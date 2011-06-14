@@ -1243,7 +1243,7 @@ class SystemManager(basemanager.BaseManager):
         params = self._computeDispatcherMethodParams(repClient, event.system,
             destination, eventUuid, requiredNetwork)
         resultsLocation = repClient.ResultsLocation(
-            path = "/api/inventory/systems/%d" % event.system.pk,
+            path = "/api/v1/inventory/systems/%d" % event.system.pk,
             port = 80)
 
         mgmtInterfaceName = self.getSystemManagementInterfaceName(event.system)

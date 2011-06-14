@@ -38,14 +38,14 @@ project_version_post_xml = """\
   <project_version>
     <description>1</description>
     <namespace>rpath</namespace>
-    <project id="http://127.0.0.1:8000/api/projects/postgres"/>
+    <project id="http://127.0.0.1:8000/api/v1/projects/postgres"/>
     <name>42</name>
   </project_version>
 """
 
 project_version_put_xml = """\
   <project_version>
-    <project id="http://127.0.0.1:8000/api/projects/postgres"/>
+    <project id="http://127.0.0.1:8000/api/v1/projects/postgres"/>
     <description>updated description</description>
   </project_version>
 """

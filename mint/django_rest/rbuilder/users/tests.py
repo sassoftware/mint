@@ -41,12 +41,12 @@ class UsersTestCase(XMLTestCase):
 
     def testGetUsers(self):
         users = models.Users.objects.all()
-        users_gotten = self.xobjResponse('/api/users/')
+        users_gotten = self.xobjResponse('users/')
         self.assertEquals(len(list(users)), len(users_gotten))
         
     def testGetUser(self):
         user = models.User.objects.get(pk=1)
-        user_gotten = self.xobjResponse('/api/users/1')
+        user_gotten = self.xobjResponse('users/1')
         self.assertEquals(unicode(user.user_name), user_gotten.user_name)
         self.assertEquals(unicode(user.full_name), user_gotten.full_name)
 
@@ -94,7 +94,7 @@ class UsersTestCase(XMLTestCase):
 
     def testAddUser(self):
         self.mockMint()
-        response = self._post('/api/users/',
+        response = self._post('users/',
             data=testsxml.users_post_xml,
         )
         self.assertEquals(200, response.status_code)
@@ -107,7 +107,7 @@ class UsersTestCase(XMLTestCase):
         self.failUnlessEqual(user.getIsAdmin(), False)
 
         # Try again
-        response = self._post('/api/users/',
+        response = self._post('users/',
             data=testsxml.users_post_xml,
         )
         self.failUnlessEqual(response.status_code, 403)
@@ -117,7 +117,7 @@ class UsersTestCase(XMLTestCase):
 
         # Create new user, now as an admin
         xml = testsxml.users_post_xml.replace('dcohn', 'testuser001')
-        response = self._post('/api/users/',
+        response = self._post('users/',
             data=xml,
             username='admin', password='password'
         )
@@ -129,17 +129,17 @@ class UsersTestCase(XMLTestCase):
 
     def testUpdateUser(self):
         self.mockMint()
-        response = self._put('/api/users/10000',
+        response = self._put('users/10000',
             data=testsxml.users_put_xml,
             username='admin', password='password')
         self.assertEquals(response.status_code, 404)
 
         # Unauthenticated
-        response = self._put('/api/users/1',
+        response = self._put('users/1',
             data=testsxml.users_put_xml)
         self.failUnlessEqual(response.status_code, 401)
 
-        response = self._put('/api/users/1',
+        response = self._put('users/1',
             data=testsxml.users_put_xml,
             username='admin', password='password')
         self.assertEquals(response.status_code, 200)
@@ -148,14 +148,14 @@ class UsersTestCase(XMLTestCase):
         self.assertEquals(user_putted.blurb, 'fear me')
 
         xml = "<user><user_name>foo</user_name></user>"
-        response = self._put('/api/users/1',
+        response = self._put('users/1',
             data=xml,
             username='admin', password='password')
         self.assertEquals(response.status_code, 403)
 
         # Admin sets its own password
         xml = "<user><password>abc</password></user>"
-        response = self._put('/api/users/1',
+        response = self._put('users/1',
             data=xml,
             username='admin', password='password')
         self.assertEquals(response.status_code, 200)
@@ -164,12 +164,12 @@ class UsersTestCase(XMLTestCase):
 
         # This is still using the old password, should fail
         xml = "<user><full_name>blabbedy</full_name></user>"
-        response = self._put('/api/users/1',
+        response = self._put('users/1',
             data=xml,
             username='admin', password='password')
         self.assertEquals(response.status_code, 401)
         # This works
-        response = self._put('/api/users/1',
+        response = self._put('users/1',
             data=xml,
             username='admin', password='abc')
         self.assertEquals(response.status_code, 200)
@@ -177,20 +177,20 @@ class UsersTestCase(XMLTestCase):
         self.failUnlessEqual(user.full_name, 'blabbedy')
 
         # Non-admin user updates another user
-        response = self._put('/api/users/1',
+        response = self._put('users/1',
             data=testsxml.users_put_xml,
             username='testuser', password='password')
         self.assertEquals(response.status_code, 403)
 
         xml = "<user><user_name>admin</user_name><full_name>foo</full_name></user>"
-        response = self._put('/api/users/2000',
+        response = self._put('users/2000',
             data=xml,
             username='testuser', password='password')
         self.assertEquals(response.status_code, 403)
 
         # Non-admin user updates itself
         xml = "<user><full_name>foo</full_name></user>"
-        response = self._put('/api/users/2000',
+        response = self._put('users/2000',
             data=xml,
             username='testuser', password='password')
         self.assertEquals(response.status_code, 200)
@@ -201,7 +201,7 @@ class UsersTestCase(XMLTestCase):
 
         # Non-admin sets its own password
         xml = "<user><password>abcd</password></user>"
-        response = self._put('/api/users/2000',
+        response = self._put('users/2000',
             data=xml,
             username='testuser', password='password')
         self.assertEquals(response.status_code, 200)
@@ -210,12 +210,12 @@ class UsersTestCase(XMLTestCase):
 
         # This is still using the old password, should fail
         xml = "<user><full_name>blabbedy</full_name></user>"
-        response = self._put('/api/users/2000',
+        response = self._put('users/2000',
             data=xml,
             username='testuser', password='password')
         self.assertEquals(response.status_code, 401)
         # This works
-        response = self._put('/api/users/2000',
+        response = self._put('users/2000',
             data=xml,
             username='testuser', password='abcd')
         self.assertEquals(response.status_code, 200)
@@ -227,7 +227,7 @@ class UsersTestCase(XMLTestCase):
 
         # Non-admin user setting is_admin
         xml = "<user><is_admin>true</is_admin></user>"
-        response = self._put('/api/users/2000',
+        response = self._put('users/2000',
             data=xml,
             username='testuser', password='password')
         self.assertEquals(response.status_code, 200)
@@ -238,7 +238,7 @@ class UsersTestCase(XMLTestCase):
 
         # admin user unsetting is_admin
         xml = "<user><is_admin>false</is_admin></user>"
-        response = self._put('/api/users/1',
+        response = self._put('users/1',
             data=xml,
             username='admin', password='password')
         self.assertEquals(response.status_code, 200)
@@ -249,7 +249,7 @@ class UsersTestCase(XMLTestCase):
 
         # admin user promoting user to admin
         xml = "<user><is_admin>1</is_admin></user>"
-        response = self._put('/api/users/2000',
+        response = self._put('users/2000',
             data=xml,
             username='admin', password='password')
         self.assertEquals(response.status_code, 200)
@@ -259,7 +259,7 @@ class UsersTestCase(XMLTestCase):
         self.failUnlessEqual(user.getIsAdmin(), True)
 
         # And doing it again
-        response = self._put('/api/users/2000',
+        response = self._put('users/2000',
             data=xml,
             username='admin', password='password')
         self.assertEquals(response.status_code, 200)
@@ -268,7 +268,7 @@ class UsersTestCase(XMLTestCase):
 
         # admin user demoting user from admin
         xml = "<user><is_admin>0</is_admin></user>"
-        response = self._put('/api/users/2000',
+        response = self._put('users/2000',
             data=xml,
             username='admin', password='password')
         user = self.toXObj(response.content)
@@ -278,7 +278,7 @@ class UsersTestCase(XMLTestCase):
 
     def testDeleteUser(self):
         # Can't delete yourself
-        response = self._delete('/api/users/1',
+        response = self._delete('users/1',
             username='admin', password='password')
         self.assertEquals(response.status_code, 403)
         fault = self.toXObj(response.content)
@@ -286,17 +286,17 @@ class UsersTestCase(XMLTestCase):
         self.failUnlessEqual(fault.message, 'Users are not allowed to remove themselves')
 
         # Non-admin
-        response = self._delete('/api/users/2000',
+        response = self._delete('users/2000',
             username='testuser', password='password')
         self.failUnlessEqual(response.status_code, 401)
 
         # Admin deleting another user
-        response = self._delete('/api/users/2000',
+        response = self._delete('users/2000',
             username='admin', password='password')
         self.assertEquals(response.status_code, 204)
 
         # User no longer exists
-        response = self._delete('/api/users/2000',
+        response = self._delete('users/2000',
             username='admin', password='password')
         self.assertEquals(response.status_code, 404)
         fault = self.toXObj(response.content)
@@ -305,12 +305,12 @@ class UsersTestCase(XMLTestCase):
 
     def testGetUserGroups(self):
         user_groups = models.UserGroups.objects.all()
-        user_groups_gotten = self.xobjResponse('/api/user_groups/')
+        user_groups_gotten = self.xobjResponse('user_groups/')
         self.assertEquals(len(list(user_groups)), len(user_groups_gotten))
         
     def testGetUserGroup(self):
         user_group = models.UserGroup.objects.get(pk=1)
-        user_group_gotten = self.xobjResponse('/api/user_groups/1')
+        user_group_gotten = self.xobjResponse('user_groups/1')
 
     def testUserGetIsAdmin(self):
         user = models.User.objects.get(user_name='admin')
@@ -322,9 +322,9 @@ class UsersTestCase(XMLTestCase):
         self.failUnlessEqual(user.getIsAdmin(), False)
 
     def testIsAdmin(self):
-        user = self.xobjResponse('/api/users/1')
+        user = self.xobjResponse('users/1')
         self.failUnlessEqual(user.is_admin, "true")
-        user = self.xobjResponse('/api/users/2000')
+        user = self.xobjResponse('users/2000')
         self.failUnlessEqual(user.is_admin, "false")
 
     def testGetUserGroupMembers(self):
