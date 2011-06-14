@@ -6,4 +6,4 @@
 
 # urls files for running the rbuilder django development app locally.
 
-from urls import urlpatterns
+from urls import urlpatterns  # pyflakes=ignore

@@ -6,9 +6,7 @@
 
 from django.conf.urls.defaults import url, patterns
 
-from mint.django_rest.rbuilder.reporting import imagereports, \
-                                                reportdispatcher, \
-                                                reports, \
+from mint.django_rest.rbuilder.reporting import reportdispatcher, \
                                                 views
 
 from mint.django_rest.rbuilder.discovery import views as discoveryviews

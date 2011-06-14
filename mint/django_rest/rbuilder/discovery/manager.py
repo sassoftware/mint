@@ -18,6 +18,11 @@ exposed = basemanager.exposed
 
 class DiscoveryManager(basemanager.BaseManager):
     @exposed
+    def getApi(self):
+        api = models.Api()
+        return api
+
+    @exposed
     def getApiVersionInfo(self):
         apiVersion = models.ApiVersion()
         apiVersion.config_info = ci = models.ConfigInfo()

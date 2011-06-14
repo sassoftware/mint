@@ -13,18 +13,10 @@
 #
 
 import os
-import time
 from lxml import etree
 from xobj import xobj
-from django.db.utils import IntegrityError
-from django.db import connection
 
-from conary.lib import digestlib
-
-from mint import mint_error
-from mint.django_rest.rbuilder.users import models
 from mint.django_rest.rbuilder.inventory.tests import XMLTestCase
-from mint.django_rest.rbuilder.users import testsxml
 
 class VersionsTestCase(XMLTestCase):
     def toXObj(self, xml):
