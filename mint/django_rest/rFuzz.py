@@ -25,12 +25,6 @@ class FzValidationError(ValidationError):
         self.instance = instance
         self.message_dict = e.message_dict
         self.error_data = self.resolveRegex()
-        
-    def resolveRegex(self):
-        error_data = {}
-        for code, error_regex in FzValidationError.ERRORS.items():
-            error_data[code] = self.parse(error_regex)
-        return error_data
 
     def resolveRegex(self):
         error_data = {}
@@ -162,7 +156,8 @@ class FuzzyModel(object):
             rng = range(0, numResults)
             return qs[random.choice(rng)]
         else:
-            return model() if inspect.isclass(model) else model          
+            # return self.model() if inspect.isclass(model) else model
+            import pdb; pdb.set_trace()       
 
     def save(self):
         try:
