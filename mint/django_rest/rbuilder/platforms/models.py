@@ -15,7 +15,7 @@ from mint.django_rest.rbuilder.projects import models as projectsmodels
 class AbstractPlatform(modellib.XObjIdModel):
     class Meta:
         abstract = True
-        
+    
     platform_id = models.AutoField(primary_key=True)
     platform_trove_name = fields.CharField(max_length=1026)
     repository_host_name = fields.CharField(max_length=1026)
@@ -47,6 +47,8 @@ class AbstractPlatform(modellib.XObjIdModel):
         xobj_model = modellib.XObjIdModel.serialize(self, request)
         # xobj_model.repository_url = self.project.getRepositoryUrl()
         return xobj_model
+
+    _xobj_hidden_accessors = set(['platformcontentsource_set', 'platformversion_set'])
 
 
 class Platforms(modellib.Collection):
@@ -205,6 +207,8 @@ class ContentSourceType(modellib.XObjIdModel):
     # config_descriptor = fields.UrlField() # think this points to other restlib model
     # status_test = fields.UrlField() # what the hell is this?
 
+    _xobj_hidden_accessors = set(['platform_set', 'sourcestatus_set', 'productplatform_set',
+                                 'platformcontenterror_set'])
 
 class ContentSources(modellib.Collection):
     class Meta:

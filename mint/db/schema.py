@@ -2037,7 +2037,6 @@ def _createQuerySetSchema(db):
             value="(unmanaged,unmanaged-credentials,registered,non-responsive-unknown,non-responsive-net,non-responsive-host,non-responsive-shutdown,non-responsive-suspended,non-responsive-credentials)"),
          dict(field="target", operator='IS_NULL', value="True"),
          dict(field='user_name', operator='IS_NULL', value="False"),
-         dict(field='notice', operator='IS_NULL', value="False"),
          ],
         ['field', 'operator', 'value'])
         
