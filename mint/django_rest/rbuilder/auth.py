@@ -52,15 +52,12 @@ def getAuth(request):
         return getCookieAuth(request)
         
     return (None, None)
-    
+
 def isAdmin(user):
-     if user is not None and isinstance(user, User):
-         groups = user.user_groups.all()
-         admingroup = UserGroup.objects.get(name='MintAdmin')
-         if admingroup in groups:
-             return True
-     return False
- 
+    if not isinstance(user, User):
+        return False
+    return user.getIsAdmin()
+
 def isAuthenticated(user):
      if user is not None and isinstance(user, User):
          return True

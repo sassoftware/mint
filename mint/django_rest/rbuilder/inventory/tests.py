@@ -134,13 +134,19 @@ class XMLTestCase(TestCase, testcase.MockMixIn):
 
     def setUp(self):
         self.workDir = tempfile.mkdtemp(dir="/tmp", prefix="rbuilder-django-")
+        dbpath = settings.TEST_DATABASE_NAME
         mintCfg = os.path.join(self.workDir, "mint.cfg")
-        file(mintCfg, "w")
+        file(mintCfg, "w").write("""
+dbDriver            sqlite
+dbPath              %(dbpath)s
+""" % dict(dbpath=dbpath))
+
+        DB = settings.DATABASES['default']
         from mint import config
         config.RBUILDER_CONFIG = mintCfg
 
-        self.oldDatabaseName = settings.DATABASES['default']['NAME']
-        settings.DATABASES['default']['NAME'] = settings.TEST_DATABASE_NAME
+        self.oldDatabaseName = DB['NAME'] 
+        DB['NAME'] = dbpath
 
         def getMintDatabase(self):
             return None

@@ -155,10 +155,7 @@ class UsersTable(database.KeyedTable):
         except DuplicateItem:
             self.confirm_table.update(userId, confirmation = confirm)
 
-    def registerNewUser(self, username, password, fullName, email,
-                        displayEmail, blurb, active):
-        if self.cfg.sendNotificationEmails and not active:
-            maillib.validateEmailDomain(email)
+    def validateUsername(self, username):
         if username.lower() == self.cfg.authUser.lower():
             raise IllegalUsername
         for letter in username:
@@ -177,9 +174,16 @@ class UsersTable(database.KeyedTable):
         if cu.fetchone()[0]:
             raise UserAlreadyExists
 
+    def registerNewUser(self, username, password, fullName, email,
+                        displayEmail, blurb, active):
+        if self.cfg.sendNotificationEmails and not active:
+            maillib.validateEmailDomain(email)
+        self.validateUsername(username)
+
         salt, passwd = self._mungePassword(password)
 
         self.db.transaction()
+        cu = self.db.cursor()
         try:
             cu.execute("INSERT INTO UserGroups (userGroup) VALUES(?)",
                        username)
