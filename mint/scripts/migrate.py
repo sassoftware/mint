@@ -2996,9 +2996,6 @@ class MigrateTo_58(SchemaMigration):
         return True
     
     def migrate9(self):
-        return True
-    
-    def migrate9(self):
         schema._createInfrastructureSystemsQuerySetSchema(self.db)
         schema._createWindowsBuildSystemsQuerySet(self.db)
         schema._createUpdateSystemsQuerySet(self.db)
