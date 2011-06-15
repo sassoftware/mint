@@ -11,6 +11,7 @@ from dateutil import tz
 
 from django.db import models
 
+from mint import userlevels
 from mint.django_rest.rbuilder import modellib
 from mint.django_rest.rbuilder.users import models as usermodels
 
@@ -79,7 +80,7 @@ class Project(modellib.XObjIdModel):
         if request is not None:
             member = self.membership.filter(user=request._authUser)
             if member:
-                role = member[0].level
+                role = userlevels.names[member[0].level]
                 xobjModel.role = role
         xobjModel.is_appliance = bool(self.is_appliance)
         xobjModel.hidden = bool(self.hidden)
