@@ -85,3 +85,9 @@ class UserGroupMembersService(service.BaseService):
 
     def get(self, user_group_id):
         return self.mgr.getUserGroupMembers(user_group_id)
+
+class SessionService(service.BaseService):
+    @access.anonymous
+    @return_xml
+    def rest_GET(self, request):
+        return self.mgr.getSessionInfo()

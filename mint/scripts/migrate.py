@@ -2898,7 +2898,7 @@ class MigrateTo_57(SchemaMigration):
 
 
 class MigrateTo_58(SchemaMigration):
-    Version = (58, 8)
+    Version = (58, 9)
 
     def migrate(self):
         return True
@@ -2993,6 +2993,16 @@ class MigrateTo_58(SchemaMigration):
 
     def migrate8(self):
         drop_columns(self.db, 'Users', 'isAdmin')
+        return True
+    
+    def migrate9(self):
+        schema._createInfrastructureSystemsQuerySetSchema(self.db)
+        schema._createWindowsBuildSystemsQuerySet(self.db)
+        schema._createUpdateSystemsQuerySet(self.db)
+        return True
+
+def _createUpdateSystemsQuerySet(db):
+
         return True
 
 

@@ -8,6 +8,7 @@ import weakref
 
 from mint.django_rest.rbuilder.manager import basemanager
 
+from mint.django_rest.rbuilder.discovery.manager import DiscoveryManager
 from mint.django_rest.rbuilder.inventory.manager.systemmgr import SystemManager
 from mint.django_rest.rbuilder.inventory.manager.versionmgr import VersionManager
 from mint.django_rest.rbuilder.inventory.manager.repeatermgr import RepeaterManager
@@ -37,6 +38,7 @@ from mint.django_rest.rbuilder.repos.manager import ReposManager
 class RbuilderManager(basemanager.BaseRbuilderManager):
 
     MANAGERS = {
+        'discMgr' : DiscoveryManager,
         'sysMgr' : SystemManager,
         'versionMgr' : VersionManager,
         'repeaterMgr' : RepeaterManager,

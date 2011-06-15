@@ -28,7 +28,7 @@ from conary.dbstore import sqlerrors, sqllib
 log = logging.getLogger(__name__)
 
 # database schema major version
-RBUILDER_DB_VERSION = sqllib.DBversion(58, 8)
+RBUILDER_DB_VERSION = sqllib.DBversion(58, 9)
 
 
 def _createTrigger(db, table, column = "changed"):
@@ -1967,6 +1967,95 @@ def _createPKI(db):
 
     return changed
 
+def _addQuerySet(db, name, description, resource_type, can_modify, query_tag_name, filter_id):
+    """Add a new query set"""
+    
+    # add the query set
+    _addTableRows(db, "querysets_queryset", "name",
+        [dict(name=name, resource_type=resource_type,
+            description=description,
+            created_date=str(datetime.datetime.now(tz.tzutc())),
+            modified_date=str(datetime.datetime.now(tz.tzutc())),
+            can_modify=can_modify),
+        ])
+    
+    # add the query tag
+    qsId = _getRowPk(db, "querysets_queryset", "query_set_id", 
+        name=name)
+    _addTableRows(db, "querysets_querytag", "name",
+        [dict(query_set_id=qsId, name=query_tag_name)])
+    
+    # link the query set to the filter
+    _addTableRows(db, "querysets_queryset_filter_entries", 'id',
+        [dict(queryset_id=qsId, filterentry_id=filter_id)],
+        ['queryset_id', 'filterentry_id'])
+    
+    return qsId
+
+
+def _addQuerySetFilterEntry(db, field, operator, value):
+    """Add a filter entry to be used by query sets"""
+    
+    _addTableRows(db, "querysets_filterentry", "filter_entry_id",
+        [dict(field=field, operator=operator, value=value)],
+        ['field', 'operator', 'value'])
+    
+    filterId = _getRowPk(db, "querysets_filterentry", 'filter_entry_id',
+        field=field, operator=operator, value=value)
+    
+    return filterId
+    
+def _addQuerySetChild(db, parent_qs_id, child_qs_id):
+    """Add a query set to another as a child"""
+    changed = False
+    
+    changed |= _addTableRows(db, "querysets_queryset_children",
+        'id',
+        [dict(from_queryset_id=parent_qs_id, to_queryset_id=child_qs_id)],
+        uniqueCols=('from_queryset_id', 'to_queryset_id'))
+    
+    return changed
+
+def _addQuerySetChildToAllSystems(db, child_qs_id):
+    """Convenience method to add a child query set to all systems"""
+    
+    allQSId = _getRowPk(db, "querysets_queryset", "query_set_id", 
+        name="All Systems")
+    
+    return _addQuerySetChild(db, allQSId, child_qs_id)
+
+def _addQuerySetChildToInfrastructureSystems(db, child_qs_id):
+    """Convenience method to add a child query set to infrastructure systems"""
+    
+    qsId = _getRowPk(db, "querysets_queryset", "query_set_id", 
+        name="Infrastructure Systems")
+    
+    return _addQuerySetChild(db, qsId, child_qs_id)
+
+def _createInfrastructureSystemsQuerySetSchema(db):
+    """Add the infrastructure systems query set"""
+    filterId = _addQuerySetFilterEntry(db, "system_type.infrastructure", "EQUAL", "true")
+    qsId = _addQuerySet(db, "Infrastructure Systems", "Systems that make up the rPath infrastructure", "system", False, "query-tag-Infrastructure_Systems-6", filterId)
+    _addQuerySetChildToAllSystems(db, qsId)
+    
+    return True
+
+def _createWindowsBuildSystemsQuerySet(db):
+    """Add the windows build systems query set"""
+    filterId = _addQuerySetFilterEntry(db, "system_type.name", "EQUAL", "infrastructure-windows-build-node")
+    qsId = _addQuerySet(db, "rPath Windows Build Services", "rPath infrastructure services for building Windows packages/images", "system", False, "query-tag-Windows_Build_Services-7", filterId)
+    _addQuerySetChildToInfrastructureSystems(db, qsId)
+    
+    return True
+
+def _createUpdateSystemsQuerySet(db):
+    """Add the windows build systems query set"""
+    filterId = _addQuerySetFilterEntry(db, "system_type.name", "EQUAL", "infrastructure-management-node")
+    qsId = _addQuerySet(db, "rPath Update Services", "rPath infrastructure services for managing systems", "system", False, "query-tag-Windows_Build_Services-7", filterId)
+    _addQuerySetChildToInfrastructureSystems(db, qsId)
+    
+    return True
+
 def _createQuerySetSchema(db):
     """QuerySet tables"""
     changed = False
@@ -2486,6 +2575,9 @@ def createSchema(db, doCommit=True, cfg=None):
     changed |= _createCapsuleIndexerYumSchema(db)
     changed |= _createPKI(db)
     changed |= _createQuerySetSchema(db)
+    changed |= _createInfrastructureSystemsQuerySetSchema(db)
+    changed |= _createWindowsBuildSystemsQuerySet(db)
+    changed |= _createUpdateSystemsQuerySet(db)
     changed |= _createChangeLogSchema(db)
     changed |= _createPackageSchema(db)
 

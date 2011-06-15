@@ -29,14 +29,14 @@ class ProjectsTestCase(XMLTestCase):
         mock.mock(manager.ProjectManager, "setProductVersionDefinition")
 
     def testGetProjectsAdmin(self):
-        response = self._get('/api/projects/',
+        response = self._get('projects/',
             username="admin", password="password")
         self.assertEquals(response.status_code, 200)
         projects = xobj.parse(response.content).projects.project
         self.assertEquals(len(projects), 3)
 
     def testGetProjectsUser(self):
-        response = self._get('/api/projects/',
+        response = self._get('projects/',
             username="testuser", password="password")
         self.assertEquals(response.status_code, 200)
         projects = xobj.parse(response.content).projects.project
@@ -44,20 +44,20 @@ class ProjectsTestCase(XMLTestCase):
         self.assertEquals([p.short_name for p in projects],
             ['chater-foo', 'postgres'])
 
-        response = self._get('/api/projects/',
+        response = self._get('projects/',
             username="testuser2", password="password")
         self.assertEquals(response.status_code, 200)
         projects = xobj.parse(response.content).projects.project
         self.assertEquals(len(projects), 3)
     
     def testGetProjectsAnon(self):
-        response = self._get('/api/projects/')
+        response = self._get('projects/')
         self.assertEquals(response.status_code, 200)
         projects = xobj.parse(response.content).projects.project
         self.assertEquals(len(projects), 2)
 
     def testAddProject(self):
-        response = self._post('/api/projects',
+        response = self._post('projects',
             data=testsxml.project_post_xml,
             username="testuser", password="password")
         self.assertEquals(response.status_code, 200)
@@ -68,7 +68,7 @@ class ProjectsTestCase(XMLTestCase):
         self.assertEquals(2000, project.creator.user_id)
 
     def testUpdateProject(self):
-        response = self._put('/api/projects/chater-foo',
+        response = self._put('projects/chater-foo',
             data=testsxml.project_put_xml,
             username="testuser", password="password")
         self.assertEquals(response.status_code, 200)
@@ -79,12 +79,12 @@ class ProjectsTestCase(XMLTestCase):
             project.description)
 
     def testDeleteProject(self):
-        response = self._delete('/api/projects/chater-foo',
+        response = self._delete('projects/chater-foo',
             username="testuser", password="password")
         self.assertEquals(response.status_code, 204)
 
     def testAddProjectVersion(self):
-        response = self._post('/api/projects/postgres/versions',
+        response = self._post('projects/postgres/versions',
             data=testsxml.project_version_post_xml,
             username="admin", password="password")
         self.assertEquals(response.status_code, 200)
@@ -93,7 +93,7 @@ class ProjectsTestCase(XMLTestCase):
         self.assertEquals('42', version.name)
 
     def testUpdateProjectVersion(self):
-        response = self._put('/api/projects/postgres/versions/2',
+        response = self._put('projects/postgres/versions/2',
             data=testsxml.project_version_put_xml,
             username="admin", password="password")
         self.assertEquals(response.status_code, 200)
@@ -103,7 +103,7 @@ class ProjectsTestCase(XMLTestCase):
             version.description)
 
     def testDeleteProjectVersion(self):
-        response = self._delete('/api/projects/postgres/versions/2',
+        response = self._delete('projects/postgres/versions/2',
             username="testuser", password="password")
         self.assertEquals(response.status_code, 204)
 

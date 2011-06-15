@@ -46,27 +46,27 @@ class JobsTestCase(BaseJobsTest):
         self.mockGetRmakeJob_called = True
 
     def testGetJobs(self):
-        response = self._get('/api/jobs/')
+        response = self._get('jobs/')
         self.assertEquals(response.status_code, 200)
         self.assertXMLEquals(response.content, testsxml.jobs_xml)
 
     def testGetJobStates(self):
-        response = self._get('/api/job_states/')
+        response = self._get('job_states/')
         self.assertEquals(response.status_code, 200)
         self.assertXMLEquals(response.content, testsxml.job_states_xml)
 
     def testGetJob(self):
-        response = self._get('/api/jobs/1/')
+        response = self._get('jobs/1/')
         self.assertEquals(response.status_code, 200)
         self.assertXMLEquals(response.content, testsxml.job_xml)
 
     def testGetJobState(self):
-        response = self._get('/api/job_states/1/')
+        response = self._get('job_states/1/')
         self.assertEquals(response.status_code, 200)
         self.assertXMLEquals(response.content, testsxml.job_state_xml)
 
     def testGetSystemJobs(self):
-        response = self._get('/api/inventory/systems/%s/jobs/' % \
+        response = self._get('inventory/systems/%s/jobs/' % \
             self.system.pk)
         self.assertEquals(response.status_code, 200)
         self.assertXMLEquals(response.content, testsxml.systems_jobs_xml)
@@ -107,7 +107,7 @@ class Jobs2TestCase(BaseJobsTest):
         self.job2.status_detail = "no such luck"
         self.job2.save()
 
-        response = self._get('/api/jobs/')
+        response = self._get('jobs/')
         self.assertEquals(response.status_code, 200)
 
         obj = xobj.parse(response.content)
