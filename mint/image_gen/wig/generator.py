@@ -116,7 +116,6 @@ class ImageGenerator(object):
 
         # WIG service
         self.wigServiceUrl = data['windowsBuildService']
-        self.wigClient = backend.WigBackendClient(self.wigServiceUrl)
 
         # Mint service
         self.imageBase = ('%sapi/products/%s/images/%d/' % (data['outputUrl'],
@@ -238,6 +237,7 @@ class WbsGenerator(ImageGenerator):
 
     def run(self):
         self.setConfiguration()
+        self.wigClient = backend.WigBackendClient(self.wigServiceUrl)
         self.makeJob()
 
         if not self.runJob():
