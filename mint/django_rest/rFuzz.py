@@ -122,7 +122,7 @@ class FuzzyModel(object):
             rng = range(0, numResults)
             return qs[random.choice(rng)]
         else:
-            return self.model() if inspect.isclass(model) else self.model     
+            return self.model() if inspect.isclass(self.model) else self.model     
 
     def save(self):
         try:
