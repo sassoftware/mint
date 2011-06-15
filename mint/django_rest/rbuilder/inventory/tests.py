@@ -205,8 +205,16 @@ dbPath              %(dbpath)s
 
         return extra
 
-    def _get(self, path, data={}, username=None, password=None, follow=False, headers=None):
+    def _fixPath(self, path):
+        arr = path.split('://', 1)
+        if len(arr) == 2:
+            return path
+        if path.startswith('/'):
+            return path
+        return '/api/v1/' + path
 
+    def _get(self, path, data={}, username=None, password=None, follow=False, headers=None):
+        path = self._fixPath(path)
         params = data.copy()
         parsed = urlparse.urlparse(path)
         if parsed.params:
@@ -220,24 +228,26 @@ dbPath              %(dbpath)s
 
     def _post(self, path, data={}, content_type='application/xml',
              username=None, password=None, follow=False, headers=None):
+        path = self._fixPath(path)
         extra = self._addRequestAuth(username, password)
         extra.update(headers or {})
         return self.client.post(path, data, content_type, follow, **extra)
 
     def _put(self, path, data={}, content_type='application/xml',
             username=None, password=None, follow=False, headers=None):
+        path = self._fixPath(path)
         extra = self._addRequestAuth(username, password)
         extra.update(headers or {})
         return self.client.put(path, data, content_type, follow, **extra)
 
     def _delete(self, path, data='', follow=False, username=None, 
                 password=None, headers=None, content_type='application_xml'):
-        extra = self._addRequestAuth(username, password)
-        extra.update(headers or {})
-
         """
         Send a DELETE request to the server.
         """
+        path = self._fixPath(path)
+        extra = self._addRequestAuth(username, password)
+        extra.update(headers or {})
         post_data = data
 
         query_string = None
@@ -393,32 +403,32 @@ dbPath              %(dbpath)s
 class InventoryTestCase(XMLTestCase):
 
     def testGetTypes(self):
-        response = self._get('/api/inventory/')
+        response = self._get('inventory/')
         self.assertEquals(response.status_code, 200)
         self.assertXMLEquals(response.content, testsxml.inventory_xml)
         
-        response = self._post('/api/inventory/?_method=GET')
+        response = self._post('inventory/?_method=GET')
         self.assertEquals(response.status_code, 200)
         self.assertXMLEquals(response.content, testsxml.inventory_xml)
         
     def testPostTypes(self):
-        response = self._post('/api/inventory/')
+        response = self._post('inventory/')
         self.assertEquals(response.status_code, 405)
         
     def notestPutTypes(self):
-        response = self._put('/api/inventory/')
+        response = self._put('inventory/')
         self.assertEquals(response.status_code, 405)
         
     def testDeleteTypes(self):
-        response = self._delete('/api/inventory/')
+        response = self._delete('inventory/')
         self.assertEquals(response.status_code, 405)
 
     def testGetTypesNoTrailingSlash(self):
-        response = self._get('/api/inventory')
+        response = self._get('inventory')
         self.assertEquals(response.status_code, 200)
         self.assertXMLEquals(response.content, testsxml.inventory_xml)
 
-        response = self._post('/api/inventory?_method=GET')
+        response = self._post('inventory?_method=GET')
         self.assertEquals(response.status_code, 200)
         self.assertXMLEquals(response.content, testsxml.inventory_xml)
 
@@ -428,10 +438,10 @@ class LogTestCase(XMLTestCase):
         """
         Ensure requires auth but not admin
         """
-        response = self._get('/api/inventory/log/')
+        response = self._get('inventory/log/')
         self.assertEquals(response.status_code, 401)
         
-        response = self._get('/api/inventory/log/', username="testuser", 
+        response = self._get('inventory/log/', username="testuser", 
             password="password")
         self.assertEquals(response.status_code, 200)
 
@@ -445,7 +455,7 @@ class LogTestCase(XMLTestCase):
         system = self.newSystem(name="mgoblue3",
             description="best appliance ever3")
         self.mgr.addSystem(system)
-        response = self._get('/api/inventory/log/', username="testuser", 
+        response = self._get('inventory/log/', username="testuser", 
             password="password")
         # Just remove lines with dates in them, it's easier to test for now.
         self.assertXMLEquals(response.content, testsxml.systems_log_xml,
@@ -459,7 +469,7 @@ class ZonesTestCase(XMLTestCase):
         # Create a system, just for kicks
         system = self.newSystem(name="foo", managing_zone=zone)
         system.save()
-        response = self._get('/api/inventory/zones/',
+        response = self._get('inventory/zones/',
             username="testuser", password="password")
         self.assertEquals(response.status_code, 200)
         self.assertXMLEquals(response.content,
@@ -471,17 +481,17 @@ class ZonesTestCase(XMLTestCase):
         Ensure requires auth but not admin
         """
         self._saveZone()
-        response = self._get('/api/inventory/zones/2/')
+        response = self._get('inventory/zones/2/')
         self.assertEquals(response.status_code, 401)
         
-        response = self._get('/api/inventory/zones/2/',
+        response = self._get('inventory/zones/2/',
             username="testuser", password="password")
         self.assertEquals(response.status_code, 200)
 
     def testGetZone(self):
         models.Zone.objects.all().delete()
         zone = self._saveZone()
-        response = self._get('/api/inventory/zones/1/',
+        response = self._get('inventory/zones/1/',
             username="testuser", password="password")
         self.assertEquals(response.status_code, 200)
         self.assertXMLEquals(response.content,
@@ -504,11 +514,11 @@ class ZonesTestCase(XMLTestCase):
         """
         Ensure we require admin to post zones
         """
-        response = self._post('/api/inventory/zones/',
+        response = self._post('inventory/zones/',
             data= testsxml.zone_post_xml)
         self.assertEquals(response.status_code, 401)
         
-        response = self._post('/api/inventory/zones/',
+        response = self._post('inventory/zones/',
             data=testsxml.zone_post_xml,
             username="testuser", password="password")
         self.assertEquals(response.status_code, 401)
@@ -516,7 +526,7 @@ class ZonesTestCase(XMLTestCase):
     def testPostZone(self):
         models.Zone.objects.all().delete()
         xml = testsxml.zone_post_xml
-        response = self._post('/api/inventory/zones/',
+        response = self._post('inventory/zones/',
             data=xml, username="admin", password="password")
         self.assertEquals(response.status_code, 200)
         zone = models.Zone.objects.get(pk=1)
@@ -524,7 +534,7 @@ class ZonesTestCase(XMLTestCase):
             (zone.created_date.isoformat()))
         
         # test posting a second zone https://issues.rpath.com/browse/RBL-7229
-        response = self._post('/api/inventory/zones/',
+        response = self._post('inventory/zones/',
             data=testsxml.zone_post_2_xml, username="admin", password="password")
         self.assertEquals(response.status_code, 200)
         zones = models.Zone.objects.all()
@@ -535,11 +545,11 @@ class ZonesTestCase(XMLTestCase):
         Ensure we require admin to put zones
         """
         zone = models.Zone.objects.get(pk=1)
-        response = self._put('/api/inventory/zones/1/', 
+        response = self._put('inventory/zones/1/', 
             data=testsxml.zone_put_xml % zone.created_date)
         self.assertEquals(response.status_code, 401)
         
-        response = self._put('/api/inventory/zones/1/', 
+        response = self._put('inventory/zones/1/', 
             data=testsxml.zone_put_xml % zone.created_date,
             username="testuser", password="password")
         self.assertEquals(response.status_code, 401)
@@ -550,7 +560,7 @@ class ZonesTestCase(XMLTestCase):
         """
         zone = models.Zone.objects.get(pk=1)
         try:
-            response = self._put('/api/inventory/zones/1zcvxzvzgvsdzfewrew4t4tga34/', 
+            response = self._put('inventory/zones/1zcvxzvzgvsdzfewrew4t4tga34/', 
                 data=testsxml.zone_put_xml % zone.created_date,
                 username="testuser", password="password")
             self.assertEquals(response.status_code, 404)
@@ -561,7 +571,7 @@ class ZonesTestCase(XMLTestCase):
     def testPutZone(self):
         models.Zone.objects.all().delete()
         zone = self._saveZone()
-        response = self._put('/api/inventory/zones/%d/' % zone.zone_id,
+        response = self._put('inventory/zones/%d/' % zone.zone_id,
             data=testsxml.zone_put_xml % zone.created_date, username="admin", password="password")
         self.assertEquals(response.status_code, 200)
         zone = models.Zone.objects.get(pk=1)
@@ -572,10 +582,10 @@ class ZonesTestCase(XMLTestCase):
         """
         Ensure we require admin to delete zones
         """
-        response = self._delete('/api/inventory/zones/1/')
+        response = self._delete('inventory/zones/1/')
         self.assertEquals(response.status_code, 401)
         
-        response = self._delete('/api/inventory/zones/1/',
+        response = self._delete('inventory/zones/1/',
             username="testuser", password="password")
         self.assertEquals(response.status_code, 401)
         
@@ -585,7 +595,7 @@ class ZonesTestCase(XMLTestCase):
         """
         models.Zone.objects.all().delete()
         self._saveZone()
-        response = self._delete('/api/inventory/zones/1/',
+        response = self._delete('inventory/zones/1/',
             username="admin", password="password")
         self.assertEquals(response.status_code, 204)
         try:
@@ -600,7 +610,7 @@ class ManagementInterfacesTestCase(XMLTestCase):
         models.ManagementInterface.objects.all().delete()
         mi = models.ManagementInterface(name="foo", description="bar", port=8000, credentials_descriptor="<foo/>")
         mi.save()
-        response = self._get('/api/inventory/management_interfaces/',
+        response = self._get('inventory/management_interfaces/',
             username="testuser", password="password")
         self.assertEquals(response.status_code, 200)
         self.assertXMLEquals(response.content,
@@ -610,10 +620,10 @@ class ManagementInterfacesTestCase(XMLTestCase):
         """
         Ensure requires auth but not admin
         """
-        response = self._get('/api/inventory/management_interfaces/')
+        response = self._get('inventory/management_interfaces/')
         self.assertEquals(response.status_code, 401)
         
-        response = self._get('/api/inventory/management_interfaces/',
+        response = self._get('inventory/management_interfaces/',
             username="testuser", password="password")
         self.assertEquals(response.status_code, 200)
 
@@ -621,7 +631,7 @@ class ManagementInterfacesTestCase(XMLTestCase):
         models.ManagementInterface.objects.all().delete()
         mi = models.ManagementInterface(name="foo", description="bar", port=8000, credentials_descriptor="<foo/>")
         mi.save()
-        response = self._get('/api/inventory/management_interfaces/1/',
+        response = self._get('inventory/management_interfaces/1/',
             username="testuser", password="password")
         self.assertEquals(response.status_code, 200)
         self.assertXMLEquals(response.content,
@@ -631,11 +641,11 @@ class ManagementInterfacesTestCase(XMLTestCase):
         """
         Ensure we require admin to put
         """
-        response = self._put('/api/inventory/management_interfaces/1/', 
+        response = self._put('inventory/management_interfaces/1/', 
             data=testsxml.management_interface_put_xml)
         self.assertEquals(response.status_code, 401)
         
-        response = self._put('/api/inventory/management_interfaces/1/', 
+        response = self._put('inventory/management_interfaces/1/', 
             data=testsxml.management_interface_put_xml,
             username="testuser", password="password")
         self.assertEquals(response.status_code, 401)
@@ -645,7 +655,7 @@ class ManagementInterfacesTestCase(XMLTestCase):
         Ensure we return 404 if we update one that doesn't exist
         """
         try:
-            response = self._put('/api/inventory/management_interfaces/1zcvxzvzgvsdzfewrew4t4tga34/', 
+            response = self._put('inventory/management_interfaces/1zcvxzvzgvsdzfewrew4t4tga34/', 
                 data=testsxml.management_interface_put_xml,
                 username="admin", password="password")
             self.assertEquals(response.status_code, 404)
@@ -658,7 +668,7 @@ class ManagementInterfacesTestCase(XMLTestCase):
         mi = models.ManagementInterface(name="foo2", description="bar", port=8000, credentials_descriptor="<foo/>")
         mi.save()
         self.assertTrue('<name>thisnameshouldnotstick</name>' in testsxml.management_interface_put_xml)
-        response = self._put('/api/inventory/management_interfaces/1',
+        response = self._put('inventory/management_interfaces/1',
             data=testsxml.management_interface_put_xml, username="admin", password="password")
         self.assertEquals(response.status_code, 200)
         mi = models.ManagementInterface.objects.get(pk=mi.pk)
@@ -673,7 +683,7 @@ class SystemTypesTestCase(XMLTestCase):
         models.SystemType.objects.all().delete()
         si = models.SystemType(name="foo", description="bar", creation_descriptor="<foo></foo>")
         si.save()
-        response = self._get('/api/inventory/system_types/',
+        response = self._get('inventory/system_types/',
             username="testuser", password="password")
         self.assertEquals(response.status_code, 200)
         self.assertXMLEquals(response.content,
@@ -683,11 +693,11 @@ class SystemTypesTestCase(XMLTestCase):
         """
         Ensure requires auth but not admin
         """
-        response = self._get('/api/inventory/system_types/',
+        response = self._get('inventory/system_types/',
             username='baduser', password='badpass')
         self.assertEquals(response.status_code, 401)
         
-        response = self._get('/api/inventory/system_types/',
+        response = self._get('inventory/system_types/',
             username="testuser", password="password")
         self.assertEquals(response.status_code, 200)
 
@@ -695,7 +705,7 @@ class SystemTypesTestCase(XMLTestCase):
         models.SystemType.objects.all().delete()
         si = models.SystemType(name="foo", description="bar", creation_descriptor="<foo></foo>")
         si.save()
-        response = self._get('/api/inventory/system_types/1/',
+        response = self._get('inventory/system_types/1/',
             username="testuser", password="password")
         self.assertEquals(response.status_code, 200)
         self.assertXMLEquals(response.content,
@@ -703,7 +713,7 @@ class SystemTypesTestCase(XMLTestCase):
         
     def testGetSystemTypeSystems(self):
         system = self._saveSystem()
-        response = self._get('/api/inventory/system_types/%d/systems/' % \
+        response = self._get('inventory/system_types/%d/systems/' % \
             system.system_type.system_type_id,
             username="testuser", password="password")
         self.assertEquals(response.status_code, 200)
@@ -714,11 +724,11 @@ class SystemTypesTestCase(XMLTestCase):
         """
         Ensure we require admin to put
         """
-        response = self._put('/api/inventory/system_types/1/', 
+        response = self._put('inventory/system_types/1/', 
             data=testsxml.system_types_put_xml)
         self.assertEquals(response.status_code, 401)
         
-        response = self._put('/api/inventory/system_types/1/', 
+        response = self._put('inventory/system_types/1/', 
             data=testsxml.system_types_put_xml,
             username="testuser", password="password")
         self.assertEquals(response.status_code, 401)
@@ -732,7 +742,7 @@ class SystemTypesTestCase(XMLTestCase):
         si = models.SystemType(name="foo", description="bar", creation_descriptor="<foo></foo>")
         si.save()
         self.assertTrue('<name>thisnameshouldnotstick</name>' in testsxml.system_types_put_xml)
-        response = self._put('/api/inventory/system_types/1',
+        response = self._put('inventory/system_types/1',
             data=testsxml.system_types_put_xml, username="admin", password="password")
         self.assertEquals(response.status_code, 200)
         si = models.SystemType.objects.get(pk=si.pk)
@@ -800,13 +810,13 @@ class SystemTypesTestCase(XMLTestCase):
 class SystemStatesTestCase(XMLTestCase):
 
     def testGetSystemStates(self):
-        response = self._get('/api/inventory/system_states/')
+        response = self._get('inventory/system_states/')
         self.assertEquals(response.status_code, 200)
         self.assertXMLEquals(response.content, testsxml.system_states_xml, 
             ignoreNodes = [ 'created_date' ])
 
     def testGetSystemState(self):
-        response = self._get('/api/inventory/system_states/1/')
+        response = self._get('inventory/system_states/1/')
         self.assertEquals(response.status_code, 200)
         self.assertXMLEquals(response.content, testsxml.system_state_xml, 
             ignoreNodes = [ 'created_date' ])
@@ -816,7 +826,7 @@ class NetworkTestCase(XMLTestCase):
     def testGetNetworks(self):
         models.System.objects.all().delete()
         self._saveSystem()
-        response = self._get('/api/inventory/networks/',
+        response = self._get('inventory/networks/',
             username="testuser", password="password")
         self.assertEquals(response.status_code, 200)
         self.assertXMLEquals(response.content,
@@ -827,10 +837,10 @@ class NetworkTestCase(XMLTestCase):
         Ensure requires auth but not admin
         """
         self._saveSystem()
-        response = self._get('/api/inventory/networks/1/')
+        response = self._get('inventory/networks/1/')
         self.assertEquals(response.status_code, 401)
         
-        response = self._get('/api/inventory/networks/1/',
+        response = self._get('inventory/networks/1/',
             username="testuser", password="password")
         self.assertEquals(response.status_code, 200)
         
@@ -838,11 +848,11 @@ class NetworkTestCase(XMLTestCase):
         """
         Ensure we require admin to put zones
         """
-        response = self._put('/api/inventory/networks/1/', 
+        response = self._put('inventory/networks/1/', 
             data= testsxml.network_put_xml)
         self.assertEquals(response.status_code, 401)
         
-        response = self._put('/api/inventory/networks/1/', 
+        response = self._put('inventory/networks/1/', 
             data=testsxml.network_put_xml,
             username="testuser", password="password")
         self.assertEquals(response.status_code, 401)
@@ -852,7 +862,7 @@ class NetworkTestCase(XMLTestCase):
         Ensure we return 404 if we update network that doesn't exist
         """
         try:
-            response = self._put('/api/inventory/networks/1zcvxzvzgvsdzfewrew4t4tga34/', 
+            response = self._put('inventory/networks/1zcvxzvzgvsdzfewrew4t4tga34/', 
                 data=testsxml.network_put_xml,
                 username="testuser", password="password")
             self.assertEquals(response.status_code, 404)
@@ -863,7 +873,7 @@ class NetworkTestCase(XMLTestCase):
     def testPutNetwork(self):
         models.System.objects.all().delete()
         self._saveSystem()
-        response = self._put('/api/inventory/networks/1/',
+        response = self._put('inventory/networks/1/',
             data=testsxml.network_put_xml, username="admin", password="password")
         self.assertEquals(response.status_code, 200)
         network = models.Network.objects.get(pk=1)
@@ -874,10 +884,10 @@ class NetworkTestCase(XMLTestCase):
         """
         Ensure we require admin to put zones
         """
-        response = self._delete('/api/inventory/networks/1/')
+        response = self._delete('inventory/networks/1/')
         self.assertEquals(response.status_code, 401)
         
-        response = self._delete('/api/inventory/networks/1/', 
+        response = self._delete('inventory/networks/1/', 
             username="testuser", password="password")
         self.assertEquals(response.status_code, 401)
         
@@ -886,7 +896,7 @@ class NetworkTestCase(XMLTestCase):
         self._saveSystem()
         network = models.Network.objects.get(pk=1)
         self.assertTrue(network is not None)
-        response = self._delete('/api/inventory/networks/1/', 
+        response = self._delete('inventory/networks/1/', 
             username="admin", password="password")
         self.assertEquals(response.status_code, 204)
         try:
@@ -898,7 +908,7 @@ class NetworkTestCase(XMLTestCase):
     def testGetNetwork(self):
         models.System.objects.all().delete()
         self._saveSystem()
-        response = self._get('/api/inventory/networks/1/',
+        response = self._get('inventory/networks/1/',
             username="testuser", password="password")
         self.assertEquals(response.status_code, 200)
         self.assertXMLEquals(response.content,
@@ -931,7 +941,7 @@ class ManagementNodesTestCase(XMLTestCase):
     # -----------------
     def testGetManagementNodes(self):
         management_node = self._saveManagementNode()
-        response = self._get('/api/inventory/management_nodes/',
+        response = self._get('inventory/management_nodes/',
             username="testuser", password="password")
         self.assertEquals(response.status_code, 200)
         self.assertXMLEquals(response.content, 
@@ -978,13 +988,13 @@ class ManagementNodesTestCase(XMLTestCase):
 
         data = dataTempl % ''.join(nodeTempl % x for x in nodes)
         # First, check that we enforce localhost auth
-        response = self._put('/api/inventory/management_nodes',
+        response = self._put('inventory/management_nodes',
             headers={'X-rPath-Repeater' : 'does not matter'},
             data=data)
         self.failUnlessEqual(response.status_code, 401)
 
         # Now a valid PUT
-        response = self._put('/api/inventory/management_nodes',
+        response = self._put('inventory/management_nodes',
             data=data)
         self.failUnlessEqual(response.status_code, 200)
 
@@ -1024,16 +1034,16 @@ class ManagementNodesTestCase(XMLTestCase):
         Ensure requires auth but not admin
         """
         self._saveManagementNode()
-        response = self._get('/api/inventory/management_nodes/1/')
+        response = self._get('inventory/management_nodes/1/')
         self.assertEquals(response.status_code, 401)
         
-        response = self._get('/api/inventory/management_nodes/1/',
+        response = self._get('inventory/management_nodes/1/',
             username="testuser", password="password")
         self.assertEquals(response.status_code, 200)
 
     def testGetManagementNode(self):
         management_node = self._saveManagementNode()
-        response = self._get('/api/inventory/management_nodes/1/',
+        response = self._get('inventory/management_nodes/1/',
             username="testuser", password="password")
         self.assertEquals(response.status_code, 200)
         self.assertXMLEquals(response.content, 
@@ -1055,16 +1065,16 @@ class ManagementNodesTestCase(XMLTestCase):
         """
         models.ManagementNode.objects.all().delete()
         self._saveZone()
-        response = self._post('/api/inventory/management_nodes/', 
+        response = self._post('inventory/management_nodes/', 
             data=testsxml.management_node_post_xml, content_type='text/xml')
         self.assertEquals(response.status_code, 401)
         
-        response = self._post('/api/inventory/management_nodes/', 
+        response = self._post('inventory/management_nodes/', 
             data=testsxml.management_node_post_xml, content_type='text/xml',
             username="testuser", password="password")
         self.assertEquals(response.status_code, 401)
         
-        response = self._post('/api/inventory/management_nodes/', 
+        response = self._post('inventory/management_nodes/', 
             data=testsxml.management_node_post_xml, content_type='text/xml',
             username="admin", password="password")
         self.assertEquals(response.status_code, 200)
@@ -1073,7 +1083,7 @@ class ManagementNodesTestCase(XMLTestCase):
         models.ManagementNode.objects.all().delete()
         self._saveZone()
         xml = testsxml.management_node_post_xml
-        response = self._post('/api/inventory/management_nodes/', 
+        response = self._post('inventory/management_nodes/', 
             data=xml, content_type='text/xml', username="admin", password="password")
         self.assertEquals(response.status_code, 200)
         management_node = models.ManagementNode.objects.get(pk=1)
@@ -1088,7 +1098,7 @@ class ManagementNodesTestCase(XMLTestCase):
         
     def testGetManagementNodesForZone(self):
         management_node = self._saveManagementNode()
-        response = self._get('/api/inventory/zones/%d/management_nodes/' % management_node.zone.zone_id,
+        response = self._get('inventory/zones/%d/management_nodes/' % management_node.zone.zone_id,
             username="testuser", password="password")
         self.assertEquals(response.status_code, 200)
         self.assertXMLEquals(response.content, 
@@ -1101,16 +1111,16 @@ class ManagementNodesTestCase(XMLTestCase):
         Ensure quires auth but not admin
         """
         management_node = self._saveManagementNode()
-        response = self._get('/api/inventory/zones/%d/management_nodes/1/' % management_node.zone.zone_id)
+        response = self._get('inventory/zones/%d/management_nodes/1/' % management_node.zone.zone_id)
         self.assertEquals(response.status_code, 401)
         
-        response = self._get('/api/inventory/zones/%d/management_nodes/1/' % management_node.zone.zone_id,
+        response = self._get('inventory/zones/%d/management_nodes/1/' % management_node.zone.zone_id,
             username="testuser", password="password")
         self.assertEquals(response.status_code, 200)
 
     def testGetManagementNodeForZone(self):
         management_node = self._saveManagementNode()
-        response = self._get('/api/inventory/zones/%d/management_nodes/1/' % management_node.zone.zone_id,
+        response = self._get('inventory/zones/%d/management_nodes/1/' % management_node.zone.zone_id,
             username="testuser", password="password")
         self.assertEquals(response.status_code, 200)
         self.assertXMLEquals(response.content, 
@@ -1150,16 +1160,16 @@ class ManagementNodesTestCase(XMLTestCase):
         """
         models.ManagementNode.objects.all().delete()
         zone = self._saveZone()
-        response = self._post('/api/inventory/zones/%d/management_nodes/' % zone.zone_id, 
+        response = self._post('inventory/zones/%d/management_nodes/' % zone.zone_id, 
             data=testsxml.management_node_zone_post_xml, content_type='text/xml')
         self.assertEquals(response.status_code, 401)
         
-        response = self._post('/api/inventory/zones/%d/management_nodes/' % zone.zone_id, 
+        response = self._post('inventory/zones/%d/management_nodes/' % zone.zone_id, 
             data=testsxml.management_node_zone_post_xml, content_type='text/xml',
             username="testuser", password="password")
         self.assertEquals(response.status_code, 401)
         
-        response = self._post('/api/inventory/zones/%d/management_nodes/' % zone.zone_id, 
+        response = self._post('inventory/zones/%d/management_nodes/' % zone.zone_id, 
             data=testsxml.management_node_zone_post_xml, content_type='text/xml',
             username="admin", password="password")
         self.assertEquals(response.status_code, 200)
@@ -1168,7 +1178,7 @@ class ManagementNodesTestCase(XMLTestCase):
         models.ManagementNode.objects.all().delete()
         zone = self._saveZone()
         xml = testsxml.management_node_zone_post_xml
-        response = self._post('/api/inventory/zones/%d/management_nodes/' % zone.zone_id, 
+        response = self._post('inventory/zones/%d/management_nodes/' % zone.zone_id, 
             data=xml, username="admin", password="password")
         self.assertEquals(response.status_code, 200)
         management_node = models.ManagementNode.objects.get(pk=1)
@@ -1288,41 +1298,41 @@ class SystemsTestCase(XMLTestCase):
 </system>
 """
         # No event uuid, no auth; this fails
-        response = self._put('/api/inventory/systems/%s' % system.pk,
+        response = self._put('inventory/systems/%s' % system.pk,
             data=xmlTempl % params)
         self.failUnlessEqual(response.status_code, 401)
 
         # Bad event uuid; this fails
-        response = self._put('/api/inventory/systems/%s' % system.pk,
+        response = self._put('inventory/systems/%s' % system.pk,
             data=xmlTempl % params,
             headers = { 'X-rBuilder-Event-UUID' : eventUuid + '-bogus'})
         self.failUnlessEqual(response.status_code, 401)
 
         # Good uuid, bad system
-        response = self._put('/api/inventory/systems/%s' % system2.pk,
+        response = self._put('inventory/systems/%s' % system2.pk,
             data=xmlTempl % params,
             headers = { 'X-rBuilder-Event-UUID' : eventUuid })
         self.failUnlessEqual(response.status_code, 401)
 
         # uuid validation, this works
-        response = self._put('/api/inventory/systems/%s' % system.pk,
+        response = self._put('inventory/systems/%s' % system.pk,
             data=xmlTempl % params,
             headers = { 'X-rBuilder-Event-UUID' : eventUuid })
         self.failUnlessEqual(response.status_code, 200)
 
         # user/pass auth, this works
-        response = self._put('/api/inventory/systems/%s' % system.pk,
+        response = self._put('inventory/systems/%s' % system.pk,
             data=xmlTempl % params, username='testuser', password='password')
         self.failUnlessEqual(response.status_code, 200)
 
         # uuid valid, bad auth - this fails
-        response = self._put('/api/inventory/systems/%s' % system.pk,
+        response = self._put('inventory/systems/%s' % system.pk,
             data=xmlTempl % params, username='testuser', password='bogus',
             headers = { 'X-rBuilder-Event-UUID' : eventUuid })
         self.failUnlessEqual(response.status_code, 401)
 
         # uuid bad, goodauth - this fails
-        response = self._put('/api/inventory/systems/%s' % system.pk,
+        response = self._put('inventory/systems/%s' % system.pk,
             data=xmlTempl % params, username='testuser', password='password',
             headers = { 'X-rBuilder-Event-UUID' : eventUuid + '-bogus' })
         self.failUnlessEqual(response.status_code, 401)
@@ -1339,12 +1349,12 @@ class SystemsTestCase(XMLTestCase):
         system = self._saveSystem()
         
         # fail if anon
-        response = self._put('/api/inventory/systems/%d/' % system.system_id,
+        response = self._put('inventory/systems/%d/' % system.system_id,
             data=testsxml.systems_put_mothball_xml)
         self.failUnlessEqual(response.status_code, 401)
         
         # fail if regular user
-        response = self._put('/api/inventory/systems/%d/' % system.system_id,
+        response = self._put('inventory/systems/%d/' % system.system_id,
             data=testsxml.systems_put_mothball_xml,
             username="testuser", password="password")
         self.failUnlessEqual(response.status_code, 401)
@@ -1356,7 +1366,7 @@ class SystemsTestCase(XMLTestCase):
         models.System.objects.all().delete()
         system = self._saveSystem()
         # work if admin
-        response = self._put('/api/inventory/systems/%d/' % system.system_id,
+        response = self._put('inventory/systems/%d/' % system.system_id,
             data=testsxml.systems_put_mothball_xml,
             username="admin", password="password")
         self.failUnlessEqual(response.status_code, 200)
@@ -1375,7 +1385,7 @@ class SystemsTestCase(XMLTestCase):
         <dns_name>%(dnsName)s</dns_name>
       </network>
     </networks>
-    <managing_zone href="http://testserver/api/inventory/zones/%(zoneId)s"/>
+    <managing_zone href="http://testserver/api/v1/inventory/zones/%(zoneId)s"/>
   </system>
 """
         systems = []
@@ -1386,7 +1396,7 @@ class SystemsTestCase(XMLTestCase):
                 zoneId=self.localZone.zone_id)
             systems.append(xmlTempl % params)
         xml = "<systems>" + ''.join(systems) + "</systems>"
-        url = "/api/inventory/systems"
+        url = "inventory/systems"
         response = self._post(url, data=xml)
         self.failUnlessEqual(response.status_code, 200)
 
@@ -1517,7 +1527,7 @@ class SystemsTestCase(XMLTestCase):
         """
         models.System.objects.all().delete()
         system_xml = testsxml.system_post_no_network_xml
-        response = self._post('/api/inventory/systems/', data=system_xml)
+        response = self._post('inventory/systems/', data=system_xml)
         self.assertEquals(response.status_code, 200)
         try:
             models.System.objects.get(pk=1)
@@ -1530,7 +1540,7 @@ class SystemsTestCase(XMLTestCase):
         """
         models.System.objects.all().delete()
         system_xml = testsxml.system_post_network_unpinned
-        response = self._post('/api/inventory/systems/', data=system_xml)
+        response = self._post('inventory/systems/', data=system_xml)
         self.assertEquals(response.status_code, 200)
         system = models.System.objects.get(pk=1)
         self.failUnlessEqual(
@@ -1548,7 +1558,7 @@ class SystemsTestCase(XMLTestCase):
         """
         models.System.objects.all().delete()
         system_xml = testsxml.system_post_network_pinned
-        response = self._post('/api/inventory/systems/', data=system_xml)
+        response = self._post('inventory/systems/', data=system_xml)
         self.assertEquals(response.status_code, 200)
         system = models.System.objects.get(pk=1)
         self.failUnlessEqual(
@@ -1568,7 +1578,7 @@ class SystemsTestCase(XMLTestCase):
         self.failUnlessEqual(list(system.networks.all()), [])
 
         xml_data = testsxml.system_post_network_unpinned
-        response = self._put('/api/inventory/systems/%s' % system.pk,
+        response = self._put('inventory/systems/%s' % system.pk,
             data=xml_data,
             username="admin", password="password")
         self.assertEquals(response.status_code, 200)
@@ -1590,7 +1600,7 @@ class SystemsTestCase(XMLTestCase):
             ip_address='10.2.2.2', active=False, pinned=False)
         network.save()
 
-        response = self._put('/api/inventory/systems/%s' % system.pk,
+        response = self._put('inventory/systems/%s' % system.pk,
             data=xml_data,
             username="admin", password="password")
         self.assertEquals(response.status_code, 200)
@@ -1612,7 +1622,7 @@ class SystemsTestCase(XMLTestCase):
             ip_address='10.2.2.2', active=False, pinned=False)
         network.save()
 
-        response = self._put('/api/inventory/systems/%s' % system.pk,
+        response = self._put('inventory/systems/%s' % system.pk,
             data=xml_data,
             username="admin", password="password")
         self.assertEquals(response.status_code, 200)
@@ -1634,7 +1644,7 @@ class SystemsTestCase(XMLTestCase):
             ip_address='10.2.2.2', active=True, pinned=False)
         network.save()
 
-        response = self._put('/api/inventory/systems/%s' % system.pk,
+        response = self._put('inventory/systems/%s' % system.pk,
             data=xml_data,
             username="admin", password="password")
         self.assertEquals(response.status_code, 200)
@@ -1652,7 +1662,7 @@ class SystemsTestCase(XMLTestCase):
         self.failUnlessEqual(list(system.networks.all()), [])
 
         xml_data = testsxml.system_post_network_pinned
-        response = self._put('/api/inventory/systems/%s' % system.pk,
+        response = self._put('inventory/systems/%s' % system.pk,
             data=xml_data,
             username="admin", password="password")
         self.assertEquals(response.status_code, 200)
@@ -1674,7 +1684,7 @@ class SystemsTestCase(XMLTestCase):
             ip_address='10.2.2.2', active=False, pinned=False)
         network.save()
 
-        response = self._put('/api/inventory/systems/%s' % system.pk,
+        response = self._put('inventory/systems/%s' % system.pk,
             data=xml_data,
             username="admin", password="password")
         self.assertEquals(response.status_code, 200)
@@ -1700,7 +1710,7 @@ class SystemsTestCase(XMLTestCase):
             ip_address='10.2.2.2', active=False, pinned=False)
         network.save()
 
-        response = self._put('/api/inventory/systems/%s' % system.pk,
+        response = self._put('inventory/systems/%s' % system.pk,
             data=xml_data,
             username="admin", password="password")
         self.assertEquals(response.status_code, 200)
@@ -1725,7 +1735,7 @@ class SystemsTestCase(XMLTestCase):
             ip_address='10.2.2.2', active=True, pinned=False)
         network.save()
 
-        response = self._put('/api/inventory/systems/%s' % system.pk,
+        response = self._put('inventory/systems/%s' % system.pk,
             data=xml_data,
             username="admin", password="password")
         self.assertEquals(response.status_code, 200)
@@ -1786,7 +1796,7 @@ class SystemsTestCase(XMLTestCase):
         network.save()
 
         system_xml = xmlTempl % params
-        response = self._post('/api/inventory/systems/', data=system_xml)
+        response = self._post('inventory/systems/', data=system_xml)
         self.assertEquals(response.status_code, 200)
         system = models.System.objects.get(pk=system.pk)
         self.failUnlessEqual(
@@ -1804,7 +1814,7 @@ class SystemsTestCase(XMLTestCase):
 
     def testGetSystems(self):
         system = self._saveSystem()
-        response = self._get('/api/inventory/systems/', username="testuser", password="password")
+        response = self._get('inventory/systems/', username="testuser", password="password")
         self.assertEquals(response.status_code, 200)
         self.assertXMLEquals(response.content, 
             testsxml.systems_xml % (system.networks.all()[0].created_date.isoformat(), system.created_date.isoformat()),
@@ -1815,10 +1825,10 @@ class SystemsTestCase(XMLTestCase):
         Ensure requires auth but not admin
         """
         system = self._saveSystem()
-        response = self._get('/api/inventory/systems/%d/' % system.system_id)
+        response = self._get('inventory/systems/%d/' % system.system_id)
         self.assertEquals(response.status_code, 401)
         
-        response = self._get('/api/inventory/systems/%d/' % system.system_id,
+        response = self._get('inventory/systems/%d/' % system.system_id,
             username="testuser", password="password")
         self.assertEquals(response.status_code, 200)
         
@@ -1826,7 +1836,7 @@ class SystemsTestCase(XMLTestCase):
         models.System.objects.all().delete()
         system = self._saveSystem()
         system.to_xml()
-        response = self._get('/api/inventory/systems/86753021/',
+        response = self._get('inventory/systems/86753021/',
             username="testuser", password="password")
         self.assertEquals(response.status_code, 404)
 
@@ -1834,7 +1844,7 @@ class SystemsTestCase(XMLTestCase):
         models.System.objects.all().delete()
         system = self._saveSystem()
         system.to_xml()
-        response = self._get('/api/inventory/systems/%d/' % system.system_id,
+        response = self._get('inventory/systems/%d/' % system.system_id,
             username="testuser", password="password")
         self.assertEquals(response.status_code, 200)
         self.assertXMLEquals(response.content, 
@@ -1849,7 +1859,7 @@ class SystemsTestCase(XMLTestCase):
         system = self._saveSystem()
         system.target = target
         system.save()
-        response = self._get('/api/inventory/systems/%d/' % system.system_id,
+        response = self._get('inventory/systems/%d/' % system.system_id,
             username="testuser", password="password")
         self.assertEquals(response.status_code, 200)
         self.assertXMLEquals(response.content, testsxml.system_target_xml % \
@@ -1861,13 +1871,13 @@ class SystemsTestCase(XMLTestCase):
         Ensure wide open for rpath-tools usage
         """
         system_xml = testsxml.system_post_xml
-        response = self._post('/api/inventory/systems/', data=system_xml)
+        response = self._post('inventory/systems/', data=system_xml)
         self.assertEquals(response.status_code, 200)
         
     def testPostSystem(self):
         models.System.objects.all().delete()
         system_xml = testsxml.system_post_xml
-        response = self._post('/api/inventory/systems/', data=system_xml)
+        response = self._post('inventory/systems/', data=system_xml)
         self.assertEquals(response.status_code, 200)
         system = models.System.objects.get(pk=1)
         system_xml = testsxml.system_post_xml_response.replace('<registration_date/>',
@@ -1896,7 +1906,7 @@ class SystemsTestCase(XMLTestCase):
 </system>
 """
         zoneName = base64.b64encode(self.localZone.name)
-        response = self._post('/api/inventory/systems/',
+        response = self._post('inventory/systems/',
             data=xmlTempl % params,
             headers={ 'X-rPath-Management-Zone' : zoneName })
         self.failUnlessEqual(response.status_code, 200)
@@ -1905,7 +1915,7 @@ class SystemsTestCase(XMLTestCase):
         # add the first system
         models.System.objects.all().delete()
         system_xml = testsxml.system_post_xml_dup
-        response = self._post('/api/inventory/systems/', data=system_xml)
+        response = self._post('inventory/systems/', data=system_xml)
         self.assertEquals(response.status_code, 200)
         system = models.System.objects.get(pk=1)
         self.failUnlessEqual(system.name, "testsystemname")
@@ -1913,7 +1923,7 @@ class SystemsTestCase(XMLTestCase):
         # add it with same uuids but with different name to make sure
         # we get back same system with updated prop
         system_xml = testsxml.system_post_xml_dup2
-        response = self._post('/api/inventory/systems/', data=system_xml)
+        response = self._post('inventory/systems/', data=system_xml)
         self.assertEquals(response.status_code, 200)
         this_system = models.System.objects.get(pk=1)
         self.failUnlessEqual(this_system.name, "testsystemnameChanged")
@@ -1922,7 +1932,7 @@ class SystemsTestCase(XMLTestCase):
         system = self._saveSystem()
 
         # Test that a mgmt interface can be changed.
-        response = self._put('/api/inventory/systems/%s' % system.pk,
+        response = self._put('inventory/systems/%s' % system.pk,
             data=testsxml.system_mgmt_interface_put_xml, 
             username="admin", password="password")
         self.assertEquals(response.status_code, 200)
@@ -1933,7 +1943,7 @@ class SystemsTestCase(XMLTestCase):
         # Test that a mgmt interface can be added.
         system.management_interface = None
         system.save()
-        response = self._put('/api/inventory/systems/%s' % system.pk,
+        response = self._put('inventory/systems/%s' % system.pk,
             data=testsxml.system_mgmt_interface_put_xml, 
             username="admin", password="password")
         self.assertEquals(response.status_code, 200)
@@ -1942,7 +1952,7 @@ class SystemsTestCase(XMLTestCase):
         self.assertEquals(system.management_interface.pk, 2)
 
         # Test that mgmt interface can be deleted
-        response = self._put('/api/inventory/systems/%s' % system.pk,
+        response = self._put('inventory/systems/%s' % system.pk,
             data=testsxml.system_delete_mgmt_interface_put_xml, 
             username="admin", password="password")
         self.assertEquals(response.status_code, 200)
@@ -1951,20 +1961,20 @@ class SystemsTestCase(XMLTestCase):
 
     def testSystemCredentials(self):
         system = self._saveSystem()
-        response = self._post('/api/inventory/systems/%s/credentials' % \
+        response = self._post('inventory/systems/%s/credentials' % \
             system.pk,
             data=testsxml.credentials_xml,
             username="admin", password="password")
         self.assertEquals(response.status_code, 200)
         self.assertXMLEquals(response.content, testsxml.credentials_resp_xml)
 
-        response = self._get('/api/inventory/systems/%s/credentials' % \
+        response = self._get('inventory/systems/%s/credentials' % \
             system.pk,
             username="admin", password="password")
         self.assertEquals(response.status_code, 200)
         self.assertXMLEquals(response.content, testsxml.credentials_resp_xml)
 
-        response = self._put('/api/inventory/systems/%s/credentials' % \
+        response = self._put('inventory/systems/%s/credentials' % \
             system.pk,
             data=testsxml.credentials_put_xml,
             username="admin", password="password")
@@ -1981,7 +1991,7 @@ class SystemsTestCase(XMLTestCase):
   <credentials>blahblah</credentials>
 </system>
 """
-        response = self._put('/api/inventory/systems/%s' % system.pk,
+        response = self._put('inventory/systems/%s' % system.pk,
             data=xml,
             username="admin", password="password")
         self.failUnlessEqual(response.status_code, 200)
@@ -1992,7 +2002,7 @@ class SystemsTestCase(XMLTestCase):
         system = self._saveSystem()
         system.management_interface = models.ManagementInterface.objects.get(name='wmi')
         system.save()
-        response = self._post('/api/inventory/systems/%s/credentials' % \
+        response = self._post('inventory/systems/%s/credentials' % \
             system.pk,
             data=testsxml.credentials_wmi_xml,
             username="admin", password="password")
@@ -2000,14 +2010,14 @@ class SystemsTestCase(XMLTestCase):
         self.assertXMLEquals(response.content, 
             testsxml.credentials_wmi_resp_xml)
 
-        response = self._get('/api/inventory/systems/%s/credentials' % \
+        response = self._get('inventory/systems/%s/credentials' % \
             system.pk,
             username="admin", password="password")
         self.assertEquals(response.status_code, 200)
         self.assertXMLEquals(response.content, 
             testsxml.credentials_wmi_resp_xml)
 
-        response = self._put('/api/inventory/systems/%s/credentials' % \
+        response = self._put('inventory/systems/%s/credentials' % \
             system.pk,
             data=testsxml.credentials_wmi_put_xml,
             username="admin", password="password")
@@ -2017,7 +2027,7 @@ class SystemsTestCase(XMLTestCase):
         
     def testSystemConfiguration(self):
         system = self._saveSystem()
-        response = self._post('/api/inventory/systems/%s/configuration' % \
+        response = self._post('inventory/systems/%s/configuration' % \
             system.pk,
             data=testsxml.configuration_post_xml,
             username="admin", password="password")
@@ -2025,14 +2035,14 @@ class SystemsTestCase(XMLTestCase):
         self.assertXMLEquals(response.content, 
             testsxml.configuration_post_resp_xml)
 
-        response = self._get('/api/inventory/systems/%s/configuration' % \
+        response = self._get('inventory/systems/%s/configuration' % \
             system.pk,
             username="admin", password="password")
         self.assertEquals(response.status_code, 200)
         self.assertXMLEquals(response.content, 
             testsxml.configuration_post_resp_xml)
 
-        response = self._put('/api/inventory/systems/%s/configuration' % \
+        response = self._put('inventory/systems/%s/configuration' % \
             system.pk,
             data=testsxml.configuration_put_xml,
             username="admin", password="password")
@@ -2051,7 +2061,7 @@ class SystemsTestCase(XMLTestCase):
         
         self.mgr.sysMgr.getSystemConfigurationDescriptor = self._getSystemConfigurationDescriptor(system.pk)
 
-        response = self._get('/api/inventory/systems/%s/configuration_descriptor' % \
+        response = self._get('inventory/systems/%s/configuration_descriptor' % \
             system.pk,
             username="admin", password="password")
         self.assertEquals(response.status_code, 200)
@@ -2063,24 +2073,24 @@ class SystemsTestCase(XMLTestCase):
         Ensure requires auth but not admin
         """
         models.System.objects.all().delete()
-        response = self._post('/api/inventory/systems/',
+        response = self._post('inventory/systems/',
             data=testsxml.system_post_xml)
         self.assertEquals(response.status_code, 200)
         
-        response = self._get('/api/inventory/systems/1/system_log/')
+        response = self._get('inventory/systems/1/system_log/')
         self.assertEquals(response.status_code, 401)
         
-        response = self._get('/api/inventory/systems/1/system_log/',
+        response = self._get('inventory/systems/1/system_log/',
             username="testuser", password="password")
         self.assertEquals(response.status_code, 200)
         
 
     def testGetSystemLog(self):
         models.System.objects.all().delete()
-        response = self._post('/api/inventory/systems/', 
+        response = self._post('inventory/systems/', 
             data=testsxml.system_post_xml)
         self.assertEquals(response.status_code, 200)
-        response = self._get('/api/inventory/systems/1/system_log/',
+        response = self._get('inventory/systems/1/system_log/',
             username="testuser", password="password")
         self.assertEquals(response.status_code, 200)
         content = []
@@ -2178,7 +2188,7 @@ class SystemsTestCase(XMLTestCase):
   <local_uuid>%(localUuid)s</local_uuid>
   <generated_uuid>%(generatedUuid)s</generated_uuid>
   <event_uuid>%(eventUuid)s</event_uuid>
-  <managing_zone href="http://testserver/api/inventory/zones/%(zoneId)s"/>
+  <managing_zone href="http://testserver/api/v1/inventory/zones/%(zoneId)s"/>
 </system>
 """ % params
         obj = xobj.parse(xml)
@@ -2199,7 +2209,7 @@ class SystemsTestCase(XMLTestCase):
   <local_uuid>%(localUuid)s</local_uuid>
   <generated_uuid>%(generatedUuid)s</generated_uuid>
   <event_uuid>%(eventUuid)s</event_uuid>
-  <managing_zone href="http://testserver/api/inventory/zones/%(zoneId)s"/>
+  <managing_zone href="http://testserver/api/v1/inventory/zones/%(zoneId)s"/>
 </system>
 """ % params
 
@@ -2290,7 +2300,7 @@ class SystemsTestCase(XMLTestCase):
   <local_uuid>%(localUuid)s</local_uuid>
   <generated_uuid>%(generatedUuid)s</generated_uuid>
   <event_uuid>%(eventUuid)s</event_uuid>
-  <managing_zone href="http://testserver/api/inventory/zones/%(zoneId)s"/>
+  <managing_zone href="http://testserver/api/v1/inventory/zones/%(zoneId)s"/>
 </system>
 """ % params
 
@@ -2353,7 +2363,7 @@ class SystemsTestCase(XMLTestCase):
     <name>mothballed</name>
     <system_state_id>10</system_state_id>
   </current_state>
-  <managing_zone href="http://testserver/api/inventory/zones/%(zoneId)s"/>
+  <managing_zone href="http://testserver/api/v1/inventory/zones/%(zoneId)s"/>
 </system>
 """ % params
 
@@ -2408,7 +2418,7 @@ class SystemsTestCase(XMLTestCase):
       <status_detail>%(statusDetail)s</status_detail>
     </job>
   </jobs>
-  <managing_zone href="http://testserver/api/inventory/zones/%(zoneId)s"/>
+  <managing_zone href="http://testserver/api/v1/inventory/zones/%(zoneId)s"/>
 </system>
 """
         xml = xmlTempl % params
@@ -2464,7 +2474,7 @@ class SystemsTestCase(XMLTestCase):
       <status_detail>%(statusDetail)s</status_detail>
     </job>
   </jobs>
-  <managing_zone href="http://testserver/api/inventory/zones/%(zoneId)s"/>
+  <managing_zone href="http://testserver/api/v1/inventory/zones/%(zoneId)s"/>
 </system>
 """
         jobState = 'Failed'
@@ -2508,7 +2518,7 @@ class SystemsTestCase(XMLTestCase):
   <generated_uuid>%(generatedUuid)s</generated_uuid>
   <ssl_client_certificate>thou shalt not change me</ssl_client_certificate>
   <ssl_client_key>thou shalt not change me</ssl_client_key>
-  <managing_zone href="http://testserver/api/inventory/zones/%(zoneId)s"/>
+  <managing_zone href="http://testserver/api/v1/inventory/zones/%(zoneId)s"/>
 </system>
 """ % params
         obj = xobj.parse(xml)
@@ -2541,7 +2551,7 @@ class SystemsTestCase(XMLTestCase):
   <local_uuid>%(localUuid)s</local_uuid>
   <generated_uuid>%(generatedUuid)s</generated_uuid>
   <event_uuid>%(eventUuid)s</event_uuid>
-  <managing_zone href="http://testserver/api/inventory/zones/%(zoneId)s"/>
+  <managing_zone href="http://testserver/api/v1/inventory/zones/%(zoneId)s"/>
 </system>
 """ % params
 
@@ -2557,7 +2567,7 @@ class SystemsTestCase(XMLTestCase):
             event_uuid=eventUuid)
         systemJob.save()
 
-        response = self._post('/api/inventory/systems', data=xml)
+        response = self._post('inventory/systems', data=xml)
         self.failUnlessEqual(response.status_code, 200)
 
         # Look up log entries
@@ -2581,7 +2591,7 @@ class SystemsTestCase(XMLTestCase):
   <local_uuid>%(localUuid)s</local_uuid>
   <generated_uuid>%(generatedUuid)s</generated_uuid>
   <agent_port>%(agentPort)s</agent_port>
-  <managing_zone href="http://testserver/api/inventory/zones/%(zoneId)s"/>
+  <managing_zone href="http://testserver/api/v1/inventory/zones/%(zoneId)s"/>
 </system>
 """ % params
         obj = xobj.parse(xml)
@@ -2610,11 +2620,11 @@ class SystemsTestCase(XMLTestCase):
   <current_state>
     <name>%(systemState)s</name>
   </current_state>
-  <managing_zone href="http://testserver/api/inventory/zones/%(zoneId)s"/>
+  <managing_zone href="http://testserver/api/v1/inventory/zones/%(zoneId)s"/>
 </system>
 """ % params
 
-        response = self._put('/api/inventory/systems/%s' % system.pk,
+        response = self._put('inventory/systems/%s' % system.pk,
             data=xml, username="testuser", password="password")
         self.failUnlessEqual(response.status_code, 200)
         system = models.System.objects.get(pk=system.pk)
@@ -2639,11 +2649,11 @@ class SystemsTestCase(XMLTestCase):
   <current_state>
     <name>%(systemState)s</name>
   </current_state>
-  <managing_zone href="http://testserver/api/inventory/zones/%(zoneId)s"/>
+  <managing_zone href="http://testserver/api/v1/inventory/zones/%(zoneId)s"/>
 </system>
 """ % params
 
-        response = self._put('/api/inventory/systems/%s' % system.pk,
+        response = self._put('inventory/systems/%s' % system.pk,
             data=xml, username="testuser", password="password")
         self.failUnlessEqual(response.status_code, 200)
         system = models.System.objects.get(pk=system.pk)
@@ -2673,7 +2683,7 @@ class SystemsTestCase(XMLTestCase):
 <system>
   <local_uuid>%(localUuid)s</local_uuid>
   <generated_uuid>%(generatedUuid)s</generated_uuid>
-  <management_interface href="/api/inventory/management_interfaces/%(managementInterfaceId)s"/>
+  <management_interface href="/api/v1/inventory/management_interfaces/%(managementInterfaceId)s"/>
   <agent_port>%(agentPort)s</agent_port>
 </system>
 """ % params
@@ -2684,7 +2694,7 @@ class SystemsTestCase(XMLTestCase):
   </management_interface>
         """
 
-        response = self._put('/api/inventory/systems/%s' % system.pk,
+        response = self._put('inventory/systems/%s' % system.pk,
             data=xml, username="testuser", password="password")
         self.failUnlessEqual(response.status_code, 200)
         system = models.System.objects.get(pk=system.pk)
@@ -2697,7 +2707,7 @@ class SystemsTestCase(XMLTestCase):
         system.save()
         creds = self.mgr.getSystemCredentials(system.pk)
         self.assertXMLEquals(creds.to_xml(),
-            '<credentials id="/api/inventory/systems/%s/credentials"/>' %
+            '<credentials id="/api/v1/inventory/systems/%s/credentials"/>' %
                 system.pk)
         
     def testGetConfigurationWhenMissing(self):
@@ -2705,7 +2715,7 @@ class SystemsTestCase(XMLTestCase):
         system.save()
         config = self.mgr.getSystemConfiguration(system.pk)
         self.assertXMLEquals(config.to_xml(),
-            '<configuration id="/api/inventory/systems/%s/configuration"/>' %
+            '<configuration id="/api/v1/inventory/systems/%s/configuration"/>' %
                 system.pk)
 
     def testMarkSystemShutdown(self):
@@ -2715,7 +2725,7 @@ class SystemsTestCase(XMLTestCase):
 
         p.update(currentState = "non-responsive-shutdown")
 
-        url = '/api/inventory/systems'
+        url = 'inventory/systems'
         xml = """
 <system>
   <local_uuid>%(local_uuid)s</local_uuid>
@@ -2820,12 +2830,12 @@ class SystemStateTestCase(XMLTestCase):
       <job_state>%(jobState)s</job_state>
     </job>
   </jobs>
-  <managing_zone href="http://testserver/api/inventory/zones/%(zoneId)s"/>
+  <managing_zone href="http://testserver/api/v1/inventory/zones/%(zoneId)s"/>
 </system>
 """
         xml = xmlTempl % params
 
-        response = self._put('/api/inventory/systems/%s' % system.pk,
+        response = self._put('inventory/systems/%s' % system.pk,
             data=xml, headers = { 'X-rBuilder-Event-UUID' : eventUuid1 })
         self.failUnlessEqual(response.status_code, 200)
 
@@ -2851,7 +2861,7 @@ class SystemStateTestCase(XMLTestCase):
 
         xml = xmlTempl % params
 
-        response = self._put('/api/inventory/systems/%s' % system.pk,
+        response = self._put('inventory/systems/%s' % system.pk,
             data=xml, headers = { 'X-rBuilder-Event-UUID' : eventUuid1 })
         self.failUnlessEqual(response.status_code, 200)
 
@@ -3173,7 +3183,7 @@ class SystemVersionsTestCase(XMLTestCase):
         system.installed_software.add(self.trove)
         system.installed_software.add(self.trove2)
         system.save()
-        response = self._get('/api/inventory/systems/%s/' % system.pk,
+        response = self._get('inventory/systems/%s/' % system.pk,
             username="testuser", password="password")
         self.assertEquals(response.status_code, 200)
         expected = (testsxml.system_version_xml % (
@@ -3191,7 +3201,7 @@ class SystemVersionsTestCase(XMLTestCase):
         system.installed_software.add(self.trove)
         system.installed_software.add(self.trove2)
         system.save()
-        url = '/api/inventory/systems/%s/installed_software/' % system.pk
+        url = 'inventory/systems/%s/installed_software/' % system.pk
         response = self._get(url, username="testuser", password="password")
         self.assertXMLEquals(response.content,
             testsxml.get_installed_software_xml %(
@@ -3205,7 +3215,7 @@ class SystemVersionsTestCase(XMLTestCase):
         system.installed_software.add(self.trove2)
         system.save()
 
-        url = '/api/inventory/systems/%s/installed_software/' % system.pk
+        url = 'inventory/systems/%s/installed_software/' % system.pk
         response = self._post(url,
             data=testsxml.installed_software_post_xml)
         self.assertXMLEquals(response.content,
@@ -3219,7 +3229,7 @@ class SystemVersionsTestCase(XMLTestCase):
         system.installed_software.add(self.trove2)
         system.save()
 
-        response = self._get('/api/inventory/systems/%s' % system.pk,
+        response = self._get('inventory/systems/%s' % system.pk,
             username="testuser", password="password")
         self.assertXMLEquals(response.content, 
             testsxml.system_available_updates_xml,
@@ -3234,7 +3244,7 @@ class SystemVersionsTestCase(XMLTestCase):
 
         # Apply update to 1-3-1
         data = testsxml.system_apply_updates_xml
-        response = self._put('/api/inventory/systems/%s/installed_software' 
+        response = self._put('inventory/systems/%s/installed_software' 
             % system.pk,
             data=data, username="admin", password="password")
         self.assertEquals(200, response.status_code)
@@ -3287,11 +3297,11 @@ class SystemVersionsTestCase(XMLTestCase):
             version='1',
             isPromotable=True))
 
-        url = '/api/inventory/systems/%s/' % system.pk
+        url = 'inventory/systems/%s/' % system.pk
         response = self._put(url, data=data,
             headers = { 'X-rBuilder-Event-UUID' : eventUuid })
         # Weak attempt to see if the response is XML
-        exp = '<system id="http://testserver/api/inventory/systems/%s">' % system.pk
+        exp = '<system id="http://testserver/api/v1/inventory/systems/%s">' % system.pk
         self.failUnless(exp in response.content)
 
         nsystem = models.System.objects.get(system_id=system.pk)
@@ -3339,12 +3349,12 @@ class SystemVersionsTestCase(XMLTestCase):
 class EventTypeTestCase(XMLTestCase):
 
     def testGetEventTypes(self):
-        response = self._get('/api/inventory/event_types/')
+        response = self._get('inventory/event_types/')
         self.assertEquals(response.status_code, 200)
         self.assertXMLEquals(response.content, testsxml.event_types_xml)
 
     def testGetEventType(self):
-        response = self._get('/api/inventory/event_types/1/')
+        response = self._get('inventory/event_types/1/')
         self.assertEquals(response.status_code, 200)
         self.assertXMLEquals(response.content, testsxml.event_type_xml)
         
@@ -3352,11 +3362,11 @@ class EventTypeTestCase(XMLTestCase):
         """
         Ensure we require admin to put event types
         """
-        response = self._put('/api/inventory/event_types/1/', 
+        response = self._put('inventory/event_types/1/', 
             data= testsxml.event_type_put_xml, content_type='text/xml')
         self.assertEquals(response.status_code, 401)
         
-        response = self._put('/api/inventory/event_types/1/', 
+        response = self._put('inventory/event_types/1/', 
             data=testsxml.event_type_put_xml, content_type='text/xml',
             username="testuser", password="password")
         self.assertEquals(response.status_code, 401)
@@ -3366,7 +3376,7 @@ class EventTypeTestCase(XMLTestCase):
         event_type = jobmodels.EventType(name="foo", description="bar", priority=110)
         event_type.save()
         self.assertTrue(event_type.priority == 110)
-        response = self._put('/api/inventory/event_types/1/', 
+        response = self._put('inventory/event_types/1/', 
             data=testsxml.event_type_put_xml, content_type='text/xml',
             username="admin", password="password")
         self.assertEquals(response.status_code, 200)
@@ -3381,7 +3391,7 @@ class EventTypeTestCase(XMLTestCase):
         event_type = jobmodels.EventType(name=jobmodels.EventType.SYSTEM_POLL, description="bar", priority=110)
         event_type.save()
         self.failUnlessEqual(event_type.name, jobmodels.EventType.SYSTEM_POLL)
-        response = self._put('/api/inventory/event_types/%d/' % event_type.pk,
+        response = self._put('inventory/event_types/%d/' % event_type.pk,
             data=testsxml.event_type_put_name_change_xml,
             username="admin", password="password")
         self.assertEquals(response.status_code, 200)
@@ -3427,7 +3437,7 @@ class SystemEventTestCase(XMLTestCase):
         event1.save()
         event2 = models.SystemEvent(system=self.system,event_type=act_event, priority=act_event.priority)
         event2.save()
-        response = self._get('/api/inventory/system_events/',
+        response = self._get('inventory/system_events/',
            username="testuser", password="password")
         self.assertEquals(response.status_code, 200)
         self.assertXMLEquals(response.content, 
@@ -3442,10 +3452,10 @@ class SystemEventTestCase(XMLTestCase):
         poll_event = self.mgr.sysMgr.eventType(jobmodels.EventType.SYSTEM_POLL)
         event = models.SystemEvent(system=self.system,event_type=poll_event, priority=poll_event.priority)
         event.save()
-        response = self._get('/api/inventory/system_events/%d/' % event.system_event_id)
+        response = self._get('inventory/system_events/%d/' % event.system_event_id)
         self.assertEquals(response.status_code, 401)
         
-        response = self._get('/api/inventory/system_events/%d/' % event.system_event_id,
+        response = self._get('inventory/system_events/%d/' % event.system_event_id,
            username="testuser", password="password")
         self.assertEquals(response.status_code, 200)
 
@@ -3453,7 +3463,7 @@ class SystemEventTestCase(XMLTestCase):
         poll_event = self.mgr.sysMgr.eventType(jobmodels.EventType.SYSTEM_POLL)
         event = models.SystemEvent(system=self.system,event_type=poll_event, priority=poll_event.priority)
         event.save()
-        response = self._get('/api/inventory/system_events/%d/' % event.system_event_id,
+        response = self._get('inventory/system_events/%d/' % event.system_event_id,
            username="testuser", password="password")
         self.assertEquals(response.status_code, 200)
         self.assertXMLEquals(response.content, 
@@ -3616,7 +3626,7 @@ class SystemEventTestCase(XMLTestCase):
         """
         Ensure requires auth but not admin
         """
-        url = '/api/inventory/systems/%d/system_events/' % self.system.system_id
+        url = 'inventory/systems/%d/system_events/' % self.system.system_id
         system_event_post_xml = testsxml.system_event_post_xml
         response = self._post(url, data=system_event_post_xml)
         self.assertEquals(response.status_code, 401)
@@ -3627,7 +3637,7 @@ class SystemEventTestCase(XMLTestCase):
         self.assertEquals(response.status_code, 200)
         
     def testPostSystemEvent(self):
-        url = '/api/inventory/systems/%d/system_events/' % self.system.system_id
+        url = 'inventory/systems/%d/system_events/' % self.system.system_id
         system_event_post_xml = testsxml.system_event_post_xml
         response = self._post(url,
             data=system_event_post_xml,
@@ -3653,7 +3663,7 @@ class SystemEventTestCase(XMLTestCase):
 
         rbuildermanager.SystemManager._dispatchSystemEvent = mock__dispatchSystemEvent
 
-        url = '/api/inventory/systems/%d/system_events/' % self.system.system_id
+        url = 'inventory/systems/%d/system_events/' % self.system.system_id
         response = self._post(url,
             data=testsxml.system_event_immediate_poll_post_xml,
             username="testuser", password="password")
@@ -3999,7 +4009,7 @@ class SystemEventProcessing2TestCase(XMLTestCase):
                             targetType=None,
                             instanceId=None,
                             launchWaitTime=300),
-                        resLoc(path='/api/inventory/systems/%s' %
+                        resLoc(path='/api/v1/inventory/systems/%s' %
                                 self.system2.pk,
                             port=80),
                     ),
@@ -4032,7 +4042,7 @@ class SystemEventProcessing2TestCase(XMLTestCase):
                             targetType=None,
                             instanceId=None,
                             launchWaitTime=300),
-                        resLoc(path='/api/inventory/systems/4', port=80),
+                        resLoc(path='/api/v1/inventory/systems/4', port=80),
                     ),
                     dict(zone='Local rBuilder'),
                 ),
@@ -4064,16 +4074,16 @@ class SystemEventProcessing2TestCase(XMLTestCase):
                                 {
                                     'port': 135,
                                     'interfaceHref':
-                                      '/api/inventory/management_interfaces/2',
+                                      '/api/v1/inventory/management_interfaces/2',
                                 },
                                 {
                                     'port': 5989,
                                     'interfaceHref':
-                                      '/api/inventory/management_interfaces/1',
+                                      '/api/v1/inventory/management_interfaces/1',
                                 },
                                 ]
                         ),
-                        resLoc(path='/api/inventory/systems/4', port=80),
+                        resLoc(path='/api/v1/inventory/systems/4', port=80),
                     ),
                     dict(zone='Local rBuilder'),
                 ),
@@ -4112,7 +4122,7 @@ class SystemEventProcessing2TestCase(XMLTestCase):
                 ('poll_wmi',
                     (
                         wmiParams(**wmiDict),
-                        resLoc(path='/api/inventory/systems/4', port=80),
+                        resLoc(path='/api/v1/inventory/systems/4', port=80),
                     ),
                     dict(zone='Local rBuilder'),
                 ),
@@ -4145,7 +4155,7 @@ class SystemEventProcessing2TestCase(XMLTestCase):
                 ('update_wmi',
                     (
                         wmiParams(**wmiDict),
-                        resLoc(path='/api/inventory/systems/4', port=80),
+                        resLoc(path='/api/v1/inventory/systems/4', port=80),
                     ),
                     dict(
                         zone='Local rBuilder',
@@ -4208,7 +4218,7 @@ class SystemEventProcessing2TestCase(XMLTestCase):
                             targetType=None,
                             instanceId=None,
                             launchWaitTime=300),
-                        resLoc(path='/api/inventory/systems/%s' %
+                        resLoc(path='/api/v1/inventory/systems/%s' %
                                 systemCim.pk,
                             port=80),
                     ),
@@ -4230,7 +4240,7 @@ class SystemEventProcessing2TestCase(XMLTestCase):
         event = self._setupEvent(jobmodels.EventType.SYSTEM_APPLY_UPDATE_IMMEDIATE)
         event.delete()
 
-        url = "/api/inventory/systems/%s/installed_software" % self.system2.pk
+        url = "inventory/systems/%s/installed_software" % self.system2.pk
         xml = """
 <installed_software>
     <trove>
@@ -4291,7 +4301,7 @@ class SystemEventProcessing2TestCase(XMLTestCase):
                             targetType=None,
                             instanceId=None,
                             launchWaitTime=300),
-                        resLoc(path='/api/inventory/systems/%s' %
+                        resLoc(path='/api/v1/inventory/systems/%s' %
                                 self.system2.pk, port=80),
                     ),
                     dict(
@@ -4461,7 +4471,7 @@ class TargetSystemImportTest(XMLTestCase):
         # Use the API, make sure the fields come out right
         system = models.System.objects.get(target_system_id='vsphere1-001')
         # Fetch XML
-        response = self._get('/api/inventory/systems/%d/' % system.system_id,
+        response = self._get('inventory/systems/%d/' % system.system_id,
             username="testuser", password="password")
         self.assertEquals(response.status_code, 200)
         obj = xobj.parse(response.content)
@@ -4530,7 +4540,7 @@ class TargetSystemImportTest(XMLTestCase):
 
     def testGetSystemWithTarget(self):
         system = models.System.objects.get(target_system_id='vsphere1-002')
-        url = '/api/inventory/systems/%s' % system.pk
+        url = 'inventory/systems/%s' % system.pk
         response = self._get(url, username='testuser', password='password')
         self.failUnlessEqual(response.status_code, 200)
         self.assertXMLEquals(response.content, testsxml.system_with_target,
@@ -4598,7 +4608,7 @@ class CollectionTest(XMLTestCase):
         return systems
 
     def testGetDefaultCollection(self):
-        response = self._get('/api/inventory/systems/',
+        response = self._get('inventory/systems/',
             username="admin", password="password")
         self.assertXMLEquals(response.content, testsxml.systems_collection_xml)
         xobjModel = xobj.parse(response.content)
@@ -4609,13 +4619,13 @@ class CollectionTest(XMLTestCase):
         self.assertEquals(systems.end_index, '9')
         self.assertEquals(systems.num_pages, '21')
         self.assertTrue(systems.next_page.endswith(
-            '/api/inventory/systems;start_index=10;limit=10'))
+            '/api/v1/inventory/systems;start_index=10;limit=10'))
         self.assertEquals(systems.previous_page, '')
         self.assertEquals(systems.order_by, '')
         self.assertEquals(systems.filter_by, '')
 
     def testGetNextPage(self):
-        response = self._get('/api/inventory/systems/',
+        response = self._get('inventory/systems/',
             username="admin", password="password")
         xobjModel = xobj.parse(response.content)
         systems = xobjModel.systems
@@ -4629,14 +4639,14 @@ class CollectionTest(XMLTestCase):
         self.assertEquals(systems.end_index, '19')
         self.assertEquals(systems.num_pages, '21')
         self.assertTrue(systems.next_page.endswith(
-            '/api/inventory/systems;start_index=20;limit=10'))
+            '/api/v1/inventory/systems;start_index=20;limit=10'))
         self.assertTrue(systems.previous_page.endswith(
-            '/api/inventory/systems;start_index=0;limit=10'))
+            '/api/v1/inventory/systems;start_index=0;limit=10'))
         self.assertEquals(systems.order_by, '')
         self.assertEquals(systems.filter_by, '')
 
     def testGetPreviousPage(self):
-        response = self._get('/api/inventory/systems/',
+        response = self._get('inventory/systems/',
             username="admin", password="password")
         xobjModel = xobj.parse(response.content)
         systems = xobjModel.systems
@@ -4654,80 +4664,80 @@ class CollectionTest(XMLTestCase):
         self.assertEquals(systems.end_index, '9')
         self.assertEquals(systems.num_pages, '21')
         self.assertTrue(systems.next_page.endswith(
-            '/api/inventory/systems;start_index=10;limit=10'))
+            '/api/v1/inventory/systems;start_index=10;limit=10'))
         self.assertEquals(systems.previous_page, '')
         self.assertEquals(systems.order_by, '')
         self.assertEquals(systems.filter_by, '')
 
     def testOrderBy(self):
-        systems = self.xobjResponse('/api/inventory/systems;order_by=name')
+        systems = self.xobjResponse('/api/v1/inventory/systems;order_by=name')
         self.assertEquals([x.name.strip('System name ') for x in systems.system],
             ['10', '100', '101', '102', '103', '104', '105', '106', '107', '108'])
         self.assertEquals(systems.id,
-            'http://testserver/api/inventory/systems;start_index=0;limit=10;order_by=name')
+            'http://testserver/api/v1/inventory/systems;start_index=0;limit=10;order_by=name')
         self.assertEquals(systems.next_page,
-            'http://testserver/api/inventory/systems;start_index=10;limit=10;order_by=name')
+            'http://testserver/api/v1/inventory/systems;start_index=10;limit=10;order_by=name')
         self.assertEquals(systems.order_by, 'name')
-        systems = self.xobjResponse('/api/inventory/systems;order_by=-name')
+        systems = self.xobjResponse('/api/v1/inventory/systems;order_by=-name')
         self.assertEquals([x.name.strip('System name ') for x in systems.system],
             ['rPath Update Servic', '99', '98', '97', '96', '95', '94', '93', '92', '91'])
         self.assertEquals(systems.id,
-            'http://testserver/api/inventory/systems;start_index=0;limit=10;order_by=-name')
+            'http://testserver/api/v1/inventory/systems;start_index=0;limit=10;order_by=-name')
         self.assertEquals(systems.next_page,
-            'http://testserver/api/inventory/systems;start_index=10;limit=10;order_by=-name')
+            'http://testserver/api/v1/inventory/systems;start_index=10;limit=10;order_by=-name')
         self.assertEquals(systems.order_by, '-name')
 
     def testFilterBy(self):
         systems = self.xobjResponse(
-            '/api/inventory/systems;filter_by=[name,LIKE,3]')
+            '/api/v1/inventory/systems;filter_by=[name,LIKE,3]')
         self.assertEquals([x.name.strip('System name ') for x in systems.system],
             [u'3', u'13', u'23', u'30', u'31', u'32', u'33', u'34', u'35', u'36'])
         self.assertEquals(systems.id,
-            'http://testserver/api/inventory/systems;start_index=0;limit=10;filter_by=[name,LIKE,3]')
+            'http://testserver/api/v1/inventory/systems;start_index=0;limit=10;filter_by=[name,LIKE,3]')
         self.assertEquals(systems.next_page,
-            'http://testserver/api/inventory/systems;start_index=10;limit=10;filter_by=[name,LIKE,3]')
+            'http://testserver/api/v1/inventory/systems;start_index=10;limit=10;filter_by=[name,LIKE,3]')
         self.assertEquals(systems.filter_by,
             '[name,LIKE,3]')
         systems = self.xobjResponse(
-            '/api/inventory/systems;filter_by=[name,NOT_LIKE,3]')
+            '/api/v1/inventory/systems;filter_by=[name,NOT_LIKE,3]')
         self.assertEquals([x.name.strip('System name ') for x in systems.system],
             [u'rPath Update Servic', u'4', u'5', u'6', u'7', u'8', u'9', u'10', u'11', u'12'])
         self.assertEquals(systems.id,
-            'http://testserver/api/inventory/systems;start_index=0;limit=10;filter_by=[name,NOT_LIKE,3]')
+            'http://testserver/api/v1/inventory/systems;start_index=0;limit=10;filter_by=[name,NOT_LIKE,3]')
         self.assertEquals(systems.next_page,
-            'http://testserver/api/inventory/systems;start_index=10;limit=10;filter_by=[name,NOT_LIKE,3]')
+            'http://testserver/api/v1/inventory/systems;start_index=10;limit=10;filter_by=[name,NOT_LIKE,3]')
         self.assertEquals(systems.filter_by,
             '[name,NOT_LIKE,3]')
         systems = self.xobjResponse(
-            '/api/inventory/systems;filter_by=[name,NOT_LIKE,3],[description,NOT_LIKE,Update]')
+            '/api/v1/inventory/systems;filter_by=[name,NOT_LIKE,3],[description,NOT_LIKE,Update]')
         self.assertEquals([x.name.strip('System name ') for x in systems.system],
             [u'4', u'5', u'6', u'7', u'8', u'9', u'10', u'11', u'12', u'14'])
         self.assertEquals(systems.id,
-            'http://testserver/api/inventory/systems;start_index=0;limit=10;filter_by=[name,NOT_LIKE,3],[description,NOT_LIKE,Update]')
+            'http://testserver/api/v1/inventory/systems;start_index=0;limit=10;filter_by=[name,NOT_LIKE,3],[description,NOT_LIKE,Update]')
         self.assertEquals(systems.next_page,
-            'http://testserver/api/inventory/systems;start_index=10;limit=10;filter_by=[name,NOT_LIKE,3],[description,NOT_LIKE,Update]')
+            'http://testserver/api/v1/inventory/systems;start_index=10;limit=10;filter_by=[name,NOT_LIKE,3],[description,NOT_LIKE,Update]')
         self.assertEquals(systems.filter_by,
             '[name,NOT_LIKE,3],[description,NOT_LIKE,Update]')
 
     def testOrderAndFilterBy(self):
         systems = self.xobjResponse(
-            '/api/inventory/systems;filter_by=[name,LIKE,3];order_by=-name')
+            '/api/v1/inventory/systems;filter_by=[name,LIKE,3];order_by=-name')
         self.assertEquals([x.name.strip('System name ') for x in systems.system],
             [u'93', u'83', u'73', u'63', u'53', u'43', u'39', u'38', u'37', u'36'])
         self.assertEquals(systems.id,
-            'http://testserver/api/inventory/systems;start_index=0;limit=10;order_by=-name;filter_by=[name,LIKE,3]')
+            'http://testserver/api/v1/inventory/systems;start_index=0;limit=10;order_by=-name;filter_by=[name,LIKE,3]')
         self.assertEquals(systems.next_page,
-            'http://testserver/api/inventory/systems;start_index=10;limit=10;order_by=-name;filter_by=[name,LIKE,3]')
+            'http://testserver/api/v1/inventory/systems;start_index=10;limit=10;order_by=-name;filter_by=[name,LIKE,3]')
         self.assertEquals(systems.filter_by,
             '[name,LIKE,3]')
         self.assertEquals(systems.order_by,
             '-name')
         systems = self.xobjResponse(
-            '/api/inventory/systems;order_by=-name;filter_by=[name,LIKE,3]')
+            '/api/v1/inventory/systems;order_by=-name;filter_by=[name,LIKE,3]')
         self.assertEquals(systems.id,
-            'http://testserver/api/inventory/systems;start_index=0;limit=10;order_by=-name;filter_by=[name,LIKE,3]')
+            'http://testserver/api/v1/inventory/systems;start_index=0;limit=10;order_by=-name;filter_by=[name,LIKE,3]')
         self.assertEquals(systems.next_page,
-            'http://testserver/api/inventory/systems;start_index=10;limit=10;order_by=-name;filter_by=[name,LIKE,3]')
+            'http://testserver/api/v1/inventory/systems;start_index=10;limit=10;order_by=-name;filter_by=[name,LIKE,3]')
         self.assertEquals(systems.filter_by,
             '[name,LIKE,3]')
         self.assertEquals(systems.order_by,
@@ -4735,9 +4745,9 @@ class CollectionTest(XMLTestCase):
         self.assertEquals([x.name.strip('System name ') for x in systems.system],
             [u'93', u'83', u'73', u'63', u'53', u'43', u'39', u'38', u'37', u'36'])
         self.assertEquals(systems.id,
-            'http://testserver/api/inventory/systems;start_index=0;limit=10;order_by=-name;filter_by=[name,LIKE,3]')
+            'http://testserver/api/v1/inventory/systems;start_index=0;limit=10;order_by=-name;filter_by=[name,LIKE,3]')
         self.assertEquals(systems.next_page,
-            'http://testserver/api/inventory/systems;start_index=10;limit=10;order_by=-name;filter_by=[name,LIKE,3]')
+            'http://testserver/api/v1/inventory/systems;start_index=10;limit=10;order_by=-name;filter_by=[name,LIKE,3]')
         self.assertEquals(systems.filter_by,
             '[name,LIKE,3]')
         self.assertEquals(systems.order_by,
@@ -4745,24 +4755,24 @@ class CollectionTest(XMLTestCase):
 
     def testLimit(self):
         systems = self.xobjResponse(
-            '/api/inventory/systems;limit=5')
+            '/api/v1/inventory/systems;limit=5')
         self.assertEquals([x.name.strip('System name ') for x in systems.system],
             [u'rPath Update Servic', u'3', u'4', u'5', u'6'])
         self.assertEquals(systems.id,
-            'http://testserver/api/inventory/systems;start_index=0;limit=5')
+            'http://testserver/api/v1/inventory/systems;start_index=0;limit=5')
         self.assertEquals(systems.next_page,
-            'http://testserver/api/inventory/systems;start_index=5;limit=5')
+            'http://testserver/api/v1/inventory/systems;start_index=5;limit=5')
         self.assertEquals(systems.limit, '5')
 
     def testOrderAndFilterAndLimitBy(self):
         systems = self.xobjResponse(
-            '/api/inventory/systems;limit=5;filter_by=[name,LIKE,3];order_by=-name')
+            '/api/v1/inventory/systems;limit=5;filter_by=[name,LIKE,3];order_by=-name')
         self.assertEquals([x.name.strip('System name ') for x in systems.system],
             [u'93', u'83', u'73', u'63', u'53'])
         self.assertEquals(systems.id,
-            'http://testserver/api/inventory/systems;start_index=0;limit=5;order_by=-name;filter_by=[name,LIKE,3]')
+            'http://testserver/api/v1/inventory/systems;start_index=0;limit=5;order_by=-name;filter_by=[name,LIKE,3]')
         self.assertEquals(systems.next_page,
-            'http://testserver/api/inventory/systems;start_index=5;limit=5;order_by=-name;filter_by=[name,LIKE,3]')
+            'http://testserver/api/v1/inventory/systems;start_index=5;limit=5;order_by=-name;filter_by=[name,LIKE,3]')
         self.assertEquals(systems.limit,
             '5')
         self.assertEquals(systems.filter_by,
@@ -4772,7 +4782,7 @@ class CollectionTest(XMLTestCase):
 
     def testFilterByBoolean(self):
         systems = self.xobjResponse(
-            '/api/inventory/systems;filter_by=[local_uuid,IS_NULL,True]')
+            '/api/v1/inventory/systems;filter_by=[local_uuid,IS_NULL,True]')
         # System 50 and the Update Service are the only one set up with a null
         # local_uuid in the fixture
         self.assertEquals([x.system_id for x in systems.system],

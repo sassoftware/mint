@@ -37,7 +37,7 @@ class PackagesTestCase(XMLTestCase):
 
     def testAddPackage(self):
         # Create a new package
-        response = self._post('/api/packages/',
+        response = self._post('packages/',
             data=testsxml.package_post_xml,
             username="admin", password="password")
         self.assertEquals(200, response.status_code)
@@ -49,7 +49,7 @@ class PackagesTestCase(XMLTestCase):
 
     def testAddPackageVersion(self):
         # create package version
-        r = self._post('/api/packages/1/package_versions/',
+        r = self._post('packages/1/package_versions/',
             data=testsxml.package_version_post_xml,
             username="admin", password="password")
         self.assertEquals(200, r.status_code)
@@ -61,7 +61,7 @@ class PackagesTestCase(XMLTestCase):
         self.assertEquals(True, pv.consumable)
 
         # now add an url
-        r = self._post('/api/package_versions/5/urls/',
+        r = self._post('package_versions/5/urls/',
             data=testsxml.package_version_url_post_xml,
             username="admin", password="password")
         self.assertEquals(200, r.status_code)
@@ -70,7 +70,7 @@ class PackagesTestCase(XMLTestCase):
             pv.package_version_urls.all()[3].url)
 
         # add another url
-        r = self._post('/api/package_versions/5/urls/',
+        r = self._post('package_versions/5/urls/',
             data=testsxml.package_version_url_post_xml2,
             username="admin", password="password")
         self.assertEquals(200, r.status_code)
@@ -83,7 +83,7 @@ class PackagesTestCase(XMLTestCase):
         pkg = models.Package.objects.get(pk=1)
         # change name from apache to Apache and change desciption
         # from Apache Web Server (httpd) to Apache Renamed
-        r = self._put('/api/packages/1',
+        r = self._put('packages/1',
             data=testsxml.package_put_xml,
             username='admin', password='password')
         updatedPkg = models.Package.objects.get(pk=1)
@@ -100,7 +100,7 @@ class PackagesTestCase(XMLTestCase):
         self.assertEquals(True, pv.consumable)
         # Change consumable from true to false and
         # change name from 3.0 to 3.1
-        r = self._put('/api/package_versions/1',
+        r = self._put('package_versions/1',
                  data=testsxml.package_version_put_xml,
                  username="admin", password="password")
         self.assertEquals(200, r.status_code)         
@@ -110,7 +110,7 @@ class PackagesTestCase(XMLTestCase):
         
     def testGetPackage(self):
         pkg = models.Package.objects.get(pk=1)
-        pkg_gotten = self.xobjResponse('/api/packages/1')
+        pkg_gotten = self.xobjResponse('packages/1')
         # p.package_id returns an int so cast to unicode string
         self.assertEquals(unicode(pkg.package_id), pkg_gotten.package_id)
         self.assertEquals(pkg.name, pkg_gotten.name)
@@ -118,12 +118,12 @@ class PackagesTestCase(XMLTestCase):
         
     def testGetPackages(self):
         pkgs = models.Packages.objects.all()
-        pkgs_gotten = self.xobjResponse('/api/packages/')
+        pkgs_gotten = self.xobjResponse('packages/')
         self.assertEquals(len(list(pkgs)), len(pkgs_gotten))
     
     def testGetPackageVersion(self):
         pv = models.PackageVersion.objects.get(pk=1)
-        pv_gotten = self.xobjResponse('/api/package_versions/1')
+        pv_gotten = self.xobjResponse('package_versions/1')
         self.assertEquals(unicode(pv.package_version_id), pv_gotten.package_version_id)
         self.assertEquals(pv.name, pv_gotten.name)
         self.assertEquals(pv.description, pv_gotten.description)
@@ -136,24 +136,24 @@ class PackagesTestCase(XMLTestCase):
       
     def testGetPackageVersions(self):
         pvs = models.PackageVersions.objects.all()
-        pvs_gotten = self.xobjResponse('/api/package_versions/')
+        pvs_gotten = self.xobjResponse('package_versions/')
         self.assertEquals(len(list(pvs)), len(pvs_gotten))
         
     def testGetPackageUrl(self):
         pUrl = models.PackageVersionUrl.objects.get(pk=1)
-        pUrl_gotten = self.xobjResponse('/api/package_versions/1/urls/1')
+        pUrl_gotten = self.xobjResponse('package_versions/1/urls/1')
         self.assertEquals(pUrl.url, pUrl_gotten.url)
         
     def testGetPackageUrls(self):
         pUrls = models.PackageVersionUrls.objects.all()
-        pUrls_gotten = self.xobjResponse('/api/package_versions/1/urls/')
+        pUrls_gotten = self.xobjResponse('package_versions/1/urls/')
         self.assertEquals(len(list(pUrls)), len(pUrls_gotten))
     
 
     def testCommitPackageVersion(self):
         client.Client.pc_packageSourceCommit._mock.setDefaultReturn(
             ("testjobuuid", None))
-        response = self._post('/api/package_versions/6/package_version_jobs',
+        response = self._post('package_versions/6/package_version_jobs',
             data=testsxml.package_version_commit_job_post_xml,
             username='admin', password='password')
         self.assertEquals(200, response.status_code)         
@@ -170,7 +170,7 @@ class PackagesTestCase(XMLTestCase):
 
         # Now GET the job and verify it
         response = self._get(
-            '/api/package_versions/6/package_version_jobs/%s' % \
+            'package_versions/6/package_version_jobs/%s' % \
             job.package_version_job_id,
             username="admin", password="password")
         self.assertEquals(200, response.status_code)
