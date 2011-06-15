@@ -75,7 +75,6 @@ class VersionsTestCase(XMLTestCase):
   <products id="http://testserver/api/products"/>
   <projects id="http://testserver/api/projects"/>
   <query_sets id="http://testserver/api/v1/query_sets"/>
-  <registration id="http://testserver/api/registration"/>
   <reports id="http://testserver/api/v1/reports"/>
   <users id="http://testserver/api/v1/users"/>
   <version_info>
