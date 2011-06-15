@@ -162,8 +162,8 @@ class UsersManager(basemanager.BaseManager):
         if user_id == str(self.user.user_id):
             raise self.exceptions.UserSelfRemovalException()
         cu = connection.cursor()
-        ret = cu.execute("DELETE FROM users WHERE userid = %s", [ user_id ])
-        if not ret.rowcount:
+        cu.execute("DELETE FROM users WHERE userid = %s", [ user_id ])
+        if not cu.rowcount:
             raise self.exceptions.UserNotFoundException()
 
     # def cancelUserAccount(self, username):
