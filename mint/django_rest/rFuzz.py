@@ -79,39 +79,6 @@ class FzIntegrityError(IntegrityError):
                     return code, result.groupdict().get('column_name')
             else:
                 import pdb; pdb.set_trace()
-                pass
-
-
-def validate(fzMdl):
-    
-    passed = []
-    failed = []
-    
-    def _validate(fzMdl):    
-        p = {}
-        f = {}
-        for fname, field in fzMdl.fields.items():
-            attr = {fname:getattr(fzMdl.instance, fname)}
-            try:
-                qs = fzMdl.instance.__class__.objects.filter(**attr)
-                p[fname] = (attr, qs)
-            except:
-                f[fname] = (attr, field)
-        
-        passed.append((fzMdl.instance, p))
-        failed.append((fzMdl.instance, f))
-        
-        for fname, tpl in p.items():
-            _qs = tpl[1]
-            for mdl in _qs:
-                if mdl not in [psd[0] for psd in passed]:
-                    _validate(FuzzyModel(mdl))
-    try:
-        _validate(fzMdl)
-    except Exception, e:
-        failed.append((fzMdl.instance, e))
-    
-    return passed, failed
 
 
 class FuzzyModel(object):
