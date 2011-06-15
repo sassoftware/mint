@@ -327,5 +327,19 @@ class UsersTestCase(XMLTestCase):
         user = self.xobjResponse('users/2000')
         self.failUnlessEqual(user.is_admin, "false")
 
+    def testGetSession(self):
+        # Unauthenticated. We get back an empty <user/>
+        response = self._get('session')
+        self.failUnlessEqual(response.status_code, 200)
+        sess = self.toXObj(response.content)
+        self.assertXMLEquals(xobj.toxml(sess.user, xml_declaration=False),
+            "<user/>")
+
+        # Authenticated
+        response = self._get('session', username="testuser", password="password")
+        self.failUnlessEqual(response.status_code, 200)
+        sess = self.toXObj(response.content)
+        self.failUnlessEqual(sess.user.user_id, '2000')
+
     def testGetUserGroupMembers(self):
         pass

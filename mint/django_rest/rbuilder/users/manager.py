@@ -4,6 +4,8 @@
 # All Rights Reserved
 #
 
+from xobj import xobj
+
 from mint.django_rest.rbuilder import errors
 from mint.django_rest.rbuilder.manager import basemanager
 from mint.django_rest.rbuilder.users import models
@@ -166,6 +168,19 @@ class UsersManager(basemanager.BaseManager):
         if not cu.rowcount:
             raise self.exceptions.UserNotFoundException()
 
+    @exposed
+    def getSessionInfo(self):
+        session = models.Session()
+        if self.user:
+            session.user = [ self.user ]
+        else:
+            session.user = [ self._NoUser ]
+        return session
+
+    class _UserClass(object):
+        _xobj = xobj.XObjMetadata(tag='user')
+    _NoUser = _UserClass()
+
     # def cancelUserAccount(self, username):
     #     user_id = self.getUserId(username)
     #     self._ensureNoOrphans(user_id)
@@ -178,8 +193,8 @@ class UsersManager(basemanager.BaseManager):
             
     def _ensureNoOrphans(self, user_id):
         pass
-    
-    
+
+
 class UserGroupsManager(basemanager.BaseManager):
     @exposed
     def getUserGroup(self, user_group_id):

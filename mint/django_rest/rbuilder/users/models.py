@@ -145,6 +145,16 @@ class UserGroupMember(modellib.XObjIdModel):
     
     _xobj = xobj.XObjMetadata(tag='user_group_member')
 
+class Session(modellib.XObjIdModel):
+    class Meta:
+        abstract = True
+    _xobj = xobj.XObjMetadata(tag='session', attributes = {'id':str})
+    view_name = 'Session'
+
+    # Blargh. If I add user as a regular field, it won't get serialized,
+    # because get_field_dict() won't pick it up. So we cheat here and
+    # make user a list.
+    list_fields = [ 'user' ]
 
 for mod_obj in sys.modules[__name__].__dict__.values():
     if hasattr(mod_obj, '_xobj'):

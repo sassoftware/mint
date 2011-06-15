@@ -87,5 +87,6 @@ class ApiVersion(modellib.XObjIdModel):
     query_sets = modellib.HrefField("query_sets")
     reports = modellib.HrefField("reports")
     users = modellib.HrefField("users")
+    session = modellib.HrefField("session")
     config_info = ConfigInfo()
     version_info = VersionInfo()

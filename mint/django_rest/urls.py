@@ -399,6 +399,9 @@ urlpatterns = patterns('',
 #         packageviews.PackageBuildJobService(),
 #         name='PackageBuildJob'),
 # 
+    URL(r'session/?$',
+        usersviews.SessionService(),
+        name='Session'),
     # Users
     URL(r'users/?$',
         usersviews.UsersService(),
