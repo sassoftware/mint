@@ -2576,6 +2576,8 @@ def createSchema(db, doCommit=True, cfg=None):
     changed |= _createPKI(db)
     changed |= _createQuerySetSchema(db)
     changed |= _createInfrastructureSystemsQuerySetSchema(db)
+    changed |= _createWindowsBuildSystemsQuerySet(db)
+    changed |= _createUpdateSystemsQuerySet(db)
     changed |= _createChangeLogSchema(db)
     changed |= _createPackageSchema(db)
 
