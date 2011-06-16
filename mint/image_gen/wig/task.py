@@ -4,25 +4,26 @@
 
 import logging
 import hashlib
+import itertools
 import json
 import os
 import re
 import StringIO
-import tempfile
 import time
-import zipfile
 from collections import namedtuple
 from conary import callbacks
 from conary import conarycfg
 from conary import conaryclient
+from conary import files as cny_files
+from conary import trove as cny_trove
 from conary import trovetup
 from conary import versions as cny_versions
 from conary.deps import deps as cny_deps
-from conary.lib import util
 from lxml import builder
 from lxml import etree
 from restlib import client as rl_client
 from rmake3.worker import plug_worker
+from xobj import xobj
 
 from jobslave import job_data
 from mint import buildtypes
@@ -30,8 +31,6 @@ from mint.image_gen import constants as iconst
 from mint.image_gen.util import FileWithProgress
 from mint.image_gen.wig import backend
 from mint.image_gen.wig import bootable
-from mint.image_gen.wig import install_job
-from mint.lib.subprocutil import logCall
 
 log = logging.getLogger('wig')
 
@@ -64,42 +63,29 @@ STEP_LIST = [
 class WigTask(plug_worker.TaskHandler):
 
     taskType = iconst.WIG_TASK
-
-    def run(self):
-        data = job_data.JobData(json.loads(self.getData()))
-        imageType = data['buildType']
-        if imageType == buildtypes.WINDOWS_ISO:
-            genClass = IsoGenerator
-        elif imageType == buildtypes.WINDOWS_WIM:
-            genClass = WimGenerator
-        elif imageType in (buildtypes.VMWARE_IMAGE,
-                buildtypes.VMWARE_ESX_IMAGE):
-            genClass = ConvertedImageGenerator
-        else:
-            raise TypeError("Invalid Windows image type %s" % imageType)
-        generator = genClass(self, data)
-        try:
-            generator.run()
-        finally:
-            generator.destroy()
-
-
-class ImageGenerator(object):
-    """
-    Base class for all Windows image generators.
-    """
-
     tempDir = '/srv/rbuilder/tmp'
 
-    def __init__(self, parent, jobData):
-        self.parent = parent
-        self.jobData = jobData
-        self.installJob = None
-        self.workDir = tempfile.mkdtemp(dir=self.tempDir, prefix='imagegen-')
+    def run(self):
+        self.setConfiguration()
+        self.makeJob()
 
-    def destroy(self):
-        #util.rmtree(self.workDir)
-        pass
+        if not self.runJob():
+            return
+
+        if self.imageType in NON_BOOTABLE_TYPES:
+            # WIMs and ISOs can be uploaded directly
+            if self.imageType == buildtypes.WINDOWS_ISO:
+                kind = 'iso'
+                title = "Installable CD/DVD (ISO)"
+            else:
+                kind = 'wim'
+                title = "Windows Image (WIM)"
+            size, fobj = self.wigClient.getResults(kind)
+            outputName = '%s.%s' % (self.jobData['baseFileName'], kind)
+            self.postResults([(fobj, size, outputName, title)])
+        else:
+            self.convert()
+        self.sendStatus(iconst.WIG_JOB_DONE, "Image built")
 
     def sendStatus(self, code, text, extraProgress=''):
         if code in self.stepList:
@@ -111,11 +97,10 @@ class ImageGenerator(object):
             if extraProgress:
                 progress += ';' + extraProgress
             text += ' {%s}' % (progress,)
-        log.info("Sending status: %s %s", code, text)
-        self.parent.sendStatus(code, text)
+        plug_worker.TaskHandler.sendStatus(self, code, text)
 
     def setConfiguration(self):
-        data = self.jobData
+        data = self.jobData = job_data.JobData(json.loads(self.getData()))
 
         # Image trove tuple
         name = data['troveName'].encode('ascii')
@@ -152,10 +137,6 @@ class ImageGenerator(object):
         ccfg.dbPath = ':memory:'
         self.conaryClient = conaryclient.ConaryClient(self.conaryCfg)
 
-        # Install job
-        self.installJob = install_job.InstallJob(self.conaryClient,
-                [self.troveTup])
-
         # WIG service
         self.wigServiceUrl = data['windowsBuildService']
         self.wigClient = backend.WigBackendClient(self.wigServiceUrl)
@@ -167,342 +148,11 @@ class ImageGenerator(object):
                 data['buildId'],)
         self.imageToken = data['outputToken'].encode('ascii')
 
+        # Finalize the list of steps we will perform based on the image type
+        # chosen.
         self.stepList = STEP_LIST[:]
-        self.setStepList()
-
-    def _post(self, method, path, contentType='application/xml', body=None):
-        # FIXME: copypasta from jobslave, obsoleted by using robj in
-        # postResults()
-        headers = {
-                'Content-Type': contentType,
-                'X-rBuilder-OutputToken': self.imageToken,
-                }
-        url = self.imageBase + path
-
-        client = rl_client.Client(url, headers)
-        client.connect()
-        return client.request(method, body)
-
-    def _postFileObject(self, method, targetName, fobj, digest):
-        # FIXME: copypasta from jobslave
-        headers = {
-                'Content-Type': 'application/octet-stream',
-                'X-rBuilder-OutputToken': self.imageToken,
-                }
-        url = self.uploadBase + targetName
-
-        client = FilePutter(url, headers)
-        client.connect()
-        return client.putFileObject(method, fobj, digest)
-
-    def sendLog(self, data):
-        try:
-            self._post('POST', 'buildLog', contentType='text/plain', body=data)
-        except rl_client.ResponseError, err:
-            if err.status != 204:  # No Content
-                raise
-
-    def _postOneResult(self, fobj, size, name, title, seq, total):
-        """Upload a single file and return the XML fragment for the rBuilder
-        API.
-        """
-        statusString = "Transferring image result " + name
-        progressString = "%d/%d;%%d%%%%" % (seq, total)
-        self.sendStatus(iconst.WIG_JOB_UPLOADING, statusString,
-                progressString % 0)
-
-        # Report progress for file upload.
-        def callback(transferred):
-            if size:
-                percent = int(100.0 * transferred / size)
-            else:
-                percent = 0
-            self.sendStatus(iconst.WIG_JOB_UPLOADING,
-                    "Transferring image result", "%d%%" % (percent,))
-        wrapper = FileWithProgress(fobj, callback)
-
-        # Also calculate SHA-1 digest as it uploads.
-        ctx = hashlib.sha1()
-        self._postFileObject('PUT', name, wrapper, ctx)
-
-        E = builder.ElementMaker()
-        fileXml = E.file(
-            E.title(title),
-            E.size(str(size)),
-            E.sha1(ctx.hexdigest()),
-            E.fileName(name),
-            )
-        return fileXml
-
-    def postResults(self, outputFiles):
-        """Upload several files and post the file list to rBuilder.
-
-        C{outputFiles} should be a list of 4-tuples like
-        C{(fobj, size, name, title)}.
-        """
-        xmlFiles = []
-        for n, (fobj, size, name, title) in enumerate(outputFiles):
-            fileXml = self._postOneResult(fobj, size, name, title, n,
-                    len(outputFiles))
-            xmlFiles.append(fileXml)
-
-        E = builder.ElementMaker()
-        root = E.files(*xmlFiles)
-        self._post('PUT', 'files', body=etree.tostring(root))
-
-
-class IsoGenerator(ImageGenerator):
-
-    def run(self):
-        self.setConfiguration()
-        self.runJob()
-        self.upload()
-        self.sendStatus(iconst.WIG_JOB_DONE, "Image built")
-
-    def setStepList(self):
-        self.stepList = [
-                iconst.WIG_JOB_QUEUED,
-                iconst.WIG_JOB_FETCHING,
-                iconst.WIG_JOB_SENDING,
-                iconst.WIG_JOB_RUNNING,
-                iconst.WIG_JOB_UPLOADING,
-                iconst.WIG_JOB_DONE,
-                ]
-
-    def runJob(self):
-        E = builder.ElementMaker()
-
-        self.sendStatus(iconst.WIG_JOB_FETCHING, "Retrieving image contents")
-        self.installJob.load()
-
-        isoDir = os.path.join(self.workDir, 'iso')
-        updateDir = os.path.join(isoDir, 'rPath/DeploymentUpdate')
-
-        # Gather a list of files to fetch so that we fail fast if something is
-        # missing and so that the progress reporting has an accurate total.
-        files = self.installJob.getFilesByClass(install_job.WIMData)
-        if not files:
-            raise RuntimeError("A WIM must be present in order to build "
-                    "Windows images")
-        self.wimData = files[0]
-
-        files = self.installJob.getRegularFilesByName('/platform-isokit.zip')
-        if not files:
-            raise RuntimeError("A platform-isokit.zip must be present in "
-                    "order to build Installable ISO images")
-        self.isokitData = files[0]
-
-        msis = self.installJob.getFilesByClass(install_job.MSIData)
-        self.fileCount = 2 + len(msis)
-        self.filesTransferred = 0
-
-        # Download isokit first and extract the basic ISO directory structure.
-        self.unpackIsokit()
-
-        osName = self.wimData.version
-        if osName.startswith('2003'):
-            # XXX FIXME
-            raise NotImplementedError
-        else:
-            # 2008, 2008R2
-            winFirstBootPath = 'C:\\Windows\\Setup\\Scripts\\SetupComplete.cmd'
-            winUpdateDir = 'C:\\ProgramData\\rPath\\Updates\\DeploymentUpdate'
-
-        # Download WIM directly into the output directory.
-        progressCallback = self._startFileProgress(self.wimData)
-        outF = open(isoDir + '/sources/image.wim', 'wb')
-        self.wimData.storeContents(outF, progressCallback)
-        outF.close()
-
-        # Download and store MSIs.
-        criticalPackageList = []
-        packageList = []
-        rtisPath = None
-        for msiData in msis:
-            name = os.path.basename(msiData.fileTup.path)
-
-            # Append package to either the critical or regular package list.
-            if msiData.isCritical():
-                targetList = criticalPackageList
-            else:
-                targetList = packageList
-            pkgXml = msiData.getPackageXML(seqNum=len(targetList))
-            targetList.append(pkgXml)
-
-            # Store MSI directly to the output directory.
-            relPath = os.path.join(msiData.getProductCode(), name)
-            destPath = os.path.join(updateDir, relPath)
-            util.mkdirChain(os.path.dirname(destPath))
-
-            outF = open(destPath, 'wb')
-            progressCallback = self._startFileProgress(msiData)
-            msiData.storeContents(outF, progressCallback)
-            outF.close()
-
-            # Remember the path to rTIS so it can be pre-installed on first
-            # boot.
-            if msiData.troveTuple[0].lower() == 'rtis:msi':
-                rtisPath = relPath
-
-        # Write batch script to copy MSIs and prepare rTIS bootstrap.
-        fobj = open(isoDir + '/rPath/copymsi.bat', 'w')
-        fobj.write('xcopy /e /y '
-                '%%binpath%%\\DeploymentUpdate %(winUpdateDir)s\\\r\n'
-                % dict(winUpdateDir=winUpdateDir))
-        fobj.write('md %(winFirstBootDir)s\r\n'
-                % dict(winFirstBootDir=winFirstBootPath.rsplit('\\', 1)[0]))
-        fobj.write('copy /y %%binpath%%\\firstboot.bat '
-                '"%(winFirstBootPath)s"\r\n'
-                % dict(winFirstBootPath=winFirstBootPath))
-        fobj.close()
-
-        # Write first-boot script to bootstrap rTIS.
-        fobj = open(isoDir + '/rPath/firstboot.bat', 'w')
-        if rtisPath:
-            fobj.write('msiexec /i '
-                    '"%(winUpdateDir)s\\%(rtisPath)s" '
-                    '/quiet /norestart '
-                    '/l*v "%(winUpdateDir)s\\%(rtisLog)s" '
-                    '\r\n' % dict(
-                        winUpdateDir=winUpdateDir,
-                        rtisPath=rtisPath,
-                        rtisLog=rtisPath.rsplit('.', 1)[0] + '.Install.log',
-                        ))
-        fobj.close()
-
-        # Finish assembling servicing.xml and send it to the build service.
-        sysModel = 'install %s=%s\n' % (
-            self.troveTup.name, str(self.troveTup.version))
-        pollingManifest = '%s=%s[%s]\n' % (
-            self.troveTup.name, self.troveTup.version.freeze(),
-            str(self.troveTup.flavor))
-
-        jobs = []
-        if criticalPackageList:
-            jobs.append(E.updateJob(
-                    E.sequence('0'),
-                    E.logFile('install.log'),
-                    E.packages(*criticalPackageList),
-                    ))
-        if packageList:
-            jobs.append(E.updateJob(
-                    E.sequence('1'),
-                    E.logFile('install.log'),
-                    E.packages(*packageList),
-                    ))
-        root = E.update(
-            E.logFile('install.log'),
-            E.systemModel(sysModel),
-            E.pollingManifest(pollingManifest),
-            E.updateJobs(*jobs)
-            )
-        doc = etree.tostring(root)
-        fobj = open(updateDir + '/servicing.xml', 'w')
-        fobj.write(doc)
-        fobj.close()
-
-        # Build ISO
-        last = [time.time()]
-        self.sendStatus(iconst.WIG_JOB_RUNNING, "Creating ISO", "0%")
-        def _mkisofs_callback(pipe, line):
-            if '% done' in line:
-                if time.time() - last[0] < 2:
-                    return
-                last[0] = time.time()
-                percent = line.split('% done')[0].strip()
-                percent = int(float(percent))
-                self.sendStatus(iconst.WIG_JOB_RUNNING,
-                        "Creating ISO", "%d%%" % percent)
-        logCall(['mkisofs',
-            '-udf',
-            '-b', 'boot/etfsboot.com',
-            '-no-emul-boot',
-            '-f', # follow symlinks
-            '-o', self.workDir + '/output.iso',
-            isoDir,
-            ], callback=_mkisofs_callback)
-
-    def _startFileProgress(self, fileData):
-        """Report that a file transfer has started and return a callback that
-        callers can use to update the progress.
-        """
-        name = os.path.basename(fileData.fileTup.path)
-        statusString = "Transferring file " + name
-        progressString = "%d/%d;%%d%%%%" % (self.filesTransferred,
-                self.fileCount)
-        self.sendStatus(iconst.WIG_JOB_SENDING, statusString,
-                progressString % 0)
-        last = [time.time()]
-        interval = 2
-        def callback(percent):
-            now = time.time()
-            if now - last[0] < interval:
-                return
-            last[0] = now
-            self.sendStatus(iconst.WIG_JOB_SENDING, statusString,
-                    progressString % int(percent))
-        self.filesTransferred += 1
-        return callback
-
-    def unpackIsokit(self):
-        ikData = self.isokitData
-        ikPath = os.path.join(self.workDir, 'isokit.zip')
-        outF = open(ikPath, 'wb')
-        progressCallback = self._startFileProgress(ikData)
-        ikData.storeContents(outF, progressCallback)
-        outF.close()
-
-        zf = zipfile.ZipFile(ikPath, 'r')
-        for name in zf.namelist():
-            norm = os.path.normpath(name)
-            if not norm.startswith('isoKit/'):
-                raise RuntimeError("Invalid isokit.zip")
-            path = os.path.join(self.workDir, norm)
-            if name.endswith('/'):
-                util.mkdirChain(path)
-            else:
-                util.mkdirChain(os.path.dirname(path))
-                f_in = zf.open(name)
-                f_out = open(path, 'wb')
-                util.copyfileobj(f_in, f_out)
-                f_in.close()
-                f_out.close()
-        zf.close()
-
-        # Move directory structures into place
-        isoDir = os.path.join(self.workDir, 'iso')
-        ikDir = os.path.join(self.workDir, 'isoKit')
-        osName = self.wimData.version
-        os.rename(ikDir + '/ISO', isoDir)
-        os.rename(ikDir + '/os/' + osName, isoDir + '/rPath/os')
-
-    def upload(self):
-        kind = 'iso'
-        title = "Installable CD/DVD (ISO)"
-        outputName = '%s.%s' % (self.jobData['baseFileName'], kind)
-        fObj = open(self.workDir + '/output.iso', 'rb')
-        fileSize = os.fstat(fObj.fileno()).st_size
-        self.postResults([(fObj, fileSize, outputName, title)])
-
-
-class WbsGenerator(ImageGenerator):
-    """
-    Base class for generators that require use of a rPath Windows Build Service.
-    """
-
-    def run(self):
-        self.setConfiguration()
-        self.makeJob()
-
-        if not self.runJob():
-            return
-
-        self.convert()
-        self.sendStatus(iconst.WIG_JOB_DONE, "Image built")
-
-    def convert(self):
-        """Convert image to final format and upload."""
-        raise NotImplementedError
+        if self.imageType in NON_BOOTABLE_TYPES:
+            self.stepList.remove(iconst.WIG_JOB_CONVERTING)
 
     def makeJob(self):
         E = builder.ElementMaker()
@@ -624,6 +274,159 @@ class WbsGenerator(ImageGenerator):
         wrapper = FileWithProgress(fobj, sendCallback)
         self.wigClient.addFileStream(wrapper, data.kind, name, size)
 
+    def filterFiles(self, cs):
+        # Select files that can be given to the windows build service.
+        interestingFiles = []
+        fileMap = {}
+        for trvCs in cs.iterNewTroveList():
+            critical = (trvCs.getName() in CRITICAL_PACKAGES)
+
+            for pathId, path, fileId, fileVer in trvCs.getNewFileList():
+                fileStream = cs.getFileChange(None, fileId)
+                if not cny_files.frozenFileHasContents(fileStream):
+                    # No contents
+                    continue
+                if '.' not in path:
+                    # Only files with extensions are interesting
+                    continue
+                name = os.path.basename(path)
+                ext = name.split('.')[-1].lower()
+
+                fileInfo = cny_files.ThawFile(fileStream, pathId)
+                flags = fileInfo.flags
+                if (flags.isEncapsulatedContent()
+                        and not flags.isCapsuleOverride()):
+                    # No contents
+                    continue
+
+                keep, otherInfo = self.filterFile(pathId, path, ext, trvCs)
+                if not keep:
+                    continue
+
+                data = FileData(pathId, fileId, fileVer, path, ext, trvCs,
+                        fileInfo, otherInfo, critical)
+                if ext != 'reg':
+                    # Reg files are added later
+                    interestingFiles.append(data)
+                fileMap.setdefault(ext, []).append(data)
+
+        return interestingFiles, fileMap
+
+    def filterFile(self, pathId, path, ext, trvCs):
+        """Is the file interesting, and what other metadata is there?"""
+        if pathId == cny_trove.CAPSULE_PATHID:
+            # Capsule file
+            if ext == 'msi':
+                # MSI package to be installed
+                return True, trvCs.getTroveInfo().capsule.msi
+            elif ext == 'wim':
+                # Base platform WIM
+                return True, trvCs.getTroveInfo().capsule.wim
+            else:
+                log.warning("Ignoring capsule file %r -- don't know "
+                        "what it is", path)
+        else:
+            # Regular file
+            if path.lower() == '/rtis.exe':
+                # rTIS bootstrap executable
+                return True, None
+            elif ext == 'reg':
+                # rTIS bootstrap registry entry
+                return True, None
+            elif path.lower() == '/platform-isokit.zip':
+                # WinPE and associated ISO generation tools
+                if self.imageType == buildtypes.WINDOWS_ISO:
+                    return True, None
+            else:
+                log.warning("Ignoring regular file %r -- don't know "
+                        "what it is", path)
+        return False, None
+
+    def processMSI(self, data, seq, critical=False):
+        """Return install job XML for a MSI package."""
+        E = builder.ElementMaker()
+
+        # Use the digest as the name so there aren't conflicts, e.g.
+        # two different packages providing Setup.msi
+        name = data.fileInfo.contents.sha1().encode('hex') + '.msi'
+
+        # MSI install job, to be put in servicing.xml
+        trvName, trvVersion, trvFlavor = data.trvCs.getNewNameVersionFlavor()
+        manifest = '%s=%s[%s]' % (trvName, trvVersion.freeze(),
+                trvFlavor)
+        msiInfo = data.otherInfo
+        pkgXml = E.package(
+                E.type('msi'),
+                E.sequence(str(seq)),
+                E.logFile('install.log'),
+                E.operation('install'),
+                E.productCode(msiInfo.productCode()),
+                E.productName(msiInfo.name()),
+                E.productVerson(msiInfo.version()),
+                E.file(name),
+                E.manifestEntry(manifest),
+                E.previousManifestEntry(''),
+                E.critical(str(critical).lower()),
+                )
+
+        return pkgXml, name
+
+    def selectRegFile(self, fileMap):
+        wimFiles = fileMap.get('wim', [])
+        if len(wimFiles) != 1:
+            raise RuntimeError("Appliance groups must contain exactly one "
+                    "WIM capsule.")
+        wimData = wimFiles[0].otherInfo
+        imgIdx = str(wimData.volumeIndex())
+        wimXml = xobj.parse(wimData.infoXml())
+
+        images = wimXml.WIM.IMAGE
+        if not isinstance(images, list):
+            images = [images]
+        for image in images:
+            if image.INDEX == imgIdx:
+                break
+        else:
+            raise RuntimeError("Image index %s was not found." % (imgIdx,))
+
+        arch = image.WINDOWS.ARCH
+        if arch == '0':
+            archPart = 'x86'
+            vmwareSuffix = ''
+        elif arch == '9':
+            archPart = 'x64'
+            vmwareSuffix = '-64'
+        else:
+            raise RuntimeError("WIM has unsupported architecture %r" % (arch,))
+
+        version = [int(x) for x in wimData.version().split('.')][:2]
+        if version >= [6, 0]:
+            # Windows Server 2008 (and later, including R2)
+            verPart = '2008'
+            vmwareName = 'windows7srv'
+        else:
+            # Windows Server 2003
+            verPart = '2003'
+            vmwareName = 'winNetStandard'
+        self.jobData['vmwareOS'] = vmwareName + vmwareSuffix
+
+        regPath = '/%s%s.reg' % (verPart, archPart)
+        for fileData in fileMap.get('reg', []):
+            if fileData.path == regPath:
+                return fileData
+        raise RuntimeError("The rTIS package does not contain the "
+                "required registry file %r" % (regPath,))
+
+    def getTroveJobList(self):
+        """Return a set of trove install jobs in dependency order."""
+        log.info("Retrieving trove list for %s", self.troveTup)
+        job = self.conaryClient.newUpdateJob()
+        self.conaryClient.prepareUpdateJob(job,
+                [(self.troveTup.name, (None, None), (self.troveTup.version,
+                    self.troveTup.flavor), True)],
+                checkPathConflicts=False)
+        return list(itertools.chain(*job.jobs))
+
     def runJob(self):
         self.sendStatus(iconst.WIG_JOB_RUNNING, "Processing image", "0%")
         self.wigClient.startJob()
@@ -654,22 +457,37 @@ class WbsGenerator(ImageGenerator):
             return False
         return True
 
+    def _post(self, method, path, contentType='application/xml', body=None):
+        # FIXME: copypasta from jobslave, obsoleted by using robj in
+        # postResults()
+        headers = {
+                'Content-Type': contentType,
+                'X-rBuilder-OutputToken': self.imageToken,
+                }
+        url = self.imageBase + path
 
-class WimGenerator(WbsGenerator):
+        client = rl_client.Client(url, headers)
+        client.connect()
+        return client.request(method, body)
 
-    def setStepList(self):
-        self.stepList.remove(iconst.WIG_JOB_CONVERTING)
+    def _postFileObject(self, method, targetName, fobj, digest):
+        # FIXME: copypasta from jobslave
+        headers = {
+                'Content-Type': 'application/octet-stream',
+                'X-rBuilder-OutputToken': self.imageToken,
+                }
+        url = self.uploadBase + targetName
 
-    def convert(self):
-        kind = 'wim'
-        title = "Windows Image (WIM)"
-        size, fobj = self.wigClient.getResults(kind)
-        outputName = '%s.%s' % (self.jobData['baseFileName'], kind)
-        self.postResults([(fobj, size, outputName, title)])
-        self.wigClient.cleanup()
+        client = FilePutter(url, headers)
+        client.connect()
+        return client.putFileObject(method, fobj, digest)
 
-
-class ConvertedImageGenerator(WbsGenerator):
+    def sendLog(self, data):
+        try:
+            self._post('POST', 'buildLog', contentType='text/plain', body=data)
+        except rl_client.ResponseError, err:
+            if err.status != 204:  # No Content
+                raise
 
     def convert(self):
         """Fetch the VHD result, convert as needed, then upload."""
@@ -684,10 +502,58 @@ class ConvertedImageGenerator(WbsGenerator):
                 os.path.basename(path), title)
                 for (path, title) in outputPaths]
             self.postResults(outputFiles)
-            self.wigClient.cleanup()
         finally:
             converter.destroy()
 
+    def _postOneResult(self, fobj, size, name, title, seq, total):
+        """Upload a single file and return the XML fragment for the rBuilder
+        API.
+        """
+        statusString = "Transferring image result " + name
+        progressString = "%d/%d;%%d%%%%" % (seq, total)
+        self.sendStatus(iconst.WIG_JOB_UPLOADING, statusString,
+                progressString % 0)
+
+        # Report progress for file upload.
+        def callback(transferred):
+            if size:
+                percent = int(100.0 * transferred / size)
+            else:
+                percent = 0
+            self.sendStatus(iconst.WIG_JOB_UPLOADING,
+                    "Transferring image result", "%d%%" % (percent,))
+        wrapper = FileWithProgress(fobj, callback)
+
+        # Also calculate SHA-1 digest as it uploads.
+        ctx = hashlib.sha1()
+        self._postFileObject('PUT', name, wrapper, ctx)
+
+        E = builder.ElementMaker()
+        fileXml = E.file(
+            E.title(title),
+            E.size(str(size)),
+            E.sha1(ctx.hexdigest()),
+            E.fileName(name),
+            )
+        return fileXml
+
+    def postResults(self, outputFiles):
+        """Upload several files and post the file list to rBuilder.
+
+        C{outputFiles} should be a list of 4-tuples like
+        C{(fobj, size, name, title)}.
+        """
+        xmlFiles = []
+        for n, (fobj, size, name, title) in enumerate(outputFiles):
+            fileXml = self._postOneResult(fobj, size, name, title, n,
+                    len(outputFiles))
+            xmlFiles.append(fileXml)
+
+        E = builder.ElementMaker()
+        root = E.files(*xmlFiles)
+        self._post('PUT', 'files', body=etree.tostring(root))
+
+        self.wigClient.cleanup()
 
 
 # FIXME: copypasta from jobslave
