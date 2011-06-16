@@ -618,10 +618,10 @@ class ManagementInterfacesTestCase(XMLTestCase):
 
     def testGetManagementInterfacesAuth(self):
         """
-        Ensure requires auth but not admin
+        Don't require auth or admin
         """
         response = self._get('inventory/management_interfaces/')
-        self.assertEquals(response.status_code, 401)
+        self.assertEquals(response.status_code, 200)
         
         response = self._get('inventory/management_interfaces/',
             username="testuser", password="password")
