@@ -106,8 +106,11 @@ class ProductManager(manager.Manager):
         results = []
         for row in cu:
             role = row.pop('role')
-            if role is not None:
-                row['role'] = userlevels.names[role]
+            if role is None:
+                # If we got access to this product, but have no specific
+                # privileges, role is User
+                role = userlevels.USER
+            row['role'] = userlevels.names[role]
             row['name'] = cu.decode(row['name'])
             if row['description'] is not None:
                 row['description'] = cu.decode(row['description'])
@@ -127,9 +130,15 @@ class ProductManager(manager.Manager):
                      prodtype=None):
         clauses = []
         if roles is not None:
-            roles = ', '.join('%d' % userlevels.idsByName[x.lower()]
-                    for x in roles)
-            clauses.append(('m.level IN ( %s )' % roles, ()))
+            # The User role is now granted to all viewers of public projects
+            roles = set(userlevels.idsByName[x.lower()]
+                for x in roles)
+            withUser = userlevels.USER in roles
+            roles = ', '.join('%d' % x for x in sorted(roles))
+            if withUser:
+                clauses.append(('(m.level IN ( %s ) OR m.level IS NULL)' % roles, ()))
+            else:
+                clauses.append(('m.level IN ( %s )' % roles, ()))
 
         if search:
             search = search.replace('\\', '\\\\')
@@ -506,10 +515,19 @@ class ProductManager(manager.Manager):
         prodDef.saveToRepository(cclient,
                 'Product Definition commit from rBuilder\n')
 
-    def rebaseProductVersionPlatform(self, fqdn, version, platformLabel):
+    def rebaseProductVersionPlatform(self, fqdn, version, platformVersion):
         pd = self.getProductVersionDefinition(fqdn, version)
         cclient = self.reposMgr.getUserClient()
-        pd.rebase(cclient, platformLabel)
+        name = platformVersion.name
+        label = platformVersion.label
+        if str(label) == '':
+            label = None
+        # support rebase to latest if special string is sent
+        # see RBL-8673
+        kwargs = {}
+        if name != "rebase-to-latest-on-versionless-platform":
+            kwargs['platformVersion'] = platformVersion.revision
+        pd.rebase(cclient, label, **kwargs)
         pd.saveToRepository(cclient, 
                 'Product Definition commit from rBuilder\n')
 

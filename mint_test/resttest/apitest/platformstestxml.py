@@ -18,6 +18,7 @@ platformsXml = """\
     <contentSourceTypes href="http://localhost:8000/api/platforms/1/contentSourceTypes"/>
     <load href="http://localhost:8000/api/platforms/1/load/"/>
     <imageTypeDefinitions href="http://localhost:8000/api/platforms/1/imageTypeDefinitions"/>
+    <platformVersions href="http://localhost:8000/api/platforms/1/platformVersions/"/>
   </platform>
   <platform id="http://localhost:8000/api/platforms/2">
     <platformId>2</platformId>
@@ -36,11 +37,14 @@ platformsXml = """\
     <contentSourceTypes href="http://localhost:8000/api/platforms/2/contentSourceTypes"/>
     <load href="http://localhost:8000/api/platforms/2/load/"/>
     <imageTypeDefinitions href="http://localhost:8000/api/platforms/2/imageTypeDefinitions"/>
+    <platformVersions href="http://localhost:8000/api/platforms/2/platformVersions/"/>
   </platform>
 </platforms>
 """
 
-platformXml = """\
+platformVersions = """<platformVersions href="http://localhost:8000/api/platforms/1/platformVersions/"/>"""
+
+platformXmlTempl = """\
 <?xml version='1.0' encoding='UTF-8'?>
 <platform id="http://localhost:8000/api/platforms/1">
   <platformId>1</platformId>
@@ -49,7 +53,7 @@ platformXml = """\
   <platformName>Crowbar Linux 1</platformName>
   <platformUsageTerms>Terms of Use 1</platformUsageTerms>
   <mode>manual</mode>
-  <enabled>false</enabled>
+  <enabled>%(enabled)s</enabled>
   <configurable>true</configurable>
   <abstract>false</abstract>
   <mirrorPermission>true</mirrorPermission>
@@ -58,9 +62,14 @@ platformXml = """\
   <platformStatus href="http://localhost:8000/api/platforms/1/status"/>
   <contentSourceTypes href="http://localhost:8000/api/platforms/1/contentSourceTypes"/>
   <load href="http://localhost:8000/api/platforms/1/load/"/>
-  <imageTypeDefinitions href="http://localhost:8000/api/platforms/1/imageTypeDefinitions"/>
+  <imageTypeDefinitions href="http://localhost:8000/api/platforms/1/imageTypeDefinitions"/>%(platformVersions)s
 </platform>
 """
+
+platformXml = platformXmlTempl % dict(
+    enabled="false",
+    platformVersions="""
+    %s""" % platformVersions)
 
 platformSourcesXml = """\
 <?xml version='1.0' encoding='UTF-8'?>
@@ -126,7 +135,7 @@ platformSourceStatusXml4 = """\
 <platformSourceStatus>
   <connected>true</connected>
   <valid>false</valid>
-  <message> Repository is empty, please manually load the base slice for this platform available from http://docs.rpath.com/platforms/platform_repositories.html.</message>
+  <message> Repository is empty, please manually load the preload for this platform available from http://docs.rpath.com/platforms/platform_repositories.html.</message>
 </platformSourceStatus>
 """
 
@@ -289,6 +298,7 @@ contentSourceTypesXml = """\
 <contentSourceTypes>
   <contentSourceType id="http://localhost:8000/api/contentSources/RHN">
     <contentSourceType>RHN</contentSourceType>
+    <required>true</required>
     <singleton>true</singleton>
     <instances href="http://localhost:8000/api/contentSources/RHN/instances/"/>
     <configDescriptor href="http://localhost:8000/api/contentSources/RHN/descriptor"/>
@@ -296,6 +306,7 @@ contentSourceTypesXml = """\
   </contentSourceType>
   <contentSourceType id="http://localhost:8000/api/contentSources/satellite">
     <contentSourceType>satellite</contentSourceType>
+    <required>false</required>
     <instances href="http://localhost:8000/api/contentSources/satellite/instances/"/>
     <configDescriptor href="http://localhost:8000/api/contentSources/satellite/descriptor"/>
     <statusTest href="http://localhost:8000/api/contentSources/satellite/statusTest"/>
@@ -307,6 +318,7 @@ contentSourceTypeXml = """\
 <?xml version='1.0' encoding='UTF-8'?>
 <contentSourceType id="http://localhost:8000/api/contentSources/RHN">
   <contentSourceType>RHN</contentSourceType>
+  <required>true</required>
   <singleton>true</singleton>
   <instances href="http://localhost:8000/api/contentSources/RHN/instances/"/>
   <configDescriptor href="http://localhost:8000/api/contentSources/RHN/descriptor"/>
@@ -402,6 +414,7 @@ contentSourceTypesByPlatformXml = """\
 <contentSourceTypes>
   <contentSourceType id="http://localhost:8000/api/contentSources/RHN">
     <contentSourceType>RHN</contentSourceType>
+    <required>true</required>
     <singleton>true</singleton>
     <instances href="http://localhost:8000/api/contentSources/RHN/instances/"/>
     <configDescriptor href="http://localhost:8000/api/contentSources/RHN/descriptor"/>
@@ -409,6 +422,7 @@ contentSourceTypesByPlatformXml = """\
   </contentSourceType>
   <contentSourceType id="http://localhost:8000/api/contentSources/satellite">
     <contentSourceType>satellite</contentSourceType>
+    <required>false</required>
     <instances href="http://localhost:8000/api/contentSources/satellite/instances/"/>
     <configDescriptor href="http://localhost:8000/api/contentSources/satellite/descriptor"/>
     <statusTest href="http://localhost:8000/api/contentSources/satellite/statusTest"/>
@@ -450,27 +464,14 @@ contentSourcePUTXml2 = """\
 </contentSource>
 """
 
-platformPUTXml = """\
-<?xml version='1.0' encoding='UTF-8'?>
-<platform id="http://localhost:8000/api/platforms/1">
-  <platformId>1</platformId>
-  <repositoryHostname>localhost</repositoryHostname>
-  <label>localhost@rpath:plat-1</label>
-  <platformName>Crowbar Linux 1</platformName>
-  <platformUsageTerms>Terms of Use 1</platformUsageTerms>
-  <mode>manual</mode>
-  <enabled>true</enabled>
-  <configurable>true</configurable>
-  <abstract>false</abstract>
-  <mirrorPermission>true</mirrorPermission>
-  <repositoryUrl href="http://localhost:8000/repos/localhost./api"/>
-  <contentSources href="http://localhost:8000/api/platforms/1/contentSources"/>
-  <platformStatus href="http://localhost:8000/api/platforms/1/status"/>
-  <contentSourceTypes href="http://localhost:8000/api/platforms/1/contentSourceTypes"/>
-  <load href="http://localhost:8000/api/platforms/1/load/"/>
-  <imageTypeDefinitions href="http://localhost:8000/api/platforms/1/imageTypeDefinitions"/>
-</platform>
-"""
+platformPUTXml = platformXmlTempl % dict(
+    enabled="true",
+    platformVersions="")
+
+platformGETXml = platformXmlTempl % dict(
+    enabled="true",
+    platformVersions="""
+    %s""" % platformVersions)
 
 sourcePOSTXml = """\
 <?xml version='1.0' encoding='UTF-8'?>
@@ -569,70 +570,70 @@ platformStatus2Xml = """\
 
 platformImageDefXml = """\
 <imageTypeDefinitions>
-  <imageTypeDefinition id="http://localhost:8000/api/platforms/1/imageTypeDefinitions/9a1ffeb422bd48550ac2f3ccef4b6204">
+  <imageTypeDefinition id="http://localhost:8000/api/platforms/1/imageTypeDefinitions/3580ab1481bf29998e62cb8111a6833a">
     <name>Citrix XenServer 32-bit</name>
     <displayName>Citrix XenServer 32-bit</displayName>
-    <container id="http://localhost:8000/api/platforms/1/imagesTypeDefinitions/9a1ffeb422bd48550ac2f3ccef4b6204/containers/xenOvaImage">
+    <container id="http://localhost:8000/api/platforms/1/imagesTypeDefinitions/3580ab1481bf29998e62cb8111a6833a/containers/xenOvaImage">
       <name>xenOvaImage</name>
       <displayName>Citrix(R) XenServer(TM) Appliance</displayName>
       <options autoResolve="true" baseFileName="" freespace="1024" installLabelPath="" swapSize="512" vmMemory="256"/>
     </container>
-    <architecture id="http://localhost:8000/api/platforms/1/imagesTypeDefinitions/9a1ffeb422bd48550ac2f3ccef4b6204/architectures/x86">
+    <architecture id="http://localhost:8000/api/platforms/1/imagesTypeDefinitions/3580ab1481bf29998e62cb8111a6833a/architectures/x86">
       <name>x86</name>
       <displayName>x86</displayName>
     </architecture>
-    <flavorSet id="http://localhost:8000/api/platforms/1/imagesTypeDefinitions/9a1ffeb422bd48550ac2f3ccef4b6204/flavorsets/xen">
+    <flavorSet id="http://localhost:8000/api/platforms/1/imagesTypeDefinitions/3580ab1481bf29998e62cb8111a6833a/flavorsets/xen">
       <name>xen</name>
       <displayName>Xen DomU</displayName>
     </flavorSet>
   </imageTypeDefinition>
-  <imageTypeDefinition id="http://localhost:8000/api/platforms/1/imageTypeDefinitions/71a60de01b7e8675254175584fdb9db2">
+  <imageTypeDefinition id="http://localhost:8000/api/platforms/1/imageTypeDefinitions/76374bd15c72d81d733ddc309d4a5b86">
     <name>Citrix XenServer 64-bit</name>
     <displayName>Citrix XenServer 64-bit</displayName>
-    <container id="http://localhost:8000/api/platforms/1/imagesTypeDefinitions/71a60de01b7e8675254175584fdb9db2/containers/xenOvaImage">
+    <container id="http://localhost:8000/api/platforms/1/imagesTypeDefinitions/76374bd15c72d81d733ddc309d4a5b86/containers/xenOvaImage">
       <name>xenOvaImage</name>
       <displayName>Citrix(R) XenServer(TM) Appliance</displayName>
       <options autoResolve="true" baseFileName="" freespace="1024" installLabelPath="" swapSize="512" vmMemory="256"/>
     </container>
-    <architecture id="http://localhost:8000/api/platforms/1/imagesTypeDefinitions/71a60de01b7e8675254175584fdb9db2/architectures/x86_64">
+    <architecture id="http://localhost:8000/api/platforms/1/imagesTypeDefinitions/76374bd15c72d81d733ddc309d4a5b86/architectures/x86_64">
       <name>x86_64</name>
       <displayName>x86 (64-bit)</displayName>
     </architecture>
-    <flavorSet id="http://localhost:8000/api/platforms/1/imagesTypeDefinitions/71a60de01b7e8675254175584fdb9db2/flavorsets/xen">
+    <flavorSet id="http://localhost:8000/api/platforms/1/imagesTypeDefinitions/76374bd15c72d81d733ddc309d4a5b86/flavorsets/xen">
       <name>xen</name>
       <displayName>Xen DomU</displayName>
     </flavorSet>
   </imageTypeDefinition>
-  <imageTypeDefinition id="http://localhost:8000/api/platforms/1/imageTypeDefinitions/072f6883c0290204e26de6f4e66c5c54">
+  <imageTypeDefinition id="http://localhost:8000/api/platforms/1/imageTypeDefinitions/724a58650a441a12a0103e8961c4f4fd">
     <name>VMware ESX 32-bit</name>
     <displayName>VMware ESX 32-bit</displayName>
-    <container id="http://localhost:8000/api/platforms/1/imagesTypeDefinitions/072f6883c0290204e26de6f4e66c5c54/containers/vmwareEsxImage">
+    <container id="http://localhost:8000/api/platforms/1/imagesTypeDefinitions/724a58650a441a12a0103e8961c4f4fd/containers/vmwareEsxImage">
       <name>vmwareEsxImage</name>
       <displayName>VMware(R) ESX(R) Server Virtual Appliance</displayName>
       <options autoResolve="true" baseFileName="" freespace="1024" installLabelPath="" natNetworking="true" swapSize="512" vmMemory="256" vmSnapshots="true"/>
     </container>
-    <architecture id="http://localhost:8000/api/platforms/1/imagesTypeDefinitions/072f6883c0290204e26de6f4e66c5c54/architectures/x86">
+    <architecture id="http://localhost:8000/api/platforms/1/imagesTypeDefinitions/724a58650a441a12a0103e8961c4f4fd/architectures/x86">
       <name>x86</name>
       <displayName>x86</displayName>
     </architecture>
-    <flavorSet id="http://localhost:8000/api/platforms/1/imagesTypeDefinitions/072f6883c0290204e26de6f4e66c5c54/flavorsets/vmware">
+    <flavorSet id="http://localhost:8000/api/platforms/1/imagesTypeDefinitions/724a58650a441a12a0103e8961c4f4fd/flavorsets/vmware">
       <name>vmware</name>
       <displayName>VMware</displayName>
     </flavorSet>
   </imageTypeDefinition>
-  <imageTypeDefinition id="http://localhost:8000/api/platforms/1/imageTypeDefinitions/e0b2438053d04a63f74ef5e7794e42a1">
+  <imageTypeDefinition id="http://localhost:8000/api/platforms/1/imageTypeDefinitions/b2cbbc10ed9cc9f756cab7f7d8685708">
     <name>VMware ESX 64-bit</name>
     <displayName>VMware ESX 64-bit</displayName>
-    <container id="http://localhost:8000/api/platforms/1/imagesTypeDefinitions/e0b2438053d04a63f74ef5e7794e42a1/containers/vmwareEsxImage">
+    <container id="http://localhost:8000/api/platforms/1/imagesTypeDefinitions/b2cbbc10ed9cc9f756cab7f7d8685708/containers/vmwareEsxImage">
       <name>vmwareEsxImage</name>
       <displayName>VMware(R) ESX(R) Server Virtual Appliance</displayName>
       <options autoResolve="true" baseFileName="" freespace="1024" installLabelPath="" natNetworking="true" swapSize="512" vmMemory="256" vmSnapshots="true"/>
     </container>
-    <architecture id="http://localhost:8000/api/platforms/1/imagesTypeDefinitions/e0b2438053d04a63f74ef5e7794e42a1/architectures/x86_64">
+    <architecture id="http://localhost:8000/api/platforms/1/imagesTypeDefinitions/b2cbbc10ed9cc9f756cab7f7d8685708/architectures/x86_64">
       <name>x86_64</name>
       <displayName>x86 (64-bit)</displayName>
     </architecture>
-    <flavorSet id="http://localhost:8000/api/platforms/1/imagesTypeDefinitions/e0b2438053d04a63f74ef5e7794e42a1/flavorsets/vmware">
+    <flavorSet id="http://localhost:8000/api/platforms/1/imagesTypeDefinitions/b2cbbc10ed9cc9f756cab7f7d8685708/flavorsets/vmware">
       <name>vmware</name>
       <displayName>VMware</displayName>
     </flavorSet>

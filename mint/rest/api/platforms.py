@@ -136,6 +136,17 @@ class PlatformLoadController(base.BaseController):
     def create(self, request, platformId, platformLoad):
         return self.db.loadPlatform(platformId, platformLoad)
 
+class PlatformVersionController(base.BaseController):
+    modelName = 'platformVersionId'
+
+    @auth.public
+    def index(self, request, platformId):
+        return self.db.getPlatformVersions(platformId)
+
+    @auth.public
+    def get(self, request, platformId, platformVersionId):
+        return self.db.getPlatformVersion(platformId, platformVersionId)
+
 class PlatformController(base.BaseController):
     modelName = "platformId"
 
@@ -144,6 +155,7 @@ class PlatformController(base.BaseController):
              'contentSourceTypes' : PlatformSourceTypeController,
              'imageTypeDefinitions' : PlatformImageTypeController,
              'load' : PlatformLoadController,
+             'platformVersions' : PlatformVersionController,
            }
 
     @auth.public

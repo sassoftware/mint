@@ -1,0 +1,16 @@
+InstalledSoftware properties:
+    N/A
+
+
+Trove properties:
+    N/A
+
+Methods:
+    GET:
+        Authentication: user
+    POST:
+        not supported
+    PUT:
+        Authentication: user
+    DELETE:
+        not supported
