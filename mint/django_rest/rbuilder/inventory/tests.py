@@ -1501,8 +1501,8 @@ class SystemsTestCase(XMLTestCase):
         self.failUnlessEqual(self.mock_scheduleSystemRegistrationEvent_called,
             False)
         
-        # make sure we did not scheduled poll event since this is a management node
-        self.failUnlessEqual(self.mock_scheduleSystemPollEvent_called, False)
+        # make sure we scheduled poll event since this is a management node and they are managed now
+        self.failUnlessEqual(self.mock_scheduleSystemPollEvent_called, True)
         
     def testAddSystemNull(self):
         
