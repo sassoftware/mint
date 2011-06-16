@@ -84,8 +84,10 @@ class UsersManager(basemanager.BaseManager):
         self._commit()
         s = server.MintServer(self.cfg, allowPrivate=True)
         s.auth = self.auth
+        s.auth.userId = self.user.user_id
         s.authToken = self.auth.token
         s.setPassword(user.user_id, password)
+        self._newTransaction()
         return models.User.objects.get(user_name=user.user_name)
 
     @exposed
@@ -102,14 +104,14 @@ class UsersManager(basemanager.BaseManager):
             raise self.exceptions.UserCannotChangeNameException()
         # Copy all fields the user may have chosen to change
         models.User.objects.copyFields(dbuser, user)
-        dbuser.save()
-        dbuser = self._setPassword(dbuser, user.password)
         if self.auth.admin and user.is_admin is not None:
             # Admin users cannot drop the admin flag for themselves
             if user_id != str(self.user.user_id):
                 is_admin = self._toBool(user.is_admin)
                 if dbuser.getIsAdmin() != is_admin:
                     self.setIsAdmin(dbuser, is_admin)
+        dbuser.save()
+        dbuser = self._setPassword(dbuser, user.password)
         return dbuser
 
     def _commit(self):
@@ -117,6 +119,10 @@ class UsersManager(basemanager.BaseManager):
             if transaction.is_dirty():
                 transaction.commit()
             transaction.leave_transaction_management()
+
+    def _newTransaction(self):
+        transaction.enter_transaction_management()
+        transaction.managed(True)
 
     def setIsAdmin(self, user, isAdmin):
         userGroupId = self.getAdminGroupId()
