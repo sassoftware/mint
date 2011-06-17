@@ -178,8 +178,8 @@ class FuzzyGraph(set):
         set.__init__(self)
         self.registry = {}
 
-    def add(self, fz):
-        hsh = id(fz.instance.__class__)
+    def add(self, fz, hsh=None):
+        hsh = hsh if hsh else id(fz.instance.__class__)
         if hsh not in self:
             set.add(self, hsh)
             if hsh not in self.registry:
@@ -205,7 +205,7 @@ class FuzzyGraph(set):
 
     @staticmethod
     def fromRegistry(registry):
-        fzG = FuzzyGraph()
+        fzG = cls()
         fzG.iterAdd(registry.values())
         return fzG
 
@@ -219,48 +219,61 @@ class FuzzyGraph(set):
     def _syncRegistry(self):
         FuzzyGraph.syncRegistry(self)
 
-    def union(self, other):
+    def union(self, fzG):
         fzG_union = FuzzyGraph()
-        un = set.union(self, other)
-        for hsh in un:
-            FuzzyGraph.combine(hsh, fzG_union, self, other)
-        FuzzyGraph.syncRegistry(fzG_union)
-        return fzG_union
+        un = set.union(self, fzG)
+        FuzzyGraph.syncRegistry(un)
+        return un
 
-    def intersection(self, other):
+    def intersection(self, fzG):
         fzG_intersection = FuzzyGraph()
-        inter = set.intersection(self, other)
-        for hsh in inter:
-            FuzzyGraph.combine(hsh, fzG_intersection, self, other)
-        FuzzyGraph.syncRegistry(fzG_intersection)
-        return fzG_intersection
+        inter = set.intersection(self, fzG)
+        FuzzyGraph.syncRegistry(inter)
+        return inter
 
-    def difference(self, other):
+    def difference(self, fzG):
         fzG_difference = FuzzyGraph()
-        diff = set.difference(self, other)
-        for hsh in diff:
-            FuzzyGraph.combine(hsh, fzG_difference, self, other)
-        FuzzyGraph.syncRegistry(fzG_difference)
-        return fzG_difference
+        diff = set.difference(self, fzG)
+        FuzzyGraph.syncRegistry(diff)
+        return diff
 
-    def symmetric_difference(self, other):
+    def symmetric_difference(self, fzG):
         fzG_sym_difference = FuzzyGraph()
-        sym_diff = set.symmetric_difference(self, other)
-        for hsh in sym_diff:
-            FuzzyGraph.combine(hsh, fzG_sym_difference, self, other)
-        FuzzyGraph.syncRegistry(fzG_sym_difference)
-        return fzG_sym_difference
+        sym_diff = set.symmetric_difference(self, fzG)
+        FuzzyGraph.syncRegistry(sym_diff)
+        return sym_diff
 
-    def update(self, other):
-        set.update(self, other)
-        self.registry.update(other.registry)
+    def update(self, fzG):
+        set.update(self, fzG)
+        self.registry.update(fzG.registry)
+        self._syncRegistry()
 
-    @staticmethod
-    def combine(hsh, trgt, fzG1, fzG2):
-        x1 = fzG1.registry[hsh]
-        trgt.add(x1)
-        x2 = fzG2.registry[hsh]
-        trgt.add(x2)
+
+# class FuzzyDigraph(FuzzyGraph):
+#     def __init__(self, fz):
+#         FuzzyGraph.__init__(self)
+#         self.populate(fz)
+# 
+#     def populate(self, fz):
+#         for field in fz.FKFields.values():
+#             parent = field.related.parent_model
+#             fz_parent = FuzzyModel(parent)
+#             if (id(fz.model), id(fz_parent.model)) in self:
+#                 continue
+#             else:
+#                 self.add(fz, fz_parent)
+#                 fz_parent_graph = FuzzyDigraph.__new__(self.__class__, fz_parent)
+#                 self.union(fz_parent_graph)
+#                 import pdb; pdb.set_trace()
+# 
+#     def add(self, fz1, fz2):
+#         hsh1 = id(fz1.instance.__class__)
+#         hsh2 = id(fz2.instance.__class__)
+#         hsh = (hsh1, hsh2)
+#         if hsh not in self:
+#             set.add(self, hsh)
+#             if hsh not in self.registry:
+#                 self.registry[hsh] = (fz1, fz2)
 
 
 class Fuzzer(object):
@@ -315,12 +328,6 @@ class Fuzzer(object):
                 self.DONE.append((fname, accessor))
 
         self.save()
-        # for lst in Fuzzer.GRAPH.registry.values():
-        #     for fz in lst:
-        #         try:
-        #             fz.save()
-        #         except FzValidationError, e:
-        #             print e
 
     @staticmethod
     def fuzzSimpleData(field):
@@ -469,273 +476,3 @@ class Fuzzer(object):
     @staticmethod
     def reset():
         Fuzzer.GRAPH = FuzzyGraph()
-
-# class Fuzzer(object):
-# 
-#     """
-#     forced = {'fname1':field1, 'fname2':field2, ...}
-#     skip = [field1, field2, ...]
-#     """
-# 
-#     FZGRAPH = FuzzyGraph()
-# 
-#     integers = range(0, 1000)
-#     strings = ['abc', 'def', 'ghi', 'jkl', 'mno', 'pqr', 'stu']
-#     words = ['the', 'crazy', 'bird', 'walks', 'off', 'pier']
-# 
-#     def __init__(self, model, skip=None, force=None, fz_params=None, simple_only=False):
-#         self.fz_params = fz_params if fz_params else {}
-#         self.fz = model if isinstance(model, FuzzyModel) else FuzzyModel(model, **self.fz_params)
-#         self.skipped = skip if skip else []
-#         self.forced = force if force else {}
-#         self.simple_only = simple_only
-#         self.DONE = []
-# 
-#         for fname, field in self.fz.SimpleFields.items():
-#             if fname in self.forced:
-#                 setattr(self.fz.instance, fname, self.forced[fname])
-#                 continue
-#             if id(field) in [id(f) for f in self.skipped]:
-#                 continue
-# 
-#             x = self.fuzzSimpleData(fname, field)
-#             setattr(self.fz.instance, fname, x)
-#             self.DONE.append((fname, field))
-#         
-#         if not simple_only:
-#             for fname, fk in self.fz.FKFields.items():
-#                 if fname in self.forced:
-#                     setattr(self.fz.instance, fname, self.forced[fname])
-#                     continue
-#                 if id(fk) in [id(f) for f in self.skipped]:
-#                     continue
-# 
-#                 self.fuzzFK(fname, fk)
-#                 self.DONE.append((fname, fk))
-# 
-#             for fname, accessor in self.fz.M2MFields.items():
-#                 if fname in self.forced:
-#                     setattr(self.fz.instance, fname, self.forced[fname])
-#                     continue
-#                 if id(accessor) in [id(f) for f in self.skipped]:
-#                     continue
-# 
-#                 self.fuzzM2M(fname, accessor)
-#                 self.DONE.append((fname, accessor))
-#             
-#         self.save()
-# 
-# 
-#     def fuzzFK(self, fname, field):
-#         Fuzzer.fuzzFzFkField(self.fz, fname, field)
-# 
-#     @staticmethod
-#     def fuzzFzFkField(fz, fname, field):
-#         parent = field.related.parent_model
-#         pname = parent.__name__
-#         if id(field) not in fz.related:
-#             if pname in Fuzzer.INSTANCE_REGISTRY:
-#                 instance = Fuzzer.INSTANCE_REGISTRY[pname]
-#             else:
-#                 fuzz = Fuzzer(parent)
-#                 instance = fuzz.fz.instance
-#                 Fuzzer.INSTANCE_REGISTRY[fuzz.fz.model.__name__] = instance
-#             setattr(fz, fname, instance)
-# 
-# 
-#     # def fuzzFK(self, fname, field):
-#     #     Fuzzer.fuzzFzFKInstance(self.fz, fname, field)
-#     
-#     # @staticmethod
-#     # def fuzzFzFKInstance(fz, fname, field):
-#     #     
-#     #     def _fuzzAndSet(hsh, parent):
-#     #         fuzz = Fuzzer(parent)
-#     #         instance = fuzz.fz.instance
-#     #         fz.related[hsh] = instance
-#     #         return instance
-#     #         
-#     #     hsh = id(field)
-#     #     parent = field.related.parent_model
-#     # 
-#     #     if hsh in fz.related:
-#     #         instance = fz.related[hsh]
-#     #         if not instance:
-#     #             instance = _fuzzAndSet(hsh, parent)
-#     #     else:
-#     #         instance = _fuzzAndSet(hsh, parent)
-#     #     setattr(fz.instance, fname, instance)
-# 
-# 
-# 
-#     def fuzzM2M(self, fname, field):
-#         Fuzzer.fuzzFzM2MInstance(self.fz, fname, field)
-# 
-#     @staticmethod
-#     def fuzzFzM2MInstance(fz, fname, field):
-#         hsh = id(field)
-#         if hsh not in fz.related:
-#             if hasattr(field, 'through'):
-#                 through = field.through
-#                 through_fields = dict((f.name, f) for f in through._meta.fields)
-#                 related = {}
-#                 for tFname, tField in through_fields.items():
-#                     if hasattr(tField, 'rel'):
-#                         if hasattr(tField.rel, 'to'):
-#                             related[tFname] = tField.rel.to
-# 
-#                 data = {}
-# 
-#                 for rFname, rField in related.items():
-#                     rHsh = id(rField)
-#                     if isinstance(fz.instance, rField):
-#                         data[rFname] = fz.instance
-#                     elif issubclass(field.model, rField):
-#                         if rHsh in fz.related:
-#                             data[rFname] = fz.related[rHsh]
-#                         else:
-#                             data[rFname] = Fuzzer(field.model).fz.instance
-#                             fz.related[rHsh] = data[rFname]
-# 
-#                 for val in data.values():
-#                     Fuzzer.saveInstance(val)
-# 
-#                 t = field.through(**data)
-#                 Fuzzer.saveInstance(t)
-# 
-#     @staticmethod
-#     def fuzzSimpleData(fname, field):
-#         if isinstance(field, models.AutoField):
-#             x = Fuzzer.fuzzAutoField()
-#         elif isinstance(field, models.CharField):
-#             x = Fuzzer.fuzzCharField()
-#         elif isinstance(field, models.IntegerField):
-#             x = Fuzzer.fuzzIntegerField()
-#         elif isinstance(field, models.TextField):
-#             x = Fuzzer.fuzzTextField()
-#         elif isinstance(field, models.BooleanField):
-#             x = Fuzzer.fuzzBooleanField()
-#         elif isinstance(field, models.DecimalField):
-#             x = Fuzzer.fuzzDecimalField()
-#         else:
-#             return
-#         return x
-# 
-#     @staticmethod
-#     def fuzzDecimalField():
-#         return random.choice(Fuzzer.integers)
-# 
-#     @staticmethod
-#     def fuzzAutoField():
-#         return random.choice(Fuzzer.integers)
-# 
-#     @staticmethod
-#     def fuzzCharField():
-#         return random.choice(Fuzzer.words)
-# 
-#     @staticmethod
-#     def fuzzIntegerField():
-#         return random.choice(Fuzzer.integers)
-#         
-#     @staticmethod
-#     def fuzzTextField():
-#         return random.choice(Fuzzer.words)
-# 
-#     @staticmethod
-#     def fuzzBooleanField():
-#         return random.choice([True, False])
-# 
-#     def clean(self):
-#         self.fz.clean()
-# 
-#     def save(self):
-#         fz = self.fz
-#         
-#         try:
-#             fz.clean()
-#         except FzValidationError, e:
-#             import pdb; pdb.set_trace()
-#             fname = e.message_dict.keys()[0]
-#             bad = fz.fields[fname]
-#             if not bad:
-#                 raise ValidationError
-#             # import pdb; pdb.set_trace()
-#             Fuzzer.reFuzzInstanceAndSet(fz, fname, bad)
-#             
-#         try:
-#             fz.save()
-#         except FzValidationError, e:
-#             fname = e.message_dict.keys()[0]
-#             bad = fz.fields[fname]
-#             if not bad:
-#                 raise ValidationError
-#             Fuzzer.reFuzzInstanceAndSet(fz, fname, bad)
-#             fz.instance.save()
-#         except FzIntegrityError, e:
-#             import pdb; pdb.set_trace()
-#             pass
-#         try:
-#             self.save()
-#         except:
-#             print 'could not save'
-# 
-#     @staticmethod
-#     def reFuzzInstanceAndSet(fz, fname, bad):
-#         if fname in fz.SimpleFields:
-#             import pdb; pdb.set_trace()
-#             x = Fuzzer.fuzzSimpleData(fname, bad)
-#             setattr(fz.instance, fname, x)
-#         elif fname in fz.FKFields:
-#             Fuzzer.fuzzFzFkInstance(fz, fname, bad)
-#         elif fname in fz.M2MFields:
-#             if id(bad) not in fz.related:
-#                 Fuzzer.fuzzFzM2MInstance(fz, fname, bad)
-#         else:
-#             import pdb; pdb.set_trace()
-#             pass
-#     
-#     @staticmethod
-#     def saveInstance(instance):
-#         fz = FuzzyModel(instance)
-#         bad = None
-#         try:
-#             fz.save()
-#         except FzValidationError, e:
-#             fname = e.message_dict.keys()[0]
-#             bad = fz.fields[fname]
-#             if not bad:
-#                 raise ValidationError
-#         except FzIntegrityError, e:
-#             for fname, field in fz.fields.items():
-#                 if field.column == e.column:
-#                     bad = field
-#                     break
-#             if not bad:
-#                 raise IntegrityError
-#         if bad:
-#             Fuzzer.reFuzzInstanceAndSet(fz, bad.name, bad)
-#         fz.save()
-# 
-#     @staticmethod
-#     def cleanInstance(instance):
-#         """
-#         error_data = {'field_name1':[(code1, msg1, param_dict1), (code2, msg2, param_dict2)], ...}
-#         """
-#         fz = FuzzyModel(instance)
-#         try:
-#             fz.instance.validate_unique()
-#         except ValidationError, e:
-#             err = FzValidationError(fz.instance, e)
-#             for fname, err_collection in err.error_data.items():
-#                 for code, msg, params in err_collection:
-#                     if code == 0:
-#                         import pdb; pdb.set_trace()
-#                     elif code == 1:
-#                         import pdb; pdb.set_trace()
-#                     elif code == 2:
-#                         import pdb; pdb.set_trace()
-#                     else:
-#                         import pdb; pdb.set_trace()
-# 
-#     # def clean(self):
-#     #     Fuzzer.cleanInstance(self.fz.instance)

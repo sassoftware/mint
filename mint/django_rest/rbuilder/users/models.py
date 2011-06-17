@@ -53,7 +53,7 @@ class User(modellib.XObjIdModel):
     full_name = models.CharField(max_length=128, db_column='fullname')
     # salt and password should be hidden, users shouldn't see crypted
     # passwords
-    salt = modellib.XObjHidden(models.TextField()) # This field type is a guess.
+    salt = modellib.XObjHidden(models.TextField(null=True)) # This field type is a guess.
     passwd = modellib.XObjHidden(models.CharField(max_length=254))
     email = models.CharField(max_length=128)
     display_email = models.TextField(db_column='displayemail')
