@@ -2051,7 +2051,7 @@ def _createWindowsBuildSystemsQuerySet(db):
 def _createUpdateSystemsQuerySet(db):
     """Add the windows build systems query set"""
     filterId = _addQuerySetFilterEntry(db, "system_type.name", "EQUAL", "infrastructure-management-node")
-    qsId = _addQuerySet(db, "rPath Update Services", "rPath infrastructure services for managing systems", "system", False, "query-tag-Windows_Build_Services-7", filterId)
+    qsId = _addQuerySet(db, "rPath Update Services", "rPath infrastructure services for managing systems", "system", False, "query-tag-Update_Services-8", filterId)
     _addQuerySetChildToInfrastructureSystems(db, qsId)
     
     return True
