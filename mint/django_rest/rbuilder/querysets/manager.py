@@ -25,6 +25,7 @@ class QuerySetManager(basemanager.BaseManager):
     resourceCollectionMap = {
         'system' : 'systems',
         'user' : 'users',
+        'project' : 'projects'
     }
     tagModelMap = {
         'system' : 'system_tag',
