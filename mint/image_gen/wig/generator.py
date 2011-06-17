@@ -216,7 +216,6 @@ class ImageGenerator(object):
             E.pollingManifest(pollingManifest),
             E.updateJobs(*jobs)
             )
-        doc = etree.tostring(root)
         return etree.tostring(root)
 
     def _postOneResult(self, fobj, size, name, title, seq, total):

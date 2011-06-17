@@ -6,8 +6,6 @@ import os
 import time
 import zipfile
 from conary.lib import util
-from lxml import builder
-from lxml import etree
 from mint.image_gen import constants as iconst
 from mint.image_gen.wig import generator as genmod
 from mint.image_gen.wig import install_job
@@ -119,41 +117,56 @@ class IsoGenerator(genmod.ImageGenerator):
         fobj.close()
 
     def _writeScripts(self, isoDir, rtisPath):
+        # Write deployment script to copy the MSIs and first-boot script onto
+        # the target system.
+        copymsi = open(isoDir + '/rPath/copymsi.bat', 'w')
+
         osName = self.wimData.version
+        m = {}
         if osName.startswith('2003'):
-            # XXX FIXME
-            raise NotImplementedError
+            # 2003 requires another level of indirection
+            m['winFirstBootDir'] = 'C:\\Windows\\Temp'
+            progData = 'C:\\Documents and Settings\\All Users\\Application Data'
+            cmdlines = open(isoDir + '/rPath/cmdlines.txt', 'w')
+            cmdlines.write(
+                '[Commands]\r\n'
+                '"%(winFirstBootDir)s\\SetupComplete.cmd"\r\n'
+                % m)
+            cmdlines.close()
+
+            m['cmdDir'] = 'C:\\sysprep\\i386\\$OEM$'
+            copymsi.write(
+                'md "%(cmdDir)s"\r\n'
+                'copy /y "%%binpath%%\\cmdlines.txt" '
+                    '"%(cmdDir)s\\cmdlines.txt"\r\n'
+                % m)
         else:
             # 2008, 2008R2
-            winFirstBootPath = 'C:\\Windows\\Setup\\Scripts\\SetupComplete.cmd'
-            winUpdateDir = 'C:\\ProgramData\\rPath\\Updates\\DeploymentUpdate'
+            m['winFirstBootDir'] = 'C:\\Windows\\Setup\\Scripts'
+            progData = 'C:\\ProgramData'
+        m['winUpdateDir'] = progData + '\\rPath\\Updates\\DeploymentUpdate'
 
-        fobj = open(isoDir + '/rPath/copymsi.bat', 'w')
-        fobj.write('xcopy /e /y '
-                '%%binpath%%\\DeploymentUpdate %(winUpdateDir)s\\\r\n'
-                % dict(winUpdateDir=winUpdateDir))
-        fobj.write('md %(winFirstBootDir)s\r\n'
-                % dict(winFirstBootDir=winFirstBootPath.rsplit('\\', 1)[0]))
-        fobj.write('copy /y %%binpath%%\\firstboot.bat '
-                '"%(winFirstBootPath)s"\r\n'
-                % dict(winFirstBootPath=winFirstBootPath))
-        fobj.close()
+        copymsi.write(
+                'xcopy /e /y '
+                    '"%%binpath%%\\DeploymentUpdate" "%(winUpdateDir)s"\\\r\n'
+                'md "%(winFirstBootDir)s"\r\n'
+                'copy /y "%%binpath%%\\firstboot.bat" '
+                    '"%(winFirstBootDir)s\\SetupComplete.cmd"\r\n'
+                % m)
+        copymsi.close()
 
         # Write first-boot script to bootstrap rTIS.
-        fobj = open(isoDir + '/rPath/firstboot.bat', 'w')
+        firstboot = open(isoDir + '/rPath/firstboot.bat', 'w')
         if rtisPath:
-            rtisPath = rtisPath.replace('/', '\\')
-            fobj.write('msiexec /i '
-                    '"%(winUpdateDir)s\\%(rtisPath)s" '
-                    '/quiet /norestart '
-                    '/l*v "%(winUpdateDir)s\\%(rtisLog)s" '
-                    '\r\n' % dict(
-                        winUpdateDir=winUpdateDir,
-                        rtisPath=rtisPath,
-                        rtisLog=rtisPath.rsplit('.', 1)[0] + '.Install.log',
-                        ))
-            fobj.write('net start "rPath Tools Installer Servce"\n')
-        fobj.close()
+            m['rtisPath'] = rtisPath.replace('/', '\\')
+            m['rtisLog'] = m['rtisPath'].rsplit('.', 1)[0] + '.Install.log'
+            firstboot.write(
+                'msiexec /i '
+                    '"%(winUpdateDir)s\\%(rtisPath)s" /quiet /norestart '
+                    '/l*v "%(winUpdateDir)s\\%(rtisLog)s"\r\n'
+                'net start "rPath Tools Installer Service"\r\n'
+                )
+        firstboot.close()
 
     def unpackIsokit(self):
         ikData = self.isokitData
