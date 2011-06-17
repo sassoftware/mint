@@ -29,9 +29,9 @@ class VersionsTestCase(XMLTestCase):
         self.failUnlessEqual(response.status_code, 200)
         self.assertXMLEquals(response.content, """\
 <api>
-  <versions>
-    <version description="rBuilder REST API version 1" id="http://testserver/api/v1" name="v1"/>
-  </versions>
+  <api_versions>
+    <api_version description="rBuilder REST API version 1" id="http://testserver/api/v1" name="v1"/>
+  </api_versions>
 </api>""")
 
     def _mockConfigInfo(self):
@@ -55,7 +55,7 @@ class VersionsTestCase(XMLTestCase):
         response = self._get('/api/v1')
         self.failUnlessEqual(response.status_code, 200)
         self.assertXMLEquals(response.content, """\
-<api_version id="http://testserver/api/v1">
+<api_version id="http://testserver/api/v1" name="v1" description="rBuilder REST API version 1">
   <changelogs id="http://testserver/api/v1/changelogs"/>
   <config_info>
     <account_creation_requires_admin>false</account_creation_requires_admin>

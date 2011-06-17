@@ -7,10 +7,10 @@
 from xobj import xobj
 from mint.django_rest.rbuilder import modellib
 
-class Version(modellib.XObjIdModel):
+class ApiVersionShort(modellib.XObjIdModel):
     class Meta:
         abstract = True
-    _xobj = xobj.XObjMetadata(tag = 'version',
+    _xobj = xobj.XObjMetadata(
         attributes=dict(id=str, name=str, description=str))
     view_name = 'API'
     id = modellib.SyntheticField()
@@ -31,23 +31,32 @@ class Version(modellib.XObjIdModel):
         return "%s/%s" % (modellib.XObjIdModel.get_absolute_url(self, request),
             self.id)
 
-class Versions(modellib.XObjModel):
+class ApiVersions(modellib.XObjModel):
     class Meta:
         abstract = True
-    _xobj = xobj.XObjMetadata(tag = 'versions')
-    list_fields = ['version']
-    version = []
+    _xobj = xobj.XObjMetadata()
+    list_fields = ['api_version']
+    api_version = []
 
 class Api(modellib.XObjIdModel):
     class Meta:
         abstract = True
     _xobj = xobj.XObjMetadata(tag = 'api')
-    versions = Versions
+    api_versions = ApiVersions()
+
+    class Constants(object):
+        class v1(object):
+            id = 'v1'
+            name = 'v1'
+            description = 'rBuilder REST API version 1'
 
     def __init__(self):
-        self.versions = Versions()
-        self.versions.version.append(
-            Version(id='v1', name='v1', description='rBuilder REST API version 1'))
+        self.api_versions = ApiVersions()
+        for k, v in sorted(self.Constants.__dict__.items()):
+            if not k.startswith('v'):
+                continue
+            self.api_versions.api_version.append(
+                ApiVersionShort(id=v.id, name=v.name, description=v.description))
 
 class VersionInfo(modellib.XObjIdModel):
     class Meta:
@@ -72,9 +81,12 @@ class ConfigInfo(modellib.XObjIdModel):
 class ApiVersion(modellib.XObjIdModel):
     class Meta:
         abstract = True
-    _xobj = xobj.XObjMetadata(tag = 'api_version', attributes=dict(id=str))
+    _xobj = xobj.XObjMetadata(tag = 'api_version',
+        attributes=dict(id=str, name=str, description=str))
     view_name = 'APIVersion'
 
+    name = modellib.SyntheticField()
+    description = modellib.SyntheticField()
     changelogs = modellib.HrefField("changelogs")
     inventory = modellib.HrefField("inventory")
     jobs = modellib.HrefField("jobs")
