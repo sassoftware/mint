@@ -61,15 +61,14 @@ class IsoGenerator(genmod.ImageGenerator):
         self.unpackIsokit()
 
         # Download WIM directly into the output directory.
-        progressCallback = self._startFileProgress(self.wimData)
+        progressCallback = self._startFileProgress('image.wim')
         outF = open(isoDir + '/sources/image.wim', 'wb')
         self.wimData.storeContents(outF, progressCallback)
         outF.close()
 
         # Download and store MSIs.
-        packageLists, rtisPath = self._downloadPackages(msis, updateDir)
-
-        self._writeServicing(packageLists, updateDir)
+        rtisPath = self._downloadPackages(msis, updateDir)
+        self._writeServicing(msis, updateDir)
         self._writeScripts(isoDir, rtisPath)
 
         # Build ISO
@@ -93,19 +92,9 @@ class IsoGenerator(genmod.ImageGenerator):
             ], callback=_mkisofs_callback)
 
     def _downloadPackages(self, msis, updateDir):
-        criticalPackageList = []
-        packageList = []
         rtisPath = None
         for msiData in msis:
             name = os.path.basename(msiData.fileTup.path)
-
-            # Append package to either the critical or regular package list.
-            if msiData.isCritical():
-                targetList = criticalPackageList
-            else:
-                targetList = packageList
-            pkgXml = msiData.getPackageXML(seqNum=len(targetList))
-            targetList.append(pkgXml)
 
             # Store MSI directly to the output directory.
             relPath = os.path.join(msiData.getProductCode(), name)
@@ -113,48 +102,18 @@ class IsoGenerator(genmod.ImageGenerator):
             util.mkdirChain(os.path.dirname(destPath))
 
             outF = open(destPath, 'wb')
-            progressCallback = self._startFileProgress(msiData)
+            progressCallback = self._startFileProgress(name)
             msiData.storeContents(outF, progressCallback)
             outF.close()
 
             # Remember the path to rTIS so it can be pre-installed on first
             # boot.
-            if msiData.troveTuple[0].lower() == 'rtis:msi':
+            if msiData.isRtis():
                 rtisPath = relPath
+        return rtisPath
 
-        packageLists = criticalPackageList, packageList
-        return packageLists, rtisPath
-
-    def _writeServicing(self, packageLists, updateDir):
-        E = builder.ElementMaker()
-        criticalPackageList, packageList = packageLists
-
-        sysModel = 'install %s=%s\n' % (
-            self.troveTup.name, str(self.troveTup.version))
-        pollingManifest = '%s=%s[%s]\n' % (
-            self.troveTup.name, self.troveTup.version.freeze(),
-            str(self.troveTup.flavor))
-
-        jobs = []
-        if criticalPackageList:
-            jobs.append(E.updateJob(
-                    E.sequence('0'),
-                    E.logFile('install.log'),
-                    E.packages(*criticalPackageList),
-                    ))
-        if packageList:
-            jobs.append(E.updateJob(
-                    E.sequence('1'),
-                    E.logFile('install.log'),
-                    E.packages(*packageList),
-                    ))
-        root = E.update(
-            E.logFile('install.log'),
-            E.systemModel(sysModel),
-            E.pollingManifest(pollingManifest),
-            E.updateJobs(*jobs)
-            )
-        doc = etree.tostring(root)
+    def _writeServicing(self, msis, updateDir):
+        doc = self._getServicingXml(msis)
         fobj = open(updateDir + '/servicing.xml', 'w')
         fobj.write(doc)
         fobj.close()
@@ -200,7 +159,7 @@ class IsoGenerator(genmod.ImageGenerator):
         ikData = self.isokitData
         ikPath = os.path.join(self.workDir, 'isokit.zip')
         outF = open(ikPath, 'wb')
-        progressCallback = self._startFileProgress(ikData)
+        progressCallback = self._startFileProgress('isokit.zip')
         ikData.storeContents(outF, progressCallback)
         outF.close()
 

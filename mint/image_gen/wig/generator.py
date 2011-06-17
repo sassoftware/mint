@@ -9,7 +9,6 @@ import re
 import StringIO
 import tempfile
 import time
-from conary import callbacks
 from conary import conarycfg
 from conary import conaryclient
 from conary import trovetup
@@ -127,11 +126,10 @@ class ImageGenerator(object):
         self.stepList = STEP_LIST[:]
         self.setStepList()
 
-    def _startFileProgress(self, fileData):
+    def _startFileProgress(self, name):
         """Report that a file transfer has started and return a callback that
         callers can use to update the progress.
         """
-        name = os.path.basename(fileData.fileTup.path)
         statusString = "Transferring file " + name
         progressString = "%d/%d;%%d%%%%" % (self.filesTransferred,
                 self.fileCount)
@@ -180,6 +178,46 @@ class ImageGenerator(object):
         except rl_client.ResponseError, err:
             if err.status != 204:  # No Content
                 raise
+
+    def _getServicingXml(self, msis):
+        criticalPackageList = []
+        packageList = []
+        for msiData in msis:
+            if msiData.isCritical():
+                targetList = criticalPackageList
+            else:
+                targetList = packageList
+            pkgXml = msiData.getPackageXML(seqNum=len(targetList))
+            targetList.append(pkgXml)
+
+        sysModel = 'install %s=%s\n' % (
+            self.troveTup.name, str(self.troveTup.version))
+        pollingManifest = '%s=%s[%s]\n' % (
+            self.troveTup.name, self.troveTup.version.freeze(),
+            str(self.troveTup.flavor))
+
+        E = builder.ElementMaker()
+        jobs = []
+        if criticalPackageList:
+            jobs.append(E.updateJob(
+                    E.sequence('0'),
+                    E.logFile('install.log'),
+                    E.packages(*criticalPackageList),
+                    ))
+        if packageList:
+            jobs.append(E.updateJob(
+                    E.sequence('1'),
+                    E.logFile('install.log'),
+                    E.packages(*packageList),
+                    ))
+        root = E.update(
+            E.logFile('install.log'),
+            E.systemModel(sysModel),
+            E.pollingManifest(pollingManifest),
+            E.updateJobs(*jobs)
+            )
+        doc = etree.tostring(root)
+        return etree.tostring(root)
 
     def _postOneResult(self, fobj, size, name, title, seq, total):
         """Upload a single file and return the XML fragment for the rBuilder
@@ -235,9 +273,10 @@ class WbsGenerator(ImageGenerator):
     Base class for generators that require use of a rPath Windows Build Service.
     """
 
+    wigClient = None
+
     def run(self):
         self.setConfiguration()
-        self.wigClient = backend.WigBackendClient(self.wigServiceUrl)
         self.makeJob()
 
         if not self.runJob():
@@ -250,123 +289,56 @@ class WbsGenerator(ImageGenerator):
         """Convert image to final format and upload."""
         raise NotImplementedError
 
+    # FIXME
+    def FIXME__destroy(self):
+        if self.wigClient:
+            try:
+                self.wigClient.cleanup()
+            except:
+                log.exception("Failed to clean up build service:")
+        ImageGenerator.destroy(self)
+
     def makeJob(self):
         self.sendStatus(iconst.WIG_JOB_FETCHING, "Retrieving image contents")
         self.installJob.load()
+        self.wigClient = backend.WigBackendClient(self.wigServiceUrl)
         self.wigClient.createJob()
         self.wigClient.setImageType(self.imageType)
+        uploadMap = {}
 
         files = self.installJob.getFilesByClass(install_job.WIMData)
         if not files:
             raise RuntimeError("A WIM must be present in order to build "
                     "Windows images")
         self.wimData = files[0]
-
-        regName = self.wimData.version + self.wimData.arch + '.reg'
-        files = self.installJob.getRegularFilesByName(regName)
-        if not files:
-            raise RuntimeError("Registry file %s was not found" % regName)
-        regData = files[0]
+        uploadMap['image.wim'] = self.wimData
 
         msis = self.installJob.getFilesByClass(install_job.MSIData)
-        self.fileCount = 2 + len(msis)
-        self.filesTransferred = 0
-
-        criticalPackageList = []
-        packageList = []
-        totalFiles = len(interestingFiles)
-        for n, data in enumerate(sorted(interestingFiles)):
-            name = os.path.basename(data.path)
-
-            if data.kind == 'msi':
-                if data.critical:
-                    pkgXml, name = self.processMSI(data,
-                                                   seq=len(criticalPackageList),
-                                                   critical=data.critical)
-                    criticalPackageList.append(pkgXml)
-                else:
-                    pkgXml, name = self.processMSI(data, seq=len(packageList),
-                                                   critical=data.critical)
-                    packageList.append(pkgXml)
-            elif data.kind == 'reg':
-                name = 'rTIS.reg'
-
-            self.sendContents(name, data, n, totalFiles)
-
-        # Finish assembling servicing.xml and send it to the build service.
-        sysModel = 'install %s=%s\n' % (
-            self.troveTup.name, str(self.troveTup.version))
-        pollingManifest = '%s=%s[%s]\n' % (
-            self.troveTup.name, self.troveTup.version.freeze(),
-            str(self.troveTup.flavor))
-
-        jobs = []
-        if criticalPackageList:
-            jobs.append(E.updateJob(
-                    E.sequence('0'),
-                    E.logFile('install.log'),
-                    E.packages(*criticalPackageList),
-                    ))
-        if packageList:
-            jobs.append(E.updateJob(
-                    E.sequence('1'),
-                    E.logFile('install.log'),
-                    E.packages(*packageList),
-                    ))
-        root = E.update(
-            E.logFile('install.log'),
-            E.systemModel(sysModel),
-            E.pollingManifest(pollingManifest),
-            E.updateJobs(*jobs)
-            )
-        doc = etree.tostring(root)
-        sio = StringIO.StringIO(doc)
-        self.wigClient.addFileStream(sio, 'xml', 'servicing.xml', len(doc))
-
-    def sendContents(self, name, data, seq, total):
-        """Transfer file from repository to build service."""
-        repos = self.conaryClient.getRepos()
-        size = data.fileInfo.contents.size()
-        statusString = "Transferring file " + name
-        progressString = "%d/%d;%%d%%%%" % (seq, total)
-
-        # Retrieve contents
-        # Note that getFileContents doesn't pipeline, so rather than creating
-        # yet another substep just use the first 50% for fetching and the
-        # second 50% for sending.
-        last = [time.time()]
-        class FetchCallback(callbacks.ChangesetCallback):
-            def downloadingFileContents(xself, transferred, _):
-                if time.time() - last[0] < 2:
-                    return
-                last[0] = time.time()
-                if size:
-                    percent = int(50.0 * transferred / size)
-                else:
-                    percent = 0
-                self.sendStatus(iconst.WIG_JOB_SENDING, statusString,
-                        progressString % percent)
-
-        self.sendStatus(iconst.WIG_JOB_SENDING, statusString,
-                progressString % 0)
-        fobj = repos.getFileContents( [(data.fileId, data.fileVer)],
-                callback=FetchCallback() )[0].get()
-
-        # Report progress for file upload.
-        def sendCallback(transferred):
-            if size:
-                percent = 50 + int(50.0 * transferred / size)
+        for msiData in msis:
+            # Uniquify MSI filenames to avoid collisions between same-named
+            # files from different packages. msiData.fileName is changed here
+            # so that servicing.xml references the correct file.
+            if msiData.isRtis():
+                msiData.fileName = 'rTIS.NET.msi'
             else:
-                percent = 50
-            self.sendStatus(iconst.WIG_JOB_SENDING, statusString,
-                    progressString % percent)
+                msiData.fileName = msiData.sha1.encode('hex') + '.msi'
+            uploadMap[msiData.fileName] = msiData
 
-        # Upload file contents to the build service.
-        log.info("Sending file: pathid=%s fileid=%s path=%s",
-                data.pathId.encode('hex'), data.fileId.encode('hex'),
-                data.path)
-        wrapper = FileWithProgress(fobj, sendCallback)
-        self.wigClient.addFileStream(wrapper, data.kind, name, size)
+        servicingXml = self._getServicingXml(msis)
+        uploadMap['servicing.xml'] = StringIO.StringIO(servicingXml)
+
+        self.filesTransferred = 0
+        self.fileCount = len(uploadMap)
+        for name, data in sorted(uploadMap.items()):
+            kind = name.split('.')[-1]
+            progressCallback = self._startFileProgress(name)
+            if hasattr(data, 'getContents'):
+                fobj = data.getContents(progressCallback)
+                size = data.size
+            else:
+                fobj = data
+                size = len(data.getvalue())
+            self.wigClient.addFileStream(fobj, kind, name, size)
 
     def runJob(self):
         self.sendStatus(iconst.WIG_JOB_RUNNING, "Processing image", "0%")
@@ -414,6 +386,9 @@ class WimGenerator(WbsGenerator):
 
 
 class ConvertedImageGenerator(WbsGenerator):
+
+    def setStepList(self):
+        pass
 
     def convert(self):
         """Fetch the VHD result, convert as needed, then upload."""
