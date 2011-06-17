@@ -618,10 +618,10 @@ class ManagementInterfacesTestCase(XMLTestCase):
 
     def testGetManagementInterfacesAuth(self):
         """
-        Ensure requires auth but not admin
+        Don't require auth or admin
         """
         response = self._get('inventory/management_interfaces/')
-        self.assertEquals(response.status_code, 401)
+        self.assertEquals(response.status_code, 200)
         
         response = self._get('inventory/management_interfaces/',
             username="testuser", password="password")
@@ -1501,8 +1501,8 @@ class SystemsTestCase(XMLTestCase):
         self.failUnlessEqual(self.mock_scheduleSystemRegistrationEvent_called,
             False)
         
-        # make sure we did not scheduled poll event since this is a management node
-        self.failUnlessEqual(self.mock_scheduleSystemPollEvent_called, False)
+        # make sure we scheduled poll event since this is a management node and they are managed now
+        self.failUnlessEqual(self.mock_scheduleSystemPollEvent_called, True)
         
     def testAddSystemNull(self):
         

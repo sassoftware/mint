@@ -70,6 +70,9 @@ def sendMail(fromEmail, fromEmailName, toEmail, subject, body):
     except:
         # This simply means that we couldn't contact rAPA to get the relay,
         # and so we attempt to send mail directly
+        relay = None
+
+    if not relay:
         relay = '127.0.0.1'
 
     for i in range(2):

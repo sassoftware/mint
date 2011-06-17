@@ -643,7 +643,8 @@ class SystemManager(basemanager.BaseManager):
                 # We really see this system the first time with its proper
                 # uuids. We'll assume it's been registered with rpath-register
                 self.log_system(system, models.SystemLogEntry.REGISTERED)
-            if not system.system_type.infrastructure:
+            if not system.system_type.infrastructure or system.system_type.name == \
+                    models.SystemType.INFRASTRUCTURE_WINDOWS_BUILD_NODE:
                 # Schedule a poll event in the future
                 self.scheduleSystemPollEvent(system)
                 # And schedule one immediately

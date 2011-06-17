@@ -25,6 +25,10 @@ class DiscoveryManager(basemanager.BaseManager):
     @exposed
     def getApiVersionInfo(self):
         apiVersion = models.ApiVersion()
+        v1 = models.Api.Constants.v1
+        apiVersion.id = v1.id
+        apiVersion.name = v1.name
+        apiVersion.description = v1.description
         apiVersion.config_info = ci = models.ConfigInfo()
         apiVersion.version_info = vi = models.VersionInfo()
 

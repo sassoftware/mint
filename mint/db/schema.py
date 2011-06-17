@@ -28,7 +28,7 @@ from conary.dbstore import sqlerrors, sqllib
 log = logging.getLogger(__name__)
 
 # database schema major version
-RBUILDER_DB_VERSION = sqllib.DBversion(58, 9)
+RBUILDER_DB_VERSION = sqllib.DBversion(58, 10)
 
 
 def _createTrigger(db, table, column = "changed"):
@@ -2051,8 +2051,22 @@ def _createWindowsBuildSystemsQuerySet(db):
 def _createUpdateSystemsQuerySet(db):
     """Add the windows build systems query set"""
     filterId = _addQuerySetFilterEntry(db, "system_type.name", "EQUAL", "infrastructure-management-node")
-    qsId = _addQuerySet(db, "rPath Update Services", "rPath infrastructure services for managing systems", "system", False, "query-tag-Windows_Build_Services-7", filterId)
+    qsId = _addQuerySet(db, "rPath Update Services", "rPath infrastructure services for managing systems", "system", False, "query-tag-Update_Services-8", filterId)
     _addQuerySetChildToInfrastructureSystems(db, qsId)
+    
+    return True
+
+def _createAllProjectsQuerySetSchema(db):
+    """Add the all projects query set"""
+    filterId = _addQuerySetFilterEntry(db, "is_appliance", "EQUAL", "true")
+    qsId = _addQuerySet(db, "All Appliances", "All appliances", "project", False, "query-tag-All_Appliances-9", filterId)
+    
+    return True
+
+def _createExternalProjectsQuerySetSchema(db):
+    """Add the external projects query set"""
+    filterId = _addQuerySetFilterEntry(db, "external", "EQUAL", "true")
+    qsId = _addQuerySet(db, "External Appliances", "External appliances", "project", False, "query-tag-External_Appliances-10", filterId)
     
     return True
 
@@ -2578,6 +2592,8 @@ def createSchema(db, doCommit=True, cfg=None):
     changed |= _createInfrastructureSystemsQuerySetSchema(db)
     changed |= _createWindowsBuildSystemsQuerySet(db)
     changed |= _createUpdateSystemsQuerySet(db)
+    changed |= _createAllProjectsQuerySetSchema(db)
+    changed |= _createExternalProjectsQuerySetSchema(db)
     changed |= _createChangeLogSchema(db)
     changed |= _createPackageSchema(db)
 

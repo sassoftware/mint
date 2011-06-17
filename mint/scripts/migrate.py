@@ -2898,7 +2898,7 @@ class MigrateTo_57(SchemaMigration):
 
 
 class MigrateTo_58(SchemaMigration):
-    Version = (58, 9)
+    Version = (58, 10)
 
     def migrate(self):
         return True
@@ -2999,6 +2999,11 @@ class MigrateTo_58(SchemaMigration):
         schema._createInfrastructureSystemsQuerySetSchema(self.db)
         schema._createWindowsBuildSystemsQuerySet(self.db)
         schema._createUpdateSystemsQuerySet(self.db)
+        return True
+    
+    def migrate10(self):
+        schema._createAllProjectsQuerySetSchema(self.db)
+        schema._createExternalProjectsQuerySetSchema(self.db)
         return True
 
 def _createUpdateSystemsQuerySet(db):
