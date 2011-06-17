@@ -21,6 +21,7 @@ class QuerySetManager(basemanager.BaseManager):
     tagMethodMap = {
         'system' : 'tagSystems',
         'user' : 'tagUsers',
+        'project' : 'tagProjects'
     }
     resourceCollectionMap = {
         'system' : 'systems',
@@ -29,7 +30,8 @@ class QuerySetManager(basemanager.BaseManager):
     }
     tagModelMap = {
         'system' : 'system_tag',
-        'user' : 'user_tag'
+        'user' : 'user_tag',
+        'project' : 'project_tag'
     }
 
 
