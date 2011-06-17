@@ -18,9 +18,12 @@ from conary.lib import util as cny_util
 from lxml import builder
 from xobj import xobj
 
+from mint.image_gen.util import FileWithProgress
+
 log = logging.getLogger(__name__)
 
-CRITICAL_PACKAGES = set(('rTIS:msi',))
+RTIS_PACKAGES = set(('rTIS:msi', 'rTIS.NET:msi'))
+CRITICAL_PACKAGES = set(RTIS_PACKAGES)
 
 
 class InstallJob(object):
@@ -81,11 +84,13 @@ class InstallJob(object):
             return None
 
         size = fileInfo.contents.size()
+        sha1 = fileInfo.contents.sha1()
         if pathId == cny_trove.CAPSULE_PATHID:
             # Capsule file
             if extension == 'msi':
                 # MSI package to be installed
                 return MSIData(self.conaryClient, fileTup, size,
+                        sha1=sha1,
                         troveTuple=trvCs.getNewNameVersionFlavor(),
                         msiInfo=trvCs.getTroveInfo().capsule.msi,
                         )
@@ -132,16 +137,26 @@ class RegularFileData(object):
                 if not progressCallback:
                     return
                 if self.size:
-                    percent = 100.0 * transferred / self.size
+                    percent = 50.0 * transferred / self.size
                 else:
                     percent = 0.0
                 progressCallback(percent)
+        def sendCallback(transferred):
+            if not progressCallback:
+                return
+            if self.size:
+                percent = 50.0 + 50.0 * transferred / self.size
+            else:
+                percent = 50.0
+            progressCallback(percent)
         log.info("Retrieving file %s, %d bytes", self.fileTup.path, self.size)
         repos = self.conaryClient.getRepos()
-        return repos.getFileContents(
+        fobj = repos.getFileContents(
                 [(self.fileTup.fileId, self.fileTup.fileVer)],
                 callback=FetchCallback(),
                 )[0].get()
+        wrapper = FileWithProgress(fobj, sendCallback)
+        return wrapper
 
     def storeContents(self, outF, progressCallback=None):
         # The initial download constitutes the first 50% of progress
@@ -163,17 +178,18 @@ class RegularFileData(object):
 
 class MSIData(RegularFileData):
 
-    def __init__(self, conaryClient, fileTup, size, troveTuple, msiInfo):
+    def __init__(self, conaryClient, fileTup, size, sha1, troveTuple, msiInfo):
         RegularFileData.__init__(self, conaryClient, fileTup, size)
+        self.sha1 = sha1
         self.troveTuple = troveTuple
         self.msiInfo = msiInfo
+        self.fileName = os.path.basename(self.fileTup.path)
 
     def getProductCode(self):
         return self.msiInfo.productCode()
 
     def getPackageXML(self, seqNum):
         E = builder.ElementMaker()
-        name = os.path.basename(self.fileTup.path)
         manifest = '%s=%s[%s]' % (self.troveTuple[0],
                 self.troveTuple[1].freeze(), self.troveTuple[2])
 
@@ -186,7 +202,7 @@ class MSIData(RegularFileData):
                 E.productCode(msi.productCode()),
                 E.productName(msi.name()),
                 E.productVersion(msi.version()),
-                E.file(name),
+                E.file(self.fileName),
                 E.manifestEntry(manifest),
                 E.previousManifestEntry(''),
                 E.critical(str(self.isCritical()).lower()),
@@ -194,6 +210,9 @@ class MSIData(RegularFileData):
 
     def isCritical(self):
         return self.troveTuple[0] in CRITICAL_PACKAGES
+
+    def isRtis(self):
+        return self.troveTuple[0] in RTIS_PACKAGES
 
 
 class WIMData(RegularFileData):
