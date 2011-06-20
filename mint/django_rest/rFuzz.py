@@ -217,26 +217,44 @@ class FuzzyGraph(set):
     def _syncRegistry(self):
         FuzzyGraph.syncRegistry(self)
 
-    # def union(self, fzG):
-    #     un = set.union(tmp, fzG)
-    #     return un
-    # 
-    # def intersection(self, fzG):
-    #     fzG_intersection = FuzzyGraph()
-    #     inter = set.intersection(self, fzG)
-    #     FuzzyGraph.syncRegistry(inter)
-    #     return inter
-    # 
-    # def difference(self, fzG):
-    #     fzG_difference = FuzzyGraph()
-    #     diff = set.difference(self, fzG)
-    #     FuzzyGraph.syncRegistry(diff)
-    #     return diff
-    # 
-    # def symmetric_difference(self, fzG):
-    #     sym_diff = set.symmetric_difference(self, fzG)
-    #     FuzzyGraph.syncRegistry(sym_diff)
-    #     return sym_diff
+    @staticmethod
+    def syncAgainst(S, fzG):
+        for hsh in S:
+            if hsh in fzG:
+                continue
+            else:
+                del fzG.registry[hsh]
+
+    def _syncAgainst(self, fzG):
+        FuzzyGraph.syncAgainst(self, fzG)
+
+    def union(self, fzG):
+        un = set.union(self, fzG)
+        fzs1 = dict((hsh, self.registry[hsh]) for hsh in self)
+        fzs2 = dict((hsh, fzG.regsitry[hsh]) for hsh in fzG)
+        
+        
+        dict_union = {}
+        dict_union.update
+        union = FuzzyGraph()
+        return un
+    
+    def intersection(self, fzG):
+        fzG_intersection = FuzzyGraph()
+        inter = set.intersection(self, fzG)
+        FuzzyGraph.syncRegistry(inter)
+        return inter
+    
+    def difference(self, fzG):
+        fzG_difference = FuzzyGraph()
+        diff = set.difference(self, fzG)
+        FuzzyGraph.syncRegistry(diff)
+        return diff
+    
+    def symmetric_difference(self, fzG):
+        sym_diff = set.symmetric_difference(self, fzG)
+        FuzzyGraph.syncRegistry(sym_diff)
+        return sym_diff
 
     def update(self, fzG):
         set.update(self, fzG)
