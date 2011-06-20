@@ -429,21 +429,21 @@ urlpatterns = patterns('',
         name='UserGroupMembers'),
     
     # USERGROUPS OLD, REMOVE
-    URL(r'users/user_groups/?$',
-        usersviews.UserGroupsService(),
-        name='UserGroups'),
-    
-    URL(r'users/(?P<user_id>\d+)/user_groups/?$',
-        usersviews.UserUserGroupsService(),
-        name='UserGroups'),
-    
-    URL(r'users/user_groups/(?P<user_group_id>\d+)/?$',
-        usersviews.UserGroupsService(),
-        name='UserGroup'),
-        
-    URL(r'users/user_groups/(?P<user_group_id>\d+)/user_group_members/?$',
-        usersviews.UserGroupMembersService(),
-        name='UserGroupMembers'),
+    # URL(r'users/user_groups/?$',
+    #     usersviews.UserGroupsService(),
+    #     name='UserGroups'),
+    # 
+    # URL(r'users/(?P<user_id>\d+)/user_groups/?$',
+    #     usersviews.UserUserGroupsService(),
+    #     name='UserGroups'),
+    # 
+    # URL(r'users/user_groups/(?P<user_group_id>\d+)/?$',
+    #     usersviews.UserGroupsService(),
+    #     name='UserGroup'),
+    #     
+    # URL(r'users/user_groups/(?P<user_group_id>\d+)/user_group_members/?$',
+    #     usersviews.UserGroupMembersService(),
+    #     name='UserGroupMembers'),
     # END OLD USERGROUP URLS
     
     
