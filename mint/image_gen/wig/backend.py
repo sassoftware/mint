@@ -90,9 +90,10 @@ class WigBackendClient(object):
         config.persist()
 
     def cleanup(self):
-        self.image.imageJob.delete()
-        self.image.delete()
-        self.image = None
+        if self.image:
+            self.image.imageJob.delete()
+            self.image.delete()
+            self.image = None
 
     def dataFromObject(self, data, tag, method='POST',
             contentType='application/xml'):

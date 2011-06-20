@@ -13,6 +13,7 @@ from mint.django_rest.deco import D
 from mint.django_rest.rbuilder import modellib
 from mint.django_rest.rbuilder.inventory import models as inventorymodels
 from mint.django_rest.rbuilder.users import models as usersmodels
+from mint.django_rest.rbuilder.projects import models as projectsmodels
 from mint.django_rest.rbuilder.querysets import errors
 
 from xobj import xobj
@@ -267,6 +268,29 @@ class UserTag(modellib.XObjIdModel):
     
     def get_absolute_url(self, *args, **kwargs):
         self._parents = [self.user, self]
+        return modellib.XObjIdModel.get_absolute_url(self, *args, **kwargs)
+        
+    def serialize(self, request=None, values=None):
+        xobjModel = modellib.XObjIdModel.serialize(self, request)
+        querySetHref = self.query_tag.query_set.get_absolute_url(request)
+        xobjModel.query_set = modellib.XObjHrefModel(querySetHref)
+        return xobjModel
+    
+class ProjectTag(modellib.XObjIdModel):
+    class Meta:
+        unique_together = (('project', 'query_tag', 'inclusion_method'),)
+        
+    _xobj = xobj.XObjMetadata(tag='project_tag')
+    
+    project_tag_id = models.AutoField(primary_key=True)
+    project = modellib.ForeignKey(projectsmodels.Project, related_name='project_tags')
+    query_tag = modellib.ForeignKey(QueryTag, related_name='project_tags', text_field='name')
+    inclusion_method = modellib.SerializedForeignKey(InclusionMethod, related_name='project_tags')
+    
+    load_fields = [project, query_tag, inclusion_method]
+    
+    def get_absolute_url(self, *args, **kwargs):
+        self._parents = [self.project, self]
         return modellib.XObjIdModel.get_absolute_url(self, *args, **kwargs)
         
     def serialize(self, request=None, values=None):

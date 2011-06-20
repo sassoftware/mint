@@ -31,6 +31,7 @@ class Project(modellib.XObjIdModel):
     class Meta:
         db_table = u"projects"
         
+    _xobj = xobj.XObjMetadata(tag='project')
     _xobj_hidden_accessors = set(['membership', 'package_set', 
         'platform_set', 'productplatform_set', 'abstractplatform_set'])
     view_name = "Project"
