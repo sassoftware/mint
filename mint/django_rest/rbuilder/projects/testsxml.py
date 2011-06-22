@@ -37,6 +37,9 @@ project_put_xml = """\
 project_version_post_no_project_xml = """\
   <project_branch>
     <project_short_name>foo</project_short_name>
+    <project_name>foo appliance</project_name>
+    <project_external>false</project_external>
+    <project_type>Appliance</project_type>
     <description>1</description>
     <namespace>rpath</namespace>
     <name>42</name>

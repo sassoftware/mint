@@ -240,8 +240,10 @@ class ProjectManager(basemanager.BaseManager):
 
     def _createProjectFromVersion(self, projectVersion):
         project = models.Project()
-        project.short_name = projectVersion.project_short_name
-        project.name = project.hostname = project.short_name
+        project.name = projectVersion.project_name;
+        project.short_name = project.hostname = projectVersion.project_short_name
+        project.external = projectVersion.project_external.lower() == "true" and 1 or 0
+        project.project_type = projectVersion.project_type
         project = self.addProject(project)
         
         return project

@@ -108,6 +108,12 @@ class ProjectsTestCase(XMLTestCase):
         branch = models.ProjectVersion.objects.get(pk=branch.branch_id)
         self.assertEquals('42', branch.name)
         
+        # validate project that was created
+        self.assertEquals('foo appliance', branch.project.name)
+        self.assertEquals('foo', branch.project.short_name)
+        self.assertEquals(0, branch.project.external)
+        self.assertEquals('Appliance', branch.project.project_type)
+        
         # make sure stages are there
         self.assertEquals(3, len(branch.stages.all()))
         
