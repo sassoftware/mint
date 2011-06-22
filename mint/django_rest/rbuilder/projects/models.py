@@ -206,6 +206,7 @@ class Stage(modellib.XObjIdModel):
     name = models.CharField(max_length=256)
     label = models.TextField(unique=True)
     promotable = models.BooleanField(default=False)
+    created_date = modellib.DateTimeUtcField(auto_now_add=True)
 
     def serialize(self, request=None):
         xobj_model = modellib.XObjIdModel.serialize(self, request)
