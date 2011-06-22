@@ -3059,6 +3059,8 @@ class MigrateTo_58(SchemaMigration):
     def migrate14(self):
         cu = self.db.cursor()
         cu.execute("""ALTER TABLE ProductVersions ALTER COLUMN projectId DROP NOT NULL""")
+        
+        return True
 
 def _createUpdateSystemsQuerySet(db):
 
