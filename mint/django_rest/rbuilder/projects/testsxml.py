@@ -34,18 +34,37 @@ project_put_xml = """\
   </project>
 """
 
-project_version_post_xml = """\
-  <project_version>
+project_version_post_no_project_xml = """\
+  <project_branch>
+    <project_short_name>foo</project_short_name>
     <description>1</description>
     <namespace>rpath</namespace>
-    <project id="http://127.0.0.1:8000/api/v1/projects/postgres"/>
     <name>42</name>
-  </project_version>
+  </project_branch>
+"""
+
+project_version_post_with_project_xml = """\
+  <project_branch>
+    <project id="http://127.0.0.1:8000/api/v1/projects/foo"/>
+    <project_short_name>foo</project_short_name>
+    <description>1</description>
+    <namespace>rpath</namespace>
+    <name>42</name>
+  </project_branch>
+"""
+
+project_version_post_with_project_no_auth_xml = """\
+  <project_branch>
+    <project id="http://127.0.0.1:8000/api/v1/projects/test-project"/>
+    <project_short_name>foo</project_short_name>
+    <description>1</description>
+    <namespace>rpath</namespace>
+    <name>42</name>
+  </project_branch>
 """
 
 project_version_put_xml = """\
-  <project_version>
-    <project id="http://127.0.0.1:8000/api/v1/projects/postgres"/>
+  <project_branch id="http://127.0.0.1:8000/api/v1/project_branches/2">
     <description>updated description</description>
-  </project_version>
+  </project_branch>
 """

@@ -12,6 +12,7 @@ from mint.django_rest.rbuilder.projects import models # pyflakes=ignore
 from mint.django_rest.rbuilder.projects import testsxml # pyflakes=ignore
 from mint.django_rest.rbuilder.repos import manager as reposmanager
 from mint.django_rest.rbuilder.manager import basemanager
+from mint.django_rest.rbuilder.manager import rbuildermanager
 
 from xobj import xobj
 
@@ -27,6 +28,14 @@ class ProjectsTestCase(XMLTestCase):
         mock.mock(reposmanager.ReposManager, "generateConaryrcFile")
         mock.mock(basemanager.BaseRbuilderManager, "restDb")
         mock.mock(manager.ProjectManager, "setProductVersionDefinition")
+        self.mgr = rbuildermanager.RbuilderManager()
+        
+    def _addProject(self, short_name):
+        project = models.Project()
+        project.name = project.hostname = project.short_name = short_name
+        project = self.mgr.projectManager.addProject(project)
+        
+        return project
 
     def testGetProjectsAdmin(self):
         response = self._get('projects/',
@@ -82,29 +91,70 @@ class ProjectsTestCase(XMLTestCase):
         response = self._delete('projects/chater-foo',
             username="testuser", password="password")
         self.assertEquals(response.status_code, 204)
+        
+    def testGetProjectVersion(self):
+        response = self._get('project_branches/',
+            username="testuser", password="password")
+        self.assertEquals(response.status_code, 200)
+        branches = xobj.parse(response.content).project_branches.project_branch
+        self.assertEquals(len(branches), 4)
 
-    def testAddProjectVersion(self):
-        response = self._post('projects/postgres/versions',
-            data=testsxml.project_version_post_xml,
+    def testAddProjectVersionNoProject(self):
+        response = self._post('project_branches/',
+            data=testsxml.project_version_post_no_project_xml,
             username="admin", password="password")
         self.assertEquals(response.status_code, 200)
-        version = xobj.parse(response.content).project_version
-        version = models.ProjectVersion.objects.get(pk=version.version_id)
-        self.assertEquals('42', version.name)
+        branch = xobj.parse(response.content).project_branch
+        branch = models.ProjectVersion.objects.get(pk=branch.branch_id)
+        self.assertEquals('42', branch.name)
+        
+    def testAddProjectVersionToProject(self):
+        self._addProject("foo")
+        response = self._post('project_branches/',
+            data=testsxml.project_version_post_with_project_xml,
+            username="admin", password="password")
+        self.assertEquals(response.status_code, 200)
+        branch = xobj.parse(response.content).project_branch
+        branch = models.ProjectVersion.objects.get(pk=branch.branch_id)
+        self.assertEquals('42', branch.name)
+        
+    def testAddProjectVersionToProjectNoAuth(self):
+        # add project as admin
+        response = self._post('projects',
+            data=testsxml.project_post_xml,
+            username="admin", password="password")
+        self.assertEquals(response.status_code, 200)
+        
+        # try to add project as different user
+        response = self._post('project_branches/',
+            data=testsxml.project_version_post_with_project_no_auth_xml,
+            username="testuser", password="password")
+        self.assertEquals(response.status_code, 401)
 
     def testUpdateProjectVersion(self):
-        response = self._put('projects/postgres/versions/2',
+        response = self._put('project_branches/2',
             data=testsxml.project_version_put_xml,
             username="admin", password="password")
         self.assertEquals(response.status_code, 200)
-        version = xobj.parse(response.content).project_version
-        version = models.ProjectVersion.objects.get(pk=version.version_id)
+        branch = xobj.parse(response.content).project_branch
+        branch = models.ProjectVersion.objects.get(pk=branch.branch_id)
         self.assertEquals("updated description",
-            version.description)
+            branch.description)
+        
+    def testUpdateProjectVersionNoAuth(self):
+        response = self._put('project_branches/2',
+            data=testsxml.project_version_put_xml,
+            username="testuser", password="password")
+        self.assertEquals(response.status_code, 401)
 
     def testDeleteProjectVersion(self):
-        response = self._delete('projects/postgres/versions/2',
-            username="testuser", password="password")
+        response = self._delete('project_branches/2',
+            username="admin", password="password")
         self.assertEquals(response.status_code, 204)
+        
+    def testDeleteProjectVersionNoAuth(self):
+        response = self._delete('project_branches/2',
+            username="testuser", password="password")
+        self.assertEquals(response.status_code, 401)
 
 

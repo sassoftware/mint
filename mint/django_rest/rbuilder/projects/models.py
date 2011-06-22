@@ -136,9 +136,9 @@ class ProjectVersions(modellib.Collection):
         abstract = True
 
     _xobj = xobj.XObjMetadata(
-                tag = "project_versions")
+                tag = "project_branches")
     view_name = "ProjectVersions"
-    list_fields = ["project_version"]
+    list_fields = ["project_branch"]
     version = []
 
 class ProjectVersion(modellib.XObjIdModel):
@@ -146,14 +146,14 @@ class ProjectVersion(modellib.XObjIdModel):
         db_table = u'productversions'
 
     _xobj = xobj.XObjMetadata(
-        tag="project_version")
+        tag="project_branch")
     view_name = 'ProjectVersion'
-    url_key = ['project', 'pk']
 
-    version_id = models.AutoField(primary_key=True,
+    branch_id = models.AutoField(primary_key=True,
         db_column='productversionid')
     project = modellib.DeferredForeignKey(Project, db_column='projectid',
-        related_name="versions", view_name="ProjectVersions")
+        related_name="project_branches", view_name="ProjectVersions", null=True)
+    project_short_name = modellib.SyntheticField()
     namespace = models.CharField(max_length=16)
     name = models.CharField(max_length=16)
     description = models.TextField()
@@ -173,6 +173,7 @@ class ProjectVersion(modellib.XObjIdModel):
         # Convert timestamp fields in the database to our standard UTC format
         xobjModel.created_date = str(datetime.datetime.fromtimestamp(
             xobjModel.created_date, tz.tzutc()))
+        xobjModel.project_short_name = self.project.short_name
         return xobjModel
 
 class Stages(modellib.Collection):
