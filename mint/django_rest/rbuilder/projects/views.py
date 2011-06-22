@@ -43,28 +43,28 @@ class ProjectVersionService(service.BaseService):
 
     @access.anonymous
     @return_xml
-    def rest_GET(self, request, short_name, version_id=None):
-        return self.get(short_name, version_id)
+    def rest_GET(self, request, branch_id=None):
+        return self.get(branch_id)
 
-    def get(self, short_name, version_id=None):
-        if version_id:
-            return self.mgr.getProjectVersion(short_name, version_id)
+    def get(self, branch_id=None):
+        if branch_id:
+            return self.mgr.getProjectVersion(branch_id)
         else:
-            return self.mgr.getProjectVersions(short_name)
+            return self.mgr.getProjectVersions()
 
-    @requires("project_version")
+    @requires("project_branch")
     @return_xml
-    def rest_POST(self, request, short_name, project_version):
-        return self.mgr.addProjectVersion(short_name, project_version)
+    def rest_POST(self, request, project_branch):
+        return self.mgr.addProjectVersion(project_branch)
 
-    @requires("project_version")
+    @requires("project_branch")
     @return_xml
-    def rest_PUT(self, request, short_name, version_id, project_version):
-        return self.mgr.updateProjectVersion(short_name, project_version)
+    def rest_PUT(self, request, branch_id, project_branch):
+        return self.mgr.updateProjectVersion(project_branch)
 
-    def rest_DELETE(self, request, short_name, version_id):
-        projectVersion = self.get(short_name, version_id)
-        self.mgr.deleteProjectVersion(projectVersion)
+    def rest_DELETE(self, request, branch_id):
+        projectBranch = self.get(branch_id)
+        self.mgr.deleteProjectVersion(projectBranch)
         response = HttpResponse(status=204)
         return response
 

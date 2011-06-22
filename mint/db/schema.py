@@ -2058,14 +2058,14 @@ def _createUpdateSystemsQuerySet(db):
 
 def _createAllProjectsQuerySetSchema(db):
     """Add the all projects query set"""
-    filterId = _addQuerySetFilterEntry(db, "is_appliance", "EQUAL", "true")
+    filterId = _addQuerySetFilterEntry(db, "is_appliance", "EQUAL", "1")
     qsId = _addQuerySet(db, "All Appliances", "All appliances", "project", False, "query-tag-All_Appliances-9", filterId)
     
     return True
 
 def _createExternalProjectsQuerySetSchema(db):
     """Add the external projects query set"""
-    filterId = _addQuerySetFilterEntry(db, "external", "EQUAL", "true")
+    filterId = _addQuerySetFilterEntry(db, "external", "EQUAL", "1")
     qsId = _addQuerySet(db, "External Appliances", "External appliances", "project", False, "query-tag-External_Appliances-10", filterId)
     
     return True

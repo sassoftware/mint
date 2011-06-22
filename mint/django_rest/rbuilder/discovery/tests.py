@@ -73,7 +73,8 @@ class VersionsTestCase(XMLTestCase):
   <packages id="http://testserver/api/v1/packages"/>
   <platforms id="http://testserver/api/platforms"/>
   <products id="http://testserver/api/products"/>
-  <projects id="http://testserver/api/projects"/>
+  <projects id="http://testserver/api/v1/projects"/>
+  <project_branches id="http://testserver/api/v1/project_branches"/>
   <query_sets id="http://testserver/api/v1/query_sets"/>
   <reports id="http://testserver/api/v1/reports"/>
   <users id="http://testserver/api/v1/users"/>

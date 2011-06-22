@@ -210,15 +210,13 @@ class ProjectManager(basemanager.BaseManager):
         member.delete()
 
     @exposed
-    def getProjectVersions(self, shortName):
-        versions = models.ProjectVersions()
-        project = models.Project.objects.get(short_name=shortName)
-        versions.project_version = project.versions.all()
-        versions._parents = [project]
-        return versions
+    def getProjectVersions(self):
+        allVersions = models.ProjectVersions()
+        allVersions.project_branch = models.ProjectVersion.objects.all()
+        return allVersions
 
     @exposed
-    def getProjectVersion(self, shortName, versionId):
+    def getProjectVersion(self, versionId):
         version = models.ProjectVersion.objects.get(pk=versionId)
         return version
 
@@ -227,24 +225,35 @@ class ProjectManager(basemanager.BaseManager):
         prodDef.saveToRepository(cclient,
                 'Product Definition commit from rBuilder\n')
 
-    @exposed
-    def addProjectVersion(self, shortName, projectVersion):
-        project = models.Project.objects.get(short_name=shortName)
+    def _createProjectFromVersion(self, projectVersion):
+        project = models.Project()
+        project.short_name = projectVersion.project_short_name
+        project.name = project.hostname = project.short_name
+        project = self.addProject(project)
+        
+        return project
 
-        if not self.isProjectOwner(project):
+    @exposed
+    def addProjectVersion(self, projectVersion):
+        
+        # do we need to create the project?
+        if not projectVersion.project:
+            projectVersion.project = self._createProjectFromVersion(projectVersion)
+
+        if not self.isProjectOwner(projectVersion.project):
             raise errors.PermissionDenied()
 
         if not projectVersion.namespace:
-            projectVersion.namespace = project.namespace
+            projectVersion.namespace = projectVersion.project.namespace
 
         self.validateNamespace(projectVersion.namespace)
         self.validateProjectVersionName(projectVersion.name)
 
         # initial product definition
-        prodDef = helperfuncs.sanitizeProductDefinition(project.name,
-                        projectVersion.description, project.hostname, 
-                        project.domain_name, 
-                        project.short_name, projectVersion.name,
+        prodDef = helperfuncs.sanitizeProductDefinition(projectVersion.project.name,
+                        projectVersion.description, projectVersion.project.hostname, 
+                        projectVersion.project.domain_name, 
+                        projectVersion.project.short_name, projectVersion.name,
                         '', projectVersion.namespace)
         label = prodDef.getDefaultLabel()
 
@@ -253,7 +262,6 @@ class ProjectManager(basemanager.BaseManager):
         if projects.validLabel.match(label) == None:
             raise mint_error.InvalidLabel(label)
 
-        projectVersion.project = project
         projectVersion.save()
 
         self.setProductVersionDefinition(prodDef)
@@ -261,9 +269,9 @@ class ProjectManager(basemanager.BaseManager):
         # TODO: get the correct platformLabel
         platformLabel = None
 
-        if project.project_type == 'Appliance' or \
-           project.project_type == 'PlatformFoundation':
-            groupName = helperfuncs.getDefaultImageGroupName(project.hostname)
+        if projectVersion.project.project_type == 'Appliance' or \
+           projectVersion.project.project_type == 'PlatformFoundation':
+            groupName = helperfuncs.getDefaultImageGroupName(projectVersion.project.hostname)
             className = util.convertPackageNameToClassName(groupName)
             # convert from unicode
             recipeStr = str(templates.write(groupTemplate,
@@ -272,7 +280,7 @@ class ProjectManager(basemanager.BaseManager):
                             groupName=groupName,
                             recipeClassName=className,
                             version=projectVersion.name) + '\n')
-            self.mgr.createSourceTrove(str(project.repository_hostname),
+            self.mgr.createSourceTrove(str(projectVersion.project.repository_hostname),
                 str(groupName), str(label), str(projectVersion.name),
                 {'%s.recipe' % str(groupName): recipeStr},
                 'Initial appliance image group template')
@@ -280,15 +288,16 @@ class ProjectManager(basemanager.BaseManager):
         return projectVersion
 
     @exposed
-    def updateProjectVersion(self, shortName, projectVersion):
-        project = models.Project.objects.get(short_name=shortName)
-        if not self.isProjectOwner(project):
+    def updateProjectVersion(self, projectVersion):
+        if not self.isProjectOwner(projectVersion.project):
             raise errors.PermissionDenied()
         projectVersion.save()
         return projectVersion
 
     @exposed
     def deleteProjectVersion(self, projectVersion):
+        if not self.isProjectOwner(projectVersion.project):
+            raise errors.PermissionDenied()
         projectVersion.delete()
 
     @exposed
