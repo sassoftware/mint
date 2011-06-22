@@ -430,24 +430,43 @@ urlpatterns = patterns('',
     URL(r'users/(?P<user_id>\d+)/?$',
         usersviews.UsersService(),
         name='User'),
-        
+    
     # UserGroups
-    URL(r'users/user_groups/?$',
+    URL(r'user_groups/?$',
         usersviews.UserGroupsService(),
         name='UserGroups'),
-    
-    URL(r'users/(?P<user_id>\d+)/user_groups/?$',
+        
+    URL(r'user_groups/(?P<user_id>\d+)/?$',
         usersviews.UserUserGroupsService(),
-        name='UserGroups'),
-    
-    URL(r'users/user_groups/(?P<user_group_id>\d+)/?$',
+        name='UserGroup'),
+        
+    URL(r'user_groups/(?P<user_group_id>\d+)/?$',
         usersviews.UserGroupsService(),
         name='UserGroup'),
         
-    URL(r'users/user_groups/(?P<user_group_id>\d+)/user_group_members/?$',
+    URL(r'user_groups/(?P<user_group_id>\d+)/user_group_members/?$',
         usersviews.UserGroupMembersService(),
         name='UserGroupMembers'),
-        
+    
+    # USERGROUPS OLD, REMOVE
+    # URL(r'users/user_groups/?$',
+    #     usersviews.UserGroupsService(),
+    #     name='UserGroups'),
+    # 
+    # URL(r'users/(?P<user_id>\d+)/user_groups/?$',
+    #     usersviews.UserUserGroupsService(),
+    #     name='UserGroups'),
+    # 
+    # URL(r'users/user_groups/(?P<user_group_id>\d+)/?$',
+    #     usersviews.UserGroupsService(),
+    #     name='UserGroup'),
+    #     
+    # URL(r'users/user_groups/(?P<user_group_id>\d+)/user_group_members/?$',
+    #     usersviews.UserGroupMembersService(),
+    #     name='UserGroupMembers'),
+    # END OLD USERGROUP URLS
+    
+    
     # GlobalNotices
     URL(r'notices/?$',
         noticesviews.GlobalNoticesService(),

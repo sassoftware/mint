@@ -20,7 +20,7 @@ from lxml import etree  # pyflakes=ignore
 
 
 class PlatformsTestCase(XMLTestCase):
-    fixtures = ['platforms']
+    fixtures = ['platformstestxml']
     
     def xobjResponse(self, url):
         response = self._get(url, username="admin", password="password")
@@ -96,7 +96,7 @@ class PlatformsTestCase(XMLTestCase):
         
 
 class NewPlatformTest(XMLTestCase):
-    fixtures = ['platforms']
+    fixtures = ['platformstestxml']
     
     def xobjResponse(self, url):
         response = self._get(url, username="admin", password="password")
