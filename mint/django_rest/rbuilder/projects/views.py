@@ -71,14 +71,14 @@ class ProjectVersionService(service.BaseService):
 class ProjectVersionStageService(service.BaseService):
     @access.anonymous
     @return_xml
-    def rest_GET(self, request, short_name, version_id, stage_name=None):
-        return self.get(short_name, version_id, stage_name)
+    def rest_GET(self, request, stage_id=None):
+        return self.get(stage_id)
 
-    def get(self, short_name, version_id, stage_name):
-        if stage_name:
-            return self.mgr.getStage(short_name, version_id, stage_name)
+    def get(self, stage_id):
+        if stage_id:
+            return self.mgr.getStage(stage_id)
         else:
-            return self.mgr.getStages(short_name, version_id)
+            return self.mgr.getStages()
 
 class ProjectImageService(service.BaseService):
 

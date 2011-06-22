@@ -28,7 +28,7 @@ from conary.dbstore import sqlerrors, sqllib
 log = logging.getLogger(__name__)
 
 # database schema major version
-RBUILDER_DB_VERSION = sqllib.DBversion(58, 11)
+RBUILDER_DB_VERSION = sqllib.DBversion(58, 12)
 
 
 def _createTrigger(db, table, column = "changed"):
@@ -1086,18 +1086,18 @@ def _createInventorySchema(db, cfg):
         changed |= _addSystemTypes(db)
         changed = True
 
-    if 'inventory_stage' not in db.tables:
+    if 'project_branch_stage' not in db.tables:
         cu.execute("""
-            CREATE TABLE "inventory_stage" (
+            CREATE TABLE "project_branch_stage" (
                 "stage_id" %(PRIMARYKEY)s,
                 "name" varchar(256) NOT NULL,
                 "label" text NOT NULL,
-                "project_version_id" integer
+                "project_branch_id" integer
                     REFERENCES ProductVersions (productVersionId)
                     ON DELETE SET NULL,
                 "promotable" bool
             )""" % db.keywords)
-        db.tables['inventory_stage'] = []
+        db.tables['project_branch_stage'] = []
         changed = True
 
     if 'inventory_system' not in db.tables:
@@ -1135,7 +1135,7 @@ def _createInventorySchema(db, cfg):
                 "credentials" text,
                 "configuration" text,
                 "stage_id" integer 
-                    REFERENCES "inventory_stage" ("stage_id"),
+                    REFERENCES "project_branch_stage" ("stage_id"),
                 "major_version_id" integer 
                     REFERENCES ProductVersions (productVersionId),
                 "project_id" integer 

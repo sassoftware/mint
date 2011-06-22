@@ -181,23 +181,22 @@ class Stages(modellib.Collection):
         abstract = True
 
     _xobj = xobj.XObjMetadata(
-                tag = "stages")
+                tag = "project_branch_stages")
     view_name = "Stages"
-    list_fields = ["stage"]
-    stage = []
+    list_fields = ["project_branch_stage"]
+    project_branch_stage = []
 
 class Stage(modellib.XObjIdModel):
     class Meta:
-        db_table = 'inventory_stage'
+        db_table = 'project_branch_stage'
 
     view_name = 'ProjectVersionStage'
-    _xobj = xobj.XObjMetadata(tag='stage')
+    _xobj = xobj.XObjMetadata(tag='project_branch_stage')
     _xobj_hidden_accessors = set(['version_set',])
-    url_key = ['project_version', 'name']
 
     stage_id = models.AutoField(primary_key=True)
-    project_version = modellib.DeferredForeignKey(ProjectVersion, 
-        related_name="stages", view_name="ProjectVersionStages")
+    project_branch = modellib.DeferredForeignKey(ProjectVersion, 
+        related_name="project_branch_stages", view_name="ProjectVersionStages")
     name = models.CharField(max_length=256)
     label = models.TextField(unique=True)
     promotable = models.BooleanField(default=False)
@@ -205,7 +204,7 @@ class Stage(modellib.XObjIdModel):
     def serialize(self, request=None):
         xobj_model = modellib.XObjIdModel.serialize(self, request)
         xobj_model._xobj.text = self.name
-        xobj_model.hostname = self.project_version.project.hostname
+        xobj_model.hostname = self.project_branch.project.hostname
         return xobj_model
 
 class Release(modellib.XObjModel):

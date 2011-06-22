@@ -97,6 +97,7 @@ class ApiVersion(modellib.XObjIdModel):
     products = modellib.HrefField("../products")
     projects = modellib.HrefField("projects")
     project_branches = modellib.HrefField("project_branches")
+    project_branch_stages = modellib.HrefField("project_branch_stages")
     query_sets = modellib.HrefField("query_sets")
     reports = modellib.HrefField("reports")
     users = modellib.HrefField("users")

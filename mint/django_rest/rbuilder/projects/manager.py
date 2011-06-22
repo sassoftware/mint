@@ -219,11 +219,24 @@ class ProjectManager(basemanager.BaseManager):
     def getProjectVersion(self, versionId):
         version = models.ProjectVersion.objects.get(pk=versionId)
         return version
+    
+    def saveProductVersionDefinition(self, productVersion, prodDef):
+        self.setProductVersionDefinition(prodDef)
+        # now save them in the DB also
+        stages = prodDef.getStages()
+        for stage in stages:
+            promotable = ((stage.name != stages[-1].name and True) or False)
+            dbStage = models.Stage(name=str(stage.name),
+                 label=str(prodDef.getLabelForStage(stage.name)),
+                 promotable=promotable)
+            dbStage.project_branch = productVersion
+            dbStage.save()
 
     def setProductVersionDefinition(self, prodDef):
         cclient = self.mgr.getUserClient()
         prodDef.saveToRepository(cclient,
                 'Product Definition commit from rBuilder\n')
+        
 
     def _createProjectFromVersion(self, projectVersion):
         project = models.Project()
@@ -263,8 +276,8 @@ class ProjectManager(basemanager.BaseManager):
             raise mint_error.InvalidLabel(label)
 
         projectVersion.save()
-
-        self.setProductVersionDefinition(prodDef)
+        
+        self.saveProductVersionDefinition(projectVersion, prodDef)
 
         # TODO: get the correct platformLabel
         platformLabel = None
@@ -325,7 +338,12 @@ class ProjectManager(basemanager.BaseManager):
         return pd
 
     @exposed
-    def getStage(self, shortName, projectVersionId, stageName):
+    def getStage(self, stageId):
+        stage = models.Stage.objects.get(pk=stageId)
+        return stage
+
+    @exposed
+    def getStageOld(self, shortName, projectVersionId, stageName):
         projectVersion = models.ProjectVersion.objects.get(
             pk=projectVersionId) 
         project = projectVersion.project
@@ -340,21 +358,7 @@ class ProjectManager(basemanager.BaseManager):
         return dbStage
 
     @exposed
-    def getStages(self, shortName, projectVersionId):
-        projectVersion = models.ProjectVersion.objects.get(
-            pk=projectVersionId) 
-        project = projectVersion.project
-        pd = self.getProductVersionDefinitionByProjectVersion(projectVersion)
-        stages = models.Stages()
-        stages.stage = []
-        pdStages = pd.getStages()
-        for stage in pdStages:
-            promotable = ((stage.name != pdStages[-1].name and True) or False)
-            # TODO: now that we've created a model for this stage, should we
-            # save it in the db?
-            dbStage = models.Stage(name=str(stage.name),
-                 label=str(pd.getLabelForStage(stage.name)),
-                 project_version=projectVersion,
-                 promotable=promotable)
-            stages.stage.append(dbStage)
-        return stages
+    def getStages(self):
+        allStages = models.Stages()
+        allStages.project_branch_stage = models.Stage.objects.all()
+        return allStages

@@ -2898,7 +2898,7 @@ class MigrateTo_57(SchemaMigration):
 
 
 class MigrateTo_58(SchemaMigration):
-    Version = (58, 11)
+    Version = (58, 12)
 
     def migrate(self):
         return True
@@ -3024,6 +3024,11 @@ class MigrateTo_58(SchemaMigration):
                     NOT NULL,
                 UNIQUE ("project_id", "query_tag_id", "inclusion_method_id")
             )""")
+        return True
+    
+    def migrate12(self):
+        cu = self.db.cursor()
+        cu.execute("""ALTER TABLE inventory_stage RENAME TO project_branch_stage""")
         return True
 
 def _createUpdateSystemsQuerySet(db):
