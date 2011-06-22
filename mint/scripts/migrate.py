@@ -2898,7 +2898,7 @@ class MigrateTo_57(SchemaMigration):
 
 
 class MigrateTo_58(SchemaMigration):
-    Version = (58, 12)
+    Version = (58, 13)
 
     def migrate(self):
         return True
@@ -3029,6 +3029,31 @@ class MigrateTo_58(SchemaMigration):
     def migrate12(self):
         cu = self.db.cursor()
         cu.execute("""ALTER TABLE inventory_stage RENAME TO project_branch_stage""")
+        return True
+
+    def migrate13(self):
+        cu = self.db.cursor()
+        cu.execute("""DELETE FROM querysets_queryset WHERE name='All Appliances'""")
+        schema._createAllProjectBranchStages(self.db)
+        
+        createTable(self.db, """
+            CREATE TABLE "querysets_stagetag" (
+                "stage_tag_id" %(PRIMARYKEY)s,
+                "stage_id" INTEGER
+                    REFERENCES "project_branch_stage" ("stage_id")
+                    ON DELETE CASCADE
+                    NOT NULL,
+                "query_tag_id" INTEGER
+                    REFERENCES "querysets_querytag" ("query_tag_id")
+                    ON DELETE CASCADE
+                    NOT NULL,
+                "inclusion_method_id" INTEGER
+                    REFERENCES "querysets_inclusionmethod" ("inclusion_method_id")
+                    ON DELETE CASCADE
+                    NOT NULL,
+                UNIQUE ("stage_id", "query_tag_id", "inclusion_method_id")
+            )""")
+        
         return True
 
 def _createUpdateSystemsQuerySet(db):

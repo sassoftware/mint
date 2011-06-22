@@ -28,7 +28,7 @@ from conary.dbstore import sqlerrors, sqllib
 log = logging.getLogger(__name__)
 
 # database schema major version
-RBUILDER_DB_VERSION = sqllib.DBversion(58, 12)
+RBUILDER_DB_VERSION = sqllib.DBversion(58, 13)
 
 
 def _createTrigger(db, table, column = "changed"):
@@ -1967,7 +1967,7 @@ def _createPKI(db):
 
     return changed
 
-def _addQuerySet(db, name, description, resource_type, can_modify, query_tag_name, filter_id):
+def _addQuerySet(db, name, description, resource_type, can_modify, query_tag_name, filter_id=None):
     """Add a new query set"""
     
     # add the query set
@@ -1985,10 +1985,11 @@ def _addQuerySet(db, name, description, resource_type, can_modify, query_tag_nam
     _addTableRows(db, "querysets_querytag", "name",
         [dict(query_set_id=qsId, name=query_tag_name)])
     
-    # link the query set to the filter
-    _addTableRows(db, "querysets_queryset_filter_entries", 'id',
-        [dict(queryset_id=qsId, filterentry_id=filter_id)],
-        ['queryset_id', 'filterentry_id'])
+    if filter_id:
+        # link the query set to the filter
+        _addTableRows(db, "querysets_queryset_filter_entries", 'id',
+            [dict(queryset_id=qsId, filterentry_id=filter_id)],
+            ['queryset_id', 'filterentry_id'])
     
     return qsId
 
@@ -2067,6 +2068,12 @@ def _createExternalProjectsQuerySetSchema(db):
     """Add the external projects query set"""
     filterId = _addQuerySetFilterEntry(db, "external", "EQUAL", "1")
     qsId = _addQuerySet(db, "External Appliances", "External appliances", "project", False, "query-tag-External_Appliances-10", filterId)
+    
+    return True
+
+def _createAllProjectBranchStages(db):
+    """Add the project branch stages query set"""
+    qsId = _addQuerySet(db, "All Projects", "All projects", "project_branch_stage", False, "query-tag-All_Projects-11")
     
     return True
 
@@ -2610,8 +2617,8 @@ def createSchema(db, doCommit=True, cfg=None):
     changed |= _createInfrastructureSystemsQuerySetSchema(db)
     changed |= _createWindowsBuildSystemsQuerySet(db)
     changed |= _createUpdateSystemsQuerySet(db)
-    changed |= _createAllProjectsQuerySetSchema(db)
-    changed |= _createExternalProjectsQuerySetSchema(db)
+    #changed |= _createAllProjectsQuerySetSchema(db)
+    #changed |= _createExternalProjectsQuerySetSchema(db)
     changed |= _createChangeLogSchema(db)
     changed |= _createPackageSchema(db)
 

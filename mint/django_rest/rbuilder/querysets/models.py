@@ -298,6 +298,29 @@ class ProjectTag(modellib.XObjIdModel):
         querySetHref = self.query_tag.query_set.get_absolute_url(request)
         xobjModel.query_set = modellib.XObjHrefModel(querySetHref)
         return xobjModel
+    
+class StageTag(modellib.XObjIdModel):
+    class Meta:
+        unique_together = (('stage', 'query_tag', 'inclusion_method'),)
+        
+    _xobj = xobj.XObjMetadata(tag='stage_tag')
+    
+    stage_tag_id = models.AutoField(primary_key=True)
+    stage = modellib.ForeignKey(projectsmodels.Stage, related_name='stage_tags')
+    query_tag = modellib.ForeignKey(QueryTag, related_name='stage_tags', text_field='name')
+    inclusion_method = modellib.SerializedForeignKey(InclusionMethod, related_name='stage_tags')
+    
+    load_fields = [stage, query_tag, inclusion_method]
+    
+    def get_absolute_url(self, *args, **kwargs):
+        self._parents = [self.stage, self]
+        return modellib.XObjIdModel.get_absolute_url(self, *args, **kwargs)
+        
+    def serialize(self, request=None, values=None):
+        xobjModel = modellib.XObjIdModel.serialize(self, request)
+        querySetHref = self.query_tag.query_set.get_absolute_url(request)
+        xobjModel.query_set = modellib.XObjHrefModel(querySetHref)
+        return xobjModel
 
 
 for mod_obj in sys.modules[__name__].__dict__.values():
