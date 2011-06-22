@@ -252,6 +252,9 @@ class ProjectManager(basemanager.BaseManager):
         project.project_type = projectVersion.project_type
         project.namespace = projectVersion.namespace
         
+        if not project.description:
+            project.description = ''
+        
         if not project.namespace:
             project.namespace = self.cfg.namespace
         
