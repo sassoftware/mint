@@ -2898,7 +2898,7 @@ class MigrateTo_57(SchemaMigration):
 
 
 class MigrateTo_58(SchemaMigration):
-    Version = (58, 16)
+    Version = (58, 17)
 
     def migrate(self):
         return True
@@ -3069,6 +3069,11 @@ class MigrateTo_58(SchemaMigration):
     def migrate16(self):
         cu = self.db.cursor()
         cu.execute("""ALTER TABLE project_branch_stage ADD COLUMN created_date timestamp with time zone NOT NULL""")
+        return True
+    
+    def migrate17(self):
+        cu = self.db.cursor()
+        cu.execute("""ALTER TABLE project_branch_stage RENAME COLUMN project_version_id TO project_branch_id""")
         return True
 
 def _createUpdateSystemsQuerySet(db):
