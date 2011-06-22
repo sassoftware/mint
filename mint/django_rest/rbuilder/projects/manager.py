@@ -250,6 +250,11 @@ class ProjectManager(basemanager.BaseManager):
         project.short_name = project.hostname = projectVersion.project_short_name
         project.external = projectVersion.project_external.lower() == "true" and 1 or 0
         project.project_type = projectVersion.project_type
+        project.namespace = projectVersion.namespace
+        
+        if not project.namespace:
+            project.namespace = self.cfg.namespace
+        
         project = self.addProject(project)
         
         return project
@@ -272,7 +277,7 @@ class ProjectManager(basemanager.BaseManager):
 
         # initial product definition
         prodDef = helperfuncs.sanitizeProductDefinition(projectVersion.project.name,
-                        projectVersion.description, projectVersion.project.hostname, 
+                        projectVersion.project.description, projectVersion.project.hostname, 
                         projectVersion.project.domain_name, 
                         projectVersion.project.short_name, projectVersion.name,
                         '', projectVersion.namespace)
