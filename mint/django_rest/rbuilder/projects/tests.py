@@ -109,7 +109,7 @@ class ProjectsTestCase(XMLTestCase):
         self.assertEquals('42', branch.name)
         
         # make sure stages are there
-        self.assertEquals(3, len(branch.project_branch_stages.all()))
+        self.assertEquals(3, len(branch.stages.all()))
         
     def testAddProjectVersionToProject(self):
         self._addProject("foo")
@@ -122,7 +122,7 @@ class ProjectsTestCase(XMLTestCase):
         self.assertEquals('42', branch.name)
         
         # make sure stages are there
-        self.assertEquals(3, len(branch.project_branch_stages.all()))
+        self.assertEquals(3, len(branch.stages.all()))
         
     def testAddProjectVersionToProjectNoAuth(self):
         # add project as admin
