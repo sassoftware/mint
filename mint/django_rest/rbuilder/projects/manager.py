@@ -94,6 +94,12 @@ class ProjectManager(basemanager.BaseManager):
 
         if not project.database:
             project.database = self.cfg.defaultDatabase
+            
+        if not project.domain_name:
+            project.domain_name = self.cfg.siteDomainName
+            
+        if not project.repository_hostname:
+            project.repository_hostname = '.'.join(project.hostname, project.domain_name)
 
         # Save the project, we need the pk populated to create the repository
         project.save()
