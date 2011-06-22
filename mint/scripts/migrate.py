@@ -2898,7 +2898,7 @@ class MigrateTo_57(SchemaMigration):
 
 
 class MigrateTo_58(SchemaMigration):
-    Version = (58, 13)
+    Version = (58, 14)
 
     def migrate(self):
         return True
@@ -3055,6 +3055,10 @@ class MigrateTo_58(SchemaMigration):
             )""")
         
         return True
+    
+    def migrate14(self):
+        cu = self.db.cursor()
+        cu.execute("""ALTER TABLE ProductVersions ALTER COLUMN projectId integer NULL""")
 
 def _createUpdateSystemsQuerySet(db):
 

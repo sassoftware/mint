@@ -28,7 +28,7 @@ from conary.dbstore import sqlerrors, sqllib
 log = logging.getLogger(__name__)
 
 # database schema major version
-RBUILDER_DB_VERSION = sqllib.DBversion(58, 13)
+RBUILDER_DB_VERSION = sqllib.DBversion(58, 14)
 
 
 def _createTrigger(db, table, column = "changed"):
@@ -655,7 +655,7 @@ def _createProductVersions(db):
         cu.execute("""
             CREATE TABLE ProductVersions (
                 productVersionId    %(PRIMARYKEY)s,
-                projectId       integer             NOT NULL
+                projectId       integer
                     REFERENCES Projects ON DELETE CASCADE,
                 namespace           varchar(16)     NOT NULL,
                 name                varchar(16)     NOT NULL,
