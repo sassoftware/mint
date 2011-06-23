@@ -211,9 +211,9 @@ urlpatterns = patterns('',
         name='MajorVersions'),
 
     # Stages
-    URL(r'products/(\w|\-)*/versions/(\w|\.)*/stages/(\w)*/?$',
-        inventoryviews.StageService(),
-        name='Stages'),
+    #URL(r'products/(\w|\-)*/versions/(\w|\.)*/stages/(\w)*/?$',
+    #    inventoryviews.StageService(),
+    #    name='Stages'),
 
     # Projects
     URL(r'products/(\w|\-)*/?$',
@@ -263,7 +263,10 @@ urlpatterns = patterns('',
         name='ProjectVersions'),
     URL(r'project_branches/(?P<branch_id>[a-zA-Z0-9]+(\.[a-zA-Z0-9]+)*)/?$',
         projectviews.ProjectVersionService(),
-        name='ProjectVersions'),   
+        name='ProjectVersions'),
+    URL(r'project_branches/(?P<version_id>[a-zA-Z0-9]+(\.[a-zA-Z0-9]+)*)/stages/?$',
+        projectviews.ProjectBranchStageService(),
+        name='ProjectImages'),
     URL(r'project_branches/(?P<version_id>[a-zA-Z0-9]+(\.[a-zA-Z0-9]+)*)/images/?$',
         projectviews.ProjectImageService(),
         name='ProjectImages'),
@@ -274,10 +277,10 @@ urlpatterns = patterns('',
                        
     # project branch stages     
     URL(r'project_branch_stages/?$',
-        projectviews.ProjectVersionStageService(),
+        projectviews.ProjectStageService(),
         name='ProjectVersionStages'),   
     URL(r'project_branch_stages/(?P<stage_id>[a-zA-Z0-9]+(\.[a-zA-Z0-9]+)*)/?$',
-        projectviews.ProjectVersionStageService(),
+        projectviews.ProjectStageService(),
         name='ProjectVersionStage'),      
            
     # Projects

@@ -68,7 +68,7 @@ class ProjectVersionService(service.BaseService):
         response = HttpResponse(status=204)
         return response
 
-class ProjectVersionStageService(service.BaseService):
+class ProjectStageService(service.BaseService):
     @access.anonymous
     @return_xml
     def rest_GET(self, request, stage_id=None):
@@ -79,6 +79,18 @@ class ProjectVersionStageService(service.BaseService):
             return self.mgr.getStage(stage_id)
         else:
             return self.mgr.getStages()
+        
+class ProjectBranchStageService(service.BaseService):
+    @access.anonymous
+    @return_xml
+    def rest_GET(self, request, version_id, stage_id=None):
+        return self.get(version_id, stage_id)
+
+    def get(self, version_id, stage_id):
+        if stage_id:
+            return self.mgr.getStage(stage_id)
+        else:
+            return self.mgr.getStages(version_id)
 
 class ProjectImageService(service.BaseService):
 
