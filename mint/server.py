@@ -271,20 +271,7 @@ class MintServer(object):
                     # access -- we don't want a broken session preventing
                     # anonymous access or logins.
                     sid, authToken = authToken, ('anonymous', 'anonymous')
-                    if len(sid) == 64:
-                        # signed cookie
-                        sig, val = sid[:32], sid[32:]
-
-                        mac = hmac.new(self.cfg.cookieSecretKey, 'pysid')
-                        mac.update(val)
-                        if mac.hexdigest() != sig:
-                            raise mint_error.PermissionDenied
-
-                        sid = val
-                    elif len(sid) == 32:
-                        # unsigned cookie
-                        pass
-                    else:
+                    if len(sid) != 32:
                         # unknown
                         sid = None
 
