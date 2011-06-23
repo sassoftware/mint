@@ -188,7 +188,7 @@ class Stages(modellib.Collection):
 
     _xobj = xobj.XObjMetadata(
                 tag = "project_branch_stages")
-    view_name = "Stages"
+    view_name = "ProjectStages"
     list_fields = ["project_branch_stage"]
     project_branch_stage = []
 
@@ -196,13 +196,13 @@ class Stage(modellib.XObjIdModel):
     class Meta:
         db_table = 'project_branch_stage'
 
-    view_name = 'ProjectVersionStage'
+    view_name = 'ProjectStage'
     _xobj = xobj.XObjMetadata(tag='project_branch_stage')
     _xobj_hidden_accessors = set(['version_set',])
 
     stage_id = models.AutoField(primary_key=True)
     project_branch = modellib.DeferredForeignKey(ProjectVersion, 
-        related_name="stages", view_name="ProjectVersionStages")
+        related_name="stages", view_name="ProjectBranchStages")
     name = models.CharField(max_length=256)
     label = models.TextField(unique=True)
     promotable = models.BooleanField(default=False)
