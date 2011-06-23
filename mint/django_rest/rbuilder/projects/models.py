@@ -154,7 +154,6 @@ class ProjectVersion(modellib.XObjIdModel):
     project = modellib.DeferredForeignKey(Project, db_column='projectid',
         related_name="project_branches", view_name="ProjectVersions", null=True)
     project_name = modellib.SyntheticField()
-    project_external = modellib.SyntheticField()
     project_short_name = modellib.SyntheticField()
     project_type = modellib.SyntheticField()
     namespace = models.CharField(max_length=16)
@@ -178,7 +177,6 @@ class ProjectVersion(modellib.XObjIdModel):
             xobjModel.created_date, tz.tzutc()))
         xobjModel.project_name = self.project.name
         xobjModel.project_type = self.project.project_type
-        xobjModel.project_external = self.project.external
         xobjModel.project_short_name = self.project.short_name
         return xobjModel
 
