@@ -207,10 +207,12 @@ class Stage(modellib.XObjIdModel):
     project_name = modellib.SyntheticField()
     project_short_name = modellib.SyntheticField()
     project_type = modellib.SyntheticField()
+    project_branch_name = modellib.SyntheticField()
     created_date = modellib.DateTimeUtcField(auto_now_add=True)
 
     def serialize(self, request=None):
         xobjModel = modellib.XObjIdModel.serialize(self, request)
+        xobjModel.project_branch_name = self.project_branch.name
         xobjModel.project_name = self.project_branch.project.name
         xobjModel.project_type = self.project_branch.project.project_type
         xobjModel.project_short_name = self.project_branch.project.short_name
