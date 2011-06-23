@@ -378,7 +378,7 @@ class ProjectManager(basemanager.BaseManager):
         stages = models.Stages()
         if version_id:
             version = models.ProjectVersion.objects.get(pk=version_id)
-            stages.project_branch_stage = version.stages.all()
+            stages.project_branch_stage = version.project_branch_stages.all()
         else:
             stages.project_branch_stage = models.Stage.objects.all()
         return stages

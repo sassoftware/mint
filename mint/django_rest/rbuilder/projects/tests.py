@@ -115,7 +115,7 @@ class ProjectsTestCase(XMLTestCase):
         self.assertEquals('Appliance', branch.project.project_type)
         
         # make sure stages are there
-        self.assertEquals(3, len(branch.stages.all()))
+        self.assertEquals(3, len(branch.project_branch_stages.all()))
         
     def testAddProjectVersionToProject(self):
         self._addProject("foo")
@@ -128,7 +128,7 @@ class ProjectsTestCase(XMLTestCase):
         self.assertEquals('42', branch.name)
         
         # make sure stages are there
-        self.assertEquals(3, len(branch.stages.all()))
+        self.assertEquals(3, len(branch.project_branch_stages.all()))
         
     def testAddProjectVersionToProjectNoAuth(self):
         # add project as admin
@@ -186,7 +186,7 @@ class ProjectsTestCase(XMLTestCase):
         branch = models.ProjectVersion.objects.get(pk=branch.branch_id)
         
         # get branch stages
-        response = self._get('project_branches/%s/stages' % branch.branch_id,
+        response = self._get('project_branches/%s/project_branch_stages' % branch.branch_id,
             username="testuser", password="password")
         self.assertEquals(response.status_code, 200)
         stages = xobj.parse(response.content).project_branch_stages.project_branch_stage

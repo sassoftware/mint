@@ -202,7 +202,7 @@ class Stage(modellib.XObjIdModel):
 
     stage_id = models.AutoField(primary_key=True)
     project_branch = modellib.DeferredForeignKey(ProjectVersion, 
-        related_name="stages", view_name="ProjectBranchStages")
+        related_name="project_branch_stages", view_name="ProjectBranchStages")
     name = models.CharField(max_length=256)
     label = models.TextField(unique=True)
     promotable = models.BooleanField(default=False)
