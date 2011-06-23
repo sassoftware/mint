@@ -89,6 +89,8 @@ class QuerySet(modellib.XObjIdModel):
         "Defined filter entries for this query set")
     resource_type = D(models.TextField(),
         "Name of the resource this query set operates on")
+    presentation_type = D(models.TextField(),
+        "A classification for client to use when displaying the objects.  For example, stages can be on projects, branches, platforms, etc.")
     can_modify = D(models.BooleanField(default=True),
         "Whether this query set can be deleted through the API.")
 

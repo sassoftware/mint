@@ -28,7 +28,7 @@ from conary.dbstore import sqlerrors, sqllib
 log = logging.getLogger(__name__)
 
 # database schema major version
-RBUILDER_DB_VERSION = sqllib.DBversion(58, 17)
+RBUILDER_DB_VERSION = sqllib.DBversion(58, 18)
 
 
 def _createTrigger(db, table, column = "changed"):
@@ -1968,7 +1968,7 @@ def _createPKI(db):
 
     return changed
 
-def _addQuerySet(db, name, description, resource_type, can_modify, query_tag_name, filter_id=None):
+def _addQuerySet(db, name, description, resource_type, can_modify, query_tag_name, filter_id=None, presentation_type=None):
     """Add a new query set"""
     
     # add the query set
@@ -1977,6 +1977,7 @@ def _addQuerySet(db, name, description, resource_type, can_modify, query_tag_nam
             description=description,
             created_date=str(datetime.datetime.now(tz.tzutc())),
             modified_date=str(datetime.datetime.now(tz.tzutc())),
+            presentation_type=presentation_type,
             can_modify=can_modify),
         ])
     
@@ -2058,25 +2059,23 @@ def _createUpdateSystemsQuerySet(db):
     
     return True
 
-def _createAllProjectsQuerySetSchema(db):
-    """Add the all projects query set"""
-    filterId = _addQuerySetFilterEntry(db, "is_appliance", "EQUAL", "1")
-    qsId = _addQuerySet(db, "All Appliances", "All appliances", "project", False, "query-tag-All_Appliances-9", filterId)
-    
-    return True
-
-def _createExternalProjectsQuerySetSchema(db):
-    """Add the external projects query set"""
-    filterId = _addQuerySetFilterEntry(db, "external", "EQUAL", "1")
-    qsId = _addQuerySet(db, "External Appliances", "External appliances", "project", False, "query-tag-External_Appliances-10", filterId)
-    
-    return True
-
 def _createAllProjectBranchStages(db):
     """Add the project branch stages query set"""
-    qsId = _addQuerySet(db, "All Projects", "All projects", "project_branch_stage", False, "query-tag-All_Projects-11")
+    filterId = _addQuerySetFilterEntry(db, "name", "IS_NULL", "False")
+    qsId = _addQuerySet(db, "All Projects", "All projects", "project_branch_stage", False, "query-tag-All_Projects-11", filterId)
     
     return True
+
+def _createAllPlatformBranchStages(db):
+    """Add the platform branch stages query set"""
+    filterId = _getAllFilterId(db)
+    qsId = _addQuerySet(db, "All Platforms", "All platforms", "project_branch_stage", False, "query-tag-All_Projects-12", filterId, "platform")
+    
+    return True
+
+def _getAllFilterId(db):
+    return _getRowPk(db, "querysets_filterentry", 'filter_entry_id',
+        field="name", operator='IS_NULL', value="False")
 
 def _createQuerySetSchema(db):
     """QuerySet tables"""
@@ -2090,6 +2089,7 @@ def _createQuerySetSchema(db):
             "created_date" TIMESTAMP WITH TIME ZONE NOT NULL,
             "modified_date" TIMESTAMP WITH TIME ZONE NOT NULL,
             "resource_type" TEXT NOT NULL,
+            "presentation_type" TEXT,
             "can_modify" BOOLEAN NOT NULL DEFAULT TRUE
         )""")
     changed |= _addTableRows(db, "querysets_queryset", "name",
@@ -2618,8 +2618,8 @@ def createSchema(db, doCommit=True, cfg=None):
     changed |= _createInfrastructureSystemsQuerySetSchema(db)
     changed |= _createWindowsBuildSystemsQuerySet(db)
     changed |= _createUpdateSystemsQuerySet(db)
-    #changed |= _createAllProjectsQuerySetSchema(db)
-    #changed |= _createExternalProjectsQuerySetSchema(db)
+    changed != _createAllProjectBranchStages(db)
+    changed != _createAllPlatformBranchStages(db)
     changed |= _createChangeLogSchema(db)
     changed |= _createPackageSchema(db)
 

@@ -2898,7 +2898,7 @@ class MigrateTo_57(SchemaMigration):
 
 
 class MigrateTo_58(SchemaMigration):
-    Version = (58, 17)
+    Version = (58, 18)
 
     def migrate(self):
         return True
@@ -3074,6 +3074,30 @@ class MigrateTo_58(SchemaMigration):
     def migrate17(self):
         cu = self.db.cursor()
         cu.execute("""ALTER TABLE project_branch_stage RENAME COLUMN project_version_id TO project_branch_id""")
+        return True
+    
+    def migrate18(self):
+        cu = self.db.cursor()
+        cu.execute("""ALTER TABLE querysets_queryset ADD COLUMN presentation_type TEXT""")
+        
+        # remove old external appliances query set and filter
+        cu.execute("""DELETE FROM querysets_queryset WHERE name='External Appliances'""")
+        cu.execute("""DELETE FROM querysets_filterentry WHERE field='external' AND operator='EQUAL' AND value='1'""")
+        cu.execute("""DELETE FROM querysets_filterentry WHERE field='is_appliance' AND operator='EQUAL' AND value='1'""")
+        
+        # add the filter terms for "all" in the set
+        allFilterId = schema._addQuerySetFilterEntry(self.db, "name", "IS_NULL", "False")
+        
+        # get the all projects qs
+        qsId = schema._getRowPk(self.db, "querysets_queryset", "query_set_id", name="All Projects")
+        
+        # link the all projects query set to the "all" filter
+        schema._addTableRows(self.db, "querysets_queryset_filter_entries", 'id',
+            [dict(queryset_id=qsId, filterentry_id=allFilterId)],
+            ['queryset_id', 'filterentry_id'])
+        
+        # add new query sets
+        schema._createAllPlatformBranchStages(self.db)
         return True
 
 def _createUpdateSystemsQuerySet(db):
