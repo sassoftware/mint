@@ -28,7 +28,7 @@ from conary.dbstore import sqlerrors, sqllib
 log = logging.getLogger(__name__)
 
 # database schema major version
-RBUILDER_DB_VERSION = sqllib.DBversion(58, 19)
+RBUILDER_DB_VERSION = sqllib.DBversion(58, 20)
 
 
 def _createTrigger(db, table, column = "changed"):
@@ -2059,8 +2059,10 @@ def _createUpdateSystemsQuerySet(db):
     
     return True
 
-def _createAllProjectBranchStages(db):
+def _createAllProjectBranchStages13(db):
     """Add the project branch stages query set"""
+    
+    # do not change this, froxen to migrate13
     filterId = _addQuerySetFilterEntry(db, "name", "IS_NULL", "False")
     qsId = _addQuerySet(db, "All Projects", "All projects", "project_branch_stage", False, "query-tag-All_Projects-11", filterId, "project")
     
@@ -2069,7 +2071,21 @@ def _createAllProjectBranchStages(db):
 def _createAllPlatformBranchStages(db):
     """Add the platform branch stages query set"""
     filterId = _getAllFilterId(db)
-    qsId = _addQuerySet(db, "All Platforms", "All platforms", "project_branch_stage", False, "query-tag-All_Projects-12", filterId, "platform")
+    qsId = _addQuerySet(db, "All Platforms", "All platforms", "project_branch_stage", False, "query-tag-All_Platforms-12", filterId, "platform")
+    
+    return True
+
+def _createAllProjectBranchStages(db):
+    """Add the project branch stages query set"""
+    filterId = _getAllFilterId(db)
+    qsId = _addQuerySet(db, "All Project Stages", "All project stages", "project_branch_stage", False, "query-tag-All_Project_Branch_Stages-13", filterId, "project")
+    
+    return True
+
+def _createAllProjects(db):
+    """Add the projects query set"""
+    filterId = _getAllFilterId(db)
+    qsId = _addQuerySet(db, "All Projects", "All projects", "project", False, "query-tag-All_Projects-14", filterId)
     
     return True
 
@@ -2620,6 +2636,7 @@ def createSchema(db, doCommit=True, cfg=None):
     changed |= _createUpdateSystemsQuerySet(db)
     changed != _createAllProjectBranchStages(db)
     changed != _createAllPlatformBranchStages(db)
+    changed |= _createAllProjects(db)
     changed |= _createChangeLogSchema(db)
     changed |= _createPackageSchema(db)
 

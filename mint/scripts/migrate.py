@@ -2898,7 +2898,7 @@ class MigrateTo_57(SchemaMigration):
 
 
 class MigrateTo_58(SchemaMigration):
-    Version = (58, 19)
+    Version = (58, 20)
 
     def migrate(self):
         return True
@@ -3035,7 +3035,7 @@ class MigrateTo_58(SchemaMigration):
     def migrate13(self):
         cu = self.db.cursor()
         cu.execute("""DELETE FROM querysets_queryset WHERE name='All Appliances'""")
-        schema._createAllProjectBranchStages(self.db)
+        schema._createAllProjectBranchStages13(self.db)
         
         createTable(self.db, """
             CREATE TABLE "querysets_stagetag" (
@@ -3104,6 +3104,13 @@ class MigrateTo_58(SchemaMigration):
     def migrate19(self):
         cu = self.db.cursor()
         cu.execute("""UPDATE querysets_queryset SET presentation_type='project' WHERE name='All Projects'""")
+        return True
+    
+    def migrate20(self):
+        cu = self.db.cursor()
+        cu.execute("""UPDATE querysets_queryset SET resource_type='project' WHERE name='All Projects'""")
+        cu.execute("""UPDATE querysets_queryset SET presentation_type=NULL WHERE name='All Projects'""")
+        schema._createAllProjectBranchStages(self.db)
         return True
 
 def _createUpdateSystemsQuerySet(db):
