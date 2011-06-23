@@ -195,7 +195,7 @@ class Stage(modellib.XObjIdModel):
         db_table = 'project_branch_stage'
 
     view_name = 'ProjectStage'
-    _xobj = xobj.XObjMetadata(tag='project_branch_stage')
+    _xobj = xobj.XObjMetadata(tag='project_branch_stage', elements = ['labels', ])
     _xobj_hidden_accessors = set(['version_set',])
 
     stage_id = models.AutoField(primary_key=True)

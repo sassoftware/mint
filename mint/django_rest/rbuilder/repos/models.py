@@ -9,15 +9,19 @@ from django.db import models
 from mint.django_rest.rbuilder import modellib
 from mint.django_rest.rbuilder.projects import models as projectmodels
 
+Cache = modellib.Cache
+XObjHidden = modellib.XObjHidden
+APIReadOnly = modellib.APIReadOnly
+
 class Label(modellib.XObjIdModel):
     class Meta:
         db_table = "labels"
 
     label_id = models.AutoField(primary_key=True, 
         db_column="labelid")
-    project = modellib.ForeignKey(projectmodels.Project,
+    project = XObjHidden(modellib.ForeignKey(projectmodels.Project,
         related_name="labels",
-        db_column="projectid")
+        db_column="projectid"))
     label = models.CharField(max_length=255)
     url = models.CharField(max_length=255)
     auth_type = models.CharField(max_length=32, default="none",
