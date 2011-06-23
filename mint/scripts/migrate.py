@@ -3002,8 +3002,9 @@ class MigrateTo_58(SchemaMigration):
         return True
     
     def migrate10(self):
-        schema._createAllProjectsQuerySetSchema(self.db)
-        schema._createExternalProjectsQuerySetSchema(self.db)
+        # no longer needed
+        #schema._createAllProjectsQuerySetSchema(self.db)
+        #schema._createExternalProjectsQuerySetSchema(self.db)
         return True
     
     def migrate11(self):
