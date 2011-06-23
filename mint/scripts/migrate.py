@@ -2898,7 +2898,7 @@ class MigrateTo_57(SchemaMigration):
 
 
 class MigrateTo_58(SchemaMigration):
-    Version = (58, 18)
+    Version = (58, 19)
 
     def migrate(self):
         return True
@@ -3098,6 +3098,11 @@ class MigrateTo_58(SchemaMigration):
         
         # add new query sets
         schema._createAllPlatformBranchStages(self.db)
+        return True
+    
+    def migrate19(self):
+        cu = self.db.cursor()
+        cu.execute("""UPDATE querysets_queryset SET presentation_type='project' WHERE name='All Projects'""")
         return True
 
 def _createUpdateSystemsQuerySet(db):

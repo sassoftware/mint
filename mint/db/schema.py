@@ -28,7 +28,7 @@ from conary.dbstore import sqlerrors, sqllib
 log = logging.getLogger(__name__)
 
 # database schema major version
-RBUILDER_DB_VERSION = sqllib.DBversion(58, 18)
+RBUILDER_DB_VERSION = sqllib.DBversion(58, 19)
 
 
 def _createTrigger(db, table, column = "changed"):
@@ -2062,7 +2062,7 @@ def _createUpdateSystemsQuerySet(db):
 def _createAllProjectBranchStages(db):
     """Add the project branch stages query set"""
     filterId = _addQuerySetFilterEntry(db, "name", "IS_NULL", "False")
-    qsId = _addQuerySet(db, "All Projects", "All projects", "project_branch_stage", False, "query-tag-All_Projects-11", filterId)
+    qsId = _addQuerySet(db, "All Projects", "All projects", "project_branch_stage", False, "query-tag-All_Projects-11", filterId, "project")
     
     return True
 
