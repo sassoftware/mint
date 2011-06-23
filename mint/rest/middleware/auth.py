@@ -82,11 +82,7 @@ class AuthenticationCallback(object):
         req = request._req
         anonToken = ('anonymous', 'anonymous')
         try:
-            if cfg.cookieSecretKey:
-                cookies = Cookie.get_cookies(req, Cookie.SignedCookie,
-                                             secret = cfg.cookieSecretKey)
-            else:
-                cookies = Cookie.get_cookies(req, Cookie.Cookie)
+            cookies = Cookie.get_cookies(req, Cookie.Cookie)
         except:
             cookies = {}
         if 'pysid' not in cookies:
@@ -100,7 +96,6 @@ class AuthenticationCallback(object):
         from mint.session import SqlSession
         session = SqlSession(req, sessionClient,
             sid = sid,
-            secret = cfg.cookieSecretKey,
             timeout = 86400,
             lock = False)
         return session.get('authToken', None)

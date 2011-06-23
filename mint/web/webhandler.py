@@ -179,7 +179,6 @@ class WebHandler(object):
 
         self.session = SqlSession(self.req, sessionClient,
             sid = sid,
-            secret = self.cfg.cookieSecretKey,
             timeout = 86400,
             lock = False)
 
