@@ -204,13 +204,17 @@ class Stage(modellib.XObjIdModel):
     name = models.CharField(max_length=256)
     label = models.TextField(unique=True)
     promotable = models.BooleanField(default=False)
+    project_name = modellib.SyntheticField()
+    project_short_name = modellib.SyntheticField()
+    project_type = modellib.SyntheticField()
     created_date = modellib.DateTimeUtcField(auto_now_add=True)
 
     def serialize(self, request=None):
-        xobj_model = modellib.XObjIdModel.serialize(self, request)
-        xobj_model._xobj.text = self.name
-        xobj_model.hostname = self.project_branch.project.hostname
-        return xobj_model
+        xobjModel = modellib.XObjIdModel.serialize(self, request)
+        xobjModel.project_name = self.project_branch.project.name
+        xobjModel.project_type = self.project_branch.project.project_type
+        xobjModel.project_short_name = self.project_branch.project.short_name
+        return xobjModel
 
 class Release(modellib.XObjModel):
     class Meta:
