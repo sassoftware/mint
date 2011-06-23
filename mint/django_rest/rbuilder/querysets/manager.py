@@ -33,7 +33,8 @@ class QuerySetManager(basemanager.BaseManager):
     tagModelMap = {
         'system' : 'system_tag',
         'user' : 'user_tag',
-        'project_branch_stage' : 'stage_tag'
+        'project_branch_stage' : 'stage_tag',
+        'project' : 'project_tag'
     }
 
 
