@@ -235,6 +235,7 @@ class ProjectManager(basemanager.BaseManager):
             dbStage = models.Stage(name=str(stage.name),
                  label=str(prodDef.getLabelForStage(stage.name)),
                  promotable=promotable)
+            dbStage.project = productVersion.project
             dbStage.project_branch = productVersion
             dbStage.save()
 
@@ -242,32 +243,9 @@ class ProjectManager(basemanager.BaseManager):
         cclient = self.mgr.getUserClient()
         prodDef.saveToRepository(cclient,
                 'Product Definition commit from rBuilder\n')
-        
-
-    def _createProjectFromVersion(self, projectVersion):
-        project = models.Project()
-        project.name = projectVersion.project_name;
-        project.short_name = project.hostname = projectVersion.project_short_name
-        project.external = 0
-        project.project_type = projectVersion.project_type
-        project.namespace = projectVersion.namespace
-        
-        if not project.description:
-            project.description = ''
-        
-        if not project.namespace:
-            project.namespace = self.cfg.namespace
-        
-        project = self.addProject(project)
-        
-        return project
 
     @exposed
     def addProjectVersion(self, projectVersion):
-        
-        # do we need to create the project?
-        if not projectVersion.project:
-            projectVersion.project = self._createProjectFromVersion(projectVersion)
 
         if not self.isProjectOwner(projectVersion.project):
             raise errors.PermissionDenied()

@@ -28,7 +28,7 @@ from conary.dbstore import sqlerrors, sqllib
 log = logging.getLogger(__name__)
 
 # database schema major version
-RBUILDER_DB_VERSION = sqllib.DBversion(58, 20)
+RBUILDER_DB_VERSION = sqllib.DBversion(58, 21)
 
 
 def _createTrigger(db, table, column = "changed"):
@@ -1092,6 +1092,9 @@ def _createInventorySchema(db, cfg):
                 "stage_id" %(PRIMARYKEY)s,
                 "name" varchar(256) NOT NULL,
                 "label" text NOT NULL,
+                "project_id" integer
+                    REFERENCES Projects (projectId)
+                    ON DELETE SET NULL,
                 "project_branch_id" integer
                     REFERENCES ProductVersions (productVersionId)
                     ON DELETE SET NULL,
@@ -2071,21 +2074,21 @@ def _createAllProjectBranchStages13(db):
 def _createAllPlatformBranchStages(db):
     """Add the platform branch stages query set"""
     filterId = _getAllFilterId(db)
-    qsId = _addQuerySet(db, "All Platforms", "All platforms", "project_branch_stage", False, "query-tag-All_Platforms-12", filterId, "platform")
+    #qsId = _addQuerySet(db, "All Platforms", "All platforms", "project_branch_stage", False, "query-tag-All_Platforms-12", filterId, "platform")
     
     return True
 
 def _createAllProjectBranchStages(db):
     """Add the project branch stages query set"""
     filterId = _getAllFilterId(db)
-    qsId = _addQuerySet(db, "All Project Stages", "All project stages", "project_branch_stage", False, "query-tag-All_Project_Branch_Stages-13", filterId, "project")
+    #qsId = _addQuerySet(db, "All Project Stages", "All project stages", "project_branch_stage", False, "query-tag-All_Project_Branch_Stages-13", filterId, "project")
     
     return True
 
 def _createAllProjects(db):
     """Add the projects query set"""
     filterId = _getAllFilterId(db)
-    qsId = _addQuerySet(db, "All Projects", "All projects", "project", False, "query-tag-All_Projects-14", filterId)
+    #qsId = _addQuerySet(db, "All Projects", "All projects", "project", False, "query-tag-All_Projects-14", filterId)
     
     return True
 

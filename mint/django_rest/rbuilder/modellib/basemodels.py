@@ -1146,6 +1146,9 @@ class XObjModel(models.Model):
                                             attributes = {"id":str})
                         setattr(refModel, "id", 
                             val.get_absolute_url(request))
+                        if hasattr(val, "summary_view"):
+                            for sField in val.summary_view:
+                                setattr(refModel, sField, getattr(val, sField))
                         if text_field and getattr(val, text_field):
                             refModel._xobj.text = getattr(val, text_field)
                         setattr(xobj_model, fieldName, refModel)

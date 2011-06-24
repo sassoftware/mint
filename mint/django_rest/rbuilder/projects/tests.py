@@ -98,24 +98,6 @@ class ProjectsTestCase(XMLTestCase):
         self.assertEquals(response.status_code, 200)
         branches = xobj.parse(response.content).project_branches.project_branch
         self.assertEquals(len(branches), 4)
-
-    def testAddProjectVersionNoProject(self):
-        response = self._post('project_branches/',
-            data=testsxml.project_version_post_no_project_xml,
-            username="admin", password="password")
-        self.assertEquals(response.status_code, 200)
-        branch = xobj.parse(response.content).project_branch
-        branch = models.ProjectVersion.objects.get(pk=branch.branch_id)
-        self.assertEquals('42', branch.name)
-        
-        # validate project that was created
-        self.assertEquals('foo appliance', branch.project.name)
-        self.assertEquals('foo', branch.project.short_name)
-        self.assertEquals(0, branch.project.external)
-        self.assertEquals('Appliance', branch.project.project_type)
-        
-        # make sure stages are there
-        self.assertEquals(3, len(branch.project_branch_stages.all()))
         
     def testAddProjectVersionToProject(self):
         self._addProject("foo")
@@ -177,9 +159,10 @@ class ProjectsTestCase(XMLTestCase):
         self.assertEquals(len(stages), 9)
         
     def testGetProjectBranchStagesByVersion(self):
+        self._addProject("foo")
         # add a branch to work with
         response = self._post('project_branches/',
-            data=testsxml.project_version_post_no_project_xml,
+            data=testsxml.project_version_post_with_project_xml,
             username="admin", password="password")
         self.assertEquals(response.status_code, 200)
         branch = xobj.parse(response.content).project_branch

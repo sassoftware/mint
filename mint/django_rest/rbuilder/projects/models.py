@@ -36,6 +36,7 @@ class Project(modellib.XObjIdModel):
         'platform_set', 'productplatform_set', 'abstractplatform_set'])
     view_name = "Project"
     url_key = ["short_name"]
+    summary_view = ["name", "short_name", "domain_name"]
     
     project_id = models.AutoField(primary_key=True, db_column="projectid",
         blank=True)
@@ -148,14 +149,12 @@ class ProjectVersion(modellib.XObjIdModel):
     _xobj = xobj.XObjMetadata(
         tag="project_branch")
     view_name = 'ProjectVersion'
+    summary_view = ["name"]
 
     branch_id = models.AutoField(primary_key=True,
         db_column='productversionid')
     project = modellib.DeferredForeignKey(Project, db_column='projectid',
         related_name="project_branches", view_name="ProjectVersions", null=True)
-    project_name = modellib.SyntheticField()
-    project_short_name = modellib.SyntheticField()
-    project_type = modellib.SyntheticField()
     namespace = models.CharField(max_length=16)
     name = models.CharField(max_length=16)
     description = models.TextField()
@@ -175,9 +174,6 @@ class ProjectVersion(modellib.XObjIdModel):
         # Convert timestamp fields in the database to our standard UTC format
         xobjModel.created_date = str(datetime.datetime.fromtimestamp(
             xobjModel.created_date, tz.tzutc()))
-        xobjModel.project_name = self.project.name
-        xobjModel.project_type = self.project.project_type
-        xobjModel.project_short_name = self.project.short_name
         return xobjModel
 
 class Stages(modellib.Collection):
@@ -197,25 +193,21 @@ class Stage(modellib.XObjIdModel):
     view_name = 'ProjectStage'
     _xobj = xobj.XObjMetadata(tag='project_branch_stage', elements = ['labels', ])
     _xobj_hidden_accessors = set(['version_set',])
+    
+    summary_view = ["name"]
 
     stage_id = models.AutoField(primary_key=True)
+    project = modellib.DeferredForeignKey(Project,
+        related_name="project_branch_stages", view_name="ProjectBranchStages")
     project_branch = modellib.DeferredForeignKey(ProjectVersion, 
         related_name="project_branch_stages", view_name="ProjectBranchStages")
     name = models.CharField(max_length=256)
     label = models.TextField(unique=True)
     promotable = models.BooleanField(default=False)
-    project_name = modellib.SyntheticField()
-    project_short_name = modellib.SyntheticField()
-    project_type = modellib.SyntheticField()
-    project_branch_name = modellib.SyntheticField()
     created_date = modellib.DateTimeUtcField(auto_now_add=True)
 
     def serialize(self, request=None):
         xobjModel = modellib.XObjIdModel.serialize(self, request)
-        xobjModel.project_branch_name = self.project_branch.name
-        xobjModel.project_name = self.project_branch.project.name
-        xobjModel.project_type = self.project_branch.project.project_type
-        xobjModel.project_short_name = self.project_branch.project.short_name
         return xobjModel
 
 class Release(modellib.XObjModel):
