@@ -924,7 +924,6 @@ class ProductVersionTest(restbase.BaseRestTest):
     <projecturl></projecturl>
     <repositoryHostname>testproject.rpath.local2</repositoryHostname>
     <repositoryUrl href="http://%(server)s:%(port)s/repos/testproject/api"/>
-    <repositoryBrowserUrl href="http://%(server)s:%(port)s/repos/testproject/browse"/>
     <description></description>
     <prodtype>Appliance</prodtype>
     <commitEmail></commitEmail>
@@ -979,7 +978,6 @@ class ProductVersionTest(restbase.BaseRestTest):
   <projecturl></projecturl>
   <repositoryHostname>testproject.rpath.local2</repositoryHostname>
   <repositoryUrl href="http://%(server)s:%(port)s/repos/testproject/api"/>
-  <repositoryBrowserUrl href="http://%(server)s:%(port)s/repos/testproject/browse"/>
   <description></description>
   <prodtype>Appliance</prodtype>
   <commitEmail></commitEmail>

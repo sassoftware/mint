@@ -95,7 +95,6 @@ class ProductTest(restbase.BaseRestTest):
   <projecturl></projecturl>
   <repositoryHostname>foobar.rpath.local2</repositoryHostname>
   <repositoryUrl href="http://%(server)s:%(port)s/repos/foobar/api"/>
-  <repositoryBrowserUrl href="http://%(server)s:%(port)s/repos/foobar/browse"/>
   <description></description>
   <commitEmail></commitEmail>
   <backupExternal>false</backupExternal>
