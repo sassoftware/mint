@@ -381,7 +381,7 @@ class MintServer(object):
                 if repos.isLocalMirror:
                     # No repomap required for anything with a database.
                     continue
-                ccfg.repositoryMap.append((repos.fqdn, repos.repositoryMap))
+                ccfg.repositoryMap.append((repos.fqdn, repos.getURL()))
 
     def _getProjectConaryConfig(self, project, internal=True):
         """

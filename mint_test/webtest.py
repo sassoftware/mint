@@ -833,14 +833,6 @@ class WebPageTest(mint_rephelp.WebRepositoryHelper):
         page = self.fetch('/project/foo/mailingLists',
                                   ok_codes = [200])
 
-    def testPgpAdminPage(self):
-        client, userId = self.quickMintUser('foouser','foopass')
-        projectId = self.newProject(client)
-        page = self.webLogin('foouser', 'foopass')
-
-        page = page.fetchWithRedirect('/repos/testproject/pgpAdminForm',
-            server = self.getProjectServerHostname())
-
     def testUploadKeyPage(self):
         pText = helperfuncs.getProjectText().lower()
         client, userId = self.quickMintUser('foouser','foopass')
@@ -935,12 +927,6 @@ class WebPageTest(mint_rephelp.WebRepositoryHelper):
         self.failIf("Email Confirmation Required" not in page.body,
                     'Unconfirmed user broke out of confirm email jail on'
                     ' front page.')
-
-        page = page.fetchWithRedirect('/repos/foo/browse',
-                server = self.getProjectServerHostname())
-        self.failIf("Email Confirmation Required" not in page.body,
-                    'Unconfirmed user broke out of confirm email jail on'
-                    ' repository page.')
 
         page = page.fetchWithRedirect('/editUserSettings', params = \
                           {'email'    : ''},
@@ -1184,28 +1170,6 @@ class WebPageTest(mint_rephelp.WebRepositoryHelper):
         # link historically showed up wrong by not pre-pending a /
         page = self.assertNotContent('/project/testproject/',
                                      'a href="register"')
-
-    def testTroveInfoLogin(self):
-        client, userId = self.quickMintUser('foouser','foopass')
-        projectId = self.newProject(client)
-
-        project = client.getProject(projectId)
-
-        self.addQuickTestComponent('foo:data',
-            '/testproject.' + MINT_PROJECT_DOMAIN + '@rpl:devel/1.0-1')
-
-        # link historically brought up a spurious "my projects" pane
-        page = self.assertContent( \
-            '/repos/testproject/troveInfo?t=foo:data',
-            '/processLogin',
-            server = self.getProjectServerHostname())
-
-        page = self.webLogin('foouser', 'foopass')
-
-        page = self.assertContent( \
-            '/repos/testproject/troveInfo?t=foo:data',
-            '/newProject',
-            server = self.getProjectServerHostname())
 
     def testMailSignin(self):
         raise testsuite.SkipTestException

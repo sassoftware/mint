@@ -18,10 +18,6 @@ class _RepositoryUrlField(fields.AbstractUrlField):
         return '%s/repos/%s/%s' % (base, parent.hostname, self.name)
 
 
-class RepositoryBrowserUrlField(_RepositoryUrlField):
-    name = 'browse'
-
-
 class RepositoryRestUrlField(_RepositoryUrlField):
     name = 'api'
 
@@ -36,7 +32,6 @@ class Product(Model):
     projecturl         = fields.CharField()
     repositoryHostname = fields.CharField()
     repositoryUrl      = RepositoryRestUrlField()
-    repositoryBrowserUrl = RepositoryBrowserUrlField()
     description        = fields.CharField()
     prodtype           = fields.CharField()
     commitEmail        = fields.EmailField(visibility='owner')

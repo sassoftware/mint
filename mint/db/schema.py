@@ -1099,7 +1099,7 @@ def _createInventorySchema(db, cfg):
                     REFERENCES ProductVersions (productVersionId)
                     ON DELETE SET NULL,
                 "promotable" bool,
-                "created_date" timestamp with time zone NOT NULL,
+                "created_date" timestamp with time zone NOT NULL
             )""" % db.keywords)
         db.tables['project_branch_stage'] = []
         changed = True
