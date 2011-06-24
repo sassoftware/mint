@@ -2074,21 +2074,21 @@ def _createAllProjectBranchStages13(db):
 def _createAllPlatformBranchStages(db):
     """Add the platform branch stages query set"""
     filterId = _getAllFilterId(db)
-    #qsId = _addQuerySet(db, "All Platforms", "All platforms", "project_branch_stage", False, "query-tag-All_Platforms-12", filterId, "platform")
+    qsId = _addQuerySet(db, "All Platforms", "All platforms", "project_branch_stage", False, "query-tag-All_Platforms-12", filterId, "platform")
     
     return True
 
 def _createAllProjectBranchStages(db):
     """Add the project branch stages query set"""
     filterId = _getAllFilterId(db)
-    #qsId = _addQuerySet(db, "All Project Stages", "All project stages", "project_branch_stage", False, "query-tag-All_Project_Branch_Stages-13", filterId, "project")
+    qsId = _addQuerySet(db, "All Project Stages", "All project stages", "project_branch_stage", False, "query-tag-All_Project_Branch_Stages-13", filterId, "project")
     
     return True
 
 def _createAllProjects(db):
     """Add the projects query set"""
     filterId = _getAllFilterId(db)
-    #qsId = _addQuerySet(db, "All Projects", "All projects", "project", False, "query-tag-All_Projects-14", filterId)
+    qsId = _addQuerySet(db, "All Projects", "All projects", "project", False, "query-tag-All_Projects-14", filterId)
     
     return True
 
