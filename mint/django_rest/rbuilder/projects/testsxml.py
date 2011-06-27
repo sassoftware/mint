@@ -18,11 +18,11 @@ project_post_xml = """\
     <hostname>test-project.eng.rpath.com</hostname>
     <namespace>rpath</namespace>
     <domain_name>eng.rpath.com</domain_name>
-    <hidden>0</hidden>
+    <hidden>false</hidden>
     <description>test project description</description>
     <backup_external>0</backup_external>
     <repository_hostname>test-project.eng.rpath.com</repository_hostname>
-    <external>0</external>
+    <external>false</external>
     <name>test-project</name>
   </project>
 """
