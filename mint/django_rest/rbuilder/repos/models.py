@@ -4,6 +4,7 @@
 # All Rights Reserved
 #
 
+import sys
 from django.db import models
 
 from mint.django_rest.rbuilder import modellib
@@ -30,6 +31,15 @@ class Label(modellib.XObjIdModel):
         db_column="username")
     password = models.CharField(max_length=255, null=True)
     entitlement = models.CharField(max_length=254, null=True)
+    
+    def save(self, *args, **kwargs):
+        if not self.url:
+            if self.auth_type != "none":
+                self.url = "https://%s/conary/" % self.project.repository_hostname
+            else:
+                self.url = "http://%s/conary/" % self.project.repository_hostname
+            
+        return modellib.XObjIdModel.save(self, *args, **kwargs)
 
 
 class AuthInfo(modellib.XObjModel):
@@ -51,3 +61,10 @@ class RepNameMap(modellib.XObjModel):
         db_column="fromname")
     to_name = models.CharField(max_length=255,
         db_column="toname")
+    
+for mod_obj in sys.modules[__name__].__dict__.values():
+    if hasattr(mod_obj, '_xobj'):
+        if mod_obj._xobj.tag:
+            modellib.type_map[mod_obj._xobj.tag] = mod_obj
+    if hasattr(mod_obj, '_meta'):
+        modellib.type_map[mod_obj._meta.verbose_name] = mod_obj

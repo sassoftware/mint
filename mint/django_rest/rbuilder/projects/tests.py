@@ -75,6 +75,57 @@ class ProjectsTestCase(XMLTestCase):
         project = models.Project.objects.get(pk=projectId)
         self.assertEquals("test-project", project.name)
         self.assertEquals(2000, project.creator.user_id)
+        
+    def testAddProjectNoRepoHostname(self):
+        response = self._post('projects',
+            data=testsxml.project_post_no_repo_hostname_xml,
+            username="testuser", password="password")
+        self.assertEquals(response.status_code, 200)
+        project = xobj.parse(response.content).project
+        projectId = project.project_id
+        project = models.Project.objects.get(pk=projectId)
+        self.assertEquals("test-project.eng.rpath.com", project.repository_hostname)
+        self.assertEquals(2000, project.creator.user_id)
+        
+        
+    def testAddProjectExternal(self):
+        response = self._post('projects',
+            data=testsxml.project_post_external_xml,
+            username="testuser", password="password")
+        self.assertEquals(response.status_code, 200)
+        project = xobj.parse(response.content).project
+        projectId = project.project_id
+        project = models.Project.objects.get(pk=projectId)
+        self.assertEquals("rPath Windows Build Service", project.name)
+        self.assertEquals(2000, project.creator.user_id)
+        label = project.labels.all()[0]
+        self.assertEquals("https://rb.rpath.com/repos/rwbs/browse", label.url)
+        
+    def testAddProjectExternalNoUrlNoAuth(self):
+        response = self._post('projects',
+            data=testsxml.project_post_external_no_url_no_auth_xml,
+            username="testuser", password="password")
+        self.assertEquals(response.status_code, 200)
+        project = xobj.parse(response.content).project
+        projectId = project.project_id
+        project = models.Project.objects.get(pk=projectId)
+        self.assertEquals("rPath Windows Build Service", project.name)
+        self.assertEquals(2000, project.creator.user_id)
+        label = project.labels.all()[0]
+        self.assertEquals("http://%s/conary/" % project.repository_hostname, label.url)
+        
+    def testAddProjectExternalNoUrlExternalAuth(self):
+        response = self._post('projects',
+            data=testsxml.project_post_external_no_url_external_auth_xml,
+            username="testuser", password="password")
+        self.assertEquals(response.status_code, 200)
+        project = xobj.parse(response.content).project
+        projectId = project.project_id
+        project = models.Project.objects.get(pk=projectId)
+        self.assertEquals("rPath Windows Build Service", project.name)
+        self.assertEquals(2000, project.creator.user_id)
+        label = project.labels.all()[0]
+        self.assertEquals("https://%s/conary/" % project.repository_hostname, label.url)
 
     def testUpdateProject(self):
         response = self._put('projects/chater-foo',

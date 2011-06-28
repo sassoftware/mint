@@ -113,6 +113,10 @@ class Project(modellib.XObjIdModel):
             self.created_date = str(time.time())
         if self.modified_date is None:
             self.modified_date = str(time.time())
+            
+        if not self.repository_hostname and self.hostname and self.domain_name:
+            self.repository_hostname = '%s.%s' % (self.hostname, self.domain_name)
+            
         return modellib.XObjIdModel.save(self, *args, **kwargs)
 
 class Members(modellib.Collection):

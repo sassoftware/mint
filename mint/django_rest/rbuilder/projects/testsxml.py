@@ -15,7 +15,7 @@ project_post_xml = """\
     <disabled>0</disabled>
     <isAppliance>1</isAppliance>
     <short_name>test-project</short_name>
-    <hostname>test-project.eng.rpath.com</hostname>
+    <hostname>test-project</hostname>
     <namespace>rpath</namespace>
     <domain_name>eng.rpath.com</domain_name>
     <hidden>false</hidden>
@@ -24,6 +24,92 @@ project_post_xml = """\
     <repository_hostname>test-project.eng.rpath.com</repository_hostname>
     <external>false</external>
     <name>test-project</name>
+  </project>
+"""
+
+project_post_no_repo_hostname_xml = """\
+  <project>
+    <commit_email>test@example.com</commit_email>
+    <project_url>http://</project_url>
+    <disabled>0</disabled>
+    <isAppliance>1</isAppliance>
+    <short_name>test-project</short_name>
+    <hostname>test-project</hostname>
+    <namespace>rpath</namespace>
+    <domain_name>eng.rpath.com</domain_name>
+    <hidden>false</hidden>
+    <description>test project description</description>
+    <backup_external>0</backup_external>
+    <external>false</external>
+    <name>test-project</name>
+  </project>
+"""
+
+project_post_external_xml = """\
+  <project>
+    <project_url>http://</project_url>
+    <short_name>rwbs</short_name>
+    <hostname>rwbs</hostname>
+    <namespace>rpath</namespace>
+    <domain_name>eng.rpath.com</domain_name>
+    <hidden>false</hidden>
+    <description>test project description</description>
+    <external>true</external>
+    <name>rPath Windows Build Service</name>
+    <labels>
+      <label>
+         <auth_type>userpass</auth_type>
+         <entitlement/>
+         <url>https://rb.rpath.com/repos/rwbs/browse</url>
+         <label>rwbs.rb.rpath.com@rpath:rwbs-1-devel</label>
+         <password>somepassword</password>
+         <user_name>someuser</user_name>
+       </label>
+    </labels>
+  </project>
+"""
+
+project_post_external_no_url_no_auth_xml = """\
+  <project>
+    <project_url>http://</project_url>
+    <short_name>rwbs</short_name>
+    <hostname>rwbs</hostname>
+    <namespace>rpath</namespace>
+    <domain_name>eng.rpath.com</domain_name>
+    <hidden>false</hidden>
+    <description>test project description</description>
+    <external>true</external>
+    <name>rPath Windows Build Service</name>
+    <labels>
+      <label>
+         <auth_type>none</auth_type>
+         <entitlement/>
+         <label>rwbs.rb.rpath.com@rpath:rwbs-1-devel</label>
+       </label>
+    </labels>
+  </project>
+"""
+
+project_post_external_no_url_external_auth_xml = """\
+  <project>
+    <project_url>http://</project_url>
+    <short_name>rwbs</short_name>
+    <hostname>rwbs</hostname>
+    <namespace>rpath</namespace>
+    <domain_name>eng.rpath.com</domain_name>
+    <hidden>false</hidden>
+    <description>test project description</description>
+    <external>true</external>
+    <name>rPath Windows Build Service</name>
+    <labels>
+      <label>
+         <auth_type>userpass</auth_type>
+         <entitlement/>
+         <label>rwbs.rb.rpath.com@rpath:rwbs-1-devel</label>
+         <password>somepassword</password>
+         <user_name>someuser</user_name>
+       </label>
+    </labels>
   </project>
 """
 
