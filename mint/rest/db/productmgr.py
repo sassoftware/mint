@@ -215,7 +215,7 @@ class ProductManager(manager.Manager):
                 shortname=shortname, 
                 prodtype=prodtype, 
                 commitEmail=commitEmail, 
-                hidden=int(isPrivate),
+                hidden=bool(isPrivate),
                 version=version,
                 commit=False)
         except sqlerrors.CursorError, e:
@@ -254,9 +254,9 @@ class ProductManager(manager.Manager):
         if hidden:
             # only admin can hide
             if self.auth.isAdmin:
-                params['hidden'] = 1
+                params['hidden'] = True
         else:
-            params['hidden'] = 0
+            params['hidden'] = False
 
         keys = '=?, '.join(params) + '=?'
         values = params.values()
