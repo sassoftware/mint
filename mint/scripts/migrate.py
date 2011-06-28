@@ -2996,6 +2996,8 @@ class MigrateTo_58(SchemaMigration):
         return True
     
     def migrate9(self):
+        cu = self.db.cursor()
+        cu.execute("""ALTER TABLE querysets_queryset ADD COLUMN presentation_type TEXT""")
         schema._createInfrastructureSystemsQuerySetSchema(self.db)
         schema._createWindowsBuildSystemsQuerySet(self.db)
         schema._createUpdateSystemsQuerySet(self.db)
@@ -3079,7 +3081,6 @@ class MigrateTo_58(SchemaMigration):
     
     def migrate18(self):
         cu = self.db.cursor()
-        cu.execute("""ALTER TABLE querysets_queryset ADD COLUMN presentation_type TEXT""")
         
         # remove old external appliances query set and filter
         cu.execute("""DELETE FROM querysets_queryset WHERE name='External Appliances'""")
