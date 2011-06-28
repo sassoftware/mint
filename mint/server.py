@@ -377,7 +377,7 @@ class MintServer(object):
 
         # Also add repositoryMap entries for external cached projects.
         if repoMaps:
-            for repos in self.reposMgr.iterRepositories('external = 1'):
+            for repos in self.reposMgr.iterRepositories('external'):
                 if repos.isLocalMirror:
                     # No repomap required for anything with a database.
                     continue
@@ -909,7 +909,7 @@ class MintServer(object):
             projectId = self.projects.new(name=name, creatorId=creatorId,
                     description='', shortname=hostname, fqdn=fqdn,
                     hostname=hostname, domainname=domainname, projecturl='',
-                    external=1, timeModified=now, timeCreated=now,
+                    external=True, timeModified=now, timeCreated=now,
                     database=database, prodtype="Repository",
                     commit=False)
 
@@ -1952,7 +1952,7 @@ If you would not like to be %s %s of this project, you may resign from this proj
         cu = self.db.cursor()
         cu.execute("""SELECT projectId FROM Projects
                             WHERE NOT hidden AND NOT disabled AND
-                                (external=0 OR projectId IN (SELECT targetProjectId FROM InboundMirrors))""")
+                                (NOT external OR projectId IN (SELECT targetProjectId FROM InboundMirrors))""")
         projs = cu.fetchall()
         repoMap = {}
         for x in projs:
@@ -1960,7 +1960,7 @@ If you would not like to be %s %s of this project, you may resign from this proj
 
         # for external projects where rBuilder isn't using the default
         # repositoryMap, put this in conaryrc.generated too:
-        cu.execute("""SELECT projectId FROM Projects WHERE external=1
+        cu.execute("""SELECT projectId FROM Projects WHERE external
             AND NOT (projectId IN (SELECT targetProjectId FROM InboundMirrors))""")
         projs = cu.fetchall()
         for x in projs:

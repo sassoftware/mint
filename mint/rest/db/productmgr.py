@@ -208,7 +208,7 @@ class ProductManager(manager.Manager):
                 fqdn='%s.%s' % (hostname, domainname),
                 database=self.cfg.defaultDatabase,
                 namespace=namespace,
-                isAppliance=int(prodtype == 'Appliance' or prodtype == 'PlatformFoundation'), 
+                isAppliance=(prodtype == 'Appliance' or prodtype == 'PlatformFoundation'),
                 projecturl=projecturl,
                 timeModified=createTime, 
                 timeCreated=createTime,
@@ -244,7 +244,7 @@ class ProductManager(manager.Manager):
                       timeModified=time.time())
         if prodtype is not None:
             params['prodtype'] = prodtype
-            params['isAppliance'] = int(prodtype == 'Appliance' or prodtype == 'PlatformFoundation')
+            params['isAppliance'] = (prodtype == 'Appliance' or prodtype == 'PlatformFoundation')
         if namespace is not None:
             v = helperfuncs.validateNamespace(namespace)
             if v != True:
@@ -305,10 +305,10 @@ class ProductManager(manager.Manager):
             cu.execute('''INSERT INTO Projects (name, creatorId, description,
                     shortname, hostname, domainname, fqdn, projecturl, external,
                     timeModified, timeCreated, backupExternal, database)
-                    VALUES (?, ?, '', ?, ?, ?, ?, '', 1, ?, ?, ?, ?)''',
+                    VALUES (?, ?, '', ?, ?, ?, ?, '', true, ?, ?, ?, ?)''',
                     title, creatorId, hostname, hostname, domainname,
                     '%s.%s' % (hostname, domainname),
-                    createTime, createTime, int(backupExternal), database)
+                    createTime, createTime, bool(backupExternal), database)
             productId = cu.lastrowid
 
         if mirror:

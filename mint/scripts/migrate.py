@@ -269,7 +269,7 @@ class MigrateTo_40(SchemaMigration):
                     EXISTS(SELECT * FROM InboundMirrors WHERE
                         projectId=targetProjectId) AS localMirror
                 FROM Projects LEFT JOIN Labels USING(projectId)
-                WHERE external = 1 AND label LIKE ?""", '%s@%%' % host)
+                WHERE external AND label LIKE ?""", '%s@%%' % host)
 
             for projectId, localMirror in cu.fetchall():
                 if localMirror:
