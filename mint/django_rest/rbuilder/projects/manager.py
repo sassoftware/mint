@@ -93,9 +93,6 @@ class ProjectManager(basemanager.BaseManager):
             self.validateExternalProject(project)
             
             label = project.labels.all()[0]
-            # XXX - return proper error here
-            if not label.auth_type in ('none', 'userpass', 'entitlement'):
-                raise RuntimeError, "Invalid authentication type specified"
             
             label.save()
 
