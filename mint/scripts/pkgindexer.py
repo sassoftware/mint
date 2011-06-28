@@ -169,7 +169,7 @@ class UpdatePackageIndexExternal(PackageIndexer):
         # sets the mark to "1" to ensure no race conditions exist
         # sorrounding the setting of the mark.
         cu = self.db.transaction()
-        cu.execute("SELECT COUNT(*) FROM Projects WHERE external = 0")
+        cu.execute("SELECT COUNT(*) FROM Projects WHERE NOT external")
         internalProjects = cu.fetchone()[0]
         cu.execute("SELECT COUNT(*) FROM Commits")
         commits = cu.fetchone()[0]

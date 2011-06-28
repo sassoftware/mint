@@ -305,10 +305,10 @@ class ProductManager(manager.Manager):
             cu.execute('''INSERT INTO Projects (name, creatorId, description,
                     shortname, hostname, domainname, fqdn, projecturl, external,
                     timeModified, timeCreated, backupExternal, database)
-                    VALUES (?, ?, '', ?, ?, ?, ?, '', 1, ?, ?, ?, ?)''',
+                    VALUES (?, ?, '', ?, ?, ?, ?, '', true, ?, ?, ?, ?)''',
                     title, creatorId, hostname, hostname, domainname,
                     '%s.%s' % (hostname, domainname),
-                    createTime, createTime, int(backupExternal), database)
+                    createTime, createTime, bool(backupExternal), database)
             productId = cu.lastrowid
 
         if mirror:

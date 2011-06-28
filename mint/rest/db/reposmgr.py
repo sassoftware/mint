@@ -299,7 +299,7 @@ class RepositoryManager(manager.Manager):
         cu.execute('''SELECT label, authType, username, password,
                              entitlement
                       FROM Projects JOIN Labels USING(projectId)
-                      WHERE external=1 
+                      WHERE external
                         AND authType IN (?, ?)''', "userpass", "entitlement")
         repoMap = {}
         entMap = []
