@@ -176,7 +176,7 @@ class NewPlatformTest(XMLTestCase):
     def testCreatePlatform(self):
 		#Creates a new platform
         response = self._post('platforms/',
-            data=platformtestxml.platformPOSTXml,
+            data=platformstestxml.platformPOSTXml,
             username="admin", password="password")
         self.assertEquals(200, response.status_code)
         
@@ -189,7 +189,7 @@ class NewPlatformTest(XMLTestCase):
     def testCreateContentSource(self):
 		#Creates a new platform
         response = self._post('platforms/',
-            data=platformtestxml.contentSourcePOSTXml,
+            data=platformstestxml.contentSourcePOSTXml,
             username="admin", password="password")
         self.assertEquals(200, response.status_code)
         
@@ -203,7 +203,7 @@ class NewPlatformTest(XMLTestCase):
     def testCreateContentSourceType(self):
 		#Creates a new contentsourcetype
         response = self._post('platforms/',
-            data=platformtestxml.contentSourceTypePOSTXml,
+            data=platformstestxml.contentSourceTypePOSTXml,
             username="admin", password="password")
         self.assertEquals(200, response.status_code) 
         
@@ -217,7 +217,7 @@ class NewPlatformTest(XMLTestCase):
     def testCreatePlatformLoadStatus(self):
 		#Creates a new contentsourcetype
         response = self._post('platforms/',
-            data=platformtestxml.platformLoadStatusPOSTXml,
+            data=platformstestxml.platformLoadStatusPOSTXml,
             username="admin", password="password")
         self.assertEquals(200, response.status_code)             
         
@@ -231,7 +231,7 @@ class NewPlatformTest(XMLTestCase):
     def testCreatePlatformLoad(self):
 		#Creates a new contentsourcetype
         response = self._post('platforms/',
-            data=platformtestxml.platformLoadPOSTXml,
+            data=platformstestxml.platformLoadPOSTXml,
             username="admin", password="password")
         self.assertEquals(200, response.status_code) 
         
@@ -245,7 +245,7 @@ class NewPlatformTest(XMLTestCase):
     def testCreatePlatformVersion(self):
 		#Creates a new contentsourcetype
         response = self._post('platforms/',
-            data=platformtestxml.platformVersionPOSTXml,
+            data=platformstestxml.platformVersionPOSTXml,
             username="admin", password="password")
         self.assertEquals(200, response.status_code) 
         
@@ -259,7 +259,7 @@ class NewPlatformTest(XMLTestCase):
     def testCreateSourceStatus(self):
 		#Creates a new contentsourcetype
         response = self._post('platforms/',
-            data=platformtestxml.sourceStatusPOSTXml,
+            data=platformstestxml.sourceStatusPOSTXml,
             username="admin", password="password")
         self.assertEquals(200, response.status_code)  
         
