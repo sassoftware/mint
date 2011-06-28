@@ -208,7 +208,7 @@ class ProductManager(manager.Manager):
                 fqdn='%s.%s' % (hostname, domainname),
                 database=self.cfg.defaultDatabase,
                 namespace=namespace,
-                isAppliance=int(prodtype == 'Appliance' or prodtype == 'PlatformFoundation'), 
+                isAppliance=(prodtype == 'Appliance' or prodtype == 'PlatformFoundation'),
                 projecturl=projecturl,
                 timeModified=createTime, 
                 timeCreated=createTime,
@@ -244,7 +244,7 @@ class ProductManager(manager.Manager):
                       timeModified=time.time())
         if prodtype is not None:
             params['prodtype'] = prodtype
-            params['isAppliance'] = int(prodtype == 'Appliance' or prodtype == 'PlatformFoundation')
+            params['isAppliance'] = (prodtype == 'Appliance' or prodtype == 'PlatformFoundation')
         if namespace is not None:
             v = helperfuncs.validateNamespace(namespace)
             if v != True:
