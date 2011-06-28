@@ -19,6 +19,7 @@ from mint.templates import groupTemplate
 from mint.django_rest.rbuilder import auth
 from mint.django_rest.rbuilder import errors
 from mint.django_rest.rbuilder.manager import basemanager
+from mint.django_rest.rbuilder.repos import models as repomodels
 from mint.django_rest.rbuilder.manager.basemanager import exposed
 from mint.django_rest.rbuilder.projects import models
 
@@ -92,7 +93,18 @@ class ProjectManager(basemanager.BaseManager):
         if project.external:
             self.validateExternalProject(project)
             
-            label = project.labels.all()[0]
+            label = None
+            if project.labels and len(project.labels.all()) > 0:
+                label = project.labels.all()[0]
+            else:
+                label = repomodels.Label()
+                
+            label.project = project
+            label.url = project.upstream_url
+            label.auth_type = project.auth_type
+            label.user_name = project.user_name
+            label.password = project.password
+            label.entitlement = project.entitlement
             
             label.save()
 

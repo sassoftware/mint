@@ -74,16 +74,12 @@ project_post_external_xml = """\
     <description>test project description</description>
     <external>true</external>
     <name>rPath Windows Build Service</name>
-    <labels>
-      <label>
-         <auth_type>userpass</auth_type>
-         <entitlement/>
-         <url>https://rb.rpath.com/repos/rwbs/browse</url>
-         <label>rwbs.rb.rpath.com@rpath:rwbs-1-devel</label>
-         <password>somepassword</password>
-         <user_name>someuser</user_name>
-       </label>
-    </labels>
+    <auth_type>userpass</auth_type>
+    <entitlement/>
+    <upstream_url>https://rb.rpath.com/repos/rwbs/browse</upstream_url>
+    <label>rwbs.rb.rpath.com@rpath:rwbs-1-devel</label>
+    <password>somepassword</password>
+    <user_name>someuser</user_name>
   </project>
 """
 
@@ -98,13 +94,11 @@ project_post_external_no_url_no_auth_xml = """\
     <description>test project description</description>
     <external>true</external>
     <name>rPath Windows Build Service</name>
-    <labels>
-      <label>
-         <auth_type>none</auth_type>
-         <entitlement/>
-         <label>rwbs.rb.rpath.com@rpath:rwbs-1-devel</label>
-       </label>
-    </labels>
+    <auth_type>none</auth_type>
+    <entitlement/>
+    <label>rwbs.rb.rpath.com@rpath:rwbs-1-devel</label>
+    <password>somepassword</password>
+    <user_name>someuser</user_name>
   </project>
 """
 
@@ -119,15 +113,11 @@ project_post_external_no_url_external_auth_xml = """\
     <description>test project description</description>
     <external>true</external>
     <name>rPath Windows Build Service</name>
-    <labels>
-      <label>
-         <auth_type>userpass</auth_type>
-         <entitlement/>
-         <label>rwbs.rb.rpath.com@rpath:rwbs-1-devel</label>
-         <password>somepassword</password>
-         <user_name>someuser</user_name>
-       </label>
-    </labels>
+    <auth_type>userpass</auth_type>
+    <entitlement/>
+    <label>rwbs.rb.rpath.com@rpath:rwbs-1-devel</label>
+    <password>somepassword</password>
+    <user_name>someuser</user_name>
   </project>
 """
 

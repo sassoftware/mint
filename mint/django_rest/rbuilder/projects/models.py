@@ -33,7 +33,7 @@ class Project(modellib.XObjIdModel):
         
     _xobj = xobj.XObjMetadata(tag='project')
     _xobj_hidden_accessors = set(['membership', 'package_set', 
-        'platform_set', 'productplatform_set', 'abstractplatform_set'])
+        'platform_set', 'productplatform_set', 'abstractplatform_set', 'labels'])
     view_name = "Project"
     url_key = ["short_name"]
     summary_view = ["name", "short_name", "domain_name"]
@@ -71,6 +71,14 @@ class Project(modellib.XObjIdModel):
     database = models.CharField(max_length=128, null=True)
     members = modellib.DeferredManyToManyField(usermodels.User, 
         through="Member")
+    
+    # synthetic properties hoisted from labels - these will eventually be merged
+    # into the projects schema instead of a labels table
+    upstream_url = modellib.SyntheticField()
+    auth_type = modellib.SyntheticField()
+    user_name = modellib.SyntheticField()
+    password = modellib.SyntheticField()
+    entitlement = modellib.SyntheticField()
 
     load_fields = [ short_name ]
 
@@ -90,6 +98,15 @@ class Project(modellib.XObjIdModel):
             xobjModel.created_date, tz.tzutc()))
         xobjModel.modified_date = str(datetime.datetime.fromtimestamp(
             xobjModel.modified_date, tz.tzutc()))
+        
+        if self.labels and len(self.labels.all()) > 0:
+            label = self.labels.all()[0]
+            xobjModel.upstream_url = label.url
+            xobjModel.auth_type = label.auth_type
+            xobjModel.user_name = label.user_name
+            xobjModel.password = label.password
+            xobjModel.entitlement = label.entitlement
+        
         return xobjModel
 
     def setIsAppliance(self):
@@ -116,6 +133,15 @@ class Project(modellib.XObjIdModel):
             
         if not self.repository_hostname and self.hostname and self.domain_name:
             self.repository_hostname = '%s.%s' % (self.hostname, self.domain_name)
+
+        if self.labels and len(self.labels.all()) > 0:
+            label = self.labels.all()[0]
+            label.url = self.upstream_url
+            label.auth_type = self.auth_type
+            label.user_name = self.user_name
+            label.password = self.password
+            label.entitlement = self.entitlement
+            label.save() 
             
         return modellib.XObjIdModel.save(self, *args, **kwargs)
 

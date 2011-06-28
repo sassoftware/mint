@@ -103,12 +103,8 @@ class ProjectsTestCase(XMLTestCase):
             username="testuser", password="password")
         self.assertEquals(response.status_code, 200)
         project = xobj.parse(response.content).project
-        projectId = project.project_id
-        project = models.Project.objects.get(pk=projectId)
         self.assertEquals("rPath Windows Build Service", project.name)
-        self.assertEquals(2000, project.creator.user_id)
-        label = project.labels.all()[0]
-        self.assertEquals("https://rb.rpath.com/repos/rwbs/browse", label.url)
+        self.assertEquals("https://rb.rpath.com/repos/rwbs/browse", project.upstream_url)
         
     def testAddProjectExternalNoUrlNoAuth(self):
         response = self._post('projects',
@@ -116,12 +112,7 @@ class ProjectsTestCase(XMLTestCase):
             username="testuser", password="password")
         self.assertEquals(response.status_code, 200)
         project = xobj.parse(response.content).project
-        projectId = project.project_id
-        project = models.Project.objects.get(pk=projectId)
-        self.assertEquals("rPath Windows Build Service", project.name)
-        self.assertEquals(2000, project.creator.user_id)
-        label = project.labels.all()[0]
-        self.assertEquals("http://%s/conary/" % project.repository_hostname, label.url)
+        self.assertEquals("http://%s/conary/" % project.repository_hostname, project.upstream_url)
         
     def testAddProjectExternalNoUrlExternalAuth(self):
         response = self._post('projects',
@@ -129,12 +120,7 @@ class ProjectsTestCase(XMLTestCase):
             username="testuser", password="password")
         self.assertEquals(response.status_code, 200)
         project = xobj.parse(response.content).project
-        projectId = project.project_id
-        project = models.Project.objects.get(pk=projectId)
-        self.assertEquals("rPath Windows Build Service", project.name)
-        self.assertEquals(2000, project.creator.user_id)
-        label = project.labels.all()[0]
-        self.assertEquals("https://%s/conary/" % project.repository_hostname, label.url)
+        self.assertEquals("https://%s/conary/" % project.repository_hostname, project.upstream_url)
 
     def testUpdateProject(self):
         response = self._put('projects/chater-foo',
