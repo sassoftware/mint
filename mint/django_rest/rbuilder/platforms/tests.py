@@ -181,7 +181,7 @@ class NewPlatformTest(XMLTestCase):
         self.assertEquals(200, response.status_code)
         
         # 3 platforms were already in the fixture
-        self.assertEquals(4, len(models.Platform.objects.all()))
+        self.assertEquals(4, len(pmodels.Platform.objects.all()))
         platform = pmodels.Platform.objects.get(platform_name="Platform Post")
         self.assertEquals("PlatformTest Post", platform.label)
         self.assertEquals("Platform Post",platform.product_version)
@@ -194,7 +194,7 @@ class NewPlatformTest(XMLTestCase):
         self.assertEquals(200, response.status_code)
         
         # 3 sources were already in the fixture
-        self.assertEquals(4, len(models.ContentSource.objects.all()))
+        self.assertEquals(4, len(pmodels.ContentSource.objects.all()))
         content = pmodels.ContentSource.objects.get(name="PlatformTestPost")
         self.assertEquals("PlatformTestPost",content.short_name)
         self.asserEquals("1",content.order_index)
@@ -208,7 +208,7 @@ class NewPlatformTest(XMLTestCase):
         self.assertEquals(200, response.status_code) 
         
          # 3 sources were already in the fixture
-        self.assertEquals(4, len(models.ContentSourceType.objects.all()))
+        self.assertEquals(4, len(pmodels.ContentSourceType.objects.all()))
         contentType = pmodels.ContentSourceType.objects.get(content_source_type="ContentSourceTypePost")
         self.assertEquals("true",contentType.required)
         self.asserEquals("true",contentType.singleton)  
@@ -222,7 +222,7 @@ class NewPlatformTest(XMLTestCase):
         self.assertEquals(200, response.status_code)             
         
          # 3 stasus were already in the fixture
-        self.assertEquals(4, len(models.PlatformLoadStatus.objects.all()))
+        self.assertEquals(4, len(pmodels.PlatformLoadStatus.objects.all()))
         pLoadStatus = pmodels.PlatformLoadStatus.objects.get(code=10)
         self.assertEquals("PlatformLoadStatusPostTest",pLoadStatus.message)
         self.asserEquals("true",pLoadStatus.is_final)  
@@ -236,7 +236,7 @@ class NewPlatformTest(XMLTestCase):
         self.assertEquals(200, response.status_code) 
         
          # 3 stasus were already in the fixture
-        self.assertEquals(4, len(models.PlatformLoad.objects.all()))
+        self.assertEquals(4, len(pmodels.PlatformLoad.objects.all()))
         pLoad = pmodels.PlatformLoad.objects.get(load_uri="platformLoadUri")
         self.assertEquals(10,pLoad.job_id)
         self.asserEquals(10,pLoad.platform_id)  
@@ -250,7 +250,7 @@ class NewPlatformTest(XMLTestCase):
         self.assertEquals(200, response.status_code) 
         
         # 3 stasus were already in the fixture
-        self.assertEquals(4, len(models.PlatformVersion.objects.all()))
+        self.assertEquals(4, len(pmodels.PlatformVersion.objects.all()))
         platformVersion = pmodels.PlatformVersion.objects.get(name="PlatformVersionPostTest")
         self.assertEquals("Post",platformVersion.version)
         self.asserEquals("PlatformVersionPostTest",platformVersion.label) 
@@ -264,7 +264,7 @@ class NewPlatformTest(XMLTestCase):
         self.assertEquals(200, response.status_code)  
         
         # 3 stasus were already in the fixture
-        self.assertEquals(4, len(models.SourceStatus.objects.all()))
+        self.assertEquals(4, len(pmodels.SourceStatus.objects.all()))
         sourceStatus = pmodels.SourceStatus.objects.get(message="sourceStatusPostTest")
         self.assertEquals(true,sourceStatus.connected)
         self.asserEquals("sourceStatusPostTest",sourceStatus.short_name)                    
