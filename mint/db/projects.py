@@ -149,7 +149,7 @@ class ProjectsTable(database.KeyedTable):
                         ON Projects.projectId=ProjectUsers.projectId
                     WHERE ProjectUsers.userId=?"""
         if filter:
-            stmt += " AND hidden=0"
+            stmt += " AND NOT hidden"
         cu.execute(stmt, userId)
 
         return [tuple(x) for x in cu.fetchall()]
@@ -168,7 +168,7 @@ class ProjectsTable(database.KeyedTable):
                   JOIN Projects ON Projects.projectId=ProjectUsers.projectId
                   WHERE ProjectUsers.userId=?"""
         if filter:
-            stmt += " AND hidden=0"
+            stmt += " AND NOT hidden"
         cu.execute(stmt, userId)
         ret = []
         for x in cu.fetchall_dict():
@@ -188,7 +188,7 @@ class ProjectsTable(database.KeyedTable):
             fledgeQuery = "AND EXISTS(SELECT troveName FROM Commits WHERE projectId=Projects.projectId LIMIT 1)"
 
         cu.execute("""SELECT projectId, hostname, name, description, timeModified
-                FROM Projects WHERE hidden=0 AND external=0 %s ORDER BY timeCreated DESC
+                FROM Projects WHERE NOT hidden AND NOT external %s ORDER BY timeCreated DESC
                 LIMIT ?""" % fledgeQuery, limit)
 
         ids = []
@@ -301,7 +301,7 @@ class ProjectsTable(database.KeyedTable):
             extras += ")"
 
         if not includeInactive:
-            extras += " AND Projects.hidden=0"
+            extras += " AND NOT Projects.hidden"
 
         terms = " ".join(terms)
 
@@ -343,14 +343,14 @@ class ProjectsTable(database.KeyedTable):
     @database.dbWriter
     def hide(self, cu, projectId):
         # Anonymous user is added/removed in server
-        cu.execute("UPDATE Projects SET hidden=1, timeModified=? WHERE projectId=?", time.time(), projectId)
+        cu.execute("UPDATE Projects SET hidden=true, timeModified=? WHERE projectId=?", time.time(), projectId)
         cu.execute("DELETE FROM PackageIndex WHERE projectId=?", projectId)
 
     def unhide(self, projectId):
         # Anonymous user is added/removed in server
         cu = self.db.cursor()
 
-        cu.execute("UPDATE Projects SET hidden=0, timeModified=? WHERE projectId=?", time.time(), projectId)
+        cu.execute("UPDATE Projects SET hidden=false, timeModified=? WHERE projectId=?", time.time(), projectId)
         self.db.commit()
 
     def isHidden(self, projectId):

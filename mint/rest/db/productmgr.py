@@ -89,7 +89,7 @@ class ProductManager(manager.Manager):
         if not self.auth.isAdmin:
             # Private projects are invisible to non-member non-admins.
             whereClauses.append(
-                    ('( p.hidden = 0 OR m.level IS NOT NULL )', ()))
+                    ('( NOT p.hidden OR m.level IS NOT NULL )', ()))
 
         if whereClauses:
             sql += ' WHERE ' + ' AND '.join(x[0] for x in whereClauses)

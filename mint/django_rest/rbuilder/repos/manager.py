@@ -214,7 +214,7 @@ class ReposManager(basemanager.BaseManager):
 
     def _getFullRepositoryMap(self):
         labels = models.Label.objects.filter(
-            project__hidden=0, project__disabled=0)
+            project__hidden=False, project__disabled=False)
         repoMap = {}
         for label in labels:
             host = label.label.split('@', 1)[0]

@@ -1306,7 +1306,7 @@ If you would not like to be %s %s of this project, you may resign from this proj
     @private
     def setBackupExternal(self, projectId, backupExternal):
         return self.projects.update(projectId,
-                backupExternal=int(backupExternal))
+                backupExternal=bool(backupExternal))
 
     @typeCheck(int, bool)
     @requiresAuth
@@ -1951,7 +1951,7 @@ If you would not like to be %s %s of this project, you may resign from this proj
     def _getFullRepositoryMap(self):
         cu = self.db.cursor()
         cu.execute("""SELECT projectId FROM Projects
-                            WHERE hidden=0 AND disabled=0 AND
+                            WHERE NOT hidden AND NOT disabled AND
                                 (external=0 OR projectId IN (SELECT targetProjectId FROM InboundMirrors))""")
         projs = cu.fetchall()
         repoMap = {}

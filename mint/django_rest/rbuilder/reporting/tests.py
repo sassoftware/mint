@@ -66,7 +66,7 @@ class ImagesPerProductTestCase(unittest.TestCase):
             active=1)
         self.product = Project.objects.create(hostname='foo',name='foo Applicance', 
             namespace='rpath',domainname='eng.rpath.com',repositoryHostName='foo.eng.rpath.com',
-            prodtype='Appliance',hidden=0,creatorid=self.user,timecreated=str(time.time()),
+            prodtype='Appliance',hidden=False,creatorid=self.user,timecreated=str(time.time()),
             timemodified=str(time.time()), shortname='foo')
         self.version = Project.Version.objects.create(productId=self.product,namespace='foo',name='bar',
             timecreated=str(time.time()))

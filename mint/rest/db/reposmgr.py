@@ -508,7 +508,7 @@ class RepositoryManager(manager.Manager):
                  (SELECT targetProjectId FROM InboundMirrors )) AS mirrored
             FROM Projects
             JOIN Labels USING(projectId)
-            WHERE hidden=0 AND disabled=0""")
+            WHERE NOT hidden AND NOT disabled""")
         repoMap = {}
         for url, label, external, authType, mirrored in cu:
             host = label.split('@', 1)[0]
