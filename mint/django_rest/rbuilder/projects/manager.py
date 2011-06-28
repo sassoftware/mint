@@ -49,7 +49,7 @@ class ProjectManager(basemanager.BaseManager):
         if auth.isAdmin(self.user):
             return True
         # Public projects are visible to all
-        elif project.hidden == 0:
+        elif not project.hidden:
             return True
         # Is the current user a project member
         elif self.user in project.members.all():
@@ -222,12 +222,12 @@ class ProjectManager(basemanager.BaseManager):
         # XXX Is this correct?
         if project.hidden:
             if self.auth.admin:
-                project.hidden = 1
+                project.hidden = True
             else:
-                project.hidden = 0
+                project.hidden = False
 
         oldProject = models.Project.objects.get(hostname=project.hostname)
-        if project.hidden == 0 and oldProject.hidden == 1:
+        if not project.hidden and oldProject.hidden:
             self.restDb.publisher.notify('ProductUnhidden', oldProject.pk)
             self.mgr.addUser('.'.join((oldProject.hostname,
                                             oldProject.domain_name)), 

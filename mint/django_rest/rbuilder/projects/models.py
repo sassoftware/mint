@@ -54,18 +54,18 @@ class Project(modellib.XObjIdModel):
         default="Appliance")
     commit_email = models.CharField(max_length=128, null=True, blank=True, 
         db_column="commitemail")
-    backup_external = models.SmallIntegerField(default=0,
+    backup_external = models.BooleanField(default=False,
         db_column="backupexternal")
     created_date = models.DecimalField(max_digits=14, decimal_places=3,
         blank=True, db_column="timecreated")
     modified_date = models.DecimalField(max_digits=14, decimal_places=3,
         blank=True, db_column="timemodified")
-    hidden = models.SmallIntegerField(default=0)
+    hidden = models.BooleanField(default=False)
     creator = models.ForeignKey(usermodels.User,
         related_name="creator", null=True, db_column="creatorid")
-    external = models.SmallIntegerField(default=0)
-    disabled = models.SmallIntegerField(default=0)
-    is_appliance = models.SmallIntegerField(default=1, db_column="isappliance")
+    external = models.BooleanField(default=False)
+    disabled = models.BooleanField(default=False)
+    is_appliance = models.BooleanField(default=True, db_column="isappliance")
     version = models.CharField(max_length=128, null=True, blank=True,
         default='')
     database = models.CharField(max_length=128, null=True)
@@ -84,10 +84,7 @@ class Project(modellib.XObjIdModel):
             if member:
                 role = userlevels.names[member[0].level]
                 xobjModel.role = role
-        xobjModel.is_appliance = bool(self.is_appliance)
-        xobjModel.hidden = bool(self.hidden)
-        xobjModel.external = bool(self.external)
-
+                
         # Convert timestamp fields in the database to our standard UTC format
         xobjModel.created_date = str(datetime.datetime.fromtimestamp(
             xobjModel.created_date, tz.tzutc()))
@@ -98,9 +95,9 @@ class Project(modellib.XObjIdModel):
     def setIsAppliance(self):
         if self.project_type == "Appliance" or \
            self.project_type == "PlatformFoundation":
-            self.is_appliance = 1
+            self.is_appliance = True
         else:
-            self.is_appliance = 0
+            self.is_appliance = False
 
     def save(self, *args, **kwargs):
         # Default project type to Appliance

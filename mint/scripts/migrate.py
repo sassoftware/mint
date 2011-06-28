@@ -2898,7 +2898,7 @@ class MigrateTo_57(SchemaMigration):
 
 
 class MigrateTo_58(SchemaMigration):
-    Version = (58, 21)
+    Version = (58, 22)
 
     def migrate(self):
         return True
@@ -3117,6 +3117,30 @@ class MigrateTo_58(SchemaMigration):
         cu = self.db.cursor()
         cu.execute("""ALTER TABLE project_branch_stage ADD COLUMN project_id integer
                       REFERENCES Projects (projectId) ON DELETE SET NULL""")
+        return True
+    
+    def migrate22(self):
+        cu = self.db.cursor()
+        cu.execute("""ALTER TABLE Projects ALTER COLUMN disabled DROP DEFAULT""")
+        cu.execute("""ALTER TABLE Projects ALTER COLUMN disabled TYPE BOOLEAN USING CASE WHEN disabled=0 THEN FALSE ELSE TRUE END""")
+        cu.execute("""ALTER TABLE Projects ALTER COLUMN disabled SET DEFAULT FALSE""")
+        
+        cu.execute("""ALTER TABLE Projects ALTER COLUMN hidden DROP DEFAULT""")
+        cu.execute("""ALTER TABLE Projects ALTER COLUMN hidden TYPE BOOLEAN USING CASE WHEN hidden=0 THEN FALSE ELSE TRUE END""")
+        cu.execute("""ALTER TABLE Projects ALTER COLUMN hidden SET DEFAULT FALSE""")
+        
+        cu.execute("""ALTER TABLE Projects ALTER COLUMN external DROP DEFAULT""")
+        cu.execute("""ALTER TABLE Projects ALTER COLUMN external TYPE BOOLEAN USING CASE WHEN external=0 THEN FALSE ELSE TRUE END""")
+        cu.execute("""ALTER TABLE Projects ALTER COLUMN external SET DEFAULT FALSE""")
+        
+        cu.execute("""ALTER TABLE Projects ALTER COLUMN isAppliance DROP DEFAULT""")
+        cu.execute("""ALTER TABLE Projects ALTER COLUMN isAppliance TYPE BOOLEAN USING CASE WHEN isAppliance=0 THEN FALSE ELSE TRUE END""")
+        cu.execute("""ALTER TABLE Projects ALTER COLUMN isAppliance SET DEFAULT TRUE""")
+        
+        cu.execute("""ALTER TABLE Projects ALTER COLUMN backupExternal DROP DEFAULT""")
+        cu.execute("""ALTER TABLE Projects ALTER COLUMN backupExternal TYPE BOOLEAN USING CASE WHEN backupExternal=0 THEN FALSE ELSE TRUE END""")
+        cu.execute("""ALTER TABLE Projects ALTER COLUMN backupExternal SET DEFAULT FALSE""")
+        
         return True
 
 def _createUpdateSystemsQuerySet(db):

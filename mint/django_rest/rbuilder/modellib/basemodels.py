@@ -276,15 +276,6 @@ class BaseManager(models.Manager):
                 val = str(val)
                 val = (val.lower() == str(True).lower())
 
-            # Handle values that are integers in DB but serialize as boolean
-            # strings (like project.external for example)
-            elif isinstance(field, (djangofields.IntegerField)):
-                if isinstance(val, types.StringTypes):
-                    if (val.lower() == str(True).lower()):
-                        val = 1
-                    else:
-                        val = 0
-
             # Handle xml fields
             elif isinstance(field, XMLField):
                 if not val._xobj.elements:

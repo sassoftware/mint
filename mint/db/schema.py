@@ -28,7 +28,7 @@ from conary.dbstore import sqlerrors, sqllib
 log = logging.getLogger(__name__)
 
 # database schema major version
-RBUILDER_DB_VERSION = sqllib.DBversion(58, 21)
+RBUILDER_DB_VERSION = sqllib.DBversion(58, 22)
 
 
 def _createTrigger(db, table, column = "changed"):
@@ -166,16 +166,16 @@ def _createProjects(db):
             namespace           varchar(16),
             projecturl          varchar(128)    DEFAULT ''  NOT NULL,
             description         text,
-            disabled            smallint        NOT NULL    DEFAULT 0,
-            hidden              smallint        NOT NULL    DEFAULT 0,
-            external            smallint        NOT NULL    DEFAULT 0,
-            isAppliance         smallint        NOT NULL    DEFAULT 1,
+            disabled            boolean         NOT NULL    DEFAULT FALSE,
+            hidden              boolean         NOT NULL    DEFAULT FALSE,
+            external            boolean         NOT NULL    DEFAULT FALSE,
+            isAppliance         boolean         NOT NULL    DEFAULT TRUE,
             timeCreated         numeric(14,3),
             timeModified        numeric(14,3),
             commitEmail         varchar(128)                DEFAULT '',
             prodtype            varchar(128)                DEFAULT '',
             version             varchar(128)                DEFAULT '',
-            backupExternal      smallint        NOT NULL    DEFAULT 0,
+            backupExternal      boolean        NOT NULL    DEFAULT FALSE,
             database            varchar(128)
         ) %(TABLEOPTS)s """ % db.keywords)
         db.tables['Projects'] = []
