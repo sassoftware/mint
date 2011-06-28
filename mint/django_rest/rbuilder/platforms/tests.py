@@ -17,7 +17,7 @@ from mint.django_rest.rbuilder.platforms import testsxml  # pyflakes=ignore
 from mint.django_rest.rbuilder.inventory.tests import XMLTestCase  # pyflakes=ignore
 from xobj import xobj  # pyflakes=ignore
 from lxml import etree  # pyflakes=ignore
-
+from mint.django_rest.rbuilder.platforms import platformstestxml
 
 class PlatformsTestCase(XMLTestCase):
     fixtures = ['platformstestxml']
