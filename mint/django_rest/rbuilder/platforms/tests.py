@@ -266,7 +266,7 @@ class NewPlatformTest(XMLTestCase):
         # 3 stasus were already in the fixture
         self.assertEquals(4, len(pmodels.SourceStatus.objects.all()))
         sourceStatus = pmodels.SourceStatus.objects.get(message="sourceStatusPostTest")
-        self.assertEquals(true,sourceStatus.connected)
+        self.assertEquals("true",sourceStatus.connected)
         self.asserEquals("sourceStatusPostTest",sourceStatus.short_name)                    
 		        
         
