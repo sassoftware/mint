@@ -105,6 +105,9 @@ class Project(modellib.XObjIdModel):
             self.project_type = "Appliance"
 
         self.setIsAppliance()
+        
+        if not self.hostname:
+            self.hostname = self.short_name
 
         if self.created_date is None:
             self.created_date = str(time.time())
