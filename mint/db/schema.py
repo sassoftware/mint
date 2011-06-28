@@ -2730,10 +2730,6 @@ def loadSchema(db, cfg=None, should_migrate=False):
     try:
         version = migrate.migrateSchema(db, cfg)
         db.loadSchema()
-
-        # run through the schema creation to create any missing objects
-        log.debug("Checking for and creating missing schema elements")
-        createSchema(db, doCommit=False)
     except:
         db.rollback()
         raise
