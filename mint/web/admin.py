@@ -334,7 +334,7 @@ class AdminHandler(WebHandler):
         # projects).
         mirroredProjects = []
         for repos in self.client.server._server.reposMgr.iterRepositories(
-                'external = 1'):
+                'external'):
             project = self.client.getProject(repos.projectId)
             mirrored = self.client.getInboundMirror(project.id)
 

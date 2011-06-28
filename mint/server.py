@@ -377,7 +377,7 @@ class MintServer(object):
 
         # Also add repositoryMap entries for external cached projects.
         if repoMaps:
-            for repos in self.reposMgr.iterRepositories('external = 1'):
+            for repos in self.reposMgr.iterRepositories('external'):
                 if repos.isLocalMirror:
                     # No repomap required for anything with a database.
                     continue
