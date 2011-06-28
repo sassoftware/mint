@@ -507,7 +507,8 @@ class RepositoryHandle(object):
                 authToken.password = self._projectInfo['password']
         # Always add any configured outbound entitlements.
         if injectedAuthType == 'entitlement':
-            authToken.entitlements.append(self._projectInfo['entitlement'])
+            authToken.entitlements.append(
+                    (None, self._projectInfo['entitlement']))
         return authToken
 
     def convertAuthToken(self, mintToken, useRepoDb=False):
