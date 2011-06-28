@@ -522,7 +522,7 @@ class RepositoryHandle(object):
         # preserves compatibility with existing repositories, e.g. the built-in
         # rmake repository.
         extraRoles = set()
-        if useRepoDb:
+        if useRepoDb and self.hasDatabase:
             netserver = self.getNetServer()
             rcu = netserver.db.cursor()
             try:
