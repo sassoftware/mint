@@ -99,7 +99,7 @@ class PlatformVersion(modellib.XObjIdModel):
     revision = fields.CharField(max_length=1026)
     label = fields.CharField(max_length=1026)
     ordering = fields.CharField(max_length=1026)
-    platform_id = models.ForeignKey('Platform', db_column='platform_id')
+    platform_id = models.ForeignKey('Platform', null=True,db_column='platform_id')
 
 
 class PlatformLoads(modellib.Collection):
