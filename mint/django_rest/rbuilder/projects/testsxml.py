@@ -45,6 +45,23 @@ project_post_no_hostname_xml = """\
   </project>
 """
 
+project_post_no_namespace_xml = """\
+  <project>
+    <commit_email>test@example.com</commit_email>
+    <project_url>http://</project_url>
+    <disabled>0</disabled>
+    <isAppliance>1</isAppliance>
+    <short_name>test-project</short_name>
+    <domain_name>eng.rpath.com</domain_name>
+    <hidden>false</hidden>
+    <description>test project description</description>
+    <backup_external>0</backup_external>
+    <repository_hostname>test-project.eng.rpath.com</repository_hostname>
+    <external>false</external>
+    <name>test-project</name>
+  </project>
+"""
+
 project_post_no_repo_hostname_xml = """\
   <project>
     <commit_email>test@example.com</commit_email>
@@ -55,6 +72,23 @@ project_post_no_repo_hostname_xml = """\
     <hostname>test-project</hostname>
     <namespace>rpath</namespace>
     <domain_name>eng.rpath.com</domain_name>
+    <hidden>false</hidden>
+    <description>test project description</description>
+    <backup_external>0</backup_external>
+    <external>false</external>
+    <name>test-project</name>
+  </project>
+"""
+
+project_post_no_domain_name_xml = """\
+  <project>
+    <commit_email>test@example.com</commit_email>
+    <project_url>http://</project_url>
+    <disabled>0</disabled>
+    <isAppliance>1</isAppliance>
+    <short_name>test-project</short_name>
+    <hostname>test-project</hostname>
+    <namespace>rpath</namespace>
     <hidden>false</hidden>
     <description>test project description</description>
     <backup_external>0</backup_external>

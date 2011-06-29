@@ -76,6 +76,8 @@ class ProjectManager(basemanager.BaseManager):
             v = helperfuncs.validateNamespace(namespace)
             if v != True:
                 raise mint_error.InvalidNamespace
+            
+        return namespace
 
     def validateProjectVersionName(self, versionName):
         validProjectVersion = re.compile('^[a-zA-Z0-9]+(\.[a-zA-Z0-9]+)*$')
@@ -88,7 +90,7 @@ class ProjectManager(basemanager.BaseManager):
     @exposed
     def addProject(self, project):
         
-        self.validateNamespace(project.namespace)
+        project.namespace = self.validateNamespace(project.namespace)
         
         if project.external:
             self.validateExternalProject(project)
@@ -140,7 +142,7 @@ class ProjectManager(basemanager.BaseManager):
 
     @exposed
     def updateProject(self, project):
-        self.validateNamespace(project.namespace)
+        project.namespace = self.validateNamespace(project.namespace)
 
         # Only an admin can hide a project.
         # XXX Is this correct?
@@ -274,7 +276,7 @@ class ProjectManager(basemanager.BaseManager):
         if not projectVersion.namespace:
             projectVersion.namespace = projectVersion.project.namespace
 
-        self.validateNamespace(projectVersion.namespace)
+        projectVersion.namespace = self.validateNamespace(projectVersion.namespace)
         self.validateProjectVersionName(projectVersion.name)
 
         # initial product definition

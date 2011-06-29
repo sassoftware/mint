@@ -29,6 +29,7 @@ class ProjectsTestCase(XMLTestCase):
         mock.mock(basemanager.BaseRbuilderManager, "restDb")
         mock.mock(manager.ProjectManager, "setProductVersionDefinition")
         self.mgr = rbuildermanager.RbuilderManager()
+        self.mintConfig = self.mgr.cfg
         
     def _addProject(self, short_name):
         project = models.Project()
@@ -95,6 +96,28 @@ class ProjectsTestCase(XMLTestCase):
         projectId = project.project_id
         project = models.Project.objects.get(pk=projectId)
         self.assertEquals("test-project.eng.rpath.com", project.repository_hostname)
+        self.assertEquals(2000, project.creator.user_id)
+        
+    def testAddProjectNoDomainName(self):
+        response = self._post('projects',
+            data=testsxml.project_post_no_domain_name_xml,
+            username="testuser", password="password")
+        self.assertEquals(response.status_code, 200)
+        project = xobj.parse(response.content).project
+        projectId = project.project_id
+        project = models.Project.objects.get(pk=projectId)
+        self.assertEquals("test-project.eng.rpath.com", project.repository_hostname)
+        self.assertEquals(2000, project.creator.user_id)
+        
+    def testAddProjectNoNamespace(self):
+        response = self._post('projects',
+            data=testsxml.project_post_no_namespace_xml,
+            username="testuser", password="password")
+        self.assertEquals(response.status_code, 200)
+        project = xobj.parse(response.content).project
+        projectId = project.project_id
+        project = models.Project.objects.get(pk=projectId)
+        self.assertEquals("", project.namespace) # the cfg default is actually empty string in tests
         self.assertEquals(2000, project.creator.user_id)
         
     def testAddProjectExternal(self):
