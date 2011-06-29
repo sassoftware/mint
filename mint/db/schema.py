@@ -2263,7 +2263,24 @@ def _createQuerySetSchema(db):
                 NOT NULL,
             UNIQUE ("project_id", "query_tag_id", "inclusion_method_id")
         )""")
-
+    
+    changed != createTable(db, """
+        CREATE TABLE "querysets_stagetag" (
+            "stage_tag_id" %(PRIMARYKEY)s,
+            "stage_id" INTEGER
+                REFERENCES "project_branch_stage" ("stage_id")
+                ON DELETE CASCADE
+                NOT NULL,
+            "query_tag_id" INTEGER
+                REFERENCES "querysets_querytag" ("query_tag_id")
+                ON DELETE CASCADE
+                NOT NULL,
+            "inclusion_method_id" INTEGER
+                REFERENCES "querysets_inclusionmethod" ("inclusion_method_id")
+                ON DELETE CASCADE
+                NOT NULL,
+            UNIQUE ("stage_id", "query_tag_id", "inclusion_method_id")
+        )""")
 
     changed |= createTable(db, "querysets_queryset_filter_entries", """
         CREATE TABLE "querysets_queryset_filter_entries" (
