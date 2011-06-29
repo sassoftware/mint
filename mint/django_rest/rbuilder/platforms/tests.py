@@ -34,7 +34,7 @@ class PlatformsTestCase(XMLTestCase):
     def testGetPlatform(self):
 		# get django model instance corresponding to
         # platforms/1 (ie platform with id = 1)
-        platform_gotten = self.xobjResponse('/api/v1/platforms/1')
+        platform_gotten = self.xobjResponse('/api/v1/platforms/1')           #unsure about the url
         # load platform/1 from db to check
         platform = pmodels.Platform.objects.get(pk=1)
         # now test that the platform attributes are equal
@@ -175,11 +175,10 @@ class NewPlatformTest(XMLTestCase):
     
     def testCreatePlatform(self):
 		#Creates a new platform
-        response = self._post('platforms/',
+        response = self._post('platforms/',              #unsure about the url
             data=platformstestxml.platformPOSTXml,
             username="admin", password="password")
-        self.assertEquals(200, response.status_code)
-        
+        self.assertEquals(200, response.status_code)        
         # 3 platforms were already in the fixture
         self.assertEquals(4, len(pmodels.Platform.objects.all()))
         platform = pmodels.Platform.objects.get(platform_name="Platform Post")
@@ -188,11 +187,10 @@ class NewPlatformTest(XMLTestCase):
         
     def testCreateContentSource(self):
 		#Creates a new platform
-        response = self._post('platforms/',
+        response = self._post('platforms/',                 #unsure about the url
             data=platformstestxml.contentSourcePOSTXml,
             username="admin", password="password")
-        self.assertEquals(200, response.status_code)
-        
+        self.assertEquals(200, response.status_code)        
         # 3 sources were already in the fixture
         self.assertEquals(4, len(pmodels.ContentSource.objects.all()))
         content = pmodels.ContentSource.objects.get(name="PlatformTestPost")
@@ -202,11 +200,10 @@ class NewPlatformTest(XMLTestCase):
    
     def testCreateContentSourceType(self):
 		#Creates a new contentsourcetype
-        response = self._post('platforms/',
+        response = self._post('platforms/',                    #unsure about the url
             data=platformstestxml.contentSourceTypePOSTXml,
             username="admin", password="password")
-        self.assertEquals(200, response.status_code) 
-        
+        self.assertEquals(200, response.status_code)         
          # 3 sources were already in the fixture
         self.assertEquals(4, len(pmodels.ContentSourceType.objects.all()))
         contentType = pmodels.ContentSourceType.objects.get(content_source_type="ContentSourceTypePost")
@@ -216,12 +213,11 @@ class NewPlatformTest(XMLTestCase):
         
     def testCreatePlatformLoadStatus(self):
 		#Creates a new contentsourcetype
-        response = self._post('platforms/',
+        response = self._post('platforms/',                    #unsure about the url
             data=platformstestxml.platformLoadStatusPOSTXml,
             username="admin", password="password")
-        self.assertEquals(200, response.status_code)             
-        
-         # 3 stasus were already in the fixture
+        self.assertEquals(200, response.status_code)        
+        # 3 stasus were already in the fixture
         self.assertEquals(4, len(pmodels.PlatformLoadStatus.objects.all()))
         pLoadStatus = pmodels.PlatformLoadStatus.objects.get(code=10)
         self.assertEquals("PlatformLoadStatusPostTest",pLoadStatus.message)
@@ -230,12 +226,11 @@ class NewPlatformTest(XMLTestCase):
         
     def testCreatePlatformLoad(self):
 		#Creates a new contentsourcetype
-        response = self._post('platforms/',
+        response = self._post('platforms/',                  #unsure about the url
             data=platformstestxml.platformLoadPOSTXml,
             username="admin", password="password")
         self.assertEquals(200, response.status_code) 
-        
-         # 3 stasus were already in the fixture
+        # 3 stasus were already in the fixture
         self.assertEquals(4, len(pmodels.PlatformLoad.objects.all()))
         pLoad = pmodels.PlatformLoad.objects.get(load_uri="platformLoadUri")
         self.assertEquals(10,pLoad.job_id)
@@ -244,11 +239,10 @@ class NewPlatformTest(XMLTestCase):
         
     def testCreatePlatformVersion(self):
 		#Creates a new contentsourcetype
-        response = self._post('platforms/',
+        response = self._post('platforms/',                        #unsure about the url
             data=platformstestxml.platformVersionPOSTXml,
             username="admin", password="password")
-        self.assertEquals(200, response.status_code) 
-        
+        self.assertEquals(200, response.status_code)        
         # 3 stasus were already in the fixture
         self.assertEquals(4, len(pmodels.PlatformVersion.objects.all()))
         platformVersion = pmodels.PlatformVersion.objects.get(name="PlatformVersionPostTest")
@@ -258,11 +252,10 @@ class NewPlatformTest(XMLTestCase):
         
     def testCreateSourceStatus(self):
 		#Creates a new contentsourcetype
-        response = self._post('platforms/',
+        response = self._post('platforms/',                         #unsure about the url
             data=platformstestxml.sourceStatusPOSTXml,
             username="admin", password="password")
-        self.assertEquals(200, response.status_code)  
-        
+        self.assertEquals(200, response.status_code)          
         # 3 stasus were already in the fixture
         self.assertEquals(4, len(pmodels.SourceStatus.objects.all()))
         sourceStatus = pmodels.SourceStatus.objects.get(message="sourceStatusPostTest")
@@ -275,3 +268,92 @@ class NewPlatformTest(XMLTestCase):
         
     def testCreatePlatform_NoPlatform(self):
         pass
+        
+        
+    def testUpdatePlatform(self):
+		#1 already in fixture
+        plat = pmodels.Platform.objects.get(pk=1)
+        r = self._put('platforms/1',                              #unsure about the url
+            data=platformstestxml.platformPUTXml,
+            username='admin', password='password')
+        updatedPlat = pmodels.Platform.objects.get(pk=1)
+        # Check that name and other fields are updated
+        self.assertEquals('PlatformPut', updatedPlat.platform_trove_name)
+        self.assertEquals('PlatformPut', updatedPlat.repository_host_name)
+        self.assertEquals('PlatformPut', updatedPlat.label)
+        self.assertEquals('PlatformPut', updatedPlat.product_version)
+        self.assertEquals('PlatformPut', updatedPlat.platform_name)
+        self.assertEquals('PlatformPut', updatedPlat.platform_usage_terms)
+        self.assertEquals('PlatformPut', updatedPlat.mode)
+        
+		
+    def testUpdateContentSource(self):
+		#1 already in fixture
+        content = pmodels.ContentSource.objects.get(pk=1)
+        r = self._put('platforms/1',                              #unsure about the url
+            data=platformstestxml.contentSourcePUTXml,
+            username='admin', password='password')
+        updatedContent = pmodels.ContentSource.objects.get(pk=1)
+        # Check that name and other fields are updated
+        self.assertEquals('PlatformTestPut', updatedContent.name)
+        self.assertEquals('PlatformTestPut', updatedContent.short_name)
+        self.assertEquals('true', updatedContent.default_source)
+        
+        
+    def testUpdateContentSourceType(self):
+		#1 already in fixture
+        content = pmodels.ContentSourceType.objects.get(pk=1)
+        r = self._put('platforms/1',                              #unsure about the url
+            data=platformstestxml.contentSourceTypePUTXml,
+            username='admin', password='password')
+        updatedContent = pmodels.Platform.objects.get(pk=1)
+        # Check that name and other fields are updated
+        self.assertEquals('ContentSourceTypePut', updatedContent.content_source_type) 
+		
+    def testUpdatePlatformLoadStatus(self):
+		#1 already in fixture
+        plStatus = pmodels.PlatformLoadStatus.objects.get(pk=1)
+        r = self._put('platforms/1',                              #unsure about the url
+            data=platformstestxml.platformLoadStatusPUTXml,
+            username='admin', password='password')
+        updatedPlStatus = pmodels.PlatformLoadStatus.objects.get(pk=1)
+        # Check that name and other fields are updated
+        self.assertEquals(12, updatedPlStatus.code)
+        self.assertEquals('PlatformLoadStatusPutTest', updatedPlStatus.message)
+		
+    def testUpdatePlatformLoad(self):
+		#1 already in fixture
+        pLoad = pmodels.PlatformLoad.objects.get(pk=1)
+        r = self._put('platforms/1',                              #unsure about the url
+            data=platformstestxml.platformLoadPUTXml,
+            username='admin', password='password')
+        updatedPLoad = pmodels.PlatformLoad.objects.get(pk=1)
+        # Check that name and other fields are updated
+        self.assertEquals('platformLoadUriPut', updatedPLoad.load_uri)
+        self.assertEquals(12, updatedPLoad.job_id)
+        self.assertEquals(12, updatedPLoad.platform_id)
+		
+    def testUpdatePlatformVersion(self):
+		#1 already in fixture
+        pVersion = pmodels.PlatformVersion.objects.get(pk=1)
+        r = self._put('platforms/1',                              #unsure about the url
+            data=platformstestxml.platformVersionPUTXml,
+            username='admin', password='password')
+        updatedPVersion = pmodels.PlatformVersion.objects.get(pk=1) 
+        # Check that name and other fields are updated
+        self.assertEquals('PlatformVersionPutTest', updatedPVersion.name)
+        self.assertEquals('Put', updatedPVersion.version)
+        self.assertEquals('Put', updatedPVersion.revision)
+        self.assertEquals('PlatformVersionPutTest', updatedPVersion.label)
+        self.assertEquals('PlatformVersionPutTest', updatedPVersion.ordering)
+		
+    def testUpdateSourceStatus(self):
+		#1 already in fixture
+        sourceStatus = pmodels.SourceStatus.objects.get(pk=1)
+        r = self._put('platforms/1',                              #unsure about the url
+            data=platformstestxml.sourceStatusPUTXml,
+            username='admin', password='password')
+        updatedSourceStatus = pmodels.SourceStatus.objects.get(pk=1) 
+        # Check that name and other fields are updated
+        self.assertEquals('sourceStatusPutTest', updatedSourceStatus.message)
+        self.assertEquals('sourceStatusPutTest', updatedSourceStatus.short_name) 												        
