@@ -34,6 +34,7 @@ class PlatformsTestCase(XMLTestCase):
     def testGetPlatform(self):
 
         platform_gotten = self.xobjResponse('/api/v1/platforms/1')           #unsure about the url
+        platform = pmodels.Platform.objects.get(pk=1)
         self.assertEquals(platform.label,platform_gotten.label)
         self.assertEquals(platform.platform_trove_name,platform_gotten.platform_trove_name)
         self.assertEquals(platform.repository_host_name,platform_gotten.repository_host_name)
@@ -58,10 +59,6 @@ class PlatformsTestCase(XMLTestCase):
 		platforms = pmodels.Platform.objects.all()
 		platforms_gotten = self.xobjResponse('platforms/')
 		self.assertEquals(len(platforms), len(platforms_gotten))
-        
-    
-    def testGetImageTypeDefinitions(self): #ignore
-        pass
 
 
     def testGetPlatforms(self):
