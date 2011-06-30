@@ -32,12 +32,8 @@ class PlatformsTestCase(XMLTestCase):
         return getattr(xobjModel, root_name)
         
     def testGetPlatform(self):
-		# get django model instance corresponding to
-        # platforms/1 (ie platform with id = 1)
+
         platform_gotten = self.xobjResponse('/api/v1/platforms/1')           #unsure about the url
-        # load platform/1 from db to check
-        platform = pmodels.Platform.objects.get(pk=1)
-        # now test that the platform attributes are equal
         self.assertEquals(platform.label,platform_gotten.label)
         self.assertEquals(platform.platform_trove_name,platform_gotten.platform_trove_name)
         self.assertEquals(platform.repository_host_name,platform_gotten.repository_host_name)
@@ -56,7 +52,8 @@ class PlatformsTestCase(XMLTestCase):
         self.assertEquals(platform.is_platform,platform_gotten.is_platform)
         self.assertEquals(platform.platform_versions,platform_gotten.platform_versions)
         self.assertEquals(platform.project,platform_gotten.project)
-        
+
+
     def testGetPlatforms(self):
 		platforms = pmodels.Platform.objects.all()
 		platforms_gotten = self.xobjResponse('platforms/')
@@ -65,7 +62,20 @@ class PlatformsTestCase(XMLTestCase):
     
     def testGetImageTypeDefinitions(self): #ignore
         pass
+
+
+    def testGetPlatforms(self):
+        platforms_gotten = self.xobjResponse('/api/v1/platforms/')
+        # note that when we test getting Platforms, we are not
+        # trying to retrieve a Platforms instance, but rather all
+        # the platform instances that it contains
+        platforms = pmodels.Platform.objects.all()
+        self.assertEquals(len(list(platforms)), len(platforms_gotten))
         
+    
+    def testGetImageTypeDefinitions(self):
+        pass
+
     #platformSourceStatus and ContentSourceStatus are merged into SourceStatus    
     def testGetPlatformSourceStatus(self):
 		pSourceStatus = pmodels.SourceStatus.objects.get(pk=1)
@@ -75,6 +85,7 @@ class PlatformsTestCase(XMLTestCase):
 		self.asserEquals(pSourceStatus.message,pSourceStatus_gotten.message)
 		self.asserEquals(pSourceStatus.content_source_type,pSourceStatus_gotten.content_source_type)
 		self.asserEquals(pSourceStatus.short_name,pSourceStatus_gotten.short_name)
+
         
         
     def testGetContentSourceStatusNoData(self):
