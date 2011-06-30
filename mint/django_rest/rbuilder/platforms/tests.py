@@ -54,13 +54,6 @@ class PlatformsTestCase(XMLTestCase):
         self.assertEquals(platform.platform_versions,platform_gotten.platform_versions)
         self.assertEquals(platform.project,platform_gotten.project)
 
-
-    def testGetPlatforms(self):
-		platforms = pmodels.Platform.objects.all()
-		platforms_gotten = self.xobjResponse('platforms/')
-		self.assertEquals(len(platforms), len(platforms_gotten))
-
-
     def testGetPlatforms(self):
         platforms_gotten = self.xobjResponse('/api/v1/platforms/')
         # note that when we test getting Platforms, we are not
