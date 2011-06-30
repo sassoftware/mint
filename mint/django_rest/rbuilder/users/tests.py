@@ -41,7 +41,7 @@ class UsersTestCase(XMLTestCase):
 
     def testGetUsers(self):
         users = models.Users.objects.all()
-        users_gotten = self.xobjResponse('users/')
+        users_gotten = 	
         self.assertEquals(len(list(users)), len(users_gotten))
         
     def testGetUser(self):
