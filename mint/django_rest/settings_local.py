@@ -22,8 +22,10 @@ AUTHENTICATION_BACKENDS = (
     'django.contrib.auth.backends.ModelBackend'
 )
 
-MIDDLEWARE_CLASSES = MIDDLEWARE_CLASSES + \
-    ('mint.django_rest.middleware.LocalQueryParameterMiddleware',)
+MIDDLEWARE_CLASSES = MIDDLEWARE_CLASSES + (
+    'mint.django_rest.middleware.LocalQueryParameterMiddleware',
+    'mint.django_rest.middleware.ExceptionLoggerMiddleware',
+)
 
 # Custom setting for if we should manage/create the tables in rbuilder.models
 MANAGE_RBUILDER_MODELS = True

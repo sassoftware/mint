@@ -12,8 +12,9 @@ from debug_toolbar import middleware
 from django import http
 from django.contrib.auth import authenticate
 from django.contrib.redirects import middleware as redirectsmiddleware
-from django.http import HttpResponseBadRequest
+from django.http import HttpResponse, HttpResponseBadRequest
 
+import django.core.exceptions as core_exc 
 from mint import config
 from mint.django_rest import handler
 from mint.django_rest.rbuilder import auth
@@ -61,6 +62,13 @@ class ExceptionLoggerMiddleware(BaseMiddleware):
         return None
 
     def process_exception(self, request, exception):
+
+        if isinstance(exception, core_exc.ObjectDoesNotExist):
+            fault = rbuildermodels.Fault(code=404, message=str(exception))
+            response = HttpResponse(status=404, content_type='text/xml')
+            response.content = fault.to_xml(request)
+            return response
+
         return handler.handleException(request, exception)
 
 class RequestSanitizationMiddleware(BaseMiddleware):

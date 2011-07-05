@@ -1822,6 +1822,13 @@ class SystemsTestCase(XMLTestCase):
             testsxml.system_xml % (system.networks.all()[0].created_date.isoformat(), system.created_date.isoformat()),
             ignoreNodes = [ 'created_date', 'time_created', 'time_updated' ])
 
+    def testDeleteSystemDoesNotExist(self):
+        # deleting a system that doesn't exist should be a 404, not an error
+        models.System.objects.all().delete()
+        response = self._delete('inventory/systems/%d/' % 42,
+            username="admin", password="password")
+        self.assertEquals(response.status_code, 404)
+
     def testGetSystemWithTarget(self):
         models.System.objects.all().delete()
         target = rbuildermodels.Targets(pk=1, targettype='testtargettype',
