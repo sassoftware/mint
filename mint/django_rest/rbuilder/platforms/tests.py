@@ -35,24 +35,24 @@ class PlatformsTestCase(XMLTestCase):
 
         platform_gotten = self.xobjResponse('/api/v1/platforms/1')           #unsure about the url
         platform = pmodels.Platform.objects.get(pk=1)
-        self.assertEquals(platform.label,platform_gotten.label)
-        self.assertEquals(platform.platform_trove_name,platform_gotten.platform_trove_name)
-        self.assertEquals(platform.repository_host_name,platform_gotten.repository_host_name)
-        self.assertEquals(platform.product_version,platform_gotten.product_version)
-        self.assertEquals(platform.platform_name,platform_gotten.platform_name)
-        self.assertEquals(platform.platform_usage_terms,platform_gotten.platform_usage_terms)
-        self.assertEquals(platform.mode,platform_gotten.mode)
-        self.assertEquals(platform.enabled,platform_gotten.enabled)
-        self.assertEquals(platform.configurable,platform_gotten.configurable)
-        self.assertEquals(platform.mirror_permission,platform_gotten.mirror_permission)
-        self.assertEquals(platform.abstract,platform_gotten.abstract)
-        self.assertEquals(platform.platform_type,platform_gotten.platform_type)
-        self.assertEquals(platform.platform_status,platform_gotten.platform_status)
-        self.assertEquals(platform.content_source_types,platform_gotten.content_source_types)
-        self.assertEquals(platform.load,platform_gotten.load)
-        self.assertEquals(platform.is_platform,platform_gotten.is_platform)
-        self.assertEquals(platform.platform_versions,platform_gotten.platform_versions)
-        self.assertEquals(platform.project,platform_gotten.project)
+        self.assertEquals(platform.label, platform_gotten.label)
+        self.assertEquals(platform.platform_trove_name, platform_gotten.platform_trove_name)
+        self.assertEquals(platform.repository_host_name, platform_gotten.repository_host_name)
+        self.assertEquals(platform.product_version, platform_gotten.product_version)
+        self.assertEquals(platform.platform_name, platform_gotten.platform_name)
+        self.assertEquals(platform.platform_usage_terms, platform_gotten.platform_usage_terms)
+        self.assertEquals(platform.mode, platform_gotten.mode)
+        self.assertEquals(platform.enabled, platform_gotten.enabled)
+        self.assertEquals(platform.configurable, platform_gotten.configurable)
+        self.assertEquals(platform.mirror_permission, platform_gotten.mirror_permission)
+        self.assertEquals(platform.abstract, platform_gotten.abstract)
+        self.assertEquals(platform.platform_type, platform_gotten.platform_type)
+        self.assertEquals(platform.platform_status, platform_gotten.platform_status)
+        self.assertEquals(platform.content_source_types, platform_gotten.content_source_types)
+        self.assertEquals(platform.load, platform_gotten.load)
+        self.assertEquals(platform.is_platform, platform_gotten.is_platform)
+        self.assertEquals(platform.platform_versions, platform_gotten.platform_versions)
+        self.assertEquals(platform.project, platform_gotten.project)
 
     def testGetPlatforms(self):
         platforms_gotten = self.xobjResponse('/api/v1/platforms/')
@@ -70,11 +70,11 @@ class PlatformsTestCase(XMLTestCase):
     def testGetPlatformSourceStatus(self):
 		pSourceStatus = pmodels.SourceStatus.objects.get(pk=1)
 		pSourceStatus_gotten = self.xobjResponse('/api/v1/platforms/sourcestatus/1')  #not sure
-		self.asserEquals(pSourceStatus.connected,pSourceStatus_gotten.connected)
-		self.asserEquals(pSourceStatus.valid,pSourceStatus_gotten.valid)
-		self.asserEquals(pSourceStatus.message,pSourceStatus_gotten.message)
-		self.asserEquals(pSourceStatus.content_source_type,pSourceStatus_gotten.content_source_type)
-		self.asserEquals(pSourceStatus.short_name,pSourceStatus_gotten.short_name)
+		self.asserEquals(pSourceStatus.connected, pSourceStatus_gotten.connected)
+		self.asserEquals(pSourceStatus.valid, pSourceStatus_gotten.valid)
+		self.asserEquals(pSourceStatus.message, pSourceStatus_gotten.message)
+		self.asserEquals(pSourceStatus.content_source_type, pSourceStatus_gotten.content_source_type)
+		self.asserEquals(pSourceStatus.short_name, pSourceStatus_gotten.short_name)
 
         
         
@@ -96,32 +96,32 @@ class PlatformsTestCase(XMLTestCase):
     def testGetContentSourceTypes(self):
         cSourceTypes = pmodels.ContentSourceType.objects.all()
         cSourceTypes_gotten = self.xobjResponse('/api/v1/platforms/contentsourcetypes/')  #not sure
-        self.assertEquals(len(cSourceTypes), len(cSourceTypes_gotten))
+        self.assertEquals(len(list(cSourceTypes)), len(cSourceTypes_gotten))
         
         
     def testGetContentSourceType(self):
         cSourceType = pmodels.ContentSourceType.objects.get(pk=1)
         cSourceType_gotten = self.xobjResponse('/api/v1/platforms/contentsourcetypes/1')  #not sure
-        self.assertEquals(cSourceType.content_source_type,cSourceType_gotten.content_source_type)
-        self.assertEquals(cSourceType.required,cSourceType_gotten.required)
-        self.assertEquals(cSourceType.singleton,cSourceType_gotten.singleton)
+        self.assertEquals(cSourceType.content_source_type, cSourceType_gotten.content_source_type)
+        self.assertEquals(cSourceType.required, cSourceType_gotten.required)
+        self.assertEquals(cSourceType.singleton, cSourceType_gotten.singleton)
         
         
     def testGetContentSources(self):
         contentSources = pmodels.ContentSources.objects.all()
         contentSources_gotten = self.xobjResponse('/api/v1/platforms/contentsources/') #not sure
-        self.assertEquals(len(contentSources),len(contentSources_gotten))
+        self.assertEquals(len(list(contentSources)), len(contentSources_gotten))
         
     def testGetContentSource(self):
         contentSource = pmodels.ContentSources.objects.get(pk=1)
         contentSource_gotten = self.xobjResponse('/api/v1/platforms/contentsources/1') #not sure
-        self.assertEquals(contentSource.name,contentSource_gotten.name)
-        self.assertEquals(contentSource.short_name,contentSource_gotten.short_name)
-        self.assertEquals(contentSource.default_source,contentSource_gotten.default_source)
-        self.assertEquals(contentSource.order_index,contentSource_gotten.order_index)
-        self.assertEquals(contentSource.content_source_type,contentSource_gotten.content_source_type)
-        self.assertEquals(contentSource.enabled,contentSource_gotten.enabled)
-        self.assertEquals(contentSource.content_source_status,contentSource_gotten.content_source_status)        
+        self.assertEquals(contentSource.name, contentSource_gotten.name)
+        self.assertEquals(contentSource.short_name, contentSource_gotten.short_name)
+        self.assertEquals(contentSource.default_source, contentSource_gotten.default_source)
+        self.assertEquals(contentSource.order_index, contentSource_gotten.order_index)
+        self.assertEquals(contentSource.content_source_type, contentSource_gotten.content_source_type)
+        self.assertEquals(contentSource.enabled, contentSource_gotten.enabled)
+        self.assertEquals(contentSource.content_source_status, contentSource_gotten.content_source_status)        
         
                 
     def testGetSourcesByPlatform(self):  #ignore
@@ -148,9 +148,9 @@ class PlatformsTestCase(XMLTestCase):
     def testGetPlatformLoadStatus(self):  #added
         pLoadStatus = pmodels.PlatformLoadStatus.objects.get(pk=1)
         pLoadStatus_gotten = self.xobjResponse('/api/v1/platforms/platformloadstatus/1') #not sure
-        self.assertEquals(pLoadStatus.code,pLoadStatus_gotten.code)
-        self.assertEquals(pLoadStatus.message,pLoadStatus_gotten.message)
-        self.assertEquals(pLoadStatus.is_final,pLoadStatus_gotten.is_final)
+        self.assertEquals(pLoadStatus.code, pLoadStatus_gotten.code)
+        self.assertEquals(pLoadStatus.message, pLoadStatus_gotten.message)
+        self.assertEquals(pLoadStatus.is_final, pLoadStatus_gotten.is_final)
         
     def testGetLoadPlatform(self):
        loadPlatform = pmodels.PlatformLoad.objects.get(pk=1)
@@ -181,10 +181,10 @@ class NewPlatformTest(XMLTestCase):
             username="admin", password="password")
         self.assertEquals(200, response.status_code)        
         # 3 platforms were already in the fixture
-        self.assertEquals(4, len(pmodels.Platform.objects.all()))
+        self.assertEquals(4, len(list(pmodels.Platform.objects.all())))
         platform = pmodels.Platform.objects.get(platform_name="Platform Post")
         self.assertEquals("PlatformTest Post", platform.label)
-        self.assertEquals("Platform Post",platform.product_version)
+        self.assertEquals("Platform Post", platform.product_version)
         
     def testCreateContentSource(self):
 		#Creates a new platform
@@ -206,10 +206,10 @@ class NewPlatformTest(XMLTestCase):
             username="admin", password="password")
         self.assertEquals(200, response.status_code)         
          # 3 sources were already in the fixture
-        self.assertEquals(4, len(pmodels.ContentSourceType.objects.all()))
+        self.assertEquals(4, len(list(pmodels.ContentSourceType.objects.all())))
         contentType = pmodels.ContentSourceType.objects.get(content_source_type="ContentSourceTypePost")
-        self.assertEquals("true",contentType.required)
-        self.asserEquals("true",contentType.singleton)  
+        self.assertEquals("true", contentType.required)
+        self.asserEquals("true", contentType.singleton)  
         
         
     def testCreatePlatformLoadStatus(self):
@@ -221,8 +221,8 @@ class NewPlatformTest(XMLTestCase):
         # 3 stasus were already in the fixture
         self.assertEquals(4, len(pmodels.PlatformLoadStatus.objects.all()))
         pLoadStatus = pmodels.PlatformLoadStatus.objects.get(code=10)
-        self.assertEquals("PlatformLoadStatusPostTest",pLoadStatus.message)
-        self.asserEquals("true",pLoadStatus.is_final)  
+        self.assertEquals("PlatformLoadStatusPostTest", pLoadStatus.message)
+        self.asserEquals("true", pLoadStatus.is_final)  
         
         
     def testCreatePlatformLoad(self):
@@ -234,8 +234,8 @@ class NewPlatformTest(XMLTestCase):
         # 3 stasus were already in the fixture
         self.assertEquals(4, len(pmodels.PlatformLoad.objects.all()))
         pLoad = pmodels.PlatformLoad.objects.get(load_uri="platformLoadUri")
-        self.assertEquals(10,pLoad.job_id)
-        self.asserEquals(10,pLoad.platform_id)  
+        self.assertEquals(10, pLoad.job_id)
+        self.asserEquals(10, pLoad.platform_id)  
         
         
     def testCreatePlatformVersion(self):
@@ -247,8 +247,8 @@ class NewPlatformTest(XMLTestCase):
         # 3 stasus were already in the fixture
         self.assertEquals(4, len(pmodels.PlatformVersion.objects.all()))
         platformVersion = pmodels.PlatformVersion.objects.get(name="PlatformVersionPostTest")
-        self.assertEquals("Post",platformVersion.version)
-        self.asserEquals("PlatformVersionPostTest",platformVersion.label) 
+        self.assertEquals("Post", platformVersion.version)
+        self.asserEquals("PlatformVersionPostTest", platformVersion.label) 
         
         
     def testCreateSourceStatus(self):
@@ -260,8 +260,8 @@ class NewPlatformTest(XMLTestCase):
         # 3 stasus were already in the fixture
         self.assertEquals(4, len(pmodels.SourceStatus.objects.all()))
         sourceStatus = pmodels.SourceStatus.objects.get(message="sourceStatusPostTest")
-        self.assertEquals("true",sourceStatus.connected)
-        self.asserEquals("sourceStatusPostTest",sourceStatus.short_name)                    
+        self.assertEquals("true", sourceStatus.connected)
+        self.asserEquals("sourceStatusPostTest", sourceStatus.short_name)                    
 		        
         
     def testCreatePlatform_NoProduct(self):
@@ -314,7 +314,7 @@ class NewPlatformTest(XMLTestCase):
     def testUpdatePlatformLoadStatus(self):
 		#1 already in fixture
         plStatus = pmodels.PlatformLoadStatus.objects.get(pk=1)
-        r = self._put('platforms/1',                              #unsure about the url
+        r = self._put('platforms/1',                             #unsure about the url
             data=platformstestxml.platformLoadStatusPUTXml,
             username='admin', password='password')
         updatedPlStatus = pmodels.PlatformLoadStatus.objects.get(pk=1)

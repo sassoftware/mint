@@ -143,7 +143,7 @@ class PlatformLoadManager(basemanager.BaseManager):
 class PlatformVersionManager(basemanager.BaseManager):
     @exposed
     def getPlatformVersion(self, platform_id, platform_version_id):
-        return platformModels.PlatformVersion.objects.get(platform_id=platform_id)
+        return platformModels.PlatformVersion.objects.get(pk=platform_version_id)
     
     @exposed
     def getPlatformVersions(self, platform_id):
