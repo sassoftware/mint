@@ -1174,8 +1174,8 @@ class SystemManager(basemanager.BaseManager):
 
     def _cimParams(self, repClient, system, destination, eventUuid, requiredNetwork):
         if system.target_id is not None:
-            targetName = system.target.targetname
-            targetType = system.target.targettype
+            targetName = system.target.target_name
+            targetType = system.target.target_type
         else:
             targetName = None
             targetType = None
