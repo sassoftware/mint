@@ -1,4 +1,4 @@
-QueryTag properties:
+SourceStatus properties:
     N/A
 
 Methods:

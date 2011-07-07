@@ -1,9 +1,8 @@
-QueryTag properties:
-    N/A
+
 
 Methods:
     GET:
-        Authentication: user
+        Authentication: none
     POST:
         not supported
     PUT:

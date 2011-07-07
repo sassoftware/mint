@@ -1,5 +1,4 @@
-QueryTag properties:
-    N/A
+
 
 Methods:
     GET:

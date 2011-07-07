@@ -1,5 +1,4 @@
-QueryTag properties:
-    N/A
+
 
 Methods:
     GET:
@@ -7,6 +6,6 @@ Methods:
     POST:
         not supported
     PUT:
-        not supported
+        Authentication: user
     DELETE:
         not supported

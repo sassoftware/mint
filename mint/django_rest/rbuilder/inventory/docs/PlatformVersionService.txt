@@ -1,4 +1,4 @@
-QueryTag properties:
+PlatformVersion properties:
     N/A
 
 Methods:

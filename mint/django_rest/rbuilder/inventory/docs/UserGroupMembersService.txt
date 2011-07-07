@@ -1,4 +1,8 @@
-QueryTag properties:
+UserGroupMembers properties:
+    N/A
+
+
+UserGroupMember properties:
     N/A
 
 Methods:

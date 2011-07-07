@@ -1,4 +1,4 @@
-QueryTag properties:
+UserGroup properties:
     N/A
 
 Methods:

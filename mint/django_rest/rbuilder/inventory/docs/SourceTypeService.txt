@@ -1,4 +1,4 @@
-QueryTag properties:
+ContentSourceType properties:
     N/A
 
 Methods:
