@@ -247,6 +247,9 @@ class EventType(modellib.XObjIdModel):
     SYSTEM_CONFIG_IMMEDIATE = 'immediate system configuration'
     SYSTEM_CONFIG_IMMEDIATE_DESCRIPTION = "Update system configuration"
     SYSTEM_CONFIG_IMMEDIATE_PRIORITY = ON_DEMAND_BASE + 5
+
+    SYSTEM_ASSIMILATE             = 'system assimilation'
+    SYSTEM_ASSIMILATE_DESCRIPTION = 'System assimilation'
         
     event_type_id = D(models.AutoField(primary_key=True), "the database id of the event type")
     EVENT_TYPES = (
@@ -268,6 +271,7 @@ class EventType(modellib.XObjIdModel):
          SYSTEM_DETECT_MANAGEMENT_INTERFACE_IMMEDIATE_DESC),
         (SYSTEM_CONFIG_IMMEDIATE,
          SYSTEM_CONFIG_IMMEDIATE_DESCRIPTION),
+        (SYSTEM_ASSIMILATE, SYSTEM_ASSIMILATE_DESCRIPTION)
     )
     name = D(APIReadOnly(models.CharField(max_length=8092, unique=True,
         choices=EVENT_TYPES)), "the event type name (read-only)")
@@ -285,6 +289,7 @@ class EventType(modellib.XObjIdModel):
              self.SYSTEM_SHUTDOWN,
              self.SYSTEM_SHUTDOWN_IMMEDIATE,
              self.SYSTEM_CONFIG_IMMEDIATE,
+             self.SYSTEM_ASSIMILATE,
             ]:
             return True
         else:

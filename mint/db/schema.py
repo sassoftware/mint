@@ -28,7 +28,7 @@ from conary.dbstore import sqlerrors, sqllib
 log = logging.getLogger(__name__)
 
 # database schema major version
-RBUILDER_DB_VERSION = sqllib.DBversion(58, 22)
+RBUILDER_DB_VERSION = sqllib.DBversion(58, 23)
 
 
 def _createTrigger(db, table, column = "changed"):
@@ -1278,6 +1278,9 @@ def _createInventorySchema(db, cfg):
              dict(name="immediate system configuration",
                   description="Update system configuration",
                   priority=105),
+             dict(name="system assimilation",
+                  description="System assimilation",
+                  priority=105)
             ])
         
     if 'inventory_system_event' not in db.tables:
@@ -2739,7 +2742,7 @@ def loadSchema(db, cfg=None, should_migrate=False):
         raise sqlerrors.SchemaVersionError("""
         It appears that this schema is from a version of rBuilder older
         than version 3.1.4. Schema migrations from this database schema
-        version are longer supported. Please contact rPath for help 
+        version are no longer supported. Please contact rPath for help 
         converting the rBuilder database to a supported version.""", version)
 
     # if we reach here, a schema migration is needed/requested
