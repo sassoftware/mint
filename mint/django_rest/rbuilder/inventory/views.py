@@ -437,9 +437,22 @@ class InventorySystemsSystemLogService(BaseInventoryService):
         else:
             pass
 
+class InventorySystemsSystemAssimilatorService(BaseInventoryService):
+    '''Assimilates a system in inventory that does not have any management S/W yet'''
+
+    @access.admin
+    @requires('assimilation_parameters')
+    @return_xml
+    def rest_PUT(self, request, system_id, assimilation_parameters, format='xml'):
+        system = self.mgr.getSystem(system_id)
+        if not system:
+            return HttpResponseNotFound()
+        result = self.mgr.assimilateSystem(system, assimilation_parameters)
+        return result
+
 class InventoryUsersService(BaseInventoryService):
 
-    # used by modeelib
+    # used by modellib
     def get(self, user):
         user = usersmodels.Users.objects.get(user_name=user)
         return user

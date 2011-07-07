@@ -400,6 +400,21 @@ dbPath              %(dbpath)s
     def cleanUp(self):
         shutil.rmtree(self.workDir, ignore_errors=True)
 
+class AssimilatorTestCase(XMLTestCase):
+
+    def testAssimilate(self):
+        system = self._saveSystem()
+        response = self._put('inventory/systems/%s/assimilator/' % system.pk,
+            testsxml.system_assimilator_xml, 
+            username="admin", password="password")
+        self.assertEquals(response.status_code, 200)
+        # make sure it looks like an event
+        # FIXME: our system_event_id is coming back empty, investigate
+        self.assertXMLEquals(response.content,
+            '<system_event></system_event>',
+            ignoreNodes=['event_data','event_type','system','time_created',
+                'system_event_id','priority','time_enabled'])
+
 class InventoryTestCase(XMLTestCase):
 
     def testGetTypes(self):
@@ -3053,6 +3068,7 @@ class SystemStateTestCase(XMLTestCase):
             msg = "Job %s (%s): %s -> %s (expected: %s)" % (
                 (job.event_type.name, jobState.name, oldState, ret, newState))
             self.failUnlessEqual(ret, newState, msg)
+
 
 class SystemVersionsTestCase(XMLTestCase):
     fixtures = ['system_job']
