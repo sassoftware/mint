@@ -3325,7 +3325,7 @@ class SystemVersionsTestCase(XMLTestCase):
             headers = { 'X-rBuilder-Event-UUID' : eventUuid })
         # Weak attempt to see if the response is XML
         exp = '<system id="http://testserver/api/v1/inventory/systems/%s">' % system.pk
-        self.failUnless(exp in response.content)
+        self.failUnlessIn(exp, response.content)
 
         nsystem = models.System.objects.get(system_id=system.pk)
         self.failUnlessEqual(

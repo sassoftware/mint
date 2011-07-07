@@ -108,7 +108,7 @@ class VersionManager(basemanager.BaseManager):
             return
 
         stage, created = models.Stage.objects.get_or_create(project_branch=majorVersion,
-            label=trove.version.label, name=stage.name)
+            label=trove.version.label, name=stage.name, project=project)
 
         system.stage = stage
         system.major_version = majorVersion
