@@ -2898,7 +2898,7 @@ class MigrateTo_57(SchemaMigration):
 
 
 class MigrateTo_58(SchemaMigration):
-    Version = (58, 22)
+    Version = (58, 23)
 
     def migrate(self):
         return True
@@ -3142,6 +3142,18 @@ class MigrateTo_58(SchemaMigration):
         cu.execute("""ALTER TABLE Projects ALTER COLUMN backupExternal TYPE BOOLEAN USING CASE WHEN backupExternal=0 THEN FALSE ELSE TRUE END""")
         cu.execute("""ALTER TABLE Projects ALTER COLUMN backupExternal SET DEFAULT FALSE""")
         
+        return True
+
+    def migrate23(self):
+        cu = self.db.cursor()
+        cu.execute("""
+            INSERT INTO "inventory_event_type" 
+                ("name", "description", "priority")
+            VALUES
+                ('system assimilation',
+                 'System Assimilation',
+                 105)
+        """)
         return True
 
 def _createUpdateSystemsQuerySet(db):

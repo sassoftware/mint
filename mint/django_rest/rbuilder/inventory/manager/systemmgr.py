@@ -57,6 +57,9 @@ class SystemManager(basemanager.BaseManager):
     SystemConfigurationEvents = set([
         jobmodels.EventType.SYSTEM_CONFIG_IMMEDIATE,
     ])
+    AssimilationEvents = set([
+        jobmodels.EventType.SYSTEM_ASSIMILATE
+    ])
 
     IncompatibleEvents = {
         # All events are incompatible with themselves (enforced in
@@ -145,32 +148,25 @@ class SystemManager(basemanager.BaseManager):
     @exposed
     def addZone(self, zone):
         """Add a zone"""
-
         if not zone:
             return
-
         zone.save()
         return zone
     
     @exposed
     def updateZone(self, zone):
         """Update a zone"""
-
         if not zone:
             return
-
         zone.save()
         return zone
     
     @exposed
     def deleteZone(self, zone):
         """Update a zone"""
-
         if not zone:
             return
-
         zone.delete()
-        
         return
 
     @exposed
@@ -187,10 +183,8 @@ class SystemManager(basemanager.BaseManager):
     @exposed
     def updateNetwork(self, network):
         """Update a network"""
-
         if not network:
             return
-
         network.save()
         return network
     
@@ -934,6 +928,20 @@ class SystemManager(basemanager.BaseManager):
             setattr(credentials, k, v)
         return credentials
 
+    @exposed
+    def assimilateSystem(self, system, assimilation_parameters):
+        '''adds management software to a bare system in inventory''' 
+        sshAuth = []
+        for cred in assimilation_parameters.assimilation_credential:
+             sshAuth.append(dict(
+                 sshUser     = cred.ssh_username,
+                 sshPassword = cred.ssh_password,
+                 sshKey      = cred.ssh_key
+             ))
+        return self._scheduleEvent(system,
+            jobmodels.EventType.SYSTEM_ASSIMILATE,
+            eventData=sshAuth)
+
     @classmethod
     def unmarshalCredentials(cls, credentialsString):
         creds = mintdata.unmarshalGenericData(credentialsString)
@@ -1167,6 +1175,9 @@ class SystemManager(basemanager.BaseManager):
         methodMap = {
             models.ManagementInterface.CIM : self._cimParams,
             models.ManagementInterface.WMI : self._wmiParams,
+            # this may have to change if the SSH interface starts to do more
+            # than just assimilation
+            #models.ManagementInterface.SSH : self._assimilatorParams,
         }
         mgmtInterfaceName = self.getSystemManagementInterfaceName(system)
         method = methodMap[mgmtInterfaceName]
@@ -1241,14 +1252,24 @@ class SystemManager(basemanager.BaseManager):
 
         eventUuid = str(uuid.uuid4())
         zone = event.system.managing_zone.name
-        params = self._computeDispatcherMethodParams(repClient, event.system,
-            destination, eventUuid, requiredNetwork)
+        params = None
+        if eventType not in self.AssimilationEvents:
+            params = self._computeDispatcherMethodParams(repClient, event.system,
+                destination, eventUuid, requiredNetwork)
+        else:
+            # assimilation events are not management interface related
+            # so the computeDispatcher logic is short-circuited
+            event_data = cPickle.loads(event.event_data)
+            params = repClient.AssimilatorParams(host=destination, 
+                sshAuth=event_data, eventUuid=eventUuid)
+
         resultsLocation = repClient.ResultsLocation(
             path = "/api/v1/inventory/systems/%d" % event.system.pk,
             port = 80)
 
         mgmtInterfaceName = self.getSystemManagementInterfaceName(event.system)
 
+        # TODO: refactor
         if eventType in self.RegistrationEvents:
             method = getattr(repClient, "register_" + mgmtInterfaceName)
             self._runSystemEvent(event, method, params,
@@ -1279,6 +1300,10 @@ class SystemManager(basemanager.BaseManager):
             params.eventUuid = eventUuid
             self._runSystemEvent(event, repClient.detectMgmtInterface,
                 params, resultsLocation=resultsLocation, zone=zone)
+        elif eventType in self.AssimilationEvents:
+            method = repClient.bootstrap
+            self._runSystemEvent(event, method, params,
+                resultsLocation, zone=zone) # sources=data)
         else:
             log.error("Unknown event type %s" % eventType)
             raise errors.UnknownEventType(eventType=eventType)

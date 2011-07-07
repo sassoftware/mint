@@ -108,6 +108,13 @@ event_types_xml="""\
     <priority>105</priority>
     <system_events/>
   </event_type>
+  <event_type id="http://testserver/api/v1/inventory/event_types/12">
+    <description>System assimilation</description>
+    <event_type_id>12</event_type_id>
+    <name>system assimilation</name>
+    <priority>105</priority>
+    <system_events/>
+  </event_type>
 </event_types>"""
 
 event_type_put_xml="""\
@@ -3342,4 +3349,18 @@ Methods:
     <created_date>2010-12-06T22:11:00+00:00</created_date>
   </system>
 </systems>
+"""
+
+system_assimilator_xml="""
+<assimilation_parameters>
+  <assimilation_credential>
+    <ssh_username>root</ssh_username>
+    <ssh_password>blarg</ssh_password>
+    <ssh_key>ABCDEFGHIJKL</ssh_key>
+  </assimilation_credential>
+  <assimilation_credential>
+    <ssh_key>MNOPQRSTUVWXYZ</ssh_key>
+    <ssh_password>letmein</ssh_password>
+  </assimilation_credential>
+</assimilation_parameters>
 """

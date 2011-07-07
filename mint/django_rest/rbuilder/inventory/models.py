@@ -443,6 +443,28 @@ class NetworkAddress(modellib.XObjModel):
         return (self.address == other.address and
                 bool(self.pinned) == bool(other.pinned))
 
+class AssimilationParameters(modellib.XObjModel):
+    '''Used to install management S/W on a system already in inventory'''
+    class Meta:
+        abstract = True
+    _xobj = xobj.XObjMetadata(
+        tag = 'assimilation_parameters',
+        elements = ['assimilation_credential']
+    )
+    list_fields = ['assimilation_credential']
+
+class AssimilationCredential(modellib.XObjModel):
+    '''One of many login credentials to try when using AssimilationParameters'''
+    class Meta:
+        abstract = True
+    _xobj = xobj.XObjMetadata(
+       tag = 'assimilation_credential'
+    )
+
+    ssh_username = D(models.CharField(max_length=100), "OS username")
+    ssh_password = D(models.CharField(max_length=512), "OS or SSH key password")
+    ssh_key      = D(models.TextField(null=True), "SSH key")
+
 class System(modellib.XObjIdModel):
     XSL = "system.xsl"
     class Meta:
