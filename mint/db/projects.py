@@ -461,7 +461,7 @@ class LabelsTable(database.KeyedTable):
             password = p[4] is not None and p[4] or ''
             entitlement = p[5] is not None and p[5] or ''
             url = url or ''  # seems to be unused
-            return dict(label=p[0], url=p[1], authType=p[2],
+            return dict(label=p[0], url=url, authType=p[2],
                 username=username, password=password, entitlement=entitlement)
 
     @database.dbWriter
