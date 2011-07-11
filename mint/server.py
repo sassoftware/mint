@@ -1952,28 +1952,10 @@ If you would not like to be %s %s of this project, you may resign from this proj
         return self.labels.removeLabel(projectId, labelId)
 
     def _getFullRepositoryMap(self):
-        cu = self.db.cursor()
-        cu.execute("""SELECT projectId FROM Projects
-                            WHERE NOT hidden AND NOT disabled AND
-                                (NOT external OR projectId IN (SELECT targetProjectId FROM InboundMirrors))""")
-        projs = cu.fetchall()
         repoMap = {}
-        for x in projs:
-            repoMap.update(self.labels.getLabelsForProject(x[0])[1])
-
-        # for external projects where rBuilder isn't using the default
-        # repositoryMap, put this in conaryrc.generated too:
-        cu.execute("""SELECT projectId FROM Projects WHERE external
-            AND NOT (projectId IN (SELECT targetProjectId FROM InboundMirrors))""")
-        projs = cu.fetchall()
-        for x in projs:
-            l = self.labels.getLabelsForProject(x[0])
-            label = versions.Label(l[0].keys()[0])
-            host = getUrlHost(l[1].values()[0])
-
-            if label.getHost() != host:
-                repoMap.update(l[1])
-
+        for handle in self.reposMgr.iterRepositories(
+                'NOT hidden AND NOT disabled'):
+            repoMap[handle.fqdn] = handle.getURL()
         return repoMap
 
     def _generateConaryRcFile(self):
