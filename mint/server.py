@@ -349,18 +349,6 @@ class MintServer(object):
             self.callLog.log(self.remoteIp, list(authToken) + [None, None],
                 methodName, str_args, exception = e)
 
-    @typeCheck(str)
-    @requiresAdmin
-    @private
-    def translateProjectFQDN(self, fqdn):
-        return self._translateProjectFQDN(fqdn)
-
-    def _translateProjectFQDN(self, fqdn):
-        cu = self.db.cursor()
-        cu.execute('SELECT toName FROM RepNameMap WHERE fromName=?', fqdn)
-        res = cu.fetchone()
-        return res and res[0] or fqdn
-
     def _addInternalConaryConfig(self, ccfg, repoMaps=True):
         """
         Adds user lines and repository maps for the current user.
@@ -952,7 +940,6 @@ class MintServer(object):
     @typeCheck(str)
     @private
     def getProjectIdByFQDN(self, fqdn):
-        fqdn = self._translateProjectFQDN(fqdn)
         projectId = self.projects.getProjectIdByFQDN(fqdn)
         self._filterProjectAccess(projectId)
         return projectId
@@ -3837,24 +3824,6 @@ If you would not like to be %s %s of this project, you may resign from this proj
             self.db.commit()
         return True
 
-    @private
-    @typeCheck(str, str)
-    @requiresAdmin
-    def addRemappedRepository(self, fromName, toName):
-        return self._addRemappedRepository(fromName, toName)
-
-    def _addRemappedRepository(self, fromName, toName):
-        return self.repNameMap.new(fromName = fromName, toName = toName)
-
-    @private
-    @typeCheck(str)
-    @requiresAdmin
-    def delRemappedRepository(self, fromName):
-        cu = self.db.cursor()
-        cu.execute("DELETE FROM RepNameMap WHERE fromName=?", fromName)
-        self.db.commit()
-        return True
-
     def _getAllRepositories(self):
         """
             Return a list of netclient objects for each repository
@@ -4935,7 +4904,6 @@ If you would not like to be %s %s of this project, you may resign from this proj
         cu = self.db.transaction()
         try:
             cu.execute("DELETE FROM Projects WHERE projectId = ?", projectId)
-            cu.execute("DELETE FROM RepNameMap WHERE toName = ?", handle.fqdn)
         except:
             self.db.rollback()
             raise

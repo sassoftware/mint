@@ -24,7 +24,7 @@ class Label(modellib.XObjIdModel):
         related_name="labels",
         db_column="projectid"))
     label = models.CharField(max_length=255)
-    url = models.CharField(max_length=255)
+    url = models.CharField(max_length=255, null=True)
     auth_type = models.CharField(max_length=32, default="none",
         db_column="authtype")
     user_name = models.CharField(max_length=255, null=True,
@@ -33,12 +33,6 @@ class Label(modellib.XObjIdModel):
     entitlement = models.CharField(max_length=254, null=True)
     
     def save(self, *args, **kwargs):
-        if not self.url:
-            if self.auth_type != "none":
-                self.url = "https://%s/conary/" % self.project.repository_hostname
-            else:
-                self.url = "http://%s/conary/" % self.project.repository_hostname
-            
         return modellib.XObjIdModel.save(self, *args, **kwargs)
 
 
@@ -52,16 +46,7 @@ class AuthInfo(modellib.XObjModel):
     password = models.TextField()
     entitlement = models.TextField()
 
-class RepNameMap(modellib.XObjModel):
-    class Meta:
-        db_table = "repnamemap"
-        unique_together = ("from_name", "to_name")
 
-    from_name = models.CharField(max_length=255,
-        db_column="fromname")
-    to_name = models.CharField(max_length=255,
-        db_column="toname")
-    
 for mod_obj in sys.modules[__name__].__dict__.values():
     if hasattr(mod_obj, '_xobj'):
         if mod_obj._xobj.tag:

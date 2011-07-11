@@ -171,19 +171,6 @@ class ReposManager(basemanager.BaseManager):
 
         localFqdn = project.hostname + "." + \
             self.cfg.projectDomainName.split(':')[0]
-        if fqdn != localFqdn:
-            count = models.RepNameMap.objects.filter(
-                from_name=localFqdn).count()
-            if count == 0:
-                # Sure would be nice if we could use the ORM here, but since
-                # Django has no support for multi column primary key tables,
-                # or tables without primary keys, we have to fall back to raw
-                # sql.
-                cu = connection.cursor()
-                cu.execute("""
-                    INSERT INTO repnamemap (fromname, toname)
-                    VALUES (%s, %s) """, [localFqdn, fqdn])
-                
         self.generateConaryrcFile()
 
     @exposed

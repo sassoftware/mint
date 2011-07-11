@@ -3163,6 +3163,8 @@ class MigrateTo_58(SchemaMigration):
         cu.execute("""UPDATE LABELS SET url = NULL, authtype = 'none',
             username = NULL, password = NULL, entitlement = NULL
             WHERE database IS NOT NULL""")
+        # Drop unused table
+        drop_tables(self.db, 'RepNameMap')
         return True
 
 def _createUpdateSystemsQuerySet(db):

@@ -519,33 +519,6 @@ def _createMirrorInfo(db):
     return changed
 
 
-def _createRepNameMap(db):
-    cu = db.cursor()
-    changed = False
-
-    # NB: This table is dead. It is still referenced in a few places, but it
-    # was such an awful and tremendously confusing idea that it has been
-    # superceded by the "fqdn" column in Projects. Please delete references to
-    # it when it is safe to do so.
-
-    if 'RepNameMap' not in db.tables:
-        cu.execute("""
-        CREATE TABLE RepNameMap (
-            fromName            varchar(254)    NOT NULL,
-            toName              varchar(254)    NOT NULL,
-
-            PRIMARY KEY ( fromName, toName )
-        ) %(TABLEOPTS)s """ % db.keywords)
-        db.tables['RepNameMap'] = []
-        changed = True
-    changed |= db.createIndex('RepNameMap', 'RepNameMap_fromName_idx',
-        'fromName')
-    changed |= db.createIndex('RepNameMap', 'RepNameMap_toName_idx',
-        'toName')
-
-    return changed
-
-
 def _createApplianceSpotlight(db):
     cu = db.cursor()
     changed = False
@@ -2641,7 +2614,6 @@ def createSchema(db, doCommit=True, cfg=None):
     changed |= _createPackageIndex(db)
     changed |= _createNewsCache(db)
     changed |= _createMirrorInfo(db)
-    changed |= _createRepNameMap(db)
     changed |= _createApplianceSpotlight(db)
     changed |= _createFrontPageStats(db)
     changed |= _createSessions(db)

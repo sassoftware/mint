@@ -427,10 +427,6 @@ class RepositoryManager(manager.Manager):
 
         hostname = fqdn.split('.', 1)[0]
         localFqdn = hostname + "." + self.cfg.projectDomainName.split(':')[0]
-        if fqdn != localFqdn:
-            count = self.db.db.repNameMap.getCountByFromName(localFqdn)
-            if not count:
-                self.db.db.repNameMap.new(localFqdn, fqdn)
         self._generateConaryrcFile()
 
     def checkExternalRepositoryAccess(self, hostname, domainname, url, authInfo):
