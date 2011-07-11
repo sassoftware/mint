@@ -3162,7 +3162,8 @@ class MigrateTo_58(SchemaMigration):
         cu.execute("ALTER TABLE Labels ALTER url DROP NOT NULL")
         cu.execute("""UPDATE LABELS SET url = NULL, authtype = 'none',
             username = NULL, password = NULL, entitlement = NULL
-            WHERE database IS NOT NULL""")
+            WHERE (SELECT database FROM projects
+                WHERE Projects.projectId = Labels.projectId) IS NOT NULL""")
         # Drop unused table
         drop_tables(self.db, 'RepNameMap')
         return True
