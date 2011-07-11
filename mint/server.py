@@ -65,7 +65,7 @@ from conary.lib import sha1helper
 from conary.lib import util
 from conary.lib.http import http_error
 from conary.lib.http import request as cny_req
-from conary.repository.errors import TroveNotFound
+from conary.repository.errors import TroveNotFound, UserNotFound
 from conary.repository import netclient
 from conary.repository import shimclient
 from conary.repository.netrepos.reposlog import RepositoryCallLogger as CallLogger
@@ -1277,8 +1277,11 @@ If you would not like to be %s %s of this project, you may resign from this proj
         project = projects.Project(self, projectId)
         self.amiPerms.hideProject(projectId)
 
-        self.restDb.productMgr.reposMgr.deleteUser(project.getFQDN(),
+        try:
+            self.restDb.productMgr.reposMgr.deleteUser(project.getFQDN(),
                                                    'anonymous')
+        except UserNotFound:
+            pass
         # Hide the project
         self.projects.hide(projectId)
 
