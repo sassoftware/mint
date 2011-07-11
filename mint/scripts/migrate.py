@@ -2898,7 +2898,7 @@ class MigrateTo_57(SchemaMigration):
 
 
 class MigrateTo_58(SchemaMigration):
-    Version = (58, 23)
+    Version = (58, 24)
 
     def migrate(self):
         return True
@@ -3154,6 +3154,15 @@ class MigrateTo_58(SchemaMigration):
                  'System Assimilation',
                  105)
         """)
+        return True
+
+    def migrate24(self):
+        # URL and creds for local/mirror projects are redundant.
+        cu = self.db.cursor()
+        cu.execute("ALTER TABLE Labels ALTER url DROP NOT NULL")
+        cu.execute("""UPDATE LABELS SET url = NULL, authtype = 'none',
+            username = NULL, password = NULL, entitlement = NULL
+            WHERE database IS NOT NULL""")
         return True
 
 def _createUpdateSystemsQuerySet(db):

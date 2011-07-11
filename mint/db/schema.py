@@ -28,7 +28,7 @@ from conary.dbstore import sqlerrors, sqllib
 log = logging.getLogger(__name__)
 
 # database schema major version
-RBUILDER_DB_VERSION = sqllib.DBversion(58, 23)
+RBUILDER_DB_VERSION = sqllib.DBversion(58, 24)
 
 
 def _createTrigger(db, table, column = "changed"):
@@ -135,7 +135,7 @@ def _createLabels(db):
             projectId           integer         NOT NULL
                 REFERENCES Projects ON DELETE CASCADE,
             label               varchar(255)    NOT NULL,
-            url                 varchar(255)    NOT NULL,
+            url                 varchar(255),
             authType            varchar(32)     NOT NULL    DEFAULT 'none',
             username            varchar(255),
             password            varchar(255),
