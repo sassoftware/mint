@@ -2898,7 +2898,7 @@ class MigrateTo_57(SchemaMigration):
 
 
 class MigrateTo_58(SchemaMigration):
-    Version = (58, 24)
+    Version = (58, 25)
 
     def migrate(self):
         return True
@@ -3167,10 +3167,18 @@ class MigrateTo_58(SchemaMigration):
         # Drop unused table
         drop_tables(self.db, 'RepNameMap')
         return True
+        
+    def migrate25(self):
+		#adding the stageid to the images(builds)
+        cu = self.db.cursor()
+        cu.execute("ALTER TABLE Builds ADD COLUMN stageid INTEGER")
+        return True        
 
 def _createUpdateSystemsQuerySet(db):
 
         return True
+   
+     
 
 
 #### SCHEMA MIGRATIONS END HERE #############################################

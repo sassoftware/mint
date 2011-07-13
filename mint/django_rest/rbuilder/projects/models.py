@@ -304,6 +304,9 @@ class Image(modellib.XObjIdModel):
     image_id = models.AutoField(primary_key=True, db_column='buildid')
     project = modellib.DeferredForeignKey(Project, db_column='projectid',
         related_name="images", view_name="ProjectImages")
+    #The images need to be linked to the project branch stages and the project     
+    project_branch_stage = modellib.DeferredForeignKey(Stage, db_column='stageid',
+        related_name="images", view_name="ProjectImages")    
     release = models.ForeignKey(Release, null=True,
         db_column='pubreleaseid')
     build_type = models.IntegerField(db_column="buildtype")
