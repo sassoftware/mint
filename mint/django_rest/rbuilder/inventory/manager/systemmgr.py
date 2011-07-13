@@ -1261,7 +1261,8 @@ class SystemManager(basemanager.BaseManager):
             # so the computeDispatcher logic is short-circuited
             event_data = cPickle.loads(event.event_data)
             params = repClient.AssimilatorParams(host=destination, 
-                sshAuth=event_data, eventUuid=eventUuid)
+                caCert=event.system.ssl_client_certificate, sshAuth=event_data,
+                eventUuid=eventUuid)
 
         resultsLocation = repClient.ResultsLocation(
             path = "/api/v1/inventory/systems/%d" % event.system.pk,
