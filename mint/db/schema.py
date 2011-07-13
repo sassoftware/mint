@@ -2240,7 +2240,7 @@ def _createQuerySetSchema(db):
             UNIQUE ("project_id", "query_tag_id", "inclusion_method_id")
         )""")
     
-    changed != createTable(db, 'querysets_stagetag', """
+    changed |= createTable(db, 'querysets_stagetag', """
         CREATE TABLE "querysets_stagetag" (
             "stage_tag_id" %(PRIMARYKEY)s,
             "stage_id" INTEGER
