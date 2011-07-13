@@ -69,8 +69,7 @@ class ReposManager(basemanager.BaseManager):
         authInfo = models.AuthInfo(auth_type="userpass",
                 user_name=self.cfg.authUser, password=self.cfg.authPass)
 
-        if createMaps:
-            self.addLabel(project, repos.fqdn, repos.getURL(), authInfo)
+        self.generateConaryrcFile()
 
         if repos.hasDatabase:
             # Create the repository infrastructure (db, dirs, etc.).
@@ -171,7 +170,6 @@ class ReposManager(basemanager.BaseManager):
 
         localFqdn = project.hostname + "." + \
             self.cfg.projectDomainName.split(':')[0]
-        self.generateConaryrcFile()
 
     @exposed
     def generateConaryrcFile(self):
@@ -200,58 +198,30 @@ class ReposManager(basemanager.BaseManager):
         fObj_v1.commit()
 
     def _getFullRepositoryMap(self):
-        labels = models.Label.objects.filter(
-            project__hidden=False, project__disabled=False)
         repoMap = {}
-        for label in labels:
-            host = label.label.split('@', 1)[0]
-            if not label.url:
-                repoMap[host] = "http://%s/conary/" % (host)
-            elif label.project.external:
-                mirrored = projectmodels.InboundMirror.objects.filter(
-                    target_project=label.project).exists()
-                if mirrored:
-                    repoMap[host] = label.url
-                elif host != helperfuncs.getUrlHost(label.url):
-                    repoMap[host] = label.url
-                elif label.auth_type == 'none':
-                    if not label.url.startswith('http://'):
-                        repoMap[host] = label.url
-                elif not label.url.startswith('https://'):
-                    repoMap[host] = label.url
-            else:
-                if self.cfg.SSL:
-                    protocol = "https"
-                    mapHost = self.cfg.secureHost
-                    defaultPort = 443
-                else:
-                    protocol = "http"
-                    mapHost = self.cfg.siteHost
-                    defaultPort = 80
-                _, port = helperfuncs.hostPortParse(mapHost, defaultPort)
-                repoMap[host] = helperfuncs.rewriteUrlProtocolPort(
-                    label.url, protocol, port)
-
+        for handle in self.iterRepositories(hidden=False, disabled=False):
+            repoMap[handle.fqdn] = handle.getURL()
         return repoMap
 
     def getRepositoryForProject(self, project):
         projectInfo = {}
-        projectInfo["projectId"] = str(project.pk)
+        projectInfo["projectId"] = project.pk
         projectInfo["shortname"] = str(project.short_name)
         projectInfo["fqdn"] = str(project.repository_hostname)
         projectInfo["external"] = project.external
         projectInfo["hidden"] = project.hidden
-        projectInfo["commitEmail"] = str(project.commit_email)
-        projectInfo["database"] = str(project.database)
+        projectInfo["commitEmail"] = project.commit_email and str(project.commit_email)
+        projectInfo["database"] = project.database and str(project.database)
 
         try:
             label = models.Label.objects.get(project=project)
-            projectInfo["localMirror"] = 1
-            projectInfo["url"] = str(label.url)
+            projectInfo["localMirror"] = bool(len(
+                project.inbound_mirrors.all()))
+            projectInfo["url"] = label.url and str(label.url)
             projectInfo["authType"] = str(label.auth_type)
-            projectInfo["username"] = str(label.user_name)
-            projectInfo["entitlement"] = str(label.entitlement)
-            projectInfo["password"] = str(label.password)
+            projectInfo["username"] = label.user_name and str(label.user_name)
+            projectInfo["entitlement"] = label.entitlement and str(label.entitlement)
+            projectInfo["password"] = label.password and str(label.password)
         except models.Label.DoesNotExist:
             projectInfo["localMirror"] = None
             projectInfo["url"] = None
@@ -266,6 +236,10 @@ class ReposManager(basemanager.BaseManager):
     def getRepositoryFromFQDN(self, fqdn):
         project = projectmodels.Project.objects.get(repository_hostname=fqdn)
         return self.getRepositoryForProject(project)
+
+    def iterRepositories(self, **conditions):
+        for project in projectmodels.Project.objects.filter(**conditions):
+            yield self.getRepositoryForProject(project)
 
     @exposed
     def createSourceTrove(self, fqdn, trovename, buildLabel, 

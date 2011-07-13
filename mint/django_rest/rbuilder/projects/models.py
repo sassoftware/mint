@@ -98,15 +98,16 @@ class Project(modellib.XObjIdModel):
             xobjModel.created_date, tz.tzutc()))
         xobjModel.modified_date = str(datetime.datetime.fromtimestamp(
             xobjModel.modified_date, tz.tzutc()))
-        
-        if self.labels and len(self.labels.all()) > 0:
+
+        # Attach URL and auth data from Labels if and only if this is a
+        # proxy-mode external project. Otherwise these fields are meaningless.
+        if not self.database:
             label = self.labels.all()[0]
             xobjModel.upstream_url = label.url
             xobjModel.auth_type = label.auth_type
             xobjModel.user_name = label.user_name
             xobjModel.password = label.password
             xobjModel.entitlement = label.entitlement
-        
         return xobjModel
 
     def setIsAppliance(self):
@@ -120,9 +121,11 @@ class Project(modellib.XObjIdModel):
         # Default project type to Appliance
         if self.project_type is None:
             self.project_type = "Appliance"
+        if not self.project_url:
+            self.project_url = ''
 
         self.setIsAppliance()
-        
+
         if not self.hostname:
             self.hostname = self.short_name
 
@@ -130,19 +133,33 @@ class Project(modellib.XObjIdModel):
             self.created_date = str(time.time())
         if self.modified_date is None:
             self.modified_date = str(time.time())
-            
+
         if not self.repository_hostname and self.hostname and self.domain_name:
             self.repository_hostname = '%s.%s' % (self.hostname, self.domain_name)
 
-        if self.labels and len(self.labels.all()) > 0:
-            label = self.labels.all()[0]
-            label.url = self.upstream_url
-            label.auth_type = self.auth_type
-            label.user_name = self.user_name
-            label.password = self.password
-            label.entitlement = self.entitlement
-            label.save() 
-            
+        labels = self.labels.all()
+        if labels:
+            label = labels[0]
+            if self.database:
+                # Internal projects and mirror projects have no use for these
+                # fields so make sure they are nulled out.
+                label.url = None
+                label.auth_type = 'none'
+                label.user_name = None
+                label.password = None
+                label.entitlement = None
+            else:
+                assert self.external
+                label.url = self.upstream_url
+                label.auth_type = self.auth_type
+                label.user_name = self.user_name
+                label.password = self.password
+                label.entitlement = self.entitlement
+            # This field doesn't mean anything but some old code might still
+            # use it.
+            label.label = self.repository_hostname + '@dummy:label'
+            label.save()
+
         return modellib.XObjIdModel.save(self, *args, **kwargs)
 
 class Members(modellib.Collection):

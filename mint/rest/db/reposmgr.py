@@ -497,40 +497,8 @@ class RepositoryManager(manager.Manager):
         fObj_v1.commit()
 
     def _getFullRepositoryMap(self):
-        cu = self.db.cursor()
-        cu.execute("""
-            SELECT url, label, external, authType,
-                (projectId IN 
-                 (SELECT targetProjectId FROM InboundMirrors )) AS mirrored
-            FROM Projects
-            JOIN Labels USING(projectId)
-            WHERE NOT hidden AND NOT disabled""")
         repoMap = {}
-        for url, label, external, authType, mirrored in cu:
-            host = label.split('@', 1)[0]
-            if not url:
-                repoMap[host] = "http://%s/conary/" % (host)
-            elif external:
-                if mirrored:
-                    repoMap[host] = url
-                elif host != helperfuncs.getUrlHost(url):
-                    repoMap[host] = url
-
-                elif authType == 'none':
-                    if not url.startswith('http://'):
-                        repoMap[host] = url
-                elif not url.startswith('https://'):
-                    repoMap[host] = url
-            else:
-                if self.cfg.SSL:
-                    protocol = "https"
-                    mapHost = self.cfg.secureHost
-                    defaultPort = 443
-                else:
-                    protocol = "http"
-                    mapHost = self.cfg.siteHost
-                    defaultPort = 80
-                _, port = helperfuncs.hostPortParse(mapHost, defaultPort)
-                repoMap[host] = helperfuncs.rewriteUrlProtocolPort(url, 
-                                                            protocol, port)
+        for handle in self.reposManager.iterRepositories(
+                'NOT hidden AND NOT disabled'):
+            repoMap[handle.fqdn] = handle.getURL()
         return repoMap
