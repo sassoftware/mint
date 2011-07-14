@@ -102,12 +102,14 @@ class Project(modellib.XObjIdModel):
         # Attach URL and auth data from Labels if and only if this is a
         # proxy-mode external project. Otherwise these fields are meaningless.
         if not self.database:
-            label = self.labels.all()[0]
-            xobjModel.upstream_url = label.url
-            xobjModel.auth_type = label.auth_type
-            xobjModel.user_name = label.user_name
-            xobjModel.password = label.password
-            xobjModel.entitlement = label.entitlement
+            labels = self.labels.all()
+            if labels:
+                label = labels[0]
+                xobjModel.upstream_url = label.url
+                xobjModel.auth_type = label.auth_type
+                xobjModel.user_name = label.user_name
+                xobjModel.password = label.password
+                xobjModel.entitlement = label.entitlement
         return xobjModel
 
     def setIsAppliance(self):
