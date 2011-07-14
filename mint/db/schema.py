@@ -28,7 +28,7 @@ from conary.dbstore import sqlerrors, sqllib
 log = logging.getLogger(__name__)
 
 # database schema major version
-RBUILDER_DB_VERSION = sqllib.DBversion(58, 24)
+RBUILDER_DB_VERSION = sqllib.DBversion(58, 25)
 
 
 def _createTrigger(db, table, column = "changed"):
@@ -134,7 +134,7 @@ def _createLabels(db):
             labelId             %(PRIMARYKEY)s,
             projectId           integer         NOT NULL
                 REFERENCES Projects ON DELETE CASCADE,
-            label               varchar(255)    NOT NULL,
+            label               varchar(255)    NOT NULL  UNIQUE,
             url                 varchar(255),
             authType            varchar(32)     NOT NULL    DEFAULT 'none',
             username            varchar(255),
@@ -266,8 +266,8 @@ def _createBuilds(db):
             buildId             %(PRIMARYKEY)s,
             projectId            integer        NOT NULL
                 REFERENCES Projects ON DELETE CASCADE,
-            stageid              integer        NOT NULL
-                 REFERENCES Stages ON DELETE SET NULL,    
+            stageid              integer        NOT NULL  
+                 REFERENCES project_branch_stage ON DELETE SET NULL,    
             pubReleaseId         integer
                 REFERENCES PublishedReleases ON DELETE SET NULL,
             buildType            integer,
@@ -330,7 +330,7 @@ def _createBuilds(db):
         CREATE TABLE FilesUrls (
             urlId               %(PRIMARYKEY)s,
             urlType             smallint        NOT NULL,
-            url                 varchar(255)    NOT NULL
+            url                 varchar(255)    NOT NULL UNIQUE
         ) %(TABLEOPTS)s """ % db.keywords)
         db.tables['FilesUrls'] = []
         changed = True
@@ -394,7 +394,7 @@ def _createPackageIndex(db):
             pkgId               %(PRIMARYKEY)s,
             projectId           integer         NOT NULL
                 REFERENCES Projects ON DELETE CASCADE,
-            name                varchar(255)    NOT NULL,
+            name                varchar(255)    NOT NULL UNIQUE,
             version             varchar(255)    NOT NULL,
             serverName          varchar(254)    NOT NULL,
             branchName          varchar(254)    NOT NULL,
@@ -530,7 +530,7 @@ def _createApplianceSpotlight(db):
         cu.execute("""
         CREATE TABLE ApplianceSpotlight (
             itemId          %(PRIMARYKEY)s,
-            title           varchar(255),
+            title           varchar(255) ,
             text            varchar(255),
             link            varchar(255),
             logo            varchar(255),
@@ -633,7 +633,7 @@ def _createProductVersions(db):
                 projectId       integer
                     REFERENCES Projects ON DELETE CASCADE,
                 namespace           varchar(16),
-                name                varchar(16)     NOT NULL,
+                name                varchar(16)     NOT NULL UNIQUE,
                 description         text,
                 timeCreated         numeric(14,3)
         ) %(TABLEOPTS)s """ % db.keywords)
@@ -664,7 +664,7 @@ def _createTargets(db):
             CREATE TABLE TargetData (
                 targetId        integer             NOT NULL
                     REFERENCES Targets ON DELETE CASCADE,
-                name            varchar(255)        NOT NULL,
+                name            varchar(255)        NOT NULL UNIQUE,
                 value           text,
 
                 PRIMARY KEY ( targetId, name )
@@ -762,7 +762,7 @@ def _createPlatforms(db):
             CREATE TABLE PlatformSourceData (
                 platformSourceId    integer         NOT NULL
                     REFERENCES PlatformSources ON DELETE CASCADE,
-                name                varchar(32)     NOT NULL,
+                name                varchar(32)     NOT NULL  UNIQUE,
                 value               text            NOT NULL,
                 dataType            smallint        NOT NULL,
                 PRIMARY KEY ( platformSourceId, name )
@@ -1065,7 +1065,7 @@ def _createInventorySchema(db, cfg):
         cu.execute("""
             CREATE TABLE "project_branch_stage" (
                 "stage_id" %(PRIMARYKEY)s,
-                "name" varchar(256) NOT NULL,
+                "name" varchar(256) NOT NULL  UNIQUE,
                 "label" text NOT NULL,
                 "project_id" integer
                     REFERENCES Projects (projectId)
@@ -1083,7 +1083,7 @@ def _createInventorySchema(db, cfg):
         cu.execute("""
             CREATE TABLE "inventory_system" (
                 "system_id" %(PRIMARYKEY)s,
-                "name" varchar(8092) NOT NULL,
+                "name" varchar(8092) NOT NULL  UNIQUE,
                 "description" varchar(8092),
                 "created_date" timestamp with time zone NOT NULL,
                 "hostname" varchar(8092),
@@ -2334,7 +2334,7 @@ def _createPackageSchema(db):
     changed |= createTable(db, "packages_package_action_type", """
         CREATE TABLE "packages_package_action_type" (
             "package_action_type_id" %(PRIMARYKEY)s,
-            "name" text NOT NULL,
+            "name" text NOT NULL UNIQUE,
             "description" text NOT NULL,
             "created_date" timestamp with time zone NOT NULL,
             "modified_date" timestamp with time zone NOT NULL
@@ -2358,7 +2358,7 @@ def _createPackageSchema(db):
             "package_version_id" %(PRIMARYKEY)s,
             "package_id" integer NOT NULL 
                 REFERENCES "packages_package" ("package_id"),
-            "name" text NOT NULL,
+            "name" text NOT NULL UNIQUE,
             "description" text,
             "license" text,
             "consumable" boolean NOT NULL,

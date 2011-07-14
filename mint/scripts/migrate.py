@@ -3171,7 +3171,7 @@ class MigrateTo_58(SchemaMigration):
     def migrate25(self):
 		#adding the stageid to the images(builds)
         cu = self.db.cursor()
-        cu.execute("ALTER TABLE Builds ADD COLUMN stageid INTEGER")
+        cu.execute("ALTER TABLE Builds ADD COLUMN stageid INTEGER REFERENCES project_branch_stage ON DELETE SET NULL")
         return True        
 
 def _createUpdateSystemsQuerySet(db):
