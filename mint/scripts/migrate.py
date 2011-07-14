@@ -2898,7 +2898,7 @@ class MigrateTo_57(SchemaMigration):
 
 
 class MigrateTo_58(SchemaMigration):
-    Version = (58, 25)
+    Version = (58, 26)
 
     def migrate(self):
         return True
@@ -3173,6 +3173,38 @@ class MigrateTo_58(SchemaMigration):
         cu = self.db.cursor()
         cu.execute("ALTER TABLE Builds ADD COLUMN stageid INTEGER REFERENCES project_branch_stage ON DELETE SET NULL")
         return True        
+
+    def migrate26(self):
+        # Add missing ON DELETE clauses to FKs
+        cu = self.db.cursor()
+        cu.execute("""ALTER TABLE inventory_system
+                DROP CONSTRAINT inventory_system_launching_user_id_fkey,
+                DROP CONSTRAINT inventory_system_stage_id_fkey,
+                DROP CONSTRAINT inventory_system_major_version_id_fkey,
+                DROP CONSTRAINT inventory_system_project_id_fkey,
+                ADD FOREIGN KEY (launching_user_id)
+                    REFERENCES users(userid)
+                    ON DELETE SET NULL,
+                ADD FOREIGN KEY (stage_id)
+                    REFERENCES "project_branch_stage" ("stage_id")
+                    ON DELETE SET NULL,
+                ADD FOREIGN KEY (major_version_id)
+                    REFERENCES productversions(productversionid)
+                    ON DELETE SET NULL,
+                ADD FOREIGN KEY (project_id)
+                    REFERENCES projects(projectid)
+                    ON DELETE SET NULL""")
+        cu.execute("""ALTER TABLE packages_package
+                DROP CONSTRAINT packages_package_created_by_id_fkey,
+                DROP CONSTRAINT packages_package_modified_by_id_fkey,
+                ADD FOREIGN KEY (created_by_id)
+                    REFERENCES users(userid)
+                    ON DELETE SET NULL,
+                ADD FOREIGN KEY (modified_by_id)
+                    REFERENCES users(userid)
+                    ON DELETE SET NULL""")
+        return True
+
 
 def _createUpdateSystemsQuerySet(db):
 
