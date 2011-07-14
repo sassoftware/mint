@@ -27,10 +27,15 @@ class Projects(modellib.Collection):
     list_fields = ["project"]
     project = []
 
+class PlatformHref(modellib.XObjIdModel):
+    class Meta:
+        abstract = True
+    _xobj = xobj.XObjMetadata(tag='platform')
+
 class Project(modellib.XObjIdModel):
     class Meta:
         db_table = u"projects"
-        
+
     _xobj = xobj.XObjMetadata(tag='project')
     _xobj_hidden_accessors = set(['membership', 'package_set', 
         'platform_set', 'productplatform_set', 'abstractplatform_set', 'labels'])
@@ -206,6 +211,7 @@ class ProjectVersion(modellib.XObjIdModel):
         related_name="project_branches", view_name="ProjectVersions", null=True)
     namespace = models.CharField(max_length=16)
     name = models.CharField(max_length=16)
+    platform = modellib.SyntheticField()
     description = models.TextField()
     created_date = models.DecimalField(max_digits=14, decimal_places=3,
         db_column="timecreated")
@@ -224,6 +230,13 @@ class ProjectVersion(modellib.XObjIdModel):
         xobjModel.created_date = str(datetime.datetime.fromtimestamp(
             xobjModel.created_date, tz.tzutc()))
         return xobjModel
+
+    def computeSyntheticFields(self, sender, **kwargs):
+        if self._rbmgr is None or self.project_id is None:
+            return
+        restDb = self._rbmgr.restDb
+        plat = restDb.getProductVersionPlatform(self.project.repository_hostname, self.name)
+        # XXX Do something useful here
 
 class Stages(modellib.Collection):
     class Meta:

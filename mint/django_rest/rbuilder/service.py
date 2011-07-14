@@ -99,7 +99,13 @@ class BaseService(resource.Resource):
             return HttpAuthenticationRequired
         if not self._auth_filter(request, access, kwargs):
             return HttpAuthenticationRequired
-        return method(request, *args, **kwargs)
+        # Set the manager into one of the model's base classes
+        from rbuilder import modellib
+        modellib.XObjModel._rbmgr = self.mgr
+        try:
+            return method(request, *args, **kwargs)
+        finally:
+            modellib.XObjModel._rbmgr = None
 
     def _auth_filter(self, request, access, kwargs):
         """Return C{True} if the request passes authentication checks."""
