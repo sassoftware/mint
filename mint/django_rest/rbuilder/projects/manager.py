@@ -106,7 +106,6 @@ class ProjectManager(basemanager.BaseManager):
             label = project.labels.all()[0]
         else:
             label = repomodels.Label()
-        label.project = project
 
         if project.external:
             self._validateExternalProject(project)
@@ -150,6 +149,7 @@ class ProjectManager(basemanager.BaseManager):
 
         # Save the project, we need the pk populated to create the repository
         project.save()
+        label.project = project
         label.save()
 
         # Create project repository

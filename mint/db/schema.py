@@ -28,7 +28,7 @@ from conary.dbstore import sqlerrors, sqllib
 log = logging.getLogger(__name__)
 
 # database schema major version
-RBUILDER_DB_VERSION = sqllib.DBversion(58, 24)
+RBUILDER_DB_VERSION = sqllib.DBversion(58, 26)
 
 
 def _createTrigger(db, table, column = "changed"):
@@ -266,6 +266,8 @@ def _createBuilds(db):
             buildId             %(PRIMARYKEY)s,
             projectId            integer        NOT NULL
                 REFERENCES Projects ON DELETE CASCADE,
+            stageid              integer        NOT NULL  
+                 REFERENCES project_branch_stage ON DELETE SET NULL,    
             pubReleaseId         integer
                 REFERENCES PublishedReleases ON DELETE SET NULL,
             buildType            integer,
@@ -1100,7 +1102,9 @@ def _createInventorySchema(db, cfg):
                 "ssl_server_certificate" varchar(8092),
                 "agent_port" integer,
                 "state_change_date" timestamp with time zone,
-                "launching_user_id" integer REFERENCES "users" ("userid"),
+                "launching_user_id" integer
+                    REFERENCES "users" ("userid")
+                    ON DELETE SET NULL,
                 "current_state_id" integer NOT NULL
                     REFERENCES "inventory_system_state" ("system_state_id"),
                 "managing_zone_id" integer NOT NULL
@@ -1112,11 +1116,14 @@ def _createInventorySchema(db, cfg):
                 "credentials" text,
                 "configuration" text,
                 "stage_id" integer 
-                    REFERENCES "project_branch_stage" ("stage_id"),
+                    REFERENCES "project_branch_stage" ("stage_id")
+                    ON DELETE SET NULL,
                 "major_version_id" integer 
-                    REFERENCES ProductVersions (productVersionId),
+                    REFERENCES ProductVersions (productVersionId)
+                    ON DELETE SET NULL,
                 "project_id" integer 
                     REFERENCES Projects (projectId)
+                    ON DELETE SET NULL
             ) %(TABLEOPTS)s""" % db.keywords)
         db.tables['inventory_system'] = []
         changed = True
@@ -2346,9 +2353,9 @@ def _createPackageSchema(db):
             "created_date" TIMESTAMP WITH TIME ZONE NOT NULL,
             "modified_date" TIMESTAMP WITH TIME ZONE NOT NULL,
             "created_by_id" INTEGER 
-                REFERENCES "users" ("userid"),
+                REFERENCES "users" ("userid") ON DELETE SET NULL,
             "modified_by_id" INTEGER
-                REFERENCES "users" ("userid")
+                REFERENCES "users" ("userid") ON DELETE SET NULL
         )""")
 
     changed |= createTable(db, "packages_package_version", """
