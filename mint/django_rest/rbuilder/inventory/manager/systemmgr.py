@@ -1260,8 +1260,11 @@ class SystemManager(basemanager.BaseManager):
             # assimilation events are not management interface related
             # so the computeDispatcher logic is short-circuited
             event_data = cPickle.loads(event.event_data)
-            params = repClient.AssimilatorParams(host=destination, 
-                caCert=event.system.ssl_client_certificate, sshAuth=event_data,
+            certs  = rbuildermodels.PkiCertificates.objects
+            hcerts = certs.filter(purpose="hg_ca").order_by('-time_issued')
+            cert   = hcerts[0].x509_pem
+            params = repClient.AssimilatorParams(host=destination,
+                caCert=cert, sshAuth=event_data,
                 eventUuid=eventUuid)
 
         resultsLocation = repClient.ResultsLocation(
