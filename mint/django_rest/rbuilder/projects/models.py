@@ -87,9 +87,11 @@ class Project(modellib.XObjIdModel):
 
     load_fields = [ short_name ]
 
+    _ApplianceTypes = set([ "Appliance", "PlatformFoundation", ])
+
     def __unicode__(self):
         return self.hostname
-        
+
     def serialize(self, request=None):
         xobjModel = modellib.XObjIdModel.serialize(self, request)
         if request is not None:
@@ -118,11 +120,11 @@ class Project(modellib.XObjIdModel):
         return xobjModel
 
     def setIsAppliance(self):
-        if self.project_type == "Appliance" or \
-           self.project_type == "PlatformFoundation":
-            self.is_appliance = True
-        else:
-            self.is_appliance = False
+        self.is_appliance = (self.project_type in self._ApplianceTypes)
+
+    @classmethod
+    def Now(cls):
+        return "%.2f" % time.time()
 
     def save(self, *args, **kwargs):
         # Default project type to Appliance
@@ -136,10 +138,11 @@ class Project(modellib.XObjIdModel):
         if not self.hostname:
             self.hostname = self.short_name
 
+        now = self.Now()
         if self.created_date is None:
-            self.created_date = str(time.time())
+            self.created_date = now
         if self.modified_date is None:
-            self.modified_date = str(time.time())
+            self.modified_date = now
 
         if not self.repository_hostname and self.hostname and self.domain_name:
             self.repository_hostname = '%s.%s' % (self.hostname, self.domain_name)
@@ -221,7 +224,7 @@ class ProjectVersion(modellib.XObjIdModel):
         
     def save(self, *args, **kwargs):
         if self.created_date is None:
-            self.created_date = str(time.time())
+            self.created_date = Project.Now()
         return modellib.XObjIdModel.save(self, *args, **kwargs)
 
     def serialize(self, request=None):
