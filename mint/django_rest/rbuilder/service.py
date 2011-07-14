@@ -100,7 +100,7 @@ class BaseService(resource.Resource):
         if not self._auth_filter(request, access, kwargs):
             return HttpAuthenticationRequired
         # Set the manager into one of the model's base classes
-        from rbuilder import modellib
+        from mint.django_rest.rbuilder import modellib
         modellib.XObjModel._rbmgr = self.mgr
         try:
             return method(request, *args, **kwargs)
