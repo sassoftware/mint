@@ -2885,7 +2885,7 @@ class MigrateTo_56(SchemaMigration):
         """)
         cu.execute("""
             ALTER TABLE "inventory_job_state"
-            RENAME TO "jobs_job_state"
+            TO "jobs_job_state"
         """)
 
         return True
@@ -2898,7 +2898,7 @@ class MigrateTo_57(SchemaMigration):
 
 
 class MigrateTo_58(SchemaMigration):
-    Version = (58, 26)
+    Version = (58, 27)
 
     def migrate(self):
         return True
@@ -3204,6 +3204,17 @@ class MigrateTo_58(SchemaMigration):
                     REFERENCES users(userid)
                     ON DELETE SET NULL""")
         return True
+        
+
+    def migrate27(self): 
+        #Renaming inventory_event_type to inventory_job_type
+        cu = self.db.cursor()
+        cu.execute("""
+            ALTER TABLE "inventory_event_type"
+            RENAME TO "inventory_job_type"
+        """)
+        return True
+               
 
 
 def _createUpdateSystemsQuerySet(db):
