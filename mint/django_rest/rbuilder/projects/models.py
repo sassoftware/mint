@@ -235,11 +235,25 @@ class Stage(modellib.XObjIdModel):
     label = models.TextField(unique=True)
     promotable = models.BooleanField(default=False)
     created_date = modellib.DateTimeUtcField(auto_now_add=True)
+    groups = modellib.DeferredForeignKey("Groups")
 
     def serialize(self, request=None):
         xobjModel = modellib.XObjIdModel.serialize(self, request)
         return xobjModel
 
+
+class Groups(modellib.XObjModel):
+    
+    _xobj = xobj.XObjMetadata(tag='groups')
+    group = modellib.SyntheticField()
+    
+    def computeSyntheticField(self, sender, **kwargs):
+        import pdb; pdb.set_trace()
+        pass
+
+
+
+    
 class Release(modellib.XObjModel):
     class Meta:
         db_table = u'publishedreleases'

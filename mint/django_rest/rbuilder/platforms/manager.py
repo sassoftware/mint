@@ -137,7 +137,8 @@ class PlatformLoadManager(basemanager.BaseManager):
         
     @exposed
     def loadPlatform(self, platform_id, platform_load):
-        pass
+        platform_load.save()
+        return platform_load
         
 
 class PlatformVersionManager(basemanager.BaseManager):
