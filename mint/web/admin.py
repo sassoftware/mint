@@ -252,11 +252,9 @@ class AdminHandler(WebHandler):
                     self.client.addInboundMirror(projectId, [str(extLabel)] +
                         additionalLabels, url, authType, externalUser,
                         externalPass, externalEntKey, allLabels)
-                    self.client.addRemappedRepository(hostname + "." + self.cfg.siteDomainName, extLabel.getHost())
             # remove mirroring if requested
             elif useMirror == 'none' and mirror and editing:
                 self.client.delInboundMirror(mirror['inboundMirrorId'])
-                self.client.delRemappedRepository(hostname + "." + self.cfg.siteDomainName)
 
             verb = editing and "Edited" or "Added"
             self._setInfo("%s external %s %s" % (verb, getProjectText().lower(), name))

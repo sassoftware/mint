@@ -23,6 +23,9 @@ from mint.django_rest.rbuilder.repos import models as repomodels
 from mint.django_rest.rbuilder.manager.basemanager import exposed
 from mint.django_rest.rbuilder.projects import models
 
+from conary import conarycfg
+from conary import conaryclient
+from conary.repository import errors as repoerrors
 from rpath_proddef import api1 as proddef
 
 class ProjectManager(basemanager.BaseManager):
@@ -89,39 +92,65 @@ class ProjectManager(basemanager.BaseManager):
 
     @exposed
     def addProject(self, project):
-        
+        if not project.repository_hostname:
+            project.repository_hostname = (
+                    project.short_name + self.cfg.projectDomainName)
+        elif '.' not in project.repository_hostname:
+            raise projects.ProductVersionInvalid
+        project.host_name = project.short_name
+        project.domain_name = project.repository_hostname.split('.', 1)[1]
         project.namespace = self.validateNamespace(project.namespace)
-        
+
+        label = None
+        if project.labels and len(project.labels.all()) > 0:
+            label = project.labels.all()[0]
+        else:
+            label = repomodels.Label()
+
         if project.external:
-            self.validateExternalProject(project)
-            
-            label = None
-            if project.labels and len(project.labels.all()) > 0:
-                label = project.labels.all()[0]
+            self._validateExternalProject(project)
+            if (project.inbound_mirrors and
+                    len(project.inbound_mirrors.all()) > 0):
+                # Mirror mode must have a database
+                if not project.database:
+                    project.database = self.cfg.defaultDatabase
             else:
-                label = repomodels.Label()
-                
-            label.project = project
-            label.url = project.upstream_url
-            label.auth_type = project.auth_type
-            label.user_name = project.user_name
-            label.password = project.password
-            label.entitlement = project.entitlement
-            
-            label.save()
+                # Proxy-mode must not have a database
+                project.database = None
+
+            if not project.auth_type:
+                project.auth_type = 'none'
+            if not project.database:
+                # These fields only make sense for proxy mode, otherwise the
+                # ones on the inbound mirror model are used.
+                label.url = project.upstream_url
+                label.auth_type = project.auth_type
+                label.user_name = project.user_name
+                label.password = project.password
+                label.entitlement = project.entitlement
+        else:
+            # Internal projects always need a database
+            project.auth_type = label.auth_type = 'none'
+            project.user_name = label.user_name = None
+            project.password = label.password = None
+            project.entitlement = label.entitlement = None
+            project.upstream_url = label.url = None
+            if not project.database:
+                project.database = self.cfg.defaultDatabase
+
+            # Make sure there isn't an inbound mirror
+            if (project.inbound_mirrors and
+                    len(project.inbound_mirrors.all()) > 0):
+                raise projects.ProductVersionInvalid
 
         # Set creator to current user
         if self.user:
             project.creator = self.user
 
-        if not project.database:
-            project.database = self.cfg.defaultDatabase
-            
-        if not project.domain_name:
-            project.domain_name = self.cfg.siteDomainName
-
         # Save the project, we need the pk populated to create the repository
         project.save()
+        label.project = project
+        label.save()
 
         # Create project repository
         self.mgr.createRepositoryForProject(project)
@@ -132,13 +161,40 @@ class ProjectManager(basemanager.BaseManager):
                 level=userlevels.OWNER)
             member.save()
 
-        self.restDb.publisher.notify('ProductCreated', project.project_id)
-
         return project
-    
-    def validateExternalProject(self, project):
-        # XXX - um yeah, do this
-        pass
+
+    def _validateExternalProject(self, project):
+        fqdn = project.repository_hostname
+        mirrors = (project.inbound_mirrors
+                and project.inbound_mirrors.all() or [])
+        for mirror in mirrors:
+            testcfg = conarycfg.ConaryConfiguration(False)
+            if not mirror.source_url:
+                mirror.source_url = 'https://%s/conary/' % (fqdn,)
+            testcfg.configLine('repositoryMap %s %s' % (
+                fqdn, mirror.source_url))
+            if mirror.source_auth_type == 'userpass':
+                testcfg.user.addServerGlob(fqdn, (mirror.source_user_name,
+                    mirror.source_password))
+            elif mirror.source_auth_type == 'entitlement':
+                testcfg.entitlement.addEntitlement(fqdn,
+                        mirror.source_entitlement)
+            else:
+                # Don't test mirror permissions if no entitlement is provided.
+                mirror.source_auth_type = 'none'
+                continue
+            testrepos = conaryclient.ConaryClient(testcfg).getRepos()
+            try:
+                # use 2**64 to ensure we won't make the server do much
+                testrepos.getNewTroveList(fqdn, '4611686018427387904')
+            except repoerrors.InsufficientPermission:
+                raise errors.MirrorCredentialsInvalid(
+                        creds=mirror.source_auth_type, url=mirror.source_url)
+            except repoerrors.OpenError, err:
+                raise errors.MirrorNotReachable(
+                        url=mirror.source_url, reason=str(err))
+        if not mirrors and not project.upstream_url:
+            project.upstream_url = 'https://%s/conary/' % (fqdn,)
 
     @exposed
     def updateProject(self, project):
@@ -161,8 +217,6 @@ class ProjectManager(basemanager.BaseManager):
                                   password='anonymous',
                                   level=userlevels.USER)   
             self.publisher.notify('ProductUnhidden', oldProject.id)
-            self.mgr.generateConaryrcFile()
-
 
         project.save()
         self.mgr.generateConaryrcFile()

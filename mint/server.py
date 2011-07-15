@@ -65,7 +65,7 @@ from conary.lib import sha1helper
 from conary.lib import util
 from conary.lib.http import http_error
 from conary.lib.http import request as cny_req
-from conary.repository.errors import TroveNotFound
+from conary.repository.errors import TroveNotFound, UserNotFound
 from conary.repository import netclient
 from conary.repository import shimclient
 from conary.repository.netrepos.reposlog import RepositoryCallLogger as CallLogger
@@ -348,18 +348,6 @@ class MintServer(object):
                 for x in args]
             self.callLog.log(self.remoteIp, list(authToken) + [None, None],
                 methodName, str_args, exception = e)
-
-    @typeCheck(str)
-    @requiresAdmin
-    @private
-    def translateProjectFQDN(self, fqdn):
-        return self._translateProjectFQDN(fqdn)
-
-    def _translateProjectFQDN(self, fqdn):
-        cu = self.db.cursor()
-        cu.execute('SELECT toName FROM RepNameMap WHERE fromName=?', fqdn)
-        res = cu.fetchone()
-        return res and res[0] or fqdn
 
     def _addInternalConaryConfig(self, ccfg, repoMaps=True):
         """
@@ -952,7 +940,6 @@ class MintServer(object):
     @typeCheck(str)
     @private
     def getProjectIdByFQDN(self, fqdn):
-        fqdn = self._translateProjectFQDN(fqdn)
         projectId = self.projects.getProjectIdByFQDN(fqdn)
         self._filterProjectAccess(projectId)
         return projectId
@@ -1277,8 +1264,11 @@ If you would not like to be %s %s of this project, you may resign from this proj
         project = projects.Project(self, projectId)
         self.amiPerms.hideProject(projectId)
 
-        self.restDb.productMgr.reposMgr.deleteUser(project.getFQDN(),
+        try:
+            self.restDb.productMgr.reposMgr.deleteUser(project.getFQDN(),
                                                    'anonymous')
+        except UserNotFound:
+            pass
         # Hide the project
         self.projects.hide(projectId)
 
@@ -1949,28 +1939,10 @@ If you would not like to be %s %s of this project, you may resign from this proj
         return self.labels.removeLabel(projectId, labelId)
 
     def _getFullRepositoryMap(self):
-        cu = self.db.cursor()
-        cu.execute("""SELECT projectId FROM Projects
-                            WHERE NOT hidden AND NOT disabled AND
-                                (NOT external OR projectId IN (SELECT targetProjectId FROM InboundMirrors))""")
-        projs = cu.fetchall()
         repoMap = {}
-        for x in projs:
-            repoMap.update(self.labels.getLabelsForProject(x[0])[1])
-
-        # for external projects where rBuilder isn't using the default
-        # repositoryMap, put this in conaryrc.generated too:
-        cu.execute("""SELECT projectId FROM Projects WHERE external
-            AND NOT (projectId IN (SELECT targetProjectId FROM InboundMirrors))""")
-        projs = cu.fetchall()
-        for x in projs:
-            l = self.labels.getLabelsForProject(x[0])
-            label = versions.Label(l[0].keys()[0])
-            host = getUrlHost(l[1].values()[0])
-
-            if label.getHost() != host:
-                repoMap.update(l[1])
-
+        for handle in self.reposMgr.iterRepositories(
+                'NOT hidden AND NOT disabled'):
+            repoMap[handle.fqdn] = handle.getURL()
         return repoMap
 
     def _generateConaryRcFile(self):
@@ -3852,24 +3824,6 @@ If you would not like to be %s %s of this project, you may resign from this proj
             self.db.commit()
         return True
 
-    @private
-    @typeCheck(str, str)
-    @requiresAdmin
-    def addRemappedRepository(self, fromName, toName):
-        return self._addRemappedRepository(fromName, toName)
-
-    def _addRemappedRepository(self, fromName, toName):
-        return self.repNameMap.new(fromName = fromName, toName = toName)
-
-    @private
-    @typeCheck(str)
-    @requiresAdmin
-    def delRemappedRepository(self, fromName):
-        cu = self.db.cursor()
-        cu.execute("DELETE FROM RepNameMap WHERE fromName=?", fromName)
-        self.db.commit()
-        return True
-
     def _getAllRepositories(self):
         """
             Return a list of netclient objects for each repository
@@ -4950,7 +4904,6 @@ If you would not like to be %s %s of this project, you may resign from this proj
         cu = self.db.transaction()
         try:
             cu.execute("DELETE FROM Projects WHERE projectId = ?", projectId)
-            cu.execute("DELETE FROM RepNameMap WHERE toName = ?", handle.fqdn)
         except:
             self.db.rollback()
             raise

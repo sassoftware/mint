@@ -823,6 +823,11 @@ class XObjModel(models.Model):
     class Meta:
         abstract = True
 
+    # The manager gets set by the service when it dispatches one of the
+    # HTTP methods.
+    # Don't expect _rbmgr to be set when loading fixtures, for instance
+    _rbmgr = None
+
     # All models use our BaseManager as their manager
     objects = BaseManager()
 

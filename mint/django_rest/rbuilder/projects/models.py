@@ -27,10 +27,15 @@ class Projects(modellib.Collection):
     list_fields = ["project"]
     project = []
 
+class PlatformHref(modellib.XObjIdModel):
+    class Meta:
+        abstract = True
+    _xobj = xobj.XObjMetadata(tag='platform')
+
 class Project(modellib.XObjIdModel):
     class Meta:
         db_table = u"projects"
-        
+
     _xobj = xobj.XObjMetadata(tag='project')
     _xobj_hidden_accessors = set(['membership', 'package_set', 
         'platform_set', 'productplatform_set', 'abstractplatform_set', 'labels'])
@@ -82,9 +87,11 @@ class Project(modellib.XObjIdModel):
 
     load_fields = [ short_name ]
 
+    _ApplianceTypes = set([ "Appliance", "PlatformFoundation", ])
+
     def __unicode__(self):
         return self.hostname
-        
+
     def serialize(self, request=None):
         xobjModel = modellib.XObjIdModel.serialize(self, request)
         if request is not None:
@@ -98,51 +105,71 @@ class Project(modellib.XObjIdModel):
             xobjModel.created_date, tz.tzutc()))
         xobjModel.modified_date = str(datetime.datetime.fromtimestamp(
             xobjModel.modified_date, tz.tzutc()))
-        
-        if self.labels and len(self.labels.all()) > 0:
-            label = self.labels.all()[0]
-            xobjModel.upstream_url = label.url
-            xobjModel.auth_type = label.auth_type
-            xobjModel.user_name = label.user_name
-            xobjModel.password = label.password
-            xobjModel.entitlement = label.entitlement
-        
+
+        # Attach URL and auth data from Labels if and only if this is a
+        # proxy-mode external project. Otherwise these fields are meaningless.
+        if not self.database:
+            labels = self.labels.all()
+            if labels:
+                label = labels[0]
+                xobjModel.upstream_url = label.url
+                xobjModel.auth_type = label.auth_type
+                xobjModel.user_name = label.user_name
+                xobjModel.password = label.password
+                xobjModel.entitlement = label.entitlement
         return xobjModel
 
     def setIsAppliance(self):
-        if self.project_type == "Appliance" or \
-           self.project_type == "PlatformFoundation":
-            self.is_appliance = True
-        else:
-            self.is_appliance = False
+        self.is_appliance = (self.project_type in self._ApplianceTypes)
+
+    @classmethod
+    def Now(cls):
+        return "%.2f" % time.time()
 
     def save(self, *args, **kwargs):
         # Default project type to Appliance
         if self.project_type is None:
             self.project_type = "Appliance"
+        if not self.project_url:
+            self.project_url = ''
 
         self.setIsAppliance()
-        
+
         if not self.hostname:
             self.hostname = self.short_name
 
+        now = self.Now()
         if self.created_date is None:
-            self.created_date = str(time.time())
+            self.created_date = now
         if self.modified_date is None:
-            self.modified_date = str(time.time())
-            
+            self.modified_date = now
+
         if not self.repository_hostname and self.hostname and self.domain_name:
             self.repository_hostname = '%s.%s' % (self.hostname, self.domain_name)
 
-        if self.labels and len(self.labels.all()) > 0:
-            label = self.labels.all()[0]
-            label.url = self.upstream_url
-            label.auth_type = self.auth_type
-            label.user_name = self.user_name
-            label.password = self.password
-            label.entitlement = self.entitlement
-            label.save() 
-            
+        labels = self.labels.all()
+        if labels:
+            label = labels[0]
+            if self.database:
+                # Internal projects and mirror projects have no use for these
+                # fields so make sure they are nulled out.
+                label.url = None
+                label.auth_type = 'none'
+                label.user_name = None
+                label.password = None
+                label.entitlement = None
+            else:
+                assert self.external
+                label.url = self.upstream_url
+                label.auth_type = self.auth_type
+                label.user_name = self.user_name
+                label.password = self.password
+                label.entitlement = self.entitlement
+            # This field doesn't mean anything but some old code might still
+            # use it.
+            label.label = self.repository_hostname + '@dummy:label'
+            label.save()
+
         return modellib.XObjIdModel.save(self, *args, **kwargs)
 
 class Members(modellib.Collection):
@@ -187,6 +214,7 @@ class ProjectVersion(modellib.XObjIdModel):
         related_name="project_branches", view_name="ProjectVersions", null=True)
     namespace = models.CharField(max_length=16)
     name = models.CharField(max_length=16)
+    platform = modellib.SyntheticField()
     description = models.TextField()
     created_date = models.DecimalField(max_digits=14, decimal_places=3,
         db_column="timecreated")
@@ -196,7 +224,7 @@ class ProjectVersion(modellib.XObjIdModel):
         
     def save(self, *args, **kwargs):
         if self.created_date is None:
-            self.created_date = str(time.time())
+            self.created_date = Project.Now()
         return modellib.XObjIdModel.save(self, *args, **kwargs)
 
     def serialize(self, request=None):
@@ -205,6 +233,13 @@ class ProjectVersion(modellib.XObjIdModel):
         xobjModel.created_date = str(datetime.datetime.fromtimestamp(
             xobjModel.created_date, tz.tzutc()))
         return xobjModel
+
+    def computeSyntheticFields(self, sender, **kwargs):
+        if self._rbmgr is None or self.project_id is None:
+            return
+        restDb = self._rbmgr.restDb
+        plat = restDb.getProductVersionPlatform(self.project.repository_hostname, self.name)
+        # XXX Do something useful here
 
 class Stages(modellib.Collection):
     class Meta:
@@ -301,6 +336,9 @@ class Image(modellib.XObjIdModel):
     image_id = models.AutoField(primary_key=True, db_column='buildid')
     project = modellib.DeferredForeignKey(Project, db_column='projectid',
         related_name="images", view_name="ProjectImages")
+    #The images need to be linked to the project branch stages and the project     
+    project_branch_stage = modellib.DeferredForeignKey(Stage, db_column='stageid',
+        related_name="images", view_name="ProjectImages")    
     release = models.ForeignKey(Release, null=True,
         db_column='pubreleaseid')
     build_type = models.IntegerField(db_column="buildtype")

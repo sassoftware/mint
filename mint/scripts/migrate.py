@@ -2885,7 +2885,7 @@ class MigrateTo_56(SchemaMigration):
         """)
         cu.execute("""
             ALTER TABLE "inventory_job_state"
-            RENAME TO "jobs_job_state"
+            TO "jobs_job_state"
         """)
 
         return True
@@ -2898,7 +2898,7 @@ class MigrateTo_57(SchemaMigration):
 
 
 class MigrateTo_58(SchemaMigration):
-    Version = (58, 23)
+    Version = (58, 27)
 
     def migrate(self):
         return True
@@ -3156,9 +3156,72 @@ class MigrateTo_58(SchemaMigration):
         """)
         return True
 
+    def migrate24(self):
+        # URL and creds for local/mirror projects are redundant.
+        cu = self.db.cursor()
+        cu.execute("ALTER TABLE Labels ALTER url DROP NOT NULL")
+        cu.execute("""UPDATE LABELS SET url = NULL, authtype = 'none',
+            username = NULL, password = NULL, entitlement = NULL
+            WHERE (SELECT database FROM projects
+                WHERE Projects.projectId = Labels.projectId) IS NOT NULL""")
+        # Drop unused table
+        drop_tables(self.db, 'RepNameMap')
+        return True
+        
+    def migrate25(self):
+		#adding the stageid to the images(builds)
+        cu = self.db.cursor()
+        cu.execute("ALTER TABLE Builds ADD COLUMN stageid INTEGER REFERENCES project_branch_stage ON DELETE SET NULL")
+        return True        
+
+    def migrate26(self):
+        # Add missing ON DELETE clauses to FKs
+        cu = self.db.cursor()
+        cu.execute("""ALTER TABLE inventory_system
+                DROP CONSTRAINT inventory_system_launching_user_id_fkey,
+                DROP CONSTRAINT inventory_system_stage_id_fkey,
+                DROP CONSTRAINT inventory_system_major_version_id_fkey,
+                DROP CONSTRAINT inventory_system_project_id_fkey,
+                ADD FOREIGN KEY (launching_user_id)
+                    REFERENCES users(userid)
+                    ON DELETE SET NULL,
+                ADD FOREIGN KEY (stage_id)
+                    REFERENCES "project_branch_stage" ("stage_id")
+                    ON DELETE SET NULL,
+                ADD FOREIGN KEY (major_version_id)
+                    REFERENCES productversions(productversionid)
+                    ON DELETE SET NULL,
+                ADD FOREIGN KEY (project_id)
+                    REFERENCES projects(projectid)
+                    ON DELETE SET NULL""")
+        cu.execute("""ALTER TABLE packages_package
+                DROP CONSTRAINT packages_package_created_by_id_fkey,
+                DROP CONSTRAINT packages_package_modified_by_id_fkey,
+                ADD FOREIGN KEY (created_by_id)
+                    REFERENCES users(userid)
+                    ON DELETE SET NULL,
+                ADD FOREIGN KEY (modified_by_id)
+                    REFERENCES users(userid)
+                    ON DELETE SET NULL""")
+        return True
+        
+
+    def migrate27(self): 
+        #Renaming inventory_event_type to inventory_job_type
+        cu = self.db.cursor()
+        cu.execute("""
+            ALTER TABLE "inventory_event_type"
+            RENAME TO "inventory_job_type"
+        """)
+        return True
+               
+
+
 def _createUpdateSystemsQuerySet(db):
 
         return True
+   
+     
 
 
 #### SCHEMA MIGRATIONS END HERE #############################################

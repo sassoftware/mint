@@ -135,7 +135,7 @@ class ProjectsTestCase(XMLTestCase):
             username="testuser", password="password")
         self.assertEquals(response.status_code, 200)
         project = xobj.parse(response.content).project
-        self.assertEquals("http://%s/conary/" % project.repository_hostname, project.upstream_url)
+        self.assertEquals("https://%s/conary/" % project.repository_hostname, project.upstream_url)
         
     def testAddProjectExternalNoUrlExternalAuth(self):
         response = self._post('projects',

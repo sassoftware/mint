@@ -28,7 +28,7 @@ from conary.dbstore import sqlerrors, sqllib
 log = logging.getLogger(__name__)
 
 # database schema major version
-RBUILDER_DB_VERSION = sqllib.DBversion(58, 23)
+RBUILDER_DB_VERSION = sqllib.DBversion(58, 27)
 
 
 def _createTrigger(db, table, column = "changed"):
@@ -135,7 +135,7 @@ def _createLabels(db):
             projectId           integer         NOT NULL
                 REFERENCES Projects ON DELETE CASCADE,
             label               varchar(255)    NOT NULL,
-            url                 varchar(255)    NOT NULL,
+            url                 varchar(255),
             authType            varchar(32)     NOT NULL    DEFAULT 'none',
             username            varchar(255),
             password            varchar(255),
@@ -266,6 +266,8 @@ def _createBuilds(db):
             buildId             %(PRIMARYKEY)s,
             projectId            integer        NOT NULL
                 REFERENCES Projects ON DELETE CASCADE,
+            stageid              integer        NOT NULL  
+                 REFERENCES project_branch_stage ON DELETE SET NULL,    
             pubReleaseId         integer
                 REFERENCES PublishedReleases ON DELETE SET NULL,
             buildType            integer,
@@ -515,33 +517,6 @@ def _createMirrorInfo(db):
             ) %(TABLEOPTS)s""" % db.keywords)
         db.tables['OutboundMirrorsUpdateServices'] = []
         changed = True
-
-    return changed
-
-
-def _createRepNameMap(db):
-    cu = db.cursor()
-    changed = False
-
-    # NB: This table is dead. It is still referenced in a few places, but it
-    # was such an awful and tremendously confusing idea that it has been
-    # superceded by the "fqdn" column in Projects. Please delete references to
-    # it when it is safe to do so.
-
-    if 'RepNameMap' not in db.tables:
-        cu.execute("""
-        CREATE TABLE RepNameMap (
-            fromName            varchar(254)    NOT NULL,
-            toName              varchar(254)    NOT NULL,
-
-            PRIMARY KEY ( fromName, toName )
-        ) %(TABLEOPTS)s """ % db.keywords)
-        db.tables['RepNameMap'] = []
-        changed = True
-    changed |= db.createIndex('RepNameMap', 'RepNameMap_fromName_idx',
-        'fromName')
-    changed |= db.createIndex('RepNameMap', 'RepNameMap_toName_idx',
-        'toName')
 
     return changed
 
@@ -1127,7 +1102,9 @@ def _createInventorySchema(db, cfg):
                 "ssl_server_certificate" varchar(8092),
                 "agent_port" integer,
                 "state_change_date" timestamp with time zone,
-                "launching_user_id" integer REFERENCES "users" ("userid"),
+                "launching_user_id" integer
+                    REFERENCES "users" ("userid")
+                    ON DELETE SET NULL,
                 "current_state_id" integer NOT NULL
                     REFERENCES "inventory_system_state" ("system_state_id"),
                 "managing_zone_id" integer NOT NULL
@@ -1139,11 +1116,14 @@ def _createInventorySchema(db, cfg):
                 "credentials" text,
                 "configuration" text,
                 "stage_id" integer 
-                    REFERENCES "project_branch_stage" ("stage_id"),
+                    REFERENCES "project_branch_stage" ("stage_id")
+                    ON DELETE SET NULL,
                 "major_version_id" integer 
-                    REFERENCES ProductVersions (productVersionId),
+                    REFERENCES ProductVersions (productVersionId)
+                    ON DELETE SET NULL,
                 "project_id" integer 
                     REFERENCES Projects (projectId)
+                    ON DELETE SET NULL
             ) %(TABLEOPTS)s""" % db.keywords)
         db.tables['inventory_system'] = []
         changed = True
@@ -2267,7 +2247,7 @@ def _createQuerySetSchema(db):
             UNIQUE ("project_id", "query_tag_id", "inclusion_method_id")
         )""")
     
-    changed != createTable(db, """
+    changed |= createTable(db, 'querysets_stagetag', """
         CREATE TABLE "querysets_stagetag" (
             "stage_tag_id" %(PRIMARYKEY)s,
             "stage_id" INTEGER
@@ -2373,9 +2353,9 @@ def _createPackageSchema(db):
             "created_date" TIMESTAMP WITH TIME ZONE NOT NULL,
             "modified_date" TIMESTAMP WITH TIME ZONE NOT NULL,
             "created_by_id" INTEGER 
-                REFERENCES "users" ("userid"),
+                REFERENCES "users" ("userid") ON DELETE SET NULL,
             "modified_by_id" INTEGER
-                REFERENCES "users" ("userid")
+                REFERENCES "users" ("userid") ON DELETE SET NULL
         )""")
 
     changed |= createTable(db, "packages_package_version", """
@@ -2641,7 +2621,6 @@ def createSchema(db, doCommit=True, cfg=None):
     changed |= _createPackageIndex(db)
     changed |= _createNewsCache(db)
     changed |= _createMirrorInfo(db)
-    changed |= _createRepNameMap(db)
     changed |= _createApplianceSpotlight(db)
     changed |= _createFrontPageStats(db)
     changed |= _createSessions(db)

@@ -54,6 +54,9 @@ class BaseMiddleware(object):
     def _process_response(self, request, response):
         return response
 
+    def isLocalServer(self, request):
+        return not hasattr(request, '_req')
+
 class ExceptionLoggerMiddleware(BaseMiddleware):
 
     def process_request(self, request):
@@ -123,14 +126,13 @@ class SetMintAdminMiddleware(BaseMiddleware):
     def _process_request(self, request):
         request._is_admin = auth.isAdmin(request._authUser)
         return None
-    
+
 class LocalSetMintAdminMiddleware(BaseMiddleware):
     def _process_request(self, request):
         request._is_admin = True
         request._is_authenticated = True
         request._authUser = usersmodels.User.objects.get(pk=1)
         request._auth = ("admin", "admin")
-        return None
 
 class SetMintAuthenticatedMiddleware(BaseMiddleware):
     """
@@ -143,23 +145,16 @@ class SetMintAuthenticatedMiddleware(BaseMiddleware):
 class SetMintConfigMiddleware(BaseMiddleware):
 
     def _process_request(self, request):
-        if hasattr(request, '_req'):
+        if not self.isLocalServer(request):
             cfgPath = request._req.get_options().get("rbuilderConfig", config.RBUILDER_CONFIG)
+            cfg = config.getConfig(cfgPath)
         else:
-            cfgPath = config.RBUILDER_CONFIG
-        cfg = config.getConfig(cfgPath)
+            cfg = config.MintConfig()
+            cfg.siteHost = 'localhost.localdomain'
 
         request.cfg = cfg
 
         return None
-
-class LocalSetMintConfigMiddleware(BaseMiddleware):
-
-    def _process_request(self, request):
-        cfg = config.MintConfig()
-        cfg.siteHost = 'localhost.localdomain'
-        request.cfg = cfg
-
 
 class AddCommentsMiddleware(BaseMiddleware):
     

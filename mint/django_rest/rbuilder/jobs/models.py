@@ -127,11 +127,12 @@ class Job(modellib.XObjIdModel):
     def serialize(self, request=None):
         xobj_model = modellib.XObjIdModel.serialize(self, request)
         self.setValuesFromRmake()
+        # Get rid of event_type in favor of job_type
         if self.event_type:
-            xobj_model.job_type = modellib.Cache.get(self.event_type.__class__,
-                pk=self.event_type_id).name
-            xobj_model.job_description = modellib.Cache.get(
-                self.event_type.__class__, pk=self.event_type_id).description
+            eventType =  modellib.Cache.get(self.event_type.__class__,
+                pk=self.event_type_id)
+            xobj_model.job_type = eventType.name
+            xobj_model.job_description = eventType.description
         xobj_model.event_type = None
         return xobj_model
 
