@@ -191,7 +191,7 @@ class EventType(modellib.XObjIdModel):
     XSL = 'eventType.xsl'
     
     class Meta:
-        db_table = 'inventory_event_type'
+        db_table = 'inventory_job_type'
     _xobj = xobj.XObjMetadata(tag='event_type')
     
      # hide jobs, see https://issues.rpath.com/browse/RBL-7151
