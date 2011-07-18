@@ -17,13 +17,27 @@ from mint.django_rest.deco import requires, return_xml, access, ACCESS, \
 from mint.django_rest.rbuilder.users import models as usersmodels
 from mint.django_rest.rbuilder import service
 from mint.django_rest.rbuilder.inventory import models
+from mint.django_rest.rbuilder.projects import models as projectsmodels
+import urllib2 as url2
 
+
+    
 class RestDbPassthrough(resource.Resource):
     pass
 
-class StageService(RestDbPassthrough):
-    def get(self, project, majorVersion, stage):
-        return None
+
+class StageService(service.BaseService):
+    def rest_GET(self, request, short_name, version, label=None):
+        xml = self.get(request, short_name, version, label)
+        return xml
+    
+    def get(self, request, short_name, version, label):
+        # redirects to old stages code
+        url = r'%(host)s/api/products/%(short_name)s/versions/%(version)s/stages/%(label)s'
+        args = dict(host='http://' + request.get_host(), short_name=short_name, version=version, label=label)
+        raw_xml = url2.urlopen(url % args).read()
+        return HttpResponse(raw_xml.strip(), mimetype='text/xml')
+            
 
 class MajorVersionService(RestDbPassthrough):
     def get(self, project, majorVersion):

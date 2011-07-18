@@ -112,3 +112,15 @@ class ProjectMemberService(service.BaseService):
 
     def get(self, short_name):
         return self.mgr.getProjectMembers(short_name)
+
+
+class GroupsService(service.BaseService):
+    @return_xml
+    def rest_GET(self, request, short_name, version, search):
+        return self.get(short_name, version, search)
+        
+    def get(self, short_name, version, search):
+        url = '/api/products/%(short_name)s/versions/%(version)s/repos/%(search)s/'
+        args = dict(short_name=short_name, version=version, search=search)
+        xml = HttpResponse.HttpRedirect(url % args)
+        return xml

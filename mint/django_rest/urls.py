@@ -209,14 +209,19 @@ urlpatterns = patterns('',
         name='JobStateJobs'),
 
     # Major Versions
-    URL(r'products/(\w|\-)*/versions/(\w|\.)*/?$',
+    URL(r'products/(?P<short_name>(\w|\-)*)/versions/(?P<version>(\w|\.)*)/?$',
         inventoryviews.MajorVersionService(),
         name='MajorVersions'),
 
     # Stages
-    #URL(r'products/(\w|\-)*/versions/(\w|\.)*/stages/(\w)*/?$',
-    #    inventoryviews.StageService(),
-    #    name='Stages'),
+    URL(r'products/(?P<short_name>(\w|\-)*)/versions/(?P<version>(\w|\.)*)/stages/(?P<label>\w*)/?$',
+       inventoryviews.StageService(),
+       name='Stages'),
+
+    # Groups
+    URL(r'products/(?P<short_name>(\w|\-)*)/versions/(?P<version>(\w|\.)*)/repos/(?P<search>.*)/?$',
+        projectviews.GroupsService,
+        name='Groups'),
 
     # Projects
     URL(r'products/(\w|\-)*/?$',
