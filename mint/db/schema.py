@@ -28,7 +28,7 @@ from conary.dbstore import sqlerrors, sqllib
 log = logging.getLogger(__name__)
 
 # database schema major version
-RBUILDER_DB_VERSION = sqllib.DBversion(58, 27)
+RBUILDER_DB_VERSION = sqllib.DBversion(58, 29)
 
 
 def _createTrigger(db, table, column = "changed"):
@@ -1213,54 +1213,67 @@ def _createInventorySchema(db, cfg):
         db.tables['inventory_version'] = []
         changed = True
 
-    tableName = 'inventory_job_type'
+    tableName = 'jobs_job_type'
     if tableName not in db.tables:
         cu.execute("""
-            CREATE TABLE "inventory_job_type" (
+            CREATE TABLE "jobs_job_type" (
                 "event_type_id" %(PRIMARYKEY)s,
                 "name" varchar(8092) NOT NULL UNIQUE,
                 "description" varchar(8092) NOT NULL,
-                "priority" smallint NOT NULL
+                "priority" smallint NOT NULL,
+                "resource_type" varchar(8092) NOT NULL
             ) %(TABLEOPTS)s""" % db.keywords)
         db.tables[tableName] = []
         changed = True
         changed |= _addTableRows(db, tableName, 'name',
             [dict(name="system registration",
                   description='System registration',
-                  priority=110),
+                  priority=110,
+                  resource_type='System'),
              dict(name="system poll",
                   description='System synchronization',
-                  priority=50),
+                  priority=50,
+                  resource_type='System'),
              dict(name="immediate system poll",
                   description='On-demand system synchronization',
-                  priority=105),
+                  priority=105,
+                  resource_type='System'),
              dict(name="system apply update",
                   description='Scheduled system update', 
-                  priority=50),
+                  priority=50,
+                  resource_type='System'),
              dict(name="immediate system apply update",
                   description='System update',
-                  priority=105),
+                  priority=105,
+                  resource_type='System'),
              dict(name="system shutdown",
                   description='Scheduled system shutdown',
-                  priority=50),
+                  priority=50,
+                  resource_type='System'),
              dict(name="immediate system shutdown", 
                   description='System shutdown',
-                  priority=105),
+                  priority=105,
+                  resource_type='System'),
              dict(name='system launch wait',
                   description='Launched system network data discovery',
-                  priority=105),
+                  priority=105,
+                  resource_type='System'),
              dict(name="system detect management interface",
                   description="System management interface detection",
-                  priority=50),
+                  priority=50,
+                  resource_type='System'),
              dict(name="immediate system detect management interface",
                   description="On-demand system management interface detection",
-                  priority=105),
+                  priority=105,
+                  resource_type="System"),
              dict(name="immediate system configuration",
                   description="Update system configuration",
-                  priority=105),
+                  priority=105,
+                  resource_type="System"),
              dict(name="system assimilation",
                   description="System assimilation",
-                  priority=105)
+                  priority=105,
+                  resource_type="System")
             ])
         
     if 'inventory_system_event' not in db.tables:
@@ -1311,7 +1324,9 @@ def _createInventorySchema(db, cfg):
                 job_state_id integer NOT NULL
                     REFERENCES jobs_job_state,
                 event_type_id integer
-                    REFERENCES inventory_job_type,
+                    REFERENCES jobs_job_type,
+                descriptor VARCHAR,
+                descriptor_data VARCHAR,    
                 status_code INTEGER NOT NULL DEFAULT 100,
                 status_text VARCHAR NOT NULL DEFAULT 'Initializing',
                 status_detail VARCHAR,

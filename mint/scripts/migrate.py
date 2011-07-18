@@ -2898,7 +2898,7 @@ class MigrateTo_57(SchemaMigration):
 
 
 class MigrateTo_58(SchemaMigration):
-    Version = (58, 27)
+    Version = (58, 29)
 
     def migrate(self):
         return True
@@ -3211,9 +3211,27 @@ class MigrateTo_58(SchemaMigration):
         cu = self.db.cursor()
         cu.execute("""
             ALTER TABLE "inventory_event_type"
-            RENAME TO "inventory_job_type"
+            RENAME TO "jobs_job_type"
         """)
         return True
+        
+    def migrate28(self):
+		#adding the descriptor and descriptor_data to jobs_job
+        cu = self.db.cursor()
+        cu.execute("ALTER TABLE jobs_job ADD COLUMN descriptor VARCHAR")
+        cu.execute("ALTER TABLE jobs_job ADD COLUMN descriptor_data VARCHAR")
+        return True  
+        
+   
+    def migrate29(self):
+		#adding the column resource_type to jobs_job_type
+        cu = self.db.cursor()
+        cu.execute("ALTER TABLE jobs_job_type ADD COLUMN resource_type VARCHAR")
+        cu.execute("""
+           UPDATE "jobs_job_type"
+           SET "resource_type" = 'System'
+        """)
+        return True                           
                
 
 
