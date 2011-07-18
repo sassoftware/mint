@@ -3063,85 +3063,85 @@ class MigrateTo_58(SchemaMigration):
         cu = self.db.cursor()
         cu.execute("""ALTER TABLE ProductVersions ALTER COLUMN projectId DROP NOT NULL""")
         return True
-    
+
     def migrate15(self):
         cu = self.db.cursor()
         cu.execute("""ALTER TABLE ProductVersions ALTER COLUMN namespace DROP NOT NULL""")
         return True
-    
+
     def migrate16(self):
         cu = self.db.cursor()
         cu.execute("""ALTER TABLE project_branch_stage ADD COLUMN created_date timestamp with time zone NOT NULL""")
         return True
-    
+
     def migrate17(self):
         cu = self.db.cursor()
         cu.execute("""ALTER TABLE project_branch_stage RENAME COLUMN project_version_id TO project_branch_id""")
         return True
-    
+
     def migrate18(self):
         cu = self.db.cursor()
-        
+
         # remove old external appliances query set and filter
         cu.execute("""DELETE FROM querysets_queryset WHERE name='External Appliances'""")
         cu.execute("""DELETE FROM querysets_filterentry WHERE field='external' AND operator='EQUAL' AND value='1'""")
         cu.execute("""DELETE FROM querysets_filterentry WHERE field='is_appliance' AND operator='EQUAL' AND value='1'""")
-        
+
         # add the filter terms for "all" in the set
         allFilterId = schema._addQuerySetFilterEntry(self.db, "name", "IS_NULL", "False")
-        
+
         # get the all projects qs
         qsId = schema._getRowPk(self.db, "querysets_queryset", "query_set_id", name="All Projects")
-        
+
         # link the all projects query set to the "all" filter
         schema._addTableRows(self.db, "querysets_queryset_filter_entries", 'id',
             [dict(queryset_id=qsId, filterentry_id=allFilterId)],
             ['queryset_id', 'filterentry_id'])
-        
+
         # add new query sets
         schema._createAllPlatformBranchStages(self.db)
         return True
-    
+
     def migrate19(self):
         cu = self.db.cursor()
         cu.execute("""UPDATE querysets_queryset SET presentation_type='project' WHERE name='All Projects'""")
         return True
-    
+
     def migrate20(self):
         cu = self.db.cursor()
         cu.execute("""UPDATE querysets_queryset SET resource_type='project' WHERE name='All Projects'""")
         cu.execute("""UPDATE querysets_queryset SET presentation_type=NULL WHERE name='All Projects'""")
         schema._createAllProjectBranchStages(self.db)
         return True
-    
+
     def migrate21(self):
         cu = self.db.cursor()
         cu.execute("""ALTER TABLE project_branch_stage ADD COLUMN project_id integer
                       REFERENCES Projects (projectId) ON DELETE SET NULL""")
         return True
-    
+
     def migrate22(self):
         cu = self.db.cursor()
         cu.execute("""ALTER TABLE Projects ALTER COLUMN disabled DROP DEFAULT""")
         cu.execute("""ALTER TABLE Projects ALTER COLUMN disabled TYPE BOOLEAN USING CASE WHEN disabled=0 THEN FALSE ELSE TRUE END""")
         cu.execute("""ALTER TABLE Projects ALTER COLUMN disabled SET DEFAULT FALSE""")
-        
+
         cu.execute("""ALTER TABLE Projects ALTER COLUMN hidden DROP DEFAULT""")
         cu.execute("""ALTER TABLE Projects ALTER COLUMN hidden TYPE BOOLEAN USING CASE WHEN hidden=0 THEN FALSE ELSE TRUE END""")
         cu.execute("""ALTER TABLE Projects ALTER COLUMN hidden SET DEFAULT FALSE""")
-        
+
         cu.execute("""ALTER TABLE Projects ALTER COLUMN external DROP DEFAULT""")
         cu.execute("""ALTER TABLE Projects ALTER COLUMN external TYPE BOOLEAN USING CASE WHEN external=0 THEN FALSE ELSE TRUE END""")
         cu.execute("""ALTER TABLE Projects ALTER COLUMN external SET DEFAULT FALSE""")
-        
+
         cu.execute("""ALTER TABLE Projects ALTER COLUMN isAppliance DROP DEFAULT""")
         cu.execute("""ALTER TABLE Projects ALTER COLUMN isAppliance TYPE BOOLEAN USING CASE WHEN isAppliance=0 THEN FALSE ELSE TRUE END""")
         cu.execute("""ALTER TABLE Projects ALTER COLUMN isAppliance SET DEFAULT TRUE""")
-        
+
         cu.execute("""ALTER TABLE Projects ALTER COLUMN backupExternal DROP DEFAULT""")
         cu.execute("""ALTER TABLE Projects ALTER COLUMN backupExternal TYPE BOOLEAN USING CASE WHEN backupExternal=0 THEN FALSE ELSE TRUE END""")
         cu.execute("""ALTER TABLE Projects ALTER COLUMN backupExternal SET DEFAULT FALSE""")
-        
+
         return True
 
     def migrate23(self):
@@ -3167,12 +3167,12 @@ class MigrateTo_58(SchemaMigration):
         # Drop unused table
         drop_tables(self.db, 'RepNameMap')
         return True
-        
+
     def migrate25(self):
-		#adding the stageid to the images(builds)
+        # adding the stageid to the images(builds)
         cu = self.db.cursor()
         cu.execute("ALTER TABLE Builds ADD COLUMN stageid INTEGER REFERENCES project_branch_stage ON DELETE SET NULL")
-        return True        
+        return True
 
     def migrate26(self):
         # Add missing ON DELETE clauses to FKs
@@ -3204,35 +3204,32 @@ class MigrateTo_58(SchemaMigration):
                     REFERENCES users(userid)
                     ON DELETE SET NULL""")
         return True
-        
 
-    def migrate27(self): 
-        #Renaming inventory_event_type to inventory_job_type
+    def migrate27(self):
+        # Renaming inventory_event_type to jobs_job_type
         cu = self.db.cursor()
         cu.execute("""
             ALTER TABLE "inventory_event_type"
             RENAME TO "jobs_job_type"
         """)
         return True
-        
+
     def migrate28(self):
-		#adding the descriptor and descriptor_data to jobs_job
+        # adding the descriptor and descriptor_data to jobs_job
         cu = self.db.cursor()
         cu.execute("ALTER TABLE jobs_job ADD COLUMN descriptor VARCHAR")
         cu.execute("ALTER TABLE jobs_job ADD COLUMN descriptor_data VARCHAR")
-        return True  
-        
-   
+        return True
+
     def migrate29(self):
-		#adding the column resource_type to jobs_job_type
+        # adding the column resource_type to jobs_job_type
         cu = self.db.cursor()
         cu.execute("ALTER TABLE jobs_job_type ADD COLUMN resource_type VARCHAR")
         cu.execute("""
            UPDATE "jobs_job_type"
            SET "resource_type" = 'System'
         """)
-        return True                           
-               
+        return True
 
 
 def _createUpdateSystemsQuerySet(db):
