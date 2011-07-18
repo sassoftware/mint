@@ -1213,10 +1213,10 @@ def _createInventorySchema(db, cfg):
         db.tables['inventory_version'] = []
         changed = True
 
-    tableName = 'inventory_event_type'
+    tableName = 'inventory_job_type'
     if tableName not in db.tables:
         cu.execute("""
-            CREATE TABLE "inventory_event_type" (
+            CREATE TABLE "inventory_job_type" (
                 "event_type_id" %(PRIMARYKEY)s,
                 "name" varchar(8092) NOT NULL UNIQUE,
                 "description" varchar(8092) NOT NULL,
@@ -1271,7 +1271,7 @@ def _createInventorySchema(db, cfg):
                     REFERENCES "inventory_system" ("system_id")
                     ON DELETE CASCADE,
                 "event_type_id" integer NOT NULL
-                    REFERENCES "inventory_event_type",
+                    REFERENCES "inventory_job_type",
                 "time_created" timestamp with time zone NOT NULL,
                 "time_enabled" timestamp with time zone NOT NULL,
                 "priority" smallint NOT NULL,
@@ -1311,7 +1311,7 @@ def _createInventorySchema(db, cfg):
                 job_state_id integer NOT NULL
                     REFERENCES jobs_job_state,
                 event_type_id integer
-                    REFERENCES inventory_event_type,
+                    REFERENCES inventory_job_type,
                 status_code INTEGER NOT NULL DEFAULT 100,
                 status_text VARCHAR NOT NULL DEFAULT 'Initializing',
                 status_detail VARCHAR,
