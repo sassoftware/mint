@@ -2885,7 +2885,7 @@ class MigrateTo_56(SchemaMigration):
         """)
         cu.execute("""
             ALTER TABLE "inventory_job_state"
-            TO "jobs_job_state"
+            RENAME TO "jobs_job_state"
         """)
 
         return True
