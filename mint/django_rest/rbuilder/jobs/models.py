@@ -70,6 +70,10 @@ class Job(modellib.XObjIdModel):
     event_type = D(APIReadOnly(modellib.DeferredForeignKey("EventType",
         text_field='name', related_name="jobs", null=True)),
         "documentation missing")
+    descriptor = D(models.TextField(null=True),
+        " ")  
+    descriptor_data = D(models.TextField(null=True),
+        " ")              
     time_created = D(modellib.DateTimeUtcField(auto_now_add=True),
         "the date the job was created (UTC)")
     time_updated =  D(modellib.DateTimeUtcField(auto_now_add=True),
@@ -191,7 +195,7 @@ class EventType(modellib.XObjIdModel):
     XSL = 'eventType.xsl'
     
     class Meta:
-        db_table = 'inventory_event_type'
+        db_table = 'jobs_job_type'
     _xobj = xobj.XObjMetadata(tag='event_type')
     
      # hide jobs, see https://issues.rpath.com/browse/RBL-7151
@@ -204,53 +208,66 @@ class EventType(modellib.XObjIdModel):
     SYSTEM_POLL = "system poll"
     SYSTEM_POLL_PRIORITY = 50
     SYSTEM_POLL_DESC = "System synchronization"
+    RESOURCE_TYPE = 'System'
     
     SYSTEM_POLL_IMMEDIATE = "immediate system poll"
     SYSTEM_POLL_IMMEDIATE_PRIORITY = ON_DEMAND_BASE + 5
     SYSTEM_POLL_IMMEDIATE_DESC = "On-demand system synchronization"
+    RESOURCE_TYPE = 'System'
     
     SYSTEM_REGISTRATION = "system registration"
     SYSTEM_REGISTRATION_PRIORITY = ON_DEMAND_BASE + 10
     SYSTEM_REGISTRATION_DESC = "System registration"
+    RESOURCE_TYPE = 'System'
 
     SYSTEM_APPLY_UPDATE = 'system apply update'
     SYSTEM_APPLY_UPDATE_PRIORITY = 50
     SYSTEM_APPLY_UPDATE_DESCRIPTION = 'Scheduled system update'
+    RESOURCE_TYPE = 'System'
         
     SYSTEM_APPLY_UPDATE_IMMEDIATE = 'immediate system apply update'
     SYSTEM_APPLY_UPDATE_IMMEDIATE_PRIORITY = ON_DEMAND_BASE + 5
     SYSTEM_APPLY_UPDATE_IMMEDIATE_DESCRIPTION = \
         'System update'
+    RESOURCE_TYPE = 'System'    
 
     SYSTEM_SHUTDOWN = 'system shutdown'
     SYSTEM_SHUTDOWN_PRIORITY = 50
     SYSTEM_SHUTDOWN_DESCRIPTION = 'Scheduled system shutdown'
+    RESOURCE_TYPE = 'System'
 
     SYSTEM_DETECT_MANAGEMENT_INTERFACE = 'system detect management interface'
     SYSTEM_DETECT_MANAGEMENT_INTERFACE_PRIORITY = 50
     SYSTEM_DETECT_MANAGEMENT_INTERFACE_DESC = \
         "System management interface detection"
+    RESOURCE_TYPE = 'System'
+        
     SYSTEM_DETECT_MANAGEMENT_INTERFACE_IMMEDIATE = \
         'immediate system detect management interface'
     SYSTEM_DETECT_MANAGEMENT_INTERFACE_IMMEDIATE_PRIORITY = 105
     SYSTEM_DETECT_MANAGEMENT_INTERFACE_IMMEDIATE_DESC = \
         "On-demand system management interface detection"
+    RESOURCE_TYPE = 'System'    
 
     SYSTEM_SHUTDOWN_IMMEDIATE = 'immediate system shutdown'
     SYSTEM_SHUTDOWN_IMMEDIATE_PRIORITY = ON_DEMAND_BASE + 5
     SYSTEM_SHUTDOWN_IMMEDIATE_DESCRIPTION = \
         'System shutdown'
+    RESOURCE_TYPE = 'System'    
 
     LAUNCH_WAIT_FOR_NETWORK = 'system launch wait'
     LAUNCH_WAIT_FOR_NETWORK_DESCRIPTION = "Launched system network data discovery"
     LAUNCH_WAIT_FOR_NETWORK_PRIORITY = ON_DEMAND_BASE + 5
+    RESOURCE_TYPE = 'System'
     
     SYSTEM_CONFIG_IMMEDIATE = 'immediate system configuration'
     SYSTEM_CONFIG_IMMEDIATE_DESCRIPTION = "Update system configuration"
     SYSTEM_CONFIG_IMMEDIATE_PRIORITY = ON_DEMAND_BASE + 5
+    RESOURCE_TYPE='System'
 
     SYSTEM_ASSIMILATE             = 'system assimilation'
     SYSTEM_ASSIMILATE_DESCRIPTION = 'System assimilation'
+    RESOURCE_TYPE='System'
         
     event_type_id = D(models.AutoField(primary_key=True), "the database id of the event type")
     EVENT_TYPES = (
@@ -278,6 +295,7 @@ class EventType(modellib.XObjIdModel):
         choices=EVENT_TYPES)), "the event type name (read-only)")
     description = D(models.CharField(max_length=8092), "the event type description")
     priority = D(models.SmallIntegerField(db_index=True), "the event type priority where > priority wins")
+    resource_type = D(models.CharField(max_length=8092), "the resource type for the job")
 
     @property
     def requiresManagementInterface(self):

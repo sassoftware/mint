@@ -55,7 +55,7 @@ class JobManager(basemanager.BaseManager):
 
     @exposed
     def getSystemJobsByState(self, system_id, job_state_id):
-        system = models.System.objects.get(pk=system_id)
+        system = inventorymodels.System.objects.get(pk=system_id)
         jobState = models.JobState.objects.get(pk=job_state_id)
         return self._jobsFromIterator(system.jobs.filter(job_state=jobState))
 
