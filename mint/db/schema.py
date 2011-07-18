@@ -1284,7 +1284,7 @@ def _createInventorySchema(db, cfg):
                     REFERENCES "inventory_system" ("system_id")
                     ON DELETE CASCADE,
                 "event_type_id" integer NOT NULL
-                    REFERENCES "inventory_job_type",
+                    REFERENCES "jobs_job_type",
                 "time_created" timestamp with time zone NOT NULL,
                 "time_enabled" timestamp with time zone NOT NULL,
                 "priority" smallint NOT NULL,
