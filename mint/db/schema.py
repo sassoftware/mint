@@ -642,6 +642,24 @@ def _createProductVersions(db):
     changed |= db.createIndex('ProductVersions', 'ProductVersions_uq',
             'projectId,namespace,name', unique = True)
 
+    if 'project_branch_stage' not in db.tables:
+        cu.execute("""
+            CREATE TABLE "project_branch_stage" (
+                "stage_id" %(PRIMARYKEY)s,
+                "name" varchar(256) NOT NULL,
+                "label" text NOT NULL,
+                "project_id" integer
+                    REFERENCES Projects (projectId)
+                    ON DELETE SET NULL,
+                "project_branch_id" integer
+                    REFERENCES ProductVersions (productVersionId)
+                    ON DELETE SET NULL,
+                "promotable" bool,
+                "created_date" timestamp with time zone NOT NULL
+            )""" % db.keywords)
+        db.tables['project_branch_stage'] = []
+        changed = True
+
     return changed
 
 def _createTargets(db):
@@ -1059,24 +1077,6 @@ def _createInventorySchema(db, cfg):
             ) %(TABLEOPTS)s""" % db.keywords)
         db.tables['inventory_system_type'] = []
         changed |= _addSystemTypes(db)
-        changed = True
-
-    if 'project_branch_stage' not in db.tables:
-        cu.execute("""
-            CREATE TABLE "project_branch_stage" (
-                "stage_id" %(PRIMARYKEY)s,
-                "name" varchar(256) NOT NULL,
-                "label" text NOT NULL,
-                "project_id" integer
-                    REFERENCES Projects (projectId)
-                    ON DELETE SET NULL,
-                "project_branch_id" integer
-                    REFERENCES ProductVersions (productVersionId)
-                    ON DELETE SET NULL,
-                "promotable" bool,
-                "created_date" timestamp with time zone NOT NULL
-            )""" % db.keywords)
-        db.tables['project_branch_stage'] = []
         changed = True
 
     if 'inventory_system' not in db.tables:
