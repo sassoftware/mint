@@ -3256,7 +3256,7 @@ class MigrateTo_58(SchemaMigration):
         cu.execute("""ALTER TABLE jobs_job_type RENAME COLUMN event_type_id TO job_type_id""")
         cu.execute("""ALTER TABLE jobs_job RENAME COLUMN event_type_id TO job_type_id""")
         cu.execute("""ALTER TABLE jobs_job ALTER job_type_id SET NOT NULL""")
-        cu.execute("""ALTER TABLE inventory_system_event RENAME COLUMN event_type_id TO job_type_id REFERENCES jobs_job_type"""
+        cu.execute("""ALTER TABLE inventory_system_event RENAME COLUMN event_type_id TO job_type_id REFERENCES jobs_job_type""")
         return True     
 
 
