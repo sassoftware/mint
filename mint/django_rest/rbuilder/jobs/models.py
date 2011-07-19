@@ -95,7 +95,7 @@ class Job(modellib.XObjIdModel):
     status_detail = D(XObjHidden(models.TextField(null=True)),
         "documentation missing")
     event_type = D(APIReadOnly(modellib.DeferredForeignKey("EventType",
-        text_field='name', related_name="jobs", null=True)),
+        text_field='name', related_name="jobs", null=False)),
         "documentation missing")
     descriptor = D(models.TextField(null=True),
         " ")  
@@ -296,7 +296,7 @@ class EventType(modellib.XObjIdModel):
     SYSTEM_ASSIMILATE_DESCRIPTION = 'System assimilation'
     RESOURCE_TYPE='System'
         
-    event_type_id = D(models.AutoField(primary_key=True), "the database id of the event type")
+    job_type_id = D(models.AutoField(primary_key=True), "the database id of the  type")
     EVENT_TYPES = (
         (SYSTEM_REGISTRATION, SYSTEM_REGISTRATION_DESC),
         (SYSTEM_POLL_IMMEDIATE, SYSTEM_POLL_IMMEDIATE_DESC),

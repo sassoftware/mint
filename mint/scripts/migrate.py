@@ -182,6 +182,57 @@ def renameConstraint(db, table, oldName, newDefinition, conditional=False):
                 (oldName, table))
 
 
+def quoteIdentifier(name):
+    name = name.replace('"', '""')
+    return '"%s"' % (name,)
+
+
+def findForeignKey(db, table, columns):
+    """Return the name of a foreign key in the given table and consisting of
+    the named columns."""
+    cu = db.cursor()
+    # Map column names to attribute numbers
+    cu.execute("""
+        SELECT t.oid, a.attnum, a.attname
+        FROM pg_catalog.pg_class t
+        JOIN pg_catalog.pg_namespace n ON t.relnamespace = n.oid
+        JOIN pg_attribute a ON a.attrelid = t.oid
+        WHERE n.nspname = 'public' AND t.relname = ? AND a.attnum > 0
+        ORDER BY a.attnum ASC
+        """, (table,))
+    result = cu.fetchall()
+    if not result:
+        raise RuntimeError("Missing table %s" % table)
+    oid = result[0][0]
+    colMap = dict((name, num) for (oid, num, name) in result)
+    try:
+        colIds = sorted(colMap[colName] for colName in columns)
+    except KeyError:
+        raise RuntimeError("Missing one or more columns in table %s" % table)
+    keyStr = '{' + (','.join(str(x) for x in colIds)) + '}'
+
+    # Look for matching foreign keys
+    cu.execute("""
+        SELECT c.conname FROM pg_constraint c
+        WHERE c.conrelid = ? AND c.contype = 'f'
+        AND c.conkey = ?
+        """, (oid, keyStr))
+    result = cu.fetchone()
+    if result:
+        return result[0]
+    else:
+        raise RuntimeError("No matching constraint in table %s" % table)
+
+
+def dropForeignKey(db, table, columns):
+    """Drop a foreign key given the table name and included columns."""
+    name = findForeignKey(db, table, columns)
+    cu = db.cursor()
+    cu.execute("ALTER TABLE %s DROP CONSTRAINT %s" %
+            (quoteIdentifier(table), quoteIdentifier(name)))
+    return name
+
+
 #### SCHEMA MIGRATIONS BEGIN HERE ###########################################
 
 # SCHEMA VERSION 37.0 - DUMMY MIGRATION
@@ -2885,7 +2936,7 @@ class MigrateTo_56(SchemaMigration):
         """)
         cu.execute("""
             ALTER TABLE "inventory_job_state"
-            TO "jobs_job_state"
+            RENAME TO "jobs_job_state"
         """)
 
         return True
@@ -2898,7 +2949,7 @@ class MigrateTo_57(SchemaMigration):
 
 
 class MigrateTo_58(SchemaMigration):
-    Version = (58, 30)
+    Version = (58, 32)
 
     def migrate(self):
         return True
@@ -3177,11 +3228,11 @@ class MigrateTo_58(SchemaMigration):
     def migrate26(self):
         # Add missing ON DELETE clauses to FKs
         cu = self.db.cursor()
+        dropForeignKey(self.db, "inventory_system", ["launching_user_id"])
+        dropForeignKey(self.db, "inventory_system", ["stage_id"])
+        dropForeignKey(self.db, "inventory_system", ["major_version_id"])
+        dropForeignKey(self.db, "inventory_system", ["project_id"])
         cu.execute("""ALTER TABLE inventory_system
-                DROP CONSTRAINT inventory_system_launching_user_id_fkey,
-                DROP CONSTRAINT inventory_system_stage_id_fkey,
-                DROP CONSTRAINT inventory_system_major_version_id_fkey,
-                DROP CONSTRAINT inventory_system_project_id_fkey,
                 ADD FOREIGN KEY (launching_user_id)
                     REFERENCES users(userid)
                     ON DELETE SET NULL,
@@ -3194,9 +3245,9 @@ class MigrateTo_58(SchemaMigration):
                 ADD FOREIGN KEY (project_id)
                     REFERENCES projects(projectid)
                     ON DELETE SET NULL""")
+        dropForeignKey(self.db, "packages_package", ["created_by_id"])
+        dropForeignKey(self.db, "packages_package", ["modified_by_id"])
         cu.execute("""ALTER TABLE packages_package
-                DROP CONSTRAINT packages_package_created_by_id_fkey,
-                DROP CONSTRAINT packages_package_modified_by_id_fkey,
                 ADD FOREIGN KEY (created_by_id)
                     REFERENCES users(userid)
                     ON DELETE SET NULL,
@@ -3205,15 +3256,24 @@ class MigrateTo_58(SchemaMigration):
                     ON DELETE SET NULL""")
         return True
 
-    def migrate27(self):
+    def _rename_jobs_table(self):
+        # Various mistakes were made in renaming this table (twice), so just
+        # rerun this for all of the minor migrations involved until everything
+        # settles. This way people who have installed or migrated all end up
+        # with the right table.
         cu = self.db.cursor()
-        cu.execute("""
-            ALTER TABLE "inventory_job_type"
-            RENAME TO "jobs_job_type"
-        """)
+        for name in ('inventory_event_type', 'inventory_job_type'):
+            if name in self.db.tables:
+                cu.execute("ALTER TABLE %s RENAME TO jobs_job_type" % name)
+                self.db.tables['jobs_job_type'] = self.db.tables.pop(name)
+                break
+
+    def migrate27(self):
+        self._rename_jobs_table()
         return True
 
     def migrate28(self):
+        self._rename_jobs_table()
         # adding the descriptor and descriptor_data to jobs_job
         cu = self.db.cursor()
         cu.execute("ALTER TABLE jobs_job ADD COLUMN descriptor VARCHAR")
@@ -3221,17 +3281,33 @@ class MigrateTo_58(SchemaMigration):
         return True
 
     def migrate29(self):
+        self._rename_jobs_table()
         # adding the column resource_type to jobs_job_type
         cu = self.db.cursor()
-        cu.execute("ALTER TABLE inventory_job_type ADD COLUMN resource_type VARCHAR")
+        cu.execute("ALTER TABLE jobs_job_type ADD COLUMN resource_type VARCHAR")
         return True
 
     def migrate30(self):
+        self._rename_jobs_table()
+        # This is the last migration with job_type problems
         cu = self.db.cursor()
-        cu.execute("ALTER TABLE inventory_job_type RENAME TO jobs_job_type")
         cu.execute("UPDATE jobs_job_type SET resource_type = 'System'")
         cu.execute("ALTER TABLE jobs_job_type ALTER resource_type SET NOT NULL")
+        return True       
+
+
+    def migrate31(self):
+        cu = self.db.cursor()
+        cu.execute("ALTER TABLE builds ALTER stageid DROP NOT NULL")
         return True
+        
+    def migrate32(self):
+        cu = self.db.cursor()
+        cu.execute("""ALTER TABLE jobs_job_type RENAME COLUMN event_type_id TO job_type_id""")
+        cu.execute("""ALTER TABLE jobs_job RENAME COLUMN event_type_id TO job_type_id""")
+        cu.execute("""ALTER TABLE jobs_job ALTER job_type_id SET NOT NULL""")
+        cu.execute("""ALTER TABLE inventory_system_event RENAME COLUMN event_type_id TO job_type_id""")
+        return True     
 
 
 def _createUpdateSystemsQuerySet(db):

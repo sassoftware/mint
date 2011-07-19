@@ -28,7 +28,7 @@ from conary.dbstore import sqlerrors, sqllib
 log = logging.getLogger(__name__)
 
 # database schema major version
-RBUILDER_DB_VERSION = sqllib.DBversion(58, 30)
+RBUILDER_DB_VERSION = sqllib.DBversion(58, 32)
 
 
 def _createTrigger(db, table, column = "changed"):
@@ -266,8 +266,8 @@ def _createBuilds(db):
             buildId             %(PRIMARYKEY)s,
             projectId            integer        NOT NULL
                 REFERENCES Projects ON DELETE CASCADE,
-            stageid              integer        NOT NULL  
-                 REFERENCES project_branch_stage ON DELETE SET NULL,    
+            stageid              integer
+                 REFERENCES project_branch_stage ON DELETE SET NULL,
             pubReleaseId         integer
                 REFERENCES PublishedReleases ON DELETE SET NULL,
             buildType            integer,
@@ -1217,7 +1217,7 @@ def _createInventorySchema(db, cfg):
     if tableName not in db.tables:
         cu.execute("""
             CREATE TABLE "jobs_job_type" (
-                "event_type_id" %(PRIMARYKEY)s,
+                "job_type_id" %(PRIMARYKEY)s,
                 "name" varchar(8092) NOT NULL UNIQUE,
                 "description" varchar(8092) NOT NULL,
                 "priority" smallint NOT NULL,
@@ -1283,7 +1283,7 @@ def _createInventorySchema(db, cfg):
                 "system_id" integer NOT NULL 
                     REFERENCES "inventory_system" ("system_id")
                     ON DELETE CASCADE,
-                "event_type_id" integer NOT NULL
+                "job_type_id" integer NOT NULL
                     REFERENCES "jobs_job_type",
                 "time_created" timestamp with time zone NOT NULL,
                 "time_enabled" timestamp with time zone NOT NULL,
@@ -1294,7 +1294,7 @@ def _createInventorySchema(db, cfg):
         changed |= db.createIndex("inventory_system_event",
             "inventory_system_event_system_id", "system_id")
         changed |= db.createIndex("inventory_system_event",
-            "inventory_system_event_event_type_id", "event_type_id")
+            "inventory_system_event_event_type_id", "job_type_id")
         changed |= db.createIndex("inventory_system_event",
             "inventory_system_event_time_enabled", "time_enabled")
         changed |= db.createIndex("inventory_system_event",
@@ -1323,7 +1323,7 @@ def _createInventorySchema(db, cfg):
                 job_uuid varchar(64) NOT NULL UNIQUE,
                 job_state_id integer NOT NULL
                     REFERENCES jobs_job_state,
-                event_type_id integer
+                job_type_id integer NOT NULL
                     REFERENCES jobs_job_type,
                 descriptor VARCHAR,
                 descriptor_data VARCHAR,    
