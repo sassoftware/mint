@@ -3205,15 +3205,25 @@ class MigrateTo_58(SchemaMigration):
                     ON DELETE SET NULL""")
         return True
 
-    def migrate27(self):
+    def _rename_jobs_table(self):
+        # Various mistakes were made in renaming this table (twice), so just
+        # rerun this for all of the minor migrations involved until everything
+        # settles. This way people who have installed or migrated all end up
+        # with the right table.
         cu = self.db.cursor()
-        cu.execute("""
-            ALTER TABLE "inventory_job_type"
-            RENAME TO "jobs_job_type"
-        """)
+        for name in ('inventory_event_type', 'inventory_job_type'):
+            if name in self.db.tables:
+                cu.execute("ALTER TABLE %s RENAME TO jobs_job_type" % name)
+                self.db.tables['jobs_job_type'] = []
+                break
+            del self.db.tables[name]
+
+    def migrate27(self):
+        self._rename_jobs_table()
         return True
 
     def migrate28(self):
+        self._rename_jobs_table()
         # adding the descriptor and descriptor_data to jobs_job
         cu = self.db.cursor()
         cu.execute("ALTER TABLE jobs_job ADD COLUMN descriptor VARCHAR")
@@ -3221,14 +3231,16 @@ class MigrateTo_58(SchemaMigration):
         return True
 
     def migrate29(self):
+        self._rename_jobs_table()
         # adding the column resource_type to jobs_job_type
         cu = self.db.cursor()
-        cu.execute("ALTER TABLE inventory_job_type ADD COLUMN resource_type VARCHAR")
+        cu.execute("ALTER TABLE jobs_job_type ADD COLUMN resource_type VARCHAR")
         return True
 
     def migrate30(self):
+        self._rename_jobs_table()
+        # This is the last migration with job_type problems
         cu = self.db.cursor()
-        cu.execute("ALTER TABLE inventory_job_type RENAME TO jobs_job_type")
         cu.execute("UPDATE jobs_job_type SET resource_type = 'System'")
         cu.execute("ALTER TABLE jobs_job_type ALTER resource_type SET NOT NULL")
         return True       
