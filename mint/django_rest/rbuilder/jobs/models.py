@@ -28,7 +28,7 @@ class Action(modellib.XObjModel):
     class Meta:
         abstract = True
         
-    _xobj = xobj.XObjMetadata(tag='action', id={'type':str})
+    _xobj = xobj.XObjMetadata(tag='action', attributes={'type':str})
     
     type = models.CharField(max_length=1026)
     name = models.CharField(max_length=1026)
