@@ -28,7 +28,7 @@ from conary.dbstore import sqlerrors, sqllib
 log = logging.getLogger(__name__)
 
 # database schema major version
-RBUILDER_DB_VERSION = sqllib.DBversion(58, 31)
+RBUILDER_DB_VERSION = sqllib.DBversion(58, 32)
 
 
 def _createTrigger(db, table, column = "changed"):

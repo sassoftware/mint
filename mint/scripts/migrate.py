@@ -3231,20 +3231,20 @@ class MigrateTo_58(SchemaMigration):
         cu.execute("ALTER TABLE inventory_job_type RENAME TO jobs_job_type")
         cu.execute("UPDATE jobs_job_type SET resource_type = 'System'")
         cu.execute("ALTER TABLE jobs_job_type ALTER resource_type SET NOT NULL")
-        return True
-        
-    def migrate31(self):
-        cu = self.db.cursor()
-        cu.execute("""ALTER TABLE jobs_job_type RENAME COLUMN event_type_id TO job_type_id""")
-        cu.execute("""ALTER TABLE jobs_job RENAME COLUMN event_type_id TO job_type_id REFERENCES jobs_job_type"""
-        cu.execute("""ALTER TABLE inventory_system_event RENAME COLUMN event_type_id TO job_type_id REFERENCES jobs_job_type"""
-        return True        
+        return True       
 
 
     def migrate31(self):
         cu = self.db.cursor()
         cu.execute("ALTER TABLE builds ALTER stageid DROP NOT NULL")
         return True
+        
+    def migrate32(self):
+        cu = self.db.cursor()
+        cu.execute("""ALTER TABLE jobs_job_type RENAME COLUMN event_type_id TO job_type_id""")
+        cu.execute("""ALTER TABLE jobs_job RENAME COLUMN event_type_id TO job_type_id NOT NULL REFERENCES jobs_job_type"""
+        cu.execute("""ALTER TABLE inventory_system_event RENAME COLUMN event_type_id TO job_type_id REFERENCES jobs_job_type"""
+        return True     
 
 
 def _createUpdateSystemsQuerySet(db):

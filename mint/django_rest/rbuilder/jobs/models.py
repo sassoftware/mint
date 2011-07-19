@@ -68,7 +68,7 @@ class Job(modellib.XObjIdModel):
     status_detail = D(XObjHidden(models.TextField(null=True)),
         "documentation missing")
     event_type = D(APIReadOnly(modellib.DeferredForeignKey("EventType",
-        text_field='name', related_name="jobs", null=True)),
+        text_field='name', related_name="jobs", null=False)),
         "documentation missing")
     descriptor = D(models.TextField(null=True),
         " ")  
