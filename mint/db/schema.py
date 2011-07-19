@@ -1324,7 +1324,7 @@ def _createInventorySchema(db, cfg):
                 job_state_id integer NOT NULL
                     REFERENCES jobs_job_state,
                 job_type_id integer
-                    REFERENCES jobs_job_type,
+                    REFERENCES jobs_job_type NOT NULL,
                 descriptor VARCHAR,
                 descriptor_data VARCHAR,    
                 status_code INTEGER NOT NULL DEFAULT 100,
