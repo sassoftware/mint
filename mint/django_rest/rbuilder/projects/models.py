@@ -277,17 +277,6 @@ class Stage(modellib.XObjIdModel):
         return xobjModel
 
 
-class Groups(modellib.XObjModel):
-    
-    _xobj = xobj.XObjMetadata(tag='groups')
-    group = modellib.SyntheticField()
-    
-    def computeSyntheticField(self, sender, **kwargs):
-        import pdb; pdb.set_trace()
-        pass
-
-
-
     
 class Release(modellib.XObjModel):
     class Meta:

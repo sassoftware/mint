@@ -24,20 +24,3 @@ class UserNoticesService(service.BaseService):
 
     def rest_DELETE(self, request, user_id):
         self.mgr.deleteUserNotice(user_id)
-
-class GlobalNoticesService(service.BaseService):
-    
-    @return_xml
-    def rest_GET(self, request):
-        return self.get()
-        
-    def get(self):
-        return self.mgr.getGlobalNotices()
-    
-    @requires('global_notice')
-    @return_xml
-    def rest_POST(self, request, global_notice):
-        return self.mgr.createGlobalNotice(global_notice)
-
-    def rest_DELETE(self, request, global_notice_id):
-        self.mgr.deleteUserNotice(global_notice_id)

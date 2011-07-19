@@ -9,22 +9,7 @@ from mint.django_rest.rbuilder import modellib
 from xobj import xobj
 import sys
 
-class GlobalNotices(modellib.Collection):
-    class Meta:
-        abstract = True
-        
-    list_fields = ['global_notice']
-    _xobj = xobj.XObjMetadata(tag='global_notices')
-    
-    
-class GlobalNotice(modellib.XObjIdModel):
-    class Meta:
-        db_table = 'notices_globalnotice'
-    
-    global_notice_id = models.AutoField(primary_key=True)
-    notice = models.TextField()
-    
-    
+   
 class UserNotices(modellib.Collection):
     class Meta:
         abstract = True

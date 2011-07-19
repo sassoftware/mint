@@ -701,6 +701,7 @@ class System(modellib.XObjIdModel):
         xobj_model = modellib.XObjIdModel.serialize(self, request)
         xobj_model.has_active_jobs = self.areJobsActive(jobs)
         xobj_model.has_running_jobs = self.areJobsRunning(jobs)
+        
 
         if request:
             class CredentialsHref(object): 

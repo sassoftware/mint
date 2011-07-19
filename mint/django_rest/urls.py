@@ -477,11 +477,6 @@ urlpatterns = patterns('',
     #     name='UserGroupMembers'),
     # END OLD USERGROUP URLS
     
-    
-    # GlobalNotices
-    URL(r'notices/?$',
-        noticesviews.GlobalNoticesService(),
-        name='GlobalNotices'),
         
     # UserNotices
     URL(r'users/(?P<user_id>\d+)/notices/?$',

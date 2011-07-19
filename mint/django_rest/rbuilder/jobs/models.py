@@ -16,6 +16,33 @@ from xobj import xobj
 XObjHidden = modellib.XObjHidden
 APIReadOnly = modellib.APIReadOnly
 
+
+class Actions(modellib.XObjModel):
+    class Meta:
+        abstract = True
+        
+    list_fields = ['action']
+    
+
+class Action(modellib.XObjModel):
+    class Meta:
+        abstract = True
+        
+    _xobj = xobj.XObjMetadata(tag='action', id={'type':str})
+    
+    type = models.CharField(max_length=1026)
+    name = models.CharField(max_length=1026)
+    description = models.TextField()
+    descriptor = modellib.SyntheticField()
+
+    def serialize(self, request=None):
+        path = request.path if request else ''
+        xobj_model = modellib.XObjModel.serialize(self, request)
+        xobj_model._xobj.id['id'] = str
+        xobj_model.id = '/'.join([path, self.type])
+        return xobj_model
+
+
 class Jobs(modellib.Collection):
     
     XSL = 'jobs.xsl'
