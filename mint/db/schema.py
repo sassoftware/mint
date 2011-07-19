@@ -1323,8 +1323,8 @@ def _createInventorySchema(db, cfg):
                 job_uuid varchar(64) NOT NULL UNIQUE,
                 job_state_id integer NOT NULL
                     REFERENCES jobs_job_state,
-                job_type_id integer
-                    REFERENCES jobs_job_type NOT NULL,
+                job_type_id integer NOT NULL
+                    REFERENCES jobs_job_type,
                 descriptor VARCHAR,
                 descriptor_data VARCHAR,    
                 status_code INTEGER NOT NULL DEFAULT 100,
