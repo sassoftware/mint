@@ -1294,7 +1294,7 @@ def _createInventorySchema(db, cfg):
         changed |= db.createIndex("inventory_system_event",
             "inventory_system_event_system_id", "system_id")
         changed |= db.createIndex("inventory_system_event",
-            "inventory_system_event_event_type_id", "event_type_id")
+            "inventory_system_event_event_type_id", "job_type_id")
         changed |= db.createIndex("inventory_system_event",
             "inventory_system_event_time_enabled", "time_enabled")
         changed |= db.createIndex("inventory_system_event",
