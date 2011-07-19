@@ -3232,6 +3232,14 @@ class MigrateTo_58(SchemaMigration):
         cu.execute("UPDATE jobs_job_type SET resource_type = 'System'")
         cu.execute("ALTER TABLE jobs_job_type ALTER resource_type SET NOT NULL")
         return True
+        
+    def migrate31(self):
+        cu = self.db.cursor()
+        cu.execute("""ALTER TABLE jobs_job_type RENAME COLUMN event_type_id TO job_type_id""")
+        cu.execute("""ALTER TABLE jobs_job RENAME COLUMN event_type_id TO job_type_id REFERENCES jobs_job_type"""
+        cu.execute("""ALTER TABLE inventory_system_event RENAME COLUMN event_type_id TO job_type_id REFERENCES jobs_job_type"""
+        return True        
+
 
     def migrate31(self):
         cu = self.db.cursor()
