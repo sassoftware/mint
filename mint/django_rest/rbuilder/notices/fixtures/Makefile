@@ -5,7 +5,8 @@
 #
 
 # These fixtures files aren't py files, but they get installed the same way.
-python_files = $(wildcard *.xml)
+# Uncomment when we have fixtures to deploy
+#python_files = $(wildcard *.xml)
 
 all: default-all
 
