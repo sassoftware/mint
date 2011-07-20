@@ -200,8 +200,8 @@ class UsersTable(database.KeyedTable):
                               blurb = blurb,
                               active = int(active))
 
-            cu.execute("INSERT INTO UserGroupMembers VALUES(?,?)", userGroupId,
-                       userId)
+            cu.execute("""INSERT INTO UserGroupMembers (usergroupid, userid)
+                    VALUES(?,?)""", userGroupId, userId)
             cu.execute("""SELECT userGroupId FROM UserGroups
                               WHERE userGroup='public'""")
             # FIXME, just skip the public group if it's not there.
@@ -209,8 +209,8 @@ class UsersTable(database.KeyedTable):
                 pubGroupId = cu.fetchone()[0]
             except:
                 raise AssertionError("There's no public group!")
-            cu.execute("INSERT INTO UserGroupMembers VALUES(?,?)", pubGroupId,
-                       userId)
+            cu.execute("""INSERT INTO UserGroupMembers (usergroupid, userid)
+                    VALUES(?,?)""", pubGroupId, userId)
 
             if self.cfg.sendNotificationEmails and not active:
                 confirm = confirmString()
