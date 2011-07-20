@@ -23,8 +23,10 @@ AUTHENTICATION_BACKENDS = (
 MIDDLEWARE_CLASSES = MIDDLEWARE_CLASSES + \
     ('mint.django_rest.middleware.LocalQueryParameterMiddleware',)
 
-MIDDLEWARE_CLASSES = MIDDLEWARE_CLASSES + \
-    ('mint.django_rest.middleware.LocalSetMintAdminMiddleware',)
+# Commented out misa 2011-07-20 - adding this middleware breaks the test
+# suite, so make sure you know what you're doing
+#MIDDLEWARE_CLASSES = MIDDLEWARE_CLASSES + \
+#    ('mint.django_rest.middleware.LocalSetMintAdminMiddleware',)
 
 installedAppsList = list(INSTALLED_APPS)
 installedAppsList.append('mint.django_rest.sdk_builder')

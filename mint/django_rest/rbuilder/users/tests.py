@@ -41,9 +41,9 @@ class UsersTestCase(XMLTestCase):
 
     def testGetUsers(self):
         users = models.Users.objects.all()
-        users_gotten = 	models.Users.objects.all()
+        users_gotten = self.xobjResponse('users')
         self.assertEquals(len(list(users)), len(users_gotten))
-        
+
     def testGetUser(self):
         user = models.User.objects.get(pk=1)
         user_gotten = self.xobjResponse('users/1')
@@ -52,7 +52,7 @@ class UsersTestCase(XMLTestCase):
 
     @classmethod
     def _mungePassword(cls, password):
-        salt = '0' * 4
+        salt = '\000' * 4
         m = digestlib.md5()
         m.update(salt)
         m.update(password)
