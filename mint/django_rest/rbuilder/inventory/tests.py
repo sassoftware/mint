@@ -1871,7 +1871,7 @@ class SystemsTestCase(XMLTestCase):
         system.save()
         # Create a job
         eventType = self.mgr.sysMgr.eventType(jobmodels.EventType.SYSTEM_REGISTRATION)
-        job = jobmodels.Job(job_uuid = 'rmakeuuid001', event_type=eventType,
+        job = jobmodels.Job(job_uuid = 'rmakeuuid001', job_type=eventType,
             job_state=self.mgr.sysMgr.jobState(jobmodels.JobState.RUNNING))
         job.save()
         systemJob = models.SystemJob(system=system, job=job,
@@ -1937,7 +1937,7 @@ class SystemsTestCase(XMLTestCase):
 
         # Create a job
         eventType = self.mgr.sysMgr.eventType(jobmodels.EventType.SYSTEM_REGISTRATION)
-        job = jobmodels.Job(job_uuid = 'rmakeuuid001', event_type=eventType,
+        job = jobmodels.Job(job_uuid = 'rmakeuuid001', job_type=eventType,
             job_state=self.mgr.sysMgr.jobState(jobmodels.JobState.RUNNING))
         job.save()
         systemJob = models.SystemJob(system=system1, job=job,
@@ -2043,7 +2043,7 @@ class SystemsTestCase(XMLTestCase):
         # Create a job
         eventType = jobmodels.EventType.objects.get(
             name = jobmodels.EventType.SYSTEM_POLL)
-        job = jobmodels.Job(job_uuid=jobUuid, event_type=eventType,
+        job = jobmodels.Job(job_uuid=jobUuid, job_type=eventType,
             job_state=self.mgr.sysMgr.jobState(jobmodels.JobState.RUNNING))
         job.save()
         systemJob = models.SystemJob(system=system, job=job,
@@ -2213,7 +2213,7 @@ class SystemsTestCase(XMLTestCase):
         system.save()
         # Create a job
         eventType = self.mgr.sysMgr.eventType(jobmodels.EventType.SYSTEM_REGISTRATION)
-        job = jobmodels.Job(job_uuid = 'rmakeuuid001', event_type=eventType,
+        job = jobmodels.Job(job_uuid = 'rmakeuuid001', job_type=eventType,
             job_state=self.mgr.sysMgr.jobState(jobmodels.JobState.RUNNING))
         job.save()
         systemJob = models.SystemJob(system=system, job=job,
@@ -2655,7 +2655,7 @@ class SystemStateTestCase(XMLTestCase):
             job.job_state = jobState
             ret = self.mgr.sysMgr.getNextSystemState(system, job)
             msg = "Job %s (%s; %s): %s -> %s (expected: %s)" % (
-                (job.event_type.name, jobState.name, job.status_code,
+                (job.job_type.name, jobState.name, job.status_code,
                  oldState, ret, newState))
             self.failUnlessEqual(ret, newState, msg)
 
@@ -2697,7 +2697,7 @@ class SystemStateTestCase(XMLTestCase):
             job.job_state = jobState
             ret = self.mgr.sysMgr.getNextSystemState(system, job)
             msg = "Job %s (%s): %s -> %s (expected: %s)" % (
-                (job.event_type.name, jobState.name, oldState, ret, newState))
+                (job.job_type.name, jobState.name, oldState, ret, newState))
             self.failUnlessEqual(ret, newState, msg)
 
 
@@ -3309,7 +3309,7 @@ class SystemEventTestCase(XMLTestCase):
             system = event.system
             job = jobmodels.Job(job_uuid=str(random.random()),
                 job_state=jobmodels.JobState.objects.get(name='Running'),
-                event_type=event.event_type)
+                job_type=event.event_type)
             job.save()
             systemJob = models.SystemJob(job=job, system=system,
                 event_uuid=str(random.random()))

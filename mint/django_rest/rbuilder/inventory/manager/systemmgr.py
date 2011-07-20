@@ -618,7 +618,7 @@ class SystemManager(basemanager.BaseManager):
         if not sjobs:
             return
         job = sjobs[0].job
-        if job.event_type.name != job.event_type.SYSTEM_REGISTRATION:
+        if job.job_type.name != job.job_type.SYSTEM_REGISTRATION:
             return
         # We came back from a registration. Schedule an immediate system poll.
         self.scheduleSystemPollNowEvent(system)
@@ -766,7 +766,7 @@ class SystemManager(basemanager.BaseManager):
     def getNextSystemState(self, system, job):
         # Return None if the state hasn't changed
         jobStateName = job.job_state.name
-        eventTypeName = job.event_type.name
+        eventTypeName = job.job_type.name
         if jobStateName == jobmodels.JobState.COMPLETED:
             if eventTypeName in self.RegistrationEvents:
                 # We don't trust that a registration action did anything, we
@@ -1123,7 +1123,7 @@ class SystemManager(basemanager.BaseManager):
 
     def checkEventCompatibility(self, event):
         runningJobs = event.system.jobs.filter(job_state__name=jobmodels.JobState.RUNNING) 
-        runningEventTypes = [j.event_type.name for j in runningJobs]
+        runningEventTypes = [j.job_type.name for j in runningJobs]
 
         # Event types are incompatible with themselves
         if event.event_type.name in runningEventTypes:
@@ -1380,7 +1380,7 @@ class SystemManager(basemanager.BaseManager):
             (systemName, params.host, uuid, eventType))
         job = jobmodels.Job()
         job.job_uuid = str(uuid)
-        job.event_type = event.event_type
+        job.job_type = event.event_type
         job.job_state = cls.jobState(jobmodels.JobState.RUNNING)
         job.save()
 

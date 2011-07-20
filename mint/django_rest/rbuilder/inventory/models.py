@@ -885,8 +885,8 @@ class SystemEvent(modellib.XObjIdModel):
     system_event_id = models.AutoField(primary_key=True)
     system = modellib.DeferredForeignKey(System, db_index=True,
         related_name='system_events')
-    job_type = modellib.DeferredForeignKey(jobmodels.EventType,
-        related_name='system_events')
+    event_type = modellib.DeferredForeignKey(jobmodels.EventType,
+        related_name='system_events', db_column='job_type_id')
     time_created = modellib.DateTimeUtcField(auto_now_add=True)
     time_enabled = modellib.DateTimeUtcField(
         default=datetime.datetime.now(tz.tzutc()), db_index=True)
@@ -894,7 +894,7 @@ class SystemEvent(modellib.XObjIdModel):
     event_data = models.TextField(null=True)
 
     def dispatchImmediately(self):
-        return self.job_type.priority >= jobmodels.EventType.ON_DEMAND_BASE
+        return self.event_type.priority >= jobmodels.EventType.ON_DEMAND_BASE
 
     def get_absolute_url(self, request, parents=None, *args, **kwargs):
         if parents:
@@ -907,7 +907,7 @@ class SystemEvent(modellib.XObjIdModel):
 
     def save(self, *args, **kw):
         if not self.priority:
-            self.priority = self.job_type.priority
+            self.priority = self.event_type.priority
         modellib.XObjIdModel.save(self, *args, **kw)
 
 class Network(modellib.XObjIdModel):
