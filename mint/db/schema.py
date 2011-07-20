@@ -104,12 +104,13 @@ def _createUsers(db):
             userGroupId         integer         NOT NULL
                 REFERENCES UserGroups ON DELETE CASCADE,
             userId              integer         NOT NULL
-                REFERENCES Users ON DELETE CASCADE,
-
-            UNIQUE ( userGroupId, userId )
+                REFERENCES Users ON DELETE CASCADE
         ) %(TABLEOPTS)s""" % db.keywords)
         db.tables['UserGroupMembers'] = []
         changed = True
+    changed | = db.createdIndex('UserGroupMembers', 'UserGroupMembersIdx',
+                'userGroupId, userId', unique = True)         
+        
 
     if 'Confirmations' not in db.tables:
         cu.execute("""
