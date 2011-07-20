@@ -71,7 +71,8 @@ class rBuilderBackend(object):
     def authenticate(self, username=None, password=None):
         try:
        	    user = User.objects.get(user_name=username)
-            m = md5(user.salt + password)
+            salt = user.salt.decode('hex')
+            m = md5(salt + password)
             if (m.hexdigest() == user.passwd):
        	        return user
         except User.DoesNotExist:

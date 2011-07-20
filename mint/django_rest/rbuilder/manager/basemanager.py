@@ -63,10 +63,7 @@ class BaseRbuilderManager(object):
         if userName is None:
             self.user = None
         else:
-            # The salt field contains binary data that blows django's little
-            # mind when it tries to decode it as UTF-8. Since we don't need it
-            # here, defer the loading of that column
-            self.user = usersmodels.User.objects.defer("salt").get(user_name=userName)
+            self.user = usersmodels.User.objects.get(user_name=userName)
 
         # We instantiate _restDb lazily
         self._restDb = None

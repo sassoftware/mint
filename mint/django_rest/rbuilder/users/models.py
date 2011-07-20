@@ -53,7 +53,7 @@ class User(modellib.XObjIdModel):
     full_name = models.CharField(max_length=128, db_column='fullname')
     # salt and password should be hidden, users shouldn't see crypted
     # passwords
-    salt = modellib.XObjHidden(models.TextField(null=True)) # This field type is a guess.
+    salt = modellib.XObjHidden(models.TextField(null=True))
     passwd = modellib.XObjHidden(models.CharField(max_length=254))
     email = models.CharField(max_length=128)
     display_email = models.TextField(db_column='displayemail')
@@ -107,20 +107,6 @@ class User(modellib.XObjIdModel):
         # Unfortunately we don't have boolean synthetic fields yet, so
         # let's save the string representation of it
         self.is_admin = str(bool(isAdmin)).lower()
-
-    def save(self):
-        # Omit the salt field
-        localFields = self._meta.local_fields
-        neuteredFields = getattr(self._meta, 'neuteredLocalFields', None)
-        if neuteredFields is None:
-            neuteredFields = [ x for x in localFields if x.name != 'salt' ]
-            self._meta.neuteredLocalFields = neuteredFields
-
-        try:
-            self._meta.local_fields = neuteredFields
-            return super(User, self).save()
-        finally:
-            self._meta.local_fields = localFields
 
     def computeSyntheticFields(self, sender, **kwargs):
         if self.pk is not None:

@@ -2949,7 +2949,7 @@ class MigrateTo_57(SchemaMigration):
 
 
 class MigrateTo_58(SchemaMigration):
-    Version = (58, 33)
+    Version = (58, 34)
 
     def migrate(self):
         return True
@@ -3320,7 +3320,13 @@ class MigrateTo_58(SchemaMigration):
                 ADD COLUMN userGroupMemberId SERIAL PRIMARY KEY""")
         self.db.createIndex('UserGroupMembers', 'UserGroupMembersIdx',
             'userGroupId, userId', unique = True)
-        return True           
+        return True
+
+    def migrate34(self):
+        cu = self.db.cursor()
+        cu.execute("""ALTER TABLE users ALTER salt
+                TYPE text USING encode(salt, 'hex')""")
+        return True
 
 
 def _createUpdateSystemsQuerySet(db):

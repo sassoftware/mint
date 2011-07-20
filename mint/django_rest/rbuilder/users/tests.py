@@ -56,7 +56,7 @@ class UsersTestCase(XMLTestCase):
         m = digestlib.md5()
         m.update(salt)
         m.update(password)
-        return salt, m.hexdigest()
+        return salt.encode('hex'), m.hexdigest()
 
     def mockMint(self):
         class FakeUsers(object):
@@ -103,7 +103,7 @@ class UsersTestCase(XMLTestCase):
         self.assertEquals(u'Dan Cohn', user_posted.full_name)
         self.failUnlessEqual(user_posted.user_id, '2001')
         user = models.User.objects.get(user_name=user_posted.user_name)
-        self.failUnlessEqual(user.salt, '0' * 4)
+        self.failUnlessEqual(user.salt, '0' * 8)
         self.failUnlessEqual(user.getIsAdmin(), False)
 
         # Try again
@@ -160,7 +160,7 @@ class UsersTestCase(XMLTestCase):
             username='admin', password='password')
         self.assertEquals(response.status_code, 200)
         user = models.User.objects.get(pk=1)
-        self.failUnlessEqual(user.salt, '0' * 4)
+        self.failUnlessEqual(user.salt, '0' * 8)
 
         # This is still using the old password, should fail
         xml = "<user><full_name>blabbedy</full_name></user>"
@@ -206,7 +206,7 @@ class UsersTestCase(XMLTestCase):
             username='testuser', password='password')
         self.assertEquals(response.status_code, 200)
         user = models.User.objects.get(pk=user.user_id)
-        self.failUnlessEqual(user.salt, '0' * 4)
+        self.failUnlessEqual(user.salt, '0' * 8)
 
         # This is still using the old password, should fail
         xml = "<user><full_name>blabbedy</full_name></user>"

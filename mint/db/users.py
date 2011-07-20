@@ -53,29 +53,24 @@ class UsersTable(database.KeyedTable):
         self.cfg = cfg
         database.DatabaseTable.__init__(self, db)
         self.confirm_table = ConfirmationsTable(db)
-        # not passing a db object since a mint db isn't correct
-        # and we're only using the _checkPassword function anyway
-        self._userAuth = repository.netrepos.netauth.UserAuthorization(
-            db = None, pwCheckUrl = self.cfg.externalPasswordURL,
-            cacheTimeout = self.cfg.authCacheTimeout)
 
     def changePassword(self, username, password):
         salt, passwd = self._mungePassword(password)
         cu = self.db.cursor()
         cu.execute("UPDATE Users SET salt=?, passwd=? WHERE username=?",
-                   cu.binary(salt), passwd, username)
+                   salt, passwd, username)
         self.db.commit()
 
     def _checkPassword(self, user, salt, password, challenge):
-        return self._userAuth._checkPassword( \
-                user, salt, password, challenge)
+        m = md5(salt.decode('hex') + challenge)
+        return m.hexdigest() == password
 
     def _mungePassword(self, password):
         m = md5()
         salt = os.urandom(4)
         m.update(salt)
         m.update(password)
-        return salt, m.hexdigest()
+        return salt.encode('hex'), m.hexdigest()
 
     def _getUserGroups(self, authToken):
         user, challenge = authToken
@@ -191,7 +186,7 @@ class UsersTable(database.KeyedTable):
 
             userId = self.new(username = username,
                               fullName = fullName,
-                              salt = cu.binary(salt),
+                              salt = salt,
                               passwd = passwd,
                               email = email,
                               displayEmail = displayEmail,

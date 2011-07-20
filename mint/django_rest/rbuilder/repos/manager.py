@@ -120,10 +120,10 @@ class ReposManager(basemanager.BaseManager):
         reposServer = repos.getShimServer()
         role = self._getRoleForLevel(reposServer, level)
         try:
-            reposServer.auth.addUserByMD5(username, salt, password)
+            reposServer.auth.addUserByMD5(username, salt.decode('hex'), password)
         except reposerrors.UserAlreadyExists:
             reposServer.auth.deleteUserByName(username, deleteRole=False)
-            reposServer.auth.addUserByMD5(username, salt, password)
+            reposServer.auth.addUserByMD5(username, salt.decode('hex'), password)
         reposServer.auth.setUserRoles(username, [role])
 
     def addUser(self, repos, username, password, level):

@@ -12,7 +12,7 @@
   <object pk="1" model="users.user">
     <field type="CharField" name="user_name">admin</field>
     <field type="CharField" name="full_name">Administrator</field>
-    <field type="TextField" name="salt">\\256\\303\\325B)</field>
+    <field type="TextField" name="salt">aec3d54229</field>
     <field type="CharField" name="passwd">f0ae519bbcac24795abf2c2aa5414ed0</field>
     <field type="CharField" name="email">admin@rpath.com</field>
     <field type="TextField" name="display_email"></field>
@@ -24,7 +24,7 @@
   <object pk="2000" model="users.user">
     <field type="CharField" name="user_name">testuser</field>
     <field type="CharField" name="full_name">Test User</field>
-    <field type="TextField" name="salt">\\256\\303\\325B)</field>
+    <field type="TextField" name="salt">aec3d54229</field>
     <field type="CharField" name="passwd">f0ae519bbcac24795abf2c2aa5414ed0</field>
     <field type="CharField" name="email">testuser@rpath.com</field>
     <field type="TextField" name="display_email"></field>

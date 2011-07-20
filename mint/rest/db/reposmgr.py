@@ -116,10 +116,10 @@ class RepositoryManager(manager.Manager):
         repos = self._getRepositoryServer(fqdn)
         role = self._getRoleForLevel(repos, level)
         try:
-            repos.auth.addUserByMD5(username, salt, password)
+            repos.auth.addUserByMD5(username, salt.decode('hex'), password)
         except reposerrors.UserAlreadyExists:
             repos.auth.deleteUserByName(username, deleteRole=False)
-            repos.auth.addUserByMD5(username, salt, password)
+            repos.auth.addUserByMD5(username, salt.decode('hex'), password)
         repos.auth.setUserRoles(username, [role])
 
     def addUser(self, fqdn, username, password, level):

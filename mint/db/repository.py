@@ -547,6 +547,7 @@ class RepositoryHandle(object):
             row = cu.fetchone()
             if row:
                 maybeLevel, maybeUserId, userSalt, userPass = row
+                userSalt = userSalt.decode('hex')
                 passwordOK = False
                 if mintToken.password is ValidPasswordToken:
                     passwordOK = True
@@ -743,10 +744,10 @@ class RepositoryHandle(object):
     @withNetServer
     def addUserByMD5(self, repos, username, salt, password, roles=None):
         try:
-            repos.auth.addUserByMD5(username, salt, password)
+            repos.auth.addUserByMD5(username, salt.decode('hex'), password)
         except reposerrors.UserAlreadyExists:
             repos.auth.deleteUserByName(username, deleteRole=False)
-            repos.auth.addUserByMD5(username, salt, password)
+            repos.auth.addUserByMD5(username, salt.decode('hex'), password)
         repos.auth.setUserRoles(username, roles or [])
 
     @withNetServer

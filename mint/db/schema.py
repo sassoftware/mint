@@ -28,7 +28,7 @@ from conary.dbstore import sqlerrors, sqllib
 log = logging.getLogger(__name__)
 
 # database schema major version
-RBUILDER_DB_VERSION = sqllib.DBversion(58, 33)
+RBUILDER_DB_VERSION = sqllib.DBversion(58, 34)
 
 
 def _createTrigger(db, table, column = "changed"):
@@ -60,7 +60,7 @@ def _createUsers(db):
             userId              %(PRIMARYKEY)s,
             username            varchar(128)    NOT NULL    UNIQUE,
             fullName            varchar(128)    NOT NULL    DEFAULT '',
-            salt                %(BINARY4)s,
+            salt                text,
             passwd              varchar(254),
             email               varchar(128),
             displayEmail        text,
