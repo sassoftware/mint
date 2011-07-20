@@ -106,7 +106,7 @@ dbPath              %(dbpath)s
         views.BaseInventoryService._setMintAuth = lambda *args: None
 
         # Default to 10 items per page in the tests
-        import settings
+        from django.conf import settings
         settings.PER_PAGE = 10
         return TestCase.setUp(self)
 
