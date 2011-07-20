@@ -2949,7 +2949,7 @@ class MigrateTo_57(SchemaMigration):
 
 
 class MigrateTo_58(SchemaMigration):
-    Version = (58, 34)
+    Version = (58, 35)
 
     def migrate(self):
         return True
@@ -3327,6 +3327,19 @@ class MigrateTo_58(SchemaMigration):
         cu.execute("""ALTER TABLE users ALTER salt
                 TYPE text USING encode(salt, 'hex')""")
         return True
+        
+    def migrate35(self):
+        # Add a serial primary key, drop the old pk, add it as unique for targetdata table
+        cu = self.db.cursor()
+        cu.execute("""
+            ALTER TABLE TargetData
+                DROP CONSTRAINT targetdata_pkey""")
+        cu.execute("""
+            ALTER TABLE TargetData
+                ADD COLUMN targetdataId SERIAL PRIMARY KEY""")
+        self.db.createIndex('TargetData', 'TargetDataIdx',
+            'targetId, name', unique = True)                 
+        return True        
 
 
 def _createUpdateSystemsQuerySet(db):

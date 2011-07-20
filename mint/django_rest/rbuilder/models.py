@@ -103,6 +103,8 @@ class Targets(modellib.XObjModel):
 class TargetData(modellib.XObjModel):
     class Meta:
         db_table = u'targetdata'
+        
+    targetdata_id = models.AutoField(primary_key=True, db_column='targetdataid')    
     target_id = models.ForeignKey(Targets, db_column="targetid")
     name = models.CharField(max_length=255, null=False)
     value = models.TextField()

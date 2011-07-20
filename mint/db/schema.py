@@ -28,7 +28,7 @@ from conary.dbstore import sqlerrors, sqllib
 log = logging.getLogger(__name__)
 
 # database schema major version
-RBUILDER_DB_VERSION = sqllib.DBversion(58, 34)
+RBUILDER_DB_VERSION = sqllib.DBversion(58, 35)
 
 
 def _createTrigger(db, table, column = "changed"):
@@ -81,7 +81,6 @@ def _createUsers(db):
             name                varchar(32)     NOT NULL,
             value               text,
             dataType            integer,
-
             PRIMARY KEY ( userId, name )
         ) %(TABLEOPTS)s""" % db.keywords)
         db.tables['UserData'] = []
@@ -682,15 +681,16 @@ def _createTargets(db):
     if 'TargetData' not in db.tables:
         cu.execute("""
             CREATE TABLE TargetData (
+                targetdataId    %(PRIMARYKEY)s,   
                 targetId        integer             NOT NULL
                     REFERENCES Targets ON DELETE CASCADE,
                 name            varchar(255)        NOT NULL,
-                value           text,
-
-                PRIMARY KEY ( targetId, name )
+                value           text
             ) %(TABLEOPTS)s """ % db.keywords)
         db.tables['TargetData'] = []
         changed = True
+    changed |= db.createIndex('TargetData', 'TargetDataIdx',
+            'targetId, name', unique = True)        
 
     changed |= createTable(db, 'TargetCredentials', """
             CREATE TABLE TargetCredentials (
