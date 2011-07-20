@@ -35,12 +35,25 @@ class Action(modellib.XObjModel):
     description = models.TextField()
     descriptor = modellib.SyntheticField()
 
-    def serialize(self, request=None):
+
+class Actionable(object):
+    """
+    Mixin that allows dynamically computed actions
+    """
+    def getActions(self, request, model):
         path = request.path if request else ''
-        xobj_model = modellib.XObjModel.serialize(self, request)
-        xobj_model._xobj.id['id'] = str
-        xobj_model.id = '/'.join([path, self.type])
-        return xobj_model
+        actions = Actions()
+        try:
+            actions.action = self.computeActions(model)
+        except NotImplementedError:
+            actions.action = []
+        return actions
+
+    def computeActions(self, model):
+        """
+        returns a list of actions instances available
+        """
+        raise NotImplementedError
 
 
 class Jobs(modellib.Collection):

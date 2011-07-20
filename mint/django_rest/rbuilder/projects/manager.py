@@ -437,3 +437,13 @@ class ProjectManager(basemanager.BaseManager):
         else:
             stages.project_branch_stage = models.Stage.objects.all()
         return stages
+
+    @exposed
+    def getImage(self, short_name, image_id):
+        return projectsmodels.Image.objects.get(pk=image_id)
+        
+    @exposed
+    def getImages(self, short_name, image_id):
+        Images = projectsmodels.Images()
+        Images.image = projectsmodels.Image.all().filter(short_name=short_name)
+        return Images

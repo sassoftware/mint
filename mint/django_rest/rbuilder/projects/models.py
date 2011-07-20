@@ -85,6 +85,8 @@ class Project(modellib.XObjIdModel):
     password = modellib.SyntheticField()
     entitlement = modellib.SyntheticField()
 
+    actions = modellib.SyntheticField()
+
     load_fields = [ short_name ]
 
     _ApplianceTypes = set([ "Appliance", "PlatformFoundation", ])
@@ -276,7 +278,6 @@ class Stage(modellib.XObjIdModel):
         xobjModel = modellib.XObjIdModel.serialize(self, request)
         return xobjModel
 
-
     
 class Release(modellib.XObjModel):
     class Meta:
@@ -310,6 +311,15 @@ class Release(modellib.XObjModel):
         blank=True, default=0)
     time_mirrored = models.DecimalField(max_digits=14, decimal_places=3,
         null=True, db_column='timemirrored')
+               
+             
+class Images(modellib.Collection):
+    class Meta:
+        abstract = True
+        
+    list_fields = ['image']
+    _xobj = xobj.XObjMetadata(tag='images')
+             
                
 class Image(modellib.XObjIdModel):
     class Meta:
@@ -360,6 +370,8 @@ class Image(modellib.XObjIdModel):
     status = models.IntegerField(null=True, default=-1)
     status_message = models.TextField(null=True, blank=True, default='',
         db_column="statusmessage")
+    actions = modellib.SyntheticField()
+
 
 class Downloads(modellib.XObjModel):
     class Meta:
