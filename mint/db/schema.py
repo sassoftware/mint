@@ -2349,6 +2349,63 @@ def _createChangeLogSchema(db):
 
     return changed
 
+def _createDjangoSchema(db):
+    # before edge, django would just go out by itself to create its
+    # tables.
+    # we need to do it here. There is no migration needed for old
+    # schema versions.
+    changed = False
+    changed |= createTable(db, 'django_content_type', """
+        CREATE TABLE django_content_type (
+            id          %(PRIMARYKEY)s,
+            name        VARCHAR(100) NOT NULL,
+            app_label   VARCHAR(100) NOT NULL,
+            model       VARCHAR(100) NOT NULL
+        )""")
+    changed |= createTable(db, 'django_site', """
+        CREATE TABLE django_site (
+            id          %(PRIMARYKEY)s,
+            domain      VARCHAR(100) NOT NULL,
+            name        VARCHAR(100) NOT NULL
+    )""")
+    changed |= createTable(db, 'django_session', """
+        CREATE TABLE django_session (
+            session_key VARCHAR(40) NOT NULL PRIMARY KEY,
+            session_data    TEXT NOT NULL,
+            expire_date TIMESTAMP WITH TIME ZONE NOT NULL
+    )""")
+    changed |= createTable(db, 'django_redirect', """
+        CREATE TABLE django_redirect (
+            id          %(PRIMARYKEY)s,
+            site_id     INTEGER NOT NULL
+                        REFERENCES django_site(id),
+            old_path    VARCHAR(200) NOT NULL,
+            new_path    VARCHAR(200) NOT NULL
+    )""")
+    changed |= createTable(db, 'auth_permission', """
+        CREATE TABLE auth_permission (
+            id          %(PRIMARYKEY)s,
+            name        VARCHAR(50) NOT NULL,
+            content_type_id INTEGER NOT NULL
+                        REFERENCES django_content_type(id),
+            codename    VARCHAR(100) NOT NULL
+    )""")
+    changed |= createTable(db, 'auth_user', """
+        CREATE TABLE auth_user (
+            id          %(PRIMARYKEY)s,
+            username    VARCHAR(30) NOT NULL,
+            first_name  VARCHAR(30) NOT NULL,
+            last_name   VARCHAR(30) NOT NULL,
+            email       VARCHAR(75) NOT NULL,
+            password    VARCHAR(128) NOT NULL,
+            is_staff    BOOLEAN NOT NULL,
+            is_active   BOOLEAN NOT NULL,
+            is_superuser    BOOLEAN NOT NULL,
+            last_login TIMESTAMP WITH TIME ZONE NOT NULL,
+            date_joined TIMESTAMP WITH TIME ZONE NOT NULL
+    )""")
+    return changed
+
 def _createPackageSchema(db):
     """Package tables"""
     changed = False
@@ -2658,6 +2715,7 @@ def createSchema(db, doCommit=True, cfg=None):
     changed |= _createAllProjects(db)
     changed |= _createChangeLogSchema(db)
     changed |= _createPackageSchema(db)
+    changed |= _createDjangoSchema(db)
 
     if doCommit:
         db.commit()

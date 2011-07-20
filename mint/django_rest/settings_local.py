@@ -9,10 +9,11 @@ ROOT_URLCONF = 'mint.django_rest.urls_local'
 
 # Override individual options
 DEBUG = True
-DATABASES['default']['ENGINE'] = 'django.db.backends.sqlite3'
-DATABASES['default']['NAME'] = os.environ.get('MINT_LOCAL_DB',
-    os.path.realpath('../mint-local.db'))
-TEST_DATABASE_NAME = os.path.realpath('../test-mint-local.db')
+DATABASES['default'].update(
+    ENGINE = 'django.db.backends.sqlite3',
+    NAME = os.environ.get('MINT_LOCAL_DB', os.path.realpath('../mint-local.db')),
+    TEST_NAME =  os.path.realpath('../test-mint-local.db'),
+)
 
 AUTHENTICATION_BACKENDS = (
     'mint.django_rest.rbuilder.auth.rBuilderBackend',
@@ -29,3 +30,4 @@ installedAppsList = list(INSTALLED_APPS)
 installedAppsList.append('mint.django_rest.sdk_builder')
 INSTALLED_APPS = tuple(installedAppsList)
 
+TEST_RUNNER = "mint.django_rest.test_utils.TestRunner"

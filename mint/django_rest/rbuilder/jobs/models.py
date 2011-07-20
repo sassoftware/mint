@@ -94,7 +94,8 @@ class Job(modellib.XObjIdModel):
 
     objects = modellib.JobManager()
 
-    job_id = D(models.AutoField(primary_key=True),
+    # The URL will contain the UUID, so there's no point in exposing job_id
+    job_id = D(XObjHidden(models.AutoField(primary_key=True)),
         "the database id of the job")
     job_uuid = D(models.CharField(max_length=64, unique=True),
         "a UUID for job tracking purposes")
@@ -107,19 +108,17 @@ class Job(modellib.XObjIdModel):
         "the message associated with the current status")
     status_detail = D(XObjHidden(models.TextField(null=True)),
         "documentation missing")
-    event_type = D(APIReadOnly(modellib.DeferredForeignKey("EventType",
+    job_type = D(APIReadOnly(modellib.DeferredForeignKey("EventType",
         text_field='name', related_name="jobs", null=False)),
-        "documentation missing")
-    descriptor = D(models.TextField(null=True),
-        " ")  
-    descriptor_data = D(models.TextField(null=True),
-        " ")              
+        "The job type")
+    descriptor = D(XObjHidden(models.TextField(null=True)),
+        " ")
+    descriptor_data = D(XObjHidden(models.TextField(null=True)),
+        " ")
     time_created = D(modellib.DateTimeUtcField(auto_now_add=True),
         "the date the job was created (UTC)")
     time_updated =  D(modellib.DateTimeUtcField(auto_now_add=True),
         "the date the job was updated (UTC)")
-    job_type = D(modellib.SyntheticField(),
-        "the job type")
     job_description = D(modellib.SyntheticField(),
         "a description of the job")
 
@@ -168,16 +167,13 @@ class Job(modellib.XObjIdModel):
         return modellib.XObjIdModel.get_absolute_url(self, request,
             parents=parents, *args, **kwargs)
 
+    def get_url_key(self, *args, **kwargs):
+        return [ self.job_uuid ]
+
     def serialize(self, request=None):
         xobj_model = modellib.XObjIdModel.serialize(self, request)
         self.setValuesFromRmake()
-        # Get rid of event_type in favor of job_type
-        if self.event_type:
-            eventType =  modellib.Cache.get(self.event_type.__class__,
-                pk=self.event_type_id)
-            xobj_model.job_type = eventType.name
-            xobj_model.job_description = eventType.description
-        xobj_model.event_type = None
+        xobj_model.job_description = self.job_type.description
         return xobj_model
 
 class JobStates(modellib.Collection):
@@ -198,6 +194,7 @@ class JobState(modellib.XObjIdModel):
     
     class Meta:
         db_table = "jobs_job_state"
+        managed = False
     QUEUED = "Queued"
     RUNNING = "Running"
     COMPLETED = "Completed"
@@ -236,6 +233,7 @@ class EventType(modellib.XObjIdModel):
     
     class Meta:
         db_table = 'jobs_job_type'
+        managed = False
     _xobj = xobj.XObjMetadata(tag='event_type')
     
      # hide jobs, see https://issues.rpath.com/browse/RBL-7151

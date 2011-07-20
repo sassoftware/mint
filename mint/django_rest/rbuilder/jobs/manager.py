@@ -17,8 +17,8 @@ class JobManager(basemanager.BaseManager):
         return self._jobsFromIterator(models.Job.objects.all())
 
     @exposed
-    def getJob(self, job_id):
-        return self._fillIn(models.Job.objects.get(pk=job_id))
+    def getJob(self, job_uuid):
+        return self._fillIn(models.Job.objects.get(job_uuid=job_uuid))
 
     @exposed
     def updateJob(self, jobId, job):

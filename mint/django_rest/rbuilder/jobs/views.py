@@ -13,12 +13,12 @@ class JobsService(service.BaseService):
     
     @access.anonymous
     @return_xml
-    def rest_GET(self, request, job_id=None):
-        return self.get(job_id)
+    def rest_GET(self, request, job_uuid=None):
+        return self.get(job_uuid=job_uuid)
 
-    def get(self, job_id):
-        if job_id:
-            return self.mgr.getJob(job_id)
+    def get(self, job_uuid):
+        if job_uuid:
+            return self.mgr.getJob(job_uuid=job_uuid)
         else:
             return self.mgr.getJobs()
 
@@ -29,11 +29,11 @@ class JobsService(service.BaseService):
 
     @requires("job")
     @return_xml
-    def rest_PUT(self, job_id, job):
-        return self.mgr.updateJob(job_id, job)
+    def rest_PUT(self, job_uuid, job):
+        return self.mgr.updateJob(job_uuid, job)
 
-    def rest_DELETE(self, job_id):
-        self.mgr.deleteJob(job_id)
+    def rest_DELETE(self, job_uuid):
+        self.mgr.deleteJob(job_uuid)
         response = HttpResponse(status=204)
         return response
 

@@ -5,7 +5,7 @@
 # All rights reserved.
 #
 
-from mint.django_rest.rbuilder.inventory.tests import XMLTestCase
+from mint.django_rest.test_utils import XMLTestCase
 
 from mint.django_rest.rbuilder.jobs import models
 from mint.django_rest.rbuilder.jobs import testsxml
@@ -56,7 +56,7 @@ class JobsTestCase(BaseJobsTest):
         self.assertXMLEquals(response.content, testsxml.job_states_xml)
 
     def testGetJob(self):
-        response = self._get('jobs/1/')
+        response = self._get('jobs/rmakeuuid001/')
         self.assertEquals(response.status_code, 200)
         self.assertXMLEquals(response.content, testsxml.job_xml)
 
