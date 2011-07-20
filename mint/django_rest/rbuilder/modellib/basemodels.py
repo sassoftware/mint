@@ -1466,6 +1466,14 @@ class XMLField(models.TextField):
     a field as containing XML
     """
 
+class DecimalField(models.DecimalField):
+    def to_python(self, value):
+        # Django's default is to try to pass a float to decimal.Decimal,
+        # and that explodes
+        if isinstance(value, float):
+            value = str(value)
+        return models.DecimalField.to_python(self, value)
+
 class DateTimeUtcField(models.DateTimeField):
     """
     Like a DateTimeField, but default to using a datetime value that is set to
