@@ -440,10 +440,10 @@ class ProjectManager(basemanager.BaseManager):
 
     @exposed
     def getImage(self, short_name, image_id):
-        return projectsmodels.Image.objects.get(pk=image_id)
+        return models.Image.objects.get(pk=image_id)
         
     @exposed
     def getImages(self, short_name, image_id):
-        Images = projectsmodels.Images()
-        Images.image = projectsmodels.Image.all().filter(short_name=short_name)
+        Images = models.Images()
+        Images.image = models.Image.all().filter(short_name=short_name)
         return Images
