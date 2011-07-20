@@ -1800,8 +1800,12 @@ class SystemsTestCase(XMLTestCase):
 
         # Create a job
         cu = connection.cursor()
-        cu.execute("INSERT INTO jobs (job_uuid) VALUES (%s)",
-            [ bootUuid ])
+        now = self.mgr.sysMgr.now()
+        cu.execute("""
+            INSERT INTO jobs (job_uuid, job_type_id, job_state_id, created_by,
+                created, modified)
+            VALUES (%s, %s, %s, %s, %s, %s)""",
+            [ bootUuid, 1, 1, 1, now, now])
         jobId = cu.lastrowid
 
         # Pretend that this job launched 2 systems (the way ec2 can do)
