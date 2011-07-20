@@ -13,6 +13,7 @@ import urlparse
 
 from conary import dbstore
 from conary.lib import util
+from django.core.management import call_command
 from django.db import connections, DEFAULT_DB_ALIAS
 from django.test.client import Client, FakePayload
 from django.test import TestCase
@@ -29,6 +30,10 @@ from mint.django_rest.rbuilder.manager import rbuildermanager
 from testrunner import testcase
 
 class TestRunner(DjangoTestSuiteRunner):
+
+    DB_DUMP = tempfile.NamedTemporaryFile(
+        prefix="mint-django-fixture-", delete=False).name
+
     def setup_databases(self, **kwargs):
         # We don't care about a lot of the complexities in
         # DjangoTestSuiteRunner
@@ -45,9 +50,37 @@ class TestRunner(DjangoTestSuiteRunner):
         conn.settings_dict['NAME'] = dbname
         # Test connection
         conn.cursor()
+        self._sqlite_dump(dbname, self.DB_DUMP)
         return ([(conn, oldDbName, True)], [])
 
+    @classmethod
+    def _sqlite_dump(cls, srcfile, dstfile):
+        util.execute("sqlite3 '%s' .dump > '%s'" % (srcfile, dstfile))
+
+    @classmethod
+    def _sqlite_restore(cls, srcfile, dstfile):
+        tfile = util.AtomicFile(dstfile)
+        cmd = "sqlite3 '%s' < '%s'" % (tfile.name, srcfile)
+        util.execute(cmd)
+        util.removeIfExists(dstfile + '.journal')
+        tfile.commit()
+
 class XMLTestCase(TestCase, testcase.MockMixIn):
+    def _fixture_setup(self):
+        alias = DEFAULT_DB_ALIAS
+        conn = connections[alias]
+        TestRunner._sqlite_restore(TestRunner.DB_DUMP,
+            conn.settings_dict['TEST_NAME'])
+        # This will force a re-init
+        conn.close()
+        # Test connection
+        conn.cursor()
+        call_command('loaddata', 'initial_data',
+            **dict(verbosity=0, database=alias))
+        if hasattr(self, 'fixtures'):
+            call_command('loaddata', *self.fixtures,
+                **dict(verbosity=0, database=alias))
+
     def setUp(self):
         self.workDir = tempfile.mkdtemp(dir="/tmp", prefix="rbuilder-django-")
         conn = connections[DEFAULT_DB_ALIAS]
