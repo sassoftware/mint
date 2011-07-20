@@ -28,7 +28,7 @@ from conary.dbstore import sqlerrors, sqllib
 log = logging.getLogger(__name__)
 
 # database schema major version
-RBUILDER_DB_VERSION = sqllib.DBversion(58, 32)
+RBUILDER_DB_VERSION = sqllib.DBversion(58, 33)
 
 
 def _createTrigger(db, table, column = "changed"):
@@ -100,15 +100,17 @@ def _createUsers(db):
     if 'UserGroupMembers' not in db.tables:
         cu.execute("""
         CREATE TABLE UserGroupMembers (
+            userGroupMemberId    %(PRIMARYKEY)s,
             userGroupId         integer         NOT NULL
                 REFERENCES UserGroups ON DELETE CASCADE,
             userId              integer         NOT NULL
-                REFERENCES Users ON DELETE CASCADE,
-
-            PRIMARY KEY ( userGroupId, userId )
+                REFERENCES Users ON DELETE CASCADE
         ) %(TABLEOPTS)s""" % db.keywords)
         db.tables['UserGroupMembers'] = []
         changed = True
+    changed |= db.createIndex('UserGroupMembers', 'UserGroupMembersIdx', 
+            'userGroupId, userId', unique = True)             
+        
 
     if 'Confirmations' not in db.tables:
         cu.execute("""

@@ -1817,7 +1817,8 @@ If you would not like to be %s %s of this project, you may resign from this proj
             raise mint_error.UserAlreadyAdmin
 
         cu = self.db.cursor()
-        cu.execute('INSERT INTO UserGroupMembers VALUES(?, ?)',
+        cu.execute(
+            "INSERT INTO UserGroupMembers (usergroupid, userid) VALUES(?, ?)",
                 mintAdminId, userId)
         self.db.commit()
         return True
