@@ -2949,7 +2949,7 @@ class MigrateTo_57(SchemaMigration):
 
 
 class MigrateTo_58(SchemaMigration):
-    Version = (58, 32)
+    Version = (58, 33)
 
     def migrate(self):
         return True
@@ -3308,6 +3308,20 @@ class MigrateTo_58(SchemaMigration):
         cu.execute("""ALTER TABLE jobs_job ALTER job_type_id SET NOT NULL""")
         cu.execute("""ALTER TABLE inventory_system_event RENAME COLUMN event_type_id TO job_type_id""")
         return True     
+    
+    def migrate33(self):
+        # Add a serial primary key, drop the old pk, add it as unique for usergroupmembers table
+        cu = self.db.cursor()
+        cu.execute("""
+            ALTER TABLE UserGroupMembers
+                DROP CONSTRAINT usergroupmembers_pkey""")
+        cu.execute("""
+            ALTER TABLE UserGroupMembers
+                ADD COLUMN userGroupMemberId SERIAL PRIMARY KEY""")
+        cu.execute("""
+            ALTER TABLE UserGroupMembers
+                ADD UNIQUE(userGroupId, userid)""") 
+        return True           
 
 
 def _createUpdateSystemsQuerySet(db):

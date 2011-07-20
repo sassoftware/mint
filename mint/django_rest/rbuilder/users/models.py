@@ -139,7 +139,8 @@ class UserGroupMember(modellib.XObjIdModel):
     
     class Meta:
         db_table = u'usergroupmembers'
-    
+        
+    user_group_member_id = models.AutoField(primary_key=True, db_column='usergroupmemberid')
     user_group_id = modellib.XObjHidden(modellib.DeferredForeignKey(UserGroup, db_column='usergroupid', related_name='user_members_group_id'))
     user_id = modellib.DeferredForeignKey(User, db_column='userid', related_name='usermember')
     
