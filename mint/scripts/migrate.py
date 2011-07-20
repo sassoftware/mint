@@ -3318,8 +3318,8 @@ class MigrateTo_58(SchemaMigration):
         cu.execute("""
             ALTER TABLE UserGroupMembers
                 ADD COLUMN userGroupMemberId SERIAL PRIMARY KEY""")
-    self.db.createIndex('UserGroupMembers', 'UserGroupMembersIdx',
-                'userGroupId, userId', unique = True)
+        self.db.createIndex('UserGroupMembers', 'UserGroupMembersIdx',
+            'userGroupId, userId', unique = True)
         return True           
 
 

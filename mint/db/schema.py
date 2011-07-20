@@ -108,8 +108,7 @@ def _createUsers(db):
         ) %(TABLEOPTS)s""" % db.keywords)
         db.tables['UserGroupMembers'] = []
         changed = True
-    changed | = db.createdIndex('UserGroupMembers', 'UserGroupMembersIdx',
-                'userGroupId, userId', unique = True)         
+    changed | = db.createIndex('UserGroupMembers', 'UserGroupMembersIdx', 'userGroupId, userId', unique = True)         
         
 
     if 'Confirmations' not in db.tables:
