@@ -423,11 +423,6 @@ class UserGroupsTable(database.KeyedTable):
     def __init__(self, db, cfg):
         self.cfg = cfg
         database.DatabaseTable.__init__(self, db)
-        cu = self.db.cursor()
-        cu.execute("""SELECT userGroupId FROM UserGroups
-                          WHERE userGroup='public'""")
-        if not cu.fetchall():
-            cu.execute("INSERT INTO UserGroups (userGroup) VALUES('public')")
 
     def getMintAdminId(self):
         """
