@@ -242,8 +242,8 @@ management_interface_put_xml="""\
 system_types_xml="""\
 <?xml version="1.0"?>
 <system_types>
-  <system_type id="http://testserver/api/v1/inventory/system_types/1">
-    <system_type_id>1</system_type_id>
+  <system_type id="http://testserver/api/v1/inventory/system_types/4">
+    <system_type_id>4</system_type_id>
     <infrastructure>false</infrastructure>
     <description>bar</description>
     <name>foo</name>
