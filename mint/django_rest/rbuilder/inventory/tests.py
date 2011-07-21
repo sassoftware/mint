@@ -679,17 +679,17 @@ class ManagementNodesTestCase(XMLTestCase):
         """
         Ensure requires auth but not admin
         """
-        self._saveManagementNode()
-        response = self._get('inventory/management_nodes/1/')
+        node = self._saveManagementNode()
+        response = self._get('inventory/management_nodes/%s/' % node.system_ptr_id)
         self.assertEquals(response.status_code, 401)
         
-        response = self._get('inventory/management_nodes/1/',
+        response = self._get('inventory/management_nodes/%s/' % node.system_ptr_id,
             username="testuser", password="password")
         self.assertEquals(response.status_code, 200)
 
     def testGetManagementNode(self):
         management_node = self._saveManagementNode()
-        response = self._get('inventory/management_nodes/1/',
+        response = self._get('inventory/management_nodes/%s/' % management_node.system_ptr_id,
             username="testuser", password="password")
         self.assertEquals(response.status_code, 200)
         self.assertXMLEquals(response.content, 
@@ -757,16 +757,19 @@ class ManagementNodesTestCase(XMLTestCase):
         Ensure quires auth but not admin
         """
         management_node = self._saveManagementNode()
-        response = self._get('inventory/zones/%d/management_nodes/1/' % management_node.zone.zone_id)
+        response = self._get('inventory/zones/%d/management_nodes/%s/' % (
+            management_node.zone.zone_id, management_node.system_ptr_id))
         self.assertEquals(response.status_code, 401)
         
-        response = self._get('inventory/zones/%d/management_nodes/1/' % management_node.zone.zone_id,
+        response = self._get('inventory/zones/%d/management_nodes/%s/' % (
+            management_node.zone.zone_id, management_node.system_ptr_id),
             username="testuser", password="password")
         self.assertEquals(response.status_code, 200)
 
     def testGetManagementNodeForZone(self):
         management_node = self._saveManagementNode()
-        response = self._get('inventory/zones/%d/management_nodes/3/' % management_node.zone.zone_id,
+        response = self._get('inventory/zones/%d/management_nodes/%s/' % (
+            management_node.zone.zone_id, management_node.system_ptr_id),
             username="testuser", password="password")
         self.assertEquals(response.status_code, 200)
         self.assertXMLEquals(response.content, 
