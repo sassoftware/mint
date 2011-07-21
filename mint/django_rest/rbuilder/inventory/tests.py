@@ -3042,11 +3042,11 @@ class EventTypeTestCase(XMLTestCase):
         event_type = jobmodels.EventType(name="foo", description="bar", priority=110)
         event_type.save()
         self.assertTrue(event_type.priority == 110)
-        response = self._put('inventory/event_types/1/', 
+        response = self._put('inventory/event_types/%s/' % event_type.job_type_id,
             data=testsxml.event_type_put_xml, content_type='text/xml',
             username="admin", password="password")
         self.assertEquals(response.status_code, 200)
-        event_type = jobmodels.EventType.objects.get(pk=1)
+        event_type = jobmodels.EventType.objects.get(pk=event_type.pk)
         self.assertTrue(event_type.priority == 1)
         
     def testPutEventTypeName(self):

@@ -132,20 +132,20 @@ event_types_xml="""\
 
 event_type_put_xml="""\
 <?xml version="1.0" encoding="UTF-8"?>
-<event_type id="http://testserver/api/v1/inventory/event_types/1">
+<event_type id="http://testserver/api/v1/inventory/event_types/13">
   <description>System registration</description>
   <priority>1</priority>
-  <event_type_id>1</event_type_id>
+  <event_type_id>13</event_type_id>
   <name>system registration</name>
   <system_events/>
 </event_type>"""
 
 event_type_put_name_change_xml="""\
 <?xml version="1.0" encoding="UTF-8"?>
-<event_type id="http://testserver/api/v1/inventory/event_types/1">
+<event_type id="http://testserver/api/v1/inventory/event_types/13">
   <description>System registration</description>
   <priority>110</priority>
-  <event_type_id>1</event_type_id>
+  <event_type_id>13</event_type_id>
   <name>foobar</name>
   <system_events/>
 </event_type>"""
