@@ -287,10 +287,10 @@ system_type_systems_xml="""
     <credentials id="http://testserver/api/v1/inventory/systems/3/credentials"/>
     <configuration id="http://testserver/api/v1/inventory/systems/3/configuration"/>
     <configuration_descriptor id="http://testserver/api/v1/inventory/systems/3/configuration_descriptor"/>
-    <current_state id="http://testserver/api/v1/inventory/system_states/2">
+    <current_state id="http://testserver/api/v1/inventory/system_states/3">
       <description>Initial synchronization pending</description>
       <name>registered</name>
-      <system_state_id>2</system_state_id>
+      <system_state_id>3</system_state_id>
     </current_state>
     <description>testsystemdescription</description>
     <generated_uuid>testsystemgenerateduuid</generated_uuid>
