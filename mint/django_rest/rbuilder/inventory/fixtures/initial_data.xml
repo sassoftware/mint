@@ -4,8 +4,8 @@
     <object pk="1" model="users.user">
 	    <field type="CharField" name="user_name">admin</field>
 	    <field type="CharField" name="full_name">Administrator</field>
-	    <field type="TextField" name="salt">5c5c3235365c5c3330335c5c3332354229</field>
-	    <field type="CharField" name="passwd">f0ae519bbcac24795abf2c2aa5414ed0</field>
+	    <field type="TextField" name="salt">deadbeef</field>
+	    <field type="CharField" name="passwd">6ca2833e3cf29b63ac5ad911b8d8d3e3</field>
 	    <field type="CharField" name="email">admin@rpath.com</field>
 	    <field type="TextField" name="display_email"/>
 	    <field type="DecimalField" name="created_date">1283523987.852</field>
@@ -16,8 +16,8 @@
 	<object pk="2000" model="users.user">
 	    <field type="CharField" name="user_name">testuser</field>
             <field type="CharField" name="full_name">Test User</field>
-	    <field type="TextField" name="salt">5c5c3235365c5c3330335c5c3332354229</field>
-	    <field type="CharField" name="passwd">f0ae519bbcac24795abf2c2aa5414ed0</field>
+	    <field type="TextField" name="salt">deadbeef</field>
+	    <field type="CharField" name="passwd">6ca2833e3cf29b63ac5ad911b8d8d3e3</field>
 	    <field type="CharField" name="email">testuser@rpath.com</field>
 	    <field type="TextField" name="display_email"/>
 	    <field type="DecimalField" name="created_date">1283529921.387</field>
