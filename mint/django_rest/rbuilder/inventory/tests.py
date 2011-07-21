@@ -1176,7 +1176,7 @@ class SystemsTestCase(XMLTestCase):
         response = self._post('inventory/systems/', data=system_xml)
         self.assertEquals(response.status_code, 200)
         try:
-            models.System.objects.get(pk=1)
+            models.System.objects.get(pk=3)
         except models.System.DoesNotExist:
             self.assertTrue(False) # should exist
 
@@ -1188,7 +1188,7 @@ class SystemsTestCase(XMLTestCase):
         system_xml = testsxml.system_post_network_unpinned
         response = self._post('inventory/systems/', data=system_xml)
         self.assertEquals(response.status_code, 200)
-        system = models.System.objects.get(pk=1)
+        system = models.System.objects.get(pk=3)
         self.failUnlessEqual(
             [ (x.dns_name, x.active, x.pinned)
                 for x in system.networks.all() ],
@@ -1206,7 +1206,7 @@ class SystemsTestCase(XMLTestCase):
         system_xml = testsxml.system_post_network_pinned
         response = self._post('inventory/systems/', data=system_xml)
         self.assertEquals(response.status_code, 200)
-        system = models.System.objects.get(pk=1)
+        system = models.System.objects.get(pk=3)
         self.failUnlessEqual(
             [ (x.dns_name, x.active, x.pinned)
                 for x in system.networks.all() ],
@@ -1449,8 +1449,8 @@ class SystemsTestCase(XMLTestCase):
             [ (x.dns_name, x.ip_address, x.active, x.pinned)
                 for x in system.networks.all() ],
             [
-                ('10.1.1.1', '10.1.1.1', False, None, ),
                 ('blah2.example.com', '10.2.2.2', True, False, ),
+                ('10.1.1.1', '10.1.1.1', False, None, ),
                 ('blah1', None, None, True, ),
             ])
         xml = system.to_xml()
@@ -1532,7 +1532,7 @@ class SystemsTestCase(XMLTestCase):
         system_xml = testsxml.system_post_xml
         response = self._post('inventory/systems/', data=system_xml)
         self.assertEquals(response.status_code, 200)
-        system = models.System.objects.get(pk=1)
+        system = models.System.objects.get(pk=3)
         system_xml = testsxml.system_post_xml_response.replace('<registration_date/>',
             '<registration_date>%s</registration_date>' % \
             (system.registration_date.isoformat()))
@@ -1570,7 +1570,7 @@ class SystemsTestCase(XMLTestCase):
         system_xml = testsxml.system_post_xml_dup
         response = self._post('inventory/systems/', data=system_xml)
         self.assertEquals(response.status_code, 200)
-        system = models.System.objects.get(pk=1)
+        system = models.System.objects.get(pk=3)
         self.failUnlessEqual(system.name, "testsystemname")
         
         # add it with same uuids but with different name to make sure
@@ -1578,7 +1578,7 @@ class SystemsTestCase(XMLTestCase):
         system_xml = testsxml.system_post_xml_dup2
         response = self._post('inventory/systems/', data=system_xml)
         self.assertEquals(response.status_code, 200)
-        this_system = models.System.objects.get(pk=1)
+        this_system = models.System.objects.get(pk=3)
         self.failUnlessEqual(this_system.name, "testsystemnameChanged")
 
     def testPutSystemManagementInterface(self):
@@ -1730,10 +1730,10 @@ class SystemsTestCase(XMLTestCase):
             data=testsxml.system_post_xml)
         self.assertEquals(response.status_code, 200)
         
-        response = self._get('inventory/systems/1/system_log/')
+        response = self._get('inventory/systems/3/system_log/')
         self.assertEquals(response.status_code, 401)
         
-        response = self._get('inventory/systems/1/system_log/',
+        response = self._get('inventory/systems/3/system_log/',
             username="testuser", password="password")
         self.assertEquals(response.status_code, 200)
         
@@ -1743,7 +1743,7 @@ class SystemsTestCase(XMLTestCase):
         response = self._post('inventory/systems/', 
             data=testsxml.system_post_xml)
         self.assertEquals(response.status_code, 200)
-        response = self._get('inventory/systems/1/system_log/',
+        response = self._get('inventory/systems/3/system_log/',
             username="testuser", password="password")
         self.assertEquals(response.status_code, 200)
         content = []

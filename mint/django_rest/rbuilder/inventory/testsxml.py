@@ -1079,13 +1079,13 @@ systems_put_xml = """\
 
 systems_put_mothball_xml = """\
 <?xml version="1.0" encoding="UTF-8"?>
-<system id="http://testserver/api/v1/inventory/systems/1">
+<system id="http://testserver/api/v1/inventory/systems/3">
   <ssl_client_key>testsystemsslclientkey</ssl_client_key>
   <out_of_date>False</out_of_date>
   <registration_date/>
   <generated_uuid>testsystemgenerateduuid</generated_uuid>
   <networks>
-    <network id="http://testserver/api/v1/inventory/networks/1">
+    <network id="http://testserver/api/v1/inventory/networks/2">
       <active/>
       <device_name>eth0</device_name>
       <dns_name>testnetwork.example.com</dns_name>
@@ -1113,10 +1113,10 @@ systems_put_mothball_xml = """\
   <local_uuid>testsystemlocaluuid</local_uuid>
   <major_version/>
   <management_interface id="http://testserver/api/v1/inventory/management_interfaces/1">Common Information Model (CIM)</management_interface>
-  <current_state id="http://testserver/api/v1/inventory/system_states/10">
+  <current_state id="http://testserver/api/v1/inventory/system_states/12">
     <description>Retired</description>
     <name>mothballed</name>
-    <system_state_id>10</system_state_id>
+    <system_state_id>12</system_state_id>
   </current_state>
 </system>"""
 
@@ -1303,24 +1303,24 @@ system_delete_mgmt_interface_put_xml = """\
 
 system_post_xml_response = """\
 <?xml version="1.0" encoding="UTF-8"?>
-<system id="http://testserver/api/v1/inventory/systems/1">
+<system id="http://testserver/api/v1/inventory/systems/3">
   <agent_port>5989</agent_port>
   <system_tags/>
   <project/>
-  <credentials id="http://testserver/api/v1/inventory/systems/1/credentials"/>
-  <configuration id="http://testserver/api/v1/inventory/systems/1/configuration"/>
-  <configuration_descriptor id="http://testserver/api/v1/inventory/systems/1/configuration_descriptor"/>
-  <system_events id="http://testserver/api/v1/inventory/systems/1/system_events"/>
+  <credentials id="http://testserver/api/v1/inventory/systems/3/credentials"/>
+  <configuration id="http://testserver/api/v1/inventory/systems/3/configuration"/>
+  <configuration_descriptor id="http://testserver/api/v1/inventory/systems/3/configuration_descriptor"/>
+  <system_events id="http://testserver/api/v1/inventory/systems/3/system_events"/>
   <out_of_date>False</out_of_date>
   <registration_date/>
   <generated_uuid>testsystemgenerateduuid</generated_uuid>
-  <has_active_jobs>True</has_active_jobs>
+  <has_active_jobs>False</has_active_jobs>
   <has_running_jobs>False</has_running_jobs>
   <network_address>
     <address>1.1.1.1</address>
   </network_address>
   <networks>
-    <network id="http://testserver/api/v1/inventory/networks/1">
+    <network id="http://testserver/api/v1/inventory/networks/2">
       <active/>
       <created_date>%s</created_date>
       <device_name>eth0</device_name>
@@ -1328,9 +1328,9 @@ system_post_xml_response = """\
       <ip_address>1.1.1.1</ip_address>
       <ipv6_address/>
       <netmask>255.255.255.0</netmask>
-      <network_id>1</network_id>
+      <network_id>2</network_id>
       <port_type>lan</port_type>
-      <system id="http://testserver/api/v1/inventory/systems/1"/>
+      <system id="http://testserver/api/v1/inventory/systems/3"/>
       <pinned/>
     </network>
   </networks>
@@ -1339,18 +1339,18 @@ system_post_xml_response = """\
   <stage/>
   <managing_zone id="http://testserver/api/v1/inventory/zones/1">Local rBuilder</managing_zone>
   <hostname/>
-  <system_id>1</system_id>
+  <system_id>3</system_id>
   <launching_user/>
   <launch_date/>
-  <installed_software id="http://testserver/api/v1/inventory/systems/1/installed_software"/>
-  <jobs id="http://testserver/api/v1/inventory/systems/1/jobs">
-    <completed_jobs id="http://testserver/api/v1/inventory/systems/1/job_states/3/jobs"/>
-    <failed_jobs id="http://testserver/api/v1/inventory/systems/1/job_states/4/jobs"/>
-    <queued_jobs id="http://testserver/api/v1/inventory/systems/1/job_states/1/jobs"/>
-    <running_jobs id="http://testserver/api/v1/inventory/systems/1/job_states/2/jobs"/>
+  <installed_software id="http://testserver/api/v1/inventory/systems/3/installed_software"/>
+  <jobs id="http://testserver/api/v1/inventory/systems/3/jobs">
+    <completed_jobs id="http://testserver/api/v1/inventory/systems/3/job_states/3/jobs"/>
+    <failed_jobs id="http://testserver/api/v1/inventory/systems/3/job_states/4/jobs"/>
+    <queued_jobs id="http://testserver/api/v1/inventory/systems/3/job_states/1/jobs"/>
+    <running_jobs id="http://testserver/api/v1/inventory/systems/3/job_states/2/jobs"/>
   </jobs>
   <description>testsystemdescription</description>
-  <system_log id="http://testserver/api/v1/inventory/systems/1/system_log"/>
+  <system_log id="http://testserver/api/v1/inventory/systems/3/system_log"/>
   <target_system_id/>
   <target_system_name/>
   <target_system_description/>
@@ -1361,10 +1361,10 @@ system_post_xml_response = """\
   <local_uuid>testsystemlocaluuid</local_uuid>
   <major_version/>
   <management_interface id="http://testserver/api/v1/inventory/management_interfaces/1">Common Information Model (CIM)</management_interface>
-  <current_state id="http://testserver/api/v1/inventory/system_states/2">
+  <current_state id="http://testserver/api/v1/inventory/system_states/3">
     <description>Initial synchronization pending</description>
     <name>registered</name>
-    <system_state_id>2</system_state_id>
+    <system_state_id>3</system_state_id>
   </current_state>
   <created_date>%s</created_date>
 </system>"""
@@ -1595,29 +1595,29 @@ system_event_immediate_registration_post_xml = """\
 
 system_log_xml = """\
 <?xml version="1.0" encoding="UTF-8"?>
-<system_log id="http://testserver/api/v1/inventory/systems/1/system_log">
+<system_log id="http://testserver/api/v1/inventory/systems/3/system_log">
   <system_log_entries>
     <system_log_entry>
       <entry>System added to inventory</entry>
-      <system_log id="http://testserver/api/v1/inventory/systems/1/system_log"/>
+      <system_log id="http://testserver/api/v1/inventory/systems/3/system_log"/>
       <system_log_entry_id>1</system_log_entry_id>
     </system_log_entry>
     <system_log_entry>
       <entry>System registered via rpath-tools</entry>
-      <system_log id="http://testserver/api/v1/inventory/systems/1/system_log"/>
+      <system_log id="http://testserver/api/v1/inventory/systems/3/system_log"/>
       <system_log_entry_id>2</system_log_entry_id>
     </system_log_entry>
     <system_log_entry>
-      <system_log id="http://testserver/api/v1/inventory/systems/1/system_log"/>
+      <system_log id="http://testserver/api/v1/inventory/systems/3/system_log"/>
       <system_log_entry_id>3</system_log_entry_id>
     </system_log_entry>
     <system_log_entry>
-      <system_log id="http://testserver/api/v1/inventory/systems/1/system_log"/>
+      <system_log id="http://testserver/api/v1/inventory/systems/3/system_log"/>
       <system_log_entry_id>4</system_log_entry_id>
     </system_log_entry>
   </system_log_entries>
   <system_log_id>1</system_log_id>
-  <system id="http://testserver/api/v1/inventory/systems/1"/>
+  <system id="http://testserver/api/v1/inventory/systems/3"/>
 </system_log>
 """
 
