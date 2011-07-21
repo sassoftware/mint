@@ -766,7 +766,7 @@ class ManagementNodesTestCase(XMLTestCase):
 
     def testGetManagementNodeForZone(self):
         management_node = self._saveManagementNode()
-        response = self._get('inventory/zones/%d/management_nodes/1/' % management_node.zone.zone_id,
+        response = self._get('inventory/zones/%d/management_nodes/3/' % management_node.zone.zone_id,
             username="testuser", password="password")
         self.assertEquals(response.status_code, 200)
         self.assertXMLEquals(response.content, 
