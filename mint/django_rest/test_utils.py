@@ -94,10 +94,6 @@ dbPath              %(dbpath)s
         from mint import config
         config.RBUILDER_CONFIG = mintCfg
 
-        def getMintDatabase(self):
-            return None
-        basemanager.BaseRbuilderManager.getMintDatabase = getMintDatabase
-
         self.client = Client()
         self.mgr = rbuildermanager.RbuilderManager()
         self.localZone = self.mgr.sysMgr.getLocalZone()

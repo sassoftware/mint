@@ -87,7 +87,7 @@ class BaseRbuilderManager(object):
     def setRestDbPath(self):
         from django.conf import settings
         DB = settings.DATABASES['default']
-        if DB['ENGINE'] == 'sqlite3':
+        if DB['ENGINE'].endswith('sqlite3'):
             self.cfg.dbPath = DB['NAME']
         else:
             self.cfg.dbPath = '%s:%s/%s' % (DB['HOST'], DB['PORT'], DB['NAME'])
