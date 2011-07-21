@@ -314,7 +314,7 @@ class ManagementInterfacesTestCase(XMLTestCase):
         mi = models.ManagementInterface(name="foo2", description="bar", port=8000, credentials_descriptor="<foo/>")
         mi.save()
         self.assertTrue('<name>thisnameshouldnotstick</name>' in testsxml.management_interface_put_xml)
-        response = self._put('inventory/management_interfaces/1',
+        response = self._put('inventory/management_interfaces/3',
             data=testsxml.management_interface_put_xml, username="admin", password="password")
         self.assertEquals(response.status_code, 200)
         mi = models.ManagementInterface.objects.get(pk=mi.pk)

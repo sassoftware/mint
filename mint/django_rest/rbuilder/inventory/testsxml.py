@@ -241,7 +241,7 @@ management_interface_xml="""\
 
 management_interface_put_xml="""\
 <?xml version="1.0"?>
-<management_interface id="http://testserver/api/v1/inventory/management_interfaces/1/">
+<management_interface id="http://testserver/api/v1/inventory/management_interfaces/3/">
   <systems/>
   <description>bar</description>
   <management_interface_id>1</management_interface_id>
