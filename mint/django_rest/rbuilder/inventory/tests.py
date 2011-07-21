@@ -2951,7 +2951,7 @@ class SystemVersionsTestCase(XMLTestCase):
         self.mockStages.append(restmodels.Stage(
             label='chater-foo.eng.rpath.com@rpath:chater-foo-1-devel',
             name='Development',
-            hostname='chater-foo.eng.rpath.com',
+            hostname='chater-foo',
             version='1',
             isPromotable=True))
 

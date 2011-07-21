@@ -151,6 +151,8 @@ class SetMintConfigMiddleware(BaseMiddleware):
         else:
             cfg = config.MintConfig()
             cfg.siteHost = 'localhost.localdomain'
+            from django.db import connection
+            cfg.dbPath = connection.settings_dict['NAME']
 
         request.cfg = cfg
 

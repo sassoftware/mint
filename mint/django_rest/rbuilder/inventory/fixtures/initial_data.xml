@@ -659,7 +659,7 @@ Aj/9jaPTk+mjBIgXSVEHkJCtxfGZWYFx/eNItfaAAfZVX68txm5Hyp2J6Equnr82
     <field type="DateTimeField" name="time_expired">2010-09-01 15:18:53</field>
   </object>
   <object pk="1" model="projects.project">
-    <field type="CharField" name="hostname">chater-foo.eng.rpath.com</field>
+    <field type="CharField" name="hostname">chater-foo</field>
     <field type="CharField" name="name">chater-foo</field>
     <field type="CharField" name="namespace">rpath</field>
     <field type="CharField" name="domain_name">eng.rpath.com</field>

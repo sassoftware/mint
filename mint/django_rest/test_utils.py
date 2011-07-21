@@ -51,6 +51,9 @@ class TestRunner(DjangoTestSuiteRunner):
         # Test connection
         conn.cursor()
         self._sqlite_dump(dbname, self.DB_DUMP)
+        from mint.db import database
+        # Turn off temporary table creation, because django keeps the db locked
+        database.Database._createTemporaryTables = lambda *args, **kwargs: None
         return ([(conn, oldDbName, True)], [])
 
     @classmethod
@@ -99,7 +102,6 @@ dbPath              %(dbpath)s
         self.localZone = self.mgr.sysMgr.getLocalZone()
         from mint.django_rest.rbuilder.inventory.manager import repeatermgr
         repeatermgr.repeater_client = None
-        views.BaseInventoryService._setMintAuth = lambda *args: None
 
         # Default to 10 items per page in the tests
         from django.conf import settings
