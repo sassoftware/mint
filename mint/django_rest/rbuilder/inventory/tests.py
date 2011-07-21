@@ -351,7 +351,7 @@ class SystemTypesTestCase(XMLTestCase):
         models.SystemType.objects.all().delete()
         si = models.SystemType(name="foo", description="bar", creation_descriptor="<foo></foo>")
         si.save()
-        response = self._get('inventory/system_types/1/',
+        response = self._get('inventory/system_types/%s/' % si.pk,
             username="testuser", password="password")
         self.assertEquals(response.status_code, 200)
         self.assertXMLEquals(response.content,
