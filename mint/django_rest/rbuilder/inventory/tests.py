@@ -540,9 +540,9 @@ class NetworkTestCase(XMLTestCase):
     def testDeleteNetwork(self):
         models.System.objects.all().delete()
         self._saveSystem()
-        network = models.Network.objects.get(pk=1)
+        network = models.Network.objects.get(pk=2)
         self.assertTrue(network is not None)
-        response = self._delete('inventory/networks/1/', 
+        response = self._delete('inventory/networks/2/', 
             username="admin", password="password")
         self.assertEquals(response.status_code, 204)
         try:
