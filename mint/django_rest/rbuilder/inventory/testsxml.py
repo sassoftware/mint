@@ -140,13 +140,13 @@ event_type_put_name_change_xml="""\
 zones_xml = """\
 <?xml version="1.0" encoding="UTF-8"?>
 <zones>
-  <zone id="http://testserver/api/v1/inventory/zones/1">
+  <zone id="http://testserver/api/v1/inventory/zones/2">
     <description>Some local zone</description>
     <created_date>%s</created_date>
     <name>Local Zone</name>
     <management_nodes/>
-    <zone_id>1</zone_id>
-  </zone>
+    <zone_id>2</zone_id>
+   </zone>
 </zones>
 """
 
@@ -160,6 +160,7 @@ zone_xml = """\
   <zone_id>1</zone_id>
 </zone>
 """
+
 
 zone_post_xml = """\
 <?xml version="1.0" encoding="UTF-8"?>
@@ -929,10 +930,10 @@ systems_xml = """\
     <out_of_date>False</out_of_date>
     <registration_date/>
     <created_date>%s</created_date>
-    <current_state id="http://testserver/api/v1/inventory/system_states/2">
+    <current_state id="http://testserver/api/v1/inventory/system_states/3">
       <description>Initial synchronization pending</description>
       <name>registered</name>
-      <system_state_id>2</system_state_id>
+      <system_state_id>3</system_state_id>
     </current_state>
     <description>testsystemdescription</description>
     <generated_uuid>testsystemgenerateduuid</generated_uuid>
