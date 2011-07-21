@@ -1573,7 +1573,7 @@ system_event_post_xml = """\
 system_event_immediate_poll_post_xml = """\
 <?xml version="1.0" encoding="UTF-8"?>
 <system_event>
-    <event_type id="http://testserver/api/v1/inventory/event_types/2"/>
+    <event_type id="http://testserver/api/v1/inventory/event_types/3"/>
     <system id="http://testserver/api/v1/inventory/systems/2"/>
     <priority>50</priority>
 </system_event>
