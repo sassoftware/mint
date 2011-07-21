@@ -512,7 +512,7 @@
     <field type="TextField" name="status_detail">
       <None/>
     </field>
-    <field to="inventory.eventtype" name="event_type" rel="ManyToOneRel">1</field>
+    <field to="inventory.eventtype" name="job_type" rel="ManyToOneRel">1</field>
     <field type="DateTimeField" name="time_created">2011-03-24 16:48:10</field>
     <field type="DateTimeField" name="time_updated">2011-03-24 16:48:10</field>
   </object>
@@ -524,7 +524,7 @@
     <field type="TextField" name="status_detail">
       <None/>
     </field>
-    <field to="inventory.eventtype" name="event_type" rel="ManyToOneRel">1</field>
+    <field to="inventory.eventtype" name="job_type" rel="ManyToOneRel">1</field>
     <field type="DateTimeField" name="time_created">2011-03-24 16:48:47</field>
     <field type="DateTimeField" name="time_updated">2011-03-24 16:48:47</field>
   </object>
@@ -536,7 +536,7 @@
     <field type="TextField" name="status_detail">
       <None/>
     </field>
-    <field to="inventory.eventtype" name="event_type" rel="ManyToOneRel">1</field>
+    <field to="inventory.eventtype" name="job_type" rel="ManyToOneRel">1</field>
     <field type="DateTimeField" name="time_created">2011-03-24 16:48:52</field>
     <field type="DateTimeField" name="time_updated">2011-03-24 16:48:52</field>
   </object>

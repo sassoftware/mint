@@ -17,7 +17,9 @@ from lxml import etree
 from xobj import xobj
 from testutils import mock
 
-class PackagesTestCase(XMLTestCase):
+# urls.py comments out the entry points into the code, so we disable these tests
+#class PackagesTestCase(XMLTestCase):
+class PackagesTestCase(object):
     fixtures = ['packages']
 
     def setUp(self):
@@ -86,6 +88,7 @@ class PackagesTestCase(XMLTestCase):
         r = self._put('packages/1',
             data=testsxml.package_put_xml,
             username='admin', password='password')
+        self.failUnlessEqual(r.status_code, 200)
         updatedPkg = models.Package.objects.get(pk=1)
         # Check that name and description are updated
         self.assertEquals('Apache', updatedPkg.name)
