@@ -3426,7 +3426,7 @@ class SystemEventProcessingTestCase(XMLTestCase):
         self.failUnlessEqual(len(events), 1)
         event = events[0]
         self.failUnlessEqual(event.event_type.name,
-            jobmodels.EventType.SYSTEM_POLL_IMMEDIATE)
+            jobmodels.EventType.SYSTEM_POLL)
 
         # remove the poll now event and ensure we get the standard poll event next
         event.delete()
@@ -3434,7 +3434,7 @@ class SystemEventProcessingTestCase(XMLTestCase):
         self.failUnlessEqual(len(events), 1)
         event = events[0]
         self.failUnlessEqual(event.event_type.name,
-            jobmodels.EventType.SYSTEM_POLL)
+            jobmodels.EventType.SYSTEM_POLL_IMMEDIATE)
 
         # add another poll event with a higher priority but a future time 
         # and make sure we don't get it (because of the future registration time)
@@ -3471,7 +3471,7 @@ class SystemEventProcessingTestCase(XMLTestCase):
         events = self.mgr.sysMgr.getSystemEventsForProcessing()
         event = events[0]
         self.failUnlessEqual(event.event_type.name,
-            jobmodels.EventType.SYSTEM_POLL_IMMEDIATE)
+            jobmodels.EventType.SYSTEM_POLL)
         self.mgr.sysMgr.processSystemEvents()
         
         # make sure the event was removed and that we have the next poll event 
@@ -3483,7 +3483,7 @@ class SystemEventProcessingTestCase(XMLTestCase):
             assert(False) # should have failed
         except models.SystemEvent.DoesNotExist:
             pass
-        poll_event = self.mgr.sysMgr.eventType(jobmodels.EventType.SYSTEM_POLL)
+        poll_event = self.mgr.sysMgr.eventType(jobmodels.EventType.SYSTEM_POLL_IMMEDIATE)
         local_system = poll_event.system_events.all()[0]
         event = models.SystemEvent.objects.get(system=local_system, event_type=poll_event)
         self.failIf(event is None)
