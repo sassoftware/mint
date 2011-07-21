@@ -781,13 +781,13 @@ management_node_zone_post_xml = """\
 
 management_node_zone_post_response_xml = """\
 <?xml version="1.0" encoding="UTF-8"?>
-<management_node id="http://testserver/api/v1/inventory/management_nodes/1">
+<management_node id="http://testserver/api/v1/inventory/management_nodes/3">
   <agent_port>5989</agent_port>
   <project/>
-  <credentials id="http://testserver/api/v1/inventory/management_nodes/1/credentials"/>
-  <configuration id="http://testserver/api/v1/inventory/management_nodes/1/configuration"/>
-  <configuration_descriptor id="http://testserver/api/v1/inventory/management_nodes/1/configuration_descriptor"/>
-  <system_events id="http://testserver/api/v1/inventory/systems/1/system_events"/>
+  <credentials id="http://testserver/api/v1/inventory/management_nodes/3/credentials"/>
+  <configuration id="http://testserver/api/v1/inventory/management_nodes/3/configuration"/>
+  <configuration_descriptor id="http://testserver/api/v1/inventory/management_nodes/3/configuration_descriptor"/>
+  <system_events id="http://testserver/api/v1/inventory/systems/3/system_events"/>
   <system_tags/>
   <out_of_date>False</out_of_date>
   <registration_date/>
@@ -808,7 +808,7 @@ management_node_zone_post_response_xml = """\
       <netmask>255.255.255.0</netmask>
       <network_id>1</network_id>
       <port_type>lan</port_type>
-      <system id="http://testserver/api/v1/inventory/systems/1"/>
+      <system id="http://testserver/api/v1/inventory/systems/3"/>
       <pinned/>
     </network>
   </networks>
@@ -819,19 +819,19 @@ management_node_zone_post_response_xml = """\
   <managing_zone id="http://testserver/api/v1/inventory/zones/1">Local rBuilder</managing_zone>
   <hostname>myhostname</hostname>
   <name>test management node</name>
-  <system_id>1</system_id>
+  <system_id>3</system_id>
   <launching_user/>
   <launch_date/>
   <local>true</local>
-  <installed_software id="http://testserver/api/v1/inventory/systems/1/installed_software"/>
-  <jobs id="http://testserver/api/v1/inventory/systems/1/jobs">
-    <completed_jobs id="http://testserver/api/v1/inventory/systems/1/job_states/3/jobs"/>
-    <failed_jobs id="http://testserver/api/v1/inventory/systems/1/job_states/4/jobs"/>
-    <queued_jobs id="http://testserver/api/v1/inventory/systems/1/job_states/1/jobs"/>
-    <running_jobs id="http://testserver/api/v1/inventory/systems/1/job_states/2/jobs"/>
+  <installed_software id="http://testserver/api/v1/inventory/systems/3/installed_software"/>
+  <jobs id="http://testserver/api/v1/inventory/systems/3/jobs">
+    <completed_jobs id="http://testserver/api/v1/inventory/systems/3/job_states/3/jobs"/>
+    <failed_jobs id="http://testserver/api/v1/inventory/systems/3/job_states/4/jobs"/>
+    <queued_jobs id="http://testserver/api/v1/inventory/systems/3/job_states/1/jobs"/>
+    <running_jobs id="http://testserver/api/v1/inventory/systems/3/job_states/2/jobs"/>
   </jobs>
   <description>test management node desc</description>
-  <system_log id="http://testserver/api/v1/inventory/systems/1/system_log"/>
+  <system_log id="http://testserver/api/v1/inventory/systems/3/system_log"/>
   <target_system_id/>
   <target_system_name/>
   <target_system_description/>
@@ -839,15 +839,15 @@ management_node_zone_post_response_xml = """\
   <system_type id="http://testserver/api/v1/inventory/system_types/2">rPath Update Service (Infrastructure)</system_type>
   <target/>
   <zone id="http://testserver/api/v1/inventory/zones/2"/>
-  <system_ptr id="http://testserver/api/v1/inventory/systems/1"/>
+  <system_ptr id="http://testserver/api/v1/inventory/systems/3"/>
   <local_uuid>test management node luuid</local_uuid>
   <major_version/>
   <management_interface id="http://testserver/api/v1/inventory/management_interfaces/1">Common Information Model (CIM)</management_interface>
-  <current_state id="http://testserver/api/v1/inventory/system_states/2">
+  <current_state id="http://testserver/api/v1/inventory/system_states/3">
     <created_date>%s</created_date>
     <description>Initial synchronization pending</description>
     <name>registered</name>
-    <system_state_id>2</system_state_id>
+    <system_state_id>3</system_state_id>
   </current_state>
   <created_date>%s</created_date>
 </management_node>"""

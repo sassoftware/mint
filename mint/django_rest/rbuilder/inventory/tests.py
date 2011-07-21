@@ -827,7 +827,7 @@ class ManagementNodesTestCase(XMLTestCase):
         response = self._post('inventory/zones/%d/management_nodes/' % zone.zone_id, 
             data=xml, username="admin", password="password")
         self.assertEquals(response.status_code, 200)
-        management_node = models.ManagementNode.objects.get(pk=1)
+        management_node = models.ManagementNode.objects.get(pk=3)
         management_node_xml = testsxml.management_node_zone_post_response_xml.replace(
             '<registration_date/>',
             '<registration_date>%s</registration_date>' % \
