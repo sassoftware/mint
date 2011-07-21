@@ -23,7 +23,8 @@ event_type_xml="""\
 <event_type id="http://testserver/api/v1/inventory/event_types/1">
   <description>System registration</description>
   <priority>110</priority>
-  <event_type_id>1</event_type_id>
+  <resource_type>System</resource_type>
+  <job_type_id>1</job_type_id>
   <name>system registration</name>
   <system_events/>
 </event_type>"""
@@ -35,33 +36,38 @@ event_types_xml="""\
     <name>system registration</name>
     <priority>110</priority>
     <job_type_id>1</job_type_id>
+    <resource_type>System</resource_type>
     <description>System registration</description>
     <system_events/>
   </event_type>
   <event_type id="http://testserver/api/v1/inventory/event_types/2">
     <name>immediate system poll</name>
-    <priority>105</priority>
+    <priority>50</priority>
     <job_type_id>2</job_type_id>
-    <description>On-demand system synchronization</description>
+    <resource_type>System</resource_type>
+    <description>System synchronization</description>
     <system_events/>
   </event_type>
   <event_type id="http://testserver/api/v1/inventory/event_types/3">
     <name>system poll</name>
-    <priority>50</priority>
+    <priority>105</priority>
+    <resource_type>System</resource_type>
     <job_type_id>3</job_type_id>
-    <description>System synchronization</description>
+    <description>On-demand system synchronization</description>
     <system_events/>
   </event_type>
   <event_type id="http://testserver/api/v1/inventory/event_types/4">
     <description>Scheduled system update</description>
     <job_type_id>4</job_type_id>
     <name>system apply update</name>
+    <resource_type>System</resource_type>
     <priority>50</priority>
     <system_events/>
   </event_type>
   <event_type id="http://testserver/api/v1/inventory/event_types/5">
     <description>System update</description>
     <job_type_id>5</job_type_id>
+    <resource_type>System</resource_type>
     <name>immediate system apply update</name>
     <priority>105</priority>
     <system_events/>
@@ -71,12 +77,14 @@ event_types_xml="""\
     <job_type_id>6</job_type_id>
     <name>system shutdown</name>
     <priority>50</priority>
+    <resource_type>System</resource_type>
     <system_events/>
   </event_type>
   <event_type id="http://testserver/api/v1/inventory/event_types/7">
     <description>System shutdown</description>
     <job_type_id>7</job_type_id>
     <name>immediate system shutdown</name>
+    <resource_type>System</resource_type>
     <priority>105</priority>
     <system_events/>
   </event_type>
@@ -85,6 +93,7 @@ event_types_xml="""\
     <job_type_id>8</job_type_id>
     <name>system launch wait</name>
     <priority>105</priority>
+    <resource_type>System</resource_type>
     <system_events/>
   </event_type>
   <event_type id="http://testserver/api/v1/inventory/event_types/9">
@@ -92,6 +101,7 @@ event_types_xml="""\
     <job_type_id>9</job_type_id>
     <name>system detect management interface</name>
     <priority>50</priority>
+    <resource_type>System</resource_type>
     <system_events/>
   </event_type>
   <event_type id="http://testserver/api/v1/inventory/event_types/10">
@@ -99,6 +109,7 @@ event_types_xml="""\
     <job_type_id>10</job_type_id>
     <name>immediate system detect management interface</name>
     <priority>105</priority>
+    <resource_type>System</resource_type>
     <system_events/>
   </event_type>
   <event_type id="http://testserver/api/v1/inventory/event_types/11">
@@ -106,6 +117,7 @@ event_types_xml="""\
     <job_type_id>11</job_type_id>
     <name>immediate system configuration</name>
     <priority>105</priority>
+    <resource_type>System</resource_type>
     <system_events/>
   </event_type>
   <event_type id="http://testserver/api/v1/inventory/event_types/12">
@@ -113,6 +125,7 @@ event_types_xml="""\
     <job_type_id>12</job_type_id>
     <name>system assimilation</name>
     <priority>105</priority>
+    <resource_type>System</resource_type>
     <system_events/>
   </event_type>
 </event_types>"""
