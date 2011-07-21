@@ -37,7 +37,7 @@ class ProjectService(service.BaseService, jobsmodels.Actionable):
     def rest_PUT(self, request, short_name, project):
         return self.mgr.updateProject(project)
 
-    def rest_DELETE(self, short_name):
+    def rest_DELETE(self, request, short_name):
         project = self.get(short_name)
         self.mgr.deleteProject(project)
         response = HttpResponse(status=204)
