@@ -137,7 +137,7 @@ class ZonesTestCase(XMLTestCase):
     def testGetZone(self):
         models.Zone.objects.all().delete()
         zone = self._saveZone()
-        response = self._get('inventory/zones/1/',
+        response = self._get('inventory/zones/2/',
             username="testuser", password="password")
         self.assertEquals(response.status_code, 200)
         self.assertXMLEquals(response.content,
@@ -175,7 +175,7 @@ class ZonesTestCase(XMLTestCase):
         response = self._post('inventory/zones/',
             data=xml, username="admin", password="password")
         self.assertEquals(response.status_code, 200)
-        zone = models.Zone.objects.get(pk=1)
+        zone = models.Zone.objects.get(pk=2)
         self.assertXMLEquals(response.content, testsxml.zone_post_response_xml % \
             (zone.created_date.isoformat()))
         
@@ -220,7 +220,7 @@ class ZonesTestCase(XMLTestCase):
         response = self._put('inventory/zones/%d/' % zone.zone_id,
             data=testsxml.zone_put_xml % zone.created_date, username="admin", password="password")
         self.assertEquals(response.status_code, 200)
-        zone = models.Zone.objects.get(pk=1)
+        zone = models.Zone.objects.get(pk=zone.zone_id)
         self.assertTrue(zone.name == "zoneputname")
         self.assertTrue(zone.description == "zoneputdesc")
         
@@ -241,7 +241,7 @@ class ZonesTestCase(XMLTestCase):
         """
         models.Zone.objects.all().delete()
         self._saveZone()
-        response = self._delete('inventory/zones/1/',
+        response = self._delete('inventory/zones/2/',
             username="admin", password="password")
         self.assertEquals(response.status_code, 204)
         try:
@@ -314,7 +314,7 @@ class ManagementInterfacesTestCase(XMLTestCase):
         mi = models.ManagementInterface(name="foo2", description="bar", port=8000, credentials_descriptor="<foo/>")
         mi.save()
         self.assertTrue('<name>thisnameshouldnotstick</name>' in testsxml.management_interface_put_xml)
-        response = self._put('inventory/management_interfaces/1',
+        response = self._put('inventory/management_interfaces/3',
             data=testsxml.management_interface_put_xml, username="admin", password="password")
         self.assertEquals(response.status_code, 200)
         mi = models.ManagementInterface.objects.get(pk=mi.pk)
@@ -351,7 +351,7 @@ class SystemTypesTestCase(XMLTestCase):
         models.SystemType.objects.all().delete()
         si = models.SystemType(name="foo", description="bar", creation_descriptor="<foo></foo>")
         si.save()
-        response = self._get('inventory/system_types/1/',
+        response = self._get('inventory/system_types/%s/' % si.pk,
             username="testuser", password="password")
         self.assertEquals(response.status_code, 200)
         self.assertXMLEquals(response.content,
@@ -519,10 +519,10 @@ class NetworkTestCase(XMLTestCase):
     def testPutNetwork(self):
         models.System.objects.all().delete()
         self._saveSystem()
-        response = self._put('inventory/networks/1/',
+        response = self._put('inventory/networks/2/',
             data=testsxml.network_put_xml, username="admin", password="password")
         self.assertEquals(response.status_code, 200)
-        network = models.Network.objects.get(pk=1)
+        network = models.Network.objects.get(pk=2)
         self.assertTrue(network.dns_name == "new.com")
         self.assertTrue(network.ip_address == "2.2.2.2")
         
@@ -540,9 +540,9 @@ class NetworkTestCase(XMLTestCase):
     def testDeleteNetwork(self):
         models.System.objects.all().delete()
         self._saveSystem()
-        network = models.Network.objects.get(pk=1)
+        network = models.Network.objects.get(pk=2)
         self.assertTrue(network is not None)
-        response = self._delete('inventory/networks/1/', 
+        response = self._delete('inventory/networks/2/', 
             username="admin", password="password")
         self.assertEquals(response.status_code, 204)
         try:
@@ -554,7 +554,7 @@ class NetworkTestCase(XMLTestCase):
     def testGetNetwork(self):
         models.System.objects.all().delete()
         self._saveSystem()
-        response = self._get('inventory/networks/1/',
+        response = self._get('inventory/networks/2/',
             username="testuser", password="password")
         self.assertEquals(response.status_code, 200)
         self.assertXMLEquals(response.content,
@@ -729,10 +729,10 @@ class ManagementNodesTestCase(XMLTestCase):
         models.ManagementNode.objects.all().delete()
         self._saveZone()
         xml = testsxml.management_node_post_xml
-        response = self._post('inventory/management_nodes/', 
+        response = self._post('inventory/management_nodes/',
             data=xml, content_type='text/xml', username="admin", password="password")
         self.assertEquals(response.status_code, 200)
-        management_node = models.ManagementNode.objects.get(pk=1)
+        management_node = models.ManagementNode.objects.get(pk=3)
         management_node_xml = testsxml.management_node_post_response_xml.replace(
             '<registration_date/>',
             '<registration_date>%s</registration_date>' % \
@@ -827,7 +827,7 @@ class ManagementNodesTestCase(XMLTestCase):
         response = self._post('inventory/zones/%d/management_nodes/' % zone.zone_id, 
             data=xml, username="admin", password="password")
         self.assertEquals(response.status_code, 200)
-        management_node = models.ManagementNode.objects.get(pk=1)
+        management_node = models.ManagementNode.objects.get(pk=3)
         management_node_xml = testsxml.management_node_zone_post_response_xml.replace(
             '<registration_date/>',
             '<registration_date>%s</registration_date>' % \
@@ -1176,7 +1176,7 @@ class SystemsTestCase(XMLTestCase):
         response = self._post('inventory/systems/', data=system_xml)
         self.assertEquals(response.status_code, 200)
         try:
-            models.System.objects.get(pk=1)
+            models.System.objects.get(pk=3)
         except models.System.DoesNotExist:
             self.assertTrue(False) # should exist
 
@@ -1188,7 +1188,7 @@ class SystemsTestCase(XMLTestCase):
         system_xml = testsxml.system_post_network_unpinned
         response = self._post('inventory/systems/', data=system_xml)
         self.assertEquals(response.status_code, 200)
-        system = models.System.objects.get(pk=1)
+        system = models.System.objects.get(pk=3)
         self.failUnlessEqual(
             [ (x.dns_name, x.active, x.pinned)
                 for x in system.networks.all() ],
@@ -1206,7 +1206,7 @@ class SystemsTestCase(XMLTestCase):
         system_xml = testsxml.system_post_network_pinned
         response = self._post('inventory/systems/', data=system_xml)
         self.assertEquals(response.status_code, 200)
-        system = models.System.objects.get(pk=1)
+        system = models.System.objects.get(pk=3)
         self.failUnlessEqual(
             [ (x.dns_name, x.active, x.pinned)
                 for x in system.networks.all() ],
@@ -1449,8 +1449,8 @@ class SystemsTestCase(XMLTestCase):
             [ (x.dns_name, x.ip_address, x.active, x.pinned)
                 for x in system.networks.all() ],
             [
-                ('10.1.1.1', '10.1.1.1', False, None, ),
                 ('blah2.example.com', '10.2.2.2', True, False, ),
+                ('10.1.1.1', '10.1.1.1', False, None, ),
                 ('blah1', None, None, True, ),
             ])
         xml = system.to_xml()
@@ -1532,7 +1532,7 @@ class SystemsTestCase(XMLTestCase):
         system_xml = testsxml.system_post_xml
         response = self._post('inventory/systems/', data=system_xml)
         self.assertEquals(response.status_code, 200)
-        system = models.System.objects.get(pk=1)
+        system = models.System.objects.get(pk=3)
         system_xml = testsxml.system_post_xml_response.replace('<registration_date/>',
             '<registration_date>%s</registration_date>' % \
             (system.registration_date.isoformat()))
@@ -1570,7 +1570,7 @@ class SystemsTestCase(XMLTestCase):
         system_xml = testsxml.system_post_xml_dup
         response = self._post('inventory/systems/', data=system_xml)
         self.assertEquals(response.status_code, 200)
-        system = models.System.objects.get(pk=1)
+        system = models.System.objects.get(pk=3)
         self.failUnlessEqual(system.name, "testsystemname")
         
         # add it with same uuids but with different name to make sure
@@ -1578,7 +1578,7 @@ class SystemsTestCase(XMLTestCase):
         system_xml = testsxml.system_post_xml_dup2
         response = self._post('inventory/systems/', data=system_xml)
         self.assertEquals(response.status_code, 200)
-        this_system = models.System.objects.get(pk=1)
+        this_system = models.System.objects.get(pk=3)
         self.failUnlessEqual(this_system.name, "testsystemnameChanged")
 
     def testPutSystemManagementInterface(self):
@@ -1730,10 +1730,10 @@ class SystemsTestCase(XMLTestCase):
             data=testsxml.system_post_xml)
         self.assertEquals(response.status_code, 200)
         
-        response = self._get('inventory/systems/1/system_log/')
+        response = self._get('inventory/systems/3/system_log/')
         self.assertEquals(response.status_code, 401)
         
-        response = self._get('inventory/systems/1/system_log/',
+        response = self._get('inventory/systems/3/system_log/',
             username="testuser", password="password")
         self.assertEquals(response.status_code, 200)
         
@@ -1743,7 +1743,7 @@ class SystemsTestCase(XMLTestCase):
         response = self._post('inventory/systems/', 
             data=testsxml.system_post_xml)
         self.assertEquals(response.status_code, 200)
-        response = self._get('inventory/systems/1/system_log/',
+        response = self._get('inventory/systems/3/system_log/',
             username="testuser", password="password")
         self.assertEquals(response.status_code, 200)
         content = []
@@ -3042,11 +3042,11 @@ class EventTypeTestCase(XMLTestCase):
         event_type = jobmodels.EventType(name="foo", description="bar", priority=110)
         event_type.save()
         self.assertTrue(event_type.priority == 110)
-        response = self._put('inventory/event_types/1/', 
+        response = self._put('inventory/event_types/%s/' % event_type.job_type_id,
             data=testsxml.event_type_put_xml, content_type='text/xml',
             username="admin", password="password")
         self.assertEquals(response.status_code, 200)
-        event_type = jobmodels.EventType.objects.get(pk=1)
+        event_type = jobmodels.EventType.objects.get(pk=event_type.pk)
         self.assertTrue(event_type.priority == 1)
         
     def testPutEventTypeName(self):
@@ -3426,7 +3426,7 @@ class SystemEventProcessingTestCase(XMLTestCase):
         self.failUnlessEqual(len(events), 1)
         event = events[0]
         self.failUnlessEqual(event.event_type.name,
-            jobmodels.EventType.SYSTEM_POLL_IMMEDIATE)
+            jobmodels.EventType.SYSTEM_POLL)
 
         # remove the poll now event and ensure we get the standard poll event next
         event.delete()
@@ -3434,7 +3434,7 @@ class SystemEventProcessingTestCase(XMLTestCase):
         self.failUnlessEqual(len(events), 1)
         event = events[0]
         self.failUnlessEqual(event.event_type.name,
-            jobmodels.EventType.SYSTEM_POLL)
+            jobmodels.EventType.SYSTEM_POLL_IMMEDIATE)
 
         # add another poll event with a higher priority but a future time 
         # and make sure we don't get it (because of the future registration time)
@@ -3471,7 +3471,7 @@ class SystemEventProcessingTestCase(XMLTestCase):
         events = self.mgr.sysMgr.getSystemEventsForProcessing()
         event = events[0]
         self.failUnlessEqual(event.event_type.name,
-            jobmodels.EventType.SYSTEM_POLL_IMMEDIATE)
+            jobmodels.EventType.SYSTEM_POLL)
         self.mgr.sysMgr.processSystemEvents()
         
         # make sure the event was removed and that we have the next poll event 
@@ -3483,7 +3483,7 @@ class SystemEventProcessingTestCase(XMLTestCase):
             assert(False) # should have failed
         except models.SystemEvent.DoesNotExist:
             pass
-        poll_event = self.mgr.sysMgr.eventType(jobmodels.EventType.SYSTEM_POLL)
+        poll_event = self.mgr.sysMgr.eventType(jobmodels.EventType.SYSTEM_POLL_IMMEDIATE)
         local_system = poll_event.system_events.all()[0]
         event = models.SystemEvent.objects.get(system=local_system, event_type=poll_event)
         self.failIf(event is None)

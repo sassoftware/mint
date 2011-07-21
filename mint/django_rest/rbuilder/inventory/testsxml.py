@@ -23,7 +23,8 @@ event_type_xml="""\
 <event_type id="http://testserver/api/v1/inventory/event_types/1">
   <description>System registration</description>
   <priority>110</priority>
-  <event_type_id>1</event_type_id>
+  <resource_type>System</resource_type>
+  <job_type_id>1</job_type_id>
   <name>system registration</name>
   <system_events/>
 </event_type>"""
@@ -34,105 +35,117 @@ event_types_xml="""\
   <event_type id="http://testserver/api/v1/inventory/event_types/1">
     <name>system registration</name>
     <priority>110</priority>
-    <event_type_id>1</event_type_id>
+    <job_type_id>1</job_type_id>
+    <resource_type>System</resource_type>
     <description>System registration</description>
     <system_events/>
   </event_type>
   <event_type id="http://testserver/api/v1/inventory/event_types/2">
-    <name>immediate system poll</name>
-    <priority>105</priority>
-    <event_type_id>2</event_type_id>
-    <description>On-demand system synchronization</description>
+    <name>system poll</name>
+    <priority>50</priority>
+    <job_type_id>2</job_type_id>
+    <resource_type>System</resource_type>
+    <description>System synchronization</description>
     <system_events/>
   </event_type>
   <event_type id="http://testserver/api/v1/inventory/event_types/3">
-    <name>system poll</name>
-    <priority>50</priority>
-    <event_type_id>3</event_type_id>
-    <description>System synchronization</description>
+    <name>immediate system poll</name>
+    <priority>105</priority>
+    <resource_type>System</resource_type>
+    <job_type_id>3</job_type_id>
+    <description>On-demand system synchronization</description>
     <system_events/>
   </event_type>
   <event_type id="http://testserver/api/v1/inventory/event_types/4">
     <description>Scheduled system update</description>
-    <event_type_id>4</event_type_id>
+    <job_type_id>4</job_type_id>
     <name>system apply update</name>
+    <resource_type>System</resource_type>
     <priority>50</priority>
     <system_events/>
   </event_type>
   <event_type id="http://testserver/api/v1/inventory/event_types/5">
     <description>System update</description>
-    <event_type_id>5</event_type_id>
+    <job_type_id>5</job_type_id>
+    <resource_type>System</resource_type>
     <name>immediate system apply update</name>
     <priority>105</priority>
     <system_events/>
   </event_type>
   <event_type id="http://testserver/api/v1/inventory/event_types/6">
     <description>Scheduled system shutdown</description>
-    <event_type_id>6</event_type_id>
+    <job_type_id>6</job_type_id>
     <name>system shutdown</name>
     <priority>50</priority>
+    <resource_type>System</resource_type>
     <system_events/>
   </event_type>
   <event_type id="http://testserver/api/v1/inventory/event_types/7">
     <description>System shutdown</description>
-    <event_type_id>7</event_type_id>
+    <job_type_id>7</job_type_id>
     <name>immediate system shutdown</name>
+    <resource_type>System</resource_type>
     <priority>105</priority>
     <system_events/>
   </event_type>
   <event_type id="http://testserver/api/v1/inventory/event_types/8">
     <description>Launched system network data discovery</description>
-    <event_type_id>8</event_type_id>
+    <job_type_id>8</job_type_id>
     <name>system launch wait</name>
     <priority>105</priority>
+    <resource_type>System</resource_type>
     <system_events/>
   </event_type>
   <event_type id="http://testserver/api/v1/inventory/event_types/9">
     <description>System management interface detection</description>
-    <event_type_id>9</event_type_id>
+    <job_type_id>9</job_type_id>
     <name>system detect management interface</name>
     <priority>50</priority>
+    <resource_type>System</resource_type>
     <system_events/>
   </event_type>
   <event_type id="http://testserver/api/v1/inventory/event_types/10">
     <description>On-demand system management interface detection</description>
-    <event_type_id>10</event_type_id>
+    <job_type_id>10</job_type_id>
     <name>immediate system detect management interface</name>
     <priority>105</priority>
+    <resource_type>System</resource_type>
     <system_events/>
   </event_type>
   <event_type id="http://testserver/api/v1/inventory/event_types/11">
     <description>Update system configuration</description>
-    <event_type_id>11</event_type_id>
+    <job_type_id>11</job_type_id>
     <name>immediate system configuration</name>
     <priority>105</priority>
+    <resource_type>System</resource_type>
     <system_events/>
   </event_type>
   <event_type id="http://testserver/api/v1/inventory/event_types/12">
     <description>System assimilation</description>
-    <event_type_id>12</event_type_id>
+    <job_type_id>12</job_type_id>
     <name>system assimilation</name>
     <priority>105</priority>
+    <resource_type>System</resource_type>
     <system_events/>
   </event_type>
 </event_types>"""
 
 event_type_put_xml="""\
 <?xml version="1.0" encoding="UTF-8"?>
-<event_type id="http://testserver/api/v1/inventory/event_types/1">
+<event_type id="http://testserver/api/v1/inventory/event_types/13">
   <description>System registration</description>
   <priority>1</priority>
-  <event_type_id>1</event_type_id>
+  <event_type_id>13</event_type_id>
   <name>system registration</name>
   <system_events/>
 </event_type>"""
 
 event_type_put_name_change_xml="""\
 <?xml version="1.0" encoding="UTF-8"?>
-<event_type id="http://testserver/api/v1/inventory/event_types/1">
+<event_type id="http://testserver/api/v1/inventory/event_types/13">
   <description>System registration</description>
   <priority>110</priority>
-  <event_type_id>1</event_type_id>
+  <event_type_id>13</event_type_id>
   <name>foobar</name>
   <system_events/>
 </event_type>"""
@@ -140,26 +153,27 @@ event_type_put_name_change_xml="""\
 zones_xml = """\
 <?xml version="1.0" encoding="UTF-8"?>
 <zones>
-  <zone id="http://testserver/api/v1/inventory/zones/1">
+  <zone id="http://testserver/api/v1/inventory/zones/2">
     <description>Some local zone</description>
     <created_date>%s</created_date>
     <name>Local Zone</name>
     <management_nodes/>
-    <zone_id>1</zone_id>
-  </zone>
+    <zone_id>2</zone_id>
+   </zone>
 </zones>
 """
 
 zone_xml = """\
 <?xml version="1.0" encoding="UTF-8"?>
-<zone id="http://testserver/api/v1/inventory/zones/1">
+<zone id="http://testserver/api/v1/inventory/zones/2">
   <description>Some local zone</description>
   <created_date>%s</created_date>
   <name>Local Zone</name>
   <management_nodes/>
-  <zone_id>1</zone_id>
+  <zone_id>2</zone_id>
 </zone>
 """
+
 
 zone_post_xml = """\
 <?xml version="1.0" encoding="UTF-8"?>
@@ -171,12 +185,12 @@ zone_post_xml = """\
 
 zone_post_response_xml = """\
 <?xml version="1.0" encoding="UTF-8"?>
-<zone id="http://testserver/api/v1/inventory/zones/1">
+<zone id="http://testserver/api/v1/inventory/zones/2">
   <description>Some local zone</description>
   <created_date>%s</created_date>
   <name>Local Zone</name>
   <management_nodes/>
-  <zone_id>1</zone_id>
+  <zone_id>2</zone_id>
 </zone>
 """
 
@@ -190,7 +204,7 @@ zone_post_2_xml = """\
 
 zone_put_xml = """\
 <?xml version="1.0" encoding="UTF-8"?>
-<zone id="http://testserver/api/v1/inventory/zones/1">
+<zone id="http://testserver/api/v1/inventory/zones/2">
   <description>zoneputdesc</description>
   <name>zoneputname</name>
   <created_date>%s</created_date>
@@ -200,9 +214,9 @@ zone_put_xml = """\
 management_interfaces_xml="""\
 <?xml version="1.0"?>
 <management_interfaces>
-  <management_interface id="http://testserver/api/v1/inventory/management_interfaces/1">
+  <management_interface id="http://testserver/api/v1/inventory/management_interfaces/3">
     <description>bar</description>
-    <management_interface_id>1</management_interface_id>
+    <management_interface_id>3</management_interface_id>
     <created_date>2010-10-06T00:11:27.828160+00:00</created_date>
     <credentials_descriptor><foo/></credentials_descriptor>
     <port>8000</port>
@@ -227,7 +241,7 @@ management_interface_xml="""\
 
 management_interface_put_xml="""\
 <?xml version="1.0"?>
-<management_interface id="http://testserver/api/v1/inventory/management_interfaces/1/">
+<management_interface id="http://testserver/api/v1/inventory/management_interfaces/3/">
   <systems/>
   <description>bar</description>
   <management_interface_id>1</management_interface_id>
@@ -241,8 +255,8 @@ management_interface_put_xml="""\
 system_types_xml="""\
 <?xml version="1.0"?>
 <system_types>
-  <system_type id="http://testserver/api/v1/inventory/system_types/1">
-    <system_type_id>1</system_type_id>
+  <system_type id="http://testserver/api/v1/inventory/system_types/4">
+    <system_type_id>4</system_type_id>
     <infrastructure>false</infrastructure>
     <description>bar</description>
     <name>foo</name>
@@ -255,8 +269,8 @@ system_types_xml="""\
 
 system_type_xml="""\
 <?xml version="1.0"?>
-<system_type id="http://testserver/api/v1/inventory/system_types/1">
-  <system_type_id>1</system_type_id>
+<system_type id="http://testserver/api/v1/inventory/system_types/4">
+  <system_type_id>4</system_type_id>
   <infrastructure>false</infrastructure>
   <description>bar</description>
   <name>foo</name>
@@ -286,10 +300,10 @@ system_type_systems_xml="""
     <credentials id="http://testserver/api/v1/inventory/systems/3/credentials"/>
     <configuration id="http://testserver/api/v1/inventory/systems/3/configuration"/>
     <configuration_descriptor id="http://testserver/api/v1/inventory/systems/3/configuration_descriptor"/>
-    <current_state id="http://testserver/api/v1/inventory/system_states/2">
+    <current_state id="http://testserver/api/v1/inventory/system_states/3">
       <description>Initial synchronization pending</description>
       <name>registered</name>
-      <system_state_id>2</system_state_id>
+      <system_state_id>3</system_state_id>
     </current_state>
     <description>testsystemdescription</description>
     <generated_uuid>testsystemgenerateduuid</generated_uuid>
@@ -349,7 +363,7 @@ networks_xml = """\
 <?xml version="1.0"?>
 <networks>
   <systems id="http://testserver/api/v1/inventory/systems"/>
-  <network id="http://testserver/api/v1/inventory/networks/1">
+  <network id="http://testserver/api/v1/inventory/networks/2">
     <active/>
     <created_date>2010-09-15T21:41:40.142078+00:00</created_date>
     <device_name>eth0</device_name>
@@ -357,16 +371,16 @@ networks_xml = """\
     <ip_address>1.1.1.1</ip_address>
     <ipv6_address/>
     <netmask>255.255.255.0</netmask>
-    <network_id>1</network_id>
+    <network_id>2</network_id>
     <port_type>lan</port_type>
-    <system id="http://testserver/api/v1/inventory/systems/1"/>
+    <system id="http://testserver/api/v1/inventory/systems/3"/>
     <pinned/>
   </network>
 </networks>"""
 
 network_xml = """\
 <?xml version="1.0"?>
-<network id="http://testserver/api/v1/inventory/networks/1">
+<network id="http://testserver/api/v1/inventory/networks/2">
   <active/>
   <created_date>2010-09-15T21:41:40.142078+00:00</created_date>
   <device_name>eth0</device_name>
@@ -374,15 +388,15 @@ network_xml = """\
   <ip_address>1.1.1.1</ip_address>
   <ipv6_address/>
   <netmask>255.255.255.0</netmask>
-  <network_id>1</network_id>
+  <network_id>2</network_id>
   <port_type>lan</port_type>
-  <system id="http://testserver/api/v1/inventory/systems/1"/>
+  <system id="http://testserver/api/v1/inventory/systems/3"/>
   <pinned/>
 </network>"""
 
 network_put_xml = """\
 <?xml version="1.0"?>
-<network id="http://testserver/api/v1/inventory/networks/1">
+<network id="http://testserver/api/v1/inventory/networks/2">
   <active/>
   <created_date>2010-09-15T21:41:40.142078+00:00</created_date>
   <device_name>eth0</device_name>
@@ -390,9 +404,9 @@ network_put_xml = """\
   <ip_address>2.2.2.2</ip_address>
   <ipv6_address/>
   <netmask>255.255.255.0</netmask>
-  <network_id>1</network_id>
+  <network_id>2</network_id>
   <port_type>lan</port_type>
-  <system id="http://testserver/api/v1/inventory/systems/1"/>
+  <system id="http://testserver/api/v1/inventory/systems/3"/>
   <pinned/>
 </network>"""
 
@@ -407,66 +421,66 @@ system_states_xml = """\
   </system_state>
   <system_state id="http://testserver/api/v1/inventory/system_states/2">
     <system_state_id>2</system_state_id>
-    <description>Initial synchronization pending</description>
-    <name>registered</name>
+    <description>Unmanaged: Invalid credentials</description>
+    <name>unmanaged-credentials</name>
     <created_date>2010-09-03T18:23:42.658249+00:00</created_date>
   </system_state>
   <system_state id="http://testserver/api/v1/inventory/system_states/3">
     <system_state_id>3</system_state_id>
-    <description>Online</description>
-    <name>responsive</name>
+    <description>Initial synchronization pending</description>
+    <name>registered</name>
     <created_date>2010-09-03T18:23:42.659883+00:00</created_date>
   </system_state>
   <system_state id="http://testserver/api/v1/inventory/system_states/4">
     <system_state_id>4</system_state_id>
-    <description>Not responding: Unknown</description>
-    <name>non-responsive-unknown</name>
+    <description>Online</description>
+    <name>responsive</name>
     <created_date>2010-09-03T18:23:42.661629+00:00</created_date>
   </system_state>
   <system_state id="http://testserver/api/v1/inventory/system_states/5">
     <system_state_id>5</system_state_id>
-    <description>Not responding: Network unreachable</description>
-    <name>non-responsive-net</name>
+    <description>Not responding: Unknown</description>
+    <name>non-responsive-unknown</name>
     <created_date>2010-09-03T18:23:42.663290+00:00</created_date>
   </system_state>
   <system_state id="http://testserver/api/v1/inventory/system_states/6">
     <system_state_id>6</system_state_id>
-    <description>Not responding: Host unreachable</description>
-    <name>non-responsive-host</name>
+    <description>Not responding: Network unreachable</description>
+    <name>non-responsive-net</name>
     <created_date>2010-09-03T18:23:42.664943+00:00</created_date>
     </system_state>
     <system_state id="http://testserver/api/v1/inventory/system_states/7">
       <system_state_id>7</system_state_id>
-      <description>Not responding: Shutdown</description>
-      <name>non-responsive-shutdown</name>
+      <description>Not responding: Host unreachable</description>
+      <name>non-responsive-host</name>
       <created_date>2010-09-03T18:23:42.666612+00:00</created_date>
     </system_state>
     <system_state id="http://testserver/api/v1/inventory/system_states/8">
       <system_state_id>8</system_state_id>
-      <description>Not responding: Suspended</description>
-      <name>non-responsive-suspended</name>
+      <description>Not responding: Shutdown</description>
+      <name>non-responsive-shutdown</name>
       <created_date>2010-09-03T18:23:42.668266+00:00</created_date>
     </system_state>
     <system_state id="http://testserver/api/v1/inventory/system_states/9">
       <system_state_id>9</system_state_id>
-      <description>Stale</description>
-      <name>dead</name>
+      <description>Not responding: Suspended</description>
+      <name>non-responsive-suspended</name>
       <created_date>2010-09-03T18:23:42.669899+00:00</created_date>
     </system_state>
     <system_state id="http://testserver/api/v1/inventory/system_states/10">
       <system_state_id>10</system_state_id>
-      <description>Retired</description>
-      <name>mothballed</name>
+      <description>Not responding: Invalid credentials</description>
+      <name>non-responsive-credentials</name>
       <created_date>2010-09-03T18:23:42.671647+00:00</created_date>
     </system_state>
     <system_state id="http://testserver/api/v1/inventory/system_states/11">
-    <description>Unmanaged: Invalid credentials</description>
-    <name>unmanaged-credentials</name>
+    <description>Stale</description>
+    <name>dead</name>
     <system_state_id>11</system_state_id>
   </system_state>
   <system_state id="http://testserver/api/v1/inventory/system_states/12">
-    <description>Not responding: Invalid credentials</description>
-    <name>non-responsive-credentials</name>
+    <description>Retired</description>
+    <name>mothballed</name>
     <system_state_id>12</system_state_id>
   </system_state>
 </system_states>"""
@@ -483,14 +497,14 @@ system_state_xml = """\
 management_nodes_xml = """\
 <?xml version="1.0" encoding="UTF-8"?>
 <management_nodes>
-  <management_node id="http://testserver/api/v1/inventory/management_nodes/1">
+  <management_node id="http://testserver/api/v1/inventory/management_nodes/3">
     <agent_port>5989</agent_port>
     <system_tags/>
     <project/>
-    <credentials id="http://testserver/api/v1/inventory/management_nodes/1/credentials"/>
-    <configuration id="http://testserver/api/v1/inventory/management_nodes/1/configuration"/>
-    <configuration_descriptor id="http://testserver/api/v1/inventory/management_nodes/1/configuration_descriptor"/>
-    <system_events id="http://testserver/api/v1/inventory/systems/1/system_events"/>
+    <credentials id="http://testserver/api/v1/inventory/management_nodes/3/credentials"/>
+    <configuration id="http://testserver/api/v1/inventory/management_nodes/3/configuration"/>
+    <configuration_descriptor id="http://testserver/api/v1/inventory/management_nodes/3/configuration_descriptor"/>
+    <system_events id="http://testserver/api/v1/inventory/systems/3/system_events"/>
     <out_of_date>False</out_of_date>
     <registration_date/>
     <generated_uuid>test management node guuid</generated_uuid>
@@ -500,7 +514,7 @@ management_nodes_xml = """\
       <address>2.2.2.2</address>
     </network_address>
     <networks>
-      <network id="http://testserver/api/v1/inventory/networks/1">
+      <network id="http://testserver/api/v1/inventory/networks/2">
         <active/>
         <created_date>%s</created_date>
         <device_name>eth0</device_name>
@@ -508,9 +522,9 @@ management_nodes_xml = """\
         <ip_address>2.2.2.2</ip_address>
         <ipv6_address/>
         <netmask>255.255.255.0</netmask>
-        <network_id>1</network_id>
+        <network_id>2</network_id>
         <port_type>lan</port_type>
-        <system id="http://testserver/api/v1/inventory/systems/1"/>
+        <system id="http://testserver/api/v1/inventory/systems/3"/>
         <pinned/>
       </network>
     </networks>
@@ -521,19 +535,19 @@ management_nodes_xml = """\
     <managing_zone id="http://testserver/api/v1/inventory/zones/2">Local Zone</managing_zone>
     <hostname/>
     <name>test management node</name>
-    <system_id>1</system_id>
+    <system_id>3</system_id>
     <launching_user/>
     <launch_date/>
     <local>true</local>
-    <installed_software id="http://testserver/api/v1/inventory/systems/1/installed_software"/>
-    <jobs id="http://testserver/api/v1/inventory/systems/1/jobs">
-      <completed_jobs id="http://testserver/api/v1/inventory/systems/1/job_states/3/jobs"/>
-      <failed_jobs id="http://testserver/api/v1/inventory/systems/1/job_states/4/jobs"/>
-      <queued_jobs id="http://testserver/api/v1/inventory/systems/1/job_states/1/jobs"/>
-      <running_jobs id="http://testserver/api/v1/inventory/systems/1/job_states/2/jobs"/>
+    <installed_software id="http://testserver/api/v1/inventory/systems/3/installed_software"/>
+    <jobs id="http://testserver/api/v1/inventory/systems/3/jobs">
+      <completed_jobs id="http://testserver/api/v1/inventory/systems/3/job_states/3/jobs"/>
+      <failed_jobs id="http://testserver/api/v1/inventory/systems/3/job_states/4/jobs"/>
+      <queued_jobs id="http://testserver/api/v1/inventory/systems/3/job_states/1/jobs"/>
+      <running_jobs id="http://testserver/api/v1/inventory/systems/3/job_states/2/jobs"/>
     </jobs>
     <description>test management node desc</description>
-    <system_log id="http://testserver/api/v1/inventory/systems/1/system_log"/>
+    <system_log id="http://testserver/api/v1/inventory/systems/3/system_log"/>
     <target_system_id/>
     <target_system_name/>
     <target_system_description/>
@@ -541,15 +555,15 @@ management_nodes_xml = """\
     <system_type id="http://testserver/api/v1/inventory/system_types/2">rPath Update Service (Infrastructure)</system_type>
     <target/>
     <zone id="http://testserver/api/v1/inventory/zones/2"/>
-    <system_ptr id="http://testserver/api/v1/inventory/systems/1"/>
+    <system_ptr id="http://testserver/api/v1/inventory/systems/3"/>
     <local_uuid>test management node luuid</local_uuid>
     <major_version/>
     <management_interface id="http://testserver/api/v1/inventory/management_interfaces/1">Common Information Model (CIM)</management_interface>
-    <current_state id="http://testserver/api/v1/inventory/system_states/2">
+    <current_state id="http://testserver/api/v1/inventory/system_states/3">
       <created_date>%s</created_date>
       <description>Initial synchronization pending</description>
       <name>registered</name>
-      <system_state_id>2</system_state_id>
+      <system_state_id>3</system_state_id>
     </current_state>
     <created_date>%s</created_date>
   </management_node>
@@ -669,14 +683,14 @@ management_node_post_xml = """\
 
 management_node_post_response_xml = """\
 <?xml version="1.0" encoding="UTF-8"?>
-<management_node id="http://testserver/api/v1/inventory/management_nodes/1">
+<management_node id="http://testserver/api/v1/inventory/management_nodes/3">
   <agent_port>5989</agent_port> 
   <system_tags/>
   <project/>
-  <credentials id="http://testserver/api/v1/inventory/management_nodes/1/credentials"/>
-  <configuration id="http://testserver/api/v1/inventory/management_nodes/1/configuration"/>
-  <configuration_descriptor id="http://testserver/api/v1/inventory/management_nodes/1/configuration_descriptor"/>
-  <system_events id="http://testserver/api/v1/inventory/systems/1/system_events"/>
+  <credentials id="http://testserver/api/v1/inventory/management_nodes/3/credentials"/>
+  <configuration id="http://testserver/api/v1/inventory/management_nodes/3/configuration"/>
+  <configuration_descriptor id="http://testserver/api/v1/inventory/management_nodes/3/configuration_descriptor"/>
+  <system_events id="http://testserver/api/v1/inventory/systems/3/system_events"/>
   <out_of_date>False</out_of_date>
   <registration_date/>
   <generated_uuid>test management node guuid</generated_uuid>
@@ -696,7 +710,7 @@ management_node_post_response_xml = """\
       <netmask>255.255.255.0</netmask>
       <network_id>1</network_id>
       <port_type>lan</port_type>
-      <system id="http://testserver/api/v1/inventory/systems/1"/>
+      <system id="http://testserver/api/v1/inventory/systems/3"/>
       <pinned/>
     </network>
   </networks>
@@ -706,36 +720,36 @@ management_node_post_response_xml = """\
   <ssl_server_certificate>test management node server cert</ssl_server_certificate>
   <stage/>
   <managing_zone id="http://testserver/api/v1/inventory/zones/1">Local rBuilder</managing_zone>
-  <jobs id="http://testserver/api/v1/inventory/systems/1/jobs">
-    <completed_jobs id="http://testserver/api/v1/inventory/systems/1/job_states/3/jobs"/>
-    <failed_jobs id="http://testserver/api/v1/inventory/systems/1/job_states/4/jobs"/>
-    <queued_jobs id="http://testserver/api/v1/inventory/systems/1/job_states/1/jobs"/>
-    <running_jobs id="http://testserver/api/v1/inventory/systems/1/job_states/2/jobs"/>
+  <jobs id="http://testserver/api/v1/inventory/systems/3/jobs">
+    <completed_jobs id="http://testserver/api/v1/inventory/systems/3/job_states/3/jobs"/>
+    <failed_jobs id="http://testserver/api/v1/inventory/systems/3/job_states/4/jobs"/>
+    <queued_jobs id="http://testserver/api/v1/inventory/systems/3/job_states/1/jobs"/>
+    <running_jobs id="http://testserver/api/v1/inventory/systems/3/job_states/2/jobs"/>
   </jobs>
   <hostname>myhostname</hostname>
   <name>test management node</name>
-  <system_id>1</system_id>
+  <system_id>3</system_id>
   <launching_user/>
   <launch_date/>
   <local>true</local>
-  <installed_software id="http://testserver/api/v1/inventory/systems/1/installed_software"/>
+  <installed_software id="http://testserver/api/v1/inventory/systems/3/installed_software"/>
   <description>test management node desc</description>
-  <system_log id="http://testserver/api/v1/inventory/systems/1/system_log"/>
+  <system_log id="http://testserver/api/v1/inventory/systems/3/system_log"/>
   <target_system_id/>
   <target_system_name/>
   <target_system_description/>
   <target_system_state/>
   <system_type id="http://testserver/api/v1/inventory/system_types/2">rPath Update Service (Infrastructure)</system_type>
   <target/>
-  <system_ptr id="http://testserver/api/v1/inventory/systems/1"/>
+  <system_ptr id="http://testserver/api/v1/inventory/systems/3"/>
   <local_uuid>test management node luuid</local_uuid>
   <major_version/>
   <management_interface id="http://testserver/api/v1/inventory/management_interfaces/1">Common Information Model (CIM)</management_interface>
-  <current_state id="http://testserver/api/v1/inventory/system_states/2">
+  <current_state id="http://testserver/api/v1/inventory/system_states/3">
     <created_date>%s</created_date>
     <description>Initial synchronization pending</description>
     <name>registered</name>
-    <system_state_id>2</system_state_id>
+    <system_state_id>3</system_state_id>
   </current_state>
   <created_date>%s</created_date>
 </management_node>"""
@@ -780,13 +794,13 @@ management_node_zone_post_xml = """\
 
 management_node_zone_post_response_xml = """\
 <?xml version="1.0" encoding="UTF-8"?>
-<management_node id="http://testserver/api/v1/inventory/management_nodes/1">
+<management_node id="http://testserver/api/v1/inventory/management_nodes/3">
   <agent_port>5989</agent_port>
   <project/>
-  <credentials id="http://testserver/api/v1/inventory/management_nodes/1/credentials"/>
-  <configuration id="http://testserver/api/v1/inventory/management_nodes/1/configuration"/>
-  <configuration_descriptor id="http://testserver/api/v1/inventory/management_nodes/1/configuration_descriptor"/>
-  <system_events id="http://testserver/api/v1/inventory/systems/1/system_events"/>
+  <credentials id="http://testserver/api/v1/inventory/management_nodes/3/credentials"/>
+  <configuration id="http://testserver/api/v1/inventory/management_nodes/3/configuration"/>
+  <configuration_descriptor id="http://testserver/api/v1/inventory/management_nodes/3/configuration_descriptor"/>
+  <system_events id="http://testserver/api/v1/inventory/systems/3/system_events"/>
   <system_tags/>
   <out_of_date>False</out_of_date>
   <registration_date/>
@@ -807,7 +821,7 @@ management_node_zone_post_response_xml = """\
       <netmask>255.255.255.0</netmask>
       <network_id>1</network_id>
       <port_type>lan</port_type>
-      <system id="http://testserver/api/v1/inventory/systems/1"/>
+      <system id="http://testserver/api/v1/inventory/systems/3"/>
       <pinned/>
     </network>
   </networks>
@@ -818,19 +832,19 @@ management_node_zone_post_response_xml = """\
   <managing_zone id="http://testserver/api/v1/inventory/zones/1">Local rBuilder</managing_zone>
   <hostname>myhostname</hostname>
   <name>test management node</name>
-  <system_id>1</system_id>
+  <system_id>3</system_id>
   <launching_user/>
   <launch_date/>
   <local>true</local>
-  <installed_software id="http://testserver/api/v1/inventory/systems/1/installed_software"/>
-  <jobs id="http://testserver/api/v1/inventory/systems/1/jobs">
-    <completed_jobs id="http://testserver/api/v1/inventory/systems/1/job_states/3/jobs"/>
-    <failed_jobs id="http://testserver/api/v1/inventory/systems/1/job_states/4/jobs"/>
-    <queued_jobs id="http://testserver/api/v1/inventory/systems/1/job_states/1/jobs"/>
-    <running_jobs id="http://testserver/api/v1/inventory/systems/1/job_states/2/jobs"/>
+  <installed_software id="http://testserver/api/v1/inventory/systems/3/installed_software"/>
+  <jobs id="http://testserver/api/v1/inventory/systems/3/jobs">
+    <completed_jobs id="http://testserver/api/v1/inventory/systems/3/job_states/3/jobs"/>
+    <failed_jobs id="http://testserver/api/v1/inventory/systems/3/job_states/4/jobs"/>
+    <queued_jobs id="http://testserver/api/v1/inventory/systems/3/job_states/1/jobs"/>
+    <running_jobs id="http://testserver/api/v1/inventory/systems/3/job_states/2/jobs"/>
   </jobs>
   <description>test management node desc</description>
-  <system_log id="http://testserver/api/v1/inventory/systems/1/system_log"/>
+  <system_log id="http://testserver/api/v1/inventory/systems/3/system_log"/>
   <target_system_id/>
   <target_system_name/>
   <target_system_description/>
@@ -838,15 +852,15 @@ management_node_zone_post_response_xml = """\
   <system_type id="http://testserver/api/v1/inventory/system_types/2">rPath Update Service (Infrastructure)</system_type>
   <target/>
   <zone id="http://testserver/api/v1/inventory/zones/2"/>
-  <system_ptr id="http://testserver/api/v1/inventory/systems/1"/>
+  <system_ptr id="http://testserver/api/v1/inventory/systems/3"/>
   <local_uuid>test management node luuid</local_uuid>
   <major_version/>
   <management_interface id="http://testserver/api/v1/inventory/management_interfaces/1">Common Information Model (CIM)</management_interface>
-  <current_state id="http://testserver/api/v1/inventory/system_states/2">
+  <current_state id="http://testserver/api/v1/inventory/system_states/3">
     <created_date>%s</created_date>
     <description>Initial synchronization pending</description>
     <name>registered</name>
-    <system_state_id>2</system_state_id>
+    <system_state_id>3</system_state_id>
   </current_state>
   <created_date>%s</created_date>
 </management_node>"""
@@ -929,10 +943,10 @@ systems_xml = """\
     <out_of_date>False</out_of_date>
     <registration_date/>
     <created_date>%s</created_date>
-    <current_state id="http://testserver/api/v1/inventory/system_states/2">
+    <current_state id="http://testserver/api/v1/inventory/system_states/3">
       <description>Initial synchronization pending</description>
       <name>registered</name>
-      <system_state_id>2</system_state_id>
+      <system_state_id>3</system_state_id>
     </current_state>
     <description>testsystemdescription</description>
     <generated_uuid>testsystemgenerateduuid</generated_uuid>
@@ -1078,13 +1092,13 @@ systems_put_xml = """\
 
 systems_put_mothball_xml = """\
 <?xml version="1.0" encoding="UTF-8"?>
-<system id="http://testserver/api/v1/inventory/systems/1">
+<system id="http://testserver/api/v1/inventory/systems/3">
   <ssl_client_key>testsystemsslclientkey</ssl_client_key>
   <out_of_date>False</out_of_date>
   <registration_date/>
   <generated_uuid>testsystemgenerateduuid</generated_uuid>
   <networks>
-    <network id="http://testserver/api/v1/inventory/networks/1">
+    <network id="http://testserver/api/v1/inventory/networks/2">
       <active/>
       <device_name>eth0</device_name>
       <dns_name>testnetwork.example.com</dns_name>
@@ -1112,33 +1126,33 @@ systems_put_mothball_xml = """\
   <local_uuid>testsystemlocaluuid</local_uuid>
   <major_version/>
   <management_interface id="http://testserver/api/v1/inventory/management_interfaces/1">Common Information Model (CIM)</management_interface>
-  <current_state id="http://testserver/api/v1/inventory/system_states/10">
+  <current_state id="http://testserver/api/v1/inventory/system_states/12">
     <description>Retired</description>
     <name>mothballed</name>
-    <system_state_id>10</system_state_id>
+    <system_state_id>12</system_state_id>
   </current_state>
 </system>"""
 
 system_xml = """\
 <?xml version="1.0" encoding="UTF-8"?>
-<system id="http://testserver/api/v1/inventory/systems/1">
+<system id="http://testserver/api/v1/inventory/systems/3">
   <agent_port>5989</agent_port>
   <system_tags/>
   <project/>
-  <credentials id="http://testserver/api/v1/inventory/systems/1/credentials"/>
-  <configuration id="http://testserver/api/v1/inventory/systems/1/configuration"/>
-  <configuration_descriptor id="http://testserver/api/v1/inventory/systems/1/configuration_descriptor"/>
-  <installed_software id="http://testserver/api/v1/inventory/systems/1/installed_software"/>
-  <jobs id="http://testserver/api/v1/inventory/systems/1/jobs">
-    <completed_jobs id="http://testserver/api/v1/inventory/systems/1/job_states/3/jobs"/>
-    <failed_jobs id="http://testserver/api/v1/inventory/systems/1/job_states/4/jobs"/>
-    <queued_jobs id="http://testserver/api/v1/inventory/systems/1/job_states/1/jobs"/>
-    <running_jobs id="http://testserver/api/v1/inventory/systems/1/job_states/2/jobs"/>
+  <credentials id="http://testserver/api/v1/inventory/systems/3/credentials"/>
+  <configuration id="http://testserver/api/v1/inventory/systems/3/configuration"/>
+  <configuration_descriptor id="http://testserver/api/v1/inventory/systems/3/configuration_descriptor"/>
+  <installed_software id="http://testserver/api/v1/inventory/systems/3/installed_software"/>
+  <jobs id="http://testserver/api/v1/inventory/systems/3/jobs">
+    <completed_jobs id="http://testserver/api/v1/inventory/systems/3/job_states/3/jobs"/>
+    <failed_jobs id="http://testserver/api/v1/inventory/systems/3/job_states/4/jobs"/>
+    <queued_jobs id="http://testserver/api/v1/inventory/systems/3/job_states/1/jobs"/>
+    <running_jobs id="http://testserver/api/v1/inventory/systems/3/job_states/2/jobs"/>
   </jobs>
   <out_of_date>False</out_of_date>
   <registration_date/>
   <generated_uuid>testsystemgenerateduuid</generated_uuid>
-  <has_active_jobs>True</has_active_jobs>
+  <has_active_jobs>False</has_active_jobs>
   <has_running_jobs>False</has_running_jobs>
   <managing_zone id="http://testserver/api/v1/inventory/zones/1">Local rBuilder</managing_zone>
   <hostname/>
@@ -1146,7 +1160,7 @@ system_xml = """\
     <address>1.1.1.1</address>
   </network_address>
   <networks>
-    <network id="http://testserver/api/v1/inventory/networks/1">
+    <network id="http://testserver/api/v1/inventory/networks/2">
       <active/>
       <created_date>%s</created_date>
       <device_name>eth0</device_name>
@@ -1154,35 +1168,35 @@ system_xml = """\
       <ip_address>1.1.1.1</ip_address>
       <ipv6_address/>
       <netmask>255.255.255.0</netmask>
-      <network_id>1</network_id>
+      <network_id>2</network_id>
       <port_type>lan</port_type>
-      <system id="http://testserver/api/v1/inventory/systems/1"/>
+      <system id="http://testserver/api/v1/inventory/systems/3"/>
       <pinned/>
     </network>
   </networks>
   <ssl_client_certificate>testsystemsslclientcertificate</ssl_client_certificate>
   <ssl_server_certificate>testsystemsslservercertificate</ssl_server_certificate>
   <stage/>
-  <system_id>1</system_id>
+  <system_id>3</system_id>
   <launching_user/>
   <launch_date/>
   <description>testsystemdescription</description>
-  <system_log id="http://testserver/api/v1/inventory/systems/1/system_log"/>
+  <system_log id="http://testserver/api/v1/inventory/systems/3/system_log"/>
   <target_system_id/>
   <target_system_name/>
   <target_system_description/>
   <target_system_state/>
   <system_type id="http://testserver/api/v1/inventory/system_types/1">Inventory</system_type>
-  <system_events id="http://testserver/api/v1/inventory/systems/1/system_events"/>
+  <system_events id="http://testserver/api/v1/inventory/systems/3/system_events"/>
   <target/>
   <name>testsystemname</name>
   <local_uuid>testsystemlocaluuid</local_uuid>
   <major_version/>
   <management_interface id="http://testserver/api/v1/inventory/management_interfaces/1">Common Information Model (CIM)</management_interface>
-  <current_state id="http://testserver/api/v1/inventory/system_states/2">
+  <current_state id="http://testserver/api/v1/inventory/system_states/3">
     <description>Initial synchronization pending</description>
     <name>registered</name>
-    <system_state_id>2</system_state_id>
+    <system_state_id>3</system_state_id>
   </current_state>
   <created_date>%s</created_date>
 </system>"""
@@ -1302,24 +1316,24 @@ system_delete_mgmt_interface_put_xml = """\
 
 system_post_xml_response = """\
 <?xml version="1.0" encoding="UTF-8"?>
-<system id="http://testserver/api/v1/inventory/systems/1">
+<system id="http://testserver/api/v1/inventory/systems/3">
   <agent_port>5989</agent_port>
   <system_tags/>
   <project/>
-  <credentials id="http://testserver/api/v1/inventory/systems/1/credentials"/>
-  <configuration id="http://testserver/api/v1/inventory/systems/1/configuration"/>
-  <configuration_descriptor id="http://testserver/api/v1/inventory/systems/1/configuration_descriptor"/>
-  <system_events id="http://testserver/api/v1/inventory/systems/1/system_events"/>
+  <credentials id="http://testserver/api/v1/inventory/systems/3/credentials"/>
+  <configuration id="http://testserver/api/v1/inventory/systems/3/configuration"/>
+  <configuration_descriptor id="http://testserver/api/v1/inventory/systems/3/configuration_descriptor"/>
+  <system_events id="http://testserver/api/v1/inventory/systems/3/system_events"/>
   <out_of_date>False</out_of_date>
   <registration_date/>
   <generated_uuid>testsystemgenerateduuid</generated_uuid>
-  <has_active_jobs>True</has_active_jobs>
+  <has_active_jobs>False</has_active_jobs>
   <has_running_jobs>False</has_running_jobs>
   <network_address>
     <address>1.1.1.1</address>
   </network_address>
   <networks>
-    <network id="http://testserver/api/v1/inventory/networks/1">
+    <network id="http://testserver/api/v1/inventory/networks/2">
       <active/>
       <created_date>%s</created_date>
       <device_name>eth0</device_name>
@@ -1327,9 +1341,9 @@ system_post_xml_response = """\
       <ip_address>1.1.1.1</ip_address>
       <ipv6_address/>
       <netmask>255.255.255.0</netmask>
-      <network_id>1</network_id>
+      <network_id>2</network_id>
       <port_type>lan</port_type>
-      <system id="http://testserver/api/v1/inventory/systems/1"/>
+      <system id="http://testserver/api/v1/inventory/systems/3"/>
       <pinned/>
     </network>
   </networks>
@@ -1338,18 +1352,18 @@ system_post_xml_response = """\
   <stage/>
   <managing_zone id="http://testserver/api/v1/inventory/zones/1">Local rBuilder</managing_zone>
   <hostname/>
-  <system_id>1</system_id>
+  <system_id>3</system_id>
   <launching_user/>
   <launch_date/>
-  <installed_software id="http://testserver/api/v1/inventory/systems/1/installed_software"/>
-  <jobs id="http://testserver/api/v1/inventory/systems/1/jobs">
-    <completed_jobs id="http://testserver/api/v1/inventory/systems/1/job_states/3/jobs"/>
-    <failed_jobs id="http://testserver/api/v1/inventory/systems/1/job_states/4/jobs"/>
-    <queued_jobs id="http://testserver/api/v1/inventory/systems/1/job_states/1/jobs"/>
-    <running_jobs id="http://testserver/api/v1/inventory/systems/1/job_states/2/jobs"/>
+  <installed_software id="http://testserver/api/v1/inventory/systems/3/installed_software"/>
+  <jobs id="http://testserver/api/v1/inventory/systems/3/jobs">
+    <completed_jobs id="http://testserver/api/v1/inventory/systems/3/job_states/3/jobs"/>
+    <failed_jobs id="http://testserver/api/v1/inventory/systems/3/job_states/4/jobs"/>
+    <queued_jobs id="http://testserver/api/v1/inventory/systems/3/job_states/1/jobs"/>
+    <running_jobs id="http://testserver/api/v1/inventory/systems/3/job_states/2/jobs"/>
   </jobs>
   <description>testsystemdescription</description>
-  <system_log id="http://testserver/api/v1/inventory/systems/1/system_log"/>
+  <system_log id="http://testserver/api/v1/inventory/systems/3/system_log"/>
   <target_system_id/>
   <target_system_name/>
   <target_system_description/>
@@ -1360,10 +1374,10 @@ system_post_xml_response = """\
   <local_uuid>testsystemlocaluuid</local_uuid>
   <major_version/>
   <management_interface id="http://testserver/api/v1/inventory/management_interfaces/1">Common Information Model (CIM)</management_interface>
-  <current_state id="http://testserver/api/v1/inventory/system_states/2">
+  <current_state id="http://testserver/api/v1/inventory/system_states/3">
     <description>Initial synchronization pending</description>
     <name>registered</name>
-    <system_state_id>2</system_state_id>
+    <system_state_id>3</system_state_id>
   </current_state>
   <created_date>%s</created_date>
 </system>"""
@@ -1443,24 +1457,24 @@ system_post_xml_dup2 = system_post_xml_dup.replace(
 
 system_target_xml = """\
 <?xml version="1.0" encoding="UTF-8"?>
-<system id="http://testserver/api/v1/inventory/systems/1">
+<system id="http://testserver/api/v1/inventory/systems/3">
   <agent_port>5989</agent_port>
   <system_tags/>
   <project/>
-  <credentials id="http://testserver/api/v1/inventory/systems/1/credentials"/>
-  <configuration id="http://testserver/api/v1/inventory/systems/1/configuration"/>
-  <configuration_descriptor id="http://testserver/api/v1/inventory/systems/1/configuration_descriptor"/>
-  <system_events id="http://testserver/api/v1/inventory/systems/1/system_events"/>
+  <credentials id="http://testserver/api/v1/inventory/systems/3/credentials"/>
+  <configuration id="http://testserver/api/v1/inventory/systems/3/configuration"/>
+  <configuration_descriptor id="http://testserver/api/v1/inventory/systems/3/configuration_descriptor"/>
+  <system_events id="http://testserver/api/v1/inventory/systems/3/system_events"/>
   <out_of_date>False</out_of_date>
   <registration_date/>
   <generated_uuid>testsystemgenerateduuid</generated_uuid>
-  <has_active_jobs>True</has_active_jobs>
+  <has_active_jobs>False</has_active_jobs>
   <has_running_jobs>False</has_running_jobs>
   <network_address>
     <address>1.1.1.1</address>
   </network_address>
   <networks>
-    <network id="http://testserver/api/v1/inventory/networks/1">
+    <network id="http://testserver/api/v1/inventory/networks/2">
       <active/>
       <created_date>%s</created_date>
       <device_name>eth0</device_name>
@@ -1468,9 +1482,9 @@ system_target_xml = """\
       <ip_address>1.1.1.1</ip_address>
       <ipv6_address/>
       <netmask>255.255.255.0</netmask>
-      <network_id>1</network_id>
+      <network_id>2</network_id>
       <port_type>lan</port_type>
-      <system id="http://testserver/api/v1/inventory/systems/1"/>
+      <system id="http://testserver/api/v1/inventory/systems/3"/>
       <pinned/>
     </network>
   </networks>
@@ -1479,18 +1493,18 @@ system_target_xml = """\
   <stage/>
   <managing_zone id="http://testserver/api/v1/inventory/zones/1">Local rBuilder</managing_zone>
   <hostname/>
-  <system_id>1</system_id>
+  <system_id>3</system_id>
   <launching_user/>
   <launch_date/>
-  <installed_software id="http://testserver/api/v1/inventory/systems/1/installed_software"/>
-  <jobs id="http://testserver/api/v1/inventory/systems/1/jobs">
-    <completed_jobs id="http://testserver/api/v1/inventory/systems/1/job_states/3/jobs"/>
-    <failed_jobs id="http://testserver/api/v1/inventory/systems/1/job_states/4/jobs"/>
-    <queued_jobs id="http://testserver/api/v1/inventory/systems/1/job_states/1/jobs"/>
-    <running_jobs id="http://testserver/api/v1/inventory/systems/1/job_states/2/jobs"/>
+  <installed_software id="http://testserver/api/v1/inventory/systems/3/installed_software"/>
+  <jobs id="http://testserver/api/v1/inventory/systems/3/jobs">
+    <completed_jobs id="http://testserver/api/v1/inventory/systems/3/job_states/3/jobs"/>
+    <failed_jobs id="http://testserver/api/v1/inventory/systems/3/job_states/4/jobs"/>
+    <queued_jobs id="http://testserver/api/v1/inventory/systems/3/job_states/1/jobs"/>
+    <running_jobs id="http://testserver/api/v1/inventory/systems/3/job_states/2/jobs"/>
    </jobs>
   <description>testsystemdescription</description>
-  <system_log id="http://testserver/api/v1/inventory/systems/1/system_log"/>
+  <system_log id="http://testserver/api/v1/inventory/systems/3/system_log"/>
   <target_system_id/>
   <target_system_name/>
   <target_system_description/>
@@ -1501,10 +1515,10 @@ system_target_xml = """\
   <local_uuid>testsystemlocaluuid</local_uuid>
   <major_version/>
   <management_interface id="http://testserver/api/v1/inventory/management_interfaces/1">Common Information Model (CIM)</management_interface>
-  <current_state id="http://testserver/api/v1/inventory/system_states/2">
+  <current_state id="http://testserver/api/v1/inventory/system_states/3">
     <description>Initial synchronization pending</description>
     <name>registered</name>
-    <system_state_id>2</system_state_id>
+    <system_state_id>3</system_state_id>
   </current_state>
   <created_date>%s</created_date>
 </system>
@@ -1594,29 +1608,29 @@ system_event_immediate_registration_post_xml = """\
 
 system_log_xml = """\
 <?xml version="1.0" encoding="UTF-8"?>
-<system_log id="http://testserver/api/v1/inventory/systems/1/system_log">
+<system_log id="http://testserver/api/v1/inventory/systems/3/system_log">
   <system_log_entries>
     <system_log_entry>
       <entry>System added to inventory</entry>
-      <system_log id="http://testserver/api/v1/inventory/systems/1/system_log"/>
+      <system_log id="http://testserver/api/v1/inventory/systems/3/system_log"/>
       <system_log_entry_id>1</system_log_entry_id>
     </system_log_entry>
     <system_log_entry>
       <entry>System registered via rpath-tools</entry>
-      <system_log id="http://testserver/api/v1/inventory/systems/1/system_log"/>
+      <system_log id="http://testserver/api/v1/inventory/systems/3/system_log"/>
       <system_log_entry_id>2</system_log_entry_id>
     </system_log_entry>
     <system_log_entry>
-      <system_log id="http://testserver/api/v1/inventory/systems/1/system_log"/>
+      <system_log id="http://testserver/api/v1/inventory/systems/3/system_log"/>
       <system_log_entry_id>3</system_log_entry_id>
     </system_log_entry>
     <system_log_entry>
-      <system_log id="http://testserver/api/v1/inventory/systems/1/system_log"/>
+      <system_log id="http://testserver/api/v1/inventory/systems/3/system_log"/>
       <system_log_entry_id>4</system_log_entry_id>
     </system_log_entry>
   </system_log_entries>
   <system_log_id>1</system_log_id>
-  <system id="http://testserver/api/v1/inventory/systems/1"/>
+  <system id="http://testserver/api/v1/inventory/systems/3"/>
 </system_log>
 """
 
@@ -1847,10 +1861,10 @@ system_version_xml = """\
   <local_uuid>testsystemlocaluuid</local_uuid>
   <major_version/>
   <management_interface id="http://testserver/api/v1/inventory/management_interfaces/1">Common Information Model (CIM)</management_interface>
-  <current_state id="http://testserver/api/v1/inventory/system_states/2">
+  <current_state id="http://testserver/api/v1/inventory/system_states/3">
     <description>Initial synchronization pending</description>
     <name>registered</name>
-    <system_state_id>2</system_state_id>
+    <system_state_id>3</system_state_id>
   </current_state>
   <created_date>%%s</created_date>
 </system>
@@ -2123,10 +2137,10 @@ system_available_updates_xml = """\
   <local_uuid>testsystemlocaluuid</local_uuid>
   <major_version/>
   <management_interface id="http://testserver/api/v1/inventory/management_interfaces/1">Common Information Model (CIM)</management_interface>
-  <current_state id="http://testserver/api/v1/inventory/system_states/2">
+  <current_state id="http://testserver/api/v1/inventory/system_states/3">
     <description>Initial synchronization pending</description>
     <name>registered</name>
-    <system_state_id>2</system_state_id>
+    <system_state_id>3</system_state_id>
   </current_state>
   <created_date>2010-08-27T12:21:59.800269+00:00</created_date>
 </system>
