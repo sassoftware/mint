@@ -41,7 +41,7 @@ event_types_xml="""\
     <system_events/>
   </event_type>
   <event_type id="http://testserver/api/v1/inventory/event_types/2">
-    <name>immediate system poll</name>
+    <name>system poll</name>
     <priority>50</priority>
     <job_type_id>2</job_type_id>
     <resource_type>System</resource_type>
@@ -49,7 +49,7 @@ event_types_xml="""\
     <system_events/>
   </event_type>
   <event_type id="http://testserver/api/v1/inventory/event_types/3">
-    <name>system poll</name>
+    <name>immediate system poll</name>
     <priority>105</priority>
     <resource_type>System</resource_type>
     <job_type_id>3</job_type_id>
