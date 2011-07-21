@@ -1848,10 +1848,10 @@ system_version_xml = """\
   <local_uuid>testsystemlocaluuid</local_uuid>
   <major_version/>
   <management_interface id="http://testserver/api/v1/inventory/management_interfaces/1">Common Information Model (CIM)</management_interface>
-  <current_state id="http://testserver/api/v1/inventory/system_states/2">
+  <current_state id="http://testserver/api/v1/inventory/system_states/3">
     <description>Initial synchronization pending</description>
     <name>registered</name>
-    <system_state_id>2</system_state_id>
+    <system_state_id>3</system_state_id>
   </current_state>
   <created_date>%%s</created_date>
 </system>
