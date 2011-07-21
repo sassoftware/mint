@@ -30,12 +30,12 @@ class QuerySetTestCase(XMLTestCase):
             "rPath Update Service")
         self.assertEquals(models.SystemTag.objects.all()[0].inclusion_method.name,
             "filtered")
-        self.assertEquals(len(models.QueryTag.objects.all()), 5)
-        self.assertEquals(models.QueryTag.objects.all()[4].name,
-            "query-tag-Unmanaged_systems-5")
-        self.assertEquals(len(models.QuerySet.objects.all()), 5)
-        self.assertEquals(models.QuerySet.objects.all()[4].name,
-            "Unmanaged systems")
+        self.assertEquals(len(models.QueryTag.objects.all()), 12)
+        self.assertEquals(models.QueryTag.objects.get(pk=4).name,
+            "query-tag-Physical_Systems-4")
+        self.assertEquals(len(models.QuerySet.objects.all()), 12)
+        self.assertEquals(models.QuerySet.objects.get(pk=4).name,
+            "Physical Systems")
 
 class QuerySetFixturedTestCase(XMLTestCase):
     fixtures = ['systems_named_like_3_queryset', 'system_collection']
@@ -302,10 +302,10 @@ class QuerySetChildFixturedTestCase(XMLTestCase):
     def testGetQuerySetChildResult(self):
         systems = self.xobjResponse('query_sets/9/child')
         self.assertEquals([s.system_id for s in systems.system],
-            [u'210', u'211', u'214', u'215', u'216', u'217', u'212', u'213'])
+            [u'210', u'211', u'212', u'213', u'214', u'215', u'216', u'217'])
         systems = self.xobjResponse('query_sets/9/all')
         self.assertEquals([s.system_id for s in systems.system],
-            [u'210', u'211', u'214', u'215', u'216', u'217', u'212', u'213'])
+            [u'210', u'211', u'212', u'213', u'214', u'215', u'216', u'217'])
 
         systems = self.xobjResponse('query_sets/12/child')
         self.assertEquals([s.system_id for s in systems.system],

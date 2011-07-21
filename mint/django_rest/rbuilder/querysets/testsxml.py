@@ -17,7 +17,7 @@ queryset_post_xml = """\
 
 query_sets_xml = """\
 <?xml version="1.0"?>
-<query_sets count="5" next_page="" num_pages="1" previous_page="" full_collection="http://testserver/api/v1/query_sets" end_index="4" limit="10" order_by="" per_page="10" filter_by="" id="http://testserver/api/v1/query_sets;start_index=0;limit=10" start_index="0">
+<query_sets count="11" next_page="http://testserver/api/v1/query_sets;start_index=10;limit=10" num_pages="2" previous_page="" full_collection="http://testserver/api/v1/query_sets" end_index="9" limit="10" order_by="" per_page="10" filter_by="" id="http://testserver/api/v1/query_sets;start_index=0;limit=10" start_index="0">
   <query_set id="http://testserver/api/v1/query_sets/1">
     <modified_date>2011-01-26T21:59:59+00:00</modified_date>
     <filter_descriptor id="http://testserver/api/v1/query_sets/filter_descriptor"/>
@@ -30,6 +30,7 @@ query_sets_xml = """\
     <chosen_members id="http://testserver/api/v1/query_sets/1/chosen"/>
     <child_members id="http://testserver/api/v1/query_sets/1/child"/>
     <collection id="http://testserver/api/v1/inventory/systems"/>
+    <presentation_type/>
     <query_tags>
       <query_tag id="http://testserver/api/v1/query_sets/1/query_tags/1">
         <name>query-tag-All_Systems-1</name>
@@ -59,6 +60,7 @@ query_sets_xml = """\
         <chosen_members id="http://testserver/api/v1/query_sets/2/chosen"/>
         <child_members id="http://testserver/api/v1/query_sets/2/child"/>
         <collection id="http://testserver/api/v1/inventory/systems"/>
+        <presentation_type/>
         <query_tags>
           <query_tag id="http://testserver/api/v1/query_sets/2/query_tags/2">
             <name>query-tag-Active_Systems-2</name>
@@ -91,6 +93,7 @@ query_sets_xml = """\
         <chosen_members id="http://testserver/api/v1/query_sets/3/chosen"/>
         <child_members id="http://testserver/api/v1/query_sets/3/child"/>
         <collection id="http://testserver/api/v1/inventory/systems"/>
+        <presentation_type/>
         <query_tags>
           <query_tag id="http://testserver/api/v1/query_sets/3/query_tags/3">
             <name>query-tag-Inactive_Systems-3</name>
@@ -127,6 +130,7 @@ query_sets_xml = """\
     <chosen_members id="http://testserver/api/v1/query_sets/2/chosen"/>
     <child_members id="http://testserver/api/v1/query_sets/2/child"/>
     <collection id="http://testserver/api/v1/inventory/systems"/>
+    <presentation_type/>
         <query_tags>
           <query_tag id="http://testserver/api/v1/query_sets/2/query_tags/2">
             <name>query-tag-Active_Systems-2</name>
@@ -159,6 +163,7 @@ query_sets_xml = """\
     <chosen_members id="http://testserver/api/v1/query_sets/3/chosen"/>
     <child_members id="http://testserver/api/v1/query_sets/3/child"/>
     <collection id="http://testserver/api/v1/inventory/systems"/>
+    <presentation_type/>
         <query_tags>
           <query_tag id="http://testserver/api/v1/query_sets/3/query_tags/3">
             <name>query-tag-Inactive_Systems-3</name>
@@ -191,6 +196,7 @@ query_sets_xml = """\
     <chosen_members id="http://testserver/api/v1/query_sets/4/chosen"/>
     <child_members id="http://testserver/api/v1/query_sets/4/child"/>
     <collection id="http://testserver/api/v1/inventory/systems"/>
+    <presentation_type/>
     <query_tags>
       <query_tag id="http://testserver/api/v1/query_sets/4/query_tags/4">
         <name>query-tag-Physical_Systems-4</name>
@@ -223,6 +229,7 @@ query_sets_xml = """\
     <chosen_members id="http://testserver/api/v1/query_sets/5/chosen"/>
     <child_members id="http://testserver/api/v1/query_sets/5/child"/>
     <collection id="http://testserver/api/v1/inventory/systems"/>
+    <presentation_type/>
     <query_tags>
       <query_tag id="http://testserver/api/v1/query_sets/5/query_tags/5">
         <name>query-tag-Systems_named_like_3-5</name>
@@ -235,6 +242,210 @@ query_sets_xml = """\
     <children/>
     <resource_type>system</resource_type>
     <filtered_members id="http://testserver/api/v1/query_sets/5/filtered"/>
+  </query_set>
+  <query_set id="http://testserver/api/v1/query_sets/6">
+    <all_members id="http://testserver/api/v1/query_sets/6/all"/>
+    <can_modify>false</can_modify>
+    <child_members id="http://testserver/api/v1/query_sets/6/child"/>
+    <children>
+      <query_set id="http://testserver/api/v1/query_sets/7">
+        <all_members id="http://testserver/api/v1/query_sets/7/all"/>
+        <can_modify>false</can_modify>
+        <child_members id="http://testserver/api/v1/query_sets/7/child"/>
+        <children/>
+        <chosen_members id="http://testserver/api/v1/query_sets/7/chosen"/>
+        <collection id="http://testserver/api/v1/inventory/systems"/>
+        <description>rPath infrastructure services for building Windows packages/images</description>
+        <filter_descriptor id="http://testserver/api/v1/query_sets/filter_descriptor"/>
+        <filter_entries>
+          <filter_entry>
+            <field>system_type.name</field>
+            <filter_entry_id>6</filter_entry_id>
+            <operator>EQUAL</operator>
+            <value>infrastructure-windows-build-node</value>
+          </filter_entry>
+        </filter_entries>
+        <filtered_members id="http://testserver/api/v1/query_sets/7/filtered"/>
+        <is_top_level>False</is_top_level>
+        <name>rPath Windows Build Services</name>
+        <presentation_type/>
+        <query_set_id>7</query_set_id>
+        <query_tags>
+          <query_tag id="http://testserver/api/v1/query_sets/7/query_tags/7">
+            <name>query-tag-Windows_Build_Services-7</name>
+            <query_set id="http://testserver/api/v1/query_sets/7"/>
+            <query_tag_id>7</query_tag_id>
+          </query_tag>
+        </query_tags>
+        <resource_type>system</resource_type>
+      </query_set>
+      <query_set id="http://testserver/api/v1/query_sets/8">
+        <all_members id="http://testserver/api/v1/query_sets/8/all"/>
+        <can_modify>false</can_modify>
+        <child_members id="http://testserver/api/v1/query_sets/8/child"/>
+        <children/>
+        <chosen_members id="http://testserver/api/v1/query_sets/8/chosen"/>
+        <collection id="http://testserver/api/v1/inventory/systems"/>
+        <description>rPath infrastructure services for managing systems</description>
+        <filter_descriptor id="http://testserver/api/v1/query_sets/filter_descriptor"/>
+        <filter_entries>
+          <filter_entry>
+            <field>system_type.name</field>
+            <filter_entry_id>7</filter_entry_id>
+            <operator>EQUAL</operator>
+            <value>infrastructure-management-node</value>
+          </filter_entry>
+        </filter_entries>
+        <filtered_members id="http://testserver/api/v1/query_sets/8/filtered"/>
+        <is_top_level>False</is_top_level>
+        <name>rPath Update Services</name>
+        <presentation_type/>
+        <query_set_id>8</query_set_id>
+        <query_tags>
+          <query_tag id="http://testserver/api/v1/query_sets/8/query_tags/8">
+            <name>query-tag-Update_Services-8</name>
+            <query_set id="http://testserver/api/v1/query_sets/8"/>
+            <query_tag_id>8</query_tag_id>
+          </query_tag>
+        </query_tags>
+        <resource_type>system</resource_type>
+      </query_set>
+    </children>
+    <chosen_members id="http://testserver/api/v1/query_sets/6/chosen"/>
+    <collection id="http://testserver/api/v1/inventory/systems"/>
+    <description>Systems that make up the rPath infrastructure</description>
+    <filter_descriptor id="http://testserver/api/v1/query_sets/filter_descriptor"/>
+    <filter_entries>
+      <filter_entry>
+        <field>system_type.infrastructure</field>
+        <filter_entry_id>5</filter_entry_id>
+        <operator>EQUAL</operator>
+        <value>true</value>
+      </filter_entry>
+    </filter_entries>
+    <filtered_members id="http://testserver/api/v1/query_sets/6/filtered"/>
+    <is_top_level>True</is_top_level>
+    <name>Infrastructure Systems</name>
+    <presentation_type/>
+    <query_set_id>6</query_set_id>
+    <query_tags>
+      <query_tag id="http://testserver/api/v1/query_sets/6/query_tags/6">
+        <name>query-tag-Infrastructure_Systems-6</name>
+        <query_set id="http://testserver/api/v1/query_sets/6"/>
+        <query_tag_id>6</query_tag_id>
+      </query_tag>
+    </query_tags>
+    <resource_type>system</resource_type>
+  </query_set>
+  <query_set id="http://testserver/api/v1/query_sets/7">
+    <all_members id="http://testserver/api/v1/query_sets/7/all"/>
+    <can_modify>false</can_modify>
+    <child_members id="http://testserver/api/v1/query_sets/7/child"/>
+    <children/>
+    <chosen_members id="http://testserver/api/v1/query_sets/7/chosen"/>
+    <collection id="http://testserver/api/v1/inventory/systems"/>
+    <description>rPath infrastructure services for building Windows packages/images</description>
+    <filter_descriptor id="http://testserver/api/v1/query_sets/filter_descriptor"/>
+    <filter_entries>
+      <filter_entry>
+        <field>system_type.name</field>
+        <filter_entry_id>6</filter_entry_id>
+        <operator>EQUAL</operator>
+        <value>infrastructure-windows-build-node</value>
+      </filter_entry>
+    </filter_entries>
+    <filtered_members id="http://testserver/api/v1/query_sets/7/filtered"/>
+    <is_top_level>False</is_top_level>
+    <name>rPath Windows Build Services</name>
+    <presentation_type/>
+    <query_set_id>7</query_set_id>
+    <query_tags>
+      <query_tag id="http://testserver/api/v1/query_sets/7/query_tags/7">
+        <name>query-tag-Windows_Build_Services-7</name>
+        <query_set id="http://testserver/api/v1/query_sets/7"/>
+        <query_tag_id>7</query_tag_id>
+      </query_tag>
+    </query_tags>
+    <resource_type>system</resource_type>
+  </query_set>
+  <query_set id="http://testserver/api/v1/query_sets/8">
+    <all_members id="http://testserver/api/v1/query_sets/8/all"/>
+    <can_modify>false</can_modify>
+    <child_members id="http://testserver/api/v1/query_sets/8/child"/>
+    <children/>
+    <chosen_members id="http://testserver/api/v1/query_sets/8/chosen"/>
+    <collection id="http://testserver/api/v1/inventory/systems"/>
+    <description>rPath infrastructure services for managing systems</description>
+    <filter_descriptor id="http://testserver/api/v1/query_sets/filter_descriptor"/>
+    <filter_entries>
+      <filter_entry>
+        <field>system_type.name</field>
+        <filter_entry_id>7</filter_entry_id>
+        <operator>EQUAL</operator>
+        <value>infrastructure-management-node</value>
+      </filter_entry>
+    </filter_entries>
+    <filtered_members id="http://testserver/api/v1/query_sets/8/filtered"/>
+    <is_top_level>False</is_top_level>
+    <name>rPath Update Services</name>
+    <presentation_type/>
+    <query_set_id>8</query_set_id>
+    <query_tags>
+      <query_tag id="http://testserver/api/v1/query_sets/8/query_tags/8">
+        <name>query-tag-Update_Services-8</name>
+        <query_set id="http://testserver/api/v1/query_sets/8"/>
+        <query_tag_id>8</query_tag_id>
+      </query_tag>
+    </query_tags>
+    <resource_type>system</resource_type>
+  </query_set>
+  <query_set id="http://testserver/api/v1/query_sets/9">
+    <all_members id="http://testserver/api/v1/query_sets/9/all"/>
+    <can_modify>false</can_modify>
+    <child_members id="http://testserver/api/v1/query_sets/9/child"/>
+    <children/>
+    <chosen_members id="http://testserver/api/v1/query_sets/9/chosen"/>
+    <collection id="http://testserver/api/v1/project_branch_stages"/>
+    <description>All project stages</description>
+    <filter_descriptor id="http://testserver/api/v1/query_sets/filter_descriptor"/>
+    <filter_entries/>
+    <filtered_members id="http://testserver/api/v1/query_sets/9/filtered"/>
+    <is_top_level>True</is_top_level>
+    <name>All Project Stages</name>
+    <presentation_type>project</presentation_type>
+    <query_set_id>9</query_set_id>
+    <query_tags>
+      <query_tag id="http://testserver/api/v1/query_sets/9/query_tags/9">
+        <name>query-tag-All_Project_Branch_Stages-13</name>
+        <query_set id="http://testserver/api/v1/query_sets/9"/>
+        <query_tag_id>9</query_tag_id>
+      </query_tag>
+    </query_tags>
+    <resource_type>project_branch_stage</resource_type>
+  </query_set>
+  <query_set id="http://testserver/api/v1/query_sets/10">
+    <all_members id="http://testserver/api/v1/query_sets/10/all"/>
+    <can_modify>false</can_modify>
+    <child_members id="http://testserver/api/v1/query_sets/10/child"/>
+    <children/>
+    <chosen_members id="http://testserver/api/v1/query_sets/10/chosen"/>
+    <collection id="http://testserver/api/v1/project_branch_stages"/>
+    <description>All platforms</description>
+    <filter_descriptor id="http://testserver/api/v1/query_sets/filter_descriptor"/>
+    <filter_entries/>
+    <filtered_members id="http://testserver/api/v1/query_sets/10/filtered"/>
+    <is_top_level>True</is_top_level>
+    <name>All Platforms</name>
+    <presentation_type>platform</presentation_type>
+    <query_set_id>10</query_set_id>
+    <query_tags>
+      <query_tag id="http://testserver/api/v1/query_sets/10/query_tags/10">
+        <name>query-tag-All_Platforms-12</name>
+        <query_set id="http://testserver/api/v1/query_sets/10"/>
+        <query_tag_id>10</query_tag_id>
+      </query_tag>
+    </query_tags>
+    <resource_type>project_branch_stage</resource_type>
   </query_set>
 </query_sets>
 """
@@ -260,6 +471,7 @@ query_set_xml = """\
     <chosen_members id="http://testserver/api/v1/query_sets/4/chosen"/>
     <child_members id="http://testserver/api/v1/query_sets/4/child"/>
     <collection id="http://testserver/api/v1/inventory/systems"/>
+    <presentation_type/>
     <query_tags>
       <query_tag id="http://testserver/api/v1/query_sets/4/query_tags/4">
         <name>query-tag-Physical_Systems-4</name>
@@ -307,6 +519,7 @@ query_set_fixtured_xml = """\
     <is_top_level>True</is_top_level>
     <children/>
     <resource_type>system</resource_type>
+    <presentation_type/>
     <filtered_members id="http://testserver/api/v1/query_sets/5/filtered"/>
   </query_set>
 """
@@ -525,7 +738,7 @@ queryset_post_xml2 = """\
 """
 
 queryset_post_response_xml2 = """\
-<query_set id="http://testserver/api/v1/query_sets/6">
+<query_set id="http://testserver/api/v1/query_sets/12">
   <filter_entries>
     <filter_entry>
       <operator>IS_NULL</operator>
@@ -537,22 +750,23 @@ queryset_post_response_xml2 = """\
   <filter_descriptor id="http://testserver/api/v1/query_sets/filter_descriptor"/>
   <can_modify>true</can_modify>
   <modified_date>2011-03-16T21:33:47.055412+00:00</modified_date>
-  <filtered_members id="http://testserver/api/v1/query_sets/6/filtered"/>
+  <filtered_members id="http://testserver/api/v1/query_sets/12/filtered"/>
   <description>New query set for physical systems</description>
-  <child_members id="http://testserver/api/v1/query_sets/6/child"/>
+  <child_members id="http://testserver/api/v1/query_sets/12/child"/>
+  <presentation_type/>
   <query_tags>
-    <query_tag id="http://testserver/api/v1/query_sets/6/query_tags/6">
-      <query_tag_id>6</query_tag_id>
-      <query_set id="http://testserver/api/v1/query_sets/6"/>
-      <name>query-tag-A_new_query_set-6</name>
+    <query_tag id="http://testserver/api/v1/query_sets/12/query_tags/12">
+      <query_tag_id>12</query_tag_id>
+      <query_set id="http://testserver/api/v1/query_sets/12"/>
+      <name>query-tag-A_new_query_set-12</name>
     </query_tag>
   </query_tags>
-  <chosen_members id="http://testserver/api/v1/query_sets/6/chosen"/>
-  <query_set_id>6</query_set_id>
+  <chosen_members id="http://testserver/api/v1/query_sets/12/chosen"/>
+  <query_set_id>12</query_set_id>
   <collection id="http://testserver/api/v1/inventory/systems"/>
   <is_top_level>False</is_top_level>
   <created_date>2011-03-16T21:33:47.055325+00:00</created_date>
-  <all_members id="http://testserver/api/v1/query_sets/6/all"/>
+  <all_members id="http://testserver/api/v1/query_sets/12/all"/>
   <children/>
   <resource_type>system</resource_type>
   <name>A new query set</name>
