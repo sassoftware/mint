@@ -519,10 +519,10 @@ class NetworkTestCase(XMLTestCase):
     def testPutNetwork(self):
         models.System.objects.all().delete()
         self._saveSystem()
-        response = self._put('inventory/networks/1/',
+        response = self._put('inventory/networks/2/',
             data=testsxml.network_put_xml, username="admin", password="password")
         self.assertEquals(response.status_code, 200)
-        network = models.Network.objects.get(pk=1)
+        network = models.Network.objects.get(pk=2)
         self.assertTrue(network.dns_name == "new.com")
         self.assertTrue(network.ip_address == "2.2.2.2")
         
@@ -554,7 +554,7 @@ class NetworkTestCase(XMLTestCase):
     def testGetNetwork(self):
         models.System.objects.all().delete()
         self._saveSystem()
-        response = self._get('inventory/networks/1/',
+        response = self._get('inventory/networks/2/',
             username="testuser", password="password")
         self.assertEquals(response.status_code, 200)
         self.assertXMLEquals(response.content,

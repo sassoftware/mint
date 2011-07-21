@@ -350,7 +350,7 @@ networks_xml = """\
 <?xml version="1.0"?>
 <networks>
   <systems id="http://testserver/api/v1/inventory/systems"/>
-  <network id="http://testserver/api/v1/inventory/networks/1">
+  <network id="http://testserver/api/v1/inventory/networks/2">
     <active/>
     <created_date>2010-09-15T21:41:40.142078+00:00</created_date>
     <device_name>eth0</device_name>
@@ -358,16 +358,16 @@ networks_xml = """\
     <ip_address>1.1.1.1</ip_address>
     <ipv6_address/>
     <netmask>255.255.255.0</netmask>
-    <network_id>1</network_id>
+    <network_id>2</network_id>
     <port_type>lan</port_type>
-    <system id="http://testserver/api/v1/inventory/systems/1"/>
+    <system id="http://testserver/api/v1/inventory/systems/3"/>
     <pinned/>
   </network>
 </networks>"""
 
 network_xml = """\
 <?xml version="1.0"?>
-<network id="http://testserver/api/v1/inventory/networks/1">
+<network id="http://testserver/api/v1/inventory/networks/2">
   <active/>
   <created_date>2010-09-15T21:41:40.142078+00:00</created_date>
   <device_name>eth0</device_name>
@@ -375,15 +375,15 @@ network_xml = """\
   <ip_address>1.1.1.1</ip_address>
   <ipv6_address/>
   <netmask>255.255.255.0</netmask>
-  <network_id>1</network_id>
+  <network_id>2</network_id>
   <port_type>lan</port_type>
-  <system id="http://testserver/api/v1/inventory/systems/1"/>
+  <system id="http://testserver/api/v1/inventory/systems/3"/>
   <pinned/>
 </network>"""
 
 network_put_xml = """\
 <?xml version="1.0"?>
-<network id="http://testserver/api/v1/inventory/networks/1">
+<network id="http://testserver/api/v1/inventory/networks/2">
   <active/>
   <created_date>2010-09-15T21:41:40.142078+00:00</created_date>
   <device_name>eth0</device_name>
@@ -391,9 +391,9 @@ network_put_xml = """\
   <ip_address>2.2.2.2</ip_address>
   <ipv6_address/>
   <netmask>255.255.255.0</netmask>
-  <network_id>1</network_id>
+  <network_id>2</network_id>
   <port_type>lan</port_type>
-  <system id="http://testserver/api/v1/inventory/systems/1"/>
+  <system id="http://testserver/api/v1/inventory/systems/3"/>
   <pinned/>
 </network>"""
 
