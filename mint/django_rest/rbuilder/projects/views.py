@@ -16,14 +16,15 @@ class ProjectService(service.BaseService, jobsmodels.Actionable):
     @access.anonymous
     @return_xml
     def rest_GET(self, request, short_name=None):
-        return self.get(request, short_name)
+        model = self.get(short_name)
+        model.actions = self.getActions(request, model)
+        return model
 
-    def get(self, request, short_name):
+    def get(self, short_name):
         if short_name:
             model = self.mgr.getProject(short_name)
         else:
             model = self.mgr.getProjects()
-        model.actions = self.getActions(request, model)
         return model
         
     @requires('project')
@@ -36,7 +37,7 @@ class ProjectService(service.BaseService, jobsmodels.Actionable):
     def rest_PUT(self, request, short_name, project):
         return self.mgr.updateProject(project)
 
-    def rest_DELETE(self, request, short_name):
+    def rest_DELETE(self, short_name):
         project = self.get(short_name)
         self.mgr.deleteProject(project)
         response = HttpResponse(status=204)
@@ -100,9 +101,9 @@ class ProjectImageService(service.BaseService, jobsmodels.Actionable):
     @access.anonymous
     @return_xml
     def rest_GET(self, request, short_name, image_id=None):
-        return self.get(request, short_name, image_id)
+        return self.get(short_name, image_id)
 
-    def get(self, request, short_name, image_id):
+    def get(self, short_name, image_id):
         if image_id:
             model = self.mgr.getImage(image_id)
         else:
