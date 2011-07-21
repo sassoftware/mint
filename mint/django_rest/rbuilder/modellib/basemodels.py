@@ -1114,7 +1114,7 @@ class XObjModel(models.Model):
                     val = val.isoformat()
                 elif isinstance(field, (djangofields.BooleanField,
                                         djangofields.NullBooleanField)):
-                    val = str(val).lower()
+                    val = str(bool(val)).lower()
                 elif isinstance(field, XMLField):
                     if val is None:
                         continue
