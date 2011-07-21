@@ -2569,8 +2569,8 @@ system_installed_software_version_stage_xml = """\
   <major_version id="http://testserver/api/v1/project_branches/1">
     <name>1</name>
   </major_version>
-  <current_state id="http://testserver/api/v1/inventory/system_states/2">
-    <system_state_id>2</system_state_id>
+  <current_state id="http://testserver/api/v1/inventory/system_states/3">
+    <system_state_id>3</system_state_id>
     <description>Initial synchronization pending</description>
     <name>registered</name>
     <created_date>2010-11-10T22:52:26.167013+00:00</created_date>

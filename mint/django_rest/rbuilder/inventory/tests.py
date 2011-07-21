@@ -2914,7 +2914,15 @@ class SystemVersionsTestCase(XMLTestCase):
         version = versions.VersionFromString(newGroup.version)
         self.assertEquals('1-3-1', version.trailingRevision().asString())
 
+    def _mockProductDefinition(self):
+        import StringIO
+        from rpath_proddef import api1 as proddef
+        def fakeLoadFromRepository(slf, client):
+            slf.parseStream(StringIO.StringIO(refProductDefintion1))
+        self.mock(proddef.ProductDefinition, 'loadFromRepository', fakeLoadFromRepository)
+
     def testSetInstalledSoftwareSystemRest(self):
+        self._mockProductDefinition()
         system = self._saveSystem()
         self._saveTrove()
         system.installed_software.add(self.trove)
@@ -4445,3 +4453,25 @@ class CollectionTest(XMLTestCase):
         # local_uuid in the fixture
         self.assertEquals([x.system_id for x in systems.system],
             [u'2', u'50'])
+
+refProductDefintion1 = """\
+<?xml version='1.0' encoding='UTF-8'?>
+<productDefinition xmlns="http://www.rpath.com/permanent/rpd-2.0.xsd" xmlns:xsi=
+"http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.rpath.com/permanent/rpd-2.0.xsd rpd-2.0.xsd" version="2.0">
+  <productName>My Awesome Appliance</productName>
+  <productShortname>awesome</productShortname>
+  <productDescription>Awesome</productDescription>
+  <productVersion>1.0</productVersion>
+  <productVersionDescription>Awesome Version</productVersionDescription>
+  <conaryRepositoryHostname>product.example.com</conaryRepositoryHostname>
+  <conaryNamespace>exm</conaryNamespace>
+  <imageGroup>group-awesome-dist</imageGroup>
+  <baseFlavor>is: x86 x86_64</baseFlavor>
+  <stages>
+    <stage labelSuffix="-devel" name="devel"/>
+    <stage labelSuffix="-qa" name="qa"/>
+    <stage labelSuffix="" name="release"/>
+  </stages>
+  <searchPaths/>
+</productDefinition>
+"""
