@@ -277,7 +277,7 @@ class ManagementInterfacesTestCase(XMLTestCase):
         models.ManagementInterface.objects.all().delete()
         mi = models.ManagementInterface(name="foo", description="bar", port=8000, credentials_descriptor="<foo/>")
         mi.save()
-        response = self._get('inventory/management_interfaces/1/',
+        response = self._get('inventory/management_interfaces/%s/' % mi.pk,
             username="testuser", password="password")
         self.assertEquals(response.status_code, 200)
         self.assertXMLEquals(response.content,

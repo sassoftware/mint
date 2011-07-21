@@ -228,9 +228,9 @@ management_interfaces_xml="""\
 
 management_interface_xml="""\
 <?xml version="1.0"?>
-<management_interface id="http://testserver/api/v1/inventory/management_interfaces/1">
+<management_interface id="http://testserver/api/v1/inventory/management_interfaces/3">
   <description>bar</description>
-  <management_interface_id>1</management_interface_id>
+  <management_interface_id>3</management_interface_id>
   <created_date>2010-10-06T00:11:27.828160+00:00</created_date>
   <credentials_descriptor><foo/></credentials_descriptor>
   <port>8000</port>
