@@ -137,7 +137,7 @@ class ZonesTestCase(XMLTestCase):
     def testGetZone(self):
         models.Zone.objects.all().delete()
         zone = self._saveZone()
-        response = self._get('inventory/zones/1/',
+        response = self._get('inventory/zones/2/',
             username="testuser", password="password")
         self.assertEquals(response.status_code, 200)
         self.assertXMLEquals(response.content,
@@ -175,7 +175,7 @@ class ZonesTestCase(XMLTestCase):
         response = self._post('inventory/zones/',
             data=xml, username="admin", password="password")
         self.assertEquals(response.status_code, 200)
-        zone = models.Zone.objects.get(pk=1)
+        zone = models.Zone.objects.get(pk=2)
         self.assertXMLEquals(response.content, testsxml.zone_post_response_xml % \
             (zone.created_date.isoformat()))
         
@@ -220,7 +220,7 @@ class ZonesTestCase(XMLTestCase):
         response = self._put('inventory/zones/%d/' % zone.zone_id,
             data=testsxml.zone_put_xml % zone.created_date, username="admin", password="password")
         self.assertEquals(response.status_code, 200)
-        zone = models.Zone.objects.get(pk=1)
+        zone = models.Zone.objects.get(pk=zone.zone_id)
         self.assertTrue(zone.name == "zoneputname")
         self.assertTrue(zone.description == "zoneputdesc")
         
@@ -241,7 +241,7 @@ class ZonesTestCase(XMLTestCase):
         """
         models.Zone.objects.all().delete()
         self._saveZone()
-        response = self._delete('inventory/zones/1/',
+        response = self._delete('inventory/zones/2/',
             username="admin", password="password")
         self.assertEquals(response.status_code, 204)
         try:

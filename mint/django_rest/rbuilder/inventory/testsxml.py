@@ -152,12 +152,12 @@ zones_xml = """\
 
 zone_xml = """\
 <?xml version="1.0" encoding="UTF-8"?>
-<zone id="http://testserver/api/v1/inventory/zones/1">
+<zone id="http://testserver/api/v1/inventory/zones/2">
   <description>Some local zone</description>
   <created_date>%s</created_date>
   <name>Local Zone</name>
   <management_nodes/>
-  <zone_id>1</zone_id>
+  <zone_id>2</zone_id>
 </zone>
 """
 
@@ -172,12 +172,12 @@ zone_post_xml = """\
 
 zone_post_response_xml = """\
 <?xml version="1.0" encoding="UTF-8"?>
-<zone id="http://testserver/api/v1/inventory/zones/1">
+<zone id="http://testserver/api/v1/inventory/zones/2">
   <description>Some local zone</description>
   <created_date>%s</created_date>
   <name>Local Zone</name>
   <management_nodes/>
-  <zone_id>1</zone_id>
+  <zone_id>2</zone_id>
 </zone>
 """
 
@@ -191,7 +191,7 @@ zone_post_2_xml = """\
 
 zone_put_xml = """\
 <?xml version="1.0" encoding="UTF-8"?>
-<zone id="http://testserver/api/v1/inventory/zones/1">
+<zone id="http://testserver/api/v1/inventory/zones/2">
   <description>zoneputdesc</description>
   <name>zoneputname</name>
   <created_date>%s</created_date>
