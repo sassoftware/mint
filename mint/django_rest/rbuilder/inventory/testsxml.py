@@ -34,83 +34,83 @@ event_types_xml="""\
   <event_type id="http://testserver/api/v1/inventory/event_types/1">
     <name>system registration</name>
     <priority>110</priority>
-    <event_type_id>1</event_type_id>
+    <job_type_id>1</job_type_id>
     <description>System registration</description>
     <system_events/>
   </event_type>
   <event_type id="http://testserver/api/v1/inventory/event_types/2">
     <name>immediate system poll</name>
     <priority>105</priority>
-    <event_type_id>2</event_type_id>
+    <job_type_id>2</job_type_id>
     <description>On-demand system synchronization</description>
     <system_events/>
   </event_type>
   <event_type id="http://testserver/api/v1/inventory/event_types/3">
     <name>system poll</name>
     <priority>50</priority>
-    <event_type_id>3</event_type_id>
+    <job_type_id>3</job_type_id>
     <description>System synchronization</description>
     <system_events/>
   </event_type>
   <event_type id="http://testserver/api/v1/inventory/event_types/4">
     <description>Scheduled system update</description>
-    <event_type_id>4</event_type_id>
+    <job_type_id>4</job_type_id>
     <name>system apply update</name>
     <priority>50</priority>
     <system_events/>
   </event_type>
   <event_type id="http://testserver/api/v1/inventory/event_types/5">
     <description>System update</description>
-    <event_type_id>5</event_type_id>
+    <job_type_id>5</job_type_id>
     <name>immediate system apply update</name>
     <priority>105</priority>
     <system_events/>
   </event_type>
   <event_type id="http://testserver/api/v1/inventory/event_types/6">
     <description>Scheduled system shutdown</description>
-    <event_type_id>6</event_type_id>
+    <job_type_id>6</job_type_id>
     <name>system shutdown</name>
     <priority>50</priority>
     <system_events/>
   </event_type>
   <event_type id="http://testserver/api/v1/inventory/event_types/7">
     <description>System shutdown</description>
-    <event_type_id>7</event_type_id>
+    <job_type_id>7</job_type_id>
     <name>immediate system shutdown</name>
     <priority>105</priority>
     <system_events/>
   </event_type>
   <event_type id="http://testserver/api/v1/inventory/event_types/8">
     <description>Launched system network data discovery</description>
-    <event_type_id>8</event_type_id>
+    <job_type_id>8</job_type_id>
     <name>system launch wait</name>
     <priority>105</priority>
     <system_events/>
   </event_type>
   <event_type id="http://testserver/api/v1/inventory/event_types/9">
     <description>System management interface detection</description>
-    <event_type_id>9</event_type_id>
+    <job_type_id>9</job_type_id>
     <name>system detect management interface</name>
     <priority>50</priority>
     <system_events/>
   </event_type>
   <event_type id="http://testserver/api/v1/inventory/event_types/10">
     <description>On-demand system management interface detection</description>
-    <event_type_id>10</event_type_id>
+    <job_type_id>10</job_type_id>
     <name>immediate system detect management interface</name>
     <priority>105</priority>
     <system_events/>
   </event_type>
   <event_type id="http://testserver/api/v1/inventory/event_types/11">
     <description>Update system configuration</description>
-    <event_type_id>11</event_type_id>
+    <job_type_id>11</job_type_id>
     <name>immediate system configuration</name>
     <priority>105</priority>
     <system_events/>
   </event_type>
   <event_type id="http://testserver/api/v1/inventory/event_types/12">
     <description>System assimilation</description>
-    <event_type_id>12</event_type_id>
+    <job_type_id>12</job_type_id>
     <name>system assimilation</name>
     <priority>105</priority>
     <system_events/>
@@ -201,9 +201,9 @@ zone_put_xml = """\
 management_interfaces_xml="""\
 <?xml version="1.0"?>
 <management_interfaces>
-  <management_interface id="http://testserver/api/v1/inventory/management_interfaces/1">
+  <management_interface id="http://testserver/api/v1/inventory/management_interfaces/3">
     <description>bar</description>
-    <management_interface_id>1</management_interface_id>
+    <management_interface_id>3</management_interface_id>
     <created_date>2010-10-06T00:11:27.828160+00:00</created_date>
     <credentials_descriptor><foo/></credentials_descriptor>
     <port>8000</port>
