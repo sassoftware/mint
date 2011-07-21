@@ -408,66 +408,66 @@ system_states_xml = """\
   </system_state>
   <system_state id="http://testserver/api/v1/inventory/system_states/2">
     <system_state_id>2</system_state_id>
-    <description>Initial synchronization pending</description>
-    <name>registered</name>
+    <description>Unmanaged: Invalid credentials</description>
+    <name>unmanaged-credentials</name>
     <created_date>2010-09-03T18:23:42.658249+00:00</created_date>
   </system_state>
   <system_state id="http://testserver/api/v1/inventory/system_states/3">
     <system_state_id>3</system_state_id>
-    <description>Online</description>
-    <name>responsive</name>
+    <description>Initial synchronization pending</description>
+    <name>registered</name>
     <created_date>2010-09-03T18:23:42.659883+00:00</created_date>
   </system_state>
   <system_state id="http://testserver/api/v1/inventory/system_states/4">
     <system_state_id>4</system_state_id>
-    <description>Not responding: Unknown</description>
-    <name>non-responsive-unknown</name>
+    <description>Online</description>
+    <name>responsive</name>
     <created_date>2010-09-03T18:23:42.661629+00:00</created_date>
   </system_state>
   <system_state id="http://testserver/api/v1/inventory/system_states/5">
     <system_state_id>5</system_state_id>
-    <description>Not responding: Network unreachable</description>
-    <name>non-responsive-net</name>
+    <description>Not responding: Unknown</description>
+    <name>non-responsive-unknown</name>
     <created_date>2010-09-03T18:23:42.663290+00:00</created_date>
   </system_state>
   <system_state id="http://testserver/api/v1/inventory/system_states/6">
     <system_state_id>6</system_state_id>
-    <description>Not responding: Host unreachable</description>
-    <name>non-responsive-host</name>
+    <description>Not responding: Network unreachable</description>
+    <name>non-responsive-net</name>
     <created_date>2010-09-03T18:23:42.664943+00:00</created_date>
     </system_state>
     <system_state id="http://testserver/api/v1/inventory/system_states/7">
       <system_state_id>7</system_state_id>
-      <description>Not responding: Shutdown</description>
-      <name>non-responsive-shutdown</name>
+      <description>Not responding: Host unreachable</description>
+      <name>non-responsive-host</name>
       <created_date>2010-09-03T18:23:42.666612+00:00</created_date>
     </system_state>
     <system_state id="http://testserver/api/v1/inventory/system_states/8">
       <system_state_id>8</system_state_id>
-      <description>Not responding: Suspended</description>
-      <name>non-responsive-suspended</name>
+      <description>Not responding: Shutdown</description>
+      <name>non-responsive-shutdown</name>
       <created_date>2010-09-03T18:23:42.668266+00:00</created_date>
     </system_state>
     <system_state id="http://testserver/api/v1/inventory/system_states/9">
       <system_state_id>9</system_state_id>
-      <description>Stale</description>
-      <name>dead</name>
+      <description>Not responding: Suspended</description>
+      <name>non-responsive-suspended</name>
       <created_date>2010-09-03T18:23:42.669899+00:00</created_date>
     </system_state>
     <system_state id="http://testserver/api/v1/inventory/system_states/10">
       <system_state_id>10</system_state_id>
-      <description>Retired</description>
-      <name>mothballed</name>
+      <description>Not responding: Invalid credentials</description>
+      <name>non-responsive-credentials</name>
       <created_date>2010-09-03T18:23:42.671647+00:00</created_date>
     </system_state>
     <system_state id="http://testserver/api/v1/inventory/system_states/11">
-    <description>Unmanaged: Invalid credentials</description>
-    <name>unmanaged-credentials</name>
+    <description>Stale</description>
+    <name>dead</name>
     <system_state_id>11</system_state_id>
   </system_state>
   <system_state id="http://testserver/api/v1/inventory/system_states/12">
-    <description>Not responding: Invalid credentials</description>
-    <name>non-responsive-credentials</name>
+    <description>Retired</description>
+    <name>mothballed</name>
     <system_state_id>12</system_state_id>
   </system_state>
 </system_states>"""
