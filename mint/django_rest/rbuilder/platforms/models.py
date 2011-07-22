@@ -6,7 +6,6 @@
 
 from django.db import models
 from mint.django_rest.rbuilder.platforms import fields
-from xobj import xobj
 from mint.django_rest.rbuilder import modellib
 from mint.django_rest.rbuilder.modellib import basemodels # hack, because of modellib in Platform
 import sys
