@@ -228,6 +228,10 @@ urlpatterns = patterns('',
         inventoryviews.ApplianceService(),
         name='Projects'),
 
+    URL(r'projects/(?P<short_name>(\w|\-)*)/project_branches/(?P<project_branch_name>(\w|\-)*)/repos/?$'
+        projectsviews.ProjectBranchService(),
+        name='ProjectVersion'),
+
     # Query Sets
     URL(r'query_sets/?$',
         querysetviews.QuerySetService(),

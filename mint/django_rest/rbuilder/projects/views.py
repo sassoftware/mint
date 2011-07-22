@@ -11,6 +11,16 @@ from mint.django_rest.deco import access, return_xml, requires
 from mint.django_rest.rbuilder import service
 from mint.django_rest.rbuilder.jobs import models as jobsmodels
 
+class ProjectBranchService(service.BaseService, jobsmodels.Actionable):
+    @access.anonymous
+    @return_xml
+    def rest_GET(self, request, short_name, project_branch_name):
+        return self.get(short_name, project_branch_name)
+        
+    def get(self, short_name, project_branch_name):
+        return self.mgr.getProjectBranch(short_name, project_branch_name)
+
+
 class ProjectService(service.BaseService, jobsmodels.Actionable):
 
     @access.anonymous

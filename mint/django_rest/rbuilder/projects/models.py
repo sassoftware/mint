@@ -84,7 +84,6 @@ class Project(modellib.XObjIdModel):
     user_name = modellib.SyntheticField()
     password = modellib.SyntheticField()
     entitlement = modellib.SyntheticField()
-
     actions = modellib.SyntheticField()
 
     load_fields = [ short_name ]
@@ -272,7 +271,7 @@ class Stage(modellib.XObjIdModel):
     label = models.TextField(unique=True)
     promotable = models.BooleanField(default=False)
     created_date = modellib.DateTimeUtcField(auto_now_add=True)
-    # groups = modellib.DeferredForeignKey("Groups")
+    groups = modellib.SyntheticField()
 
     def serialize(self, request=None):
         xobjModel = modellib.XObjIdModel.serialize(self, request)
