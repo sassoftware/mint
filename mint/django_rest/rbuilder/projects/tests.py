@@ -38,6 +38,14 @@ class ProjectsTestCase(XMLTestCase):
         
         return project
 
+    def testGetProjectVersionFromDB(self):
+        try:
+            PlatformVersions = models.ProjectVersion.objects.all()
+            import pdb; pdb.set_trace()
+        except Exception, e:
+            raise AssertionError(e)
+            
+
     def testGetProjectsAdmin(self):
         response = self._get('projects/',
             username="admin", password="password")

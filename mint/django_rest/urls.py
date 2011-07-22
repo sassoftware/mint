@@ -228,7 +228,7 @@ urlpatterns = patterns('',
         inventoryviews.ApplianceService(),
         name='Projects'),
 
-    URL(r'projects/(?P<short_name>(\w|\-)*)/project_branches/(?P<project_branch_name>(\w|\-)*)/repos/?$',
+    URL(r'projects/(?P<short_name>(\w|\-)*)/project_branches/(?P<project_branch_name>(\w|\-|[0-9])*)/repos/?$',
         projectviews.ProjectBranchService(),
         name='ProjectVersion'),
 
