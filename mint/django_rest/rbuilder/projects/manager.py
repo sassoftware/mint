@@ -454,7 +454,3 @@ class ProjectManager(basemanager.BaseManager):
         ProjectVersions.project_branch = models.ProjectVersion.objects.all().filter(
                 project_branch_name=project_branch_name).filter(project__short_name__exact=short_name)
         return ProjectVersions
-        
-        
-        
-        
