@@ -451,7 +451,7 @@ class ProjectManager(basemanager.BaseManager):
     @exposed
     def getProjectBranch(self, short_name, project_branch_name):
         ProjectVersions = models.ProjectVersions()
-        ProjectVersions.project_branch = \ 
+        ProjectVersions.project_branch = \
             models.ProjectVersion.objects.all().filter(
                 project_branch_name=project_branch_name).filter(project__short_name__exact=short_name)
         return ProjectVersions
