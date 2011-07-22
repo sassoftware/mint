@@ -28,7 +28,7 @@ from conary.dbstore import sqlerrors, sqllib
 log = logging.getLogger(__name__)
 
 # database schema major version
-RBUILDER_DB_VERSION = sqllib.DBversion(58, 35)
+RBUILDER_DB_VERSION = sqllib.DBversion(58, 36)
 
 
 def _createTrigger(db, table, column = "changed"):
@@ -1230,7 +1230,9 @@ def _createInventorySchema(db, cfg):
         changed |= _addTableRows(db, tableName, 'name',
             [dict(name="system registration",
                   description='System registration',
-                  priority=110,
+                  # registration events are no longer dispatched immediately
+                  # (RBL-8851)
+                  priority=70,
                   resource_type='System'),
              dict(name="system poll",
                   description='System synchronization',

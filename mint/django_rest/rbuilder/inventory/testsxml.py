@@ -22,7 +22,7 @@ event_type_xml="""\
 <?xml version="1.0" encoding="UTF-8"?>
 <event_type id="http://testserver/api/v1/inventory/event_types/1">
   <description>System registration</description>
-  <priority>110</priority>
+  <priority>70</priority>
   <resource_type>System</resource_type>
   <job_type_id>1</job_type_id>
   <name>system registration</name>
@@ -34,7 +34,7 @@ event_types_xml="""\
 <event_types>
   <event_type id="http://testserver/api/v1/inventory/event_types/1">
     <name>system registration</name>
-    <priority>110</priority>
+    <priority>70</priority>
     <job_type_id>1</job_type_id>
     <resource_type>System</resource_type>
     <description>System registration</description>
@@ -1541,7 +1541,7 @@ system_events_xml = """\
         <event_type id="http://testserver/api/v1/inventory/event_types/1"/>
         <system id="http://testserver/api/v1/inventory/systems/3"/>
         <time_created>%s</time_created>
-        <priority>110</priority>
+        <priority>70</priority>
         <time_enabled>%s</time_enabled>
         <system_event_id>2</system_event_id>
     </system_event>

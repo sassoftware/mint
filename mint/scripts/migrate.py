@@ -2949,7 +2949,7 @@ class MigrateTo_57(SchemaMigration):
 
 
 class MigrateTo_58(SchemaMigration):
-    Version = (58, 35)
+    Version = (58, 36)
 
     def migrate(self):
         return True
@@ -3338,9 +3338,13 @@ class MigrateTo_58(SchemaMigration):
             ALTER TABLE TargetData
                 ADD COLUMN targetdataId SERIAL PRIMARY KEY""")
         self.db.createIndex('TargetData', 'TargetDataIdx',
-            'targetId, name', unique = True)                 
-        return True        
+            'targetId, name', unique = True)
+        return True
 
+    def migrate36(self):
+        cu = self.db.cursor()
+        cu.execute("UPDATE jobs_job_type SET priority=70 WHERE name = 'system registration'")
+        return True
 
 def _createUpdateSystemsQuerySet(db):
 

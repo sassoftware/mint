@@ -3226,9 +3226,10 @@ class SystemEventTestCase(XMLTestCase):
         assert(len(sys_registered_entries) == 1)
         
     def testScheduleSystemRegistrationEvent(self):
+        # registration events are no longer dispatched immediately (RBL-8851)
         self.mgr.scheduleSystemRegistrationEvent(self.system)
-        assert(self.mock_dispatchSystemEvent_called)
-        
+        self.failIf(self.mock_dispatchSystemEvent_called)
+
         registration_event = self.mgr.sysMgr.eventType(jobmodels.EventType.SYSTEM_REGISTRATION)
         event = models.SystemEvent.objects.filter(system=self.system,event_type=registration_event).get()
         assert(event is not None)
@@ -3248,7 +3249,7 @@ class SystemEventTestCase(XMLTestCase):
             assert(False) # should not throw exception
         
     def testAddSystemRegistrationEvent(self):
-        # registration event should be dispatched now
+        # registration events are no longer dispatched immediately (RBL-8851)
         registration_event = self.mgr.sysMgr.eventType(jobmodels.EventType.SYSTEM_REGISTRATION)
         systemEvent = models.SystemEvent(system=self.system, 
             event_type=registration_event, priority=registration_event.priority,
@@ -3256,7 +3257,7 @@ class SystemEventTestCase(XMLTestCase):
         systemEvent.save()
         assert(systemEvent is not None)
         self.mgr.addSystemSystemEvent(self.system.system_id, systemEvent)
-        assert(self.mock_dispatchSystemEvent_called)
+        self.failIf(self.mock_dispatchSystemEvent_called)
         
     def testAddSystemConfigNowEvent(self):
         # poll now event should be dispatched now
@@ -3871,8 +3872,15 @@ class SystemEventProcessing2TestCase(XMLTestCase):
         cimParams = repClient.CimParams
         resLoc = repClient.ResultsLocation
 
+        # Clear out the system events table
+        models.SystemEvent.objects.all().delete()
         newState = self.mgr.sysMgr.getNextSystemState(systemCim, jobCim)
         self.failUnlessEqual(newState, None)
+        # registration events are no longer dispatched immediately (RBL-)
+        self.failUnlessEqual(self.mgr.repeaterMgr.repeaterClient.methodsCalled,
+            [])
+        # Dispatch the event now
+        self.mgr.sysMgr.processSystemEvents()
         self.failUnlessEqual(self.mgr.repeaterMgr.repeaterClient.methodsCalled,
             [
                 ('register_cim',
