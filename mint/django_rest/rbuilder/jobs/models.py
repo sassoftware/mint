@@ -122,6 +122,7 @@ class Job(modellib.XObjIdModel):
     job_description = D(modellib.SyntheticField(),
         "a description of the job")
 
+
     load_fields = [ job_uuid ]
 
     def getRmakeJob(self):

@@ -8,47 +8,59 @@ from django.db import models
 from mint.django_rest.rbuilder.platforms import fields
 from xobj import xobj
 from mint.django_rest.rbuilder import modellib
+from mint.django_rest.rbuilder.modellib import basemodels # hack, because of modellib in Platform
 import sys
 from mint.django_rest.rbuilder.projects import models as projectsmodels
 
 
-class AbstractPlatform(modellib.XObjIdModel):
-    class Meta:
-        abstract = True
+# class AbstractPlatform(modellib.XObjIdModel):
+#     class Meta:
+#         abstract = True
+#     
+#     platform_id = models.AutoField(primary_key=True, db_column='platformid')
+#     label = models.CharField(max_length=1026)
+#     mode = models.CharField(max_length=1026)
+#     enabled = models.IntegerField()
+#     projects = models.ForeignKey(projectsmodels.Project)
+#     platform_name = models.CharField(max_length=1026, db_column='platformName')
+#     configurable = models.BooleanField(default=False)
+#     abstract = models.BooleanField(default=False)
+#     is_from_disk = models.BooleanField(default=False, db_column='isFromDisk')
+#     time_refresed = modellib.DatetimeUtcField()
     
-    platform_id = models.AutoField(primary_key=True)
-    platform_trove_name = fields.CharField(max_length=1026)
-    repository_host_name = fields.CharField(max_length=1026)
-    label = fields.CharField(max_length=1026)
-    product_version = fields.CharField(max_length=1026)
-    platform_name = fields.CharField(max_length=1026)
-    platform_usage_terms = fields.CharField(max_length=1026)
-    mode = fields.CharField(max_length=1026)
-    enabled = fields.BooleanField(max_length=1026)
-    configurable = fields.BooleanField()
-    abstract = fields.BooleanField()
-    mirror_permission = fields.BooleanField()
-    # repository_url = modellib.HrefField() # no clue
-    # content_sources = models.ManyToManyField('ContentSource', through='ProductPlatformContentSource')
-    platform_type = fields.CharField(max_length=1026)
-    platform_status = models.ForeignKey('SourceStatus') # not sure this is the correct model to point to
-    content_source_types = models.ForeignKey('ContentSourceType')
-    load = models.ForeignKey('PlatformLoad')
-    # image_type_definitions = modellib.ForeignKey('ImageTypeDefinition') # model doesn't exist yet
-    is_platform = fields.BooleanField()
-    # both of platform_version and platform_versions are in original model for platform as URLFields,
-    # not sure if both are necessary and what the URLFields translate to
-    # platform_version = modellib.DeferredForeignKey('PlatformVersion')
-    # platform_versions = modellib.DeferredManyToManyField('PlatformVersion')
-    platform_versions = modellib.DeferredForeignKey('PlatformVersion')
-    project = models.ForeignKey(projectsmodels.Project)
-
-    def serialize(self, request=None):
-        xobj_model = modellib.XObjIdModel.serialize(self, request)
-        # xobj_model.repository_url = self.project.getRepositoryUrl()
-        return xobj_model
-
-    _xobj_hidden_accessors = set(['platformcontentsource_set', 'platformversion_set'])
+    # platform_id = models.AutoField(primary_key=True, db_column='platformid')
+    # platform_trove_name = fields.CharField(max_length=1026)
+    # repository_host_name = fields.CharField(max_length=1026)
+    # label = fields.CharField(max_length=1026)
+    # product_version = fields.CharField(max_length=1026)
+    # platform_name = fields.CharField(max_length=1026)
+    # platform_usage_terms = fields.CharField(max_length=1026)
+    # mode = fields.CharField(max_length=1026)
+    # enabled = fields.BooleanField(max_length=1026)
+    # configurable = fields.BooleanField()
+    # abstract = fields.BooleanField()
+    # mirror_permission = fields.BooleanField()
+    # # repository_url = modellib.HrefField() # no clue
+    # # content_sources = models.ManyToManyField('ContentSource', through='ProductPlatformContentSource')
+    # platform_type = fields.CharField(max_length=1026)
+    # platform_status = models.ForeignKey('SourceStatus') # not sure this is the correct model to point to
+    # content_source_types = models.ForeignKey('ContentSourceType')
+    # load = models.ForeignKey('PlatformLoad')
+    # # image_type_definitions = modellib.ForeignKey('ImageTypeDefinition') # model doesn't exist yet
+    # is_platform = fields.BooleanField()
+    # # both of platform_version and platform_versions are in original model for platform as URLFields,
+    # # not sure if both are necessary and what the URLFields translate to
+    # # platform_version = modellib.DeferredForeignKey('PlatformVersion')
+    # # platform_versions = modellib.DeferredManyToManyField('PlatformVersion')
+    # platform_versions = modellib.DeferredForeignKey('PlatformVersion')
+    # project = models.ForeignKey(projectsmodels.Project)
+    # 
+    # def serialize(self, request=None):
+    #     xobj_model = modellib.XObjIdModel.serialize(self, request)
+    #     # xobj_model.repository_url = self.project.getRepositoryUrl()
+    #     return xobj_model
+    # 
+    # _xobj_hidden_accessors = set(['platformcontentsource_set', 'platformversion_set'])
 
 
 class Platforms(modellib.Collection):
@@ -58,11 +70,26 @@ class Platforms(modellib.Collection):
     list_fields = ['platform']
 
 
-class Platform(AbstractPlatform):
-    class Meta:
-        abstract = False
-        
-    content_sources = models.ManyToManyField('ContentSource', through='PlatformContentSource')
+class Platform(modellib.XObjIdModel):
+    platform_id = models.AutoField(primary_key=True, db_column='platformid')
+    platform_trove_name = models.CharField(max_length=1026)
+    label = models.CharField(max_length=1026)
+    mode = models.CharField(max_length=1026)
+    enabled = models.IntegerField()
+    projects = modellib.DeferredForeignKey(projectsmodels.Project)
+    platform_name = models.CharField(max_length=1026, db_column='platformName')
+    configurable = models.BooleanField(default=False)
+    abstract = models.BooleanField(default=False)
+    is_from_disk = models.BooleanField(default=False, db_column='isFromDisk')
+    time_refresed = basemodels.DateTimeUtcField() # hack, modellib keeps evaluating to None
+
+
+# class Platform(AbstractPlatform):
+#     class Meta:
+#         abstract = False
+#         db_table = 'platforms'
+#         
+#     content_sources = models.ManyToManyField('ContentSource', through='PlatformContentSource')
 
 class ProductPlatforms(modellib.Collection):
     class Meta:
@@ -70,10 +97,19 @@ class ProductPlatforms(modellib.Collection):
         
     list_fields = ['product_platform']
 
-class ProductPlatform(AbstractPlatform):
+class ProductPlatform(modellib.XObjIdModel):
     class Meta:
         abstract = False
-        
+    platform_id = models.AutoField(primary_key=True, db_column='platformid')
+    label = models.CharField(max_length=1026)
+    mode = models.CharField(max_length=1026)
+    enabled = models.IntegerField()
+    projects = modellib.DeferredForeignKey(projectsmodels.Project)
+    platform_name = models.CharField(max_length=1026, db_column='platformName')
+    configurable = models.BooleanField(default=False)
+    abstract = models.BooleanField(default=False)
+    is_from_disk = models.BooleanField(default=False, db_column='isFromDisk')
+    time_refresed = basemodels.DateTimeUtcField() # hack, modellib keeps evaluating to None
     hostname = fields.CharField(max_length=1026)
     content_sources = models.ManyToManyField('ContentSource', through='ProductPlatformContentSource')
 
@@ -136,25 +172,37 @@ class Sources(modellib.Collection):
     list_fields = ['content_source']
     
     
+# class AbstractSource(modellib.XObjIdModel):
+#     class Meta:
+#         abstract = True
+#     content_source_id = models.AutoField(primary_key=True, db_column='platformSourceId')
+#     name = fields.CharField(max_length=1026)
+#     short_name = fields.CharField(max_length=1026, unique=True, db_column='shortName')
+#     default_source = fields.BooleanField()
+#     order_index = fields.IntegerField()
+#     content_source_type = models.CharField(max_length=1026)
+#     enabled = fields.BooleanField()
+#     content_source_status = models.ForeignKey('SourceStatus', null=True)
+#     # resource_errors = fields.UrlField() # what the heck does this go to
+#     
+#     def serialize(self, request=None):
+#         xobj_model = modellib.XObjIdModel.serialize(self, request)
+#         content_source_type = ContentSourceType.objects.get(content_source_type=self.content_source_type)
+#         serialized_content_source_type = content_source_type.serialize(request)
+#         xobj_model.content_source_type = serialized_content_source_type
+#         return xobj_model
+
+
 class AbstractSource(modellib.XObjIdModel):
     class Meta:
         abstract = True
-    content_source_id = models.AutoField(primary_key=True)
-    name = fields.CharField(max_length=1026)
-    short_name = fields.CharField(max_length=1026, unique=True)
-    default_source = fields.BooleanField()
-    order_index = fields.IntegerField()
-    content_source_type = models.CharField(max_length=1026)
+    content_source_id = models.AutoField(primary_key=True, db_column='platformSourceId')
+    name = models.CharField(max_length=1026)
+    short_name = models.CharField(max_length=1026, unique=True, db_column='shortName')
+    default_source = models.IntegerField()
+    order_index = models.IntegerField()
+    content_source_type = models.CharField(max_length=1026, db_column='contentSourceType')
     enabled = fields.BooleanField()
-    content_source_status = models.ForeignKey('SourceStatus', null=True)
-    # resource_errors = fields.UrlField() # what the heck does this go to
-    
-    def serialize(self, request=None):
-        xobj_model = modellib.XObjIdModel.serialize(self, request)
-        content_source_type = ContentSourceType.objects.get(content_source_type=self.content_source_type)
-        serialized_content_source_type = content_source_type.serialize(request)
-        xobj_model.content_source_type = serialized_content_source_type
-        return xobj_model
 
 
 class PlatformContentSource(modellib.XObjIdModel):
