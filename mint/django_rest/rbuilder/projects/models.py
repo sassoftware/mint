@@ -224,7 +224,7 @@ class ProjectVersion(modellib.XObjIdModel):
     platform = modellib.DeferredForeignKey(platformModels.platform, null=True)
     platform_version = modellib.DeferredForeignKey(platformModels.PlatformVersion, null=True)
     image_type_definitions = modellib.DeferredForeignKey(platformModels.ImageTypeDefinitions, null=True)
-    images = modellib.DeferredForeignKey(Images, null=True)
+    images = modellib.DeferredForeignKey('Images', null=True)
     source_group = modellib.SyntheticField() # not implemented yet
 
     def __unicode__(self):
