@@ -14,6 +14,7 @@ from mint.django_rest.rbuilder.repos import manager as reposmanager
 from mint.django_rest.rbuilder.manager import basemanager
 from mint.django_rest.rbuilder.manager import rbuildermanager
 
+
 from xobj import xobj
 
 from testutils import mock
@@ -157,9 +158,11 @@ class ProjectsTestCase(XMLTestCase):
             project.description)
 
     def testDeleteProject(self):
-        response = self._delete('projects/chater-foo',
-            username="testuser", password="password")
-        self.assertEquals(response.status_code, 204)
+	    project = models.Project.objects.get(short_name='chater-foo')
+	    import pdb; pdb.set_trace()
+            response = self._delete('projects/chater-foo',
+                username="testuser", password="password")
+            self.assertEquals(response.status_code, 204)
         
     def testGetProjectVersion(self):
         response = self._get('project_branches/',
@@ -182,12 +185,13 @@ class ProjectsTestCase(XMLTestCase):
         self.assertEquals(3, len(branch.project_branch_stages.all()))
         
     def testAddProjectVersionToProjectNoAuth(self):
-        # add project as admin
+        # add project as admin    
         response = self._post('projects',
             data=testsxml.project_post_xml,
             username="admin", password="password")
         self.assertEquals(response.status_code, 200)
         
+        import pdb; pdb.set_trace()
         # try to add project as different user
         response = self._post('project_branches/',
             data=testsxml.project_version_post_with_project_no_auth_xml,
