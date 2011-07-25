@@ -966,8 +966,7 @@ class SystemManager(basemanager.BaseManager):
         system = models.System.objects.get(pk=system_id)
         systemCreds = {}
         if system.management_interface:
-            if system.management_interface.name == 'wmi' or \
-                    system.management_interface.name == 'ssh':
+            if system.management_interface.name in [ 'wmi', 'ssh' ]:
                 if system.credentials is None:
                     systemCreds = {}
                 else:
@@ -983,8 +982,7 @@ class SystemManager(basemanager.BaseManager):
     def addSystemCredentials(self, system_id, credentials):
         system = models.System.objects.get(pk=system_id)
         if system.management_interface:
-            if system.management_interface.name == 'wmi' or \
-                    system.management_interface.name == 'ssh':
+            if system.management_interface.name in [ 'wmi', 'ssh' ]:
                 systemCreds = self.marshalCredentials(credentials)
                 system.credentials = systemCreds
             elif system.management_interface.name == 'cim':
