@@ -214,9 +214,9 @@ zone_put_xml = """\
 management_interfaces_xml="""\
 <?xml version="1.0"?>
 <management_interfaces>
-  <management_interface id="http://testserver/api/v1/inventory/management_interfaces/3">
+  <management_interface id="http://testserver/api/v1/inventory/management_interfaces/4">
     <description>bar</description>
-    <management_interface_id>3</management_interface_id>
+    <management_interface_id>4</management_interface_id>
     <created_date>2010-10-06T00:11:27.828160+00:00</created_date>
     <credentials_descriptor><foo/></credentials_descriptor>
     <port>8000</port>
@@ -228,9 +228,9 @@ management_interfaces_xml="""\
 
 management_interface_xml="""\
 <?xml version="1.0"?>
-<management_interface id="http://testserver/api/v1/inventory/management_interfaces/3">
+<management_interface id="http://testserver/api/v1/inventory/management_interfaces/4">
   <description>bar</description>
-  <management_interface_id>3</management_interface_id>
+  <management_interface_id>4</management_interface_id>
   <created_date>2010-10-06T00:11:27.828160+00:00</created_date>
   <credentials_descriptor><foo/></credentials_descriptor>
   <port>8000</port>
@@ -241,10 +241,10 @@ management_interface_xml="""\
 
 management_interface_put_xml="""\
 <?xml version="1.0"?>
-<management_interface id="http://testserver/api/v1/inventory/management_interfaces/3/">
+<management_interface id="http://testserver/api/v1/inventory/management_interfaces/4/">
   <systems/>
   <description>bar</description>
-  <management_interface_id>1</management_interface_id>
+  <management_interface_id>4</management_interface_id>
   <created_date>2010-10-06T00:11:27.828160+00:00</created_date>
   <credentials_descriptor><foo/></credentials_descriptor>
   <port>123</port>
