@@ -14,6 +14,7 @@ from django.db import models
 from mint import userlevels
 from mint.django_rest.rbuilder import modellib
 from mint.django_rest.rbuilder.users import models as usermodels
+from mint.django_rest.rbuilder.platforms import models as platformModels
 
 from xobj import xobj
 
@@ -199,6 +200,7 @@ class ProjectVersions(modellib.Collection):
     view_name = "ProjectVersions"
     list_fields = ["project_branch"]
     version = []
+    
 
 class ProjectVersion(modellib.XObjIdModel):
     class Meta:
@@ -215,10 +217,15 @@ class ProjectVersion(modellib.XObjIdModel):
         related_name="project_branches", view_name="ProjectVersions", null=True)
     namespace = models.CharField(max_length=16)
     name = models.CharField(max_length=16)
-    platform = modellib.SyntheticField()
+    platform_label = modellib.SyntheticField()
     description = models.TextField()
     created_date = models.DecimalField(max_digits=14, decimal_places=3,
         db_column="timecreated")
+    platform = modellib.DeferredForeignKey(platformModels.platform, null=True)
+    platform_version = modellib.DeferredForeignKey(platformModels.PlatformVersion, null=True)
+    image_type_definitions = modellib.DeferredForeignKey(platformModels.ImageTypeDefinitions, null=True)
+    images = modellib.DeferredForeignKey('Images', null=True)
+    source_group = modellib.SyntheticField() # not implemented yet
 
     def __unicode__(self):
         return self.name
@@ -240,7 +247,7 @@ class ProjectVersion(modellib.XObjIdModel):
             return
         restDb = self._rbmgr.restDb
         plat = restDb.getProductVersionPlatform(self.project.repository_hostname, self.name)
-        return plat.label
+        self.platform_label = plat.label
 
 
 class Stages(modellib.Collection):

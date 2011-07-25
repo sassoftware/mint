@@ -239,11 +239,18 @@ class PlatformContentErrors(modellib.Collection):
     list_fields = ['platform_content_error']
 
 
-class PlatformContentError(modellib.XObjModel):
+class PlatformContentError(modellib.XObjIdModel):
     content_source_type = modellib.ForeignKey('ContentSourceType')
     short_name = fields.CharField(max_length=1026, unique=True)
     error_id = fields.IntegerField()
 
+
+class ImageTypeDefinitions(modellib.XObjIdModel):
+    pass
+    
+
+class ImageDefinitions(modellib.XObjIdModel):
+    pass
 
 
 for mod_obj in sys.modules[__name__].__dict__.values():

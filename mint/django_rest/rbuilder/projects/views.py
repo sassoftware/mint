@@ -111,15 +111,15 @@ class ProjectImageService(service.BaseService, jobsmodels.Actionable):
     @access.anonymous
     @return_xml
     def rest_GET(self, request, short_name, image_id=None):
-        return self.get(short_name, image_id)
+        return self.get(request, short_name, image_id)
 
-    def get(self, short_name, image_id):
+    def get(self, request, short_name, image_id):
         if image_id:
             model = self.mgr.getImage(image_id)
         else:
             model = self.mgr.getImages()
         model.actions = self.getActions(request, model)
-        return model    
+        return model
 
 class ProjectMemberService(service.BaseService):
 
