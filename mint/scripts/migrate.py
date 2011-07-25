@@ -3350,7 +3350,22 @@ class MigrateTo_58(SchemaMigration):
         # Add a new management interface type (SSH)
         cu = self.db.cursor()
         cu.execute("""insert into inventory_management_interface (name, description, created_date, port, credentials_descriptor, credentials_readonly) values (?,?,now(),?,?,?)""" , 'ssh', 'Secure Shell (SSH)', 22, schema.ssh_credentials_descriptor, 'false')
-        return True    
+        return True 
+        
+    def migrate38(self):
+        # Add Unique constraint to project and label in labels
+        cu = self.db.cursor()
+        cu.execute("""
+            ALTER TABLE Labels
+            ADD CONSTRAINT labels_project_id_uq
+            UNIQUE (projectId)
+        """)
+        cu.execute("""
+            ALTER TABLE Labels
+            ADD CONSTRAINT labels_label_uq
+            UNIQUE (label)
+        """)
+        return True             
 
     def migrate38(self):
         # Add Unique constraint to project and label in labels
