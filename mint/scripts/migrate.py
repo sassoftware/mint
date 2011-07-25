@@ -2949,7 +2949,7 @@ class MigrateTo_57(SchemaMigration):
 
 
 class MigrateTo_58(SchemaMigration):
-    Version = (58, 36)
+    Version = (58, 37)
 
     def migrate(self):
         return True
@@ -3338,13 +3338,20 @@ class MigrateTo_58(SchemaMigration):
             ALTER TABLE TargetData
                 ADD COLUMN targetdataId SERIAL PRIMARY KEY""")
         self.db.createIndex('TargetData', 'TargetDataIdx',
-            'targetId, name', unique = True)
-        return True
+            'targetId, name', unique = True)                 
+        return True        
 
     def migrate36(self):
         cu = self.db.cursor()
         cu.execute("UPDATE jobs_job_type SET priority=70 WHERE name = 'system registration'")
         return True
+    
+    def migrate37(self):
+        # Add a new management interface type (SSH)
+        cu = self.db.cursor()
+        cu.execute("""insert into inventory_management_interface (name, description, created_date, port, credentials_descriptor, credentials_readonly) values (?,?,now(),?,?,?)""" , 'ssh', 'Secure Shell (SSH)', 22, schema.ssh_credentials_descriptor, 'false')
+        return True    
+
 
 def _createUpdateSystemsQuerySet(db):
 

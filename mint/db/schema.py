@@ -28,7 +28,7 @@ from conary.dbstore import sqlerrors, sqllib
 log = logging.getLogger(__name__)
 
 # database schema major version
-RBUILDER_DB_VERSION = sqllib.DBversion(58, 36)
+RBUILDER_DB_VERSION = sqllib.DBversion(58, 37)
 
 
 def _createTrigger(db, table, column = "changed"):
@@ -1547,6 +1547,30 @@ wmi_credentials_descriptor=r"""<descriptor xmlns:xsi="http://www.w3.org/2001/XML
   </dataFields>
 </descriptor>"""
 
+ssh_credentials_descriptor=r"""<descriptor xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns="http://www.rpath.com/permanent/descriptor-1.0.xsd" xsi:schemaLocation="http://www.rpath.com/permanent/descriptor-1.0.xsd descriptor-1.0.xsd">
+  <metadata></metadata>
+  <dataFields>
+    <field><name>key</name>
+      <descriptions>
+        <desc>SSH private key</desc>
+      </descriptions>
+      <type>str</type>
+      <default></default>
+      <required>false</required>
+    </field>
+    <field>
+      <name>password</name>
+      <descriptions>
+        <desc>SSH key unlock or root password</desc>
+      </descriptions>
+      <password>true</password>
+      <type>str</type>
+      <default></default>
+      <required>false</required>
+    </field>
+  </dataFields>
+</descriptor>"""
+
 def _addManagementInterfaces(db):
     changed = False
     
@@ -1565,6 +1589,15 @@ def _addManagementInterfaces(db):
                   port=135,
                   created_date=str(datetime.datetime.now(tz.tzutc())),
                   credentials_descriptor=wmi_credentials_descriptor,
+                  credentials_readonly=False
+            )])
+
+    changed != _addTableRows(db, 'ssh_management_interface', 'name',
+            [dict(name='ssh',
+                  description='Secure Shell (SSH)',
+                  port=22,
+                  created_date=str(datetime.datetime.now(tz.tzutc())),
+                  credentials_descriptor=ssh_credentials_descriptor,
                   credentials_readonly=False
             )])
     

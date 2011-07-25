@@ -364,10 +364,14 @@ class ManagementInterface(modellib.XObjIdModel):
     WMI = "wmi"
     WMI_PORT = 135
     WMI_DESC = "Windows Management Instrumentation (WMI)"
+    SSH = "ssh"
+    SSH_PORT = 22
+    SSH_DESC = "Secure Shell (SSH)"
 
     CHOICES = (
         (CIM, CIM_DESC),
         (WMI, WMI_DESC),
+        (SSH, SSH_DESC),
     )
         
     management_interface_id = D(models.AutoField(primary_key=True), "the database ID for the management interface")
