@@ -240,7 +240,8 @@ class ProjectVersion(modellib.XObjIdModel):
             return
         restDb = self._rbmgr.restDb
         plat = restDb.getProductVersionPlatform(self.project.repository_hostname, self.name)
-        # XXX Do something useful here
+        return plat.label
+
 
 class Stages(modellib.Collection):
     class Meta:
