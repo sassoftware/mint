@@ -1592,7 +1592,7 @@ def _addManagementInterfaces(db):
                   credentials_readonly=False
             )])
 
-    changed != _addTableRows(db, 'ssh_management_interface', 'name',
+    changed != _addTableRows(db, 'inventory_management_interface', 'name',
             [dict(name='ssh',
                   description='Secure Shell (SSH)',
                   port=22,
