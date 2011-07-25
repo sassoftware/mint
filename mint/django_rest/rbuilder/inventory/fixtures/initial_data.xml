@@ -129,6 +129,46 @@
   </dataFields>
 </descriptor>]]></field>
     </object>
+	<object pk="3" model="inventory.managementinterface">
+        <field type="CharField" name="name">ssh</field>
+        <field type="CharField" name="description">Secure Shell (SSH)</field>
+        <field type="DateTimeField" name="created_date">2011-07-22 18:36:37</field>
+        <field type="IntegerField" name="port">22</field>
+        <field type="NullBooleanField" name="credentials_readonly">False</field>
+        <field type="TextField" name="credentials_descriptor"><![CDATA[<descriptor xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns="http://www.rpath.com/permanent/descriptor-1.0.xsd" xsi:schemaLocation="http://www.rpath.com/permanent/descriptor-1.0.xsd descriptor-1.0.xsd">
+  <metadata></metadata>
+  <dataFields>
+    <field><name>key</name>
+      <descriptions>
+        <desc>SSH private key</desc>
+      </descriptions>
+      <type>str</type>
+      <default></default>
+      <required>false</required>
+    </field>
+    <field>
+      <name>username</name>
+      <descriptions>
+        <desc>User</desc>
+      </descriptions>
+      <type>str</type>
+      <default></default>
+      <required>false</required>
+    </field>
+    <field>
+      <name>password</name>
+      <descriptions>
+        <desc>System or SSH Key Password</desc>
+      </descriptions>
+      <password>true</password>
+      <type>str</type>
+      <default></default>
+      <required>false</required>
+    </field>
+  </dataFields>
+</descriptor>]]></field>
+    </object>
+
     <object pk="1" model="inventory.systemtype">
         <field type="CharField" name="name">inventory</field>
         <field type="CharField" name="description">Inventory</field>

@@ -271,6 +271,7 @@ class SystemManager(basemanager.BaseManager):
         if not management_interface:
             return
 
+
         management_interface.save()
         return management_interface
 
@@ -781,6 +782,13 @@ class SystemManager(basemanager.BaseManager):
                 # registration event now.
                 wmiIfaceId = models.Cache.get(models.ManagementInterface,
                     name=models.ManagementInterface.WMI).pk
+                # unless we are SSH, in which case, assimilation is the only
+                # way to upgrade to a interface type that can do something other
+                # than just assimilate
+                sshIfaceId = models.Cache.get(models.ManagementInterface,
+                    name=models.ManagementInterface.SSH).pk
+                if system.management_interface_id == sshIfaceId:
+                    return None
                 # But if it's a WMI system and we have no credentials, skip
                 # directly to UNMANAGED_CREDENTIALS_REQUIRED (RBL-7439)
                 if system.management_interface_id == wmiIfaceId:
@@ -958,12 +966,13 @@ class SystemManager(basemanager.BaseManager):
         system = models.System.objects.get(pk=system_id)
         systemCreds = {}
         if system.management_interface:
-            if system.management_interface.name == 'wmi':
+            if system.management_interface.name == 'wmi' or \
+                    system.management_interface.name == 'ssh':
                 if system.credentials is None:
                     systemCreds = {}
                 else:
                     systemCreds = self.unmarshalCredentials(system.credentials)
-            else:
+            else: 
                 systemCreds = dict(
                     ssl_client_certificate=system.ssl_client_certificate,
                     ssl_client_key=system.ssl_client_key)
@@ -974,10 +983,11 @@ class SystemManager(basemanager.BaseManager):
     def addSystemCredentials(self, system_id, credentials):
         system = models.System.objects.get(pk=system_id)
         if system.management_interface:
-            if system.management_interface.name == 'wmi':
+            if system.management_interface.name == 'wmi' or \
+                    system.management_interface.name == 'ssh':
                 systemCreds = self.marshalCredentials(credentials)
                 system.credentials = systemCreds
-            else:
+            elif system.management_interface.name == 'cim':
                 if credentials.has_key('ssl_client_certificate'):
                     system.ssl_client_certificate = \
                         credentials['ssl_client_certificate']
@@ -1177,10 +1187,14 @@ class SystemManager(basemanager.BaseManager):
             models.ManagementInterface.WMI : self._wmiParams,
             # this may have to change if the SSH interface starts to do more
             # than just assimilation
-            #models.ManagementInterface.SSH : self._assimilatorParams,
+            models.ManagementInterface.SSH : None
         }
         mgmtInterfaceName = self.getSystemManagementInterfaceName(system)
-        method = methodMap[mgmtInterfaceName]
+        if mgmtInterfaceName == models.ManagementInterface.SSH:
+            # there will be no following events, no need to do this.
+            return None
+        else:
+            method = methodMap[mgmtInterfaceName]
         return method(repClient, system, destination, eventUuid, requiredNetwork)
 
     def _cimParams(self, repClient, system, destination, eventUuid, requiredNetwork):
@@ -1256,6 +1270,9 @@ class SystemManager(basemanager.BaseManager):
         if eventType not in self.AssimilationEvents:
             params = self._computeDispatcherMethodParams(repClient, event.system,
                 destination, eventUuid, requiredNetwork)
+            if params is None:
+                # no follow up event for non-assimilation SSH operations
+                return
         else:
             # assimilation events are not management interface related
             # so the computeDispatcher logic is short-circuited
@@ -1318,8 +1335,16 @@ class SystemManager(basemanager.BaseManager):
         interfacesList = [ dict(interfaceHref=x.get_absolute_url(), port=x.port)
             for x in ifaces ]
         # Order the list so we detect wmi before cim (luckily we can sort by
-        # port number)
-        interfacesList.sort(key=lambda x: x['port'])
+        # port number), but SSH should always come last.  This is a bit silly
+        # as we could just hardcode the list, though this may prevent suprises
+        # when we add the next one.
+        def interfaceSorter(x):
+            if x['port'] == 22:
+                return 99999   # SSH comes last
+            else:
+                return x['port']
+            
+        interfacesList.sort(key=lambda x: interfaceSorter(x))
         params = repClient.ManagementInterfaceParams(host=destination,
             interfacesList=interfacesList)
         return params
