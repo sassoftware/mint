@@ -318,7 +318,7 @@ class WbsGenerator(ImageGenerator):
             # files from different packages. msiData.fileName is changed here
             # so that servicing.xml references the correct file.
             if msiData.isRtis():
-                msiData.fileName = 'rTIS.NET.msi'
+                msiData.fileName = 'rPathTools.msi'
             else:
                 msiData.fileName = msiData.sha1.encode('hex') + '.msi'
             uploadMap[msiData.fileName] = msiData

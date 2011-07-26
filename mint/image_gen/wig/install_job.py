@@ -22,7 +22,7 @@ from mint.image_gen.util import FileWithProgress
 
 log = logging.getLogger(__name__)
 
-RTIS_PACKAGES = set(('rTIS:msi', 'rTIS.NET:msi'))
+RTIS_PACKAGES = set(('rTIS:msi', 'rTIS.NET:msi', 'rPathTools:msi'))
 CRITICAL_PACKAGES = set(RTIS_PACKAGES)
 
 
