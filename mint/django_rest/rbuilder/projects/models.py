@@ -207,6 +207,7 @@ class ProjectVersion(modellib.XObjIdModel):
 
     _xobj = xobj.XObjMetadata(
         tag="project_branch")
+    
     view_name = 'ProjectVersion'
     summary_view = ["name"]
 
@@ -216,12 +217,13 @@ class ProjectVersion(modellib.XObjIdModel):
         related_name="project_branches", view_name="ProjectVersions", null=True)
     namespace = models.CharField(max_length=16)
     name = models.CharField(max_length=16)
-    platform_label = modellib.SyntheticField()
     description = models.TextField()
     created_date = models.DecimalField(max_digits=14, decimal_places=3,
         db_column="timecreated")
 
+    platform_label = modellib.SyntheticField() # don't think this is needed if we already have a platform
     images = modellib.SyntheticField()
+    definition = modellib.SyntheticField()
     platform = modellib.SyntheticField()
     platform_version = modellib.SyntheticField()
     image_type_definitions = modellib.SyntheticField()

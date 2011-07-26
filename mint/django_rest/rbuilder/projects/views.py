@@ -58,9 +58,9 @@ class ProjectVersionService(service.BaseService):
     @access.anonymous
     @return_xml
     def rest_GET(self, request, branch_id=None):
-        return self.get(branch_id)
+        return self.get(request, branch_id)
 
-    def get(self, branch_id=None):
+    def get(self, request, branch_id=None):
         if branch_id:
             return self.mgr.getProjectVersion(branch_id)
         else:

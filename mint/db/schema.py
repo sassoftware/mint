@@ -28,7 +28,7 @@ from conary.dbstore import sqlerrors, sqllib
 log = logging.getLogger(__name__)
 
 # database schema major version
-RBUILDER_DB_VERSION = sqllib.DBversion(58, 38)
+RBUILDER_DB_VERSION = sqllib.DBversion(58, 40)
 
 
 def _createTrigger(db, table, column = "changed"):
@@ -135,12 +135,13 @@ def _createLabels(db):
             labelId             %(PRIMARYKEY)s,
             projectId           integer         NOT NULL  UNIQUE
                 REFERENCES Projects ON DELETE CASCADE,
-            label               varchar(255)    NOT NULL  UNIQUE,
+            label               varchar(255)              UNIQUE,
             url                 varchar(255),
             authType            varchar(32)     NOT NULL    DEFAULT 'none',
             username            varchar(255),
             password            varchar(255),
-            entitlement         varchar(254)
+            entitlement         varchar(254),
+            CONSTRAINT label_not_empty CHECK (label != '')
         ) %(TABLEOPTS)s """ % db.keywords)
         db.tables['Labels'] = []
         changed = True

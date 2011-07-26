@@ -388,6 +388,7 @@ Aj/9jaPTk+mjBIgXSVEHkJCtxfGZWYFx/eNItfaAAfZVX68txm5Hyp2J6Equnr82
     <field type="DecimalField" name="created_date">0</field>
     <field type="DecimalField" name="modified_date">0</field>
     <field type="SmallIntegerField" name="hidden">0</field>
+    <field type="CharField" name="database">sqlite chater-foo</field>
     <field to="users.User" name="creator" rel="ManyToOneRel">1</field>
   </object>
   <object pk="1" model="projects.projectversion">

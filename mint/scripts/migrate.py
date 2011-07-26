@@ -2949,7 +2949,7 @@ class MigrateTo_57(SchemaMigration):
 
 
 class MigrateTo_58(SchemaMigration):
-    Version = (58, 38)
+    Version = (58, 40)
 
     def migrate(self):
         return True
@@ -3355,6 +3355,8 @@ class MigrateTo_58(SchemaMigration):
     def migrate38(self):
         # Add Unique constraint to project and label in labels
         cu = self.db.cursor()
+        cu.execute("ALTER TABLE Labels ALTER label DROP NOT NULL")
+        cu.execute("UPDATE Labels SET label = NULL WHERE label = ''")
         cu.execute("""
             ALTER TABLE Labels
             ADD CONSTRAINT labels_project_id_uq
@@ -3365,7 +3367,21 @@ class MigrateTo_58(SchemaMigration):
             ADD CONSTRAINT labels_label_uq
             UNIQUE (label)
         """)
-        return True        
+        return True
+
+    def migrate39(self):
+        cu = self.db.cursor()
+        cu.execute("ALTER TABLE Labels ALTER label DROP NOT NULL")
+        cu.execute("UPDATE Labels SET label = NULL WHERE label = ''")
+        cu.execute("""ALTER TABLE Labels
+            ADD CONSTRAINT label_not_empty CHECK (label != '')
+            """)
+        return True
+
+    def migrate40(self):
+        cu = self.db.cursor()
+        cu.execute("ALTER TABLE Labels ALTER label DROP NOT NULL")
+        return True
 
 
 def _createUpdateSystemsQuerySet(db):
