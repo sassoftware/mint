@@ -18,6 +18,7 @@ from mint.django_rest.rbuilder.users import models as usersmodels
 from mint.django_rest.rbuilder import service
 from mint.django_rest.rbuilder.inventory import models
 from mint.django_rest.rbuilder.jobs import models as jobmodels
+from mint.django_rest.rbuilder.projects import models as projectsmodels
 import urllib2 as url2
 
 
@@ -32,18 +33,35 @@ class StageService(service.BaseService):
         return xml
     
     def get(self, request, short_name, version, label):
-        # redirects to old stages code
-        # url = r'%(host)s/api/products/%(short_name)s/versions/%(version)s/stages/%(label)s'
+        # redirects to old stages code, note no v1 postfixed to /api
+        url = r'%(host)s/api/products/%(short_name)s/versions/%(version)s/stages/%(label)s'
         # for local testing only:
-        url = r'http://rbalast.eng.rpath.com/api/products/%(short_name)s/versions/%(version)s/stages/%(label)s'
+        # url = r'http://rbalast.eng.rpath.com/api/products/%(short_name)s/versions/%(version)s/stages/%(label)s'
         args = dict(host='http://' + request.get_host(), short_name=short_name, version=version, label=label)
         raw_xml = url2.urlopen(url % args).read()
         return HttpResponse(raw_xml.strip(), mimetype='text/xml')
             
 
-class MajorVersionService(RestDbPassthrough):
-    def get(self, project, majorVersion):
-        return None
+class MajorVersionService(service.BaseService):
+    # @access.anonymous
+    # @return_xml
+    # def rest_GET(self, request, short_name, version):
+    #     return self.get(request, short_name, version)
+    
+    def get(self, request, short_name, version):
+        """
+        XXX defunct for now
+        """
+        modifiers = ['platform', 'platform_version', 'definition', 'image_type_definitions',
+                     'image_definitions', 'images', 'source_group']
+        project = projectsmodels.Project.objects.get(short_name=short_name)
+        project_version = projectsmodels.ProjectVersion.objects.get(project=project)
+        for m in modifiers:
+            url = r'%(host)s/api/products/%(short_name)s/versions/%(version)s/%(modifier)s/'\
+                    % dict(host= 'http://' + request.get_host(), short_name=short_name, version=version, modifier=m)
+            setattr(project_version, m, url)
+        return project_version
+
 
 class ApplianceService(RestDbPassthrough):
     def get(self, project):
