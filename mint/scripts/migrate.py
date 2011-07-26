@@ -3365,22 +3365,7 @@ class MigrateTo_58(SchemaMigration):
             ADD CONSTRAINT labels_label_uq
             UNIQUE (label)
         """)
-        return True             
-
-    def migrate38(self):
-        # Add Unique constraint to project and label in labels
-        cu = self.db.cursor()
-        cu.execute("""
-            ALTER TABLE Labels
-            ADD CONSTRAINT labels_project_id_uq
-            UNIQUE (projectId)
-        """)
-        cu.execute("""
-            ALTER TABLE Labels
-            ADD CONSTRAINT labels_label_uq
-            UNIQUE (label)
-        """)
-        return True
+        return True        
 
 
 def _createUpdateSystemsQuerySet(db):

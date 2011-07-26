@@ -158,8 +158,7 @@ class ProjectsTestCase(XMLTestCase):
             project.description)
 
     def testDeleteProject(self):
-	    project = models.Project.objects.get(short_name='chater-foo')
-	    import pdb; pdb.set_trace()
+	    project = models.Project.objects.get(short_name='chater-foo')	    
             response = self._delete('projects/chater-foo',
                 username="testuser", password="password")
             self.assertEquals(response.status_code, 204)

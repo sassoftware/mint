@@ -14,7 +14,6 @@ from django.db import models
 from mint import userlevels
 from mint.django_rest.rbuilder import modellib
 from mint.django_rest.rbuilder.users import models as usermodels
-from mint.django_rest.rbuilder.platforms import models as platformModels
 
 from xobj import xobj
 
@@ -221,10 +220,11 @@ class ProjectVersion(modellib.XObjIdModel):
     description = models.TextField()
     created_date = models.DecimalField(max_digits=14, decimal_places=3,
         db_column="timecreated")
-    platform = modellib.DeferredForeignKey(platformModels.platform, null=True)
-    platform_version = modellib.DeferredForeignKey(platformModels.PlatformVersion, null=True)
-    image_type_definitions = modellib.DeferredForeignKey(platformModels.ImageTypeDefinitions, null=True)
-    images = modellib.DeferredForeignKey('Images', null=True)
+
+    images = modellib.SyntheticField()
+    platform = modellib.SyntheticField()
+    platform_version = modellib.SyntheticField()
+    image_type_definitions = modellib.SyntheticField()
     source_group = modellib.SyntheticField() # not implemented yet
 
     def __unicode__(self):
@@ -370,7 +370,7 @@ class Image(modellib.XObjIdModel):
     build_count = models.IntegerField(null=True, default=0,
         db_column="buildcount")
     version = models.ForeignKey(ProjectVersion, null=True,
-        related_name="images",
+        related_name="project_version",
         db_column='productversionid')
     stage_name = models.CharField(max_length=255, db_column='stagename',
         null=True, blank=True, default='')

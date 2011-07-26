@@ -21,9 +21,9 @@ class Label(modellib.XObjIdModel):
     label_id = models.AutoField(primary_key=True, 
         db_column="labelid")
     project = XObjHidden(modellib.ForeignKey(projectmodels.Project,
-        related_name="labels",
+        unique=True, related_name="labels", 
         db_column="projectid"))
-    label = models.CharField(max_length=255)
+    label = models.CharField(unique=True, max_length=255)
     url = models.CharField(max_length=255, null=True)
     auth_type = models.CharField(max_length=32, default="none",
         db_column="authtype")
