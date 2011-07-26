@@ -9,7 +9,7 @@ from mint.django_rest.rbuilder.platforms import fields
 from mint.django_rest.rbuilder import modellib
 from mint.django_rest.rbuilder.modellib import basemodels # hack, because of modellib in Platform
 import sys
-from mint.django_rest.rbuilder.projects import models as projectsmodels
+from xobj import xobj
 
 
 class Platforms(modellib.Collection):
@@ -25,7 +25,7 @@ class Platform(modellib.XObjIdModel):
     label = models.CharField(max_length=1026)
     mode = models.CharField(max_length=1026)
     enabled = models.IntegerField()
-    projects = modellib.DeferredForeignKey(projectsmodels.Project)
+    projects = modellib.DeferredForeignKey('projects.Project')
     platform_name = models.CharField(max_length=1026, db_column='platformName')
     configurable = models.BooleanField(default=False)
     abstract = models.BooleanField(default=False)
@@ -49,7 +49,7 @@ class ProductPlatform(modellib.XObjIdModel):
     label = models.CharField(max_length=1026)
     mode = models.CharField(max_length=1026)
     enabled = models.IntegerField()
-    projects = modellib.DeferredForeignKey(projectsmodels.Project)
+    projects = modellib.DeferredForeignKey('projects.Project')
     platform_name = models.CharField(max_length=1026, db_column='platformName')
     configurable = models.BooleanField(default=False)
     abstract = models.BooleanField(default=False)
@@ -246,11 +246,11 @@ class PlatformContentError(modellib.XObjIdModel):
 
 
 class ImageTypeDefinitions(modellib.XObjIdModel):
-    pass
+    _xobj = xobj.XObjMetadata(tag='image_type_definitions')
     
 
 class ImageDefinitions(modellib.XObjIdModel):
-    pass
+    _xobj = xobj.XObjMetadata(tag='image_definitions')
 
 
 for mod_obj in sys.modules[__name__].__dict__.values():
