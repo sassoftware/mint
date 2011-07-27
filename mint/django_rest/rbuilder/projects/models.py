@@ -14,8 +14,36 @@ from django.db import models
 from mint import userlevels
 from mint.django_rest.rbuilder import modellib
 from mint.django_rest.rbuilder.users import models as usermodels
-
+from mint.django_rest.rbuilder.platforms import models as platformsmodels
 from xobj import xobj
+
+
+class Groups(modellib.Collection):
+    class Meta:
+        abstract = True
+        
+    _xobj = xobj.XObjMetadata(tag='troves')
+        
+    list_fields = ['group']
+
+
+class Group(modellib.XObjIdModel):
+    class Meta:
+        abstract = True
+        
+    _xobj = xobj.XObjMetadata(tag='trove')
+    
+    group_id = models.AutoField(primary_key=True)
+    hostname = models.CharField(max_length=1026)
+    name = models.CharField(max_length=1026)
+    version = models.CharField(max_length=1026)
+    label = models.CharField(max_length=1026)
+    trailing = models.CharField(max_length=1026)
+    flavor = models.TextField()
+    time_stamp = models.DecimalField()
+    # images = modellib.DeferredForeignKey('Image')
+    image_count = models.IntegerField()
+    
 
 class Projects(modellib.Collection):
     class Meta:
@@ -244,12 +272,12 @@ class ProjectVersion(modellib.XObjIdModel):
             xobjModel.created_date, tz.tzutc()))
         return xobjModel
 
-    def computeSyntheticFields(self, sender, **kwargs):
-        if self._rbmgr is None or self.project_id is None:
-            return
-        restDb = self._rbmgr.restDb
-        plat = restDb.getProductVersionPlatform(self.project.repository_hostname, self.name)
-        self.platform_label = plat.label
+    # def computeSyntheticFields(self, sender, **kwargs):
+    #     if self._rbmgr is None or self.project_id is None:
+    #         return
+    #     restDb = self._rbmgr.restDb
+    #     plat = restDb.getProductVersionPlatform(self.project.repository_hostname, self.name)
+    #     self.platform_label = plat.label
 
 
 class Stages(modellib.Collection):
@@ -261,6 +289,7 @@ class Stages(modellib.Collection):
     view_name = "ProjectStages"
     list_fields = ["project_branch_stage"]
     project_branch_stage = []
+
 
 class Stage(modellib.XObjIdModel):
     class Meta:
@@ -284,9 +313,13 @@ class Stage(modellib.XObjIdModel):
     groups = modellib.SyntheticField()
 
     def serialize(self, request=None):
+        # FIXME TOTAL HACK, import statement inlined because of some undiscovered conflict
+        from mint.django_rest.rbuilder.projects import views as projectsviews
+        view = projectsviews.GroupsService()
+        self.groups = xobj.parse(view.get(request).content).troves
         xobjModel = modellib.XObjIdModel.serialize(self, request)
         return xobjModel
-
+        
     
 class Release(modellib.XObjModel):
     class Meta:
