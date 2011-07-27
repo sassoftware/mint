@@ -15,9 +15,9 @@ from mint.django_rest.rbuilder.repos import testsxml # pyflakes=ignore
 from mint.django_rest.rbuilder.manager import basemanager
 from mint.django_rest.rbuilder.projects import models as projmodels
 
-from xobj import xobj
+#from xobj import xobj
 
-from testutils import mock
+#from testutils import mock
 
 class LabelTestCase(XMLTestCase):
     fixtures = ["repos"]
