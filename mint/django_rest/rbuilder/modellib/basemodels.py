@@ -81,7 +81,7 @@ class BaseManager(models.Manager):
             if keyFieldVal:
                 loadedModel = self.get(pk=keyFieldVal)
             elif model_inst.load_fields:   
-                loadedModel = self.get(**model_inst.load_fields_dict())
+                loadedModel = self.get(**model_inst._load_fields_dict())
             else:
                 return None, None
             oldModel = loadedModel.serialize()
@@ -174,7 +174,7 @@ class BaseManager(models.Manager):
         based on model_inst, if one wasn't found, create one and return it.
         """
         # Load the model from the db.
-        oldModel, loaded_model = self.load(model_inst,
+        oldModel, loaded_model = self._load(model_inst,
             xobjModel=xobjModel, withReadOnly=withReadOnly)
         if not loaded_model:
             # No matching model was found. We need to save.  This scenario
@@ -223,7 +223,7 @@ class BaseManager(models.Manager):
         For each xobjModel attribute, if the attribute matches a field name on
         model, set the attribute's value on model.
         """
-        fields = model.get_field_dict()
+        fields = model._get_field_dict()
         set_fields = []
 
         for key, val in xobjModel.__dict__.items():
@@ -363,7 +363,7 @@ class BaseManager(models.Manager):
         Build and return a dict of accessor name and list of accessor
         objects.
         """
-        accessors = model.get_accessor_dict()
+        accessors = model._get_accessor_dict()
         ret_accessors = {}
 
         for key, val in xobjModel.__dict__.items():
@@ -416,7 +416,7 @@ class BaseManager(models.Manager):
         Populate the many to many accessors on model based on the xobj model
         in xobjModel.
         """
-        for m2m_accessor, m2m_mgr in model.get_m2m_accessor_dict().items():
+        for m2m_accessor, m2m_mgr in model._get_m2m_accessor_dict().items():
             _xobj = getattr(m2m_mgr.model, '_xobj', None)
             if _xobj:
                 rel_obj_name = _xobj.tag or m2m_mgr.target_field_name
@@ -879,39 +879,43 @@ class XObjModel(models.Model):
         so, call the to_python method on the field with the value.  If we're
         using our DateTimeUtcField subclass, the timezone will be set to utc.
         """
-        field = self.get_field_dict().get(attr, None)
+        field = self._get_field_dict().get(attr, None)
         if field:
             if isinstance(field, models.DateTimeField):
                 val = field.to_python(val)
         object.__setattr__(self, attr, val)
 
     # The camelCase here is intentional - these are not extensions of django
-    @classmethod
-    def iterRegularFields(cls):
-        for f in cls._meta.fields:
-            if not isinstance(f, ForeignKey):
-                yield f
+    # NOTE: NOT USED?
+    #@classmethod
+    #def iterRegularFields(cls):
+    #    for f in cls._meta.fields:
+    #        if not isinstance(f, ForeignKey):
+    #            yield f
 
-    @classmethod
-    def iterForeignKeys(cls):
-        for f in cls._meta.fields:
-            if isinstance(f, ForeignKey):
-                yield f
+    # NOTE: NOT USED?
+    #@classmethod
+    #def iterForeignKeys(cls):
+    #    for f in cls._meta.fields:
+    #        if isinstance(f, ForeignKey):
+    #            yield f
 
-    @classmethod
-    def iterAccessors(cls, withHidden=True):
-        for r in cls._meta.get_all_related_objects():
-            if withHidden or \
-                    r.get_accessor_name() not in getattr(cls, '_xobj_hidden_accessors', []):
-                yield r
+    # NOTE: NOT USED?
+    #@classmethod
+    #def iterAccessors(cls, withHidden=True):
+    #    for r in cls._meta.get_all_related_objects():
+    #        if withHidden or \
+    #                r.get_accessor_name() not in getattr(cls, '_xobj_hidden_accessors', []):
+    #           yield r
 
-    @classmethod
-    def iterM2MAccessors(cls, withHidden=True):
-        for m in cls._meta.get_m2m_with_model():
-            f = m[0]
-            if withHidden or \
-                    f.name not in getattr(cls, '_xobj_hidden_m2m', []):
-                yield f
+    # NOTE: NOT USED?
+    #@classmethod
+    #def iterM2MAccessors(cls, withHidden=True):
+    #    for m in cls._meta.get_m2m_with_model():
+    #        f = m[0]
+    #        if withHidden or \
+    #                f.name not in getattr(cls, '_xobj_hidden_m2m', []):
+    #            yield f
 
     @classmethod
     def getAccessorName(cls, accessor):
@@ -920,7 +924,7 @@ class XObjModel(models.Model):
         return accessor.var_name
 
     @classmethod
-    def getM2MName(cls, m2model):
+    def _getM2MName(cls, m2model):
         if hasattr(m2model, '_xobj') and m2model._xobj.tag:
             return m2model._xobj.tag
         return m2model._meta.verbose_name
@@ -938,7 +942,7 @@ class XObjModel(models.Model):
     def _saveFields(self):
         if self._meta.abstract:
             return
-        fieldNames = self.get_field_dict().keys()
+        fieldNames = self._get_field_dict().keys()
         if self.pk:
             self._savedFields = dict((f, getattr(self, f)) \
                             for f in self.logged_fields \
@@ -946,7 +950,7 @@ class XObjModel(models.Model):
         else:
             self._savedFields = None
 
-    def getChangedFields(self):
+    def _getChangedFields(self):
         changedFields = {}
         if self._savedFields is None:
             return changedFields
@@ -955,7 +959,7 @@ class XObjModel(models.Model):
                 changedFields[k] = v
         return changedFields
 
-    def load_fields_dict(self):
+    def _load_fields_dict(self):
         """
         Returns a dict of field name, field value for each field in
         load_fields.
@@ -1054,7 +1058,7 @@ class XObjModel(models.Model):
         else:
             return relative_url
 
-    def get_field_dict(self):
+    def _get_field_dict(self):
         """
         return dict of field names and field instances (these are not field
         values)
@@ -1064,7 +1068,7 @@ class XObjModel(models.Model):
             fields[f.name] = f
         return fields
 
-    def get_accessor_dict(self):
+    def _get_accessor_dict(self):
         """
         dict of accessor names and instances.  an accessor in django are the
         reverse foreign key relationships, e.g., network has a FK to system,
@@ -1076,7 +1080,7 @@ class XObjModel(models.Model):
             accessors[r.get_accessor_name()] = r
         return accessors
 
-    def get_m2m_accessor_dict(self):
+    def _get_m2m_accessor_dict(self):
         """
         dict of many to many field names and their managers.
         """
@@ -1089,7 +1093,7 @@ class XObjModel(models.Model):
                 pass
         return m2m_accessors
 
-    def serialize_fields(self, xobj_model, fields, request):
+    def _serialize_fields(self, xobj_model, fields, request):
         """
         For each attribute on self (the model), see if it's a field, if so,
         set the value on xobj_model.  Then, remove it from fields, as don't
@@ -1125,7 +1129,7 @@ class XObjModel(models.Model):
                     val = float(val)
                 setattr(xobj_model, key, val)
 
-    def serialize_fk_fields(self, xobj_model, fields, request):
+    def _serialize_fk_fields(self, xobj_model, fields, request):
         """
         For each remaining field in fields, see if it's a FK field, if so set
         the create an href object and set it on xobj_model.
@@ -1164,7 +1168,7 @@ class XObjModel(models.Model):
                 else:
                     setattr(xobj_model, fieldName, '')
 
-    def serialize_fk_accessors(self, xobj_model, accessors, request):
+    def _serialize_fk_accessors(self, xobj_model, accessors, request):
         """
         Builds up an object for each accessor for this model and sets it on
         xobj_model.  This is so that things like <networks> appear as an xml
@@ -1235,7 +1239,7 @@ class XObjModel(models.Model):
             m2m_accessor_model = type(m2m_accessor, (object,), {})()
         return m2m_accessor_model
 
-    def serialize_m2m_accessors(self, xobj_model, m2m_accessors, request):
+    def _serialize_m2m_accessors(self, xobj_model, m2m_accessors, request):
         """
         Build up an object for each many to many field on this model and set
         it on xobj_model.
@@ -1261,7 +1265,7 @@ class XObjModel(models.Model):
             # Look up the name of the related model for the accessor.  Can be
             # overriden via _xobj.  E.g., The related model name for the
             # networks accessor on system is "network".
-            var_name = self.getM2MName(m2model)
+            var_name = self._getM2MName(m2model)
 
             # Simple object to create for our m2m_accessor
             m2m_accessor_model = self._m2m_buildXobjModel(request, m2m_accessor)
@@ -1286,7 +1290,7 @@ class XObjModel(models.Model):
             except exceptions.ObjectDoesNotExist:
                 setattr(xobj_model, m2m_accessor, None)
 
-    def serialize_list_fields(self, xobj_model, request):
+    def _serialize_list_fields(self, xobj_model, request):
         """
         Special handling of list_fields.  For each field in list_fields, get
         the list found at the attribute on the model and serialize each model
@@ -1304,7 +1308,7 @@ class XObjModel(models.Model):
                     xobjModelVal = val
                 listFieldVals.append(xobjModelVal)
 
-    def serialize_abstract_fields(self, xobj_model, request):
+    def _serialize_abstract_fields(self, xobj_model, request):
         abstractFields = getattr(self._meta, 'abstract_fields', dict())
         for fieldName, field in abstractFields.iteritems():
             val = getattr(self, fieldName, None)
@@ -1326,17 +1330,17 @@ class XObjModel(models.Model):
         if _xobj:
             xobj_model._xobj = _xobj
 
-        fields = self.get_field_dict()
-        m2m_accessors = self.get_m2m_accessor_dict()
+        fields = self._get_field_dict()
+        m2m_accessors = self._get_m2m_accessor_dict()
 
-        self.serialize_fields(xobj_model, fields, request)
-        self.serialize_fk_fields(xobj_model, fields, request)
+        self._serialize_fields(xobj_model, fields, request)
+        self._serialize_fk_fields(xobj_model, fields, request)
         if self.serialize_accessors:
-            accessors = self.get_accessor_dict()
-            self.serialize_fk_accessors(xobj_model, accessors, request)
-        self.serialize_m2m_accessors(xobj_model, m2m_accessors, request)
-        self.serialize_list_fields(xobj_model, request)
-        self.serialize_abstract_fields(xobj_model, request)
+            accessors = self._get_accessor_dict()
+            self._serialize_fk_accessors(xobj_model, accessors, request)
+        self._serialize_m2m_accessors(xobj_model, m2m_accessors, request)
+        self._serialize_list_fields(xobj_model, request)
+        self._serialize_abstract_fields(xobj_model, request)
 
         return xobj_model
 
