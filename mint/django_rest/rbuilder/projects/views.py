@@ -9,9 +9,6 @@ from django.http import HttpResponse
 
 from mint.django_rest.deco import access, return_xml, requires
 from mint.django_rest.rbuilder import service
-from mint.django_rest.rbuilder.jobs import models as jobsmodels
-from mint.django_rest.rbuilder import modellib
-from mint.django_rest.rbuilder.projects import models as projectsmodels
 import urllib2 as url2
 from xobj import xobj
 
@@ -149,13 +146,12 @@ class GroupsService(service.BaseService):
         # production
         old_api_url = request.get_full_path().replace('/v1', '')
         raw_xml = url2.urlopen('http://' + request.get_host().strip('/') + old_api_url).read()
-        groups_xobj = xobj.parse(raw_xml)
         
         # local testing
         # old_api_url = '/api/products/retail/repos/search?type=group&label=retail.eng.rpath.com@rpath%3Aretail-1-devel&_method=GET'
         # import httplib2
         # h = httplib2.Http()
-        # h.add_credentials('admin', 'tclmeSRS')
+        # h.add_credentials('admin', '*****) # change when running locally
         # resp, raw_xml = h.request('http://' + 'rbanext-eng.eng.rpath.com' + old_api_url, 'GET')
         # groups_xobj = xobj.parse(raw_xml)
         
