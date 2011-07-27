@@ -10,7 +10,6 @@ from django.http import HttpResponse
 from mint.django_rest.deco import access, return_xml, requires
 from mint.django_rest.rbuilder import service
 import urllib2 as url2
-from xobj import xobj
 
 class ProjectBranchService(service.BaseService):
     @access.anonymous
