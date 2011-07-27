@@ -33,7 +33,8 @@ class Action(modellib.XObjModel):
     type = models.CharField(max_length=1026)
     name = models.CharField(max_length=1026)
     description = models.TextField()
-    descriptor = modellib.SyntheticField()
+    descriptor  = modellib.HrefField()
+    job         = modellib.HrefField()
 
 class Jobs(modellib.Collection):
     
@@ -331,6 +332,18 @@ class EventType(modellib.XObjIdModel):
             return True
         else:
             return False
+
+    @classmethod
+    def makeAction(cls, name, descriptor_url=None, launch_url=None):
+        '''Return a related Action object for spawning this jobtype'''
+        obj = cls.objects.get(name=name)
+        return Action(
+            type        = obj.name, # TODO: href-like field
+            name        = obj.name,
+            job         = launch_url, # TODO: href-like field, how to launch
+            description = obj.description, 
+            descriptor  = descriptor_url,
+        )
 
 for mod_obj in sys.modules[__name__].__dict__.values():
     if hasattr(mod_obj, '_xobj'):

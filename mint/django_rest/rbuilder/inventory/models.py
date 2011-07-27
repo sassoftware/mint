@@ -828,19 +828,26 @@ class System(modellib.XObjIdModel):
 
     def computeSyntheticFields(self, sender, **kwargs):
         ''' Compute non-database fields.'''
+        self._computeActions()
 
-        return
-        # To be re-enabled after updating test XML ...
-        #
-        #self.actions = jobmodels.Actions()
-        #self.actions.action = []
-        #
-        #if self.management_interface is not None:
-        #    if self.management_interface.name == 'ssh':
-        #        self.actions.action.append(jobmodels.Action(
-        #             name='blah'
-        #        ))
-           
+    def _computeActions(self):
+        '''What actions are available on the system?'''
+
+        if self.management_interface is not None:
+
+            if self.management_interface.name == 'ssh':
+                self.actions = jobmodels.Actions()
+                self.actions.action = []
+                self.actions.action.append(
+                    jobmodels.EventType.makeAction(
+                        jobmodels.EventType.SYSTEM_ASSIMILATE,
+                        launch_url="http://localhost/not_implemented",
+                        descriptor_url="http://localhost/not_implemented"
+                    )
+                )
+
+        # TODO LATER: we should always have a collection
+        # of actions, regardless of interface type.
 
 class ManagementNode(System):
     
