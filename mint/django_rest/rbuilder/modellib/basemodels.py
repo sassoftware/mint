@@ -54,7 +54,7 @@ class BaseManager(models.Manager):
     deserialize an object from xobj into an instance of the model.
     """
 
-    def load_from_db(self, model_inst):
+    def _load_from_db(self, model_inst):
         """
         Load an existing model from the db from an existing instance of the
         model provided in model_inst.  As model representations are provided
@@ -115,7 +115,7 @@ class BaseManager(models.Manager):
             oldModel = loadedModel.serialize()
         else:
             # Fall back to loading from the db by model_inst
-            oldModel, loadedModel = self.load_from_db(model_inst)
+            oldModel, loadedModel = self._load_from_db(model_inst)
 
         # For each field on loadedModel, see if that field is defined on
         # model_inst, if it is and the value is different, update the value on
@@ -577,8 +577,8 @@ class VersionManager(BaseManager):
         return nmodel
 
 class JobManager(BaseManager):
-    def load_from_db(self, model_inst):
-        oldModel, loaded_model = BaseManager.load_from_db(self, model_inst)
+    def _load_from_db(self, model_inst):
+        oldModel, loaded_model = BaseManager._load_from_db(self, model_inst)
         if loaded_model:
             return oldModel, loaded_model
         # We could not find the job. Create one just because we need to
@@ -613,7 +613,7 @@ class ConfigurationDescriptorManager(BaseManager):
 
 class SystemManager(BaseManager):
     
-    def load_from_db(self, model_inst):
+    def _load_from_db(self, model_inst):
         """
         Overridden because systems have several checks required to determine 
         if the system already exists.
@@ -740,8 +740,8 @@ class ManagementNodeManager(SystemManager):
     Overridden because management nodes have several checks required to
     determine if the system already exists.
     """
-    def load_from_db(self, model_inst):
-        oldModel, loaded_model = BaseManager.load_from_db(self, model_inst)
+    def _load_from_db(self, model_inst):
+        oldModel, loaded_model = BaseManager._load_from_db(self, model_inst)
         if loaded_model:
             if loaded_model.managing_zone_id is None:
                 loaded_model.managing_zone = loaded_model.zone
