@@ -122,7 +122,7 @@ class BaseManager(models.Manager):
         # loadedModel.  In this case we are most likely handling a PUT or an
         # update to a model.
         if loadedModel:
-            self.copyFields(loadedModel, model_inst, xobjModel,
+            self._copyFields(loadedModel, model_inst, xobjModel,
                 withReadOnly=withReadOnly)
             return oldModel, loadedModel
 
@@ -136,7 +136,7 @@ class BaseManager(models.Manager):
                 setattr(model_inst, field.name, None)
         return oldModel, loadedModel
 
-    def copyFields(self, dest, src, xobjModel=object(), withReadOnly=False):
+    def _copyFields(self, dest, src, xobjModel=object(), withReadOnly=False):
         """
         Copy fields from src to dest
         If withReadOnly is set to True, read-only fields will also be copied

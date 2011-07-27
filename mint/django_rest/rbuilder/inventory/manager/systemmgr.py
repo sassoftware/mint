@@ -538,7 +538,7 @@ class SystemManager(basemanager.BaseManager):
             if currentState == responsiveState:
                 savedState = currentState
 
-        models.System.objects.copyFields(system, other, withReadOnly=True)
+        models.System.objects._copyFields(system, other, withReadOnly=True)
 
         if savedState:
             system.current_state = savedState

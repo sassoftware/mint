@@ -103,7 +103,7 @@ class UsersManager(basemanager.BaseManager):
         if user.user_name and user.user_name != dbuser.user_name:
             raise self.exceptions.UserCannotChangeNameException()
         # Copy all fields the user may have chosen to change
-        models.User.objects.copyFields(dbuser, user)
+        models.User.objects._copyFields(dbuser, user)
         if self.auth.admin and user.is_admin is not None:
             # Admin users cannot drop the admin flag for themselves
             if user_id != str(self.user.user_id):
