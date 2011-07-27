@@ -585,6 +585,8 @@ class System(modellib.XObjIdModel):
         "the descriptor of available fields to set system configuration "
         "parameters")
     network_address = D(NetworkAddress, "Network address for this system")
+    actions = D(modellib.SyntheticField(jobmodels.Actions),
+        "actions available on the system")
 
     logged_fields = ['name', 'installed_software']
 
@@ -823,6 +825,22 @@ class System(modellib.XObjIdModel):
         address = network.ip_address or network.dns_name
 
         return NetworkAddress(address=address, pinned=pinned)
+
+    def computeSyntheticFields(self, sender, **kwargs):
+        ''' Compute non-database fields.'''
+
+        return
+        # To be re-enabled after updating test XML ...
+        #
+        #self.actions = jobmodels.Actions()
+        #self.actions.action = []
+        #
+        #if self.management_interface is not None:
+        #    if self.management_interface.name == 'ssh':
+        #        self.actions.action.append(jobmodels.Action(
+        #             name='blah'
+        #        ))
+           
 
 class ManagementNode(System):
     
