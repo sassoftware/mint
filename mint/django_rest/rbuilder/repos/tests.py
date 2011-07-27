@@ -11,7 +11,7 @@ from mint.django_rest.rbuilder.inventory.tests import XMLTestCase
 
 from mint.django_rest.rbuilder.repos import manager # pyflakes=ignore
 from mint.django_rest.rbuilder.repos import models # pyflakes=ignore
-from mint.django_rest.rbuilder.repos import testsxml # pyflakes=ignore
+#from mint.django_rest.rbuilder.repos import testsxml # pyflakes=ignore
 from mint.django_rest.rbuilder.manager import basemanager
 from mint.django_rest.rbuilder.projects import models as projmodels
 
