@@ -35,9 +35,14 @@ class TestRunner(DjangoTestSuiteRunner):
         prefix="mint-django-fixture-", delete=False).name
 
     def setup_databases(self, **kwargs):
+        "Called by django's testsuite"
+        return self._setupDatabases(**kwargs)
+
+    @classmethod
+    def _setupDatabases(cls, **kwargs):
         # We don't care about a lot of the complexities in
         # DjangoTestSuiteRunner
-        alias = 'default'
+        alias = DEFAULT_DB_ALIAS
         conn = connections[alias]
         dbname = conn.settings_dict['TEST_NAME']
         # XXX sqlite only for now
@@ -50,7 +55,7 @@ class TestRunner(DjangoTestSuiteRunner):
         conn.settings_dict['NAME'] = dbname
         # Test connection
         conn.cursor()
-        self._sqlite_dump(dbname, self.DB_DUMP)
+        cls._sqlite_dump(dbname, cls.DB_DUMP)
         from mint.db import database
         # Turn off temporary table creation, because django keeps the db locked
         database.Database._createTemporaryTables = lambda *args, **kwargs: None
@@ -68,15 +73,32 @@ class TestRunner(DjangoTestSuiteRunner):
         util.removeIfExists(dstfile + '.journal')
         tfile.commit()
 
-class XMLTestCase(TestCase, testcase.MockMixIn):
-    def _fixture_setup(self):
+    @classmethod
+    def getConnection(cls):
         alias = DEFAULT_DB_ALIAS
         conn = connections[alias]
-        TestRunner._sqlite_restore(TestRunner.DB_DUMP,
-            conn.settings_dict['TEST_NAME'])
-        # This will force a re-init
-        conn.close()
+        return conn
+
+    @classmethod
+    def setupFixture(cls):
+        s = os.stat(cls.DB_DUMP)
+        if s.st_size == 0:
+            # DB not set up yet
+            cls._setupDatabases()
+        else:
+            conn = cls.getConnection()
+            dbName = conn.settings_dict['TEST_NAME']
+            cls._sqlite_restore(cls.DB_DUMP, dbName)
+            # This will force a re-init
+            conn.close()
+
+class XMLTestCase(TestCase, testcase.MockMixIn):
+    def _fixture_setup(self):
+        "Called by django's testsuite"
+        alias = DEFAULT_DB_ALIAS
+        TestRunner.setupFixture()
         # Test connection
+        conn = TestRunner.getConnection()
         conn.cursor()
         call_command('loaddata', 'initial_data',
             **dict(verbosity=0, database=alias))
@@ -86,7 +108,7 @@ class XMLTestCase(TestCase, testcase.MockMixIn):
 
     def setUp(self):
         self.workDir = tempfile.mkdtemp(dir="/tmp", prefix="rbuilder-django-")
-        conn = connections[DEFAULT_DB_ALIAS]
+        conn = TestRunner.getConnection()
         dbpath = conn.settings_dict['TEST_NAME']
         mintCfg = os.path.join(self.workDir, "mint.cfg")
         file(mintCfg, "w").write("""
