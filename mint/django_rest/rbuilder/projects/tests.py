@@ -190,7 +190,6 @@ class ProjectsTestCase(XMLTestCase):
             username="admin", password="password")
         self.assertEquals(response.status_code, 200)
         
-        import pdb; pdb.set_trace()
         # try to add project as different user
         response = self._post('project_branches/',
             data=testsxml.project_version_post_with_project_no_auth_xml,
