@@ -23,18 +23,32 @@ class Actions(modellib.XObjModel):
         
     list_fields = ['action']
     
+class JobDescriptor(modellib.XObjModel):
+    '''URL to fetch a smartforms descriptor from'''
+    class Meta:
+        abstract = True
+    _xobj = xobj.XObjMetadata(tag='descriptor', attributes={'id':str})
+    id = models.TextField(null=True)
+
+class JobLauncher(modellib.XObjModel):
+    '''URL to post smartform results that also spawns the job'''
+    class Meta:
+        abstract = True
+    _xobj = xobj.XObjMetadata(tag='job', attributes={'id':str})
+    id = models.TextField(null=True)
 
 class Action(modellib.XObjModel):
+    '''Represents the ability to spawn a job, and how to do it'''
     class Meta:
         abstract = True
         
     _xobj = xobj.XObjMetadata(tag='action', attributes={'type':str})
     
-    type = models.CharField(max_length=1026)
-    name = models.CharField(max_length=1026)
+    type        = models.CharField(max_length=1026)
+    name        = models.CharField(max_length=1026)
     description = models.TextField()
-    descriptor  = modellib.HrefField()
-    job         = modellib.HrefField()
+    descriptor  = JobDescriptor()
+    job         = JobLauncher()
 
 class Jobs(modellib.Collection):
     
@@ -336,14 +350,15 @@ class EventType(modellib.XObjIdModel):
     @classmethod
     def makeAction(cls, name, descriptor_url=None, launch_url=None):
         '''Return a related Action object for spawning this jobtype'''
-        obj = cls.objects.get(name=name)
-        return Action(
-            type        = obj.name, # TODO: href-like field
+        obj        = cls.objects.get(name=name)
+        action  = Action(
+            type        = obj.name,
             name        = obj.name,
-            job         = launch_url, # TODO: href-like field, how to launch
-            description = obj.description, 
-            descriptor  = descriptor_url,
+            description = obj.description
         )
+        action.descriptor = JobDescriptor(id="http://127.0.1/not_implemented_yet")
+        action.job        = JobLauncher(id="http://127.0.0.1/not_implemented_yet")
+        return action
 
 for mod_obj in sys.modules[__name__].__dict__.values():
     if hasattr(mod_obj, '_xobj'):
