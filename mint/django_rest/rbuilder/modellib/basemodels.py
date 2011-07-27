@@ -91,7 +91,7 @@ class BaseManager(models.Manager):
         except exceptions.MultipleObjectsReturned:
             return None, None
 
-    def load(self, model_inst, xobjModel, withReadOnly=False):
+    def _load(self, model_inst, xobjModel, withReadOnly=False):
         """
         Load a model based on model_inst, which is an instance of the model.
         Allows for checking to see if model_inst already exists in the db, and
@@ -110,7 +110,7 @@ class BaseManager(models.Manager):
 
         # First try to load by an id or href attribute on xobjModel.  This
         # attribute (if present) should a be the full url of the model.
-        loadedModel = self.load_from_href(xobjModel)
+        loadedModel = self._load_from_href(xobjModel)
         if loadedModel:
             oldModel = loadedModel.serialize()
         else:
@@ -186,7 +186,7 @@ class BaseManager(models.Manager):
 
         return oldModel, loaded_model
 
-    def load_from_href(self, xobjModel):
+    def _load_from_href(self, xobjModel):
         """
         Given an xobjModel, and an attribute to look at on that xobjModel for
         a url, try to load the corresponding django model identified by that
@@ -218,7 +218,7 @@ class BaseManager(models.Manager):
         else:
             return None
 
-    def add_fields(self, model, xobjModel, request, save=True):
+    def _add_fields(self, model, xobjModel, request, save=True):
         """
         For each xobjModel attribute, if the attribute matches a field name on
         model, set the attribute's value on model.
@@ -332,7 +332,7 @@ class BaseManager(models.Manager):
 
         return model
 
-    def add_list_fields(self, model, xobjModel, request, save=True):
+    def _add_list_fields(self, model, xobjModel, request, save=True):
         """
         For each list_field on the model, get the objects off of xobjModel, load
         their corresponding model and add them to our model in a list.
@@ -358,7 +358,7 @@ class BaseManager(models.Manager):
 
         return model
 
-    def get_accessors(self, model, xobjModel, request=None):
+    def _get_accessors(self, model, xobjModel, request=None):
         """
         Build and return a dict of accessor name and list of accessor
         objects.
@@ -386,7 +386,7 @@ class BaseManager(models.Manager):
                     ret_accessors[key].append(rel_mod)
         return ret_accessors
 
-    def add_accessors(self, model, accessors):
+    def _add_accessors(self, model, accessors):
         """
         For each xobjModel attribute, if the attribute matches an accessor name,
         load all the acccessor models off xobjModel and add them to the model's 
@@ -397,21 +397,21 @@ class BaseManager(models.Manager):
                 getattr(model, key).add(v)
         return model
 
-    def set_m2m_accessor(self, model, m2m_accessor, rel_mod):
+    def _set_m2m_accessor(self, model, m2m_accessor, rel_mod):
         """
         Add rel_mod to the correct many to many accessor on model.  Needs to
         be in a seperate method so that it can be overridden.
         """
         getattr(model, m2m_accessor).add(rel_mod)
 
-    def clear_m2m_accessor(self, model, m2m_accessor):
+    def _clear_m2m_accessor(self, model, m2m_accessor):
         """
         Clear a many to many accessor.  Needs to be in a seperate method so
         that it can be overridden.
         """
         getattr(model, m2m_accessor).clear()
 
-    def add_m2m_accessors(self, model, xobjModel, request):
+    def _add_m2m_accessors(self, model, xobjModel, request):
         """
         Populate the many to many accessors on model based on the xobj model
         in xobjModel.
@@ -426,20 +426,20 @@ class BaseManager(models.Manager):
             acobj = getattr(xobjModel, m2m_accessor, None)
             objlist = getattr(acobj, rel_obj_name, None)
             if objlist is not None:
-                self.clear_m2m_accessor(model, m2m_accessor)
+                self._clear_m2m_accessor(model, m2m_accessor)
                 if not isinstance(objlist, list):
                     objlist = [ objlist ]
             for rel_obj in objlist or []:
                 modelCls = m2m_mgr.model
-                rel_mod = modelCls.objects.load_from_href(rel_obj)
+                rel_mod = modelCls.objects._load_from_href(rel_obj)
                 if rel_mod is None:
                     rel_mod = modelCls.objects.load_from_object(
                         rel_obj, request)
-                self.set_m2m_accessor(model, m2m_accessor, rel_mod)
+                self._set_m2m_accessor(model, m2m_accessor, rel_mod)
 
         return model
 
-    def add_synthetic_fields(self, model, xobjModel):
+    def _add_synthetic_fields(self, model, xobjModel):
         # Not all models have the synthetic fields option set, so use getattr
         for fieldName in getattr(model._meta, 'synthetic_fields', {}):
             val = getattr(xobjModel, fieldName, None)
@@ -449,7 +449,7 @@ class BaseManager(models.Manager):
             setattr(model, fieldName, val)
         return model
 
-    def add_abstract_fields(self, model, xobjModel):
+    def _add_abstract_fields(self, model, xobjModel):
         abstractFields = getattr(model._meta, 'abstract_fields', None)
         if not abstractFields:
             return model
@@ -464,7 +464,7 @@ class BaseManager(models.Manager):
             else:
                 mdlinst = currentVal
 
-            mdl.objects.add_fields(mdlinst, val, request=None)
+            mdl.objects._add_fields(mdlinst, val, request=None)
         return model
 
 
@@ -487,9 +487,9 @@ class BaseManager(models.Manager):
 
         # We need access to synthetic fields before loading from the DB, they
         # may be used in load_or_create
-        model = self.add_synthetic_fields(model, xobjModel)
-        model = self.add_fields(model, xobjModel, request, save=save)
-        accessors = self.get_accessors(model, xobjModel, request)
+        model = self._add_synthetic_fields(model, xobjModel)
+        model = self._add_fields(model, xobjModel, request, save=save)
+        accessors = self._get_accessors(model, xobjModel, request)
 
         # Only try to load the model if load is True.  
         if not load:
@@ -502,17 +502,17 @@ class BaseManager(models.Manager):
         elif save:
             oldModel, model = self.load_or_create(model, xobjModel)
         else:
-            oldModel, dbmodel = self.load(model, xobjModel)
+            oldModel, dbmodel = self._load(model, xobjModel)
             if dbmodel:
                 model = dbmodel
 
         # Copy the synthetic fields again - this is unfortunate
-        model = self.add_synthetic_fields(model, xobjModel)
+        model = self._add_synthetic_fields(model, xobjModel)
 
-        model = self.add_m2m_accessors(model, xobjModel, request)
-        model = self.add_list_fields(model, xobjModel, request, save=save)
-        model = self.add_accessors(model, accessors)
-        model = self.add_abstract_fields(model, xobjModel)
+        model = self._add_m2m_accessors(model, xobjModel, request)
+        model = self._add_list_fields(model, xobjModel, request, save=save)
+        model = self._add_accessors(model, accessors)
+        model = self._add_abstract_fields(model, xobjModel)
 
         # Save a reference to the oldModel on model.  This could be helpful
         # later on to detect state changes.
@@ -522,7 +522,7 @@ class BaseManager(models.Manager):
 
 class PackageJobManager(BaseManager):
 
-    def add_fields(self, model, obj, request, save):
+    def _add_fields(self, model, obj, request, save):
         job_data = getattr(obj, "job_data", None)
         
         if job_data is not None:
@@ -534,7 +534,7 @@ class PackageJobManager(BaseManager):
             marshalled_job_data = mintdata.marshalGenericData(job_data_dict) 
             model.job_data = marshalled_job_data
 
-        return BaseManager.add_fields(self, model, obj, request, save)
+        return BaseManager._add_fields(self, model, obj, request, save)
 
 class TroveManager(BaseManager):
     def load_from_object(self, obj, request, save=True, load=True):
@@ -546,30 +546,30 @@ class TroveManager(BaseManager):
         return BaseManager.load_from_object(self, obj, request, save=save,
             load=load)
 
-    def clear_m2m_accessor(self, model, m2m_accessor):
+    def _clear_m2m_accessor(self, model, m2m_accessor):
         # We don't want available_updates to be published via REST
         if m2m_accessor == 'available_updates':
             return
-        BaseManager.clear_m2m_accessor(self, model, m2m_accessor)
+        BaseManager._clear_m2m_accessor(self, model, m2m_accessor)
 
-    def set_m2m_accessor(self, model, m2m_accessor, rel_mod):
+    def _set_m2m_accessor(self, model, m2m_accessor, rel_mod):
         if m2m_accessor == 'available_updates':
             return
-        return BaseManager.set_m2m_accessor(self, model, m2m_accessor, rel_mod)
+        return BaseManager._set_m2m_accessor(self, model, m2m_accessor, rel_mod)
 
-    def add_fields(self, model, obj, request, save=True):
-        nmodel = BaseManager.add_fields(self, model, obj, request, save=save)
+    def _add_fields(self, model, obj, request, save=True):
+        nmodel = BaseManager._add_fields(self, model, obj, request, save=save)
         if nmodel.flavor is None:
             nmodel.flavor = ''
         return nmodel
 
-    def load_from_href(self, *args, **kwargs):
+    def _load_from_href(self, *args, **kwargs):
         return None
 
 class VersionManager(BaseManager):
-    def add_fields(self, model, obj, request, save=True):
+    def _add_fields(self, model, obj, request, save=True):
         # Fix up label and revision
-        nmodel = BaseManager.add_fields(self, model, obj, request, save=save)
+        nmodel = BaseManager._add_fields(self, model, obj, request, save=save)
         v = nmodel.conaryVersion
         nmodel.fromConaryVersion(v)
         if nmodel.flavor is None:
@@ -687,13 +687,13 @@ class SystemManager(BaseManager):
         
         return loaded_model
     
-    def clear_m2m_accessor(self, model, m2m_accessor):
+    def _clear_m2m_accessor(self, model, m2m_accessor):
         # XXX Need a better way to handle this
         if m2m_accessor in [ 'installed_software', 'jobs' ]:
             return
-        BaseManager.clear_m2m_accessor(self, model, m2m_accessor)
+        BaseManager._clear_m2m_accessor(self, model, m2m_accessor)
 
-    def set_m2m_accessor(self, model, m2m_accessor, rel_mod):
+    def _set_m2m_accessor(self, model, m2m_accessor, rel_mod):
         # XXX Need a better way to handle this
         if m2m_accessor == 'installed_software':
             if model.new_versions is None:
@@ -702,7 +702,7 @@ class SystemManager(BaseManager):
         elif m2m_accessor == 'jobs':
             self._handleSystemJob(model, rel_mod)
         else:
-            BaseManager.set_m2m_accessor(self, model, m2m_accessor, rel_mod)
+            BaseManager._set_m2m_accessor(self, model, m2m_accessor, rel_mod)
 
     def _handleSystemJob(self, system, job):
         self.lastJob = None
@@ -721,7 +721,7 @@ class SystemManager(BaseManager):
         # Save the job so we know to update the system state
         system.lastJob = job
 
-    def add_accessors(self, model, accessors):
+    def _add_accessors(self, model, accessors):
         """
         Overridden here, b/c we always clear out the existing networks before
         setting new ones.
@@ -763,7 +763,7 @@ class ManagementNodeManager(SystemManager):
         return zone
 
 class SystemsManager(BaseManager):
-    def load(self, *args, **kwargs):
+    def _load(self, *args, **kwargs):
         """
         Overridden because systems has no direct representation in the db - we
         need to load individual objects
@@ -778,7 +778,7 @@ class InstalledSoftwareManager(SystemsManager):
     pass
 
 class ProductsManager(BaseManager):
-    def load_from_href(self, *args, **kwargs):
+    def _load_from_href(self, *args, **kwargs):
         return None
 
 class XObjModel(models.Model):
