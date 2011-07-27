@@ -28,26 +28,23 @@ class RestDbPassthrough(resource.Resource):
 
 
 class StageService(service.BaseService):
-    def rest_GET(self, request, short_name, version, label=None):
-        xml = self.get(request, short_name, version, label)
-        return xml
-    
-    def get(self, request, short_name, version, label):
-        # redirects to old stages code, note no v1 postfixed to /api
-        url = r'%(host)s/api/products/%(short_name)s/versions/%(version)s/stages/%(label)s'
-        # for local testing only:
-        # url = r'http://rbalast.eng.rpath.com/api/products/%(short_name)s/versions/%(version)s/stages/%(label)s'
-        args = dict(host='http://' + request.get_host(), short_name=short_name, version=version, label=label)
-        raw_xml = url2.urlopen(url % args).read()
-        return HttpResponse(raw_xml.strip(), mimetype='text/xml')
+    @access.anonymous
+    @return_xml
+    def rest_GET(self, request, name, version, label):
+        return self.get(request, name, version, label)
+
+    def get(self, request, name, version, label):
+        if not label:
+            Stages = projectsmodels.Stages()
+            Stages.project_branch_stage = [p for p in projectsmodels.Stage.objects.all()]
+            return Stages
+        else:
+            Stage = projectsmodels.Stage.objects.get(label=label)
+            return Stage
             
 
 class MajorVersionService(service.BaseService):
-    # @access.anonymous
-    # @return_xml
-    # def rest_GET(self, request, short_name, version):
-    #     return self.get(request, short_name, version)
-    
+
     def get(self, request, short_name, version):
         """
         XXX defunct for now
