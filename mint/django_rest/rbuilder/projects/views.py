@@ -9,9 +9,9 @@ from django.http import HttpResponse
 
 from mint.django_rest.deco import access, return_xml, requires
 from mint.django_rest.rbuilder import service
-from mint.django_rest.rbuilder.jobs import models as jobsmodels
+#from mint.django_rest.rbuilder.jobs import models as jobsmodels
 
-class ProjectBranchService(service.BaseService, jobsmodels.Actionable):
+class ProjectBranchService(service.BaseService):
     @access.anonymous
     @return_xml
     def rest_GET(self, request, short_name, project_branch_name):
@@ -21,13 +21,12 @@ class ProjectBranchService(service.BaseService, jobsmodels.Actionable):
         return self.mgr.getProjectBranch(short_name, project_branch_name)
 
 
-class ProjectService(service.BaseService, jobsmodels.Actionable):
+class ProjectService(service.BaseService):
 
     @access.anonymous
     @return_xml
     def rest_GET(self, request, short_name=None):
         model = self.get(short_name)
-        model.actions = self.getActions(request, model)
         return model
 
     def get(self, short_name):
@@ -106,7 +105,7 @@ class ProjectBranchStageService(service.BaseService):
         else:
             return self.mgr.getStages(version_id)
 
-class ProjectImageService(service.BaseService, jobsmodels.Actionable):
+class ProjectImageService(service.BaseService):
 
     @access.anonymous
     @return_xml
@@ -118,7 +117,6 @@ class ProjectImageService(service.BaseService, jobsmodels.Actionable):
             model = self.mgr.getImage(image_id)
         else:
             model = self.mgr.getImages()
-        model.actions = self.getActions(request, model)
         return model
 
 class ProjectMemberService(service.BaseService):

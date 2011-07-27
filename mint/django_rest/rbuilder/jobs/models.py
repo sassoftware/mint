@@ -35,27 +35,6 @@ class Action(modellib.XObjModel):
     description = models.TextField()
     descriptor = modellib.SyntheticField()
 
-
-class Actionable(object):
-    """
-    Mixin that allows dynamically computed actions
-    """
-    def getActions(self, request, model):
-        path = request.path if request else ''
-        actions = Actions()
-        try:
-            actions.action = self.computeActions(model)
-        except NotImplementedError:
-            actions.action = []
-        return actions
-
-    def computeActions(self, model):
-        """
-        returns a list of actions instances available
-        """
-        raise NotImplementedError
-
-
 class Jobs(modellib.Collection):
     
     XSL = 'jobs.xsl'

@@ -393,7 +393,7 @@ class ImageImportMetadataDescriptorService(BaseInventoryService):
     def get(self):
         return self.mgr.getImageImportMetadataDescriptor()
 
-class InventorySystemsSystemService(BaseInventoryService, jobmodels.Actionable):
+class InventorySystemsSystemService(BaseInventoryService):
     
     @return_xml
     def rest_GET(self, request, system_id):

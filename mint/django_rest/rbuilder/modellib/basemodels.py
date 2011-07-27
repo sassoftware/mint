@@ -439,14 +439,15 @@ class BaseManager(models.Manager):
 
         return model
 
-    def _add_synthetic_fields(self, model, xobjModel):
+    def _add_synthetic_fields(self, model, xobjModel, request):
         # Not all models have the synthetic fields option set, so use getattr
-        for fieldName in getattr(model._meta, 'synthetic_fields', {}):
+        for fieldName, fmodel in getattr(model._meta, 'synthetic_fields', {}).items():
             val = getattr(xobjModel, fieldName, None)
             if val is not None:
-                # XXX for now we assume synthetic fields are char only.
-                val = str(val)
-            setattr(model, fieldName, val)
+                if isinstance(val, XObjIdModel):
+                    val = self.load_from_object(val, request)
+            if val is not None:
+                    setattr(model, fieldName, val)
         return model
 
     def _add_abstract_fields(self, model, xobjModel):
@@ -487,7 +488,7 @@ class BaseManager(models.Manager):
 
         # We need access to synthetic fields before loading from the DB, they
         # may be used in load_or_create
-        model = self._add_synthetic_fields(model, xobjModel)
+        model = self._add_synthetic_fields(model, xobjModel, request)
         model = self._add_fields(model, xobjModel, request, save=save)
         accessors = self._get_accessors(model, xobjModel, request)
 
@@ -507,7 +508,7 @@ class BaseManager(models.Manager):
                 model = dbmodel
 
         # Copy the synthetic fields again - this is unfortunate
-        model = self._add_synthetic_fields(model, xobjModel)
+        model = self._add_synthetic_fields(model, xobjModel, request)
 
         model = self._add_m2m_accessors(model, xobjModel, request)
         model = self._add_list_fields(model, xobjModel, request, save=save)
@@ -1345,7 +1346,23 @@ class XObjModel(models.Model):
         return xobj_model
 
 class SyntheticField(object):
-    """A field that has no database storage, but is de-serialized"""
+    """
+    A field that has no database storage, but is de-serialized.
+    Can we used to wrap (any?) field type, but defaults to strings.
+    Unlike APIReadOnly and Hidden, this is a class, not a function,
+    so must do extra work to transfer attributes to the model it wraps.
+    """
+
+    def __init__(self, model=None):
+        if model is None:
+           model = str
+        self.model = model
+        hidden = getattr(self, 'XObjIdHidden', None)
+        ro     = getattr(self, 'APIReadOnly', None)
+        if hidden:
+             self.model.XObjIdHidden = hidden
+        if ro:
+             self.model.APIReadOnly  = ro
 
 class XObjIdModel(XObjModel):
     """
@@ -1363,7 +1380,7 @@ class XObjIdModel(XObjModel):
             ret._meta.abstract_fields = abstr = dict()
             for k, v in attrs.items():
                 if isinstance(v, SyntheticField):
-                    synth[k] = v
+                    synth[k] = v.model
                     # Default the value to None
                     setattr(ret, k, None)
                 meta = getattr(v, '_meta', None)
