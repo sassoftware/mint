@@ -37,7 +37,10 @@ class JobLauncher(modellib.XObjModel):
     _xobj = xobj.XObjMetadata(tag='job', attributes={'id':str})
     id = models.TextField(null=True)
 
-class Action(modellib.XObjModel):
+# NOTE: this being an id model is bogus, and is only so we can
+# override serializaiton
+
+class Action(modellib.XObjIdModel):
     '''Represents the ability to spawn a job, and how to do it'''
     class Meta:
         abstract = True
@@ -49,6 +52,12 @@ class Action(modellib.XObjModel):
     description = models.TextField()
     descriptor  = JobDescriptor()
     job         = JobLauncher()
+
+    def serialize(self, request=None):
+        # TODO: supply actual values
+        xobj_model = modellib.XObjIdModel.serialize(self, request)
+        xobj_model.descriptor.id = '9001'
+        return xobj_model
 
 class Jobs(modellib.Collection):
     
