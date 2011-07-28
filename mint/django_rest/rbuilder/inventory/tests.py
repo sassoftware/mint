@@ -33,18 +33,20 @@ XMLTestCase = test_utils.XMLTestCase
 
 class AssimilatorTestCase(XMLTestCase):
 
-    def testAssimilate(self):
-        system = self._saveSystem()
-        response = self._put('inventory/systems/%s/assimilator/' % system.pk,
-            testsxml.system_assimilator_xml, 
-            username="admin", password="password")
-        self.assertEquals(response.status_code, 200)
-        # make sure it looks like an event
-        # FIXME: our system_event_id is coming back empty, investigate
-        self.assertXMLEquals(response.content,
-            '<system_event></system_event>',
-            ignoreNodes=['event_data','event_type','system','time_created',
-                'system_event_id','priority','time_enabled'])
+    def testExpectedActions(self):
+        system = self.newSystem(name="blinky", description="ghost")
+        system.management_interface = models.ManagementInterface.objects.get(name='ssh')
+        self.mgr.addSystem(system)
+        response = self._get('inventory/systems/%s' % system.pk, username="testuser",
+            password="password")
+        obj = xobj.parse(response.content)
+        # obj doesn't listify 1 element lists
+        # don't break tests if there is only 1 action
+        actions = obj.system.actions.action
+        if type(actions) != type(list):
+           actions = [actions] 
+        descs = [ x.description for x in actions ]
+        self.assertTrue('System assimilation' in descs)
 
 class InventoryTestCase(XMLTestCase):
 

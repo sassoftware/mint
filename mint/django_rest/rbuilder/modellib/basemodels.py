@@ -1109,7 +1109,7 @@ class XObjModel(models.Model):
                 if getattr(field, 'XObjHidden', False):
                     continue
                 if val is None:
-                        val = ''
+                    val = ''
                 # Special handling of DateTimeFields.  Could make this OO by
                 # calling .seriaize(...) on each field, and overriding that
                 # behavior for DateTimeField's, but as long as it's just this
@@ -1128,6 +1128,10 @@ class XObjModel(models.Model):
                     val = field.serialize_value(request)
                 elif isinstance(field, djangofields.DecimalField):
                     val = float(val)
+                elif isinstance(val, XObjModel):
+                    # allow nested synthetic fields to override serialization
+                    # if the child of the synthetic field is an XObjIdModel
+                    val = val.serialize(request)
                 setattr(xobj_model, key, val)
 
     def _serialize_fk_fields(self, xobj_model, fields, request):
