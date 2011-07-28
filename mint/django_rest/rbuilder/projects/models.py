@@ -230,6 +230,7 @@ class ProjectVersions(modellib.Collection):
     
 
 class ProjectVersion(modellib.XObjIdModel):
+    # a.k.a. "branch"
     class Meta:
         db_table = u'productversions'
 
@@ -243,6 +244,8 @@ class ProjectVersion(modellib.XObjIdModel):
         db_column='productversionid')
     project = modellib.DeferredForeignKey(Project, db_column='projectid',
         related_name="project_branches", view_name="ProjectVersions", null=True)
+    label = models.TextField(unique=True, null=False)
+    cache_key = modellib.XObjHidden(models.TextField(null=True))
     namespace = models.CharField(max_length=16)
     name = models.CharField(max_length=16)
     description = models.TextField()
@@ -259,7 +262,7 @@ class ProjectVersion(modellib.XObjIdModel):
 
     def __unicode__(self):
         return self.name
-        
+
     def save(self, *args, **kwargs):
         if self.created_date is None:
             self.created_date = Project.Now()
@@ -307,7 +310,7 @@ class Stage(modellib.XObjIdModel):
     project_branch = modellib.DeferredForeignKey(ProjectVersion, 
         related_name="project_branch_stages", view_name="ProjectBranchStages")
     name = models.CharField(max_length=256)
-    label = models.TextField(unique=True)
+    label = models.TextField(null=False)
     promotable = models.BooleanField(default=False)
     created_date = modellib.DateTimeUtcField(auto_now_add=True)
     groups = modellib.SyntheticField()

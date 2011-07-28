@@ -357,7 +357,7 @@ class EventType(modellib.XObjIdModel):
         choices=EVENT_TYPES)), "the event type name (read-only)")
     description = D(models.CharField(max_length=8092), "the event type description")
     priority = D(models.SmallIntegerField(db_index=True), "the event type priority where > priority wins")
-    resource_type = D(models.CharField(max_length=8092), "the resource type for the job")
+    resource_type = D(models.TextField(), "the resource type for the job")
 
     @property
     def requiresManagementInterface(self):

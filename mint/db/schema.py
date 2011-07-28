@@ -28,7 +28,7 @@ from conary.dbstore import sqlerrors, sqllib
 log = logging.getLogger(__name__)
 
 # database schema major version
-RBUILDER_DB_VERSION = sqllib.DBversion(58, 40)
+RBUILDER_DB_VERSION = sqllib.DBversion(58, 41)
 
 
 def _createTrigger(db, table, column = "changed"):
@@ -628,12 +628,19 @@ def _createProductVersions(db):
     cu = db.cursor()
     changed = False
 
+    # TODO:
+    # * Rename table ProductVersions to project_branch
+    # * Drop "namespace" column
+    # * "name" becomes decorative only, "label" will be sole mechanism for
+    #   finding the proddef in the repository.
     if 'ProductVersions' not in db.tables:
         cu.execute("""
             CREATE TABLE ProductVersions (
                 productVersionId    %(PRIMARYKEY)s,
-                projectId       integer
+                projectId       integer             NOT NULL
                     REFERENCES Projects ON DELETE CASCADE,
+                label               text            NOT NULL    UNIQUE,
+                cache_key           text,
                 namespace           varchar(16),
                 name                varchar(16)     NOT NULL,
                 description         text,
@@ -650,12 +657,12 @@ def _createProductVersions(db):
                 "stage_id" %(PRIMARYKEY)s,
                 "name" varchar(256) NOT NULL,
                 "label" text NOT NULL,
-                "project_id" integer
+                project_id          integer         NOT NULL
                     REFERENCES Projects (projectId)
-                    ON DELETE SET NULL,
-                "project_branch_id" integer
+                    ON DELETE CASCADE,
+                project_branch_id   integer         NOT NULL
                     REFERENCES ProductVersions (productVersionId)
-                    ON DELETE SET NULL,
+                    ON DELETE CASCADE,
                 "promotable" bool,
                 "created_date" timestamp with time zone NOT NULL
             )""" % db.keywords)
@@ -1224,7 +1231,7 @@ def _createInventorySchema(db, cfg):
                 "name" varchar(8092) NOT NULL UNIQUE,
                 "description" varchar(8092) NOT NULL,
                 "priority" smallint NOT NULL,
-                "resource_type" varchar(8092) NOT NULL
+                "resource_type" text NOT NULL
             ) %(TABLEOPTS)s""" % db.keywords)
         db.tables[tableName] = []
         changed = True

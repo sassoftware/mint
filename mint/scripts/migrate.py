@@ -2949,7 +2949,7 @@ class MigrateTo_57(SchemaMigration):
 
 
 class MigrateTo_58(SchemaMigration):
-    Version = (58, 40)
+    Version = (58, 41)
 
     def migrate(self):
         return True
@@ -3381,6 +3381,45 @@ class MigrateTo_58(SchemaMigration):
     def migrate40(self):
         cu = self.db.cursor()
         cu.execute("ALTER TABLE Labels ALTER label DROP NOT NULL")
+        return True
+
+    def migrate41(self):
+        cu = self.db.cursor()
+        # Make ProductVersions.projectId NOT NULL
+        cu.execute("DELETE FROM ProductVersions WHERE projectId IS NULL")
+        cu.execute("ALTER TABLE ProductVersions ALTER projectId SET NOT NULL")
+        # Add new columns for improved branch schema
+        cu.execute("""ALTER TABLE ProductVersions
+                ADD label text UNIQUE,
+                ADD cache_key text""")
+        cu.execute("""UPDATE ProductVersions v SET label =
+            p.fqdn || '@' || v.namespace || ':' || p.shortname || '-' || v.name
+            FROM Projects p WHERE p.projectid = v.projectid""")
+        cu.execute("ALTER TABLE ProductVersions ALTER label SET NOT NULL")
+        # Make project_branch_stage FKs NOT NULL and CASCADE
+        cu.execute("""DELETE FROM project_branch_stage
+                WHERE project_id IS NULL OR project_branch_id IS NULL""")
+        dropForeignKey(self.db, 'project_branch_stage', ['project_id'])
+        dropForeignKey(self.db, 'project_branch_stage', ['project_branch_id'])
+        cu.execute("""ALTER TABLE project_branch_stage
+            ADD FOREIGN KEY (project_id)
+                REFERENCES Projects (projectId)
+                ON DELETE CASCADE,
+            ALTER project_id SET NOT NULL,
+            ADD FOREIGN KEY (project_branch_id)
+                REFERENCES ProductVersions (productVersionId)
+                ON DELETE CASCADE,
+            ALTER project_branch_id SET NOT NULL
+            """)
+
+        # Fixups to make initial schema consistent with migrations.
+        cu.execute("""ALTER TABLE jobs_job_type
+                ALTER resource_type TYPE text""")
+        cu.execute("""
+            UPDATE "jobs_job_type"
+            SET description = 'System assimilation'
+            WHERE name = 'system assimilation'
+        """)
         return True
 
 
