@@ -48,6 +48,22 @@ class AssimilatorTestCase(XMLTestCase):
         descs = [ x.description for x in actions ]
         self.assertTrue('System assimilation' in descs)
 
+    def testFetchActionsDescriptor(self): 
+        system = self.newSystem(name="blinky", description="ghost")
+        system.management_interface = models.ManagementInterface.objects.get(name='ssh')
+        self.mgr.addSystem(system)
+        assimilate = jobmodels.EventType.SYSTEM_ASSIMILATE
+        event_type = jobmodels.EventType.objects.get(name=assimilate)
+        type_id = event_type.pk
+        url = "inventory/systems/%s/descriptors/%s" % (system.pk, type_id)
+        response = self._get(url)
+        self.assertTrue(response.content.find("<descriptor>") != -1)
+        # make sure the same works with parameters
+        url = "inventory/systems/%s/descriptors/%s?foo=bar" % (system.pk, type_id)
+        response = self._get(url)
+        self.assertTrue(response.content.find("<descriptor>") != -1)
+
+
 class InventoryTestCase(XMLTestCase):
 
     def testGetTypes(self):

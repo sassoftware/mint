@@ -1835,6 +1835,22 @@ class SystemManager(basemanager.BaseManager):
         systemTag = querysetmodels.SystemTag.objects.get(pk=system_tag_id)
         return systemTag
 
+    @exposed
+    def getDescriptorForSystemAction(self, system_id, job_type, query_dict):
+        '''To submit a job to the system, what smartform data do I need?'''
+        system     = models.System.objects.get(pk=system_id)
+        event_type = jobmodels.EventType.objects.get(pk=job_type).name
+        descriptor = jobmodels.EventType.DESCRIPTOR_MAP.get(event_type, None)
+        if descriptor is None:
+            raise Exception("no descriptor for job type %s" % event_type)
+        # NOTE: it may be that depending on system context and event type
+        # we may need to dynamically create parameters.  For instance,
+        # if foo=3 on VMware.  When that happens, add some conditionals
+        # here based on system state.
+        query_dict = query_dict.copy()
+        query_dict['system_id'] = system_id
+        result = descriptor % query_dict
+        return result
 
 class Configuration(object):
     _xobj = xobj.XObjMetadata(

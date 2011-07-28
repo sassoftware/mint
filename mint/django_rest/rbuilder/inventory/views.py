@@ -632,21 +632,35 @@ class InventorySystemJobsService(BaseInventoryService):
         return self.mgr.getSystemJobs(system_id)
 
     @access.admin
+    @requires('job')
     @return_xml
-    def rest_POST(self, request, system_id, job_type):
+    def rest_POST(self, request, system_id, job):
         '''request starting a job on this system'''
-        raise exceptions.NotImplementedError
+        system = self.mgr.getSystem(system_id)
+        return self.mgr.scheduleJobAction(
+            system, job
+        )
 
 class InventorySystemJobDescriptorService(BaseInventoryService):
 
     @access.anonymous
+    # smartform object already is XML, no need
     @return_xml
     def rest_GET(self, request, system_id, job_type):
         '''
-        Get a smartform descriptor for starting a job on
-        InventorySystemJobsService
+        Get a smartform descriptor for starting a action on
+        InventorySystemJobsService.  An action is not *quite* a job.
+        It's a request to start a job.
         '''
-        raise exceptions.NotImplementedError
+        content = self.get(system_id, job_type, request.GET.copy())
+        response = HttpResponse(status=200, content=content)
+        response['Content-Type'] = 'text/xml'
+        return response
+
+    def get(self, system_id, job_type, parameters):
+        return self.mgr.getDescriptorForSystemAction(
+            system_id, job_type, parameters
+        )
 
 class InventorySystemJobStatesService(BaseInventoryService):
 
