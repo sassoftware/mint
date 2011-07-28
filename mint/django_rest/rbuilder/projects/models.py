@@ -33,16 +33,16 @@ class Group(modellib.XObjIdModel):
         
     _xobj = xobj.XObjMetadata(tag='trove', attributes={'href':str})
     
-    group_id = models.AutoField(primary_key=True)
-    hostname = models.CharField(max_length=1026)
-    name = models.CharField(max_length=1026)
-    version = models.CharField(max_length=1026)
-    label = models.CharField(max_length=1026)
-    trailing = models.CharField(max_length=1026)
-    flavor = models.TextField()
-    time_stamp = models.DecimalField()
+    # group_id = models.AutoField(primary_key=True)
+    # hostname = models.CharField(max_length=1026)
+    # name = models.CharField(max_length=1026)
+    # version = models.CharField(max_length=1026)
+    # label = models.CharField(max_length=1026)
+    # trailing = models.CharField(max_length=1026)
+    # flavor = models.TextField()
+    # time_stamp = models.DecimalField()
     # images = modellib.DeferredForeignKey('Image')
-    image_count = models.IntegerField()
+    # image_count = models.IntegerField()
     
     def __init__(self, href=None):
         if href:
@@ -314,20 +314,18 @@ class Stage(modellib.XObjIdModel):
     project_branch = modellib.DeferredForeignKey(ProjectVersion, 
         related_name="project_branch_stages", view_name="ProjectBranchStages")
     name = models.CharField(max_length=256)
+    hostname = models.CharField(max_length=1026)
     label = models.TextField(null=False)
     promotable = models.BooleanField(default=False)
     created_date = modellib.DateTimeUtcField(auto_now_add=True)
+    version = models.CharField(max_length=1026)
     groups = modellib.SyntheticField()
 
     def serialize(self, request=None):
         # FIXME TOTAL HACK, import statement inlined because of some undiscovered conflict
         from mint.django_rest.rbuilder.projects import views as projectsviews
-        view = projectsviews.GroupsService()
-        stages = xobj.parse(view.get(request).content)
-        # self.groups = [Group(href=s.groups.href) for s in stages.stages.stage]
-        self.groups = Groups()
-        groups = [Group(href=s.groups.href) for s in stages.stages.stage]
-        self.groups.group = groups
+        view = projectsviews.GroupProxyService()
+        self.groups = view.get(request, self.hostname, self.version)
         xobjModel = modellib.XObjModel.serialize(self, request)
         return xobjModel
         
