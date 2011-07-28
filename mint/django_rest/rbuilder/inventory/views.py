@@ -34,6 +34,7 @@ class StageService(service.BaseService):
         return self.get(request, name, version, label)
 
     def get(self, request, name, version, label):
+        import pdb; pdb.set_trace()
         if not label:
             Stages = projectsmodels.Stages()
             Stages.project_branch_stage = [p for p in projectsmodels.Stage.objects.all()]

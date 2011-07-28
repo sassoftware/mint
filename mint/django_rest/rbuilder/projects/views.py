@@ -143,8 +143,10 @@ class GroupsService(service.BaseService):
         groups (so I can call "get" with just the request) they need to be
         """
         # production
+        import pdb; pdb.set_trace()
         old_api_url = request.get_full_path().replace('/v1', '')
-        raw_xml = url2.urlopen('http://' + request.get_host().strip('/') + old_api_url).read()
+        params = '/search?' + request.params.strip(';').replace(';', '&')
+        raw_xml = url2.urlopen('http://' + request.get_host().strip('/') + old_api_url + params).read()
         
         # local testing
         # old_api_url = '/api/products/retail/repos/search?type=group&label=retail.eng.rpath.com@rpath%3Aretail-1-devel&_method=GET'

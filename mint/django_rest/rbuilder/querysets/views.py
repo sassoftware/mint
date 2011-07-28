@@ -48,6 +48,7 @@ class QuerySetService(BaseQuerySetService):
 
 class QuerySetAllResultService(BaseQuerySetService):
     
+    @access.anonymous
     @return_xml
     def rest_GET(self, request, query_set_id):
         return self.mgr.getQuerySetAllResult(query_set_id)

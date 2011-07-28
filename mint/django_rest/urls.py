@@ -219,7 +219,7 @@ urlpatterns = patterns('',
        name='Stages'),
        
     # Groups
-    URL(r'products/(?P<hostname>(\w|\-)*)/repos/(?P<search>.*)/?$',
+    URL(r'products/(?P<hostname>(\w|\-)*)/repos/(?P<search>(.*))/?$',
         projectviews.GroupsService(),
         name='Groups'),
 
