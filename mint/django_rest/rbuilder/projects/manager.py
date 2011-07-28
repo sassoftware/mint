@@ -429,10 +429,10 @@ class ProjectManager(basemanager.BaseManager):
         return dbStage
 
     @exposed
-    def getStages(self, version_id=None):
+    def getStages(self, version_name=None):
         stages = models.Stages()
         if version_id:
-            version = models.ProjectVersion.objects.get(pk=version_id)
+            version = models.ProjectVersion.objects.all().filter(name=version_name)
             stages.project_branch_stage = version.project_branch_stages.all()
         else:
             stages.project_branch_stage = models.Stage.objects.all()
