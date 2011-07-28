@@ -316,7 +316,7 @@ class Stage(modellib.XObjIdModel):
         # FIXME TOTAL HACK, import statement inlined because of some undiscovered conflict
         from mint.django_rest.rbuilder.projects import views as projectsviews
         view = projectsviews.GroupsService()
-        self.groups = xobj.parse(view.get(request).content).troves
+        self.groups = xobj.parse(view.get(request).content)
         xobjModel = modellib.XObjIdModel.serialize(self, request)
         return xobjModel
         
