@@ -18,7 +18,7 @@ from mint.django_rest.rbuilder.users import models as usermodels
 from xobj import xobj
 
 
-class Groups(modellib.Collection):
+class Groups(modellib.XObjModel):
     class Meta:
         abstract = True
         
@@ -31,7 +31,7 @@ class Group(modellib.XObjIdModel):
     class Meta:
         abstract = True
         
-    _xobj = xobj.XObjMetadata(tag='trove')
+    _xobj = xobj.XObjMetadata(tag='trove', attributes={'href':str})
     
     group_id = models.AutoField(primary_key=True)
     hostname = models.CharField(max_length=1026)
@@ -43,6 +43,10 @@ class Group(modellib.XObjIdModel):
     time_stamp = models.DecimalField()
     # images = modellib.DeferredForeignKey('Image')
     image_count = models.IntegerField()
+    
+    def __init__(self, href=None):
+        if href:
+            self.href = href
     
 
 class Projects(modellib.Collection):
@@ -319,8 +323,12 @@ class Stage(modellib.XObjIdModel):
         # FIXME TOTAL HACK, import statement inlined because of some undiscovered conflict
         from mint.django_rest.rbuilder.projects import views as projectsviews
         view = projectsviews.GroupsService()
-        self.groups = xobj.parse(view.get(request).content)
-        xobjModel = modellib.XObjIdModel.serialize(self, request)
+        stages = xobj.parse(view.get(request).content)
+        # self.groups = [Group(href=s.groups.href) for s in stages.stages.stage]
+        self.groups = Groups()
+        groups = [Group(href=s.groups.href) for s in stages.stages.stage]
+        self.groups.group = groups
+        xobjModel = modellib.XObjModel.serialize(self, request)
         return xobjModel
         
     

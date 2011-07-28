@@ -96,14 +96,14 @@ class ProjectStageService(service.BaseService):
 class ProjectBranchStageService(service.BaseService):
     @access.anonymous
     @return_xml
-    def rest_GET(self, request, version_id, stage_id=None):
-        return self.get(version_id, stage_id)
+    def rest_GET(self, request, version_name, stage_id=None):
+        return self.get(version_name, stage_id)
 
-    def get(self, version_id, stage_id):
+    def get(self, version_name, stage_id):
         if stage_id:
             return self.mgr.getStage(stage_id)
         else:
-            return self.mgr.getStages(version_id)
+            return self.mgr.getStages(version_name)
 
 class ProjectImageService(service.BaseService):
 
@@ -140,19 +140,9 @@ class GroupsService(service.BaseService):
     def get(self, request, hostname=None, search=None):
         """
         hostname and search should not be None but to hack together
-        groups (so I can call "get" with just the request) they need to be
+        groups (so I can call "get" with just the request), they need to be
         """
-        # production
         old_api_url = request.get_full_path().replace('/v1', '')
-        params = '/search?' + request.params.strip(';').replace(';', '&')
-        raw_xml = url2.urlopen('http://' + request.get_host().strip('/') + old_api_url + params).read()
-        
-        # local testing
-        # old_api_url = '/api/products/retail/repos/search?type=group&label=retail.eng.rpath.com@rpath%3Aretail-1-devel&_method=GET'
-        # import httplib2
-        # h = httplib2.Http()
-        # h.add_credentials('admin', '*****) # change when running locally
-        # resp, raw_xml = h.request('http://' + 'rbanext-eng.eng.rpath.com' + old_api_url, 'GET')
-        # groups_xobj = xobj.parse(raw_xml)
-        
+        host = request.get_host()
+        raw_xml = url2.urlopen('http://' + host.strip('/') + old_api_url).read()
         return HttpResponse(raw_xml, mimetype='text/xml')
