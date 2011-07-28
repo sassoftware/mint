@@ -324,7 +324,7 @@ class Stage(modellib.XObjIdModel):
     def serialize(self, request=None):
         # FIXME TOTAL HACK, import statement inlined because of some undiscovered conflict
         from mint.django_rest.rbuilder.projects import views as projectsviews
-        view = projectsviews.GroupProxyService()
+        view = projectsviews.GroupsProxyService()
         self.groups = view.get(request, self.hostname, self.version)
         xobjModel = modellib.XObjModel.serialize(self, request)
         return xobjModel
