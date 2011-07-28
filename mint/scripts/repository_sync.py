@@ -5,7 +5,6 @@
 import hashlib
 import logging
 import sys
-from conary.repository.netrepos import cache
 from mint.lib.scriptlibrary import GenericScript
 from mint.db import database
 from mint.db import repository
