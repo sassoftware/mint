@@ -21,6 +21,7 @@
     <field to="projects.project" name="project" rel="ManyToOneRel">2</field>
     <field type="CharField" name="namespace">rpath</field>
     <field type="CharField" name="name">1</field>
+    <field type="TextField" name="label">postgres.rpath.com@rpath:postgres-1</field>
     <field type="TextField" name="description">1</field>
     <field type="DecimalField" name="created_date">0</field>
   </object>
@@ -28,6 +29,7 @@
     <field to="projects.project" name="project" rel="ManyToOneRel">2</field>
     <field type="CharField" name="namespace">rpath</field>
     <field type="CharField" name="name">2</field>
+    <field type="TextField" name="label">postgres.rpath.com@rpath:postgres-2</field>
     <field type="TextField" name="description">2</field>
     <field type="DecimalField" name="created_date">0</field>
   </object>
@@ -89,6 +91,7 @@
     <field to="projects.project" name="project" rel="ManyToOneRel">3</field>
     <field type="CharField" name="namespace">rpath</field>
     <field type="CharField" name="name">1</field>
+    <field type="TextField" name="label">postgres-private.rpath.com@rpath:postgres-private-1</field>
     <field type="TextField" name="description">1</field>
     <field type="DecimalField" name="created_date">0</field>
   </object>

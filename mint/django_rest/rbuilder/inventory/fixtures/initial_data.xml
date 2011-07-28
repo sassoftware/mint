@@ -396,6 +396,7 @@ Aj/9jaPTk+mjBIgXSVEHkJCtxfGZWYFx/eNItfaAAfZVX68txm5Hyp2J6Equnr82
     <field type="CharField" name="namespace">rpath</field>
     <field type="CharField" name="name">1</field>
     <field type="TextField" name="description">1</field>
+    <field type="TextField" name="label">chater-foo.eng.rpath.com@rpath:chater-foo-1</field>
     <field type="DecimalField" name="created_date">0</field>
   </object>
 </django-objects>

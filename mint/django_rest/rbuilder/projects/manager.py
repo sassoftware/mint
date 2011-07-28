@@ -302,8 +302,10 @@ class ProjectManager(basemanager.BaseManager):
     def getProjectVersion(self, versionId):
         version = models.ProjectVersion.objects.get(pk=versionId)
         return version
-    
+
     def saveProductVersionDefinition(self, productVersion, prodDef):
+        # FIXME: this shouldn't trust prodDef, it could point to somebody
+        # else's repository which this method would gleefully overwrite...
         self.setProductVersionDefinition(prodDef)
         # now save them in the DB also
         stages = prodDef.getStages()
@@ -346,6 +348,11 @@ class ProjectManager(basemanager.BaseManager):
         if projects.validLabel.match(label) == None:
             raise mint_error.InvalidLabel(label)
 
+        projectVersion.label = prodDef.getProductDefinitionLabel()
+        if projectVersion.label.split('@')[0].lower() != (
+                projectVersion.project.repository_hostname.lower()):
+            raise mint_error.InvalidLabel(projectVersion.label)
+
         projectVersion.save()
         
         self.saveProductVersionDefinition(projectVersion, prodDef)
@@ -375,6 +382,9 @@ class ProjectManager(basemanager.BaseManager):
     def updateProjectVersion(self, projectVersion):
         if not self.isProjectOwner(projectVersion.project):
             raise errors.PermissionDenied()
+        if projectVersion.label.split('@')[0].lower() != (
+                projectVersion.project.repository_hostname.lower()):
+            raise mint_error.InvalidLabel(projectVersion.label)
         projectVersion.save()
         return projectVersion
 
@@ -395,10 +405,7 @@ class ProjectManager(basemanager.BaseManager):
     def getProductVersionDefinitionByProjectVersion(self, projectVersion):
         project = projectVersion.project
         pd = proddef.ProductDefinition()
-        pd.setProductShortname(project.short_name)
-        pd.setConaryRepositoryHostname(project.repository_hostname)
-        pd.setConaryNamespace(projectVersion.namespace)
-        pd.setProductVersion(projectVersion.name)
+        pd.setBaseLabel(projectVersion.label)
         cclient = self.mgr.getAdminClient(write=False)
         try:
             pd.loadFromRepository(cclient)
