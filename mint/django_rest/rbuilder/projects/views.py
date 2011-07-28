@@ -10,6 +10,8 @@ from django.http import HttpResponse
 from mint.django_rest.deco import access, return_xml, requires
 from mint.django_rest.rbuilder import service
 import urllib2 as url2
+from xobj import xobj
+import models
 
 class ProjectBranchService(service.BaseService):
     @access.anonymous
@@ -141,7 +143,7 @@ class GroupsProxyService(service.BaseService):
         raw_response = self.get(request, hostname, version)
         stages = xobj.parse(raw_response.content)
         groups = models.Groups()
-        groups.trove = [Group(href=s.groups.href) for s in stages.stages.stage]
+        groups.trove = [models.Group(href=s.groups.href) for s in stages.stages.stage]
         return groups
     
     def get(self, request, hostname, version):
