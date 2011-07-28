@@ -228,7 +228,7 @@ urlpatterns = patterns('',
        
     # Groups
     URL(r'products/(?P<hostname>(\w|\-)*)/repos/(?P<search>(.*))/?$',
-        projectviews.GroupsService(),
+        projectviews.GroupsProxyService(),
         name='Groups'),
 
     # Projects
