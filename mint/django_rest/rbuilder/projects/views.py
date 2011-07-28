@@ -143,7 +143,6 @@ class GroupsService(service.BaseService):
         groups (so I can call "get" with just the request) they need to be
         """
         # production
-        import pdb; pdb.set_trace()
         old_api_url = request.get_full_path().replace('/v1', '')
         params = '/search?' + request.params.strip(';').replace(';', '&')
         raw_xml = url2.urlopen('http://' + request.get_host().strip('/') + old_api_url + params).read()
