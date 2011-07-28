@@ -20,7 +20,7 @@ from mint.django_rest.rbuilder.inventory import models
 from mint.django_rest.rbuilder.jobs import models as jobmodels
 from mint.django_rest.rbuilder.projects import models as projectsmodels
 import urllib2 as url2
-
+import exceptions
 
  
 class RestDbPassthrough(resource.Resource):
@@ -627,12 +627,29 @@ class InventorySystemJobsService(BaseInventoryService):
     
     @access.anonymous
     @return_xml
-    def rest_GET(self, request, system_id, job_id=None):
+    def rest_GET(self, request, system_id):
+        '''list the jobs running on this system'''
         return self.get(system_id)
 
     def get(self, system_id):
         return self.mgr.getSystemJobs(system_id)
 
+    @access.admin
+    @return_xml
+    def rest_POST(self, request, system_id, job_type):
+        '''request starting a job on this system'''
+        raise exceptions.NotImplementedError
+
+class InventorySystemJobDescriptorService(BaseInventoryService):
+
+    @access.anonymous
+    @return_xml
+    def rest_GET(self, request, system_id, job_type):
+        '''
+        Get a smartform descriptor for starting a job on
+        InventorySystemJobsService
+        '''
+        raise exceptions.NotImplementedError
 
 class InventorySystemJobStatesService(BaseInventoryService):
 

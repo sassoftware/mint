@@ -38,7 +38,7 @@ class JobDescriptor(modellib.XObjIdModel):
     def get_absolute_url(self, request, *args, **kwargs):
         # this may serve systems, images, etc
         fullpath = request.get_full_path()
-        return urlparse.urljoin(fullpath, "descriptors/%s" % self.id)
+        return urlparse.urljoin(fullpath, "job_descriptors/%s" % self.id)
 
 class JobLauncher(modellib.XObjIdModel):
     '''URL to post smartform results that also spawns the job'''
