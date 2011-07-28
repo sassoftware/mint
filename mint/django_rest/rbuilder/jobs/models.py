@@ -10,7 +10,7 @@ from django.db import models
 
 from mint.django_rest.deco import D
 from mint.django_rest.rbuilder import modellib
-
+import urlparse
 from xobj import xobj
 
 XObjHidden = modellib.XObjHidden
@@ -23,19 +23,39 @@ class Actions(modellib.XObjModel):
         
     list_fields = ['action']
     
-class JobDescriptor(modellib.XObjModel):
+class JobDescriptor(modellib.XObjIdModel):
     '''URL to fetch a smartforms descriptor from'''
     class Meta:
         abstract = True
     _xobj = xobj.XObjMetadata(tag='descriptor', attributes={'id':str})
     id = models.TextField(null=True)
+    
+    def serialize(self, request):
+        xobj_model = modellib.XObjIdModel.serialize(self, request)
+        xobj_model.id = self.get_absolute_url(request)
+        return xobj_model
 
-class JobLauncher(modellib.XObjModel):
+    def get_absolute_url(self, request, *args, **kwargs):
+        # this may serve systems, images, etc
+        fullpath = request.get_full_path()
+        return urlparse.urljoin(fullpath, "descriptors/%s" % self.id)
+
+class JobLauncher(modellib.XObjIdModel):
     '''URL to post smartform results that also spawns the job'''
     class Meta:
         abstract = True
     _xobj = xobj.XObjMetadata(tag='job', attributes={'id':str})
     id = models.TextField(null=True)
+
+    def serialize(self, request):
+        xobj_model = modellib.XObjIdModel.serialize(self, request)
+        xobj_model.id = self.get_absolute_url(request)
+        return xobj_model
+
+    def get_absolute_url(self, request, *args, **kwargs):
+        # this may serve systems, images, etc
+        fullpath = request.get_full_path()
+        return urlparse.urljoin(fullpath, "jobs/%s" % self.id)
 
 # NOTE: this being an id model is bogus, and is only so we can
 # override serializaiton
@@ -53,11 +73,11 @@ class Action(modellib.XObjIdModel):
     descriptor  = JobDescriptor()
     job         = JobLauncher()
 
-    def serialize(self, request=None):
-        # TODO: supply actual values
-        xobj_model = modellib.XObjIdModel.serialize(self, request)
-        xobj_model.descriptor.id = '9001'
-        return xobj_model
+    #def serialize(self, request=None):
+    #    # TODO: supply actual values
+    #    xobj_model = modellib.XObjIdModel.serialize(self, request)
+    #    xobj_model.descriptor.id = '9001'
+    #    return xobj_model
 
 class Jobs(modellib.Collection):
     
@@ -71,7 +91,7 @@ class Jobs(modellib.Collection):
                 attributes={'id':str})
     list_fields = ['job']
     job = []
-    
+ 
     def get_absolute_url(self, request, *args, **kwargs):
         """
         This implementation of get_absolute_url is a bit different since the
@@ -360,13 +380,15 @@ class EventType(modellib.XObjIdModel):
     def makeAction(cls, name, descriptor_url=None, launch_url=None):
         '''Return a related Action object for spawning this jobtype'''
         obj        = cls.objects.get(name=name)
+        id_name = obj.name.replace(" ","-")
         action  = Action(
-            type        = obj.name,
+            type        = id_name,
             name        = obj.name,
             description = obj.description
         )
-        action.descriptor = JobDescriptor(id="http://127.0.1/not_implemented_yet")
-        action.job        = JobLauncher(id="http://127.0.0.1/not_implemented_yet")
+        # TODO: fill in proper IDs
+        action.descriptor = JobDescriptor(id=id_name)
+        action.job        = JobLauncher(id=id_name)
         return action
 
 for mod_obj in sys.modules[__name__].__dict__.values():
