@@ -39,6 +39,15 @@ def XObjHidden(field):
     field.XObjHidden = True
     return field
 
+def APIImmutable(field):
+    """
+    It's possible to write this item if not in the database but it may
+    not be changed via the API thereafter.
+    FIXME: TODO: NOT IMPLEMENTED YET, PLACEHOLDER!
+    """
+    field.APIImmutable = True
+    return field
+
 def APIReadOnly(field):
     """
     Fields implementing this interface will not be updated through the
