@@ -366,7 +366,7 @@ class RepositoryHandle(object):
         cfg.contentsDir = ' '.join(self.contentsDirs)
         cfg.tmpDir = os.path.join(self._cfg.dataPath, 'tmp')
 
-        if self._cfg.commitAction and not self.isLocalMirror:
+        if self._cfg.commitAction:
             actionDict = {
                     'repMap': '%s %s' % (fqdn, self.getURL()),
                     'buildLabel': '%s@rpl:1' % (fqdn,),
@@ -382,8 +382,6 @@ class RepositoryHandle(object):
             if self._cfg.commitActionEmail and self.commitEmail:
                 cfg.commitAction += (
                         ' ' + self._cfg.commitActionEmail % actionDict)
-            else:
-                cfg.commitAction = None
 
         return cfg
 
