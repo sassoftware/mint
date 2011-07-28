@@ -841,13 +841,12 @@ class System(modellib.XObjIdModel):
                 self.actions.action.append(
                     jobmodels.EventType.makeAction(
                         jobmodels.EventType.SYSTEM_ASSIMILATE,
-                        launch_url="http://localhost/not_implemented",
-                        descriptor_url="http://localhost/not_implemented"
                     )
                 )
 
         # TODO LATER: we should always have a collection
-        # of actions, regardless of interface type.
+        # of actions, regardless of interface type, this requires
+        # lots of testsxml updates.
 
 class ManagementNode(System):
     

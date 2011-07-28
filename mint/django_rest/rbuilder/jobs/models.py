@@ -16,6 +16,21 @@ from xobj import xobj
 XObjHidden = modellib.XObjHidden
 APIReadOnly = modellib.APIReadOnly
 
+# ==========================================================
+# descriptors needed to launch certain jobs, when adding
+# items here also update DESCRIPTOR_MAP below and make
+# sure the descriptor serving service for your resource
+# (ex: system, image, etc) knows about the new type
+
+# no parameters required for assimilation --- just
+# uses the management_interface credentials directly
+
+system_assimilate_descriptor = """
+<descriptor>
+</descriptor>
+"""
+
+# ==========================================================
 
 class Actions(modellib.XObjModel):
     class Meta:
@@ -38,24 +53,9 @@ class JobDescriptor(modellib.XObjIdModel):
     def get_absolute_url(self, request, *args, **kwargs):
         # this may serve systems, images, etc
         fullpath = request.get_full_path()
-        return urlparse.urljoin(fullpath, "job_descriptors/%s" % self.id)
-
-class JobLauncher(modellib.XObjIdModel):
-    '''URL to post smartform results that also spawns the job'''
-    class Meta:
-        abstract = True
-    _xobj = xobj.XObjMetadata(tag='job', attributes={'id':str})
-    id = models.TextField(null=True)
-
-    def serialize(self, request):
-        xobj_model = modellib.XObjIdModel.serialize(self, request)
-        xobj_model.id = self.get_absolute_url(request)
-        return xobj_model
-
-    def get_absolute_url(self, request, *args, **kwargs):
-        # this may serve systems, images, etc
-        fullpath = request.get_full_path()
-        return urlparse.urljoin(fullpath, "jobs/%s" % self.id)
+        return request.build_absolute_uri(
+            urlparse.urljoin(fullpath, "descriptors/%s" % self.id)
+        )
 
 # NOTE: this being an id model is bogus, and is only so we can
 # override serializaiton
@@ -71,7 +71,6 @@ class Action(modellib.XObjIdModel):
     name        = models.CharField(max_length=1026)
     description = models.TextField()
     descriptor  = JobDescriptor()
-    job         = JobLauncher()
 
     #def serialize(self, request=None):
     #    # TODO: supply actual values
@@ -353,6 +352,13 @@ class EventType(modellib.XObjIdModel):
          SYSTEM_CONFIG_IMMEDIATE_DESCRIPTION),
         (SYSTEM_ASSIMILATE, SYSTEM_ASSIMILATE_DESCRIPTION)
     )
+
+    # what smartform descriptor templates are needed to launch jobs of
+    # certain types?
+    DESCRIPTOR_MAP = {
+        SYSTEM_ASSIMILATE : system_assimilate_descriptor
+    } 
+
     name = D(APIReadOnly(models.CharField(max_length=8092, unique=True,
         choices=EVENT_TYPES)), "the event type name (read-only)")
     description = D(models.CharField(max_length=8092), "the event type description")
@@ -377,18 +383,15 @@ class EventType(modellib.XObjIdModel):
             return False
 
     @classmethod
-    def makeAction(cls, name, descriptor_url=None, launch_url=None):
+    def makeAction(cls, name):
         '''Return a related Action object for spawning this jobtype'''
         obj        = cls.objects.get(name=name)
-        id_name = obj.name.replace(" ","-")
         action  = Action(
-            type        = id_name,
-            name        = obj.name,
+            type        = obj.job_type_id,
+            name        = name,
             description = obj.description
         )
-        # TODO: fill in proper IDs
-        action.descriptor = JobDescriptor(id=id_name)
-        action.job        = JobLauncher(id=id_name)
+        action.descriptor = JobDescriptor(id=obj.job_type_id)
         return action
 
 for mod_obj in sys.modules[__name__].__dict__.values():
