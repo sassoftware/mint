@@ -32,12 +32,24 @@ from mint.django_rest import test_utils
 XMLTestCase = test_utils.XMLTestCase
 
 class AssimilatorTestCase(XMLTestCase):
+    ''' 
+    This tests actions as well as the assimilator.  See if we can list the jobs on 
+    a system, get the descriptor for spawning that job, and whether we can actually
+    start that job.  note: rpath-repeater is mocked, so that will return successful
+    job XML even if parameters are insufficient.
+    '''
+
+    def setUp(self):
+        XMLTestCase.setUp(self)
+        self.system = self.newSystem(name="blinky", description="ghost")
+        self.system.management_interface = models.ManagementInterface.objects.get(name='ssh')
+        self.mgr.addSystem(self.system)
+        self.assimilate = jobmodels.EventType.SYSTEM_ASSIMILATE
+        self.event_type = jobmodels.EventType.objects.get(name=self.assimilate)
+        self.type_id  = self.event_type.pk
 
     def testExpectedActions(self):
-        system = self.newSystem(name="blinky", description="ghost")
-        system.management_interface = models.ManagementInterface.objects.get(name='ssh')
-        self.mgr.addSystem(system)
-        response = self._get('inventory/systems/%s' % system.pk, username="testuser",
+        response = self._get('inventory/systems/%s' % self.system.pk, username="testuser",
             password="password")
         obj = xobj.parse(response.content)
         # obj doesn't listify 1 element lists
@@ -49,19 +61,22 @@ class AssimilatorTestCase(XMLTestCase):
         self.assertTrue('System assimilation' in descs)
 
     def testFetchActionsDescriptor(self): 
-        system = self.newSystem(name="blinky", description="ghost")
-        system.management_interface = models.ManagementInterface.objects.get(name='ssh')
-        self.mgr.addSystem(system)
-        assimilate = jobmodels.EventType.SYSTEM_ASSIMILATE
-        event_type = jobmodels.EventType.objects.get(name=assimilate)
-        type_id = event_type.pk
-        url = "inventory/systems/%s/descriptors/%s" % (system.pk, type_id)
+        url = "inventory/systems/%s/descriptors/%s" % (self.system.pk, self.type_id)
         response = self._get(url)
         self.assertTrue(response.content.find("<descriptor>") != -1)
         # make sure the same works with parameters
-        url = "inventory/systems/%s/descriptors/%s?foo=bar" % (system.pk, type_id)
+        url = "inventory/systems/%s/descriptors/%s?foo=bar" % (self.system.pk, self.type_id)
         response = self._get(url)
         self.assertTrue(response.content.find("<descriptor>") != -1)
+
+    #def testSpawnAction(self):
+    #    url = "inventory/systems/%s/jobs/" % (self.system.pk)
+    #    print "JOB_TYPE_ID=%s" % self.type_id
+    #    job = jobmodels.Job(job_type=self.event_type)
+    #    print job
+    #    response = self._post(url, job.to_xml())
+    #    # TODO: more strict XML checking
+    #    self.assertTrue(response.content.find("<job>") != -1)
 
 
 class InventoryTestCase(XMLTestCase):

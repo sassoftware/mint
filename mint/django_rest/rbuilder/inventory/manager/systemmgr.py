@@ -936,19 +936,19 @@ class SystemManager(basemanager.BaseManager):
             setattr(credentials, k, v)
         return credentials
 
-    @exposed
-    def assimilateSystem(self, system, assimilation_parameters):
-        '''adds management software to a bare system in inventory''' 
-        sshAuth = []
-        for cred in assimilation_parameters.assimilation_credential:
-             sshAuth.append(dict(
-                 sshUser     = cred.ssh_username,
-                 sshPassword = cred.ssh_password,
-                 sshKey      = cred.ssh_key
-             ))
-        return self._scheduleEvent(system,
-            jobmodels.EventType.SYSTEM_ASSIMILATE,
-            eventData=sshAuth)
+    #@exposed
+    #def assimilateSystem(self, system, assimilation_parameters):
+    #    '''adds management software to a bare system in inventory''' 
+    #    sshAuth = []
+    #    for cred in assimilation_parameters.assimilation_credential:
+    #         sshAuth.append(dict(
+    #             sshUser     = cred.ssh_username,
+    #             sshPassword = cred.ssh_password,
+    #             sshKey      = cred.ssh_key
+    #         ))
+    #    return self._scheduleEvent(system,
+    #        jobmodels.EventType.SYSTEM_ASSIMILATE,
+    #        eventData=sshAuth)
 
     @classmethod
     def unmarshalCredentials(cls, credentialsString):
@@ -1851,6 +1851,33 @@ class SystemManager(basemanager.BaseManager):
         query_dict['system_id'] = system_id
         result = descriptor % query_dict
         return result
+
+    @exposed
+    def scheduleJobAction(self, system_id, job):
+        '''
+        Allows scheduling a user job in response to <actions/> XML
+        presented by the system.  Object coming in will be very bare,
+        validate and run the appropriate (internal) event functions
+        instead of using it directly.
+        '''
+        jt = job.job_type
+        if jt != jobmodels.EventType.SYSTEM_ASSIMILATE:
+            creds = self.getSystemCredentials(system_id)
+            #import epdb. epdb.st()
+            auth = [dict(
+                sshUser     = 'root',
+                sshPassword = cred.password,
+                sshKey      = cred.key
+            )]
+            return self._scheduleEvent(system, jt, eventData=auth)
+            # we can completely ignore descriptor and descriptor_data
+            # for this job, because we have that data stored in credentials
+            # but other actions will have work to do with them in this
+            # function.
+        else:
+            raise Exception("action dispatch not yet supported")
+        
+
 
 class Configuration(object):
     _xobj = xobj.XObjMetadata(

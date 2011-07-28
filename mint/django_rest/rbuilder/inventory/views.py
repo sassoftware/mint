@@ -632,7 +632,7 @@ class InventorySystemJobsService(BaseInventoryService):
         return self.mgr.getSystemJobs(system_id)
 
     @access.admin
-    @requires('job')
+    @requires('job', save=False, load=False)
     @return_xml
     def rest_POST(self, request, system_id, job):
         '''request starting a job on this system'''
