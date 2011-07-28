@@ -131,18 +131,25 @@ class ProjectMemberService(service.BaseService):
         return self.mgr.getProjectMembers(short_name)
 
 
-class GroupsService(service.BaseService):
-
+class GroupsProxyService(service.BaseService):
+    """
+    Need to move this logic into a manager
+    """
     @access.anonymous # what are actual permissions for this?
-    def rest_GET(self, request, hostname, search):
-        return self.get(request, hostname, search)
+    @return_xml
+    def rest_GET(self, request, hostname, version):
+        raw_response = self.get(request, hostname, version)
+        stages = xobj.parse(raw_response.content)
+        groups = models.Groups()
+        groups.trove = [Group(href=s.groups.href) for s in stages.stages.stage]
+        return groups
     
-    def get(self, request, hostname=None, search=None):
+    def get(self, request, hostname, version):
         """
         hostname and search should not be None but to hack together
         groups (so I can call "get" with just the request), they need to be
         """
-        old_api_url = request.get_full_path().replace('/v1', '')
+        old_api_url = r'products/%s/versions/%s/stages/' % (hostname, version)
         host = request.get_host()
-        raw_xml = url2.urlopen('http://' + host.strip('/') + old_api_url).read()
-        return HttpResponse(raw_xml, mimetype='text/xml')
+        raw_stages_xml = url2.urlopen('http://' + host.strip('/') + old_api_url).read()
+        return HttpResponse(raw_stages_xml, mimetype='text/xml')
