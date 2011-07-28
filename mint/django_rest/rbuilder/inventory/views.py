@@ -17,9 +17,7 @@ from mint.django_rest.deco import requires, return_xml, access, ACCESS, \
 from mint.django_rest.rbuilder.users import models as usersmodels
 from mint.django_rest.rbuilder import service
 from mint.django_rest.rbuilder.inventory import models
-from mint.django_rest.rbuilder.jobs import models as jobmodels
 from mint.django_rest.rbuilder.projects import models as projectsmodels
-import urllib2 as url2
 import exceptions
 
  
