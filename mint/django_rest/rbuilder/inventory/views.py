@@ -672,7 +672,7 @@ class InventorySystemJobsService(BaseInventoryService):
         # be queued and we don't know the jobs it will produce yet, or it may
         # fire immediately and not produce any events.  Not getting an
         # exception is success.
-        event =  self.mgr.scheduleJobAction(
+        self.mgr.scheduleJobAction(
             system, job
         )
         return HttpResponse(status=200)

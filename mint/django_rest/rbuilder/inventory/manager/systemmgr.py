@@ -1891,7 +1891,7 @@ class SystemManager(basemanager.BaseManager):
                 sshPassword = creds.password,
                 sshKey      = creds.key,
             )]
-            rc = self._scheduleEvent(system, job_name, eventData=auth)
+            return self._scheduleEvent(system, job_name, eventData=auth)
             # we can completely ignore descriptor and descriptor_data
             # for this job, because we have that data stored in credentials
             # but other actions will have work to do with them in this
