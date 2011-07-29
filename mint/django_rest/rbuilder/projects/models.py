@@ -28,8 +28,10 @@ class Groups(modellib.XObjModel):
 class Group(modellib.XObjIdModel):
     class Meta:
         abstract = True
-        
-    _xobj = xobj.XObjMetadata(tag='group', attributes={'href':str})
+    
+    # tag name is only groups for the sake of calculating project_branch_stage(s)
+    # once Group(s) is moved over, change back to singular
+    _xobj = xobj.XObjMetadata(tag='groups', attributes={'href':str})
     
     href = models.CharField(max_length=1026)
     # group_id = models.AutoField(primary_key=True)
