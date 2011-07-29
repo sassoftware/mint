@@ -2348,6 +2348,13 @@ credentials_xml = """\
 </credentials>
 """
 
+ssh_credentials_xml = """\
+<?xml version="1.0"?>
+<credentials>
+  <key>sshKeyContentsGoesHere</key>
+  <password>osOrUnlockPassword</password>
+</credentials>
+"""
 credentials_put_xml = """\
 <?xml version="1.0"?>
 <credentials>
@@ -3373,16 +3380,7 @@ Methods:
 </systems>
 """
 
-system_assimilator_xml="""
-<assimilation_parameters>
-  <assimilation_credential>
-    <ssh_username>root</ssh_username>
-    <ssh_password>blarg</ssh_password>
-    <ssh_key>ABCDEFGHIJKL</ssh_key>
-  </assimilation_credential>
-  <assimilation_credential>
-    <ssh_key>MNOPQRSTUVWXYZ</ssh_key>
-    <ssh_password>letmein</ssh_password>
-  </assimilation_credential>
-</assimilation_parameters>
+system_assimilator_xml="""<job>
+<job_type id='https://localhost/api/v1/inventory/event_types/12'>system assimilation</job_type>
+</job>
 """

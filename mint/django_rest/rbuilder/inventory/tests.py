@@ -32,15 +32,40 @@ from mint.django_rest import test_utils
 XMLTestCase = test_utils.XMLTestCase
 
 class AssimilatorTestCase(XMLTestCase):
+    ''' 
+    This tests actions as well as the assimilator.  See if we can list the jobs on 
+    a system, get the descriptor for spawning that job, and whether we can actually
+    start that job.  note: rpath-repeater is mocked, so that will return successful
+    job XML even if parameters are insufficient.
+    '''
+
+    def setUp(self):
+        # make a new system, get ids to use when spawning job
+        XMLTestCase.setUp(self)
+        self.system = self.newSystem(name="blinky", description="ghost")
+        self.system.management_interface = models.ManagementInterface.objects.get(name='ssh')
+        self.mgr.addSystem(self.system)
+        self.assimilate = jobmodels.EventType.SYSTEM_ASSIMILATE
+        self.event_type = jobmodels.EventType.objects.get(name=self.assimilate)
+        self.type_id  = self.event_type.pk
+        self.system.save()
+
+        # system needs  a network
+        network = models.Network()
+        network.dns_name = 'testnetwork.example.com'
+        network.system = self.system
+        network.save()
+        self.system.networks.add(network)
+        # system.save not required
+        self.system = models.System.objects.get(pk=self.system.pk)
+        self.assertTrue(self.mgr.sysMgr.getSystemHasHostInfo(self.system))
 
     def testExpectedActions(self):
-        system = self.newSystem(name="blinky", description="ghost")
-        system.management_interface = models.ManagementInterface.objects.get(name='ssh')
-        self.mgr.addSystem(system)
-        response = self._get('inventory/systems/%s' % system.pk, username="testuser",
+        # do we see assimilate as a possible action?
+        response = self._get('inventory/systems/%s' % self.system.pk, username="testuser",
             password="password")
         obj = xobj.parse(response.content)
-        # obj doesn't listify 1 element lists
+        # xobj hack: obj doesn't listify 1 element lists
         # don't break tests if there is only 1 action
         actions = obj.system.actions.action
         if type(actions) != type(list):
@@ -49,19 +74,29 @@ class AssimilatorTestCase(XMLTestCase):
         self.assertTrue('System assimilation' in descs)
 
     def testFetchActionsDescriptor(self): 
-        system = self.newSystem(name="blinky", description="ghost")
-        system.management_interface = models.ManagementInterface.objects.get(name='ssh')
-        self.mgr.addSystem(system)
-        assimilate = jobmodels.EventType.SYSTEM_ASSIMILATE
-        event_type = jobmodels.EventType.objects.get(name=assimilate)
-        type_id = event_type.pk
-        url = "inventory/systems/%s/descriptors/%s" % (system.pk, type_id)
+        # can we determine what smartform we need to populate?
+        url = "inventory/systems/%s/descriptors/%s" % (self.system.pk, self.type_id)
         response = self._get(url)
         self.assertTrue(response.content.find("<descriptor>") != -1)
         # make sure the same works with parameters
-        url = "inventory/systems/%s/descriptors/%s?foo=bar" % (system.pk, type_id)
+        url = "inventory/systems/%s/descriptors/%s?foo=bar" % (self.system.pk, self.type_id)
         response = self._get(url)
         self.assertTrue(response.content.find("<descriptor>") != -1)
+
+    def testSpawnAction(self):
+        # can we launch the job>?
+        # first make sure SSH managemnet interface credentials are set
+        self.assertTrue(self.mgr.sysMgr.getSystemHasHostInfo(self.system))
+        response = self._post('inventory/systems/%s/credentials' % \
+            self.system.pk,
+            data=testsxml.ssh_credentials_xml,
+            username="admin", password="password")
+        self.assertEquals(response.status_code, 200)
+        # now post a barebones job to the systems jobs collection
+        url = "inventory/systems/%s/jobs/" % (self.system.pk)
+        response = self._post(url, testsxml.system_assimilator_xml, 
+            username="admin", password="password")
+        self.assertEquals(response.status_code, 200)
 
 
 class InventoryTestCase(XMLTestCase):

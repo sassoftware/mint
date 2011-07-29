@@ -15,6 +15,7 @@ from xobj import xobj
 
 XObjHidden = modellib.XObjHidden
 APIReadOnly = modellib.APIReadOnly
+APIImmutable = modellib.APIImmutable
 
 # ==========================================================
 # descriptors needed to launch certain jobs, when adding
@@ -130,7 +131,7 @@ class Job(modellib.XObjIdModel):
         "the message associated with the current status")
     status_detail = D(XObjHidden(models.TextField(null=True)),
         "documentation missing")
-    job_type = D(APIReadOnly(modellib.DeferredForeignKey("EventType",
+    job_type = D(APIImmutable(modellib.DeferredForeignKey("EventType",
         text_field='name', related_name="jobs", null=False)),
         "The job type")
     descriptor = D(XObjHidden(models.TextField(null=True)),
