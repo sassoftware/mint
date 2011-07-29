@@ -28,7 +28,7 @@ class FileUrl(modellib.XObjIdModel):
         
     file_id = models.AutoField(primary_key=True,
         db_column="urlId")  
-    url_type = c(db_column='urlType') 
+    url_type = models.smallIntegerField(db_column='urlType') 
     url =  models.CharField(max_length=255)
 
 
