@@ -43,8 +43,9 @@ class StageProxyService(service.BaseService):
 
         stages_collection = []
         for label, href in stages_metadata:
-            stage = projectsmodels.Stage.objects.get(label=label)
-            stage.groups = projectsmodels.Group(href=href)
+            import pdb; pdb.set_trace()
+            stage = projectsmodels.Stage.objects.get(label=str(label))
+            stage.groups = projectsmodels.Group(href=str(href))
             stages_collection.append(stage)
 
         ProjectBranchStages = projectsmodels.Stages()
@@ -277,6 +278,7 @@ class InventorySystemTypeService(BaseInventoryService):
 
     # @access.authenticated
     # @access.localhost
+    @access.anonymous
     @return_xml
     def rest_GET(self, request, system_type_id=None):
         return self.get(system_type_id)
@@ -301,6 +303,7 @@ class InventorySystemTypeService(BaseInventoryService):
     
 class InventorySystemTypeSystemsService(BaseInventoryService):
     
+    @access.anonymous
     @return_xml
     def rest_GET(self, request, system_type_id, system_id=None):
         return self.get(system_type_id)
