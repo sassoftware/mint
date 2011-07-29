@@ -9,7 +9,7 @@ import sys
 import time
 from dateutil import tz
 
-from django.db import models
+# from django.db import models
 
 from mint import userlevels
 from mint.django_rest.rbuilder import modellib
