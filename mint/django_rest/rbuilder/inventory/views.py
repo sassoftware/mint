@@ -39,11 +39,11 @@ class StageProxyService(service.BaseService):
         raw_stages_xml = url2.urlopen('http://' + host.strip('/') + old_api_url).read()
 
         stages = xobj.parse(raw_stages_xml)
-        stages_metadata = [(s.hostname, s.version, s.label, s.groups.href) for s in stages.stages.stage]
+        stages_metadata = [(s.label, s.groups.href) for s in stages.stages.stage]
 
         stages_collection = []
-        for hostname, version, label, href in stages_metadata:
-            stage = projectsmodels.Stage.objects.get(hostname=hostname, version=version, label=label)
+        for label, href in stages_metadata:
+            stage = projectsmodels.Stage.objects.get(label=label)
             stage.groups = projectsmodels.Group(href=href)
             stages_collection.append(stage)
 
