@@ -43,7 +43,6 @@ class StageProxyService(service.BaseService):
 
         stages_collection = []
         for label, href in stages_metadata:
-            import pdb; pdb.set_trace()
             stage = projectsmodels.Stage.objects.get(label=str(label))
             stage.groups = projectsmodels.Group(href=str(href))
             stages_collection.append(stage)
