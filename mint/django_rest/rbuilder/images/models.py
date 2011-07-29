@@ -7,7 +7,7 @@
 from django.db import models
 from xobj import xobj
 from mint.django_rest.rbuilder import modellib
-import sys
+#import sys
 from mint.django_field.rbuilder.projects import models as projmodels
 
 
