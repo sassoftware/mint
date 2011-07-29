@@ -33,7 +33,7 @@ class Group(modellib.XObjIdModel):
         
     _xobj = xobj.XObjMetadata(tag='trove', attributes={'href':str})
     
-    href = str
+    href = models.CharField(max_length=1026)
     # group_id = models.AutoField(primary_key=True)
     # hostname = models.CharField(max_length=1026)
     # name = models.CharField(max_length=1026)
