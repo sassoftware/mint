@@ -9,9 +9,9 @@ from django.http import HttpResponse
 
 from mint.django_rest.deco import access, return_xml, requires
 from mint.django_rest.rbuilder import service
-import urllib2 as url2
-from xobj import xobj
-import models
+# import urllib2 as url2
+# from xobj import xobj
+# import models
 
 class ProjectBranchService(service.BaseService):
     @access.anonymous
@@ -137,22 +137,3 @@ class ProjectMemberService(service.BaseService):
 #     """
 #     Need to move this logic into a manager
 #     """
-#     @access.anonymous # what are actual permissions for this?
-#     @return_xml
-#     def rest_GET(self, request, hostname, version=None, search=None):
-#         raw_response = self.get(request, hostname, version)
-#         stages = xobj.parse(raw_response.content)
-#         groups = models.Groups()
-#         groups.trove = [models.Group(href=s.groups.href) for s in stages.stages.stage]
-#         return groups
-#     
-#     def get(self, request, hostname, version):
-#         """
-#         hostname and search should not be None but to hack together
-#         groups (so I can call "get" with just the request), they need to be
-#         """
-#         old_api_url = r'/products/%s/versions/%s/stages/' % (hostname, version)
-#         # host = request.get_host()
-#         host = 'rbalast.eng.rpath.com'
-#         raw_stages_xml = url2.urlopen('http://' + host.strip('/') + old_api_url).read()
-#         return HttpResponse(raw_stages_xml, mimetype='text/xml')

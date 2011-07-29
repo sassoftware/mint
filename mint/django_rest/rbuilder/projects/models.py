@@ -8,9 +8,7 @@ import datetime
 import sys
 import time
 from dateutil import tz
-
 from django.db import models
-
 from mint import userlevels
 from mint.django_rest.rbuilder import modellib
 from mint.django_rest.rbuilder.users import models as usermodels
@@ -22,7 +20,7 @@ class Groups(modellib.XObjModel):
     class Meta:
         abstract = True
         
-    _xobj = xobj.XObjMetadata(tag='troves')
+    _xobj = xobj.XObjMetadata(tag='groups')
         
     list_fields = ['group']
 
@@ -30,8 +28,10 @@ class Groups(modellib.XObjModel):
 class Group(modellib.XObjIdModel):
     class Meta:
         abstract = True
-        
-    _xobj = xobj.XObjMetadata(tag='trove', attributes={'href':str})
+    
+    # tag name is only groups for the sake of calculating project_branch_stage(s)
+    # once Group(s) is moved over, change back to singular
+    _xobj = xobj.XObjMetadata(tag='groups', attributes={'href':str})
     
     href = models.CharField(max_length=1026)
     # group_id = models.AutoField(primary_key=True)
@@ -297,6 +297,10 @@ class Stages(modellib.Collection):
     view_name = "ProjectStages"
     list_fields = ["project_branch_stage"]
     project_branch_stage = []
+    
+    def serialize(self, request=None):
+        xobjModel = modellib.XObjModel.serialize(self, request)
+        return xobjModel
 
 
 class Stage(modellib.XObjIdModel):
@@ -318,7 +322,7 @@ class Stage(modellib.XObjIdModel):
     label = models.TextField(null=False)
     promotable = models.BooleanField(default=False)
     created_date = modellib.DateTimeUtcField(auto_now_add=True)
-    group = modellib.SyntheticField()
+    groups = modellib.SyntheticField()
 
     def serialize(self, request=None):
         xobjModel = modellib.XObjModel.serialize(self, request)
