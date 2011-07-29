@@ -97,7 +97,7 @@ class AssimilatorTestCase(XMLTestCase):
         response = self._post(url, testsxml.system_assimilator_xml, 
             username="admin", password="password")
         self.assertEquals(response.status_code, 200)
-
+        self.assertTrue(response.content.find("<system_event>") != -1)
 
 class InventoryTestCase(XMLTestCase):
 

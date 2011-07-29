@@ -1884,6 +1884,7 @@ class SystemManager(basemanager.BaseManager):
         event_type = jobmodels.EventType.objects.get(job_type_id=jt)
         job_name   = event_type.name
 
+        event = None
         if job_name == jobmodels.EventType.SYSTEM_ASSIMILATE:
             creds = self.getSystemCredentials(system)
             auth = [dict(
@@ -1891,7 +1892,7 @@ class SystemManager(basemanager.BaseManager):
                 sshPassword = creds.password,
                 sshKey      = creds.key,
             )]
-            return self._scheduleEvent(system, job_name, eventData=auth)
+            event = self._scheduleEvent(system, job_name, eventData=auth)
             # we can completely ignore descriptor and descriptor_data
             # for this job, because we have that data stored in credentials
             # but other actions will have work to do with them in this
@@ -1899,6 +1900,11 @@ class SystemManager(basemanager.BaseManager):
         else:
             raise Exception("action dispatch not yet supported on job type: %s" % jt)
         
+        if event is None:
+            # this can happen if the event preconditions are not met and the exception
+            # gets caught somewhere up the chain (which we should fix)
+            raise Exception("failed to schedule event")
+        return event
 
 
 class Configuration(object):

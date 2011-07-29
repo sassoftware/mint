@@ -667,15 +667,9 @@ class InventorySystemJobsService(BaseInventoryService):
     def rest_POST(self, request, system_id, job):
         '''request starting a job on this system'''
         system = self.mgr.getSystem(system_id)
-        # this often returns none even if the event is scheduled, because
-        # the event will be immediately deleted, or the event may
-        # be queued and we don't know the jobs it will produce yet, or it may
-        # fire immediately and not produce any events.  Not getting an
-        # exception is success.
-        self.mgr.scheduleJobAction(
+        return self.mgr.scheduleJobAction(
             system, job
         )
-        return HttpResponse(status=200)
 
 class InventorySystemJobDescriptorService(BaseInventoryService):
 
