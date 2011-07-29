@@ -18,8 +18,7 @@ from mint.django_rest.rbuilder.users import models as usersmodels
 from mint.django_rest.rbuilder import service
 from mint.django_rest.rbuilder.inventory import models
 from mint.django_rest.rbuilder.projects import models as projectsmodels
-from mint.django_rest.rbuilder.projects import views as projectsviews
-import exceptions
+# import exceptions
 from xobj import xobj
 import urllib2 as url2
  
@@ -40,7 +39,6 @@ class StageProxyService(service.BaseService):
         raw_stages_xml = url2.urlopen('http://' + host.strip('/') + old_api_url).read()
 
         stages = xobj.parse(raw_stages_xml)
-        labels = [s.label for s in stages.stages.stage]
         stages_metadata = [(s.hostname, s.version, s.label, s.groups.href) for s in stages.stages.stage]
 
         stages_collection = []
