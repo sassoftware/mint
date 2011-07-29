@@ -49,7 +49,7 @@ class StageProxyService(service.BaseService):
 
         ProjectBranchStages = projectsmodels.Stages()
         ProjectBranchStages.project_branch_stage = stages_collection
-        return Stages
+        return ProjectBranchStages
     
     
 
