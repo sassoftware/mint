@@ -47,8 +47,8 @@ class StageProxyService(service.BaseService):
             stage.groups = projectsmodels.Group(href=href)
             stages_collection.append(stage)
 
-        Stages = projectsmodels.Stages()
-        Stages.stage = stages_collection
+        ProjectBranchStages = projectsmodels.Stages()
+        ProjectBranchStages.project_branch_stage = stages_collection
         return Stages
     
     
