@@ -44,7 +44,7 @@ class StageProxyService(service.BaseService):
         stages_collection = []
         for label, href in stages_metadata:
             stage = projectsmodels.Stage.objects.get(label=str(label))
-            stage.group = projectsmodels.Group(href=str(href))
+            stage.groups = projectsmodels.Group(href=str(href))
             stages_collection.append(stage)
 
         ProjectBranchStages = projectsmodels.Stages()

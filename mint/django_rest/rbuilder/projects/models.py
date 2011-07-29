@@ -299,20 +299,6 @@ class Stages(modellib.Collection):
     project_branch_stage = []
     
     def serialize(self, request=None):
-        old_api_url = request.get_full_path()
-        host = request.get_host()
-        raw_stages_xml = url2.urlopen('http://' + host.strip('/') + old_api_url).read()
-
-        stages = xobj.parse(raw_stages_xml)
-        stages_metadata = [(s.label, s.groups.href) for s in stages.stages.stage]
-
-        stages_collection = []
-        for label, href in stages_metadata:
-            stage = projectsmodels.Stage.objects.get(label=str(label))
-            stage.groups = projectsmodels.Group(href=str(href))
-            stages_collection.append(stage)
-
-        self.project_branch_stage = stages_collection
         xobjModel = modellib.XObjModel.serialize(self, request)
         return xobjModel
 
@@ -336,7 +322,7 @@ class Stage(modellib.XObjIdModel):
     label = models.TextField(null=False)
     promotable = models.BooleanField(default=False)
     created_date = modellib.DateTimeUtcField(auto_now_add=True)
-    group = modellib.SyntheticField()
+    groups = modellib.SyntheticField()
 
     def serialize(self, request=None):
         xobjModel = modellib.XObjModel.serialize(self, request)
