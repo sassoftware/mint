@@ -40,6 +40,7 @@ class AssimilatorTestCase(XMLTestCase):
     '''
 
     def setUp(self):
+        # make a new system, get ids to use when spawning job
         XMLTestCase.setUp(self)
         self.system = self.newSystem(name="blinky", description="ghost")
         self.system.management_interface = models.ManagementInterface.objects.get(name='ssh')
@@ -47,12 +48,24 @@ class AssimilatorTestCase(XMLTestCase):
         self.assimilate = jobmodels.EventType.SYSTEM_ASSIMILATE
         self.event_type = jobmodels.EventType.objects.get(name=self.assimilate)
         self.type_id  = self.event_type.pk
+        self.system.save()
+
+        # system needs  a network
+        network = models.Network()
+        network.dns_name = 'testnetwork.example.com'
+        network.system = self.system
+        network.save()
+        self.system.networks.add(network)
+        # system.save not required
+        self.system = models.System.objects.get(pk=self.system.pk)
+        self.assertTrue(self.mgr.sysMgr.getSystemHasHostInfo(self.system))
 
     def testExpectedActions(self):
+        # do we see assimilate as a possible action?
         response = self._get('inventory/systems/%s' % self.system.pk, username="testuser",
             password="password")
         obj = xobj.parse(response.content)
-        # obj doesn't listify 1 element lists
+        # xobj hack: obj doesn't listify 1 element lists
         # don't break tests if there is only 1 action
         actions = obj.system.actions.action
         if type(actions) != type(list):
@@ -61,6 +74,7 @@ class AssimilatorTestCase(XMLTestCase):
         self.assertTrue('System assimilation' in descs)
 
     def testFetchActionsDescriptor(self): 
+        # can we determine what smartform we need to populate?
         url = "inventory/systems/%s/descriptors/%s" % (self.system.pk, self.type_id)
         response = self._get(url)
         self.assertTrue(response.content.find("<descriptor>") != -1)
@@ -69,14 +83,20 @@ class AssimilatorTestCase(XMLTestCase):
         response = self._get(url)
         self.assertTrue(response.content.find("<descriptor>") != -1)
 
-    #def testSpawnAction(self):
-    #    url = "inventory/systems/%s/jobs/" % (self.system.pk)
-    #    print "JOB_TYPE_ID=%s" % self.type_id
-    #    job = jobmodels.Job(job_type=self.event_type)
-    #    print job
-    #    response = self._post(url, job.to_xml())
-    #    # TODO: more strict XML checking
-    #    self.assertTrue(response.content.find("<job>") != -1)
+    def testSpawnAction(self):
+        # can we launch the job>?
+        # first make sure SSH managemnet interface credentials are set
+        self.assertTrue(self.mgr.sysMgr.getSystemHasHostInfo(self.system))
+        response = self._post('inventory/systems/%s/credentials' % \
+            self.system.pk,
+            data=testsxml.ssh_credentials_xml,
+            username="admin", password="password")
+        self.assertEquals(response.status_code, 200)
+        # now post a barebones job to the systems jobs collection
+        url = "inventory/systems/%s/jobs/" % (self.system.pk)
+        response = self._post(url, testsxml.system_assimilator_xml, 
+            username="admin", password="password")
+        self.assertEquals(response.status_code, 200)
 
 
 class InventoryTestCase(XMLTestCase):

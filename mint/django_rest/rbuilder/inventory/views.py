@@ -13,7 +13,7 @@ from django_restapi import resource
 from mint.db import database
 from mint import users
 from mint.django_rest.deco import requires, return_xml, access, ACCESS, \
-    HttpAuthenticationRequired, getHeaderValue
+    HttpAuthenticationRequired, getHeaderValue, xObjRequires
 from mint.django_rest.rbuilder.users import models as usersmodels
 from mint.django_rest.rbuilder import service
 from mint.django_rest.rbuilder.inventory import models
@@ -632,14 +632,20 @@ class InventorySystemJobsService(BaseInventoryService):
         return self.mgr.getSystemJobs(system_id)
 
     @access.admin
-    @requires('job', save=False, load=False)
+    @xObjRequires('job')
     @return_xml
     def rest_POST(self, request, system_id, job):
         '''request starting a job on this system'''
         system = self.mgr.getSystem(system_id)
-        return self.mgr.scheduleJobAction(
+        # this often returns none even if the event is scheduled, because
+        # the event will be immediately deleted, or the event may
+        # be queued and we don't know the jobs it will produce yet, or it may
+        # fire immediately and not produce any events.  Not getting an
+        # exception is success.
+        event =  self.mgr.scheduleJobAction(
             system, job
         )
+        return HttpResponse(status=200)
 
 class InventorySystemJobDescriptorService(BaseInventoryService):
 

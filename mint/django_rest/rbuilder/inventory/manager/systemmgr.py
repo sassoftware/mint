@@ -961,9 +961,20 @@ class SystemManager(basemanager.BaseManager):
     def marshalCredentials(cls, credentialsDict):
         return mintdata.marshalGenericData(credentialsDict)
 
+    def _systemOrId(self, system_or_id):
+        '''Allow input of systems or system ids'''
+        if type(system_or_id) != models.System:
+            return models.System.objects.get(pk=system_or_id)
+        else:
+            return system_or_id
+
     @exposed
-    def getSystemCredentials(self, system_id):
-        system = models.System.objects.get(pk=system_id)
+    def getSystemCredentials(self, system):
+        '''
+        Get the credentials assigned to the management interface, which
+        differs by type (SSH, WMI, CIM...), as an xobj model
+        '''
+        system = self._systemOrId(system)
         systemCreds = {}
         if system.management_interface:
             if system.management_interface.name in [ 'wmi', 'ssh' ]:
@@ -1522,7 +1533,10 @@ class SystemManager(basemanager.BaseManager):
                 event_data=pickledData)
             event.save()
             self.logSystemEvent(event, enableTime)
-            
+                
+            # NOTE: dispatch immediately will delete events as soon as we're done, making
+            # the return from this function often None in case where the event
+            # actually fired. 
             if event.dispatchImmediately():
                 self.dispatchSystemEvent(event)
         else:
@@ -1853,29 +1867,37 @@ class SystemManager(basemanager.BaseManager):
         return result
 
     @exposed
-    def scheduleJobAction(self, system_id, job):
+    def scheduleJobAction(self, system, job):
         '''
-        Allows scheduling a user job in response to <actions/> XML
-        presented by the system.  Object coming in will be very bare,
-        validate and run the appropriate (internal) event functions
-        instead of using it directly.
+        An action is a bare job submission that is a request to start
+        a real job.
+
+        Job coming in will be xobj only,
+        containing job_type, descriptor, and descriptor_data.  We'll use
+        that data to schedule a completely different job, which will
+        be more complete.
         '''
-        jt = job.job_type
-        if jt != jobmodels.EventType.SYSTEM_ASSIMILATE:
-            creds = self.getSystemCredentials(system_id)
-            #import epdb. epdb.st()
+        # get integer job type even if not a django model
+        jt = job.job_type.id
+        if str(jt).find("/") != -1:
+            jt = int(jt.split("/")[-1])
+        event_type = jobmodels.EventType.objects.get(job_type_id=jt)
+        job_name   = event_type.name
+
+        if job_name == jobmodels.EventType.SYSTEM_ASSIMILATE:
+            creds = self.getSystemCredentials(system)
             auth = [dict(
                 sshUser     = 'root',
-                sshPassword = cred.password,
-                sshKey      = cred.key
+                sshPassword = creds.password,
+                sshKey      = creds.key,
             )]
-            return self._scheduleEvent(system, jt, eventData=auth)
+            rc = self._scheduleEvent(system, job_name, eventData=auth)
             # we can completely ignore descriptor and descriptor_data
             # for this job, because we have that data stored in credentials
             # but other actions will have work to do with them in this
             # function.
         else:
-            raise Exception("action dispatch not yet supported")
+            raise Exception("action dispatch not yet supported on job type: %s" % jt)
         
 
 
