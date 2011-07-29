@@ -324,6 +324,14 @@ class Stage(modellib.XObjIdModel):
         xobjModel = modellib.XObjModel.serialize(self, request)
         return xobjModel
         
+        
+class Releases(modellib.Collection):
+    class Meta:
+        abstract = True
+        
+    list_fields = ['releases']
+    _xobj = xobj.XObjMetadata(tag='releases')        
+        
     
 class Release(modellib.XObjModel):
     class Meta:
