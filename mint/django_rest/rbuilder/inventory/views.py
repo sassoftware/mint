@@ -18,27 +18,57 @@ from mint.django_rest.rbuilder.users import models as usersmodels
 from mint.django_rest.rbuilder import service
 from mint.django_rest.rbuilder.inventory import models
 from mint.django_rest.rbuilder.projects import models as projectsmodels
+from mint.django_rest.rbuilder.projects import views as projectsviews
 import exceptions
-
+from xobj import xobj
+import urllib2 as url2
  
 class RestDbPassthrough(resource.Resource):
     pass
 
 
-class StageService(service.BaseService):
-    @access.anonymous
+class StageProxyService(service.BaseService):
+    @access.anonymous # what are correct permissions
     @return_xml
-    def rest_GET(self, request, name, version, label):
-        return self.get(request, name, version, label)
+    def rest_GET(self, request, hostname, version):
+        return self.get(request, hostname, version)
+    
+    
+    def get(self, request, hostname, version):
+        old_api_url = r'/api/products/%s/versions/%s/stages/' % (hostname, version)
+        host = request.get_host()
+        raw_stages_xml = url2.urlopen('http://' + host.strip('/') + old_api_url).read()
 
-    def get(self, request, name, version, label):
-        if not label:
-            Stages = projectsmodels.Stages()
-            Stages.project_branch_stage = [p for p in projectsmodels.Stage.objects.all()]
-            return Stages
-        else:
-            Stage = projectsmodels.Stage.objects.get(label=label)
-            return Stage
+        stages = xobj.parse(raw_stages_xml)
+        labels = [s.label for s in stages.stages.stage]
+        stages_metadata = [(s.hostname, s.version, s.label, s.groups.href) for s in stages.stages.stage]
+
+        stages_collection = []
+        for hostname, version, label, href in stages_metadata:
+            stage = projectsmodels.Stage.objects.get(hostname=hostname, version=version, label=label)
+            stage.groups = projectsmodels.Group(href=href)
+            stages_collection.append(stage)
+
+        Stages = projectsmodels.Stages()
+        Stages.stage = stages_collection
+        return Stages
+    
+    
+
+# class StageService(service.BaseService):
+#     @access.anonymous
+#     @return_xml
+#     def rest_GET(self, request, name, version, label):
+#         return self.get(request, name, version, label)
+# 
+#     def get(self, request, name, version, label):
+#         if not label:
+#             Stages = projectsmodels.Stages()
+#             Stages.project_branch_stage = [p for p in projectsmodels.Stage.objects.all()]
+#             return Stages
+#         else:
+#             Stage = projectsmodels.Stage.objects.get(label=label)
+#             return Stage
             
 
 class MajorVersionService(service.BaseService):

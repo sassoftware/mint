@@ -103,9 +103,9 @@ class ProjectBranchStageService(service.BaseService):
 
     def get(self, version_name, stage_id):
         if stage_id:
-            return self.mgr.getStage(stage_id)
+            return self.mgr.getStage(stage_id=stage_id)
         else:
-            return self.mgr.getStages(version_name)
+            return self.mgr.getStages(version_name=version_name)
 
 class ProjectImageService(service.BaseService):
 
@@ -133,25 +133,26 @@ class ProjectMemberService(service.BaseService):
         return self.mgr.getProjectMembers(short_name)
 
 
-class GroupsProxyService(service.BaseService):
-    """
-    Need to move this logic into a manager
-    """
-    @access.anonymous # what are actual permissions for this?
-    @return_xml
-    def rest_GET(self, request, hostname, version):
-        raw_response = self.get(request, hostname, version)
-        stages = xobj.parse(raw_response.content)
-        groups = models.Groups()
-        groups.trove = [models.Group(href=s.groups.href) for s in stages.stages.stage]
-        return groups
-    
-    def get(self, request, hostname, version):
-        """
-        hostname and search should not be None but to hack together
-        groups (so I can call "get" with just the request), they need to be
-        """
-        old_api_url = r'products/%s/versions/%s/stages/' % (hostname, version)
-        host = request.get_host()
-        raw_stages_xml = url2.urlopen('http://' + host.strip('/') + old_api_url).read()
-        return HttpResponse(raw_stages_xml, mimetype='text/xml')
+# class GroupsProxyService(service.BaseService):
+#     """
+#     Need to move this logic into a manager
+#     """
+#     @access.anonymous # what are actual permissions for this?
+#     @return_xml
+#     def rest_GET(self, request, hostname, version=None, search=None):
+#         raw_response = self.get(request, hostname, version)
+#         stages = xobj.parse(raw_response.content)
+#         groups = models.Groups()
+#         groups.trove = [models.Group(href=s.groups.href) for s in stages.stages.stage]
+#         return groups
+#     
+#     def get(self, request, hostname, version):
+#         """
+#         hostname and search should not be None but to hack together
+#         groups (so I can call "get" with just the request), they need to be
+#         """
+#         old_api_url = r'/products/%s/versions/%s/stages/' % (hostname, version)
+#         # host = request.get_host()
+#         host = 'rbalast.eng.rpath.com'
+#         raw_stages_xml = url2.urlopen('http://' + host.strip('/') + old_api_url).read()
+#         return HttpResponse(raw_stages_xml, mimetype='text/xml')

@@ -223,13 +223,13 @@ urlpatterns = patterns('',
     #    name='Stages'),
        
     URL(r'projects/(?P<hostname>(\w|\-)*)/versions/(?P<version>(\w|\.)*)/stages/?$',
-        inventoryviews.StageService(),
+        inventoryviews.StageProxyService(),
         name='Stages'),
        
     # Groups
-    URL(r'products/(?P<hostname>(\w|\-)*)/repos/(?P<search>(.*))/?$',
-        projectviews.GroupsProxyService(),
-        name='Groups'),
+    # URL(r'products/(?P<hostname>(\w|\-)*)/repos/(?P<search>(.*))/?$',
+    #     projectviews.GroupsProxyService(),
+    #     name='Groups'),
 
     # Projects
     URL(r'products/(\w|\-)*/?$',

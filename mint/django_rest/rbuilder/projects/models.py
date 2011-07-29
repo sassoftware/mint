@@ -314,18 +314,12 @@ class Stage(modellib.XObjIdModel):
     project_branch = modellib.DeferredForeignKey(ProjectVersion, 
         related_name="project_branch_stages", view_name="ProjectBranchStages")
     name = models.CharField(max_length=256)
-    hostname = models.CharField(max_length=1026)
     label = models.TextField(null=False)
     promotable = models.BooleanField(default=False)
     created_date = modellib.DateTimeUtcField(auto_now_add=True)
-    version = models.CharField(max_length=1026)
-    groups = modellib.SyntheticField()
+    group = modellib.SyntheticField()
 
     def serialize(self, request=None):
-        # FIXME TOTAL HACK, import statement inlined because of some undiscovered conflict
-        from mint.django_rest.rbuilder.projects import views as projectsviews
-        view = projectsviews.GroupsProxyService()
-        self.groups = view.get(request, self.hostname, self.version)
         xobjModel = modellib.XObjModel.serialize(self, request)
         return xobjModel
         
