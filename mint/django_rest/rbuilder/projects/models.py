@@ -22,7 +22,7 @@ class Groups(modellib.XObjModel):
     class Meta:
         abstract = True
         
-    _xobj = xobj.XObjMetadata(tag='troves')
+    _xobj = xobj.XObjMetadata(tag='groups')
         
     list_fields = ['group']
 
@@ -31,7 +31,7 @@ class Group(modellib.XObjIdModel):
     class Meta:
         abstract = True
         
-    _xobj = xobj.XObjMetadata(tag='trove', attributes={'href':str})
+    _xobj = xobj.XObjMetadata(tag='group', attributes={'href':str})
     
     href = models.CharField(max_length=1026)
     # group_id = models.AutoField(primary_key=True)
@@ -297,6 +297,24 @@ class Stages(modellib.Collection):
     view_name = "ProjectStages"
     list_fields = ["project_branch_stage"]
     project_branch_stage = []
+    
+    def serialize(self, request=None):
+        old_api_url = request.get_full_path()
+        host = request.get_host()
+        raw_stages_xml = url2.urlopen('http://' + host.strip('/') + old_api_url).read()
+
+        stages = xobj.parse(raw_stages_xml)
+        stages_metadata = [(s.label, s.groups.href) for s in stages.stages.stage]
+
+        stages_collection = []
+        for label, href in stages_metadata:
+            stage = projectsmodels.Stage.objects.get(label=str(label))
+            stage.groups = projectsmodels.Group(href=str(href))
+            stages_collection.append(stage)
+
+        self.project_branch_stage = stages_collection
+        xobjModel = modellib.XObjModel.serialize(self, request)
+        return xobjModel
 
 
 class Stage(modellib.XObjIdModel):
