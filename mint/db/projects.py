@@ -391,13 +391,13 @@ class LabelsTable(database.KeyedTable):
         cu = self.db.cursor()
 
         if projectId:
-            cu.execute("""SELECT l.labelId, l.label, l.url, l.authType, 
+            cu.execute("""SELECT l.labelId, l.label, p.fqdn, l.url, l.authType,
                                     l.username, l.password, l.entitlement,
                                     p.external
                             FROM Labels l, Projects p
                             WHERE p.projectId=? AND l.projectId=p.projectId""", projectId)
         else:
-            cu.execute("""SELECT l.labelId, l.label, l.url, l.authType, 
+            cu.execute("""SELECT l.labelId, l.label, p.fqdn, l.url, l.authType,
                                     l.username, l.password, l.entitlement,
                                     p.external
                             FROM Labels l, Projects p
@@ -407,13 +407,15 @@ class LabelsTable(database.KeyedTable):
         labelIdMap = {}
         userMap = []
         entMap = []
-        for labelId, label, url, authType, username, password, entitlement, \
-                external in cu.fetchall():
+        for (labelId, label, host, url, authType, username, password,
+                entitlement, external) in cu.fetchall():
             if overrideAuth:
                 authType = 'userpass'
                 username = newUser
                 password = newPass
 
+            if not label:
+                label = host + '@dummy:label'
             labelIdMap[label] = labelId
             host = label[:label.find('@')]
             if url:
