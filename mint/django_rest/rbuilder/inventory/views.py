@@ -64,11 +64,11 @@ class StageProxyService(service.BaseService):
     def getStagesAndSetGroup(request, version=None):
         Stages = projectsmodels.Stages()
         
-        if version:
-            project_branch_stages = projectsmodels.Stage.objects.all().filter(name=version)
-        else:
-            project_branch_stages = projectsmodels.Stage.objects.all()
-        
+        # if version:
+        #     project_branch_stages = projectsmodels.Stage.objects.all().filter(name=version)
+        # else:
+        #     project_branch_stages = projectsmodels.Stage.objects.all()
+        project_branch_stages = projectsmodels.Stage.objects.all()
         stages_collection = []
         
         for stage in project_branch_stages:
@@ -91,23 +91,7 @@ class StageProxyService(service.BaseService):
     #         stage.groups = projectsmodels.Group(href=str(href))
     #         stages_collection.append(stage)
     #     return stages_collection
-    
 
-# class StageService(service.BaseService):
-#     @access.anonymous
-#     @return_xml
-#     def rest_GET(self, request, name, version, label):
-#         return self.get(request, name, version, label)
-# 
-#     def get(self, request, name, version, label):
-#         if not label:
-#             Stages = projectsmodels.Stages()
-#             Stages.project_branch_stage = [p for p in projectsmodels.Stage.objects.all()]
-#             return Stages
-#         else:
-#             Stage = projectsmodels.Stage.objects.get(label=label)
-#             return Stage
-            
 
 class MajorVersionService(service.BaseService):
 

@@ -12,7 +12,7 @@ from django.db import models
 from mint import userlevels
 from mint.django_rest.rbuilder import modellib
 from mint.django_rest.rbuilder.users import models as usermodels
-# from mint.django_rest.rbuilder.platforms import models as platformsmodels
+from mint.django_rest.rbuilder.inventory.views import StageProxyService
 from xobj import xobj
 
 
@@ -325,7 +325,8 @@ class Stage(modellib.XObjIdModel):
     groups = modellib.SyntheticField()
 
     def serialize(self, request=None):
-        xobjModel = modellib.XObjModel.serialize(self, request)
+        model = StageProxyService.getStageAndSetGroup(request, self.stage_id)
+        xobjModel = modellib.XObjModel.serialize(model, request)
         return xobjModel
         
         
