@@ -128,24 +128,32 @@ event_types_xml="""\
     <resource_type>System</resource_type>
     <system_events/>
   </event_type>
+  <event_type id="http://testserver/api/v1/inventory/event_types/13">
+    <description>Image builds</description>
+    <job_type_id>13</job_type_id>
+    <name>image builds</name>
+    <priority>105</priority>
+    <resource_type>Image</resource_type>
+    <system_events/>
+  </event_type>
 </event_types>"""
 
 event_type_put_xml="""\
 <?xml version="1.0" encoding="UTF-8"?>
-<event_type id="http://testserver/api/v1/inventory/event_types/13">
+<event_type id="http://testserver/api/v1/inventory/event_types/%(event_type_id)s">
   <description>System registration</description>
   <priority>1</priority>
-  <event_type_id>13</event_type_id>
+  <event_type_id>%(event_type_id)s</event_type_id>
   <name>system registration</name>
   <system_events/>
 </event_type>"""
 
 event_type_put_name_change_xml="""\
 <?xml version="1.0" encoding="UTF-8"?>
-<event_type id="http://testserver/api/v1/inventory/event_types/13">
+<event_type id="http://testserver/api/v1/inventory/event_types/%(event_type_id)s">
   <description>System registration</description>
   <priority>110</priority>
-  <event_type_id>13</event_type_id>
+  <event_type_id>%(event_type_id)s</event_type_id>
   <name>foobar</name>
   <system_events/>
 </event_type>"""
