@@ -2949,7 +2949,7 @@ class MigrateTo_57(SchemaMigration):
 
 
 class MigrateTo_58(SchemaMigration):
-    Version = (58, 41)
+    Version = (58, 42)
 
     def migrate(self):
         return True
@@ -3421,6 +3421,19 @@ class MigrateTo_58(SchemaMigration):
             WHERE name = 'system assimilation'
         """)
         return True
+        
+    def migrate42(self):
+        cu = self.db.cursor()
+        cu.execute("""
+            INSERT INTO "jobs_job_type" 
+                ("name", "description", "priority","resource_type")
+            VALUES
+                ('image builds',
+                 'Image builds',
+                 105,
+                 'Image')
+        """)
+        return True        
 
 
 def _createUpdateSystemsQuerySet(db):

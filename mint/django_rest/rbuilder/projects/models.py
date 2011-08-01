@@ -431,7 +431,7 @@ class Image(modellib.XObjIdModel):
     status = models.IntegerField(null=True, default=-1)
     status_message = models.TextField(null=True, blank=True, default='',
         db_column="statusmessage")
-    actions = modellib.SyntheticField()
+    #actions = modellib.SyntheticField()
 
 
 class Downloads(modellib.XObjModel):

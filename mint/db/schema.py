@@ -28,7 +28,7 @@ from conary.dbstore import sqlerrors, sqllib
 log = logging.getLogger(__name__)
 
 # database schema major version
-RBUILDER_DB_VERSION = sqllib.DBversion(58, 41)
+RBUILDER_DB_VERSION = sqllib.DBversion(58, 42)
 
 
 def _createTrigger(db, table, column = "changed"):
@@ -1285,7 +1285,11 @@ def _createInventorySchema(db, cfg):
              dict(name="system assimilation",
                   description="System assimilation",
                   priority=105,
-                  resource_type="System")
+                  resource_type="System"),
+             dict(name="image builds",
+                  description="Image builds",
+                  priority=105,
+                  resource_type="Image")                                     
             ])
         
     if 'inventory_system_event' not in db.tables:

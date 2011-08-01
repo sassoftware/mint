@@ -330,6 +330,10 @@ class EventType(modellib.XObjIdModel):
     SYSTEM_ASSIMILATE             = 'system assimilation'
     SYSTEM_ASSIMILATE_DESCRIPTION = 'System assimilation'
     RESOURCE_TYPE='System'
+    
+    IMAGE_BUILDS = 'image builds'
+    IMAGE_BUILDS_DESCRIPTION = 'Image builds'
+    RESOURCE_TYPE = 'Image'
         
     job_type_id = D(models.AutoField(primary_key=True), "the database id of the  type")
     EVENT_TYPES = (
@@ -351,7 +355,8 @@ class EventType(modellib.XObjIdModel):
          SYSTEM_DETECT_MANAGEMENT_INTERFACE_IMMEDIATE_DESC),
         (SYSTEM_CONFIG_IMMEDIATE,
          SYSTEM_CONFIG_IMMEDIATE_DESCRIPTION),
-        (SYSTEM_ASSIMILATE, SYSTEM_ASSIMILATE_DESCRIPTION)
+        (SYSTEM_ASSIMILATE, SYSTEM_ASSIMILATE_DESCRIPTION),
+        (IMAGE_BUILDS, IMAGE_BUILDS_DESCRIPTION)
     )
 
     # what smartform descriptor templates are needed to launch jobs of
