@@ -22,7 +22,7 @@ event_type_xml="""\
 <?xml version="1.0" encoding="UTF-8"?>
 <event_type id="http://testserver/api/inventory/event_types/1">
   <description>System registration</description>
-  <priority>110</priority>
+  <priority>70</priority>
   <event_type_id>1</event_type_id>
   <name>system registration</name>
   <system_events/>
@@ -33,7 +33,7 @@ event_types_xml="""\
 <event_types>
   <event_type id="http://testserver/api/inventory/event_types/1">
     <name>system registration</name>
-    <priority>110</priority>
+    <priority>70</priority>
     <event_type_id>1</event_type_id>
     <description>System registration</description>
     <system_events/>
@@ -1520,7 +1520,7 @@ system_events_xml = """\
         <event_type href="http://testserver/api/inventory/event_types/1"/>
         <system href="http://testserver/api/inventory/systems/3"/>
         <time_created>%s</time_created>
-        <priority>110</priority>
+        <priority>70</priority>
         <time_enabled>%s</time_enabled>
         <system_event_id>2</system_event_id>
     </system_event>

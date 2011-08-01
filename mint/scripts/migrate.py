@@ -2582,11 +2582,15 @@ class MigrateTo_54(SchemaMigration):
         return True
 
 class MigrateTo_55(SchemaMigration):
-    Version = (55, 0)
+    Version = (55, 1)
 
     def migrate(self):
         return True
 
+    def migrate1(self):
+        cu = self.db.cursor()
+        cu.execute("UPDATE jobs_job_type SET priority=70 WHERE name = 'system registration'")
+        return True
 
 #### SCHEMA MIGRATIONS END HERE #############################################
 
