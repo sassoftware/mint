@@ -9,9 +9,7 @@ from django.http import HttpResponse
 
 from mint.django_rest.deco import access, return_xml, requires
 from mint.django_rest.rbuilder import service
-# import urllib2 as url2
-# from xobj import xobj
-# import models
+from mint.django_rest.rbuilder.inventory.views import StageProxyService
 
 class ProjectBranchService(service.BaseService):
     @access.anonymous
@@ -87,13 +85,19 @@ class ProjectStageService(service.BaseService):
     @access.anonymous
     @return_xml
     def rest_GET(self, request, stage_id=None):
-        return self.get(stage_id)
+        return self.get(request, stage_id)
 
-    def get(self, stage_id):
+    # def get(self, stage_id):
+    #     if stage_id:
+    #         return self.mgr.getStage(stage_id)
+    #     else:
+    #         return self.mgr.getStages()
+    
+    def get(self, request, stage_id=None):
         if stage_id:
-            return self.mgr.getStage(stage_id)
+            return StageProxyService.getStageAndSetGroup(request, stage_id)
         else:
-            return self.mgr.getStages()
+            return StageProxyService.getStagesAndSetGroup(request)
         
 class ProjectBranchStageService(service.BaseService):
     @access.anonymous
@@ -101,11 +105,17 @@ class ProjectBranchStageService(service.BaseService):
     def rest_GET(self, request, version_name, stage_id=None):
         return self.get(version_name, stage_id)
 
-    def get(self, version_name, stage_id):
+    # def get(self, version_name, stage_id):
+    #     if stage_id:
+    #         return self.mgr.getStage(stage_id=stage_id)
+    #     else:
+    #         return self.mgr.getStages(version_name=version_name)
+    
+    def get(self, request, version, stage_id=None):
         if stage_id:
-            return self.mgr.getStage(stage_id=stage_id)
+            return StageProxyService.getStageAndSetGroup(request, stage_id=stage_id)
         else:
-            return self.mgr.getStages(version_name=version_name)
+            return StageProxyService.getStagesAndSetGroup(request, version=version)
 
 class ProjectImageService(service.BaseService):
 
