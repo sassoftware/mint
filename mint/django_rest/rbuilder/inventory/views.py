@@ -18,38 +18,13 @@ from mint.django_rest.rbuilder.users import models as usersmodels
 from mint.django_rest.rbuilder import service
 from mint.django_rest.rbuilder.inventory import models
 from mint.django_rest.rbuilder.projects import models as projectsmodels
-# import exceptions
-# from xobj import xobj
-# import urllib2 as url2
+
  
 class RestDbPassthrough(resource.Resource):
     pass
 
 
 class StageProxyService(service.BaseService):
-    # @access.anonymous # what are correct permissions
-    # @return_xml
-    # def rest_GET(self, request, hostname, version):
-    #     return self.get(request, hostname, version)
-    
-    
-    # def get(self, request, hostname, version):
-    #     old_api_url = r'/api/products/%s/versions/%s/stages/' % (hostname, version)
-    #     host = request.get_host()
-    #     raw_stages_xml = url2.urlopen('http://' + host.strip('/') + old_api_url).read()
-    # 
-    #     stages = xobj.parse(raw_stages_xml)
-    #     stages_metadata = [(s.label, s.groups.href) for s in stages.stages.stage]
-    # 
-    #     stages_collection = []
-    #     for label, href in stages_metadata:
-    #         stage = projectsmodels.Stage.objects.get(label=str(label))
-    #         stage.groups = projectsmodels.Group(href=str(href))
-    #         stages_collection.append(stage)
-    # 
-    #     ProjectBranchStages = projectsmodels.Stages()
-    #     ProjectBranchStages.project_branch_stage = stages_collection
-    #     return ProjectBranchStages
     
     @staticmethod
     def getStageAndSetGroup(request, stage_id):
