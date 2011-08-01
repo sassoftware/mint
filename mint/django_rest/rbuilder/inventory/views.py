@@ -39,11 +39,11 @@ class StageProxyService(service.BaseService):
     def getStagesAndSetGroup(request, version=None):
         Stages = projectsmodels.Stages()
         
-        # if version:
-        #     project_branch_stages = projectsmodels.Stage.objects.all().filter(name=version)
-        # else:
-        #     project_branch_stages = projectsmodels.Stage.objects.all()
-        project_branch_stages = projectsmodels.Stage.objects.all()
+        if version:
+            project_branch_stages = projectsmodels.Stage.objects.all().filter(name=version)
+        else:
+            project_branch_stages = projectsmodels.Stage.objects.all()
+        # project_branch_stages = projectsmodels.Stage.objects.all()
         stages_collection = []
         
         for stage in project_branch_stages:
