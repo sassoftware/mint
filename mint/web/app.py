@@ -93,10 +93,7 @@ class MintApp(WebHandler):
         anonToken = ('anonymous', 'anonymous')
 
         try:
-            if self.cfg.cookieSecretKey:
-                cookies = Cookie.get_cookies(self.req, Cookie.SignedCookie, secret = self.cfg.cookieSecretKey)
-            else:
-                cookies = Cookie.get_cookies(self.req, Cookie.Cookie)
+            cookies = Cookie.get_cookies(self.req, Cookie.Cookie)
         except:
             # Parsing the cookies failed, so just pretend there aren't
             # any and they'll get overwritten when our response goes

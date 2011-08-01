@@ -214,6 +214,8 @@ class BaseRestTest(mint_rephelp.MintDatabaseHelper):
         pl1.setContentProvider('Crowbar', 'Crowbar', [cst], [ds])
         pl2.setPlatformName('Crowbar Linux 2')
         pl2.setPlatformUsageTerms('Terms of Use 2')
+        sp = pl2.getSearchPaths()[0]
+        sp.set_isPlatformTrove(True)
         pl2.saveToRepository(self.cclient, platformLabel2)
         self._addPlatform(platformLabel2, pl2)
 

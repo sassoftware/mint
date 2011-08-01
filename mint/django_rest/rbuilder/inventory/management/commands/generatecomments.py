@@ -1,10 +1,13 @@
 
+import inspect
 import os
+from django.db import models as djmodels
 from django.core.management.base import BaseCommand
-from mint.django_rest.rbuilder.inventory import models
 from mint.django_rest.urls import urlpatterns
 from mint.django_rest import deco
 import string
+
+import settings
 
 BASE_PATH = "rbuilder/inventory/docs"
 
@@ -25,10 +28,32 @@ Methods:
 )
 
 def parseName(name):
+    """
+    changes management_nodes to ManagementNodes
+    """
     return ''.join([s.capitalize() for s in name.split('_')])
+
+def readModels():
+    allModels = {}
+    for app in settings.INSTALLED_APPS:
+        if not app.startswith('mint.'):
+            continue
+        m = __import__(app + '.models', {}, {}, ['models'])
+        for objname in dir(m):
+            obj = getattr(m, objname)
+            if not inspect.isclass(obj) or not issubclass(obj, djmodels.Model):
+                continue
+            allModels[objname] = obj
+    return allModels
 
 class Command(BaseCommand):
     help = "Generate comments for the REST documentation"
+
+    @property
+    def models(self):
+        if not hasattr(self, '_models'):
+            self._models = readModels()
+        return self._models
 
     def handle(self, *args, **options):
         for u in urlpatterns:
@@ -39,8 +64,9 @@ class Command(BaseCommand):
                 view_doc = self.processView(u.callback)
             except AttributeError:
                 continue
-            if u.name in models.__dict__:
-                model_doc = self.processModel(models.__dict__[u.name])
+            model = self.models.get(u.name)
+            if model:
+                model_doc = self.processModel(model)
             else:
                 model_doc = ''
             filepath = os.path.join(BASE_PATH, u.callback.__class__.__name__)
@@ -68,7 +94,10 @@ class Command(BaseCommand):
         if listed:
             for model_name in listed:
                 parsed_name = parseName(model_name)
-                sub_model = models.__dict__[parsed_name]
+                sub_model = self.models.get(parsed_name)
+                if sub_model is None:
+                    print "Model missing: %s" % parsed_name
+                    continue
                 fdesc.append('\n')
                 fdesc.append(self.processModel(sub_model))
         return '\n'.join(fdesc)

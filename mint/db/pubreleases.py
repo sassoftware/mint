@@ -52,7 +52,7 @@ class PublishedReleasesTable(database.KeyedTable):
         cu.execute("""SELECT Proj.name, Proj.hostname, PubRel.pubReleaseId
                       FROM Projects Proj LEFT JOIN PublishedReleases PubRel
                          ON Proj.projectId = PubRel.projectId
-                      WHERE Proj.hidden = 0
+                      WHERE NOT Proj.hidden
                          AND PubRel.timePublished IS NOT NULL
                       ORDER BY PubRel.timePublished DESC LIMIT ? OFFSET ?""",
                       limit, offset)
