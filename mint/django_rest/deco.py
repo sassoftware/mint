@@ -46,6 +46,10 @@ def requires(model_names, save=True, load=True):
     Decorator that parses the post data on a request into the class
     specified by modelClass.
     We can specify multiple model names that we handle.
+
+    WARNING: load=False does not prevent database access, use xObjRequires
+    instead if you're attempting to construct a model from user input
+    and it's unlikely to be saveable.
     """
     def decorate(function):
 
@@ -66,6 +70,31 @@ def requires(model_names, save=True, load=True):
             kw[model_name] = model
             return function(*args, **kw)
         
+        return inner
+    return decorate
+
+def xObjRequires(model_names):
+    """
+    The normal requires will save an object in the database, this one
+    just returns an xObj instance, because the serialization is 
+    to entangled with saving/loading from the database to get Django
+    instances that don't have database-relevance.
+
+    The model required can be entirely abstract.
+
+    Example usage:  submitting partially filled out objects
+    that will rely on the view/manager to complete and act on.
+    """
+    def decorate(function):
+
+        def inner(*args, **kw):
+            request = args[1]
+            built_model, model_name, modelCls  = _getXobjModel(request, model_names)
+            # is this needed here?
+            _injectZone(request, built_model, model_name, modelCls)
+            kw[model_name] = built_model
+            return function(*args, **kw)
+
         return inner
     return decorate
 

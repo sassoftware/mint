@@ -13,7 +13,7 @@ from django_restapi import resource
 from mint.db import database
 from mint import users
 from mint.django_rest.deco import requires, return_xml, access, ACCESS, \
-    HttpAuthenticationRequired, getHeaderValue
+    HttpAuthenticationRequired, getHeaderValue, xObjRequires
 from mint.django_rest.rbuilder.users import models as usersmodels
 from mint.django_rest.rbuilder import service
 from mint.django_rest.rbuilder.inventory import models
@@ -702,7 +702,7 @@ class InventorySystemJobsService(BaseInventoryService):
         return self.mgr.getSystemJobs(system_id)
 
     @access.admin
-    @requires('job')
+    @xObjRequires('job')
     @return_xml
     def rest_POST(self, request, system_id, job):
         '''request starting a job on this system'''
