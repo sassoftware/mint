@@ -103,7 +103,7 @@ class ProjectBranchStageService(service.BaseService):
     @access.anonymous
     @return_xml
     def rest_GET(self, request, version_name, stage_id=None):
-        return self.get(version_name, stage_id)
+        return self.get(request, version_name, stage_id)
 
     # def get(self, version_name, stage_id):
     #     if stage_id:
