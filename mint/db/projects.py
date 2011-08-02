@@ -149,7 +149,7 @@ class ProjectsTable(database.KeyedTable):
                         ON Projects.projectId=ProjectUsers.projectId
                     WHERE ProjectUsers.userId=?"""
         if filter:
-            stmt += " AND hidden=0"
+            stmt += " AND NOT hidden"
         cu.execute(stmt, userId)
 
         return [tuple(x) for x in cu.fetchall()]
@@ -168,7 +168,7 @@ class ProjectsTable(database.KeyedTable):
                   JOIN Projects ON Projects.projectId=ProjectUsers.projectId
                   WHERE ProjectUsers.userId=?"""
         if filter:
-            stmt += " AND hidden=0"
+            stmt += " AND NOT hidden"
         cu.execute(stmt, userId)
         ret = []
         for x in cu.fetchall_dict():
@@ -188,7 +188,7 @@ class ProjectsTable(database.KeyedTable):
             fledgeQuery = "AND EXISTS(SELECT troveName FROM Commits WHERE projectId=Projects.projectId LIMIT 1)"
 
         cu.execute("""SELECT projectId, hostname, name, description, timeModified
-                FROM Projects WHERE hidden=0 AND external=0 %s ORDER BY timeCreated DESC
+                FROM Projects WHERE NOT hidden AND NOT external %s ORDER BY timeCreated DESC
                 LIMIT ?""" % fledgeQuery, limit)
 
         ids = []
@@ -301,7 +301,7 @@ class ProjectsTable(database.KeyedTable):
             extras += ")"
 
         if not includeInactive:
-            extras += " AND Projects.hidden=0"
+            extras += " AND NOT Projects.hidden"
 
         terms = " ".join(terms)
 
@@ -343,14 +343,14 @@ class ProjectsTable(database.KeyedTable):
     @database.dbWriter
     def hide(self, cu, projectId):
         # Anonymous user is added/removed in server
-        cu.execute("UPDATE Projects SET hidden=1, timeModified=? WHERE projectId=?", time.time(), projectId)
+        cu.execute("UPDATE Projects SET hidden=true, timeModified=? WHERE projectId=?", time.time(), projectId)
         cu.execute("DELETE FROM PackageIndex WHERE projectId=?", projectId)
 
     def unhide(self, projectId):
         # Anonymous user is added/removed in server
         cu = self.db.cursor()
 
-        cu.execute("UPDATE Projects SET hidden=0, timeModified=? WHERE projectId=?", time.time(), projectId)
+        cu.execute("UPDATE Projects SET hidden=false, timeModified=? WHERE projectId=?", time.time(), projectId)
         self.db.commit()
 
     def isHidden(self, projectId):
@@ -391,13 +391,13 @@ class LabelsTable(database.KeyedTable):
         cu = self.db.cursor()
 
         if projectId:
-            cu.execute("""SELECT l.labelId, l.label, l.url, l.authType, 
+            cu.execute("""SELECT l.labelId, l.label, p.fqdn, l.url, l.authType,
                                     l.username, l.password, l.entitlement,
                                     p.external
                             FROM Labels l, Projects p
                             WHERE p.projectId=? AND l.projectId=p.projectId""", projectId)
         else:
-            cu.execute("""SELECT l.labelId, l.label, l.url, l.authType, 
+            cu.execute("""SELECT l.labelId, l.label, p.fqdn, l.url, l.authType,
                                     l.username, l.password, l.entitlement,
                                     p.external
                             FROM Labels l, Projects p
@@ -407,13 +407,15 @@ class LabelsTable(database.KeyedTable):
         labelIdMap = {}
         userMap = []
         entMap = []
-        for labelId, label, url, authType, username, password, entitlement, \
-                external in cu.fetchall():
+        for (labelId, label, host, url, authType, username, password,
+                entitlement, external) in cu.fetchall():
             if overrideAuth:
                 authType = 'userpass'
                 username = newUser
                 password = newPass
 
+            if not label:
+                label = host + '@dummy:label'
             labelIdMap[label] = labelId
             host = label[:label.find('@')]
             if url:
@@ -460,7 +462,8 @@ class LabelsTable(database.KeyedTable):
             username = p[3] is not None and p[3] or ''
             password = p[4] is not None and p[4] or ''
             entitlement = p[5] is not None and p[5] or ''
-            return dict(label=p[0], url=p[1], authType=p[2],
+            url = p[1] or ''  # seems to be unused
+            return dict(label=p[0], url=url, authType=p[2],
                 username=username, password=password, entitlement=entitlement)
 
     @database.dbWriter

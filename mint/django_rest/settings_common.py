@@ -11,12 +11,14 @@ ADMINS = (
 
 MANAGERS = ADMINS
 
-DATABASE_ENGINE = 'postgresql_psycopg2'           # 'postgresql_psycopg2', 'postgresql', 'mysql', 'sqlite3' or 'oracle'.
-DATABASE_NAME = 'mint'             # Or path to database file if using sqlite3.
-DATABASE_USER = 'postgres'             # Not used with sqlite3.
-DATABASE_PASSWORD = ''         # Not used with sqlite3.
-DATABASE_HOST = 'localhost'             # Set to empty string for localhost. Not used with sqlite3.
-DATABASE_PORT = '6432'             # Set to empty string for default. Not used with sqlite3.
+DATABASES = dict(default=dict(
+    ENGINE = 'django.db.backends.postgresql_psycopg2',
+    NAME = 'mint',                  # Or path to database file if using sqlite3.
+    USER = 'postgres',              # Not used with sqlite3.
+    PASSWORD = '',                  # Not used with sqlite3.
+    HOST = 'localhost',             # Set to empty string for localhost. Not used with sqlite3.
+    PORT = '6432',                  # Set to empty string for default. Not used with sqlite3.
+))
 
 # Local time zone for this installation. Choices can be found here:
 # http://en.wikipedia.org/wiki/List_of_tz_zones_by_name
@@ -54,8 +56,8 @@ SECRET_KEY = 'o5pks8b=o8zmpr%nu=4$##n*o_6s(t%r%i%h)*(9w)#yg=9*4u'
 
 # List of callables that know how to import templates from various sources.
 TEMPLATE_LOADERS = (
-    'django.template.loaders.filesystem.load_template_source',
-    'django.template.loaders.app_directories.load_template_source',
+    'django.template.loaders.filesystem.Loader',
+    'django.template.loaders.app_directories.Loader',
 )
 
 MIDDLEWARE_CLASSES = (
@@ -93,20 +95,26 @@ INSTALLED_APPS = (
     'django.contrib.sites',
     'debug_toolbar',
     'mint.django_rest.rbuilder',
+    'mint.django_rest.rbuilder.discovery',
     'mint.django_rest.rbuilder.reporting',
     'mint.django_rest.rbuilder.inventory',
     'mint.django_rest.rbuilder.metrics',
     'mint.django_rest.rbuilder.querysets',
-    'mint.django_rest.rbuilder.packages',
     'mint.django_rest.rbuilder.changelog',
+    'mint.django_rest.rbuilder.packageindex',
+    'mint.django_rest.rbuilder.packages',
+    'mint.django_rest.rbuilder.projects',
+    'mint.django_rest.rbuilder.users',
+    'mint.django_rest.rbuilder.notices',
+    'mint.django_rest.rbuilder.jobs',
+    'mint.django_rest.rbuilder.platforms',
+    'mint.django_rest.rbuilder.repos',
+    #'mint.django_rest.rbuilder.images',
 )
 
 AUTHENTICATION_BACKENDS = (
     'mint.django_rest.rbuilder.auth.rBuilderBackend',
 )
-
-# Custom setting for if we should manage/create the tables in rbuilder.models
-MANAGE_RBUILDER_MODELS = False
 
 # Custom settings for pagination
 PER_PAGE = 50

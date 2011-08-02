@@ -212,7 +212,7 @@ class BuildsTable(database.KeyedTable):
             cu.execute("""
                  SELECT pu.projectId
                  FROM   projectUsers pu JOIN projects p USING (projectId)
-                 WHERE  p.hidden = 1 AND pu.userId = ?
+                 WHERE  p.hidden AND pu.userId = ?
                  """, requestingUserId)
             okHiddenProjectIds = [result[0] for result in cu.fetchall()]
 

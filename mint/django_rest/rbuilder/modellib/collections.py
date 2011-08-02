@@ -245,15 +245,16 @@ class Collection(XObjIdModel):
     def get_absolute_url(self, request=None, parents=None, model=None,
                          page=None, full=None):
         url = XObjIdModel.get_absolute_url(self, request, parents, model)
-        if not page and not full:
-            page = getattr(self, 'page', None)
-        if page:
-            limit = request.GET.get('limit', settings.PER_PAGE)
-            url += ';start_index=%s;limit=%s' % (page.start_index(), limit)
-        if self.order_by:
-            url += ';order_by=%s' % self.order_by
-        if self.filter_by:
-            url += ';filter_by=%s' % self.filter_by
+        if url:
+            if not page and not full:
+                page = getattr(self, 'page', None)
+            if page:
+                limit = request.GET.get('limit', settings.PER_PAGE)
+                url += ';start_index=%s;limit=%s' % (page.start_index(), limit)
+            if self.order_by:
+                url += ';order_by=%s' % self.order_by
+            if self.filter_by:
+                url += ';filter_by=%s' % self.filter_by
         return url
 
     def orderBy(self, request, modelList):
@@ -326,21 +327,27 @@ class Collection(XObjIdModel):
         else:
             self.previous_page = ''
 
-    def serialize(self, request=None, values=None):
+    def serialize(self, request=None):
         # We only support one list field right now
         if self.list_fields:
             listField = self.list_fields[0]
         else:
-            return XObjIdModel.serialize(self, request, values)
+            return XObjIdModel.serialize(self, request)
 
         modelList = getattr(self, listField)
+        
+        # NEW
+        if request:
+            modelList = self.filterBy(request, modelList)
+            modelList = self.orderBy(request, modelList)
+            self.paginate(request, listField, modelList)
 
-        modelList = self.filterBy(request, modelList)
-        modelList = self.orderBy(request, modelList)
+        # OLD
+        # modelList = self.filterBy(request, modelList)
+        # modelList = self.orderBy(request, modelList)
+        # self.paginate(request, listField, modelList)
 
-        self.paginate(request, listField, modelList)
-
-        xobj_model = XObjIdModel.serialize(self, request, values)
+        xobj_model = XObjIdModel.serialize(self, request)
 
         return xobj_model
 

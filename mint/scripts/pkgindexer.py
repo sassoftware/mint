@@ -78,7 +78,7 @@ class UpdatePackageIndex(PackageIndexer):
                               LEFT JOIN Projects
                                   ON Commits.projectId=Projects.projectId
                               WHERE (troveName NOT LIKE '%:%' OR troveName LIKE '%:source')
-                              AND hidden=0 AND disabled=0
+                              AND NOT hidden AND NOT disabled
                               AND timestamp >=
                                   (SELECT mark FROM PackageIndexMark)""")
 
@@ -169,7 +169,7 @@ class UpdatePackageIndexExternal(PackageIndexer):
         # sets the mark to "1" to ensure no race conditions exist
         # sorrounding the setting of the mark.
         cu = self.db.transaction()
-        cu.execute("SELECT COUNT(*) FROM Projects WHERE external = 0")
+        cu.execute("SELECT COUNT(*) FROM Projects WHERE NOT external")
         internalProjects = cu.fetchone()[0]
         cu.execute("SELECT COUNT(*) FROM Commits")
         commits = cu.fetchone()[0]
@@ -195,7 +195,7 @@ class UpdatePackageIndexExternal(PackageIndexer):
         cu.execute("""SELECT projectId, %s, EXISTS(SELECT * FROM InboundMirrors
                            WHERE projectId=targetProjectId) AS localMirror
                          FROM Projects
-                         WHERE external=1 AND hidden=0 AND disabled=0""" % \
+                         WHERE external AND NOT hidden AND NOT disabled""" % \
                    database.concat(self.db, 'hostname', "'.'", 'domainname'))
 
         labels = {}

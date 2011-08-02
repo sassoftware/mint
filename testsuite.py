@@ -171,7 +171,6 @@ def main(argv=None, individual=True):
         argv = sys.argv
     from testrunner import testhelp
     from django.test import utils
-    setup_django_database()
     utils.setup_test_environment()
     handlerClass = testhelp.getHandlerClass(testhelp.ConaryTestSuite,
                                             getCoverageDirs,

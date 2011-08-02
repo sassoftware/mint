@@ -13,21 +13,77 @@ from django_restapi import resource
 from mint.db import database
 from mint import users
 from mint.django_rest.deco import requires, return_xml, access, ACCESS, \
-    HttpAuthenticationRequired, getHeaderValue
-from mint.django_rest.rbuilder import models as rbuildermodels
+    HttpAuthenticationRequired, getHeaderValue, xObjRequires
+from mint.django_rest.rbuilder.users import models as usersmodels
 from mint.django_rest.rbuilder import service
 from mint.django_rest.rbuilder.inventory import models
+from mint.django_rest.rbuilder.projects import models as projectsmodels
 
+ 
 class RestDbPassthrough(resource.Resource):
     pass
 
-class StageService(RestDbPassthrough):
-    def get(self, project, majorVersion, stage):
-        return None
 
-class MajorVersionService(RestDbPassthrough):
-    def get(self, project, majorVersion):
-        return None
+class StageProxyService(service.BaseService):
+    
+    @staticmethod
+    def getStageAndSetGroup(request, stage_id):
+        stage = projectsmodels.Stage.objects.get(pk=stage_id)
+        hostname = stage.project.short_name # aka project's short_name
+        label = stage.label
+        href = 'http://' + request.get_host().strip('/') + '/api/products/%s/repos/search?type=group&label=%s'
+        stage.groups = projectsmodels.Group(href=href % (hostname, label))
+        return stage
+    
+    @staticmethod
+    def getStagesAndSetGroup(request, version=None):
+        Stages = projectsmodels.Stages()
+        
+        if version:
+            project_branch_stages = projectsmodels.Stage.objects.all().filter(name=version)
+        else:
+            project_branch_stages = projectsmodels.Stage.objects.all()
+        # project_branch_stages = projectsmodels.Stage.objects.all()
+        stages_collection = []
+        
+        for stage in project_branch_stages:
+            stages_collection.append(StageProxyService.getStageAndSetGroup(request, stage.stage_id))
+        Stages.project_branch_stage = stages_collection
+        return Stages
+        
+    
+    # def get(self, request, hostname, version):
+    #     old_api_url = r'/api/products/%s/versions/%s/stages/' % (hostname, version)
+    #     host = request.get_host()
+    #     raw_stages_xml = url2.urlopen('http://' + host.strip('/') + old_api_url).read()
+    # 
+    #     stages = xobj.parse(raw_stages_xml)
+    #     stages_metadata = [(s.label, s.groups.href) for s in stages.stages.stage]
+    # 
+    #     stages_collection = []
+    #     for label, href in stages_metadata:
+    #         stage = projectsmodels.Stage.objects.get(project__short_name=hostname, name=version)
+    #         stage.groups = projectsmodels.Group(href=str(href))
+    #         stages_collection.append(stage)
+    #     return stages_collection
+
+
+class MajorVersionService(service.BaseService):
+
+    def get(self, request, short_name, version):
+        """
+        XXX defunct for now
+        """
+        modifiers = ['platform', 'platform_version', 'definition', 'image_type_definitions',
+                     'image_definitions', 'images', 'source_group']
+        project = projectsmodels.Project.objects.get(short_name=short_name)
+        project_version = projectsmodels.ProjectVersion.objects.get(project=project)
+        for m in modifiers:
+            url = r'%(host)s/api/products/%(short_name)s/versions/%(version)s/%(modifier)s/'\
+                    % dict(host= 'http://' + request.get_host(), short_name=short_name, version=version, modifier=m)
+            setattr(project_version, m, url)
+        return project_version
+
 
 class ApplianceService(RestDbPassthrough):
     def get(self, project):
@@ -193,6 +249,7 @@ class InventoryManagementNodeService(BaseInventoryService):
 
 class InventoryManagementInterfaceService(BaseInventoryService):
     
+    @access.anonymous
     @return_xml
     def rest_GET(self, request, management_interface_id=None):
         return self.get(management_interface_id)
@@ -242,6 +299,7 @@ class InventorySystemTypeService(BaseInventoryService):
     
 class InventorySystemTypeSystemsService(BaseInventoryService):
     
+    @access.anonymous
     @return_xml
     def rest_GET(self, request, system_type_id, system_id=None):
         return self.get(system_type_id)
@@ -435,11 +493,24 @@ class InventorySystemsSystemLogService(BaseInventoryService):
         else:
             pass
 
+class InventorySystemsSystemAssimilatorService(BaseInventoryService):
+    '''Assimilates a system in inventory that does not have any management S/W yet'''
+
+    @access.admin
+    @requires('assimilation_parameters')
+    @return_xml
+    def rest_PUT(self, request, system_id, assimilation_parameters, format='xml'):
+        system = self.mgr.getSystem(system_id)
+        if not system:
+            return HttpResponseNotFound()
+        result = self.mgr.assimilateSystem(system, assimilation_parameters)
+        return result
+
 class InventoryUsersService(BaseInventoryService):
 
-    # used by modeelib
+    # used by modellib
     def get(self, user):
-        user = rbuildermodels.Users.objects.get(username=user)
+        user = usersmodels.Users.objects.get(user_name=user)
         return user
 
 class InventorySystemEventsService(BaseInventoryService):
@@ -580,47 +651,43 @@ class InventorySystemJobsService(BaseInventoryService):
     
     @access.anonymous
     @return_xml
-    def rest_GET(self, request, system_id, job_id=None):
+    def rest_GET(self, request, system_id):
+        '''list the jobs running on this system'''
         return self.get(system_id)
 
     def get(self, system_id):
         return self.mgr.getSystemJobs(system_id)
 
-class InventoryJobsService(BaseInventoryService):
-    
-    @access.anonymous
+    @access.admin
+    @xObjRequires('job')
     @return_xml
-    def rest_GET(self, request, job_id=None):
-        return self.get(job_id)
+    def rest_POST(self, request, system_id, job):
+        '''request starting a job on this system'''
+        system = self.mgr.getSystem(system_id)
+        return self.mgr.scheduleJobAction(
+            system, job
+        )
 
-    def get(self, job_id):
-        if job_id:
-            return self.mgr.getJob(job_id)
-        else:
-            return self.mgr.getJobs()
-
-class InventoryJobStatesService(BaseInventoryService):
+class InventorySystemJobDescriptorService(BaseInventoryService):
 
     @access.anonymous
+    # smartform object already is XML, no need
     @return_xml
-    def rest_GET(self, request, job_state_id=None):
-        return self.get(job_state_id)
+    def rest_GET(self, request, system_id, job_type):
+        '''
+        Get a smartform descriptor for starting a action on
+        InventorySystemJobsService.  An action is not *quite* a job.
+        It's a request to start a job.
+        '''
+        content = self.get(system_id, job_type, request.GET.copy())
+        response = HttpResponse(status=200, content=content)
+        response['Content-Type'] = 'text/xml'
+        return response
 
-    def get(self, job_state_id):
-        if job_state_id:
-            return self.mgr.getJobState(job_state_id)
-        else:
-            return self.mgr.getJobStates()
-
-class InventoryJobStatesJobsService(BaseInventoryService):
-
-    @access.anonymous
-    @return_xml
-    def rest_GET(self, request, job_state_id):
-        return self.get(job_state_id)
-
-    def get(self, job_state_id):
-        return self.mgr.getJobsByJobState(job_state_id)
+    def get(self, system_id, job_type, parameters):
+        return self.mgr.getDescriptorForSystemAction(
+            system_id, job_type, parameters
+        )
 
 class InventorySystemJobStatesService(BaseInventoryService):
 

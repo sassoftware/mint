@@ -1,7 +1,5 @@
 #
-# Copyright (c) 2009-2010 rPath, Inc.
-#
-# All rights reserved.
+# Copyright (c) 2011 rPath, Inc.
 #
 
 """
@@ -10,6 +8,7 @@ A unified interface to rBuilder project repositories.
 
 
 import errno
+import hashlib
 import logging
 import os
 import time
@@ -26,7 +25,7 @@ from conary.repository import netclient
 from conary.repository import shimclient
 from conary.repository.netrepos import netserver
 from conary.repository.netrepos import proxy
-from conary.repository.netrepos.netauth import ValidUser
+from conary.repository.netrepos.netauth import ValidUser, ValidPasswordToken
 from conary.server import schema as conary_schema
 
 from mint import userlevels
@@ -39,7 +38,7 @@ log = logging.getLogger(__name__)
 ROLE_PERMS = {
         # level                 role name           write   admin
         userlevels.ADMIN:     ('rb_internal_admin', True,   True),
-        userlevels.OWNER:     ('rb_owner',          True,   True),
+        userlevels.OWNER:     ('rb_internal_admin', True,   True),
         userlevels.DEVELOPER: ('rb_developer',      True,   False),
         userlevels.USER:      ('rb_user',           False,  False),
 }
@@ -60,18 +59,6 @@ def _makeClient(repos):
     cfg.name = 'rBuilder'
     cfg.contact = 'rbuilder'
     return conaryclient.ConaryClient(cfg=cfg, repos=repos)
-
-
-def cached(method):
-    #pylint: disable-msg=W0212,W0612
-    name = method.func_name
-    def wrapper(self, *args, **kwargs):
-        key = (name, args, tuple(sorted(kwargs.items())))
-        if key not in self._cache:
-            self._cache[key] = method(self, *args, **kwargs)
-        return self._cache[key]
-    wrapper.func_name = method.func_name
-    return wrapper
 
 
 def withNetServer(method):
@@ -208,7 +195,6 @@ class RepositoryHandle(object):
         self._cfg = manager.cfg
         self._db = manager.db
         self._projectInfo = projectInfo
-        self._cache = {}
 
         # Switch to a subclass for whichever database driver is needed.
         if self.hasDatabase:
@@ -256,9 +242,6 @@ class RepositoryHandle(object):
     def projectId(self):
         return self._projectInfo['projectId']
     @property
-    def repositoryMap(self):
-        return self._projectInfo['url']
-    @property
     def shortName(self):
         return self._projectInfo['shortname']
     @property
@@ -282,10 +265,16 @@ class RepositoryHandle(object):
         return protocol, host, port
 
     def getURL(self):
-        protocol, host, port = self._getURLPieces()
-        return '%s://%s:%d/repos/%s/' % (protocol, host, port, self.shortName)
+        if self.hasDatabase:
+            # Local databases (including mirrors) are constructed based on the
+            # rBuilder configuration.
+            protocol, host, port = self._getURLPieces()
+            return '%s://%s:%d/repos/%s/' % (protocol, host, port,
+                    self.shortName)
+        else:
+            # Remote repositories' info comes from the Projects table.
+            return self._projectInfo['url']
 
-    @cached
     def _getReposDBParams(self):
         """
         Return the "database tuple" for this project. Don't call this
@@ -335,7 +324,6 @@ class RepositoryHandle(object):
             db = dbstore.connect(path, driver)
         return db
 
-    @cached
     def getNetServerConfig(self):
         """
         Return a C{ServerConfig} suitable for creating a
@@ -369,12 +357,16 @@ class RepositoryHandle(object):
             cfg.requireSigs = False
             #cfg.requireSigs = self._cfg.requireSigs
         cfg.serializeCommits = True
+        cfg.memCache = self._cfg.memCache
+        cfg.memCacheTimeout = self._cfg.memCacheTimeout
+        # Make sure cached info is partitioned by role.
+        cfg.memCacheUserAuth = True
 
         cfg.serverName = [fqdn]
         cfg.contentsDir = ' '.join(self.contentsDirs)
         cfg.tmpDir = os.path.join(self._cfg.dataPath, 'tmp')
 
-        if self._cfg.commitAction and not self.isLocalMirror:
+        if self._cfg.commitAction:
             actionDict = {
                     'repMap': '%s %s' % (fqdn, self.getURL()),
                     'buildLabel': '%s@rpl:1' % (fqdn,),
@@ -390,13 +382,12 @@ class RepositoryHandle(object):
             if self._cfg.commitActionEmail and self.commitEmail:
                 cfg.commitAction += (
                         ' ' + self._cfg.commitActionEmail % actionDict)
-            else:
-                cfg.commitAction = None
 
         return cfg
 
-    def _getServer(self, serverClass):
-        nscfg = self.getNetServerConfig()
+    def getServer(self, serverClass, nscfg=None):
+        if nscfg is None:
+            nscfg = self.getNetServerConfig()
         for path in nscfg.contentsDir.split():
             if not os.access(path, os.R_OK | os.X_OK):
                 raise RepositoryDatabaseError("Unable to read repository "
@@ -416,14 +407,12 @@ class RepositoryHandle(object):
         baseUrl = self.getURL()
         return serverClass(nscfg, baseUrl, db)
 
-    @cached
     def getNetServer(self):
         """
         Return a (cached) C{NetworkRepositoryServer} for this project.
         """
-        return self._getServer(netserver.NetworkRepositoryServer)
+        return self.getServer(netserver.NetworkRepositoryServer)
 
-    @cached
     def getProxyServer(self):
         """
         Return a (cached) C{CachingRepositoryServer} for this project's
@@ -432,53 +421,149 @@ class RepositoryHandle(object):
         return proxy.CachingRepositoryServer(self.getNetServerConfig(),
                 self.getURL(), self.getNetServer())
 
-    @cached
     def getShimServer(self):
         """
         Return a (cached) shim C{NetworkRepositoryServer} for this project.
         """
-        return self._getServer(shimclient.NetworkRepositoryServer)
+        return self.getServer(shimclient.NetworkRepositoryServer)
 
-    @cached
-    def _getAuthToken(self, userId):
+    def getAuthToken(self, userId, level=None, authToken=None, extraRoles=()):
         """
         Return a role-based auth token for given user, or raise a
         C{ProductNotFoundError} if they do not have read permissions.
 
         C{userId} may also be a special value less than zero, either
-        C{ANY_READER} or C{ANY_WRITER}.
-        """
-        if userId == ANY_WRITER:
-            level = userlevels.ADMIN
-        elif userId == ANY_READER:
-            level = userlevels.USER
-        elif userId == ANONYMOUS:
-            if self.isHidden:
-                raise ProductNotFound(self.shortName)
-            else:
-                level = userlevels.USER
-        elif userId < 0:
-            raise RuntimeError("Invalid userId %d" % userId)
-        else:
-            cu = self._db.cursor()
-            cu.execute("""SELECT level FROM ProjectUsers
-                    WHERE projectId = ? AND userId = ?""",
-                    self.projectId, userId)
-            try:
-                level, = cu.next()
-            except StopIteration:
-                if self.isHidden:
-                    # Not a member on a private project -> project not found
-                    raise ProductNotFound(self.shortName)
-                else:
-                    # Not a member on a public project -> "user" level
-                    level = userlevels.USER
-            else:
-                if level not in userlevels.LEVELS:
-                    raise RuntimeError("Invalid userlevel %d" % (level,))
+        C{ANY_READER} or C{ANY_WRITER} or C{ANONYMOUS}.
 
-        roleName = ROLE_PERMS[level][0]
-        return [ValidUser(roleName), None, [], None]
+        If C{level} is provided then it will be used rather than the database
+        to determine the user's project permissions. If C{authToken} is
+        provided then the new token will extend that one, otherwise a blank
+        token will be used.
+        """
+        if authToken is None:
+            authToken = netserver.AuthToken()
+        else:
+            authToken = netserver.AuthToken(*authToken)
+        if self._cfg.injectUserAuth:
+            injectedAuthType = self._projectInfo['authType']
+        else:
+            injectedAuthType = 'none'
+        if self.hasDatabase:
+            # Only local repositories (regular and mirrored) can require
+            # authentication.
+            if userId == ANY_WRITER:
+                level = userlevels.ADMIN
+            elif userId == ANY_READER:
+                level = userlevels.USER
+            elif userId == ANONYMOUS:
+                if not self.isHidden:
+                    level = userlevels.USER
+                else:
+                    level = None
+            elif userId < 0:
+                raise RuntimeError("Invalid userId %d" % userId)
+            elif level is None:
+                cu = self._db.cursor()
+                cu.execute("""SELECT level FROM ProjectUsers
+                        WHERE projectId = ? AND userId = ?""",
+                        self.projectId, userId)
+                try:
+                    level, = cu.next()
+                except StopIteration:
+                    if self.isHidden:
+                        # Not a member on a private project -> project not found
+                        raise ProductNotFound(self.shortName)
+                    else:
+                        # Not a member on a public project -> "user" level
+                        level = userlevels.USER
+
+            # Turn the user level into an abstract repository role.
+            allRoles = set(extraRoles)
+            if level is not None:
+                if level not in ROLE_PERMS:
+                    raise RuntimeError("Invalid userlevel %d" % (level,))
+                roleName = ROLE_PERMS[level][0]
+                allRoles.add(roleName)
+            if not allRoles:
+                # No permissions -> pretend the project doesn't exist.
+                raise ProductNotFound(self.shortName)
+            # Preserve the username for commit messages, etc.
+            originalUser = None
+            if authToken.user != 'anonymous':
+                originalUser = authToken.user
+            authToken.user = ValidUser(*allRoles, username=originalUser)
+            authToken.password = None
+        else:
+            # Proxied repositories require no authentication, but they may have
+            # a password configured for outbound requests.
+            # TODO: Once Conary has a way to send multiple username/password
+            # sets, use it to supply both the original password from the
+            # request as well as the one configured to be injected, similar to
+            # how entitlements work.
+            if injectedAuthType == 'userpass':
+                authToken.user = self._projectInfo['username']
+                authToken.password = self._projectInfo['password']
+        # Always add any configured outbound entitlements.
+        if injectedAuthType == 'entitlement':
+            authToken.entitlements.append(
+                    (None, self._projectInfo['entitlement']))
+        return authToken
+
+    def convertAuthToken(self, mintToken, useRepoDb=False):
+        """
+        Return a role-based auth token for the given inbound token. Username
+        and password will be looked up in the mint Users table and mapped to
+        corresponding repository roles. If this handle is for a proxy-mode
+        repository, the proxy authentication will be substituted instead.
+        """
+        # First check if the user is granted any permissions via a user in the
+        # repository database. This can go away eventually, but for now it
+        # preserves compatibility with existing repositories, e.g. the built-in
+        # rmake repository.
+        extraRoles = set()
+        if useRepoDb and self.hasDatabase:
+            netserver = self.getNetServer()
+            rcu = netserver.db.cursor()
+            try:
+                roleIds = netserver.auth.getAuthRoles(rcu, mintToken)
+            except reposerrors.InsufficientPermission:
+                pass
+            else:
+                extraRoles.update(roleIds)
+        userId = ANONYMOUS
+        level = None
+        if mintToken.user != 'anonymous':
+            # If the user's password is valid, grant them the access given by
+            # their project membership.
+            cu = self._db.cursor()
+            cu.execute("""
+                SELECT pu.level, u.userId, u.salt, u.passwd
+                FROM ProjectUsers pu
+                JOIN Users u USING (userId)
+                WHERE u.username = ? AND pu.projectId = ?
+                """, mintToken.user, self.projectId)
+            row = cu.fetchone()
+            if row:
+                maybeLevel, maybeUserId, userSalt, userPass = row
+                userSalt = userSalt.decode('hex')
+                passwordOK = False
+                if mintToken.password is ValidPasswordToken:
+                    passwordOK = True
+                else:
+                    testPass = hashlib.md5(userSalt + mintToken.password
+                            ).hexdigest()
+                    if testPass.lower() == userPass.lower():
+                        passwordOK = True
+                if passwordOK:
+                    userId = maybeUserId
+                    level = maybeLevel
+                # If the password was not valid, just ignore it -- the password
+                # might actually be intended for something we're proxying to.
+                # See RBL-5269
+        # Passing level to getAuthToken saves another DB query, but it's just a
+        # shortcut.
+        return self.getAuthToken(userId, level=level, authToken=mintToken,
+                extraRoles=extraRoles)
 
     def _getShimServerProxy(self, userId=None):
         """
@@ -488,11 +573,10 @@ class RepositoryHandle(object):
         all roles.
         """
         protocol, _, port = self._getURLPieces()
-        authToken = self._getAuthToken(userId)
+        authToken = self.getAuthToken(userId)
         return shimclient.ShimServerProxy(self.getShimServer(),
                 protocol, port, authToken)
 
-    @cached
     def getServerProxy(self, userId=None):
         """
         Get a XMLRPC server proxy for this project's repository. If the
@@ -658,10 +742,10 @@ class RepositoryHandle(object):
     @withNetServer
     def addUserByMD5(self, repos, username, salt, password, roles=None):
         try:
-            repos.auth.addUserByMD5(username, salt, password)
+            repos.auth.addUserByMD5(username, salt.decode('hex'), password)
         except reposerrors.UserAlreadyExists:
             repos.auth.deleteUserByName(username, deleteRole=False)
-            repos.auth.addUserByMD5(username, salt, password)
+            repos.auth.addUserByMD5(username, salt.decode('hex'), password)
         repos.auth.setUserRoles(username, roles or [])
 
     @withNetServer
@@ -724,7 +808,6 @@ class SQLiteRepositoryHandle(RepositoryHandle):
 
 class PostgreSQLRepositoryHandle(RepositoryHandle):
 
-    @cached
     def _getParams(self):
         driver, path = self.dbTuple
         if driver == 'pgpool':

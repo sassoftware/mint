@@ -1,5 +1,5 @@
 #
-# Copyright (c) 2010 rPath, Inc.
+# Copyright (c) 2011 rPath, Inc.
 #
 # All rights reserved.
 #
@@ -48,15 +48,27 @@ def add_columns(db, table, *columns):
     ...     'somethingelse STRING')
     '''
     cu = db.cursor()
-    changed = False
-
+    cu.execute("SELECT * FROM %s LIMIT 1" % (table,))
+    allFields = set(x.lower() for x in cu.fields())
     for column in columns:
-        try:
+        if column.lower() not in allFields:
             cu.execute('ALTER TABLE %s ADD COLUMN %s' % (table, column))
-            changed = True
-        except sqlerrors.DuplicateColumnName:
-            pass
-    return changed
+    return True
+
+
+def drop_columns(db, table, *columns):
+    """
+    Drop each column while ignoring missing columns.
+
+    >>> drop_columns(db, 'Table', 'column1', 'column2')
+    """
+    cu = db.cursor()
+    cu.execute("SELECT * FROM %s LIMIT 1" % (table,))
+    allFields = set(x.lower() for x in cu.fields())
+    for column in columns:
+        if column.lower() in allFields:
+            cu.execute("ALTER TABLE %s DROP %s" % (table, column))
+    return True
 
 
 def drop_tables(db, *tables):
@@ -170,6 +182,57 @@ def renameConstraint(db, table, oldName, newDefinition, conditional=False):
                 (oldName, table))
 
 
+def quoteIdentifier(name):
+    name = name.replace('"', '""')
+    return '"%s"' % (name,)
+
+
+def findForeignKey(db, table, columns):
+    """Return the name of a foreign key in the given table and consisting of
+    the named columns."""
+    cu = db.cursor()
+    # Map column names to attribute numbers
+    cu.execute("""
+        SELECT t.oid, a.attnum, a.attname
+        FROM pg_catalog.pg_class t
+        JOIN pg_catalog.pg_namespace n ON t.relnamespace = n.oid
+        JOIN pg_attribute a ON a.attrelid = t.oid
+        WHERE n.nspname = 'public' AND t.relname = ? AND a.attnum > 0
+        ORDER BY a.attnum ASC
+        """, (table,))
+    result = cu.fetchall()
+    if not result:
+        raise RuntimeError("Missing table %s" % table)
+    oid = result[0][0]
+    colMap = dict((name, num) for (oid, num, name) in result)
+    try:
+        colIds = sorted(colMap[colName] for colName in columns)
+    except KeyError:
+        raise RuntimeError("Missing one or more columns in table %s" % table)
+    keyStr = '{' + (','.join(str(x) for x in colIds)) + '}'
+
+    # Look for matching foreign keys
+    cu.execute("""
+        SELECT c.conname FROM pg_constraint c
+        WHERE c.conrelid = ? AND c.contype = 'f'
+        AND c.conkey = ?
+        """, (oid, keyStr))
+    result = cu.fetchone()
+    if result:
+        return result[0]
+    else:
+        raise RuntimeError("No matching constraint in table %s" % table)
+
+
+def dropForeignKey(db, table, columns):
+    """Drop a foreign key given the table name and included columns."""
+    name = findForeignKey(db, table, columns)
+    cu = db.cursor()
+    cu.execute("ALTER TABLE %s DROP CONSTRAINT %s" %
+            (quoteIdentifier(table), quoteIdentifier(name)))
+    return name
+
+
 #### SCHEMA MIGRATIONS BEGIN HERE ###########################################
 
 # SCHEMA VERSION 37.0 - DUMMY MIGRATION
@@ -257,7 +320,7 @@ class MigrateTo_40(SchemaMigration):
                     EXISTS(SELECT * FROM InboundMirrors WHERE
                         projectId=targetProjectId) AS localMirror
                 FROM Projects LEFT JOIN Labels USING(projectId)
-                WHERE external = 1 AND label LIKE ?""", '%s@%%' % host)
+                WHERE external AND label LIKE ?""", '%s@%%' % host)
 
             for projectId, localMirror in cu.fetchall():
                 if localMirror:
@@ -2591,6 +2654,799 @@ class MigrateTo_55(SchemaMigration):
         cu = self.db.cursor()
         cu.execute("UPDATE inventory_event_type SET priority=70 WHERE name = 'system registration'")
         return True
+
+class MigrateTo_56(SchemaMigration):
+    Version = (56, 2)
+
+    def migrate(self):
+        return True
+
+    def migrate1(self):
+        db = self.db
+        createTable = schema.createTable
+        changed = False
+
+        changed |= createTable(db, "packages_package_action_type", """
+            CREATE TABLE "packages_package_action_type" (
+                "package_action_type_id" %(PRIMARYKEY)s,
+                "name" text NOT NULL,
+                "description" text NOT NULL,
+                "created_date" timestamp with time zone NOT NULL,
+                "modified_date" timestamp with time zone NOT NULL
+            )""")
+
+        changed |= createTable(db, "packages_package", """
+            CREATE TABLE "packages_package" (
+                "package_id" %(PRIMARYKEY)s,
+                "name" TEXT NOT NULL UNIQUE,
+                "description" TEXT,
+                "created_date" TIMESTAMP WITH TIME ZONE NOT NULL,
+                "modified_date" TIMESTAMP WITH TIME ZONE NOT NULL,
+                "created_by_id" INTEGER 
+                    REFERENCES "users" ("userid"),
+                "modified_by_id" INTEGER
+                    REFERENCES "users" ("userid")
+            )""")
+
+        changed |= createTable(db, "packages_package_version", """
+            CREATE TABLE "packages_package_version" (
+                "package_version_id" %(PRIMARYKEY)s,
+                "package_id" integer NOT NULL 
+                    REFERENCES "packages_package" ("package_id"),
+                "name" text NOT NULL,
+                "description" text,
+                "license" text,
+                "consumable" boolean NOT NULL,
+                "created_date" timestamp with time zone NOT NULL,
+                "modified_date" timestamp with time zone NOT NULL,
+                "created_by_id" integer 
+                    REFERENCES "users" ("userid"),
+                "modified_by_id" integer 
+                    REFERENCES "users" ("userid"),
+                "committed" boolean NOT NULL
+            )""")
+
+        changed |= createTable(db, "packages_package_version_action", """
+            CREATE TABLE "packages_package_version_action" (
+                "package_version_action_id" %(PRIMARYKEY)s,
+                "package_version_id" integer NOT NULL 
+                    REFERENCES "packages_package_version" ("package_version_id"),
+                "package_action_type_id" integer NOT NULL
+                    REFERENCES "packages_package_action_type"
+                        ("package_action_type_id"),
+                "visible" boolean NOT NULL,
+                "enabled" boolean NOT NULL,
+                "descriptor" text,
+                "created_date" timestamp with time zone NOT NULL,
+                "modified_date" timestamp with time zone NOT NULL
+            )""")
+
+        changed |= createTable(db, "packages_package_version_job", """
+            CREATE TABLE "packages_package_version_job" (
+                "package_version_job_id" %(PRIMARYKEY)s,
+                "package_version_id" integer NOT NULL 
+                    REFERENCES "packages_package_version" ("package_version_id"),
+                "package_action_type_id" integer NOT NULL
+                    REFERENCES "packages_package_action_type"
+                        ("package_action_type_id"),
+                "job_id" integer
+                    REFERENCES "inventory_job" ("job_id"),
+                "job_data" text,
+                "created_date" timestamp with time zone NOT NULL,
+                "modified_date" timestamp with time zone NOT NULL,
+                "created_by_id" integer 
+                    REFERENCES "users" ("userid"),
+                "modified_by_id" integer 
+                    REFERENCES "users" ("userid")
+            )""")
+
+        changed |= createTable(db, "packages_package_version_url", """
+            CREATE TABLE "packages_package_version_url" (
+                "package_version_url_id" %(PRIMARYKEY)s,
+                "package_version_id" integer NOT NULL 
+                    REFERENCES "packages_package_version" ("package_version_id"),
+                "url" text NOT NULL,
+                "file_path" text,
+                "downloaded_date" timestamp with time zone,
+                "file_size" integer,
+                "created_date" timestamp with time zone NOT NULL,
+                "modified_date" timestamp with time zone NOT NULL,
+                "created_by_id" integer 
+                    REFERENCES "users" ("userid"),
+                "modified_by_id" integer 
+                    REFERENCES "users" ("userid")
+            )""")
+
+        changed |= createTable(db, "packages_package_source", """
+            CREATE TABLE "packages_package_source" (
+                "package_source_id" %(PRIMARYKEY)s,
+                "package_version_id" integer NOT NULL 
+                    REFERENCES "packages_package_version" ("package_version_id"),
+                "created_date" timestamp with time zone NOT NULL,
+                "modified_date" timestamp with time zone NOT NULL,
+                "created_by_id" integer 
+                    REFERENCES "users" ("userid"),
+                "modified_by_id" integer 
+                    REFERENCES "users" ("userid"),
+                "built" boolean NOT NULL,
+                "trove_id" integer 
+                    REFERENCES "inventory_trove" ("trove_id")
+            )""")
+
+        changed |= createTable(db, "packages_package_source_action", """
+            CREATE TABLE "packages_package_source_action" (
+                "package_source_action_id" %(PRIMARYKEY)s,
+                "package_source_id" integer NOT NULL 
+                    REFERENCES "packages_package_source" ("package_source_id"),
+                "package_action_type_id" integer NOT NULL,
+                "enabled" boolean NOT NULL,
+                "visible" boolean NOT NULL,
+                "descriptor" text,
+                "created_date" timestamp with time zone NOT NULL,
+                "modified_date" timestamp with time zone NOT NULL
+            )""")
+
+        changed |= createTable(db, "packages_package_source_job", """
+            CREATE TABLE "packages_package_source_job" (
+                "package_source_job_id" %(PRIMARYKEY)s,
+                "package_source_id" integer NOT NULL 
+                    REFERENCES "packages_package_source" ("package_source_id"),
+                "package_action_type_id" integer NOT NULL
+                    REFERENCES "packages_package_action_type"
+                        ("package_action_type_id"),
+                "job_id" integer
+                    REFERENCES "inventory_job" ("job_id"),
+                "job_data" text,
+                "created_date" timestamp with time zone NOT NULL,
+                "modified_date" timestamp with time zone NOT NULL,
+                "created_by_id" integer 
+                    REFERENCES "users" ("userid"),
+                "modified_by_id" integer 
+                    REFERENCES "users" ("userid")
+            )""")
+
+        changed |= createTable(db, "packages_package_build", """
+            CREATE TABLE "packages_package_build" (
+                "package_build_id" %(PRIMARYKEY)s,
+                "package_source_id" integer NOT NULL 
+                    REFERENCES "packages_package_source" ("package_source_id"),
+                "created_date" timestamp with time zone NOT NULL,
+                "modified_date" timestamp with time zone NOT NULL,
+                "created_by_id" integer
+                    REFERENCES "users" ("userid"),
+                "modified_by_id" integer
+                    REFERENCES "users" ("userid")
+            )""")
+
+        changed |= createTable(db, "packages_package_build_troves", """
+            CREATE TABLE "packages_package_build_troves" (
+                "id" %(PRIMARYKEY)s,
+                "packagebuild_id" integer NOT NULL
+                    REFERENCES "packages_package_build" ("package_build_id"),
+                "trove_id" integer NOT NULL 
+                    REFERENCES "inventory_trove" ("trove_id"),
+                UNIQUE ("packagebuild_id", "trove_id")
+            )""")
+
+        changed |= createTable(db, "packages_package_build_action", """
+            CREATE TABLE "packages_package_build_action" (
+                "package_build_action_id" %(PRIMARYKEY)s,
+                "package_build_id" integer NOT NULL 
+                    REFERENCES "packages_package_build" ("package_build_id"),
+                "package_action_type_id" integer NOT NULL
+                    REFERENCES "packages_package_action_type"
+                        ("package_action_type_id"),
+                "visible" boolean NOT NULL,
+                "enabled" boolean NOT NULL,
+                "descriptor" text,
+                "created_date" timestamp with time zone NOT NULL,
+                "modified_date" timestamp with time zone NOT NULL
+            )""")
+
+        changed |= createTable(db, "packages_package_build_job", """
+            CREATE TABLE "packages_package_build_job" (
+                "package_build_job_id" %(PRIMARYKEY)s,
+                "package_build_id" integer NOT NULL 
+                    REFERENCES "packages_package_build" ("package_build_id"),
+                "package_action_type_id" integer NOT NULL,
+                "job_id" integer
+                    REFERENCES "inventory_job" ("job_id"),
+                "job_data" text,
+                "created_date" timestamp with time zone NOT NULL,
+                "modified_date" timestamp with time zone NOT NULL,
+                "created_by_id" integer
+                    REFERENCES "users" ("userid"),
+                "modified_by_id" integer
+                    REFERENCES "users" ("userid")
+            )""")
+
+        changed |= db.createIndex("packages_package", 
+            "packages_package_created_by_id", "created_by_id")
+        changed |= db.createIndex("packages_package", 
+            "packages_package_modified_by_id", "modified_by_id")
+        changed |= db.createIndex("packages_package_version",
+            "packages_package_version_package_id", "package_id")
+        changed |= db.createIndex("packages_package_version",
+            "packages_package_version_created_by_id", "created_by_id")
+        changed |= db.createIndex("packages_package_version_action",
+            "packages_package_version_action_package_version_id", "package_version_id")
+        changed |= db.createIndex("packages_package_version_action",
+            "packages_package_version_action_package_action_type_id", "package_action_type_id")
+        changed |= db.createIndex("packages_package_version_job",
+            "packages_package_version_job_package_version_id", "package_version_id")
+        changed |= db.createIndex("packages_package_version_job",
+            "packages_package_version_job_package_action_type_id", "package_action_type_id")
+        changed |= db.createIndex("packages_package_version_job",
+            "packages_package_version_job_job_id", "job_id")
+        changed |= db.createIndex("packages_package_version_job",
+            "packages_package_version_job_created_by_id", "created_by_id")
+        changed |= db.createIndex("packages_package_version_job",
+            "packages_package_version_job_modified_by_id", "modified_by_id")
+        changed |= db.createIndex("packages_package_version_url",
+            "packages_package_version_url_package_version_id", "package_version_id")
+        changed |= db.createIndex("packages_package_version_url",
+            "packages_package_version_url_created_by_id", "created_by_id")
+        changed |= db.createIndex("packages_package_version_url",
+            "packages_package_version_url_modified_by_id", "modified_by_id")
+        changed |= db.createIndex("packages_package_source",
+            "packages_package_source_package_version_id", "package_version_id")
+        changed |= db.createIndex("packages_package_source",
+            "packages_package_source_created_by_id", "created_by_id")
+        changed |= db.createIndex("packages_package_source",
+            "packages_package_source_modified_by_id", "modified_by_id")
+        changed |= db.createIndex("packages_package_source",
+            "packages_package_source_trove_id", "trove_id")
+        changed |= db.createIndex("packages_package_source_action",
+            "packages_package_source_action_package_source_id", "package_source_id")
+        changed |= db.createIndex("packages_package_source_action",
+            "packages_package_source_action_package_action_type_id", "package_action_type_id")
+        changed |= db.createIndex("packages_package_source_job",
+            "packages_package_source_job_package_source_id", "package_source_id")
+        changed |= db.createIndex("packages_package_source_job",
+            "packages_package_source_job_package_action_type_id", "package_action_type_id")
+        changed |= db.createIndex("packages_package_source_job",
+            "packages_package_source_job_job_id", "job_id")
+        changed |= db.createIndex("packages_package_source_job",
+            "packages_package_source_job_created_by_id", "created_by_id")
+        changed |= db.createIndex("packages_package_source_job",
+            "packages_package_source_job_modified_by_id", "modified_by_id")
+        changed |= db.createIndex("packages_package_build",
+            "packages_package_build_package_source_id", "package_source_id")
+        changed |= db.createIndex("packages_package_build",
+            "packages_package_build_created_by_id", "created_by_id")
+        changed |= db.createIndex("packages_package_build",
+            "packages_package_build_modified_by_id", "modified_by_id")
+        changed |= db.createIndex("packages_package_build_action",
+            "packages_package_build_action_package_build_id", "package_build_id")
+        changed |= db.createIndex("packages_package_build_action",
+            "packages_package_build_action_package_action_type_id", "package_action_type_id")
+        changed |= db.createIndex("packages_package_build_job",
+            "packages_package_build_job_package_build_id", "package_build_id")
+        changed |= db.createIndex("packages_package_build_job",
+            "packages_package_build_job_package_action_type_id", "package_action_type_id")
+        changed |= db.createIndex("packages_package_build_job",
+            "packages_package_build_job_job_id", "job_id")
+        changed |= db.createIndex("packages_package_build_job",
+            "packages_package_build_job_created_by_id", "created_by_id")
+        changed |= db.createIndex("packages_package_build_job",
+            "packages_package_build_job_modified_by_id", "modified_by_id")
+
+        return True
+        
+    def migrate2(self):
+        cu = self.db.cursor()
+        cu.execute("""
+            ALTER TABLE "inventory_job"
+            RENAME TO "jobs_job"
+        """)
+        cu.execute("""
+            ALTER TABLE "inventory_job_state"
+            RENAME TO "jobs_job_state"
+        """)
+
+        return True
+
+class MigrateTo_57(SchemaMigration):
+    Version = (57, 0)
+
+    def migrate(self):
+        return True
+
+
+class MigrateTo_58(SchemaMigration):
+    Version = (58, 42)
+
+    def migrate(self):
+        return True
+
+    def migrate1(self):
+        cu = self.db.cursor()
+        cu.execute("""
+            ALTER TABLE "inventory_system"
+            RENAME "appliance_id" TO "project_id"
+        """)
+
+        cu.execute("""
+            ALTER TABLE "inventory_stage"
+            RENAME "major_version_id" TO "project_version_id"
+        """)
+
+
+        cu.execute("""
+            ALTER TABLE "inventory_stage"
+            ADD "promotable" bool
+        """)
+
+        return True
+
+    def migrate2(self):
+        schema._addTableRows(self.db, "querysets_queryset", "name", [
+        dict(name="All Users", resource_type='user',
+              description='All users',
+              created_date=str(datetime.datetime.now(tz.tzutc())),
+              modified_date=str(datetime.datetime.now(tz.tzutc())),
+              can_modify=False)
+        ])
+        
+        schema._addTableRows(self.db, "querysets_filterentry",
+            'filter_entry_id',
+            [
+             dict(field='user_name', operator='IS_NULL', value="False"),
+             ],
+            ['field', 'operator', 'value'])
+        
+        allUserFiltId = schema._getRowPk(self.db, "querysets_filterentry", 'filter_entry_id',
+                field="user_name", operator='IS_NULL', value="False")
+
+        allUserQSId = schema._getRowPk(self.db, "querysets_queryset", "query_set_id", 
+            name="All Users")
+
+        schema._addTableRows(self.db, "querysets_querytag", "name",
+             [dict(query_set_id=allUserQSId, name="query-tag-all_users-5"),
+            ])
+
+        schema._addTableRows(self.db, "querysets_queryset_filter_entries",
+            'id',
+            [
+             dict(queryset_id=allUserQSId, filterentry_id=allUserFiltId),
+             ],
+            ['queryset_id', 'filterentry_id'])
+
+        schema.createTable(self.db, 'querysets_usertag', """
+            CREATE TABLE "querysets_usertag" (
+                "user_tag_id" %(PRIMARYKEY)s,
+                "user_id" INTEGER
+                    REFERENCES "users" ("userid")
+                    ON DELETE CASCADE
+                    NOT NULL,
+                "query_tag_id" INTEGER
+                    REFERENCES "querysets_querytag" ("query_tag_id")
+                    ON DELETE CASCADE
+                    NOT NULL,
+                "inclusion_method_id" INTEGER
+                    REFERENCES "querysets_inclusionmethod" ("inclusion_method_id")
+                    ON DELETE CASCADE
+                    NOT NULL,
+                UNIQUE ("user_id", "query_tag_id", "inclusion_method_id")
+            )""")
+
+        return True
+
+    def migrate3(self):
+        return True
+        
+    def migrate4(self):
+        return True
+        
+    def migrate5(self):
+        return True
+
+    def migrate6(self):
+        return True
+
+    def migrate7(self):
+        return True
+
+    def migrate8(self):
+        drop_columns(self.db, 'Users', 'isAdmin')
+        return True
+    
+    def migrate9(self):
+        cu = self.db.cursor()
+        cu.execute("""ALTER TABLE querysets_queryset ADD COLUMN presentation_type TEXT""")
+        schema._createInfrastructureSystemsQuerySetSchema(self.db)
+        schema._createWindowsBuildSystemsQuerySet(self.db)
+        schema._createUpdateSystemsQuerySet(self.db)
+        return True
+    
+    def migrate10(self):
+        # no longer needed
+        #schema._createAllProjectsQuerySetSchema(self.db)
+        #schema._createExternalProjectsQuerySetSchema(self.db)
+        return True
+    
+    def migrate11(self):
+        createTable(self.db, """
+            CREATE TABLE "querysets_projecttag" (
+                "project_tag_id" %(PRIMARYKEY)s,
+                "project_id" INTEGER
+                    REFERENCES "projects" ("projectid")
+                    ON DELETE CASCADE
+                    NOT NULL,
+                "query_tag_id" INTEGER
+                    REFERENCES "querysets_querytag" ("query_tag_id")
+                    ON DELETE CASCADE
+                    NOT NULL,
+                "inclusion_method_id" INTEGER
+                    REFERENCES "querysets_inclusionmethod" ("inclusion_method_id")
+                    ON DELETE CASCADE
+                    NOT NULL,
+                UNIQUE ("project_id", "query_tag_id", "inclusion_method_id")
+            )""")
+        return True
+    
+    def migrate12(self):
+        cu = self.db.cursor()
+        cu.execute("""ALTER TABLE inventory_stage RENAME TO project_branch_stage""")
+        return True
+
+    def migrate13(self):
+        cu = self.db.cursor()
+        cu.execute("""DELETE FROM querysets_queryset WHERE name='All Appliances'""")
+        schema._createAllProjectBranchStages13(self.db)
+        
+        createTable(self.db, """
+            CREATE TABLE "querysets_stagetag" (
+                "stage_tag_id" %(PRIMARYKEY)s,
+                "stage_id" INTEGER
+                    REFERENCES "project_branch_stage" ("stage_id")
+                    ON DELETE CASCADE
+                    NOT NULL,
+                "query_tag_id" INTEGER
+                    REFERENCES "querysets_querytag" ("query_tag_id")
+                    ON DELETE CASCADE
+                    NOT NULL,
+                "inclusion_method_id" INTEGER
+                    REFERENCES "querysets_inclusionmethod" ("inclusion_method_id")
+                    ON DELETE CASCADE
+                    NOT NULL,
+                UNIQUE ("stage_id", "query_tag_id", "inclusion_method_id")
+            )""")
+        
+        return True
+    
+    def migrate14(self):
+        cu = self.db.cursor()
+        cu.execute("""ALTER TABLE ProductVersions ALTER COLUMN projectId DROP NOT NULL""")
+        return True
+
+    def migrate15(self):
+        cu = self.db.cursor()
+        cu.execute("""ALTER TABLE ProductVersions ALTER COLUMN namespace DROP NOT NULL""")
+        return True
+
+    def migrate16(self):
+        cu = self.db.cursor()
+        cu.execute("""ALTER TABLE project_branch_stage ADD COLUMN created_date timestamp with time zone NOT NULL""")
+        return True
+
+    def migrate17(self):
+        cu = self.db.cursor()
+        cu.execute("""ALTER TABLE project_branch_stage RENAME COLUMN project_version_id TO project_branch_id""")
+        return True
+
+    def migrate18(self):
+        cu = self.db.cursor()
+
+        # remove old external appliances query set and filter
+        cu.execute("""DELETE FROM querysets_queryset WHERE name='External Appliances'""")
+        cu.execute("""DELETE FROM querysets_filterentry WHERE field='external' AND operator='EQUAL' AND value='1'""")
+        cu.execute("""DELETE FROM querysets_filterentry WHERE field='is_appliance' AND operator='EQUAL' AND value='1'""")
+
+        # add the filter terms for "all" in the set
+        allFilterId = schema._addQuerySetFilterEntry(self.db, "name", "IS_NULL", "False")
+
+        # get the all projects qs
+        qsId = schema._getRowPk(self.db, "querysets_queryset", "query_set_id", name="All Projects")
+
+        # link the all projects query set to the "all" filter
+        schema._addTableRows(self.db, "querysets_queryset_filter_entries", 'id',
+            [dict(queryset_id=qsId, filterentry_id=allFilterId)],
+            ['queryset_id', 'filterentry_id'])
+
+        # add new query sets
+        schema._createAllPlatformBranchStages(self.db)
+        return True
+
+    def migrate19(self):
+        cu = self.db.cursor()
+        cu.execute("""UPDATE querysets_queryset SET presentation_type='project' WHERE name='All Projects'""")
+        return True
+
+    def migrate20(self):
+        cu = self.db.cursor()
+        cu.execute("""UPDATE querysets_queryset SET resource_type='project' WHERE name='All Projects'""")
+        cu.execute("""UPDATE querysets_queryset SET presentation_type=NULL WHERE name='All Projects'""")
+        schema._createAllProjectBranchStages(self.db)
+        return True
+
+    def migrate21(self):
+        cu = self.db.cursor()
+        cu.execute("""ALTER TABLE project_branch_stage ADD COLUMN project_id integer
+                      REFERENCES Projects (projectId) ON DELETE SET NULL""")
+        return True
+
+    def migrate22(self):
+        cu = self.db.cursor()
+        cu.execute("""ALTER TABLE Projects ALTER COLUMN disabled DROP DEFAULT""")
+        cu.execute("""ALTER TABLE Projects ALTER COLUMN disabled TYPE BOOLEAN USING CASE WHEN disabled=0 THEN FALSE ELSE TRUE END""")
+        cu.execute("""ALTER TABLE Projects ALTER COLUMN disabled SET DEFAULT FALSE""")
+
+        cu.execute("""ALTER TABLE Projects ALTER COLUMN hidden DROP DEFAULT""")
+        cu.execute("""ALTER TABLE Projects ALTER COLUMN hidden TYPE BOOLEAN USING CASE WHEN hidden=0 THEN FALSE ELSE TRUE END""")
+        cu.execute("""ALTER TABLE Projects ALTER COLUMN hidden SET DEFAULT FALSE""")
+
+        cu.execute("""ALTER TABLE Projects ALTER COLUMN external DROP DEFAULT""")
+        cu.execute("""ALTER TABLE Projects ALTER COLUMN external TYPE BOOLEAN USING CASE WHEN external=0 THEN FALSE ELSE TRUE END""")
+        cu.execute("""ALTER TABLE Projects ALTER COLUMN external SET DEFAULT FALSE""")
+
+        cu.execute("""ALTER TABLE Projects ALTER COLUMN isAppliance DROP DEFAULT""")
+        cu.execute("""ALTER TABLE Projects ALTER COLUMN isAppliance TYPE BOOLEAN USING CASE WHEN isAppliance=0 THEN FALSE ELSE TRUE END""")
+        cu.execute("""ALTER TABLE Projects ALTER COLUMN isAppliance SET DEFAULT TRUE""")
+
+        cu.execute("""ALTER TABLE Projects ALTER COLUMN backupExternal DROP DEFAULT""")
+        cu.execute("""ALTER TABLE Projects ALTER COLUMN backupExternal TYPE BOOLEAN USING CASE WHEN backupExternal=0 THEN FALSE ELSE TRUE END""")
+        cu.execute("""ALTER TABLE Projects ALTER COLUMN backupExternal SET DEFAULT FALSE""")
+
+        return True
+
+    def migrate23(self):
+        cu = self.db.cursor()
+        cu.execute("""
+            INSERT INTO "inventory_event_type" 
+                ("name", "description", "priority")
+            VALUES
+                ('system assimilation',
+                 'System Assimilation',
+                 105)
+        """)
+        return True
+
+    def migrate24(self):
+        # URL and creds for local/mirror projects are redundant.
+        cu = self.db.cursor()
+        cu.execute("ALTER TABLE Labels ALTER url DROP NOT NULL")
+        cu.execute("""UPDATE LABELS SET url = NULL, authtype = 'none',
+            username = NULL, password = NULL, entitlement = NULL
+            WHERE (SELECT database FROM projects
+                WHERE Projects.projectId = Labels.projectId) IS NOT NULL""")
+        # Drop unused table
+        drop_tables(self.db, 'RepNameMap')
+        return True
+
+    def migrate25(self):
+        # adding the stageid to the images(builds)
+        cu = self.db.cursor()
+        cu.execute("ALTER TABLE Builds ADD COLUMN stageid INTEGER REFERENCES project_branch_stage ON DELETE SET NULL")
+        return True
+
+    def migrate26(self):
+        # Add missing ON DELETE clauses to FKs
+        cu = self.db.cursor()
+        dropForeignKey(self.db, "inventory_system", ["launching_user_id"])
+        dropForeignKey(self.db, "inventory_system", ["stage_id"])
+        dropForeignKey(self.db, "inventory_system", ["major_version_id"])
+        dropForeignKey(self.db, "inventory_system", ["project_id"])
+        cu.execute("""ALTER TABLE inventory_system
+                ADD FOREIGN KEY (launching_user_id)
+                    REFERENCES users(userid)
+                    ON DELETE SET NULL,
+                ADD FOREIGN KEY (stage_id)
+                    REFERENCES "project_branch_stage" ("stage_id")
+                    ON DELETE SET NULL,
+                ADD FOREIGN KEY (major_version_id)
+                    REFERENCES productversions(productversionid)
+                    ON DELETE SET NULL,
+                ADD FOREIGN KEY (project_id)
+                    REFERENCES projects(projectid)
+                    ON DELETE SET NULL""")
+        dropForeignKey(self.db, "packages_package", ["created_by_id"])
+        dropForeignKey(self.db, "packages_package", ["modified_by_id"])
+        cu.execute("""ALTER TABLE packages_package
+                ADD FOREIGN KEY (created_by_id)
+                    REFERENCES users(userid)
+                    ON DELETE SET NULL,
+                ADD FOREIGN KEY (modified_by_id)
+                    REFERENCES users(userid)
+                    ON DELETE SET NULL""")
+        return True
+
+    def _rename_jobs_table(self):
+        # Various mistakes were made in renaming this table (twice), so just
+        # rerun this for all of the minor migrations involved until everything
+        # settles. This way people who have installed or migrated all end up
+        # with the right table.
+        cu = self.db.cursor()
+        for name in ('inventory_event_type', 'inventory_job_type'):
+            if name in self.db.tables:
+                cu.execute("ALTER TABLE %s RENAME TO jobs_job_type" % name)
+                self.db.tables['jobs_job_type'] = self.db.tables.pop(name)
+                break
+
+    def migrate27(self):
+        self._rename_jobs_table()
+        return True
+
+    def migrate28(self):
+        self._rename_jobs_table()
+        # adding the descriptor and descriptor_data to jobs_job
+        cu = self.db.cursor()
+        cu.execute("ALTER TABLE jobs_job ADD COLUMN descriptor VARCHAR")
+        cu.execute("ALTER TABLE jobs_job ADD COLUMN descriptor_data VARCHAR")
+        return True
+
+    def migrate29(self):
+        self._rename_jobs_table()
+        # adding the column resource_type to jobs_job_type
+        cu = self.db.cursor()
+        cu.execute("ALTER TABLE jobs_job_type ADD COLUMN resource_type VARCHAR")
+        return True
+
+    def migrate30(self):
+        self._rename_jobs_table()
+        # This is the last migration with job_type problems
+        cu = self.db.cursor()
+        cu.execute("UPDATE jobs_job_type SET resource_type = 'System'")
+        cu.execute("ALTER TABLE jobs_job_type ALTER resource_type SET NOT NULL")
+        return True       
+
+
+    def migrate31(self):
+        cu = self.db.cursor()
+        cu.execute("ALTER TABLE builds ALTER stageid DROP NOT NULL")
+        return True
+        
+    def migrate32(self):
+        cu = self.db.cursor()
+        cu.execute("""ALTER TABLE jobs_job_type RENAME COLUMN event_type_id TO job_type_id""")
+        cu.execute("""ALTER TABLE jobs_job RENAME COLUMN event_type_id TO job_type_id""")
+        cu.execute("""ALTER TABLE jobs_job ALTER job_type_id SET NOT NULL""")
+        cu.execute("""ALTER TABLE inventory_system_event RENAME COLUMN event_type_id TO job_type_id""")
+        return True     
+    
+    def migrate33(self):
+        # Add a serial primary key, drop the old pk, add it as unique for usergroupmembers table
+        cu = self.db.cursor()
+        cu.execute("""
+            ALTER TABLE UserGroupMembers
+                DROP CONSTRAINT usergroupmembers_pkey""")
+        cu.execute("""
+            ALTER TABLE UserGroupMembers
+                ADD COLUMN userGroupMemberId SERIAL PRIMARY KEY""")
+        self.db.createIndex('UserGroupMembers', 'UserGroupMembersIdx',
+            'userGroupId, userId', unique = True)
+        return True
+
+    def migrate34(self):
+        cu = self.db.cursor()
+        cu.execute("""ALTER TABLE users ALTER salt
+                TYPE text USING encode(salt, 'hex')""")
+        return True
+        
+    def migrate35(self):
+        # Add a serial primary key, drop the old pk, add it as unique for targetdata table
+        cu = self.db.cursor()
+        cu.execute("""
+            ALTER TABLE TargetData
+                DROP CONSTRAINT targetdata_pkey""")
+        cu.execute("""
+            ALTER TABLE TargetData
+                ADD COLUMN targetdataId SERIAL PRIMARY KEY""")
+        self.db.createIndex('TargetData', 'TargetDataIdx',
+            'targetId, name', unique = True)                 
+        return True        
+
+    def migrate36(self):
+        cu = self.db.cursor()
+        cu.execute("UPDATE jobs_job_type SET priority=70 WHERE name = 'system registration'")
+        return True
+
+    def migrate37(self):
+        # Add a new management interface type (SSH)
+        cu = self.db.cursor()
+        cu.execute("""insert into inventory_management_interface (name, description, created_date, port, credentials_descriptor, credentials_readonly) values (?,?,now(),?,?,?)""" , 'ssh', 'Secure Shell (SSH)', 22, schema.ssh_credentials_descriptor, 'false')
+        return True 
+        
+    def migrate38(self):
+        # Add Unique constraint to project and label in labels
+        cu = self.db.cursor()
+        cu.execute("ALTER TABLE Labels ALTER label DROP NOT NULL")
+        cu.execute("UPDATE Labels SET label = NULL WHERE label = ''")
+        cu.execute("""
+            ALTER TABLE Labels
+            ADD CONSTRAINT labels_project_id_uq
+            UNIQUE (projectId)
+        """)
+        cu.execute("""
+            ALTER TABLE Labels
+            ADD CONSTRAINT labels_label_uq
+            UNIQUE (label)
+        """)
+        return True
+
+    def migrate39(self):
+        cu = self.db.cursor()
+        cu.execute("ALTER TABLE Labels ALTER label DROP NOT NULL")
+        cu.execute("UPDATE Labels SET label = NULL WHERE label = ''")
+        cu.execute("""ALTER TABLE Labels
+            ADD CONSTRAINT label_not_empty CHECK (label != '')
+            """)
+        return True
+
+    def migrate40(self):
+        cu = self.db.cursor()
+        cu.execute("ALTER TABLE Labels ALTER label DROP NOT NULL")
+        return True
+
+    def migrate41(self):
+        cu = self.db.cursor()
+        # Make ProductVersions.projectId NOT NULL
+        cu.execute("DELETE FROM ProductVersions WHERE projectId IS NULL")
+        cu.execute("ALTER TABLE ProductVersions ALTER projectId SET NOT NULL")
+        # Add new columns for improved branch schema
+        cu.execute("""ALTER TABLE ProductVersions
+                ADD label text UNIQUE,
+                ADD cache_key text""")
+        cu.execute("""UPDATE ProductVersions v SET label =
+            p.fqdn || '@' || v.namespace || ':' || p.shortname || '-' || v.name
+            FROM Projects p WHERE p.projectid = v.projectid""")
+        cu.execute("ALTER TABLE ProductVersions ALTER label SET NOT NULL")
+        # Make project_branch_stage FKs NOT NULL and CASCADE
+        cu.execute("""DELETE FROM project_branch_stage
+                WHERE project_id IS NULL OR project_branch_id IS NULL""")
+        dropForeignKey(self.db, 'project_branch_stage', ['project_id'])
+        dropForeignKey(self.db, 'project_branch_stage', ['project_branch_id'])
+        cu.execute("""ALTER TABLE project_branch_stage
+            ADD FOREIGN KEY (project_id)
+                REFERENCES Projects (projectId)
+                ON DELETE CASCADE,
+            ALTER project_id SET NOT NULL,
+            ADD FOREIGN KEY (project_branch_id)
+                REFERENCES ProductVersions (productVersionId)
+                ON DELETE CASCADE,
+            ALTER project_branch_id SET NOT NULL
+            """)
+
+        # Fixups to make initial schema consistent with migrations.
+        cu.execute("""ALTER TABLE jobs_job_type
+                ALTER resource_type TYPE text""")
+        cu.execute("""
+            UPDATE "jobs_job_type"
+            SET description = 'System assimilation'
+            WHERE name = 'system assimilation'
+        """)
+        return True
+        
+    def migrate42(self):
+        cu = self.db.cursor()
+        cu.execute("""
+            INSERT INTO "jobs_job_type" 
+                ("name", "description", "priority","resource_type")
+            VALUES
+                ('image builds',
+                 'Image builds',
+                 105,
+                 'Image')
+        """)
+        return True        
+
+
+def _createUpdateSystemsQuerySet(db):
+
+        return True
+   
+     
+
 
 #### SCHEMA MIGRATIONS END HERE #############################################
 

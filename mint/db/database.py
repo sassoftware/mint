@@ -53,7 +53,6 @@ class TableCache(object):
         self.outboundMirrors = mirror.OutboundMirrorsTable(db, cfg)
         self.updateServices = mirror.UpdateServicesTable(db, cfg)
         self.outboundMirrorsUpdateServices = mirror.OutboundMirrorsUpdateServicesTable(db)
-        self.repNameMap = mirror.RepNameMapTable(db)
         self.selections = selections.FrontPageSelectionsTable(db, cfg)
         self.topProjects = selections.TopProjectsTable(db)
         self.popularProjects = selections.PopularProjectsTable(db)
@@ -111,7 +110,6 @@ class Database(object):
         self.outboundMirrors = tables.outboundMirrors
         self.updateServices = tables.updateServices
         self.outboundMirrorsUpdateServices = tables.outboundMirrorsUpdateServices
-        self.repNameMap = tables.repNameMap
         self.selections = tables.selections
         self.topProjects = tables.topProjects
         self.popularProjects = tables.popularProjects
