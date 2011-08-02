@@ -41,8 +41,8 @@ class ProjectManager(basemanager.BaseManager):
         return allProjects
 
     @exposed
-    def getProject(self, shortName):
-        project = models.Project.objects.get(short_name=shortName)
+    def getProject(self, project_name):
+        project = models.Project.objects.get(short_name=project_name)
         if self.checkAccess(project):   
             return project
         else:
@@ -455,9 +455,24 @@ class ProjectManager(basemanager.BaseManager):
         Images.image = models.Image.all().filter(short_name=short_name)
         return Images
         
+    # @exposed
+    # def getProjectBranch(self, project_name, project_branch_name):
+    #     ProjectVersions = models.ProjectVersions()
+    #     if project_branch_name:
+    #         ProjectVersions.project_branch = models.ProjectVersion.objects.all().filter(
+    #                 name=project_branch_name, project__short_name=project_name)
+    #     else:
+    #         ProjectVersions.project_branch = models.ProjectVersion.objects.all().filter(
+    #             project__short_name=project_name)
+    #     return ProjectVersions
+
     @exposed
-    def getProjectBranch(self, short_name, project_branch_name):
+    def getProjectBranch(self, project_name, project_branch_label):
         ProjectVersions = models.ProjectVersions()
-        ProjectVersions.project_branch = models.ProjectVersion.objects.all().filter(
-                name=project_branch_name, project__short_name=short_name)
+        if project_branch_label:
+            ProjectVersions.project_branch = models.ProjectVersion.objects.all().filter(
+                    label=project_branch_label, project__short_name=project_name)
+        else:
+            ProjectVersions.project_branch = models.ProjectVersion.objects.all().filter(
+                project__short_name=project_name)
         return ProjectVersions

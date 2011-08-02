@@ -248,6 +248,8 @@ class PlatformContentError(modellib.XObjIdModel):
 class ImageTypeDefinitions(modellib.XObjIdModel):
     _xobj = xobj.XObjMetadata(tag='image_type_definitions')
     
+    image_type_definitions_id = models.AutoField(primary_key=True)
+    
 
 class ImageDefinitions(modellib.XObjIdModel):
     _xobj = xobj.XObjMetadata(tag='image_definitions')

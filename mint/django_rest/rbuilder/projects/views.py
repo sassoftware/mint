@@ -10,28 +10,37 @@ from django.http import HttpResponse
 from mint.django_rest.deco import access, return_xml, requires
 from mint.django_rest.rbuilder import service
 from mint.django_rest.rbuilder.inventory.views import StageProxyService
+from mint.django_rest.rbuilder.projects import models as projectsmodels
+
+# class ProjectBranchService(service.BaseService):
+#     @access.anonymous
+#     @return_xml
+#     def rest_GET(self, request, project_name, project_branch_name=None):
+#         return self.get(project_name, project_branch_name)
+#         
+#     def get(self, project_name, project_branch_name):
+#         return self.mgr.getProjectBranch(project_name, project_branch_name)
 
 class ProjectBranchService(service.BaseService):
     @access.anonymous
     @return_xml
-    def rest_GET(self, request, short_name, project_branch_name):
-        return self.get(short_name, project_branch_name)
+    def rest_GET(self, request, project_short_name, project_branch_label=None):
+        return self.get(project_short_name, project_branch_label)
         
-    def get(self, short_name, project_branch_name):
-        return self.mgr.getProjectBranch(short_name, project_branch_name)
+    def get(self, project_short_name, project_branch_label):
+        return self.mgr.getProjectBranch(project_short_name, project_branch_label)
 
 
 class ProjectService(service.BaseService):
-
     @access.anonymous
     @return_xml
-    def rest_GET(self, request, short_name=None):
-        model = self.get(short_name)
+    def rest_GET(self, request, project_short_name=None):
+        model = self.get(project_short_name)
         return model
 
-    def get(self, short_name):
-        if short_name:
-            model = self.mgr.getProject(short_name)
+    def get(self, project_short_name):
+        if project_short_name:
+            model = self.mgr.getProject(project_short_name)
         else:
             model = self.mgr.getProjects()
         return model
@@ -43,11 +52,11 @@ class ProjectService(service.BaseService):
 
     @requires('project')
     @return_xml
-    def rest_PUT(self, request, short_name, project):
+    def rest_PUT(self, request, project_short_name, project):
         return self.mgr.updateProject(project)
 
-    def rest_DELETE(self, request, short_name):
-        project = self.get(short_name)
+    def rest_DELETE(self, request, project_short_name):
+        project = self.get(project_short_name)
         self.mgr.deleteProject(project)
         response = HttpResponse(status=204)
         return response
@@ -57,9 +66,9 @@ class ProjectVersionService(service.BaseService):
     @access.anonymous
     @return_xml
     def rest_GET(self, request, branch_id=None):
-        return self.get(request, branch_id)
+        return self.get(branch_id)
 
-    def get(self, request, branch_id=None):
+    def get(self, branch_id=None):
         if branch_id:
             return self.mgr.getProjectVersion(branch_id)
         else:
@@ -98,24 +107,21 @@ class ProjectStageService(service.BaseService):
             return StageProxyService.getStageAndSetGroup(request, stage_id)
         else:
             return StageProxyService.getStagesAndSetGroup(request)
-        
+
 class ProjectBranchStageService(service.BaseService):
     @access.anonymous
     @return_xml
-    def rest_GET(self, request, version_name, stage_id=None):
-        return self.get(request, version_name, stage_id)
-
-    # def get(self, version_name, stage_id):
-    #     if stage_id:
-    #         return self.mgr.getStage(stage_id=stage_id)
-    #     else:
-    #         return self.mgr.getStages(version_name=version_name)
-    
-    def get(self, request, version, stage_id=None):
-        if stage_id:
-            return StageProxyService.getStageAndSetGroup(request, stage_id=stage_id)
+    def rest_GET(self, request, project_short_name, stage_name=None):
+        return self.get(project_short_name, stage_name)
+        
+    def get(self, project_short_name, stage_name):
+        Stages = projectsmodels.Stages()
+        if not stage_name:
+            Stages.project_branch_stage = projectsmodels.Stage.objects.all().filter(project__short_name=project_short_name)
         else:
-            return StageProxyService.getStagesAndSetGroup(request, version=version)
+            Stages.project_branch_stage = projectsmodels.Stage.objects.all().filter(project__short_name=project_short_name, name__iexact=stage_name)
+        return Stages
+
 
 class ProjectImageService(service.BaseService):
 
@@ -141,9 +147,3 @@ class ProjectMemberService(service.BaseService):
 
     def get(self, short_name):
         return self.mgr.getProjectMembers(short_name)
-
-
-# class GroupsProxyService(service.BaseService):
-#     """
-#     Need to move this logic into a manager
-#     """

@@ -225,9 +225,12 @@ class ProjectsTestCase(XMLTestCase):
     def testGetProjectBranchStages(self):
         response = self._get('project_branch_stages/',
             username="testuser", password="password")
+        import pdb; pdb.set_trace()
         self.assertEquals(response.status_code, 200)
         stages = xobj.parse(response.content).project_branch_stages.project_branch_stage
+        import pdb; pdb.set_trace()
         self.assertEquals(len(stages), 9)
+        
         
     def testGetProjectBranchStagesByVersion(self):
         self._addProject("foo")
@@ -245,5 +248,6 @@ class ProjectsTestCase(XMLTestCase):
         self.assertEquals(response.status_code, 200)
         stages = xobj.parse(response.content).project_branch_stages.project_branch_stage
         self.assertEquals(len(stages), 3)
+        
 
 

@@ -44,7 +44,7 @@ class Group(modellib.XObjIdModel):
     # images = modellib.DeferredForeignKey('Image')
     # image_count = models.IntegerField()
     
-    def __init__(self, href=None):
+    def __init__(self, href=None, *args, **kwargs):
         if href:
             self.href = href
     
@@ -295,11 +295,7 @@ class Stages(modellib.Collection):
                 tag = "project_branch_stages")
     view_name = "ProjectStages"
     list_fields = ["project_branch_stage"]
-    project_branch_stage = []
-    
-    def serialize(self, request=None):
-        xobjModel = modellib.XObjModel.serialize(self, request)
-        return xobjModel
+    # project_branch_stage = []
 
 
 class Stage(modellib.XObjIdModel):
@@ -328,7 +324,7 @@ class Stage(modellib.XObjIdModel):
         # inlining import statement, CHANGEME soon
         from mint.django_rest.rbuilder.inventory.views import StageProxyService
         model = StageProxyService.getStageAndSetGroup(request, self.stage_id)
-        xobjModel = modellib.XObjModel.serialize(model, request)
+        xobjModel = modellib.XObjIdModel.serialize(model, request)
         return xobjModel
         
         
