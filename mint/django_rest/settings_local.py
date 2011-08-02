@@ -31,7 +31,8 @@ MIDDLEWARE_CLASSES = MIDDLEWARE_CLASSES + (
 #    ('mint.django_rest.middleware.LocalSetMintAdminMiddleware',)
 
 installedAppsList = list(INSTALLED_APPS)
-installedAppsList.append('mint.django_rest.sdk_builder')
+# Commented out misa 2011-08-02 - this breaks the testsuite under hudson
+# installedAppsList.append('mint.django_rest.sdk_builder')
 INSTALLED_APPS = tuple(installedAppsList)
 
 TEST_RUNNER = "mint.django_rest.test_utils.TestRunner"
