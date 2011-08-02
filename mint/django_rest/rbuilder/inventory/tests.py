@@ -396,10 +396,10 @@ class SystemTypesTestCase(XMLTestCase):
             username='baduser', password='badpass')
         self.assertEquals(response.status_code, 401)
 
-        response = self._get('/api/inventory/system_types/')
+        response = self._get('inventory/system_types/')
         self.assertEquals(response.status_code, 200)
 
-        response = self._get('/api/inventory/system_types/',
+        response = self._get('inventory/system_types/',
             username="testuser", password="password")
         self.assertEquals(response.status_code, 200)
 
