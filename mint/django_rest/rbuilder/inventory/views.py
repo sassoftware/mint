@@ -217,6 +217,7 @@ class InventoryManagementInterfaceService(BaseInventoryService):
     
 class InventorySystemTypeService(BaseInventoryService):
 
+    @access.anonymous
     @return_xml
     def rest_GET(self, request, system_type_id=None):
         return self.get(system_type_id)

@@ -662,12 +662,15 @@ class SystemTypesTestCase(XMLTestCase):
 
     def testGetSystemTypesAuth(self):
         """
-        Ensure requires auth but not admin
+        Ensure requires correct auth but is wide open otherwise
         """
         response = self._get('/api/inventory/system_types/',
             username='baduser', password='badpass')
         self.assertEquals(response.status_code, 401)
-        
+
+        response = self._get('/api/inventory/system_types/')
+        self.assertEquals(response.status_code, 200)
+
         response = self._get('/api/inventory/system_types/',
             username="testuser", password="password")
         self.assertEquals(response.status_code, 200)
