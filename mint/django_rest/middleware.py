@@ -13,6 +13,7 @@ from django.contrib.auth import authenticate
 from django.contrib.redirects import middleware as redirectsmiddleware
 from django.http import HttpResponse, HttpResponseBadRequest
 from django.db.utils import IntegrityError
+from django.db import connection
 import django.core.exceptions as core_exc
 
 from mint import config
@@ -325,4 +326,15 @@ class SerializeXmlMiddleware(BaseMiddleware):
                 response['Content-Type'] = 'text/xml'
 
         return response
-        
+      
+# NOTE: must also set DEBUG=True in settings to use this. 
+class SqlLoggingMiddleware(BaseMiddleware):
+    '''log each database hit to a file, profiling use only'''
+    def process_response(self, request, response):
+        fd = open("/tmp/sql.log", "a")
+        for query in connection.queries:
+            fd.write("\033[1;31m[%s]\033[0m \033[1m%s\033[0m\n" % (query['time'],
+ " ".join(query['sql'].split())))
+        fd.close()
+        return response
+ 
