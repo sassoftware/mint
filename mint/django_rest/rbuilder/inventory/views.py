@@ -50,22 +50,6 @@ class StageProxyService(service.BaseService):
             stages_collection.append(StageProxyService.getStageAndSetGroup(request, stage.stage_id))
         Stages.project_branch_stage = stages_collection
         return Stages
-        
-    
-    # def get(self, request, hostname, version):
-    #     old_api_url = r'/api/products/%s/versions/%s/stages/' % (hostname, version)
-    #     host = request.get_host()
-    #     raw_stages_xml = url2.urlopen('http://' + host.strip('/') + old_api_url).read()
-    # 
-    #     stages = xobj.parse(raw_stages_xml)
-    #     stages_metadata = [(s.label, s.groups.href) for s in stages.stages.stage]
-    # 
-    #     stages_collection = []
-    #     for label, href in stages_metadata:
-    #         stage = projectsmodels.Stage.objects.get(project__short_name=hostname, name=version)
-    #         stage.groups = projectsmodels.Group(href=str(href))
-    #         stages_collection.append(stage)
-    #     return stages_collection
 
 
 class MajorVersionService(service.BaseService):
