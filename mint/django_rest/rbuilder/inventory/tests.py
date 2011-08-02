@@ -589,14 +589,18 @@ class ManagementInterfacesTestCase(XMLTestCase):
 
     def testGetManagementInterfacesAuth(self):
         """
-        Ensure requires auth but not admin
+        Ensure requires valid auth but is wide open
         """
         response = self._get('/api/inventory/management_interfaces/')
-        self.assertEquals(response.status_code, 401)
+        self.assertEquals(response.status_code, 200)
         
         response = self._get('/api/inventory/management_interfaces/',
             username="testuser", password="password")
         self.assertEquals(response.status_code, 200)
+
+        response = self._get('/api/inventory/management_interfaces/',
+            username="testuser", password="badpassword")
+        self.assertEquals(response.status_code, 401)
 
     def testGetManagementInterface(self):
         models.ManagementInterface.objects.all().delete()

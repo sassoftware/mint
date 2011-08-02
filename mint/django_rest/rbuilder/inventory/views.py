@@ -193,6 +193,7 @@ class InventoryManagementNodeService(BaseInventoryService):
 
 class InventoryManagementInterfaceService(BaseInventoryService):
     
+    @access.anonymous
     @return_xml
     def rest_GET(self, request, management_interface_id=None):
         return self.get(management_interface_id)
