@@ -1,0 +1,12 @@
+User properties:
+    N/A
+
+Methods:
+    GET:
+        Authentication: user
+    POST:
+        Authentication: none
+    PUT:
+        Authentication: user
+    DELETE:
+        Authentication: admin

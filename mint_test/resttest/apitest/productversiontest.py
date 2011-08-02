@@ -17,6 +17,9 @@ from conary.lib import util
 import restbase
 from restlib import client as restClient
 from testutils import mock
+
+from  mint.rest.api import models
+
 ResponseError = restClient.ResponseError
 
 class ProductVersionTest(restbase.BaseRestTest):
@@ -48,6 +51,7 @@ class ProductVersionTest(restbase.BaseRestTest):
   <description>Version description</description>
   <timeCreated></timeCreated>
   <platform href="http://%(server)s:%(port)s/api/products/testproject/versions/1.0/platform"/>
+  <platformVersion href="http://localhost:8000/api/products/testproject/versions/1.0/platformVersion"/>
   <stages href="http://%(server)s:%(port)s/api/products/testproject/versions/1.0/stages/"/>
   <definition href="http://%(server)s:%(port)s/api/products/testproject/versions/1.0/definition"/>
   <imageTypeDefinitions href="http://%(server)s:%(port)s/api/products/testproject/versions/1.0/imageTypeDefinitions"/>
@@ -60,8 +64,8 @@ class ProductVersionTest(restbase.BaseRestTest):
             resp = re.sub("<%s>.*</%s>" % (pat, pat),
              "<%s></%s>" % (pat, pat),
             resp)
-        self.failUnlessEqual(resp,
-             exp % dict(port = client.port, server = client.server))
+        exp = exp % dict(port = client.port, server = client.server)
+        self.assertXMLEquals(resp, exp)
 
     def testGetProductDefinition(self):
         uriTemplate = 'products/%s/versions/%s/definition'
@@ -715,33 +719,31 @@ class ProductVersionTest(restbase.BaseRestTest):
                         True)
         self.mock(restbase.proddef.PlatformDefinition, 'snapshotVersions',
             lambda slf, conaryClient, platformVersion = None: None)
-        uriTemplate = 'products/%s/versions/%s/platform'
+        platformVersion = models.PlatformVersion(
+            name="foo", revision="foo", label="foo", version="foo",
+            ordering="foo", _platformId="2")
+        mock.mock(platformmgr.Platforms, 'getPlatformVersions',
+            platformVersion)
+        uriTemplate = 'products/%s/versions/%s/platformVersion'
         uri = uriTemplate % (self.productShortName, self.productVersion)
         client = self.getRestClient(username='foouser', admin=True)
 
         label = 'localhost@rpath:plat-2'
         data = """\
-<platform>
+<platformVersion>
   <label>%s</label>
-</platform>
+  <name>rebase-to-latest-on-versionless-platform</name>
+</platformVersion>
 """ % label
         req, response = client.call('PUT', uri, data, convert = True)
         expected = """\
-<platform id="http://localhost:8000/api/products/testproject/versions/1.0/platform">
-  <platformId>2</platformId>
-  <platformTroveName>platform-definition</platformTroveName>
-  <label>localhost@rpath:plat-2</label>
-  <platformVersion>4.2-1</platformVersion>
-  <productVersion>1.0</productVersion>
-  <platformName>Crowbar Linux 2</platformName>
-  <enabled>true</enabled>
-  <contentSources href="http://localhost:8000/api/platforms/2/contentSources"/>
-  <platformStatus href="http://localhost:8000/api/platforms/2/status"/>
-  <contentSourceTypes href="http://localhost:8000/api/platforms/2/contentSourceTypes"/>
-  <load href="http://localhost:8000/api/platforms/2/load/"/>
-  <imageTypeDefinitions href="http://localhost:8000/api/platforms/2/imageTypeDefinitions"/>
-  <platformVersions href="http://localhost:8000/api/platforms/2/platformVersions/"/>
-</platform>
+<platformVersion id="http://localhost:8000/api/platforms/2/platformVersions/foo%3Dfoo">
+  <name>foo</name>
+  <version>foo</version>
+  <revision>foo</revision>
+  <label>foo</label>
+  <ordering>foo</ordering>
+</platformVersion>
 """
         self.assertXMLEquals(response, expected)
 
@@ -922,7 +924,6 @@ class ProductVersionTest(restbase.BaseRestTest):
     <projecturl></projecturl>
     <repositoryHostname>testproject.rpath.local2</repositoryHostname>
     <repositoryUrl href="http://%(server)s:%(port)s/repos/testproject/api"/>
-    <repositoryBrowserUrl href="http://%(server)s:%(port)s/repos/testproject/browse"/>
     <description></description>
     <prodtype>Appliance</prodtype>
     <commitEmail></commitEmail>
@@ -977,7 +978,6 @@ class ProductVersionTest(restbase.BaseRestTest):
   <projecturl></projecturl>
   <repositoryHostname>testproject.rpath.local2</repositoryHostname>
   <repositoryUrl href="http://%(server)s:%(port)s/repos/testproject/api"/>
-  <repositoryBrowserUrl href="http://%(server)s:%(port)s/repos/testproject/browse"/>
   <description></description>
   <prodtype>Appliance</prodtype>
   <commitEmail></commitEmail>
@@ -1031,6 +1031,7 @@ class ProductVersionTest(restbase.BaseRestTest):
     <description>Version description</description>
     <timeCreated></timeCreated>
     <platform href="http://%(server)s:%(port)s/api/products/testproject/versions/1.0/platform"/>
+    <platformVersion href="http://localhost:8000/api/products/testproject/versions/1.0/platformVersion"/>
     <stages href="http://%(server)s:%(port)s/api/products/testproject/versions/1.0/stages/"/>
     <definition href="http://%(server)s:%(port)s/api/products/testproject/versions/1.0/definition"/>
     <imageTypeDefinitions href="http://%(server)s:%(port)s/api/products/testproject/versions/1.0/imageTypeDefinitions"/>

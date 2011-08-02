@@ -1,7 +1,5 @@
 #
-# Copyright (c) 2005-2009 rPath, Inc.
-#
-# All rights reserved.
+# Copyright (c) 2011 rPath, Inc.
 #
 
 import logging
@@ -24,6 +22,7 @@ from mint.db import database
 from mint.lib import mintutils
 from mint.mint_error import ItemNotFound
 from mint.logerror import logErrorAndEmail
+from mint.scripts import repository_sync
 
 log = logging.getLogger(__name__)
 
@@ -89,6 +88,7 @@ def registerCommits(argSet, commitList):
     now = time.time()
     projectIdCache = {}
     trovesSeen = set()
+    proddefHosts = set()
     for name, version, _ in commitList:
         version = versions.VersionFromString(version)
 
@@ -97,6 +97,8 @@ def registerCommits(argSet, commitList):
             hostname = overrideHostname
         else:
             hostname = version.getHost()
+        if name == 'product-definition:source':
+            proddefHosts.add(hostname)
 
         if hostname in projectIdCache:
             projectId = projectIdCache[hostname]
@@ -116,5 +118,9 @@ def registerCommits(argSet, commitList):
         if (name, version) not in trovesSeen:
             db.commits.new(projectId, now, name, version.asString(), userId)
             trovesSeen.add((name, version))
-
     db.db.commit()
+
+    if proddefHosts:
+        tool = repository_sync.SyncTool(cfg, db)
+        for hostname in proddefHosts:
+            tool.syncReposByFQDN(hostname)

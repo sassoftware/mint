@@ -12,6 +12,8 @@ from django.db import models
 from mint.django_rest.deco import D
 from mint.django_rest.rbuilder import modellib
 from mint.django_rest.rbuilder.inventory import models as inventorymodels
+from mint.django_rest.rbuilder.users import models as usersmodels
+from mint.django_rest.rbuilder.projects import models as projectsmodels
 from mint.django_rest.rbuilder.querysets import errors
 
 from xobj import xobj
@@ -71,8 +73,6 @@ class QuerySet(modellib.XObjIdModel):
     _xobj = xobj.XObjMetadata(
                 tag = "query_set")
 
-    refName = "id"
-
     query_set_id = D(models.AutoField(primary_key=True),
         "The database id for the query set")
     name = D(models.TextField(unique=True),
@@ -83,20 +83,21 @@ class QuerySet(modellib.XObjIdModel):
         "Date the query set was created")
     modified_date = D(modellib.DateTimeUtcField(auto_now_add=True),
         "Date the query set was modified")
-    children = D(modellib.ManyToManyField("self", symmetrical=False,
-        refName="id"),
+    children = D(models.ManyToManyField("self", symmetrical=False),
         "Query sets that are children of this query set")
     filter_entries = D(models.ManyToManyField("FilterEntry"),
         "Defined filter entries for this query set")
     resource_type = D(models.TextField(),
         "Name of the resource this query set operates on")
+    presentation_type = D(models.TextField(),
+        "A classification for client to use when displaying the objects.  For example, stages can be on projects, branches, platforms, etc.")
     can_modify = D(models.BooleanField(default=True),
         "Whether this query set can be deleted through the API.")
 
     load_fields = [name]
 
-    def serialize(self, request=None, values=None):
-        xobjModel = modellib.XObjIdModel.serialize(self, request, values)
+    def serialize(self, request=None):
+        xobjModel = modellib.XObjIdModel.serialize(self, request)
 
         am = AllMembers()
         am._parents = [self]
@@ -198,7 +199,8 @@ class FilterEntry(modellib.XObjIdModel):
 class QueryTag(modellib.XObjIdModel):
     _xobj = xobj.XObjMetadata(
                 tag = 'query_tag')
-    _xobj_hidden_accessors = set(['system_tags'])
+    _xobj_hidden_accessors = set(['project_tags', 'stage_tags',
+        'system_tags', 'user_tags', ])
 
     query_tag_id = models.AutoField(primary_key=True)
     query_set = modellib.ForeignKey("QuerySet", related_name="query_tags", 
@@ -250,9 +252,79 @@ class SystemTag(modellib.XObjIdModel):
     def serialize(self, request=None, values=None):
         xobjModel = modellib.XObjIdModel.serialize(self, request)
         querySetHref = self.query_tag.query_set.get_absolute_url(request)
-        xobjModel.query_set = modellib.XObjHrefModel(querySetHref, 'id')
+        xobjModel.query_set = modellib.XObjHrefModel(querySetHref)
         return xobjModel
          
+         
+class UserTag(modellib.XObjIdModel):
+    class Meta:
+        unique_together = (('user', 'query_tag', 'inclusion_method'),)
+        
+    _xobj = xobj.XObjMetadata(tag='user_tag')
+    
+    user_tag_id = models.AutoField(primary_key=True)
+    user = modellib.ForeignKey(usersmodels.User, related_name='user_tags')
+    query_tag = modellib.ForeignKey(QueryTag, related_name='user_tags', text_field='name')
+    inclusion_method = modellib.SerializedForeignKey(InclusionMethod, related_name='user_tags')
+    
+    load_fields = [user, query_tag, inclusion_method]
+    
+    def get_absolute_url(self, *args, **kwargs):
+        self._parents = [self.user, self]
+        return modellib.XObjIdModel.get_absolute_url(self, *args, **kwargs)
+        
+    def serialize(self, request=None, values=None):
+        xobjModel = modellib.XObjIdModel.serialize(self, request)
+        querySetHref = self.query_tag.query_set.get_absolute_url(request)
+        xobjModel.query_set = modellib.XObjHrefModel(querySetHref)
+        return xobjModel
+    
+class ProjectTag(modellib.XObjIdModel):
+    class Meta:
+        unique_together = (('project', 'query_tag', 'inclusion_method'),)
+        
+    _xobj = xobj.XObjMetadata(tag='project_tag')
+    
+    project_tag_id = models.AutoField(primary_key=True)
+    project = modellib.ForeignKey(projectsmodels.Project, related_name='project_tags')
+    query_tag = modellib.ForeignKey(QueryTag, related_name='project_tags', text_field='name')
+    inclusion_method = modellib.SerializedForeignKey(InclusionMethod, related_name='project_tags')
+    
+    load_fields = [project, query_tag, inclusion_method]
+    
+    def get_absolute_url(self, *args, **kwargs):
+        self._parents = [self.project, self]
+        return modellib.XObjIdModel.get_absolute_url(self, *args, **kwargs)
+        
+    def serialize(self, request=None, values=None):
+        xobjModel = modellib.XObjIdModel.serialize(self, request)
+        querySetHref = self.query_tag.query_set.get_absolute_url(request)
+        xobjModel.query_set = modellib.XObjHrefModel(querySetHref)
+        return xobjModel
+    
+class StageTag(modellib.XObjIdModel):
+    class Meta:
+        unique_together = (('stage', 'query_tag', 'inclusion_method'),)
+        
+    _xobj = xobj.XObjMetadata(tag='stage_tag')
+    
+    stage_tag_id = models.AutoField(primary_key=True)
+    stage = modellib.ForeignKey(projectsmodels.Stage, related_name='stage_tags')
+    query_tag = modellib.ForeignKey(QueryTag, related_name='stage_tags', text_field='name')
+    inclusion_method = modellib.SerializedForeignKey(InclusionMethod, related_name='stage_tags')
+    
+    load_fields = [stage, query_tag, inclusion_method]
+    
+    def get_absolute_url(self, *args, **kwargs):
+        self._parents = [self.stage, self]
+        return modellib.XObjIdModel.get_absolute_url(self, *args, **kwargs)
+        
+    def serialize(self, request=None, values=None):
+        xobjModel = modellib.XObjIdModel.serialize(self, request)
+        querySetHref = self.query_tag.query_set.get_absolute_url(request)
+        xobjModel.query_set = modellib.XObjHrefModel(querySetHref)
+        return xobjModel
+
 
 for mod_obj in sys.modules[__name__].__dict__.values():
     if hasattr(mod_obj, '_xobj'):

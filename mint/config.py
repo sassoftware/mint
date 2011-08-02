@@ -113,10 +113,11 @@ class MintConfig(conarycfg.ConfigFile):
     profiling               = (CfgBool, False)
     sendNotificationEmails  = (CfgBool, True)
     smallBugsEmail          = (CfgString, None)
+    memCache                = (CfgString, 'localhost:11211')
+    memCacheTimeout         = (CfgInt, 86400)
 
     # Handler configuration
     basePath                = (CfgString, '/', "URI root for this rBuilder")
-    cookieSecretKey         = (CfgString, None) # Not used in product
     hostName                = (CfgString, None,
         "Hostname to access the rBuilder site. For example, <b><tt>rbuilder</tt></b>. "
         "(The complete URL to access rBuilder is constructed from the "
@@ -292,6 +293,7 @@ class MintConfig(conarycfg.ConfigFile):
     projectAdmin            = (CfgBool, True)
     externalDomainName      = (CfgString, None)
     packageCreatorURL       = (CfgString, None)
+    cookieSecretKey         = (CfgString, None)
 
     # AMI configuration -- migrated in schema (45, 6)
     ec2PublicKey            = (CfgString, '', "The AWS account id")

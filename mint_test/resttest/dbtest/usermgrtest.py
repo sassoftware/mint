@@ -59,7 +59,6 @@ class UserManagerTest(mint_rephelp.MintDatabaseHelper):
         self.setDbUser(db, 'admin')
         adminId = db.getUser('admin').userId
         passwd, salt = db.userMgr._getPassword(adminId)
-        assert(len(salt) == 4)
         #TODO: ensure algorithm is right.
 
     def testGetUsername(self):

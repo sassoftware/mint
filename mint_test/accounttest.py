@@ -525,7 +525,7 @@ class AccountTest(fixtures.FixturedUnitTest):
 
         # now make the project external
         cu = self.db.cursor()
-        cu.execute('UPDATE Projects set external = 1')
+        cu.execute('UPDATE Projects set external = true')
         self.db.commit()
 
         # now switch to admin context and add the watcher

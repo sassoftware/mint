@@ -17,7 +17,7 @@ def _mungePassword(password):
     salt = os.urandom(4)
     m.update(salt)
     m.update(password)
-    return salt, m.hexdigest()
+    return salt.encode('hex'), m.hexdigest()
 
 
 class UserManager(manager.Manager):
@@ -180,7 +180,8 @@ class UserManager(manager.Manager):
     def _getPassword(self, userId):
         cu = self.db.cursor()
         cu.execute('SELECT passwd, salt from Users where userId=?', userId)
-        return cu.next()
+        passwd, salt = cu.next()
+        return passwd, salt
 
     def _getUsername(self, userId):
         cu = self.db.cursor()
