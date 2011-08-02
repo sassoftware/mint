@@ -320,11 +320,11 @@ class Stage(modellib.XObjIdModel):
     groups = modellib.SyntheticField()
 
     def serialize(self, request=None):
-        # circular import somewhere in the import chain, HACK it by
-        # inlining import statement, CHANGEME soon
-        from mint.django_rest.rbuilder.inventory.views import StageProxyService
-        model = StageProxyService.getStageAndSetGroup(request, self.stage_id)
-        xobjModel = modellib.XObjIdModel.serialize(model, request)
+        href = 'http://' + request.get_host().strip('/') + '/api/products/%s/repos/search?type=group&label=%s'
+        short_name = self.project.short_name # aka project's short_name
+        label = self.label
+        self.groups = Group(href=href % (short_name, label))
+        xobjModel = modellib.XObjIdModel.serialize(self, request)
         return xobjModel
         
         

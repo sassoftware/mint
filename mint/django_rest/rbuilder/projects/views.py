@@ -95,12 +95,6 @@ class ProjectStageService(service.BaseService):
     @return_xml
     def rest_GET(self, request, stage_id=None):
         return self.get(request, stage_id)
-
-    # def get(self, stage_id):
-    #     if stage_id:
-    #         return self.mgr.getStage(stage_id)
-    #     else:
-    #         return self.mgr.getStages()
     
     def get(self, request, stage_id=None):
         if stage_id:
