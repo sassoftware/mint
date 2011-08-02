@@ -2589,7 +2589,7 @@ class MigrateTo_55(SchemaMigration):
 
     def migrate1(self):
         cu = self.db.cursor()
-        cu.execute("UPDATE jobs_job_type SET priority=70 WHERE name = 'system registration'")
+        cu.execute("UPDATE inventory_event_type SET priority=70 WHERE name = 'system registration'")
         return True
 
 #### SCHEMA MIGRATIONS END HERE #############################################
