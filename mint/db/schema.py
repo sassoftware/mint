@@ -28,7 +28,7 @@ from conary.dbstore import sqlerrors, sqllib
 log = logging.getLogger(__name__)
 
 # database schema major version
-RBUILDER_DB_VERSION = sqllib.DBversion(58, 42)
+RBUILDER_DB_VERSION = sqllib.DBversion(58, 43)
 
 
 def _createTrigger(db, table, column = "changed"):
@@ -149,6 +149,70 @@ def _createLabels(db):
 
     return changed
 
+def _createRbac(db):
+    '''role based access control tables'''
+
+    cu = db.cursor()
+    changed = False
+
+    if 'rbac_role' not in db.tables:
+        cu.execute("""
+        CREATE TABLE rbac_role (
+            role_id      TEXT PRIMARY KEY
+        ) %(TABLEOPTS)s """ % db.keywords)
+        db.tables['rbac_role'] = []
+        changed = True
+
+    if 'rbac_user_role' not in db.tables:
+        cu.execute("""
+        CREATE TABLE rbac_user_role (
+            rbac_user_role_id  %(PRIMARYKEY)s,
+            role_id      TEXT NOT NULL 
+               REFERENCES rbac_role ( role_id ) 
+               ON DELETE CASCADE
+               ON UPDATE CASCADE,
+            user_id      INTEGER NOT NULL
+               REFERENCES Users ( userId ) 
+               ON DELETE CASCADE,
+            UNIQUE ( "role_id", "user_id" )
+        ) %(TABLEOPTS)s """ % db.keywords)
+        db.tables['rbac_user_role'] = []
+        changed = True
+
+    if 'rbac_context' not in db.tables:
+        cu.execute("""
+        CREATE TABLE rbac_context (
+            context_id     TEXT PRIMARY KEY
+        ) %(TABLEOPTS)s """ % db.keywords)
+        db.tables['rbac_context'] = []
+        changed = True
+
+    if 'rbac_permission' not in db.tables:
+        cu.execute("""
+        CREATE TABLE rbac_permission (
+            permission_id   %(PRIMARYKEY)s,
+            role_id         TEXT NOT NULL
+               REFERENCES rbac_role ( role_id ) 
+               ON DELETE CASCADE
+               ON UPDATE CASCADE,
+            context_id      TEXT NOT NULL
+               REFERENCES rbac_context ( context_id ) 
+               ON DELETE CASCADE
+               ON UPDATE CASCADE,
+            action          TEXT NOT NULL,
+            UNIQUE ( "role_id", "context_id", "action" )
+        ) %(TABLEOPTS)s """ % db.keywords)
+        db.tables['rbac_permission'] = []
+        changed = True
+
+    changed |= db.createIndex('rbac_user_role', 'RbacUserRoleSearchIdx',  
+        'role_id, user_id')
+    changed != db.createIndex('rbac_permission', 'RbacPermissionSearchIdx', 
+        'role_id, context_id')
+    changed != db.createIndex('rbac_permission', 'RbacPermissionLookupIdx',  
+        'role_id, context_id, action')
+
+    return changed
 
 def _createProjects(db):
     cu = db.cursor()
@@ -1133,6 +1197,9 @@ def _createInventorySchema(db, cfg):
                     ON DELETE SET NULL,
                 "project_id" integer 
                     REFERENCES Projects (projectId)
+                    ON DELETE SET NULL,
+                "rbac_context_id" TEXT 
+                    REFERENCES rbac_context ("context_id")
                     ON DELETE SET NULL
             ) %(TABLEOPTS)s""" % db.keywords)
         db.tables['inventory_system'] = []
@@ -2749,6 +2816,7 @@ def createSchema(db, doCommit=True, cfg=None):
     changed |= _createPlatforms(db)
     changed |= _createCapsuleIndexerSchema(db)
     changed |= _createRepositoryLogSchema(db)
+    changed |= _createRbac(db)
     changed |= _createInventorySchema(db, cfg)
     changed |= _createJobsSchema(db)
     changed |= _createCapsuleIndexerYumSchema(db)
