@@ -89,13 +89,13 @@ class SourceTypeService(service.BaseService):
             return self.mgr.getSourceTypes()
 
 
-class PlatformStatusService(service.BaseService):
+class PlatformLoadStatusService(service.BaseService):
     @return_xml
-    def rest_GET(self, request, platform_id):
-        return self.get(platform_id)
+    def rest_GET(self, request, platform_id, job_id=None):
+        return self.get(platform_id, job_id)
         
     def get(self, platform_id):
-        return self.mgr.getPlatformStatus(platform_id)
+        return self.mgr.getPlatformLoadStatus(platform_id, job_id)
     
     @return_xml
     @requires('platform')

@@ -20,6 +20,9 @@ class Platforms(modellib.Collection):
 
 
 class Platform(modellib.XObjIdModel):
+    class Meta:
+        db_table = 'Platforms'
+        
     platform_id = models.AutoField(primary_key=True, db_column='platformid')
     platform_trove_name = models.CharField(max_length=1026)
     label = models.CharField(max_length=1026)
@@ -173,6 +176,9 @@ class ContentSourceTypes(modellib.Collection):
     
     
 class ContentSourceType(modellib.XObjIdModel):
+    class Meta:
+        db_table = 'PlatformsContentSourceTypes'
+        
     content_source_type = fields.CharField(max_length=1026)
     required = fields.BooleanField()
     singleton = fields.BooleanField()
@@ -214,6 +220,8 @@ class Status(AbstractStatus):
 class PlatformLoadStatuses(Statuses):
     class Meta:
         abstract = True
+    
+    list_fields = ['platform_load_status']
     
     
 class PlatformLoadStatus(modellib.XObjIdModel):

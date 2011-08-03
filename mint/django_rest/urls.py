@@ -514,9 +514,9 @@ urlpatterns = patterns('',
         platformsviews.PlatformService(),
         name='Platform'),
         
-    URL(r'platforms/(?P<platform_id>\d+)/platform_status/?$',
-        platformsviews.PlatformStatusService(),
-        name='PlatformStatus'),
+    # URL(r'platforms/(?P<platform_id>\d+)/platform_status/?$',
+    #     platformsviews.PlatformStatusService(),
+    #     name='PlatformStatus'),
         
     URL(r'platforms/(?P<platform_id>\d+)/platform_source/?$',
         platformsviews.PlatformSourceService(),
@@ -533,7 +533,11 @@ urlpatterns = patterns('',
     URL(r'platforms/(?P<platform_id>\d+)/platform_load/(?P<job_uuid>[-a-zA-X0-9+])/?$',
         platformsviews.PlatformLoadService(),
         name='PlatformLoad'),
-        
+    
+    URL(r'platforms/(?P<platform_id>\d+)/platform_load/(?P<job_uuid>[-a-zA-X0-9+])/status/?$',
+        platformsviews.PlatformLoadStatusService(),
+        name='PlatformLoad'),
+    
     URL(r'platforms/(?P<platform_id>\d+)/platform_versions/?$',
         platformsviews.PlatformVersionService(),
         name='PlatformVersions'),

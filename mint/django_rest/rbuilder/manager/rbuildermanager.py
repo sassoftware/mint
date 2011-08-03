@@ -26,7 +26,7 @@ from mint.django_rest.rbuilder.platforms.manager import SourceStatusManager, \
                                                         SourceTypeDescriptorManager, \
                                                         SourceTypeStatusTestManager, \
                                                         SourceTypeManager, \
-                                                        PlatformStatusManager, \
+                                                        PlatformLoadStatusManager, \
                                                         PlatformSourceManager, \
                                                         PlatformSourceTypeManager, \
                                                         PlatformImageTypeManager, \
@@ -58,7 +58,7 @@ class RbuilderManager(basemanager.BaseRbuilderManager):
         'sourceTypeDescriptorMgr': SourceTypeDescriptorManager,
         'sourceTypeStatusTestMgr' : SourceTypeStatusTestManager,
         'sourceTypeMgr' : SourceTypeManager,
-        'platformStatusMgr' : PlatformStatusManager,
+        'platformStatusMgr' : PlatformLoadStatusManager,
         'platformSourceMgr' : PlatformSourceManager,
         'platformSourceTypeMgr' : PlatformSourceTypeManager,
         'platformImageTypeMgr' : PlatformImageTypeManager,

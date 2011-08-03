@@ -95,11 +95,14 @@ class SourceTypeManager(basemanager.BaseManager):
         return ContentSourceTypes
         
         
-class PlatformStatusManager(basemanager.BaseManager):
+class PlatformLoadStatusManager(basemanager.BaseManager):
     @exposed
-    def getPlatformStatus(self, platform_id):
-        return platformModels.Platform.objects.get(
-            platform_id=platform_id).platform_status
+    def getPlatformLoadStatus(self, platform_id, job_id):
+        platform_loads = platformModels.PlatformLoad.objects.all().filter(
+            platform_id=platform_id, job_id=job_id)
+        Statuses = platformModels.PlatformLoadStatuses()
+        Statuses.platform_load_status = [p.platform_load_status for p in platform_loads]
+        return Statuses
         
     @exposed
     def getPlatformStatusTest(self, platform):
@@ -131,9 +134,6 @@ class PlatformImageTypeManager(basemanager.BaseManager):
         
 
 class PlatformLoadManager(basemanager.BaseManager):
-    @exposed
-    def getPlatformLoadStatus(self, platform_id, job_id):
-        pass
         
     @exposed
     def loadPlatform(self, platform_id, platform_load):

@@ -32,7 +32,7 @@ class PlatformsTestCase(XMLTestCase):
         return getattr(xobjModel, root_name)
         
     def testGetPlatform(self):
-
+        import pdb; pdb.set_trace()
         platform_gotten = self.xobjResponse('/api/v1/platforms/1')           #unsure about the url
         platform = pmodels.Platform.objects.get(pk=1)
         self.assertEquals(platform.label, platform_gotten.label)
@@ -95,13 +95,13 @@ class PlatformsTestCase(XMLTestCase):
         
     def testGetContentSourceTypes(self):
         cSourceTypes = pmodels.ContentSourceType.objects.all()
-        cSourceTypes_gotten = self.xobjResponse('/api/v1/platforms/contentsourcetypes/')  #not sure
+        cSourceTypes_gotten = self.xobjResponse('/api/v1/platforms/content_source_types/')  #not sure
         self.assertEquals(len(list(cSourceTypes)), len(cSourceTypes_gotten))
         
         
     def testGetContentSourceType(self):
         cSourceType = pmodels.ContentSourceType.objects.get(pk=1)
-        cSourceType_gotten = self.xobjResponse('/api/v1/platforms/contentsourcetypes/1')  #not sure
+        cSourceType_gotten = self.xobjResponse('/api/v1/platforms/content_source_types/1')  #not sure
         self.assertEquals(cSourceType.content_source_type, cSourceType_gotten.content_source_type)
         self.assertEquals(cSourceType.required, cSourceType_gotten.required)
         self.assertEquals(cSourceType.singleton, cSourceType_gotten.singleton)
@@ -109,12 +109,12 @@ class PlatformsTestCase(XMLTestCase):
         
     def testGetContentSources(self):
         contentSources = pmodels.ContentSources.objects.all()
-        contentSources_gotten = self.xobjResponse('/api/v1/platforms/contentsources/') #not sure
+        contentSources_gotten = self.xobjResponse('/api/v1/platforms/content_sources/') #not sure
         self.assertEquals(len(list(contentSources)), len(contentSources_gotten))
         
     def testGetContentSource(self):
         contentSource = pmodels.ContentSources.objects.get(pk=1)
-        contentSource_gotten = self.xobjResponse('/api/v1/platforms/contentsources/1') #not sure
+        contentSource_gotten = self.xobjResponse('/api/v1/platforms/content_sources/1') #not sure
         self.assertEquals(contentSource.name, contentSource_gotten.name)
         self.assertEquals(contentSource.short_name, contentSource_gotten.short_name)
         self.assertEquals(contentSource.default_source, contentSource_gotten.default_source)
@@ -147,14 +147,14 @@ class PlatformsTestCase(XMLTestCase):
         
     def testGetPlatformLoadStatus(self):  #added
         pLoadStatus = pmodels.PlatformLoadStatus.objects.get(pk=1)
-        pLoadStatus_gotten = self.xobjResponse('/api/v1/platforms/platformloadstatus/1') #not sure
+        pLoadStatus_gotten = self.xobjResponse('/api/v1/platforms/platform_status/1') #not sure
         self.assertEquals(pLoadStatus.code, pLoadStatus_gotten.code)
         self.assertEquals(pLoadStatus.message, pLoadStatus_gotten.message)
         self.assertEquals(pLoadStatus.is_final, pLoadStatus_gotten.is_final)
         
     def testGetLoadPlatform(self):
        loadPlatform = pmodels.PlatformLoad.objects.get(pk=1)
-       loadPlatform_gotten = self.xobjResponse('/api/v1/platforms/platformload/1') #not sure
+       loadPlatform_gotten = self.xobjResponse('/api/v1/platforms/platform_load/1') #not sure
        self.assertEquals(loadPlatform.load_uri, loadPlatform_gotten.load_uri)
        self.assertEquals(loadPlatform.job_id, loadPlatform_gotten.job_id)
        self.assertEquals(loadPlatform.platform_id, loadPlatform_gotten.platform_id)
