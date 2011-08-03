@@ -28,7 +28,7 @@ from conary.dbstore import sqlerrors, sqllib
 log = logging.getLogger(__name__)
 
 # database schema major version
-RBUILDER_DB_VERSION = sqllib.DBversion(58, 42)
+RBUILDER_DB_VERSION = sqllib.DBversion(58, 43)
 
 
 def _createTrigger(db, table, column = "changed"):
@@ -163,20 +163,18 @@ def _createRbac(db):
         db.tables['rbac_role'] = []
         changed = True
 
-    if 'rbac_user_roles' not in db.tables:
+    if 'rbac_user_role' not in db.tables:
         cu.execute("""
         CREATE TABLE rbac_user_role (
             rbac_user_role_id  %(PRIMARYKEY)s,
-            role_id      TEXT
-               REFERENCES rbac_role ( 'role_id' ) 
+            role_id      TEXT NOT NULL 
+               REFERENCES rbac_role ( role_id ) 
                ON DELETE CASCADE
-               ON UPDATE CASCADE
-               NOT NULL,
-            user_id      INTEGER
-               REFERENCES Users ( 'userId' ) 
-               ON DELETE CASCADE
-               NOT NULL,
-            UNIQUE ( 'role_id', 'user_id' )
+               ON UPDATE CASCADE,
+            user_id      INTEGER NOT NULL
+               REFERENCES Users ( userId ) 
+               ON DELETE CASCADE,
+            UNIQUE ( "role_id", "user_id" )
         ) %(TABLEOPTS)s """ % db.keywords)
         db.tables['rbac_user_role'] = []
         changed = True
@@ -185,18 +183,16 @@ def _createRbac(db):
         cu.execute("""
         CREATE TABLE rbac_permission (
             permission_id   %(PRIMARYKEY)s,
-            role_id         TEXT
-               REFERENCES rbac_role ( 'role_id' ) 
+            role_id         TEXT NOT NULL
+               REFERENCES rbac_role ( role_id ) 
                ON DELETE CASCADE
-               ON UPDATE CASCADE
-               NOT NULL,
-            context_id      TEXT
-               REFERENCES rbac_context ( 'context_id' ) 
+               ON UPDATE CASCADE,
+            context_id      TEXT NOT NULL
+               REFERENCES rbac_context ( context_id ) 
                ON DELETE CASCADE
-               ON UPDATE CASCADE
-               NOT NULL,
+               ON UPDATE CASCADE,
             action          TEXT NOT NULL,
-            UNIQUE ( 'role_id', 'context_id', 'action' )
+            UNIQUE ( "role_id", "context_id", "action" )
         ) %(TABLEOPTS)s """ % db.keywords)
         db.tables['rbac_permission'] = []
         changed = True
@@ -209,16 +205,8 @@ def _createRbac(db):
         db.tables['rbac_context'] = []
         changed = True
 
-    changed |= db.createIndex('rbac_user_role', 'RbacUserRoleIdx',        
-        'rbac_user_role_id')
     changed |= db.createIndex('rbac_user_role', 'RbacUserRoleSearchIdx',  
         'role_id, user_id')
-    changed |= db.createIndex('rbac_role',       'RbacRoleIdx',             
-        'role_id')
-    changed != db.createIndex('rbac_context',    'RbacContextIdx',          
-        'context_id')
-    changed != db.createIndex('rbac_permission', 'RbacPermissionIdx',       
-        'permission_id')
     changed != db.createIndex('rbac_permission', 'RbacPermissionSearchIdx', 
         'role_id, context_id')
     changed != db.createIndex('rbac_permission', 'RbacPermissionLookupIdx',  
@@ -1210,8 +1198,8 @@ def _createInventorySchema(db, cfg):
                 "project_id" integer 
                     REFERENCES Projects (projectId)
                     ON DELETE SET NULL,
-                "rbac_context_id" integer
-                    REFERENCES rbac_context ("rbac_context_id")
+                "rbac_context_id" TEXT,
+                    REFERENCES rbac_context ("context_id")
                     ON DELETE SET NULL
             ) %(TABLEOPTS)s""" % db.keywords)
         db.tables['inventory_system'] = []

@@ -19,6 +19,7 @@ from mint.django_rest.rbuilder.projects import views as projectviews
 from mint.django_rest.rbuilder.users import views as usersviews
 from mint.django_rest.rbuilder.notices import views as noticesviews
 from mint.django_rest.rbuilder.platforms import views as platformsviews
+from mint.django_rest.rbuilder.rbac import views as rbacviews
 from mint.django_rest.rbuilder.jobs import views as jobviews
 from mint.django_rest.rbuilder.modulehooks import views as modulehooksviews
 
@@ -578,8 +579,28 @@ urlpatterns = patterns('',
     # ModuleHooks
     URL(r'module_hooks/?$',
         modulehooksviews.ModuleHooksService(),
-        name='ModuleHooks')
-  
+        name='ModuleHooks'),
+ 
+    # Role Based Access Control
+    URL(r'rbac/permissions/?$',
+        rbacviews.RbacPermissionsService(),
+        name='RbacPermissions'),
+    URL(r'rbac/permissions/(?P<permission_id>\w+)/?$',
+        rbacviews.RbacPermissionsService(),
+        name='RbacPermissions'),
+    URL(r'rbac/roles/?$',
+        rbacviews.RbacRolesService(),
+        name='RbacRoles'),
+    URL(r'rbac/roles/(?P<role_id>\w+)/?$',
+        rbacviews.RbacRolesService(),
+        name='RbacRoles'),
+    URL(r'rbac/contexts/?$',
+        rbacviews.RbacContextsService(),
+        name='RbacContexts'),
+    URL(r'rbac/contexts/(?P<context_id>\w+)/?$',
+        rbacviews.RbacContextsService(),
+        name='RbacContexts'),
+ 
 )
 
 
