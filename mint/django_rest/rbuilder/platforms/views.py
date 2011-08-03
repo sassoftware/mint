@@ -94,7 +94,7 @@ class PlatformLoadStatusService(service.BaseService):
     def rest_GET(self, request, platform_id, job_id=None):
         return self.get(platform_id, job_id)
         
-    def get(self, platform_id):
+    def get(self, platform_id, job_id):
         return self.mgr.getPlatformLoadStatus(platform_id, job_id)
     
     @return_xml

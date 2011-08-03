@@ -32,7 +32,6 @@ class PlatformsTestCase(XMLTestCase):
         return getattr(xobjModel, root_name)
         
     def testGetPlatform(self):
-        import pdb; pdb.set_trace()
         platform_gotten = self.xobjResponse('/api/v1/platforms/1')           #unsure about the url
         platform = pmodels.Platform.objects.get(pk=1)
         self.assertEquals(platform.label, platform_gotten.label)
