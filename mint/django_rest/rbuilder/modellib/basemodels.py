@@ -63,13 +63,6 @@ class BaseManager(models.Manager):
     deserialize an object from xobj into an instance of the model.
     """
 
-    def get_query_set(self):
-        """
-        When selecting items, avoid the need to do extra lookups to traverse
-        their relations.
-        """
-        return super(BaseManager, self).get_query_set().select_related(depth=5)
-
     def _load_from_db(self, model_inst):
         """
         Load an existing model from the db from an existing instance of the

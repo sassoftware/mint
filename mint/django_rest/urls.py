@@ -178,13 +178,12 @@ urlpatterns = patterns('',
         name='SystemEvent'),
 
     # System Tags
-    # Unfinished...
-    #URL(r'inventory/systems/(?P<system_id>\d+)/system_tags/?$',
-    #    inventoryviews.InventorySystemTagsService(),
-    #    name='SystemTags'),
-    #URL(r'inventory/systems/(?P<system_id>\d+)/system_tags/(?P<system_tag_id>\d+)/?$',
-    #    inventoryviews.InventorySystemTagsService(),
-    #    name='SystemTag'),
+    URL(r'inventory/systems/(?P<system_id>\d+)/system_tags/?$',
+        inventoryviews.InventorySystemTagsService(),
+        name='SystemTags'),
+    URL(r'inventory/systems/(?P<system_id>\d+)/system_tags/(?P<system_tag_id>\d+)/?$',
+        inventoryviews.InventorySystemTagsService(),
+        name='SystemTag'),
 
     # Event Types
     URL(r'inventory/event_types/?$',
@@ -249,13 +248,12 @@ urlpatterns = patterns('',
     URL(r'query_sets/filter_descriptor/?$',
         querysetviews.QuerySetFilterDescriptorService(),
         name='QuerySetFilterDescriptor'),
-    # Unfinished...
-    #URL(r'query_sets/(?P<query_set_id>\d+)/query_tags/?$',
-    #    querysetviews.QueryTagService(),
-    #    name='QueryTags'),
-    #URL(r'query_sets/(?P<query_set_id>\d+)/query_tags/(?P<query_tag_id>\d+)/?$',
-    #    querysetviews.QueryTagService(),
-    #    name='QueryTag'),
+    URL(r'query_sets/(?P<query_set_id>\d+)/query_tags/?$',
+        querysetviews.QueryTagService(),
+        name='QueryTags'),
+    URL(r'query_sets/(?P<query_set_id>\d+)/query_tags/(?P<query_tag_id>\d+)/?$',
+        querysetviews.QueryTagService(),
+        name='QueryTag'),
 
     # Change Logs
     URL(r'changelogs/?$',

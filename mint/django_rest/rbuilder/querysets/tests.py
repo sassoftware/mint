@@ -24,19 +24,18 @@ class QuerySetTestCase(XMLTestCase):
             username="admin", password="password")
         self.assertEquals(response.status_code, 200)
 
-        # Unfinished..
         # there's only one unmanaged system initially
-        #self.assertEquals(len(models.SystemTag.objects.all()), 1)
-        #self.assertEquals(models.SystemTag.objects.all()[0].system.name,
-        #    "rPath Update Service")
-        #self.assertEquals(models.SystemTag.objects.all()[0].inclusion_method.name,
-        #    "filtered")
-        #self.assertEquals(len(models.QueryTag.objects.all()), 12)
-        #self.assertEquals(models.QueryTag.objects.get(pk=4).name,
-        #    "query-tag-Physical_Systems-4")
-        #self.assertEquals(len(models.QuerySet.objects.all()), 12)
-        #self.assertEquals(models.QuerySet.objects.get(pk=4).name,
-        #    "Physical Systems")
+        self.assertEquals(len(models.SystemTag.objects.all()), 1)
+        self.assertEquals(models.SystemTag.objects.all()[0].system.name,
+            "rPath Update Service")
+        self.assertEquals(models.SystemTag.objects.all()[0].inclusion_method.name,
+            "filtered")
+        self.assertEquals(len(models.QueryTag.objects.all()), 12)
+        self.assertEquals(models.QueryTag.objects.get(pk=4).name,
+            "query-tag-Physical_Systems-4")
+        self.assertEquals(len(models.QuerySet.objects.all()), 12)
+        self.assertEquals(models.QuerySet.objects.get(pk=4).name,
+            "Physical Systems")
 
 class QuerySetFixturedTestCase(XMLTestCase):
     fixtures = ['systems_named_like_3_queryset', 'system_collection']
@@ -193,58 +192,58 @@ class QuerySetFixturedTestCase(XMLTestCase):
         self.assertEquals([s.name for s in systems.system], [])
 
     
-    #def _getChosenSystems(self, querySet):
-    #    queryTag = models.QueryTag.objects.filter(query_set=querySet)[0]
-    #    chosenMethod = models.InclusionMethod.objects.get(
-    #        name='chosen')
-    #    chosenSystems = models.SystemTag.objects.filter(
-    #        inclusion_method=chosenMethod) # query_tag=queryTag)
-    #    return chosenSystems
+    def _getChosenSystems(self, querySet):
+        queryTag = models.QueryTag.objects.filter(query_set=querySet)[0]
+        chosenMethod = models.InclusionMethod.objects.get(
+            name='chosen')
+        chosenSystems = models.SystemTag.objects.filter(
+            inclusion_method=chosenMethod, query_tag=queryTag)
+        return chosenSystems
 
-    #def testDeleteQuerySetChosen2(self):
-    #    # Delete system from the query set
-    #    response = self._put('inventory/systems/4',
-    #        data=testsxml.system_4_xml,
-    #        username="admin", password="password")
-    #    self.assertEquals(response.status_code, 200)
-    #    system = response.content
-    #
-    #    chosenSystems4 = self._getChosenSystems(
-    #        models.QuerySet.objects.get(pk=4))
-    #    self.assertEquals(0, len(chosenSystems4))
-    #
-    #    # Add systems 7 and 8 to query sets 4 and 5
-    #    response = self._post('query_sets/4/chosen/',
-    #        data=testsxml.systems_chosen_post_xml,
-    #        username="admin", password="password")
-    #    response = self._post('query_sets/5/chosen/',
-    #        data=testsxml.systems_chosen_post_xml,
-    #        username="admin", password="password")
-    #    response = self._post('query_sets/4/chosen/',
-    #        data=testsxml.systems_chosen_post_xml2,
-    #        username="admin", password="password")
-    #    response = self._post('query_sets/5/chosen/',
-    #        data=testsxml.systems_chosen_post_xml2,
-    #       username="admin", password="password")
-    #
-    #    chosenSystems4 = self._getChosenSystems(
-    #        models.QuerySet.objects.get(pk=4))
-    #    chosenSystems5 = self._getChosenSystems(
-    #        models.QuerySet.objects.get(pk=5))
-    #
-    #    self.assertEquals(2, len(chosenSystems4))
-    #    self.assertEquals(2, len(chosenSystems5))
-    #
-    #    # Delete system 7 from query set 4
-    #    response = self._put('inventory/systems/7',
-    #        data=testsxml.system_7_xml,
-    #        username="admin", password="password")
-    #    self.assertEquals(response.status_code, 200)
-    #
-    #    chosenSystems4 = self._getChosenSystems(
-    #        models.QuerySet.objects.get(pk=4))
-    #
-    #    self.assertEquals(1, len(chosenSystems4))
+    def testDeleteQuerySetChosen2(self):
+        # Delete system from the query set
+        response = self._put('inventory/systems/4',
+            data=testsxml.system_4_xml,
+            username="admin", password="password")
+        self.assertEquals(response.status_code, 200)
+        system = response.content
+
+        chosenSystems4 = self._getChosenSystems(
+            models.QuerySet.objects.get(pk=4))
+        self.assertEquals(0, len(chosenSystems4))
+
+        # Add systems 7 and 8 to query sets 4 and 5
+        response = self._post('query_sets/4/chosen/',
+            data=testsxml.systems_chosen_post_xml,
+            username="admin", password="password")
+        response = self._post('query_sets/5/chosen/',
+            data=testsxml.systems_chosen_post_xml,
+            username="admin", password="password")
+        response = self._post('query_sets/4/chosen/',
+            data=testsxml.systems_chosen_post_xml2,
+            username="admin", password="password")
+        response = self._post('query_sets/5/chosen/',
+            data=testsxml.systems_chosen_post_xml2,
+            username="admin", password="password")
+
+        chosenSystems4 = self._getChosenSystems(
+            models.QuerySet.objects.get(pk=4))
+        chosenSystems5 = self._getChosenSystems(
+            models.QuerySet.objects.get(pk=5))
+
+        self.assertEquals(2, len(chosenSystems4))
+        self.assertEquals(2, len(chosenSystems5))
+
+        # Delete system 7 from query set 4
+        response = self._put('inventory/systems/7',
+            data=testsxml.system_7_xml,
+            username="admin", password="password")
+        self.assertEquals(response.status_code, 200)
+
+        chosenSystems4 = self._getChosenSystems(
+            models.QuerySet.objects.get(pk=4))
+
+        self.assertEquals(1, len(chosenSystems4))
 
     def testUpdateQuerySet(self):
         response = self._put('query_sets/5/',
@@ -315,37 +314,37 @@ class QuerySetChildFixturedTestCase(XMLTestCase):
         self.assertEquals([s.system_id for s in systems.system],
             [u'215', u'216', u'217'])
 
-    #def testUpdateChildQuery(self):
-    #    response = self._put('query_sets/12/',
-    #        data=testsxml.query_set_child_update_xml,
-    #        username="admin", password="password")
-    #    self.assertEquals(response.status_code, 200)
-    #    querySet = models.QuerySet.objects.get(pk=12)
-    #    self.assertEquals([q.pk for q in querySet.children.all()],
-    #        [6, 10, 11])
-    #    systems = self.xobjResponse('query_sets/12/child')
-    #    self.assertEquals([s.system_id for s in systems.system],
-    #        [u'210', u'211', u'215', u'216', u'217'])
+    def testUpdateChildQuery(self):
+        response = self._put('query_sets/12/',
+            data=testsxml.query_set_child_update_xml,
+            username="admin", password="password")
+        self.assertEquals(response.status_code, 200)
+        querySet = models.QuerySet.objects.get(pk=12)
+        self.assertEquals([q.pk for q in querySet.children.all()],
+            [6, 10, 11])
+        systems = self.xobjResponse('query_sets/12/child')
+        self.assertEquals([s.system_id for s in systems.system],
+            [u'210', u'211', u'215', u'216', u'217'])
 
         # Update the query set to just have children of 10 and 11 now
         # Testing referencing query set children by id
-    #    response = self._put('query_sets/12/',
-    #        data=testsxml.query_set_child_update_xml2,
-    #        username="admin", password="password")
-    #    self.assertEquals(response.status_code, 200)
-    #    querySet = models.QuerySet.objects.get(pk=12)
-    #    self.assertEquals([q.pk for q in querySet.children.all()],
-    #        [10, 11])
+        response = self._put('query_sets/12/',
+            data=testsxml.query_set_child_update_xml2,
+            username="admin", password="password")
+        self.assertEquals(response.status_code, 200)
+        querySet = models.QuerySet.objects.get(pk=12)
+        self.assertEquals([q.pk for q in querySet.children.all()],
+            [10, 11])
 
         # Add back 6 as a child
         # Testing referencing query set children by id
-    #    response = self._put('query_sets/12/',
-    #        data=testsxml.query_set_child_update_xml3,
-    #        username="admin", password="password")
-    #    self.assertEquals(response.status_code, 200)
-    #    querySet = models.QuerySet.objects.get(pk=12)
-    #    self.assertEquals([q.pk for q in querySet.children.all()],
-    #        [6, 10, 11])
+        response = self._put('query_sets/12/',
+            data=testsxml.query_set_child_update_xml3,
+            username="admin", password="password")
+        self.assertEquals(response.status_code, 200)
+        querySet = models.QuerySet.objects.get(pk=12)
+        self.assertEquals([q.pk for q in querySet.children.all()],
+            [6, 10, 11])
 
     def testChildren(self):
         # 12 can't be a child of 12
