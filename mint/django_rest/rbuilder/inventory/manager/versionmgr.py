@@ -92,7 +92,7 @@ class VersionManager(basemanager.BaseManager):
 
         label = trove.version.conaryVersion.trailingLabel()
         tag = label.getLabel()
-        _, majorVersionName, _ = tag.split('-')
+        majorVersionName = tag.split('-')[1]
 
         stages = self.getStages(hostname,
             majorVersionName)
