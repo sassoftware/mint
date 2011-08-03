@@ -110,7 +110,7 @@ class ProjectBranchStageService(service.BaseService):
 
     def get(self, project_short_name, project_branch_label, stage_name):
         if stage_name:
-            return projectmodels.Stage.objects.get(
+            return projectsmodels.Stage.objects.get(
                 project__short_name=project_short_name,
                 project_branch__label=project_branch_label,
                 stage_name=stage_name)
