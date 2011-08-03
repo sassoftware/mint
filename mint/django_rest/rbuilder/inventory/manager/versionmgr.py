@@ -89,8 +89,10 @@ class VersionManager(basemanager.BaseManager):
             return
 
         hostname = trove.getHost()
-        revision = trove.version.conaryVersion.trailingRevision()
-        majorVersionName = revision.version
+
+        label = trove.version.conaryVersion.trailingLabel()
+        tag = label.getLabel()
+        _, majorVersionName, _ = tag.split('-')
 
         stages = self.getStages(hostname,
             majorVersionName)
