@@ -179,6 +179,14 @@ def _createRbac(db):
         db.tables['rbac_user_role'] = []
         changed = True
 
+    if 'rbac_context' not in db.tables:
+        cu.execute("""
+        CREATE TABLE rbac_context (
+            context_id     TEXT PRIMARY KEY
+        ) %(TABLEOPTS)s """ % db.keywords)
+        db.tables['rbac_context'] = []
+        changed = True
+
     if 'rbac_permission' not in db.tables:
         cu.execute("""
         CREATE TABLE rbac_permission (
@@ -195,14 +203,6 @@ def _createRbac(db):
             UNIQUE ( "role_id", "context_id", "action" )
         ) %(TABLEOPTS)s """ % db.keywords)
         db.tables['rbac_permission'] = []
-        changed = True
-
-    if 'rbac_context' not in db.tables:
-        cu.execute("""
-        CREATE TABLE rbac_context (
-            context_id     TEXT PRIMARY KEY
-        ) %(TABLEOPTS)s """ % db.keywords)
-        db.tables['rbac_context'] = []
         changed = True
 
     changed |= db.createIndex('rbac_user_role', 'RbacUserRoleSearchIdx',  
