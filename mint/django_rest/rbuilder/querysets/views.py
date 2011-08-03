@@ -54,6 +54,7 @@ class QuerySetAllResultService(BaseQuerySetService):
         return self.mgr.getQuerySetAllResult(query_set_id)
 
 
+# this manipulates query tags, correct?  Unfinished
 class QuerySetChosenResultService(BaseQuerySetService):
 
     @return_xml
@@ -103,14 +104,16 @@ class QuerySetFilterDescriptorService(BaseQuerySetService):
                 filterDescriptorId)
         return response
 
-class QueryTagService(BaseQuerySetService):
-
-    @return_xml
-    def rest_GET(self, request, query_set_id, query_tag_id=None):
-        return self.get(query_set_id, query_tag_id)
-
-    def get(self, query_set_id, query_tag_id):
-        if query_tag_id:
-            return self.mgr.getQueryTag(query_set_id, query_tag_id)
-        else:
-            return self.mgr.getQueryTags()
+# disabled -- incomplete
+#
+#class QueryTagService(BaseQuerySetService):
+#
+#    @return_xml
+#    def rest_GET(self, request, query_set_id, query_tag_id=None):
+#        return self.get(query_set_id, query_tag_id)
+#
+#    def get(self, query_set_id, query_tag_id):
+#        if query_tag_id:
+#            return self.mgr.getQueryTag(query_set_id, query_tag_id)
+#        else:
+#            return self.mgr.getQueryTags()

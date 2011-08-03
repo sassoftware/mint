@@ -31,13 +31,6 @@ query_sets_xml = """\
     <child_members id="http://testserver/api/v1/query_sets/1/child"/>
     <collection id="http://testserver/api/v1/inventory/systems"/>
     <presentation_type/>
-    <query_tags>
-      <query_tag id="http://testserver/api/v1/query_sets/1/query_tags/1">
-        <name>query-tag-All_Systems-1</name>
-        <query_tag_id>1</query_tag_id>
-        <query_set id="http://testserver/api/v1/query_sets/1"/>
-      </query_tag>
-    </query_tags>
     <created_date>2011-01-26T21:59:59+00:00</created_date>
     <is_top_level>True</is_top_level>
     <children>
@@ -61,13 +54,6 @@ query_sets_xml = """\
         <child_members id="http://testserver/api/v1/query_sets/2/child"/>
         <collection id="http://testserver/api/v1/inventory/systems"/>
         <presentation_type/>
-        <query_tags>
-          <query_tag id="http://testserver/api/v1/query_sets/2/query_tags/2">
-            <name>query-tag-Active_Systems-2</name>
-            <query_tag_id>2</query_tag_id>
-            <query_set id="http://testserver/api/v1/query_sets/2"/>
-          </query_tag>
-        </query_tags>
         <created_date>2011-01-26T21:59:59+00:00</created_date>
         <is_top_level>False</is_top_level>
         <children/>
@@ -94,13 +80,6 @@ query_sets_xml = """\
         <child_members id="http://testserver/api/v1/query_sets/3/child"/>
         <collection id="http://testserver/api/v1/inventory/systems"/>
         <presentation_type/>
-        <query_tags>
-          <query_tag id="http://testserver/api/v1/query_sets/3/query_tags/3">
-            <name>query-tag-Inactive_Systems-3</name>
-            <query_tag_id>3</query_tag_id>
-            <query_set id="http://testserver/api/v1/query_sets/3"/>
-          </query_tag>
-        </query_tags>
         <created_date>2011-01-26T21:59:59+00:00</created_date>
         <is_top_level>False</is_top_level>
         <children/>
@@ -134,13 +113,6 @@ query_sets_xml = """\
             <name>rPath Windows Build Services</name>
             <presentation_type/>
             <query_set_id>7</query_set_id>
-            <query_tags>
-              <query_tag id="http://testserver/api/v1/query_sets/7/query_tags/7">
-                <name>query-tag-Windows_Build_Services-7</name>
-                <query_set id="http://testserver/api/v1/query_sets/7"/>
-                <query_tag_id>7</query_tag_id>
-              </query_tag>
-            </query_tags>
             <resource_type>system</resource_type>
           </query_set>
           <query_set id="http://testserver/api/v1/query_sets/8">
@@ -165,13 +137,6 @@ query_sets_xml = """\
             <name>rPath Update Services</name>
             <presentation_type/>
             <query_set_id>8</query_set_id>
-            <query_tags>
-              <query_tag id="http://testserver/api/v1/query_sets/8/query_tags/8">
-                <name>query-tag-Update_Services-8</name>
-                <query_set id="http://testserver/api/v1/query_sets/8"/>
-                <query_tag_id>8</query_tag_id>
-              </query_tag>
-            </query_tags>
             <resource_type>system</resource_type>
           </query_set>
         </children>
@@ -192,13 +157,6 @@ query_sets_xml = """\
         <name>Infrastructure Systems</name>
         <presentation_type/>
         <query_set_id>6</query_set_id>
-        <query_tags>
-          <query_tag id="http://testserver/api/v1/query_sets/6/query_tags/6">
-            <name>query-tag-Infrastructure_Systems-6</name>
-            <query_set id="http://testserver/api/v1/query_sets/6"/>
-            <query_tag_id>6</query_tag_id>
-          </query_tag>
-        </query_tags>
         <resource_type>system</resource_type>
       </query_set>
     </children>
@@ -225,13 +183,6 @@ query_sets_xml = """\
     <child_members id="http://testserver/api/v1/query_sets/2/child"/>
     <collection id="http://testserver/api/v1/inventory/systems"/>
     <presentation_type/>
-        <query_tags>
-          <query_tag id="http://testserver/api/v1/query_sets/2/query_tags/2">
-            <name>query-tag-Active_Systems-2</name>
-            <query_tag_id>2</query_tag_id>
-            <query_set id="http://testserver/api/v1/query_sets/2"/>
-          </query_tag>
-        </query_tags>
     <created_date>2011-01-26T21:59:59+00:00</created_date>
     <is_top_level>False</is_top_level>
     <children/>
@@ -258,13 +209,6 @@ query_sets_xml = """\
     <child_members id="http://testserver/api/v1/query_sets/3/child"/>
     <collection id="http://testserver/api/v1/inventory/systems"/>
     <presentation_type/>
-    <query_tags>
-      <query_tag id="http://testserver/api/v1/query_sets/3/query_tags/3">
-      <name>query-tag-Inactive_Systems-3</name>
-      <query_tag_id>3</query_tag_id>
-      <query_set id="http://testserver/api/v1/query_sets/3"/>
-      </query_tag>
-    </query_tags>
     <created_date>2011-01-26T21:59:59+00:00</created_date>
     <is_top_level>False</is_top_level>
     <children/>
@@ -291,13 +235,6 @@ query_sets_xml = """\
     <child_members id="http://testserver/api/v1/query_sets/4/child"/>
     <collection id="http://testserver/api/v1/inventory/systems"/>
     <presentation_type/>
-    <query_tags>
-      <query_tag id="http://testserver/api/v1/query_sets/4/query_tags/4">
-        <name>query-tag-Physical_Systems-4</name>
-        <query_tag_id>4</query_tag_id>
-        <query_set id="http://testserver/api/v1/query_sets/4"/>
-      </query_tag>
-    </query_tags>
     <created_date>2011-01-26T21:59:59+00:00</created_date>
     <is_top_level>True</is_top_level>
     <children/>
@@ -324,13 +261,6 @@ query_sets_xml = """\
     <child_members id="http://testserver/api/v1/query_sets/5/child"/>
     <collection id="http://testserver/api/v1/inventory/systems"/>
     <presentation_type/>
-    <query_tags>
-      <query_tag id="http://testserver/api/v1/query_sets/5/query_tags/5">
-        <name>query-tag-Systems_named_like_3-5</name>
-        <query_tag_id>5</query_tag_id>
-        <query_set id="http://testserver/api/v1/query_sets/5"/>
-      </query_tag>
-    </query_tags>
     <created_date>2011-01-05T00:00:00+00:00</created_date>
     <is_top_level>True</is_top_level>
     <children/>
@@ -364,13 +294,6 @@ query_sets_xml = """\
         <name>rPath Windows Build Services</name>
         <presentation_type/>
         <query_set_id>7</query_set_id>
-        <query_tags>
-          <query_tag id="http://testserver/api/v1/query_sets/7/query_tags/7">
-            <name>query-tag-Windows_Build_Services-7</name>
-            <query_set id="http://testserver/api/v1/query_sets/7"/>
-            <query_tag_id>7</query_tag_id>
-          </query_tag>
-        </query_tags>
         <resource_type>system</resource_type>
       </query_set>
       <query_set id="http://testserver/api/v1/query_sets/8">
@@ -395,13 +318,6 @@ query_sets_xml = """\
         <name>rPath Update Services</name>
         <presentation_type/>
         <query_set_id>8</query_set_id>
-        <query_tags>
-          <query_tag id="http://testserver/api/v1/query_sets/8/query_tags/8">
-            <name>query-tag-Update_Services-8</name>
-            <query_set id="http://testserver/api/v1/query_sets/8"/>
-            <query_tag_id>8</query_tag_id>
-          </query_tag>
-        </query_tags>
         <resource_type>system</resource_type>
       </query_set>
     </children>
@@ -422,13 +338,6 @@ query_sets_xml = """\
     <name>Infrastructure Systems</name>
     <presentation_type/>
     <query_set_id>6</query_set_id>
-    <query_tags>
-      <query_tag id="http://testserver/api/v1/query_sets/6/query_tags/6">
-        <name>query-tag-Infrastructure_Systems-6</name>
-        <query_set id="http://testserver/api/v1/query_sets/6"/>
-        <query_tag_id>6</query_tag_id>
-      </query_tag>
-    </query_tags>
     <resource_type>system</resource_type>
   </query_set>
   <query_set id="http://testserver/api/v1/query_sets/7">
@@ -453,13 +362,6 @@ query_sets_xml = """\
     <name>rPath Windows Build Services</name>
     <presentation_type/>
     <query_set_id>7</query_set_id>
-    <query_tags>
-      <query_tag id="http://testserver/api/v1/query_sets/7/query_tags/7">
-        <name>query-tag-Windows_Build_Services-7</name>
-        <query_set id="http://testserver/api/v1/query_sets/7"/>
-        <query_tag_id>7</query_tag_id>
-      </query_tag>
-    </query_tags>
     <resource_type>system</resource_type>
   </query_set>
   <query_set id="http://testserver/api/v1/query_sets/8">
@@ -484,13 +386,6 @@ query_sets_xml = """\
     <name>rPath Update Services</name>
     <presentation_type/>
     <query_set_id>8</query_set_id>
-    <query_tags>
-      <query_tag id="http://testserver/api/v1/query_sets/8/query_tags/8">
-        <name>query-tag-Update_Services-8</name>
-        <query_set id="http://testserver/api/v1/query_sets/8"/>
-        <query_tag_id>8</query_tag_id>
-      </query_tag>
-    </query_tags>
     <resource_type>system</resource_type>
   </query_set>
   <query_set id="http://testserver/api/v1/query_sets/9">
@@ -508,13 +403,6 @@ query_sets_xml = """\
     <name>All Project Stages</name>
     <presentation_type>project</presentation_type>
     <query_set_id>9</query_set_id>
-    <query_tags>
-      <query_tag id="http://testserver/api/v1/query_sets/9/query_tags/9">
-        <name>query-tag-All_Project_Branch_Stages-13</name>
-        <query_set id="http://testserver/api/v1/query_sets/9"/>
-        <query_tag_id>9</query_tag_id>
-      </query_tag>
-    </query_tags>
     <resource_type>project_branch_stage</resource_type>
   </query_set>
   <query_set id="http://testserver/api/v1/query_sets/10">
@@ -532,13 +420,6 @@ query_sets_xml = """\
     <name>All Platforms</name>
     <presentation_type>platform</presentation_type>
     <query_set_id>10</query_set_id>
-    <query_tags>
-      <query_tag id="http://testserver/api/v1/query_sets/10/query_tags/10">
-        <name>query-tag-All_Platforms-12</name>
-        <query_set id="http://testserver/api/v1/query_sets/10"/>
-        <query_tag_id>10</query_tag_id>
-      </query_tag>
-    </query_tags>
     <resource_type>project_branch_stage</resource_type>
   </query_set>
 </query_sets>
@@ -566,13 +447,6 @@ query_set_xml = """\
     <child_members id="http://testserver/api/v1/query_sets/4/child"/>
     <collection id="http://testserver/api/v1/inventory/systems"/>
     <presentation_type/>
-    <query_tags>
-      <query_tag id="http://testserver/api/v1/query_sets/4/query_tags/4">
-        <name>query-tag-Physical_Systems-4</name>
-        <query_tag_id>4</query_tag_id>
-        <query_set id="http://testserver/api/v1/query_sets/4"/>
-      </query_tag>
-    </query_tags>
     <created_date>2011-01-26T21:59:59+00:00</created_date>
     <is_top_level>True</is_top_level>
     <children/>
@@ -602,13 +476,6 @@ query_set_fixtured_xml = """\
     <chosen_members id="http://testserver/api/v1/query_sets/5/chosen"/>
     <child_members id="http://testserver/api/v1/query_sets/5/child"/>
     <collection id="http://testserver/api/v1/inventory/systems"/>
-   <query_tags>
-     <query_tag id="http://testserver/api/v1/query_sets/5/query_tags/5">
-       <query_set id="http://testserver/api/v1/query_sets/5"/>
-       <name>query-tag-Systems_named_like_3-5</name>
-       <query_tag_id>5</query_tag_id>
-     </query_tag>
-   </query_tags>
     <created_date>2011-01-05T00:00:00+00:00</created_date>
     <is_top_level>True</is_top_level>
     <children/>
@@ -780,7 +647,6 @@ system_4_xml = """\
 <?xml version='1.0' encoding='UTF-8'?>
 <system id="http://127.0.0.1:8000/api/v1/inventory/systems/4">
   <generated_uuid>system-4-generated-uuid</generated_uuid>
-  <system_tags/>
   <local_uuid>system-4-local-uuid</local_uuid>
 </system>
 """
@@ -790,15 +656,6 @@ system_7_xml = """\
 <system id="http://127.0.0.1:8000/api/v1/inventory/systems/7">
   <generated_uuid>system-7-generated-uuid</generated_uuid>
   <local_uuid>system-7-local-uuid</local_uuid>
-  <system_tags>
-    <system_tag id="http://127.0.0.1:8000/api/v1/inventory/systems/7/system_tags/2">
-      <query_tag id="http://127.0.0.1:8000/api/v1/query_sets/5/query_tags/5">query-tag-Systems_named_like_3-5</query_tag>
-      <inclusion_method>
-        <name>chosen</name>
-      </inclusion_method>
-      <system id="http://127.0.0.1:8000/api/v1/inventory/systems/7"/>
-    </system_tag>
-  </system_tags>
 </system>
 """
 
@@ -822,7 +679,6 @@ queryset_post_xml2 = """\
     <chosen_members/>
     <child_members/>
     <collection/>
-    <query_tags/>
     <created_date/>
     <is_top_level>True</is_top_level>
     <children/>
@@ -848,13 +704,6 @@ queryset_post_response_xml2 = """\
   <description>New query set for physical systems</description>
   <child_members id="http://testserver/api/v1/query_sets/12/child"/>
   <presentation_type/>
-  <query_tags>
-    <query_tag id="http://testserver/api/v1/query_sets/12/query_tags/12">
-      <query_tag_id>12</query_tag_id>
-      <query_set id="http://testserver/api/v1/query_sets/12"/>
-      <name>query-tag-A_new_query_set-12</name>
-    </query_tag>
-  </query_tags>
   <chosen_members id="http://testserver/api/v1/query_sets/12/chosen"/>
   <query_set_id>12</query_set_id>
   <collection id="http://testserver/api/v1/inventory/systems"/>
@@ -887,7 +736,6 @@ queryset_post_xml3 = """\
     <chosen_members/>
     <child_members/>
     <collection/>
-    <query_tags/>
     <created_date/>
     <is_top_level>True</is_top_level>
     <children/>
