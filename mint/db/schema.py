@@ -1198,7 +1198,7 @@ def _createInventorySchema(db, cfg):
                 "project_id" integer 
                     REFERENCES Projects (projectId)
                     ON DELETE SET NULL,
-                "rbac_context_id" TEXT,
+                "rbac_context_id" TEXT 
                     REFERENCES rbac_context ("context_id")
                     ON DELETE SET NULL
             ) %(TABLEOPTS)s""" % db.keywords)
