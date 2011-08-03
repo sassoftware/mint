@@ -2816,6 +2816,7 @@ def createSchema(db, doCommit=True, cfg=None):
     changed |= _createPlatforms(db)
     changed |= _createCapsuleIndexerSchema(db)
     changed |= _createRepositoryLogSchema(db)
+    changed |= _createRbac(db)
     changed |= _createInventorySchema(db, cfg)
     changed |= _createJobsSchema(db)
     changed |= _createCapsuleIndexerYumSchema(db)
@@ -2830,7 +2831,6 @@ def createSchema(db, doCommit=True, cfg=None):
     changed |= _createChangeLogSchema(db)
     changed |= _createPackageSchema(db)
     changed |= _createDjangoSchema(db)
-    changed |= _createRbac(db)
 
     if doCommit:
         db.commit()
