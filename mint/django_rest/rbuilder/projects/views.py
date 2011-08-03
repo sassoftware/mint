@@ -12,14 +12,14 @@ from mint.django_rest.rbuilder import service
 from mint.django_rest.rbuilder.inventory.views import StageProxyService
 from mint.django_rest.rbuilder.projects import models as projectsmodels
 
-# class ProjectBranchService(service.BaseService):
-#     @access.anonymous
-#     @return_xml
-#     def rest_GET(self, request, project_name, project_branch_name=None):
-#         return self.get(project_name, project_branch_name)
-#         
-#     def get(self, project_name, project_branch_name):
-#         return self.mgr.getProjectBranch(project_name, project_branch_name)
+class AllProjectBranchesStagesService(service.BaseService):
+    pass
+
+class AllProjectBranchesService(service.BaseService):
+    pass
+
+class ProjectBranchesAllStagesService(service.BaseService):
+    pass
 
 class ProjectBranchService(service.BaseService):
     @access.anonymous
@@ -105,15 +105,22 @@ class ProjectStageService(service.BaseService):
 class ProjectBranchStageService(service.BaseService):
     @access.anonymous
     @return_xml
-    def rest_GET(self, request, project_short_name, stage_name=None):
-        return self.get(project_short_name, stage_name)
-        
-    def get(self, project_short_name, stage_name):
+    def rest_GET(self, request, project_short_name, project_branch_label, stage_name=None):
+        return self.get(project_short_name, project_branch_label, stage_name)
+
+    def get(self, project_short_name, project_branch_label, stage_name):
+        if stage_name:
+            return projectmodels.Stage.objects.get(
+                project__short_name=project_short_name,
+                project_branch__label=project_branch_label,
+                stage_name=stage_name)
+
         Stages = projectsmodels.Stages()
-        if not stage_name:
-            Stages.project_branch_stage = projectsmodels.Stage.objects.all().filter(project__short_name=project_short_name)
-        else:
-            Stages.project_branch_stage = projectsmodels.Stage.objects.all().filter(project__short_name=project_short_name, name__iexact=stage_name)
+        iterator = projectsmodels.Stage.objects.filter(
+                project__short_name=project_short_name,
+                project_branch__label=project_branch_label)
+        Stages.project_branch_stage = sorted(iterator,
+            key=lambda x: x.stage_id)
         return Stages
 
 
