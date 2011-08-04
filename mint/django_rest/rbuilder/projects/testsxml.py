@@ -230,7 +230,6 @@ project_image_post_xml = """\
     <project_branch id="http://testserver/api/v1/projects/chater-foo/project_branches/chater-foo.eng.rpath.com@rpath:chater-foo-trunk">
     <build_type>image-test-build-type</build_type>
     <time_created>1</time_created>
-    <created_by id= "http://testserver/api/v1/users/1">
   </image>
 """
 

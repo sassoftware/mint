@@ -331,7 +331,7 @@ class ProjectsTestCase(XMLTestCase):
         self.assertEquals(len(stages), 3)
         
     def testPostImage(self):
-        response=self._post('images/',
+        response=self._post('projects/chater-foo/images/',
             data = testsxml.project_image_post_xml,
             username="admin", password="password")
         self.assertEquals(response.status_code, 200)
