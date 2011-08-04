@@ -20,6 +20,7 @@ from mint.django_rest.rbuilder.users import models as usersmodels
 from mint.django_rest.rbuilder.inventory import models
 from mint.django_rest.rbuilder.jobs import models as jobmodels
 from mint.django_rest.rbuilder.inventory import testsxml
+from mint.django_rest.rbuilder.projects import models as projectmodels
 from mint.lib import x509
 from mint.rest.api import models as restmodels
 
@@ -2986,6 +2987,12 @@ class SystemVersionsTestCase(XMLTestCase):
         self._saveTrove()
         system.installed_software.add(self.trove)
         system.installed_software.add(self.trove2)
+
+        system.project = projectmodels.Project.objects.get(short_name='chater-foo')
+        system.major_version = projectmodels.ProjectVersion.objects.get(
+            branch_id=system.project_id, name='1')
+        system.stage = projectmodels.Stage.objects.get(
+            project_branch=system.major_version, name='Development')
         system.save()
 
         eventUuid = 'eventuuid007'

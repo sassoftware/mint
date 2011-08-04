@@ -399,4 +399,22 @@ Aj/9jaPTk+mjBIgXSVEHkJCtxfGZWYFx/eNItfaAAfZVX68txm5Hyp2J6Equnr82
     <field type="TextField" name="label">chater-foo.eng.rpath.com@rpath:chater-foo-1</field>
     <field type="DecimalField" name="created_date">0</field>
   </object>
+  <object pk="1" model="projects.stage">
+    <field to="projects.project" name="project" rel="ManyToOneRel">1</field>
+    <field to="projects.projectversion" name="project_branch" rel="ManyToOneRel">1</field>
+    <field type="CharField" name="name">Development</field>
+    <field type="TextField" name="label">chater-foo.eng.rpath.com@rpath:chater-foo-1-devel</field>
+  </object>
+  <object pk="2" model="projects.stage">
+    <field to="projects.project" name="project" rel="ManyToOneRel">1</field>
+    <field to="projects.projectversion" name="project_branch" rel="ManyToOneRel">1</field>
+    <field type="CharField" name="name">QA</field>
+    <field type="TextField" name="label">chater-foo.eng.rpath.com@rpath:chater-foo-1-qa</field>
+  </object>
+  <object pk="3" model="projects.stage">
+    <field to="projects.project" name="project" rel="ManyToOneRel">1</field>
+    <field to="projects.projectversion" name="project_branch" rel="ManyToOneRel">1</field>
+    <field type="CharField" name="name">Release</field>
+    <field type="TextField" name="label">chater-foo.eng.rpath.com@rpath:chater-foo-1</field>
+  </object>
 </django-objects>
