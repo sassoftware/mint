@@ -14,7 +14,7 @@
 #from django.template import TemplateDoesNotExist
 
 #from mint.django_rest.rbuilder import models as rbuildermodels
-from mint.django_rest.rbuilder.rbac import views
+#from mint.django_rest.rbuilder.rbac import views
 from mint.django_rest.rbuilder.rbac import models
 #from mint.django_rest.rbuilder.manager import rbuildermanager
 #from mint.django_rest.rbuilder.users import models as usersmodels
