@@ -627,6 +627,22 @@ class ConfigurationDescriptorManager(BaseManager):
             setattr(model, k, v)
         return model
 
+class RbacRoleManager(BaseManager):
+    # needed because of non-integer primary key and xobj
+    def load_from_object(self, obj, request, save=False, load=True):
+        model = self.model(role_id=None)
+        for k, v in obj.__dict__.items():
+            setattr(model, k, v)
+        return model
+
+class RbacContextManager(BaseManager):
+    # needed because of non-integer primary key and xobj
+    def load_from_object(self, obj, request, save=False, load=True):
+        model = self.model(context_id=None)
+        for k, v in obj.__dict__.items():
+            setattr(model, k, v)
+        return model
+
 class SystemManager(BaseManager):
     
     def _load_from_db(self, model_inst):

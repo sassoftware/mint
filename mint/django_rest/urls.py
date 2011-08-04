@@ -581,19 +581,19 @@ urlpatterns = patterns('',
         name='RbacRoles'),
     URL(r'rbac/roles/(?P<role_id>\w+)/?$',
         rbacviews.RbacRolesService(),
-        name='RbacRoles'),
+        name='RbacRole'),
     URL(r'rbac/contexts/?$',
         rbacviews.RbacContextsService(),
         name='RbacContexts'),
     URL(r'rbac/contexts/(?P<context_id>\w+)/?$',
         rbacviews.RbacContextsService(),
-        name='RbacContexts'),
+        name='RbacContext'),
     URL(r'rbac/users/?(P<user_id>\d+)/roles/?$',
         rbacviews.RbacUserRolesService(),
-        name='RbacUserRole'),
-    URL(r'rbac/users/?(P<user_id>\d+)/roles/?(P<role_id>\d+)',
+        name='RbacUserRoles'),
+    URL(r'rbac/users/?(P<user_id>\d+)/roles/?(P<role_id>\w+)',
         rbacviews.RbacUserRolesService(),
-        name='RbacUserRoles')
+        name='RbacUserRole')
 )
 
 

@@ -60,15 +60,20 @@ class RbacRole(modellib.XObjIdModel):
         db_table = 'rbac_role'
 
     view_name = 'RbacRole' # TODO
-
     _xobj = xobj.XObjMetadata(
         tag = 'rbac_role',
         attributes = {'id':str},
     )
+    objects = modellib.RbacRoleManager() # needed because of non-integer PK
+    _xobj_hidden_accessors = set(['rbacuserrole_set','rbacpermission_set'])
 
-    # objects = modellib.RbacManager() # NEEDED?
     role_id = D(models.TextField(primary_key=True),
         "the database ID for the role")
+
+    #def serialize(self, request):
+    #    model = modellib.XObjIdModel.serialize(self, request)
+    #    #model.role_id = "%s/%s" % (self.get_absolute_url(request), self.pk)
+    #    return model
 
 class RbacContexts(modellib.Collection):
     '''
@@ -103,6 +108,7 @@ class RbacContext(modellib.XObjIdModel):
 
     view_name = 'RbacContext' # TODO
 
+    objects = modellib.RbacContextManager() # needed because of non-integer PK
     _xobj = xobj.XObjMetadata(
         tag = 'rbac_context',
         attributes = {'id':str},

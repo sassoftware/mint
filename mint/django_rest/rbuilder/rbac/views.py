@@ -14,7 +14,7 @@
 #
 #from mint.db import database
 #from mint import users
-from mint.django_rest.deco import return_xml, access #, requires, ACCESS, \
+from mint.django_rest.deco import return_xml, access, requires #, ACCESS, \
 #    HttpAuthenticationRequired, getHeaderValue, xObjRequires
 #from mint.django_rest.rbuilder.users import models as usersmodels
 from mint.django_rest.rbuilder import service
@@ -43,7 +43,6 @@ class RbacPermissionsService(BaseRbacService):
         # TODO
         return None
 
-    # TODO: rest_PUT
     # TODO: rest_DELETE
 
 
@@ -57,6 +56,7 @@ class RbacRolesService(BaseRbacService):
     </rbac_roles>    
     """
 
+    # READ
     @access.admin
     @return_xml
     def rest_GET(self, request, role_id=None):
@@ -68,8 +68,20 @@ class RbacRolesService(BaseRbacService):
         else:
             return self.mgr.getRbacRoles()
 
-    # TODO: rest_PUT
-    # TODO: rest_DELETE
+    # CREATE
+    @access.admin
+    @return_xml
+    @requires('rbac_role')
+    def rest_POST(self, request, rbac_role):
+        return self.mgr.addRbacRole(rbac_role)
+
+    # UPDATE
+    @access.admin
+    @requires('rbac_role')
+    @return_xml
+    def rest_PUT(self, request, role_id, role):
+        return self.mgr.updateRbacRole(role_id, role)
+
 
 class RbacUserRolesService(BaseRbacService):
    """

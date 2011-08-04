@@ -36,18 +36,66 @@ exposed = basemanager.exposed
 
 class RbacManager(basemanager.BaseManager):
 
-    def _role(self, value):
-        if type(value) != models.RbacRole:
-           return models.RbacRole.objects.get(pk=value)
+    def _getThings(self, modelClass, containedClass, collection_field):
+        '''generic collection loader'''
+        things = modelClass()
+        setattr(things, collection_field, containedClass.objects.all())
+        return things
+
+    def _addThing(self, modelClass, obj):
+        '''generic creation method'''
+        if not obj:
+            return None
+        obj.save()
+        return obj
+
+    def _updateThing(self, modelClass, old_id, obj):
+        '''generic update method'''
+        # FIXME: make this do a proper update
+        oldObj = modelClass.get(pk=old_id)
+        if not oldObj:
+            return None
+        obj.save()
+        return obj
+
+    def _deleteThing(self, modelClass, obj):
+        '''generic delete method'''
+        if not obj:
+            return None
+        obj.delete()
+        return obj
+    
+    def _orId(self, value, modelClass):
+        '''prevent duplicate get requests'''
+        if type(value) != modelClass:
+           return modelClass.objects.get(pk=value)
         return value
+        
+    def _role(self, value):
+        '''cast input as a role'''
+        return self._orId(value, models.RbacRole)
 
     @exposed
     def getRbacRoles(self):
-        roles = models.RbacRoles()
-        roles.rbac_role = models.RbacRole.objects.all()
-        return roles
+        #roles = models.RbacRoles()
+        #roles.rbac_role = models.RbacRole.objects.all()
+        #return roles
+        return self._getThings(models.RbacRoles, models.RbacRole, 'rbac_role')
 
     @exposed
     def getRbacRole(self, role):
         return self._role(role)
-    
+   
+    @exposed
+    def addRbacRole(self, role):
+        return self._addThing(models.RbacRole, role)
+
+    @exposed
+    def updateRole(self, old_id, role):
+        return self._updateThing(models.RbacRole, old_id, role)
+
+    @exposed
+    def deleteRole(self, role):
+        return self._deleteThing(models.RbacRole, role) 
+
+

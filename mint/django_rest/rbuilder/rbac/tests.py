@@ -4,6 +4,7 @@
 #import os
 #import random
 #from dateutil import tz
+import testsxml
 from xobj import xobj
 #
 #from conary import versions
@@ -47,7 +48,7 @@ class RbacTestCase(XMLTestCase):
         else:
             return item
 
-    def req(self, url, method='GET', expect=200, is_authenticated=False, is_admin=False):
+    def req(self, url, method='GET', expect=200, is_authenticated=False, is_admin=False, **kwargs):
         '''Test a HTTP operation and it's return value, return the contents'''
         method_map = {
            'GET'    : self._get,
@@ -57,11 +58,11 @@ class RbacTestCase(XMLTestCase):
         }
         
         if is_admin:
-             response = method_map[method](url, username="admin", password="password")
+             response = method_map[method](url, username="admin", password="password", **kwargs)
         elif is_authenticated:
-             response = method_map[method](url, username="testuser", password="password")
+             response = method_map[method](url, username="testuser", password="password", **kwargs)
         else:
-             response = method_map[method](url)
+             response = method_map[method](url, **kwargs)
         self.failUnlessEqual(response.status_code, expect, "Expected status code of %s for %s" % (expect, url))
         return response.content
 
@@ -175,15 +176,22 @@ class RbacRoleViews(RbacTestCase):
  
     def testCanGetSingleRole(self):
 
-        #url = 'rbac/roles/datacenter'
-        #content = self.req(url, method='GET', expect=401, is_authenticated=True)
-        #content = self.req(url, method='GET', expect=200, is_admin=True)
-        #obj = xobj.parse(content)
-        #self.assertEqual(obj.role_id, 'datacenter')
-        pass
+        url = 'rbac/roles/developer'
+        content = self.req(url, method='GET', expect=401, is_authenticated=True)
+        content = self.req(url, method='GET', expect=200, is_admin=True)
+        obj = xobj.parse(content)
+        self.assertEqual(obj.rbac_role.role_id, 'developer')
 
     def testCanAddRoles(self):
-        pass
+        
+        url = 'rbac/roles'
+        input = testsxml.role_put_xml_input
+        output = testsxml.role_put_xml_output
+        content = self.req(url, method='POST', data=input, expect=401, is_authenticated=True)
+        content = self.req(url, method='POST', data=input, expect=200, is_admin=True)
+        found_items = models.RbacRole.objects.get(pk='rocket surgeon')
+        self.assertEqual(found_items.pk, 'rocket surgeon')
+        self.assertXMLEquals(content, output)
 
     def testCanDeleteRoles(self):
         pass
