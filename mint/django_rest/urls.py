@@ -263,38 +263,19 @@ urlpatterns = patterns('',
     URL(r'changelogs/(?P<change_log_id>\d+)/?$',
         changelogviews.ChangeLogService(),
         name='ChangeLog'),
-                       
-    # project branch stages     
-    URL(r'project_branch_stages/?$',
-        projectviews.ProjectStageService(),
-        name='ProjectStages'),   
-    URL(r'project_branch_stages/(?P<stage_id>[a-zA-Z0-9]+(\.[a-zA-Z0-9]+)*)/?$',
-        projectviews.ProjectStageService(),
-        name='ProjectStage'),
-                       
-    # product branches (aka major versions) # OLD, shouldn't be top level anymore
+
+    # These are aggregates
+    # Aggregate all project branches
     URL(r'project_branches/?$',
-        projectviews.ProjectVersionService(),
-        name='ProjectVersions'),
-    URL(r'project_branches/(?P<branch_id>[a-zA-Z0-9]+(\.[a-zA-Z0-9]+)*)/?$',
-        projectviews.ProjectVersionService(),
-        name='ProjectVersion'),
-    URL(r'project_branches/(?P<version_id>[a-zA-Z0-9]+(\.[a-zA-Z0-9]+)*)/images/?$',
-        projectviews.ProjectImageService(),
-        name='ProjectImages'),
-    URL(r'project_branches/(?P<version_id>[a-zA-Z0-9]+(\.[a-zA-Z0-9]+)*)'
-         '/images/(?P<image_id>\d+)/?$',
-        projectviews.ProjectImageService(),
-        name='ProjectImage'),
-           
-    # Projects
-    # URL(r'projects/?$',
-    #     projectviews.ProjectService(),
-    #     name='Projects'),
-    # URL(r'projects/(?P<short_name>(\w|\-)*)/?$',
-    #     projectviews.ProjectService(),
-    #     name='Project'),            
-    
+        projectviews.AllProjectBranchesService(),
+        name='AllProjectBranches'),
+
+    # Aggregate all project branch stages
+    URL(r'project_branch_stages/?$',
+        projectviews.AllProjectBranchesStagesService(),
+        name='AllProjectBranchStages'),
+
+    # Proper hierarchy for projects
     URL(r'projects/?$',
         projectviews.ProjectService(),
         name='Projects'),
@@ -310,15 +291,18 @@ urlpatterns = patterns('',
     URL(r'projects/(?P<project_short_name>(\w|\-)*)/project_branches/(?P<project_branch_label>[a-zA-Z0-9]+(\.|\w|\-|\@|\:)*)/?$',
         projectviews.ProjectBranchService(),
         name='ProjectVersion'),
+    URL(r'projects/(?P<project_short_name>(\w|\-)*)/project_branches/(?P<project_branch_label>[a-zA-Z0-9]+(\.|\w|\-|\@|\:)*)/project_branch_stages/?$',
+        projectviews.ProjectBranchStageService(),
+        name='ProjectBranchStages'),
+    URL(r'projects/(?P<project_short_name>(\w|\-)*)/project_branches/(?P<project_branch_label>[a-zA-Z0-9]+(\.|\w|\-|\@|\:)*)/project_branch_stages/(?P<stage_name>(\w|-)+)$',
+        projectviews.ProjectBranchStageService(),
+        name='ProjectBranchStage'),
+
+    # Aggregate all stages for a project
     URL(r'projects/(?P<project_short_name>(\w|\-)*)/project_branch_stages/?$',
-        projectviews.ProjectBranchStageService(),
+        projectviews.ProjectBranchesAllStagesService(),
         name='Stages'),
-    URL(r'projects/(?P<project_short_name>(\w|\-)*)/project_branch_stages/(?P<stage_name>[a-zA-Z0-9]+(\.|\w|\-)*)/?$',
-        projectviews.ProjectBranchStageService(),
-        name='Stage'),
-    
-    
-    
+
     #URL(r'projects/(?P<short_name>(\w|\-)*)/versions/(?P<version_id>[a-zA-Z0-9]+(\.[a-zA-Z0-9]+)*)/?$',
     #    projectviews.ProjectVersionService(),
     #    name='ProjectVersion'),
