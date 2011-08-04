@@ -40,9 +40,9 @@ class UsersTestCase(XMLTestCase):
         return getattr(xobjModel, root_name)
 
     def testGetUsers(self):
-        users = models.Users.objects.all()
+        users = models.User.objects.all()
         users_gotten = self.xobjResponse('users')
-        self.assertEquals(len(list(users)), len(users_gotten))
+        self.assertEquals(len(list(users)), len(users_gotten.user))
 
     def testGetUser(self):
         user = models.User.objects.get(pk=1)
@@ -304,9 +304,9 @@ class UsersTestCase(XMLTestCase):
         self.failUnlessEqual(fault.message, 'The specified user does not exist')
 
     def testGetUserGroups(self):
-        user_groups = models.UserGroups.objects.all()
+        user_groups = models.UserGroup.objects.all()
         user_groups_gotten = self.xobjResponse('user_groups/')
-        self.assertEquals(len(list(user_groups)), len(user_groups_gotten))
+        self.assertEquals(len(list(user_groups)), len(user_groups_gotten.user_group))
         
     def testGetUserGroup(self):
         user_group = models.UserGroup.objects.get(pk=1)
