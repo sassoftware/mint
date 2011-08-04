@@ -392,6 +392,7 @@ class ConvertedImageGenerator(WbsGenerator):
         """Fetch the VHD result, convert as needed, then upload."""
         size, fobj = self.wigClient.getResults('vhd')
         self.jobData['vmwareOS'] = self.wimData.getVmwareOS()
+        self.jobData['vmMemory'] = 1024
         converter = bootable.getConverter(jobData=self.jobData, vhdObj=fobj,
                 vhdSize=size, tempDir=self.tempDir, callback=self.sendStatus)
         self.sendStatus(iconst.WIG_JOB_CONVERTING, "Creating %s image" %
