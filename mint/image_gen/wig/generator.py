@@ -288,8 +288,7 @@ class WbsGenerator(ImageGenerator):
         """Convert image to final format and upload."""
         raise NotImplementedError
 
-    # FIXME
-    def FIXME__destroy(self):
+    def destroy(self):
         if self.wigClient:
             try:
                 self.wigClient.cleanup()
