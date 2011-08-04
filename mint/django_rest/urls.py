@@ -301,7 +301,7 @@ urlpatterns = patterns('',
     # Aggregate all stages for a project
     URL(r'projects/(?P<project_short_name>(\w|\-)*)/project_branch_stages/?$',
         projectviews.ProjectBranchesAllStagesService(),
-        name='Stages'),
+        name='ProjectBranchesAllStages'),
 
     #URL(r'projects/(?P<short_name>(\w|\-)*)/versions/(?P<version_id>[a-zA-Z0-9]+(\.[a-zA-Z0-9]+)*)/?$',
     #    projectviews.ProjectVersionService(),

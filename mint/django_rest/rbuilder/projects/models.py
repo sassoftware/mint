@@ -242,7 +242,8 @@ class ProjectVersion(modellib.XObjIdModel):
 
     _xobj = xobj.XObjMetadata(
         tag="project_branch")
-    
+    _xobj_hidden_accessors = set(['images', 'systems', ])
+
     view_name = 'ProjectVersion'
     summary_view = ["name"]
 
@@ -263,8 +264,9 @@ class ProjectVersion(modellib.XObjIdModel):
     definition = modellib.SyntheticField()
     platform = modellib.SyntheticField()
     platform_version = modellib.SyntheticField()
-    image_type_definitions = modellib.SyntheticField()
-    source_group = modellib.SyntheticField() # not implemented yet
+    image_definitions = modellib.SyntheticField(modellib.HrefField())
+    image_type_definitions = modellib.SyntheticField(modellib.HrefField())
+    source_group = modellib.SyntheticField()
 
     def __unicode__(self):
         return self.name
@@ -278,6 +280,13 @@ class ProjectVersion(modellib.XObjIdModel):
         return [ self.project.short_name, self.label ]
 
     def serialize(self, request=None):
+        oldUrlValues = (self.project.short_name, self.name)
+        self.image_definitions = modellib.HrefField(
+            href='/api/products/%s/versions/%s/imageDefinitions',
+            values=oldUrlValues)
+        self.image_type_definitions = modellib.HrefField(
+            href='/api/products/%s/versions/%s/imageTypeDefinitions',
+            values=oldUrlValues)
         xobjModel = modellib.XObjIdModel.serialize(self, request)
         # Convert timestamp fields in the database to our standard UTC format
         xobjModel.created_date = str(datetime.datetime.fromtimestamp(
@@ -286,13 +295,13 @@ class ProjectVersion(modellib.XObjIdModel):
         xobjModel.project_branch_stages.id = "%s/project_branch_stages" % (xobjModel.id, )
         return xobjModel
 
-    # def computeSyntheticFields(self, sender, **kwargs):
-    #     if self._rbmgr is None or self.project_id is None:
-    #         return
-    #     restDb = self._rbmgr.restDb
-    #     plat = restDb.getProductVersionPlatform(self.project.repository_hostname, self.name)
-    #     self.platform_label = plat.label
-
+    def computeSyntheticFields(self, sender, **kwargs):
+        if self._rbmgr is None or self.project_id is None:
+            return
+        restDb = self._rbmgr.restDb
+        pd = restDb.getProductVersionDefinition(self.project.repository_hostname, self.name)
+        self.source_group = str(pd.getImageGroup())
+        self.image_definitions = modellib.HrefField()
 
 class Stages(modellib.Collection):
     class Meta:
@@ -308,15 +317,15 @@ class Stage(modellib.XObjIdModel):
         db_table = 'project_branch_stage'
 
     view_name = 'ProjectBranchStage'
-    _xobj = xobj.XObjMetadata(tag='project_branch_stage', elements = ['labels', ])
+    _xobj = xobj.XObjMetadata(tag='project_branch_stage')
     _xobj_hidden_accessors = set(['version_set',])
-    
+
     summary_view = ["name"]
 
     stage_id = models.AutoField(primary_key=True)
     project = modellib.DeferredForeignKey(Project,
         related_name="project_branch_stages", view_name="Stages")
-    project_branch = modellib.DeferredForeignKey(ProjectVersion, 
+    project_branch = modellib.DeferredForeignKey(ProjectVersion,
         related_name="project_branch_stages", view_name="ProjectVersion")
     name = models.CharField(max_length=256)
     label = models.TextField(null=False)
@@ -431,7 +440,7 @@ class Image(modellib.XObjIdModel):
     build_count = models.IntegerField(null=True, default=0,
         db_column="buildcount")
     version = models.ForeignKey(ProjectVersion, null=True,
-        related_name="project_version",
+        related_name="images",
         db_column='productversionid')
     stage_name = models.CharField(max_length=255, db_column='stagename',
         null=True, blank=True, default='')

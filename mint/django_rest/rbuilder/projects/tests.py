@@ -14,7 +14,6 @@ from mint.django_rest.rbuilder.repos import manager as reposmanager
 from mint.django_rest.rbuilder.manager import basemanager
 from mint.django_rest.rbuilder.manager import rbuildermanager
 
-
 from xobj import xobj
 
 from testutils import mock
@@ -27,7 +26,10 @@ class ProjectsTestCase(XMLTestCase):
         mock.mock(reposmanager.ReposManager, "createRepositoryForProject")
         mock.mock(reposmanager.ReposManager, "createSourceTrove")
         mock.mock(reposmanager.ReposManager, "generateConaryrcFile")
+        MockProdDef = mock.MockObject()
+        MockProdDef.getImageGroup._mock.setReturn("group-foo-appliance")
         mock.mock(basemanager.BaseRbuilderManager, "restDb")
+        basemanager.BaseRbuilderManager.restDb.getProductVersionDefinition._mock.setDefaultReturn(MockProdDef)
         mock.mock(manager.ProjectManager, "setProductVersionDefinition")
         self.mgr = rbuildermanager.RbuilderManager()
         self.mintConfig = self.mgr.cfg
@@ -119,6 +121,9 @@ class ProjectsTestCase(XMLTestCase):
         self.failUnlessEqual(branch.name, 'trunk')
         self.failUnlessEqual(branch.project_branch_stages.id,
                 'http://testserver/api/v1/projects/chater-foo/project_branches/chater-foo.eng.rpath.com@rpath:chater-foo-trunk/project_branch_stages')
+        # Comparing XML is more involved maintenance-wise, avoid doing
+        # that for collections
+        self.assertXMLEquals(response.content, testsxml.project_branch_xml)
 
     def testGetProjectBranchStagesAnon(self):
         self._initProject()
@@ -133,6 +138,18 @@ class ProjectsTestCase(XMLTestCase):
             'http://testserver/api/v1/projects/chater-foo/project_branches/chater-foo.eng.rpath.com@rpath:chater-foo-trunk/project_branch_stages/Stage',
             'http://testserver/api/v1/projects/chater-foo/project_branches/chater-foo.eng.rpath.com@rpath:chater-foo-trunk/project_branch_stages/Release',
          ])
+
+    def testGetProjectBranchStageAnon(self):
+        self._initProject()
+        response = self._get('projects/chater-foo/project_branches/chater-foo.eng.rpath.com@rpath:chater-foo-trunk/project_branch_stages/Stage')
+        self.assertEquals(response.status_code, 200)
+        stage = xobj.parse(response.content).project_branch_stage
+        self.failUnlessEqual(stage.name, 'Stage')
+        self.failUnlessEqual(stage.id, 'http://testserver/api/v1/projects/chater-foo/project_branches/chater-foo.eng.rpath.com@rpath:chater-foo-trunk/project_branch_stages/Stage')
+
+        # Comparing XML is more involved maintenance-wise, avoid doing
+        # that for collections
+        self.assertXMLEquals(response.content, testsxml.project_branch_stage_xml)
 
     def testAddProject(self):
         response = self._post('projects',

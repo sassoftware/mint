@@ -113,7 +113,7 @@ class ProjectBranchStageService(service.BaseService):
             return projectsmodels.Stage.objects.get(
                 project__short_name=project_short_name,
                 project_branch__label=project_branch_label,
-                stage_name=stage_name)
+                name=stage_name)
 
         Stages = projectsmodels.Stages()
         iterator = projectsmodels.Stage.objects.filter(
