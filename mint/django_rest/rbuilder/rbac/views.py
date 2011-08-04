@@ -79,8 +79,8 @@ class RbacRolesService(BaseRbacService):
     @access.admin
     @requires('rbac_role')
     @return_xml
-    def rest_PUT(self, request, role_id, role):
-        return self.mgr.updateRbacRole(role_id, role)
+    def rest_PUT(self, request, role_id, rbac_role):
+        return self.mgr.updateRbacRole(role_id, rbac_role)
 
 
 class RbacUserRolesService(BaseRbacService):

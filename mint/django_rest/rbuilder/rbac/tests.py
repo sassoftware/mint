@@ -185,7 +185,7 @@ class RbacRoleViews(RbacTestCase):
     def testCanAddRoles(self):
         
         url = 'rbac/roles'
-        input = testsxml.role_put_xml_input
+        input = testsxml.role_put_xml_input   
         output = testsxml.role_put_xml_output
         content = self.req(url, method='POST', data=input, expect=401, is_authenticated=True)
         content = self.req(url, method='POST', data=input, expect=200, is_admin=True)
@@ -196,8 +196,19 @@ class RbacRoleViews(RbacTestCase):
     def testCanDeleteRoles(self):
         pass
 
-    def testCanUpdateRoles(self):
-        pass
+    #def testCanUpdateRoles(self):
+    #    
+    #    url = 'rbac/roles/sysadmin'
+    #    input = testsxml.role_put_xml_input   # reusing put data is fine here
+    #    output = testsxml.role_put_xml_output
+    #    content = self.req(url, method='PUT', data=input, expect=401, is_authenticated=True)
+    #    content = self.req(url, method='PUT', data=input, expect=200, is_admin=True)
+    #    found_items = models.RbacRole.objects.get(pk='rocket surgeon')
+    #    found_items2 = models.RbacRole.objects.get(pk='sysadmin')
+    #    self.assertEqual(found_items.pk, 'rocket surgeon')
+    #    self.assertXMLEquals(content, output)
+    #    print found_items2
+    #    self.assertTrue(found_items2 is None, 'sysadmin is renamed')
 
 class RbacPermissionViews(RbacTestCase):
     def testCanListPermissions(self):

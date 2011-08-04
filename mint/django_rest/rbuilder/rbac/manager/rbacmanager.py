@@ -51,12 +51,28 @@ class RbacManager(basemanager.BaseManager):
 
     def _updateThing(self, modelClass, old_id, obj):
         '''generic update method'''
-        # FIXME: make this do a proper update
-        oldObj = modelClass.get(pk=old_id)
+        # FIXME: not convinced this works
+        oldObj = modelClass.objects.get(pk=old_id)
         if not oldObj:
             return None
         obj.save()
         return obj
+
+    def _updateSingleColumnThing(self, modelClass, old_id, obj, field):
+        '''update a table where the only value is a primary key'''
+        #oldObj = modelClass.objects.get(pk=old_id)
+        #if not oldObj:
+        #    return None
+        #print oldObj.__dict__
+        #value = getattr(obj, field)
+        #print "FIELD=%s" % field
+        #print "NEW VALUE=%s" % value
+        #setattr(oldObj, field, value)
+        #print oldObj.__dict__
+        #oldObj.save(force_update=True)
+        # modelClass.objects.raw('UPDATE % FROM '?
+        # return oldObj
+        return None
 
     def _deleteThing(self, modelClass, obj):
         '''generic delete method'''
@@ -91,11 +107,11 @@ class RbacManager(basemanager.BaseManager):
         return self._addThing(models.RbacRole, role)
 
     @exposed
-    def updateRole(self, old_id, role):
-        return self._updateThing(models.RbacRole, old_id, role)
+    def updateRbacRole(self, old_id, role):
+        return self._updateSingleColumnThing(models.RbacRole, old_id, role, 'role_id')
 
     @exposed
-    def deleteRole(self, role):
+    def deleteRbacRole(self, role):
         return self._deleteThing(models.RbacRole, role) 
 
 
