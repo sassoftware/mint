@@ -303,18 +303,6 @@ urlpatterns = patterns('',
         projectviews.ProjectBranchesAllStagesService(),
         name='ProjectBranchesAllStages'),
 
-    #URL(r'projects/(?P<short_name>(\w|\-)*)/versions/(?P<version_id>[a-zA-Z0-9]+(\.[a-zA-Z0-9]+)*)/?$',
-    #    projectviews.ProjectVersionService(),
-    #    name='ProjectVersion'),
-    #URL(r'projects/(?P<short_name>(\w|\-)*)/versions/(?P<version_id>[a-zA-Z0-9]+(\.[a-zA-Z0-9]+)*)/'
-    #     'stages/?$',
-    #    projectviews.ProjectVersionStageService(),
-    #    name='ProjectVersionStages'),
-    #URL(r'projects/(?P<short_name>(\w|\-)*)/versions/(?P<version_id>[a-zA-Z0-9]+(\.[a-zA-Z0-9]+)*)/'
-    #     'stages/(?P<stage_name>[a-zA-Z0-9]+)/?$',
-    #    projectviews.ProjectVersionStageService(),
-    #    name='ProjectVersionStage'),
-    
     URL(r'projects/(?P<short_name>(\w|\-)*)/images/?$',
         projectviews.ProjectImageService(),
         name='ProjectImages'),

@@ -294,17 +294,6 @@ class ProjectManager(basemanager.BaseManager):
 
         member.delete()
 
-    @exposed
-    def getProjectVersions(self):
-        allVersions = models.ProjectVersions()
-        allVersions.project_branch = models.ProjectVersion.objects.all()
-        return allVersions
-
-    @exposed
-    def getProjectVersion(self, versionId):
-        version = models.ProjectVersion.objects.get(pk=versionId)
-        return version
-
     def saveProductVersionDefinition(self, productVersion, prodDef):
         # FIXME: this shouldn't trust prodDef, it could point to somebody
         # else's repository which this method would gleefully overwrite...
@@ -326,7 +315,7 @@ class ProjectManager(basemanager.BaseManager):
                 'Product Definition commit from rBuilder\n')
 
     @exposed
-    def addProjectVersion(self, projectVersion):
+    def addProjectBranch(self, projectVersion):
 
         if not self.isProjectOwner(projectVersion.project):
             raise errors.PermissionDenied()
@@ -381,7 +370,7 @@ class ProjectManager(basemanager.BaseManager):
         return projectVersion
 
     @exposed
-    def updateProjectVersion(self, projectVersion):
+    def updateProjectBranch(self, projectVersion):
         if not self.isProjectOwner(projectVersion.project):
             raise errors.PermissionDenied()
         if projectVersion.label.split('@')[0].lower() != (
@@ -391,7 +380,7 @@ class ProjectManager(basemanager.BaseManager):
         return projectVersion
 
     @exposed
-    def deleteProjectVersion(self, projectVersion):
+    def deleteProjectBranch(self, projectVersion):
         if not self.isProjectOwner(projectVersion.project):
             raise errors.PermissionDenied()
         projectVersion.delete()
@@ -448,25 +437,15 @@ class ProjectManager(basemanager.BaseManager):
         return stages
 
     @exposed
-    def getImage(self, short_name, image_id):
+    def getImage(self, image_id):
         return models.Image.objects.get(pk=image_id)
-        
+
     @exposed
-    def getImages(self, short_name, image_id):
+    def getImagesForProject(self, short_name):
         Images = models.Images()
-        Images.image = models.Image.all().filter(short_name=short_name)
+        Images.image = sorted(models.Image.objects.filter(project__short_name=short_name),
+            key=lambda x: x.image_id)
         return Images
-        
-    # @exposed
-    # def getProjectBranch(self, project_name, project_branch_name):
-    #     ProjectVersions = models.ProjectVersions()
-    #     if project_branch_name:
-    #         ProjectVersions.project_branch = models.ProjectVersion.objects.all().filter(
-    #                 name=project_branch_name, project__short_name=project_name)
-    #     else:
-    #         ProjectVersions.project_branch = models.ProjectVersion.objects.all().filter(
-    #             project__short_name=project_name)
-    #     return ProjectVersions
 
     @exposed
     def getProjectBranch(self, project_name, project_branch_label):

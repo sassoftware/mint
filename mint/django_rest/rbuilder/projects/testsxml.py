@@ -181,7 +181,7 @@ project_version_post_with_project_no_auth_xml = """\
 """
 
 project_version_put_xml = """\
-  <project_branch id="http://127.0.0.1:8000/api/v1/project_branches/2">
+  <project_branch id="http://testserver/api/v1/projects/postgres/project_branches/postgres.rpath.com@rpath:postgres-1">
     <description>updated description</description>
   </project_branch>
 """

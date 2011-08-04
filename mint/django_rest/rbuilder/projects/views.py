@@ -30,6 +30,21 @@ class ProjectBranchService(service.BaseService):
     def get(self, project_short_name, project_branch_label):
         return self.mgr.getProjectBranch(project_short_name, project_branch_label)
 
+    @requires("project_branch")
+    @return_xml
+    def rest_POST(self, request, project_branch):
+        return self.mgr.addProjectBranch(project_branch)
+
+    @requires("project_branch")
+    @return_xml
+    def rest_PUT(self, request, project_short_name, project_branch_label, project_branch):
+        return self.mgr.updateProjectBranch(project_branch)
+
+    def rest_DELETE(self, request, project_short_name, project_branch_label):
+        projectBranch = self.get(project_short_name, project_branch_label)
+        self.mgr.deleteProjectBranch(projectBranch)
+        response = HttpResponse(status=204)
+        return response
 
 class ProjectService(service.BaseService):
     @access.anonymous
@@ -58,35 +73,6 @@ class ProjectService(service.BaseService):
     def rest_DELETE(self, request, project_short_name):
         project = self.get(project_short_name)
         self.mgr.deleteProject(project)
-        response = HttpResponse(status=204)
-        return response
-
-class ProjectVersionService(service.BaseService):
-
-    @access.anonymous
-    @return_xml
-    def rest_GET(self, request, branch_id=None):
-        return self.get(branch_id)
-
-    def get(self, branch_id=None):
-        if branch_id:
-            return self.mgr.getProjectVersion(branch_id)
-        else:
-            return self.mgr.getProjectVersions()
-
-    @requires("project_branch")
-    @return_xml
-    def rest_POST(self, request, project_branch):
-        return self.mgr.addProjectVersion(project_branch)
-
-    @requires("project_branch")
-    @return_xml
-    def rest_PUT(self, request, branch_id, project_branch):
-        return self.mgr.updateProjectVersion(project_branch)
-
-    def rest_DELETE(self, request, branch_id):
-        projectBranch = self.get(branch_id)
-        self.mgr.deleteProjectVersion(projectBranch)
         response = HttpResponse(status=204)
         return response
 
@@ -135,7 +121,7 @@ class ProjectImageService(service.BaseService):
         if image_id:
             model = self.mgr.getImage(image_id)
         else:
-            model = self.mgr.getImages()
+            model = self.mgr.getImagesForProject(short_name)
         return model
 
 """        
