@@ -141,6 +141,7 @@ class _BaseVMwareConverter(ImageConverter):
         # Use jobslave code to roll up a VMX tarball (VMware) or OVF 0.9
         # tarball (VMware ESX) and, if requested, an OVF 1.0 archive.
         vmCallback = _VMwareCallback(self.sendStatus)
+        assert 'vmwareOS' in self.jobData
         self.configure()
         vmdkPath = self.writeMachine(disk, callback=vmCallback)
         if self.buildOVF10:
