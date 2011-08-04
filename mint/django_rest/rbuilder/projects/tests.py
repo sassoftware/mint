@@ -247,13 +247,16 @@ class ProjectsTestCase(XMLTestCase):
             username="testuser", password="password")
         self.assertEquals(response.status_code, 204)
 
-    def testGetProjectVersion(self):
+    def testGetAggregateProjectBranches(self):
         response = self._get('project_branches/',
             username="testuser", password="password")
         self.assertEquals(response.status_code, 200)
         branches = xobj.parse(response.content).project_branches.project_branch
-        self.assertEquals(len(branches), 4)
-        
+        self.failUnlessEqual([ x.label for x in branches ],
+            ['chater-foo.eng.rpath.com@rpath:chater-foo-1',
+             'postgres.rpath.com@rpath:postgres-1',
+             'postgres.rpath.com@rpath:postgres-2'])
+
     def testAddProjectVersionToProject(self):
         self._addProject("foo")
         response = self._post('project_branches/',
@@ -313,28 +316,38 @@ class ProjectsTestCase(XMLTestCase):
         self.assertEquals(response.status_code, 403)
         
     def testGetAggregateProjectBranchStages(self):
+        self._initProject()
         response = self._get('project_branch_stages/',
             username="testuser", password="password")
         self.assertEquals(response.status_code, 200)
         stages = xobj.parse(response.content).project_branch_stages.project_branch_stage
-        self.assertEquals(len(stages), 9)
-        
-    def testGetProjectBranchStagesByVersion(self):
-        self._addProject("foo")
-        # add a branch to work with
-        response = self._post('project_branches/',
-            data=testsxml.project_version_post_with_project_xml,
-            username="admin", password="password")
-        self.assertEquals(response.status_code, 200)
-        branch = xobj.parse(response.content).project_branch
-        branch = models.ProjectVersion.objects.get(pk=branch.branch_id)
-        
-        # get branch stages
-        response = self._get('project_branches/%s/project_branch_stages' % branch.branch_id,
+        self.failUnlessEqual([ x.label for x in stages ],
+            [
+                'foo@ns:trunk-devel',
+                'foo@ns:trunk-qa',
+                'foo@ns:trunk-stage',
+                'foo@ns:trunk',
+                'postgres.rpath.com@rpath:postgres-1-devel',
+                'postgres.rpath.com@rpath:postgres-1-qa',
+                'postgres.rpath.com@rpath:postgres-1',
+                'postgres.rpath.com@rpath:postgres-2-devel',
+                'postgres.rpath.com@rpath:postgres-2-qa',
+                'postgres.rpath.com@rpath:postgres-2',
+            ])
+
+    def testGetProjectAllBranchStages(self):
+        self._initProject()
+        response = self._get('projects/chater-foo/project_branch_stages',
             username="testuser", password="password")
         self.assertEquals(response.status_code, 200)
         stages = xobj.parse(response.content).project_branch_stages.project_branch_stage
-        self.assertEquals(len(stages), 3)
+        self.failUnlessEqual([ x.label for x in stages ],
+            [
+                'foo@ns:trunk-devel',
+                'foo@ns:trunk-qa',
+                'foo@ns:trunk-stage',
+                'foo@ns:trunk',
+            ])
 
     def testGetProjectImages(self):
         # Add image
