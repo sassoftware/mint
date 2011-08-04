@@ -12,40 +12,21 @@
 # full details.
 #
 
-SUBDIRS =	fixtures manager models_xsl docs
+# No subdirs for now
+#SUBDIRS =	fixtures manager models_xsl docs
+SUBDIRS =
 python_files =	$(wildcard *.py)
 template_files = $(wildcard *.html *.xsl)
 
 dist_files = Makefile $(python_files)
-GENERATE_DS=generateDS.py
-XSD_DIR=xsd
 
-.PHONY: clean install $(generated_files)
+.PHONY: clean install
 
-all: $(generated_files) default-all
+all: default-all
 
 install: pyfiles-install default-install
 	mkdir -p $(DESTDIR)$(PYDIR)/$(PYDEST)
-	install -m0644 $(template_files) $(DESTDIR)$(PYDIR)/$(PYDEST)/
 
 clean: default-clean
-
-generate: $(patsubst $(XSD_DIR)/%.xsd,rule-%,$(wildcard $(XSD_DIR)/*.xsd))
-
-rule-%:
-	$(GENERATE_DS) -f --silence \
-                --no-dates \
-                --no-versions \
-                --member-specs=list \
-                --external-encoding=utf-8 \
-                --search-path=$(XSD_DIR) \
-                -o generateds_$(subst -,_,$(patsubst rule-%,%,$@)).py \
-                $(XSD_DIR)/$(patsubst rule-%,%,$@).xsd
-
-install-generate: $(addprefix install-rule-,$(wildcard xml_*))
-
-install-rule-%: %
-	install -d $(DESTDIR)$(pydir)$<
-	install $</*.py $(DESTDIR)$(pydir)$</
 
 include ../../../../Make.rules
