@@ -38,30 +38,30 @@ class ProjectManager(basemanager.BaseManager):
         allProjects = models.Projects()
         # We better return things in a stable order
         allProjects.project = sorted(
-            (p for p in models.Project.objects.all() if self.checkAccess(p)),
+            (p for p in models.Project.objects.all() if self.checkProjectAccess(p)),
             key=lambda x: x.project_id)
         return allProjects
 
     @exposed
     def getProject(self, project_name):
         project = models.Project.objects.get(short_name=project_name)
-        if self.checkAccess(project):   
+        if self.checkProjectAccess(project):   
             return project
-        else:
-            raise errors.PermissionDenied() 
+        raise errors.PermissionDenied() 
 
-    def checkAccess(self, project):
+    def checkProjectAccess(self, project):
         # Admins can see all projects
         if auth.isAdmin(self.user):
             return True
         # Public projects are visible to all
-        elif not project.hidden:
+        if not project.hidden:
             return True
-        # Is the current user a project member
-        elif self.user in project.members.all():
-            return True
-        else:
+        if self.user is None:
             return False
+        # Is the current user a project member
+        if [ x for x in project.members.filter(user_id=self.user.user_id) ]:
+            return True
+        return False
 
     def isProjectOwner(self, project):
         # Admins can see all projects
@@ -427,16 +427,6 @@ class ProjectManager(basemanager.BaseManager):
         return dbStage
 
     @exposed
-    def getStages(self, version_name=None, stage_id=None):
-        stages = models.Stages()
-        if version_name:
-            version = models.ProjectVersion.objects.all().filter(name=version_name)
-            stages.project_branch_stage = version
-        else:
-            stages.project_branch_stage = models.Stage.objects.get(stage_id=stage_id)
-        return stages
-
-    @exposed
     def getImage(self, image_id):
         return models.Image.objects.get(pk=image_id)
 
@@ -452,18 +442,72 @@ class ProjectManager(basemanager.BaseManager):
         if project_branch_label:
             # Even though technically doing a GET and letting it fail
             # is not efficient, this is what most of the code does
-            branch = models.ProjectVersion.objects.get(
+            branch = models.ProjectVersion.objects.select_related(depth=2).get(
                 label=project_branch_label, project__short_name=project_name)
-            return branch
+            return self._projectValidator(branch)
 
         ProjectVersions = models.ProjectVersions()
-        iterator = models.ProjectVersion.objects.filter(
-            project__short_name=project_name)
-        ProjectVersions.project_branch = sorted(iterator,
-            key=lambda x: x.branch_id)
-        return ProjectVersions
-        
-    
+        iterator = models.ProjectVersion.objects.select_related(depth=2).filter(
+            project__short_name=project_name).order_by('branch_id')
+        return self._branchFilter(iterator)
+
+    @exposed
+    def getAllProjectBranches(self):
+        # use select_related so we catch projects in the same query
+        iterator = models.ProjectVersion.objects.select_related(depth=2).order_by(
+            'project__project_id', 'branch_id')
+        return self._branchFilter(iterator)
+
+    def _branchFilter(self, iterator):
+        return self._objectFilterOnProjects(iterator, models.ProjectVersions, 'project_branch')
+
+    def _stageFilter(self, iterator):
+        return self._objectFilterOnProjects(iterator, models.Stages, 'project_branch_stage')
+
+    def _objectFilterOnProjects(self, iterator, modelClass, fieldName):
+        # We need to check project permissions for all objects in the iterator
+        model = modelClass()
+        collector = []
+        setattr(model, fieldName, collector)
+        for obj in iterator:
+            if self.checkProjectAccess(obj.project):
+                collector.append(obj)
+        return model
+
+    def _projectValidator(self, obj):
+        if self.checkProjectAccess(obj.project):
+            return obj
+        raise errors.NotFound()
+
+    @exposed
+    def getProjectBranchStage(self, project_short_name, project_branch_label, stage_name):
+        stage = models.Stage.objects.select_related(depth=2).get(
+            project__short_name=project_short_name,
+            project_branch__label=project_branch_label,
+            name=stage_name)
+        return self._projectValidator(stage)
+
+    @exposed
+    def getProjectAllBranchStages(self, project_short_name):
+        iterator = models.Stage.objects.filter(
+                project__short_name=project_short_name).order_by(
+                    'project__project_id', 'project_branch__branch_id', 'stage_id')
+        return self._stageFilter(iterator)
+
+    @exposed
+    def getProjectBranchStages(self, project_short_name, project_branch_label):
+        iterator = models.Stage.objects.filter(
+                project__short_name=project_short_name,
+                project_branch__label=project_branch_label).order_by(
+                    'project__project_id', 'project_branch__branch_id', 'stage_id')
+        return self._stageFilter(iterator)
+
+    @exposed
+    def getAllProjectBranchStages(self):
+        iterator = models.Stage.objects.select_related(depth=2).order_by(
+            'project__project_id', 'project_branch__branch_id', 'stage_id')
+        return self._stageFilter(iterator)
+
 """    
     @exposed
     def getDescriptorForImageBuildAction(self, , job_type, query_dict):

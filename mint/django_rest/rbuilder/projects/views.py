@@ -13,13 +13,22 @@ from mint.django_rest.rbuilder.inventory.views import StageProxyService
 from mint.django_rest.rbuilder.projects import models as projectsmodels
 
 class AllProjectBranchesStagesService(service.BaseService):
-    pass
+    @access.anonymous
+    @return_xml
+    def rest_GET(self, request):
+        return self.mgr.getAllProjectBranchStages()
 
 class AllProjectBranchesService(service.BaseService):
-    pass
+    @access.anonymous
+    @return_xml
+    def rest_GET(self, request):
+        return self.mgr.getAllProjectBranches()
 
-class ProjectBranchesAllStagesService(service.BaseService):
-    pass
+class ProjectAllBranchStagesService(service.BaseService):
+    @access.anonymous
+    @return_xml
+    def rest_GET(self, request, project_short_name):
+        return self.mgr.getProjectAllBranchStages(project_short_name)
 
 class ProjectBranchService(service.BaseService):
     @access.anonymous
@@ -96,18 +105,10 @@ class ProjectBranchStageService(service.BaseService):
 
     def get(self, project_short_name, project_branch_label, stage_name):
         if stage_name:
-            return projectsmodels.Stage.objects.get(
-                project__short_name=project_short_name,
-                project_branch__label=project_branch_label,
-                name=stage_name)
-
-        Stages = projectsmodels.Stages()
-        iterator = projectsmodels.Stage.objects.filter(
-                project__short_name=project_short_name,
-                project_branch__label=project_branch_label)
-        Stages.project_branch_stage = sorted(iterator,
-            key=lambda x: x.stage_id)
-        return Stages
+            return self.mgr.getProjectBranchStage(project_short_name,
+                project_branch_label, stage_name)
+        return self.mgr.getProjectBranchStages(project_short_name,
+            project_branch_label)
 
 
 class ProjectImageService(service.BaseService):
