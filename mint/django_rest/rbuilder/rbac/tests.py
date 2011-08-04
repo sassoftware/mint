@@ -131,9 +131,10 @@ class RbacRoleViews(XMLTestCase):
 
     def setUp(self):
         XMLTestCase.setUp(self)
-        models.RbacRole('sysadmin').save()
-        models.RbacRole('developer').save()
-        models.RbacRole('intern').save()
+        self.roles = [ 'sysadmin', 'developer', 'intern' ]
+        for role in self.roles:
+            models.RbacRole(role).save()
+       
 
     def testCanListRoles(self):
 
@@ -144,14 +145,15 @@ class RbacRoleViews(XMLTestCase):
         response = self._get(url, username="admin", password="password")
         self.assertEquals(response.status_code, 200, 'able to access as admin')
 
+        actual = models.RbacRole.objects.all()
+        self.assertEqual(len(actual), len(self.roles), 'test preconditions ok')
+
         obj = xobj.parse(response.content)
-        import epdb; epdb.st()
-        items = _xobj_list_hack(obj.rbac_roles.role)
-
-        for x in items:
-            print items
-
-        self.assertEquals(len(items), 3, 'right number of items')
+        found_items = _xobj_list_hack(obj.rbac_roles.rbac_role)
+        found_items = [ item.role_id for item in found_items ] 
+        for expected in self.roles:
+            self.assertTrue(expected in found_items, 'found item')
+        self.assertEqual(len(found_items), len(self.roles), 'right number of items')
  
     def testCanGetSingleRole(self):
         pass

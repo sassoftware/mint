@@ -44,7 +44,7 @@ class RbacManager(basemanager.BaseManager):
     @exposed
     def getRbacRoles(self):
         roles = models.RbacRoles()
-        roles.role = models.RbacRoles.objects.all()
+        roles.rbac_role = models.RbacRole.objects.all()
         return roles
 
     @exposed

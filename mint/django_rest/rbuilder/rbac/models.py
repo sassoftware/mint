@@ -40,7 +40,7 @@ class RbacRoles(modellib.Collection):
         abstract = True
     _xobj = xobj.XObjMetadata(tag = 'rbac_roles')
     list_fields = ['rbac_role']
-    role = []
+    rbac_role = []
     objects = modellib.RbacRolesManager() # TODO: add django manager
     view_name = 'RbacRoles' # TODO: add view
 
@@ -48,7 +48,7 @@ class RbacRoles(modellib.Collection):
         modellib.Collection.__init__(self)
 
     def save(self):
-        return [s.save() for s in self.role]
+        return [s.save() for s in self.rbac_role]
 
 class RbacRole(modellib.XObjIdModel):
     '''
@@ -80,7 +80,7 @@ class RbacContexts(modellib.Collection):
         abstract = True
     _xobj = xobj.XObjMetadata(tag = 'rbac_contexts')
     list_fields = ['rbac_contexts']
-    context = []
+    rbac_context = []
     objects = modellib.RbacContextsManager() 
     view_name = 'RbacContexts' # TODO: add view
 
@@ -88,7 +88,7 @@ class RbacContexts(modellib.Collection):
         modellib.Collection.__init__(self)
 
     def save(self):
-        return [s.save() for s in self.context]
+        return [s.save() for s in self.rbac_context]
 
 class RbacContext(modellib.XObjIdModel):
     '''
@@ -122,7 +122,7 @@ class RbacPermissions(modellib.Collection):
         abstract = True
     _xobj = xobj.XObjMetadata(tag = 'rbac_permissions')
     list_fields = ['rbac_contexts']
-    permission = []
+    rbac_permission = []
     objects = modellib.RbacPermissionsManager()
     view_name = 'RbacPermissions' # TODO: add view
 
@@ -130,7 +130,7 @@ class RbacPermissions(modellib.Collection):
         modellib.Collection.__init__(self)
 
     def save(self):
-        return [s.save() for s in self.permission]
+        return [s.save() for s in self.rbac_permission]
 
 class RbacPermission(modellib.XObjIdModel):
     '''
@@ -164,7 +164,7 @@ class RbacUserRoles(modellib.Collection):
         abstract = True
     _xobj = xobj.XObjMetadata(tag = 'rbac_user_roles')
     list_fields = ['rbac_user_role']
-    roles = []
+    rbac_user_role = []
     objects = modellib.RbacUserRolesManager()
     view_name = 'RbacUserRoles' # TODO: add view
 
@@ -172,7 +172,7 @@ class RbacUserRoles(modellib.Collection):
         modellib.Collection.__init__(self)
 
     def save(self):
-        return [s.save() for s in self.roles]
+        return [s.save() for s in self.rbac_user_role]
 
 class RbacUserRole(modellib.XObjIdModel):
     '''
