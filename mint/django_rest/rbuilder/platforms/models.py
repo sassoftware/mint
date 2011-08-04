@@ -81,6 +81,7 @@ class ContentSource(modellib.XObjIdModel):
     resource_errors = modellib.SyntheticField() # fk
     source_url = modellib.SyntheticField() # charfield/textfield
 
+
 class ContentSourceTypes(modellib.Collection):
     """
     Container for what is called PlatformsContentSourceTypes in the db
@@ -99,7 +100,7 @@ class ContentSourceType(modellib.XObjIdModel):
         db_table = 'PlatformsContentSourceTypes'
         
     platform_id = modellib.DeferredForeignKey('Platform')
-    content_source_type = modellib.CharField(max_length=1026, db_column='contentSourceType')
+    content_source_type = models.CharField(max_length=1026, db_column='contentSourceType')
     
     # Fields w/o a corresponding db column
     required = modellib.SyntheticField() # booleanfield
@@ -111,7 +112,7 @@ class ContentSourceType(modellib.XObjIdModel):
 
 class PlatformsPlatformSources(modellib.XObjModel):
     platform_id = modellib.DeferredForeignKey('Platform')
-    platform_source_id = modellib.ForeignKey('PlatformSource')
+    platform_source_id = modellib.ForeignKey('ContentSource')
 
 
 class PlatformVersions(modellib.Collection):
@@ -125,11 +126,11 @@ class PlatformVersion(modellib.XObjIdModel):
     class Meta:
         abstract = True
     
-    name = fields.CharField(max_length=1026)
-    version = fields.CharField(max_length=1026)
-    revision = fields.CharField(max_length=1026)
-    label = fields.CharField(max_length=1026)
-    ordering = fields.DecimalField()
+    name = models.CharField(max_length=1026)
+    version = models.CharField(max_length=1026)
+    revision = models.CharField(max_length=1026)
+    label = models.CharField(max_length=1026)
+    ordering = models.DecimalField()
 
 
 class PlatformLoads(modellib.Collection):
@@ -141,12 +142,20 @@ class PlatformLoads(modellib.Collection):
 class PlatformLoad(modellib.XObjIdModel):
     class Meta:
         abstract = True
-    load_uri = fields.CharField(max_length=1026)
-    job_id = fields.IntegerField()
-    platform_id = fields.IntegerField()
+    load_uri = models.CharField(max_length=1026)
+    job_id = models.IntegerField()
+    platform_id = models.IntegerField()
     # job = fields.UrlField('platforms.load', ['platformId', 'jobId'])
     platform_load_status = models.ForeignKey('PlatformLoadStatus')
 
+
+class PlatformLoadStatus(modellib.XObjIdModel):
+    class Meta:
+        abstract = True
+        
+    code = models.IntegerField()
+    message = models.CharField(max_length=1026)
+    is_final = models.BooleanField()
 
 
 ### OLD ###
