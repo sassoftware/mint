@@ -793,6 +793,9 @@ class RbacRolesManager(StubManager):
 class RbacContextsManager(StubManager):
     pass
 
+class RbacPermissionsManager(StubManager):
+    pass
+
 class SystemsManager(StubManager):
     pass
 

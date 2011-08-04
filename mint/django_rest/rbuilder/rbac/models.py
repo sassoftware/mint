@@ -113,12 +113,46 @@ class RbacContext(modellib.XObjIdModel):
 
 
 class RbacPermissions(object):
-    # TODO
-    pass
+    '''
+    A collection of RbacPermissions
+    '''
 
-class RbacPermission(object):
-    # TODO
-    pass
+    # XSL = 'fixme.xsl' # TODO
+    class Meta:
+        abstract = True
+    _xobj = xobj.XObjMetadata(tag = 'rbac_permissions')
+    list_fields = ['rbac_contexts']
+    permission = []
+    objects = modellib.RbacPermissionsManager()
+    view_name = 'RbacPermissions' # TODO: add view
+
+    def __init__(self):
+        modellib.Collection.__init__(self)
+
+    def save(self):
+        return [s.save() for s in self.permission]
+
+class RbacPermission(modellib.XObjIdModel):
+    '''
+    An RBAC permission maps the combination of a RbacContext, a RbacRole,
+    and an action.  For example, on systems tagged "datacenter" a user
+    with the "sysadmin" role can "write".
+    '''
+    # XSL = "fixme.xsl" # TODO
+    class Meta:
+        db_table = 'rbac_permission'
+
+    view_name = 'RbacPermission' # TODO
+
+    _xobj = xobj.XObjMetadata(
+        tag = 'rbac_permission'
+    )
+
+    permission_id = D(models.AutoField(primary_key=True),
+        "the database ID for the context")
+    role    =  D(modellib.ForeignKey(RbacRole, null=False), 'rbac_role id')
+    context =  D(modellib.ForeignKey(RbacContext, null=False), 'rbac_context id')
+    action  = D(models.TextField(), 'allowed capability name')
 
  
 for mod_obj in sys.modules[__name__].__dict__.values():

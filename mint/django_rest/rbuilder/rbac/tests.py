@@ -70,7 +70,27 @@ class RbacBasicTestCase(XMLTestCase):
         )
 
     def testModelsForRbacPermissions(self):
-        pass
+        context1 = models.RbacContext(pk='datacenter')
+        context1.save()
+        role1    = models.RbacRole(pk='sysadmin')
+        role1.save() 
+        action_name = 'speak freely'
+        permission = models.RbacPermission(
+           context    = context1,
+           role       = role1,
+           # TODO: add choice restrictions
+           action     = action_name,
+        )
+        permission.save()
+        permissions2 = models.RbacPermission.objects.filter(
+           context = context1
+        )
+        self.assertEquals(len(permissions2), 1, 'correct length')
+        found = permissions2[0]
+        self.assertEquals(found.action, action_name, 'saved ok')
+        self.assertEquals(found.context.pk, 'datacenter', 'saved ok')
+        self.assertEquals(found.role.pk, 'sysadmin', 'saved ok')
+        
 
     def testModelsForUserRoleAssignment(self):
         pass
