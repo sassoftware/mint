@@ -30,6 +30,8 @@ from mint.django_rest.rbuilder.manager import basemanager
 #from mint.django_rest.rbuilder.querysets import models as querysetmodels
 #from mint.django_rest.rbuilder.jobs import models as jobmodels
 #from mint.rest import errors as mint_rest_errors
+from django.db import connection, transaction
+
 
 log = logging.getLogger(__name__)
 exposed = basemanager.exposed
@@ -58,11 +60,11 @@ class RbacManager(basemanager.BaseManager):
         obj.save()
         return obj
 
-    def _updateSingleColumnThing(self, modelClass, old_id, obj, field):
+    def _updateSingleColumnThing(self, modelClass, old_id, obj, field, table):
         '''update a table where the only value is a primary key'''
-        #oldObj = modelClass.objects.get(pk=old_id)
-        #if not oldObj:
-        #    return None
+        oldObj = modelClass.objects.get(pk=old_id)
+        if not oldObj:
+            return None
         #print oldObj.__dict__
         #value = getattr(obj, field)
         #print "FIELD=%s" % field
@@ -70,9 +72,17 @@ class RbacManager(basemanager.BaseManager):
         #setattr(oldObj, field, value)
         #print oldObj.__dict__
         #oldObj.save(force_update=True)
-        # modelClass.objects.raw('UPDATE % FROM '?
-        # return oldObj
-        return None
+        newValue = getattr(obj, field)
+        oldValue = getattr(oldObj, field)
+        cursor = connection.cursor()
+        cursor.execute("UPDATE %s SET %s='%s' WHERE %s='%s'", [
+            table, field, 
+            newValue,
+            field, 
+            oldValue,
+        ])
+        transaction.commit_unless_managed()
+        return modelClass.objects.get(pk=newValue)
 
     def _deleteThing(self, modelClass, obj):
         '''generic delete method'''
@@ -96,7 +106,8 @@ class RbacManager(basemanager.BaseManager):
         #roles = models.RbacRoles()
         #roles.rbac_role = models.RbacRole.objects.all()
         #return roles
-        return self._getThings(models.RbacRoles, models.RbacRole, 'rbac_role')
+        return self._getThings(models.RbacRoles, 
+            models.RbacRole, 'rbac_role')
 
     @exposed
     def getRbacRole(self, role):
@@ -108,7 +119,8 @@ class RbacManager(basemanager.BaseManager):
 
     @exposed
     def updateRbacRole(self, old_id, role):
-        return self._updateSingleColumnThing(models.RbacRole, old_id, role, 'role_id')
+        return self._updateSingleColumnThing(models.RbacRole, old_id, 
+            role, 'role_id', 'rbac_role')
 
     @exposed
     def deleteRbacRole(self, role):

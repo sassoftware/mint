@@ -207,7 +207,6 @@ class RbacRoleViews(RbacTestCase):
     #    found_items2 = models.RbacRole.objects.get(pk='sysadmin')
     #    self.assertEqual(found_items.pk, 'rocket surgeon')
     #    self.assertXMLEquals(content, output)
-    #    print found_items2
     #    self.assertTrue(found_items2 is None, 'sysadmin is renamed')
 
 class RbacPermissionViews(RbacTestCase):
