@@ -2954,7 +2954,7 @@ class MigrateTo_57(SchemaMigration):
 
 
 class MigrateTo_58(SchemaMigration):
-    Version = (58, 42)
+    Version = (58, 44)
 
     def migrate(self):
         return True
@@ -3050,7 +3050,7 @@ class MigrateTo_58(SchemaMigration):
     def migrate8(self):
         drop_columns(self.db, 'Users', 'isAdmin')
         return True
-    
+
     def migrate9(self):
         cu = self.db.cursor()
         cu.execute("""ALTER TABLE querysets_queryset ADD COLUMN presentation_type TEXT""")
@@ -3438,15 +3438,76 @@ class MigrateTo_58(SchemaMigration):
                  105,
                  'Image')
         """)
-        return True        
-
-
-def _createUpdateSystemsQuerySet(db):
-
         return True
-   
-     
 
+    def migrate43(self):
+        '''Add RBAC schema items'''
+
+        cu = self.db.cursor()
+        cu.execute("""
+        CREATE TABLE rbac_role (
+            role_id      TEXT PRIMARY KEY
+        ) %(TABLEOPTS)s""" % self.db.keywords)
+        self.db.tables['rbac_role'] = []
+
+        cu.execute("""
+        CREATE TABLE rbac_context (
+            context_id     TEXT PRIMARY KEY
+        ) %(TABLEOPTS)s""" % self.db.keywords)
+        self.db.tables['rbac_context'] = []
+
+        cu.execute("""
+        CREATE TABLE rbac_user_role (
+            rbac_user_role_id  %(PRIMARYKEY)s,
+            role_id      TEXT NOT NULL
+               REFERENCES rbac_role (role_id) 
+               ON DELETE CASCADE
+               ON UPDATE CASCADE,
+            user_id      INTEGER NOT NULL
+               REFERENCES Users (userId) 
+               ON DELETE CASCADE, 
+            UNIQUE ( "role_id", "user_id" )
+        ) %(TABLEOPTS)s""" % self.db.keywords)
+        self.db.tables['rbac_user_role'] = []
+
+        cu.execute("""
+        CREATE TABLE rbac_permission (
+            permission_id   %(PRIMARYKEY)s,
+            role_id         TEXT NOT NULL
+               REFERENCES rbac_role (role_id) 
+               ON DELETE CASCADE
+               ON UPDATE CASCADE,
+            context_id      TEXT NOT NULL
+               REFERENCES rbac_context (context_id) 
+               ON DELETE CASCADE
+               ON UPDATE CASCADE,
+            action          TEXT NOT NULL, 
+            UNIQUE ( "role_id", "context_id", "action" )
+        ) %(TABLEOPTS)s""" % self.db.keywords)
+        self.db.tables['rbac_permission'] = []
+
+        cu.execute("""
+        ALTER TABLE inventory_system ADD COLUMN 
+            "rbac_context_id" TEXT
+             REFERENCES rbac_context (context_id)
+             ON DELETE SET NULL
+        """)
+        self.db.createIndex('rbac_user_role', 'RbacUserRoleSearchIdx',
+            'role_id, user_id')
+        self.db.createIndex('rbac_permission', 'RbacPermissionSearchIdx',
+            'role_id, context_id')
+        self.db.createIndex('rbac_permission', 'RbacPermissionLookupIdx',
+            'role_id, context_id, action')  
+        return True
+
+    def migrate44(self):
+        cu = self.db.cursor()
+        cu.execute("""
+            ALTER TABLE project_branch_stage 
+            ADD CONSTRAINT project_branch_stage_nameid_uq 
+                UNIQUE (project_branch_id, name)
+        """)
+        return True
 
 #### SCHEMA MIGRATIONS END HERE #############################################
 

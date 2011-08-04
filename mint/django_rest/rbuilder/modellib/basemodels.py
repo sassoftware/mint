@@ -778,7 +778,7 @@ class ManagementNodeManager(SystemManager):
         zone.save()
         return zone
 
-class SystemsManager(BaseManager):
+class StubManager(BaseManager):
     def _load(self, *args, **kwargs):
         """
         Overridden because systems has no direct representation in the db - we
@@ -786,6 +786,21 @@ class SystemsManager(BaseManager):
         """
         model = self.model()
         return None, model
+
+class RbacRolesManager(StubManager):
+    pass
+
+class RbacContextsManager(StubManager):
+    pass
+
+class RbacPermissionsManager(StubManager):
+    pass
+
+class RbacUserRolesManager(StubManager):
+    pass
+
+class SystemsManager(StubManager):
+    pass
 
 class ManagementNodesManager(SystemsManager):
     pass
@@ -1120,6 +1135,10 @@ class XObjModel(models.Model):
             field = fields.pop(key, None)
             if field is None:
                 field = syntheticFields.get(key)
+                if field is not None and val is not None:
+                    # The user specified a value for the synthetic field.
+                    # We'll use that instead of the one from the class def
+                    field = val
             if field is not None:
                 if getattr(field, 'XObjHidden', False):
                     continue
@@ -1434,12 +1453,20 @@ class XObjHrefModel(XObjModel):
         setattr(self, "id", refValue)
         
 class HrefField(models.Field):
-    def __init__(self, href=None):
+    def __init__(self, href=None, values=None):
+        """
+        values is an optional tuple of values to be expanded into href
+        """
         self.href = href
+        self.values = values
         models.Field.__init__(self)
 
-    def serialize_value(self, request=None, values=None):
-        hrefModel = XObjHrefModel(request.build_absolute_uri(self.href))
+    def serialize_value(self, request=None):
+        if self.values:
+            href = self.href % tuple(self.values)
+        else:
+            href = self.href
+        hrefModel = XObjHrefModel(request.build_absolute_uri(href))
         return hrefModel
 
 class ForeignKey(models.ForeignKey):
