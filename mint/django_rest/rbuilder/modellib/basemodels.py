@@ -778,7 +778,7 @@ class ManagementNodeManager(SystemManager):
         zone.save()
         return zone
 
-class SystemsManager(BaseManager):
+class StubManager(BaseManager):
     def _load(self, *args, **kwargs):
         """
         Overridden because systems has no direct representation in the db - we
@@ -786,6 +786,15 @@ class SystemsManager(BaseManager):
         """
         model = self.model()
         return None, model
+
+class RbacRolesManager(StubManager):
+    pass
+
+class RbacContextsManager(StubManager):
+    pass
+
+class SystemsManager(StubManager):
+    pass
 
 class ManagementNodesManager(SystemsManager):
     pass

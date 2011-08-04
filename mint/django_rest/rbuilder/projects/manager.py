@@ -36,8 +36,10 @@ class ProjectManager(basemanager.BaseManager):
     @exposed 
     def getProjects(self):
         allProjects = models.Projects()
-        allProjects.project = [p for p in models.Project.objects.all()
-            if self.checkAccess(p)]
+        # We better return things in a stable order
+        allProjects.project = sorted(
+            (p for p in models.Project.objects.all() if self.checkAccess(p)),
+            key=lambda x: x.project_id)
         return allProjects
 
     @exposed
@@ -468,13 +470,18 @@ class ProjectManager(basemanager.BaseManager):
 
     @exposed
     def getProjectBranch(self, project_name, project_branch_label):
-        ProjectVersions = models.ProjectVersions()
         if project_branch_label:
-            ProjectVersions.project_branch = models.ProjectVersion.objects.all().filter(
-                    label=project_branch_label, project__short_name=project_name)
-        else:
-            ProjectVersions.project_branch = models.ProjectVersion.objects.all().filter(
-                project__short_name=project_name)
+            # Even though technically doing a GET and letting it fail
+            # is not efficient, this is what most of the code does
+            branch = models.ProjectVersion.objects.get(
+                label=project_branch_label, project__short_name=project_name)
+            return branch
+
+        ProjectVersions = models.ProjectVersions()
+        iterator = models.ProjectVersion.objects.filter(
+            project__short_name=project_name)
+        ProjectVersions.project_branch = sorted(iterator,
+            key=lambda x: x.branch_id)
         return ProjectVersions
         
     

@@ -274,11 +274,16 @@ class ProjectVersion(modellib.XObjIdModel):
             self.created_date = Project.Now()
         return modellib.XObjIdModel.save(self, *args, **kwargs)
 
+    def get_url_key(self, *args, **kwargs):
+        return [ self.project.short_name, self.label ]
+
     def serialize(self, request=None):
         xobjModel = modellib.XObjIdModel.serialize(self, request)
         # Convert timestamp fields in the database to our standard UTC format
         xobjModel.created_date = str(datetime.datetime.fromtimestamp(
             xobjModel.created_date, tz.tzutc()))
+        # XXX FIXME: this should not be needed
+        xobjModel.project_branch_stages.id = "%s/project_branch_stages" % (xobjModel.id, )
         return xobjModel
 
     # def computeSyntheticFields(self, sender, **kwargs):
@@ -295,16 +300,14 @@ class Stages(modellib.Collection):
 
     _xobj = xobj.XObjMetadata(
                 tag = "project_branch_stages")
-    view_name = "ProjectStages"
+    view_name = "ProjectBranchStages"
     list_fields = ["project_branch_stage"]
-    # project_branch_stage = []
-
 
 class Stage(modellib.XObjIdModel):
     class Meta:
         db_table = 'project_branch_stage'
 
-    view_name = 'ProjectStage'
+    view_name = 'ProjectBranchStage'
     _xobj = xobj.XObjMetadata(tag='project_branch_stage', elements = ['labels', ])
     _xobj_hidden_accessors = set(['version_set',])
     
@@ -312,14 +315,17 @@ class Stage(modellib.XObjIdModel):
 
     stage_id = models.AutoField(primary_key=True)
     project = modellib.DeferredForeignKey(Project,
-        related_name="project_branch_stages", view_name="ProjectBranchStages")
+        related_name="project_branch_stages", view_name="Stages")
     project_branch = modellib.DeferredForeignKey(ProjectVersion, 
-        related_name="project_branch_stages", view_name="ProjectBranchStages")
+        related_name="project_branch_stages", view_name="ProjectVersion")
     name = models.CharField(max_length=256)
     label = models.TextField(null=False)
     promotable = models.BooleanField(default=False)
     created_date = modellib.DateTimeUtcField(auto_now_add=True)
     groups = modellib.SyntheticField()
+
+    def get_url_key(self, *args, **kwargs):
+        return [ self.project.short_name, self.project_branch.label, self.name ]
 
     def serialize(self, request=None):
         href = 'http://' + request.get_host().strip('/') + '/api/products/%s/repos/search?type=group&label=%s'
