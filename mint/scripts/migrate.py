@@ -2954,7 +2954,7 @@ class MigrateTo_57(SchemaMigration):
 
 
 class MigrateTo_58(SchemaMigration):
-    Version = (58, 43)
+    Version = (58, 44)
 
     def migrate(self):
         return True
@@ -3050,10 +3050,7 @@ class MigrateTo_58(SchemaMigration):
     def migrate8(self):
         drop_columns(self.db, 'Users', 'isAdmin')
         return True
-   
-    def _createUpdateSystemsQuerySet(db):
-        return True
- 
+
     def migrate9(self):
         cu = self.db.cursor()
         cu.execute("""ALTER TABLE querysets_queryset ADD COLUMN presentation_type TEXT""")
@@ -3441,18 +3438,18 @@ class MigrateTo_58(SchemaMigration):
                  105,
                  'Image')
         """)
-        return True  
+        return True
 
     def migrate43(self):
         '''Add RBAC schema items'''
 
-        cu = self.db.cursor()        
+        cu = self.db.cursor()
         cu.execute("""
         CREATE TABLE rbac_role (
             role_id      TEXT PRIMARY KEY
         ) %(TABLEOPTS)s""" % self.db.keywords)
         self.db.tables['rbac_role'] = []
-        
+
         cu.execute("""
         CREATE TABLE rbac_context (
             context_id     TEXT PRIMARY KEY
@@ -3495,14 +3492,21 @@ class MigrateTo_58(SchemaMigration):
              REFERENCES rbac_context (context_id)
              ON DELETE SET NULL
         """)
-
         self.db.createIndex('rbac_user_role', 'RbacUserRoleSearchIdx',
             'role_id, user_id')
         self.db.createIndex('rbac_permission', 'RbacPermissionSearchIdx',
             'role_id, context_id')
         self.db.createIndex('rbac_permission', 'RbacPermissionLookupIdx',
             'role_id, context_id, action')  
+        return True
 
+    def migrate44(self):
+        cu = self.db.cursor()
+        cu.execute("""
+            ALTER TABLE project_branch_stage 
+            ADD CONSTRAINT project_branch_stage_nameid_uq 
+                UNIQUE (project_branch_id, name)
+        """)
         return True
 
 #### SCHEMA MIGRATIONS END HERE #############################################

@@ -483,3 +483,64 @@ class ProjectManager(basemanager.BaseManager):
         ProjectVersions.project_branch = sorted(iterator,
             key=lambda x: x.branch_id)
         return ProjectVersions
+        
+    
+"""    
+    @exposed
+    def getDescriptorForImageBuildAction(self, , job_type, query_dict):
+        '''To submit a job to the system, what smartform data do I need?'''
+        #system     = models.System.objects.get(pk=system_id)
+        event_type = jobmodels.EventType.objects.get(pk=job_type).name
+        descriptor = jobmodels.EventType.DESCRIPTOR_MAP.get(event_type, None)
+        if descriptor is None:
+            raise Exception("no descriptor for job type %s" % event_type)
+        # NOTE: it may be that depending on system context and event type
+        # we may need to dynamically create parameters.  For instance,
+        # if foo=3 on VMware.  When that happens, add some conditionals
+        # here based on system state.
+        query_dict = query_dict.copy()
+        query_dict['system_id'] = system_id
+        result = descriptor % query_dict
+        return result
+    
+    
+    @exposed
+    def scheduleJobAction(self, system, job):  #change inputs
+        '''
+        An action is a bare job submission that is a request to start
+        a real job.
+
+        Job coming in will be xobj only,
+        containing job_type, descriptor, and descriptor_data.  We'll use
+        that data to schedule a completely different job, which will
+        be more complete.
+        '''
+        # get integer job type even if not a django model
+        jt = job.job_type.id
+        if str(jt).find("/") != -1:
+            jt = int(jt.split("/")[-1])
+        event_type = jobmodels.EventType.objects.get(job_type_id=jt)
+        job_name   = event_type.name
+
+        event = None
+        if job_name == jobmodels.EventType.IMAGE_BUILDS:
+            #creds = self.getSystemCredentials(system)
+            #auth = [dict(
+               # sshUser     = 'root',
+                #sshPassword = creds.password,
+                #sshKey      = creds.key,
+           # )]
+           # event = self._scheduleEvent(system, job_name, eventData=auth)
+            # we can completely ignore descriptor and descriptor_data
+            # for this job, because we have that data stored in credentials
+            # but other actions will have work to do with them in this
+            # function.
+        else:
+            raise Exception("action dispatch not yet supported on job type: %s" % jt)
+        
+        if event is None:
+            # this can happen if the event preconditions are not met and the exception
+            # gets caught somewhere up the chain (which we should fix)
+            raise Exception("failed to schedule event")
+        return event
+ """       

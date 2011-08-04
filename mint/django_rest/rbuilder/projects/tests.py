@@ -313,5 +313,7 @@ class ProjectsTestCase(XMLTestCase):
         stages = xobj.parse(response.content).project_branch_stages.project_branch_stage
         self.assertEquals(len(stages), 3)
         
+            
+        
 
 
