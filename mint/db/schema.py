@@ -28,7 +28,7 @@ from conary.dbstore import sqlerrors, sqllib
 log = logging.getLogger(__name__)
 
 # database schema major version
-RBUILDER_DB_VERSION = sqllib.DBversion(58, 42)
+RBUILDER_DB_VERSION = sqllib.DBversion(58, 43)
 
 
 def _createTrigger(db, table, column = "changed"):
@@ -664,7 +664,8 @@ def _createProductVersions(db):
                     REFERENCES ProductVersions (productVersionId)
                     ON DELETE CASCADE,
                 "promotable" bool,
-                "created_date" timestamp with time zone NOT NULL
+                "created_date" timestamp with time zone NOT NULL,
+                UNIQUE ( name, project_branch_id )
             )""" % db.keywords)
         db.tables['project_branch_stage'] = []
         changed = True

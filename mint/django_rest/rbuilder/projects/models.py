@@ -11,7 +11,9 @@ from dateutil import tz
 from django.db import models
 from mint import userlevels
 from mint.django_rest.rbuilder import modellib
+from mint.django_rest.deco import D
 from mint.django_rest.rbuilder.users import models as usermodels
+from mint.django_rest.rbuilder.jobs import models as jobmodels
 from xobj import xobj
 
 
@@ -376,6 +378,9 @@ class Images(modellib.Collection):
         
     list_fields = ['image']
     _xobj = xobj.XObjMetadata(tag='images')
+    
+    actions = D(modellib.SyntheticField(jobmodels.Actions),
+        "actions available on the images")
              
                
 class Image(modellib.XObjIdModel):

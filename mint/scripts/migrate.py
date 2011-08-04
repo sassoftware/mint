@@ -2954,7 +2954,7 @@ class MigrateTo_57(SchemaMigration):
 
 
 class MigrateTo_58(SchemaMigration):
-    Version = (58, 42)
+    Version = (58, 43)
 
     def migrate(self):
         return True
@@ -3438,7 +3438,16 @@ class MigrateTo_58(SchemaMigration):
                  105,
                  'Image')
         """)
-        return True        
+        return True 
+        
+    def migrate43(self):
+        cu = self.db.cursor()
+        cu.execute("""
+            ALTER TABLE project_branch_stage 
+            ADD CONSTRAINT project_branch_stage_nameid_uq 
+                UNIQUE (name, project_branch_id)
+        """)
+        return True               
 
 
 def _createUpdateSystemsQuerySet(db):

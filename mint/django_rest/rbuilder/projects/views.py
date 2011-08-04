@@ -131,6 +131,43 @@ class ProjectImageService(service.BaseService):
             model = self.mgr.getImages()
         return model
 
+"""        
+class ProjectJobDescriptorServiceservice.BaseService):
+
+    @access.anonymous
+    # smartform object already is XML, no need
+    @return_xml
+    def rest_GET(self, request, , job_type):
+        '''
+        Get a smartform descriptor for starting a action on
+        InventorySystemJobsService.  An action is not *quite* a job.
+        It's a request to start a job.
+        '''
+        content = self.get(, job_type, request.GET.copy())
+        response = HttpResponse(status=200, content=content)
+        response['Content-Type'] = 'text/xml'
+        return response
+
+    def get(self, , job_type, parameters):
+        return self.mgr.getDescriptorForImageBuildAction(
+            , job_type, parameters
+        ) 
+               
+        
+class ProjectImageBuildsJobService(service.BaseService):   
+    
+    @access.admin
+    @xObjRequires('job')
+    @return_xml
+    def rest_POST(self, request, job):
+        '''request starting build image'''
+        image = self.mgr.getImage(image_id)
+        return self.mgr.scheduleJobAction(
+            system, job
+        )        
+"""
+
+
 class ProjectMemberService(service.BaseService):
 
     # TODO: figure out correct perms

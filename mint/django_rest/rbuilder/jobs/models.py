@@ -31,6 +31,11 @@ system_assimilate_descriptor = """
 </descriptor>
 """
 
+image_builds_descriptor = """
+<descriptor>
+</descriptor>
+"""
+
 # ==========================================================
 
 class Actions(modellib.XObjModel):
@@ -362,9 +367,11 @@ class EventType(modellib.XObjIdModel):
     # what smartform descriptor templates are needed to launch jobs of
     # certain types?
     DESCRIPTOR_MAP = {
-        SYSTEM_ASSIMILATE : system_assimilate_descriptor
-    } 
-
+        SYSTEM_ASSIMILATE : system_assimilate_descriptor,
+        IMAGE_BUILDS : image_builds_descriptor
+    }
+    
+    
     name = D(APIReadOnly(models.CharField(max_length=8092, unique=True,
         choices=EVENT_TYPES)), "the event type name (read-only)")
     description = D(models.CharField(max_length=8092), "the event type description")
