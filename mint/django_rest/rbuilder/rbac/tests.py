@@ -32,7 +32,40 @@ logging.disable(logging.CRITICAL)
 from mint.django_rest import test_utils
 XMLTestCase = test_utils.XMLTestCase
 
-class RbacBasicTestCase(XMLTestCase):
+class RbacTestCase(XMLTestCase):
+
+    def setUp(self):
+        XMLTestCase.setUp(self)
+
+    def _xobj_list_hack(self, item):
+        '''
+        xobj hack: obj doesn't listify 1 element lists
+        don't break tests if there is only 1 action
+        '''
+        if type(item) != type(item):
+            return [item]
+        else:
+            return item
+
+    def req(self, url, method='GET', expect=200, is_authenticated=False, is_admin=False):
+        '''Test a HTTP operation and it's return value, return the contents'''
+        method_map = {
+           'GET'    : self._get,
+           'POST'   : self._post,
+           'DELETE' : self._delete,
+           'PUT'    : self._put
+        }
+        
+        if is_admin:
+             response = method_map[method](url, username="admin", password="password")
+        elif is_authenticated:
+             response = method_map[method](url, username="testuser", password="password")
+        else:
+             response = method_map[method](url)
+        self.failUnlessEqual(response.status_code, expect, "Expected status code of %s for %s" % (expect, url))
+        return response.content
+
+class RbacBasicTestCase(RbacTestCase):
 
     #def setUp(self):
     #    # just a stub for later...
@@ -119,52 +152,48 @@ class RbacBasicTestCase(XMLTestCase):
     def testModelsForSystemContextAssignment(self):
         pass
 
-def _xobj_list_hack(item):
-    # xobj hack: obj doesn't listify 1 element lists
-    # don't break tests if there is only 1 action
-    if type(item) != type(item):
-       return [item]
-    else:
-       return item
-
-class RbacRoleViews(XMLTestCase):
+class RbacRoleViews(RbacTestCase):
 
     def setUp(self):
-        XMLTestCase.setUp(self)
-        self.roles = [ 'sysadmin', 'developer', 'intern' ]
-        for role in self.roles:
-            models.RbacRole(role).save()
+        RbacTestCase.setUp(self)
+        self.seed_data = [ 'sysadmin', 'developer', 'intern' ]
+        for item in self.seed_data:
+            models.RbacRole(item).save()
        
-
     def testCanListRoles(self):
 
         url = 'rbac/roles'
-        response = self._get(url, username="testuser", password="password")
-        self.assertEquals(response.status_code, 401, 'need to be an admin to list roles')
+        #response = self._get(url, username="testuser", password="password")
+        content = self.req(url, method='GET', expect=401, is_authenticated=True)
+        #self.assertEquals(response.status_code, 401, 'need to be an admin to list roles')
 
-        response = self._get(url, username="admin", password="password")
-        self.assertEquals(response.status_code, 200, 'able to access as admin')
+        #response = self._get(url, username="admin", password="password")
+        content = self.req(url, method='GET', expect=200, is_admin=True)
+        # self.assertEquals(response.status_code, 200, 'able to access as admin')
 
-        actual = models.RbacRole.objects.all()
-        self.assertEqual(len(actual), len(self.roles), 'test preconditions ok')
-
-        obj = xobj.parse(response.content)
-        found_items = _xobj_list_hack(obj.rbac_roles.rbac_role)
+        obj = xobj.parse(content)
+        found_items = self._xobj_list_hack(obj.rbac_roles.rbac_role)
         found_items = [ item.role_id for item in found_items ] 
-        for expected in self.roles:
+        for expected in self.seed_data:
             self.assertTrue(expected in found_items, 'found item')
-        self.assertEqual(len(found_items), len(self.roles), 'right number of items')
+        self.assertEqual(len(found_items), len(self.seed_data), 'right number of items')
  
     def testCanGetSingleRole(self):
+
+        #response = self._get(url, username="testuser", 
+
         pass
+
     def testCanAddRoles(self):
         pass
+
     def testCanDeleteRoles(self):
         pass
+
     def testCanUpdateRoles(self):
         pass
 
-class RbacPermissionViews(XMLTestCase):
+class RbacPermissionViews(RbacTestCase):
     def testCanListPermissions(self):
         pass
     def testCanGetSinglePermission(self):
@@ -176,7 +205,7 @@ class RbacPermissionViews(XMLTestCase):
     def testCanUpdatePermissions(self):
         pass
 
-class RbacContextViews(XMLTestCase):
+class RbacContextViews(RbacTestCase):
     def testCanListContexts(self):
         pass
     def testCanGetSingleContext(self):
@@ -188,19 +217,19 @@ class RbacContextViews(XMLTestCase):
     def testCanUpdatePermissions(self):
         pass
 
-class RbacUserViewTests(XMLTestCase):
+class RbacUserViewTests(RbacTestCase):
     def testCanAssignUserToRole(self):
         pass
     def testCanRemoveUserRole(self):
         pass
    
-class RbacSystemViewTests(XMLTestCase):
+class RbacSystemViewTests(RbacTestCase):
     def testCanAssignSystemToContext(self):
         pass
     def testCanRemoveSystemContext(self):
         pass
 
-class AccessControlSystemTests(XMLTestCase):
+class AccessControlSystemTests(RbacTestCase):
     # inventory tests will also help cover this
     # may want to add AccessControl tests there instead (probably do)
     def testAdminsCanAccessSystemWithContext(self):
@@ -214,8 +243,8 @@ class AccessControlSystemTests(XMLTestCase):
     def testUserCanAccessSystemWithoutContext(self):
        pass
 
-class AccessControlImageTests(XMLTestCase):
+class AccessControlImageTests(RbacTestCase):
     pass
 
-class AccessControlPlatformTests(XMLTestCase):
+class AccessControlPlatformTests(RbacTestCase):
     pass
