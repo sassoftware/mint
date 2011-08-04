@@ -37,14 +37,14 @@ class RbacPermissionsService(BaseRbacService):
     </rbac_permissions>
     """
 
-    @access.authenticated
+    @access.admin
     @return_xml
     def rest_GET(self, request, permission_id=None):
-        #return models.Permissions()
+        # TODO
         return None
 
-    # rest_PUT
-    # rest_DELETE
+    # TODO: rest_PUT
+    # TODO: rest_DELETE
 
 
 class RbacRolesService(BaseRbacService):
@@ -57,13 +57,19 @@ class RbacRolesService(BaseRbacService):
     </rbac_roles>    
     """
 
-    @access.authenticated
+    @access.admin
     @return_xml
-    def rest_GET(self, request):
-        return None
-   
-    # rest_PUT
-    # rest_DELETE
+    def rest_GET(self, request, role_id=None):
+        return self.get(role_id)
+
+    def get(self, role_id=None):
+        if role_id is not None:
+            return self.mgr.getRbacRole(role_id)
+        else:
+            return self.mgr.getRbacRoles()
+
+    # TODO: rest_PUT
+    # TODO: rest_DELETE
 
 class RbacUserRolesService(BaseRbacService):
    """
@@ -73,13 +79,13 @@ class RbacUserRolesService(BaseRbacService):
    </rbac_roles>
    """
 
-   @access.authenticated
+   @access.admin
    @return_xml
    def rest_GET(slef, request):
        return None
 
-   # rest_PUT
-   # rest_DELETE
+   # TODO: rest_PUT
+   # TODO: rest_DELETE
  
 class RbacContextsService(BaseRbacService):
     """
@@ -91,11 +97,11 @@ class RbacContextsService(BaseRbacService):
     </rbac_contexts>
     """
    
-    @access.authenticated
+    @access.admin
     @return_xml
     def rest_GET(self, request, system_state_id=None):
         return None
 
-    # rest_PUT
-    # rest_DELETE
+    # TODO: rest_PUT
+    # TODO: rest_DELETE
 

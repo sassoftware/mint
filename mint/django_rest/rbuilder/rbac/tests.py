@@ -4,7 +4,7 @@
 #import os
 #import random
 #from dateutil import tz
-#from xobj import xobj
+from xobj import xobj
 #
 #from conary import versions
 #from conary.conaryclient.cmdline import parseTroveSpec
@@ -119,8 +119,41 @@ class RbacBasicTestCase(XMLTestCase):
     def testModelsForSystemContextAssignment(self):
         pass
 
+def _xobj_list_hack(item):
+    # xobj hack: obj doesn't listify 1 element lists
+    # don't break tests if there is only 1 action
+    if type(item) != type(item):
+       return [item]
+    else:
+       return item
+
 class RbacRoleViews(XMLTestCase):
+
+    def setUp(self):
+        XMLTestCase.setUp(self)
+        models.RbacRole('sysadmin').save()
+        models.RbacRole('developer').save()
+        models.RbacRole('intern').save()
+
     def testCanListRoles(self):
+
+        url = 'rbac/roles'
+        response = self._get(url, username="testuser", password="password")
+        self.assertEquals(response.status_code, 401, 'need to be an admin to list roles')
+
+        response = self._get(url, username="admin", password="password")
+        self.assertEquals(response.status_code, 200, 'able to access as admin')
+
+        obj = xobj.parse(response.content)
+        import epdb; epdb.st()
+        items = _xobj_list_hack(obj.rbac_roles.role)
+
+        for x in items:
+            print items
+
+        self.assertEquals(len(items), 3, 'right number of items')
+ 
+    def testCanGetSingleRole(self):
         pass
     def testCanAddRoles(self):
         pass
@@ -132,6 +165,8 @@ class RbacRoleViews(XMLTestCase):
 class RbacPermissionViews(XMLTestCase):
     def testCanListPermissions(self):
         pass
+    def testCanGetSinglePermission(self):
+        pass
     def testCanAddPermissions(self):
         pass
     def testCanDeletePermissions(self):
@@ -141,6 +176,8 @@ class RbacPermissionViews(XMLTestCase):
 
 class RbacContextViews(XMLTestCase):
     def testCanListContexts(self):
+        pass
+    def testCanGetSingleContext(self):
         pass
     def testCanAddContexts(self):
         pass

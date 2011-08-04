@@ -575,7 +575,7 @@ urlpatterns = patterns('',
         name='RbacPermissions'),
     URL(r'rbac/permissions/(?P<permission_id>\w+)/?$',
         rbacviews.RbacPermissionsService(),
-        name='RbacPermissions'),
+        name='RbacPermission'),
     URL(r'rbac/roles/?$',
         rbacviews.RbacRolesService(),
         name='RbacRoles'),
@@ -588,7 +588,12 @@ urlpatterns = patterns('',
     URL(r'rbac/contexts/(?P<context_id>\w+)/?$',
         rbacviews.RbacContextsService(),
         name='RbacContexts'),
- 
+    URL(r'rbac/users/?(P<user_id>\d+)/roles/?$',
+        rbacviews.RbacUserRolesService(),
+        name='RbacUserRole'),
+    URL(r'rbac/users/?(P<user_id>\d+)/roles/?(P<role_id>\d+)',
+        rbacviews.RbacUserRolesService(),
+        name='RbacUserRoles')
 )
 
 

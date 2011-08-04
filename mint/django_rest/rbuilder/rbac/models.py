@@ -30,7 +30,7 @@ from xobj import xobj
 #XObjHidden = modellib.XObjHidden
 #APIReadOnly = modellib.APIReadOnly
 
-class RbacRoles(modellib.XObjModel):
+class RbacRoles(modellib.Collection):
     '''
     A collection of RbacRoles
     '''
@@ -70,7 +70,7 @@ class RbacRole(modellib.XObjIdModel):
     role_id = D(models.TextField(primary_key=True),
         "the database ID for the role")
 
-class RbacContexts(object):
+class RbacContexts(modellib.Collection):
     '''
     A collection of RbacContexts
     '''
@@ -112,7 +112,7 @@ class RbacContext(modellib.XObjIdModel):
         "the database ID for the context")
 
 
-class RbacPermissions(object):
+class RbacPermissions(modellib.Collection):
     '''
     A collection of RbacPermissions
     '''
@@ -154,7 +154,7 @@ class RbacPermission(modellib.XObjIdModel):
     context =  D(modellib.ForeignKey(RbacContext, null=False), 'rbac_context id')
     action  = D(models.TextField(), 'allowed capability name')
 
-class RbacUserRoles(object):
+class RbacUserRoles(modellib.Collection):
     '''
     A collection of RbacUserRoles
     '''
