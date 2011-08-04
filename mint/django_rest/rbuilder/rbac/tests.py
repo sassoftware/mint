@@ -163,13 +163,8 @@ class RbacRoleViews(RbacTestCase):
     def testCanListRoles(self):
 
         url = 'rbac/roles'
-        #response = self._get(url, username="testuser", password="password")
         content = self.req(url, method='GET', expect=401, is_authenticated=True)
-        #self.assertEquals(response.status_code, 401, 'need to be an admin to list roles')
-
-        #response = self._get(url, username="admin", password="password")
         content = self.req(url, method='GET', expect=200, is_admin=True)
-        # self.assertEquals(response.status_code, 200, 'able to access as admin')
 
         obj = xobj.parse(content)
         found_items = self._xobj_list_hack(obj.rbac_roles.rbac_role)
@@ -180,8 +175,11 @@ class RbacRoleViews(RbacTestCase):
  
     def testCanGetSingleRole(self):
 
-        #response = self._get(url, username="testuser", 
-
+        #url = 'rbac/roles/datacenter'
+        #content = self.req(url, method='GET', expect=401, is_authenticated=True)
+        #content = self.req(url, method='GET', expect=200, is_admin=True)
+        #obj = xobj.parse(content)
+        #self.assertEqual(obj.role_id, 'datacenter')
         pass
 
     def testCanAddRoles(self):
