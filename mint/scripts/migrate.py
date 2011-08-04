@@ -3445,7 +3445,7 @@ class MigrateTo_58(SchemaMigration):
         cu.execute("""
             ALTER TABLE project_branch_stage 
             ADD CONSTRAINT project_branch_stage_nameid_uq 
-                UNIQUE (name, project_branch_id)
+                UNIQUE (project_branch_id, name)
         """)
         return True               
 

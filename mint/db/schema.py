@@ -665,7 +665,7 @@ def _createProductVersions(db):
                     ON DELETE CASCADE,
                 "promotable" bool,
                 "created_date" timestamp with time zone NOT NULL,
-                UNIQUE ( name, project_branch_id )
+                UNIQUE ( project_branch_id, name )
             )""" % db.keywords)
         db.tables['project_branch_stage'] = []
         changed = True
