@@ -17,7 +17,7 @@
 #from mint.django_rest.rbuilder.rbac import views
 from mint.django_rest.rbuilder.rbac import models
 #from mint.django_rest.rbuilder.manager import rbuildermanager
-#from mint.django_rest.rbuilder.users import models as usersmodels
+from mint.django_rest.rbuilder.users import models as usersmodels
 #from mint.django_rest.rbuilder.inventory import models
 #from mint.django_rest.rbuilder.jobs import models as jobmodels
 #from mint.django_rest.rbuilder.inventory import testsxml
@@ -90,10 +90,31 @@ class RbacBasicTestCase(XMLTestCase):
         self.assertEquals(found.action, action_name, 'saved ok')
         self.assertEquals(found.context.pk, 'datacenter', 'saved ok')
         self.assertEquals(found.role.pk, 'sysadmin', 'saved ok')
-        
 
     def testModelsForUserRoleAssignment(self):
-        pass
+        # note -- we may also keep roles in AD, this is for the case
+        # where we sync them or manage them internally.  This will 
+        # probably need to be configurable
+        # TODO -- test many to many relation in user
+        user1 = usersmodels.User(
+            user_name = "test",
+            full_name = "test"
+        )
+        user1.save()
+        role1 = models.RbacRole(pk='sysadmin')
+        role1.save()
+        mapping = models.RbacUserRole(
+            user = user1,
+            role = role1
+        ) 
+        mapping.save()
+        mappings2  = models.RbacUserRole.objects.filter(
+            user = user1
+        )
+        self.assertEquals(len(mappings2), 1, 'correct length')
+        found = mappings2[0]
+        self.assertEquals(found.user.user_name, 'test', 'saved ok')
+        self.assertEquals(found.role.pk, 'sysadmin', 'saved ok')
 
     def testModelsForSystemContextAssignment(self):
         pass

@@ -22,7 +22,7 @@ from mint.django_rest.deco import D
 from mint.django_rest.rbuilder import modellib
 #from mint.django_rest.rbuilder import models as rbuildermodels
 #from mint.django_rest.rbuilder.projects.models import Project, ProjectVersion, Stage
-#from mint.django_rest.rbuilder.users import models as usersmodels
+from mint.django_rest.rbuilder.users import models as usersmodels
 #from mint.django_rest.rbuilder.jobs import models as jobmodels
 from xobj import xobj
 #
@@ -153,6 +153,47 @@ class RbacPermission(modellib.XObjIdModel):
     role    =  D(modellib.ForeignKey(RbacRole, null=False), 'rbac_role id')
     context =  D(modellib.ForeignKey(RbacContext, null=False), 'rbac_context id')
     action  = D(models.TextField(), 'allowed capability name')
+
+class RbacUserRoles(object):
+    '''
+    A collection of RbacUserRoles
+    '''
+
+    # XSL = 'fixme.xsl' # TODO
+    class Meta:
+        abstract = True
+    _xobj = xobj.XObjMetadata(tag = 'rbac_user_roles')
+    list_fields = ['rbac_user_role']
+    roles = []
+    objects = modellib.RbacUserRolesManager()
+    view_name = 'RbacUserRoles' # TODO: add view
+
+    def __init__(self):
+        modellib.Collection.__init__(self)
+
+    def save(self):
+        return [s.save() for s in self.roles]
+
+class RbacUserRole(modellib.XObjIdModel):
+    '''
+    Keeps track of what rBuilder users have as RbacRoles.
+    This may be used when NOT using a live directory for role mappings, i.e. standalone
+    or via a sync script.
+    '''
+    # XSL = "fixme.xsl" # TODO
+    class Meta:
+        db_table = 'rbac_user_role'
+
+    view_name = 'RbacUserRole' # TODO
+
+    _xobj = xobj.XObjMetadata(
+        tag = 'rbac_user_role'
+    )
+
+    rbac_user_role_id = D(models.AutoField(primary_key=True),
+        "the database ID for the rbac_user_role")
+    role    =  D(modellib.ForeignKey(RbacRole, null=False), 'rbac_role id')
+    user    =  D(modellib.ForeignKey(usersmodels.User, null=False), 'user id')
 
  
 for mod_obj in sys.modules[__name__].__dict__.values():
