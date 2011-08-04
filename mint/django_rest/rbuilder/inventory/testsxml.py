@@ -2588,14 +2588,14 @@ system_installed_software_version_stage_xml = """\
   <credentials id="http://testserver/api/v1/inventory/systems/3/credentials"/>
   <configuration id="http://testserver/api/v1/inventory/systems/3/configuration"/>
   <agent_port>5989</agent_port>
-  <stage id="http://testserver/api/v1/project_branch_stages/1">
+  <stage id="http://testserver/api/v1/projects/chater-foo/project_branches/chater-foo.eng.rpath.com@rpath:chater-foo-1/project_branch_stages/Development">
     <name>Development</name>
   </stage>
   <out_of_date>False</out_of_date>
   <name>testsystemname</name>
   <local_uuid>testsystemlocaluuid</local_uuid>
   <target_system_state/>
-  <major_version id="http://testserver/api/v1/project_branches/1">
+  <major_version id="http://testserver/api/v1/projects/chater-foo/project_branches/chater-foo.eng.rpath.com@rpath:chater-foo-1">
     <name>1</name>
   </major_version>
   <current_state id="http://testserver/api/v1/inventory/system_states/3">
