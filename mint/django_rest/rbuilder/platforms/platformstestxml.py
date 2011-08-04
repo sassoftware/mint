@@ -1,64 +1,40 @@
 platformsXml = """\
 <?xml version='1.0' encoding='UTF-8'?>
 <platforms>
-  <platform_id="http://localhost:8000/api/platforms/1">
-    <platform_trove_name>Platform</platform_trove_name>
-    <repository_host_name>Platform</repository_host_name>
+  <platform_id="http://localhost:8000/api/v1/platforms/1">
+    <platform_id>1</platform_id>
+    <platform_name>Platform1</platform_name>
     <label>Platform</label>
-    <product_version>Platform</product_version>
     <platform_name>Platform</platform_name>
-    <platform_usage_terms>Platform</platform_usage_terms>
     <mode>Platform</mode>
     <enabled>true</enabled>
     <configurable>true</configurable>
     <abstract>true</abstract>
-    <mirror_permission>true</mirror_permission>
-    <platform_type>Platform<platform_type>
-    <platform_status href="1"/>
-    <content_source_types href="1"/>
-    <load href="1"/>
-    <is_platform>true</is_platform>
-    <platform_versions href="1"/>
     <project href="1"/>
+    <is_from_disk>true</is_from_disk>
   </platform>
-  <platform_id="http://localhost:8000/api/platforms/2">
-    <platform_trove_name>Platform1</platform_trove_name>
-    <repository_host_name>Platform1</repository_host_name>
-    <label>Platform1</label>
-    <product_version>Platform1</product_version>
-    <platform_name>Platform1</platform_name>
-    <platform_usage_terms>Platform1</platform_usage_terms>
-    <mode>Platform1</mode>
-    <enabled>true</enabled>
-    <configurable>true</configurable>
-    <abstract>true</abstract>
-    <mirror_permission>true</mirror_permission>
-    <platform_type>Platform1<platform_type>
-    <platform_status href="2"/>
-    <content_source_types href="2"/>
-    <load href="2"/>
-    <is_platform>true</is_platform>
-    <platform_versions href="2"/>
-    <project href="1"/>
- <platform_id="http://localhost:8000/api/platforms/3">
-    <platform_trove_name>Platform2</platform_trove_name>
-    <repository_host_name>Platform2</repository_host_name>
-    <label>Platform2</label>
-    <product_version>Platform2</product_version>
+  <platform_id="http://localhost:8000/api/v1/platforms/2">
+    <platform_id>2</platform_id>
     <platform_name>Platform2</platform_name>
-    <platform_usage_terms>Platform2</platform_usage_terms>
-    <mode>Platform2</mode>
+    <label>Platform</label>
+    <platform_name>Platform</platform_name>
+    <mode>Platform</mode>
     <enabled>true</enabled>
     <configurable>true</configurable>
     <abstract>true</abstract>
-    <mirror_permission>true</mirror_permission>
-    <platform_type>Platform2<platform_type>
-    <platform_status href="3"/>
-    <content_source_types href="3"/>
-    <load href="3"/>
-    <is_platform>true</is_platform>
-    <platform_versions href="3"/>
-    <project href="1"/>
+    <project href="2"/>
+    <is_from_disk>true</is_from_disk>
+  <platform_id="http://localhost:8000/api/v1/platforms/3">
+    <platform_id>3</platform_id>
+    <platform_name>Platform3</platform_name>
+    <label>Platform</label>
+    <platform_name>Platform</platform_name>
+    <mode>Platform</mode>
+    <enabled>true</enabled>
+    <configurable>true</configurable>
+    <abstract>true</abstract>
+    <project href="3"/>
+    <is_from_disk>true</is_from_disk>
   </platform>
 </platforms>
 """
