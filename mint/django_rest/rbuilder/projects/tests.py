@@ -349,23 +349,6 @@ class ProjectsTestCase(XMLTestCase):
                 'foo@ns:trunk',
             ])
 
-    def testGetProjectBranchStagesByVersion(self):
-        self._addProject("foo")
-        # add a branch to work with
-        response = self._post('project_branches/',
-            data=testsxml.project_version_post_with_project_xml,
-            username="admin", password="password")
-        self.assertEquals(response.status_code, 200)
-        branch = xobj.parse(response.content).project_branch
-        branch = models.ProjectVersion.objects.get(pk=branch.branch_id)
-        
-        # get branch stages
-        response = self._get('project_branches/%s/project_branch_stages' % branch.branch_id,
-            username="testuser", password="password")
-        self.assertEquals(response.status_code, 200)
-        stages = xobj.parse(response.content).project_branch_stages.project_branch_stage
-        self.assertEquals(len(stages), 3)
-
     def testGetProjectImages(self):
         # Add image
         prj = self._addProject("foo")
