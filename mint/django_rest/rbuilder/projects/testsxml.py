@@ -224,4 +224,17 @@ project_branch_xml = """\
   <image_type_definitions id="http://testserver/api/products/chater-foo/versions/trunk/imageTypeDefinitions"/>
 </project_branch>"""
 
+project_image_post_xml = """\
+  <image>
+    <project id="http://testserver/api/v1/projects/chater-foo"/>
+    <project_branch id="http://testserver/api/v1/projects/chater-foo/project_branches/chater-foo.eng.rpath.com@rpath:chater-foo-trunk">
+    <build_type>image-test-build-type</build_type>
+    <time_created>1</time_created>
+  </image>
+"""
+
+
+
+
+
 

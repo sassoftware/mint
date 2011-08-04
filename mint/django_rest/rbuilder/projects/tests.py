@@ -330,6 +330,14 @@ class ProjectsTestCase(XMLTestCase):
         stages = xobj.parse(response.content).project_branch_stages.project_branch_stage
         self.assertEquals(len(stages), 3)
         
+    def testPostImage(self):
+        response=self._post('images/',
+            data = testsxml.project_image_post_xml,
+            username="admin", password="password")
+        self.assertEquals(response.status_code, 200)
+        image = xobj.parse(response.content).image
+        image = models.Image.objects.get(pk=image.image_id)    
+        
             
         
 
