@@ -242,11 +242,11 @@ class ProjectsTestCase(XMLTestCase):
             project.description)
 
     def testDeleteProject(self):
-	    project = models.Project.objects.get(short_name='chater-foo')	    
-            response = self._delete('projects/chater-foo',
-                username="testuser", password="password")
-            self.assertEquals(response.status_code, 204)
-        
+        project = models.Project.objects.get(short_name='chater-foo')
+        response = self._delete('projects/chater-foo',
+            username="testuser", password="password")
+        self.assertEquals(response.status_code, 204)
+
     def testGetProjectVersion(self):
         response = self._get('project_branches/',
             username="testuser", password="password")
@@ -280,8 +280,8 @@ class ProjectsTestCase(XMLTestCase):
             username="testuser", password="password")
         self.assertEquals(response.status_code, 401)
 
-    def testUpdateProjectVersion(self):
-        response = self._put('project_branches/2',
+    def testUpdateProjectBranch(self):
+        response = self._put('projects/postgres/project_branches/postgres.rpath.com@rpath:postgres-1',
             data=testsxml.project_version_put_xml,
             username="admin", password="password")
         self.assertEquals(response.status_code, 200)
@@ -290,23 +290,29 @@ class ProjectsTestCase(XMLTestCase):
         self.assertEquals("updated description",
             branch.description)
         
-    def testUpdateProjectVersionNoAuth(self):
-        response = self._put('project_branches/2',
-            data=testsxml.project_version_put_xml,
-            username="testuser", password="password")
+    def testUpdateProjectBranchNoAuth(self):
+        # Unauthenticated
+        response = self._put('projects/postgres/project_branches/postgres.rpath.com@rpath:postgres-1',
+            data=testsxml.project_version_put_xml)
         self.assertEquals(response.status_code, 401)
 
-    def testDeleteProjectVersion(self):
-        response = self._delete('project_branches/2',
+        # Not a project owner
+        response = self._put('projects/postgres/project_branches/postgres.rpath.com@rpath:postgres-1',
+            data=testsxml.project_version_put_xml,
+            username="testuser", password="password")
+        self.assertEquals(response.status_code, 403)
+
+    def testDeleteProjectBranch(self):
+        response = self._delete('projects/postgres/project_branches/postgres.rpath.com@rpath:postgres-1',
             username="admin", password="password")
         self.assertEquals(response.status_code, 204)
-        
-    def testDeleteProjectVersionNoAuth(self):
-        response = self._delete('project_branches/2',
+
+    def testDeleteProjectBranchNoAuth(self):
+        response = self._delete('projects/postgres/project_branches/postgres.rpath.com@rpath:postgres-1',
             username="testuser", password="password")
-        self.assertEquals(response.status_code, 401)
+        self.assertEquals(response.status_code, 403)
         
-    def testGetProjectBranchStages(self):
+    def testGetAggregateProjectBranchStages(self):
         response = self._get('project_branch_stages/',
             username="testuser", password="password")
         self.assertEquals(response.status_code, 200)
@@ -329,16 +335,16 @@ class ProjectsTestCase(XMLTestCase):
         self.assertEquals(response.status_code, 200)
         stages = xobj.parse(response.content).project_branch_stages.project_branch_stage
         self.assertEquals(len(stages), 3)
-        
-    def testPostImage(self):
-        response=self._post('images/',
-            data = testsxml.project_image_post_xml,
-            username="admin", password="password")
+
+    def testGetProjectImages(self):
+        # Add image
+        prj = self._addProject("foo")
+        image = models.Image(name="image-1", description="image-1",
+            project=prj, build_type=10)
+        image.save()
+
+        response = self._get('projects/%s/images/' % prj.short_name)
         self.assertEquals(response.status_code, 200)
-        image = xobj.parse(response.content).image
-        image = models.Image.objects.get(pk=image.image_id)    
-        
-            
-        
-
-
+        images = xobj.parse(response.content).images
+        image = models.Image.objects.get(pk=1)
+        self.assertEquals(image.build_type, 10)

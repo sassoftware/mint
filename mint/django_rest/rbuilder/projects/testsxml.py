@@ -181,7 +181,7 @@ project_version_post_with_project_no_auth_xml = """\
 """
 
 project_version_put_xml = """\
-  <project_branch id="http://127.0.0.1:8000/api/v1/project_branches/2">
+  <project_branch id="http://testserver/api/v1/projects/postgres/project_branches/postgres.rpath.com@rpath:postgres-1">
     <description>updated description</description>
   </project_branch>
 """
@@ -226,12 +226,13 @@ project_branch_xml = """\
 
 project_image_post_xml = """\
   <image>
-    <project id="http://testserver/api/v1/projects/chater-foo"/>
+    <project id="http://testserver/api/v1/projects/chater-foo">
     <project_branch id="http://testserver/api/v1/projects/chater-foo/project_branches/chater-foo.eng.rpath.com@rpath:chater-foo-trunk">
     <build_type>image-test-build-type</build_type>
     <time_created>1</time_created>
   </image>
 """
+
 
 
 
