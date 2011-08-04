@@ -57,7 +57,17 @@ class RbacBasicTestCase(XMLTestCase):
         )
 
     def testModelsForRbacContexts(self):
-        pass
+        datacenter = models.RbacContext(pk='datacenter')
+        datacenter.save()
+        desktops = models.RbacContext(pk='desktops')
+        desktops.save()
+        self.assertEquals(len(models.RbacContext.objects.all()), 2,
+           'correct number of results'
+        ) 
+        desktops2 = models.RbacContext.objects.get(pk='desktops')
+        self.assertEqual(desktops2.context_id, 'desktops',
+           'fetched correctly'
+        )
 
     def testModelsForRbacPermissions(self):
         pass

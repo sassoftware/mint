@@ -55,9 +55,7 @@ class RbacRole(modellib.XObjIdModel):
     An RbacRole represents a role a user has that is used to determine a RbacPermission
     on an RbacContext.  Example roles could be "syadmin", "developer", or "it_architect"
     '''
-
     # XSL = "fixme.xsl" # TODO
-
     class Meta:
         db_table = 'rbac_role'
 
@@ -69,17 +67,50 @@ class RbacRole(modellib.XObjIdModel):
     )
 
     # objects = modellib.RbacManager() # NEEDED?
-
     role_id = D(models.TextField(primary_key=True),
         "the database ID for the role")
 
 class RbacContexts(object):
-    # TODO
-    pass
+    '''
+    A collection of RbacContexts
+    '''
 
-class RbacContext(object):
-    # TODO
-    pass
+    # XSL = 'fixme.xsl' # TODO
+    class Meta:
+        abstract = True
+    _xobj = xobj.XObjMetadata(tag = 'rbac_contexts')
+    list_fields = ['rbac_contexts']
+    context = []
+    objects = modellib.RbacContextsManager() 
+    view_name = 'RbacContexts' # TODO: add view
+
+    def __init__(self):
+        modellib.Collection.__init__(self)
+
+    def save(self):
+        return [s.save() for s in self.context]
+
+class RbacContext(modellib.XObjIdModel):
+    '''
+    An RbacContext is a label assigned to resources that has security permissions
+    associated with it.  An example context might be "lab", "datacenter", "tradingfloor",
+    etc.  A resource can only have one context.  A resource having no context means
+    it is write access to admins only, but viewable to everyone.
+    '''
+    # XSL = "fixme.xsl" # TODO
+    class Meta:
+        db_table = 'rbac_context'
+
+    view_name = 'RbacContext' # TODO
+
+    _xobj = xobj.XObjMetadata(
+        tag = 'rbac_context',
+        attributes = {'id':str},
+    )
+
+    context_id = D(models.TextField(primary_key=True),
+        "the database ID for the context")
+
 
 class RbacPermissions(object):
     # TODO

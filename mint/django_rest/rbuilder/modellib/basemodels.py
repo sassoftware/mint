@@ -790,6 +790,9 @@ class StubManager(BaseManager):
 class RbacRolesManager(StubManager):
     pass
 
+class RbacContextsManager(StubManager):
+    pass
+
 class SystemsManager(StubManager):
     pass
 
