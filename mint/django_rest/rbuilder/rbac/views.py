@@ -16,7 +16,6 @@
 #from mint import users
 from mint.django_rest.deco import return_xml, access #, requires, ACCESS, \
 #    HttpAuthenticationRequired, getHeaderValue, xObjRequires
-from mint.django_rest.deco import access
 #from mint.django_rest.rbuilder.users import models as usersmodels
 from mint.django_rest.rbuilder import service
 #from mint.django_rest.rbuilder.inventory import models

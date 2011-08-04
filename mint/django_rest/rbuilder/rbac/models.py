@@ -16,7 +16,7 @@ import sys
 #from conary.deps import deps
 #
 #from django.conf import settings
-from django.db import connection, models
+from django.db import models # connection
 #from django.db.backends import signals
 from mint.django_rest.deco import D
 from mint.django_rest.rbuilder import modellib
