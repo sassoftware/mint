@@ -3450,6 +3450,7 @@ class MigrateTo_58(SchemaMigration):
         ) %(TABLEOPTS)s""" % self.db.keywords)
         self.db.tables['rbac_role'] = []
 
+        cu.execute("""
         CREATE TABLE rbac_context (
             context_id     TEXT PRIMARY KEY
         ) %(TABLEOPTS)s""" % self.db.keywords)
