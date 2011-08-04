@@ -336,7 +336,9 @@ class ProjectsTestCase(XMLTestCase):
             username="admin", password="password")
         self.assertEquals(response.status_code, 200)
         image = xobj.parse(response.content).image
-        image = models.Image.objects.get(pk=image.image_id)    
+        image = models.Image.objects.get(pk=1)
+        self.assertEquals("image-test-build-type", image.build_type)
+           
         
             
         
