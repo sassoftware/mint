@@ -343,14 +343,7 @@ class ProjectsTestCase(XMLTestCase):
             username="testuser", password="password")
         self.assertEquals(response.status_code, 200)
         stages = xobj.parse(response.content).project_branch_stages.project_branch_stage
-        self.assertEquals(len(stages), 3)
-
-        
-    def testPostImage(self):
-        response=self._post('projects/chater-foo/images/',
-            data = testsxml.project_image_post_xml,
-            username="admin", password="password")
-        import pdb; pdb.set_trace()    
+        self.assertEquals(len(stages), 3) 
 
 
         self.failUnlessEqual([ x.label for x in stages ],
