@@ -67,7 +67,7 @@ class RbacPermissionsService(BaseRbacService):
     # DELETE
     @access.admin
     def rest_DELETE(self, request, permission_id):
-        self.mgr.deleteRbacContext(permission_id)
+        self.mgr.deleteRbacPermission(permission_id)
         return HttpResponse(status=204)
 
 

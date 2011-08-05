@@ -112,3 +112,19 @@ permission_post_xml_output="""
 </rbac_permission>
 """
 
+permission_put_xml_input="""
+<rbac_permission id="http://testserver/api/v1/rbac/permissions/1">
+  <action>write</action>
+  <rbac_context id="http://testserver/api/v1/rbac/contexts/tradingfloor"/>
+  <rbac_role id="http://testserver/api/v1/rbac/roles/intern"/>
+</rbac_permission>
+"""
+
+permission_put_xml_output="""
+<rbac_permission id="http://testserver/api/v1/rbac/permissions/1">
+  <action>write</action>
+  <permission_id>1</permission_id>
+  <rbac_context id="http://testserver/api/v1/rbac/contexts/tradingfloor"/>
+  <rbac_role id="http://testserver/api/v1/rbac/roles/intern"/>
+</rbac_permission>
+"""

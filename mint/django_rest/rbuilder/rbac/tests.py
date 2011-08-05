@@ -273,12 +273,27 @@ class RbacPermissionViews(RbacTestCase):
         self.assertEqual(perm.action, 'write')
 
     def testCanDeletePermissions(self):
-        # TODO 
-        pass
+       
+        all = models.RbacPermission.objects.all()
+        url = 'rbac/permissions/1'
+        self.req(url, method='DELETE', expect=401, is_authenticated=True)
+        self.req(url, method='DELETE', expect=204, is_admin=True)
+        all = models.RbacPermission.objects.all()
+        self.assertEqual(len(all), 2, 'deleted an object')
+
 
     def testCanUpdatePermissions(self):
-        # TODO
-        pass
+        
+        url = 'rbac/permissions/1'
+        input = testsxml.permission_put_xml_input
+        output = testsxml.permission_put_xml_output
+        content = self.req(url, method='PUT', data=input, expect=401, is_authenticated=True)
+        content = self.req(url, method='PUT', data=input, expect=200, is_admin=True)
+        self.assertXMLEquals(content, output)
+        perm = models.RbacPermission.objects.get(pk=1)
+        self.assertEqual(perm.rbac_role.pk, 'intern')
+        self.assertEqual(perm.rbac_context.pk, 'tradingfloor')
+        self.assertEqual(perm.action, 'write')
 
 class RbacContextViews(RbacTestCase):
 
