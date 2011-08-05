@@ -122,6 +122,11 @@ class PlatformSourceService(service.BaseService):
     def rest_POST(self, request, content_source):
         return self.mgr.createSource(content_source)
     
+    @return_xml
+    @requires('content_source')
+    def rest_PUT(self, request, content_source):
+        return self.mgr.updateSource(content_source)
+    
 class PlatformSourceTypeService(service.BaseService):
     @return_xml
     def rest_GET(self, request, platform_id):
@@ -167,6 +172,7 @@ class PlatformVersionService(service.BaseService):
 
 
 class PlatformService(service.BaseService):
+    @access.anonymous
     @return_xml
     def rest_GET(self, request, platform_id=None):
         return self.get(platform_id)

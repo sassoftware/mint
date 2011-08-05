@@ -198,7 +198,7 @@ contentSourceTypesByPlatformXml = """\
 contentSourcePUTXml = """\
 <?xml version='1.0' encoding='UTF-8'?>
 <content_source id="http://localhost:8000/api/v1/content_sources/RHN/instances/plat2source0">
-  <content_source_id>2</contentSourceId>
+  <content_source_id>2</content_source_id>
   <name>Platform 2 Source 0</name>
   <short_name>plat2source0</short_name>
   <default_source>true</default_source>

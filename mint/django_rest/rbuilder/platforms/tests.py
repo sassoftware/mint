@@ -51,12 +51,12 @@ class PlatformsTestCase(XMLTestCase):
         # trying to retrieve a Platforms instance, but rather all
         # the platform instances that it contains
         platforms = pmodels.Platform.objects.all()
-        self.assertEquals(len(list(platforms)), len(platforms_gotten))
+        self.assertEquals(len(list(platforms)), len(platforms_gotten.platform))
     
     def testGetContentSourceTypes(self):
         cSourceTypes = pmodels.ContentSourceType.objects.all()
         cSourceTypes_gotten = self.xobjResponse('platforms/content_source_types/')
-        self.assertEquals(len(list(cSourceTypes)), len(cSourceTypes_gotten))
+        self.assertEquals(len(list(cSourceTypes)), len(cSourceTypes_gotten.content_source_type))
     
     def testGetContentSourceType(self):
         cSourceType = pmodels.ContentSourceType.objects.get(pk=1)
@@ -171,6 +171,7 @@ class NewPlatformTest(XMLTestCase):
         r = self._put('platforms/1/content_sources',
             data=platformstestxml.contentSourcePUTXml,
             username='admin', password='password')
+        import pdb; pdb.set_trace()
         self.assertEquals(r.status_code, 200)
         updatedContent = pmodels.ContentSource.objects.get(pk=1)
         # Check that name and other fields are updated
