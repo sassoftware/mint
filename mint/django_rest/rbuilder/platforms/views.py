@@ -157,6 +157,7 @@ class PlatformVersionService(service.BaseService):
 
 
 class PlatformService(service.BaseService):
+    @access.anonymous # what is actual permissions
     @return_xml
     def rest_GET(self, request, platform_id=None):
         return self.get(platform_id)
