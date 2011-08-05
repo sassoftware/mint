@@ -162,6 +162,8 @@ class Project(modellib.XObjIdModel):
         return "%.2f" % time.time()
 
     def save(self, *args, **kwargs):
+        if self.domain_name is None and self._rbmgr is not None:
+            self.domain_name = self._rbmgr.cfg.projectDomainName
         # Default project type to Appliance
         if self.project_type is None:
             self.project_type = "Appliance"
