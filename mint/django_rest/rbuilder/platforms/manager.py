@@ -94,6 +94,10 @@ class SourceTypeManager(basemanager.BaseManager):
         ContentSourceTypes.content_source_type = platformModels.ContentSourceType.objects.all()
         return ContentSourceTypes
         
+    @exposed
+    def createContentSourceType(self, content_source_type):
+        content_source_type.save()
+        return content_source_type
         
 class PlatformLoadStatusManager(basemanager.BaseManager):
     @exposed

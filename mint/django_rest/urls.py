@@ -491,11 +491,11 @@ urlpatterns = patterns('',
     #     platformsviews.PlatformStatusService(),
     #     name='PlatformStatus'),
         
-    URL(r'platforms/(?P<platform_id>\d+)/platform_source/?$',
+    URL(r'platforms/(?P<platform_id>\d+)/content_sources/?$',
         platformsviews.PlatformSourceService(),
         name='PlatformSource'),
         
-    URL(r'platforms/(?P<platform_id>\d+)/platform_source_type/?$',
+    URL(r'platforms/(?P<platform_id>\d+)/content_source_types/?$',
         platformsviews.PlatformSourceTypeService(),
         name='PlatformSourceType'),
         
@@ -520,6 +520,10 @@ urlpatterns = patterns('',
         name='PlatformVersion'),
         
     # Do platforms/content_sources/...
+    URL(r'platforms/content_sources/?$',
+        platformsviews.SourceService(),
+        name='ContentSources'),
+    
     URL(r'platforms/content_sources/(?P<source_type>[_a-zA-Z0-9]+)/?$',
         platformsviews.SourceService(),
         name='ContentSources'),
