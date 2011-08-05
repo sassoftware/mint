@@ -99,8 +99,8 @@ class PlatformsTestCase(XMLTestCase):
     def testUpdatePlatform(self):
         pass
     
-    ## All tests (including legacy tests from apui/v0) which won't run until
-    ## certain models are moved into the db
+## All tests (including legacy tests from apui/v0) which won't run until
+## certain models are moved into the db
     
 #   def testGetImageTypeDefinitions(self):
 #       pass
@@ -242,8 +242,8 @@ class NewPlatformTest(XMLTestCase):
         self.assertEquals('ContentSourceTypePut', updatedContent.content_source_type)
 
 
-    ## All tests (including legacy tests from apui/v0) which won't run until
-    ## certain models are moved into the db
+## All tests (including legacy tests from apui/v0) which won't run until
+## certain models are moved into the db
     
 #    def testUpdatePlatformLoad(self):
 #		#1 already in fixture
