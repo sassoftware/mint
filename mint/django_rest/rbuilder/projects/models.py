@@ -331,7 +331,7 @@ class ProjectVersion(modellib.XObjIdModel):
         if self._rbmgr is None or self.project_id is None:
             return
         restDb = self._rbmgr.restDb
-        pd = restDb.getProductVersionDefinition(self.project.repository_hostname, self.name)
+        pd = restDb.getProductVersionDefinition(self.project.hostname, self.name)
         self.source_group = str(pd.getImageGroup())
         #platformLabel = self.platform_label = pd.getPlatformLabel()
         # Look for a platform matching that label
