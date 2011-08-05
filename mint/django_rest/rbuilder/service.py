@@ -148,7 +148,7 @@ class BaseAuthService(BaseService):
                 return True
 
         if access & ACCESS.EVENT_UUID:
-            ret = self._check_event_uuid(request, kwargs)
+            ret = self._check_uuid_auth(request, kwargs)
             if ret is not None:
                 # A bad event UUID should fail the auth check
                 return ret
