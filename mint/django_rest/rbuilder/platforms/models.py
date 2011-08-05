@@ -12,6 +12,12 @@ import sys
 from xobj import xobj
 
 
+## TODO: Change SyntheticFields to correct type (mostly CharFields/BooleanFields/FK's)
+##       once the schema is updated (if need be).  Some of the models are listed as
+##       abstract as they lack the necessary tables in the db -- and some of the fields on
+##       those models are temporarily synthetic because we can't have FK's to abstract models.
+
+
 class Platforms(modellib.Collection):
     class Meta:
         abstract = True
@@ -25,7 +31,9 @@ class Platform(modellib.XObjIdModel):
     
     _MODE_CHOICES = (('manual', 'manual'), ('auto', 'auto'))
     
-    platform_id = models.AutoField(primary_key=True, db_column='platformId')
+    _xobj_hidden_accessors = set(['platformsplatformsources_set', 'contentsourcetype_set'])
+    
+    platform_id = models.AutoField(primary_key=True, db_column='platformid')
     label = models.CharField(max_length=1026, unique=True)
     mode = models.CharField(max_length=1026, default='manual', choices=_MODE_CHOICES)
     enabled = models.IntegerField(default=1)
@@ -34,14 +42,15 @@ class Platform(modellib.XObjIdModel):
     configurable = models.BooleanField(default=False)
     abstract = models.BooleanField(default=False)
     is_from_disk = models.BooleanField(default=False, db_column='isFromDisk')
-    time_refresed = basemodels.DateTimeUtcField() # hack, modellib keeps evaluating to None
+    time_refreshed = basemodels.DateTimeUtcField(auto_now_add=True) # hack, modellib keeps evaluating to None
     
     # SyntheticFields -- fields with no column in the db
-    # most of these are deferred fk's or CharFields in the old code
+    # most of these are deferred fk's, M2M's, or CharFields in the old code
     platform_trove_name = modellib.SyntheticField() # charfield
     repository_host_name = modellib.SyntheticField() # charfield
     repository_url = modellib.SyntheticField() # genuine synthetic field
     product_version = modellib.SyntheticField() # fk
+    platform_version = modellib.SyntheticField() # fk, is this different from product_version ?
     platform_usage_terms = modellib.SyntheticField() # charfield
     mirror_permission = modellib.SyntheticField() # boolean
     platform_type = modellib.SyntheticField() # charfield
@@ -50,7 +59,7 @@ class Platform(modellib.XObjIdModel):
     content_sources = modellib.SyntheticField() # fk
     content_source_types = modellib.SyntheticField() # fk
     platform_status = modellib.SyntheticField() # fk
-    
+    is_platform = modellib.SyntheticField() # booleanfield
     
 class ContentSources(modellib.Collection):
     """
@@ -76,7 +85,7 @@ class ContentSource(modellib.XObjIdModel):
     order_index = models.IntegerField(db_column='orderIndex')
     
     # fields on the old model w/o corresponding column in the db
-    enabled = modellib.SyntheticField() # booleanfield
+    enabled = modellib.SyntheticField() # booleanfield/integerfield
     content_source_status = modellib.SyntheticField() # fk
     resource_errors = modellib.SyntheticField() # fk
     source_url = modellib.SyntheticField() # charfield/textfield
@@ -98,8 +107,9 @@ class ContentSourceType(modellib.XObjIdModel):
     """
     class Meta:
         db_table = 'PlatformsContentSourceTypes'
-        
-    platform_id = modellib.DeferredForeignKey('Platform')
+    
+    content_source_type_id = models.AutoField(primary_key=True, db_column='contentSourceTypeId')
+    platform_id = modellib.DeferredForeignKey('Platform', db_column='platformId')
     content_source_type = models.CharField(max_length=1026, db_column='contentSourceType')
     
     # Fields w/o a corresponding db column
@@ -111,7 +121,7 @@ class ContentSourceType(modellib.XObjIdModel):
     
 
 class PlatformsPlatformSources(modellib.XObjModel):
-    platform_id = modellib.DeferredForeignKey('Platform')
+    platform_id = modellib.ForeignKey('Platform')
     platform_source_id = modellib.ForeignKey('ContentSource')
 
 
@@ -146,7 +156,9 @@ class PlatformLoad(modellib.XObjIdModel):
     job_id = models.IntegerField()
     platform_id = models.IntegerField()
     # job = fields.UrlField('platforms.load', ['platformId', 'jobId'])
-    platform_load_status = models.ForeignKey('PlatformLoadStatus')
+    
+    # SyntheticFields, fields w/o corresponding column in db
+    platform_load_status = modellib.SyntheticField() # fk
 
 
 class PlatformLoadStatus(modellib.XObjIdModel):
@@ -158,108 +170,72 @@ class PlatformLoadStatus(modellib.XObjIdModel):
     is_final = models.BooleanField()
 
 
-### OLD ###
-# class Platforms(modellib.Collection):
-#     class Meta:
-#         abstract = True
-#         
-#     list_fields = ['platform']
-# 
-# 
-# class Platform(modellib.XObjIdModel):
-#     class Meta:
-#         db_table = 'Platforms'
-#     
-#     _MODE_CHOICES = (('manual', 'manual'), ('auto', 'auto'))
-#     
-#     platform_id = models.AutoField(primary_key=True, db_column='platformid')
-#     platform_trove_name = modellib.SyntheticField() # used to be a CharField
-#     label = models.CharField(max_length=1026, unique=True)
-#     mode = models.CharField(max_length=1026, default='manual', choices=_MODE_CHOICES)
-#     enabled = models.IntegerField(default=1)
-#     projects = modellib.DeferredForeignKey('projects.Project')
-#     platform_name = models.CharField(max_length=1026, db_column='platformName')
-#     configurable = models.BooleanField(default=False)
-#     abstract = models.BooleanField(default=False)
-#     is_from_disk = models.BooleanField(default=False, db_column='isFromDisk')
-#     time_refresed = basemodels.DateTimeUtcField() # hack, modellib keeps evaluating to None
-#     repository_host_name = models.CharField(max_length=1026)
-#     product_version = models.CharField(max_length=1026)
-#     platform_usage_terms = models.CharField(max_length=1026)
-# 
-# 
-# class ProductPlatforms(modellib.Collection):
-#     class Meta:
-#         abstract = True
-#         
-#     list_fields = ['product_platform']
-# 
-# class ProductPlatform(modellib.XObjIdModel):
-#     class Meta:
-#         abstract = False
-#     platform_id = models.AutoField(primary_key=True, db_column='platformid')
-#     label = models.CharField(max_length=1026)
-#     mode = models.CharField(max_length=1026)
-#     enabled = models.IntegerField()
-#     projects = modellib.DeferredForeignKey('projects.Project')
-#     platform_name = models.CharField(max_length=1026, db_column='platformName')
-#     configurable = models.BooleanField(default=False)
-#     abstract = models.BooleanField(default=False)
-#     is_from_disk = models.BooleanField(default=False, db_column='isFromDisk')
-#     time_refresed = basemodels.DateTimeUtcField() # hack, modellib keeps evaluating to None
-#     hostname = fields.CharField(max_length=1026)
-#     content_sources = models.ManyToManyField('ContentSource', through='ProductPlatformContentSource')
-# 
-# 
-# class ProductPlatformContentSource(modellib.XObjIdModel):
-#     class Meta:
-#         abstract = False
-#         
-#     content_source = models.ForeignKey('ContentSource')
-#     product_platform = models.ForeignKey('ProductPlatform')
-# 
-# 
-# class PlatformVersions(modellib.Collection):
-#     class Meta:
-#         abstract = True
-#     
-#     list_fields = ['platform_version']
-#     
-#     
-# class PlatformVersion(modellib.XObjIdModel):
-#     name = fields.CharField(max_length=1026)
-#     version = fields.CharField(max_length=1026)
-#     revision = fields.CharField(max_length=1026)
-#     label = fields.CharField(max_length=1026)
-#     ordering = fields.CharField(max_length=1026)
-# 
-# 
-# 
-# class PlatformLoads(modellib.Collection):
-#     class Meta:
-#         abstract = True
-#     
-#     list_fields = ['platform_load']
-#     
-#     
-# class PlatformLoad(modellib.XObjIdModel):
-#     load_uri = fields.CharField(max_length=1026)
-#     job_id = fields.IntegerField()
-#     platform_id = fields.IntegerField()
-#     # job = fields.UrlField('platforms.load', ['platformId', 'jobId'])
-#     platform_load_status = models.ForeignKey('PlatformLoadStatus')
-# 
-# 
-# class PlatformBuildTemplates(modellib.Collection):
-#     class Meta:
-#         abstract = True
-#         
-#     list_fields = ['platform_build_template']
-#     
-#     
-# class PlatformBuildTemplate(modellib.XObjIdModel):
-#     class Meta:
-#         abstract = False
+class Status(modellib.XObjIdModel):
+    """
+    Base class for all statuses except PlatformLoadStatus
+    """
+    class Meta:
+        abstract = True
+        
+    connected = models.BooleanField()
+    valid = models.BooleanField()
+    message = models.CharField(max_length=1026)
+    
+
+class NuSource(modellib.XObjIdModel):
+    class Meta:
+        abstract = True
+    pass
+    
+
+class SmtSource(modellib.XObjIdModel):
+    class Meta:
+        abstract = True
+    pass
+
+
+class SatelliteSource(modellib.XObjIdModel):
+    class Meta:
+        abstract = True
+    pass
+    
+
+class RhnSource(modellib.XObjIdModel):
+    class Meta:
+        abstract = True
+    pass
+
+
+class PlatformBuildTemplates(modellib.Collection):
+    class Meta:
+        abstract = True
+        
+    list_fields = ['platform_build_template']
+    
+    
+class PlatformBuildTemplate(modellib.XObjIdModel):
+    class Meta:
+        abstract = True
+    pass
+
+
+class PlatformContentErrors(modellib.Collection):
+    class Meta:
+        abstract = True
+
+    list_fields = ['platform_content_error']
+
+
+class PlatformContentError(modellib.XObjIdModel):
+    class Meta:
+        abstract = True
+    short_name = fields.CharField(max_length=1026, unique=True)
+    error_id = fields.IntegerField()
+    
+    # SyntheticFields, fields w/o corresponding db column
+    content_source_type = modellib.SyntheticField() # fk
+
+    
 #     
 # 
 # class Sources(modellib.Collection):
@@ -280,12 +256,7 @@ class PlatformLoadStatus(modellib.XObjIdModel):
 #     content_source_type = models.CharField(max_length=1026, db_column='contentSourceType')
 #     enabled = fields.BooleanField()
 # 
-# 
-# class PlatformContentSource(modellib.XObjIdModel):
-#     platform = models.ForeignKey('Platform')
-#     content_source = models.ForeignKey('ContentSource')
-#    
-# 
+
 # class NuSource(AbstractSource):
 #     class Meta:
 #         abstract = True
@@ -315,38 +286,8 @@ class PlatformLoadStatus(modellib.XObjIdModel):
 #         abstract = True
 #         
 #     source_url = fields.CharField(max_length=1026)
-#     
-# 
-# class ContentSourceTypes(modellib.Collection):
-#     class Meta:
-#         abstract = True
-#     
-#     list_fields = ['content_source_type']
-#     
-#     
-# class ContentSourceType(modellib.XObjIdModel):
-#     class Meta:
-#         db_table = 'PlatformsContentSourceTypes'
-#         
-#     content_source_type = fields.CharField(max_length=1026)
-#     required = fields.BooleanField()
-#     singleton = fields.BooleanField()
-# 
-#     _xobj_hidden_accessors = set(['platform_set', 'sourcestatus_set', 'productplatform_set',
-#                                  'platformcontenterror_set'])
-# 
-# class ContentSources(modellib.Collection):
-#     class Meta:
-#         abstract = True
-#     
-#     list_fields = ['content_source_type']
-# 
-# 
-# class ContentSource(AbstractSource):
-#     class Meta:
-#         abstract = False
-# 
-# 
+
+
 # class AbstractStatus(modellib.XObjIdModel):
 #     class Meta:
 #         abstract = True
@@ -389,17 +330,7 @@ class PlatformLoadStatus(modellib.XObjIdModel):
 #     short_name = fields.CharField(max_length=1026, unique=True)
 # 
 # 
-# class PlatformContentErrors(modellib.Collection):
-#     class Meta:
-#         abstract = True
-# 
-#     list_fields = ['platform_content_error']
-# 
-# 
-# class PlatformContentError(modellib.XObjIdModel):
-#     content_source_type = modellib.ForeignKey('ContentSourceType')
-#     short_name = fields.CharField(max_length=1026, unique=True)
-#     error_id = fields.IntegerField()
+
 # 
 # 
 # class ImageTypeDefinitions(modellib.XObjIdModel):
