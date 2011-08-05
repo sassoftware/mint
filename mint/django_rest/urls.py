@@ -499,25 +499,25 @@ urlpatterns = patterns('',
         platformsviews.PlatformSourceTypeService(),
         name='PlatformSourceType'),
         
-    URL(r'platforms/(?P<platform_id>\d+)/platform_image_type/?$',
-        platformsviews.PlatformImageTypeService(),
-        name='PlatformImageType'),
-        
-    URL(r'platforms/(?P<platform_id>\d+)/platform_load/(?P<job_uuid>[-a-zA-X0-9+])/?$',
-        platformsviews.PlatformLoadService(),
-        name='PlatformLoad'),
-    
-    URL(r'platforms/(?P<platform_id>\d+)/platform_load/(?P<job_uuid>[-a-zA-X0-9+])/status/?$',
-        platformsviews.PlatformLoadStatusService(),
-        name='PlatformLoad'),
-    
-    URL(r'platforms/(?P<platform_id>\d+)/platform_versions/?$',
-        platformsviews.PlatformVersionService(),
-        name='PlatformVersions'),
-        
-    URL(r'platforms/(?P<platform_id>\d+)/platform_versions/(?P<platform_version_id>\d+)/?$',
-        platformsviews.PlatformVersionService(),
-        name='PlatformVersion'),
+    # URL(r'platforms/(?P<platform_id>\d+)/platform_image_type/?$',
+    #     platformsviews.PlatformImageTypeService(),
+    #     name='PlatformImageType'),
+    #     
+    # URL(r'platforms/(?P<platform_id>\d+)/platform_load/(?P<job_uuid>[-a-zA-X0-9+])/?$',
+    #     platformsviews.PlatformLoadService(),
+    #     name='PlatformLoad'),
+    # 
+    # URL(r'platforms/(?P<platform_id>\d+)/platform_load/(?P<job_uuid>[-a-zA-X0-9+])/status/?$',
+    #     platformsviews.PlatformLoadStatusService(),
+    #     name='PlatformLoad'),
+    # 
+    # URL(r'platforms/(?P<platform_id>\d+)/platform_versions/?$',
+    #     platformsviews.PlatformVersionService(),
+    #     name='PlatformVersions'),
+    #     
+    # URL(r'platforms/(?P<platform_id>\d+)/platform_versions/(?P<platform_version_id>\d+)/?$',
+    #     platformsviews.PlatformVersionService(),
+    #     name='PlatformVersion'),
         
     # Do platforms/content_sources/...
     URL(r'platforms/content_sources/?$',
@@ -532,17 +532,17 @@ urlpatterns = patterns('',
         platformsviews.SourceService(),
         name='ContentSource'),
         
-    URL(r'platforms/content_sources/(?P<source_type>[_a-zA-Z0-9]+)/(?P<short_name>(\w|\-)*)/source_status/?$',
-        platformsviews.SourceStatusService(),
-        name='SourceStatus'),
-        
-    URL(r'platforms/content_sources/(?P<source_type>[_a-zA-Z0-9]+)/(?P<short_name>(\w|\-)*)/source_errors/?$',
-        platformsviews.SourceErrorsService(),
-        name='SourceErrors'),
-        
-    URL(r'platforms/content_sources/(?P<source_type>[_a-zA-Z0-9]+)/(?P<short_name>(\w|\-)*)/source_errors/(?P<error_id>\d+)/?$',
-        platformsviews.SourceErrorsService(),
-        name='SourceError'),
+    # URL(r'platforms/content_sources/(?P<source_type>[_a-zA-Z0-9]+)/(?P<short_name>(\w|\-)*)/source_status/?$',
+    #     platformsviews.SourceStatusService(),
+    #     name='SourceStatus'),
+    #     
+    # URL(r'platforms/content_sources/(?P<source_type>[_a-zA-Z0-9]+)/(?P<short_name>(\w|\-)*)/source_errors/?$',
+    #     platformsviews.SourceErrorsService(),
+    #     name='SourceErrors'),
+    #     
+    # URL(r'platforms/content_sources/(?P<source_type>[_a-zA-Z0-9]+)/(?P<short_name>(\w|\-)*)/source_errors/(?P<error_id>\d+)/?$',
+    #     platformsviews.SourceErrorsService(),
+    #     name='SourceError'),
         
     # URL(r'platforms/sources/(?P<source_type>[_a-zA-Z0-9]+)/source_type_descriptor/?$',
         # platformsviews.SourceTypeDescriptor(),
