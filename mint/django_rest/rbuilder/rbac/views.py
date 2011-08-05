@@ -52,8 +52,8 @@ class RbacPermissionsService(BaseRbacService):
 
     # CREATE
     @access.admin
-    @return_xml
     @requires('rbac_permission')
+    @return_xml
     def rest_POST(self, request, rbac_permission):
         return self.mgr.addRbacPermission(rbac_permission)
 
@@ -102,7 +102,7 @@ class RbacRolesService(BaseRbacService):
 
     # UPDATE
     @access.admin
-    @requires('rbac_role')
+    @requires('rbac_role', save=False)
     @return_xml
     def rest_PUT(self, request, role_id, rbac_role):
         return self.mgr.updateRbacRole(role_id, rbac_role)
@@ -160,7 +160,7 @@ class RbacContextsService(BaseRbacService):
 
     # UPDATE
     @access.admin
-    @requires('rbac_context')
+    @requires('rbac_context', save=False)
     @return_xml
     def rest_PUT(self, request, context_id, rbac_context):
         return self.mgr.updateRbacContext(context_id, rbac_context)

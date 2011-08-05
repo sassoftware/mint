@@ -46,18 +46,14 @@ class RbacManager(basemanager.BaseManager):
 
     def _addThing(self, modelClass, obj):
         '''generic creation method'''
-        if not obj:
-            return None
-        obj.save()
+        # it's already saved, crazy @requires stuff.
+        #obj.save()
         return obj
 
     def _updateThing(self, modelClass, old_id, obj):
         '''generic update method'''
-        # FIXME: not convinced this works
-        oldObj = modelClass.objects.get(pk=old_id)
-        if not oldObj:
-            return None
-        obj.save()
+        # it's already saved, crazy @requires stuff.
+        #obj.save(force_update=True)
         return obj
 
     def _updateSingleColumnThing(self, modelClass, old_id, obj, field, table):
@@ -90,7 +86,9 @@ class RbacManager(basemanager.BaseManager):
     
     #########################################################
     # RBAC ROLE METHODS
-        
+    # handled a bit nonstandard due to the string PK
+    # and need to override the Django manager
+    
     def _role(self, value):
         '''cast input as a role'''
         return self._orId(value, models.RbacRole)
@@ -119,6 +117,8 @@ class RbacManager(basemanager.BaseManager):
 
     #########################################################
     # RBAC CONTEXT METHODS
+    # handled a bit nonstandard due to the string PK
+    # and need to override the Django manager
 
     def _context(self, value):
         '''cast input as a role'''
@@ -148,7 +148,8 @@ class RbacManager(basemanager.BaseManager):
 
     #########################################################
     # RBAC PERMISSION METHODS
-
+    # these do NOT override the manager so are coded differently than above
+    
     def _permission(self, value):
         '''cast input as a role'''
         return self._orId(value, models.RbacPermission)
@@ -164,11 +165,13 @@ class RbacManager(basemanager.BaseManager):
 
     @exposed
     def addRbacPermission(self, permission):
-        return self._addThing(models.RbacPermission, permission)
+        permission.save()
+        return permission
 
     @exposed
     def updateRbacPermission(self, old_id, permission):
-        raise Exception("TODO") # TODO
+        permission.save()
+        return permission
 
     @exposed
     def deleteRbacPermission(self, permission):

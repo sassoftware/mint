@@ -9,6 +9,7 @@ import datetime
 from dateutil import parser
 from dateutil import tz
 import urlparse
+import traceback
 
 from django.db import connection
 from django.db import models
@@ -223,7 +224,11 @@ class BaseManager(models.Manager):
             func, args, kwargs = resolver
             # The django rest api always uses .get(...) to handle a GET, which
             # will always return a model.
-            return func.get(*args, **kwargs)
+            try:
+                return func.get(*args, **kwargs)
+            except exceptions.ObjectDoesNotExist:
+                # exception handling middleware must be intercepted
+                return None
         else:
             return None
 
@@ -310,7 +315,11 @@ class BaseManager(models.Manager):
             # get_prep_value, except in the case of the primary key.
             elif val is not None:
                 if field.primary_key:
-                    val = int(val)
+                    try:
+                        val = int(val)
+                    except:
+                        # primary keys might not just be ints!
+                        val = str(val)
                 else:
                     # Cast to str, django will just do the right thing.
                     val = str(val)
@@ -617,22 +626,6 @@ class ConfigurationManager(BaseManager):
 class ConfigurationDescriptorManager(BaseManager):
     def load_from_object(self, obj, request, save=False, load=True):
         model = self.model(system=None)
-        for k, v in obj.__dict__.items():
-            setattr(model, k, v)
-        return model
-
-class RbacRoleManager(BaseManager):
-    # needed because of non-integer primary key and xobj
-    def load_from_object(self, obj, request, save=False, load=True):
-        model = self.model(role_id=None)
-        for k, v in obj.__dict__.items():
-            setattr(model, k, v)
-        return model
-
-class RbacContextManager(BaseManager):
-    # needed because of non-integer primary key and xobj
-    def load_from_object(self, obj, request, save=False, load=True):
-        model = self.model(context_id=None)
         for k, v in obj.__dict__.items():
             setattr(model, k, v)
         return model
