@@ -171,7 +171,6 @@ class NewPlatformTest(XMLTestCase):
         r = self._put('platforms/1/content_sources',
             data=platformstestxml.contentSourcePUTXml,
             username='admin', password='password')
-        import pdb; pdb.set_trace()
         self.assertEquals(r.status_code, 200)
         updatedContent = pmodels.ContentSource.objects.get(pk=1)
         # Check that name and other fields are updated
