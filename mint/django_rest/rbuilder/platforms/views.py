@@ -88,6 +88,12 @@ class SourceTypeService(service.BaseService):
         else:
             return self.mgr.getSourceTypes()
 
+    @access.anonymous # what are permissions for this
+    @return_xml
+    @requires('content_source_type')
+    def rest_POST(self, request, content_source_type):
+        return self.mgr.createContentSourceType(content_source_type)
+        
 
 class PlatformLoadStatusService(service.BaseService):
     @return_xml
@@ -157,6 +163,7 @@ class PlatformVersionService(service.BaseService):
 
 
 class PlatformService(service.BaseService):
+    @access.anonymous # figure out actual permissions
     @return_xml
     def rest_GET(self, request, platform_id=None):
         return self.get(platform_id)
@@ -166,12 +173,12 @@ class PlatformService(service.BaseService):
             return self.mgr.getPlatform(platform_id)
         else:
             return self.mgr.getPlatforms()
-            
+    
     @return_xml
     @requires('platform')
     def rest_POST(self, request, platform):
         return self.mgr.createPlatform(platform)
-        
+    
     @return_xml
     @requires('platform')
     def rest_PUT(self, request, platform_id, platform):
