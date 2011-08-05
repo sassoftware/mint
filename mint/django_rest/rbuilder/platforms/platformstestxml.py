@@ -42,7 +42,7 @@ platformsXml = """\
 #Prath
 platformSourceXml = """\
 <?xml version='1.0' encoding='UTF-8'?>
-<id="http://localhost:8000/api/platforms/1/sources/plat1source">
+<id="http://localhost:8000/api/v1/platforms/1/sources/plat1source">
   <platform href="1"/>
   <content_source href="1"/>
 </platformSource>
@@ -117,23 +117,17 @@ contentSourceStatusDataFailXml = """\
 #Prath
 contentSourceTypesXml = """\
 <?xml version='1.0' encoding='UTF-8'?>
-<contentSourceTypes>
-  <content_source_type id="http://localhost:8000/api/contentSources/1">
+<content_source_types>
+  <content_source_type id="http://localhost:8000/api/v1/content_sources/1">
     <content_source_type>ContentSourceType</content_source_type>
-    <required>true</required>
-    <singleton>true</singleton>
-  </contentSourceType>
-  <content_source_type id="http://localhost:8000/api/contentSources/2">
+  </content_source_type>
+  <content_source_type id="http://localhost:8000/api/v1/content_sources/2">
     <content_source_type>ContentSourceType1</content_source_type>
-    <required>true</required>
-    <singleton>true</singleton>
-  </contentSourceType>
-   <content_source_type id="http://localhost:8000/api/contentSources/3">
+  </content_source_type>
+   <content_source_type id="http://localhost:8000/api/v1/content_sources/3">
     <content_source_type>ContentSourceType2</content_source_type>
-    <required>true</required>
-    <singleton>true</singleton>
-  </contentSourceType>
-</contentSourceTypes>
+  </content_source_type>
+</content_source_types>
 """
 
 
@@ -141,7 +135,7 @@ contentSourceTypesXml = """\
 contentSourcesXml = """\
 <?xml version='1.0' encoding='UTF-8'?>
 <instances>
-  <contentSource id="http://localhost:8000/api/contentSources/RHN/instances/plat2source0">
+  <content_source id="http://localhost:8000/api/v1/contentSources/RHN/instances/plat2source0">
     <content_source_id>1</content_source_id>
     <name>Test</name>
     <short_name>Source</short_name>
@@ -149,68 +143,61 @@ contentSourcesXml = """\
     <order_index>False</order_index>
     <content_source_type>ContentSourceType Object</content_source_type>
     <enabled>True</enabled>
-    <content_source_status href="http://localhost:8000/api/contentSources/RHN/instances/plat2source0/status"/>
-  </contentSource>
+    <content_source_status href="http://localhost:8000/api/v1/contentSources/RHN/instances/plat2source0/status"/>
+  </content_source>
 """  
 
 #Prath
 contentSourcesByPlatformXml = """\
 <?xml version='1.0' encoding='UTF-8'?>
-<contentSources>
-  <content_source id="http://localhost:8000/api/contentSources/satellite/instances/plat1source">
+<content_sources>
+  <content_source id="http://localhost:8000/api/v1/content_sources/satellite/instances/plat1source">
     <content_source_id>1</content_source_id>
     <name>Test</name>
     <short_name>Source</short_name>
     <default_source>true</default_source>
     <order_index>0</order_index>
-    <content_source_type>ContentSourceTYpe Object</content_source_type>
+    <content_source_type>ContentSourceType Object</content_source_type>
     <enabled>true</enabled>
   </content_source>
-  <content_source id="http://localhost:8000/api/contentSources/satellite/instances/plat1source">
+  <content_source id="http://localhost:8000/api/v1/content_sources/satellite/instances/plat1source">
     <content_source_id>2</content_source_id>
     <name>content</name>
     <short_name>new source</short_name>
     <default_source>true</default_source>
     <order_index>0</order_index>
-    <content_source_type> </content_source_type>
+    <content_source_type>cst</content_source_type>
     <enabled>true</enabled>
-  </contentSource>
-  contentSource id="http://localhost:8000/api/contentSources/satellite/instances/plat1source">
+  </content_source>
+  <content_source id="http://localhost:8000/api/v1/contentSources/satellite/instances/plat1source">
     <content_source_id>3</content_source_id>
     <name>content1</name>
     <shortname>new source1</shortname>
-    <defaultSource>true</defaultSource>
+    <default_source>true</default_source>
     <order_index>1</order_index>
-    <content_source_type> </content_source_type>
+    <content_source_type>cst2</content_source_type>
     <enabled>true</enabled>
-  </contentSource>
-</contentSources>
+  </content_source>
+</content_sources>
 """
 
 #untouched
 contentSourceTypesByPlatformXml = """\
 <?xml version='1.0' encoding='UTF-8'?>
-<contentSourceTypes>
-  <contentSourceType id="http://localhost:8000/api/contentSources/RHN">
-    <contentSourceType>RHN</contentSourceType>
-    <singleton>true</singleton>
-    <instances href="http://localhost:8000/api/contentSources/RHN/instances/"/>
-    <configDescriptor href="http://localhost:8000/api/contentSources/RHN/descriptor"/>
-    <statusTest href="http://localhost:8000/api/contentSources/RHN/statusTest"/>
-  </contentSourceType>
-  <contentSourceType id="http://localhost:8000/api/contentSources/satellite">
-    <contentSourceType>satellite</contentSourceType>
-    <instances href="http://localhost:8000/api/contentSources/satellite/instances/"/>
-    <configDescriptor href="http://localhost:8000/api/contentSources/satellite/descriptor"/>
-    <statusTest href="http://localhost:8000/api/contentSources/satellite/statusTest"/>
-  </contentSourceType>
-</contentSourceTypes>
+<content_source_types>
+  <content_source_type id="http://localhost:8000/api/v1/content_sources/RHN">
+    <content_source_type>RHN</content_source_type>
+  </content_source_type>
+  <content_source_type id="http://localhost:8000/api/v1/content_sources/satellite">
+    <content_source_type>satellite</content_source_type>
+  </content_source_type>
+</content_source_types>
 """
 
 #Prath
 contentSourcePUTXml = """\
 <?xml version='1.0' encoding='UTF-8'?>
-<content_source id="http://localhost:8000/api/contentSources/RHN/instances/plat2source0">
+<content_source id="http://localhost:8000/api/v1/content_sources/RHN/instances/plat2source0">
   <content_source_id>2</contentSourceId>
   <name>Platform 2 Source 0</name>
   <short_name>plat2source0</short_name>
@@ -225,72 +212,50 @@ contentSourcePUTXml = """\
 #Prath
 platformPOSTXml = """\
 <?xml version='1.0' encoding='UTF-8'?>
-    <platform_trove_name>local-host</platform_trove_name>
-    <repository_host_name>locallost</repository_host_name>
     <label>PlatformTest Post</label>
-    <product_version>Platform Post</product_version>
     <platform_name>Platform Post</platform_name>
-    <platform_usage_terms>PlatformTest Post</platform_usage_terms>
     <mode>Platform</mode>
     <enabled>false</enabled>
     <configurable>true</configurable>
     <abstract>true</abstract>
-    <mirror_permission>true</mirror_permission>
-    <platform_type>Platform<platform_type>
-    <platform_status href="1"/>
-    <content_source_types href="1"/>
-    <load href="1"/>
-    <is_platform>true</is_platform>
-    <platform_versions href="1"/>
-    <project href="1"/></platform>
+    <projects href="1"/>
 </platform>
 """
 
 #Prath
 platformPUTXml = """\
 <?xml version='1.0' encoding='UTF-8'?>
-<platform_id="http://localhost:8000/api/platforms/1">
-    <platform_trove_name>Platform</platform_trove_name>
-    <repository_host_name>Platform</repository_host_name>
+<platform_id="http://localhost:8000/api/v1/platforms/1">
     <label>PlatformTest</label>
-    <product_version>Platform</product_version>
     <platform_name>Platform</platform_name>
-    <platform_usage_terms>PlatformTest</platform_usage_terms>
     <mode>Platform</mode>
     <enabled>false</enabled>
     <configurable>true</configurable>
     <abstract>true</abstract>
-    <mirror_permission>true</mirror_permission>
-    <platform_type>Platform<platform_type>
-    <platform_status href="1"/>
-    <content_source_types href="1"/>
-    <load href="1"/>
-    <is_platform>true</is_platform>
-    <platform_versions href="1"/>
-    <project href="1"/></platform>
+    <project href="1"/>
 </platform>
 """
 
 #Prath
 contentSourcePOSTXml = """\
 <?xml version='1.0' encoding='UTF-8'?>
-<contentSource>
+<content_source>
   <name>PlatformTestPost</name>
   <short_name>PlatformTestPost</short_name>
   <default_source>true</default_source>
   <order_index>1</order_index>
   <enabled>true</enabled>
-</contentSource>
+</content_source>
 """
 
 #Prath
 contentSourceTypePOSTXml = """\
 <?xml version='1.0' encoding='UTF-8'?>
-<contentSourceType>
+<content_source_type>
   <content_source_type>ContentSourceTypePost</content_source_type>
   <required>true</required>
   <singleton>true</singleton>
-</contentSourceType>
+</content_source_type>
 """
 
 #Prath
@@ -341,16 +306,16 @@ sourceStatusPOSTXml = """\
 #only field tags changed
 sourcePOSTRespXml = """\
 <?xml version='1.0' encoding='UTF-8'?>
-<contentSource id="http://localhost:8000/api/contentSources/RHN/instances/plat2source2">
-  <contentSourceId>4</contentSourceId>
+<content_source id="http://localhost:8000/api/v1/content_sources/RHN/instances/plat2source2">
+  <content_source_id>4</content_source_id>
   <name>Platform 2 Source 2</name>
   <short_name>plat2source2</short_name>
   <default_source>false</default_source>
   <order_index>1</order_index>
   <content_source_type>RHN</content_source_type>
   <enabled>false</enabled>
-  <content_source_status href="http://localhost:8000/api/contentSources/RHN/instances/plat2source2/status"/>
-</contentSource>
+  <content_source_status href="http://localhost:8000/api/v1/content_sources/RHN/instances/plat2source2/status"/>
+</content_source>
 """
 
 #unchanged
@@ -359,27 +324,25 @@ sourcePOST2Xml = """\
 <contentSource>
   <name>Platform 2 Source 2</name>
   <short_name>plat2source2</short_name>
-  <sourceUrl>https://plat2source2.example.com</sourceUrl>
-  <defaultSource>false</defaultSource>
-  <orderIndex>1</orderIndex>
-  <contentSourceType>satellite</contentSourceType>
+  <source_url>https://plat2source2.example.com</source_url>
+  <default_source>false</default_source>
+  <order_index>1</order_index>
+  <content_source_type>satellite</content_source_type>
 </contentSource>
 """
 
 #unchanged
 sourcePOSTResp2Xml = """\
 <?xml version='1.0' encoding='UTF-8'?>
-<contentSource id="http://localhost:8000/api/contentSources/satellite/instances/plat2source2">
-  <contentSourceId>4</contentSourceId>
+<content_source id="http://localhost:8000/api/v1/content_sources/satellite/instances/plat2source2">
+  <content_source_id>4</content_source_id>
   <name>Platform 2 Source 2</name>
-  <shortname>plat2source2</shortname>
-  <defaultSource>false</defaultSource>
-  <orderIndex>1</orderIndex>
-  <contentSourceType>satellite</contentSourceType>
+  <short_name>plat2source2</short_name>
+  <default_source>false</default_source>
+  <order_index>1</order_index>
+  <content_source_type>satellite</content_source_type>
   <enabled>false</enabled>
-  <contentSourceStatus href="http://localhost:8000/api/contentSources/satellite/instances/plat2source2/status"/>
-  <resourceErrors href="http://localhost:8000/api/contentSources/satellite/instances/plat2source2/errors/"/>
-  <sourceUrl>https://plat2source2.example.com</sourceUrl>
+  <source_url>https://plat2source2.example.com</source_url>
 </contentSource>
 """
 

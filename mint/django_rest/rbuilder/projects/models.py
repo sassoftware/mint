@@ -453,7 +453,8 @@ class Image(modellib.XObjIdModel):
 class Downloads(modellib.XObjModel):
     class Meta:
         db_table = u'urldownloads'
-
+    
+    downloads_id = models.AutoField(primary_key=True) # NOT IN SCHEMA YET!!
     imageId = modellib.DeferredForeignKey(Image, db_column='urlid')
     timedownloaded = models.CharField(max_length=14)
     ip = models.CharField(max_length=64)

@@ -31,6 +31,8 @@ class Platform(modellib.XObjIdModel):
     
     _MODE_CHOICES = (('manual', 'manual'), ('auto', 'auto'))
     
+    _xobj_hidden_accessors = set(['platformsplatformsources_set', 'contentsourcetype_set'])
+    
     platform_id = models.AutoField(primary_key=True, db_column='platformId')
     label = models.CharField(max_length=1026, unique=True)
     mode = models.CharField(max_length=1026, default='manual', choices=_MODE_CHOICES)
@@ -40,7 +42,7 @@ class Platform(modellib.XObjIdModel):
     configurable = models.BooleanField(default=False)
     abstract = models.BooleanField(default=False)
     is_from_disk = models.BooleanField(default=False, db_column='isFromDisk')
-    time_refreshed = basemodels.DateTimeUtcField() # hack, modellib keeps evaluating to None
+    time_refreshed = basemodels.DateTimeUtcField(auto_now_add=True) # hack, modellib keeps evaluating to None
     
     # SyntheticFields -- fields with no column in the db
     # most of these are deferred fk's, M2M's, or CharFields in the old code
@@ -105,7 +107,8 @@ class ContentSourceType(modellib.XObjIdModel):
     """
     class Meta:
         db_table = 'PlatformsContentSourceTypes'
-        
+    
+    content_source_type_id = models.AutoField(primary_key=True) # NOT IN SCHEMA YET!!
     platform_id = modellib.DeferredForeignKey('Platform')
     content_source_type = models.CharField(max_length=1026, db_column='contentSourceType')
     

@@ -503,11 +503,11 @@ urlpatterns = patterns('',
     #     platformsviews.PlatformStatusService(),
     #     name='PlatformStatus'),
         
-    URL(r'platforms/(?P<platform_id>\d+)/platform_source/?$',
+    URL(r'platforms/(?P<platform_id>\d+)/content_source/?$',
         platformsviews.PlatformSourceService(),
         name='PlatformSource'),
         
-    URL(r'platforms/(?P<platform_id>\d+)/platform_source_type/?$',
+    URL(r'platforms/(?P<platform_id>\d+)/content_source_type/?$',
         platformsviews.PlatformSourceTypeService(),
         name='PlatformSourceType'),
         
