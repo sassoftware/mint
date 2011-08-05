@@ -65,22 +65,13 @@ class RbacManager(basemanager.BaseManager):
         oldObj = modelClass.objects.get(pk=old_id)
         if not oldObj:
             return None
-        #print oldObj.__dict__
-        #value = getattr(obj, field)
-        #print "FIELD=%s" % field
-        #print "NEW VALUE=%s" % value
-        #setattr(oldObj, field, value)
-        #print oldObj.__dict__
-        #oldObj.save(force_update=True)
+        # django doesn't like primary key updates
+        # so this is somewhat low level
         newValue = getattr(obj, field)
         oldValue = getattr(oldObj, field)
         cursor = connection.cursor()
-        cursor.execute("UPDATE %s SET %s='%s' WHERE %s='%s'", [
-            table, field, 
-            newValue,
-            field, 
-            oldValue,
-        ])
+        pattern = 'UPDATE ' + table + ' SET ' + field + '=' + '%s WHERE ' + field + '=%s' 
+        cursor.execute(pattern, [newValue, oldValue])
         transaction.commit_unless_managed()
         return modelClass.objects.get(pk=newValue)
 
