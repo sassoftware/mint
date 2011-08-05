@@ -434,7 +434,7 @@ class Image(modellib.XObjIdModel):
     time_created = models.DecimalField(max_digits=14, decimal_places=3,
         db_column='timecreated')
     created_by = modellib.ForeignKey(usermodels.User,
-        db_column='createdby', related_name='created_images', null=True)
+        db_column='createdby',null=True, related_name='created_images')
     time_updated = models.DecimalField(max_digits=14, decimal_places=3,
         null=True, db_column='timeupdated')
     updated_by = modellib.ForeignKey(usermodels.User, db_column='updatedby',

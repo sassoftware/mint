@@ -2954,7 +2954,7 @@ class MigrateTo_57(SchemaMigration):
 
 
 class MigrateTo_58(SchemaMigration):
-    Version = (58, 44)
+    Version = (58, 45)
 
     def migrate(self):
         return True
@@ -3508,6 +3508,13 @@ class MigrateTo_58(SchemaMigration):
                 UNIQUE (project_branch_id, name)
         """)
         return True
+        
+    def migrate45(self):
+        cu = self.db.cursor()
+        cu.execute("""
+            ALTER TABLE PlatformsContentSourceTypes
+                ADD COLUMN contentSourceTypeId SERIAL PRIMARY KEY""")
+        return True    
 
 #### SCHEMA MIGRATIONS END HERE #############################################
 

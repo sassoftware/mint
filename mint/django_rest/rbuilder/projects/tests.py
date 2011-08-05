@@ -19,7 +19,7 @@ from xobj import xobj
 from testutils import mock
 
 class ProjectsTestCase(XMLTestCase):
-    fixtures = ["projects"]
+    fixtures = ["projects", "project_image_fixtures"]
 
     def setUp(self):
         XMLTestCase.setUp(self)
@@ -343,6 +343,16 @@ class ProjectsTestCase(XMLTestCase):
             username="testuser", password="password")
         self.assertEquals(response.status_code, 200)
         stages = xobj.parse(response.content).project_branch_stages.project_branch_stage
+        self.assertEquals(len(stages), 3)
+
+        
+    def testPostImage(self):
+        response=self._post('projects/chater-foo/images/',
+            data = testsxml.project_image_post_xml,
+            username="admin", password="password")
+        import pdb; pdb.set_trace()    
+
+
         self.failUnlessEqual([ x.label for x in stages ],
             [
                 'foo@ns:trunk-devel',
@@ -350,6 +360,7 @@ class ProjectsTestCase(XMLTestCase):
                 'foo@ns:trunk-stage',
                 'foo@ns:trunk',
             ])
+
 
     def testGetProjectImages(self):
         # Add image
