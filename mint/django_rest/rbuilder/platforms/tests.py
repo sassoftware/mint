@@ -340,5 +340,4 @@ class NewPlatformTest(XMLTestCase):
 #        updatedSourceStatus = pmodels.SourceStatus.objects.get(pk=1)
 #        # Check that name and other fields are updated
 #        self.assertEquals('sourceStatusPutTest', updatedSourceStatus.message)
-#        self.assertEquals('sourceStatusPutTest', updatedSourceStatus.short_name)												        
-#
+#        self.assertEquals('sourceStatusPutTest', updatedSourceStatus.short_name)
