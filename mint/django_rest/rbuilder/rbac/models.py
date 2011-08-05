@@ -64,7 +64,7 @@ class RbacRole(modellib.XObjIdModel):
         tag = 'rbac_role',
         attributes = {'id':str},
     )
-    objects = modellib.RbacRoleManager() # needed because of non-integer PK
+    # objects = modellib.RbacRoleManager() # needed because of non-integer PK?
     _xobj_hidden_accessors = set(['rbacuserrole_set','rbacpermission_set'])
 
     role_id = D(models.TextField(primary_key=True),
@@ -81,7 +81,7 @@ class RbacContexts(modellib.Collection):
     _xobj = xobj.XObjMetadata(tag = 'rbac_contexts')
     list_fields = ['rbac_context']
     rbac_context = []
-    objects = modellib.RbacContextsManager() 
+    objects = modellib.RbacContextsManager()
     view_name = 'RbacContexts' # TODO: add view
 
     def __init__(self):
@@ -103,7 +103,7 @@ class RbacContext(modellib.XObjIdModel):
 
     view_name = 'RbacContext' # TODO
 
-    objects = modellib.RbacContextManager() # needed because of non-integer PK
+    # objects = modellib.RbacContextManager() # needed because of non-integer PK
     _xobj = xobj.XObjMetadata(
         tag = 'rbac_context',
         attributes = {'id':str},
@@ -155,6 +155,9 @@ class RbacPermission(modellib.XObjIdModel):
     rbac_role    =  D(modellib.ForeignKey(RbacRole, null=False, db_column='role_id'), 'rbac_role id')
     rbac_context =  D(modellib.ForeignKey(RbacContext, null=False, db_column='context_id'), 'rbac_context id')
     action  = D(models.TextField(), 'allowed capability name')
+
+    #def save(self, *args, **kwargs):
+    #    return modellib.XObjIdModel(*args, **kwargs)
 
 class RbacUserRoles(modellib.Collection):
     '''

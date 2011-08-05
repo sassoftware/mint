@@ -63,6 +63,8 @@ class RbacTestCase(XMLTestCase):
              response = method_map[method](url, username="testuser", password="password", **kwargs)
         else:
              response = method_map[method](url, **kwargs)
+        if response.status_code != expect:
+             print "RESPONSE: %s\n" % response.content
         self.failUnlessEqual(response.status_code, expect, "Expected status code of %s for %s" % (expect, url))
         return response.content
 
@@ -191,8 +193,8 @@ class RbacRoleViews(RbacTestCase):
         output = testsxml.role_put_xml_output
         content = self.req(url, method='POST', data=input, expect=401, is_authenticated=True)
         content = self.req(url, method='POST', data=input, expect=200, is_admin=True)
-        found_items = models.RbacRole.objects.get(pk='rocket surgeon')
-        self.assertEqual(found_items.pk, 'rocket surgeon')
+        found_items = models.RbacRole.objects.get(pk='rocketsurgeon')
+        self.assertEqual(found_items.pk, 'rocketsurgeon')
         self.assertXMLEquals(content, output)
 
     def testCanDeleteRoles(self):
@@ -210,10 +212,10 @@ class RbacRoleViews(RbacTestCase):
         output = testsxml.role_put_xml_output
         content = self.req(url, method='PUT', data=input, expect=401, is_authenticated=True)
         content = self.req(url, method='PUT', data=input, expect=200, is_admin=True)
-        found_items = models.RbacRole.objects.get(pk='rocket surgeon')
+        found_items = models.RbacRole.objects.get(pk='rocketsurgeon')
         self.failUnlessRaises(models.RbacRole.DoesNotExist,
             lambda: models.RbacRole.objects.get(pk='sysadmin'))
-        self.assertEqual(found_items.pk, 'rocket surgeon')
+        self.assertEqual(found_items.pk, 'rocketsurgeon')
         self.assertXMLEquals(content, output)
 
 class RbacPermissionViews(RbacTestCase):
@@ -253,12 +255,22 @@ class RbacPermissionViews(RbacTestCase):
         self.assertXMLEquals(content, testsxml.permission_list_xml)
 
     def testCanGetSinglePermission(self):
-        # TODO 
-        pass
+        url = 'rbac/permissions/1'
+        content = self.req(url, method='GET', expect=401, is_authenticated=True)
+        content = self.req(url, method='GET', expect=200, is_admin=True)
+        self.assertXMLEquals(content, testsxml.permission_get_xml)
 
     def testCanAddPermissions(self):
-        # TODO 
-        pass
+        url = 'rbac/permissions'
+        input = testsxml.permission_post_xml_input
+        output = testsxml.permission_post_xml_output
+        content = self.req(url, method='POST', data=input, expect=401, is_authenticated=True)
+        content = self.req(url, method='POST', data=input, expect=200, is_admin=True)
+        self.assertXMLEquals(content, output)
+        perm = models.RbacPermission.objects.get(pk=4)
+        self.assertEqual(perm.rbac_role.pk, 'intern')
+        self.assertEqual(perm.rbac_context.pk, 'tradingfloor')
+        self.assertEqual(perm.action, 'write')
 
     def testCanDeletePermissions(self):
         # TODO 

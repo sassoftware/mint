@@ -1,13 +1,13 @@
 role_put_xml_input = """
-<rbac_role id="http://testserver/api/v1/rbac/roles/rocket%20surgeon">
-   <role_id>rocket surgeon</role_id>
+<rbac_role id="http://testserver/api/v1/rbac/roles/rocketsurgeon">
+   <role_id>rocketsurgeon</role_id>
 </rbac_role>
 """
 
 # TODO, ID should come back on this element
 role_put_xml_output = """
-<rbac_role>
-   <role_id>rocket surgeon</role_id>
+<rbac_role id="http://testserver/api/v1/rbac/roles/rocketsurgeon">
+   <role_id>rocketsurgeon</role_id>
 </rbac_role>
 """
 
@@ -86,4 +86,29 @@ permission_list_xml = """
 </rbac_permissions>
 """
 
+permission_get_xml = """
+<rbac_permission id="http://testserver/api/v1/rbac/permissions/1">
+  <action>write</action>
+  <permission_id>1</permission_id>
+  <rbac_context id="http://testserver/api/v1/rbac/contexts/datacenter"/>
+  <rbac_role id="http://testserver/api/v1/rbac/roles/sysadmin"/>
+</rbac_permission>
+"""
+
+permission_post_xml_input="""
+<rbac_permission>
+  <action>write</action>
+  <rbac_context id="http://testserver/api/v1/rbac/contexts/tradingfloor"/>
+  <rbac_role id="http://testserver/api/v1/rbac/roles/intern"/>
+</rbac_permission>
+"""
+
+permission_post_xml_output="""
+<rbac_permission id="http://testserver/api/v1/rbac/permissions/4">
+  <action>write</action>
+  <permission_id>4</permission_id>
+  <rbac_context id="http://testserver/api/v1/rbac/contexts/tradingfloor"/>
+  <rbac_role id="http://testserver/api/v1/rbac/roles/intern"/>
+</rbac_permission>
+"""
 
