@@ -34,7 +34,7 @@ class PlatformsTestCase(XMLTestCase):
         return getattr(xobjModel, root_name)
     
     def testGetPlatform(self):
-        platform_gotten = self.xobjResponse('platforms/1')           #unsure about the url
+        platform_gotten = self.xobjResponse('platforms/1')
         platform = pmodels.Platform.objects.get(pk=1)
         self.assertEquals(platform.label, platform_gotten.label)
         self.assertEquals(platform.platform_name, platform_gotten.platform_name)
@@ -100,20 +100,20 @@ class PlatformsTestCase(XMLTestCase):
     
     def testUpdatePlatform(self):
         pass
-    
+
 ## All tests (including legacy tests from apui/v0) which won't run until
 ## certain models are moved into the db
-    
+
 #   def testGetImageTypeDefinitions(self):
 #       pass
-#   
+#
 #   def testGetPlatformLoadStatus(self):  #added
 #       pLoadStatus = pmodels.PlatformLoadStatus.objects.get(pk=1)
 #       pLoadStatus_gotten = self.xobjResponse('/api/v1/platforms/platform_status/1') #not sure
 #       self.assertEquals(pLoadStatus.code, pLoadStatus_gotten.code)
 #       self.assertEquals(pLoadStatus.message, pLoadStatus_gotten.message)
 #       self.assertEquals(pLoadStatus.is_final, pLoadStatus_gotten.is_final)
-#   
+#
 #   def testGetLoadPlatform(self):
 #       loadPlatform = pmodels.PlatformLoad.objects.get(pk=1)
 #       loadPlatform_gotten = self.xobjResponse('/api/v1/platforms/platform_load/1') #not sure
@@ -121,10 +121,10 @@ class PlatformsTestCase(XMLTestCase):
 #       self.assertEquals(loadPlatform.job_id, loadPlatform_gotten.job_id)
 #       self.assertEquals(loadPlatform.platform_id, loadPlatform_gotten.platform_id)
 #       self.assertEquals(loadPlatform.platform_load_status, loadPlatform_gotten.platform_load_status)
-#   
+#
 #   def testGetPlatformStatus(self): #ignore
 #       pass
-#   
+#
 #   def testGetPlatformSourceStatus(self):
 #       """
 #       platformSourceStatus and ContentSourceStatus are merged into SourceStatus
@@ -136,22 +136,22 @@ class PlatformsTestCase(XMLTestCase):
 #   	self.asserEquals(pSourceStatus.message, pSourceStatus_gotten.message)
 #   	self.asserEquals(pSourceStatus.content_source_type, pSourceStatus_gotten.content_source_type)
 #   	self.asserEquals(pSourceStatus.short_name, pSourceStatus_gotten.short_name)
-#   
+#
 #   def testGetContentSourceStatusNoData(self):
 #       pass
-#   
+#
 #   def testGetContentSourceStatusData(self):
 #       pass
-#   
+#
 #   def testGetSourceTypeStatus(self): #ignore
 #       pass
-#   
+#
 #   def testGetSourceTypeStatusSMT(self): #ignore
 #       pass
-#   
+#
 #   def testGetSourceDescriptor(self): #ignore
 #       pass
-        
+
 
 
 class NewPlatformTest(XMLTestCase):
@@ -188,7 +188,7 @@ class NewPlatformTest(XMLTestCase):
         content = pmodels.ContentSource.objects.get(name="PlatformTestPost")
         self.assertEquals("PlatformTestPost",content.short_name)
         self.asserEquals("1",content.order_index)
-   
+    
     
     def testCreateContentSourceType(self):
 		#Creates a new contentsourcetype
@@ -198,14 +198,14 @@ class NewPlatformTest(XMLTestCase):
         self.assertEquals(200, response.status_code)
          # 3 sources were already in the fixture
         # self.assertEquals(4, len(list(pmodels.ContentSourceType.objects.all())))
-        
+    
     
     def testCreatePlatform_NoProduct(self):
         pass
     
     def testCreatePlatform_NoPlatform(self):
         pass
-        
+    
     
     def testUpdatePlatform(self):
 		#1 already in fixture
@@ -218,7 +218,7 @@ class NewPlatformTest(XMLTestCase):
         self.assertEquals('PlatformPut', updatedPlat.label)
         self.assertEquals('PlatformPut', updatedPlat.platform_name)
         self.assertEquals('auto', updatedPlat.mode)
-		
+    
     
     def testUpdateContentSource(self):
 		#1 already in fixture
@@ -231,7 +231,7 @@ class NewPlatformTest(XMLTestCase):
         self.assertEquals('PlatformTestPut', updatedContent.name)
         self.assertEquals('PlatformTestPut', updatedContent.short_name)
         self.assertEquals('true', updatedContent.default_source)
-        
+    
     
     def testUpdateContentSourceType(self):
 		#1 already in fixture
@@ -246,7 +246,7 @@ class NewPlatformTest(XMLTestCase):
 
 ## All tests (including legacy tests from apui/v0) which won't run until
 ## certain models are moved into the db
-    
+
 #    def testUpdatePlatformLoad(self):
 #		#1 already in fixture
 #        pLoad = pmodels.PlatformLoad.objects.get(pk=1)
@@ -258,7 +258,7 @@ class NewPlatformTest(XMLTestCase):
 #        self.assertEquals('platformLoadUriPut', updatedPLoad.load_uri)
 #        self.assertEquals(12, updatedPLoad.job_id)
 #        self.assertEquals(12, updatedPLoad.platform_id)
-#    
+#
 #    def testCreatePlatformLoad(self):
 #		#Creates a new contentsourcetype
 #        response = self._post('platforms/',                  #unsure about the url
@@ -270,8 +270,8 @@ class NewPlatformTest(XMLTestCase):
 #        pLoad = pmodels.PlatformLoad.objects.get(load_uri="platformLoadUri")
 #        self.assertEquals(10, pLoad.job_id)
 #        self.asserEquals(10, pLoad.platform_id)
-#        
-#    
+#
+#
 #    def testCreatePlatformVersion(self):
 #		#Creates a new contentsourcetype
 #        response = self._post('platforms/',                        #unsure about the url
@@ -283,7 +283,7 @@ class NewPlatformTest(XMLTestCase):
 #        platformVersion = pmodels.PlatformVersion.objects.get(name="PlatformVersionPostTest")
 #        self.assertEquals("Post", platformVersion.version)
 #        self.asserEquals("PlatformVersionPostTest", platformVersion.label)
-#        
+#
 #    def testCreatePlatformLoadStatus(self):
 #		#Creates a new contentsourcetype
 #        response = self._post('platforms/',                    #unsure about the url
@@ -318,7 +318,7 @@ class NewPlatformTest(XMLTestCase):
 #        # Check that name and other fields are updated
 #        self.assertEquals(12, updatedPlStatus.code)
 #        self.assertEquals('PlatformLoadStatusPutTest', updatedPlStatus.message)
-#    
+#
 #    def testUpdatePlatformVersion(self):
 #		#1 already in fixture
 #        pVersion = pmodels.PlatformVersion.objects.get(pk=1)
@@ -332,11 +332,11 @@ class NewPlatformTest(XMLTestCase):
 #        self.assertEquals('Put', updatedPVersion.revision)
 #        self.assertEquals('PlatformVersionPutTest', updatedPVersion.label)
 #        self.assertEquals('PlatformVersionPutTest', updatedPVersion.ordering)
-#    
+#
 #    def testUpdateSourceStatus(self):
 #		#1 already in fixture
 #        sourceStatus = pmodels.SourceStatus.objects.get(pk=1)
-#        r = self._put('platforms/1',                              #unsure about the url
+#        r = self._put('platforms/1',
 #            data=platformstestxml.sourceStatusPUTXml,
 #            username='admin', password='password')
 #        updatedSourceStatus = pmodels.SourceStatus.objects.get(pk=1)
