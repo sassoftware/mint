@@ -10,9 +10,7 @@ import time
 from django.http import HttpResponse, HttpResponseNotFound
 from django_restapi import resource
 
-from mint.db import database
-from mint import users
-from mint.django_rest.deco import requires, return_xml, access, ACCESS, \
+from mint.django_rest.deco import requires, return_xml, access, \
     HttpAuthenticationRequired, getHeaderValue, xObjRequires
 from mint.django_rest.rbuilder.users import models as usersmodels
 from mint.django_rest.rbuilder import service
@@ -24,7 +22,7 @@ class RestDbPassthrough(resource.Resource):
     pass
 
 
-class StageProxyService(service.BaseService):
+class StageProxyService(service.BaseAuthService):
     
     @staticmethod
     def getStageAndSetGroup(request, stage_id):
@@ -52,7 +50,7 @@ class StageProxyService(service.BaseService):
         return Stages
 
 
-class MajorVersionService(service.BaseService):
+class MajorVersionService(service.BaseAuthService):
 
     def get(self, request, short_name, version):
         """
@@ -73,33 +71,8 @@ class ApplianceService(RestDbPassthrough):
     def get(self, project):
         return None
 
-class BaseInventoryService(service.BaseService):    
-    def _auth_filter(self, request, access, kwargs):
-        """Return C{True} if the request passes authentication checks."""
-        # Access flags are permissive -- if a function specifies more than one
-        # method, the authentication is successful if any of those methods
-        # succeed.
-
-        if access & ACCESS.LOCALHOST:
-            if self._check_localhost(request):
-                return True
-
-        if access & ACCESS.EVENT_UUID:
-            ret = self._check_event_uuid(request, kwargs)
-            if ret is not None:
-                # A bad event UUID should fail the auth check
-                return ret
-
-        if access & ACCESS.ADMIN:
-            return request._is_admin
-        if access & ACCESS.AUTHENTICATED:
-            return request._is_authenticated
-        if access & ACCESS.ANONYMOUS:
-            return True
-
-        return False
-
-    def _check_event_uuid(self, request, kwargs):
+class BaseInventoryService(service.BaseAuthService):    
+    def _check_uuid_auth(self, request, kwargs):
         headerName = 'X-rBuilder-Event-UUID'
         eventUuid = getHeaderValue(request, headerName)
         if not eventUuid:
@@ -112,19 +85,6 @@ class BaseInventoryService(service.BaseService):
             return False
         self._setMintAuth()
         return True
-
-    def _setMintAuth(self):
-        db = database.Database(self.mgr.cfg)
-        authToken = (self.mgr.cfg.authUser, self.mgr.cfg.authPass)
-        mintAdminGroupId = db.userGroups.getMintAdminId()
-        cu = db.cursor()
-        cu.execute("SELECT MIN(userId) from userGroupMembers "
-           "WHERE userGroupId = ?", mintAdminGroupId)
-        ret = cu.fetchall()
-        userId = ret[0][0]
-        mintAuth = users.Authorization(username=self.mgr.cfg.authUser,
-            token=authToken, admin=True, userId=userId)
-        self.mgr._auth = mintAuth
 
 class InventoryService(BaseInventoryService):
     """
