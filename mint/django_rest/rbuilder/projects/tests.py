@@ -189,10 +189,12 @@ class ProjectsTestCase(XMLTestCase):
             username="testuser", password="password")
         self.assertEquals(response.status_code, 200)
         project = xobj.parse(response.content).project
+        self.failUnlessEqual(project.repository_hostname, 'test-project.rpath.local2')
+
         projectId = project.project_id
         project = models.Project.objects.get(pk=projectId)
-        self.assertEquals("test-project.eng.rpath.com", project.repository_hostname)
-        self.assertEquals(2000, project.creator.user_id)
+        self.failUnlessEqual(project.repository_hostname, 'test-project.rpath.local2')
+        self.assertEquals(project.creator.user_id, 2000)
         
     def testAddProjectNoNamespace(self):
         response = self._post('projects',

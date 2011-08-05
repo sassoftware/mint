@@ -111,10 +111,12 @@ class XMLTestCase(TestCase, testcase.MockMixIn):
         conn = TestRunner.getConnection()
         dbpath = conn.settings_dict['TEST_NAME']
         mintCfg = os.path.join(self.workDir, "mint.cfg")
+        from mint_test import mint_rephelp
         file(mintCfg, "w").write("""
 dbDriver            sqlite
 dbPath              %(dbpath)s
-""" % dict(dbpath=dbpath))
+projectDomainName   %(projectDomainName)s
+""" % dict(dbpath=dbpath, projectDomainName=mint_rephelp.MINT_PROJECT_DOMAIN))
 
         from mint import config
         config.RBUILDER_CONFIG = mintCfg
