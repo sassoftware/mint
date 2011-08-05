@@ -38,7 +38,7 @@ class BaseService(resource.Resource):
         if user_name and password and user:
             mintAuth = users.Authorization(user_name=user_name,
                 token=(user_name, password), admin=request._is_admin,
-                user_id=user.user_id)
+                userId=user.user_id)
             self.mgr.setAuth(mintAuth, user)
 
     def read(self, request, *args, **kwargs):
