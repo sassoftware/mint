@@ -173,6 +173,7 @@ class RbacRoleViews(RbacTestCase):
         for expected in self.seed_data:
             self.assertTrue(expected in found_items, 'found item')
         self.assertEqual(len(found_items), len(self.seed_data), 'right number of items')
+        self.assertXMLEquals(content, testsxml.role_list_xml)
  
     def testCanGetSingleRole(self):
 
@@ -181,6 +182,7 @@ class RbacRoleViews(RbacTestCase):
         content = self.req(url, method='GET', expect=200, is_admin=True)
         obj = xobj.parse(content)
         self.assertEqual(obj.rbac_role.role_id, 'developer')
+        self.assertXMLEquals(content, testsxml.role_get_xml)
 
     def testCanAddRoles(self):
         
@@ -261,6 +263,7 @@ class RbacContextViews(RbacTestCase):
         for expected in self.seed_data:
             self.assertTrue(expected in found_items, 'found item')
         self.assertEqual(len(found_items), len(self.seed_data), 'right number of items')
+        self.assertXMLEquals(content, testsxml.context_list_xml)
 
     def testCanGetSingleContext(self):
 
@@ -269,6 +272,7 @@ class RbacContextViews(RbacTestCase):
         content = self.req(url, method='GET', expect=200, is_admin=True)
         obj = xobj.parse(content)
         self.assertEqual(obj.rbac_context.context_id, 'datacenter')
+        self.assertXMLEquals(content, testsxml.context_get_xml)
 
     def testCanAddContext(self):
 
