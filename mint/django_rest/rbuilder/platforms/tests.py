@@ -67,6 +67,7 @@ class PlatformsTestCase(XMLTestCase):
     
     def testGetContentSources(self):
         contentSources = pmodels.ContentSource.objects.all()
+        import pdb; pdb.set_trace()
         contentSources_gotten = self.xobjResponse('platforms/content_sources/')
         self.assertEquals(len(list(contentSources)), len(contentSources_gotten))
     
