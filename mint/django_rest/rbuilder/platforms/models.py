@@ -108,7 +108,7 @@ class ContentSourceType(modellib.XObjIdModel):
     class Meta:
         db_table = 'PlatformsContentSourceTypes'
     
-    content_source_type_id = models.AutoField(primary_key=True) # NOT IN SCHEMA YET!!
+    content_source_type_id = models.AutoField(primary_key=True, db_column='contentSourceTypeId')
     platform_id = modellib.DeferredForeignKey('Platform', db_column='platformId')
     content_source_type = models.CharField(max_length=1026, db_column='contentSourceType')
     

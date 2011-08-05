@@ -48,12 +48,12 @@ class SourceService(service.BaseService):
             return self.mgr.getSources(source_type)
 
     @return_xml
-    @requires('source')
+    @requires('content_source')
     def rest_PUT(self, request, source_type, short_name, source):
         return self.mgr.updateSource(short_name, source)
 
     @return_xml
-    @requires('source')
+    @requires('content_source')
     def rest_POST(self, request, source_type, source):
         return self.mgr.createSource(source)
 
@@ -72,7 +72,7 @@ class SourceTypeDescriptorService(service.BaseService):
     
 class SourceTypeStatusTestService(service.BaseService):
     @return_xml
-    @requires('source')
+    @requires('content_source')
     def rest_POST(self, request, source_type, source):
         return self.mgr.getSourceStatus(source)
 
@@ -177,7 +177,9 @@ class PlatformService(service.BaseService):
     @return_xml
     @requires('platform')
     def rest_POST(self, request, platform):
-        return self.mgr.createPlatform(platform)
+        # return self.mgr.createPlatform(platform)
+        platform.save()
+        return platform
     
     @return_xml
     @requires('platform')

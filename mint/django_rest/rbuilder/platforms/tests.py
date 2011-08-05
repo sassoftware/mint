@@ -20,7 +20,7 @@ from lxml import etree  # pyflakes=ignore
 from mint.django_rest.rbuilder.platforms import platformstestxml
 
 class PlatformsTestCase(XMLTestCase):
-    # fixtures = ['platformstestxml']
+    # fixtures = ['initial_data']
     
     def xobjResponse(self, url):
         response = self._get(url, username="admin", password="password")
@@ -44,12 +44,12 @@ class PlatformsTestCase(XMLTestCase):
         self.assertEquals(platform.project, platform_gotten.project)
     
     def testGetPlatforms(self):
+        import pdb; pdb.set_trace()
         platforms_gotten = self.xobjResponse('platforms/')
         # note that when we test getting Platforms, we are not
         # trying to retrieve a Platforms instance, but rather all
         # the platform instances that it contains
         platforms = pmodels.Platform.objects.all()
-        import pdb; pdb.set_trace()
         self.assertEquals(len(list(platforms)), len(platforms_gotten))
     
     def testGetContentSourceTypes(self):
@@ -153,7 +153,7 @@ class PlatformsTestCase(XMLTestCase):
 
 
 class NewPlatformTest(XMLTestCase):
-    fixtures = ['platformstestxml']
+    # fixtures = ['initial_data']
     
     def xobjResponse(self, url):
         response = self._get(url, username="admin", password="password")
@@ -221,7 +221,7 @@ class NewPlatformTest(XMLTestCase):
     def testUpdateContentSource(self):
 		#1 already in fixture
         content = pmodels.ContentSource.objects.get(pk=1)
-        r = self._put('platforms/1/content_source',                              #unsure about the url
+        r = self._put('platforms/1/content_sources',                              #unsure about the url
             data=platformstestxml.contentSourcePUTXml,
             username='admin', password='password')
         updatedContent = pmodels.ContentSource.objects.get(pk=1)
@@ -234,7 +234,7 @@ class NewPlatformTest(XMLTestCase):
     def testUpdateContentSourceType(self):
 		#1 already in fixture
         content = pmodels.ContentSourceType.objects.get(pk=1)
-        r = self._put('platforms/1/content_source_type',                              #unsure about the url
+        r = self._put('platforms/1/content_source_types',                              #unsure about the url
             data=platformstestxml.contentSourceTypePUTXml,
             username='admin', password='password')
         updatedContent = pmodels.Platform.objects.get(pk=1)
