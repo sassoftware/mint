@@ -3,6 +3,7 @@
   <object pk="1" model="platforms.platform">
     <field type="CharField" name="label">Platform</field>
     <field type="CharField" name="platform_name">Platform</field>
+    <field type="CharField" name="mode">auto</field>
     <field to="projects.project" name="projects" rel="ManyToOneRel">1</field>
   </object>
   <object pk="2" model="platforms.platform">
@@ -16,12 +17,15 @@
     <field to="projects.project" name="projects" rel="ManyToOneRel">1</field>
   </object>
   <object pk="1" model="platforms.contentsourcetype">
+    <field to="platforms.platform" name="platform_id" rel="ManyToOneRel">1</field>
     <field type="CharField" name="content_source_type">ContentSourceType</field>
   </object>
   <object pk="2" model="platforms.contentsourcetype">
+    <field to="platforms.platform" name="platform_id" rel="ManyToOneRel">1</field>
     <field type="CharField" name="content_source_type">ContentSourceType1</field>
   </object>
   <object pk="3" model="platforms.contentsourcetype">
+    <field to="platforms.platform" name="platform_id" rel="ManyToOneRel">1</field>
     <field type="CharField" name="content_source_type">ContentSourceType2</field>
   </object>
 </django-objects>

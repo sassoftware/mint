@@ -33,7 +33,7 @@ class Platform(modellib.XObjIdModel):
     
     _xobj_hidden_accessors = set(['platformsplatformsources_set', 'contentsourcetype_set'])
     
-    platform_id = models.AutoField(primary_key=True, db_column='platformId')
+    platform_id = models.AutoField(primary_key=True, db_column='platformid')
     label = models.CharField(max_length=1026, unique=True)
     mode = models.CharField(max_length=1026, default='manual', choices=_MODE_CHOICES)
     enabled = models.IntegerField(default=1)
@@ -109,7 +109,7 @@ class ContentSourceType(modellib.XObjIdModel):
         db_table = 'PlatformsContentSourceTypes'
     
     content_source_type_id = models.AutoField(primary_key=True) # NOT IN SCHEMA YET!!
-    platform_id = modellib.DeferredForeignKey('Platform')
+    platform_id = modellib.DeferredForeignKey('Platform', db_column='platformId')
     content_source_type = models.CharField(max_length=1026, db_column='contentSourceType')
     
     # Fields w/o a corresponding db column
@@ -121,7 +121,7 @@ class ContentSourceType(modellib.XObjIdModel):
     
 
 class PlatformsPlatformSources(modellib.XObjModel):
-    platform_id = modellib.DeferredForeignKey('Platform')
+    platform_id = modellib.ForeignKey('Platform')
     platform_source_id = modellib.ForeignKey('ContentSource')
 
 
