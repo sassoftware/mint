@@ -333,12 +333,12 @@ class ProjectVersion(modellib.XObjIdModel):
         restDb = self._rbmgr.restDb
         pd = restDb.getProductVersionDefinition(self.project.repository_hostname, self.name)
         self.source_group = str(pd.getImageGroup())
-        platformLabel = self.platform_label = pd.getPlatformLabel()
+        #platformLabel = self.platform_label = pd.getPlatformLabel()
         # Look for a platform matching that label
-        platforms = platformmodels.Platform.objects.filter(label=platformLabel)
-        if platforms:
-            # XXX we should be using views for computing this URL
-            self.platform = modellib.HrefField('/api/v1/platforms/%s' % platforms.platform_id)
+        #platforms = platformmodels.Platform.objects.filter(label=platformLabel)
+        #if platforms:
+        #    # XXX we should be using views for computing this URL
+        #    self.platform = modellib.HrefField('/api/v1/platforms/%s' % platforms.platform_id)
 
     @classmethod
     def validateProjectBranchName(cls, versionName):
