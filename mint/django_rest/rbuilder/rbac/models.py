@@ -123,7 +123,7 @@ class RbacPermissions(modellib.Collection):
     class Meta:
         abstract = True
     _xobj = xobj.XObjMetadata(tag = 'rbac_permissions')
-    list_fields = ['rbac_contexts']
+    list_fields = ['rbac_permission']
     rbac_permission = []
     objects = modellib.RbacPermissionsManager()
     view_name = 'RbacPermissions' # TODO: add view
@@ -152,8 +152,8 @@ class RbacPermission(modellib.XObjIdModel):
 
     permission_id = D(models.AutoField(primary_key=True),
         "the database ID for the context")
-    role    =  D(modellib.ForeignKey(RbacRole, null=False), 'rbac_role id')
-    context =  D(modellib.ForeignKey(RbacContext, null=False), 'rbac_context id')
+    rbac_role    =  D(modellib.ForeignKey(RbacRole, null=False, db_column='role_id'), 'rbac_role id')
+    rbac_context =  D(modellib.ForeignKey(RbacContext, null=False, db_column='context_id'), 'rbac_context id')
     action  = D(models.TextField(), 'allowed capability name')
 
 class RbacUserRoles(modellib.Collection):

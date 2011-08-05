@@ -149,11 +149,30 @@ class RbacManager(basemanager.BaseManager):
     #########################################################
     # RBAC PERMISSION METHODS
 
-    # TODO
-    # getRbacPermissions
-    # addRbacPermissions
-    # updateRbacPermission
-    # deleteRbacPermission 
+    def _permission(self, value):
+        '''cast input as a role'''
+        return self._orId(value, models.RbacPermission)
+
+    @exposed
+    def getRbacPermissions(self):
+        return self._getThings(models.RbacPermissions,
+            models.RbacPermission, 'rbac_permission')
+
+    @exposed
+    def getRbacPermission(self, permission):
+        return self._permission(permission)
+
+    @exposed
+    def addRbacPermission(self, permission):
+        return self._addThing(models.RbacPermission, permission)
+
+    @exposed
+    def updateRbacPermission(self, old_id, permission):
+        raise Exception("TODO") # TODO
+
+    @exposed
+    def deleteRbacPermission(self, permission):
+        return self._deleteThing(models.RbacPermission, self._permission(permission))
 
     #########################################################
     # RBAC USER_ROLE METHODS

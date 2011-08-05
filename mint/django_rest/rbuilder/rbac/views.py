@@ -29,7 +29,8 @@ class RbacPermissionsService(BaseRbacService):
     Grants and removes permissions.
     <rbac_permissions>
         <rbac_permission id="http://hostname/api/rbac/permissions/1">
-           <user id="..."/>
+           <permission_id>1</permission_id>
+           <rbac_role id="..."/>
            <rbac_context id="..."/>
            <action>WRITE</action>
         </rbac_permission>
@@ -37,13 +38,37 @@ class RbacPermissionsService(BaseRbacService):
     </rbac_permissions>
     """
 
+    # READ
     @access.admin
     @return_xml
     def rest_GET(self, request, permission_id=None):
-        # TODO
-        return None
+        return self.get(permission_id)
 
-    # TODO: rest_DELETE
+    def get(self, permission_id=None):
+        if permission_id is not None:
+            return self.mgr.getRbacPermission(permission_id)
+        else:
+            return self.mgr.getRbacPermissions()
+
+    # CREATE
+    @access.admin
+    @return_xml
+    @requires('rbac_permission')
+    def rest_POST(self, request, rbac_permission):
+        return self.mgr.addRbacPermission(rbac_permission)
+
+    # UPDATE
+    @access.admin
+    @requires('rbac_permission')
+    @return_xml
+    def rest_PUT(self, request, permission_id, rbac_permission):
+        return self.mgr.updateRbacPermission(permission_id, rbac_permission)
+
+    # DELETE
+    @access.admin
+    def rest_DELETE(self, request, permission_id):
+        self.mgr.deleteRbacContext(permission_id)
+        return HttpResponse(status=204)
 
 
 class RbacRolesService(BaseRbacService):

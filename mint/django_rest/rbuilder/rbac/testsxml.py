@@ -63,3 +63,27 @@ context_get_xml = """
 </rbac_context>
 """
 
+permission_list_xml = """
+<rbac_permissions count="3" end_index="2" filter_by="" full_collection="http://testserver/api/v1/rbac/permissions" id="http://testserver/api/v1/rbac/permissions;start_index=0;limit=10" limit="10" next_page="" num_pages="1" order_by="" per_page="10" previous_page="" start_index="0">
+  <rbac_permission id="http://testserver/api/v1/rbac/permissions/1">
+    <action>write</action>
+    <permission_id>1</permission_id>
+    <rbac_context id="http://testserver/api/v1/rbac/contexts/datacenter"/>
+    <rbac_role id="http://testserver/api/v1/rbac/roles/sysadmin"/>
+  </rbac_permission>
+  <rbac_permission id="http://testserver/api/v1/rbac/permissions/2">
+    <action>read</action>
+    <permission_id>2</permission_id>
+    <rbac_context id="http://testserver/api/v1/rbac/contexts/datacenter"/>
+    <rbac_role id="http://testserver/api/v1/rbac/roles/developer"/>
+  </rbac_permission>
+  <rbac_permission id="http://testserver/api/v1/rbac/permissions/3">
+    <action>write</action>
+    <permission_id>3</permission_id>
+    <rbac_context id="http://testserver/api/v1/rbac/contexts/lab"/>
+    <rbac_role id="http://testserver/api/v1/rbac/roles/developer"/>
+  </rbac_permission>
+</rbac_permissions>
+"""
+
+

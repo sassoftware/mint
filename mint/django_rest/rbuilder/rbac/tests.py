@@ -110,20 +110,20 @@ class RbacBasicTestCase(RbacTestCase):
         role1.save() 
         action_name = 'speak freely'
         permission = models.RbacPermission(
-           context    = context1,
-           role       = role1,
+           rbac_context    = context1,
+           rbac_role       = role1,
            # TODO: add choice restrictions
            action     = action_name,
         )
         permission.save()
         permissions2 = models.RbacPermission.objects.filter(
-           context = context1
+           rbac_context = context1
         )
         self.assertEquals(len(permissions2), 1, 'correct length')
         found = permissions2[0]
         self.assertEquals(found.action, action_name, 'saved ok')
-        self.assertEquals(found.context.pk, 'datacenter', 'saved ok')
-        self.assertEquals(found.role.pk, 'sysadmin', 'saved ok')
+        self.assertEquals(found.rbac_context.pk, 'datacenter', 'saved ok')
+        self.assertEquals(found.rbac_role.pk, 'sysadmin', 'saved ok')
 
     def testModelsForUserRoleAssignment(self):
         # note -- we may also keep roles in AD, this is for the case
@@ -219,12 +219,38 @@ class RbacRoleViews(RbacTestCase):
 class RbacPermissionViews(RbacTestCase):
     
     def setUp(self):
-        # TODO 
-        pass
+        RbacTestCase.setUp(self)
+        self.seed_data = [ 'datacenter', 'lab', 'tradingfloor' ]
+        for item in self.seed_data:
+            models.RbacContext(item).save()
+        self.seed_data = [ 'sysadmin', 'developer', 'intern' ]
+        for item in self.seed_data:
+            models.RbacRole(item).save()
+        models.RbacPermission(
+            rbac_context  = models.RbacContext.objects.get(pk='datacenter'),
+            rbac_role     = models.RbacRole.objects.get(pk='sysadmin'),
+            action        = 'write'
+        ).save()
+        models.RbacPermission(
+            rbac_context   = models.RbacContext.objects.get(pk='datacenter'),
+            rbac_role      = models.RbacRole.objects.get(pk='developer'),
+            action         = 'read'
+        ).save()
+        models.RbacPermission(
+            rbac_context   = models.RbacContext.objects.get(pk='lab'),
+            rbac_role      = models.RbacRole.objects.get(pk='developer'),
+            action    = 'write'
+        ).save()
 
     def testCanListPermissions(self):
-        # TODO 
-        pass
+        url = 'rbac/permissions'
+        content = self.req(url, method='GET', expect=401, is_authenticated=True)
+        content = self.req(url, method='GET', expect=200, is_admin=True)
+
+        obj = xobj.parse(content)
+        found_items = self._xobj_list_hack(obj.rbac_permissions.rbac_permission)
+        self.assertEqual(len(found_items), 3, 'right number of items')
+        self.assertXMLEquals(content, testsxml.permission_list_xml)
 
     def testCanGetSinglePermission(self):
         # TODO 
@@ -306,7 +332,7 @@ class RbacContextViews(RbacTestCase):
         self.assertEqual(found_items.pk, 'datacenter2')
         self.assertXMLEquals(content, output)
 
-class RbacUserViewTests(RbacTestCase):
+class RbacUserRoleViewTests(RbacTestCase):
 
     def testCanAssignUserToRole(self):
         # TODO 
