@@ -168,6 +168,7 @@ project_version_post_with_project_xml = """\
     <description>1</description>
     <namespace>rpath</namespace>
     <name>42</name>
+    <platform id=""/>
   </project_branch>
 """
 
@@ -212,7 +213,7 @@ project_branch_xml = """\
   <description/>
   <label>chater-foo.eng.rpath.com@rpath:chater-foo-trunk</label>
   <name>trunk</name>
-  <namespace/>
+  <namespace>rpath</namespace>
   <project id="http://testserver/api/v1/projects/chater-foo">
     <domain_name>eng.rpath.com</domain_name>
     <name>chater-foo</name>

@@ -73,36 +73,8 @@ class ProjectManager(basemanager.BaseManager):
         membership = membership[0]
         return membership.level == userlevels.OWNER
 
-    def validateNamespace(self, namespace):
-        # Use the default namespace if one was not provided.
-        if namespace is None:
-            namespace = self.cfg.namespace
-        else:
-            v = helperfuncs.validateNamespace(namespace)
-            if v != True:
-                raise mint_error.InvalidNamespace
-            
-        return namespace
-
-    def validateProjectVersionName(self, versionName):
-        validProjectVersion = re.compile('^[a-zA-Z0-9]+(\.[a-zA-Z0-9]+)*$')
-        if not versionName:
-            raise projects.ProductVersionInvalid
-        if not validProjectVersion.match(versionName):
-            raise projects.ProductVersionInvalid
-        return None
-
     @exposed
     def addProject(self, project):
-        if not project.repository_hostname:
-            project.repository_hostname = (
-                    project.short_name + self.cfg.projectDomainName)
-        elif '.' not in project.repository_hostname:
-            raise projects.ProductVersionInvalid
-        project.host_name = project.short_name
-        project.domain_name = project.repository_hostname.split('.', 1)[1]
-        project.namespace = self.validateNamespace(project.namespace)
-
         label = None
         if project.labels and len(project.labels.all()) > 0:
             label = project.labels.all()[0]
@@ -200,8 +172,6 @@ class ProjectManager(basemanager.BaseManager):
 
     @exposed
     def updateProject(self, project):
-        project.namespace = self.validateNamespace(project.namespace)
-
         # Only an admin can hide a project.
         # XXX Is this correct?
         if project.hidden:
@@ -315,7 +285,7 @@ class ProjectManager(basemanager.BaseManager):
                 'Product Definition commit from rBuilder\n')
 
     @exposed
-    def addProjectBranch(self, projectVersion):
+    def addProjectBranch(self, projectShortName, projectVersion):
 
         if not self.isProjectOwner(projectVersion.project):
             raise errors.PermissionDenied()
@@ -323,59 +293,18 @@ class ProjectManager(basemanager.BaseManager):
         if not projectVersion.namespace:
             projectVersion.namespace = projectVersion.project.namespace
 
-        projectVersion.namespace = self.validateNamespace(projectVersion.namespace)
-        self.validateProjectVersionName(projectVersion.name)
-
-        # initial product definition
-        prodDef = helperfuncs.sanitizeProductDefinition(projectVersion.project.name,
-                        projectVersion.project.description, projectVersion.project.hostname, 
-                        projectVersion.project.domain_name, 
-                        projectVersion.project.short_name, projectVersion.name,
-                        '', projectVersion.namespace)
-        label = prodDef.getDefaultLabel()
-
         # validate the label, which will be added later.  This is done
-        # here so the project is not created before this error occurs
-        if projects.validLabel.match(label) == None:
-            raise mint_error.InvalidLabel(label)
-
-        projectVersion.label = prodDef.getProductDefinitionLabel()
-        if projectVersion.label.split('@')[0].lower() != (
-                projectVersion.project.repository_hostname.lower()):
+        # here so the project is not be created before this error occurs
+        if projects.validLabel.match(projectVersion.label) == None:
             raise mint_error.InvalidLabel(projectVersion.label)
 
         projectVersion.save()
-        
-        self.saveProductVersionDefinition(projectVersion, prodDef)
-
-        # TODO: get the correct platformLabel
-        platformLabel = None
-
-        if projectVersion.project.project_type == 'Appliance' or \
-           projectVersion.project.project_type == 'PlatformFoundation':
-            groupName = helperfuncs.getDefaultImageGroupName(projectVersion.project.hostname)
-            className = util.convertPackageNameToClassName(groupName)
-            # convert from unicode
-            recipeStr = str(templates.write(groupTemplate,
-                            cfg = self.cfg,
-                            groupApplianceLabel=platformLabel,
-                            groupName=groupName,
-                            recipeClassName=className,
-                            version=projectVersion.name) + '\n')
-            self.mgr.createSourceTrove(str(projectVersion.project.repository_hostname),
-                str(groupName), str(label), str(projectVersion.name),
-                {'%s.recipe' % str(groupName): recipeStr},
-                'Initial appliance image group template')
-
         return projectVersion
 
     @exposed
     def updateProjectBranch(self, projectVersion):
         if not self.isProjectOwner(projectVersion.project):
             raise errors.PermissionDenied()
-        if projectVersion.label.split('@')[0].lower() != (
-                projectVersion.project.repository_hostname.lower()):
-            raise mint_error.InvalidLabel(projectVersion.label)
         projectVersion.save()
         return projectVersion
 

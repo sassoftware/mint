@@ -20,6 +20,7 @@ from django.test import TestCase
 from django.test.simple import DjangoTestSuiteRunner
 from django.utils.http import urlencode
 
+from mint import config as mintconfig
 from mint.db import schema
 from mint.django_rest.rbuilder.inventory import models as invmodels
 from mint.django_rest.rbuilder.inventory import views
@@ -32,7 +33,7 @@ from testrunner import testcase
 # XXX this import fails when running the testsuite from manage_local.
 # Work around, but will need to be fixed - misa 2011-08-05
 # from mint_test import mint_rephelp
-MINT_PROJECT_DOMAIN = 'test.local2'
+MINT_PROJECT_DOMAIN = 'rpath.local2'
 
 class TestRunner(DjangoTestSuiteRunner):
 
@@ -111,19 +112,24 @@ class XMLTestCase(TestCase, testcase.MockMixIn):
             call_command('loaddata', *self.fixtures,
                 **dict(verbosity=0, database=alias))
 
+    def _getMintConfig(self):
+        connection = TestRunner.getConnection()
+
+        cfg = mintconfig.MintConfig()
+        cfg.siteHost = 'localhost.localdomain'
+        cfg.dbDriver = 'sqlite'
+        cfg.dbPath = connection.settings_dict['TEST_NAME']
+        cfg.projectDomainName = MINT_PROJECT_DOMAIN
+        cfg.namespace = 'ns'
+        return cfg
+
     def setUp(self):
         self.workDir = tempfile.mkdtemp(dir="/tmp", prefix="rbuilder-django-")
         conn = TestRunner.getConnection()
-        dbpath = conn.settings_dict['TEST_NAME']
-        mintCfg = os.path.join(self.workDir, "mint.cfg")
-        file(mintCfg, "w").write("""
-dbDriver            sqlite
-dbPath              %(dbpath)s
-projectDomainName   %(projectDomainName)s
-""" % dict(dbpath=dbpath, projectDomainName=MINT_PROJECT_DOMAIN))
-
-        from mint import config
-        config.RBUILDER_CONFIG = mintCfg
+        mintCfgPath = os.path.join(self.workDir, "mint.cfg")
+        self.mintCfg = self._getMintConfig()
+        self.mintCfg.writeToFile(mintCfgPath)
+        mintconfig.RBUILDER_CONFIG = mintCfgPath
 
         self.client = Client()
         self.mgr = rbuildermanager.RbuilderManager()

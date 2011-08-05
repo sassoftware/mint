@@ -150,14 +150,10 @@ class SetMintConfigMiddleware(BaseMiddleware):
     def _process_request(self, request):
         if not self.isLocalServer(request):
             cfgPath = request._req.get_options().get("rbuilderConfig", config.RBUILDER_CONFIG)
-            cfg = config.getConfig(cfgPath)
         else:
-            cfg = config.MintConfig()
-            cfg.siteHost = 'localhost.localdomain'
-            cfg.dbPath = connection.settings_dict['NAME']
-            from mint.django_rest import test_utils
-            cfg.projectDomainName = test_utils.MINT_PROJECT_DOMAIN
+            cfgPath = config.RBUILDER_CONFIG
 
+        cfg = config.getConfig(cfgPath)
         request.cfg = cfg
 
         return None

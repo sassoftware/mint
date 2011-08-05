@@ -34,9 +34,11 @@ class ProjectsTestCase(XMLTestCase):
         self.mgr = rbuildermanager.RbuilderManager()
         self.mintConfig = self.mgr.cfg
         
-    def _addProject(self, short_name):
+    def _addProject(self, short_name, namespace='ns'):
         project = models.Project()
         project.name = project.hostname = project.short_name = short_name
+        project.namespace = namespace
+        project.domain_name = 'test.local2'
         project = self.mgr.projectManager.addProject(project)
         
         return project
@@ -204,7 +206,7 @@ class ProjectsTestCase(XMLTestCase):
         project = xobj.parse(response.content).project
         projectId = project.project_id
         project = models.Project.objects.get(pk=projectId)
-        self.assertEquals("", project.namespace) # the cfg default is actually empty string in tests
+        self.assertEquals(project.namespace, 'ns')
         self.assertEquals(2000, project.creator.user_id)
         
     def testAddProjectExternal(self):
@@ -261,17 +263,19 @@ class ProjectsTestCase(XMLTestCase):
 
     def testAddProjectVersionToProject(self):
         self._addProject("foo")
-        response = self._post('project_branches/',
+        response = self._post('projects/foo/project_branches/',
             data=testsxml.project_version_post_with_project_xml,
             username="admin", password="password")
         self.assertEquals(response.status_code, 200)
         branch = xobj.parse(response.content).project_branch
         branch = models.ProjectVersion.objects.get(pk=branch.branch_id)
         self.assertEquals('42', branch.name)
-        
+
         # make sure stages are there
-        self.assertEquals(3, len(branch.project_branch_stages.all()))
-        
+        # XXX project creation does not handle stage creation at the
+        # moment
+        self.assertEquals(len(branch.project_branch_stages.all()), 3)
+
     def testAddProjectVersionToProjectNoAuth(self):
         # add project as admin    
         response = self._post('projects',
@@ -292,9 +296,8 @@ class ProjectsTestCase(XMLTestCase):
         self.assertEquals(response.status_code, 200)
         branch = xobj.parse(response.content).project_branch
         branch = models.ProjectVersion.objects.get(pk=branch.branch_id)
-        self.assertEquals("updated description",
-            branch.description)
-        
+        self.assertEquals(branch.description, "updated description")
+
     def testUpdateProjectBranchNoAuth(self):
         # Unauthenticated
         response = self._put('projects/postgres/project_branches/postgres.rpath.com@rpath:postgres-1',
@@ -325,11 +328,11 @@ class ProjectsTestCase(XMLTestCase):
         stages = xobj.parse(response.content).project_branch_stages.project_branch_stage
         self.failUnlessEqual([ x.label for x in stages ],
             [
+                'label',
                 'foo@ns:trunk-devel',
                 'foo@ns:trunk-qa',
                 'foo@ns:trunk-stage',
                 'foo@ns:trunk',
-                'postgres.rpath.com@rpath:postgres-1-devel',
                 'postgres.rpath.com@rpath:postgres-1-qa',
                 'postgres.rpath.com@rpath:postgres-1',
                 'postgres.rpath.com@rpath:postgres-2-devel',
@@ -343,11 +346,10 @@ class ProjectsTestCase(XMLTestCase):
             username="testuser", password="password")
         self.assertEquals(response.status_code, 200)
         stages = xobj.parse(response.content).project_branch_stages.project_branch_stage
-        self.assertEquals(len(stages), 3) 
-
 
         self.failUnlessEqual([ x.label for x in stages ],
             [
+                'label',
                 'foo@ns:trunk-devel',
                 'foo@ns:trunk-qa',
                 'foo@ns:trunk-stage',
@@ -365,5 +367,5 @@ class ProjectsTestCase(XMLTestCase):
         response = self._get('projects/%s/images/' % prj.short_name)
         self.assertEquals(response.status_code, 200)
         images = xobj.parse(response.content).images
-        image = models.Image.objects.get(pk=1)
+        image = models.Image.objects.get(pk=image.pk)
         self.assertEquals(image.build_type, 10)

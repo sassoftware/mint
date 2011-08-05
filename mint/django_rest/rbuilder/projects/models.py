@@ -5,15 +5,18 @@
 #
 
 import datetime
+import re
 import sys
 import time
 from dateutil import tz
 from django.db import models
-from mint import userlevels
+from mint import projects as mintprojects
+from mint import helperfuncs, userlevels
 from mint.django_rest.rbuilder import modellib
 from mint.django_rest.deco import D
 from mint.django_rest.rbuilder.users import models as usermodels
 from mint.django_rest.rbuilder.jobs import models as jobmodels
+from mint.django_rest.rbuilder.platforms import models as platformmodels
 from xobj import xobj
 
 
@@ -60,11 +63,6 @@ class Projects(modellib.Collection):
     view_name = "Projects"
     list_fields = ["project"]
     project = []
-
-class PlatformHref(modellib.XObjIdModel):
-    class Meta:
-        abstract = True
-    _xobj = xobj.XObjMetadata(tag='platform')
 
 class Project(modellib.XObjIdModel):
     class Meta:
@@ -124,6 +122,8 @@ class Project(modellib.XObjIdModel):
 
     _ApplianceTypes = set([ "Appliance", "PlatformFoundation", ])
 
+    RESERVED_HOSTS = ['admin', 'mail', 'mint', 'www', 'web', 'rpath', 'wiki', 'conary', 'lists']
+
     def __unicode__(self):
         return self.hostname
 
@@ -161,9 +161,28 @@ class Project(modellib.XObjIdModel):
     def Now(cls):
         return "%.2f" % time.time()
 
+    @classmethod
+    def validateNamespace(cls, namespace):
+        return mintprojects._validateNamespace(namespace)
+
     def save(self, *args, **kwargs):
-        if self.domain_name is None and self._rbmgr is not None:
-            self.domain_name = self._rbmgr.cfg.projectDomainName
+        if self._rbmgr is not None:
+            cfg = self._rbmgr.cfg
+        else:
+            cfg = None
+        if self.domain_name is None and cfg:
+            self.domain_name = cfg.projectDomainName
+        if self.namespace is None and cfg:
+            self.namespace = cfg.namespace
+        if not self.hostname:
+            self.hostname = self.short_name
+
+        self.validateNamespace(self.namespace)
+        mintprojects._validateShortname(self.short_name, self.domain_name,
+            self.RESERVED_HOSTS)
+        mintprojects._validateHostname(self.hostname, self.domain_name,
+            self.RESERVED_HOSTS)
+
         # Default project type to Appliance
         if self.project_type is None:
             self.project_type = "Appliance"
@@ -171,9 +190,6 @@ class Project(modellib.XObjIdModel):
             self.project_url = ''
 
         self.setIsAppliance()
-
-        if not self.hostname:
-            self.hostname = self.short_name
 
         now = self.Now()
         if self.created_date is None:
@@ -261,11 +277,11 @@ class ProjectVersion(modellib.XObjIdModel):
     created_date = models.DecimalField(max_digits=14, decimal_places=3,
         db_column="timecreated")
 
-    platform_label = modellib.SyntheticField() # don't think this is needed if we already have a platform
     images = modellib.SyntheticField()
     definition = modellib.SyntheticField()
-    platform = modellib.SyntheticField()
+    platform = modellib.SyntheticField(modellib.HrefField())
     platform_version = modellib.SyntheticField()
+    platform_label = modellib.SyntheticField() # don't think this is needed if we already have a platform
     image_definitions = modellib.SyntheticField(modellib.HrefField())
     image_type_definitions = modellib.SyntheticField(modellib.HrefField())
     source_group = modellib.SyntheticField()
@@ -276,7 +292,21 @@ class ProjectVersion(modellib.XObjIdModel):
     def save(self, *args, **kwargs):
         if self.created_date is None:
             self.created_date = Project.Now()
+        prodDef = self._getSanitizedProductDefinition()
+        if self.label is None:
+            self.label = prodDef.getProductDefinitionLabel()
+        self.validate()
         return modellib.XObjIdModel.save(self, *args, **kwargs)
+
+    def _getSanitizedProductDefinition(self):
+        project = self.project
+        if not self.namespace:
+            self.namespace = project.namespace
+        Project.validateNamespace(self.namespace)
+        prodDef = helperfuncs.sanitizeProductDefinition(
+            project.name, project.description, project.hostname, project.domain_name,
+            project.short_name, self.name, self.description, self.namespace)
+        return prodDef
 
     def get_url_key(self, *args, **kwargs):
         return [ self.project.short_name, self.label ]
@@ -303,7 +333,26 @@ class ProjectVersion(modellib.XObjIdModel):
         restDb = self._rbmgr.restDb
         pd = restDb.getProductVersionDefinition(self.project.repository_hostname, self.name)
         self.source_group = str(pd.getImageGroup())
-        self.image_definitions = modellib.HrefField()
+        platformLabel = self.platform_label = pd.getPlatformLabel()
+        # Look for a platform matching that label
+        platforms = platformmodels.Platform.objects.filter(label=platformLabel)
+        if platforms:
+            # XXX we should be using views for computing this URL
+            self.platform = modellib.HrefField('/api/v1/platforms/%s' % platforms.platform_id)
+
+    @classmethod
+    def validateProjectBranchName(cls, versionName):
+        validProjectVersion = re.compile('^[a-zA-Z0-9]+(\.[a-zA-Z0-9]+)*$')
+        if not versionName:
+            raise mintprojects.ProductVersionInvalid
+        if not validProjectVersion.match(versionName):
+            raise mintprojects.ProductVersionInvalid
+        return None
+
+    def validate(self):
+        if self.label.split('@')[0].lower() != (self.project.repository_hostname.lower()):
+            raise mintprojects.InvalidLabel(self.label)
+
 
 class Stages(modellib.Collection):
     class Meta:
