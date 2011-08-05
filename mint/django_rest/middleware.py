@@ -155,8 +155,8 @@ class SetMintConfigMiddleware(BaseMiddleware):
             cfg = config.MintConfig()
             cfg.siteHost = 'localhost.localdomain'
             cfg.dbPath = connection.settings_dict['NAME']
-            from mint_test import mint_rephelp
-            cfg.projectDomainName = mint_rephelp.MINT_PROJECT_DOMAIN
+            from mint.django_rest import test_utils
+            cfg.projectDomainName = test_utils.MINT_PROJECT_DOMAIN
 
         request.cfg = cfg
 

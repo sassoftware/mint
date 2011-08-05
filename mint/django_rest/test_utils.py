@@ -29,6 +29,11 @@ from mint.django_rest.rbuilder.manager import rbuildermanager
 
 from testrunner import testcase
 
+# XXX this import fails when running the testsuite from manage_local.
+# Work around, but will need to be fixed - misa 2011-08-05
+# from mint_test import mint_rephelp
+MINT_PROJECT_DOMAIN = 'test.local2'
+
 class TestRunner(DjangoTestSuiteRunner):
 
     DB_DUMP = tempfile.NamedTemporaryFile(
@@ -111,12 +116,11 @@ class XMLTestCase(TestCase, testcase.MockMixIn):
         conn = TestRunner.getConnection()
         dbpath = conn.settings_dict['TEST_NAME']
         mintCfg = os.path.join(self.workDir, "mint.cfg")
-        from mint_test import mint_rephelp
         file(mintCfg, "w").write("""
 dbDriver            sqlite
 dbPath              %(dbpath)s
 projectDomainName   %(projectDomainName)s
-""" % dict(dbpath=dbpath, projectDomainName=mint_rephelp.MINT_PROJECT_DOMAIN))
+""" % dict(dbpath=dbpath, projectDomainName=MINT_PROJECT_DOMAIN))
 
         from mint import config
         config.RBUILDER_CONFIG = mintCfg
