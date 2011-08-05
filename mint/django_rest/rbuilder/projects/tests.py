@@ -65,33 +65,34 @@ class ProjectsTestCase(XMLTestCase):
             username="admin", password="password")
         self.assertEquals(response.status_code, 200)
         projects = xobj.parse(response.content).projects.project
-        self.assertEquals(len(projects), 3)
+        self.assertEquals(len(projects), 4)
 
     def testGetProjectsUser(self):
         response = self._get('projects/',
             username="testuser", password="password")
         self.assertEquals(response.status_code, 200)
         projects = xobj.parse(response.content).projects.project
-        self.assertEquals(len(projects), 2)
+        self.assertEquals(len(projects), 3)
         self.assertEquals([p.short_name for p in projects],
-            ['chater-foo', 'postgres'])
+            ['chater-foo', 'postgres', 'example2'])
 
         response = self._get('projects/',
             username="testuser2", password="password")
         self.assertEquals(response.status_code, 200)
         projects = xobj.parse(response.content).projects.project
-        self.assertEquals(len(projects), 3)
+        self.assertEquals(len(projects), 4)
     
     def testGetProjectsAnon(self):
         response = self._get('projects/')
         self.assertEquals(response.status_code, 200)
         projects = xobj.parse(response.content).projects.project
         self.failUnlessEqual([ x.name for x in projects ],
-            ['chater-foo', 'postgres', ])
+            ['chater-foo', 'postgres', 'name2', ])
         self.failUnlessEqual([ x.id for x in projects ],
           [
             'http://testserver/api/v1/projects/chater-foo',
             'http://testserver/api/v1/projects/postgres',
+            'http://testserver/api/v1/projects/example2',
           ])
 
     def testGetProjectAnon(self):
