@@ -70,11 +70,6 @@ class RbacRole(modellib.XObjIdModel):
     role_id = D(models.TextField(primary_key=True),
         "the database ID for the role")
 
-    #def serialize(self, request):
-    #    model = modellib.XObjIdModel.serialize(self, request)
-    #    #model.role_id = "%s/%s" % (self.get_absolute_url(request), self.pk)
-    #    return model
-
 class RbacContexts(modellib.Collection):
     '''
     A collection of RbacContexts
@@ -84,7 +79,7 @@ class RbacContexts(modellib.Collection):
     class Meta:
         abstract = True
     _xobj = xobj.XObjMetadata(tag = 'rbac_contexts')
-    list_fields = ['rbac_contexts']
+    list_fields = ['rbac_context']
     rbac_context = []
     objects = modellib.RbacContextsManager() 
     view_name = 'RbacContexts' # TODO: add view
@@ -113,6 +108,7 @@ class RbacContext(modellib.XObjIdModel):
         tag = 'rbac_context',
         attributes = {'id':str},
     )
+    _xobj_hidden_accessors = set(['rbacpermission_set'])
 
     context_id = D(models.TextField(primary_key=True),
         "the database ID for the context")

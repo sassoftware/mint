@@ -97,9 +97,6 @@ class RbacManager(basemanager.BaseManager):
 
     @exposed
     def getRbacRoles(self):
-        #roles = models.RbacRoles()
-        #roles.rbac_role = models.RbacRole.objects.all()
-        #return roles
         return self._getThings(models.RbacRoles, 
             models.RbacRole, 'rbac_role')
 
@@ -122,12 +119,32 @@ class RbacManager(basemanager.BaseManager):
 
     #########################################################
     # RBAC CONTEXT METHODS
- 
-    # TODO
-    # getRbacContext
-    # addRbacContext
-    # updateRbacContext
-    # deleteRbacContext    
+
+    def _context(self, value):
+        '''cast input as a role'''
+        return self._orId(value, models.RbacContext)
+
+    @exposed
+    def getRbacContexts(self):
+        return self._getThings(models.RbacContexts,
+            models.RbacContext, 'rbac_context')
+
+    @exposed
+    def getRbacContext(self, context):
+        return self._context(context)
+
+    @exposed
+    def addRbacContext(self, context):
+        return self._addThing(models.RbacContext, context)
+
+    @exposed
+    def updateRbacContext(self, old_id, context):
+        return self._updateSingleColumnThing(models.RbacContext, old_id,
+            context, 'context_id', 'rbac_context')
+
+    @exposed
+    def deleteRbacContext(self, context):
+        return self._deleteThing(models.RbacContext, self._context(context)) 
 
     #########################################################
     # RBAC PERMISSION METHODS

@@ -51,7 +51,7 @@ class RbacRolesService(BaseRbacService):
     Adds and edits roles.
     <rbac_roles>
        <rbac_role id="http://hostname/api/rbac/roles/sysadmin">
-          <description>foo</description>
+           <role_id>sysadmin</role_id>
        </rbac_role>
     </rbac_roles>    
     """
@@ -109,16 +109,40 @@ class RbacContextsService(BaseRbacService):
     Adds and edits contexts.
     <rbac_contexts>
         <rbac_context id="http://hostname/api/rbac/contexts/datacenter">
-           <description>foo</description>
-        </rbac_context>
+           <context_id>datacenter</context_id>
+        <rbac_context/>
     </rbac_contexts>
     """
    
+    # READ
     @access.admin
     @return_xml
-    def rest_GET(self, request, system_state_id=None):
-        return None
+    def rest_GET(self, request, context_id=None):
+        return self.get(context_id)
 
-    # TODO: rest_PUT
-    # TODO: rest_DELETE
+    def get(self, context_id=None):
+        if context_id is not None:
+            return self.mgr.getRbacContext(context_id)
+        else:
+            return self.mgr.getRbacContexts()
+
+    # CREATE
+    @access.admin
+    @return_xml
+    @requires('rbac_context')
+    def rest_POST(self, request, rbac_context):
+        return self.mgr.addRbacContext(rbac_context)
+
+    # UPDATE
+    @access.admin
+    @requires('rbac_context')
+    @return_xml
+    def rest_PUT(self, request, context_id, rbac_context):
+        return self.mgr.updateRbacContext(context_id, rbac_context)
+
+    # DELETE
+    @access.admin
+    def rest_DELETE(self, request, context_id):
+        self.mgr.deleteRbacContext(context_id)
+        return HttpResponse(status=204)
 

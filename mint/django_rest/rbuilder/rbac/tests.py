@@ -196,8 +196,8 @@ class RbacRoleViews(RbacTestCase):
     def testCanDeleteRoles(self):
 
         url = 'rbac/roles/sysadmin'
-        content = self.req(url, method='DELETE', expect=401, is_authenticated=True)
-        content = self.req(url, method='DELETE', expect=204, is_admin=True)
+        self.req(url, method='DELETE', expect=401, is_authenticated=True)
+        self.req(url, method='DELETE', expect=204, is_admin=True)
         self.failUnlessRaises(models.RbacRole.DoesNotExist,
             lambda: models.RbacRole.objects.get(pk='sysadmin'))
 
@@ -215,57 +215,141 @@ class RbacRoleViews(RbacTestCase):
         self.assertXMLEquals(content, output)
 
 class RbacPermissionViews(RbacTestCase):
+    
+    def setUp(self):
+        # TODO 
+        pass
+
     def testCanListPermissions(self):
+        # TODO 
         pass
+
     def testCanGetSinglePermission(self):
+        # TODO 
         pass
+
     def testCanAddPermissions(self):
+        # TODO 
         pass
+
     def testCanDeletePermissions(self):
+        # TODO 
         pass
+
     def testCanUpdatePermissions(self):
+        # TODO
         pass
 
 class RbacContextViews(RbacTestCase):
+
+    def setUp(self):
+
+        RbacTestCase.setUp(self)
+        self.seed_data = [ 'datacenter', 'lab', 'tradingfloor' ]
+        for item in self.seed_data:
+            models.RbacContext(item).save()
+
     def testCanListContexts(self):
-        pass
+
+        url = 'rbac/contexts'
+        content = self.req(url, method='GET', expect=401, is_authenticated=True)
+        content = self.req(url, method='GET', expect=200, is_admin=True)
+
+        obj = xobj.parse(content)
+        found_items = self._xobj_list_hack(obj.rbac_contexts.rbac_context)
+        found_items = [ item.context_id for item in found_items ]
+        for expected in self.seed_data:
+            self.assertTrue(expected in found_items, 'found item')
+        self.assertEqual(len(found_items), len(self.seed_data), 'right number of items')
+
     def testCanGetSingleContext(self):
-        pass
-    def testCanAddContexts(self):
-        pass
-    def testCanDeleteContexts(self):
-        pass
-    def testCanUpdatePermissions(self):
-        pass
+
+        url = 'rbac/contexts/datacenter'
+        content = self.req(url, method='GET', expect=401, is_authenticated=True)
+        content = self.req(url, method='GET', expect=200, is_admin=True)
+        obj = xobj.parse(content)
+        self.assertEqual(obj.rbac_context.context_id, 'datacenter')
+
+    def testCanAddContext(self):
+
+        url = 'rbac/contexts'
+        input = testsxml.context_put_xml_input
+        output = testsxml.context_put_xml_output
+        content = self.req(url, method='POST', data=input, expect=401, is_authenticated=True)
+        content = self.req(url, method='POST', data=input, expect=200, is_admin=True)
+        found_items = models.RbacContext.objects.get(pk='datacenter2')
+        self.assertEqual(found_items.pk, 'datacenter2')
+        self.assertXMLEquals(content, output)
+
+    def testCanDeleteContext(self):
+
+        url = 'rbac/contexts/lab'
+        self.req(url, method='DELETE', expect=401, is_authenticated=True)
+        self.req(url, method='DELETE', expect=204, is_admin=True)
+        self.failUnlessRaises(models.RbacContext.DoesNotExist,
+            lambda: models.RbacContext.objects.get(pk='lab'))
+
+    def testCanUpdateContext(self):
+
+        url = 'rbac/contexts/datacenter'
+        input = testsxml.context_put_xml_input   # reusing put data is fine here
+        output = testsxml.context_put_xml_output
+        content = self.req(url, method='PUT', data=input, expect=401, is_authenticated=True)
+        content = self.req(url, method='PUT', data=input, expect=200, is_admin=True)
+        found_items = models.RbacContext.objects.get(pk='datacenter2')
+        self.failUnlessRaises(models.RbacContext.DoesNotExist,
+            lambda: models.RbacContext.objects.get(pk='datacenter'))
+        self.assertEqual(found_items.pk, 'datacenter2')
+        self.assertXMLEquals(content, output)
 
 class RbacUserViewTests(RbacTestCase):
+
     def testCanAssignUserToRole(self):
+        # TODO 
         pass
+
     def testCanRemoveUserRole(self):
+        # TODO 
         pass
    
 class RbacSystemViewTests(RbacTestCase):
+
     def testCanAssignSystemToContext(self):
+        # TODO 
         pass
+
     def testCanRemoveSystemContext(self):
+        # TODO 
         pass
 
 class AccessControlSystemTests(RbacTestCase):
     # inventory tests will also help cover this
     # may want to add AccessControl tests there instead (probably do)
+
     def testAdminsCanAccessSystemWithContext(self):
+       # TODO 
        pass
+
     def testAdminsCanAccessSystemWithoutContext(self):
+       # TODO 
        pass
+
     def testUserCanAccessSystemWithContext(self):
+       # TODO 
        pass
+
     def testUserCannotAccessSystemWithWrongContext(self):
+       # TODO 
        pass
+
     def testUserCanAccessSystemWithoutContext(self):
+       # TODO 
        pass
 
 class AccessControlImageTests(RbacTestCase):
+    # TODO 
     pass
 
 class AccessControlPlatformTests(RbacTestCase):
+    # TODO 
     pass
