@@ -34,7 +34,7 @@ class Platform(modellib.XObjIdModel):
     configurable = models.BooleanField(default=False)
     abstract = models.BooleanField(default=False)
     is_from_disk = models.BooleanField(default=False, db_column='isFromDisk')
-    time_refresed = basemodels.DateTimeUtcField() # hack, modellib keeps evaluating to None
+    time_refreshed = basemodels.DateTimeUtcField() # hack, modellib keeps evaluating to None
     
     # SyntheticFields -- fields with no column in the db
     # most of these are deferred fk's or CharFields in the old code
