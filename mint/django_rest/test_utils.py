@@ -48,8 +48,7 @@ class TestRunner(DjangoTestSuiteRunner):
     def _setupDatabases(cls, **kwargs):
         # We don't care about a lot of the complexities in
         # DjangoTestSuiteRunner
-        alias = DEFAULT_DB_ALIAS
-        conn = connections[alias]
+        conn = cls.getConnection()
         dbname = conn.settings_dict['TEST_NAME']
         # XXX sqlite only for now
         util.removeIfExists(dbname)
@@ -125,7 +124,6 @@ class XMLTestCase(TestCase, testcase.MockMixIn):
 
     def setUp(self):
         self.workDir = tempfile.mkdtemp(dir="/tmp", prefix="rbuilder-django-")
-        conn = TestRunner.getConnection()
         mintCfgPath = os.path.join(self.workDir, "mint.cfg")
         self.mintCfg = self._getMintConfig()
         self.mintCfg.writeToFile(mintCfgPath)
