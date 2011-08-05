@@ -9,7 +9,7 @@
 #import os
 #import time
 #
-#from django.http import HttpResponse, HttpResponseNotFound
+from django.http import HttpResponse #, HttpResponseNotFound
 #from django_restapi import resource
 #
 #from mint.db import database
@@ -82,6 +82,11 @@ class RbacRolesService(BaseRbacService):
     def rest_PUT(self, request, role_id, rbac_role):
         return self.mgr.updateRbacRole(role_id, rbac_role)
 
+    # DELETE
+    @access.admin
+    def rest_DELETE(self, request, role_id):
+        self.mgr.deleteRbacRole(role_id)
+        return HttpResponse(status=204)
 
 class RbacUserRolesService(BaseRbacService):
    """

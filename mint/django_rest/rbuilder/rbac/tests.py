@@ -194,7 +194,12 @@ class RbacRoleViews(RbacTestCase):
         self.assertXMLEquals(content, output)
 
     def testCanDeleteRoles(self):
-        pass
+
+        url = 'rbac/roles/sysadmin'
+        content = self.req(url, method='DELETE', expect=401, is_authenticated=True)
+        content = self.req(url, method='DELETE', expect=204, is_admin=True)
+        self.failUnlessRaises(models.RbacRole.DoesNotExist,
+            lambda: models.RbacRole.objects.get(pk='sysadmin'))
 
     def testCanUpdateRoles(self):
         

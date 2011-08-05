@@ -87,6 +87,9 @@ class RbacManager(basemanager.BaseManager):
         if type(value) != modelClass:
            return modelClass.objects.get(pk=value)
         return value
+    
+    #########################################################
+    # RBAC ROLE METHODS
         
     def _role(self, value):
         '''cast input as a role'''
@@ -115,6 +118,33 @@ class RbacManager(basemanager.BaseManager):
 
     @exposed
     def deleteRbacRole(self, role):
-        return self._deleteThing(models.RbacRole, role) 
+        return self._deleteThing(models.RbacRole, self._role(role)) 
+
+    #########################################################
+    # RBAC CONTEXT METHODS
+ 
+    # TODO
+    # getRbacContext
+    # addRbacContext
+    # updateRbacContext
+    # deleteRbacContext    
+
+    #########################################################
+    # RBAC PERMISSION METHODS
+
+    # TODO
+    # getRbacPermissions
+    # addRbacPermissions
+    # updateRbacPermission
+    # deleteRbacPermission 
+
+    #########################################################
+    # RBAC USER_ROLE METHODS
+    
+    # TODO
+    # getRbacUserRole
+    # addRbacUserRole
+    # updateRbacUserRole
+    # deleteRbacUserRole   
 
 
