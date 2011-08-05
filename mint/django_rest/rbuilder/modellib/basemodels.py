@@ -9,7 +9,6 @@ import datetime
 from dateutil import parser
 from dateutil import tz
 import urlparse
-import traceback
 
 from django.db import connection
 from django.db import models
