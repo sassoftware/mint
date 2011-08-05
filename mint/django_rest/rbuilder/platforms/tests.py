@@ -46,7 +46,6 @@ class PlatformsTestCase(XMLTestCase):
         self.assertEquals(platform.project, platform_gotten.project)
     
     def testGetPlatforms(self):
-        import pdb; pdb.set_trace()
         platforms_gotten = self.xobjResponse('platforms/')
         # note that when we test getting Platforms, we are not
         # trying to retrieve a Platforms instance, but rather all
@@ -56,7 +55,6 @@ class PlatformsTestCase(XMLTestCase):
     
     def testGetContentSourceTypes(self):
         cSourceTypes = pmodels.ContentSourceType.objects.all()
-        import pdb; pdb.set_trace()
         cSourceTypes_gotten = self.xobjResponse('platforms/content_source_types/')
         self.assertEquals(len(list(cSourceTypes)), len(cSourceTypes_gotten))
     
@@ -69,7 +67,6 @@ class PlatformsTestCase(XMLTestCase):
     
     def testGetContentSources(self):
         contentSources = pmodels.ContentSource.objects.all()
-        import pdb; pdb.set_trace()
         contentSources_gotten = self.xobjResponse('platforms/content_sources/')
         self.assertEquals(len(list(contentSources)), len(contentSources_gotten))
     
@@ -158,10 +155,10 @@ class NewPlatformTest(XMLTestCase):
     
     def testUpdatePlatform(self):
 		#1 already in fixture
-        plat = pmodels.Platform.objects.get(pk=1)
         r = self._put('platforms/1',
             data=platformstestxml.platformPUTXml,
             username='admin', password='password')
+        self.assertEquals(r.status_code, 200)
         updatedPlat = pmodels.Platform.objects.get(pk=1)
         # Check that name and other fields are updated
         self.assertEquals('PlatformPut', updatedPlat.label)
@@ -171,10 +168,10 @@ class NewPlatformTest(XMLTestCase):
     
     def testUpdateContentSource(self):
 		#1 already in fixture
-        content = pmodels.ContentSource.objects.get(pk=1)
         r = self._put('platforms/1/content_sources',
             data=platformstestxml.contentSourcePUTXml,
             username='admin', password='password')
+        self.assertEquals(r.status_code, 200)
         updatedContent = pmodels.ContentSource.objects.get(pk=1)
         # Check that name and other fields are updated
         self.assertEquals('PlatformTestPut', updatedContent.name)
@@ -184,10 +181,10 @@ class NewPlatformTest(XMLTestCase):
     
     def testUpdateContentSourceType(self):
 		#1 already in fixture
-        content = pmodels.ContentSourceType.objects.get(pk=1)
         r = self._put('platforms/1/content_source_types',
             data=platformstestxml.contentSourceTypePUTXml,
             username='admin', password='password')
+        self.assertEquals(r.status_code, 200)
         updatedContent = pmodels.Platform.objects.get(pk=1)
         # Check that name and other fields are updated
         self.assertEquals('ContentSourceTypePut', updatedContent.content_source_type)
