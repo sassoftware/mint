@@ -146,3 +146,15 @@ user_role_get_xml = """
 </rbac_role>
 """
 
+user_role_post_xml_input = """
+<rbac_role id="http://testserver/api/v1/rbac/roles/intern">
+  <role_id>intern</role_id>
+</rbac_role>
+"""
+
+user_role_post_xml_output = """
+<rbac_role id="http://testserver/api/v1/rbac/roles/intern">
+  <role_id>intern</role_id>
+</rbac_role>
+"""
+

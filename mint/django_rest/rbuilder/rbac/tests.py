@@ -422,18 +422,15 @@ class RbacUserRoleViewTests(RbacTestCase):
     def testCanAddUserRoles(self):
         user_id = self.admin_user.pk
         url = "rbac/users/%s/roles/" % user_id
-        #url = 'rbac/permissions'
-        #input = testsxml.permission_post_xml_input
-        #output = testsxml.permission_post_xml_output
-        #content = self.req(url, method='POST', data=input, expect=401, is_authenticated=True)
-        #content = self.req(url, method='POST', data=input, expect=200, is_admin=True)
-        #self.assertXMLEquals(content, output)
-        #perm = models.RbacPermission.objects.get(pk=4)
-        #self.assertEqual(perm.rbac_role.pk, 'intern')
-        #self.assertEqual(perm.rbac_context.pk, 'tradingfloor')
-        #self.assertEqual(perm.action, 'write')
-        # TODO: should also test that we can't double-assign a role to a user
-        pass
+        # gives the admin user the intern role
+        input = testsxml.user_role_post_xml_input
+        output = testsxml.user_role_post_xml_output
+        content = self.req(url, method='POST', data=input, expect=401, is_authenticated=True)
+        content = self.req(url, method='POST', data=input, expect=200, is_admin=True)
+        self.assertXMLEquals(content, output)
+        user_role = models.RbacUserRole.objects.get(user = self.admin_user, role=self.intern)
+        self.assertEqual(user_role.user.pk, self.admin_user.pk)
+        self.assertEqual(user_role.role.pk, 'intern')
 
     def testCanDeleteUserRoles(self):
         user_id = self.admin_user.pk

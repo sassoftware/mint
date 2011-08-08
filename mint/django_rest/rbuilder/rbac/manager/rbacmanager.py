@@ -235,9 +235,9 @@ class RbacManager(basemanager.BaseManager):
         try:
             mapping = models.RbacUserRole.objects.get(user=user, role=role)
             # mapping already exists, nothing to do
-        except models.RbacRole.DoesNotExist:
+        except models.RbacUserRole.DoesNotExist:
             # no role assignment found, create it
-            models.RbacRole(user=user, role=role).save()
+            models.RbacUserRole(user=user, role=role).save()
         return role
 
     # why no update function?
