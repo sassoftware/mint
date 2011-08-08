@@ -4,6 +4,7 @@
 
 import logging
 import hashlib
+import itertools
 import os
 import re
 import StringIO
@@ -187,8 +188,7 @@ class ImageGenerator(object):
                 targetList = criticalPackageList
             else:
                 targetList = packageList
-            pkgXml = msiData.getPackageXML(seqNum=len(targetList))
-            targetList.append(pkgXml)
+            targetList.append(msiData)
 
         sysModel = 'install %s=%s\n' % (
             self.troveTup.name, str(self.troveTup.version))
@@ -197,24 +197,20 @@ class ImageGenerator(object):
             str(self.troveTup.flavor))
 
         E = builder.ElementMaker()
-        jobs = []
-        if criticalPackageList:
-            jobs.append(E.updateJob(
-                    E.sequence('0'),
-                    E.logFile('install.log'),
-                    E.packages(*criticalPackageList),
-                    ))
-        if packageList:
-            jobs.append(E.updateJob(
-                    E.sequence('1'),
-                    E.logFile('install.log'),
-                    E.packages(*packageList),
-                    ))
+        pkgs = [ x.getPackageXml(seqNum=i) for i, x in
+            enumerate(itertools.chain(criticalPackageList, packageList)) ]
+
+        updateJob = E.updateJob(
+            E.sequence('0'),
+            E.logFile('setup.log'),
+            E.packages(*pkgs),
+        )
+
         root = E.update(
-            E.logFile('install.log'),
+            E.logFile('setup.log'),
             E.systemModel(sysModel),
             E.pollingManifest(pollingManifest),
-            E.updateJobs(*jobs)
+            E.updateJobs(updateJob)
             )
         return etree.tostring(root)
 
