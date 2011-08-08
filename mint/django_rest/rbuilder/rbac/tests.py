@@ -1,29 +1,9 @@
-#import base64
-#import cPickle
-#import datetime
-#import os
-#import random
-#from dateutil import tz
 import testsxml
 from xobj import xobj
-#
-#from conary import versions
-#from conary.conaryclient.cmdline import parseTroveSpec
-#
-#from django.contrib.redirects import models as redirectmodels
-#from django.db import connection
-#from django.template import TemplateDoesNotExist
-
-#from mint.django_rest.rbuilder import models as rbuildermodels
-#from mint.django_rest.rbuilder.rbac import views
 from mint.django_rest.rbuilder.rbac import models
-#from mint.django_rest.rbuilder.manager import rbuildermanager
 from mint.django_rest.rbuilder.users import models as usersmodels
-#from mint.django_rest.rbuilder.inventory import models
-#from mint.django_rest.rbuilder.jobs import models as jobmodels
-#from mint.django_rest.rbuilder.inventory import testsxml
-#from mint.lib import x509
-#from mint.rest.api import models as restmodels
+from mint.django_rest.rbuilder.inventory import models as inventorymodels
+from mint.django_rest.rbuilder.manager import rbuildermanager
 
 # Suppress all non critical msg's from output
 # still emits traceback for failed tests
@@ -448,10 +428,43 @@ class RbacUserRoleViewTests(RbacTestCase):
     # (UPDATE DOES NOT MAKE SENSE, AND IS NOT SUPPORTED)
 
 class RbacSystemViewTests(RbacTestCase):
+    ''' Can we view and manipulate the system context as an admin?'''
+
+    def setUp(self):
+        RbacTestCase.setUp(self)
+        
+        mgr = rbuildermanager.RbuilderManager()
+        local_zone = mgr.sysMgr.getLocalZone()
+        self.system = inventorymodels.System(
+            name='testSystem', managing_zone=local_zone
+        )
+        self.datacenter = models.RbacContext('datacenter')
+        self.lab = models.RbacContext('lab')
+        self.datacenter.save()
+        self.lab.save()
+        self.system.rbac_context = self.datacenter
+        self.system.save()
+
+    def testCanGetSystemContext(self):
+        url = "rbac/resources/system/%d/context" % self.system.pk
+        content = self.req(url, method='GET', expect=401, is_authenticated=True)
+        content = self.req(url, method='GET', expect=200, is_admin=True)
+        self.assertXMLEquals(content, testsxml.system_context_get_xml)
 
     def testCanAssignSystemToContext(self):
-        # TODO 
-        pass
+        url = "rbac/resources/system/%d/context" % self.system.pk
+        input = testsxml.system_context_put_xml_input   
+        output = testsxml.system_context_put_xml_output
+        content = self.req(url, method='PUT', data=input, expect=401, is_authenticated=True)
+        content = self.req(url, method='PUT', data=input, expect=200, is_admin=True)
+        # TODO: reinstate DB test here
+        #found_items = models.RbacContext.objects.get(pk='datacenter2')
+        #self.failUnlessRaises(models.RbacContext.DoesNotExist,
+        #    lambda: models.RbacContext.objects.get(pk='datacenter'))
+        #self.assertEqual(found_items.pk, 'datacenter2')
+        #self.assertXMLEquals(content, output)
+        content = self.req(url, method='GET', expect=200, is_admin=True)
+        self.assertXMLEquals(content, testsxml.system_context_get_xml2)
 
     def testCanRemoveSystemContext(self):
         # TODO 

@@ -108,7 +108,7 @@ class RbacContext(modellib.XObjIdModel):
         tag = 'rbac_context',
         attributes = {'id':str},
     )
-    _xobj_hidden_accessors = set(['rbacpermission_set'])
+    _xobj_hidden_accessors = set(['rbacpermission_set', 'systems'])
 
     context_id = D(models.TextField(primary_key=True),
         "the database ID for the context")

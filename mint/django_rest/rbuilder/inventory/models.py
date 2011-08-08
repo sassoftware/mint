@@ -22,7 +22,7 @@ from mint.django_rest.rbuilder import models as rbuildermodels
 from mint.django_rest.rbuilder.projects.models import Project, ProjectVersion, Stage
 from mint.django_rest.rbuilder.users import models as usersmodels
 from mint.django_rest.rbuilder.jobs import models as jobmodels
-
+from mint.django_rest.rbuilder.rbac import models as rbacmodels
 from xobj import xobj
 
 Cache = modellib.Cache
@@ -587,6 +587,9 @@ class System(modellib.XObjIdModel):
     network_address = D(NetworkAddress, "Network address for this system")
     actions = D(modellib.SyntheticField(jobmodels.Actions),
         "actions available on the system")
+    rbac_context = APIReadOnly(XObjHidden(
+        modellib.ForeignKey(rbacmodels.RbacContext, null=True,
+            related_name='systems')))
 
     logged_fields = ['name', 'installed_software']
 

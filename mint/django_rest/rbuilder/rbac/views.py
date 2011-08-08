@@ -188,3 +188,38 @@ class RbacContextsService(BaseRbacService):
         self.mgr.deleteRbacContext(context_id)
         return HttpResponse(status=204)
 
+class RbacResourceContextService(BaseRbacService):
+    """
+    Adds and edits the context assignment to a particular resource.
+    Not part of the individual resources as this is only available
+    to admins, and we don't want to share details with non-admins.
+
+    There may also be other batch methods of editing these assignments.
+
+    <rbac_context id="http://hostname/api/rbac/contexts/datacenter">
+           <context_id>datacenter</context_id>
+    <rbac_context/>
+    """
+
+    # READ
+    @access.admin
+    @return_xml
+    def rest_GET(self, request, resource_type, resource_id):
+        return self.get(resource_type, resource_id)
+
+    def get(self, resource_type, resource_id):
+        return self.mgr.getResourceRbacContext(resource_type, resource_id)
+
+    # WRITE
+    @access.admin
+    @requires('rbac_context', save=False)
+    @return_xml
+    def rest_PUT(self, request, resource_type, resource_id, rbac_context):
+        return self.mgr.setResourceRbacContext(resource_type, resource_id,
+            rbac_context)
+
+    # DELETE (remove context)
+    @access.admin
+    def rest_DELETE(self, request, resource_type, resource_id):
+        self.mgr.deleteResourceRbacContext(resource_type, resource_id)
+        return HttpResponse(status=204)

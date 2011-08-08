@@ -166,3 +166,20 @@ user_role_get_list_xml_after_delete = """
 </rbac_roles>
 """
 
+system_context_get_xml = """
+<rbac_context id="http://testserver/api/v1/rbac/contexts/datacenter">
+  <context_id>datacenter</context_id>
+</rbac_context>
+"""
+
+system_context_put_xml_input = """
+<rbac_context id="http://testserver/api/v1/rbac/contexts/lab">
+  <context_id>lab</context_id>
+</rbac_context>
+"""
+
+system_context_put_xml_output = system_context_put_xml_input
+system_context_get_xml2 = system_context_put_xml_input
+
+
+

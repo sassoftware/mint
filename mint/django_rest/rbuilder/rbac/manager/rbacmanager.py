@@ -28,6 +28,7 @@ from mint.django_rest.rbuilder.users import models as usersmodels
 #from mint.django_rest.rbuilder.inventory import errors
 #from mint.django_rest.rbuilder.inventory import models
 from mint.django_rest.rbuilder.manager import basemanager
+from mint.django_rest.rbuilder.inventory import models as inventorymodels
 #from mint.django_rest.rbuilder.querysets import models as querysetmodels
 #from mint.django_rest.rbuilder.jobs import models as jobmodels
 #from mint.rest import errors as mint_rest_errors
@@ -36,6 +37,11 @@ import exceptions
 
 log = logging.getLogger(__name__)
 exposed = basemanager.exposed
+
+# resource types that we can manipulate RBAC context on:
+RESOURCE_TYPE_SYSTEM   = 'system'
+RESOURCE_TYPE_PLATFORM = 'platform'
+RESOURCE_TYPE_IMAGE    = 'image'
 
 class RbacManager(basemanager.BaseManager):
 
@@ -255,5 +261,42 @@ class RbacManager(basemanager.BaseManager):
         # so it doesn't make sense to return the role
         # as what we've deleted.
         return mapping
+    
+    #########################################################
+    # RBAC RESOURCE<->CONTEXT METHODS
+    # set a context on a resource, uncontext a resource, etc
+    # ex, system256 is "datacenter", system101 is "lab", etc.
+    
+    def _getManagerByType(self, resource_type):
+        '''Get the django manager for a resource'''
+        if resource_type == RESOURCE_TYPE_SYSTEM:
+            return inventorymodels.System.objects
+        #elif resource_type == RESOURCE_TYPE_PLATFORM:
+        #    pass
+        #elif resource_Type == RESOURCE_TYPE_IMAGE:
+        #    pass
+        else:
+            raise exceptions.NotImplementedError(
+                "rbac not yet supported on this resource")
 
+    @exposed
+    def getResourceRbacContext(self, resource_type, resource_id):
+        mgr = self._getManagerByType(resource_type)
+        obj = mgr.get(pk=resource_id)
+        return obj.rbac_context
+
+    @exposed
+    def setResourceRbacContext(self, resource_type, resource_id, rbac_context):
+        mgr = self._getManagerByType(resource_type)
+        obj = mgr.get(pk=resource_id)
+        obj.rbac_context = rbac_context
+        obj.save()
+        return obj
+
+    @exposed
+    def deleteResourceRbacContext(self, resource_type, resource_id):
+        mgr = self._getManagerByType(resource_type)
+        obj = mgr.get(pk=resource_id)
+        obj.rbac_context = None
+        return obj
 
