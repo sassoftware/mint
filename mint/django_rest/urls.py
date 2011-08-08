@@ -583,7 +583,7 @@ urlpatterns = patterns('',
     URL(r'rbac/users/(?P<user_id>\d+)/roles/?$',
         rbacviews.RbacUserRolesService(),
         name='RbacUserRoles'),
-    URL(r'rbac/users/(?P<user_id>\d+)/roles/?(P<role_id>\w+)?$',
+    URL(r'rbac/users/(?P<user_id>\d+)/roles/(?P<role_id>\w+)?$',
         rbacviews.RbacUserRolesService(),
         name='RbacUserRole')
 )

@@ -404,14 +404,21 @@ class RbacUserRoleViewTests(RbacTestCase):
         self.assertXMLEquals(content, testsxml.user_role_list_xml)
 
     def testCanGetSingleUserRole(self):
-        #user_id = self.admin_user.pk
-        #url = "rbac/users/%s/roles/developer" % user_id
-        #content = self.req(url, method='GET', expect=401, is_authenticated=True)
-        #content = self.req(url, method='GET', expect=200, is_admin=True)
-        #self.assertXMLEquals(content, '<validate></validate>') # testsxml.permission_get_xml)
-        # TODO: should also test that we can't get a role a user doesn't have
-        pass  
+        # this is admittedly a rather useless function, which only 
+        # confirms/denies where a user is in a role.  More likely 
+        # we'd ask if they had permission to do something, and more 
+        # as an internals thing than a REST function.  Still, here, 
+        # for completeness.
 
+        user_id = self.admin_user.pk
+        url = "rbac/users/%s/roles/developer" % user_id
+        content = self.req(url, method='GET', expect=401, is_authenticated=True)
+        content = self.req(url, method='GET', expect=200, is_admin=True)
+        self.assertXMLEquals(content, testsxml.user_role_get_xml)
+        # now verify if the role isn't assigned to the user, we can't fetch it
+        url = "rbac/users/%s/roles/intern" % user_id
+        content = self.req(url, method='GET', expect=404, is_admin=True)
+          
     def testCanAddUserRoles(self):
         user_id = self.admin_user.pk
         url = "rbac/users/%s/roles/" % user_id

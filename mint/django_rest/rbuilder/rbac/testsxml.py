@@ -139,3 +139,10 @@ user_role_list_xml = """
   </rbac_role>
 </rbac_roles>
 """
+
+user_role_get_xml = """
+<rbac_role id="http://testserver/api/v1/rbac/roles/developer">
+  <role_id>developer</role_id>
+</rbac_role>
+"""
+
