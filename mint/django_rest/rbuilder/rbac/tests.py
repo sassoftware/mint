@@ -435,13 +435,15 @@ class RbacUserRoleViewTests(RbacTestCase):
     def testCanDeleteUserRoles(self):
         user_id = self.admin_user.pk
         url = "rbac/users/%s/roles/developer" % user_id
-        #all = models.RbacPermission.objects.all()
-        #url = 'rbac/permissions/1'
-        #self.req(url, method='DELETE', expect=401, is_authenticated=True)
-        #self.req(url, method='DELETE', expect=204, is_admin=True)
-        #all = models.RbacPermission.objects.all()
-        #self.assertEqual(len(all), 2, 'deleted an object')
-        pass
+        get_url = "rbac/users/%s/roles/" % user_id
+        # make admin no longer a developer
+        self.req(url, method='DELETE', expect=401, is_authenticated=True)
+        self.req(url, method='DELETE', expect=204, is_admin=True)
+        all = models.RbacUserRole.objects.all()
+        self.assertEquals(len(all), 2, 'right number of objects')
+        content = self.req(url, method='GET', expect=404, is_admin=True)
+        content = self.req(get_url, method='GET', expect=200, is_admin=True)
+        self.assertXMLEquals(content, testsxml.user_role_get_list_xml_after_delete)
 
     # (UPDATE DOES NOT MAKE SENSE, AND IS NOT SUPPORTED)
 

@@ -158,3 +158,11 @@ user_role_post_xml_output = """
 </rbac_role>
 """
 
+user_role_get_list_xml_after_delete = """
+<rbac_roles count="1" end_index="0" filter_by="" full_collection="http://testserver/api/v1/rbac/roles" id="http://testserver/api/v1/rbac/roles;start_index=0;limit=10" limit="10" next_page="" num_pages="1" order_by="" per_page="10" previous_page="" start_index="0">
+  <rbac_role id="http://testserver/api/v1/rbac/roles/sysadmin">
+    <role_id>sysadmin</role_id>
+  </rbac_role>
+</rbac_roles>
+"""
+

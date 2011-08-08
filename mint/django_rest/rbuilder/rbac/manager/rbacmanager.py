@@ -249,7 +249,6 @@ class RbacManager(basemanager.BaseManager):
         '''Results in the user no longer having this role'''
         user = self._user(user_id)
         role = self._role(role_id)
-        role = models.RbacRole.objects.get(role=role)
         mapping = models.RbacUserRole.objects.get(user=user, role=role)
         mapping.delete()
         # we're deleting the mapping, not the role
