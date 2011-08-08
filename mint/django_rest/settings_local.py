@@ -23,6 +23,7 @@ AUTHENTICATION_BACKENDS = (
 MIDDLEWARE_CLASSES = MIDDLEWARE_CLASSES + (
     'mint.django_rest.middleware.LocalQueryParameterMiddleware',
     'mint.django_rest.middleware.ExceptionLoggerMiddleware',
+    'mint.django_rest.middleware.SqlLoggingMiddleware',
 )
 
 # Commented out misa 2011-07-20 - adding this middleware breaks the test

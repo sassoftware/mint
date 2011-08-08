@@ -1,40 +1,38 @@
 platformsXml = """\
 <?xml version='1.0' encoding='UTF-8'?>
 <platforms>
-  <platform_id="http://localhost:8000/api/v1/platforms/1">
-    <platform_id>1</platform_id>
-    <platform_name>Platform1</platform_name>
-    <label>Platform</label>
-    <platform_name>Platform</platform_name>
+  <platform id="http://localhost:8000/api/v1/platforms/5">
+    <platform_id>5</platform_id>
+    <platform_name>Platform5</platform_name>
+    <label>Platform5label</label>
     <mode>Platform</mode>
-    <enabled>true</enabled>
+    <enabled>1</enabled>
     <configurable>true</configurable>
     <abstract>true</abstract>
+    <is_from_disk>true</is_from_disk>
     <project href="1"/>
-    <is_from_disk>true</is_from_disk>
   </platform>
-  <platform_id="http://localhost:8000/api/v1/platforms/2">
-    <platform_id>2</platform_id>
-    <platform_name>Platform2</platform_name>
-    <label>Platform</label>
-    <platform_name>Platform</platform_name>
+  <platform id="http://localhost:8000/api/v1/platforms/6">
+    <platform_id>6</platform_id>
+    <platform_name>Platform6</platform_name>
+    <label>Platform6label</label>
     <mode>Platform</mode>
-    <enabled>true</enabled>
+    <enabled>1</enabled>
     <configurable>true</configurable>
     <abstract>true</abstract>
+    <is_from_disk>true</is_from_disk>
     <project href="2"/>
-    <is_from_disk>true</is_from_disk>
-  <platform_id="http://localhost:8000/api/v1/platforms/3">
-    <platform_id>3</platform_id>
-    <platform_name>Platform3</platform_name>
-    <label>Platform</label>
-    <platform_name>Platform</platform_name>
+  </platform>
+  <platform id="http://localhost:8000/api/v1/platforms/7">
+    <platform_id>7</platform_id>
+    <platform_name>Platform7</platform_name>
+    <label>Platform7label</label>
     <mode>Platform</mode>
-    <enabled>true</enabled>
+    <enabled>1</enabled>
     <configurable>true</configurable>
     <abstract>true</abstract>
-    <project href="3"/>
     <is_from_disk>true</is_from_disk>
+    <project href="3"/>
   </platform>
 </platforms>
 """
@@ -130,6 +128,10 @@ contentSourceTypesXml = """\
 </content_source_types>
 """
 
+contentSourceTypePUTXml = """\
+<?xml version='1.0' encoding='UTF-8'?>
+<content_source_type>ContentSourceType New</content_source_type>
+"""
 
 #untouched
 contentSourcesXml = """\
@@ -212,13 +214,13 @@ contentSourcePUTXml = """\
 #Prath
 platformPOSTXml = """\
 <?xml version='1.0' encoding='UTF-8'?>
-    <label>PlatformTest Post</label>
-    <platform_name>Platform Post</platform_name>
+<platform>
+    <label>PlatformTestPost</label>
+    <platform_name>PlatformPost</platform_name>
     <mode>Platform</mode>
-    <enabled>false</enabled>
+    <enabled>1</enabled>
     <configurable>true</configurable>
     <abstract>true</abstract>
-    <projects href="1"/>
 </platform>
 """
 
@@ -229,7 +231,7 @@ platformPUTXml = """\
     <label>PlatformTest</label>
     <platform_name>Platform</platform_name>
     <mode>Platform</mode>
-    <enabled>false</enabled>
+    <enabled>0</enabled>
     <configurable>true</configurable>
     <abstract>true</abstract>
     <project href="1"/>
@@ -321,14 +323,14 @@ sourcePOSTRespXml = """\
 #unchanged
 sourcePOST2Xml = """\
 <?xml version='1.0' encoding='UTF-8'?>
-<contentSource>
+<content_source>
   <name>Platform 2 Source 2</name>
   <short_name>plat2source2</short_name>
   <source_url>https://plat2source2.example.com</source_url>
   <default_source>false</default_source>
   <order_index>1</order_index>
   <content_source_type>satellite</content_source_type>
-</contentSource>
+</content_source>
 """
 
 #unchanged
@@ -343,13 +345,13 @@ sourcePOSTResp2Xml = """\
   <content_source_type>satellite</content_source_type>
   <enabled>false</enabled>
   <source_url>https://plat2source2.example.com</source_url>
-</contentSource>
+</content_source>
 """
 
 #unchanged
 statusTestPOSTXml = """\
 <?xml version='1.0' encoding='UTF-8'?>
-<contentSource>
+<content_source>
   <name>Platform 2 Source 2</name>
   <shortname>plat2source2</shortname>
   <username>foousername</username>
@@ -358,7 +360,7 @@ statusTestPOSTXml = """\
   <defaultSource>false</defaultSource>
   <orderIndex>1</orderIndex>
   <contentSourceType>RHN</contentSourceType>
-</contentSource>
+</content_source>
 """
 
 #fields changed

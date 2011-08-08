@@ -30,15 +30,15 @@ class SourceErrorsService(service.BaseService):
         else:
             return self.mgr.getPlatformContentErrors(source_type, short_name)
 
-    @return_xml
     @requires('resource_error')
+    @return_xml
     def rest_PUT(self, request, source_type, short_name, error_id, resource_error):
         return self.mgr.updatePlatformContentError(source_type, short_name, error_id, resource_error)
         
 
 class SourceService(service.BaseService):
     @return_xml
-    def rest_GET(self, request, source_type, short_name=None):
+    def rest_GET(self, request, source_type=None, short_name=None):
         return self.get(source_type, short_name)
         
     def get(self, source_type, short_name):
@@ -47,13 +47,13 @@ class SourceService(service.BaseService):
         else:
             return self.mgr.getSources(source_type)
 
-    @return_xml
     @requires('content_source')
+    @return_xml
     def rest_PUT(self, request, source_type, short_name, source):
         return self.mgr.updateSource(short_name, source)
 
-    @return_xml
     @requires('content_source')
+    @return_xml
     def rest_POST(self, request, source_type, source):
         return self.mgr.createSource(source)
 
@@ -71,8 +71,8 @@ class SourceTypeDescriptorService(service.BaseService):
     
     
 class SourceTypeStatusTestService(service.BaseService):
-    @return_xml
     @requires('content_source')
+    @return_xml
     def rest_POST(self, request, source_type, source):
         return self.mgr.getSourceStatus(source)
 
@@ -89,11 +89,16 @@ class SourceTypeService(service.BaseService):
             return self.mgr.getSourceTypes()
 
     @access.anonymous # what are permissions for this
-    @return_xml
     @requires('content_source_type')
+    @return_xml
     def rest_POST(self, request, content_source_type):
-        return self.mgr.createContentSourceType(content_source_type)
+        return self.mgr.createSourceType(content_source_type)
         
+    @requires('content_source_type')
+    @return_xml
+    def rest_PUT(self, request, content_source_type):
+        self.mgr.updateSourceType(content_source_type)
+
 
 class PlatformLoadStatusService(service.BaseService):
     @return_xml
@@ -103,8 +108,8 @@ class PlatformLoadStatusService(service.BaseService):
     def get(self, platform_id, job_id):
         return self.mgr.getPlatformLoadStatus(platform_id, job_id)
     
-    @return_xml
     @requires('platform')
+    @return_xml
     def rest_POST(self, request, platform_id, platform):
         return self.mgr.getPlatformStatusTest(platform)
 
@@ -117,13 +122,13 @@ class PlatformSourceService(service.BaseService):
     def get(self, platform_id):
         return self.mgr.getSourcesByPlatform(platform_id)
 
-    @return_xml
     @requires('content_source')
+    @return_xml
     def rest_POST(self, request, content_source):
         return self.mgr.createSource(content_source)
     
-    @return_xml
     @requires('content_source')
+    @return_xml
     def rest_PUT(self, request, content_source):
         return self.mgr.updateSource(content_source)
     
@@ -183,12 +188,13 @@ class PlatformService(service.BaseService):
         else:
             return self.mgr.getPlatforms()
     
-    @return_xml
+    @access.anonymous # needs to change!
     @requires('platform')
+    @return_xml
     def rest_POST(self, request, platform):
         return self.mgr.createPlatform(platform)
     
-    @return_xml
     @requires('platform')
+    @return_xml
     def rest_PUT(self, request, platform_id, platform):
         return self.mgr.updatePlatform(platform_id, platform)

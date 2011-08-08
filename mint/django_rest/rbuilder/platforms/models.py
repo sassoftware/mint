@@ -29,6 +29,8 @@ class Platform(modellib.XObjIdModel):
     class Meta:
         db_table = 'Platforms'
     
+    _xobj = xobj.XObjMetadata(tag='platform')
+    
     _MODE_CHOICES = (('manual', 'manual'), ('auto', 'auto'))
     
     _xobj_hidden_accessors = set(['platformsplatformsources_set', 'contentsourcetype_set'])

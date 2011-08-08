@@ -99,6 +99,11 @@ class SourceTypeManager(basemanager.BaseManager):
         content_source_type.save()
         return content_source_type
         
+    @exposed
+    def updateSourceType(self, content_source_type):
+        content_source_type.save()
+        return content_source_type
+        
 class PlatformLoadStatusManager(basemanager.BaseManager):
     @exposed
     def getPlatformLoadStatus(self, platform_id, job_id):
@@ -120,14 +125,14 @@ class PlatformSourceManager(basemanager.BaseManager):
         platform = platformModels.Platform.objects.get(platform_id=platform_id)
         ContentSources.content_source = platform.content_sources.objects.all()
         return ContentSources
-        
+
         
 class PlatformSourceTypeManager(basemanager.BaseManager):
     @exposed
     def getSourceTypesByPlatform(self, platform_id):
         ContentSourceTypes = platformModels.ContentSourceTypes()
         platform = platformModels.Platform.objects.get(platform_id=platform_id)
-        ContentSourceTypes.content_source_type = platform.content_source_types.objects.all()
+        ContentSourceTypes.content_source_type = platform.content_source_types
         return ContentSourceTypes
         
         

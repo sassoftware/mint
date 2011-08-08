@@ -61,9 +61,8 @@ class PlatformsTestCase(XMLTestCase):
     def testGetContentSourceType(self):
         cSourceType = pmodels.ContentSourceType.objects.get(pk=1)
         cSourceType_gotten = self.xobjResponse('platforms/content_source_types/1')
+        import pdb; pdb.set_trace()
         self.assertEquals(cSourceType.content_source_type, cSourceType_gotten.content_source_type)
-        self.assertEquals(cSourceType.required, cSourceType_gotten.required)
-        self.assertEquals(cSourceType.singleton, cSourceType_gotten.singleton)
     
     def testGetContentSources(self):
         contentSources = pmodels.ContentSource.objects.all()
