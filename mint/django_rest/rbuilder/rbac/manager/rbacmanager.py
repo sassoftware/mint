@@ -216,7 +216,7 @@ class RbacManager(basemanager.BaseManager):
         return mapping.role
 
     @exposed
-    def userHasRbacPermissionTo(self, user_id, context_id, action_id):
+    def userHasRbacPermission(self, user=None, context=None, action=None):
         '''
         Can User X Do Action Y On Resoures with Context Z?
         This function is not surfaced directly via REST but is the core
@@ -224,14 +224,31 @@ class RbacManager(basemanager.BaseManager):
         are simple at the moment, but later some permissions may imply
         others.
         '''
-        # TODO -- add to tests
-        user = self._user(user_id)
-        context = self._context(context_id)
-        # TODO -- implement
-        # this is the primary function to see if a user is
-        # allowed to do something, ex:
-        # userHasRbacPermission(sysadmin, 
-        raise exceptions.NotImplementedError
+        user = self._user(user)
+        
+        # get the resource's context -- if none, allow access if the user is
+        # an admin for writes, otherwise say yes to reads.
+        found_context = None
+        try: 
+            found_context = self._context(context)
+        except models.RbacContext.DoesNotExist:
+            # no RBAC rules on this resource means
+            # it is admin only.
+            if action == 'write':
+                return getattr(user, 'is_admin', 0)
+            return True
+
+        role_maps = models.RbacUserRole.objects.filter(user=user)
+        user_role_ids = [ x.role.pk for x in role_maps ]
+
+        # there was a context, so now find the permissions associated
+        # with the context
+        resource_permissions = models.RbacPermissions.filter(
+            context_id = found_context,
+            action     = action,
+        ).extra(where=['role_id=%s'], params=user_role_ids)
+
+        return len(list(resource_permissions)) > 0
 
     @exposed
     def addRbacUserRole(self, user_id, role_id):

@@ -469,34 +469,145 @@ class RbacSystemViewTests(RbacTestCase):
         found_item = inventorymodels.System.objects.get(name='testSystem')
         self.assertEquals(found_item.rbac_context, None)
 
-class AccessControlSystemTests(RbacTestCase):
-    # inventory tests will also help cover this
-    # may want to add AccessControl tests there instead (probably do)
+class RbacEngineTests(RbacTestCase):
+    '''Do we know when to grant or deny access?'''
 
-    def testAdminsCanAccessSystemWithContext(self):
-       # TODO 
-       pass
+    def setUp(self):
+        RbacTestCase.setUp(self)
 
-    def testAdminsCanAccessSystemWithoutContext(self):
-       # TODO 
-       pass
+        # create a couple of users, with varying contexts
+        # sysadmin -- WRITE to datacenter
+        # developer -- READ to datacenter
+        # developer -- WRITE to lab
+        # everyone -- NOTHING to tradingfloor
 
-    def testUserCanAccessSystemWithContext(self):
-       # TODO 
-       pass
+        self.seed_data = [ 'datacenter', 'lab', 'tradingfloor' ]
+        for item in self.seed_data:
+            models.RbacContext(item).save()
+        self.seed_data = [ 'sysadmin', 'developer', 'intern' ]
+        for item in self.seed_data:
+            models.RbacRole(item).save()
+        models.RbacPermission(
+            rbac_context  = models.RbacContext.objects.get(pk='datacenter'),
+            rbac_role     = models.RbacRole.objects.get(pk='sysadmin'),
+            action        = 'write'
+        ).save()
+        models.RbacPermission(
+            rbac_context   = models.RbacContext.objects.get(pk='datacenter'),
+            rbac_role      = models.RbacRole.objects.get(pk='developer'),
+            action         = 'read'
+        ).save()
+        models.RbacPermission(
+            rbac_context   = models.RbacContext.objects.get(pk='lab'),
+            rbac_role      = models.RbacRole.objects.get(pk='developer'),
+            action    = 'write'
+        ).save()
 
-    def testUserCannotAccessSystemWithWrongContext(self):
-       # TODO 
-       pass
+        self.admin_user = usersmodels.User.objects.get(user_name='admin')
+        self.sysadmin_user = usersmodels.User(
+            user_name = 'Example Sysadmin'
+        )
+        self.sysadmin_user.save()
 
-    def testUserCanAccessSystemWithoutContext(self):
-       # TODO 
-       pass
+        self.developer_user = usersmodels.User(
+            user_name = 'Example Developer'
+        )
+        self.developer_user.save()
 
-class AccessControlImageTests(RbacTestCase):
-    # TODO 
-    pass
+        # summary:
+        # admin user has full access
+        #    can READ on tradingfloor
+        #    can write on tradingfloor
+        # sysadmin user can WRITE on datacenter
+        #    read is implied
+        # developer can READ on datacenter
+        #    write is not granted
+        # developer lacks all permissions on tradingfloor
+        #    developer can NOT read
+        #    developer can NOT write
+        # loose system without context?  
+        #    admin can write
+        #    everybody can read
 
-class AccessControlPlatformTests(RbacTestCase):
-    # TODO 
-    pass
+    def testAdminUserHasFullAccess(self):
+        # admin user can do everything regardless of context
+        # or permission
+        #for action in [ 'read', 'write' ]:
+        #    for context in [ 'lab', 'datacenter', 'tradingfloor' ]:
+        #        self.assertTrue(self.mgr.userHasRbacPermission(
+        #            self.admin_user, context, action
+        #        ))
+        pass
+
+    def testWriteImpliesRead(self):
+        # if you can write to something, you can read
+        # even if permission isn't in DB
+        #for action in [ 'read', 'write' ]:
+        #    self.assertTrue(self.mgr.userHasRbacPermission(
+        #        self.sysadmin_user, 'datacenter', action
+        #    ))
+        pass
+
+    def testReadDoesNotImplyWrite(self):
+        # if you can read, that doesn't mean write
+        #self.assertTrue(self.mgr.userHasRbacPermission(
+        #    self.developer_user, 'datacenter', 'read'
+        #))
+        #self.assertFalse(self.mgr.userHasRbacPermission(
+        #    self.developer_user, 'datacenter', 'write'
+        #))
+        pass
+
+    def testNothingImpliesLockout(self):
+        # if you don't have any permissions, you can neither
+        # read nor write
+        #self.assertTrue(self.mgr.userHasRbacPermission(
+        #    self.developer_user, 'tradingfloor', 'write'
+        #))
+        #self.assertTrue(self.mgr.userHasRbacPermission(
+        #    self.developer_user, 'tradingfloor', 'read'
+        #))
+        pass
+
+    def testResourceWithoutContextHasImpliedRules(self):
+        # admin users can always read and write on
+        # resources without contexts
+        #self.assertTrue(self.mgr.userHasRbacPermission(
+        #    self.admin_user, None, 'read'
+        #))
+        #self.assertTrue(self.mgr.userHasRbacPermission(
+        #    self.admin_user, None, 'write'
+        #))
+        # non-admin users can only READ on resources
+        # without contexts
+        #self.assertTrue(self.mgr.userHasRbacPermission(
+        #    self.developer_user, None, 'read'
+        #))
+        #self.assertFalse(self.mgr.userHasRbacPermission(
+        #    self.developer_user, None, 'write'
+        #))
+        pass
+
+    def testCannotLookupPermissionsOnNonConfiguredAction(self):
+        # if you test against an action type that does not
+        # exist, an error will be raised rather than
+        # returning False
+        #self.failUnlessRaises(Exception, lambda:
+        #    self.mgr.userHasRbacPermission(
+        #        self.developer_user, None, 'some fake action type'
+        #    )
+        #)
+        pass
+
+    def testCannotLookupPermissionOnInvalidContext(self):       
+        # if you test against a context that doesn't exist an
+        # error will be raised instead of returning False
+        #self.failUnlessRaises(Exception, lambda:
+        #    self.mgr.userHasRbacPermission(
+        #        self.developer_user, 'imaginarycontext', 'read'
+        #    )
+        #)
+        pass
+
+# SEE ALSO (PENDING) tests in inventory and other services
+
