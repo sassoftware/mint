@@ -298,5 +298,6 @@ class RbacManager(basemanager.BaseManager):
         mgr = self._getManagerByType(resource_type)
         obj = mgr.get(pk=resource_id)
         obj.rbac_context = None
+        obj.save()
         return obj
 

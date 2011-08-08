@@ -457,18 +457,17 @@ class RbacSystemViewTests(RbacTestCase):
         output = testsxml.system_context_put_xml_output
         content = self.req(url, method='PUT', data=input, expect=401, is_authenticated=True)
         content = self.req(url, method='PUT', data=input, expect=200, is_admin=True)
-        # TODO: reinstate DB test here
-        #found_items = models.RbacContext.objects.get(pk='datacenter2')
-        #self.failUnlessRaises(models.RbacContext.DoesNotExist,
-        #    lambda: models.RbacContext.objects.get(pk='datacenter'))
-        #self.assertEqual(found_items.pk, 'datacenter2')
-        #self.assertXMLEquals(content, output)
+        found_item = inventorymodels.System.objects.get(name='testSystem')
+        self.assertEquals(found_item.rbac_context.pk, 'lab')
         content = self.req(url, method='GET', expect=200, is_admin=True)
         self.assertXMLEquals(content, testsxml.system_context_get_xml2)
 
     def testCanRemoveSystemContext(self):
-        # TODO 
-        pass
+        url = "rbac/resources/system/%d/context" % self.system.pk
+        content = self.req(url, method='DELETE', expect=401, is_authenticated=True)
+        content = self.req(url, method='DELETE', expect=204, is_admin=True)
+        found_item = inventorymodels.System.objects.get(name='testSystem')
+        self.assertEquals(found_item.rbac_context, None)
 
 class AccessControlSystemTests(RbacTestCase):
     # inventory tests will also help cover this
