@@ -361,14 +361,86 @@ class RbacContextViews(RbacTestCase):
 
 class RbacUserRoleViewTests(RbacTestCase):
 
-    def testCanAssignUserToRole(self):
-        # TODO 
+    def setUp(self):
+
+        RbacTestCase.setUp(self)
+        #self.seed_data = [ 'datacenter', 'lab', 'tradingfloor' ]
+        #for item in self.seed_data:
+        #    models.RbacContext(item).save()
+
+        self.seed_data = [ 'sysadmin', 'developer', 'intern' ]
+        for item in self.seed_data:
+            models.RbacRole(item).save()
+        self.sysadmin   = models.RbacRole.objects.get(role_id='sysadmin')
+        self.developer  = models.RbacRole.objects.get(role_id='developer')
+        self.intern     = models.RbacRole.objects.get(role_id='intern')
+        # this is a little off as admins are NOT subject to rbac, but
+        # we're not testing the auth chain here, just the models and services
+        # so it doesn't really matter what users we use in the tests.
+        self.admin_user = usersmodels.User.objects.get(user_name='admin')
+        self.test_user  = usersmodels.User.objects.get(user_name='testuser')
+
+        # admin user has two roles
+        models.RbacUserRole(
+            role=self.sysadmin, user=self.admin_user,
+        ).save()
+        models.RbacUserRole(
+            role=self.developer, user=self.admin_user,
+        ).save()
+        # test user is an intern, just one role
+        models.RbacUserRole(
+            role=self.intern, user=self.test_user
+        ).save()
+
+      
+    def testCanListUserRoles(self):
+        user_id = self.admin_user.pk
+        url = "rbac/users/%s/roles/" % user_id
+        content = self.req(url, method='GET', expect=401, is_authenticated=True)
+        content = self.req(url, method='GET', expect=200, is_admin=True)
+        obj = xobj.parse(content)
+        found_items = self._xobj_list_hack(obj.rbac_roles.rbac_role)
+        self.assertEqual(len(found_items), 2, 'right number of items')
+        self.assertXMLEquals(content, testsxml.user_role_list_xml)
+
+    def testCanGetSingleUserRole(self):
+        #user_id = self.admin_user.pk
+        #url = "rbac/users/%s/roles/developer" % user_id
+        #content = self.req(url, method='GET', expect=401, is_authenticated=True)
+        #content = self.req(url, method='GET', expect=200, is_admin=True)
+        #self.assertXMLEquals(content, '<validate></validate>') # testsxml.permission_get_xml)
+        # TODO: should also test that we can't get a role a user doesn't have
+        pass  
+
+    def testCanAddUserRoles(self):
+        user_id = self.admin_user.pk
+        url = "rbac/users/%s/roles/" % user_id
+        #url = 'rbac/permissions'
+        #input = testsxml.permission_post_xml_input
+        #output = testsxml.permission_post_xml_output
+        #content = self.req(url, method='POST', data=input, expect=401, is_authenticated=True)
+        #content = self.req(url, method='POST', data=input, expect=200, is_admin=True)
+        #self.assertXMLEquals(content, output)
+        #perm = models.RbacPermission.objects.get(pk=4)
+        #self.assertEqual(perm.rbac_role.pk, 'intern')
+        #self.assertEqual(perm.rbac_context.pk, 'tradingfloor')
+        #self.assertEqual(perm.action, 'write')
+        # TODO: should also test that we can't double-assign a role to a user
         pass
 
-    def testCanRemoveUserRole(self):
-        # TODO 
+    def testCanDeleteUserRoles(self):
+        user_id = self.admin_user.pk
+        url = "rbac/users/%s/roles/developer" % user_id
+        #all = models.RbacPermission.objects.all()
+        #url = 'rbac/permissions/1'
+        #self.req(url, method='DELETE', expect=401, is_authenticated=True)
+        #self.req(url, method='DELETE', expect=204, is_admin=True)
+        #all = models.RbacPermission.objects.all()
+        #self.assertEqual(len(all), 2, 'deleted an object')
         pass
-   
+
+    # (UPDATE DOES NOT MAKE SENSE, AND IS NOT SUPPORTED)
+
 class RbacSystemViewTests(RbacTestCase):
 
     def testCanAssignSystemToContext(self):

@@ -114,21 +114,38 @@ class RbacRolesService(BaseRbacService):
         return HttpResponse(status=204)
 
 class RbacUserRolesService(BaseRbacService):
-   """
-   Assign roles to a user.
-   <rbac_roles>
-   ...
-   </rbac_roles>
-   """
+    """
+    Assign roles to a user & list the roles they have.
+    <rbac_roles>
+    ...
+    </rbac_roles>
+    """
 
-   @access.admin
-   @return_xml
-   def rest_GET(slef, request):
-       return None
+    # READ
+    @access.admin
+    @return_xml
+    def rest_GET(self, request, user_id, role_id=None):
+        return self.get(user_id, role_id)
 
-   # TODO: rest_PUT
-   # TODO: rest_DELETE
- 
+    def get(self, user_id, role_id=None):
+        if role_id is not None:
+            return self.mgr.getRbacUserRole(user_id, role_id)
+        else:
+            return self.mgr.getRbacUserRoles(user_id)
+
+    # CREATE -- ADD A RBAC ROLE
+    @access.admin
+    @requires('rbac_role')
+    @return_xml
+    def rest_POST(self, request, user_id, rbac_role):
+        return self.mgr.addRbacUserRole(user_id, rbac_role)
+
+    # DELETE
+    @access.admin
+    def rest_DELETE(self, request, user_id, role_id):
+        self.mgr.deleteRbacUserRole(user_id, role_id)
+        return HttpResponse(status=204)
+
 class RbacContextsService(BaseRbacService):
     """
     Adds and edits contexts.

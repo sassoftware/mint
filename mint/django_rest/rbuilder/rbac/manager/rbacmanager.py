@@ -24,6 +24,7 @@ import logging
 #from mint.lib import data as mintdata
 from mint.django_rest.rbuilder.rbac import models 
 #from mint.django_rest.rbuilder import models as rbuildermodels
+from mint.django_rest.rbuilder.users import models as usersmodels
 #from mint.django_rest.rbuilder.inventory import errors
 #from mint.django_rest.rbuilder.inventory import models
 from mint.django_rest.rbuilder.manager import basemanager
@@ -31,7 +32,7 @@ from mint.django_rest.rbuilder.manager import basemanager
 #from mint.django_rest.rbuilder.jobs import models as jobmodels
 #from mint.rest import errors as mint_rest_errors
 from django.db import connection, transaction
-
+import exceptions
 
 log = logging.getLogger(__name__)
 exposed = basemanager.exposed
@@ -81,7 +82,7 @@ class RbacManager(basemanager.BaseManager):
     def _orId(self, value, modelClass):
         '''prevent duplicate get requests'''
         if type(value) != modelClass:
-           return modelClass.objects.get(pk=value)
+            return modelClass.objects.get(pk=value)
         return value
     
     #########################################################
@@ -178,12 +179,82 @@ class RbacManager(basemanager.BaseManager):
         return self._deleteThing(models.RbacPermission, self._permission(permission))
 
     #########################################################
+
+    def _user(self, value):
+        '''cast input as a user'''
+        return self._orId(value, usersmodels.User)
+
+    #########################################################
     # RBAC USER_ROLE METHODS
+    # note -- this may grow to support external user/role
+    # mappings later.  This database implementation is only
+    # one possible method of storage.
     
-    # TODO
-    # getRbacUserRole
-    # addRbacUserRole
-    # updateRbacUserRole
-    # deleteRbacUserRole   
+    @exposed
+    def getRbacUserRoles(self, user_id):
+        '''Get all the roles the user is assigned to.'''
+        # TODO: allow passing in user or user id
+        user = self._user(user_id)
+        mapping = models.RbacUserRole.objects.filter(user=user)
+        collection = models.RbacRoles()
+        collection.rbac_role = [ x.role for x in mapping ]
+        return collection 
+
+    @exposed
+    def getRbacUserRole(self, user_id, role_id):
+        '''See if this user has a certain role.'''
+        # TODO: allow passing in user or user id
+        user = self._user(user_id)
+        role = self._role(role_id)
+        mapping = models.RbacUserRole.objects.get(user=user, role=role)
+        return mapping.role
+
+    @exposed
+    def userHasRbacPermissionTo(self, user_id, context_id, action_id):
+        '''
+        Can User X Do Action Y On Resoures with Context Z?
+        This function is not surfaced directly via REST but is the core
+        of how we'll implement RBAC protection on resources.  Permissions
+        are simple at the moment, but later some permissions may imply
+        others.
+        '''
+        # TODO -- add to tests
+        user = self._user(user_id)
+        context = self._context(context_id)
+        # TODO -- implement
+        # this is the primary function to see if a user is
+        # allowed to do something, ex:
+        # userHasRbacPermission(sysadmin, 
+        raise exceptions.NotImplementedError
+
+    @exposed
+    def addRbacUserRole(self, user_id, role_id):
+        '''Results in the user having this rbac role'''
+        user = self._user(user_id)
+        role = self._role(role_id)
+        try:
+            mapping = models.RbacUserRole.objects.get(user=user, role=role)
+            # mapping already exists, nothing to do
+        except models.RbacRole.DoesNotExist:
+            # no role assignment found, create it
+            models.RbacRole(user=user, role=role).save()
+        return role
+
+    # why no update function?
+    # update role doesn't make sense here -- just update
+    # the actual role.
+
+    @exposed
+    def deleteRbacUserRole(self, user_id, role_id):
+        '''Results in the user no longer having this role'''
+        user = self._user(user_id)
+        role = self._role(role_id)
+        role = models.RbacRole.objects.get(role=role)
+        mapping = models.RbacUserRole.objects.get(user=user, role=role)
+        mapping.delete()
+        # we're deleting the mapping, not the role
+        # so it doesn't make sense to return the role
+        # as what we've deleted.
+        return mapping
 
 
