@@ -225,30 +225,45 @@ class RbacManager(basemanager.BaseManager):
         others.
         '''
         user = self._user(user)
-        
-        # get the resource's context -- if none, allow access if the user is
-        # an admin for writes, otherwise say yes to reads.
+      
+        # if the user is an admin, immediately let them by
+        if user.is_admin:
+            return True
+ 
+        # get the resource's context -- if none, do not allow access
         found_context = None
         try: 
             found_context = self._context(context)
         except models.RbacContext.DoesNotExist:
-            # no RBAC rules on this resource means
-            # it is admin only.
-            if action == 'write':
-                return getattr(user, 'is_admin', 0)
-            return True
+            return False
 
         role_maps = models.RbacUserRole.objects.filter(user=user)
         user_role_ids = [ x.role.pk for x in role_maps ]
 
-        # there was a context, so now find the permissions associated
-        # with the context
-        resource_permissions = models.RbacPermissions.filter(
-            context_id = found_context,
-            action     = action,
-        ).extra(where=['role_id=%s'], params=user_role_ids)
+        # if the user has no roles on this context, fail immediately
+        if len(user_role_ids) == 0:
+            return False
 
-        return len(list(resource_permissions)) > 0
+        # write access implies read access.  When we have more granular
+        # permissions this will have to go.
+        acceptable_permitted_actions = [ action ]
+        if action == 'read':
+            acceptable_permitted_actions.append('write')
+
+        # there is context/roles info, so now find the permissions associated
+        # with the context
+        resource_permissions = models.RbacPermission.objects.filter(
+            rbac_context = found_context,
+        ).extra(
+            where=['role_id=%s'], params=user_role_ids
+        )
+
+        # permit user if they have one of the actions we want...
+        # Django seems to displike duplicate extra queries, so...
+        for x in resource_permissions:
+             if x.action in acceptable_permitted_actions:
+                 return True
+        return False
 
     @exposed
     def addRbacUserRole(self, user_id, role_id):
@@ -261,6 +276,7 @@ class RbacManager(basemanager.BaseManager):
         except models.RbacUserRole.DoesNotExist:
             # no role assignment found, create it
             models.RbacUserRole(user=user, role=role).save()
+
         return role
 
     # why no update function?

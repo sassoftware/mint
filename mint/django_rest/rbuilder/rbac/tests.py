@@ -481,40 +481,44 @@ class RbacEngineTests(RbacTestCase):
         # developer -- WRITE to lab
         # everyone -- NOTHING to tradingfloor
 
-        self.seed_data = [ 'datacenter', 'lab', 'tradingfloor' ]
-        for item in self.seed_data:
+        context_seed_data = [ 'datacenter', 'lab', 'tradingfloor' ]
+        for item in context_seed_data:
             models.RbacContext(item).save()
-        self.seed_data = [ 'sysadmin', 'developer', 'intern' ]
-        for item in self.seed_data:
+        role_seed_data = [ 'sysadmin', 'developer', 'intern' ]
+        for item in role_seed_data:
             models.RbacRole(item).save()
-        models.RbacPermission(
-            rbac_context  = models.RbacContext.objects.get(pk='datacenter'),
-            rbac_role     = models.RbacRole.objects.get(pk='sysadmin'),
-            action        = 'write'
-        ).save()
-        models.RbacPermission(
-            rbac_context   = models.RbacContext.objects.get(pk='datacenter'),
-            rbac_role      = models.RbacRole.objects.get(pk='developer'),
-            action         = 'read'
-        ).save()
-        models.RbacPermission(
-            rbac_context   = models.RbacContext.objects.get(pk='lab'),
-            rbac_role      = models.RbacRole.objects.get(pk='developer'),
-            action    = 'write'
-        ).save()
 
-        self.admin_user = usersmodels.User.objects.get(user_name='admin')
-        self.sysadmin_user = usersmodels.User(
-            user_name = 'Example Sysadmin'
-        )
-        self.sysadmin_user.save()
+        def mk_permission(context, role, action):
+            models.RbacPermission(
+                rbac_context  = models.RbacContext.objects.get(pk=context),
+                rbac_role     = models.RbacRole.objects.get(pk=role),
+                action        = action
+            ).save()
 
-        self.developer_user = usersmodels.User(
-            user_name = 'Example Developer'
-        )
-        self.developer_user.save()
+        def mk_user(name, is_admin, role):
+            user = usersmodels.User(
+                user_name = name
+            )
+            user.save()
+            # quick hack to avoid needing to test UserGroups here
+            # actual model doesn't work this way
+            # we support more than one role per user, this is just
+            # for simple testing...
+            user.is_admin = is_admin
+            models.RbacUserRole(
+               user = user,
+               role = models.RbacRole.objects.get(pk=role)
+            ).save()
+            return user
 
-        # summary:
+        mk_permission('datacenter', 'sysadmin',  'write')
+        mk_permission('datacenter', 'developer', 'read')
+
+        self.admin_user     = usersmodels.User.objects.get(user_name='admin')
+        self.sysadmin_user  = mk_user('Example Sysadmin', False, 'sysadmin')
+        self.developer_user = mk_user('Example Developer', False, 'developer')
+
+        # summary of tests to come:
         # admin user has full access
         #    can READ on tradingfloor
         #    can write on tradingfloor
@@ -527,87 +531,74 @@ class RbacEngineTests(RbacTestCase):
         #    developer can NOT write
         # loose system without context?  
         #    admin can write
-        #    everybody can read
+        #    everyone else is locked out
 
     def testAdminUserHasFullAccess(self):
         # admin user can do everything regardless of context
         # or permission
-        #for action in [ 'read', 'write' ]:
-        #    for context in [ 'lab', 'datacenter', 'tradingfloor' ]:
-        #        self.assertTrue(self.mgr.userHasRbacPermission(
-        #            self.admin_user, context, action
-        #        ))
-        pass
+        for action in [ 'read', 'write' ]:
+            for context in [ 'lab', 'datacenter', 'tradingfloor' ]:
+                self.assertTrue(self.mgr.userHasRbacPermission(
+                    self.admin_user, context, action
+                ))
 
     def testWriteImpliesRead(self):
         # if you can write to something, you can read
         # even if permission isn't in DB
-        #for action in [ 'read', 'write' ]:
-        #    self.assertTrue(self.mgr.userHasRbacPermission(
-        #        self.sysadmin_user, 'datacenter', action
-        #    ))
-        pass
+        for action in [ 'read', 'write' ]:
+            self.assertTrue(self.mgr.userHasRbacPermission(
+                self.sysadmin_user, 'datacenter', action
+            ))
 
     def testReadDoesNotImplyWrite(self):
         # if you can read, that doesn't mean write
-        #self.assertTrue(self.mgr.userHasRbacPermission(
-        #    self.developer_user, 'datacenter', 'read'
-        #))
-        #self.assertFalse(self.mgr.userHasRbacPermission(
-        #    self.developer_user, 'datacenter', 'write'
-        #))
-        pass
+        self.assertTrue(self.mgr.userHasRbacPermission(
+            self.developer_user, 'datacenter', 'read'
+        ))
+        self.assertFalse(self.mgr.userHasRbacPermission(
+            self.developer_user, 'datacenter', 'write'
+        ))
 
     def testNothingImpliesLockout(self):
         # if you don't have any permissions, you can neither
         # read nor write
-        #self.assertTrue(self.mgr.userHasRbacPermission(
-        #    self.developer_user, 'tradingfloor', 'write'
-        #))
-        #self.assertTrue(self.mgr.userHasRbacPermission(
-        #    self.developer_user, 'tradingfloor', 'read'
-        #))
-        pass
+        self.assertFalse(self.mgr.userHasRbacPermission(
+            self.developer_user, 'tradingfloor', 'write'
+        ))
+        self.assertFalse(self.mgr.userHasRbacPermission(
+            self.developer_user, 'tradingfloor', 'read'
+        ))
 
-    def testResourceWithoutContextHasImpliedRules(self):
-        # admin users can always read and write on
-        # resources without contexts
-        #self.assertTrue(self.mgr.userHasRbacPermission(
-        #    self.admin_user, None, 'read'
-        #))
-        #self.assertTrue(self.mgr.userHasRbacPermission(
-        #    self.admin_user, None, 'write'
-        #))
-        # non-admin users can only READ on resources
-        # without contexts
-        #self.assertTrue(self.mgr.userHasRbacPermission(
-        #    self.developer_user, None, 'read'
-        #))
-        #self.assertFalse(self.mgr.userHasRbacPermission(
-        #    self.developer_user, None, 'write'
-        #))
-        pass
+    def testResourceWithoutContextImpliesNonAdminLockout(self):
+        # NOTE -- this is not SUPPOSED to be a valid
+        # test case because every resource will have a 
+        # security context, but we're being thorough
+        self.assertTrue(self.mgr.userHasRbacPermission(
+            self.admin_user, None, 'read'
+        ))
+        self.assertTrue(self.mgr.userHasRbacPermission(
+            self.admin_user, None, 'write'
+        ))
+        self.assertFalse(self.mgr.userHasRbacPermission(
+            self.developer_user, None, 'read'
+        ))
+        self.assertFalse(self.mgr.userHasRbacPermission(
+            self.developer_user, None, 'write'
+        ))
 
     def testCannotLookupPermissionsOnNonConfiguredAction(self):
         # if you test against an action type that does not
-        # exist, an error will be raised rather than
-        # returning False
-        #self.failUnlessRaises(Exception, lambda:
-        #    self.mgr.userHasRbacPermission(
-        #        self.developer_user, None, 'some fake action type'
-        #    )
-        #)
-        pass
+        # exist (due to code error?) you don't get in
+        self.assertFalse(self.mgr.userHasRbacPermission(
+            self.developer_user, None, 'some fake action type'
+        ))
 
     def testCannotLookupPermissionOnInvalidContext(self):       
-        # if you test against a context that doesn't exist an
-        # error will be raised instead of returning False
-        #self.failUnlessRaises(Exception, lambda:
-        #    self.mgr.userHasRbacPermission(
-        #        self.developer_user, 'imaginarycontext', 'read'
-        #    )
-        #)
-        pass
+        # if you test against a context that doesn't exist
+        # (due to code error?) you don't get in
+        self.assertFalse(self.mgr.userHasRbacPermission(
+            self.developer_user, 'imaginarycontext', 'read'
+        ))
 
 # SEE ALSO (PENDING) tests in inventory and other services
 
