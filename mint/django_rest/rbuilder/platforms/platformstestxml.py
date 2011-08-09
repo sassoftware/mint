@@ -211,16 +211,17 @@ contentSourcePUTXml = """\
 </contentSource>
 """
 
-#Prath
-platformPOSTXml = """\
-<?xml version='1.0' encoding='UTF-8'?>
+platformPOSTXml = \
+"""
 <platform>
-    <label>PlatformTestPost</label>
-    <platform_name>PlatformPost</platform_name>
-    <mode>Platform</mode>
+    <platform_name>Platform5</platform_name>
+    <label>PlatformMyPlatformLabel2</label>
+    <mode>manual</mode>
     <enabled>1</enabled>
     <configurable>true</configurable>
     <abstract>true</abstract>
+    <is_from_disk>true</is_from_disk>
+    <projects id="http://localhost:8000/api/v1/projects/morbeef" />
 </platform>
 """
 
@@ -234,7 +235,6 @@ platformPUTXml = """\
     <enabled>0</enabled>
     <configurable>true</configurable>
     <abstract>true</abstract>
-    <project href="1"/>
 </platform>
 """
 

@@ -4,16 +4,19 @@
     <field type="CharField" name="label">Platform</field>
     <field type="CharField" name="platform_name">Platform</field>
     <field type="CharField" name="mode">auto</field>
+    <field type="DateTimeUtcField" name="time_refreshed">2011-08-09T13:13:20.590430+00:00</field>
     <field to="projects.project" name="projects" rel="ManyToOneRel">1</field>
   </object>
   <object pk="2" model="platforms.platform">
     <field type="CharField" name="label">Platform1</field>
     <field type="CharField" name="platform_name">Platform1</field>
+    <field type="DateTimeUtcField" name="time_refreshed">2011-08-09T13:13:20.590430+00:00</field>
     <field to="projects.project" name="projects" rel="ManyToOneRel">2</field>
   </object>
   <object pk="3" model="platforms.platform">
     <field type="CharField" name="label">Platform2</field>
     <field type="CharField" name="platform_name">Platform2</field>
+    <field type="DateTimeUtcField" name="time_refreshed">2011-08-09T13:13:20.590430+00:00</field>
     <field to="projects.project" name="projects" rel="ManyToOneRel">3</field>
   </object>
   <object pk="1" model="platforms.contentsourcetype">

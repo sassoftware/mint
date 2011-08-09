@@ -22,7 +22,7 @@ from lxml import etree  # pyflakes=ignore
 from mint.django_rest.rbuilder.platforms import platformstestxml
 
 class PlatformsTestCase(XMLTestCase):
-    # fixtures = ['initial_data']
+    # fixtures = ['platforms_test']
     
     def xobjResponse(self, url):
         response = self._get(url, username="admin", password="password")
@@ -39,7 +39,7 @@ class PlatformsTestCase(XMLTestCase):
         self.assertEquals(platform.label, platform_gotten.label)
         self.assertEquals(platform.platform_name, platform_gotten.platform_name)
         self.assertEquals(platform.mode, platform_gotten.mode)
-        self.assertEquals(platform.enabled, platform_gotten.enabled)
+        self.assertEquals(platform.enabled, int(platform_gotten.enabled))
         self.assertEquals(platform.configurable, platform_gotten.configurable)
         self.assertEquals(platform.abstract, platform_gotten.abstract)
         self.assertEquals(platform.content_source_types, platform_gotten.content_source_types)
@@ -60,24 +60,25 @@ class PlatformsTestCase(XMLTestCase):
     
     def testGetContentSourceType(self):
         cSourceType = pmodels.ContentSourceType.objects.get(pk=1)
-        cSourceType_gotten = self.xobjResponse('platforms/content_source_types/1')
+        cSourceType_gotten = self.xobjResponse('platforms/content_source_types/ContentSourceType')
         import pdb; pdb.set_trace()
-        self.assertEquals(cSourceType.content_source_type, cSourceType_gotten.content_source_type)
+        self.assertEquals(cSourceType.content_source_type, cSourceType_gotten.content_source_type.content_source_type)
     
     def testGetContentSources(self):
         contentSources = pmodels.ContentSource.objects.all()
         contentSources_gotten = self.xobjResponse('platforms/content_sources/')
+        import pdb; pdb.set_trace()
         self.assertEquals(len(list(contentSources)), len(contentSources_gotten))
     
     def testGetContentSource(self):
         contentSource = pmodels.ContentSources.objects.get(pk=1)
-        contentSource_gotten = self.xobjResponse('platforms/content_sources/1')
+        contentSource_gotten = self.xobjResponse('platforms/content_sources/ContentSourceType')
         self.assertEquals(contentSource.name, contentSource_gotten.name)
         self.assertEquals(contentSource.short_name, contentSource_gotten.short_name)
         self.assertEquals(contentSource.default_source, contentSource_gotten.default_source)
         self.assertEquals(contentSource.order_index, contentSource_gotten.order_index)
         self.assertEquals(contentSource.content_source_type, contentSource_gotten.content_source_type)
-        self.assertEquals(contentSource.enabled, contentSource_gotten.enabled)
+        self.assertEquals(contentSource.enabled, int(contentSource_gotten.enabled))
     
     def testGetSourcesByPlatform(self):  #ignore
         pass
@@ -100,7 +101,7 @@ class PlatformsTestCase(XMLTestCase):
 
 
 class NewPlatformTest(XMLTestCase):
-    # fixtures = ['initial_data']
+    # fixtures = ['platforms_test']
     
     def xobjResponse(self, url):
         response = self._get(url, username="admin", password="password")
@@ -167,7 +168,7 @@ class NewPlatformTest(XMLTestCase):
     
     def testUpdateContentSource(self):
 		#1 already in fixture
-        r = self._put('platforms/1/content_sources',
+        r = self._put('platforms/1/content_sources/ContentSourceType',
             data=platformstestxml.contentSourcePUTXml,
             username='admin', password='password')
         self.assertEquals(r.status_code, 200)
@@ -180,10 +181,10 @@ class NewPlatformTest(XMLTestCase):
     
     def testUpdateContentSourceType(self):
 		#1 already in fixture
-        r = self._put('platforms/1/content_source_types',
+        r = self._put('platforms/1/content_source_types/ContentSourceType',
             data=platformstestxml.contentSourceTypePUTXml,
             username='admin', password='password')
         self.assertEquals(r.status_code, 200)
-        updatedContent = pmodels.Platform.objects.get(pk=1)
+        updatedContent = pmodels.Platform.objects.get(pk=1).content_source_type
         # Check that name and other fields are updated
         self.assertEquals('ContentSourceTypePut', updatedContent.content_source_type)
