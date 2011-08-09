@@ -301,6 +301,16 @@ class CapsuleFilterMixIn(object):
 
         def downloadCapsuleFile(self, capsuleKey, capsuleSha1sum, fileName,
                 fileSha1sum):
+            if capsuleSha1sum == fileSha1sum or fileName == '':
+                # Troves do contain the capsule too, it's legitimate to
+                # request it; however, we can fall back to downloadCapsule for
+                # it.
+                # The SHA-1 check doesn't normally work because the
+                # FileStreams.sha1 column is often null for capsule files, but
+                # the repository will also return fileName='' if the capsule
+                # fileId is the same as the contents fileId. Either of these
+                # mean that the capsule itself is being requested.
+                return self.downloadCapsule(capsuleKey, capsuleSha1sum)
             indexer = self._restDb.capsuleMgr.getIndexer()
             msgTmpl = ("Error downloading file from capsule. "
                 "Upstream error message: (fault code: %s) %s")
