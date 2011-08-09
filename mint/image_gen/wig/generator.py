@@ -197,7 +197,7 @@ class ImageGenerator(object):
             str(self.troveTup.flavor))
 
         E = builder.ElementMaker()
-        pkgs = [ x.getPackageXml(seqNum=i) for i, x in
+        pkgs = [ x.getPackageXML(seqNum=i) for i, x in
             enumerate(itertools.chain(criticalPackageList, packageList)) ]
 
         updateJob = E.updateJob(
