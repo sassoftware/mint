@@ -21,6 +21,7 @@ from xobj import xobj
 OPERATOR_CHOICES = [(k, v) for k, v in modellib.filterTermMap.items()]
 
 class AllMembers(modellib.XObjIdModel):
+    '''Query set results matched regardless of match type (below)'''
     class Meta:
         abstract = True
     _xobj = xobj.XObjMetadata(
@@ -28,6 +29,7 @@ class AllMembers(modellib.XObjIdModel):
     view_name = "QuerySetAllResult"
 
 class ChosenMembers(modellib.XObjIdModel):
+    '''Query set results based on resources explicitly added to the QS'''
     class Meta:
         abstract = True
     _xobj = xobj.XObjMetadata(
@@ -35,6 +37,7 @@ class ChosenMembers(modellib.XObjIdModel):
     view_name = "QuerySetChosenResult"
 
 class FilteredMembers(modellib.XObjIdModel):
+    '''Query set results based on given match criteria'''
     class Meta:
         abstract = True
     _xobj = xobj.XObjMetadata(
@@ -42,6 +45,7 @@ class FilteredMembers(modellib.XObjIdModel):
     view_name = "QuerySetFilteredResult"
 
 class ChildMembers(modellib.XObjIdModel):
+    '''Query set results that are selected because of a child query set'''
     class Meta:
         abstract = True
     _xobj = xobj.XObjMetadata(
@@ -49,6 +53,7 @@ class ChildMembers(modellib.XObjIdModel):
     view_name = "QuerySetChildResult"
 
 class QuerySets(modellib.Collection):
+    '''A list of all query sets in the rBuilder'''
     class Meta:
         abstract = True
     _xobj = xobj.XObjMetadata(
@@ -70,9 +75,10 @@ class CollectionId(modellib.XObjIdModel):
                 
 
 class QuerySet(modellib.XObjIdModel):
+    '''An individual queryset, ex: "All Systems"'''
+
     _xobj = xobj.XObjMetadata(
                 tag = "query_set")
-
     query_set_id = D(models.AutoField(primary_key=True),
         "The database id for the query set")
     name = D(models.TextField(unique=True),
@@ -197,6 +203,13 @@ class FilterEntry(modellib.XObjIdModel):
     load_fields = [field, operator, value]
 
 class QueryTag(modellib.XObjIdModel):
+    '''
+    A resource tag indicates that a resource has (when last tagged) been
+    matched by a query set, but this is an intermediate table
+    between the queryset and the resource tag.  It seems unneccessary and
+    seems to just give a name to the "tag type" that is derived from the
+    queryset name.  Can we refactor this out?  [MPD]
+    '''
     _xobj = xobj.XObjMetadata(
                 tag = 'query_tag')
     _xobj_hidden_accessors = set(['project_tags', 'stage_tags',
@@ -214,6 +227,10 @@ class QueryTag(modellib.XObjIdModel):
         return modellib.XObjIdModel.get_absolute_url(self, *args, **kwargs)
 
 class InclusionMethod(modellib.XObjIdModel):
+    '''
+    Explains how the system came to be in the query set.  This is probably
+    not needed and could be removed for a performance boost.  [MPD]
+    '''
     _xobj = xobj.XObjMetadata(
                 tag = 'inclusion_method')
     _xobj_hidden_accessors = set(["system_tags"])
@@ -229,6 +246,10 @@ class InclusionMethod(modellib.XObjIdModel):
     load_fields = [name]
 
 class SystemTag(modellib.XObjIdModel):
+    '''
+    Indicates what systems were matched by a query set
+    '''
+
     class Meta:
         unique_together = (("system", "query_tag", "inclusion_method"),)
 
@@ -257,6 +278,8 @@ class SystemTag(modellib.XObjIdModel):
          
          
 class UserTag(modellib.XObjIdModel):
+    '''Indicates what users were matched by a query set'''
+
     class Meta:
         unique_together = (('user', 'query_tag', 'inclusion_method'),)
         
@@ -280,6 +303,8 @@ class UserTag(modellib.XObjIdModel):
         return xobjModel
     
 class ProjectTag(modellib.XObjIdModel):
+    '''Indicates what projects were matched by a query set'''
+
     class Meta:
         unique_together = (('project', 'query_tag', 'inclusion_method'),)
         
@@ -303,6 +328,8 @@ class ProjectTag(modellib.XObjIdModel):
         return xobjModel
     
 class StageTag(modellib.XObjIdModel):
+    '''Indicates which stages were matched by a query set'''
+ 
     class Meta:
         unique_together = (('stage', 'query_tag', 'inclusion_method'),)
         
@@ -325,7 +352,7 @@ class StageTag(modellib.XObjIdModel):
         xobjModel.query_set = modellib.XObjHrefModel(querySetHref)
         return xobjModel
 
-
+# register xobj metadata
 for mod_obj in sys.modules[__name__].__dict__.values():
     if hasattr(mod_obj, '_xobj'):
         if mod_obj._xobj.tag:
