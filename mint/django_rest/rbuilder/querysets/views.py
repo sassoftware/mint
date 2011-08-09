@@ -8,7 +8,6 @@
 from django import http
 
 from mint.django_rest.deco import return_xml, requires, access
-from mint.django_rest.rbuilder import models as rbuildermodels
 from mint.django_rest.rbuilder import service
 from mint.django_rest.rbuilder.querysets import filterdescriptors
 from mint.django_rest.rbuilder.querysets import models
@@ -49,6 +48,7 @@ class QuerySetService(BaseQuerySetService):
 
 class QuerySetAllResultService(BaseQuerySetService):
     
+    @access.anonymous
     @return_xml
     def rest_GET(self, request, query_set_id):
         return self.mgr.getQuerySetAllResult(query_set_id)

@@ -361,8 +361,6 @@ class WebPageTest(mint_rephelp.WebRepositoryHelper):
                               'externalPass': 'mirrorpass'})
 
         self.failUnlessEqual(client.getInboundMirrors(), [])
-        self.failUnlessEqual(client.translateProjectFQDN('rpath' + MINT_PROJECT_DOMAIN),
-            'rpath' + MINT_PROJECT_DOMAIN)
 
     def testExternalToMirroredProject(self):
         # mainly make sure that user-entered settings are preserved on the edit

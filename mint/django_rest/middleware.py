@@ -3,7 +3,6 @@
 #
 # All Rights Reserved
 #
-
 import os
 import logging
 
@@ -13,12 +12,15 @@ from django import http
 from django.contrib.auth import authenticate
 from django.contrib.redirects import middleware as redirectsmiddleware
 from django.http import HttpResponse, HttpResponseBadRequest
+from django.db.utils import IntegrityError
+from django.db import connection
+import django.core.exceptions as core_exc
 
-import django.core.exceptions as core_exc 
 from mint import config
 from mint.django_rest import handler
-from mint.django_rest.rbuilder import auth
-from mint.django_rest.rbuilder import models as rbuildermodels
+from mint.django_rest.rbuilder import auth, errors, models
+# from mint.django_rest.rbuilder import models as rbuildermodels
+from mint.django_rest.rbuilder.users import models as usersmodels
 from mint.django_rest.rbuilder.metrics import models as metricsmodels
 from mint.lib import mintutils
 
@@ -54,6 +56,9 @@ class BaseMiddleware(object):
     def _process_response(self, request, response):
         return response
 
+    def isLocalServer(self, request):
+        return not hasattr(request, '_req')
+
 class ExceptionLoggerMiddleware(BaseMiddleware):
 
     def process_request(self, request):
@@ -64,8 +69,15 @@ class ExceptionLoggerMiddleware(BaseMiddleware):
     def process_exception(self, request, exception):
 
         if isinstance(exception, core_exc.ObjectDoesNotExist):
-            fault = rbuildermodels.Fault(code=404, message=str(exception))
+            fault = models.Fault(code=404, message=str(exception))
             response = HttpResponse(status=404, content_type='text/xml')
+            response.content = fault.to_xml(request)
+            return response
+
+        if isinstance(exception, (errors.RbuilderError, IntegrityError)):
+            code = getattr(exception, 'status', errors.BAD_REQUEST)
+            fault = models.Fault(code=code, message=str(exception))
+            response = HttpResponse(status=code, content_type='text/xml')
             response.content = fault.to_xml(request)
             return response
 
@@ -117,14 +129,13 @@ class SetMintAdminMiddleware(BaseMiddleware):
     def _process_request(self, request):
         request._is_admin = auth.isAdmin(request._authUser)
         return None
-    
+
 class LocalSetMintAdminMiddleware(BaseMiddleware):
     def _process_request(self, request):
         request._is_admin = True
         request._is_authenticated = True
-        request._authUser = rbuildermodels.Users.objects.get(pk=1)
+        request._authUser = usersmodels.User.objects.get(pk=1)
         request._auth = ("admin", "admin")
-        return None
 
 class SetMintAuthenticatedMiddleware(BaseMiddleware):
     """
@@ -137,23 +148,15 @@ class SetMintAuthenticatedMiddleware(BaseMiddleware):
 class SetMintConfigMiddleware(BaseMiddleware):
 
     def _process_request(self, request):
-        if hasattr(request, '_req'):
+        if not self.isLocalServer(request):
             cfgPath = request._req.get_options().get("rbuilderConfig", config.RBUILDER_CONFIG)
         else:
             cfgPath = config.RBUILDER_CONFIG
-        cfg = config.getConfig(cfgPath)
 
+        cfg = config.getConfig(cfgPath)
         request.cfg = cfg
 
         return None
-
-class LocalSetMintConfigMiddleware(BaseMiddleware):
-
-    def _process_request(self, request):
-        cfg = config.MintConfig()
-        cfg.siteHost = 'localhost.localdomain'
-        request.cfg = cfg
-
 
 class AddCommentsMiddleware(BaseMiddleware):
     
@@ -311,7 +314,24 @@ class SerializeXmlMiddleware(BaseMiddleware):
             if metrics:
                 return response
 
-            response.write(response.model.to_xml(request))
+            format = request.GET.get('format', 'xml')
+            if format == 'json':
+                response.write(response.model.to_json(request))
+                response['Content-Type'] = 'application/json'
+            else:
+                response.write(response.model.to_xml(request))
+                response['Content-Type'] = 'text/xml'
 
         return response
-        
+      
+# NOTE: must also set DEBUG=True in settings to use this. 
+class SqlLoggingMiddleware(BaseMiddleware):
+    '''log each database hit to a file, profiling use only'''
+    def process_response(self, request, response):
+        fd = open("/tmp/sql.log", "a")
+        for query in connection.queries:
+            fd.write("\033[1;31m[%s]\033[0m \033[1m%s\033[0m\n" % (query['time'],
+ " ".join(query['sql'].split())))
+        fd.close()
+        return response
+ 

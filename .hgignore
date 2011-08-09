@@ -49,6 +49,7 @@
 ^scripts/postgres-major-migrate$
 ^scripts/process-system-events$
 ^scripts/rbuilder-database$
+^scripts/repository-sync$
 ^scripts/system-resolver$
 ^scripts/target-systems-import$
 

@@ -24,7 +24,7 @@ class Coordinator(object):
 
     def listSystems(self):
         """Collect a list of rPath Windows Build Services from inventory."""
-        url = 'http://%s/api/inventory/' % (self.hostname,)
+        url = 'http://%s/api/v1/inventory/' % (self.hostname,)
         # Get list of system types so we can figure out what URL corresponds to
         # WBS components.
         d = getPage(self.reactor, url + 'system_types')
@@ -52,7 +52,7 @@ class Coordinator(object):
         hostnames = set()
         for system in doc.systems.system:
             # Ignore non-WBS systems
-            if system.system_type.href != wbsUrl:
+            if system.system_type.id != wbsUrl:
                 continue
             # If there's only one network (usual case) xobj doesn't figure out
             # that it's a collection.

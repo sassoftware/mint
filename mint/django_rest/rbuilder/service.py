@@ -9,6 +9,7 @@ from django.http import HttpResponseNotAllowed, HttpResponseNotFound
 
 from django_restapi import resource
 
+from mint.db import database
 from mint import users
 from mint.django_rest.deco import getHeaderValue, access, ACCESS, HttpAuthenticationRequired
 from mint.django_rest.rbuilder.manager import rbuildermanager
@@ -32,12 +33,12 @@ class BaseService(resource.Resource):
         return resource.Resource.__call__(self, request, *args, **kw)
 
     def setManagerAuth(self, request):
-        username, password = request._auth
+        user_name, password = request._auth
         user = request._authUser
-        if username and password and user:
-            mintAuth = users.Authorization(username=username,
-                token=(username, password), admin=request._is_admin,
-                userId=user.userid)
+        if user_name and password and user:
+            mintAuth = users.Authorization(user_name=user_name,
+                token=(user_name, password), admin=request._is_admin,
+                userId=user.user_id)
             self.mgr.setAuth(mintAuth, user)
 
     def read(self, request, *args, **kwargs):
@@ -99,7 +100,13 @@ class BaseService(resource.Resource):
             return HttpAuthenticationRequired
         if not self._auth_filter(request, access, kwargs):
             return HttpAuthenticationRequired
-        return method(request, *args, **kwargs)
+        # Set the manager into one of the model's base classes
+        from mint.django_rest.rbuilder import modellib
+        modellib.XObjModel._rbmgr = self.mgr
+        try:
+            return method(request, *args, **kwargs)
+        finally:
+            modellib.XObjModel._rbmgr = None
 
     def _auth_filter(self, request, access, kwargs):
         """Return C{True} if the request passes authentication checks."""
@@ -129,4 +136,45 @@ class BaseService(resource.Resource):
         return (headerValue is None and
             request.META['REMOTE_ADDR'] == '127.0.0.1')
 
+class BaseAuthService(BaseService):
+    def _auth_filter(self, request, access, kwargs):
+        """Return C{True} if the request passes authentication checks."""
+        # Access flags are permissive -- if a function specifies more than one
+        # method, the authentication is successful if any of those methods
+        # succeed.
+
+        if access & ACCESS.LOCALHOST:
+            if self._check_localhost(request):
+                return True
+
+        if access & ACCESS.EVENT_UUID:
+            ret = self._check_uuid_auth(request, kwargs)
+            if ret is not None:
+                # A bad event UUID should fail the auth check
+                return ret
+
+        if access & ACCESS.ADMIN:
+            return request._is_admin
+        if access & ACCESS.AUTHENTICATED:
+            return request._is_authenticated
+        if access & ACCESS.ANONYMOUS:
+            return True
+
+        return False
+
+    def _check_uuid_auth(self, request, kwargs):
+        return False
+
+    def _setMintAuth(self):
+        db = database.Database(self.mgr.cfg)
+        authToken = (self.mgr.cfg.authUser, self.mgr.cfg.authPass)
+        mintAdminGroupId = db.userGroups.getMintAdminId()
+        cu = db.cursor()
+        cu.execute("SELECT MIN(userId) from userGroupMembers "
+           "WHERE userGroupId = ?", mintAdminGroupId)
+        ret = cu.fetchall()
+        userId = ret[0][0]
+        mintAuth = users.Authorization(username=self.mgr.cfg.authUser,
+            token=authToken, admin=True, userId=userId)
+        self.mgr._auth = mintAuth
 

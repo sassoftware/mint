@@ -46,6 +46,7 @@ generic_scripts = \
 	postgres-major-migrate		\
 	process-system-events		\
 	rbuilder-database		\
+	repository-sync			\
 	system-resolver			\
 	target-systems-import		\
 

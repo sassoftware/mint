@@ -1,0 +1,75 @@
+<?xml version="1.0" encoding="utf-8"?>
+<django-objects version="1.0">
+  <object pk="1" model="jobs.job">
+    <field type="CharField" name="job_uuid">aaaa</field>
+    <field to="jobs.jobstate" name="job_state" rel="ManyToOneRel">1</field>
+    <field type="IntegerField" name="status_code">100</field>
+    <field type="TextField" name="status_text">aaaa status text</field>
+    <field type="TextField" name="status_detail">aaaa status detail</field>
+    <field to="jobs.eventtype" name="event_type" rel="ManyToOneRel">
+      <None/>
+    </field>
+    <field type="DateTimeField" name="time_created">2011-01-26 21:59:59</field>
+    <field type="DateTimeField" name="time_updated">2011-01-26 21:59:59</field>
+  </object>
+  <object pk="2" model="jobs.job">
+    <field type="CharField" name="job_uuid">bbbb</field>
+    <field to="jobs.jobstate" name="job_state" rel="ManyToOneRel">2</field>
+    <field type="IntegerField" name="status_code">200</field>
+    <field type="TextField" name="status_text">bbbb status text</field>
+    <field type="TextField" name="status_detail">bbbb status detail</field>
+    <field to="jobs.eventtype" name="event_type" rel="ManyToOneRel">
+      <None/>
+    </field>
+    <field type="DateTimeField" name="time_created">2011-01-26 21:59:59</field>
+    <field type="DateTimeField" name="time_updated">2011-01-26 21:59:59</field>
+  </object>
+  <object pk="3" model="jobs.job">
+    <field type="CharField" name="job_uuid">cccc</field>
+    <field to="jobs.jobstate" name="job_state" rel="ManyToOneRel">3</field>
+    <field type="IntegerField" name="status_code">300</field>
+    <field type="TextField" name="status_text">cccc status text</field>
+    <field type="TextField" name="status_detail">cccc status detail</field>
+    <field to="jobs.eventtype" name="event_type" rel="ManyToOneRel">
+      <None/>
+    </field>
+    <field type="DateTimeField" name="time_created">2011-01-26 21:59:59</field>
+    <field type="DateTimeField" name="time_updated">2011-01-26 21:59:59</field>
+  </object>
+  <object pk="4" model="jobs.job">
+    <field type="CharField" name="job_uuid">dddd</field>
+    <field to="jobs.jobstate" name="job_state" rel="ManyToOneRel">4</field>
+    <field type="IntegerField" name="status_code">400</field>
+    <field type="TextField" name="status_text">dddd status text</field>
+    <field type="TextField" name="status_detail">dddd status detail</field>
+    <field to="jobs.eventtype" name="event_type" rel="ManyToOneRel">
+      <None/>
+    </field>
+    <field type="DateTimeField" name="time_created">2011-01-26 21:59:59</field>
+    <field type="DateTimeField" name="time_updated">2011-01-26 21:59:59</field>
+  </object>
+  <object pk="5" model="jobs.job">
+    <field type="CharField" name="job_uuid">eeee</field>
+    <field to="jobs.jobstate" name="job_state" rel="ManyToOneRel">2</field>
+    <field type="IntegerField" name="status_code">500</field>
+    <field type="TextField" name="status_text">eeee status text</field>
+    <field type="TextField" name="status_detail">eeee status detail</field>
+    <field to="jobs.eventtype" name="event_type" rel="ManyToOneRel">
+      <None/>
+    </field>
+    <field type="DateTimeField" name="time_created">2011-01-26 21:59:59</field>
+    <field type="DateTimeField" name="time_updated">2011-01-26 21:59:59</field>
+  </object>
+  <object pk="6" model="jobs.job">
+    <field type="CharField" name="job_uuid">ffff</field>
+    <field to="jobs.jobstate" name="job_state" rel="ManyToOneRel">2</field>
+    <field type="IntegerField" name="status_code">500</field>
+    <field type="TextField" name="status_text">ffff status text</field>
+    <field type="TextField" name="status_detail">ffff status detail</field>
+    <field to="jobs.eventtype" name="event_type" rel="ManyToOneRel">
+      <None/>
+    </field>
+    <field type="DateTimeField" name="time_created">2011-01-26 21:59:59</field>
+    <field type="DateTimeField" name="time_updated">2011-01-26 21:59:59</field>
+  </object>
+</django-objects>

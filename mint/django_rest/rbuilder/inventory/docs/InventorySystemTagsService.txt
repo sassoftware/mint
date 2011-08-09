@@ -1,4 +1,5 @@
-
+SystemTag properties:
+    N/A
 
 Methods:
     GET:

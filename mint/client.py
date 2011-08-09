@@ -663,9 +663,6 @@ class MintClient:
          """
          return self.server.getJobServerStatus()
 
-    def translateProjectFQDN(self, fqdn):
-        return self.server.translateProjectFQDN(fqdn)
-
     # session management
     def loadSession(self, sid):
         return self.server.loadSession(sid) or None
@@ -785,12 +782,6 @@ class MintClient:
 
     def isLocalMirror(self, projectId):
         return self.server.isLocalMirror(projectId)
-
-    def addRemappedRepository(self, fromName, toName):
-        return self.server.addRemappedRepository(fromName, toName)
-
-    def delRemappedRepository(self, fromName):
-        return self.server.delRemappedRepository(fromName)
 
     def addFrontPageSelection(self, name, link, rank):
         return self.server.addFrontPageSelection(name, link, rank)

@@ -49,7 +49,7 @@ def m2mChanged(sender, instance, **kwargs):
     changeLogEntry.save()
 
 def logChanges(instance):
-    changedFields = instance.getChangedFields()
+    changedFields = instance._getChangedFields()
     if not changedFields:
         return
 

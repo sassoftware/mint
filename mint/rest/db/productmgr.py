@@ -89,7 +89,7 @@ class ProductManager(manager.Manager):
         if not self.auth.isAdmin:
             # Private projects are invisible to non-member non-admins.
             whereClauses.append(
-                    ('( p.hidden = 0 OR m.level IS NOT NULL )', ()))
+                    ('( NOT p.hidden OR m.level IS NOT NULL )', ()))
 
         if whereClauses:
             sql += ' WHERE ' + ' AND '.join(x[0] for x in whereClauses)
@@ -208,14 +208,14 @@ class ProductManager(manager.Manager):
                 fqdn='%s.%s' % (hostname, domainname),
                 database=self.cfg.defaultDatabase,
                 namespace=namespace,
-                isAppliance=int(prodtype == 'Appliance' or prodtype == 'PlatformFoundation'), 
+                isAppliance=(prodtype == 'Appliance' or prodtype == 'PlatformFoundation'),
                 projecturl=projecturl,
                 timeModified=createTime, 
                 timeCreated=createTime,
                 shortname=shortname, 
                 prodtype=prodtype, 
                 commitEmail=commitEmail, 
-                hidden=int(isPrivate),
+                hidden=bool(isPrivate),
                 version=version,
                 commit=False)
         except sqlerrors.CursorError, e:
@@ -244,7 +244,7 @@ class ProductManager(manager.Manager):
                       timeModified=time.time())
         if prodtype is not None:
             params['prodtype'] = prodtype
-            params['isAppliance'] = int(prodtype == 'Appliance' or prodtype == 'PlatformFoundation')
+            params['isAppliance'] = (prodtype == 'Appliance' or prodtype == 'PlatformFoundation')
         if namespace is not None:
             v = helperfuncs.validateNamespace(namespace)
             if v != True:
@@ -254,9 +254,9 @@ class ProductManager(manager.Manager):
         if hidden:
             # only admin can hide
             if self.auth.isAdmin:
-                params['hidden'] = 1
+                params['hidden'] = True
         else:
-            params['hidden'] = 0
+            params['hidden'] = False
 
         keys = '=?, '.join(params) + '=?'
         values = params.values()
@@ -305,10 +305,10 @@ class ProductManager(manager.Manager):
             cu.execute('''INSERT INTO Projects (name, creatorId, description,
                     shortname, hostname, domainname, fqdn, projecturl, external,
                     timeModified, timeCreated, backupExternal, database)
-                    VALUES (?, ?, '', ?, ?, ?, ?, '', 1, ?, ?, ?, ?)''',
+                    VALUES (?, ?, '', ?, ?, ?, ?, '', true, ?, ?, ?, ?)''',
                     title, creatorId, hostname, hostname, domainname,
                     '%s.%s' % (hostname, domainname),
-                    createTime, createTime, int(backupExternal), database)
+                    createTime, createTime, bool(backupExternal), database)
             productId = cu.lastrowid
 
         if mirror:
