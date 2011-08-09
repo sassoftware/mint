@@ -4,6 +4,7 @@
 
 import logging
 import hashlib
+import itertools
 import os
 import re
 import StringIO
@@ -187,8 +188,7 @@ class ImageGenerator(object):
                 targetList = criticalPackageList
             else:
                 targetList = packageList
-            pkgXml = msiData.getPackageXML(seqNum=len(targetList))
-            targetList.append(pkgXml)
+            targetList.append(msiData)
 
         sysModel = 'install %s=%s\n' % (
             self.troveTup.name, str(self.troveTup.version))
@@ -197,24 +197,20 @@ class ImageGenerator(object):
             str(self.troveTup.flavor))
 
         E = builder.ElementMaker()
-        jobs = []
-        if criticalPackageList:
-            jobs.append(E.updateJob(
-                    E.sequence('0'),
-                    E.logFile('install.log'),
-                    E.packages(*criticalPackageList),
-                    ))
-        if packageList:
-            jobs.append(E.updateJob(
-                    E.sequence('1'),
-                    E.logFile('install.log'),
-                    E.packages(*packageList),
-                    ))
+        pkgs = [ x.getPackageXML(seqNum=i) for i, x in
+            enumerate(itertools.chain(criticalPackageList, packageList)) ]
+
+        updateJob = E.updateJob(
+            E.sequence('0'),
+            E.logFile('setup.log'),
+            E.packages(*pkgs),
+        )
+
         root = E.update(
-            E.logFile('install.log'),
+            E.logFile('setup.log'),
             E.systemModel(sysModel),
             E.pollingManifest(pollingManifest),
-            E.updateJobs(*jobs)
+            E.updateJobs(updateJob)
             )
         return etree.tostring(root)
 
@@ -288,8 +284,7 @@ class WbsGenerator(ImageGenerator):
         """Convert image to final format and upload."""
         raise NotImplementedError
 
-    # FIXME
-    def FIXME__destroy(self):
+    def destroy(self):
         if self.wigClient:
             try:
                 self.wigClient.cleanup()
@@ -392,6 +387,8 @@ class ConvertedImageGenerator(WbsGenerator):
     def convert(self):
         """Fetch the VHD result, convert as needed, then upload."""
         size, fobj = self.wigClient.getResults('vhd')
+        self.jobData['vmwareOS'] = self.wimData.getVmwareOS()
+        self.jobData['vmMemory'] = 1024
         converter = bootable.getConverter(jobData=self.jobData, vhdObj=fobj,
                 vhdSize=size, tempDir=self.tempDir, callback=self.sendStatus)
         self.sendStatus(iconst.WIG_JOB_CONVERTING, "Creating %s image" %
