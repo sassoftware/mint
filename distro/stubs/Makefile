@@ -25,8 +25,6 @@ install: default-install
 		$(DESTDIR)/etc/rmake/node.d/25_rbuilder-rapa.conf
 	install -D -m0664 serverrc.rapa \
 		$(DESTDIR)/etc/rmake/server.d/25_rbuilder-rapa.conf
-	install -D -m0644 dom0-mem.conf \
-		$(DESTDIR)/etc/bootloader.d/dom0-mem.conf
 	# Install stubs to be overwritten by administrators. These are
 	# deprecated in favor of config.d-style arrangements.
 	# (InitialContents)

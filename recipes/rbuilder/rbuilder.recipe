@@ -176,7 +176,6 @@ class rBuilderProduct(CPackageRecipe):
         r.InitialContents(r'%(servicedir)s/rbuilder/config/'
             'rbuilder-(custom|generated).conf')
         r.InitialContents(r'/etc/rmake/(node|server).d/25_rbuilder-rapa.conf')
-        r.InitialContents(r'/etc/bootloader.d/dom0-mem.conf')
         r.InitialContents(r'/srv/rbuilder/config/postgresql-custom.conf')
         r.InitialContents(r'/root/.rmakerc')
 
