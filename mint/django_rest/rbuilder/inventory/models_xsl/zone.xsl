@@ -11,33 +11,13 @@ Description:
 <xsl:copy-of select="$zone_model_properties" />
 </xsl:variable>
 
-<xsl:variable name="zone_model_properties"><![CDATA[
-Zone Properties:
-  name - the zone name
-  description - the zone description
-  zone_id - the database id for the zone
-  created_date - the date the zone was created (UTC)
-  management_nodes - a collection of management nodes in this zone
-  systems - a collection of systems that are managed by this zone]]>
+<xsl:variable name="zone_model_properties"><![CDATA[   created_date - the date the zone was created (UTC)
+   description - the zone description
+   name - the zone name
+   zone_id - the database id for the zone]]>
 </xsl:variable>
 
-<xsl:variable name="zone_methods"><![CDATA[
-Methods: 
-  GET:
-    Authentication: user
-    Response Format:
-       <zone id="http://hostname/api/inventory/zones/1/">
-         ...
-       </zone>
-
-  POST:
-    not supported
-    
-  PUT:
-    Authentication: admin
-    
-  DELETE:
-    Authentication: admin]]>
+<xsl:variable name="zone_methods"><![CDATA[@@METHODS@@]]>
 </xsl:variable>
 
 </xsl:stylesheet>

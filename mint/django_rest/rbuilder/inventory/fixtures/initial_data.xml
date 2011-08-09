@@ -329,7 +329,7 @@
     <object pk="1" model="inventory.eventtype">
         <field type="CharField" name="name">system registration</field>
         <field type="CharField" name="description">System registration</field>
-        <field type="SmallIntegerField" name="priority">110</field>
+        <field type="SmallIntegerField" name="priority">70</field>
     </object>
     <object pk="2" model="inventory.eventtype">
         <field type="CharField" name="name">immediate system poll</field>
@@ -420,7 +420,7 @@
         <field type="CharField" name="netmask"><None></None></field>
         <field type="CharField" name="port_type"><None></None></field>
         <field type="NullBooleanField" name="active"><None></None></field>
-        <field type="NullBooleanField" name="required"><None></None></field>
+        <field type="NullBooleanField" name="pinned"><None></None></field>
         <field type="DateTimeField" name="created_date">2010-10-05 18:36:37</field>
   </object>
   <object pk="1" model="inventory.systemstate">

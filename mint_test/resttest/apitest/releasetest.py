@@ -67,9 +67,13 @@ class ReleasesTest(restbase.BaseRestTest):
 
         client = self.getRestClient(admin=True, username='adminuser')
         uri = 'products/testproject/releases?limit=1'
+        # This is the old-style way of sending the ID. Now the client
+        # sends an id field
+        body = "<image><imageId>%s</imageId></image>" % imageId
+        # New style
+        body = "<image id='/%s' />" % imageId
         req, results = client.call('POST',
-                'products/testproject/releases/1/images',
-                body="<image><imageId>%s</imageId></image>" % imageId)
+                'products/testproject/releases/1/images', body=body)
         assert(results.imageId == imageId)
         assert(results.released == True)
         assert(results.published == False)
