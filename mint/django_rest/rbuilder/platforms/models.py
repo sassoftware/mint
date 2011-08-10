@@ -33,9 +33,6 @@ class Platform(modellib.XObjIdModel):
     
     _MODE_CHOICES = (('manual', 'manual'), ('auto', 'auto'))
     
-    # _xobj_hidden_accessors = set(['platformsplatformsources_set', 'contentsourcetype_set'])
-    # _xobj_hidden_accessors = set(['contentsourcetype_set'])
-    
     platform_id = models.AutoField(primary_key=True, db_column='platformid')
     label = models.CharField(max_length=1026, unique=True)
     mode = models.CharField(max_length=1026, default='manual', choices=_MODE_CHOICES)
@@ -59,7 +56,6 @@ class Platform(modellib.XObjIdModel):
     platform_type = modellib.SyntheticField() # charfield
     load = modellib.SyntheticField() # fk
     image_type_definitions = modellib.SyntheticField() # fk
-    # content_sources = modellib.SyntheticField() # fk
     platform_status = modellib.SyntheticField() # fk
     is_platform = modellib.SyntheticField() # booleanfield
     
