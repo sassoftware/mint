@@ -15,7 +15,6 @@
 #
 
 from mint.django_rest.rbuilder.platforms import models as pmodels  # pyflakes=ignore
-from mint.django_rest.rbuilder.platforms import testsxml  # pyflakes=ignore
 from mint.django_rest.rbuilder.inventory.tests import XMLTestCase  # pyflakes=ignore
 from xobj import xobj  # pyflakes=ignore
 from lxml import etree  # pyflakes=ignore
@@ -132,24 +131,15 @@ class NewPlatformTest(XMLTestCase):
     #     content = pmodels.ContentSource.objects.get(name="PlatformTestPost")
     #     self.assertEquals("PlatformTestPost",content.short_name)
     #     self.asserEquals("1",content.order_index)
-    
-    
+    #
+    #
     # def testCreateContentSourceType(self):
     #     response = self._post('platforms/content_source_types',
     #         data=platformstestxml.contentSourceTypePOSTXml,
     #         username="admin", password="password")
     #     self.assertEquals(200, response.status_code)
-         # 3 sources were already in the fixture
-        # self.assertEquals(4, len(list(pmodels.ContentSourceType.objects.all())))
-    
-    
-    def testCreatePlatform_NoProduct(self):
-        pass
-    
-    def testCreatePlatform_NoPlatform(self):
-        pass
-    
-    
+    #     self.assertEquals(4, len(list(pmodels.ContentSourceType.objects.all())))
+    #
     # def testUpdatePlatform(self):
     #     r = self._put('platforms/1',
     #         data=platformstestxml.platformPUTXml,
@@ -159,8 +149,8 @@ class NewPlatformTest(XMLTestCase):
     #     self.assertEquals('PlatformPut', updatedPlat.label)
     #     self.assertEquals('PlatformPut', updatedPlat.platform_name)
     #     self.assertEquals('auto', updatedPlat.mode)
-    
-    
+    #
+    #
     # def testUpdateContentSource(self):
     #     r = self._put('platforms/1/content_sources/ContentSourceType',
     #         data=platformstestxml.contentSourcePUTXml,
@@ -170,8 +160,8 @@ class NewPlatformTest(XMLTestCase):
     #     self.assertEquals('PlatformTestPut', updatedContent.name)
     #     self.assertEquals('PlatformTestPut', updatedContent.short_name)
     #     self.assertEquals('true', updatedContent.default_source)
-    
-    
+    #
+    #
     # def testUpdateContentSourceType(self):
     #     r = self._put('platforms/1/content_source_types/ContentSourceType',
     #         data=platformstestxml.contentSourceTypePUTXml,
