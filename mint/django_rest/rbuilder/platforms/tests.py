@@ -28,7 +28,7 @@ class PlatformsTestCase(XMLTestCase):
         response = self._get(url, username="admin", password="password")
         return self.toXObj(response.content)
     
-    def toXObj(self, xml):
+    def toXObj(self, xml, typemap=None):
         xobjModel = xobj.parse(xml)
         root_name = etree.XML(xml).tag
         return getattr(xobjModel, root_name)

@@ -33,7 +33,8 @@ class Platform(modellib.XObjIdModel):
     
     _MODE_CHOICES = (('manual', 'manual'), ('auto', 'auto'))
     
-    _xobj_hidden_accessors = set(['platformsplatformsources_set', 'contentsourcetype_set'])
+    # _xobj_hidden_accessors = set(['platformsplatformsources_set', 'contentsourcetype_set'])
+    # _xobj_hidden_accessors = set(['contentsourcetype_set'])
     
     platform_id = models.AutoField(primary_key=True, db_column='platformid')
     label = models.CharField(max_length=1026, unique=True)
@@ -58,8 +59,7 @@ class Platform(modellib.XObjIdModel):
     platform_type = modellib.SyntheticField() # charfield
     load = modellib.SyntheticField() # fk
     image_type_definitions = modellib.SyntheticField() # fk
-    content_sources = modellib.SyntheticField() # fk
-    content_source_types = modellib.SyntheticField() # fk
+    # content_sources = modellib.SyntheticField() # fk
     platform_status = modellib.SyntheticField() # fk
     is_platform = modellib.SyntheticField() # booleanfield
     
@@ -111,7 +111,7 @@ class ContentSourceType(modellib.XObjIdModel):
         db_table = 'PlatformsContentSourceTypes'
     
     content_source_type_id = models.AutoField(primary_key=True, db_column='contentSourceTypeId')
-    platform_id = modellib.DeferredForeignKey('Platform', db_column='platformId')
+    platform_id = modellib.DeferredForeignKey('Platform', db_column='platformId', related_name='content_source_types')
     content_source_type = models.CharField(max_length=1026, db_column='contentSourceType')
     
     # Fields w/o a corresponding db column
@@ -123,8 +123,11 @@ class ContentSourceType(modellib.XObjIdModel):
     
 
 class PlatformsPlatformSources(modellib.XObjModel):
-    platform_id = modellib.ForeignKey('Platform')
-    platform_source_id = modellib.ForeignKey('ContentSource')
+    class Meta:
+        db_table = 'PlatformsPlatformSources'
+    platforms_platform_sources_id = models.AutoField(primary_key=True)
+    platform_id = modellib.ForeignKey('Platform', db_column='platformId', related_name='content_sources')
+    platform_source_id = modellib.ForeignKey('ContentSource', db_column='platformSourceId', related_name='content_sources')
 
 
 class PlatformVersions(modellib.Collection):
