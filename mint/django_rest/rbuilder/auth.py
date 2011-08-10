@@ -2,7 +2,8 @@
 # Copyright (c) 2011 rPath, Inc.
 #
 from mint.django_rest.rbuilder.models import Sessions
-from mint.django_rest.rbuilder.users.models import User, UserGroup
+from mint.django_rest.rbuilder.users.models import User
+from mint.lib import auth_client
 from hashlib import md5
 import base64
 import cPickle
@@ -68,16 +69,20 @@ class rBuilderBackend(object):
     supports_inactive_user = False
     supports_object_permissions = False
 
-    def authenticate(self, username=None, password=None):
+    def authenticate(self, username=None, password=None, mintConfig=None):
         try:
-       	    user = User.objects.get(user_name=username)
+            user = User.objects.get(user_name=username)
+        except User.DoesNotExist:
+            return None
+        if user.passwd and user.salt:
             salt = user.salt.decode('hex')
             m = md5(salt + password)
             if (m.hexdigest() == user.passwd):
-       	        return user
-        except User.DoesNotExist:
-            pass
-
+                return user
+        if mintConfig:
+            client = auth_client.getClient(mintConfig.authSocket)
+            if client.checkPassword(username, password):
+                return user
         return None
 
     def get_user(self, user_id):

@@ -115,6 +115,7 @@ class MintConfig(conarycfg.ConfigFile):
     smallBugsEmail          = (CfgString, None)
     memCache                = (CfgString, 'localhost:11211')
     memCacheTimeout         = (CfgInt, 86400)
+    authSocket              = (CfgPath, None)
 
     # Handler configuration
     basePath                = (CfgString, '/', "URI root for this rBuilder")

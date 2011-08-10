@@ -231,6 +231,9 @@ urlpatterns = patterns('',
     URL(r'query_sets/?$',
         querysetviews.QuerySetService(),
         name='QuerySets'),
+    URL(r'query_sets/(?P<query_set_id>\d+)/retagged?$',
+        querysetviews.QuerySetReTagService(),
+        name='QuerySetReTagged'),
     URL(r'query_sets/(?P<query_set_id>\d+)/?$',
         querysetviews.QuerySetService(),
         name='QuerySet'),
@@ -580,12 +583,16 @@ urlpatterns = patterns('',
     URL(r'rbac/contexts/(?P<context_id>\w+)?$',
         rbacviews.RbacContextsService(),
         name='RbacContext'),
-    URL(r'rbac/users/?(P<user_id>\d+)/roles/?$',
+    URL(r'rbac/users/(?P<user_id>\d+)/roles/?$',
         rbacviews.RbacUserRolesService(),
         name='RbacUserRoles'),
-    URL(r'rbac/users/?(P<user_id>\d+)/roles/?(P<role_id>\w+)',
+    URL(r'rbac/users/(?P<user_id>\d+)/roles/(?P<role_id>\w+)?$',
         rbacviews.RbacUserRolesService(),
-        name='RbacUserRole')
+        name='RbacUserRole'),
+    URL(r'rbac/resources/(?P<resource_type>\w+)/(?P<resource_id>\d+)/context?$',
+        rbacviews.RbacResourceContextService(),
+        name='RbacResourceContextService')
+    
 )
 
 

@@ -114,21 +114,38 @@ class RbacRolesService(BaseRbacService):
         return HttpResponse(status=204)
 
 class RbacUserRolesService(BaseRbacService):
-   """
-   Assign roles to a user.
-   <rbac_roles>
-   ...
-   </rbac_roles>
-   """
+    """
+    Assign roles to a user & list the roles they have.
+    <rbac_roles>
+    ...
+    </rbac_roles>
+    """
 
-   @access.admin
-   @return_xml
-   def rest_GET(slef, request):
-       return None
+    # READ
+    @access.admin
+    @return_xml
+    def rest_GET(self, request, user_id, role_id=None):
+        return self.get(user_id, role_id)
 
-   # TODO: rest_PUT
-   # TODO: rest_DELETE
- 
+    def get(self, user_id, role_id=None):
+        if role_id is not None:
+            return self.mgr.getRbacUserRole(user_id, role_id)
+        else:
+            return self.mgr.getRbacUserRoles(user_id)
+
+    # CREATE -- ADD A RBAC ROLE
+    @access.admin
+    @requires('rbac_role')
+    @return_xml
+    def rest_POST(self, request, user_id, rbac_role):
+        return self.mgr.addRbacUserRole(user_id, rbac_role)
+
+    # DELETE
+    @access.admin
+    def rest_DELETE(self, request, user_id, role_id):
+        self.mgr.deleteRbacUserRole(user_id, role_id)
+        return HttpResponse(status=204)
+
 class RbacContextsService(BaseRbacService):
     """
     Adds and edits contexts.
@@ -171,3 +188,38 @@ class RbacContextsService(BaseRbacService):
         self.mgr.deleteRbacContext(context_id)
         return HttpResponse(status=204)
 
+class RbacResourceContextService(BaseRbacService):
+    """
+    Adds and edits the context assignment to a particular resource.
+    Not part of the individual resources as this is only available
+    to admins, and we don't want to share details with non-admins.
+
+    There may also be other batch methods of editing these assignments.
+
+    <rbac_context id="http://hostname/api/rbac/contexts/datacenter">
+           <context_id>datacenter</context_id>
+    <rbac_context/>
+    """
+
+    # READ
+    @access.admin
+    @return_xml
+    def rest_GET(self, request, resource_type, resource_id):
+        return self.get(resource_type, resource_id)
+
+    def get(self, resource_type, resource_id):
+        return self.mgr.getResourceRbacContext(resource_type, resource_id)
+
+    # WRITE
+    @access.admin
+    @requires('rbac_context', save=False)
+    @return_xml
+    def rest_PUT(self, request, resource_type, resource_id, rbac_context):
+        return self.mgr.setResourceRbacContext(resource_type, resource_id,
+            rbac_context)
+
+    # DELETE (remove context)
+    @access.admin
+    def rest_DELETE(self, request, resource_type, resource_id):
+        self.mgr.deleteResourceRbacContext(resource_type, resource_id)
+        return HttpResponse(status=204)

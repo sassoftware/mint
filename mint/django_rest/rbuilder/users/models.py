@@ -54,7 +54,7 @@ class User(modellib.XObjIdModel):
     # salt and password should be hidden, users shouldn't see crypted
     # passwords
     salt = modellib.XObjHidden(models.TextField(null=True))
-    passwd = modellib.XObjHidden(models.CharField(max_length=254))
+    passwd = modellib.XObjHidden(models.CharField(max_length=254, null=True))
     email = models.CharField(max_length=128)
     display_email = models.TextField(db_column='displayemail')
     created_date = modellib.DecimalField(max_digits=14, decimal_places=3, db_column='timecreated')

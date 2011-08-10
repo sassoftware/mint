@@ -1,29 +1,9 @@
-#import base64
-#import cPickle
-#import datetime
-#import os
-#import random
-#from dateutil import tz
 import testsxml
 from xobj import xobj
-#
-#from conary import versions
-#from conary.conaryclient.cmdline import parseTroveSpec
-#
-#from django.contrib.redirects import models as redirectmodels
-#from django.db import connection
-#from django.template import TemplateDoesNotExist
-
-#from mint.django_rest.rbuilder import models as rbuildermodels
-#from mint.django_rest.rbuilder.rbac import views
 from mint.django_rest.rbuilder.rbac import models
-#from mint.django_rest.rbuilder.manager import rbuildermanager
 from mint.django_rest.rbuilder.users import models as usersmodels
-#from mint.django_rest.rbuilder.inventory import models
-#from mint.django_rest.rbuilder.jobs import models as jobmodels
-#from mint.django_rest.rbuilder.inventory import testsxml
-#from mint.lib import x509
-#from mint.rest.api import models as restmodels
+from mint.django_rest.rbuilder.inventory import models as inventorymodels
+from mint.django_rest.rbuilder.manager import rbuildermanager
 
 # Suppress all non critical msg's from output
 # still emits traceback for failed tests
@@ -361,52 +341,264 @@ class RbacContextViews(RbacTestCase):
 
 class RbacUserRoleViewTests(RbacTestCase):
 
-    def testCanAssignUserToRole(self):
-        # TODO 
-        pass
+    def setUp(self):
 
-    def testCanRemoveUserRole(self):
-        # TODO 
-        pass
-   
+        RbacTestCase.setUp(self)
+        #self.seed_data = [ 'datacenter', 'lab', 'tradingfloor' ]
+        #for item in self.seed_data:
+        #    models.RbacContext(item).save()
+
+        self.seed_data = [ 'sysadmin', 'developer', 'intern' ]
+        for item in self.seed_data:
+            models.RbacRole(item).save()
+        self.sysadmin   = models.RbacRole.objects.get(role_id='sysadmin')
+        self.developer  = models.RbacRole.objects.get(role_id='developer')
+        self.intern     = models.RbacRole.objects.get(role_id='intern')
+        # this is a little off as admins are NOT subject to rbac, but
+        # we're not testing the auth chain here, just the models and services
+        # so it doesn't really matter what users we use in the tests.
+        self.admin_user = usersmodels.User.objects.get(user_name='admin')
+        self.test_user  = usersmodels.User.objects.get(user_name='testuser')
+
+        # admin user has two roles
+        models.RbacUserRole(
+            role=self.sysadmin, user=self.admin_user,
+        ).save()
+        models.RbacUserRole(
+            role=self.developer, user=self.admin_user,
+        ).save()
+        # test user is an intern, just one role
+        models.RbacUserRole(
+            role=self.intern, user=self.test_user
+        ).save()
+
+      
+    def testCanListUserRoles(self):
+        user_id = self.admin_user.pk
+        url = "rbac/users/%s/roles/" % user_id
+        content = self.req(url, method='GET', expect=401, is_authenticated=True)
+        content = self.req(url, method='GET', expect=200, is_admin=True)
+        obj = xobj.parse(content)
+        found_items = self._xobj_list_hack(obj.rbac_roles.rbac_role)
+        self.assertEqual(len(found_items), 2, 'right number of items')
+        self.assertXMLEquals(content, testsxml.user_role_list_xml)
+
+    def testCanGetSingleUserRole(self):
+        # this is admittedly a rather useless function, which only 
+        # confirms/denies where a user is in a role.  More likely 
+        # we'd ask if they had permission to do something, and more 
+        # as an internals thing than a REST function.  Still, here, 
+        # for completeness.
+
+        user_id = self.admin_user.pk
+        url = "rbac/users/%s/roles/developer" % user_id
+        content = self.req(url, method='GET', expect=401, is_authenticated=True)
+        content = self.req(url, method='GET', expect=200, is_admin=True)
+        self.assertXMLEquals(content, testsxml.user_role_get_xml)
+        # now verify if the role isn't assigned to the user, we can't fetch it
+        url = "rbac/users/%s/roles/intern" % user_id
+        content = self.req(url, method='GET', expect=404, is_admin=True)
+          
+    def testCanAddUserRoles(self):
+        user_id = self.admin_user.pk
+        url = "rbac/users/%s/roles/" % user_id
+        # gives the admin user the intern role
+        input = testsxml.user_role_post_xml_input
+        output = testsxml.user_role_post_xml_output
+        content = self.req(url, method='POST', data=input, expect=401, is_authenticated=True)
+        content = self.req(url, method='POST', data=input, expect=200, is_admin=True)
+        self.assertXMLEquals(content, output)
+        user_role = models.RbacUserRole.objects.get(user = self.admin_user, role=self.intern)
+        self.assertEqual(user_role.user.pk, self.admin_user.pk)
+        self.assertEqual(user_role.role.pk, 'intern')
+
+    def testCanDeleteUserRoles(self):
+        user_id = self.admin_user.pk
+        url = "rbac/users/%s/roles/developer" % user_id
+        get_url = "rbac/users/%s/roles/" % user_id
+        # make admin no longer a developer
+        self.req(url, method='DELETE', expect=401, is_authenticated=True)
+        self.req(url, method='DELETE', expect=204, is_admin=True)
+        all = models.RbacUserRole.objects.all()
+        self.assertEquals(len(all), 2, 'right number of objects')
+        content = self.req(url, method='GET', expect=404, is_admin=True)
+        content = self.req(get_url, method='GET', expect=200, is_admin=True)
+        self.assertXMLEquals(content, testsxml.user_role_get_list_xml_after_delete)
+
+    # (UPDATE DOES NOT MAKE SENSE, AND IS NOT SUPPORTED)
+
 class RbacSystemViewTests(RbacTestCase):
+    ''' Can we view and manipulate the system context as an admin?'''
+
+    def setUp(self):
+        RbacTestCase.setUp(self)
+        
+        mgr = rbuildermanager.RbuilderManager()
+        local_zone = mgr.sysMgr.getLocalZone()
+        self.system = inventorymodels.System(
+            name='testSystem', managing_zone=local_zone
+        )
+        self.datacenter = models.RbacContext('datacenter')
+        self.lab = models.RbacContext('lab')
+        self.datacenter.save()
+        self.lab.save()
+        self.system.rbac_context = self.datacenter
+        self.system.save()
+
+    def testCanGetSystemContext(self):
+        url = "rbac/resources/system/%d/context" % self.system.pk
+        content = self.req(url, method='GET', expect=401, is_authenticated=True)
+        content = self.req(url, method='GET', expect=200, is_admin=True)
+        self.assertXMLEquals(content, testsxml.system_context_get_xml)
 
     def testCanAssignSystemToContext(self):
-        # TODO 
-        pass
+        url = "rbac/resources/system/%d/context" % self.system.pk
+        input = testsxml.system_context_put_xml_input   
+        output = testsxml.system_context_put_xml_output
+        content = self.req(url, method='PUT', data=input, expect=401, is_authenticated=True)
+        content = self.req(url, method='PUT', data=input, expect=200, is_admin=True)
+        found_item = inventorymodels.System.objects.get(name='testSystem')
+        self.assertEquals(found_item.rbac_context.pk, 'lab')
+        content = self.req(url, method='GET', expect=200, is_admin=True)
+        self.assertXMLEquals(content, testsxml.system_context_get_xml2)
 
     def testCanRemoveSystemContext(self):
-        # TODO 
-        pass
+        url = "rbac/resources/system/%d/context" % self.system.pk
+        content = self.req(url, method='DELETE', expect=401, is_authenticated=True)
+        content = self.req(url, method='DELETE', expect=204, is_admin=True)
+        found_item = inventorymodels.System.objects.get(name='testSystem')
+        self.assertEquals(found_item.rbac_context, None)
 
-class AccessControlSystemTests(RbacTestCase):
-    # inventory tests will also help cover this
-    # may want to add AccessControl tests there instead (probably do)
+class RbacEngineTests(RbacTestCase):
+    '''Do we know when to grant or deny access?'''
 
-    def testAdminsCanAccessSystemWithContext(self):
-       # TODO 
-       pass
+    def setUp(self):
+        RbacTestCase.setUp(self)
 
-    def testAdminsCanAccessSystemWithoutContext(self):
-       # TODO 
-       pass
+        # create a couple of users, with varying contexts
+        # sysadmin -- WRITE to datacenter
+        # developer -- READ to datacenter
+        # developer -- WRITE to lab
+        # everyone -- NOTHING to tradingfloor
 
-    def testUserCanAccessSystemWithContext(self):
-       # TODO 
-       pass
+        context_seed_data = [ 'datacenter', 'lab', 'tradingfloor' ]
+        for item in context_seed_data:
+            models.RbacContext(item).save()
+        role_seed_data = [ 'sysadmin', 'developer', 'intern' ]
+        for item in role_seed_data:
+            models.RbacRole(item).save()
 
-    def testUserCannotAccessSystemWithWrongContext(self):
-       # TODO 
-       pass
+        def mk_permission(context, role, action):
+            models.RbacPermission(
+                rbac_context  = models.RbacContext.objects.get(pk=context),
+                rbac_role     = models.RbacRole.objects.get(pk=role),
+                action        = action
+            ).save()
 
-    def testUserCanAccessSystemWithoutContext(self):
-       # TODO 
-       pass
+        def mk_user(name, is_admin, role):
+            user = usersmodels.User(
+                user_name = name
+            )
+            user.save()
+            # quick hack to avoid needing to test UserGroups here
+            # actual model doesn't work this way
+            # we support more than one role per user, this is just
+            # for simple testing...
+            user.is_admin = is_admin
+            models.RbacUserRole(
+               user = user,
+               role = models.RbacRole.objects.get(pk=role)
+            ).save()
+            return user
 
-class AccessControlImageTests(RbacTestCase):
-    # TODO 
-    pass
+        mk_permission('datacenter', 'sysadmin',  'write')
+        mk_permission('datacenter', 'developer', 'read')
 
-class AccessControlPlatformTests(RbacTestCase):
-    # TODO 
-    pass
+        self.admin_user     = usersmodels.User.objects.get(user_name='admin')
+        self.sysadmin_user  = mk_user('Example Sysadmin', False, 'sysadmin')
+        self.developer_user = mk_user('Example Developer', False, 'developer')
+
+        # summary of tests to come:
+        # admin user has full access
+        #    can READ on tradingfloor
+        #    can write on tradingfloor
+        # sysadmin user can WRITE on datacenter
+        #    read is implied
+        # developer can READ on datacenter
+        #    write is not granted
+        # developer lacks all permissions on tradingfloor
+        #    developer can NOT read
+        #    developer can NOT write
+        # loose system without context?  
+        #    admin can write
+        #    everyone else is locked out
+
+    def testAdminUserHasFullAccess(self):
+        # admin user can do everything regardless of context
+        # or permission
+        for action in [ 'read', 'write' ]:
+            for context in [ 'lab', 'datacenter', 'tradingfloor' ]:
+                self.assertTrue(self.mgr.userHasRbacPermission(
+                    self.admin_user, context, action
+                ))
+
+    def testWriteImpliesRead(self):
+        # if you can write to something, you can read
+        # even if permission isn't in DB
+        for action in [ 'read', 'write' ]:
+            self.assertTrue(self.mgr.userHasRbacPermission(
+                self.sysadmin_user, 'datacenter', action
+            ))
+
+    def testReadDoesNotImplyWrite(self):
+        # if you can read, that doesn't mean write
+        self.assertTrue(self.mgr.userHasRbacPermission(
+            self.developer_user, 'datacenter', 'read'
+        ))
+        self.assertFalse(self.mgr.userHasRbacPermission(
+            self.developer_user, 'datacenter', 'write'
+        ))
+
+    def testNothingImpliesLockout(self):
+        # if you don't have any permissions, you can neither
+        # read nor write
+        self.assertFalse(self.mgr.userHasRbacPermission(
+            self.developer_user, 'tradingfloor', 'write'
+        ))
+        self.assertFalse(self.mgr.userHasRbacPermission(
+            self.developer_user, 'tradingfloor', 'read'
+        ))
+
+    def testResourceWithoutContextImpliesNonAdminLockout(self):
+        # NOTE -- this is not SUPPOSED to be a valid
+        # test case because every resource will have a 
+        # security context, but we're being thorough
+        self.assertTrue(self.mgr.userHasRbacPermission(
+            self.admin_user, None, 'read'
+        ))
+        self.assertTrue(self.mgr.userHasRbacPermission(
+            self.admin_user, None, 'write'
+        ))
+        self.assertFalse(self.mgr.userHasRbacPermission(
+            self.developer_user, None, 'read'
+        ))
+        self.assertFalse(self.mgr.userHasRbacPermission(
+            self.developer_user, None, 'write'
+        ))
+
+    def testCannotLookupPermissionsOnNonConfiguredAction(self):
+        # if you test against an action type that does not
+        # exist (due to code error?) you don't get in
+        self.assertFalse(self.mgr.userHasRbacPermission(
+            self.developer_user, None, 'some fake action type'
+        ))
+
+    def testCannotLookupPermissionOnInvalidContext(self):       
+        # if you test against a context that doesn't exist
+        # (due to code error?) you don't get in
+        self.assertFalse(self.mgr.userHasRbacPermission(
+            self.developer_user, 'imaginarycontext', 'read'
+        ))
+
+# SEE ALSO (PENDING) tests in inventory and other services
+

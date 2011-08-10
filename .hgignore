@@ -53,6 +53,8 @@
 ^scripts/system-resolver$
 ^scripts/target-systems-import$
 
+^twisted/plugins/dropin.cache$
+
 ^failed$
 ^(.*/)?\.failed$
 ^(.*/)?\.times$

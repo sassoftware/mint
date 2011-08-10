@@ -37,6 +37,17 @@ class QuerySetTestCase(XMLTestCase):
         self.assertEquals(models.QuerySet.objects.get(pk=4).name,
             "Physical Systems")
 
+class QuerySetReTagTestCase(XMLTestCase):
+    '''Test that we can retag a query set via a remote script'''
+ 
+    def testReTagQuerySet(self):
+        # Basically just tests that the URL works, should test more
+        response = self._get('query_sets/1', 
+            username='admin', password='password')
+        self.assertEquals(response.status_code, 200)
+        # TODO -- make sure tags are updated by first deleting system
+        # tags, but to do this, we'll need systems in the DB too
+
 class QuerySetFixturedTestCase(XMLTestCase):
     fixtures = ['systems_named_like_3_queryset', 'system_collection']
 

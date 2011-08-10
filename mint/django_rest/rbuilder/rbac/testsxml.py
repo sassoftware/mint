@@ -128,3 +128,58 @@ permission_put_xml_output="""
   <rbac_role id="http://testserver/api/v1/rbac/roles/intern"/>
 </rbac_permission>
 """
+
+user_role_list_xml = """
+<rbac_roles count="2" next_page="" num_pages="1" previous_page="" full_collection="http://testserver/api/v1/rbac/roles" end_index="1" limit="10" order_by="" per_page="10" filter_by="" id="http://testserver/api/v1/rbac/roles;start_index=0;limit=10" start_index="0">
+  <rbac_role id="http://testserver/api/v1/rbac/roles/sysadmin">
+    <role_id>sysadmin</role_id>
+  </rbac_role>
+  <rbac_role id="http://testserver/api/v1/rbac/roles/developer">
+    <role_id>developer</role_id>
+  </rbac_role>
+</rbac_roles>
+"""
+
+user_role_get_xml = """
+<rbac_role id="http://testserver/api/v1/rbac/roles/developer">
+  <role_id>developer</role_id>
+</rbac_role>
+"""
+
+user_role_post_xml_input = """
+<rbac_role id="http://testserver/api/v1/rbac/roles/intern">
+  <role_id>intern</role_id>
+</rbac_role>
+"""
+
+user_role_post_xml_output = """
+<rbac_role id="http://testserver/api/v1/rbac/roles/intern">
+  <role_id>intern</role_id>
+</rbac_role>
+"""
+
+user_role_get_list_xml_after_delete = """
+<rbac_roles count="1" end_index="0" filter_by="" full_collection="http://testserver/api/v1/rbac/roles" id="http://testserver/api/v1/rbac/roles;start_index=0;limit=10" limit="10" next_page="" num_pages="1" order_by="" per_page="10" previous_page="" start_index="0">
+  <rbac_role id="http://testserver/api/v1/rbac/roles/sysadmin">
+    <role_id>sysadmin</role_id>
+  </rbac_role>
+</rbac_roles>
+"""
+
+system_context_get_xml = """
+<rbac_context id="http://testserver/api/v1/rbac/contexts/datacenter">
+  <context_id>datacenter</context_id>
+</rbac_context>
+"""
+
+system_context_put_xml_input = """
+<rbac_context id="http://testserver/api/v1/rbac/contexts/lab">
+  <context_id>lab</context_id>
+</rbac_context>
+"""
+
+system_context_put_xml_output = system_context_put_xml_input
+system_context_get_xml2 = system_context_put_xml_input
+
+
+

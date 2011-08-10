@@ -119,7 +119,8 @@ class SetMintAuthMiddleware(BaseMiddleware):
     def _process_request(self, request):
         request._auth = auth.getAuth(request)
         username, password = request._auth
-        request._authUser = authenticate(username = username, password = password)
+        request._authUser = authenticate(username=username, password=password,
+                mintConfig=request.cfg)
         return None
 
 class SetMintAdminMiddleware(BaseMiddleware):

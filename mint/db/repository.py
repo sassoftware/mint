@@ -29,6 +29,7 @@ from conary.repository.netrepos.netauth import ValidUser, ValidPasswordToken
 from conary.server import schema as conary_schema
 
 from mint import userlevels
+from mint.lib import auth_client
 from mint.mint_error import RepositoryDatabaseError, RepositoryAlreadyExists
 from mint.rest.errors import ProductNotFound
 
@@ -75,6 +76,7 @@ class RepositoryManager(object):
         self.db = db
         self.bypass = bypass
         self.reposDBCache = {}
+        self.authClient = auth_client.getClient(cfg.authSocket)
 
     def iterRepositories(self, whereClause='', *args):
         """
@@ -545,16 +547,7 @@ class RepositoryHandle(object):
             row = cu.fetchone()
             if row:
                 maybeLevel, maybeUserId, userSalt, userPass = row
-                userSalt = userSalt.decode('hex')
-                passwordOK = False
-                if mintToken.password is ValidPasswordToken:
-                    passwordOK = True
-                else:
-                    testPass = hashlib.md5(userSalt + mintToken.password
-                            ).hexdigest()
-                    if testPass.lower() == userPass.lower():
-                        passwordOK = True
-                if passwordOK:
+                if self._checkPassword(mintToken, userSalt, userPass):
                     userId = maybeUserId
                     level = maybeLevel
                 # If the password was not valid, just ignore it -- the password
@@ -564,6 +557,19 @@ class RepositoryHandle(object):
         # shortcut.
         return self.getAuthToken(userId, level=level, authToken=mintToken,
                 extraRoles=extraRoles)
+
+    def _checkPassword(self, mintToken, salt, digest):
+        if mintToken.password is ValidPasswordToken:
+            return True
+        if salt and digest:
+            salt = salt.decode('hex')
+            testPass = hashlib.md5(salt + mintToken.password).hexdigest()
+            if testPass.lower() == digest.lower():
+                return True
+        authClient = self._manager().authClient
+        if authClient.checkPassword(mintToken.user, mintToken.password):
+            return True
+        return False
 
     def _getShimServerProxy(self, userId=None):
         """

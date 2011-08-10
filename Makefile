@@ -22,7 +22,7 @@ export POSTGRES_VERSION = 9.0
 export PYTHON = /usr/bin/python$(PYVER)
 export PYDIR = $(LIBDIR)/python$(PYVER)/site-packages
 
-SUBDIRS = mint scripts raaplugins rmake_plugins doc distro
+SUBDIRS = mint scripts raaplugins rmake_plugins doc distro twisted
 
 dist_files = Makefile Make.rules rbuilder.conf httpd.conf NEWS
 

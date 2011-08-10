@@ -1,7 +1,5 @@
 #
-# Copyright (c) 2005-2008 rPath, Inc.
-#
-# All Rights Reserved
+# Copyright (c) 2011 rPath, Inc.
 #
 import os
 import random
@@ -13,13 +11,12 @@ from conary.lib import sha1helper
 
 from conary.repository.netrepos.netauth import nameCharacterSet
 
-from mint import userlevels
 from mint import templates
-from mint.templates import registerNewUser
-from mint.templates import validateNewEmail
 from mint import searcher
 from mint import userlisting
-from mint.mint_error import *
+from mint.mint_error import (AuthRepoError, DuplicateItem, InvalidUsername,
+        IllegalUsername, UserAlreadyExists, AlreadyConfirmed, ItemNotFound)
+from mint.lib import auth_client
 from mint.lib import data
 from mint.lib import database
 from mint.lib import maillib
@@ -53,6 +50,7 @@ class UsersTable(database.KeyedTable):
         self.cfg = cfg
         database.DatabaseTable.__init__(self, db)
         self.confirm_table = ConfirmationsTable(db)
+        self.authClient = auth_client.getClient(cfg.authSocket)
 
     def changePassword(self, username, password):
         salt, passwd = self._mungePassword(password)
@@ -62,8 +60,13 @@ class UsersTable(database.KeyedTable):
         self.db.commit()
 
     def _checkPassword(self, user, salt, password, challenge):
-        m = md5(salt.decode('hex') + challenge)
-        return m.hexdigest() == password
+        if salt and password:
+            m = md5(salt.decode('hex') + challenge)
+            if m.hexdigest() == password:
+                return True
+        if self.authClient.checkPassword(user, challenge):
+            return True
+        return False
 
     def _mungePassword(self, password):
         m = md5()
@@ -178,7 +181,6 @@ class UsersTable(database.KeyedTable):
         salt, passwd = self._mungePassword(password)
 
         self.db.transaction()
-        cu = self.db.cursor()
         try:
             userId = self.new(username = username,
                               fullName = fullName,

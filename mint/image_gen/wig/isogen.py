@@ -165,7 +165,7 @@ class IsoGenerator(genmod.ImageGenerator):
                     '"%(winUpdateDir)s\\%(rtisPath)s" /quiet /norestart '
                     '/l*v "%(winUpdateDir)s\\%(rtisLog)s"\r\n'
                 'net start "rPath Tools Installer Service"\r\n'
-                )
+                % m)
         firstboot.close()
 
     def unpackIsokit(self):
