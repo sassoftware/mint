@@ -1126,14 +1126,20 @@ class XObjModel(models.Model):
                 pass
         return m2m_accessors
 
-    def _serialize_fields(self, xobj_model, fields, request):
+    def _serialize_fields(self, xobj_model, fields, request, summarize):
         """
         For each attribute on self (the model), see if it's a field, if so,
         set the value on xobj_model.  Then, remove it from fields, as don't
         want to try to serialize it later.
         """
         syntheticFields = getattr(self._meta, 'synthetic_fields', {})
+        summary_fields = self._get_summary_fields() # FIXME: rename this better
         for key, val in self.__dict__.items():
+            if summarize and key not in summary_fields:
+                # the object was tagged for summarization and this is not one of the
+                # included fields, so skip this one.
+                print "skipping regular key=%s on %s" % (key,self)
+                continue 
             field = fields.pop(key, None)
             if field is None:
                 field = syntheticFields.get(key)
@@ -1169,13 +1175,34 @@ class XObjModel(models.Model):
                     # if the child of the synthetic field is an XObjIdModel
                     val = val.serialize(request)
                 setattr(xobj_model, key, val)
+  
+    def _get_summary_fields(self):
+        '''
+        Return the summary fields for an object if it's tagged for summarization,
+        otherwise return None.  NOTE: there is one case (the older one) where
+        things are always summarized.  This is different.  Summarize means
+        "expand these FKs to include additional info", but it also is used
+        to show only certain items in list fields, that are not FKs.  The former
+        case doesn't require the "_summarize" detector bit.
+        '''
+        should_summarize = getattr(self, '_summarize', False)
+        if not should_summarize:
+            return None
+        fields = getattr(self, 'summary_fields', None)
+        if fields is None:
+            return [ 'id' ]
+        return fields
 
     def _serialize_fk_fields(self, xobj_model, fields, request):
         """
         For each remaining field in fields, see if it's a FK field, if so set
         the create an href object and set it on xobj_model.
+        TODO: accessors?
         """
+        summary_fields = self._get_summary_fields()
         for fieldName in fields:
+            if summary_fields and fieldName not in summary_fields:
+                continue
             field = fields[fieldName]
             if getattr(field, 'XObjHidden', False):
                 continue
@@ -1341,9 +1368,14 @@ class XObjModel(models.Model):
         for list_field in self.list_fields:
             listFieldVals = []
             setattr(xobj_model, list_field, listFieldVals)
+            show_collapsed = getattr(self, '_supports_collapsed_collection', False)
             for val in getattr(self, list_field, []):
                 if hasattr(val, '_meta'):
-                    # This is a db model
+                    # This is a db model...
+                    # now if the collection is marked collapsable mark the kids
+                    # as things we need to show in summary view, to
+                    if getattr(self, '_supports_collapsed_collection', False):
+                        val._summarize = True
                     xobjModelVal = val.serialize(request)
                 else:
                     xobjModelVal = val
@@ -1374,14 +1406,17 @@ class XObjModel(models.Model):
         fields = self._get_field_dict()
         m2m_accessors = self._get_m2m_accessor_dict()
 
-        self._serialize_fields(xobj_model, fields, request)
-        self._serialize_fk_fields(xobj_model, fields, request)
-        if self.serialize_accessors:
-            accessors = self._get_accessor_dict()
-            self._serialize_fk_accessors(xobj_model, accessors, request)
-        self._serialize_m2m_accessors(xobj_model, m2m_accessors, request)
-        self._serialize_list_fields(xobj_model, request)
-        self._serialize_abstract_fields(xobj_model, request)
+        summarize = getattr(self, '_summarize', False)
+
+        self._serialize_fields(xobj_model, fields, request, summarize)
+        if not summarize:
+            self._serialize_fk_fields(xobj_model, fields, request)
+            if self.serialize_accessors:
+                accessors = self._get_accessor_dict()
+                self._serialize_fk_accessors(xobj_model, accessors, request)
+            self._serialize_m2m_accessors(xobj_model, m2m_accessors, request)
+            self._serialize_abstract_fields(xobj_model, request)
+            self._serialize_list_fields(xobj_model, request)
 
         return xobj_model
 

@@ -99,6 +99,13 @@ class Systems(modellib.Collection):
     objects = modellib.SystemsManager()
     view_name = 'Systems'
 
+    # use summary_fields to show only certain members
+    # in list view when this is turned on.  Pretty awesome
+    # for SQL performance but needs UI support first. We'll
+    # also want to tweak what's in summary_fields.
+
+    # _supports_collapsed_collection = True
+
     def __init__(self):
         modellib.Collection.__init__(self)
 
@@ -485,6 +492,9 @@ class System(modellib.XObjIdModel):
                 tag = 'system',
                 attributes = {'id':str},
                 elements = ['networks', ])
+
+    summary_fields = [ 'name', 'hostname' ]
+
     """
     networks - a collection of network resources exposed by the system
     system_events - a link to the collection of system events currently 
@@ -707,9 +717,15 @@ class System(modellib.XObjIdModel):
 
     def serialize(self, request=None):
         jobs = self.jobs.all()
+
+        # hide some data in collapsed collections 
+        summarize = getattr(self, '_summarize', False)
+
         xobj_model = modellib.XObjIdModel.serialize(self, request)
-        xobj_model.has_active_jobs = self.areJobsActive(jobs)
-        xobj_model.has_running_jobs = self.areJobsRunning(jobs)
+
+        if not summarize:
+            xobj_model.has_active_jobs = self.areJobsActive(jobs)
+            xobj_model.has_running_jobs = self.areJobsRunning(jobs)
         
 
         if request:
@@ -736,15 +752,16 @@ class System(modellib.XObjIdModel):
 
                 def __init__(self, href):
                     self.id = href
-
-            xobj_model.credentials = CredentialsHref(request.build_absolute_uri(
-                '%s/credentials' % self.get_absolute_url(request)))
             
-            xobj_model.configuration = ConfigurationHref(request.build_absolute_uri(
-                '%s/configuration' % self.get_absolute_url(request)))
+            if not summarize:
+                xobj_model.credentials = CredentialsHref(request.build_absolute_uri(
+                    '%s/credentials' % self.get_absolute_url(request)))
             
-            xobj_model.configuration_descriptor = ConfigurationDescriptorHref(request.build_absolute_uri(
-                '%s/configuration_descriptor' % self.get_absolute_url(request)))
+                xobj_model.configuration = ConfigurationHref(request.build_absolute_uri(
+                    '%s/configuration' % self.get_absolute_url(request)))
+            
+                xobj_model.configuration_descriptor = ConfigurationDescriptorHref(request.build_absolute_uri(
+                    '%s/configuration_descriptor' % self.get_absolute_url(request)))
 
         class JobsHref(modellib.XObjIdModel):
             _xobj = xobj.XObjMetadata(tag='jobs',
@@ -777,15 +794,18 @@ class System(modellib.XObjIdModel):
                     self.get_absolute_url(request, parents=parents))
                 self.view_name = None
 
-        xobj_model.jobs = JobsHref(request, self)
+        if not summarize:
+            xobj_model.jobs = JobsHref(request, self)
 
-        # Set out of date flag on xobj_model
-        out_of_date = False
-        for trove in self.installed_software.all():
-            if trove.out_of_date:
-                out_of_date = True
-                break
-        xobj_model.out_of_date = out_of_date
+            # Set out of date flag on xobj_model
+            # but don't include if we're set to include this as part of a collection
+            out_of_date = False
+            for trove in self.installed_software.all():
+                if trove.out_of_date:
+                    out_of_date = True
+                    break
+            xobj_model.out_of_date = out_of_date
+
         xobj_model.network_address = self.__class__.extractNetworkAddress(self)
         return xobj_model
 
