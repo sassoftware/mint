@@ -74,7 +74,9 @@ class ContentSource(modellib.XObjIdModel):
     """
     class Meta:
         db_table = 'PlatformSources'
-        
+    
+    _xobj_hidden_accessors = set(['content_sources'])
+    
     content_source_id = models.AutoField(primary_key=True, db_column='platformSourceId')
     name = models.CharField(max_length=1026)
     default_source = models.IntegerField(db_column='defaultSource', default=0)

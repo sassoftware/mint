@@ -31,4 +31,18 @@
     <field to="platforms.platform" name="platform_id" rel="ManyToOneRel">1</field>
     <field type="CharField" name="content_source_type">ContentSourceType2</field>
   </object>
+  <object pk="1" model="platforms.contentsource">
+      <field type="CharField" name="name">csname1</field>
+      <field type="IntegerField" name="default_source">0</field>
+      <field type="CharField" name="short_name">cs_shortname1</field>
+      <field type="CharField" name="content_source_type">RHN</field>
+      <field type="IntegerField" name="order_index">1</field>
+  </object>
+  <object pk="2" model="platforms.contentsource">
+      <field type="CharField" name="name">csname2</field>
+      <field type="IntegerField" name="default_source">1</field>
+      <field type="CharField" name="short_name">cs_shortname2</field>
+      <field type="CharField" name="content_source_type">SMT</field>
+      <field type="IntegerField" name="order_index">0</field>
+  </object>
 </django-objects>

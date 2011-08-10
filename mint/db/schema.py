@@ -28,7 +28,7 @@ from conary.dbstore import sqlerrors, sqllib
 log = logging.getLogger(__name__)
 
 # database schema major version
-RBUILDER_DB_VERSION = sqllib.DBversion(58, 45)
+RBUILDER_DB_VERSION = sqllib.DBversion(58, 46)
 
 
 def _createTrigger(db, table, column = "changed"):
@@ -867,6 +867,7 @@ def _createPlatforms(db):
     if 'PlatformsPlatformSources' not in db.tables:
         cu.execute("""
             CREATE TABLE PlatformsPlatformSources (
+                platforms_platform_sources_id  %(PRIMARYKEY)s,
                 platformId          integer         NOT NULL
                     REFERENCES platforms ON DELETE CASCADE,
                 platformSourceId    integer         NOT NULL

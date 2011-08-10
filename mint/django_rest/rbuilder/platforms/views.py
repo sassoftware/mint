@@ -37,15 +37,18 @@ class SourceErrorsService(service.BaseService):
         
 
 class SourceService(service.BaseService):
+    @access.anonymous
     @return_xml
     def rest_GET(self, request, source_type=None, short_name=None):
         return self.get(source_type, short_name)
         
     def get(self, source_type, short_name):
+        if not source_type and not short_name:
+            return self.mgr.getSources()
         if short_name:
-            return self.mgr.getSource(short_name)
+            return self.mgr.getSourceByShortName(short_name)
         else:
-            return self.mgr.getSources(source_type)
+            return self.mgr.getSourcesByType(source_type)
 
     @requires('content_source')
     @return_xml
@@ -78,6 +81,7 @@ class SourceTypeStatusTestService(service.BaseService):
 
 
 class SourceTypeService(service.BaseService):
+    @access.anonymous
     @return_xml
     def rest_GET(self, request, source_type=None):
         return self.get(source_type)

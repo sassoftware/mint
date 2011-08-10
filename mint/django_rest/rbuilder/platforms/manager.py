@@ -60,11 +60,17 @@ class PlatformManager(basemanager.BaseManager):
 
 class SourceManager(basemanager.BaseManager):
     @exposed
-    def getSource(self, short_name):
+    def getSourceByShortName(self, short_name):
         return platformModels.ContentSource.objects.get(short_name=short_name)
         
     @exposed
-    def getSources(self, source_type):
+    def getSources(self):
+        ContentSources = platformModels.ContentSources()
+        ContentSources.content_source = platformModels.ContentSource.objects.all()
+        return ContentSources
+    
+    @exposed
+    def getSourcesByType(self, source_type):
         ContentSources = platformModels.ContentSources()
         ContentSources.content_source = platformModels.ContentSource.objects.all().filter(content_source_type=source_type)
         return ContentSources
