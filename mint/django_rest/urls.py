@@ -558,6 +558,10 @@ urlpatterns = patterns('',
     URL(r'platforms/content_source_types/(?P<source_type>[_a-zA-Z0-9]+)/?$',
         platformsviews.SourceTypeService(),
         name='ContentSourceType'),
+
+    URL(r'platforms/content_source_types/(?P<source_type>[_a-zA-Z0-9]+)/(?P<content_source_type_id>\d+)/?$',
+        platformsviews.SourceTypeService(),
+        name='ContentSourceType'),
  
     # ModuleHooks
     URL(r'module_hooks/?$',

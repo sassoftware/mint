@@ -1,4 +1,5 @@
-platformsXml = """\
+platformsXml = \
+"""
 <?xml version='1.0' encoding='UTF-8'?>
 <platforms>
   <platform id="http://localhost:8000/api/v1/platforms/5">
@@ -35,16 +36,17 @@ platformsXml = """\
     <project href="3"/>
   </platform>
 </platforms>
-"""
+""".strip()
 
 #Prath
-platformSourceXml = """\
+platformSourceXml = \
+"""
 <?xml version='1.0' encoding='UTF-8'?>
 <id="http://localhost:8000/api/v1/platforms/1/sources/plat1source">
   <platform href="1"/>
   <content_source href="1"/>
 </platformSource>
-"""
+""".strip()
 
 #Prath
 platformSourceStatusXml = """\
@@ -113,7 +115,8 @@ contentSourceStatusDataFailXml = """\
 """
 
 #Prath
-contentSourceTypesXml = """\
+contentSourceTypesXml = \
+"""
 <?xml version='1.0' encoding='UTF-8'?>
 <content_source_types>
   <content_source_type id="http://localhost:8000/api/v1/content_sources/1">
@@ -126,15 +129,17 @@ contentSourceTypesXml = """\
     <content_source_type>ContentSourceType2</content_source_type>
   </content_source_type>
 </content_source_types>
-"""
+""".strip()
 
-contentSourceTypePUTXml = """\
+contentSourceTypePUTXml = \
+"""
 <?xml version='1.0' encoding='UTF-8'?>
 <content_source_type>ContentSourceType New</content_source_type>
-"""
+""".strip()
 
 #untouched
-contentSourcesXml = """\
+contentSourcesXml = \
+"""
 <?xml version='1.0' encoding='UTF-8'?>
 <instances>
   <content_source id="http://localhost:8000/api/v1/contentSources/RHN/instances/plat2source0">
@@ -147,10 +152,11 @@ contentSourcesXml = """\
     <enabled>True</enabled>
     <content_source_status href="http://localhost:8000/api/v1/contentSources/RHN/instances/plat2source0/status"/>
   </content_source>
-"""  
+""".strip()
 
 #Prath
-contentSourcesByPlatformXml = """\
+contentSourcesByPlatformXml = \
+"""
 <?xml version='1.0' encoding='UTF-8'?>
 <content_sources>
   <content_source id="http://localhost:8000/api/v1/content_sources/satellite/instances/plat1source">
@@ -181,10 +187,11 @@ contentSourcesByPlatformXml = """\
     <enabled>true</enabled>
   </content_source>
 </content_sources>
-"""
+""".strip()
 
 #untouched
-contentSourceTypesByPlatformXml = """\
+contentSourceTypesByPlatformXml = \
+"""
 <?xml version='1.0' encoding='UTF-8'?>
 <content_source_types>
   <content_source_type id="http://localhost:8000/api/v1/content_sources/RHN">
@@ -194,25 +201,25 @@ contentSourceTypesByPlatformXml = """\
     <content_source_type>satellite</content_source_type>
   </content_source_type>
 </content_source_types>
-"""
+""".strip()
 
 #Prath
-contentSourcePUTXml = """\
-<?xml version='1.0' encoding='UTF-8'?>
-<content_source id="http://localhost:8000/api/v1/content_sources/RHN/instances/plat2source0">
-  <content_source_id>2</content_source_id>
-  <name>Platform 2 Source 0</name>
-  <short_name>plat2source0</short_name>
-  <default_source>true</default_source>
-  <order_index>1</order_index>
-  <enabled>true</enabled>
-  <username>foousername</username>
-  <password>foopassword</password>
-</contentSource>
+contentSourcePUTXml = \
 """
+<?xml version='1.0' encoding='UTF-8'?>
+<content_source>
+  <content_source_id>1</content_source_id>
+  <name>Content Source Changed</name>
+  <short_name>cs_shortnameChanged</short_name>
+  <default_source>1</default_source>
+  <order_index>1</order_index>
+  <content_source_type>RHN</content_source_type>
+</content_source>
+""".strip()
 
 platformPOSTXml = \
 """
+<?xml version='1.0' encoding='UTF-8'?>
 <platform>
     <platform_name>Platform5</platform_name>
     <label>PlatformMyPlatformLabel2</label>
@@ -223,42 +230,44 @@ platformPOSTXml = \
     <is_from_disk>true</is_from_disk>
     <projects id="http://localhost:8000/api/v1/projects/morbeef" />
 </platform>
-"""
+""".strip()
 
 #Prath
-platformPUTXml = """\
+platformPUTXml = \
+"""
 <?xml version='1.0' encoding='UTF-8'?>
-<platform_id="http://localhost:8000/api/v1/platforms/1">
-    <label>PlatformTest</label>
-    <platform_name>Platform</platform_name>
+<platform>
+    <label>PlatformPut</label>
+    <platform_name>Platform Name Changed</platform_name>
     <mode>Platform</mode>
     <enabled>0</enabled>
     <configurable>true</configurable>
     <abstract>true</abstract>
 </platform>
-"""
+""".strip()
 
 #Prath
-contentSourcePOSTXml = """\
+contentSourcePOSTXml = \
+"""
 <?xml version='1.0' encoding='UTF-8'?>
 <content_source>
-  <name>PlatformTestPost</name>
-  <short_name>PlatformTestPost</short_name>
-  <default_source>true</default_source>
+  <name>PlatformContentSourceTestPost</name>
+  <short_name>PlatformContentSourceTestPostShortName</short_name>
+  <default_source>0</default_source>
   <order_index>1</order_index>
-  <enabled>true</enabled>
+  <content_source_type>RHN</content_source_type>
 </content_source>
-"""
+""".strip()
 
 #Prath
-contentSourceTypePOSTXml = """\
+contentSourceTypePOSTXml = \
+"""
 <?xml version='1.0' encoding='UTF-8'?>
 <content_source_type>
+  <platform_id id="http://localhost:8000/api/v1/platforms/1" />
   <content_source_type>ContentSourceTypePost</content_source_type>
-  <required>true</required>
-  <singleton>true</singleton>
 </content_source_type>
-"""
+""".strip()
 
 #Prath
 platformLoadStatusPOSTXml = """\

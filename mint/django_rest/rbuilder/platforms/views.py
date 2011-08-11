@@ -50,16 +50,19 @@ class SourceService(service.BaseService):
         else:
             return self.mgr.getSourcesByType(source_type)
 
+    @access.anonymous
     @requires('content_source')
     @return_xml
-    def rest_PUT(self, request, source_type, short_name, source):
-        return self.mgr.updateSource(short_name, source)
+    def rest_PUT(self, request, source_type, short_name, content_source):
+        return self.mgr.updateSource(short_name, content_source)
 
+    @access.anonymous # needs to be changed
     @requires('content_source')
     @return_xml
-    def rest_POST(self, request, source_type, source):
-        return self.mgr.createSource(source)
+    def rest_POST(self, request, content_source, source_type=None, short_name=None):
+        return self.mgr.createSource(content_source)
 
+    @access.anonymous # needs to be changed
     def rest_DELETE(self, source_type, short_name):
         self.mgr.deleteSource(short_name)
         
@@ -83,24 +86,31 @@ class SourceTypeStatusTestService(service.BaseService):
 class SourceTypeService(service.BaseService):
     @access.anonymous
     @return_xml
-    def rest_GET(self, request, source_type=None):
-        return self.get(source_type)
+    def rest_GET(self, request, source_type=None, content_source_type_id=None):
+        return self.get(source_type, content_source_type_id)
         
-    def get(self, source_type):
-        if source_type:
-            return self.mgr.getSourceType(source_type)
-        else:
+    def get(self, source_type, content_source_type_id):
+        # .../platforms/content_source_types/
+        if not source_type and not content_source_type_id:
             return self.mgr.getSourceTypes()
+        # .../platforms/content_source_types/<source_type>/  
+        elif source_type and not content_source_type_id:
+            return self.mgr.getSourceType(source_type)
+        # .../platforms/content_source_types/<source_type>/<content_source_type_id>/
+        else:
+            return self.mgr.getSourceTypeById(content_source_type_id)
+            
 
     @access.anonymous # what are permissions for this
     @requires('content_source_type')
     @return_xml
     def rest_POST(self, request, content_source_type):
         return self.mgr.createSourceType(content_source_type)
-        
+    
+    @access.anonymous # change
     @requires('content_source_type')
     @return_xml
-    def rest_PUT(self, request, content_source_type):
+    def rest_PUT(self, request, source_type, content_source_type_id, content_source_type):
         self.mgr.updateSourceType(content_source_type)
 
 
@@ -126,6 +136,7 @@ class PlatformSourceService(service.BaseService):
     def get(self, platform_id):
         return self.mgr.getSourcesByPlatform(platform_id)
 
+    @access.anonymous
     @requires('content_source')
     @return_xml
     def rest_POST(self, request, content_source):
@@ -198,6 +209,7 @@ class PlatformService(service.BaseService):
     def rest_POST(self, request, platform):
         return self.mgr.createPlatform(platform)
     
+    @access.anonymous
     @requires('platform')
     @return_xml
     def rest_PUT(self, request, platform_id, platform):
