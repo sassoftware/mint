@@ -747,8 +747,8 @@ class SystemManager(BaseManager):
         for key, val in accessors.items():
             if key == 'networks':
                 model.networks.all().delete()
-            if key == "system_tags":
-                model.system_tags.all().delete()
+            if key == "tags":
+                model.tags.all().delete()
             for v in val:
                 getattr(model, key).add(v)
         return model

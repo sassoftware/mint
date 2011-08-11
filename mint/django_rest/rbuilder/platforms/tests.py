@@ -32,17 +32,17 @@ class PlatformsTestCase(XMLTestCase):
     
     # Should be passing except I'm getting a weird AssertionError:
     # 0 != u'false' for the configurable attr (which I know to be boolean)
-    # def testGetPlatform(self):
-    #     platform_gotten = self.xobjResponse('platforms/1')
-    #     platform = pmodels.Platform.objects.get(pk=1)
-    #     self.assertEquals(platform.label, platform_gotten.label)
-    #     self.assertEquals(platform.platform_name, platform_gotten.platform_name)
-    #     self.assertEquals(platform.mode, platform_gotten.mode)
-    #     self.assertEquals(platform.enabled, int(platform_gotten.enabled))
-    #     self.assertEquals(platform.configurable, platform_gotten.configurable)
-    #     self.assertEquals(platform.abstract, platform_gotten.abstract)
-    #     self.assertEquals(platform.content_source_types, platform_gotten.content_source_types)
-    #     self.assertEquals(platform.project, platform_gotten.project)
+    def testGetPlatform(self):
+         platform_gotten = self.xobjResponse('platforms/1')
+         platform = pmodels.Platform.objects.get(pk=1)
+         self.assertEquals(platform.label, platform_gotten.label)
+         self.assertEquals(platform.platform_name, platform_gotten.platform_name)
+         self.assertEquals(platform.mode, platform_gotten.mode)
+         self.assertEquals(platform.enabled, int(platform_gotten.enabled))
+         self.assertEquals(platform.configurable, platform_gotten.configurable)
+         self.assertEquals(platform.abstract, platform_gotten.abstract)
+         self.assertEquals(platform.content_source_types, platform_gotten.content_source_types)
+         self.assertEquals(platform.project, platform_gotten.project)
     
     def testGetPlatforms(self):
         platforms_gotten = self.xobjResponse('platforms/')
