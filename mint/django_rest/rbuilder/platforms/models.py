@@ -75,6 +75,8 @@ class ContentSource(modellib.XObjIdModel):
     class Meta:
         db_table = 'PlatformSources'
     
+    _xobj = xobj.XObjMetadata(tag='content_source')
+    
     _xobj_hidden_accessors = set(['content_sources'])
     
     content_source_id = models.AutoField(primary_key=True, db_column='platformSourceId')
@@ -107,6 +109,9 @@ class ContentSourceType(modellib.XObjIdModel):
     """
     class Meta:
         db_table = 'PlatformsContentSourceTypes'
+        unique_together = ('platform_id', 'content_source_type')
+    
+    _xobj = xobj.XObjMetadata(tag='content_source_type')
     
     content_source_type_id = models.AutoField(primary_key=True, db_column='contentSourceTypeId')
     platform_id = modellib.DeferredForeignKey('Platform', db_column='platformId', related_name='content_source_types')

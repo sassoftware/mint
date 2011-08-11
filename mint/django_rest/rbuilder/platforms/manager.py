@@ -24,9 +24,14 @@ class SourceTypeManager(basemanager.BaseManager):
         ContentSourceTypes = platformModels.ContentSourceTypes()
         ContentSourceTypes.content_source_type = platformModels.ContentSourceType.objects.all()
         return ContentSourceTypes
-        
+    
     @exposed
-    def createContentSourceType(self, content_source_type):
+    def getSourceTypeById(self, content_source_type_id):
+        ContentSourceType = platformModels.ContentSourceType.objects.get(pk=content_source_type_id)
+        return ContentSourceType
+    
+    @exposed
+    def createSourceType(self, content_source_type):
         content_source_type.save()
         return content_source_type
         
@@ -53,7 +58,7 @@ class PlatformManager(basemanager.BaseManager):
         return platform
 
     @exposed
-    def updatePlatform(platform_id, platform):
+    def updatePlatform(self, platform_id, platform):
         platform.save()
         return platform
 
