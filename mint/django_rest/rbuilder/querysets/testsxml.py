@@ -29,7 +29,6 @@ query_sets_xml = """\
     <all_members id="http://testserver/api/v1/query_sets/1/all"/>
     <chosen_members id="http://testserver/api/v1/query_sets/1/chosen"/>
     <child_members id="http://testserver/api/v1/query_sets/1/child"/>
-    <collection id="http://testserver/api/v1/inventory/systems"/>
     <presentation_type/>
     <query_tags>
       <query_tag id="http://testserver/api/v1/query_sets/1/query_tags/1">
@@ -59,7 +58,6 @@ query_sets_xml = """\
         <all_members id="http://testserver/api/v1/query_sets/2/all"/>
         <chosen_members id="http://testserver/api/v1/query_sets/2/chosen"/>
         <child_members id="http://testserver/api/v1/query_sets/2/child"/>
-        <collection id="http://testserver/api/v1/inventory/systems"/>
         <presentation_type/>
         <query_tags>
           <query_tag id="http://testserver/api/v1/query_sets/2/query_tags/2">
@@ -92,7 +90,6 @@ query_sets_xml = """\
         <all_members id="http://testserver/api/v1/query_sets/3/all"/>
         <chosen_members id="http://testserver/api/v1/query_sets/3/chosen"/>
         <child_members id="http://testserver/api/v1/query_sets/3/child"/>
-        <collection id="http://testserver/api/v1/inventory/systems"/>
         <presentation_type/>
         <query_tags>
           <query_tag id="http://testserver/api/v1/query_sets/3/query_tags/3">
@@ -118,7 +115,6 @@ query_sets_xml = """\
             <child_members id="http://testserver/api/v1/query_sets/7/child"/>
             <children/>
             <chosen_members id="http://testserver/api/v1/query_sets/7/chosen"/>
-            <collection id="http://testserver/api/v1/inventory/systems"/>
             <description>rPath infrastructure services for building Windows packages/images</description>
             <filter_descriptor id="http://testserver/api/v1/query_sets/filter_descriptor"/>
             <filter_entries>
@@ -149,7 +145,6 @@ query_sets_xml = """\
             <child_members id="http://testserver/api/v1/query_sets/8/child"/>
             <children/>
             <chosen_members id="http://testserver/api/v1/query_sets/8/chosen"/>
-            <collection id="http://testserver/api/v1/inventory/systems"/>
             <description>rPath infrastructure services for managing systems</description>
             <filter_descriptor id="http://testserver/api/v1/query_sets/filter_descriptor"/>
             <filter_entries>
@@ -176,7 +171,6 @@ query_sets_xml = """\
           </query_set>
         </children>
         <chosen_members id="http://testserver/api/v1/query_sets/6/chosen"/>
-        <collection id="http://testserver/api/v1/inventory/systems"/>
         <description>Systems that make up the rPath infrastructure</description>
         <filter_descriptor id="http://testserver/api/v1/query_sets/filter_descriptor"/>
         <filter_entries>
@@ -223,7 +217,6 @@ query_sets_xml = """\
     <all_members id="http://testserver/api/v1/query_sets/2/all"/>
     <chosen_members id="http://testserver/api/v1/query_sets/2/chosen"/>
     <child_members id="http://testserver/api/v1/query_sets/2/child"/>
-    <collection id="http://testserver/api/v1/inventory/systems"/>
     <presentation_type/>
         <query_tags>
           <query_tag id="http://testserver/api/v1/query_sets/2/query_tags/2">
@@ -256,7 +249,6 @@ query_sets_xml = """\
     <all_members id="http://testserver/api/v1/query_sets/3/all"/>
     <chosen_members id="http://testserver/api/v1/query_sets/3/chosen"/>
     <child_members id="http://testserver/api/v1/query_sets/3/child"/>
-    <collection id="http://testserver/api/v1/inventory/systems"/>
     <presentation_type/>
     <query_tags>
       <query_tag id="http://testserver/api/v1/query_sets/3/query_tags/3">
@@ -289,7 +281,6 @@ query_sets_xml = """\
     <all_members id="http://testserver/api/v1/query_sets/4/all"/>
     <chosen_members id="http://testserver/api/v1/query_sets/4/chosen"/>
     <child_members id="http://testserver/api/v1/query_sets/4/child"/>
-    <collection id="http://testserver/api/v1/inventory/systems"/>
     <presentation_type/>
     <query_tags>
       <query_tag id="http://testserver/api/v1/query_sets/4/query_tags/4">
@@ -322,7 +313,6 @@ query_sets_xml = """\
     <all_members id="http://testserver/api/v1/query_sets/5/all"/>
     <chosen_members id="http://testserver/api/v1/query_sets/5/chosen"/>
     <child_members id="http://testserver/api/v1/query_sets/5/child"/>
-    <collection id="http://testserver/api/v1/inventory/systems"/>
     <presentation_type/>
     <query_tags>
       <query_tag id="http://testserver/api/v1/query_sets/5/query_tags/5">
@@ -348,7 +338,6 @@ query_sets_xml = """\
         <child_members id="http://testserver/api/v1/query_sets/7/child"/>
         <children/>
         <chosen_members id="http://testserver/api/v1/query_sets/7/chosen"/>
-        <collection id="http://testserver/api/v1/inventory/systems"/>
         <description>rPath infrastructure services for building Windows packages/images</description>
         <filter_descriptor id="http://testserver/api/v1/query_sets/filter_descriptor"/>
         <filter_entries>
@@ -379,7 +368,6 @@ query_sets_xml = """\
         <child_members id="http://testserver/api/v1/query_sets/8/child"/>
         <children/>
         <chosen_members id="http://testserver/api/v1/query_sets/8/chosen"/>
-        <collection id="http://testserver/api/v1/inventory/systems"/>
         <description>rPath infrastructure services for managing systems</description>
         <filter_descriptor id="http://testserver/api/v1/query_sets/filter_descriptor"/>
         <filter_entries>
@@ -406,7 +394,6 @@ query_sets_xml = """\
       </query_set>
     </children>
     <chosen_members id="http://testserver/api/v1/query_sets/6/chosen"/>
-    <collection id="http://testserver/api/v1/inventory/systems"/>
     <description>Systems that make up the rPath infrastructure</description>
     <filter_descriptor id="http://testserver/api/v1/query_sets/filter_descriptor"/>
     <filter_entries>
@@ -437,7 +424,6 @@ query_sets_xml = """\
     <child_members id="http://testserver/api/v1/query_sets/7/child"/>
     <children/>
     <chosen_members id="http://testserver/api/v1/query_sets/7/chosen"/>
-    <collection id="http://testserver/api/v1/inventory/systems"/>
     <description>rPath infrastructure services for building Windows packages/images</description>
     <filter_descriptor id="http://testserver/api/v1/query_sets/filter_descriptor"/>
     <filter_entries>
@@ -468,7 +454,6 @@ query_sets_xml = """\
     <child_members id="http://testserver/api/v1/query_sets/8/child"/>
     <children/>
     <chosen_members id="http://testserver/api/v1/query_sets/8/chosen"/>
-    <collection id="http://testserver/api/v1/inventory/systems"/>
     <description>rPath infrastructure services for managing systems</description>
     <filter_descriptor id="http://testserver/api/v1/query_sets/filter_descriptor"/>
     <filter_entries>
@@ -499,7 +484,6 @@ query_sets_xml = """\
     <child_members id="http://testserver/api/v1/query_sets/9/child"/>
     <children/>
     <chosen_members id="http://testserver/api/v1/query_sets/9/chosen"/>
-    <collection id="http://testserver/api/v1/project_branch_stages"/>
     <description>All project stages</description>
     <filter_descriptor id="http://testserver/api/v1/query_sets/filter_descriptor"/>
     <filter_entries/>
@@ -523,7 +507,6 @@ query_sets_xml = """\
     <child_members id="http://testserver/api/v1/query_sets/10/child"/>
     <children/>
     <chosen_members id="http://testserver/api/v1/query_sets/10/chosen"/>
-    <collection id="http://testserver/api/v1/project_branch_stages"/>
     <description>All platforms</description>
     <filter_descriptor id="http://testserver/api/v1/query_sets/filter_descriptor"/>
     <filter_entries/>
@@ -564,7 +547,6 @@ query_set_xml = """\
     <all_members id="http://testserver/api/v1/query_sets/4/all"/>
     <chosen_members id="http://testserver/api/v1/query_sets/4/chosen"/>
     <child_members id="http://testserver/api/v1/query_sets/4/child"/>
-    <collection id="http://testserver/api/v1/inventory/systems"/>
     <presentation_type/>
     <query_tags>
       <query_tag id="http://testserver/api/v1/query_sets/4/query_tags/4">
@@ -601,7 +583,6 @@ query_set_fixtured_xml = """\
     <all_members id="http://testserver/api/v1/query_sets/5/all"/>
     <chosen_members id="http://testserver/api/v1/query_sets/5/chosen"/>
     <child_members id="http://testserver/api/v1/query_sets/5/child"/>
-    <collection id="http://testserver/api/v1/inventory/systems"/>
    <query_tags>
      <query_tag id="http://testserver/api/v1/query_sets/5/query_tags/5">
        <query_set id="http://testserver/api/v1/query_sets/5"/>
@@ -857,7 +838,6 @@ queryset_post_response_xml2 = """\
   </query_tags>
   <chosen_members id="http://testserver/api/v1/query_sets/12/chosen"/>
   <query_set_id>12</query_set_id>
-  <collection id="http://testserver/api/v1/inventory/systems"/>
   <is_top_level>False</is_top_level>
   <created_date>2011-03-16T21:33:47.055325+00:00</created_date>
   <all_members id="http://testserver/api/v1/query_sets/12/all"/>
