@@ -128,11 +128,9 @@ class IsoGenerator(genmod.ImageGenerator):
             m['winFirstBootDir'] = 'C:\\Windows\\Temp'
             progData = 'C:\\Documents and Settings\\All Users\\Application Data'
             cmdlines = open(isoDir + '/rPath/cmdlines.txt', 'w')
-            # FIXME: The ping thing is a horable HACK!!!!, we need to fix this.
             cmdlines.write(
                 '[Commands]\r\n'
                 '"%(winFirstBootDir)s\\SetupComplete.cmd"\r\n'
-                '"ping 127.0.0.1 -n 120"\r\n'
                 % m)
             cmdlines.close()
 
@@ -166,7 +164,7 @@ class IsoGenerator(genmod.ImageGenerator):
                 'msiexec /i '
                     '"%(winUpdateDir)s\\%(rtisPath)s" /quiet /norestart '
                     '/l*v "%(winUpdateDir)s\\%(rtisLog)s"\r\n'
-                'net start "rPath Tools Installer Service"\r\n'
+                'schtasks.exe /create /tn rTISOnStart /tr "net start \'rPath Tools Installer Service\'" /sc ONCE /ru system\r\n'
                 % m)
         firstboot.close()
 
