@@ -104,7 +104,6 @@ class NewPlatformTest(XMLTestCase):
         self.assertEquals(4, len(list(pmodels.Platform.objects.all())))
         platform = pmodels.Platform.objects.get(platform_name="Platform")
         self.assertEquals("Platform", platform.label)
-<<<<<<< local
     
     def testCreateContentSource(self):
         response = self._post('platforms/content_sources/',
@@ -150,5 +149,4 @@ class NewPlatformTest(XMLTestCase):
             username='admin', password='password')
         self.assertEquals(r.status_code, 200)
         updatedContent = pmodels.ContentSourceType.objects.get(pk=1)
-        self.assertEquals('ContentSourceType New', updatedContent.content_source_type)=======
->>>>>>> other
+        self.assertEquals('ContentSourceType New', updatedContent.content_source_type)
