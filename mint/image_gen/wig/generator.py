@@ -190,9 +190,9 @@ class ImageGenerator(object):
                 targetList = packageList
             targetList.append(msiData)
 
-        sysModel = 'install %s=%s\n' % (
+        sysModel = 'install %s=%s' % (
             self.troveTup.name, str(self.troveTup.version))
-        pollingManifest = '%s=%s[%s]\n' % (
+        pollingManifest = '%s=%s[%s]' % (
             self.troveTup.name, self.troveTup.version.freeze(),
             str(self.troveTup.flavor))
 
