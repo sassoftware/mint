@@ -8,7 +8,6 @@
 from mint.django_rest.rbuilder.inventory.tests import XMLTestCase
 from mint.django_rest.rbuilder.inventory import models as inventorymodels
 
-from mint.django_rest.rbuilder.querysets import manager
 from mint.django_rest.rbuilder.querysets import models
 from mint.django_rest.rbuilder.querysets import testsxml
 from mint.django_rest.rbuilder.manager import rbuildermanager
