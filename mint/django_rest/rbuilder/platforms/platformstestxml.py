@@ -237,9 +237,9 @@ platformPUTXml = \
 """
 <?xml version='1.0' encoding='UTF-8'?>
 <platform>
-    <label>PlatformPut</label>
+    <label>PlatformChanged</label>
     <platform_name>Platform Name Changed</platform_name>
-    <mode>Platform</mode>
+    <mode>auto</mode>
     <enabled>0</enabled>
     <configurable>true</configurable>
     <abstract>true</abstract>

@@ -133,7 +133,7 @@ class NewPlatformTest(XMLTestCase):
             username='admin', password='password')
         self.assertEquals(r.status_code, 200)
         updatedPlat = pmodels.Platform.objects.get(pk=1)
-        self.assertEquals('PlatformPut', updatedPlat.label)
+        self.assertEquals('PlatformChanged', updatedPlat.label)
         self.assertEquals('Platform Name Changed', updatedPlat.platform_name)
         self.assertEquals('auto', updatedPlat.mode)
     
