@@ -229,7 +229,8 @@ class SystemManager(basemanager.BaseManager):
     @exposed
     def getSystems(self):
         systems = models.Systems()
-        systems.system = models.System.objects.all()
+        qs = models.System.objects.select_related()
+        systems.system = qs.all()
         return systems
 
     @exposed
