@@ -128,9 +128,11 @@ class IsoGenerator(genmod.ImageGenerator):
             m['winFirstBootDir'] = 'C:\\Windows\\Temp'
             progData = 'C:\\Documents and Settings\\All Users\\Application Data'
             cmdlines = open(isoDir + '/rPath/cmdlines.txt', 'w')
+            # FIXME: The ping thing is a horable HACK!!!!, we need to fix this.
             cmdlines.write(
                 '[Commands]\r\n'
                 '"%(winFirstBootDir)s\\SetupComplete.cmd"\r\n'
+                '"ping 127.0.0.1 -n 120"\r\n'
                 % m)
             cmdlines.close()
 
