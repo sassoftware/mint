@@ -134,7 +134,9 @@ contentSourceTypesXml = \
 contentSourceTypePUTXml = \
 """
 <?xml version='1.0' encoding='UTF-8'?>
-<content_source_type>ContentSourceType New</content_source_type>
+<content_source_type>
+  <content_source_type>ContentSourceType New</content_source_type>
+</content_source_type>
 """.strip()
 
 #untouched

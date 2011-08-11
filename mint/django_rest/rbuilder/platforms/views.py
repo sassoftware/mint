@@ -111,7 +111,7 @@ class SourceTypeService(service.BaseService):
     @requires('content_source_type')
     @return_xml
     def rest_PUT(self, request, source_type, content_source_type_id, content_source_type):
-        self.mgr.updateSourceType(content_source_type)
+        return self.mgr.updateSourceType(content_source_type)
 
 
 class PlatformLoadStatusService(service.BaseService):

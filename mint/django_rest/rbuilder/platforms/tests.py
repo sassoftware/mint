@@ -19,7 +19,6 @@ from lxml import etree  # pyflakes=ignore
 from mint.django_rest.rbuilder.platforms import platformstestxml
 
 class PlatformsTestCase(XMLTestCase):
-    # fixtures = ['platforms_test']
     
     def xobjResponse(self, url):
         response = self._get(url, username="admin", password="password")
@@ -85,7 +84,6 @@ class PlatformsTestCase(XMLTestCase):
 
 
 class NewPlatformTest(XMLTestCase):
-    # fixtures = ['platforms_test']
     
     def xobjResponse(self, url):
         response = self._get(url, username="admin", password="password")
@@ -117,15 +115,13 @@ class NewPlatformTest(XMLTestCase):
         content = pmodels.ContentSource.objects.get(name="PlatformContentSourceTestPost")
         self.assertEquals("PlatformContentSourceTestPostShortName", content.short_name)
         self.assertEquals(1, int(content.order_index))
-    # 
-    # 
+
     def testCreateContentSourceType(self):
         response = self._post('platforms/content_source_types/',
             data=platformstestxml.contentSourceTypePOSTXml,
             username="admin", password="password")
         self.assertEquals(200, response.status_code)
         self.assertEquals(4, len(list(pmodels.ContentSourceType.objects.all())))
-    
     
     def testUpdatePlatform(self):
         r = self._put('platforms/1',
@@ -137,7 +133,6 @@ class NewPlatformTest(XMLTestCase):
         self.assertEquals('Platform Name Changed', updatedPlat.platform_name)
         self.assertEquals('auto', updatedPlat.mode)
     
-    
     def testUpdateContentSource(self):
         r = self._put('platforms/content_sources/RHN/cs_shortname1',
             data=platformstestxml.contentSourcePUTXml,
@@ -147,12 +142,11 @@ class NewPlatformTest(XMLTestCase):
         self.assertEquals('Content Source Changed', updatedContent.name)
         self.assertEquals('cs_shortnameChanged', updatedContent.short_name)
         self.assertEquals(1, updatedContent.default_source)
-    #
-    #
-    # def testUpdateContentSourceType(self):
-    #     r = self._put('platforms/1/content_source_types/ContentSourceType',
-    #         data=platformstestxml.contentSourceTypePUTXml,
-    #         username='admin', password='password')
-    #     self.assertEquals(r.status_code, 200)
-    #     updatedContent = pmodels.Platform.objects.get(pk=1).content_source_type
-    #     self.assertEquals('ContentSourceTypePut', updatedContent.content_source_type)
+    
+    def testUpdateContentSourceType(self):
+        r = self._put('platforms/content_source_types/RHN/1',
+            data=platformstestxml.contentSourceTypePUTXml,
+            username='admin', password='password')
+        self.assertEquals(r.status_code, 200)
+        updatedContent = pmodels.ContentSourceType.objects.get(pk=1)
+        self.assertEquals('ContentSourceType New', updatedContent.content_source_type)
