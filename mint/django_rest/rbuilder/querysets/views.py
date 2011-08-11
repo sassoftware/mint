@@ -15,7 +15,10 @@ from mint.django_rest.rbuilder.querysets import models
 class BaseQuerySetService(service.BaseService):
     pass
 
+USE_TAGS_IN_QUERY=True
+
 class QuerySetService(BaseQuerySetService):
+
 
     @return_xml
     def rest_GET(self, request, query_set_id=None):
@@ -26,6 +29,7 @@ class QuerySetService(BaseQuerySetService):
             return self.mgr.getQuerySet(query_set_id)
         else:
             return self.mgr.getQuerySets()
+        return self.mgr.getQuerySet(query_set_id)
         
     @access.admin
     @requires('query_set', load=False)
@@ -63,6 +67,23 @@ class QuerySetReTagService(BaseQuerySetService):
         qs = self.mgr.getQuerySet(query_set_id)
         self.mgr.tagQuerySet(qs)
         return qs
+
+class QuerySetWithTagsService(BaseQuerySetService):
+    '''
+    Attempt to use query set tags to do a more efficient QuerySet
+    fetch.  This is a work in progress and is not production ready
+    yet.
+    '''
+    @access.admin
+    @return_xml
+    def rest_GET(self, request, query_set_id):
+        '''Return the query set using object tags to do the lookup'''
+        # NOTE: this currently only retags on the leaf node query sets
+        # so we'll *PROBABLY* want to run this in a way that runs only
+        # against those, and or runs against all of those.
+        # TODO: know when to reTag when results are stale, keep a last_ran_date
+        # or equivalent
+        return self.mgr.getQuerySetAllResult(query_set_id, use_tags=True)
 
 class QuerySetAllResultService(BaseQuerySetService):
     

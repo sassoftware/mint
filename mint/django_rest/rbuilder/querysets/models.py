@@ -261,7 +261,7 @@ class SystemTag(modellib.XObjIdModel):
 
     system_tag_id = models.AutoField(primary_key=True)
     system = XObjHidden(modellib.ForeignKey(inventorymodels.System,
-        related_name="system_tags"))
+        related_name="tags"))
     query_tag = XObjHidden(modellib.ForeignKey(QueryTag, related_name="system_tags",
         text_field="name"))
     #inclusion_method = modellib.SerializedForeignKey(InclusionMethod,
@@ -287,11 +287,11 @@ class UserTag(modellib.XObjIdModel):
 
     class Meta:
         unique_together = (('user', 'query_tag', 'inclusion_method'),)
-        
+
     _xobj = xobj.XObjMetadata(tag='user_tag')
     
     user_tag_id = models.AutoField(primary_key=True)
-    user = modellib.ForeignKey(usersmodels.User, related_name='user_tags')
+    user = modellib.ForeignKey(usersmodels.User, related_name='tags')
     query_tag = modellib.ForeignKey(QueryTag, related_name='user_tags', text_field='name')
     # TODO -- also don't share inclusion_method
     inclusion_method = modellib.SerializedForeignKey(InclusionMethod, related_name='user_tags')
@@ -313,11 +313,11 @@ class ProjectTag(modellib.XObjIdModel):
 
     class Meta:
         unique_together = (('project', 'query_tag', 'inclusion_method'),)
-        
+    
     _xobj = xobj.XObjMetadata(tag='project_tag')
     
     project_tag_id = models.AutoField(primary_key=True)
-    project = modellib.ForeignKey(projectsmodels.Project, related_name='project_tags')
+    project = modellib.ForeignKey(projectsmodels.Project, related_name='tags')
     query_tag = modellib.ForeignKey(QueryTag, related_name='project_tags', text_field='name')
     # TODO -- also don't share inclusion_method
     inclusion_method = modellib.SerializedForeignKey(InclusionMethod, related_name='project_tags')
@@ -339,11 +339,11 @@ class StageTag(modellib.XObjIdModel):
  
     class Meta:
         unique_together = (('stage', 'query_tag', 'inclusion_method'),)
-        
+    
     _xobj = xobj.XObjMetadata(tag='stage_tag')
     
     stage_tag_id = models.AutoField(primary_key=True)
-    stage = modellib.ForeignKey(projectsmodels.Stage, related_name='stage_tags')
+    stage = modellib.ForeignKey(projectsmodels.Stage, related_name='tags')
     query_tag = modellib.ForeignKey(QueryTag, related_name='stage_tags', text_field='name')
     # TODO -- also don't share inclusion_method
     inclusion_method = modellib.SerializedForeignKey(InclusionMethod, related_name='stage_tags')
