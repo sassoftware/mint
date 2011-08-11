@@ -195,7 +195,7 @@ class SystemManager(basemanager.BaseManager):
 
     @exposed
     def getSystem(self, system_id):
-        system = models.System.objects.get(pk=system_id)
+        system = models.System.objects.select_related().get(pk=system_id)
 
         # Recalculate available updates for each trove on the system, if
         # needed.  This call honors the 24 hour cache.
@@ -210,7 +210,7 @@ class SystemManager(basemanager.BaseManager):
 
     @exposed
     def getSystemByTargetSystemId(self, target_system_id):
-        systems = models.System.objects.filter(
+        systems = models.System.objects.select_related().filter(
             target_system_id=target_system_id)
         if systems:
             return systems[0]
@@ -237,7 +237,7 @@ class SystemManager(basemanager.BaseManager):
     def getInventorySystems(self):
         systems = models.Systems()
         systems.system = \
-            models.System.objects.filter(system_type__infrastructure=False)
+            models.System.objects.select_related().filter(system_type__infrastructure=False)
         return systems
 
     @exposed
