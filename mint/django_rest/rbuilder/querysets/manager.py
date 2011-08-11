@@ -16,6 +16,9 @@ from mint.django_rest.rbuilder.querysets import descriptor
 from mint.django_rest.rbuilder.querysets import errors
 from mint.django_rest.rbuilder.querysets import models
 
+# TODO: this code passes around ids way too much and should be passing
+# around objects to reduce SQL usage
+
 class QuerySetManager(basemanager.BaseManager):
 
     tagMethodMap = {
@@ -40,12 +43,12 @@ class QuerySetManager(basemanager.BaseManager):
 
     @exposed
     def getQuerySet(self, querySetId):
-        return models.QuerySet.objects.get(pk=querySetId)
+        return models.QuerySet.objects.select_related().get(pk=querySetId)
 
     @exposed
     def getQuerySets(self):
         querySets = models.QuerySets()
-        querySets.query_set = models.QuerySet.objects.all()
+        querySets.query_set = models.QuerySet.objects.select_related().all()
         return querySets
 
     @exposed
@@ -74,13 +77,13 @@ class QuerySetManager(basemanager.BaseManager):
             raise errors.QuerySetReadOnly(querySetName=querySet.name)
 
     def addToAllQuerySet(self, querySet):
-        allQuerySet = models.QuerySet.objects.get(name='All Systems')
+        allQuerySet = models.QuerySet.objects.select_related().get(name='All Systems')
         allQuerySet.children.add(querySet)
         allQuerySet.save()
 
     def _getQueryTag(self, querySet):
         try:
-            queryTag = models.QueryTag.objects.get(query_set=querySet)
+            queryTag = models.QueryTag.objects.select_related().get(query_set=querySet)
         except ObjectDoesNotExist:
             querySetName = querySet.name.replace(' ', '_')
             queryTagName = 'query-tag-%s-%s' % (querySetName, querySet.pk)
@@ -94,23 +97,24 @@ class QuerySetManager(basemanager.BaseManager):
         resources = self.filterQuerySet(querySet)
         tag = self._getQueryTag(querySet)
         method = getattr(self, self.tagMethodMap[querySet.resource_type])
-        inclusionMethod = models.InclusionMethod.objects.get(
+        inclusionMethod = models.InclusionMethod.objects.select_related().get(
             name='filtered')
         method(resources, tag, inclusionMethod)
 
     def tagSystems(self, systems, tag, inclusionMethod):
         for system in systems:
-            systemTag, created = models.SystemTag.objects.get_or_create(
+            systemTag, created = models.SystemTag.objects.select_related().get_or_create(
                 system=system, query_tag=tag, inclusion_method=inclusionMethod)
             systemTag.save()
 
     def filterQuerySet(self, querySet):
         model = modellib.type_map[querySet.resource_type]
-        if not querySet.filter_entries.all():
+        if not querySet.filter_entries.select_related().all():
             resources = EmptyQuerySet(model)
         else:
-            resources = model.objects.all()
-        for filt in querySet.filter_entries.all():
+            resources = model.objects.select_related().all()
+        # TODO remove duplciate use of new query set
+        for filt in querySet.filter_entries.select_related().all():
             resources = modellib.filterDjangoQuerySet(resources, 
                 filt.field, filt.operator, filt.value)
         return resources
@@ -125,7 +129,7 @@ class QuerySetManager(basemanager.BaseManager):
 
     @exposed
     def getQuerySetAllResult(self, querySetId):
-        querySet = models.QuerySet.objects.get(pk=querySetId)
+        querySet = models.QuerySet.objects.select_related().get(pk=querySetId)
         qsAllResult = self._getQuerySetAllResult(querySet)
         resourceCollection = self.getResourceCollection(querySet, qsAllResult)
         resourceCollection.view_name = "QuerySetAllResult"
@@ -139,7 +143,7 @@ class QuerySetManager(basemanager.BaseManager):
 
     @exposed
     def getQuerySetChosenResult(self, querySetId):
-        querySet = models.QuerySet.objects.get(pk=querySetId)
+        querySet = models.QuerySet.objects.select_related().get(pk=querySetId)
         resourceCollection = self.getResourceCollection(querySet,
             self._getQuerySetChosenResult(querySet))
         resourceCollection.view_name = "QuerySetChosenResult"
@@ -147,7 +151,7 @@ class QuerySetManager(basemanager.BaseManager):
 
     def _getQuerySetChosenResult(self, querySet):
         queryTag = self._getQueryTag(querySet)
-        chosenMethod = models.InclusionMethod.objects.get(
+        chosenMethod = models.InclusionMethod.objects.select_related().get(
             name='chosen')
         tagModel = modellib.type_map[self.tagModelMap[querySet.resource_type]]
         taggedModels = tagModel.objects.filter(query_tag=queryTag,
@@ -162,7 +166,7 @@ class QuerySetManager(basemanager.BaseManager):
 
     @exposed
     def getQuerySetFilteredResult(self, querySetId):
-        querySet = models.QuerySet.objects.get(pk=querySetId)
+        querySet = models.QuerySet.objects.select_related().get(pk=querySetId)
         resourceCollection = self.getResourceCollection(querySet,
             self._getQuerySetFilteredResult(querySet))
         resourceCollection.view_name = "Systems"
@@ -176,7 +180,7 @@ class QuerySetManager(basemanager.BaseManager):
 
     @exposed
     def getQuerySetChildResult(self, querySetId):
-        querySet = models.QuerySet.objects.get(pk=querySetId)
+        querySet = models.QuerySet.objects.select_related().get(pk=querySetId)
         resourceCollection = self.getResourceCollection(querySet,
             self._getQuerySetChildResult(querySet))
         resourceCollection.view_name = "QuerySetChildResult"
@@ -185,14 +189,14 @@ class QuerySetManager(basemanager.BaseManager):
     def _getQuerySetChildResult(self, querySet):
         model = modellib.type_map[querySet.resource_type]
         resources = EmptyQuerySet(model)
-        for childQuerySet in querySet.children.all():
+        for childQuerySet in querySet.children.select_related().all():
             childResources = self._getQuerySetAllResult(childQuerySet)
             resources = resources | childResources
         return resources
 
     @exposed
     def getQuerySetFilterDescriptor(self, querySetId):
-        querySet = models.QuerySet.objects.get(pk=querySetId)
+        querySet = models.QuerySet.objects.select_related().get(pk=querySetId)
         model = modellib.type_map[querySet.resource_type]
         filterDescriptor = descriptor.getFilterDescriptor(model)
         filterDescriptor.pk = querySetId
@@ -200,9 +204,9 @@ class QuerySetManager(basemanager.BaseManager):
 
     @exposed
     def updateQuerySetChosen(self, querySetId, resource):
-        querySet = models.QuerySet.objects.get(pk=querySetId)
+        querySet = models.QuerySet.objects.select_related().get(pk=querySetId)
         queryTag = self._getQueryTag(querySet)
-        chosenMethod = models.InclusionMethod.objects.get(
+        chosenMethod = models.InclusionMethod.objects.select_related().get(
             name='chosen')
         tagMethod = getattr(self, self.tagMethodMap[querySet.resource_type])
         tagMethod([resource], queryTag, chosenMethod)
@@ -210,15 +214,15 @@ class QuerySetManager(basemanager.BaseManager):
 
     @exposed
     def addQuerySetChosen(self, querySetId, resources):
-        querySet = models.QuerySet.objects.get(pk=querySetId)
+        querySet = models.QuerySet.objects.select_related().get(pk=querySetId)
         queryTag = self._getQueryTag(querySet)
-        chosenMethod = models.InclusionMethod.objects.get(
+        chosenMethod = models.InclusionMethod.objects.select_related().get(
             name='chosen')
         resources = getattr(resources, querySet.resource_type)
 
         # Delete all previously tagged resources
         tagModel = modellib.type_map[self.tagModelMap[querySet.resource_type]]
-        tagModels = tagModel.objects.filter(query_tag=queryTag,
+        tagModels = tagModel.objects.select_related().filter(query_tag=queryTag,
             inclusion_method=chosenMethod)
         tagModels.delete()
 
@@ -230,9 +234,9 @@ class QuerySetManager(basemanager.BaseManager):
 
     @exposed
     def deleteQuerySetChosen(self, querySetId, resource):
-        querySet = models.QuerySet.objects.get(pk=querySetId)
+        querySet = models.QuerySet.objects.select_related().get(pk=querySetId)
         queryTag = self._getQueryTag(querySet)
-        chosenMethod = models.InclusionMethod.objects.get(
+        chosenMethod = models.InclusionMethod.objects.select_related().get(
             name='chosen')
         tagModel = modellib.type_map[self.tagModelMap[querySet.resource_type]]
         resourceArg = {querySet.resource_type:resource}
@@ -245,10 +249,10 @@ class QuerySetManager(basemanager.BaseManager):
     def getQueryTags(self, query_set_id):
         queryTags = models.QueryTags()
         queryTags.query_tag = \
-            models.QueryTag.objects.filter(query_set__pk=query_set_id)
+            models.QueryTag.objects.select_related().filter(query_set__pk=query_set_id)
         return queryTags
 
     @exposed
     def getQueryTag(self, query_set_id, query_tag_id):
-        queryTag = models.QueryTag.objects.get(pk=query_tag_id)
+        queryTag = models.QueryTag.objects.select_related().get(pk=query_tag_id)
         return queryTag

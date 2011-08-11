@@ -18,6 +18,8 @@ from mint.django_rest.rbuilder.querysets import errors
 
 from xobj import xobj
 
+XObjHidden = modellib.XObjHidden
+
 OPERATOR_CHOICES = [(k, v) for k, v in modellib.filterTermMap.items()]
 
 class AllMembers(modellib.XObjIdModel):
@@ -121,11 +123,12 @@ class QuerySet(modellib.XObjIdModel):
         fd = FilterDescriptor()
         xobjModel.filter_descriptor = fd.serialize(request)
 
-        from mint.django_rest.rbuilder.querysets import manager
-        collectionId = CollectionId()
-        collectionId.view_name = \
-            modellib.type_map[manager.QuerySetManager.resourceCollectionMap[self.resource_type]].view_name
-        xobjModel.collection = collectionId.serialize(request)
+        # do not need to include this
+        #from mint.django_rest.rbuilder.querysets import manager
+        #collectionId = CollectionId()
+        #collectionId.view_name = \
+        #    modellib.type_map[manager.QuerySetManager.resourceCollectionMap[self.resource_type]].view_name
+        #xobjModel.collection = collectionId.serialize(request)
 
         xobjModel.is_top_level = self.isTopLevel()
 
@@ -257,12 +260,14 @@ class SystemTag(modellib.XObjIdModel):
                 tag = 'system_tag')
 
     system_tag_id = models.AutoField(primary_key=True)
-    system = modellib.ForeignKey(inventorymodels.System,
-        related_name="system_tags")
-    query_tag = modellib.ForeignKey(QueryTag, related_name="system_tags",
-        text_field="name")
-    inclusion_method = modellib.SerializedForeignKey(InclusionMethod,
-        related_name="system_tags")
+    system = XObjHidden(modellib.ForeignKey(inventorymodels.System,
+        related_name="system_tags"))
+    query_tag = XObjHidden(modellib.ForeignKey(QueryTag, related_name="system_tags",
+        text_field="name"))
+    #inclusion_method = modellib.SerializedForeignKey(InclusionMethod,
+    #    related_name="system_tags")
+    inclusion_method = XObjHidden(modellib.ForeignKey(InclusionMethod,
+        related_name="system_tags"))
 
     load_fields = [system, query_tag, inclusion_method]
 
@@ -288,6 +293,7 @@ class UserTag(modellib.XObjIdModel):
     user_tag_id = models.AutoField(primary_key=True)
     user = modellib.ForeignKey(usersmodels.User, related_name='user_tags')
     query_tag = modellib.ForeignKey(QueryTag, related_name='user_tags', text_field='name')
+    # TODO -- also don't share inclusion_method
     inclusion_method = modellib.SerializedForeignKey(InclusionMethod, related_name='user_tags')
     
     load_fields = [user, query_tag, inclusion_method]
@@ -313,6 +319,7 @@ class ProjectTag(modellib.XObjIdModel):
     project_tag_id = models.AutoField(primary_key=True)
     project = modellib.ForeignKey(projectsmodels.Project, related_name='project_tags')
     query_tag = modellib.ForeignKey(QueryTag, related_name='project_tags', text_field='name')
+    # TODO -- also don't share inclusion_method
     inclusion_method = modellib.SerializedForeignKey(InclusionMethod, related_name='project_tags')
     
     load_fields = [project, query_tag, inclusion_method]
@@ -338,6 +345,7 @@ class StageTag(modellib.XObjIdModel):
     stage_tag_id = models.AutoField(primary_key=True)
     stage = modellib.ForeignKey(projectsmodels.Stage, related_name='stage_tags')
     query_tag = modellib.ForeignKey(QueryTag, related_name='stage_tags', text_field='name')
+    # TODO -- also don't share inclusion_method
     inclusion_method = modellib.SerializedForeignKey(InclusionMethod, related_name='stage_tags')
     
     load_fields = [stage, query_tag, inclusion_method]
