@@ -24,6 +24,11 @@ class RbuilderError(Exception):
         except TypeError:
             return self.msg
 
+class PermissionDenied(RbuilderError):
+    "Permission to the requested resource is denied"
+
+    status = 403
+
 class CollectionPageNotFound(RbuilderError):
     "The requested page of the collection was not found."
     status = NOT_FOUND
@@ -34,4 +39,14 @@ class UnknownFilterOperator(RbuilderError):
 
 class InvalidFilterValue(RbuilderError):
     "%(value)s in an invalid value for filter operator %(filter)s"
+    status = BAD_REQUEST
+
+
+class MirrorCredentialsInvalid(RbuilderError):
+    "The supplied %(creds)s credentials do not grant mirror access to the repository at %(url)s"
+    status = BAD_REQUEST
+
+
+class MirrorNotReachable(RbuilderError):
+    "Error contacting remote repository at %(url)s: %(reason)s"
     status = BAD_REQUEST

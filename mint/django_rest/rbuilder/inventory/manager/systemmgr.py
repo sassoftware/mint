@@ -8,7 +8,7 @@ import cPickle
 import logging
 import sys
 import datetime
-import os
+import random
 import time
 import traceback
 from dateutil import tz
@@ -27,34 +27,38 @@ from mint.django_rest.rbuilder.inventory import errors
 from mint.django_rest.rbuilder.inventory import models
 from mint.django_rest.rbuilder.manager import basemanager
 from mint.django_rest.rbuilder.querysets import models as querysetmodels
+from mint.django_rest.rbuilder.jobs import models as jobmodels
 from mint.rest import errors as mint_rest_errors
 
 log = logging.getLogger(__name__)
 exposed = basemanager.exposed
 
 class SystemManager(basemanager.BaseManager):
-    RegistrationEvents = set([ models.EventType.SYSTEM_REGISTRATION ])
+    RegistrationEvents = set([ jobmodels.EventType.SYSTEM_REGISTRATION ])
     PollEvents = set([
-        models.EventType.SYSTEM_POLL,
-        models.EventType.SYSTEM_POLL_IMMEDIATE,
+        jobmodels.EventType.SYSTEM_POLL,
+        jobmodels.EventType.SYSTEM_POLL_IMMEDIATE,
     ])
     SystemUpdateEvents = set([
-        models.EventType.SYSTEM_APPLY_UPDATE,
-        models.EventType.SYSTEM_APPLY_UPDATE_IMMEDIATE,
+        jobmodels.EventType.SYSTEM_APPLY_UPDATE,
+        jobmodels.EventType.SYSTEM_APPLY_UPDATE_IMMEDIATE,
     ])
     ShutdownEvents = set([
-        models.EventType.SYSTEM_SHUTDOWN,
-        models.EventType.SYSTEM_SHUTDOWN_IMMEDIATE
+        jobmodels.EventType.SYSTEM_SHUTDOWN,
+        jobmodels.EventType.SYSTEM_SHUTDOWN_IMMEDIATE
     ])
     LaunchWaitForNetworkEvents = set([
-        models.EventType.LAUNCH_WAIT_FOR_NETWORK
+        jobmodels.EventType.LAUNCH_WAIT_FOR_NETWORK
     ])
     ManagementInterfaceEvents = set([
-        models.EventType.SYSTEM_DETECT_MANAGEMENT_INTERFACE,
-        models.EventType.SYSTEM_DETECT_MANAGEMENT_INTERFACE_IMMEDIATE
+        jobmodels.EventType.SYSTEM_DETECT_MANAGEMENT_INTERFACE,
+        jobmodels.EventType.SYSTEM_DETECT_MANAGEMENT_INTERFACE_IMMEDIATE
     ])
     SystemConfigurationEvents = set([
-        models.EventType.SYSTEM_CONFIG_IMMEDIATE,
+        jobmodels.EventType.SYSTEM_CONFIG_IMMEDIATE,
+    ])
+    AssimilationEvents = set([
+        jobmodels.EventType.SYSTEM_ASSIMILATE
     ])
 
     IncompatibleEvents = {
@@ -63,23 +67,23 @@ class SystemManager(basemanager.BaseManager):
         # Can't shutdown and update at the same time
         # Can't shutdown and configure at the same time
 
-        models.EventType.SYSTEM_APPLY_UPDATE:\
-            [models.EventType.SYSTEM_SHUTDOWN,
-             models.EventType.SYSTEM_SHUTDOWN_IMMEDIATE],
-        models.EventType.SYSTEM_APPLY_UPDATE_IMMEDIATE:\
-            [models.EventType.SYSTEM_SHUTDOWN,
-             models.EventType.SYSTEM_SHUTDOWN_IMMEDIATE],
-        models.EventType.SYSTEM_SHUTDOWN:\
-            [models.EventType.SYSTEM_APPLY_UPDATE,
-             models.EventType.SYSTEM_APPLY_UPDATE_IMMEDIATE,
-             models.EventType.SYSTEM_CONFIG_IMMEDIATE],
-        models.EventType.SYSTEM_SHUTDOWN_IMMEDIATE:\
-            [models.EventType.SYSTEM_APPLY_UPDATE,
-             models.EventType.SYSTEM_APPLY_UPDATE_IMMEDIATE,
-             models.EventType.SYSTEM_CONFIG_IMMEDIATE],
-        models.EventType.SYSTEM_CONFIG_IMMEDIATE:\
-            [models.EventType.SYSTEM_SHUTDOWN,
-             models.EventType.SYSTEM_SHUTDOWN_IMMEDIATE],
+        jobmodels.EventType.SYSTEM_APPLY_UPDATE:\
+            [jobmodels.EventType.SYSTEM_SHUTDOWN,
+             jobmodels.EventType.SYSTEM_SHUTDOWN_IMMEDIATE],
+        jobmodels.EventType.SYSTEM_APPLY_UPDATE_IMMEDIATE:\
+            [jobmodels.EventType.SYSTEM_SHUTDOWN,
+             jobmodels.EventType.SYSTEM_SHUTDOWN_IMMEDIATE],
+        jobmodels.EventType.SYSTEM_SHUTDOWN:\
+            [jobmodels.EventType.SYSTEM_APPLY_UPDATE,
+             jobmodels.EventType.SYSTEM_APPLY_UPDATE_IMMEDIATE,
+             jobmodels.EventType.SYSTEM_CONFIG_IMMEDIATE],
+        jobmodels.EventType.SYSTEM_SHUTDOWN_IMMEDIATE:\
+            [jobmodels.EventType.SYSTEM_APPLY_UPDATE,
+             jobmodels.EventType.SYSTEM_APPLY_UPDATE_IMMEDIATE,
+             jobmodels.EventType.SYSTEM_CONFIG_IMMEDIATE],
+        jobmodels.EventType.SYSTEM_CONFIG_IMMEDIATE:\
+            [jobmodels.EventType.SYSTEM_SHUTDOWN,
+             jobmodels.EventType.SYSTEM_SHUTDOWN_IMMEDIATE],
     }
 
     TZ = tz.tzutc()
@@ -100,13 +104,13 @@ class SystemManager(basemanager.BaseManager):
 
     @exposed
     def getEventTypes(self):
-        EventTypes = models.EventTypes()
-        EventTypes.event_type = list(models.EventType.objects.all())
+        EventTypes = jobmodels.EventTypes()
+        EventTypes.event_type = list(jobmodels.EventType.objects.all())
         return EventTypes
 
     @exposed
     def getEventType(self, event_type_id):
-        eventType = models.EventType.objects.get(pk=event_type_id)
+        eventType = jobmodels.EventType.objects.get(pk=event_type_id)
         return eventType
     
     @exposed
@@ -144,32 +148,25 @@ class SystemManager(basemanager.BaseManager):
     @exposed
     def addZone(self, zone):
         """Add a zone"""
-
         if not zone:
             return
-
         zone.save()
         return zone
     
     @exposed
     def updateZone(self, zone):
         """Update a zone"""
-
         if not zone:
             return
-
         zone.save()
         return zone
     
     @exposed
     def deleteZone(self, zone):
         """Update a zone"""
-
         if not zone:
             return
-
         zone.delete()
-        
         return
 
     @exposed
@@ -186,10 +183,8 @@ class SystemManager(basemanager.BaseManager):
     @exposed
     def updateNetwork(self, network):
         """Update a network"""
-
         if not network:
             return
-
         network.save()
         return network
     
@@ -200,14 +195,12 @@ class SystemManager(basemanager.BaseManager):
 
     @exposed
     def getSystem(self, system_id):
-        system = models.System.objects.get(pk=system_id)
+        system = models.System.objects.select_related().get(pk=system_id)
 
         # Recalculate available updates for each trove on the system, if
         # needed.  This call honors the 24 hour cache.
-        # We only want to do this if we're not running in local mode.
-        if not settings.MANAGE_RBUILDER_MODELS:
-            for trove in system.installed_software.all():
-                self.mgr.versionMgr.set_available_updates(trove)
+        for trove in system.installed_software.all():
+            self.mgr.versionMgr.set_available_updates(trove)
         return system
 
     @exposed
@@ -217,7 +210,7 @@ class SystemManager(basemanager.BaseManager):
 
     @exposed
     def getSystemByTargetSystemId(self, target_system_id):
-        systems = models.System.objects.filter(
+        systems = models.System.objects.select_related().filter(
             target_system_id=target_system_id)
         if systems:
             return systems[0]
@@ -236,14 +229,15 @@ class SystemManager(basemanager.BaseManager):
     @exposed
     def getSystems(self):
         systems = models.Systems()
-        systems.system = models.System.objects.all()
+        qs = models.System.objects.select_related()
+        systems.system = qs.all()
         return systems
 
     @exposed
     def getInventorySystems(self):
         systems = models.Systems()
         systems.system = \
-            models.System.objects.filter(system_type__infrastructure=False)
+            models.System.objects.select_related().filter(system_type__infrastructure=False)
         return systems
 
     @exposed
@@ -277,6 +271,7 @@ class SystemManager(basemanager.BaseManager):
 
         if not management_interface:
             return
+
 
         management_interface.save()
         return management_interface
@@ -395,7 +390,21 @@ class SystemManager(basemanager.BaseManager):
             pass
         
         return nodes
-    
+
+    @exposed
+    def getWindowsBuildServiceDestination(self):
+        nodes = self.getWindowsBuildServiceNodes()
+        if not nodes:
+            return None
+        node = random.choice(nodes)
+        network = self.extractNetworkToUse(node)
+        if not network:
+            return None
+        r = network.ip_address or network.dns_name
+        dest = str(r.strip())
+        log.info("Selected Windows Build Service with network address %s", dest)
+        return dest
+
     @exposed
     def addWindowsBuildService(self, name, description, network_address):
         log.info("Adding Windows Build Service with name '%s', description '%s', and network address '%s'" % (name, description, network_address))
@@ -530,7 +539,7 @@ class SystemManager(basemanager.BaseManager):
             if currentState == responsiveState:
                 savedState = currentState
 
-        models.System.objects.copyFields(system, other, withReadOnly=True)
+        models.System.objects._copyFields(system, other, withReadOnly=True)
 
         if savedState:
             system.current_state = savedState
@@ -611,7 +620,7 @@ class SystemManager(basemanager.BaseManager):
         if not sjobs:
             return
         job = sjobs[0].job
-        if job.event_type.name != job.event_type.SYSTEM_REGISTRATION:
+        if job.job_type.name != job.job_type.SYSTEM_REGISTRATION:
             return
         # We came back from a registration. Schedule an immediate system poll.
         self.scheduleSystemPollNowEvent(system)
@@ -630,7 +639,8 @@ class SystemManager(basemanager.BaseManager):
                 # We really see this system the first time with its proper
                 # uuids. We'll assume it's been registered with rpath-register
                 self.log_system(system, models.SystemLogEntry.REGISTERED)
-            if not system.system_type.infrastructure:
+            if not system.system_type.infrastructure or system.system_type.name == \
+                    models.SystemType.INFRASTRUCTURE_WINDOWS_BUILD_NODE:
                 # Schedule a poll event in the future
                 self.scheduleSystemPollEvent(system)
                 # And schedule one immediately
@@ -704,7 +714,7 @@ class SystemManager(basemanager.BaseManager):
             return
         self.checkInstalledSoftware(system)
         last_job = getattr(system, 'lastJob', None)
-        if last_job and last_job.job_state.name == models.JobState.COMPLETED:
+        if last_job and last_job.job_state.name == jobmodels.JobState.COMPLETED:
             # This will update the system state as a side-effect
             self.addSystem(system, generateCertificates=False,
                 withManagementInterfaceDetection=False)
@@ -758,8 +768,8 @@ class SystemManager(basemanager.BaseManager):
     def getNextSystemState(self, system, job):
         # Return None if the state hasn't changed
         jobStateName = job.job_state.name
-        eventTypeName = job.event_type.name
-        if jobStateName == models.JobState.COMPLETED:
+        eventTypeName = job.job_type.name
+        if jobStateName == jobmodels.JobState.COMPLETED:
             if eventTypeName in self.RegistrationEvents:
                 # We don't trust that a registration action did anything, we
                 # won't transition to REGISTERED, rpath-register should be
@@ -773,6 +783,13 @@ class SystemManager(basemanager.BaseManager):
                 # registration event now.
                 wmiIfaceId = models.Cache.get(models.ManagementInterface,
                     name=models.ManagementInterface.WMI).pk
+                # unless we are SSH, in which case, assimilation is the only
+                # way to upgrade to a interface type that can do something other
+                # than just assimilate
+                sshIfaceId = models.Cache.get(models.ManagementInterface,
+                    name=models.ManagementInterface.SSH).pk
+                if system.management_interface_id == sshIfaceId:
+                    return None
                 # But if it's a WMI system and we have no credentials, skip
                 # directly to UNMANAGED_CREDENTIALS_REQUIRED (RBL-7439)
                 if system.management_interface_id == wmiIfaceId:
@@ -783,7 +800,7 @@ class SystemManager(basemanager.BaseManager):
             else:
                 # Add more processing here if needed
                 return None
-        if jobStateName == models.JobState.FAILED:
+        if jobStateName == jobmodels.JobState.FAILED:
             currentStateName = system.current_state.name
             # Simple cases first.
             if job.status_code == 401:
@@ -819,7 +836,7 @@ class SystemManager(basemanager.BaseManager):
 
     def lookupTarget(self, targetType, targetName):
         return rbuildermodels.Targets.objects.get(
-            targettype=targetType, targetname=targetName)
+            target_type=targetType, target_name=targetName)
 
     @exposed
     def addLaunchedSystem(self, system, dnsName=None, targetName=None,
@@ -862,15 +879,15 @@ class SystemManager(basemanager.BaseManager):
         else:
             self.scheduleLaunchWaitForNetworkEvent(system)
         self.log_system(system, "System launched in target %s (%s)" %
-            (target.targetname, target.targettype))
+            (target.target_name, target.target_type))
         self.addSystem(system)
         return system
 
     def _getCredentialsForUser(self, target):
         tucs = rbuildermodels.TargetUserCredentials.objects.filter(
-            targetid=target, userid=self.user)
+            target_id=target, user_id=self.user)
         for tuc in tucs:
-            return tuc.targetcredentialsid
+            return tuc.target_credentials_id
         return None
 
     def matchSystem(self, system):
@@ -884,7 +901,7 @@ class SystemManager(basemanager.BaseManager):
         return None
 
     def isManageable(self, managedSystem):
-        if managedSystem.launching_user.userid == self.user.userid:
+        if managedSystem.launching_user.user_id == self.user.user_id:
             # If we own the system, we can manage
             return True
         # Does the user who launched the system have the same credentials as
@@ -896,7 +913,7 @@ class SystemManager(basemanager.BaseManager):
               JOIN TargetUserCredentials tc2 USING (targetId, targetCredentialsId)
              WHERE tc1.userId = %s
                AND tc2.userId = %s
-         """, [ self.user.userid, managedSystem.launching_user.userid ])
+         """, [ self.user.user_id, managedSystem.launching_user.user_id ])
         row = cu.fetchone()
         return bool(row)
 
@@ -920,6 +937,20 @@ class SystemManager(basemanager.BaseManager):
             setattr(credentials, k, v)
         return credentials
 
+    #@exposed
+    #def assimilateSystem(self, system, assimilation_parameters):
+    #    '''adds management software to a bare system in inventory''' 
+    #    sshAuth = []
+    #    for cred in assimilation_parameters.assimilation_credential:
+    #         sshAuth.append(dict(
+    #             sshUser     = cred.ssh_username,
+    #             sshPassword = cred.ssh_password,
+    #             sshKey      = cred.ssh_key
+    #         ))
+    #    return self._scheduleEvent(system,
+    #        jobmodels.EventType.SYSTEM_ASSIMILATE,
+    #        eventData=sshAuth)
+
     @classmethod
     def unmarshalCredentials(cls, credentialsString):
         creds = mintdata.unmarshalGenericData(credentialsString)
@@ -931,17 +962,28 @@ class SystemManager(basemanager.BaseManager):
     def marshalCredentials(cls, credentialsDict):
         return mintdata.marshalGenericData(credentialsDict)
 
+    def _systemOrId(self, system_or_id):
+        '''Allow input of systems or system ids'''
+        if type(system_or_id) != models.System:
+            return models.System.objects.get(pk=system_or_id)
+        else:
+            return system_or_id
+
     @exposed
-    def getSystemCredentials(self, system_id):
-        system = models.System.objects.get(pk=system_id)
+    def getSystemCredentials(self, system):
+        '''
+        Get the credentials assigned to the management interface, which
+        differs by type (SSH, WMI, CIM...), as an xobj model
+        '''
+        system = self._systemOrId(system)
         systemCreds = {}
         if system.management_interface:
-            if system.management_interface.name == 'wmi':
+            if system.management_interface.name in [ 'wmi', 'ssh' ]:
                 if system.credentials is None:
                     systemCreds = {}
                 else:
                     systemCreds = self.unmarshalCredentials(system.credentials)
-            else:
+            else: 
                 systemCreds = dict(
                     ssl_client_certificate=system.ssl_client_certificate,
                     ssl_client_key=system.ssl_client_key)
@@ -952,10 +994,10 @@ class SystemManager(basemanager.BaseManager):
     def addSystemCredentials(self, system_id, credentials):
         system = models.System.objects.get(pk=system_id)
         if system.management_interface:
-            if system.management_interface.name == 'wmi':
+            if system.management_interface.name in [ 'wmi', 'ssh' ]:
                 systemCreds = self.marshalCredentials(credentials)
                 system.credentials = systemCreds
-            else:
+            elif system.management_interface.name == 'cim':
                 if credentials.has_key('ssl_client_certificate'):
                     system.ssl_client_certificate = \
                         credentials['ssl_client_certificate']
@@ -1100,8 +1142,8 @@ class SystemManager(basemanager.BaseManager):
             self.dispatchSystemEvent(event)
 
     def checkEventCompatibility(self, event):
-        runningJobs = event.system.jobs.filter(job_state__name=models.JobState.RUNNING) 
-        runningEventTypes = [j.event_type.name for j in runningJobs]
+        runningJobs = event.system.jobs.filter(job_state__name=jobmodels.JobState.RUNNING) 
+        runningEventTypes = [j.job_type.name for j in runningJobs]
 
         # Event types are incompatible with themselves
         if event.event_type.name in runningEventTypes:
@@ -1136,7 +1178,7 @@ class SystemManager(basemanager.BaseManager):
         self.cleanupSystemEvent(event)
 
         # create the next event if needed
-        if event.event_type.name == models.EventType.SYSTEM_POLL:
+        if event.event_type.name == jobmodels.EventType.SYSTEM_POLL:
             self.scheduleSystemPollEvent(event.system)
         else:
             log.debug("%s events do not trigger a new event creation" % event.event_type.name)
@@ -1153,15 +1195,22 @@ class SystemManager(basemanager.BaseManager):
         methodMap = {
             models.ManagementInterface.CIM : self._cimParams,
             models.ManagementInterface.WMI : self._wmiParams,
+            # this may have to change if the SSH interface starts to do more
+            # than just assimilation
+            models.ManagementInterface.SSH : None
         }
         mgmtInterfaceName = self.getSystemManagementInterfaceName(system)
-        method = methodMap[mgmtInterfaceName]
+        if mgmtInterfaceName == models.ManagementInterface.SSH:
+            # there will be no following events, no need to do this.
+            return None
+        else:
+            method = methodMap[mgmtInterfaceName]
         return method(repClient, system, destination, eventUuid, requiredNetwork)
 
     def _cimParams(self, repClient, system, destination, eventUuid, requiredNetwork):
         if system.target_id is not None:
-            targetName = system.target.targetname
-            targetType = system.target.targettype
+            targetName = system.target.target_name
+            targetType = system.target.target_type
         else:
             targetName = None
             targetType = None
@@ -1227,14 +1276,31 @@ class SystemManager(basemanager.BaseManager):
 
         eventUuid = str(uuid.uuid4())
         zone = event.system.managing_zone.name
-        params = self._computeDispatcherMethodParams(repClient, event.system,
-            destination, eventUuid, requiredNetwork)
+        params = None
+        if eventType not in self.AssimilationEvents:
+            params = self._computeDispatcherMethodParams(repClient, event.system,
+                destination, eventUuid, requiredNetwork)
+            if params is None:
+                # no follow up event for non-assimilation SSH operations
+                return
+        else:
+            # assimilation events are not management interface related
+            # so the computeDispatcher logic is short-circuited
+            event_data = cPickle.loads(event.event_data)
+            certs  = rbuildermodels.PkiCertificates.objects
+            hcerts = certs.filter(purpose="hg_ca").order_by('-time_issued')
+            cert   = hcerts[0].x509_pem
+            params = repClient.AssimilatorParams(host=destination,
+                caCert=cert, sshAuth=event_data,
+                eventUuid=eventUuid)
+
         resultsLocation = repClient.ResultsLocation(
-            path = "/api/inventory/systems/%d" % event.system.pk,
+            path = "/api/v1/inventory/systems/%d" % event.system.pk,
             port = 80)
 
         mgmtInterfaceName = self.getSystemManagementInterfaceName(event.system)
 
+        # TODO: refactor
         if eventType in self.RegistrationEvents:
             method = getattr(repClient, "register_" + mgmtInterfaceName)
             self._runSystemEvent(event, method, params,
@@ -1265,6 +1331,10 @@ class SystemManager(basemanager.BaseManager):
             params.eventUuid = eventUuid
             self._runSystemEvent(event, repClient.detectMgmtInterface,
                 params, resultsLocation=resultsLocation, zone=zone)
+        elif eventType in self.AssimilationEvents:
+            method = repClient.bootstrap
+            self._runSystemEvent(event, method, params,
+                resultsLocation, zone=zone) # sources=data)
         else:
             log.error("Unknown event type %s" % eventType)
             raise errors.UnknownEventType(eventType=eventType)
@@ -1275,8 +1345,16 @@ class SystemManager(basemanager.BaseManager):
         interfacesList = [ dict(interfaceHref=x.get_absolute_url(), port=x.port)
             for x in ifaces ]
         # Order the list so we detect wmi before cim (luckily we can sort by
-        # port number)
-        interfacesList.sort(key=lambda x: x['port'])
+        # port number), but SSH should always come last.  This is a bit silly
+        # as we could just hardcode the list, though this may prevent suprises
+        # when we add the next one.
+        def interfaceSorter(x):
+            if x['port'] == 22:
+                return 99999   # SSH comes last
+            else:
+                return x['port']
+            
+        interfacesList.sort(key=lambda x: interfaceSorter(x))
         params = repClient.ManagementInterfaceParams(host=destination,
             interfacesList=interfacesList)
         return params
@@ -1335,10 +1413,10 @@ class SystemManager(basemanager.BaseManager):
 
         log.info("System %s (%s), task %s (%s) in progress" %
             (systemName, params.host, uuid, eventType))
-        job = models.Job()
+        job = jobmodels.Job()
         job.job_uuid = str(uuid)
-        job.event_type = event.event_type
-        job.job_state = cls.jobState(models.JobState.RUNNING)
+        job.job_type = event.event_type
+        job.job_state = cls.jobState(jobmodels.JobState.RUNNING)
         job.save()
 
         sjob = models.SystemJob()
@@ -1355,23 +1433,23 @@ class SystemManager(basemanager.BaseManager):
 
     @classmethod
     def eventType(cls, name):
-        return models.EventType.objects.get(name=name)
+        return jobmodels.EventType.objects.get(name=name)
 
     @classmethod
     def jobState(cls, name):
-        return models.JobState.objects.get(name=name)
+        return jobmodels.JobState.objects.get(name=name)
 
     @exposed
     def scheduleSystemPollEvent(self, system):
         '''Schedule an event for the system to be polled'''
-        return self._scheduleEvent(system, models.EventType.SYSTEM_POLL)
+        return self._scheduleEvent(system, jobmodels.EventType.SYSTEM_POLL)
 
     @exposed
     def scheduleSystemPollNowEvent(self, system):
         '''Schedule an event for the system to be polled now'''
         # happens on demand, so enable now
         return self._scheduleEvent(system,
-            models.EventType.SYSTEM_POLL_IMMEDIATE,
+            jobmodels.EventType.SYSTEM_POLL_IMMEDIATE,
             enableTime=self.now())
 
     @exposed
@@ -1379,21 +1457,21 @@ class SystemManager(basemanager.BaseManager):
         '''Schedule an event for the system to be registered'''
         # registration events happen on demand, so enable now
         return self._scheduleEvent(system,
-            models.EventType.SYSTEM_REGISTRATION,
+            jobmodels.EventType.SYSTEM_REGISTRATION,
             enableTime=self.now())
 
     @exposed
     def scheduleSystemApplyUpdateEvent(self, system, sources):
         '''Schedule an event for the system to be updated'''
         return self._scheduleEvent(system,
-            models.EventType.SYSTEM_APPLY_UPDATE_IMMEDIATE,
+            jobmodels.EventType.SYSTEM_APPLY_UPDATE_IMMEDIATE,
             eventData=sources)
 
     @exposed
     def scheduleSystemShutdownEvent(self, system):
         '''Schedule an event to shutdown the system.'''
         return self._scheduleEvent(system,
-            models.EventType.SYSTEM_SHUTDOWN_IMMEDIATE)
+            jobmodels.EventType.SYSTEM_SHUTDOWN_IMMEDIATE)
 
     @exposed
     def scheduleLaunchWaitForNetworkEvent(self, system):
@@ -1403,7 +1481,7 @@ class SystemManager(basemanager.BaseManager):
         rpath-tools.
         """
         return self._scheduleEvent(system,
-            models.EventType.LAUNCH_WAIT_FOR_NETWORK,
+            jobmodels.EventType.LAUNCH_WAIT_FOR_NETWORK,
             enableTime=self.now())
 
     @exposed
@@ -1413,7 +1491,7 @@ class SystemManager(basemanager.BaseManager):
         on the system.
         """
         return self._scheduleEvent(system,
-            models.EventType.SYSTEM_DETECT_MANAGEMENT_INTERFACE_IMMEDIATE,
+            jobmodels.EventType.SYSTEM_DETECT_MANAGEMENT_INTERFACE_IMMEDIATE,
             enableTime=self.now())
 
     @exposed
@@ -1422,7 +1500,7 @@ class SystemManager(basemanager.BaseManager):
         # registration events happen on demand, so enable now
         configData = self.configDictToXml(configuration)
         return self._scheduleEvent(system,
-            models.EventType.SYSTEM_CONFIG_IMMEDIATE,
+            jobmodels.EventType.SYSTEM_CONFIG_IMMEDIATE,
             enableTime=self.now(),
             eventData=configData)
 
@@ -1456,7 +1534,10 @@ class SystemManager(basemanager.BaseManager):
                 event_data=pickledData)
             event.save()
             self.logSystemEvent(event, enableTime)
-            
+                
+            # NOTE: dispatch immediately will delete events as soon as we're done, making
+            # the return from this function often None in case where the event
+            # actually fired. 
             if event.dispatchImmediately():
                 self.dispatchSystemEvent(event)
         else:
@@ -1533,7 +1614,7 @@ class SystemManager(basemanager.BaseManager):
             managing_zone = self.getLocalZone())
         if created:
             self.log_system(system, "System added as part of target %s (%s)" %
-                (target.targetname, target.targettype))
+                (target.target_name, target.target_type))
             # Having nothing else available, we copy the target's name
             system.name = targetSystem.instanceName
             system.description = targetSystem.instanceDescription
@@ -1565,11 +1646,11 @@ class SystemManager(basemanager.BaseManager):
             ipAddress = nw.ip_address and nw.ip_address or "ip unset"
             self.log_system(system,
                 "%s (%s): removing stale network information %s (%s)" %
-                (target.targetname, target.targettype, nw.dns_name,
+                (target.target_name, target.target_type, nw.dns_name,
                 ipAddress))
             nw.delete()
         self.log_system(system, "%s (%s): using %s as primary contact address" %
-            (target.targetname, target.targettype, dnsName))
+            (target.target_name, target.target_type, dnsName))
         nw = models.Network(system=system, dns_name=dnsName)
         nw.save()
 
@@ -1578,10 +1659,10 @@ class SystemManager(basemanager.BaseManager):
             for x in system.target_credentials.all())
         desiredCredsMap = dict()
         for userName in userNames:
-            desiredCredsMap.update((x.targetcredentialsid.targetcredentialsid,
-                    x.targetcredentialsid)
+            desiredCredsMap.update((x.target_credentials_id.target_credentials_id,
+                    x.target_credentials_id)
                 for x in rbuildermodels.TargetUserCredentials.objects.filter(
-                    targetid=target, userid__username=userName))
+                    target_id=target, user_id__user_name=userName))
         existingCredsSet = set(existingCredsMap)
         desiredCredsSet = set(desiredCredsMap)
 
@@ -1605,14 +1686,14 @@ class SystemManager(basemanager.BaseManager):
             userNames = []
             for cred in credentials:
                 tucs = rbuildermodels.TargetUserCredentials.objects.filter(
-                    targetid=target, targetcredentialsid=cred)
-                userNames.extend(x.userid.username for x in tucs)
+                    target_id=target, target_credentials_id=cred)
+                userNames.extend(x.user_id.user_name for x in tucs)
             if not userNames:
                 userNames = [ None ]
             for userName in userNames:
                 # We don't care about dnsName and system, they're not used for
                 # determining uniqueness
-                targetsData.addSystem(target.targettype, target.targetname,
+                targetsData.addSystem(target.target_type, target.target_name,
                     userName, system.target_system_id,
                     system.target_system_name,
                     system.target_system_description, None, None)
@@ -1768,6 +1849,64 @@ class SystemManager(basemanager.BaseManager):
     def getSystemTag(self, system_id, system_tag_id):
         systemTag = querysetmodels.SystemTag.objects.get(pk=system_tag_id)
         return systemTag
+
+    @exposed
+    def getDescriptorForSystemAction(self, system_id, job_type, query_dict):
+        '''To submit a job to the system, what smartform data do I need?'''
+        system     = models.System.objects.get(pk=system_id)
+        event_type = jobmodels.EventType.objects.get(pk=job_type).name
+        descriptor = jobmodels.EventType.DESCRIPTOR_MAP.get(event_type, None)
+        if descriptor is None:
+            raise Exception("no descriptor for job type %s" % event_type)
+        # NOTE: it may be that depending on system context and event type
+        # we may need to dynamically create parameters.  For instance,
+        # if foo=3 on VMware.  When that happens, add some conditionals
+        # here based on system state.
+        query_dict = query_dict.copy()
+        query_dict['system_id'] = system_id
+        result = descriptor % query_dict
+        return result
+
+    @exposed
+    def scheduleJobAction(self, system, job):
+        '''
+        An action is a bare job submission that is a request to start
+        a real job.
+
+        Job coming in will be xobj only,
+        containing job_type, descriptor, and descriptor_data.  We'll use
+        that data to schedule a completely different job, which will
+        be more complete.
+        '''
+        # get integer job type even if not a django model
+        jt = job.job_type.id
+        if str(jt).find("/") != -1:
+            jt = int(jt.split("/")[-1])
+        event_type = jobmodels.EventType.objects.get(job_type_id=jt)
+        job_name   = event_type.name
+
+        event = None
+        if job_name == jobmodels.EventType.SYSTEM_ASSIMILATE:
+            creds = self.getSystemCredentials(system)
+            auth = [dict(
+                sshUser     = 'root',
+                sshPassword = creds.password,
+                sshKey      = creds.key,
+            )]
+            event = self._scheduleEvent(system, job_name, eventData=auth)
+            # we can completely ignore descriptor and descriptor_data
+            # for this job, because we have that data stored in credentials
+            # but other actions will have work to do with them in this
+            # function.
+        else:
+            raise Exception("action dispatch not yet supported on job type: %s" % jt)
+        
+        if event is None:
+            # this can happen if the event preconditions are not met and the exception
+            # gets caught somewhere up the chain (which we should fix)
+            raise Exception("failed to schedule event")
+        return event
+
 
 class Configuration(object):
     _xobj = xobj.XObjMetadata(

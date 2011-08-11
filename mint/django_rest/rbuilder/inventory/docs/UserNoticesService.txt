@@ -1,0 +1,20 @@
+UserNotices properties:
+    N/A
+
+
+UserNotice properties:
+    N/A
+
+
+GlobalNotice properties:
+    N/A
+
+Methods:
+    GET:
+        Authentication: user
+    POST:
+        Authentication: user
+    PUT:
+        not supported
+    DELETE:
+        Authentication: user

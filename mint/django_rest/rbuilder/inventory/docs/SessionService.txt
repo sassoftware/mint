@@ -1,0 +1,16 @@
+Session properties:
+    N/A
+
+
+User properties:
+    N/A
+
+Methods:
+    GET:
+        Authentication: none
+    POST:
+        not supported
+    PUT:
+        not supported
+    DELETE:
+        not supported

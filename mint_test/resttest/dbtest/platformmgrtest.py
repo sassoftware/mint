@@ -78,6 +78,7 @@ class PlatformManagerTest(restbase.BaseRestTest):
         self.db.productMgr.reposMgr._mock.enableByDefault()
         self.db.productMgr.reposMgr._mock.disable('createRepository')
         self.db.productMgr.reposMgr._mock.disable('_generateConaryrcFile')
+        self.db.productMgr.reposMgr._mock.disable('getAdminClient')
         self.db.productMgr.reposMgr.db = self.db
 
         mock.mockFunctionOnce(self.db.db.projects, 'getProjectIdByFQDN',

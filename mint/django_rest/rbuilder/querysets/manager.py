@@ -20,13 +20,23 @@ class QuerySetManager(basemanager.BaseManager):
 
     tagMethodMap = {
         'system' : 'tagSystems',
+        'user' : 'tagUsers',
+        'project' : 'tagProjects',
+        'project_branch_stage' : 'tagStages'
     }
     resourceCollectionMap = {
         'system' : 'systems',
+        'user' : 'users',
+        'project' : 'projects',
+        'project_branch_stage' : 'stages'
     }
     tagModelMap = {
         'system' : 'system_tag',
+        'user' : 'user_tag',
+        'project_branch_stage' : 'stage_tag',
+        'project' : 'project_tag'
     }
+
 
     @exposed
     def getQuerySet(self, querySetId):
@@ -116,8 +126,8 @@ class QuerySetManager(basemanager.BaseManager):
     @exposed
     def getQuerySetAllResult(self, querySetId):
         querySet = models.QuerySet.objects.get(pk=querySetId)
-        resourceCollection = self.getResourceCollection(querySet, 
-            self._getQuerySetAllResult(querySet))
+        qsAllResult = self._getQuerySetAllResult(querySet)
+        resourceCollection = self.getResourceCollection(querySet, qsAllResult)
         resourceCollection.view_name = "QuerySetAllResult"
         return resourceCollection
 

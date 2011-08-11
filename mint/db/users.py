@@ -1,7 +1,5 @@
 #
-# Copyright (c) 2005-2008 rPath, Inc.
-#
-# All Rights Reserved
+# Copyright (c) 2011 rPath, Inc.
 #
 import os
 import random
@@ -13,13 +11,12 @@ from conary.lib import sha1helper
 
 from conary.repository.netrepos.netauth import nameCharacterSet
 
-from mint import userlevels
 from mint import templates
-from mint.templates import registerNewUser
-from mint.templates import validateNewEmail
 from mint import searcher
 from mint import userlisting
-from mint.mint_error import *
+from mint.mint_error import (AuthRepoError, DuplicateItem, InvalidUsername,
+        IllegalUsername, UserAlreadyExists, AlreadyConfirmed, ItemNotFound)
+from mint.lib import auth_client
 from mint.lib import data
 from mint.lib import database
 from mint.lib import maillib
@@ -53,29 +50,30 @@ class UsersTable(database.KeyedTable):
         self.cfg = cfg
         database.DatabaseTable.__init__(self, db)
         self.confirm_table = ConfirmationsTable(db)
-        # not passing a db object since a mint db isn't correct
-        # and we're only using the _checkPassword function anyway
-        self._userAuth = repository.netrepos.netauth.UserAuthorization(
-            db = None, pwCheckUrl = self.cfg.externalPasswordURL,
-            cacheTimeout = self.cfg.authCacheTimeout)
+        self.authClient = auth_client.getClient(cfg.authSocket)
 
     def changePassword(self, username, password):
         salt, passwd = self._mungePassword(password)
         cu = self.db.cursor()
         cu.execute("UPDATE Users SET salt=?, passwd=? WHERE username=?",
-                   cu.binary(salt), passwd, username)
+                   salt, passwd, username)
         self.db.commit()
 
     def _checkPassword(self, user, salt, password, challenge):
-        return self._userAuth._checkPassword( \
-                user, salt, password, challenge)
+        if salt and password:
+            m = md5(salt.decode('hex') + challenge)
+            if m.hexdigest() == password:
+                return True
+        if self.authClient.checkPassword(user, challenge):
+            return True
+        return False
 
     def _mungePassword(self, password):
         m = md5()
         salt = os.urandom(4)
         m.update(salt)
         m.update(password)
-        return salt, m.hexdigest()
+        return salt.encode('hex'), m.hexdigest()
 
     def _getUserGroups(self, authToken):
         user, challenge = authToken
@@ -155,10 +153,7 @@ class UsersTable(database.KeyedTable):
         except DuplicateItem:
             self.confirm_table.update(userId, confirmation = confirm)
 
-    def registerNewUser(self, username, password, fullName, email,
-                        displayEmail, blurb, active):
-        if self.cfg.sendNotificationEmails and not active:
-            maillib.validateEmailDomain(email)
+    def validateUsername(self, username):
         if username.lower() == self.cfg.authUser.lower():
             raise IllegalUsername
         for letter in username:
@@ -177,17 +172,19 @@ class UsersTable(database.KeyedTable):
         if cu.fetchone()[0]:
             raise UserAlreadyExists
 
+    def registerNewUser(self, username, password, fullName, email,
+                        displayEmail, blurb, active):
+        if self.cfg.sendNotificationEmails and not active:
+            maillib.validateEmailDomain(email)
+        self.validateUsername(username)
+
         salt, passwd = self._mungePassword(password)
 
         self.db.transaction()
         try:
-            cu.execute("INSERT INTO UserGroups (userGroup) VALUES(?)",
-                       username)
-            userGroupId = cu.lastid()
-
             userId = self.new(username = username,
                               fullName = fullName,
-                              salt = cu.binary(salt),
+                              salt = salt,
                               passwd = passwd,
                               email = email,
                               displayEmail = displayEmail,
@@ -195,18 +192,6 @@ class UsersTable(database.KeyedTable):
                               timeAccessed = 0,
                               blurb = blurb,
                               active = int(active))
-
-            cu.execute("INSERT INTO UserGroupMembers VALUES(?,?)", userGroupId,
-                       userId)
-            cu.execute("""SELECT userGroupId FROM UserGroups
-                              WHERE userGroup='public'""")
-            # FIXME, just skip the public group if it's not there.
-            try:
-                pubGroupId = cu.fetchone()[0]
-            except:
-                raise AssertionError("There's no public group!")
-            cu.execute("INSERT INTO UserGroupMembers VALUES(?,?)", pubGroupId,
-                       userId)
 
             if self.cfg.sendNotificationEmails and not active:
                 confirm = confirmString()
@@ -424,11 +409,6 @@ class UserGroupsTable(database.KeyedTable):
     def __init__(self, db, cfg):
         self.cfg = cfg
         database.DatabaseTable.__init__(self, db)
-        cu = self.db.cursor()
-        cu.execute("""SELECT userGroupId FROM UserGroups
-                          WHERE userGroup='public'""")
-        if not cu.fetchall():
-            cu.execute("INSERT INTO UserGroups (userGroup) VALUES('public')")
 
     def getMintAdminId(self):
         """
