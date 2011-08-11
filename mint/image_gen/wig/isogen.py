@@ -164,7 +164,7 @@ class IsoGenerator(genmod.ImageGenerator):
                 'msiexec /i '
                     '"%(winUpdateDir)s\\%(rtisPath)s" /quiet /norestart '
                     '/l*v "%(winUpdateDir)s\\%(rtisLog)s"\r\n'
-                'schtasks.exe /create /tn rTISOnStart /tr "net start \'rPath Tools Installer Service\'" /sc ONSTART /ru system\r\n'
+                'schtasks.exe /create /tn rTISOnStart /tr "net start \\\"rPath Tools Installer Service\\\"" /sc ONSTART /ru system\r\n'
                 % m)
         firstboot.close()
 
