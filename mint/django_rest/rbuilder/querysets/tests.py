@@ -99,7 +99,8 @@ class QuerySetFixturedTestCase(XMLTestCase):
             data=testsxml.queryset_post_xml2)
         self.assertEquals(response.status_code, 200)
         self.assertXMLEquals(testsxml.queryset_post_response_xml2,
-            response.content)
+            response.content, 
+            ignoreNodes=['tagged_date','created_date','modified_date'])
 
         # Post the same query set again, it should fail
         response = self._post('query_sets/',

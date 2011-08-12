@@ -16,10 +16,10 @@ from mint.django_rest.rbuilder.querysets import descriptor
 from mint.django_rest.rbuilder.querysets import errors
 from mint.django_rest.rbuilder.querysets import models
 
+from datetime import datetime
+
 # TODO: this code passes around ids way too much and should be passing
 # around objects to reduce SQL usage
-
-USE_TAGS_IN_QUERY=True
 
 class QuerySetManager(basemanager.BaseManager):
 
@@ -99,6 +99,8 @@ class QuerySetManager(basemanager.BaseManager):
         '''tag all resources matching a query set whether filtered or chosen'''
         self._tagQuerySetFiltered(querySet)
         self._tagQuerySetChosen(querySet)
+        querySet.tagged_date = datetime.now()
+        querySet.save()
 
     def _tagQuerySetFiltered(self, querySet):
         '''tag resources matched by a filter'''
