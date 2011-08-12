@@ -307,6 +307,8 @@ class WbsGenerator(ImageGenerator):
         self.wimData = files[0]
         uploadMap['image.wim'] = self.wimData
 
+        self.wigClient.setOSVersion(self.wimData.version)
+
         msis = self.installJob.getFilesByClass(install_job.MSIData)
         for msiData in msis:
             # Uniquify MSI filenames to avoid collisions between same-named

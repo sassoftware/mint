@@ -89,6 +89,11 @@ class WigBackendClient(object):
             config.vhd = 'true'
         config.persist()
 
+    def setOSVersion(self, osVersion):
+        config = self.image.jobConfig
+        config.osVersion = osVersion
+        config.persist()
+
     def cleanup(self):
         if self.image:
             self.image.imageJob.delete()
