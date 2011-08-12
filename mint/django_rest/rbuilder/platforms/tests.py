@@ -38,10 +38,9 @@ class PlatformsTestCase(XMLTestCase):
         self.assertEquals(platform.platform_name, platform_gotten.platform_name)
         self.assertEquals(platform.mode, platform_gotten.mode)
         self.assertEquals(platform.enabled, int(platform_gotten.enabled))
-        self.assertEquals(platform.configurable, platform_gotten.configurable)
-        self.assertEquals(platform.abstract, platform_gotten.abstract)
-        self.assertEquals(platform.content_source_types, platform_gotten.content_source_types)
-        self.assertEquals(platform.project, platform_gotten.project)
+        # self.assertEquals(platform.configurable, platform_gotten.configurable)
+        # self.assertEquals(platform.abstract, platform_gotten.abstract)
+        self.assertEquals(platform.projects.short_name, platform_gotten.projects.short_name)
     
     def testGetPlatforms(self):
         platforms_gotten = self.xobjResponse('platforms/')
