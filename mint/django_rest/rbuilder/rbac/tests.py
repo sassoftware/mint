@@ -2,9 +2,7 @@ import testsxml
 from xobj import xobj
 from mint.django_rest.rbuilder.rbac import models
 from mint.django_rest.rbuilder.users import models as usersmodels
-from mint.django_rest.rbuilder.inventory import models as inventorymodels
 from mint.django_rest.rbuilder.querysets import models as querymodels
-from mint.django_rest.rbuilder.manager import rbuildermanager
 
 # Suppress all non critical msg's from output
 # still emits traceback for failed tests
