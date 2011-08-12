@@ -30,9 +30,9 @@ class RbacPermissionsService(BaseRbacService):
     <rbac_permissions>
         <rbac_permission id="http://hostname/api/rbac/permissions/1">
            <permission_id>1</permission_id>
-           <rbac_role id="..."/>
-           <rbac_context id="..."/>
-           <action>WRITE</action>
+           <rbac_role id="http://..."/>
+           <queryset id="http://...">
+           <action>write</action>
         </rbac_permission>
         ...
     </rbac_permissions>
@@ -146,80 +146,3 @@ class RbacUserRolesService(BaseRbacService):
         self.mgr.deleteRbacUserRole(user_id, role_id)
         return HttpResponse(status=204)
 
-class RbacContextsService(BaseRbacService):
-    """
-    Adds and edits contexts.
-    <rbac_contexts>
-        <rbac_context id="http://hostname/api/rbac/contexts/datacenter">
-           <context_id>datacenter</context_id>
-        <rbac_context/>
-    </rbac_contexts>
-    """
-   
-    # READ
-    @access.admin
-    @return_xml
-    def rest_GET(self, request, context_id=None):
-        return self.get(context_id)
-
-    def get(self, context_id=None):
-        if context_id is not None:
-            return self.mgr.getRbacContext(context_id)
-        else:
-            return self.mgr.getRbacContexts()
-
-    # CREATE
-    @access.admin
-    @return_xml
-    @requires('rbac_context')
-    def rest_POST(self, request, rbac_context):
-        return self.mgr.addRbacContext(rbac_context)
-
-    # UPDATE
-    @access.admin
-    @requires('rbac_context', save=False)
-    @return_xml
-    def rest_PUT(self, request, context_id, rbac_context):
-        return self.mgr.updateRbacContext(context_id, rbac_context)
-
-    # DELETE
-    @access.admin
-    def rest_DELETE(self, request, context_id):
-        self.mgr.deleteRbacContext(context_id)
-        return HttpResponse(status=204)
-
-class RbacResourceContextService(BaseRbacService):
-    """
-    Adds and edits the context assignment to a particular resource.
-    Not part of the individual resources as this is only available
-    to admins, and we don't want to share details with non-admins.
-
-    There may also be other batch methods of editing these assignments.
-
-    <rbac_context id="http://hostname/api/rbac/contexts/datacenter">
-           <context_id>datacenter</context_id>
-    <rbac_context/>
-    """
-
-    # READ
-    @access.admin
-    @return_xml
-    def rest_GET(self, request, resource_type, resource_id):
-        return self.get(resource_type, resource_id)
-
-    def get(self, resource_type, resource_id):
-        return self.mgr.getResourceRbacContext(resource_type, resource_id)
-
-    # WRITE
-    @access.admin
-    @requires('rbac_context', save=False)
-    @return_xml
-    def rest_PUT(self, request, resource_type, resource_id, rbac_context):
-        return self.mgr.setResourceRbacContext(resource_type, resource_id,
-            rbac_context)
-
-    # DELETE (remove context)
-    @access.admin
-    def rest_DELETE(self, request, resource_type, resource_id):
-        self.mgr.deleteResourceRbacContext(resource_type, resource_id)
-        return HttpResponse(status=204)

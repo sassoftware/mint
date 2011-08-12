@@ -28,7 +28,7 @@ from conary.dbstore import sqlerrors, sqllib
 log = logging.getLogger(__name__)
 
 # database schema major version
-RBUILDER_DB_VERSION = sqllib.DBversion(58, 46)
+RBUILDER_DB_VERSION = sqllib.DBversion(58, 47)
 
 
 def _createTrigger(db, table, column = "changed"):
@@ -179,14 +179,6 @@ def _createRbac(db):
         db.tables['rbac_user_role'] = []
         changed = True
 
-    if 'rbac_context' not in db.tables:
-        cu.execute("""
-        CREATE TABLE rbac_context (
-            context_id     TEXT PRIMARY KEY
-        ) %(TABLEOPTS)s """ % db.keywords)
-        db.tables['rbac_context'] = []
-        changed = True
-
     if 'rbac_permission' not in db.tables:
         cu.execute("""
         CREATE TABLE rbac_permission (
@@ -195,22 +187,20 @@ def _createRbac(db):
                REFERENCES rbac_role ( role_id ) 
                ON DELETE CASCADE
                ON UPDATE CASCADE,
-            context_id      TEXT NOT NULL
-               REFERENCES rbac_context ( context_id ) 
+            queryset_id      INTEGER NOT NULL
+               REFERENCES querysets_queryset ( queryset_id ) 
                ON DELETE CASCADE
                ON UPDATE CASCADE,
             action          TEXT NOT NULL,
-            UNIQUE ( "role_id", "context_id", "action" )
+            UNIQUE ( "role_id", "queryset_id", "action" )
         ) %(TABLEOPTS)s """ % db.keywords)
         db.tables['rbac_permission'] = []
         changed = True
 
     changed |= db.createIndex('rbac_user_role', 'RbacUserRoleSearchIdx',  
-        'role_id, user_id')
-    changed != db.createIndex('rbac_permission', 'RbacPermissionSearchIdx', 
-        'role_id, context_id')
+        'user_id')
     changed != db.createIndex('rbac_permission', 'RbacPermissionLookupIdx',  
-        'role_id, context_id, action')
+        'role_id, queryset_id, action')
 
     return changed
 

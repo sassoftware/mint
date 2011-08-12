@@ -6,29 +6,13 @@
 
 # RBAC models
 
-#import datetime
 import sys
-#import urllib
-#import urlparse
-#from dateutil import tz
-#
-#from conary import versions
-#from conary.deps import deps
-#
-#from django.conf import settings
-from django.db import models # connection
-#from django.db.backends import signals
+from django.db import models
 from mint.django_rest.deco import D
 from mint.django_rest.rbuilder import modellib
-#from mint.django_rest.rbuilder import models as rbuildermodels
-#from mint.django_rest.rbuilder.projects.models import Project, ProjectVersion, Stage
 from mint.django_rest.rbuilder.users import models as usersmodels
-#from mint.django_rest.rbuilder.jobs import models as jobmodels
+from mint.django_rest.rbuilder.querysets import models as querymodels
 from xobj import xobj
-#
-#Cache = modellib.Cache
-#XObjHidden = modellib.XObjHidden
-#APIReadOnly = modellib.APIReadOnly
 
 class RbacRoles(modellib.Collection):
     '''
@@ -70,50 +54,6 @@ class RbacRole(modellib.XObjIdModel):
     role_id = D(models.TextField(primary_key=True),
         "the database ID for the role")
 
-class RbacContexts(modellib.Collection):
-    '''
-    A collection of RbacContexts
-    '''
-
-    # XSL = 'fixme.xsl' # TODO
-    class Meta:
-        abstract = True
-    _xobj = xobj.XObjMetadata(tag = 'rbac_contexts')
-    list_fields = ['rbac_context']
-    rbac_context = []
-    objects = modellib.RbacContextsManager()
-    view_name = 'RbacContexts' # TODO: add view
-
-    def __init__(self):
-        modellib.Collection.__init__(self)
-
-    def save(self):
-        return [s.save() for s in self.rbac_context]
-
-class RbacContext(modellib.XObjIdModel):
-    '''
-    An RbacContext is a label assigned to resources that has security permissions
-    associated with it.  An example context might be "lab", "datacenter", "tradingfloor",
-    etc.  A resource can only have one context.  A resource having no context means
-    it is write access to admins only, but viewable to everyone.
-    '''
-    # XSL = "fixme.xsl" # TODO
-    class Meta:
-        db_table = 'rbac_context'
-
-    view_name = 'RbacContext' # TODO
-
-    # objects = modellib.RbacContextManager() # needed because of non-integer PK
-    _xobj = xobj.XObjMetadata(
-        tag = 'rbac_context',
-        attributes = {'id':str},
-    )
-    _xobj_hidden_accessors = set(['rbacpermission_set', 'systems'])
-
-    context_id = D(models.TextField(primary_key=True),
-        "the database ID for the context")
-
-
 class RbacPermissions(modellib.Collection):
     '''
     A collection of RbacPermissions
@@ -152,12 +92,11 @@ class RbacPermission(modellib.XObjIdModel):
 
     permission_id = D(models.AutoField(primary_key=True),
         "the database ID for the context")
-    rbac_role    =  D(modellib.ForeignKey(RbacRole, null=False, db_column='role_id'), 'rbac_role id')
-    rbac_context =  D(modellib.ForeignKey(RbacContext, null=False, db_column='context_id'), 'rbac_context id')
+    rbac_role    =  D(modellib.ForeignKey(RbacRole, 
+        null=False, db_column='role_id'), 'rbac_role id')
+    queryset     =  D(modellib.ForeignKey(querymodels.QuerySet, 
+        null=False, db_column='queryset_id'), 'queryset id')
     action  = D(models.TextField(), 'allowed capability name')
-
-    #def save(self, *args, **kwargs):
-    #    return modellib.XObjIdModel(*args, **kwargs)
 
 class RbacUserRoles(modellib.Collection):
     '''

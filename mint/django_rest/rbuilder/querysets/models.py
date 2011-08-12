@@ -11,7 +11,7 @@ from django.db import models
 
 from mint.django_rest.deco import D
 from mint.django_rest.rbuilder import modellib
-from mint.django_rest.rbuilder.inventory import models as inventorymodels
+#from mint.django_rest.rbuilder.inventory import models as inventorymodels
 from mint.django_rest.rbuilder.users import models as usersmodels
 from mint.django_rest.rbuilder.projects import models as projectsmodels
 from mint.django_rest.rbuilder.querysets import errors
@@ -260,7 +260,7 @@ class SystemTag(modellib.XObjIdModel):
                 tag = 'system_tag')
 
     system_tag_id = models.AutoField(primary_key=True)
-    system = XObjHidden(modellib.ForeignKey(inventorymodels.System,
+    system = XObjHidden(modellib.ForeignKey('inventory.System',
         related_name="tags"))
     query_tag = XObjHidden(modellib.ForeignKey(QueryTag, related_name="system_tags",
         text_field="name"))

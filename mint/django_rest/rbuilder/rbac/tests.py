@@ -3,6 +3,7 @@ from xobj import xobj
 from mint.django_rest.rbuilder.rbac import models
 from mint.django_rest.rbuilder.users import models as usersmodels
 from mint.django_rest.rbuilder.inventory import models as inventorymodels
+from mint.django_rest.rbuilder.querysets import models as querymodels
 from mint.django_rest.rbuilder.manager import rbuildermanager
 
 # Suppress all non critical msg's from output
@@ -17,6 +18,32 @@ class RbacTestCase(XMLTestCase):
 
     def setUp(self):
         XMLTestCase.setUp(self)
+        # some common test bootstrapping
+        self._createQuerysets()
+
+    def _createQuerysets(self):
+        ''' 
+        create some simple querysets to be used by all tests in common.
+        more robust queryset testing exists in the queryset test cases
+        '''
+
+        self.req('query_sets/', method='POST', expect=200, is_admin=True,
+            data=testsxml.tradingfloor_xml)
+        self.req('query_sets/', method='POST', expect=200, is_admin=True,
+            data=testsxml.lab_xml)
+        self.req('query_sets/', method='POST', expect=200, is_admin=True,
+            data=testsxml.datacenter_xml)
+
+        self.tradingfloor_queryset = querymodels.QuerySet.objects.get(name='tradingfloor')
+        self.datacenter_queryset   = querymodels.QuerySet.objects.get(name='datacenter')
+        self.lab_queryset          = querymodels.QuerySet.objects.get(name='lab')
+        
+        self.test_querysets = [
+            self.tradingfloor_queryset, 
+            self.datacenter_queryset, 
+            self.lab_queryset
+        ]
+
 
     def _xobj_list_hack(self, item):
         '''
@@ -72,46 +99,34 @@ class RbacBasicTestCase(RbacTestCase):
             'object fetched correctly'
         )
 
-    def testModelsForRbacContexts(self):
-        datacenter = models.RbacContext(pk='datacenter')
-        datacenter.save()
-        desktops = models.RbacContext(pk='desktops')
-        desktops.save()
-        self.assertEquals(len(models.RbacContext.objects.all()), 2,
-           'correct number of results'
-        ) 
-        desktops2 = models.RbacContext.objects.get(pk='desktops')
-        self.assertEqual(desktops2.context_id, 'desktops',
-           'fetched correctly'
-        )
-
     def testModelsForRbacPermissions(self):
-        context1 = models.RbacContext(pk='datacenter')
-        context1.save()
+
+        # TODO: load from queryset fixture?
+        queryset1 = querymodels.QuerySet()
+        queryset1.save()
+
         role1    = models.RbacRole(pk='sysadmin')
         role1.save() 
         action_name = 'speak freely'
         permission = models.RbacPermission(
-           rbac_context    = context1,
+           queryset        = queryset1,
            rbac_role       = role1,
-           # TODO: add choice restrictions
-           action     = action_name,
+           action          = action_name,
         )
         permission.save()
         permissions2 = models.RbacPermission.objects.filter(
-           rbac_context = context1
+           queryset = queryset1
         )
         self.assertEquals(len(permissions2), 1, 'correct length')
         found = permissions2[0]
         self.assertEquals(found.action, action_name, 'saved ok')
-        self.assertEquals(found.rbac_context.pk, 'datacenter', 'saved ok')
+        self.assertEquals(found.queryset.pk, 15, 'saved ok')
         self.assertEquals(found.rbac_role.pk, 'sysadmin', 'saved ok')
 
     def testModelsForUserRoleAssignment(self):
         # note -- we may also keep roles in AD, this is for the case
         # where we sync them or manage them internally.  This will 
         # probably need to be configurable
-        # TODO -- test many to many relation in user
         user1 = usersmodels.User(
             user_name = "test",
             full_name = "test"
@@ -131,9 +146,6 @@ class RbacBasicTestCase(RbacTestCase):
         found = mappings2[0]
         self.assertEquals(found.user.user_name, 'test', 'saved ok')
         self.assertEquals(found.role.pk, 'sysadmin', 'saved ok')
-
-    def testModelsForSystemContextAssignment(self):
-        pass
 
 class RbacRoleViews(RbacTestCase):
 
@@ -202,24 +214,23 @@ class RbacPermissionViews(RbacTestCase):
     
     def setUp(self):
         RbacTestCase.setUp(self)
-        self.seed_data = [ 'datacenter', 'lab', 'tradingfloor' ]
-        for item in self.seed_data:
-            models.RbacContext(item).save()
+
         self.seed_data = [ 'sysadmin', 'developer', 'intern' ]
         for item in self.seed_data:
             models.RbacRole(item).save()
+
         models.RbacPermission(
-            rbac_context  = models.RbacContext.objects.get(pk='datacenter'),
+            queryset      = self.datacenter_queryset,
             rbac_role     = models.RbacRole.objects.get(pk='sysadmin'),
             action        = 'write'
         ).save()
         models.RbacPermission(
-            rbac_context   = models.RbacContext.objects.get(pk='datacenter'),
+            queryset       = self.datacenter_queryset,
             rbac_role      = models.RbacRole.objects.get(pk='developer'),
             action         = 'read'
         ).save()
         models.RbacPermission(
-            rbac_context   = models.RbacContext.objects.get(pk='lab'),
+            queryset       = self.lab_queryset,
             rbac_role      = models.RbacRole.objects.get(pk='developer'),
             action    = 'write'
         ).save()
@@ -249,7 +260,7 @@ class RbacPermissionViews(RbacTestCase):
         self.assertXMLEquals(content, output)
         perm = models.RbacPermission.objects.get(pk=4)
         self.assertEqual(perm.rbac_role.pk, 'intern')
-        self.assertEqual(perm.rbac_context.pk, 'tradingfloor')
+        self.assertEqual(perm.queryset.pk, self.tradingfloor_queryset.pk)
         self.assertEqual(perm.action, 'write')
 
     def testCanDeletePermissions(self):
@@ -272,72 +283,8 @@ class RbacPermissionViews(RbacTestCase):
         self.assertXMLEquals(content, output)
         perm = models.RbacPermission.objects.get(pk=1)
         self.assertEqual(perm.rbac_role.pk, 'intern')
-        self.assertEqual(perm.rbac_context.pk, 'tradingfloor')
+        self.assertEqual(perm.queryset.pk, self.datacenter_queryset.pk)
         self.assertEqual(perm.action, 'write')
-
-class RbacContextViews(RbacTestCase):
-
-    def setUp(self):
-
-        RbacTestCase.setUp(self)
-        self.seed_data = [ 'datacenter', 'lab', 'tradingfloor' ]
-        for item in self.seed_data:
-            models.RbacContext(item).save()
-
-    def testCanListContexts(self):
-
-        url = 'rbac/contexts'
-        content = self.req(url, method='GET', expect=401, is_authenticated=True)
-        content = self.req(url, method='GET', expect=200, is_admin=True)
-
-        obj = xobj.parse(content)
-        found_items = self._xobj_list_hack(obj.rbac_contexts.rbac_context)
-        found_items = [ item.context_id for item in found_items ]
-        for expected in self.seed_data:
-            self.assertTrue(expected in found_items, 'found item')
-        self.assertEqual(len(found_items), len(self.seed_data), 'right number of items')
-        self.assertXMLEquals(content, testsxml.context_list_xml)
-
-    def testCanGetSingleContext(self):
-
-        url = 'rbac/contexts/datacenter'
-        content = self.req(url, method='GET', expect=401, is_authenticated=True)
-        content = self.req(url, method='GET', expect=200, is_admin=True)
-        obj = xobj.parse(content)
-        self.assertEqual(obj.rbac_context.context_id, 'datacenter')
-        self.assertXMLEquals(content, testsxml.context_get_xml)
-
-    def testCanAddContext(self):
-
-        url = 'rbac/contexts'
-        input = testsxml.context_put_xml_input
-        output = testsxml.context_put_xml_output
-        content = self.req(url, method='POST', data=input, expect=401, is_authenticated=True)
-        content = self.req(url, method='POST', data=input, expect=200, is_admin=True)
-        found_items = models.RbacContext.objects.get(pk='datacenter2')
-        self.assertEqual(found_items.pk, 'datacenter2')
-        self.assertXMLEquals(content, output)
-
-    def testCanDeleteContext(self):
-
-        url = 'rbac/contexts/lab'
-        self.req(url, method='DELETE', expect=401, is_authenticated=True)
-        self.req(url, method='DELETE', expect=204, is_admin=True)
-        self.failUnlessRaises(models.RbacContext.DoesNotExist,
-            lambda: models.RbacContext.objects.get(pk='lab'))
-
-    def testCanUpdateContext(self):
-
-        url = 'rbac/contexts/datacenter'
-        input = testsxml.context_put_xml_input   # reusing put data is fine here
-        output = testsxml.context_put_xml_output
-        content = self.req(url, method='PUT', data=input, expect=401, is_authenticated=True)
-        content = self.req(url, method='PUT', data=input, expect=200, is_admin=True)
-        found_items = models.RbacContext.objects.get(pk='datacenter2')
-        self.failUnlessRaises(models.RbacContext.DoesNotExist,
-            lambda: models.RbacContext.objects.get(pk='datacenter'))
-        self.assertEqual(found_items.pk, 'datacenter2')
-        self.assertXMLEquals(content, output)
 
 class RbacUserRoleViewTests(RbacTestCase):
 
@@ -425,72 +372,19 @@ class RbacUserRoleViewTests(RbacTestCase):
         content = self.req(get_url, method='GET', expect=200, is_admin=True)
         self.assertXMLEquals(content, testsxml.user_role_get_list_xml_after_delete)
 
-    # (UPDATE DOES NOT MAKE SENSE, AND IS NOT SUPPORTED)
-
-class RbacSystemViewTests(RbacTestCase):
-    ''' Can we view and manipulate the system context as an admin?'''
-
-    def setUp(self):
-        RbacTestCase.setUp(self)
-        
-        mgr = rbuildermanager.RbuilderManager()
-        local_zone = mgr.sysMgr.getLocalZone()
-        self.system = inventorymodels.System(
-            name='testSystem', managing_zone=local_zone
-        )
-        self.datacenter = models.RbacContext('datacenter')
-        self.lab = models.RbacContext('lab')
-        self.datacenter.save()
-        self.lab.save()
-        self.system.rbac_context = self.datacenter
-        self.system.save()
-
-    def testCanGetSystemContext(self):
-        url = "rbac/resources/system/%d/context" % self.system.pk
-        content = self.req(url, method='GET', expect=401, is_authenticated=True)
-        content = self.req(url, method='GET', expect=200, is_admin=True)
-        self.assertXMLEquals(content, testsxml.system_context_get_xml)
-
-    def testCanAssignSystemToContext(self):
-        url = "rbac/resources/system/%d/context" % self.system.pk
-        input = testsxml.system_context_put_xml_input   
-        output = testsxml.system_context_put_xml_output
-        content = self.req(url, method='PUT', data=input, expect=401, is_authenticated=True)
-        content = self.req(url, method='PUT', data=input, expect=200, is_admin=True)
-        found_item = inventorymodels.System.objects.get(name='testSystem')
-        self.assertEquals(found_item.rbac_context.pk, 'lab')
-        content = self.req(url, method='GET', expect=200, is_admin=True)
-        self.assertXMLEquals(content, testsxml.system_context_get_xml2)
-
-    def testCanRemoveSystemContext(self):
-        url = "rbac/resources/system/%d/context" % self.system.pk
-        content = self.req(url, method='DELETE', expect=401, is_authenticated=True)
-        content = self.req(url, method='DELETE', expect=204, is_admin=True)
-        found_item = inventorymodels.System.objects.get(name='testSystem')
-        self.assertEquals(found_item.rbac_context, None)
-
 class RbacEngineTests(RbacTestCase):
     '''Do we know when to grant or deny access?'''
 
     def setUp(self):
         RbacTestCase.setUp(self)
 
-        # create a couple of users, with varying contexts
-        # sysadmin -- WRITE to datacenter
-        # developer -- READ to datacenter
-        # developer -- WRITE to lab
-        # everyone -- NOTHING to tradingfloor
-
-        context_seed_data = [ 'datacenter', 'lab', 'tradingfloor' ]
-        for item in context_seed_data:
-            models.RbacContext(item).save()
         role_seed_data = [ 'sysadmin', 'developer', 'intern' ]
         for item in role_seed_data:
             models.RbacRole(item).save()
 
-        def mk_permission(context, role, action):
+        def mk_permission(queryset, role, action):
             models.RbacPermission(
-                rbac_context  = models.RbacContext.objects.get(pk=context),
+                queryset      = queryset,
                 rbac_role     = models.RbacRole.objects.get(pk=role),
                 action        = action
             ).save()
@@ -511,8 +405,8 @@ class RbacEngineTests(RbacTestCase):
             ).save()
             return user
 
-        mk_permission('datacenter', 'sysadmin',  'write')
-        mk_permission('datacenter', 'developer', 'read')
+        mk_permission(self.datacenter_queryset, 'sysadmin',  'write')
+        mk_permission(self.datacenter_queryset, 'developer', 'read')
 
         self.admin_user     = usersmodels.User.objects.get(user_name='admin')
         self.sysadmin_user  = mk_user('Example Sysadmin', False, 'sysadmin')
@@ -537,9 +431,9 @@ class RbacEngineTests(RbacTestCase):
         # admin user can do everything regardless of context
         # or permission
         for action in [ 'read', 'write' ]:
-            for context in [ 'lab', 'datacenter', 'tradingfloor' ]:
+            for queryset in self.test_querysets:
                 self.assertTrue(self.mgr.userHasRbacPermission(
-                    self.admin_user, context, action
+                    self.admin_user, queryset, action
                 ))
 
     def testWriteImpliesRead(self):
@@ -547,32 +441,30 @@ class RbacEngineTests(RbacTestCase):
         # even if permission isn't in DB
         for action in [ 'read', 'write' ]:
             self.assertTrue(self.mgr.userHasRbacPermission(
-                self.sysadmin_user, 'datacenter', action
+                self.sysadmin_user, self.datacenter_queryset, action
             ))
 
     def testReadDoesNotImplyWrite(self):
         # if you can read, that doesn't mean write
         self.assertTrue(self.mgr.userHasRbacPermission(
-            self.developer_user, 'datacenter', 'read'
+            self.developer_user, self.datacenter_queryset, 'read'
         ))
         self.assertFalse(self.mgr.userHasRbacPermission(
-            self.developer_user, 'datacenter', 'write'
+            self.developer_user, self.datacenter_queryset, 'write'
         ))
 
     def testNothingImpliesLockout(self):
         # if you don't have any permissions, you can neither
         # read nor write
         self.assertFalse(self.mgr.userHasRbacPermission(
-            self.developer_user, 'tradingfloor', 'write'
+            self.developer_user, self.tradingfloor_queryset, 'write'
         ))
         self.assertFalse(self.mgr.userHasRbacPermission(
-            self.developer_user, 'tradingfloor', 'read'
+            self.developer_user, self.tradingfloor_queryset, 'read'
         ))
 
     def testResourceWithoutContextImpliesNonAdminLockout(self):
-        # NOTE -- this is not SUPPOSED to be a valid
-        # test case because every resource will have a 
-        # security context, but we're being thorough
+        # if a resource is not in any queryset access is admin only
         self.assertTrue(self.mgr.userHasRbacPermission(
             self.admin_user, None, 'read'
         ))
@@ -591,13 +483,6 @@ class RbacEngineTests(RbacTestCase):
         # exist (due to code error?) you don't get in
         self.assertFalse(self.mgr.userHasRbacPermission(
             self.developer_user, None, 'some fake action type'
-        ))
-
-    def testCannotLookupPermissionOnInvalidContext(self):       
-        # if you test against a context that doesn't exist
-        # (due to code error?) you don't get in
-        self.assertFalse(self.mgr.userHasRbacPermission(
-            self.developer_user, 'imaginarycontext', 'read'
         ))
 
 # SEE ALSO (PENDING) tests in inventory and other services
