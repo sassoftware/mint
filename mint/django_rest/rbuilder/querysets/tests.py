@@ -168,37 +168,30 @@ class QuerySetFixturedTestCase(XMLTestCase):
             [u'System name 7', u'System name 8'])
 
     def testPostQuerySetChosen(self):
+
         # Add system 7 to query set 5
         response = self._post('query_sets/5/chosen/',
             data=testsxml.systems_chosen_post_xml,
             username="admin", password="password")
         self.assertEquals(response.status_code, 200)
-        systems = self.xobjResponse('query_sets/5/chosen/')
-        self.assertEquals(len(systems.system), 2)
-        self.assertEquals([s.name for s in systems.system],
-            [u'System name 4', u'System name 7'])
+        xobjModel = xobj.parse(response.content)
+        self.assertEquals(xobjModel.system.system_id, u'7')
 
         # Add system 8 to query set 5
         response = self._post('query_sets/5/chosen/',
             data=testsxml.systems_chosen_post_xml2,
             username="admin", password="password")
         self.assertEquals(response.status_code, 200)
-        systems = self.xobjResponse('query_sets/5/chosen/')
-        self.assertEquals(len(systems.system), 3)
-        self.assertEquals([s.name for s in systems.system],
-            [u'System name 4', u'System name 7',
-             u'System name 8'])
+        xobjModel = xobj.parse(response.content)
+        self.assertEquals(xobjModel.system.system_id, u'8')
 
         # Add system 9, this time completely by ref, to query set 5
         response = self._post('query_sets/5/chosen/',
             data=testsxml.systems_chosen_post_xml3,
             username="admin", password="password")
         self.assertEquals(response.status_code, 200)
-        systems = self.xobjResponse('query_sets/5/chosen/')
-        self.assertEquals(len(systems.system), 4)
-        self.assertEquals([s.name for s in systems.system],
-            [u'System name 4', u'System name 7',
-             u'System name 8', u'System name 9'])
+        xobjModel = xobj.parse(response.content)
+        self.assertEquals(xobjModel.system.system_id, u'9')
 
     def testDeleteQuerySetChosen(self):
         # Add system 7 to the query set first
