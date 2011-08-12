@@ -188,7 +188,7 @@ def _createRbac(db):
                ON DELETE CASCADE
                ON UPDATE CASCADE,
             queryset_id      INTEGER NOT NULL
-               REFERENCES querysets_queryset ( queryset_id ) 
+               REFERENCES querysets_queryset ( query_set_id ) 
                ON DELETE CASCADE
                ON UPDATE CASCADE,
             action          TEXT NOT NULL,
@@ -1190,9 +1190,6 @@ def _createInventorySchema(db, cfg):
                     ON DELETE SET NULL,
                 "project_id" integer 
                     REFERENCES Projects (projectId)
-                    ON DELETE SET NULL,
-                "rbac_context_id" TEXT 
-                    REFERENCES rbac_context ("context_id")
                     ON DELETE SET NULL
             ) %(TABLEOPTS)s""" % db.keywords)
         db.tables['inventory_system'] = []
@@ -2809,7 +2806,6 @@ def createSchema(db, doCommit=True, cfg=None):
     changed |= _createPlatforms(db)
     changed |= _createCapsuleIndexerSchema(db)
     changed |= _createRepositoryLogSchema(db)
-    changed |= _createRbac(db)
     changed |= _createInventorySchema(db, cfg)
     changed |= _createJobsSchema(db)
     changed |= _createCapsuleIndexerYumSchema(db)
@@ -2824,6 +2820,7 @@ def createSchema(db, doCommit=True, cfg=None):
     changed |= _createChangeLogSchema(db)
     changed |= _createPackageSchema(db)
     changed |= _createDjangoSchema(db)
+    changed |= _createRbac(db)
 
     if doCommit:
         db.commit()
