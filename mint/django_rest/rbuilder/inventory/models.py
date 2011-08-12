@@ -597,9 +597,6 @@ class System(modellib.XObjIdModel):
     network_address = D(NetworkAddress, "Network address for this system")
     actions = D(modellib.SyntheticField(jobmodels.Actions),
         "actions available on the system")
-    rbac_context = APIReadOnly(XObjHidden(
-        modellib.ForeignKey(rbacmodels.RbacContext, null=True,
-            related_name='systems')))
 
     logged_fields = ['name', 'installed_software']
 

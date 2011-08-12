@@ -29,6 +29,7 @@ from mint.django_rest.rbuilder.users import models as usersmodels
 #from mint.django_rest.rbuilder.inventory import models
 from mint.django_rest.rbuilder.manager import basemanager
 from mint.django_rest.rbuilder.inventory import models as inventorymodels
+from mint.django_rest.rbuilder.querysets import models as querymodels
 #from mint.django_rest.rbuilder.querysets import models as querysetmodels
 #from mint.django_rest.rbuilder.jobs import models as jobmodels
 #from mint.rest import errors as mint_rest_errors
@@ -123,37 +124,6 @@ class RbacManager(basemanager.BaseManager):
         return self._deleteThing(models.RbacRole, self._role(role)) 
 
     #########################################################
-    # RBAC CONTEXT METHODS
-    # handled a bit nonstandard due to the string PK
-    # and need to override the Django manager
-
-    def _context(self, value):
-        '''cast input as a role'''
-        return self._orId(value, models.RbacContext)
-
-    @exposed
-    def getRbacContexts(self):
-        return self._getThings(models.RbacContexts,
-            models.RbacContext, 'rbac_context')
-
-    @exposed
-    def getRbacContext(self, context):
-        return self._context(context)
-
-    @exposed
-    def addRbacContext(self, context):
-        return self._addThing(models.RbacContext, context)
-
-    @exposed
-    def updateRbacContext(self, old_id, context):
-        return self._updateSingleColumnThing(models.RbacContext, old_id,
-            context, 'context_id', 'rbac_context')
-
-    @exposed
-    def deleteRbacContext(self, context):
-        return self._deleteThing(models.RbacContext, self._context(context)) 
-
-    #########################################################
     # RBAC PERMISSION METHODS
     # these do NOT override the manager so are coded differently than above
     
@@ -215,8 +185,13 @@ class RbacManager(basemanager.BaseManager):
         mapping = models.RbacUserRole.objects.get(user=user, role=role)
         return mapping.role
 
+    def _queryset(self, queryset_or_id):
+        if type(queryset_or_id) == int:
+            return querymodels.objects.get(pk=queryset_or_id)
+        return queryset_or_id
+
     @exposed
-    def userHasRbacPermission(self, user=None, context=None, action=None):
+    def userHasRbacPermission(self, user=None, queryset=None, action=None):
         '''
         Can User X Do Action Y On Resoures with Context Z?
         This function is not surfaced directly via REST but is the core
@@ -231,16 +206,16 @@ class RbacManager(basemanager.BaseManager):
             return True
  
         # get the resource's context -- if none, do not allow access
-        found_context = None
+        found_queryset = None
         try: 
-            found_context = self._context(context)
+            found_queryset = self._queryset(queryset)
         except models.RbacContext.DoesNotExist:
             return False
 
         role_maps = models.RbacUserRole.objects.filter(user=user)
         user_role_ids = [ x.role.pk for x in role_maps ]
 
-        # if the user has no roles on this context, fail immediately
+        # if the user has no roles on this queryset, fail immediately
         if len(user_role_ids) == 0:
             return False
 
@@ -250,10 +225,10 @@ class RbacManager(basemanager.BaseManager):
         if action == 'read':
             acceptable_permitted_actions.append('write')
 
-        # there is context/roles info, so now find the permissions associated
-        # with the context
+        # there is queryset/roles info, so now find the permissions associated
+        # with the queryset
         resource_permissions = models.RbacPermission.objects.filter(
-            rbac_context = found_context,
+            queryset = found_queryset,
         ).extra(
             where=['role_id=%s'], params=user_role_ids
         )
@@ -295,42 +270,4 @@ class RbacManager(basemanager.BaseManager):
         # as what we've deleted.
         return mapping
     
-    #########################################################
-    # RBAC RESOURCE<->CONTEXT METHODS
-    # set a context on a resource, uncontext a resource, etc
-    # ex, system256 is "datacenter", system101 is "lab", etc.
-    
-    def _getManagerByType(self, resource_type):
-        '''Get the django manager for a resource'''
-        if resource_type == RESOURCE_TYPE_SYSTEM:
-            return inventorymodels.System.objects
-        #elif resource_type == RESOURCE_TYPE_PLATFORM:
-        #    pass
-        #elif resource_Type == RESOURCE_TYPE_IMAGE:
-        #    pass
-        else:
-            raise exceptions.NotImplementedError(
-                "rbac not yet supported on this resource")
-
-    @exposed
-    def getResourceRbacContext(self, resource_type, resource_id):
-        mgr = self._getManagerByType(resource_type)
-        obj = mgr.get(pk=resource_id)
-        return obj.rbac_context
-
-    @exposed
-    def setResourceRbacContext(self, resource_type, resource_id, rbac_context):
-        mgr = self._getManagerByType(resource_type)
-        obj = mgr.get(pk=resource_id)
-        obj.rbac_context = rbac_context
-        obj.save()
-        return obj
-
-    @exposed
-    def deleteResourceRbacContext(self, resource_type, resource_id):
-        mgr = self._getManagerByType(resource_type)
-        obj = mgr.get(pk=resource_id)
-        obj.rbac_context = None
-        obj.save()
-        return obj
 

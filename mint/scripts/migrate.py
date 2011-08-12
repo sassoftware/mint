@@ -2954,7 +2954,7 @@ class MigrateTo_57(SchemaMigration):
 
 
 class MigrateTo_58(SchemaMigration):
-    Version = (58, 46)
+    Version = (58, 47)
 
     def migrate(self):
         return True
@@ -3522,6 +3522,41 @@ class MigrateTo_58(SchemaMigration):
             ALTER TABLE PlatformsPlatformSources
                 ADD COLUMN platforms_platform_sources_id SERIAL PRIMARY KEY""")
         return True            
+
+    def migrate47(self):
+        '''permissions use querysets not a seperate rbac_context entity'''
+        cu = self.db.cursor()
+        
+        # remove old items (not shipped)
+        cu.execute("DROP TABLE rbac_context CASCADE")
+        cu.execute("DROP TABLE rbac_permission CASCADE")
+        cu.execute("""
+        ALTER TABLE inventory_system DROP COLUMN 
+            "rbac_context_id"
+        """)
+        
+        # add new version
+        cu.execute("""
+        CREATE TABLE rbac_permission (
+            permission_id   %(PRIMARYKEY)s,
+            role_id         TEXT NOT NULL
+               REFERENCES rbac_role (role_id) 
+               ON DELETE CASCADE
+               ON UPDATE CASCADE,
+            queryset_id      INTEGER NOT NULL
+               REFERENCES querysets_queryset (query_set_id) 
+               ON DELETE CASCADE
+               ON UPDATE CASCADE,
+            action          TEXT NOT NULL, 
+            UNIQUE ( "role_id", "queryset_id", "action" )
+        ) %(TABLEOPTS)s""" % self.db.keywords)
+        self.db.tables['rbac_permission'] = []
+        self.db.createIndex('rbac_user_role', 'RbacUserRoleSearchIdx',
+            'user_id')
+        self.db.createIndex('rbac_permission', 'RbacPermissionLookupIdx',
+            'role_id, queryset_id, action')
+
+        return True 
 
 #### SCHEMA MIGRATIONS END HERE #############################################
 
