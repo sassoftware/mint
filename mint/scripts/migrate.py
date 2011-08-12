@@ -2954,7 +2954,7 @@ class MigrateTo_57(SchemaMigration):
 
 
 class MigrateTo_58(SchemaMigration):
-    Version = (58, 47)
+    Version = (58, 48)
 
     def migrate(self):
         return True
@@ -3557,6 +3557,13 @@ class MigrateTo_58(SchemaMigration):
             'role_id, queryset_id, action')
 
         return True 
+
+    def migrate48(self):
+        cu = self.db.cursor()
+        cu.execute("""
+            ALTER TABLE querysets_queryset
+                ADD COLUMN "tagged_date" TIMESTAMP WITH TIME ZONE""")
+        return True
 
 #### SCHEMA MIGRATIONS END HERE #############################################
 

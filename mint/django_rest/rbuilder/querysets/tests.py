@@ -83,7 +83,8 @@ class QuerySetFixturedTestCase(XMLTestCase):
         response = self._get('query_sets/',
             username="admin", password="password")
         self.assertEquals(response.status_code, 200)
-        self.assertXMLEquals(response.content, testsxml.query_sets_xml)
+        self.assertXMLEquals(response.content, testsxml.query_sets_xml,
+            ignoreNodes=['tagged_date', 'created_date', 'modified_date'])
 
     def testGetQuerySet(self):
         response = self._get('query_sets/4/',

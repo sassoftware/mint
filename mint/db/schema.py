@@ -28,7 +28,7 @@ from conary.dbstore import sqlerrors, sqllib
 log = logging.getLogger(__name__)
 
 # database schema major version
-RBUILDER_DB_VERSION = sqllib.DBversion(58, 47)
+RBUILDER_DB_VERSION = sqllib.DBversion(58, 48)
 
 
 def _createTrigger(db, table, column = "changed"):
@@ -2211,6 +2211,7 @@ def _createQuerySetSchema(db):
             "description" TEXT,
             "created_date" TIMESTAMP WITH TIME ZONE NOT NULL,
             "modified_date" TIMESTAMP WITH TIME ZONE NOT NULL,
+            "tagged_date" TIMESTAMP WITH TIME ZONE,
             "resource_type" TEXT NOT NULL,
             "presentation_type" TEXT,
             "can_modify" BOOLEAN NOT NULL DEFAULT TRUE

@@ -93,6 +93,8 @@ class QuerySet(modellib.XObjIdModel):
         "Date the query set was created")
     modified_date = D(modellib.DateTimeUtcField(auto_now_add=True),
         "Date the query set was modified")
+    tagged_date = D(modellib.DateTimeUtcField(auto_now_add=False),
+        "Date the query set was last tagged")
     children = D(models.ManyToManyField("self", symmetrical=False),
         "Query sets that are children of this query set")
     filter_entries = D(models.ManyToManyField("FilterEntry"),
