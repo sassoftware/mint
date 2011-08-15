@@ -494,8 +494,8 @@ class ProductManager(manager.Manager):
         productVersion = self._getMinimalProductVersion(fqdn, version)
         return self.getProductVersionDefinitionByProductVersion(productVersion)
 
-    def getProductVersionDefinitionByProductVersion(self, productVersion):
-        product = self.getProduct(productVersion.hostname)
+    def getProductVersionDefinitionByProductVersion(self, hostname, productVersion):
+        product = self.getProduct(hostname)
         pd = proddef.ProductDefinition()
         pd.setProductShortname(product.shortname)
         pd.setConaryRepositoryHostname(product.getFQDN())

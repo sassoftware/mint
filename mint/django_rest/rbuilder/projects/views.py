@@ -39,6 +39,7 @@ class ProjectBranchService(service.BaseService):
     def get(self, project_short_name, project_branch_label):
         return self.mgr.getProjectBranch(project_short_name, project_branch_label)
 
+    @access.anonymous
     @requires("project_branch")
     @return_xml
     def rest_POST(self, request, project_short_name, project_branch):

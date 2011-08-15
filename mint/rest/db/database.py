@@ -562,6 +562,10 @@ class Database(DBInterface):
     def getProductVersionDefinition(self, hostname, version):
         self.auth.requireProductReadAccess(hostname)
         return self.productMgr.getProductVersionDefinition(hostname, version)
+    
+    def getProductVersionDefinitionFromVersion(self, hostname, version):
+        self.auth.requireProductReadAccess(hostname)
+        return self.productMgr.getProductVersionDefinitionByProductVersion(hostname, version)
 
     @commitafter
     def setProductVersionDefinition(self, hostname, version, pd):
