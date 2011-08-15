@@ -588,7 +588,7 @@ class Database(DBInterface):
         self.auth.requireBuildsOnHost(hostname, [imageId])
         return self.imageMgr.stopImageJob(imageId)
 
-    @readonly    
+    @readonly
     def listReleasesForProduct(self, hostname, limit=None):
         self.auth.requireProductReadAccess(hostname)
         return self.releaseMgr.listReleasesForProduct(hostname, limit=limit)
