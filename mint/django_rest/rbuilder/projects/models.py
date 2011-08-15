@@ -12,6 +12,7 @@ from dateutil import tz
 from django.db import models
 from mint import projects as mintprojects
 from mint import helperfuncs, userlevels
+from mint import mint_error
 from mint.django_rest.rbuilder import modellib
 from mint.django_rest.deco import D
 from mint.django_rest.rbuilder.users import models as usermodels
@@ -321,8 +322,9 @@ class ProjectVersion(modellib.XObjIdModel):
             values=oldUrlValues)
         xobjModel = modellib.XObjIdModel.serialize(self, request)
         # Convert timestamp fields in the database to our standard UTC format
-        xobjModel.created_date = str(datetime.datetime.fromtimestamp(
-            xobjModel.created_date, tz.tzutc()))
+        if xobjModel.created_date:
+            xobjModel.created_date = str(datetime.datetime.fromtimestamp(
+                xobjModel.created_date, tz.tzutc()))
         # XXX FIXME: this should not be needed
         xobjModel.project_branch_stages.id = "%s/project_branch_stages" % (xobjModel.id, )
         return xobjModel
@@ -331,8 +333,12 @@ class ProjectVersion(modellib.XObjIdModel):
         if self._rbmgr is None or self.project_id is None:
             return
         restDb = self._rbmgr.restDb
-        pd = restDb.getProductVersionDefinitionFromVersion(self.project.hostname, self)
-        self.source_group = str(pd.getImageGroup())
+        # TODO: cache me, or pull me into the branch table
+        try:
+            pd = restDb.getProductVersionDefinitionFromVersion(self.project.hostname, self)
+            self.source_group = str(pd.getImageGroup())
+        except mint_error.ProductDefinitionVersionNotFound:
+            pass
         #platformLabel = self.platform_label = pd.getPlatformLabel()
         # Look for a platform matching that label
         #platforms = platformmodels.Platform.objects.filter(label=platformLabel)
