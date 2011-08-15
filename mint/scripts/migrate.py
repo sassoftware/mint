@@ -2592,6 +2592,12 @@ class MigrateTo_55(SchemaMigration):
         cu.execute("UPDATE inventory_event_type SET priority=70 WHERE name = 'system registration'")
         return True
 
+class MigrateTo_56(SchemaMigration):
+    Version = (56, 0)
+
+    def migrate(self):
+        return True
+
 #### SCHEMA MIGRATIONS END HERE #############################################
 
 def _getMigration(major):
