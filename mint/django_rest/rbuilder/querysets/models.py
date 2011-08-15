@@ -11,7 +11,7 @@ from django.db import models
 
 from mint.django_rest.deco import D
 from mint.django_rest.rbuilder import modellib
-from mint.django_rest.rbuilder.inventory import models as inventorymodels
+#from mint.django_rest.rbuilder.inventory import models as inventorymodels
 from mint.django_rest.rbuilder.users import models as usersmodels
 from mint.django_rest.rbuilder.projects import models as projectsmodels
 from mint.django_rest.rbuilder.querysets import errors
@@ -81,6 +81,8 @@ class QuerySet(modellib.XObjIdModel):
 
     _xobj = xobj.XObjMetadata(
                 tag = "query_set")
+    _xobj_hidden_accessors = set(['rbacpermission_set'])
+
     query_set_id = D(models.AutoField(primary_key=True),
         "The database id for the query set")
     name = D(models.TextField(unique=True),
@@ -91,6 +93,8 @@ class QuerySet(modellib.XObjIdModel):
         "Date the query set was created")
     modified_date = D(modellib.DateTimeUtcField(auto_now_add=True),
         "Date the query set was modified")
+    tagged_date = D(modellib.DateTimeUtcField(auto_now_add=False),
+        "Date the query set was last tagged")
     children = D(models.ManyToManyField("self", symmetrical=False),
         "Query sets that are children of this query set")
     filter_entries = D(models.ManyToManyField("FilterEntry"),
@@ -260,7 +264,7 @@ class SystemTag(modellib.XObjIdModel):
                 tag = 'system_tag')
 
     system_tag_id = models.AutoField(primary_key=True)
-    system = XObjHidden(modellib.ForeignKey(inventorymodels.System,
+    system = XObjHidden(modellib.ForeignKey('inventory.System',
         related_name="tags"))
     query_tag = XObjHidden(modellib.ForeignKey(QueryTag, related_name="system_tags",
         text_field="name"))

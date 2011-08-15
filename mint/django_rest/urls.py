@@ -586,22 +586,12 @@ urlpatterns = patterns('',
     URL(r'rbac/roles/(?P<role_id>\w+)?$',
         rbacviews.RbacRolesService(),
         name='RbacRole'),
-    URL(r'rbac/contexts/?$',
-        rbacviews.RbacContextsService(),
-        name='RbacContexts'),
-    URL(r'rbac/contexts/(?P<context_id>\w+)?$',
-        rbacviews.RbacContextsService(),
-        name='RbacContext'),
     URL(r'rbac/users/(?P<user_id>\d+)/roles/?$',
         rbacviews.RbacUserRolesService(),
         name='RbacUserRoles'),
     URL(r'rbac/users/(?P<user_id>\d+)/roles/(?P<role_id>\w+)?$',
         rbacviews.RbacUserRolesService(),
         name='RbacUserRole'),
-    URL(r'rbac/resources/(?P<resource_type>\w+)/(?P<resource_id>\d+)/context?$',
-        rbacviews.RbacResourceContextService(),
-        name='RbacResourceContextService')
-    
 )
 
 

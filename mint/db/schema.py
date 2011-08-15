@@ -28,7 +28,7 @@ from conary.dbstore import sqlerrors, sqllib
 log = logging.getLogger(__name__)
 
 # database schema major version
-RBUILDER_DB_VERSION = sqllib.DBversion(58, 46)
+RBUILDER_DB_VERSION = sqllib.DBversion(58, 48)
 
 
 def _createTrigger(db, table, column = "changed"):
@@ -179,14 +179,6 @@ def _createRbac(db):
         db.tables['rbac_user_role'] = []
         changed = True
 
-    if 'rbac_context' not in db.tables:
-        cu.execute("""
-        CREATE TABLE rbac_context (
-            context_id     TEXT PRIMARY KEY
-        ) %(TABLEOPTS)s """ % db.keywords)
-        db.tables['rbac_context'] = []
-        changed = True
-
     if 'rbac_permission' not in db.tables:
         cu.execute("""
         CREATE TABLE rbac_permission (
@@ -195,22 +187,20 @@ def _createRbac(db):
                REFERENCES rbac_role ( role_id ) 
                ON DELETE CASCADE
                ON UPDATE CASCADE,
-            context_id      TEXT NOT NULL
-               REFERENCES rbac_context ( context_id ) 
+            queryset_id      INTEGER NOT NULL
+               REFERENCES querysets_queryset ( query_set_id ) 
                ON DELETE CASCADE
                ON UPDATE CASCADE,
             action          TEXT NOT NULL,
-            UNIQUE ( "role_id", "context_id", "action" )
+            UNIQUE ( "role_id", "queryset_id", "action" )
         ) %(TABLEOPTS)s """ % db.keywords)
         db.tables['rbac_permission'] = []
         changed = True
 
     changed |= db.createIndex('rbac_user_role', 'RbacUserRoleSearchIdx',  
-        'role_id, user_id')
-    changed != db.createIndex('rbac_permission', 'RbacPermissionSearchIdx', 
-        'role_id, context_id')
+        'user_id')
     changed != db.createIndex('rbac_permission', 'RbacPermissionLookupIdx',  
-        'role_id, context_id, action')
+        'role_id, queryset_id, action')
 
     return changed
 
@@ -1200,9 +1190,6 @@ def _createInventorySchema(db, cfg):
                     ON DELETE SET NULL,
                 "project_id" integer 
                     REFERENCES Projects (projectId)
-                    ON DELETE SET NULL,
-                "rbac_context_id" TEXT 
-                    REFERENCES rbac_context ("context_id")
                     ON DELETE SET NULL
             ) %(TABLEOPTS)s""" % db.keywords)
         db.tables['inventory_system'] = []
@@ -2224,6 +2211,7 @@ def _createQuerySetSchema(db):
             "description" TEXT,
             "created_date" TIMESTAMP WITH TIME ZONE NOT NULL,
             "modified_date" TIMESTAMP WITH TIME ZONE NOT NULL,
+            "tagged_date" TIMESTAMP WITH TIME ZONE,
             "resource_type" TEXT NOT NULL,
             "presentation_type" TEXT,
             "can_modify" BOOLEAN NOT NULL DEFAULT TRUE
@@ -2819,7 +2807,6 @@ def createSchema(db, doCommit=True, cfg=None):
     changed |= _createPlatforms(db)
     changed |= _createCapsuleIndexerSchema(db)
     changed |= _createRepositoryLogSchema(db)
-    changed |= _createRbac(db)
     changed |= _createInventorySchema(db, cfg)
     changed |= _createJobsSchema(db)
     changed |= _createCapsuleIndexerYumSchema(db)
@@ -2834,6 +2821,7 @@ def createSchema(db, doCommit=True, cfg=None):
     changed |= _createChangeLogSchema(db)
     changed |= _createPackageSchema(db)
     changed |= _createDjangoSchema(db)
+    changed |= _createRbac(db)
 
     if doCommit:
         db.commit()

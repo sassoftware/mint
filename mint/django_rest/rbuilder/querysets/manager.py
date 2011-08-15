@@ -16,10 +16,10 @@ from mint.django_rest.rbuilder.querysets import descriptor
 from mint.django_rest.rbuilder.querysets import errors
 from mint.django_rest.rbuilder.querysets import models
 
+from datetime import datetime
+
 # TODO: this code passes around ids way too much and should be passing
 # around objects to reduce SQL usage
-
-USE_TAGS_IN_QUERY=True
 
 class QuerySetManager(basemanager.BaseManager):
 
@@ -96,11 +96,28 @@ class QuerySetManager(basemanager.BaseManager):
 
     @exposed
     def tagQuerySet(self, querySet):
+        '''tag all resources matching a query set whether filtered or chosen'''
+        self._tagQuerySetFiltered(querySet)
+        self._tagQuerySetChosen(querySet)
+        querySet.tagged_date = datetime.now()
+        querySet.save()
+
+    def _tagQuerySetFiltered(self, querySet):
+        '''tag resources matched by a filter'''
         resources = self.filterQuerySet(querySet)
         tag = self._getQueryTag(querySet)
         method = getattr(self, self.tagMethodMap[querySet.resource_type])
         inclusionMethod = models.InclusionMethod.objects.select_related().get(
             name='filtered')
+        method(resources, tag, inclusionMethod)
+
+    def _tagQuerySetChosen(self, querySet):
+        '''tag resources explicitly added to query set'''
+        resources = self._getQuerySetChosenResult(querySet, use_tags=False)
+        tag = self._getQueryTag(querySet)
+        method = getattr(self, self.tagMethodMap[querySet.resource_type])
+        inclusionMethod = models.InclusionMethod.objects.select_related().get(
+            name='chosen')
         method(resources, tag, inclusionMethod)
 
     def tagSystems(self, systems, tag, inclusionMethod):

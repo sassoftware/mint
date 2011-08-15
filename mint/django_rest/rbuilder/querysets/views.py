@@ -109,7 +109,8 @@ class QuerySetChosenResultService(BaseQuerySetService):
     @requires('system')
     @return_xml
     def rest_POST(self, request, query_set_id, system):
-        return self.mgr.updateQuerySetChosen(query_set_id, system)
+        self.mgr.updateQuerySetChosen(query_set_id, system)
+        return system
 
     @access.admin
     @requires('system')

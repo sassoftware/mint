@@ -1,3 +1,31 @@
+# createa  system placeholder queryset
+datacenter_xml = """
+<query_set>
+    <name>datacenter</name>
+    <resource_type>system</resource_type>
+    <filter_entries/>
+</query_set>
+"""
+
+# create a lab placeholder queryset
+lab_xml = """
+<query_set>
+    <name>lab</name>
+    <resource_type>system</resource_type>
+    <filter_entries/>
+</query_set>
+"""
+
+# create a tradingfloor placeholder queryset
+tradingfloor_xml = """
+<query_set>
+    <name>tradingfloor</name>
+    <resource_type>system</resource_type>
+    <filter_entries/>
+</query_set>
+"""
+
+
 role_put_xml_input = """
 <rbac_role id="http://testserver/api/v1/rbac/roles/rocketsurgeon">
    <role_id>rocketsurgeon</role_id>
@@ -31,56 +59,24 @@ role_get_xml = """
 </rbac_role>
 """
 
-context_put_xml_input = """
-<rbac_context id="http://testserver/api/v1/rbac/contexts/datacenter2">
-   <context_id>datacenter2</context_id>
-</rbac_context>
-"""
-
-context_put_xml_output = """
-<rbac_context id="http://testserver/api/v1/rbac/contexts/datacenter2">
-   <context_id>datacenter2</context_id>
-</rbac_context>
-"""
-
-context_list_xml = """
-<rbac_contexts count="3" end_index="2" filter_by="" full_collection="http://testserver/api/v1/rbac/contexts" id="http://testserver/api/v1/rbac/contexts;start_index=0;limit=10" limit="10" next_page="" num_pages="1" order_by="" per_page="10" previous_page="" start_index="0">
-  <rbac_context id="http://testserver/api/v1/rbac/contexts/datacenter">
-    <context_id>datacenter</context_id>
-  </rbac_context>
-  <rbac_context id="http://testserver/api/v1/rbac/contexts/lab">
-    <context_id>lab</context_id>
-  </rbac_context>
-  <rbac_context id="http://testserver/api/v1/rbac/contexts/tradingfloor">
-    <context_id>tradingfloor</context_id>
-  </rbac_context>
-</rbac_contexts>
-"""
-
-context_get_xml = """
-<rbac_context id="http://testserver/api/v1/rbac/contexts/datacenter">
-  <context_id>datacenter</context_id>
-</rbac_context>
-"""
-
 permission_list_xml = """
 <rbac_permissions count="3" end_index="2" filter_by="" full_collection="http://testserver/api/v1/rbac/permissions" id="http://testserver/api/v1/rbac/permissions;start_index=0;limit=10" limit="10" next_page="" num_pages="1" order_by="" per_page="10" previous_page="" start_index="0">
   <rbac_permission id="http://testserver/api/v1/rbac/permissions/1">
-    <action>write</action>
     <permission_id>1</permission_id>
-    <rbac_context id="http://testserver/api/v1/rbac/contexts/datacenter"/>
+    <action>write</action>
+    <queryset id="http://testserver/api/v1/query_sets/14"/>
     <rbac_role id="http://testserver/api/v1/rbac/roles/sysadmin"/>
   </rbac_permission>
   <rbac_permission id="http://testserver/api/v1/rbac/permissions/2">
     <action>read</action>
+    <queryset id="http://testserver/api/v1/query_sets/14"/>
     <permission_id>2</permission_id>
-    <rbac_context id="http://testserver/api/v1/rbac/contexts/datacenter"/>
     <rbac_role id="http://testserver/api/v1/rbac/roles/developer"/>
   </rbac_permission>
   <rbac_permission id="http://testserver/api/v1/rbac/permissions/3">
     <action>write</action>
+    <queryset id="http://testserver/api/v1/query_sets/13"/>
     <permission_id>3</permission_id>
-    <rbac_context id="http://testserver/api/v1/rbac/contexts/lab"/>
     <rbac_role id="http://testserver/api/v1/rbac/roles/developer"/>
   </rbac_permission>
 </rbac_permissions>
@@ -90,7 +86,7 @@ permission_get_xml = """
 <rbac_permission id="http://testserver/api/v1/rbac/permissions/1">
   <action>write</action>
   <permission_id>1</permission_id>
-  <rbac_context id="http://testserver/api/v1/rbac/contexts/datacenter"/>
+  <queryset id="http://testserver/api/v1/query_sets/14"/>
   <rbac_role id="http://testserver/api/v1/rbac/roles/sysadmin"/>
 </rbac_permission>
 """
@@ -98,7 +94,7 @@ permission_get_xml = """
 permission_post_xml_input="""
 <rbac_permission>
   <action>write</action>
-  <rbac_context id="http://testserver/api/v1/rbac/contexts/tradingfloor"/>
+  <queryset id="http://testserver/api/v1/query_sets/12"/>
   <rbac_role id="http://testserver/api/v1/rbac/roles/intern"/>
 </rbac_permission>
 """
@@ -106,8 +102,8 @@ permission_post_xml_input="""
 permission_post_xml_output="""
 <rbac_permission id="http://testserver/api/v1/rbac/permissions/4">
   <action>write</action>
+  <queryset id="http://testserver/api/v1/query_sets/12"/>
   <permission_id>4</permission_id>
-  <rbac_context id="http://testserver/api/v1/rbac/contexts/tradingfloor"/>
   <rbac_role id="http://testserver/api/v1/rbac/roles/intern"/>
 </rbac_permission>
 """
@@ -115,18 +111,18 @@ permission_post_xml_output="""
 permission_put_xml_input="""
 <rbac_permission id="http://testserver/api/v1/rbac/permissions/1">
   <action>write</action>
-  <rbac_context id="http://testserver/api/v1/rbac/contexts/tradingfloor"/>
+  <queryset id="http://testserver/api/v1/query_sets/14"/>
   <rbac_role id="http://testserver/api/v1/rbac/roles/intern"/>
 </rbac_permission>
 """
 
 permission_put_xml_output="""
-<rbac_permission id="http://testserver/api/v1/rbac/permissions/1">
-  <action>write</action>
-  <permission_id>1</permission_id>
-  <rbac_context id="http://testserver/api/v1/rbac/contexts/tradingfloor"/>
-  <rbac_role id="http://testserver/api/v1/rbac/roles/intern"/>
-</rbac_permission>
+ <rbac_permission id="http://testserver/api/v1/rbac/permissions/1">
+   <action>write</action>
+   <permission_id>1</permission_id>
+   <queryset id="http://testserver/api/v1/query_sets/14"/>
+   <rbac_role id="http://testserver/api/v1/rbac/roles/intern"/>
+ </rbac_permission>
 """
 
 user_role_list_xml = """
@@ -165,21 +161,4 @@ user_role_get_list_xml_after_delete = """
   </rbac_role>
 </rbac_roles>
 """
-
-system_context_get_xml = """
-<rbac_context id="http://testserver/api/v1/rbac/contexts/datacenter">
-  <context_id>datacenter</context_id>
-</rbac_context>
-"""
-
-system_context_put_xml_input = """
-<rbac_context id="http://testserver/api/v1/rbac/contexts/lab">
-  <context_id>lab</context_id>
-</rbac_context>
-"""
-
-system_context_put_xml_output = system_context_put_xml_input
-system_context_get_xml2 = system_context_put_xml_input
-
-
 
