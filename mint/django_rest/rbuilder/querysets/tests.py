@@ -130,6 +130,7 @@ class QuerySetFixturedTestCase(XMLTestCase):
             username="admin", password="password")
         self.assertEquals(response.status_code, 200)
         self.assertXMLEquals(response.content, testsxml.query_set_fixtured_xml)
+        xobjModel = xobj.parse(response.content)
 
     def testGetQuerySetFilteredResult(self):
         response = self._get('query_sets/5/filtered',
