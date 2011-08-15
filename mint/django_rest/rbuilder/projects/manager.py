@@ -265,8 +265,13 @@ class ProjectManager(basemanager.BaseManager):
         member.delete()
 
     def saveProductVersionDefinition(self, productVersion, prodDef):
-        # FIXME: this shouldn't trust prodDef, it could point to somebody
-        # else's repository which this method would gleefully overwrite...
+        # Make sure users can't overwrite proddefs on other projects by
+        # tweaking their own proddef XML.
+        checkFQDN = productVersion.label.split('@')[0]
+        expectFQDN = productVersion.project.repository_hostname
+        assert checkFQDN.lower() == expectFQDN.lower()
+
+        prodDef.setBaseLabel(productVersion.label)
         self.setProductVersionDefinition(prodDef)
         # now save them in the DB also
         stages = prodDef.getStages()
@@ -298,7 +303,25 @@ class ProjectManager(basemanager.BaseManager):
         if projects.validLabel.match(projectVersion.label) == None:
             raise mint_error.InvalidLabel(projectVersion.label)
 
+        project = projectVersion.project
+        pd = helperfuncs.sanitizeProductDefinition(
+                projectName=project.name,
+                projectDescription=projectVersion.description,
+                hostname=project.hostname,
+                domainname=project.domain_name,
+                shortname=project.short_name,
+                version=projectVersion.name,
+                versionDescription='',
+                namespace=projectVersion.namespace)
+        pd.setBaseLabel(projectVersion.label)
+
         projectVersion.save()
+        self.saveProductVersionDefinition(projectVersion, pd)
+        projectVersion.refresh()
+
+        if projectVersion.platform:
+            cclient = self.mgr.getAdminClient(write=True)
+            pd.rebase(cclient, projectVersion.platform.label)
         return projectVersion
 
     @exposed
