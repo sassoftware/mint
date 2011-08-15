@@ -2954,7 +2954,7 @@ class MigrateTo_57(SchemaMigration):
 
 
 class MigrateTo_58(SchemaMigration):
-    Version = (58, 48)
+    Version = (58, 49)
 
     def migrate(self):
         return True
@@ -3563,6 +3563,12 @@ class MigrateTo_58(SchemaMigration):
         cu.execute("""
             ALTER TABLE querysets_queryset
                 ADD COLUMN "tagged_date" TIMESTAMP WITH TIME ZONE""")
+        return True
+
+    def migrate49(self):
+        schema._addTableRows(self.db, "querysets_inclusionmethod",
+            "name",
+            [dict(name="transitive")])
         return True
 
 #### SCHEMA MIGRATIONS END HERE #############################################

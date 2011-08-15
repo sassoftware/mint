@@ -28,7 +28,7 @@ from conary.dbstore import sqlerrors, sqllib
 log = logging.getLogger(__name__)
 
 # database schema major version
-RBUILDER_DB_VERSION = sqllib.DBversion(58, 48)
+RBUILDER_DB_VERSION = sqllib.DBversion(58, 49)
 
 
 def _createTrigger(db, table, column = "changed"):
@@ -2313,7 +2313,8 @@ def _createQuerySetSchema(db):
     changed |= _addTableRows(db, "querysets_inclusionmethod",
         "name",
         [dict(name="chosen"),
-         dict(name="filtered")])
+         dict(name="filtered"),
+         dict(name="transitive")])
 
     changed |= createTable(db, 'querysets_systemtag', """
         CREATE TABLE "querysets_systemtag" (
