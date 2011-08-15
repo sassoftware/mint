@@ -66,23 +66,26 @@ class QuerySetManager(basemanager.BaseManager):
         else:
             return query_set_or_id
 
+    def _lookupMethod(self, key):
+         '''
+         Get an inclusion method and try to avoid repeated lookups.
+         TODO: use cache module on constant table.
+         '''
+         storage = "__%s_method" % key
+         if getattr(self, storage, None) is None:
+             setattr(self, storage, models.InclusionMethod.objects.get(
+                 name=key
+             ))
+         return getattr(self, storage)
+
     def _filteredMethod(self):
-         '''avoid multiple lookups on a constant table'''
-         # TODO: use cache module
-         if self.__filtered_method is None:
-             self.__filtered_method = models.InclusionMethod.objects.get(
-                 name='filtered'
-             )
-         return self.__filtered_method
+         return self._lookupMethod('filtered')
 
     def _chosenMethod(self):
-         '''avoid multiple lookups on a constant table'''
-         # TODO: use cache module
-         if self.__chosen_method is None:
-             self.__chosen_method = models.InclusionMethod.objects.get(
-                 name='chosen'
-             )
-         return self.__chosen_method
+         return self._lookupMethod('chosen')
+
+    def _transitiveMethod(self):
+         return self._lookupMethod('transitive')
 
     @exposed
     def getQuerySet(self, querySetId):
