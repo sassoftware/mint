@@ -47,42 +47,6 @@ class QuerySetService(BaseQuerySetService):
         response = http.HttpResponse(status=204)
         return response
 
-class QuerySetReTagService(BaseQuerySetService):
-    '''
-    Query sets are slow to refresh, but we need to do this periodically, or some
-    systems (etc) will remain untagged.
-    This surfaces the capability so we can put it on cron, etc
-    FIXME -- REMOVE ONCE OBSOLETED (SOON)
-    '''
-
-    @access.admin
-    @return_xml
-    def rest_GET(self, request, query_set_id):
-        '''Retag a query set and return the query set'''
-        # NOTE: this currently only retags on the leaf node query sets
-        # so we'll *PROBABLY* want to run this in a way that runs only
-        # against those, and or runs against all of those.
-        qs = self.mgr.getQuerySet(query_set_id)
-        self.mgr.tagQuerySet(qs)
-        return qs
-
-class QuerySetWithTagsService(BaseQuerySetService):
-    '''
-    Attempt to use query set tags to do a more efficient QuerySet
-    fetch.  This is a work in progress and is not production ready
-    yet.
-    '''
-    @access.admin
-    @return_xml
-    def rest_GET(self, request, query_set_id):
-        '''Return the query set using object tags to do the lookup'''
-        # NOTE: this currently only retags on the leaf node query sets
-        # so we'll *PROBABLY* want to run this in a way that runs only
-        # against those, and or runs against all of those.
-        # TODO: know when to reTag when results are stale, keep a last_ran_date
-        # or equivalent
-        return self.mgr.getQuerySetAllResult(query_set_id)
-
 class QuerySetAllResultService(BaseQuerySetService):
     
     @access.anonymous

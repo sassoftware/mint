@@ -103,7 +103,7 @@ class QuerySetManager(basemanager.BaseManager):
     def addQuerySet(self, querySet):
         '''create a new query set'''
         querySet.save()
-        self.tagQuerySet(querySet)
+        # we don't have to tag anything because if it's not tagged tags always run
         if querySet.resource_type == 'system' and querySet.isTopLevel():
             self.addToAllQuerySet(querySet)
         return querySet
@@ -114,7 +114,7 @@ class QuerySetManager(basemanager.BaseManager):
         if not querySet.can_modify:
             raise errors.QuerySetReadOnly(querySetName=querySet.name)
         querySet.save()
-        self.tagQuerySet(querySet)
+        # we don't have to tag anything because if it's not tagged tags always run
         if querySet.resource_type == 'system' and querySet.isTopLevel():
             self.addToAllQuerySet(querySet)
         return querySet
@@ -154,17 +154,6 @@ class QuerySetManager(basemanager.BaseManager):
 
         return queryTag
 
-    @exposed
-    def tagQuerySet(self, querySet):
-        '''
-        tag all resources matching a query set whether filtered or chosen,
-        recursively including query set children
-        '''
-        querysets_to_tag = self._getAllChildQuerySets(querySet)
-        querysets_to_tag.append(querySet)
-        for qs in querysets_to_tag:
-            self._tagSingleQuerySet(qs)
-
     def _tagMethod(self, querySet):
         '''
         Get the routine to tag a query set
@@ -175,7 +164,7 @@ class QuerySetManager(basemanager.BaseManager):
             return None
         return getattr(self, method_name)
 
-    def _tagSingleQuerySet(self, querySet):
+    def _tagSingleQuerySetFiltered(self, querySet):
         '''tag a single query set, non recursively'''
         # get the results the filtered items would have matched
         resources = self.filterQuerySet(querySet, use_tags=False)
@@ -366,7 +355,7 @@ class QuerySetManager(basemanager.BaseManager):
         # TODO: plumb nocache up?
 
         if nocache or self._areResourceTagsStale(querySet):
-            self.tagQuerySet(querySet)
+            self._tagSingleQuerySetFiltered(querySet)
 
         return self.filterQuerySet(querySet, use_tags=use_tags)
 
@@ -409,7 +398,12 @@ class QuerySetManager(basemanager.BaseManager):
                  qs
              ).distinct()
              resources = resources | filtered | chosen
-        return resources.distinct()
+        resources = resources.distinct()
+
+        # all the child resources in this query set must be assigned to each
+        # of their parents -- BOOKMARK
+
+        return resources
 
     def _getAllChildQuerySets(self, querySet, results=None):
         '''
@@ -419,7 +413,15 @@ class QuerySetManager(basemanager.BaseManager):
             results = []
         kids = querySet.children.all()
         results.extend(kids)
+        if not hasattr(querySet, '_parents'):
+            querySet._parents = []
         for k in kids:
+            # annotate this queryset as having it's parent
+            # so we can update transitive tags later
+            if not hasattr(k, '_parents'):
+                k._parents = []
+            k._parents.extend(querySet._parents)
+            k._parents.append(querySet)
             self._getAllChildQuerySets(k, results)
         return results
 
