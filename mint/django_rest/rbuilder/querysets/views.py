@@ -15,8 +15,6 @@ from mint.django_rest.rbuilder.querysets import models
 class BaseQuerySetService(service.BaseService):
     pass
 
-USE_TAGS_IN_QUERY=True
-
 class QuerySetService(BaseQuerySetService):
 
 
@@ -25,11 +23,10 @@ class QuerySetService(BaseQuerySetService):
         return self.get(query_set_id)
 
     def get(self, query_set_id):
-        if query_set_id:
-            return self.mgr.getQuerySet(query_set_id)
-        else:
+        if query_set_id is None:
             return self.mgr.getQuerySets()
-        return self.mgr.getQuerySet(query_set_id)
+        else:
+            return self.mgr.getQuerySet(query_set_id)
         
     @access.admin
     @requires('query_set', load=False)
@@ -54,7 +51,8 @@ class QuerySetReTagService(BaseQuerySetService):
     '''
     Query sets are slow to refresh, but we need to do this periodically, or some
     systems (etc) will remain untagged.
-    This surfaces the capability so we can put it on cron, etc.
+    This surfaces the capability so we can put it on cron, etc
+    FIXME -- REMOVE ONCE OBSOLETED (SOON)
     '''
 
     @access.admin
@@ -83,7 +81,7 @@ class QuerySetWithTagsService(BaseQuerySetService):
         # against those, and or runs against all of those.
         # TODO: know when to reTag when results are stale, keep a last_ran_date
         # or equivalent
-        return self.mgr.getQuerySetAllResult(query_set_id, use_tags=True)
+        return self.mgr.getQuerySetAllResult(query_set_id)
 
 class QuerySetAllResultService(BaseQuerySetService):
     
@@ -91,7 +89,6 @@ class QuerySetAllResultService(BaseQuerySetService):
     @return_xml
     def rest_GET(self, request, query_set_id):
         return self.mgr.getQuerySetAllResult(query_set_id)
-
 
 class QuerySetChosenResultService(BaseQuerySetService):
 
