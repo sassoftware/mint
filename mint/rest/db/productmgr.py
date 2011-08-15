@@ -492,7 +492,7 @@ class ProductManager(manager.Manager):
 
     def getProductVersionDefinition(self, fqdn, version):
         productVersion = self._getMinimalProductVersion(fqdn, version)
-        return self.getProductVersionDefinitionByProductVersion(productVersion)
+        return self.getProductVersionDefinitionByProductVersion(fqdn, productVersion)
 
     def getProductVersionDefinitionByProductVersion(self, hostname, productVersion):
         product = self.getProduct(hostname)
