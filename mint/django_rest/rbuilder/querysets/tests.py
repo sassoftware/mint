@@ -12,6 +12,12 @@ from mint.django_rest.rbuilder.querysets import models
 from mint.django_rest.rbuilder.querysets import testsxml
 from mint.django_rest.rbuilder.manager import rbuildermanager
 
+from mint.django_rest.rbuilder.querysets import manager as mgr
+# turn off tag cache delay for tests, effectively always
+# forcing a retag
+mgr.TAG_REFRESH_INTERVAL=-1
+
+
 from xobj import xobj
 
 class QuerySetTestCase(XMLTestCase):

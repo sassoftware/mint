@@ -18,43 +18,50 @@ from mint.django_rest.rbuilder.querysets import models
 
 from datetime import datetime
 
+# retag if a new query is made and the results are greater
+# than this many seconds old
+TAG_REFRESH_INTERVAL=60
+
 # TODO: this code passes around ids way too much and should be passing
 # around objects to reduce SQL usage
 
 class QuerySetManager(basemanager.BaseManager):
 
+    # TODO: make this more pluggable/OO so these maps aren't needed
     tagMethodMap = {
-        'system' : 'tagSystems',
-        'user' : 'tagUsers',
-        'project' : 'tagProjects',
-        'project_branch_stage' : 'tagStages'
+        'system'               : '_tagSystems',
+        'user'                 : '_tagUsers',     # FIXME: implement
+        'project'              : '_tagProjects',  # FIXME: implement
+        'project_branch_stage' : '_tagStages'     # FIXME: implement
     }
     resourceCollectionMap = {
-        'system' : 'systems',
-        'user' : 'users',
-        'project' : 'projects',
+        'system'               : 'systems',
+        'user'                 : 'users',
+        'project'              : 'projects',
         'project_branch_stage' : 'stages'
     }
     tagModelMap = {
-        'system' : 'system_tag',
-        'user' : 'user_tag',
+        'system'               : 'system_tag',
+        'user'                 : 'user_tag',
         'project_branch_stage' : 'stage_tag',
-        'project' : 'project_tag'
+        'project'              : 'project_tag'
     }
-
 
     @exposed
     def getQuerySet(self, querySetId):
+        '''look up a query set object'''
         return models.QuerySet.objects.select_related().get(pk=querySetId)
 
     @exposed
     def getQuerySets(self):
+        '''return all query set objects'''
         querySets = models.QuerySets()
         querySets.query_set = models.QuerySet.objects.select_related().all()
         return querySets
 
     @exposed
     def addQuerySet(self, querySet):
+        '''create a new query set'''
         querySet.save()
         self.tagQuerySet(querySet)
         if querySet.resource_type == 'system' and querySet.isTopLevel():
@@ -63,6 +70,7 @@ class QuerySetManager(basemanager.BaseManager):
 
     @exposed
     def updateQuerySet(self, querySet):
+        '''edit a query set'''
         if not querySet.can_modify:
             raise errors.QuerySetReadOnly(querySetName=querySet.name)
         querySet.save()
@@ -73,19 +81,31 @@ class QuerySetManager(basemanager.BaseManager):
 
     @exposed
     def deleteQuerySet(self, querySet):
+        '''remove a query set unless it's one that shipped w/ rBuilder'''
         if querySet.can_modify: 
             querySet.delete()
         else:
             raise errors.QuerySetReadOnly(querySetName=querySet.name)
 
     def addToAllQuerySet(self, querySet):
-        allQuerySet = models.QuerySet.objects.select_related().get(name='All Systems')
+        '''
+        The "all" (systems) queryset is auto-maintained to 
+        include all system querysets
+        '''
+        allQuerySet = models.QuerySet.objects.select_related().get(
+            name='All Systems'
+        )
         allQuerySet.children.add(querySet)
         allQuerySet.save()
 
     def _getQueryTag(self, querySet):
+        '''
+        TODO: eliminate query tags as a middle layer, we don't need them, 
+        resource tags are enough'''
         try:
-            queryTag = models.QueryTag.objects.select_related().get(query_set=querySet)
+            queryTag = models.QueryTag.objects.select_related().get(
+                query_set=querySet
+            )
         except ObjectDoesNotExist:
             querySetName = querySet.name.replace(' ', '_')
             queryTagName = 'query-tag-%s-%s' % (querySetName, querySet.pk)
@@ -96,37 +116,73 @@ class QuerySetManager(basemanager.BaseManager):
 
     @exposed
     def tagQuerySet(self, querySet):
-        '''tag all resources matching a query set whether filtered or chosen'''
+        '''
+        tag all resources matching a query set whether filtered or chosen,
+        recursively including query set children
+        '''
+        querysets_to_tag = self._getAllChildQuerySets(querySet)
+        querysets_to_tag.append(querySet)
+        for qs in querysets_to_tag:
+            self._tagSingleQuerySet(qs)
+
+    def _tagSingleQuerySet(self, querySet):
+        '''tag a single query set, non recursively'''
         self._tagQuerySetFiltered(querySet)
-        self._tagQuerySetChosen(querySet)
+        # self._tagQuerySetChosen(querySet)
         querySet.tagged_date = datetime.now()
         querySet.save()
 
     def _tagQuerySetFiltered(self, querySet):
         '''tag resources matched by a filter'''
-        resources = self.filterQuerySet(querySet)
+        # get the results the filtered items would have matched
+        resources = self.filterQuerySet(querySet, use_tags=False)
         tag = self._getQueryTag(querySet)
         method = getattr(self, self.tagMethodMap[querySet.resource_type])
         inclusionMethod = models.InclusionMethod.objects.select_related().get(
             name='filtered')
         method(resources, tag, inclusionMethod)
 
-    def _tagQuerySetChosen(self, querySet):
-        '''tag resources explicitly added to query set'''
-        resources = self._getQuerySetChosenResult(querySet, use_tags=False)
-        tag = self._getQueryTag(querySet)
-        method = getattr(self, self.tagMethodMap[querySet.resource_type])
-        inclusionMethod = models.InclusionMethod.objects.select_related().get(
-            name='chosen')
-        method(resources, tag, inclusionMethod)
+    # no need to do this, as adding systems to a chosen
+    # set already does this, this would be a no-op, right?
+    # 
+    #def _tagQuerySetChosen(self, querySet):
+    #    '''tag resources explicitly added to query set'''
+    #    resources = self._getQuerySetChosenResult(querySet, use_tags=False)
+    #    tag = self._getQueryTag(querySet)
+    #    method = getattr(self, self.tagMethodMap[querySet.resource_type])
+    #    inclusionMethod = models.InclusionMethod.objects.select_related().get(
+    #        name='chosen')
+    #    method(resources, tag, inclusionMethod)
 
-    def tagSystems(self, systems, tag, inclusionMethod):
+    def _tagSystems(self, systems, tag, inclusionMethod):
+        '''
+        store that a given query tag matched the system 
+        for caching purposes
+        '''
+        # TODO: make this pluggable so we don't neeed model 
+        # specific methods
+
+        if inclusionMethod.name != 'chosen':
+            # membership in the chosen set is stored ONLY 
+            # through resource tags so we do not delete stale 
+            # entries here, however filtered matches
+            # need to be recalculated
+            old_tags = models.SystemTag.objects.filter(
+                query_tag=tag, 
+                inclusion_method=inclusionMethod
+            ).delete()
+
         for system in systems:
-            systemTag, created = models.SystemTag.objects.select_related().get_or_create(
-                system=system, query_tag=tag, inclusion_method=inclusionMethod)
+            # create a tag for each system
+            systemTag, created = models.SystemTag.objects.get_or_create(
+                system=system, 
+                query_tag=tag, 
+                inclusion_method=inclusionMethod
+            )
             systemTag.save()
 
     def _classByName(self, kls):
+        '''helper method to load modules'''
         parts = kls.split('.')
         module = ".".join(parts[:-1])
         m = __import__(module)
@@ -134,8 +190,8 @@ class QuerySetManager(basemanager.BaseManager):
             m = getattr(m, comp)            
         return m
 
-    # BOOKMARK!!!
-    def filterQuerySet(self, querySet, use_tags=False):
+    def filterQuerySet(self, querySet, use_tags=True):
+        '''Return resources matching specific filter criteria'''
         model = modellib.type_map[querySet.resource_type]
  
         resources = None
@@ -150,16 +206,20 @@ class QuerySetManager(basemanager.BaseManager):
                     filt.field, filt.operator, filt.value)
             return resources
         else:
-            # EXPERIMENTAL PATH -- do not filter, but instead
             # use tags to find what is matched by the query set
             # this should probably be it's own method
-            query_tag = models.QueryTag.objects.select_related().get(query_set=querySet)
+            query_tag = models.QueryTag.objects.select_related().get(
+                query_set=querySet
+            )
             resources = model.objects.select_related().filter(
-                  tags__query_tag__query_tag_id = query_tag.pk
+                tags__query_tag__query_tag_id = query_tag.pk
             ).all()
             return resources
 
-    def getResourceCollection(self, querySet, resources):
+    def _getResourceCollection(self, querySet, resources):
+        '''
+        Given a queryset and a list of matched resources, 
+        construct and return a collection object.'''
         resourceCollection = modellib.type_map[
             self.resourceCollectionMap[querySet.resource_type]]
         resourceCollection = resourceCollection()
@@ -168,20 +228,28 @@ class QuerySetManager(basemanager.BaseManager):
         return resourceCollection
 
     @exposed
-    def getQuerySetAllResult(self, querySetId, use_tags=False):
-        # definition of the query set
+    def getQuerySetAllResult(self, querySetId, use_tags=True):
+        '''
+        The results for a queryset are typically the 'all' result.  It is
+        also possible to be more fine grained and only see matches
+        due to filters, chosen (explicitly added) or child (recursive) matches,
+        though 'all' includes, well, all of those.
+        '''
         querySet = models.QuerySet.objects.select_related().get(pk=querySetId)
-        # contents...
         qsAllResult = self._getQuerySetAllResult(querySet, use_tags=use_tags)
-        resourceCollection = self.getResourceCollection(querySet, qsAllResult)
+        resourceCollection = self._getResourceCollection(querySet, qsAllResult)
         resourceCollection.view_name = "QuerySetAllResult"
         return resourceCollection
 
-    def _getQuerySetAllResult(self, querySet, use_tags=False):
+    def _getQuerySetAllResult(self, querySet, use_tags=True):
+        '''
+        The result for a queryset is the merger of it's filtered, chosen,
+        and child query sets
+        '''
         filtered = self._getQuerySetFilteredResult(querySet, use_tags=use_tags)
         if not use_tags:
             # use_tags currently doesn't have any meaning to the following:
-            chosen =  self._getQuerySetChosenResult(querySet, use_tags=use_tags)
+            chosen =  self._getQuerySetChosenResult(querySet)
             children = self._getQuerySetChildResult(querySet, use_tags=use_tags)
             return filtered | chosen | children
         else:
@@ -190,14 +258,19 @@ class QuerySetManager(basemanager.BaseManager):
             return children | filtered
 
     @exposed
-    def getQuerySetChosenResult(self, querySetId, use_tags=False):
+    def getQuerySetChosenResult(self, querySetId): #, use_tags=False):
+        '''
+        For a given query set, return only the chosen matches, aka resources
+        explicitly placed in the queryset
+        TODO: allow passing in the queryset or the ID
+        '''
         querySet = models.QuerySet.objects.select_related().get(pk=querySetId)
-        result_data = self._getQuerySetChosenResult(querySet, use_tags=use_tags)
-        resourceCollection = self.getResourceCollection(querySet, result_data)
+        result_data = self._getQuerySetChosenResult(querySet) #, use_tags=use_tags)
+        resourceCollection = self._getResourceCollection(querySet, result_data)
         resourceCollection.view_name = "QuerySetChosenResult"
         return resourceCollection
 
-    def _getQuerySetChosenResult(self, querySet, use_tags=False):
+    def _getQuerySetChosenResult(self, querySet): #, use_tags=False):
         queryTag = self._getQueryTag(querySet)
         chosenMethod = models.InclusionMethod.objects.select_related().get(
             name='chosen')
@@ -213,36 +286,92 @@ class QuerySetManager(basemanager.BaseManager):
         return resources
 
     @exposed
-    def getQuerySetFilteredResult(self, querySetId, use_tags=False):
+    def getQuerySetFilteredResult(self, querySetId, use_tags=True, nocache=False):
+        '''
+        For a given queryset, return only the portion of it's matches
+        that correspond to "smart match" style comparison checks.
+        '''
         querySet = models.QuerySet.objects.select_related().get(pk=querySetId)
+
         resultData = self._getQuerySetFilteredResult(querySet, use_tags=use_tags)
-        resourceCollection = self.getResourceCollection(querySet, resultData)
+        resourceCollection = self._getResourceCollection(querySet, resultData)
         resourceCollection.view_name = "Systems"
         resourceCollection._parents = []
         resourceCollection.filter_by = querySet.getFilterBy()
         return resourceCollection
 
-    def _getQuerySetFilteredResult(self, querySet, use_tags=False):
+    def _getQuerySetFilteredResult(self, querySet, use_tags=False, nocache=False):
+
+        # if we requested to use tags and the queryset is stale,
+        # decide to NOT use tags and also retag the queryset, we don't
+        # have to do this for chosen sets because they are done
+        # one at a time and manually, and there is no inclusionMethod
+        # for 'all'.
+
+        # TODO: plumb nocache up
+
+        if use_tags:
+            if querySet.tagged_date is None:
+                # never been tagged before
+                self.tagQuerySet(querySet)
+            else:
+                if nocache:
+                    # this flag is intended to be sent to "refresh the tags now".
+                    # use_tags is NOT intended to be publically surfaced/used, but
+                    # is needed in the /computation/ of tags.
+                    self.tagQuerySet(querySet)
+                else:
+                    # tag is expired
+                    # need a non-timezone aware datetime
+                    then  = querySet.tagged_date.replace(tzinfo=None)
+                    delta = datetime.now() - then
+                    if delta.seconds > TAG_REFRESH_INTERVAL:
+                        self.tagQuerySet(querySet)
+
         return self.filterQuerySet(querySet, use_tags=use_tags)
 
     @exposed
-    def getQuerySetChildResult(self, querySetId, use_tags=False):
+    def getQuerySetChildResult(self, querySetId, use_tags=True):
+        ''' 
+        Return the portion of queryset match data that comes from child
+        querysets, regardless of whether those child matches are themselves
+        'chosen', 'filtered', or 'child' matches.
+        '''
         querySet = models.QuerySet.objects.select_related().get(pk=querySetId)
         result_data = self._getQuerySetChildResult(querySet, use_tags=use_tags)
-        resourceCollection = self.getResourceCollection(querySet, result_data)
+        resourceCollection = self._getResourceCollection(querySet, result_data)
         resourceCollection.view_name = "QuerySetChildResult"
         return resourceCollection
 
-    def _getQuerySetChildResult(self, querySet, use_tags=False):
+    def _getQuerySetChildResult(self, querySet, use_tags=True):
         model = modellib.type_map[querySet.resource_type]
         resources = EmptyQuerySet(model)
         for childQuerySet in querySet.children.select_related().all():
-            childResources = self._getQuerySetAllResult(childQuerySet, use_tags=use_tags)
+            childResources = self._getQuerySetAllResult(
+                childQuerySet, 
+                use_tags=use_tags
+            )
             resources = resources | childResources
         return resources
 
+    def _getAllChildQuerySets(self, querySet, results=None):
+        '''
+        Return all query sets below this one
+        '''
+        if results is None:
+            results = []
+        kids = querySet.children.select_related().all()
+        results.extend(kids)
+        for k in kids:
+            self._getAllChildQuerySets(k, results)
+        return results
+
     @exposed
     def getQuerySetFilterDescriptor(self, querySetId):
+        '''
+        Return the smartform that describes how this queryset can
+        be configured (or IS configured???)
+        '''
         querySet = models.QuerySet.objects.select_related().get(pk=querySetId)
         model = modellib.type_map[querySet.resource_type]
         filterDescriptor = descriptor.getFilterDescriptor(model)
@@ -251,16 +380,27 @@ class QuerySetManager(basemanager.BaseManager):
 
     @exposed
     def updateQuerySetChosen(self, querySetId, resource):
+        '''
+        Add a resource explicitly to the query set match results.
+        It must be of the same collection type, querysets are not
+        heterogeneous.
+        '''
         querySet = models.QuerySet.objects.select_related().get(pk=querySetId)
         queryTag = self._getQueryTag(querySet)
         chosenMethod = models.InclusionMethod.objects.select_related().get(
             name='chosen')
+        # we do not update the queryset tag date here because it could
+        # still be stale with respect to child or filtered results
         tagMethod = getattr(self, self.tagMethodMap[querySet.resource_type])
         tagMethod([resource], queryTag, chosenMethod)
         return self.getQuerySetChosenResult(querySetId)
 
     @exposed
     def addQuerySetChosen(self, querySetId, resources):
+        '''
+        Add a list of matched systems to a chosen query set result list.
+        Deletes all previous matches.
+        '''
         querySet = models.QuerySet.objects.select_related().get(pk=querySetId)
         queryTag = self._getQueryTag(querySet)
         chosenMethod = models.InclusionMethod.objects.select_related().get(
@@ -269,9 +409,10 @@ class QuerySetManager(basemanager.BaseManager):
 
         # Delete all previously tagged resources
         tagModel = modellib.type_map[self.tagModelMap[querySet.resource_type]]
-        tagModels = tagModel.objects.select_related().filter(query_tag=queryTag,
-            inclusion_method=chosenMethod)
-        tagModels.delete()
+        tagModel.objects.select_related().filter(
+            query_tag=queryTag,
+            inclusion_method=chosenMethod
+        ).delete()
 
         # Tag new resources
         tagMethod = getattr(self, self.tagMethodMap[querySet.resource_type])
@@ -281,6 +422,9 @@ class QuerySetManager(basemanager.BaseManager):
 
     @exposed
     def deleteQuerySetChosen(self, querySetId, resource):
+        '''
+        Remove a resource from a queryset chosen result.
+        '''
         querySet = models.QuerySet.objects.select_related().get(pk=querySetId)
         queryTag = self._getQueryTag(querySet)
         chosenMethod = models.InclusionMethod.objects.select_related().get(
@@ -294,12 +438,24 @@ class QuerySetManager(basemanager.BaseManager):
 
     @exposed
     def getQueryTags(self, query_set_id):
+        '''
+        Return the querytags associated with a queryset.
+        TODO: These seem to basically be 1:1 with them and we can probably smite them.
+        '''
         queryTags = models.QueryTags()
-        queryTags.query_tag = \
-            models.QueryTag.objects.select_related().filter(query_set__pk=query_set_id)
+        queryTags.query_tag = models.QueryTag.objects.select_related().filter(
+            query_set__pk=query_set_id
+        )
         return queryTags
 
     @exposed
     def getQueryTag(self, query_set_id, query_tag_id):
-        queryTag = models.QueryTag.objects.select_related().get(pk=query_tag_id)
+        '''
+        I think we can remove this.  See getQueryTags.
+        '''
+        queryTag = models.QueryTag.objects.select_related().get(
+            pk=query_tag_id
+        )
         return queryTag
+
+
