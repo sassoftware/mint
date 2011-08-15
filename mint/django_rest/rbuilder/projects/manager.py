@@ -21,6 +21,7 @@ from mint.django_rest.rbuilder import errors
 from mint.django_rest.rbuilder.manager import basemanager
 from mint.django_rest.rbuilder.repos import models as repomodels
 from mint.django_rest.rbuilder.manager.basemanager import exposed
+from mint.django_rest.rbuilder.platforms import models as platmodel
 from mint.django_rest.rbuilder.projects import models
 
 from conary import conarycfg
@@ -315,13 +316,15 @@ class ProjectManager(basemanager.BaseManager):
                 namespace=projectVersion.namespace)
         pd.setBaseLabel(projectVersion.label)
 
-        projectVersion.save()
-        self.saveProductVersionDefinition(projectVersion, pd)
-        projectVersion.refresh()
-
-        if projectVersion.platform:
+        # FIXME: use the href and look up the platform in the DB instead
+        platformLabel = getattr(projectVersion.platform, 'label', None)
+        if platformLabel:
+            platform = platmodel.Platform.objects.get(label=str(platformLabel))
             cclient = self.mgr.getAdminClient(write=True)
-            pd.rebase(cclient, projectVersion.platform.label)
+            pd.rebase(cclient, platform.label)
+        self.saveProductVersionDefinition(projectVersion, pd)
+
+        projectVersion.save()
         return projectVersion
 
     @exposed
