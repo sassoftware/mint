@@ -346,33 +346,27 @@ class QuerySetManager(basemanager.BaseManager):
         resourceCollection.filter_by = querySet.getFilterBy()
         return resourceCollection
 
+    def _areResourceTagsStale(self, querySet):
+         '''
+         Does the query set need to be retagged?
+         '''
+         if querySet.tagged_date is None:
+             # never been tagged before
+             return True
+         else:
+             then  = querySet.tagged_date.replace(tzinfo=None)
+             delta = datetime.now() - then
+             return (delta.seconds > TAG_REFRESH_INTERVAL)
+
     def _getQuerySetFilteredResult(self, querySet, use_tags=False, nocache=False):
 
         # if we requested to use tags and the queryset is stale,
-        # decide to NOT use tags and also retag the queryset, we don't
-        # have to do this for chosen sets because they are done
-        # one at a time and manually, and there is no inclusionMethod
-        # for 'all'.
+        # retag the queryset before using it
 
-        # TODO: plumb nocache up
+        # TODO: plumb nocache up?
 
-        if use_tags:
-            if querySet.tagged_date is None:
-                # never been tagged before
-                self.tagQuerySet(querySet)
-            else:
-                if nocache:
-                    # this flag is intended to be sent to "refresh the tags now".
-                    # use_tags is NOT intended to be publically surfaced/used, but
-                    # is needed in the /computation/ of tags.
-                    self.tagQuerySet(querySet)
-                else:
-                    # tag is expired
-                    # need a non-timezone aware datetime
-                    then  = querySet.tagged_date.replace(tzinfo=None)
-                    delta = datetime.now() - then
-                    if delta.seconds > TAG_REFRESH_INTERVAL:
-                        self.tagQuerySet(querySet)
+        if nocache or self._areResourceTagsStale(querySet):
+            self.tagQuerySet(querySet)
 
         return self.filterQuerySet(querySet, use_tags=use_tags)
 
