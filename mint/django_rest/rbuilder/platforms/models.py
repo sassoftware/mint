@@ -27,7 +27,7 @@ class Platforms(modellib.Collection):
 
 class Platform(modellib.XObjIdModel):
     class Meta:
-        db_table = 'Platforms'
+        db_table = 'platforms'
     
     _xobj = xobj.XObjMetadata(tag='platform')
     
@@ -37,11 +37,11 @@ class Platform(modellib.XObjIdModel):
     label = models.CharField(max_length=1026, unique=True)
     mode = models.CharField(max_length=1026, default='manual', choices=_MODE_CHOICES)
     enabled = models.IntegerField(default=1)
-    projects = modellib.DeferredForeignKey('projects.Project', db_column='projectId')
-    platform_name = models.CharField(max_length=1026, db_column='platformName')
+    projects = modellib.DeferredForeignKey('projects.Project', db_column='projectid')
+    platform_name = models.CharField(max_length=1026, db_column='platformname')
     configurable = models.BooleanField(default=False)
     abstract = models.BooleanField(default=False)
-    is_from_disk = models.BooleanField(default=False, db_column='isFromDisk')
+    is_from_disk = models.BooleanField(default=False, db_column='isfromdisk')
     time_refreshed = basemodels.DateTimeUtcField(auto_now_add=True) # hack, modellib keeps evaluating to None
     
     # SyntheticFields -- fields with no column in the db
@@ -73,18 +73,18 @@ class ContentSource(modellib.XObjIdModel):
     Called PlatformSource in the db
     """
     class Meta:
-        db_table = 'PlatformSources'
+        db_table = 'platformsources'
     
     _xobj = xobj.XObjMetadata(tag='content_source')
     
     _xobj_hidden_accessors = set(['content_sources'])
     
-    content_source_id = models.AutoField(primary_key=True, db_column='platformSourceId')
+    content_source_id = models.AutoField(primary_key=True, db_column='platformsourceid')
     name = models.CharField(max_length=1026)
-    default_source = models.IntegerField(db_column='defaultSource', default=0)
-    short_name = models.CharField(max_length=1026, unique=True, db_column='shortName')
-    content_source_type = models.CharField(max_length=1026, db_column='contentSourceType')
-    order_index = models.IntegerField(db_column='orderIndex')
+    default_source = models.IntegerField(db_column='defaultsource', default=0)
+    short_name = models.CharField(max_length=1026, unique=True, db_column='shortname')
+    content_source_type = models.CharField(max_length=1026, db_column='contentsourcetype')
+    order_index = models.IntegerField(db_column='orderindex')
     
     # fields on the old model w/o corresponding column in the db
     enabled = modellib.SyntheticField() # booleanfield/integerfield
@@ -108,14 +108,14 @@ class ContentSourceType(modellib.XObjIdModel):
     Is PlatformsContentSourceTypes in the db
     """
     class Meta:
-        db_table = 'PlatformsContentSourceTypes'
+        db_table = 'platformscontentsourcetypes'
         unique_together = ('platform_id', 'content_source_type')
     
     _xobj = xobj.XObjMetadata(tag='content_source_type')
     
-    content_source_type_id = models.AutoField(primary_key=True, db_column='contentSourceTypeId')
-    platform_id = modellib.DeferredForeignKey('Platform', db_column='platformId', related_name='content_source_types')
-    content_source_type = models.CharField(max_length=1026, db_column='contentSourceType')
+    content_source_type_id = models.AutoField(primary_key=True, db_column='contentsourcetypeid')
+    platform_id = modellib.DeferredForeignKey('Platform', db_column='platformid', related_name='content_source_types')
+    content_source_type = models.CharField(max_length=1026, db_column='contentsourcetype')
     
     # Fields w/o a corresponding db column
     required = modellib.SyntheticField() # booleanfield
@@ -127,10 +127,10 @@ class ContentSourceType(modellib.XObjIdModel):
 
 class PlatformsPlatformSources(modellib.XObjModel):
     class Meta:
-        db_table = 'PlatformsPlatformSources'
+        db_table = 'platformsplatformsources'
     platforms_platform_sources_id = models.AutoField(primary_key=True)
-    platform_id = modellib.ForeignKey('Platform', db_column='platformId', related_name='content_sources')
-    platform_source_id = modellib.ForeignKey('ContentSource', db_column='platformSourceId', related_name='content_sources')
+    platform_id = modellib.ForeignKey('Platform', db_column='platformid', related_name='content_sources')
+    platform_source_id = modellib.ForeignKey('ContentSource', db_column='platformsourceid', related_name='content_sources')
 
 
 class PlatformVersions(modellib.Collection):

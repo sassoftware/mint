@@ -5,6 +5,7 @@
 import hashlib
 import logging
 import sys
+from conary.dbstore import sqlerrors
 from mint.lib.scriptlibrary import GenericScript
 from mint.db import database
 from mint.db import repository
@@ -62,19 +63,32 @@ class SyncTool(object):
         # FIXME: more error handling: missing or inaccessible stuff shouldn't
         # crash the whole script or make excessive noise.
 
-        # Get current branch/stage structure.
-        cu = self.db.cursor()
-        cu.execute("""SELECT label, productversionid, cache_key
-            FROM ProductVersions WHERE projectId = ?""", handle.projectId)
-        branchMap = dict((x[0], x[1:]) for x in cu)
+        for x in range(3):
+            try:
+                # Get current branch/stage structure.
+                cu = self.db.cursor()
+                cu.execute("""SELECT label, productversionid, cache_key
+                    FROM ProductVersions WHERE projectId = ?""", handle.projectId)
+                branchMap = dict((x[0], x[1:]) for x in cu)
 
-        # Resolve a list of proddef troves on this repository.
-        name = 'product-definition:source'
-        result = self.repos.getAllTroveLeaves(handle.fqdn, {name: None})
-        if name not in result:
-            return
-        for version in result[name]:
-            self._syncBranchMaybe(handle, version, branchMap)
+                # Resolve a list of proddef troves on this repository.
+                name = 'product-definition:source'
+                result = self.repos.getAllTroveLeaves(handle.fqdn, {name: None})
+                if name not in result:
+                    return
+                for version in result[name]:
+                    self._syncBranchMaybe(handle, version, branchMap)
+            except sqlerrors.ColumnNotUnique:
+                # Often, creating or modifying a branch through the API results
+                # in the database being updated directly as well, which
+                # conflicts here. Just go through the cycle again to make sure
+                # everything is tidy.
+                self.db.rollback()
+                continue
+            else:
+                break
+        else:
+            raise
 
     def _syncBranchMaybe(self, handle, version, branchMap):
         """Compute a hash of the proddef version, then compare to the existing
