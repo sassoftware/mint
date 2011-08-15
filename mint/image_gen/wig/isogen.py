@@ -160,7 +160,7 @@ class IsoGenerator(genmod.ImageGenerator):
         if rtisPath:
             m['rtisPath'] = rtisPath.replace('/', '\\')
             m['rtisLog'] = m['rtisPath'].rsplit('.', 1)[0] + '.Install.log'
-			if osName.startswith('2003'):
+            if osName.startswith('2003'):
                 # 2003 reboots at the end of OOBE gui setup automatically, leave the /norestart param in.
                 firstboot.write(
                     'schtasks.exe /create /tn rTISOnStart /tr "net start \\\"rPath Tools Installer Service\\\"" /sc ONSTART /ru system\r\n'
