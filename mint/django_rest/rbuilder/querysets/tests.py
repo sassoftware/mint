@@ -9,8 +9,8 @@ from mint.django_rest.rbuilder.inventory.tests import XMLTestCase
 from mint.django_rest.rbuilder.inventory import models as inventorymodels
 
 from mint.django_rest.rbuilder.querysets import models
-from mint.django_rest.rbuilder.querysets import testsxml
-from mint.django_rest.rbuilder.manager import rbuildermanager
+#from mint.django_rest.rbuilder.querysets import testsxml
+#from mint.django_rest.rbuilder.manager import rbuildermanager
 from mint.django_rest.rbuilder.querysets import manager as mgr
 
 # turn off tag cache delay for tests, effectively always
@@ -18,7 +18,7 @@ from mint.django_rest.rbuilder.querysets import manager as mgr
 mgr.TAG_REFRESH_INTERVAL=-1
 
 
-from xobj import xobj
+#from xobj import xobj
 
 class QueryTestCase(XMLTestCase):
 
