@@ -2954,7 +2954,7 @@ class MigrateTo_57(SchemaMigration):
 
 
 class MigrateTo_58(SchemaMigration):
-    Version = (58, 49)
+    Version = (58, 50)
 
     def migrate(self):
         return True
@@ -3569,6 +3569,21 @@ class MigrateTo_58(SchemaMigration):
         schema._addTableRows(self.db, "querysets_inclusionmethod",
             "name",
             [dict(name="transitive")])
+        return True
+
+    def migrate50(self):
+        # these never shipped but following querysets were installed wrong
+        # so the filters didn't work, delete querysets & reinstall
+        cu = self.db.cursor()
+    
+        cu.execute("DELETE FROM querysets_queryset WHERE name='All Project Stages'")
+        cu.execute("DELETE FROM querysets_queryset WHERE name='All Platforms'")
+        cu.execute("DELETE FROM querysets_queryset WHERE name='All Projects'")
+    
+        schema._createAllProjectBranchStages(self.db)
+        schema._createAllPlatformBranchStages(self.db)
+        schema._createAllProjects(self.db)
+
         return True
 
 #### SCHEMA MIGRATIONS END HERE #############################################

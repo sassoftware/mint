@@ -28,7 +28,7 @@ from conary.dbstore import sqlerrors, sqllib
 log = logging.getLogger(__name__)
 
 # database schema major version
-RBUILDER_DB_VERSION = sqllib.DBversion(58, 49)
+RBUILDER_DB_VERSION = sqllib.DBversion(58, 50)
 
 
 def _createTrigger(db, table, column = "changed"):
@@ -2131,7 +2131,6 @@ def _addQuerySetChildToAllSystems(db, child_qs_id):
     
     allQSId = _getRowPk(db, "querysets_queryset", "query_set_id", 
         name="All Systems")
-    
     return _addQuerySetChild(db, allQSId, child_qs_id)
 
 def _addQuerySetChildToInfrastructureSystems(db, child_qs_id):
@@ -2139,7 +2138,6 @@ def _addQuerySetChildToInfrastructureSystems(db, child_qs_id):
     
     qsId = _getRowPk(db, "querysets_queryset", "query_set_id", 
         name="Infrastructure Systems")
-    
     return _addQuerySetChild(db, qsId, child_qs_id)
 
 def _createInfrastructureSystemsQuerySetSchema(db):
@@ -2147,7 +2145,6 @@ def _createInfrastructureSystemsQuerySetSchema(db):
     filterId = _addQuerySetFilterEntry(db, "system_type.infrastructure", "EQUAL", "true")
     qsId = _addQuerySet(db, "Infrastructure Systems", "Systems that make up the rPath infrastructure", "system", False, "query-tag-Infrastructure_Systems-6", filterId)
     _addQuerySetChildToAllSystems(db, qsId)
-    
     return True
 
 def _createWindowsBuildSystemsQuerySet(db):
@@ -2155,7 +2152,6 @@ def _createWindowsBuildSystemsQuerySet(db):
     filterId = _addQuerySetFilterEntry(db, "system_type.name", "EQUAL", "infrastructure-windows-build-node")
     qsId = _addQuerySet(db, "rPath Windows Build Services", "rPath infrastructure services for building Windows packages/images", "system", False, "query-tag-Windows_Build_Services-7", filterId)
     _addQuerySetChildToInfrastructureSystems(db, qsId)
-    
     return True
 
 def _createUpdateSystemsQuerySet(db):
@@ -2163,42 +2159,36 @@ def _createUpdateSystemsQuerySet(db):
     filterId = _addQuerySetFilterEntry(db, "system_type.name", "EQUAL", "infrastructure-management-node")
     qsId = _addQuerySet(db, "rPath Update Services", "rPath infrastructure services for managing systems", "system", False, "query-tag-Update_Services-8", filterId)
     _addQuerySetChildToInfrastructureSystems(db, qsId)
-    
     return True
 
 def _createAllProjectBranchStages13(db):
     """Add the project branch stages query set"""
     
     # do not change this, froxen to migrate13
+    # (NOTE -- this value will NOT be in the final result schema and is wrong!)
     filterId = _addQuerySetFilterEntry(db, "name", "IS_NULL", "False")
     qsId = _addQuerySet(db, "All Projects", "All projects", "project_branch_stage", False, "query-tag-All_Projects-11", filterId, "project")
-    
     return True
 
 def _createAllPlatformBranchStages(db):
     """Add the platform branch stages query set"""
-    filterId = _getAllFilterId(db)
+    # AllFilterId is None
+    filterId = _addQuerySetFilterEntry(db, "platform.name", "IS_NULL", "false")
     qsId = _addQuerySet(db, "All Platforms", "All platforms", "project_branch_stage", False, "query-tag-All_Platforms-12", filterId, "platform")
-    
     return True
 
 def _createAllProjectBranchStages(db):
     """Add the project branch stages query set"""
-    filterId = _getAllFilterId(db)
+    filterId = _addQuerySetFilterEntry(db, "project_branch_stage.name", "IS_NULL", "false")
     qsId = _addQuerySet(db, "All Project Stages", "All project stages", "project_branch_stage", False, "query-tag-All_Project_Branch_Stages-13", filterId, "project")
-    
     return True
 
 def _createAllProjects(db):
     """Add the projects query set"""
-    filterId = _getAllFilterId(db)
+    # filterId = _getAllFilterId(db)
+    filterId = _addQuerySetFilterEntry(db, "project.name", "IS_NULL", "false")
     qsId = _addQuerySet(db, "All Projects", "All projects", "project", False, "query-tag-All_Projects-14", filterId)
-    
     return True
-
-def _getAllFilterId(db):
-    return _getRowPk(db, "querysets_filterentry", 'filter_entry_id',
-        field="name", operator='IS_NULL', value="False")
 
 def _createQuerySetSchema(db):
     """QuerySet tables"""
