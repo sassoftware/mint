@@ -2954,7 +2954,7 @@ class MigrateTo_57(SchemaMigration):
 
 
 class MigrateTo_58(SchemaMigration):
-    Version = (58, 50)
+    Version = (58, 51)
 
     def migrate(self):
         return True
@@ -3592,20 +3592,24 @@ class MigrateTo_58(SchemaMigration):
         cu = db.cursor()
         # find the existing All Systems query set
         # as previously defined, it will have children but no filter tags
-        allQSId = schema._getRowPk(db, 'querysets_queryset', 'query_set_id',
+        allQsId = schema._getRowPk(db, 'querysets_queryset', 'query_set_id',
             name='All Systems')   
         # remove any child query sets assigned to 'All Systems'
         cu.execute('DELETE FROM querysets_queryset_children WHERE from_queryset_id=?', allQsId)
         # create a filter to match the presense of any system name
-        schema._addTableRows(db, 'querysets_filterentry', 'filter_entry_id',
-            [ dict(field='system.name', operator='IS_NULL', value='false') ]
-        )
-        # assign the filter to the "All Systems" query set
+        try:
+            cu.execute("""INSERT INTO querysets_filterentry (field, operator, value)
+                VALUES('system.name', 'IS_NULL', false)""")
+        except:
+            # possible but unlikley the customer already made this one, so tolerate 
+            # duplicate insertion failure
+            pass
         filterId = schema._getRowPk(db, "querysets_filterentry", "filter_entry_id",
             field='system.name', operator='IS_NULL', value='false')
-        schema._addTableRows(db, 'querysets_queryset_filter_entries', 'id',
-            [ dict(queryset_id=allQSId, filterentry_id=filterId) ]
-        )
+        cu.execute("""INSERT INTO querysets_queryset_filter_entries
+            (queryset_id, filterentry_id)
+            VALUES(?, ?)""", allQsId, filterId)
+        
 
         return True
    
