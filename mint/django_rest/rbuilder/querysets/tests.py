@@ -6,7 +6,7 @@
 #
 
 from mint.django_rest.rbuilder.inventory.tests import XMLTestCase
-#from mint.django_rest.rbuilder.inventory import models as inventorymodels
+from mint.django_rest.rbuilder.inventory import models as inventorymodels
 from mint.django_rest.rbuilder.querysets import models
 from mint.django_rest.rbuilder.querysets import testsxml
 #from mint.django_rest.rbuilder.manager import rbuildermanager
@@ -28,6 +28,28 @@ class QueryTestCase(XMLTestCase):
         '''lookup query sets to avoid hardcodes in tests'''
         return models.QuerySet.objects.get(name=name).pk
 
+    def xobjSystems(self, url):
+        response = self._get(url,
+            username="admin", password="password")
+        xobjModel = xobj.parse(response.content)
+        systems = None
+        try:
+            systems = xobjModel.systems.system
+        except AttributeError:
+            return []
+        return self.xobjHack(systems)
+    
+    #def xobjSystem(self, url):
+    #    response = self._get(url,
+    #        username="admin", password="password")
+    #    xobjModel = xobj.parse(response.content)
+    #    return xobjModel.system
+
+    def xobjHack(self, result):
+        '''get a list from an xobj, even if N=1. Bug/feature in xobj'''
+        if type(result) != list:
+            return [result]
+        return result
 
 class QuerySetTestCase(QueryTestCase):
 
@@ -36,39 +58,72 @@ class QuerySetTestCase(QueryTestCase):
     def setUp(self):
         QueryTestCase.setUp(self)
 
-
-
     def testListQuerySet(self):
+        # show that we can list all query sets
         response = self._get('query_sets/',
             username="admin", password="password")
+        self.assertEquals(response.status_code, 200)
         querySets = xobj.parse(response.content)
         length = len(querySets.query_sets.query_set)
         # ok to bump this if we add more QS in the db
         self.assertEqual(length, 10)
 
     def testGetQuerySet(self):
+        # show that we can get the definition of a queryset
         qsid = self._getQs("All Systems")
         response = self._get("query_sets/%s" % qsid,
             username="admin", password="password")
+        self.assertEquals(response.status_code, 200)
         querySet = xobj.parse(response.content)
         self.failUnlessEqual(querySet.query_set.name, 'All Systems')
 
     def testGetQuerySetAll(self):
+        # show that we can get results from a query set
         qsid = self._getQs("All Systems")
         response = self._get("query_sets/%s/all" % qsid,
             username="admin", password="password")
+        self.assertEquals(response.status_code, 200)
         systems = xobj.parse(response.content)
         count = len(systems.systems.system)
         self.failUnlessEqual(count, 10)
 
+    # NOTE -- this test did not exist previously, is it
+    # supported?
+
     def testPutQuerySet(self):
-         pass
+        # show that we can edit a query set and it sticks
+        qsid = self._getQs("All Systems")
+        response = self._get("query_sets/%s/" % qsid,
+            username="admin", password="password")
+        self.assertEquals(response.status_code, 200)
+        content = response.content
+
+        # this queryset actually isn't writeable so we need to first
+        # cheat for the purposes of this test
+        qs = models.QuerySet.objects.get(pk=qsid)
+        qs.can_modify = True
+        qs.save()
+
+        # does not pass:
+        #
+        #content = content.replace("All Systems", "LOTS OF SYSTEMS")
+        #response = self._put("query_sets/%s/" % qsid,
+        #    username="admin", password="password",
+        #    data=content)
+        #self.assertEquals(response.status_code, 200)
+        #
+        #response = self._get("query_sets/%s/" % qsid,
+        #    username="admin", password="password")
+        #self.assertEquals(response.status_code, 200)
+        #qs = xobj.parse(response.content)
+        #self.assertEquals(qs.query_set.name, "LOTS OF SYSTEMS")
 
     def testPostQuerySet(self):
-        
+        # show that we can add a new query set
         # get before result
         response = self._get('query_sets/',
             username="admin", password="password")
+        self.assertEquals(response.status_code, 200)
         before_db = list(models.QuerySet.objects.all())
  
         # post a new query set
@@ -76,28 +131,59 @@ class QuerySetTestCase(QueryTestCase):
             data=testsxml.queryset_post_xml,
             username="admin", password="password")
         self.assertEquals(response.status_code, 200)
+        self.assertEquals(response.status_code, 200)
 
         # verify the new query set gets added
         response = self._get('query_sets/',
             username="admin", password="password")
+        self.assertEquals(response.status_code, 200)
         after_db = list(models.QuerySet.objects.all())
-        
+       
+        # ensure we added something 
         self.assertEqual(len(before_db)+1, len(after_db))
 
+    def testChosenQuerySets(self):
+        # get a query set that would not include a
+        # system we're trying to add
+        qsid = self._getQs('rPath Update Services')
+        
+        # get a a system to add
+        systems = inventorymodels.System.objects.all()
+        system = systems[0]
+        response = self._get("inventory/systems/%s" % system.pk,
+            username="admin", password="password")
+        self.assertEquals(response.status_code, 200)
+        system_xml = response.content
+        # show that there are no chosen results yet
+        systems = self.xobjSystems("query_sets/%s/chosen/" % qsid)
+        self.assertEquals(len(systems), 0)
+
+        # post the system to the chosen result of this queryset
+        response = self._post("query_sets/%s/chosen/" % qsid,
+            username="admin", password="password",
+            data=system_xml)
+        self.assertEquals(response.status_code, 200)
+        #self.assertXMLEquals(response.content, system_xml)        
+
+        # retrieve the chosen result of this queryset
+        # verify that the system is present
+        systems = self.xobjSystems("query_sets/%s/chosen/" % qsid)
+        #self.assertTrue(response.status_code, 200)
+        #print "C1=%s" % response.content
+        #matched = xobj.parse(response.content)
+        # TODO: verify <system_id>system.pk</system_id>
+        self.assertEquals(len(systems), 1)        
+        systems = self.xobjSystems("query_sets/%s/all/" % qsid)
+        self.assertEquals(len(systems), 1)
+
+        # retrieve the all result
+        # verify that the system is present
+        # TODO
 
 class QuerySetChildTests(QueryTestCase):
     pass
 
 class QuerySetFilteredTests(QueryTestCase):
-    pass
-
-class QuerySetChosenTests(QueryTestCase):
-    pass
-
-class QuerySetAllTests(QueryTestCase):
-    pass
-
-class QuerySetTaggingTests(QueryTestCase):
     pass
 
 class QuerySetFixturedTestCase(QueryTestCase):

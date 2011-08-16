@@ -102,6 +102,8 @@ class QuerySetManager(basemanager.BaseManager):
     @exposed
     def addQuerySet(self, querySet):
         '''create a new query set'''
+        # this is probably a duplicate save because of how xobj
+        # is used.
         querySet.save()
         return querySet
 
