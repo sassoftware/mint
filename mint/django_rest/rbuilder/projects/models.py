@@ -269,7 +269,7 @@ class ProjectVersion(modellib.XObjIdModel):
     branch_id = models.AutoField(primary_key=True,
         db_column='productversionid')
     project = modellib.DeferredForeignKey(Project, db_column='projectid',
-        related_name="project_branches", view_name="ProjectVersions", null=True)
+        related_name="project_branches", view_name="ProjectVersions")
     label = models.TextField(unique=True, null=False)
     cache_key = modellib.XObjHidden(models.TextField(null=True))
     namespace = models.CharField(max_length=16)
@@ -507,14 +507,14 @@ class Image(modellib.XObjIdModel):
     #actions = modellib.SyntheticField()
 
 
-class Downloads(modellib.XObjModel):
-    class Meta:
-        db_table = u'urldownloads'
-    
-    downloads_id = models.AutoField(primary_key=True) # NOT IN SCHEMA YET!!
-    imageId = modellib.DeferredForeignKey(Image, db_column='urlid')
-    timedownloaded = models.CharField(max_length=14)
-    ip = models.CharField(max_length=64)
+# class Downloads(modellib.XObjModel):
+#     class Meta:
+#         db_table = u'urldownloads'
+#     
+#     downloads_id = models.AutoField(primary_key=True) # NOT IN SCHEMA YET!!
+#     imageId = modellib.DeferredForeignKey(Image, db_column='urlid')
+#     timedownloaded = models.CharField(max_length=14)
+#     ip = models.CharField(max_length=64)
     
 class InboundMirror(modellib.XObjModel):
     _xobj = xobj.XObjMetadata(tag="inbound_mirror")

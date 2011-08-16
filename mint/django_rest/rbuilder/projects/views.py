@@ -24,6 +24,13 @@ class AllProjectBranchesService(service.BaseService):
     def rest_GET(self, request):
         return self.mgr.getAllProjectBranches()
 
+    @requires('project_branch')
+    @return_xml
+    def rest_POST(self, request, project_branch):
+        # move to a mgr if this works
+        project_branch.save()
+        return project_branch
+
 class ProjectAllBranchStagesService(service.BaseService):
     @access.anonymous
     @return_xml
