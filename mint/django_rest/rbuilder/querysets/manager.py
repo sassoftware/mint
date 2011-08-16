@@ -103,9 +103,6 @@ class QuerySetManager(basemanager.BaseManager):
     def addQuerySet(self, querySet):
         '''create a new query set'''
         querySet.save()
-        # we don't have to tag anything because if it's not tagged tags always run
-        if querySet.resource_type == 'system' and querySet.isTopLevel():
-            self.addToAllQuerySet(querySet)
         return querySet
 
     @exposed
@@ -115,9 +112,6 @@ class QuerySetManager(basemanager.BaseManager):
             raise errors.QuerySetReadOnly(querySetName=querySet.name)
         querySet.tagged_date = None
         querySet.save()
-        # we don't have to tag anything because if it's not tagged tags always run
-        if querySet.resource_type == 'system' and querySet.isTopLevel():
-            self.addToAllQuerySet(querySet)
         return querySet
 
     @exposed
@@ -127,17 +121,6 @@ class QuerySetManager(basemanager.BaseManager):
             querySet.delete()
         else:
             raise errors.QuerySetReadOnly(querySetName=querySet.name)
-
-    def addToAllQuerySet(self, querySet):
-        '''
-        The "all" (systems) queryset is auto-maintained to 
-        include all system querysets
-        '''
-        allQuerySet = models.QuerySet.objects.get(
-            name='All Systems'
-        )
-        allQuerySet.children.add(querySet)
-        allQuerySet.save()
 
     def _getQueryTag(self, querySet):
         '''
@@ -493,7 +476,10 @@ class QuerySetManager(basemanager.BaseManager):
         # we do not update the queryset tag date here because it could
         # still be stale with respect to child or filtered results
         tagMethod = self._tagMethod(querySet)
-        tagMethod([resource], queryTag, self._chosenMethod())
+        # if we support tagging this resource type yet
+        # then tag it, otherwise, basically no-op.
+        if tagMethod is not None:
+            tagMethod([resource], queryTag, self._chosenMethod())
         return self.getQuerySetChosenResult(querySetId)
 
     @exposed

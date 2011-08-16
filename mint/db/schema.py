@@ -28,7 +28,7 @@ from conary.dbstore import sqlerrors, sqllib
 log = logging.getLogger(__name__)
 
 # database schema major version
-RBUILDER_DB_VERSION = sqllib.DBversion(58, 50)
+RBUILDER_DB_VERSION = sqllib.DBversion(58, 51)
 
 
 def _createTrigger(db, table, column = "changed"):
@@ -2126,13 +2126,6 @@ def _addQuerySetChild(db, parent_qs_id, child_qs_id):
     
     return changed
 
-def _addQuerySetChildToAllSystems(db, child_qs_id):
-    """Convenience method to add a child query set to all systems"""
-    
-    allQSId = _getRowPk(db, "querysets_queryset", "query_set_id", 
-        name="All Systems")
-    return _addQuerySetChild(db, allQSId, child_qs_id)
-
 def _addQuerySetChildToInfrastructureSystems(db, child_qs_id):
     """Convenience method to add a child query set to infrastructure systems"""
     
@@ -2144,7 +2137,6 @@ def _createInfrastructureSystemsQuerySetSchema(db):
     """Add the infrastructure systems query set"""
     filterId = _addQuerySetFilterEntry(db, "system_type.infrastructure", "EQUAL", "true")
     qsId = _addQuerySet(db, "Infrastructure Systems", "Systems that make up the rPath infrastructure", "system", False, "query-tag-Infrastructure_Systems-6", filterId)
-    _addQuerySetChildToAllSystems(db, qsId)
     return True
 
 def _createWindowsBuildSystemsQuerySet(db):
@@ -2190,6 +2182,13 @@ def _createAllProjects(db):
     qsId = _addQuerySet(db, "All Projects", "All projects", "project", False, "query-tag-All_Projects-14", filterId)
     return True
 
+def _createAllSystems(db):
+    """Add the all systems query set"""
+    filterId = _addQuerySetFilterEntry(db, "system.name", "IS_NULL", "false")
+    qsId = _addQuerySet(db, "All Systems", "All systems", "system", False, "query-tag-All_Systems-15", filterId)
+    return True
+
+
 def _createQuerySetSchema(db):
     """QuerySet tables"""
     changed = False
@@ -2206,12 +2205,42 @@ def _createQuerySetSchema(db):
             "presentation_type" TEXT,
             "can_modify" BOOLEAN NOT NULL DEFAULT TRUE
         )""")
-    changed |= _addTableRows(db, "querysets_queryset", "name",
-        [dict(name="All Systems", resource_type="system",
-            description="All Systems",
-            created_date=str(datetime.datetime.now(tz.tzutc())),
-            modified_date=str(datetime.datetime.now(tz.tzutc())),
-            can_modify=False),
+
+    changed |= createTable(db, 'querysets_filterentry', """
+        CREATE TABLE "querysets_filterentry" (
+            "filter_entry_id" %(PRIMARYKEY)s,
+            "field" TEXT NOT NULL,
+            "operator" TEXT NOT NULL,
+            "value" TEXT,
+            UNIQUE("field", "operator", "value")
+        )""")
+
+    changed |= createTable(db, 'querysets_querytag', """
+        CREATE TABLE "querysets_querytag" (
+            "query_tag_id" %(PRIMARYKEY)s,
+            "query_set_id" INTEGER UNIQUE
+                REFERENCES "querysets_queryset" ("query_set_id")
+                ON DELETE CASCADE
+                NOT NULL,
+            "name" TEXT NOT NULL UNIQUE
+        )""")
+
+    changed |= createTable(db, "querysets_queryset_filter_entries", """
+        CREATE TABLE "querysets_queryset_filter_entries" (
+            "id" %(PRIMARYKEY)s,
+            "queryset_id" INTEGER
+                REFERENCES "querysets_queryset" ("query_set_id")
+                ON DELETE CASCADE
+                NOT NULL,
+            "filterentry_id" INTEGER
+                REFERENCES "querysets_filterentry" ("filter_entry_id")
+                ON DELETE CASCADE
+                NOT NULL,
+            UNIQUE ("queryset_id", "filterentry_id")
+        )""")
+
+    # unique value was 'name', not queryset_id
+    changed |= _addTableRows(db, "querysets_queryset", "name", [
          dict(name="Active Systems", resource_type="system",
             description="Active Systems",
             created_date=str(datetime.datetime.now(tz.tzutc())),
@@ -2233,6 +2262,8 @@ def _createQuerySetSchema(db):
               modified_date=str(datetime.datetime.now(tz.tzutc())),
               can_modify=False),
         ])
+    
+    changed != _createAllSystems(db)
         
     allQSId = _getRowPk(db, "querysets_queryset", "query_set_id", 
         name="All Systems")
@@ -2245,15 +2276,6 @@ def _createQuerySetSchema(db):
     allUserQSId = _getRowPk(db, "querysets_queryset", "query_set_id", 
         name="All Users")
 
-
-    changed |= createTable(db, 'querysets_filterentry', """
-        CREATE TABLE "querysets_filterentry" (
-            "filter_entry_id" %(PRIMARYKEY)s,
-            "field" TEXT NOT NULL,
-            "operator" TEXT NOT NULL,
-            "value" TEXT,
-            UNIQUE("field", "operator", "value")
-        )""")
     changed |= _addTableRows(db, "querysets_filterentry",
         'filter_entry_id',
         [dict(field="current_state.name", operator="EQUAL", value="responsive"),
@@ -2277,23 +2299,12 @@ def _createQuerySetSchema(db):
     allUserFiltId = _getRowPk(db, "querysets_filterentry", 'filter_entry_id',
         field="user_name", operator='IS_NULL', value="False")
 
-
-    changed |= createTable(db, 'querysets_querytag', """
-        CREATE TABLE "querysets_querytag" (
-            "query_tag_id" %(PRIMARYKEY)s,
-            "query_set_id" INTEGER UNIQUE
-                REFERENCES "querysets_queryset" ("query_set_id")
-                ON DELETE CASCADE
-                NOT NULL,
-            "name" TEXT NOT NULL UNIQUE
-        )""")
-    changed |= _addTableRows(db, "querysets_querytag", "name",
-        [dict(query_set_id=allQSId, name="query-tag-All_Systems-1"),
-         dict(query_set_id=activeQSId, name="query-tag-Active_Systems-2"),
-         dict(query_set_id=inactiveQSId, name="query-tag-Inactive_Systems-3"),
-         dict(query_set_id=physicalQSId, name="query-tag-Physical_Systems-4"),
-         dict(query_set_id=allUserQSId, name="query-tag-all_users-5"),
-        ])
+    changed |= _addTableRows(db, "querysets_querytag", "name", [
+        dict(query_set_id=activeQSId, name="query-tag-Active_Systems-2"),
+        dict(query_set_id=inactiveQSId, name="query-tag-Inactive_Systems-3"),
+        dict(query_set_id=physicalQSId, name="query-tag-Physical_Systems-4"),
+        dict(query_set_id=allUserQSId, name="query-tag-all_users-5"),
+    ])
 
     changed |= createTable(db, 'querysets_inclusionmethod', """
         CREATE TABLE "querysets_inclusionmethod" (
@@ -2378,20 +2389,6 @@ def _createQuerySetSchema(db):
             UNIQUE ("stage_id", "query_tag_id", "inclusion_method_id")
         )""")
 
-    changed |= createTable(db, "querysets_queryset_filter_entries", """
-        CREATE TABLE "querysets_queryset_filter_entries" (
-            "id" %(PRIMARYKEY)s,
-            "queryset_id" INTEGER
-                REFERENCES "querysets_queryset" ("query_set_id")
-                ON DELETE CASCADE
-                NOT NULL,
-            "filterentry_id" INTEGER
-                REFERENCES "querysets_filterentry" ("filter_entry_id")
-                ON DELETE CASCADE
-                NOT NULL,
-            UNIQUE ("queryset_id", "filterentry_id")
-        )""")
-
     changed |= _addTableRows(db, "querysets_queryset_filter_entries",
         'id',
         [dict(queryset_id=activeQSId, filterentry_id=activeFiltId),
@@ -2414,11 +2411,6 @@ def _createQuerySetSchema(db):
                 NOT NULL,
             UNIQUE ("from_queryset_id", "to_queryset_id")
         )""")
-    changed |= _addTableRows(db, "querysets_queryset_children",
-        'id',
-        [dict(from_queryset_id=allQSId, to_queryset_id=activeQSId),
-         dict(from_queryset_id=allQSId, to_queryset_id=inactiveQSId)],
-        uniqueCols=('from_queryset_id', 'to_queryset_id'))
 
     return changed
 
