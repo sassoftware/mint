@@ -27,7 +27,6 @@ class AllProjectBranchesService(service.BaseService):
     @requires('project_branch')
     @return_xml
     def rest_POST(self, request, project_branch):
-        # move to a mgr if this works
         project_branch.save()
         return project_branch
 
