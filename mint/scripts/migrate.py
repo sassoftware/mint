@@ -3600,7 +3600,7 @@ class MigrateTo_58(SchemaMigration):
         try:
             cu.execute("""INSERT INTO querysets_filterentry (field, operator, value)
                 VALUES('system.name', 'IS_NULL', false)""")
-        except:
+        except sqlerrors.ConstraintViolation:
             # possible but unlikley the customer already made this one, so tolerate 
             # duplicate insertion failure
             pass
