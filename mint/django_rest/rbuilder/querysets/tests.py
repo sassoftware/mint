@@ -6,19 +6,18 @@
 #
 
 from mint.django_rest.rbuilder.inventory.tests import XMLTestCase
-from mint.django_rest.rbuilder.inventory import models as inventorymodels
-
+#from mint.django_rest.rbuilder.inventory import models as inventorymodels
 from mint.django_rest.rbuilder.querysets import models
-#from mint.django_rest.rbuilder.querysets import testsxml
+from mint.django_rest.rbuilder.querysets import testsxml
 #from mint.django_rest.rbuilder.manager import rbuildermanager
 from mint.django_rest.rbuilder.querysets import manager as mgr
+from xobj import xobj
 
 # turn off tag cache delay for tests, effectively always
 # forcing a retag
 mgr.TAG_REFRESH_INTERVAL=-1
 
 
-#from xobj import xobj
 
 class QueryTestCase(XMLTestCase):
 
@@ -32,23 +31,74 @@ class QueryTestCase(XMLTestCase):
 
 class QuerySetTestCase(QueryTestCase):
 
+    fixtures = ['system_collection']
+
     def setUp(self):
         QueryTestCase.setUp(self)
 
-#    def testPostQuerySet(self):
-#        response = self._post('query_sets/',
-#            data=testsxml.queryset_post_xml,
-#            username="admin", password="password")
-#        self.assertEquals(response.status_code, 200)
-#
-#        # believe this is an invalid test because tests haven't run yet
-#        # and query tags are an INTERNALS implementation.
-#        #self.assertEquals(len(models.QueryTag.objects.all()), 12)
-#        #self.assertEquals(models.QueryTag.objects.get(pk=4).name,
-#        #    "query-tag-Physical_Systems-4")
-#        self.assertEquals(len(models.QuerySet.objects.all()), 12)
-#        self.assertEquals(models.QuerySet.objects.get(pk=4).name,
-#            "Physical Systems")
+
+
+    def testListQuerySet(self):
+        response = self._get('query_sets/',
+            username="admin", password="password")
+        querySets = xobj.parse(response.content)
+        length = len(querySets.query_sets.query_set)
+        # ok to bump this if we add more QS in the db
+        self.assertEqual(length, 10)
+
+    def testGetQuerySet(self):
+        qsid = self._getQs("All Systems")
+        response = self._get("query_sets/%s" % qsid,
+            username="admin", password="password")
+        querySet = xobj.parse(response.content)
+        self.failUnlessEqual(querySet.query_set.name, 'All Systems')
+
+    def testGetQuerySetAll(self):
+        qsid = self._getQs("All Systems")
+        response = self._get("query_sets/%s/all" % qsid,
+            username="admin", password="password")
+        systems = xobj.parse(response.content)
+        count = len(systems.systems.system)
+        self.failUnlessEqual(count, 10)
+
+    def testPutQuerySet(self):
+         pass
+
+    def testPostQuerySet(self):
+        
+        # get before result
+        response = self._get('query_sets/',
+            username="admin", password="password")
+        before_db = list(models.QuerySet.objects.all())
+ 
+        # post a new query set
+        response = self._post('query_sets/',
+            data=testsxml.queryset_post_xml,
+            username="admin", password="password")
+        self.assertEquals(response.status_code, 200)
+
+        # verify the new query set gets added
+        response = self._get('query_sets/',
+            username="admin", password="password")
+        after_db = list(models.QuerySet.objects.all())
+        
+        self.assertEqual(len(before_db)+1, len(after_db))
+
+
+class QuerySetChildTests(QueryTestCase):
+    pass
+
+class QuerySetFilteredTests(QueryTestCase):
+    pass
+
+class QuerySetChosenTests(QueryTestCase):
+    pass
+
+class QuerySetAllTests(QueryTestCase):
+    pass
+
+class QuerySetTaggingTests(QueryTestCase):
+    pass
 
 class QuerySetFixturedTestCase(QueryTestCase):
     fixtures = ['systems_named_like_3_queryset', 'system_collection']

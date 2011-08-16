@@ -5,9 +5,30 @@
 # All rights reserved.
 #
 
-queryset_post_xml = """\
+queryset_post_xml = """
 <query_set>
-    <name>Unmanaged systems</name>
+  <filter_entries>
+    <filter_entry>
+      <operator>IS_NULL</operator>
+      <field>system.name</field>
+      <operator>LIKE</operator>
+      <value>3</value>
+    </filter_entry>
+  </filter_entries>
+  <name>New Query Set</name>
+  <resource_type>system</resource_type>
+  <description>System name has a 3 in it</description>
+</query_set>
+"""
+
+###################################################
+# items below this line included for reference only
+# and will be soon deleted
+###################################################
+
+old_queryset_post_xml = """\
+<query_set>
+    <name>Unmanaged systems -- new query set</name>
     <resource_type>system</resource_type>
     <filter_entries>
         <filter_entry field="current_state.name" operator="EQUAL" value="unmanaged"/>

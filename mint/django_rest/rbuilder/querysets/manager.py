@@ -90,13 +90,13 @@ class QuerySetManager(basemanager.BaseManager):
     @exposed
     def getQuerySet(self, querySetId):
         '''look up a query set object'''
-        return models.QuerySet.objects.select_related(depth=1).get(pk=querySetId)
+        return models.QuerySet.objects.get(pk=querySetId)
 
     @exposed
     def getQuerySets(self):
         '''return all query set objects'''
         querySets = models.QuerySets()
-        querySets.query_set = models.QuerySet.objects.select_related(depth=1).all()
+        querySets.query_set = models.QuerySet.objects.all()
         return querySets
 
     @exposed
