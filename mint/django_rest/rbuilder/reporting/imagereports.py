@@ -1,5 +1,5 @@
 from mint.django_rest.rbuilder import reporting
-from mint.django_rest.rbuilder.projects.models import Project, Downloads
+from mint.django_rest.rbuilder.projects.models import Project #, Downloads
 from mint.django_rest.rbuilder.reporting.reports import TimeSegmentReport
 
 from django.db import connection, transaction

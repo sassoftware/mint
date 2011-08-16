@@ -286,8 +286,7 @@ class ProjectsTestCase(XMLTestCase):
         
         # try to add project as different user
         response = self._post('project_branches/',
-            data=testsxml.project_version_post_with_project_no_auth_xml,
-            username="testuser", password="password")
+            data=testsxml.project_version_post_with_project_no_auth_xml)
         self.assertEquals(response.status_code, 401)
 
     def testUpdateProjectBranch(self):

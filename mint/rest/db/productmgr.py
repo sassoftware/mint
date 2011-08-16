@@ -160,7 +160,7 @@ class ProductManager(manager.Manager):
 
     def getProductVersion(self, fqdn, versionName):
         productVersion = self._getMinimalProductVersion(fqdn, versionName)
-        pd = self.getProductVersionDefinitionByProductVersion(productVersion)
+        pd = self.getProductVersionDefinitionByProductVersion(productVersion.hostname, productVersion)
         # Use sourceGroup here since this is really the name of the source
         # trove that needs to be cooked.
         productVersion.sourceGroup = pd.getImageGroup()
