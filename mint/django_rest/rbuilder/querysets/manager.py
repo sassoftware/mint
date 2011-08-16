@@ -113,6 +113,7 @@ class QuerySetManager(basemanager.BaseManager):
         '''edit a query set'''
         if not querySet.can_modify:
             raise errors.QuerySetReadOnly(querySetName=querySet.name)
+        querySet.tagged_date = None
         querySet.save()
         # we don't have to tag anything because if it's not tagged tags always run
         if querySet.resource_type == 'system' and querySet.isTopLevel():
@@ -175,6 +176,8 @@ class QuerySetManager(basemanager.BaseManager):
             return
         method(resources, tag, self._filteredMethod())
         querySet.tagged_date = datetime.now()
+        # mark as tagged so we know later when we want to process transitive tagging
+        querySet._was_retagged = True
         querySet.save()
 
     # no need to do this, as adding systems to a chosen
@@ -225,7 +228,7 @@ class QuerySetManager(basemanager.BaseManager):
             m = getattr(m, comp)            
         return m
 
-    def filterQuerySet(self, querySet, use_tags=True):
+    def filterQuerySet(self, querySet, use_tags=True, update_transitive=False):
         '''Return resources matching specific filter criteria'''
         model = modellib.type_map[querySet.resource_type]
 
@@ -237,7 +240,9 @@ class QuerySetManager(basemanager.BaseManager):
             use_tags = False
  
         resources = None
+        retval = None
         if not use_tags:
+            # TODO: split into submethod
             if not querySet.filter_entries.all():
                 resources = EmptyQuerySet(model)
             else:
@@ -246,8 +251,9 @@ class QuerySetManager(basemanager.BaseManager):
             for filt in querySet.filter_entries.select_related().all():
                 resources = modellib.filterDjangoQuerySet(resources, 
                     filt.field, filt.operator, filt.value)
-            return resources.distinct()
+            retval = resources.distinct()
         else:
+            # TODO: split into submethod
             # use tags to find what is matched by the query set
             # this should probably be it's own method
             query_tag = models.QueryTag.objects.get(
@@ -257,8 +263,13 @@ class QuerySetManager(basemanager.BaseManager):
                 #tags__query_tag__query_tag_id = query_tag.pk,
                 tags__query_tag__query_tag_id = query_tag.pk,
                 tags__inclusion_method = self._filteredMethod()
-            ).distinct().all()
-            return resources
+            )
+            retval = resources.distinct()
+
+        if update_transitive:
+            self._updateTransitiveFilterTags(querySet, resources)
+
+        return retval
 
     def _getResourceCollection(self, querySet, resources):
         '''
@@ -279,6 +290,8 @@ class QuerySetManager(basemanager.BaseManager):
         due to filters, chosen (explicitly added) or child (recursive) matches,
         though 'all' includes, well, all of those.
         '''
+        # TODO: if the query is still fresh, just go directly to transitive tags
+        # and don't descend below at all.
         querySet = self._querySet(querySetId)
         qsAllResult = self._getQuerySetAllResult(querySet, use_tags=use_tags)
         resourceCollection = self._getResourceCollection(querySet, qsAllResult)
@@ -300,7 +313,6 @@ class QuerySetManager(basemanager.BaseManager):
         '''
         For a given query set, return only the chosen matches, aka resources
         explicitly placed in the queryset
-        TODO: allow passing in the queryset or the ID
         '''
         querySet = self._querySet(querySetId)
         result_data = self._getQuerySetChosenResult(querySet) #, use_tags=use_tags)
@@ -354,10 +366,40 @@ class QuerySetManager(basemanager.BaseManager):
 
         # TODO: plumb nocache up?
 
+        update_transitive_tags = False
         if nocache or self._areResourceTagsStale(querySet):
             self._tagSingleQuerySetFiltered(querySet)
+            update_transitive_tags = True 
 
-        return self.filterQuerySet(querySet, use_tags=use_tags)
+        results = self.filterQuerySet(
+            querySet, 
+            use_tags=use_tags,
+            update_transitive=update_transitive_tags
+        )
+
+        return results
+
+    def _updateTransitiveFilterTags(self, querySet, results):
+        '''
+        When we get results back for a filtered query set, we'll
+        tag each element with the inclusionMethod 'filtered'.  However,
+        we also want to tag each parent that would match with the
+        inclusionMethod 'transitive', so we don't have to traverse
+        the tree when doing 'all' matches, and can also do quick
+        lookups to see if a resource is in a certain set.
+
+        (all three inclusion types) and the resource supports it
+        '''
+        # TODO: must delete previous transitive tags
+        # TODO: must also be done for chosen elements.  Ow.
+        # TODO: make 'all' lookups use resourcetags ONLY if non-stale
+        parents = getattr(querySet, '_parents', [])
+        for p in parents:
+            queryTag = self._getQueryTag(p)
+            # we do not update the queryset tag date here because it could
+            # still be stale with respect to child or filtered results
+            tagMethod = self._tagMethod(p)
+            tagMethod(results, queryTag, self._transitiveMethod())
 
     @exposed
     def getQuerySetChildResult(self, querySetId, use_tags=True):
@@ -369,7 +411,8 @@ class QuerySetManager(basemanager.BaseManager):
         # NOTE: child query set ALWAYS uses tags, because you can't choose
         # to use tags or not at UI visible level, (there may be a nocache
         # flag instead).
-        # TODO: provide a nice wrapper to get these by ID
+        # TODO: jump directly to tags if the set isn't stale, do this at THIS level, not
+        # below.
         querySet = self._querySet(querySetId)
         result_data = self._getQuerySetChildResult(querySet, use_tags=True)
         resourceCollection = self._getResourceCollection(querySet, result_data)
@@ -394,6 +437,7 @@ class QuerySetManager(basemanager.BaseManager):
              filtered = self._getQuerySetFilteredResult(
                  qs, use_tags=use_tags
              ).distinct()
+             # TODO: if we had any chosen results, update the tags UP the chain 
              chosen = self._getQuerySetChosenResult(
                  qs
              ).distinct()
@@ -458,6 +502,7 @@ class QuerySetManager(basemanager.BaseManager):
         Add a list of matched systems to a chosen query set result list.
         Deletes all previous matches.
         '''
+        # TODO: update transitive items
         querySet = self._querySet(querySetId)
         queryTag = self._getQueryTag(querySet)
         resources_out = getattr(resources, querySet.resource_type)
@@ -480,6 +525,8 @@ class QuerySetManager(basemanager.BaseManager):
         '''
         Remove a resource from a queryset chosen result.
         '''
+        # TODO: if for this querySet I'm marked chosen but NOT filtered
+        # set the tagged_date back to NULL so it will be retagged next time
         querySet = self._querySet(querySetId)
         queryTag = self._getQueryTag(querySet)
         tagModel = modellib.type_map[self.tagModelMap[querySet.resource_type]]
