@@ -175,8 +175,14 @@ def operatorFactory(operator):
 def filterDjangoQuerySet(djangoQuerySet, field, operator, value):
     # Ignore fields that don't exist on the model
     fieldName = field.split('.')[0]
+
     if fieldName not in djangoQuerySet.model._meta.get_all_field_names():
-        return djangoQuerySet
+        # if the model field didn't exist, try just the fieldName, 
+        # it's possible the model was renamed and a custom query set
+        # is no longer accurate.  
+        field = fieldName = field.split('.')[-1]
+        if fieldName not in djangoQuerySet.model._meta.get_all_field_names():
+            return djangoQuerySet
 
     if value is None:
         value = False

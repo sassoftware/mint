@@ -142,6 +142,36 @@ class QuerySetTestCase(QueryTestCase):
         # ensure we added something 
         self.assertEqual(len(before_db)+1, len(after_db))
 
+        # the query set we added was
+        # "systems with a 3 in it" in our set of 10
+        # there are 3 matches
+        qs = self._getQs("New Query Set")
+        response = self._get("query_sets/%s" % qs,
+            username="admin", password="password")
+        self.assertEquals(response.status_code, 200)
+
+        systems = self.xobjSystems("query_sets/%s/filtered/" % qs)
+        self.assertEquals(len(systems), 10)
+        systems = self.xobjSystems("query_sets/%s/child/" % qs)
+        self.assertEquals(len(systems), 0)
+        systems = self.xobjSystems("query_sets/%s/chosen/" % qs)
+        self.assertEquals(len(systems), 0)
+        systems = self.xobjSystems("query_sets/%s/all/" % qs)
+        self.assertEquals(len(systems), 10)
+
+        # now since we've done some useful setup, might
+        # as well test child query sets to this one.  Adding 
+        # "All Systems" to it, and then we can test the length
+        # of the various subquerysets, which will make
+        # sure duplicate results don't show up
+
+        qs = self._getQs("All Systems")
+        # TODO
+        # all = 10 
+        # child = 10
+        # filtered = 3
+        # chosen = 0
+
     def testChosenQuerySets(self):
         # get a query set that would not include a
         # system we're trying to add
@@ -163,34 +193,22 @@ class QuerySetTestCase(QueryTestCase):
             username="admin", password="password",
             data=system_xml)
         self.assertEquals(response.status_code, 200)
-        #self.assertXMLEquals(response.content, system_xml)        
+        self.assertXMLEquals(response.content, system_xml)        
 
         # retrieve the chosen result of this queryset
         # verify that the system is present
         systems = self.xobjSystems("query_sets/%s/chosen/" % qsid)
-        #self.assertTrue(response.status_code, 200)
-        #print "C1=%s" % response.content
-        #matched = xobj.parse(response.content)
-        # TODO: verify <system_id>system.pk</system_id>
+        self.assertTrue(systems[0].name, system.name)
         self.assertEquals(len(systems), 1)        
         systems = self.xobjSystems("query_sets/%s/all/" % qsid)
         self.assertEquals(len(systems), 1)
+        systems = self.xobjSystems("query_sets/%s/filtered/" % qsid)
+        self.assertEquals(len(systems), 1)
+        systems = self.xobjSystems("query_sets/%s/child/" % qsid)
+        self.assertEquals(len(systems), 0)
 
-        # retrieve the all result
-        # verify that the system is present
-        # TODO
 
-class QuerySetChildTests(QueryTestCase):
-    pass
-
-class QuerySetFilteredTests(QueryTestCase):
-    pass
-
-class QuerySetFixturedTestCase(QueryTestCase):
-    fixtures = ['systems_named_like_3_queryset', 'system_collection']
-
-    def setUp(self):
-        QueryTestCase.setUp(self)
+# OLD FIXTURED TESTS:
 #
 #    def xobjResponse(self, url):
 #        response = self._get(url,

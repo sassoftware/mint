@@ -9,7 +9,6 @@ queryset_post_xml = """
 <query_set>
   <filter_entries>
     <filter_entry>
-      <operator>IS_NULL</operator>
       <field>system.name</field>
       <operator>LIKE</operator>
       <value>3</value>
