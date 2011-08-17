@@ -283,7 +283,7 @@ class ProjectVersion(modellib.XObjIdModel):
     platform = modellib.SyntheticField(modellib.HrefField())
     platform_version = modellib.SyntheticField()
     platform_label = modellib.SyntheticField() # don't think this is needed if we already have a platform
-    image_definitions = modellib.SyntheticField(modellib.HrefField())
+    imageDefinitions = modellib.SyntheticField(modellib.HrefField()) # only camelCase for compatibility reasons, CHANGE
     image_type_definitions = modellib.SyntheticField(modellib.HrefField())
     source_group = modellib.SyntheticField()
 

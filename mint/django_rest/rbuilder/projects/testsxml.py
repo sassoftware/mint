@@ -221,7 +221,7 @@ project_branch_xml = """\
   </project>
   <project_branch_stages id="http://testserver/api/v1/projects/chater-foo/project_branches/chater-foo.eng.rpath.com@rpath:chater-foo-trunk/project_branch_stages"/>
   <source_group>group-foo-appliance</source_group>
-  <image_definitions id="http://testserver/api/products/chater-foo/versions/trunk/imageDefinitions"/>
+  <imageDefinitions id="http://testserver/api/products/chater-foo/versions/trunk/imageDefinitions"/>
   <image_type_definitions id="http://testserver/api/products/chater-foo/versions/trunk/imageTypeDefinitions"/>
 </project_branch>"""
 
