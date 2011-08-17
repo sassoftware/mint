@@ -113,7 +113,6 @@ class SyncTool(object):
         pd.loadFromRepository(self.client)
         fields = {
                 'projectId': handle.projectId,
-                'definition_version': version.freeze(),
                 'namespace': pd.getConaryNamespace(),
                 'name': pd.getProductVersion(),
                 'description': pd.getProductDescription(),
