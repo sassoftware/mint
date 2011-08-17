@@ -314,7 +314,7 @@ class ProjectVersion(modellib.XObjIdModel):
 
     def serialize(self, request=None):
         oldUrlValues = (self.project.short_name, self.name)
-        self.image_definitions = modellib.HrefField(
+        self.imageDefinitions = modellib.HrefField(
             href='/api/products/%s/versions/%s/imageDefinitions',
             values=oldUrlValues)
         self.image_type_definitions = modellib.HrefField(
