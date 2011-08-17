@@ -29,6 +29,7 @@ class QueryTestCase(XMLTestCase):
         return models.QuerySet.objects.get(name=name).pk
 
     def xobjSystems(self, url):
+        url = url + ";start_index=0;limit=9999"
         response = self._get(url,
             username="admin", password="password")
         xobjModel = xobj.parse(response.content)
@@ -90,33 +91,49 @@ class QuerySetTestCase(QueryTestCase):
     # NOTE -- this test did not exist previously, is it
     # supported?
 
-    def testPutQuerySet(self):
-        # show that we can edit a query set and it sticks
-        qsid = self._getQs("All Systems")
-        response = self._get("query_sets/%s/" % qsid,
+    def testPutQuerySetAndChildSets(self):
+
+        # add a new query set (post)
+        # query set, then modify it to add a child set.
+
+        # post a new query set
+        response = self._post('query_sets/',
+            data=testsxml.queryset_post_xml,
             username="admin", password="password")
         self.assertEquals(response.status_code, 200)
-        content = response.content
+        self.assertEquals(response.status_code, 200)
 
-        # this queryset actually isn't writeable so we need to first
-        # cheat for the purposes of this test
-        qs = models.QuerySet.objects.get(pk=qsid)
-        qs.can_modify = True
-        qs.save()
+        # some Django model tweaks so we don't have to fixture
+        # the XML.  Notice we don't save here.
+        qs1 = models.QuerySet.objects.get(name='New Query Set')
+        child1 = self.xobjSystems("query_sets/%s/child/" % qs1.pk)
+        all1 = self.xobjSystems("query_sets/%s/all/" % qs1.pk)
+        chosen1 = self.xobjSystems("query_sets/%s/chosen/" % qs1.pk)
+        filtered1 = self.xobjSystems("query_sets/%s/filtered/" % qs1.pk)
+        self.assertEqual(len(child1), 0)
+        self.assertEqual(len(all1), 38)
+        self.assertEqual(len(chosen1), 0)
+        self.assertEqual(len(filtered1), 38)
+        
+        #qs2 = models.QuerySet.objects.get(name='All Systems')
+        #qs1.children.add(qs2)
+        #xml = qs1.to_xml()
 
-        # does not pass:
-        #
-        #content = content.replace("All Systems", "LOTS OF SYSTEMS")
-        #response = self._put("query_sets/%s/" % qsid,
-        #    username="admin", password="password",
-        #    data=content)
-        #self.assertEquals(response.status_code, 200)
-        #
-        #response = self._get("query_sets/%s/" % qsid,
-        #    username="admin", password="password")
-        #self.assertEquals(response.status_code, 200)
-        #qs = xobj.parse(response.content)
-        #self.assertEquals(qs.query_set.name, "LOTS OF SYSTEMS")
+        # verify the counts are consistent with having a large
+        # child set.
+        response = self._put("query_sets/%s" % qs1.pk,
+            username="admin", password="password", 
+            data=testsxml.queryset_put_xml)
+        self.assertEquals(response.status_code, 200)
+
+        child2 = self.xobjSystems("query_sets/%s/child/" % qs1.pk)
+        self.assertEquals(len(child2), 201)
+        all2 = self.xobjSystems("query_sets/%s/all/" % qs1.pk)
+        self.assertEquals(len(all2), 201)
+        chosen2 = self.xobjSystems("query_sets/%s/chosen/" % qs1.pk)
+        self.assertEquals(len(chosen2), 0)
+        filtered2 = self.xobjSystems("query_sets/%s/filtered/" % qs1.pk)
+        self.assertEquals(len(filtered2), 38)
 
     def testPostQuerySet(self):
         # show that we can add a new query set
@@ -151,26 +168,13 @@ class QuerySetTestCase(QueryTestCase):
         self.assertEquals(response.status_code, 200)
 
         systems = self.xobjSystems("query_sets/%s/filtered/" % qs)
-        self.assertEquals(len(systems), 10)
+        self.assertEquals(len(systems), 38)
         systems = self.xobjSystems("query_sets/%s/child/" % qs)
         self.assertEquals(len(systems), 0)
         systems = self.xobjSystems("query_sets/%s/chosen/" % qs)
         self.assertEquals(len(systems), 0)
         systems = self.xobjSystems("query_sets/%s/all/" % qs)
-        self.assertEquals(len(systems), 10)
-
-        # now since we've done some useful setup, might
-        # as well test child query sets to this one.  Adding 
-        # "All Systems" to it, and then we can test the length
-        # of the various subquerysets, which will make
-        # sure duplicate results don't show up
-
-        qs = self._getQs("All Systems")
-        # TODO
-        # all = 10 
-        # child = 10
-        # filtered = 3
-        # chosen = 0
+        self.assertEquals(len(systems), 38)
 
     def testChosenQuerySets(self):
         # get a query set that would not include a
