@@ -375,7 +375,7 @@ class Stage(modellib.XObjIdModel):
 
     view_name = 'ProjectBranchStage'
     _xobj = xobj.XObjMetadata(tag='project_branch_stage')
-    _xobj_hidden_accessors = set(['version_set',])
+    _xobj_hidden_accessors = set(['version_set', 'tags'])
 
     summary_view = ["name"]
 
