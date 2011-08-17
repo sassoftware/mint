@@ -81,12 +81,24 @@ class QuerySetTestCase(QueryTestCase):
     def testGetQuerySetAll(self):
         # show that we can get results from a query set
         qsid = self._getQs("All Systems")
-        response = self._get("query_sets/%s/all" % qsid,
+        response = self._get("query_sets/%s/all;start_index=0;limit=9999" % qsid,
             username="admin", password="password")
         self.assertEquals(response.status_code, 200)
         systems = xobj.parse(response.content)
         count = len(systems.systems.system)
-        self.failUnlessEqual(count, 10)
+        self.failUnlessEqual(count, 201)
+
+        # we will have tagged it by visiting the last pass
+        # now hit it again and run down the "tagged" path
+        # for code coverage purposes & make sure we get
+        # the same result
+        mgr.TAG_REFRESH_INTERVAL=9999
+        response = self._get("query_sets/%s/all;start_index=0;limit=9999" % qsid,
+            username="admin", password="password")
+        self.assertEquals(response.status_code, 200)
+        systems = xobj.parse(response.content)
+        count = len(systems.systems.system)
+        self.failUnlessEqual(count, 201)
 
     # NOTE -- this test did not exist previously, is it
     # supported?
@@ -211,6 +223,28 @@ class QuerySetTestCase(QueryTestCase):
         systems = self.xobjSystems("query_sets/%s/child/" % qsid)
         self.assertEquals(len(systems), 0)
 
+    def testBaseQuerySets(self):
+        # run through various querysets that ship with the app
+        # to make sure they don't explode
+        qsid = self._getQs('All Projects')
+        response = self._get("query_sets/%s/all/" % qsid,
+            username="admin", password="password")
+        self.assertEquals(response.status_code, 200)
+
+        qsid = self._getQs('All Users')
+        response = self._get("query_sets/%s/all/" % qsid,
+            username="admin", password="password")
+        self.assertEquals(response.status_code, 200)
+        
+        qsid = self._getQs('All Project Stages')
+        response = self._get("query_sets/%s/all/" % qsid,
+            username="admin", password="password")
+        self.assertEquals(response.status_code, 200)
+        
+        qsid = self._getQs('All Platforms')
+        response = self._get("query_sets/%s/all/" % qsid,
+            username="admin", password="password")
+        self.assertEquals(response.status_code, 200)
 
 # OLD FIXTURED TESTS:
 #

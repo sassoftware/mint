@@ -296,10 +296,14 @@ class UserTag(modellib.XObjIdModel):
     
     user_tag_id = models.AutoField(primary_key=True)
     user = modellib.ForeignKey(usersmodels.User, related_name='tags')
-    query_tag = modellib.ForeignKey(QueryTag, related_name='user_tags', text_field='name')
+    query_tag = XObjHidden(
+        modellib.ForeignKey(QueryTag, related_name='user_tags', text_field='name')
+    )
     # TODO -- also don't share inclusion_method
-    inclusion_method = modellib.SerializedForeignKey(InclusionMethod, related_name='user_tags')
-    
+    inclusion_method = XObjHidden(
+        modellib.SerializedForeignKey(InclusionMethod, related_name='user_tags')
+    )    
+
     load_fields = [user, query_tag, inclusion_method]
     
     def get_absolute_url(self, *args, **kwargs):
@@ -322,10 +326,14 @@ class ProjectTag(modellib.XObjIdModel):
     
     project_tag_id = models.AutoField(primary_key=True)
     project = modellib.ForeignKey(projectsmodels.Project, related_name='tags')
-    query_tag = modellib.ForeignKey(QueryTag, related_name='project_tags', text_field='name')
+    query_tag = XObjHidden(
+        modellib.ForeignKey(QueryTag, related_name='project_tags', text_field='name')
+    )
     # TODO -- also don't share inclusion_method
-    inclusion_method = modellib.SerializedForeignKey(InclusionMethod, related_name='project_tags')
-    
+    inclusion_method = XObjHidden(
+       modellib.SerializedForeignKey(InclusionMethod, related_name='project_tags')
+    )    
+
     load_fields = [project, query_tag, inclusion_method]
     
     def get_absolute_url(self, *args, **kwargs):
@@ -348,10 +356,14 @@ class StageTag(modellib.XObjIdModel):
     
     stage_tag_id = models.AutoField(primary_key=True)
     stage = modellib.ForeignKey(projectsmodels.Stage, related_name='tags')
-    query_tag = modellib.ForeignKey(QueryTag, related_name='stage_tags', text_field='name')
+    query_tag = XObjHidden(
+        modellib.ForeignKey(QueryTag, related_name='stage_tags', text_field='name')
+    )
     # TODO -- also don't share inclusion_method
-    inclusion_method = modellib.SerializedForeignKey(InclusionMethod, related_name='stage_tags')
-    
+    inclusion_method = XObjHidden(
+        modellib.SerializedForeignKey(InclusionMethod, related_name='stage_tags')
+    )    
+
     load_fields = [stage, query_tag, inclusion_method]
     
     def get_absolute_url(self, *args, **kwargs):
