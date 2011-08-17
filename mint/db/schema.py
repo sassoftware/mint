@@ -28,7 +28,7 @@ from conary.dbstore import sqlerrors, sqllib
 log = logging.getLogger(__name__)
 
 # database schema major version
-RBUILDER_DB_VERSION = sqllib.DBversion(58, 51)
+RBUILDER_DB_VERSION = sqllib.DBversion(58, 52)
 
 
 def _createTrigger(db, table, column = "changed"):
@@ -2319,7 +2319,7 @@ def _createQuerySetSchema(db):
 
     changed |= createTable(db, 'querysets_systemtag', """
         CREATE TABLE "querysets_systemtag" (
-            "system_tag_id" %(PRIMARYKEY)s,
+            "system_tag_id" %(BIGPRIMARYKEY)s,
             "system_id" INTEGER
                 REFERENCES "inventory_system" ("system_id")
                 ON DELETE CASCADE
@@ -2337,7 +2337,7 @@ def _createQuerySetSchema(db):
 
     changed |= createTable(db, 'querysets_usertag', """
         CREATE TABLE "querysets_usertag" (
-            "user_tag_id" %(PRIMARYKEY)s,
+            "user_tag_id" %(BIGPRIMARYKEY)s,
             "user_id" INTEGER
                 REFERENCES "users" ("userid")
                 ON DELETE CASCADE
@@ -2355,7 +2355,7 @@ def _createQuerySetSchema(db):
     
     changed |= createTable(db, 'querysets_projecttag', """
         CREATE TABLE "querysets_projecttag" (
-            "project_tag_id" %(PRIMARYKEY)s,
+            "project_tag_id" %(BIGPRIMARYKEY)s,
             "project_id" INTEGER
                 REFERENCES "projects" ("projectid")
                 ON DELETE CASCADE
@@ -2373,7 +2373,7 @@ def _createQuerySetSchema(db):
     
     changed |= createTable(db, 'querysets_stagetag', """
         CREATE TABLE "querysets_stagetag" (
-            "stage_tag_id" %(PRIMARYKEY)s,
+            "stage_tag_id" %(BIGPRIMARYKEY)s,
             "stage_id" INTEGER
                 REFERENCES "project_branch_stage" ("stage_id")
                 ON DELETE CASCADE

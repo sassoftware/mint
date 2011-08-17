@@ -2954,7 +2954,7 @@ class MigrateTo_57(SchemaMigration):
 
 
 class MigrateTo_58(SchemaMigration):
-    Version = (58, 51)
+    Version = (58, 52)
 
     def migrate(self):
         return True
@@ -3609,10 +3609,21 @@ class MigrateTo_58(SchemaMigration):
         cu.execute("""INSERT INTO querysets_queryset_filter_entries
             (queryset_id, filterentry_id)
             VALUES(?, ?)""", allQsId, filterId)
-        
-
         return True
-   
+
+    def migrate52(self):
+        # tags tables need larger PKs
+        db = self.db()
+        cu = db.cursor()
+        rebuild_table(self.db, "querysets_systemtag",
+            ['system_id', 'query_tag_id', 'inclusion_method_id']) 
+        rebuild_table(self.db, "querysets_usertag",
+            ['user_id', 'query_tag_id', 'inclusion_method_id']) 
+        rebuild_table(self.db, "querysets_projecttag",
+            ['project_id', 'query_tag_id', 'inclusion_method_id']) 
+        rebuild_table(self.db, "querysets_stagetag",
+            ['stage_id', 'query_tag_id', 'inclusion_method_id']) 
+        return True
 
 #### SCHEMA MIGRATIONS END HERE #############################################
 
