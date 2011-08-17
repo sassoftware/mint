@@ -247,7 +247,6 @@ class ProjectsTestCase(XMLTestCase):
             project.description)
 
     def testDeleteProject(self):
-        project = models.Project.objects.get(short_name='chater-foo')
         response = self._delete('projects/chater-foo',
             username="testuser", password="password")
         self.assertEquals(response.status_code, 204)
@@ -366,6 +365,5 @@ class ProjectsTestCase(XMLTestCase):
 
         response = self._get('projects/%s/images/' % prj.short_name)
         self.assertEquals(response.status_code, 200)
-        images = xobj.parse(response.content).images
         image = models.Image.objects.get(pk=image.pk)
         self.assertEquals(image.build_type, 10)
