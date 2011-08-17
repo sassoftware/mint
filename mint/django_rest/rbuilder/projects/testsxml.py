@@ -186,7 +186,7 @@ project_version_put_xml = """\
     <description>updated description</description>
   </project_branch>
 """
-
+ 
 project_branch_stage_xml = """\
 <project_branch_stage id="http://testserver/api/v1/projects/chater-foo/project_branches/chater-foo.eng.rpath.com@rpath:chater-foo-trunk/project_branch_stages/Stage">
   <groups href="http://testserver/api/products/chater-foo/repos/search?type=group&amp;label=foo@ns:trunk-stage"/>
@@ -203,7 +203,7 @@ project_branch_stage_xml = """\
   </project_branch>
   <promotable>false</promotable>
   <stage_id>12</stage_id>
-  <stage_tags/>
+  <tags/>
   <systems/>
 </project_branch_stage>"""
 
