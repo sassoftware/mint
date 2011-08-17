@@ -3613,7 +3613,7 @@ class MigrateTo_58(SchemaMigration):
 
     def migrate52(self):
         # tags tables need larger PKs
-        db = self.db()
+        db = self.db
         cu = db.cursor()
         rebuild_table(self.db, "querysets_systemtag",
             ['system_id', 'query_tag_id', 'inclusion_method_id']) 
