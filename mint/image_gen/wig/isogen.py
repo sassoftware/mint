@@ -160,12 +160,22 @@ class IsoGenerator(genmod.ImageGenerator):
         if rtisPath:
             m['rtisPath'] = rtisPath.replace('/', '\\')
             m['rtisLog'] = m['rtisPath'].rsplit('.', 1)[0] + '.Install.log'
-            firstboot.write(
-                'msiexec /i '
-                    '"%(winUpdateDir)s\\%(rtisPath)s" /quiet /norestart '
-                    '/l*v "%(winUpdateDir)s\\%(rtisLog)s"\r\n'
-                'schtasks.exe /create /tn rTISOnStart /tr "net start \'rPath Tools Installer Service\'" /sc ONCE /ru system\r\n'
-                % m)
+            if osName.startswith('2003'):
+                # 2003 reboots at the end of OOBE gui setup automatically, leave the /norestart param in.
+                firstboot.write(
+                    'schtasks.exe /create /tn rTISOnStart /tr "net start \\\"rPath Tools Installer Service\\\"" /sc ONSTART /ru system\r\n'
+                    'msiexec /i '
+                        '"%(winUpdateDir)s\\%(rtisPath)s" /qn /norestart '
+                        '/l*v "%(winUpdateDir)s\\%(rtisLog)s"\r\n'
+                    % m)
+            else:
+                # 2008 + does not restart at the end of OOBE gui setup.
+                firstboot.write(
+                    'schtasks.exe /create /tn rTISOnStart /tr "net start \\\"rPath Tools Installer Service\\\"" /sc ONSTART /ru system\r\n'
+                    'msiexec /i '
+                        '"%(winUpdateDir)s\\%(rtisPath)s" /qn /forcerestart '
+                        '/l*v "%(winUpdateDir)s\\%(rtisLog)s"\r\n'
+                    % m)
         firstboot.close()
 
     def unpackIsokit(self):
