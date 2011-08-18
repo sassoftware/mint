@@ -177,26 +177,27 @@ class RbacManager(basemanager.BaseManager):
         return queryset_or_id
 
     @exposed
-    def userHasRbacPermission(self, user=None, queryset=None, action=None):
+    def userHasRbacPermission(self, user=None, resource=None, action=None):
         '''
-        Can User X Do Action Y On Resoures with Context Z?
+        Can User X Do Action Y On Resource?
+
         This function is not surfaced directly via REST but is the core
-        of how we'll implement RBAC protection on resources.  Permissions
-        are simple at the moment, but later some permissions may imply
-        others.
+        of how we implement RBAC protection on resources.  Permissions
+        are simple at the moment, but some imply others.   Query set
+        tags must exist to find the queryset relationships.
         '''
+
+        querysets = self.mgr.getQuerySetsForResource(resource)
+        #querysetids = [ x.query_set_id for x in querysets ]
+
         user = self._user(user)
       
         # if the user is an admin, immediately let them by
         if user.is_admin:
             return True
- 
-        # get the resource's context -- if none, do not allow access
-        found_queryset = None
-        try: 
-            found_queryset = self._queryset(queryset)
-        except models.RbacContext.DoesNotExist:
-            return False
+
+        if len(querysets) == 0:
+            return False 
 
         role_maps = models.RbacUserRole.objects.filter(user=user)
         user_role_ids = [ x.role.pk for x in role_maps ]
@@ -216,7 +217,7 @@ class RbacManager(basemanager.BaseManager):
         # there is queryset/roles info, so now find the permissions associated
         # with the queryset
         resource_permissions = models.RbacPermission.objects.filter(
-            queryset = found_queryset,
+            queryset__in = querysets
         ).extra(
             where=['role_id=%s'], params=user_role_ids
         )

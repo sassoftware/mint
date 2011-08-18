@@ -40,9 +40,12 @@ class RbacTestCase(XMLTestCase):
         self.req('query_sets/', method='POST', expect=200, is_admin=True,
             data=testsxml.datacenter_xml)
 
-        self.tradingfloor_queryset = querymodels.QuerySet.objects.get(name='tradingfloor')
-        self.datacenter_queryset   = querymodels.QuerySet.objects.get(name='datacenter')
-        self.lab_queryset          = querymodels.QuerySet.objects.get(name='lab')
+        self.tradingfloor_queryset = querymodels.QuerySet.objects.get(
+            name='tradingfloor')
+        self.datacenter_queryset   = querymodels.QuerySet.objects.get(
+            name='datacenter')
+        self.lab_queryset          = querymodels.QuerySet.objects.get(
+            name='lab')
         
         self.test_querysets = [
             self.tradingfloor_queryset, 
@@ -50,6 +53,42 @@ class RbacTestCase(XMLTestCase):
             self.lab_queryset
         ]
 
+        # now create some dummy systems and add them to the chosen queryset for each
+        # so that when we check against the resources we can find some things
+        # that have context
+        self.datacenter_system = self.newSystem(name="dc1")
+        self.lab_system        = self.newSystem(name="lab1")
+        self.tradingfloor_system = self.newSystem(name="tf1")
+        # this one will not be matched by a queryset
+        self.lost_system         = self.newSystem(name="iAmLost")
+        self.datacenter_system.save()
+        self.lab_system.save()
+        self.tradingfloor_system.save()
+        self.lost_system.save()
+        self.test_systems = [
+            self.tradingfloor_system,
+            self.datacenter_system,
+            self.lab_system,
+        ]
+
+        self.req('query_sets/%s/chosen/' % self.datacenter_queryset.pk,
+             method='POST', expect=200, is_admin=True,
+            data=self.datacenter_system.to_xml())
+        self.req('query_sets/%s/chosen/' % self.lab_queryset.pk, 
+            method='POST', expect=200, is_admin=True,
+            data=self.lab_system.to_xml())
+        self.req('query_sets/%s/chosen/' % self.tradingfloor_queryset.pk, 
+            method='POST', expect=200, is_admin=True,
+            data=self.tradingfloor_system.to_xml())
+
+        # now in order to make sure the system tags are there for the test,
+        # do a query against them -- we'll mix query types
+        self.req('query_sets/%s/chosen/' % self.datacenter_queryset.pk,
+             method='GET', expect=200, is_admin=True)
+        self.req('query_sets/%s/all/' % self.lab_queryset.pk,
+             method='GET', expect=200, is_admin=True)
+        self.req('query_sets/%s/chosen/' % self.tradingfloor_queryset.pk,
+             method='GET', expect=200, is_admin=True)
 
     def _xobj_list_hack(self, item):
         '''
@@ -437,9 +476,9 @@ class RbacEngineTests(RbacTestCase):
         # admin user can do everything regardless of context
         # or permission
         for action in [ RMEMBER, WMEMBER, RQUERYSET, WQUERYSET ]:
-            for queryset in self.test_querysets:
+            for system in self.test_systems:
                 self.assertTrue(self.mgr.userHasRbacPermission(
-                    self.admin_user, queryset, action
+                    self.admin_user, system, action
                 ))
 
     def testWriteImpliesRead(self):
@@ -448,26 +487,26 @@ class RbacEngineTests(RbacTestCase):
         # write on queryset member also implies read on queryset itself
         for action in [ RMEMBER, WMEMBER, RQUERYSET ]:
             self.assertTrue(self.mgr.userHasRbacPermission(
-                self.sysadmin_user, self.datacenter_queryset, action
+                self.sysadmin_user, self.datacenter_system, action
             ))
         # but not write on queryset
         self.assertFalse(self.mgr.userHasRbacPermission(
-            self.sysadmin_user, self.datacenter_queryset, WQUERYSET
+            self.sysadmin_user, self.datacenter_system, WQUERYSET
         ))
 
     def testReadDoesNotImplyWrite(self):
         # if you can read, that doesn't mean write
         self.assertTrue(self.mgr.userHasRbacPermission(
-            self.developer_user, self.datacenter_queryset, RMEMBER
+            self.developer_user, self.datacenter_system, RMEMBER
         ))
         self.assertTrue(self.mgr.userHasRbacPermission(
-            self.developer_user, self.datacenter_queryset, RQUERYSET
+            self.developer_user, self.datacenter_system, RQUERYSET
         ))
         self.assertFalse(self.mgr.userHasRbacPermission(
-            self.developer_user, self.datacenter_queryset, WMEMBER
+            self.developer_user, self.datacenter_system, WMEMBER
         ))
         self.assertFalse(self.mgr.userHasRbacPermission(
-            self.developer_user, self.datacenter_queryset, WQUERYSET
+            self.developer_user, self.datacenter_system, WQUERYSET
         ))
 
     def testNothingImpliesLockout(self):
@@ -476,7 +515,7 @@ class RbacEngineTests(RbacTestCase):
         to_test = [RMEMBER,WMEMBER,RQUERYSET,WQUERYSET]
         for action in to_test:
             self.assertFalse(self.mgr.userHasRbacPermission(
-                self.developer_user, self.tradingfloor_queryset, action
+                self.developer_user, self.tradingfloor_system, action
             ))
 
     def testResourceWithoutContextImpliesNonAdminLockout(self):
@@ -484,14 +523,14 @@ class RbacEngineTests(RbacTestCase):
         to_test = [RMEMBER,WMEMBER,RQUERYSET,WQUERYSET]
         for action in to_test:
             self.assertTrue(self.mgr.userHasRbacPermission(
-                self.admin_user, None, action,
+                self.admin_user, self.lost_system, action,
             ))
 
     def testCannotLookupPermissionsOnNonConfiguredAction(self):
         # if you test against an action type that does not
         # exist (due to code error?) you don't get in
         self.assertFalse(self.mgr.userHasRbacPermission(
-            self.developer_user, None, 'some fake action type'
+            self.developer_user, self.lost_system, 'some fake action type'
         ))
 
 # SEE ALSO (PENDING) tests in inventory and other services

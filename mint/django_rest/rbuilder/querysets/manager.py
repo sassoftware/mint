@@ -382,6 +382,41 @@ class QuerySetManager(basemanager.BaseManager):
         ).order_by('stage_id')
 
     @exposed
+    def getQuerySetsForResource(self, resource):
+        '''
+        If the resource is a querySet, just return it.
+        If it's a item in a QuerySet, return the QuerySets
+        that match it.  This is key to rBac and requires
+        resource tags to have been applied.   
+        ''' 
+
+        if type(resource) == models.QuerySet:
+            return resource           
+  
+        # TODO -- make this more generic / compress
+        tags = []
+        if type(resource) == usermodels.User:
+            tags = models.QueryTag.objects.select_related().filter(
+                user_tags__user = resource
+            )
+        elif type(resource) == projectmodels.Stage:
+            tags = models.QueryTag.objects.select_related().filter(
+                stage_tags__stage = resource
+            )
+        elif type(resource) == projectmodels.Project:
+            tags = models.QueryTag.objects.select_related().filter(
+                project_tags__project = resource
+            )
+        elif type(resource) == inventorymodels.System:
+            tags = models.QueryTag.objects.select_related().filter(
+                system_tags__system = resource
+            )
+        else:
+            raise Exception("resource is not searchable by queryset")
+
+        return [ t.query_set for t in tags ]
+
+    @exposed
     def getQuerySetChosenResult(self, querySetId): #, use_tags=False):
         '''
         For a given query set, return only the chosen matches, aka resources
