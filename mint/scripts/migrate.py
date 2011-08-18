@@ -3616,31 +3616,19 @@ class MigrateTo_58(SchemaMigration):
         # tags tables need larger PKs
         db = self.db
         cu = db.cursor()
-        all_tables = [
-            "querysets_systemtag", 
-            "querysets_usertag", 
-            "querysets_projecttag", 
-            "querysets_usertag",
-        ]
-        cu.execute("ALTER TABLE querysets_querytag DROP CONSTRAINT IF EXISTS querysets_querytag_query_set_id_key")
-        for t in all_tables:
-            cu.execute("ALTER TABLE %s DROP CONSTRAINT IF EXISTS %s_pkey" % (t,t))
-            cu.execute("ALTER TABLE %s DROP CONSTRAINT IF EXISTS %s_inclusion_method_id_fkey" % (t,t))
-            cu.execute("ALTER TABLE %s DROP CONSTRAINT IF EXISTS %s_query_tag_id_fkey" % (t,t))
-            cu.execute("ALTER TABLE %s DROP CONSTRAINT IF EXISTS %s_system_tag_id_fkey" % (t,t))
-
-        rebuild_table(self.db, "querysets_systemtag",
-            ['system_id', 'query_tag_id', 'inclusion_method_id'],
-            skipDropIndex=True) 
-        rebuild_table(self.db, "querysets_usertag",
-            ['user_id', 'query_tag_id', 'inclusion_method_id'],
-            skipDropIndex=True) 
-        rebuild_table(self.db, "querysets_projecttag",
-            ['project_id', 'query_tag_id', 'inclusion_method_id'],
-            skipDropIndex=True) 
-        rebuild_table(self.db, "querysets_stagetag",
-            ['stage_id', 'query_tag_id', 'inclusion_method_id'],
-            skipDropIndex=True) 
+        
+        cu.execute("""ALTER TABLE querysets_systemtag 
+            ALTER COLUMN system_tag_id TYPE %(BIGINT)s
+        """ % db.keywords)
+        cu.execute("""ALTER TABLE querysets_usertag 
+            ALTER COLUMN user_tag_id TYPE %(BIGINT)s 
+        """ % db.keywords)
+        cu.execute("""ALTER TABLE querysets_projecttag  
+            ALTER COLUMN project_tag_id TYPE %(BIGINT)s  
+        """ % db.keywords)
+        cu.execute("""ALTER TABLE querysets_stagetag 
+             ALTER COLUMN stage_tag_id TYPE %(BIGINT)s 
+        """ % db.keywords)
         return True
 
 #### SCHEMA MIGRATIONS END HERE #############################################
