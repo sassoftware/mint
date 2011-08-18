@@ -63,18 +63,18 @@ permission_list_xml = """
 <rbac_permissions count="3" end_index="2" filter_by="" full_collection="http://testserver/api/v1/rbac/permissions" id="http://testserver/api/v1/rbac/permissions;start_index=0;limit=10" limit="10" next_page="" num_pages="1" order_by="" per_page="10" previous_page="" start_index="0">
   <rbac_permission id="http://testserver/api/v1/rbac/permissions/1">
     <permission_id>1</permission_id>
-    <action>write</action>
+    <action>wmember</action>
     <queryset id="http://testserver/api/v1/query_sets/14"/>
     <rbac_role id="http://testserver/api/v1/rbac/roles/sysadmin"/>
   </rbac_permission>
   <rbac_permission id="http://testserver/api/v1/rbac/permissions/2">
-    <action>read</action>
+    <action>rmember</action>
     <queryset id="http://testserver/api/v1/query_sets/14"/>
     <permission_id>2</permission_id>
     <rbac_role id="http://testserver/api/v1/rbac/roles/developer"/>
   </rbac_permission>
   <rbac_permission id="http://testserver/api/v1/rbac/permissions/3">
-    <action>write</action>
+    <action>wmember</action>
     <queryset id="http://testserver/api/v1/query_sets/13"/>
     <permission_id>3</permission_id>
     <rbac_role id="http://testserver/api/v1/rbac/roles/developer"/>
@@ -84,7 +84,7 @@ permission_list_xml = """
 
 permission_get_xml = """
 <rbac_permission id="http://testserver/api/v1/rbac/permissions/1">
-  <action>write</action>
+  <action>wmember</action>
   <permission_id>1</permission_id>
   <queryset id="http://testserver/api/v1/query_sets/14"/>
   <rbac_role id="http://testserver/api/v1/rbac/roles/sysadmin"/>
@@ -93,7 +93,7 @@ permission_get_xml = """
 
 permission_post_xml_input="""
 <rbac_permission>
-  <action>write</action>
+  <action>wmember</action>
   <queryset id="http://testserver/api/v1/query_sets/12"/>
   <rbac_role id="http://testserver/api/v1/rbac/roles/intern"/>
 </rbac_permission>
@@ -101,7 +101,7 @@ permission_post_xml_input="""
 
 permission_post_xml_output="""
 <rbac_permission id="http://testserver/api/v1/rbac/permissions/4">
-  <action>write</action>
+  <action>wmember</action>
   <queryset id="http://testserver/api/v1/query_sets/12"/>
   <permission_id>4</permission_id>
   <rbac_role id="http://testserver/api/v1/rbac/roles/intern"/>
@@ -110,7 +110,7 @@ permission_post_xml_output="""
 
 permission_put_xml_input="""
 <rbac_permission id="http://testserver/api/v1/rbac/permissions/1">
-  <action>write</action>
+  <action>wmember</action>
   <queryset id="http://testserver/api/v1/query_sets/14"/>
   <rbac_role id="http://testserver/api/v1/rbac/roles/intern"/>
 </rbac_permission>
@@ -118,7 +118,7 @@ permission_put_xml_input="""
 
 permission_put_xml_output="""
  <rbac_permission id="http://testserver/api/v1/rbac/permissions/1">
-   <action>write</action>
+   <action>wmember</action>
    <permission_id>1</permission_id>
    <queryset id="http://testserver/api/v1/query_sets/14"/>
    <rbac_role id="http://testserver/api/v1/rbac/roles/intern"/>

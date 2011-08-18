@@ -19,6 +19,17 @@ RESOURCE_TYPE_SYSTEM   = 'system'
 RESOURCE_TYPE_PLATFORM = 'platform'
 RESOURCE_TYPE_IMAGE    = 'image'
 
+# allowable permission types
+# *member =
+#    read and write to members of a queryset
+# *queryset = 
+#    ability to see queryset at all or modify it
+
+RMEMBER = 'rmember'  
+WMEMBER = 'wmember'  
+RQUERYSET = 'rqueryset' 
+WQUERYSET = 'wqueryset' 
+
 class RbacManager(basemanager.BaseManager):
 
     def _getThings(self, modelClass, containedClass, collection_field):
@@ -197,8 +208,10 @@ class RbacManager(basemanager.BaseManager):
         # write access implies read access.  When we have more granular
         # permissions this will have to go.
         acceptable_permitted_actions = [ action ]
-        if action == 'read':
-            acceptable_permitted_actions.append('write')
+        if action == RMEMBER:
+            acceptable_permitted_actions.extend([WMEMBER])
+        if action == RQUERYSET:
+            acceptable_permitted_actions.extend([WQUERYSET,RMEMBER,WMEMBER])
 
         # there is queryset/roles info, so now find the permissions associated
         # with the queryset
