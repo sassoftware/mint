@@ -87,7 +87,7 @@ def drop_tables(db, *tables):
     db.loadSchema()
 
 
-def rebuild_table(db, table, fieldsOut, fieldsIn=None):
+def rebuild_table(db, table, fieldsOut, fieldsIn=None, skipDropIndex=False):
     """
     SQLite offers no way to alter, drop, or change constraints on columns.
     So instead we have to rename it out of the way, build a new table, and
@@ -98,7 +98,8 @@ def rebuild_table(db, table, fieldsOut, fieldsIn=None):
     tmpTable = None
     if table in db.tables:
         for index in list(db.tables[table]):
-            db.dropIndex(table, index)
+            if not skipDropIndex:
+                db.dropIndex(table, index)
 
         tmpTable = table + '_tmp'
         cu.execute("ALTER TABLE %s RENAME TO %s" % (table, tmpTable))
@@ -3615,14 +3616,31 @@ class MigrateTo_58(SchemaMigration):
         # tags tables need larger PKs
         db = self.db
         cu = db.cursor()
+        all_tables = [
+            "querysets_systemtag", 
+            "querysets_usertag", 
+            "querysets_projecttag", 
+            "querysets_usertag",
+        ]
+        cu.execute("ALTER TABLE querysets_querytag DROP CONSTRAINT IF EXISTS querysets_querytag_query_set_id_key")
+        for t in all_tables:
+            cu.execute("ALTER TABLE %s DROP CONSTRAINT IF EXISTS %s_pkey" % (t,t))
+            cu.execute("ALTER TABLE %s DROP CONSTRAINT IF EXISTS %s_inclusion_method_id_fkey" % (t,t))
+            cu.execute("ALTER TABLE %s DROP CONSTRAINT IF EXISTS %s_query_tag_id_fkey" % (t,t))
+            cu.execute("ALTER TABLE %s DROP CONSTRAINT IF EXISTS %s_system_tag_id_fkey" % (t,t))
+
         rebuild_table(self.db, "querysets_systemtag",
-            ['system_id', 'query_tag_id', 'inclusion_method_id']) 
+            ['system_id', 'query_tag_id', 'inclusion_method_id'],
+            skipDropIndex=True) 
         rebuild_table(self.db, "querysets_usertag",
-            ['user_id', 'query_tag_id', 'inclusion_method_id']) 
+            ['user_id', 'query_tag_id', 'inclusion_method_id'],
+            skipDropIndex=True) 
         rebuild_table(self.db, "querysets_projecttag",
-            ['project_id', 'query_tag_id', 'inclusion_method_id']) 
+            ['project_id', 'query_tag_id', 'inclusion_method_id'],
+            skipDropIndex=True) 
         rebuild_table(self.db, "querysets_stagetag",
-            ['stage_id', 'query_tag_id', 'inclusion_method_id']) 
+            ['stage_id', 'query_tag_id', 'inclusion_method_id'],
+            skipDropIndex=True) 
         return True
 
 #### SCHEMA MIGRATIONS END HERE #############################################
