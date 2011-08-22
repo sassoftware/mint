@@ -250,14 +250,6 @@ urlpatterns = patterns('',
     URL(r'query_sets/filter_descriptor/?$',
         querysetviews.QuerySetFilterDescriptorService(),
         name='QuerySetFilterDescriptor'),
-    # internal resource should probably not be exposed
-    URL(r'query_sets/(?P<query_set_id>\d+)/query_tags/?$',
-        querysetviews.QueryTagService(),
-        name='QueryTags'),
-    # internal resource should probably not be exposed
-    URL(r'query_sets/(?P<query_set_id>\d+)/query_tags/(?P<query_tag_id>\d+)/?$',
-        querysetviews.QueryTagService(),
-        name='QueryTag'),
 
     # Change Logs
     URL(r'changelogs/?$',

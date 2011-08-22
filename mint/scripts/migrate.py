@@ -2955,7 +2955,7 @@ class MigrateTo_57(SchemaMigration):
 
 
 class MigrateTo_58(SchemaMigration):
-    Version = (58, 52)
+    Version = (58, 53)
 
     def migrate(self):
         return True
@@ -3629,6 +3629,48 @@ class MigrateTo_58(SchemaMigration):
         cu.execute("""ALTER TABLE querysets_stagetag 
              ALTER COLUMN stage_tag_id TYPE %(BIGINT)s 
         """ % db.keywords)
+        return True
+
+    def migrate53(self):
+        # remove intermediate querytag table
+        db = self.db
+        cu = db.cursor()
+        tables = [ 
+            [ 'querysets_systemtag',  'system_id',  'system',  'querysets_systemtag_system_id_query_set_id_inclusion_method_key' ], 
+            [ 'querysets_projecttag', 'project_id', 'project', 'querysets_projecttag_project_id_query_set_id_inclusion_meth_key' ],
+            [ 'querysets_stagetag',   'stage_id',   'stage',   'querysets_stagetag_stage_id_query_set_id_inclusion_method_i_key' ],
+            [ 'querysets_usertag',    'user_id',    'user',    'querysets_usertag_user_id_query_set_id_inclusion_method_id_key'  ]
+        ]
+        # unrelated, but names need to be consistent from earlier schema change
+        cu.execute("""UPDATE querysets_queryset SET description='All systems'
+            WHERE name='All Systems'
+        """)
+        # unrelated, but index was not set correctly vs schema.py in previous migration
+        cu.execute("DROP INDEX IF EXISTS rbacuserrolesearchidx")
+        self.db.createIndex('rbac_user_role', 'rbacuserrolesearchidx',
+                'user_id, role_id', unique=True)
+
+        for t in tables:
+            constraint = t[3]
+            cu.execute("""
+                ALTER TABLE %s ADD COLUMN query_set_id INTEGER
+                    REFERENCES querysets_queryset(query_set_id)
+                    ON DELETE CASCADE
+            """ % t[0])
+            cu.execute("""
+                UPDATE %s SET query_set_id=(
+                   SELECT query_set_id FROM querysets_querytag where query_tag_id=%s.query_tag_id
+                )
+            """ % (t[0],t[0]))
+
+            cu.execute("""
+                ALTER TABLE %s ADD CONSTRAINT %s
+                    UNIQUE (%s, query_set_id, inclusion_method_id)
+            """ % (t[0], constraint, t[1]))
+            cu.execute("""
+                ALTER TABLE %s DROP COLUMN query_tag_id
+            """ % t[0])
+        cu.execute("DROP TABLE querysets_querytag")
         return True
 
 #### SCHEMA MIGRATIONS END HERE #############################################

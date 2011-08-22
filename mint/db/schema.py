@@ -28,7 +28,7 @@ from conary.dbstore import sqlerrors, sqllib
 log = logging.getLogger(__name__)
 
 # database schema major version
-RBUILDER_DB_VERSION = sqllib.DBversion(58, 52)
+RBUILDER_DB_VERSION = sqllib.DBversion(58, 53)
 
 
 def _createTrigger(db, table, column = "changed"):
@@ -198,7 +198,7 @@ def _createRbac(db):
         changed = True
 
     changed |= db.createIndex('rbac_user_role', 'RbacUserRoleSearchIdx',  
-        'user_id')
+        'user_id, role_id', unique=True)
     changed != db.createIndex('rbac_permission', 'RbacPermissionLookupIdx',  
         'role_id, queryset_id, action')
 
@@ -2075,7 +2075,7 @@ def _createPKI(db):
 
     return changed
 
-def _addQuerySet(db, name, description, resource_type, can_modify, query_tag_name, filter_id=None, presentation_type=None):
+def _addQuerySet(db, name, description, resource_type, can_modify, filter_id=None, presentation_type=None):
     """Add a new query set"""
     
     # add the query set
@@ -2091,8 +2091,6 @@ def _addQuerySet(db, name, description, resource_type, can_modify, query_tag_nam
     # add the query tag
     qsId = _getRowPk(db, "querysets_queryset", "query_set_id", 
         name=name)
-    _addTableRows(db, "querysets_querytag", "name",
-        [dict(query_set_id=qsId, name=query_tag_name)])
     
     if filter_id:
         # link the query set to the filter
@@ -2136,20 +2134,20 @@ def _addQuerySetChildToInfrastructureSystems(db, child_qs_id):
 def _createInfrastructureSystemsQuerySetSchema(db):
     """Add the infrastructure systems query set"""
     filterId = _addQuerySetFilterEntry(db, "system_type.infrastructure", "EQUAL", "true")
-    qsId = _addQuerySet(db, "Infrastructure Systems", "Systems that make up the rPath infrastructure", "system", False, "query-tag-Infrastructure_Systems-6", filterId)
+    qsId = _addQuerySet(db, "Infrastructure Systems", "Systems that make up the rPath infrastructure", "system", False, filterId)
     return True
 
 def _createWindowsBuildSystemsQuerySet(db):
     """Add the windows build systems query set"""
     filterId = _addQuerySetFilterEntry(db, "system_type.name", "EQUAL", "infrastructure-windows-build-node")
-    qsId = _addQuerySet(db, "rPath Windows Build Services", "rPath infrastructure services for building Windows packages/images", "system", False, "query-tag-Windows_Build_Services-7", filterId)
+    qsId = _addQuerySet(db, "rPath Windows Build Services", "rPath infrastructure services for building Windows packages/images", "system", False, filterId)
     _addQuerySetChildToInfrastructureSystems(db, qsId)
     return True
 
 def _createUpdateSystemsQuerySet(db):
     """Add the windows build systems query set"""
     filterId = _addQuerySetFilterEntry(db, "system_type.name", "EQUAL", "infrastructure-management-node")
-    qsId = _addQuerySet(db, "rPath Update Services", "rPath infrastructure services for managing systems", "system", False, "query-tag-Update_Services-8", filterId)
+    qsId = _addQuerySet(db, "rPath Update Services", "rPath infrastructure services for managing systems", "system", False, filterId)
     _addQuerySetChildToInfrastructureSystems(db, qsId)
     return True
 
@@ -2159,33 +2157,33 @@ def _createAllProjectBranchStages13(db):
     # do not change this, froxen to migrate13
     # (NOTE -- this value will NOT be in the final result schema and is wrong!)
     filterId = _addQuerySetFilterEntry(db, "name", "IS_NULL", "False")
-    qsId = _addQuerySet(db, "All Projects", "All projects", "project_branch_stage", False, "query-tag-All_Projects-11", filterId, "project")
+    qsId = _addQuerySet(db, "All Projects", "All projects", "project_branch_stage", False, filterId, "project")
     return True
 
 def _createAllPlatformBranchStages(db):
     """Add the platform branch stages query set"""
     # AllFilterId is None
     filterId = _addQuerySetFilterEntry(db, "platform.name", "IS_NULL", "false")
-    qsId = _addQuerySet(db, "All Platforms", "All platforms", "project_branch_stage", False, "query-tag-All_Platforms-12", filterId, "platform")
+    qsId = _addQuerySet(db, "All Platforms", "All platforms", "project_branch_stage", False, filterId, "platform")
     return True
 
 def _createAllProjectBranchStages(db):
     """Add the project branch stages query set"""
     filterId = _addQuerySetFilterEntry(db, "project_branch_stage.name", "IS_NULL", "false")
-    qsId = _addQuerySet(db, "All Project Stages", "All project stages", "project_branch_stage", False, "query-tag-All_Project_Branch_Stages-13", filterId, "project")
+    qsId = _addQuerySet(db, "All Project Stages", "All project stages", "project_branch_stage", False, filterId, "project")
     return True
 
 def _createAllProjects(db):
     """Add the projects query set"""
     # filterId = _getAllFilterId(db)
     filterId = _addQuerySetFilterEntry(db, "project.name", "IS_NULL", "false")
-    qsId = _addQuerySet(db, "All Projects", "All projects", "project", False, "query-tag-All_Projects-14", filterId)
+    qsId = _addQuerySet(db, "All Projects", "All projects", "project", False, filterId)
     return True
 
 def _createAllSystems(db):
     """Add the all systems query set"""
     filterId = _addQuerySetFilterEntry(db, "system.name", "IS_NULL", "false")
-    qsId = _addQuerySet(db, "All Systems", "All systems", "system", False, "query-tag-All_Systems-15", filterId)
+    qsId = _addQuerySet(db, "All Systems", "All systems", "system", False, filterId)
     return True
 
 
@@ -2213,16 +2211,6 @@ def _createQuerySetSchema(db):
             "operator" TEXT NOT NULL,
             "value" TEXT,
             UNIQUE("field", "operator", "value")
-        )""")
-
-    changed |= createTable(db, 'querysets_querytag', """
-        CREATE TABLE "querysets_querytag" (
-            "query_tag_id" %(PRIMARYKEY)s,
-            "query_set_id" INTEGER UNIQUE
-                REFERENCES "querysets_queryset" ("query_set_id")
-                ON DELETE CASCADE
-                NOT NULL,
-            "name" TEXT NOT NULL UNIQUE
         )""")
 
     changed |= createTable(db, "querysets_queryset_filter_entries", """
@@ -2299,13 +2287,6 @@ def _createQuerySetSchema(db):
     allUserFiltId = _getRowPk(db, "querysets_filterentry", 'filter_entry_id',
         field="user_name", operator='IS_NULL', value="False")
 
-    changed |= _addTableRows(db, "querysets_querytag", "name", [
-        dict(query_set_id=activeQSId, name="query-tag-Active_Systems-2"),
-        dict(query_set_id=inactiveQSId, name="query-tag-Inactive_Systems-3"),
-        dict(query_set_id=physicalQSId, name="query-tag-Physical_Systems-4"),
-        dict(query_set_id=allUserQSId, name="query-tag-all_users-5"),
-    ])
-
     changed |= createTable(db, 'querysets_inclusionmethod', """
         CREATE TABLE "querysets_inclusionmethod" (
             "inclusion_method_id" %(PRIMARYKEY)s,
@@ -2324,15 +2305,14 @@ def _createQuerySetSchema(db):
                 REFERENCES "inventory_system" ("system_id")
                 ON DELETE CASCADE
                 NOT NULL,
-            "query_tag_id" INTEGER
-                REFERENCES "querysets_querytag" ("query_tag_id")
-                ON DELETE CASCADE
-                NOT NULL,
+            "query_set_id" INTEGER
+                REFERENCES "querysets_queryset" ("query_set_id")
+                ON DELETE CASCADE,
             "inclusion_method_id" INTEGER
                 REFERENCES "querysets_inclusionmethod" ("inclusion_method_id")
                 ON DELETE CASCADE
                 NOT NULL,
-            UNIQUE ("system_id", "query_tag_id", "inclusion_method_id")
+            UNIQUE ("system_id", "query_set_id", "inclusion_method_id")
         )""")
 
     changed |= createTable(db, 'querysets_usertag', """
@@ -2342,15 +2322,14 @@ def _createQuerySetSchema(db):
                 REFERENCES "users" ("userid")
                 ON DELETE CASCADE
                 NOT NULL,
-            "query_tag_id" INTEGER
-                REFERENCES "querysets_querytag" ("query_tag_id")
-                ON DELETE CASCADE
-                NOT NULL,
+            "query_set_id" INTEGER
+                REFERENCES "querysets_queryset" ("query_set_id")
+                ON DELETE CASCADE,
             "inclusion_method_id" INTEGER
                 REFERENCES "querysets_inclusionmethod" ("inclusion_method_id")
                 ON DELETE CASCADE
                 NOT NULL,
-            UNIQUE ("user_id", "query_tag_id", "inclusion_method_id")
+            UNIQUE ("user_id", "query_set_id", "inclusion_method_id")
         )""")
     
     changed |= createTable(db, 'querysets_projecttag', """
@@ -2360,15 +2339,14 @@ def _createQuerySetSchema(db):
                 REFERENCES "projects" ("projectid")
                 ON DELETE CASCADE
                 NOT NULL,
-            "query_tag_id" INTEGER
-                REFERENCES "querysets_querytag" ("query_tag_id")
-                ON DELETE CASCADE
-                NOT NULL,
+            "query_set_id" INTEGER
+                REFERENCES "querysets_queryset" ("query_set_id")
+                ON DELETE CASCADE,
             "inclusion_method_id" INTEGER
                 REFERENCES "querysets_inclusionmethod" ("inclusion_method_id")
                 ON DELETE CASCADE
                 NOT NULL,
-            UNIQUE ("project_id", "query_tag_id", "inclusion_method_id")
+            UNIQUE ("project_id", "query_set_id", "inclusion_method_id")
         )""")
     
     changed |= createTable(db, 'querysets_stagetag', """
@@ -2378,15 +2356,14 @@ def _createQuerySetSchema(db):
                 REFERENCES "project_branch_stage" ("stage_id")
                 ON DELETE CASCADE
                 NOT NULL,
-            "query_tag_id" INTEGER
-                REFERENCES "querysets_querytag" ("query_tag_id")
-                ON DELETE CASCADE
-                NOT NULL,
+            "query_set_id" INTEGER
+                REFERENCES "querysets_queryset" ("query_set_id")
+                ON DELETE CASCADE,
             "inclusion_method_id" INTEGER
                 REFERENCES "querysets_inclusionmethod" ("inclusion_method_id")
                 ON DELETE CASCADE
                 NOT NULL,
-            UNIQUE ("stage_id", "query_tag_id", "inclusion_method_id")
+            UNIQUE ("stage_id", "query_set_id", "inclusion_method_id")
         )""")
 
     changed |= _addTableRows(db, "querysets_queryset_filter_entries",
