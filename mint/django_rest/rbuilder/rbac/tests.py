@@ -454,6 +454,7 @@ class RbacEngineTests(RbacTestCase):
         mk_permission(self.datacenter_queryset, 'developer', RMEMBER)
 
         self.admin_user     = usersmodels.User.objects.get(user_name='admin')
+        self.admin_user._is_admin = True
         self.sysadmin_user  = mk_user('Example Sysadmin', False, 'sysadmin')
         self.developer_user = mk_user('Example Developer', False, 'developer')
 

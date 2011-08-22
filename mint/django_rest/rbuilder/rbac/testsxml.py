@@ -127,11 +127,11 @@ permission_put_xml_output="""
 
 user_role_list_xml = """
 <rbac_roles count="2" next_page="" num_pages="1" previous_page="" full_collection="http://testserver/api/v1/rbac/roles" end_index="1" limit="10" order_by="" per_page="10" filter_by="" id="http://testserver/api/v1/rbac/roles;start_index=0;limit=10" start_index="0">
-  <rbac_role id="http://testserver/api/v1/rbac/roles/sysadmin">
-    <role_id>sysadmin</role_id>
-  </rbac_role>
   <rbac_role id="http://testserver/api/v1/rbac/roles/developer">
     <role_id>developer</role_id>
+  </rbac_role>
+  <rbac_role id="http://testserver/api/v1/rbac/roles/sysadmin">
+    <role_id>sysadmin</role_id>
   </rbac_role>
 </rbac_roles>
 """

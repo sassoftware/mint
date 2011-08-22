@@ -32,9 +32,12 @@ WQUERYSET = 'wqueryset'
 
 class RbacManager(basemanager.BaseManager):
 
-    def _getThings(self, modelClass, containedClass, collection_field):
+    def _getThings(self, modelClass, containedClass, collection_field, order_by=None):
         '''generic collection loader'''
         things = modelClass()
+        all = containedClass.objects.all()
+        if order_by:
+            all = all.order_by(*order_by)
         setattr(things, collection_field, containedClass.objects.all())
         return things
 
@@ -90,7 +93,7 @@ class RbacManager(basemanager.BaseManager):
     @exposed
     def getRbacRoles(self):
         return self._getThings(models.RbacRoles, 
-            models.RbacRole, 'rbac_role')
+            models.RbacRole, 'rbac_role', order_by=['role_id'])
 
     @exposed
     def getRbacRole(self, role):
@@ -120,7 +123,9 @@ class RbacManager(basemanager.BaseManager):
     @exposed
     def getRbacPermissions(self):
         return self._getThings(models.RbacPermissions,
-            models.RbacPermission, 'rbac_permission')
+            models.RbacPermission, 'rbac_permission', 
+            order_by=['queryset_id', 'role_id', 'action']
+        )
 
     @exposed
     def getRbacPermission(self, permission):
@@ -155,9 +160,10 @@ class RbacManager(basemanager.BaseManager):
     @exposed
     def getRbacUserRoles(self, user_id):
         '''Get all the roles the user is assigned to.'''
-        # TODO: allow passing in user or user id
         user = self._user(user_id)
-        mapping = models.RbacUserRole.objects.filter(user=user)
+        mapping = models.RbacUserRole.objects.filter(user=user).order_by(
+            'user__user_name', 'role__role_id',
+        )
         collection = models.RbacRoles()
         collection.rbac_role = [ x.role for x in mapping ]
         return collection 
@@ -165,7 +171,6 @@ class RbacManager(basemanager.BaseManager):
     @exposed
     def getRbacUserRole(self, user_id, role_id):
         '''See if this user has a certain role.'''
-        # TODO: allow passing in user or user id
         user = self._user(user_id)
         role = self._role(role_id)
         mapping = models.RbacUserRole.objects.get(user=user, role=role)
@@ -188,7 +193,6 @@ class RbacManager(basemanager.BaseManager):
         '''
 
         querysets = self.mgr.getQuerySetsForResource(resource)
-        #querysetids = [ x.query_set_id for x in querysets ]
 
         user = self._user(user)
       
