@@ -84,7 +84,7 @@ class QuerySet(modellib.XObjIdModel):
     _xobj_hidden_accessors = set([
         'rbacpermission_set', 
         'stage_tags',
-        'query_tags',
+        'system_tags',
         'user_tags',
         'project_tags'
     ])
