@@ -3,14 +3,11 @@
 #
 # All Rights Reserved
 #
-
 import base64
-
 from django import http
-
 from xobj import xobj
-
 from mint.django_rest.rbuilder import modellib
+
 
 class ACCESS(object):
     ANONYMOUS = 1
@@ -171,7 +168,6 @@ def return_xml(function):
             return ret_val
         response = http.HttpResponse()
         response['Content-Type'] = 'text/xml'
-        request = args[1]
         response.model = ret_val
         return response
     inner.__doc__ = function.__doc__
