@@ -33,7 +33,7 @@ class rbac(object):
             # Check rbac perms for a given user on a resource
             if rbacMgr.userHasRbacPermission(user, resource, fcn._action):
                 return resource
-            return HttpResponse(fcn._failure_status_code)
+            return http.HttpResponse(fcn._failure_status_code)
         return callFcn
         
 
@@ -196,7 +196,6 @@ def return_xml(function):
             return ret_val
         response = http.HttpResponse()
         response['Content-Type'] = 'text/xml'
-        request = args[1]
         response.model = ret_val
         return response
     inner.__doc__ = function.__doc__
