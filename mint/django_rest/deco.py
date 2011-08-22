@@ -3,39 +3,11 @@
 #
 # All Rights Reserved
 #
-
 import base64
 from django import http
 from xobj import xobj
 from mint.django_rest.rbuilder import modellib
-from mint.django_rest.rbuilder.rbac.manager.rbacmanager import RbacManager as rbacMgr
 
-
-class rbac(object):
-    """
-    Decorator that sets rbac roles.
-    """
-    def __init__(self, action, failure_status_code=403):
-        self._action = action
-        self._failure_status_code = failure_status_code
-        
-    def __call__(self, fcn):
-        fcn._action  = self._action
-        fcn._failure_status_code = self._failure_status_code
-        fcn.__call__ = self._callWrapper(fcn)
-    
-    def _callWrapper(self, fcn):
-        # NOTE: _self == "self" of view method, not to be confused
-        #       self in the signature of _callWrapper
-        def callFcn(_self, request, *args, **kwargs):
-            user = request.user
-            resource = fcn(_self, request, *args, **kwargs)
-            # Check rbac perms for a given user on a resource
-            if rbacMgr.userHasRbacPermission(user, resource, fcn._action):
-                return resource
-            return http.HttpResponse(fcn._failure_status_code)
-        return callFcn
-        
 
 class ACCESS(object):
     ANONYMOUS = 1
