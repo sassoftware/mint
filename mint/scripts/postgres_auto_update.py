@@ -68,7 +68,7 @@ class Script(postgres_major_migrate.Script):
         log.info("Stopping PostgreSQL on port %s", self.port)
         sockPath = '/tmp/.s.PGSQL.%s' % self.port
         # Send progressively more aggressive sigals until it dies.
-        signals = (['-TERM'] * 3) + (['-QUIT'] * 3) + ['-KILL']
+        signals = (['-TERM'] * 4) + (['-QUIT'] * 2) + ['-KILL']
         while signals:
             if not os.path.exists(sockPath):
                 return
@@ -82,7 +82,11 @@ class Script(postgres_major_migrate.Script):
                 # fuser failed, postgres must not be running?
                 return
 
-            time.sleep(1)
+            sleepUntil = time.time() + 15
+            while time.time() < sleepUntil:
+                if not os.path.exists(sockPath):
+                    return
+                time.sleep(0.1)
 
     def getCurrentMeta(self):
         """Get metadata about the current PostgreSQL cluster."""

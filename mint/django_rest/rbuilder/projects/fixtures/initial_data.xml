@@ -20,7 +20,7 @@
     <field type="BooleanField" name="disabled">0</field>
     <field type="BooleanField" name="is_appliance">1</field>
     <field type="CharField" name="version">meatapplianceV1</field>
-    <field type="CharField" name="database">neatmeatdb</field>
+    <field type="CharField" name="database">sqlite neatmeatdb</field>
   </object>
   <object pk="3" model="projects.project">
     <field type="CharField" name="hostname">hostname1</field>
@@ -42,7 +42,7 @@
     <field type="BooleanField" name="disabled">0</field>
     <field type="BooleanField" name="is_appliance">1</field>
     <field type="CharField" name="version">applianceV2</field>
-    <field type="CharField" name="database">postgresdb</field>
+    <field type="CharField" name="database">sqlite postgresdb</field>
   </object>
   <object pk="4" model="projects.project">
     <field type="CharField" name="hostname">hostname2</field>
@@ -64,6 +64,6 @@
     <field type="BooleanField" name="disabled">0</field>
     <field type="BooleanField" name="is_appliance">1</field>
     <field type="CharField" name="version">applianceV3</field>
-    <field type="CharField" name="database">postgresdb</field>
+    <field type="CharField" name="database">sqlite postgresdb</field>
   </object>
 </django-objects>
