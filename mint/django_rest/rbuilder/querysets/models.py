@@ -209,30 +209,6 @@ class FilterEntry(modellib.XObjIdModel):
 
     load_fields = [field, operator, value]
 
-class QueryTag(modellib.XObjIdModel):
-    '''
-    A resource tag indicates that a resource has (when last tagged) been
-    matched by a query set, but this is an intermediate table
-    between the queryset and the resource tag.  It seems unneccessary and
-    seems to just give a name to the "tag type" that is derived from the
-    queryset name.  Can we refactor this out?  [MPD]
-    '''
-    _xobj = xobj.XObjMetadata(
-                tag = 'query_tag')
-    _xobj_hidden_accessors = set(['project_tags', 'stage_tags',
-        'system_tags', 'user_tags', ])
-
-    query_tag_id = models.AutoField(primary_key=True)
-    query_set = modellib.ForeignKey("QuerySet", related_name="query_tags", 
-        unique=True)
-    name = models.TextField()
-
-    load_fields = [name]
-
-    def get_absolute_url(self, *args, **kwargs):
-        self._parents = [self.query_set, self]
-        return modellib.XObjIdModel.get_absolute_url(self, *args, **kwargs)
-
 class InclusionMethod(modellib.XObjIdModel):
     '''
     Explains how the system came to be in the query set.  This is probably
@@ -258,7 +234,7 @@ class SystemTag(modellib.XObjIdModel):
     '''
 
     class Meta:
-        unique_together = (("system", "query_tag", "inclusion_method"),)
+        unique_together = (("system", "query_set", "inclusion_method"),)
 
     _xobj = xobj.XObjMetadata(
                 tag = 'system_tag')
@@ -266,14 +242,14 @@ class SystemTag(modellib.XObjIdModel):
     system_tag_id = models.AutoField(primary_key=True)
     system = XObjHidden(modellib.ForeignKey('inventory.System',
         related_name="tags"))
-    query_tag = XObjHidden(modellib.ForeignKey(QueryTag, related_name="system_tags",
+    query_set = XObjHidden(modellib.ForeignKey(QuerySet, related_name="system_tags",
         text_field="name"))
     #inclusion_method = modellib.SerializedForeignKey(InclusionMethod,
     #    related_name="system_tags")
     inclusion_method = XObjHidden(modellib.ForeignKey(InclusionMethod,
         related_name="system_tags"))
 
-    load_fields = [system, query_tag, inclusion_method]
+    load_fields = [system, query_set, inclusion_method]
 
     def get_absolute_url(self, *args, **kwargs):
         self._parents = [self.system, self]
@@ -281,7 +257,7 @@ class SystemTag(modellib.XObjIdModel):
 
     def serialize(self, request=None, values=None):
         xobjModel = modellib.XObjIdModel.serialize(self, request)
-        querySetHref = self.query_tag.query_set.get_absolute_url(request)
+        querySetHref = self.query_set.get_absolute_url(request)
         xobjModel.query_set = modellib.XObjHrefModel(querySetHref)
         return xobjModel
          
@@ -290,21 +266,21 @@ class UserTag(modellib.XObjIdModel):
     '''Indicates what users were matched by a query set'''
 
     class Meta:
-        unique_together = (('user', 'query_tag', 'inclusion_method'),)
+        unique_together = (('user', 'query_set', 'inclusion_method'),)
 
     _xobj = xobj.XObjMetadata(tag='user_tag')
     
     user_tag_id = models.AutoField(primary_key=True)
     user = modellib.ForeignKey(usersmodels.User, related_name='tags')
-    query_tag = XObjHidden(
-        modellib.ForeignKey(QueryTag, related_name='user_tags', text_field='name')
+    query_set = XObjHidden(
+        modellib.ForeignKey(QuerySet, related_name='user_tags', text_field='name')
     )
     # TODO -- also don't share inclusion_method
     inclusion_method = XObjHidden(
         modellib.SerializedForeignKey(InclusionMethod, related_name='user_tags')
     )    
 
-    load_fields = [user, query_tag, inclusion_method]
+    load_fields = [user, query_set, inclusion_method]
     
     def get_absolute_url(self, *args, **kwargs):
         self._parents = [self.user, self]
@@ -312,7 +288,7 @@ class UserTag(modellib.XObjIdModel):
         
     def serialize(self, request=None, values=None):
         xobjModel = modellib.XObjIdModel.serialize(self, request)
-        querySetHref = self.query_tag.query_set.get_absolute_url(request)
+        querySetHref = self.query_set.get_absolute_url(request)
         xobjModel.query_set = modellib.XObjHrefModel(querySetHref)
         return xobjModel
     
@@ -320,21 +296,21 @@ class ProjectTag(modellib.XObjIdModel):
     '''Indicates what projects were matched by a query set'''
 
     class Meta:
-        unique_together = (('project', 'query_tag', 'inclusion_method'),)
+        unique_together = (('project', 'query_set', 'inclusion_method'),)
     
     _xobj = xobj.XObjMetadata(tag='project_tag')
     
     project_tag_id = models.AutoField(primary_key=True)
     project = modellib.ForeignKey(projectsmodels.Project, related_name='tags')
-    query_tag = XObjHidden(
-        modellib.ForeignKey(QueryTag, related_name='project_tags', text_field='name')
+    query_set = XObjHidden(
+        modellib.ForeignKey(QuerySet, related_name='project_tags', text_field='name')
     )
     # TODO -- also don't share inclusion_method
     inclusion_method = XObjHidden(
        modellib.SerializedForeignKey(InclusionMethod, related_name='project_tags')
     )    
 
-    load_fields = [project, query_tag, inclusion_method]
+    load_fields = [project, query_set, inclusion_method]
     
     def get_absolute_url(self, *args, **kwargs):
         self._parents = [self.project, self]
@@ -342,7 +318,7 @@ class ProjectTag(modellib.XObjIdModel):
         
     def serialize(self, request=None, values=None):
         xobjModel = modellib.XObjIdModel.serialize(self, request)
-        querySetHref = self.query_tag.query_set.get_absolute_url(request)
+        querySetHref = self.query_set.get_absolute_url(request)
         xobjModel.query_set = modellib.XObjHrefModel(querySetHref)
         return xobjModel
     
@@ -350,21 +326,21 @@ class StageTag(modellib.XObjIdModel):
     '''Indicates which stages were matched by a query set'''
  
     class Meta:
-        unique_together = (('stage', 'query_tag', 'inclusion_method'),)
+        unique_together = (('stage', 'query_set', 'inclusion_method'),)
     
     _xobj = xobj.XObjMetadata(tag='stage_tag')
     
     stage_tag_id = models.AutoField(primary_key=True)
     stage = modellib.ForeignKey(projectsmodels.Stage, related_name='tags')
-    query_tag = XObjHidden(
-        modellib.ForeignKey(QueryTag, related_name='stage_tags', text_field='name')
+    query_set = XObjHidden(
+        modellib.ForeignKey(QuerySet, related_name='stage_tags', text_field='name')
     )
     # TODO -- also don't share inclusion_method
     inclusion_method = XObjHidden(
         modellib.SerializedForeignKey(InclusionMethod, related_name='stage_tags')
     )    
 
-    load_fields = [stage, query_tag, inclusion_method]
+    load_fields = [stage, query_set, inclusion_method]
     
     def get_absolute_url(self, *args, **kwargs):
         self._parents = [self.stage, self]
@@ -372,7 +348,7 @@ class StageTag(modellib.XObjIdModel):
         
     def serialize(self, request=None, values=None):
         xobjModel = modellib.XObjIdModel.serialize(self, request)
-        querySetHref = self.query_tag.query_set.get_absolute_url(request)
+        querySetHref = self.query_set.get_absolute_url(request)
         xobjModel.query_set = modellib.XObjHrefModel(querySetHref)
         return xobjModel
 
