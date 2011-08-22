@@ -1,5 +1,5 @@
 from django import http
-from mint.django_rest.rbuilder.rbac import manager as rbacMgr
+# from mint.django_rest.rbuilder.rbac.manager.rbacmanager import RbacManager as rbacMgr
 
 class rbac(object):
     """
@@ -12,7 +12,8 @@ class rbac(object):
     def __call__(self, fcn):
         fcn._action  = self._action
         fcn._failure_status_code = self._failure_status_code
-        fcn.__call__ = self._callWrapper(fcn)
+        return self._callWrapper(fcn)
+
     
     def _callWrapper(self, fcn):
         # NOTE: _self == "self" of view method, not to be confused
@@ -20,8 +21,8 @@ class rbac(object):
         def callFcn(_self, request, *args, **kwargs):
             user = request.user
             resource = fcn(_self, request, *args, **kwargs)
-            # Check rbac perms for a given user on a resource
-            if rbacMgr.userHasRbacPermission(user, resource, fcn._action):
-                return resource
-            return http.HttpResponse(status_code=fcn._failure_status_code)
+            if _self.mgr.userHasRbacPermission(user, resource, fcn._action):
+                return fcn
+            else:
+                return lambda s, r, *args, **kwargs: http.HttpResponse(status_code=fcn._failure_status_code)
         return callFcn
