@@ -31,7 +31,7 @@ class rbac(object):
             user = request.user
             resource = fcn(_self, request, *args, **kwargs)
             # Check rbac perms for a given user on a resource
-            if rbacMgr.userHasRbacPermissions(user, resource, fcn._action):
+            if rbacMgr.userHasRbacPermission(user, resource, fcn._action):
                 return resource
             return HttpResponse(fcn._failure_status_code)
         return callFcn
