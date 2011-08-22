@@ -36,12 +36,14 @@ class LabelTestCase(XMLTestCase):
     def testIterRepositories(self):
 		# Iterate over the repositories in the fixture
         repos = self.mgr.reposMgr.iterRepositories(hidden=False, disabled=False)
-        self.failUnlessEqual([x.shortName for x in repos], ['chater-foo'])
+        self.failUnlessEqual([x.shortName for x in repos],
+            ['chater-foo', 'morbeef', 'example', 'example2', ])
         
     def testGetRepositoryForProject(self):
         self.setUpProjects()
         project = projmodels.Project(short_name="test1", external=False,
-			repository_hostname="test1.local", database="sqlite test1_local")
+            repository_hostname="test1.local", database="sqlite test1_local",
+            namespace='ns')
         project.save()
         self.mgr.reposMgr.createRepositoryForProject(project)
         repHandle = self.mgr.reposMgr.getRepositoryForProject(project)
