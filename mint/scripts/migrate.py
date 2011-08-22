@@ -3636,10 +3636,10 @@ class MigrateTo_58(SchemaMigration):
         db = self.db
         cu = db.cursor()
         tables = [ 
-            [ 'querysets_systemtag',  'system_id',  'system',  'querysets_systemtag_system_id_query_set_id_inclusion_method_key' ], 
-            [ 'querysets_projecttag', 'project_id', 'project', 'querysets_projecttag_project_id_query_set_id_inclusion_meth_key' ],
-            [ 'querysets_stagetag',   'stage_id',   'stage',   'querysets_stagetag_stage_id_query_set_id_inclusion_method_i_key' ],
-            [ 'querysets_usertag',    'user_id',    'user',    'querysets_usertag_user_id_query_set_id_inclusion_method_id_key'  ]
+            [ 'querysets_systemtag',  'system_id',  'system',  'querysets_systemtag_uq' ],
+            [ 'querysets_projecttag', 'project_id', 'project', 'querysets_projecttag_uq' ],
+            [ 'querysets_stagetag',   'stage_id',   'stage',   'querysets_stagetag_uq' ],
+            [ 'querysets_usertag',    'user_id',    'user',    'querysets_usertag_uq' ],
         ]
         # unrelated, but names need to be consistent from earlier schema change
         cu.execute("""UPDATE querysets_queryset SET description='All systems'

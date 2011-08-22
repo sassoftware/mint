@@ -2312,7 +2312,7 @@ def _createQuerySetSchema(db):
                 REFERENCES "querysets_inclusionmethod" ("inclusion_method_id")
                 ON DELETE CASCADE
                 NOT NULL,
-            UNIQUE ("system_id", "query_set_id", "inclusion_method_id")
+            CONSTRAINT querysets_systemtag_uq UNIQUE ("system_id", "query_set_id", "inclusion_method_id")
         )""")
 
     changed |= createTable(db, 'querysets_usertag', """
@@ -2329,7 +2329,7 @@ def _createQuerySetSchema(db):
                 REFERENCES "querysets_inclusionmethod" ("inclusion_method_id")
                 ON DELETE CASCADE
                 NOT NULL,
-            UNIQUE ("user_id", "query_set_id", "inclusion_method_id")
+            CONSTRAINT querysets_usertag_uq UNIQUE ("user_id", "query_set_id", "inclusion_method_id")
         )""")
     
     changed |= createTable(db, 'querysets_projecttag', """
@@ -2346,7 +2346,7 @@ def _createQuerySetSchema(db):
                 REFERENCES "querysets_inclusionmethod" ("inclusion_method_id")
                 ON DELETE CASCADE
                 NOT NULL,
-            UNIQUE ("project_id", "query_set_id", "inclusion_method_id")
+            CONSTRAINT querysets_projecttag_uq UNIQUE ("project_id", "query_set_id", "inclusion_method_id")
         )""")
     
     changed |= createTable(db, 'querysets_stagetag', """
@@ -2363,7 +2363,7 @@ def _createQuerySetSchema(db):
                 REFERENCES "querysets_inclusionmethod" ("inclusion_method_id")
                 ON DELETE CASCADE
                 NOT NULL,
-            UNIQUE ("stage_id", "query_set_id", "inclusion_method_id")
+            CONSTRAINT querysets_stagetag_uq UNIQUE ("stage_id", "query_set_id", "inclusion_method_id")
         )""")
 
     changed |= _addTableRows(db, "querysets_queryset_filter_entries",
