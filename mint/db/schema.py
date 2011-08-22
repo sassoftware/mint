@@ -198,7 +198,7 @@ def _createRbac(db):
         changed = True
 
     changed |= db.createIndex('rbac_user_role', 'RbacUserRoleSearchIdx',  
-        'user_id')
+        'user_id, role_id', unique=True)
     changed != db.createIndex('rbac_permission', 'RbacPermissionLookupIdx',  
         'role_id, queryset_id, action')
 
