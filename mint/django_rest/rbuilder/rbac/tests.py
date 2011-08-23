@@ -482,6 +482,61 @@ class RbacEngineTests(RbacTestCase):
                     self.admin_user, system, action
                 ))
 
+    def testRbacDecoratorThroughView(self):
+
+        return # disable test run for now
+
+        # this tests the decorator in rbac_auth.py
+      
+        urls = [ 
+            "inventory/systems/%s" % self.datacenter_system.pk,
+            "inventory/system"
+        ] 
+
+        for url in urls:
+            # sysadmin can get in
+            response = self._get(url,
+                username=self.sysadmin_user.user_name,
+                password=self.sysadmin_user.passwd
+            )
+            self.assertEquals(response.status_code, 200, 'authorized get')
+            self.assertTrue(response.content.find("<system>") != -1)
+        
+            # developer can't get in
+            response = self._get(url,
+                username=self.developer_user.user_name,
+                password=self.developer_user.passwd
+            )
+            self.assertEquals(response.status_code, 403, 'unauthorized get')
+            self.assertTrue(response.content.find("<system>") == -1)
+
+            # admin can get in
+            response = self._get(url,
+                username=self.developer_user.user_name,
+                password=self.developer_user.passwd
+            )
+            self.assertEquals(response.status_code, 200)
+            self.assertTrue(response.content.find("<system>") != -1)
+
+        # delete uses a custom callback for the decorator, so this
+        # covers the other half of the decorator code
+
+        url = "inventory/system/%s" % self.datacenter_system.pk
+        response = self._delete(url,
+            username=self.sysadmin_user.user_name,
+            password=self.sysadmin_user.passwd
+        )
+        self.assertEquals(response.status_code, 403, 'unauthorized delete')
+
+        # delete as sysadmin works
+        response = self._delete(url,
+               username=self.sysadmin_user.user_name,
+               password=self.sysadmin_user.passwd
+        )
+        self.assertEquals(response.status_code, 204, 'authorized delete')
+
+   
+        
     def testWriteImpliesRead(self):
         # if you can write to something, you can read
         # even if permission isn't in DB
