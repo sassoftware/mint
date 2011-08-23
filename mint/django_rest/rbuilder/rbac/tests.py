@@ -504,7 +504,6 @@ class RbacEngineTests(RbacTestCase):
 
         for url in urls:
             # sysadmin can get in
-            print "SYSADMIN USER=%s, PASS=%s" % (self.sysadmin_user.user_name, self.sysadmin_user.passwd)
             response = self._get(url,
                 username=self.sysadmin_user.user_name,
                 password=self.sysadmin_user.passwd
