@@ -2920,7 +2920,7 @@ class SystemVersionsTestCase(XMLTestCase):
         system.installed_software.add(self.trove2)
         system.save()
         url = 'inventory/systems/%s/installed_software/' % system.pk
-        response = self._get(url, username="testuser", password="password")
+        response = self._get(url, username="admin", password="password")
         self.assertXMLEquals(response.content,
             testsxml.get_installed_software_xml %(
                 self.trove.last_available_update_refresh.isoformat(),

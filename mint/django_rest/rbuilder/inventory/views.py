@@ -467,20 +467,20 @@ class InventorySystemsSystemLogService(BaseInventoryService):
         else:
             pass
 
-# BOOKMARK -- STOPPED RBAC HERE
-
-class InventorySystemsSystemAssimilatorService(BaseInventoryService):
-    '''Assimilates a system in inventory that does not have any management S/W yet'''
-
-    @access.admin
-    @requires('assimilation_parameters')
-    @return_xml
-    def rest_PUT(self, request, system_id, assimilation_parameters, format='xml'):
-        system = self.mgr.getSystem(system_id)
-        if not system:
-            return HttpResponseNotFound()
-        result = self.mgr.assimilateSystem(system, assimilation_parameters)
-        return result
+#class InventorySystemsSystemAssimilatorService(BaseInventoryService):
+#    '''Assimilates a system in inventory that does not have any management S/W yet'''
+#
+#    # This is the OLD way to do this, the new way involves creating a job.
+#    # we can probably disable this.
+#    @access.admin
+#    @requires('assimilation_parameters')
+#    @return_xml
+#    def rest_PUT(self, request, system_id, assimilation_parameters, format='xml'):
+#        system = self.mgr.getSystem(system_id)
+#        if not system:
+#            return HttpResponseNotFound()
+#        result = self.mgr.assimilateSystem(system, assimilation_parameters)
+#        return result
 
 class InventoryUsersService(BaseInventoryService):
 
@@ -490,7 +490,12 @@ class InventoryUsersService(BaseInventoryService):
         return user
 
 class InventorySystemEventsService(BaseInventoryService):
-    
+ 
+    # TODO -- this may reveal too much info, consider
+    # checking what event the system is related to
+    # for a single object and otherwise require
+    # admin for the full collection?
+    @access.authenticated   
     @return_xml
     def rest_GET(self, request, system_event_id=None):
         return self.get(system_event_id)
@@ -503,6 +508,7 @@ class InventorySystemEventsService(BaseInventoryService):
 
 class InventorySystemsInstalledSoftwareService(BaseInventoryService):
     
+    @rbac(rbac_can_read_system_id)
     @return_xml
     def rest_GET(self, request, system_id):
         system = self.mgr.getSystem(system_id)
@@ -521,12 +527,13 @@ class InventorySystemsInstalledSoftwareService(BaseInventoryService):
 
 class InventorySystemCredentialsServices(BaseInventoryService):
 
-    @access.admin
+    # TODO -- is this too permissive for reading credentials?
+    @rbac(rbac_can_read_system_id)
     @return_xml
     def rest_GET(self, request, system_id):
         return self.get(system_id)
 
-    @access.admin
+    @rbac(rbac_can_write_system_id)
     @return_xml
     @requires('credentials')
     def rest_PUT(self, request, system_id, credentials):
@@ -536,7 +543,7 @@ class InventorySystemCredentialsServices(BaseInventoryService):
                 credsDict[k] = v
         return self.mgr.addSystemCredentials(system_id, credsDict)
 
-    @access.admin
+    @rbac(rbac_can_write_system_id)
     @return_xml
     @requires('credentials')
     def rest_POST(self, request, system_id, credentials):
@@ -551,12 +558,12 @@ class InventorySystemCredentialsServices(BaseInventoryService):
     
 class InventorySystemConfigurationServices(BaseInventoryService):
 
-    @access.admin
+    @rbac(rbac_can_read_system_id)
     @return_xml
     def rest_GET(self, request, system_id):
         return self.get(system_id)
 
-    @access.admin
+    @rbac(rbac_can_write_system_id)
     @return_xml
     @requires('configuration')
     def rest_PUT(self, request, system_id, configuration):
@@ -566,7 +573,7 @@ class InventorySystemConfigurationServices(BaseInventoryService):
                 configDict[k] = v
         return self.mgr.addSystemConfiguration(system_id, configDict)
 
-    @access.admin
+    @rbac(rbac_can_write_system_id)
     @return_xml
     @requires('configuration')
     def rest_POST(self, request, system_id, configuration):
@@ -581,6 +588,7 @@ class InventorySystemConfigurationServices(BaseInventoryService):
     
 class InventorySystemConfigurationDescriptorServices(BaseInventoryService):
 
+    @rbac(rbac_can_read_system_id)
     @access.admin
     def rest_GET(self, request, system_id):
         response = HttpResponse(status=200, content=self.get(system_id))
