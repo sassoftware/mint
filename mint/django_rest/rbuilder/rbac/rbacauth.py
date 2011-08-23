@@ -33,11 +33,11 @@ class rbac(object):
         return retval
 
     def _callWrapper(self, fcn):
-            
+        # inlining @access.authenticated from deco.py
+        fcn.ACCESS = getattr(fcn, 'ACCESS', 0) | ACCESS.AUTHENTICATED
         # NOTE: _self == "self" of view method, not to be confused
         #       self in the signature of _callWrapper
         def callFcn(_self, request, *args, **kwargs):
-
             # error checking and admin/bypass:
             #    why is this a list?
             user = _self.mgr.getSessionInfo().user[0]

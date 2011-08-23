@@ -368,7 +368,7 @@ def rbac_can_write_system_id(view, request, system_id):
     )
         
 class InventorySystemsSystemService(BaseInventoryService):
-    
+
     @return_xml
     @rbac('rmember')
     @access.authenticated
