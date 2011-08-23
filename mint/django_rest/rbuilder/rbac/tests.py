@@ -435,28 +435,36 @@ class RbacEngineTests(RbacTestCase):
             ).save()
 
         def mk_user(name, is_admin, role):
-            user = usersmodels.User(
-                user_name = name
+
+            xml = testsxml.user_post_xml % (
+                name, name, is_admin 
             )
-            user.save()
-            # quick hack to avoid needing to test UserGroups here
-            # actual model doesn't work this way
-            # we support more than one role per user, this is just
-            # for simple testing...
-            user.is_admin = is_admin
+            # admins must register admins
+            response = self._post('users/',
+                data=xml,
+                username='admin', password='password'
+            )
+            assert response.status_code == 200
+            user = xobj.parse(response.content)
+            #print response.content            
+
+            dbuser = usersmodels.User.objects.get(pk = int(user.user.user_id))
+
+            # add rbac role mapping
             models.RbacUserRole(
-               user = user,
+               user = dbuser,
                role = models.RbacRole.objects.get(pk=role)
             ).save()
-            return user
+            return dbuser
 
         mk_permission(self.datacenter_queryset, 'sysadmin',  WMEMBER)
         mk_permission(self.datacenter_queryset, 'developer', RMEMBER)
 
         self.admin_user     = usersmodels.User.objects.get(user_name='admin')
         self.admin_user._is_admin = True
-        self.sysadmin_user  = mk_user('Example Sysadmin', False, 'sysadmin')
-        self.developer_user = mk_user('Example Developer', False, 'developer')
+        self.sysadmin_user  = mk_user('ExampleSysadmin', False, 'sysadmin')
+        self.developer_user = mk_user('ExampleDeveloper', False, 'developer')
+        self.intern_user    = mk_user('ExampleIntern', False, 'intern')
 
         # summary of tests to come:
         # admin user has full access
@@ -484,10 +492,11 @@ class RbacEngineTests(RbacTestCase):
 
     def testRbacDecoratorThroughView(self):
 
-        return # disable test run for now
+        # return # disable test run for now
+        return 
 
         # this tests the decorator in rbac_auth.py
-      
+ 
         urls = [ 
             "inventory/systems/%s" % self.datacenter_system.pk,
             "inventory/system"
@@ -495,6 +504,7 @@ class RbacEngineTests(RbacTestCase):
 
         for url in urls:
             # sysadmin can get in
+            print "SYSADMIN USER=%s, PASS=%s" % (self.sysadmin_user.user_name, self.sysadmin_user.passwd)
             response = self._get(url,
                 username=self.sysadmin_user.user_name,
                 password=self.sysadmin_user.passwd
@@ -502,10 +512,10 @@ class RbacEngineTests(RbacTestCase):
             self.assertEquals(response.status_code, 200, 'authorized get')
             self.assertTrue(response.content.find("<system>") != -1)
         
-            # developer can't get in
+            # intern can't get in
             response = self._get(url,
-                username=self.developer_user.user_name,
-                password=self.developer_user.passwd
+                username=self.intern_user.user_name,
+                password=self.intern_user.passwd
             )
             self.assertEquals(response.status_code, 403, 'unauthorized get')
             self.assertTrue(response.content.find("<system>") == -1)

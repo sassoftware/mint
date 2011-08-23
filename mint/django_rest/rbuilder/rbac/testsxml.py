@@ -7,6 +7,21 @@ datacenter_xml = """
 </query_set>
 """
 
+user_post_xml = """
+<user>
+<full_name>%s</full_name>
+<display_email>True</display_email>
+<password>password</password>
+<user_name>%s</user_name>
+<time_accessed>1283530322.49</time_accessed>
+<time_created>1283523987.85</time_created>
+<active>1</active>
+<email>email@example.com</email>
+<blurb>something here</blurb>
+<is_admin>%s</is_admin>
+</user>
+"""
+
 # create a lab placeholder queryset
 lab_xml = """
 <query_set>

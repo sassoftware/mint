@@ -120,6 +120,8 @@ class XMLTestCase(TestCase, testcase.MockMixIn):
         cfg.dbPath = connection.settings_dict['TEST_NAME']
         cfg.projectDomainName = MINT_PROJECT_DOMAIN
         cfg.namespace = 'ns'
+        cfg.authUser = 'auth_user_abcdefg' 
+        cfg.authPass = 'auth_pass_abcdefg'
         return cfg
 
     def setUp(self):
