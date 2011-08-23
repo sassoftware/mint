@@ -361,8 +361,13 @@ class ImageImportMetadataDescriptorService(BaseInventoryService):
 
 class InventorySystemsSystemService(BaseInventoryService):
     
+<<<<<<< local
+    # @return_xml
+    @rbac('rmember')
+=======
     @return_xml
     #@rbac('rmember')
+>>>>>>> other
     @access.authenticated
     def rest_GET(self, request, system_id):
         return self.get(system_id)
