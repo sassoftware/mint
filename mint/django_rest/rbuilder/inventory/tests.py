@@ -77,11 +77,11 @@ class AssimilatorTestCase(XMLTestCase):
     def testFetchActionsDescriptor(self): 
         # can we determine what smartform we need to populate?
         url = "inventory/systems/%s/descriptors/%s" % (self.system.pk, self.type_id)
-        response = self._get(url)
+        response = self._get(url, username="admin", password="password")
         self.assertTrue(response.content.find("<descriptor>") != -1)
         # make sure the same works with parameters
         url = "inventory/systems/%s/descriptors/%s?foo=bar" % (self.system.pk, self.type_id)
-        response = self._get(url)
+        response = self._get(url, username="admin", password="password")
         self.assertTrue(response.content.find("<descriptor>") != -1)
 
     def testSpawnAction(self):
@@ -4012,7 +4012,7 @@ class SystemEventProcessing2TestCase(XMLTestCase):
 """
 
         response = self._put(url, data=xml,
-            username="testuser", password="password")
+            username="admin", password="password")
         self.failUnlessEqual(response.status_code, 200)
 
         # We can't mock something past django's handler, so there's no

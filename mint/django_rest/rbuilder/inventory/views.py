@@ -467,21 +467,6 @@ class InventorySystemsSystemLogService(BaseInventoryService):
         else:
             pass
 
-#class InventorySystemsSystemAssimilatorService(BaseInventoryService):
-#    '''Assimilates a system in inventory that does not have any management S/W yet'''
-#
-#    # This is the OLD way to do this, the new way involves creating a job.
-#    # we can probably disable this.
-#    @access.admin
-#    @requires('assimilation_parameters')
-#    @return_xml
-#    def rest_PUT(self, request, system_id, assimilation_parameters, format='xml'):
-#        system = self.mgr.getSystem(system_id)
-#        if not system:
-#            return HttpResponseNotFound()
-#        result = self.mgr.assimilateSystem(system, assimilation_parameters)
-#        return result
-
 class InventoryUsersService(BaseInventoryService):
 
     # used by modellib
@@ -516,6 +501,7 @@ class InventorySystemsInstalledSoftwareService(BaseInventoryService):
         installedSoftware.trove = system.installed_software.all()
         return installedSoftware
 
+    @rbac(rbac_can_write_system_id)
     @requires('installed_software')
     @return_xml
     def rest_PUT(self, request, system_id, installed_software):
@@ -620,6 +606,8 @@ class InventoryEventTypesService(BaseInventoryService):
         else:
             return self.mgr.getEventTypes()
         
+    # FIXME: consider dropping support for this as code
+    # changes are also required for this to be meaningful
     @access.admin
     @requires('event_type')
     @return_xml
@@ -633,7 +621,7 @@ class InventoryEventTypesService(BaseInventoryService):
 
 class InventorySystemJobsService(BaseInventoryService):
     
-    @access.anonymous
+    @rbac(rbac_can_read_system_id)
     @return_xml
     def rest_GET(self, request, system_id):
         '''list the jobs running on this system'''
@@ -642,7 +630,7 @@ class InventorySystemJobsService(BaseInventoryService):
     def get(self, system_id):
         return self.mgr.getSystemJobs(system_id)
 
-    @access.admin
+    @rbac(rbac_can_write_system_id)
     @xObjRequires('job')
     @return_xml
     def rest_POST(self, request, system_id, job):
@@ -654,8 +642,7 @@ class InventorySystemJobsService(BaseInventoryService):
 
 class InventorySystemJobDescriptorService(BaseInventoryService):
 
-    @access.anonymous
-    # smartform object already is XML, no need
+    @rbac(rbac_can_read_system_id)
     @return_xml
     def rest_GET(self, request, system_id, job_type):
         '''
@@ -675,7 +662,7 @@ class InventorySystemJobDescriptorService(BaseInventoryService):
 
 class InventorySystemJobStatesService(BaseInventoryService):
 
-    @access.anonymous
+    @rbac(rbac_can_read_system_id)
     @return_xml
     def rest_GET(self, request, system_id, job_state_id):
         return self.get(system_id, job_state_id)
@@ -686,6 +673,7 @@ class InventorySystemJobStatesService(BaseInventoryService):
 
 class InventorySystemTagsService(BaseInventoryService):
 
+    @rbac(rbac_can_read_system_id)
     @return_xml
     def rest_GET(self, request, system_id, system_tag_id=None):
         return self.get(system_id, system_tag_id)
@@ -695,3 +683,4 @@ class InventorySystemTagsService(BaseInventoryService):
             return self.mgr.getSystemTag(system_id, system_tag_id)
         else:
             return self.mgr.getSystemTags(system_id)
+
