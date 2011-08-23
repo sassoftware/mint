@@ -41,6 +41,8 @@ class rbac(object):
             # error checking and admin/bypass:
             #    why is this a list?
             user = _self.mgr.getSessionInfo().user[0]
+            if fcn.ACCESS is None:
+                raise Exception("@access.authenticated missing in conjunction with @rbac?")
             if fcn.ACCESS & ACCESS.ANONYMOUS:
                 # this shouldn't ever happen due to outer decorator
                 raise PermissionDenied()
