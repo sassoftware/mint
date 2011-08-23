@@ -35,7 +35,8 @@ class rbac(object):
         # NOTE: _self == "self" of view method, not to be confused
         #       self in the signature of _callWrapper
         def callFcn(_self, request, *args, **kwargs):
-            user = _self.mgr.getSessionInfo().user
+            # why is this a list?
+            user = _self.mgr.getSessionInfo().user[0]
             if fcn.ACCESS & ACCESS.ANONYMOUS:
                 # this shouldn't ever happen due to outer decorator
                 raise Exception('Impossible access control state')
