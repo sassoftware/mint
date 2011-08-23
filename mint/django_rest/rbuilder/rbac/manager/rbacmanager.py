@@ -182,7 +182,7 @@ class RbacManager(basemanager.BaseManager):
         return queryset_or_id
 
     @exposed
-    def userHasRbacPermission(self, user=None, resource=None, action=None):
+    def userHasRbacPermission(self, user=None, resource=None, action=None, request=None):
         '''
         Can User X Do Action Y On Resource?
 
@@ -192,13 +192,16 @@ class RbacManager(basemanager.BaseManager):
         tags must exist to find the queryset relationships.
         '''
 
+        # if the user is an admin, immediately let them by
+        if request is not None and request._is_admin:
+            return True
+        # tests simulate admin by going this route
+        if getattr(user, '_is_admin', False):
+            return True
+
         querysets = self.mgr.getQuerySetsForResource(resource)
 
         user = self._user(user)
-      
-        # if the user is an admin, immediately let them by
-        if user.is_admin:
-            return True
 
         if len(querysets) == 0:
             return False 

@@ -63,7 +63,7 @@ class AssimilatorTestCase(XMLTestCase):
 
     def testExpectedActions(self):
         # do we see assimilate as a possible action?
-        response = self._get('inventory/systems/%s' % self.system.pk, username="testuser",
+        response = self._get('inventory/systems/%s' % self.system.pk, username="admin",
             password="password")
         obj = xobj.parse(response.content)
         # xobj hack: obj doesn't listify 1 element lists

@@ -16,8 +16,9 @@ from mint.django_rest.rbuilder.users import models as usersmodels
 from mint.django_rest.rbuilder import service
 from mint.django_rest.rbuilder.inventory import models
 from mint.django_rest.rbuilder.projects import models as projectsmodels
+from mint.django_rest.rbuilder.rbac.rbacauth import rbac
+from mint.django_rest.deco import ACCESS
 
- 
 class RestDbPassthrough(resource.Resource):
     pass
 
@@ -362,12 +363,15 @@ class ImageImportMetadataDescriptorService(BaseInventoryService):
 class InventorySystemsSystemService(BaseInventoryService):
     
     @return_xml
+    @rbac('rmember')
+    @access.authenticated
     def rest_GET(self, request, system_id):
         return self.get(system_id)
 
     def get(self, system_id):
         return self.mgr.getSystem(system_id)
 
+    #come back, tricky
     @access.event_uuid
     @access.authenticated
     @requires('system')
@@ -387,7 +391,7 @@ class InventorySystemsSystemService(BaseInventoryService):
         self.mgr.updateSystem(system)
         return self.mgr.getSystem(system_id)
 
-    @access.admin
+    @rbac('wmember')
     def rest_DELETE(self, request, system_id):
         self.mgr.deleteSystem(system_id)
         response = HttpResponse(status=204)
