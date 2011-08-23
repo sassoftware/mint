@@ -370,7 +370,7 @@ def rbac_can_write_system_id(view, request, system_id):
 class InventorySystemsSystemService(BaseInventoryService):
     
     @return_xml
-    #@rbac('rmember')
+    @rbac('rmember')
     @access.authenticated
     def rest_GET(self, request, system_id):
         return self.get(system_id)

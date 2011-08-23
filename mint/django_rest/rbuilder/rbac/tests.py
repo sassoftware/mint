@@ -491,14 +491,11 @@ class RbacEngineTests(RbacTestCase):
                 ))
 
     def testRbacDecoratorThroughView(self):
-
         # this tests the decorator in rbac_auth.py
         # disabling until error codes are appropriate
-        return 
 
         urls = [ 
             "inventory/systems/%s" % self.datacenter_system.pk,
-            "inventory/system"
         ] 
 
         for url in urls:
@@ -507,7 +504,7 @@ class RbacEngineTests(RbacTestCase):
                 username=self.sysadmin_user.user_name,
                 password='password',
             )
-            self.assertEquals(response.status_code, 200, 'authorized get')
+            self.assertEquals(response.status_code, 200, "authorized get on %s" % url)
             self.assertTrue(response.content.find("<system") != -1)
         
             # intern can't get in
@@ -516,7 +513,7 @@ class RbacEngineTests(RbacTestCase):
                 password='password',
             )
             
-            self.assertEquals(response.status_code, 403, 'unauthorized get')
+            self.assertEquals(response.status_code, 403, "unauthorized get on %s" % url)
             self.assertTrue(response.content.find("<system") == -1)
 
             # admin can get in
@@ -524,7 +521,7 @@ class RbacEngineTests(RbacTestCase):
                 username=self.developer_user.user_name,
                 password='password',
             )
-            self.assertEquals(response.status_code, 200)
+            self.assertEquals(response.status_code, 200, "admin get on %s" % url)
             self.assertTrue(response.content.find("<system") != -1)
 
         # delete uses a custom callback for the decorator, so this

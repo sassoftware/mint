@@ -1,5 +1,5 @@
-from django.db import models
 from mint.django_rest.deco import ACCESS
+from mint.django_rest.rbuilder.errors import PermissionDenied
 
 class rbac(object):
     """
@@ -43,7 +43,7 @@ class rbac(object):
             user = _self.mgr.getSessionInfo().user[0]
             if fcn.ACCESS & ACCESS.ANONYMOUS:
                 # this shouldn't ever happen due to outer decorator
-                raise Exception('Impossible access control state')
+                raise PermissionDenied()
             if fcn.ACCESS & ACCESS.ADMIN:
                 # save some database access if the user is an admin
                 return fcn(_self, request, *args, **kwargs)
@@ -61,14 +61,14 @@ class rbac(object):
                 if allowed:
                     return resource
                 else:
-                    raise Exception('Forbidden') # XXX Fixme
+                    raise PermissionDenied()
             else:
                 # call check function first, then get resource
                 allowed = fcn._action(_self, request, *args, **kwargs)
                 if allowed:
                     return fcn(_self, request, *args, **kwargs)
                 else:
-                    raise Exception('Forbidden') # XXX Fixme
+                    raise PermissionDenied()
 
         # ensure access decorators are still called
         access = getattr(fcn, 'ACCESS', None)

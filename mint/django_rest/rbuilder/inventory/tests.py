@@ -1535,7 +1535,7 @@ class SystemsTestCase(XMLTestCase):
         self.assertEquals(response.status_code, 401)
         
         response = self._get('inventory/systems/%d/' % system.system_id,
-            username="testuser", password="password")
+            username="admin", password="password")
         self.assertEquals(response.status_code, 200)
         
     def testGetSystemDoesntExist(self):
@@ -1551,7 +1551,7 @@ class SystemsTestCase(XMLTestCase):
         system = self._saveSystem()
         system.to_xml()
         response = self._get('inventory/systems/%d/' % system.system_id,
-            username="testuser", password="password")
+            username="admin", password="password")
         self.assertEquals(response.status_code, 200)
         self.assertXMLEquals(response.content, 
             testsxml.system_xml % (system.networks.all()[0].created_date.isoformat(), system.created_date.isoformat()),
@@ -1573,7 +1573,7 @@ class SystemsTestCase(XMLTestCase):
         system.target = target
         system.save()
         response = self._get('inventory/systems/%d/' % system.system_id,
-            username="testuser", password="password")
+            username="admin", password="password")
         self.assertEquals(response.status_code, 200)
         self.assertXMLEquals(response.content, testsxml.system_target_xml % \
             (system.networks.all()[0].created_date.isoformat(), system.created_date.isoformat()),
@@ -2902,7 +2902,7 @@ class SystemVersionsTestCase(XMLTestCase):
         system.installed_software.add(self.trove2)
         system.save()
         response = self._get('inventory/systems/%s/' % system.pk,
-            username="testuser", password="password")
+            username="admin", password="password")
         self.assertEquals(response.status_code, 200)
         expected = (testsxml.system_version_xml % (
                 self.trove.last_available_update_refresh.isoformat(),
@@ -2948,7 +2948,7 @@ class SystemVersionsTestCase(XMLTestCase):
         system.save()
 
         response = self._get('inventory/systems/%s' % system.pk,
-            username="testuser", password="password")
+            username="admin", password="password")
         self.assertXMLEquals(response.content, 
             testsxml.system_available_updates_xml,
             ignoreNodes=['created_date', 'last_available_update_refresh'])
@@ -3073,7 +3073,7 @@ class SystemVersionsTestCase(XMLTestCase):
         system = models.System.objects.get(pk=system.pk)
         self.failUnlessEqual(system.name, "testsystemname")
 
-        response = self._get(url, username="testuser", password="password")
+        response = self._get(url, username="admin", password="password")
         self.assertEquals(response.status_code, 200)
         self.assertXMLEquals(response.content,
             testsxml.system_installed_software_version_stage_xml)
@@ -4219,7 +4219,7 @@ class TargetSystemImportTest(XMLTestCase):
         system = models.System.objects.get(target_system_id='vsphere1-001')
         # Fetch XML
         response = self._get('inventory/systems/%d/' % system.system_id,
-            username="testuser", password="password")
+            username="admin", password="password")
         self.assertEquals(response.status_code, 200)
         obj = xobj.parse(response.content)
         xobjmodel = obj.system
@@ -4288,7 +4288,7 @@ class TargetSystemImportTest(XMLTestCase):
     def testGetSystemWithTarget(self):
         system = models.System.objects.get(target_system_id='vsphere1-002')
         url = 'inventory/systems/%s' % system.pk
-        response = self._get(url, username='testuser', password='password')
+        response = self._get(url, username='admin', password='password')
         self.failUnlessEqual(response.status_code, 200)
         self.assertXMLEquals(response.content, testsxml.system_with_target,
             ignoreNodes=['created_date'])
