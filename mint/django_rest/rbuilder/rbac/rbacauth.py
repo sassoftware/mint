@@ -41,12 +41,14 @@ class rbac(object):
             # error checking and admin/bypass:
             #    why is this a list?
             user = _self.mgr.getSessionInfo().user[0]
+            if fcn.ACCESS is None:
+                raise Exception("@access.authenticated missing in conjunction with @rbac?")
             if fcn.ACCESS & ACCESS.ANONYMOUS:
                 # this shouldn't ever happen due to outer decorator
                 raise PermissionDenied()
             if fcn.ACCESS & ACCESS.ADMIN:
                 # save some database access if the user is an admin
-                return fcn(_self, request, *args, **kwargs)
+                raise Exception("can't use rbac with ACCESS.ADMIN")
 
             # determine the rbac result based on the return of the function
             # unless an "allowed callback" is provided, in which case call

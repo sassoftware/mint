@@ -21,7 +21,6 @@ from mint.django_rest.rbuilder.rbac.rbacauth import rbac
 class RestDbPassthrough(resource.Resource):
     pass
 
-
 class StageProxyService(service.BaseAuthService):
     
     @staticmethod
@@ -100,7 +99,8 @@ class InventoryService(BaseInventoryService):
         return inventory
 
 class InventoryLogService(BaseInventoryService):
-    
+   
+    @access.authenticated 
     @return_xml
     def rest_GET(self, request):
         return self.mgr.getSystemsLog()
@@ -130,6 +130,7 @@ class InventorySystemStateService(BaseInventoryService):
     
 class InventoryZoneService(BaseInventoryService):
     
+    @access.authenticated
     @return_xml
     def rest_GET(self, request, zone_id=None):
         return self.get(zone_id)
@@ -167,6 +168,7 @@ class InventoryZoneService(BaseInventoryService):
     
 class InventoryManagementNodeService(BaseInventoryService):
     
+    @access.authenticated
     @return_xml
     def rest_GET(self, request, management_node_id=None):
         return self.get(management_node_id)
@@ -204,6 +206,9 @@ class InventoryManagementInterfaceService(BaseInventoryService):
         else:
             return self.mgr.getManagementInterfaces()
         
+    # FIXME: consider removing support
+    # this may be useful for tests but will likely break your
+    # rBuilder, so we shouldn't allow it, right?
     @access.admin
     @requires('management_interface')
     @return_xml
@@ -229,6 +234,7 @@ class InventorySystemTypeService(BaseInventoryService):
         else:
             return self.mgr.getSystemTypes()
         
+    # FIXME: consider removing support
     @access.admin
     @requires('system_type')
     @return_xml
@@ -253,6 +259,7 @@ class InventorySystemTypeSystemsService(BaseInventoryService):
     
 class InventoryZoneManagementNodeService(BaseInventoryService):
     
+    @access.authenticated
     @return_xml
     def rest_GET(self, request, zone_id, management_node_id=None):
         return self.get(zone_id, management_node_id)
@@ -263,6 +270,7 @@ class InventoryZoneManagementNodeService(BaseInventoryService):
         else:
             return self.mgr.getManagementNodesForZone(zone_id)
         
+    # FIXME: consider removing support
     @access.admin
     @requires('management_node')
     @return_xml
@@ -273,6 +281,7 @@ class InventoryZoneManagementNodeService(BaseInventoryService):
 
 class InventoryNetworkService(BaseInventoryService):
     
+    @access.authenticated
     @return_xml
     def rest_GET(self, request, network_id=None):
         return self.get(network_id)
@@ -328,7 +337,10 @@ class InventorySystemsService(BaseInventoryService):
         return self.mgr.getSystems()
 
 class InventoryInventorySystemsService(BaseInventoryService):
-    
+   
+    # if you want to get this data as a non-admin you must use the
+    # query set 
+    @access.admin
     @return_xml
     def rest_GET(self, request):
         return self.get()
@@ -360,25 +372,29 @@ class ImageImportMetadataDescriptorService(BaseInventoryService):
         return self.mgr.getImageImportMetadataDescriptor()
 
 
-def rbac_can_write_system_id(view, request, system_id):
-    # is the system ID writeable by the user?
+def rbac_can_write_system_id(view, request, system_id, *args, **kwargs):
+    '''is the system ID writeable by the user?'''
     obj = view.mgr.getSystem(system_id)
-    return view.mgr.userHasRbacPermission(
-        view.getSessionInfo().user[0], obj, 'wmember'
-    )
+    user = view.mgr.getSessionInfo().user[0]
+    return view.mgr.userHasRbacPermission(user, obj, 'wmember')
+
+def rbac_can_read_system_id(view, request, system_id, *args, **kwargs):
+    '''is the system ID readable by the user?'''
+    obj = view.mgr.getSystem(system_id)
+    user = view.mgr.getSessionInfo().user[0]
+    return view.mgr.userHasRbacPermission(user, obj, 'rmember')
         
 class InventorySystemsSystemService(BaseInventoryService):
 
     @return_xml
     @rbac('rmember')
-    @access.authenticated
     def rest_GET(self, request, system_id):
         return self.get(system_id)
 
     def get(self, system_id):
         return self.mgr.getSystem(system_id)
 
-    #come back, tricky
+    # FIXME -- come back, tricky -- rbac if no event_uuid ???
     @access.event_uuid
     @access.authenticated
     @requires('system')
@@ -398,9 +414,7 @@ class InventorySystemsSystemService(BaseInventoryService):
         self.mgr.updateSystem(system)
         return self.mgr.getSystem(system_id)
 
-    # TODO: make @rbac imply access.authenticated
     @rbac(rbac_can_write_system_id)
-    @access.authenticated
     def rest_DELETE(self, request, system_id):
         self.mgr.deleteSystem(system_id)
         response = HttpResponse(status=204)
@@ -408,6 +422,7 @@ class InventorySystemsSystemService(BaseInventoryService):
 
 class InventorySystemsSystemEventService(BaseInventoryService):
     
+    @rbac(rbac_can_read_system_id)
     @return_xml
     def rest_GET(self, request, system_id, system_event_id=None):
         return self.get(system_id)
@@ -418,6 +433,7 @@ class InventorySystemsSystemEventService(BaseInventoryService):
         else:
             return self.mgr.getSystemSystemEvents(system_id)
         
+    @rbac(rbac_can_write_system_id)
     @requires('system_event')
     @return_xml
     def rest_POST(self, request, system_id, system_event):
@@ -426,6 +442,7 @@ class InventorySystemsSystemEventService(BaseInventoryService):
 
 class InventorySystemsSystemLogService(BaseInventoryService):
 
+    @rbac(rbac_can_read_system_id)
     def rest_GET(self, request, system_id, format='xml'):
         managedSystem = self.mgr.getSystem(system_id)
         systemLog = self.mgr.getSystemLog(managedSystem)
@@ -449,6 +466,8 @@ class InventorySystemsSystemLogService(BaseInventoryService):
             return response
         else:
             pass
+
+# BOOKMARK -- STOPPED RBAC HERE
 
 class InventorySystemsSystemAssimilatorService(BaseInventoryService):
     '''Assimilates a system in inventory that does not have any management S/W yet'''

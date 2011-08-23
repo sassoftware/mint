@@ -218,8 +218,15 @@ class RbacManager(basemanager.BaseManager):
         # if the user is an admin, immediately let them by
         if request is not None and request._is_admin:
             return True
-        # some of the tests use this path
+        # some of the tests use this path, but the main app doesn't
+        # TODO: modify tests so they act like everything else
         if getattr(user, '_is_admin', False):
+            return True
+        # this will trigger on DB users even if request is not passed in
+        # so we could probably eliminate the request check
+        # TODO: make it happen
+        user_is_admin = str(getattr(user, 'is_admin', 'false'))
+        if user_is_admin == 'true':
             return True
 
         querysets = self.mgr.getQuerySetsForResource(resource)

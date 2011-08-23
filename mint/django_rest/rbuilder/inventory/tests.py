@@ -1794,7 +1794,7 @@ class SystemsTestCase(XMLTestCase):
         self.assertEquals(response.status_code, 401)
         
         response = self._get('inventory/systems/3/system_log/',
-            username="testuser", password="password")
+            username="admin", password="password")
         self.assertEquals(response.status_code, 200)
         
 
@@ -1804,7 +1804,7 @@ class SystemsTestCase(XMLTestCase):
             data=testsxml.system_post_xml)
         self.assertEquals(response.status_code, 200)
         response = self._get('inventory/systems/3/system_log/',
-            username="testuser", password="password")
+            username="admin", password="password")
         self.assertEquals(response.status_code, 200)
         content = []
         # Just remove lines with dates in them, it's easier to test for now.
@@ -3368,7 +3368,7 @@ class SystemEventTestCase(XMLTestCase):
         
         response = self._post(url,
             data=system_event_post_xml,
-            username="testuser", password="password")
+            username="admin", password="password")
         self.assertEquals(response.status_code, 200)
         
     def testPostSystemEvent(self):
@@ -3376,7 +3376,7 @@ class SystemEventTestCase(XMLTestCase):
         system_event_post_xml = testsxml.system_event_post_xml
         response = self._post(url,
             data=system_event_post_xml,
-            username="testuser", password="password")
+            username="admin", password="password")
         self.assertEquals(response.status_code, 200)
         system_event = models.SystemEvent.objects.get(pk=1)
         system_event_xml = testsxml.system_event_xml % \
@@ -3401,14 +3401,14 @@ class SystemEventTestCase(XMLTestCase):
         url = 'inventory/systems/%d/system_events/' % self.system.system_id
         response = self._post(url,
             data=testsxml.system_event_immediate_poll_post_xml,
-            username="testuser", password="password")
+            username="admin", password="password")
         self.assertEquals(response.status_code, 200)
 
         # Schedule another poll, should fail, can't poll twice at the same
         # time
         response = self._post(url,
             data=testsxml.system_event_immediate_poll_post_xml,
-            username="testuser", password="password")
+            username="admin", password="password")
         self.assertEquals(response.status_code, 200)
         self.assertTrue('<fault>' in response.content)
 
@@ -3418,14 +3418,14 @@ class SystemEventTestCase(XMLTestCase):
         # Schedule an update, should succeed
         response = self._post(url,
             data=testsxml.system_event_immediate_update_post_xml,
-            username="testuser", password="password")
+            username="admin", password="password")
         self.assertEquals(response.status_code, 200)
         self.assertTrue('<fault>' not in response.content)
 
         # Schedule a shutdown, should fail
         response = self._post(url,
             data=testsxml.system_event_immediate_shutdown_post_xml,
-            username="testuser", password="password")
+            username="admin", password="password")
         self.assertEquals(response.status_code, 200)
         self.assertTrue('<fault>' in response.content)
         
@@ -3435,14 +3435,14 @@ class SystemEventTestCase(XMLTestCase):
         # Schedule a registration, should succeed
         response = self._post(url,
             data=testsxml.system_event_immediate_registration_post_xml,
-            username="testuser", password="password")
+            username="admin", password="password")
         self.assertEquals(response.status_code, 200)
         self.assertTrue('<fault>' not in response.content)
 
         # Schedule a poll, should succeed
         response = self._post(url,
             data=testsxml.system_event_immediate_poll_post_xml,
-            username="testuser", password="password")
+            username="admin", password="password")
         self.assertEquals(response.status_code, 200)
         self.assertTrue('<fault>' not in response.content)
 

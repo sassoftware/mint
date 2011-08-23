@@ -527,9 +527,9 @@ class RbacEngineTests(RbacTestCase):
         # delete uses a custom callback for the decorator, so this
         # covers the other half of the decorator code
 
-        url = "inventory/system/%s" % self.datacenter_system.pk
+        url = "inventory/systems/%s" % self.datacenter_system.pk
         response = self._delete(url,
-            username=self.sysadmin_user.user_name,
+            username=self.intern_user.user_name,
             password='password',
         )
         self.assertEquals(response.status_code, 403, 'unauthorized delete')
