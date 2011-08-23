@@ -492,11 +492,10 @@ class RbacEngineTests(RbacTestCase):
 
     def testRbacDecoratorThroughView(self):
 
-        # return # disable test run for now
+        # this tests the decorator in rbac_auth.py
+        # disabling until error codes are appropriate
         return 
 
-        # this tests the decorator in rbac_auth.py
- 
         urls = [ 
             "inventory/systems/%s" % self.datacenter_system.pk,
             "inventory/system"
@@ -506,26 +505,27 @@ class RbacEngineTests(RbacTestCase):
             # sysadmin can get in
             response = self._get(url,
                 username=self.sysadmin_user.user_name,
-                password=self.sysadmin_user.passwd
+                password='password',
             )
             self.assertEquals(response.status_code, 200, 'authorized get')
-            self.assertTrue(response.content.find("<system>") != -1)
+            self.assertTrue(response.content.find("<system") != -1)
         
             # intern can't get in
             response = self._get(url,
                 username=self.intern_user.user_name,
-                password=self.intern_user.passwd
+                password='password',
             )
+            
             self.assertEquals(response.status_code, 403, 'unauthorized get')
-            self.assertTrue(response.content.find("<system>") == -1)
+            self.assertTrue(response.content.find("<system") == -1)
 
             # admin can get in
             response = self._get(url,
                 username=self.developer_user.user_name,
-                password=self.developer_user.passwd
+                password='password',
             )
             self.assertEquals(response.status_code, 200)
-            self.assertTrue(response.content.find("<system>") != -1)
+            self.assertTrue(response.content.find("<system") != -1)
 
         # delete uses a custom callback for the decorator, so this
         # covers the other half of the decorator code
@@ -533,14 +533,14 @@ class RbacEngineTests(RbacTestCase):
         url = "inventory/system/%s" % self.datacenter_system.pk
         response = self._delete(url,
             username=self.sysadmin_user.user_name,
-            password=self.sysadmin_user.passwd
+            password='password',
         )
         self.assertEquals(response.status_code, 403, 'unauthorized delete')
 
         # delete as sysadmin works
         response = self._delete(url,
                username=self.sysadmin_user.user_name,
-               password=self.sysadmin_user.passwd
+               password='password',
         )
         self.assertEquals(response.status_code, 204, 'authorized delete')
 
