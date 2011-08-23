@@ -11,23 +11,38 @@ from mint.django_rest.deco import return_xml, requires, access
 from mint.django_rest.rbuilder import service
 from mint.django_rest.rbuilder.querysets import filterdescriptors
 from mint.django_rest.rbuilder.querysets import models
+from django.http import HttpResponse
+#from mint.django_rest.rbuilder.rbac.rbacauth import rbac
 
 class BaseQuerySetService(service.BaseService):
     pass
 
 class QuerySetService(BaseQuerySetService):
 
-
+    # rbac is handled semimanually for this function, because it is the only
+    # on that has result filtering
     @return_xml
+    @access.authenticated
     def rest_GET(self, request, query_set_id=None):
-        return self.get(query_set_id)
-
-    def get(self, query_set_id):
+        user = self.mgr.getSessionInfo().user
         if query_set_id is None:
-            return self.mgr.getQuerySets()
+            querysets = self.mgr.getQuerySets() 
+            return self.mgr.filterRbacQuerysets(user, querysets, request)
         else:
-            return self.mgr.getQuerySet(query_set_id)
-        
+            queryset = self.mgr.getQuerySet(query_set_id)
+            if self.mgr.userHasRbacPermission(user, queryset, 'rqueryset', request):
+                return queryset
+            else: 
+                return HttpResponse(status=403)
+
+    # not used above, but still needed by load_from_href and other
+    # functions
+    def get(self, query_set_id=None):
+        if query_set_id is None:
+            return self.mgr.getQuerySets() 
+        else:
+            return self.mgr.getQuerySet(query_set_id) 
+
     @access.admin
     @requires('query_set', load=False)
     @return_xml

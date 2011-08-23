@@ -182,7 +182,27 @@ class RbacManager(basemanager.BaseManager):
         return queryset_or_id
 
     @exposed
-    def userHasRbacPermission(self, user=None, resource=None, action=None, request=None):
+    def filterRbacQuerysets(self, user, querysets_obj, request=None):
+        '''
+        Modify a querysets collection to contain only the querysets
+        the user is allowed to see, leaving the others hidden.
+        '''
+        # TODO: optimize database access
+        if request is not None and request._is_admin:
+            return querysets_obj
+        if getattr(user, '_is_admin', False):
+            return querysets_obj
+        querysets = querysets_obj.query_set
+        results = []
+        for q in querysets:
+            if self.mgr.userHasRbacPermission(user, q, 'rqueryset', request=request):
+                results.append(q)
+        querysets_obj.query_set = results
+        return querysets_obj
+
+    @exposed
+    def userHasRbacPermission(self, user, resource, action, 
+        request=None):
         '''
         Can User X Do Action Y On Resource?
 
@@ -190,19 +210,20 @@ class RbacManager(basemanager.BaseManager):
         of how we implement RBAC protection on resources.  Permissions
         are simple at the moment, but some imply others.   Query set
         tags must exist to find the queryset relationships.
+
+        Whether the user is anonymous or admin can come in through multiple routes,
+        depending on usage.  
         '''
 
         # if the user is an admin, immediately let them by
         if request is not None and request._is_admin:
             return True
-        # tests simulate admin by going this route
+        # some of the tests use this path
         if getattr(user, '_is_admin', False):
             return True
 
         querysets = self.mgr.getQuerySetsForResource(resource)
-
         user = self._user(user)
-
         if len(querysets) == 0:
             return False 
 

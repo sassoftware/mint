@@ -362,7 +362,7 @@ class ImageImportMetadataDescriptorService(BaseInventoryService):
 class InventorySystemsSystemService(BaseInventoryService):
     
     @return_xml
-    @rbac('rmember')
+    #@rbac('rmember')
     @access.authenticated
     def rest_GET(self, request, system_id):
         return self.get(system_id)
@@ -390,7 +390,7 @@ class InventorySystemsSystemService(BaseInventoryService):
         self.mgr.updateSystem(system)
         return self.mgr.getSystem(system_id)
 
-    @rbac('wmember')
+    #@rbac('wmember')
     def rest_DELETE(self, request, system_id):
         self.mgr.deleteSystem(system_id)
         response = HttpResponse(status=204)
