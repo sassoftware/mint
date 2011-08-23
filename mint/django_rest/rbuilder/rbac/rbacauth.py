@@ -1,5 +1,6 @@
 from django.db import models
 from mint.django_rest.deco import ACCESS
+from mint.django_rest.rbuilder.errors import PermissionDenied
 
 class rbac(object):
     """
@@ -33,11 +34,9 @@ class rbac(object):
         return retval
 
     def _callWrapper(self, fcn):
-            
         # NOTE: _self == "self" of view method, not to be confused
         #       self in the signature of _callWrapper
         def callFcn(_self, request, *args, **kwargs):
-
             # error checking and admin/bypass:
             #    why is this a list?
             user = _self.mgr.getSessionInfo().user[0]
@@ -61,14 +60,14 @@ class rbac(object):
                 if allowed:
                     return resource
                 else:
-                    raise Exception('Forbidden') # XXX Fixme
+                    raise PermissionDenied()
             else:
                 # call check function first, then get resource
                 allowed = fcn._action(_self, request, *args, **kwargs)
                 if allowed:
                     return fcn(_self, request, *args, **kwargs)
                 else:
-                    raise Exception('Forbidden') # XXX Fixme
+                    raise PermissionDenied()
 
         # ensure access decorators are still called
         access = getattr(fcn, 'ACCESS', None)
