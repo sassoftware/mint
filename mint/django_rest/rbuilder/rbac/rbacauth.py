@@ -19,14 +19,16 @@ class rbac(object):
     rqueryset -- ability to see a queryset
     wqueryset -- ability to modify a queryset
 
+    action can be a callback also, in which case it MUST
+    use self.mgr.userHasRbacPermission to implement itself
+
     """
-    def __init__(self, action, failure_status_code=403):
+    def __init__(self, action):
+        # TODO: check type of action and use as callback if it's callable
         self._action = action
-        self._failure_status_code = failure_status_code
-        
+ 
     def __call__(self, fcn):
         fcn._action  = self._action
-        fcn._failure_status_code = self._failure_status_code
         retval = self._callWrapper(fcn)
         return retval
 
@@ -35,21 +37,39 @@ class rbac(object):
         # NOTE: _self == "self" of view method, not to be confused
         #       self in the signature of _callWrapper
         def callFcn(_self, request, *args, **kwargs):
-            # why is this a list?
+
+            # error checking and admin/bypass:
+            #    why is this a list?
             user = _self.mgr.getSessionInfo().user[0]
             if fcn.ACCESS & ACCESS.ANONYMOUS:
                 # this shouldn't ever happen due to outer decorator
                 raise Exception('Impossible access control state')
-            resource = fcn(_self, request, *args, **kwargs)
             if fcn.ACCESS & ACCESS.ADMIN:
                 # save some database access if the user is an admin
-                return resource
-            if not isinstance(resource, models.Model):
-                return Exception('rbac decorator must be closest to the method')
-            if _self.mgr.userHasRbacPermission(user, resource, fcn._action, request):
-                return resource
+                return fcn(_self, request, *args, **kwargs)
+
+            # determine the rbac result based on the return of the function
+            # unless an "allowed callback" is provided, in which case call
+            # that function.  It is assumed this function ALWAYS
+            # will call userHasRbacPermission internally.
+
+            if not callable(fcn._action):
+                # depends on the resource
+                resource = fcn(_self, request, *args, **kwargs)
+                allowed = _self.mgr.userHasRbacPermission(user, resource, 
+                    fcn._action, request)
+                if allowed:
+                    return resource
+                else:
+                    raise Exception('Forbidden') # XXX Fixme
             else:
-                raise Exception('Forbidden') # XXX Fixme
+                # call check function first, then get resource
+                allowed = fcn._action(_self, request, *args, **kwargs)
+                if allowed:
+                    return fcn(_self, request, *args, **kwargs)
+                else:
+                    raise Exception('Forbidden') # XXX Fixme
+
         # ensure access decorators are still called
         access = getattr(fcn, 'ACCESS', None)
         if access:

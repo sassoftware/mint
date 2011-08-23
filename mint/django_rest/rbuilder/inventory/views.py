@@ -359,6 +359,14 @@ class ImageImportMetadataDescriptorService(BaseInventoryService):
     def get(self):
         return self.mgr.getImageImportMetadataDescriptor()
 
+
+def rbac_can_write_system_id(view, request, system_id):
+    # is the system ID writeable by the user?
+    obj = view.mgr.getSystem(system_id)
+    return view.mgr.userHasRbacPermission(
+        view.getSessionInfo().user[0], obj, 'wmember'
+    )
+        
 class InventorySystemsSystemService(BaseInventoryService):
     
     @return_xml
@@ -390,7 +398,9 @@ class InventorySystemsSystemService(BaseInventoryService):
         self.mgr.updateSystem(system)
         return self.mgr.getSystem(system_id)
 
-    #@rbac('wmember')
+    # TODO: make @rbac imply access.authenticated
+    @rbac(rbac_can_write_system_id)
+    @access.authenticated
     def rest_DELETE(self, request, system_id):
         self.mgr.deleteSystem(system_id)
         response = HttpResponse(status=204)
