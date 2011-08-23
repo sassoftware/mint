@@ -288,6 +288,9 @@ urlpatterns = patterns('',
     URL(r'projects/(?P<project_short_name>(\w|\-)*)/project_branches/(?P<project_branch_label>[a-zA-Z0-9]+(\.|\w|\-|\@|\:)*)/project_branch_stages/(?P<stage_name>(\w|-)+)$',
         projectviews.ProjectBranchStageService(),
         name='ProjectBranchStage'),
+    URL(r'projects/(?P<project_short_name>(\w|\-)*)/project_branches/(?P<project_branch_label>[a-zA-Z0-9]+(\.|\w|\-|\@|\:)*)/project_branch_stages/(?P<stage_name>(\w|-)+)/images/?$',
+        projectviews.ProjectBranchStageImagesService(),
+        name='ProjectBranchStageImages'),
 
     # Aggregate all stages for a project
     URL(r'projects/(?P<project_short_name>(\w|\-)*)/project_branch_stages/?$',

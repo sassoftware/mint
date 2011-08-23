@@ -463,6 +463,26 @@ class ProjectManager(basemanager.BaseManager):
             'project__project_id', 'project_branch__branch_id', 'stage_id')
         return self._stageFilter(iterator)
 
+    @exposed
+    def getProjectBranchStageImages(self, project_short_name, project_branch_label, stage_name):
+        stage = self.getProjectBranchStage(project_short_name, project_branch_label, stage_name)
+
+        # First, find all images directly linked to this stage
+        imagesMap = dict((x.image_id, x)
+            for x in models.Image.objects.filter(
+                project_branch_stage__stage_id=stage.stage_id))
+        # Then get the ones belonging to the same branch, that only have
+        # a stage name
+        imagesMap.update((x.image_id, x)
+            for x in models.Image.objects.filter(
+                version__branch_id=stage.project_branch.branch_id,
+                stage_name=stage.name))
+
+        # Sort images by image id
+        images = models.Images()
+        images.image = [ x[1] for x in sorted(imagesMap.items()) ]
+        return images
+
 """    
     @exposed
     def getDescriptorForImageBuildAction(self, , job_type, query_dict):
