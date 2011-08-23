@@ -1,5 +1,5 @@
-from django import http
 from django.db import models
+from mint.django_rest.deco import ACCESS
 
 class rbac(object):
     """

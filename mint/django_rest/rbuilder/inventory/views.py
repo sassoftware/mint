@@ -17,7 +17,6 @@ from mint.django_rest.rbuilder import service
 from mint.django_rest.rbuilder.inventory import models
 from mint.django_rest.rbuilder.projects import models as projectsmodels
 from mint.django_rest.rbuilder.rbac.rbacauth import rbac
-from mint.django_rest.deco import ACCESS
 
 class RestDbPassthrough(resource.Resource):
     pass

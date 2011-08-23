@@ -242,7 +242,7 @@ class RbacManager(basemanager.BaseManager):
         user = self._user(user_id)
         role = self._role(role_id)
         try:
-            mapping = models.RbacUserRole.objects.get(user=user, role=role)
+            mapping = models.RbacUserRole.objects.get(user=user, role=role)  # pyflakes=ignore
             # mapping already exists, nothing to do
         except models.RbacUserRole.DoesNotExist:
             # no role assignment found, create it
