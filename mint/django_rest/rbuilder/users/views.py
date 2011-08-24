@@ -65,6 +65,9 @@ class UsersService(service.BaseService):
     @requires('user')
     @return_xml
     def rest_PUT(self, request, user_id, user):
+        oldUser = self.mgr.getUser(user_id)
+        if oldUser.pk != user.pk:
+            raise PermissionDenied()
         return self.mgr.updateUser(user_id, user)
 
     @access.admin

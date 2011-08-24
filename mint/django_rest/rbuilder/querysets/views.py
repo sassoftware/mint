@@ -65,6 +65,9 @@ class QuerySetService(BaseQuerySetService):
     @requires('query_set')
     @return_xml
     def rest_PUT(self, request, query_set_id, query_set):
+        oldQuerySet = self.mgr.getQuerySet(query_set_id)
+        if oldQuerySet.pk != query_set.pk:
+            raise PermissionDenied()
         return self.mgr.updateQuerySet(query_set)
 
     @access.admin
