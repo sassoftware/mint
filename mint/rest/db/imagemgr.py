@@ -632,7 +632,7 @@ class ImageManager(manager.Manager):
 
         factoryName = "rbuilder-image"
         troveName = "image-%s" % hostname
-        troveVersion = img.version
+        troveVersion = imageId
         RegularFile = productMgr.reposMgr.RegularFile
         streamMap = dict((os.path.basename(x),
             RegularFile(contents=file(x), config=False)) for x in filePaths)
