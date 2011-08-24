@@ -4582,9 +4582,9 @@ class AntiRecursiveSaving(XMLTestCase):
         xml2 = xml.replace("Secure Shell (SSH)", "Special Hacker Interface (SHI)")
         response = self._put("inventory/systems/%s" % self.system.pk,
             data=xml2, username='admin', password='password')
-        # this raised a 404 because one of the objects we tried to save
-        # did not exist
-        self.assertEquals(response.status_code, 404)
+        # this raised a 400 because one of the objects we tried to save
+        # did not exist, bad input.
+        self.assertEquals(response.status_code, 400)
         response = self._get("inventory/systems/%s" % self.system.pk,
             username='admin', password='password')
         self.assertEquals(response.status_code, 200)
@@ -4611,10 +4611,8 @@ class AntiRecursiveSaving(XMLTestCase):
         response = self._post("inventory/systems",
             username='admin', password='password',
             data=testsxml.system_post_forge_object)
-        # object didn't exist, so causes a 404... not quite intuitive as we catch
-        # that generically, non GET requests MAY want to catch DjangoNotFound and
-        # return something that means bad input!  (FIXME)
-        self.assertEquals(response.status_code, 404)
+        # sub object didn't exist, so causes a 400, bad input
+        self.assertEquals(response.status_code, 400)
         interfaces = list(models.ManagementInterface.objects.all())
         self.assertEquals(len(interfaces), 3, 'no interfaces added')
 

@@ -69,8 +69,14 @@ class ExceptionLoggerMiddleware(BaseMiddleware):
     def process_exception(self, request, exception):
 
         if isinstance(exception, core_exc.ObjectDoesNotExist):
-            fault = models.Fault(code=404, message=str(exception))
-            response = HttpResponse(status=404, content_type='text/xml')
+            # django not found in a get/delete is usually a bad URL
+            # in a PUT/POST, it's usually trying to insert or 
+            # mangle something in a way that does not align with the DB
+            code=404
+            if request.method not in [ 'GET', 'DELETE' ]:
+                code = 400
+            fault = models.Fault(code=code, message=str(exception))
+            response = HttpResponse(status=code, content_type='text/xml')
             response.content = fault.to_xml(request)
             return response
 
