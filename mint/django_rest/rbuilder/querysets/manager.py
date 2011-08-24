@@ -362,7 +362,7 @@ class QuerySetManager(basemanager.BaseManager):
         ''' 
 
         if type(resource) == models.QuerySet:
-            return resource           
+            return [ resource ]           
   
         # TODO -- make this more generic / compress
         tags = []

@@ -46,7 +46,10 @@ class RbacTestCase(XMLTestCase):
             name='datacenter')
         self.lab_queryset          = querymodels.QuerySet.objects.get(
             name='lab')
-        
+        self.all_queryset          = querymodels.QuerySet.objects.get(
+            name='All Systems'
+        )       
+ 
         self.test_querysets = [
             self.tradingfloor_queryset, 
             self.datacenter_queryset, 
@@ -541,8 +544,40 @@ class RbacEngineTests(RbacTestCase):
         )
         self.assertEquals(response.status_code, 204, 'authorized delete')
 
-   
-        
+        actual_qs = list(querymodels.QuerySet.objects.all())
+
+        # admin can see all query sets
+        url = "query_sets/;start_index=0;limit=9999"
+        response = self._get(url,
+               username='admin',
+               password='password'
+        )
+        self.assertEquals(response.status_code, 200, 'qs lookup')
+        xobj_querysets = xobj.parse(response.content)
+        results = xobj_querysets.query_sets.query_set
+        self.assertEquals(len(results), len(actual_qs), 'admin gets full queryset results')
+
+        # syadmin user can only see some query sets       
+        response = self._get(url,
+               username=self.sysadmin_user.user_name,
+               password='password'
+        )
+        self.assertEquals(response.status_code, 200, 'qs lookup')
+        xobj_querysets = xobj.parse(response.content)
+        results = xobj_querysets.query_sets.query_set
+        #self.assertEquals(len(results), 99, 'sysadmin user gets fewer results')
+ 
+        # sysadmin user CAN read the datacenter queryset
+        # TODO
+
+        # intern user CANNOT read the datacenter query set
+        # because he hasn't been given permissions on it
+        # TODO
+
+        # sysadmin user CANNOT use the all systems queryset
+        # because he hasn't been given permissions on it
+        # TODO       
+ 
     def testWriteImpliesRead(self):
         # if you can write to something, you can read
         # even if permission isn't in DB

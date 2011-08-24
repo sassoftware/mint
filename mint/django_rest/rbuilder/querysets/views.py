@@ -24,7 +24,7 @@ class QuerySetService(BaseQuerySetService):
     @return_xml
     @access.authenticated
     def rest_GET(self, request, query_set_id=None):
-        user = self.mgr.getSessionInfo().user
+        user = self.mgr.getSessionInfo().user[0]
         if query_set_id is None:
             querysets = self.mgr.getQuerySets() 
             return self.mgr.filterRbacQuerysets(user, querysets, request)
