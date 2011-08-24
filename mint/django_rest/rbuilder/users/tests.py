@@ -132,7 +132,7 @@ class UsersTestCase(XMLTestCase):
         response = self._put('users/10000',
             data=testsxml.users_put_xml,
             username='admin', password='password')
-        self.assertEquals(response.status_code, 404)
+        self.assertEquals(response.status_code, 400)
 
         # Unauthenticated
         response = self._put('users/1',
