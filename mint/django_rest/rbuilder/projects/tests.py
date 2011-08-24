@@ -404,6 +404,27 @@ class ProjectsTestCase(XMLTestCase):
         response = self._get(url,
             username="testuser", password="password")
         self.assertEquals(response.status_code, 200)
-        images = xobj.parse(response.content).images.image
+        images = xobj.parse(response.content).images
+        self.failUnlessEqual(images.id, 'http://testserver/api/v1/projects/chater-foo/project_branches/chater-foo.eng.rpath.com@rpath:chater-foo-trunk/project_branch_stages/Development/images;start_index=0;limit=10')
+
+        images = images.image
         self.failUnlessEqual([ x.name for x in images ],
             ['image-1', 'image-2', ])
+
+        # Test project images too
+        url = 'projects/%s' % (prj.short_name, )
+        response = self._get(url,
+            username="testuser", password="password")
+        self.assertEquals(response.status_code, 200)
+        project = xobj.parse(response.content).project
+        self.failUnlessEqual(project.images.id, 'http://testserver/api/v1/projects/chater-foo/images')
+        url += '/images'
+        response = self._get(url,
+            username="testuser", password="password")
+        self.assertEquals(response.status_code, 200)
+        images = xobj.parse(response.content).images
+        self.failUnlessEqual(images.id, 'http://testserver/api/v1/projects/chater-foo/images;start_index=0;limit=10')
+
+        images = images.image
+        self.failUnlessEqual([ x.name for x in images ],
+            ['image from fixture', 'image-1', 'image-2', ])

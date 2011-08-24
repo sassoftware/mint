@@ -452,8 +452,10 @@ class Images(modellib.Collection):
     
     actions = D(modellib.SyntheticField(jobmodels.Actions),
         "actions available on the images")
-             
-               
+
+    def get_url_key(self, *args, **kwargs):
+        return self.url_key
+
 class Image(modellib.XObjIdModel):
     class Meta:
         db_table = u'builds'
