@@ -45,7 +45,7 @@
     <field to="projects.release" name="release" rel="ManyToOneRel"><None></None></field>
     <field type="IntegerField" name="build_type">2</field>
     <field type="CharField" name="job_uuid"><None></None></field>
-    <field type="CharField" name="name"><None></None></field>
+    <field type="CharField" name="name">image from fixture</field>
     <field type="TextField" name="description"><None></None></field>
     <field type="CharField" name="trove_name"><None></None></field>
     <field type="CharField" name="trove_version"><None></None></field>

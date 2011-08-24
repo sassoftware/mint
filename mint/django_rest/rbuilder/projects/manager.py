@@ -387,9 +387,12 @@ class ProjectManager(basemanager.BaseManager):
 
     @exposed
     def getImagesForProject(self, short_name):
+        project = self.getProject(short_name)
         Images = models.Images()
-        Images.image = sorted(models.Image.objects.filter(project__short_name=short_name),
-            key=lambda x: x.image_id)
+        Images.image = models.Image.objects.filter(
+            project__project_id=project.project_id).order_by('image_id')
+        Images.url_key = [ short_name ]
+        Images.view_name = 'ProjectImages'
         return Images
 
     @exposed
@@ -481,6 +484,8 @@ class ProjectManager(basemanager.BaseManager):
         # Sort images by image id
         images = models.Images()
         images.image = [ x[1] for x in sorted(imagesMap.items()) ]
+        images.url_key = [ project_short_name, project_branch_label, stage_name ]
+        images.view_name = 'ProjectBranchStageImages'
         return images
 
 """    
