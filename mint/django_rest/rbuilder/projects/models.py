@@ -497,7 +497,7 @@ class Image(modellib.XObjIdModel):
         related_name='updated_images', null=True)
     build_count = models.IntegerField(null=True, default=0,
         db_column="buildcount")
-    version = models.ForeignKey(ProjectVersion, null=True,
+    project_branch = models.ForeignKey(ProjectVersion, null=True,
         related_name="images",
         db_column='productversionid')
     stage_name = models.CharField(max_length=255, db_column='stagename',

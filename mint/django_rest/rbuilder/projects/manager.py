@@ -475,7 +475,7 @@ class ProjectManager(basemanager.BaseManager):
         # a stage name
         imagesMap.update((x.image_id, x)
             for x in models.Image.objects.filter(
-                version__branch_id=stage.project_branch.branch_id,
+                project_branch__branch_id=stage.project_branch.branch_id,
                 stage_name=stage.name))
 
         # Sort images by image id

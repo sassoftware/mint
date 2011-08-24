@@ -378,13 +378,13 @@ class ProjectsTestCase(XMLTestCase):
 
         # First image has no stage reference
         image = models.Image(name="image-1", description="image-1",
-            project=prj, version=branch, build_type=10,
+            project=prj, project_branch=branch, build_type=10,
             stage_name=stage.name)
         image.save()
 
         # Second image has a stage reference
         image = models.Image(name="image-2", description="image-2",
-            project=prj, version=branch, project_branch_stage=stage, build_type=10)
+            project=prj, project_branch=branch, project_branch_stage=stage, build_type=10)
         image.save()
 
         url = ('projects/%s/project_branches/%s/project_branch_stages/%s' %
@@ -395,6 +395,10 @@ class ProjectsTestCase(XMLTestCase):
 
         # Make sure we have a link for images
         self.failUnlessEqual(stg.images.id, 'http://testserver/api/v1/projects/chater-foo/project_branches/chater-foo.eng.rpath.com@rpath:chater-foo-trunk/project_branch_stages/Development/images')
+
+        # Make sure we have a project_branch
+        self.failUnlessEqual(stg.project_branch.id, 'http://testserver/api/v1/projects/chater-foo/project_branches/chater-foo.eng.rpath.com@rpath:chater-foo-trunk')
+        self.failUnlessEqual(stg.project_branch.name, 'trunk')
 
         url += '/images'
         response = self._get(url,
