@@ -17,6 +17,7 @@ from mint.django_rest.rbuilder import service
 from mint.django_rest.rbuilder.inventory import models
 from mint.django_rest.rbuilder.projects import models as projectsmodels
 from mint.django_rest.rbuilder.rbac.rbacauth import rbac
+from mint.django_rest.rbuilder.errors import PermissionDenied
 
 class RestDbPassthrough(resource.Resource):
     pass
@@ -403,6 +404,8 @@ class InventorySystemsSystemService(BaseInventoryService):
         oldSystem = self.mgr.getSystem(system_id)
         if not oldSystem:
             return HttpResponseNotFound()
+        if oldSystem.pk != system.pk:
+            raise PermissionDenied()
         # This is a terrible place to put logic, but until we decide to pass
         # the request into the manager, we don't have a way around it
         mb = models.SystemState.MOTHBALLED
