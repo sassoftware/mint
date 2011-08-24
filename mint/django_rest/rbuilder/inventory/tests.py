@@ -4556,3 +4556,55 @@ refProductDefintion1 = """\
   <searchPaths/>
 </productDefinition>
 """
+
+class AntiRecursiveSaving(XMLTestCase):
+    '''
+    Generalized xobj test.  Make sure that when saving an object with child members, 
+    in this case a system & a management interface, and we go to EDIT
+    that system, we can't CREATE a new, non-existant management interface OR
+    rename an existing management interface.   This, if present, would
+    allow for priveledge escalation.
+    '''
+    def setUp(self):
+        # make a new system
+        XMLTestCase.setUp(self)
+        self.system = self.newSystem(name="blinky", description="ghost")
+        self.system.management_interface = models.ManagementInterface.objects.get(name='ssh')
+        self.mgr.addSystem(self.system)
+
+    def testCannotModifySubObjects(self):
+        # make sure that fields in foreign key relationships, when saved,
+        # do not allow editing the object represented by the FK.
+        response = self._get("inventory/systems/%s" % self.system.pk,
+            username='admin', password='password')
+        xml = response.content
+        self.assertTrue(response.status_code, 200)
+        xml2 = xml.replace("Secure Shell (SSH)", "Special Hacker Interface (SHI)")
+        response = self._put("inventory/systems/%s" % self.system.pk,
+            data=xml2, username='admin', password='admin')
+        self.assertTrue(response.status_code, 200)
+        response = self._get("inventory/systems/%s" % self.system.pk,
+            username='admin', password='password')
+        self.assertTrue(response.status_code, 200)
+        self.assertTrue(response.content.find("Hacker Interface") == -1)
+
+    def testCannotCreateNewSubObjects(self):
+        # make sure we do not allow creating new sub objects on a put.
+        response = self._get("inventory/systems/%s" % self.system.pk,
+            username='admin', password='password')
+        xml = response.content
+        xml2 = xml.replace("management_interfaces/3", "management_interfaces/9999")
+        xml2 = xml2.replace("Secure Shell (SSH)", "Special Hacker Interface (SHI)")
+        response = self._put("inventory/systems/%s" % self.system.pk,
+            data=xml2, username='admin', password='admin')
+        self.assertTrue(response.status_code, 200)
+        response = self._get("inventory/systems/%s" % self.system.pk,
+            username='admin', password='password')
+        self.assertTrue(response.status_code, 200)
+        self.assertTrue(response.content.find("Hacker Interface") == -1)
+        self.assertTrue(response.content.find("management_interfaces/4") == -1)
+        # make sure we do not allow saving new sub objects on a post...
+        # TODO
+
+ 
+
