@@ -56,7 +56,7 @@
     <field type="DecimalField" name="time_updated">1</field>
     <field to="users.user" name="updated_by" rel="ManyToOneRel"><None></None></field>
     <field type="IntegerField" name="build_count">0</field>
-    <field to="projects.projectversion" name="version" rel="ManyToOneRel"><None></None></field>
+    <field to="projects.projectversion" name="project_branch" rel="ManyToOneRel"><None></None></field>
     <field type="CharField" name="stage_name"></field>
     <field type="IntegerField" name="status">-1</field>
     <field type="TextField" name="status_message"></field>

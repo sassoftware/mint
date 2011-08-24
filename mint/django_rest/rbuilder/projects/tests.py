@@ -367,3 +367,43 @@ class ProjectsTestCase(XMLTestCase):
         self.assertEquals(response.status_code, 200)
         image = models.Image.objects.get(pk=image.pk)
         self.assertEquals(image.build_type, 10)
+
+    def testGetProjectBranchStage(self):
+        self._initProject()
+        prj = models.Project.objects.get(name='chater-foo')
+        branch = models.ProjectVersion.objects.get(
+            project__project_id=prj.project_id, name='trunk')
+        stage = models.Stage.objects.get(
+            project_branch__branch_id=branch.branch_id, name='Development')
+
+        # First image has no stage reference
+        image = models.Image(name="image-1", description="image-1",
+            project=prj, project_branch=branch, build_type=10,
+            stage_name=stage.name)
+        image.save()
+
+        # Second image has a stage reference
+        image = models.Image(name="image-2", description="image-2",
+            project=prj, project_branch=branch, project_branch_stage=stage, build_type=10)
+        image.save()
+
+        url = ('projects/%s/project_branches/%s/project_branch_stages/%s' %
+                (prj.short_name, branch.label, stage.name))
+        response = self._get(url)
+        self.assertEquals(response.status_code, 200)
+        stg = xobj.parse(response.content).project_branch_stage
+
+        # Make sure we have a link for images
+        self.failUnlessEqual(stg.images.id, 'http://testserver/api/v1/projects/chater-foo/project_branches/chater-foo.eng.rpath.com@rpath:chater-foo-trunk/project_branch_stages/Development/images')
+
+        # Make sure we have a project_branch
+        self.failUnlessEqual(stg.project_branch.id, 'http://testserver/api/v1/projects/chater-foo/project_branches/chater-foo.eng.rpath.com@rpath:chater-foo-trunk')
+        self.failUnlessEqual(stg.project_branch.name, 'trunk')
+
+        url += '/images'
+        response = self._get(url,
+            username="testuser", password="password")
+        self.assertEquals(response.status_code, 200)
+        images = xobj.parse(response.content).images.image
+        self.failUnlessEqual([ x.name for x in images ],
+            ['image-1', 'image-2', ])

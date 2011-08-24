@@ -400,8 +400,7 @@ class Stage(modellib.XObjIdModel):
         self.groups = Group(href=href % (short_name, label))
         xobjModel = modellib.XObjIdModel.serialize(self, request)
         return xobjModel
-        
-        
+
 class Releases(modellib.Collection):
     class Meta:
         abstract = True
@@ -469,9 +468,11 @@ class Image(modellib.XObjIdModel):
     image_id = models.AutoField(primary_key=True, db_column='buildid')
     project = modellib.DeferredForeignKey(Project, db_column='projectid',
         related_name="images", view_name="ProjectImages")
-    #The images need to be linked to the project branch stages and the project     
-    project_branch_stage = modellib.DeferredForeignKey(Stage, db_column='stageid',
-        related_name="images", view_name="ProjectImages", null=True)
+    #The images need to be linked to the project branch stages and the project
+    #Until then, hide project_branch_stage
+    project_branch_stage = modellib.XObjHidden(
+        modellib.DeferredForeignKey(Stage, db_column='stageid',
+        related_name="images", view_name="ProjectBranchStageImages", null=True))
     release = models.ForeignKey(Release, null=True,
         db_column='pubreleaseid')
     build_type = models.IntegerField(db_column="buildtype")
@@ -496,7 +497,7 @@ class Image(modellib.XObjIdModel):
         related_name='updated_images', null=True)
     build_count = models.IntegerField(null=True, default=0,
         db_column="buildcount")
-    version = models.ForeignKey(ProjectVersion, null=True,
+    project_branch = models.ForeignKey(ProjectVersion, null=True,
         related_name="images",
         db_column='productversionid')
     stage_name = models.CharField(max_length=255, db_column='stagename',

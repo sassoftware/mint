@@ -132,6 +132,15 @@ class ProjectImageService(service.BaseService):
             model = self.mgr.getImagesForProject(short_name)
         return model
 
+class ProjectBranchStageImagesService(service.BaseService):
+    def get(self, request, project_short_name, project_branch_label, stage_name):
+        return self.mgr.getProjectBranchStageImages(project_short_name,
+            project_branch_label, stage_name)
+
+    @return_xml
+    def rest_GET(self, request, project_short_name, project_branch_label, stage_name):
+        return self.get(request, project_short_name, project_branch_label, stage_name)
+
 """        
 class ProjectJobDescriptorServiceservice.BaseService):
 
