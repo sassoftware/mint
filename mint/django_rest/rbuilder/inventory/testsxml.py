@@ -3367,3 +3367,39 @@ system_assimilator_xml="""<job>
 <job_type id='https://localhost/api/v1/inventory/event_types/12'>system assimilation</job_type>
 </job>
 """
+
+system_post_forge_object = """<?xml version="1.0" encoding="UTF-8"?>
+<system>
+  <managing_zone id="http://testserver/api/v1/inventory/zones/1">Local rBuilder</managing_zone>
+  <ssl_client_key>testsystemsslclientkey</ssl_client_key>
+  <out_of_date>False</out_of_date>
+  <registration_date/>
+  <generated_uuid>testsystemgenerateduuid</generated_uuid>
+  <networks>
+    <network>
+      <active/>
+      <device_name>eth0</device_name>
+      <dns_name>testnetwork.example.com</dns_name>
+      <ip_address>1.1.1.1</ip_address>
+      <ipv6_address/>
+      <netmask>255.255.255.0</netmask>
+      <port_type>lan</port_type>
+      <pinned/>
+    </network>
+  </networks>
+  <ssl_client_certificate>testsystemsslclientcertificate</ssl_client_certificate>
+  <ssl_server_certificate>testsystemsslservercertificate</ssl_server_certificate>
+  <stage/>
+  <launch_date/>
+  <ssl_client_certificate>testsystemsslclientcertificate</ssl_client_certificate>
+  <description>testsystemdescription</description>
+  <system_log id="http://testserver/api/v1/inventory/systems/1/system_log"/>
+  <target_system_id/>
+  <target_system_name/>
+  <target_system_description/>
+  <target_system_state/>
+  <name>testsystemname</name>
+  <local_uuid>testsystemlocaluuid</local_uuid>
+  <major_version/>
+  <management_interface id="http://testserver/api/v1/inventory/management_interfaces/9999">Should Not Exist</management_interface>
+</system>"""

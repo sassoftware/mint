@@ -4578,14 +4578,16 @@ class AntiRecursiveSaving(XMLTestCase):
         response = self._get("inventory/systems/%s" % self.system.pk,
             username='admin', password='password')
         xml = response.content
-        self.assertTrue(response.status_code, 200)
+        self.assertEquals(response.status_code, 200)
         xml2 = xml.replace("Secure Shell (SSH)", "Special Hacker Interface (SHI)")
         response = self._put("inventory/systems/%s" % self.system.pk,
-            data=xml2, username='admin', password='admin')
-        self.assertTrue(response.status_code, 200)
+            data=xml2, username='admin', password='password')
+        # this raised a 404 because one of the objects we tried to save
+        # did not exist
+        self.assertEquals(response.status_code, 404)
         response = self._get("inventory/systems/%s" % self.system.pk,
             username='admin', password='password')
-        self.assertTrue(response.status_code, 200)
+        self.assertEquals(response.status_code, 200)
         self.assertTrue(response.content.find("Hacker Interface") == -1)
 
     def testCannotCreateNewSubObjects(self):
@@ -4596,15 +4598,23 @@ class AntiRecursiveSaving(XMLTestCase):
         xml2 = xml.replace("management_interfaces/3", "management_interfaces/9999")
         xml2 = xml2.replace("Secure Shell (SSH)", "Special Hacker Interface (SHI)")
         response = self._put("inventory/systems/%s" % self.system.pk,
-            data=xml2, username='admin', password='admin')
+            data=xml2, username='admin', password='password')
         self.assertTrue(response.status_code, 200)
         response = self._get("inventory/systems/%s" % self.system.pk,
             username='admin', password='password')
-        self.assertTrue(response.status_code, 200)
+        self.assertEquals(response.status_code, 200)
         self.assertTrue(response.content.find("Hacker Interface") == -1)
         self.assertTrue(response.content.find("management_interfaces/4") == -1)
-        # make sure we do not allow saving new sub objects on a post...
-        # TODO
 
- 
+    def testPostShouldNotInjectNewSubObjects(self):
+        # make sure we do not allow saving new sub objects on a post...
+        response = self._post("inventory/systems",
+            username='admin', password='password',
+            data=testsxml.system_post_forge_object)
+        # object didn't exist, so causes a 404... not quite intuitive as we catch
+        # that generically, non GET requests MAY want to catch DjangoNotFound and
+        # return something that means bad input!  (FIXME)
+        self.assertEquals(response.status_code, 404)
+        interfaces = list(models.ManagementInterface.objects.all())
+        self.assertEquals(len(interfaces), 3, 'no interfaces added')
 
