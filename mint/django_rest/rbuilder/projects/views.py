@@ -10,8 +10,8 @@ from django.http import HttpResponse
 from mint.django_rest.deco import access, return_xml, requires
 from mint.django_rest.rbuilder import service
 from mint.django_rest.rbuilder.inventory.views import StageProxyService
-from mint.django_rest.rbuilder.projects import models as projectsmodels
 from mint.django_rest.rbuilder.rbac.rbacauth import rbac
+from mint.django_rest.rbuilder.errors import PermissionDenied
 
 
 class PCallbacks(object):
@@ -19,28 +19,26 @@ class PCallbacks(object):
     RBAC callbacks for Project(s)
     """
     @staticmethod
-    def _checkPermissions(view, project_short_name, action):
+    def _checkPermissions(view, request, project_short_name, action):
         if project_short_name:
             obj = view.mgr.getProject(project_short_name)
-        else:
-            print 'Please change this once project collections have rbac support'
-            return True
-        user = view.mgr.getSessionInfo().user[0]
-        return view.mgr.userHasRbacPermission(user, obj, action)
-    
-    # Come back and change signature, passing in project_short_name as a kwarg might be
-    # a security hole
+            user = view.mgr.getSessionInfo().user[0]
+            return view.mgr.userHasRbacPermission(user, obj, action)
+        elif request._is_admin:
+            return view.mgr.getProjects()
+        raise PermissionDenied()
+
     @staticmethod
     def rbac_can_read_project_by_short_name(view, request, project_short_name=None, *args, **kwargs):
-        return PCallbacks._checkPermissions(view, project_short_name, 'rmember')
+        return PCallbacks._checkPermissions(view, request, project_short_name, 'rmember')
 
     @staticmethod
     def rbac_can_write_project_by_short_name(view, request, project_short_name, *args, **kwargs):
-        return PCallbacks._checkPermissions(view, project_short_name, 'wmember')
+        return PCallbacks._checkPermissions(view, request, project_short_name, 'wmember')
     
     @staticmethod
     def rbac_can_delete_project_by_short_name(view, request, project_short_name, *args, **kwargs):
-        return PCallbacks._checkPermissions(view, project_short_name, 'wmember')
+        return PCallbacks._checkPermissions(view, request, project_short_name, 'wmember')
         
 
 class PBSCallbacks(object):
