@@ -67,7 +67,7 @@ class JobsTestCase(BaseJobsTest):
 
     def testGetSystemJobs(self):
         response = self._get('inventory/systems/%s/jobs/' % \
-            self.system.pk)
+            self.system.pk, username="admin", password="password")
         self.assertEquals(response.status_code, 200)
         self.assertXMLEquals(response.content, testsxml.systems_jobs_xml)
 
