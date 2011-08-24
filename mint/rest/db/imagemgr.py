@@ -643,7 +643,8 @@ class ImageManager(manager.Manager):
                 factoryName=factoryName, admin=True,
                 metadata=metadataDict)
         except Exception, e:
-            self._setStatus(imageId, message="Commit failed: %s" % (e, ))
+            self._setStatus(imageId, code=jobstatus.FAILED,
+                message="Commit failed: %s" % (e, ))
             log.error("Error: %s", e)
             raise
         else:
