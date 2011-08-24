@@ -187,16 +187,26 @@ class RbacManager(basemanager.BaseManager):
         Modify a querysets collection to contain only the querysets
         the user is allowed to see, leaving the others hidden.
         '''
-        # TODO: optimize database access
         if request is not None and request._is_admin:
             return querysets_obj
         if getattr(user, '_is_admin', False):
             return querysets_obj
         querysets = querysets_obj.query_set
+
+        user_roles = models.RbacUserRole.objects.select_related().filter(
+            user = user
+        )
+        my_roles = [ x.role for x in user_roles ] 
+        allowed_actions = [ 'rmember', 'wmember', 'rqueryset', 'wqueryset' ]
+        perms = models.RbacPermission.objects.select_related().filter(
+           rbac_role__in = my_roles,
+           action__in    = allowed_actions
+        )
+
         results = []
-        for q in querysets:
-            if self.mgr.userHasRbacPermission(user, q, 'rqueryset', request=request):
-                results.append(q)
+        for p in perms:
+            if p.queryset not in results:
+                results.append(p.queryset)
         querysets_obj.query_set = results
         return querysets_obj
 
