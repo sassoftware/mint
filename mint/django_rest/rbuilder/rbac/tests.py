@@ -462,6 +462,7 @@ class RbacEngineTests(RbacTestCase):
 
         mk_permission(self.datacenter_queryset, 'sysadmin',  WMEMBER)
         mk_permission(self.datacenter_queryset, 'developer', RMEMBER)
+        mk_permission(self.all_queryset, 'sysadmin', RQUERYSET)
 
         self.admin_user     = usersmodels.User.objects.get(user_name='admin')
         self.admin_user._is_admin = True
@@ -565,18 +566,33 @@ class RbacEngineTests(RbacTestCase):
         self.assertEquals(response.status_code, 200, 'qs lookup')
         xobj_querysets = xobj.parse(response.content)
         results = xobj_querysets.query_sets.query_set
-        #self.assertEquals(len(results), 99, 'sysadmin user gets fewer results')
+        self.assertEquals(len(results), 2, 'sysadmin user gets fewer results')
  
-        # sysadmin user CAN read the datacenter queryset
-        # TODO
-
-        # intern user CANNOT read the datacenter query set
+        # sysadmin user CAN see & use the all systems queryset
+        # because he has permissions on it
+        response = self._get("query_sets/%s" % self.all_queryset.pk,
+            username=self.sysadmin_user.user_name,
+            password='password'
+        )
+        self.assertEquals(response.status_code, 200)
+        response = self._get("query_sets/%s/all" % self.all_queryset.pk,
+            username=self.sysadmin_user.user_name,
+            password='password'
+        )
+        self.assertEquals(response.status_code, 200)
+ 
+        # intern user can't see or use the datacenter query set
         # because he hasn't been given permissions on it
-        # TODO
-
-        # sysadmin user CANNOT use the all systems queryset
-        # because he hasn't been given permissions on it
-        # TODO       
+        response = self._get("query_sets/%s" % self.all_queryset.pk,
+            username=self.intern_user.user_name,
+            password='password'
+        )
+        self.assertEquals(response.status_code, 403)
+        response = self._get("query_sets/%s/all" % self.all_queryset.pk,
+            username=self.intern_user.user_name,
+            password='password'
+        )
+        self.assertEquals(response.status_code, 403)
  
     def testWriteImpliesRead(self):
         # if you can write to something, you can read
