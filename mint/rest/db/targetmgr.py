@@ -60,24 +60,55 @@ class TargetManager(manager.Manager):
                     targetId, name, value)
 
     def _addTargetQuerySet(self, targetId, targetName, targetType):
-        from mint.django_rest.rbuilder.manager import rbuildermanager
-        from mint.django_rest.rbuilder.querysets import models
-        log.info("Creating a new query set for target %s." % targetName)
-        filterEntry, created = models.FilterEntry.objects.get_or_create(
-            field='target.target_id', operator='EQUAL', value=targetId)
-        filterEntry.save()
+        # Ideally we would like to handle this from django, but once we
+        # add the target in restlib, the db is locked, so django can't
+        # do anything
+
         querySetName = "All %s systems (%s)" % (targetName, targetType)
-        querySet, created = models.QuerySet.objects.get_or_create(name=querySetName, 
-            description=querySetName, resource_type='system')
-        if not created:
+
+        cu = self.db.cursor()
+
+        cu.execute("SELECT query_set_id FROM querysets_queryset WHERE name=?",
+            querySetName)
+        rows = cu.fetchall()
+        if not rows:
+            log.info("Creating a new query set for target %s." % targetName)
+            cu.execute("""
+                INSERT INTO querysets_queryset
+                (name, description, resource_type, created_date, modified_date)
+                VALUES (?, ?, ?, current_timestamp, current_timestamp)""",
+                querySetName, querySetName, 'system')
+            querySetId = cu.lastrowid
+        else:
             log.info("Already a query set named %s, not creating a new one." %
                 querySetName)
-            return
-        querySet.filter_entries.add(filterEntry)
-        rbuilderManager = rbuildermanager.RbuilderManager(self.cfg, 
-            self.auth.username)
-        querySet.can_modify = False
-        return rbuilderManager.addQuerySet(querySet)
+            querySetId = rows[0][0]
+
+        feField = 'target.target_id'
+        feOperator = 'EQUAL'
+        feValue = targetId
+        cu.execute("""SELECT filter_entry_id FROM querysets_filterentry
+            WHERE field=? AND operator=? AND value=?""",
+            feField, feOperator, feValue)
+        rows = cu.fetchall()
+        if not rows:
+            cu.execute("""
+                INSERT INTO querysets_filterentry (field, operator, value)
+                VALUES (?, ?, ?)""",
+                feField, feOperator, feValue)
+            filterEntryId = cu.lastrowid
+        else:
+            filterEntryId = rows[0][0]
+
+        cu.execute("""SELECT * FROM querysets_queryset_filter_entries
+            WHERE queryset_id = ? AND filterentry_id = ?""",
+            querySetId, filterEntryId)
+        if not cu.fetchall():
+            cu.execute("""
+                INSERT INTO querysets_queryset_filter_entries
+                    (queryset_id, filterentry_id)
+                VALUES (?, ?)""",
+                querySetId, filterEntryId)
 
     def getTargetData(self, targetType, targetName):
         cu = self.db.cursor()
