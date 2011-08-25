@@ -13,7 +13,6 @@ from mint.django_rest.rbuilder import modellib
 from mint.django_rest.rbuilder.users import models as usersmodels
 from mint.django_rest.rbuilder.querysets import models as querymodels
 from xobj import xobj
-import urlparse
 from django.core.urlresolvers import reverse
 
 class RbacRoles(modellib.Collection):
