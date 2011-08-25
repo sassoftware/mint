@@ -2,7 +2,6 @@
 
 import os
 import testsetup
-from testutils import mock
 
 from mint import mint_error
 from mint.rest import errors
