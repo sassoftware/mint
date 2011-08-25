@@ -522,7 +522,13 @@ class RestDBMixIn(object):
             db.productMgr.setProductVersionDefinition = mock.MockObject()
             db.reposMgr = mock.MockObject()
         db.commit()
+        self.setDjangoDB()
         return db
+
+    def setDjangoDB(self):
+        from django.db import connections, DEFAULT_DB_ALIAS
+        sd = connections[DEFAULT_DB_ALIAS].settings_dict
+        sd['NAME'] = sd['TEST_NAME'] = self.mintCfg.dbPath
 
     def createUser(self, name, password=None, admin=False):
         db = self.openRestDatabase()
