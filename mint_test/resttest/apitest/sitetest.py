@@ -45,8 +45,8 @@ class SiteTest(restbase.BaseRestTest):
   <accountCreationRequiresAdmin>false</accountCreationRequiresAdmin>
   <identity>
     <rbuilderId></rbuilderId>
-    <serviceLevel status="Unknown" daysRemaining="-1" expired="true" limited="true"/>
-    <registered>false</registered>
+    <serviceLevel status="Unknown" daysRemaining="-1" expired="false" limited="false"/>
+    <registered>true</registered>
   </identity>
   <products href="http://%(server)s:%(port)s/api/products/"/>
   <users href="http://%(server)s:%(port)s/api/users/"/>

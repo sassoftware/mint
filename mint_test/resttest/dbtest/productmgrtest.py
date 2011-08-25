@@ -237,7 +237,7 @@ class ProductManagerTest(mint_rephelp.MintDatabaseHelper):
 
         reposMgr.addUserByMd5._mock.assertCalled(
                                       'foo.rpath.local2', 'other',
-                                       password, salt.decode('hex'),
+                                       password, salt,
                                        userlevels.USER)
         publisher.notify._mock.assertCalled('UserProductAdded', 
                                             otherId, productId, 

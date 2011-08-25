@@ -1,4 +1,6 @@
 #!/usr/bin/python
+
+import os
 import testsetup
 from testutils import mock
 
@@ -7,6 +9,14 @@ from mint.rest import errors
 from mint_test import mint_rephelp
 
 class UserManagerTest(mint_rephelp.MintDatabaseHelper):
+    def setUp(self):
+        mint_rephelp.MintDatabaseHelper.setUp(self)
+        from mint.rest.db import targetmgr
+        tmgr = targetmgr.TargetManager
+        if not os.path.exists(tmgr.TargetImportScriptPath):
+            self.mock(tmgr, 'importTargetSystems',
+                lambda *args, **kwargs: True)
+
     def testCancelUserAccount(self):
         db = self.openMintDatabase(createRepos=False)
         self.createUser('admin', admin=True)
