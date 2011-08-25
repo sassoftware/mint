@@ -283,6 +283,7 @@ class ProductManager(manager.Manager):
         createTime = time.time()
         creatorId = self.auth.userId > 0 and self.auth.userId or None
 
+        fqdn = self.reposMgr._getFqdn(hostname, domainname)
         try:
             product = self.getProduct(hostname)
             productId = product.productId
@@ -291,7 +292,6 @@ class ProductManager(manager.Manager):
             # repository url there.
             labelIdMap, repoMap, userMap, entMap = \
                 self.db.db.labels.getLabelsForProject(productId) 
-            fqdn = self.reposMgr._getFqdn(hostname, domainname)
             url = repoMap.get(fqdn, url)
         except errors.ItemNotFound:
             productId = None
@@ -307,7 +307,7 @@ class ProductManager(manager.Manager):
                     timeModified, timeCreated, backupExternal, database)
                     VALUES (?, ?, '', ?, ?, ?, ?, '', ?, ?, ?, ?, ?)''',
                     title, creatorId, hostname, hostname, domainname,
-                    '%s.%s' % (hostname, domainname), True,
+                    fqdn, True,
                     createTime, createTime, bool(backupExternal), database)
             productId = cu.lastrowid
 
