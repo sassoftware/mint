@@ -29,13 +29,6 @@ user_get_xml_with_roles = """
   <email>email@example.com</email>
   <full_name>ExampleIntern</full_name>
   <is_admin>false</is_admin>
-  <tags>
-    <user_tag>
-      <query_set id="http://testserver/api/v1/query_sets/4"/>
-      <user id="http://testserver/api/v1/users/2003"/>
-      <user_tag_id>5</user_tag_id>
-    </user_tag>
-  </tags>
   <rbac_user_roles>
     <rbac_user_role id="/api/v1/rbac/users/2003/roles/intern">
       <rbac_user_role_id>3</rbac_user_role_id>
