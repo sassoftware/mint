@@ -217,7 +217,7 @@ class Database(DBInterface):
         for row in cu:
             pvl.addProductVersion(row)
             pv = pvl.versions[-1]
-            pd = self.productMgr.getProductVersionDefinitionByProductVersion(pv)
+            pd = self.productMgr.getProductVersionDefinitionByProductVersion(hostname, pv)
             # Use sourceGroup here since this is really the name of the source
             # trove that needs to be cooked.
             pv.sourceGroup = pd.getImageGroup()
