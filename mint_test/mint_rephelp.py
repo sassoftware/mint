@@ -523,7 +523,15 @@ class RestDBMixIn(object):
             db.reposMgr = mock.MockObject()
         db.commit()
         self.setDjangoDB()
+        self.writeMintConfig()
         return db
+
+    def writeMintConfig(self):
+        cfgPath = os.path.join(self.workDir, "rbuilder.conf")
+        f = file(cfgPath, "w")
+        self.mintCfg.display(f)
+        f.close()
+        self.mock(config, 'RBUILDER_CONFIG', cfgPath)
 
     def setDjangoDB(self):
         from django.db import connections, DEFAULT_DB_ALIAS
