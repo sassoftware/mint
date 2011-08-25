@@ -23,32 +23,51 @@ class PCallbacks(object):
         if project_short_name:
             obj = view.mgr.getProject(project_short_name)
             user = view.mgr.getSessionInfo().user[0]
+            if request.method == 'PUT' and \
+                obj.short_name != project_short_name:
+                raise PermissionDenied()
             return view.mgr.userHasRbacPermission(user, obj, action)
         elif request._is_admin:
-            return view.mgr.getProjects()
+            return True
         raise PermissionDenied()
 
     @staticmethod
     def rbac_can_read_project_by_short_name(view, request, project_short_name=None, *args, **kwargs):
+        """
+        project_short_name needs to be a kwarg until the views are more granularly refactored.
+        """
         return PCallbacks._checkPermissions(view, request, project_short_name, 'rmember')
 
     @staticmethod
     def rbac_can_write_project_by_short_name(view, request, project_short_name, *args, **kwargs):
-        return PCallbacks._checkPermissions(view, request, project_short_name, 'wmember')
-    
-    @staticmethod
-    def rbac_can_delete_project_by_short_name(view, request, project_short_name, *args, **kwargs):
+        """
+        project_short_name always required for write to succeed, so don't make it kwarg
+        """
         return PCallbacks._checkPermissions(view, request, project_short_name, 'wmember')
         
 
 class PBSCallbacks(object):
     @staticmethod
-    def rbac_can_read_stage_by_project_short_name(*args, **kwargs):
-        return True # needs to change
+    def rbac_can_read_all_project_branches_stages(view, request, *args, **kwargs):
+        if request._is_admin:
+            return True
+        else:
+            raise PermissionDenied()
+    
+    @staticmethod
+    def rbac_can_read_stage_by_project(view, 
+        request, project_short_name, project_branch_label, stage_name=None, *args, **kwargs):
+        obj = view.mgr.getProjectBranchStage(project_short_name, project_branch_label, stage_name)
+        user = view.mgr.getSessionInfo().user[0]
+        if not stage_name and request._is_admin:
+            return True
+        elif stage_name:
+            return view.mgr.userHasRbacPermission(user, obj, 'rmember')
+        raise PermissionDenied()
 
 
 class AllProjectBranchesStagesService(service.BaseService):
-    @access.authenticated
+    @rbac(PBSCallbacks.rbac_can_read_all_project_branches_stages)
     @return_xml
     def rest_GET(self, request):
         return self.mgr.getAllProjectBranchStages()
@@ -123,7 +142,7 @@ class ProjectService(service.BaseService):
     def rest_PUT(self, request, project_short_name, project):
         return self.mgr.updateProject(project)
 
-    @rbac(PCallbacks.rbac_can_delete_project_by_short_name)
+    @rbac(PCallbacks.rbac_can_write_project_by_short_name)
     def rest_DELETE(self, request, project_short_name):
         project = self.get(project_short_name)
         self.mgr.deleteProject(project)
@@ -146,7 +165,7 @@ class ProjectStageService(service.BaseService):
 
 
 class ProjectBranchStageService(service.BaseService):
-    @rbac(PBSCallbacks.rbac_can_read_stage_by_project_short_name)
+    @rbac(PBSCallbacks.rbac_can_read_stage_by_project)
     @return_xml
     def rest_GET(self, request, project_short_name, project_branch_label, stage_name=None):
         return self.get(project_short_name, project_branch_label, stage_name)

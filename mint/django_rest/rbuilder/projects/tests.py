@@ -348,7 +348,7 @@ class ProjectsTestCase(XMLTestCase):
     def testGetAggregateProjectBranchStages(self):
         self._initProject()
         response = self._get('project_branch_stages/',
-            username="testuser", password="password")
+            username="admin", password="password")
         self.assertEquals(response.status_code, 200)
         stages = xobj.parse(response.content).project_branch_stages.project_branch_stage
         self.failUnlessEqual([ x.label for x in stages ],
