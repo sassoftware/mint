@@ -22,6 +22,26 @@ user_post_xml = """
 </user>
 """
 
+user_get_xml_with_roles = """
+<user id="http://testserver/api/v1/users/2003">
+  <blurb>something here</blurb>
+  <display_email>True</display_email>
+  <email>email@example.com</email>
+  <full_name>ExampleIntern</full_name>
+  <is_admin>false</is_admin>
+  <rbac_user_roles>
+    <rbac_user_role id="/api/v1/rbac/users/2003/roles/intern">
+      <rbac_user_role_id>3</rbac_user_role_id>
+      <role id="http://testserver/api/v1/rbac/roles/intern"/>
+      <user id="http://testserver/api/v1/users/2003"/>
+    </rbac_user_role>
+  </rbac_user_roles>
+  <user_groups/>
+  <user_id>2003</user_id>
+  <user_name>ExampleIntern</user_name>
+</user>
+"""
+
 # create a lab placeholder queryset
 lab_xml = """
 <query_set>

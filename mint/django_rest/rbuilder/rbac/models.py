@@ -13,6 +13,8 @@ from mint.django_rest.rbuilder import modellib
 from mint.django_rest.rbuilder.users import models as usersmodels
 from mint.django_rest.rbuilder.querysets import models as querymodels
 from xobj import xobj
+import urlparse
+from django.core.urlresolvers import reverse
 
 class RbacRoles(modellib.Collection):
     '''
@@ -137,8 +139,15 @@ class RbacUserRole(modellib.XObjIdModel):
     rbac_user_role_id = D(models.AutoField(primary_key=True),
         "the database ID for the rbac_user_role")
     role    =  D(modellib.ForeignKey(RbacRole, null=False), 'rbac_role id')
-    user    =  D(modellib.ForeignKey(usersmodels.User, null=False), 'user id')
+    user    =  D(modellib.ForeignKey(usersmodels.User, null=False, related_name='rbac_user_roles'), 'user id')
 
+    def serialize(self, request):
+        xobj_model = modellib.XObjIdModel.serialize(self, request)
+        xobj_model.id = self.get_absolute_url(request)
+        return xobj_model
+
+    def get_absolute_url(self, request, *args, **kwargs):
+        return reverse('RbacUserRole', args=[self.user.pk, self.role.pk])
  
 for mod_obj in sys.modules[__name__].__dict__.values():
     if hasattr(mod_obj, '_xobj'):

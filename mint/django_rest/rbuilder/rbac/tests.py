@@ -474,20 +474,16 @@ class RbacEngineTests(RbacTestCase):
         self.developer_user = mk_user('ExampleDeveloper', False, 'developer')
         self.intern_user    = mk_user('ExampleIntern', False, 'intern')
 
-        # summary of tests to come:
-        # admin user has full access
-        #    can READ on tradingfloor
-        #    can write on tradingfloor
-        # sysadmin user can WRITE on datacenter
-        #    read is implied
-        # developer can READ on datacenter
-        #    write is not granted
-        # developer lacks all permissions on tradingfloor
-        #    developer can NOT read
-        #    developer can NOT write
-        # loose system without context?  
-        #    admin can write
-        #    everyone else is locked out
+
+    def testUserRolesAppearInUserXml(self):
+
+        # make sure rbac role assignments show up on the user object
+        response = self._get("users/%s" % self.intern_user.pk,
+            username = self.intern_user.user_name,
+            password = 'password'
+        ) 
+        self.assertEquals(response.status_code, 200)
+        self.assertXMLEquals(response.content, testsxml.user_get_xml_with_roles)
 
     def testAdminUserHasFullAccess(self):
         # admin user can do everything regardless of context
