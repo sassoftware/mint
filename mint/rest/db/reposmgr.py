@@ -12,6 +12,7 @@ from mint import mint_error
 from mint import userlevels
 from mint.db import projects
 from mint.db import repository as reposdb
+from mint.lib import mintutils
 from mint.lib import unixutils
 from mint.rest import errors
 from mint.rest.api import models
@@ -20,6 +21,7 @@ from mint.rest.db import manager
 from conary import changelog
 from conary import conarycfg
 from conary import conaryclient
+from conary import trovetup
 from conary.conaryclient import filetypes
 from conary.repository import errors as reposerrors
 from conary.repository import shimclient
@@ -34,6 +36,7 @@ class RepositoryManager(manager.Manager):
         self.auth = auth
         self.profiler = None
         self.reposManager = reposdb.RepositoryManager(cfg, db.db._db)
+        self.cache = mintutils.CacheWrapper(cfg.memCache)
 
     def close(self):
         self.reposManager.close()
@@ -356,6 +359,9 @@ class RepositoryManager(manager.Manager):
         # commit the change set to the repository
         client.getRepos().commitChangeSet(changeSet)
 
+        troveTup = sorted(changeSet.newTroves.keys())[0]
+        return trovetup.TroveTuple(troveTup)
+
     def _getFqdn(self, hostname, domainname):
         if domainname:
             fqdn = '%s.%s' % (hostname, domainname)
@@ -538,3 +544,21 @@ class RepositoryManager(manager.Manager):
                 repoMap[host] = helperfuncs.rewriteUrlProtocolPort(url, 
                                                             protocol, port)
         return repoMap
+
+    def _getKeyValueMetadata(self, troveTups):
+        out = []
+        client = self.getAdminClient()
+        for trv in client.repos.getTroves(troveTups):
+            if trv:
+                metaDict = trv.troveInfo.metadata.get()['keyValue']
+                out.append(dict(metaDict.items()))
+            else:
+                out.append(None)
+        return out
+
+    def getKeyValueMetadata(self, troveTups):
+        return self.cache.coalesce(
+                keyPrefix='kvmeta:',
+                innerFunc=self._getKeyValueMetadata,
+                items=troveTups,
+                )

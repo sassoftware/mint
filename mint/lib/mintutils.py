@@ -1,7 +1,5 @@
 #
-# Copyright (c) 2010 rPath, Inc.
-#
-# All rights reserved.
+# Copyright (c) 2011 rPath, Inc.
 #
 
 """
@@ -10,10 +8,13 @@ General utilities for use in the rBuilder codebase.
 
 import logging
 import inspect
+import itertools
 import re
 import time
 
+from conary.lib import digestlib
 from conary.lib import util
+from conary.repository.netrepos import cache
 
 
 def setupLogging(logPath=None, consoleLevel=logging.WARNING,
@@ -194,3 +195,46 @@ class Transformations(object):
 
     _FieldNames = ['tagName', 'nodeName']
 
+
+class CacheWrapper(object):
+
+    def __init__(self, cacheServer, timeout=0.0):
+        if cacheServer:
+            self.cache = cache.getCache(cacheServer)
+        else:
+            self.cache = cache.EmptyCache()
+        self.timeout = timeout
+
+    def _keys(self, items, args, kwargs):
+        if kwargs is None:
+            kwargs = ()
+        else:
+            kwargs = tuple(sorted(kwargs.items()))
+        common = digestlib.sha1(str(args + kwargs)).digest()
+        return [digestlib.sha1(common + str(x)).hexdigest() for x in items]
+
+    def coalesce(self, keyPrefix, innerFunc, items, *args, **kwargs):
+        """Memoize a function call using the cache.
+
+        The function should take a list of things as the first argument, and
+        return a parallel list of results.
+        """
+        # Get from cache
+        keys = self._keys(items, args, kwargs)
+        cachedDict = self.cache.get_multi(keys, key_prefix=keyPrefix)
+        allResults = [cachedDict.get(x) for x in keys]
+
+        # Get missed results from inner function and store
+        needed = [(i, x) for (i, x) in enumerate(items)
+                if keys[i] not in cachedDict]
+        if needed:
+            newResults = innerFunc([x[1] for x in needed], *args, **kwargs)
+            cacheUpdates = {}
+            for (i, x), result in itertools.izip(needed, newResults):
+                allResults[i] = result
+                cacheUpdates[keys[i]] = result
+            self.cache.set_multi(cacheUpdates,
+                    key_prefix=keyPrefix,
+                    time=self.timeout,
+                    )
+        return allResults

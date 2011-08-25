@@ -28,7 +28,7 @@ from conary.dbstore import sqlerrors, sqllib
 log = logging.getLogger(__name__)
 
 # database schema major version
-RBUILDER_DB_VERSION = sqllib.DBversion(55, 1)
+RBUILDER_DB_VERSION = sqllib.DBversion(55, 2)
 
 
 def _createTrigger(db, table, column = "changed"):
@@ -253,7 +253,8 @@ def _createBuilds(db):
             publishedBy         integer
                 REFERENCES Users ( userId ) ON DELETE SET NULL,
             shouldMirror        smallint        NOT NULL    DEFAULT 0,
-            timeMirrored        numeric(14,3)
+            timeMirrored        numeric(14,3),
+            output_trove        text
         ) %(TABLEOPTS)s """ % db.keywords)
         db.tables['PublishedReleases'] = []
         changed = True

@@ -11,6 +11,7 @@ import sys
 import datetime
 from dateutil import tz
 
+from conary import files as cny_files
 from conary.conarycfg import loadEntitlement, EntitlementList
 from conary.dbstore import migration, sqlerrors
 from mint import userlevels
@@ -2582,7 +2583,7 @@ class MigrateTo_54(SchemaMigration):
         return True
 
 class MigrateTo_55(SchemaMigration):
-    Version = (55, 1)
+    Version = (55, 2)
 
     def migrate(self):
         return True
@@ -2590,6 +2591,88 @@ class MigrateTo_55(SchemaMigration):
     def migrate1(self):
         cu = self.db.cursor()
         cu.execute("UPDATE inventory_event_type SET priority=70 WHERE name = 'system registration'")
+        return True
+
+    def migrate2(self):
+        # Add field for imported images. The best way to find that linkage post
+        # facto is to look in the repository by SHA1, yecch.
+        cu = self.db.cursor()
+        cu.execute("ALTER TABLE Builds ADD output_trove text")
+
+        cu.execute("""SELECT fqdn, buildId, sha1 FROM Builds
+            JOIN BuildFiles USING (buildId)
+            JOIN Projects USING (projectId)
+            WHERE troveVersion = '/local@local:COOK/0.100:1-1-1'""")
+        buildsBySha1ByProject = {}
+        for fqdn, buildId, sha1 in cu:
+            buildsBySha1ByProject.setdefault(fqdn, {}
+                    ).setdefault(sha1, set()).add(buildId)
+
+        manager = repository.RepositoryManager(self.cfg, self.db, bypass=True)
+        client = manager.getClient(userId=repository.ANY_READER)
+        repos = client.repos
+        updates = []
+        for fqdn, buildsBySha1 in buildsBySha1ByProject.items():
+            # Get latest versions of all troves, then filter to just the
+            # image-foo troves
+            leaves = repos.getAllTroveLeaves(fqdn, {})
+            allQuery = {}
+            for name, versions in leaves.iteritems():
+                if not name.startswith('image-'):
+                    continue
+                for version in versions:
+                    allQuery.setdefault(name, {})[version.trailingLabel()
+                            ] = None
+            if not allQuery:
+                manager.reset()
+                continue
+            # Get all versions of all image troves
+            allVersions = repos.getTroveVersionsByLabel(allQuery)
+            allJobs = set()
+            for name, versions in allVersions.iteritems():
+                for version, flavors in versions.items():
+                    for flavor in flavors:
+                        allJobs.add(
+                                (name, (None, None), (version, flavor), True))
+            # Get changeset of all image troves with files but not contents.
+            # Map contents SHA-1 back to the trove tuple.
+            allJobs = sorted(allJobs)
+            cs = repos.createChangeSet(allJobs, withFiles=True,
+                    withFileContents=False, recurse=False)
+            troveSpecsBySha1 = {}
+            for name, _, (version, flavor), _ in allJobs:
+                try:
+                    trvCs = cs.getNewTroveVersion(name, version, flavor)
+                except KeyError:
+                    # Trove is missing
+                    continue
+                if trvCs.getTroveInfo().factory() != 'rbuilder-image':
+                    # Not an imported image
+                    continue
+                for pathId, path, fileId, fileVer in trvCs.getNewFileList():
+                    fileStreamBlob = cs.getFileChange(None, fileId)
+                    fileStream = cny_files.ThawFile(fileStreamBlob, pathId)
+                    sha1 = fileStream.contents.sha1()
+                    if sha1:
+                        sha1 = sha1.encode('hex')
+                        tup = '%s=%s' % (name, version)
+                        troveSpecsBySha1.setdefault(sha1, set()
+                                ).add((version, tup))
+            manager.reset()
+
+            for sha1, buildIds in buildsBySha1.items():
+                tups = troveSpecsBySha1.get(sha1)
+                if not tups:
+                    continue
+                # Pick latest version if more than one trove had that SHA-1
+                tup = sorted(tups)[-1][1]
+                for buildId in buildIds:
+                    updates.append((tup, buildId))
+
+        if updates:
+            cu.executemany("""UPDATE Builds SET output_trove = ?
+                    WHERE buildId = ?""", updates)
+
         return True
 
 #### SCHEMA MIGRATIONS END HERE #############################################

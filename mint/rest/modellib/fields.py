@@ -193,3 +193,11 @@ class ListField(Field):
     def isList(self):
         return True
 
+
+class XObjField(Field):
+
+    def _valueFromString(self, value):
+        return value
+
+    def _valueToString(self, value, parent, context):
+        return value
