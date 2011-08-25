@@ -56,7 +56,7 @@ class TargetManager(manager.Manager):
         # perhaps check the id to be certain it's unique
         for name, value in targetData.iteritems():
             value = json.dumps(value)
-            cu.execute("INSERT INTO TargetData VALUES(?, ?, ?)",
+            cu.execute("INSERT INTO TargetData (targetId, name, value) VALUES(?, ?, ?)",
                     targetId, name, value)
 
     def _addTargetQuerySet(self, targetId, targetName, targetType):

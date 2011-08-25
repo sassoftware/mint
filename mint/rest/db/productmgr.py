@@ -305,9 +305,9 @@ class ProductManager(manager.Manager):
             cu.execute('''INSERT INTO Projects (name, creatorId, description,
                     shortname, hostname, domainname, fqdn, projecturl, external,
                     timeModified, timeCreated, backupExternal, database)
-                    VALUES (?, ?, '', ?, ?, ?, ?, '', true, ?, ?, ?, ?)''',
+                    VALUES (?, ?, '', ?, ?, ?, ?, '', ?, ?, ?, ?, ?)''',
                     title, creatorId, hostname, hostname, domainname,
-                    '%s.%s' % (hostname, domainname),
+                    '%s.%s' % (hostname, domainname), True,
                     createTime, createTime, bool(backupExternal), database)
             productId = cu.lastrowid
 
@@ -430,6 +430,7 @@ class ProductManager(manager.Manager):
         try:
             versionId = self.db.db.productVersions.new(projectId=projectId,
                     namespace=namespace, name=version, description=description,
+                    label=prodDef.getProductDefinitionLabel(),
                     timeCreated=time.time())
         except mint_error.DuplicateItem:
             raise mint_error.DuplicateProductVersion
