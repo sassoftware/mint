@@ -49,8 +49,9 @@ class RbacRole(modellib.XObjIdModel):
         tag = 'rbac_role',
         attributes = {'id':str},
     )
+    
     # objects = modellib.RbacRoleManager() # needed because of non-integer PK?
-    _xobj_hidden_accessors = set(['rbacuserrole_set','rbacpermission_set'])
+    _xobj_hidden_accessors = set(['rbacuserrole_set'])
 
     role_id = D(models.TextField(primary_key=True),
         "the database ID for the role")
@@ -94,7 +95,7 @@ class RbacPermission(modellib.XObjIdModel):
     permission_id = D(models.AutoField(primary_key=True),
         "the database ID for the context")
     rbac_role    =  D(modellib.ForeignKey(RbacRole, 
-        null=False, db_column='role_id'), 'rbac_role id')
+        null=False, db_column='role_id', related_name='permissions'), 'rbac_role id')
     queryset     =  D(modellib.ForeignKey(querymodels.QuerySet, 
         null=False, db_column='queryset_id'), 'queryset id')
     action  = D(models.TextField(), 'allowed capability name')
@@ -119,6 +120,11 @@ class RbacUserRoles(modellib.Collection):
     def save(self):
         return [s.save() for s in self.rbac_user_role]
 
+    def serialize(self, request):
+        xobj_model = modellib.XObjIdModel.serialize(self, request)
+        # TODO: add permission info here
+        return xobj_model
+ 
 class RbacUserRole(modellib.XObjIdModel):
     '''
     Keeps track of what rBuilder users have as RbacRoles.

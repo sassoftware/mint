@@ -477,7 +477,15 @@ class RbacEngineTests(RbacTestCase):
 
     def testUserRolesAppearInUserXml(self):
 
+        # run all users queryset to make sure tags show up in user XML
+        response = self._get("query_sets/%s/all" % self.user_queryset.pk,
+            username = "admin",
+            password = "password"
+        )
+        self.assertEquals(response.status_code, 200)
+
         # make sure rbac role assignments show up on the user object
+        # and we have enough to discern permissions
         response = self._get("users/%s" % self.intern_user.pk,
             username = self.intern_user.user_name,
             password = 'password'

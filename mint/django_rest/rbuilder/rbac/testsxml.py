@@ -29,6 +29,13 @@ user_get_xml_with_roles = """
   <email>email@example.com</email>
   <full_name>ExampleIntern</full_name>
   <is_admin>false</is_admin>
+  <tags>
+    <user_tag>
+      <query_set id="http://testserver/api/v1/query_sets/4"/>
+      <user id="http://testserver/api/v1/users/2003"/>
+      <user_tag_id>5</user_tag_id>
+    </user_tag>
+  </tags>
   <rbac_user_roles>
     <rbac_user_role id="/api/v1/rbac/users/2003/roles/intern">
       <rbac_user_role_id>3</rbac_user_role_id>
@@ -63,6 +70,7 @@ tradingfloor_xml = """
 
 role_put_xml_input = """
 <rbac_role id="http://testserver/api/v1/rbac/roles/rocketsurgeon">
+   <permissions/>
    <role_id>rocketsurgeon</role_id>
 </rbac_role>
 """
@@ -70,6 +78,7 @@ role_put_xml_input = """
 # TODO, ID should come back on this element
 role_put_xml_output = """
 <rbac_role id="http://testserver/api/v1/rbac/roles/rocketsurgeon">
+   <permissions/>
    <role_id>rocketsurgeon</role_id>
 </rbac_role>
 """
@@ -77,12 +86,15 @@ role_put_xml_output = """
 role_list_xml = """
 <rbac_roles count="3" end_index="2" filter_by="" full_collection="http://testserver/api/v1/rbac/roles" id="http://testserver/api/v1/rbac/roles;start_index=0;limit=10" limit="10" next_page="" num_pages="1" order_by="" per_page="10" previous_page="" start_index="0">
   <rbac_role id="http://testserver/api/v1/rbac/roles/sysadmin">
+    <permissions/>
     <role_id>sysadmin</role_id>
   </rbac_role>
   <rbac_role id="http://testserver/api/v1/rbac/roles/developer">
+    <permissions/>
     <role_id>developer</role_id>
   </rbac_role>
   <rbac_role id="http://testserver/api/v1/rbac/roles/intern">
+    <permissions/>
     <role_id>intern</role_id>
   </rbac_role>
 </rbac_roles>
@@ -90,6 +102,7 @@ role_list_xml = """
 
 role_get_xml = """
 <rbac_role id="http://testserver/api/v1/rbac/roles/developer">
+  <permissions/>
   <role_id>developer</role_id>
 </rbac_role>
 """
@@ -163,9 +176,11 @@ permission_put_xml_output="""
 user_role_list_xml = """
 <rbac_roles count="2" next_page="" num_pages="1" previous_page="" full_collection="http://testserver/api/v1/rbac/roles" end_index="1" limit="10" order_by="" per_page="10" filter_by="" id="http://testserver/api/v1/rbac/roles;start_index=0;limit=10" start_index="0">
   <rbac_role id="http://testserver/api/v1/rbac/roles/developer">
+    <permissions/>
     <role_id>developer</role_id>
   </rbac_role>
   <rbac_role id="http://testserver/api/v1/rbac/roles/sysadmin">
+    <permissions/>
     <role_id>sysadmin</role_id>
   </rbac_role>
 </rbac_roles>
@@ -173,18 +188,21 @@ user_role_list_xml = """
 
 user_role_get_xml = """
 <rbac_role id="http://testserver/api/v1/rbac/roles/developer">
+  <permissions/>
   <role_id>developer</role_id>
 </rbac_role>
 """
 
 user_role_post_xml_input = """
 <rbac_role id="http://testserver/api/v1/rbac/roles/intern">
+  <permissions/>
   <role_id>intern</role_id>
 </rbac_role>
 """
 
 user_role_post_xml_output = """
 <rbac_role id="http://testserver/api/v1/rbac/roles/intern">
+  <permissions/>
   <role_id>intern</role_id>
 </rbac_role>
 """
@@ -192,6 +210,7 @@ user_role_post_xml_output = """
 user_role_get_list_xml_after_delete = """
 <rbac_roles count="1" end_index="0" filter_by="" full_collection="http://testserver/api/v1/rbac/roles" id="http://testserver/api/v1/rbac/roles;start_index=0;limit=10" limit="10" next_page="" num_pages="1" order_by="" per_page="10" previous_page="" start_index="0">
   <rbac_role id="http://testserver/api/v1/rbac/roles/sysadmin">
+    <permissions/>
     <role_id>sysadmin</role_id>
   </rbac_role>
 </rbac_roles>

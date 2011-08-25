@@ -85,7 +85,6 @@ class User(modellib.XObjIdModel):
         'usermember', 'package_versions_created', 'packages_created', 'user',
         'created_images', 'updated_images', 'project_membership',
         'created_releases', 'updated_releases', 'published_releases', 'user_tags', 
-        'tags',
     ])
 
     def __unicode__(self):
