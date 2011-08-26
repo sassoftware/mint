@@ -104,7 +104,7 @@ class rBuilderTest(TestPackageRecipe):
 
         # For now, limit to django tests only -- misa
         r.run_tests(environ=environ, configuration=config,
-            args='--context \!unfriendly django_rest')
+            args='--context \!unfriendly django_rest mint_test.resttest')
 
     def install(r):
         r.Install('mint_test', '%(libdir)s/mint-test')
