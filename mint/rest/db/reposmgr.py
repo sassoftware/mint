@@ -21,8 +21,11 @@ from mint.rest.db import manager
 from conary import changelog
 from conary import conarycfg
 from conary import conaryclient
+from conary import trove as cny_trove
 from conary import trovetup
+from conary.build import nextversion
 from conary.conaryclient import filetypes
+from conary.repository import changeset
 from conary.repository import errors as reposerrors
 from conary.repository import shimclient
 
@@ -562,3 +565,53 @@ class RepositoryManager(manager.Manager):
                 innerFunc=self._getKeyValueMetadata,
                 items=troveTups,
                 )
+
+    def updateKeyValueMetadata(self, jobs, admin=False):
+        if not jobs:
+            return []
+        if admin:
+            client = self.getAdminClient(write=True)
+        else:
+            client = self.getUserClient()
+
+        troveTups = [x[0] for x in jobs]
+        allSpecs = [(n, '%s/%s' % (v.trailingLabel(),
+                v.trailingRevision().getVersion()), None)
+            for (n, v, f) in troveTups]
+        metaDicts = [x[1] for x in jobs]
+
+        allVersions = client.repos.findTroves(None, allSpecs, getLeaves=False)
+
+        troves = client.repos.getTroves(troveTups, withFiles=True)
+        changeSet = changeset.ChangeSet()
+        newTups = []
+        for trv, allSpec, metaDict in zip(troves, allSpecs, metaDicts):
+            newTrv = trv.copy()
+            # Build new key-value metadata
+            keyValues = cny_trove.KeyValueItemsStream()
+            for key, value in metaDict.iteritems():
+                keyValues[key] = value
+            meta = newTrv.troveInfo.metadata
+            # Make sure there's an existing MetadataItem to work on
+            meta.addItem(cny_trove.MetadataItem())
+            # Flatten old metadata and replace the keyvalue element
+            flattened = meta.flatten(skipSet=set(['sizeOverride']))
+            for item in flattened:
+                if not item.language():
+                    item.keyValue = keyValues
+            newTrv.troveInfo.metadata = cny_trove.Metadata()
+            newTrv.troveInfo.metadata.addItems(flattened)
+            # Pick new version
+            old = trv.getVersion()
+            oldTups = allVersions[allSpec]
+            version = nextversion.nextSourceVersion(old.branch(),
+                    old.trailingRevision(), [x[1] for x in oldTups])
+            newTrv.changeVersion(version)
+            # Prepare for commit
+            newTrv.computeDigests()
+            trvCs = newTrv.diff(None, absolute=True)[0]
+            changeSet.newTrove(trvCs)
+            newTups.append(trovetup.TroveTuple(newTrv.getNameVersionFlavor()))
+
+        client.repos.commitChangeSet(changeSet)
+        return newTups

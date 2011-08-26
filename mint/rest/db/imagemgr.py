@@ -10,6 +10,7 @@ from xobj import xobj
 from conary import trovetup
 from conary import versions
 from conary.deps import deps
+from conary.lib.log import FORMATS
 from rpath_repeater import client as repeater_client
 
 from mint import builds
@@ -385,6 +386,36 @@ class ImageManager(manager.Manager):
                                         commit=False)
         return buildId
 
+    def updateImage(self, fqdn, image):
+        if image.metadata is None:
+            return
+        hostname = fqdn.split('.')[0]
+        imageId = image.imageId
+        metadata = self.getMetadataDict(image.metadata)
+        cu = self.db.cursor()
+        cu.execute("""
+            SELECT b.output_trove
+            FROM Builds b
+            JOIN Projects p ON p.projectId = b.projectId
+            WHERE b.buildId = ?
+            AND p.hostname = ?
+            """, imageId, hostname)
+        oldTup, = self.db._getOne(cu, errors.ImageNotFound, imageId)
+        name, version, flavor = trovetup.TroveSpec.fromString(oldTup)
+        version = versions.VersionFromString(version)
+        if flavor is None:
+            flavor = deps.Flavor()
+        oldTup = trovetup.TroveTuple(name, version, flavor)
+        nvf = self.db.productMgr.reposMgr.updateKeyValueMetadata(
+                [(oldTup, metadata)], admin=True)[0]
+        cu.execute("UPDATE Builds SET output_trove = ? WHERE buildId = ?",
+                nvf.asString(), imageId)
+        msg = "Updated image committed as %s=%s/%s" % (nvf.name,
+                nvf.version.trailingLabel(),
+                nvf.version.trailingRevision())
+        log.info(msg)
+        self._getImageLogger(hostname, imageId).info(msg)
+
     def getRepeaterClient(self):
         return repeater_client.RepeaterClient()
 
@@ -678,8 +709,7 @@ class ImageManager(manager.Manager):
                     nvf.version.trailingLabel(),
                     nvf.version.trailingRevision())
             log.info(msg)
-            self.db.fileMgr.appendImageFile(hostname, imageId, 'build.log',
-                    msg + '\n')
+            self._getImageLogger(hostname, imageId).info(msg)
 
     def getAllImagesByType(self, imageType):
         images = self.db.db.builds.getAllBuildsByType(imageType,
@@ -717,3 +747,12 @@ class ImageManager(manager.Manager):
             imageId = imageData['buildId']
             imageData['baseFileName'] = imagesBaseFileNameMap[imageId]
         return images
+
+    def _getImageLogger(self, hostname, imageId):
+        fileObj = self.db.fileMgr.openImageFile(
+                hostname, imageId, 'build.log', 'a')
+        handler = logging.StreamHandler(fileObj)
+        handler.setFormatter(FORMATS['apache'])
+        log = logging.Logger('image')
+        log.addHandler(handler)
+        return log

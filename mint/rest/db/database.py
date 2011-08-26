@@ -760,6 +760,11 @@ class Database(DBInterface):
         return image
 
     @commitafter
+    def updateImage(self, hostname, image):
+        self.auth.requireProductDeveloper(hostname)
+        self.imageMgr.updateImage(hostname, image)
+
+    @commitafter
     def createUser(self, username, password, fullName, email, 
                    displayEmail, blurb, admin=False):
         self.auth.requireAdmin()
