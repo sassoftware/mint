@@ -93,7 +93,7 @@ class RbacManager(basemanager.BaseManager):
     @exposed
     def getRbacRoles(self):
         return self._getThings(models.RbacRoles, 
-            models.RbacRole, 'rbac_role', order_by=['role_id'])
+            models.RbacRole, 'role', order_by=['role_id'])
 
     @exposed
     def getRbacRole(self, role):
@@ -123,7 +123,7 @@ class RbacManager(basemanager.BaseManager):
     @exposed
     def getRbacPermissions(self):
         return self._getThings(models.RbacPermissions,
-            models.RbacPermission, 'rbac_permission', 
+            models.RbacPermission, 'grant',  
             order_by=['queryset_id', 'role_id', 'action']
         )
 
@@ -165,7 +165,7 @@ class RbacManager(basemanager.BaseManager):
             'user__user_name', 'role__role_id',
         )
         collection = models.RbacRoles()
-        collection.rbac_role = [ x.role for x in mapping ]
+        collection.role = [ x.role for x in mapping ]
         return collection 
 
     @exposed
@@ -193,14 +193,14 @@ class RbacManager(basemanager.BaseManager):
             return querysets_obj
         querysets = querysets_obj.query_set
 
-        user_roles = models.RbacUserRole.objects.select_related().filter(
+        roles = models.RbacUserRole.objects.select_related().filter(
             user = user
         )
-        my_roles = [ x.role for x in user_roles ] 
-        allowed_actions = [ 'rmember', 'wmember', 'rqueryset', 'wqueryset' ]
+        my_roles = [ x.role for x in roles ] 
+        allowed_permissions = [ 'rmember', 'wmember', 'rqueryset', 'wqueryset' ]
         perms = models.RbacPermission.objects.select_related().filter(
-           rbac_role__in = my_roles,
-           action__in    = allowed_actions
+           role__in = my_roles,
+           permission__in    = allowed_permissions
         )
 
         results = []
@@ -211,7 +211,7 @@ class RbacManager(basemanager.BaseManager):
         return querysets_obj
 
     @exposed
-    def userHasRbacPermission(self, user, resource, action, 
+    def userHasRbacPermission(self, user, resource, permission, 
         request=None):
         '''
         Can User X Do Action Y On Resource?
@@ -245,32 +245,32 @@ class RbacManager(basemanager.BaseManager):
             return False 
 
         role_maps = models.RbacUserRole.objects.filter(user=user)
-        user_role_ids = [ x.role.pk for x in role_maps ]
+        role_ids = [ x.role.pk for x in role_maps ]
 
         # if the user has no roles on this queryset, fail immediately
-        if len(user_role_ids) == 0:
+        if len(role_ids) == 0:
             return False
 
         # write access implies read access.  When we have more granular
         # permissions this will have to go.
-        acceptable_permitted_actions = [ action ]
-        if action == RMEMBER:
-            acceptable_permitted_actions.extend([WMEMBER])
-        if action == RQUERYSET:
-            acceptable_permitted_actions.extend([WQUERYSET,RMEMBER,WMEMBER])
+        acceptable_permitted_permissions = [ permission ]
+        if permission == RMEMBER:
+            acceptable_permitted_permissions.extend([WMEMBER])
+        if permission == RQUERYSET:
+            acceptable_permitted_permissions.extend([WQUERYSET,RMEMBER,WMEMBER])
 
         # there is queryset/roles info, so now find the permissions associated
         # with the queryset
         resource_permissions = models.RbacPermission.objects.filter(
             queryset__in = querysets
         ).extra(
-            where=['role_id=%s'], params=user_role_ids
+            where=['role_id=%s'], params=role_ids
         )
 
-        # permit user if they have one of the actions we want...
+        # permit user if they have one of the permissions we want...
         # Django seems to displike duplicate extra queries, so...
         for x in resource_permissions:
-             if x.action in acceptable_permitted_actions:
+             if x.permission in acceptable_permitted_permissions:
                  return True
         return False
 

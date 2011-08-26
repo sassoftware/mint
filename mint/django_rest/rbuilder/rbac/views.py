@@ -27,15 +27,15 @@ class BaseRbacService(service.BaseService):
 class RbacPermissionsService(BaseRbacService):
     """
     Grants and removes permissions.
-    <rbac_permissions>
-        <rbac_permission id="http://hostname/api/rbac/permissions/1">
+    <grants>
+        <grant id="http://hostname/api/rbac/permissions/1">
            <permission_id>1</permission_id>
-           <rbac_role id="http://..."/>
+           <role id="http://..."/>
            <queryset id="http://...">
-           <action>write</action>
-        </rbac_permission>
+           <permission>write</permission>
+        </grant>
         ...
-    </rbac_permissions>
+    </grants>
     """
 
     # READ
@@ -52,17 +52,17 @@ class RbacPermissionsService(BaseRbacService):
 
     # CREATE
     @access.admin
-    @requires('rbac_permission')
+    @requires('grant')
     @return_xml
-    def rest_POST(self, request, rbac_permission):
-        return self.mgr.addRbacPermission(rbac_permission)
+    def rest_POST(self, request, grant):
+        return self.mgr.addRbacPermission(grant)
 
     # UPDATE
     @access.admin
-    @requires('rbac_permission')
+    @requires('grant')
     @return_xml
-    def rest_PUT(self, request, permission_id, rbac_permission):
-        return self.mgr.updateRbacPermission(permission_id, rbac_permission)
+    def rest_PUT(self, request, permission_id, grant):
+        return self.mgr.updateRbacPermission(permission_id, grant)
 
     # DELETE
     @access.admin
@@ -74,11 +74,11 @@ class RbacPermissionsService(BaseRbacService):
 class RbacRolesService(BaseRbacService):
     """
     Adds and edits roles.
-    <rbac_roles>
-       <rbac_role id="http://hostname/api/rbac/roles/sysadmin">
+    <roles>
+       <role id="http://hostname/api/rbac/roles/sysadmin">
            <role_id>sysadmin</role_id>
-       </rbac_role>
-    </rbac_roles>    
+       </role>
+    </roles>    
     """
 
     # READ
@@ -96,16 +96,16 @@ class RbacRolesService(BaseRbacService):
     # CREATE
     @access.admin
     @return_xml
-    @requires('rbac_role')
-    def rest_POST(self, request, rbac_role):
-        return self.mgr.addRbacRole(rbac_role)
+    @requires('role')
+    def rest_POST(self, request, role):
+        return self.mgr.addRbacRole(role)
 
     # UPDATE
     @access.admin
-    @requires('rbac_role', save=False)
+    @requires('role', save=False)
     @return_xml
-    def rest_PUT(self, request, role_id, rbac_role):
-        return self.mgr.updateRbacRole(role_id, rbac_role)
+    def rest_PUT(self, request, role_id, role):
+        return self.mgr.updateRbacRole(role_id, role)
 
     # DELETE
     @access.admin
@@ -116,9 +116,9 @@ class RbacRolesService(BaseRbacService):
 class RbacUserRolesService(BaseRbacService):
     """
     Assign roles to a user & list the roles they have.
-    <rbac_roles>
+    <roles>
     ...
-    </rbac_roles>
+    </roles>
     """
 
     # READ
@@ -135,10 +135,10 @@ class RbacUserRolesService(BaseRbacService):
 
     # CREATE -- ADD A RBAC ROLE
     @access.admin
-    @requires('rbac_role')
+    @requires('role')
     @return_xml
-    def rest_POST(self, request, user_id, rbac_role):
-        return self.mgr.addRbacUserRole(user_id, rbac_role)
+    def rest_POST(self, request, user_id, role):
+        return self.mgr.addRbacUserRole(user_id, role)
 
     # DELETE
     @access.admin
