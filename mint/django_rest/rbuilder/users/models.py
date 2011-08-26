@@ -10,7 +10,6 @@ from xobj import xobj
 import sys
 
 from mint.django_rest.rbuilder.users import manager_model
-
 from django.db import connection
 
 class UserGroups(modellib.Collection):
