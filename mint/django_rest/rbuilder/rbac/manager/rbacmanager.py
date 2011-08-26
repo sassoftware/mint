@@ -238,12 +238,10 @@ class RbacManager(basemanager.BaseManager):
         user_is_admin = str(getattr(user, 'is_admin', 'false'))
         if user_is_admin == 'true':
             return True
-
         querysets = self.mgr.getQuerySetsForResource(resource)
         user = self._user(user)
         if len(querysets) == 0:
             return False 
-
         role_maps = models.RbacUserRole.objects.filter(user=user)
         user_role_ids = [ x.role.pk for x in role_maps ]
 

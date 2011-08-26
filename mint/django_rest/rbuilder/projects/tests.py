@@ -14,15 +14,16 @@ from mint.django_rest.rbuilder.repos import manager as reposmanager
 from mint.django_rest.rbuilder.manager import basemanager
 from mint.django_rest.rbuilder.manager import rbuildermanager
 from xobj import xobj
-
+from mint.django_rest.rbuilder.rbac.tests import RbacEngine
+from mint.django_rest.rbuilder.rbac import models as rbacmodels
 from testutils import mock
 
 
-class ProjectsTestCase(XMLTestCase):
+class ProjectsTestCase(RbacEngine):
     fixtures = ["projects", "project_image_fixtures"]
 
     def setUp(self):
-        XMLTestCase.setUp(self)
+        RbacEngine.setUp(self)
         mock.mock(reposmanager.ReposManager, "createRepositoryForProject")
         mock.mock(reposmanager.ReposManager, "createSourceTrove")
         mock.mock(reposmanager.ReposManager, "generateConaryrcFile")
@@ -79,13 +80,22 @@ class ProjectsTestCase(XMLTestCase):
         # XXX: Below is a good thing to check, put this back in.  It
         #      was taken out because of the way rbac handles collections,
         #      rbac won't validate the permissions unless the user is admin
-        
+    
         # response = self._get('projects/',
         #     username="testuser", password="password")
         # self.assertEquals(response.status_code, 200)
         # projects = xobj.parse(response.content).projects.project
         # self.assertEquals(len(projects), 3)
     
+    def testGetProjectAuthenticatedNonAdmin(self):
+        response = self._get('projects/chater-foo/',
+            username=self.sysadmin_user.user_name, password='password')
+        self.assertEquals(response.status_code, 200)
+        
+        response = self._get('projects/chater-foo/',
+            username=self.developer_user.user_name, password='password')
+        self.assertEquals(response.status_code, 403)
+        
     # def testGetProjectsAnon(self):
     #     response = self._get('projects/')
     #     self.assertEquals(response.status_code, 200)

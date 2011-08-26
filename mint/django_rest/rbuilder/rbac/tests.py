@@ -49,14 +49,16 @@ class RbacTestCase(XMLTestCase):
         self.sys_queryset          = querymodels.QuerySet.objects.get(
             name='All Systems'
         )       
-        self.user_queryset          = querymodels.QuerySet.objects.get(
+        self.user_queryset         = querymodels.QuerySet.objects.get(
             name='All Users'
         )       
+        self.projects_queryset     = querymodels.QuerySet.objects.get(
+            name='All Projects')
  
         self.test_querysets = [
             self.tradingfloor_queryset, 
             self.datacenter_queryset, 
-            self.lab_queryset
+            self.lab_queryset,
         ]
 
         # now create some dummy systems and add them to the chosen queryset for each
@@ -94,6 +96,8 @@ class RbacTestCase(XMLTestCase):
         self.req('query_sets/%s/all/' % self.lab_queryset.pk,
              method='GET', expect=200, is_admin=True)
         self.req('query_sets/%s/chosen/' % self.tradingfloor_queryset.pk,
+             method='GET', expect=200, is_admin=True)
+        self.req('query_sets/%s/all' % self.projects_queryset.pk,
              method='GET', expect=200, is_admin=True)
 
     def _xobj_list_hack(self, item):
@@ -423,9 +427,8 @@ class RbacUserRoleViewTests(RbacTestCase):
         content = self.req(get_url, method='GET', expect=200, is_admin=True)
         self.assertXMLEquals(content, testsxml.user_role_get_list_xml_after_delete)
 
-class RbacEngineTests(RbacTestCase):
-    '''Do we know when to grant or deny access?'''
 
+class RbacEngine(RbacTestCase):
     def setUp(self):
         RbacTestCase.setUp(self)
 
@@ -467,6 +470,7 @@ class RbacEngineTests(RbacTestCase):
         mk_permission(self.datacenter_queryset, 'developer', RMEMBER)
         mk_permission(self.sys_queryset, 'sysadmin', RQUERYSET)
         mk_permission(self.user_queryset, 'sysadmin', RMEMBER)
+        mk_permission(self.projects_queryset, 'sysadmin', RMEMBER)
 
         self.admin_user     = usersmodels.User.objects.get(user_name='admin')
         self.admin_user._is_admin = True
@@ -474,20 +478,9 @@ class RbacEngineTests(RbacTestCase):
         self.developer_user = mk_user('ExampleDeveloper', False, 'developer')
         self.intern_user    = mk_user('ExampleIntern', False, 'intern')
 
-        # summary of tests to come:
-        # admin user has full access
-        #    can READ on tradingfloor
-        #    can write on tradingfloor
-        # sysadmin user can WRITE on datacenter
-        #    read is implied
-        # developer can READ on datacenter
-        #    write is not granted
-        # developer lacks all permissions on tradingfloor
-        #    developer can NOT read
-        #    developer can NOT write
-        # loose system without context?  
-        #    admin can write
-        #    everyone else is locked out
+
+class RbacEngineTests(RbacEngine):
+    '''Do we know when to grant or deny access?'''
 
     def testAdminUserHasFullAccess(self):
         # admin user can do everything regardless of context
