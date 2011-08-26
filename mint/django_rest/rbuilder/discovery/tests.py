@@ -77,6 +77,7 @@ class VersionsTestCase(XMLTestCase):
   <project_branches id="http://testserver/api/v1/project_branches"/>
   <project_branch_stages id="http://testserver/api/v1/project_branch_stages"/>
   <query_sets id="http://testserver/api/v1/query_sets"/>
+  <rbac id="http://testserver/api/v1/rbac"/>
   <reports id="http://testserver/api/v1/reports"/>
   <users id="http://testserver/api/v1/users"/>
   <session id="http://testserver/api/v1/session"/>
