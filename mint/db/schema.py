@@ -253,8 +253,7 @@ def _createBuilds(db):
             publishedBy         integer
                 REFERENCES Users ( userId ) ON DELETE SET NULL,
             shouldMirror        smallint        NOT NULL    DEFAULT 0,
-            timeMirrored        numeric(14,3),
-            output_trove        text
+            timeMirrored        numeric(14,3)
         ) %(TABLEOPTS)s """ % db.keywords)
         db.tables['PublishedReleases'] = []
         changed = True
@@ -288,7 +287,8 @@ def _createBuilds(db):
                 REFERENCES ProductVersions ON DELETE SET NULL,
             stageName            varchar(255)               DEFAULT '',
             status               integer                    DEFAULT -1,
-            statusMessage        text                       DEFAULT ''
+            statusMessage        text                       DEFAULT '',
+            output_trove         text
         ) %(TABLEOPTS)s """ % db.keywords)
         db.tables['Builds'] = []
         changed = True

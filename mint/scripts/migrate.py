@@ -2599,6 +2599,10 @@ class MigrateTo_55(SchemaMigration):
         cu = self.db.cursor()
         cu.execute("ALTER TABLE Builds ADD output_trove text")
 
+        # Skip the computed part if we're running a test or initial schema.
+        if not self.cfg:
+            return True
+
         cu.execute("""SELECT fqdn, buildId, sha1 FROM Builds
             JOIN BuildFiles USING (buildId)
             JOIN Projects USING (projectId)
