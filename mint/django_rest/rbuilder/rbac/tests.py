@@ -377,7 +377,7 @@ class RbacUserRoleViewTests(RbacTestCase):
       
     def testCanListUserRoles(self):
         user_id = self.admin_user.pk
-        url = "rbac/users/%s/roles/" % user_id
+        url = "users/%s/roles/" % user_id
         content = self.req(url, method='GET', expect=401, is_authenticated=True)
         content = self.req(url, method='GET', expect=200, is_admin=True)
         obj = xobj.parse(content)
@@ -393,17 +393,17 @@ class RbacUserRoleViewTests(RbacTestCase):
         # for completeness.
 
         user_id = self.admin_user.pk
-        url = "rbac/users/%s/roles/developer" % user_id
+        url = "users/%s/roles/developer" % user_id
         content = self.req(url, method='GET', expect=401, is_authenticated=True)
         content = self.req(url, method='GET', expect=200, is_admin=True)
         self.assertXMLEquals(content, testsxml.user_role_get_xml)
         # now verify if the role isn't assigned to the user, we can't fetch it
-        url = "rbac/users/%s/roles/intern" % user_id
+        url = "users/%s/roles/intern" % user_id
         content = self.req(url, method='GET', expect=404, is_admin=True)
           
     def testCanAddUserRoles(self):
         user_id = self.admin_user.pk
-        url = "rbac/users/%s/roles/" % user_id
+        url = "users/%s/roles/" % user_id
         # gives the admin user the intern role
         input = testsxml.user_role_post_xml_input
         output = testsxml.user_role_post_xml_output
@@ -416,8 +416,8 @@ class RbacUserRoleViewTests(RbacTestCase):
 
     def testCanDeleteUserRoles(self):
         user_id = self.admin_user.pk
-        url = "rbac/users/%s/roles/developer" % user_id
-        get_url = "rbac/users/%s/roles/" % user_id
+        url = "users/%s/roles/developer" % user_id
+        get_url = "users/%s/roles/" % user_id
         # make admin no longer a developer
         self.req(url, method='DELETE', expect=401, is_authenticated=True)
         self.req(url, method='DELETE', expect=204, is_admin=True)
@@ -642,7 +642,7 @@ class RbacEngineTests(RbacEngine):
         )
         self.assertEquals(response.status_code, 403)
         response = self._get("query_sets/%s/all" % self.user_queryset.pk,
-            username=self.sysadmin_user.user_name,
+            username=self.admin_user.user_name,
             password='password'
         )
         self.assertEquals(response.status_code, 200) 
@@ -657,7 +657,7 @@ class RbacEngineTests(RbacEngine):
         # if you can write to something, you can read
         # even if permission isn't in DB
         # write on queryset member also implies read on queryset itself
-        for action in [ RMEMBER, WMEMBER, RQUERYSET ]:
+        for action in [ RMEMBER, WMEMBER ]:
             self.assertTrue(self.mgr.userHasRbacPermission(
                 self.sysadmin_user, self.datacenter_system, action
             ))
@@ -665,20 +665,18 @@ class RbacEngineTests(RbacEngine):
         self.assertFalse(self.mgr.userHasRbacPermission(
             self.sysadmin_user, self.datacenter_system, WQUERYSET
         ))
+        # nor read, because querysets and member rights are not linked
+        self.assertFalse(self.mgr.userHasRbacPermission(
+            self.sysadmin_user, self.datacenter_system, RQUERYSET
+        ))
 
     def testReadDoesNotImplyWrite(self):
         # if you can read, that doesn't mean write
         self.assertTrue(self.mgr.userHasRbacPermission(
             self.developer_user, self.datacenter_system, RMEMBER
         ))
-        self.assertTrue(self.mgr.userHasRbacPermission(
-            self.developer_user, self.datacenter_system, RQUERYSET
-        ))
         self.assertFalse(self.mgr.userHasRbacPermission(
             self.developer_user, self.datacenter_system, WMEMBER
-        ))
-        self.assertFalse(self.mgr.userHasRbacPermission(
-            self.developer_user, self.datacenter_system, WQUERYSET
         ))
 
     def testNothingImpliesLockout(self):

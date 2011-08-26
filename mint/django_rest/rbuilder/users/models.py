@@ -66,7 +66,6 @@ class User(modellib.XObjIdModel):
     # Field used for the clear-text password when it is to be
     # set/changed
     password = modellib.XObjHidden(modellib.SyntheticField())
-    roles = D(modellib.SyntheticField(modellib.HrefField('rbac_roles')),  "assigned roles for RBAC")
 
     class Meta:
         # managed = settings.MANAGE_RBUILDER_MODELS

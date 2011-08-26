@@ -30,7 +30,7 @@ user_get_xml_with_roles = """
   <full_name>ExampleIntern</full_name>
   <is_admin>false</is_admin>
   <user_roles>
-    <user_role id="/api/v1/rbac/users/2003/roles/intern">
+    <user_role id="/api/v1/users/2003/roles/intern">
       <rbac_user_role_id>3</rbac_user_role_id>
       <role id="http://testserver/api/v1/rbac/roles/intern"/>
       <user id="http://testserver/api/v1/users/2003"/>

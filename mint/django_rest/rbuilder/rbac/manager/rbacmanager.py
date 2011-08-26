@@ -249,13 +249,12 @@ class RbacManager(basemanager.BaseManager):
         if len(role_ids) == 0:
             return False
 
-        # write access implies read access.  When we have more granular
-        # permissions this will have to go.
+        # write access implies read access.  
         acceptable_permitted_permissions = [ permission ]
         if permission == RMEMBER:
             acceptable_permitted_permissions.extend([WMEMBER])
         if permission == RQUERYSET:
-            acceptable_permitted_permissions.extend([WQUERYSET,RMEMBER,WMEMBER])
+            acceptable_permitted_permissions.extend([WQUERYSET])
 
         # there is queryset/roles info, so now find the permissions associated
         # with the queryset
