@@ -524,6 +524,8 @@ class RestDBMixIn(object):
         db.commit()
         self.setDjangoDB()
         self.writeMintConfig()
+        # If loading a fixture (or after a commit), the temporary tables are gone
+        self.mintDb._createTemporaryTables()
         return db
 
     def writeMintConfig(self):
