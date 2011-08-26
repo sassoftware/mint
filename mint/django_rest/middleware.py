@@ -22,6 +22,7 @@ from mint.django_rest.rbuilder import auth, errors, models
 # from mint.django_rest.rbuilder import models as rbuildermodels
 from mint.django_rest.rbuilder.users import models as usersmodels
 from mint.django_rest.rbuilder.metrics import models as metricsmodels
+from mint.django_rest.rbuilder.errors import PermissionDenied
 from mint.lib import mintutils
 
 #from lxml import etree
@@ -67,6 +68,14 @@ class ExceptionLoggerMiddleware(BaseMiddleware):
         return None
 
     def process_exception(self, request, exception):
+
+        if isinstance(exception, PermissionDenied):
+            # TODO: factor out duplication 
+            code = 403
+            fault = models.Fault(code=code, message=str(exception))
+            response = HttpResponse(status=code, content_type='text/xml')
+            response.content = fault.to_xml(request)
+            return response
 
         if isinstance(exception, core_exc.ObjectDoesNotExist):
             # django not found in a get/delete is usually a bad URL
