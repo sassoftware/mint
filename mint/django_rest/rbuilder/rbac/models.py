@@ -23,8 +23,8 @@ class RbacRoles(modellib.Collection):
     # XSL = 'fixme.xsl' # TODO
     class Meta:
         abstract = True
-    _xobj = xobj.XObjMetadata(tag = 'rbac_roles')
-    list_fields = ['rbac_role']
+    _xobj = xobj.XObjMetadata(tag = 'roles')
+    list_fields = ['role']
     rbac_role = []
     objects = modellib.RbacRolesManager() # TODO: add django manager
     view_name = 'RbacRoles' # TODO: add view
@@ -46,7 +46,7 @@ class RbacRole(modellib.XObjIdModel):
 
     view_name = 'RbacRole' # TODO
     _xobj = xobj.XObjMetadata(
-        tag = 'rbac_role',
+        tag = 'role',
         attributes = {'id':str},
     )
     
@@ -64,9 +64,9 @@ class RbacPermissions(modellib.Collection):
     # XSL = 'fixme.xsl' # TODO
     class Meta:
         abstract = True
-    _xobj = xobj.XObjMetadata(tag = 'rbac_permissions')
-    list_fields = ['rbac_permission']
-    rbac_permission = []
+    _xobj = xobj.XObjMetadata(tag = 'grants')
+    list_fields = ['grant']
+    grant = []
     objects = modellib.RbacPermissionsManager()
     view_name = 'RbacPermissions' # TODO: add view
 
@@ -74,7 +74,7 @@ class RbacPermissions(modellib.Collection):
         modellib.Collection.__init__(self)
 
     def save(self):
-        return [s.save() for s in self.rbac_permission]
+        return [s.save() for s in self.grant]
 
 class RbacPermission(modellib.XObjIdModel):
     '''
@@ -89,16 +89,16 @@ class RbacPermission(modellib.XObjIdModel):
     view_name = 'RbacPermission' # TODO
 
     _xobj = xobj.XObjMetadata(
-        tag = 'rbac_permission'
+        tag = 'grant'
     )
 
     permission_id = D(models.AutoField(primary_key=True),
         "the database ID for the context")
-    rbac_role    =  D(modellib.ForeignKey(RbacRole, 
-        null=False, db_column='role_id', related_name='permissions'), 'rbac_role id')
+    role         =  D(modellib.ForeignKey(RbacRole, 
+        null=False, db_column='role_id', related_name='grants'), 'rbac_role id')
     queryset     =  D(modellib.ForeignKey(querymodels.QuerySet, 
-        null=False, db_column='queryset_id'), 'queryset id')
-    action  = D(models.TextField(), 'allowed capability name')
+        null=False, db_column='queryset_id', related_name='grants'), 'queryset id')
+    permission  = D(models.TextField(db_column='action'), 'allowed capability name')
 
 class RbacUserRoles(modellib.Collection):
     '''
@@ -108,9 +108,9 @@ class RbacUserRoles(modellib.Collection):
     # XSL = 'fixme.xsl' # TODO
     class Meta:
         abstract = True
-    _xobj = xobj.XObjMetadata(tag = 'rbac_user_roles')
-    list_fields = ['rbac_user_role']
-    rbac_user_role = []
+    _xobj = xobj.XObjMetadata(tag = 'user_roles')
+    list_fields = ['user_role']
+    role = []
     objects = modellib.RbacUserRolesManager()
     view_name = 'RbacUserRoles' # TODO: add view
 
@@ -118,7 +118,7 @@ class RbacUserRoles(modellib.Collection):
         modellib.Collection.__init__(self)
 
     def save(self):
-        return [s.save() for s in self.rbac_user_role]
+        return [s.save() for s in self.role]
 
     def serialize(self, request):
         xobj_model = modellib.XObjIdModel.serialize(self, request)
@@ -138,13 +138,14 @@ class RbacUserRole(modellib.XObjIdModel):
     view_name = 'RbacUserRole' # TODO
 
     _xobj = xobj.XObjMetadata(
-        tag = 'rbac_user_role'
+        tag = 'user_role'
     )
 
     rbac_user_role_id = D(models.AutoField(primary_key=True),
         "the database ID for the rbac_user_role")
     role    =  D(modellib.ForeignKey(RbacRole, null=False), 'rbac_role id')
-    user    =  D(modellib.ForeignKey(usersmodels.User, null=False, related_name='rbac_user_roles'), 'user id')
+    user    =  D(modellib.ForeignKey(usersmodels.User, null=False, 
+        related_name='user_roles'), 'user id')
 
     def serialize(self, request):
         xobj_model = modellib.XObjIdModel.serialize(self, request)

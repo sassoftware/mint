@@ -125,8 +125,8 @@ class RbacTestCase(XMLTestCase):
              response = method_map[method](url, username="testuser", password="password", **kwargs)
         else:
              response = method_map[method](url, **kwargs)
-        if response.status_code != expect:
-             print "RESPONSE: %s\n" % response.content
+        #if response.status_code != expect:
+        #     print "RESPONSE: %s\n" % response.content
         self.failUnlessEqual(response.status_code, expect, "Expected status code of %s for %s" % (expect, url))
         return response.content
 
@@ -165,8 +165,8 @@ class RbacBasicTestCase(RbacTestCase):
         action_name = 'speak freely'
         permission = models.RbacPermission(
            queryset        = queryset1,
-           rbac_role       = role1,
-           action          = action_name,
+           role            = role1,
+           permission      = action_name,
         )
         permission.save()
         permissions2 = models.RbacPermission.objects.filter(
@@ -174,9 +174,9 @@ class RbacBasicTestCase(RbacTestCase):
         )
         self.assertEquals(len(permissions2), 1, 'correct length')
         found = permissions2[0]
-        self.assertEquals(found.action, action_name, 'saved ok')
+        self.assertEquals(found.permission, action_name, 'saved ok')
         self.assertEquals(found.queryset.pk, 15, 'saved ok')
-        self.assertEquals(found.rbac_role.pk, 'sysadmin', 'saved ok')
+        self.assertEquals(found.role.pk, 'sysadmin', 'saved ok')
 
     def testModelsForUserRoleAssignment(self):
         # note -- we may also keep roles in AD, this is for the case
@@ -217,7 +217,7 @@ class RbacRoleViews(RbacTestCase):
         content = self.req(url, method='GET', expect=200, is_admin=True)
 
         obj = xobj.parse(content)
-        found_items = self._xobj_list_hack(obj.rbac_roles.rbac_role)
+        found_items = self._xobj_list_hack(obj.roles.role)
         found_items = [ item.role_id for item in found_items ] 
         for expected in self.seed_data:
             self.assertTrue(expected in found_items, 'found item')
@@ -230,7 +230,7 @@ class RbacRoleViews(RbacTestCase):
         content = self.req(url, method='GET', expect=401, is_authenticated=True)
         content = self.req(url, method='GET', expect=200, is_admin=True)
         obj = xobj.parse(content)
-        self.assertEqual(obj.rbac_role.role_id, 'developer')
+        self.assertEqual(obj.role.role_id, 'developer')
         self.assertXMLEquals(content, testsxml.role_get_xml)
 
     def testCanAddRoles(self):
@@ -276,18 +276,18 @@ class RbacPermissionViews(RbacTestCase):
 
         models.RbacPermission(
             queryset      = self.datacenter_queryset,
-            rbac_role     = models.RbacRole.objects.get(pk='sysadmin'),
-            action        = WMEMBER
+            role          = models.RbacRole.objects.get(pk='sysadmin'),
+            permission    = WMEMBER
         ).save()
         models.RbacPermission(
             queryset       = self.datacenter_queryset,
-            rbac_role      = models.RbacRole.objects.get(pk='developer'),
-            action         = RMEMBER
+            role           = models.RbacRole.objects.get(pk='developer'),
+            permission     = RMEMBER
         ).save()
         models.RbacPermission(
             queryset       = self.lab_queryset,
-            rbac_role      = models.RbacRole.objects.get(pk='developer'),
-            action         = WMEMBER
+            role           = models.RbacRole.objects.get(pk='developer'),
+            permission     = WMEMBER
         ).save()
 
     def testCanListPermissions(self):
@@ -296,7 +296,7 @@ class RbacPermissionViews(RbacTestCase):
         content = self.req(url, method='GET', expect=200, is_admin=True)
 
         obj = xobj.parse(content)
-        found_items = self._xobj_list_hack(obj.rbac_permissions.rbac_permission)
+        found_items = self._xobj_list_hack(obj.grants.grant)
         self.assertEqual(len(found_items), 3, 'right number of items')
         self.assertXMLEquals(content, testsxml.permission_list_xml)
 
@@ -314,9 +314,9 @@ class RbacPermissionViews(RbacTestCase):
         content = self.req(url, method='POST', data=input, expect=200, is_admin=True)
         self.assertXMLEquals(content, output)
         perm = models.RbacPermission.objects.get(pk=4)
-        self.assertEqual(perm.rbac_role.pk, 'intern')
+        self.assertEqual(perm.role.pk, 'intern')
         self.assertEqual(perm.queryset.pk, self.tradingfloor_queryset.pk)
-        self.assertEqual(perm.action, WMEMBER)
+        self.assertEqual(perm.permission, WMEMBER)
 
     def testCanDeletePermissions(self):
        
@@ -337,9 +337,9 @@ class RbacPermissionViews(RbacTestCase):
         content = self.req(url, method='PUT', data=input, expect=200, is_admin=True)
         self.assertXMLEquals(content, output)
         perm = models.RbacPermission.objects.get(pk=1)
-        self.assertEqual(perm.rbac_role.pk, 'intern')
+        self.assertEqual(perm.role.pk, 'intern')
         self.assertEqual(perm.queryset.pk, self.datacenter_queryset.pk)
-        self.assertEqual(perm.action, WMEMBER)
+        self.assertEqual(perm.permission, WMEMBER)
 
 class RbacUserRoleViewTests(RbacTestCase):
 
@@ -381,7 +381,7 @@ class RbacUserRoleViewTests(RbacTestCase):
         content = self.req(url, method='GET', expect=401, is_authenticated=True)
         content = self.req(url, method='GET', expect=200, is_admin=True)
         obj = xobj.parse(content)
-        found_items = self._xobj_list_hack(obj.rbac_roles.rbac_role)
+        found_items = self._xobj_list_hack(obj.roles.role)
         self.assertEqual(len(found_items), 2, 'right number of items')
         self.assertXMLEquals(content, testsxml.user_role_list_xml)
 
@@ -439,8 +439,8 @@ class RbacEngine(RbacTestCase):
         def mk_permission(queryset, role, action):
             models.RbacPermission(
                 queryset      = queryset,
-                rbac_role     = models.RbacRole.objects.get(pk=role),
-                action        = action
+                role          = models.RbacRole.objects.get(pk=role),
+                permission    = action
             ).save()
 
         def mk_user(name, is_admin, role):
