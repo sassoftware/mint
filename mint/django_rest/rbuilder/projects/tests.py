@@ -15,7 +15,6 @@ from mint.django_rest.rbuilder.manager import basemanager
 from mint.django_rest.rbuilder.manager import rbuildermanager
 from xobj import xobj
 from mint.django_rest.rbuilder.rbac.tests import RbacEngine
-from mint.django_rest.rbuilder.rbac import models as rbacmodels
 from testutils import mock
 
 
