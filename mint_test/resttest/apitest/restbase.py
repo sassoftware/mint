@@ -141,6 +141,8 @@ class BaseRestTest(mint_rephelp.MintDatabaseHelper):
         groupVer = groupTrv.getVersion().freeze()
         groupFlv = str(groupTrv.getFlavor())
         imageIds = []
+        # If loading a fixture, the temporary tables are not created
+        db.db._createTemporaryTables()
         for imageName, imageType in images:
             imageId = self.createImage(db, self.productShortName,
                 imageType, name = imageName,

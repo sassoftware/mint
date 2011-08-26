@@ -508,8 +508,6 @@ class RestDBMixIn(object):
         from mint.rest.db import database as restdb
         from mint.db import database
         db = database.Database(self.mintCfg)
-        # If loading a fixture, the temporary tables are not created
-        db._createTemporaryTables()
         if subscribers is None:
             subscribers = []
         db = restdb.Database(self.mintCfg, db, subscribers=subscribers)
