@@ -18,11 +18,21 @@ from mint.django_rest.deco import return_xml, access, requires #, ACCESS, \
 #    HttpAuthenticationRequired, getHeaderValue, xObjRequires
 #from mint.django_rest.rbuilder.users import models as usersmodels
 from mint.django_rest.rbuilder import service
-#from mint.django_rest.rbuilder.inventory import models
+from mint.django_rest.rbuilder.rbac import models
 #from mint.django_rest.rbuilder.projects import models as projectsmodels
 
 class BaseRbacService(service.BaseService):
     pass
+
+class RbacService(BaseRbacService):
+    """
+    URLs for discovery purposes
+    """
+
+    @access.anonymous
+    @return_xml
+    def rest_GET(self, request):
+        return models.Rbac()
  
 class RbacPermissionsService(BaseRbacService):
     """

@@ -291,7 +291,7 @@ class RbacPermissionViews(RbacTestCase):
         ).save()
 
     def testCanListPermissions(self):
-        url = 'rbac/permissions'
+        url = 'rbac/grants'
         content = self.req(url, method='GET', expect=401, is_authenticated=True)
         content = self.req(url, method='GET', expect=200, is_admin=True)
 
@@ -301,13 +301,13 @@ class RbacPermissionViews(RbacTestCase):
         self.assertXMLEquals(content, testsxml.permission_list_xml)
 
     def testCanGetSinglePermission(self):
-        url = 'rbac/permissions/1'
+        url = 'rbac/grants/1'
         content = self.req(url, method='GET', expect=401, is_authenticated=True)
         content = self.req(url, method='GET', expect=200, is_admin=True)
         self.assertXMLEquals(content, testsxml.permission_get_xml)
 
     def testCanAddPermissions(self):
-        url = 'rbac/permissions'
+        url = 'rbac/grants'
         input = testsxml.permission_post_xml_input
         output = testsxml.permission_post_xml_output
         content = self.req(url, method='POST', data=input, expect=401, is_authenticated=True)
@@ -321,7 +321,7 @@ class RbacPermissionViews(RbacTestCase):
     def testCanDeletePermissions(self):
        
         all = models.RbacPermission.objects.all()
-        url = 'rbac/permissions/1'
+        url = 'rbac/grants/1'
         self.req(url, method='DELETE', expect=401, is_authenticated=True)
         self.req(url, method='DELETE', expect=204, is_admin=True)
         all = models.RbacPermission.objects.all()
@@ -330,7 +330,7 @@ class RbacPermissionViews(RbacTestCase):
 
     def testCanUpdatePermissions(self):
         
-        url = 'rbac/permissions/1'
+        url = 'rbac/grants/1'
         input = testsxml.permission_put_xml_input
         output = testsxml.permission_put_xml_output
         content = self.req(url, method='PUT', data=input, expect=401, is_authenticated=True)

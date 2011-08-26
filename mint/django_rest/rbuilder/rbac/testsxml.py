@@ -101,20 +101,20 @@ role_get_xml = """
 """
 
 permission_list_xml = """
-<grants count="3" end_index="2" filter_by="" full_collection="http://testserver/api/v1/rbac/permissions" id="http://testserver/api/v1/rbac/permissions;start_index=0;limit=10" limit="10" next_page="" num_pages="1" order_by="" per_page="10" previous_page="" start_index="0">
-  <grant id="http://testserver/api/v1/rbac/permissions/1">
+<grants count="3" end_index="2" filter_by="" full_collection="http://testserver/api/v1/rbac/grants" id="http://testserver/api/v1/rbac/grants;start_index=0;limit=10" limit="10" next_page="" num_pages="1" order_by="" per_page="10" previous_page="" start_index="0">
+  <grant id="http://testserver/api/v1/rbac/grants/1">
     <permission_id>1</permission_id>
     <permission>wmember</permission>
     <queryset id="http://testserver/api/v1/query_sets/14"/>
     <role id="http://testserver/api/v1/rbac/roles/sysadmin"/>
   </grant>
-  <grant id="http://testserver/api/v1/rbac/permissions/2">
+  <grant id="http://testserver/api/v1/rbac/grants/2">
     <permission>rmember</permission>
     <queryset id="http://testserver/api/v1/query_sets/14"/>
     <permission_id>2</permission_id>
     <role id="http://testserver/api/v1/rbac/roles/developer"/>
   </grant>
-  <grant id="http://testserver/api/v1/rbac/permissions/3">
+  <grant id="http://testserver/api/v1/rbac/grants/3">
     <permission>wmember</permission>
     <queryset id="http://testserver/api/v1/query_sets/13"/>
     <permission_id>3</permission_id>
@@ -124,7 +124,7 @@ permission_list_xml = """
 """
 
 permission_get_xml = """
-<grant id="http://testserver/api/v1/rbac/permissions/1">
+<grant id="http://testserver/api/v1/rbac/grants/1">
   <permission>wmember</permission>
   <permission_id>1</permission_id>
   <queryset id="http://testserver/api/v1/query_sets/14"/>
@@ -141,7 +141,7 @@ permission_post_xml_input="""
 """
 
 permission_post_xml_output="""
-<grant id="http://testserver/api/v1/rbac/permissions/4">
+<grant id="http://testserver/api/v1/rbac/grants/4">
   <permission>wmember</permission>
   <queryset id="http://testserver/api/v1/query_sets/12"/>
   <permission_id>4</permission_id>
@@ -150,7 +150,7 @@ permission_post_xml_output="""
 """
 
 permission_put_xml_input="""
-<grant id="http://testserver/api/v1/rbac/permissions/1">
+<grant id="http://testserver/api/v1/rbac/grants/1">
   <permission>wmember</permission>
   <queryset id="http://testserver/api/v1/query_sets/14"/>
   <role id="http://testserver/api/v1/rbac/roles/intern"/>
@@ -158,7 +158,7 @@ permission_put_xml_input="""
 """
 
 permission_put_xml_output="""
- <grant id="http://testserver/api/v1/rbac/permissions/1">
+ <grant id="http://testserver/api/v1/rbac/grants/1">
    <permission>wmember</permission>
    <permission_id>1</permission_id>
    <queryset id="http://testserver/api/v1/query_sets/14"/>

@@ -15,6 +15,19 @@ from mint.django_rest.rbuilder.querysets import models as querymodels
 from xobj import xobj
 from django.core.urlresolvers import reverse
 
+class Rbac(modellib.XObjModel):
+
+    # XSL = 'rbac.xsl'
+
+    class Meta:
+        abstract = True
+
+    _xobj = xobj.XObjMetadata(
+                tag = 'rbac')
+
+    zones = D(modellib.HrefField('grants'), "permissions granted to roles")
+    roles = D(modellib.HrefField('roles'),  "access control roles")
+
 class RbacRoles(modellib.Collection):
     '''
     A collection of RbacRoles

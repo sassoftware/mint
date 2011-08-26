@@ -10,7 +10,7 @@ from xobj import xobj
 import sys
 
 from mint.django_rest.rbuilder.users import manager_model
-
+from mint.django_rest.deco import D
 from django.db import connection
 
 class UserGroups(modellib.Collection):
@@ -66,6 +66,7 @@ class User(modellib.XObjIdModel):
     # Field used for the clear-text password when it is to be
     # set/changed
     password = modellib.XObjHidden(modellib.SyntheticField())
+    roles = D(modellib.SyntheticField(modellib.HrefField('rbac_roles')),  "assigned roles for RBAC")
 
     class Meta:
         # managed = settings.MANAGE_RBUILDER_MODELS
