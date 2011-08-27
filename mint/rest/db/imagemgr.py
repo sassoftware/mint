@@ -128,6 +128,7 @@ class ImageManager(manager.Manager):
         if not imageIds:
             return []
 
+        self.db.db._createTemporaryTables()
         cu = self.db.cursor()
 
         cu.execute("DELETE FROM tmpOneVal")
