@@ -3044,7 +3044,7 @@ class MigrateTo_57(SchemaMigration):
 
 
 class MigrateTo_58(SchemaMigration):
-    Version = (58, 56)
+    Version = (58, 57)
 
     def migrate(self):
         return True
@@ -3823,6 +3823,18 @@ class MigrateTo_58(SchemaMigration):
                     NOT NULL,
                 CONSTRAINT querysets_roletag_uq UNIQUE ("role_id", "query_set_id", "inclusion_method_id")
             )""")
+        return True
+
+    def migrate57(self):
+        cu = self.db.cursor()
+        cu.execute("""
+            INSERT INTO "inventory_event_type" 
+                ("name", "description", "priority")
+            VALUES
+                ('refresh queryset',
+                 'Refresh queryset',
+                 105)
+        """)
         return True
 
 #### SCHEMA MIGRATIONS END HERE #############################################

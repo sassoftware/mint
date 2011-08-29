@@ -58,10 +58,14 @@ class JobDescriptor(modellib.XObjIdModel):
 
     def get_absolute_url(self, request, *args, **kwargs):
         # this may serve systems, images, etc
-        fullpath = request.get_full_path()
-        return request.build_absolute_uri(
-            urlparse.urljoin(fullpath, "descriptors/%s" % self.id)
-        )
+        if request is not None:
+            fullpath = request.get_full_path()
+            return request.build_absolute_uri(
+                urlparse.urljoin(fullpath, "descriptors/%s" % self.id)
+            )
+        else:
+            # allow to_xml to work from epdb, etc
+            return ""
 
 # NOTE: this being an id model is bogus, and is only so we can
 # override serializaiton
@@ -272,74 +276,70 @@ class EventType(modellib.XObjIdModel):
     # DO NOT CHANGE POLL PRIORITIES HERE WITHOUT CHANGING IN schema.py also
     ON_DEMAND_BASE = 100
     
+    # resource type == system #########################################
     SYSTEM_POLL = "system poll"
     SYSTEM_POLL_PRIORITY = 50
     SYSTEM_POLL_DESC = "System synchronization"
-    RESOURCE_TYPE = 'System'
     
     SYSTEM_POLL_IMMEDIATE = "immediate system poll"
     SYSTEM_POLL_IMMEDIATE_PRIORITY = ON_DEMAND_BASE + 5
     SYSTEM_POLL_IMMEDIATE_DESC = "On-demand system synchronization"
-    RESOURCE_TYPE = 'System'
     
     SYSTEM_REGISTRATION = "system registration"
     SYSTEM_REGISTRATION_PRIORITY = ON_DEMAND_BASE + 10
     SYSTEM_REGISTRATION_DESC = "System registration"
-    RESOURCE_TYPE = 'System'
 
     SYSTEM_APPLY_UPDATE = 'system apply update'
     SYSTEM_APPLY_UPDATE_PRIORITY = 50
     SYSTEM_APPLY_UPDATE_DESCRIPTION = 'Scheduled system update'
-    RESOURCE_TYPE = 'System'
         
     SYSTEM_APPLY_UPDATE_IMMEDIATE = 'immediate system apply update'
     SYSTEM_APPLY_UPDATE_IMMEDIATE_PRIORITY = ON_DEMAND_BASE + 5
     SYSTEM_APPLY_UPDATE_IMMEDIATE_DESCRIPTION = \
         'System update'
-    RESOURCE_TYPE = 'System'    
 
     SYSTEM_SHUTDOWN = 'system shutdown'
     SYSTEM_SHUTDOWN_PRIORITY = 50
     SYSTEM_SHUTDOWN_DESCRIPTION = 'Scheduled system shutdown'
-    RESOURCE_TYPE = 'System'
 
     SYSTEM_DETECT_MANAGEMENT_INTERFACE = 'system detect management interface'
     SYSTEM_DETECT_MANAGEMENT_INTERFACE_PRIORITY = 50
     SYSTEM_DETECT_MANAGEMENT_INTERFACE_DESC = \
         "System management interface detection"
-    RESOURCE_TYPE = 'System'
         
     SYSTEM_DETECT_MANAGEMENT_INTERFACE_IMMEDIATE = \
         'immediate system detect management interface'
     SYSTEM_DETECT_MANAGEMENT_INTERFACE_IMMEDIATE_PRIORITY = 105
     SYSTEM_DETECT_MANAGEMENT_INTERFACE_IMMEDIATE_DESC = \
         "On-demand system management interface detection"
-    RESOURCE_TYPE = 'System'    
 
     SYSTEM_SHUTDOWN_IMMEDIATE = 'immediate system shutdown'
     SYSTEM_SHUTDOWN_IMMEDIATE_PRIORITY = ON_DEMAND_BASE + 5
     SYSTEM_SHUTDOWN_IMMEDIATE_DESCRIPTION = \
         'System shutdown'
-    RESOURCE_TYPE = 'System'    
 
     LAUNCH_WAIT_FOR_NETWORK = 'system launch wait'
     LAUNCH_WAIT_FOR_NETWORK_DESCRIPTION = "Launched system network data discovery"
     LAUNCH_WAIT_FOR_NETWORK_PRIORITY = ON_DEMAND_BASE + 5
-    RESOURCE_TYPE = 'System'
     
     SYSTEM_CONFIG_IMMEDIATE = 'immediate system configuration'
     SYSTEM_CONFIG_IMMEDIATE_DESCRIPTION = "Update system configuration"
     SYSTEM_CONFIG_IMMEDIATE_PRIORITY = ON_DEMAND_BASE + 5
-    RESOURCE_TYPE='System'
 
     SYSTEM_ASSIMILATE             = 'system assimilation'
     SYSTEM_ASSIMILATE_DESCRIPTION = 'System assimilation'
-    RESOURCE_TYPE='System'
-    
+   
+    # resource type = image ##########################################
     IMAGE_BUILDS = 'image builds'
     IMAGE_BUILDS_DESCRIPTION = 'Image builds'
-    RESOURCE_TYPE = 'Image'
-        
+     
+    # resource type = queryset #######################################
+    # these codes are not in the db because queryset jobs are (so far)
+    # not backgroundable.
+    QUERYSET_INVALIDATE              = 'refresh queryset'
+    QUERYSET_INVALIDATE_DESCRIPTION  = 'Refresh queryset'
+    
+    
     job_type_id = D(models.AutoField(primary_key=True), "the database id of the  type")
     EVENT_TYPES = (
         (SYSTEM_REGISTRATION, SYSTEM_REGISTRATION_DESC),
@@ -361,7 +361,8 @@ class EventType(modellib.XObjIdModel):
         (SYSTEM_CONFIG_IMMEDIATE,
          SYSTEM_CONFIG_IMMEDIATE_DESCRIPTION),
         (SYSTEM_ASSIMILATE, SYSTEM_ASSIMILATE_DESCRIPTION),
-        (IMAGE_BUILDS, IMAGE_BUILDS_DESCRIPTION)
+        (IMAGE_BUILDS, IMAGE_BUILDS_DESCRIPTION),
+        (QUERYSET_INVALIDATE, QUERYSET_INVALIDATE_DESCRIPTION),
     )
 
     # what smartform descriptor templates are needed to launch jobs of

@@ -7,7 +7,7 @@
 
 from django import http
 
-from mint.django_rest.deco import return_xml, requires, access
+from mint.django_rest.deco import return_xml, requires, access, xObjRequires
 from mint.django_rest.rbuilder import service
 from mint.django_rest.rbuilder.querysets import filterdescriptors
 from mint.django_rest.rbuilder.querysets import models
@@ -124,6 +124,20 @@ class QuerySetChildResultService(BaseQuerySetService):
     def rest_GET(self, request, query_set_id):
         return self.mgr.getQuerySetChildResult(query_set_id)
 
+class QuerySetJobsService(BaseQuerySetService):
+
+    # no way to list running jobs at the moment
+    # since all jobs run immediately
+
+    @rbac(rbac_can_write_queryset)
+    @xObjRequires('job')
+    @return_xml
+    def rest_POST(self, request, query_set_id, job):
+        '''request starting a job on this system'''
+        queryset = self.mgr.getQuerySet(query_set_id)
+        return self.mgr.scheduleQuerySetJobAction(
+            queryset, job
+        )
 
 class QuerySetFilterDescriptorService(BaseQuerySetService):
 

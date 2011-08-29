@@ -16,6 +16,7 @@ from mint.django_rest.rbuilder.users import models as usersmodels
 from mint.django_rest.rbuilder.projects import models as projectsmodels
 from mint.django_rest.rbuilder.rbac import models as rbacmodels
 from mint.django_rest.rbuilder.querysets import errors
+from mint.django_rest.rbuilder.jobs import models as jobmodels
 
 from xobj import xobj
 
@@ -112,8 +113,27 @@ class QuerySet(modellib.XObjIdModel):
         "A classification for client to use when displaying the objects.  For example, stages can be on projects, branches, platforms, etc.")
     can_modify = D(models.BooleanField(default=True),
         "Whether this query set can be deleted through the API.")
+    actions = D(modellib.SyntheticField(jobmodels.Actions), 'Available actions on this query set')
 
     load_fields = [name]
+
+    def computeSyntheticFields(self, sender, **kwargs):
+        ''' Compute non-database fields.'''
+        self._computeActions()
+
+    def _computeActions(self):
+        '''What actions are available on the system?'''
+
+        self.actions = jobmodels.Actions()
+        self.actions.action = []
+         
+        if self.tagged_date is not None:
+            # refreshes the queryset next time it is accessed
+            # regardless of resource tag (cache) age
+            invalidate = jobmodels.EventType.makeAction(
+                jobmodels.EventType.QUERYSET_INVALIDATE
+            )
+            self.actions.action.append(invalidate)
 
     def serialize(self, request=None):
         xobjModel = modellib.XObjIdModel.serialize(self, request)
