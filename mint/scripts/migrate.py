@@ -52,7 +52,8 @@ def add_columns(db, table, *columns):
     cu.execute("SELECT * FROM %s LIMIT 1" % (table,))
     allFields = set(x.lower() for x in cu.fields())
     for column in columns:
-        if column.lower() not in allFields:
+        name = column.split()[0]
+        if name.lower() not in allFields:
             cu.execute('ALTER TABLE %s ADD COLUMN %s' % (table, column))
     return True
 
@@ -3043,7 +3044,7 @@ class MigrateTo_57(SchemaMigration):
 
 
 class MigrateTo_58(SchemaMigration):
-    Version = (58, 54)
+    Version = (58, 55)
 
     def migrate(self):
         return True
@@ -3773,6 +3774,12 @@ class MigrateTo_58(SchemaMigration):
         for table in tables:
             for field in fields:
                 cu.execute("ALTER TABLE %s ADD COLUMN %s" % (table, field))
+        return True
+
+    def migrate55(self):
+        add_columns(self.db, 'Builds', 'output_trove text')
+        # Data migration is covered in the 55.2 migration, nobody else would
+        # have installed between then and here.
         return True
 
 #### SCHEMA MIGRATIONS END HERE #############################################
