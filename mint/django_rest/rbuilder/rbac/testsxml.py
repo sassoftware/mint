@@ -93,6 +93,55 @@ role_list_xml = """
 </roles>
 """
 
+role_list_xml_with_grants = """
+<roles count="3" next_page="" num_pages="1" previous_page="" full_collection="http://testserver/api/v1/rbac/roles" end_index="2" limit="10" order_by="" per_page="10" filter_by="" id="http://testserver/api/v1/rbac/roles;start_index=0;limit=10" start_index="0">
+  <role id="http://testserver/api/v1/rbac/roles/sysadmin">
+    <created_date>2011-08-29T15:14:07.060469+00:00</created_date>
+    <modified_date>2011-08-29T15:14:07.060562+00:00</modified_date>
+    <grants>
+      <grant id="http://testserver/api/v1/rbac/grants/1">
+        <modified_date>2011-08-29T15:14:07.088295+00:00</modified_date>
+        <permission>wmember</permission>
+        <permission_id>1</permission_id>
+        <queryset id="http://testserver/api/v1/query_sets/14"/>
+        <role id="http://testserver/api/v1/rbac/roles/sysadmin"/>
+        <created_date>2011-08-29T15:14:07.088210+00:00</created_date>
+      </grant>
+    </grants>
+    <role_id>sysadmin</role_id>
+  </role>
+  <role id="http://testserver/api/v1/rbac/roles/developer">
+    <created_date>2011-08-29T15:14:07.071144+00:00</created_date>
+    <modified_date>2011-08-29T15:14:07.071232+00:00</modified_date>
+    <grants>
+      <grant id="http://testserver/api/v1/rbac/grants/3">
+        <modified_date>2011-08-29T15:14:07.104559+00:00</modified_date>
+        <permission>wmember</permission>
+        <permission_id>3</permission_id>
+        <queryset id="http://testserver/api/v1/query_sets/13"/>
+        <role id="http://testserver/api/v1/rbac/roles/developer"/>
+        <created_date>2011-08-29T15:14:07.104478+00:00</created_date>
+      </grant>
+      <grant id="http://testserver/api/v1/rbac/grants/2">
+        <modified_date>2011-08-29T15:14:07.096349+00:00</modified_date>
+        <permission>rmember</permission>
+        <permission_id>2</permission_id>
+        <queryset id="http://testserver/api/v1/query_sets/14"/>
+        <role id="http://testserver/api/v1/rbac/roles/developer"/>
+        <created_date>2011-08-29T15:14:07.096269+00:00</created_date>
+      </grant>
+    </grants>
+    <role_id>developer</role_id>
+  </role>
+  <role id="http://testserver/api/v1/rbac/roles/intern">
+    <created_date>2011-08-29T15:14:07.079447+00:00</created_date>
+    <modified_date>2011-08-29T15:14:07.079671+00:00</modified_date>
+    <grants/>
+    <role_id>intern</role_id>
+  </role>
+</roles>
+"""
+
 role_get_xml = """
 <role id="http://testserver/api/v1/rbac/roles/developer">
   <grants/>

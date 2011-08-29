@@ -28,7 +28,7 @@ from conary.dbstore import sqlerrors, sqllib
 log = logging.getLogger(__name__)
 
 # database schema major version
-RBUILDER_DB_VERSION = sqllib.DBversion(58, 53)
+RBUILDER_DB_VERSION = sqllib.DBversion(58, 54)
 
 
 def _createTrigger(db, table, column = "changed"):
@@ -158,7 +158,9 @@ def _createRbac(db):
     if 'rbac_role' not in db.tables:
         cu.execute("""
         CREATE TABLE rbac_role (
-            role_id      TEXT PRIMARY KEY
+            role_id      TEXT PRIMARY KEY,
+            created_date timestamp with time zone NOT NULL,
+            modified_date timestamp with time zone NOT NULL
         ) %(TABLEOPTS)s """ % db.keywords)
         db.tables['rbac_role'] = []
         changed = True
@@ -174,6 +176,8 @@ def _createRbac(db):
             user_id      INTEGER NOT NULL
                REFERENCES Users ( userId ) 
                ON DELETE CASCADE,
+            created_date timestamp with time zone NOT NULL,
+            modified_date timestamp with time zone NOT NULL,
             UNIQUE ( "role_id", "user_id" )
         ) %(TABLEOPTS)s """ % db.keywords)
         db.tables['rbac_user_role'] = []
@@ -192,6 +196,8 @@ def _createRbac(db):
                ON DELETE CASCADE
                ON UPDATE CASCADE,
             action          TEXT NOT NULL,
+            created_date timestamp with time zone NOT NULL,
+            modified_date timestamp with time zone NOT NULL,
             UNIQUE ( "role_id", "queryset_id", "action" )
         ) %(TABLEOPTS)s """ % db.keywords)
         db.tables['rbac_permission'] = []

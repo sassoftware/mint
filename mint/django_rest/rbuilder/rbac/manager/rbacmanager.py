@@ -10,6 +10,7 @@ from mint.django_rest.rbuilder.users import models as usersmodels
 from mint.django_rest.rbuilder.manager import basemanager
 from mint.django_rest.rbuilder.querysets import models as querymodels
 from django.db import connection, transaction
+from datetime import datetime
 
 log = logging.getLogger(__name__)
 exposed = basemanager.exposed
@@ -49,12 +50,14 @@ class RbacManager(basemanager.BaseManager):
 
     def _updateThing(self, modelClass, old_id, obj):
         '''generic update method'''
-        # it's already saved, crazy @requires stuff.
-        #obj.save(force_update=True)
+        # it's already saved, via crazy @requires stuff, but we'll save again
+        # to make sure the date is correct.
+        obj.modified_date = datetime.now()
+        obj.save()
         return obj
 
-    def _updateSingleColumnThing(self, modelClass, old_id, obj, field, table):
-        '''update a table where the only value is a primary key'''
+    def _updatePrimaryKey(self, modelClass, old_id, obj, field, table):
+        '''update a table and change the primary key'''
         oldObj = modelClass.objects.get(pk=old_id)
         if not oldObj:
             return None
@@ -63,10 +66,14 @@ class RbacManager(basemanager.BaseManager):
         newValue = getattr(obj, field)
         oldValue = getattr(oldObj, field)
         cursor = connection.cursor()
-        pattern = 'UPDATE ' + table + ' SET ' + field + '=' + '%s WHERE ' + field + '=%s' 
+        pattern = 'UPDATE ' + table + ' SET ' + field + '=%s WHERE ' + field + '=%s' 
         cursor.execute(pattern, [newValue, oldValue])
         transaction.commit_unless_managed()
-        return modelClass.objects.get(pk=newValue)
+        obj = modelClass.objects.get(pk=newValue)
+        obj.modified_date = datetime.now()
+        obj.save()
+        return obj
+
 
     def _deleteThing(self, modelClass, obj):
         '''generic delete method'''
@@ -105,7 +112,7 @@ class RbacManager(basemanager.BaseManager):
 
     @exposed
     def updateRbacRole(self, old_id, role):
-        return self._updateSingleColumnThing(models.RbacRole, old_id, 
+        return self._updatePrimaryKey(models.RbacRole, old_id, 
             role, 'role_id', 'rbac_role')
 
     @exposed
@@ -138,6 +145,7 @@ class RbacManager(basemanager.BaseManager):
 
     @exposed
     def updateRbacPermission(self, old_id, permission):
+        permission.modified_date = datetime.now()
         permission.save()
         return permission
 
