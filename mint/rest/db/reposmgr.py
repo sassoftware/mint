@@ -554,7 +554,10 @@ class RepositoryManager(manager.Manager):
         for trv in client.repos.getTroves(troveTups):
             if trv:
                 metaDict = trv.troveInfo.metadata.get()['keyValue']
-                out.append(dict(metaDict.items()))
+                if metaDict:
+                    out.append(dict(metaDict.items()))
+                else:
+                    out.append({})
             else:
                 out.append(None)
         return out
