@@ -29,7 +29,7 @@ class rBuilderTest(TestPackageRecipe):
         'm2crypto:python',
         'mcp:python',
         'mcp-sources:python',
-        'memcached:python',
+        'python-memcached:python',
         'mod_python:runtime',
         'PIL:python',
         'python:devel',
