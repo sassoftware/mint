@@ -2,8 +2,6 @@
 # Copyright (c) 2011 rPath, Inc.
 #
 
-SUBDIRS = upload wig
-
 python_files = $(wildcard *.py)
 
 
@@ -14,5 +12,5 @@ install: pyfiles-install default-install
 clean: default-clean
 
 
-include ../../Make.rules
+include ../../../Make.rules
 # vim: set sts=8 sw=8 noexpandtab :

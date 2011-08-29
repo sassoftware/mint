@@ -345,7 +345,8 @@ def _createBuilds(db):
                 REFERENCES ProductVersions ON DELETE SET NULL,
             stageName            varchar(255)               DEFAULT '',
             status               integer                    DEFAULT -1,
-            statusMessage        text                       DEFAULT ''
+            statusMessage        text                       DEFAULT '',
+            output_trove         text
         ) %(TABLEOPTS)s """ % db.keywords)
         db.tables['Builds'] = []
         changed = True
