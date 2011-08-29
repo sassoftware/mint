@@ -3043,7 +3043,7 @@ class MigrateTo_57(SchemaMigration):
 
 
 class MigrateTo_58(SchemaMigration):
-    Version = (58, 53)
+    Version = (58, 54)
 
     def migrate(self):
         return True
@@ -3759,6 +3759,20 @@ class MigrateTo_58(SchemaMigration):
                 ALTER TABLE %s DROP COLUMN query_tag_id
             """ % t[0])
         cu.execute("DROP TABLE querysets_querytag")
+        return True
+
+    def migrate54(self):
+        '''Add dates to rbac tables'''
+        db = self.db
+        cu = db.cursor()
+        tables = [ 'rbac_user_role', 'rbac_permission', 'rbac_role' ]
+        fields = [
+             "created_date timestamp with time zone NOT NULL",
+             "modified_date timestamp with time zone NOT NULL",
+        ]
+        for table in tables:
+            for field in fields:
+                cu.execute("ALTER TABLE %s ADD COLUMN %s" % (table, field))
         return True
 
 #### SCHEMA MIGRATIONS END HERE #############################################

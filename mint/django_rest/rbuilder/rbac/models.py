@@ -68,6 +68,10 @@ class RbacRole(modellib.XObjIdModel):
 
     role_id = D(models.TextField(primary_key=True),
         "the database ID for the role")
+    created_date = D(modellib.DateTimeUtcField(auto_now_add=True),
+        "creation date")
+    modified_date = D(modellib.DateTimeUtcField(auto_now_add=True),
+        "modification date")
 
 class RbacPermissions(modellib.Collection):
     '''
@@ -112,6 +116,10 @@ class RbacPermission(modellib.XObjIdModel):
     queryset     =  D(modellib.ForeignKey(querymodels.QuerySet, 
         null=False, db_column='queryset_id', related_name='grants'), 'queryset id')
     permission  = D(models.TextField(db_column='action'), 'allowed capability name')
+    created_date = D(modellib.DateTimeUtcField(auto_now_add=True),
+        "creation date")
+    modified_date = D(modellib.DateTimeUtcField(auto_now_add=True),
+        "modification date")
 
 class RbacUserRoles(modellib.Collection):
     '''
@@ -159,6 +167,10 @@ class RbacUserRole(modellib.XObjIdModel):
     role    =  D(modellib.ForeignKey(RbacRole, null=False), 'rbac_role id')
     user    =  D(modellib.ForeignKey(usersmodels.User, null=False, 
         related_name='user_roles'), 'user id')
+    created_date = D(modellib.DateTimeUtcField(auto_now_add=True),
+        "creation date")
+    modified_date = D(modellib.DateTimeUtcField(auto_now_add=True),
+        "modification date")
 
     def serialize(self, request):
         xobj_model = modellib.XObjIdModel.serialize(self, request)

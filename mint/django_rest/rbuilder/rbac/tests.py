@@ -300,6 +300,12 @@ class RbacPermissionViews(RbacTestCase):
         self.assertEqual(len(found_items), 3, 'right number of items')
         self.assertXMLEquals(content, testsxml.permission_list_xml)
 
+        # verify that grants also show up on roles objects
+        # via associations
+        url = 'rbac/roles'
+        content = self.req(url, method='GET', expect=200, is_admin=True)
+        self.assertXMLEquals(content, testsxml.role_list_xml_with_grants)
+
     def testCanGetSinglePermission(self):
         url = 'rbac/grants/1'
         content = self.req(url, method='GET', expect=401, is_authenticated=True)
