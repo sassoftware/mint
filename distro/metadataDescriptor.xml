@@ -99,7 +99,7 @@
       </enumeratedType>
     </field>
     <field>
-      <name>metadata.billingCode</name>
+      <name>metadata.billing_code</name>
       <help lang="en_US">@Help_import_image_billing_code@</help>
       <descriptions>
         <desc>Billing Code</desc>
@@ -108,7 +108,7 @@
       <default/>
     </field>
     <field>
-      <name>metadata.deptCode</name>
+      <name>metadata.department_code</name>
       <help lang="en_US">@Help_import_image_dept_code@</help>
       <descriptions>
         <desc>Department Code</desc>
