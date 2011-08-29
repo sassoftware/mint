@@ -14,6 +14,7 @@ from mint.django_rest.rbuilder import modellib
 #from mint.django_rest.rbuilder.inventory import models as inventorymodels
 from mint.django_rest.rbuilder.users import models as usersmodels
 from mint.django_rest.rbuilder.projects import models as projectsmodels
+from mint.django_rest.rbuilder.rbac import models as rbacmodels
 from mint.django_rest.rbuilder.querysets import errors
 
 from xobj import xobj
@@ -266,8 +267,75 @@ class SystemTag(modellib.XObjIdModel):
         querySetHref = self.query_set.get_absolute_url(request)
         xobjModel.query_set = modellib.XObjHrefModel(querySetHref)
         return xobjModel
+
+
+# TODO: reduce duplication here, add a common tag base class or factory?
+class RoleTag(modellib.XObjIdModel):
+    '''
+    Indicates what roles were matched by a query set
+    '''
+
+    class Meta:
+        unique_together = (("role", "query_set", "inclusion_method"),)
+
+    _xobj = xobj.XObjMetadata(
+                tag = 'role_tag')
+
+    role_tag_id = models.AutoField(primary_key=True)
+    role = XObjHidden(modellib.ForeignKey(rbacmodels.RbacRole,
+        related_name="tags"))
+    query_set = XObjHidden(modellib.ForeignKey(QuerySet, related_name="role_tags",
+        text_field="name"))
+    inclusion_method = XObjHidden(modellib.ForeignKey(InclusionMethod,
+        related_name="role_tags"))
+
+    load_fields = [role, query_set, inclusion_method]
+
+    def get_absolute_url(self, *args, **kwargs):
+        self._parents = [self.system, self]
+        return modellib.XObjIdModel.get_absolute_url(self, *args, **kwargs)
+
+    def serialize(self, request=None, values=None):
+        xobjModel = modellib.XObjIdModel.serialize(self, request)
+        querySetHref = self.query_set.get_absolute_url(request)
+        xobjModel.query_set = modellib.XObjHrefModel(querySetHref)
+        return xobjModel         
          
-         
+# TODO: reduce duplication here, add a common tag base class or factory?
+class PermissionTag(modellib.XObjIdModel):
+    '''
+    Indicates what roles were matched by a query set
+    '''
+
+    class Meta:
+        unique_together = (("permission", "query_set", "inclusion_method"),)
+
+    _xobj = xobj.XObjMetadata(
+                tag = 'grant_tag')
+
+    # NOTE: we call permissions "GRANTS" in the XML api, though these
+    # tags will largely be hidden here, and we can call fields by their
+    # internal names, knowing this data need not be surfaced.
+    permission_tag_id = models.AutoField(primary_key=True)
+    permission = XObjHidden(modellib.ForeignKey(rbacmodels.RbacPermission,
+        related_name="tags"))
+    query_set = XObjHidden(modellib.ForeignKey(QuerySet, related_name="permission_tags",
+        text_field="name"))
+    inclusion_method = XObjHidden(modellib.ForeignKey(InclusionMethod,
+        related_name="permission_tags"))
+
+    load_fields = [permission, query_set, inclusion_method]
+
+    def get_absolute_url(self, *args, **kwargs):
+        self._parents = [self.system, self]
+        return modellib.XObjIdModel.get_absolute_url(self, *args, **kwargs)
+
+    def serialize(self, request=None, values=None):
+        xobjModel = modellib.XObjIdModel.serialize(self, request)
+        querySetHref = self.query_set.get_absolute_url(request)
+        xobjModel.query_set = modellib.XObjHrefModel(querySetHref)
+        return xobjModel
+
 class UserTag(modellib.XObjIdModel):
     '''Indicates what users were matched by a query set'''
 

@@ -28,7 +28,7 @@ from conary.dbstore import sqlerrors, sqllib
 log = logging.getLogger(__name__)
 
 # database schema major version
-RBUILDER_DB_VERSION = sqllib.DBversion(58, 54)
+RBUILDER_DB_VERSION = sqllib.DBversion(58, 55)
 
 
 def _createTrigger(db, table, column = "changed"):
@@ -2193,6 +2193,18 @@ def _createAllSystems(db):
     qsId = _addQuerySet(db, "All Systems", "All systems", "system", False, filterId)
     return True
 
+def _createAllRoles(db):
+    """Add the all roles query set"""
+    filterId = _addQuerySetFilterEntry(db, "rbac_role.role_id", "IS_NULL", "false")
+    qsId = _addQuerySet(db, "All Roles", "All roles", "role", False, filterId, 'rbac')
+    return True
+
+def _createAllGrants(db):
+    """Add the all systems query set"""
+    filterId = _addQuerySetFilterEntry(db, "rbac_permission.permission_id", "IS_NULL", "false")
+    qsId = _addQuerySet(db, "All Grants", "All grants", "grant", False, filterId, 'rbac')
+    return True
+
 
 def _createQuerySetSchema(db):
     """QuerySet tables"""
@@ -2373,6 +2385,40 @@ def _createQuerySetSchema(db):
             CONSTRAINT querysets_stagetag_uq UNIQUE ("stage_id", "query_set_id", "inclusion_method_id")
         )""")
 
+    changed |= createTable(db, 'querysets_permissiontag', """
+        CREATE TABLE "querysets_permissiontag" (
+            "permission_tag_id" TEXT PRIMARY KEY,
+            "permission_id" INTEGER
+                REFERENCES "rbac_permission" ("permission_id")
+                ON DELETE CASCADE
+                NOT NULL,
+            "query_set_id" INTEGER
+                REFERENCES "querysets_queryset" ("query_set_id")
+                ON DELETE CASCADE,
+            "inclusion_method_id" INTEGER
+                REFERENCES "querysets_inclusionmethod" ("inclusion_method_id")
+                ON DELETE CASCADE
+                NOT NULL,
+            CONSTRAINT querysets_permissiontag_uq UNIQUE ("permission_id", "query_set_id", "inclusion_method_id")
+        )""")
+
+    changed |= createTable(db, 'querysets_roletag', """
+        CREATE TABLE "querysets_roletag" (
+            "role_tag_id" TEXT PRIMARY KEY,
+            "role_id" TEXT
+                REFERENCES "rbac_role" ("role_id")
+                ON DELETE CASCADE
+                NOT NULL,
+            "query_set_id" INTEGER
+                REFERENCES "querysets_queryset" ("query_set_id")
+                ON DELETE CASCADE,
+            "inclusion_method_id" INTEGER
+                REFERENCES "querysets_inclusionmethod" ("inclusion_method_id")
+                ON DELETE CASCADE
+                NOT NULL,
+            CONSTRAINT querysets_roletag_uq UNIQUE ("role_id", "query_set_id", "inclusion_method_id")
+        )""")
+
     changed |= _addTableRows(db, "querysets_queryset_filter_entries",
         'id',
         [dict(queryset_id=activeQSId, filterentry_id=activeFiltId),
@@ -2395,6 +2441,9 @@ def _createQuerySetSchema(db):
                 NOT NULL,
             UNIQUE ("from_queryset_id", "to_queryset_id")
         )""")
+    
+    changed != _createAllRoles(db)
+    changed |= _createAllGrants(db)
 
     return changed
 
