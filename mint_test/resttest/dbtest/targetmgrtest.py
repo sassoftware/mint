@@ -19,8 +19,7 @@ class TargetManagerTest(mint_rephelp.MintDatabaseHelper):
     def setUp(self):
         tmgr = targetmgr.TargetManager
         mint_rephelp.MintDatabaseHelper.setUp(self)
-        if not os.path.exists(tmgr.TargetImportScriptPath):
-            tmgr.importTargetSystems = lambda *args, **kwargs: True
+        tmgr.importTargetSystems = lambda *args, **kwargs: True
 
     def _newTarget(self, targetType=None, targetName=None, targetData=None):
         targetType = targetType or 'ec2'
