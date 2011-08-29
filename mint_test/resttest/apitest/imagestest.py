@@ -115,19 +115,17 @@ class ImagesTest(restbase.BaseRestTest):
 </image>""" % dict(productVersion=productVersion)
 
 
-        from rpath_repeater import client as repclient
-        from rpath_repeater import models
-        class MockRepeaterClient(repclient.RepeaterClient):
+        from mint.image_gen.upload import client as rclient
+        class MockRClient(rclient.UploadClient):
             calls = []
-            def download_images(slf, *args, **kwargs):
+            def __init__(self, *args, **kwargs):
+                pass
+            def downloadImages(slf, *args, **kwargs):
                 slf.calls.append((args, kwargs))
                 return 'uuid', 'job'
-            Image = models.Image
-            ImageFile = models.ImageFile
-            ImageMetadata = models.ImageMetadata
 
         def mockGetRepeaterClient():
-            return MockRepeaterClient()
+            return MockRClient()
         self.mock(db.imageMgr, "getRepeaterClient", mockGetRepeaterClient)
 
         req, img = client.call('POST', 'products/%s/images' % hostname, imageXml)
