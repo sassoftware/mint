@@ -61,9 +61,6 @@ class TestRunner(DjangoTestSuiteRunner):
         # Test connection
         conn.cursor()
         cls._sqlite_dump(dbname, cls.DB_DUMP)
-        from mint.db import database
-        # Turn off temporary table creation, because django keeps the db locked
-        database.Database._createTemporaryTables = lambda *args, **kwargs: None
         return ([(conn, oldDbName, True)], [])
 
     @classmethod
