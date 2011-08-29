@@ -20,6 +20,7 @@ from mint.django_rest.rbuilder.querysets import models
 from mint.django_rest.rbuilder.inventory import models as inventorymodels
 from mint.django_rest.rbuilder.users import models as usermodels
 from mint.django_rest.rbuilder.projects import models as projectmodels
+from mint.django_rest.rbuilder.rbac import models as rbacmodels
 
 # retag if a new query is made and the results are greater
 # than this many seconds old
@@ -36,24 +37,32 @@ class QuerySetManager(basemanager.BaseManager):
         'user'                 : '_tagUsers',
         'project'              : '_tagProjects',
         'project_branch_stage' : '_tagStages',
+        'grant'                : '_tagGrants',
+        'role'                 : '_tagRoles',
     }
     resourceCollectionMap = {
         'system'               : 'systems',
         'user'                 : 'users',
         'project'              : 'projects',
-        'project_branch_stage' : 'stages'
+        'project_branch_stage' : 'stages',
+        'grant'                : 'grants',
+        'role'                 : 'roles',
     }
     tagLookupMap = {
         'system'               : '_lookupTaggedSystems',
         'user'                 : '_lookupTaggedUsers', 
         'project'              : '_lookupTaggedProjects',
         'project_branch_stage' : '_lookupTaggedStages',
+        'grant'                : '_lookupTaggedGrants',
+        'role'                 : '_lookupTaggedRoles',
     }
     tagModelMap = {
         'system'               : 'system_tag',
         'user'                 : 'user_tag',
         'project_branch_stage' : 'stage_tag',
         'project'              : 'project_tag'
+        # grants are presently untagged
+        # roles are presently untagged
     }
     
 
@@ -140,8 +149,6 @@ class QuerySetManager(basemanager.BaseManager):
         TODO: make this pluggable and eliminate the map.
         '''
         method_name = self.tagMethodMap[querySet.resource_type]
-        if method_name is None:
-            return None
         return getattr(self, method_name)
 
     def _searchMethod(self, querySet):
@@ -149,8 +156,6 @@ class QuerySetManager(basemanager.BaseManager):
         Get the tag lookup method for the querySet
         '''
         method_name = self.tagLookupMap[querySet.resource_type]
-        if method_name is None:
-            return None
         return getattr(self, method_name)
 
     def _tagSingleQuerySetFiltered(self, querySet):
@@ -158,9 +163,6 @@ class QuerySetManager(basemanager.BaseManager):
         # get the results the filtered items would have matched
         resources = self.filterQuerySet(querySet)
         method = self._tagMethod(querySet)
-        if method is None:
-            # query set doesn't support tagging yet
-            return
         method(resources, querySet, self._filteredMethod())
         querySet.tagged_date = datetime.now()
         querySet.save()
@@ -214,6 +216,18 @@ class QuerySetManager(basemanager.BaseManager):
            tagClass=models.StageTag,
            tagTable='querysets_stagetag',
            idColumn='stage_id')
+
+    def _tagRoles(self, resources, tag, inclusionMethod):
+        self._tagGeneric(resources, tag, inclusionMethod,
+           tagClass=models.RoleTag,
+           tagTable='querysets_roletag',
+           idColumn='role_id')
+
+    def _tagGrants(self, resources, tag, inclusionMethod):
+        self._tagGeneric(resources, tag, inclusionMethod,
+           tagClass=models.PermissionTag,
+           tagTable='querysets_permissiontag',
+           idColumn='permission_id')
 
     def _classByName(self, kls):
         '''helper method to load modules'''
@@ -271,7 +285,7 @@ class QuerySetManager(basemanager.BaseManager):
         querySet = self._querySet(querySetId)
         stale = self._areResourceTagsStale(querySet)
         lookupFn = self._searchMethod(querySet)
-        if stale or not use_tags or lookupFn is None:
+        if stale or not use_tags:
             # if use_tags is true, attempt to use tags *WHERE* possible in
             # subquerysets, asking each if they are stale or not.  If stale
             # automatically retag resouces that match
@@ -352,6 +366,20 @@ class QuerySetManager(basemanager.BaseManager):
             tags__inclusion_method__inclusion_method_id__in=methods
         ).order_by('stage_id')
 
+    def _lookupTaggedRoles(self, querySet, methods):
+        # TODO: eliminate duplication here
+        return rbacmodels.RbacRole.objects.filter(
+            tags__query_set=querySet,
+            tags__inclusion_method__inclusion_method_id__in=methods
+        ).order_by('role_id')
+
+    def _lookupTaggedGrants(self, querySet, methods):
+        # TODO: eliminate duplication here
+        return rbacmodels.RbacPermission.objects.filter(
+            tags__query_set=querySet,
+            tags__inclusion_method__inclusion_method_id__in=methods
+        ).order_by('permission_id')
+
     @exposed
     def getQuerySetsForResource(self, resource):
         '''
@@ -383,7 +411,7 @@ class QuerySetManager(basemanager.BaseManager):
                 system_tags__system = resource
             )
         else:
-            raise Exception("resource is not searchable by queryset")
+            raise Exception("resource is not searchable by queryset tags")
 
         return tags
 
@@ -395,7 +423,15 @@ class QuerySetManager(basemanager.BaseManager):
         '''
         querySet = self._querySet(querySetId)
         lookupFn = self._searchMethod(querySet)
-        result_data = self._getQuerySetChosenResultFast(querySet, lookupFn)
+        result_data = None
+        if lookupFn is None:
+            # if the queryset does not support tagging, it does not support
+            # chosen results.  This is so far only true for QuerySets that are not
+            # user configurable.
+            model = modellib.type_map[querySet.resource_type]
+            result_data = EmptyQuerySet(model)
+        else:
+            result_data = self._getQuerySetChosenResultFast(querySet, lookupFn)
         resourceCollection = self._getResourceCollection(querySet, result_data)
         resourceCollection.view_name = "QuerySetChosenResult"
         return resourceCollection

@@ -11,7 +11,8 @@ from django.db import models
 from mint.django_rest.deco import D
 from mint.django_rest.rbuilder import modellib
 from mint.django_rest.rbuilder.users import models as usersmodels
-from mint.django_rest.rbuilder.querysets import models as querymodels
+# avoid circular reference
+#from mint.django_rest.rbuilder.querysets import models as querymodels
 from xobj import xobj
 from django.core.urlresolvers import reverse
 
@@ -64,7 +65,7 @@ class RbacRole(modellib.XObjIdModel):
     )
     
     # objects = modellib.RbacRoleManager() # needed because of non-integer PK?
-    _xobj_hidden_accessors = set(['rbacuserrole_set'])
+    _xobj_hidden_accessors = set(['rbacuserrole_set', 'tags'])
 
     role_id = D(models.TextField(primary_key=True),
         "the database ID for the role")
@@ -108,12 +109,13 @@ class RbacPermission(modellib.XObjIdModel):
     _xobj = xobj.XObjMetadata(
         tag = 'grant'
     )
+    _xobj_hidden_accessors = set(['tags'])
 
     permission_id = D(models.AutoField(primary_key=True),
         "the database ID for the context")
     role         =  D(modellib.ForeignKey(RbacRole, 
         null=False, db_column='role_id', related_name='grants'), 'rbac_role id')
-    queryset     =  D(modellib.ForeignKey(querymodels.QuerySet, 
+    queryset     =  D(modellib.ForeignKey('querysets.QuerySet', 
         null=False, db_column='queryset_id', related_name='grants'), 'queryset id')
     permission  = D(models.TextField(db_column='action'), 'allowed capability name')
     created_date = D(modellib.DateTimeUtcField(auto_now_add=True),

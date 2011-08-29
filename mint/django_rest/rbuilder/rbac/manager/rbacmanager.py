@@ -36,9 +36,10 @@ class RbacManager(basemanager.BaseManager):
     def _getThings(self, modelClass, containedClass, collection_field, order_by=None):
         '''generic collection loader'''
         things = modelClass()
-        all = containedClass.objects.all()
+        all = containedClass.objects
         if order_by:
             all = all.order_by(*order_by)
+        all = all.all()
         setattr(things, collection_field, containedClass.objects.all())
         return things
 

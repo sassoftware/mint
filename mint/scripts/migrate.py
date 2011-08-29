@@ -3044,7 +3044,7 @@ class MigrateTo_57(SchemaMigration):
 
 
 class MigrateTo_58(SchemaMigration):
-    Version = (58, 55)
+    Version = (58, 56)
 
     def migrate(self):
         return True
@@ -3777,9 +3777,52 @@ class MigrateTo_58(SchemaMigration):
         return True
 
     def migrate55(self):
-        add_columns(self.db, 'Builds', 'output_trove text')
         # Data migration is covered in the 55.2 migration, nobody else would
         # have installed between then and here.
+        add_columns(self.db, 'Builds', 'output_trove text')
+        return True
+
+    def migrate56(self):
+        # add new querysets for roles & grants
+        cu = self.db.cursor()
+        db = self.db
+        filterId = schema._addQuerySetFilterEntry(db, "rbac_role.role_id", "IS_NULL", "false")
+        qsId = schema._addQuerySet(db, "All Roles", "All roles", "role", False, filterId, 'rbac')
+        filterId = schema._addQuerySetFilterEntry(db, "rbac_permission.permission_id", "IS_NULL", "false")
+        qsId = schema._addQuerySet(db, "All Grants", "All grants", "grant", False, filterId, 'rbac')
+        createTable(self.db, """ 
+            CREATE TABLE "querysets_permissiontag" (
+                "permission_tag_id" TEXT PRIMARY KEY,
+                "permission_id" INTEGER
+                    REFERENCES "rbac_permission" ("permission_id")
+                    ON DELETE CASCADE
+                    NOT NULL,
+                "query_set_id" INTEGER
+                    REFERENCES "querysets_queryset" ("query_set_id")
+                    ON DELETE CASCADE,
+                "inclusion_method_id" INTEGER
+                    REFERENCES "querysets_inclusionmethod" ("inclusion_method_id")
+                    ON DELETE CASCADE
+                    NOT NULL,
+                CONSTRAINT querysets_permissiontag_uq UNIQUE ("permission_id", "query_set_id", "inclusion_method_id")
+            )""")
+
+        createTable(self.db, """
+            CREATE TABLE "querysets_roletag" (
+                "role_tag_id" TEXT PRIMARY KEY,
+                "role_id" TEXT
+                    REFERENCES "rbac_role" ("role_id")
+                    ON DELETE CASCADE
+                    NOT NULL,
+                "query_set_id" INTEGER
+                    REFERENCES "querysets_queryset" ("query_set_id")
+                    ON DELETE CASCADE,
+                "inclusion_method_id" INTEGER
+                    REFERENCES "querysets_inclusionmethod" ("inclusion_method_id")
+                    ON DELETE CASCADE
+                    NOT NULL,
+                CONSTRAINT querysets_roletag_uq UNIQUE ("role_id", "query_set_id", "inclusion_method_id")
+            )""")
         return True
 
 #### SCHEMA MIGRATIONS END HERE #############################################
