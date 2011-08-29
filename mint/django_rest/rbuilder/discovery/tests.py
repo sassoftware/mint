@@ -66,6 +66,7 @@ class VersionsTestCase(XMLTestCase):
     <maintenance_mode>false</maintenance_mode>
     <rbuilder_id>super-id</rbuilder_id>
   </config_info>
+  <grants id="http://testserver/api/v1/rbac/grants"/>
   <inventory id="http://testserver/api/v1/inventory"/>
   <jobs id="http://testserver/api/v1/jobs"/>
   <module_hooks id="http://testserver/api/v1/module_hooks"/>
@@ -79,6 +80,7 @@ class VersionsTestCase(XMLTestCase):
   <query_sets id="http://testserver/api/v1/query_sets"/>
   <rbac id="http://testserver/api/v1/rbac"/>
   <reports id="http://testserver/api/v1/reports"/>
+  <roles id="http://testserver/api/v1/rbac/roles"/>
   <users id="http://testserver/api/v1/users"/>
   <session id="http://testserver/api/v1/session"/>
   <version_info>
