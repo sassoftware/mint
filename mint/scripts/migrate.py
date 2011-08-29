@@ -3779,7 +3779,7 @@ class MigrateTo_58(SchemaMigration):
         cu = self.db.cursor()
         schema._createAllRoles(self.db)
         schema._createAllGrants(self.db)
-        createTable(db, 'querysets_permissiontag', """
+        createTable(self.db, """ 
             CREATE TABLE "querysets_permissiontag" (
                 "permission_tag_id" TEXT PRIMARY KEY,
                 "permission_id" INTEGER
@@ -3796,7 +3796,7 @@ class MigrateTo_58(SchemaMigration):
                 CONSTRAINT querysets_permissiontag_uq UNIQUE ("permission_id", "query_set_id", "inclusion_method_id")
             )""")
 
-        createTable(db, 'querysets_roletag', """
+        createTable(self.db, """
             CREATE TABLE "querysets_roletag" (
                 "role_tag_id" TEXT PRIMARY KEY,
                 "role_id" TEXT

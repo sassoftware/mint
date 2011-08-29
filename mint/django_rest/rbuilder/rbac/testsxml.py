@@ -93,6 +93,23 @@ role_list_xml = """
 </roles>
 """
 
+role_queryset_xml = """
+<roles count="3" end_index="2" filter_by="" full_collection="http://testserver/api/v1/query_sets/12/all" id="http://testserver/api/v1/query_sets/12/all;start_index=0;limit=10" limit="10" next_page="" num_pages="1" order_by="" per_page="10" previous_page="" start_index="0">
+  <role id="http://testserver/api/v1/rbac/roles/developer">
+    <grants/>
+    <role_id>developer</role_id>
+  </role>
+  <role id="http://testserver/api/v1/rbac/roles/intern">
+    <grants/>
+    <role_id>intern</role_id>
+  </role>
+  <role id="http://testserver/api/v1/rbac/roles/sysadmin">
+    <grants/>
+    <role_id>sysadmin</role_id>
+  </role>
+</roles>
+"""
+
 role_list_xml_with_grants = """
 <roles count="3" next_page="" num_pages="1" previous_page="" full_collection="http://testserver/api/v1/rbac/roles" end_index="2" limit="10" order_by="" per_page="10" filter_by="" id="http://testserver/api/v1/rbac/roles;start_index=0;limit=10" start_index="0">
   <role id="http://testserver/api/v1/rbac/roles/sysadmin">
@@ -173,7 +190,7 @@ permission_list_xml = """
 """
 
 permission_queryset_xml = """
-<grants count="3" end_index="2" filter_by="" full_collection="http://testserver/api/v1/query_sets/7/all" id="http://testserver/api/v1/query_sets/7/all;start_index=0;limit=10" limit="10" next_page="" num_pages="1" order_by="" per_page="10" previous_page="" start_index="0">
+<grants count="3" end_index="2" filter_by="" full_collection="http://testserver/api/v1/query_sets/13/all" id="http://testserver/api/v1/query_sets/13/all;start_index=0;limit=10" limit="10" next_page="" num_pages="1" order_by="" per_page="10" previous_page="" start_index="0">
   <grant id="http://testserver/api/v1/rbac/grants/1">
     <permission_id>1</permission_id>
     <permission>wmember</permission>

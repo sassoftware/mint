@@ -208,6 +208,45 @@ def _createRbac(db):
     changed != db.createIndex('rbac_permission', 'RbacPermissionLookupIdx',  
         'role_id, queryset_id, action')
 
+    # rbac query sets
+    changed != _createAllRoles(db)
+    changed |= _createAllGrants(db)
+
+    # queryset tag tables
+    changed |= createTable(db, 'querysets_permissiontag', """
+        CREATE TABLE "querysets_permissiontag" (
+            "permission_tag_id" TEXT PRIMARY KEY,
+            "permission_id" INTEGER
+                REFERENCES "rbac_permission" ("permission_id")
+                ON DELETE CASCADE
+                NOT NULL,
+            "query_set_id" INTEGER
+                REFERENCES "querysets_queryset" ("query_set_id")
+                ON DELETE CASCADE,
+            "inclusion_method_id" INTEGER
+                REFERENCES "querysets_inclusionmethod" ("inclusion_method_id")
+                ON DELETE CASCADE
+                NOT NULL,
+            CONSTRAINT querysets_permissiontag_uq UNIQUE ("permission_id", "query_set_id", "inclusion_method_id")
+        )""")
+
+    changed |= createTable(db, 'querysets_roletag', """
+        CREATE TABLE "querysets_roletag" (
+            "role_tag_id" TEXT PRIMARY KEY,
+            "role_id" TEXT
+                REFERENCES "rbac_role" ("role_id")
+                ON DELETE CASCADE
+                NOT NULL,
+            "query_set_id" INTEGER
+                REFERENCES "querysets_queryset" ("query_set_id")
+                ON DELETE CASCADE,
+            "inclusion_method_id" INTEGER
+                REFERENCES "querysets_inclusionmethod" ("inclusion_method_id")
+                ON DELETE CASCADE
+                NOT NULL,
+            CONSTRAINT querysets_roletag_uq UNIQUE ("role_id", "query_set_id", "inclusion_method_id")
+        )""")
+
     return changed
 
 def _createProjects(db):
@@ -2385,40 +2424,6 @@ def _createQuerySetSchema(db):
             CONSTRAINT querysets_stagetag_uq UNIQUE ("stage_id", "query_set_id", "inclusion_method_id")
         )""")
 
-    changed |= createTable(db, 'querysets_permissiontag', """
-        CREATE TABLE "querysets_permissiontag" (
-            "permission_tag_id" TEXT PRIMARY KEY,
-            "permission_id" INTEGER
-                REFERENCES "rbac_permission" ("permission_id")
-                ON DELETE CASCADE
-                NOT NULL,
-            "query_set_id" INTEGER
-                REFERENCES "querysets_queryset" ("query_set_id")
-                ON DELETE CASCADE,
-            "inclusion_method_id" INTEGER
-                REFERENCES "querysets_inclusionmethod" ("inclusion_method_id")
-                ON DELETE CASCADE
-                NOT NULL,
-            CONSTRAINT querysets_permissiontag_uq UNIQUE ("permission_id", "query_set_id", "inclusion_method_id")
-        )""")
-
-    changed |= createTable(db, 'querysets_roletag', """
-        CREATE TABLE "querysets_roletag" (
-            "role_tag_id" TEXT PRIMARY KEY,
-            "role_id" TEXT
-                REFERENCES "rbac_role" ("role_id")
-                ON DELETE CASCADE
-                NOT NULL,
-            "query_set_id" INTEGER
-                REFERENCES "querysets_queryset" ("query_set_id")
-                ON DELETE CASCADE,
-            "inclusion_method_id" INTEGER
-                REFERENCES "querysets_inclusionmethod" ("inclusion_method_id")
-                ON DELETE CASCADE
-                NOT NULL,
-            CONSTRAINT querysets_roletag_uq UNIQUE ("role_id", "query_set_id", "inclusion_method_id")
-        )""")
-
     changed |= _addTableRows(db, "querysets_queryset_filter_entries",
         'id',
         [dict(queryset_id=activeQSId, filterentry_id=activeFiltId),
@@ -2442,9 +2447,6 @@ def _createQuerySetSchema(db):
             UNIQUE ("from_queryset_id", "to_queryset_id")
         )""")
     
-    changed != _createAllRoles(db)
-    changed |= _createAllGrants(db)
-
     return changed
 
 def _createChangeLogSchema(db):

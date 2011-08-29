@@ -231,7 +231,7 @@ class RbacRoleViews(RbacTestCase):
         queryset = querymodels.QuerySet.objects.get(name='All Roles')
         url = "query_sets/%s/all" % queryset.pk
         content = self.req(url, method='GET', expect=200, is_admin=True)
-        self.assertXMLEquals(content, testsxml.role_list_xml)
+        self.assertXMLEquals(content, testsxml.role_queryset_xml)
  
     def testCanGetSingleRole(self):
 
