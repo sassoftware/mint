@@ -12,7 +12,7 @@ from mint.django_rest.rbuilder.errors import PermissionDenied
 
 def rbac_can_read_user(view, request, user_id, *args, **kwargs):
     obj = view.mgr.getUser(user_id)
-    user = view.mgr.getSessionInfo().user[0]
+    user = request._authUser
     if obj.pk == user.pk:
         # you can always read yourself
         return True 
@@ -20,7 +20,7 @@ def rbac_can_read_user(view, request, user_id, *args, **kwargs):
 
 def rbac_can_write_user(view, request, user_id, *args, **kwargs):
     obj = view.mgr.getUser(user_id)
-    user = view.mgr.getSessionInfo().user[0]
+    user = request._authUser
     if obj.pk == user.pk:
         # you can always update yourself
         # TODO: but you can't delete yourself unless admin
@@ -42,6 +42,7 @@ class UsersService(service.BaseService):
              # they have access to in order to obtain all results
              if request._is_admin:
                  return self.get()
+             # TODO: redirect to queryset
              raise PermissionDenied()
 
     def get(self, user_id=None):

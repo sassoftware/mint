@@ -25,7 +25,7 @@ class Rbac(modellib.XObjModel):
     _xobj = xobj.XObjMetadata(
                 tag = 'rbac')
 
-    zones = D(modellib.HrefField('grants'), "permissions granted to roles")
+    grants = D(modellib.HrefField('grants'), "permissions granted to roles")
     roles = D(modellib.HrefField('roles'),  "access control roles")
 
 class RbacRoles(modellib.Collection):

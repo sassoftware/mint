@@ -376,13 +376,13 @@ class ImageImportMetadataDescriptorService(BaseInventoryService):
 def rbac_can_write_system_id(view, request, system_id, *args, **kwargs):
     '''is the system ID writeable by the user?'''
     obj = view.mgr.getSystem(system_id)
-    user = view.mgr.getSessionInfo().user[0]
+    user = request._authUser
     return view.mgr.userHasRbacPermission(user, obj, 'wmember')
 
 def rbac_can_read_system_id(view, request, system_id, *args, **kwargs):
     '''is the system ID readable by the user?'''
     obj = view.mgr.getSystem(system_id)
-    user = view.mgr.getSessionInfo().user[0]
+    user = request._authUser
     return view.mgr.userHasRbacPermission(user, obj, 'rmember')
         
 class InventorySystemsSystemService(BaseInventoryService):
