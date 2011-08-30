@@ -3044,7 +3044,7 @@ class MigrateTo_57(SchemaMigration):
 
 
 class MigrateTo_58(SchemaMigration):
-    Version = (58, 57)
+    Version = (58, 58)
 
     def migrate(self):
         return True
@@ -3872,6 +3872,54 @@ class MigrateTo_58(SchemaMigration):
                     NOT NULL,
                 CONSTRAINT querysets_roletag_uq UNIQUE ("role_id", "query_set_id", "inclusion_method_id")
             )""" % self.db.keywords)
+        return True
+
+    def migrate58(self):
+        # we want integer IDs for rbac role
+        cu = self.db.cursor()
+        cu.execute("DROP TABLE rbac_permission CASCADE")
+        cu.execute("DROP TABLE rbac_user_role CASCADE") 
+        cu.execute("DROP TABLE rbac_role CASCADE")
+ 
+        createTable(self.db, """
+            CREATE TABLE rbac_role (
+                role_id      %(PRIMARYKEY)s,
+                role_name    TEXT,
+                created_date timestamp with time zone NOT NULL,
+                modified_date timestamp with time zone NOT NULL
+            ) %(TABLEOPTS)s """ % db.keywords)
+
+        createTable(self.db, """
+            CREATE TABLE rbac_user_role (
+                rbac_user_role_id  %(PRIMARYKEY)s,
+                role_id      INTEGER NOT NULL 
+                    REFERENCES rbac_role ( role_id ) 
+                    ON DELETE CASCADE
+                    ON UPDATE CASCADE,
+                user_id      INTEGER NOT NULL
+                    REFERENCES Users ( userId ) 
+                    ON DELETE CASCADE,
+                created_date timestamp with time zone NOT NULL,
+                modified_date timestamp with time zone NOT NULL,
+                UNIQUE ( "role_id", "user_id" )
+            ) %(TABLEOPTS)s """ % db.keywords)
+
+        createTable(self.db, """
+            CREATE TABLE rbac_permission (
+                permission_id   %(PRIMARYKEY)s,
+                role_id         INTEGER NOT NULL
+                   REFERENCES rbac_role ( role_id ) 
+                   ON DELETE CASCADE
+                   ON UPDATE CASCADE,
+                queryset_id      INTEGER NOT NULL
+                   REFERENCES querysets_queryset ( query_set_id ) 
+                   ON DELETE CASCADE
+                   ON UPDATE CASCADE,
+                action          TEXT NOT NULL,
+                created_date timestamp with time zone NOT NULL,
+                modified_date timestamp with time zone NOT NULL,
+                UNIQUE ( "role_id", "queryset_id", "action" )
+            ) %(TABLEOPTS)s """ % db.keywords)
 
         return True
 

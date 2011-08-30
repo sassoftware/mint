@@ -41,39 +41,6 @@ class RbacManager(basemanager.BaseManager):
         setattr(things, collection_field, containedClass.objects.all())
         return things
 
-    def _addThing(self, modelClass, obj):
-        '''generic creation method'''
-        # it's already saved, crazy @requires stuff.
-        #obj.save()
-        return obj
-
-    def _updateThing(self, modelClass, old_id, obj):
-        '''generic update method'''
-        # it's already saved, via crazy @requires stuff, but we'll save again
-        # to make sure the date is correct.
-        obj.modified_date = datetime.now()
-        obj.save()
-        return obj
-
-    def _updatePrimaryKey(self, modelClass, old_id, obj, field, table):
-        '''update a table and change the primary key'''
-        oldObj = modelClass.objects.get(pk=old_id)
-        if not oldObj:
-            return None
-        # django doesn't like primary key updates
-        # so this is somewhat low level
-        newValue = getattr(obj, field)
-        oldValue = getattr(oldObj, field)
-        cursor = connection.cursor()
-        pattern = 'UPDATE ' + table + ' SET ' + field + '=%s WHERE ' + field + '=%s' 
-        cursor.execute(pattern, [newValue, oldValue])
-        transaction.commit_unless_managed()
-        obj = modelClass.objects.get(pk=newValue)
-        obj.modified_date = datetime.now()
-        obj.save()
-        return obj
-
-
     def _deleteThing(self, modelClass, obj):
         '''generic delete method'''
         if not obj:
@@ -107,12 +74,17 @@ class RbacManager(basemanager.BaseManager):
    
     @exposed
     def addRbacRole(self, role):
-        return self._addThing(models.RbacRole, role)
+        # already saved via requires() decorator
+        role = models.RbacRole.objects.get(role_name=role.role_name)
+        return role
 
     @exposed
     def updateRbacRole(self, old_id, role):
-        return self._updatePrimaryKey(models.RbacRole, old_id, 
-            role, 'role_id', 'rbac_role')
+        # view already checked that id matched
+        # save may be redundant due to requires() decorator
+        role.modified_date = datetime.now()
+        role.save()
+        return role
 
     @exposed
     def deleteRbacRole(self, role):
@@ -289,7 +261,7 @@ class RbacManager(basemanager.BaseManager):
         except models.RbacUserRole.DoesNotExist:
             # no role assignment found, create it
             models.RbacUserRole(user=user, role=role).save()
-
+            role = models.RbacUserRole.objects.get(user=user, role=role)
         return role
 
     # why no update function?

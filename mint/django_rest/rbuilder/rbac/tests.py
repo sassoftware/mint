@@ -140,19 +140,17 @@ class RbacBasicTestCase(RbacTestCase):
     def testModelsForRbacRoles(self):
         '''verify django models for roles work'''
 
-        sysadmin = models.RbacRole(pk='sysadmin')
+        sysadmin = models.RbacRole(role_name='sysadmin')
         sysadmin.save()
-        developer = models.RbacRole(pk='developer')
+        developer = models.RbacRole(role_name='developer')
         developer.save()
 
         self.assertEquals(len(models.RbacRole.objects.all()), 2,
             'correct number of results'
         )
 
-        developer2 = models.RbacRole.objects.get(pk='developer')
-        self.assertEquals(developer2.role_id, 'developer', 
-            'object fetched correctly'
-        )
+        developer2 = models.RbacRole.objects.get(role_name='developer')
+        self.assertEquals(developer2.pk, 2)
 
     def testModelsForRbacPermissions(self):
 
@@ -162,8 +160,9 @@ class RbacBasicTestCase(RbacTestCase):
         queryset1 = querymodels.QuerySet()
         queryset1.save()
 
-        role1    = models.RbacRole(pk='sysadmin')
+        role1    = models.RbacRole(role_name='sysadmin')
         role1.save() 
+        role1    = models.RbacRole.objects.get(role_name='sysadmin')
         action_name = 'speak freely'
         permission = models.RbacPermission(
            queryset        = queryset1,
@@ -178,7 +177,7 @@ class RbacBasicTestCase(RbacTestCase):
         found = permissions2[0]
         self.assertEquals(found.permission, action_name, 'saved ok')
         self.assertEquals(found.queryset.pk, size+1, 'saved ok')
-        self.assertEquals(found.role.pk, 'sysadmin', 'saved ok')
+        self.assertEquals(found.role.role_name, 'sysadmin', 'saved ok')
 
     def testModelsForUserRoleAssignment(self):
         # note -- we may also keep roles in AD, this is for the case
@@ -189,8 +188,9 @@ class RbacBasicTestCase(RbacTestCase):
             full_name = "test"
         )
         user1.save()
-        role1 = models.RbacRole(pk='sysadmin')
+        role1 = models.RbacRole(role_name='sysadmin')
         role1.save()
+        role1 = models.RbacRole.objects.get(role_name='sysadmin')
         mapping = models.RbacUserRole(
             user = user1,
             role = role1
@@ -202,7 +202,7 @@ class RbacBasicTestCase(RbacTestCase):
         self.assertEquals(len(mappings2), 1, 'correct length')
         found = mappings2[0]
         self.assertEquals(found.user.user_name, 'test', 'saved ok')
-        self.assertEquals(found.role.pk, 'sysadmin', 'saved ok')
+        self.assertEquals(found.role.role_name, 'sysadmin', 'saved ok')
 
 class RbacRoleViews(RbacTestCase):
 
@@ -210,7 +210,7 @@ class RbacRoleViews(RbacTestCase):
         RbacTestCase.setUp(self)
         self.seed_data = [ 'sysadmin', 'developer', 'intern' ]
         for item in self.seed_data:
-            models.RbacRole(item).save()
+            models.RbacRole(role_name=item).save()
        
     def testCanListRoles(self):
 
@@ -220,7 +220,7 @@ class RbacRoleViews(RbacTestCase):
 
         obj = xobj.parse(content)
         found_items = self._xobj_list_hack(obj.roles.role)
-        found_items = [ item.role_id for item in found_items ] 
+        found_items = [ item.role_name for item in found_items ] 
         for expected in self.seed_data:
             self.assertTrue(expected in found_items, 'found item')
         self.assertEqual(len(found_items), len(self.seed_data), 'right number of items')
@@ -235,43 +235,42 @@ class RbacRoleViews(RbacTestCase):
  
     def testCanGetSingleRole(self):
 
-        url = 'rbac/roles/developer'
+        url = 'rbac/roles/2'
         content = self.req(url, method='GET', expect=401, is_authenticated=True)
         content = self.req(url, method='GET', expect=200, is_admin=True)
         obj = xobj.parse(content)
-        self.assertEqual(obj.role.role_id, 'developer')
+        self.assertEqual(obj.role.role_name, 'developer')
         self.assertXMLEquals(content, testsxml.role_get_xml)
 
     def testCanAddRoles(self):
         
         url = 'rbac/roles'
-        input = testsxml.role_put_xml_input   
-        output = testsxml.role_put_xml_output
+        input = testsxml.role_post_xml_input   
+        output = testsxml.role_post_xml_output
         content = self.req(url, method='POST', data=input, expect=401, is_authenticated=True)
         content = self.req(url, method='POST', data=input, expect=200, is_admin=True)
-        found_items = models.RbacRole.objects.get(pk='rocketsurgeon')
-        self.assertEqual(found_items.pk, 'rocketsurgeon')
         self.assertXMLEquals(content, output)
 
     def testCanDeleteRoles(self):
 
-        url = 'rbac/roles/sysadmin'
+        url = 'rbac/roles/1'
         self.req(url, method='DELETE', expect=401, is_authenticated=True)
         self.req(url, method='DELETE', expect=204, is_admin=True)
         self.failUnlessRaises(models.RbacRole.DoesNotExist,
-            lambda: models.RbacRole.objects.get(pk='sysadmin'))
+            lambda: models.RbacRole.objects.get(role_name='sysadmin'))
 
     def testCanUpdateRoles(self):
         
-        url = 'rbac/roles/sysadmin'
+        url = 'rbac/roles/2' # was 1, 2 == sysadmin?
         input = testsxml.role_put_xml_input   # reusing put data is fine here
         output = testsxml.role_put_xml_output
         content = self.req(url, method='PUT', data=input, expect=401, is_authenticated=True)
         content = self.req(url, method='PUT', data=input, expect=200, is_admin=True)
-        found_items = models.RbacRole.objects.get(pk='rocketsurgeon')
-        self.failUnlessRaises(models.RbacRole.DoesNotExist,
-            lambda: models.RbacRole.objects.get(pk='sysadmin'))
-        self.assertEqual(found_items.pk, 'rocketsurgeon')
+        found_items = models.RbacRole.objects.get(role_name='rocketsurgeon')
+        all_roles = models.RbacRole.objects.all()
+        role_names = [ x.role_name for x in all_roles ]
+        self.assertTrue('developer' not in role_names)
+        self.assertTrue('rocketsurgeon' in role_names)
         self.assertXMLEquals(content, output)
 
 class RbacPermissionViews(RbacTestCase):
@@ -281,21 +280,21 @@ class RbacPermissionViews(RbacTestCase):
 
         self.seed_data = [ 'sysadmin', 'developer', 'intern' ]
         for item in self.seed_data:
-            models.RbacRole(item).save()
+            models.RbacRole(role_name=item).save()
 
         models.RbacPermission(
             queryset      = self.datacenter_queryset,
-            role          = models.RbacRole.objects.get(pk='sysadmin'),
+            role          = models.RbacRole.objects.get(role_name='sysadmin'),
             permission    = MODMEMBERS
         ).save()
         models.RbacPermission(
             queryset       = self.datacenter_queryset,
-            role           = models.RbacRole.objects.get(pk='developer'),
+            role           = models.RbacRole.objects.get(role_name='developer'),
             permission     = READMEMBERS
         ).save()
         models.RbacPermission(
             queryset       = self.lab_queryset,
-            role           = models.RbacRole.objects.get(pk='developer'),
+            role           = models.RbacRole.objects.get(role_name='developer'),
             permission     = MODMEMBERS
         ).save()
 
@@ -336,7 +335,7 @@ class RbacPermissionViews(RbacTestCase):
         content = self.req(url, method='POST', data=input, expect=200, is_admin=True)
         self.assertXMLEquals(content, output)
         perm = models.RbacPermission.objects.get(pk=4)
-        self.assertEqual(perm.role.pk, 'intern')
+        self.assertEqual(perm.role.role_name, 'developer')
         self.assertEqual(perm.queryset.pk, self.tradingfloor_queryset.pk)
         self.assertEqual(perm.permission, MODMEMBERS)
 
@@ -359,7 +358,7 @@ class RbacPermissionViews(RbacTestCase):
         content = self.req(url, method='PUT', data=input, expect=200, is_admin=True)
         self.assertXMLEquals(content, output)
         perm = models.RbacPermission.objects.get(pk=1)
-        self.assertEqual(perm.role.pk, 'intern')
+        self.assertEqual(perm.role.role_name, 'intern')
         self.assertEqual(perm.queryset.pk, self.datacenter_queryset.pk)
         self.assertEqual(perm.permission, MODMEMBERS)
 
@@ -374,10 +373,10 @@ class RbacUserRoleViewTests(RbacTestCase):
 
         self.seed_data = [ 'sysadmin', 'developer', 'intern' ]
         for item in self.seed_data:
-            models.RbacRole(item).save()
-        self.sysadmin   = models.RbacRole.objects.get(role_id='sysadmin')
-        self.developer  = models.RbacRole.objects.get(role_id='developer')
-        self.intern     = models.RbacRole.objects.get(role_id='intern')
+            models.RbacRole(role_name=item).save()
+        self.sysadmin   = models.RbacRole.objects.get(role_name='sysadmin')
+        self.developer  = models.RbacRole.objects.get(role_name='developer')
+        self.intern     = models.RbacRole.objects.get(role_name='intern')
         # this is a little off as admins are NOT subject to rbac, but
         # we're not testing the auth chain here, just the models and services
         # so it doesn't really matter what users we use in the tests.
@@ -415,7 +414,7 @@ class RbacUserRoleViewTests(RbacTestCase):
         # for completeness.
 
         user_id = self.admin_user.pk
-        url = "users/%s/roles/developer" % user_id
+        url = "users/%s/roles/1" % user_id # developer role
         content = self.req(url, method='GET', expect=401, is_authenticated=True)
         content = self.req(url, method='GET', expect=200, is_admin=True)
         self.assertXMLEquals(content, testsxml.user_role_get_xml)
@@ -434,11 +433,11 @@ class RbacUserRoleViewTests(RbacTestCase):
         self.assertXMLEquals(content, output)
         user_role = models.RbacUserRole.objects.get(user = self.admin_user, role=self.intern)
         self.assertEqual(user_role.user.pk, self.admin_user.pk)
-        self.assertEqual(user_role.role.pk, 'intern')
+        self.assertEqual(user_role.role.role_name, 'intern')
 
     def testCanDeleteUserRoles(self):
         user_id = self.admin_user.pk
-        url = "users/%s/roles/developer" % user_id
+        url = "users/%s/roles/1" % user_id # developer role
         get_url = "users/%s/roles/" % user_id
         # make admin no longer a developer
         self.req(url, method='DELETE', expect=401, is_authenticated=True)
@@ -456,12 +455,12 @@ class RbacEngine(RbacTestCase):
 
         role_seed_data = [ 'sysadmin', 'developer', 'intern' ]
         for item in role_seed_data:
-            models.RbacRole(item).save()
+            models.RbacRole(role_name=item).save()
 
         def mk_permission(queryset, role, action):
             models.RbacPermission(
                 queryset      = queryset,
-                role          = models.RbacRole.objects.get(pk=role),
+                role          = models.RbacRole.objects.get(role_name=role),
                 permission    = action
             ).save()
 
@@ -484,7 +483,7 @@ class RbacEngine(RbacTestCase):
             # add rbac role mapping
             models.RbacUserRole(
                user = dbuser,
-               role = models.RbacRole.objects.get(pk=role)
+               role = models.RbacRole.objects.get(role_name=role)
             ).save()
             return dbuser
 

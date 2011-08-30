@@ -67,8 +67,9 @@ class RbacRole(modellib.XObjIdModel):
     # objects = modellib.RbacRoleManager() # needed because of non-integer PK?
     _xobj_hidden_accessors = set(['rbacuserrole_set', 'tags'])
 
-    role_id = D(models.TextField(primary_key=True),
+    role_id = D(models.IntegerField(primary_key=True),
         "the database ID for the role")
+    role_name = D(models.TextField(unique=True), "name of the role")
     created_date = D(modellib.DateTimeUtcField(auto_now_add=True),
         "creation date")
     modified_date = D(modellib.DateTimeUtcField(auto_now_add=True),
@@ -192,3 +193,5 @@ for mod_obj in sys.modules[__name__].__dict__.values():
 #for mod_obj in usersmodels.__dict__.values():
 #    if hasattr(mod_obj, '_meta'):
 #       modellib.type_map[mod_obj._meta.verbose_name] = mod_obj
+
+
