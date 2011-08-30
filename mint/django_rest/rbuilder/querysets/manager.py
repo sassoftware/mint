@@ -644,14 +644,14 @@ class QuerySetManager(basemanager.BaseManager):
             jt = int(jt.split("/")[-1])
 
         # lookup job name for ID in database
-        event_type = jobmodels.EventType.objects.get(job_type_id=jt)
-        job_name   = event_type.name
+        #event_type = jobmodels.EventType.objects.get(job_type_id=jt)
+        #job_name   = event_type.name
 
-        if job_name == jobmodels.EventType.QUERYSET_INVALIDATE:
-            querySet.tagged_date = None
-            querySet.save()
-        else:
-            raise Exception("action dispatch not yet supported on job type: %s" % jt)
+        #if job_name == jobmodels.EventType.QUERYSET_INVALIDATE:
+        #    querySet.tagged_date = None
+        #    querySet.save()
+        #else:
+        #    raise Exception("action dispatch not yet supported on job type: %s" % jt)
 
         return job
 
