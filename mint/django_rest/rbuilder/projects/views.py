@@ -5,7 +5,7 @@
 # All rights reserved.
 #
 
-from django.http import HttpResponse
+from django.http import HttpResponse, HttpResponseRedirect
 
 from mint.django_rest.deco import access, return_xml, requires
 from mint.django_rest.rbuilder import service
@@ -14,6 +14,8 @@ from mint.django_rest.rbuilder.rbac.rbacauth import rbac
 from mint.django_rest.rbuilder.errors import PermissionDenied
 from mint.django_rest.rbuilder.rbac.manager.rbacmanager import \
    READMEMBERS, MODMEMBERS
+from mint.django_rest.rbuilder.querysets import models as querymodels
+from mint.django_rest.rbuilder.projects import models as projectmodels
 
 class PCallbacks(object):
     """
@@ -23,14 +25,14 @@ class PCallbacks(object):
     def _checkPermissions(view, request, project_short_name, action):
         if project_short_name:
             obj = view.mgr.getProject(project_short_name)
-            user = view.mgr.getSessionInfo().user[0]
+            user = request._authUser
             if request.method == 'PUT' and \
                 obj.short_name != project_short_name:
-                raise PermissionDenied()
+                return False
             return view.mgr.userHasRbacPermission(user, obj, action)
         elif request._is_admin:
             return True
-        raise PermissionDenied()
+        return False
 
     @staticmethod
     def rbac_can_read_project_by_short_name(view, request, project_short_name=None, *args, **kwargs):
@@ -53,32 +55,55 @@ class PBSCallbacks(object):
         if request._is_admin:
             return True
         else:
-            raise PermissionDenied()
+            return False
     
     @staticmethod
     def rbac_can_read_stage_by_project(view, 
         request, project_short_name, project_branch_label, stage_name=None, *args, **kwargs):
         obj = view.mgr.getProjectBranchStage(project_short_name, project_branch_label, stage_name)
-        user = view.mgr.getSessionInfo().user[0]
+        user = request._authUser
         if not stage_name and request._is_admin:
             return True
         elif stage_name:
-            return view.mgr.userHasRbacPermission(user, obj, READMEMBERS)
+            return view.mgr.userHasRbacPermission(user, obj, 'rmember')
+        return False
+
+    @staticmethod
+    def rbac_can_read_pbs_by_project_short_name(view, request, project_short_name):
+        user = request._authUser
+        collection = projectmodels.Stage.objects.filter(project__short_name=project_short_name)
+        tv = all(view.mgr.userHasRbacPermission(user, obj, 'rmember') for obj in collection)
+        if tv:
+            return True
+        return False
+
+# class AllProjectBranchesStagesService(service.BaseService):
+#     @rbac(PBSCallbacks.rbac_can_read_all_project_branches_stages)
+#     @return_xml
+#     def rest_GET(self, request):
+#         return self.mgr.getAllProjectBranchStages()
+
+class AllProjectBranchesStagesService(service.BaseService):
+    """
+    get all pbs's
+    """
+    @access.authenticated
+    @return_xml
+    def rest_GET(self, request):
+        if PBSCallbacks.rbac_can_read_all_project_branches_stages(self, request):
+            qs = querymodels.QuerySet.objects.get(name='All Project Stages')
+            url = '/api/v1/query_sets/%s/all' % qs.pk
+            return HttpResponseRedirect(url)
         raise PermissionDenied()
 
 
-class AllProjectBranchesStagesService(service.BaseService):
-    @rbac(PBSCallbacks.rbac_can_read_all_project_branches_stages)
-    @return_xml
-    def rest_GET(self, request):
-        return self.mgr.getAllProjectBranchStages()
-
-
 class AllProjectBranchesService(service.BaseService):
+    @access.admin
     @return_xml
     def rest_GET(self, request):
         return self.mgr.getAllProjectBranches()
 
+    @access.admin
     @requires('project_branch')
     @return_xml
     def rest_POST(self, request, project_branch):
@@ -87,12 +112,19 @@ class AllProjectBranchesService(service.BaseService):
 
 
 class ProjectAllBranchStagesService(service.BaseService):
+    """
+    returns all pbs associated with a given project.
+    """
+    @access.authenticated
     @return_xml
     def rest_GET(self, request, project_short_name):
-        return self.mgr.getProjectAllBranchStages(project_short_name)
+        if PBSCallbacks.rbac_can_read_pbs_by_project_short_name(
+            self, request, project_short_name):
+            return self.mgr.getProjectAllBranchStages(project_short_name)
 
 
 class ProjectBranchService(service.BaseService):
+    @access.admin
     @return_xml
     def rest_GET(self, request, project_short_name, project_branch_label=None):
         return self.get(project_short_name, project_branch_label)
@@ -100,16 +132,19 @@ class ProjectBranchService(service.BaseService):
     def get(self, project_short_name, project_branch_label):
         return self.mgr.getProjectBranch(project_short_name, project_branch_label)
 
+    @access.admin
     @requires("project_branch")
     @return_xml
     def rest_POST(self, request, project_short_name, project_branch):
         return self.mgr.addProjectBranch(project_short_name, project_branch)
 
+    @access.admin
     @requires("project_branch")
     @return_xml
     def rest_PUT(self, request, project_short_name, project_branch_label, project_branch):
         return self.mgr.updateProjectBranch(project_branch)
 
+    @access.admin
     def rest_DELETE(self, request, project_short_name, project_branch_label):
         projectBranch = self.get(project_short_name, project_branch_label)
         self.mgr.deleteProjectBranch(projectBranch)
@@ -118,18 +153,24 @@ class ProjectBranchService(service.BaseService):
 
 
 class ProjectService(service.BaseService):
-    @rbac(PCallbacks.rbac_can_read_project_by_short_name)
+    # manual RBAC, see get function
+    @access.authenticated
     @return_xml
     def rest_GET(self, request, project_short_name=None):
-        model = self.get(project_short_name)
-        return model
+        if PCallbacks.rbac_can_read_project_by_short_name(
+            self, request, project_short_name):
+            model = self.get(project_short_name)
+            return model
+        raise PermissionDenied()
 
     def get(self, project_short_name):
         if project_short_name:
             model = self.mgr.getProject(project_short_name)
+            return model
         else:
-            model = self.mgr.getProjects()
-        return model
+            qs = querymodels.QuerySet.objects.get(name='All Projects')
+            url = '/api/v1/query_sets/%s/all' % qs.pk
+            return HttpResponseRedirect(url)
     
     @rbac(MODMEMBERS)
     @requires('project')
@@ -154,6 +195,9 @@ class ProjectService(service.BaseService):
 # XXX StageProxyService is no longer in use, is
 #     ProjectStageService still being used by anything?
 class ProjectStageService(service.BaseService):
+    
+    # FIXME if no longer in use, add access.admin until we are sure we can remove it.
+    # else it's a security leak
     @return_xml
     def rest_GET(self, request, stage_id=None):
         return self.get(request, stage_id)
@@ -181,6 +225,7 @@ class ProjectBranchStageService(service.BaseService):
 
 class ProjectImageService(service.BaseService):
 
+    @rbac(PCallbacks.rbac_can_read_project_by_short_name)
     @return_xml
     def rest_GET(self, request, short_name, image_id=None):
         return self.get(request, short_name, image_id)
@@ -194,10 +239,12 @@ class ProjectImageService(service.BaseService):
 
 
 class ProjectBranchStageImagesService(service.BaseService):
+    
     def get(self, request, project_short_name, project_branch_label, stage_name):
         return self.mgr.getProjectBranchStageImages(project_short_name,
             project_branch_label, stage_name)
-
+    
+    @rbac(PBSCallbacks.rbac_can_read_stage_by_project)
     @return_xml
     def rest_GET(self, request, project_short_name, project_branch_label, stage_name):
         return self.get(request, project_short_name, project_branch_label, stage_name)
@@ -240,6 +287,7 @@ class ProjectImageBuildsJobService(service.BaseService):
 
 
 class ProjectMemberService(service.BaseService):
+    @rbac(PCallbacks.rbac_can_read_project_by_short_name)
     @return_xml
     def rest_GET(self, request, short_name):
         return self.get(short_name)
