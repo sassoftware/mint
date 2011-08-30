@@ -40,7 +40,7 @@ class rbac(object):
         def callFcn(_self, request, *args, **kwargs):
             # error checking and admin/bypass:
             #    why is this a list?
-            user = _self.mgr.getSessionInfo().user[0]
+            user = request._authUser
             if fcn.ACCESS is None:
                 raise Exception("@access.authenticated missing in conjunction with @rbac?")
             if fcn.ACCESS & ACCESS.ANONYMOUS:

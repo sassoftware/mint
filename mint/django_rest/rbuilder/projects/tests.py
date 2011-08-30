@@ -33,6 +33,17 @@ class ProjectsTestCase(RbacEngine):
         mock.mock(manager.ProjectManager, "setProductVersionDefinition")
         self.mgr = rbuildermanager.RbuilderManager()
         self.mintConfig = self.mgr.cfg
+    
+    def _get(self, url, username=None, password=None, data=None):
+        # Ugly
+        def _parseRedirect(http_redirect):
+            return http_redirect['Location'].split('/api/v1/')[1] + ';offset=0;limit=9999'
+            
+        response = super(ProjectsTestCase, self)._get(url, username=username, password=password)
+        if str(response.status_code).startswith('3') and response.has_header('Location'):
+            new_url = _parseRedirect(response)
+            return ProjectsTestCase._get(self, new_url, username=username, password=password)
+        return response
         
     def _addProject(self, short_name, namespace='ns'):
         project = models.Project()
@@ -289,13 +300,14 @@ class ProjectsTestCase(RbacEngine):
 
     def testGetAggregateProjectBranches(self):
         response = self._get('project_branches/',
-            username="testuser", password="password")
+            username="admin", password="password")
         self.assertEquals(response.status_code, 200)
         branches = xobj.parse(response.content).project_branches.project_branch
         self.failUnlessEqual([ x.label for x in branches ],
             ['chater-foo.eng.rpath.com@rpath:chater-foo-1',
              'postgres.rpath.com@rpath:postgres-1',
-             'postgres.rpath.com@rpath:postgres-2'])
+             'postgres.rpath.com@rpath:postgres-2',
+             'postgres-private.rpath.com@rpath:postgres-private-1'])
 
     def testAddProjectVersionToProject(self):
         self._addProject("foo")
@@ -343,7 +355,7 @@ class ProjectsTestCase(RbacEngine):
         response = self._put('projects/postgres/project_branches/postgres.rpath.com@rpath:postgres-1',
             data=testsxml.project_version_put_xml,
             username="testuser", password="password")
-        self.assertEquals(response.status_code, 403)
+        self.assertEquals(response.status_code, 401)
 
     def testDeleteProjectBranch(self):
         response = self._delete('projects/postgres/project_branches/postgres.rpath.com@rpath:postgres-1',
@@ -360,24 +372,30 @@ class ProjectsTestCase(RbacEngine):
             username="admin", password="password")
         self.assertEquals(response.status_code, 200)
         stages = xobj.parse(response.content).project_branch_stages.project_branch_stage
+        oldMaxDiff = self.maxDiff
+        self.maxDiff = None
         self.failUnlessEqual([ x.label for x in stages ],
             [
                 'label',
-                'foo@ns:trunk-devel',
-                'foo@ns:trunk-qa',
-                'foo@ns:trunk-stage',
-                'foo@ns:trunk',
                 'postgres.rpath.com@rpath:postgres-1-qa',
                 'postgres.rpath.com@rpath:postgres-1',
                 'postgres.rpath.com@rpath:postgres-2-devel',
                 'postgres.rpath.com@rpath:postgres-2-qa',
                 'postgres.rpath.com@rpath:postgres-2',
+                'postgres-private.rpath.com@rpath:postgres-1-devel',
+                'postgres-private.rpath.com@rpath:postgres-1-qa',
+                'postgres-private.rpath.com@rpath:postgres-1',
+                'foo@ns:trunk-devel',
+                'foo@ns:trunk-qa',
+                'foo@ns:trunk-stage',
+                'foo@ns:trunk'
             ])
-
+        self.maxDiff = oldMaxDiff
+        
     def testGetProjectAllBranchStages(self):
         self._initProject()
         response = self._get('projects/chater-foo/project_branch_stages',
-            username="testuser", password="password")
+            username="admin", password="password")
         self.assertEquals(response.status_code, 200)
         stages = xobj.parse(response.content).project_branch_stages.project_branch_stage
 
