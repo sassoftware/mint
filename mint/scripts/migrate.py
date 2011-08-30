@@ -3828,12 +3828,13 @@ class MigrateTo_58(SchemaMigration):
     def migrate57(self):
         cu = self.db.cursor()
         cu.execute("""
-            INSERT INTO "inventory_event_type" 
-                ("name", "description", "priority")
+            INSERT INTO "jobs_job_type" 
+                ("name", "description", "priority", "resource_type")
             VALUES
                 ('refresh queryset',
                  'Refresh queryset',
-                 105)
+                 105,
+                 'QuerySet')
         """)
         return True
 
