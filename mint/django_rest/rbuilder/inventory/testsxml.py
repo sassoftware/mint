@@ -136,6 +136,14 @@ event_types_xml="""\
     <resource_type>Image</resource_type>
     <system_events/>
   </event_type>
+  <event_type id="http://testserver/api/v1/inventory/event_types/14">
+    <description>Refresh queryset</description>
+    <job_type_id>14</job_type_id>
+    <name>refresh queryset</name>
+    <priority>105</priority>
+    <resource_type>QuerySet</resource_type>
+    <system_events/>
+  </event_type>
 </event_types>"""
 
 event_type_put_xml="""\

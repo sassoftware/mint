@@ -204,7 +204,7 @@ class RbacManager(basemanager.BaseManager):
             user = user
         )
         my_roles = [ x.role for x in roles ] 
-        allowed_permissions = [ 'rmember', 'wmember', 'rqueryset', 'wqueryset' ]
+        allowed_permissions = [ READMEMBERS, MODMEMBERS, READSET, MODSETDEF ]
         perms = models.RbacPermission.objects.select_related().filter(
            role__in = my_roles,
            permission__in    = allowed_permissions
@@ -258,10 +258,10 @@ class RbacManager(basemanager.BaseManager):
 
         # write access implies read access.  
         acceptable_permitted_permissions = [ permission ]
-        if permission == RMEMBER:
-            acceptable_permitted_permissions.extend([WMEMBER])
-        if permission == RQUERYSET:
-            acceptable_permitted_permissions.extend([WQUERYSET])
+        if permission == READMEMBERS:
+            acceptable_permitted_permissions.extend([MODMEMBERS])
+        if permission == READSET:
+            acceptable_permitted_permissions.extend([MODSETDEF])
 
         # there is queryset/roles info, so now find the permissions associated
         # with the queryset

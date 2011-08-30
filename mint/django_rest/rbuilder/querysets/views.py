@@ -14,7 +14,7 @@ from mint.django_rest.rbuilder.querysets import models
 from mint.django_rest.rbuilder.rbac.rbacauth import rbac
 from mint.django_rest.rbuilder.errors import PermissionDenied
 from mint.django_rest.rbuilder.rbac.manager.rbacmanager import \
-   READSET, MODSETDEF, READMEMBERS, MODMEMBERS
+   READSET, MODSETDEF
 
 def rbac_can_read_queryset(view, request, query_set_id, *args, **kwargs):
     obj = view.mgr.getQuerySet(query_set_id)

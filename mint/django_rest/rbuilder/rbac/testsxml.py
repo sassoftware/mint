@@ -118,7 +118,7 @@ role_list_xml_with_grants = """
     <grants>
       <grant id="http://testserver/api/v1/rbac/grants/1">
         <modified_date>2011-08-29T15:14:07.088295+00:00</modified_date>
-        <permission></permission>
+        <permission>ModMembers</permission>
         <permission_id>1</permission_id>
         <queryset id="http://testserver/api/v1/query_sets/16"/>
         <role id="http://testserver/api/v1/rbac/roles/sysadmin"/>
@@ -133,7 +133,7 @@ role_list_xml_with_grants = """
     <grants>
       <grant id="http://testserver/api/v1/rbac/grants/3">
         <modified_date>2011-08-29T15:14:07.104559+00:00</modified_date>
-        <permission></permission>
+        <permission>ModMembers</permission>
         <permission_id>3</permission_id>
         <queryset id="http://testserver/api/v1/query_sets/15"/>
         <role id="http://testserver/api/v1/rbac/roles/developer"/>
@@ -170,7 +170,7 @@ permission_list_xml = """
 <grants count="3" end_index="2" filter_by="" full_collection="http://testserver/api/v1/rbac/grants" id="http://testserver/api/v1/rbac/grants;start_index=0;limit=10" limit="10" next_page="" num_pages="1" order_by="" per_page="10" previous_page="" start_index="0">
   <grant id="http://testserver/api/v1/rbac/grants/1">
     <permission_id>1</permission_id>
-    <permission></permission>
+    <permission>ModMembers</permission>
     <queryset id="http://testserver/api/v1/query_sets/16"/>
     <role id="http://testserver/api/v1/rbac/roles/sysadmin"/>
   </grant>
@@ -181,7 +181,7 @@ permission_list_xml = """
     <role id="http://testserver/api/v1/rbac/roles/developer"/>
   </grant>
   <grant id="http://testserver/api/v1/rbac/grants/3">
-    <permission></permission>
+    <permission>ModMembers</permission>
     <queryset id="http://testserver/api/v1/query_sets/15"/>
     <permission_id>3</permission_id>
     <role id="http://testserver/api/v1/rbac/roles/developer"/>
@@ -193,7 +193,7 @@ permission_queryset_xml = """
 <grants count="3" end_index="2" filter_by="" full_collection="http://testserver/api/v1/query_sets/13/all" id="http://testserver/api/v1/query_sets/13/all;start_index=0;limit=10" limit="10" next_page="" num_pages="1" order_by="" per_page="10" previous_page="" start_index="0">
   <grant id="http://testserver/api/v1/rbac/grants/1">
     <permission_id>1</permission_id>
-    <permission></permission>
+    <permission>ModMembers</permission>
     <queryset id="http://testserver/api/v1/query_sets/16"/>
     <role id="http://testserver/api/v1/rbac/roles/sysadmin"/>
   </grant>
@@ -204,7 +204,7 @@ permission_queryset_xml = """
     <role id="http://testserver/api/v1/rbac/roles/developer"/>
   </grant>
   <grant id="http://testserver/api/v1/rbac/grants/3">
-    <permission></permission>
+    <permission>ModMembers</permission>
     <queryset id="http://testserver/api/v1/query_sets/15"/>
     <permission_id>3</permission_id>
     <role id="http://testserver/api/v1/rbac/roles/developer"/>
@@ -214,7 +214,7 @@ permission_queryset_xml = """
 
 permission_get_xml = """
 <grant id="http://testserver/api/v1/rbac/grants/1">
-  <permission></permission>
+  <permission>ModMembers</permission>
   <permission_id>1</permission_id>
   <queryset id="http://testserver/api/v1/query_sets/16"/>
   <role id="http://testserver/api/v1/rbac/roles/sysadmin"/>
@@ -223,7 +223,7 @@ permission_get_xml = """
 
 permission_post_xml_input="""
 <grant>
-  <permission></permission>
+  <permission>ModMembers</permission>
   <queryset id="http://testserver/api/v1/query_sets/14"/>
   <role id="http://testserver/api/v1/rbac/roles/intern"/>
 </grant>
@@ -231,7 +231,7 @@ permission_post_xml_input="""
 
 permission_post_xml_output="""
 <grant id="http://testserver/api/v1/rbac/grants/4">
-  <permission></permission>
+  <permission>ModMembers</permission>
   <queryset id="http://testserver/api/v1/query_sets/14"/>
   <permission_id>4</permission_id>
   <role id="http://testserver/api/v1/rbac/roles/intern"/>
@@ -240,7 +240,7 @@ permission_post_xml_output="""
 
 permission_put_xml_input="""
 <grant id="http://testserver/api/v1/rbac/grants/1">
-  <permission></permission>
+  <permission>ModMembers</permission>
   <queryset id="http://testserver/api/v1/query_sets/16"/>
   <role id="http://testserver/api/v1/rbac/roles/intern"/>
 </grant>
@@ -248,7 +248,7 @@ permission_put_xml_input="""
 
 permission_put_xml_output="""
  <grant id="http://testserver/api/v1/rbac/grants/1">
-   <permission></permission>
+   <permission>ModMembers</permission>
    <permission_id>1</permission_id>
    <queryset id="http://testserver/api/v1/query_sets/16"/>
    <role id="http://testserver/api/v1/rbac/roles/intern"/>
