@@ -9,6 +9,8 @@ from mint.django_rest.deco import requires, return_xml, access
 from django.http import HttpResponse
 from mint.django_rest.rbuilder.rbac.rbacauth import rbac
 from mint.django_rest.rbuilder.errors import PermissionDenied
+from mint.django_rest.rbuilder.rbac.manager.rbacmanager import \
+   READMEMBERS, MODMEMBERS
 
 def rbac_can_read_user(view, request, user_id, *args, **kwargs):
     obj = view.mgr.getUser(user_id)
@@ -16,7 +18,7 @@ def rbac_can_read_user(view, request, user_id, *args, **kwargs):
     if obj.pk == user.pk:
         # you can always read yourself
         return True 
-    return view.mgr.userHasRbacPermission(user, obj, 'rmember')
+    return view.mgr.userHasRbacPermission(user, obj, READMEMBERS)
 
 def rbac_can_write_user(view, request, user_id, *args, **kwargs):
     obj = view.mgr.getUser(user_id)
@@ -25,7 +27,7 @@ def rbac_can_write_user(view, request, user_id, *args, **kwargs):
         # you can always update yourself
         # TODO: but you can't delete yourself unless admin
         return True
-    return view.mgr.userHasRbacPermission(user, obj, 'wmember')
+    return view.mgr.userHasRbacPermission(user, obj, MODMEMBERS)
 
 class UsersService(service.BaseService):
     

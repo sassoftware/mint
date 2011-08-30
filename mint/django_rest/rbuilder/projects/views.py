@@ -12,7 +12,8 @@ from mint.django_rest.rbuilder import service
 from mint.django_rest.rbuilder.inventory.views import StageProxyService
 from mint.django_rest.rbuilder.rbac.rbacauth import rbac
 from mint.django_rest.rbuilder.errors import PermissionDenied
-
+from mint.django_rest.rbuilder.rbac.manager.rbacmanager import \
+   READMEMBERS, MODMEMBERS
 
 class PCallbacks(object):
     """
@@ -36,14 +37,14 @@ class PCallbacks(object):
         """
         project_short_name needs to be a kwarg until the views are more granularly refactored.
         """
-        return PCallbacks._checkPermissions(view, request, project_short_name, 'rmember')
+        return PCallbacks._checkPermissions(view, request, project_short_name, READMEMBERS)
 
     @staticmethod
     def rbac_can_write_project_by_short_name(view, request, project_short_name, *args, **kwargs):
         """
         project_short_name always required for write to succeed, so don't make it kwarg
         """
-        return PCallbacks._checkPermissions(view, request, project_short_name, 'wmember')
+        return PCallbacks._checkPermissions(view, request, project_short_name, MODMEMBERS)
         
 
 class PBSCallbacks(object):
@@ -62,7 +63,7 @@ class PBSCallbacks(object):
         if not stage_name and request._is_admin:
             return True
         elif stage_name:
-            return view.mgr.userHasRbacPermission(user, obj, 'rmember')
+            return view.mgr.userHasRbacPermission(user, obj, READMEMBERS)
         raise PermissionDenied()
 
 
@@ -130,7 +131,7 @@ class ProjectService(service.BaseService):
             model = self.mgr.getProjects()
         return model
     
-    @rbac('wmember')
+    @rbac(MODMEMBERS)
     @requires('project')
     @return_xml
     def rest_POST(self, request, project):

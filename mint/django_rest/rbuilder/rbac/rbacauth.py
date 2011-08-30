@@ -6,20 +6,10 @@ class rbac(object):
     Decorator that sets rbac permissions required to access a resource.
 
     usage 
-         @rbac('rmember')
-         @access.authenticated
+         @rbac(permission_constant) # from rbacmanager.py
+         OR @rbac(custom_callback_returns_boolean_access_ok)
 
-    In order to have access to authenticated bits, rbac must
-    always be used with access.authenticated for now.
-
-    FIXME -- factor that otu and make it do authenticated's lifting.
-
-    rmember -- ability to read a data member
-    wmember -- ability to modify or delete a data member
-    rqueryset -- ability to see a queryset
-    wqueryset -- ability to modify a queryset
-
-    action can be a callback also, in which case it MUST
+    if action is a callback also, in which case it MUST
     use self.mgr.userHasRbacPermission to implement itself
 
     """

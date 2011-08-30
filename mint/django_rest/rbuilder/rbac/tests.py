@@ -4,7 +4,7 @@ from mint.django_rest.rbuilder.rbac import models
 from mint.django_rest.rbuilder.users import models as usersmodels
 from mint.django_rest.rbuilder.querysets import models as querymodels
 from mint.django_rest.rbuilder.rbac.manager.rbacmanager import \
-   RMEMBER, WMEMBER, RQUERYSET, WQUERYSET
+   READMEMBERS, MODMEMBERS, READSET, MODSETDEF
 
 # Suppress all non critical msg's from output
 # still emits traceback for failed tests
@@ -15,7 +15,7 @@ from mint.django_rest import test_utils
 XMLTestCase = test_utils.XMLTestCase
 
 # REMAINING TEST ITEMS for RBAC:
-# * tests for RQUERYSET, WQUERYSET
+# * tests for READSET, MODSETDEF
 # * make hasRbacPermission take a resource, not a queryset
 # * test on live resources inside of querySets
 # * test assertRbac functions
@@ -286,17 +286,17 @@ class RbacPermissionViews(RbacTestCase):
         models.RbacPermission(
             queryset      = self.datacenter_queryset,
             role          = models.RbacRole.objects.get(pk='sysadmin'),
-            permission    = WMEMBER
+            permission    = MODMEMBERS
         ).save()
         models.RbacPermission(
             queryset       = self.datacenter_queryset,
             role           = models.RbacRole.objects.get(pk='developer'),
-            permission     = RMEMBER
+            permission     = READMEMBERS
         ).save()
         models.RbacPermission(
             queryset       = self.lab_queryset,
             role           = models.RbacRole.objects.get(pk='developer'),
-            permission     = WMEMBER
+            permission     = MODMEMBERS
         ).save()
 
     def testCanListPermissions(self):
@@ -338,7 +338,7 @@ class RbacPermissionViews(RbacTestCase):
         perm = models.RbacPermission.objects.get(pk=4)
         self.assertEqual(perm.role.pk, 'intern')
         self.assertEqual(perm.queryset.pk, self.tradingfloor_queryset.pk)
-        self.assertEqual(perm.permission, WMEMBER)
+        self.assertEqual(perm.permission, MODMEMBERS)
 
     def testCanDeletePermissions(self):
        
@@ -361,7 +361,7 @@ class RbacPermissionViews(RbacTestCase):
         perm = models.RbacPermission.objects.get(pk=1)
         self.assertEqual(perm.role.pk, 'intern')
         self.assertEqual(perm.queryset.pk, self.datacenter_queryset.pk)
-        self.assertEqual(perm.permission, WMEMBER)
+        self.assertEqual(perm.permission, MODMEMBERS)
 
 class RbacUserRoleViewTests(RbacTestCase):
 
@@ -488,11 +488,11 @@ class RbacEngine(RbacTestCase):
             ).save()
             return dbuser
 
-        mk_permission(self.datacenter_queryset, 'sysadmin',  WMEMBER)
-        mk_permission(self.datacenter_queryset, 'developer', RMEMBER)
-        mk_permission(self.sys_queryset, 'sysadmin', RQUERYSET)
-        mk_permission(self.user_queryset, 'sysadmin', RMEMBER)
-        mk_permission(self.projects_queryset, 'sysadmin', RMEMBER)
+        mk_permission(self.datacenter_queryset, 'sysadmin',  MODMEMBERS)
+        mk_permission(self.datacenter_queryset, 'developer', READMEMBERS)
+        mk_permission(self.sys_queryset, 'sysadmin', READSET)
+        mk_permission(self.user_queryset, 'sysadmin', READMEMBERS)
+        mk_permission(self.projects_queryset, 'sysadmin', READMEMBERS)
 
         self.admin_user     = usersmodels.User.objects.get(user_name='admin')
         self.admin_user._is_admin = True
@@ -525,7 +525,7 @@ class RbacEngineTests(RbacEngine):
     def testAdminUserHasFullAccess(self):
         # admin user can do everything regardless of context
         # or permission
-        for action in [ RMEMBER, WMEMBER, RQUERYSET, WQUERYSET ]:
+        for action in [ READMEMBERS, MODMEMBERS, READSET, MODSETDEF ]:
             for system in self.test_systems:
                 self.assertTrue(self.mgr.userHasRbacPermission(
                     self.admin_user, system, action
@@ -679,32 +679,32 @@ class RbacEngineTests(RbacEngine):
         # if you can write to something, you can read
         # even if permission isn't in DB
         # write on queryset member also implies read on queryset itself
-        for action in [ RMEMBER, WMEMBER ]:
+        for action in [ READMEMBERS, MODMEMBERS ]:
             self.assertTrue(self.mgr.userHasRbacPermission(
                 self.sysadmin_user, self.datacenter_system, action
             ))
         # but not write on queryset
         self.assertFalse(self.mgr.userHasRbacPermission(
-            self.sysadmin_user, self.datacenter_system, WQUERYSET
+            self.sysadmin_user, self.datacenter_system, MODSETDEF
         ))
         # nor read, because querysets and member rights are not linked
         self.assertFalse(self.mgr.userHasRbacPermission(
-            self.sysadmin_user, self.datacenter_system, RQUERYSET
+            self.sysadmin_user, self.datacenter_system, READSET
         ))
 
     def testReadDoesNotImplyWrite(self):
         # if you can read, that doesn't mean write
         self.assertTrue(self.mgr.userHasRbacPermission(
-            self.developer_user, self.datacenter_system, RMEMBER
+            self.developer_user, self.datacenter_system, READMEMBERS
         ))
         self.assertFalse(self.mgr.userHasRbacPermission(
-            self.developer_user, self.datacenter_system, WMEMBER
+            self.developer_user, self.datacenter_system, MODMEMBERS
         ))
 
     def testNothingImpliesLockout(self):
         # if you don't have any permissions, you can neither
         # read nor write
-        to_test = [RMEMBER,WMEMBER,RQUERYSET,WQUERYSET]
+        to_test = [READMEMBERS,MODMEMBERS,READSET,MODSETDEF]
         for action in to_test:
             self.assertFalse(self.mgr.userHasRbacPermission(
                 self.developer_user, self.tradingfloor_system, action
@@ -712,7 +712,7 @@ class RbacEngineTests(RbacEngine):
 
     def testResourceWithoutContextImpliesNonAdminLockout(self):
         # if a resource is not in any queryset access is admin only
-        to_test = [RMEMBER,WMEMBER,RQUERYSET,WQUERYSET]
+        to_test = [READMEMBERS,MODMEMBERS,READSET,MODSETDEF]
         for action in to_test:
             self.assertTrue(self.mgr.userHasRbacPermission(
                 self.admin_user, self.lost_system, action,

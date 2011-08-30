@@ -18,6 +18,8 @@ from mint.django_rest.rbuilder.inventory import models
 from mint.django_rest.rbuilder.projects import models as projectsmodels
 from mint.django_rest.rbuilder.rbac.rbacauth import rbac
 from mint.django_rest.rbuilder.errors import PermissionDenied
+from mint.django_rest.rbuilder.rbac.manager.rbacmanager import \
+   READMEMBERS, MODMEMBERS
 
 class RestDbPassthrough(resource.Resource):
     pass
@@ -377,18 +379,18 @@ def rbac_can_write_system_id(view, request, system_id, *args, **kwargs):
     '''is the system ID writeable by the user?'''
     obj = view.mgr.getSystem(system_id)
     user = request._authUser
-    return view.mgr.userHasRbacPermission(user, obj, 'wmember')
+    return view.mgr.userHasRbacPermission(user, obj, MODMEMBERS)
 
 def rbac_can_read_system_id(view, request, system_id, *args, **kwargs):
     '''is the system ID readable by the user?'''
     obj = view.mgr.getSystem(system_id)
     user = request._authUser
-    return view.mgr.userHasRbacPermission(user, obj, 'rmember')
+    return view.mgr.userHasRbacPermission(user, obj, READMEMBERS)
         
 class InventorySystemsSystemService(BaseInventoryService):
 
     @return_xml
-    @rbac('rmember')
+    @rbac(READMEMBERS)
     def rest_GET(self, request, system_id):
         return self.get(system_id)
 

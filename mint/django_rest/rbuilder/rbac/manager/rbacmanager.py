@@ -20,16 +20,14 @@ RESOURCE_TYPE_SYSTEM   = 'system'
 RESOURCE_TYPE_PLATFORM = 'platform'
 RESOURCE_TYPE_IMAGE    = 'image'
 
-# allowable permission types
-# *member =
-#    read and write to members of a queryset
-# *queryset = 
-#    ability to see queryset at all or modify it
-
-RMEMBER = 'rmember'  
-WMEMBER = 'wmember'  
-RQUERYSET = 'rqueryset' 
-WQUERYSET = 'wqueryset' 
+# ability to view items inside a queryset
+READMEMBERS = 'ReadMembers'  
+# ability to edit items in a queryset
+MODMEMBERS = 'ModMembers'  
+# ability to see a queryset, but not execute it
+READSET = 'ReadSet' 
+# ability to modify/delete a query set
+MODSETDEF = 'ModSetDef' 
 
 class RbacManager(basemanager.BaseManager):
 

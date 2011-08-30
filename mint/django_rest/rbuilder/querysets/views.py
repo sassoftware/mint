@@ -13,17 +13,18 @@ from mint.django_rest.rbuilder.querysets import filterdescriptors
 from mint.django_rest.rbuilder.querysets import models
 from mint.django_rest.rbuilder.rbac.rbacauth import rbac
 from mint.django_rest.rbuilder.errors import PermissionDenied
-
+from mint.django_rest.rbuilder.rbac.manager.rbacmanager import \
+   READSET, MODSETDEF, READMEMBERS, MODMEMBERS
 
 def rbac_can_read_queryset(view, request, query_set_id, *args, **kwargs):
     obj = view.mgr.getQuerySet(query_set_id)
     user = view.mgr.getSessionInfo().user[0]
-    return view.mgr.userHasRbacPermission(user, obj, 'rqueryset')
+    return view.mgr.userHasRbacPermission(user, obj, READSET)
 
 def rbac_can_write_queryset(view, request, query_set_id, *args, **kwargs):
     obj = view.mgr.getQuerySet(query_set_id)
     user = view.mgr.getSessionInfo().user[0]
-    return view.mgr.userHasRbacPermission(user, obj, 'wqueryset')
+    return view.mgr.userHasRbacPermission(user, obj, MODSETDEF)
 
 class BaseQuerySetService(service.BaseService):
     pass
@@ -42,7 +43,7 @@ class QuerySetService(BaseQuerySetService):
         else:
             queryset = self.mgr.getQuerySet(query_set_id)
             if not self.mgr.userHasRbacPermission(
-                user, queryset, 'rqueryset', request
+                user, queryset, READSET, request
             ):
                 raise PermissionDenied()
             return queryset
