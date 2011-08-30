@@ -76,6 +76,48 @@ queryset_put_xml = """
   </children>
   <resource_type>system</resource_type>
   <description>System name has a 3 in it</description>
+  <actions/>
 </query_set>
+"""
+
+queryset_with_actions = """
+<query_set id="http://testserver/api/v1/query_sets/5">
+  <actions>
+    <action type="14">
+      <description>Refresh queryset</description>
+      <descriptor id="http://testserver/api/v1/query_sets/5/descriptors/14"/>
+      <name>refresh queryset</name>
+    </action>
+  </actions>
+  <all_members id="http://testserver/api/v1/query_sets/5/all"/>
+  <can_modify>false</can_modify>
+  <child_members id="http://testserver/api/v1/query_sets/5/child"/>
+  <children/>
+  <chosen_members id="http://testserver/api/v1/query_sets/5/chosen"/>
+  <description>All systems</description>
+  <filter_descriptor id="http://testserver/api/v1/query_sets/filter_descriptor"/>
+  <filter_entries>
+    <filter_entry>
+      <field>system.name</field>
+      <filter_entry_id>1</filter_entry_id>
+      <operator>IS_NULL</operator>
+      <value>false</value>
+    </filter_entry>
+  </filter_entries>
+  <filtered_members id="http://testserver/api/v1/query_sets/5/filtered"/>
+  <grants/>
+  <is_top_level>True</is_top_level>
+  <name>All Systems</name>
+  <presentation_type/>
+  <query_set_id>5</query_set_id>
+  <resource_type>system</resource_type>
+  <tagged_date>2011-08-29T21:44:24.358194+00:00</tagged_date>
+</query_set>
+"""
+
+queryset_invalidate_post_xml = """
+<job>
+<job_type id='https://localhost/api/v1/inventory/event_types/14'>queryset refresh</job_type>
+</job>
 """
 

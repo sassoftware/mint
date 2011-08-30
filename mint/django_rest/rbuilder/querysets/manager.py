@@ -622,4 +622,36 @@ class QuerySetManager(basemanager.BaseManager):
         tagModels.delete()
         return self.getQuerySetChosenResult(querySetId)
 
+    @exposed
+    def scheduleQuerySetJobAction(self, system, job):
+        '''
+        An action is a bare job submission that is a request to start
+        a real job.   
+
+        Job coming in will be xobj only,
+        containing job_type, descriptor, and descriptor_data.  
+
+        Normally, we'd use that data to schedule a completely different job, 
+        which will be more complete.  However, there really aren't any 
+        background jobs on a queryset, so things just run immediately
+        for now.   
+        '''
+
+        # get integer job type even if not a django model
+        # (because the job isn't fully formed)
+        jt = job.job_type.id
+        if str(jt).find("/") != -1:
+            jt = int(jt.split("/")[-1])
+
+        # lookup job name for ID in database
+        event_type = jobmodels.EventType.objects.get(job_type_id=jt)
+        job_name   = event_type.name
+
+        if job_name == jobmodels.EventType.QUERYSET_INVALIDATE:
+            querySet.tagged_date = None
+            querySet.save()
+        else:
+            raise Exception("action dispatch not yet supported on job type: %s" % jt)
+
+        return job
 
