@@ -124,9 +124,9 @@ class ImagesTest(restbase.BaseRestTest):
                 slf.calls.append((args, kwargs))
                 return 'uuid', 'job'
 
-        def mockGetRepeaterClient():
+        def mockGetUploaderClient():
             return MockRClient()
-        self.mock(db.imageMgr, "getRepeaterClient", mockGetRepeaterClient)
+        self.mock(db.imageMgr, "getUploaderClient", mockGetUploaderClient)
 
         req, img = client.call('POST', 'products/%s/images' % hostname, imageXml)
         self.failUnlessEqual(img.stage, "Development")
@@ -134,18 +134,16 @@ class ImagesTest(restbase.BaseRestTest):
         self.failUnlessEqual(str(img.troveVersion), '/local@local:COOK/1-1-1')
         self.failUnlessEqual(str(img.troveFlavor), 'is: x86')
 
-        self.failUnlessEqual(len(MockRepeaterClient.calls), 1)
-        rcargs, rckwargs = MockRepeaterClient.calls[0]
+        self.failUnlessEqual(len(MockRClient.calls), 1)
+        rcargs, rckwargs = MockRClient.calls[0]
         self.failUnlessEqual(rckwargs, {})
 
-        image, statusReportUrl, putFilesUrl = rcargs
+        image, baseUrl = rcargs
         self.failUnlessEqual(image.architecture, 'x86')
-        self.failUnlessEqual(image.metadata.cost, 'sdfg')
+        self.failUnlessEqual(image.metadata['cost'], 'sdfg')
 
-        self.failUnlessEqual(statusReportUrl.path,
-            '/api/products/createdproject/images/4/status')
-        self.failUnlessEqual(putFilesUrl.path,
-            '/api/products/createdproject/images/4/files')
+        self.failUnlessEqual(baseUrl.path,
+            '/api/products/createdproject/images/4/')
 
     def testGetReleases(self):
         return self._testGetReleases()

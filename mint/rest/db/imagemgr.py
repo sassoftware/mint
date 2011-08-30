@@ -416,13 +416,14 @@ class ImageManager(manager.Manager):
         log.info(msg)
         self._getImageLogger(hostname, imageId).info(msg)
 
-    def getRepeaterClient(self):
-        return repeater_client.RepeaterClient()
+    def getUploaderClient(self):
+        rcli = repeater_client.RepeaterClient()
+        return iup_client.UploadClient(rcli.client)
 
     def uploadImageFiles(self, hostname, image, outputToken=None):
         if not image.files.files:
             return None
-        rcli = self.getRepeaterClient()
+        rcli = repeater_client.RepeaterClient
         relPath="/api/products/%s/images/%s/" % (hostname, image.imageId)
         imageURL = rcli.URL(
                 scheme='http',
@@ -456,7 +457,7 @@ class ImageManager(manager.Manager):
         imodel = rcli.Image(name=self._u(image.name), metadata=metaDict,
             architecture=self._u(image.architecture), files=fileList)
 
-        uploadClient = iup_client.UploadClient(rcli.client)
+        uploadClient = self.getUploaderClient()
         uuid, job = uploadClient.downloadImages(imodel, imageURL)
         cu = self.db.cursor()
         cu.execute("UPDATE builds SET job_uuid = ? WHERE buildId = ?",
