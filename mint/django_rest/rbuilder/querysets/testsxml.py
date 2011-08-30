@@ -108,11 +108,9 @@ queryset_with_actions = """
   <grants/>
   <is_top_level>True</is_top_level>
   <name>All Systems</name>
-  <permission_tags/>
   <presentation_type/>
   <query_set_id>5</query_set_id>
   <resource_type>system</resource_type>
-  <role_tags/>
   <tagged_date>2011-08-29T21:44:24.358194+00:00</tagged_date>
 </query_set>
 """
