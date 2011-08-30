@@ -27,11 +27,11 @@ class PCallbacks(object):
             user = request._authUser
             if request.method == 'PUT' and \
                 obj.short_name != project_short_name:
-                raise PermissionDenied()
+                return False
             return view.mgr.userHasRbacPermission(user, obj, action)
         elif request._is_admin:
             return True
-        raise PermissionDenied()
+        return False
 
     @staticmethod
     def rbac_can_read_project_by_short_name(view, request, project_short_name=None, *args, **kwargs):
@@ -54,7 +54,7 @@ class PBSCallbacks(object):
         if request._is_admin:
             return True
         else:
-            raise PermissionDenied()
+            return False
     
     @staticmethod
     def rbac_can_read_stage_by_project(view, 
@@ -65,7 +65,7 @@ class PBSCallbacks(object):
             return True
         elif stage_name:
             return view.mgr.userHasRbacPermission(user, obj, 'rmember')
-        raise PermissionDenied()
+        return False
 
     @staticmethod
     def rbac_can_read_pbs_by_project_short_name(view, request, project_short_name):
@@ -74,7 +74,7 @@ class PBSCallbacks(object):
         tv = all(view.mgr.userHasRbacPermission(user, obj, 'rmember') for obj in collection)
         if tv:
             return True
-        raise PermissionDenied()
+        return False
 
 # class AllProjectBranchesStagesService(service.BaseService):
 #     @rbac(PBSCallbacks.rbac_can_read_all_project_branches_stages)
@@ -112,7 +112,7 @@ class AllProjectBranchesService(service.BaseService):
 
 class ProjectAllBranchStagesService(service.BaseService):
     """
-    returns all pbs associated with a given project
+    returns all pbs associated with a given project.
     """
     @access.authenticated
     @return_xml
