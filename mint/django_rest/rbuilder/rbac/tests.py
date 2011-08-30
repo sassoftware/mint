@@ -500,6 +500,24 @@ class RbacEngine(RbacTestCase):
         self.developer_user = mk_user('ExampleDeveloper', False, 'developer')
         self.intern_user    = mk_user('ExampleIntern', False, 'intern')
 
+    def _get(self, url, username=None, password=None, data=None):
+        """
+        Handles redirects resulting from rbac requirement that we
+        return a query set for resources that are collections.
+        Note that we include an offset and limit big enough
+        that our test data will not be truncated
+        """
+        # Ugly
+        def _parseRedirect(http_redirect):
+            return http_redirect['Location'].split('/api/v1/')[1].strip('/') + ';offset=0;limit=9999'
+
+        response = super(RbacTestCase, self)._get(url,
+            username=username, password=password)
+        if str(response.status_code).startswith('3') and response.has_header('Location'):
+            new_url = _parseRedirect(response)
+            return RbacTestCase._get(self, new_url,
+                username=username, password=password)
+        return response
 
 class RbacEngineTests(RbacEngine):
     '''Do we know when to grant or deny access?'''

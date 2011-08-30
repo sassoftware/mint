@@ -96,7 +96,7 @@ class AllProjectBranchesStagesService(service.BaseService):
     def rest_GET(self, request):
         if PBSCallbacks.rbac_can_read_all_project_branches_stages(self, request):
             qs = querymodels.QuerySet.objects.get(name='All Project Stages')
-            url = '/api/v1/query_sets/%s/all' % qs.pk
+            url = '/api/v1/query_sets/%s/all%s' % (qs.pk, request.params)
             return HttpResponseRedirect(url)
         raise PermissionDenied()
 
@@ -164,18 +164,18 @@ class ProjectService(service.BaseService):
     def rest_GET(self, request, project_short_name=None):
         if PCallbacks.rbac_can_read_project_by_short_name(
             self, request, project_short_name):
-            model = self.get(project_short_name)
-            return model
+            if project_short_name:
+                return self.get(project_short_name)
+            else:
+                qs = querymodels.QuerySet.objects.get(name='All Projects')
+                url = '/api/v1/query_sets/%s/all%s' % (qs.pk, request.params)
+                return HttpResponseRedirect(url)
         raise PermissionDenied()
 
     def get(self, project_short_name):
-        if project_short_name:
-            model = self.mgr.getProject(project_short_name)
-            return model
-        else:
-            qs = querymodels.QuerySet.objects.get(name='All Projects')
-            url = '/api/v1/query_sets/%s/all' % qs.pk
-            return HttpResponseRedirect(url)
+        assert project_short_name is not None
+        model = self.mgr.getProject(project_short_name)
+        return model
     
     # Unknown bug requires manual rbac
     @requires('project')

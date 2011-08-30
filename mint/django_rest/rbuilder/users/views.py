@@ -4,11 +4,13 @@
 # All Rights Reserved
 #
 
+from django.http import HttpResponse, HttpResponseRedirect
 from mint.django_rest.rbuilder import service
 from mint.django_rest.deco import requires, return_xml, access
 from django.http import HttpResponse
 from mint.django_rest.rbuilder.rbac.rbacauth import rbac
 from mint.django_rest.rbuilder.errors import PermissionDenied
+from mint.django_rest.rbuilder.querysets import models as querymodels
 from mint.django_rest.rbuilder.rbac.manager.rbacmanager import \
    READMEMBERS, MODMEMBERS
 
@@ -43,15 +45,16 @@ class UsersService(service.BaseService):
              # non-priveledged users should use a queryset
              # they have access to in order to obtain all results
              if request._is_admin:
-                 return self.get()
-             # TODO: redirect to queryset
+                 qs = querymodels.QuerySet.objects.get(name='All Users')
+                 url = '/api/v1/query_sets/%s/all%s' % (qs.pk, request.params)
+                 return HttpResponseRedirect(url)
              raise PermissionDenied()
 
-    def get(self, user_id=None):
-        if user_id:
-            return self.mgr.getUser(user_id)
-        else:
-            return self.mgr.getUsers()
+    def get(self, user_id):
+        # if user_id is None then we have bypassed rbac
+        # (which is manually run inside rest_GET)
+        assert user_id is not None
+        return self.mgr.getUser(user_id)
 
     # Has to be public, so one can create an account before logging in
     @access.anonymous

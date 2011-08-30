@@ -33,17 +33,6 @@ class ProjectsTestCase(RbacEngine):
         mock.mock(manager.ProjectManager, "setProductVersionDefinition")
         self.mgr = rbuildermanager.RbuilderManager()
         self.mintConfig = self.mgr.cfg
-    
-    def _get(self, url, username=None, password=None, data=None):
-        # Ugly
-        def _parseRedirect(http_redirect):
-            return http_redirect['Location'].split('/api/v1/')[1] + ';offset=0;limit=9999'
-            
-        response = super(ProjectsTestCase, self)._get(url, username=username, password=password)
-        if str(response.status_code).startswith('3') and response.has_header('Location'):
-            new_url = _parseRedirect(response)
-            return ProjectsTestCase._get(self, new_url, username=username, password=password)
-        return response
         
     def _addProject(self, short_name, namespace='ns'):
         project = models.Project()
