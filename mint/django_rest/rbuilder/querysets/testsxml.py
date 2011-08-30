@@ -117,3 +117,9 @@ queryset_with_actions = """
 </query_set>
 """
 
+queryset_invalidate_post_xml = """
+<job>
+<job_type id='https://localhost/api/v1/inventory/event_types/14'>queryset refresh</job_type>
+</job>
+"""
+

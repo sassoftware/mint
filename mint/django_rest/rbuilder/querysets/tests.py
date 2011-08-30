@@ -108,6 +108,18 @@ class QuerySetTestCase(QueryTestCase):
         self.assertEquals(response.status_code, 200)
         self.assertXMLEquals(response.content, testsxml.queryset_with_actions)
 
+        # post the invalidation job to the queryset and verify the tagged
+        # date goes back to null
+        #queryset = querymodels.QuerySet.objects.get(pk=qsid)
+        #self.assertTrue(queryset.tagged_date is not None)
+        #response = self._post("query_sets/%s/jobs" % qsid,
+        #    data=queryset_invalidate_post_xml, 
+        #    username="admin", password="password")
+        #self.assertEquals(response.status_code, 200)
+        #queryset = querymodels.QuerySet.objects.get(pk=qsid)
+        #self.assertEquals(queryset.tagged_date, None)
+
+
 
     # NOTE -- this test did not exist previously, is it
     # supported?

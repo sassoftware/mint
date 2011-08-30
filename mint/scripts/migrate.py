@@ -3836,6 +3836,43 @@ class MigrateTo_58(SchemaMigration):
                  105,
                  'QuerySet')
         """)
+        # fix previous migration -- needs different primary key type
+        cu.execute("DROP TABLE querysets_permissiontag")
+        cu.execute("DROP TABLE querysets_roletag")
+        createTable(self.db, """ 
+            CREATE TABLE "querysets_permissiontag" (
+                "permission_tag_id" %(BIGPRIMARYKEY)s,
+                "permission_id" INTEGER
+                    REFERENCES "rbac_permission" ("permission_id")
+                    ON DELETE CASCADE
+                    NOT NULL,
+                "query_set_id" INTEGER
+                    REFERENCES "querysets_queryset" ("query_set_id")
+                    ON DELETE CASCADE,
+                "inclusion_method_id" INTEGER
+                    REFERENCES "querysets_inclusionmethod" ("inclusion_method_id")
+                    ON DELETE CASCADE
+                    NOT NULL,
+                CONSTRAINT querysets_permissiontag_uq UNIQUE ("permission_id", "query_set_id", "inclusion_method_id")
+            )""" % self.db.keywords)
+
+        createTable(self.db, """
+            CREATE TABLE "querysets_roletag" (
+                "role_tag_id" %(BIGPRIMARYKEY)s,
+                "role_id" TEXT
+                    REFERENCES "rbac_role" ("role_id")
+                    ON DELETE CASCADE
+                    NOT NULL,
+                "query_set_id" INTEGER
+                    REFERENCES "querysets_queryset" ("query_set_id")
+                    ON DELETE CASCADE,
+                "inclusion_method_id" INTEGER
+                    REFERENCES "querysets_inclusionmethod" ("inclusion_method_id")
+                    ON DELETE CASCADE
+                    NOT NULL,
+                CONSTRAINT querysets_roletag_uq UNIQUE ("role_id", "query_set_id", "inclusion_method_id")
+            )""" % self.db.keywords)
+
         return True
 
 #### SCHEMA MIGRATIONS END HERE #############################################

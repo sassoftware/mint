@@ -215,7 +215,7 @@ def _createRbac(db):
     # queryset tag tables
     changed |= createTable(db, 'querysets_permissiontag', """
         CREATE TABLE "querysets_permissiontag" (
-            "permission_tag_id" TEXT PRIMARY KEY,
+            "permission_tag_id" %(BIGPRIMARYKEY)s,
             "permission_id" INTEGER
                 REFERENCES "rbac_permission" ("permission_id")
                 ON DELETE CASCADE
@@ -232,7 +232,7 @@ def _createRbac(db):
 
     changed |= createTable(db, 'querysets_roletag', """
         CREATE TABLE "querysets_roletag" (
-            "role_tag_id" TEXT PRIMARY KEY,
+            "role_tag_id" %(BIGPRIMARYKEY)s,
             "role_id" TEXT
                 REFERENCES "rbac_role" ("role_id")
                 ON DELETE CASCADE

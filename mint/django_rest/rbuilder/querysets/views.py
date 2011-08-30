@@ -129,11 +129,11 @@ class QuerySetJobsService(BaseQuerySetService):
     # no way to list running jobs at the moment
     # since all jobs run immediately
 
-    @rbac(rbac_can_write_queryset)
+    @rbac(rbac_can_read_queryset)
     @xObjRequires('job')
     @return_xml
     def rest_POST(self, request, query_set_id, job):
-        '''request starting a job on this system'''
+        '''launch a job on this queryset'''
         queryset = self.mgr.getQuerySet(query_set_id)
         return self.mgr.scheduleQuerySetJobAction(
             queryset, job
