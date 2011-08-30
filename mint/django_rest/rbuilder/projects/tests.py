@@ -218,6 +218,12 @@ class ProjectsTestCase(RbacEngine):
         self.assertEquals("test-project", project.name)
         self.assertEquals(1, project.creator.user_id)
         
+    def testAddProjectAuthenticatedNoPerms(self):
+        response = self._post('projects',
+            data=testsxml.project_post_xml,
+            username=self.developer_user.user_name, password="password")
+        self.assertEquals(response.status_code, 403)
+        
     def testAddProjectNoHostname(self):
         response = self._post('projects',
             data=testsxml.project_post_no_hostname_xml,
@@ -292,11 +298,22 @@ class ProjectsTestCase(RbacEngine):
         project = models.Project.objects.get(pk=projectId)
         self.assertEquals("updated description",
             project.description)
+    
+    def testUpdateProjectAuthenticatedNoWritePerms(self):
+        response = self._put('projects/chater-foo',
+            data=testsxml.project_put_xml,
+            username=self.developer_user.user_name, password='password')
+        self.assertEquals(response.status_code, 403)
 
     def testDeleteProject(self):
         response = self._delete('projects/chater-foo',
             username="admin", password="password")
         self.assertEquals(response.status_code, 204)
+
+    def testDeleteProjectAuthenticatedNoWritePerms(self):
+        response = self._delete('projects/chater-foo',
+            username=self.developer_user.user_name, password='password')
+        self.assertEquals(response.status_code, 403)
 
     def testGetAggregateProjectBranches(self):
         response = self._get('project_branches/',
@@ -392,6 +409,10 @@ class ProjectsTestCase(RbacEngine):
             ])
         self.maxDiff = oldMaxDiff
         
+        response = self._get('project_branch_stages/',
+            username=self.developer_user.user_name, password="password")
+        self.assertEquals(response.status_code, 403)
+        
     def testGetProjectAllBranchStages(self):
         self._initProject()
         response = self._get('projects/chater-foo/project_branch_stages',
@@ -408,6 +429,9 @@ class ProjectsTestCase(RbacEngine):
                 'foo@ns:trunk',
             ])
 
+        response = self._get('projects/chater-foo/project_branch_stages',
+            username=self.developer_user.user_name, password="password")
+        self.assertEquals(response.status_code, 403)
 
     def testGetProjectImages(self):
         # Add image
@@ -421,6 +445,10 @@ class ProjectsTestCase(RbacEngine):
         self.assertEquals(response.status_code, 200)
         image = models.Image.objects.get(pk=image.pk)
         self.assertEquals(image.build_type, 10)
+        
+        response = self._get('projects/%s/images/' % prj.short_name,
+                    username=self.developer_user.user_name, password='password')
+        self.assertEquals(response.status_code, 403)
 
     def testGetProjectBranchStage(self):
         self._initProject()
