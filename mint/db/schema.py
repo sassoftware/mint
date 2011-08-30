@@ -234,7 +234,7 @@ def _createRbac(db):
     changed |= createTable(db, 'querysets_roletag', """
         CREATE TABLE "querysets_roletag" (
             "role_tag_id" %(BIGPRIMARYKEY)s,
-            "role_id" TEXT
+            "role_id" INTEGER
                 REFERENCES "rbac_role" ("role_id")
                 ON DELETE CASCADE
                 NOT NULL,

@@ -3880,6 +3880,7 @@ class MigrateTo_58(SchemaMigration):
         cu.execute("DROP TABLE rbac_permission CASCADE")
         cu.execute("DROP TABLE rbac_user_role CASCADE") 
         cu.execute("DROP TABLE rbac_role CASCADE")
+        cu.execute("DROP TABLE querysets_roletag CASCADE")
  
         createTable(self.db, """
             CREATE TABLE rbac_role (
@@ -3887,7 +3888,7 @@ class MigrateTo_58(SchemaMigration):
                 role_name    TEXT,
                 created_date timestamp with time zone NOT NULL,
                 modified_date timestamp with time zone NOT NULL
-            ) %(TABLEOPTS)s """ % db.keywords)
+            ) %(TABLEOPTS)s """ % self.db.keywords)
 
         createTable(self.db, """
             CREATE TABLE rbac_user_role (
@@ -3902,7 +3903,7 @@ class MigrateTo_58(SchemaMigration):
                 created_date timestamp with time zone NOT NULL,
                 modified_date timestamp with time zone NOT NULL,
                 UNIQUE ( "role_id", "user_id" )
-            ) %(TABLEOPTS)s """ % db.keywords)
+            ) %(TABLEOPTS)s """ % self.db.keywords)
 
         createTable(self.db, """
             CREATE TABLE rbac_permission (
@@ -3919,7 +3920,24 @@ class MigrateTo_58(SchemaMigration):
                 created_date timestamp with time zone NOT NULL,
                 modified_date timestamp with time zone NOT NULL,
                 UNIQUE ( "role_id", "queryset_id", "action" )
-            ) %(TABLEOPTS)s """ % db.keywords)
+            ) %(TABLEOPTS)s """ % self.db.keywords)
+
+        createTable(self.db, """
+            CREATE TABLE "querysets_roletag" (
+                "role_tag_id" %(BIGPRIMARYKEY)s,
+                "role_id" INTEGER
+                    REFERENCES "rbac_role" ("role_id")
+                    ON DELETE CASCADE
+                    NOT NULL,
+                "query_set_id" INTEGER
+                    REFERENCES "querysets_queryset" ("query_set_id")
+                    ON DELETE CASCADE, 
+                "inclusion_method_id" INTEGER
+                    REFERENCES "querysets_inclusionmethod" ("inclusion_method_id")
+                    ON DELETE CASCADE
+                    NOT NULL,
+                CONSTRAINT querysets_roletag_uq UNIQUE ("role_id", "query_set_id", "inclusion_method_id")
+            )""" % self.db.keywords)
 
         return True
 
