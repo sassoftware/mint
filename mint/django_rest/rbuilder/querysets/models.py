@@ -84,11 +84,13 @@ class QuerySet(modellib.XObjIdModel):
     _xobj = xobj.XObjMetadata(
                 tag = "query_set")
     _xobj_hidden_accessors = set([
-        'rbacpermission_set', 
+        'rbacpermission_set',
         'stage_tags',
         'system_tags',
         'user_tags',
-        'project_tags'
+        'project_tags',
+        'role_tags',
+        'permission_tags'
     ])
 
     query_set_id = D(models.AutoField(primary_key=True),
