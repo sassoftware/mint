@@ -14,7 +14,6 @@ from mint.django_rest.rbuilder.rbac.rbacauth import rbac
 from mint.django_rest.rbuilder.errors import PermissionDenied
 from mint.django_rest.rbuilder.querysets import models as querymodels
 from mint.django_rest.rbuilder.projects import models as projectmodels
-from django.core.urlresolvers import reverse
 
 class PCallbacks(object):
     """
