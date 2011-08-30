@@ -131,13 +131,13 @@ class QuerySetJobsService(BaseQuerySetService):
 
     @rbac(rbac_can_read_queryset)
     @xObjRequires('job')
-    @return_xml
     def rest_POST(self, request, query_set_id, job):
         '''launch a job on this queryset'''
         queryset = self.mgr.getQuerySet(query_set_id)
-        return self.mgr.scheduleQuerySetJobAction(
+        self.mgr.scheduleQuerySetJobAction(
             queryset, job
         )
+        return http.HttpResponse(status=200)
 
 class QuerySetFilterDescriptorService(BaseQuerySetService):
 

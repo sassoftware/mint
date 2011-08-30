@@ -21,6 +21,7 @@ from mint.django_rest.rbuilder.inventory import models as inventorymodels
 from mint.django_rest.rbuilder.users import models as usermodels
 from mint.django_rest.rbuilder.projects import models as projectmodels
 from mint.django_rest.rbuilder.rbac import models as rbacmodels
+from mint.django_rest.rbuilder.jobs import models as jobmodels
 
 # retag if a new query is made and the results are greater
 # than this many seconds old
@@ -623,10 +624,10 @@ class QuerySetManager(basemanager.BaseManager):
         return self.getQuerySetChosenResult(querySetId)
 
     @exposed
-    def scheduleQuerySetJobAction(self, system, job):
+    def scheduleQuerySetJobAction(self, querySet, job):
         '''
         An action is a bare job submission that is a request to start
-        a real job.   
+        a real job.   (However, querysets don't really have jobs).
 
         Job coming in will be xobj only,
         containing job_type, descriptor, and descriptor_data.  
@@ -634,7 +635,8 @@ class QuerySetManager(basemanager.BaseManager):
         Normally, we'd use that data to schedule a completely different job, 
         which will be more complete.  However, there really aren't any 
         background jobs on a queryset, so things just run immediately
-        for now.   
+        for now.  (We may want an object agnostic job dispatch engine in
+        rbuilder at some point, right now it's inventory specific).
         '''
 
         # get integer job type even if not a django model
@@ -644,14 +646,14 @@ class QuerySetManager(basemanager.BaseManager):
             jt = int(jt.split("/")[-1])
 
         # lookup job name for ID in database
-        #event_type = jobmodels.EventType.objects.get(job_type_id=jt)
-        #job_name   = event_type.name
+        event_type = jobmodels.EventType.objects.get(job_type_id=jt)
+        job_name   = event_type.name
 
-        #if job_name == jobmodels.EventType.QUERYSET_INVALIDATE:
-        #    querySet.tagged_date = None
-        #    querySet.save()
-        #else:
-        #    raise Exception("action dispatch not yet supported on job type: %s" % jt)
+        if job_name == jobmodels.EventType.QUERYSET_INVALIDATE:
+            querySet.tagged_date = None
+            querySet.save()
+        else:
+            raise Exception("action dispatch not yet supported on job type: %s" % jt)
 
-        return job
+        return None
 
