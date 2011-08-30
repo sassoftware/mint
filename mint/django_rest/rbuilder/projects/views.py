@@ -48,6 +48,10 @@ class PCallbacks(object):
         """
         return PCallbacks._checkPermissions(view, request, project_short_name, MODMEMBERS)
         
+    @staticmethod
+    def rbac_can_write_project(view, request, project, *args, **kwargs):
+        user = request._authUser
+        return view.mgr.userHasRbacPermission(user, args, MODMEMBERS)
 
 class PBSCallbacks(object):
     @staticmethod
@@ -92,7 +96,7 @@ class AllProjectBranchesStagesService(service.BaseService):
     def rest_GET(self, request):
         if PBSCallbacks.rbac_can_read_all_project_branches_stages(self, request):
             qs = querymodels.QuerySet.objects.get(name='All Project Stages')
-            url = '/api/v1/query_sets/%s/all' % qs.pk
+            url = '/api/v1/query_sets/%s/all%s' % (qs.pk, request.params)
             return HttpResponseRedirect(url)
         raise PermissionDenied()
 
@@ -121,6 +125,7 @@ class ProjectAllBranchStagesService(service.BaseService):
         if PBSCallbacks.rbac_can_read_pbs_by_project_short_name(
             self, request, project_short_name):
             return self.mgr.getProjectAllBranchStages(project_short_name)
+        raise PermissionDenied()
 
 
 class ProjectBranchService(service.BaseService):
@@ -159,24 +164,27 @@ class ProjectService(service.BaseService):
     def rest_GET(self, request, project_short_name=None):
         if PCallbacks.rbac_can_read_project_by_short_name(
             self, request, project_short_name):
-            model = self.get(project_short_name)
-            return model
+            if project_short_name:
+                return self.get(project_short_name)
+            else:
+                qs = querymodels.QuerySet.objects.get(name='All Projects')
+                url = '/api/v1/query_sets/%s/all%s' % (qs.pk, request.params)
+                return HttpResponseRedirect(url)
         raise PermissionDenied()
 
     def get(self, project_short_name):
-        if project_short_name:
-            model = self.mgr.getProject(project_short_name)
-            return model
-        else:
-            qs = querymodels.QuerySet.objects.get(name='All Projects')
-            url = '/api/v1/query_sets/%s/all' % qs.pk
-            return HttpResponseRedirect(url)
+        assert project_short_name is not None
+        model = self.mgr.getProject(project_short_name)
+        return model
     
-    @rbac(MODMEMBERS)
+    # Unknown bug requires manual rbac
     @requires('project')
     @return_xml
     def rest_POST(self, request, project):
-        return self.mgr.addProject(project)
+        user = request._authUser
+        if self.mgr.userHasRbacPermission(user, project, MODMEMBERS):
+            return self.mgr.addProject(project)
+        raise PermissionDenied()
 
     @rbac(PCallbacks.rbac_can_write_project_by_short_name)
     @requires('project')
@@ -198,6 +206,7 @@ class ProjectStageService(service.BaseService):
     
     # FIXME if no longer in use, add access.admin until we are sure we can remove it.
     # else it's a security leak
+    @access.admin
     @return_xml
     def rest_GET(self, request, stage_id=None):
         return self.get(request, stage_id)
