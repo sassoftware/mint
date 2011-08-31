@@ -356,7 +356,7 @@ class XMLTestCase(TestCase, testcase.MockMixIn):
 
         return system
 
-    def _newJob(self, system, eventUuid, jobUuid, jobType, jobState=None,
+    def _newSystemJob(self, system, eventUuid, jobUuid, jobType, jobState=None,
             statusCode=100, statusText=None, statusDetail=None):
         eventType = self.mgr.sysMgr.eventType(jobType)
         if jobState is None:

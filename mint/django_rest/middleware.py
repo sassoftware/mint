@@ -338,6 +338,14 @@ class SerializeXmlMiddleware(BaseMiddleware):
                 response.write(response.model.to_xml(request))
                 response['Content-Type'] = 'text/xml'
 
+        # Originally opened in BaseService. Unfortunately models in collections
+        # aren't finalized until this method, so the manager can't be closed in
+        # the same scope in which it was opened.
+        from mint.django_rest.rbuilder import modellib
+        if getattr(modellib.XObjModel, '_rbmgr', None):
+            modellib.XObjModel._rbmgr.restDb.close()
+            modellib.XObjModel._rbmgr = None
+
         return response
       
 # NOTE: must also set DEBUG=True in settings to use this. 

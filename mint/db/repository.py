@@ -319,11 +319,10 @@ class RepositoryHandle(object):
         if params in self._manager().reposDBCache:
             db = self._manager().reposDBCache[params]
             db.reopen()
-            if db.inTransaction(True):
-                db.rollback()
         else:
             driver, path = params
             db = dbstore.connect(path, driver)
+            self._manager().reposDBCache[params] = db
         return db
 
     def getNetServerConfig(self):

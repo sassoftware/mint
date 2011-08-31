@@ -396,6 +396,14 @@ class ProjectManager(basemanager.BaseManager):
         return Images
 
     @exposed
+    def updateImage(self, image):
+        # For now only metadata can be updated, in the future it will be
+        # necessary to figure out what changed before needlessly re-committing
+        # the image trove.
+        image.saveMetadata()
+        return image
+
+    @exposed
     def getProjectBranch(self, project_name, project_branch_label):
         if project_branch_label:
             # Even though technically doing a GET and letting it fail

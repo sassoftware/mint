@@ -71,7 +71,7 @@ class RbacRole(modellib.XObjIdModel):
     # objects = modellib.RbacRoleManager() # needed because of non-integer PK?
     _xobj_hidden_accessors = set(['rbacuserrole_set', 'tags'])
 
-    role_id = D(models.IntegerField(primary_key=True),
+    role_id = D(models.AutoField(primary_key=True),
         "the database ID for the role")
     name = D(models.TextField(unique=True, db_column="role_name"), "name of the role")
     description = D(models.TextField(), 'description')

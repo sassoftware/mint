@@ -94,3 +94,8 @@ class BaseRbuilderManager(object):
 
     def getMintDatabase(self):
         return database.Database(self.cfg)
+
+    def close(self):
+        if self._restDb is not None:
+            self._restDb.close()
+            self._restDb = None

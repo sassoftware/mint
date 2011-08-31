@@ -160,12 +160,15 @@ class Database(DBInterface):
             self.siteAuth = siteauth.getSiteAuth(cfg.siteAuthCfgPath)
 
     def close(self):
-        #DBInterface.close(self)
+        DBInterface.close(self)
         self.productMgr.reposMgr.close()
 
     def reopen_fork(self):
         DBInterface.reopen_fork(self)
         self.productMgr.reposMgr.reopen_fork()
+
+    def reset(self):
+        self.productMgr.reposMgr.reset()
 
     def setAuth(self, auth, authToken):
         self.auth.setAuth(auth, authToken)

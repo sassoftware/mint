@@ -236,15 +236,22 @@ class ProjectImageService(service.BaseService):
 
     @rbac(PCallbacks.rbac_can_read_project_by_short_name)
     @return_xml
-    def rest_GET(self, request, short_name, image_id=None):
-        return self.get(request, short_name, image_id)
+    def rest_GET(self, request, project_short_name, image_id=None):
+        return self.get(request, project_short_name, image_id)
 
-    def get(self, request, short_name, image_id):
+    def get(self, request, project_short_name, image_id):
         if image_id:
             model = self.mgr.getImage(image_id)
         else:
-            model = self.mgr.getImagesForProject(short_name)
+            model = self.mgr.getImagesForProject(project_short_name)
         return model
+
+    @rbac(PCallbacks.rbac_can_write_project_by_short_name)
+    @requires("image")
+    @return_xml
+    def rest_PUT(self, request, project_short_name, image_id, image):
+        image.image_id = image_id
+        return self.mgr.updateImage(image)
 
 
 class ProjectBranchStageImagesService(service.BaseService):
@@ -298,8 +305,8 @@ class ProjectImageBuildsJobService(service.BaseService):
 class ProjectMemberService(service.BaseService):
     @rbac(PCallbacks.rbac_can_read_project_by_short_name)
     @return_xml
-    def rest_GET(self, request, short_name):
-        return self.get(short_name)
+    def rest_GET(self, request, project_short_name):
+        return self.get(project_short_name)
 
-    def get(self, short_name):
-        return self.mgr.getProjectMembers(short_name)
+    def get(self, project_short_name):
+        return self.mgr.getProjectMembers(project_short_name)
