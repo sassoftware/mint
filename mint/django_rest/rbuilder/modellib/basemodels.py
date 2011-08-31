@@ -783,8 +783,8 @@ class ManagementNodeManager(SystemManager):
 class StubManager(BaseManager):
     def _load(self, *args, **kwargs):
         """
-        Overridden because systems has no direct representation in the db - we
-        need to load individual objects
+        Overridden because collections have no direct representation in the db - 
+        we need to load individual objects
         """
         model = self.model()
         return None, model
@@ -796,6 +796,9 @@ class RbacContextsManager(StubManager):
     pass
 
 class RbacPermissionsManager(StubManager):
+    pass
+
+class RbacPermissionTypesManager(StubManager):
     pass
 
 class RbacUserRolesManager(StubManager):

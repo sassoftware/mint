@@ -379,7 +379,7 @@ class QuerySetManager(basemanager.BaseManager):
         return rbacmodels.RbacPermission.objects.filter(
             tags__query_set=querySet,
             tags__inclusion_method__inclusion_method_id__in=methods
-        ).order_by('permission_id')
+        ).order_by('grant_id')
 
     @exposed
     def getQuerySetsForResource(self, resource):

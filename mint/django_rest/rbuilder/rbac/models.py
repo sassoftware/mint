@@ -16,6 +16,8 @@ from mint.django_rest.rbuilder.users import models as usersmodels
 from xobj import xobj
 from django.core.urlresolvers import reverse
 
+APIReadOnly = modellib.APIReadOnly
+
 class Rbac(modellib.XObjModel):
 
     # XSL = 'rbac.xsl'
@@ -63,17 +65,24 @@ class RbacRole(modellib.XObjIdModel):
         tag = 'role',
         attributes = {'id':str},
     )
+
+    summary_view = [ "name", "description" ]
     
     # objects = modellib.RbacRoleManager() # needed because of non-integer PK?
     _xobj_hidden_accessors = set(['rbacuserrole_set', 'tags'])
 
     role_id = D(models.IntegerField(primary_key=True),
         "the database ID for the role")
-    role_name = D(models.TextField(unique=True), "name of the role")
-    created_date = D(modellib.DateTimeUtcField(auto_now_add=True),
+    name = D(models.TextField(unique=True, db_column="role_name"), "name of the role")
+    description = D(models.TextField(), 'description')
+    created_date = D(APIReadOnly(modellib.DateTimeUtcField(auto_now_add=True)),
         "creation date")
-    modified_date = D(modellib.DateTimeUtcField(auto_now_add=True),
+    modified_date = D(APIReadOnly(modellib.DateTimeUtcField(auto_now_add=True)),
         "modification date")
+    created_by   =  D(APIReadOnly(modellib.ForeignKey(usersmodels.User, null=True, 
+        related_name='+', db_column='created_by')), 'user who created this resource')
+    modified_by   =  D(APIReadOnly(modellib.ForeignKey(usersmodels.User, null=True, 
+        related_name='+', db_column='modified_by')), 'user who last modified this resource')
 
 class RbacPermissions(modellib.Collection):
     '''
@@ -87,13 +96,58 @@ class RbacPermissions(modellib.Collection):
     list_fields = ['grant']
     grant = []
     objects = modellib.RbacPermissionsManager()
-    view_name = 'RbacPermissions' # TODO: add view
+    view_name = 'RbacPermissions'
 
     def __init__(self):
         modellib.Collection.__init__(self)
 
     def save(self):
         return [s.save() for s in self.grant]
+
+class RbacPermissionTypes(modellib.Collection):
+    '''
+    A collection of RbacPermissionTypes
+    '''
+
+    # XSL = 'fixme.xsl' # TODO
+    class Meta:
+        abstract = True
+    _xobj = xobj.XObjMetadata(tag = 'permissions')
+    list_fields = ['permission']
+    grant = []
+    objects = modellib.RbacPermissionTypesManager()
+    view_name = 'RbacPermissionTypes' 
+
+    def __init__(self):
+        modellib.Collection.__init__(self)
+
+    def save(self):
+        return [s.save() for s in self.permission]
+
+class RbacPermissionType(modellib.XObjIdModel):
+    '''
+    A permission type that can be granted to an individual user
+    and that can be used to gate access control around a resource
+    '''
+    #   "permission_type_id" %(PRIMARYKEY)s,
+    #        "name" TEXT,
+    #        "description" TEXT
+
+    XSL = "fixme.xsl" # TODO
+    class Meta:
+        db_table = 'rbac_permission_type'
+
+    view_name = 'RbacPermissionType' # TODO
+
+    _xobj = xobj.XObjMetadata(
+        tag = 'permission'
+    )
+    summary_view = [ "name", "description" ]
+
+    permission_id = D(models.AutoField(primary_key=True, db_column='permission_type_id'),
+        "the database ID for the permission type")
+    name         =  D(models.TextField(), 'internal role name/code')
+    description  =  D(models.TextField(), 'role description')
 
 class RbacPermission(modellib.XObjIdModel):
     '''
@@ -112,17 +166,23 @@ class RbacPermission(modellib.XObjIdModel):
     )
     _xobj_hidden_accessors = set(['tags'])
 
-    permission_id = D(models.AutoField(primary_key=True),
-        "the database ID for the context")
+    grant_id = D(models.AutoField(primary_key=True, db_column='permission_id'),
+        "the database ID for the permission")
     role         =  D(modellib.ForeignKey(RbacRole, 
         null=False, db_column='role_id', related_name='grants'), 'rbac_role id')
     queryset     =  D(modellib.ForeignKey('querysets.QuerySet', 
         null=False, db_column='queryset_id', related_name='grants'), 'queryset id')
-    permission  = D(models.TextField(db_column='action'), 'allowed capability name')
-    created_date = D(modellib.DateTimeUtcField(auto_now_add=True),
+    permission  = D(models.ForeignKey(RbacPermissionType,
+        null=False, db_column='permission_type_id', related_name='+'),
+        'permission')
+    created_date = D(APIReadOnly(modellib.DateTimeUtcField(auto_now_add=True)),
         "creation date")
-    modified_date = D(modellib.DateTimeUtcField(auto_now_add=True),
+    modified_date = D(APIReadOnly(modellib.DateTimeUtcField(auto_now_add=True)),
         "modification date")
+    created_by   =  D(APIReadOnly(modellib.ForeignKey(usersmodels.User, null=True, 
+        related_name='+', db_column='created_by')), 'user who created this resource')
+    modified_by   =  D(APIReadOnly(modellib.ForeignKey(usersmodels.User, null=True, 
+        related_name='+', db_column='modified_by')), 'user who last modified this resource')
 
 class RbacUserRoles(modellib.Collection):
     '''
@@ -170,10 +230,14 @@ class RbacUserRole(modellib.XObjIdModel):
     role    =  D(modellib.ForeignKey(RbacRole, null=False), 'rbac_role id')
     user    =  D(modellib.ForeignKey(usersmodels.User, null=False, 
         related_name='user_roles'), 'user id')
-    created_date = D(modellib.DateTimeUtcField(auto_now_add=True),
+    created_date = D(APIReadOnly(modellib.DateTimeUtcField(auto_now_add=True)),
         "creation date")
-    modified_date = D(modellib.DateTimeUtcField(auto_now_add=True),
+    modified_date = D(APIReadOnly(modellib.DateTimeUtcField(auto_now_add=True)),
         "modification date")
+    created_by   =  D(APIReadOnly(modellib.ForeignKey(usersmodels.User, null=True, 
+        related_name='+', db_column='created_by')), 'user who created this resource')
+    modified_by   =  D(APIReadOnly(modellib.ForeignKey(usersmodels.User, null=True, 
+        related_name='+', db_column='modified_by')), 'user who last modified this resource')
 
     def serialize(self, request):
         xobj_model = modellib.XObjIdModel.serialize(self, request)

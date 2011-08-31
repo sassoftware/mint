@@ -3965,6 +3965,62 @@ class MigrateTo_58(SchemaMigration):
 
         return True
 
+    def migrate59(self):
+        db = self.db
+        cu = self.db.cursor
+        columns = [ 'created_by', 'modified_by' ] 
+        tables = [ 'rbac_permission', 'rbac_user_role', 'rbac_role' ]
+        for table in tables:
+            for column in columns:
+                cu.execute("""ALTER TABLE %s ADD COLUMN %s
+                     INTEGER 
+                     REFERENCES Users ( userId ) 
+                     ON DELETE CASCADE,
+                """ % (table, column))
+        cu.execute("ALTER TABLE rbac_user_role ADD COLUMN description TEXT")       
+ 
+        createTable(self.db, 'rbac_permission_type', """
+            CREATE TABLE "rbac_permission_type" (
+                "permission_type_id" %(PRIMARYKEY)s,
+                "name" TEXT,
+                "description" TEXT
+            )""")
+
+        # BOOKMARK
+        schema._addTableRows(self.db, 'rbac_permission_type', 'name', [ 
+            dict(name="ReadMembers", description='Read Member Resources'),
+            dict(name="ModMembers",  description='Modify Member Resources'),
+            dict(name="ReadSet",     description='Read Set'),
+            dict(name="ModSetDef",   description='Modify Set Definition'),
+        ])
+
+        cu.execute("""DROP TABLE rbac_permission CASCADE""")
+        createTable(self.db, """
+            CREATE TABLE rbac_permission (
+                permission_id   %(PRIMARYKEY)s,
+                role_id         INTEGER NOT NULL
+                   REFERENCES rbac_role ( role_id ) 
+                   ON DELETE CASCADE
+                   ON UPDATE CASCADE,
+                queryset_id      INTEGER NOT NULL
+                   REFERENCES querysets_queryset ( query_set_id ) 
+                   ON DELETE CASCADE
+                   ON UPDATE CASCADE,
+                permission_type_id  INTEGER NOT NULL
+                   REFERENCES rbac_permission_type ( permission_type_id )
+                   ON DELETE CASCADE
+                   ON UPDATE CASCADE,
+                created_date timestamp with time zone NOT NULL,
+                modified_date timestamp with time zone NOT NULL,
+                UNIQUE ( "role_id", "queryset_id", "permission_type_id" )
+            ) %(TABLEOPTS)s """ % self.db.keywords)
+        self.db.tables['rbac_permission'] = []
+        self.db.createIndex('rbac_permission', 'RbacPermissionLookupIdx',
+            'role_id, queryset_id, permission_type_id')
+
+        return True
+
+
 #### SCHEMA MIGRATIONS END HERE #############################################
 
 def _getMigration(major):

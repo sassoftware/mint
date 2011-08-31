@@ -33,6 +33,23 @@ class RbacService(BaseRbacService):
     @return_xml
     def rest_GET(self, request):
         return models.Rbac()
+
+class RbacPermissionTypeService(BaseRbacService):
+    """ 
+    Returns the list of permissions configurable for RBAC
+    """
+    
+    @access.anonymous
+    @return_xml
+    def rest_GET(self, request, permission_type_id=None):
+        return self.get(permission_type_id)
+
+    def get(self, permission_type_id=None):
+        if permission_type_id is not None:
+            return self.mgr.getRbacPermissionType(permission_type_id)
+        else:
+            return self.mgr.getRbacPermissionTypes()
+
  
 class RbacPermissionsService(BaseRbacService):
     """
@@ -62,17 +79,17 @@ class RbacPermissionsService(BaseRbacService):
 
     # CREATE
     @access.admin
-    @requires('grant')
+    @requires('grant', save=False)
     @return_xml
     def rest_POST(self, request, grant):
-        return self.mgr.addRbacPermission(grant)
+        return self.mgr.addRbacPermission(grant, request._authUser)
 
     # UPDATE
     @access.admin
-    @requires('grant')
+    @requires('grant', save=False)
     @return_xml
     def rest_PUT(self, request, permission_id, grant):
-        return self.mgr.updateRbacPermission(permission_id, grant)
+        return self.mgr.updateRbacPermission(permission_id, grant, request._authUser)
 
     # DELETE
     @access.admin
@@ -106,16 +123,16 @@ class RbacRolesService(BaseRbacService):
     # CREATE
     @access.admin
     @return_xml
-    @requires('role')
+    @requires('role', save=False)
     def rest_POST(self, request, role):
-        return self.mgr.addRbacRole(role)
+        return self.mgr.addRbacRole(role, request._authUser)
 
     # UPDATE
     @access.admin
     @requires('role', save=False)
     @return_xml
     def rest_PUT(self, request, role_id, role):
-        return self.mgr.updateRbacRole(role_id, role)
+        return self.mgr.updateRbacRole(role_id, role, request._authUser)
 
     # DELETE
     @access.admin
@@ -145,10 +162,10 @@ class RbacUserRolesService(BaseRbacService):
 
     # CREATE -- ADD A RBAC ROLE
     @access.admin
-    @requires('role')
+    @requires('role', save=False)
     @return_xml
     def rest_POST(self, request, user_id, role):
-        return self.mgr.addRbacUserRole(user_id, role)
+        return self.mgr.addRbacUserRole(user_id, role, request._authUser)
 
     # DELETE
     @access.admin

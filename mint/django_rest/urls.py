@@ -583,6 +583,12 @@ urlpatterns = patterns('',
     URL(r'users/(?P<user_id>\d+)/roles/(?P<role_id>\d+)?$',
         rbacviews.RbacUserRolesService(),
         name='RbacUserRole'),
+    URL(r'rbac/permissions/?$',
+        rbacviews.RbacPermissionTypeService(),
+        name='RbacPermissionTypes'),
+    URL(r'rbac/permissions/(?P<permission_type_id>\d+)?$',
+        rbacviews.RbacPermissionTypeService(),
+        name='RbacPermissionType'),
 )
 
 

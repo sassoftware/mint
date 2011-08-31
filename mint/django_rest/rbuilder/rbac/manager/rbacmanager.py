@@ -20,6 +20,9 @@ RESOURCE_TYPE_SYSTEM   = 'system'
 RESOURCE_TYPE_PLATFORM = 'platform'
 RESOURCE_TYPE_IMAGE    = 'image'
 
+# the following constants are used to lookup RbacPermissionTypes
+# in the database and are not to be used directly.
+#
 # ability to view items inside a queryset
 READMEMBERS = 'ReadMembers'  
 # ability to edit items in a queryset
@@ -53,11 +56,25 @@ class RbacManager(basemanager.BaseManager):
         if type(value) != modelClass:
             return modelClass.objects.get(pk=value)
         return value
+   
+    #########################################################
+    # RBAC PERMISSION TYPE METHODS
+    # read only!
     
+    def _permission_type(self, value):
+       return self._orId(value, models.RbacPermissionType)
+
+    @exposed
+    def getRbacPermissionTypes(self):
+        return self._getThings(models.RbacPermissionTypes,
+            models.RbacPermissionType, 'permission', order_by=['permission_type_id'])
+
+    @exposed
+    def getRbacPermissionType(self, permission_type):
+        return self._permission_type(permission_type)
+
     #########################################################
     # RBAC ROLE METHODS
-    # handled a bit nonstandard due to the string PK
-    # and need to override the Django manager
     
     def _role(self, value):
         '''cast input as a role'''
@@ -73,16 +90,22 @@ class RbacManager(basemanager.BaseManager):
         return self._role(role)
    
     @exposed
-    def addRbacRole(self, role):
-        # already saved via requires() decorator
-        role = models.RbacRole.objects.get(role_name=role.role_name)
+    def addRbacRole(self, role, by_user):
+        role.created_by = by_user
+        role.modified_by = by_user
+        role.save()
+        role = models.RbacRole.objects.get(name=role.name)
         return role
 
     @exposed
-    def updateRbacRole(self, old_id, role):
-        # view already checked that id matched
-        # save may be redundant due to requires() decorator
+    def updateRbacRole(self, old_id, role, by_user):
+        old_obj = models.RbacRole.objects.get(pk=role.oldModel.role_id)
+        role.created_by = old_obj.created_by
+        if old_obj.created_date is None:
+            raise Exception("ERROR: invalid previous object?")
+        role.created_date = old_obj.created_date
         role.modified_date = datetime.now()
+        role.modified_by = by_user
         role.save()
         return role
 
@@ -108,15 +131,29 @@ class RbacManager(basemanager.BaseManager):
     @exposed
     def getRbacPermission(self, permission):
         return self._permission(permission)
-
+ 
     @exposed
-    def addRbacPermission(self, permission):
+    def addRbacPermission(self, permission, by_user):
+        permission.created_by  = by_user
+        permission.modified_by = by_user
         permission.save()
-        return permission
+        result = models.RbacPermission.objects.get(
+            role = permission.role,
+            queryset = permission.queryset,
+            permission = permission.permission
+        )
+        return result
 
     @exposed
-    def updateRbacPermission(self, old_id, permission):
+    def updateRbacPermission(self, old_id, permission, by_user):
+        # BOOKMARK
+        old_obj = models.RbacPermission.objects.get(pk=permission.oldModel.grant_id)
+        if old_obj.created_date is None:
+            raise Exception("ERROR: invalid previous object?")
+        permission.created_by    = old_obj.created_by
+        permission.created_date  = old_obj.created_date
         permission.modified_date = datetime.now()
+        permission.modified_by   = by_user
         permission.save()
         return permission
 
@@ -176,10 +213,8 @@ class RbacManager(basemanager.BaseManager):
             user = user
         )
         my_roles = [ x.role for x in roles ] 
-        allowed_permissions = [ READMEMBERS, MODMEMBERS, READSET, MODSETDEF ]
         perms = models.RbacPermission.objects.select_related().filter(
            role__in = my_roles,
-           permission__in    = allowed_permissions
         )
 
         results = []
@@ -204,6 +239,7 @@ class RbacManager(basemanager.BaseManager):
         depending on usage.  
         '''
 
+
         # if the user is an admin, immediately let them by
         if request is not None and request._is_admin:
             return True
@@ -217,6 +253,10 @@ class RbacManager(basemanager.BaseManager):
         user_is_admin = str(getattr(user, 'is_admin', 'false'))
         if user_is_admin == 'true':
             return True
+        
+        # input permission is a permission name, upconvert to PermissionType object
+        permission = models.RbacPermissionType.objects.get(name=permission)
+
         querysets = self.mgr.getQuerySetsForResource(resource)
         user = self._user(user)
         if len(querysets) == 0:
@@ -230,14 +270,17 @@ class RbacManager(basemanager.BaseManager):
 
         # write access implies read access.  
         acceptable_permitted_permissions = [ permission ]
-        if permission == READMEMBERS:
-            acceptable_permitted_permissions.extend([MODMEMBERS])
-        if permission == READSET:
-            acceptable_permitted_permissions.extend([MODSETDEF])
+        if permission.name == READMEMBERS:
+            modmembers = models.RbacPermissionType.objects.get(name=MODMEMBERS)
+            acceptable_permitted_permissions.append(modmembers)
+        if permission.name == READSET:
+            modsetdef = models.RbacPermissionType.objects.get(name=MODSETDEF)
+            acceptable_permitted_permissions.append(modsetdef)
+        acceptable_permitted_permissions = [ x.name for x in acceptable_permitted_permissions ]
 
         # there is queryset/roles info, so now find the permissions associated
         # with the queryset
-        resource_permissions = models.RbacPermission.objects.filter(
+        resource_permissions = models.RbacPermission.objects.select_related('rbac_permission_type').filter(
             queryset__in = querysets
         ).extra(
             where=['role_id=%s'], params=role_ids
@@ -245,13 +288,13 @@ class RbacManager(basemanager.BaseManager):
 
         # permit user if they have one of the permissions we want...
         # Django seems to displike duplicate extra queries, so...
-        for x in resource_permissions:
-             if x.permission in acceptable_permitted_permissions:
+        for x in resource_permissions: # aka grants
+             if x.permission.name in acceptable_permitted_permissions:
                  return True
         return False
 
     @exposed
-    def addRbacUserRole(self, user_id, role_id):
+    def addRbacUserRole(self, user_id, role_id, by_user):
         '''Results in the user having this rbac role'''
         user = self._user(user_id)
         role = self._role(role_id)
@@ -260,7 +303,12 @@ class RbacManager(basemanager.BaseManager):
             # mapping already exists, nothing to do
         except models.RbacUserRole.DoesNotExist:
             # no role assignment found, create it
-            models.RbacUserRole(user=user, role=role).save()
+            models.RbacUserRole(
+                user=user, 
+                role=role, 
+                created_by=by_user, 
+                modified_by=by_user
+            ).save()
             role = models.RbacUserRole.objects.get(user=user, role=role)
         return role
 

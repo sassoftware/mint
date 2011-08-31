@@ -160,8 +160,15 @@ def _createRbac(db):
         CREATE TABLE rbac_role (
             role_id      %(PRIMARYKEY)s,
             role_name    TEXT,
+            description  TEXT,
             created_date timestamp with time zone NOT NULL,
-            modified_date timestamp with time zone NOT NULL
+            modified_date timestamp with time zone NOT NULL,
+            created_by   INTEGER
+               REFERENCES Users ( userId ) 
+               ON DELETE CASCADE,
+            modified_by   INTEGER 
+               REFERENCES Users ( userId ) 
+               ON DELETE CASCADE
         ) %(TABLEOPTS)s """ % db.keywords)
         db.tables['rbac_role'] = []
         changed = True
@@ -175,6 +182,12 @@ def _createRbac(db):
                ON DELETE CASCADE
                ON UPDATE CASCADE,
             user_id      INTEGER NOT NULL
+               REFERENCES Users ( userId ) 
+               ON DELETE CASCADE,
+            created_by   INTEGER
+               REFERENCES Users ( userId ) 
+               ON DELETE CASCADE,
+            modified_by   INTEGER
                REFERENCES Users ( userId ) 
                ON DELETE CASCADE,
             created_date timestamp with time zone NOT NULL,
@@ -196,10 +209,19 @@ def _createRbac(db):
                REFERENCES querysets_queryset ( query_set_id ) 
                ON DELETE CASCADE
                ON UPDATE CASCADE,
-            action          TEXT NOT NULL,
+            permission_type_id  INTEGER NOT NULL
+                   REFERENCES rbac_permission_type ( permission_type_id )
+                   ON DELETE CASCADE
+                   ON UPDATE CASCADE,
             created_date timestamp with time zone NOT NULL,
             modified_date timestamp with time zone NOT NULL,
-            UNIQUE ( "role_id", "queryset_id", "action" )
+            created_by   INTEGER
+               REFERENCES Users ( userId ) 
+               ON DELETE CASCADE,
+            modified_by   INTEGER
+               REFERENCES Users ( userId ) 
+               ON DELETE CASCADE, 
+            UNIQUE ( "role_id", "queryset_id", "permission_type_id" )
         ) %(TABLEOPTS)s """ % db.keywords)
         db.tables['rbac_permission'] = []
         changed = True
@@ -207,7 +229,7 @@ def _createRbac(db):
     changed |= db.createIndex('rbac_user_role', 'RbacUserRoleSearchIdx',  
         'user_id, role_id', unique=True)
     changed != db.createIndex('rbac_permission', 'RbacPermissionLookupIdx',  
-        'role_id, queryset_id, action')
+        'role_id, queryset_id, permission_type_id')
 
     # rbac query sets
     changed != _createAllRoles(db)
@@ -247,6 +269,22 @@ def _createRbac(db):
                 NOT NULL,
             CONSTRAINT querysets_roletag_uq UNIQUE ("role_id", "query_set_id", "inclusion_method_id")
         )""")
+
+    changed != createTable(db, 'rbac_permission_type', """
+        CREATE TABLE "rbac_permission_type" (
+            "permission_type_id" %(PRIMARYKEY)s,
+            "name" TEXT,
+            "description" TEXT
+        )""")
+
+    # BOOKMARK
+    changed |= _addTableRows(db, 'rbac_permission_type', 'name',
+        [ 
+          dict(name="ReadMembers", description='Read Member Resources'),
+          dict(name="ModMembers",  description='Modify Member Resources'),
+          dict(name="ReadSet",     description='Read Set'),
+          dict(name="ModSetDef",   description='Modify Set Definition'),
+        ])
 
     return changed
 
