@@ -246,6 +246,13 @@ class ProjectImageService(service.BaseService):
             model = self.mgr.getImagesForProject(project_short_name)
         return model
 
+    @rbac(PCallbacks.rbac_can_write_project_by_short_name)
+    @requires("image")
+    @return_xml
+    def rest_PUT(self, request, project_short_name, image_id, image):
+        image.image_id = image_id
+        return self.mgr.updateImage(image)
+
 
 class ProjectBranchStageImagesService(service.BaseService):
     

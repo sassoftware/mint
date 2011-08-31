@@ -512,14 +512,14 @@ class Image(modellib.XObjIdModel):
     #actions = modellib.SyntheticField()
 
     def computeSyntheticFields(self, sender, **kwargs):
+        self._computeMetadata()
+
+    def _computeMetadata(self):
         if self._rbmgr is None or self.output_trove is None:
             return
-        name, version, flavor = trovetup.TroveSpec.fromString(self.output_trove)
-        version = versions.VersionFromString(version)
-        if flavor is None:
-            flavor = deps.Flavor()
+        troveTup = self._getOutputTrove()
         reposMgr = self._rbmgr.restDb.productMgr.reposMgr
-        metadata = reposMgr.getKeyValueMetadata([(name, version, flavor)])[0]
+        metadata = reposMgr.getKeyValueMetadata([troveTup])[0]
         if metadata is None:
             self.metadata = None
             return
@@ -527,6 +527,45 @@ class Image(modellib.XObjIdModel):
         for key, value in metadata.items():
             setattr(metaxml, key, value)
         self.metadata = metaxml
+
+    def saveMetadata(self):
+        if (self._rbmgr is None or self.output_trove is None
+                or self.metadata is None):
+            return
+        # Commit a new image trove with updated metadata to repository and save
+        # its NVF back to the output_trove field.
+        metadata = self._getMetadataDict()
+        oldTup = self._getOutputTrove()
+        reposMgr = self._rbmgr.restDb.productMgr.reposMgr
+        newTup = reposMgr.updateKeyValueMetadata([(oldTup, metadata)],
+                admin=True)[0]
+        self.output_trove = newTup.asString()
+        self.save()
+        # Log new image tuple
+        msg = "Updated image committed as %s=%s/%s" % (newTup.name,
+                newTup.version.trailingLabel(),
+                newTup.version.trailingRevision())
+        self._rbmgr.restDb.imageMgr._getImageLogger(self.project.short_name,
+                self.image_id).info(msg)
+
+    def _getOutputTrove(self):
+        if self.output_trove is None:
+            return None
+        name, version, flavor = trovetup.TroveSpec.fromString(self.output_trove)
+        version = versions.VersionFromString(version)
+        if flavor is None:
+            flavor = deps.Flavor()
+        return trovetup.TroveTuple(name, version, flavor)
+
+    def _getMetadataDict(self):
+        if self.metadata is None:
+            return None
+        metadataDict = {}
+        for name, value in self.metadata.__dict__.items():
+            if name.startswith('_'):
+                continue
+            metadataDict[name] = str(value)
+        return metadataDict
 
 
 # class Downloads(modellib.XObjModel):
