@@ -100,13 +100,12 @@ class BaseService(resource.Resource):
             return HttpAuthenticationRequired
         if not self._auth_filter(request, access, kwargs):
             return HttpAuthenticationRequired
-        # Set the manager into one of the model's base classes
+        # Set the manager into one of the model's base classes. It will be
+        # freed in SerializeXmlMiddleware, which is the last place that might
+        # need access to the attached database.
         from mint.django_rest.rbuilder import modellib
         modellib.XObjModel._rbmgr = self.mgr
-        try:
-            return method(request, *args, **kwargs)
-        finally:
-            modellib.XObjModel._rbmgr = None
+        return method(request, *args, **kwargs)
 
     def _auth_filter(self, request, access, kwargs):
         """Return C{True} if the request passes authentication checks."""

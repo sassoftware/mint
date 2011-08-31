@@ -1,13 +1,14 @@
 #
 # Copyright (c) 2011 rPath, Inc.
 #
-# All Rights Reserved
-#
 
 import datetime
 import re
 import sys
 import time
+from conary import trovetup
+from conary import versions
+from conary.deps import deps
 from dateutil import tz
 from django.db import models
 from mint import projects as mintprojects
@@ -17,7 +18,6 @@ from mint.django_rest.rbuilder import modellib
 from mint.django_rest.deco import D
 from mint.django_rest.rbuilder.users import models as usermodels
 from mint.django_rest.rbuilder.jobs import models as jobmodels
-from mint.django_rest.rbuilder.platforms import models as platformmodels
 from xobj import xobj
 
 
@@ -489,6 +489,7 @@ class Image(modellib.XObjIdModel):
         db_column='troveflavor')
     trove_last_changed = models.DecimalField(max_digits=14,
         decimal_places=3, null=True, db_column='trovelastchanged')
+    output_trove = models.TextField(null=True)
     time_created = models.DecimalField(max_digits=14, decimal_places=3,
         db_column='timecreated')
     created_by = modellib.ForeignKey(usermodels.User,
@@ -507,7 +508,25 @@ class Image(modellib.XObjIdModel):
     status = models.IntegerField(null=True, default=-1)
     status_message = models.TextField(null=True, blank=True, default='',
         db_column="statusmessage")
+    metadata = modellib.SyntheticField()
     #actions = modellib.SyntheticField()
+
+    def computeSyntheticFields(self, sender, **kwargs):
+        if self._rbmgr is None or self.output_trove is None:
+            return
+        name, version, flavor = trovetup.TroveSpec.fromString(self.output_trove)
+        version = versions.VersionFromString(version)
+        if flavor is None:
+            flavor = deps.Flavor()
+        reposMgr = self._rbmgr.restDb.productMgr.reposMgr
+        metadata = reposMgr.getKeyValueMetadata([(name, version, flavor)])[0]
+        if metadata is None:
+            self.metadata = None
+            return
+        metaxml = xobj.XObj()
+        for key, value in metadata.items():
+            setattr(metaxml, key, value)
+        self.metadata = metaxml
 
 
 # class Downloads(modellib.XObjModel):
