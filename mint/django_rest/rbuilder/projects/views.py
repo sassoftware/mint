@@ -301,5 +301,5 @@ class ProjectMemberService(service.BaseService):
     def rest_GET(self, request, project_short_name):
         return self.get(project_short_name)
 
-    def get(self, short_name):
+    def get(self, project_short_name):
         return self.mgr.getProjectMembers(project_short_name)
