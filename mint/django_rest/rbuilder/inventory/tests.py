@@ -1023,7 +1023,7 @@ class SystemsTestCase(XMLTestCaseStandin):
         system2 = self.newSystem(name="blip")
         system2.save()
 
-        self._newJob(system, eventUuid, 'rmakejob007',
+        self._newSystemJob(system, eventUuid, 'rmakejob007',
             jobmodels.EventType.SYSTEM_REGISTRATION)
 
         xmlTempl = """\
@@ -2581,7 +2581,7 @@ class SystemStateTestCase(XMLTestCaseStandin):
         system = self.newSystem(name='blippy')
         system.save()
 
-        self._newJob(system, eventUuid1, jobUuid1,
+        self._newSystemJob(system, eventUuid1, jobUuid1,
             jobmodels.EventType.SYSTEM_REGISTRATION)
 
         params = dict(eventUuid=eventUuid1, jobUuid=jobUuid1, jobState=jobState,
@@ -2620,7 +2620,7 @@ class SystemStateTestCase(XMLTestCaseStandin):
         # poll event
         eventUuid2 = 'eventuuid002'
         jobUuid2 = 'rmakeuuid002'
-        self._newJob(system, eventUuid2, jobUuid2,
+        self._newSystemJob(system, eventUuid2, jobUuid2,
             jobmodels.EventType.SYSTEM_POLL)
 
         params = dict(eventUuid=eventUuid2, jobUuid=jobUuid2, jobState=jobState,
@@ -2671,20 +2671,20 @@ class SystemStateTestCase(XMLTestCaseStandin):
         stateCompleted = self.mgr.sysMgr.jobState(jobmodels.JobState.COMPLETED)
         stateFailed = self.mgr.sysMgr.jobState(jobmodels.JobState.FAILED)
 
-        job1 = self._newJob(system, eventUuid1, jobUuid1,
+        job1 = self._newSystemJob(system, eventUuid1, jobUuid1,
             jobmodels.EventType.SYSTEM_REGISTRATION)
-        job2 = self._newJob(system, eventUuid2, jobUuid2,
+        job2 = self._newSystemJob(system, eventUuid2, jobUuid2,
             jobmodels.EventType.SYSTEM_POLL)
-        job3 = self._newJob(system, eventUuid3, jobUuid3,
+        job3 = self._newSystemJob(system, eventUuid3, jobUuid3,
             jobmodels.EventType.SYSTEM_POLL_IMMEDIATE)
-        job4 = self._newJob(system, eventUuid4, jobUuid4,
+        job4 = self._newSystemJob(system, eventUuid4, jobUuid4,
             jobmodels.EventType.SYSTEM_APPLY_UPDATE)
-        job5 = self._newJob(system, eventUuid5, jobUuid5,
+        job5 = self._newSystemJob(system, eventUuid5, jobUuid5,
             jobmodels.EventType.SYSTEM_APPLY_UPDATE_IMMEDIATE)
 
-        jobRegNoAuth = self._newJob(system, eventUuid6, jobUuid6,
+        jobRegNoAuth = self._newSystemJob(system, eventUuid6, jobUuid6,
             jobmodels.EventType.SYSTEM_REGISTRATION, statusCode = 401)
-        jobPollNoAuth = self._newJob(system, eventUuid7, jobUuid7,
+        jobPollNoAuth = self._newSystemJob(system, eventUuid7, jobUuid7,
             jobmodels.EventType.SYSTEM_POLL, statusCode = 401)
 
         UNMANAGED = models.SystemState.UNMANAGED
@@ -3048,7 +3048,7 @@ class SystemVersionsTestCase(XMLTestCaseStandin):
 
         eventUuid = 'eventuuid007'
         jobUuid = 'rmakejob007'
-        self._newJob(system, eventUuid, jobUuid, jobmodels.EventType.SYSTEM_POLL)
+        self._newSystemJob(system, eventUuid, jobUuid, jobmodels.EventType.SYSTEM_POLL)
 
         self.failUnlessEqual(
             [ (x.name, (x.version.full, x.version.ordering, x.version.flavor,
@@ -3985,10 +3985,10 @@ class SystemEventProcessing2TestCase(XMLTestCaseStandin):
         network = models.Network(dns_name="blah wmi", ip_address="1.2.3.4",
             system=systemWmi)
 
-        jobCim = self._newJob(systemCim, eventUuid1, jobUuid1,
+        jobCim = self._newSystemJob(systemCim, eventUuid1, jobUuid1,
             jobmodels.EventType.SYSTEM_DETECT_MANAGEMENT_INTERFACE,
             jobState=jobmodels.JobState.COMPLETED)
-        jobWmi = self._newJob(systemWmi, eventUuid2, jobUuid2,
+        jobWmi = self._newSystemJob(systemWmi, eventUuid2, jobUuid2,
             jobmodels.EventType.SYSTEM_DETECT_MANAGEMENT_INTERFACE,
             jobState=jobmodels.JobState.COMPLETED)
 
