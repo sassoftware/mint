@@ -24,7 +24,8 @@ from mint.django_rest.rbuilder.projects import models as projectmodels
 from mint.lib import x509
 from mint.rest.api import models as restmodels
 
-from mint.django_rest.rbuilder.rbac.tests import RbacEngine
+# from mint.django_rest.rbuilder.rbac.tests import RbacEngine
+
 # Suppress all non critical msg's from output
 # still emits traceback for failed tests
 import logging
@@ -33,7 +34,35 @@ logging.disable(logging.CRITICAL)
 from mint.django_rest import test_utils
 XMLTestCase = test_utils.XMLTestCase
 
-class AssimilatorTestCase(RbacEngine):
+class XMLTestCaseStandin(XMLTestCase):
+    def setUp(self):
+        XMLTestCase.setUp(self)
+    
+    def _get(self, url, username=None, password=None, data=None):
+        """
+        Handles redirects resulting from rbac requirement that we
+        return a query set for resources that are collections.
+        Note that we include an offset and limit big enough
+        that our test data will not be truncated
+        """
+        # Ugly
+        def _parseRedirect(http_redirect):
+            # if ';' in http_redirect then do not attach pagination
+            # postfix as the redirect most likely already includes it
+            redirect_url = http_redirect['Location']
+            if ';' not in redirect_url:
+                pagination = ';offset=0;limit=9999'
+            else:
+                pagination = ''
+            return redirect_url.split('/api/v1/')[1].strip('/') + pagination
+
+        response = super(XMLTestCaseStandin, self)._get(url, username=username, password=password)
+        if str(response.status_code).startswith('3') and response.has_header('Location'):
+            new_url = _parseRedirect(response)
+            response = XMLTestCaseStandin._get(self, new_url, username=username, password=password)
+        return response
+
+class AssimilatorTestCase(XMLTestCaseStandin):
     ''' 
     This tests actions as well as the assimilator.  See if we can list the jobs on 
     a system, get the descriptor for spawning that job, and whether we can actually
@@ -43,7 +72,7 @@ class AssimilatorTestCase(RbacEngine):
 
     def setUp(self):
         # make a new system, get ids to use when spawning job
-        RbacEngine.setUp(self)
+        XMLTestCaseStandin.setUp(self)
         self.system = self.newSystem(name="blinky", description="ghost")
         self.system.management_interface = models.ManagementInterface.objects.get(name='ssh')
         self.mgr.addSystem(self.system)
@@ -101,7 +130,7 @@ class AssimilatorTestCase(RbacEngine):
         self.assertEquals(response.status_code, 200)
         self.assertTrue(response.content.find("<system_event>") != -1)
 
-class InventoryTestCase(RbacEngine):
+class InventoryTestCase(XMLTestCaseStandin):
 
     def testGetTypes(self):
         response = self._get('inventory/')
@@ -133,7 +162,7 @@ class InventoryTestCase(RbacEngine):
         self.assertEquals(response.status_code, 200)
         self.assertXMLEquals(response.content, testsxml.inventory_xml)
 
-class LogTestCase(RbacEngine):
+class LogTestCase(XMLTestCaseStandin):
 
     def testGetLogAuth(self):
         """
@@ -162,7 +191,7 @@ class LogTestCase(RbacEngine):
         self.assertXMLEquals(response.content, testsxml.systems_log_xml,
             ignoreNodes = [ 'entry_date' ])
 
-class ZonesTestCase(RbacEngine):
+class ZonesTestCase(XMLTestCaseStandin):
 
     def testGetZones(self):
         models.Zone.objects.all().delete()
@@ -305,7 +334,7 @@ class ZonesTestCase(RbacEngine):
         except models.Zone.DoesNotExist:
             pass # what we expect
         
-class ManagementInterfacesTestCase(RbacEngine):
+class ManagementInterfacesTestCase(XMLTestCaseStandin):
 
     def testGetManagementInterfaces(self):
         models.ManagementInterface.objects.all().delete()
@@ -378,7 +407,7 @@ class ManagementInterfacesTestCase(RbacEngine):
         self.failUnlessEqual(mi.port, 123)
         self.failUnlessEqual(mi.credentials_descriptor, "<foo/>")
         
-class SystemTypesTestCase(RbacEngine):
+class SystemTypesTestCase(XMLTestCaseStandin):
 
     def testGetSystemTypes(self):
         models.SystemType.objects.all().delete()
@@ -511,7 +540,7 @@ class SystemTypesTestCase(RbacEngine):
         assert(buildNodes is not None)
         assert(len(buildNodes) == 0)
         
-class SystemStatesTestCase(RbacEngine):
+class SystemStatesTestCase(XMLTestCaseStandin):
 
     def testGetSystemStates(self):
         response = self._get('inventory/system_states/')
@@ -525,7 +554,7 @@ class SystemStatesTestCase(RbacEngine):
         self.assertXMLEquals(response.content, testsxml.system_state_xml, 
             ignoreNodes = [ 'created_date' ])
         
-class NetworkTestCase(RbacEngine):
+class NetworkTestCase(XMLTestCaseStandin):
 
     def testGetNetworks(self):
         models.System.objects.all().delete()
@@ -618,10 +647,10 @@ class NetworkTestCase(RbacEngine):
         self.assertXMLEquals(response.content,
             testsxml.network_xml, ignoreNodes = [ 'created_date' ])
 
-class ManagementNodesTestCase(RbacEngine):
+class ManagementNodesTestCase(XMLTestCaseStandin):
 
     def setUp(self):
-        RbacEngine.setUp(self)
+        XMLTestCaseStandin.setUp(self)
         models.ManagementNode.objects.all().delete()
 
     def testManagementNodeSave(self):
@@ -898,10 +927,10 @@ class ManagementNodesTestCase(RbacEngine):
              management_node.current_state.created_date.isoformat(),
              management_node.created_date.isoformat()))
 
-class NetworksTestCase(RbacEngine):
+class NetworksTestCase(XMLTestCaseStandin):
 
     def setUp(self):
-        RbacEngine.setUp(self)
+        XMLTestCaseStandin.setUp(self)
         self.system = self.newSystem(name="mgoblue",
             description="best appliance ever")
         self.system.save()
@@ -951,11 +980,11 @@ class NetworksTestCase(RbacEngine):
         net = self.mgr.sysMgr.extractNetworkToUse(self.system)
         self.failUnlessEqual(net.network_id, network3.network_id)
 
-class SystemsTestCase(RbacEngine):
+class SystemsTestCase(XMLTestCaseStandin):
     fixtures = ['system_job', 'targets']
 
     def setUp(self):
-        RbacEngine.setUp(self)
+        XMLTestCaseStandin.setUp(self)
         self.mock_scheduleSystemRegistrationEvent_called = False
         self.mock_scheduleSystemPollEvent_called = False
         self.mockGetRmakeJob_called = False
@@ -967,7 +996,7 @@ class SystemsTestCase(RbacEngine):
         jobmodels.Job.getRmakeJob = self.mockGetRmakeJob
 
     def tearDown(self):
-        RbacEngine.tearDown(self)
+        XMLTestCaseStandin.tearDown(self)
 
     def mock_scheduleSystemRegistrationEvent(self, system):
         self.mock_scheduleSystemRegistrationEvent_called = True
@@ -1024,7 +1053,8 @@ class SystemsTestCase(RbacEngine):
         # uuid validation, this works
         response = self._put('inventory/systems/%s' % system.pk,
             data=xmlTempl % params,
-            headers = { 'X-rBuilder-Event-UUID' : eventUuid })
+            headers = { 'X-rBuilder-Event-UUID' : eventUuid },
+            username='admin', password='password')
         self.failUnlessEqual(response.status_code, 200)
 
         # user/pass auth, this works
@@ -1040,7 +1070,7 @@ class SystemsTestCase(RbacEngine):
 
         # uuid bad, goodauth - this fails
         response = self._put('inventory/systems/%s' % system.pk,
-            data=xmlTempl % params, username='testuser', password='password',
+            data=xmlTempl % params, username='admin', password='password',
             headers = { 'X-rBuilder-Event-UUID' : eventUuid + '-bogus' })
         self.failUnlessEqual(response.status_code, 401)
 
@@ -1064,7 +1094,7 @@ class SystemsTestCase(RbacEngine):
         response = self._put('inventory/systems/%d/' % system.system_id,
             data=testsxml.systems_put_mothball_xml,
             username="testuser", password="password")
-        self.failUnlessEqual(response.status_code, 403)
+        self.failUnlessEqual(response.status_code, 401)
 
     def testSystemMothball(self):
         """
@@ -1814,7 +1844,7 @@ class SystemsTestCase(RbacEngine):
         
         response = self._get('inventory/systems/3/system_log/',
             username="testuser", password="password")
-        self.assertEquals(response.status_code, 200)
+        self.assertEquals(response.status_code, 403)
         
 
     def testGetSystemLog(self):
@@ -2492,7 +2522,7 @@ class SystemsTestCase(RbacEngine):
             generated_uuid=guuid)
         self.failIf(system1.pk == system2.pk)
 
-class SystemCertificateTestCase(RbacEngine):
+class SystemCertificateTestCase(XMLTestCaseStandin):
     def testGenerateSystemCertificates(self):
         system = self.newSystem(local_uuid="localuuid001",
             generated_uuid="generateduuid001")
@@ -2532,9 +2562,9 @@ class SystemCertificateTestCase(RbacEngine):
         self.failUnlessEqual(system.ssl_client_certificate, clientCert)
         self.failUnlessEqual(system.ssl_client_key, clientKey)
 
-class SystemStateTestCase(RbacEngine):
+class SystemStateTestCase(XMLTestCaseStandin):
     def setUp(self):
-        RbacEngine.setUp(self)
+        XMLTestCaseStandin.setUp(self)
         jobmodels.Job.getRmakeJob = self.mockGetRmakeJob
     
     def mockGetRmakeJob(self):
@@ -2786,11 +2816,11 @@ class SystemStateTestCase(RbacEngine):
             self.failUnlessEqual(ret, newState, msg)
 
 
-class SystemVersionsTestCase(RbacEngine):
+class SystemVersionsTestCase(XMLTestCaseStandin):
     fixtures = ['system_job']
     
     def setUp(self):
-        RbacEngine.setUp(self)
+        XMLTestCaseStandin.setUp(self)
         self.mintConfig = self.mgr.cfg
         from django.conf import settings
         self.mintConfig.dbPath = settings.DATABASES['default']['NAME']
@@ -3102,7 +3132,7 @@ class SystemVersionsTestCase(RbacEngine):
         self.assertXMLEquals(response.content,
             testsxml.system_installed_software_version_stage_xml)
 
-class EventTypeTestCase(RbacEngine):
+class EventTypeTestCase(XMLTestCaseStandin):
 
     def testGetEventTypes(self):
         response = self._get('inventory/event_types/')
@@ -3157,10 +3187,10 @@ class EventTypeTestCase(RbacEngine):
         # name should not have changed
         self.failUnlessEqual(event_type.name, jobmodels.EventType.SYSTEM_POLL)
 
-class SystemEventTestCase(RbacEngine):
+class SystemEventTestCase(XMLTestCaseStandin):
     
     def setUp(self):
-        RbacEngine.setUp(self)
+        XMLTestCaseStandin.setUp(self)
 
         # need a system
         network = models.Network(ip_address='1.1.1.1')
@@ -3183,7 +3213,7 @@ class SystemEventTestCase(RbacEngine):
 
     def tearDown(self):
         rbuildermanager.SystemManager._dispatchSystemEvent = self.old_DispatchSystemEvent
-        RbacEngine.tearDown(self)
+        XMLTestCaseStandin.tearDown(self)
 
     def mock_dispatchSystemEvent(self, event):
         self.mock_dispatchSystemEvent_called = True
@@ -3470,13 +3500,13 @@ class SystemEventTestCase(RbacEngine):
         self.assertEquals(response.status_code, 200)
         self.assertTrue('<fault>' not in response.content)
 
-class SystemEventProcessingTestCase(RbacEngine):
+class SystemEventProcessingTestCase(XMLTestCaseStandin):
     
     # do not load other fixtures for this test case as it is very data order dependent
     fixtures = ['system_event_processing']
     
     def setUp(self):
-        RbacEngine.setUp(self)
+        XMLTestCaseStandin.setUp(self)
 
         self.mintConfig = self.mgr.cfg
         self.mgr.sysMgr.cleanupSystemEvent = self.mock_cleanupSystemEvent
@@ -3641,12 +3671,12 @@ class SystemEventProcessingTestCase(RbacEngine):
         self.failUnless(self.mock_cleanupSystemEvent_called)
         self.failIf(self.mock_scheduleSystemPollEvent_called)
 
-class SystemEventProcessing2TestCase(RbacEngine):
+class SystemEventProcessing2TestCase(XMLTestCaseStandin):
     # do not load other fixtures for this test case as it is very data order dependent
     fixtures = ['system_event_processing']
 
     def setUp(self):
-        RbacEngine.setUp(self)
+        XMLTestCaseStandin.setUp(self)
 
         class RepeaterClient(object):
             methodsCalled = []
@@ -4082,7 +4112,7 @@ class SystemEventProcessing2TestCase(RbacEngine):
                 ),
             ])
 
-class TargetSystemImportTest(RbacEngine):
+class TargetSystemImportTest(XMLTestCaseStandin):
     fixtures = ['users', 'targets']
 
     class Driver(object):
@@ -4111,7 +4141,7 @@ class TargetSystemImportTest(RbacEngine):
             self.dnsName = self._X(dnsName)
 
     def setUp(self):
-        RbacEngine.setUp(self)
+        XMLTestCaseStandin.setUp(self)
 
         TI = self.TargetInstance
 
@@ -4368,7 +4398,7 @@ class TargetSystemImportTest(RbacEngine):
             params['target_system_description'])
         self.failUnlessEqual(system.description, params['description'])
 
-# class CollectionTest(RbacEngine):
+# class CollectionTest(XMLTestCaseStandin):
 #     fixtures = ['system_collection']
 # 
 #     def xobjResponse(self, url):
@@ -4581,7 +4611,7 @@ refProductDefintion1 = """\
 </productDefinition>
 """
 
-class AntiRecursiveSaving(RbacEngine):
+class AntiRecursiveSaving(XMLTestCaseStandin):
     '''
     Generalized xobj test.  Make sure that when saving an object with child members, 
     in this case a system & a management interface, and we go to EDIT
