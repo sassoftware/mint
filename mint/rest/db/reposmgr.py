@@ -48,6 +48,9 @@ class RepositoryManager(manager.Manager):
         self.reposManager.close_fork()
         self.reposManager = reposdb.RepositoryManager(self.cfg, self.db.db._db)
 
+    def reset(self):
+        self.reposManager.reset()
+
     def createRepositorySafe(self, productId, createMaps=True):
         try:
             self.createRepository(productId, createMaps)
