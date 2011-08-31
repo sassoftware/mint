@@ -24,6 +24,7 @@ from mint.django_rest.rbuilder.projects import models as projectmodels
 from mint.lib import x509
 from mint.rest.api import models as restmodels
 
+from mint.django_rest.rbuilder.rbac.tests import RbacEngine
 # Suppress all non critical msg's from output
 # still emits traceback for failed tests
 import logging
@@ -32,7 +33,7 @@ logging.disable(logging.CRITICAL)
 from mint.django_rest import test_utils
 XMLTestCase = test_utils.XMLTestCase
 
-class AssimilatorTestCase(XMLTestCase):
+class AssimilatorTestCase(RbacEngine):
     ''' 
     This tests actions as well as the assimilator.  See if we can list the jobs on 
     a system, get the descriptor for spawning that job, and whether we can actually
@@ -42,7 +43,7 @@ class AssimilatorTestCase(XMLTestCase):
 
     def setUp(self):
         # make a new system, get ids to use when spawning job
-        XMLTestCase.setUp(self)
+        RbacEngine.setUp(self)
         self.system = self.newSystem(name="blinky", description="ghost")
         self.system.management_interface = models.ManagementInterface.objects.get(name='ssh')
         self.mgr.addSystem(self.system)
@@ -100,7 +101,7 @@ class AssimilatorTestCase(XMLTestCase):
         self.assertEquals(response.status_code, 200)
         self.assertTrue(response.content.find("<system_event>") != -1)
 
-class InventoryTestCase(XMLTestCase):
+class InventoryTestCase(RbacEngine):
 
     def testGetTypes(self):
         response = self._get('inventory/')
@@ -132,7 +133,7 @@ class InventoryTestCase(XMLTestCase):
         self.assertEquals(response.status_code, 200)
         self.assertXMLEquals(response.content, testsxml.inventory_xml)
 
-class LogTestCase(XMLTestCase):
+class LogTestCase(RbacEngine):
 
     def testGetLogAuth(self):
         """
@@ -161,7 +162,7 @@ class LogTestCase(XMLTestCase):
         self.assertXMLEquals(response.content, testsxml.systems_log_xml,
             ignoreNodes = [ 'entry_date' ])
 
-class ZonesTestCase(XMLTestCase):
+class ZonesTestCase(RbacEngine):
 
     def testGetZones(self):
         models.Zone.objects.all().delete()
@@ -304,7 +305,7 @@ class ZonesTestCase(XMLTestCase):
         except models.Zone.DoesNotExist:
             pass # what we expect
         
-class ManagementInterfacesTestCase(XMLTestCase):
+class ManagementInterfacesTestCase(RbacEngine):
 
     def testGetManagementInterfaces(self):
         models.ManagementInterface.objects.all().delete()
@@ -377,7 +378,7 @@ class ManagementInterfacesTestCase(XMLTestCase):
         self.failUnlessEqual(mi.port, 123)
         self.failUnlessEqual(mi.credentials_descriptor, "<foo/>")
         
-class SystemTypesTestCase(XMLTestCase):
+class SystemTypesTestCase(RbacEngine):
 
     def testGetSystemTypes(self):
         models.SystemType.objects.all().delete()
@@ -510,7 +511,7 @@ class SystemTypesTestCase(XMLTestCase):
         assert(buildNodes is not None)
         assert(len(buildNodes) == 0)
         
-class SystemStatesTestCase(XMLTestCase):
+class SystemStatesTestCase(RbacEngine):
 
     def testGetSystemStates(self):
         response = self._get('inventory/system_states/')
@@ -524,7 +525,7 @@ class SystemStatesTestCase(XMLTestCase):
         self.assertXMLEquals(response.content, testsxml.system_state_xml, 
             ignoreNodes = [ 'created_date' ])
         
-class NetworkTestCase(XMLTestCase):
+class NetworkTestCase(RbacEngine):
 
     def testGetNetworks(self):
         models.System.objects.all().delete()
@@ -617,10 +618,10 @@ class NetworkTestCase(XMLTestCase):
         self.assertXMLEquals(response.content,
             testsxml.network_xml, ignoreNodes = [ 'created_date' ])
 
-class ManagementNodesTestCase(XMLTestCase):
+class ManagementNodesTestCase(RbacEngine):
 
     def setUp(self):
-        XMLTestCase.setUp(self)
+        RbacEngine.setUp(self)
         models.ManagementNode.objects.all().delete()
 
     def testManagementNodeSave(self):
@@ -897,10 +898,10 @@ class ManagementNodesTestCase(XMLTestCase):
              management_node.current_state.created_date.isoformat(),
              management_node.created_date.isoformat()))
 
-class NetworksTestCase(XMLTestCase):
+class NetworksTestCase(RbacEngine):
 
     def setUp(self):
-        XMLTestCase.setUp(self)
+        RbacEngine.setUp(self)
         self.system = self.newSystem(name="mgoblue",
             description="best appliance ever")
         self.system.save()
@@ -950,11 +951,11 @@ class NetworksTestCase(XMLTestCase):
         net = self.mgr.sysMgr.extractNetworkToUse(self.system)
         self.failUnlessEqual(net.network_id, network3.network_id)
 
-class SystemsTestCase(XMLTestCase):
+class SystemsTestCase(RbacEngine):
     fixtures = ['system_job', 'targets']
 
     def setUp(self):
-        XMLTestCase.setUp(self)
+        RbacEngine.setUp(self)
         self.mock_scheduleSystemRegistrationEvent_called = False
         self.mock_scheduleSystemPollEvent_called = False
         self.mockGetRmakeJob_called = False
@@ -966,7 +967,7 @@ class SystemsTestCase(XMLTestCase):
         jobmodels.Job.getRmakeJob = self.mockGetRmakeJob
 
     def tearDown(self):
-        XMLTestCase.tearDown(self)
+        RbacEngine.tearDown(self)
 
     def mock_scheduleSystemRegistrationEvent(self, system):
         self.mock_scheduleSystemRegistrationEvent_called = True
@@ -1063,7 +1064,7 @@ class SystemsTestCase(XMLTestCase):
         response = self._put('inventory/systems/%d/' % system.system_id,
             data=testsxml.systems_put_mothball_xml,
             username="testuser", password="password")
-        self.failUnlessEqual(response.status_code, 401)
+        self.failUnlessEqual(response.status_code, 403)
 
     def testSystemMothball(self):
         """
@@ -1103,7 +1104,7 @@ class SystemsTestCase(XMLTestCase):
             systems.append(xmlTempl % params)
         xml = "<systems>" + ''.join(systems) + "</systems>"
         url = "inventory/systems"
-        response = self._post(url, data=xml)
+        response = self._post(url, data=xml, username='admin', password='password')
         self.failUnlessEqual(response.status_code, 200)
 
 
@@ -1246,7 +1247,8 @@ class SystemsTestCase(XMLTestCase):
         """
         models.System.objects.all().delete()
         system_xml = testsxml.system_post_network_unpinned
-        response = self._post('inventory/systems/', data=system_xml)
+        response = self._post('inventory/systems/',
+            data=system_xml, username='admin', password='password')
         self.assertEquals(response.status_code, 200)
         system = models.System.objects.get(pk=3)
         self.failUnlessEqual(
@@ -1264,7 +1266,8 @@ class SystemsTestCase(XMLTestCase):
         """
         models.System.objects.all().delete()
         system_xml = testsxml.system_post_network_pinned
-        response = self._post('inventory/systems/', data=system_xml)
+        response = self._post('inventory/systems/',
+            data=system_xml, username='admin', password='password')
         self.assertEquals(response.status_code, 200)
         system = models.System.objects.get(pk=3)
         self.failUnlessEqual(
@@ -1502,7 +1505,8 @@ class SystemsTestCase(XMLTestCase):
         network.save()
 
         system_xml = xmlTempl % params
-        response = self._post('inventory/systems/', data=system_xml)
+        response = self._post('inventory/systems/',
+            data=system_xml, username='admin', password='password')
         self.assertEquals(response.status_code, 200)
         system = models.System.objects.get(pk=system.pk)
         self.failUnlessEqual(
@@ -1520,12 +1524,14 @@ class SystemsTestCase(XMLTestCase):
 
     def testGetSystems(self):
         system = self._saveSystem()
-        response = self._get('inventory/systems/', username="testuser", password="password")
+        response = self._get('inventory/systems/', username="admin", password="password")
         self.assertEquals(response.status_code, 200)
         self.assertXMLEquals(response.content, 
             testsxml.systems_xml % (system.networks.all()[0].created_date.isoformat(), system.created_date.isoformat()),
             ignoreNodes = [ 'created_date' ])
-
+        response = self._get('inventory/systems', username='testuser', password='password')
+        self.assertEquals(response.status_code, 403)
+        
     def testGetSystemAuth(self):
         """
         Ensure requires auth but not admin
@@ -1533,6 +1539,10 @@ class SystemsTestCase(XMLTestCase):
         system = self._saveSystem()
         response = self._get('inventory/systems/%d/' % system.system_id)
         self.assertEquals(response.status_code, 401)
+        
+        response = self._get('inventory/systems/%d/' % system.system_id,
+            username='testuser', password='password')
+        self.assertEquals(response.status_code, 403)
         
         response = self._get('inventory/systems/%d/' % system.system_id,
             username="admin", password="password")
@@ -1543,7 +1553,7 @@ class SystemsTestCase(XMLTestCase):
         system = self._saveSystem()
         system.to_xml()
         response = self._get('inventory/systems/86753021/',
-            username="testuser", password="password")
+            username="admin", password="password")
         self.assertEquals(response.status_code, 404)
 
     def testGetSystem(self):
@@ -1584,13 +1594,15 @@ class SystemsTestCase(XMLTestCase):
         Ensure wide open for rpath-tools usage
         """
         system_xml = testsxml.system_post_xml
-        response = self._post('inventory/systems/', data=system_xml)
+        response = self._post('inventory/systems/',
+            data=system_xml, username="admin", password="password")
         self.assertEquals(response.status_code, 200)
         
     def testPostSystem(self):
         models.System.objects.all().delete()
         system_xml = testsxml.system_post_xml
-        response = self._post('inventory/systems/', data=system_xml)
+        response = self._post('inventory/systems/',
+            data=system_xml, username="admin", password="password")
         self.assertEquals(response.status_code, 200)
         system = models.System.objects.get(pk=3)
         system_xml = testsxml.system_post_xml_response.replace('<registration_date/>',
@@ -1621,14 +1633,16 @@ class SystemsTestCase(XMLTestCase):
         zoneName = base64.b64encode(self.localZone.name)
         response = self._post('inventory/systems/',
             data=xmlTempl % params,
-            headers={ 'X-rPath-Management-Zone' : zoneName })
+            headers={ 'X-rPath-Management-Zone' : zoneName },
+            username="admin", password="password")
         self.failUnlessEqual(response.status_code, 200)
 
     def testPostSystemDupUuid(self):
         # add the first system
         models.System.objects.all().delete()
         system_xml = testsxml.system_post_xml_dup
-        response = self._post('inventory/systems/', data=system_xml)
+        response = self._post('inventory/systems/',
+            data=system_xml, username="admin", password="password")
         self.assertEquals(response.status_code, 200)
         system = models.System.objects.get(pk=3)
         self.failUnlessEqual(system.name, "testsystemname")
@@ -1636,7 +1650,8 @@ class SystemsTestCase(XMLTestCase):
         # add it with same uuids but with different name to make sure
         # we get back same system with updated prop
         system_xml = testsxml.system_post_xml_dup2
-        response = self._post('inventory/systems/', data=system_xml)
+        response = self._post('inventory/systems/',
+            data=system_xml, username="admin", password="password")
         self.assertEquals(response.status_code, 200)
         this_system = models.System.objects.get(pk=3)
         self.failUnlessEqual(this_system.name, "testsystemnameChanged")
@@ -1787,7 +1802,7 @@ class SystemsTestCase(XMLTestCase):
         """
         models.System.objects.all().delete()
         response = self._post('inventory/systems/',
-            data=testsxml.system_post_xml)
+            data=testsxml.system_post_xml, username="admin", password="password")
         self.assertEquals(response.status_code, 200)
         
         response = self._get('inventory/systems/3/system_log/')
@@ -1795,6 +1810,10 @@ class SystemsTestCase(XMLTestCase):
         
         response = self._get('inventory/systems/3/system_log/',
             username="admin", password="password")
+        self.assertEquals(response.status_code, 200)
+        
+        response = self._get('inventory/systems/3/system_log/',
+            username="testuser", password="password")
         self.assertEquals(response.status_code, 200)
         
 
@@ -2342,7 +2361,7 @@ class SystemsTestCase(XMLTestCase):
 """ % params
 
         response = self._put('inventory/systems/%s' % system.pk,
-            data=xml, username="testuser", password="password")
+            data=xml, username="admin", password="password")
         self.failUnlessEqual(response.status_code, 200)
         system = models.System.objects.get(pk=system.pk)
         self.failUnlessEqual(system.current_state.name, systemState)
@@ -2371,7 +2390,7 @@ class SystemsTestCase(XMLTestCase):
 """ % params
 
         response = self._put('inventory/systems/%s' % system.pk,
-            data=xml, username="testuser", password="password")
+            data=xml, username="admin", password="password")
         self.failUnlessEqual(response.status_code, 200)
         system = models.System.objects.get(pk=system.pk)
         self.failUnlessEqual(system.local_uuid, localUuid)
@@ -2412,7 +2431,7 @@ class SystemsTestCase(XMLTestCase):
         """
 
         response = self._put('inventory/systems/%s' % system.pk,
-            data=xml, username="testuser", password="password")
+            data=xml, username="admin", password="password")
         self.failUnlessEqual(response.status_code, 200)
         system = models.System.objects.get(pk=system.pk)
         self.failUnlessEqual(system.management_interface_id,
@@ -2473,7 +2492,7 @@ class SystemsTestCase(XMLTestCase):
             generated_uuid=guuid)
         self.failIf(system1.pk == system2.pk)
 
-class SystemCertificateTestCase(XMLTestCase):
+class SystemCertificateTestCase(RbacEngine):
     def testGenerateSystemCertificates(self):
         system = self.newSystem(local_uuid="localuuid001",
             generated_uuid="generateduuid001")
@@ -2513,9 +2532,9 @@ class SystemCertificateTestCase(XMLTestCase):
         self.failUnlessEqual(system.ssl_client_certificate, clientCert)
         self.failUnlessEqual(system.ssl_client_key, clientKey)
 
-class SystemStateTestCase(XMLTestCase):
+class SystemStateTestCase(RbacEngine):
     def setUp(self):
-        XMLTestCase.setUp(self)
+        RbacEngine.setUp(self)
         jobmodels.Job.getRmakeJob = self.mockGetRmakeJob
     
     def mockGetRmakeJob(self):
@@ -2553,7 +2572,8 @@ class SystemStateTestCase(XMLTestCase):
         xml = xmlTempl % params
 
         response = self._put('inventory/systems/%s' % system.pk,
-            data=xml, headers = { 'X-rBuilder-Event-UUID' : eventUuid1 })
+            data=xml, headers = { 'X-rBuilder-Event-UUID' : eventUuid1 },
+            username="admin", password="password")
         self.failUnlessEqual(response.status_code, 200)
 
         system2 = models.System.objects.get(pk=system.pk)
@@ -2579,7 +2599,8 @@ class SystemStateTestCase(XMLTestCase):
         xml = xmlTempl % params
 
         response = self._put('inventory/systems/%s' % system.pk,
-            data=xml, headers = { 'X-rBuilder-Event-UUID' : eventUuid1 })
+            data=xml, headers = { 'X-rBuilder-Event-UUID' : eventUuid1 },
+            username="admin", password="password")
         self.failUnlessEqual(response.status_code, 200)
 
         system2 = models.System.objects.get(pk=system.pk)
@@ -2765,11 +2786,11 @@ class SystemStateTestCase(XMLTestCase):
             self.failUnlessEqual(ret, newState, msg)
 
 
-class SystemVersionsTestCase(XMLTestCase):
+class SystemVersionsTestCase(RbacEngine):
     fixtures = ['system_job']
     
     def setUp(self):
-        XMLTestCase.setUp(self)
+        RbacEngine.setUp(self)
         self.mintConfig = self.mgr.cfg
         from django.conf import settings
         self.mintConfig.dbPath = settings.DATABASES['default']['NAME']
@@ -3031,7 +3052,9 @@ class SystemVersionsTestCase(XMLTestCase):
 
         url = 'inventory/systems/%s/' % system.pk
         response = self._put(url, data=data,
-            headers = { 'X-rBuilder-Event-UUID' : eventUuid })
+            headers = { 'X-rBuilder-Event-UUID' : eventUuid },
+            username="admin", password="password")
+            
         # Weak attempt to see if the response is XML
         exp = '<system id="http://testserver/api/v1/inventory/systems/%s">' % system.pk
         self.failUnlessIn(exp, response.content)
@@ -3067,7 +3090,8 @@ class SystemVersionsTestCase(XMLTestCase):
 
         # Try it again
         response = self._put(url, data=data,
-            headers = { 'X-rBuilder-Event-UUID' : eventUuid })
+            headers = { 'X-rBuilder-Event-UUID' : eventUuid },
+            username="admin", password="password")
         self.failUnlessEqual(response.status_code, 200)
 
         system = models.System.objects.get(pk=system.pk)
@@ -3078,7 +3102,7 @@ class SystemVersionsTestCase(XMLTestCase):
         self.assertXMLEquals(response.content,
             testsxml.system_installed_software_version_stage_xml)
 
-class EventTypeTestCase(XMLTestCase):
+class EventTypeTestCase(RbacEngine):
 
     def testGetEventTypes(self):
         response = self._get('inventory/event_types/')
@@ -3133,10 +3157,10 @@ class EventTypeTestCase(XMLTestCase):
         # name should not have changed
         self.failUnlessEqual(event_type.name, jobmodels.EventType.SYSTEM_POLL)
 
-class SystemEventTestCase(XMLTestCase):
+class SystemEventTestCase(RbacEngine):
     
     def setUp(self):
-        XMLTestCase.setUp(self)
+        RbacEngine.setUp(self)
 
         # need a system
         network = models.Network(ip_address='1.1.1.1')
@@ -3159,7 +3183,7 @@ class SystemEventTestCase(XMLTestCase):
 
     def tearDown(self):
         rbuildermanager.SystemManager._dispatchSystemEvent = self.old_DispatchSystemEvent
-        XMLTestCase.tearDown(self)
+        RbacEngine.tearDown(self)
 
     def mock_dispatchSystemEvent(self, event):
         self.mock_dispatchSystemEvent_called = True
@@ -3446,13 +3470,13 @@ class SystemEventTestCase(XMLTestCase):
         self.assertEquals(response.status_code, 200)
         self.assertTrue('<fault>' not in response.content)
 
-class SystemEventProcessingTestCase(XMLTestCase):
+class SystemEventProcessingTestCase(RbacEngine):
     
     # do not load other fixtures for this test case as it is very data order dependent
     fixtures = ['system_event_processing']
     
     def setUp(self):
-        XMLTestCase.setUp(self)
+        RbacEngine.setUp(self)
 
         self.mintConfig = self.mgr.cfg
         self.mgr.sysMgr.cleanupSystemEvent = self.mock_cleanupSystemEvent
@@ -3617,12 +3641,12 @@ class SystemEventProcessingTestCase(XMLTestCase):
         self.failUnless(self.mock_cleanupSystemEvent_called)
         self.failIf(self.mock_scheduleSystemPollEvent_called)
 
-class SystemEventProcessing2TestCase(XMLTestCase):
+class SystemEventProcessing2TestCase(RbacEngine):
     # do not load other fixtures for this test case as it is very data order dependent
     fixtures = ['system_event_processing']
 
     def setUp(self):
-        XMLTestCase.setUp(self)
+        RbacEngine.setUp(self)
 
         class RepeaterClient(object):
             methodsCalled = []
@@ -4058,7 +4082,7 @@ class SystemEventProcessing2TestCase(XMLTestCase):
                 ),
             ])
 
-class TargetSystemImportTest(XMLTestCase):
+class TargetSystemImportTest(RbacEngine):
     fixtures = ['users', 'targets']
 
     class Driver(object):
@@ -4087,7 +4111,7 @@ class TargetSystemImportTest(XMLTestCase):
             self.dnsName = self._X(dnsName)
 
     def setUp(self):
-        XMLTestCase.setUp(self)
+        RbacEngine.setUp(self)
 
         TI = self.TargetInstance
 
@@ -4344,196 +4368,196 @@ class TargetSystemImportTest(XMLTestCase):
             params['target_system_description'])
         self.failUnlessEqual(system.description, params['description'])
 
-class CollectionTest(XMLTestCase):
-    fixtures = ['system_collection']
-
-    def xobjResponse(self, url):
-        response = self._get(url,
-            username="admin", password="password")
-        xobjModel = xobj.parse(response.content)
-        systems = xobjModel.systems
-        return systems
-
-    def testGetDefaultCollection(self):
-        response = self._get('inventory/systems/',
-            username="admin", password="password")
-        self.assertXMLEquals(response.content, testsxml.systems_collection_xml)
-        xobjModel = xobj.parse(response.content)
-        systems = xobjModel.systems
-        self.assertEquals(systems.count, '201')
-        self.assertEquals(systems.per_page, '10')
-        self.assertEquals(systems.start_index, '0')
-        self.assertEquals(systems.end_index, '9')
-        self.assertEquals(systems.num_pages, '21')
-        self.assertTrue(systems.next_page.endswith(
-            '/api/v1/inventory/systems;start_index=10;limit=10'))
-        self.assertEquals(systems.previous_page, '')
-        self.assertEquals(systems.order_by, '')
-        self.assertEquals(systems.filter_by, '')
-
-    def testGetNextPage(self):
-        response = self._get('inventory/systems/',
-            username="admin", password="password")
-        xobjModel = xobj.parse(response.content)
-        systems = xobjModel.systems
-        response = self._get(systems.next_page,
-            username="admin", password="password")
-        xobjModel = xobj.parse(response.content)
-        systems = xobjModel.systems
-        self.assertEquals(systems.count, '201')
-        self.assertEquals(systems.per_page, '10')
-        self.assertEquals(systems.start_index, '10')
-        self.assertEquals(systems.end_index, '19')
-        self.assertEquals(systems.num_pages, '21')
-        self.assertTrue(systems.next_page.endswith(
-            '/api/v1/inventory/systems;start_index=20;limit=10'))
-        self.assertTrue(systems.previous_page.endswith(
-            '/api/v1/inventory/systems;start_index=0;limit=10'))
-        self.assertEquals(systems.order_by, '')
-        self.assertEquals(systems.filter_by, '')
-
-    def testGetPreviousPage(self):
-        response = self._get('inventory/systems/',
-            username="admin", password="password")
-        xobjModel = xobj.parse(response.content)
-        systems = xobjModel.systems
-        response = self._get(systems.next_page,
-            username="admin", password="password")
-        xobjModel = xobj.parse(response.content)
-        systems = xobjModel.systems
-        response = self._get(systems.previous_page,
-            username="admin", password="password")
-        xobjModel = xobj.parse(response.content)
-        systems = xobjModel.systems
-        self.assertEquals(systems.count, '201')
-        self.assertEquals(systems.per_page, '10')
-        self.assertEquals(systems.start_index, '0')
-        self.assertEquals(systems.end_index, '9')
-        self.assertEquals(systems.num_pages, '21')
-        self.assertTrue(systems.next_page.endswith(
-            '/api/v1/inventory/systems;start_index=10;limit=10'))
-        self.assertEquals(systems.previous_page, '')
-        self.assertEquals(systems.order_by, '')
-        self.assertEquals(systems.filter_by, '')
-
-    def testOrderBy(self):
-        systems = self.xobjResponse('/api/v1/inventory/systems;order_by=name')
-        self.assertEquals([x.name.strip('System name ') for x in systems.system],
-            ['10', '100', '101', '102', '103', '104', '105', '106', '107', '108'])
-        self.assertEquals(systems.id,
-            'http://testserver/api/v1/inventory/systems;start_index=0;limit=10;order_by=name')
-        self.assertEquals(systems.next_page,
-            'http://testserver/api/v1/inventory/systems;start_index=10;limit=10;order_by=name')
-        self.assertEquals(systems.order_by, 'name')
-        systems = self.xobjResponse('/api/v1/inventory/systems;order_by=-name')
-        self.assertEquals([x.name.strip('System name ') for x in systems.system],
-            ['rPath Update Servic', '99', '98', '97', '96', '95', '94', '93', '92', '91'])
-        self.assertEquals(systems.id,
-            'http://testserver/api/v1/inventory/systems;start_index=0;limit=10;order_by=-name')
-        self.assertEquals(systems.next_page,
-            'http://testserver/api/v1/inventory/systems;start_index=10;limit=10;order_by=-name')
-        self.assertEquals(systems.order_by, '-name')
-
-    def testFilterBy(self):
-        systems = self.xobjResponse(
-            '/api/v1/inventory/systems;filter_by=[name,LIKE,3]')
-        self.assertEquals([x.name.strip('System name ') for x in systems.system],
-            [u'3', u'13', u'23', u'30', u'31', u'32', u'33', u'34', u'35', u'36'])
-        self.assertEquals(systems.id,
-            'http://testserver/api/v1/inventory/systems;start_index=0;limit=10;filter_by=[name,LIKE,3]')
-        self.assertEquals(systems.next_page,
-            'http://testserver/api/v1/inventory/systems;start_index=10;limit=10;filter_by=[name,LIKE,3]')
-        self.assertEquals(systems.filter_by,
-            '[name,LIKE,3]')
-        systems = self.xobjResponse(
-            '/api/v1/inventory/systems;filter_by=[name,NOT_LIKE,3]')
-        self.assertEquals([x.name.strip('System name ') for x in systems.system],
-            [u'rPath Update Servic', u'4', u'5', u'6', u'7', u'8', u'9', u'10', u'11', u'12'])
-        self.assertEquals(systems.id,
-            'http://testserver/api/v1/inventory/systems;start_index=0;limit=10;filter_by=[name,NOT_LIKE,3]')
-        self.assertEquals(systems.next_page,
-            'http://testserver/api/v1/inventory/systems;start_index=10;limit=10;filter_by=[name,NOT_LIKE,3]')
-        self.assertEquals(systems.filter_by,
-            '[name,NOT_LIKE,3]')
-        systems = self.xobjResponse(
-            '/api/v1/inventory/systems;filter_by=[name,NOT_LIKE,3],[description,NOT_LIKE,Update]')
-        self.assertEquals([x.name.strip('System name ') for x in systems.system],
-            [u'4', u'5', u'6', u'7', u'8', u'9', u'10', u'11', u'12', u'14'])
-        self.assertEquals(systems.id,
-            'http://testserver/api/v1/inventory/systems;start_index=0;limit=10;filter_by=[name,NOT_LIKE,3],[description,NOT_LIKE,Update]')
-        self.assertEquals(systems.next_page,
-            'http://testserver/api/v1/inventory/systems;start_index=10;limit=10;filter_by=[name,NOT_LIKE,3],[description,NOT_LIKE,Update]')
-        self.assertEquals(systems.filter_by,
-            '[name,NOT_LIKE,3],[description,NOT_LIKE,Update]')
-
-    def testOrderAndFilterBy(self):
-        systems = self.xobjResponse(
-            '/api/v1/inventory/systems;filter_by=[name,LIKE,3];order_by=-name')
-        self.assertEquals([x.name.strip('System name ') for x in systems.system],
-            [u'93', u'83', u'73', u'63', u'53', u'43', u'39', u'38', u'37', u'36'])
-        self.assertEquals(systems.id,
-            'http://testserver/api/v1/inventory/systems;start_index=0;limit=10;order_by=-name;filter_by=[name,LIKE,3]')
-        self.assertEquals(systems.next_page,
-            'http://testserver/api/v1/inventory/systems;start_index=10;limit=10;order_by=-name;filter_by=[name,LIKE,3]')
-        self.assertEquals(systems.filter_by,
-            '[name,LIKE,3]')
-        self.assertEquals(systems.order_by,
-            '-name')
-        systems = self.xobjResponse(
-            '/api/v1/inventory/systems;order_by=-name;filter_by=[name,LIKE,3]')
-        self.assertEquals(systems.id,
-            'http://testserver/api/v1/inventory/systems;start_index=0;limit=10;order_by=-name;filter_by=[name,LIKE,3]')
-        self.assertEquals(systems.next_page,
-            'http://testserver/api/v1/inventory/systems;start_index=10;limit=10;order_by=-name;filter_by=[name,LIKE,3]')
-        self.assertEquals(systems.filter_by,
-            '[name,LIKE,3]')
-        self.assertEquals(systems.order_by,
-            '-name')
-        self.assertEquals([x.name.strip('System name ') for x in systems.system],
-            [u'93', u'83', u'73', u'63', u'53', u'43', u'39', u'38', u'37', u'36'])
-        self.assertEquals(systems.id,
-            'http://testserver/api/v1/inventory/systems;start_index=0;limit=10;order_by=-name;filter_by=[name,LIKE,3]')
-        self.assertEquals(systems.next_page,
-            'http://testserver/api/v1/inventory/systems;start_index=10;limit=10;order_by=-name;filter_by=[name,LIKE,3]')
-        self.assertEquals(systems.filter_by,
-            '[name,LIKE,3]')
-        self.assertEquals(systems.order_by,
-            '-name')
-
-    def testLimit(self):
-        systems = self.xobjResponse(
-            '/api/v1/inventory/systems;limit=5')
-        self.assertEquals([x.name.strip('System name ') for x in systems.system],
-            [u'rPath Update Servic', u'3', u'4', u'5', u'6'])
-        self.assertEquals(systems.id,
-            'http://testserver/api/v1/inventory/systems;start_index=0;limit=5')
-        self.assertEquals(systems.next_page,
-            'http://testserver/api/v1/inventory/systems;start_index=5;limit=5')
-        self.assertEquals(systems.limit, '5')
-
-    def testOrderAndFilterAndLimitBy(self):
-        systems = self.xobjResponse(
-            '/api/v1/inventory/systems;limit=5;filter_by=[name,LIKE,3];order_by=-name')
-        self.assertEquals([x.name.strip('System name ') for x in systems.system],
-            [u'93', u'83', u'73', u'63', u'53'])
-        self.assertEquals(systems.id,
-            'http://testserver/api/v1/inventory/systems;start_index=0;limit=5;order_by=-name;filter_by=[name,LIKE,3]')
-        self.assertEquals(systems.next_page,
-            'http://testserver/api/v1/inventory/systems;start_index=5;limit=5;order_by=-name;filter_by=[name,LIKE,3]')
-        self.assertEquals(systems.limit,
-            '5')
-        self.assertEquals(systems.filter_by,
-            '[name,LIKE,3]')
-        self.assertEquals(systems.order_by,
-            '-name')
-
-    def testFilterByBoolean(self):
-        systems = self.xobjResponse(
-            '/api/v1/inventory/systems;filter_by=[local_uuid,IS_NULL,True]')
-        # System 50 and the Update Service are the only one set up with a null
-        # local_uuid in the fixture
-        self.assertEquals([x.system_id for x in systems.system],
-            [u'2', u'50'])
+# class CollectionTest(RbacEngine):
+#     fixtures = ['system_collection']
+# 
+#     def xobjResponse(self, url):
+#         response = self._get(url,
+#             username="admin", password="password")
+#         xobjModel = xobj.parse(response.content)
+#         systems = xobjModel.systems
+#         return systems
+# 
+#     def testGetDefaultCollection(self):
+#         response = self._get('inventory/systems/',
+#             username="admin", password="password")
+#         self.assertXMLEquals(response.content, testsxml.systems_collection_xml)
+#         xobjModel = xobj.parse(response.content)
+#         systems = xobjModel.systems
+#         self.assertEquals(systems.count, '201')
+#         self.assertEquals(systems.per_page, '10')
+#         self.assertEquals(systems.start_index, '0')
+#         self.assertEquals(systems.end_index, '9')
+#         self.assertEquals(systems.num_pages, '21')
+#         self.assertTrue(systems.next_page.endswith(
+#             '/api/v1/inventory/systems;start_index=10;limit=10'))
+#         self.assertEquals(systems.previous_page, '')
+#         self.assertEquals(systems.order_by, '')
+#         self.assertEquals(systems.filter_by, '')
+# 
+#     def testGetNextPage(self):
+#         response = self._get('inventory/systems/',
+#             username="admin", password="password")
+#         xobjModel = xobj.parse(response.content)
+#         systems = xobjModel.systems
+#         response = self._get(systems.next_page,
+#             username="admin", password="password")
+#         xobjModel = xobj.parse(response.content)
+#         systems = xobjModel.systems
+#         self.assertEquals(systems.count, '201')
+#         self.assertEquals(systems.per_page, '10')
+#         self.assertEquals(systems.start_index, '10')
+#         self.assertEquals(systems.end_index, '19')
+#         self.assertEquals(systems.num_pages, '21')
+#         self.assertTrue(systems.next_page.endswith(
+#             '/api/v1/inventory/systems;start_index=20;limit=10'))
+#         self.assertTrue(systems.previous_page.endswith(
+#             '/api/v1/inventory/systems;start_index=0;limit=10'))
+#         self.assertEquals(systems.order_by, '')
+#         self.assertEquals(systems.filter_by, '')
+# 
+#     def testGetPreviousPage(self):
+#         response = self._get('inventory/systems/',
+#             username="admin", password="password")
+#         xobjModel = xobj.parse(response.content)
+#         systems = xobjModel.systems
+#         response = self._get(systems.next_page,
+#             username="admin", password="password")
+#         xobjModel = xobj.parse(response.content)
+#         systems = xobjModel.systems
+#         response = self._get(systems.previous_page,
+#             username="admin", password="password")
+#         xobjModel = xobj.parse(response.content)
+#         systems = xobjModel.systems
+#         self.assertEquals(systems.count, '201')
+#         self.assertEquals(systems.per_page, '10')
+#         self.assertEquals(systems.start_index, '0')
+#         self.assertEquals(systems.end_index, '9')
+#         self.assertEquals(systems.num_pages, '21')
+#         self.assertTrue(systems.next_page.endswith(
+#             '/api/v1/inventory/systems;start_index=10;limit=10'))
+#         self.assertEquals(systems.previous_page, '')
+#         self.assertEquals(systems.order_by, '')
+#         self.assertEquals(systems.filter_by, '')
+# 
+#     def testOrderBy(self):
+#         systems = self.xobjResponse('/api/v1/inventory/systems;order_by=name')
+#         self.assertEquals([x.name.strip('System name ') for x in systems.system],
+#             ['10', '100', '101', '102', '103', '104', '105', '106', '107', '108'])
+#         self.assertEquals(systems.id,
+#             'http://testserver/api/v1/inventory/systems;start_index=0;limit=10;order_by=name')
+#         self.assertEquals(systems.next_page,
+#             'http://testserver/api/v1/inventory/systems;start_index=10;limit=10;order_by=name')
+#         self.assertEquals(systems.order_by, 'name')
+#         systems = self.xobjResponse('/api/v1/inventory/systems;order_by=-name')
+#         self.assertEquals([x.name.strip('System name ') for x in systems.system],
+#             ['rPath Update Servic', '99', '98', '97', '96', '95', '94', '93', '92', '91'])
+#         self.assertEquals(systems.id,
+#             'http://testserver/api/v1/inventory/systems;start_index=0;limit=10;order_by=-name')
+#         self.assertEquals(systems.next_page,
+#             'http://testserver/api/v1/inventory/systems;start_index=10;limit=10;order_by=-name')
+#         self.assertEquals(systems.order_by, '-name')
+# 
+#     def testFilterBy(self):
+#         systems = self.xobjResponse(
+#             '/api/v1/inventory/systems;filter_by=[name,LIKE,3]')
+#         self.assertEquals([x.name.strip('System name ') for x in systems.system],
+#             [u'3', u'13', u'23', u'30', u'31', u'32', u'33', u'34', u'35', u'36'])
+#         self.assertEquals(systems.id,
+#             'http://testserver/api/v1/inventory/systems;start_index=0;limit=10;filter_by=[name,LIKE,3]')
+#         self.assertEquals(systems.next_page,
+#             'http://testserver/api/v1/inventory/systems;start_index=10;limit=10;filter_by=[name,LIKE,3]')
+#         self.assertEquals(systems.filter_by,
+#             '[name,LIKE,3]')
+#         systems = self.xobjResponse(
+#             '/api/v1/inventory/systems;filter_by=[name,NOT_LIKE,3]')
+#         self.assertEquals([x.name.strip('System name ') for x in systems.system],
+#             [u'rPath Update Servic', u'4', u'5', u'6', u'7', u'8', u'9', u'10', u'11', u'12'])
+#         self.assertEquals(systems.id,
+#             'http://testserver/api/v1/inventory/systems;start_index=0;limit=10;filter_by=[name,NOT_LIKE,3]')
+#         self.assertEquals(systems.next_page,
+#             'http://testserver/api/v1/inventory/systems;start_index=10;limit=10;filter_by=[name,NOT_LIKE,3]')
+#         self.assertEquals(systems.filter_by,
+#             '[name,NOT_LIKE,3]')
+#         systems = self.xobjResponse(
+#             '/api/v1/inventory/systems;filter_by=[name,NOT_LIKE,3],[description,NOT_LIKE,Update]')
+#         self.assertEquals([x.name.strip('System name ') for x in systems.system],
+#             [u'4', u'5', u'6', u'7', u'8', u'9', u'10', u'11', u'12', u'14'])
+#         self.assertEquals(systems.id,
+#             'http://testserver/api/v1/inventory/systems;start_index=0;limit=10;filter_by=[name,NOT_LIKE,3],[description,NOT_LIKE,Update]')
+#         self.assertEquals(systems.next_page,
+#             'http://testserver/api/v1/inventory/systems;start_index=10;limit=10;filter_by=[name,NOT_LIKE,3],[description,NOT_LIKE,Update]')
+#         self.assertEquals(systems.filter_by,
+#             '[name,NOT_LIKE,3],[description,NOT_LIKE,Update]')
+# 
+#     def testOrderAndFilterBy(self):
+#         systems = self.xobjResponse(
+#             '/api/v1/inventory/systems;filter_by=[name,LIKE,3];order_by=-name')
+#         self.assertEquals([x.name.strip('System name ') for x in systems.system],
+#             [u'93', u'83', u'73', u'63', u'53', u'43', u'39', u'38', u'37', u'36'])
+#         self.assertEquals(systems.id,
+#             'http://testserver/api/v1/inventory/systems;start_index=0;limit=10;order_by=-name;filter_by=[name,LIKE,3]')
+#         self.assertEquals(systems.next_page,
+#             'http://testserver/api/v1/inventory/systems;start_index=10;limit=10;order_by=-name;filter_by=[name,LIKE,3]')
+#         self.assertEquals(systems.filter_by,
+#             '[name,LIKE,3]')
+#         self.assertEquals(systems.order_by,
+#             '-name')
+#         systems = self.xobjResponse(
+#             '/api/v1/inventory/systems;order_by=-name;filter_by=[name,LIKE,3]')
+#         self.assertEquals(systems.id,
+#             'http://testserver/api/v1/inventory/systems;start_index=0;limit=10;order_by=-name;filter_by=[name,LIKE,3]')
+#         self.assertEquals(systems.next_page,
+#             'http://testserver/api/v1/inventory/systems;start_index=10;limit=10;order_by=-name;filter_by=[name,LIKE,3]')
+#         self.assertEquals(systems.filter_by,
+#             '[name,LIKE,3]')
+#         self.assertEquals(systems.order_by,
+#             '-name')
+#         self.assertEquals([x.name.strip('System name ') for x in systems.system],
+#             [u'93', u'83', u'73', u'63', u'53', u'43', u'39', u'38', u'37', u'36'])
+#         self.assertEquals(systems.id,
+#             'http://testserver/api/v1/inventory/systems;start_index=0;limit=10;order_by=-name;filter_by=[name,LIKE,3]')
+#         self.assertEquals(systems.next_page,
+#             'http://testserver/api/v1/inventory/systems;start_index=10;limit=10;order_by=-name;filter_by=[name,LIKE,3]')
+#         self.assertEquals(systems.filter_by,
+#             '[name,LIKE,3]')
+#         self.assertEquals(systems.order_by,
+#             '-name')
+# 
+#     def testLimit(self):
+#         systems = self.xobjResponse(
+#             '/api/v1/inventory/systems;limit=5')
+#         self.assertEquals([x.name.strip('System name ') for x in systems.system],
+#             [u'rPath Update Servic', u'3', u'4', u'5', u'6'])
+#         self.assertEquals(systems.id,
+#             'http://testserver/api/v1/inventory/systems;start_index=0;limit=5')
+#         self.assertEquals(systems.next_page,
+#             'http://testserver/api/v1/inventory/systems;start_index=5;limit=5')
+#         self.assertEquals(systems.limit, '5')
+# 
+#     def testOrderAndFilterAndLimitBy(self):
+#         systems = self.xobjResponse(
+#             '/api/v1/inventory/systems;limit=5;filter_by=[name,LIKE,3];order_by=-name')
+#         self.assertEquals([x.name.strip('System name ') for x in systems.system],
+#             [u'93', u'83', u'73', u'63', u'53'])
+#         self.assertEquals(systems.id,
+#             'http://testserver/api/v1/inventory/systems;start_index=0;limit=5;order_by=-name;filter_by=[name,LIKE,3]')
+#         self.assertEquals(systems.next_page,
+#             'http://testserver/api/v1/inventory/systems;start_index=5;limit=5;order_by=-name;filter_by=[name,LIKE,3]')
+#         self.assertEquals(systems.limit,
+#             '5')
+#         self.assertEquals(systems.filter_by,
+#             '[name,LIKE,3]')
+#         self.assertEquals(systems.order_by,
+#             '-name')
+# 
+#     def testFilterByBoolean(self):
+#         systems = self.xobjResponse(
+#             '/api/v1/inventory/systems;filter_by=[local_uuid,IS_NULL,True]')
+#         # System 50 and the Update Service are the only one set up with a null
+#         # local_uuid in the fixture
+#         self.assertEquals([x.system_id for x in systems.system],
+#             [u'2', u'50'])
 
 refProductDefintion1 = """\
 <?xml version='1.0' encoding='UTF-8'?>
@@ -4557,7 +4581,7 @@ refProductDefintion1 = """\
 </productDefinition>
 """
 
-class AntiRecursiveSaving(XMLTestCase):
+class AntiRecursiveSaving(RbacEngine):
     '''
     Generalized xobj test.  Make sure that when saving an object with child members, 
     in this case a system & a management interface, and we go to EDIT

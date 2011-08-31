@@ -6,8 +6,7 @@
 
 import os
 import time
-
-from django.http import HttpResponse, HttpResponseNotFound
+from django.http import HttpResponse, HttpResponseNotFound, HttpResponseRedirect
 from django_restapi import resource
 
 from mint.django_rest.deco import requires, return_xml, access, \
@@ -16,6 +15,7 @@ from mint.django_rest.rbuilder.users import models as usersmodels
 from mint.django_rest.rbuilder import service
 from mint.django_rest.rbuilder.inventory import models
 from mint.django_rest.rbuilder.projects import models as projectsmodels
+from mint.django_rest.rbuilder.querysets import models as querymodels
 from mint.django_rest.rbuilder.rbac.rbacauth import rbac
 from mint.django_rest.rbuilder.errors import PermissionDenied
 from mint.django_rest.rbuilder.rbac.manager.rbacmanager import \
@@ -320,10 +320,17 @@ class InventorySystemsService(BaseInventoryService):
         ...
     </system>
     """
-
+    # has manual rbac, inlined
     @return_xml
     def rest_GET(self, request):
-        return self.get()
+        user = request._authUser
+        systems = self.get()
+        tv = all(self.mgr.userHasRbacPermission(user, obj, READMEMBERS) for obj in systems.system)
+        if tv:
+            qs = querymodels.QuerySet.objects.get(name='All Systems')
+            url = '/api/v1/query_sets/%s/all%s' % (qs.pk, request.params)
+            return HttpResponseRedirect(url)
+        raise PermissionDenied()
 
     def get(self):
         return self.mgr.getSystems()

@@ -508,14 +508,19 @@ class RbacEngine(RbacTestCase):
         """
         # Ugly
         def _parseRedirect(http_redirect):
-            return http_redirect['Location'].split('/api/v1/')[1].strip('/') + ';offset=0;limit=9999'
+            # if ';' in http_redirect then do not attach pagination
+            # postfix as the redirect most likely already includes it
+            redirect_url = http_redirect['Location']
+            if ';' not in redirect_url:
+                pagination = ';offset=0;limit=9999'
+            else:
+                pagination = ''
+            return redirect_url.split('/api/v1/')[1].strip('/') + pagination
 
-        response = super(RbacTestCase, self)._get(url,
-            username=username, password=password)
+        response = super(RbacTestCase, self)._get(url, username=username, password=password)
         if str(response.status_code).startswith('3') and response.has_header('Location'):
             new_url = _parseRedirect(response)
-            return RbacTestCase._get(self, new_url,
-                username=username, password=password)
+            response = RbacTestCase._get(self, new_url, username=username, password=password)
         return response
 
 class RbacEngineTests(RbacEngine):
@@ -535,7 +540,7 @@ class RbacEngineTests(RbacEngine):
         response = self._get("users/%s" % self.intern_user.pk,
             username = self.intern_user.user_name,
             password = 'password'
-        ) 
+        )
         self.assertEquals(response.status_code, 200)
         self.assertXMLEquals(response.content, testsxml.user_get_xml_with_roles)
 
