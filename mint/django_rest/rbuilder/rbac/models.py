@@ -166,6 +166,7 @@ class RbacPermission(modellib.XObjIdModel):
         tag = 'grant'
     )
     _xobj_hidden_accessors = set(['tags'])
+    summary_view = [ 'created_by', 'modified_by' ]
 
     grant_id = D(models.AutoField(primary_key=True, db_column='permission_id'),
         "the database ID for the permission")

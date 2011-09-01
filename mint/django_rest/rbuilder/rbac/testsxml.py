@@ -29,16 +29,7 @@ user_get_xml_with_roles = """
   <email>email@example.com</email>
   <full_name>ExampleIntern</full_name>
   <is_admin>false</is_admin>
-  <roles count="1" end_index="0" filter_by="" full_collection="http://testserver/api/v1/rbac/roles" id="http://testserver/api/v1/rbac/roles;start_index=0;limit=10" limit="10" next_page="" num_pages="1" order_by="" per_page="10" previous_page="" start_index="0">
-    <role id="http://testserver/api/v1/rbac/roles/3">
-      <created_by id="http://testserver/api/v1/users/1"/>
-      <description/>
-      <grants/>
-      <modified_by id="http://testserver/api/v1/users/1"/>
-      <name>intern</name>
-      <role_id>3</role_id>
-    </role>
-  </roles>
+  <roles id="http://testserver/api/users/2003/roles"/>
   <user_groups/>
   <user_id>2003</user_id>
   <user_name>ExampleIntern</user_name>

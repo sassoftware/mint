@@ -1141,7 +1141,6 @@ class XObjModel(models.Model):
             if summarize and key not in summary_fields:
                 # the object was tagged for summarization and this is not one of the
                 # included fields, so skip this one.
-                print "skipping regular key=%s on %s" % (key,self)
                 continue 
             field = fields.pop(key, None)
             if field is None:
@@ -1230,8 +1229,9 @@ class XObjModel(models.Model):
                         if hasattr(val, "summary_view"):
                             for sField in val.summary_view:
                                 setattr(refModel, sField, getattr(val, sField))
-                        if text_field and getattr(val, text_field):
-                            refModel._xobj.text = getattr(val, text_field)
+                        else:
+                            if text_field and getattr(val, text_field):
+                                refModel._xobj.text = getattr(val, text_field)
                         setattr(xobj_model, fieldName, refModel)
                     else:
                         val = val.serialize(request)
