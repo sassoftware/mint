@@ -65,6 +65,7 @@ class User(modellib.XObjIdModel):
     # Field used for the clear-text password when it is to be
     # set/changed
     password = modellib.XObjHidden(modellib.SyntheticField())
+    roles = modellib.SyntheticField()
 
     class Meta:
         # managed = settings.MANAGE_RBUILDER_MODELS
@@ -83,7 +84,8 @@ class User(modellib.XObjIdModel):
         'system_set', 'package_builds_jobs_last_modified', 'package_sources_last_modified',
         'usermember', 'package_versions_created', 'packages_created', 'user',
         'created_images', 'updated_images', 'project_membership',
-        'created_releases', 'updated_releases', 'published_releases', 'tags', 'user_tags', 
+        'created_releases', 'updated_releases', 'published_releases', 'tags', 'user_tags',
+        'user_roles' 
     ])
 
     def __unicode__(self):
@@ -111,6 +113,13 @@ class User(modellib.XObjIdModel):
     def computeSyntheticFields(self, sender, **kwargs):
         if self.pk is not None:
             self.set_is_admin()
+
+        # user_roles is a mapping table, we want to surface the roles
+        from mint.django_rest.rbuilder.rbac import models as rbacmodels
+        self.roles = rbacmodels.RbacRoles()
+        actual_roles = [ ur.role for ur in self.user_roles.all() ]
+        self.roles.role = actual_roles
+          
 
 class UserGroupMembers(modellib.Collection):
     class Meta:
