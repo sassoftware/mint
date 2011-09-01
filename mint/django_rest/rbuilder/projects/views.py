@@ -69,14 +69,14 @@ class PBSCallbacks(object):
         if not stage_name and request._is_admin:
             return True
         elif stage_name:
-            return view.mgr.userHasRbacPermission(user, obj, 'rmember')
+            return view.mgr.userHasRbacPermission(user, obj, READMEMBERS)
         return False
 
     @staticmethod
     def rbac_can_read_pbs_by_project_short_name(view, request, project_short_name):
         user = request._authUser
         collection = projectmodels.Stage.objects.filter(project__short_name=project_short_name)
-        tv = all(view.mgr.userHasRbacPermission(user, obj, 'rmember') for obj in collection)
+        tv = all(view.mgr.userHasRbacPermission(user, obj, READMEMBERS) for obj in collection)
         if tv:
             return True
         return False
