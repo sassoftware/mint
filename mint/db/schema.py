@@ -2278,7 +2278,7 @@ def _createAllRoles(db):
     qsId = _addQuerySet(db, "All Roles", "All roles", "role", False, filterId)
     return True
 
-def _createAllGrants(db)
+def _createAllGrants(db):
     '''Add the All grants rbac query set'''
     filterId = _addQuerySetFilterEntry(db, "rbac_role.name", "IS_NULL", "false")
     qsId = _addQuerySet(db, "All Grants", "All grants", "grants", False, filterId)
