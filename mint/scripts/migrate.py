@@ -4024,6 +4024,26 @@ class MigrateTo_58(SchemaMigration):
         self.db.createIndex('rbac_permission', 'RbacPermissionLookupIdx',
             'role_id, queryset_id, permission_type_id')
 
+        cu.execute("DROP TABLE querysets_permissiontag")
+        # still hasn't changed, but easiest way to keep the constraints happy is to just recreate it
+        # seeing it hasn't shipped
+        createTable(self.db, """
+            CREATE TABLE "querysets_permissiontag" (
+                "permission_tag_id" %(BIGPRIMARYKEY)s,
+                "permission_id" INTEGER
+                    REFERENCES "rbac_permission" ("permission_id")
+                    ON DELETE CASCADE
+                    NOT NULL,
+                "query_set_id" INTEGER
+                    REFERENCES "querysets_queryset" ("query_set_id")
+                    ON DELETE CASCADE,
+                "inclusion_method_id" INTEGER
+                    REFERENCES "querysets_inclusionmethod" ("inclusion_method_id")
+                    ON DELETE CASCADE
+                    NOT NULL,
+                CONSTRAINT querysets_permissiontag_uq UNIQUE ("permission_id", "query_set_id", "inclusion_method_id")
+            )""" % self.db.keywords)
+
         return True
 
 
