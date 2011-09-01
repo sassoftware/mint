@@ -30,6 +30,7 @@ class Rbac(modellib.XObjModel):
 
     grants = D(modellib.HrefField('grants'), "permissions granted to roles")
     roles = D(modellib.HrefField('roles'),  "access control roles")
+    permissions = D(modellib.HrefField('permissions'),  "supported access control permission types")
 
 class RbacRoles(modellib.Collection):
     '''

@@ -72,6 +72,7 @@ class VersionsTestCase(XMLTestCase):
   <module_hooks id="http://testserver/api/v1/module_hooks"/>
   <notices id="http://testserver/api/v1/notices"/>
   <packages id="http://testserver/api/v1/packages"/>
+  <permissions id="http://testserver/api/v1/rbac/permissions"/>
   <platforms id="http://testserver/api/platforms"/>
   <products id="http://testserver/api/products"/>
   <projects id="http://testserver/api/v1/projects"/>
