@@ -3982,8 +3982,8 @@ class MigrateTo_58(SchemaMigration):
         createTable(self.db, """
             CREATE TABLE "rbac_permission_type" (
                 "permission_type_id" %(PRIMARYKEY)s,
-                "name" TEXT,
-                "description" TEXT
+                "name" TEXT NOT NULL UNIQUE,
+                "description" TEXT NOT NULL
             )""" % db.keywords)
 
         # BOOKMARK
