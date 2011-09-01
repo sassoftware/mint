@@ -400,7 +400,7 @@ class ProjectsTestCase(RbacEngine):
         
         response = self._get('project_branch_stages/',
             username=self.developer_user.user_name, password="password")
-        self.assertEquals(response.status_code, 403)
+        self.assertEquals(response.status_code, 401)
         
     def testGetProjectAllBranchStages(self):
         self._initProject()

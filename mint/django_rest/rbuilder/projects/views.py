@@ -54,12 +54,6 @@ class PCallbacks(object):
         return view.mgr.userHasRbacPermission(user, args, MODMEMBERS)
 
 class PBSCallbacks(object):
-    @staticmethod
-    def rbac_can_read_all_project_branches_stages(view, request, *args, **kwargs):
-        if request._is_admin:
-            return True
-        else:
-            return False
     
     @staticmethod
     def rbac_can_read_stage_by_project(view, 
@@ -91,14 +85,12 @@ class AllProjectBranchesStagesService(service.BaseService):
     """
     get all pbs's
     """
-    @access.authenticated
+    @access.admin
     @return_xml
     def rest_GET(self, request):
-        if PBSCallbacks.rbac_can_read_all_project_branches_stages(self, request):
-            qs = querymodels.QuerySet.objects.get(name='All Project Stages')
-            url = '/api/v1/query_sets/%s/all%s' % (qs.pk, request.params)
-            return HttpResponseRedirect(url)
-        raise PermissionDenied()
+        qs = querymodels.QuerySet.objects.get(name='All Project Stages')
+        url = '/api/v1/query_sets/%s/all%s' % (qs.pk, request.params)
+        return HttpResponseRedirect(url)
 
 
 class AllProjectBranchesService(service.BaseService):
@@ -117,7 +109,7 @@ class AllProjectBranchesService(service.BaseService):
 
 class ProjectAllBranchStagesService(service.BaseService):
     """
-    returns all pbs associated with a given project.
+    returns all pbs associated with a given project. manual rbac
     """
     @access.authenticated
     @return_xml

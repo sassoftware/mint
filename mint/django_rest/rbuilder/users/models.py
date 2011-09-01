@@ -115,7 +115,7 @@ class User(modellib.XObjIdModel):
             self.set_is_admin()
 
         # user_roles is a mapping table, we want to surface the roles
-        from mint.django_rest.rbuilder.rbac import models as rbacmodels
+        # from mint.django_rest.rbuilder.rbac import models as rbacmodels
         self.roles = modellib.HrefField(
            href="/api/users/%s/roles" % self.user_id
         )
