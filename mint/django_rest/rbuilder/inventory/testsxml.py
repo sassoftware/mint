@@ -2722,7 +2722,7 @@ Methods:
   DELETE:
     not supported
 -->
-<systems count="201" next_page="http://testserver/api/v1/inventory/systems;start_index=10;limit=10" num_pages="21" previous_page="" full_collection="http://testserver/api/v1/inventory/systems" end_index="9" order_by="" per_page="10" filter_by="" id="http://testserver/api/v1/inventory/systems;start_index=0;limit=10" limit="10" start_index="0">
+<systems count="201" next_page="http://testserver/api/v1/query_sets/5/all;start_index=10;limit=10" num_pages="21" previous_page="" full_collection="http://testserver/api/v1/query_sets/5/all" end_index="9" order_by="" per_page="10" filter_by="" id="http://testserver/api/v1/query_sets/5/all;start_index=0;limit=10" limit="10" start_index="0">
   <system id="http://testserver/api/v1/inventory/systems/2">
     <network_address>
       <address>127.0.0.1</address>
