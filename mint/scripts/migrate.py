@@ -3044,7 +3044,7 @@ class MigrateTo_57(SchemaMigration):
 
 
 class MigrateTo_58(SchemaMigration):
-    Version = (58, 58)
+    Version = (58, 59)
 
     def migrate(self):
         return True
@@ -3967,24 +3967,24 @@ class MigrateTo_58(SchemaMigration):
 
     def migrate59(self):
         db = self.db
-        cu = self.db.cursor
+        cu = self.db.cursor()
         columns = [ 'created_by', 'modified_by' ] 
-        tables = [ 'rbac_permission', 'rbac_user_role', 'rbac_role' ]
+        tables = [ 'rbac_user_role', 'rbac_role' ]
         for table in tables:
             for column in columns:
                 cu.execute("""ALTER TABLE %s ADD COLUMN %s
                      INTEGER 
                      REFERENCES Users ( userId ) 
-                     ON DELETE CASCADE,
+                     ON DELETE CASCADE
                 """ % (table, column))
-        cu.execute("ALTER TABLE rbac_user_role ADD COLUMN description TEXT")       
+        cu.execute("ALTER TABLE rbac_role ADD COLUMN description TEXT")       
  
-        createTable(self.db, 'rbac_permission_type', """
+        createTable(self.db, """
             CREATE TABLE "rbac_permission_type" (
                 "permission_type_id" %(PRIMARYKEY)s,
                 "name" TEXT,
                 "description" TEXT
-            )""")
+            )""" % db.keywords)
 
         # BOOKMARK
         schema._addTableRows(self.db, 'rbac_permission_type', 'name', [ 
@@ -4010,6 +4010,12 @@ class MigrateTo_58(SchemaMigration):
                    REFERENCES rbac_permission_type ( permission_type_id )
                    ON DELETE CASCADE
                    ON UPDATE CASCADE,
+                created_by INTEGER, 
+                     REFERENCES Users ( userId ) 
+                     ON DELETE CASCADE,
+                modified_by INTEGER
+                     REFERENCES Users ( userId )
+                     ON DELETE CASCADE,
                 created_date timestamp with time zone NOT NULL,
                 modified_date timestamp with time zone NOT NULL,
                 UNIQUE ( "role_id", "queryset_id", "permission_type_id" )

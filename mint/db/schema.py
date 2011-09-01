@@ -28,7 +28,7 @@ from conary.dbstore import sqlerrors, sqllib
 log = logging.getLogger(__name__)
 
 # database schema major version
-RBUILDER_DB_VERSION = sqllib.DBversion(58, 58)
+RBUILDER_DB_VERSION = sqllib.DBversion(58, 54)
 
 
 def _createTrigger(db, table, column = "changed"):
@@ -2199,7 +2199,6 @@ def _addQuerySetFilterEntry(db, field, operator, value):
         field=field, operator=operator, value=value)
     
     return filterId
-    
 def _addQuerySetChild(db, parent_qs_id, child_qs_id):
     """Add a query set to another as a child"""
     changed = False
@@ -2238,6 +2237,99 @@ def _createUpdateSystemsQuerySet(db):
     _addQuerySetChildToInfrastructureSystems(db, qsId)
     return True
 
+def _createAllProjectBranchStages13(db):
+    """Add the project branch stages query set"""
+    
+    # do not change this, froxen to migrate13
+    # (NOTE -- this value will NOT be in the final result schema and is wrong!)
+    filterId = _addQuerySetFilterEntry(db, "name", "IS_NULL", "False")
+    qsId = _addQuerySet(db, "All Projects", "All projects", "project_branch_stage", False, filterId, "project")
+    return True
+
+def _createAllPlatformBranchStages(db):
+    """Add the platform branch stages query set"""
+    # AllFilterId is None
+    filterId = _addQuerySetFilterEntry(db, "platform.name", "IS_NULL", "false")
+    qsId = _addQuerySet(db, "All Platforms", "All platforms", "project_branch_stage", False, filterId, "platform")
+    return True
+
+def _createAllProjectBranchStages(db):
+    """Add the project branch stages query set"""
+    filterId = _addQuerySetFilterEntry(db, "project_branch_stage.name", "IS_NULL", "false")
+    qsId = _addQuerySet(db, "All Project Stages", "All project stages", "project_branch_stage", False, filterId, "project")
+    return True
+
+def _createAllProjects(db):
+    """Add the projects query set"""
+    # filterId = _getAllFilterId(db)
+    filterId = _addQuerySetFilterEntry(db, "project.name", "IS_NULL", "false")
+    qsId = _addQuerySet(db, "All Projects", "All projects", "project", False, filterId)
+    return True
+
+def _createAllSystems(db):
+    """Add the all systems query set"""
+    filterId = _addQuerySetFilterEntry(db, "system.name", "IS_NULL", "false")
+    qsId = _addQuerySet(db, "All Systems", "All systems", "system", False, filterId)
+    return True
+
+def _createAllRoles(db):
+    '''Add the All Roles rbac query set'''
+    filterId = _addQuerySetFilterEntry(db, "rbac_role.name", "IS_NULL", "false")
+    qsId = _addQuerySet(db, "All Roles", "All roles", "role", False, filterId)
+    return True
+
+def _createAllGrants(db)
+    '''Add the All grants rbac query set'''
+    filterId = _addQuerySetFilterEntry(db, "rbac_role.name", "IS_NULL", "false")
+    qsId = _addQuerySet(db, "All Grants", "All grants", "grants", False, filterId)
+    return True
+
+
+def _createQuerySetSchema(db):
+    """QuerySet tables"""
+    changed = False
+
+    changed |= createTable(db, 'querysets_queryset', """
+        CREATE TABLE "querysets_queryset" (
+            "query_set_id" %(PRIMARYKEY)s,
+            "name" TEXT NOT NULL UNIQUE,
+            "description" TEXT,
+            "created_date" TIMESTAMP WITH TIME ZONE NOT NULL,
+            "modified_date" TIMESTAMP WITH TIME ZONE NOT NULL,
+            "tagged_date" TIMESTAMP WITH TIME ZONE,
+            "resource_type" TEXT NOT NULL,
+            "presentation_type" TEXT,
+            "can_modify" BOOLEAN NOT NULL DEFAULT TRUE
+        )""")
+
+    changed |= createTable(db, 'querysets_filterentry', """
+        CREATE TABLE "querysets_filterentry" (
+            "filter_entry_id" %(PRIMARYKEY)s,
+            "field" TEXT NOT NULL,
+            "operator" TEXT NOT NULL,
+            "value" TEXT,
+            UNIQUE("field", "operator", "value")
+        )""")
+
+    changed |= createTable(db, "querysets_queryset_filter_entries", """
+        CREATE TABLE "querysets_queryset_filter_entries" (
+            "id" %(PRIMARYKEY)s,
+            "queryset_id" INTEGER
+                REFERENCES "querysets_queryset" ("query_set_id")
+                ON DELETE CASCADE
+                NOT NULL,
+            "filterentry_id" INTEGER
+                REFERENCES "querysets_filterentry" ("filter_entry_id")
+                ON DELETE CASCADE
+                NOT NULL,
+            UNIQUE ("queryset_id", "filterentry_id")
+        )""")
+
+    # unique value was 'name', not queryset_id
+    changed |= _addTableRows(db, "querysets_queryset", "name", [
+         dict(name="Active Systems", resource_type="system",
+            description="Active Systems",
+            created_date=str(datetime.datetime.now(tz.tzutc())),
 def _createAllProjectBranchStages13(db):
     """Add the project branch stages query set"""
     
@@ -2813,99 +2905,6 @@ def _createPackageSchema(db):
     changed |= db.createIndex("packages_package_source_job",
         "packages_package_source_job_package_action_type_id", "package_action_type_id")
     changed |= db.createIndex("packages_package_source_job",
-        "packages_package_source_job_job_id", "job_id")
-    changed |= db.createIndex("packages_package_source_job",
-        "packages_package_source_job_created_by_id", "created_by_id")
-    changed |= db.createIndex("packages_package_source_job",
-        "packages_package_source_job_modified_by_id", "modified_by_id")
-    changed |= db.createIndex("packages_package_build",
-        "packages_package_build_package_source_id", "package_source_id")
-    changed |= db.createIndex("packages_package_build",
-        "packages_package_build_created_by_id", "created_by_id")
-    changed |= db.createIndex("packages_package_build",
-        "packages_package_build_modified_by_id", "modified_by_id")
-    changed |= db.createIndex("packages_package_build_action",
-        "packages_package_build_action_package_build_id", "package_build_id")
-    changed |= db.createIndex("packages_package_build_action",
-        "packages_package_build_action_package_action_type_id", "package_action_type_id")
-    changed |= db.createIndex("packages_package_build_job",
-        "packages_package_build_job_package_build_id", "package_build_id")
-    changed |= db.createIndex("packages_package_build_job",
-        "packages_package_build_job_package_action_type_id", "package_action_type_id")
-    changed |= db.createIndex("packages_package_build_job",
-        "packages_package_build_job_job_id", "job_id")
-    changed |= db.createIndex("packages_package_build_job",
-        "packages_package_build_job_created_by_id", "created_by_id")
-    changed |= db.createIndex("packages_package_build_job",
-        "packages_package_build_job_modified_by_id", "modified_by_id")
-
-    return changed
-
-# create the (permanent) server repository schema
-def createSchema(db, doCommit=True, cfg=None):
-    if not hasattr(db, "tables"):
-        db.loadSchema()
-
-    if doCommit:
-        db.transaction()
-
-    changed = False
-    changed |= _createUsers(db)
-    changed |= _createProjects(db)
-    changed |= _createLabels(db)
-    changed |= _createProductVersions(db)
-    changed |= _createBuilds(db)
-    changed |= _createCommits(db)
-    changed |= _createPackageIndex(db)
-    changed |= _createNewsCache(db)
-    changed |= _createMirrorInfo(db)
-    changed |= _createApplianceSpotlight(db)
-    changed |= _createFrontPageStats(db)
-    changed |= _createSessions(db)
-    changed |= _createTargets(db)
-    changed |= _createPlatforms(db)
-    changed |= _createCapsuleIndexerSchema(db)
-    changed |= _createRepositoryLogSchema(db)
-    changed |= _createInventorySchema(db, cfg)
-    changed |= _createJobsSchema(db)
-    changed |= _createCapsuleIndexerYumSchema(db)
-    changed |= _createPKI(db)
-    changed |= _createQuerySetSchema(db)
-    changed |= _createInfrastructureSystemsQuerySetSchema(db)
-    changed |= _createWindowsBuildSystemsQuerySet(db)
-    changed |= _createUpdateSystemsQuerySet(db)
-    changed != _createAllProjectBranchStages(db)
-    changed != _createAllPlatformBranchStages(db)
-    changed |= _createAllProjects(db)
-    changed |= _createChangeLogSchema(db)
-    changed |= _createPackageSchema(db)
-    changed |= _createDjangoSchema(db)
-    changed |= _createRbac(db)
-
-    if doCommit:
-        db.commit()
-        db.loadSchema()
-
-    return changed
-
-
-#############################################################################
-# The following code was adapted from Conary's Database Migration schema
-# bits (see conary/server/{migrate,schema}.py for updates).
-
-# this should only check for the proper schema version. This function
-# is called usually from the multithreaded setup, so schema operations
-# should be avoided here
-
-def checkVersion(db):
-    version = db.getVersion()
-
-    # test for no version
-    if version == 0:
-        raise sqlerrors.SchemaVersionError('Uninitialized database', version)
-
-    # the major and minor versions must match
-    if version != RBUILDER_DB_VERSION:
         raise sqlerrors.SchemaVersionError('Schema version mismatch', version)
 
     return version
