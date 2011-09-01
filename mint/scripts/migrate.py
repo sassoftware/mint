@@ -4010,7 +4010,7 @@ class MigrateTo_58(SchemaMigration):
                    REFERENCES rbac_permission_type ( permission_type_id )
                    ON DELETE CASCADE
                    ON UPDATE CASCADE,
-                created_by INTEGER, 
+                created_by INTEGER 
                      REFERENCES Users ( userId ) 
                      ON DELETE CASCADE,
                 modified_by INTEGER
