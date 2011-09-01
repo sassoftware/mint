@@ -440,8 +440,6 @@ user_role_get_xml = """
 
 user_role_post_xml_input = """
 <role id="http://testserver/api/v1/rbac/roles/3">
-  <grants/>
-  <role_id>3</role_id>
   <name>intern</name>
 </role>
 """

@@ -278,13 +278,26 @@ class RbacRoleViews(RbacTestCase):
         self.assertXMLEquals(content, testsxml.role_get_xml)
 
     def testCanAddRoles(self):
-        
+        # verify the All Roles queryset doesn't have a tagged date
+        # just to make sure the future check will be proving something
+        qs = querymodels.QuerySet.objects.get(name='All Roles')
+        self.assertEqual(qs.tagged_date, None)
+        # now run the queryset to give it a tagged date
+        self.req("query_sets/%s/all" % qs.pk, method='GET', is_admin=True)
+        qs = querymodels.QuerySet.objects.get(name='All Roles')
+        self.assertTrue(qs.tagged_date is not None)    
+        # add the role and verify we returned a filled in role    
         url = 'rbac/roles'
         input = testsxml.role_post_xml_input   
         output = testsxml.role_post_xml_output
         content = self.req(url, method='POST', data=input, expect=401, is_authenticated=True)
         content = self.req(url, method='POST', data=input, expect=200, is_admin=True)
         self.assertXMLEquals(content, output)
+        # verify that the act of adding a role auto-invalidated the queryset tag
+        # so the next UI request will get teh full list of roles without having
+        # to manually invalidate the queryset with a queryset invalidation job
+        qs = querymodels.QuerySet.objects.get(name='All Roles')
+        self.assertTrue(qs.tagged_date is None)
 
     def testCanDeleteRoles(self):
 

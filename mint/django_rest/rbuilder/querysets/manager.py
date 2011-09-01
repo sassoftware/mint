@@ -128,6 +128,18 @@ class QuerySetManager(basemanager.BaseManager):
         return querySet
 
     @exposed
+    def invalidateQuerySetByName(self, name):
+        ''' 
+        to be called after adding an object such that a regular request
+        to the queryset that does NOT want to bother with queryset invalidation
+        jobs can get reasonably results... only use for querysets of small size
+        as we have a tag/cache timeout and that should be fine for larger querysets
+        '''
+        qs = models.QuerySet.objects.get(name=name)
+        qs.tagged_date = None
+        qs.save()
+
+    @exposed
     def updateQuerySet(self, querySet):
         '''edit a query set'''
         if not querySet.can_modify:

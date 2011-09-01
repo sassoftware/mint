@@ -95,6 +95,7 @@ class RbacManager(basemanager.BaseManager):
         role.modified_by = by_user
         role.save()
         role = models.RbacRole.objects.get(name=role.name)
+        self.mgr.invalidateQuerySetByName('All Roles')
         return role
 
     @exposed
@@ -107,10 +108,12 @@ class RbacManager(basemanager.BaseManager):
         role.modified_date = datetime.now()
         role.modified_by = by_user
         role.save()
+        self.mgr.invalidateQuerySetByName('All Roles')
         return role
 
     @exposed
     def deleteRbacRole(self, role):
+        self.mgr.invalidateQuerySetByName('All Roles')
         return self._deleteThing(models.RbacRole, self._role(role)) 
 
     #########################################################
@@ -142,6 +145,7 @@ class RbacManager(basemanager.BaseManager):
             queryset = permission.queryset,
             permission = permission.permission
         )
+        self.mgr.invalidateQuerySetByName('All Grants')
         return result
 
     @exposed
@@ -155,10 +159,12 @@ class RbacManager(basemanager.BaseManager):
         permission.modified_date = datetime.now()
         permission.modified_by   = by_user
         permission.save()
+        self.mgr.invalidateQuerySetByName('All Grants')
         return permission
 
     @exposed
     def deleteRbacPermission(self, permission):
+        self.mgr.invalidateQuerySetByName('All Grants')
         return self._deleteThing(models.RbacPermission, self._permission(permission))
 
     #########################################################
