@@ -599,11 +599,11 @@ urlpatterns = patterns('',
         targetsviews.TargetService(),
         name='Target'),
     URL(r'target_types/',
-        targetsviews.TargetTypesService(),
+        targetsviews.TargetTypeService(),
         name='TargetTypes'),
     URL(r'target_types/(?P<target_type>[_a-zA-Z0-9]+)/?$',
-        targetsviews.TargetTypesService(),
-        name='TargetTypes'),
+        targetsviews.TargetTypeService(),
+        name='TargetType'),
 )
 
 
