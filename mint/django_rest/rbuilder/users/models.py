@@ -117,7 +117,7 @@ class User(modellib.XObjIdModel):
         # user_roles is a mapping table, we want to surface the roles
         # from mint.django_rest.rbuilder.rbac import models as rbacmodels
         self.roles = modellib.HrefField(
-           href="/api/users/%s/roles" % self.user_id
+           href="/api/v1/users/%s/roles" % self.user_id
         )
         # actual_roles = [ ur.role for ur in self.user_roles.all() ]
         # self.roles.role = actual_roles

@@ -29,7 +29,7 @@ user_get_xml_with_roles = """
   <email>email@example.com</email>
   <full_name>ExampleIntern</full_name>
   <is_admin>false</is_admin>
-  <roles id="http://testserver/api/users/2003/roles"/>
+  <roles id="http://testserver/api/v1/users/2003/roles"/>
   <user_groups/>
   <user_id>2003</user_id>
   <user_name>ExampleIntern</user_name>
