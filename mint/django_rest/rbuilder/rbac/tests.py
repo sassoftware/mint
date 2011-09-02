@@ -585,22 +585,16 @@ class RbacEngine(RbacTestCase):
         self.developer_user = mk_user('ExampleDeveloper', False, 'developer')
         self.intern_user    = mk_user('ExampleIntern', False, 'intern')
 
-    def _get(self, url, username=None, password=None, data=None):
+    def _get(self, url, username=None, password=None, pagination='', *args, **kwargs):
         """
         Handles redirects resulting from rbac requirement that we
         return a query set for resources that are collections.
-        Note that we include an offset and limit big enough
-        that our test data will not be truncated
+        The pagination parameter allows us to include an offset and
+        limit big enough that our test data will not be truncated.
         """
         # Ugly
         def _parseRedirect(http_redirect):
-            # if ';' in http_redirect then do not attach pagination
-            # postfix as the redirect most likely already includes it
             redirect_url = http_redirect['Location']
-            if ';' not in redirect_url:
-                pagination = ';offset=0;limit=9999'
-            else:
-                pagination = ''
             return redirect_url.split('/api/v1/')[1].strip('/') + pagination
 
         response = super(RbacTestCase, self)._get(url, username=username, password=password)
