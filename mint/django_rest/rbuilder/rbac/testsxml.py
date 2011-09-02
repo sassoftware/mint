@@ -485,16 +485,14 @@ user_role_post_bad_xml_input = """
 """
 
 user_role_post_xml_output = """
-<user_role id="/api/v1/users/1/roles/3">
-  <rbac_user_role_id>4</rbac_user_role_id>
-  <role id="http://testserver/api/v1/rbac/roles/3">
-    <description/>
-    <name>intern</name>
-  </role>  
-  <user id="http://testserver/api/v1/users/1"/>
+<role id="http://testserver/api/v1/rbac/roles/3">
   <created_by id="http://testserver/api/v1/users/1"/>
+  <description/>
+  <grants/>
   <modified_by id="http://testserver/api/v1/users/1"/>
-</user_role>
+  <name>intern</name>
+  <role_id>3</role_id>
+</role>
 """
 
 user_role_get_list_xml_after_delete = """
