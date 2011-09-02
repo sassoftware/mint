@@ -68,7 +68,7 @@ class Script(postgres_major_migrate.Script):
         log.info("Stopping PostgreSQL on port %s", self.port)
         sockPath = '/tmp/.s.PGSQL.%s' % self.port
         # Send progressively more aggressive sigals until it dies.
-        signals = (['-TERM'] * 4) + (['-QUIT'] * 2) + ['-KILL']
+        signals = (['-INT'] * 4) + (['-QUIT'] * 2) + ['-KILL']
         while signals:
             if not os.path.exists(sockPath):
                 return
