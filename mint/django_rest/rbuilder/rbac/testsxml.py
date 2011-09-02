@@ -444,6 +444,46 @@ user_role_post_xml_input = """
 </role>
 """
 
+# NOTE -- we're not testing this ATM
+# attempt to post bad XML to test our error handling
+# and see what's up with it (to resolve UI bug)
+user_role_post_bad_xml_input = """
+<role id="https://testserver/api/v1/rbac/roles/6" href="https://testserver/api/v1/rbac/roles/6">
+        <created_by id="https://testserver/api/v1/users/1" href="https://testserver/api/v1/users/1">
+                <active>0</active>
+                <blurb />
+                <description />
+                <display_email />
+                <email>jmaddox@rpath.com</email>
+                <full_name>Administrator</full_name>
+                <is_admin>true</is_admin>
+                <name>admin</name>
+                <password />
+                <rbacuserrole_set />
+                <resource_type />
+                <roles id="https://testserver/api/users/1/roles" href="https://testserver/api/users/1/roles" />
+                <tags />
+                <user_groups />
+                <user_name>admin</user_name>
+                <user_tags />
+        </created_by>
+        <created_date>2011-09-01T15:50:24.077145+00:00</created_date>
+        <description>All interns in the company</description>
+        <grants>
+                <item>
+                        <errorID>0</errorID>
+                        <message />
+                        <name />
+                        <responders />
+                </item>
+        </grants>
+        <modified_by id="https://testserver/api/v1/users/1" href="https://testserver/api/v1/users/1" />
+        <modified_date>2011-09-01T15:50:24.077296+00:00</modified_date>
+        <name>interns</name>
+        <resource_type />
+</role>
+"""
+
 user_role_post_xml_output = """
 <user_role id="/api/v1/users/1/roles/3">
   <rbac_user_role_id>4</rbac_user_role_id>

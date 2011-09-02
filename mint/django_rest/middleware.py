@@ -27,6 +27,8 @@ from mint.lib import mintutils
 
 #from lxml import etree
 
+import logging
+log = logging.getLogger(__name__)
 
 try:
     # The mod_python version is more efficient, so try importing it first.
@@ -75,6 +77,7 @@ class ExceptionLoggerMiddleware(BaseMiddleware):
             fault = models.Fault(code=code, message=str(exception))
             response = HttpResponse(status=code, content_type='text/xml')
             response.content = fault.to_xml(request)
+            log.error(str(exception))
             return response
 
         if isinstance(exception, core_exc.ObjectDoesNotExist):
@@ -87,6 +90,7 @@ class ExceptionLoggerMiddleware(BaseMiddleware):
             fault = models.Fault(code=code, message=str(exception))
             response = HttpResponse(status=code, content_type='text/xml')
             response.content = fault.to_xml(request)
+            log.error(str(exception))
             return response
 
         if isinstance(exception, (errors.RbuilderError, IntegrityError)):
@@ -94,6 +98,7 @@ class ExceptionLoggerMiddleware(BaseMiddleware):
             fault = models.Fault(code=code, message=str(exception))
             response = HttpResponse(status=code, content_type='text/xml')
             response.content = fault.to_xml(request)
+            log.error(str(exception))
             return response
 
         return handler.handleException(request, exception)
