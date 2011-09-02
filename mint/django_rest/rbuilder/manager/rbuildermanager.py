@@ -35,6 +35,7 @@ from mint.django_rest.rbuilder.platforms.manager import SourceStatusManager, \
                                                         PlatformManager
 from mint.django_rest.rbuilder.repos.manager import ReposManager
 from mint.django_rest.rbuilder.rbac.manager.rbacmanager import RbacManager
+from mint.django_rest.rbuilder.targets.manager import TargetsManager, TargetTypesManager, TargetCredentialsManager
 
 class RbuilderManager(basemanager.BaseRbuilderManager):
 
@@ -68,7 +69,10 @@ class RbuilderManager(basemanager.BaseRbuilderManager):
         'platformMgr' : PlatformManager,
         'modulehooksMgr' : ModuleHooksManager,
         'reposMgr' : ReposManager,
-        'rbacMgr' : RbacManager
+        'rbacMgr' : RbacManager,
+        'targetsManager' : TargetsManager,
+        'targetTypesManager': TargetTypesManager,
+        'targetCredentialsManager' : TargetCredentialsManager
     }
 
     def __init__(self, cfg=None, userName=None):

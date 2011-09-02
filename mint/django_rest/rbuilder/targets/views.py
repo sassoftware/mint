@@ -23,7 +23,7 @@ class TargetService(service.BaseService):
     @requires('target')
     @return_xml
     def rest_PUT(self, request, target_id, target):
-        return self.mgr.updateTarget(target_id)
+        return self.mgr.updateTarget(target_id, target)
         
     def rest_DELETE(self, request, target_id):
         self.mgr.deleteTarget(target_id)
@@ -42,4 +42,20 @@ class TargetTypeService(service.BaseService):
             return self.mgr.getTargetTypes()
 
     
-    
+class TargetUserCredentialsService(service.BaseService):
+    @return_xml
+    def rest_GET(self, request, target_id, user_id):
+        return self.get(target_id, user_id)
+        
+    def get(self, target_id, user_id):
+        return self.mgr.getTargetCredentialsForTargetByUserId(target_id, user_id)
+        
+    @requires('target_credentials')
+    @return_xml
+    def rest_POST(self, request, target_credentials):
+        return self.mgr.createTargetCredentials(target_credentials)
+        
+    @requires('target_credentials')
+    @return_xml
+    def rest_PUT(self, request, target_credentials_id, target_credentials):
+        return self.mgr.updateTargetCredentials(target_credentials_id, target_credentials)

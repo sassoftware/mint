@@ -14,8 +14,14 @@ from xobj import xobj
 
 XObjHidden = modellib.XObjHidden
 
+class Targets(modellib.Collection):
+    class Meta:
+        abstract = True
+        
+    _xobj = xobj.XObjMetadata(tag='targets')
+    list_fields = ['target']
 
-class Targets(modellib.XObjModel):
+class Target(modellib.XObjModel):
     target_id = models.IntegerField(primary_key=True, db_column='targetid')
     target_type = modellib.ForeignKey('TargetType', db_column='targettype')
     target_name = models.CharField(unique=True, max_length=255, db_column='targetname')
@@ -45,7 +51,7 @@ class TargetData(modellib.XObjModel):
     value = models.TextField()
     # Uhm. django does not support multi-column PKs.
 
-class TargetCredentials(modellib.XObjModel):
+class TargetCredential(modellib.XObjModel):
     class Meta:
         db_table = u'targetcredentials'
     target_credentials_id = models.AutoField(primary_key=True,
