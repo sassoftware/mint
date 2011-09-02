@@ -9,6 +9,7 @@ from datetime import datetime
 
 # Suppress all non critical msg's from output
 # still emits traceback for failed tests
+
 import logging
 logging.disable(logging.CRITICAL)
 
@@ -510,6 +511,12 @@ class RbacUserRoleViewTests(RbacTestCase):
         user_role = models.RbacUserRole.objects.get(user = self.admin_user, role=self.intern)
         self.assertEqual(user_role.user.pk, self.admin_user.pk)
         self.assertEqual(user_role.role.name, 'intern')
+
+        # UI was having some problems adding user roles, post some XML similar to what
+        # it would post and see if we can detect why it fails
+        #content = self.req(url, method='POST', data=testsxml.user_role_post_bad_xml_input,
+        #      expect=200, is_admin=True)
+        #print content
 
     def testCanDeleteUserRoles(self):
         user_id = self.admin_user.pk
