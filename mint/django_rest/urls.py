@@ -22,6 +22,7 @@ from mint.django_rest.rbuilder.platforms import views as platformsviews
 from mint.django_rest.rbuilder.rbac import views as rbacviews
 from mint.django_rest.rbuilder.jobs import views as jobviews
 from mint.django_rest.rbuilder.modulehooks import views as modulehooksviews
+from mint.django_rest.rbuilder.targets import views as targetsviews
 
 handler404 = 'mint.django_rest.handler.handler404'
 handler500 = 'mint.django_rest.handler.handler500'
@@ -589,6 +590,20 @@ urlpatterns = patterns('',
     URL(r'rbac/permissions/(?P<permission_type_id>\d+)?$',
         rbacviews.RbacPermissionTypeService(),
         name='RbacPermissionType'),
+    
+    # Begin Targets/TargetTypes
+    URL(r'targets/?$',
+        targetsviews.TargetService(),
+        name='Targets'),
+    URL(r'targets/(?P<target_id>\d+)/?$',
+        targetsviews.TargetService(),
+        name='Target'),
+    URL(r'target_types/',
+        targetsviews.TargetTypesService(),
+        name='TargetTypes'),
+    URL(r'target_types/(?P<target_type>[_a-zA-Z0-9]+)/?$',
+        targetsviews.TargetTypesService(),
+        name='TargetTypes'),
 )
 
 
