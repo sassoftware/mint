@@ -1,7 +1,5 @@
 #
-# Copyright (c) 2010 rPath, Inc.
-#
-# All rights reserved.
+# Copyright (c) rPath, Inc.
 #
 
 """
@@ -11,6 +9,7 @@ Shut down PostgreSQL, check if it needs updating, then start it again.
 import logging
 import optparse
 import os
+import signal
 import subprocess
 import tempfile
 import time
@@ -68,18 +67,16 @@ class Script(postgres_major_migrate.Script):
         log.info("Stopping PostgreSQL on port %s", self.port)
         sockPath = '/tmp/.s.PGSQL.%s' % self.port
         # Send progressively more aggressive sigals until it dies.
-        signals = (['-INT'] * 4) + (['-QUIT'] * 2) + ['-KILL']
+        signals =   ([signal.SIGINT] * 4
+                ) + ([signal.SIGQUIT] * 2
+                ) +  [signal.SIGKILL]
         while signals:
             if not os.path.exists(sockPath):
                 return
 
-            signame = signals.pop(0)
-            proc = subprocess.Popen(['fuser', '-sk', signame, sockPath],
-                    shell=False, stdout=subprocess.PIPE,
-                    stderr=subprocess.PIPE)
-            stdout, _ = proc.communicate()
-            if proc.returncode:
-                # fuser failed, postgres must not be running?
+            signum = signals.pop(0)
+            if not self._stopPostgres(sockPath, signum):
+                # No process is listening on that socket.
                 return
 
             sleepUntil = time.time() + 15
@@ -87,6 +84,25 @@ class Script(postgres_major_migrate.Script):
                 if not os.path.exists(sockPath):
                     return
                 time.sleep(0.1)
+
+    @staticmethod
+    def _stopPostgres(sockPath, signal):
+        # Use netstat to figure out what processes own the socket.
+        netstat = subprocess.Popen(['netstat', '-lpnxT'],
+                shell=False, stdout=subprocess.PIPE).communicate()[0]
+        found = False
+        for line in netstat.splitlines():
+            words = line.split()
+            if sockPath not in words:
+                continue
+            i = words.index(sockPath)
+            process = words[i-1]
+            pid, name = process.split('/')
+            if name not in ('postmaster', 'postgres'):
+                continue
+            os.kill(int(pid), signal)
+            found = True
+        return found
 
     def getCurrentMeta(self):
         """Get metadata about the current PostgreSQL cluster."""
