@@ -315,7 +315,6 @@ class RbacManager(basemanager.BaseManager):
                 created_by=by_user, 
                 modified_by=by_user
             ).save()
-            role = models.RbacUserRole.objects.get(user=user, role=role)
         return role
 
     # why no update function?
