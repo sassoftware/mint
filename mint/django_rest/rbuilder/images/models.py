@@ -8,6 +8,8 @@ from django.db import models
 from xobj import xobj
 from mint.django_rest.rbuilder import modellib
 from mint.django_rest.rbuilder.projects import models as projmodels
+from django.core.urlresolvers import reverse
+import urlparse
 
 class Images(modellib.XObjIdModel):
     class Meta:
@@ -35,8 +37,22 @@ class ImageDefinitionDescriptor(modellib.XObjIdModel):
 
     _xobj = xobj.XObjMetadata(tag='image_definition_descriptor')
     name = models.CharField()
-    url  = modellib.HrefField()
+    id  = modellib.HrefField()
     view_name = 'ImageDefinitionDescriptor'
+
+    def serialize(self, request):
+        xobj_model = modellib.XObjIdModel.serialize(self, request)
+        xobj_model.id = self.get_absolute_url(request)
+        return xobj_model
+
+    def get_absolute_url(self, request, *args, **kwargs):
+        segment =  reverse(ImageDefinitionDescriptor.view_name, args=[self.name])
+        if request is not None:
+            fullpath = request.get_full_path()
+            return request.build_absolute_uri(
+                urlparse.urljoin(fullpath, segment)
+            )
+        return segment
 
 ###########################################################################
 # BELOW THIS LINE -- unfinished effort to add images into Django

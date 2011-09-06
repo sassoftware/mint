@@ -10,6 +10,7 @@
 from mint.django_rest.deco import return_xml, access #, requires
 from mint.django_rest.rbuilder import service
 from mint.django_rest.rbuilder.images import models
+import exceptions
 
 class BaseImageService(service.BaseService):
     pass
@@ -33,7 +34,7 @@ class ImageDefinitionDescriptorsService(BaseImageService):
     @access.anonymous
     @return_xml
     def rest_GET(self, request):
-        return self.mgr.getImageDescriptors()
+        return self.mgr.getImageDefinitionDescriptors()
 
 class ImageDefinitionDescriptorService(BaseImageService):
     """
@@ -44,6 +45,7 @@ class ImageDefinitionDescriptorService(BaseImageService):
     @access.anonymous
     @return_xml
     def rest_GET(self, request, image_descriptor_type):
-        return self.mgr.getImageDescriptor(image_descriptor_type)
+        raise exceptions.NotImplementedError()
+        #return self.mgr.getImageDefinitionDescriptor(image_descriptor_type)
 
 

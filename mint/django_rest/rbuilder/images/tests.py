@@ -1,4 +1,4 @@
-#import testsxml
+import testsxml
 #from xobj import xobj
 #from mint.django_rest.rbuilder.images import models as imagemodels
 
@@ -17,8 +17,13 @@ class ImagesDescriptorTestCase(XMLTestCase):
         XMLTestCase.setUp(self)
 
     def testListImageDescriptors(self):
-        #response = self._get('images/image_definition_descriptors')
-        #self.assertEquals(response.status_code, 200)
-        #self.assertXmlEquals(response.content, '<wrong></wrong>')
-        pass
+        response = self._get('images/image_definition_descriptors')
+        self.assertEquals(response.status_code, 200)
+        self.assertXMLEquals(response.content, testsxml.image_descriptors_list_xml)
+        
+    #def testGetSpecificImageDescriptor(self):
+    #    response = self._get('images/image_definition_descriptors/vmware')
+    #    self.assertEquals(response.status_code, 200)
+    #    self.assertXmlEquals(response.content, '<wrong></wrong>')
+
 
