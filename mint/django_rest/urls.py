@@ -23,6 +23,7 @@ from mint.django_rest.rbuilder.rbac import views as rbacviews
 from mint.django_rest.rbuilder.jobs import views as jobviews
 from mint.django_rest.rbuilder.modulehooks import views as modulehooksviews
 from mint.django_rest.rbuilder.targets import views as targetsviews
+from mint.django_rest.rbuilder.images import views as imageviews
 
 handler404 = 'mint.django_rest.handler.handler404'
 handler500 = 'mint.django_rest.handler.handler500'
@@ -607,6 +608,19 @@ urlpatterns = patterns('',
     URL(r'target_types/(?P<target_type>\d+)/?$',
         targetsviews.TargetTypeService(),
         name='TargetType'),
+
+    # Image Service
+    URL(r'images/?$',
+        imageviews.ImagesService(),
+        name='Images'),
+    URL(r'images/image_definition_descriptors/?$',
+        imageviews.ImageDefinitionDescriptorsService,
+        name='ImageDefinitionDescriptors'),
+    URL(r'images/image_definition_descriptors/(?P<image_definition_type>\w+)/?$',
+        imageviews.ImageDefinitionDescriptorService,
+        name='ImageDefinitionDescriptor')
+    
+
 )
 
 

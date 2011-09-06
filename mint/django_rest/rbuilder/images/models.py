@@ -7,10 +7,45 @@
 from django.db import models
 from xobj import xobj
 from mint.django_rest.rbuilder import modellib
-#import sys
-from mint.django_field.rbuilder.projects import models as projmodels
+from mint.django_rest.rbuilder.projects import models as projmodels
 
+class Images(modellib.XObjIdModel):
+    class Meta:
+        abstract = True
+    
+    _xobj = xobj.XObjMetadata(tag="images")
 
+    image_definition_descriptors = modellib.HrefField(href='./image_definition_descriptors')
+
+class ImageDefinitionDescriptors(modellib.Collection):
+    '''Collection of available image definition descriptor types'''
+
+    class Meta:
+        abstract = True
+
+    _xobj = xobj.XObjMetadata(tag="image_definition_descriptors")
+    view_name = 'ImageDefinitionDescriptors'
+    list_fields = [ 'image_definition_descriptor' ]
+
+class ImageDefinitionDescriptor(modellib.XObjIdModel):
+    '''Image definition descriptor for a sepcific image type'''
+
+    class Meta:
+        abstract = True
+
+    _xobj = xobj.XObjMetadata(tag='image_definition_descriptor')
+    name = models.CharField()
+    url  = modellib.HrefField()
+    view_name = 'ImageDefinitionDescriptor'
+
+###########################################################################
+# BELOW THIS LINE -- unfinished effort to add images into Django
+# these do not have tests and this code didn't use to compile, so DO
+# verify correctness of items below and add tests before using these,
+# and mark which remain untested/unfinished
+##########################################################################
+
+# UNTESTED/UNUSED:        
 class TargetImage(modellib.XObjIdModel): 
     class Meta:
         db_table = u'targets'
@@ -19,19 +54,19 @@ class TargetImage(modellib.XObjIdModel):
         db_column="targetid")
     target_name = models.CharField(max_length=255, db_column="targetName")
     target_type = models.CharField(max_length=255, db_column="targetType")
-    
-    
 
+# UNTESTED/UNUSED:        
 class FileUrl(modellib.XObjIdModel):
     class Meta:
         db_table = u'FilesUrls'
         
     file_id = models.AutoField(primary_key=True,
         db_column="urlId")  
-    url_type = models.smallIntegerField(db_column='urlType') 
+    url_type = models.IntegerField(db_column='urlType') 
     url =  models.CharField(max_length=255)
 
 
+# UNTESTED/UNUSED:        
 class ImageFiles(modellib.Collection):
     class Meta:
         abstract = True
@@ -46,7 +81,8 @@ class ImageFiles(modellib.Collection):
     #metadata = fields.ModelField(ImageMetadata)     
 
 
-class ImageFile(modellib.XOjIdModel):
+# UNTESTED/UNUSED:        
+class ImageFile(modellib.XObjIdModel):
     class Meta:
         db_table= u'BuildFiles'
         
@@ -54,13 +90,13 @@ class ImageFile(modellib.XOjIdModel):
         db_column="fileId")  
     imade_id = modellib.DeferredForeignKey(projmodels.Image, db_column='buildid')
     idx = models.SmallIntegerField(default=0)
-    title= models.CharField(max_length=255)
-    size     = models.bigIntegerField(null=True)
-    sha1     = models.CharField(max_length=40, null=True)
-    fileName = models.CharField(max_lenth=255, null=True)     #column not present in the DB
- 
+    title= models.TextField()
+    size     = models.BigIntegerField(null=True)
+    sha1     = models.TextField(null=True)
+    fileName = models.TextField(null=True)     #column not present in the DB
 
 
+# UNTESTED/UNUSED:        
 class Urls(modellib.Collection):
     class Meta:
         abstract = True
@@ -68,8 +104,8 @@ class Urls(modellib.Collection):
     list_fields = ['FileUrl']
     _xobj = xobj.XObjMetadata(tag='url')
     
-    
 
+# UNTESTED/UNUSED:        
 class TargetImages(modellib.Collection):
     class Meta:
         abstract = True
@@ -77,6 +113,7 @@ class TargetImages(modellib.Collection):
     list_fields = ['TargetImage']  
     
     
+# UNTESTED/UNUSED:        
 class Files(modellib.Collection):
     class Meta:
         abstract = True
@@ -84,16 +121,16 @@ class Files(modellib.Collection):
     list_fields = ['ImageFile']               
     _xobj = xobj.XObjMetadata(tag='file')
 
-
-class ImageMetadata(modellib.XOjIdModel):
+# UNTESTED/UNUSED:        
+class ImageMetadata(modellib.XObjIdModel):
     class Meta:
         abstract = True
     
     #changing charFields to textField as textField has no limit    
-    owner = models.textField()
-    billingCode= models.textField()
-    deptCode = models.textField()
-    cost = models.textField()
+    owner = models.TextField()
+    billingCode= models.TextField()
+    deptCode = models.TextField()
+    cost = models.TextField()
 
     #copied directly from old code, not sure at all
     def getValues(self):
@@ -109,8 +146,8 @@ class ImageMetadata(modellib.XOjIdModel):
     def __nonzero__(self):
         return bool(self.getValues())   
         
-        
-class UpdateRelease(modellib.XObIdModel):
+# UNTESTED/UNUSED:        
+class UpdateRelease(modellib.XObjIdModel):
     class Meta:
         abstract = True
         
@@ -119,7 +156,7 @@ class UpdateRelease(modellib.XObIdModel):
     version= models.CharField(max_length=32, blank=True, default='')
     #not sure how to handle the imageIds
     #imageIds = fields.ListField(ImageId)
-    description= models.textField()
+    description= models.TextField()
     is_published = models.BooleanField(default=False)
     should_mirror= models.BooleanField(default=False)                 
 
