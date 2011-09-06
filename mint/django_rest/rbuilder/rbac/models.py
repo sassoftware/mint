@@ -52,6 +52,7 @@ class RbacRoles(modellib.Collection):
     def save(self):
         return [s.save() for s in self.rbac_role]
 
+
 class RbacRole(modellib.XObjIdModel):
     '''
     An RbacRole represents a role a user has that is used to determine a RbacPermission
@@ -70,7 +71,7 @@ class RbacRole(modellib.XObjIdModel):
     summary_view = [ "name", "description" ]
     
     # objects = modellib.RbacRoleManager() # needed because of non-integer PK?
-    _xobj_hidden_accessors = set(['rbacuserrole_set', 'tags'])
+    _xobj_hidden_accessors = set(['rbacuserrole_set', 'tags', 'rbac_grants'])
 
     role_id = D(models.AutoField(primary_key=True),
         "the database ID for the role")
@@ -84,6 +85,12 @@ class RbacRole(modellib.XObjIdModel):
         related_name='+', db_column='created_by')), 'user who created this resource')
     modified_by   =  D(APIReadOnly(modellib.ForeignKey(usersmodels.User, null=True, 
         related_name='+', db_column='modified_by')), 'user who last modified this resource')
+    grants        =  D(modellib.SyntheticField(), 'permissions granted on this role')
+    
+    def computeSyntheticFields(self, sender, **kwargs):
+        self.grants = modellib.HrefField(
+           href="/api/v1/rbac/roles/%s/grants/" % self.role_id
+        )
 
 class RbacPermissions(modellib.Collection):
     '''
@@ -171,7 +178,7 @@ class RbacPermission(modellib.XObjIdModel):
     grant_id = D(models.AutoField(primary_key=True, db_column='permission_id'),
         "the database ID for the permission")
     role         =  D(modellib.ForeignKey(RbacRole, 
-        null=False, db_column='role_id', related_name='grants'), 'rbac_role id')
+        null=False, db_column='role_id', related_name='rbac_grants'), 'rbac_role id')
     queryset     =  D(modellib.ForeignKey('querysets.QuerySet', 
         null=False, db_column='queryset_id', related_name='grants'), 'queryset id')
     permission  = D(models.ForeignKey(RbacPermissionType,

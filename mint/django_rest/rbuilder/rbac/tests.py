@@ -268,7 +268,7 @@ class RbacRoleViews(RbacTestCase):
         url = "query_sets/%s/all" % queryset.pk
         content = self.req(url, method='GET', expect=200, is_admin=True)
         self.assertXMLEquals(content, testsxml.role_queryset_xml)
- 
+
     def testCanGetSingleRole(self):
 
         url = 'rbac/roles/2'
@@ -386,6 +386,12 @@ class RbacPermissionViews(RbacTestCase):
         url = "query_sets/%s/all" % queryset.pk
         content = self.req(url, method='GET', expect=200, is_admin=True)
         self.assertXMLEquals(content, testsxml.permission_queryset_xml)
+
+        # verify we can list permissions off the role itself
+        sysadmin = models.RbacRole.objects.get(name='sysadmin')
+        url = "rbac/roles/%s/grants/" % sysadmin.pk
+        content = self.req(url, method='GET', expect=200, is_admin=True)
+        self.assertXMLEquals(content, testsxml.permission_list_xml_for_role)
 
     def testCanGetSinglePermission(self):
         url = 'rbac/grants/1'

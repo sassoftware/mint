@@ -41,7 +41,7 @@ class RbacManager(basemanager.BaseManager):
         if order_by:
             all = all.order_by(*order_by)
         all = all.all()
-        setattr(things, collection_field, containedClass.objects.all())
+        setattr(things, collection_field, all)
         return things
 
     def _deleteThing(self, modelClass, obj):
@@ -67,7 +67,7 @@ class RbacManager(basemanager.BaseManager):
     @exposed
     def getRbacPermissionTypes(self):
         return self._getThings(models.RbacPermissionTypes,
-            models.RbacPermissionType, 'permission', order_by=['permission_type_id'])
+            models.RbacPermissionType, 'permission', order_by=['permission_id'])
 
     @exposed
     def getRbacPermissionType(self, permission_type):
@@ -128,12 +128,22 @@ class RbacManager(basemanager.BaseManager):
     def getRbacPermissions(self):
         return self._getThings(models.RbacPermissions,
             models.RbacPermission, 'grant',  
-            order_by=['queryset_id', 'role_id', 'action']
+            order_by=['queryset', 'role', 'permission']
         )
 
     @exposed
     def getRbacPermission(self, permission):
         return self._permission(permission)
+
+    @exposed
+    def getRbacPermissionsForRole(self, role):
+        role = self._role(role)
+        grants = models.RbacPermissions()
+        all = models.RbacPermission.objects.filter(
+            role = role
+        ).order_by('queryset', 'role', 'permission')
+        grants.grant = all
+        return grants
  
     @exposed
     def addRbacPermission(self, permission, by_user):

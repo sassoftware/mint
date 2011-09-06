@@ -6,9 +6,10 @@
 
 # Services related to images
 
-from django.http import HttpResponse #, HttpResponseNotFound
-from mint.django_rest.deco import return_xml, access, requires
+# from django.http import HttpResponse #, HttpResponseNotFound
+from mint.django_rest.deco import return_xml, access #, requires
 from mint.django_rest.rbuilder import service
+from mint.django_rest.rbuilder.images import models
 
 class BaseImageService(service.BaseService):
     pass

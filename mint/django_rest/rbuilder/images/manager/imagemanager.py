@@ -5,8 +5,7 @@
 #
 
 import logging
-from mint.django_rest.rbuilder.images import models
-from datetime import datetime
+#from mint.django_rest.rbuilder.images import models
 import exceptions
 from mint.django_rest.rbuilder.manager import basemanager
 

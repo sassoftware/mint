@@ -173,3 +173,41 @@ class RbacUserRolesService(BaseRbacService):
         self.mgr.deleteRbacUserRole(user_id, role_id)
         return HttpResponse(status=204)
 
+
+class RbacRoleGrantsService(BaseRbacService):
+    """
+    What grants are available on a role?
+    <roles>
+    ...
+    </roles>
+    """
+
+    # READ
+    @access.admin
+    @return_xml
+    def rest_GET(self, request, role_id, grant_id=None):
+        return self.get(role_id, grant_id)
+
+    def get(self, role_id, grant_id=None):
+        if grant_id is not None:
+            return self.mgr.getRbacPermission(grant_id)
+        else:
+            return self.mgr.getRbacPermissionsForRole(role_id)
+
+    # CREATE -- ADD A RBAC ROLE
+    # NOTE -- same as RbacRolesService method
+    @access.admin
+    @requires('grant', save=False)
+    @return_xml
+    def rest_POST(self, request, role_id, grant):
+        return self.mgr.addRbacPermission(grant, request._authUser)
+
+    # DELETE
+    # NOTE -- same as RbacRolesService method
+    @access.admin
+    def rest_DELETE(self, request, role_id, grant_id):
+        self.mgr.deleteRbacPermission(grant_id)
+        return HttpResponse(status=204)
+
+
+

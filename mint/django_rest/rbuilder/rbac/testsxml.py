@@ -33,6 +33,7 @@ user_get_xml_with_roles = """
   <user_groups/>
   <user_id>2003</user_id>
   <user_name>ExampleIntern</user_name>
+  <target_user_id/>
 </user>
 """
 
@@ -57,7 +58,7 @@ tradingfloor_xml = """
 
 role_put_xml_input = """
 <role id="http://testserver/api/v1/rbac/roles/2">
-   <grants/>
+   <grants id="http://testserver/api/v1/rbac/roles/2/grants/"/>
    <role_id>2</role_id>
    <name>rocketsurgeon</name>
    <description></description>
@@ -66,7 +67,7 @@ role_put_xml_input = """
 
 role_put_xml_output = """
 <role id="http://testserver/api/v1/rbac/roles/2">
-   <grants/>
+   <grants id="http://testserver/api/v1/rbac/roles/2/grants/"/>
    <role_id>2</role_id>
    <name>rocketsurgeon</name>
    <description></description>
@@ -77,7 +78,6 @@ role_put_xml_output = """
 
 role_post_xml_input = """
 <role>
-   <grants/>
    <name>rocketsurgeon</name>
    <description></description>
 </role>
@@ -85,7 +85,7 @@ role_post_xml_input = """
 
 role_post_xml_output = """
 <role id="http://testserver/api/v1/rbac/roles/4">
-  <grants/>
+  <grants id="http://testserver/api/v1/rbac/roles/4/grants/"/>
   <role_id>4</role_id>
   <name>rocketsurgeon</name>
   <description/>
@@ -97,7 +97,7 @@ role_post_xml_output = """
 role_list_xml = """
 <roles count="3" end_index="2" filter_by="" full_collection="http://testserver/api/v1/rbac/roles" id="http://testserver/api/v1/rbac/roles;start_index=0;limit=10" limit="10" next_page="" num_pages="1" order_by="" per_page="10" previous_page="" start_index="0">
   <role id="http://testserver/api/v1/rbac/roles/1">
-    <grants/>
+    <grants id="http://testserver/api/v1/rbac/roles/1/grants/"/>
     <role_id>1</role_id>
     <description/>
     <name>developer</name>
@@ -106,7 +106,7 @@ role_list_xml = """
   </role>
   </role>
   <role id="http://testserver/api/v1/rbac/roles/2">
-    <grants/>
+    <grants id="http://testserver/api/v1/rbac/roles/2/grants/"/>
     <role_id>2</role_id>
     <description/>
     <name>sysadmin</name>
@@ -114,7 +114,7 @@ role_list_xml = """
     <modified_by id="http://testserver/api/v1/users/1"/>
   </role>
   <role id="http://testserver/api/v1/rbac/roles/3">
-    <grants/>
+    <grants id="http://testserver/api/v1/rbac/roles/3/grants/"/>
     <role_id>2</role_id>
     <description/>
     <name>intern</name>
@@ -127,7 +127,7 @@ role_list_xml = """
 role_queryset_xml = """
 <roles count="3" end_index="2" filter_by="" full_collection="http://testserver/api/v1/query_sets/12/all" id="http://testserver/api/v1/query_sets/12/all;start_index=0;limit=10" limit="10" next_page="" num_pages="1" order_by="" per_page="10" previous_page="" start_index="0">
   <role id="http://testserver/api/v1/rbac/roles/1">
-    <grants/>
+    <grants id="http://testserver/api/v1/rbac/roles/1/grants/"/>
     <role_id>1</role_id>
     <description/>
     <name>sysadmin</name>
@@ -135,7 +135,7 @@ role_queryset_xml = """
     <modified_by id="http://testserver/api/v1/users/1"/>
   </role>
   <role id="http://testserver/api/v1/rbac/roles/2">
-    <grants/>
+    <grants id="http://testserver/api/v1/rbac/roles/2/grants/"/>
     <role_id>2</role_id>
     <description/>
     <name>developer</name>
@@ -143,7 +143,7 @@ role_queryset_xml = """
     <modified_by id="http://testserver/api/v1/users/1"/>
   </role>
   <role id="http://testserver/api/v1/rbac/roles/3">
-    <grants/>
+    <grants id="http://testserver/api/v1/rbac/roles/3/grants/"/>
     <role_id>3</role_id>
     <description/>
     <name>intern</name>
@@ -158,22 +158,7 @@ role_list_xml_with_grants = """
   <role id="http://testserver/api/v1/rbac/roles/1">
     <created_by id="http://testserver/api/v1/users/1"/>
     <description/>
-    <grants>
-      <grant id="http://testserver/api/v1/rbac/grants/1">
-        <created_by id="http://testserver/api/v1/users/1"/>
-        <grant_id>1</grant_id>
-        <modified_by id="http://testserver/api/v1/users/1"/>
-        <permission id="http://testserver/api/v1/rbac/permissions/2">
-          <description>Modify Member Resources</description>
-          <name>ModMembers</name>
-        </permission>
-        <queryset id="http://testserver/api/v1/query_sets/16"/>
-        <role id="http://testserver/api/v1/rbac/roles/1">
-          <description/>
-          <name>sysadmin</name>
-        </role>
-      </grant>
-    </grants>
+    <grants id="http://testserver/api/v1/rbac/roles/1/grants/"/>
     <modified_by id="http://testserver/api/v1/users/1"/>
     <name>sysadmin</name>
     <role_id>1</role_id>
@@ -181,36 +166,7 @@ role_list_xml_with_grants = """
   <role id="http://testserver/api/v1/rbac/roles/2">
     <created_by id="http://testserver/api/v1/users/1"/>
     <description/>
-    <grants>
-      <grant id="http://testserver/api/v1/rbac/grants/3">
-        <created_by id="http://testserver/api/v1/users/1"/>
-        <grant_id>3</grant_id>
-        <modified_by id="http://testserver/api/v1/users/1"/>
-        <permission id="http://testserver/api/v1/rbac/permissions/2">
-          <description>Modify Member Resources</description>
-          <name>ModMembers</name>
-        </permission>
-        <queryset id="http://testserver/api/v1/query_sets/15"/>
-        <role id="http://testserver/api/v1/rbac/roles/2">
-          <description/>
-          <name>developer</name>
-        </role>
-      </grant>
-      <grant id="http://testserver/api/v1/rbac/grants/2">
-        <created_by id="http://testserver/api/v1/users/1"/>
-        <grant_id>2</grant_id>
-        <modified_by id="http://testserver/api/v1/users/1"/>
-        <permission id="http://testserver/api/v1/rbac/permissions/1">
-          <description>Read Member Resources</description>
-          <name>ReadMembers</name>
-        </permission>
-        <queryset id="http://testserver/api/v1/query_sets/16"/>
-        <role id="http://testserver/api/v1/rbac/roles/2">
-          <description/>
-          <name>developer</name>
-        </role>
-      </grant>
-    </grants>
+    <grants id="http://testserver/api/v1/rbac/roles/2/grants/"/>
     <modified_by id="http://testserver/api/v1/users/1"/>
     <name>developer</name>
     <role_id>2</role_id>
@@ -218,7 +174,7 @@ role_list_xml_with_grants = """
   <role id="http://testserver/api/v1/rbac/roles/3">
     <created_by id="http://testserver/api/v1/users/1"/>
     <description/>
-    <grants/>
+    <grants id="http://testserver/api/v1/rbac/roles/3/grants/"/>
     <modified_by id="http://testserver/api/v1/users/1"/>
     <name>intern</name>
     <role_id>3</role_id>
@@ -228,7 +184,7 @@ role_list_xml_with_grants = """
 
 role_get_xml = """
 <role id="http://testserver/api/v1/rbac/roles/2">
-  <grants/>
+  <grants id="http://testserver/api/v1/rbac/roles/2/grants/"/>
   <role_id>2</role_id>
   <name>developer</name>
   <description/>
@@ -239,6 +195,20 @@ role_get_xml = """
 
 permission_list_xml = """
 <grants count="3" end_index="2" filter_by="" full_collection="http://testserver/api/v1/rbac/grants" id="http://testserver/api/v1/rbac/grants;start_index=0;limit=10" limit="10" next_page="" num_pages="1" order_by="" per_page="10" previous_page="" start_index="0">
+ <grant id="http://testserver/api/v1/rbac/grants/3">
+    <created_by id="http://testserver/api/v1/users/1"/>
+    <grant_id>3</grant_id>
+    <modified_by id="http://testserver/api/v1/users/1"/>
+    <permission id="http://testserver/api/v1/rbac/permissions/2">
+      <description>Modify Member Resources</description>
+      <name>ModMembers</name>
+    </permission>
+    <queryset id="http://testserver/api/v1/query_sets/15"/>
+    <role id="http://testserver/api/v1/rbac/roles/2">
+      <description/>
+      <name>developer</name>
+    </role>
+  </grant>
   <grant id="http://testserver/api/v1/rbac/grants/1">
     <created_by id="http://testserver/api/v1/users/1"/>
     <grant_id>1</grant_id>
@@ -267,18 +237,23 @@ permission_list_xml = """
       <name>developer</name>
     </role>
   </grant>
-  <grant id="http://testserver/api/v1/rbac/grants/3">
+</grants>
+"""
+
+permission_list_xml_for_role = """
+<grants count="1" end_index="0" filter_by="" full_collection="http://testserver/api/v1/rbac/grants" id="http://testserver/api/v1/rbac/grants;start_index=0;limit=10" limit="10" next_page="" num_pages="1" order_by="" per_page="10" previous_page="" start_index="0">
+  <grant id="http://testserver/api/v1/rbac/grants/1">
     <created_by id="http://testserver/api/v1/users/1"/>
-    <grant_id>3</grant_id>
+    <grant_id>1</grant_id>
     <modified_by id="http://testserver/api/v1/users/1"/>
     <permission id="http://testserver/api/v1/rbac/permissions/2">
       <description>Modify Member Resources</description>
       <name>ModMembers</name>
     </permission>
-    <queryset id="http://testserver/api/v1/query_sets/15"/>
-    <role id="http://testserver/api/v1/rbac/roles/2">
+    <queryset id="http://testserver/api/v1/query_sets/16"/>
+    <role id="http://testserver/api/v1/rbac/roles/1">
       <description/>
-      <name>developer</name>
+      <name>sysadmin</name>
     </role>
   </grant>
 </grants>
@@ -409,7 +384,7 @@ permission_put_xml_output="""
 user_role_list_xml = """
 <roles count="2" next_page="" num_pages="1" previous_page="" full_collection="http://testserver/api/v1/rbac/roles" end_index="1" limit="10" order_by="" per_page="10" filter_by="" id="http://testserver/api/v1/rbac/roles;start_index=0;limit=10" start_index="0">
   <role id="http://testserver/api/v1/rbac/roles/1">
-    <grants/>
+   <grants id="http://testserver/api/v1/rbac/roles/1/grants/"/>
     <role_id>1</role_id>
     <name>sysadmin</name>
     <description/>
@@ -417,7 +392,7 @@ user_role_list_xml = """
     <modified_by id="http://testserver/api/v1/users/1"/>
   </role>
   <role id="http://testserver/api/v1/rbac/roles/2">
-    <grants/>
+    <grants id="http://testserver/api/v1/rbac/roles/2/grants/"/>
     <role_id>2</role_id>
     <name>developer</name>
     <description/>
@@ -429,7 +404,7 @@ user_role_list_xml = """
 
 user_role_get_xml = """
 <role id="http://testserver/api/v1/rbac/roles/1">
-  <grants/>
+  <grants id="http://testserver/api/v1/rbac/roles/1/grants/"/>
   <role_id>1</role_id>
   <name>sysadmin</name>
   <description/>
@@ -488,7 +463,7 @@ user_role_post_xml_output = """
 <role id="http://testserver/api/v1/rbac/roles/3">
   <created_by id="http://testserver/api/v1/users/1"/>
   <description/>
-  <grants/>
+  <grants id="http://testserver/api/v1/rbac/roles/3/grants/"/>
   <modified_by id="http://testserver/api/v1/users/1"/>
   <name>intern</name>
   <role_id>3</role_id>
@@ -498,7 +473,7 @@ user_role_post_xml_output = """
 user_role_get_list_xml_after_delete = """
 <roles count="1" end_index="0" filter_by="" full_collection="http://testserver/api/v1/rbac/roles" id="http://testserver/api/v1/rbac/roles;start_index=0;limit=10" limit="10" next_page="" num_pages="1" order_by="" per_page="10" previous_page="" start_index="0">
   <role id="http://testserver/api/v1/rbac/roles/2">
-    <grants/>
+    <grants id="http://testserver/api/v1/rbac/roles/2/grants/"/>
     <role_id>2</role_id>
     <name>developer</name>
     <description/>

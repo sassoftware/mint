@@ -61,11 +61,13 @@ class User(modellib.XObjIdModel):
     active = modellib.XObjHidden(modellib.APIReadOnly(models.SmallIntegerField()))
     blurb = models.TextField()
     user_groups = modellib.DeferredManyToManyField(UserGroup, through="UserGroupMember", db_column='user_group_id', related_name='group')
+
     is_admin = modellib.SyntheticField()
     # Field used for the clear-text password when it is to be
     # set/changed
     password = modellib.XObjHidden(modellib.SyntheticField())
     roles = modellib.SyntheticField()
+    grants = modellib.SyntheticField()
 
     class Meta:
         # managed = settings.MANAGE_RBUILDER_MODELS
@@ -114,13 +116,10 @@ class User(modellib.XObjIdModel):
         if self.pk is not None:
             self.set_is_admin()
 
-        # user_roles is a mapping table, we want to surface the roles
-        # from mint.django_rest.rbuilder.rbac import models as rbacmodels
+        # sub-collections off of user
         self.roles = modellib.HrefField(
            href="/api/v1/users/%s/roles" % self.user_id
         )
-        # actual_roles = [ ur.role for ur in self.user_roles.all() ]
-        # self.roles.role = actual_roles
           
 
 class UserGroupMembers(modellib.Collection):

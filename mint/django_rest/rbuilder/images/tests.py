@@ -1,6 +1,6 @@
-import testsxml
-from xobj import xobj
-from mint.django_rest.rbuilder.images import models as imagemodels
+#import testsxml
+#from xobj import xobj
+#from mint.django_rest.rbuilder.images import models as imagemodels
 
 # Suppress all non critical msg's from output
 # still emits traceback for failed tests
