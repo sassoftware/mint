@@ -2,7 +2,7 @@ from mint.django_rest.rbuilder.inventory.tests import XMLTestCase
 from mint.django_rest.rbuilder.targets import models
 from mint.django_rest.rbuilder.targets import testsxml
 from xobj import xobj
-from testutils import mock
+# from testutils import mock
 
 class TargetsTestCase(XMLTestCase):
     def setUp(self):
@@ -79,12 +79,13 @@ class TargetsTestCase(XMLTestCase):
         self._initTestFixtures()
         response = self._get('target_types/', username='admin', password='password')
         self.assertXMLEquals(response.content, testsxml.target_types_GET)
-        
+    
+    # Finish
     def testGetTargetType(self):
         self._initTestFixtures()
-        response = self._get('target_types/1', username='admin', password='password')
-        self.assert
-        
+        # response = self._get('target_types/1', username='admin', password='password')
+    
+    # Finish
     def testGetTargetCredentialsForTargetByUserId(self):
         pass
     

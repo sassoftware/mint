@@ -1,7 +1,7 @@
-from django.http import HttpResponse, HttpResponseRedirect
+from django.http import HttpResponse# HttpResponseRedirect
 from mint.django_rest.deco import access, return_xml, requires
 from mint.django_rest.rbuilder import service
-from mint.django_rest.rbuilder.errors import PermissionDenied
+# from mint.django_rest.rbuilder.errors import PermissionDenied
 
 class TargetService(service.BaseService):
     
@@ -24,7 +24,8 @@ class TargetService(service.BaseService):
     @return_xml
     def rest_PUT(self, request, target_id, target):
         return self.mgr.updateTarget(target_id, target)
-        
+    
+    @access.admin
     def rest_DELETE(self, request, target_id):
         self.mgr.deleteTarget(target_id)
         return HttpResponse(status=204)
