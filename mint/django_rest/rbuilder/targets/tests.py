@@ -88,4 +88,3 @@ class TargetsTestCase(XMLTestCase):
     # Finish
     def testGetTargetCredentialsForTargetByUserId(self):
         pass
-    
