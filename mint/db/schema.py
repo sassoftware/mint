@@ -819,13 +819,25 @@ def _createTargets(db):
         cu.execute("""
             CREATE TABLE Targets (
                 targetId        %(PRIMARYKEY)s,
-                targetType      varchar(255)        NOT NULL,
+                targetType      integer            NOT NULL
+                    REFERENCES TargetTypes (targetType)
+                    ON DELETE CASCADE,
                 targetName      varchar(255)        NOT NULL
             ) %(TABLEOPTS)s""" % db.keywords)
         db.tables['Targets'] = []
         db.createIndex('Targets',
             'Targets_Type_Name_Uq', 'targetType, targetName', unique = True)
         changed = True
+
+    if 'TargetTypes' not in db.tables:
+        cu.execute("""
+            CREATE TABLE TargetTypes (
+            targettypeid     %(PRIMARYKEY)s,
+            type               varchar(255),
+            timecreated        numeric(14,3),
+            timeaccessed       numeric(14,3),
+            description        text
+        ) %(TABLEOPTS)s """ % db.keywords)
 
     if 'TargetData' not in db.tables:
         cu.execute("""

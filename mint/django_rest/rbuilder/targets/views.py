@@ -27,7 +27,7 @@ class TargetService(service.BaseService):
         
     def rest_DELETE(self, request, target_id):
         self.mgr.deleteTarget(target_id)
-        return HttpResponse(status_code=204)
+        return HttpResponse(status=204)
         
 
 class TargetTypeService(service.BaseService):

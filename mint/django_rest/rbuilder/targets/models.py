@@ -11,6 +11,7 @@ from django.db import models
 from mint.django_rest.rbuilder import modellib
 from mint.django_rest.rbuilder.users import models as usersmodels
 from xobj import xobj
+import sys
 
 XObjHidden = modellib.XObjHidden
 
@@ -22,8 +23,13 @@ class Targets(modellib.Collection):
     list_fields = ['target']
 
 class Target(modellib.XObjModel):
+    _xobj_hidden_accessors = set(
+        ['targetdata_set', 'targetimagesdeployed_set', 'targetusercredentials_set'])
+    
+    # why is target_id an integer field and not an autofield?? this 
+    # has implications for POSTs
     target_id = models.IntegerField(primary_key=True, db_column='targetid')
-    target_type = modellib.ForeignKey('TargetType', db_column='targettype')
+    target_type = models.ForeignKey('TargetType', db_column='targettype')
     target_name = models.CharField(unique=True, max_length=255, db_column='targetname')
     class Meta:
         db_table = u'targets'
@@ -46,12 +52,12 @@ class TargetData(modellib.XObjModel):
         db_table = u'targetdata'
         
     targetdata_id = models.AutoField(primary_key=True, db_column='targetdataid')    
-    target_id = models.ForeignKey(Targets, db_column="targetid")
+    target_id = models.ForeignKey('Target', db_column="targetid")
     name = models.CharField(max_length=255, null=False)
     value = models.TextField()
     # Uhm. django does not support multi-column PKs.
 
-class TargetCredential(modellib.XObjModel):
+class TargetCredentials(modellib.XObjModel):
     class Meta:
         db_table = u'targetcredentials'
     target_credentials_id = models.AutoField(primary_key=True,
@@ -59,15 +65,15 @@ class TargetCredential(modellib.XObjModel):
     credentials = models.TextField(null=False, unique=True)
 
 class TargetUserCredentials(modellib.XObjModel):
-    target_id = models.ForeignKey(Targets, db_column="targetid")
-    user_id = models.ForeignKey(usersmodels.User, db_column="userid")
-    target_credentials_id = models.ForeignKey(TargetCredentials,
+    target_id = models.ForeignKey('Target', db_column="targetid")
+    user_id = models.ForeignKey(usersmodels.User, db_column="userid", related_name='target_user_id')
+    target_credentials_id = models.ForeignKey('TargetCredentials',
         db_column="targetcredentialsid")
     class Meta:
         db_table = u'targetusercredentials'
 
 class TargetImagesDeployed(modellib.XObjModel):
-    target_id = models.ForeignKey(Targets, db_column="targetid")
+    target_id = models.ForeignKey('Target', db_column="targetid")
     file_id = models.IntegerField(null=False, db_column='fileid')
     target_image_id = models.CharField(max_length=128, db_column='targetimageid')
     class Meta:
@@ -76,13 +82,24 @@ class TargetImagesDeployed(modellib.XObjModel):
 class TargetTypes(modellib.Collection):
     class Meta:
         abstract = True
+        
     _xobj = xobj.XObjMetadata(tag='target_types')
     list_fields = ['target_type']
     
 class TargetType(modellib.XObjModel):
+    class Meta:
+         db_table = u'targettypes'
+         
     target_type_id = models.AutoField(primary_key=True, db_column='targettypeid')
     type = models.CharField(max_length=255)
     created_date = modellib.DecimalField(max_digits=14, decimal_places=3, db_column='timecreated')
     modified_date = modellib.DecimalField(max_digits=14, decimal_places=3, db_column='timeaccessed')
     description = models.TextField(null=True, blank=True)
-    
+
+
+for mod_obj in sys.modules[__name__].__dict__.values():
+    if hasattr(mod_obj, '_xobj'):
+        if mod_obj._xobj.tag:
+            modellib.type_map[mod_obj._xobj.tag] = mod_obj
+    if hasattr(mod_obj, '_meta'):
+        modellib.type_map[mod_obj._meta.verbose_name] = mod_obj   

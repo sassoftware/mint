@@ -110,6 +110,7 @@ INSTALLED_APPS = (
     'mint.django_rest.rbuilder.platforms',
     'mint.django_rest.rbuilder.repos',
     'mint.django_rest.rbuilder.rbac',
+    'mint.django_rest.rbuilder.targets',
     #'mint.django_rest.rbuilder.images',
 )
 
