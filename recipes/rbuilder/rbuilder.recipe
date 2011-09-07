@@ -61,6 +61,7 @@ class rBuilderProduct(CPackageRecipe):
         'pyOpenSSL:python',
         'python-dateutil:python',
         'python:devel',
+        'python-pam:python',
         'python-pgsql:python',
         'python-twisted:python',
         'rapa:python',
@@ -143,6 +144,9 @@ class rBuilderProduct(CPackageRecipe):
         r.Ownership('apache', 'root',
             r'/etc/rmake/(node|server).d/25_rbuilder-rapa.conf')
 
+        # create run directory for authentication service
+        r.MakeDirs('/var/lib/twisted-taps/rbuilder-authn')
+        r.ExcludeDirectories(exceptions='/var/lib/twisted-taps/rbuilder-authn')
 
         # known-good mount point for /mnt/mirror/
         r.MakeDirs('/mnt/mirror')
