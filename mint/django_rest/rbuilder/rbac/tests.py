@@ -518,11 +518,11 @@ class RbacUserRoleViewTests(RbacTestCase):
         self.assertEqual(user_role.user.pk, self.admin_user.pk)
         self.assertEqual(user_role.role.name, 'intern')
 
-        # UI was having some problems adding user roles, post some XML similar to what
-        # it would post and see if we can detect why it fails
-        #content = self.req(url, method='POST', data=testsxml.user_role_post_bad_xml_input,
-        #      expect=200, is_admin=True)
-        #print content
+        # list users in role to make sure that relationship collection works
+        url = 'rbac/roles/3/users/'
+        content = self.req(url, method='GET', expect=401, is_authenticated=True)
+        content = self.req(url, method='GET', expect=200, is_admin=True)
+        self.assertXMLEquals(content, testsxml.users_in_role_xml)
 
     def testCanDeleteUserRoles(self):
         user_id = self.admin_user.pk
@@ -573,7 +573,6 @@ class RbacEngine(RbacTestCase):
             )
             assert response.status_code == 200
             user = xobj.parse(response.content)
-            #print response.content            
 
             dbuser = usersmodels.User.objects.get(pk = int(user.user.user_id))
 

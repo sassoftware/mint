@@ -144,6 +144,20 @@ class RbacManager(basemanager.BaseManager):
         ).order_by('queryset', 'role', 'permission')
         grants.grant = all
         return grants
+
+    @exposed
+    def getRbacUsersForRole(self, role):
+        role = self._role(role)
+        users = usersmodels.Users()
+        rbac_user_roles = models.RbacUserRole.objects.all()
+        rbac_user_roles = models.RbacUserRole.objects.filter(
+            role = role
+        ).order_by('user')
+        user_results = usersmodels.User.objects.filter(
+            user_roles__in = rbac_user_roles
+        )
+        users.user = user_results
+        return users
  
     @exposed
     def addRbacPermission(self, permission, by_user):

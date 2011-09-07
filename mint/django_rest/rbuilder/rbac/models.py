@@ -86,10 +86,14 @@ class RbacRole(modellib.XObjIdModel):
     modified_by   =  D(APIReadOnly(modellib.ForeignKey(usersmodels.User, null=True, 
         related_name='+', db_column='modified_by')), 'user who last modified this resource')
     grants        =  D(modellib.SyntheticField(), 'permissions granted on this role')
+    users         =  D(modellib.SyntheticField(), 'users with this role')
     
     def computeSyntheticFields(self, sender, **kwargs):
         self.grants = modellib.HrefField(
            href="/api/v1/rbac/roles/%s/grants/" % self.role_id
+        )
+        self.users = modellib.HrefField(
+           href="/api/v1/rbac/roles/%s/users/" % self.role_id
         )
 
 class RbacPermissions(modellib.Collection):

@@ -210,4 +210,33 @@ class RbacRoleGrantsService(BaseRbacService):
         return HttpResponse(status=204)
 
 
+class RbacRoleUsersService(BaseRbacService):
+    """
+    What roles have what users?
+    """
+
+    # READ
+    @access.admin
+    @return_xml
+    def rest_GET(self, request, role_id, user_id=None):
+        return self.get(role_id, user_id)
+
+    def get(self, role_id, user_id=None):
+        if user_id is not None:
+            return self.mgr.getUser(user_id)
+        else:
+            return self.mgr.getRbacUsersForRole(role_id)
+
+    # CREATE -- ADD A RBAC USER TO A ROLE
+    @access.admin
+    @requires('user', save=False)
+    @return_xml
+    def rest_POST(self, request, role_id, user):
+        return self.mgr.addRbacUserRole(user.pk, role_id, request._authUser)
+
+    # DELETE
+    @access.admin
+    def rest_DELETE(self, request, role_id, user_id):
+        self.mgr.deleteRbacUserRole(user_id, role_id)
+        return HttpResponse(status=204)
 

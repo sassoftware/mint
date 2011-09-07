@@ -59,6 +59,7 @@ tradingfloor_xml = """
 role_put_xml_input = """
 <role id="http://testserver/api/v1/rbac/roles/2">
    <grants id="http://testserver/api/v1/rbac/roles/2/grants/"/>
+   <users id="http://testserver/api/v1/rbac/roles/2/users/"/>
    <role_id>2</role_id>
    <name>rocketsurgeon</name>
    <description></description>
@@ -68,6 +69,7 @@ role_put_xml_input = """
 role_put_xml_output = """
 <role id="http://testserver/api/v1/rbac/roles/2">
    <grants id="http://testserver/api/v1/rbac/roles/2/grants/"/>
+   <users id="http://testserver/api/v1/rbac/roles/2/users/"/>
    <role_id>2</role_id>
    <name>rocketsurgeon</name>
    <description></description>
@@ -86,6 +88,7 @@ role_post_xml_input = """
 role_post_xml_output = """
 <role id="http://testserver/api/v1/rbac/roles/4">
   <grants id="http://testserver/api/v1/rbac/roles/4/grants/"/>
+  <users id="http://testserver/api/v1/rbac/roles/4/users/"/>
   <role_id>4</role_id>
   <name>rocketsurgeon</name>
   <description/>
@@ -97,6 +100,7 @@ role_post_xml_output = """
 role_list_xml = """
 <roles count="3" end_index="2" filter_by="" full_collection="http://testserver/api/v1/rbac/roles" id="http://testserver/api/v1/rbac/roles;start_index=0;limit=10" limit="10" next_page="" num_pages="1" order_by="" per_page="10" previous_page="" start_index="0">
   <role id="http://testserver/api/v1/rbac/roles/1">
+    <users id="http://testserver/api/v1/rbac/roles/1/users/"/>
     <grants id="http://testserver/api/v1/rbac/roles/1/grants/"/>
     <role_id>1</role_id>
     <description/>
@@ -106,6 +110,7 @@ role_list_xml = """
   </role>
   </role>
   <role id="http://testserver/api/v1/rbac/roles/2">
+    <users id="http://testserver/api/v1/rbac/roles/2/users/"/>
     <grants id="http://testserver/api/v1/rbac/roles/2/grants/"/>
     <role_id>2</role_id>
     <description/>
@@ -114,6 +119,7 @@ role_list_xml = """
     <modified_by id="http://testserver/api/v1/users/1"/>
   </role>
   <role id="http://testserver/api/v1/rbac/roles/3">
+    <users id="http://testserver/api/v1/rbac/roles/3/users/"/>
     <grants id="http://testserver/api/v1/rbac/roles/3/grants/"/>
     <role_id>2</role_id>
     <description/>
@@ -127,6 +133,7 @@ role_list_xml = """
 role_queryset_xml = """
 <roles count="3" end_index="2" filter_by="" full_collection="http://testserver/api/v1/query_sets/12/all" id="http://testserver/api/v1/query_sets/12/all;start_index=0;limit=10" limit="10" next_page="" num_pages="1" order_by="" per_page="10" previous_page="" start_index="0">
   <role id="http://testserver/api/v1/rbac/roles/1">
+    <users id="http://testserver/api/v1/rbac/roles/1/users/"/>
     <grants id="http://testserver/api/v1/rbac/roles/1/grants/"/>
     <role_id>1</role_id>
     <description/>
@@ -135,6 +142,7 @@ role_queryset_xml = """
     <modified_by id="http://testserver/api/v1/users/1"/>
   </role>
   <role id="http://testserver/api/v1/rbac/roles/2">
+    <users id="http://testserver/api/v1/rbac/roles/2/users/"/>
     <grants id="http://testserver/api/v1/rbac/roles/2/grants/"/>
     <role_id>2</role_id>
     <description/>
@@ -143,6 +151,7 @@ role_queryset_xml = """
     <modified_by id="http://testserver/api/v1/users/1"/>
   </role>
   <role id="http://testserver/api/v1/rbac/roles/3">
+    <users id="http://testserver/api/v1/rbac/roles/3/users/"/>
     <grants id="http://testserver/api/v1/rbac/roles/3/grants/"/>
     <role_id>3</role_id>
     <description/>
@@ -159,6 +168,7 @@ role_list_xml_with_grants = """
     <created_by id="http://testserver/api/v1/users/1"/>
     <description/>
     <grants id="http://testserver/api/v1/rbac/roles/1/grants/"/>
+    <users id="http://testserver/api/v1/rbac/roles/1/users/"/>
     <modified_by id="http://testserver/api/v1/users/1"/>
     <name>sysadmin</name>
     <role_id>1</role_id>
@@ -167,6 +177,7 @@ role_list_xml_with_grants = """
     <created_by id="http://testserver/api/v1/users/1"/>
     <description/>
     <grants id="http://testserver/api/v1/rbac/roles/2/grants/"/>
+    <users id="http://testserver/api/v1/rbac/roles/2/users/"/>
     <modified_by id="http://testserver/api/v1/users/1"/>
     <name>developer</name>
     <role_id>2</role_id>
@@ -175,6 +186,7 @@ role_list_xml_with_grants = """
     <created_by id="http://testserver/api/v1/users/1"/>
     <description/>
     <grants id="http://testserver/api/v1/rbac/roles/3/grants/"/>
+    <users id="http://testserver/api/v1/rbac/roles/3/users/"/>
     <modified_by id="http://testserver/api/v1/users/1"/>
     <name>intern</name>
     <role_id>3</role_id>
@@ -185,6 +197,7 @@ role_list_xml_with_grants = """
 role_get_xml = """
 <role id="http://testserver/api/v1/rbac/roles/2">
   <grants id="http://testserver/api/v1/rbac/roles/2/grants/"/>
+  <users id="http://testserver/api/v1/rbac/roles/2/users/"/>
   <role_id>2</role_id>
   <name>developer</name>
   <description/>
@@ -384,7 +397,8 @@ permission_put_xml_output="""
 user_role_list_xml = """
 <roles count="2" next_page="" num_pages="1" previous_page="" full_collection="http://testserver/api/v1/rbac/roles" end_index="1" limit="10" order_by="" per_page="10" filter_by="" id="http://testserver/api/v1/rbac/roles;start_index=0;limit=10" start_index="0">
   <role id="http://testserver/api/v1/rbac/roles/1">
-   <grants id="http://testserver/api/v1/rbac/roles/1/grants/"/>
+    <grants id="http://testserver/api/v1/rbac/roles/1/grants/"/>
+    <users id="http://testserver/api/v1/rbac/roles/1/users/"/>
     <role_id>1</role_id>
     <name>sysadmin</name>
     <description/>
@@ -393,6 +407,7 @@ user_role_list_xml = """
   </role>
   <role id="http://testserver/api/v1/rbac/roles/2">
     <grants id="http://testserver/api/v1/rbac/roles/2/grants/"/>
+    <users id="http://testserver/api/v1/rbac/roles/2/users/"/>
     <role_id>2</role_id>
     <name>developer</name>
     <description/>
@@ -405,6 +420,7 @@ user_role_list_xml = """
 user_role_get_xml = """
 <role id="http://testserver/api/v1/rbac/roles/1">
   <grants id="http://testserver/api/v1/rbac/roles/1/grants/"/>
+  <users id="http://testserver/api/v1/rbac/roles/1/users/"/>
   <role_id>1</role_id>
   <name>sysadmin</name>
   <description/>
@@ -464,6 +480,7 @@ user_role_post_xml_output = """
   <created_by id="http://testserver/api/v1/users/1"/>
   <description/>
   <grants id="http://testserver/api/v1/rbac/roles/3/grants/"/>
+  <users id="http://testserver/api/v1/rbac/roles/3/users/"/>
   <modified_by id="http://testserver/api/v1/users/1"/>
   <name>intern</name>
   <role_id>3</role_id>
@@ -474,6 +491,7 @@ user_role_get_list_xml_after_delete = """
 <roles count="1" end_index="0" filter_by="" full_collection="http://testserver/api/v1/rbac/roles" id="http://testserver/api/v1/rbac/roles;start_index=0;limit=10" limit="10" next_page="" num_pages="1" order_by="" per_page="10" previous_page="" start_index="0">
   <role id="http://testserver/api/v1/rbac/roles/2">
     <grants id="http://testserver/api/v1/rbac/roles/2/grants/"/>
+    <users id="http://testserver/api/v1/rbac/roles/2/users/"/>
     <role_id>2</role_id>
     <name>developer</name>
     <description/>
@@ -515,4 +533,34 @@ permission_type_get_xml = """
   <permission_id>2</permission_id>
 </permission>
 """
+
+users_in_role_xml = """
+<users count="2" end_index="1" filter_by="" full_collection="http://testserver/api/v1/users" id="http://testserver/api/v1/users;start_index=0;limit=10" limit="10" next_page="" num_pages="1" order_by="" per_page="10" previous_page="" start_index="0">
+  <user id="http://testserver/api/v1/users/2000">
+    <blurb>null</blurb>
+    <display_email/>
+    <email>testuser@rpath.com</email>
+    <full_name>Test User</full_name>
+    <is_admin>false</is_admin>
+    <roles id="http://testserver/api/v1/users/2000/roles"/>
+    <target_user_id/>
+    <user_groups/>
+    <user_id>2000</user_id>
+    <user_name>testuser</user_name>
+  </user>
+  <user id="http://testserver/api/v1/users/1">
+    <blurb/>
+    <display_email/>
+    <email>admin@rpath.com</email>
+    <full_name>Administrator</full_name>
+    <is_admin>true</is_admin>
+    <roles id="http://testserver/api/v1/users/1/roles"/>
+    <target_user_id/>
+    <user_groups/>
+    <user_id>1</user_id>
+    <user_name>admin</user_name>
+  </user>
+</users>
+"""
+
 
