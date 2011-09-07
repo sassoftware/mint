@@ -36,7 +36,10 @@ class ImageDefinitionDescriptor(modellib.XObjIdModel):
         abstract = True
 
     _xobj = xobj.XObjMetadata(tag='image_definition_descriptor')
-    name = models.CharField()
+
+    name = models.TextField()
+    description = models.TextField()
+    architecture = models.TextField()
     id  = modellib.HrefField()
     view_name = 'ImageDefinitionDescriptor'
 
@@ -46,7 +49,7 @@ class ImageDefinitionDescriptor(modellib.XObjIdModel):
         return xobj_model
 
     def get_absolute_url(self, request, *args, **kwargs):
-        segment =  reverse(ImageDefinitionDescriptor.view_name, args=[self.name])
+        segment =  reverse(ImageDefinitionDescriptor.view_name, args=[self.name, self.architecture])
         if request is not None:
             fullpath = request.get_full_path()
             return request.build_absolute_uri(

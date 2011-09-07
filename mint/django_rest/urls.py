@@ -626,7 +626,7 @@ urlpatterns = patterns('',
     URL(r'images/image_definition_descriptors/?$',
         imageviews.ImageDefinitionDescriptorsService(),
         name='ImageDefinitionDescriptors'),
-    URL(r'images/image_definition_descriptors/(?P<image_definition_type>\w+)/?$',
+    URL(r'images/image_definition_descriptors/(?P<image_definition_type>\w+)/(?P<architecture>\w+)?$',
         imageviews.ImageDefinitionDescriptorService(),
         name='ImageDefinitionDescriptor')
     
