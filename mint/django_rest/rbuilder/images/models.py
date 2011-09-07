@@ -112,7 +112,6 @@ class ImageFile(modellib.XObjIdModel):
     title= models.TextField()
     size     = models.BigIntegerField(null=True)
     sha1     = models.TextField(null=True)
-    fileName = models.TextField(null=True)     #column not present in the DB
 
 
 # UNTESTED/UNUSED:        

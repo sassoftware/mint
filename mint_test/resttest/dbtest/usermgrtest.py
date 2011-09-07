@@ -15,6 +15,12 @@ class UserManagerTest(mint_rephelp.MintDatabaseHelper):
         if not os.path.exists(tmgr.TargetImportScriptPath):
             self.mock(tmgr, 'importTargetSystems',
                 lambda *args, **kwargs: True)
+        db = self.openMintDatabase(createRepos=False)
+        cu = db.cursor()
+        for ttype in [ 'tType', ]:
+            cu.execute("INSERT INTO target_types (name, description) VALUES (?, ?)",
+                ttype, ttype + " description")
+        db.commit()
 
     def testCancelUserAccount(self):
         db = self.openMintDatabase(createRepos=False)
