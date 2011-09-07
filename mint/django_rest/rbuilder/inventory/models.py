@@ -22,7 +22,6 @@ from mint.django_rest.rbuilder import models as rbuildermodels
 from mint.django_rest.rbuilder.projects.models import Project, ProjectVersion, Stage
 from mint.django_rest.rbuilder.users import models as usersmodels
 from mint.django_rest.rbuilder.jobs import models as jobmodels
-from mint.django_rest.rbuilder.rbac import models as rbacmodels
 from mint.django_rest.rbuilder.inventory import zones as zmodels
 from mint.django_rest.rbuilder.targets import models as targetmodels
 from xobj import xobj

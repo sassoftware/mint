@@ -24,7 +24,6 @@ from mint import config as mintconfig
 from mint.db import schema
 from mint.django_rest.rbuilder.inventory import models as invmodels
 from mint.django_rest.rbuilder.inventory import zones as zmodels
-from mint.django_rest.rbuilder.inventory import views
 from mint.django_rest.rbuilder.jobs import models as jobmodels
 from mint.django_rest.rbuilder.manager import basemanager
 from mint.django_rest.rbuilder.manager import rbuildermanager
