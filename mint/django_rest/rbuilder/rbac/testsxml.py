@@ -543,7 +543,7 @@ users_in_role_xml = """
     <full_name>Test User</full_name>
     <is_admin>false</is_admin>
     <roles id="http://testserver/api/v1/users/2000/roles"/>
-    <target_user_id/>
+    <target_user_credentials/>
     <user_groups/>
     <user_id>2000</user_id>
     <user_name>testuser</user_name>
@@ -555,7 +555,7 @@ users_in_role_xml = """
     <full_name>Administrator</full_name>
     <is_admin>true</is_admin>
     <roles id="http://testserver/api/v1/users/1/roles"/>
-    <target_user_id/>
+    <target_user_credentials/>
     <user_groups/>
     <user_id>1</user_id>
     <user_name>admin</user_name>
