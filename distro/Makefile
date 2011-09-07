@@ -56,6 +56,7 @@ install: default-install httpd-sysconfig
 	install -D -m0755 rbuilder.tmpwatch $(DESTDIR)/etc/cron.daily/rbuilder.tmpwatch
 	install -D -m0755 chrootcache.tmpwatch $(DESTDIR)/etc/cron.daily/chrootcache.tmpwatch
 	install -D -m0755 rbuilder.init $(DESTDIR)/etc/init.d/rbuilder
+	install -D -m0755 rbuilder-authn.init $(DESTDIR)/etc/init.d/rbuilder-authn
 	# splashy theme
 	install -D -m0644 splashy.xml $(DESTDIR)/usr/share/splashy/themes/rbuilder/theme.xml
 	install -D -m0644 FreeSans.ttf $(DESTDIR)/usr/share/splashy/themes/rbuilder/FreeSans.ttf
