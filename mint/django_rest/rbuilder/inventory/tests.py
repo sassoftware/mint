@@ -18,6 +18,8 @@ from mint.django_rest.rbuilder.inventory import views
 from mint.django_rest.rbuilder.manager import rbuildermanager
 from mint.django_rest.rbuilder.users import models as usersmodels
 from mint.django_rest.rbuilder.inventory import models
+from mint.django_rest.rbuilder.inventory import zones as zmodels
+from mint.django_rest.rbuilder.targets import models as targetmodels
 from mint.django_rest.rbuilder.jobs import models as jobmodels
 from mint.django_rest.rbuilder.inventory import testsxml
 from mint.django_rest.rbuilder.projects import models as projectmodels
@@ -188,7 +190,7 @@ class LogTestCase(XMLTestCaseStandin):
 class ZonesTestCase(XMLTestCaseStandin):
 
     def testGetZones(self):
-        models.Zone.objects.all().delete()
+        zmodels.Zone.objects.all().delete()
         zone = self._saveZone()
         # Create a system, just for kicks
         system = self.newSystem(name="foo", managing_zone=zone)
@@ -213,7 +215,7 @@ class ZonesTestCase(XMLTestCaseStandin):
         self.assertEquals(response.status_code, 200)
 
     def testGetZone(self):
-        models.Zone.objects.all().delete()
+        zmodels.Zone.objects.all().delete()
         zone = self._saveZone()
         response = self._get('inventory/zones/2/',
             username="testuser", password="password")
@@ -248,12 +250,12 @@ class ZonesTestCase(XMLTestCaseStandin):
         self.assertEquals(response.status_code, 401)
         
     def testPostZone(self):
-        models.Zone.objects.all().delete()
+        zmodels.Zone.objects.all().delete()
         xml = testsxml.zone_post_xml
         response = self._post('inventory/zones/',
             data=xml, username="admin", password="password")
         self.assertEquals(response.status_code, 200)
-        zone = models.Zone.objects.get(pk=2)
+        zone = zmodels.Zone.objects.get(pk=2)
         self.assertXMLEquals(response.content, testsxml.zone_post_response_xml % \
             (zone.created_date.isoformat()))
         
@@ -261,14 +263,14 @@ class ZonesTestCase(XMLTestCaseStandin):
         response = self._post('inventory/zones/',
             data=testsxml.zone_post_2_xml, username="admin", password="password")
         self.assertEquals(response.status_code, 200)
-        zones = models.Zone.objects.all()
+        zones = zmodels.Zone.objects.all()
         self.assertTrue(len(zones) == 2)
         
     def testPutZoneAuth(self):
         """
         Ensure we require admin to put zones
         """
-        zone = models.Zone.objects.get(pk=1)
+        zone = zmodels.Zone.objects.get(pk=1)
         response = self._put('inventory/zones/1/', 
             data=testsxml.zone_put_xml % zone.created_date)
         self.assertEquals(response.status_code, 401)
@@ -282,7 +284,7 @@ class ZonesTestCase(XMLTestCaseStandin):
         """
         Ensure we return 404 if we update zone that doesn't exist
         """
-        zone = models.Zone.objects.get(pk=1)
+        zone = zmodels.Zone.objects.get(pk=1)
         try:
             response = self._put('inventory/zones/1zcvxzvzgvsdzfewrew4t4tga34/', 
                 data=testsxml.zone_put_xml % zone.created_date,
@@ -293,12 +295,12 @@ class ZonesTestCase(XMLTestCaseStandin):
             self.assertTrue("404" in str(e))
         
     def testPutZone(self):
-        models.Zone.objects.all().delete()
+        zmodels.Zone.objects.all().delete()
         zone = self._saveZone()
         response = self._put('inventory/zones/%d/' % zone.zone_id,
             data=testsxml.zone_put_xml % zone.created_date, username="admin", password="password")
         self.assertEquals(response.status_code, 200)
-        zone = models.Zone.objects.get(pk=zone.zone_id)
+        zone = zmodels.Zone.objects.get(pk=zone.zone_id)
         self.assertTrue(zone.name == "zoneputname")
         self.assertTrue(zone.description == "zoneputdesc")
         
@@ -317,15 +319,15 @@ class ZonesTestCase(XMLTestCaseStandin):
         """
         Ensure we can delete zones
         """
-        models.Zone.objects.all().delete()
+        zmodels.Zone.objects.all().delete()
         self._saveZone()
         response = self._delete('inventory/zones/2/',
             username="admin", password="password")
         self.assertEquals(response.status_code, 204)
         try:
-            models.Zone.objects.get(pk=1)
+            zmodels.Zone.objects.get(pk=1)
             self.fail("Lookup should have failed due to deletion")
-        except models.Zone.DoesNotExist:
+        except zmodels.Zone.DoesNotExist:
             pass # what we expect
         
 class ManagementInterfacesTestCase(XMLTestCaseStandin):
@@ -677,7 +679,7 @@ class ManagementNodesTestCase(XMLTestCaseStandin):
                                              management_node.created_date.isoformat()))
 
     def testPutManagementNodes(self):
-        lz = models.Zone.LOCAL_ZONE
+        lz = zmodels.Zone.LOCAL_ZONE
         management_node0 = self._saveManagementNode(zoneName=lz)
         self._saveManagementNode(idx=1, zoneName=lz)
         dataTempl = """
@@ -727,8 +729,8 @@ class ManagementNodesTestCase(XMLTestCaseStandin):
 
         obj = xobj.parse(response.content)
         nodes = obj.management_nodes.management_node
-        zone0 = models.Zone.objects.get(name='new zone 0')
-        zone2 = models.Zone.objects.get(name='new zone 2')
+        zone0 = zmodels.Zone.objects.get(name='new zone 0')
+        zone2 = zmodels.Zone.objects.get(name='new zone 2')
         exp = [(management_node0.node_jid, zone0.zone_id, 'false',
                 'test management node', zone0.zone_id,),
             # RBL-7703: this should go away
@@ -1600,8 +1602,10 @@ class SystemsTestCase(XMLTestCaseStandin):
 
     def testGetSystemWithTarget(self):
         models.System.objects.all().delete()
-        target = rbuildermodels.Targets(pk=1, target_type='testtargettype',
-            target_name='testtargetname')
+        targetType = targetmodels.TargetType.objects.get(name='vmware')
+        target = targetmodels.Target(target_type=targetType,
+            name='testtargetname', description='testtargetdescription',
+            zone=self.localZone)
         target.save()
         system = self._saveSystem()
         system.target = target
@@ -2033,7 +2037,7 @@ class SystemsTestCase(XMLTestCaseStandin):
         targetSystemName = 'target system name 001'
         targetSystemDescription = 'target system description 001'
         targetSystemState = "Obflusterating"
-        tgt1 = rbuildermodels.Targets.objects.get(pk=1) # vsphere1
+        tgt1 = targetmodels.Target.objects.get(pk=1) # vsphere1
         system1 = self.newSystem(name="bloppy", target=tgt1,
             target_system_id=targetSystemId,
             target_system_name=targetSystemName,
@@ -4196,12 +4200,12 @@ class TargetSystemImportTest(XMLTestCaseStandin):
         zone = self.localZone
 
         # Create some dummy systems
-        self.tgt1 = rbuildermodels.Targets.objects.get(pk=1) # vsphere1
-        self.tgt2 = rbuildermodels.Targets.objects.get(pk=2) # vsphere2
-        self.tgt3 = rbuildermodels.Targets.objects.get(pk=3) # ec2
-        c1 = rbuildermodels.TargetCredentials.objects.get(pk=1)
-        c2 = rbuildermodels.TargetCredentials.objects.get(pk=2)
-        c3 = rbuildermodels.TargetCredentials.objects.get(pk=3)
+        self.tgt1 = targetmodels.Target.objects.get(pk=1) # vsphere1
+        self.tgt2 = targetmodels.Target.objects.get(pk=2) # vsphere2
+        self.tgt3 = targetmodels.Target.objects.get(pk=3) # ec2
+        c1 = targetmodels.TargetCredentials.objects.get(pk=1)
+        c2 = targetmodels.TargetCredentials.objects.get(pk=2)
+        c3 = targetmodels.TargetCredentials.objects.get(pk=3)
         systems = [
             ('vsphere1-001', 'vsphere1 001', self.tgt1, [c2]),
             ('vsphere1-002', 'vsphere1 002', self.tgt1, [c1, c2]),
@@ -4237,9 +4241,10 @@ class TargetSystemImportTest(XMLTestCaseStandin):
         self.failUnlessEqual(models.System.objects.get(
             target_system_id='ec2aws-002').target, None)
 
-        for (targetType, targetName, userName, tsystems) in self._targets:
-            tgt = rbuildermodels.Targets.objects.get(target_type=targetType,
-                target_name=targetName)
+        for (targetTypeName, targetName, userName, tsystems) in self._targets:
+            targetType = targetmodels.TargetType.objects.get(name=targetTypeName)
+            tgt = targetmodels.Target.objects.get(target_type=targetType,
+                name=targetName)
             for tsystem in tsystems:
                 # Make sure we linked this system to the target
                 system = models.System.objects.get(target=tgt,
@@ -4248,9 +4253,9 @@ class TargetSystemImportTest(XMLTestCaseStandin):
                 cred_ids = set(x.credentials_id
                     for x in system.target_credentials.all())
                 try:
-                    tuc = rbuildermodels.TargetUserCredentials.objects.get(
+                    tuc = targetmodels.TargetUserCredentials.objects.get(
                         target_id=tgt, user_id__user_name = userName)
-                except rbuildermodels.TargetUserCredentials.DoesNotExist:
+                except targetmodels.TargetUserCredentials.DoesNotExist:
                     self.fail("System %s not linked to user %s" % (
                         system.target_system_id, userName))
                 self.failUnlessIn(
@@ -4313,9 +4318,9 @@ class TargetSystemImportTest(XMLTestCaseStandin):
         user2 = usersmodels.User.objects.get(user_name='JeanValjean2')
         user3 = usersmodels.User.objects.get(user_name='JeanValjean3')
         self.failUnlessEqual(
-            rbuildermodels.TargetUserCredentials.objects.get(
+            targetmodels.TargetUserCredentials.objects.get(
                 target_id=self.tgt3, user_id=user1).target_credentials_id.pk,
-            rbuildermodels.TargetUserCredentials.objects.get(
+            targetmodels.TargetUserCredentials.objects.get(
                 target_id=self.tgt3, user_id=user2).target_credentials_id.pk,
         )
 
@@ -4356,7 +4361,7 @@ class TargetSystemImportTest(XMLTestCaseStandin):
         system = self.newSystem(**params)
         system = self.mgr.addLaunchedSystem(system,
             dnsName=dnsName,
-            targetName=self.tgt2.target_name,
+            targetName=self.tgt2.name,
             targetType=self.tgt2.target_type)
         for k, v in params.items():
             self.failUnlessEqual(getattr(system, k), v)
@@ -4364,9 +4369,9 @@ class TargetSystemImportTest(XMLTestCaseStandin):
         stc = list(system.target_credentials.all())[0]
         self.failUnlessIn(stc.credentials_id,
             [ x.target_credentials_id.target_credentials_id
-                for x in user2.targetusercredentials_set.all() ])
+                for x in user2.target_user_credentials.all() ])
         self.failUnlessEqual(system.managing_zone.name,
-            models.Zone.LOCAL_ZONE)
+            zmodels.Zone.LOCAL_ZONE)
         self.failUnlessEqual(system.target_system_name, params['target_system_name'])
         self.failUnlessEqual(system.name, params['target_system_name'])
         self.failUnlessEqual(system.target_system_description,
@@ -4383,7 +4388,7 @@ class TargetSystemImportTest(XMLTestCaseStandin):
 
         system = self.mgr.addLaunchedSystem(system,
             dnsName=dnsName,
-            targetName=self.tgt2.target_name,
+            targetName=self.tgt2.name,
             targetType=self.tgt2.target_type)
 
         self.failUnlessEqual(system.target_system_name, params['target_system_name'])

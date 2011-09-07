@@ -8,12 +8,24 @@ import urlparse
 
 from django.db import models
 
+from mint.django_rest.deco import D
 from mint.django_rest.rbuilder import modellib
 from mint.django_rest.rbuilder.users import models as usersmodels
+from mint.django_rest.rbuilder.inventory import zones as zmodels
 from xobj import xobj
 import sys
 
 XObjHidden = modellib.XObjHidden
+
+class TargetType(modellib.XObjModel):
+    class Meta:
+         db_table = 'target_types'
+
+    target_type_id = models.AutoField(primary_key=True)
+    name = D(models.TextField(unique=True), "Target Type Name")
+    description = D(models.TextField(null=False), "Target Type Description")
+    created_date = D(modellib.DateTimeUtcField(auto_now_add=True), "the date the resource was created (UTC)")
+    modified_date = D(modellib.DateTimeUtcField(auto_now_add=True), "the date the resource was modified (UTC)")
 
 class Targets(modellib.Collection):
     class Meta:
@@ -24,28 +36,19 @@ class Targets(modellib.Collection):
 
 class Target(modellib.XObjModel):
     _xobj_hidden_accessors = set(
-        ['targetdata_set', 'targetimagesdeployed_set', 'targetusercredentials_set'])
-    
-    # why is target_id an integer field and not an autofield?? this 
-    # has implications for POSTs
-    target_id = models.IntegerField(primary_key=True, db_column='targetid')
-    target_type = models.ForeignKey('TargetType', db_column='targettype')
-    target_name = models.CharField(unique=True, max_length=255, db_column='targetname')
+        ['targetdata_set', 'targetimagesdeployed_set', 'targetusercredentials_set', 'system_set', ])
+
     class Meta:
         db_table = u'targets'
 
-    def get_absolute_url(self, request=None, parents=None, values=None):
-        path = '/catalog/clouds/%s/instances/%s' % \
-            (self.target_type, self.target_name)
-        if request:
-            uri = request.build_absolute_uri()
-            parts = urlparse.urlparse(uri)
-            parts = list(parts)
-            parts[2] = path
-            parts[4] = ''
-            return urlparse.urlunparse(parts)
-        else:
-            return path
+    target_id = models.AutoField(primary_key=True, db_column='targetid')
+    target_type = modellib.DeferredForeignKey(TargetType, null=False,
+        related_name='targets', view_name='TargetTypeTargets')
+    zone = modellib.DeferredForeignKey(zmodels.Zone, null=False,
+        related_name='targets')
+    name = models.TextField(null=False)
+    description = models.TextField(null=False)
+    unique_together = (target_type, name)
 
 class TargetData(modellib.XObjModel):
     class Meta:
@@ -66,7 +69,8 @@ class TargetCredentials(modellib.XObjModel):
 
 class TargetUserCredentials(modellib.XObjModel):
     target_id = models.ForeignKey('Target', db_column="targetid")
-    user_id = models.ForeignKey(usersmodels.User, db_column="userid", related_name='target_user_id')
+    user_id = models.ForeignKey(usersmodels.User, db_column="userid",
+        related_name='target_user_credentials')
     target_credentials_id = models.ForeignKey('TargetCredentials',
         db_column="targetcredentialsid")
     class Meta:
@@ -85,17 +89,6 @@ class TargetTypes(modellib.Collection):
         
     _xobj = xobj.XObjMetadata(tag='target_types')
     list_fields = ['target_type']
-    
-class TargetType(modellib.XObjModel):
-    class Meta:
-         db_table = u'targettypes'
-         
-    target_type_id = models.AutoField(primary_key=True, db_column='targettypeid')
-    type = models.CharField(max_length=255)
-    created_date = modellib.DecimalField(max_digits=14, decimal_places=3, db_column='timecreated')
-    modified_date = modellib.DecimalField(max_digits=14, decimal_places=3, db_column='timeaccessed')
-    description = models.TextField(null=True, blank=True)
-
 
 for mod_obj in sys.modules[__name__].__dict__.values():
     if hasattr(mod_obj, '_xobj'):

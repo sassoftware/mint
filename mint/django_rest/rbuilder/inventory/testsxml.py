@@ -1521,7 +1521,7 @@ system_target_xml = """\
   <target_system_state/>
   <system_type id="http://testserver/api/v1/inventory/system_types/1">Inventory</system_type>
   <name>testsystemname</name>
-  <target id="http://testserver/catalog/clouds/testtargettype/instances/testtargetname">testtargetname</target>
+  <target id="http://testserver/api/v1/targets/4">testtargetname</target>
   <local_uuid>testsystemlocaluuid</local_uuid>
   <major_version/>
   <management_interface id="http://testserver/api/v1/inventory/management_interfaces/1">Common Information Model (CIM)</management_interface>
@@ -2326,7 +2326,7 @@ system_with_target = """\
   <credentials id="http://testserver/api/v1/inventory/systems/4/credentials"/>
   <configuration id="http://testserver/api/v1/inventory/systems/4/configuration"/>
   <configuration_descriptor id="http://testserver/api/v1/inventory/systems/4/configuration_descriptor"/>
-  <target id="http://testserver/catalog/clouds/vmware/instances/vsphere1.eng.rpath.com">vsphere1.eng.rpath.com</target>
+  <target id="http://testserver/api/v1/targets/1">vsphere1.eng.rpath.com</target>
   <name>vsphere1 002</name>
   <network_address>
     <address>vsphere1-002</address>

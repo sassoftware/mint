@@ -25,6 +25,8 @@ from mint.lib import data as mintdata
 from mint.django_rest.rbuilder import models as rbuildermodels
 from mint.django_rest.rbuilder.inventory import errors
 from mint.django_rest.rbuilder.inventory import models
+from mint.django_rest.rbuilder.inventory import zones as zmodels
+from mint.django_rest.rbuilder.targets import models as targetmodels
 from mint.django_rest.rbuilder.manager import basemanager
 from mint.django_rest.rbuilder.querysets import models as querysetmodels
 from mint.django_rest.rbuilder.jobs import models as jobmodels
@@ -125,13 +127,13 @@ class SystemManager(basemanager.BaseManager):
 
     @exposed
     def getZone(self, zone_id):
-        zone = models.Zone.objects.get(pk=zone_id)
+        zone = zmodels.Zone.objects.get(pk=zone_id)
         return zone
 
     @exposed
     def getLocalZone(self):
         "Return the zone for this rBuilder"
-        zone = models.Zone.objects.get(name='Local rBuilder')
+        zone = zmodels.Zone.objects.get(name=zmodels.Zone.LOCAL_ZONE)
         return zone
 
     @exposed
@@ -141,8 +143,8 @@ class SystemManager(basemanager.BaseManager):
 
     @exposed
     def getZones(self):
-        Zones = models.Zones()
-        Zones.zone = list(models.Zone.objects.all())
+        Zones = zmodels.Zones()
+        Zones.zone = list(zmodels.Zone.objects.all())
         return Zones
 
     @exposed
@@ -320,7 +322,7 @@ class SystemManager(basemanager.BaseManager):
 
     @exposed
     def getManagementNodeForZone(self, zone_id, management_node_id):
-        zone = models.Zone.objects.get(pk=zone_id)
+        zone = zmodels.Zone.objects.get(pk=zone_id)
         managementNode = models.ManagementNode.objects.get(zone=zone, pk=management_node_id)
         return managementNode
     
@@ -331,7 +333,7 @@ class SystemManager(basemanager.BaseManager):
         if not managementNode:
             return
 
-        zone = models.Zone.objects.get(pk=zone_id)
+        zone = zmodels.Zone.objects.get(pk=zone_id)
         managementNode.zone = zone;
         managementNode.save()
 
@@ -341,7 +343,7 @@ class SystemManager(basemanager.BaseManager):
 
     @exposed
     def getManagementNodesForZone(self, zone_id):
-        zone = models.Zone.objects.get(pk=zone_id)
+        zone = zmodels.Zone.objects.get(pk=zone_id)
         ManagementNodes = models.ManagementNodes()
         ManagementNodes.management_node = list(models.ManagementNode.objects.filter(zone=zone).all())
         return ManagementNodes
@@ -834,14 +836,14 @@ class SystemManager(basemanager.BaseManager):
         # Some other job state, do nothing
         return None
 
-    def lookupTarget(self, targetType, targetName):
-        return rbuildermodels.Targets.objects.get(
-            target_type=targetType, target_name=targetName)
+    def lookupTarget(self, targetTypeName, targetName):
+        return targetmodels.Target.objects.get(
+            target_type__name=targetTypeName, name=targetName)
 
     @exposed
     def addLaunchedSystem(self, system, dnsName=None, targetName=None,
             targetType=None):
-        target = self.lookupTarget(targetType=targetType,
+        target = self.lookupTarget(targetTypeName=targetType.name,
             targetName=targetName)
         system.target = target
         if system.managing_zone_id is None:
@@ -879,12 +881,12 @@ class SystemManager(basemanager.BaseManager):
         else:
             self.scheduleLaunchWaitForNetworkEvent(system)
         self.log_system(system, "System launched in target %s (%s)" %
-            (target.target_name, target.target_type))
+            (target.name, target.target_type.name))
         self.addSystem(system)
         return system
 
     def _getCredentialsForUser(self, target):
-        tucs = rbuildermodels.TargetUserCredentials.objects.filter(
+        tucs = targetmodels.TargetUserCredentials.objects.filter(
             target_id=target, user_id=self.user)
         for tuc in tucs:
             return tuc.target_credentials_id
@@ -1209,8 +1211,8 @@ class SystemManager(basemanager.BaseManager):
 
     def _cimParams(self, repClient, system, destination, eventUuid, requiredNetwork):
         if system.target_id is not None:
-            targetName = system.target.target_name
-            targetType = system.target.target_type
+            targetName = system.target.name
+            targetType = system.target.target_type.name
         else:
             targetName = None
             targetType = None
@@ -1594,16 +1596,16 @@ class SystemManager(basemanager.BaseManager):
                 models.SystemTargetCredentials.objects.filter(system=system).delete()
 
     def _addSystemsToTargets(self, objList):
-        for (targetType, targetName), systemMap in objList:
+        for (targetTypeName, targetName), systemMap in objList:
             t0 = time.time()
-            target = self.lookupTarget(targetType, targetName)
+            target = self.lookupTarget(targetTypeName, targetName)
 
             log.info("Importing %d systems from target %s (%s)" % (
-                len(systemMap), targetName, targetType))
+                len(systemMap), targetName, targetTypeName))
             for targetSystemId, tSystem in systemMap.items():
                 self._addSystemToTarget(target, targetSystemId, tSystem)
             log.info("Target %s (%s) import of %d systems completed in %.2f seconds" % (
-                targetName, targetType, len(systemMap), time.time() - t0))
+                targetName, targetTypeName, len(systemMap), time.time() - t0))
 
     def _addSystemToTarget(self, target, targetSystemId, targetSystem):
         t0 = time.time()
@@ -1614,7 +1616,7 @@ class SystemManager(basemanager.BaseManager):
             managing_zone = self.getLocalZone())
         if created:
             self.log_system(system, "System added as part of target %s (%s)" %
-                (target.target_name, target.target_type))
+                (target.name, target.target_type.name))
             # Having nothing else available, we copy the target's name
             system.name = targetSystem.instanceName
             system.description = targetSystem.instanceDescription
@@ -1646,11 +1648,11 @@ class SystemManager(basemanager.BaseManager):
             ipAddress = nw.ip_address and nw.ip_address or "ip unset"
             self.log_system(system,
                 "%s (%s): removing stale network information %s (%s)" %
-                (target.target_name, target.target_type, nw.dns_name,
+                (target.name, target.target_type.name, nw.dns_name,
                 ipAddress))
             nw.delete()
         self.log_system(system, "%s (%s): using %s as primary contact address" %
-            (target.target_name, target.target_type, dnsName))
+            (target.name, target.target_type.name, dnsName))
         nw = models.Network(system=system, dns_name=dnsName)
         nw.save()
 
@@ -1661,7 +1663,7 @@ class SystemManager(basemanager.BaseManager):
         for userName in userNames:
             desiredCredsMap.update((x.target_credentials_id.target_credentials_id,
                     x.target_credentials_id)
-                for x in rbuildermodels.TargetUserCredentials.objects.filter(
+                for x in targetmodels.TargetUserCredentials.objects.filter(
                     target_id=target, user_id__user_name=userName))
         existingCredsSet = set(existingCredsMap)
         desiredCredsSet = set(desiredCredsMap)
@@ -1685,7 +1687,7 @@ class SystemManager(basemanager.BaseManager):
             credentials = system.target_credentials.all()
             userNames = []
             for cred in credentials:
-                tucs = rbuildermodels.TargetUserCredentials.objects.filter(
+                tucs = targetmodels.TargetUserCredentials.objects.filter(
                     target_id=target, target_credentials_id=cred)
                 userNames.extend(x.user_id.user_name for x in tucs)
             if not userNames:
@@ -1693,7 +1695,7 @@ class SystemManager(basemanager.BaseManager):
             for userName in userNames:
                 # We don't care about dnsName and system, they're not used for
                 # determining uniqueness
-                targetsData.addSystem(target.target_type, target.target_name,
+                targetsData.addSystem(target.target_type.name, target.name,
                     userName, system.target_system_id,
                     system.target_system_name,
                     system.target_system_description, None, None)
@@ -1722,7 +1724,7 @@ class SystemManager(basemanager.BaseManager):
 
         def addSystem(self, targetType, targetName, userName, instanceId,
                 instanceName, instanceDescription, dnsName, state):
-            # We key by (targetType, targetName). The value is another
+            # We key by (targetTypeName, targetName). The value is another
             # dictionary keyed on instanceId (since within a single target,
             # the instance id is unique). The same system may be available to
             # multiple users.
@@ -1745,7 +1747,7 @@ class SystemManager(basemanager.BaseManager):
         def iterSystems(self):
             """
             Returns list of:
-                (targetName, targetType), { instanceId : System, ... })
+                (targetTypeName, targetName), { instanceId : System, ... })
             """
             return self._systemsMap.iteritems()
 

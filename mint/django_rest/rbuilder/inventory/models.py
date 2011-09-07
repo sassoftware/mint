@@ -23,6 +23,8 @@ from mint.django_rest.rbuilder.projects.models import Project, ProjectVersion, S
 from mint.django_rest.rbuilder.users import models as usersmodels
 from mint.django_rest.rbuilder.jobs import models as jobmodels
 from mint.django_rest.rbuilder.rbac import models as rbacmodels
+from mint.django_rest.rbuilder.inventory import zones as zmodels
+from mint.django_rest.rbuilder.targets import models as targetmodels
 from xobj import xobj
 
 Cache = modellib.Cache
@@ -174,17 +176,6 @@ class Networks(modellib.XObjModel):
     
     systems = D(modellib.HrefField('../systems'), "an entry point into system inventory")
     
-class Zones(modellib.XObjModel):
-    
-    XSL = 'zones.xsl'
-    
-    class Meta:
-        abstract = True
-    _xobj = xobj.XObjMetadata(
-                tag='zones',
-                elements=['zone'])
-    list_fields = ['zone']
-    
 class Credentials(modellib.XObjIdModel):
     
     XSL = 'credentials.xsl'
@@ -245,29 +236,6 @@ class ConfigurationDescriptor(modellib.XObjIdModel):
     def to_xml(self, request=None, xobj_model=None):
         self.id = self.get_absolute_url(request, parents=[self._system])
         return xobj.toxml(self)
-
-class Zone(modellib.XObjIdModel):
-    
-    XSL = 'zone.xsl'
-    
-    LOCAL_ZONE = "Local rBuilder"
-    class Meta:
-        db_table = 'inventory_zone'
-    _xobj = xobj.XObjMetadata(
-                tag = 'zone',
-                attributes = {'id':str})
-    
-    # Don't inline all the systems now.  Do not remove this code!
-    # See https://issues.rpath.com/browse/RBL-7236 and 
-    # https://issues.rpath.com/browse/RBL-7237 for more info
-    _xobj_hidden_accessors = set(['systems',])
-
-    zone_id = D(models.AutoField(primary_key=True), "the database id for the zone")
-    name = D(models.CharField(max_length=8092, unique=True), "the zone name")
-    description = D(models.CharField(max_length=8092, null=True), "the zone description")
-    created_date = D(modellib.DateTimeUtcField(auto_now_add=True), "the date the zone was created (UTC)")
-    
-    load_fields = [ name ]
 
 class SystemState(modellib.XObjIdModel):
     
@@ -517,8 +485,8 @@ class System(modellib.XObjIdModel):
     launch_date = D(modellib.DateTimeUtcField(null=True),
         "the date the system was deployed (only applies if system is on a "
         "virtual target)")
-    target = D(modellib.ForeignKey(rbuildermodels.Targets, null=True, 
-        text_field="target_name"),
+    target = D(modellib.ForeignKey(targetmodels.Target, null=True, 
+        text_field="name"),
         "the virtual target the system was deployed to (only applies if "
         "system is on a virtual target)")
     target_system_id = D(models.CharField(max_length=255,
@@ -562,7 +530,7 @@ class System(modellib.XObjIdModel):
         "the current state of the system")
     installed_software = D(models.ManyToManyField('Trove', null=True),
         "a collection of top-level items installed on the system")
-    managing_zone = D(modellib.ForeignKey(Zone, null=False,
+    managing_zone = D(modellib.ForeignKey(zmodels.Zone, null=False,
             related_name='systems', text_field="name"),
         "a link to the management zone in which this system resides")
     jobs = models.ManyToManyField(jobmodels.Job, through="SystemJob")
@@ -879,7 +847,7 @@ class ManagementNode(System):
                 attributes = {'id':str})
     view_name = 'ManagementNode'
     local = D(models.NullBooleanField(), "whether or not this management node is local to the rBuilder")
-    zone = D(modellib.ForeignKey(Zone, related_name='management_nodes'), "the zone the management node lives in")
+    zone = D(modellib.ForeignKey(zmodels.Zone, related_name='management_nodes'), "the zone the management node lives in")
     node_jid = D(models.CharField(max_length=64, null=True), "the Jabber ID the management node is using")
     load_fields = [ node_jid ]
 
@@ -901,7 +869,7 @@ class SystemTargetCredentials(modellib.XObjModel):
 
     system = modellib.ForeignKey(System, null=False,
         related_name = 'target_credentials')
-    credentials = modellib.ForeignKey(rbuildermodels.TargetCredentials,
+    credentials = modellib.ForeignKey(targetmodels.TargetCredentials,
         null=False, related_name = 'systems')
 
 class InstalledSoftware(modellib.XObjIdModel):

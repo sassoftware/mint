@@ -182,17 +182,23 @@
     <field type="TextField" name="label">jboss.rpath.com@rpath:jboss-1-devel</field>
   </object>
 
-  <object pk="1" model="rbuilder.targets">
-    <field type="CharField" name="target_type">vmware</field>
-    <field type="CharField" name="target_name">vsphere1.eng.rpath.com</field>
+  <object pk="1" model="targets.target">
+    <field to="targets.target_type" name="target_type" rel="ManyToOneRel">5</field>
+    <field type="CharField" name="name">vsphere1.eng.rpath.com</field>
+    <field type="CharField" name="description">vsphere1.eng.rpath.com description</field>
+    <field to="zones.zone" name="zone" rel="ManyToOneRel">1</field>
   </object>
-  <object pk="2" model="rbuilder.targets">
-    <field type="CharField" name="target_type">vmware</field>
-    <field type="CharField" name="target_name">vsphere2.eng.rpath.com</field>
+  <object pk="2" model="targets.target">
+    <field to="targets.target_type" name="target_type" rel="ManyToOneRel">5</field>
+    <field type="CharField" name="name">vsphere2.eng.rpath.com</field>
+    <field type="CharField" name="description">vsphere2.eng.rpath.com description</field>
+    <field to="zones.zone" name="zone" rel="ManyToOneRel">1</field>
   </object>
-  <object pk="3" model="rbuilder.targets">
-    <field type="CharField" name="target_type">ec2</field>
-    <field type="CharField" name="target_name">aws</field>
+  <object pk="3" model="targets.target">
+    <field to="targets.target_type" name="target_type" rel="ManyToOneRel">1</field>
+    <field type="CharField" name="name">aws</field>
+    <field type="CharField" name="description">aws description</field>
+    <field to="zones.zone" name="zone" rel="ManyToOneRel">1</field>
   </object>
 
   <object pk="2" model="inventory.system">

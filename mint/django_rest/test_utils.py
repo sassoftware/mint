@@ -23,6 +23,7 @@ from django.utils.http import urlencode
 from mint import config as mintconfig
 from mint.db import schema
 from mint.django_rest.rbuilder.inventory import models as invmodels
+from mint.django_rest.rbuilder.inventory import zones as zmodels
 from mint.django_rest.rbuilder.inventory import views
 from mint.django_rest.rbuilder.jobs import models as jobmodels
 from mint.django_rest.rbuilder.manager import basemanager
@@ -252,11 +253,11 @@ class XMLTestCase(TestCase, testcase.MockMixIn):
     def _saveZone(self, zoneName=None, zoneDescription=None):
         if zoneName is None:
             zoneName = "Local Zone"
-        zones = invmodels.Zone.objects.filter(name=zoneName)
+        zones = zmodels.Zone.objects.filter(name=zoneName)
         if len(zones) > 0:
             zone = zones[0]
         else:
-            zone = invmodels.Zone()
+            zone = zmodels.Zone()
             zone.name = zoneName
         zone.description = zoneDescription or "Some local zone"
         zone.save()

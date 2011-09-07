@@ -3044,7 +3044,7 @@ class MigrateTo_57(SchemaMigration):
 
 
 class MigrateTo_58(SchemaMigration):
-    Version = (58, 59)
+    Version = (58, 60)
 
     def migrate(self):
         return True
@@ -4046,6 +4046,71 @@ class MigrateTo_58(SchemaMigration):
 
         return True
 
+    def migrate60(self):
+        db = self.db
+        cu = db.cursor()
+        cu.execute("""
+            CREATE TABLE target_types (
+            target_type_id     %(PRIMARYKEY)s,
+            name              TEXT NOT NULL UNIQUE,
+            description       TEXT NOT NULL,
+            created_date      TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT current_timestamp,
+            modified_date     TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT current_timestamp) %(TABLEOPTS)s """ % db.keywords)
+        schema._addTableRows(db, 'target_types', 'name',
+            [
+                dict(name="ec2",
+                    description="Amazon Elastic Compute Cloud"),
+                dict(name="eucalyptus",
+                    description="Eucalyptus"),
+                dict(name="openstack",
+                    description="OpenStack"),
+                dict(name="vcloud",
+                    description="VMware vCloud"),
+                dict(name="vmware",
+                    description="VMware ESX/vSphere"),
+                dict(name="xenent",
+                    description="Citrix Xen Server"),
+            ])
+        # Delete targets of unknown types
+        cu.execute("""
+           DELETE FROM Targets
+            WHERE targetType NOT IN
+               (SELECT name FROM target_types)""")
+        # Add new target columns, with constraints disabled
+        cu.execute("""ALTER TABLE Targets
+            ADD COLUMN target_type_id    integer
+                    REFERENCES target_types (target_type_id)
+                    ON DELETE CASCADE,
+            ADD COLUMN zone_id           integer
+                    REFERENCES inventory_zone (zone_id)
+                    ON DELETE CASCADE,
+            ADD COLUMN description       TEXT,
+            ADD COLUMN created_date      TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT current_timestamp,
+            ADD COLUMN modified_date     TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT current_timestamp
+        """)
+        cu.execute("ALTER TABLE Targets RENAME targetName TO name")
+        cu.execute("ALTER TABLE Targets ALTER COLUMN name TYPE TEXT")
+        # Populate rows
+        cu.execute("SELECT zone_id FROM inventory_zone WHERE name=?",
+            'Local rBuilder')
+        zoneId = cu.fetchone()[0]
+        # Default description to name
+        cu.execute("UPDATE Targets SET zone_id=?, description=name", zoneId)
+        cu.execute("""
+            UPDATE Targets AS tt
+               SET target_type_id=(
+                    SELECT target_type_id
+                      FROM target_types
+                     WHERE tt.targetType = target_types.name)""")
+        cu.execute("ALTER TABLE Targets DROP COLUMN targetType")
+        # Set not null constraints
+        cu.execute("""
+            ALTER TABLE Targets
+                ALTER COLUMN zone_id SET NOT NULL,
+                ALTER COLUMN target_type_id SET NOT NULL,
+                ALTER COLUMN description SET NOT NULL""")
+        cu.execute("CREATE UNIQUE INDEX Targets_Type_Name_Uq ON Targets(target_type_id, name)")
+        return True
 
 #### SCHEMA MIGRATIONS END HERE #############################################
 

@@ -1,17 +1,17 @@
 <?xml version="1.0"?>
 <django-objects version="1.0">
   <object pk="5" model="querysets.filterentry">
-    <field type="TextField" name="field">target.target_name</field>
+    <field type="TextField" name="field">target.name</field>
     <field type="TextField" name="operator">EQUAL</field>
     <field type="TextField" name="value">ec2</field>
   </object>
   <object pk="6" model="querysets.filterentry">
-    <field type="TextField" name="field">target.target_name</field>
+    <field type="TextField" name="field">target.name</field>
     <field type="TextField" name="operator">EQUAL</field>
     <field type="TextField" name="value">vsphere</field>
   </object>
   <object pk="7" model="querysets.filterentry">
-    <field type="TextField" name="field">target.target_name</field>
+    <field type="TextField" name="field">target.name</field>
     <field type="TextField" name="operator">EQUAL</field>
     <field type="TextField" name="value">esx</field>
   </object>
@@ -132,17 +132,23 @@
     <field type="TextField" name="name">query-tag-Tagged_Systems_1_and_2-10</field>
   </object>
 
-  <object pk="1" model="rbuilder.targets">
-    <field type="CharField" name="target_type">aws</field>
-    <field type="CharField" name="target_name">ec2</field>
+  <object pk="1" model="targets.target">
+    <field to="targets.target_type" name="target_type" rel="ManyToOneRel">1</field>
+    <field type="CharField" name="name">ec2</field>
+    <field type="CharField" name="description">ec2</field>
+    <field to="zones.zone" name="zone" rel="ManyToOneRel">1</field>
   </object>
-  <object pk="2" model="rbuilder.targets">
-    <field type="CharField" name="target_type">vmware</field>
-    <field type="CharField" name="target_name">vsphere</field>
+  <object pk="2" model="targets.target">
+    <field to="targets.target_type" name="target_type" rel="ManyToOneRel">5</field>
+    <field type="CharField" name="name">vsphere</field>
+    <field type="CharField" name="description">vsphere</field>
+    <field to="zones.zone" name="zone" rel="ManyToOneRel">1</field>
   </object>
-  <object pk="3" model="rbuilder.targets">
-    <field type="CharField" name="target_type">vmware</field>
-    <field type="CharField" name="target_name">esx</field>
+  <object pk="3" model="targets.target">
+    <field to="targets.target_type" name="target_type" rel="ManyToOneRel">5</field>
+    <field type="CharField" name="name">esx</field>
+    <field type="CharField" name="description">esx</field>
+    <field to="zones.zone" name="zone" rel="ManyToOneRel">1</field>
   </object>
 
     <object pk="210" model="inventory.system">

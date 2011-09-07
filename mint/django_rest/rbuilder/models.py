@@ -80,58 +80,6 @@ class Sessions(modellib.XObjModel):
     class Meta:
         db_table = u'sessions'
 
-class Targets(modellib.XObjModel):
-    target_id = models.IntegerField(primary_key=True, db_column='targetid')
-    target_type = models.CharField(max_length=255, db_column='targettype')
-    target_name = models.CharField(unique=True, max_length=255, db_column='targetname')
-    class Meta:
-        db_table = u'targets'
-
-    def get_absolute_url(self, request=None, parents=None, values=None):
-        path = '/catalog/clouds/%s/instances/%s' % \
-            (self.target_type, self.target_name)
-        if request:
-            uri = request.build_absolute_uri()
-            parts = urlparse.urlparse(uri)
-            parts = list(parts)
-            parts[2] = path
-            parts[4] = ''
-            return urlparse.urlunparse(parts)
-        else:
-            return path
-
-class TargetData(modellib.XObjModel):
-    class Meta:
-        db_table = u'targetdata'
-        
-    targetdata_id = models.AutoField(primary_key=True, db_column='targetdataid')    
-    target_id = models.ForeignKey(Targets, db_column="targetid")
-    name = models.CharField(max_length=255, null=False)
-    value = models.TextField()
-    # Uhm. django does not support multi-column PKs.
-
-class TargetCredentials(modellib.XObjModel):
-    class Meta:
-        db_table = u'targetcredentials'
-    target_credentials_id = models.AutoField(primary_key=True,
-        db_column="targetcredentialsid")
-    credentials = models.TextField(null=False, unique=True)
-
-class TargetUserCredentials(modellib.XObjModel):
-    target_id = models.ForeignKey(Targets, db_column="targetid")
-    user_id = models.ForeignKey(usersmodels.User, db_column="userid")
-    target_credentials_id = models.ForeignKey(TargetCredentials,
-        db_column="targetcredentialsid")
-    class Meta:
-        db_table = u'targetusercredentials'
-
-class TargetImagesDeployed(modellib.XObjModel):
-    target_id = models.ForeignKey(Targets, db_column="targetid")
-    file_id = models.IntegerField(null=False, db_column='fileid')
-    target_image_id = models.CharField(max_length=128, db_column='targetimageid')
-    class Meta:
-        db_table = u'targetimagesdeployed'
-
 class PkiCertificates(modellib.XObjModel):
     class Meta:
         db_table = 'pki_certificates'

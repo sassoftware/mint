@@ -28,7 +28,7 @@ from conary.dbstore import sqlerrors, sqllib
 log = logging.getLogger(__name__)
 
 # database schema major version
-RBUILDER_DB_VERSION = sqllib.DBversion(58, 59)
+RBUILDER_DB_VERSION = sqllib.DBversion(58, 60)
 
 
 def _createTrigger(db, table, column = "changed"):
@@ -815,30 +815,50 @@ def _createProductVersions(db):
 def _createTargets(db):
     cu = db.cursor()
     changed = False
-    if 'TargetTypes' not in db.tables:
+    if 'target_types' not in db.tables:
         cu.execute("""
-            CREATE TABLE TargetTypes (
-            targettypeid     %(PRIMARYKEY)s,
-            type               varchar(255),
-            timecreated        numeric(14,3),
-            timeaccessed       numeric(14,3),
-            description        text
-        ) %(TABLEOPTS)s """ % db.keywords)
-        db.tables['TargetTypes'] = []
+            CREATE TABLE target_types (
+            target_type_id     %(PRIMARYKEY)s,
+            name              TEXT NOT NULL UNIQUE,
+            description       TEXT NOT NULL,
+            created_date      TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT current_timestamp,
+            modified_date     TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT current_timestamp) %(TABLEOPTS)s """ % db.keywords)
+        db.tables['target_types'] = []
+        changed |= _addTableRows(db, 'target_types', 'name',
+            [
+                dict(name="ec2",
+                    description="Amazon Elastic Compute Cloud"),
+                dict(name="eucalyptus",
+                    description="Eucalyptus"),
+                dict(name="openstack",
+                    description="OpenStack"),
+                dict(name="vcloud",
+                    description="VMware vCloud"),
+                dict(name="vmware",
+                    description="VMware ESX/vSphere"),
+                dict(name="xenent",
+                    description="Citrix Xen Server"),
+            ])
         changed = True
 
     if 'Targets' not in db.tables:
         cu.execute("""
             CREATE TABLE Targets (
                 targetId        %(PRIMARYKEY)s,
-                targetType      integer            NOT NULL
-                    REFERENCES TargetTypes (targetType)
+                target_type_id    integer            NOT NULL
+                    REFERENCES target_types (target_type_id)
                     ON DELETE CASCADE,
-                targetName      varchar(255)        NOT NULL
+                name              TEXT NOT NULL,
+                description       TEXT NOT NULL,
+                zone_id           integer NOT NULL
+                    REFERENCES inventory_zone (zone_id)
+                    ON DELETE CASCADE,
+                created_date      TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT current_timestamp,
+                modified_date     TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT current_timestamp
             ) %(TABLEOPTS)s""" % db.keywords)
         db.tables['Targets'] = []
         db.createIndex('Targets',
-            'Targets_Type_Name_Uq', 'targetType, targetName', unique = True)
+            'Targets_Type_Name_Uq', 'target_type_id, name', unique = True)
         changed = True
 
     if 'TargetData' not in db.tables:
@@ -1190,10 +1210,11 @@ def _createRepositoryLogSchema(db):
 
     return changed
 
-def _createInventorySchema(db, cfg):
+def _createZoneSchema(db):
     cu = db.cursor()
     changed = False
-    
+
+    # XXX this table should no longer be prefixed with inventory_
     if 'inventory_zone' not in db.tables:
         cu.execute("""
             CREATE TABLE "inventory_zone" (
@@ -1204,6 +1225,13 @@ def _createInventorySchema(db, cfg):
             ) %(TABLEOPTS)s""" % db.keywords)
         db.tables['inventory_zone'] = []
         changed = True
+
+    return changed
+
+
+def _createInventorySchema(db, cfg):
+    cu = db.cursor()
+    changed = False
 
     if 'inventory_system_state' not in db.tables:
         cu.execute("""
@@ -2879,6 +2907,7 @@ def createSchema(db, doCommit=True, cfg=None):
     changed |= _createApplianceSpotlight(db)
     changed |= _createFrontPageStats(db)
     changed |= _createSessions(db)
+    changed |= _createZoneSchema(db)
     changed |= _createTargets(db)
     changed |= _createPlatforms(db)
     changed |= _createCapsuleIndexerSchema(db)

@@ -12,7 +12,7 @@ class TargetsManager(basemanager.BaseManager):
     @exposed
     def getTargets(self):
         Targets = models.Targets()
-        Targets.target = models.Target.objects.all()
+        Targets.target = models.Target.objects.order_by('target_id')
         return Targets
         
     @exposed
@@ -39,10 +39,15 @@ class TargetTypesManager(basemanager.BaseManager):
     @exposed
     def getTargetTypes(self):
         TargetTypes = models.TargetTypes()
-        TargetTypes.target_type = models.TargetType.objects.all()
+        TargetTypes.target_type = models.TargetType.objects.order_by('target_type_id')
         return TargetTypes
-        
-        
+
+    @exposed
+    def getTargetsByTargetType(self, target_type_id):
+        return models.TargetType.objects.filter(
+            target_type__target_type_id=target_type_id).order_by('target_type_id')
+
+
 class TargetCredentialsManager(basemanager.BaseManager):
     @exposed
     def getTargetCredentialsForTargetByUserId(self, target_id, user_id):
