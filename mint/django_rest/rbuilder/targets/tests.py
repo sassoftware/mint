@@ -84,6 +84,7 @@ class TargetsTestCase(XMLTestCase):
         response = self._get('targets/1/target_types',
             username='testuser', password='password')
         self.assertEquals(response.status_code, 200)
+        import pdb; pdb.set_trace()
         self.assertXMLEquals(response.content, testsxml.target_type_by_target_id_GET)
     
     # Finish

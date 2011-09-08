@@ -26,6 +26,8 @@ class TargetType(modellib.XObjModel):
     description = D(models.TextField(null=False), "Target Type Description")
     created_date = D(modellib.DateTimeUtcField(auto_now_add=True), "the date the resource was created (UTC)")
     modified_date = D(modellib.DateTimeUtcField(auto_now_add=True), "the date the resource was modified (UTC)")
+    descriptor_create_target = modellib.HrefField(href='/target_types/%s/descriptor_create_target',
+                                                    values = (TargetType.target_type_id,))
 
 class Targets(modellib.Collection):
     class Meta:
