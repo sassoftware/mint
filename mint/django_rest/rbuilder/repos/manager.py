@@ -2,8 +2,6 @@
 #
 # Copyright (c) 2011 rPath, Inc.
 #
-# All rights reserved.
-#
 
 from StringIO import StringIO
 
@@ -13,7 +11,6 @@ from conary import changelog
 from conary.conaryclient import filetypes
 from conary.repository import errors as reposerrors
 
-from mint import helperfuncs
 from mint import userlevels
 from mint.db import repository as reposdbmgr
 from mint.lib import unixutils
@@ -25,38 +22,12 @@ from mint.django_rest.rbuilder.projects import models as projectmodels
 
 _cachedCfg = None
 
-class ReposManager(basemanager.BaseManager):
+class ReposManager(basemanager.BaseManager, reposdbmgr.RepomanMixin):
 
     def __init__(self, *args, **kwargs):
         basemanager.BaseManager.__init__(self, *args, **kwargs)
-        if kwargs.has_key("bypass"):
-            self.bypass = kwargs["bypass"]
-        else:
-            self.bypass = False
-
-        self.reposDBCache = {}
-
-    def reset(self):
-        """
-        Reset all open database connections. Call this before finishing a
-        request.
-        """
-        for key, reposDB in self.reposDBCache.items():
-            if reposDB.poolmode:
-                reposDB.close()
-                del self.reposDBCache[key]
-            elif reposDB.inTransaction(default=True):
-                reposDB.rollback()
-
-    def close(self):
-        while self.reposDBCache:
-            reposDB = self.reposDBCache.popitem()[1]
-            reposDB.close()
-
-    def close_fork(self):
-        while self.reposDBCache:
-            reposDB = self.reposDBCache.popitem()[1]
-            reposDB.close_fork()
+        bypass = kwargs.pop('bypass', False)
+        self._repoInit(bypass=bypass)
 
     @property
     def db(self):
@@ -65,9 +36,6 @@ class ReposManager(basemanager.BaseManager):
     @exposed
     def createRepositoryForProject(self, project, createMaps=True):
         repos = self.getRepositoryForProject(project)
-
-        authInfo = models.AuthInfo(auth_type="userpass",
-                user_name=self.cfg.authUser, password=self.cfg.authPass)
 
         self.generateConaryrcFile()
 
@@ -167,9 +135,6 @@ class ReposManager(basemanager.BaseManager):
             auth_type=authType, user_name=authUser, password=authPass,
             entitlement=entitlement)
         newLabel.save()
-
-        localFqdn = project.hostname + "." + \
-            self.cfg.projectDomainName.split(':')[0]
 
     @exposed
     def generateConaryrcFile(self):
@@ -321,19 +286,3 @@ class ReposManager(basemanager.BaseManager):
             client.cfg.name = self.auth.username
             client.cfg.contact = self.auth.fullName or ''
         return client
-
-    def getRepos(self, userId=None):
-        """
-        Get a global C{NetworkRepositoryClient} for this site, optionally
-        constrained to the permissions of a particular user.
-        """
-        return reposdbmgr.MultiShimNetClient(self, userId)
-
-    @exposed
-    def getClient(self, userId=None):
-        """
-        Get a global C{ConaryClient} for this site, optionally constrained to
-        the permissions of a particular user.
-        """
-        return reposdbmgr._makeClient(self.getRepos(userId))
-

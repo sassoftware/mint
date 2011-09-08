@@ -70,67 +70,15 @@ def withNetServer(method):
     return wrapper
 
 
-class RepositoryManager(object):
-    def __init__(self, cfg, db, bypass=False):
-        self.cfg = cfg
-        self.db = db
+class RepomanMixin(object):
+    """
+    Common functions between this RepositoryManager and the one in django_rest.
+    """
+
+    def _repoInit(self, bypass=False):
         self.bypass = bypass
         self.reposDBCache = {}
-        self.authClient = auth_client.getClient(cfg.authSocket)
-
-    def iterRepositories(self, whereClause='', *args):
-        """
-        Generate a sequence of L{RepositoryHandle}s matching a given
-        query.
-        """
-        return self._iterRepositories(whereClause, args, contentSources=True)
-
-    def _iterRepositories(self, whereClause, args, contentSources):
-        if whereClause:
-            whereClause = 'WHERE ' + whereClause
-        if contentSources:
-            sourceClause = """
-                EXISTS (
-                    SELECT * FROM PlatformsContentSourceTypes
-                    JOIN Platforms AS plat USING (platformId)
-                    WHERE plat.projectId = projectId
-                )"""
-        else:
-            sourceClause = "false"
-
-        cu = self.db.cursor()
-        cu.execute("""
-                SELECT projectId, shortname, fqdn, external, hidden,
-                    EXISTS ( SELECT * FROM InboundMirrors
-                        WHERE projectId = targetProjectId
-                        ) AS localMirror,
-                    commitEmail, database, url, authType, username, password,
-                    entitlement, %s AS hasContentSources
-                FROM Projects LEFT JOIN Labels USING ( projectId )
-                %s ORDER BY projectId ASC""" % (sourceClause, whereClause),
-                *args)
-
-        for row in cu:
-            yield RepositoryHandle(self, row)
-
-    def _getRepository(self, whereClause, *args):
-        """
-        Return a new L{RepositoryHandle} object by querying the database.
-        """
-        repoIter = self.iterRepositories(whereClause, *args)
-        try:
-            return repoIter.next()
-        except StopIteration:
-            raise ProductNotFound(args[0])
-
-    def getRepositoryFromFQDN(self, fqdn):
-        return self._getRepository('fqdn = ?', fqdn)
-
-    def getRepositoryFromProjectId(self, projectId):
-        return self._getRepository('projectId = ?', projectId)
-
-    def getRepositoryFromShortName(self, shortName):
-        return self._getRepository('shortname = ?', shortName)
+        self.authClient = auth_client.getClient(self.cfg.authSocket)
 
     def reset(self):
         """
@@ -188,6 +136,68 @@ class RepositoryManager(object):
         the permissions of a particular user.
         """
         return _makeClient(self.getRepos(userId))
+
+
+class RepositoryManager(RepomanMixin):
+
+    def __init__(self, cfg, db, bypass=False):
+        self.cfg = cfg
+        self.db = db
+        self._repoInit(bypass)
+
+    def iterRepositories(self, whereClause='', *args):
+        """
+        Generate a sequence of L{RepositoryHandle}s matching a given
+        query.
+        """
+        return self._iterRepositories(whereClause, args, contentSources=True)
+
+    def _iterRepositories(self, whereClause, args, contentSources):
+        if whereClause:
+            whereClause = 'WHERE ' + whereClause
+        if contentSources:
+            sourceClause = """
+                EXISTS (
+                    SELECT * FROM PlatformsContentSourceTypes
+                    JOIN Platforms AS plat USING (platformId)
+                    WHERE plat.projectId = projectId
+                )"""
+        else:
+            sourceClause = "false"
+
+        cu = self.db.cursor()
+        cu.execute("""
+                SELECT projectId, shortname, fqdn, external, hidden,
+                    EXISTS ( SELECT * FROM InboundMirrors
+                        WHERE projectId = targetProjectId
+                        ) AS localMirror,
+                    commitEmail, database, url, authType, username, password,
+                    entitlement, %s AS hasContentSources
+                FROM Projects LEFT JOIN Labels USING ( projectId )
+                %s ORDER BY projectId ASC""" % (sourceClause, whereClause),
+                *args)
+
+        for row in cu:
+            yield RepositoryHandle(self, row)
+
+    def _getRepository(self, whereClause, *args):
+        """
+        Return a new L{RepositoryHandle} object by querying the database.
+        """
+        repoIter = self.iterRepositories(whereClause, *args)
+        try:
+            return repoIter.next()
+        except StopIteration:
+            raise ProductNotFound(args[0])
+
+    def getRepositoryFromFQDN(self, fqdn):
+        return self._getRepository('fqdn = ?', fqdn)
+
+    def getRepositoryFromProjectId(self, projectId):
+        return self._getRepository('projectId = ?', projectId)
+
+    def getRepositoryFromShortName(self, shortName):
+        return self._getRepository('shortname = ?', shortName)
 
 
 class RepositoryHandle(object):
