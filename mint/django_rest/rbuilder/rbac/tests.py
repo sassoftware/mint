@@ -16,12 +16,6 @@ logging.disable(logging.CRITICAL)
 from mint.django_rest import test_utils
 XMLTestCase = test_utils.XMLTestCase
 
-# REMAINING TEST ITEMS for RBAC:
-# * tests for READSET, MODSETDEF
-# * make hasRbacPermission take a resource, not a queryset
-# * test on live resources inside of querySets
-# * test assertRbac functions
-
 class RbacTestCase(XMLTestCase):
 
     def setUp(self):
