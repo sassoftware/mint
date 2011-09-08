@@ -149,3 +149,19 @@ class NewPlatformTest(XMLTestCase):
         self.assertEquals(r.status_code, 200)
         updatedContent = pmodels.ContentSourceType.objects.get(pk=1)
         self.assertEquals('ContentSourceType New', updatedContent.content_source_type)
+
+    def testCanGetImageTypeDefinitionDescriptor(self):
+
+        # a valid ITD...
+        response = self._get('platforms/image_type_definitions/vmwareImage',
+            username='admin', password='password')
+        self.assertEquals(response.status_code, 200)
+        self.assertXMLEquals(response.content, '<wrong></wrong>')
+
+        # an invalid one...
+        response = self._get('platforms/image_type_definitions/doesNotExist',
+            username='admin', password='password')
+        self.assertEquals(response.status_code, 404)
+         
+        
+

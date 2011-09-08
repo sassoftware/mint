@@ -4,11 +4,9 @@
 # All Rights Reserved
 #
 
-from django.http import HttpResponse  # pyflakes=ignore
-
-from mint.django_rest.rbuilder import service  # pyflakes=ignore
-from mint.django_rest.deco import requires, return_xml, access  # pyflakes=ignore
-
+from django.http import HttpResponse, HttpResponseNotFound
+from mint.django_rest.rbuilder import service
+from mint.django_rest.deco import requires, return_xml, access
 
 class SourceStatusService(service.BaseService):
     @return_xml
@@ -214,3 +212,15 @@ class PlatformService(service.BaseService):
     @return_xml
     def rest_PUT(self, request, platform_id, platform):
         return self.mgr.updatePlatform(platform_id, platform)
+
+class ImageTypeDefinitionDescriptorService(service.BaseService):
+    '''Returns a smartform with options required for each image type'''
+
+    @access.anonymous
+    def rest_GET(self, request, name=None):
+        descriptor_xml = self.mgr.getImageTypeDefinitionDescriptor(name)
+        if descriptor_xml is None:
+            return HttpResponseNotFound()
+        return HttpResponse(content=descriptor_xml)
+
+

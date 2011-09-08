@@ -4,12 +4,14 @@
 # All Rights Reserved
 #
 
+import sys
+import exceptions
+
 from mint.django_rest.rbuilder.manager import basemanager
 from mint.django_rest.rbuilder.platforms import models as platformModels
 
-
+IMAGE_TYPE_DESCRIPTORS="mint.django_rest.rbuilder.platforms.image_type_descriptors"
 exposed = basemanager.exposed
-
 
 class SourceTypeManager(basemanager.BaseManager):
     @exposed
@@ -62,6 +64,23 @@ class PlatformManager(basemanager.BaseManager):
         platform.save()
         return platform
 
+    @exposed
+    def getImageTypeDefinitionDescriptor(self, name):
+        '''
+        An image type definition descriptor contains the smartform
+        XML needed to define an image type, for example,
+        a vmwareImage type will need virtualized RAM and disk
+        parameters
+        '''
+        modname = "%s.%s" % (IMAGE_TYPE_DESCRIPTORS, name)
+        # TODO: if the IT is 'deferrred', generate dynamically
+        # TODO: add IT type 'deferred'
+        try:
+             __import__(modname)
+        except exceptions.ImportError:
+             return None
+        mod = sys.modules[modname]
+        return mod.XML.strip()
 
 class SourceManager(basemanager.BaseManager):
     @exposed
@@ -195,3 +214,4 @@ class SourceErrorsManager(basemanager.BaseManager):
     @exposed
     def updatePlatformContentError(self, source_type, short_name, error_id, resource_error):
         pass
+

@@ -67,6 +67,12 @@ class BuildDefinitionMixIn(object):
                     options = imageParams,
                     **extraParams)
                 # XXX we need to add the rest of the fields here too
+
+            # url to image definition descriptor (will be served from Django)
+            kw['descriptor'] = models.Descriptor(
+                name = ctemplRef,
+            ) 
+
         if hasattr(buildDef, 'getBuildImageGroup'):
             grp = buildDef.getBuildImageGroup()
             if grp:

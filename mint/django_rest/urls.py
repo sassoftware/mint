@@ -23,7 +23,6 @@ from mint.django_rest.rbuilder.rbac import views as rbacviews
 from mint.django_rest.rbuilder.jobs import views as jobviews
 from mint.django_rest.rbuilder.modulehooks import views as modulehooksviews
 from mint.django_rest.rbuilder.targets import views as targetsviews
-from mint.django_rest.rbuilder.images import views as imageviews
 
 handler404 = 'mint.django_rest.handler.handler404'
 handler500 = 'mint.django_rest.handler.handler500'
@@ -475,28 +474,23 @@ urlpatterns = patterns('',
     URL(r'notices/users/(?P<user_id>\d+)/?$',
         noticesviews.UserNoticesService(),
         name='UserNotices'),
-    
+
     # Begin all things platforms
     URL(r'platforms/?$',
         platformsviews.PlatformService(),
         name='Platforms'),
-        
     URL(r'platforms/(?P<platform_id>\d+)/?$',
         platformsviews.PlatformService(),
         name='Platform'),
-        
     # URL(r'platforms/(?P<platform_id>\d+)/platform_status/?$',
     #     platformsviews.PlatformStatusService(),
     #     name='PlatformStatus'),
-        
     URL(r'platforms/(?P<platform_id>\d+)/content_sources/?$',
         platformsviews.PlatformSourceService(),
         name='PlatformSource'),
-        
     URL(r'platforms/(?P<platform_id>\d+)/content_source_types/?$',
         platformsviews.PlatformSourceTypeService(),
         name='PlatformSourceType'),
-        
     # URL(r'platforms/(?P<platform_id>\d+)/platform_image_type/?$',
     #     platformsviews.PlatformImageTypeService(),
     #     name='PlatformImageType'),
@@ -521,15 +515,12 @@ urlpatterns = patterns('',
     URL(r'platforms/content_sources/?$',
         platformsviews.SourceService(),
         name='ContentSources'),
-    
     URL(r'platforms/content_sources/(?P<source_type>[_a-zA-Z0-9]+)/?$',
         platformsviews.SourceService(),
         name='ContentSources'),
-        
     URL(r'platforms/content_sources/(?P<source_type>[_a-zA-Z0-9]+)/(?P<short_name>(\w|\-)*)/?$',
         platformsviews.SourceService(),
         name='ContentSource'),
-        
     # URL(r'platforms/content_sources/(?P<source_type>[_a-zA-Z0-9]+)/(?P<short_name>(\w|\-)*)/source_status/?$',
     #     platformsviews.SourceStatusService(),
     #     name='SourceStatus'),
@@ -545,18 +536,19 @@ urlpatterns = patterns('',
     # URL(r'platforms/sources/(?P<source_type>[_a-zA-Z0-9]+)/source_type_descriptor/?$',
         # platformsviews.SourceTypeDescriptor(),
         # name='SourceTypeDescriptor'),
-        
     URL(r'platforms/content_source_types/?$',
         platformsviews.SourceTypeService(),
         name='ContentSourceTypes'),
-        
     URL(r'platforms/content_source_types/(?P<source_type>[_a-zA-Z0-9]+)/?$',
         platformsviews.SourceTypeService(),
         name='ContentSourceType'),
-
     URL(r'platforms/content_source_types/(?P<source_type>[_a-zA-Z0-9]+)/(?P<content_source_type_id>\d+)/?$',
         platformsviews.SourceTypeService(),
         name='ContentSourceType'),
+    URL(r'platforms/image_type_definitions/(?P<name>\w+)/?$',
+        platformsviews.ImageTypeDefinitionDescriptorService(),
+        name='ImageTypeDefinitionDescriptor'),
+
  
     # ModuleHooks
     URL(r'module_hooks/?$',
@@ -618,19 +610,4 @@ urlpatterns = patterns('',
         targetsviews.TargetTypeTargetsService(),
         name='TargetTypeTargets'),
 
-
-    # Image Service
-    URL(r'images/?$',
-        imageviews.ImagesService(),
-        name='Images'),
-    URL(r'images/image_definition_descriptors/?$',
-        imageviews.ImageDefinitionDescriptorsService(),
-        name='ImageDefinitionDescriptors'),
-    URL(r'images/image_definition_descriptors/(?P<image_definition_type>\w+)/(?P<architecture>\w+)?$',
-        imageviews.ImageDefinitionDescriptorService(),
-        name='ImageDefinitionDescriptor')
-    
-
 )
-
-

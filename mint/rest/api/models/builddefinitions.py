@@ -16,6 +16,16 @@ class _DisplayField(Model):
     stageName = fields.CharField(display=False)
     platform = fields.CharField(display=False)
 
+class Descriptor(_DisplayField):
+
+    id = fields.AbsoluteUrlField(isAttribute = True)
+    name = fields.CharField(display=False)     
+
+    def get_absolute_url(self):
+        # this is from Django, hence the hard code
+        # as they don't know about each other
+        return "/api/v1/platforms/image_type_definitions/%s" % self.name
+
 class Architecture(_DisplayField):
     id = fields.AbsoluteUrlField(isAttribute = True)
     name = fields.CharField()
@@ -77,6 +87,7 @@ class BuildDefinition(_DisplayField):
     container = fields.ModelField(ContainerFormat)
     architecture = fields.ModelField(Architecture)
     flavorSet = fields.ModelField(FlavorSet)
+    descriptor = fields.ModelField(Descriptor)
 
     def get_absolute_url(self):
         return ('products.versions', self.hostname, self.version,
@@ -94,6 +105,7 @@ class BuildTemplate(_DisplayField):
     container = fields.ModelField(ContainerFormat)
     architecture = fields.ModelField(Architecture)
     flavorSet = fields.ModelField(FlavorSet)
+    descriptor = fields.ModelField(Descriptor)
 
     def get_absolute_url(self):
         return ('products.versions', self.hostname, self.version,
