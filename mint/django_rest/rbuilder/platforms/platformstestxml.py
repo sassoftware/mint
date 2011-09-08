@@ -476,3 +476,39 @@ platformImageDefXml = """\
   </imageTypeDefinition>
 </imageTypeDefinitions>
 """
+
+deferred_image_descriptor_xml = """
+<createApplianceDescriptor xmlns="http://www.rpath.com/permanent/descriptor-1.0.xsd" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.rpath.com/permanent/descriptor-1.0.xsd descriptor-1.0.xsd">
+  <dataFields>
+    <field>
+      <descriptions/>
+      <enumeratedType>
+        <describedValue>
+          <descriptions>
+            <desc>placeholder</desc>
+          </descriptions>
+          <key>placeholder</key>
+        </describedValue>
+        <describedValue>
+          <descriptions>
+            <desc>placeholder</desc>
+          </descriptions>
+          <key>placeholder</key>
+        </describedValue>
+      </enumeratedType>
+      <multiple>false</multiple>
+      <name>base-image</name>
+      <required>true</required>
+    </field>
+  </dataFields>
+  <metadata>
+    <descriptions>
+      <desc>Deferred Image Configuration</desc>
+    </descriptions>
+    <displayName>Deferred Image Configuration</displayName>
+    <rootElement>createApplianceDescriptor</rootElement>
+  </metadata>
+</createApplianceDescriptor>
+"""
+
+

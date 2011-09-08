@@ -12,11 +12,11 @@
 # full details.
 #
 
-from mint.django_rest.rbuilder.platforms import models as pmodels  # pyflakes=ignore
-from mint.django_rest.rbuilder.inventory.tests import XMLTestCase  # pyflakes=ignore
-from xobj import xobj  # pyflakes=ignore
-from lxml import etree  # pyflakes=ignore
-from mint.django_rest.rbuilder.platforms import platformstestxml
+from mint.django_rest.rbuilder.platforms import models as pmodels
+from mint.django_rest.rbuilder.inventory.tests import XMLTestCase
+from xobj import xobj
+from lxml import etree
+from mint.django_rest.rbuilder.platforms import platformstestxml as testsxml
 import mint.buildtypes 
 
 class PlatformsTestCase(XMLTestCase):
@@ -97,7 +97,7 @@ class NewPlatformTest(XMLTestCase):
     def testCreatePlatform(self):
 		#Creates a new platform
         response = self._post('platforms/',
-            data=platformstestxml.platformPOSTXml,
+            data=testsxml.platformPOSTXml,
             username="admin", password="password")
         self.assertEquals(200, response.status_code)
         # 3 platforms were already in the fixture
@@ -107,7 +107,7 @@ class NewPlatformTest(XMLTestCase):
     
     def testCreateContentSource(self):
         response = self._post('platforms/content_sources/',
-            data=platformstestxml.contentSourcePOSTXml,
+            data=testsxml.contentSourcePOSTXml,
             username="admin", password="password")
         self.assertEquals(200, response.status_code)
         # 3 sources were already in the fixture
@@ -118,14 +118,14 @@ class NewPlatformTest(XMLTestCase):
 
     def testCreateContentSourceType(self):
         response = self._post('platforms/content_source_types/',
-            data=platformstestxml.contentSourceTypePOSTXml,
+            data=testsxml.contentSourceTypePOSTXml,
             username="admin", password="password")
         self.assertEquals(200, response.status_code)
         self.assertEquals(4, len(list(pmodels.ContentSourceType.objects.all())))
     
     def testUpdatePlatform(self):
         r = self._put('platforms/1',
-            data=platformstestxml.platformPUTXml,
+            data=testsxml.platformPUTXml,
             username='admin', password='password')
         self.assertEquals(r.status_code, 200)
         updatedPlat = pmodels.Platform.objects.get(pk=1)
@@ -135,7 +135,7 @@ class NewPlatformTest(XMLTestCase):
     
     def testUpdateContentSource(self):
         r = self._put('platforms/content_sources/RHN/cs_shortname1',
-            data=platformstestxml.contentSourcePUTXml,
+            data=testsxml.contentSourcePUTXml,
             username='admin', password='password')
         self.assertEquals(r.status_code, 200)
         updatedContent = pmodels.ContentSource.objects.get(short_name='cs_shortnameChanged')
@@ -145,7 +145,7 @@ class NewPlatformTest(XMLTestCase):
     
     def testUpdateContentSourceType(self):
         r = self._put('platforms/content_source_types/RHN/1',
-            data=platformstestxml.contentSourceTypePUTXml,
+            data=testsxml.contentSourceTypePUTXml,
             username='admin', password='password')
         self.assertEquals(r.status_code, 200)
         updatedContent = pmodels.ContentSourceType.objects.get(pk=1)
@@ -155,20 +155,33 @@ class NewPlatformTest(XMLTestCase):
 
         # make sure we can load all the valid types
         for image_type in mint.buildtypes.xmlTagNameImageTypeMap.keys():
-            # we do not have XML for these because they're deprecated
-            if image_type not in [ 'netbootImage', 'liveIsoImage' ]:
+            # we do not have XML for netboot/live because they're deprecated
+            # and deferred is special so we want to test differently
+            if image_type not in [ 'netbootImage', 'liveIsoImage', 'deferred' ]:
                 # verify we can get the descriptor and it looks XML-ish
                 url = "platforms/image_type_definitions/%s" % image_type
-                response = self._get(url, username='admin', password='password')
+                response = self._get(url) #, username='admin', password='password')
                 self.assertEquals(response.status_code, 200)
                 content = response.content.strip()
                 self.assertTrue(content.startswith('<createApplianceDescriptor'))
                 self.assertTrue(content.endswith('</createApplianceDescriptor>'))
                 model = xobj.parse(content)
 
+        # FIXME
+        # we want to leave ITD's anonymous, but this is interesting... we're populating
+        # the list of valid target base images here, which COULD contain some confidental
+        # information.  If the type is deferred we may want to filter the list based
+        # on request._authUser and what they can see, as we'll need to do in the
+        # general collection / queryset as well.
+
+        response = self._get('platforms/image_type_definitions/deferred')
+        self.assertEqual(response.status_code, 200)
+        self.assertXMLEquals(response.content, 
+            testsxml.deferred_image_descriptor_xml)
+
         # an invalid one should 404
-        response = self._get('platforms/image_type_definitions/doesNotExist',
-            username='admin', password='password')
+        response = self._get('platforms/image_type_definitions/doesNotExist')
+        #    username='admin', password='password')
         self.assertEquals(response.status_code, 404)
          
         

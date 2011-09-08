@@ -6,6 +6,9 @@
 
 import sys
 import exceptions
+import StringIO
+
+import smartform.descriptor
 
 from mint.django_rest.rbuilder.manager import basemanager
 from mint.django_rest.rbuilder.platforms import models as platformModels
@@ -70,8 +73,13 @@ class PlatformManager(basemanager.BaseManager):
         An image type definition descriptor contains the smartform
         XML needed to define an image type, for example,
         a vmwareImage type will need virtualized RAM and disk
-        parameters
+        parameters.   (These are served from templates unless
+        the type is deferred, in which case it is generated
+        dynamically.  More types may be dynamic later.)
         '''
+        if name == 'deferred':
+            return self._getDeferredImageTypeDescriptor()
+
         modname = "%s.%s" % (IMAGE_TYPE_DESCRIPTORS, name)
         # TODO: if the IT is 'deferrred', generate dynamically
         # TODO: add IT type 'deferred'
@@ -81,6 +89,40 @@ class PlatformManager(basemanager.BaseManager):
              return None
         mod = sys.modules[modname]
         return mod.XML.strip()
+
+    def _getDeferredImageTypeDescriptor(self):
+        '''
+        A deferred image is a base image + an appliance
+        group to install on it. Here we only need to prompt
+        for the base image as the appliance group is defined
+        based on the project name.
+        '''
+        desc = smartform.descriptor.ConfigurationDescriptor()
+        desc.setRootElement("createApplianceDescriptor")
+        desc.setDisplayName("Deferred Image Configuration")
+        desc.addDescription("Deferred Image Configuration")
+
+        # TODO: maybe not all images are deployable, if so call something else
+        deployable_images = self.mgr.getUnifiedImages()
+        image_codes = [ x.name for x in deployable_images.image ]
+        # TODO: we might want a description other than just the name
+        # this is just stub data for now
+        smartform_values = [ desc.ValueWithDescription(x, descriptions=x) for x in image_codes ] 
+
+        desc.addDataField("base-image",
+            required = True,
+            multiple = False,
+            type = desc.EnumeratedType(smartform_values)
+        )
+        sio = StringIO.StringIO()
+        desc.serialize(sio)
+        result = sio.getvalue()
+
+        # FIXME -- setRootElement does not set the actual root, just the
+        # metadata, this is temporary until I find the right way to use the lib.
+        result = result.replace("<descriptor ", "<createApplianceDescriptor ")
+        result = result.replace("</descriptor>", "</createApplianceDescriptor>")
+        return result
 
 class SourceManager(basemanager.BaseManager):
     @exposed
