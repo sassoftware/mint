@@ -32,6 +32,15 @@ class TargetTypeService(service.BaseService):
         else:
             return self.mgr.getTargetTypes()
 
+class TargetTypeByTargetService(service.BaseService):
+    @return_xml
+    def rest_GET(self, request, target_id):
+        return self.get(target_id)
+        
+    def get(self, target_id):
+        return self.mgr.getTargetTypesByTargetId(target_id)
+        
+
 class TargetTypeTargetsService(service.BaseService):
     @return_xml
     def rest_GET(self, request, target_type_id):

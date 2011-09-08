@@ -47,3 +47,16 @@ target_type_GET = """
   <target_type_id>3</target_type_id>
 </target_type>
 """.strip()
+
+target_type_by_target_id_GET = \
+"""
+<?xml version='1.0' encoding='UTF-8'?>
+<target_type>
+  <created_date>2011-09-08T17:52:39+00:00</created_date>
+  <description>VMware ESX/vSphere</description>
+  <modified_date>2011-09-08T17:52:39+00:00</modified_date>
+  <name>vmware</name>
+  <target_type_id>5</target_type_id>
+  <targets id="http://testserver/api/v1/target_types/5/targets"/>
+</target_type>
+""".strip()

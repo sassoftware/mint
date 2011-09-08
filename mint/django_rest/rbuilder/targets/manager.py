@@ -47,6 +47,10 @@ class TargetTypesManager(basemanager.BaseManager):
         return models.TargetType.objects.filter(
             target_type__target_type_id=target_type_id).order_by('target_type_id')
 
+    @exposed
+    def getTargetTypesByTargetId(self, target_id):
+        target = models.Target.objects.get(pk=target_id)
+        return target.target_type
 
 class TargetCredentialsManager(basemanager.BaseManager):
     @exposed

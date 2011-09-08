@@ -9,16 +9,6 @@ class TargetsTestCase(XMLTestCase):
     def setUp(self):
         XMLTestCase.setUp(self)
         self._initTestFixtures()
-
-    def _xobj_list_hack(self, item):
-        '''
-        xobj hack: obj doesn't listify 1 element lists
-        don't break tests if there is only 1 action
-        '''
-        if type(item) != type(item):
-            return [item]
-        else:
-            return item
     
     def _initTestFixtures(self):
         sampleTargetTypes = [ models.TargetType.objects.get(name=x)
@@ -89,6 +79,13 @@ class TargetsTestCase(XMLTestCase):
         self.assertEquals(response.status_code, 200)
         self.assertXMLEquals(response.content, testsxml.target_type_GET)
 
+    def testGetTargetTypeByTargetId(self):
+        target = models.Target.objects.get(pk=1)
+        response = self._get('targets/1/target_types',
+            username='testuser', password='password')
+        self.assertEquals(response.status_code, 200)
+        self.assertXMLEquals(response.content, testsxml.target_type_by_target_id_GET)
+    
     # Finish
     def testGetTargetCredentialsForTargetByUserId(self):
         pass
