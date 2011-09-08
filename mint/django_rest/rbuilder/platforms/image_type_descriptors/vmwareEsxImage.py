@@ -2,9 +2,9 @@ XML="""<createApplianceDescriptor xmlns:xsi="http://www.w3.org/2001/XMLSchema-in
   xsi:schemaLocation="http://www.rpath.com/permanent/factorydef-1.0.xsd factorydef-1.0.xsd"
   >
     <metadata>
-        <displayName>VMware Virtual Machine Image Configuration</displayName>
+        <displayName>VMware ESX Server Image Configuration</displayName>
         <descriptions>
-            <desc>VMware Virtual Machine Image Configuration</desc>
+            <desc>VMware ESX Server Image Configuration</desc>
         </descriptions>
     </metadata>
 
@@ -17,7 +17,7 @@ XML="""<createApplianceDescriptor xmlns:xsi="http://www.w3.org/2001/XMLSchema-in
                 <desc>Image name</desc>
             </descriptions>
             <prompt>
-                <desc>Example: Example System Image for VMware</desc>
+                <desc>Example: Example System Image for VMware ESX Server</desc>
             </prompt>
             <type>str</type>
             <default></default>
@@ -86,7 +86,7 @@ XML="""<createApplianceDescriptor xmlns:xsi="http://www.w3.org/2001/XMLSchema-in
                 <desc>RAM</desc>
             </descriptions>
             <prompt>
-                <desc>Exmaple: 512</desc>
+                <desc>Example: 512</desc>
             </prompt>
             <type>int</type>
             <default>512</default>
@@ -133,38 +133,7 @@ XML="""<createApplianceDescriptor xmlns:xsi="http://www.w3.org/2001/XMLSchema-in
             <type>bool</type>
             <default>true</default>
         </field>
-        
-        
-        <field>
-            <name>container.options.diskAdapter</name>
-            <help lang="en_US">@Help_image_disk_driver@</help>
-            <required>true</required>
-            <descriptions>
-                <desc>Disk driver</desc>
-            </descriptions>
-            <prompt>
-                <desc>Select the disk driver that the VM should use.</desc>
-            </prompt>
-            <enumeratedType>
-            
-              <describedValue>
-                <descriptions>
-                  <desc>IDE</desc>
-                </descriptions>
-                <key>ide</key>
-              </describedValue>
-              
-              <describedValue>
-                <descriptions>
-                  <desc>SCSI (LSILogic)</desc>
-                </descriptions>
-                <key>lsilogic</key>
-              </describedValue>
-              
-             </enumeratedType>
-            <default>lsilogic</default>
-        </field>   
-        
+
         <field>
             <name>container.options.buildOVF10</name>
             <help lang="en_US">@Help_build_ovf_1_0@</help>
@@ -178,6 +147,7 @@ XML="""<createApplianceDescriptor xmlns:xsi="http://www.w3.org/2001/XMLSchema-in
             <type>bool</type>
             <default>false</default>
         </field>
+
                 
-      </dataFields>
+         </dataFields>
 </createApplianceDescriptor>"""

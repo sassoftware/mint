@@ -17,6 +17,7 @@ from mint.django_rest.rbuilder.inventory.tests import XMLTestCase  # pyflakes=ig
 from xobj import xobj  # pyflakes=ignore
 from lxml import etree  # pyflakes=ignore
 from mint.django_rest.rbuilder.platforms import platformstestxml
+import mint.buildtypes 
 
 class PlatformsTestCase(XMLTestCase):
     
@@ -152,13 +153,20 @@ class NewPlatformTest(XMLTestCase):
 
     def testCanGetImageTypeDefinitionDescriptor(self):
 
-        # a valid ITD...
-        response = self._get('platforms/image_type_definitions/vmwareImage',
-            username='admin', password='password')
-        self.assertEquals(response.status_code, 200)
-        self.assertXMLEquals(response.content, '<wrong></wrong>')
+        # make sure we can load all the valid types
+        for image_type in mint.buildtypes.xmlTagNameImageTypeMap.keys():
+            # we do not have XML for these because they're deprecated
+            if image_type not in [ 'netbootImage', 'liveIsoImage' ]:
+                # verify we can get the descriptor and it looks XML-ish
+                url = "platforms/image_type_definitions/%s" % image_type
+                response = self._get(url, username='admin', password='password')
+                self.assertEquals(response.status_code, 200)
+                content = response.content.strip()
+                self.assertTrue(content.startswith('<createApplianceDescriptor'))
+                self.assertTrue(content.endswith('</createApplianceDescriptor>'))
+                model = xobj.parse(content)
 
-        # an invalid one...
+        # an invalid one should 404
         response = self._get('platforms/image_type_definitions/doesNotExist',
             username='admin', password='password')
         self.assertEquals(response.status_code, 404)

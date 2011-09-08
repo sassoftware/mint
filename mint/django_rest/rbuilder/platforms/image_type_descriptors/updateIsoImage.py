@@ -2,9 +2,9 @@ XML="""<createApplianceDescriptor xmlns:xsi="http://www.w3.org/2001/XMLSchema-in
   xsi:schemaLocation="http://www.rpath.com/permanent/factorydef-1.0.xsd factorydef-1.0.xsd"
   >
     <metadata>
-        <displayName>VMware Virtual Machine Image Configuration</displayName>
+        <displayName>Update CD/DVD Image Configuration</displayName>
         <descriptions>
-            <desc>VMware Virtual Machine Image Configuration</desc>
+            <desc>Update CD/DVD Image Configuration</desc>
         </descriptions>
     </metadata>
 
@@ -17,7 +17,7 @@ XML="""<createApplianceDescriptor xmlns:xsi="http://www.w3.org/2001/XMLSchema-in
                 <desc>Image name</desc>
             </descriptions>
             <prompt>
-                <desc>Example: Example System Image for VMware</desc>
+                <desc>Example: Example System Image</desc>
             </prompt>
             <type>str</type>
             <default></default>
@@ -50,47 +50,128 @@ XML="""<createApplianceDescriptor xmlns:xsi="http://www.w3.org/2001/XMLSchema-in
         </field>
 
         <field>
-            <name>container.options.freespace</name>
-            <help lang="en_US">@Help_image_freespace@</help>
+            <name>container.options.bugsUrl</name>
+            <help lang="en_US">@Help_bug_report_url@</help>
             <required>false</required>
             <descriptions>
-                <desc>Free space</desc>
+                <desc>Bug Report URL</desc>
             </descriptions>
             <prompt>
-                <desc>Example: 256</desc>
+                <desc>Example: http://issues.example.com</desc>
             </prompt>
-            <type>int</type>
-            <default>256</default>
+            <type>str</type>
+            <default></default>
         </field>
-
+        <field>
+            <name>container.options.betaNag</name>
+            <help lang="en_US">@Help_beta@</help>
+            <required>false</required>
+            <descriptions>
+                <desc>Beta?</desc>
+            </descriptions>
+            <prompt>
+                <desc>Check to have the installer indicate that the image is a beta.</desc>
+            </prompt>
+            <type>bool</type>
+            <default></default>
+        </field>
+        <field>
+            <name>container.options.showMediaCheck</name>
+            <help lang="en_US">@Help_cd_verify@</help>
+            <required>false</required>
+            <descriptions>
+                <desc>CD verify?</desc>
+            </descriptions>
+            <prompt>
+                <desc>Check to prompt the user to verify CD/DVD images during install.</desc>
+            </prompt>
+            <type>bool</type>
+            <default></default>
+        </field>
 
         <field>
-            <name>container.options.swapSize</name>
-            <help lang="en_US">@Help_image_swapspace@</help>
+            <name>container.options.anacondaTemplatesTrove</name>
+            <help lang="en_US">@Help_anaconda_templates@</help>
             <required>false</required>
             <descriptions>
-                <desc>Swap space</desc>
+                <desc>anaconda-templates</desc>
             </descriptions>
             <prompt>
-                <desc>Example: 512</desc>
+                <desc>Example: anaconda-templates=/example.rpath.org@corp:example-1/1.1-2-1</desc>
             </prompt>
-            <type>int</type>
-            <default>512</default>
+            <type>str</type>
+            <default></default>
         </field>
-
         <field>
-            <name>container.options.vmMemory</name>
-            <help lang="en_US">@Help_image_ram@</help>
+            <name>container.options.anacondaCustomTrove</name>
+            <help lang="en_US">@Help_anaconda_custom@</help>
             <required>false</required>
             <descriptions>
-                <desc>RAM</desc>
+                <desc>anaconda-custom</desc>
             </descriptions>
             <prompt>
-                <desc>Exmaple: 512</desc>
+                <desc>Example: anaconda-custom=/example.rpath.org@corp:example-1/1.1-2-1</desc>
             </prompt>
-            <type>int</type>
-            <default>512</default>
+            <type>str</type>
+            <default></default>
         </field>
+        <field>
+            <name>container.options.mediaTemplateTrove</name>
+            <help lang="en_US">@Help_media_template@</help>
+            <required>false</required>
+            <descriptions>
+                <desc>media-template</desc>
+            </descriptions>
+            <prompt>
+                <desc>Example: media-template=/example.rpath.org@corp:example-1/1.1-2-1</desc>
+            </prompt>
+            <type>str</type>
+            <default></default>
+        </field>
+        
+        <field>
+            <name>container.options.maxIsoSize</name>
+            <help lang="en_US">@Help_iso_size@</help>
+            <required>true</required>
+            <descriptions>
+                <desc>ISO Size</desc>
+            </descriptions>
+            <prompt>
+                <desc>Select the ISO size needed for your install media.</desc>
+            </prompt>
+            <enumeratedType>
+            
+              <describedValue>
+                <descriptions>
+                  <desc>CD: 650 MB</desc>
+                </descriptions>
+                <key>681574400</key>
+              </describedValue>
+              
+              <describedValue>
+                <descriptions>
+                  <desc>CD: 700 MB</desc>
+                </descriptions>
+                <key>734003200</key>
+              </describedValue>
+              
+              <describedValue>
+                <descriptions>
+                  <desc>DVD: 4.7 GB</desc>
+                </descriptions>
+                <key>4700000000</key>
+              </describedValue>
+              
+              <describedValue>
+                <descriptions>
+                  <desc>DVD: 8.5 GB</desc>
+                </descriptions>
+                <key>8500000000</key>
+              </describedValue>
+
+             </enumeratedType>
+            <default></default>
+        </field>   
                 
         <field>
             <name>container.options.autoResolve</name>
@@ -105,79 +186,5 @@ XML="""<createApplianceDescriptor xmlns:xsi="http://www.w3.org/2001/XMLSchema-in
             <type>bool</type>
             <default>false</default>
         </field>
-
-        <field>
-            <name>container.options.natNetworking</name>
-            <help lang="en_US">@Help_image_use_nat@</help>
-            <required>false</required>
-            <descriptions>
-                <desc>Use NAT?</desc>
-            </descriptions>
-            <prompt>
-                <desc>Check if the VM should use NAT instead of bridged networking.</desc>
-            </prompt>
-            <type>bool</type>
-            <default>true</default>
-        </field>
-
-        <field>
-            <name>container.options.allowSnapshots</name>
-            <help lang="en_US">@Help_allow_snapshots@</help>
-            <required>false</required>
-            <descriptions>
-                <desc>Allow snapshots?</desc>
-            </descriptions>
-            <prompt>
-                <desc>Check if the VM should allow the user to take snapshots of the system.</desc>
-            </prompt>
-            <type>bool</type>
-            <default>true</default>
-        </field>
-        
-        
-        <field>
-            <name>container.options.diskAdapter</name>
-            <help lang="en_US">@Help_image_disk_driver@</help>
-            <required>true</required>
-            <descriptions>
-                <desc>Disk driver</desc>
-            </descriptions>
-            <prompt>
-                <desc>Select the disk driver that the VM should use.</desc>
-            </prompt>
-            <enumeratedType>
-            
-              <describedValue>
-                <descriptions>
-                  <desc>IDE</desc>
-                </descriptions>
-                <key>ide</key>
-              </describedValue>
-              
-              <describedValue>
-                <descriptions>
-                  <desc>SCSI (LSILogic)</desc>
-                </descriptions>
-                <key>lsilogic</key>
-              </describedValue>
-              
-             </enumeratedType>
-            <default>lsilogic</default>
-        </field>   
-        
-        <field>
-            <name>container.options.buildOVF10</name>
-            <help lang="en_US">@Help_build_ovf_1_0@</help>
-            <required>false</required>
-            <descriptions>
-                <desc>Generate in OVF 1.0?</desc>
-            </descriptions>
-            <prompt>
-                <desc>Check to generate the image in OVF 1.0 format.</desc>
-            </prompt>
-            <type>bool</type>
-            <default>false</default>
-        </field>
-                
-      </dataFields>
+    </dataFields>
 </createApplianceDescriptor>"""

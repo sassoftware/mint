@@ -2,9 +2,9 @@ XML="""<createApplianceDescriptor xmlns:xsi="http://www.w3.org/2001/XMLSchema-in
   xsi:schemaLocation="http://www.rpath.com/permanent/factorydef-1.0.xsd factorydef-1.0.xsd"
   >
     <metadata>
-        <displayName>VMware Virtual Machine Image Configuration</displayName>
+        <displayName>Mountable Filesystem Image Configuration</displayName>
         <descriptions>
-            <desc>VMware Virtual Machine Image Configuration</desc>
+            <desc>Mountable Filesystem Image Configuration</desc>
         </descriptions>
     </metadata>
 
@@ -17,7 +17,7 @@ XML="""<createApplianceDescriptor xmlns:xsi="http://www.w3.org/2001/XMLSchema-in
                 <desc>Image name</desc>
             </descriptions>
             <prompt>
-                <desc>Example: Example System Image for VMware</desc>
+                <desc>Example: Example System Image</desc>
             </prompt>
             <type>str</type>
             <default></default>
@@ -77,21 +77,7 @@ XML="""<createApplianceDescriptor xmlns:xsi="http://www.w3.org/2001/XMLSchema-in
             <type>int</type>
             <default>512</default>
         </field>
-
-        <field>
-            <name>container.options.vmMemory</name>
-            <help lang="en_US">@Help_image_ram@</help>
-            <required>false</required>
-            <descriptions>
-                <desc>RAM</desc>
-            </descriptions>
-            <prompt>
-                <desc>Exmaple: 512</desc>
-            </prompt>
-            <type>int</type>
-            <default>512</default>
-        </field>
-                
+        
         <field>
             <name>container.options.autoResolve</name>
             <help lang="en_US">@Help_resolve_dependencies@</help>
@@ -107,65 +93,6 @@ XML="""<createApplianceDescriptor xmlns:xsi="http://www.w3.org/2001/XMLSchema-in
         </field>
 
         <field>
-            <name>container.options.natNetworking</name>
-            <help lang="en_US">@Help_image_use_nat@</help>
-            <required>false</required>
-            <descriptions>
-                <desc>Use NAT?</desc>
-            </descriptions>
-            <prompt>
-                <desc>Check if the VM should use NAT instead of bridged networking.</desc>
-            </prompt>
-            <type>bool</type>
-            <default>true</default>
-        </field>
-
-        <field>
-            <name>container.options.allowSnapshots</name>
-            <help lang="en_US">@Help_allow_snapshots@</help>
-            <required>false</required>
-            <descriptions>
-                <desc>Allow snapshots?</desc>
-            </descriptions>
-            <prompt>
-                <desc>Check if the VM should allow the user to take snapshots of the system.</desc>
-            </prompt>
-            <type>bool</type>
-            <default>true</default>
-        </field>
-        
-        
-        <field>
-            <name>container.options.diskAdapter</name>
-            <help lang="en_US">@Help_image_disk_driver@</help>
-            <required>true</required>
-            <descriptions>
-                <desc>Disk driver</desc>
-            </descriptions>
-            <prompt>
-                <desc>Select the disk driver that the VM should use.</desc>
-            </prompt>
-            <enumeratedType>
-            
-              <describedValue>
-                <descriptions>
-                  <desc>IDE</desc>
-                </descriptions>
-                <key>ide</key>
-              </describedValue>
-              
-              <describedValue>
-                <descriptions>
-                  <desc>SCSI (LSILogic)</desc>
-                </descriptions>
-                <key>lsilogic</key>
-              </describedValue>
-              
-             </enumeratedType>
-            <default>lsilogic</default>
-        </field>   
-        
-        <field>
             <name>container.options.buildOVF10</name>
             <help lang="en_US">@Help_build_ovf_1_0@</help>
             <required>false</required>
@@ -178,6 +105,6 @@ XML="""<createApplianceDescriptor xmlns:xsi="http://www.w3.org/2001/XMLSchema-in
             <type>bool</type>
             <default>false</default>
         </field>
-                
-      </dataFields>
+
+    </dataFields>
 </createApplianceDescriptor>"""

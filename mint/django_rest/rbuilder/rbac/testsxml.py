@@ -33,7 +33,7 @@ user_get_xml_with_roles = """
   <user_groups/>
   <user_id>2003</user_id>
   <user_name>ExampleIntern</user_name>
-  <target_user_id/>
+  <target_user_credentials/>
 </user>
 """
 
