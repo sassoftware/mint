@@ -21,6 +21,13 @@ class TargetManagerTest(mint_rephelp.MintDatabaseHelper):
         mint_rephelp.MintDatabaseHelper.setUp(self)
         tmgr.importTargetSystems = lambda *args, **kwargs: True
 
+        db = self.openMintDatabase(createRepos=False)
+        cu = db.cursor()
+        for ttype in [ 'type1', 'type2' ]:
+            cu.execute("INSERT INTO target_types (name, description) VALUES (?, ?)",
+                ttype, ttype + " description")
+        db.commit()
+
     def _newTarget(self, targetType=None, targetName=None, targetData=None):
         targetType = targetType or 'ec2'
         targetName = targetName or 'eww-west-1'

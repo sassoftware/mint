@@ -740,9 +740,10 @@ class ProjectUsersTable(database.DatabaseTable):
               JOIN TargetUserCredentials AS tuc USING (userId)
               JOIN TargetCredentials AS tc USING (targetCredentialsId)
               JOIN Targets ON (tuc.targetId=Targets.targetId)
+              JOIN target_types USING (target_type_id)
              WHERE pu.projectId = ?
-               AND Targets.targetType = ?
-               AND Targets.targetName = ?""", projectId, 'ec2', 'aws')
+               AND target_types.name = ?
+               AND Targets.name = ?""", projectId, 'ec2', 'aws')
         for isWriter, creds in cu.fetchall():
             val = mintdata.unmarshalTargetUserCredentials(creds).get('accountId')
             if val is None:

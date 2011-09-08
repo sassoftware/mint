@@ -82,7 +82,7 @@ class User(modellib.XObjIdModel):
         'package_build_jobs_created', 'package_builds_created', 'package_version_jobs_created',
         'imageUpdater', 'package_version_urls_created', 'package_versions_last_modified',
         'package_source_jobs_last_modified', 'package_builds_last_modified',
-        'targetusercredentials_set', 'package_version_jobs_last_modified', 'package_sources_created',
+        'target_user_credentials', 'package_version_jobs_last_modified', 'package_sources_created',
         'system_set', 'package_builds_jobs_last_modified', 'package_sources_last_modified',
         'usermember', 'package_versions_created', 'packages_created', 'user',
         'created_images', 'updated_images', 'project_membership',
