@@ -43,50 +43,19 @@ class Actions(modellib.XObjModel):
         abstract = True
         
     list_fields = ['action']
-    
-class JobDescriptor(modellib.XObjIdModel):
-    '''URL to fetch a smartforms descriptor from'''
-    class Meta:
-        abstract = True
-    _xobj = xobj.XObjMetadata(tag='descriptor', attributes={'id':str})
-    id = models.TextField(null=True)
-    
-    def serialize(self, request):
-        xobj_model = modellib.XObjIdModel.serialize(self, request)
-        xobj_model.id = self.get_absolute_url(request)
-        return xobj_model
 
-    def get_absolute_url(self, request, *args, **kwargs):
-        # this may serve systems, images, etc
-        if request is not None:
-            fullpath = request.get_full_path()
-            return request.build_absolute_uri(
-                urlparse.urljoin(fullpath, "descriptors/%s" % self.id)
-            )
-        else:
-            # allow to_xml to work from epdb, etc
-            return ""
-
-# NOTE: this being an id model is bogus, and is only so we can
-# override serializaiton
-
-class Action(modellib.XObjIdModel):
+class Action(modellib.XObjModel):
     '''Represents the ability to spawn a job, and how to do it'''
     class Meta:
         abstract = True
-        
-    _xobj = xobj.XObjMetadata(tag='action', attributes={'type':str})
-    
-    type        = models.CharField(max_length=1026)
+
+    _xobj = xobj.XObjMetadata(tag='action', attributes={})
+
+    job_type    = modellib.HrefField()
     name        = models.CharField(max_length=1026)
     description = models.TextField()
-    descriptor  = JobDescriptor()
-
-    #def serialize(self, request=None):
-    #    # TODO: supply actual values
-    #    xobj_model = modellib.XObjIdModel.serialize(self, request)
-    #    xobj_model.descriptor.id = '9001'
-    #    return xobj_model
+    descriptor  = modellib.HrefField()
+    enabled     = models.BooleanField(default=True)
 
 class Jobs(modellib.Collection):
     
@@ -399,13 +368,14 @@ class EventType(modellib.XObjIdModel):
     @classmethod
     def makeAction(cls, name):
         '''Return a related Action object for spawning this jobtype'''
-        obj        = cls.objects.get(name=name)
-        action  = Action(
-            type        = obj.job_type_id,
-            name        = name,
-            description = obj.description
+        obj = modellib.Cache.get(cls, name=name)
+        action = Action(
+            job_type = modellib.HrefFieldFromModel(obj),
+            name = name,
+            description = obj.description,
+            enabled = True,
         )
-        action.descriptor = JobDescriptor(id=obj.job_type_id)
+        action.descriptor = modellib.HrefField("descriptors/%s", values=(obj.job_type_id, ))
         return action
 
 for mod_obj in sys.modules[__name__].__dict__.values():

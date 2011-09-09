@@ -83,9 +83,11 @@ queryset_put_xml = """
 queryset_with_actions = """
 <query_set id="http://testserver/api/v1/query_sets/5">
   <actions>
-    <action type="14">
+    <action>
       <description>Refresh queryset</description>
       <descriptor id="http://testserver/api/v1/query_sets/5/descriptors/14"/>
+      <enabled>true</enabled>
+      <job_type id="http://testserver/api/v1/inventory/event_types/14"/>
       <name>refresh queryset</name>
     </action>
   </actions>
