@@ -485,15 +485,15 @@ deferred_image_descriptor_xml = """
       <enumeratedType>
         <describedValue>
           <descriptions>
-            <desc>placeholder</desc>
+            <desc>alpha</desc>
           </descriptions>
-          <key>placeholder</key>
+        <key>dummy-trove=/example.rpath.com@dummy:label/1.0-1-1</key>
         </describedValue>
         <describedValue>
           <descriptions>
-            <desc>placeholder</desc>
+            <desc>beta</desc>
           </descriptions>
-          <key>placeholder</key>
+          <key>dummy-trove=/example.rpath.com@dummy:label/1.0-1-1</key>
         </describedValue>
       </enumeratedType>
       <multiple>false</multiple>

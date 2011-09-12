@@ -12,6 +12,7 @@ import smartform.descriptor
 
 from mint.django_rest.rbuilder.manager import basemanager
 from mint.django_rest.rbuilder.platforms import models as platform_models
+from mint.django_rest.rbuilder.projects import models as project_models
 
 IMAGE_TYPE_DESCRIPTORS="mint.django_rest.rbuilder.platforms.image_type_descriptors"
 exposed = basemanager.exposed
@@ -100,12 +101,16 @@ class PlatformManager(basemanager.BaseManager):
         desc.setDisplayName("Deferred Image Configuration")
         desc.addDescription("Deferred Image Configuration")
 
-        # TODO: maybe not all images are deployable, if so call something else
-        deployable_images = self.mgr.getUnifiedImages()
-        image_codes = [ x.name for x in deployable_images.image ]
-        # TODO: we might want a description other than just the name
-        # this is just stub data for now
-        smartform_values = [ desc.ValueWithDescription(x, descriptions=x) for x in image_codes ] 
+        # TODO: this might be filtered more aggressively later
+        # right now the image list could get very large
+
+        deployable_images = project_models.Image.objects.filter(
+            output_trove__isnull=False
+        )
+
+        smartform_values = [ desc.ValueWithDescription(
+           x.output_trove, descriptions=x.name) for
+               x in deployable_images ]
 
         desc.addDataField("base-image",
             required = True,
