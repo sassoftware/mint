@@ -36,16 +36,17 @@ class ProjectManager(basemanager.BaseManager):
 
     @exposed 
     def getProjects(self):
+        # FIXME -- this needs to be rewritten to run in a constant number of queries
         allProjects = models.Projects()
         # We better return things in a stable order
         allProjects.project = sorted(
-            (p for p in models.Project.objects.all() if self.checkProjectAccess(p)),
+            (p for p in models.Project.objects.select_related().all() if self.checkProjectAccess(p)),
             key=lambda x: x.project_id)
         return allProjects
 
     @exposed
     def getProject(self, project_name):
-        project = models.Project.objects.get(short_name=project_name)
+        project = models.Project.objects.select_related().get(short_name=project_name)
         if self.checkProjectAccess(project):   
             return project
         raise errors.PermissionDenied() 
@@ -319,7 +320,7 @@ class ProjectManager(basemanager.BaseManager):
         # FIXME: use the href and look up the platform in the DB instead
         platformLabel = getattr(projectVersion.platform, 'label', None)
         if platformLabel:
-            platform = platform_models.Platform.objects.get(label=str(platformLabel))
+            platform = platform_models.Platform.objects.select_related().get(label=str(platformLabel))
             cclient = self.mgr.getAdminClient(write=True)
             pd.rebase(cclient, platform.label)
         self.saveProductVersionDefinition(projectVersion, pd)
@@ -342,9 +343,11 @@ class ProjectManager(basemanager.BaseManager):
 
     @exposed
     def getProjectMembers(self, shortName):
-        project = models.Project.objects.get(short_name=shortName)
+        project = models.Project.objects.select_related().get(short_name=shortName)
         members = models.Members()
-        members.member = [m for m in project.members.all()]
+        # FIXME -- to avoid serialization overhead, should this be a paged
+        # collection versus inline?
+        members.member = [m for m in project.members.select_related().all()]
         members._parents = [project]
         return members
 
@@ -363,12 +366,12 @@ class ProjectManager(basemanager.BaseManager):
 
     @exposed
     def getStage(self, stageId):
-        stage = models.Stage.objects.get(pk=stageId)
+        stage = models.Stage.objects.select_related().get(pk=stageId)
         return stage
 
     @exposed
     def getStageOld(self, shortName, projectVersionId, stageName):
-        projectVersion = models.ProjectVersion.objects.get(
+        projectVersion = models.ProjectVersion.objects.select_related().get(
             pk=projectVersionId) 
         project = projectVersion.project
         pd = self.getProductVersionDefinitionByProjectVersion(projectVersion)
@@ -383,13 +386,13 @@ class ProjectManager(basemanager.BaseManager):
 
     @exposed
     def getImage(self, image_id):
-        return models.Image.objects.get(pk=image_id)
+        return models.Image.objects.select_related().get(pk=image_id)
 
     @exposed
     def getImagesForProject(self, short_name):
         project = self.getProject(short_name)
         Images = models.Images()
-        Images.image = models.Image.objects.filter(
+        Images.image = models.Image.objects.select_related().filter(
             project__project_id=project.project_id).order_by('image_id')
         Images.url_key = [ short_name ]
         Images.view_name = 'ProjectImages'
@@ -455,14 +458,14 @@ class ProjectManager(basemanager.BaseManager):
 
     @exposed
     def getProjectAllBranchStages(self, project_short_name):
-        iterator = models.Stage.objects.filter(
+        iterator = models.Stage.objects.select_related().filter(
                 project__short_name=project_short_name).order_by(
                     'project__project_id', 'project_branch__branch_id', 'stage_id')
         return self._stageFilter(iterator)
 
     @exposed
     def getProjectBranchStages(self, project_short_name, project_branch_label):
-        iterator = models.Stage.objects.filter(
+        iterator = models.Stage.objects.select_related().filter(
                 project__short_name=project_short_name,
                 project_branch__label=project_branch_label).order_by(
                     'project__project_id', 'project_branch__branch_id', 'stage_id')
@@ -478,9 +481,11 @@ class ProjectManager(basemanager.BaseManager):
     def getProjectBranchStageImages(self, project_short_name, project_branch_label, stage_name):
         stage = self.getProjectBranchStage(project_short_name, project_branch_label, stage_name)
 
+        # FIXME -- this needs to be rewritten to run in a constant number of queries
+
         # First, find all images directly linked to this stage
         imagesMap = dict((x.image_id, x)
-            for x in models.Image.objects.filter(
+            for x in models.Image.objects.select_related().filter(
                 project_branch_stage__stage_id=stage.stage_id))
         # Then get the ones belonging to the same branch, that only have
         # a stage name
