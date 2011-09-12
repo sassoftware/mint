@@ -97,6 +97,8 @@ class JobsTestCase(BaseJobsTest):
         response = self._put('jobs/%s' % jobUuid, jobXml,
             jobToken=jobToken)
         self.assertEquals(response.status_code, 200)
+        obj = xobj.parse(response.content)
+        self.failUnlessEqual(obj.job.id, "http://testserver/api/v1/jobs/%s" % job.job_uuid)
 
 class Jobs2TestCase(BaseJobsTest):
     def _mock(self):

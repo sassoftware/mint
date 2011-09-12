@@ -7,7 +7,7 @@
 import inspect
 import weakref
 
-from mint.django_rest.rbuilder import errors, modellib
+from mint.django_rest.rbuilder import errors
 from mint.django_rest.rbuilder.manager import basemanager
 from mint.django_rest.rbuilder.jobs import models
 from mint.django_rest.rbuilder.inventory import models as inventorymodels
