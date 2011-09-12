@@ -107,6 +107,7 @@ class ProductVersionTest(restbase.BaseRestTest):
       <name>xen</name>
       <displayName>Xen</displayName>
     </flavorSet>
+    <descriptor id="/api/v1/platforms/image_type_definitions/xenOvaImage"/>
   </imageDefinition>
   <imageDefinition id="http://%(server)s:%(port)s/api/products/testproject/versions/1.0/imageDefinitions/6471e079080cb3d767e81c4ef112c1da">
     <name>Citrix XenServer 64-bit</name>
@@ -128,6 +129,7 @@ class ProductVersionTest(restbase.BaseRestTest):
       <name>xen</name>
       <displayName>Xen</displayName>
     </flavorSet>
+    <descriptor id="/api/v1/platforms/image_type_definitions/xenOvaImage"/>
   </imageDefinition>
   <imageDefinition id="http://%(server)s:%(port)s/api/products/testproject/versions/1.0/imageDefinitions/e9ab1e72b797d11ce4f6b98e92aeee2f">
     <name>VMware ESX 32-bit</name>
@@ -149,6 +151,7 @@ class ProductVersionTest(restbase.BaseRestTest):
       <name>vmware</name>
       <displayName>VMware</displayName>
     </flavorSet>
+    <descriptor id="/api/v1/platforms/image_type_definitions/vmwareEsxImage"/>
   </imageDefinition>
   <imageDefinition id="http://%(server)s:%(port)s/api/products/testproject/versions/1.0/imageDefinitions/100f456aff2280f146c8bfbdb5be8fdf">
     <name>VMware ESX 64-bit</name>
@@ -170,6 +173,7 @@ class ProductVersionTest(restbase.BaseRestTest):
       <name>vmware</name>
       <displayName>VMware</displayName>
     </flavorSet>
+    <descriptor id="/api/v1/platforms/image_type_definitions/vmwareEsxImage"/>
   </imageDefinition>
 </imageDefinitions>
 """
@@ -207,6 +211,7 @@ class ProductVersionTest(restbase.BaseRestTest):
       <name>xen</name>
       <displayName>Xen</displayName>
     </flavorSet>
+    <descriptor id="/api/v1/platforms/image_type_definitions/xenOvaImage"/>
   </imageDefinition>
   <imageDefinition id="http://%(server)s:%(port)s/api/products/testproject/versions/1.0/imageDefinitions/6471e079080cb3d767e81c4ef112c1da">
     <name>Citrix XenServer 64-bit</name>
@@ -228,6 +233,7 @@ class ProductVersionTest(restbase.BaseRestTest):
       <name>xen</name>
       <displayName>Xen</displayName>
     </flavorSet>
+    <descriptor id="/api/v1/platforms/image_type_definitions/xenOvaImage"/>
   </imageDefinition>
   <imageDefinition id="http://%(server)s:%(port)s/api/products/testproject/versions/1.0/imageDefinitions/e9ab1e72b797d11ce4f6b98e92aeee2f">
     <name>VMware ESX 32-bit</name>
@@ -249,6 +255,7 @@ class ProductVersionTest(restbase.BaseRestTest):
       <name>vmware</name>
       <displayName>VMware</displayName>
     </flavorSet>
+    <descriptor id="/api/v1/platforms/image_type_definitions/vmwareEsxImage"/>
   </imageDefinition>
   <imageDefinition id="http://%(server)s:%(port)s/api/products/testproject/versions/1.0/imageDefinitions/100f456aff2280f146c8bfbdb5be8fdf">
     <name>VMware ESX 64-bit</name>
@@ -270,6 +277,7 @@ class ProductVersionTest(restbase.BaseRestTest):
       <name>vmware</name>
       <displayName>VMware</displayName>
     </flavorSet>
+    <descriptor id="/api/v1/platforms/image_type_definitions/vmwareEsxImage"/>
   </imageDefinition>
 </imageDefinitions>
 """
@@ -303,6 +311,7 @@ class ProductVersionTest(restbase.BaseRestTest):
       <name>ami</name>
       <displayName>AMI</displayName>
     </flavorSet>
+    <descriptor id="/api/v1/platforms/image_type_definitions/amiImage"/>
   </imageTypeDefinition>
   <imageTypeDefinition id="http://%(server)s:%(port)s/api/products/testproject/versions/1.0/imageTypeDefinitions/b9ffaaafacae3b42f72864d113d7995c">
     <name>ec2_small</name>
@@ -320,6 +329,7 @@ class ProductVersionTest(restbase.BaseRestTest):
       <name>ami</name>
       <displayName>AMI</displayName>
     </flavorSet>
+    <descriptor id="/api/v1/platforms/image_type_definitions/amiImage"/>
   </imageTypeDefinition>
   <imageTypeDefinition id="http://%(server)s:%(port)s/api/products/testproject/versions/1.0/imageTypeDefinitions/ac0063910f7134cc838281b7fb5d42c2">
     <name>iso</name>
@@ -333,6 +343,7 @@ class ProductVersionTest(restbase.BaseRestTest):
       <name>x86</name>
       <displayName>x86 (32-bit)</displayName>
     </architecture>
+    <descriptor id="/api/v1/platforms/image_type_definitions/applianceIsoImage"/>
   </imageTypeDefinition>
   <imageTypeDefinition id="http://%(server)s:%(port)s/api/products/testproject/versions/1.0/imageTypeDefinitions/693912898a7deda5fba2e11da496e31c">
     <name>iso</name>
@@ -346,6 +357,7 @@ class ProductVersionTest(restbase.BaseRestTest):
       <name>x86</name>
       <displayName>x86 (32-bit)</displayName>
     </architecture>
+    <descriptor id="/api/v1/platforms/image_type_definitions/installableIsoImage"/>
   </imageTypeDefinition>
   <imageTypeDefinition id="http://%(server)s:%(port)s/api/products/testproject/versions/1.0/imageTypeDefinitions/00ce8ec04c049013d2d032a7d59b4353">
     <name>iso</name>
@@ -359,6 +371,7 @@ class ProductVersionTest(restbase.BaseRestTest):
       <name>x86</name>
       <displayName>x86 (32-bit)</displayName>
     </architecture>
+    <descriptor id="/api/v1/platforms/image_type_definitions/updateIsoImage"/>
   </imageTypeDefinition>
   <imageTypeDefinition id="http://%(server)s:%(port)s/api/products/testproject/versions/1.0/imageTypeDefinitions/e9b231d3812e4ec7808c1b56d700f933">
     <name>iso</name>
@@ -372,6 +385,7 @@ class ProductVersionTest(restbase.BaseRestTest):
       <name>x86_64</name>
       <displayName>x86 (64-bit)</displayName>
     </architecture>
+    <descriptor id="/api/v1/platforms/image_type_definitions/applianceIsoImage"/>
   </imageTypeDefinition>
   <imageTypeDefinition id="http://%(server)s:%(port)s/api/products/testproject/versions/1.0/imageTypeDefinitions/efab84338c2862b8d04fd3783a3394e9">
     <name>iso</name>
@@ -385,6 +399,7 @@ class ProductVersionTest(restbase.BaseRestTest):
       <name>x86_64</name>
       <displayName>x86 (64-bit)</displayName>
     </architecture>
+    <descriptor id="/api/v1/platforms/image_type_definitions/installableIsoImage"/>
   </imageTypeDefinition>
   <imageTypeDefinition id="http://%(server)s:%(port)s/api/products/testproject/versions/1.0/imageTypeDefinitions/270978cfe105c57aff7eb3569717da2b">
     <name>iso</name>
@@ -398,6 +413,7 @@ class ProductVersionTest(restbase.BaseRestTest):
       <name>x86_64</name>
       <displayName>x86 (64-bit)</displayName>
     </architecture>
+    <descriptor id="/api/v1/platforms/image_type_definitions/updateIsoImage"/>
   </imageTypeDefinition>
   <imageTypeDefinition id="http://%(server)s:%(port)s/api/products/testproject/versions/1.0/imageTypeDefinitions/4375b6b1a1607aa176d2adf29acdf83a">
     <name>hyper_v</name>
@@ -415,6 +431,7 @@ class ProductVersionTest(restbase.BaseRestTest):
       <name>generic</name>
       <displayName>Generic</displayName>
     </flavorSet>
+    <descriptor id="/api/v1/platforms/image_type_definitions/vhdImage"/>
   </imageTypeDefinition>
   <imageTypeDefinition id="http://%(server)s:%(port)s/api/products/testproject/versions/1.0/imageTypeDefinitions/a23df9b49d9fa36664c2d4009a457e23">
     <name>hyper_v</name>
@@ -432,6 +449,7 @@ class ProductVersionTest(restbase.BaseRestTest):
       <name>generic</name>
       <displayName>Generic</displayName>
     </flavorSet>
+    <descriptor id="/api/v1/platforms/image_type_definitions/vhdImage"/>
   </imageTypeDefinition>
   <imageTypeDefinition id="http://%(server)s:%(port)s/api/products/testproject/versions/1.0/imageTypeDefinitions/cf16e2998c6b727dd96b4fd923a2c5e1">
     <name>raw_fs</name>
@@ -445,6 +463,7 @@ class ProductVersionTest(restbase.BaseRestTest):
       <name>x86</name>
       <displayName>x86 (32-bit)</displayName>
     </architecture>
+    <descriptor id="/api/v1/platforms/image_type_definitions/rawFsImage"/>
   </imageTypeDefinition>
   <imageTypeDefinition id="http://%(server)s:%(port)s/api/products/testproject/versions/1.0/imageTypeDefinitions/dece8286c53268d424f719606a9182ec">
     <name>raw_fs</name>
@@ -458,6 +477,7 @@ class ProductVersionTest(restbase.BaseRestTest):
       <name>x86_64</name>
       <displayName>x86 (64-bit)</displayName>
     </architecture>
+    <descriptor id="/api/v1/platforms/image_type_definitions/rawFsImage"/>
   </imageTypeDefinition>
   <imageTypeDefinition id="http://%(server)s:%(port)s/api/products/testproject/versions/1.0/imageTypeDefinitions/6b9ec3e88b39e5f7db1e81ed5f5d1ef0">
     <name>raw_hd</name>
@@ -471,6 +491,7 @@ class ProductVersionTest(restbase.BaseRestTest):
       <name>x86</name>
       <displayName>x86 (32-bit)</displayName>
     </architecture>
+    <descriptor id="/api/v1/platforms/image_type_definitions/rawHdImage"/>
   </imageTypeDefinition>
   <imageTypeDefinition id="http://%(server)s:%(port)s/api/products/testproject/versions/1.0/imageTypeDefinitions/287c7becce8de890d5b1626dd429eb47">
     <name>raw_hd</name>
@@ -484,6 +505,7 @@ class ProductVersionTest(restbase.BaseRestTest):
       <name>x86_64</name>
       <displayName>x86 (64-bit)</displayName>
     </architecture>
+    <descriptor id="/api/v1/platforms/image_type_definitions/rawHdImage"/>
   </imageTypeDefinition>
   <imageTypeDefinition id="http://%(server)s:%(port)s/api/products/testproject/versions/1.0/imageTypeDefinitions/48bb9ca059314422f9cc0f09afb65976">
     <name>tar</name>
@@ -497,6 +519,7 @@ class ProductVersionTest(restbase.BaseRestTest):
       <name>x86</name>
       <displayName>x86 (32-bit)</displayName>
     </architecture>
+    <descriptor id="/api/v1/platforms/image_type_definitions/tarballImage"/>
   </imageTypeDefinition>
   <imageTypeDefinition id="http://%(server)s:%(port)s/api/products/testproject/versions/1.0/imageTypeDefinitions/1e297fa23928806462908182ada781a0">
     <name>tar</name>
@@ -510,6 +533,7 @@ class ProductVersionTest(restbase.BaseRestTest):
       <name>x86_64</name>
       <displayName>x86 (64-bit)</displayName>
     </architecture>
+    <descriptor id="/api/v1/platforms/image_type_definitions/tarballImage"/>
   </imageTypeDefinition>
   <imageTypeDefinition id="http://%(server)s:%(port)s/api/products/testproject/versions/1.0/imageTypeDefinitions/0f1ead937e2152c31c2cdaa4f350a25f">
     <name>vmware</name>
@@ -527,6 +551,7 @@ class ProductVersionTest(restbase.BaseRestTest):
       <name>vmware</name>
       <displayName>VMware</displayName>
     </flavorSet>
+    <descriptor id="/api/v1/platforms/image_type_definitions/vmwareImage"/>
   </imageTypeDefinition>
   <imageTypeDefinition id="http://%(server)s:%(port)s/api/products/testproject/versions/1.0/imageTypeDefinitions/4599da97777a0ef9208c831872f65e1a">
     <name>vmware</name>
@@ -544,6 +569,7 @@ class ProductVersionTest(restbase.BaseRestTest):
       <name>vmware</name>
       <displayName>VMware</displayName>
     </flavorSet>
+    <descriptor id="/api/v1/platforms/image_type_definitions/vmwareEsxImage"/>
   </imageTypeDefinition>
   <imageTypeDefinition id="http://%(server)s:%(port)s/api/products/testproject/versions/1.0/imageTypeDefinitions/5fbfbac74be1703761d5f4d843aca4d1">
     <name>vmware</name>
@@ -561,6 +587,7 @@ class ProductVersionTest(restbase.BaseRestTest):
       <name>vmware</name>
       <displayName>VMware</displayName>
     </flavorSet>
+    <descriptor id="/api/v1/platforms/image_type_definitions/vmwareImage"/>
   </imageTypeDefinition>
   <imageTypeDefinition id="http://%(server)s:%(port)s/api/products/testproject/versions/1.0/imageTypeDefinitions/14e2f46bc7d83b95300b17dded8d1c4c">
     <name>vmware</name>
@@ -578,6 +605,7 @@ class ProductVersionTest(restbase.BaseRestTest):
       <name>vmware</name>
       <displayName>VMware</displayName>
     </flavorSet>
+    <descriptor id="/api/v1/platforms/image_type_definitions/vmwareEsxImage"/>
   </imageTypeDefinition>
   <imageTypeDefinition id="http://%(server)s:%(port)s/api/products/testproject/versions/1.0/imageTypeDefinitions/d0bf5e94df8c729839c2b3a50d8e5b34">
     <name>virtual_iron</name>
@@ -595,6 +623,7 @@ class ProductVersionTest(restbase.BaseRestTest):
       <name>virtual_iron</name>
       <displayName>Virtual Iron</displayName>
     </flavorSet>
+    <descriptor id="/api/v1/platforms/image_type_definitions/virtualIronImage"/>
   </imageTypeDefinition>
   <imageTypeDefinition id="http://%(server)s:%(port)s/api/products/testproject/versions/1.0/imageTypeDefinitions/124a6b3c25ee6f1d07530cb751ac15bb">
     <name>virtual_iron</name>
@@ -612,6 +641,7 @@ class ProductVersionTest(restbase.BaseRestTest):
       <name>virtual_iron</name>
       <displayName>Virtual Iron</displayName>
     </flavorSet>
+    <descriptor id="/api/v1/platforms/image_type_definitions/virtualIronImage"/>
   </imageTypeDefinition>
   <imageTypeDefinition id="http://%(server)s:%(port)s/api/products/testproject/versions/1.0/imageTypeDefinitions/2560dae479b4fe726ac0429de3a72c5c">
     <name>xen_ova</name>
@@ -629,6 +659,7 @@ class ProductVersionTest(restbase.BaseRestTest):
       <name>xen</name>
       <displayName>Xen</displayName>
     </flavorSet>
+    <descriptor id="/api/v1/platforms/image_type_definitions/xenOvaImage"/>
   </imageTypeDefinition>
   <imageTypeDefinition id="http://%(server)s:%(port)s/api/products/testproject/versions/1.0/imageTypeDefinitions/acd0dc888ab70e27d38447365fcb9f56">
     <name>xen_ova</name>
@@ -646,6 +677,7 @@ class ProductVersionTest(restbase.BaseRestTest):
       <name>xen</name>
       <displayName>Xen</displayName>
     </flavorSet>
+    <descriptor id="/api/v1/platforms/image_type_definitions/xenOvaImage"/>
   </imageTypeDefinition>
 </imageTypeDefinitions>
 """
@@ -799,6 +831,7 @@ class ProductVersionTest(restbase.BaseRestTest):
       <name>xen</name>
       <displayName>Xen</displayName>
     </flavorSet>
+    <descriptor id="/api/v1/platforms/image_type_definitions/xenOvaImage"/>
   </imageDefinition>
   <imageDefinition id="http://%(server)s:%(port)s/api/products/testproject/versions/1.0/imageDefinitions/f529d60760c1d1b0250bbe5787a9f661">
     <name>virtual_irony 32-bit</name>
@@ -820,6 +853,7 @@ class ProductVersionTest(restbase.BaseRestTest):
       <name>virtual_iron</name>
       <displayName>Virtual Iron</displayName>
     </flavorSet>
+    <descriptor id="/api/v1/platforms/image_type_definitions/virtualIronImage"/>
   </imageDefinition>
   <imageDefinition id="http://%(server)s:%(port)s/api/products/testproject/versions/1.0/imageDefinitions/23b4aba399fd29e9f28aac7a0c16d0ae">
     <name>update iso 64-bit</name>
@@ -837,6 +871,7 @@ class ProductVersionTest(restbase.BaseRestTest):
       <name>x86_64</name>
       <displayName>x86 (64-bit)</displayName>
     </architecture>
+    <descriptor id="/api/v1/platforms/image_type_definitions/updateIsoImage"/>
   </imageDefinition>
   <imageDefinition id="http://localhost:8000/api/products/testproject/versions/1.0/imageDefinitions/007a4984a99129d86084918e09bfaf42">
     <name>Old UI image that has an extra generic flavor in it</name>
@@ -854,6 +889,7 @@ class ProductVersionTest(restbase.BaseRestTest):
       <name>x86</name>
       <displayName>x86 (32-bit)</displayName>
     </architecture>
+    <descriptor id="/api/v1/platforms/image_type_definitions/applianceIsoImage"/>
   </imageDefinition>
 </imageDefinitions>
 """
@@ -1080,6 +1116,7 @@ imageSet1 = """
       <options autoResolve="false" installLabelPath="" baseFileName="" swapSize="512" freespace="2048"/>
     </container>
     <architecture id="http://%(server)s:%(port)s/api/products/testproject/versions/1.0/architectures/x86_64" />
+    <descriptor id="/api/v1/platforms/image_type_definitions/updateIsoImage"/>
   </imageDefinition>
   <imageDefinition>
     <name>Old UI image that has an extra generic flavor in it</name>
@@ -1090,6 +1127,7 @@ imageSet1 = """
     <architecture id="http://%(server)s:%(port)s/api/products/testproject/versions/1.0/architectures/x86" />
     <flavorSet id="http://%(server)s:%(port)s/api/products/testproject/versions/1.0/flavorSets/generic">
     </flavorSet>
+    <descriptor id="/api/v1/platforms/image_type_definitions/xenOvaImage"/>
   </imageDefinition>
 </imageDefinitions>
 """
