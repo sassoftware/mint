@@ -2854,24 +2854,27 @@ def _createTargetJobs(db):
     # tables.
     # we need to do it here. There is no migration needed for old
     # schema versions.
-    changed = False
-    changed |= createTable(db, 'jobs_job_target_type', """
+    createTable(db, 'jobs_job_target_type', """
         CREATE TABLE jobs_job_target_type (
             id          %(PRIMARYKEY)s,
             job_id      integer NOT NULL
-                        REFERENCES jobs_job(job_id) ON DELETE CASCADE,
+                        REFERENCES jobs_job(job_id)
+                        ON DELETE CASCADE,
             target_type_id integer NOT NULL
-                        REFERENCES target_types(target_type_id) ON DELETE CASCADE
+                        REFERENCES target_types(target_type_id)
+                        ON DELETE CASCADE
     )""")
-    changed |= createTable(db, 'jobs_job_target', """
+    createTable(db, 'jobs_job_target', """
         CREATE TABLE jobs_job_target (
             id          %(PRIMARYKEY)s,
             job_id      integer NOT NULL
-                        REFERENCES jobs_job(job_id) ON DELETE CASCADE,
+                        REFERENCES jobs_job(job_id)
+                        ON DELETE CASCADE,
             target_id integer NOT NULL
-                        REFERENCES Targets(targetid) ON DELETE CASCADE
+                        REFERENCES Targets(targetid)
+                        ON DELETE CASCADE
     )""")
-    return changed
+
 
 # create the (permanent) server repository schema
 def createSchema(db, doCommit=True, cfg=None):
@@ -2913,7 +2916,7 @@ def createSchema(db, doCommit=True, cfg=None):
     _createPackageSchema(db)
     _createDjangoSchema(db)
     _createRbac(db)
-    changed |= _createTargetJobs(db)
+    _createTargetJobs(db)
 
     if doCommit:
         db.commit()
