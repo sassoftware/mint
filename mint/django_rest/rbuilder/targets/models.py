@@ -126,6 +126,27 @@ class TargetTypes(modellib.Collection):
     _xobj = xobj.XObjMetadata(tag='target_types')
     list_fields = ['target_type']
 
+
+class TargetType(modellib.XObjModel):
+    class Meta:
+         db_table = u'targettypes'
+         
+    target_type_id = models.AutoField(primary_key=True, db_column='targettypeid')
+    name = models.CharField(max_length=255)
+    created_date = modellib.DecimalField(max_digits=14, decimal_places=3, db_column='timecreated')
+    modified_date = modellib.DecimalField(max_digits=14, decimal_places=3, db_column='timeaccessed')
+    description = models.TextField(null=True, blank=True)
+    job_target_types = models.ManyToMany(jobsmodels.Job, through='JobTargetType')
+
+class JobTargetType(modellib.XObjModel):
+    class Meta:
+        db_table = u'jobs_job_target_type'
+        
+    id = models.AutoField(primary_key=True)
+    job_id = models.ForeignKey(jobsmodels.Job)
+    target_type_id = models.ForeignKey('TargetType')
+
+
 for mod_obj in sys.modules[__name__].__dict__.values():
     if hasattr(mod_obj, '_xobj'):
         if mod_obj._xobj.tag:
