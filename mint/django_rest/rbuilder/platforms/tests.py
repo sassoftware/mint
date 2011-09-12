@@ -12,7 +12,8 @@
 # full details.
 #
 
-from mint.django_rest.rbuilder.platforms import models as pmodels
+from mint.django_rest.rbuilder.platforms import models as platform_models
+from mint.django_rest.rbuilder.projects import models as project_models
 from mint.django_rest.rbuilder.inventory.tests import XMLTestCase
 from xobj import xobj
 from lxml import etree
@@ -34,7 +35,7 @@ class PlatformsTestCase(XMLTestCase):
     # 0 != u'false' for the configurable attr (which I know to be boolean)
     def testGetPlatform(self):
         platform_gotten = self.xobjResponse('platforms/1')
-        platform = pmodels.Platform.objects.get(pk=1)
+        platform = platform_models.Platform.objects.get(pk=1)
         self.assertEquals(platform.label, platform_gotten.label)
         self.assertEquals(platform.platform_name, platform_gotten.platform_name)
         self.assertEquals(platform.mode, platform_gotten.mode)
@@ -48,26 +49,26 @@ class PlatformsTestCase(XMLTestCase):
         # note that when we test getting Platforms, we are not
         # trying to retrieve a Platforms instance, but rather all
         # the platform instances that it contains
-        platforms = pmodels.Platform.objects.all()
+        platforms = platform_models.Platform.objects.all()
         self.assertEquals(len(list(platforms)), len(platforms_gotten.platform))
     
     def testGetContentSourceTypes(self):
-        cSourceTypes = pmodels.ContentSourceType.objects.all()
+        cSourceTypes = platform_models.ContentSourceType.objects.all()
         cSourceTypes_gotten = self.xobjResponse('platforms/content_source_types/')
         self.assertEquals(len(list(cSourceTypes)), len(cSourceTypes_gotten.content_source_type))
     
     def testGetContentSourceType(self):
-        cSourceType = pmodels.ContentSourceType.objects.get(pk=1)
+        cSourceType = platform_models.ContentSourceType.objects.get(pk=1)
         cSourceType_gotten = self.xobjResponse('platforms/content_source_types/ContentSourceType')
         self.assertEquals(cSourceType.content_source_type, cSourceType_gotten.content_source_type.content_source_type)
     
     def testGetContentSources(self):
-        contentSources = pmodels.ContentSource.objects.all()
+        contentSources = platform_models.ContentSource.objects.all()
         contentSources_gotten = self.xobjResponse('platforms/content_sources/')
         self.assertEquals(len(contentSources), len(contentSources_gotten.content_source))
     
     def testGetContentSource(self):
-        contentSource = pmodels.ContentSource.objects.get(pk=1)
+        contentSource = platform_models.ContentSource.objects.get(pk=1)
         contentSource_gotten = self.xobjResponse('platforms/content_sources/RHN')
         self.assertEquals(contentSource.name, contentSource_gotten.content_source.name)
         self.assertEquals(contentSource.short_name, contentSource_gotten.content_source.short_name)
@@ -101,8 +102,8 @@ class NewPlatformTest(XMLTestCase):
             username="admin", password="password")
         self.assertEquals(200, response.status_code)
         # 3 platforms were already in the fixture
-        self.assertEquals(4, len(list(pmodels.Platform.objects.all())))
-        platform = pmodels.Platform.objects.get(platform_name="Platform")
+        self.assertEquals(4, len(list(platform_models.Platform.objects.all())))
+        platform = platform_models.Platform.objects.get(platform_name="Platform")
         self.assertEquals("Platform", platform.label)
     
     def testCreateContentSource(self):
@@ -111,8 +112,8 @@ class NewPlatformTest(XMLTestCase):
             username="admin", password="password")
         self.assertEquals(200, response.status_code)
         # 3 sources were already in the fixture
-        self.assertEquals(3, len(pmodels.ContentSource.objects.all()))
-        content = pmodels.ContentSource.objects.get(name="PlatformContentSourceTestPost")
+        self.assertEquals(3, len(platform_models.ContentSource.objects.all()))
+        content = platform_models.ContentSource.objects.get(name="PlatformContentSourceTestPost")
         self.assertEquals("PlatformContentSourceTestPostShortName", content.short_name)
         self.assertEquals(1, int(content.order_index))
 
@@ -121,14 +122,14 @@ class NewPlatformTest(XMLTestCase):
             data=testsxml.contentSourceTypePOSTXml,
             username="admin", password="password")
         self.assertEquals(200, response.status_code)
-        self.assertEquals(4, len(list(pmodels.ContentSourceType.objects.all())))
+        self.assertEquals(4, len(list(platform_models.ContentSourceType.objects.all())))
     
     def testUpdatePlatform(self):
         r = self._put('platforms/1',
             data=testsxml.platformPUTXml,
             username='admin', password='password')
         self.assertEquals(r.status_code, 200)
-        updatedPlat = pmodels.Platform.objects.get(pk=1)
+        updatedPlat = platform_models.Platform.objects.get(pk=1)
         self.assertEquals('PlatformChanged', updatedPlat.label)
         self.assertEquals('Platform Name Changed', updatedPlat.platform_name)
         self.assertEquals('auto', updatedPlat.mode)
@@ -138,7 +139,7 @@ class NewPlatformTest(XMLTestCase):
             data=testsxml.contentSourcePUTXml,
             username='admin', password='password')
         self.assertEquals(r.status_code, 200)
-        updatedContent = pmodels.ContentSource.objects.get(short_name='cs_shortnameChanged')
+        updatedContent = platform_models.ContentSource.objects.get(short_name='cs_shortnameChanged')
         self.assertEquals('Content Source Changed', updatedContent.name)
         self.assertEquals('cs_shortnameChanged', updatedContent.short_name)
         self.assertEquals(1, updatedContent.default_source)
@@ -148,7 +149,7 @@ class NewPlatformTest(XMLTestCase):
             data=testsxml.contentSourceTypePUTXml,
             username='admin', password='password')
         self.assertEquals(r.status_code, 200)
-        updatedContent = pmodels.ContentSourceType.objects.get(pk=1)
+        updatedContent = platform_models.ContentSourceType.objects.get(pk=1)
         self.assertEquals('ContentSourceType New', updatedContent.content_source_type)
 
     def testCanGetImageTypeDefinitionDescriptor(self):
@@ -173,6 +174,34 @@ class NewPlatformTest(XMLTestCase):
         # information.  If the type is deferred we may want to filter the list based
         # on request._authUser and what they can see, as we'll need to do in the
         # general collection / queryset as well.
+
+        # insert some placeholder images for the test
+        project = project_models.Project(
+           name='blippy', hostname='blippy', short_name='blippy', 
+           project_url='http://blippy.example.com', namespace='blippy'
+        ).save()
+        project = project_models.Project.objects.get(name='blippy') 
+
+        output_trove = 'dummy-trove=/example.rpath.com@dummy:label/1.0-1-1'
+
+        i1 = project_models.Image(
+            project=project, name='alpha', output_trove=output_trove
+        )
+        i2 = project_models.Image(
+            project=project, name='beta', output_trove=output_trove
+        )
+        i3 = project_models.Image(
+            project=project, name='gamma', output_trove=None
+        )
+
+        def noop(*args, **kwargs):
+            return None
+            
+        project_models.Image._computeMetadata = noop
+
+        for x in [ i1, i2, i3 ]:
+            # keep app from making call to repos service
+            x.save()
 
         response = self._get('platforms/image_type_definitions/deferred')
         self.assertEqual(response.status_code, 200)
