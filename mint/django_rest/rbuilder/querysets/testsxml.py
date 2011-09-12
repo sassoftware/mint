@@ -64,6 +64,7 @@ queryset_put_xml = """
       <is_top_level>False</is_top_level>
       <tagged_date></tagged_date>
       <name>All Systems</name>
+      <presentation_type>system</presentation_type>
       <chosen_members id="/api/v1/query_sets/5/chosen"/>
       <query_set_id>5</query_set_id>
       <child_members id="/api/v1/query_sets/5/child"/>
@@ -110,7 +111,7 @@ queryset_with_actions = """
   <grants/>
   <is_top_level>True</is_top_level>
   <name>All Systems</name>
-  <presentation_type/>
+  <presentation_type>system</presentation_type>
   <query_set_id>5</query_set_id>
   <resource_type>system</resource_type>
   <tagged_date>2011-08-29T21:44:24.358194+00:00</tagged_date>
