@@ -48,11 +48,6 @@ class PCallbacks(object):
         """
         return PCallbacks._checkPermissions(view, request, project_short_name, MODMEMBERS)
         
-    @staticmethod
-    def rbac_can_write_project(view, request, project, *args, **kwargs):
-        user = request._authUser
-        return view.mgr.userHasRbacPermission(user, args, MODMEMBERS)
-
 class PBSCallbacks(object):
     
     @staticmethod
