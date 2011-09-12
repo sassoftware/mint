@@ -44,7 +44,7 @@ target_type_GET = """
   <created_date>2011-09-08T17:52:39+00:00</created_date>
   <modified_date>2011-09-08T17:52:39+00:00</modified_date>
   <targets id="http://testserver/api/v1/target_types/3/targets"/>
-  <descriptor_create_target id="http://testserver/target_types/3/descriptor_create_target"/>
+  <descriptor_create_target id="http://testserver/api/v1/target_types/3/descriptor_create_target"/>
   <target_type_id>3</target_type_id>
 </target_type>
 """.strip()
@@ -59,6 +59,6 @@ target_type_by_target_id_GET = \
   <name>vmware</name>
   <target_type_id>5</target_type_id>
   <targets id="http://testserver/api/v1/target_types/5/targets"/>
-  <descriptor_create_target id="http://testserver/target_types/5/descriptor_create_target"/>
+  <descriptor_create_target id="http://testserver/api/v1/target_types/5/descriptor_create_target"/>
 </target_type>
 """.strip()

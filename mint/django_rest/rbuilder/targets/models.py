@@ -26,10 +26,10 @@ class TargetType(modellib.XObjIdModel):
     created_date = D(modellib.DateTimeUtcField(auto_now_add=True), "the date the resource was created (UTC)")
     modified_date = D(modellib.DateTimeUtcField(auto_now_add=True), "the date the resource was modified (UTC)")
     descriptor_create_target = modellib.SyntheticField(modellib.HrefField())
-    
+
     def computeSyntheticFields(self, sender, **kwargs):
-        self.descriptor_create_target = modellib.HrefField(
-            href='/target_types/%s/descriptor_create_target', values = (self.target_type_id,))
+        self.descriptor_create_target = modellib.HrefFieldFromModel(self,
+            viewName='TargetTypeCreateTarget')
 
 class Targets(modellib.Collection):
     class Meta:

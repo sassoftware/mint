@@ -1,8 +1,17 @@
-# from mint.django_rest.rbuilder import auth
-# from mint.django_rest.rbuilder import errors
+#
+# Copyright (c) 2011 rPath, Inc.
+#
+# All Rights Reserved
+#
+
+from lxml import etree
+
 from mint.django_rest.rbuilder.manager import basemanager
 from mint.django_rest.rbuilder.manager.basemanager import exposed
 from mint.django_rest.rbuilder.targets import models
+from mint.django_rest.rbuilder.inventory import zones
+
+from smartform import descriptor
 
 class TargetsManager(basemanager.BaseManager):
     @exposed
@@ -51,6 +60,37 @@ class TargetTypesManager(basemanager.BaseManager):
     def getTargetTypesByTargetId(self, target_id):
         target = models.Target.objects.get(pk=target_id)
         return target.target_type
+
+    @exposed
+    def getDescriptorCreateTargetByTargetType(self, target_type_id):
+        targetType = self.getTargetTypeById(target_type_id)
+        moduleName = "catalogService.rest.drivers.%s" % targetType.name
+        DriverClass = __import__(moduleName, {}, {}, '.driver').driver
+        descr = descriptor.ConfigurationDescriptor(
+            fromStream=DriverClass.configurationDescriptorXmlData)
+        zoneList = [ (x.name, x.description)
+            for x in zones.Zone.objects.order_by('zone_id') ]
+        zoneList = [ descr.ValueWithDescription(n, descriptions=d)
+            for (n, d) in zoneList ]
+        descr.addDataField('zone',
+            descriptions = "Zone",
+            type = zoneList)
+
+        return descr
+
+    @exposed
+    def serializeDescriptorCreateTargetByTargetType(self, target_type_id):
+        descr = self.getDescriptorCreateTargetByTargetType(target_type_id)
+        wrapper = etreeObjectWrapper(descr.getElementTree(validate=True))
+        return wrapper
+
+# XXX This should go in modellib most likely
+class etreeObjectWrapper(object):
+    def __init__(self, element):
+        self.element = element
+    def to_xml(self, request=None, xobj_model=None):
+        return etree.tostring(self.element, pretty_print=False,
+            encoding="UTF-8", xml_declaration=False)
 
 class TargetCredentialsManager(basemanager.BaseManager):
     @exposed

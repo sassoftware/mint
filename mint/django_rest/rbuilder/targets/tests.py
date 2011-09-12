@@ -135,3 +135,26 @@ class TargetsTestCase(XMLTestCase):
             username='testuser', password='password')
         self.assertEquals(response.status_code, 200)
         self.assertXMLEquals(response.content, testsxml.target_type_by_target_id_GET)
+
+    def testGetTargetTypeDescriptorCreateTarget(self):
+        response = self._get('target_types/1024/descriptor_create_target',
+            username='testuser', password='password')
+        self.assertEquals(response.status_code, 404)
+        response = self._get('target_types/1/descriptor_create_target',
+            username='testuser', password='password')
+        self.assertEquals(response.status_code, 200)
+        obj = xobj.parse(response.content)
+        self.failUnlessEqual(
+            [ x.name for x in obj.descriptor.dataFields.field ],
+            [
+                'name',
+                'cloudAlias',
+                'fullDescription',
+                'accountId',
+                'publicAccessKeyId',
+                'secretAccessKey',
+                'certificateData',
+                'certificateKeyData',
+                's3Bucket',
+                'zone',
+        ])
