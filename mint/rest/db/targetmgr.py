@@ -145,10 +145,10 @@ class TargetManager(manager.Manager):
         cu = self.db.cursor()
         cu.execute("""
             SELECT td.name, td.value
-              FROM Targets
+              FROM Targets AS t
               JOIN target_types USING (target_type_id)
-              JOIN TargetData AS td USING (targetId)
-             WHERE target_types.name = ? AND Targets.name = ?
+              JOIN TargetData AS td ON td.targetId = t.targetId
+             WHERE target_types.name = ? AND t.name = ?
         """, targetType, targetName)
         return dict((k, self._stripUnicode(json.loads(v)))
             for (k, v) in cu)
@@ -162,10 +162,10 @@ class TargetManager(manager.Manager):
     def getConfiguredTargetsByType(self, targetType):
         cu = self.db.cursor()
         cu.execute("""
-            SELECT Targets.name AS targetName, TargetData.name, TargetData.value
-              FROM Targets
+            SELECT t.name AS targetName, td.name, td.value
+              FROM Targets AS t
               JOIN target_types USING (target_type_id)
-              JOIN TargetData USING (targetId)
+              JOIN TargetData AS td ON td.targetId = t.targetId
              WHERE target_types.name = ?
         """, targetType)
         ret = {}
@@ -177,11 +177,10 @@ class TargetManager(manager.Manager):
     def getTargetsForUser(self, targetType, userName):
         cu = self.db.cursor()
         cu.execute("""
-            SELECT Targets.name AS targetName,
-                   tc.credentials
-              FROM Targets
+            SELECT t.name AS targetName, tc.credentials
+              FROM Targets t
               JOIN target_types USING (target_type_id)
-              JOIN TargetUserCredentials AS tuc USING (targetId)
+              JOIN TargetUserCredentials AS tuc ON tuc.targetId = t.targetId
               JOIN Users USING (userId)
               JOIN TargetCredentials AS tc ON
                   (tuc.targetCredentialsId=tc.targetCredentialsId)
@@ -201,19 +200,19 @@ class TargetManager(manager.Manager):
         targetConfigs = self.getConfiguredTargetsByType(targetType)
         cu = self.db.cursor()
         cu.execute("""
-            SELECT Targets.name AS targetName,
+            SELECT t.name AS targetName,
                    tc.credentials,
                    tc.targetCredentialsId,
                    Users.username,
                    Users.userId
-              FROM Targets
+              FROM Targets t
               JOIN target_types USING (target_type_id)
-              JOIN TargetUserCredentials AS tuc USING (targetId)
+              JOIN TargetUserCredentials AS tuc ON tuc.targetId = t.targetId
               JOIN Users USING (userId)
               JOIN TargetCredentials AS tc ON
                   (tuc.targetCredentialsId=tc.targetCredentialsId)
              WHERE target_types.name = ?
-             ORDER BY Users.userId, Targets.name
+             ORDER BY Users.userId, t.name
         """, targetType)
         ret = []
         for targetName, creds, credsId, userName, userId in cu:
