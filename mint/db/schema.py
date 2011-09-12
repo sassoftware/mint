@@ -28,7 +28,7 @@ from conary.dbstore import sqlerrors, sqllib
 log = logging.getLogger(__name__)
 
 # database schema major version
-RBUILDER_DB_VERSION = sqllib.DBversion(58, 60)
+RBUILDER_DB_VERSION = sqllib.DBversion(58, 61)
 
 
 def _createTrigger(db, table, column = "changed"):
@@ -2209,6 +2209,9 @@ def _createPKI(db):
 
 def _addQuerySet(db, name, description, resource_type, can_modify, filter_id=None, presentation_type=None):
     """Add a new query set"""
+
+    if presentation_type is None:
+        presentation_type = resource_type
     
     # add the query set
     _addTableRows(db, "querysets_queryset", "name",
@@ -2377,23 +2380,31 @@ def _createQuerySetSchema(db):
             description="Active Systems",
             created_date=str(datetime.datetime.now(tz.tzutc())),
             modified_date=str(datetime.datetime.now(tz.tzutc())),
-            can_modify=False),
+            can_modify=False,
+            presentation_type='system',
+         ),
          dict(name="Inactive Systems", resource_type="system",
             description="Inactive Systems",
             created_date=str(datetime.datetime.now(tz.tzutc())),
             modified_date=str(datetime.datetime.now(tz.tzutc())),
-            can_modify=False),
+            can_modify=False,
+            presentation_type='system'
+         ),
          dict(name="Physical Systems", resource_type="system",
             description="Physical Systems",
             created_date=str(datetime.datetime.now(tz.tzutc())),
             modified_date=str(datetime.datetime.now(tz.tzutc())),
-            can_modify=False),
+            can_modify=False,
+            presentation_type='system'
+         ),
          dict(name="All Users", resource_type='user',
-              description='All users',
-              created_date=str(datetime.datetime.now(tz.tzutc())),
-              modified_date=str(datetime.datetime.now(tz.tzutc())),
-              can_modify=False),
-        ])
+            description='All users',
+            created_date=str(datetime.datetime.now(tz.tzutc())),
+            modified_date=str(datetime.datetime.now(tz.tzutc())),
+            can_modify=False,
+            presentation_type='user'
+         )
+    ])
     
     changed != _createAllSystems(db)
         

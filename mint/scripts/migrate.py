@@ -3044,7 +3044,7 @@ class MigrateTo_57(SchemaMigration):
 
 
 class MigrateTo_58(SchemaMigration):
-    Version = (58, 60)
+    Version = (58, 61)
 
     def migrate(self):
         return True
@@ -4111,6 +4111,16 @@ class MigrateTo_58(SchemaMigration):
                 ALTER COLUMN description SET NOT NULL""")
         cu.execute("CREATE UNIQUE INDEX Targets_Type_Name_Uq ON Targets(target_type_id, name)")
         return True
+    
+    def migrate61(self):
+        db = self.db
+        cu = db.cursor()
+        cu.execute("""
+            UPDATE querysets_queryset SET presentation_type = resource_type
+                WHERE presentation_type IS NULL
+        """)
+        return True
+
 
 #### SCHEMA MIGRATIONS END HERE #############################################
 
