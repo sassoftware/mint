@@ -160,10 +160,14 @@ class ImageManager(manager.Manager):
 
         # Grab target images
         cu.execute("""
-            SELECT DISTINCT tt.name AS targetType, t.name AS targetName, tid.fileId, tid.targetImageId
+            SELECT DISTINCT
+                    tt.name AS targetType,
+                    t.name AS targetName,
+                    tid.fileId AS fileId,
+                    tid.targetImageId AS targetImageId
               FROM Targets AS t
               JOIN target_types AS tt USING (target_type_id)
-              JOIN TargetImagesDeployed AS tid USING (targetId)
+              JOIN TargetImagesDeployed AS tid ON tid.targetId = t.targetId
               JOIN BuildFiles AS bf USING (fileId)
               JOIN tmpOneVal AS tb ON (bf.buildId = tb.id)
         """)
