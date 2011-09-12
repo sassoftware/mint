@@ -2159,7 +2159,7 @@ def _createInfrastructureSystemsQuerySetSchema(db):
     """Add the infrastructure systems query set"""
     filterId = _addQuerySetFilterEntry(db, "system_type.infrastructure",
             "EQUAL", "true")
-    qsId = _addQuerySet(db, "Infrastructure Systems",
+    _addQuerySet(db, "Infrastructure Systems",
             "Systems that make up the rPath infrastructure", "system",
             False, filterId)
     return True
@@ -2193,7 +2193,7 @@ def _createAllProjectBranchStages13(db):
     # do not change this, froxen to migrate13
     # (NOTE -- this value will NOT be in the final result schema and is wrong!)
     filterId = _addQuerySetFilterEntry(db, "name", "IS_NULL", "False")
-    qsId = _addQuerySet(db, "All Projects", "All projects",
+    _addQuerySet(db, "All Projects", "All projects",
             "project_branch_stage", False, filterId, "project")
     return True
 
@@ -2202,7 +2202,7 @@ def _createAllPlatformBranchStages(db):
     """Add the platform branch stages query set"""
     # AllFilterId is None
     filterId = _addQuerySetFilterEntry(db, "platform.name", "IS_NULL", "false")
-    qsId = _addQuerySet(db, "All Platforms", "All platforms",
+    _addQuerySet(db, "All Platforms", "All platforms",
             "project_branch_stage", False, filterId, "platform")
     return True
 
@@ -2211,7 +2211,7 @@ def _createAllProjectBranchStages(db):
     """Add the project branch stages query set"""
     filterId = _addQuerySetFilterEntry(db, "project_branch_stage.name",
             "IS_NULL", "false")
-    qsId = _addQuerySet(db, "All Project Stages", "All project stages",
+    _addQuerySet(db, "All Project Stages", "All project stages",
             "project_branch_stage", False, filterId, "project")
     return True
 
@@ -2220,7 +2220,7 @@ def _createAllProjects(db):
     """Add the projects query set"""
     # filterId = _getAllFilterId(db)
     filterId = _addQuerySetFilterEntry(db, "project.name", "IS_NULL", "false")
-    qsId = _addQuerySet(db, "All Projects", "All projects", "project", False,
+    _addQuerySet(db, "All Projects", "All projects", "project", False,
             filterId)
     return True
 
@@ -2228,7 +2228,7 @@ def _createAllProjects(db):
 def _createAllSystems(db):
     """Add the all systems query set"""
     filterId = _addQuerySetFilterEntry(db, "system.name", "IS_NULL", "false")
-    qsId = _addQuerySet(db, "All Systems", "All systems", "system", False,
+    _addQuerySet(db, "All Systems", "All systems", "system", False,
             filterId)
     return True
 
@@ -2237,7 +2237,7 @@ def _createAllRoles(db):
     """Add the all roles query set"""
     filterId = _addQuerySetFilterEntry(db, "rbac_role.role_id", "IS_NULL",
             "false")
-    qsId = _addQuerySet(db, "All Roles", "All roles", "role", False, filterId,
+    _addQuerySet(db, "All Roles", "All roles", "role", False, filterId,
             'rbac')
     return True
 
@@ -2246,7 +2246,7 @@ def _createAllGrants(db):
     """Add the all systems query set"""
     filterId = _addQuerySetFilterEntry(db, "rbac_permission.permission_id",
             "IS_NULL", "false")
-    qsId = _addQuerySet(db, "All Grants", "All grants", "grant", False,
+    _addQuerySet(db, "All Grants", "All grants", "grant", False,
             filterId, 'rbac')
     return True
 
