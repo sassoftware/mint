@@ -2,7 +2,7 @@
 target_GET = \
 """
 <?xml version='1.0' encoding='UTF-8'?>
-<target>
+<target id="http://testserver/api/v1/targets/4">
   <description>Target Description openstack</description>
   <name>Target Name openstack</name>
   <target_id>4</target_id>
@@ -27,7 +27,7 @@ target_POST = \
 target_PUT = \
 """
 <?xml version='1.0' encoding='UTF-8'?>
-<target>
+<target id="http://testserver/api/v1/targets/4">
   <target_id>1</target_id>
   <name>Target 1 renamed</name>
   <target_type>

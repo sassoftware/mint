@@ -817,6 +817,26 @@ class ProductsManager(BaseManager):
     def _load_from_href(self, *args, **kwargs):
         return None
 
+class SyntheticField(object):
+    """
+    A field that has no database storage, but is de-serialized.
+    Can we used to wrap (any?) field type, but defaults to strings.
+    Unlike APIReadOnly and Hidden, this is a class, not a function,
+    so must do extra work to transfer attributes to the model it wraps.
+    """
+
+    def __init__(self, model=None):
+        if model is None:
+           model = str
+        self.model = model
+        hidden = getattr(self, 'XObjIdHidden', None)
+        ro     = getattr(self, 'APIReadOnly', None)
+        if hidden:
+             self.model.XObjIdHidden = hidden
+        if ro:
+             self.model.APIReadOnly  = ro
+
+
 class XObjModel(models.Model):
     """
     Common model class all models should inherit from.  Overrides the default
@@ -854,6 +874,17 @@ class XObjModel(models.Model):
                         if elem not in ret._xobj.elements:
                             ret._xobj.elements.append(elem)
 
+            ret._meta.synthetic_fields = synth = dict()
+            ret._meta.abstract_fields = abstr = dict()
+            for k, v in attrs.items():
+                if isinstance(v, SyntheticField):
+                    synth[k] = v.model
+                    # Default the value to None
+                    setattr(ret, k, None)
+                meta = getattr(v, '_meta', None)
+                if meta is not None and meta.abstract:
+                    abstr[k] = v
+                    setattr(ret, k, None)
             return ret
 
     class Meta:
@@ -1427,25 +1458,6 @@ class XObjModel(models.Model):
 
         return xobj_model
 
-class SyntheticField(object):
-    """
-    A field that has no database storage, but is de-serialized.
-    Can we used to wrap (any?) field type, but defaults to strings.
-    Unlike APIReadOnly and Hidden, this is a class, not a function,
-    so must do extra work to transfer attributes to the model it wraps.
-    """
-
-    def __init__(self, model=None):
-        if model is None:
-           model = str
-        self.model = model
-        hidden = getattr(self, 'XObjIdHidden', None)
-        ro     = getattr(self, 'APIReadOnly', None)
-        if hidden:
-             self.model.XObjIdHidden = hidden
-        if ro:
-             self.model.APIReadOnly  = ro
-
 class XObjIdModel(XObjModel):
     """
     Model that sets an id attribute on itself corresponding to the href for
@@ -1453,23 +1465,6 @@ class XObjIdModel(XObjModel):
     """
     class Meta:
         abstract = True
-
-    class __metaclass__(XObjModel.__metaclass__):
-        def __new__(cls, name, bases, attrs):
-            ret = XObjModel.__metaclass__.__new__(cls, name, bases, attrs)
-            # Find synthetic fields
-            ret._meta.synthetic_fields = synth = dict()
-            ret._meta.abstract_fields = abstr = dict()
-            for k, v in attrs.items():
-                if isinstance(v, SyntheticField):
-                    synth[k] = v.model
-                    # Default the value to None
-                    setattr(ret, k, None)
-                meta = getattr(v, '_meta', None)
-                if meta is not None and meta.abstract:
-                    abstr[k] = v
-                    setattr(ret, k, None)
-            return ret
 
     def serialize(self, request=None):
         xobj_model = XObjModel.serialize(self, request)
@@ -1505,13 +1500,21 @@ class HrefField(models.Field):
         self.values = values
         models.Field.__init__(self)
 
-    def serialize_value(self, request=None):
-        if request is None:
-            return None
+    def _getRelativeHref(self, url=None):
         if self.values:
             href = self.href % tuple(self.values)
         else:
             href = self.href
+        if url is None:
+            return href
+        if href is None:
+            return url
+        return "%s/%s" % (url, href)
+
+    def serialize_value(self, request=None):
+        if request is None:
+            return None
+        href = self._getRelativeHref()
         hrefModel = XObjHrefModel(request.build_absolute_uri(href))
         return hrefModel
 
@@ -1527,6 +1530,7 @@ class HrefFieldFromModel(HrefField):
     def serialize_value(self, request=None):
         "Extracts the URL from the given model and builds an href from it"
         url = self.model.get_absolute_url(request, view_name=self.viewName)
+        url = self._getRelativeHref(url=url)
         return XObjHrefModel(url)
 
 class ForeignKey(models.ForeignKey):

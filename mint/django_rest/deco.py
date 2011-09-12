@@ -13,7 +13,7 @@ class ACCESS(object):
     ANONYMOUS = 1
     AUTHENTICATED = 2
     ADMIN = 4
-    EVENT_UUID = 8
+    AUTH_TOKEN = 8
     LOCALHOST = 16
 
 def D(field, docstring):
@@ -53,11 +53,13 @@ def requires(model_names, save=True, load=True):
         def inner(*args, **kw):
             request = args[1]
             built_model, model_name, modelCls  = _getXobjModel(request, model_names)
-            # Extract the pk field
-            if modelCls._meta.has_auto_field:
-                autoField = modelCls._meta.auto_field
-                keyFieldName = autoField.name
-                keyFieldValue = kw.get(keyFieldName)
+
+            uqFields = set(x.name for x in modelCls._meta.fields if x.unique)
+            uqkeyvals = [ x for x in kw.items() if x[0] in uqFields ]
+            if len(uqkeyvals) > 1:
+                raise Exception("Programming error: multiple unique keys present")
+            if uqkeyvals:
+                keyFieldName, keyFieldValue = uqkeyvals[0]
                 # This will also overwrite the field if it's present
                 setattr(built_model, keyFieldName, keyFieldValue)
             # XXX This is not the ideal place to handle this
@@ -142,11 +144,11 @@ class access(object):
         return function
 
     @classmethod
-    def event_uuid(cls, function):
+    def auth_token(cls, function):
         """
-        Decorator that verifies a valid event id
+        Decorator that verifies a valid auth token
         """
-        function.ACCESS = getattr(function, 'ACCESS', 0) | ACCESS.EVENT_UUID
+        function.ACCESS = getattr(function, 'ACCESS', 0) | ACCESS.AUTH_TOKEN
         return function
 
     @classmethod
@@ -155,6 +157,14 @@ class access(object):
         Decorator that verifies localhost access (for management interfaces)
         """
         function.ACCESS = getattr(function, 'ACCESS', 0) | ACCESS.LOCALHOST
+        return function
+
+    @classmethod
+    def job_token(cls, function):
+        """
+        Decorator that verifies a valid job token
+        """
+        function.ACCESS = getattr(function, 'ACCESS', 0) | ACCESS.JOB_TOKEN
         return function
 
 def return_xml(function):

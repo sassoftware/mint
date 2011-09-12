@@ -28,7 +28,7 @@ from conary.dbstore import sqlerrors, sqllib
 log = logging.getLogger(__name__)
 
 # database schema major version
-RBUILDER_DB_VERSION = sqllib.DBversion(58, 61)
+RBUILDER_DB_VERSION = sqllib.DBversion(58, 62)
 
 
 def _createTrigger(db, table, column = "changed"):
@@ -1478,9 +1478,29 @@ def _createInventorySchema(db, cfg):
              dict(name="refresh queryset",
                   description="Refresh queryset",
                   priority=105,
-                  resource_type="QuerySet")                          
+                  resource_type="QuerySet"),
+             dict(name="refresh target images",
+                  description="Refresh target images",
+                  priority=105,
+                  resource_type="Target"),
+             dict(name="refresh target systems",
+                  description="Refresh target systems",
+                  priority=105,
+                  resource_type="Target"),
+             dict(name="deploy image on target",
+                  description="Deploy image on target",
+                  priority=105,
+                  resource_type="Target"),
+             dict(name="launch system on target",
+                  description="Launch system on target",
+                  priority=105,
+                  resource_type="Target"),
+             dict(name="create target",
+                  description="Create target",
+                  priority=105,
+                  resource_type="TargetType"),
             ])
-        
+
     if 'inventory_system_event' not in db.tables:
         cu.execute("""
             CREATE TABLE "inventory_system_event" (
@@ -1526,6 +1546,7 @@ def _createInventorySchema(db, cfg):
             CREATE TABLE jobs_job (
                 job_id %(PRIMARYKEY)s,
                 job_uuid varchar(64) NOT NULL UNIQUE,
+                job_token varchar(64) UNIQUE,
                 job_state_id integer NOT NULL
                     REFERENCES jobs_job_state,
                 job_type_id integer NOT NULL
@@ -2897,6 +2918,30 @@ def _createPackageSchema(db):
 
     return changed
 
+def _createTargetJobs(db):
+    # before edge, django would just go out by itself to create its
+    # tables.
+    # we need to do it here. There is no migration needed for old
+    # schema versions.
+    changed = False
+    changed |= createTable(db, 'jobs_job_target_type', """
+        CREATE TABLE jobs_job_target_type (
+            id          %(PRIMARYKEY)s,
+            job_id      integer NOT NULL
+                        REFERENCES jobs_job(job_id) ON DELETE CASCADE,
+            target_type_id integer NOT NULL
+                        REFERENCES target_types(target_type_id) ON DELETE CASCADE
+    )""")
+    changed |= createTable(db, 'jobs_job_target', """
+        CREATE TABLE jobs_job_target (
+            id          %(PRIMARYKEY)s,
+            job_id      integer NOT NULL
+                        REFERENCES jobs_job(job_id) ON DELETE CASCADE,
+            target_id integer NOT NULL
+                        REFERENCES Targets(targetid) ON DELETE CASCADE
+    )""")
+    return changed
+
 # create the (permanent) server repository schema
 def createSchema(db, doCommit=True, cfg=None):
     if not hasattr(db, "tables"):
@@ -2938,6 +2983,7 @@ def createSchema(db, doCommit=True, cfg=None):
     changed |= _createPackageSchema(db)
     changed |= _createDjangoSchema(db)
     changed |= _createRbac(db)
+    changed |= _createTargetJobs(db)
 
     if doCommit:
         db.commit()

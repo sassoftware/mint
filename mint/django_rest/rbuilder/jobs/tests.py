@@ -71,6 +71,33 @@ class JobsTestCase(BaseJobsTest):
         self.assertEquals(response.status_code, 200)
         self.assertXMLEquals(response.content, testsxml.systems_jobs_xml)
 
+    def testUpdateJob(self):
+        jobUuid = 'jobUuid1'
+        jobToken = 'jobToken1'
+        job = self._newJob(jobUuid, jobToken=jobToken,
+            jobType=models.EventType.TARGET_REFRESH_IMAGES)
+
+        jobXml = """
+<job>
+  <job_status>Completed</job_status>
+  <status_code>200</status_code>
+  <status_text>Some status here</status_text>
+  <results encoding="identity">
+    <images>
+      <image id="id1">
+        <imageId>id1</imageId>
+      </image>
+      <image id="id2">
+        <imageId>id2</imageId>
+      </image>
+    </images>
+  </results>
+</job>
+"""
+        response = self._put('jobs/%s' % jobUuid, jobXml,
+            jobToken=jobToken)
+        self.assertEquals(response.status_code, 200)
+
 class Jobs2TestCase(BaseJobsTest):
     def _mock(self):
         class DummyStatus(object):

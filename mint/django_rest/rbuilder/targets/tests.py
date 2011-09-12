@@ -47,6 +47,46 @@ class TargetsTestCase(XMLTestCase):
         self.assertEquals(response.status_code, 200)
         self.failUnlessEqual([ x.name for x in targets_gotten.targets.target ],
             [ x.name for x in targets ])
+        self.failUnlessEqual([ x.id for x in targets_gotten.targets.target ],
+            [
+                'http://testserver/api/v1/targets/1',
+                'http://testserver/api/v1/targets/2',
+                'http://testserver/api/v1/targets/3',
+                'http://testserver/api/v1/targets/4',
+            ])
+        actions = targets_gotten.targets.actions.action
+        self.failUnlessEqual(
+            [ x.name for x in actions ],
+            [
+                'Create target of type ec2',
+                'Create target of type eucalyptus',
+                'Create target of type openstack',
+                'Create target of type vcloud',
+                'Create target of type vmware',
+                'Create target of type xenent',
+            ])
+        self.failUnlessEqual(
+            [ x.descriptor.id for x in actions ],
+            [
+                'http://testserver/api/v1/target_types/1/descriptor_create_target',
+                'http://testserver/api/v1/target_types/2/descriptor_create_target',
+                'http://testserver/api/v1/target_types/3/descriptor_create_target',
+                'http://testserver/api/v1/target_types/4/descriptor_create_target',
+                'http://testserver/api/v1/target_types/5/descriptor_create_target',
+                'http://testserver/api/v1/target_types/6/descriptor_create_target',
+            ])
+        self.failUnlessEqual(
+            [ x.job_type.id for x in actions ],
+            [
+                'http://testserver/api/v1/inventory/event_types/19',
+                'http://testserver/api/v1/inventory/event_types/19',
+                'http://testserver/api/v1/inventory/event_types/19',
+                'http://testserver/api/v1/inventory/event_types/19',
+                'http://testserver/api/v1/inventory/event_types/19',
+                'http://testserver/api/v1/inventory/event_types/19',
+            ])
+        self.failUnlessEqual(targets_gotten.targets.jobs.id,
+            'http://testserver/api/v1/target_jobs')
 
     def testGetTarget(self):
         target = models.Target.objects.get(name = 'Target Name openstack')

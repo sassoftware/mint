@@ -41,7 +41,7 @@ image_builds_descriptor = """
 class Actions(modellib.XObjModel):
     class Meta:
         abstract = True
-        
+
     list_fields = ['action']
 
 class Action(modellib.XObjModel):
@@ -93,14 +93,17 @@ class Job(modellib.XObjIdModel):
         "package_source_jobs",
         "package_build_jobs"])
 
-    objects = modellib.JobManager()
+    #objects = modellib.JobManager()
 
     # The URL will contain the UUID, so there's no point in exposing job_id
     job_id = D(XObjHidden(models.AutoField(primary_key=True)),
         "the database id of the job")
     job_uuid = D(models.CharField(max_length=64, unique=True),
         "a UUID for job tracking purposes")
-    job_state = D(modellib.DeferredForeignKey("JobState", 
+    job_token = D(XObjHidden(APIReadOnly(
+        models.CharField(max_length=64, null=False, unique=True))),
+        "cookie token for updating this job")
+    job_state = D(modellib.DeferredForeignKey("JobState",
         text_field='name', related_name='jobs'),
         "the current state of the job")
     status_code = D(models.IntegerField(default=100),
@@ -122,7 +125,7 @@ class Job(modellib.XObjIdModel):
         "the date the job was updated (UTC)")
     job_description = D(modellib.SyntheticField(),
         "a description of the job")
-
+    results = modellib.SyntheticField()
 
     load_fields = [ job_uuid ]
 
@@ -307,8 +310,18 @@ class EventType(modellib.XObjIdModel):
     # not backgroundable.
     QUERYSET_INVALIDATE              = 'refresh queryset'
     QUERYSET_INVALIDATE_DESCRIPTION  = 'Refresh queryset'
-    
-    
+
+    TARGET_REFRESH_IMAGES = 'refresh target images'
+    TARGET_REFRESH_IMAGES_DESCRIPTION = 'Refresh target images'
+    TARGET_REFRESH_SYSTEMS = 'refresh target systems'
+    TARGET_REFRESH_SYSTEMS_DESCRIPTION = 'Refresh target systems'
+    TARGET_DEPLOY_IMAGE = 'deploy image on target'
+    TARGET_DEPLOY_IMAGE_DESCRIPTION = 'Deploy image on target'
+    TARGET_LAUNCH_SYSTEM = 'launch system on target'
+    TARGET_LAUNCH_SYSTEM_DESCRIPTION = 'Launch system on target'
+    TARGET_CREATE = 'create target'
+    TARGET_CREATE_DESCRIPTION = 'Create target'
+
     job_type_id = D(models.AutoField(primary_key=True), "the database id of the  type")
     EVENT_TYPES = (
         (SYSTEM_REGISTRATION, SYSTEM_REGISTRATION_DESC),
@@ -332,6 +345,11 @@ class EventType(modellib.XObjIdModel):
         (SYSTEM_ASSIMILATE, SYSTEM_ASSIMILATE_DESCRIPTION),
         (IMAGE_BUILDS, IMAGE_BUILDS_DESCRIPTION),
         (QUERYSET_INVALIDATE, QUERYSET_INVALIDATE_DESCRIPTION),
+        (TARGET_REFRESH_IMAGES, TARGET_REFRESH_IMAGES_DESCRIPTION),
+        (TARGET_REFRESH_SYSTEMS, TARGET_REFRESH_SYSTEMS_DESCRIPTION),
+        (TARGET_DEPLOY_IMAGE, TARGET_DEPLOY_IMAGE_DESCRIPTION),
+        (TARGET_LAUNCH_SYSTEM, TARGET_LAUNCH_SYSTEM_DESCRIPTION),
+        (TARGET_CREATE, TARGET_CREATE_DESCRIPTION),
     )
 
     # what smartform descriptor templates are needed to launch jobs of
@@ -366,16 +384,32 @@ class EventType(modellib.XObjIdModel):
             return False
 
     @classmethod
-    def makeAction(cls, name):
+    def makeAction(cls, jobTypeName, actionName=None, actionDescription=None,
+            enabled=True, descriptorModel=None, descriptorHref=None,
+            descriptorHrefValues=None, descriptorViewName=None):
         '''Return a related Action object for spawning this jobtype'''
-        obj = modellib.Cache.get(cls, name=name)
+        obj = modellib.Cache.get(cls, name=jobTypeName)
+        if actionName is None:
+            if actionDescription is None:
+                actionDescription = obj.description
+            actionName = jobTypeName
+        if actionDescription is None:
+            actionDescription = actionName
         action = Action(
             job_type = modellib.HrefFieldFromModel(obj),
-            name = name,
-            description = obj.description,
-            enabled = True,
+            name = actionName,
+            description = actionDescription,
+            enabled = enabled,
         )
-        action.descriptor = modellib.HrefField("descriptors/%s", values=(obj.job_type_id, ))
+        # XXX This is too complicated
+        if descriptorModel is not None:
+            action.descriptor = modellib.HrefFieldFromModel(descriptorModel,
+                viewName=descriptorViewName)
+            action.descriptor.href = descriptorHref
+            action.descriptor.values = descriptorHrefValues
+        else:
+            action.descriptor = modellib.HrefField("descriptors/%s",
+                values=(obj.job_type_id, ))
         return action
 
 for mod_obj in sys.modules[__name__].__dict__.values():

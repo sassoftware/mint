@@ -2,21 +2,26 @@
 <django-objects version="1.0">
   <object pk="1" model="jobs.job">
     <field name="job_uuid">fixture-job-uuid1</field>
+    <field name="job_token"><None/></field>
     <field to="jobs.jobstate" name="job_state" rel="ManyToOneRel">1</field>
+    <field to="jobs.jobtype" name="job_type" rel="ManyToOneRel">1</field>
     <field to="jobs.jobtype" name="job_type" rel="ManyToOneRel">1</field>
   </object>
   <object pk="2" model="jobs.job">
     <field name="job_uuid">fixture-job-uuid2</field>
+    <field name="job_token"><None/></field>
     <field to="jobs.jobstate" name="job_state" rel="ManyToOneRel">1</field>
     <field to="jobs.jobtype" name="job_type" rel="ManyToOneRel">2</field>
   </object>
   <object pk="3" model="jobs.job">
     <field name="job_uuid">fixture-job-uuid3</field>
+    <field name="job_token"><None/></field>
     <field to="jobs.jobstate" name="job_state" rel="ManyToOneRel">1</field>
     <field to="jobs.jobtype" name="job_type" rel="ManyToOneRel">3</field>
   </object>
   <object pk="4" model="jobs.job">
     <field name="job_uuid">fixture-job-uuid4</field>
+    <field name="job_token"><None/></field>
     <field to="jobs.jobstate" name="job_state" rel="ManyToOneRel">1</field>
     <field to="jobs.jobtype" name="job_type" rel="ManyToOneRel">1</field>
   </object>

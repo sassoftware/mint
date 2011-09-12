@@ -172,10 +172,12 @@ class XMLTestCase(TestCase, testcase.MockMixIn):
             kwargs['managing_zone'] = self.localZone
         return invmodels.System(**kwargs)
 
-    def _addRequestAuth(self, username=None, password=None, **extra):
+    def _addRequestAuth(self, username=None, password=None, jobToken=None, **extra):
         if username:
             type, password = self._authHeader(username, password)
             extra[type] = password
+        if jobToken:
+            extra['X-rBuilder-Job-Token'] = jobToken
 
         return extra
 
@@ -208,9 +210,10 @@ class XMLTestCase(TestCase, testcase.MockMixIn):
         return self.client.post(path, data, content_type, follow, **extra)
 
     def _put(self, path, data={}, content_type='application/xml',
-            username=None, password=None, follow=False, headers=None):
+            username=None, password=None, follow=False, headers=None,
+            jobToken=None):
         path = self._fixPath(path)
-        extra = self._addRequestAuth(username, password)
+        extra = self._addRequestAuth(username, password, jobToken=jobToken)
         extra.update(headers or {})
         return self.client.put(path, data, content_type, follow, **extra)
 
@@ -354,18 +357,27 @@ class XMLTestCase(TestCase, testcase.MockMixIn):
         network.save()
 
         return system
-
-    def _newSystemJob(self, system, eventUuid, jobUuid, jobType, jobState=None,
+    
+    def _newJob(self, jobUuid, jobType, jobToken=None, jobState=None,
             statusCode=100, statusText=None, statusDetail=None):
         eventType = self.mgr.sysMgr.eventType(jobType)
         if jobState is None:
             jobState = jobmodels.JobState.RUNNING
         jobState = self.mgr.sysMgr.jobState(jobState)
-        job = jobmodels.Job(job_uuid=jobUuid, job_type=eventType,
+        job = jobmodels.Job(job_uuid=jobUuid,
+            job_token=jobToken,
+            job_type=eventType,
             job_state=jobState, status_code=statusCode,
             status_text=statusText or 'Initializing',
             status_detail=statusDetail)
         job.save()
+        return job
+
+    def _newSystemJob(self, system, eventUuid, jobUuid, jobType, jobState=None,
+            statusCode=100, statusText=None, statusDetail=None):
+        job = self._newJob(jobUuid, jobType, jobState=jobState,
+            statusCode=statusCode, statusText=statusText,
+            statusDetail=statusDetail)
         systemJob = invmodels.SystemJob(system=system, job=job,
             event_uuid=eventUuid)
         systemJob.save()

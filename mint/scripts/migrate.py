@@ -3044,7 +3044,7 @@ class MigrateTo_57(SchemaMigration):
 
 
 class MigrateTo_58(SchemaMigration):
-    Version = (58, 61)
+    Version = (58, 62)
 
     def migrate(self):
         return True
@@ -4121,6 +4121,50 @@ class MigrateTo_58(SchemaMigration):
         """)
         return True
 
+    def migrate62(self):
+        db = self.db
+        cu = db.cursor()
+        cu.execute("""ALTER TABLE jobs_job
+            ADD COLUMN job_token varchar(64) UNIQUE""")
+        schema._addTableRows(db, 'jobs_job_type', 'name', [
+             dict(name="refresh target images",
+                  description="Refresh target images",
+                  priority=105,
+                  resource_type="Target"),
+             dict(name="refresh target systems",
+                  description="Refresh target systems",
+                  priority=105,
+                  resource_type="Target"),
+             dict(name="deploy image on target",
+                  description="Deploy image on target",
+                  priority=105,
+                  resource_type="Target"),
+             dict(name="launch system on target",
+                  description="Launch system on target",
+                  priority=105,
+                  resource_type="Target"),
+             dict(name="create target",
+                  description="Create target",
+                  priority=105,
+                  resource_type="TargetType"),
+        ])
+        schema.createTable(db, 'jobs_job_target_type', """
+        CREATE TABLE jobs_job_target_type (
+            id          %(PRIMARYKEY)s,
+            job_id      integer NOT NULL
+                        REFERENCES jobs_job(job_id) ON DELETE CASCADE,
+            target_type_id integer NOT NULL
+                        REFERENCES target_types(target_type_id) ON DELETE CASCADE
+        )""")
+        schema.createTable(db, 'jobs_job_target', """
+        CREATE TABLE jobs_job_target (
+            id          %(PRIMARYKEY)s,
+            job_id      integer NOT NULL
+                        REFERENCES jobs_job(job_id) ON DELETE CASCADE,
+            target_id integer NOT NULL
+                        REFERENCES Targets(targetid) ON DELETE CASCADE
+        )""")
+        return True
 
 #### SCHEMA MIGRATIONS END HERE #############################################
 
