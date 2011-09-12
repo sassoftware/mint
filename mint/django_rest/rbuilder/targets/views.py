@@ -49,6 +49,14 @@ class TargetTypeTargetsService(service.BaseService):
     def get(self, target_type_id):
         return self.mgr.getTargetsByTargetType(target_type_id)
 
+class TargetCredentialsService(service.BaseService):
+    @return_xml
+    def rest_GET(self, request, target_id, target_credentials_id):
+        return self.get(target_id, target_credentials_id)
+        
+    def get(self, target_id, target_credentials_id):
+        return self.mgr.getTargetCredentialsForTarget(target_id, target_credentials_id)
+
 
 class TargetUserCredentialsService(service.BaseService):
     @return_xml

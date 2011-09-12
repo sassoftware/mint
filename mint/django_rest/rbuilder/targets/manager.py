@@ -55,4 +55,8 @@ class TargetTypesManager(basemanager.BaseManager):
 class TargetCredentialsManager(basemanager.BaseManager):
     @exposed
     def getTargetCredentialsForTargetByUserId(self, target_id, user_id):
-        return models.TargetUserCredentials.objects.filter(target_id=target_id, user_id=user_id)
+        return models.TargetUserCredentials.objects.get(target_id=target_id, user_id=user_id)
+        
+    @exposed
+    def getTargetCredentialsForTarget(self, target_id, target_credentials_id):
+        return models.TargetCredentials.objects.get(pk=target_credentials_id)

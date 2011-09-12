@@ -17,7 +17,7 @@ import sys
 
 XObjHidden = modellib.XObjHidden
 
-class TargetType(modellib.XObjModel):
+class TargetType(modellib.XObjIdModel):
     class Meta:
          db_table = 'target_types'
 
@@ -26,8 +26,12 @@ class TargetType(modellib.XObjModel):
     description = D(models.TextField(null=False), "Target Type Description")
     created_date = D(modellib.DateTimeUtcField(auto_now_add=True), "the date the resource was created (UTC)")
     modified_date = D(modellib.DateTimeUtcField(auto_now_add=True), "the date the resource was modified (UTC)")
-    descriptor_create_target = modellib.HrefField(href='/target_types/%s/descriptor_create_target',
-                                                    values = (TargetType.target_type_id,))
+    descriptor_create_target = modellib.SyntheticField()
+    
+    def computeSyntheticFields(self, sender, **kwargs):
+        self.descriptor_create_target = modellib.HrefField(
+            href='/target_types/%s/descriptor_create_target', values = (self.target_type_id,))
+
 
 class Targets(modellib.Collection):
     class Meta:
@@ -62,6 +66,19 @@ class TargetData(modellib.XObjModel):
     value = models.TextField()
     # Uhm. django does not support multi-column PKs.
 
+class Credentials(modellib.Collection):
+    class Meta:
+        abstract = True
+    # xobj can take two list fields.  we include both here because
+    # we'd like to use Credentials as the collection for both
+    # TargetCredentials and TargetUserCredentials.  This is
+    # necessary because I can't think of a better way to name
+    # the *Credential's models to otherwise include a collection
+    # for each.
+    list_fields = ['target_credentials', 'target_user_credentials']
+    _xobj = xobj.XObjMetadata(tag='credentials')
+
+
 class TargetCredentials(modellib.XObjModel):
     class Meta:
         db_table = u'targetcredentials'
@@ -75,6 +92,7 @@ class TargetUserCredentials(modellib.XObjModel):
         related_name='target_user_credentials')
     target_credentials_id = models.ForeignKey('TargetCredentials',
         db_column="targetcredentialsid")
+    
     class Meta:
         db_table = u'targetusercredentials'
 
