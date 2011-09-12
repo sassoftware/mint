@@ -2,6 +2,7 @@ from mint.django_rest.rbuilder.inventory.tests import XMLTestCase
 from mint.django_rest.rbuilder.inventory import zones as zmodels
 from mint.django_rest.rbuilder.users import models as umodels
 from mint.django_rest.rbuilder.targets import models
+from mint.django_rest.rbuilder.jobs import models as jobmodels
 from mint.django_rest.rbuilder.targets import testsxml
 from xobj import xobj
 # from testutils import mock

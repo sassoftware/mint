@@ -8,6 +8,7 @@ from django.db import models
 
 from mint.django_rest.deco import D
 from mint.django_rest.rbuilder import modellib
+from mint.django_rest.rbuilder.jobs import models as jobmodels
 from mint.django_rest.rbuilder.users import models as usersmodels
 from mint.django_rest.rbuilder.inventory import zones as zmodels
 from xobj import xobj
@@ -34,9 +35,14 @@ class TargetType(modellib.XObjIdModel):
 class Targets(modellib.Collection):
     class Meta:
         abstract = True
-        
+
     _xobj = xobj.XObjMetadata(tag='targets')
     list_fields = ['target']
+    actions = D(modellib.SyntheticField(jobmodels.Actions),
+        "actions available for targets")
+
+    def computeSyntheticFields(self, sender, **kwargs):
+        pass
 
 class Target(modellib.XObjModel):
     _xobj_hidden_accessors = set(
@@ -124,4 +130,4 @@ for mod_obj in sys.modules[__name__].__dict__.values():
         if mod_obj._xobj.tag:
             modellib.type_map[mod_obj._xobj.tag] = mod_obj
     if hasattr(mod_obj, '_meta'):
-        modellib.type_map[mod_obj._meta.verbose_name] = mod_obj   
+        modellib.type_map[mod_obj._meta.verbose_name] = mod_obj
