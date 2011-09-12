@@ -107,7 +107,7 @@ def rebuild_table(db, table, fieldsOut, fieldsIn=None, skipDropIndex=False):
         cu.execute("ALTER TABLE %s RENAME TO %s" % (table, tmpTable))
         del db.tables[table]
 
-    assert schema.createSchema(db, doCommit=False)
+    schema.createSchema(db, doCommit=False)
 
     if fieldsIn is None:
         fieldsIn = fieldsOut

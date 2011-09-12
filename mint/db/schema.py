@@ -52,7 +52,6 @@ def createTable(db, name, definition):
 
 def _createUsers(db):
     cu = db.cursor()
-    changed = False
 
     if 'Users' not in db.tables:
         cu.execute("""
@@ -70,8 +69,7 @@ def _createUsers(db):
             blurb               text
         ) %(TABLEOPTS)s""" % db.keywords)
         db.tables['Users'] = []
-        changed = True
-    changed |= db.createIndex('Users', 'UsersActiveIdx', 'username, active')
+    db.createIndex('Users', 'UsersActiveIdx', 'username, active')
 
     if 'UserData' not in db.tables:
         cu.execute("""
@@ -84,8 +82,7 @@ def _createUsers(db):
             PRIMARY KEY ( userId, name )
         ) %(TABLEOPTS)s""" % db.keywords)
         db.tables['UserData'] = []
-        changed = True
-    changed |= db.createIndex('UserData', 'UserDataIdx', 'userId')
+    db.createIndex('UserData', 'UserDataIdx', 'userId')
 
     if 'UserGroups' not in db.tables:
         cu.execute("""
@@ -94,7 +91,6 @@ def _createUsers(db):
             userGroup           varchar(128)    NOT NULL    UNIQUE
         ) %(TABLEOPTS)s""" % db.keywords)
         db.tables['UserGroups'] = []
-        changed = True
 
     if 'UserGroupMembers' not in db.tables:
         cu.execute("""
@@ -106,8 +102,7 @@ def _createUsers(db):
                 REFERENCES Users ON DELETE CASCADE
         ) %(TABLEOPTS)s""" % db.keywords)
         db.tables['UserGroupMembers'] = []
-        changed = True
-    changed |= db.createIndex('UserGroupMembers', 'UserGroupMembersIdx', 
+    db.createIndex('UserGroupMembers', 'UserGroupMembersIdx', 
             'userGroupId, userId', unique = True)             
         
 
@@ -120,14 +115,10 @@ def _createUsers(db):
             confirmation        varchar(255)
         ) %(TABLEOPTS)s""" % db.keywords)
         db.tables['Confirmations'] = []
-        changed = True
-
-    return changed
 
 
 def _createLabels(db):
     cu = db.cursor()
-    changed = False
 
     if 'Labels' not in db.tables:
         cu.execute("""
@@ -144,16 +135,13 @@ def _createLabels(db):
             CONSTRAINT label_not_empty CHECK (label != '')
         ) %(TABLEOPTS)s """ % db.keywords)
         db.tables['Labels'] = []
-        changed = True
-    changed |= db.createIndex('Labels', 'LabelsPackageIdx', 'projectId')
+    db.createIndex('Labels', 'LabelsPackageIdx', 'projectId')
 
-    return changed
 
 def _createRbac(db):
     '''role based access control tables'''
 
     cu = db.cursor()
-    changed = False
 
     if 'rbac_permission_type' not in db.tables:
         cu.execute("""
@@ -163,9 +151,8 @@ def _createRbac(db):
                 "description" TEXT NOT NULL
         )""" % db.keywords)
         db.tables['rbac_permission_type'] = []
-        changed = True
 
-    changed |= _addTableRows(db, 'rbac_permission_type', 'name', [
+    _addTableRows(db, 'rbac_permission_type', 'name', [
         dict(name="ReadMembers", description='Read Member Resources'),
         dict(name="ModMembers",  description='Modify Member Resources'),
         dict(name="ReadSet",     description='Read Set'),
@@ -188,7 +175,6 @@ def _createRbac(db):
                ON DELETE CASCADE
         ) %(TABLEOPTS)s """ % db.keywords)
         db.tables['rbac_role'] = []
-        changed = True
 
     if 'rbac_user_role' not in db.tables:
         cu.execute("""
@@ -212,7 +198,6 @@ def _createRbac(db):
             UNIQUE ( "role_id", "user_id" )
         ) %(TABLEOPTS)s """ % db.keywords)
         db.tables['rbac_user_role'] = []
-        changed = True
 
     if 'rbac_permission' not in db.tables:
         cu.execute("""
@@ -241,19 +226,18 @@ def _createRbac(db):
             UNIQUE ( "role_id", "queryset_id", "permission_type_id" )
         ) %(TABLEOPTS)s """ % db.keywords)
         db.tables['rbac_permission'] = []
-        changed = True
 
-    changed |= db.createIndex('rbac_user_role', 'RbacUserRoleSearchIdx',  
+    db.createIndex('rbac_user_role', 'RbacUserRoleSearchIdx',  
         'user_id, role_id', unique=True)
-    changed != db.createIndex('rbac_permission', 'RbacPermissionLookupIdx',  
+    db.createIndex('rbac_permission', 'RbacPermissionLookupIdx',  
         'role_id, queryset_id, permission_type_id')
 
     # rbac query sets
-    changed != _createAllRoles(db)
-    changed |= _createAllGrants(db)
+    _createAllRoles(db)
+    _createAllGrants(db)
 
     # queryset tag tables
-    changed |= createTable(db, 'querysets_permissiontag', """
+    createTable(db, 'querysets_permissiontag', """
         CREATE TABLE "querysets_permissiontag" (
             "permission_tag_id" %(BIGPRIMARYKEY)s,
             "permission_id" INTEGER
@@ -270,7 +254,7 @@ def _createRbac(db):
             CONSTRAINT querysets_permissiontag_uq UNIQUE ("permission_id", "query_set_id", "inclusion_method_id")
         )""")
 
-    changed |= createTable(db, 'querysets_roletag', """
+    createTable(db, 'querysets_roletag', """
         CREATE TABLE "querysets_roletag" (
             "role_tag_id" %(BIGPRIMARYKEY)s,
             "role_id" INTEGER
@@ -287,11 +271,9 @@ def _createRbac(db):
             CONSTRAINT querysets_roletag_uq UNIQUE ("role_id", "query_set_id", "inclusion_method_id")
         )""")
 
-    return changed
 
 def _createProjects(db):
     cu = db.cursor()
-    changed = False
 
     if 'Projects' not in db.tables:
         cu.execute("""
@@ -320,11 +302,10 @@ def _createProjects(db):
             database            varchar(128)
         ) %(TABLEOPTS)s """ % db.keywords)
         db.tables['Projects'] = []
-        changed = True
-    changed |= db.createIndex('Projects', 'ProjectsHostnameIdx', 'hostname')
-    changed |= db.createIndex('Projects', 'ProjectsShortnameIdx', 'shortname')
-    changed |= db.createIndex('Projects', 'ProjectsDisabledIdx', 'disabled')
-    changed |= db.createIndex('Projects', 'ProjectsHiddenIdx', 'hidden')
+    db.createIndex('Projects', 'ProjectsHostnameIdx', 'hostname')
+    db.createIndex('Projects', 'ProjectsShortnameIdx', 'shortname')
+    db.createIndex('Projects', 'ProjectsDisabledIdx', 'disabled')
+    db.createIndex('Projects', 'ProjectsHiddenIdx', 'hidden')
 
     if 'ProjectUsers' not in db.tables:
         cu.execute("""
@@ -338,10 +319,9 @@ def _createProjects(db):
             PRIMARY KEY ( projectId, userId )
         ) %(TABLEOPTS)s """ % db.keywords)
         db.tables['ProjectUsers'] = []
-        changed = True
-    changed |= db.createIndex('ProjectUsers',
+    db.createIndex('ProjectUsers',
         'ProjectUsersProjectIdx', 'projectId')
-    changed |= db.createIndex('ProjectUsers', 'ProjectUsersUserIdx', 'userId')
+    db.createIndex('ProjectUsers', 'ProjectUsersUserIdx', 'userId')
 
     if 'MembershipRequests' not in db.tables:
         cu.execute("""
@@ -355,7 +335,6 @@ def _createProjects(db):
             PRIMARY KEY ( projectId, userId )
         ) %(TABLEOPTS)s """ % db.keywords)
         db.tables['MembershipRequests'] = []
-        changed = True
 
     if 'CommunityIds' not in db.tables:
         cu.execute("""
@@ -366,14 +345,10 @@ def _createProjects(db):
             communityId         varchar(255)
         ) %(TABLEOPTS)s""" % db.keywords)
         db.tables['CommunityIds'] = []
-        changed = True
-
-    return changed
 
 
 def _createBuilds(db):
     cu = db.cursor()
-    changed = False
 
     if 'PublishedReleases' not in db.tables:
         cu.execute("""
@@ -397,8 +372,7 @@ def _createBuilds(db):
             timeMirrored        numeric(14,3)
         ) %(TABLEOPTS)s """ % db.keywords)
         db.tables['PublishedReleases'] = []
-        changed = True
-    changed |= db.createIndex('PublishedReleases', 'PubReleasesProjectIdIdx',
+    db.createIndex('PublishedReleases', 'PubReleasesProjectIdIdx',
             'projectId')
 
     if 'Builds' not in db.tables:
@@ -434,10 +408,9 @@ def _createBuilds(db):
             output_trove         text
         ) %(TABLEOPTS)s """ % db.keywords)
         db.tables['Builds'] = []
-        changed = True
 
-    changed |= db.createIndex('Builds', 'BuildProjectIdIdx', 'projectId')
-    changed |= db.createIndex('Builds', 'BuildPubReleaseIdIdx', 'pubReleaseId')
+    db.createIndex('Builds', 'BuildProjectIdIdx', 'projectId')
+    db.createIndex('Builds', 'BuildPubReleaseIdIdx', 'pubReleaseId')
 
     if 'BuildData' not in db.tables:
         cu.execute("""
@@ -451,7 +424,6 @@ def _createBuilds(db):
             PRIMARY KEY ( buildId, name )
         ) %(TABLEOPTS)s """ % db.keywords)
         db.tables['BuildData'] = []
-        changed = True
 
     if 'BuildFiles' not in db.tables:
         cu.execute("""
@@ -465,7 +437,6 @@ def _createBuilds(db):
             sha1                char(40)
         ) %(TABLEOPTS)s """ % db.keywords)
         db.tables['BuildFiles'] = []
-        changed = True
 
     if 'FilesUrls' not in db.tables:
         cu.execute("""
@@ -475,7 +446,6 @@ def _createBuilds(db):
             url                 varchar(255)    NOT NULL
         ) %(TABLEOPTS)s """ % db.keywords)
         db.tables['FilesUrls'] = []
-        changed = True
 
     if 'BuildFilesUrlsMap' not in db.tables:
         cu.execute("""
@@ -488,7 +458,6 @@ def _createBuilds(db):
             PRIMARY KEY ( fileId, urlId )
         ) %(TABLEOPTS)s """ % db.keywords)
         db.tables['BuildFilesUrlsMap'] = []
-        changed = True
 
     if 'UrlDownloads' not in db.tables:
         cu.execute("""
@@ -499,14 +468,10 @@ def _createBuilds(db):
             ip                  varchar(64)     NOT NULL
         )""" % db.keywords)
         db.tables['UrlDownloads'] = []
-        changed = True
-
-    return changed
 
 
 def _createCommits(db):
     cu = db.cursor()
-    changed = False
 
     if 'Commits' not in db.tables:
         cu.execute("""
@@ -520,15 +485,11 @@ def _createCommits(db):
                 REFERENCES Users ON DELETE SET NULL
         ) %(TABLEOPTS)s """ % db.keywords)
         db.tables['Commits'] = []
-        changed = True
-    changed |= db.createIndex('Commits', 'CommitsProjectIdx', 'projectId')
-
-    return changed
+    db.createIndex('Commits', 'CommitsProjectIdx', 'projectId')
 
 
 def _createPackageIndex(db):
     cu = db.cursor()
-    changed = False
 
     if 'PackageIndex' not in db.tables:
         cu.execute("""
@@ -543,14 +504,13 @@ def _createPackageIndex(db):
             isSource            integer         NOT NULL    DEFAULT '0'
         ) %(TABLEOPTS)s """ % db.keywords)
         db.tables['PackageIndex'] = []
-        changed = True
-    changed |= db.createIndex("PackageIndex", "PackageIndex_Project_Name_idx",
+    db.createIndex("PackageIndex", "PackageIndex_Project_Name_idx",
             "projectId, name")
-    changed |= db.createIndex("PackageIndex", "PackageIndexNameIdx",
+    db.createIndex("PackageIndex", "PackageIndexNameIdx",
         "name, version")
-    changed |= db.createIndex("PackageIndex", "PackageIndexProjectIdx",
+    db.createIndex("PackageIndex", "PackageIndexProjectIdx",
         "projectId")
-    changed |= db.createIndex("PackageIndex", "PackageIndexServerBranchName",
+    db.createIndex("PackageIndex", "PackageIndexServerBranchName",
         "serverName, branchName")
 
     if 'PackageIndexMark' not in db.tables:
@@ -560,14 +520,10 @@ def _createPackageIndex(db):
         ) %(TABLEOPTS)s """ % db.keywords)
         db.tables['PackageIndexMark'] = []
         cu.execute("INSERT INTO PackageIndexMark VALUES(0)")
-        changed = True
-
-    return changed
 
 
 def _createNewsCache(db):
     cu = db.cursor()
-    changed = False
 
     if 'NewsCache' not in db.tables:
         cu.execute("""
@@ -580,7 +536,6 @@ def _createNewsCache(db):
             category            varchar(255)
         ) %(TABLEOPTS)s """ % db.keywords)
         db.tables['NewsCache'] = []
-        changed = True
 
     if 'NewsCacheInfo' not in db.tables:
         cu.execute("""
@@ -589,14 +544,10 @@ def _createNewsCache(db):
             feedLink            varchar(255)
         ) %(TABLEOPTS)s """ % db.keywords)
         db.tables['NewsCacheInfo'] = []
-        changed = True
-
-    return changed
 
 
 def _createMirrorInfo(db):
     cu = db.cursor()
-    changed = False
 
     if 'InboundMirrors' not in db.tables:
         cu.execute("""CREATE TABLE InboundMirrors (
@@ -613,8 +564,7 @@ def _createMirrorInfo(db):
             allLabels           integer                     DEFAULT 0
         ) %(TABLEOPTS)s """ % db.keywords)
         db.tables['InboundMirrors'] = []
-        changed = True
-    changed |= db.createIndex('InboundMirrors', 'InboundMirrorsProjectIdIdx',
+    db.createIndex('InboundMirrors', 'InboundMirrorsProjectIdIdx',
             'targetProjectId')
 
     if 'UpdateServices' not in db.tables:
@@ -627,7 +577,6 @@ def _createMirrorInfo(db):
             mirrorPassword      varchar(254)    NOT NULL
             ) %(TABLEOPTS)s""" % db.keywords)
         db.tables['UpdateServices'] = []
-        changed = True
 
     if 'OutboundMirrors' not in db.tables:
         cu.execute("""CREATE TABLE OutboundMirrors (
@@ -643,8 +592,7 @@ def _createMirrorInfo(db):
             useReleases         integer         NOT NULL    DEFAULT 0
             ) %(TABLEOPTS)s""" % db.keywords)
         db.tables['OutboundMirrors'] = []
-        changed = True
-    changed |= db.createIndex('OutboundMirrors', 'OutboundMirrorsProjectIdIdx',
+    db.createIndex('OutboundMirrors', 'OutboundMirrorsProjectIdIdx',
             'sourceProjectId')
 
     if 'OutboundMirrorsUpdateServices' not in db.tables:
@@ -658,14 +606,10 @@ def _createMirrorInfo(db):
             PRIMARY KEY ( outboundMirrorId, updateServiceId )
             ) %(TABLEOPTS)s""" % db.keywords)
         db.tables['OutboundMirrorsUpdateServices'] = []
-        changed = True
-
-    return changed
 
 
 def _createApplianceSpotlight(db):
     cu = db.cursor()
-    changed = False
 
     # XXX: delete this in a future schema upgrade; leaving dormant for now
     if 'ApplianceSpotlight' not in db.tables:
@@ -681,7 +625,6 @@ def _createApplianceSpotlight(db):
             endDate         INT
         ) %(TABLEOPTS)s """ % db.keywords)
         db.tables['ApplianceSpotlight'] = []
-        changed = True
 
     if 'FrontPageSelections' not in db.tables:
         cu.execute("""
@@ -692,7 +635,6 @@ def _createApplianceSpotlight(db):
             rank            INT
         ) %(TABLEOPTS)s """ % db.keywords)
         db.tables['FrontPageSelections'] = []
-        changed = True
 
     # XXX: delete this in a future schema upgrade; leaving dormant for now
     if 'UseIt' not in db.tables:
@@ -703,14 +645,10 @@ def _createApplianceSpotlight(db):
             link            varchar(255)
         ) %(TABLEOPTS)s """ % db.keywords)
         db.tables['UseIt'] = []
-        changed = True
-
-    return changed
 
 
 def _createFrontPageStats(db):
     cu = db.cursor()
-    changed = False
 
     if 'LatestCommit' not in db.tables:
         cu.execute("""
@@ -720,8 +658,7 @@ def _createFrontPageStats(db):
             commitTime          numeric(14,3)   NOT NULL
         ) %(TABLEOPTS)s """ % db.keywords)
         db.tables['LatestCommit'] = []
-        changed = True
-    changed |= db.createIndex('LatestCommit', 'LatestCommitTimestamp',
+    db.createIndex('LatestCommit', 'LatestCommitTimestamp',
             'projectId, commitTime')
 
     if 'PopularProjects' not in db.tables:
@@ -732,7 +669,6 @@ def _createFrontPageStats(db):
             rank                integer         NOT NULL
         ) %(TABLEOPTS)s """ % db.keywords)
         db.tables['PopularProjects'] = []
-        changed = True
 
     if 'TopProjects' not in db.tables:
         cu.execute("""
@@ -742,14 +678,10 @@ def _createFrontPageStats(db):
             rank                integer         NOT NULL
         ) %(TABLEOPTS)s """ % db.keywords)
         db.tables['TopProjects'] = []
-        changed = True
-
-    return changed
 
 
 def _createSessions(db):
     cu = db.cursor()
-    changed = False
 
     if 'Sessions' not in db.tables:
         cu.execute("""
@@ -759,14 +691,10 @@ def _createSessions(db):
             data                text
         ) %(TABLEOPTS)s """ % db.keywords)
         db.tables['Sessions'] = []
-        changed = True
-
-    return changed
 
 
 def _createProductVersions(db):
     cu = db.cursor()
-    changed = False
 
     # TODO:
     # * Rename table ProductVersions to project_branch
@@ -787,8 +715,7 @@ def _createProductVersions(db):
                 timeCreated         numeric(14,3)
         ) %(TABLEOPTS)s """ % db.keywords)
         db.tables['ProductVersions'] = []
-        changed = True
-    changed |= db.createIndex('ProductVersions', 'ProductVersions_uq',
+    db.createIndex('ProductVersions', 'ProductVersions_uq',
             'projectId,namespace,name', unique = True)
 
     if 'project_branch_stage' not in db.tables:
@@ -808,13 +735,10 @@ def _createProductVersions(db):
                 UNIQUE ( project_branch_id, name )
             )""" % db.keywords)
         db.tables['project_branch_stage'] = []
-        changed = True
 
-    return changed
 
 def _createTargets(db):
     cu = db.cursor()
-    changed = False
     if 'target_types' not in db.tables:
         cu.execute("""
             CREATE TABLE target_types (
@@ -824,7 +748,7 @@ def _createTargets(db):
             created_date      TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT current_timestamp,
             modified_date     TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT current_timestamp) %(TABLEOPTS)s """ % db.keywords)
         db.tables['target_types'] = []
-        changed |= _addTableRows(db, 'target_types', 'name',
+        _addTableRows(db, 'target_types', 'name',
             [
                 dict(name="ec2",
                     description="Amazon Elastic Compute Cloud"),
@@ -839,7 +763,6 @@ def _createTargets(db):
                 dict(name="xenent",
                     description="Citrix Xen Server"),
             ])
-        changed = True
 
     if 'Targets' not in db.tables:
         cu.execute("""
@@ -859,7 +782,6 @@ def _createTargets(db):
         db.tables['Targets'] = []
         db.createIndex('Targets',
             'Targets_Type_Name_Uq', 'target_type_id, name', unique = True)
-        changed = True
 
     if 'TargetData' not in db.tables:
         cu.execute("""
@@ -871,17 +793,16 @@ def _createTargets(db):
                 value           text
             ) %(TABLEOPTS)s """ % db.keywords)
         db.tables['TargetData'] = []
-        changed = True
-    changed |= db.createIndex('TargetData', 'TargetDataIdx',
+    db.createIndex('TargetData', 'TargetDataIdx',
             'targetId, name', unique = True)        
 
-    changed |= createTable(db, 'TargetCredentials', """
+    createTable(db, 'TargetCredentials', """
             CREATE TABLE TargetCredentials (
                 targetCredentialsId     %(PRIMARYKEY)s,
                 credentials             text NOT NULL UNIQUE
             ) %(TABLEOPTS)s""")
 
-    changed |= createTable(db, 'TargetUserCredentials', """
+    createTable(db, 'TargetUserCredentials', """
             CREATE TABLE TargetUserCredentials (
                 id              %(PRIMARYKEY)s,
                 targetId        integer             NOT NULL
@@ -893,7 +814,7 @@ def _createTargets(db):
                 UNIQUE ( targetId, userId )
             ) %(TABLEOPTS)s""")
 
-    changed |= createTable(db, 'TargetImagesDeployed', """
+    createTable(db, 'TargetImagesDeployed', """
             CREATE TABLE TargetImagesDeployed (
                 id              %(PRIMARYKEY)s,
                 targetId        integer             NOT NULL
@@ -903,11 +824,9 @@ def _createTargets(db):
                 targetImageId   varchar(128)        NOT NULL
             ) %(TABLEOPTS)s""")
 
-    return changed
 
 def _createPlatforms(db):
     cu = db.cursor()
-    changed = False
 
     if 'Platforms' not in db.tables:
         cu.execute("""
@@ -926,7 +845,6 @@ def _createPlatforms(db):
                                 DEFAULT current_timestamp
             ) %(TABLEOPTS)s""" % db.keywords)
         db.tables['Platforms'] = []
-        changed = True
 
     if 'PlatformsContentSourceTypes' not in db.tables:
         cu.execute("""
@@ -937,8 +855,7 @@ def _createPlatforms(db):
                 contentSourceType  varchar(255) NOT NULL
             ) %(TABLEOPTS)s""" % db.keywords)
         db.tables['PlatformsContentSourceTypes'] = []
-        changed = True
-    changed |= db.createIndex('PlatformsContentSourceTypes',
+    db.createIndex('PlatformsContentSourceTypes',
             'PlatformsContentSourceTypes_platformId_contentSourceType_uq',
             'platformId,contentSourceType', unique = True)
 
@@ -953,11 +870,10 @@ def _createPlatforms(db):
                 orderIndex  smallint NOT NULL
             ) %(TABLEOPTS)s""" % db.keywords)
         db.tables['PlatformSources'] = []
-        changed = True
-    changed |= db.createIndex('PlatformSources',
+    db.createIndex('PlatformSources',
             'PlatformSources_platformSourceId_defaultSource_uq',
             'platformSourceId,defaultSource', unique = True)
-    changed |= db.createIndex('PlatformSources',
+    db.createIndex('PlatformSources',
             'PlatformSources_platformSourceId_orderIndex_uq',
             'platformSourceId,orderIndex', unique = True)
 
@@ -972,7 +888,6 @@ def _createPlatforms(db):
                 PRIMARY KEY ( platformSourceId, name )
             ) %(TABLEOPTS)s """ % db.keywords)
         db.tables['PlatformSourceData'] = []
-        changed = True
 
     if 'PlatformsPlatformSources' not in db.tables:
         cu.execute("""
@@ -984,16 +899,13 @@ def _createPlatforms(db):
                     REFERENCES platformSources ON DELETE CASCADE
             ) %(TABLEOPTS)s""" % db.keywords)
         db.tables['PlatformsPlatformSources'] = []
-        changed = True
 
-    return changed
 
 def _createCapsuleIndexerSchema(db):
     # Even though sqlalchemy is perfectly capable of creating the schema, we
     # will create it by hand instead. The main reason is that sqlite will get
     # upset if schema changes underneath an open connection.
     cu = db.cursor()
-    changed = False
 
     tableName = 'ci_rhn_channels'
     if tableName not in db.tables:
@@ -1004,8 +916,7 @@ def _createCapsuleIndexerSchema(db):
                 last_modified VARCHAR
             ) %(TABLEOPTS)s""" % db.keywords)
         db.tables[tableName] = []
-        changed = True
-    changed |= db.createIndex('ci_rhn_channels',
+    db.createIndex('ci_rhn_channels',
         'ci_rhn_channels_label_idx_uq', 'label', unique = True)
 
     tableName = 'ci_rhn_errata'
@@ -1021,7 +932,6 @@ def _createCapsuleIndexerSchema(db):
                 update_date VARCHAR NOT NULL
             ) %(TABLEOPTS)s""" % db.keywords)
         db.tables[tableName] = []
-        changed = True
 
     tableName = 'ci_rhn_nevra'
     if tableName not in db.tables:
@@ -1035,8 +945,7 @@ def _createCapsuleIndexerSchema(db):
                 arch VARCHAR NOT NULL
             ) %(TABLEOPTS)s""" % db.keywords)
         db.tables[tableName] = []
-        changed = True
-    changed |= db.createIndex('ci_rhn_nevra',
+    db.createIndex('ci_rhn_nevra',
         'ci_rhn_nevra_n_e_v_r_a_idx_uq', 'name, epoch, version, release, arch',
         unique = True)
 
@@ -1053,11 +962,10 @@ def _createCapsuleIndexerSchema(db):
                 path VARCHAR
             ) %(TABLEOPTS)s""" % db.keywords)
         db.tables[tableName] = []
-        changed = True
-    changed |= db.createIndex('ci_rhn_packages',
+    db.createIndex('ci_rhn_packages',
         'ci_rhn_packages_nevra_id_last_modified_idx_uq',
         'nevra_id, last_modified', unique = True)
-    changed |= db.createIndex('ci_rhn_packages',
+    db.createIndex('ci_rhn_packages',
         'ci_rhn_packages_nevra_id_sha1sum_idx', 'nevra_id, sha1sum')
 
     tableName = 'ci_rhn_package_failed'
@@ -1072,7 +980,6 @@ def _createCapsuleIndexerSchema(db):
                 resolved VARCHAR
             ) %(TABLEOPTS)s""" % db.keywords)
         db.tables[tableName] = []
-        changed = True
 
     tableName = 'ci_rhn_channel_package'
     if tableName not in db.tables:
@@ -1084,11 +991,10 @@ def _createCapsuleIndexerSchema(db):
                     REFERENCES ci_rhn_packages ON DELETE CASCADE
             ) %(TABLEOPTS)s""" % db.keywords)
         db.tables[tableName] = []
-        changed = True
-    changed |= db.createIndex('ci_rhn_channel_package',
+    db.createIndex('ci_rhn_channel_package',
         'ci_rhn_channel_package_cid_pid_idx_uq', 'channel_id, package_id',
         unique = True)
-    changed |= db.createIndex('ci_rhn_channel_package',
+    db.createIndex('ci_rhn_channel_package',
         'ci_rhn_channel_package_pid_cid_idx', 'package_id, channel_id')
 
     tableName = 'ci_rhn_errata_channel'
@@ -1101,11 +1007,10 @@ def _createCapsuleIndexerSchema(db):
                     REFERENCES ci_rhn_channels ON DELETE CASCADE
             ) %(TABLEOPTS)s""" % db.keywords)
         db.tables[tableName] = []
-        changed = True
-    changed |= db.createIndex('ci_rhn_errata_channel',
+    db.createIndex('ci_rhn_errata_channel',
         'ci_rhn_errata_channel_eid_cid_idx_uq', 'errata_id, channel_id',
         unique = True)
-    changed |= db.createIndex('ci_rhn_errata_channel',
+    db.createIndex('ci_rhn_errata_channel',
         'ci_rhn_errata_channel_cid_eid_idx', 'channel_id, errata_id')
 
     tableName = 'ci_rhn_errata_nevra_channel'
@@ -1121,13 +1026,10 @@ def _createCapsuleIndexerSchema(db):
                 PRIMARY KEY (errata_id, nevra_id, channel_id)
             ) %(TABLEOPTS)s""" % db.keywords)
         db.tables[tableName] = []
-        changed = True
 
-    return changed
 
 def _createCapsuleIndexerYumSchema(db):
     cu = db.cursor()
-    changed = False
 
     tableName = 'ci_yum_repositories'
     if tableName not in db.tables:
@@ -1140,8 +1042,7 @@ def _createCapsuleIndexerYumSchema(db):
                 checksum_type VARCHAR
             ) %(TABLEOPTS)s""" % db.keywords)
         db.tables[tableName] = []
-        changed = True
-    changed |= db.createIndex('ci_yum_repositories',
+    db.createIndex('ci_yum_repositories',
         'ci_yum_repositories_label_idx_uq', 'label', unique = True)
 
     tableName = 'ci_yum_packages'
@@ -1157,8 +1058,7 @@ def _createCapsuleIndexerYumSchema(db):
                 path VARCHAR
             ) %(TABLEOPTS)s""" % db.keywords)
         db.tables[tableName] = []
-        changed = True
-    changed |= db.createIndex('ci_yum_packages',
+    db.createIndex('ci_yum_packages',
         'ci_yum_packages_nevra_id_checksum_idx_uq',
         'nevra_id, checksum, checksum_type', unique = True)
 
@@ -1174,13 +1074,11 @@ def _createCapsuleIndexerYumSchema(db):
                 PRIMARY KEY (yum_repository_id, package_id)
             ) %(TABLEOPTS)s""" % db.keywords)
         db.tables[tableName] = []
-        changed = True
-    return changed
+
 
 def _createRepositoryLogSchema(db):
     # Repository Log scraping table and the status table for th scraper 
     cu = db.cursor()
-    changed = False
 
     if 'systemupdate' not in db.tables:
         cu.execute("""
@@ -1193,8 +1091,7 @@ def _createRepositoryLogSchema(db):
                 updateuser character varying(128) NOT NULL
             ) %(TABLEOPTS)s""" % db.keywords)
         db.tables['systemupdate'] = []
-        changed = True
-    changed |= db.createIndex('systemupdate',
+    db.createIndex('systemupdate',
         'systemupdate_repo_idx', 'repositoryname')
 
     if 'repositorylogstatus' not in db.tables:
@@ -1206,13 +1103,10 @@ def _createRepositoryLogSchema(db):
                 logoffset integer NOT NULL
             ) %(TABLEOPTS)s""" % db.keywords)
         db.tables['repositorylogstatus'] = []
-        changed = True
 
-    return changed
 
 def _createZoneSchema(db):
     cu = db.cursor()
-    changed = False
 
     # XXX this table should no longer be prefixed with inventory_
     if 'inventory_zone' not in db.tables:
@@ -1224,14 +1118,10 @@ def _createZoneSchema(db):
                 "created_date" timestamp with time zone NOT NULL
             ) %(TABLEOPTS)s""" % db.keywords)
         db.tables['inventory_zone'] = []
-        changed = True
-
-    return changed
 
 
 def _createInventorySchema(db, cfg):
     cu = db.cursor()
-    changed = False
 
     if 'inventory_system_state' not in db.tables:
         cu.execute("""
@@ -1242,8 +1132,7 @@ def _createInventorySchema(db, cfg):
                 "created_date" timestamp with time zone NOT NULL
             ) %(TABLEOPTS)s""" % db.keywords)
         db.tables['inventory_system_state'] = []
-        changed = True
-        changed |= _addSystemStates(db, cfg)
+        _addSystemStates(db, cfg)
         
     if 'inventory_management_interface' not in db.tables:
         cu.execute("""
@@ -1257,8 +1146,7 @@ def _createInventorySchema(db, cfg):
                 "credentials_readonly" bool
             ) %(TABLEOPTS)s""" % db.keywords)
         db.tables['inventory_management_interface'] = []
-        changed |= _addManagementInterfaces(db)
-        changed = True
+        _addManagementInterfaces(db)
         
     if 'inventory_system_type' not in db.tables:
         cu.execute("""
@@ -1271,8 +1159,7 @@ def _createInventorySchema(db, cfg):
                 "creation_descriptor" text NOT NULL
             ) %(TABLEOPTS)s""" % db.keywords)
         db.tables['inventory_system_type'] = []
-        changed |= _addSystemTypes(db)
-        changed = True
+        _addSystemTypes(db)
 
     if 'inventory_system' not in db.tables:
         cu.execute("""
@@ -1321,8 +1208,7 @@ def _createInventorySchema(db, cfg):
                     ON DELETE SET NULL
             ) %(TABLEOPTS)s""" % db.keywords)
         db.tables['inventory_system'] = []
-        changed = True
-        changed |= db.createIndex("inventory_system",
+        db.createIndex("inventory_system",
             "inventory_system_target_id_idx", "target_id")
         
     if 'inventory_zone_management_node' not in db.tables:
@@ -1336,7 +1222,6 @@ def _createInventorySchema(db, cfg):
                 "node_jid" varchar(64)
             ) %(TABLEOPTS)s""" % db.keywords)
         db.tables['inventory_zone_management_node'] = []
-        changed = True
 
     if 'inventory_system_network' not in db.tables:
         cu.execute("""
@@ -1358,15 +1243,14 @@ def _createInventorySchema(db, cfg):
                 UNIQUE ("system_id", "ipv6_address")
             ) %(TABLEOPTS)s""" % db.keywords)
         db.tables['inventory_system_network'] = []
-        changed = True
-        changed |= db.createIndex("inventory_system_network",
+        db.createIndex("inventory_system_network",
             "inventory_system_network_system_id_idx", "system_id")
-        changed |= db.createIndex("inventory_system_network",
+        db.createIndex("inventory_system_network",
             "inventory_system_network_dns_name_idx", "dns_name")
         
     # add local management zone.  must be done after inventory_system and 
     # inventory_system_network are added
-    changed |= _addManagementZone(db, cfg)
+    _addManagementZone(db, cfg)
 
     if 'inventory_system_log' not in db.tables:
         cu.execute("""
@@ -1377,8 +1261,7 @@ def _createInventorySchema(db, cfg):
                     ON DELETE CASCADE
             ) %(TABLEOPTS)s""" % db.keywords)
         db.tables['inventory_system_log'] = []
-        changed = True
-        changed |= db.createIndex("inventory_system_log",
+        db.createIndex("inventory_system_log",
             "inventory_system_log_system_id_idx", "system_id")
 
     if 'inventory_system_log_entry' not in db.tables:
@@ -1392,7 +1275,6 @@ def _createInventorySchema(db, cfg):
                 "entry_date" timestamp with time zone NOT NULL
             ) %(TABLEOPTS)s""" % db.keywords)
         db.tables['inventory_system_log_entry'] = []
-        changed = True
 
     if 'inventory_version' not in db.tables:
         cu.execute("""
@@ -1406,7 +1288,6 @@ def _createInventorySchema(db, cfg):
                 UNIQUE("full", "ordering", "flavor")
             ) %(TABLEOPTS)s""" % db.keywords)
         db.tables['inventory_version'] = []
-        changed = True
 
     tableName = 'jobs_job_type'
     if tableName not in db.tables:
@@ -1419,8 +1300,7 @@ def _createInventorySchema(db, cfg):
                 "resource_type" text NOT NULL
             ) %(TABLEOPTS)s""" % db.keywords)
         db.tables[tableName] = []
-        changed = True
-        changed |= _addTableRows(db, tableName, 'name',
+        _addTableRows(db, tableName, 'name',
             [dict(name="system registration",
                   description='System registration',
                   # registration events are no longer dispatched immediately
@@ -1496,15 +1376,14 @@ def _createInventorySchema(db, cfg):
                 "event_data" varchar
             ) %(TABLEOPTS)s""" % db.keywords)
         db.tables['inventory_system_event'] = []
-        changed |= db.createIndex("inventory_system_event",
+        db.createIndex("inventory_system_event",
             "inventory_system_event_system_id", "system_id")
-        changed |= db.createIndex("inventory_system_event",
+        db.createIndex("inventory_system_event",
             "inventory_system_event_event_type_id", "job_type_id")
-        changed |= db.createIndex("inventory_system_event",
+        db.createIndex("inventory_system_event",
             "inventory_system_event_time_enabled", "time_enabled")
-        changed |= db.createIndex("inventory_system_event",
+        db.createIndex("inventory_system_event",
             "inventory_system_event_priority", "priority")
-        changed = True
 
     if 'jobs_job_state' not in db.tables:
         cu.execute("""
@@ -1514,8 +1393,7 @@ def _createInventorySchema(db, cfg):
                 name VARCHAR NOT NULL UNIQUE
             ) %(TABLEOPTS)s""" % db.keywords)
         db.tables['jobs_job_state'] = []
-        changed = True
-    changed |= _addTableRows(db, 'jobs_job_state', 'name',
+    _addTableRows(db, 'jobs_job_state', 'name',
         [
             dict(name='Queued'), dict(name='Running'),
             dict(name='Completed'), dict(name='Failed'), ])
@@ -1539,7 +1417,6 @@ def _createInventorySchema(db, cfg):
                 time_updated timestamp with time zone NOT NULL
             ) %(TABLEOPTS)s""" % db.keywords)
         db.tables[tableName] = []
-        changed = True
 
     tableName = "inventory_system_job"
     if 'inventory_system_job' not in db.tables:
@@ -1557,7 +1434,6 @@ def _createInventorySchema(db, cfg):
                 event_uuid varchar(64) NOT NULL UNIQUE
             ) %(TABLEOPTS)s""" % db.keywords)
         db.tables[tableName] = []
-        changed = True
 
     if 'inventory_trove_available_updates' not in db.tables:
         cu.execute("""
@@ -1570,7 +1446,6 @@ def _createInventorySchema(db, cfg):
                 UNIQUE ("trove_id", "version_id")
             )""" % db.keywords)
         db.tables['inventory_trove_available_updates'] = []
-        changed = True
 
     if 'inventory_trove' not in db.tables:
         cu.execute("""
@@ -1588,7 +1463,6 @@ def _createInventorySchema(db, cfg):
             )""" % db.keywords)
 
         db.tables['inventory_trove'] = []
-        changed = True
 
     if 'inventory_system_installed_software' not in db.tables:
         cu.execute("""
@@ -1615,7 +1489,6 @@ def _createInventorySchema(db, cfg):
                 UNIQUE ("system_id", "credentials_id")
             )""" % db.keywords)
         db.tables['inventory_system_target_credentials'] = []
-        changed = True
 
     if 'django_site' not in db.tables:
         cu.execute("""
@@ -1625,8 +1498,7 @@ def _createInventorySchema(db, cfg):
                 "name" VARCHAR(100) NOT NULL UNIQUE
             )""" % db.keywords)
         db.tables['django_site'] = []
-        changed = True
-        changed |= _addTableRows(db, 'django_site', 'name',
+        _addTableRows(db, 'django_site', 'name',
             [
                 dict(id=1, domain="rbuilder.inventory", name="rBuilder Inventory")])
 
@@ -1640,13 +1512,10 @@ def _createInventorySchema(db, cfg):
                 "new_path" VARCHAR(200) NOT NULL 
             )""" % db.keywords)
         db.tables['django_redirect'] = []
-        changed = True
 
-    return changed
 
 def _addSystemStates(db, cfg):
-    changed = False
-    changed |= _addTableRows(db, 'inventory_system_state', 'name',
+    _addTableRows(db, 'inventory_system_state', 'name',
             [
                 dict(name="unmanaged", description="Unmanaged", created_date=str(datetime.datetime.now(tz.tzutc()))),
                 dict(name="unmanaged-credentials", description="Unmanaged: Invalid credentials", created_date=str(datetime.datetime.now(tz.tzutc()))),
@@ -1661,21 +1530,18 @@ def _addSystemStates(db, cfg):
                 dict(name="dead", description="Stale", created_date=str(datetime.datetime.now(tz.tzutc()))),
                 dict(name="mothballed", description="Retired", created_date=str(datetime.datetime.now(tz.tzutc())))
             ])
-    
-    return changed
+
 
 def _addManagementZone(db, cfg):
-    changed = False
     
     # add the zone
     zoneName = "Local rBuilder"
     zoneDescription = 'Local rBuilder management zone'
-    changed |= _addTableRows(db, 'inventory_zone', 'name',
+    _addTableRows(db, 'inventory_zone', 'name',
             [dict(name=zoneName,
                   description=zoneDescription,
                   created_date=str(datetime.datetime.now(tz.tzutc())))])
 
-    return changed
 
 cim_credentials_descriptor=r"""<descriptor xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns="http://www.rpath.com/permanent/descriptor-1.0.xsd" xsi:schemaLocation="http://www.rpath.com/permanent/descriptor-1.0.xsd descriptor-1.0.xsd">
   <metadata></metadata>
@@ -1773,9 +1639,8 @@ ssh_credentials_descriptor=r"""<descriptor xmlns:xsi="http://www.w3.org/2001/XML
 </descriptor>"""
 
 def _addManagementInterfaces(db):
-    changed = False
     
-    changed |= _addTableRows(db, 'inventory_management_interface', 'name',
+    _addTableRows(db, 'inventory_management_interface', 'name',
             [dict(name='cim',
                   description='Common Information Model (CIM)',
                   port=5989,
@@ -1784,7 +1649,7 @@ def _addManagementInterfaces(db):
                   credentials_readonly=True
             )])
     
-    changed |= _addTableRows(db, 'inventory_management_interface', 'name',
+    _addTableRows(db, 'inventory_management_interface', 'name',
             [dict(name='wmi',
                   description='Windows Management Instrumentation (WMI)',
                   port=135,
@@ -1793,7 +1658,7 @@ def _addManagementInterfaces(db):
                   credentials_readonly=False
             )])
 
-    changed != _addTableRows(db, 'inventory_management_interface', 'name',
+    _addTableRows(db, 'inventory_management_interface', 'name',
             [dict(name='ssh',
                   description='Secure Shell (SSH)',
                   port=22,
@@ -1802,7 +1667,6 @@ def _addManagementInterfaces(db):
                   credentials_readonly=False
             )])
     
-    return changed
 
 inventory_creation_descriptor=r"""<descriptor xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns="http://www.rpath.com/permanent/descriptor-1.0.xsd" xsi:schemaLocation="http://www.rpath.com/permanent/descriptor-1.0.xsd descriptor-1.0.xsd"> 
   <metadata>
@@ -1987,9 +1851,8 @@ windows_build_node_creation_descriptor=r"""<descriptor xmlns:xsi="http://www.w3.
 </descriptor>"""
 
 def _addSystemTypes(db):
-    changed = False
     
-    changed |= _addTableRows(db, 'inventory_system_type', 'name',
+    _addTableRows(db, 'inventory_system_type', 'name',
             [dict(name='inventory',
                   description='Inventory',
                   created_date=str(datetime.datetime.now(tz.tzutc())),
@@ -1997,7 +1860,7 @@ def _addSystemTypes(db):
                   creation_descriptor=inventory_creation_descriptor
             )])
     
-    changed |= _addTableRows(db, 'inventory_system_type', 'name',
+    _addTableRows(db, 'inventory_system_type', 'name',
             [dict(name='infrastructure-management-node',
                   description='rPath Update Service (Infrastructure)',
                   created_date=str(datetime.datetime.now(tz.tzutc())),
@@ -2005,7 +1868,7 @@ def _addSystemTypes(db):
                   creation_descriptor=management_node_creation_descriptor
             )])
     
-    changed |= _addTableRows(db, 'inventory_system_type', 'name',
+    _addTableRows(db, 'inventory_system_type', 'name',
             [dict(name='infrastructure-windows-build-node',
                   description='rPath Windows Build Service (Infrastructure)',
                   created_date=str(datetime.datetime.now(tz.tzutc())),
@@ -2013,7 +1876,6 @@ def _addSystemTypes(db):
                   creation_descriptor=windows_build_node_creation_descriptor
             )])
     
-    return changed
 
 def _addTableRows(db, table, uniqueKey, rows, uniqueCols=[]):
     """
@@ -2065,7 +1927,6 @@ def _getRowPk(db, table, pkColumn, **uniqueVals):
 
 def _createJobsSchema(db):
     cu = db.cursor()
-    changed = False
 
     if 'job_types' not in db.tables:
         cu.execute("""
@@ -2076,8 +1937,7 @@ def _createJobsSchema(db):
                 description VARCHAR NOT NULL
             ) %(TABLEOPTS)s""" % db.keywords)
         db.tables['job_types'] = []
-        changed = True
-    changed |= _addTableRows(db, 'job_types', 'name',
+    _addTableRows(db, 'job_types', 'name',
         [ dict(name="instance-launch", description='Instance Launch'),
           dict(name="platform-load", description='Platform Load'),
           dict(name="software-version-refresh", description='Software Version Refresh'),
@@ -2091,8 +1951,7 @@ def _createJobsSchema(db):
                 name VARCHAR NOT NULL UNIQUE
             ) %(TABLEOPTS)s""" % db.keywords)
         db.tables['job_states'] = []
-        changed = True
-    changed |= _addTableRows(db, 'job_states', 'name', [ dict(name='Queued'),
+    _addTableRows(db, 'job_states', 'name', [ dict(name='Queued'),
         dict(name='Running'), dict(name='Completed'), dict(name='Failed') ])
 
     if 'rest_methods' not in db.tables:
@@ -2103,8 +1962,7 @@ def _createJobsSchema(db):
                 name VARCHAR NOT NULL UNIQUE
             ) %(TABLEOPTS)s""" % db.keywords)
         db.tables['rest_methods'] = []
-        changed = True
-    changed |= _addTableRows(db, 'rest_methods', 'name', [ dict(name='POST'),
+    _addTableRows(db, 'rest_methods', 'name', [ dict(name='POST'),
         dict(name='PUT'), dict(name='DELETE') ])
 
     if 'jobs' not in db.tables:
@@ -2132,7 +1990,6 @@ def _createJobsSchema(db):
                 rest_args   VARCHAR
             ) %(TABLEOPTS)s""" % db.keywords)
         db.tables['jobs'] = []
-        changed = True
 
     if 'job_history' not in db.tables:
         cu.execute("""
@@ -2146,7 +2003,6 @@ def _createJobsSchema(db):
                 content     VARCHAR NOT NULL
             ) %(TABLEOPTS)s""" % db.keywords)
         db.tables['job_history'] = []
-        changed = True
 
     if 'job_results' not in db.tables:
         cu.execute("""
@@ -2158,7 +2014,6 @@ def _createJobsSchema(db):
                 data    VARCHAR NOT NULL
             ) %(TABLEOPTS)s""" % db.keywords)
         db.tables['job_results'] = []
-        changed = True
 
     if 'job_target' not in db.tables:
         cu.execute("""
@@ -2170,7 +2025,6 @@ def _createJobsSchema(db):
                     REFERENCES Targets ON DELETE CASCADE
             ) %(TABLEOPTS)s""" % db.keywords)
         db.tables['job_target'] = []
-        changed = True
 
     if 'job_system' not in db.tables:
         cu.execute("""
@@ -2182,15 +2036,12 @@ def _createJobsSchema(db):
                     REFERENCES inventory_system ON DELETE CASCADE
             ) %(TABLEOPTS)s""" % db.keywords)
         db.tables['job_system'] = []
-        changed = True
 
-    return changed
 
 def _createPKI(db):
     """Public key infrastructure tables"""
-    changed = False
 
-    changed |= createTable(db, 'pki_certificates', """
+    createTable(db, 'pki_certificates', """
         CREATE TABLE pki_certificates (
             fingerprint             text PRIMARY KEY,
             purpose                 text NOT NULL,
@@ -2205,7 +2056,6 @@ def _createPKI(db):
             time_expired            timestamptz NOT NULL
         )""")
 
-    return changed
 
 def _addQuerySet(db, name, description, resource_type, can_modify, filter_id=None, presentation_type=None):
     """Add a new query set"""
@@ -2250,14 +2100,12 @@ def _addQuerySetFilterEntry(db, field, operator, value):
     
 def _addQuerySetChild(db, parent_qs_id, child_qs_id):
     """Add a query set to another as a child"""
-    changed = False
     
-    changed |= _addTableRows(db, "querysets_queryset_children",
+    _addTableRows(db, "querysets_queryset_children",
         'id',
         [dict(from_queryset_id=parent_qs_id, to_queryset_id=child_qs_id)],
         uniqueCols=('from_queryset_id', 'to_queryset_id'))
     
-    return changed
 
 def _addQuerySetChildToInfrastructureSystems(db, child_qs_id):
     """Convenience method to add a child query set to infrastructure systems"""
@@ -2336,9 +2184,8 @@ def _createAllGrants(db):
 
 def _createQuerySetSchema(db):
     """QuerySet tables"""
-    changed = False
 
-    changed |= createTable(db, 'querysets_queryset', """
+    createTable(db, 'querysets_queryset', """
         CREATE TABLE "querysets_queryset" (
             "query_set_id" %(PRIMARYKEY)s,
             "name" TEXT NOT NULL UNIQUE,
@@ -2351,7 +2198,7 @@ def _createQuerySetSchema(db):
             "can_modify" BOOLEAN NOT NULL DEFAULT TRUE
         )""")
 
-    changed |= createTable(db, 'querysets_filterentry', """
+    createTable(db, 'querysets_filterentry', """
         CREATE TABLE "querysets_filterentry" (
             "filter_entry_id" %(PRIMARYKEY)s,
             "field" TEXT NOT NULL,
@@ -2360,7 +2207,7 @@ def _createQuerySetSchema(db):
             UNIQUE("field", "operator", "value")
         )""")
 
-    changed |= createTable(db, "querysets_queryset_filter_entries", """
+    createTable(db, "querysets_queryset_filter_entries", """
         CREATE TABLE "querysets_queryset_filter_entries" (
             "id" %(PRIMARYKEY)s,
             "queryset_id" INTEGER
@@ -2375,7 +2222,7 @@ def _createQuerySetSchema(db):
         )""")
 
     # unique value was 'name', not queryset_id
-    changed |= _addTableRows(db, "querysets_queryset", "name", [
+    _addTableRows(db, "querysets_queryset", "name", [
          dict(name="Active Systems", resource_type="system",
             description="Active Systems",
             created_date=str(datetime.datetime.now(tz.tzutc())),
@@ -2406,7 +2253,7 @@ def _createQuerySetSchema(db):
          )
     ])
     
-    changed != _createAllSystems(db)
+    _createAllSystems(db)
         
     allQSId = _getRowPk(db, "querysets_queryset", "query_set_id", 
         name="All Systems")
@@ -2419,7 +2266,7 @@ def _createQuerySetSchema(db):
     allUserQSId = _getRowPk(db, "querysets_queryset", "query_set_id", 
         name="All Users")
 
-    changed |= _addTableRows(db, "querysets_filterentry",
+    _addTableRows(db, "querysets_filterentry",
         'filter_entry_id',
         [dict(field="current_state.name", operator="EQUAL", value="responsive"),
          dict(field="current_state.name", operator="IN", 
@@ -2442,18 +2289,18 @@ def _createQuerySetSchema(db):
     allUserFiltId = _getRowPk(db, "querysets_filterentry", 'filter_entry_id',
         field="user_name", operator='IS_NULL', value="False")
 
-    changed |= createTable(db, 'querysets_inclusionmethod', """
+    createTable(db, 'querysets_inclusionmethod', """
         CREATE TABLE "querysets_inclusionmethod" (
             "inclusion_method_id" %(PRIMARYKEY)s,
             "name" TEXT NOT NULL UNIQUE
         )""")
-    changed |= _addTableRows(db, "querysets_inclusionmethod",
+    _addTableRows(db, "querysets_inclusionmethod",
         "name",
         [dict(name="chosen"),
          dict(name="filtered"),
          dict(name="transitive")])
 
-    changed |= createTable(db, 'querysets_systemtag', """
+    createTable(db, 'querysets_systemtag', """
         CREATE TABLE "querysets_systemtag" (
             "system_tag_id" %(BIGPRIMARYKEY)s,
             "system_id" INTEGER
@@ -2470,7 +2317,7 @@ def _createQuerySetSchema(db):
             CONSTRAINT querysets_systemtag_uq UNIQUE ("system_id", "query_set_id", "inclusion_method_id")
         )""")
 
-    changed |= createTable(db, 'querysets_usertag', """
+    createTable(db, 'querysets_usertag', """
         CREATE TABLE "querysets_usertag" (
             "user_tag_id" %(BIGPRIMARYKEY)s,
             "user_id" INTEGER
@@ -2487,7 +2334,7 @@ def _createQuerySetSchema(db):
             CONSTRAINT querysets_usertag_uq UNIQUE ("user_id", "query_set_id", "inclusion_method_id")
         )""")
     
-    changed |= createTable(db, 'querysets_projecttag', """
+    createTable(db, 'querysets_projecttag', """
         CREATE TABLE "querysets_projecttag" (
             "project_tag_id" %(BIGPRIMARYKEY)s,
             "project_id" INTEGER
@@ -2504,7 +2351,7 @@ def _createQuerySetSchema(db):
             CONSTRAINT querysets_projecttag_uq UNIQUE ("project_id", "query_set_id", "inclusion_method_id")
         )""")
     
-    changed |= createTable(db, 'querysets_stagetag', """
+    createTable(db, 'querysets_stagetag', """
         CREATE TABLE "querysets_stagetag" (
             "stage_tag_id" %(BIGPRIMARYKEY)s,
             "stage_id" INTEGER
@@ -2521,7 +2368,7 @@ def _createQuerySetSchema(db):
             CONSTRAINT querysets_stagetag_uq UNIQUE ("stage_id", "query_set_id", "inclusion_method_id")
         )""")
 
-    changed |= _addTableRows(db, "querysets_queryset_filter_entries",
+    _addTableRows(db, "querysets_queryset_filter_entries",
         'id',
         [dict(queryset_id=activeQSId, filterentry_id=activeFiltId),
          dict(queryset_id=inactiveQSId, filterentry_id=inactiveFiltId),
@@ -2530,7 +2377,7 @@ def _createQuerySetSchema(db):
          ],
         ['queryset_id', 'filterentry_id'])
 
-    changed |= createTable(db, "querysets_queryset_children", """
+    createTable(db, "querysets_queryset_children", """
         CREATE TABLE "querysets_queryset_children" (
             "id" %(PRIMARYKEY)s,
             "from_queryset_id" INTEGER
@@ -2544,20 +2391,18 @@ def _createQuerySetSchema(db):
             UNIQUE ("from_queryset_id", "to_queryset_id")
         )""")
     
-    return changed
 
 def _createChangeLogSchema(db):
     """ChangeLog tables"""
-    changed = False
 
-    changed |= createTable(db, 'changelog_change_log', """
+    createTable(db, 'changelog_change_log', """
         CREATE TABLE "changelog_change_log" (
             "change_log_id" %(PRIMARYKEY)s,
             "resource_type" TEXT NOT NULL,
             "resource_id" INTEGER NOT NULL
         )""")
 
-    changed |= createTable(db, 'changelog_change_log_entry', """
+    createTable(db, 'changelog_change_log_entry', """
         CREATE TABLE "changelog_change_log_entry" (
             "change_log_entry_id" %(PRIMARYKEY)s,
             "change_log_id" INTEGER
@@ -2567,34 +2412,32 @@ def _createChangeLogSchema(db):
             "entry_date" TIMESTAMP WITH TIME ZONE NOT NULL
         )""")
 
-    return changed
 
 def _createDjangoSchema(db):
     # before edge, django would just go out by itself to create its
     # tables.
     # we need to do it here. There is no migration needed for old
     # schema versions.
-    changed = False
-    changed |= createTable(db, 'django_content_type', """
+    createTable(db, 'django_content_type', """
         CREATE TABLE django_content_type (
             id          %(PRIMARYKEY)s,
             name        VARCHAR(100) NOT NULL,
             app_label   VARCHAR(100) NOT NULL,
             model       VARCHAR(100) NOT NULL
         )""")
-    changed |= createTable(db, 'django_site', """
+    createTable(db, 'django_site', """
         CREATE TABLE django_site (
             id          %(PRIMARYKEY)s,
             domain      VARCHAR(100) NOT NULL,
             name        VARCHAR(100) NOT NULL
     )""")
-    changed |= createTable(db, 'django_session', """
+    createTable(db, 'django_session', """
         CREATE TABLE django_session (
             session_key VARCHAR(40) NOT NULL PRIMARY KEY,
             session_data    TEXT NOT NULL,
             expire_date TIMESTAMP WITH TIME ZONE NOT NULL
     )""")
-    changed |= createTable(db, 'django_redirect', """
+    createTable(db, 'django_redirect', """
         CREATE TABLE django_redirect (
             id          %(PRIMARYKEY)s,
             site_id     INTEGER NOT NULL
@@ -2602,7 +2445,7 @@ def _createDjangoSchema(db):
             old_path    VARCHAR(200) NOT NULL,
             new_path    VARCHAR(200) NOT NULL
     )""")
-    changed |= createTable(db, 'auth_permission', """
+    createTable(db, 'auth_permission', """
         CREATE TABLE auth_permission (
             id          %(PRIMARYKEY)s,
             name        VARCHAR(50) NOT NULL,
@@ -2610,7 +2453,7 @@ def _createDjangoSchema(db):
                         REFERENCES django_content_type(id),
             codename    VARCHAR(100) NOT NULL
     )""")
-    changed |= createTable(db, 'auth_user', """
+    createTable(db, 'auth_user', """
         CREATE TABLE auth_user (
             id          %(PRIMARYKEY)s,
             username    VARCHAR(30) NOT NULL,
@@ -2624,13 +2467,12 @@ def _createDjangoSchema(db):
             last_login TIMESTAMP WITH TIME ZONE NOT NULL,
             date_joined TIMESTAMP WITH TIME ZONE NOT NULL
     )""")
-    return changed
+
 
 def _createPackageSchema(db):
     """Package tables"""
-    changed = False
 
-    changed |= createTable(db, "packages_package_action_type", """
+    createTable(db, "packages_package_action_type", """
         CREATE TABLE "packages_package_action_type" (
             "package_action_type_id" %(PRIMARYKEY)s,
             "name" text NOT NULL,
@@ -2639,7 +2481,7 @@ def _createPackageSchema(db):
             "modified_date" timestamp with time zone NOT NULL
         )""")
 
-    changed |= createTable(db, "packages_package", """
+    createTable(db, "packages_package", """
         CREATE TABLE "packages_package" (
             "package_id" %(PRIMARYKEY)s,
             "name" TEXT NOT NULL UNIQUE,
@@ -2652,7 +2494,7 @@ def _createPackageSchema(db):
                 REFERENCES "users" ("userid") ON DELETE SET NULL
         )""")
 
-    changed |= createTable(db, "packages_package_version", """
+    createTable(db, "packages_package_version", """
         CREATE TABLE "packages_package_version" (
             "package_version_id" %(PRIMARYKEY)s,
             "package_id" integer NOT NULL 
@@ -2670,7 +2512,7 @@ def _createPackageSchema(db):
             "committed" boolean NOT NULL
         )""")
 
-    changed |= createTable(db, "packages_package_version_action", """
+    createTable(db, "packages_package_version_action", """
         CREATE TABLE "packages_package_version_action" (
             "package_version_action_id" %(PRIMARYKEY)s,
             "package_version_id" integer NOT NULL 
@@ -2685,7 +2527,7 @@ def _createPackageSchema(db):
             "modified_date" timestamp with time zone NOT NULL
         )""")
 
-    changed |= createTable(db, "packages_package_version_job", """
+    createTable(db, "packages_package_version_job", """
         CREATE TABLE "packages_package_version_job" (
             "package_version_job_id" %(PRIMARYKEY)s,
             "package_version_id" integer NOT NULL 
@@ -2704,7 +2546,7 @@ def _createPackageSchema(db):
                 REFERENCES "users" ("userid")
         )""")
 
-    changed |= createTable(db, "packages_package_version_url", """
+    createTable(db, "packages_package_version_url", """
         CREATE TABLE "packages_package_version_url" (
             "package_version_url_id" %(PRIMARYKEY)s,
             "package_version_id" integer NOT NULL 
@@ -2721,7 +2563,7 @@ def _createPackageSchema(db):
                 REFERENCES "users" ("userid")
         )""")
 
-    changed |= createTable(db, "packages_package_source", """
+    createTable(db, "packages_package_source", """
         CREATE TABLE "packages_package_source" (
             "package_source_id" %(PRIMARYKEY)s,
             "package_version_id" integer NOT NULL 
@@ -2737,7 +2579,7 @@ def _createPackageSchema(db):
                 REFERENCES "inventory_trove" ("trove_id")
         )""")
 
-    changed |= createTable(db, "packages_package_source_action", """
+    createTable(db, "packages_package_source_action", """
         CREATE TABLE "packages_package_source_action" (
             "package_source_action_id" %(PRIMARYKEY)s,
             "package_source_id" integer NOT NULL 
@@ -2750,7 +2592,7 @@ def _createPackageSchema(db):
             "modified_date" timestamp with time zone NOT NULL
         )""")
 
-    changed |= createTable(db, "packages_package_source_job", """
+    createTable(db, "packages_package_source_job", """
         CREATE TABLE "packages_package_source_job" (
             "package_source_job_id" %(PRIMARYKEY)s,
             "package_source_id" integer NOT NULL 
@@ -2769,7 +2611,7 @@ def _createPackageSchema(db):
                 REFERENCES "users" ("userid")
         )""")
 
-    changed |= createTable(db, "packages_package_build", """
+    createTable(db, "packages_package_build", """
         CREATE TABLE "packages_package_build" (
             "package_build_id" %(PRIMARYKEY)s,
             "package_source_id" integer NOT NULL 
@@ -2782,7 +2624,7 @@ def _createPackageSchema(db):
                 REFERENCES "users" ("userid")
         )""")
 
-    changed |= createTable(db, "packages_package_build_troves", """
+    createTable(db, "packages_package_build_troves", """
         CREATE TABLE "packages_package_build_troves" (
             "id" %(PRIMARYKEY)s,
             "packagebuild_id" integer NOT NULL
@@ -2792,7 +2634,7 @@ def _createPackageSchema(db):
             UNIQUE ("packagebuild_id", "trove_id")
         )""")
 
-    changed |= createTable(db, "packages_package_build_action", """
+    createTable(db, "packages_package_build_action", """
         CREATE TABLE "packages_package_build_action" (
             "package_build_action_id" %(PRIMARYKEY)s,
             "package_build_id" integer NOT NULL 
@@ -2807,7 +2649,7 @@ def _createPackageSchema(db):
             "modified_date" timestamp with time zone NOT NULL
         )""")
 
-    changed |= createTable(db, "packages_package_build_job", """
+    createTable(db, "packages_package_build_job", """
         CREATE TABLE "packages_package_build_job" (
             "package_build_job_id" %(PRIMARYKEY)s,
             "package_build_id" integer NOT NULL 
@@ -2824,78 +2666,77 @@ def _createPackageSchema(db):
                 REFERENCES "users" ("userid")
         )""")
 
-    changed |= db.createIndex("packages_package", 
+    db.createIndex("packages_package", 
         "packages_package_created_by_id", "created_by_id")
-    changed |= db.createIndex("packages_package", 
+    db.createIndex("packages_package", 
         "packages_package_modified_by_id", "modified_by_id")
-    changed |= db.createIndex("packages_package_version",
+    db.createIndex("packages_package_version",
         "packages_package_version_package_id", "package_id")
-    changed |= db.createIndex("packages_package_version",
+    db.createIndex("packages_package_version",
         "packages_package_version_created_by_id", "created_by_id")
-    changed |= db.createIndex("packages_package_version_action",
+    db.createIndex("packages_package_version_action",
         "packages_package_version_action_package_version_id", "package_version_id")
-    changed |= db.createIndex("packages_package_version_action",
+    db.createIndex("packages_package_version_action",
         "packages_package_version_action_package_action_type_id", "package_action_type_id")
-    changed |= db.createIndex("packages_package_version_job",
+    db.createIndex("packages_package_version_job",
         "packages_package_version_job_package_version_id", "package_version_id")
-    changed |= db.createIndex("packages_package_version_job",
+    db.createIndex("packages_package_version_job",
         "packages_package_version_job_package_action_type_id", "package_action_type_id")
-    changed |= db.createIndex("packages_package_version_job",
+    db.createIndex("packages_package_version_job",
         "packages_package_version_job_job_id", "job_id")
-    changed |= db.createIndex("packages_package_version_job",
+    db.createIndex("packages_package_version_job",
         "packages_package_version_job_created_by_id", "created_by_id")
-    changed |= db.createIndex("packages_package_version_job",
+    db.createIndex("packages_package_version_job",
         "packages_package_version_job_modified_by_id", "modified_by_id")
-    changed |= db.createIndex("packages_package_version_url",
+    db.createIndex("packages_package_version_url",
         "packages_package_version_url_package_version_id", "package_version_id")
-    changed |= db.createIndex("packages_package_version_url",
+    db.createIndex("packages_package_version_url",
         "packages_package_version_url_created_by_id", "created_by_id")
-    changed |= db.createIndex("packages_package_version_url",
+    db.createIndex("packages_package_version_url",
         "packages_package_version_url_modified_by_id", "modified_by_id")
-    changed |= db.createIndex("packages_package_source",
+    db.createIndex("packages_package_source",
         "packages_package_source_package_version_id", "package_version_id")
-    changed |= db.createIndex("packages_package_source",
+    db.createIndex("packages_package_source",
         "packages_package_source_created_by_id", "created_by_id")
-    changed |= db.createIndex("packages_package_source",
+    db.createIndex("packages_package_source",
         "packages_package_source_modified_by_id", "modified_by_id")
-    changed |= db.createIndex("packages_package_source",
+    db.createIndex("packages_package_source",
         "packages_package_source_trove_id", "trove_id")
-    changed |= db.createIndex("packages_package_source_action",
+    db.createIndex("packages_package_source_action",
         "packages_package_source_action_package_source_id", "package_source_id")
-    changed |= db.createIndex("packages_package_source_action",
+    db.createIndex("packages_package_source_action",
         "packages_package_source_action_package_action_type_id", "package_action_type_id")
-    changed |= db.createIndex("packages_package_source_job",
+    db.createIndex("packages_package_source_job",
         "packages_package_source_job_package_source_id", "package_source_id")
-    changed |= db.createIndex("packages_package_source_job",
+    db.createIndex("packages_package_source_job",
         "packages_package_source_job_package_action_type_id", "package_action_type_id")
-    changed |= db.createIndex("packages_package_source_job",
+    db.createIndex("packages_package_source_job",
         "packages_package_source_job_job_id", "job_id")
-    changed |= db.createIndex("packages_package_source_job",
+    db.createIndex("packages_package_source_job",
         "packages_package_source_job_created_by_id", "created_by_id")
-    changed |= db.createIndex("packages_package_source_job",
+    db.createIndex("packages_package_source_job",
         "packages_package_source_job_modified_by_id", "modified_by_id")
-    changed |= db.createIndex("packages_package_build",
+    db.createIndex("packages_package_build",
         "packages_package_build_package_source_id", "package_source_id")
-    changed |= db.createIndex("packages_package_build",
+    db.createIndex("packages_package_build",
         "packages_package_build_created_by_id", "created_by_id")
-    changed |= db.createIndex("packages_package_build",
+    db.createIndex("packages_package_build",
         "packages_package_build_modified_by_id", "modified_by_id")
-    changed |= db.createIndex("packages_package_build_action",
+    db.createIndex("packages_package_build_action",
         "packages_package_build_action_package_build_id", "package_build_id")
-    changed |= db.createIndex("packages_package_build_action",
+    db.createIndex("packages_package_build_action",
         "packages_package_build_action_package_action_type_id", "package_action_type_id")
-    changed |= db.createIndex("packages_package_build_job",
+    db.createIndex("packages_package_build_job",
         "packages_package_build_job_package_build_id", "package_build_id")
-    changed |= db.createIndex("packages_package_build_job",
+    db.createIndex("packages_package_build_job",
         "packages_package_build_job_package_action_type_id", "package_action_type_id")
-    changed |= db.createIndex("packages_package_build_job",
+    db.createIndex("packages_package_build_job",
         "packages_package_build_job_job_id", "job_id")
-    changed |= db.createIndex("packages_package_build_job",
+    db.createIndex("packages_package_build_job",
         "packages_package_build_job_created_by_id", "created_by_id")
-    changed |= db.createIndex("packages_package_build_job",
+    db.createIndex("packages_package_build_job",
         "packages_package_build_job_modified_by_id", "modified_by_id")
 
-    return changed
 
 # create the (permanent) server repository schema
 def createSchema(db, doCommit=True, cfg=None):
@@ -2905,45 +2746,42 @@ def createSchema(db, doCommit=True, cfg=None):
     if doCommit:
         db.transaction()
 
-    changed = False
-    changed |= _createUsers(db)
-    changed |= _createProjects(db)
-    changed |= _createLabels(db)
-    changed |= _createProductVersions(db)
-    changed |= _createBuilds(db)
-    changed |= _createCommits(db)
-    changed |= _createPackageIndex(db)
-    changed |= _createNewsCache(db)
-    changed |= _createMirrorInfo(db)
-    changed |= _createApplianceSpotlight(db)
-    changed |= _createFrontPageStats(db)
-    changed |= _createSessions(db)
-    changed |= _createZoneSchema(db)
-    changed |= _createTargets(db)
-    changed |= _createPlatforms(db)
-    changed |= _createCapsuleIndexerSchema(db)
-    changed |= _createRepositoryLogSchema(db)
-    changed |= _createInventorySchema(db, cfg)
-    changed |= _createJobsSchema(db)
-    changed |= _createCapsuleIndexerYumSchema(db)
-    changed |= _createPKI(db)
-    changed |= _createQuerySetSchema(db)
-    changed |= _createInfrastructureSystemsQuerySetSchema(db)
-    changed |= _createWindowsBuildSystemsQuerySet(db)
-    changed |= _createUpdateSystemsQuerySet(db)
-    changed != _createAllProjectBranchStages(db)
-    changed != _createAllPlatformBranchStages(db)
-    changed |= _createAllProjects(db)
-    changed |= _createChangeLogSchema(db)
-    changed |= _createPackageSchema(db)
-    changed |= _createDjangoSchema(db)
-    changed |= _createRbac(db)
+    _createUsers(db)
+    _createProjects(db)
+    _createLabels(db)
+    _createProductVersions(db)
+    _createBuilds(db)
+    _createCommits(db)
+    _createPackageIndex(db)
+    _createNewsCache(db)
+    _createMirrorInfo(db)
+    _createApplianceSpotlight(db)
+    _createFrontPageStats(db)
+    _createSessions(db)
+    _createZoneSchema(db)
+    _createTargets(db)
+    _createPlatforms(db)
+    _createCapsuleIndexerSchema(db)
+    _createRepositoryLogSchema(db)
+    _createInventorySchema(db, cfg)
+    _createJobsSchema(db)
+    _createCapsuleIndexerYumSchema(db)
+    _createPKI(db)
+    _createQuerySetSchema(db)
+    _createInfrastructureSystemsQuerySetSchema(db)
+    _createWindowsBuildSystemsQuerySet(db)
+    _createUpdateSystemsQuerySet(db)
+    _createAllProjectBranchStages(db)
+    _createAllPlatformBranchStages(db)
+    _createAllProjects(db)
+    _createChangeLogSchema(db)
+    _createPackageSchema(db)
+    _createDjangoSchema(db)
+    _createRbac(db)
 
     if doCommit:
         db.commit()
         db.loadSchema()
-
-    return changed
 
 
 #############################################################################
