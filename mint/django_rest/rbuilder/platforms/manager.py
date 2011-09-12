@@ -81,8 +81,6 @@ class PlatformManager(basemanager.BaseManager):
             return self._getDeferredImageTypeDescriptor()
 
         modname = "%s.%s" % (IMAGE_TYPE_DESCRIPTORS, name)
-        # TODO: if the IT is 'deferrred', generate dynamically
-        # TODO: add IT type 'deferred'
         try:
              __import__(modname)
         except exceptions.ImportError:
