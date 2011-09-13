@@ -3044,7 +3044,7 @@ class MigrateTo_57(SchemaMigration):
 
 
 class MigrateTo_58(SchemaMigration):
-    Version = (58, 62)
+    Version = (58, 63)
 
     def migrate(self):
         return True
@@ -4165,6 +4165,21 @@ class MigrateTo_58(SchemaMigration):
                         REFERENCES Targets(targetid) ON DELETE CASCADE
         )""")
         return True
+
+    def migrate63(self):
+        drop_tables(self.db,
+                'CommunityIds',
+                'NewsCache',
+                'NewsCacheInfo',
+                'ApplianceSpotlight',
+                'FrontPageSelections',
+                'UseIt',
+                'LatestCommit',
+                'PopularProjects',
+                'TopProjects',
+                )
+        return True
+
 
 #### SCHEMA MIGRATIONS END HERE #############################################
 
