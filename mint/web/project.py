@@ -1,14 +1,11 @@
 #
-# Copyright (c) 2005-2009 rPath, Inc.
+# Copyright (c) 2011 rPath, Inc.
 #
-# All rights reserved
-#
+
 import email
-import os
 import re
 import sys
 import time
-from mint.web import basictroves
 from mint import communitytypes
 from mint import mailinglists
 from mint.db import jobs
@@ -16,7 +13,11 @@ from mint import jobstatus
 from mint import builds
 from mint import buildtypes
 from mint import userlevels
-from mint.mint_error import *
+from mint.mint_error import (ItemNotFound, TroveNotFoundForBuildDefinition,
+        NotEntitledError, BuildOptionValidationException, MintError,
+        DuplicateItem, ProductDefinitionVersionExternalNotSup,
+        ProductDefinitionInvalidStage, ProductVersionInvalid,
+        )
 
 from mint import buildtemplates
 from mint import helperfuncs
@@ -27,17 +28,14 @@ from mint.lib.maillib import sendMailWithChecks
 from mint.web import productversion
 from mint.web.packagecreator import PackageCreatorMixin
 from mint.web.fields import strFields, intFields, listFields, boolFields, dictFields
-from mint.web.webhandler import WebHandler, normPath, HttpNotFound, \
-     HttpForbidden
+from mint.web.webhandler import WebHandler, normPath, HttpNotFound
 from mint.web.decorators import ownerOnly, writersOnly, requiresAuth, \
-        requiresAdmin, mailList, redirectHttp
+        mailList, redirectHttp
 
-from conary import conaryclient
-from conary import conarycfg
 from conary.deps import deps
 from conary import versions
 from conary.conaryclient.cmdline import parseTroveSpec
-from conary.errors import TroveNotFound, ParseError
+from conary.errors import ParseError
 
 from rpath_proddef import api1 as proddef
 
@@ -158,15 +156,16 @@ class ProjectHandler(BaseProjectHandler, PackageCreatorMixin):
 
     # @writersOnly
     def builds(self, auth):
-        builds = [self.client.getBuild(x) for x in self.project.getBuilds()]
+        buildList = [self.client.getBuild(x) for x in self.project.getBuilds()]
         publishedReleases = dict()
-        for build in builds:
+        for build in buildList:
             if build.getPublished() and \
                     build.pubReleaseId not in publishedReleases:
                 publishedReleases[build.pubReleaseId] = \
                         self.client.getPublishedRelease(build.pubReleaseId)
 
-        return self._write("builds", builds = builds, publishedReleases = publishedReleases)
+        return self._write("builds", builds=buildList,
+                publishedReleases=publishedReleases)
 
     @writersOnly
     def groups(self, auth):
@@ -255,10 +254,7 @@ class ProjectHandler(BaseProjectHandler, PackageCreatorMixin):
                 visibleTypes = self.client.getAvailableBuildTypes(),
                 kwargs = {})
         elif action == "Recreate Image":
-            try:
-                job = self.client.startImageJob(buildId)
-            except mcp_error.JobConflict:
-                pass
+            self.client.startImageJob(buildId)
             self._predirect("build?id=%d" % buildId)
         else:
             self._addErrors("Invalid action %s" % action)
@@ -431,7 +427,6 @@ class ProjectHandler(BaseProjectHandler, PackageCreatorMixin):
             if not buildIdsToDelete:
                 self._addErrors("No images specified.")
                 self._predirect("builds")
-            numToDelete = len(buildIdsToDelete)
             numPublished = 0
             message = ""
             for buildId in buildIdsToDelete:
@@ -1105,7 +1100,6 @@ class ProjectHandler(BaseProjectHandler, PackageCreatorMixin):
 
             kwargs['namespace'] = pd.getConaryNamespace()
         else:
-            valueToIdMap = buildtemplates.getValueToTemplateIdMap();
             pd = proddef.ProductDefinition()
             helperfuncs.addDefaultStagesToProductDefinition(pd)
             # XXX: this should be carried forward when images and other values are
@@ -1323,7 +1317,6 @@ class ProjectHandler(BaseProjectHandler, PackageCreatorMixin):
 
         platformName = None
         customPlatform = ()
-        acceptablePlatform = True
         pd = self.client.getProductDefinitionForVersion(id)
 
         platformSourceTrove = pd.getPlatformSourceTrove()
@@ -1338,8 +1331,6 @@ class ProjectHandler(BaseProjectHandler, PackageCreatorMixin):
             if not platformName:
                 platformName = 'Custom appliance platform on %s' % platformLabel
                 customPlatform = (platformLabel, platformName)
-                acceptablePlatform = \
-                        self.client.isPlatformAcceptable(platformLabel)
 
         return self._write("rebaseProductVersion",
                 id = id,
@@ -1579,7 +1570,6 @@ class ProjectHandler(BaseProjectHandler, PackageCreatorMixin):
     @strFields(action = '')
     @intFields(userId = None)
     def acceptJoinRequest(self, auth, userId, action):
-        projectId = self.project.getId()
         user = self.client.getUser(userId)
         username = user.getUsername()
         # XXX This is fragile, and probably will not work so well with
