@@ -24,7 +24,6 @@ TABLE_LIST = [
         'packageindexmark',
         'packageindex',
         'labels',
-        'communityids',
         'urldownloads',
         'inboundmirrors',
         'latestcommit',

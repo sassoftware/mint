@@ -337,16 +337,6 @@ def _createProjects(db):
         ) %(TABLEOPTS)s """ % db.keywords)
         db.tables['MembershipRequests'] = []
 
-    if 'CommunityIds' not in db.tables:
-        cu.execute("""
-        CREATE TABLE CommunityIds (
-            projectId           integer         NOT NULL
-                REFERENCES Projects ON DELETE CASCADE,
-            communityType       integer,
-            communityId         varchar(255)
-        ) %(TABLEOPTS)s""" % db.keywords)
-        db.tables['CommunityIds'] = []
-
 
 def _createBuilds(db):
     cu = db.cursor()

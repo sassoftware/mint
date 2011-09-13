@@ -597,15 +597,6 @@ class MintClient:
         """
         return self.server.unpublishPublishedRelease(pubReleaseId)
 
-    def getCommunityId(self, projectId, communityType):
-        return self.server.getCommunityId(projectId, communityType)
-
-    def setCommunityId(self, projectId, communityType, communityId):
-        return self.server.setCommunityId(projectId, communityType, communityId)
-
-    def deleteCommunityId(self, projectId, communityType):
-        return self.server.deleteCommunityId(projectId, communityType)
-
     def getrAPAPassword(self, host, role):
         return self.server.getrAPAPassword(host, role)
 

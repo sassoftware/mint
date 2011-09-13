@@ -12,7 +12,6 @@ from mint import mint_error
 from mint.db import schema
 
 from mint.db import builds
-from mint.db import communityids
 from mint.db import jobs
 from mint.db import news
 from mint.db import mirror
@@ -58,7 +57,6 @@ class TableCache(object):
         self.popularProjects = selections.PopularProjectsTable(db)
         self.latestCommit = selections.LatestCommitTable(db)
         self.publishedReleases = pubreleases.PublishedReleasesTable(db)
-        self.communityIds = communityids.CommunityIdsTable(db)
         self.productVersions = projects.ProductVersionsTable(db, cfg)
 
         self.targets = targets.TargetsTable(db)
@@ -115,7 +113,6 @@ class Database(object):
         self.popularProjects = tables.popularProjects
         self.latestCommit = tables.latestCommit
         self.publishedReleases = tables.publishedReleases
-        self.communityIds = tables.communityIds
         self.productVersions = tables.productVersions
         self.platforms = tables.platforms
         self.platformSources = tables.platformSources

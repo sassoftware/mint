@@ -2817,23 +2817,6 @@ If you would not like to be %s %s of this project, you may resign from this proj
         return self.publishedReleases.getPublishedReleasesByProject(projectId,
                 publishedOnly)
 
-    @typeCheck(int, int)
-    @private
-    def getCommunityId(self, projectId, communityType):
-        return self.communityIds.getCommunityId(projectId, communityType)
-
-    @typeCheck(int, int, str)
-    @private
-    @requiresAuth
-    def setCommunityId(self, projectId, communityType, communityId):
-        return self.communityIds.setCommunityId(projectId, communityType,
-                                                communityId)
-    @typeCheck(int, int)
-    @private
-    @requiresAuth
-    def deleteCommunityId(self, projectId, communityType):
-        return self.communityIds.deleteCommunityId(projectId, communityType)
-
     @typeCheck(int)
     @private
     def getBuildTrove(self, buildId):
