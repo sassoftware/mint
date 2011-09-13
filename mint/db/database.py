@@ -13,7 +13,6 @@ from mint.db import schema
 
 from mint.db import builds
 from mint.db import jobs
-from mint.db import news
 from mint.db import mirror
 from mint.db import pkgindex
 from mint.db import platforms
@@ -21,7 +20,6 @@ from mint.db import projects
 from mint.db import pubreleases
 from mint.db import requests
 from mint.db import sessiondb
-from mint.db import selections
 from mint.db import stats
 from mint.db import targets
 from mint.db import users
@@ -43,7 +41,6 @@ class TableCache(object):
         self.projectUsers = projects.ProjectUsersTable(db)
         self.builds = builds.BuildsTable(db)
         self.pkgIndex = pkgindex.PackageIndexTable(db)
-        self.newsCache = news.NewsCacheTable(db, cfg)
         self.sessions = sessiondb.SessionsTable(db)
         self.membershipRequests = requests.MembershipRequestTable(db)
         self.commits = stats.CommitsTable(db)
@@ -52,10 +49,6 @@ class TableCache(object):
         self.outboundMirrors = mirror.OutboundMirrorsTable(db, cfg)
         self.updateServices = mirror.UpdateServicesTable(db, cfg)
         self.outboundMirrorsUpdateServices = mirror.OutboundMirrorsUpdateServicesTable(db)
-        self.selections = selections.FrontPageSelectionsTable(db, cfg)
-        self.topProjects = selections.TopProjectsTable(db)
-        self.popularProjects = selections.PopularProjectsTable(db)
-        self.latestCommit = selections.LatestCommitTable(db)
         self.publishedReleases = pubreleases.PublishedReleasesTable(db)
         self.productVersions = projects.ProductVersionsTable(db, cfg)
 
@@ -69,7 +62,6 @@ class TableCache(object):
         self.platformsContentSourceTypes = platforms.PlatformsContentSourceTypesTable(db)
 
         self.users.confirm_table.db = db
-        self.newsCache.ageTable.db = db
         self.projects.reposDB.cfg = cfg
 
 class Database(object):
@@ -99,7 +91,6 @@ class Database(object):
         self.projectUsers = tables.projectUsers
         self.builds = tables.builds
         self.pkgIndex = tables.pkgIndex
-        self.newsCache = tables.newsCache
         self.sessions = tables.sessions
         self.membershipRequests = tables.membershipRequests
         self.commits = tables.commits
@@ -108,10 +99,6 @@ class Database(object):
         self.outboundMirrors = tables.outboundMirrors
         self.updateServices = tables.updateServices
         self.outboundMirrorsUpdateServices = tables.outboundMirrorsUpdateServices
-        self.selections = tables.selections
-        self.topProjects = tables.topProjects
-        self.popularProjects = tables.popularProjects
-        self.latestCommit = tables.latestCommit
         self.publishedReleases = tables.publishedReleases
         self.productVersions = tables.productVersions
         self.platforms = tables.platforms

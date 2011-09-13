@@ -513,30 +513,6 @@ def _createPackageIndex(db):
         cu.execute("INSERT INTO PackageIndexMark VALUES(0)")
 
 
-def _createNewsCache(db):
-    cu = db.cursor()
-
-    if 'NewsCache' not in db.tables:
-        cu.execute("""
-        CREATE TABLE NewsCache (
-            itemId              %(PRIMARYKEY)s,
-            title               varchar(255),
-            pubDate             numeric(14,3),
-            content             text,
-            link                varchar(255),
-            category            varchar(255)
-        ) %(TABLEOPTS)s """ % db.keywords)
-        db.tables['NewsCache'] = []
-
-    if 'NewsCacheInfo' not in db.tables:
-        cu.execute("""
-        CREATE TABLE NewsCacheInfo (
-            age                 numeric(14,3),
-            feedLink            varchar(255)
-        ) %(TABLEOPTS)s """ % db.keywords)
-        db.tables['NewsCacheInfo'] = []
-
-
 def _createMirrorInfo(db):
     cu = db.cursor()
 
@@ -597,78 +573,6 @@ def _createMirrorInfo(db):
             PRIMARY KEY ( outboundMirrorId, updateServiceId )
             ) %(TABLEOPTS)s""" % db.keywords)
         db.tables['OutboundMirrorsUpdateServices'] = []
-
-
-def _createApplianceSpotlight(db):
-    cu = db.cursor()
-
-    # XXX: delete this in a future schema upgrade; leaving dormant for now
-    if 'ApplianceSpotlight' not in db.tables:
-        cu.execute("""
-        CREATE TABLE ApplianceSpotlight (
-            itemId          %(PRIMARYKEY)s,
-            title           varchar(255),
-            text            varchar(255),
-            link            varchar(255),
-            logo            varchar(255),
-            showArchive     integer,
-            startDate       integer,
-            endDate         INT
-        ) %(TABLEOPTS)s """ % db.keywords)
-        db.tables['ApplianceSpotlight'] = []
-
-    if 'FrontPageSelections' not in db.tables:
-        cu.execute("""
-        CREATE TABLE FrontPageSelections (
-            itemId          %(PRIMARYKEY)s,
-            name            varchar(255),
-            link            varchar(255),
-            rank            INT
-        ) %(TABLEOPTS)s """ % db.keywords)
-        db.tables['FrontPageSelections'] = []
-
-    # XXX: delete this in a future schema upgrade; leaving dormant for now
-    if 'UseIt' not in db.tables:
-        cu.execute("""
-        CREATE TABLE UseIt (
-            itemId         %(PRIMARYKEY)s,
-            name            varchar(255),
-            link            varchar(255)
-        ) %(TABLEOPTS)s """ % db.keywords)
-        db.tables['UseIt'] = []
-
-
-def _createFrontPageStats(db):
-    cu = db.cursor()
-
-    if 'LatestCommit' not in db.tables:
-        cu.execute("""
-        CREATE TABLE LatestCommit (
-            projectId           integer         NOT NULL
-                REFERENCES Projects ON DELETE CASCADE,
-            commitTime          numeric(14,3)   NOT NULL
-        ) %(TABLEOPTS)s """ % db.keywords)
-        db.tables['LatestCommit'] = []
-    db.createIndex('LatestCommit', 'LatestCommitTimestamp',
-            'projectId, commitTime')
-
-    if 'PopularProjects' not in db.tables:
-        cu.execute("""
-        CREATE TABLE PopularProjects (
-            projectId           integer         NOT NULL
-                REFERENCES Projects ON DELETE CASCADE,
-            rank                integer         NOT NULL
-        ) %(TABLEOPTS)s """ % db.keywords)
-        db.tables['PopularProjects'] = []
-
-    if 'TopProjects' not in db.tables:
-        cu.execute("""
-        CREATE TABLE TopProjects (
-            projectId           integer         NOT NULL
-                REFERENCES Projects ON DELETE CASCADE,
-            rank                integer         NOT NULL
-        ) %(TABLEOPTS)s """ % db.keywords)
-        db.tables['TopProjects'] = []
 
 
 def _createSessions(db):
@@ -2881,10 +2785,7 @@ def createSchema(db, doCommit=True, cfg=None):
     _createBuilds(db)
     _createCommits(db)
     _createPackageIndex(db)
-    _createNewsCache(db)
     _createMirrorInfo(db)
-    _createApplianceSpotlight(db)
-    _createFrontPageStats(db)
     _createSessions(db)
     _createZoneSchema(db)
     _createTargets(db)

@@ -235,7 +235,6 @@ def getMintCfg(reposDir, serverRoot, port, securePort, reposDbPort, useProxy):
         cfg.proxyTmpDir = reposDir + '/proxytmp'
 
 
-#        cfg.newsRssFeed = 'file://' +mintPath + '/test/archive/news.xml'
     cfg.configured = True
     cfg.debugMode = True
     cfg.sendNotificationEmails = False

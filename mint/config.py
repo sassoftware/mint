@@ -217,7 +217,6 @@ class MintConfig(conarycfg.ConfigFile):
         "Your organization's intranet or public web site: (Used for the &quot;About&quot; links)")
     supportContactHTML      = (CfgString, 'Contact information in HTML.')
     supportContactTXT       = (CfgString, 'Contact information in text.')
-    newsRssFeed             = (CfgString, '')
     noticesRssFeed          = (CfgList(CfgString), [])
     announceLink            = (CfgString, '')
     googleAnalyticsTracker  = (CfgBool, False)
@@ -295,6 +294,7 @@ class MintConfig(conarycfg.ConfigFile):
     cookieSecretKey         = (CfgString, None)
     VAMUser                 = (CfgString, '')
     VAMPassword             = (CfgString, '')
+    newsRssFeed             = (CfgString, '')
 
     # AMI configuration -- migrated in schema (45, 6)
     ec2PublicKey            = (CfgString, '', "The AWS account id")
