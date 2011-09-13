@@ -2188,7 +2188,8 @@ class SystemsTestCase(XMLTestCaseStandin):
         xml = xmlTempl % params
         obj = xobj.parse(xml)
         xobjmodel = obj.system
-        model = models.System.objects.load_from_object(xobjmodel, request=None)
+        model = models.System.objects.load_from_object(xobjmodel, request=None,
+            save=False)
         self.failUnlessEqual(model.pk, system.pk)
 
         # We expect nothing to be updated, since there's no such job
@@ -3440,7 +3441,8 @@ class SystemEventTestCase(XMLTestCaseStandin):
     def testIncompatibleEvents(self):
         def mock__dispatchSystemEvent(self, event):
             system = event.system
-            job = jobmodels.Job(job_uuid=str(random.random()),
+            job_uuid = str(random.random())
+            job = jobmodels.Job(job_uuid=job_uuid, job_token=job_uuid*2,
                 job_state=jobmodels.JobState.objects.get(name='Running'),
                 job_type=event.event_type)
             job.save()

@@ -451,7 +451,7 @@ class BaseManager(models.Manager):
                 rel_mod = modelCls.objects._load_from_href(rel_obj)
                 if rel_mod is None:
                     rel_mod = modelCls.objects.load_from_object(
-                        rel_obj, request)
+                        rel_obj, request, save=False)
                 self._set_m2m_accessor(model, m2m_accessor, rel_mod)
 
         return model
