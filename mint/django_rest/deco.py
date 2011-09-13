@@ -54,14 +54,17 @@ def requires(model_names, save=True, load=True):
             request = args[1]
             built_model, model_name, modelCls  = _getXobjModel(request, model_names)
 
-            uqFields = set(x.name for x in modelCls._meta.fields if x.unique)
+            uqFields = dict((x.name, getattr(x, 'UpdatableKey', False))
+                for x in modelCls._meta.fields if x.unique)
             uqkeyvals = [ x for x in kw.items() if x[0] in uqFields ]
             if len(uqkeyvals) > 1:
                 raise Exception("Programming error: multiple unique keys present")
             if uqkeyvals:
                 keyFieldName, keyFieldValue = uqkeyvals[0]
-                # This will also overwrite the field if it's present
-                setattr(built_model, keyFieldName, keyFieldValue)
+                updatable = uqFields[keyFieldName]
+                if getattr(built_model, keyFieldName, None) is None or not updatable:
+                    # This will also overwrite the field if it's present
+                    setattr(built_model, keyFieldName, keyFieldValue)
             # XXX This is not the ideal place to handle this
             _injectZone(request, built_model, model_name, modelCls)
             model = modelCls.objects.load_from_object(

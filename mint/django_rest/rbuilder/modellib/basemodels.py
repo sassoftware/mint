@@ -39,13 +39,13 @@ def XObjHidden(field):
     field.XObjHidden = True
     return field
 
-def APIImmutable(field):
+def UpdatableKey(field):
     """
-    It's possible to write this item if not in the database but it may
-    not be changed via the API thereafter.
-    FIXME: TODO: NOT IMPLEMENTED YET, PLACEHOLDER!
+    Decorating a field as UpdatableKey will let the requires decorator
+    update its value; otherwise, the value specified in the URI will be
+    preserved.
     """
-    field.APIImmutable = True
+    field.UpdatableKey = True
     return field
 
 def APIReadOnly(field):
