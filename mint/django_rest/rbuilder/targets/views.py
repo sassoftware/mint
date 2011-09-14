@@ -83,3 +83,12 @@ class TargetTypeCreateTargetService(service.BaseService):
 
     def get(self, target_type_id):
         return self.mgr.serializeDescriptorCreateTargetByTargetType(target_type_id)
+
+class TargetTypeJobsService(service.BaseService):
+    @return_xml
+    def rest_GET(self, request, target_type_id):
+        return self.get(target_type_id)
+        
+    def get(self, target_type_id):
+        return self.mgr.getJobsByTargetType(target_type_id)
+    

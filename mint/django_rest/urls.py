@@ -619,6 +619,9 @@ urlpatterns = patterns('',
     URL(r'target_types/(?P<target_type_id>\d+)/descriptor_create_target/?$',
         targetsviews.TargetTypeCreateTargetService(),
         name='TargetTypeCreateTarget'),
+    URL(r'target_type_jobs/(?P<target_type_id>\d+)/?$',
+        targetsviews.TargetTypeJobsService(),
+        name='Jobs'),
 
     # Begin Images service
     URL(r'images/?$',

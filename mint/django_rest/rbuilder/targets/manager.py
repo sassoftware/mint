@@ -100,3 +100,12 @@ class TargetCredentialsManager(basemanager.BaseManager):
     @exposed
     def getTargetCredentialsForTarget(self, target_id, target_credentials_id):
         return models.TargetCredentials.objects.get(pk=target_credentials_id)
+
+
+class TargetTypeJobsManager(basemanager.BaseManager):
+    @exposed
+    def getJobsByTargetType(self, target_type_id):
+        jobTargetTypes = models.JobTargetType.objects.filter(target_type__target_type_id=target_type_id)
+        return jobTargetTypes.job
+        
+        
