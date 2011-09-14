@@ -2987,6 +2987,8 @@ If you would not like to be %s %s of this project, you may resign from this proj
                 jobData = self.serializeBuild(buildId)
                 if buildType in buildtypes.windowsBuildTypes:
                     return self.startWindowsImageJob(buildId, jobData)
+                elif buildType == buildtypes.DEFERRED_IMAGE:
+                    return self.startDeferredImageJob(buildId, jobData)
 
                 # Check the product definition to see if this is based on a
                 # Windows platform.
@@ -3019,6 +3021,12 @@ If you would not like to be %s %s of this project, you may resign from this proj
         log.info("Created Windows image job, UUID %s", job_uuid)
         self.builds.update(buildId, job_uuid=str(job_uuid))
         return str(job_uuid)
+
+    def startDeferredImageJob(self, buildId, jobData):
+        """Create a deferred image record in the database."""
+        self.db.builds.update(buildId, status=jobstatus.FINISHED,
+                statusMessage="Deferred image has been recorded")
+        return 1
 
     @typeCheck(int, str, list)
     def setBuildFilenamesSafe(self, buildId, outputToken, filenames):

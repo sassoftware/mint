@@ -158,7 +158,8 @@ class NewPlatformTest(XMLTestCase):
         for image_type in mint.buildtypes.xmlTagNameImageTypeMap.keys():
             # we do not have XML for netboot/live because they're deprecated
             # and deferred is special so we want to test differently
-            if image_type not in [ 'netbootImage', 'liveIsoImage', 'deferred' ]:
+            if image_type not in ['netbootImage', 'liveIsoImage',
+                    'deferredImage']:
                 # verify we can get the descriptor and it looks XML-ish
                 url = "platforms/image_type_definitions/%s" % image_type
                 response = self._get(url) #, username='admin', password='password')
@@ -203,7 +204,7 @@ class NewPlatformTest(XMLTestCase):
             # keep app from making call to repos service
             x.save()
 
-        response = self._get('platforms/image_type_definitions/deferred')
+        response = self._get('platforms/image_type_definitions/deferredImage')
         self.assertEqual(response.status_code, 200)
         self.assertXMLEquals(response.content, 
             testsxml.deferred_image_descriptor_xml)

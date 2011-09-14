@@ -78,7 +78,7 @@ class PlatformManager(basemanager.BaseManager):
         the type is deferred, in which case it is generated
         dynamically.  More types may be dynamic later.)
         '''
-        if name == 'deferred':
+        if name == 'deferredImage':
             return self._getDeferredImageTypeDescriptor()
 
         modname = "%s.%s" % (IMAGE_TYPE_DESCRIPTORS, name)
@@ -112,7 +112,7 @@ class PlatformManager(basemanager.BaseManager):
            x.output_trove, descriptions=x.name) for
                x in deployable_images ]
 
-        desc.addDataField("base-image",
+        desc.addDataField("baseImageTrove",
             required = True,
             multiple = False,
             type = desc.EnumeratedType(smartform_values)

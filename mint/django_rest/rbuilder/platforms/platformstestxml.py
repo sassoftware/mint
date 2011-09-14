@@ -497,7 +497,7 @@ deferred_image_descriptor_xml = """
         </describedValue>
       </enumeratedType>
       <multiple>false</multiple>
-      <name>base-image</name>
+      <name>baseImageTrove</name>
       <required>true</required>
     </field>
   </dataFields>
