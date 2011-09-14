@@ -234,9 +234,81 @@ project_image_post_xml = """\
   </image>
 """
 
-
-
-
-
-
-
+project_branch_stages_xml = \
+"""
+<?xml version='1.0' encoding='UTF-8'?>
+<project_branch_stages count="4" next_page="" num_pages="1" previous_page="" full_collection="" end_index="3" limit="10" order_by="" per_page="10" filter_by="" start_index="0">
+  <project_branch_stage id="http://testserver/api/v1/projects/chater-foo/project_branches/chater-foo.eng.rpath.com@rpath:chater-foo-trunk/project_branch_stages/Development">
+    <stage_id>10</stage_id>
+    <project_branch id="http://testserver/api/v1/projects/chater-foo/project_branches/chater-foo.eng.rpath.com@rpath:chater-foo-trunk">
+      <name>trunk</name>
+    </project_branch>
+    <name>Development</name>
+    <label>foo@ns:trunk-devel</label>
+    <project id="http://testserver/api/v1/projects/chater-foo">
+      <domain_name>eng.rpath.com</domain_name>
+      <short_name>chater-foo</short_name>
+      <name>chater-foo</name>
+    </project>
+    <systems/>
+    <groups href="http://testserver/api/products/chater-foo/repos/search?type=group&amp;label=foo@ns:trunk-devel"/>
+    <created_date>2011-09-13T21:49:24.421095+00:00</created_date>
+    <images id="http://testserver/api/v1/projects/chater-foo/project_branches/chater-foo.eng.rpath.com@rpath:chater-foo-trunk/project_branch_stages/Development/images"/>
+    <promotable>false</promotable>
+  </project_branch_stage>
+  <project_branch_stage id="http://testserver/api/v1/projects/chater-foo/project_branches/chater-foo.eng.rpath.com@rpath:chater-foo-trunk/project_branch_stages/QA">
+    <stage_id>11</stage_id>
+    <project_branch id="http://testserver/api/v1/projects/chater-foo/project_branches/chater-foo.eng.rpath.com@rpath:chater-foo-trunk">
+      <name>trunk</name>
+    </project_branch>
+    <name>QA</name>
+    <label>foo@ns:trunk-qa</label>
+    <project id="http://testserver/api/v1/projects/chater-foo">
+      <domain_name>eng.rpath.com</domain_name>
+      <short_name>chater-foo</short_name>
+      <name>chater-foo</name>
+    </project>
+    <systems/>
+    <groups href="http://testserver/api/products/chater-foo/repos/search?type=group&amp;label=foo@ns:trunk-qa"/>
+    <created_date>2011-09-13T21:49:24.423607+00:00</created_date>
+    <images id="http://testserver/api/v1/projects/chater-foo/project_branches/chater-foo.eng.rpath.com@rpath:chater-foo-trunk/project_branch_stages/QA/images"/>
+    <promotable>false</promotable>
+  </project_branch_stage>
+  <project_branch_stage id="http://testserver/api/v1/projects/chater-foo/project_branches/chater-foo.eng.rpath.com@rpath:chater-foo-trunk/project_branch_stages/Stage">
+    <stage_id>12</stage_id>
+    <project_branch id="http://testserver/api/v1/projects/chater-foo/project_branches/chater-foo.eng.rpath.com@rpath:chater-foo-trunk">
+      <name>trunk</name>
+    </project_branch>
+    <name>Stage</name>
+    <label>foo@ns:trunk-stage</label>
+    <project id="http://testserver/api/v1/projects/chater-foo">
+      <domain_name>eng.rpath.com</domain_name>
+      <short_name>chater-foo</short_name>
+      <name>chater-foo</name>
+    </project>
+    <systems/>
+    <groups href="http://testserver/api/products/chater-foo/repos/search?type=group&amp;label=foo@ns:trunk-stage"/>
+    <created_date>2011-09-13T21:49:24.426203+00:00</created_date>
+    <images id="http://testserver/api/v1/projects/chater-foo/project_branches/chater-foo.eng.rpath.com@rpath:chater-foo-trunk/project_branch_stages/Stage/images"/>
+    <promotable>false</promotable>
+  </project_branch_stage>
+  <project_branch_stage id="http://testserver/api/v1/projects/chater-foo/project_branches/chater-foo.eng.rpath.com@rpath:chater-foo-trunk/project_branch_stages/Release">
+    <stage_id>13</stage_id>
+    <project_branch id="http://testserver/api/v1/projects/chater-foo/project_branches/chater-foo.eng.rpath.com@rpath:chater-foo-trunk">
+      <name>trunk</name>
+    </project_branch>
+    <name>Release</name>
+    <label>foo@ns:trunk</label>
+    <project id="http://testserver/api/v1/projects/chater-foo">
+      <domain_name>eng.rpath.com</domain_name>
+      <short_name>chater-foo</short_name>
+      <name>chater-foo</name>
+    </project>
+    <systems/>
+    <groups href="http://testserver/api/products/chater-foo/repos/search?type=group&amp;label=foo@ns:trunk"/>
+    <created_date>2011-09-13T21:49:24.429069+00:00</created_date>
+    <images id="http://testserver/api/v1/projects/chater-foo/project_branches/chater-foo.eng.rpath.com@rpath:chater-foo-trunk/project_branch_stages/Release/images"/>
+    <promotable>false</promotable>
+  </project_branch_stage>
+</project_branch_stages>
+""".strip()

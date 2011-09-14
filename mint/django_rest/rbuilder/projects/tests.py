@@ -439,6 +439,18 @@ class ProjectsTestCase(RbacEngine):
                     username=self.developer_user.user_name, password='password')
         self.assertEquals(response.status_code, 403)
 
+    def testGetProjectBranchStagesByProject(self):
+        self._initProject()
+        prj = models.Project.objects.get(name='chater-foo')
+        branch = models.ProjectVersion.objects.get(
+            project__project_id=prj.project_id, name='trunk')
+        url = ('projects/%s/project_branches/%s/project_branch_stages/' %
+                (prj.short_name, branch.label))
+        response = self._get(url, username='admin', password='password')
+        self.assertEquals(response.status_code, 200)
+        stgs = xobj.parse(response.content)
+        self.assertXMLEquals(stgs.toxml(), testsxml.project_branch_stages_xml)
+
     def testGetProjectBranchStage(self):
         self._initProject()
         prj = models.Project.objects.get(name='chater-foo')
