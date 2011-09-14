@@ -8,7 +8,7 @@ from django.db import models
 
 from mint.django_rest.deco import D
 from mint.django_rest.rbuilder import modellib
-from mint.django_rest.rbuilder.jobs import models as jobmodels
+from mint.django_rest.rbuilder.jobs import models as jobsmodels
 from mint.django_rest.rbuilder.users import models as usersmodels
 from mint.django_rest.rbuilder.inventory import zones as zmodels
 from xobj import xobj
