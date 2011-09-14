@@ -271,10 +271,12 @@ class ProjectVersion(modellib.XObjIdModel):
     project = modellib.DeferredForeignKey(Project, db_column='projectid',
         related_name="project_branches", view_name="ProjectVersions")
     label = models.TextField(unique=True, null=False)
+    source_group = models.TextField(null=True)
     cache_key = modellib.XObjHidden(models.TextField(null=True))
     namespace = models.CharField(max_length=16)
     name = models.CharField(max_length=16)
     description = models.TextField()
+    platform_label = models.TextField(null=True)
     created_date = models.DecimalField(max_digits=14, decimal_places=3,
         db_column="timecreated")
 
@@ -282,10 +284,8 @@ class ProjectVersion(modellib.XObjIdModel):
     definition = modellib.SyntheticField()
     platform = modellib.SyntheticField(modellib.HrefField())
     platform_version = modellib.SyntheticField()
-    platform_label = modellib.SyntheticField() # don't think this is needed if we already have a platform
     imageDefinitions = modellib.SyntheticField(modellib.HrefField()) # only camelCase for compatibility reasons, CHANGE
     image_type_definitions = modellib.SyntheticField(modellib.HrefField())
-    source_group = modellib.SyntheticField()
 
     def __unicode__(self):
         return self.name
@@ -328,23 +328,6 @@ class ProjectVersion(modellib.XObjIdModel):
         # XXX FIXME: this should not be needed
         xobjModel.project_branch_stages.id = "%s/project_branch_stages" % (xobjModel.id, )
         return xobjModel
-
-    def computeSyntheticFields(self, sender, **kwargs):
-        if self._rbmgr is None or self.project_id is None:
-            return
-        restDb = self._rbmgr.restDb
-        # TODO: cache me, or pull me into the branch table
-        try:
-            pd = restDb.getProductVersionDefinitionFromVersion(self.project.hostname, self)
-            self.source_group = str(pd.getImageGroup())
-        except mint_error.ProductDefinitionVersionNotFound:
-            pass
-        #platformLabel = self.platform_label = pd.getPlatformLabel()
-        # Look for a platform matching that label
-        #platforms = platformmodels.Platform.objects.filter(label=platformLabel)
-        #if platforms:
-        #    # XXX we should be using views for computing this URL
-        #    self.platform = modellib.HrefField('/api/v1/platforms/%s' % platforms.platform_id)
 
     @classmethod
     def validateProjectBranchName(cls, versionName):

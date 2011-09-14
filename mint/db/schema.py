@@ -1,5 +1,5 @@
 #
-# Copyright (c) 2005-2010 rPath, Inc.
+# Copyright (c) 2011 rPath, Inc.
 #
 # This program is distributed under the terms of the Common Public License,
 # version 1.0. A copy of this license should have been distributed with this
@@ -28,7 +28,7 @@ from conary.dbstore import sqlerrors, sqllib
 log = logging.getLogger(__name__)
 
 # database schema major version
-RBUILDER_DB_VERSION = sqllib.DBversion(58, 63)
+RBUILDER_DB_VERSION = sqllib.DBversion(58, 64)
 
 
 def _createTrigger(db, table, column="changed"):
@@ -604,6 +604,10 @@ def _createProductVersions(db):
                     REFERENCES Projects ON DELETE CASCADE,
                 label               text            NOT NULL    UNIQUE,
                 cache_key           text,
+                source_group        text,
+                platform_id         integer
+                    REFERENCES Platforms ON DELETE SET NULL,
+                platform_label      text,
                 namespace           varchar(16),
                 name                varchar(16)     NOT NULL,
                 description         text,
@@ -2781,6 +2785,7 @@ def createSchema(db, doCommit=True, cfg=None):
     _createUsers(db)
     _createProjects(db)
     _createLabels(db)
+    _createPlatforms(db)
     _createProductVersions(db)
     _createBuilds(db)
     _createCommits(db)
@@ -2789,7 +2794,6 @@ def createSchema(db, doCommit=True, cfg=None):
     _createSessions(db)
     _createZoneSchema(db)
     _createTargets(db)
-    _createPlatforms(db)
     _createCapsuleIndexerSchema(db)
     _createRepositoryLogSchema(db)
     _createInventorySchema(db, cfg)

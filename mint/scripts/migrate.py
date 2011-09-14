@@ -3044,7 +3044,7 @@ class MigrateTo_57(SchemaMigration):
 
 
 class MigrateTo_58(SchemaMigration):
-    Version = (58, 63)
+    Version = (58, 64)
 
     def migrate(self):
         return True
@@ -4178,6 +4178,14 @@ class MigrateTo_58(SchemaMigration):
                 'PopularProjects',
                 'TopProjects',
                 )
+        return True
+
+    def migrate64(self):
+        cu = self.db.cursor()
+        cu.execute("""ALTER TABLE ProductVersions
+            ADD source_group text,
+            ADD platform_id integer REFERENCES Platforms ON DELETE SET NULL,
+            ADD platform_label text""")
         return True
 
 
