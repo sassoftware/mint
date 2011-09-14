@@ -1,6 +1,7 @@
 from mint.django_rest.rbuilder.inventory.tests import XMLTestCase
 from mint.django_rest.rbuilder.inventory import zones as zmodels
 from mint.django_rest.rbuilder.users import models as umodels
+from mint.django_rest.rbuilder.jobs import models as jmodels
 from mint.django_rest.rbuilder.targets import models
 from mint.django_rest.rbuilder.targets import testsxml
 from xobj import xobj
@@ -28,6 +29,31 @@ class TargetsTestCase(XMLTestCase):
                     zone=lz))
         self.targetTypes = sampleTargetTypes
         self.targets = sampleTargets
+
+        eventUuid1 = 'eventuuid001'
+        jobUuid1 = 'rmakeuuid001'
+        eventUuid2 = 'eventuuid002'
+        jobUuid2 = 'rmakeuuid002'
+        eventUuid3 = 'eventuuid003'
+        jobUuid3 = 'rmakeuuid003'
+        system = self._saveSystem()
+        
+        jobs = []
+        jobs.append(self._newSystemJob(system, eventUuid1, jobUuid1,
+            jmodels.EventType.SYSTEM_REGISTRATION))
+        jobs.append(self._newSystemJob(system, eventUuid2, jobUuid2,
+            jmodels.EventType.SYSTEM_POLL))
+        jobs.append(self._newSystemJob(system, eventUuid3, jobUuid3,
+            jmodels.EventType.SYSTEM_POLL_IMMEDIATE))
+
+        self.system = system
+        self.jobs = jobs
+
+        for i in range(2):
+            for j in range(1,3):
+                models.JobTargetType.objects.create(
+                    job=self.jobs[i], target_type=self.targetTypes[j-1])       
+        self.jobTargetTypes = models.JobTargetType.objects.all()
 
         for i in range(3):
             targetCredentials = models.TargetCredentials.objects.create(credentials='abc%s' % i)
@@ -158,3 +184,9 @@ class TargetsTestCase(XMLTestCase):
                 's3Bucket',
                 'zone',
         ])
+
+    def testGetJobsByTargetType(self):
+        url = 'target_type_jobs/%s'
+        response = self._get(url % 1, username='admin', password='password')
+        self.assertEquals(response.status_code, 200)
+        self.assertXMLEquals(response.content, testsxml.jobs_by_target_type_GET)

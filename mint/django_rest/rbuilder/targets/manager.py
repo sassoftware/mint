@@ -10,6 +10,7 @@ from mint.django_rest.rbuilder.manager import basemanager
 from mint.django_rest.rbuilder.manager.basemanager import exposed
 from mint.django_rest.rbuilder.targets import models
 from mint.django_rest.rbuilder.inventory import zones
+from mint.django_rest.rbuilder.jobs import models as jobsmodels
 
 from smartform import descriptor
 
@@ -100,3 +101,14 @@ class TargetCredentialsManager(basemanager.BaseManager):
     @exposed
     def getTargetCredentialsForTarget(self, target_id, target_credentials_id):
         return models.TargetCredentials.objects.get(pk=target_credentials_id)
+
+
+class TargetTypeJobsManager(basemanager.BaseManager):
+    @exposed
+    def getJobsByTargetType(self, target_type_id):
+        jobTargetTypes = models.JobTargetType.objects.filter(target_type__target_type_id=target_type_id)
+        Jobs = jobsmodels.Jobs()
+        Jobs.job = [jobTargetType.job for jobTargetType in jobTargetTypes]
+        return Jobs
+        
+        
