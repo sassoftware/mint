@@ -1,22 +1,21 @@
 #
-# Copyright (c) 2005-2009 rPath, Inc.
+# Copyright (c) 2011 rPath, Inc.
 #
-# All rights reserved
-#
+
 import email
-import os
 import re
 import sys
-import time
-from mint.web import basictroves
-from mint import communitytypes
 from mint import mailinglists
 from mint.db import jobs
 from mint import jobstatus
 from mint import builds
 from mint import buildtypes
 from mint import userlevels
-from mint.mint_error import *
+from mint.mint_error import (ItemNotFound, TroveNotFoundForBuildDefinition,
+        NotEntitledError, BuildOptionValidationException, MintError,
+        DuplicateItem, ProductDefinitionVersionExternalNotSup,
+        ProductDefinitionInvalidStage, ProductVersionInvalid,
+        )
 
 from mint import buildtemplates
 from mint import helperfuncs
@@ -27,17 +26,14 @@ from mint.lib.maillib import sendMailWithChecks
 from mint.web import productversion
 from mint.web.packagecreator import PackageCreatorMixin
 from mint.web.fields import strFields, intFields, listFields, boolFields, dictFields
-from mint.web.webhandler import WebHandler, normPath, HttpNotFound, \
-     HttpForbidden
+from mint.web.webhandler import WebHandler, normPath, HttpNotFound
 from mint.web.decorators import ownerOnly, writersOnly, requiresAuth, \
-        requiresAdmin, mailList, redirectHttp
+        mailList, redirectHttp
 
-from conary import conaryclient
-from conary import conarycfg
 from conary.deps import deps
 from conary import versions
 from conary.conaryclient.cmdline import parseTroveSpec
-from conary.errors import TroveNotFound, ParseError
+from conary.errors import ParseError
 
 from rpath_proddef import api1 as proddef
 
@@ -137,19 +133,13 @@ class ProjectHandler(BaseProjectHandler, PackageCreatorMixin):
         else:
             mirrored = False
             anonymous = False
-        if self.cfg.VAMUser:
-            vmtnId = self.client.getCommunityId(self.project.getId(), 
-                                                communitytypes.VMWARE_VAM)
-        else:
-            vmtnId = None
-            
         if self.project.external:
             external = True
         else:
             external = False
 
         return self._write("projectPage", mirrored = mirrored, 
-                           anonymous = anonymous, vmtnId = vmtnId,
+                           anonymous = anonymous,
                            external = external)
     index = projectPage
 
@@ -158,15 +148,16 @@ class ProjectHandler(BaseProjectHandler, PackageCreatorMixin):
 
     # @writersOnly
     def builds(self, auth):
-        builds = [self.client.getBuild(x) for x in self.project.getBuilds()]
+        buildList = [self.client.getBuild(x) for x in self.project.getBuilds()]
         publishedReleases = dict()
-        for build in builds:
+        for build in buildList:
             if build.getPublished() and \
                     build.pubReleaseId not in publishedReleases:
                 publishedReleases[build.pubReleaseId] = \
                         self.client.getPublishedRelease(build.pubReleaseId)
 
-        return self._write("builds", builds = builds, publishedReleases = publishedReleases)
+        return self._write("builds", builds=buildList,
+                publishedReleases=publishedReleases)
 
     @writersOnly
     def groups(self, auth):
@@ -255,10 +246,7 @@ class ProjectHandler(BaseProjectHandler, PackageCreatorMixin):
                 visibleTypes = self.client.getAvailableBuildTypes(),
                 kwargs = {})
         elif action == "Recreate Image":
-            try:
-                job = self.client.startImageJob(buildId)
-            except mcp_error.JobConflict:
-                pass
+            self.client.startImageJob(buildId)
             self._predirect("build?id=%d" % buildId)
         else:
             self._addErrors("Invalid action %s" % action)
@@ -431,7 +419,6 @@ class ProjectHandler(BaseProjectHandler, PackageCreatorMixin):
             if not buildIdsToDelete:
                 self._addErrors("No images specified.")
                 self._predirect("builds")
-            numToDelete = len(buildIdsToDelete)
             numPublished = 0
             message = ""
             for buildId in buildIdsToDelete:
@@ -748,63 +735,6 @@ class ProjectHandler(BaseProjectHandler, PackageCreatorMixin):
         else:
             return None
 
-    def _getPreviewData(self, pubrelease, latestBuild):
-        dataDict = {} 
-        # Title
-        dataDict.update(title=latestBuild.getName())
-        # One Line Desc
-        if pubrelease.description:
-            dataDict.update(oneLiner=pubrelease.description)
-        elif latestBuild.getDesc():
-            dataDict.update(oneLiner=latestBuild.getDesc())
-        else:
-            dataDict.update(oneLiner=self.project.getName())
-        # Long Description
-        if self.project.getDesc():
-            dataDict.update(longDesc=self.project.getDesc())
-        else:
-            dataDict.update(longDesc=self.project.getName())
-
-        return dataDict
-
-    def _getVAMData(self, pubrelease, latestBuild):
-        # Get title, one line desc, and long desc
-        dataDict = self._getPreviewData(pubrelease, latestBuild) 
-
-        # URL
-        dataDict.update(url=self.project.getUrl(self.baseUrl) + 'latestRelease')
-        # Memory
-        dataDict.update(memory=latestBuild.getDataValue('vmMemory'))
-        # Size compressed
-        dataDict.update(size=latestBuild.getFiles()[0]['size']/0x100000)
-        if dataDict['size'] == '0':
-            dataDict['size'] = ''
-        # VMware tools installed?
-        fl = latestBuild.getTroveFlavor()
-        if fl.stronglySatisfies(deps.parseFlavor('use: vmware')):
-            dataDict.update(vmtools='1')
-        else:
-            dataDict.update(vmtools=False)
-        # Bit Torrent Available
-        dataDict.update(torrent='1')
-        # User name
-        dataDict.update(userName='root')
-        # Password
-        dataDict.update(password='')
-
-        # OS 
-        dataDict.update(os='rPath Linux')
-
-        # Time
-        timeTup = time.gmtime(latestBuild.getChangedTime())
-        dataDict.update(year=timeTup[0])
-        dataDict.update(month=timeTup[1])
-        dataDict.update(day=timeTup[2])
-        dataDict.update(hour=timeTup[3])
-        dataDict.update(minute=timeTup[4])
-
-        return dataDict
-
     @ownerOnly
     @dictFields(yesArgs = {})
     @boolFields(confirmed=False, shouldMirror=False)
@@ -812,53 +742,11 @@ class ProjectHandler(BaseProjectHandler, PackageCreatorMixin):
     def publishRelease(self, auth, confirmed, vmtn, shouldMirror, **yesArgs):
         pubrelease = self.client.getPublishedRelease(int(yesArgs['id']))
         if confirmed:
-            vmtnError = ''
-            if self.cfg.VAMUser and vmtn == 'on':
-            # Handle VAM stuff
-                build = self._getLatestVMwareBuild(pubrelease)        
-                if build:
-                    dataDict = self._getVAMData(pubrelease, build)
-                    communityId = self.client.getCommunityId(self.project.getId(), communitytypes.VMWARE_VAM)
-                    if communityId:
-                        try:
-                            from mint.web import vmtn
-                            v = vmtn.VMTN()
-                            v.edit(self.cfg.VAMUser, self.cfg.VAMPassword,
-                                         dataDict, communityId)
-                        except:
-                            vmtnError = "Unable to update this project's VAM entry." 
-
-                    else:
-                        # Create new VAM entry & get vamId
-                        try:
-                            from mint.web import vmtn
-                            v = vmtn.VMTN()
-                            vamId = v.add(self.cfg.VAMUser, 
-                                                    self.cfg.VAMPassword,
-                                                    dataDict)
-                        except:
-                            vmtnError = "Unable to create a VAM entry for this project."
-                        else:
-                            self.client.setCommunityId(self.project.getId(), 
-                                                   communitytypes.VMWARE_VAM,
-                                                   vamId)
-
             pubrelease.publish(shouldMirror=shouldMirror)
-            if vmtnError:
-                self._setInfo("Published release %s (version %s)" % (pubrelease.name, pubrelease.version) + '.  ' + vmtnError)
-            else:
-                self._setInfo("Published release %s (version %s)" % (pubrelease.name, pubrelease.version))
+            self._setInfo("Published release %s (version %s)" % (pubrelease.name, pubrelease.version))
             self._predirect("releases")
         else:
-            if self.cfg.VAMUser:
-                build = self._getLatestVMwareBuild(pubrelease)        
-            else:
-                build = None
-            if build:
-                previewData = self._getPreviewData(pubrelease, build)
-            else:
-                previewData = False
-                
+            previewData = False
             mirroredByRelease = self.client.isProjectMirroredByRelease(
                                     self.project.getId())
             return self._write("confirmPublish",
@@ -1105,7 +993,6 @@ class ProjectHandler(BaseProjectHandler, PackageCreatorMixin):
 
             kwargs['namespace'] = pd.getConaryNamespace()
         else:
-            valueToIdMap = buildtemplates.getValueToTemplateIdMap();
             pd = proddef.ProductDefinition()
             helperfuncs.addDefaultStagesToProductDefinition(pd)
             # XXX: this should be carried forward when images and other values are
@@ -1323,7 +1210,6 @@ class ProjectHandler(BaseProjectHandler, PackageCreatorMixin):
 
         platformName = None
         customPlatform = ()
-        acceptablePlatform = True
         pd = self.client.getProductDefinitionForVersion(id)
 
         platformSourceTrove = pd.getPlatformSourceTrove()
@@ -1338,8 +1224,6 @@ class ProjectHandler(BaseProjectHandler, PackageCreatorMixin):
             if not platformName:
                 platformName = 'Custom appliance platform on %s' % platformLabel
                 customPlatform = (platformLabel, platformName)
-                acceptablePlatform = \
-                        self.client.isPlatformAcceptable(platformLabel)
 
         return self._write("rebaseProductVersion",
                 id = id,
@@ -1579,7 +1463,6 @@ class ProjectHandler(BaseProjectHandler, PackageCreatorMixin):
     @strFields(action = '')
     @intFields(userId = None)
     def acceptJoinRequest(self, auth, userId, action):
-        projectId = self.project.getId()
         user = self.client.getUser(userId)
         username = user.getUsername()
         # XXX This is fragile, and probably will not work so well with

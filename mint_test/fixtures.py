@@ -96,7 +96,6 @@ class FixtureCache(object):
         cfg.conaryRcFile = os.path.join(cfg.dataPath, 'run', 'conaryrc')
         util.mkdirChain(os.path.join(cfg.dataPath, 'run'))
         util.mkdirChain(os.path.join(cfg.dataPath, 'tmp'))
-        cfg.newsRssFeed = 'file://' + pathManager.getPath('MINT_ARCHIVE_PATH') + '/news.xml'
         cfg.ec2AccountId = '012345678901'
         cfg.ec2PublicKey = 'publicKey'
         cfg.ec2PrivateKey = 'secretKey'

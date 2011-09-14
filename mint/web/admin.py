@@ -357,25 +357,6 @@ class AdminHandler(WebHandler):
             regColumns = regColumns, regRows = regRows,
             mirrorColumns = mirrorColumns, mirrorRows = mirrorRows)
 
-    def selections(self, *args, **kwargs):
-        return self._write('admin/selections',
-                           selectionData=self.client.getFrontPageSelection())
-
-    @strFields(name=None, link=None)
-    @intFields(rank=0)
-    def addSelection(self, name, link, rank, op, *args, **kwargs):
-        self.client.addFrontPageSelection(name, link, rank)
-        return self.selections()
-
-    @intFields(itemId=None)
-    def deleteSelection(self, itemId, *args, **kwargs):
-        self.client.deleteFrontPageSelection(itemId)
-        return self.selections()
-
-    def spotlight(self, *args, **kwargs):
-        return self._write('admin/spotlight',
-                           spotlightData=self.client.getSpotlightAll())
-
     def _makeMirrorOrderingLinks(self, name, count, order, index, id):
         """Helper function to make the up/down links for mirror ordering"""
         blank = """<img src="%s/apps/mint/images/blank.gif" width="15" height="15" />""" % \

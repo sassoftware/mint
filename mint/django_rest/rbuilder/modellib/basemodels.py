@@ -39,13 +39,13 @@ def XObjHidden(field):
     field.XObjHidden = True
     return field
 
-def APIImmutable(field):
+def UpdatableKey(field):
     """
-    It's possible to write this item if not in the database but it may
-    not be changed via the API thereafter.
-    FIXME: TODO: NOT IMPLEMENTED YET, PLACEHOLDER!
+    Decorating a field as UpdatableKey will let the requires decorator
+    update its value; otherwise, the value specified in the URI will be
+    preserved.
     """
-    field.APIImmutable = True
+    field.UpdatableKey = True
     return field
 
 def APIReadOnly(field):
@@ -451,7 +451,7 @@ class BaseManager(models.Manager):
                 rel_mod = modelCls.objects._load_from_href(rel_obj)
                 if rel_mod is None:
                     rel_mod = modelCls.objects.load_from_object(
-                        rel_obj, request)
+                        rel_obj, request, save=False)
                 self._set_m2m_accessor(model, m2m_accessor, rel_mod)
 
         return model

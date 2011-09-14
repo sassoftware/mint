@@ -82,7 +82,7 @@ class ContentSource(modellib.XObjIdModel):
     content_source_id = models.AutoField(primary_key=True, db_column='platformsourceid')
     name = models.CharField(max_length=1026)
     default_source = models.IntegerField(db_column='defaultsource', default=0)
-    short_name = models.CharField(max_length=1026, unique=True, db_column='shortname')
+    short_name = modellib.UpdatableKey(models.CharField(max_length=1026, unique=True, db_column='shortname'))
     content_source_type = models.CharField(max_length=1026, db_column='contentsourcetype')
     order_index = models.IntegerField(db_column='orderindex')
     

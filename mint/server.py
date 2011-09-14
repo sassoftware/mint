@@ -1846,43 +1846,6 @@ If you would not like to be %s %s of this project, you may resign from this proj
         self.db.commit()
         return True
 
-    @typeCheck()
-    @private
-    def getNews(self):
-        return self.db.newsCache.getNews()
-
-    @typeCheck()
-    @private
-    def getNewsLink(self):
-        return self.db.newsCache.getNewsLink()
-
-    @typeCheck(str, str, int)
-    @private
-    @requiresAdmin
-    def addFrontPageSelection(self, name, link, rank):
-        return self.selections.addItem(name, link, rank)
-
-    @typeCheck(int)
-    @private
-    @requiresAdmin
-    def deleteFrontPageSelection(self, itemId):
-        return self.selections.deleteItem(itemId)
-
-    @typeCheck()
-    @private
-    def getFrontPageSelection(self):
-        return self.selections.getAll()
-
-    @typeCheck()
-    @private
-    def getPopularProjects(self):
-        return self.popularProjects.getList()
-
-    @typeCheck()
-    @private
-    def getTopProjects(self):
-        return self.topProjects.getList()
-
     #
     # LABEL STUFF
     #
@@ -2816,23 +2779,6 @@ If you would not like to be %s %s of this project, you may resign from this proj
             publishedOnly = True
         return self.publishedReleases.getPublishedReleasesByProject(projectId,
                 publishedOnly)
-
-    @typeCheck(int, int)
-    @private
-    def getCommunityId(self, projectId, communityType):
-        return self.communityIds.getCommunityId(projectId, communityType)
-
-    @typeCheck(int, int, str)
-    @private
-    @requiresAuth
-    def setCommunityId(self, projectId, communityType, communityId):
-        return self.communityIds.setCommunityId(projectId, communityType,
-                                                communityId)
-    @typeCheck(int, int)
-    @private
-    @requiresAuth
-    def deleteCommunityId(self, projectId, communityType):
-        return self.communityIds.deleteCommunityId(projectId, communityType)
 
     @typeCheck(int)
     @private
@@ -4878,7 +4824,6 @@ If you would not like to be %s %s of this project, you may resign from this proj
         # unnecessary when we're reloading the tables for every request.
         #if self.db.tablesReloaded:
         #    self._generateConaryRcFile()
-        self.newsCache.refresh()
 
     @typeCheck(int)
     @requiresAdmin

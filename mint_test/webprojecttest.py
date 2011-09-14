@@ -87,7 +87,6 @@ class WebProjectBaseTest(mint_rephelp.WebRepositoryHelper):
         projectHandler.currentVersion = projectHandler.client.addProductVersion(projectHandler.projectId, self.mintCfg.namespace, "version1", "Fluff description")
         projectHandler._setCurrentProductVersion(projectHandler.currentVersion)
         projectHandler.versions = projectHandler.client.getProductVersionListForProduct(projectHandler.projectId)
-        projectHandler.latestRssNews = {}
         projectHandler.toUrl = self.mintCfg.basePath
         projectHandler.baseUrl = 'http://%s%s' % (FQDN, self.mintCfg.basePath)
         projectHandler.groupTrove = None
@@ -120,7 +119,6 @@ class WebProjectBaseTest(mint_rephelp.WebRepositoryHelper):
         siteHandler.infoMsg = None
         siteHandler.errorMsgList = []
         siteHandler.session = session()
-        siteHandler.latestRssNews = {}
         siteHandler.membershipReqsList = None
         siteHandler.baseUrl = 'http://%s%s' % (FQDN, self.mintCfg.basePath)
         siteHandler._addErrors = types.MethodType(_addErrors,
