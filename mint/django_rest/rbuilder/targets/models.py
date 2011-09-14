@@ -8,7 +8,7 @@ from django.db import models
 
 from mint.django_rest.deco import D
 from mint.django_rest.rbuilder import modellib
-from mint.django_rest.rbuilder.jobs import models as jobsmodels
+from mint.django_rest.rbuilder.jobs import models as jobmodels
 from mint.django_rest.rbuilder.users import models as usersmodels
 from mint.django_rest.rbuilder.inventory import zones as zmodels
 from xobj import xobj
@@ -136,14 +136,16 @@ class TargetType(modellib.XObjModel):
     created_date = modellib.DecimalField(max_digits=14, decimal_places=3, db_column='timecreated')
     modified_date = modellib.DecimalField(max_digits=14, decimal_places=3, db_column='timeaccessed')
     description = models.TextField(null=True, blank=True)
-    job_target_types = models.ManyToMany(jobsmodels.Job, through='JobTargetType')
+    job_target_types = models.ManyToManyField(jobmodels.Job,
+            through='JobTargetType')
+
 
 class JobTargetType(modellib.XObjModel):
     class Meta:
         db_table = u'jobs_job_target_type'
         
     id = models.AutoField(primary_key=True)
-    job_id = models.ForeignKey(jobsmodels.Job)
+    job_id = models.ForeignKey(jobmodels.Job)
     target_type_id = models.ForeignKey('TargetType')
 
 
