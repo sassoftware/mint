@@ -91,4 +91,3 @@ class TargetTypeJobsService(service.BaseService):
         
     def get(self, target_type_id):
         return self.mgr.getJobsByTargetType(target_type_id)
-    

@@ -110,5 +110,3 @@ class TargetTypeJobsManager(basemanager.BaseManager):
         Jobs = jobsmodels.Jobs()
         Jobs.job = [jobTargetType.job for jobTargetType in jobTargetTypes]
         return Jobs
-        
-        
