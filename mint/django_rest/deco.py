@@ -38,7 +38,7 @@ def getHeaderValue(request, headerName):
     mangledHeaderName = 'HTTP_' + headerName.replace('-', '_').upper()
     return request.META.get(headerName, request.META.get(mangledHeaderName))
 
-def requires(model_names, save=True, load=True):
+def requires(model_names, save=True, load=True, flags=None):
     """
     Decorator that parses the post data on a request into the class
     specified by modelClass.
@@ -48,6 +48,8 @@ def requires(model_names, save=True, load=True):
     instead if you're attempting to construct a model from user input
     and it's unlikely to be saveable.
     """
+    if flags is None:
+        flags = modellib.Flags(save=save, load=load)
     def decorate(function):
 
         def inner(*args, **kw):
@@ -67,8 +69,11 @@ def requires(model_names, save=True, load=True):
                     setattr(built_model, keyFieldName, keyFieldValue)
             # XXX This is not the ideal place to handle this
             _injectZone(request, built_model, model_name, modelCls)
+            # We need to pass a new copy of the flags object, because
+            # it gets modified down the road, and we don't want to
+            # pollute further calls.
             model = modelCls.objects.load_from_object(
-                built_model, request, save=save, load=load)
+                built_model, request, flags=flags.copy())
             kw[model_name] = model
             return function(*args, **kw)
         

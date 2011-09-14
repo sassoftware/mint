@@ -8,7 +8,10 @@ import types
 import datetime
 from dateutil import parser
 from dateutil import tz
+import inspect
 import urlparse
+
+from conary.lib import util
 
 from django.db import connection
 from django.db import models
@@ -24,6 +27,33 @@ from xobj import xobj
 from mint.django_rest.rbuilder import errors
 from mint.lib import mintutils
 from mint.lib import data as mintdata
+
+class BaseFlags(util.Flags):
+    __slots__ = []
+    __defaults = {}
+
+    def __init__(self, **kwargs):
+        # First, compute defaults. Walk mro in reverse order, we may
+        # want to override parent defaults
+        defaults = {}
+        slots = set()
+        for cls in reversed(inspect.getmro(self.__class__)):
+            defaults.update(getattr(cls, '__defaults__', {}))
+            slots.update(getattr(cls, '__slots__', ()))
+        for flag in slots:
+            setattr(self, flag, kwargs.get(flag, defaults.get(flag, False)))
+
+    def copy(self, **kwargs):
+        vals = {}
+        for cls in inspect.getmro(self.__class__):
+            vals.update((flag,  getattr(self, flag))
+                for flag in getattr(cls, '__slots__', ()))
+        vals.update(kwargs)
+        return self.__class__(**vals)
+
+class Flags(BaseFlags):
+    __slots__ = [ 'save', 'load', ]
+    __defaults__ = dict(save=True, load=True)
 
 # Dict to hold the union of all models' tags as keys, and the model class as
 # values.  Needed so that there is exactly one place to look to determine what
@@ -231,7 +261,7 @@ class BaseManager(models.Manager):
         else:
             return None
 
-    def _add_fields(self, model, xobjModel, request, save=True):
+    def _add_fields(self, model, xobjModel, request, flags=None):
         """
         For each xobjModel attribute, if the attribute matches a field name on
         model, set the attribute's value on model.
@@ -263,7 +293,7 @@ class BaseManager(models.Manager):
             # load the model for them based on their inline xml
             # representation.
             elif isinstance(field, SerializedForeignKey):
-                val = field.related.parent_model.objects.load_from_object(val, request, save=save)
+                val = field.related.parent_model.objects.load_from_object(val, request, flags=flags)
 
             # Foreign keys can be serialized based on a text field, or the
             # text of an xml elements, try to load the foreign key model if
@@ -280,7 +310,7 @@ class BaseManager(models.Manager):
             elif isinstance(field, related.RelatedField):
                 parentModel = field.rel.to
                 val = parentModel.objects.load_from_object(val, request,
-                        save=save)
+                        flags=flags)
 
             # Handle different combinations of true/True, etc for
             # BooleanFields.
@@ -349,26 +379,28 @@ class BaseManager(models.Manager):
 
         return model
 
-    def _add_list_fields(self, model, xobjModel, request, save=True):
+    def _add_list_fields(self, model, xobjModel, request, flags=None):
         """
         For each list_field on the model, get the objects off of xobjModel, load
         their corresponding model and add them to our model in a list.
         """
+        # We force a save here, even if the parent object was
+        # abstract.
+        # XXX the save keyword should be redesigned, I thought it
+        # meant something else - passing it around was not a good
+        # idea -- misa
+        flags = flags.copy(save=True)
         for key in model.list_fields:
             # xobj deserializes lists by adding a list as an attribute to the
             # model named after the element.
             flist = getattr(xobjModel, key, None)
             if type(flist) != type([]):
                 flist = [flist]
+
             mods = []
             for val in flist:
-                # We force a save here, even if the parent object was
-                # abstract.
-                # XXX the save keyword should be redesigned, I thought it
-                # meant something else - passing it around was not a good
-                # idea -- misa
                 m = type_map[key].objects.load_from_object(val, request,
-                    save=True)
+                    flags=flags)
                 mods.append(m)
             if mods:
                 setattr(model, key, mods)
@@ -383,6 +415,12 @@ class BaseManager(models.Manager):
         accessors = model._get_accessor_dict()
         ret_accessors = {}
 
+        # We're creating related models, such as a network model
+        # that's going to reference a system, well since system is
+        # not yet set as  FK, we can't save the network model yet,
+        # so pass False for the save flag.
+        flags = Flags(save=False)
+
         for key, val in xobjModel.__dict__.items():
             if key in accessors:
                 ret_accessors[key] = []
@@ -394,12 +432,8 @@ class BaseManager(models.Manager):
                 if type(rel_objs) != type([]):
                     rel_objs = [rel_objs]
                 for rel_obj in rel_objs:
-                    # We're creating related models, such as a network model
-                    # that's going to reference a system, well since system is
-                    # not yet set as  FK, we can't save the network model yet,
-                    # so pass False for the save flag.
                     rel_mod = type_map[rel_obj_name].objects.load_from_object(
-                        rel_obj, request, save=False)
+                        rel_obj, request, flags=flags)
                     ret_accessors[key].append(rel_mod)
         return ret_accessors
 
@@ -428,11 +462,12 @@ class BaseManager(models.Manager):
         """
         getattr(model, m2m_accessor).clear()
 
-    def _add_m2m_accessors(self, model, xobjModel, request):
+    def _add_m2m_accessors(self, model, xobjModel, request, flags=None):
         """
         Populate the many to many accessors on model based on the xobj model
         in xobjModel.
         """
+        flags = flags.copy(save=False)
         for m2m_accessor, m2m_mgr in model._get_m2m_accessor_dict().items():
             _xobj = getattr(m2m_mgr.model, '_xobj', None)
             if _xobj:
@@ -451,7 +486,7 @@ class BaseManager(models.Manager):
                 rel_mod = modelCls.objects._load_from_href(rel_obj)
                 if rel_mod is None:
                     rel_mod = modelCls.objects.load_from_object(
-                        rel_obj, request, save=False)
+                        rel_obj, request, flags=flags)
                 self._set_m2m_accessor(model, m2m_accessor, rel_mod)
 
         return model
@@ -486,7 +521,7 @@ class BaseManager(models.Manager):
         return model
 
 
-    def load_from_object(self, xobjModel, request, save=True, load=True):
+    def load_from_object(self, xobjModel, request, flags=None):
         """
         Given an object (xobjModel) from xobj, create and return the  corresponding
         model.  If load is True, load the model from the db and apply the
@@ -495,29 +530,31 @@ class BaseManager(models.Manager):
         xobjModel does not have to be from xobj, but it should match the
         similar structure of an object that xobj would create from xml.
         """
+        if flags is None:
+            flags = Flags(save=True, load=True)
         # Every manager has access to the model it's a manager for, create an
         # empty model instance to start with.
         model = self.model()
 
         # Don't even attempt to save abstract models
         if model._meta.abstract:
-            save = False
+            flags.save = False
 
         # We need access to synthetic fields before loading from the DB, they
         # may be used in load_or_create
         model = self._add_synthetic_fields(model, xobjModel, request)
-        model = self._add_fields(model, xobjModel, request, save=save)
+        model = self._add_fields(model, xobjModel, request, flags=flags)
         accessors = self._get_accessors(model, xobjModel, request)
 
         # Only try to load the model if load is True.  
-        if not load:
+        if not flags.load:
             try:
                 model.save()
             except IntegrityError, e:
                 e.status = errors.BAD_REQUEST
                 raise e
             oldModel = None
-        elif save:
+        elif flags.save:
             oldModel, model = self.load_or_create(model, xobjModel)
         else:
             oldModel, dbmodel = self._load(model, xobjModel)
@@ -527,8 +564,8 @@ class BaseManager(models.Manager):
         # Copy the synthetic fields again - this is unfortunate
         model = self._add_synthetic_fields(model, xobjModel, request)
 
-        model = self._add_m2m_accessors(model, xobjModel, request)
-        model = self._add_list_fields(model, xobjModel, request, save=save)
+        model = self._add_m2m_accessors(model, xobjModel, request, flags=flags)
+        model = self._add_list_fields(model, xobjModel, request, flags=flags)
         model = self._add_accessors(model, accessors)
         model = self._add_abstract_fields(model, xobjModel)
 
@@ -540,7 +577,7 @@ class BaseManager(models.Manager):
 
 class PackageJobManager(BaseManager):
 
-    def _add_fields(self, model, obj, request, save):
+    def _add_fields(self, model, obj, request, flags=None):
         job_data = getattr(obj, "job_data", None)
         
         if job_data is not None:
@@ -552,17 +589,16 @@ class PackageJobManager(BaseManager):
             marshalled_job_data = mintdata.marshalGenericData(job_data_dict) 
             model.job_data = marshalled_job_data
 
-        return BaseManager._add_fields(self, model, obj, request, save)
+        return BaseManager._add_fields(self, model, obj, request, flags=flags)
 
 class TroveManager(BaseManager):
-    def load_from_object(self, obj, request, save=True, load=True):
+    def load_from_object(self, obj, request, flags=None):
         # None flavor fixup
         if getattr(obj, 'flavor', None) is None:
             obj.flavor = ''
         # Fix up the flavor in the version object
         obj.version.flavor = obj.flavor
-        return BaseManager.load_from_object(self, obj, request, save=save,
-            load=load)
+        return BaseManager.load_from_object(self, obj, request, flags=flags)
 
     def _clear_m2m_accessor(self, model, m2m_accessor):
         # We don't want available_updates to be published via REST
@@ -575,8 +611,8 @@ class TroveManager(BaseManager):
             return
         return BaseManager._set_m2m_accessor(self, model, m2m_accessor, rel_mod)
 
-    def _add_fields(self, model, obj, request, save=True):
-        nmodel = BaseManager._add_fields(self, model, obj, request, save=save)
+    def _add_fields(self, model, obj, request, flags=None):
+        nmodel = BaseManager._add_fields(self, model, obj, request, flags=flags)
         if nmodel.flavor is None:
             nmodel.flavor = ''
         return nmodel
@@ -585,9 +621,9 @@ class TroveManager(BaseManager):
         return None
 
 class VersionManager(BaseManager):
-    def _add_fields(self, model, obj, request, save=True):
+    def _add_fields(self, model, obj, request, flags=None):
         # Fix up label and revision
-        nmodel = BaseManager._add_fields(self, model, obj, request, save=save)
+        nmodel = BaseManager._add_fields(self, model, obj, request, flags=flags)
         v = nmodel.conaryVersion
         nmodel.fromConaryVersion(v)
         if nmodel.flavor is None:
@@ -609,21 +645,21 @@ class JobManager(BaseManager):
         return oldModel, model
 
 class CredentialsManager(BaseManager):
-    def load_from_object(self, obj, request, save=False, load=True):
+    def load_from_object(self, obj, request, flags=None):
         model = self.model(system=None)
         for k, v in obj.__dict__.items():
             setattr(model, k, v)
         return model
     
 class ConfigurationManager(BaseManager):
-    def load_from_object(self, obj, request, save=False, load=True):
+    def load_from_object(self, obj, request, flags=None):
         model = self.model(system=None)
         for k, v in obj.__dict__.items():
             setattr(model, k, v)
         return model
     
 class ConfigurationDescriptorManager(BaseManager):
-    def load_from_object(self, obj, request, save=False, load=True):
+    def load_from_object(self, obj, request, flags=None):
         model = self.model(system=None)
         for k, v in obj.__dict__.items():
             setattr(model, k, v)

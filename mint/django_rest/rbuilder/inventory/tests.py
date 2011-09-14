@@ -2188,8 +2188,9 @@ class SystemsTestCase(XMLTestCaseStandin):
         xml = xmlTempl % params
         obj = xobj.parse(xml)
         xobjmodel = obj.system
+        from mint.django_rest.rbuilder import modellib
         model = models.System.objects.load_from_object(xobjmodel, request=None,
-            save=False)
+            flags=modellib.Flags(save=False))
         self.failUnlessEqual(model.pk, system.pk)
 
         # We expect nothing to be updated, since there's no such job
