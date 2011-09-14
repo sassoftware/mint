@@ -10,6 +10,7 @@ from mint.django_rest.rbuilder.manager import basemanager
 from mint.django_rest.rbuilder.manager.basemanager import exposed
 from mint.django_rest.rbuilder.targets import models
 from mint.django_rest.rbuilder.inventory import zones
+from mint.django_rest.rbuilder.jobs import models as jobsmodels
 
 from smartform import descriptor
 
@@ -106,6 +107,8 @@ class TargetTypeJobsManager(basemanager.BaseManager):
     @exposed
     def getJobsByTargetType(self, target_type_id):
         jobTargetTypes = models.JobTargetType.objects.filter(target_type__target_type_id=target_type_id)
-        return jobTargetTypes.job
+        Jobs = jobsmodels.Jobs()
+        Jobs.job = [jobTargetType.job for jobTargetType in jobTargetTypes]
+        return Jobs
         
         
