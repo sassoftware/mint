@@ -20,6 +20,8 @@ class TargetType(modellib.XObjIdModel):
     class Meta:
          db_table = 'target_types'
 
+    _xobj_hidden_accessors = set(["jobtargettype_set"])
+
     target_type_id = models.AutoField(primary_key=True)
     name = D(models.TextField(unique=True), "Target Type Name")
     description = D(models.TextField(null=False), "Target Type Description")
@@ -127,27 +129,13 @@ class TargetTypes(modellib.Collection):
     list_fields = ['target_type']
 
 
-class TargetType(modellib.XObjModel):
-    class Meta:
-         db_table = u'targettypes'
-         
-    target_type_id = models.AutoField(primary_key=True, db_column='targettypeid')
-    name = models.CharField(max_length=255)
-    created_date = modellib.DecimalField(max_digits=14, decimal_places=3, db_column='timecreated')
-    modified_date = modellib.DecimalField(max_digits=14, decimal_places=3, db_column='timeaccessed')
-    description = models.TextField(null=True, blank=True)
-    job_target_types = models.ManyToManyField(jobmodels.Job,
-            through='JobTargetType')
-
-
 class JobTargetType(modellib.XObjModel):
     class Meta:
         db_table = u'jobs_job_target_type'
-        
-    id = models.AutoField(primary_key=True)
-    job_id = models.ForeignKey(jobmodels.Job)
-    target_type_id = models.ForeignKey('TargetType')
 
+    id = models.AutoField(primary_key=True)
+    job = models.ForeignKey(jobmodels.Job)
+    target_type = models.ForeignKey('TargetType')
 
 for mod_obj in sys.modules[__name__].__dict__.values():
     if hasattr(mod_obj, '_xobj'):

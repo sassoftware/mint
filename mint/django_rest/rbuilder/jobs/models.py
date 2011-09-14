@@ -90,7 +90,8 @@ class Job(modellib.XObjIdModel):
     _xobj_hidden_accessors = set([
         "package_version_jobs",
         "package_source_jobs",
-        "package_build_jobs"])
+        "package_build_jobs",
+        "jobtargettype_set",])
 
     #objects = modellib.JobManager()
 
@@ -100,7 +101,7 @@ class Job(modellib.XObjIdModel):
     job_uuid = D(models.CharField(max_length=64, unique=True),
         "a UUID for job tracking purposes")
     job_token = D(XObjHidden(APIReadOnly(
-        models.CharField(max_length=64, null=False, unique=True))),
+        models.CharField(max_length=64, null=True, unique=True))),
         "cookie token for updating this job")
     job_state = D(modellib.DeferredForeignKey("JobState",
         text_field='name', related_name='jobs'),
