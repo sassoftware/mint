@@ -251,7 +251,7 @@ project_branch_stages_xml = \
       <name>chater-foo</name>
     </project>
     <systems/>
-    <groups href="http://testserver/api/products/chater-foo/repos/search?type=group&amp;label=foo@ns:trunk-devel"/>
+    <groups href="https://testserver/api/products/chater-foo/repos/search?type=group&amp;label=foo@ns:trunk-devel"/>
     <created_date>2011-09-13T21:49:24.421095+00:00</created_date>
     <images id="http://testserver/api/v1/projects/chater-foo/project_branches/chater-foo.eng.rpath.com@rpath:chater-foo-trunk/project_branch_stages/Development/images"/>
     <promotable>false</promotable>
@@ -269,7 +269,7 @@ project_branch_stages_xml = \
       <name>chater-foo</name>
     </project>
     <systems/>
-    <groups href="http://testserver/api/products/chater-foo/repos/search?type=group&amp;label=foo@ns:trunk-qa"/>
+    <groups href="https://testserver/api/products/chater-foo/repos/search?type=group&amp;label=foo@ns:trunk-qa"/>
     <created_date>2011-09-13T21:49:24.423607+00:00</created_date>
     <images id="http://testserver/api/v1/projects/chater-foo/project_branches/chater-foo.eng.rpath.com@rpath:chater-foo-trunk/project_branch_stages/QA/images"/>
     <promotable>false</promotable>
@@ -287,7 +287,7 @@ project_branch_stages_xml = \
       <name>chater-foo</name>
     </project>
     <systems/>
-    <groups href="http://testserver/api/products/chater-foo/repos/search?type=group&amp;label=foo@ns:trunk-stage"/>
+    <groups href="https://testserver/api/products/chater-foo/repos/search?type=group&amp;label=foo@ns:trunk-stage"/>
     <created_date>2011-09-13T21:49:24.426203+00:00</created_date>
     <images id="http://testserver/api/v1/projects/chater-foo/project_branches/chater-foo.eng.rpath.com@rpath:chater-foo-trunk/project_branch_stages/Stage/images"/>
     <promotable>false</promotable>
@@ -305,7 +305,7 @@ project_branch_stages_xml = \
       <name>chater-foo</name>
     </project>
     <systems/>
-    <groups href="http://testserver/api/products/chater-foo/repos/search?type=group&amp;label=foo@ns:trunk"/>
+    <groups href="https://testserver/api/products/chater-foo/repos/search?type=group&amp;label=foo@ns:trunk"/>
     <created_date>2011-09-13T21:49:24.429069+00:00</created_date>
     <images id="http://testserver/api/v1/projects/chater-foo/project_branches/chater-foo.eng.rpath.com@rpath:chater-foo-trunk/project_branch_stages/Release/images"/>
     <promotable>false</promotable>
