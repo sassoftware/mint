@@ -7,7 +7,6 @@
 import sys
 
 from django.db import models
-
 from mint.django_rest.deco import D
 from mint.django_rest.rbuilder import modellib
 import urlparse
@@ -91,7 +90,8 @@ class Job(modellib.XObjIdModel):
         "package_version_jobs",
         "package_source_jobs",
         "package_build_jobs",
-        "jobtargettype_set",])
+        "jobtargettype_set",
+        "jobtarget_set"])
 
     #objects = modellib.JobManager()
 
@@ -411,6 +411,8 @@ class EventType(modellib.XObjIdModel):
             action.descriptor = modellib.HrefField("descriptors/%s",
                 values=(obj.job_type_id, ))
         return action
+    
+
 
 for mod_obj in sys.modules[__name__].__dict__.values():
     if hasattr(mod_obj, '_xobj'):

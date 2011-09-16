@@ -91,3 +91,32 @@ jobs_by_target_type_GET = \
   </job>
 </jobs>
 """.strip()
+
+jobs_by_target_GET = \
+"""
+<?xml version='1.0' encoding='UTF-8'?>
+<jobs count="2" next_page="" num_pages="1" previous_page="" full_collection="http://testserver/api/v1/targets/1/jobs/" end_index="1" limit="10" order_by="" per_page="10" filter_by="" id="http://testserver/api/v1/targets/1/jobs/" start_index="0">
+  <job id="http://testserver/api/v1/jobs/rmakeuuid002">
+    <time_updated>2011-09-16T18:00:49.787912+00:00</time_updated>
+    <status_code>100</status_code>
+    <job_state id="http://testserver/api/v1/job_states/2">Running</job_state>
+    <job_type id="http://testserver/api/v1/inventory/event_types/2">system poll</job_type>
+    <time_created>2011-09-16T18:00:49.787852+00:00</time_created>
+    <systems/>
+    <status_text>Initializing</status_text>
+    <job_uuid>rmakeuuid002</job_uuid>
+    <job_description>System synchronization</job_description>
+  </job>
+  <job id="http://testserver/api/v1/jobs/rmakeuuid001">
+    <time_updated>2011-09-16T18:00:49.780438+00:00</time_updated>
+    <status_code>100</status_code>
+    <job_state id="http://testserver/api/v1/job_states/2">Running</job_state>
+    <job_type id="http://testserver/api/v1/inventory/event_types/1">system registration</job_type>
+    <time_created>2011-09-16T18:00:49.780378+00:00</time_created>
+    <systems/>
+    <status_text>Initializing</status_text>
+    <job_uuid>rmakeuuid001</job_uuid>
+    <job_description>System registration</job_description>
+  </job>
+</jobs>
+""".strip()

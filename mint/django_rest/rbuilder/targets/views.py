@@ -91,3 +91,11 @@ class TargetTypeJobsService(service.BaseService):
         
     def get(self, target_type_id):
         return self.mgr.getJobsByTargetType(target_type_id)
+        
+class TargetJobsService(service.BaseService):
+    @return_xml
+    def rest_GET(self, request, target_id):
+        return self.get(target_id)
+        
+    def get(self, target_id):
+        return self.mgr.getJobsByTargetId(target_id)

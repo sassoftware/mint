@@ -102,11 +102,18 @@ class TargetCredentialsManager(basemanager.BaseManager):
     def getTargetCredentialsForTarget(self, target_id, target_credentials_id):
         return models.TargetCredentials.objects.get(pk=target_credentials_id)
 
-
 class TargetTypeJobsManager(basemanager.BaseManager):
     @exposed
     def getJobsByTargetType(self, target_type_id):
         jobTargetTypes = models.JobTargetType.objects.filter(target_type__target_type_id=target_type_id).order_by('-job__job_id')
         Jobs = jobsmodels.Jobs()
         Jobs.job = [jobTargetType.job for jobTargetType in jobTargetTypes]
+        return Jobs
+
+class TargetJobsManager(basemanager.BaseManager):
+    @exposed
+    def getJobsByTargetId(self, target_id):
+        jobTargets = models.JobTarget.objects.filter(target__target_id=target_id).order_by('-job__job_id')
+        Jobs = jobsmodels.Jobs()
+        Jobs.job = [jobTarget.job for jobTarget in jobTargets]
         return Jobs

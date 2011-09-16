@@ -586,7 +586,10 @@ urlpatterns = patterns('',
     URL(r'target_type_jobs/(?P<target_type_id>\d+)/?$',
         targetsviews.TargetTypeJobsService(),
         name='Jobs'),
-
+    URL(r'targets/(?P<target_id>\d+)/jobs/?$',
+        targetsviews.TargetJobsService(),
+        name='Jobs'),
+    
     # Begin Images service
     URL(r'images/?$',
         imagesviews.ImagesService(),

@@ -55,6 +55,12 @@ class TargetsTestCase(XMLTestCase):
                     job=self.jobs[i], target_type=self.targetTypes[j-1])       
         self.jobTargetTypes = models.JobTargetType.objects.all()
 
+        for i in range(2):
+            for j in range(1,3):
+                models.JobTarget.objects.create(
+                    job=self.jobs[i], target=self.targets[j-1])       
+        self.jobTargets = models.JobTarget.objects.all()
+
         for i in range(3):
             targetCredentials = models.TargetCredentials.objects.create(credentials='abc%s' % i)
             models.TargetUserCredentials.objects.create(
@@ -190,3 +196,9 @@ class TargetsTestCase(XMLTestCase):
         response = self._get(url % 1, username='admin', password='password')
         self.assertEquals(response.status_code, 200)
         self.assertXMLEquals(response.content, testsxml.jobs_by_target_type_GET)
+        
+    def testGetJobsByTarget(self):
+        url = 'targets/%s/jobs'
+        response = self._get(url % 1, username='admin', password='password')
+        self.assertEquals(response.status_code, 200)
+        self.assertXMLEquals(response.content, testsxml.jobs_by_target_GET)

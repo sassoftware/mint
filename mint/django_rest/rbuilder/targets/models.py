@@ -61,7 +61,7 @@ class Targets(modellib.Collection):
 
 class Target(modellib.XObjIdModel):
     _xobj_hidden_accessors = set(
-        ['targetdata_set', 'targetimagesdeployed_set', 'targetusercredentials_set', 'system_set', ])
+        ['targetdata_set', 'targetimagesdeployed_set', 'targetusercredentials_set', 'system_set', 'jobtarget_set'])
 
     class Meta:
         db_table = u'targets'
@@ -136,6 +136,18 @@ class JobTargetType(modellib.XObjModel):
     id = models.AutoField(primary_key=True)
     job = models.ForeignKey(jobmodels.Job)
     target_type = models.ForeignKey('TargetType')
+
+
+class JobTarget(modellib.XObjModel):
+    class Meta:
+        db_table = u'jobs_job_target'
+
+    _xobj = xobj.XObjMetadata(tag='job_target')
+
+    id = models.AutoField(primary_key=True)
+    job = models.ForeignKey(jobmodels.Job)
+    target = models.ForeignKey('Target')
+
 
 for mod_obj in sys.modules[__name__].__dict__.values():
     if hasattr(mod_obj, '_xobj'):
