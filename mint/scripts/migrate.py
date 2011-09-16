@@ -2648,7 +2648,7 @@ class MigrateTo_54(SchemaMigration):
         return True
 
 class MigrateTo_55(SchemaMigration):
-    Version = (55, 2)
+    Version = (55, 3)
 
     def migrate(self):
         return True
@@ -2744,6 +2744,12 @@ class MigrateTo_55(SchemaMigration):
 
         return True
 
+    def migrate3(self):
+        db = self.db
+        schema._addTableRows(db, 'job_types', 'name',
+        [
+          dict(name="image-deployment", description="Image Deployment"),
+        ])
 
 class MigrateTo_56(SchemaMigration):
     Version = (56, 2)

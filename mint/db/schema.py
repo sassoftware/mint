@@ -1875,6 +1875,7 @@ def _createJobsSchema(db):
         dict(name="software-version-refresh",
             description='Software Version Refresh'),
         dict(name="instance-update", description='Update Instance'),
+        dict(name="image-deployment", description="Image Deployment"),
         ])
 
     if 'job_states' not in db.tables:
