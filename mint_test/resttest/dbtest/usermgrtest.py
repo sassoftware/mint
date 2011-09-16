@@ -39,25 +39,17 @@ class UserManagerTest(mint_rephelp.MintDatabaseHelper):
         self.createProduct('foo3', developers=['developer'], db=db)
         self.assertRaises(mint_error.LastOwner, db.cancelUserAccount, 'owner')
 
-    def testGetAdminGroupId(self):
-        db = self.openMintDatabase(createRepos=False)
-        self.createUser('admin', admin=True)
-        groupId = db.userMgr._getAdminGroupId()
-        assert(groupId == db.userMgr._getAdminGroupId())
-
     def testMakeAdmin(self):
         db = self.openMintDatabase(createRepos=False)
         self.createUser('admin', admin=True)
         self.createUser('other')
         assert(not db.userMgr._isUserAdmin('other'))
         db.userMgr.makeAdmin('other')
-        groupId = db.userMgr._getAdminGroupId()
         assert(db.userMgr._isUserAdmin('other'))
 
     def testCreateUser(self):
         db = self.openMintDatabase(createRepos=False)
         self.createUser('admin', admin=True)
-        self.assertRaises(mint_error.UserAlreadyExists, self.createUser, 'mintadmin')
         self.assertRaises(mint_error.UserAlreadyExists, self.createUser, 'ADmIN')
         db.createUser('foo', 'bar', 'fullName', 'email', 
                       'displayEmail', 'blurb')

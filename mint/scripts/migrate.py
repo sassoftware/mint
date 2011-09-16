@@ -3044,7 +3044,7 @@ class MigrateTo_57(SchemaMigration):
 
 
 class MigrateTo_58(SchemaMigration):
-    Version = (58, 64)
+    Version = (58, 65)
 
     def migrate(self):
         return True
@@ -4186,6 +4186,22 @@ class MigrateTo_58(SchemaMigration):
             ADD source_group text,
             ADD platform_id integer REFERENCES Platforms ON DELETE SET NULL,
             ADD platform_label text""")
+        return True
+
+    def migrate65(self):
+        cu = self.db.cursor()
+        cu.execute("""ALTER TABLE Users
+                ADD is_admin bool NOT NULL DEFAULT false""")
+        cu.execute("""UPDATE Users u
+            SET is_admin = EXISTS (
+                SELECT * FROM UserGroupMembers m
+                JOIN UserGroups g USING (userGroupId)
+                WHERE m.userId = u.userId AND g.usergroup = 'MintAdmin'
+            ) """)
+        drop_tables(self.db,
+                'UserGroupMembers',
+                'UserGroups',
+                )
         return True
 
 

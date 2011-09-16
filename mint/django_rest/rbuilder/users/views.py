@@ -81,57 +81,6 @@ class UsersService(service.BaseService):
         self.mgr.deleteUser(user_id)
         return HttpResponse(status=204)
 
-class UserGroupsService(service.BaseService):
-
-    @access.admin # FIXME: correct?
-    @return_xml
-    def rest_GET(self, request, user_group_id=None):
-        return self.get(user_group_id)
-    
-    def get(self, user_group_id=None):
-        if user_group_id:
-            return self.mgr.getUserGroup(user_group_id)
-        else:
-            return self.mgr.getUserGroups()
-    
-    # user groups are only exposed in rBuilder for the purpose
-    # of defining the admin user, so only the admin user
-    # should be able to create user groups
-    @access.admin 
-    @requires('user_group')       
-    @return_xml
-    def rest_POST(self, request, user_group):
-        return self.mgr.addUserGroup(user_group)
-    
-    @access.admin
-    @requires('user_group')
-    @return_xml
-    def rest_PUT(self, request, user_group_id, user_group):
-        return self.mgr.updateUserGroup(user_group_id, user_group)
-
-    @access.admin
-    def rest_DELETE(self, request, user_group_id):
-        self.mgr.deleteUserGroup(user_group_id)
-        return HttpResponse(status=204)
-
-
-class UserUserGroupsService(service.BaseService):
-    
-    @rbac(rbac_can_read_user)
-    @return_xml
-    def rest_GET(self, request, user_id):
-        return self.mgr.getUserUserGroups(user_id)
-
-
-class UserGroupMembersService(service.BaseService):
-    
-    @access.admin
-    @return_xml
-    def rest_GET(self, request, user_group_id):
-        return self.get(user_group_id)
-
-    def get(self, user_group_id):
-        return self.mgr.getUserGroupMembers(user_group_id)
 
 class SessionService(service.BaseService):
 

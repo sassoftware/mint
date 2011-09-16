@@ -247,12 +247,6 @@ class MintClient:
         """
         return self.server.getUserIdByName(username)
 
-    def getUsersList(self):
-        """
-        Fetch users and IDs
-        """
-        return self.server.getUsersList()
-
     def getUserSearchResults(self, terms, limit = 10, offset = 0):
         """
         Collect the results from a users search as requested by the search

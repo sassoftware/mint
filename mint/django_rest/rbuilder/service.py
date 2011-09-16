@@ -170,10 +170,8 @@ class BaseAuthService(BaseService):
     def _setMintAuth(self):
         db = database.Database(self.mgr.cfg)
         authToken = (self.mgr.cfg.authUser, self.mgr.cfg.authPass)
-        mintAdminGroupId = db.userGroups.getMintAdminId()
         cu = db.cursor()
-        cu.execute("SELECT MIN(userId) from userGroupMembers "
-           "WHERE userGroupId = ?", mintAdminGroupId)
+        cu.execute("SELECT MIN(userId) FROM Users WHERE is_admin = ?", True)
         ret = cu.fetchall()
         userId = ret[0][0]
         mintAuth = users.Authorization(username=self.mgr.cfg.authUser,

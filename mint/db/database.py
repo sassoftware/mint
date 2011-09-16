@@ -35,8 +35,6 @@ class TableCache(object):
         self.buildFilesUrlsMap = jobs.BuildFilesUrlsMapTable(db)
         self.urlDownloads = builds.UrlDownloadsTable(db)
         self.users = users.UsersTable(db, cfg)
-        self.userGroups = users.UserGroupsTable(db, cfg)
-        self.userGroupMembers = users.UserGroupMembersTable(db, cfg)
         self.userData = users.UserDataTable(db)
         self.projectUsers = projects.ProjectUsersTable(db)
         self.builds = builds.BuildsTable(db)
@@ -85,8 +83,6 @@ class Database(object):
         self.buildFilesUrlsMap = tables.buildFilesUrlsMap
         self.urlDownloads = tables.urlDownloads
         self.users = tables.users
-        self.userGroups = tables.userGroups
-        self.userGroupMembers = tables.userGroupMembers
         self.userData = tables.userData
         self.projectUsers = tables.projectUsers
         self.builds = tables.builds
@@ -132,7 +128,6 @@ class Database(object):
         tables = TableCache(self._db, self._cfg)
         self._copyTables(tables)
         self.normalizeMirrorOrder()
-        self._createTemporaryTables()
         if self._db.inTransaction(True):
             self._db.commit()
 
@@ -193,7 +188,3 @@ class Database(object):
             return res
         except:
             raise exception(key)
-
-    def _createTemporaryTables(self):
-        dblib.createTemporaryTable(self.db, 'tmpOneVal',
-            [ "id int", "val int" ])

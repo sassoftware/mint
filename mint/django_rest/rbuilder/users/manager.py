@@ -71,9 +71,10 @@ class UsersManager(basemanager.BaseManager):
         dbuser = models.User.objects.get(user_name=user.user_name)
         if self.auth and self.auth.admin:
             is_admin = self._toBool(user.is_admin)
-            if is_admin:
-                self.setIsAdmin(dbuser, is_admin)
-                dbuser.set_is_admin()
+            # Copy "model" field to "database" field, now that caller's
+            # adminship has been proven.
+            dbuser.setIsAdmin(is_admin)
+            dbuser.save()
         return dbuser
 
     def _setPassword(self, user, password):
@@ -105,11 +106,12 @@ class UsersManager(basemanager.BaseManager):
         # Copy all fields the user may have chosen to change
         models.User.objects._copyFields(dbuser, user)
         if self.auth.admin and user.is_admin is not None:
-            # Admin users cannot drop the admin flag for themselves
+            # Copy "model" field to "database" field, now that caller's
+            # adminship has been proven. Admin users cannot drop the admin flag
+            # for themselves
             if user_id != str(self.user.user_id):
                 is_admin = self._toBool(user.is_admin)
-                if dbuser.getIsAdmin() != is_admin:
-                    self.setIsAdmin(dbuser, is_admin)
+                dbuser.setIsAdmin(is_admin)
         dbuser.save()
         dbuser = self._setPassword(dbuser, user.password)
         return dbuser
@@ -123,34 +125,6 @@ class UsersManager(basemanager.BaseManager):
     def _newTransaction(self):
         transaction.enter_transaction_management()
         transaction.managed(True)
-
-    def setIsAdmin(self, user, isAdmin):
-        userGroupId = self.getAdminGroupId()
-        cu = connection.cursor()
-        if isAdmin:
-            try:
-                cu.execute("""
-                    INSERT INTO UserGroupMembers (userId, userGroupId)
-                    VALUES (%s, %s)
-                """, [ user.user_id, userGroupId ])
-            except IntegrityError:
-                pass
-        else:
-            cu.execute("""
-                DELETE FROM UserGroupMembers
-                 WHERE userId = %s
-                   AND userGroupId = %s
-            """, [ user.user_id, userGroupId ])
-        user.set_is_admin()
-        return user
-
-    def getAdminGroupId(self):
-        cu = connection.cursor()
-        cu.execute("SELECT userGroupId FROM UserGroups WHERE userGroup=%s",
-            [ 'MintAdmin' ])
-        row = cu.fetchone()
-        # XXX Error checking if group does not exist
-        return row[0]
 
     @classmethod
     def _toBool(cls, val):
@@ -199,55 +173,3 @@ class UsersManager(basemanager.BaseManager):
             
     def _ensureNoOrphans(self, user_id):
         pass
-
-
-class UserGroupsManager(basemanager.BaseManager):
-    @exposed
-    def getUserGroup(self, user_group_id):
-        user_group = models.UserGroup.objects.get(pk=user_group_id)
-        return user_group
-        
-    @exposed
-    def getUserGroups(self):
-        UserGroups = models.UserGroups()
-        UserGroups.user_group = models.UserGroup.objects.all()
-        return UserGroups
-    
-    @exposed
-    def addUserGroups(self, user_group):
-        user_group.save()
-        return user_group
-        
-    @exposed
-    def updateUserGroups(self, user_group):
-        user_group.save()
-        return user_group
-        
-    @exposed
-    def deleteUserGroup(self, user_group_id):
-        user_group = models.UserGroup.objects.get(pk=user_group_id)
-        user_group.delete()
-        
-        
-class UserUserGroupsManager(basemanager.BaseManager):
-    @exposed
-    def getUserUserGroups(self, user_id):
-        UserGroups = models.UserGroups()
-        user_groups = models.User.objects.get(user_id=user_id).user_groups.all()
-        UserGroups.user_group = user_groups
-        return UserGroups
-        
-    
-# class UserGroupMembersManager(basemanager.BaseManager):
-#     @exposed
-#     def getUserGroupMembers(self, user_group_id):
-#         user_group_members = models.UserGroupMembers.objects.get(pk=user_group_id)
-#         return user_group_members
-        
-class UserGroupMembersManager(basemanager.BaseManager):
-    @exposed
-    def getUserGroupMembers(self, user_group_id):
-        UserGroupMembers = models.UserGroupMembers()
-        groups = models.User.user_groups.through.objects.filter(user_group_id=user_group_id)
-        UserGroupMembers.user_group_member = groups
-        return UserGroupMembers

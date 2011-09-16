@@ -27,47 +27,6 @@ class DatabaseVersion(modellib.XObjModel):
     minor = models.SmallIntegerField(null=True)
 
 
-# class UserGroups(modellib.XObjModel):
-#     usergroupid = models.AutoField(primary_key=True)
-#     usergroup = models.CharField(unique=True, max_length=128)
-#     
-#     class Meta:
-#         managed = settings.MANAGE_RBUILDER_MODELS
-#         db_table = u'usergroups'
-#         
-#     def __unicode__(self):
-#         return self.usergroup
-
-# class Users(modellib.XObjModel):
-#     userid = models.AutoField(primary_key=True)
-#     username = models.CharField(unique=True, max_length=128)
-#     fullname = models.CharField(max_length=128)
-#     # salt has binary data, django is unhappy about that.
-#     salt = models.TextField() # This field type is a guess.
-#     passwd = models.CharField(max_length=254)
-#     email = models.CharField(max_length=128)
-#     displayemail = models.TextField()
-#     timecreated = models.DecimalField(max_digits=14, decimal_places=3)
-#     timeaccessed = models.DecimalField(max_digits=14, decimal_places=3)
-#     active = models.SmallIntegerField()
-#     blurb = models.TextField()
-#     groups = models.ManyToManyField(UserGroups, through="UserGroupMembers", related_name='groups')
-#     
-#     class Meta:
-#         managed = settings.MANAGE_RBUILDER_MODELS
-#         db_table = u'users'
-#         
-#     def __unicode__(self):
-#         return self.username
-        
-# class UserGroupMembers(modellib.XObjModel):
-#     usergroupid = models.ForeignKey(UserGroups, db_column='usergroupid', related_name='group')
-#     userid = models.ForeignKey(Users, db_column='userid', related_name='usermember')
-#     
-#     class Meta:
-#         managed = settings.MANAGE_RBUILDER_MODELS
-#         db_table = u'usergroupmembers'
-    
 class Pk(object):
     def __init__(self, pk):
         self.pk = pk

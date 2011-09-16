@@ -612,13 +612,11 @@ class MintServer(object):
         return False
 
     def _isUserAdmin(self, userId):
-        mintAdminId = self.userGroups.getMintAdminId()
         try:
-            if mintAdminId in self.userGroupMembers.getGroupsForUser(userId):
-                return True
+            user = self.users.get(userId)
+            return user['is_admin']
         except mint_error.ItemNotFound:
-            pass
-        return False
+            return False
 
     def _getProxies(self):
         useInternalConaryProxy = self.cfg.useInternalConaryProxy
@@ -1523,12 +1521,7 @@ If you would not like to be %s %s of this project, you may resign from this proj
         if not self._isUserAdmin(userId):
             return
         cu = self.db.cursor()
-        cu.execute("""SELECT userId
-                          FROM UserGroups
-                          LEFT JOIN UserGroupMembers
-                          ON UserGroups.userGroupId =
-                                 UserGroupMembers.userGroupId
-                          WHERE userGroup='MintAdmin'""")
+        cu.execute("SELECT userId FROM UserGroups WHERE is_admin = true")
         if [x[0] for x in cu.fetchall()] == [userId]:
             # userId is admin, and there is only one admin => last admin
             raise mint_error.LastAdmin(
@@ -1557,19 +1550,10 @@ If you would not like to be %s %s of this project, you may resign from this proj
 
         cu = self.db.transaction()
         try:
-            cu.execute("""SELECT userGroupId FROM UserGroupMembers
-                              WHERE userId=?""", userId)
-            for userGroupId in [x[0] for x in cu.fetchall()]:
-                cu.execute("""SELECT COUNT(*) FROM UserGroupMembers
-                                  WHERE userGroupId=?""", userGroupId)
-                if cu.fetchone()[0] == 1:
-                    cu.execute("DELETE FROM UserGroups WHERE userGroupId=?",
-                               userGroupId)
             cu.execute("UPDATE Projects SET creatorId=NULL WHERE creatorId=?",
                        userId)
             cu.execute("DELETE FROM ProjectUsers WHERE userId=?", userId)
             cu.execute("DELETE FROM Confirmations WHERE userId=?", userId)
-            cu.execute("DELETE FROM UserGroupMembers WHERE userId=?", userId)
             cu.execute("DELETE FROM Users WHERE userId=?", userId)
             cu.execute("DELETE FROM UserData where userId=?", userId)
         except:
@@ -1773,15 +1757,6 @@ If you would not like to be %s %s of this project, you may resign from this proj
         """
         return self.projects.getNewProjects(limit, showFledgling)
 
-    @typeCheck()
-    @requiresAdmin
-    @private
-    def getUsersList(self):
-        """
-        Collect a list of users suitable for creating a select box
-        """
-        return self.users.getUsersList()
-
     @typeCheck(int, int, int)
     @requiresAdmin
     @private
@@ -1807,19 +1782,12 @@ If you would not like to be %s %s of this project, you may resign from this proj
         Given a userId, will attempt to promote that user to an
         administrator (i.e. make a member of the MintAdmin User Group).
 
-        NOTE: if the MintAdmin UserGroup doesn't exist, it will be created
-        as a side effect.
-
         @param userId: the userId to promote
         """
-        mintAdminId = self.userGroups.getMintAdminId()
         if self._isUserAdmin(userId):
             raise mint_error.UserAlreadyAdmin
-
         cu = self.db.cursor()
-        cu.execute(
-            "INSERT INTO UserGroupMembers (usergroupid, userid) VALUES(?, ?)",
-                mintAdminId, userId)
+        cu.execute("UPDATE Users SET is_admin = true WHERE userId = ?", userId)
         self.db.commit()
         return True
 
@@ -1835,14 +1803,8 @@ If you would not like to be %s %s of this project, you may resign from this proj
         # refuse to demote self. this ensures there will always be at least one
         if userId == self.auth.userId:
             raise mint_error.AdminSelfDemotion
-
-        mintAdminId = self.userGroups.getMintAdminId()
         cu = self.db.cursor()
-        cu.execute("SELECT userId FROM UserGroupMembers WHERE userGroupId=?",
-                   mintAdminId)
-
-        cu.execute("""DELETE FROM UserGroupMembers WHERE userId=?
-                          AND userGroupId=?""", userId, mintAdminId)
+        cu.execute("UPDATE Users SET is_admin = false WHERE userId = ?", userId)
         self.db.commit()
         return True
 

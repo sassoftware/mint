@@ -30,7 +30,6 @@ user_get_xml_with_roles = """
   <full_name>ExampleIntern</full_name>
   <is_admin>false</is_admin>
   <roles id="http://testserver/api/v1/users/2003/roles"/>
-  <user_groups/>
   <user_id>2003</user_id>
   <user_name>ExampleIntern</user_name>
 </user>
@@ -453,7 +452,6 @@ user_role_post_bad_xml_input = """
                 <resource_type />
                 <roles id="https://testserver/api/users/1/roles" href="https://testserver/api/users/1/roles" />
                 <tags />
-                <user_groups />
                 <user_name>admin</user_name>
                 <user_tags />
         </created_by>
@@ -542,7 +540,6 @@ users_in_role_xml = """
     <full_name>Test User</full_name>
     <is_admin>false</is_admin>
     <roles id="http://testserver/api/v1/users/2000/roles"/>
-    <user_groups/>
     <user_id>2000</user_id>
     <user_name>testuser</user_name>
   </user>
@@ -553,7 +550,6 @@ users_in_role_xml = """
     <full_name>Administrator</full_name>
     <is_admin>true</is_admin>
     <roles id="http://testserver/api/v1/users/1/roles"/>
-    <user_groups/>
     <user_id>1</user_id>
     <user_name>admin</user_name>
   </user>

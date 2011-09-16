@@ -8,7 +8,6 @@
 TABLE_LIST = [
         'targets',
         'updateservices',
-        'usergroups',
         'repnamemap',
         'users',
         'sessions',
@@ -24,7 +23,6 @@ TABLE_LIST = [
         'projectusers',
         'publishedreleases',
         'userdata',
-        'usergroupmembers',
         'productversions',
         'commits',
         'membershiprequests',

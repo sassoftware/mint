@@ -39,7 +39,7 @@ class UsersTable(database.KeyedTable):
 
     fields = ['userId', 'username', 'fullName', 'salt', 'passwd', 'email',
               'displayEmail', 'timeCreated', 'timeAccessed',
-              'active', 'blurb']
+              'active', 'blurb', 'is_admin']
 
     # Not the ideal place to put these, but I wanted to easily find them later
     # --misa
@@ -75,22 +75,18 @@ class UsersTable(database.KeyedTable):
         m.update(password)
         return salt.encode('hex'), m.hexdigest()
 
-    def _getUserGroups(self, authToken):
+    def _checkAuth(self, authToken):
         user, challenge = authToken
 
         cu = self.db.cursor()
-        cu.execute("SELECT salt, passwd FROM Users WHERE username=?", user)
+        cu.execute("""SELECT salt, passwd, is_admin
+            FROM Users WHERE username=?""", user)
         r = cu.fetchone()
-        if r  and self._checkPassword(user, r[0], r[1], challenge):
-            cu.execute("""SELECT UserGroups.userGroup
-                          FROM UserGroups, Users, UserGroupMembers
-                          WHERE UserGroups.userGroupId =
-                                  UserGroupMembers.userGroupId AND
-                                UserGroupMembers.userId = Users.userId AND
-                                Users.username = ?""", user)
-            return [row[0] for row in cu.fetchall()]
+        if r and self._checkPassword(user, r[0], r[1], challenge):
+            isAdmin = r[2]
+            return True, isAdmin
         else:
-            return []
+            return False, False
 
     def checkAuth(self, authToken):
         auth = {'authorized': False, 'userId': -1}
@@ -106,14 +102,11 @@ class UsersTable(database.KeyedTable):
 
         if r:
             try:
-                groups = self._getUserGroups(authToken)
+                ok, isAdmin = self._checkAuth(authToken)
             except repository.errors.OpenError:
                 return auth
 
-            if type(groups) != list:
-                raise AuthRepoError
-
-            if groups:
+            if ok:
                 auth = {'authorized':   True,
                         'userId':       int(r[0]),
                         'username':     username,
@@ -123,11 +116,9 @@ class UsersTable(database.KeyedTable):
                         'blurb':        r[4],
                         'timeAccessed': r[5],
                         'stagnant':     self.isUserStagnant(r[0]),
-                        'groups':       groups}
-                if 'MintAdmin' in groups:
-                    auth['admin'] = True
-                else:
-                    auth['admin'] = False
+                        'groups':       [],
+                        'admin':        isAdmin,
+                        }
 
         return auth
 
@@ -161,12 +152,6 @@ class UsersTable(database.KeyedTable):
                 raise InvalidUsername
 
         cu = self.db.cursor()
-        cu.execute("""SELECT COUNT(*) FROM UserGroups
-                          WHERE UPPER(userGroup)=UPPER(?)""",
-                   username)
-        if cu.fetchone()[0]:
-            raise UserAlreadyExists
-
         cu.execute("SELECT COUNT(*) FROM Users WHERE UPPER(username)=UPPER(?)",
                    username)
         if cu.fetchone()[0]:
@@ -276,33 +261,6 @@ class UsersTable(database.KeyedTable):
 
         return ids, count
 
-    def getUsersList(self):
-        """
-        Returns a list of all users suitable for framing in a listbox or
-        multi-select box.
-        """
-        cu = self.db.cursor()
-
-        userConcat = database.concat(self.db, 'username', "' - '", 'fullName')
-        SQL = """SELECT userId, %s, active
-                FROM Users
-                ORDER BY username""" % userConcat
-
-        cu.execute(SQL)
-
-        # results must be a built in type
-        results = [tuple(x) for x in cu.fetchall()]
-        for index, (userId, userName, active) in enumerate(results[:]):
-            cu.execute("""SELECT COUNT(*) FROM UserGroupMembers
-                              LEFT JOIN UserGroups
-                                  ON UserGroupMembers.userGroupId=
-                                          UserGroups.userGroupId
-                              WHERE UserGroup = 'MintAdmin'
-                              AND userId=?""", userId)
-            if cu.fetchone()[0]:
-                results[index] = userId, userName + " (admin)", active
-        return results
-
     def getUsersWithEmail(self):
         """
         Returns a list of all users suitable for sending e-mail
@@ -401,45 +359,6 @@ class UsersTable(database.KeyedTable):
               AND pu.userId = ?""", userId)
         return cu.fetchall_dict()
 
-class UserGroupsTable(database.KeyedTable):
-    name = "UserGroups"
-    key = "userGroupId"
-    fields = ['userGroupId', 'userGroup']
-
-    def __init__(self, db, cfg):
-        self.cfg = cfg
-        database.DatabaseTable.__init__(self, db)
-
-    def getMintAdminId(self):
-        """
-        Return the id of the MintAdmin user.
-
-        NOTE: This will create the MintAdmin UserGroup if it doesn't
-        already exist.
-        """
-        try:
-            mintAdminId = self.getIdByColumn('userGroup', 'MintAdmin')
-        except ItemNotFound:
-            mintAdminId = self.new(userGroup = 'MintAdmin')
-        except:
-            raise
-        return mintAdminId
-
-
-class UserGroupMembersTable(database.DatabaseTable):
-    name = "UserGroupMembers"
-    fields = ['userGroupId', 'userId']
-
-    def __init__(self, db, cfg):
-        self.cfg = cfg
-        database.DatabaseTable.__init__(self, db)
-
-    def getGroupsForUser(self, userId):
-        cu = self.db.cursor()
-        cu.execute("SELECT userGroupId FROM UserGroupMembers WHERE userId=?",
-                   userId)
-        return [x[0] for x in cu.fetchall()]
 
 class UserDataTable(data.GenericDataTable):
     name = "UserData"
-

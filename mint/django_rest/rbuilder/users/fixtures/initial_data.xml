@@ -1,14 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
 <django-objects version="1.0">
-  <object pk="1" model="users.usergroup">
-    <field type="CharField" name="name">admin</field>
-  </object>
-  <object pk="2" model="users.usergroup">
-    <field type="CharField" name="name">MintAdmin</field>
-  </object>
-  <object pk="2000" model="users.usergroup">
-    <field type="CharField" name="name">testuser</field>
-  </object>
   <object pk="1" model="users.user">
     <field type="CharField" name="user_name">admin</field>
     <field type="CharField" name="full_name">Administrator</field>
@@ -20,6 +11,7 @@
     <field type="DecimalField" name="modified_date">1283530322.491</field>
     <field type="SmallIntegerField" name="active">1</field>
     <field type="TextField" name="blurb"></field>
+    <field type="BooleanField" name="_is_admin">True</field>
   </object>
   <object pk="2000" model="users.user">
     <field type="CharField" name="user_name">testuser</field>
@@ -32,17 +24,6 @@
     <field type="DecimalField" name="modified_date">1283530359.041</field>
     <field type="SmallIntegerField" name="active">1</field>
     <field type="TextField" name="blurb">null</field>
-  </object>
-  <object pk="1" model="users.usergroupmember">
-    <field to="users.usergroup" name="user_group_id" rel="ManyToOneRel">1</field>
-    <field to="users.user" name="user_id" rel="ManyToOneRel">1</field>
-  </object>
-  <object pk="2" model="users.usergroupmember">
-    <field to="users.usergroup" name="user_group_id" rel="ManyToOneRel">2</field>
-    <field to="users.user" name="user_id" rel="ManyToOneRel">1</field>
-  </object>
-  <object pk="2000" model="users.usergroupmember">
-    <field to="users.usergroup" name="user_group_id" rel="ManyToOneRel">2000</field>
-    <field to="users.user" name="user_id" rel="ManyToOneRel">2000</field>
+    <field type="BooleanField" name="_is_admin">False</field>
   </object>
 </django-objects>

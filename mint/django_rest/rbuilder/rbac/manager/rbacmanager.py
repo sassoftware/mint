@@ -280,8 +280,7 @@ class RbacManager(basemanager.BaseManager):
         # this will trigger on DB users even if request is not passed in
         # so we could probably eliminate the request check
         # TODO: make it happen
-        user_is_admin = str(getattr(user, 'is_admin', 'false'))
-        if user_is_admin == 'true':
+        if user.getIsAdmin():
             return True
         
         # input permission is a permission name, upconvert to PermissionType object

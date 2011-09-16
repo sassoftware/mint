@@ -307,15 +307,6 @@ class UsersTestCase(RbacEngine):
         self.failUnlessEqual(fault.code, '404')
         self.failUnlessEqual(fault.message, 'The specified user does not exist')
 
-    def testGetUserGroups(self):
-        user_groups = models.UserGroup.objects.all()
-        user_groups_gotten = self.xobjResponse('user_groups/')
-        self.assertEquals(len(list(user_groups)), len(user_groups_gotten.user_group))
-        
-    def testGetUserGroup(self):
-        user_group = models.UserGroup.objects.get(pk=1)
-        user_group_gotten = self.xobjResponse('user_groups/1')
-
     def testUserGetIsAdmin(self):
         user = models.User.objects.get(user_name='admin')
         self.failUnlessEqual(user.getIsAdmin(), True)
@@ -344,6 +335,3 @@ class UsersTestCase(RbacEngine):
         self.failUnlessEqual(response.status_code, 200)
         sess = self.toXObj(response.content)
         self.failUnlessEqual(sess.user.user_id, '2000')
-
-    def testGetUserGroupMembers(self):
-        pass

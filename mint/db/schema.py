@@ -28,7 +28,7 @@ from conary.dbstore import sqlerrors, sqllib
 log = logging.getLogger(__name__)
 
 # database schema major version
-RBUILDER_DB_VERSION = sqllib.DBversion(58, 64)
+RBUILDER_DB_VERSION = sqllib.DBversion(58, 65)
 
 
 def _createTrigger(db, table, column="changed"):
@@ -66,7 +66,8 @@ def _createUsers(db):
             timeCreated         numeric(14,3),
             timeAccessed        numeric(14,3),
             active              smallint,
-            blurb               text
+            blurb               text,
+            is_admin            boolean         NOT NULL    DEFAULT false
         ) %(TABLEOPTS)s""" % db.keywords)
         db.tables['Users'] = []
     db.createIndex('Users', 'UsersActiveIdx', 'username, active')
@@ -83,27 +84,6 @@ def _createUsers(db):
         ) %(TABLEOPTS)s""" % db.keywords)
         db.tables['UserData'] = []
     db.createIndex('UserData', 'UserDataIdx', 'userId')
-
-    if 'UserGroups' not in db.tables:
-        cu.execute("""
-        CREATE TABLE UserGroups (
-            userGroupId         %(PRIMARYKEY)s,
-            userGroup           varchar(128)    NOT NULL    UNIQUE
-        ) %(TABLEOPTS)s""" % db.keywords)
-        db.tables['UserGroups'] = []
-
-    if 'UserGroupMembers' not in db.tables:
-        cu.execute("""
-        CREATE TABLE UserGroupMembers (
-            userGroupMemberId    %(PRIMARYKEY)s,
-            userGroupId         integer         NOT NULL
-                REFERENCES UserGroups ON DELETE CASCADE,
-            userId              integer         NOT NULL
-                REFERENCES Users ON DELETE CASCADE
-        ) %(TABLEOPTS)s""" % db.keywords)
-        db.tables['UserGroupMembers'] = []
-    db.createIndex('UserGroupMembers', 'UserGroupMembersIdx',
-            'userGroupId, userId', unique=True)
 
     if 'Confirmations' not in db.tables:
         cu.execute("""

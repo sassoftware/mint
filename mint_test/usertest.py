@@ -232,15 +232,6 @@ class UsersTest(fixtures.FixturedUnitTest):
         for key, val in userPub.iteritems():
             assert val == user.__getattribute__(key)
 
-    @fixtures.fixture('Full')
-    def testMissingMintAuth(self, db, data):
-        client = self.getClient('admin')
-        assert client.server._server._isUserAdmin(data['admin'])
-        cu = db.cursor()
-        cu.execute("DELETE FROM UserGroups WHERE userGroup='MintAdmin'")
-        db.commit()
-        assert not client.server._server._isUserAdmin(data['admin'])
-
     @ fixtures.fixture('Full')
     def donttestProductionConfirmation(self, db, data):
         client = self.getClient('admin')

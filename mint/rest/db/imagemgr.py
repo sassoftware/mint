@@ -151,12 +151,9 @@ class ImageManager(manager.Manager):
         imageIds = [int(x) for x in imageIds]
         if not imageIds:
             return []
+        imageStr = ', '.join('%d' % x for x in imageIds)
 
         cu = self.db.cursor()
-
-        cu.execute("DELETE FROM tmpOneVal")
-        cu.executemany("INSERT INTO tmpOneVal (id) VALUES (?)",
-            [ (x, ) for x in imageIds ])
 
         # Grab target images
         cu.execute("""
@@ -169,8 +166,8 @@ class ImageManager(manager.Manager):
               JOIN target_types AS tt USING (target_type_id)
               JOIN TargetImagesDeployed AS tid ON tid.targetId = t.targetId
               JOIN BuildFiles AS bf USING (fileId)
-              JOIN tmpOneVal AS tb ON (bf.buildId = tb.id)
-        """)
+              WHERE bf.buildId IN (%s)
+        """ % imageStr)
         targetImages = {}
         for row in cu:
             targetImages.setdefault(row['fileId'], []).append(
@@ -185,8 +182,8 @@ class ImageManager(manager.Manager):
             FROM BuildFiles f
                 JOIN BuildFilesUrlsMap USING ( fileId )
                 JOIN FilesUrls u USING ( urlId )
-                JOIN tmpOneVal AS tb ON (f.buildId = tb.id)
-            '''
+                WHERE f.buildId IN (%s)
+            ''' % imageStr
         cu.execute(sql)
 
         filesByImageId = dict((imageId, {}) for imageId in imageIds)
