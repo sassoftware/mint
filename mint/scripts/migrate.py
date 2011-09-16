@@ -2583,7 +2583,7 @@ class MigrateTo_54(SchemaMigration):
         return True
 
 class MigrateTo_55(SchemaMigration):
-    Version = (55, 2)
+    Version = (55, 3)
 
     def migrate(self):
         return True
@@ -2677,6 +2677,14 @@ class MigrateTo_55(SchemaMigration):
             cu.executemany("""UPDATE Builds SET output_trove = ?
                     WHERE buildId = ?""", updates)
 
+        return True
+
+    def migrate3(self):
+        db = self.db
+        schema._addTableRows(db, 'job_types', 'name',
+        [
+          dict(name="image-deployment", description="Image Deployment"),
+        ])
         return True
 
 #### SCHEMA MIGRATIONS END HERE #############################################

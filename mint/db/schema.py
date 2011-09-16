@@ -28,7 +28,7 @@ from conary.dbstore import sqlerrors, sqllib
 log = logging.getLogger(__name__)
 
 # database schema major version
-RBUILDER_DB_VERSION = sqllib.DBversion(55, 2)
+RBUILDER_DB_VERSION = sqllib.DBversion(55, 3)
 
 
 def _createTrigger(db, table, column = "changed"):
@@ -1843,8 +1843,9 @@ def _createJobsSchema(db):
         [ dict(name="instance-launch", description='Instance Launch'),
           dict(name="platform-load", description='Platform Load'),
           dict(name="software-version-refresh", description='Software Version Refresh'),
-          dict(name="instance-update", description='Update Instance'), ])
-
+          dict(name="instance-update", description='Update Instance'),
+          dict(name="image-deployment", description="Image Deployment"),
+        ])
     if 'job_states' not in db.tables:
         cu.execute("""
             CREATE TABLE job_states
