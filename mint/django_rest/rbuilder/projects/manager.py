@@ -307,12 +307,12 @@ class ProjectManager(basemanager.BaseManager):
         project = projectVersion.project
         pd = helperfuncs.sanitizeProductDefinition(
                 projectName=project.name,
-                projectDescription=projectVersion.description,
+                projectDescription=project.description or '',
                 hostname=project.hostname,
                 domainname=project.domain_name,
                 shortname=project.short_name,
                 version=projectVersion.name,
-                versionDescription='',
+                versionDescription=projectVersion.description or '',
                 namespace=projectVersion.namespace)
         pd.setBaseLabel(projectVersion.label)
 
