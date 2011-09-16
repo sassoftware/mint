@@ -67,17 +67,6 @@ jobs_by_target_type_GET = \
 """
 <?xml version='1.0' encoding='UTF-8'?>
 <jobs count="2" next_page="" num_pages="1" previous_page="" full_collection="http://testserver/api/v1/target_type_jobs/1/" end_index="1" limit="10" order_by="" per_page="10" filter_by="" id="http://testserver/api/v1/target_type_jobs/1/" start_index="0">
-  <job id="http://testserver/api/v1/jobs/rmakeuuid001">
-    <time_updated>2011-09-14T18:32:05.021478+00:00</time_updated>
-    <status_code>100</status_code>
-    <job_state id="http://testserver/api/v1/job_states/2">Running</job_state>
-    <job_type id="http://testserver/api/v1/inventory/event_types/1">system registration</job_type>
-    <time_created>2011-09-14T18:32:05.021403+00:00</time_created>
-    <systems/>
-    <status_text>Initializing</status_text>
-    <job_uuid>rmakeuuid001</job_uuid>
-    <job_description>System registration</job_description>
-  </job>
   <job id="http://testserver/api/v1/jobs/rmakeuuid002">
     <time_updated>2011-09-14T18:32:05.028972+00:00</time_updated>
     <status_code>100</status_code>
@@ -88,6 +77,17 @@ jobs_by_target_type_GET = \
     <status_text>Initializing</status_text>
     <job_uuid>rmakeuuid002</job_uuid>
     <job_description>System synchronization</job_description>
+  </job>
+  <job id="http://testserver/api/v1/jobs/rmakeuuid001">
+    <time_updated>2011-09-14T18:32:05.021478+00:00</time_updated>
+    <status_code>100</status_code>
+    <job_state id="http://testserver/api/v1/job_states/2">Running</job_state>
+    <job_type id="http://testserver/api/v1/inventory/event_types/1">system registration</job_type>
+    <time_created>2011-09-14T18:32:05.021403+00:00</time_created>
+    <systems/>
+    <status_text>Initializing</status_text>
+    <job_uuid>rmakeuuid001</job_uuid>
+    <job_description>System registration</job_description>
   </job>
 </jobs>
 """.strip()

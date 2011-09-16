@@ -106,7 +106,7 @@ class TargetCredentialsManager(basemanager.BaseManager):
 class TargetTypeJobsManager(basemanager.BaseManager):
     @exposed
     def getJobsByTargetType(self, target_type_id):
-        jobTargetTypes = models.JobTargetType.objects.filter(target_type__target_type_id=target_type_id)
+        jobTargetTypes = models.JobTargetType.objects.filter(target_type__target_type_id=target_type_id).order_by('-job__job_id')
         Jobs = jobsmodels.Jobs()
         Jobs.job = [jobTargetType.job for jobTargetType in jobTargetTypes]
         return Jobs
