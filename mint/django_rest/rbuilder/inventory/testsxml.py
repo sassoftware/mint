@@ -184,6 +184,14 @@ event_types_xml="""\
     <resource_type>TargetType</resource_type>
     <system_events/>
   </event_type>
+  <event_type id="http://testserver/api/v1/inventory/event_types/20">
+    <description>Configure target credentials for the current user</description>
+    <job_type_id>20</job_type_id>
+    <name>configure target credentials</name>
+    <priority>105</priority>
+    <resource_type>Target</resource_type>
+    <system_events/>
+  </event_type>
 </event_types>"""
 
 event_type_put_xml="""\
