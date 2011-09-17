@@ -75,6 +75,24 @@ class Target(modellib.XObjIdModel):
     description = models.TextField(null=False)
     unique_together = (target_type, name)
 
+    actions = D(modellib.SyntheticField(jobmodels.Actions),
+        "actions available for this target")
+    jobs = modellib.SyntheticField(modellib.HrefField())
+
+    def computeSyntheticFields(self, sender, **kwargs):
+        self.actions = actions = jobmodels.Actions()
+        actions.action = []
+        actions.action.append(self._actionConfigureUserCredentials())
+        self.jobs = modellib.HrefField("jobs")
+
+    def _actionConfigureUserCredentials(self):
+        actionName = "Configure user credentials for target"
+        action = jobmodels.EventType.makeAction(
+                jobTypeName=jobmodels.EventType.TARGET_CONFIGURE_CREDENTIALS,
+                actionName=actionName,
+                descriptorModel=self, descriptorHref="descriptor_configure_credentials")
+        return action
+
 class TargetData(modellib.XObjModel):
     class Meta:
         db_table = u'targetdata'

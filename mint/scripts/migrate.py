@@ -2750,6 +2750,7 @@ class MigrateTo_55(SchemaMigration):
         [
           dict(name="image-deployment", description="Image Deployment"),
         ])
+        return True
 
 class MigrateTo_56(SchemaMigration):
     Version = (56, 2)
@@ -3050,7 +3051,7 @@ class MigrateTo_57(SchemaMigration):
 
 
 class MigrateTo_58(SchemaMigration):
-    Version = (58, 65)
+    Version = (58, 66)
 
     def migrate(self):
         return True
@@ -4210,6 +4211,21 @@ class MigrateTo_58(SchemaMigration):
                 )
         return True
 
+    def migrate66(self):
+        # This includes migration 55.3
+        db = self.db
+        schema._addTableRows(db, 'job_types', 'name',
+        [
+          dict(name="image-deployment", description="Image Deployment"),
+        ])
+        tableName = 'jobs_job_type'
+        schema._addTableRows(db, tableName, 'name', [
+             dict(name="configure target credentials",
+                  description="Configure target credentials for the current user",
+                  priority=105,
+                  resource_type="Target"),
+        ])
+        return True
 
 #### SCHEMA MIGRATIONS END HERE #############################################
 

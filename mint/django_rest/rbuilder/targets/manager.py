@@ -6,6 +6,8 @@
 
 from lxml import etree
 
+from django.db.models import Q
+
 from mint.django_rest.rbuilder.manager import basemanager
 from mint.django_rest.rbuilder.manager.basemanager import exposed
 from mint.django_rest.rbuilder.targets import models
@@ -39,8 +41,23 @@ class TargetsManager(basemanager.BaseManager):
     def deleteTarget(self, target_id):
         target = models.Target.objects.get(pk=target_id)
         target.delete()
-        
-        
+
+    @exposed
+    def getDescriptorConfigureCredentials(self, target_id):
+        target = self.getTargetById(target_id)
+        moduleName = "catalogService.rest.drivers.%s" % target.target_type.name
+        DriverClass = __import__(moduleName, {}, {}, '.driver').driver
+        descr = descriptor.ConfigurationDescriptor(
+            fromStream=DriverClass.credentialsDescriptorXmlData)
+        descr.setRootElement("descriptor_data")
+        return descr
+
+    @exposed
+    def serializeDescriptorConfigureCredentials(self, target_id):
+        descr = self.getDescriptorConfigureCredentials(target_id)
+        wrapper = etreeObjectWrapper(descr.getElementTree(validate=True))
+        return wrapper
+
 class TargetTypesManager(basemanager.BaseManager):
     @exposed
     def getTargetTypeById(self, target_type_id):
@@ -69,6 +86,7 @@ class TargetTypesManager(basemanager.BaseManager):
         DriverClass = __import__(moduleName, {}, {}, '.driver').driver
         descr = descriptor.ConfigurationDescriptor(
             fromStream=DriverClass.configurationDescriptorXmlData)
+        descr.setRootElement("descriptor_data")
         zoneList = [ (x.name, x.description)
             for x in zones.Zone.objects.order_by('zone_id') ]
         zoneList = [ descr.ValueWithDescription(n, descriptions=d)
@@ -105,9 +123,16 @@ class TargetCredentialsManager(basemanager.BaseManager):
 class TargetTypeJobsManager(basemanager.BaseManager):
     @exposed
     def getJobsByTargetType(self, target_type_id):
-        jobTargetTypes = models.JobTargetType.objects.filter(target_type__target_type_id=target_type_id).order_by('-job__job_id')
+        jobs = jobsmodels.Job.objects.filter(jobtargettype__target_type__target_type_id = target_type_id).order_by("-job_id")
         Jobs = jobsmodels.Jobs()
-        Jobs.job = [jobTargetType.job for jobTargetType in jobTargetTypes]
+        Jobs.job = jobs
+        return Jobs
+
+    @exposed
+    def getAllTargetTypeJobs(self):
+        jobs = jobsmodels.Job.objects.filter(~Q(jobtargettype = None)).order_by("-job_id")
+        Jobs = jobsmodels.Jobs()
+        Jobs.job = jobs
         return Jobs
 
 class TargetJobsManager(basemanager.BaseManager):

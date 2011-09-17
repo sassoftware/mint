@@ -8,6 +8,8 @@ from django import http
 from xobj import xobj
 from mint.django_rest.rbuilder import modellib
 
+# Used by views too
+Flags = modellib.Flags
 
 class ACCESS(object):
     ANONYMOUS = 1
@@ -49,7 +51,7 @@ def requires(model_names, save=True, load=True, flags=None):
     and it's unlikely to be saveable.
     """
     if flags is None:
-        flags = modellib.Flags(save=save, load=load)
+        flags = Flags(save=save, load=load)
     def decorate(function):
 
         def inner(*args, **kw):

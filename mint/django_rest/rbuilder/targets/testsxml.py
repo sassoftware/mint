@@ -3,7 +3,17 @@ target_GET = \
 """
 <?xml version='1.0' encoding='UTF-8'?>
 <target id="http://testserver/api/v1/targets/4">
+  <actions>
+    <action>
+      <description>Configure user credentials for target</description>
+      <descriptor id="http://testserver/api/v1/targets/4/descriptor_configure_credentials"/>
+      <enabled>true</enabled>
+      <job_type id="http://testserver/api/v1/inventory/event_types/20"/>
+      <name>Configure user credentials for target</name>
+    </action>
+  </actions>
   <description>Target Description openstack</description>
+  <jobs id="http://testserver/api/v1/targets/4/jobs"/>
   <name>Target Name openstack</name>
   <target_id>4</target_id>
   <target_type id="http://testserver/api/v1/target_types/3"/>
@@ -66,7 +76,7 @@ target_type_by_target_id_GET = \
 jobs_by_target_type_GET = \
 """
 <?xml version='1.0' encoding='UTF-8'?>
-<jobs count="2" next_page="" num_pages="1" previous_page="" full_collection="http://testserver/api/v1/target_type_jobs/1/" end_index="1" limit="10" order_by="" per_page="10" filter_by="" id="http://testserver/api/v1/target_type_jobs/1/" start_index="0">
+<jobs count="2" next_page="" num_pages="1" previous_page="" full_collection="http://testserver/api/v1/target_types/1/jobs/" end_index="1" limit="10" order_by="" per_page="10" filter_by="" id="http://testserver/api/v1/target_types/1/jobs/" start_index="0">
   <job id="http://testserver/api/v1/jobs/rmakeuuid002">
     <time_updated>2011-09-14T18:32:05.028972+00:00</time_updated>
     <status_code>100</status_code>

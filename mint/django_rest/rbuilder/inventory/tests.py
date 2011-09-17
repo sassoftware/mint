@@ -3672,71 +3672,13 @@ class SystemEventProcessingTestCase(XMLTestCaseStandin):
         self.failUnless(self.mock_cleanupSystemEvent_called)
         self.failIf(self.mock_scheduleSystemPollEvent_called)
 
-class SystemEventProcessing2TestCase(XMLTestCaseStandin):
+class SystemEventProcessing2TestCase(XMLTestCaseStandin, test_utils.RepeaterMixIn):
     # do not load other fixtures for this test case as it is very data order dependent
     fixtures = ['system_event_processing']
 
     def setUp(self):
         XMLTestCaseStandin.setUp(self)
-
-        class RepeaterClient(object):
-            methodsCalled = []
-
-            class CimParams(object):
-                def __init__(self, **kwargs):
-                    self.__dict__.update(kwargs)
-                def __eq__(self, other):
-                    return self.__dict__ == other.__dict__
-                def __repr__(self):
-                    return repr(self.__dict__)
-
-            class WmiParams(CimParams):
-                pass
-
-            class ManagementInterfaceParams(CimParams):
-                pass
-
-            class ResultsLocation(object):
-                def __init__(self, **kwargs):
-                    self.__dict__.update(kwargs)
-                def __eq__(self, other):
-                    return self.__dict__ == other.__dict__
-                def __repr__(self):
-                    return repr(self.__dict__)
-
-            def register_cim(slf, *args, **kwargs):
-                return slf._action('register_cim', *args, **kwargs)
-
-            def register_wmi(slf, *args, **kwargs):
-                return slf._action('register_wmi', *args, **kwargs)
-
-            def configuration_cim(slf, *args, **kwargs):
-                return slf._action('configuration_cim', *args, **kwargs)
-
-            def configuration_wmi(slf, *args, **kwargs):
-                return slf._action('configuration_wmi', *args, **kwargs)
-
-            def poll_cim(slf, *args, **kwargs):
-                return slf._action('poll_cim', *args, **kwargs)
-
-            def poll_wmi(slf, *args, **kwargs):
-                return slf._action('poll_wmi', *args, **kwargs)
-
-            def update_wmi(slf, *args, **kwargs):
-                return slf._action('update_wmi', *args, **kwargs)
-
-            def detectMgmtInterface(slf, *args, **kwargs):
-                return slf._action('detectMgmtInterface', *args, **kwargs)
-
-            def _action(slf, method, *args, **kwargs):
-                count = len(slf.methodsCalled)
-                slf.methodsCalled.append((method, args, kwargs))
-                return "uuid%03d" % count, object()
-
-        class RepeaterMgr(object):
-            repeaterClient = RepeaterClient()
-
-        self.mgr.repeaterMgr = RepeaterMgr()
+        test_utils.RepeaterMixIn.setUpRepeaterClient(self)
         self.system2 = system = self.newSystem(name="hey")
         system.save()
         network2 = models.Network(ip_address="2.2.2.2", active=True)
@@ -3784,7 +3726,7 @@ class SystemEventProcessing2TestCase(XMLTestCaseStandin):
         cimParams = self.mgr.repeaterMgr.repeaterClient.CimParams
         resLoc = self.mgr.repeaterMgr.repeaterClient.ResultsLocation
 
-        self.failUnlessEqual(self.mgr.repeaterMgr.repeaterClient.methodsCalled,
+        self.failUnlessEqual(self.mgr.repeaterMgr.repeaterClient.getCallList(),
             [
                 ('poll_cim',
                     (
@@ -3818,7 +3760,7 @@ class SystemEventProcessing2TestCase(XMLTestCaseStandin):
         cimParams = self.mgr.repeaterMgr.repeaterClient.CimParams
         resLoc = self.mgr.repeaterMgr.repeaterClient.ResultsLocation
 
-        self.failUnlessEqual(self.mgr.repeaterMgr.repeaterClient.methodsCalled,
+        self.failUnlessEqual(self.mgr.repeaterMgr.repeaterClient.getCallList(),
             [
                 ('register_cim',
                     (
@@ -3854,7 +3796,7 @@ class SystemEventProcessing2TestCase(XMLTestCaseStandin):
         mgmtIfaceParams = self.mgr.repeaterMgr.repeaterClient.ManagementInterfaceParams
         resLoc = self.mgr.repeaterMgr.repeaterClient.ResultsLocation
 
-        self.failUnlessEqual(self.mgr.repeaterMgr.repeaterClient.methodsCalled,
+        self.failUnlessEqual(self.mgr.repeaterMgr.repeaterClient.getCallList(),
             [
                 ('detectMgmtInterface',
                     (
@@ -3912,7 +3854,7 @@ class SystemEventProcessing2TestCase(XMLTestCaseStandin):
         wmiDict.update(eventUuid='really-unique-id', host='superduper.com',
             requiredNetwork=None, port=12345)
 
-        self.failUnlessEqual(repClient.methodsCalled,
+        self.failUnlessEqual(repClient.getCallList(),
             [
                 ('poll_wmi',
                     (
@@ -3945,7 +3887,7 @@ class SystemEventProcessing2TestCase(XMLTestCaseStandin):
         wmiDict.update(eventUuid='really-unique-id', host='superduper.com',
             port=12345, requiredNetwork=None)
 
-        self.failUnlessEqual(repClient.methodsCalled,
+        self.failUnlessEqual(repClient.getCallList(),
             [
                 ('update_wmi',
                     (
@@ -4002,11 +3944,11 @@ class SystemEventProcessing2TestCase(XMLTestCaseStandin):
         newState = self.mgr.sysMgr.getNextSystemState(systemCim, jobCim)
         self.failUnlessEqual(newState, None)
         # registration events are no longer dispatched immediately (RBL-)
-        self.failUnlessEqual(self.mgr.repeaterMgr.repeaterClient.methodsCalled,
+        self.failUnlessEqual(self.mgr.repeaterMgr.repeaterClient.getCallList(),
             [])
         # Dispatch the event now
         self.mgr.sysMgr.processSystemEvents()
-        self.failUnlessEqual(self.mgr.repeaterMgr.repeaterClient.methodsCalled,
+        self.failUnlessEqual(self.mgr.repeaterMgr.repeaterClient.getCallList(),
             [
                 ('register_cim',
                     (
@@ -4029,13 +3971,13 @@ class SystemEventProcessing2TestCase(XMLTestCaseStandin):
             ])
 
         # Clean the deck
-        del self.mgr.repeaterMgr.repeaterClient.methodsCalled[:]
+        self.mgr.repeaterMgr.repeaterClient.reset()
 
         newState = self.mgr.sysMgr.getNextSystemState(systemWmi, jobWmi)
         self.failUnlessEqual(newState,
             models.SystemState.UNMANAGED_CREDENTIALS_REQUIRED)
         # Being a WMI system, we need credentials
-        self.failUnlessEqual(self.mgr.repeaterMgr.repeaterClient.methodsCalled,
+        self.failUnlessEqual(self.mgr.repeaterMgr.repeaterClient.getCallList(),
             [])
 
     def testUpdateCim(self):
@@ -4089,7 +4031,7 @@ class SystemEventProcessing2TestCase(XMLTestCaseStandin):
         resLoc = repClient.ResultsLocation
 
         eventUuid = models.SystemJob.objects.all()[0].event_uuid
-        self.failUnlessEqual(repClient.methodsCalled,
+        self.failUnlessEqual(repClient.getCallList(),
             [
                 ('configuration_cim',
                     (

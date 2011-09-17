@@ -11,6 +11,8 @@ import tempfile
 import urllib
 import urlparse
 
+from collections import namedtuple
+
 from conary import dbstore
 from conary.lib import util
 from django.core.management import call_command
@@ -476,3 +478,83 @@ class XML(object):
         if node1.text == node2.text:
             return False
         return (node1.text, node2.text)
+
+class CallProxy(object):
+    __slots__ = []
+    class _CallProxy(object):
+        _callList = []
+        # If we set _callReturn to a lambda, it will be interpreted as a
+        # class method. So fake it
+        _callReturn = []
+        #_callData = namedtuple("CallData", "name args kwargs retval")
+        _callData = namedtuple("CallData", "name args kwargs")
+        def __init__(self, name):
+            self._name = name
+
+        def __repr__(self):
+            return "<%s for  %s>" % (self.__class__.__name__, self._name)
+
+        def __getattr__(self, name):
+            return self.__class__("%s.%s" % (self._name, name))
+
+        def __call__(self, *args, **kwargs):
+            ret = self._callReturn[0](self._name, args, kwargs, self._callList)
+            #self._callList.append(self._callData(self._name, args, kwargs, ret))
+            self._callList.append(self._callData(self._name, args, kwargs))
+            return ret
+
+    def __getattr__(self, name):
+        return self._CallProxy(name)
+
+    def reset(self):
+        del self._CallProxy._callList[:]
+
+    def setCallReturn(self, func):
+        self._CallProxy._callReturn = [func]
+
+    def getCallList(self):
+        return self._CallProxy._callList[:]
+
+class RepeaterClient(CallProxy):
+    class CimParams(object):
+        def __init__(self, **kwargs):
+            self.__dict__.update(kwargs)
+        def __eq__(self, other):
+            return self.__dict__ == other.__dict__
+        def __repr__(self):
+            return repr(self.__dict__)
+
+    class WmiParams(CimParams):
+        pass
+
+    class ManagementInterfaceParams(CimParams):
+        pass
+
+    class ResultsLocation(object):
+        def __init__(self, **kwargs):
+            self.__dict__.update(kwargs)
+        def __eq__(self, other):
+            return self.__dict__ == other.__dict__
+        def __repr__(self):
+            return repr(self.__dict__)
+
+class RmakeJob(object):
+    Status = namedtuple("Status", "code text detail final")
+
+    def __init__(self, uuid, statusCode, statusText, statusDetail, final):
+        self.job_uuid = uuid
+        self.status = self.Status(statusCode, statusText, statusDetail, final)
+
+def makeRepeaterData(serial):
+    uuid = "uuid%03d" % serial
+    return uuid, RmakeJob(uuid, 200, "status text", "status detail", False)
+
+class RepeaterMixIn(object):
+    class RepeaterMgr(object):
+        repeaterClient = RepeaterClient()
+        repeaterClient.setCallReturn(
+                lambda n, args, kwargs, callList: makeRepeaterData(len(callList)))
+
+    def setUpRepeaterClient(self):
+        self.mgr.repeaterMgr = self.RepeaterMgr()
+        self.mgr.repeaterMgr.repeaterClient.reset()

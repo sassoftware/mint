@@ -8,7 +8,7 @@ from django.http import HttpResponse
 
 from mint.django_rest.rbuilder.jobs import models
 from mint.django_rest.rbuilder import service
-from mint.django_rest.deco import requires, return_xml, access
+from mint.django_rest.deco import requires, return_xml, access, Flags
 
 class JobsService(service.BaseAuthService):
     def _check_uuid_auth(self, request, kwargs):
@@ -38,7 +38,7 @@ class JobsService(service.BaseAuthService):
         else:
             return self.mgr.getJobs()
 
-    @requires("job")
+    @requires("job", flags=Flags(save=False))
     @return_xml
     def rest_POST(self, request, job):
         return self.mgr.addJob(job)

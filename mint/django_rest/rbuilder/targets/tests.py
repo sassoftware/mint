@@ -1,17 +1,24 @@
-from mint.django_rest.rbuilder.inventory.tests import XMLTestCase
+#!/usr/bin/python
+#
+# Copyright (c) 2011 rPath, Inc.
+#
+# All rights reserved.
+#
+
+from mint.django_rest.test_utils import XMLTestCase, RepeaterMixIn
 from mint.django_rest.rbuilder.inventory import zones as zmodels
 from mint.django_rest.rbuilder.users import models as umodels
 from mint.django_rest.rbuilder.jobs import models as jmodels
 from mint.django_rest.rbuilder.targets import models
 from mint.django_rest.rbuilder.targets import testsxml
 from xobj import xobj
-# from testutils import mock
 
-class TargetsTestCase(XMLTestCase):
+class BaseTargetsTest(XMLTestCase):
     def setUp(self):
         XMLTestCase.setUp(self)
         self._initTestFixtures()
-    
+        self._mock()
+
     def _initTestFixtures(self):
         sampleTargetTypes = [ models.TargetType.objects.get(name=x)
             for x in ['vmware', 'ec2', 'xenent', 'openstack'] ]
@@ -71,6 +78,10 @@ class TargetsTestCase(XMLTestCase):
         self.target_credentials = models.TargetCredentials.objects.all()
         self.target_user_credentials = models.TargetUserCredentials.objects.all()
 
+    def _mock(self):
+        pass
+
+class TargetsTestCase(BaseTargetsTest):
     def testGetTargets(self):
         targets = models.Target.objects.order_by('target_id')
         response = self._get('targets/', username='testuser', password='password')
@@ -176,6 +187,7 @@ class TargetsTestCase(XMLTestCase):
             username='testuser', password='password')
         self.assertEquals(response.status_code, 200)
         obj = xobj.parse(response.content)
+        self.failUnlessEqual(obj.descriptor.metadata.rootElement, 'descriptor_data')
         self.failUnlessEqual(
             [ x.name for x in obj.descriptor.dataFields.field ],
             [
@@ -191,14 +203,103 @@ class TargetsTestCase(XMLTestCase):
                 'zone',
         ])
 
+    def testGetTargetDescriptorConfigureCredentials(self):
+        response = self._get('targets/1024/descriptor_configure_credentials',
+            username='testuser', password='password')
+        self.assertEquals(response.status_code, 404)
+        response = self._get('targets/1/descriptor_configure_credentials',
+            username='testuser', password='password')
+        self.assertEquals(response.status_code, 200)
+        obj = xobj.parse(response.content)
+        self.failUnlessEqual(obj.descriptor.metadata.rootElement, 'descriptor_data')
+        self.failUnlessEqual(
+            [ x.name for x in obj.descriptor.dataFields.field ],
+            [
+                'username',
+                'password',
+            ])
+
     def testGetJobsByTargetType(self):
-        url = 'target_type_jobs/%s'
+        url = 'target_types/%s/jobs'
         response = self._get(url % 1, username='admin', password='password')
         self.assertEquals(response.status_code, 200)
         self.assertXMLEquals(response.content, testsxml.jobs_by_target_type_GET)
-        
+
+    def testGetAllTargetTypeJobs(self):
+        url = 'target_type_jobs'
+        response = self._get(url, username='testuser', password='password')
+        self.assertEquals(response.status_code, 200)
+        obj = xobj.parse(response.content)
+        self.failUnlessEqual([ x.job_uuid for x in obj.jobs.job ],
+            ['rmakeuuid002', 'rmakeuuid001'])
+
+
     def testGetJobsByTarget(self):
         url = 'targets/%s/jobs'
         response = self._get(url % 1, username='admin', password='password')
         self.assertEquals(response.status_code, 200)
         self.assertXMLEquals(response.content, testsxml.jobs_by_target_GET)
+
+class JobCreationTest(BaseTargetsTest, RepeaterMixIn):
+
+    def _mock(self):
+        RepeaterMixIn.setUpRepeaterClient(self)
+        from mint.django_rest.rbuilder.inventory.manager import repeatermgr
+        self.mock(repeatermgr.RepeaterManager, 'repeaterClient',
+            self.mgr.repeaterMgr.repeaterClient)
+
+    def testTargetCreationJob(self):
+        jobXml = """
+<job>
+  <job_type id="http://localhost/api/v1/inventory/event_types/19"/>
+  <descriptor id="http://testserver/api/v1/target_types/6/descriptor_create_target"/>
+  <descriptor_data>
+    <alias>newbie</alias>
+    <description>Brand new cloud</description>
+    <name>newbie.eng.rpath.com</name>
+  </descriptor_data>
+</job>
+"""
+        response = self._post('target_type_jobs', jobXml,
+            username='testuser', password='password')
+        self.assertEquals(response.status_code, 200)
+        obj = xobj.parse(response.content)
+        job = obj.job
+        self.failUnlessEqual(job.descriptor.id, "http://testserver/api/v1/target_types/6/descriptor_create_target")
+
+        dbjob = jmodels.Job.objects.get(job_uuid=job.job_uuid)
+        # Make sure the job is related to the target type
+        self.failUnlessEqual(
+            [ x.target_type.name for x in dbjob.jobtargettype_set.all() ],
+            [ 'xenent' ],
+        )
+
+    def testTargetCredentialsConfiguration(self):
+        jobType = jmodels.EventType.objects.get(name="configure target credentials")
+        target = models.Target.objects.get(name='Target Name vmware')
+        jobXml = """
+<job>
+  <job_type id="http://localhost/api/v1/inventory/event_types/%(jobTypeId)s"/>
+  <descriptor id="http://testserver/api/v1/targets/%(targetId)s/descriptor_configure_credentials"/>
+  <descriptor_data>
+    <username>bubba</username>
+    <password>shrimp</password>
+  </descriptor_data>
+</job>
+"""
+        params = dict(targetId=target.target_id, jobTypeId=jobType.job_type_id)
+        response = self._post('targets/%s/jobs' % target.target_id,
+            jobXml % params,
+            username='testuser', password='password')
+        self.assertEquals(response.status_code, 200)
+        obj = xobj.parse(response.content)
+        job = obj.job
+        self.failUnlessEqual(job.descriptor.id,
+            "http://testserver/api/v1/targets/%s/descriptor_configure_credentials" %  target.target_id)
+
+        dbjob = jmodels.Job.objects.get(job_uuid=job.job_uuid)
+        # Make sure the job is related to the target type
+        self.failUnlessEqual(
+            [ x.target.name for x in dbjob.jobtarget_set.all() ],
+            [ target.name ],
+        )

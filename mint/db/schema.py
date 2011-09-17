@@ -28,7 +28,7 @@ from conary.dbstore import sqlerrors, sqllib
 log = logging.getLogger(__name__)
 
 # database schema major version
-RBUILDER_DB_VERSION = sqllib.DBversion(58, 65)
+RBUILDER_DB_VERSION = sqllib.DBversion(58, 66)
 
 
 def _createTrigger(db, table, column="changed"):
@@ -1267,6 +1267,10 @@ def _createInventorySchema(db, cfg):
                   description="Create target",
                   priority=105,
                   resource_type="TargetType"),
+             dict(name="configure target credentials",
+                  description="Configure target credentials for the current user",
+                  priority=105,
+                  resource_type="Target"),
             ])
 
     if 'inventory_system_event' not in db.tables:

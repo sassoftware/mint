@@ -115,10 +115,12 @@ class Job(modellib.XObjIdModel):
     job_type = D(modellib.DeferredForeignKey("EventType",
         text_field='name', related_name="jobs", null=False),
         "The job type")
-    descriptor = D(XObjHidden(models.TextField(null=True)),
+    _descriptor = D(XObjHidden(models.TextField(null=True, db_column="descriptor")),
         " ")
-    descriptor_data = D(XObjHidden(models.TextField(null=True)),
+    _descriptor_data = D(XObjHidden(models.TextField(null=True, db_column="descriptor_data")),
         " ")
+    descriptor = D(modellib.SyntheticField(), "")
+    descriptor_data = D(modellib.SyntheticField(), "")
     time_created = D(modellib.DateTimeUtcField(auto_now_add=True),
         "the date the job was created (UTC)")
     time_updated =  D(modellib.DateTimeUtcField(auto_now_add=True),
@@ -147,23 +149,31 @@ class Job(modellib.XObjIdModel):
             name=JobState.RUNNING)
         if self.job_state_id != runningState.pk:
             return
-        completedState = modellib.Cache.get(JobState,
-            name=JobState.COMPLETED)
-        failedState = modellib.Cache.get(JobState,
-            name=JobState.FAILED)
         # This job is still running, we need to poll rmake to get its
         # status
         job = self.getRmakeJob()
         if job:
-            self.status_code = job.status.code
-            self.status_text = job.status.text
-            self.status_detail = job.status.detail
-            if job.status.final:
-                if job.status.completed:
-                    self.job_state = completedState
-                else:
-                    self.job_state = failedState
-            self.save()
+            self.setValuesFromRmakeJob(job)
+
+    def setValuesFromRmakeJob(self, job):
+        runningState = modellib.Cache.get(JobState,
+            name=JobState.RUNNING)
+        completedState = modellib.Cache.get(JobState,
+            name=JobState.COMPLETED)
+        failedState = modellib.Cache.get(JobState,
+            name=JobState.FAILED)
+        self.job_uuid = job.job_uuid
+        self.status_code = job.status.code
+        self.status_text = job.status.text
+        self.status_detail = job.status.detail
+        if job.status.final:
+            if job.status.completed:
+                self.job_state = completedState
+            else:
+                self.job_state = failedState
+        elif self.job_state_id is None:
+            self.job_state = runningState
+        self.save()
 
     def get_absolute_url(self, request, parents=None, *args, **kwargs):
         if parents:
@@ -321,6 +331,8 @@ class EventType(modellib.XObjIdModel):
     TARGET_LAUNCH_SYSTEM_DESCRIPTION = 'Launch system on target'
     TARGET_CREATE = 'create target'
     TARGET_CREATE_DESCRIPTION = 'Create target'
+    TARGET_CONFIGURE_CREDENTIALS = 'configure target credentials'
+    TARGET_CONFIGURE_CREDENTIALS_DESCRIPTION = 'Configure target credentials for the current user'
 
     job_type_id = D(models.AutoField(primary_key=True), "the database id of the  type")
     EVENT_TYPES = (
@@ -350,6 +362,7 @@ class EventType(modellib.XObjIdModel):
         (TARGET_DEPLOY_IMAGE, TARGET_DEPLOY_IMAGE_DESCRIPTION),
         (TARGET_LAUNCH_SYSTEM, TARGET_LAUNCH_SYSTEM_DESCRIPTION),
         (TARGET_CREATE, TARGET_CREATE_DESCRIPTION),
+        (TARGET_CONFIGURE_CREDENTIALS, TARGET_CONFIGURE_CREDENTIALS_DESCRIPTION),
     )
 
     # what smartform descriptor templates are needed to launch jobs of
