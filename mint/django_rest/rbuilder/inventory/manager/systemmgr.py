@@ -1888,11 +1888,15 @@ class SystemManager(basemanager.BaseManager):
         job_name   = event_type.name
 
         event = None
+
         if job_name == jobmodels.EventType.SYSTEM_ASSIMILATE:
             creds = self.getSystemCredentials(system)
+            password = getattr(creds, 'password', None)
+            if password is None:
+                raise Exception('no SSH credentials set')
             auth = [dict(
                 sshUser     = 'root',
-                sshPassword = creds.password,
+                sshPassword = password,
                 sshKey      = creds.key,
             )]
             event = self._scheduleEvent(system, job_name, eventData=auth)
