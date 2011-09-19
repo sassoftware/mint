@@ -76,10 +76,6 @@ onload = "javascript:;"
                 <div id="topRight">
                 </div>
             </div>
-            <div py:if="latestRssNews and not maintenance.getMaintenanceMode(cfg)==maintenance.LOCKED_MODE" id="rssnews">
-                <p>Latest ${self.cfg.productName} News:
-                <a target="_blank" href="${latestRssNews['link']}">${latestRssNews['title']}</a><span class="newsAge" py:if="'age' in latestRssNews">&nbsp;(posted ${latestRssNews['age']})</span></p>
-            </div>
             <div py:if="maintenance.getMaintenanceMode(cfg)==maintenance.LOCKED_MODE" id="maintmode">
                 <p>${cfg.productName} is currently in maintenance mode.
                 <a py:if="auth.admin" href="${cfg.basePath}admin/maintenance">Click here to enter the site administration menu.</a>

@@ -7,7 +7,6 @@
 import sys
 
 from django.db import models
-
 from mint.django_rest.deco import D
 from mint.django_rest.rbuilder import modellib
 import urlparse
@@ -15,7 +14,6 @@ from xobj import xobj
 
 XObjHidden = modellib.XObjHidden
 APIReadOnly = modellib.APIReadOnly
-APIImmutable = modellib.APIImmutable
 
 # ==========================================================
 # descriptors needed to launch certain jobs, when adding
@@ -41,7 +39,7 @@ image_builds_descriptor = """
 class Actions(modellib.XObjModel):
     class Meta:
         abstract = True
-        
+
     list_fields = ['action']
 
 class Action(modellib.XObjModel):
@@ -91,16 +89,21 @@ class Job(modellib.XObjIdModel):
     _xobj_hidden_accessors = set([
         "package_version_jobs",
         "package_source_jobs",
-        "package_build_jobs"])
+        "package_build_jobs",
+        "jobtargettype_set",
+        "jobtarget_set"])
 
-    objects = modellib.JobManager()
+    #objects = modellib.JobManager()
 
     # The URL will contain the UUID, so there's no point in exposing job_id
     job_id = D(XObjHidden(models.AutoField(primary_key=True)),
         "the database id of the job")
     job_uuid = D(models.CharField(max_length=64, unique=True),
         "a UUID for job tracking purposes")
-    job_state = D(modellib.DeferredForeignKey("JobState", 
+    job_token = D(XObjHidden(APIReadOnly(
+        models.CharField(max_length=64, null=True, unique=True))),
+        "cookie token for updating this job")
+    job_state = D(modellib.DeferredForeignKey("JobState",
         text_field='name', related_name='jobs'),
         "the current state of the job")
     status_code = D(models.IntegerField(default=100),
@@ -109,20 +112,22 @@ class Job(modellib.XObjIdModel):
         "the message associated with the current status")
     status_detail = D(XObjHidden(models.TextField(null=True)),
         "documentation missing")
-    job_type = D(APIImmutable(modellib.DeferredForeignKey("EventType",
-        text_field='name', related_name="jobs", null=False)),
+    job_type = D(modellib.DeferredForeignKey("EventType",
+        text_field='name', related_name="jobs", null=False),
         "The job type")
-    descriptor = D(XObjHidden(models.TextField(null=True)),
+    _descriptor = D(XObjHidden(models.TextField(null=True, db_column="descriptor")),
         " ")
-    descriptor_data = D(XObjHidden(models.TextField(null=True)),
+    _descriptor_data = D(XObjHidden(models.TextField(null=True, db_column="descriptor_data")),
         " ")
+    descriptor = D(modellib.SyntheticField(), "")
+    descriptor_data = D(modellib.SyntheticField(), "")
     time_created = D(modellib.DateTimeUtcField(auto_now_add=True),
         "the date the job was created (UTC)")
     time_updated =  D(modellib.DateTimeUtcField(auto_now_add=True),
         "the date the job was updated (UTC)")
     job_description = D(modellib.SyntheticField(),
         "a description of the job")
-
+    results = modellib.SyntheticField()
 
     load_fields = [ job_uuid ]
 
@@ -144,23 +149,31 @@ class Job(modellib.XObjIdModel):
             name=JobState.RUNNING)
         if self.job_state_id != runningState.pk:
             return
-        completedState = modellib.Cache.get(JobState,
-            name=JobState.COMPLETED)
-        failedState = modellib.Cache.get(JobState,
-            name=JobState.FAILED)
         # This job is still running, we need to poll rmake to get its
         # status
         job = self.getRmakeJob()
         if job:
-            self.status_code = job.status.code
-            self.status_text = job.status.text
-            self.status_detail = job.status.detail
-            if job.status.final:
-                if job.status.completed:
-                    self.job_state = completedState
-                else:
-                    self.job_state = failedState
-            self.save()
+            self.setValuesFromRmakeJob(job)
+
+    def setValuesFromRmakeJob(self, job):
+        runningState = modellib.Cache.get(JobState,
+            name=JobState.RUNNING)
+        completedState = modellib.Cache.get(JobState,
+            name=JobState.COMPLETED)
+        failedState = modellib.Cache.get(JobState,
+            name=JobState.FAILED)
+        self.job_uuid = job.job_uuid
+        self.status_code = job.status.code
+        self.status_text = job.status.text
+        self.status_detail = job.status.detail
+        if job.status.final:
+            if job.status.completed:
+                self.job_state = completedState
+            else:
+                self.job_state = failedState
+        elif self.job_state_id is None:
+            self.job_state = runningState
+        self.save()
 
     def get_absolute_url(self, request, parents=None, *args, **kwargs):
         if parents:
@@ -307,8 +320,20 @@ class EventType(modellib.XObjIdModel):
     # not backgroundable.
     QUERYSET_INVALIDATE              = 'refresh queryset'
     QUERYSET_INVALIDATE_DESCRIPTION  = 'Refresh queryset'
-    
-    
+
+    TARGET_REFRESH_IMAGES = 'refresh target images'
+    TARGET_REFRESH_IMAGES_DESCRIPTION = 'Refresh target images'
+    TARGET_REFRESH_SYSTEMS = 'refresh target systems'
+    TARGET_REFRESH_SYSTEMS_DESCRIPTION = 'Refresh target systems'
+    TARGET_DEPLOY_IMAGE = 'deploy image on target'
+    TARGET_DEPLOY_IMAGE_DESCRIPTION = 'Deploy image on target'
+    TARGET_LAUNCH_SYSTEM = 'launch system on target'
+    TARGET_LAUNCH_SYSTEM_DESCRIPTION = 'Launch system on target'
+    TARGET_CREATE = 'create target'
+    TARGET_CREATE_DESCRIPTION = 'Create target'
+    TARGET_CONFIGURE_CREDENTIALS = 'configure target credentials'
+    TARGET_CONFIGURE_CREDENTIALS_DESCRIPTION = 'Configure target credentials for the current user'
+
     job_type_id = D(models.AutoField(primary_key=True), "the database id of the  type")
     EVENT_TYPES = (
         (SYSTEM_REGISTRATION, SYSTEM_REGISTRATION_DESC),
@@ -332,6 +357,12 @@ class EventType(modellib.XObjIdModel):
         (SYSTEM_ASSIMILATE, SYSTEM_ASSIMILATE_DESCRIPTION),
         (IMAGE_BUILDS, IMAGE_BUILDS_DESCRIPTION),
         (QUERYSET_INVALIDATE, QUERYSET_INVALIDATE_DESCRIPTION),
+        (TARGET_REFRESH_IMAGES, TARGET_REFRESH_IMAGES_DESCRIPTION),
+        (TARGET_REFRESH_SYSTEMS, TARGET_REFRESH_SYSTEMS_DESCRIPTION),
+        (TARGET_DEPLOY_IMAGE, TARGET_DEPLOY_IMAGE_DESCRIPTION),
+        (TARGET_LAUNCH_SYSTEM, TARGET_LAUNCH_SYSTEM_DESCRIPTION),
+        (TARGET_CREATE, TARGET_CREATE_DESCRIPTION),
+        (TARGET_CONFIGURE_CREDENTIALS, TARGET_CONFIGURE_CREDENTIALS_DESCRIPTION),
     )
 
     # what smartform descriptor templates are needed to launch jobs of
@@ -366,17 +397,35 @@ class EventType(modellib.XObjIdModel):
             return False
 
     @classmethod
-    def makeAction(cls, name):
+    def makeAction(cls, jobTypeName, actionName=None, actionDescription=None,
+            enabled=True, descriptorModel=None, descriptorHref=None,
+            descriptorHrefValues=None, descriptorViewName=None):
         '''Return a related Action object for spawning this jobtype'''
-        obj = modellib.Cache.get(cls, name=name)
+        obj = modellib.Cache.get(cls, name=jobTypeName)
+        if actionName is None:
+            if actionDescription is None:
+                actionDescription = obj.description
+            actionName = jobTypeName
+        if actionDescription is None:
+            actionDescription = actionName
         action = Action(
             job_type = modellib.HrefFieldFromModel(obj),
-            name = name,
-            description = obj.description,
-            enabled = True,
+            name = actionName,
+            description = actionDescription,
+            enabled = enabled,
         )
-        action.descriptor = modellib.HrefField("descriptors/%s", values=(obj.job_type_id, ))
+        # XXX This is too complicated
+        if descriptorModel is not None:
+            action.descriptor = modellib.HrefFieldFromModel(descriptorModel,
+                viewName=descriptorViewName)
+            action.descriptor.href = descriptorHref
+            action.descriptor.values = descriptorHrefValues
+        else:
+            action.descriptor = modellib.HrefField("descriptors/%s",
+                values=(obj.job_type_id, ))
         return action
+    
+
 
 for mod_obj in sys.modules[__name__].__dict__.values():
     if hasattr(mod_obj, '_xobj'):

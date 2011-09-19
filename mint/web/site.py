@@ -71,10 +71,6 @@ class SiteHandler(WebHandler):
     @redirectHttp
     def _frontPage(self, auth, *args, **kwargs):
         self._redirectOldLinks()
-        
-        popularProjects = self.client.getPopularProjects()
-        topProjects = self.client.getTopProjects()
-        selectionData  = self.client.getFrontPageSelection()
         publishedReleases = self.client.getPublishedReleaseList()
 
         #insert marketing block
@@ -86,8 +82,6 @@ class SiteHandler(WebHandler):
             frontPageBlock = ""
 
         return self._write("frontPage", firstTime=self.session.get('firstTimer', False),
-            popularProjects=popularProjects, selectionData = selectionData,
-            topProjects = topProjects,
             publishedReleases = publishedReleases,
             frontPageBlock = frontPageBlock)
 

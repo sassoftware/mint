@@ -53,7 +53,6 @@ from mint.web.templatesupport import projectText
                         <h2>${projectText().title()} Status</h2>
     
                         <p>${projectText().title()} was created ${timeDelta(project.timeCreated, capitalized=False)}.</p>
-                        <p py:if="vmtnId">This ${projectText().lower()} is listed on the <a href="http://www.vmware.com/vmtn/appliances/directory/${vmtnId}">VMware(R) Virtual Appliance Marketplace</a></p>
                         <p py:if="project.hidden">This a private ${projectText().lower()}.</p>
                         <p py:if="not project.hidden">This a public ${projectText().lower()}.</p>
                         <p py:if="project.external and not auth.admin">This ${projectText().lower()} is externally managed.</p>

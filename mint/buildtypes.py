@@ -1,7 +1,5 @@
 #
-# Copyright (c) 2010 rPath, Inc.
-#
-# All Rights Reserved
+# Copyright (c) 2011 rPath, Inc.
 #
 
 # pyflakes=ignore-file
@@ -31,6 +29,7 @@ validBuildTypes = {
     'VMWARE_OVF_IMAGE'  : 18,
     'WINDOWS_ISO'       : 19,
     'WINDOWS_WIM'       : 20,
+    'DEFERRED_IMAGE'    : 21,
 }
 
 TYPES = validBuildTypes.values()
@@ -98,6 +97,7 @@ typeNames = {
     AMI:                "Amazon Machine Image (EC2)",
     UPDATE_ISO:         "Update CD/DVD",
     APPLIANCE_ISO:      "Appliance Installable ISO",
+    DEFERRED_IMAGE:     "Deferred Image",
     WINDOWS_ISO:        "Windows Installable ISO",
     WINDOWS_WIM:        "Windows Imaging Format (WIM)",
     IMAGELESS:          "Online Update"
@@ -120,6 +120,7 @@ typeNamesShort = {
     AMI:                "AMI",
     UPDATE_ISO:         "Update CD/DVD",
     APPLIANCE_ISO:      "Appliance Inst",
+    DEFERRED_IMAGE:     "Deferred",
     WINDOWS_ISO:        "Windows Inst",
     WINDOWS_WIM:        "Windows WIM",
     IMAGELESS:          "Online Update",
@@ -141,6 +142,7 @@ typeNamesShort = {
 xmlTagNameImageTypeMap = {
     'amiImage':            AMI,
     'applianceIsoImage':   APPLIANCE_ISO,
+    'deferredImage':       DEFERRED_IMAGE,
     'installableIsoImage': INSTALLABLE_ISO,
     'liveIsoImage':        LIVE_ISO,
     'netbootImage':        NETBOOT_IMAGE,
@@ -179,6 +181,7 @@ typeNamesMarketing = {
     AMI:                "Amazon Machine Image (EC2)",
     UPDATE_ISO:         "Update CD/DVD",
     APPLIANCE_ISO:      "Appliance Installable ISO",
+    DEFERRED_IMAGE:     "Deferred Image",
     WINDOWS_ISO:        "Installable CD/DVD (ISO)",
     WINDOWS_WIM:        "Windows Imaging Format (WIM)",
     IMAGELESS:          "Online Update",

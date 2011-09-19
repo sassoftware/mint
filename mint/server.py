@@ -612,13 +612,11 @@ class MintServer(object):
         return False
 
     def _isUserAdmin(self, userId):
-        mintAdminId = self.userGroups.getMintAdminId()
         try:
-            if mintAdminId in self.userGroupMembers.getGroupsForUser(userId):
-                return True
+            user = self.users.get(userId)
+            return user['is_admin']
         except mint_error.ItemNotFound:
-            pass
-        return False
+            return False
 
     def _getProxies(self):
         useInternalConaryProxy = self.cfg.useInternalConaryProxy
@@ -1523,12 +1521,7 @@ If you would not like to be %s %s of this project, you may resign from this proj
         if not self._isUserAdmin(userId):
             return
         cu = self.db.cursor()
-        cu.execute("""SELECT userId
-                          FROM UserGroups
-                          LEFT JOIN UserGroupMembers
-                          ON UserGroups.userGroupId =
-                                 UserGroupMembers.userGroupId
-                          WHERE userGroup='MintAdmin'""")
+        cu.execute("SELECT userId FROM UserGroups WHERE is_admin = true")
         if [x[0] for x in cu.fetchall()] == [userId]:
             # userId is admin, and there is only one admin => last admin
             raise mint_error.LastAdmin(
@@ -1557,19 +1550,10 @@ If you would not like to be %s %s of this project, you may resign from this proj
 
         cu = self.db.transaction()
         try:
-            cu.execute("""SELECT userGroupId FROM UserGroupMembers
-                              WHERE userId=?""", userId)
-            for userGroupId in [x[0] for x in cu.fetchall()]:
-                cu.execute("""SELECT COUNT(*) FROM UserGroupMembers
-                                  WHERE userGroupId=?""", userGroupId)
-                if cu.fetchone()[0] == 1:
-                    cu.execute("DELETE FROM UserGroups WHERE userGroupId=?",
-                               userGroupId)
             cu.execute("UPDATE Projects SET creatorId=NULL WHERE creatorId=?",
                        userId)
             cu.execute("DELETE FROM ProjectUsers WHERE userId=?", userId)
             cu.execute("DELETE FROM Confirmations WHERE userId=?", userId)
-            cu.execute("DELETE FROM UserGroupMembers WHERE userId=?", userId)
             cu.execute("DELETE FROM Users WHERE userId=?", userId)
             cu.execute("DELETE FROM UserData where userId=?", userId)
         except:
@@ -1773,15 +1757,6 @@ If you would not like to be %s %s of this project, you may resign from this proj
         """
         return self.projects.getNewProjects(limit, showFledgling)
 
-    @typeCheck()
-    @requiresAdmin
-    @private
-    def getUsersList(self):
-        """
-        Collect a list of users suitable for creating a select box
-        """
-        return self.users.getUsersList()
-
     @typeCheck(int, int, int)
     @requiresAdmin
     @private
@@ -1807,19 +1782,12 @@ If you would not like to be %s %s of this project, you may resign from this proj
         Given a userId, will attempt to promote that user to an
         administrator (i.e. make a member of the MintAdmin User Group).
 
-        NOTE: if the MintAdmin UserGroup doesn't exist, it will be created
-        as a side effect.
-
         @param userId: the userId to promote
         """
-        mintAdminId = self.userGroups.getMintAdminId()
         if self._isUserAdmin(userId):
             raise mint_error.UserAlreadyAdmin
-
         cu = self.db.cursor()
-        cu.execute(
-            "INSERT INTO UserGroupMembers (usergroupid, userid) VALUES(?, ?)",
-                mintAdminId, userId)
+        cu.execute("UPDATE Users SET is_admin = true WHERE userId = ?", userId)
         self.db.commit()
         return True
 
@@ -1835,53 +1803,10 @@ If you would not like to be %s %s of this project, you may resign from this proj
         # refuse to demote self. this ensures there will always be at least one
         if userId == self.auth.userId:
             raise mint_error.AdminSelfDemotion
-
-        mintAdminId = self.userGroups.getMintAdminId()
         cu = self.db.cursor()
-        cu.execute("SELECT userId FROM UserGroupMembers WHERE userGroupId=?",
-                   mintAdminId)
-
-        cu.execute("""DELETE FROM UserGroupMembers WHERE userId=?
-                          AND userGroupId=?""", userId, mintAdminId)
+        cu.execute("UPDATE Users SET is_admin = false WHERE userId = ?", userId)
         self.db.commit()
         return True
-
-    @typeCheck()
-    @private
-    def getNews(self):
-        return self.db.newsCache.getNews()
-
-    @typeCheck()
-    @private
-    def getNewsLink(self):
-        return self.db.newsCache.getNewsLink()
-
-    @typeCheck(str, str, int)
-    @private
-    @requiresAdmin
-    def addFrontPageSelection(self, name, link, rank):
-        return self.selections.addItem(name, link, rank)
-
-    @typeCheck(int)
-    @private
-    @requiresAdmin
-    def deleteFrontPageSelection(self, itemId):
-        return self.selections.deleteItem(itemId)
-
-    @typeCheck()
-    @private
-    def getFrontPageSelection(self):
-        return self.selections.getAll()
-
-    @typeCheck()
-    @private
-    def getPopularProjects(self):
-        return self.popularProjects.getList()
-
-    @typeCheck()
-    @private
-    def getTopProjects(self):
-        return self.topProjects.getList()
 
     #
     # LABEL STUFF
@@ -2817,23 +2742,6 @@ If you would not like to be %s %s of this project, you may resign from this proj
         return self.publishedReleases.getPublishedReleasesByProject(projectId,
                 publishedOnly)
 
-    @typeCheck(int, int)
-    @private
-    def getCommunityId(self, projectId, communityType):
-        return self.communityIds.getCommunityId(projectId, communityType)
-
-    @typeCheck(int, int, str)
-    @private
-    @requiresAuth
-    def setCommunityId(self, projectId, communityType, communityId):
-        return self.communityIds.setCommunityId(projectId, communityType,
-                                                communityId)
-    @typeCheck(int, int)
-    @private
-    @requiresAuth
-    def deleteCommunityId(self, projectId, communityType):
-        return self.communityIds.deleteCommunityId(projectId, communityType)
-
     @typeCheck(int)
     @private
     def getBuildTrove(self, buildId):
@@ -3041,6 +2949,8 @@ If you would not like to be %s %s of this project, you may resign from this proj
                 jobData = self.serializeBuild(buildId)
                 if buildType in buildtypes.windowsBuildTypes:
                     return self.startWindowsImageJob(buildId, jobData)
+                elif buildType == buildtypes.DEFERRED_IMAGE:
+                    return self.startDeferredImageJob(buildId, jobData)
 
                 # Check the product definition to see if this is based on a
                 # Windows platform.
@@ -3073,6 +2983,12 @@ If you would not like to be %s %s of this project, you may resign from this proj
         log.info("Created Windows image job, UUID %s", job_uuid)
         self.builds.update(buildId, job_uuid=str(job_uuid))
         return str(job_uuid)
+
+    def startDeferredImageJob(self, buildId, jobData):
+        """Create a deferred image record in the database."""
+        self.db.builds.update(buildId, status=jobstatus.FINISHED,
+                statusMessage="Deferred image has been recorded")
+        return 1
 
     @typeCheck(int, str, list)
     def setBuildFilenamesSafe(self, buildId, outputToken, filenames):
@@ -4878,7 +4794,6 @@ If you would not like to be %s %s of this project, you may resign from this proj
         # unnecessary when we're reloading the tables for every request.
         #if self.db.tablesReloaded:
         #    self._generateConaryRcFile()
-        self.newsCache.refresh()
 
     @typeCheck(int)
     @requiresAdmin

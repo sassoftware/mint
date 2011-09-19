@@ -24,6 +24,7 @@ static_files =				\
 	mirror-inbound			\
 	mirror-outbound			\
 	refresh-auth			\
+	restore-preload-bundle		\
 	rmake-reset			\
 	rmake-setup			\
 	rss-update			\

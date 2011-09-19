@@ -14,7 +14,7 @@ from rpath_proddef import api1 as proddef
 log = logging.getLogger(__name__)
 
 # Bump this to force all branches to be refreshed.
-SYNC_VERSION = 1
+SYNC_VERSION = 2
 
 
 class Script(GenericScript):
@@ -44,6 +44,7 @@ class SyncTool(object):
         self.reposManager = repository.RepositoryManager(self.cfg, self.db.db)
         self.client = self.reposManager.getClient(userId=repository.ANY_READER)
         self.repos = self.client.getRepos()
+        self._platformMap = None
 
     def syncAll(self):
         for handle in self.reposManager.iterRepositories():
@@ -111,11 +112,18 @@ class SyncTool(object):
         pd = proddef.ProductDefinition()
         pd.setBaseLabel(label)
         pd.loadFromRepository(self.client)
+
+        platformLabel = pd.getPlatformSourceLabel()
+        platformId = self.getPlatformMap().get(platformLabel)
+        sourceGroup = pd.getSourceGroup() or pd.getImageGroup()
         fields = {
                 'projectId': handle.projectId,
                 'namespace': pd.getConaryNamespace(),
                 'name': pd.getProductVersion(),
                 'description': pd.getProductDescription(),
+                'source_group': sourceGroup,
+                'platform_id': platformId,
+                'platform_label': platformLabel,
                 'cache_key': cacheKey,
                 }
         items = fields.items()
@@ -162,3 +170,10 @@ class SyncTool(object):
                     sqlStages[stage])
             log.info("Deleted stage information for stage %s on label %s",
                     stage, label)
+
+    def getPlatformMap(self):
+        if self._platformMap is None:
+            cu = self.db.cursor()
+            cu.execute("SELECT label, platformId FROM Platforms")
+            self._platformMap = dict(cu)
+        return self._platformMap

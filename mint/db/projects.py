@@ -211,7 +211,7 @@ class ProjectsTable(database.KeyedTable):
         @param offset: Count at which to begin listing
         @param limit:  Number of items to return
         @param includeInactive:  Include hidden and fledgling projects
-        @param byPopularity: Sort by popularity metric.
+        @param byPopularity: Sort by popularity metric. (OBSOLETE)
         @return:       a dictionary of the requested items.
                        each entry will contain four bits of data:
                         The hostname for use with linking,
@@ -222,8 +222,8 @@ class ProjectsTable(database.KeyedTable):
         """
         columns = ['Projects.projectId', 'Projects.hostname',
                    'Projects.name', 'Projects.description',
-                   """COALESCE(LatestCommit.commitTime, Projects.timeCreated) AS timeModified""",
-                   """COALESCE(TopProjects.rank, (SELECT COUNT(projectId) FROM Projects)) AS rank""",
+                   """Projects.timeCreated AS timeModified""",
+                   """0 AS rank""",
                    """COALESCE(tmpLatestReleases.timePublished, 0) AS lastRelease"""
         ]
 
@@ -322,10 +322,7 @@ class ProjectsTable(database.KeyedTable):
 
         whereClause = searcher.Searcher.where(terms, searchcols, extras, extraSubs)
 
-        if byPopularity:
-            orderByClause = 'rank ASC'
-        else:
-            orderByClause = searcher.Searcher.order(terms, searchcols, 'UPPER(Projects.name)')
+        orderByClause = searcher.Searcher.order(terms, searchcols, 'UPPER(Projects.name)')
 
         ids, count = database.KeyedTable.search(self, columns, 'Projects',
                 whereClause,

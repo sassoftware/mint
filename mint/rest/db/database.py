@@ -332,21 +332,6 @@ class Database(DBInterface):
             userList.users.append(models.User(d))
         return userList
 
-    @readonly    
-    def listUserGroupsForUser(self, username):
-        self.auth.requireAdmin()
-        cu = self.db.cursor()
-        cu.execute('''SELECT userGroup 
-                      FROM Users
-                      JOIN UserGroupMembers  USING(userId)
-                      JOIN UserGroups  USING(userGroupId)
-                      WHERE Users.username=?''', username)
-        groupList = models.UserGroupMemberList()
-        for userGroup, in cu:
-            group = models.UserGroupMember(userGroup, username)
-        groupList.groups.append(group)
-        return groupList
-
     @commitafter
     def createProduct(self, product):
         self.auth.requireProductCreationRights()

@@ -93,20 +93,23 @@ class QuerySetChosenResultService(BaseQuerySetService):
         return self.mgr.getQuerySetChosenResult(query_set_id)
 
     @rbac(rbac_can_write_queryset)
-    @requires('systems') 
+    # TODO: source fromc onstant somewhere
+    @requires(['systems', 'users', 'project_branch_stages', 'projects', 'grants', 'roles'])
     @return_xml
     def rest_PUT(self, request, query_set_id, systems=None):
         return self.mgr.addQuerySetChosen(query_set_id, systems)
 
     @rbac(rbac_can_write_queryset)
-    @requires('system')
+    # TODO: source fromc onstant somewhere
+    @requires(['system', 'user', 'project_branch', 'project', 'grant', 'role'])
     @return_xml
     def rest_POST(self, request, query_set_id, system):
         self.mgr.updateQuerySetChosen(query_set_id, system)
         return system
 
     @rbac(rbac_can_write_queryset)
-    @requires('system')
+    # TODO: source fromc onstant somewhere
+    @requires(['system', 'user', 'project_branch', 'project', 'grant', 'role'])
     @return_xml
     def rest_DELETE(self, request, query_set_id, system):
         return self.mgr.deleteQuerySetChosen(query_set_id, system)

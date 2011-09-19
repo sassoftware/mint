@@ -50,3 +50,11 @@ class MirrorCredentialsInvalid(RbuilderError):
 class MirrorNotReachable(RbuilderError):
     "Error contacting remote repository at %(url)s: %(reason)s"
     status = BAD_REQUEST
+
+class ResourceNotFound(RbuilderError):
+    "The requested resource was not found."
+    status = NOT_FOUND
+
+class InvalidData(RbuilderError):
+    "The data supplied with the resource was invalid"
+    status = BAD_REQUEST

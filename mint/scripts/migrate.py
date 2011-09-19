@@ -107,7 +107,7 @@ def rebuild_table(db, table, fieldsOut, fieldsIn=None, skipDropIndex=False):
         cu.execute("ALTER TABLE %s RENAME TO %s" % (table, tmpTable))
         del db.tables[table]
 
-    assert schema.createSchema(db, doCommit=False)
+    schema.createSchema(db, doCommit=False)
 
     if fieldsIn is None:
         fieldsIn = fieldsOut
@@ -2648,7 +2648,7 @@ class MigrateTo_54(SchemaMigration):
         return True
 
 class MigrateTo_55(SchemaMigration):
-    Version = (55, 2)
+    Version = (55, 3)
 
     def migrate(self):
         return True
@@ -2744,6 +2744,13 @@ class MigrateTo_55(SchemaMigration):
 
         return True
 
+    def migrate3(self):
+        db = self.db
+        schema._addTableRows(db, 'job_types', 'name',
+        [
+          dict(name="image-deployment", description="Image Deployment"),
+        ])
+        return True
 
 class MigrateTo_56(SchemaMigration):
     Version = (56, 2)
@@ -3044,7 +3051,7 @@ class MigrateTo_57(SchemaMigration):
 
 
 class MigrateTo_58(SchemaMigration):
-    Version = (58, 61)
+    Version = (58, 66)
 
     def migrate(self):
         return True
@@ -4121,6 +4128,104 @@ class MigrateTo_58(SchemaMigration):
         """)
         return True
 
+    def migrate62(self):
+        db = self.db
+        cu = db.cursor()
+        cu.execute("""ALTER TABLE jobs_job
+            ADD COLUMN job_token varchar(64) UNIQUE""")
+        schema._addTableRows(db, 'jobs_job_type', 'name', [
+             dict(name="refresh target images",
+                  description="Refresh target images",
+                  priority=105,
+                  resource_type="Target"),
+             dict(name="refresh target systems",
+                  description="Refresh target systems",
+                  priority=105,
+                  resource_type="Target"),
+             dict(name="deploy image on target",
+                  description="Deploy image on target",
+                  priority=105,
+                  resource_type="Target"),
+             dict(name="launch system on target",
+                  description="Launch system on target",
+                  priority=105,
+                  resource_type="Target"),
+             dict(name="create target",
+                  description="Create target",
+                  priority=105,
+                  resource_type="TargetType"),
+        ])
+        schema.createTable(db, 'jobs_job_target_type', """
+        CREATE TABLE jobs_job_target_type (
+            id          %(PRIMARYKEY)s,
+            job_id      integer NOT NULL
+                        REFERENCES jobs_job(job_id) ON DELETE CASCADE,
+            target_type_id integer NOT NULL
+                        REFERENCES target_types(target_type_id) ON DELETE CASCADE
+        )""")
+        schema.createTable(db, 'jobs_job_target', """
+        CREATE TABLE jobs_job_target (
+            id          %(PRIMARYKEY)s,
+            job_id      integer NOT NULL
+                        REFERENCES jobs_job(job_id) ON DELETE CASCADE,
+            target_id integer NOT NULL
+                        REFERENCES Targets(targetid) ON DELETE CASCADE
+        )""")
+        return True
+
+    def migrate63(self):
+        drop_tables(self.db,
+                'CommunityIds',
+                'NewsCache',
+                'NewsCacheInfo',
+                'ApplianceSpotlight',
+                'FrontPageSelections',
+                'UseIt',
+                'LatestCommit',
+                'PopularProjects',
+                'TopProjects',
+                )
+        return True
+
+    def migrate64(self):
+        cu = self.db.cursor()
+        cu.execute("""ALTER TABLE ProductVersions
+            ADD source_group text,
+            ADD platform_id integer REFERENCES Platforms ON DELETE SET NULL,
+            ADD platform_label text""")
+        return True
+
+    def migrate65(self):
+        cu = self.db.cursor()
+        cu.execute("""ALTER TABLE Users
+                ADD is_admin bool NOT NULL DEFAULT false""")
+        cu.execute("""UPDATE Users u
+            SET is_admin = EXISTS (
+                SELECT * FROM UserGroupMembers m
+                JOIN UserGroups g USING (userGroupId)
+                WHERE m.userId = u.userId AND g.usergroup = 'MintAdmin'
+            ) """)
+        drop_tables(self.db,
+                'UserGroupMembers',
+                'UserGroups',
+                )
+        return True
+
+    def migrate66(self):
+        # This includes migration 55.3
+        db = self.db
+        schema._addTableRows(db, 'job_types', 'name',
+        [
+          dict(name="image-deployment", description="Image Deployment"),
+        ])
+        tableName = 'jobs_job_type'
+        schema._addTableRows(db, tableName, 'name', [
+             dict(name="configure target credentials",
+                  description="Configure target credentials for the current user",
+                  priority=105,
+                  resource_type="Target"),
+        ])
+        return True
 
 #### SCHEMA MIGRATIONS END HERE #############################################
 

@@ -17,7 +17,7 @@ from mint.django_rest.rbuilder.querysets.manager import QuerySetManager
 from mint.django_rest.rbuilder.changelog.manager import ChangeLogManager
 from mint.django_rest.rbuilder.packageindex.manager import PackageManager
 from mint.django_rest.rbuilder.projects.manager import ProjectManager
-from mint.django_rest.rbuilder.users.manager import UsersManager, UserGroupsManager, UserGroupMembersManager, UserUserGroupsManager
+from mint.django_rest.rbuilder.users.manager import UsersManager
 from mint.django_rest.rbuilder.notices.manager import UserNoticesManager
 from mint.django_rest.rbuilder.modulehooks.manager import ModuleHooksManager
 from mint.django_rest.rbuilder.platforms.manager import SourceStatusManager, \
@@ -35,7 +35,11 @@ from mint.django_rest.rbuilder.platforms.manager import SourceStatusManager, \
                                                         PlatformManager
 from mint.django_rest.rbuilder.repos.manager import ReposManager
 from mint.django_rest.rbuilder.rbac.manager.rbacmanager import RbacManager
-from mint.django_rest.rbuilder.targets.manager import TargetsManager, TargetTypesManager, TargetCredentialsManager
+from mint.django_rest.rbuilder.targets.manager import TargetsManager,\
+                                                      TargetTypesManager,\
+                                                      TargetCredentialsManager,\
+                                                      TargetTypeJobsManager,\
+                                                      TargetJobsManager
 from mint.django_rest.rbuilder.images.manager.imagesmanager import ImagesManager
 
 class RbuilderManager(basemanager.BaseRbuilderManager):
@@ -50,11 +54,8 @@ class RbuilderManager(basemanager.BaseRbuilderManager):
         'changeLogMgr' : ChangeLogManager,
         'packageMgr' : PackageManager,
         'usersMgr' : UsersManager,
-        'userGroupsMgr': UserGroupsManager,
-        'userGroupMembersMgr': UserGroupMembersManager,
         'projectManager' : ProjectManager,
         'userNoticesMgr' : UserNoticesManager,
-        'userUserGroupsManager' : UserUserGroupsManager,
         'sourceStatusMgr' : SourceStatusManager,
         'sourceErrorsMgr' : SourceErrorsManager,
         'sourceMgr' : SourceManager,
@@ -74,6 +75,8 @@ class RbuilderManager(basemanager.BaseRbuilderManager):
         'targetsManager' : TargetsManager,
         'targetTypesManager': TargetTypesManager,
         'targetCredentialsManager' : TargetCredentialsManager,
+        'targetTypeJobsManager' : TargetTypeJobsManager,
+        'targetJobsManager' : TargetJobsManager,
         'imagesManager' : ImagesManager,
     }
 

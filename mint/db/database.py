@@ -12,9 +12,7 @@ from mint import mint_error
 from mint.db import schema
 
 from mint.db import builds
-from mint.db import communityids
 from mint.db import jobs
-from mint.db import news
 from mint.db import mirror
 from mint.db import pkgindex
 from mint.db import platforms
@@ -22,7 +20,6 @@ from mint.db import projects
 from mint.db import pubreleases
 from mint.db import requests
 from mint.db import sessiondb
-from mint.db import selections
 from mint.db import stats
 from mint.db import targets
 from mint.db import users
@@ -38,13 +35,10 @@ class TableCache(object):
         self.buildFilesUrlsMap = jobs.BuildFilesUrlsMapTable(db)
         self.urlDownloads = builds.UrlDownloadsTable(db)
         self.users = users.UsersTable(db, cfg)
-        self.userGroups = users.UserGroupsTable(db, cfg)
-        self.userGroupMembers = users.UserGroupMembersTable(db, cfg)
         self.userData = users.UserDataTable(db)
         self.projectUsers = projects.ProjectUsersTable(db)
         self.builds = builds.BuildsTable(db)
         self.pkgIndex = pkgindex.PackageIndexTable(db)
-        self.newsCache = news.NewsCacheTable(db, cfg)
         self.sessions = sessiondb.SessionsTable(db)
         self.membershipRequests = requests.MembershipRequestTable(db)
         self.commits = stats.CommitsTable(db)
@@ -53,12 +47,7 @@ class TableCache(object):
         self.outboundMirrors = mirror.OutboundMirrorsTable(db, cfg)
         self.updateServices = mirror.UpdateServicesTable(db, cfg)
         self.outboundMirrorsUpdateServices = mirror.OutboundMirrorsUpdateServicesTable(db)
-        self.selections = selections.FrontPageSelectionsTable(db, cfg)
-        self.topProjects = selections.TopProjectsTable(db)
-        self.popularProjects = selections.PopularProjectsTable(db)
-        self.latestCommit = selections.LatestCommitTable(db)
         self.publishedReleases = pubreleases.PublishedReleasesTable(db)
-        self.communityIds = communityids.CommunityIdsTable(db)
         self.productVersions = projects.ProductVersionsTable(db, cfg)
 
         self.targets = targets.TargetsTable(db)
@@ -71,7 +60,6 @@ class TableCache(object):
         self.platformsContentSourceTypes = platforms.PlatformsContentSourceTypesTable(db)
 
         self.users.confirm_table.db = db
-        self.newsCache.ageTable.db = db
         self.projects.reposDB.cfg = cfg
 
 class Database(object):
@@ -95,13 +83,10 @@ class Database(object):
         self.buildFilesUrlsMap = tables.buildFilesUrlsMap
         self.urlDownloads = tables.urlDownloads
         self.users = tables.users
-        self.userGroups = tables.userGroups
-        self.userGroupMembers = tables.userGroupMembers
         self.userData = tables.userData
         self.projectUsers = tables.projectUsers
         self.builds = tables.builds
         self.pkgIndex = tables.pkgIndex
-        self.newsCache = tables.newsCache
         self.sessions = tables.sessions
         self.membershipRequests = tables.membershipRequests
         self.commits = tables.commits
@@ -110,12 +95,7 @@ class Database(object):
         self.outboundMirrors = tables.outboundMirrors
         self.updateServices = tables.updateServices
         self.outboundMirrorsUpdateServices = tables.outboundMirrorsUpdateServices
-        self.selections = tables.selections
-        self.topProjects = tables.topProjects
-        self.popularProjects = tables.popularProjects
-        self.latestCommit = tables.latestCommit
         self.publishedReleases = tables.publishedReleases
-        self.communityIds = tables.communityIds
         self.productVersions = tables.productVersions
         self.platforms = tables.platforms
         self.platformSources = tables.platformSources
@@ -148,7 +128,6 @@ class Database(object):
         tables = TableCache(self._db, self._cfg)
         self._copyTables(tables)
         self.normalizeMirrorOrder()
-        self._createTemporaryTables()
         if self._db.inTransaction(True):
             self._db.commit()
 
@@ -209,7 +188,3 @@ class Database(object):
             return res
         except:
             raise exception(key)
-
-    def _createTemporaryTables(self):
-        dblib.createTemporaryTable(self.db, 'tmpOneVal',
-            [ "id int", "val int" ])

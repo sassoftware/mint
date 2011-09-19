@@ -96,7 +96,6 @@ class FixtureCache(object):
         cfg.conaryRcFile = os.path.join(cfg.dataPath, 'run', 'conaryrc')
         util.mkdirChain(os.path.join(cfg.dataPath, 'run'))
         util.mkdirChain(os.path.join(cfg.dataPath, 'tmp'))
-        cfg.newsRssFeed = 'file://' + pathManager.getPath('MINT_ARCHIVE_PATH') + '/news.xml'
         cfg.ec2AccountId = '012345678901'
         cfg.ec2PublicKey = 'publicKey'
         cfg.ec2PrivateKey = 'secretKey'
@@ -147,36 +146,10 @@ class FixtureCache(object):
         contactInfo = "%s at example.com" % username
 
         cu = db.cursor()
-
-        # create the public group
-        try:
-            cu.execute("INSERT INTO UserGroups (userGroup) VALUES('public')")
-            db.commit()
-        except sqlerrors.ColumnNotUnique:
-            db.rollback()
-
         userId = client.registerNewUser(username, password, fullname,
             email, contactInfo, "", active=True)
-
-        if isAdmin:
-            cu.execute("""SELECT COUNT(*) FROM UserGroups
-                              WHERE UserGroup = 'MintAdmin'""")
-            if cu.fetchone()[0] == 0:
-                cu.execute("""SELECT COALESCE(MAX(userGroupId) + 1, 1)
-                                 FROM UserGroups""")
-                groupId = cu.fetchone()[0]
-                cu.execute("INSERT INTO UserGroups VALUES(?, 'MintAdmin')",
-                           groupId)
-                db.commit()
-            else:
-                cu.execute("""SELECT userGroupId FROM UserGroups
-                                  WHERE UserGroup = 'MintAdmin'""")
-                groupId = cu.fetchone()[0]
-
-            cu.execute("INSERT INTO UserGroupMembers VALUES(?, ?)",
-                       groupId, userId)
-            db.commit()
-
+        cu.execute("UPDATE Users SET is_admin = ? WHERE userId = ?", isAdmin,
+                userId)
         return userId
 
     def fixtureEmpty(self, cfg):

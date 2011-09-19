@@ -21,7 +21,6 @@ def undefined(function):
     return function
 
 class BaseService(resource.Resource):
-
     def __init__(self):
         self.mgr = MANAGER_CLASS(cfg=None)
         permitted_methods = ['GET', 'PUT', 'POST', 'DELETE']
@@ -57,6 +56,10 @@ class BaseService(resource.Resource):
 
     def delete(self, request, *args, **kwargs):
         return self._auth(self.rest_DELETE, request, *args, **kwargs)
+
+    @classmethod
+    def getHeaderValue(cls, *args, **kwargs):
+        return getHeaderValue(*args, **kwargs)
 
     # Overwrite these functions when inheriting
     @undefined
@@ -131,7 +134,7 @@ class BaseService(resource.Resource):
         # Ignore requests that are forwarded through the repeater since
         # they are not trustworthy.
         headerName = 'X-rPath-Repeater'
-        headerValue = getHeaderValue(request, headerName)
+        headerValue = cls.getHeaderValue(request, headerName)
         return (headerValue is None and
             request.META['REMOTE_ADDR'] == '127.0.0.1')
 
@@ -146,7 +149,7 @@ class BaseAuthService(BaseService):
             if self._check_localhost(request):
                 return True
 
-        if access & ACCESS.EVENT_UUID:
+        if access & ACCESS.AUTH_TOKEN:
             ret = self._check_uuid_auth(request, kwargs)
             if ret is not None:
                 # A bad event UUID should fail the auth check
@@ -167,10 +170,8 @@ class BaseAuthService(BaseService):
     def _setMintAuth(self):
         db = database.Database(self.mgr.cfg)
         authToken = (self.mgr.cfg.authUser, self.mgr.cfg.authPass)
-        mintAdminGroupId = db.userGroups.getMintAdminId()
         cu = db.cursor()
-        cu.execute("SELECT MIN(userId) from userGroupMembers "
-           "WHERE userGroupId = ?", mintAdminGroupId)
+        cu.execute("SELECT MIN(userId) FROM Users WHERE is_admin = ?", True)
         ret = cu.fetchall()
         userId = ret[0][0]
         mintAuth = users.Authorization(username=self.mgr.cfg.authUser,

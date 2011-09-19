@@ -430,43 +430,7 @@ urlpatterns = patterns('',
     URL(r'users/(?P<user_id>\d+)/?$',
         usersviews.UsersService(),
         name='User'),
-    
-    # UserGroups
-    URL(r'user_groups/?$',
-        usersviews.UserGroupsService(),
-        name='UserGroups'),
-        
-    URL(r'user_groups/(?P<user_id>\d+)/?$',
-        usersviews.UserUserGroupsService(),
-        name='UserGroup'),
-        
-    URL(r'user_groups/(?P<user_group_id>\d+)/?$',
-        usersviews.UserGroupsService(),
-        name='UserGroup'),
-        
-    URL(r'user_groups/(?P<user_group_id>\d+)/user_group_members/?$',
-        usersviews.UserGroupMembersService(),
-        name='UserGroupMembers'),
-    
-    # USERGROUPS OLD, REMOVE
-    # URL(r'users/user_groups/?$',
-    #     usersviews.UserGroupsService(),
-    #     name='UserGroups'),
-    # 
-    # URL(r'users/(?P<user_id>\d+)/user_groups/?$',
-    #     usersviews.UserUserGroupsService(),
-    #     name='UserGroups'),
-    # 
-    # URL(r'users/user_groups/(?P<user_group_id>\d+)/?$',
-    #     usersviews.UserGroupsService(),
-    #     name='UserGroup'),
-    #     
-    # URL(r'users/user_groups/(?P<user_group_id>\d+)/user_group_members/?$',
-    #     usersviews.UserGroupMembersService(),
-    #     name='UserGroupMembers'),
-    # END OLD USERGROUP URLS
-    
-        
+
     # UserNotices
     URL(r'users/(?P<user_id>\d+)/notices/?$',
         noticesviews.UserNoticesService(),
@@ -607,6 +571,9 @@ urlpatterns = patterns('',
     URL(r'targets/(?P<target_id>\d+)/target_user_credentials/(?P<user_id>\d+)/?$',
         targetsviews.TargetUserCredentialsService(),
         name='TargetUserCredentials'),
+    URL(r'targets/(?P<target_id>\d+)/descriptor_configure_credentials/?$',
+        targetsviews.TargetConfigureCredentialsService(),
+        name='TargetConfigureCredentials'),
     URL(r'target_types/?$',
         targetsviews.TargetTypeService(),
         name='TargetTypes'),
@@ -616,7 +583,19 @@ urlpatterns = patterns('',
     URL(r'target_types/(?P<target_type_id>\d+)/targets/?$',
         targetsviews.TargetTypeTargetsService(),
         name='TargetTypeTargets'),
-
+    URL(r'target_types/(?P<target_type_id>\d+)/descriptor_create_target/?$',
+        targetsviews.TargetTypeCreateTargetService(),
+        name='TargetTypeCreateTarget'),
+    URL(r'target_type_jobs/?$',
+        targetsviews.TargetTypeAllJobsService(),
+        name='TargetTypeAllJobs'),
+    URL(r'target_types/(?P<target_type_id>\d+)/jobs/?$',
+        targetsviews.TargetTypeJobsService(),
+        name='TargetTypeJob'),
+    URL(r'targets/(?P<target_id>\d+)/jobs/?$',
+        targetsviews.TargetJobsService(),
+        name='TargetJobs'),
+    
     # Begin Images service
     URL(r'images/?$',
         imagesviews.ImagesService(),

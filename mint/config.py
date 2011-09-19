@@ -201,8 +201,6 @@ class MintConfig(conarycfg.ConfigFile):
 
     # Upstream resources
     proxy                   = conarycfg.CfgProxy
-    VAMUser                 = (CfgString, '')
-    VAMPassword             = (CfgString, '')
 
     # Branding
     bulletinPath            = (CfgPath, '/srv/rbuilder/config/bulletin.txt')
@@ -219,7 +217,6 @@ class MintConfig(conarycfg.ConfigFile):
         "Your organization's intranet or public web site: (Used for the &quot;About&quot; links)")
     supportContactHTML      = (CfgString, 'Contact information in HTML.')
     supportContactTXT       = (CfgString, 'Contact information in text.')
-    newsRssFeed             = (CfgString, '')
     noticesRssFeed          = (CfgList(CfgString), [])
     announceLink            = (CfgString, '')
     googleAnalyticsTracker  = (CfgBool, False)
@@ -295,6 +292,9 @@ class MintConfig(conarycfg.ConfigFile):
     externalDomainName      = (CfgString, None)
     packageCreatorURL       = (CfgString, None)
     cookieSecretKey         = (CfgString, None)
+    VAMUser                 = (CfgString, '')
+    VAMPassword             = (CfgString, '')
+    newsRssFeed             = (CfgString, '')
 
     # AMI configuration -- migrated in schema (45, 6)
     ec2PublicKey            = (CfgString, '', "The AWS account id")

@@ -1,8 +1,6 @@
 #
 # Copyright (c) 2011 rPath, Inc.
 #
-# All Rights Reserved
-#
 
 from django.db import models
 from mint.django_rest.rbuilder import modellib
@@ -11,30 +9,6 @@ import sys
 
 from mint.django_rest.rbuilder.users import manager_model
 from django.db import connection
-
-class UserGroups(modellib.Collection):
-    class Meta:
-        abstract = True
-        
-    _xobj = xobj.XObjMetadata(tag='user_groups')
-    list_fields = ['user_group']
-
-
-class UserGroup(modellib.XObjIdModel):
-
-    user_group_id = models.AutoField(primary_key=True, db_column='usergroupid')
-    name = models.CharField(unique=True, max_length=128, db_column='usergroup')
-
-    class Meta:
-        # managed = settings.MANAGE_RBUILDER_MODELS
-        db_table = u'usergroups'
-
-    _xobj = xobj.XObjMetadata(tag='user_group')
-    _xobj_hidden_accessors = set(['user_members_group_id'])
-
-
-    def __unicode__(self):
-        return self.name
 
 
 class Users(modellib.Collection):
@@ -60,9 +34,11 @@ class User(modellib.XObjIdModel):
     modified_date = modellib.DecimalField(max_digits=14, decimal_places=3, db_column='timeaccessed')
     active = modellib.XObjHidden(modellib.APIReadOnly(models.SmallIntegerField()))
     blurb = models.TextField()
-    user_groups = modellib.DeferredManyToManyField(UserGroup, through="UserGroupMember", db_column='user_group_id', related_name='group')
+    _is_admin = modellib.XObjHidden(modellib.APIReadOnly(
+        models.BooleanField(default=False, db_column='is_admin')))
 
     is_admin = modellib.SyntheticField()
+
     # Field used for the clear-text password when it is to be
     # set/changed
     password = modellib.XObjHidden(modellib.SyntheticField())
@@ -93,54 +69,42 @@ class User(modellib.XObjIdModel):
     def __unicode__(self):
         return self.user_name
 
-    def getIsAdmin(self):
-        # A bit of SQL here, so we only do one trip to the db
-        cu = connection.cursor()
-        cu.execute("""
-            SELECT 1
-              FROM UserGroupMembers
-              JOIN UserGroups USING (usergroupid)
-             WHERE UserGroups.usergroup = 'MintAdmin'
-               AND UserGroupMembers.userid = %s
-        """, [self.user_id])
-        row = cu.fetchone()
-        return bool(row)
+    @staticmethod
+    def _toBool(val):
+        if val is None:
+            return None
+        if not isinstance(val, basestring):
+            val = str(val)
+        val = val.lower()
+        if val in ('true', 'false'):
+            return val == 'true'
+        if val == '1':
+            return True
+        return False
 
-    def set_is_admin(self):
-        isAdmin = self.getIsAdmin()
+    def setIsAdmin(self, isAdmin):
+        """Set private admin flag, to be called after the caller's adminship
+        has been verified only.
+        """
+        self._is_admin = isAdmin
+
+    def getIsAdmin(self):
+        return self._toBool(self._is_admin)
+
+    def _populateAdminField(self):
+        """Copy private is_admin value to public field."""
         # Unfortunately we don't have boolean synthetic fields yet, so
         # let's save the string representation of it
-        self.is_admin = str(bool(isAdmin)).lower()
+        if self._is_admin is not None:
+            self.is_admin = str(bool(self._is_admin)).lower()
 
     def computeSyntheticFields(self, sender, **kwargs):
-        if self.pk is not None:
-            self.set_is_admin()
-
+        self._populateAdminField()
         # sub-collections off of user
         self.roles = modellib.HrefField(
            href="/api/v1/users/%s/roles" % self.user_id
         )
-          
 
-class UserGroupMembers(modellib.Collection):
-    class Meta:
-        abstract = True
-    
-    list_fields = ['user_group_member']
-
-    _xobj = xobj.XObjMetadata(tag='user_group_members')
-
-
-class UserGroupMember(modellib.XObjIdModel):
-    
-    class Meta:
-        db_table = u'usergroupmembers'
-        
-    user_group_member_id = models.AutoField(primary_key=True, db_column='usergroupmemberid')
-    user_group_id = modellib.XObjHidden(modellib.DeferredForeignKey(UserGroup, db_column='usergroupid', related_name='user_members_group_id'))
-    user_id = modellib.DeferredForeignKey(User, db_column='userid', related_name='usermember')
-    
-    _xobj = xobj.XObjMetadata(tag='user_group_member')
 
 class Session(modellib.XObjIdModel):
     class Meta:

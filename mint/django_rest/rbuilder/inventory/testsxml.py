@@ -144,6 +144,54 @@ event_types_xml="""\
     <resource_type>QuerySet</resource_type>
     <system_events/>
   </event_type>
+  <event_type id="http://testserver/api/v1/inventory/event_types/15">
+    <description>Refresh target images</description>
+    <job_type_id>15</job_type_id>
+    <name>refresh target images</name>
+    <priority>105</priority>
+    <resource_type>Target</resource_type>
+    <system_events/>
+  </event_type>
+  <event_type id="http://testserver/api/v1/inventory/event_types/16">
+    <description>Refresh target systems</description>
+    <job_type_id>16</job_type_id>
+    <name>refresh target systems</name>
+    <priority>105</priority>
+    <resource_type>Target</resource_type>
+    <system_events/>
+  </event_type>
+  <event_type id="http://testserver/api/v1/inventory/event_types/17">
+    <description>Deploy image on target</description>
+    <job_type_id>17</job_type_id>
+    <name>deploy image on target</name>
+    <priority>105</priority>
+    <resource_type>Target</resource_type>
+    <system_events/>
+  </event_type>
+  <event_type id="http://testserver/api/v1/inventory/event_types/18">
+    <description>Launch system on target</description>
+    <job_type_id>18</job_type_id>
+    <name>launch system on target</name>
+    <priority>105</priority>
+    <resource_type>Target</resource_type>
+    <system_events/>
+  </event_type>
+  <event_type id="http://testserver/api/v1/inventory/event_types/19">
+    <description>Create target</description>
+    <job_type_id>19</job_type_id>
+    <name>create target</name>
+    <priority>105</priority>
+    <resource_type>TargetType</resource_type>
+    <system_events/>
+  </event_type>
+  <event_type id="http://testserver/api/v1/inventory/event_types/20">
+    <description>Configure target credentials for the current user</description>
+    <job_type_id>20</job_type_id>
+    <name>configure target credentials</name>
+    <priority>105</priority>
+    <resource_type>Target</resource_type>
+    <system_events/>
+  </event_type>
 </event_types>"""
 
 event_type_put_xml="""\

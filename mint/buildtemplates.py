@@ -214,6 +214,11 @@ class platformIsoKitTrove(TroveOption):
     default = ''
     prompt  = 'Custom platform ISO kit'
 
+class baseImageTrove(TroveOption):
+    default = ''
+    prompt = 'Base image trove'
+
+
 ###
 # Templates
 # classes must end with 'Template' to be properly processed.
@@ -301,7 +306,13 @@ class ApplianceISOTemplate(Template):
                  'mediaTemplateTrove', 'anacondaCustomTrove',
                  'anacondaTemplatesTrove', 'buildOVF10']
     id = buildtypes.APPLIANCE_ISO
-    
+
+
+class DeferredImageTemplate(Template):
+    __slots__ = ['baseImageTrove']
+    id = buildtypes.DEFERRED_IMAGE
+
+
 class WindowsISOTemplate(Template):
     __slots__ = ['baseFileName', 'mediaTemplateTrove', 'platformIsoKitTrove']
     id = buildtypes.WINDOWS_ISO

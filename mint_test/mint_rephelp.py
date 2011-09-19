@@ -235,7 +235,6 @@ def getMintCfg(reposDir, serverRoot, port, securePort, reposDbPort, useProxy):
         cfg.proxyTmpDir = reposDir + '/proxytmp'
 
 
-#        cfg.newsRssFeed = 'file://' +mintPath + '/test/archive/news.xml'
     cfg.configured = True
     cfg.debugMode = True
     cfg.sendNotificationEmails = False
@@ -564,12 +563,7 @@ class RestDBMixIn(object):
             cu.execute('select * from Users where username=?', username)
             row, = cu.fetchall()
             row = dict(row)
-            # get admin perms while avoiding depending on db.users.checkAuth
-            cu.execute('select userGroup FROM UserGroupMembers'
-                       ' JOIN UserGroups USING(userGroupId)'
-                       ' WHERE userId=?', row['userId'])
-            groups = [ x[0] for x in cu ]
-            admin = 'MintAdmin' in groups
+            admin = row.pop('is_admin')
             auth = users.Authorization(authorized=True, admin=admin, **row)
         else:
             auth = users.Authorization(authoried=False, admin=False,

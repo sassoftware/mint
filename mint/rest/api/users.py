@@ -62,7 +62,6 @@ class UserController(base.BaseController):
     modelName = 'username'
 
     urls = {'products' : 'listProducts',
-            'groups'   : 'listGroups',
             'notices'  : UserNoticesController}
 
     def index(self, request):
@@ -75,6 +74,3 @@ class UserController(base.BaseController):
     #and groups that a user belongs.  This will likely intersect with RBAC.
     def listProducts(self, request, username):
         return self.db.listMembershipsForUser(username)
-
-    def listGroups(self, request, username):
-        return self.db.listUserGroupsForUser(username)

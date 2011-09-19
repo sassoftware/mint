@@ -10,7 +10,7 @@ from django.http import HttpResponse, HttpResponseNotFound, HttpResponseRedirect
 from django_restapi import resource
 
 from mint.django_rest.deco import requires, return_xml, access, \
-    HttpAuthenticationRequired, getHeaderValue, xObjRequires
+    HttpAuthenticationRequired, xObjRequires
 from mint.django_rest.rbuilder.users import models as usersmodels
 from mint.django_rest.rbuilder import service
 from mint.django_rest.rbuilder.inventory import models
@@ -76,7 +76,7 @@ class ApplianceService(RestDbPassthrough):
 class BaseInventoryService(service.BaseAuthService):    
     def _check_uuid_auth(self, request, kwargs):
         headerName = 'X-rBuilder-Event-UUID'
-        eventUuid = getHeaderValue(request, headerName)
+        eventUuid = self.getHeaderValue(request, headerName)
         if not eventUuid:
             return None
         # Check if this system has such an event uuid
@@ -404,8 +404,8 @@ class InventorySystemsSystemService(BaseInventoryService):
     def get(self, system_id):
         return self.mgr.getSystem(system_id)
 
-    # FIXME -- come back, tricky -- rbac if no event_uuid ???
-    @access.event_uuid
+    # FIXME -- come back, tricky -- rbac if no auth_token ???
+    @access.auth_token
     @access.authenticated
     @requires('system')
     @return_xml

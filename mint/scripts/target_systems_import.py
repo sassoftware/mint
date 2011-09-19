@@ -53,10 +53,8 @@ class Script(scriptlibrary.SingletonScript):
         
         db = database.Database(self.cfg)
         authToken = (self.cfg.authUser, self.cfg.authPass)
-        mintAdminGroupId = db.userGroups.getMintAdminId()
         cu = db.cursor()
-        cu.execute("SELECT MIN(userId) from userGroupMembers "
-                   "WHERE userGroupId = ?", mintAdminGroupId)
+        cu.execute("SELECT MIN(userId) FROM Users WHERE is_admin = true")
         ret = cu.fetchall()
         userId = ret[0][0]
         mintAuth = users.Authorization(

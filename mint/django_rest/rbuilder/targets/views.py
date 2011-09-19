@@ -1,5 +1,11 @@
+#
+# Copyright (c) 2011 rPath, Inc.
+#
+# All Rights Reserved
+#
+
 from django.http import HttpResponse# HttpResponseRedirect
-from mint.django_rest.deco import access, return_xml, requires
+from mint.django_rest.deco import access, return_xml, requires, Flags
 from mint.django_rest.rbuilder import service
 # from mint.django_rest.rbuilder.errors import PermissionDenied
 
@@ -57,6 +63,13 @@ class TargetCredentialsService(service.BaseService):
     def get(self, target_id, target_credentials_id):
         return self.mgr.getTargetCredentialsForTarget(target_id, target_credentials_id)
 
+class TargetConfigureCredentialsService(service.BaseService):
+    @return_xml
+    def rest_GET(self, request, target_id):
+        return self.get(target_id)
+
+    def get(self, target_id):
+        return self.mgr.serializeDescriptorConfigureCredentials(target_id)
 
 class TargetUserCredentialsService(service.BaseService):
     @return_xml
@@ -75,3 +88,46 @@ class TargetUserCredentialsService(service.BaseService):
     @return_xml
     def rest_PUT(self, request, target_credentials_id, target_credentials):
         return self.mgr.updateTargetCredentials(target_credentials_id, target_credentials)
+
+class TargetTypeCreateTargetService(service.BaseService):
+    @return_xml
+    def rest_GET(self, request, target_type_id):
+        return self.get(target_type_id)
+
+    def get(self, target_type_id):
+        return self.mgr.serializeDescriptorCreateTargetByTargetType(target_type_id)
+
+class TargetTypeAllJobsService(service.BaseService):
+    @return_xml
+    def rest_GET(self, request):
+        return self.get()
+
+    def get(self):
+        return self.mgr.getAllTargetTypeJobs()
+
+    @requires("job", flags=Flags(save=False))
+    @return_xml
+    def rest_POST(self, request, job):
+        return self.mgr.addJob(job)
+
+class TargetTypeJobsService(service.BaseService):
+    @return_xml
+    def rest_GET(self, request, target_type_id):
+        return self.get(target_type_id)
+
+    def get(self, target_type_id):
+        return self.mgr.getJobsByTargetType(target_type_id)
+
+class TargetJobsService(service.BaseService):
+    @return_xml
+    def rest_GET(self, request, target_id):
+        return self.get(target_id)
+        
+    def get(self, target_id):
+        return self.mgr.getJobsByTargetId(target_id)
+
+    @requires("job", flags=Flags(save=False))
+    @return_xml
+    def rest_POST(self, request, target_id, job):
+        return self.mgr.addJob(job)
+

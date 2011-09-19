@@ -12,17 +12,6 @@ from mint.web.templatesupport import projectText
 
     <head>
         <title>${formatTitle('Please Confirm')}</title>
-        <script type="text/javascript">
-            function toggleInfo() {
-                if (getElement('vmtn').checked) {
-                    showElement('previewInfo');
-                }
-                else {
-                    hideElement('previewInfo');
-                }
-            }
-        </script>
-
     </head>
     <body>
         <div class="fullpage">
@@ -57,34 +46,6 @@ from mint.web.templatesupport import projectText
                     </td>
                 </tr>
                 </table>
-                
-                <div py:strip="True" py:if="previewData">
-                    <div>
-                        <input id="vmtn" type="checkbox" checked="true" name="vmtn" onclick="toggleInfo();"/><label for="vmtn">Submit this release as a community appliance to the <a href="https://www.vmware.com/vmtn/appliances/directory">VMware(R) Virtual
-Appliance Marketplace</a></label>                            
-                        <div id="previewInfo">
-                        <table style="border: 1px solid grey; width: 90%; margin-top: 20px;">
-                        <tr>
-                            <td colspan="2">
-                                <p class="help" style="text-align: center;">The following information about your appliance will be posted to the VMware(R) Virtual Appliance Marketplace:</p>
-                            </td>
-                        </tr>
-                        <tr>
-                            <td style="text-align: right; padding-right: 30px;">Title:</td>
-                            <td>${previewData['title']}</td>
-                        </tr>
-                        <tr>
-                            <td  style="text-align: right; padding-right: 30px;">Release Description:</td>
-                            <td>${previewData['oneLiner']}</td>
-                        </tr>
-                        <tr>
-                            <td style="text-align: right; padding-right: 30px;">${projectText().title()} Description:</td>
-                            <td>${previewData['longDesc']}</td>
-                        </tr>
-                        </table>
-                        </div>
-                    </div>
-                </div>
             </form>
             </div>
             <br class="clear"/>

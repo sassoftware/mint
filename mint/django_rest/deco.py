@@ -8,12 +8,14 @@ from django import http
 from xobj import xobj
 from mint.django_rest.rbuilder import modellib
 
+# Used by views too
+Flags = modellib.Flags
 
 class ACCESS(object):
     ANONYMOUS = 1
     AUTHENTICATED = 2
     ADMIN = 4
-    EVENT_UUID = 8
+    AUTH_TOKEN = 8
     LOCALHOST = 16
 
 def D(field, docstring):
@@ -38,7 +40,7 @@ def getHeaderValue(request, headerName):
     mangledHeaderName = 'HTTP_' + headerName.replace('-', '_').upper()
     return request.META.get(headerName, request.META.get(mangledHeaderName))
 
-def requires(model_names, save=True, load=True):
+def requires(model_names, save=True, load=True, flags=None):
     """
     Decorator that parses the post data on a request into the class
     specified by modelClass.
@@ -48,22 +50,32 @@ def requires(model_names, save=True, load=True):
     instead if you're attempting to construct a model from user input
     and it's unlikely to be saveable.
     """
+    if flags is None:
+        flags = Flags(save=save, load=load)
     def decorate(function):
 
         def inner(*args, **kw):
             request = args[1]
             built_model, model_name, modelCls  = _getXobjModel(request, model_names)
-            # Extract the pk field
-            if modelCls._meta.has_auto_field:
-                autoField = modelCls._meta.auto_field
-                keyFieldName = autoField.name
-                keyFieldValue = kw.get(keyFieldName)
-                # This will also overwrite the field if it's present
-                setattr(built_model, keyFieldName, keyFieldValue)
+
+            uqFields = dict((x.name, getattr(x, 'UpdatableKey', False))
+                for x in modelCls._meta.fields if x.unique)
+            uqkeyvals = [ x for x in kw.items() if x[0] in uqFields ]
+            if len(uqkeyvals) > 1:
+                raise Exception("Programming error: multiple unique keys present")
+            if uqkeyvals:
+                keyFieldName, keyFieldValue = uqkeyvals[0]
+                updatable = uqFields[keyFieldName]
+                if getattr(built_model, keyFieldName, None) is None or not updatable:
+                    # This will also overwrite the field if it's present
+                    setattr(built_model, keyFieldName, keyFieldValue)
             # XXX This is not the ideal place to handle this
             _injectZone(request, built_model, model_name, modelCls)
+            # We need to pass a new copy of the flags object, because
+            # it gets modified down the road, and we don't want to
+            # pollute further calls.
             model = modelCls.objects.load_from_object(
-                built_model, request, save=save, load=load)
+                built_model, request, flags=flags.copy())
             kw[model_name] = model
             return function(*args, **kw)
         
@@ -142,11 +154,11 @@ class access(object):
         return function
 
     @classmethod
-    def event_uuid(cls, function):
+    def auth_token(cls, function):
         """
-        Decorator that verifies a valid event id
+        Decorator that verifies a valid auth token
         """
-        function.ACCESS = getattr(function, 'ACCESS', 0) | ACCESS.EVENT_UUID
+        function.ACCESS = getattr(function, 'ACCESS', 0) | ACCESS.AUTH_TOKEN
         return function
 
     @classmethod
@@ -155,6 +167,14 @@ class access(object):
         Decorator that verifies localhost access (for management interfaces)
         """
         function.ACCESS = getattr(function, 'ACCESS', 0) | ACCESS.LOCALHOST
+        return function
+
+    @classmethod
+    def job_token(cls, function):
+        """
+        Decorator that verifies a valid job token
+        """
+        function.ACCESS = getattr(function, 'ACCESS', 0) | ACCESS.JOB_TOKEN
         return function
 
 def return_xml(function):
