@@ -587,7 +587,6 @@ class InventorySystemConfigurationServices(BaseInventoryService):
 class InventorySystemConfigurationDescriptorServices(BaseInventoryService):
 
     @rbac(rbac_can_read_system_id)
-    @access.admin
     def rest_GET(self, request, system_id):
         response = HttpResponse(status=200, content=self.get(system_id))
         response['Content-Type'] = 'text/xml'
