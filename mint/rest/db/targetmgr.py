@@ -117,7 +117,7 @@ class TargetManager(manager.Manager):
 
         feField = 'target.target_id'
         feOperator = 'EQUAL'
-        feValue = targetId
+        feValue = str(targetId)
         cu.execute("""SELECT filter_entry_id FROM querysets_filterentry
             WHERE field=? AND operator=? AND value=?""",
             feField, feOperator, feValue)
