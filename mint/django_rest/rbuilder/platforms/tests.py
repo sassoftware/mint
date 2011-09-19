@@ -161,7 +161,7 @@ class NewPlatformTest(XMLTestCase):
             if image_type not in ['netbootImage', 'liveIsoImage',
                     'deferredImage']:
                 # verify we can get the descriptor and it looks XML-ish
-                url = "platforms/image_type_definitions/%s" % image_type
+                url = "platforms/image_type_definition_descriptors/%s" % image_type
                 response = self._get(url) #, username='admin', password='password')
                 self.assertEquals(response.status_code, 200)
                 content = response.content.strip()
@@ -204,13 +204,13 @@ class NewPlatformTest(XMLTestCase):
             # keep app from making call to repos service
             x.save()
 
-        response = self._get('platforms/image_type_definitions/deferredImage')
+        response = self._get('platforms/image_type_definition_descriptors/deferredImage')
         self.assertEqual(response.status_code, 200)
         self.assertXMLEquals(response.content, 
             testsxml.deferred_image_descriptor_xml)
 
         # an invalid one should 404
-        response = self._get('platforms/image_type_definitions/doesNotExist')
+        response = self._get('platforms/image_type_definition_descriptors/doesNotExist')
         #    username='admin', password='password')
         self.assertEquals(response.status_code, 404)
          

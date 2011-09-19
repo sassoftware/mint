@@ -510,7 +510,7 @@ urlpatterns = patterns('',
     URL(r'platforms/content_source_types/(?P<source_type>[_a-zA-Z0-9]+)/(?P<content_source_type_id>\d+)/?$',
         platformsviews.SourceTypeService(),
         name='ContentSourceType'),
-    URL(r'platforms/image_type_definitions/(?P<name>\w+)/?$',
+    URL(r'platforms/image_type_definition_descriptors/(?P<name>\w+)/?$',
         platformsviews.ImageTypeDefinitionDescriptorService(),
         name='ImageTypeDefinitionDescriptor'),
 
