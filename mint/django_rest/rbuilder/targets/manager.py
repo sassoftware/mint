@@ -48,7 +48,6 @@ class TargetsManager(basemanager.BaseManager, CatalogServiceHelper):
 
     @exposed
     def getTargetCredentialsForCurrentUser(self, target):
-        ret = dict()
         userId = self.auth.userId
         creds = models.TargetCredentials.objects.filter(
             target_user_credentials__target=target,

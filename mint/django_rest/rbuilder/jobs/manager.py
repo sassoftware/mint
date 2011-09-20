@@ -372,6 +372,7 @@ class JobHandlerRegistry(HandlerRegistry):
                 rbUser=self.mgr.auth.username,
                 rbUserId=self.mgr.auth.userId,
                 isAdmin=self.mgr.auth.admin)
+            return userCredentials
 
         def getRepeaterMethod(self, cli, job):
             descriptor, descriptorData = self.extractDescriptorData(job)
