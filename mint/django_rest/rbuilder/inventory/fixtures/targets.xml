@@ -19,47 +19,47 @@
     <field to="zones.zone" name="zone" rel="ManyToOneRel">1</field>
   </object>
   <object pk="1" model="targets.targetdata">
-    <field to="targets.target" name="target_id" rel="ManyToOneRel">1</field>
+    <field to="targets.target" name="target" rel="ManyToOneRel">1</field>
     <field type="CharField" name="name">alias</field>
     <field type="TextField" name="value">"vsphere1"</field>
   </object>
   <object pk="2" model="targets.targetdata">
-    <field to="targets.target" name="target_id" rel="ManyToOneRel">1</field>
+    <field to="targets.target" name="target" rel="ManyToOneRel">1</field>
     <field type="CharField" name="name">description</field>
     <field type="TextField" name="value">"vsphere cloud 1"</field>
   </object>
   <object pk="3" model="targets.targetdata">
-    <field to="targets.target" name="target_id" rel="ManyToOneRel">1</field>
+    <field to="targets.target" name="target" rel="ManyToOneRel">1</field>
     <field type="CharField" name="name">name</field>
     <field type="TextField" name="value">"vsphere1.eng.rpath.com"</field>
   </object>
   <object pk="4" model="targets.targetdata">
-    <field to="targets.target" name="target_id" rel="ManyToOneRel">2</field>
+    <field to="targets.target" name="target" rel="ManyToOneRel">2</field>
     <field type="CharField" name="name">alias</field>
     <field type="TextField" name="value">"vsphere2"</field>
   </object>
   <object pk="5" model="targets.targetdata">
-    <field to="targets.target" name="target_id" rel="ManyToOneRel">2</field>
+    <field to="targets.target" name="target" rel="ManyToOneRel">2</field>
     <field type="CharField" name="name">description</field>
     <field type="TextField" name="value">"vsphere cloud 2"</field>
   </object>
   <object pk="6" model="targets.targetdata">
-    <field to="targets.target" name="target_id" rel="ManyToOneRel">2</field>
+    <field to="targets.target" name="target" rel="ManyToOneRel">2</field>
     <field type="CharField" name="name">name</field>
     <field type="TextField" name="value">"vsphere2.eng.rpath.com"</field>
   </object>
   <object pk="7" model="targets.targetdata">
-    <field to="targets.target" name="target_id" rel="ManyToOneRel">3</field>
+    <field to="targets.target" name="target" rel="ManyToOneRel">3</field>
     <field type="CharField" name="name">alias</field>
     <field type="TextField" name="value">"ec2"</field>
   </object>
   <object pk="8" model="targets.targetdata">
-    <field to="targets.target" name="target_id" rel="ManyToOneRel">3</field>
+    <field to="targets.target" name="target" rel="ManyToOneRel">3</field>
     <field type="CharField" name="name">description</field>
     <field type="TextField" name="value">"Amazon EC2"</field>
   </object>
   <object pk="9" model="targets.targetdata">
-    <field to="targets.target" name="target_id" rel="ManyToOneRel">3</field>
+    <field to="targets.target" name="target" rel="ManyToOneRel">3</field>
     <field type="CharField" name="name">name</field>
     <field type="TextField" name="value">"aws"</field>
   </object>
@@ -77,33 +77,33 @@ username:YmFydXNlcg==</field>
 field2:dHdvZm9ydGhlc291bA==</field>
   </object>
   <object pk="1" model="targets.targetusercredentials">
-    <field to="targets.target" name="target_id" rel="ManyToOneRel">1</field>
-    <field to="users.users" name="user_id" rel="ManyToOneRel">2</field>
-    <field to="targets.targetcredentials" name="target_credentials_id" rel="ManyToOneRel">1</field>
+    <field to="targets.target" name="target" rel="ManyToOneRel">1</field>
+    <field to="users.users" name="user" rel="ManyToOneRel">2</field>
+    <field to="targets.targetcredentials" name="target_credentials" rel="ManyToOneRel">1</field>
   </object>
   <object pk="2" model="targets.targetusercredentials">
-    <field to="targets.target" name="target_id" rel="ManyToOneRel">3</field>
-    <field to="users.users" name="user_id" rel="ManyToOneRel">2</field>
-    <field to="targets.targetcredentials" name="target_credentials_id" rel="ManyToOneRel">3</field>
+    <field to="targets.target" name="target" rel="ManyToOneRel">3</field>
+    <field to="users.users" name="user" rel="ManyToOneRel">2</field>
+    <field to="targets.targetcredentials" name="target_credentials" rel="ManyToOneRel">3</field>
   </object>
   <object pk="3" model="targets.targetusercredentials">
-    <field to="targets.target" name="target_id" rel="ManyToOneRel">2</field>
-    <field to="users.users" name="user_id" rel="ManyToOneRel">3</field>
-    <field to="targets.targetcredentials" name="target_credentials_id" rel="ManyToOneRel">2</field>
+    <field to="targets.target" name="target" rel="ManyToOneRel">2</field>
+    <field to="users.users" name="user" rel="ManyToOneRel">3</field>
+    <field to="targets.targetcredentials" name="target_credentials" rel="ManyToOneRel">2</field>
   </object>
   <object pk="4" model="targets.targetusercredentials">
-    <field to="targets.target" name="target_id" rel="ManyToOneRel">3</field>
-    <field to="users.users" name="user_id" rel="ManyToOneRel">3</field>
-    <field to="targets.targetcredentials" name="target_credentials_id" rel="ManyToOneRel">3</field>
+    <field to="targets.target" name="target" rel="ManyToOneRel">3</field>
+    <field to="users.users" name="user" rel="ManyToOneRel">3</field>
+    <field to="targets.targetcredentials" name="target_credentials" rel="ManyToOneRel">3</field>
   </object>
   <object pk="5" model="targets.targetusercredentials">
-    <field to="targets.target" name="target_id" rel="ManyToOneRel">1</field>
-    <field to="users.users" name="user_id" rel="ManyToOneRel">4</field>
-    <field to="targets.targetcredentials" name="target_credentials_id" rel="ManyToOneRel">1</field>
+    <field to="targets.target" name="target" rel="ManyToOneRel">1</field>
+    <field to="users.users" name="user" rel="ManyToOneRel">4</field>
+    <field to="targets.targetcredentials" name="target_credentials" rel="ManyToOneRel">1</field>
   </object>
   <object pk="5" model="targets.targetusercredentials">
-    <field to="targets.target" name="target_id" rel="ManyToOneRel">2</field>
-    <field to="users.users" name="user_id" rel="ManyToOneRel">4</field>
-    <field to="targets.targetcredentials" name="target_credentials_id" rel="ManyToOneRel">1</field>
+    <field to="targets.target" name="target" rel="ManyToOneRel">2</field>
+    <field to="users.users" name="user" rel="ManyToOneRel">4</field>
+    <field to="targets.targetcredentials" name="target_credentials" rel="ManyToOneRel">1</field>
   </object>
 </django-objects>

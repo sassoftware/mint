@@ -5,6 +5,8 @@
 # All rights reserved.
 #
 
+import collections
+
 from mint.django_rest.test_utils import XMLTestCase, RepeaterMixIn
 from mint.django_rest.rbuilder.inventory import zones as zmodels
 from mint.django_rest.rbuilder.users import models as umodels
@@ -71,9 +73,9 @@ class BaseTargetsTest(XMLTestCase):
         for i in range(3):
             targetCredentials = models.TargetCredentials.objects.create(credentials='abc%s' % i)
             models.TargetUserCredentials.objects.create(
-                target_id=sampleTargets[i],
-                user_id=umodels.User.objects.get(user_name='testuser'),
-                target_credentials_id=targetCredentials)
+                target=sampleTargets[i],
+                user=umodels.User.objects.get(user_name='testuser'),
+                target_credentials=targetCredentials)
                 
         self.target_credentials = models.TargetCredentials.objects.all()
         self.target_user_credentials = models.TargetUserCredentials.objects.all()
@@ -257,6 +259,7 @@ class JobCreationTest(BaseTargetsTest, RepeaterMixIn):
     <alias>newbie</alias>
     <description>Brand new cloud</description>
     <name>newbie.eng.rpath.com</name>
+    <zone>Local rBuilder</zone>
   </descriptor_data>
 </job>
 """
@@ -273,6 +276,46 @@ class JobCreationTest(BaseTargetsTest, RepeaterMixIn):
             [ x.target_type.name for x in dbjob.jobtargettype_set.all() ],
             [ 'xenent' ],
         )
+
+        calls = self.mgr.repeaterMgr.repeaterClient.getCallList()
+        self.failUnlessEqual([ x.name for x in calls ],
+            ['targets.TargetConfiguration', 'targets.configure', 'targets.checkCreate'])
+        realCall = calls[-1]
+        self.failUnlessEqual(realCall.args, ())
+        self.failUnlessEqual(realCall.kwargs, {})
+        self.mgr.repeaterMgr.repeaterClient.reset()
+
+        jobXml = """
+<job>
+  <job_state>Failed</job_state>
+  <status_code>401</status_code>
+  <status_text>Invalid target credentials</status_text>
+</job>
+"""
+        # Grab token
+        jobToken = dbjob.job_token
+        jobUrl = "jobs/%s" % dbjob.job_uuid
+        response = self._put(jobUrl, jobXml, jobToken=jobToken)
+        self.assertEquals(response.status_code, 200)
+        obj = xobj.parse(response.content)
+        job = obj.job
+
+        jobXml = """
+<job>
+  <job_state>Completed</job_state>
+  <status_code>200</status_code>
+  <status_text>Done</status_text>
+  <results>
+    <target/>
+  </results>
+</job>
+"""
+
+        response = self._put(jobUrl, jobXml, jobToken=jobToken)
+        self.assertEquals(response.status_code, 200)
+        obj = xobj.parse(response.content)
+        job = obj.job
+        self.failUnlessEqual(job.results.id, "http://testserver/api/v1/targets/5")
 
     def testTargetCredentialsConfiguration(self):
         jobType = jmodels.EventType.objects.get(name="configure target credentials")
@@ -303,3 +346,72 @@ class JobCreationTest(BaseTargetsTest, RepeaterMixIn):
             [ x.target.name for x in dbjob.jobtarget_set.all() ],
             [ target.name ],
         )
+
+        calls = self.mgr.repeaterMgr.repeaterClient.getCallList()
+        self.failUnlessEqual([ x.name for x in calls ],
+            ['targets.TargetConfiguration', 'targets.TargetUserCredentials',
+                'targets.configure', 'targets.checkCredentials'])
+        realCall = calls[-1]
+        self.failUnlessEqual(realCall.args, ())
+        self.failUnlessEqual(realCall.kwargs, {})
+        self.mgr.repeaterMgr.repeaterClient.reset()
+
+        jobXml = """
+<job>
+  <job_state>Failed</job_state>
+  <status_code>401</status_code>
+  <status_text>Invalid target credentials</status_text>
+</job>
+"""
+        # Grab token
+        jobToken = dbjob.job_token
+        jobUrl = "jobs/%s" % dbjob.job_uuid
+        response = self._put(jobUrl, jobXml, jobToken=jobToken)
+        self.assertEquals(response.status_code, 200)
+        obj = xobj.parse(response.content)
+        job = obj.job
+
+        jobXml = """
+<job>
+  <job_state>Completed</job_state>
+  <status_code>200</status_code>
+  <status_text>Done</status_text>
+  <results>
+    <target/>
+  </results>
+</job>
+"""
+
+        response = self._put(jobUrl, jobXml, jobToken=jobToken)
+        self.assertEquals(response.status_code, 200)
+        obj = xobj.parse(response.content)
+        job = obj.job
+        self.failUnlessEqual(job.results.id, "http://testserver/api/v1/targets/1")
+
+    def testSetTargetUserCredentials(self):
+        target = models.Target.objects.get(pk=1)
+        creds0 = dict(username="bubba", password="shrimp")
+        creds1 = dict(username="forrest", password="jennay")
+        tmgr = self.mgr.targetsManager
+        fakeAuth = collections.namedtuple("FakeAuth", "userId")
+        tmgr.mgr._auth = fakeAuth(1)
+        tucreds = tmgr.setTargetUserCredentials(target, creds0)
+        creds = sorted(models.TargetUserCredentials.objects.filter(
+            user__user_id=1, target=target).values_list('id', flat=True))
+        self.failUnlessEqual(creds, [tucreds.id])
+        # Do it again, the credentials should be the same
+        tucreds2 = tmgr.setTargetUserCredentials(target, creds0)
+        self.failUnlessEqual(tucreds.id, tucreds2.id)
+
+        tcredid = tucreds.target_credentials_id
+
+        # New creds
+        tucreds3 = tmgr.setTargetUserCredentials(target, creds1)
+        self.failIf(tucreds.id == tucreds3.id)
+
+        # Old creds should be gone
+        self.failUnlessEqual([ x for x in
+                models.TargetCredentials.objects.filter(
+                    target_credentials_id=tcredid).values_list(
+                        'target_credentials_id', flat=True)],
+            [])

@@ -37,7 +37,6 @@ from mint.django_rest.rbuilder.repos.manager import ReposManager
 from mint.django_rest.rbuilder.rbac.manager.rbacmanager import RbacManager
 from mint.django_rest.rbuilder.targets.manager import TargetsManager,\
                                                       TargetTypesManager,\
-                                                      TargetCredentialsManager,\
                                                       TargetTypeJobsManager,\
                                                       TargetJobsManager
 from mint.django_rest.rbuilder.images.manager.imagesmanager import ImagesManager
@@ -74,7 +73,6 @@ class RbuilderManager(basemanager.BaseRbuilderManager):
         'rbacMgr' : RbacManager,
         'targetsManager' : TargetsManager,
         'targetTypesManager': TargetTypesManager,
-        'targetCredentialsManager' : TargetCredentialsManager,
         'targetTypeJobsManager' : TargetTypeJobsManager,
         'targetJobsManager' : TargetJobsManager,
         'imagesManager' : ImagesManager,

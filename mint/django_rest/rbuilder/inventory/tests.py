@@ -4199,12 +4199,12 @@ class TargetSystemImportTest(XMLTestCaseStandin):
                     for x in system.target_credentials.all())
                 try:
                     tuc = targetmodels.TargetUserCredentials.objects.get(
-                        target_id=tgt, user_id__user_name = userName)
+                        target=tgt, user__user_name = userName)
                 except targetmodels.TargetUserCredentials.DoesNotExist:
                     self.fail("System %s not linked to user %s" % (
                         system.target_system_id, userName))
                 self.failUnlessIn(
-                    tuc.target_credentials_id.target_credentials_id,
+                    tuc.target_credentials_id,
                     cred_ids)
                 self.failUnlessEqual([
                     x.dns_name for x in system.networks.all() ],
@@ -4264,9 +4264,9 @@ class TargetSystemImportTest(XMLTestCaseStandin):
         user3 = usersmodels.User.objects.get(user_name='JeanValjean3')
         self.failUnlessEqual(
             targetmodels.TargetUserCredentials.objects.get(
-                target_id=self.tgt3, user_id=user1).target_credentials_id.pk,
+                target=self.tgt3, user=user1).target_credentials.pk,
             targetmodels.TargetUserCredentials.objects.get(
-                target_id=self.tgt3, user_id=user2).target_credentials_id.pk,
+                target=self.tgt3, user=user2).target_credentials.pk,
         )
 
         system = models.System.objects.get(target_system_id='ec2aws-002')
@@ -4313,7 +4313,7 @@ class TargetSystemImportTest(XMLTestCaseStandin):
         # Make sure we have credentials
         stc = list(system.target_credentials.all())[0]
         self.failUnlessIn(stc.credentials_id,
-            [ x.target_credentials_id.target_credentials_id
+            [ x.target_credentials_id
                 for x in user2.target_user_credentials.all() ])
         self.failUnlessEqual(system.managing_zone.name,
             zmodels.Zone.LOCAL_ZONE)

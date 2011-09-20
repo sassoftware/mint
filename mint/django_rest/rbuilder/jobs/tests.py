@@ -168,6 +168,7 @@ class JobCreationTest(BaseJobsTest, RepeaterMixIn):
     <alias>newbie</alias>
     <description>Brand new cloud</description>
     <name>newbie.eng.rpath.com</name>
+    <zone>Local rBuilder</zone>
   </descriptor_data>
 </job>
 """

@@ -15,6 +15,7 @@ from xobj import xobj
 from smartform import descriptor as smartdescriptor
 
 from mint.django_rest.rbuilder import errors
+from mint.django_rest.rbuilder import modellib
 from mint.django_rest.rbuilder.manager import basemanager
 from mint.django_rest.rbuilder.jobs import models
 from mint.django_rest.rbuilder.inventory import models as inventorymodels
@@ -36,20 +37,20 @@ class JobManager(basemanager.BaseManager):
     def updateJob(self, job_uuid, job):
         if not job.pk:
             raise errors.ResourceNotFound()
-        factory = JobUpdateHandlerRegistry.getHandlerFactory(job.job_type.name)
+        factory = JobHandlerRegistry.getHandlerFactory(job.job_type.name)
         if factory is None:
             return job
         jhandler = factory(self)
-        jhandler.run(job)
+        jhandler.processResults(job)
         return job
 
     @exposed
     def addJob(self, job):
-        factory = JobCreationHandlerRegistry.getHandlerFactory(job.job_type.name)
+        factory = JobHandlerRegistry.getHandlerFactory(job.job_type.name)
         if factory is None:
             raise errors.InvalidData()
         jhandler = factory(self)
-        jhandler.run(job)
+        jhandler.create(job)
         return job
 
     @exposed
@@ -111,33 +112,6 @@ class AbstractHandler(object):
     def mgr(self):
         return self.mgrRef()
 
-class BaseJobUpdater(AbstractHandler):
-    __slots__ = [ 'results', ]
-    ResultsTag = None
-
-    def _init(self):
-        self.results = None
-
-    def getJobResults(self, job):
-        results = getattr(job.results, self.ResultsTag, None)
-        return results
-
-    def validateJobResults(self):
-        if self.results is None:
-            raise errors.InvalidData()
-
-    def run(self, job):
-        self.results = self.getJobResults(job)
-        self.validateJobResults()
-        self.processJobResults()
-
-class ActionJobUpdater(BaseJobUpdater):
-    __slots__ = []
-
-    def getJobResults(self, job):
-        results = getattr(job.results, self.descriptorData, None)
-        return results
-
 class HandlerRegistry(object):
     """
     Generic registry for factories.
@@ -164,32 +138,13 @@ class HandlerRegistry(object):
     def getHandlerFactory(cls, jobType):
         return cls.__metaclass__._registry.get(jobType)
 
-class JobUpdateHandlerRegistry(HandlerRegistry):
-    BaseHandlerClass = BaseJobUpdater
-
-    class TargetRefreshImages(BaseJobUpdater):
-        jobType = models.EventType.TARGET_REFRESH_IMAGES
-        ResultsTag = 'images'
-
-        def processJobResults(self):
-            pass
-
-    class TargetRefreshSystems(BaseJobUpdater):
-        jobType = models.EventType.TARGET_REFRESH_SYSTEMS
-        ResultsTag = 'instances'
-
-    class TargetDeployImage(ActionJobUpdater):
-        jobType = models.EventType.TARGET_DEPLOY_IMAGE
-
-    class TargetLaunchSystem(ActionJobUpdater):
-        jobType = models.EventType.TARGET_LAUNCH_SYSTEM
-
-class BaseJobCreator(AbstractHandler):
+class BaseJobHandler(AbstractHandler):
     __slots__ = []
 
-    def run(self, job):
+    def create(self, job):
         uuid, rmakeJob = self.createRmakeJob(job)
         job.setValuesFromRmakeJob(rmakeJob)
+        job.job_token = rmakeJob.data.getObject().data['authToken']
         job.save()
         # Blank out the descriptor data, we don't need it in the return
         # value
@@ -198,16 +153,53 @@ class BaseJobCreator(AbstractHandler):
 
     def createRmakeJob(self, job):
         cli = self.mgr.mgr.repeaterMgr.repeaterClient
-        method = self.getRepeaterMethod(cli)
+        method = self.getRepeaterMethod(cli, job)
         methodArgs, methodKwargs = self.getRepeaterMethodArgs(job)
         return method(*methodArgs, **methodKwargs)
+
+    def getRepeaterMethodArgs(self, job):
+        return (), {}
 
     def linkRelatedResource(self, job):
         pass
 
-class DescriptorJobCreator(BaseJobCreator):
+class ResultsProcessingMixIn(object):
+    __slots__ = []
+    ResultsTag = None
 
-    def getRepeaterMethodArgs(self, job):
+    # Results processing API
+    def _init(self):
+        self.results = None
+
+    def processResults(self, job):
+        if job.oldModel is None:
+            # We won't allow job creation to happen here
+            raise errors.InvalidData()
+        self.results = self.getJobResults(job)
+        self.validateJobResults(job)
+        self.processJobResults(job)
+
+    def getJobResults(self, job):
+        results = getattr(job.results, self.ResultsTag, None)
+        return results
+
+    def validateJobResults(self, job):
+        jobState = modellib.Cache.get(models.JobState, pk=job.job_state_id)
+        if self.results is None and jobState.name == jobState.COMPLETED:
+            raise errors.InvalidData()
+
+    def loadDescriptorData(self, job):
+        descriptor = smartdescriptor.ConfigurationDescriptor(fromStream=job._descriptor)
+        descriptorData = smartdescriptor.DescriptorData(
+            fromStream=job._descriptor_data, descriptor=descriptor)
+        return descriptorData
+
+
+class DescriptorJobHandler(BaseJobHandler, ResultsProcessingMixIn):
+    __slots__ = [ 'results', ]
+
+    def extractDescriptorData(self, job):
+        "Executed when the job is created"
         descriptorId = job.descriptor.id
         # Strip the server-side portion
         descriptorId = urlparse.urlsplit(descriptorId).path
@@ -233,7 +225,7 @@ class DescriptorJobCreator(BaseJobCreator):
         descriptor.serialize(sio)
         job._descriptor = sio.getvalue()
         job._descriptor_data = descriptorDataXml
-        return (descriptor, descriptorDataObj), {}
+        return descriptor, descriptorDataObj
 
     def getRelatedResource(self, descriptor):
         descriptorId = descriptor.getId()
@@ -262,39 +254,156 @@ class DescriptorJobCreator(BaseJobCreator):
         setattr(model, relatedFieldName, job._relatedResource)
         model.save()
 
-class JobCreationHandlerRegistry(HandlerRegistry):
-    BaseHandlerClass = BaseJobCreator
+class JobHandlerRegistry(HandlerRegistry):
+    BaseHandlerClass = BaseJobHandler
 
-    class TargetCreator(DescriptorJobCreator):
+    class TargetRefreshImages(DescriptorJobHandler):
+        jobType = models.EventType.TARGET_REFRESH_IMAGES
+        ResultsTag = 'images'
+
+        def processJobResults(self, job):
+            pass
+
+    class TargetRefreshSystems(DescriptorJobHandler):
+        jobType = models.EventType.TARGET_REFRESH_SYSTEMS
+        ResultsTag = 'instances'
+
+    class TargetDeployImage(DescriptorJobHandler):
+        jobType = models.EventType.TARGET_DEPLOY_IMAGE
+
+    class TargetLaunchSystem(DescriptorJobHandler):
+        jobType = models.EventType.TARGET_LAUNCH_SYSTEM
+
+
+    class TargetCreator(DescriptorJobHandler):
+        __slots__ = [ 'targetType', ]
         jobType = models.EventType.TARGET_CREATE
+        ResultsTag = 'target'
+
+        def _init(self):
+            self.targetType = None
 
         def getDescriptor(self, descriptorId):
             # XXX
             targetTypeId = os.path.basename(os.path.dirname(descriptorId))
             targetTypeId = int(targetTypeId)
+            self._setTargetType(targetTypeId)
             descr = self.mgr.mgr.getDescriptorCreateTargetByTargetType(targetTypeId)
             return descr
 
-        def getRepeaterMethod(self, cli):
-            return cli.targets.create
+        def _setTargetType(self, targetTypeId):
+            self.targetType = modellib.Cache.get(targetmodels.TargetType,
+                pk=targetTypeId)
+
+        def getRepeaterMethod(self, cli, job):
+            descriptor, descriptorData = self.extractDescriptorData(job)
+            targetType, targetName, targetData = self._createTargetConfiguration(job)
+            zone = targetData.pop('zone')
+            targetConfiguration = cli.targets.TargetConfiguration(targetType,
+                targetName, targetData.get('alias'), targetData)
+            userCredentials = None
+            cli.targets.configure(zone, targetConfiguration, userCredentials)
+            return cli.targets.checkCreate
 
         def getRelatedThroughModel(self, descriptor):
             return targetmodels.JobTargetType
 
-    class TargetCredentialsConfigurator(DescriptorJobCreator):
+        def processJobResults(self, job):
+            jobState = modellib.Cache.get(models.JobState, pk=job.job_state_id)
+            if jobState.name != jobState.COMPLETED:
+                job.results = None
+                return None
+            targetType, targetName, targetData = self._createTargetConfiguration(job)
+            target = self._createTarget(targetType, targetName, targetData)
+            # XXX technically this should be saved to the DB
+            # Also the xml should not be <results id="blah"/>, but
+            # <results><target id="blah"/></results>
+            job.results = modellib.HrefFieldFromModel(target)
+            return target
+
+        def _createTargetConfiguration(self, job):
+            descriptorData = self.loadDescriptorData(job)
+            if self.targetType is None:
+                targetTypeId = job.jobtargettype_set.all()[0].target_type_id
+                self._setTargetType(targetTypeId)
+            driverClass = self.mgr.mgr.targetsManager.getDriverClass(self.targetType)
+
+            cloudName = driverClass.getCloudNameFromDescriptorData(descriptorData)
+            config = dict((k.getName(), k.getValue())
+                for k in descriptorData.getFields())
+            return self.targetType, cloudName, config
+
+        def _createTarget(self, targetType, targetName, config):
+            return self.mgr.mgr.createTarget(targetType, targetName, config)
+
+
+    class TargetCredentialsConfigurator(DescriptorJobHandler):
+        __slots__ = [ 'target', ]
         jobType = models.EventType.TARGET_CONFIGURE_CREDENTIALS
+        ResultsTag = 'target'
+
+        def _init(self):
+            self.target = None
 
         def getDescriptor(self, descriptorId):
             # XXX
             targetId = os.path.basename(os.path.dirname(descriptorId))
             targetId = int(targetId)
+            self._setTarget(targetId)
             descr = self.mgr.mgr.getDescriptorConfigureCredentials(targetId)
             return descr
 
-        def getRepeaterMethod(self, cli):
-            # XXX
-            return cli.targets.configure
+        def _setTarget(self, targetId):
+            target = modellib.Cache.get(targetmodels.Target, pk=targetId)
+            self.target = target
+
+        def _buildTargetConfiguration(self, cli):
+            targetData = self.mgr.mgr.getTargetConfiguration(self.target)
+            targetTypeName = modellib.Cache.get(targetmodels.TargetType,
+                pk=self.target.target_type_id).name
+            targetConfiguration = cli.targets.TargetConfiguration(
+                targetTypeName, self.target.name, targetData.get('alias'),
+                targetData)
+            return targetConfiguration
+
+        def _buildTargetCredentials(self, cli, creds):
+            userCredentials = cli.targets.TargetUserCredentials(
+                credentials=creds,
+                rbUser=self.mgr.auth.username,
+                rbUserId=self.mgr.auth.userId,
+                isAdmin=self.mgr.auth.admin)
+
+        def getRepeaterMethod(self, cli, job):
+            descriptor, descriptorData = self.extractDescriptorData(job)
+            creds = dict((k.getName(), k.getValue())
+                for k in descriptorData.getFields())
+            targetConfiguration = self._buildTargetConfiguration(cli)
+            targetUserCredentials = self._buildTargetCredentials(cli, creds)
+            zone = self.mgr.mgr.getTargetZone(self.target)
+            cli.targets.configure(zone, targetConfiguration,
+                targetUserCredentials)
+            return cli.targets.checkCredentials
 
         def getRelatedThroughModel(self, descriptor):
             return targetmodels.JobTarget
 
+        def processJobResults(self, job):
+            jobState = modellib.Cache.get(models.JobState, pk=job.job_state_id)
+            if jobState.name != jobState.COMPLETED:
+                job.results = None
+                return None
+            target = self._setTargetUserCredentials(job)
+            # XXX technically this should be saved to the DB
+            # Also the xml should not be <results id="blah"/>, but
+            # <results><target id="blah"/></results>
+            job.results = modellib.HrefFieldFromModel(target)
+            return target
+
+        def _setTargetUserCredentials(self, job):
+            targetId = job.jobtarget_set.all()[0].target_id
+            self._setTarget(targetId)
+            descriptorData = self.loadDescriptorData(job)
+            creds = dict((k.getName(), k.getValue())
+                for k in descriptorData.getFields())
+            self.mgr.mgr.setTargetUserCredentials(self.target, creds)
+            return self.target

@@ -887,9 +887,9 @@ class SystemManager(basemanager.BaseManager):
 
     def _getCredentialsForUser(self, target):
         tucs = targetmodels.TargetUserCredentials.objects.filter(
-            target_id=target, user_id=self.user)
+            target=target, user=self.user)
         for tuc in tucs:
-            return tuc.target_credentials_id
+            return tuc.target_credentials
         return None
 
     def matchSystem(self, system):
@@ -1661,10 +1661,10 @@ class SystemManager(basemanager.BaseManager):
             for x in system.target_credentials.all())
         desiredCredsMap = dict()
         for userName in userNames:
-            desiredCredsMap.update((x.target_credentials_id.target_credentials_id,
-                    x.target_credentials_id)
-                for x in targetmodels.TargetUserCredentials.objects.filter(
-                    target_id=target, user_id__user_name=userName))
+            desiredCredsMap.update((x.target_credentials_id, x)
+                for x in targetmodels.TargetCredentials.objects.filter(
+                    target_user_credentials__target=target,
+                    target_user_credentials__user__user_name=userName))
         existingCredsSet = set(existingCredsMap)
         desiredCredsSet = set(desiredCredsMap)
 
@@ -1688,8 +1688,8 @@ class SystemManager(basemanager.BaseManager):
             userNames = []
             for cred in credentials:
                 tucs = targetmodels.TargetUserCredentials.objects.filter(
-                    target_id=target, target_credentials_id=cred)
-                userNames.extend(x.user_id.user_name for x in tucs)
+                    target=target, target_credentials=cred)
+                userNames.extend(x.user.user_name for x in tucs)
             if not userNames:
                 userNames = [ None ]
             for userName in userNames:

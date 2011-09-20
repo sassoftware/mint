@@ -98,7 +98,7 @@ class TargetData(modellib.XObjModel):
         db_table = u'targetdata'
         
     targetdata_id = models.AutoField(primary_key=True, db_column='targetdataid')    
-    target_id = models.ForeignKey('Target', db_column="targetid")
+    target = models.ForeignKey('Target', db_column="targetid")
     name = models.CharField(max_length=255, null=False)
     value = models.TextField()
 
@@ -123,12 +123,13 @@ class TargetCredentials(modellib.XObjModel):
     credentials = models.TextField(null=False, unique=True)
 
 class TargetUserCredentials(modellib.XObjModel):
-    target_id = models.ForeignKey('Target', db_column="targetid")
-    user_id = models.ForeignKey(usersmodels.User, db_column="userid",
+    target = models.ForeignKey('Target', db_column="targetid")
+    user = models.ForeignKey(usersmodels.User, db_column="userid",
         related_name='target_user_credentials')
-    target_credentials_id = models.ForeignKey('TargetCredentials',
-        db_column="targetcredentialsid")
-    
+    target_credentials = models.ForeignKey('TargetCredentials',
+        db_column="targetcredentialsid", related_name='target_user_credentials')
+    unique_together = ( target, user, )
+
     class Meta:
         db_table = u'targetusercredentials'
 
