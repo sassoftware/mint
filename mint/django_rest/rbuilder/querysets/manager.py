@@ -73,6 +73,7 @@ class QuerySetManager(basemanager.BaseManager):
         # query tag inclusion objects (see usage below)
         self.__filtered_method = None
         self.__chosen_method = None
+        self.__transitive_method = None
 
     def _querySet(self, query_set_or_id):
         '''
@@ -177,8 +178,10 @@ class QuerySetManager(basemanager.BaseManager):
         resources = self.filterQuerySet(querySet)
         method = self._tagMethod(querySet)
         method(resources, querySet, self._filteredMethod())
-        querySet.tagged_date = datetime.now()
-        querySet.save()
+
+    def _tagSingleQuerySetTransitive(self, querySet, resources):
+        method = self._tagMethod(querySet)
+        method(resources, querySet, self._transitiveMethod())
 
     def _tagGeneric(self, resources, queryset, inclusionMethod, tagClass, tagTable, idColumn):
         '''
@@ -303,6 +306,10 @@ class QuerySetManager(basemanager.BaseManager):
             # subquerysets, asking each if they are stale or not.  If stale
             # automatically retag resouces that match
             qsAllResult = self._getQuerySetAllResult(querySet)
+            # the individual match tag types will NOT be here, so let's tag
+            # TRANSITIVELY instead, even though we're not a kid.  (Transitive!=Child)
+            self._tagSingleQuerySetTransitive(querySet, qsAllResult)
+            self._updateQuerySetTaggedDate(querySet)
         else:
             qsAllResult = self._getQuerySetAllResultFast(querySet, lookupFn)
 
@@ -310,6 +317,10 @@ class QuerySetManager(basemanager.BaseManager):
         resourceCollection.view_name = "QuerySetAllResult"
         return resourceCollection
 
+    def _updateQuerySetTaggedDate(self, querySet):
+        querySet.tagged_date = datetime.now()
+        querySet.save()
+ 
     def _getQuerySetAllResult(self, querySet):
         '''
         The result for a queryset is the merger of it's filtered, chosen,
@@ -317,10 +328,11 @@ class QuerySetManager(basemanager.BaseManager):
         '''
        
         lookupFn = self._searchMethod(querySet)
-        return self._getQuerySetFilteredResult(querySet).distinct() | \
+        results = self._getQuerySetFilteredResult(querySet).distinct() | \
             self._getQuerySetChosenResult(querySet, lookupFn).distinct() | \
             self._getQuerySetChildResult(querySet).distinct()
-    
+        return results
+
     def _getQuerySetAllResultFast(self, querySet, lookupFn):
         return self._getQuerySetResultFast(querySet, lookupFn, [
             self._filteredMethod().pk,
@@ -356,42 +368,42 @@ class QuerySetManager(basemanager.BaseManager):
         return inventorymodels.System.objects.filter(
             tags__query_set=querySet,
             tags__inclusion_method__inclusion_method_id__in=methods
-        ).order_by('system_id')
+        ).distinct().order_by('system_id')
 
     def _lookupTaggedUsers(self, querySet, methods):
         # TODO: eliminate duplication here
         return usermodels.User.objects.filter(
             tags__query_set=querySet,
             tags__inclusion_method__inclusion_method_id__in=methods
-        ).order_by('user_id')
+        ).distinct().order_by('user_id')
 
     def _lookupTaggedProjects(self, querySet, methods):
         # TODO: eliminate duplication here
         return projectmodels.Project.objects.filter(
             tags__query_set=querySet,
             tags__inclusion_method__inclusion_method_id__in=methods
-        ).order_by('project_id')
+        ).distinct().order_by('project_id')
 
     def _lookupTaggedStages(self, querySet, methods):
         # TODO: eliminate duplication here
         return projectmodels.Stage.objects.filter(
             tags__query_set=querySet,
             tags__inclusion_method__inclusion_method_id__in=methods
-        ).order_by('stage_id')
+        ).distinct().order_by('stage_id')
 
     def _lookupTaggedRoles(self, querySet, methods):
         # TODO: eliminate duplication here
         return rbacmodels.RbacRole.objects.filter(
             tags__query_set=querySet,
             tags__inclusion_method__inclusion_method_id__in=methods
-        ).order_by('role_id')
+        ).distinct().order_by('role_id')
 
     def _lookupTaggedGrants(self, querySet, methods):
         # TODO: eliminate duplication here
         return rbacmodels.RbacPermission.objects.filter(
             tags__query_set=querySet,
             tags__inclusion_method__inclusion_method_id__in=methods
-        ).order_by('grant_id')
+        ).distinct().order_by('grant_id')
 
     @exposed
     def getQuerySetsForResource(self, resource):
@@ -437,14 +449,15 @@ class QuerySetManager(basemanager.BaseManager):
         querySet = self._querySet(querySetId)
         lookupFn = self._searchMethod(querySet)
         result_data = None
-        if lookupFn is None:
-            # if the queryset does not support tagging, it does not support
-            # chosen results.  This is so far only true for QuerySets that are not
-            # user configurable.
-            model = modellib.type_map[querySet.resource_type]
-            result_data = EmptyQuerySet(model)
-        else:
-            result_data = self._getQuerySetChosenResultFast(querySet, lookupFn)
+        # NO LONGER SUPPORTED
+        #if lookupFn is None:
+        #    # if the queryset does not support tagging, it does not support
+        #    # chosen results.  This is so far only true for QuerySets that are not
+        #    # user configurable.
+        #    model = modellib.type_map[querySet.resource_type]
+        #    result_data = EmptyQuerySet(model)
+        #else:
+        result_data = self._getQuerySetChosenResultFast(querySet, lookupFn)
         resourceCollection = self._getResourceCollection(querySet, result_data)
         resourceCollection.view_name = "QuerySetChosenResult"
         return resourceCollection
@@ -455,13 +468,12 @@ class QuerySetManager(basemanager.BaseManager):
         For a given queryset, return only the portion of it's matches
         that correspond to "smart match" style comparison checks.
         '''
+        # NOTE: the speedy version can only be used for 'all' queries.
+        # because we only have one type of tagged_date
         querySet = self._querySet(querySetId)
         stale = self._areResourceTagsStale(querySet)
         lookupFn = self._searchMethod(querySet)
-        if stale or not use_tags or lookupFn is None:
-            resultData = self._getQuerySetFilteredResult(querySet)
-        else:
-            resultData = self._getQuerySetFilteredResultFast(querySet, lookupFn)
+        resultData = self._getQuerySetFilteredResult(querySet)
         resourceCollection = self._getResourceCollection(querySet, resultData)
         resourceCollection.view_name = "Systems"
         resourceCollection._parents = []
@@ -487,7 +499,6 @@ class QuerySetManager(basemanager.BaseManager):
         lookupFn = self._searchMethod(querySet)
         if self._areResourceTagsStale(querySet):
             self._tagSingleQuerySetFiltered(querySet)
-        #return self.filterQuerySet(results)
         return self._getQuerySetFilteredResultFast(querySet, lookupFn)
 
     def _updateTransitiveTags(self, querySet, results):
@@ -509,19 +520,10 @@ class QuerySetManager(basemanager.BaseManager):
         querysets, regardless of whether those child matches are themselves
         'chosen', 'filtered', or 'child' matches.
         '''
-        # NOTE: child query set ALWAYS uses tags, because you can't choose
-        # to use tags or not at UI visible level, (there may be a nocache
-        # flag instead).
-        # TODO: jump directly to tags if the set isn't stale, do this at THIS level, not
-        # below.
         querySet = self._querySet(querySetId)
         stale = self._areResourceTagsStale(querySet)
         lookupFn = self._searchMethod(querySet)
-        if stale or not use_tags or lookupFn is None:
-            result_data = self._getQuerySetChildResult(querySet)
-        else:
-            result_data = self._getQuerySetChildResultFast(querySet, lookupFn)
-
+        result_data = self._getQuerySetChildResult(querySet)
         resourceCollection = self._getResourceCollection(querySet, result_data)
         resourceCollection.view_name = "QuerySetChildResult"
         return resourceCollection
@@ -546,6 +548,11 @@ class QuerySetManager(basemanager.BaseManager):
              ).distinct()
              resources = resources | filtered | chosen
         resources = resources.distinct()
+        # this could be slow if we update on every access, and is complicated by the fact
+        # that chosen ONLY works through tags.   So only update transitive tags when
+        # the tags are already stale
+        #if self._areResourceTagsStale(querySet):
+        self._updateTransitiveTags(querySet, resources)
         return resources
 
     def _getAllChildQuerySets(self, querySet, results=None):

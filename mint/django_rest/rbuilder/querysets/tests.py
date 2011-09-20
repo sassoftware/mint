@@ -170,6 +170,16 @@ class QuerySetTestCase(QueryTestCase):
         filtered2 = self.xobjSystems("query_sets/%s/filtered/" % qs1.pk)
         self.assertEquals(len(filtered2), 38)
 
+        # do it again to make sure child tags work
+        child2 = self.xobjSystems("query_sets/%s/child/" % qs1.pk)
+        self.assertEquals(len(child2), 201)
+        all2 = self.xobjSystems("query_sets/%s/all/" % qs1.pk)
+        self.assertEquals(len(all2), 201)
+        chosen2 = self.xobjSystems("query_sets/%s/chosen/" % qs1.pk)
+        self.assertEquals(len(chosen2), 0)
+        filtered2 = self.xobjSystems("query_sets/%s/filtered/" % qs1.pk)
+        self.assertEquals(len(filtered2), 38)
+
     def testPostQuerySet(self):
         # show that we can add a new query set
         # get before result
