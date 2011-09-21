@@ -162,10 +162,13 @@ class Job(modellib.XObjIdModel):
             name=JobState.COMPLETED)
         failedState = modellib.Cache.get(JobState,
             name=JobState.FAILED)
-        self.job_uuid = job.job_uuid
+        self.job_uuid = str(job.job_uuid)
         self.status_code = job.status.code
         self.status_text = job.status.text
         self.status_detail = job.status.detail
+        jobToken = job.data.getObject().data.get('authToken')
+        if jobToken:
+            self.job_token = str(jobToken)
         if job.status.final:
             if job.status.completed:
                 self.job_state = completedState
