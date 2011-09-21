@@ -10,6 +10,7 @@ import weakref
 import StringIO
 import urlparse
 from django.core import urlresolvers
+from django.db import IntegrityError
 
 from xobj import xobj
 from smartform import descriptor as smartdescriptor
@@ -22,6 +23,9 @@ from mint.django_rest.rbuilder.inventory import models as inventorymodels
 from mint.django_rest.rbuilder.targets import models as targetmodels
 
 exposed = basemanager.exposed
+
+import logging
+log = logging.getLogger(__name__)
 
 class JobManager(basemanager.BaseManager):
 
@@ -180,6 +184,7 @@ class ResultsProcessingMixIn(object):
         self.results = self.getJobResults(job)
         self.validateJobResults(job)
         self.processJobResults(job)
+        job.save()
 
     def getJobResults(self, job):
         results = getattr(job.results, self.ResultsTag, None)
@@ -316,7 +321,13 @@ class JobHandlerRegistry(HandlerRegistry):
                 job.results = None
                 return None
             targetType, targetName, targetData = self._createTargetConfiguration(job)
-            target = self._createTarget(targetType, targetName, targetData)
+            try:
+                target = self._createTarget(targetType, targetName, targetData)
+            except IntegrityError, e:
+                log.error("Error creating target: %s", e)
+                job.status_text = "Duplicate Target"
+                job.status_code = 400
+                return None
             # XXX technically this should be saved to the DB
             # Also the xml should not be <results id="blah"/>, but
             # <results><target id="blah"/></results>

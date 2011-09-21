@@ -316,6 +316,17 @@ class JobCreationTest(BaseTargetsTest, RepeaterMixIn):
         obj = xobj.parse(response.content)
         job = obj.job
         self.failUnlessEqual(job.results.id, "http://testserver/api/v1/targets/5")
+        self.failUnlessEqual(job.status_code, "200")
+        self.failUnlessEqual(job.status_text, "Done")
+
+        # Post again. We shouldn't create it again
+        response = self._put(jobUrl, jobXml, jobToken=jobToken)
+        self.assertEquals(response.status_code, 200)
+        obj = xobj.parse(response.content)
+        job = obj.job
+        self.failUnlessEqual(job.status_code, "400")
+        self.failUnlessEqual(job.status_text, "Duplicate Target")
+
 
     def testTargetCredentialsConfiguration(self):
         jobType = jmodels.EventType.objects.get(name="configure target credentials")
