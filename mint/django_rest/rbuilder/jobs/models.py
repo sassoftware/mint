@@ -166,9 +166,6 @@ class Job(modellib.XObjIdModel):
         self.status_code = job.status.code
         self.status_text = job.status.text
         self.status_detail = job.status.detail
-        jobToken = job.data.getObject().data.get('authToken')
-        if jobToken:
-            self.job_token = str(jobToken)
         if job.status.final:
             if job.status.completed:
                 self.job_state = completedState

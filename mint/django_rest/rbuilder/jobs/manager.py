@@ -144,6 +144,9 @@ class BaseJobHandler(AbstractHandler):
     def create(self, job):
         uuid, rmakeJob = self.createRmakeJob(job)
         job.setValuesFromRmakeJob(rmakeJob)
+        jobToken = rmakeJob.data.getObject().data.get('authToken')
+        if jobToken:
+            job.job_token = str(jobToken)
         job.save()
         # Blank out the descriptor data, we don't need it in the return
         # value
