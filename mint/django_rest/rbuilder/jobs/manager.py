@@ -10,7 +10,7 @@ import weakref
 import StringIO
 import urlparse
 from django.core import urlresolvers
-from django.db import IntegrityError
+from django.db import IntegrityError, transaction
 
 from xobj import xobj
 from smartform import descriptor as smartdescriptor
@@ -321,9 +321,11 @@ class JobHandlerRegistry(HandlerRegistry):
                 job.results = None
                 return None
             targetType, targetName, targetData = self._createTargetConfiguration(job)
+            tsid = transaction.savepoint()
             try:
                 target = self._createTarget(targetType, targetName, targetData)
             except IntegrityError, e:
+                transaction.savepoint_rollback(tsid)
                 log.error("Error creating target: %s", e)
                 job.status_text = "Duplicate Target"
                 job.status_code = 400
