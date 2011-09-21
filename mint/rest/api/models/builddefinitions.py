@@ -19,12 +19,12 @@ class _DisplayField(Model):
 class Descriptor(_DisplayField):
 
     id = fields.AbsoluteUrlField(isAttribute = True)
-    name = fields.CharField(display=False)     
+    name = fields.CharField(display=False)
 
     def get_absolute_url(self):
         # this is from Django, hence the hard code
         # as they don't know about each other
-        return "/api/v1/platforms/image_type_definition_descriptors/%s" % self.name
+        return "/api/v1/platforms/image_type_definition_descriptors/%s" % (self.name)
 
 class Architecture(_DisplayField):
     id = fields.AbsoluteUrlField(isAttribute = True)
