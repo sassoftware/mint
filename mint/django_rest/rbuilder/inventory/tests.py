@@ -1994,6 +1994,9 @@ class SystemsTestCase(XMLTestCaseStandin):
         # We should have loaded the old one
         self.failUnlessEqual(system.pk, model.pk)
         self.failUnlessEqual(model.name, 'blippy')
+        # Catch the case of synthetic fields not being converted to
+        # unicode (xobj types confuse database drivers)
+        self.failUnlessEqual(type(model.event_uuid), unicode)
 
     def testDedupByEventUuidWithRemoval1(self):
         system, systemRemoved = self._testDedupByEventUuidWithRemoval(targetSystemFirst=False)
