@@ -37,3 +37,7 @@ class ImagesManager(basemanager.BaseManager):
         # FIXME: placeholder
         return models.Image(id=1, name='placeholder')
 
+    @exposed
+    def updateImage(self, image_id, image):
+        image.save()
+        return image

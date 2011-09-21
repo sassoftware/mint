@@ -32,3 +32,5 @@ class ImagesTestCase(XMLTestCase):
         self.assertEqual(response.status_code, 200)
         self.assertXMLEquals(response.content, testsxml.image_get_xml)
 
+    def testUpdateImage(self):
+        pass
