@@ -37,5 +37,5 @@ class ImageService(BaseImageService):
     @requires('image')
     @return_xml
     def rest_PUT(self, request, image_id, image):
-        return self.mgr.updateImage(image_id, image)
+        return self.mgr.updateUnifiedImage(image_id, image)
 

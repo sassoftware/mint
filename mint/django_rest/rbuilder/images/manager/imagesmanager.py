@@ -38,6 +38,6 @@ class ImagesManager(basemanager.BaseManager):
         return models.Image(id=1, name='placeholder')
 
     @exposed
-    def updateImage(self, image_id, image):
+    def updateUnifiedImage(self, image_id, image):
         image.save()
         return image
