@@ -164,7 +164,7 @@ class JobTarget(modellib.XObjModel):
     _xobj = xobj.XObjMetadata(tag='job_target')
 
     id = models.AutoField(primary_key=True)
-    job = models.ForeignKey(jobmodels.Job)
+    job = models.ForeignKey(jobmodels.Job, related_name='target_jobs')
     target = models.ForeignKey('Target')
 
 

@@ -91,7 +91,8 @@ class Job(modellib.XObjIdModel):
         "package_source_jobs",
         "package_build_jobs",
         "jobtargettype_set",
-        "jobtarget_set"])
+        "jobtarget_set",
+        "target_jobs"])
 
     #objects = modellib.JobManager()
 

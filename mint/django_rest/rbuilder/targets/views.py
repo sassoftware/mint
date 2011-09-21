@@ -131,3 +131,10 @@ class TargetJobsService(service.BaseService):
     def rest_POST(self, request, target_id, job):
         return self.mgr.addJob(job)
 
+class AllTargetJobsService(service.BaseService):
+    @return_xml
+    def rest_GET(self, request):
+        return self.get()
+        
+    def get(self):
+        return self.mgr.getAllTargetJobs()
