@@ -227,3 +227,14 @@ class TargetJobsManager(basemanager.BaseManager):
         Jobs = jobsmodels.Jobs()
         Jobs.job = [jobTarget.job for jobTarget in jobTargets]
         return Jobs
+        
+    @exposed
+    def getAllTargetJobs(self):
+        allTargetJobs = []
+        for target in models.Target.objects.all():
+            jobs = jobsmodels.Job.objects.filter(target_jobs__target=target)
+            allTargetJobs.extend(jobs)
+        Jobs = jobsmodels.Jobs()
+        Jobs.job = allTargetJobs
+        return Jobs
+            

@@ -401,7 +401,7 @@ class JobHandlerRegistry(HandlerRegistry):
             return target
 
         def _setTargetUserCredentials(self, job):
-            targetId = job.jobtarget_set.all()[0].target_id
+            targetId = job.target_jobs.all()[0].target_id
             self._setTarget(targetId)
             descriptorData = self.loadDescriptorData(job)
             creds = dict((k.getName(), k.getValue())

@@ -235,12 +235,17 @@ class TargetsTestCase(BaseTargetsTest):
         self.failUnlessEqual([ x.job_uuid for x in obj.jobs.job ],
             ['rmakeuuid002', 'rmakeuuid001'])
 
-
     def testGetJobsByTarget(self):
         url = 'targets/%s/jobs'
         response = self._get(url % 1, username='admin', password='password')
         self.assertEquals(response.status_code, 200)
         self.assertXMLEquals(response.content, testsxml.jobs_by_target_GET)
+
+    def testGetAllTargetJobs(self):
+        response = self._get('target_jobs/', username='admin', password='password')
+        self.assertXMLEquals(response.content, testsxml.all_target_jobs_GET)
+        self.assertEquals(response.status_code, 200)
+
 
 class JobCreationTest(BaseTargetsTest, RepeaterMixIn):
 
@@ -343,7 +348,7 @@ class JobCreationTest(BaseTargetsTest, RepeaterMixIn):
         dbjob = jmodels.Job.objects.get(job_uuid=job.job_uuid)
         # Make sure the job is related to the target type
         self.failUnlessEqual(
-            [ x.target.name for x in dbjob.jobtarget_set.all() ],
+            [ x.target.name for x in dbjob.target_jobs.all() ],
             [ target.name ],
         )
 
