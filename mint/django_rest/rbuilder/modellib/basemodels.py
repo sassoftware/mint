@@ -498,10 +498,11 @@ class BaseManager(models.Manager):
             if val is not None:
                 if isinstance(val, XObjIdModel):
                     val = self.load_from_object(val, request)
-                elif isinstance(val, unicode):
+                elif isinstance(val, xobj.XObj) and bool(val):
                     # This catches xobj strings inheriting from unicode,
                     # confusing database drivers if they are not real
-                    # unicide
+                    # unicode. Still it would be nice if xobj did this
+                    # for us.
                     val = unicode(val)
             if val is not None:
                     setattr(model, fieldName, val)
