@@ -299,7 +299,7 @@ class JobHandlerRegistry(HandlerRegistry):
             descriptor, descriptorData = self.extractDescriptorData(job)
             targetType, targetName, targetData = self._createTargetConfiguration(job)
             zone = targetData.pop('zone')
-            targetConfiguration = cli.targets.TargetConfiguration(targetType,
+            targetConfiguration = cli.targets.TargetConfiguration(targetType.name,
                 targetName, targetData.get('alias'), targetData)
             userCredentials = None
             cli.targets.configure(zone, targetConfiguration, userCredentials)
