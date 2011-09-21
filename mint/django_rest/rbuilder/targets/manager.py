@@ -43,7 +43,7 @@ class TargetsManager(basemanager.BaseManager, CatalogServiceHelper):
         targetConfig = dict()
         for obj in models.TargetData.objects.filter(target=target):
             targetConfig[obj.name] = self._stripUnicode(json.loads(obj.value))
-        targetConfig['zone'] = self.getTargetZone(target)
+        targetConfig['zone'] = self.getTargetZone(target).name
         return targetConfig
 
     @exposed

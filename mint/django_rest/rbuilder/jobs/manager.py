@@ -396,7 +396,7 @@ class JobHandlerRegistry(HandlerRegistry):
             targetConfiguration = self._buildTargetConfiguration(cli)
             targetUserCredentials = self._buildTargetCredentials(cli, creds)
             zone = self.mgr.mgr.getTargetZone(self.target)
-            cli.targets.configure(zone, targetConfiguration,
+            cli.targets.configure(zone.name, targetConfiguration,
                 targetUserCredentials)
             return cli.targets.checkCredentials
 
