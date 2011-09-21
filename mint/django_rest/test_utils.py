@@ -15,6 +15,7 @@ from collections import namedtuple
 
 from conary import dbstore
 from conary.lib import util
+from smartform import descriptor as smartdesc
 from django.core.management import call_command
 from django.db import connections, DEFAULT_DB_ALIAS
 from django.test.client import Client, FakePayload
@@ -565,6 +566,20 @@ class RepeaterMixIn(object):
         repeaterClient.setCallReturn(
                 lambda n, args, kwargs, callList: makeRepeaterData(len(callList)))
 
+    def setUpSchemaDir(self):
+        self.schemaDir = ""
+        schemaFile = "descriptor-%s.xsd" % smartdesc.BaseDescriptor.version
+        schemaDir = os.path.join(os.path.dirname(os.path.realpath(
+            os.path.abspath(os.path.dirname(smartdesc.__file__)))), 'xsd')
+        if not os.path.exists(os.path.join(schemaDir, schemaFile)):
+            # Not running from a checkout
+            schemaDir = smartdesc._BaseClass.schemaDir
+            assert(os.path.exists(os.path.join(schemaDir, schemaFile)))
+        self.schemaDir = schemaDir
+        self.mock(smartdesc.BaseDescriptor, 'schemaDir', schemaDir)
+        self.mock(smartdesc.DescriptorData, 'schemaDir', schemaDir)
+
     def setUpRepeaterClient(self):
+        self.setUpSchemaDir()
         self.mgr.repeaterMgr = self.RepeaterMgr()
         self.mgr.repeaterMgr.repeaterClient.reset()
