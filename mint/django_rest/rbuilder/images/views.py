@@ -8,7 +8,7 @@
 # as target service evolves
 
 #from django.http import HttpResponse 
-from mint.django_rest.deco import return_xml, access #, requires
+from mint.django_rest.deco import requires, return_xml, access #, requires
 from mint.django_rest.rbuilder import service
 #from mint.django_rest.rbuilder.images import models
 
