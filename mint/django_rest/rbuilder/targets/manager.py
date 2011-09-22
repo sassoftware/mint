@@ -234,6 +234,12 @@ class TargetJobsManager(basemanager.BaseManager):
         for target in models.Target.objects.all():
             jobs = jobsmodels.Job.objects.filter(target_jobs__target=target)
             allTargetJobs.extend(jobs)
+            
+            allTargetJobs.extend(jobsmodels.Job.objects.extra(
+                tables=[models.JobTarget._meta.db_table],
+                where=['jobs_job_target.job_id=jobs_job.job_id']).order_by('-job_id')
+            )
+            
         Jobs = jobsmodels.Jobs()
         Jobs.job = allTargetJobs
         return Jobs
