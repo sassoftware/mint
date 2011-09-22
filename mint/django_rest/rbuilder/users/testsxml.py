@@ -36,3 +36,21 @@ users_put_xml = \
 <blurb>fear me</blurb>
 </user>
 """.strip()
+
+user_update_password = \
+"""
+<?xml version='1.0' encoding='UTF-8'?>
+<user>
+  <modified_date>1316699037.18</modified_date>
+  <user_id>2004</user_id>
+  <display_email></display_email>
+  <roles id="http://testserver/api/v1/users/2004/roles"/>
+  <is_admin>true</is_admin>
+  <full_name>Jim Phoo</full_name>
+  <created_date>1316699037.18</created_date>
+  <user_name>jphoo</user_name>
+  <email>jphoo@noreply.com</email>
+  <password>%s</password>
+  <blurb></blurb>
+</user>
+""".strip()

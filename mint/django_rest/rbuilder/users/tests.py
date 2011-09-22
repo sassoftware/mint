@@ -335,3 +335,29 @@ class UsersTestCase(RbacEngine):
         self.failUnlessEqual(response.status_code, 200)
         sess = self.toXObj(response.content)
         self.failUnlessEqual(sess.user.user_id, '2000')
+
+    def testChangePasswordAuthenticatedNonAdmin(self):
+        self.mockMint()
+        user = models.User()
+        user.user_name = 'jphoo'
+        user.full_name = 'Jim Phoo'
+        user.email = 'jphoo@noreply.com'
+        user.password = 'abc'
+        self.mgr.addUser(user)
+        user = models.User.objects.get(user_name='jphoo')
+        response = self._get('users/%s' % user.pk, username=user.user_name, password='abc')
+        self.assertEquals(response.status_code, 200)
+        
+        new_password = 'cba'
+        # should fail with 401, password hasn't changed yet
+        response = self._get('users/%s' % user.pk, username='jphoo', password=new_password)
+        self.assertEquals(response.status_code, 401)
+        
+        # changing password, should be 200 if everything works
+        response = self._put('users/%s' % user.pk,
+            username=user.user_name, password='abc', data=testsxml.user_update_password % new_password)
+        self.assertEquals(response.status_code, 200)
+        
+        # try getting user with new password
+        response = self._get('users/%s' % user.pk, username='jphoo', password=new_password)
+        self.assertEquals(response.status_code, 200)
