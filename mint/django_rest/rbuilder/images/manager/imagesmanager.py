@@ -41,3 +41,8 @@ class ImagesManager(basemanager.BaseManager):
     def updateUnifiedImage(self, image_id, image):
         image.save()
         return image
+        
+    @exposed
+    def createUnifiedImage(self, image):
+        image.save()
+        return image
