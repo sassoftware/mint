@@ -87,8 +87,10 @@ class UsersManager(basemanager.BaseManager):
         s.auth = self.auth
         s.auth.userId = self.user.user_id
         s.authToken = self.auth.token
-        s.setPassword(user.user_id, password)
-        self._newTransaction()
+        try:
+            s.setPassword(user.user_id, password)
+        finally:
+            self._newTransaction()
         return models.User.objects.get(user_name=user.user_name)
 
     @exposed

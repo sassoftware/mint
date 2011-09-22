@@ -75,6 +75,7 @@ class UsersTestCase(RbacEngine):
                             now, now, active, blurb ])
                 except IntegrityError:
                     raise mint_error.UserAlreadyExists()
+                    
             def changePassword(slf, username, password):
                 salt, passwd = self._mungePassword(password)
                 cu = connection.cursor()
