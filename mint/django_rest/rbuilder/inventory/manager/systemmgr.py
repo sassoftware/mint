@@ -1332,7 +1332,7 @@ class SystemManager(basemanager.BaseManager):
         elif eventType in self.ManagementInterfaceEvents:
             params = self.getManagementInterfaceParams(repClient, destination)
             params.eventUuid = eventUuid
-            nethod = repClient.detectMgmtInterface
+            method = repClient.detectMgmtInterface
             self._runSystemEvent(event, method, params, resultsLocation,
                 user=self.user, zone=zone)
         elif eventType in self.AssimilationEvents:
