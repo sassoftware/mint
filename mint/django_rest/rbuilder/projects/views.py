@@ -70,6 +70,17 @@ class PBSCallbacks(object):
             return True
         return False
 
+    @staticmethod
+    def rbac_can_write_image_by_pbs(view, 
+        request, project_short_name, project_branch_label, stage_name, *args, **kwargs):
+        obj = view.mgr.getProjectBranchStage(project_short_name, project_branch_label, stage_name)
+        user = request._authUser
+        if not stage_name and request._is_admin:
+            return True
+        elif stage_name:
+            return view.mgr.userHasRbacPermission(user, obj, READMEMBERS)
+        return False
+
 # class AllProjectBranchesStagesService(service.BaseService):
 #     @rbac(PBSCallbacks.rbac_can_read_all_project_branches_stages)
 #     @return_xml
@@ -251,6 +262,12 @@ class ProjectBranchStageImagesService(service.BaseService):
     @return_xml
     def rest_GET(self, request, project_short_name, project_branch_label, stage_name):
         return self.get(request, project_short_name, project_branch_label, stage_name)
+        
+    @rbac(PBSCallbacks.rbac_can_write_image_by_pbs)
+    @requires("image")
+    @return_xml
+    def rest_POST(self, request, project_short_name, project_branch_label, stage_name, image):
+        return self.mgr.createProjectBranchStageImage(image)
 
 """        
 class ProjectJobDescriptorServiceservice.BaseService):

@@ -88,7 +88,11 @@ class UsersManager(basemanager.BaseManager):
         s.auth.userId = self.user.user_id
         s.authToken = self.auth.token
         try:
-            s.setPassword(user.user_id, password)
+            # casting password to string (from unicode)
+            # is necessary to fix bug (mingle 546).
+            # DO NOT REMOVE THIS as it will cause a traceback
+            # containing the cleartext password
+            s.setPassword(user.user_id, str(password))
         finally:
             self._newTransaction()
         return models.User.objects.get(user_name=user.user_name)

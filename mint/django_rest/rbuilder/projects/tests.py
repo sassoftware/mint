@@ -439,6 +439,19 @@ class ProjectsTestCase(RbacEngine):
                     username=self.developer_user.user_name, password='password')
         self.assertEquals(response.status_code, 403)
 
+    def testAddProjectBranchStageImage(self):
+        self._initProject()
+        prj = models.Project.objects.get(name='chater-foo')
+        branch = models.ProjectVersion.objects.get(
+            project__project_id=prj.project_id, name='trunk')
+        stage = models.Stage.objects.get(
+            project_branch__branch_id=branch.branch_id, name='Development')
+        url = "projects/%s/project_branches/%s/project_branch_stages/%s/images/"
+        urlparams = (prj.short_name, branch.label, stage.name)
+        response = self._post(url % urlparams, 
+            username='admin', password='password', data=testsxml.project_branch_stage_images_post_xml)
+        self.assertEquals(response.status_code, 200)
+
     def testGetProjectBranchStagesByProject(self):
         self._initProject()
         prj = models.Project.objects.get(name='chater-foo')

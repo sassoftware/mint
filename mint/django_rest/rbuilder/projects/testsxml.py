@@ -312,3 +312,72 @@ project_branch_stages_xml = \
   </project_branch_stage>
 </project_branch_stages>
 """.strip()
+
+project_branch_stage_images_post_xml = \
+"""
+<?xml version='1.0' encoding='UTF-8'?>
+<image>
+    <status>-1</status>
+    <stage_name>Development</stage_name>
+    <time_updated></time_updated>
+    <project_branch id="http://testserver/api/v1/projects/chater-foo/project_branches/chater-foo.eng.rpath.com@rpath:chater-foo-trunk">
+      <name>trunk</name>
+    </project_branch>
+    <updated_by></updated_by>
+    <trove_version></trove_version>
+    <created_by></created_by>
+    <trove_flavor></trove_flavor>
+    <trove_last_changed></trove_last_changed>
+    <name>image-1</name>
+    <project id="http://testserver/api/v1/projects/chater-foo">
+      <domain_name>eng.rpath.com</domain_name>
+      <short_name>chater-foo</short_name>
+      <name>chater-foo</name>
+    </project>
+    <job_uuid></job_uuid>
+    <output_trove></output_trove>
+    <time_created></time_created>
+    <release></release>
+    <build_count>0</build_count>
+    <status_message></status_message>
+    <build_type>10</build_type>
+    <trove_name></trove_name>
+    <description>image-1</description>
+</image>
+""".strip()
+
+project_branch_stage_images_post_return_xml = \
+"""
+<?xml version='1.0' encoding='UTF-8'?>
+<images count="1" next_page="" num_pages="1" previous_page="" full_collection="http://testserver/api/v1/projects/chater-foo/project_branches/chater-foo.eng.rpath.com@rpath:chater-foo-trunk/project_branch_stages/Development/images" end_index="0" limit="10" order_by="" per_page="10" filter_by="" id="http://testserver/api/v1/projects/chater-foo/project_branches/chater-foo.eng.rpath.com@rpath:chater-foo-trunk/project_branch_stages/Development/images;start_index=0;limit=10" start_index="0">
+  <image>
+    <status>-1</status>
+    <stage_name>Development</stage_name>
+    <time_updated></time_updated>
+    <project_branch id="http://testserver/api/v1/projects/chater-foo/project_branches/chater-foo.eng.rpath.com@rpath:chater-foo-trunk">
+      <name>trunk</name>
+    </project_branch>
+    <updated_by></updated_by>
+    <trove_version></trove_version>
+    <created_by></created_by>
+    <trove_flavor></trove_flavor>
+    <trove_last_changed></trove_last_changed>
+    <name>image-1</name>
+    <project id="http://testserver/api/v1/projects/chater-foo">
+      <domain_name>eng.rpath.com</domain_name>
+      <short_name>chater-foo</short_name>
+      <name>chater-foo</name>
+    </project>
+    <image_id>2</image_id>
+    <job_uuid></job_uuid>
+    <output_trove></output_trove>
+    <time_created></time_created>
+    <release></release>
+    <build_count>0</build_count>
+    <status_message></status_message>
+    <build_type>10</build_type>
+    <trove_name></trove_name>
+    <description>image-1</description>
+  </image>
+</images>
+""".strip()

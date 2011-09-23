@@ -7,7 +7,6 @@
 from django.http import HttpResponse, HttpResponseRedirect
 from mint.django_rest.rbuilder import service
 from mint.django_rest.deco import requires, return_xml, access
-from django.http import HttpResponse
 from mint.django_rest.rbuilder.rbac.rbacauth import rbac
 from mint.django_rest.rbuilder.errors import PermissionDenied
 from mint.django_rest.rbuilder.querysets import models as querymodels

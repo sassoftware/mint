@@ -520,6 +520,11 @@ class ProjectManager(basemanager.BaseManager):
         images.view_name = 'ProjectBranchStageImages'
         return images
 
+    @exposed
+    def createProjectBranchStageImage(self, image):
+        image.save()
+        return image
+
 """    
     @exposed
     def getDescriptorForImageBuildAction(self, , job_type, query_dict):
