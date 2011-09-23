@@ -220,6 +220,23 @@ class QuerySet(modellib.XObjIdModel):
             # Recurse, validating each child
             childQuerySet._validateChildren(validatedChildren)
 
+    def parents(self):
+        '''querysets that directly include this queryset'''
+        results = QuerySet.objects.filter(
+            children = self
+        )
+        return results
+ 
+    def ancestors(self):
+        '''querysets that directly or indirectly include this queryset'''
+        return self._ancestors([]) 
+
+    def _ancestors(self, results):
+        my_parents = self.parents()
+        results.extend(my_parents)
+        for parent in my_parents:
+            results.extend(parent.parents())
+        return results
 
 class FilterEntry(modellib.XObjIdModel):
     class Meta:

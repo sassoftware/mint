@@ -145,6 +145,19 @@ class QuerySetManager(basemanager.BaseManager):
         '''edit a query set'''
         if not querySet.can_modify:
             raise errors.QuerySetReadOnly(querySetName=querySet.name)
+
+        # in case the filter terms changed, evaluate queryset and
+        # all parents so they can contain accurate membership.  Transitive
+        # tags must be applied on each so RBAC will be up to date
+        # this will probably be slow, but likely infrequent.
+
+        to_update = querySet.ancestors()
+        to_update.append(querySet)
+        for qs in to_update:
+            qsAllResult = self._getQuerySetAllResult(qs)
+            self._tagSingleQuerySetTransitive(qs, qsAllResult)
+            self._updateQuerySetTaggedDate(qs)
+
         querySet.tagged_date = None
         querySet.save()
         return querySet
