@@ -22,9 +22,7 @@ class JobsService(service.BaseAuthService):
             job_uuid=jobUuid, job_token=jobToken)
         if not jobs:
             return False
-        # XXX we should set the auth based on the user that launched the
-        # job
-        self._setMintAuth()
+        self._setMintAuth(jobs[0].created_by)
         return True
 
     @access.anonymous

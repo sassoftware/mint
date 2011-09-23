@@ -78,7 +78,15 @@ class TargetUserCredentialsService(service.BaseService):
         
     def get(self, target_id, user_id):
         return self.mgr.getTargetCredentialsForTargetByUserId(target_id, user_id)
-        
+
+class TargetRefreshImagesService(service.BaseService):
+    @return_xml
+    def rest_GET(self, request, target_id):
+        return self.get(target_id)
+
+    def get(self, target_id):
+        return self.mgr.serializeDescriptorRefreshImages(target_id)
+
     @requires('target_credentials')
     @return_xml
     def rest_POST(self, request, target_credentials):

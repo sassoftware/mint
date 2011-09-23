@@ -47,13 +47,15 @@ class BaseTargetsTest(XMLTestCase):
         jobUuid3 = 'rmakeuuid003'
         system = self._saveSystem()
         
+        user = self.getUser('testuser')
+
         jobs = []
         jobs.append(self._newSystemJob(system, eventUuid1, jobUuid1,
-            jmodels.EventType.SYSTEM_REGISTRATION))
+            jmodels.EventType.SYSTEM_REGISTRATION, createdBy=user))
         jobs.append(self._newSystemJob(system, eventUuid2, jobUuid2,
-            jmodels.EventType.SYSTEM_POLL))
+            jmodels.EventType.SYSTEM_POLL, createdBy=user))
         jobs.append(self._newSystemJob(system, eventUuid3, jobUuid3,
-            jmodels.EventType.SYSTEM_POLL_IMMEDIATE))
+            jmodels.EventType.SYSTEM_POLL_IMMEDIATE, createdBy=user))
 
         self.system = system
         self.jobs = jobs
@@ -81,9 +83,15 @@ class BaseTargetsTest(XMLTestCase):
         self.target_user_credentials = models.TargetUserCredentials.objects.all()
 
     def _mock(self):
-        pass
+        tmgr = self.mgr.targetsManager
+        fakeAuth = collections.namedtuple("FakeAuth", "userId")
+        self.mock(tmgr.mgr, '_auth', fakeAuth(1))
 
-class TargetsTestCase(BaseTargetsTest):
+class TargetsTestCase(BaseTargetsTest, RepeaterMixIn):
+    def _mock(self):
+        RepeaterMixIn.setUpRepeaterClient(self)
+        BaseTargetsTest._mock(self)
+
     def testGetTargets(self):
         targets = models.Target.objects.order_by('target_id')
         response = self._get('targets/', username='testuser', password='password')
@@ -221,6 +229,17 @@ class TargetsTestCase(BaseTargetsTest):
                 'password',
             ])
 
+    def testGetTargetDescriptorRefreshImages(self):
+        response = self._get('targets/1024/descriptor_refresh_images',
+            username='testuser', password='password')
+        self.assertEquals(response.status_code, 404)
+        response = self._get('targets/1/descriptor_refresh_images',
+            username='testuser', password='password')
+        self.assertEquals(response.status_code, 200)
+        obj = xobj.parse(response.content)
+        self.failUnlessEqual(obj.descriptor.metadata.rootElement, 'descriptor_data')
+        self.failIf(hasattr(obj.descriptor.dataFields, 'field'))
+
     def testGetJobsByTargetType(self):
         url = 'target_types/%s/jobs'
         response = self._get(url % 1, username='admin', password='password')
@@ -251,6 +270,7 @@ class JobCreationTest(BaseTargetsTest, RepeaterMixIn):
 
     def _mock(self):
         RepeaterMixIn.setUpRepeaterClient(self)
+        BaseTargetsTest._mock(self)
         from mint.django_rest.rbuilder.inventory.manager import repeatermgr
         self.mock(repeatermgr.RepeaterManager, 'repeaterClient',
             self.mgr.repeaterMgr.repeaterClient)
@@ -334,7 +354,7 @@ class JobCreationTest(BaseTargetsTest, RepeaterMixIn):
 
 
     def testTargetCredentialsConfiguration(self):
-        jobType = jmodels.EventType.objects.get(name="configure target credentials")
+        jobType = jmodels.EventType.objects.get(name=jmodels.EventType.TARGET_CONFIGURE_CREDENTIALS)
         target = models.Target.objects.get(name='Target Name vmware')
         jobXml = """
 <job>
@@ -409,8 +429,6 @@ class JobCreationTest(BaseTargetsTest, RepeaterMixIn):
         creds0 = dict(username="bubba", password="shrimp")
         creds1 = dict(username="forrest", password="jennay")
         tmgr = self.mgr.targetsManager
-        fakeAuth = collections.namedtuple("FakeAuth", "userId")
-        tmgr.mgr._auth = fakeAuth(1)
         tucreds = tmgr.setTargetUserCredentials(target, creds0)
         creds = sorted(models.TargetUserCredentials.objects.filter(
             user__user_id=1, target=target).values_list('id', flat=True))
@@ -431,3 +449,179 @@ class JobCreationTest(BaseTargetsTest, RepeaterMixIn):
                     target_credentials_id=tcredid).values_list(
                         'target_credentials_id', flat=True)],
             [])
+
+    def testRefreshTargetImages(self):
+        jobType = jmodels.EventType.objects.get(name=jmodels.EventType.TARGET_REFRESH_IMAGES)
+        target = models.Target.objects.get(name='Target Name vmware')
+        jobXml = """
+<job>
+  <job_type id="http://localhost/api/v1/inventory/event_types/%(jobTypeId)s"/>
+  <descriptor id="http://testserver/api/v1/targets/%(targetId)s/descriptor_refresh_images"/>
+  <descriptor_data/>
+</job>
+"""
+        params = dict(targetId=target.target_id, jobTypeId=jobType.job_type_id)
+        response = self._post('targets/%s/jobs' % target.target_id,
+            jobXml % params,
+            username='testuser', password='password')
+
+        self.assertEquals(response.status_code, 200)
+        obj = xobj.parse(response.content)
+        job = obj.job
+        self.failUnlessEqual(job.descriptor.id,
+            "http://testserver/api/v1/targets/%s/descriptor_refresh_images" %  target.target_id)
+
+        dbjob = jmodels.Job.objects.get(job_uuid=job.job_uuid)
+        # Make sure the job is related to the target type
+        self.failUnlessEqual(
+            [ x.target.name for x in dbjob.target_jobs.all() ],
+            [ target.name ],
+        )
+
+        calls = self.mgr.repeaterMgr.repeaterClient.getCallList()
+        self.failUnlessEqual([ x.name for x in calls ],
+            ['targets.TargetConfiguration', 'targets.TargetUserCredentials',
+                'targets.configure', 'targets.listImages'])
+        realCall = calls[-1]
+        self.failUnlessEqual(realCall.args, ())
+        self.failUnlessEqual(realCall.kwargs, {})
+        self.mgr.repeaterMgr.repeaterClient.reset()
+
+        jobXml = """
+<job>
+  <job_state>Failed</job_state>
+  <status_code>401</status_code>
+  <status_text>Invalid target credentials</status_text>
+</job>
+"""
+
+        # No images initially
+        models.TargetImage.objects.all().delete()
+
+        # Grab token
+        jobToken = dbjob.job_token
+        jobUrl = "jobs/%s" % dbjob.job_uuid
+        response = self._put(jobUrl, jobXml, jobToken=jobToken)
+        self.assertEquals(response.status_code, 200)
+        obj = xobj.parse(response.content)
+        job = obj.job
+
+
+        jobXml = """
+<job>
+  <job_state>Completed</job_state>
+  <status_code>200</status_code>
+  <status_text>Some status here</status_text>
+  <results encoding="identity">
+    <images>
+      <image id="id1">
+        <imageId>id1</imageId>
+        <longName>long name for id1</longName>
+        <shortName>short name for id1</shortName>
+        <productName>product name for id1</productName>
+        <internalTargetId>uuid1</internalTargetId>
+      </image>
+    </images>
+  </results>
+</job>
+"""
+        response = self._put(jobUrl, jobXml, jobToken=jobToken)
+        self.assertEquals(response.status_code, 200)
+        obj = xobj.parse(response.content)
+        self.failUnlessEqual(obj.job.id, "http://testserver/api/v1/" + jobUrl)
+
+        images = models.TargetImage.objects.filter(target=target)
+        self.failUnlessEqual([ x.name for x in images ],
+            ['product name for id1'])
+        self.failUnlessEqual([ x.description for x in images ],
+            ['long name for id1'])
+
+        # Add 2 more images
+        jobXml = """
+<job>
+  <job_state>Completed</job_state>
+  <status_code>200</status_code>
+  <status_text>Some status here</status_text>
+  <results encoding="identity">
+    <images>
+      <image id="id1">
+        <imageId>id1</imageId>
+        <longName>long name for id1</longName>
+        <shortName>short name for id1</shortName>
+        <productName>product name for id1</productName>
+        <internalTargetId>uuid1</internalTargetId>
+      </image>
+      <image id="id2">
+        <imageId>id2</imageId>
+        <longName>long name for id2</longName>
+        <shortName>short name for id2</shortName>
+        <productName>product name for id2</productName>
+        <internalTargetId>uuid2</internalTargetId>
+      </image>
+      <image id="id3">
+        <imageId>id3</imageId>
+        <longName>long name for id3</longName>
+        <shortName>short name for id3</shortName>
+        <productName>product name for id3</productName>
+        <internalTargetId>uuid3</internalTargetId>
+      </image>
+    </images>
+  </results>
+</job>
+"""
+
+        response = self._put(jobUrl, jobXml, jobToken=jobToken)
+        self.assertEquals(response.status_code, 200)
+        obj = xobj.parse(response.content)
+        self.failUnlessEqual(obj.job.id, "http://testserver/api/v1/" + jobUrl)
+
+        images = models.TargetImage.objects.filter(target=target)
+        self.failUnlessEqual([ x.name for x in images ],
+            ['product name for id1', 'product name for id2', 'product name for id3'])
+        self.failUnlessEqual([ x.description for x in images ],
+            ['long name for id1', 'long name for id2', 'long name for id3'])
+
+        # Remove first, modify second
+        jobXml = """
+<job>
+  <job_state>Completed</job_state>
+  <status_code>200</status_code>
+  <status_text>Some status here</status_text>
+  <results encoding="identity">
+    <images>
+      <image id="id2">
+        <imageId>id2</imageId>
+        <longName>long name for id2</longName>
+        <shortName>short name for id2</shortName>
+        <productName>modified product name for id2</productName>
+        <internalTargetId>uuid2</internalTargetId>
+      </image>
+      <image id="id3">
+        <imageId>id3</imageId>
+        <longName>long name for id3</longName>
+        <shortName>short name for id3</shortName>
+        <productName>product name for id3</productName>
+        <internalTargetId>uuid3</internalTargetId>
+      </image>
+    </images>
+  </results>
+</job>
+"""
+        response = self._put(jobUrl, jobXml, jobToken=jobToken)
+        self.assertEquals(response.status_code, 200)
+        obj = xobj.parse(response.content)
+        self.failUnlessEqual(obj.job.id, "http://testserver/api/v1/" + jobUrl)
+
+        images = models.TargetImage.objects.filter(target=target)
+        self.failUnlessEqual([ x.name for x in images ],
+            ['modified product name for id2', 'product name for id3'])
+        self.failUnlessEqual([ x.description for x in images ],
+            ['long name for id2', 'long name for id3'])
+
+        # Make sure we have proper linkage in target_image_credentials
+        creds = models.TargetCredentials.objects.filter(
+            target_user_credentials__user__user_name='testuser')[0]
+        images = models.TargetImage.objects.filter(
+            target_image_credentials__target_credentials=creds)
+        self.failUnlessEqual([ x.name for x in images ],
+            ['modified product name for id2', 'product name for id3'])

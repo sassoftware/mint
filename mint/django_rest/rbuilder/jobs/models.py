@@ -9,6 +9,7 @@ import sys
 from django.db import models
 from mint.django_rest.deco import D
 from mint.django_rest.rbuilder import modellib
+from mint.django_rest.rbuilder.users import models as usermodels
 import urlparse
 from xobj import xobj
 
@@ -129,6 +130,11 @@ class Job(modellib.XObjIdModel):
     job_description = D(modellib.SyntheticField(),
         "a description of the job")
     results = modellib.SyntheticField()
+    created_by = D(modellib.APIReadOnly(modellib.DeferredForeignKey(
+            usermodels.User, related_name="jobs", null=True,
+            db_column="created_by")),
+        "The user who initiated the job")
+
 
     load_fields = [ job_uuid ]
 

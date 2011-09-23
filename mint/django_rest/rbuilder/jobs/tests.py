@@ -28,12 +28,13 @@ class BaseJobsTest(XMLTestCase):
         jobUuid3 = 'rmakeuuid003'
         system = self._saveSystem()
 
+        user = self.getUser('testuser')
         self.job1 = self._newSystemJob(system, eventUuid1, jobUuid1,
-            models.EventType.SYSTEM_REGISTRATION)
+            models.EventType.SYSTEM_REGISTRATION, createdBy=user)
         self.job2 = self._newSystemJob(system, eventUuid2, jobUuid2,
-            models.EventType.SYSTEM_POLL)
+            models.EventType.SYSTEM_POLL, createdBy=user)
         self.job3 = self._newSystemJob(system, eventUuid3, jobUuid3,
-            models.EventType.SYSTEM_POLL_IMMEDIATE)
+            models.EventType.SYSTEM_POLL_IMMEDIATE, createdBy=user)
 
         self.system = system
 

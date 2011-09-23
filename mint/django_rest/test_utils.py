@@ -28,6 +28,7 @@ from mint.db import schema
 from mint.django_rest.rbuilder.inventory import models as invmodels
 from mint.django_rest.rbuilder.inventory import zones as zmodels
 from mint.django_rest.rbuilder.jobs import models as jobmodels
+from mint.django_rest.rbuilder.users import models as usermodels
 from mint.django_rest.rbuilder.manager import rbuildermanager
 
 from testrunner import testcase
@@ -140,6 +141,9 @@ class XMLTestCase(TestCase, testcase.MockMixIn):
         from django.conf import settings
         settings.PER_PAGE = 10
         return TestCase.setUp(self)
+
+    def getUser(self, userName):
+        return usermodels.User.objects.get(user_name=userName)
 
     def tearDown(self):
         TestCase.tearDown(self)
@@ -362,7 +366,7 @@ class XMLTestCase(TestCase, testcase.MockMixIn):
         return system
     
     def _newJob(self, jobUuid, jobType, jobToken=None, jobState=None,
-            statusCode=100, statusText=None, statusDetail=None):
+            statusCode=100, statusText=None, statusDetail=None, createdBy=None):
         eventType = self.mgr.sysMgr.eventType(jobType)
         if jobState is None:
             jobState = jobmodels.JobState.RUNNING
@@ -370,6 +374,7 @@ class XMLTestCase(TestCase, testcase.MockMixIn):
         job = jobmodels.Job(job_uuid=jobUuid,
             job_token=jobToken,
             job_type=eventType,
+            created_by=createdBy,
             job_state=jobState, status_code=statusCode,
             status_text=statusText or 'Initializing',
             status_detail=statusDetail)
@@ -377,10 +382,10 @@ class XMLTestCase(TestCase, testcase.MockMixIn):
         return job
 
     def _newSystemJob(self, system, eventUuid, jobUuid, jobType, jobState=None,
-            statusCode=100, statusText=None, statusDetail=None):
+            statusCode=100, statusText=None, statusDetail=None, createdBy=None):
         job = self._newJob(jobUuid, jobType, jobState=jobState,
             statusCode=statusCode, statusText=statusText,
-            statusDetail=statusDetail)
+            statusDetail=statusDetail, createdBy=createdBy)
         systemJob = invmodels.SystemJob(system=system, job=job,
             event_uuid=eventUuid)
         systemJob.save()
@@ -560,12 +565,7 @@ def makeRepeaterData(serial):
     uuid = "uuid%03d" % serial
     return uuid, RmakeJob(uuid, 200, "status text", "status detail", False)
 
-class RepeaterMixIn(object):
-    class RepeaterMgr(object):
-        repeaterClient = RepeaterClient()
-        repeaterClient.setCallReturn(
-                lambda n, args, kwargs, callList: makeRepeaterData(len(callList)))
-
+class SmartformMixIn(object):
     def setUpSchemaDir(self):
         self.schemaDir = ""
         schemaFile = "descriptor-%s.xsd" % smartdesc.BaseDescriptor.version
@@ -578,6 +578,12 @@ class RepeaterMixIn(object):
         self.schemaDir = schemaDir
         self.mock(smartdesc.BaseDescriptor, 'schemaDir', schemaDir)
         self.mock(smartdesc.DescriptorData, 'schemaDir', schemaDir)
+
+class RepeaterMixIn(SmartformMixIn):
+    class RepeaterMgr(object):
+        repeaterClient = RepeaterClient()
+        repeaterClient.setCallReturn(
+                lambda n, args, kwargs, callList: makeRepeaterData(len(callList)))
 
     def setUpRepeaterClient(self):
         self.setUpSchemaDir()

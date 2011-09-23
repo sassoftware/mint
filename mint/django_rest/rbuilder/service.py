@@ -167,14 +167,21 @@ class BaseAuthService(BaseService):
     def _check_uuid_auth(self, request, kwargs):
         return False
 
-    def _setMintAuth(self):
+    def _setMintAuth(self, user=None):
         db = database.Database(self.mgr.cfg)
-        authToken = (self.mgr.cfg.authUser, self.mgr.cfg.authPass)
-        cu = db.cursor()
-        cu.execute("SELECT MIN(userId) FROM Users WHERE is_admin = ?", True)
-        ret = cu.fetchall()
-        userId = ret[0][0]
-        mintAuth = users.Authorization(username=self.mgr.cfg.authUser,
-            token=authToken, admin=True, userId=userId)
+        if user is None:
+            authToken = (self.mgr.cfg.authUser, self.mgr.cfg.authPass)
+            cu = db.cursor()
+            cu.execute("SELECT MIN(userId) FROM Users WHERE is_admin = ?", True)
+            ret = cu.fetchall()
+            userId = ret[0][0]
+            isAdmin = True
+        else:
+            authToken = (user.user_name, "FAKE PASSWORD")
+            userId = user.user_id
+            isAdmin = bool(user._is_admin)
+        userName = authToken[0]
+        mintAuth = users.Authorization(username=userName,
+            token=authToken, admin=isAdmin, userId=userId)
         self.mgr._auth = mintAuth
 

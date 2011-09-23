@@ -7,10 +7,11 @@
 import json
 from lxml import etree
 
+from django.db import connection
 from django.db.models import Q
 
 from mint.lib import data as mintdata
-from mint.django_rest.rbuilder import modellib
+from mint.django_rest.rbuilder import errors, modellib
 from mint.django_rest.rbuilder.manager import basemanager
 from mint.django_rest.rbuilder.manager.basemanager import exposed
 from mint.django_rest.rbuilder.targets import models
@@ -46,15 +47,21 @@ class TargetsManager(basemanager.BaseManager, CatalogServiceHelper):
         targetConfig['zone'] = self.getTargetZone(target).name
         return targetConfig
 
-    @exposed
-    def getTargetCredentialsForCurrentUser(self, target):
+    def _getTargetCredentialsForCurrentUser(self, target):
         userId = self.auth.userId
         creds = models.TargetCredentials.objects.filter(
             target_user_credentials__target=target,
             target_user_credentials__user__user_id=userId)
         if not creds:
             return None
-        return mintdata.unmarshalTargetUserCredentials(creds[0].credentials)
+        return creds[0]
+
+    @exposed
+    def getTargetCredentialsForCurrentUser(self, target):
+        creds = self._getTargetCredentialsForCurrentUser(target)
+        if creds is None:
+            return None
+        return mintdata.unmarshalTargetUserCredentials(creds.credentials)
 
     @exposed
     def setTargetUserCredentials(self, target, credentials):
@@ -77,7 +84,6 @@ class TargetsManager(basemanager.BaseManager, CatalogServiceHelper):
         return tucreds
 
     def _pruneTargetCredentials(self):
-        from django.db import connection
         cu = connection.cursor()
         cu.execute("""
             DELETE FROM TargetCredentials
@@ -150,6 +156,127 @@ class TargetsManager(basemanager.BaseManager, CatalogServiceHelper):
         descr = self.getDescriptorConfigureCredentials(target_id)
         wrapper = etreeObjectWrapper(descr.getElementTree(validate=True))
         return wrapper
+
+    @exposed
+    def getDescriptorRefreshImages(self, target_id):
+        target = self.getTargetById(target_id)
+        descr = descriptor.ConfigurationDescriptor()
+        descr.setRootElement('descriptor_data')
+        descr.setDisplayName("Refresh images")
+        descr.addDescription("Refresh images")
+        return descr
+
+    @exposed
+    def serializeDescriptorRefreshImages(self, targetId):
+        descr = self.getDescriptorRefreshImages(targetId)
+        wrapper = etreeObjectWrapper(descr.getElementTree(validate=True))
+        return wrapper
+
+    @exposed
+    def updateTargetImages(self, target, images):
+        creds = self._getTargetCredentialsForCurrentUser(target)
+        if creds is None:
+            raise errors.InvalidData()
+        credsId = creds.target_credentials_id
+        cu = connection.cursor()
+        cu.execute("""
+            CREATE TEMPORARY TABLE tmp_target_image (
+                name TEXT,
+                description TEXT,
+                target_internal_id TEXT,
+                rbuilder_image_id TEXT
+            )
+        """)
+        query = """
+            INSERT INTO tmp_target_image
+                (name, description, target_internal_id, rbuilder_image_id)
+            VALUES (%s, %s, %s, %s)
+        """
+        timgs = [ self._image(target, x) for x in images ]
+        # Eliminate dupes
+        timgMap = dict((x.target_internal_id, x) for x in timgs)
+        params = [ (x.name, x.description, x.target_internal_id, x.rbuilder_image_id)
+            for x in timgMap.values() ]
+        cu.executemany(query, params)
+        # Retrieve images to be updated
+        query = """
+            SELECT ti.target_image_id, ti.target_internal_id
+              FROM tmp_target_image AS tmpti
+              JOIN target_image AS ti USING (target_internal_id)
+             WHERE ti.target_id = %s
+               AND (ti.name != tmpti.name
+                   OR ti.description != tmpti.description
+                   OR NOT ((ti.rbuilder_image_id IS NULL AND tmpti.rbuilder_image_id IS NULL)
+                     OR ti.rbuilder_image_id = tmpti.rbuilder_image_id))
+        """
+        cu.execute(query, [ target.target_id ])
+        toUpdate = cu.fetchall()
+        now = self.mgr.sysMgr.now()
+        for targetImageId, targetInternalId in toUpdate:
+            model = models.TargetImage.objects.get(target_image_id=targetImageId)
+            src = timgMap[targetInternalId]
+            model.name = src.name
+            model.description = src.description
+            model.rbuilder_image_id = src.rbuilder_image_id
+            model.modified_date = now
+            model.save()
+        # Insert all new images
+        query = """
+            INSERT INTO target_image
+                (target_id, name, description, target_internal_id, rbuilder_image_id)
+            SELECT %s, name, description, target_internal_id, rbuilder_image_id
+              FROM tmp_target_image AS tti
+             WHERE target_internal_id NOT IN
+               (SELECT target_internal_id FROM target_image WHERE target_id=%s)
+        """
+        cu.execute(query, [ target.target_id, target.target_id ])
+        # Relink images to target credentials
+        # First, remove the ones not in this list
+        query = """
+            DELETE FROM target_image_credentials
+             WHERE target_credentials_id = %s
+               AND target_image_id NOT IN (
+                   SELECT ti.target_image_id
+                     FROM target_image AS ti
+                     JOIN tmp_target_image AS tmpti USING (target_internal_id)
+                    WHERE ti.target_id = %s)"""
+        cu.execute(query, [ credsId, target.target_id ])
+        # Add the new ones
+        query = """
+            INSERT INTO target_image_credentials
+                (target_image_id, target_credentials_id)
+            SELECT ti.target_image_id, %s
+              FROM target_image AS ti
+              JOIN tmp_target_image AS tmpti USING (target_internal_id)
+             WHERE ti.target_id = %s
+               AND ti.target_image_id NOT IN
+               (SELECT target_image_id FROM target_image_credentials
+                WHERE target_credentials_id=%s)
+        """
+        cu.execute(query, [ credsId, target.target_id, credsId ])
+        # Finally, remove all images that have no credentials
+        query = """
+            DELETE FROM target_image
+             WHERE target_image_id NOT IN (
+               SELECT target_image_id FROM target_image_credentials
+             )
+        """
+        cu.execute(query)
+        cu.execute("DROP TABLE tmp_target_image")
+
+    def _image(self, target, image):
+        imageName = getattr(image, 'productName',
+            getattr(image, 'shortName'))
+        imageDescription = getattr(image, 'longName', imageName)
+        imageId = getattr(image, 'internalTargetId')
+        rbuilderImageId = getattr(image, 'imageId')
+        if rbuilderImageId == imageId:
+            rbuilderImageId = None
+
+        model = models.TargetImage(target=target,
+            name=imageName, description=imageDescription,
+            target_internal_id=imageId, rbuilder_image_id=rbuilderImageId)
+        return model
 
 class TargetTypesManager(basemanager.BaseManager, CatalogServiceHelper):
     @exposed

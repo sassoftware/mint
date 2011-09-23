@@ -61,7 +61,9 @@ class Targets(modellib.Collection):
 
 class Target(modellib.XObjIdModel):
     _xobj_hidden_accessors = set(
-        ['targetdata_set', 'targetimagesdeployed_set', 'targetusercredentials_set', 'system_set', 'jobtarget_set'])
+        ['targetdata_set', 'targetimagesdeployed_set',
+            'targetusercredentials_set', 'system_set', 'jobtarget_set',
+            'target_images',])
 
     class Meta:
         db_table = u'targets'
@@ -83,6 +85,7 @@ class Target(modellib.XObjIdModel):
         self.actions = actions = jobmodels.Actions()
         actions.action = []
         actions.action.append(self._actionConfigureUserCredentials())
+        actions.action.append(self._actionRefreshImages())
         self.jobs = modellib.HrefField("jobs")
 
     def _actionConfigureUserCredentials(self):
@@ -93,12 +96,20 @@ class Target(modellib.XObjIdModel):
                 descriptorModel=self, descriptorHref="descriptor_configure_credentials")
         return action
 
+    def _actionRefreshImages(self):
+        actionName = "Refresh images"
+        action = jobmodels.EventType.makeAction(
+                jobTypeName=jobmodels.EventType.TARGET_REFRESH_IMAGES,
+                actionName=actionName,
+                descriptorModel=self, descriptorHref="descriptor_refresh_images")
+        return action
+
 class TargetData(modellib.XObjModel):
     class Meta:
         db_table = u'targetdata'
         
     targetdata_id = models.AutoField(primary_key=True, db_column='targetdataid')    
-    target = models.ForeignKey('Target', db_column="targetid")
+    target = models.ForeignKey(Target, db_column="targetid")
     name = models.CharField(max_length=255, null=False)
     value = models.TextField()
 
@@ -123,7 +134,7 @@ class TargetCredentials(modellib.XObjModel):
     credentials = models.TextField(null=False, unique=True)
 
 class TargetUserCredentials(modellib.XObjModel):
-    target = models.ForeignKey('Target', db_column="targetid")
+    target = models.ForeignKey(Target, db_column="targetid")
     user = models.ForeignKey(usersmodels.User, db_column="userid",
         related_name='target_user_credentials')
     target_credentials = models.ForeignKey('TargetCredentials',
@@ -134,11 +145,46 @@ class TargetUserCredentials(modellib.XObjModel):
         db_table = u'targetusercredentials'
 
 class TargetImagesDeployed(modellib.XObjModel):
-    target_id = models.ForeignKey('Target', db_column="targetid")
+    """
+    Images deployed from the rBuilder onto a target get recorded in this table
+    """
+    target = models.ForeignKey(Target, db_column="targetid")
     file_id = models.IntegerField(null=False, db_column='fileid')
     target_image_id = models.CharField(max_length=128, db_column='targetimageid')
     class Meta:
         db_table = u'targetimagesdeployed'
+
+class TargetImage(modellib.XObjModel):
+    """
+    A representation of all images from a target
+    """
+    class Meta:
+        db_table = "target_image"
+
+    target_image_id = models.AutoField(primary_key=True)
+    name = D(models.TextField(unique=True), "Image Name")
+    description = D(models.TextField(null=False), "Image Description")
+    target = D(models.ForeignKey(Target, related_name='target_images'),
+        "Target the image is part of")
+    target_internal_id = D(models.TextField(null=False), "Image identifier on the target")
+    rbuilder_image_id = D(models.TextField(null=True),
+        "Image identifier on the rbuilder, as reported by the target")
+    created_date = D(modellib.DateTimeUtcField(auto_now_add=True), "the date the resource was created (UTC)")
+    modified_date = D(modellib.DateTimeUtcField(auto_now_add=True), "the date the resource was modified (UTC)")
+    unique_together = (target, target_internal_id)
+
+class TargetImageCredentials(modellib.XObjModel):
+    """
+    Links an image to the credentials that were used to fetch it
+    """
+    class Meta:
+        db_table = "target_image_credentials"
+
+    target_image = models.ForeignKey(TargetImage,
+        related_name="target_image_credentials")
+    target_credentials = models.ForeignKey('TargetCredentials',
+        related_name='target_image_credentials')
+    unique_together = (target_image, target_credentials)
 
 class TargetTypes(modellib.Collection):
     class Meta:

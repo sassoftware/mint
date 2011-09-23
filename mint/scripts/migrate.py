@@ -3051,7 +3051,7 @@ class MigrateTo_57(SchemaMigration):
 
 
 class MigrateTo_58(SchemaMigration):
-    Version = (58, 66)
+    Version = (58, 67)
 
     def migrate(self):
         return True
@@ -4226,6 +4226,56 @@ class MigrateTo_58(SchemaMigration):
                   resource_type="Target"),
         ])
         return True
+
+    def migrate67(self):
+        db = self.db
+        cu = db.cursor()
+        cu.execute("""ALTER TABLE jobs_job
+                ADD created_by INTEGER REFERENCES Users ON DELETE SET NULL""")
+        schema.createTable(db, 'target_image', """
+                CREATE TABLE target_image (
+                    target_image_id         %(PRIMARYKEY)s,
+                    name                    TEXT NOT NULL,
+                    description             TEXT NOT NULL,
+                    target_id               integer             NOT NULL
+                        REFERENCES Targets ON DELETE CASCADE,
+                    target_internal_id      TEXT             NOT NULL,
+                    rbuilder_image_id       TEXT,
+                    created_date            TIMESTAMP WITH TIME ZONE NOT NULL
+                        DEFAULT current_timestamp,
+                    modified_date           TIMESTAMP WITH TIME ZONE NOT NULL
+                        DEFAULT current_timestamp,
+                    UNIQUE ( target_id, target_internal_id )
+                ) %(TABLEOPTS)s""")
+
+        schema.createTable(db, 'target_image_credentials', """
+                CREATE TABLE target_image_credentials (
+                    id                      %(PRIMARYKEY)s,
+                    target_image_id         INTEGER NOT NULL
+                        REFERENCES target_image ON DELETE CASCADE,
+                    target_credentials_id   INTEGER NOT NULL
+                        REFERENCES TargetCredentials ON DELETE CASCADE
+                ) %(TABLEOPTS)s""")
+
+        schema.createTable(db, 'jobs_job_result', """
+            CREATE TABLE jobs_job_result (
+                job_result_id %(PRIMARYKEY)s,
+                job_id          INTEGER NOT NULL
+                    REFERENCES jobs_job ON DELETE CASCADE,
+                data            TEXT NOT NULL
+            ) %(TABLEOPTS)s""")
+
+        schema.createTable(db, 'jobs_job_history', """
+            CREATE TABLE jobs_job_history
+            (
+                job_history_id  %(PRIMARYKEY)s,
+                job_id          INTEGER NOT NULL
+                    REFERENCES jobs_job ON DELETE CASCADE,
+                content         TEXT NOT NULL,
+                created_date    TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT current_timestamp
+            ) %(TABLEOPTS)s""")
+        return True
+
 
 #### SCHEMA MIGRATIONS END HERE #############################################
 

@@ -1419,6 +1419,7 @@ class SystemManager(basemanager.BaseManager):
         job.job_uuid = str(uuid)
         job.job_type = event.event_type
         job.job_state = cls.jobState(jobmodels.JobState.RUNNING)
+        job.created_by = self.user
         job.save()
 
         sjob = models.SystemJob()

@@ -28,7 +28,7 @@ from conary.dbstore import sqlerrors, sqllib
 log = logging.getLogger(__name__)
 
 # database schema major version
-RBUILDER_DB_VERSION = sqllib.DBversion(58, 66)
+RBUILDER_DB_VERSION = sqllib.DBversion(58, 67)
 
 
 def _createTrigger(db, table, column="changed"):
@@ -708,6 +708,30 @@ def _createTargets(db):
                 targetImageId   varchar(128)        NOT NULL
             ) %(TABLEOPTS)s""")
 
+    createTable(db, 'target_image', """
+            CREATE TABLE target_image (
+                target_image_id         %(PRIMARYKEY)s,
+                name                    TEXT NOT NULL,
+                description             TEXT NOT NULL,
+                target_id               integer             NOT NULL
+                    REFERENCES Targets ON DELETE CASCADE,
+                target_internal_id      TEXT             NOT NULL,
+                rbuilder_image_id       TEXT,
+                created_date            TIMESTAMP WITH TIME ZONE NOT NULL
+                    DEFAULT current_timestamp,
+                modified_date           TIMESTAMP WITH TIME ZONE NOT NULL
+                    DEFAULT current_timestamp,
+                UNIQUE ( target_id, target_internal_id )
+            ) %(TABLEOPTS)s""")
+
+    createTable(db, 'target_image_credentials', """
+            CREATE TABLE target_image_credentials (
+                id                      %(PRIMARYKEY)s,
+                target_image_id         INTEGER NOT NULL
+                    REFERENCES target_image ON DELETE CASCADE,
+                target_credentials_id   INTEGER NOT NULL
+                    REFERENCES TargetCredentials ON DELETE CASCADE
+            ) %(TABLEOPTS)s""")
 
 def _createPlatforms(db):
     cu = db.cursor()
@@ -1326,10 +1350,30 @@ def _createInventorySchema(db, cfg):
                 status_code INTEGER NOT NULL DEFAULT 100,
                 status_text VARCHAR NOT NULL DEFAULT 'Initializing',
                 status_detail VARCHAR,
+                created_by   INTEGER
+                    REFERENCES Users ON DELETE SET NULL,
                 time_created timestamp with time zone NOT NULL,
                 time_updated timestamp with time zone NOT NULL
             ) %(TABLEOPTS)s""" % db.keywords)
         db.tables[tableName] = []
+
+    createTable(db, 'jobs_job_result', """
+        CREATE TABLE jobs_job_result (
+            job_result_id %(PRIMARYKEY)s,
+            job_id          INTEGER NOT NULL
+                REFERENCES jobs_job ON DELETE CASCADE,
+            data            TEXT NOT NULL
+        ) %(TABLEOPTS)s""")
+
+    createTable(db, 'jobs_job_history', """
+        CREATE TABLE jobs_job_history
+        (
+            job_history_id  %(PRIMARYKEY)s,
+            job_id          INTEGER NOT NULL
+                REFERENCES jobs_job ON DELETE CASCADE,
+            content         TEXT NOT NULL,
+            created_date    TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT current_timestamp
+        ) %(TABLEOPTS)s""")
 
     tableName = "inventory_system_job"
     if 'inventory_system_job' not in db.tables:
