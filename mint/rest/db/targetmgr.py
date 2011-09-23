@@ -161,20 +161,25 @@ class TargetManager(manager.Manager):
 
     def getConfiguredTargetsByType(self, targetType):
         cu = self.db.cursor()
+        # First, fetch common fields
         cu.execute("""
-            SELECT t.name AS targetName, t.description AS targetDescription,
-                   td.name, td.value
+            SELECT t.name AS targetName, t.description AS targetDescription
+              FROM Targets AS t
+              JOIN target_types USING (target_type_id)
+             WHERE target_types.name = ?
+        """, targetType)
+        ret = {}
+        for targetName, targetDescription in cu:
+            ret[targetName] = dict(description=targetDescription)
+        cu.execute("""
+            SELECT t.name AS targetName, td.name, td.value
               FROM Targets AS t
               JOIN target_types USING (target_type_id)
               JOIN TargetData AS td ON td.targetId = t.targetId
              WHERE target_types.name = ?
         """, targetType)
-        ret = {}
         for targetName, targetDescription, key, value in cu:
-            # Initialize config with common fields
-            targetConfig = dict(description=targetDescription)
-            targetConfig.update(self._stripUnicode(json.loads(value)))
-            ret.setdefault(targetName, {})[key] = targetConfig
+            ret[targetName][key] = self._stripUnicode(json.loads(value))
         return ret
 
     def getTargetsForUser(self, targetType, userName):
