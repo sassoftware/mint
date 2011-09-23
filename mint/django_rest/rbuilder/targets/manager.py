@@ -159,7 +159,8 @@ class TargetsManager(basemanager.BaseManager, CatalogServiceHelper):
 
     @exposed
     def getDescriptorRefreshImages(self, target_id):
-        target = self.getTargetById(target_id)
+        # This will validate the target
+        self.getTargetById(target_id)
         descr = descriptor.ConfigurationDescriptor()
         descr.setRootElement('descriptor_data')
         descr.setDisplayName("Refresh images")
