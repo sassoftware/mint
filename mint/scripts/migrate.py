@@ -4276,12 +4276,12 @@ class MigrateTo_58(SchemaMigration):
             ) %(TABLEOPTS)s""")
         return True
     
-    def migrate67(self):
+    def migrate68(self):
         db = self.db
         cu = db.cursor()
         cu.execute("""
-           ALTER TABLE inventory_system ADD COLUMN should_migrate
-               NOT NULL DEFAULT FALSE
+           ALTER TABLE inventory_system ADD should_migrate
+               BOOLEAN NOT NULL DEFAULT FALSE
         """)
         return True
 
