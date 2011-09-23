@@ -266,11 +266,11 @@ class TargetsManager(basemanager.BaseManager, CatalogServiceHelper):
         cu.execute("DROP TABLE tmp_target_image")
 
     def _image(self, target, image):
-        imageName = getattr(image, 'productName',
-            getattr(image, 'shortName'))
-        imageDescription = getattr(image, 'longName', imageName)
-        imageId = getattr(image, 'internalTargetId')
-        rbuilderImageId = getattr(image, 'imageId')
+        imageName = self._unXobj(getattr(image, 'productName',
+            getattr(image, 'shortName', getattr(image, 'longName'))))
+        imageDescription = self._unXobj(getattr(image, 'longName', imageName))
+        imageId = self._unXobj(getattr(image, 'internalTargetId'))
+        rbuilderImageId = self._unXobj(getattr(image, 'imageId'))
         if rbuilderImageId == imageId:
             rbuilderImageId = None
 
@@ -278,6 +278,12 @@ class TargetsManager(basemanager.BaseManager, CatalogServiceHelper):
             name=imageName, description=imageDescription,
             target_internal_id=imageId, rbuilder_image_id=rbuilderImageId)
         return model
+
+    @classmethod
+    def _unXobj(cls, value):
+        if value is None:
+            return None
+        return unicode(value)
 
 class TargetTypesManager(basemanager.BaseManager, CatalogServiceHelper):
     @exposed
