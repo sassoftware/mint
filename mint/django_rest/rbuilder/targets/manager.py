@@ -105,7 +105,7 @@ class TargetsManager(basemanager.BaseManager, CatalogServiceHelper):
     @exposed
     def createTarget(self, targetType, targetName, targetData):
         targetData.pop('name', None)
-        description = targetData.pop('description', targetName)
+        description = targetData.get('description', targetName)
         zoneName = targetData.pop('zone')
         zone = modellib.Cache.get(zones.Zone, name=zoneName)
         target = models.Target(name=targetName, description=description,
