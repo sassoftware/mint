@@ -28,7 +28,7 @@ from conary.dbstore import sqlerrors, sqllib
 log = logging.getLogger(__name__)
 
 # database schema major version
-RBUILDER_DB_VERSION = sqllib.DBversion(58, 68)
+RBUILDER_DB_VERSION = sqllib.DBversion(58, 69)
 
 
 def _createTrigger(db, table, column="changed"):
@@ -214,6 +214,9 @@ def _createRbac(db):
     # rbac query sets
     _createAllRoles(db)
     _createAllGrants(db)
+
+    # target service query set
+    _createAllTargets(db)
 
     # queryset tag tables
     createTable(db, 'querysets_permissiontag', """
@@ -2182,6 +2185,13 @@ def _createAllSystems(db):
             filterId)
     return True
 
+def _createAllTargets(db):
+    """Add the all targets query set"""
+    filterId = _addQuerySetFilterEntry(db, "target.name", "IS_NULL", "false")
+    _addQuerySet(db, "All Targets", "All targets", "target", False,
+            filterId)
+    return True
+
 
 def _createAllRoles(db):
     """Add the all roles query set"""
@@ -2396,6 +2406,24 @@ def _createQuerySetSchema(db):
                 NOT NULL,
             CONSTRAINT querysets_stagetag_uq UNIQUE ("stage_id",
                 "query_set_id", "inclusion_method_id")
+        )""")
+
+    createTable(db, 'querysets_targettag', """
+        CREATE TABLE "querysets_targettag" (
+            "target_tag_id" %(BIGPRIMARYKEY)s,
+            "target_id" INTEGER
+                REFERENCES "targets" ("targetid")
+                ON DELETE CASCADE
+                NOT NULL,
+            "query_set_id" INTEGER
+                REFERENCES "querysets_queryset" ("query_set_id")
+                ON DELETE CASCADE,
+            "inclusion_method_id" INTEGER
+                REFERENCES "querysets_inclusionmethod" ("inclusion_method_id")
+                ON DELETE CASCADE
+                NOT NULL,
+            CONSTRAINT querysets_targettag_uq UNIQUE ("target_id", "query_set_id",
+                "inclusion_method_id")
         )""")
 
     _addTableRows(db, "querysets_queryset_filter_entries",

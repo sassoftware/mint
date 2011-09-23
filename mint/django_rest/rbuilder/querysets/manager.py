@@ -22,6 +22,7 @@ from mint.django_rest.rbuilder.users import models as usermodels
 from mint.django_rest.rbuilder.projects import models as projectmodels
 from mint.django_rest.rbuilder.rbac import models as rbacmodels
 from mint.django_rest.rbuilder.jobs import models as jobmodels
+from mint.django_rest.rbuilder.targets import models as targetmodels
 
 # retag if a new query is made and the results are greater
 # than this many seconds old
@@ -40,6 +41,7 @@ class QuerySetManager(basemanager.BaseManager):
         'project_branch_stage' : '_tagStages',
         'grant'                : '_tagGrants',
         'role'                 : '_tagRoles',
+        'target'               : '_tagTargets',
     }
     resourceCollectionMap = {
         'system'               : 'systems',
@@ -48,6 +50,7 @@ class QuerySetManager(basemanager.BaseManager):
         'project_branch_stage' : 'stages',
         'grant'                : 'grants',
         'role'                 : 'roles',
+        'target'               : 'targets',
     }
     tagLookupMap = {
         'system'               : '_lookupTaggedSystems',
@@ -56,12 +59,14 @@ class QuerySetManager(basemanager.BaseManager):
         'project_branch_stage' : '_lookupTaggedStages',
         'grant'                : '_lookupTaggedGrants',
         'role'                 : '_lookupTaggedRoles',
+        'target'               : '_lookupTaggedTargets',
     }
     tagModelMap = {
         'system'               : 'system_tag',
         'user'                 : 'user_tag',
         'project_branch_stage' : 'stage_tag',
-        'project'              : 'project_tag'
+        'project'              : 'project_tag',
+        'target'               : 'target_tag',
         # grants are presently untagged
         # roles are presently untagged
     }
@@ -228,6 +233,12 @@ class QuerySetManager(basemanager.BaseManager):
            tagTable='querysets_systemtag',
            idColumn='system_id')
 
+    def _tagTargets(self, resources, tag, inclusionMethod):
+        self._tagGeneric(resources, tag, inclusionMethod,
+           tagClass=models.TargetTag,
+           tagTable='querysets_targettag',
+           idColumn='target_id')
+
     def _tagUsers(self, resources, tag, inclusionMethod):
         self._tagGeneric(resources, tag, inclusionMethod,
            tagClass=models.UserTag,
@@ -382,6 +393,12 @@ class QuerySetManager(basemanager.BaseManager):
             tags__query_set=querySet,
             tags__inclusion_method__inclusion_method_id__in=methods
         ).distinct().order_by('system_id')
+    
+    def _lookupTaggedTargets(self, querySet, methods):
+        return targetmodels.Target.objects.filter(
+            tags__query_set=querySet,
+            tags__inclusion_method__inclusion_method_id__in=methods
+        ).distinct().order_by('target_id')
 
     def _lookupTaggedUsers(self, querySet, methods):
         # TODO: eliminate duplication here

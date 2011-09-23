@@ -3051,7 +3051,7 @@ class MigrateTo_57(SchemaMigration):
 
 
 class MigrateTo_58(SchemaMigration):
-    Version = (58, 68)
+    Version = (58, 69)
 
     def migrate(self):
         return True
@@ -4283,6 +4283,32 @@ class MigrateTo_58(SchemaMigration):
            ALTER TABLE inventory_system ADD should_migrate
                BOOLEAN NOT NULL DEFAULT FALSE
         """)
+        return True
+
+    def migrate69(self):
+        '''make querysets for targets'''
+        db = self.db
+        createTable(self.db, """
+            CREATE TABLE "querysets_targettag" (
+                "target_tag_id" %(BIGPRIMARYKEY)s,
+                "target_id" INTEGER
+                    REFERENCES "targets" ("target_id")
+                    ON DELETE CASCADE
+                    NOT NULL,
+                "query_set_id" INTEGER
+                    REFERENCES "querysets_queryset" ("query_set_id")
+                    ON DELETE CASCADE,
+                "inclusion_method_id" INTEGER
+                    REFERENCES "querysets_inclusionmethod" ("inclusion_method_id")
+                    ON DELETE CASCADE
+                    NOT NULL,
+                CONSTRAINT querysets_targettag_uq UNIQUE ("target_id", "query_set_id", "inclusion_method_id")
+            )""" % self.db.keywords)
+
+        # TODO: also have to add filter entry
+        filterId = schema._addQuerySetFilterEntry(db, "target.name", "IS_NULL", "false")
+        qsId = schema._addQuerySet(db, "All Targets", "All targets", "targets", False, filterId, 'target')
+
         return True
 
 #### SCHEMA MIGRATIONS END HERE #############################################
