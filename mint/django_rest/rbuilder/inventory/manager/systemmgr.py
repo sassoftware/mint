@@ -1305,40 +1305,40 @@ class SystemManager(basemanager.BaseManager):
         # TODO: refactor
         if eventType in self.RegistrationEvents:
             method = getattr(repClient, "register_" + mgmtInterfaceName)
-            self._runSystemEvent(event, method, params, user=self.user,
-                resultsLocation, zone=zone)
+            self._runSystemEvent(event, method, params, resultsLocation,
+                user=self.user, zone=zone)
         elif eventType in self.PollEvents:
             method = getattr(repClient, "poll_" + mgmtInterfaceName)
-            self._runSystemEvent(event, method, params, user=self.user,
-                resultsLocation, zone=zone)
+            self._runSystemEvent(event, method, params, resultsLocation,
+                user=self.user, zone=zone)
         elif eventType in self.SystemUpdateEvents:
             data = cPickle.loads(event.event_data)
             method = getattr(repClient, "update_" + mgmtInterfaceName)
-            self._runSystemEvent(event, method, params, user=self.user,
-                resultsLocation, zone=zone, sources=data)
+            self._runSystemEvent(event, method, params, resultsLocation,
+                user=self.user, zone=zone, sources=data)
         elif eventType in self.SystemConfigurationEvents:
             data = event.event_data
             method = getattr(repClient, "configuration_" + mgmtInterfaceName)
-            self._runSystemEvent(event, method, params, user=self.user,
-                resultsLocation, zone=zone, configuration=data)
+            self._runSystemEvent(event, method, params, resultsLocation,
+                user=self.user, zone=zone, configuration=data)
         elif eventType in self.ShutdownEvents:
             method = getattr(repClient, "shutdown_" + mgmtInterfaceName)
-            self._runSystemEvent(event, method, params, user=self.user,
-                resultsLocation, zone=zone)
+            self._runSystemEvent(event, method, params, resultsLocation,
+                user=self.user, zone=zone)
         elif eventType in self.LaunchWaitForNetworkEvents:
             method = repClient.launchWaitForNetwork
-            self._runSystemEvent(event, method, params, user=self.user,
-                resultsLocation)
+            self._runSystemEvent(event, method, params, resultsLocation,
+                user=self.user, zone=zone)
         elif eventType in self.ManagementInterfaceEvents:
             params = self.getManagementInterfaceParams(repClient, destination)
             params.eventUuid = eventUuid
             nethod = repClient.detectMgmtInterface
-            self._runSystemEvent(event, method, params, user=self.user,
-                resultsLocation=resultsLocation, zone=zone)
+            self._runSystemEvent(event, method, params, resultsLocation,
+                user=self.user, zone=zone)
         elif eventType in self.AssimilationEvents:
             method = repClient.bootstrap
-            self._runSystemEvent(event, method, params, user=self.user,
-                resultsLocation, zone=zone) # sources=data)
+            self._runSystemEvent(event, method, params, resultsLocation,
+                user=self.user, zone=zone) # sources=data)
         else:
             log.error("Unknown event type %s" % eventType)
             raise errors.UnknownEventType(eventType=eventType)
