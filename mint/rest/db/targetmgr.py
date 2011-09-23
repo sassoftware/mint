@@ -178,7 +178,7 @@ class TargetManager(manager.Manager):
               JOIN TargetData AS td ON td.targetId = t.targetId
              WHERE target_types.name = ?
         """, targetType)
-        for targetName, targetDescription, key, value in cu:
+        for targetName, key, value in cu:
             ret[targetName][key] = self._stripUnicode(json.loads(value))
         return ret
 
