@@ -313,7 +313,7 @@ class _TargetDescriptorJobHandler(DescriptorJobHandler):
         return descr
 
     def _setTarget(self, targetId):
-        target = modellib.Cache.get(targetmodels.Target, pk=targetId)
+        target = self.mgr.mgr.getTargetById(targetId)
         self.target = target
 
     def getRelatedThroughModel(self, descriptor):
