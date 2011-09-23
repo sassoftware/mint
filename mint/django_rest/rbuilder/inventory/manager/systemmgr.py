@@ -1305,37 +1305,39 @@ class SystemManager(basemanager.BaseManager):
         # TODO: refactor
         if eventType in self.RegistrationEvents:
             method = getattr(repClient, "register_" + mgmtInterfaceName)
-            self._runSystemEvent(event, method, params,
+            self._runSystemEvent(event, method, params, user=self.user,
                 resultsLocation, zone=zone)
         elif eventType in self.PollEvents:
             method = getattr(repClient, "poll_" + mgmtInterfaceName)
-            self._runSystemEvent(event, method,
-                params, resultsLocation, zone=zone)
+            self._runSystemEvent(event, method, params, user=self.user,
+                resultsLocation, zone=zone)
         elif eventType in self.SystemUpdateEvents:
             data = cPickle.loads(event.event_data)
             method = getattr(repClient, "update_" + mgmtInterfaceName)
-            self._runSystemEvent(event, method, params,
+            self._runSystemEvent(event, method, params, user=self.user,
                 resultsLocation, zone=zone, sources=data)
         elif eventType in self.SystemConfigurationEvents:
             data = event.event_data
             method = getattr(repClient, "configuration_" + mgmtInterfaceName)
-            self._runSystemEvent(event, method, params,
+            self._runSystemEvent(event, method, params, user=self.user,
                 resultsLocation, zone=zone, configuration=data)
         elif eventType in self.ShutdownEvents:
             method = getattr(repClient, "shutdown_" + mgmtInterfaceName)
-            self._runSystemEvent(event, method,
-                params, resultsLocation, zone=zone)
+            self._runSystemEvent(event, method, params, user=self.user,
+                resultsLocation, zone=zone)
         elif eventType in self.LaunchWaitForNetworkEvents:
-            self._runSystemEvent(event, repClient.launchWaitForNetwork,
-                params, resultsLocation)
+            method = repClient.launchWaitForNetwork
+            self._runSystemEvent(event, method, params, user=self.user,
+                resultsLocation)
         elif eventType in self.ManagementInterfaceEvents:
             params = self.getManagementInterfaceParams(repClient, destination)
             params.eventUuid = eventUuid
-            self._runSystemEvent(event, repClient.detectMgmtInterface,
-                params, resultsLocation=resultsLocation, zone=zone)
+            nethod = repClient.detectMgmtInterface
+            self._runSystemEvent(event, method, params, user=self.user,
+                resultsLocation=resultsLocation, zone=zone)
         elif eventType in self.AssimilationEvents:
             method = repClient.bootstrap
-            self._runSystemEvent(event, method, params,
+            self._runSystemEvent(event, method, params, user=self.user,
                 resultsLocation, zone=zone) # sources=data)
         else:
             log.error("Unknown event type %s" % eventType)
@@ -1395,6 +1397,7 @@ class SystemManager(basemanager.BaseManager):
     @classmethod
     def _runSystemEvent(cls, event, method, params, resultsLocation=None,
             **kwargs):
+        user = kwargs.pop('user', None)
         zone = kwargs.pop('zone', None)
         systemName = event.system.name
         eventType = event.event_type.name
@@ -1419,7 +1422,7 @@ class SystemManager(basemanager.BaseManager):
         job.job_uuid = str(uuid)
         job.job_type = event.event_type
         job.job_state = cls.jobState(jobmodels.JobState.RUNNING)
-        job.created_by = self.user
+        job.created_by = user
         job.save()
 
         sjob = models.SystemJob()
