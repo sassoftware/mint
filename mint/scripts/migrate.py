@@ -3051,7 +3051,7 @@ class MigrateTo_57(SchemaMigration):
 
 
 class MigrateTo_58(SchemaMigration):
-    Version = (58, 67)
+    Version = (58, 68)
 
     def migrate(self):
         return True
@@ -4275,7 +4275,15 @@ class MigrateTo_58(SchemaMigration):
                 created_date    TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT current_timestamp
             ) %(TABLEOPTS)s""")
         return True
-
+    
+    def migrate67(self):
+        db = self.db
+        cu = db.cursor()
+        cu.execute("""
+           ALTER TABLE inventory_system ADD COLUMN should_migrate
+               NOT NULL DEFAULT FALSE
+        """)
+        return True
 
 #### SCHEMA MIGRATIONS END HERE #############################################
 

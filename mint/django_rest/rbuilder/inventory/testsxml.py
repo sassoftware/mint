@@ -358,6 +358,7 @@ system_type_systems_xml="""
 <?xml version="1.0"?>
 <systems count="1" end_index="0" filter_by="" full_collection="http://testserver/api/v1/inventory/systems" id="http://testserver/api/v1/inventory/systems;start_index=0;limit=10" limit="10" next_page="" num_pages="1" order_by="" per_page="10" previous_page="" start_index="0">
   <system id="http://testserver/api/v1/inventory/systems/3">
+    <should_migrate>false</should_migrate>
     <agent_port>5989</agent_port>
     <project/>
     <credentials id="http://testserver/api/v1/inventory/systems/3/credentials"/>
@@ -628,6 +629,7 @@ management_nodes_xml = """\
       <system_state_id>3</system_state_id>
     </current_state>
     <created_date>%s</created_date>
+    <should_migrate>false</should_migrate>
   </management_node>
 </management_nodes>
 """
@@ -702,6 +704,7 @@ management_node_xml = """\
     <system_state_id>3</system_state_id>
   </current_state>
   <created_date>%s</created_date>
+  <should_migrate>false</should_migrate>
 </management_node>"""
 
 management_node_post_xml = """\
@@ -812,6 +815,7 @@ management_node_post_response_xml = """\
     <system_state_id>3</system_state_id>
   </current_state>
   <created_date>%s</created_date>
+  <should_migrate>false</should_migrate>
 </management_node>"""
 
 management_node_zone_post_xml = """\
@@ -922,6 +926,7 @@ management_node_zone_post_response_xml = """\
     <system_state_id>3</system_state_id>
   </current_state>
   <created_date>%s</created_date>
+  <should_migrate>false</should_migrate>
 </management_node>"""
 
 # note that top level <systems> tag is going to be different now that we
@@ -995,6 +1000,7 @@ systems_xml = """\
     <target_system_description/>
     <target_system_state/>
     <system_type id="http://testserver/api/v1/inventory/system_types/2">rPath Update Service (Infrastructure)</system_type>
+    <should_migrate>false</should_migrate>
   </system>
   <system id="http://testserver/api/v1/inventory/systems/3">
     <agent_port>5989</agent_port>
@@ -1059,6 +1065,7 @@ systems_xml = """\
     <target_system_description/>
     <target_system_state/>
     <system_type id="http://testserver/api/v1/inventory/system_types/1">Inventory</system_type>
+    <should_migrate>false</should_migrate>
   </system>
 </systems>
 """
@@ -1107,6 +1114,7 @@ systems_put_xml = """\
       <system_state_id>2</system_state_id>
     </current_state>
     <created_date>%s</created_date>
+    <should_migrate>false</should_migrate>
   </system>
   <system id="http://testserver/api/v1/inventory/systems/2">
     <ssl_client_key>testsystemsslclientkey</ssl_client_key>
@@ -1149,6 +1157,7 @@ systems_put_xml = """\
       <system_state_id>2</system_state_id>
     </current_state>
     <created_date>%s</created_date>
+    <should_migrate>false</should_migrate>
   </system>
 </systems>"""
 
@@ -1193,6 +1202,7 @@ systems_put_mothball_xml = """\
     <name>mothballed</name>
     <system_state_id>12</system_state_id>
   </current_state>
+  <should_migrate>false</should_migrate>
 </system>"""
 
 system_xml = """\
@@ -1260,6 +1270,7 @@ system_xml = """\
     <system_state_id>3</system_state_id>
   </current_state>
   <created_date>%s</created_date>
+  <should_migrate>false</should_migrate>
 </system>"""
 
 system_post_xml = """\
@@ -1297,6 +1308,7 @@ system_post_xml = """\
   <local_uuid>testsystemlocaluuid</local_uuid>
   <major_version/>
   <management_interface id="http://testserver/api/v1/inventory/management_interfaces/1">Common Information Model (CIM)</management_interface>
+  <should_migrate>false</should_migrate>
 </system>"""
 
 system_mgmt_interface_put_xml = """\
@@ -1334,6 +1346,7 @@ system_mgmt_interface_put_xml = """\
   <local_uuid>testsystemlocaluuid</local_uuid>
   <major_version/>
   <management_interface id="http://testserver/api/v1/inventory/management_interfaces/2">Windows Management Instrumentation (WMI)</management_interface>
+  <should_migrate>false</should_migrate>
 </system>"""
 
 system_delete_mgmt_interface_put_xml = """\
@@ -1372,6 +1385,7 @@ system_delete_mgmt_interface_put_xml = """\
   <local_uuid>testsystemlocaluuid</local_uuid>
   <major_version/>
   <management_interface/>
+  <should_migrate>false</should_migrate>
 </system>"""
 
 system_post_xml_response = """\
@@ -1439,6 +1453,7 @@ system_post_xml_response = """\
     <system_state_id>3</system_state_id>
   </current_state>
   <created_date>%s</created_date>
+  <should_migrate>false</should_migrate>
 </system>"""
 
 system_post_no_network_xml = """\
@@ -1459,6 +1474,7 @@ system_post_network_unpinned = """\
     <address>1.2.3.4</address>
     <pinned>false</pinned>
   </network_address>
+  <should_migrate>false</should_migrate>
 </system>"""
 
 system_post_network_pinned = """\
@@ -1471,6 +1487,7 @@ system_post_network_pinned = """\
     <address>1.2.3.4</address>
     <pinned>true</pinned>
   </network_address>
+  <should_migrate>false</should_migrate>
 </system>"""
 
 system_post_xml_dup = """\
@@ -1508,6 +1525,7 @@ system_post_xml_dup = """\
   <local_uuid>testsystemlocaluuid</local_uuid>
   <major_version/>
   <management_interface id="http://testserver/api/v1/inventory/management_interfaces/1">Common Information Model (CIM)</management_interface>
+  <should_migrate>false</should_migrate>
 </system>"""
 
 system_post_xml_dup2 = system_post_xml_dup.replace(
@@ -1579,6 +1597,7 @@ system_target_xml = """\
     <system_state_id>3</system_state_id>
   </current_state>
   <created_date>%s</created_date>
+  <should_migrate>false</should_migrate>
 </system>
 """
 
@@ -1924,6 +1943,7 @@ system_version_xml = """\
     <system_state_id>3</system_state_id>
   </current_state>
   <created_date>%%s</created_date>
+  <should_migrate>false</should_migrate>
 </system>
 """ % get_installed_software_xml
 
@@ -2060,6 +2080,7 @@ system_version_put_response_xml = """\
     <system_state_id>2</system_state_id>
   </current_state>
   <created_date>2010-08-23T21:41:31.278455+00:00</created_date>
+  <should_migrate>false</should_migrate>
 </system>
 """ % installed_software_response_xml
 
@@ -2199,6 +2220,7 @@ system_available_updates_xml = """\
     <system_state_id>3</system_state_id>
   </current_state>
   <created_date>2010-08-27T12:21:59.800269+00:00</created_date>
+  <should_migrate>false</should_migrate>
 </system>
 """
 
@@ -2392,6 +2414,7 @@ system_with_target = """\
   </current_state>
   <created_date>2010-09-23T13:30:14.295974+00:00</created_date>
   <target_system_description/>
+  <should_migrate>false</should_migrate>
 </system>
 """
 
@@ -2653,6 +2676,7 @@ system_installed_software_version_stage_xml = """\
   <target/>
   <target_system_description/>
   <created_date>2010-11-10T22:52:26.343993+00:00</created_date>
+  <should_migrate>false</should_migrate>
 </system>"""
 
 systems_collection_xml = """\
@@ -2835,6 +2859,7 @@ Methods:
     <target/>
     <target_system_description/>
     <created_date>2010-08-23T22:11:00+00:00</created_date>
+    <should_migrate>false</should_migrate>
   </system>
   <system id="http://testserver/api/v1/inventory/systems/3">
     <network_address>
@@ -2900,6 +2925,7 @@ Methods:
     <target/>
     <target_system_description/>
     <created_date>2010-12-06T22:11:00+00:00</created_date>
+    <should_migrate>false</should_migrate>
   </system>
   <system id="http://testserver/api/v1/inventory/systems/4">
     <network_address>
@@ -2965,6 +2991,7 @@ Methods:
     <target/>
     <target_system_description/>
     <created_date>2010-12-06T22:11:00+00:00</created_date>
+    <should_migrate>false</should_migrate>
   </system>
   <system id="http://testserver/api/v1/inventory/systems/5">
     <network_address>
@@ -3030,6 +3057,7 @@ Methods:
     <target/>
     <target_system_description/>
     <created_date>2010-12-06T22:11:00+00:00</created_date>
+    <should_migrate>false</should_migrate>
   </system>
   <system id="http://testserver/api/v1/inventory/systems/6">
     <network_address>
@@ -3095,6 +3123,7 @@ Methods:
     <target/>
     <target_system_description/>
     <created_date>2010-12-06T22:11:00+00:00</created_date>
+    <should_migrate>false</should_migrate>
   </system>
   <system id="http://testserver/api/v1/inventory/systems/7">
     <network_address>
@@ -3160,6 +3189,7 @@ Methods:
     <target/>
     <target_system_description/>
     <created_date>2010-12-06T22:11:00+00:00</created_date>
+    <should_migrate>false</should_migrate>
   </system>
   <system id="http://testserver/api/v1/inventory/systems/8">
     <network_address>
@@ -3225,6 +3255,7 @@ Methods:
     <target/>
     <target_system_description/>
     <created_date>2010-12-06T22:11:00+00:00</created_date>
+    <should_migrate>false</should_migrate>
   </system>
   <system id="http://testserver/api/v1/inventory/systems/9">
     <network_address>
@@ -3290,6 +3321,7 @@ Methods:
     <target/>
     <target_system_description/>
     <created_date>2010-12-06T22:11:00+00:00</created_date>
+    <should_migrate>false</should_migrate>
   </system>
   <system id="http://testserver/api/v1/inventory/systems/10">
     <network_address>
@@ -3355,6 +3387,7 @@ Methods:
     <target/>
     <target_system_description/>
     <created_date>2010-12-06T22:11:00+00:00</created_date>
+    <should_migrate>false</should_migrate>
   </system>
   <system id="http://testserver/api/v1/inventory/systems/11">
     <network_address>
@@ -3420,6 +3453,7 @@ Methods:
     <target/>
     <target_system_description/>
     <created_date>2010-12-06T22:11:00+00:00</created_date>
+    <should_migrate>false</should_migrate>
   </system>
 </systems>
 """
@@ -3463,4 +3497,5 @@ system_post_forge_object = """<?xml version="1.0" encoding="UTF-8"?>
   <local_uuid>testsystemlocaluuid</local_uuid>
   <major_version/>
   <management_interface id="http://testserver/api/v1/inventory/management_interfaces/9999">Should Not Exist</management_interface>
+  <should_migrate>false</should_migrate>
 </system>"""

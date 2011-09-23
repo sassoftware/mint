@@ -564,6 +564,9 @@ class System(modellib.XObjIdModel):
     network_address = D(NetworkAddress, "Network address for this system")
     actions = D(modellib.SyntheticField(jobmodels.Actions),
         "actions available on the system")
+    should_migrate = D(models.BooleanField(default=False), 
+        "should a migration be triggered the next time this system checks in?")
+
 
     logged_fields = ['name', 'installed_software']
 
