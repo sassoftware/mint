@@ -4315,7 +4315,7 @@ class MigrateTo_58(SchemaMigration):
         '''add source image to systems table'''
         cu = self.db.cursor()
         cu.execute("""
-            UPDATE TABLE "inventory_system" 
+            ALTER TABLE "inventory_system" 
                  ADD COLUMN "source_image_id" INTEGER 
                      REFERENCES "builds" ("buildid")
                      ON DELETE CASCADE
