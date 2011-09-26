@@ -23,6 +23,7 @@ from mint.django_rest.rbuilder.repos import models as repomodels
 from mint.django_rest.rbuilder.manager.basemanager import exposed
 from mint.django_rest.rbuilder.platforms import models as platform_models
 from mint.django_rest.rbuilder.projects import models
+from mint.django_rest.rbuilder.images import models as imagesmodels
 
 from conary import conarycfg
 from conary import conaryclient
@@ -386,13 +387,13 @@ class ProjectManager(basemanager.BaseManager):
 
     @exposed
     def getImage(self, image_id):
-        return models.Image.objects.select_related().get(pk=image_id)
+        return imagesmodels.Image.objects.select_related().get(pk=image_id)
 
     @exposed
     def getImagesForProject(self, short_name):
         project = self.getProject(short_name)
-        Images = models.Images()
-        Images.image = models.Image.objects.select_related().filter(
+        Images = imagesmodels.Images()
+        Images.image = imagesmodels.Image.objects.select_related().filter(
             project__project_id=project.project_id).order_by('image_id')
         Images.url_key = [ short_name ]
         Images.view_name = 'ProjectImages'
@@ -504,17 +505,17 @@ class ProjectManager(basemanager.BaseManager):
 
         # First, find all images directly linked to this stage
         imagesMap = dict((x.image_id, x)
-            for x in models.Image.objects.select_related().filter(
+            for x in imagesmodels.Image.objects.select_related().filter(
                 project_branch_stage__stage_id=stage.stage_id))
         # Then get the ones belonging to the same branch, that only have
         # a stage name
         imagesMap.update((x.image_id, x)
-            for x in models.Image.objects.filter(
+            for x in imagesmodels.Image.objects.filter(
                 project_branch__branch_id=stage.project_branch.branch_id,
                 stage_name=stage.name))
 
         # Sort images by image id
-        images = models.Images()
+        images = imagesmodels.Images()
         images.image = [ x[1] for x in sorted(imagesMap.items()) ]
         images.url_key = [ project_short_name, project_branch_label, stage_name ]
         images.view_name = 'ProjectBranchStageImages'

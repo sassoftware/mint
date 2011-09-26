@@ -16,7 +16,7 @@ from mint.django_rest.rbuilder.manager import rbuildermanager
 from xobj import xobj
 from mint.django_rest.rbuilder.rbac.tests import RbacEngine
 from testutils import mock
-
+from mint.django_rest.rbuilder.images import models as imagesmodels
 
 class ProjectsTestCase(RbacEngine):
     fixtures = ["projects", "project_image_fixtures"]
@@ -425,14 +425,14 @@ class ProjectsTestCase(RbacEngine):
     def testGetProjectImages(self):
         # Add image
         prj = self._addProject("foo")
-        image = models.Image(name="image-1", description="image-1",
+        image = imagesmodels.Image(name="image-1", description="image-1",
             project=prj, build_type=10)
         image.save()
 
         response = self._get('projects/%s/images/' % prj.short_name,
                     username='admin', password='password')
         self.assertEquals(response.status_code, 200)
-        image = models.Image.objects.get(pk=image.pk)
+        image = imagesmodels.Image.objects.get(pk=image.pk)
         self.assertEquals(image.build_type, 10)
         
         response = self._get('projects/%s/images/' % prj.short_name,
@@ -473,13 +473,13 @@ class ProjectsTestCase(RbacEngine):
             project_branch__branch_id=branch.branch_id, name='Development')
 
         # First image has no stage reference
-        image = models.Image(name="image-1", description="image-1",
+        image = imagesmodels.Image(name="image-1", description="image-1",
             project=prj, project_branch=branch, build_type=10,
             stage_name=stage.name)
         image.save()
 
         # Second image has a stage reference
-        image = models.Image(name="image-2", description="image-2",
+        image = imagesmodels.Image(name="image-2", description="image-2",
             project=prj, project_branch=branch, project_branch_stage=stage, build_type=10)
         image.save()
 
