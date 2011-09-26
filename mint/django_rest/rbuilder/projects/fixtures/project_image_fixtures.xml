@@ -39,7 +39,7 @@
     <field type="BooleanField" name="promotable">False</field>
     <field type="DateTimeField" name="created_date">2011-08-03 17:47:04</field>
   </object>
-  <object pk="1" model="projects.image">
+  <object pk="1" model="images.image">
     <field to="projects.project" name="project" rel="ManyToOneRel">1</field>
     <field to="projects.stage" name="project_branch_stage" rel="ManyToOneRel">1</field>
     <field to="projects.release" name="release" rel="ManyToOneRel"><None></None></field>

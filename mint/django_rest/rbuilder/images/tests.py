@@ -12,6 +12,38 @@ class ImagesTestCase(XMLTestCase):
     def setUp(self):
         XMLTestCase.setUp(self)
 
+    def _initImages(self):
+        prj = self._addProject("foo")
+        image = models.Image(name="image-1", description="image-1",
+            project=prj, build_type=10)
+        image.save()
+
+    def _addProject(self, short_name, namespace='ns'):
+        project = models.Project()
+        project.name = project.hostname = project.short_name = short_name
+        project.namespace = namespace
+        project.domain_name = 'test.local2'
+        project = self.mgr.projectManager.addProject(project)
+
+        return project
+
+    def _initProject(self, name='chater-foo'):
+        proj = models.Project.objects.get(name='chater-foo')
+        branch = models.ProjectVersion(project=proj, name="trunk", label="chater-foo.eng.rpath.com@rpath:chater-foo-trunk")
+        branch.save()
+        stage = models.Stage(project=proj,
+            project_branch=branch, name="Development", label="foo@ns:trunk-devel")
+        stage.save()
+        stage = models.Stage(project=proj,
+            project_branch=branch, name="QA", label="foo@ns:trunk-qa")
+        stage.save()
+        stage = models.Stage(project=proj,
+            project_branch=branch, name="Stage", label="foo@ns:trunk-stage")
+        stage.save()
+        stage = models.Stage(project=proj,
+            project_branch=branch, name="Release", label="foo@ns:trunk")
+        stage.save()
+
     def testCanListAndAccessImages(self):
 
         # WARNING --
@@ -34,3 +66,4 @@ class ImagesTestCase(XMLTestCase):
 
     def testUpdateImage(self):
         pass
+        

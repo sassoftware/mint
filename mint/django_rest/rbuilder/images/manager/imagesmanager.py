@@ -46,3 +46,39 @@ class ImagesManager(basemanager.BaseManager):
     def createUnifiedImage(self, image):
         image.save()
         return image
+        
+    @exposed
+    def getImageBuild(self, build_id):
+        return models.Build.objects.get(pk=build_id)
+        
+    @exposed
+    def getImageBuilds(self):
+        Builds = models.Builds()
+        Builds.build = models.Build.objects.all()
+        return Builds
+
+    @exposed
+    def createImageBuild(self, build):
+        build.save()
+        return build
+        
+    @exposed
+    def updateImageBuild(self, build):
+        build.save()
+        return build
+        
+    @exposed
+    def deleteImageBuild(self, build_id):
+        models.Build.objects.get(pk=build_id).delete()
+
+    @exposed
+    def getImageBuildFile(self, build_id, file_id):
+        build_file = models.BuildFile.objects.get(file_id=file_id)
+        return build_file
+        
+    @exposed
+    def getImageBuildFiles(build_id):
+        BuildFiles = models.BuildFiles()
+        build_files = models.BuildFile.objects.filter(build__build_id=build_id)
+        BuildFiles.build_file = build_files
+        return BuildFiles
