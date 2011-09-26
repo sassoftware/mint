@@ -307,6 +307,39 @@ class SystemTag(modellib.XObjIdModel):
         xobjModel.query_set = modellib.XObjHrefModel(querySetHref)
         return xobjModel
 
+class TargetTag(modellib.XObjIdModel):
+    '''
+    Indicates what targets were matched by a query set
+    '''
+
+    class Meta:
+        unique_together = (("target", "query_set", "inclusion_method"),)
+
+    _xobj = xobj.XObjMetadata(
+                tag = 'target_tag')
+
+    target_tag_id = models.AutoField(primary_key=True)
+    target = XObjHidden(modellib.ForeignKey('targets.Target',
+        related_name="tags"))
+    query_set = XObjHidden(modellib.ForeignKey(QuerySet, related_name="target_tags",
+        text_field="name"))
+    inclusion_method = XObjHidden(modellib.ForeignKey(InclusionMethod,
+        related_name="target_tags"))
+
+    load_fields = [target, query_set, inclusion_method]
+
+    # TODO: believe these aren't really serialized anywhere anymore, ok
+    # to strike URL/serialize methods for all of these?
+
+    def get_absolute_url(self, *args, **kwargs):
+        self._parents = [self.target, self]
+        return modellib.XObjIdModel.get_absolute_url(self, *args, **kwargs)
+
+    def serialize(self, request=None, values=None):
+        xobjModel = modellib.XObjIdModel.serialize(self, request)
+        querySetHref = self.query_set.get_absolute_url(request)
+        xobjModel.query_set = modellib.XObjHrefModel(querySetHref)
+        return xobjModel
 
 # TODO: reduce duplication here, add a common tag base class or factory?
 class RoleTag(modellib.XObjIdModel):
