@@ -3051,7 +3051,7 @@ class MigrateTo_57(SchemaMigration):
 
 
 class MigrateTo_58(SchemaMigration):
-    Version = (58, 69)
+    Version = (58, 70)
 
     def migrate(self):
         return True
@@ -4309,6 +4309,17 @@ class MigrateTo_58(SchemaMigration):
         filterId = schema._addQuerySetFilterEntry(db, "target.name", "IS_NULL", "false")
         qsId = schema._addQuerySet(db, "All Targets", "All targets", "target", False, filterId)
 
+        return True
+
+    def migrate70(self):
+        '''add source image to systems table'''
+        cu = self.db.cursor()
+        cu.execute("""
+            UPDATE TABLE "inventory_system" 
+                 ADD COLUMN "source_image_id" INTEGER 
+                     REFERENCES "builds" ("buildid")
+                     ON DELETE CASCADE
+        """)
         return True
 
 #### SCHEMA MIGRATIONS END HERE #############################################

@@ -28,7 +28,7 @@ from conary.dbstore import sqlerrors, sqllib
 log = logging.getLogger(__name__)
 
 # database schema major version
-RBUILDER_DB_VERSION = sqllib.DBversion(58, 69)
+RBUILDER_DB_VERSION = sqllib.DBversion(58, 70)
 
 
 def _createTrigger(db, table, column="changed"):
@@ -1120,7 +1120,10 @@ def _createInventorySchema(db, cfg):
                     REFERENCES Projects (projectId)
                     ON DELETE SET NULL,
                 "should_migrate" BOOLEAN NOT NULL
-                    DEFAULT FALSE
+                    DEFAULT FALSE, 
+                "source_image_id" INTEGER 
+                    REFERENCES "builds" ("buildid")
+                    ON DELETE CASCADE
             ) %(TABLEOPTS)s""" % db.keywords)
         db.tables['inventory_system'] = []
         db.createIndex("inventory_system",
