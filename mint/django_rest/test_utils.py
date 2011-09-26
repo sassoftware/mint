@@ -580,6 +580,7 @@ class SmartformMixIn(object):
         self.mock(smartdesc.DescriptorData, 'schemaDir', schemaDir)
 
 class RepeaterMixIn(SmartformMixIn):
+    RmakeJobFactory = RmakeJob
     class RepeaterMgr(object):
         repeaterClient = RepeaterClient()
         repeaterClient.setCallReturn(
@@ -589,3 +590,11 @@ class RepeaterMixIn(SmartformMixIn):
         self.setUpSchemaDir()
         self.mgr.repeaterMgr = self.RepeaterMgr()
         self.mgr.repeaterMgr.repeaterClient.reset()
+        # We need to play this lambda trick so we can capture the job and pass
+        # it to mockGetRmakeJob
+        self.mock(jobmodels.Job, 'getRmakeJob',
+            lambda slf: self.mockGetRmakeJob(slf))
+
+    def mockGetRmakeJob(self, slf, *args, **kwargs):
+        return self.RmakeJobFactory(slf.job_uuid, 200, "Mocked - all good",
+            "Mocked - status detail", False)
