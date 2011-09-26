@@ -4292,7 +4292,7 @@ class MigrateTo_58(SchemaMigration):
             CREATE TABLE "querysets_targettag" (
                 "target_tag_id" %(BIGPRIMARYKEY)s,
                 "target_id" INTEGER
-                    REFERENCES "targets" ("target_id")
+                    REFERENCES "targets" ("targetid")
                     ON DELETE CASCADE
                     NOT NULL,
                 "query_set_id" INTEGER
@@ -4307,7 +4307,7 @@ class MigrateTo_58(SchemaMigration):
 
         # TODO: also have to add filter entry
         filterId = schema._addQuerySetFilterEntry(db, "target.name", "IS_NULL", "false")
-        qsId = schema._addQuerySet(db, "All Targets", "All targets", "targets", False, filterId, 'target')
+        qsId = schema._addQuerySet(db, "All Targets", "All targets", "target", False, filterId)
 
         return True
 
