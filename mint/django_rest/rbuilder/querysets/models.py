@@ -90,7 +90,8 @@ class QuerySet(modellib.XObjIdModel):
         'user_tags',
         'project_tags',
         'role_tags',
-        'permission_tags'
+        'permission_tags',
+        'target_tags'
     ])
 
     query_set_id = D(models.AutoField(primary_key=True),
