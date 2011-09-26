@@ -1322,9 +1322,14 @@ class XObjModel(models.Model):
         xobj_model.  This is so that things like <networks> appear as an xml
         representation on <system> xml.
         """
-        xobjHiddenAccessors =  getattr(self, '_xobj_hidden_accessors', set())
-        accessorsList = [ (k, v) for (k, v) in accessors.items()
-            if k not in xobjHiddenAccessors ]
+        xobjExplicitAccessors = getattr(self, '_xobj_explicit_accessors', None)
+        if xobjExplicitAccessors is not None:
+            accessorsList = [ (k, v) for (k, v) in accessors.items()
+                if k in xobjExplicitAccessors ]
+        else:
+            blacklist =  getattr(self, '_xobj_hidden_accessors', set())
+            accessorsList = [ (k, v) for (k, v) in accessors.items()
+                if k not in blacklist ]
         for accessorName, accessor in accessorsList:
             # Look up the name of the related model for the accessor.  Can be
             # overriden via _xobj.  E.g., The related model name for the
@@ -1392,9 +1397,12 @@ class XObjModel(models.Model):
         Build up an object for each many to many field on this model and set
         it on xobj_model.
         """
-        hidden = getattr(self, '_xobj_hidden_m2m', [])
+        m2mWhitelist = getattr(self, '_xobj_explicit_m2m', None)
+        m2mBlacklist = getattr(self, '_xobj_hidden_m2m', [])
         for m2m_accessor in m2m_accessors:
-            if m2m_accessor in hidden:
+            if m2mWhitelist is not None and m2m_accessor not in m2mWhitelist:
+                continue
+            if m2m_accessor in m2mBlacklist:
                 continue
             deferred = getattr(self._meta.get_field(m2m_accessor), 
                 "Deferred", None)

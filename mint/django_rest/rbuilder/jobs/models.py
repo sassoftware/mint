@@ -86,13 +86,7 @@ class Job(modellib.XObjIdModel):
     _xobj = xobj.XObjMetadata(
                 tag = 'job',
                 attributes = {'id':str})
-    _xobj_hidden_accessors = set([
-        "package_version_jobs",
-        "package_source_jobs",
-        "package_build_jobs",
-        "jobtargettype_set",
-        "jobtarget_set",
-        "target_jobs"])
+    _xobj_explicit_accessors = set(['systems'])
 
     #objects = modellib.JobManager()
 
@@ -257,8 +251,8 @@ class EventType(modellib.XObjIdModel):
         managed = False
     _xobj = xobj.XObjMetadata(tag='event_type')
     
-     # hide jobs, see https://issues.rpath.com/browse/RBL-7151
-    _xobj_hidden_accessors = set(['jobs'])
+    # hide jobs, see https://issues.rpath.com/browse/RBL-7151
+    _xobj_explicit_accessors = set(['system_events', ])
 
     # on-demand events need to be > 100 to be dispatched immediately
     # DO NOT CHANGE POLL PRIORITIES HERE WITHOUT CHANGING IN schema.py also

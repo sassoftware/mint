@@ -20,7 +20,7 @@ class TargetType(modellib.XObjIdModel):
     class Meta:
          db_table = 'target_types'
 
-    _xobj_hidden_accessors = set(["jobtargettype_set"])
+    _xobj_explicit_accessors = set(['targets'])
 
     target_type_id = models.AutoField(primary_key=True)
     name = D(models.TextField(unique=True), "Target Type Name")
@@ -60,10 +60,7 @@ class Targets(modellib.Collection):
         return action
 
 class Target(modellib.XObjIdModel):
-    _xobj_hidden_accessors = set(
-        ['targetdata_set', 'targetimagesdeployed_set',
-            'targetusercredentials_set', 'system_set', 'jobtarget_set',
-            'target_images', 'tags'])
+    _xobj_explicit_accessors = set()
 
     class Meta:
         db_table = u'targets'

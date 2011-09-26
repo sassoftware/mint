@@ -71,7 +71,7 @@ class RbacRole(modellib.XObjIdModel):
     summary_view = [ "name", "description" ]
     
     # objects = modellib.RbacRoleManager() # needed because of non-integer PK?
-    _xobj_hidden_accessors = set(['rbacuserrole_set', 'tags', 'rbac_grants'])
+    _xobj_explicit_accessors = set([])
 
     role_id = D(models.AutoField(primary_key=True),
         "the database ID for the role")
@@ -176,7 +176,7 @@ class RbacPermission(modellib.XObjIdModel):
     _xobj = xobj.XObjMetadata(
         tag = 'grant'
     )
-    _xobj_hidden_accessors = set(['tags'])
+    _xobj_explicit_accessors = set([])
     summary_view = [ 'created_by', 'modified_by' ]
 
     grant_id = D(models.AutoField(primary_key=True, db_column='permission_id'),

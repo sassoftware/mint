@@ -83,16 +83,7 @@ class QuerySet(modellib.XObjIdModel):
 
     _xobj = xobj.XObjMetadata(
                 tag = "query_set")
-    _xobj_hidden_accessors = set([
-        'rbacpermission_set',
-        'stage_tags',
-        'system_tags',
-        'user_tags',
-        'project_tags',
-        'role_tags',
-        'permission_tags',
-        'target_tags'
-    ])
+    _xobj_explicit_accessors = set(['grants', ])
 
     query_set_id = D(models.AutoField(primary_key=True),
         "The database id for the query set")
@@ -263,7 +254,7 @@ class InclusionMethod(modellib.XObjIdModel):
     '''
     _xobj = xobj.XObjMetadata(
                 tag = 'inclusion_method')
-    _xobj_hidden_accessors = set(["system_tags"])
+    _xobj_explicit_accessors = set([])
 
     METHOD_CHOICES = [
         ('chosen', 'Chosen'),
