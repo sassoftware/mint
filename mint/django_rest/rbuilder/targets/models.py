@@ -63,7 +63,7 @@ class Target(modellib.XObjIdModel):
     _xobj_hidden_accessors = set(
         ['targetdata_set', 'targetimagesdeployed_set',
             'targetusercredentials_set', 'system_set', 'jobtarget_set',
-            'target_images',])
+            'target_images', 'tags'])
 
     class Meta:
         db_table = u'targets'
