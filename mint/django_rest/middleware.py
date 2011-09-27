@@ -5,6 +5,7 @@
 #
 import os
 import logging
+import traceback
 
 from debug_toolbar import middleware
 
@@ -86,6 +87,13 @@ class ExceptionLoggerMiddleware(BaseMiddleware):
             code=404
             if request.method not in [ 'GET', 'DELETE' ]:
                 code = 400
+
+            # log full details, but don't present to user, in case
+            # XML submitted was rather confusing and we can't tell what
+            # was not found on the lookup, which could happen
+            # anywhere in the call chain
+            log.error(traceback.format_exc())
+
             fault = models.Fault(code=code, message=str(exception))
             response = HttpResponse(status=code, content_type='text/xml')
             response.content = fault.to_xml(request)
