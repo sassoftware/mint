@@ -978,9 +978,9 @@ class SystemManager(basemanager.BaseManager):
 
         # while the trove has an id, it's not stored in the builds table
         trove = models.Trove.objects.find(
-            trovename    = img.trove_name,
-            troveflavor  = img.trove_flavor,
-            troveversion = img.trove_version
+            trovename    = source_image.trove_name,
+            troveflavor  = source_image.trove_flavor,
+            troveversion = source_image.trove_version
         )
         # schedule update job
         self.mgr.updateInstalledSoftware(system, [trove])
