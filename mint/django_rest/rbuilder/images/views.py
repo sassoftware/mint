@@ -78,14 +78,14 @@ class ImageBuildFileService(service.BaseService):
             return self.mgr.getImageBuildFiles(image_id)
             
     @access.admin
-    @requires('buildfile')
+    @requires('build_file')
     @return_xml
     def rest_POST(self, request, image_id, build_file):
         build_file.save()
         return build_file
 
     @access.admin
-    @requires('buildfile')
+    @requires('build_file')
     @return_xml
     def rest_PUT(self, request, image_id, file_id, build_file):
         build_file.save()

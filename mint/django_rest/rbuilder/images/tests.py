@@ -143,11 +143,20 @@ class ImagesTestCase(XMLTestCase):
     def testCreateImageBuildFile(self):
         response = self._post('images/1/build_files/',
             username='admin', password='password', data=testsxml.build_file_post_xml)
-        import pdb; pdb.set_trace()
         self.assertEquals(response.status_code, 200)
+        self.assertXMLEquals(response.content, testsxml.build_file_posted_xml)
         
     def testUpdateImageBuildFile(self):
-        pass
+        response = self._post('images/1/build_files/',
+            username='admin', password='password', data=testsxml.build_file_post_xml)
+        buildFile = xobj.parse(response.content)
+        file_id = buildFile.build_file.file_id
+        response = self._put('images/1/build_files/%s' % file_id,
+            username='admin', password='password', data=testsxml.build_file_put_xml)
+        buildFileUpdated = xobj.parse(response.content)
+        self.assertEquals(response.status_code, 200)
+        self.assertEquals(buildFileUpdated.build_file.title, 'newtitle')
         
     def testDeleteImageBuildFile(self):
-        pass
+        response = self._delete('images/1/build_files/1', username='admin', password='password')
+        self.assertEquals(response.status_code, 204)

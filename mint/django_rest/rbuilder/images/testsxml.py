@@ -208,8 +208,61 @@ image_put_xml = """
 build_file_post_xml = \
 """
 <build_file>
+    <build>
+      <trove_last_changed></trove_last_changed>
+      <updated_by id="http://testserver/api/v1/users/2002"/>
+      <trove_flavor>is: x86</trove_flavor>
+      <created_by id="http://testserver/api/v1/users/2001"/>
+      <systems/>
+      <status_message></status_message>
+      <trove_name>troveName20-Changed</trove_name>
+      <build_count>1</build_count>
+      <status>-1</status>
+      <stage_name>stage20</stage_name>
+      <project_branch id="http://testserver/api/v1/projects/foo0/project_branches/foo0.eng.rpath.com@rpath:foo-trunk">
+        <name>trunk</name>
+      </project_branch>
+      <description>image-20</description>
+      <time_created></time_created>
+      <build_type>10</build_type>
+      <time_updated></time_updated>
+      <name>image-20</name>
+      <trove_version>newfoo@test:1/1-0-1</trove_version>
+      <project id="http://testserver/api/v1/projects/foo0">
+        <domain_name>eng.rpath.com</domain_name>
+        <short_name>foo0</short_name>
+        <name>foo0</name>
+      </project>
+      <output_trove></output_trove>
+      <release/>
+      <job_uuid>2</job_uuid>
+    </build>
+    <sha1>0</sha1>
+    <idx>0</idx>
+    <title>HelloWorld</title>
+    <size>0</size>
+</build_file>
+""".strip()
+
+build_file_posted_xml = \
+"""
+<build_file>
   <sha1>0</sha1>
   <idx>0</idx>
+  <title>HelloWorld</title>
+  <file_id>4</file_id>
+  <build/>
+  <size>0</size>
+</build_file>
+""".strip()
+
+build_file_put_xml = \
+"""
+<build_file>
+  <sha1>0</sha1>
+  <idx>0</idx>
+  <title>newtitle</title>
+  <file_id>4</file_id>
   <size>0</size>
 </build_file>
 """.strip()
