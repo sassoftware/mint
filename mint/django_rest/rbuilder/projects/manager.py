@@ -2,10 +2,9 @@
 #
 # Copyright (c) 2011 rPath, Inc.
 #
-# All rights reserved.
-#
 
-import re
+import logging
+import os
 
 from conary.lib import util
 
@@ -13,8 +12,6 @@ from mint import helperfuncs
 from mint import mint_error
 from mint import userlevels
 from mint import projects
-from mint import templates
-from mint.templates import groupTemplate
 
 from mint.django_rest.rbuilder import auth
 from mint.django_rest.rbuilder import errors
@@ -29,6 +26,9 @@ from conary import conarycfg
 from conary import conaryclient
 from conary.repository import errors as repoerrors
 from rpath_proddef import api1 as proddef
+
+log = logging.getLogger(__name__)
+
 
 class ProjectManager(basemanager.BaseManager):
 
@@ -199,6 +199,23 @@ class ProjectManager(basemanager.BaseManager):
 
     @exposed
     def deleteProject(self, project):
+        handle = self.mgr.getRepositoryForProject(project)
+        # Delete the repository database.
+        if handle.hasDatabase:
+            try:
+                handle.destroy()
+            except:
+                log.exception("Could not delete repository for project %s:",
+                        handle.shortName)
+
+        # Clean up the stragglers
+        imagesDir = os.path.join(self.cfg.imagesPath, handle.shortName)
+        if os.path.exists(imagesDir):
+            try:
+                util.rmtree(imagesDir)
+            except:
+                log.warning("Could not delete project images directory %s:",
+                        imagesDir, exc_info=True)
         project.delete()
 
     @exposed

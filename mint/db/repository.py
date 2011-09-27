@@ -724,7 +724,8 @@ class RepositoryHandle(object):
                         util.rmtree(tmpDir)
                     os.rmdir(parentDir)
                 except OSError, err:
-                    if err.errno not in (errno.ENOTEMPTY, errno.EACCES):
+                    if err.errno not in (errno.ENOTEMPTY, errno.EACCES,
+                            errno.ENOENT):
                         raise
 
     def drop(self):

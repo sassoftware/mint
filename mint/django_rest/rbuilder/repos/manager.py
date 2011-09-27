@@ -168,6 +168,7 @@ class ReposManager(basemanager.BaseManager, reposdbmgr.RepomanMixin):
             repoMap[handle.fqdn] = handle.getURL()
         return repoMap
 
+    @exposed
     def getRepositoryForProject(self, project):
         projectInfo = {}
         projectInfo["projectId"] = project.pk

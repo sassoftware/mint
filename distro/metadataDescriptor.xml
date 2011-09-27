@@ -125,5 +125,29 @@
       <type>str</type>
       <default/>
     </field>
+    <field>
+      <name>metadata.credentials_username</name>
+      <help lang="en_US">Administrator account name used to take control of this image at deploy time.</help>
+      <descriptions>
+        <desc>User Name</desc>
+      </descriptions>
+      <type>str</type>
+    </field>
+    <field>
+      <name>metadata.credentials_password</name>
+      <help lang="en_US">Administrator password used to take control of this image at deploy time.</help>
+      <descriptions>
+        <desc>Password</desc>
+      </descriptions>
+      <type>str</type>
+    </field>
+    <field>
+      <name>metadata.credentials_sshkey</name>
+      <help lang="en_US">Private key in PEM format used with SSH to take control of this image at deploy time.</help>
+      <descriptions>
+        <desc>Secure Shell (SSH) Key</desc>
+      </descriptions>
+      <type>str</type>
+    </field>
   </dataFields>
 </metadataDescriptor>
