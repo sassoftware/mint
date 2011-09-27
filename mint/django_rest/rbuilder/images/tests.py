@@ -1,5 +1,5 @@
 import testsxml
-#from xobj import xobj
+from xobj import xobj
 
 import logging
 logging.disable(logging.CRITICAL)
@@ -73,7 +73,6 @@ class ImagesTestCase(XMLTestCase):
         project.save()
         return project
 
-
     # def testCanListAndAccessImages(self):
     # 
     #     # WARNING --
@@ -95,16 +94,16 @@ class ImagesTestCase(XMLTestCase):
     #     self.assertXMLEquals(response.content, testsxml.image_get_xml)
     # 
     def testGetImages(self):
-        # test not done -- xml is missing some data (ie release)
         response = self._get('images/', username='admin', password='password')
         self.assertEquals(response.status_code, 200)
+        self.assertXMLEquals(response.content, testsxml.images_get_xml)
 
     def testGetImage(self):
-        # test not done -- xml is missing some data (ie release)
         image = models.Image.objects.get(pk=1)
         response = self._get('images/%s' % image.pk, 
             username='admin', password='password')
         self.assertEquals(response.status_code, 200)
+        self.assertXMLEquals(response.content, testsxml.image_get_xml)
         
     def testGetImageBuildFiles(self):
         image = models.Image.objects.get(pk=1)
@@ -116,3 +115,39 @@ class ImagesTestCase(XMLTestCase):
         response = self._get('images/%s/build_files/%s/' % (buildFile.build_id, buildFile.pk),
             username='admin', password='password')
         self.assertEquals(response.status_code, 200)
+        self.assertXMLEquals(response.content, testsxml.build_file_get_xml)
+        
+    def testCreateImage(self):
+        response = self._post('images/',
+            username='admin', password='password', data=testsxml.image_post_xml)
+        self.assertEquals(response.status_code, 200)
+        image = xobj.parse(response.content)
+        self.assertEquals(image.image.name, 'image-20')
+        self.assertEquals(image.image.trove_name, 'troveName20')
+        self.assertEquals(image.image.image_id, u'4')
+        
+    def testUpdateImage(self):
+        response = self._post('images/',
+            username='admin', password='password', data=testsxml.image_post_xml)
+        image = xobj.parse(response.content)
+        response = self._put('images/%s' % image.image.image_id,
+            username='admin', password='password', data=testsxml.image_put_xml)
+        self.assertEquals(response.status_code, 200)
+        image_updated = xobj.parse(response.content)
+        self.assertEquals(image_updated.image.trove_name, 'troveName20-Changed')
+        
+    def testDeleteImage(self):
+        response = self._delete('images/1', username='admin', password='password')
+        self.assertEquals(response.status_code, 204)
+        
+    def testCreateImageBuildFile(self):
+        response = self._post('images/1/build_files/',
+            username='admin', password='password', data=testsxml.build_file_post_xml)
+        import pdb; pdb.set_trace()
+        self.assertEquals(response.status_code, 200)
+        
+    def testUpdateImageBuildFile(self):
+        pass
+        
+    def testDeleteImageBuildFile(self):
+        pass

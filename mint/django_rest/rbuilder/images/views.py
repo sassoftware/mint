@@ -59,7 +59,7 @@ class ImagesService(BaseImageService):
         return self.mgr.updateImageBuild(image_id, image)
 
     @access.admin
-    def rest_DELETE(self, image_id):
+    def rest_DELETE(self, request, image_id):
         self.mgr.deleteImageBuild(image_id)
         return HttpResponse(status=204)
     
@@ -78,20 +78,20 @@ class ImageBuildFileService(service.BaseService):
             return self.mgr.getImageBuildFiles(image_id)
             
     @access.admin
-    @requires('build_file')
+    @requires('buildfile')
     @return_xml
-    def rest_POST(self, image_id, build_file):
+    def rest_POST(self, request, image_id, build_file):
         build_file.save()
         return build_file
 
     @access.admin
-    @requires('build_file')
+    @requires('buildfile')
     @return_xml
-    def rest_PUT(self, image_id, file_id, build_file):
+    def rest_PUT(self, request, image_id, file_id, build_file):
         build_file.save()
         return build_file  
         
     @access.admin
-    def rest_DELETE(self, image_id, file_id):
+    def rest_DELETE(self, request, image_id, file_id):
         models.BuildFile.objects.get(pk=file_id).delete()
         return HttpResponse(status=204)

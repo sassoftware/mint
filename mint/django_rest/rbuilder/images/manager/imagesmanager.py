@@ -45,7 +45,7 @@ class ImagesManager(basemanager.BaseManager):
     @exposed
     def getImageBuildFiles(self, image_id):
         BuildFiles = models.BuildFiles()
-        build_files = models.BuildFile.objects.filter(build__image_id=image_id)
+        build_files = models.BuildFile.objects.filter(build=image_id)
         BuildFiles.build_file = build_files
         return BuildFiles
     

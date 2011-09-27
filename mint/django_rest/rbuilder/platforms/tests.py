@@ -14,6 +14,7 @@
 
 from mint.django_rest.rbuilder.platforms import models as platform_models
 from mint.django_rest.rbuilder.projects import models as project_models
+from mint.django_rest.rbuilder.images import models as imagemodels
 from mint.django_rest.rbuilder.inventory.tests import XMLTestCase
 from xobj import xobj
 from lxml import etree
@@ -185,20 +186,20 @@ class NewPlatformTest(XMLTestCase):
 
         output_trove = 'dummy-trove=/example.rpath.com@dummy:label/1.0-1-1'
 
-        i1 = project_models.Image(
+        i1 = imagemodels.Image(
             project=project, name='alpha', output_trove=output_trove
         )
-        i2 = project_models.Image(
+        i2 = imagemodels.Image(
             project=project, name='beta', output_trove=output_trove
         )
-        i3 = project_models.Image(
+        i3 = imagemodels.Image(
             project=project, name='gamma', output_trove=None
         )
 
         def noop(*args, **kwargs):
             return None
             
-        project_models.Image._computeMetadata = noop
+        imagemodels.Image._computeMetadata = noop
 
         for x in [ i1, i2, i3 ]:
             # keep app from making call to repos service

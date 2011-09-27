@@ -193,13 +193,16 @@ class BuildFiles(modellib.Collection):
         abstract = True
         
     _xobj = xobj.XObjMetadata(tag='build_files')
-    list_fields = 'build_file'
+    list_fields = ['build_file']
     
     
 class BuildFile(modellib.XObjIdModel):
     class Meta:
         db_table = 'buildfiles'
-        
+    
+    _xobj = xobj.XObjMetadata(tag='build_file')
+    
+    
     file_id = models.AutoField(primary_key=True, db_column='fileid')
     build = models.ForeignKey('Image', null=False, db_column='buildid')
     idx = models.IntegerField(null=False, default=0)
