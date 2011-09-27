@@ -790,6 +790,10 @@ class SystemManager(basemanager.BaseManager):
                 # than just assimilate
                 sshIfaceId = models.Cache.get(models.ManagementInterface,
                     name=models.ManagementInterface.SSH).pk
+
+                # Copy credentials from the source image if available.
+                self._copyImageCredentials(system)
+
                 if system.management_interface_id == sshIfaceId:
                     return None
                 # But if it's a WMI system and we have no credentials, skip
@@ -835,6 +839,29 @@ class SystemManager(basemanager.BaseManager):
                 return models.SystemState.NONRESPONSIVE
         # Some other job state, do nothing
         return None
+
+    def _copyImageCredentials(self, system):
+        # If the source_image has credentials metadata attached, copy
+        # the credentials onto the system.
+        if (hasattr(system, 'source_image') and
+            hasattr(system.source_image, 'metadata')):
+
+            md = system.source_image.metadata
+            username = password = key = None
+            if hasattr(md, 'credentials_username'):
+                username = md.credentials_username
+            if hasattr(md, 'credentials_password'):
+                password = md.credentials_password
+            if hasattr(md, 'credentials_sshkey'):
+                key = md.credentials_sshkey
+
+            creds = dict(
+                username=username,
+                pasword=password,
+                key=key,
+            )
+
+            self._addSystemCredentials(system, creds)
 
     def lookupTarget(self, targetTypeName, targetName):
         return targetmodels.Target.objects.get(
@@ -995,7 +1022,15 @@ class SystemManager(basemanager.BaseManager):
     @exposed
     def addSystemCredentials(self, system_id, credentials):
         system = models.System.objects.get(pk=system_id)
-        if system.management_interface:
+        self._addSystemCredentials(system, credentials)
+        system.save()
+        # Schedule a system registration event after adding/updating
+        # credentials.
+        self.scheduleSystemRegistrationEvent(system)
+        return self._getCredentialsModel(system, credentials)
+
+    def _addSystemCredentials(self, system, credentials):
+         if system.management_interface:
             if system.management_interface.name in [ 'wmi', 'ssh' ]:
                 systemCreds = self.marshalCredentials(credentials)
                 system.credentials = systemCreds
@@ -1006,12 +1041,6 @@ class SystemManager(basemanager.BaseManager):
                 if credentials.has_key('ssl_client_key'):
                     system.ssl_client_key = credentials['ssl_client_key']
 
-        system.save()
-        # Schedule a system registration event after adding/updating
-        # credentials.
-        self.scheduleSystemRegistrationEvent(system)
-        return self._getCredentialsModel(system, credentials)
-    
     @exposed
     def getSystemConfigurationDescriptor(self, system_id):
         system = models.System.objects.get(pk=system_id)
