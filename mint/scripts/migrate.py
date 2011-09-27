@@ -3051,7 +3051,7 @@ class MigrateTo_57(SchemaMigration):
 
 
 class MigrateTo_58(SchemaMigration):
-    Version = (58, 70)
+    Version = (58, 71)
 
     def migrate(self):
         return True
@@ -4320,6 +4320,20 @@ class MigrateTo_58(SchemaMigration):
                      REFERENCES "builds" ("buildid")
                      ON DELETE CASCADE
         """)
+        return True
+        
+    def migrate71(self):
+        """modify table for build data"""
+        cu = self.db.cursor()
+        cu.execute("""
+            ALTER TABLE BuildData
+                DROP CONSTRAINT builddata_pkey""")
+        cu.execute("""
+            ALTER TABLE BuildData
+                ADD COLUMN buildDataId bigserial PRIMARY KEY""")
+        cu.execute("""
+            ALTER TABLE BuildData
+                ADD CONSTRAINT builddata_uq UNIQUE (buildid, name)""")
         return True
 
 #### SCHEMA MIGRATIONS END HERE #############################################

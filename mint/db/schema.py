@@ -28,7 +28,7 @@ from conary.dbstore import sqlerrors, sqllib
 log = logging.getLogger(__name__)
 
 # database schema major version
-RBUILDER_DB_VERSION = sqllib.DBversion(58, 70)
+RBUILDER_DB_VERSION = sqllib.DBversion(58, 71)
 
 
 def _createTrigger(db, table, column="changed"):
@@ -352,7 +352,7 @@ def _createBuilds(db):
     if 'Builds' not in db.tables:
         cu.execute("""
         CREATE TABLE Builds (
-            buildId             %(PRIMARYKEY)s,
+            buildId             %(BIGPRIMARYKEY)s,
             projectId            integer        NOT NULL
                 REFERENCES Projects ON DELETE CASCADE,
             stageid              integer
@@ -389,20 +389,20 @@ def _createBuilds(db):
     if 'BuildData' not in db.tables:
         cu.execute("""
         CREATE TABLE BuildData (
+            buildDataId             %(BIGPRIMARYKEY)s,
             buildId             integer         NOT NULL
                 REFERENCES Builds ON DELETE CASCADE,
             name                varchar(32)     NOT NULL,
             value               text            NOT NULL,
-            dataType            smallint        NOT NULL,
+            dataType            smallint        NOT NULL
 
-            PRIMARY KEY ( buildId, name )
         ) %(TABLEOPTS)s """ % db.keywords)
         db.tables['BuildData'] = []
 
     if 'BuildFiles' not in db.tables:
         cu.execute("""
         CREATE TABLE BuildFiles (
-            fileId              %(PRIMARYKEY)s,
+            fileId              %(BIGPRIMARYKEY)s,
             buildId             integer         NOT NULL
                 REFERENCES Builds ON DELETE CASCADE,
             idx                 smallint        NOT NULL    DEFAULT 0,

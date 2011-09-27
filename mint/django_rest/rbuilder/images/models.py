@@ -39,6 +39,7 @@ class Image(modellib.XObjIdModel):
         
     _xobj = xobj.XObjMetadata(
         tag="image")
+    _xobj_hidden_accessor = set(['buildfile_set'])
     view_name = "ProjectImage"
 
     def __unicode__(self):
@@ -186,36 +187,6 @@ class Release(modellib.XObjModel):
     time_mirrored = models.DecimalField(max_digits=14, decimal_places=3,
         null=True, db_column='timemirrored')  
 
-# class Build(modellib.XObjIdModel):
-#     class Meta:
-#         db_table = 'builds'
-#     
-#     build_id = models.AutoField(primary_key=True, db_column='buildid')
-#     project_id = models.ForeignKey('projects.Project', db_column='projectid', null=False)
-#     stage_id = models.ForeignKey('projects.Stage', db_column='stageid')
-#     pub_release_id = models.ForeignKey('Release', db_column='pubreleaseid')
-#     build_type = models.IntegerField(db_column='buildtype')
-#     job_uuid  = models.CharField(max_length=64) # is of type 'uuid' in schema
-#     name = models.CharField(max_length=255)
-#     description = models.TextField()
-#     trove_name = models.CharField(max_length=128, db_column='trovename')
-#     trove_version = models.CharField(max_length=255, db_column='troveversion')
-#     trove_flavor = models.CharField(max_length=4096, db_column='troveflavor')
-#     trove_last_changed = modellib.DecimalField(
-#         max_digits=14, decimal_places=3, db_column='trovelastchanged')
-#     time_created = modellib.DecimalField(
-#         max_digits=14, decimal_places=3, db_column='timecreated')
-#     created_by = models.ForeignKey('users.User', db_column='createdby', related_name='created_by_user')
-#     time_updated = modellib.DecimalField(
-#         max_digits=14, decimal_places=3, db_column='timeupdated')
-#     updated_by = models.ForeignKey('users.User', db_column='updatedby', related_name='updated_by_user')
-#     build_count = models.IntegerField(null=False, default=0, db_column='buildcount')
-#     product_version_id = models.ForeignKey('projects.ProjectVersion', db_column='productversionid')
-#     stage_name = models.CharField(max_length=255, default='', db_column='stagename')
-#     status = models.IntegerField(default=-1)
-#     status_message = models.TextField(default='', db_column='statusmessage')
-#     output_trove = models.TextField()
-
 
 class BuildFiles(modellib.Collection):
     class Meta:
@@ -236,6 +207,18 @@ class BuildFile(modellib.XObjIdModel):
     size = models.IntegerField()
     sha1 = models.CharField(max_length=40)
 
+
+class BuildData(modellib.XObjIdModel):
+    class Meta:
+        db_table = 'builddata'
+        unique_together = ('build', 'name')
+    
+    build_data_id = models.AutoField(primary_key=True, db_column='builddataid')
+    build = models.ForeignKey('Image', db_column='buildid')
+    name = models.CharField(max_length=32, null=False)
+    value = models.TextField()
+    data_type = models.SmallIntegerField(null=False, db_column='datatype')
+    
 
 for mod_obj in sys.modules[__name__].__dict__.values():
     if hasattr(mod_obj, '_xobj'):
