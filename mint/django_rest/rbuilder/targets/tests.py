@@ -186,7 +186,7 @@ class TargetsTestCase(BaseTargetsTest, RepeaterMixIn):
     def testGetTargetsForTargetType(self):
         targetType = models.TargetType.objects.get(name='openstack')
         models.Target.objects.filter(target_type=targetType).delete()
-        target = models.Target.objects.create(target_type=targetType,
+        models.Target.objects.create(target_type=targetType,
             name="test openstack", description="test openstack",
             zone=self.localZone)
         response = self._get('target_types/%s/targets' % targetType.pk,
