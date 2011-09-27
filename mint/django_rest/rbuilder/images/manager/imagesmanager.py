@@ -14,6 +14,17 @@ exposed = basemanager.exposed
 class ImagesManager(basemanager.BaseManager):
 
     @exposed
+    def getAllImages(self):
+        Images = models.Images()
+        images = models.Image.objects.all()
+        Images.image = images
+        return Images
+
+    @exposed
+    def getImageById(self, image_id):
+        return models.Image.objects.get(pk=image_id)
+
+    @exposed
     def getUnifiedImages(self):
         ''' 
         Return all images available on both the targets & rbuilder...
@@ -49,12 +60,12 @@ class ImagesManager(basemanager.BaseManager):
         
     @exposed
     def getImageBuild(self, build_id):
-        return models.Build.objects.get(pk=build_id)
+        return models.Image.objects.get(pk=build_id)
         
     @exposed
     def getImageBuilds(self):
-        Builds = models.Builds()
-        Builds.build = models.Build.objects.all()
+        Builds = models.Images()
+        Builds.image = models.Image.objects.all()
         return Builds
 
     @exposed
@@ -69,16 +80,16 @@ class ImagesManager(basemanager.BaseManager):
         
     @exposed
     def deleteImageBuild(self, build_id):
-        models.Build.objects.get(pk=build_id).delete()
+        models.Image.objects.get(pk=build_id).delete()
 
     @exposed
-    def getImageBuildFile(self, build_id, file_id):
+    def getImageBuildFile(self, image_id, file_id):
         build_file = models.BuildFile.objects.get(file_id=file_id)
         return build_file
         
     @exposed
-    def getImageBuildFiles(build_id):
+    def getImageBuildFiles(self, image_id):
         BuildFiles = models.BuildFiles()
-        build_files = models.BuildFile.objects.filter(build__build_id=build_id)
+        build_files = models.BuildFile.objects.filter(build__image_id=image_id)
         BuildFiles.build_file = build_files
         return BuildFiles

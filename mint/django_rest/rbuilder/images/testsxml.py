@@ -14,3 +14,16 @@ image_get_xml = """
     <name>placeholder</name>
 </image>
 """
+
+build_file_get_xml = \
+"""
+<?xml version='1.0' encoding='UTF-8'?>
+<build_file>
+  <sha1>0</sha1>
+  <idx>0</idx>
+  <title></title>
+  <file_id>1</file_id>
+  <build/>
+  <size>0</size>
+</build_file>
+""".strip()

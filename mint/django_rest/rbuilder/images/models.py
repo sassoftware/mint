@@ -12,7 +12,6 @@ from django.db import models
 from mint.django_rest.deco import D
 from mint.django_rest.rbuilder import modellib
 from xobj import xobj
-from mint import projects as mintprojects
 from conary import trovetup
 from conary import versions
 from conary.deps import deps
@@ -185,44 +184,37 @@ class Release(modellib.XObjModel):
     should_mirror = models.SmallIntegerField(db_column='shouldmirror',
         blank=True, default=0)
     time_mirrored = models.DecimalField(max_digits=14, decimal_places=3,
-        null=True, db_column='timemirrored')
+        null=True, db_column='timemirrored')  
 
-class Builds(modellib.Collection):
-    class Meta:
-        abstract = True
-        
-    list_fields = ['build']
-    
-
-class Build(modellib.XObjIdModel):
-    class Meta:
-        db_table = 'builds'
-    
-    build_id = models.AutoField(primary_key=True, db_column='buildid')
-    project_id = models.ForeignKey('projects.Project', db_column='projectid', null=False)
-    stage_id = models.ForeignKey('projects.Stage', db_column='stageid')
-    pub_release_id = models.ForeignKey('Release', db_column='pubreleaseid')
-    build_type = models.IntegerField(db_column='buildtype')
-    job_uuid  = models.CharField(max_length=64) # is of type 'uuid' in schema
-    name = models.CharField(max_length=255)
-    description = models.TextField()
-    trove_name = models.CharField(max_length=128, db_column='trovename')
-    trove_version = models.CharField(max_length=255, db_column='troveversion')
-    trove_flavor = models.CharField(max_length=4096, db_column='troveflavor')
-    trove_last_changed = modellib.DecimalField(
-        max_digits=14, decimal_places=3, db_column='trovelastchanged')
-    time_created = modellib.DecimalField(
-        max_digits=14, decimal_places=3, db_column='timecreated')
-    created_by = models.ForeignKey('users.User', db_column='createdby', related_name='created_by_user')
-    time_updated = modellib.DecimalField(
-        max_digits=14, decimal_places=3, db_column='timeupdated')
-    updated_by = models.ForeignKey('users.User', db_column='updatedby', related_name='updated_by_user')
-    build_count = models.IntegerField(null=False, default=0, db_column='buildcount')
-    product_version_id = models.ForeignKey('projects.ProjectVersion', db_column='productversionid')
-    stage_name = models.CharField(max_length=255, default='', db_column='stagename')
-    status = models.IntegerField(default=-1)
-    status_message = models.TextField(default='', db_column='statusmessage')
-    output_trove = models.TextField()
+# class Build(modellib.XObjIdModel):
+#     class Meta:
+#         db_table = 'builds'
+#     
+#     build_id = models.AutoField(primary_key=True, db_column='buildid')
+#     project_id = models.ForeignKey('projects.Project', db_column='projectid', null=False)
+#     stage_id = models.ForeignKey('projects.Stage', db_column='stageid')
+#     pub_release_id = models.ForeignKey('Release', db_column='pubreleaseid')
+#     build_type = models.IntegerField(db_column='buildtype')
+#     job_uuid  = models.CharField(max_length=64) # is of type 'uuid' in schema
+#     name = models.CharField(max_length=255)
+#     description = models.TextField()
+#     trove_name = models.CharField(max_length=128, db_column='trovename')
+#     trove_version = models.CharField(max_length=255, db_column='troveversion')
+#     trove_flavor = models.CharField(max_length=4096, db_column='troveflavor')
+#     trove_last_changed = modellib.DecimalField(
+#         max_digits=14, decimal_places=3, db_column='trovelastchanged')
+#     time_created = modellib.DecimalField(
+#         max_digits=14, decimal_places=3, db_column='timecreated')
+#     created_by = models.ForeignKey('users.User', db_column='createdby', related_name='created_by_user')
+#     time_updated = modellib.DecimalField(
+#         max_digits=14, decimal_places=3, db_column='timeupdated')
+#     updated_by = models.ForeignKey('users.User', db_column='updatedby', related_name='updated_by_user')
+#     build_count = models.IntegerField(null=False, default=0, db_column='buildcount')
+#     product_version_id = models.ForeignKey('projects.ProjectVersion', db_column='productversionid')
+#     stage_name = models.CharField(max_length=255, default='', db_column='stagename')
+#     status = models.IntegerField(default=-1)
+#     status_message = models.TextField(default='', db_column='statusmessage')
+#     output_trove = models.TextField()
 
 
 class BuildFiles(modellib.Collection):
@@ -238,7 +230,7 @@ class BuildFile(modellib.XObjIdModel):
         db_table = 'buildfiles'
         
     file_id = models.AutoField(primary_key=True, db_column='fileid')
-    build_id = models.ForeignKey('Build', null=False, db_column='buildid')
+    build = models.ForeignKey('Image', null=False, db_column='buildid')
     idx = models.IntegerField(null=False, default=0)
     title = models.CharField(max_length=255, null=False, default='')
     size = models.IntegerField()

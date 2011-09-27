@@ -566,7 +566,7 @@ class System(modellib.XObjIdModel):
         "actions available on the system")
     should_migrate = D(models.BooleanField(default=False), 
         "should a migration be triggered the next time this system checks in?")
-    source_image = D(APIReadOnly(models.ForeignKey('projects.Image', null=True,
+    source_image = D(APIReadOnly(models.ForeignKey('images.Image', null=True,
          related_name='systems')), 
          'rBuilder image used to deploy the system, if any')
 
