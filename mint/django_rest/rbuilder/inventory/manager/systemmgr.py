@@ -773,9 +773,8 @@ class SystemManager(basemanager.BaseManager):
         eventTypeName = job.job_type.name
         if jobStateName == jobmodels.JobState.COMPLETED:
             if eventTypeName in self.RegistrationEvents:
-                # We don't trust that a registration action did anything, we
-                # won't transition to REGISTERED, rpath-register should be
-                # responsible with that
+                if system.should_migrate:
+                    return self.mgr.schedulePostRegistrationSoftwareUpdate(system)                 
                 return None
             if eventTypeName in self.PollEvents or \
                     eventTypeName in self.SystemUpdateEvents:
@@ -939,19 +938,25 @@ class SystemManager(basemanager.BaseManager):
             setattr(credentials, k, v)
         return credentials
 
-    #@exposed
-    #def assimilateSystem(self, system, assimilation_parameters):
-    #    '''adds management software to a bare system in inventory''' 
-    #    sshAuth = []
-    #    for cred in assimilation_parameters.assimilation_credential:
-    #         sshAuth.append(dict(
-    #             sshUser     = cred.ssh_username,
-    #             sshPassword = cred.ssh_password,
-    #             sshKey      = cred.ssh_key
-    #         ))
-    #    return self._scheduleEvent(system,
-    #        jobmodels.EventType.SYSTEM_ASSIMILATE,
-    #        eventData=sshAuth)
+    def schedulePostRegistrationSoftwareUpdate(self, system):
+        '''
+        when coming back from registration if so marked, look at the source
+        image of the system to find it's trove and update to that trove
+        '''
+        source_image = system.source_image
+        if source_image is None:
+            raise Exception("Unable to migrate system without record of source image")
+        # else: future use cases may supply migration path info from other sources
+        # this is currently not present
+
+        # while the trove has an id, it's not stored in the builds table
+        trove = models.Trove.objects.find(
+            trovename    = img.trove_name,
+            troveflavor  = img.trove_flavor,
+            troveversion = img.trove_version
+        )
+        # schedule update job
+        self.mgr.updateInstalledSoftware(system, [trove])
 
     @classmethod
     def unmarshalCredentials(cls, credentialsString):
