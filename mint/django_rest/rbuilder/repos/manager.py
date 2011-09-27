@@ -6,10 +6,12 @@
 from StringIO import StringIO
 
 from django.db import connection
+from django.core.exceptions import ObjectDoesNotExist
 
 from conary import changelog
 from conary.conaryclient import filetypes
 from conary.repository import errors as reposerrors
+from mint.rest import errors as resterrors
 
 from mint import userlevels
 from mint.db import repository as reposdbmgr
@@ -200,7 +202,10 @@ class ReposManager(basemanager.BaseManager, reposdbmgr.RepomanMixin):
         
 
     def getRepositoryFromFQDN(self, fqdn):
-        project = projectmodels.Project.objects.get(repository_hostname=fqdn)
+        try:
+            project = projectmodels.Project.objects.get(repository_hostname=fqdn)
+        except ObjectDoesNotExist:
+            raise resterrors.ProductNotFound
         return self.getRepositoryForProject(project)
 
     def iterRepositories(self, **conditions):

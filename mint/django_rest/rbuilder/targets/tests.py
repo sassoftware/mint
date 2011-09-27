@@ -183,6 +183,29 @@ class TargetsTestCase(BaseTargetsTest, RepeaterMixIn):
         self.assertEquals(response.status_code, 200)
         self.assertXMLEquals(response.content, testsxml.target_type_GET)
 
+    def testGetTargetsForTargetType(self):
+        targetType = models.TargetType.objects.get(name='openstack')
+        models.Target.objects.filter(target_type=targetType).delete()
+        models.Target.objects.create(target_type=targetType,
+            name="test openstack", description="test openstack",
+            zone=self.localZone)
+        response = self._get('target_types/%s/targets' % targetType.pk,
+            username='testuser', password='password')
+        self.assertEquals(response.status_code, 200)
+        obj = xobj.parse(response.content)
+        targets = [ obj.targets.target ]
+        self.failUnlessEqual([ x.name for x in targets ],
+            ["test openstack"])
+        actions = [ obj.targets.actions.action ]
+        self.failUnlessEqual([ x.name for x in actions ], [
+            'Create target of type openstack',
+        ])
+        self.failUnlessEqual(
+            [ x.descriptor.id for x in actions ],
+            [
+                'http://testserver/api/v1/target_types/3/descriptor_create_target',
+            ])
+
     def testGetTargetTypeByTargetId(self):
         response = self._get('targets/1/target_types',
             username='testuser', password='password')

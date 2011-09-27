@@ -298,8 +298,12 @@ class TargetTypesManager(basemanager.BaseManager, CatalogServiceHelper):
 
     @exposed
     def getTargetsByTargetType(self, target_type_id):
-        return models.TargetType.objects.filter(
-            target_type__target_type_id=target_type_id).order_by('target_type_id')
+        # We need to cast to int, otherwise the filter won't catch anything
+        target_type_id = int(target_type_id)
+        targets = models.Targets(targetTypeFilter=set([target_type_id]))
+        targets.target = models.Target.objects.filter(
+            target_type__target_type_id=target_type_id).order_by('target_id')
+        return targets
 
     @exposed
     def getTargetTypesByTargetId(self, target_id):

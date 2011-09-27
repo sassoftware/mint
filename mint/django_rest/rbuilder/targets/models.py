@@ -43,9 +43,17 @@ class Targets(modellib.Collection):
         "actions available for targets")
     jobs = modellib.SyntheticField(modellib.HrefField())
 
+    def __init__(self, targetTypeFilter=None):
+        # Initialize our own fields before anything else, or else the
+        # postInit signal fires up
+        self.targetTypeFilter = targetTypeFilter
+        modellib.Collection.__init__(self)
+
     def computeSyntheticFields(self, sender, **kwargs):
         self.actions = actions = jobmodels.Actions()
         targetTypes = sorted(x.pk for x in modellib.Cache.all(TargetType))
+        if self.targetTypeFilter is not None:
+            targetTypes = [ x for x in targetTypes if x in self.targetTypeFilter ]
         targetTypes = [ modellib.Cache.get(TargetType, pk=x) for x in targetTypes ]
         actions.action = [ self._newAction(x) for x in targetTypes ]
         self.jobs = modellib.HrefField("../target_jobs")
