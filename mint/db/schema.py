@@ -352,7 +352,7 @@ def _createBuilds(db):
     if 'Builds' not in db.tables:
         cu.execute("""
         CREATE TABLE Builds (
-            buildId             %(BIGPRIMARYKEY)s,
+            buildId             %(PRIMARYKEY)s,
             projectId            integer        NOT NULL
                 REFERENCES Projects ON DELETE CASCADE,
             stageid              integer
@@ -394,7 +394,9 @@ def _createBuilds(db):
                 REFERENCES Builds ON DELETE CASCADE,
             name                varchar(32)     NOT NULL,
             value               text            NOT NULL,
-            dataType            smallint        NOT NULL
+            dataType            smallint        NOT NULL,
+
+            CONSTRAINT builddata_uq UNIQUE ( buildId, name )
 
         ) %(TABLEOPTS)s """ % db.keywords)
         db.tables['BuildData'] = []
@@ -402,7 +404,7 @@ def _createBuilds(db):
     if 'BuildFiles' not in db.tables:
         cu.execute("""
         CREATE TABLE BuildFiles (
-            fileId              %(BIGPRIMARYKEY)s,
+            fileId              %(PRIMARYKEY)s,
             buildId             integer         NOT NULL
                 REFERENCES Builds ON DELETE CASCADE,
             idx                 smallint        NOT NULL    DEFAULT 0,
