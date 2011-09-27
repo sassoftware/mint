@@ -39,7 +39,7 @@ class Image(modellib.XObjIdModel):
         
     _xobj = xobj.XObjMetadata(
         tag="image")
-    _xobj_hidden_accessor = set(['buildfile_set'])
+    _xobj_hidden_accessors = set(['buildfile_set', 'builddata_set'])
     view_name = "ProjectImage"
 
     def __unicode__(self):

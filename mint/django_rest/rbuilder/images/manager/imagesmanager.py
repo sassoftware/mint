@@ -12,18 +12,43 @@ log = logging.getLogger(__name__)
 exposed = basemanager.exposed
 
 class ImagesManager(basemanager.BaseManager):
-
+ 
     @exposed
-    def getAllImages(self):
+    def getImageBuild(self, image_id):
+        return models.Image.objects.get(pk=image_id)
+        
+    @exposed
+    def getImageBuilds(self):
         Images = models.Images()
-        images = models.Image.objects.all()
-        Images.image = images
+        Images.image = models.Image.objects.all()
         return Images
 
     @exposed
-    def getImageById(self, image_id):
-        return models.Image.objects.get(pk=image_id)
+    def createImageBuild(self, image):
+        image.save()
+        return image
+        
+    @exposed
+    def updateImageBuild(self, image_id, image):
+        image.save()
+        return image
+        
+    @exposed
+    def deleteImageBuild(self, image_id):
+        models.Image.objects.get(pk=image_id).delete()
 
+    @exposed
+    def getImageBuildFile(self, image_id, file_id):
+        build_file = models.BuildFile.objects.get(file_id=file_id)
+        return build_file
+        
+    @exposed
+    def getImageBuildFiles(self, image_id):
+        BuildFiles = models.BuildFiles()
+        build_files = models.BuildFile.objects.filter(build__image_id=image_id)
+        BuildFiles.build_file = build_files
+        return BuildFiles
+    
     @exposed
     def getUnifiedImages(self):
         ''' 
@@ -42,54 +67,3 @@ class ImagesManager(basemanager.BaseManager):
             models.Image(id=2, name='placeholder')
         ]
         return images
-
-    @exposed
-    def getUnifiedImage(self, permission_type):
-        # FIXME: placeholder
-        return models.Image(id=1, name='placeholder')
-
-    @exposed
-    def updateUnifiedImage(self, image_id, image):
-        image.save()
-        return image
-        
-    @exposed
-    def createUnifiedImage(self, image):
-        image.save()
-        return image
-        
-    @exposed
-    def getImageBuild(self, build_id):
-        return models.Image.objects.get(pk=build_id)
-        
-    @exposed
-    def getImageBuilds(self):
-        Builds = models.Images()
-        Builds.image = models.Image.objects.all()
-        return Builds
-
-    @exposed
-    def createImageBuild(self, build):
-        build.save()
-        return build
-        
-    @exposed
-    def updateImageBuild(self, build):
-        build.save()
-        return build
-        
-    @exposed
-    def deleteImageBuild(self, build_id):
-        models.Image.objects.get(pk=build_id).delete()
-
-    @exposed
-    def getImageBuildFile(self, image_id, file_id):
-        build_file = models.BuildFile.objects.get(file_id=file_id)
-        return build_file
-        
-    @exposed
-    def getImageBuildFiles(self, image_id):
-        BuildFiles = models.BuildFiles()
-        build_files = models.BuildFile.objects.filter(build__image_id=image_id)
-        BuildFiles.build_file = build_files
-        return BuildFiles

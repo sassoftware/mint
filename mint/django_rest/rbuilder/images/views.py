@@ -42,23 +42,21 @@ class ImagesService(BaseImageService):
     
     def get(self, image_id):
         if image_id:
-            return self.mgr.getImageById(image_id)
+            return self.mgr.getImageBuild(image_id)
         else:
-            return self.mgr.getAllImages()
+            return self.mgr.getImageBuilds()
     
     @access.admin
     @requires('image')
     @return_xml
     def rest_POST(self, request, image):
-        image.save()
-        return image
+        return self.mgr.createImageBuild(image)
     
     @access.admin
     @requires('image')
     @return_xml
     def rest_PUT(self, request, image_id, image):
-        image.save()
-        return image
+        return self.mgr.updateImageBuild(image_id, image)
 
     @access.admin
     def rest_DELETE(self, image_id):
