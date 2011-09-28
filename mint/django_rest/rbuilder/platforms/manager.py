@@ -116,7 +116,7 @@ class PlatformManager(basemanager.BaseManager):
             required = True,
             multiple = False,
             type = 'str',
-            descriptions = ('Image Name', ),
+            descriptions = ['Image Name', ],
         )
 
         desc.addDataField("baseImageTrove",
