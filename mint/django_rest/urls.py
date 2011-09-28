@@ -119,7 +119,8 @@ urlpatterns = patterns('',
         name='Network'),
 
     # Systems
-    URL(r'inventory/systems/?$',
+    # RBL-8919 - accept double slashes to accommodate an rpath-tools bug
+    URL(r'inventory//?systems/?$',
         inventoryviews.InventorySystemsService(),
         name='Systems'),
     URL(r'inventory/inventory_systems/?$',
