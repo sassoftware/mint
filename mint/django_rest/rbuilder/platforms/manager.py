@@ -12,7 +12,6 @@ import smartform.descriptor
 
 from mint.django_rest.rbuilder.manager import basemanager
 from mint.django_rest.rbuilder.platforms import models as platform_models
-from mint.django_rest.rbuilder.projects import models as project_models
 from mint.django_rest.rbuilder.images import models as imagemodels
 
 IMAGE_TYPE_DESCRIPTORS="mint.django_rest.rbuilder.platforms.image_type_descriptors"
