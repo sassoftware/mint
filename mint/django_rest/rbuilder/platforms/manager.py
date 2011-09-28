@@ -112,11 +112,19 @@ class PlatformManager(basemanager.BaseManager):
            x.output_trove, descriptions=x.name) for
                x in deployable_images ]
 
+        desc.addDataField('displayName',
+            required = True,
+            multiple = False,
+            type = 'str',
+            descriptions = ('Image Name', ),
+        )
+
         desc.addDataField("baseImageTrove",
             required = True,
             multiple = False,
             type = desc.EnumeratedType(smartform_values)
         )
+
         sio = StringIO.StringIO()
         desc.serialize(sio)
         result = sio.getvalue()
