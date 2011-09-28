@@ -13,6 +13,7 @@ import smartform.descriptor
 from mint.django_rest.rbuilder.manager import basemanager
 from mint.django_rest.rbuilder.platforms import models as platform_models
 from mint.django_rest.rbuilder.projects import models as project_models
+from mint.django_rest.rbuilder.images import models as imagemodels
 
 IMAGE_TYPE_DESCRIPTORS="mint.django_rest.rbuilder.platforms.image_type_descriptors"
 exposed = basemanager.exposed
@@ -104,7 +105,7 @@ class PlatformManager(basemanager.BaseManager):
         # TODO: this might be filtered more aggressively later
         # right now the image list could get very large
 
-        deployable_images = project_models.Image.objects.filter(
+        deployable_images = imagemodels.Image.objects.filter(
             output_trove__isnull=False
         )
 
