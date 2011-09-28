@@ -161,7 +161,7 @@ image_post_xml = """
   <build_type>10</build_type>
   <time_updated></time_updated>
   <name>image-20</name>
-  <trove_version>newfoo@test:1/1-0-1</trove_version>
+  <trove_version>foo0@test:1/1-0-1</trove_version>
   <project id="http://testserver/api/v1/projects/foo0">
     <domain_name>eng.rpath.com</domain_name>
     <short_name>foo0</short_name>
