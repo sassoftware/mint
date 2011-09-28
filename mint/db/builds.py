@@ -160,7 +160,7 @@ class BuildsTable(database.KeyedTable):
                            limitToUserId=False):
         # By default, select builds that have at least one file that is
         # not a failed build log.
-        extraSelect = ''
+        extraSelect = ', NULL AS baseBuildId'
         extraJoin = ' LEFT JOIN buildFiles bdf ON (bdf.buildId = b.buildId)'
         extraWhere = ''' AND EXISTS (
             SELECT * FROM BuildFiles bf
@@ -174,7 +174,7 @@ class BuildsTable(database.KeyedTable):
             # awsCredentials cannot be a single -
             # We use it to mark that we did not have credentials set for this
             # EC2 target (as opposed to None for non-ec2 targets)
-            extraSelect = ''', COALESCE(subq.creds, '-') AS awsCredentials,
+            extraSelect += ''', COALESCE(subq.creds, '-') AS awsCredentials,
                              bd.value AS amiId'''
             extraJoin += ''' LEFT OUTER JOIN
                              (SELECT tuc.userId AS userId,
@@ -202,7 +202,7 @@ class BuildsTable(database.KeyedTable):
             extraJoin += ''' JOIN buildData bd ON (bd.buildId  = b.buildId
                                                    AND bd.name = 'XEN_DOMU')'''
         try:
-            imageType = buildtypes.validBuildTypes[imageType]
+            imageTypeId = buildtypes.validBuildTypes[imageType]
         except KeyError:
             raise ParameterError('Unknown image type %r' % (imageType,))
         cu = self.db.cursor()
@@ -217,7 +217,7 @@ class BuildsTable(database.KeyedTable):
             okHiddenProjectIds = [result[0] for result in cu.fetchall()]
 
 
-        query = """SELECT p.projectId,
+        queryTmpl = """SELECT p.projectId,
                     p.hostname,
                     b.buildId,
                     p.name AS productName,
@@ -244,16 +244,17 @@ class BuildsTable(database.KeyedTable):
                  %(extraJoin)s
              WHERE b.buildType = ?
              %(extraWhere)s"""
-        query = query % {'extraWhere' : extraWhere,
+        query = queryTmpl % {'extraWhere' : extraWhere,
                          'extraSelect' : extraSelect,
                          'extraJoin' : extraJoin}
         keys = ['projectId', 'hostname', 'buildId', 'productName',
                 'productDescription', 'buildName', 'buildDescription',
                 'isPublished', 'isPrivate', 'createdBy', 'role',
-                'awsCredentials', 'amiId', 'troveFlavor',
+                'awsCredentials', 'amiId', 'troveFlavor', 'baseBuildId',
                 ]
 
-        cu.execute(query, requestingUserId, imageType)
+        imageIdToImageHash = {}
+        cu.execute(query, requestingUserId, imageTypeId)
         out = []
         for row in cu:
             if not self._filterBuildVisibility(row,
@@ -276,7 +277,51 @@ class BuildsTable(database.KeyedTable):
                         value = helperfuncs.getArchFromFlavor(value)
                 if value is not None:
                     outRow[key] = value
+            # Expose the build type as well
+            outRow['imageType'] = imageType
             assert not row.fields
+            out.append(outRow)
+            imageIdToImageHash[outRow['buildId']] = outRow
+        out.extend(self.addDeferredImagesByType(cu, queryTmpl, imageTypeId,
+            requestingUserId, limitToUserId, imageIdToImageHash, okHiddenProjectIds, keys))
+        return out
+
+    def addDeferredImagesByType(self, cu, queryTmpl, baseImageTypeId,
+            requestingUserId, limitToUserId, baseImageMap, okHiddenProjectIds,
+            keys):
+        out = []
+        imageTypeId = buildtypes.DEFERRED_IMAGE
+        extraSelect = ", base.buildId AS baseBuildId"
+        extraJoin = """
+            JOIN BuildData AS bd ON (b.buildId = bd.buildId)
+            JOIN Builds AS base ON (bd.value = base.output_trove)
+        """
+        extraWhere = """
+            AND bd.name = 'baseImageTrove'
+            AND base.buildType = ?
+        """
+        query = queryTmpl % {'extraWhere' : extraWhere,
+                         'extraSelect' : extraSelect,
+                         'extraJoin' : extraJoin}
+        cu.execute(query, requestingUserId, imageTypeId, baseImageTypeId)
+        for row in cu:
+            if not self._filterBuildVisibility(row,
+                    okHiddenProjectIds, limitToUserId):
+                continue
+            if row['baseBuildId'] not in baseImageMap:
+                # Base image not visible
+                continue
+            outRow = {}
+            for key in keys:
+                value = row.pop(key, None)
+                if key == 'troveFlavor':
+                    key = 'architecture'
+                    if value:
+                        value = helperfuncs.getArchFromFlavor(value)
+                if value is not None:
+                    outRow[key] = value
+            # Expose the build type as well
+            outRow['imageType'] = 'DEFERRED_IMAGE'
             out.append(outRow)
         return out
 

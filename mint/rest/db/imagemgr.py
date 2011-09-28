@@ -362,14 +362,15 @@ class ImageManager(manager.Manager):
         sql = '''INSERT INTO Builds (projectId, name, buildType, timeCreated, 
                                      buildCount, createdBy, troveName, 
                                      troveVersion, troveFlavor, stageName, 
-                                     productVersionId) 
-                            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)'''
+                                     productVersionId, output_trove) 
+                            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)'''
         assert buildType is not None
         cu.execute(sql, productId, buildName, buildType,    
                    time.time(), 0, self.auth.userId,
                    troveTuple[0], troveTuple[1].freeze(),
                    troveTuple[2].freeze(),
-                   stage, productVersionId)
+                   stage, productVersionId,
+                   image.outputTrove)
         buildId = cu.lastrowid
 
         buildDataTable = self.db.db.buildData
@@ -724,6 +725,9 @@ class ImageManager(manager.Manager):
             return []
         for imageData in images:
             hostname = imageData.pop('hostname')
+            if imageData['imageType'] == 'DEFERRED_IMAGE':
+                # Deferred images have no files, don't bother
+                continue
             hostnameToImageIdsMap.setdefault(hostname, []).append(
                 imageData['buildId'])
         imagesBaseFileNameMap = {}
@@ -735,8 +739,14 @@ class ImageManager(manager.Manager):
             imageFileListMap.update(dict((x, y)
                 for (x, y) in zip(imageIds, imageFilesList)))
 
+        deferredImages = []
+        imageMap = {}
         for imageData in images:
-            imageFileList = imageFileListMap[imageData['buildId']]
+            if imageData['imageType'] == 'DEFERRED_IMAGE':
+                deferredImages.append(imageData)
+                continue
+            imageId = imageData['buildId']
+            imageFileList = imageFileListMap[imageId]
             imageFileData = [
                 dict(fileId = x.fileId, sha1 = x.sha1,
                      fileName = x.fileName,
@@ -747,8 +757,19 @@ class ImageManager(manager.Manager):
                             for y in x.targetImages ])
                 for x in imageFileList.files ]
             imageData['files'] = imageFileData
-            imageId = imageData['buildId']
             imageData['baseFileName'] = imagesBaseFileNameMap[imageId]
+            imageMap[imageId] = imageData
+        # Now munge deferred images
+        for img in deferredImages:
+            imageId = img['buildId']
+            baseImage = imageMap[img['baseBuildId']]
+            # Copy file data from the base image
+            imageFileData = []
+            for fileData in baseImage['files']:
+                fileData = fileData.copy()
+                fileData['uniqueImageId'] = imageId
+                imageFileData.append(fileData)
+            imageData['files'] = imageFileData
         return images
 
     def _getImageLogger(self, hostname, imageId):

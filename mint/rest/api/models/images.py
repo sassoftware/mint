@@ -164,6 +164,7 @@ class Image(Model):
     files = fields.ModelField(ImageFileList)
     baseFileName = fields.CharField()
     metadata = fields.XObjField()
+    outputTrove = fields.CharField()
 
     # TODO: we want to expose all buildData via a dict.  But that requires
     # a DictField which doesn't exist yet.
