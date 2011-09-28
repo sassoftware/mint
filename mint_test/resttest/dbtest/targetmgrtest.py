@@ -161,9 +161,9 @@ class TargetManagerTest(mint_rephelp.MintDatabaseHelper):
         self.createProduct('foo', owners=['admin'], db=db)
 
         targets = [
-            ('type1', 'name1', dict(data = '11')),
-            ('type1', 'name2', dict(data = '12')),
-            ('type2', 'nameXXX', dict(data = '21')),
+            ('type1', 'name1', dict(data = '11', description='name1')),
+            ('type1', 'name2', dict(data = '12', description='name2')),
+            ('type2', 'nameXXX', dict(data = '21', description='nameXXX',)),
         ]
         tmgr = db.targetMgr
         for targetType, targetName, targetData in targets:
@@ -208,30 +208,32 @@ class TargetManagerTest(mint_rephelp.MintDatabaseHelper):
                     userName, uCreds)
 
         self.failUnlessEqual(tmgr.getTargetsForUser('type2', userName1),
-            [('name1', dict(data = '21'), {})])
+            [('name1', dict(data = '21', description='name1',), {})])
 
         self.failUnlessEqual(tmgr.getTargetsForUser('type1', userName1),
-            [ ('name1', dict(data = '11'), userCreds[('type1', 'name1')][0][1]),
-              ('name2', dict(data = '12'), userCreds[('type1', 'name2')][0][1])])
+            [ ('name1', dict(data = '11', description="name1"),
+                userCreds[('type1', 'name1')][0][1]),
+              ('name2', dict(data = '12', description="name2",),
+                userCreds[('type1', 'name2')][0][1])])
 
         self.failUnlessEqual(tmgr.getTargetsForUsers('type1'), [
-            (2, userName1, 'name1', 1, dict(data = '11'),
+            (2, userName1, 'name1', 1, dict(data = '11', description="name1"),
                 userCreds[('type1', 'name1')][0][1]),
-            (2, userName1, 'name2', 3, dict(data = '12'),
+            (2, userName1, 'name2', 3, dict(data = '12', description="name2"),
                 userCreds[('type1', 'name2')][0][1]),
-            (3, userName2, 'name1', 2, dict(data = '11'),
+            (3, userName2, 'name1', 2, dict(data = '11', description="name1"),
                 userCreds[('type1', 'name1')][1][1]),
-            (4, userName3, 'name1', 1, dict(data = '11'),
+            (4, userName3, 'name1', 1, dict(data = '11', description="name1"),
                 userCreds[('type1', 'name1')][2][1]),
         ])
         self.failUnlessEqual(tmgr.getTargetsForUsers('type2'), [])
 
         self.failUnlessEqual(tmgr.getUniqueTargetsForUsers('type1'), [
-            (2, userName1, 'name2', 3, dict(data = '12'),
+            (2, userName1, 'name2', 3, dict(data = '12', description="name2"),
                 userCreds[('type1', 'name2')][0][1]),
-            (3, userName2, 'name1', 2, dict(data = '11'),
+            (3, userName2, 'name1', 2, dict(data = '11', description="name1"),
                 userCreds[('type1', 'name1')][1][1]),
-            (4, userName3, 'name1', 1, dict(data = '11'),
+            (4, userName3, 'name1', 1, dict(data = '11', description="name1"),
                 userCreds[('type1', 'name1')][2][1]),
         ])
 
