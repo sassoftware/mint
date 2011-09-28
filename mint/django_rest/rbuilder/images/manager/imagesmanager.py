@@ -15,6 +15,7 @@ class ImagesManager(basemanager.BaseManager):
  
     @exposed
     def getImageBuild(self, image_id):
+        import pdb; pdb.set_trace()
         return models.Image.objects.get(pk=image_id)
         
     @exposed
