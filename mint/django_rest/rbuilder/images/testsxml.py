@@ -1,7 +1,7 @@
 images_get_xml = """
 <?xml version='1.0' encoding='UTF-8'?>
 <images count="3" next_page="" num_pages="1" previous_page="" full_collection="" end_index="2" limit="10" order_by="" per_page="10" filter_by="" start_index="0">
-  <image>
+  <image id="/api/v1/images/1">
     <trove_last_changed></trove_last_changed>
     <updated_by id="http://testserver/api/v1/users/2002"/>
     <trove_flavor>is: x86</trove_flavor>
@@ -31,7 +31,7 @@ images_get_xml = """
     <release/>
     <job_uuid>1</job_uuid>
   </image>
-  <image>
+  <image id="/api/v1/images/2">
     <trove_last_changed></trove_last_changed>
     <updated_by id="http://testserver/api/v1/users/2002"/>
     <trove_flavor>is: x86</trove_flavor>
@@ -61,7 +61,7 @@ images_get_xml = """
     <release/>
     <job_uuid>1</job_uuid>
   </image>
-  <image>
+  <image id="/api/v1/images/3">
     <trove_last_changed></trove_last_changed>
     <updated_by id="http://testserver/api/v1/users/2002"/>
     <trove_flavor>is: x86</trove_flavor>
@@ -96,7 +96,7 @@ images_get_xml = """
 
 image_get_xml = """
 <?xml version='1.0' encoding='UTF-8'?>
-<image>
+<image id="/api/v1/images/1">
   <trove_last_changed></trove_last_changed>
   <updated_by id="http://testserver/api/v1/users/2002"/>
   <trove_flavor>is: x86</trove_flavor>
@@ -136,7 +136,7 @@ build_file_get_xml = \
   <idx>0</idx>
   <title></title>
   <file_id>1</file_id>
-  <build/>
+  <build id="/api/v1/images/1"/>
   <size>0</size>
 </build_file>
 """.strip()
@@ -244,14 +244,30 @@ build_file_post_xml = \
 </build_file>
 """.strip()
 
+build_files_get_xml = \
+"""
+<?xml version='1.0' encoding='UTF-8'?>
+<build_files count="1" next_page="" num_pages="1" previous_page="" full_collection="" end_index="0" limit="10" order_by="" per_page="10" filter_by="" start_index="0">
+  <build_file>
+    <sha1>0</sha1>
+    <idx>0</idx>
+    <title></title>
+    <file_id>1</file_id>
+    <build id="/api/v1/images/1"/>
+    <size>0</size>
+  </build_file>
+</build_files>
+""".strip()
+
 build_file_posted_xml = \
 """
+<?xml version='1.0' encoding='UTF-8'?>
 <build_file>
   <sha1>0</sha1>
   <idx>0</idx>
   <title>HelloWorld</title>
   <file_id>4</file_id>
-  <build/>
+  <build id="/api/v1/images/4"/>
   <size>0</size>
 </build_file>
 """.strip()

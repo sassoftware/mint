@@ -109,6 +109,7 @@ class ImagesTestCase(XMLTestCase):
         image = models.Image.objects.get(pk=1)
         response = self._get('images/%s/build_files/' % image.pk, username='admin', password='password')
         self.assertEquals(response.status_code, 200)
+        self.assertXMLEquals(response.content, testsxml.build_files_get_xml)
         
     def testGetImageBuildFile(self):
         buildFile = models.BuildFile.objects.get(pk=1)

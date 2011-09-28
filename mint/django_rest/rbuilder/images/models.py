@@ -88,6 +88,9 @@ class Image(modellib.XObjIdModel):
         db_column="statusmessage")
     metadata = modellib.SyntheticField()
     #actions = modellib.SyntheticField()
+    
+    def get_absolute_url(self, request, *args, **kwargs):
+        return '/api/v1/images/%s' % self.image_id
 
     def computeSyntheticFields(self, sender, **kwargs):
         self._computeMetadata()
