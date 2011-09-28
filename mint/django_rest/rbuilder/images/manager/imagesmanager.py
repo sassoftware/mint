@@ -10,8 +10,6 @@ from mint.django_rest.rbuilder.images import models
 from mint.django_rest.rbuilder.manager import basemanager
 from conary.lib import sha1helper
 from mint.lib import data as datatypes
-from mint import helperfuncs
-from mint import builds
 from mint import buildtypes
 from conary import trovetup
 from conary import versions
