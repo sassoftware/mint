@@ -879,7 +879,11 @@ class SystemManager(basemanager.BaseManager):
     @exposed
     def addLaunchedSystem(self, system, dnsName=None, targetName=None,
             targetType=None):
-        target = self.lookupTarget(targetTypeName=targetType.name,
+        if isinstance(targetType, basestring):
+            targetTypeName = targetType
+        else:
+            targetTypeName = targetType.name
+        target = self.lookupTarget(targetTypeName=targetTypeName,
             targetName=targetName)
         system.target = target
         if system.managing_zone_id is None:
