@@ -148,6 +148,10 @@
         <desc>Secure Shell (SSH) Key</desc>
       </descriptions>
       <type>str</type>
+      <allowFileContent>true</allowFileContent>
+      <constraints>
+        <length>100</length> 
+      </constraints>
     </field>
   </dataFields>
 </metadataDescriptor>
