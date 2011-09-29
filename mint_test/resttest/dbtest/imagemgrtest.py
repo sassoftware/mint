@@ -211,6 +211,10 @@ class ImageManagerTest(mint_rephelp.MintDatabaseHelper):
             [ x['architecture'] for x in images ],
             [ 'x86', 'x86_64', 'x86', ])
         self.failUnlessEqual(
+            [ x['baseFileName'] for x in images],
+            ['foo-0.1-x86', 'bar-0.1-x86_64', 'foo-0.1-x86'])
+
+        self.failUnlessEqual(
             [ [ x['sha1'] for x in img['files'] ] for img in images],
             [ [ '356a192b7913b04c54574d18c28d46e6395428ab' ],
               [ '77de68daecd823babbb58edb1c8e14d7106e83bb' ],
