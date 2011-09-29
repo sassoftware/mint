@@ -37,7 +37,7 @@ class Platform(modellib.XObjIdModel):
     label = models.CharField(max_length=1026, unique=True)
     mode = models.CharField(max_length=1026, default='manual', choices=_MODE_CHOICES)
     enabled = models.IntegerField(default=1)
-    projects = modellib.DeferredForeignKey('projects.Project', db_column='projectid')
+    projects = modellib.DeferredForeignKey('projects.Project', db_column='projectid', null=True)
     platform_name = models.CharField(max_length=1026, db_column='platformname')
     configurable = models.BooleanField(default=False)
     abstract = models.BooleanField(default=False)
