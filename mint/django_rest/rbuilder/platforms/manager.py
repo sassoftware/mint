@@ -110,14 +110,10 @@ class PlatformManager(basemanager.BaseManager):
             output_trove__isnull=False
         )
 
-        smartform_values = [ desc.ValueWithDescription(
-           x.output_trove, descriptions=x.name) for
-               x in deployable_images ]
-
         smartform_values = []
         for img in deployable_images:
             val = desc.ValueWithDescription(img.output_trove,
-                description=img.name)
+                descriptions=img.name)
 
             flv = deps.ThawFlavor(img.trove_flavor)
             if flv.stronglySatisfies(deps.parseFlavor('is: x86_64')):

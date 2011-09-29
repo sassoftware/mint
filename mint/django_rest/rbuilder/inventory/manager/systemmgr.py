@@ -798,10 +798,13 @@ class SystemManager(basemanager.BaseManager):
                     # if no credentials, then the system is not one we are
                     # supposed to assimilate
                     if system.credentials:
-                        new_job = jobmodels.job(
-                            job_type = jobmodels.EventType.SYSTEM_ASSIMILATE
+                        # TODO: refactor
+                        new_job = jobmodels.Job(
+                            job_type = jobmodels.EventType.objects.get(
+                                name=jobmodels.EventType.SYSTEM_ASSIMILATE
+                            )
                         )
-                        self.scheduleJobAction(self, new_job)
+                        self.scheduleJobAction(system, new_job)
                         # assimilation will call rpath-register no need
                         # to queue now, it's not ready
                     return None
@@ -867,7 +870,7 @@ class SystemManager(basemanager.BaseManager):
                 output_trove=baseImageTrove)
 
             md = baseImage.metadata
-            username = password = key = None
+            username = password = key = ''
             if hasattr(md, 'credentials_username'):
                 username = md.credentials_username
             if hasattr(md, 'credentials_password'):
@@ -877,7 +880,7 @@ class SystemManager(basemanager.BaseManager):
 
             creds = dict(
                 username=username,
-                pasword=password,
+                password=password,
                 key=key,
             )
 
@@ -1060,7 +1063,7 @@ class SystemManager(basemanager.BaseManager):
         return self._getCredentialsModel(system, credentials)
 
     def _addSystemCredentials(self, system, credentials):
-         if system.management_interface:
+        if system.management_interface:
             if system.management_interface.name in [ 'wmi', 'ssh' ]:
                 systemCreds = self.marshalCredentials(credentials)
                 system.credentials = systemCreds
@@ -1944,11 +1947,18 @@ class SystemManager(basemanager.BaseManager):
         be more complete.
         '''
         # get integer job type even if not a django model
-        jt = job.job_type.id
-        if str(jt).find("/") != -1:
-            jt = int(jt.split("/")[-1])
-        event_type = jobmodels.EventType.objects.get(job_type_id=jt)
-        job_name   = event_type.name
+        job_name = None
+        try:
+            # FIXME: hack, port to misa's new job system eventually
+            # if a real django model
+            job_name = job.job_type.name
+        except:
+            # if a partial django model
+            jt = job.job_type.id
+            if str(jt).find("/") != -1:
+                jt = int(jt.split("/")[-1])
+            event_type = jobmodels.EventType.objects.get(job_type_id=jt)
+            job_name   = event_type.name
 
         event = None
 
