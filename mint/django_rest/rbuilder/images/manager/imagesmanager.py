@@ -70,7 +70,7 @@ class ImagesManager(basemanager.BaseManager):
         buildDataTable = self.restDb.db.buildData
         for name, value, dataType in buildData:
             try:
-                buildData = models.BuildData.objects.get(build=buildId, name=name)
+                buildData = models.BuildData.objects.get(build__image_id=buildId, name=name)
             except: # come back and catch MatchingQueryDoesNotExist
                 build = models.Image.objects.get(pk=buildId)
                 buildData = models.BuildData(build=build, name=name)
