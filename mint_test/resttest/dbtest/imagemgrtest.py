@@ -184,6 +184,10 @@ class ImageManagerTest(mint_rephelp.MintDatabaseHelper):
         imageId = self.createImage(db, 'foo', buildtypes.DEFERRED_IMAGE,
                                    troveFlavor="is: x86", name='Image1',
                                    buildData=[('baseImageTrove', outputTrove, data.RDT_TROVE)])
+        # And another deferred image
+        imageId = self.createImage(db, 'foo', buildtypes.DEFERRED_IMAGE,
+                                   troveFlavor="is: x86", name='Image2',
+                                   buildData=[('baseImageTrove', outputTrove, data.RDT_TROVE)])
 
 
         self.createProduct('bar', owners=['admin'], db=db)
@@ -209,19 +213,22 @@ class ImageManagerTest(mint_rephelp.MintDatabaseHelper):
         images = db.imageMgr.getAllImagesByType('VMWARE_IMAGE')
         self.failUnlessEqual(
             [ x['architecture'] for x in images ],
-            [ 'x86', 'x86_64', 'x86', ])
+            [ 'x86', 'x86_64', 'x86', 'x86', ])
         self.failUnlessEqual(
             [ x['baseFileName'] for x in images],
-            ['foo-0.1-x86', 'bar-0.1-x86_64', 'foo-0.1-x86'])
+            ['foo-0.1-x86', 'bar-0.1-x86_64', 'foo-0.1-x86', 'foo-0.1-x86'])
 
         self.failUnlessEqual(
             [ [ x['sha1'] for x in img['files'] ] for img in images],
             [ [ '356a192b7913b04c54574d18c28d46e6395428ab' ],
-              [ '77de68daecd823babbb58edb1c8e14d7106e83bb' ],
-              [ '356a192b7913b04c54574d18c28d46e6395428ab' ] ])
+              [ '1b6453892473a467d07372d45eb05abc2031647a' ],
+              [ '356a192b7913b04c54574d18c28d46e6395428ab' ],
+              [ '356a192b7913b04c54574d18c28d46e6395428ab' ],
+            ])
         self.failUnlessEqual(
             [ [ x['targetImages'] for x in img['files'] ] for img in images],
             [
+                [[]],
                 [[]],
                 [[]],
                 [[]],
@@ -229,16 +236,18 @@ class ImageManagerTest(mint_rephelp.MintDatabaseHelper):
 
         self.failUnlessEqual(
             [ [ x['fileName'] for x in img['files'] ] for img in images],
-            [ [ 'imagefile_1.iso' ], [ 'imagefile_3.iso' ], [ 'imagefile_1.iso' ] ])
+            [ [ 'imagefile_1.iso' ], [ 'imagefile_4.iso' ],
+              [ 'imagefile_1.iso' ], [ 'imagefile_1.iso' ], ])
         self.failUnlessEqual(
             [ [ x['downloadUrl'] for x in img['files'] ] for img in images],
             [ [ 'https://test.rpath.local:0/downloadImage?fileId=1', ],
               [ 'https://test.rpath.local:0/downloadImage?fileId=2', ],
               [ 'https://test.rpath.local:0/downloadImage?fileId=1', ],
+              [ 'https://test.rpath.local:0/downloadImage?fileId=1', ],
             ])
         self.failUnlessEqual(
             [ [ x.get('uniqueImageId') for x in img['files'] ] for img in images],
-            [ [None], [None], [2] ])
+            [ [None], [None], [2], [3], ])
 
     def testAddImageStatus(self):
         db = self.openMintDatabase(createRepos=False)
