@@ -30,6 +30,7 @@ from mint.django_rest.rbuilder.targets import models as targetmodels
 from mint.django_rest.rbuilder.manager import basemanager
 from mint.django_rest.rbuilder.querysets import models as querysetmodels
 from mint.django_rest.rbuilder.jobs import models as jobmodels
+from mint.django_rest.rbuilder.images import models as imagemodels
 from mint.rest import errors as mint_rest_errors
 
 log = logging.getLogger(__name__)
@@ -850,12 +851,22 @@ class SystemManager(basemanager.BaseManager):
         return None
 
     def _copyImageCredentials(self, system):
-        # If the source_image has credentials metadata attached, copy
-        # the credentials onto the system.
-        if (hasattr(system, 'source_image') and
-            hasattr(system.source_image, 'metadata')):
+        # Make sure this system has a source_image
+        if hasattr(system, 'source_image'):
+            # Now check to see if the source image has a base image trove in the
+            # builddata. This means it is a deferred image and we need to lookup
+            # the base image.
+            builddata = imagemodels.BuildData.objects.filter(
+                build=system.source_image, name='baseImageTrove')
 
-            md = system.source_image.metadata
+            if not builddata:
+                return
+
+            baseImageTrove = builddata[0].value
+            baseImage = imagemodels.Image.objects.get(
+                output_trove=baseImageTrove)
+
+            md = baseImage.metadata
             username = password = key = None
             if hasattr(md, 'credentials_username'):
                 username = md.credentials_username
