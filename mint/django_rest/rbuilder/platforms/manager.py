@@ -115,13 +115,14 @@ class PlatformManager(basemanager.BaseManager):
             val = desc.ValueWithDescription(img.output_trove,
                 descriptions=img.name)
 
-            flv = deps.ThawFlavor(img.trove_flavor)
+            flv = deps.ThawFlavor(str(img.trove_flavor))
             if flv.stronglySatisfies(deps.parseFlavor('is: x86_64')):
                 arch = 'x86_64'
             else:
                 arch = 'x86'
 
             val.architecture = arch
+            smartform_values.append(val)
 
         desc.addDataField('displayName',
             required = True,
