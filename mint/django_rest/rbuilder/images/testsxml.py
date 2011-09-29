@@ -161,7 +161,7 @@ image_post_xml = """
   <build_type>10</build_type>
   <time_updated></time_updated>
   <name>image-20</name>
-  <trove_version>newfoo@test:1/1-0-1</trove_version>
+  <trove_version>foo0@test:1/1-0-1</trove_version>
   <project id="http://testserver/api/v1/projects/foo0">
     <domain_name>eng.rpath.com</domain_name>
     <short_name>foo0</short_name>
@@ -244,8 +244,24 @@ build_file_post_xml = \
 </build_file>
 """.strip()
 
+build_files_get_xml = \
+"""
+<?xml version='1.0' encoding='UTF-8'?>
+<build_files count="1" next_page="" num_pages="1" previous_page="" full_collection="" end_index="0" limit="10" order_by="" per_page="10" filter_by="" start_index="0">
+  <build_file>
+    <sha1>0</sha1>
+    <idx>0</idx>
+    <title></title>
+    <file_id>1</file_id>
+    <build/>
+    <size>0</size>
+  </build_file>
+</build_files>
+""".strip()
+
 build_file_posted_xml = \
 """
+<?xml version='1.0' encoding='UTF-8'?>
 <build_file>
   <sha1>0</sha1>
   <idx>0</idx>
