@@ -725,9 +725,6 @@ class ImageManager(manager.Manager):
             return []
         for imageData in images:
             hostname = imageData.pop('hostname')
-            if imageData['imageType'] == 'DEFERRED_IMAGE':
-                # Deferred images have no files, don't bother
-                continue
             hostnameToImageIdsMap.setdefault(hostname, []).append(
                 imageData['buildId'])
         imagesBaseFileNameMap = {}
@@ -770,6 +767,7 @@ class ImageManager(manager.Manager):
                 fileData['uniqueImageId'] = imageId
                 imageFileData.append(fileData)
             imageData['files'] = imageFileData
+            imageData['baseFileName'] = imagesBaseFileNameMap[imageId]
         return images
 
     def _getImageLogger(self, hostname, imageId):
