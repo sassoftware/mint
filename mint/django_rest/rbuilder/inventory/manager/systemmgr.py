@@ -794,7 +794,17 @@ class SystemManager(basemanager.BaseManager):
                 self._copyImageCredentials(system)
 
                 if system.management_interface_id == sshIfaceId:
+                    # if no credentials, then the system is not one we are
+                    # supposed to assimilate
+                    if system.credentials:
+                        new_job = jobmodels.job(
+                            job_type = jobmodels.EventType.SYSTEM_ASSIMILATE
+                        )
+                        self.scheduleJobAction(self, new_job)
+                        # assimilation will call rpath-register no need
+                        # to queue now, it's not ready
                     return None
+
                 # But if it's a WMI system and we have no credentials, skip
                 # directly to UNMANAGED_CREDENTIALS_REQUIRED (RBL-7439)
                 if system.management_interface_id == wmiIfaceId:
