@@ -766,8 +766,8 @@ class ImageManager(manager.Manager):
                 fileData = fileData.copy()
                 fileData['uniqueImageId'] = imageId
                 imageFileData.append(fileData)
-            imageData['files'] = imageFileData
-            imageData['baseFileName'] = imagesBaseFileNameMap[imageId]
+            img['files'] = imageFileData
+            img['baseFileName'] = imagesBaseFileNameMap[imageId]
         return images
 
     def _getImageLogger(self, hostname, imageId):
