@@ -4305,6 +4305,7 @@ class TargetSystemImportTest(XMLTestCaseStandin):
             target_system_state = "Frisbulating",
             ssl_client_certificate = "ssl client certificate 001",
             ssl_client_key = "ssl client key 001",
+            should_migrate = True
         )
         dnsName = 'dns-name-1'
         system = self.newSystem(**params)

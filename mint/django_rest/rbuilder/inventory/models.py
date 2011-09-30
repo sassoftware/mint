@@ -564,7 +564,7 @@ class System(modellib.XObjIdModel):
     network_address = D(NetworkAddress, "Network address for this system")
     actions = D(modellib.SyntheticField(jobmodels.Actions),
         "actions available on the system")
-    should_migrate = D(models.BooleanField(default=False), 
+    should_migrate = D(APIReadOnly(models.BooleanField(default=False)), 
         "should a migration be triggered the next time this system checks in?")
     source_image = D(APIReadOnly(models.ForeignKey('images.Image', null=True,
          related_name='systems')), 
