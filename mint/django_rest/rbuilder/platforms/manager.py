@@ -10,6 +10,8 @@ import StringIO
 
 import smartform.descriptor
 
+from conary.deps import deps
+
 from mint.django_rest.rbuilder.manager import basemanager
 from mint.django_rest.rbuilder.platforms import models as platform_models
 from mint.django_rest.rbuilder.images import models as imagemodels
@@ -108,9 +110,19 @@ class PlatformManager(basemanager.BaseManager):
             output_trove__isnull=False
         )
 
-        smartform_values = [ desc.ValueWithDescription(
-           x.output_trove, descriptions=x.name) for
-               x in deployable_images ]
+        smartform_values = []
+        for img in deployable_images:
+            val = desc.ValueWithDescription(img.output_trove,
+                descriptions=img.name)
+
+            flv = deps.ThawFlavor(str(img.trove_flavor))
+            if flv.stronglySatisfies(deps.parseFlavor('is: x86_64')):
+                arch = 'x86_64'
+            else:
+                arch = 'x86'
+
+            val.architecture = arch
+            smartform_values.append(val)
 
         desc.addDataField('displayName',
             required = True,

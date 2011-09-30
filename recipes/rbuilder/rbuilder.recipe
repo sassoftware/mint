@@ -182,6 +182,7 @@ class rBuilderProduct(CPackageRecipe):
         r.InitialContents(r'/etc/rmake/(node|server).d/25_rbuilder-rapa.conf')
         r.InitialContents(r'/srv/rbuilder/config/postgresql-custom.conf')
         r.InitialContents(r'/root/.rmakerc')
+        r.Config(r'/srv/rbuilder/data/metadataDescriptor.xml')
 
         # These files contain defaults or stubs and should always be
         # replaced.
