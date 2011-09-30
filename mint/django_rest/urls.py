@@ -122,7 +122,11 @@ urlpatterns = patterns('',
     # RBL-8919 - accept double slashes to accommodate an rpath-tools bug
     URL(r'inventory//?systems/?$',
         inventoryviews.InventorySystemsService(),
-        name='Systems'),
+        name='SystemsHack1'),
+    # support outdated rpath-register (needed for older platforms)
+    URL(r'^api/inventory/systems/?$',
+        inventoryviews.InventorySystemsService(),
+        name='SystemsHack2'),
     URL(r'inventory/inventory_systems/?$',
         inventoryviews.InventoryInventorySystemsService(),
         name='InventorySystems'),
