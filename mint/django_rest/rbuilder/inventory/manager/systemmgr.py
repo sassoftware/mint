@@ -1014,7 +1014,7 @@ class SystemManager(basemanager.BaseManager):
         trove = models.Trove.objects.get(
             name    = source_image.trove_name,
             flavor  = source_image.trove_flavor,
-            version = source_image.trove_version
+            version = models.Version.objects.get(full=source_image.trove_version)
         )
         # schedule update job
         log.info("layering trove=%s" % trove.pk)
