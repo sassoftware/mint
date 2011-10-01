@@ -150,7 +150,10 @@
       <type>str</type>
       <allowFileContent>true</allowFileContent>
       <constraints>
-        <length>100</length> 
+        <range>
+          <min>100</min>
+          <max>8192</max>
+        </range>
       </constraints>
     </field>
   </dataFields>
