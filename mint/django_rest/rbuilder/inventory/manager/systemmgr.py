@@ -764,18 +764,22 @@ class SystemManager(basemanager.BaseManager):
             nstate = self.systemState(nextSystemState)
             self.log_system(system, "System state change: %s -> %s" %
                 (system.current_state.description, nstate.description))
+
             system.current_state = nstate
             system.state_change_date = self.now()
             system.save()
+            
+            if nstate.description == "Online" and system.should_migrate:
+                log.info("post-assimilation software install")
+                self.schedulePostRegistrationSoftwareUpdate(system)                 
 
     def getNextSystemState(self, system, job):
+
         # Return None if the state hasn't changed
         jobStateName = job.job_state.name
         eventTypeName = job.job_type.name
         if jobStateName == jobmodels.JobState.COMPLETED:
             if eventTypeName in self.RegistrationEvents:
-                if system.should_migrate:
-                    return self.mgr.schedulePostRegistrationSoftwareUpdate(system)                 
                 return None
             if eventTypeName in self.PollEvents or \
                     eventTypeName in self.SystemUpdateEvents:
@@ -1007,12 +1011,13 @@ class SystemManager(basemanager.BaseManager):
         # this is currently not present
 
         # while the trove has an id, it's not stored in the builds table
-        trove = models.Trove.objects.find(
-            trovename    = source_image.trove_name,
-            troveflavor  = source_image.trove_flavor,
-            troveversion = source_image.trove_version
+        trove = models.Trove.objects.get(
+            name    = source_image.trove_name,
+            flavor  = source_image.trove_flavor,
+            version = source_image.trove_version
         )
         # schedule update job
+        log.info("layering trove=%s" % trove.pk)
         self.mgr.updateInstalledSoftware(system, [trove])
 
     @classmethod
