@@ -4309,6 +4309,7 @@ class TargetSystemImportTest(XMLTestCaseStandin):
         )
         dnsName = 'dns-name-1'
         system = self.newSystem(**params)
+        system.should_migrate = True
         system = self.mgr.addLaunchedSystem(system,
             dnsName=dnsName,
             targetName=self.tgt2.name,
@@ -4328,10 +4329,15 @@ class TargetSystemImportTest(XMLTestCaseStandin):
             params['target_system_description'])
         self.failUnlessEqual(system.description,
             params['target_system_description'])
+        self.failUnless(system.should_migrate)
+
+        # Test that it got persisted
+        savedsystem = models.System.objects.get(pk=system.pk)
+        self.failUnless(savedsystem.should_migrate)
 
         # Another system that specifies a name and description
         params = dict((x, y.replace('001', '002'))
-            for (x, y) in params.items())
+            for (x, y) in params.items() if isinstance(y, basestring))
         params.update(name="system-name-002",
             description="system-description-002")
         system = self.newSystem(**params)
@@ -4346,6 +4352,7 @@ class TargetSystemImportTest(XMLTestCaseStandin):
         self.failUnlessEqual(system.target_system_description,
             params['target_system_description'])
         self.failUnlessEqual(system.description, params['description'])
+        self.failIf(system.should_migrate)
 
 class CollectionTest(XMLTestCaseStandin):
     fixtures = ['system_collection']
