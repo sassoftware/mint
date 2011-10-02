@@ -141,20 +141,21 @@
       </descriptions>
       <type>str</type>
     </field>
-    <field>
+    <field> 
       <name>metadata.credentials_sshkey</name>
       <help lang="en_US">Private key in PEM format used with SSH to take control of this image at deploy time.</help>
       <descriptions>
         <desc>Secure Shell (SSH) Key</desc>
-      </descriptions>
-      <type>str</type>
-      <allowFileContent>true</allowFileContent>
-      <constraints>
-        <range>
-          <min>100</min>
-          <max>8192</max>
-        </range>
+      </descriptions> 
+      <type>str</type> 
+      <constraints> 
+        <descriptions> 
+          <desc>The key must start with '-----BEGIN PRIVATE KEY-----', end with '----END PRIVATE KEY-----', and have a maximum length of 16384 characters.</desc> 
+        </descriptions> 
+        <regexp>^\s*-----BEGIN (\S+ )?PRIVATE KEY-----.*-----END (\S+ )?PRIVATE KEY-----\s*$</regexp> 
+        <length>16384</length> 
       </constraints>
+      <allowFileContent>true</allowFileContent> 
     </field>
   </dataFields>
 </metadataDescriptor>
