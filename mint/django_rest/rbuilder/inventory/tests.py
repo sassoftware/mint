@@ -4305,11 +4305,9 @@ class TargetSystemImportTest(XMLTestCaseStandin):
             target_system_state = "Frisbulating",
             ssl_client_certificate = "ssl client certificate 001",
             ssl_client_key = "ssl client key 001",
-            should_migrate = True
         )
         dnsName = 'dns-name-1'
         system = self.newSystem(**params)
-        system.should_migrate = True
         system = self.mgr.addLaunchedSystem(system,
             dnsName=dnsName,
             targetName=self.tgt2.name,
@@ -4329,11 +4327,9 @@ class TargetSystemImportTest(XMLTestCaseStandin):
             params['target_system_description'])
         self.failUnlessEqual(system.description,
             params['target_system_description'])
-        self.failUnless(system.should_migrate)
 
         # Test that it got persisted
         savedsystem = models.System.objects.get(pk=system.pk)
-        self.failUnless(savedsystem.should_migrate)
 
         def repl(item, a, b):
             try:
@@ -4356,11 +4352,9 @@ class TargetSystemImportTest(XMLTestCaseStandin):
 
         self.failUnlessEqual(system.target_system_name, params['target_system_name'])
         self.failUnlessEqual(system.name, params['name'])
-        self.failUnlessEqual(system.should_migrate, params['should_migrate'])
         self.failUnlessEqual(system.target_system_description,
             params['target_system_description'])
         self.failUnlessEqual(system.description, params['description'])
-        self.failIf(system.should_migrate)
 
 class CollectionTest(XMLTestCaseStandin):
     fixtures = ['system_collection']
