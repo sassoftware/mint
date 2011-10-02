@@ -903,11 +903,8 @@ class SystemManager(basemanager.BaseManager):
         if system.managing_zone_id is None:
             system.managing_zone = self.getLocalZone()
         # For bayonet, we only launch in the local zone
-        # experimental BOOKMARK -- preserve API read only field
-        should_migrate = system.should_migrate 
         oldModel, system = models.System.objects.load_or_create(system,
             withReadOnly=True)
-        system.should_migrate = should_migrate
         system.launching_user = self.user
         system.launch_date = self.now()
         # Copy some of the data from the target
