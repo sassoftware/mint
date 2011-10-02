@@ -4335,9 +4335,16 @@ class TargetSystemImportTest(XMLTestCaseStandin):
         savedsystem = models.System.objects.get(pk=system.pk)
         self.failUnless(savedsystem.should_migrate)
 
+        def repl(item, a, b):
+            try:
+                return item.replace(a, b)
+            except:
+                # booleans don't support this operatiion
+                return item
+
         # Another system that specifies a name and description
-        params = dict((x, y.replace('001', '002'))
-            for (x, y) in params.items() if isinstance(y, basestring))
+        params = dict((x, repl(y, '001', '002'))
+            for (x, y) in params.items())
         params.update(name="system-name-002",
             description="system-description-002")
         system = self.newSystem(**params)
@@ -4349,6 +4356,7 @@ class TargetSystemImportTest(XMLTestCaseStandin):
 
         self.failUnlessEqual(system.target_system_name, params['target_system_name'])
         self.failUnlessEqual(system.name, params['name'])
+        self.failUnlessEqual(system.should_migrate, params['should_migrate'])
         self.failUnlessEqual(system.target_system_description,
             params['target_system_description'])
         self.failUnlessEqual(system.description, params['description'])
