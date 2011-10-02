@@ -138,6 +138,8 @@ class ProjectManager(basemanager.BaseManager):
                 level=userlevels.OWNER)
             member.save()
 
+        self.mgr.invalidateQuerySetByName('All Projects')
+        self.mgr.invalidateQuerySetByName('All Project Stages')
         return project
 
     def _validateExternalProject(self, project):
@@ -344,6 +346,8 @@ class ProjectManager(basemanager.BaseManager):
         self.saveProductVersionDefinition(projectVersion, pd)
 
         projectVersion.save()
+        
+        self.mgr.invalidateQuerySetByName('All Project Stages')
         return projectVersion
 
     @exposed

@@ -81,12 +81,6 @@ class PBSCallbacks(object):
             return view.mgr.userHasRbacPermission(user, obj, READMEMBERS)
         return False
 
-# class AllProjectBranchesStagesService(service.BaseService):
-#     @rbac(PBSCallbacks.rbac_can_read_all_project_branches_stages)
-#     @return_xml
-#     def rest_GET(self, request):
-#         return self.mgr.getAllProjectBranchStages()
-
 class AllProjectBranchesStagesService(service.BaseService):
     """
     get all pbs's
