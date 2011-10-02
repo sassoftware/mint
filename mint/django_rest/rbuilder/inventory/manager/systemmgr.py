@@ -1342,13 +1342,13 @@ class SystemManager(basemanager.BaseManager):
             # TODO: don't require the appliance group to have the
             # name 'group-appliance' ?
             # TODO: breakout into function
-            source = system.source_image
+            source = event.system.source_image
             if source is None:
                 raise Exception("system without source image cannot be assimilated")
 
             full = source.trove_version
             tokens = full.split("/")
-            projectLabel = full[1]
+            projectLabel = tokens[1]
 
             log.info("project label=%s" % projectLabel)
 
