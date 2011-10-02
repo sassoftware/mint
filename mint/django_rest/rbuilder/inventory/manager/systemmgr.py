@@ -769,10 +769,6 @@ class SystemManager(basemanager.BaseManager):
             system.state_change_date = self.now()
             system.save()
             
-            if nstate.description == "Online" and system.should_migrate:
-                log.info("post-assimilation software install")
-                self.schedulePostRegistrationSoftwareUpdate(system)                 
-
     def getNextSystemState(self, system, job):
 
         # Return None if the state hasn't changed
@@ -998,27 +994,6 @@ class SystemManager(basemanager.BaseManager):
         for k, v in credsDict.items():
             setattr(credentials, k, v)
         return credentials
-
-    def schedulePostRegistrationSoftwareUpdate(self, system):
-        '''
-        when coming back from registration if so marked, look at the source
-        image of the system to find it's trove and update to that trove
-        '''
-        source_image = system.source_image
-        if source_image is None:
-            raise Exception("Unable to migrate system without record of source image")
-        # else: future use cases may supply migration path info from other sources
-        # this is currently not present
-
-        # while the trove has an id, it's not stored in the builds table
-        trove = models.Trove.objects.get(
-            name    = source_image.trove_name,
-            flavor  = source_image.trove_flavor,
-            version = models.Version.objects.get(full=source_image.trove_version)
-        )
-        # schedule update job
-        log.info("layering trove=%s" % trove.pk)
-        self.mgr.updateInstalledSoftware(system, [trove])
 
     @classmethod
     def unmarshalCredentials(cls, credentialsString):
@@ -1360,10 +1335,27 @@ class SystemManager(basemanager.BaseManager):
             event_data = cPickle.loads(event.event_data)
             certs  = rbuildermodels.PkiCertificates.objects
             hcerts = certs.filter(purpose="hg_ca").order_by('-time_issued')
+
             cert   = hcerts[0].x509_pem
+
+            # look at the source image to find the label
+            # TODO: don't require the appliance group to have the
+            # name 'group-appliance' ?
+            # TODO: breakout into function
+            source = system.source_image
+            if source is None:
+                raise Exception("system without source image cannot be assimilated")
+
+            full = source.trove_version
+            tokens = full.split("/")
+            projectLabel = full[1]
+
+            log.info("project label=%s" % projectLabel)
+
             params = repClient.AssimilatorParams(host=destination,
                 caCert=cert, sshAuth=event_data,
-                eventUuid=eventUuid)
+                eventUuid=eventUuid, projectLabel=projectLabel,
+                installTrove='group-appliance')
 
         resultsLocation = repClient.ResultsLocation(
             path = "/api/v1/inventory/systems/%d" % event.system.pk,
