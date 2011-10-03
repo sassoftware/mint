@@ -46,6 +46,7 @@ rBuilderExternal        False
 authUser                mintauth
 authPass                mintpass
 debugMode               False
+authSocket              /tmp/mintauth.sock
 
 # Buildtypes that are not supported (remove and use at your own risk)
 excludeBuildTypes       STUB_IMAGE
