@@ -206,6 +206,27 @@ project_branch_stage_xml = """\
   <systems/>
 </project_branch_stage>"""
 
+project_branch_stage_put_xml = \
+"""
+<stage id="http://testserver/api/v1/projects/chater-foo/project_branches/chater-foo.eng.rpath.com@rpath:chater-foo-trunk/project_branch_stages/Stage">
+  <groups href="http://testserver/api/products/chater-foo/repos/search?type=group&amp;label=foo@ns:trunk-stage"/>
+  <images id="http://testserver/api/v1/projects/chater-foo/project_branches/chater-foo.eng.rpath.com@rpath:chater-foo-trunk/project_branch_stages/Stage/images"/>
+  <label>foo@ns:trunk-stage</label>
+  <name>NewStage</name>
+  <project id="http://testserver/api/v1/projects/chater-foo">
+    <domain_name>eng.rpath.com</domain_name>
+    <name>chater-foo</name>
+    <short_name>chater-foo</short_name>
+  </project>
+  <project_branch id="http://testserver/api/v1/projects/chater-foo/project_branches/chater-foo.eng.rpath.com@rpath:chater-foo-trunk">
+    <name>trunk</name>
+  </project_branch>
+  <promotable>false</promotable>
+  <stage_id>12</stage_id>
+  <systems/>
+</stage>
+""".strip()
+
 # <imageDefinitions> camelCase only for compatibility reasons, change back to underscore ASAP
 project_branch_xml = """\
 <project_branch id="http://testserver/api/v1/projects/chater-foo/project_branches/chater-foo.eng.rpath.com@rpath:chater-foo-trunk">

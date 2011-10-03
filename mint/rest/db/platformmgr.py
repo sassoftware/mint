@@ -1262,7 +1262,8 @@ class PlatformManager(manager.Manager):
                         id = ctemplRef,
                         name = ctemplRef,
                         displayName = displayName,
-                        options = imageParams, **extra)
+                        **extra)
+                    kw.update(options=imageParams)
 
             model = models.PlatformBuildTemplate(**kw)
             buildDefModels.append(model)

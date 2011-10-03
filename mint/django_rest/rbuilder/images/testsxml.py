@@ -1,12 +1,11 @@
 images_get_xml = """
 <?xml version='1.0' encoding='UTF-8'?>
 <images count="3" next_page="" num_pages="1" previous_page="" full_collection="" end_index="2" limit="10" order_by="" per_page="10" filter_by="" start_index="0">
-  <image  id="http://testserver/api/v1/images/1">
-    <architecture>x86</architecture>
-    <trailing_version>1-0-1</trailing_version>
-    <trove_flavor>1#x86:i486:i586:i686|5#use:~!xen</trove_flavor>
+  <image id="http://testserver/api/v1/images/1">
     <trove_last_changed></trove_last_changed>
     <updated_by id="http://testserver/api/v1/users/2002"/>
+    <trailing_version>1-0-1</trailing_version>
+    <trove_flavor>1#x86:i486:i586:i686|5#use:~!xen</trove_flavor>
     <created_by id="http://testserver/api/v1/users/2001"/>
     <systems/>
     <status_message></status_message>
@@ -18,28 +17,46 @@ images_get_xml = """
       <name>trunk</name>
     </project_branch>
     <description>image-0</description>
-    <image_id>1</image_id>
+    <released>True</released>
     <time_created></time_created>
     <build_type>10</build_type>
+    <builds>
+      <build_file>
+        <sha1>0</sha1>
+        <idx>0</idx>
+        <title></title>
+        <image id="http://testserver/api/v1/images/1"/>
+        <file_id>1</file_id>
+        <size>0</size>
+      </build_file>
+      <build_file>
+        <sha1>1</sha1>
+        <idx>0</idx>
+        <title></title>
+        <image id="http://testserver/api/v1/images/1"/>
+        <file_id>2</file_id>
+        <size>1</size>
+      </build_file>
+    </builds>
     <time_updated></time_updated>
     <name>image-0</name>
     <trove_version>/cydonia.eng.rpath.com@rpath:cydonia-1-devel/1317221453.365:1-0-1</trove_version>
+    <image_id>1</image_id>
     <project id="http://testserver/api/v1/projects/foo0">
       <domain_name>eng.rpath.com</domain_name>
       <short_name>foo0</short_name>
       <name>foo0</name>
     </project>
     <output_trove></output_trove>
+    <architecture>x86</architecture>
     <release/>
-    <released>True</released>
     <job_uuid>1</job_uuid>
   </image>
   <image id="http://testserver/api/v1/images/2">
-    <architecture>x86</architecture>
-    <trailing_version>1-1-1</trailing_version>
-    <trove_flavor>1#x86:i486:i586:i686|5#use:~!xen</trove_flavor>
     <trove_last_changed></trove_last_changed>
     <updated_by id="http://testserver/api/v1/users/2002"/>
+    <trailing_version>1-1-1</trailing_version>
+    <trove_flavor>1#x86:i486:i586:i686|5#use:~!xen</trove_flavor>
     <created_by id="http://testserver/api/v1/users/2001"/>
     <systems/>
     <status_message></status_message>
@@ -51,28 +68,46 @@ images_get_xml = """
       <name>trunk</name>
     </project_branch>
     <description>image-1</description>
-    <image_id>2</image_id>
+    <released>True</released>
     <time_created></time_created>
     <build_type>10</build_type>
+    <builds>
+      <build_file>
+        <sha1>1</sha1>
+        <idx>0</idx>
+        <title></title>
+        <image id="http://testserver/api/v1/images/2"/>
+        <file_id>3</file_id>
+        <size>1</size>
+      </build_file>
+      <build_file>
+        <sha1>2</sha1>
+        <idx>0</idx>
+        <title></title>
+        <image id="http://testserver/api/v1/images/2"/>
+        <file_id>4</file_id>
+        <size>2</size>
+      </build_file>
+    </builds>
     <time_updated></time_updated>
     <name>image-1</name>
     <trove_version>/cydonia.eng.rpath.com@rpath:cydonia-1-devel/1317221453.365:1-1-1</trove_version>
+    <image_id>2</image_id>
     <project id="http://testserver/api/v1/projects/foo1">
       <domain_name>eng.rpath.com</domain_name>
       <short_name>foo1</short_name>
       <name>foo1</name>
     </project>
     <output_trove></output_trove>
+    <architecture>x86</architecture>
     <release/>
-    <released>True</released>
     <job_uuid>1</job_uuid>
   </image>
   <image id="http://testserver/api/v1/images/3">
-    <architecture>x86</architecture>
-    <trailing_version>1-2-1</trailing_version>
-    <trove_flavor>1#x86:i486:i586:i686|5#use:~!xen</trove_flavor>
     <trove_last_changed></trove_last_changed>
     <updated_by id="http://testserver/api/v1/users/2002"/>
+    <trailing_version>1-2-1</trailing_version>
+    <trove_flavor>1#x86:i486:i586:i686|5#use:~!xen</trove_flavor>
     <created_by id="http://testserver/api/v1/users/2001"/>
     <systems/>
     <status_message></status_message>
@@ -84,20 +119,39 @@ images_get_xml = """
       <name>trunk</name>
     </project_branch>
     <description>image-2</description>
-    <image_id>3</image_id>
+    <released>True</released>
     <time_created></time_created>
     <build_type>10</build_type>
+    <builds>
+      <build_file>
+        <sha1>2</sha1>
+        <idx>0</idx>
+        <title></title>
+        <image id="http://testserver/api/v1/images/3"/>
+        <file_id>5</file_id>
+        <size>2</size>
+      </build_file>
+      <build_file>
+        <sha1>3</sha1>
+        <idx>0</idx>
+        <title></title>
+        <image id="http://testserver/api/v1/images/3"/>
+        <file_id>6</file_id>
+        <size>3</size>
+      </build_file>
+    </builds>
     <time_updated></time_updated>
     <name>image-2</name>
     <trove_version>/cydonia.eng.rpath.com@rpath:cydonia-1-devel/1317221453.365:1-2-1</trove_version>
+    <image_id>3</image_id>
     <project id="http://testserver/api/v1/projects/foo2">
       <domain_name>eng.rpath.com</domain_name>
       <short_name>foo2</short_name>
       <name>foo2</name>
     </project>
     <output_trove></output_trove>
+    <architecture>x86</architecture>
     <release/>
-    <released>True</released>
     <job_uuid>1</job_uuid>
   </image>
 </images>
@@ -105,10 +159,11 @@ images_get_xml = """
 
 image_get_xml = """
 <?xml version='1.0' encoding='UTF-8'?>
-<image>
+<image id="http://testserver/api/v1/images/1">
   <trove_last_changed></trove_last_changed>
   <updated_by id="http://testserver/api/v1/users/2002"/>
-  <trove_flavor>is: x86</trove_flavor>
+  <trailing_version>1-0-1</trailing_version>
+  <trove_flavor>1#x86:i486:i586:i686|5#use:~!xen</trove_flavor>
   <created_by id="http://testserver/api/v1/users/2001"/>
   <systems/>
   <status_message></status_message>
@@ -120,18 +175,38 @@ image_get_xml = """
     <name>trunk</name>
   </project_branch>
   <description>image-0</description>
-  <image_id>1</image_id>
+  <released>True</released>
   <time_created></time_created>
   <build_type>10</build_type>
+  <builds>
+    <build_file>
+      <sha1>0</sha1>
+      <idx>0</idx>
+      <title></title>
+      <image id="http://testserver/api/v1/images/1"/>
+      <file_id>1</file_id>
+      <size>0</size>
+    </build_file>
+    <build_file>
+      <sha1>1</sha1>
+      <idx>0</idx>
+      <title></title>
+      <image id="http://testserver/api/v1/images/1"/>
+      <file_id>2</file_id>
+      <size>1</size>
+    </build_file>
+  </builds>
   <time_updated></time_updated>
   <name>image-0</name>
-  <trove_version>foo@test:1/1-0-1</trove_version>
+  <trove_version>/cydonia.eng.rpath.com@rpath:cydonia-1-devel/1317221453.365:1-0-1</trove_version>
+  <image_id>1</image_id>
   <project id="http://testserver/api/v1/projects/foo0">
     <domain_name>eng.rpath.com</domain_name>
     <short_name>foo0</short_name>
     <name>foo0</name>
   </project>
   <output_trove></output_trove>
+  <architecture>x86</architecture>
   <release/>
   <job_uuid>1</job_uuid>
 </image>
@@ -145,7 +220,7 @@ build_file_get_xml = \
   <idx>0</idx>
   <title></title>
   <file_id>1</file_id>
-  <build/>
+  <image id="http://testserver/api/v1/images/1"/>
   <size>0</size>
 </build_file>
 """.strip()
@@ -217,7 +292,8 @@ image_put_xml = """
 build_file_post_xml = \
 """
 <build_file>
-    <build>
+    <image>
+      <image_id>1</image_id>
       <trove_last_changed></trove_last_changed>
       <updated_by id="http://testserver/api/v1/users/2002"/>
       <trove_flavor>is: x86</trove_flavor>
@@ -245,7 +321,7 @@ build_file_post_xml = \
       <output_trove></output_trove>
       <release/>
       <job_uuid>2</job_uuid>
-    </build>
+    </image>
     <sha1>0</sha1>
     <idx>0</idx>
     <title>HelloWorld</title>
@@ -256,14 +332,22 @@ build_file_post_xml = \
 build_files_get_xml = \
 """
 <?xml version='1.0' encoding='UTF-8'?>
-<build_files count="1" next_page="" num_pages="1" previous_page="" full_collection="" end_index="0" limit="10" order_by="" per_page="10" filter_by="" start_index="0">
+<build_files count="2" next_page="" num_pages="1" previous_page="" full_collection="" end_index="1" limit="10" order_by="" per_page="10" filter_by="" start_index="0">
   <build_file>
     <sha1>0</sha1>
     <idx>0</idx>
     <title></title>
+    <image id="http://testserver/api/v1/images/1"/>
     <file_id>1</file_id>
-    <build/>
     <size>0</size>
+  </build_file>
+  <build_file>
+    <sha1>1</sha1>
+    <idx>0</idx>
+    <title></title>
+    <image id="http://testserver/api/v1/images/1"/>
+    <file_id>2</file_id>
+    <size>1</size>
   </build_file>
 </build_files>
 """.strip()
@@ -275,10 +359,11 @@ build_file_posted_xml = \
   <sha1>0</sha1>
   <idx>0</idx>
   <title>HelloWorld</title>
-  <file_id>4</file_id>
-  <build/>
+  <image id="http://testserver/api/v1/images/1"/>
+  <file_id>7</file_id>
   <size>0</size>
 </build_file>
+
 """.strip()
 
 build_file_put_xml = \

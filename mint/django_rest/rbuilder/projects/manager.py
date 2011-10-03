@@ -21,13 +21,19 @@ from mint.django_rest.rbuilder.manager.basemanager import exposed
 from mint.django_rest.rbuilder.platforms import models as platform_models
 from mint.django_rest.rbuilder.projects import models
 from mint.django_rest.rbuilder.images import models as imagesmodels
+# from mint.django_rest.rbuilder.jobs import models as jobsmodels
 
 from conary import conarycfg
 from conary import conaryclient
 from conary.repository import errors as repoerrors
 from rpath_proddef import api1 as proddef
+from rpath_job import api1 as rpath_job
 
 log = logging.getLogger(__name__)
+
+
+class ProductJobStore(rpath_job.JobStore):
+    _storageSubdir = 'product-load-jobs'
 
 
 class ProjectManager(basemanager.BaseManager):
@@ -546,6 +552,24 @@ class ProjectManager(basemanager.BaseManager):
     def createProjectBranchStageImage(self, image):
         image.save()
         return image
+
+    # FINISH: commented out until there are tests for this
+    # @exposed
+    # def updateProjectBranchStage(self, project_short_name, project_branch_label, stage_name, stage):
+    #     stage.save()
+    #     # project = stage.project
+    #     fqdn = stage.project.repository_hostname
+    #     version = stage.project_branch
+    #     client = self.restDb.productMgr.reposMgr.getConaryClient()
+    #     # this way doesn't seem to work inside the test suite -- prolly
+    #     # failure to correctly mock the prodDef.
+    #     pd = self.getProductVersionDefinitionByProjectVersion(version)
+    #     
+    #     # er is version or version.name supposed to be passed in...
+    #     # works either way
+    #     rpath_job.BackgroundRunner(self.restDb.productMgr._promoteGroup)(
+    #             client, pd, job, fqdn, version, stage_name, stage)
+    #     return stage
 
 """    
     @exposed
