@@ -106,8 +106,9 @@ class Image(modellib.XObjIdModel):
             
         if self.trove_version is not None:
             tv_obj = helperfuncs.parseVersion(self.trove_version)
-            self.trailing_version = str(tv_obj.trailingRevision())
-            
+            if tv_obj is not None:
+                self.trailing_version = str(tv_obj.trailingRevision())
+
         if self.release is not None:
             self.released = True
         else:

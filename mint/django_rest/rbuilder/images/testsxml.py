@@ -1,10 +1,12 @@
 images_get_xml = """
 <?xml version='1.0' encoding='UTF-8'?>
 <images count="3" next_page="" num_pages="1" previous_page="" full_collection="" end_index="2" limit="10" order_by="" per_page="10" filter_by="" start_index="0">
-  <image>
+  <image  id="http://testserver/api/v1/images/1">
+    <architecture>x86</architecture>
+    <trailing_version>1-0-1</trailing_version>
+    <trove_flavor>1#x86:i486:i586:i686|5#use:~!xen</trove_flavor>
     <trove_last_changed></trove_last_changed>
     <updated_by id="http://testserver/api/v1/users/2002"/>
-    <trove_flavor>is: x86</trove_flavor>
     <created_by id="http://testserver/api/v1/users/2001"/>
     <systems/>
     <status_message></status_message>
@@ -21,7 +23,7 @@ images_get_xml = """
     <build_type>10</build_type>
     <time_updated></time_updated>
     <name>image-0</name>
-    <trove_version>foo@test:1/1-0-1</trove_version>
+    <trove_version>/cydonia.eng.rpath.com@rpath:cydonia-1-devel/1317221453.365:1-0-1</trove_version>
     <project id="http://testserver/api/v1/projects/foo0">
       <domain_name>eng.rpath.com</domain_name>
       <short_name>foo0</short_name>
@@ -29,12 +31,15 @@ images_get_xml = """
     </project>
     <output_trove></output_trove>
     <release/>
+    <released>True</released>
     <job_uuid>1</job_uuid>
   </image>
-  <image>
+  <image id="http://testserver/api/v1/images/2">
+    <architecture>x86</architecture>
+    <trailing_version>1-1-1</trailing_version>
+    <trove_flavor>1#x86:i486:i586:i686|5#use:~!xen</trove_flavor>
     <trove_last_changed></trove_last_changed>
     <updated_by id="http://testserver/api/v1/users/2002"/>
-    <trove_flavor>is: x86</trove_flavor>
     <created_by id="http://testserver/api/v1/users/2001"/>
     <systems/>
     <status_message></status_message>
@@ -51,7 +56,7 @@ images_get_xml = """
     <build_type>10</build_type>
     <time_updated></time_updated>
     <name>image-1</name>
-    <trove_version>foo@test:1/1-1-1</trove_version>
+    <trove_version>/cydonia.eng.rpath.com@rpath:cydonia-1-devel/1317221453.365:1-1-1</trove_version>
     <project id="http://testserver/api/v1/projects/foo1">
       <domain_name>eng.rpath.com</domain_name>
       <short_name>foo1</short_name>
@@ -59,12 +64,15 @@ images_get_xml = """
     </project>
     <output_trove></output_trove>
     <release/>
+    <released>True</released>
     <job_uuid>1</job_uuid>
   </image>
-  <image>
+  <image id="http://testserver/api/v1/images/3">
+    <architecture>x86</architecture>
+    <trailing_version>1-2-1</trailing_version>
+    <trove_flavor>1#x86:i486:i586:i686|5#use:~!xen</trove_flavor>
     <trove_last_changed></trove_last_changed>
     <updated_by id="http://testserver/api/v1/users/2002"/>
-    <trove_flavor>is: x86</trove_flavor>
     <created_by id="http://testserver/api/v1/users/2001"/>
     <systems/>
     <status_message></status_message>
@@ -81,7 +89,7 @@ images_get_xml = """
     <build_type>10</build_type>
     <time_updated></time_updated>
     <name>image-2</name>
-    <trove_version>foo@test:1/1-2-1</trove_version>
+    <trove_version>/cydonia.eng.rpath.com@rpath:cydonia-1-devel/1317221453.365:1-2-1</trove_version>
     <project id="http://testserver/api/v1/projects/foo2">
       <domain_name>eng.rpath.com</domain_name>
       <short_name>foo2</short_name>
@@ -89,6 +97,7 @@ images_get_xml = """
     </project>
     <output_trove></output_trove>
     <release/>
+    <released>True</released>
     <job_uuid>1</job_uuid>
   </image>
 </images>

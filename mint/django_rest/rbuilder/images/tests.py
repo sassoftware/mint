@@ -54,8 +54,8 @@ class ImagesTestCase(XMLTestCase):
             # images
             image = models.Image(
                 project=proj, release=release, build_type=10, job_uuid='1',
-                name="image-%s" % i, trove_name='troveName%s' % i, trove_version='foo@test:1/1-%d-1' % i,
-                trove_flavor='is: x86', created_by=user1, updated_by=user2, build_count=1,
+                name="image-%s" % i, trove_name='troveName%s' % i, trove_version='/cydonia.eng.rpath.com@rpath:cydonia-1-devel/1317221453.365:1-%d-1' % i,
+                trove_flavor='1#x86:i486:i586:i686|5#use:~!xen', created_by=user1, updated_by=user2, build_count=1,
                 output_trove=None, project_branch=branch, stage_name='stage%s' % i,
                 description="image-%s" % i)
             image.save()
