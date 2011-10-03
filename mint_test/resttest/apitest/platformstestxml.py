@@ -576,7 +576,6 @@ platformImageDefXml = """\
     <container id="http://localhost:8000/api/platforms/1/imagesTypeDefinitions/3580ab1481bf29998e62cb8111a6833a/containers/xenOvaImage">
       <name>xenOvaImage</name>
       <displayName>Citrix(R) XenServer(TM) Appliance</displayName>
-      <options autoResolve="true" baseFileName="" freespace="1024" installLabelPath="" swapSize="512" vmMemory="256"/>
     </container>
     <architecture id="http://localhost:8000/api/platforms/1/imagesTypeDefinitions/3580ab1481bf29998e62cb8111a6833a/architectures/x86">
       <name>x86</name>
@@ -586,6 +585,7 @@ platformImageDefXml = """\
       <name>xen</name>
       <displayName>Xen DomU</displayName>
     </flavorSet>
+    <options autoResolve="true" baseFileName="" freespace="1024" installLabelPath="" swapSize="512" vmMemory="256"/>
   </imageTypeDefinition>
   <imageTypeDefinition id="http://localhost:8000/api/platforms/1/imageTypeDefinitions/76374bd15c72d81d733ddc309d4a5b86">
     <name>Citrix XenServer 64-bit</name>
@@ -593,7 +593,6 @@ platformImageDefXml = """\
     <container id="http://localhost:8000/api/platforms/1/imagesTypeDefinitions/76374bd15c72d81d733ddc309d4a5b86/containers/xenOvaImage">
       <name>xenOvaImage</name>
       <displayName>Citrix(R) XenServer(TM) Appliance</displayName>
-      <options autoResolve="true" baseFileName="" freespace="1024" installLabelPath="" swapSize="512" vmMemory="256"/>
     </container>
     <architecture id="http://localhost:8000/api/platforms/1/imagesTypeDefinitions/76374bd15c72d81d733ddc309d4a5b86/architectures/x86_64">
       <name>x86_64</name>
@@ -603,6 +602,7 @@ platformImageDefXml = """\
       <name>xen</name>
       <displayName>Xen DomU</displayName>
     </flavorSet>
+    <options autoResolve="true" baseFileName="" freespace="1024" installLabelPath="" swapSize="512" vmMemory="256"/>
   </imageTypeDefinition>
   <imageTypeDefinition id="http://localhost:8000/api/platforms/1/imageTypeDefinitions/724a58650a441a12a0103e8961c4f4fd">
     <name>VMware ESX 32-bit</name>
@@ -610,7 +610,6 @@ platformImageDefXml = """\
     <container id="http://localhost:8000/api/platforms/1/imagesTypeDefinitions/724a58650a441a12a0103e8961c4f4fd/containers/vmwareEsxImage">
       <name>vmwareEsxImage</name>
       <displayName>VMware(R) ESX(R) Server Virtual Appliance</displayName>
-      <options autoResolve="true" baseFileName="" freespace="1024" installLabelPath="" natNetworking="true" swapSize="512" vmMemory="256" vmSnapshots="true"/>
     </container>
     <architecture id="http://localhost:8000/api/platforms/1/imagesTypeDefinitions/724a58650a441a12a0103e8961c4f4fd/architectures/x86">
       <name>x86</name>
@@ -620,6 +619,7 @@ platformImageDefXml = """\
       <name>vmware</name>
       <displayName>VMware</displayName>
     </flavorSet>
+    <options autoResolve="true" baseFileName="" freespace="1024" installLabelPath="" natNetworking="true" swapSize="512" vmMemory="256" vmSnapshots="true"/>
   </imageTypeDefinition>
   <imageTypeDefinition id="http://localhost:8000/api/platforms/1/imageTypeDefinitions/b2cbbc10ed9cc9f756cab7f7d8685708">
     <name>VMware ESX 64-bit</name>
@@ -627,7 +627,6 @@ platformImageDefXml = """\
     <container id="http://localhost:8000/api/platforms/1/imagesTypeDefinitions/b2cbbc10ed9cc9f756cab7f7d8685708/containers/vmwareEsxImage">
       <name>vmwareEsxImage</name>
       <displayName>VMware(R) ESX(R) Server Virtual Appliance</displayName>
-      <options autoResolve="true" baseFileName="" freespace="1024" installLabelPath="" natNetworking="true" swapSize="512" vmMemory="256" vmSnapshots="true"/>
     </container>
     <architecture id="http://localhost:8000/api/platforms/1/imagesTypeDefinitions/b2cbbc10ed9cc9f756cab7f7d8685708/architectures/x86_64">
       <name>x86_64</name>
@@ -637,6 +636,7 @@ platformImageDefXml = """\
       <name>vmware</name>
       <displayName>VMware</displayName>
     </flavorSet>
+    <options autoResolve="true" baseFileName="" freespace="1024" installLabelPath="" natNetworking="true" swapSize="512" vmMemory="256" vmSnapshots="true"/>
   </imageTypeDefinition>
 </imageTypeDefinitions>
 """
