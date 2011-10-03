@@ -188,7 +188,6 @@ class Release(modellib.XObjModel):
 
     _xobj = xobj.XObjMetadata(
         tag='releases')
-    view_name = "ProjectRelease"
 
     release_id = models.AutoField(primary_key=True,
         db_column='pubreleaseid')
