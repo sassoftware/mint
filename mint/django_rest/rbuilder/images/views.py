@@ -78,20 +78,51 @@ class ImageBuildFileService(service.BaseService):
             return self.mgr.getImageBuildFiles(image_id)
             
     @access.admin
-    @requires('build_file')
+    @requires('image_file')
     @return_xml
-    def rest_POST(self, request, image_id, build_file):
-        build_file.save()
-        return build_file
+    def rest_POST(self, request, image_id, image_file):
+        image_file.save()
+        return image_file
 
     @access.admin
-    @requires('build_file')
+    @requires('image_file')
     @return_xml
-    def rest_PUT(self, request, image_id, file_id, build_file):
-        build_file.save()
-        return build_file  
+    def rest_PUT(self, request, image_id, file_id, image_file):
+        image_file.save()
+        return image_file  
         
     @access.admin
     def rest_DELETE(self, request, image_id, file_id):
         models.BuildFile.objects.get(pk=file_id).delete()
+        return HttpResponse(status=204)
+        
+        
+class ReleaseService(service.BaseService):
+    @access.admin
+    @return_xml
+    def rest_GET(self, request, release_id=None):
+        return self.get(release_id)
+        
+    def get(self, release_id):
+        if release_id:
+            return self.mgr.getReleaseById(release_id)
+        else:
+            return self.mgr.getReleases()
+            
+    @access.admin
+    @requires('release')
+    @return_xml
+    def rest_POST(self, request, release):
+        return self.mgr.createRelease(release)
+        
+    @access.admin
+    @requires('release')
+    @return_xml
+    def rest_PUT(self, request, release_id, release):
+        return self.mgr.updateRelease(release_id, release)
+        
+    @access.admin
+    def rest_DELETE(self, request, release_id):
+        release = models.Release.objects.get(pk=release_id)
+        release.delete()
         return HttpResponse(status=204)
