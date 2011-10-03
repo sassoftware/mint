@@ -375,3 +375,127 @@ build_file_put_xml = \
   <size>0</size>
 </image_file>
 """.strip()
+
+release_get_xml = \
+"""
+<?xml version='1.0' encoding='UTF-8'?>
+<release id="http://testserver/api/v1/releases/1">
+  <release_id>1</release_id>
+  <name>release0</name>
+  <description>description0</description>
+  <time_created></time_created>
+  <project id="http://testserver/api/v1/projects/foo0">
+    <domain_name>eng.rpath.com</domain_name>
+    <short_name>foo0</short_name>
+    <name>foo0</name>
+  </project>
+  <published_by id="http://testserver/api/v1/users/2002"/>
+  <time_updated></time_updated>
+  <created_by id="http://testserver/api/v1/users/2001"/>
+  <version>releaseVersion0</version>
+  <should_mirror>0</should_mirror>
+  <time_mirrored></time_mirrored>
+  <time_published></time_published>
+  <updated_by id="http://testserver/api/v1/users/2002"/>
+</release>
+""".strip()
+
+
+release_post_xml = \
+"""
+<release>
+  <name>release100</name>
+  <description>description100</description>
+  <project id="http://testserver/api/v1/projects/foo0">
+    <domain_name>eng.rpath.com</domain_name>
+    <short_name>foo0</short_name>
+    <name>foo0</name>
+  </project>
+  <published_by id="http://testserver/api/v1/users/2002"/>
+  <time_updated></time_updated>
+  <created_by id="http://testserver/api/v1/users/2001"/>
+  <version>releaseVersion100</version>
+  <should_mirror>0</should_mirror>
+  <updated_by id="http://testserver/api/v1/users/2002"/>
+</release>
+""".strip()
+
+releases_get_xml = \
+"""
+<?xml version='1.0' encoding='UTF-8'?>
+<releases count="3" next_page="" num_pages="1" previous_page="" full_collection="http://testserver/api/v1/releases" end_index="2" limit="10" order_by="" per_page="10" filter_by="" id="http://testserver/api/v1/releases;start_index=0;limit=10" start_index="0">
+  <release id="http://testserver/api/v1/releases/1">
+    <release_id>1</release_id>
+    <name>release0</name>
+    <description>description0</description>
+    <time_created></time_created>
+    <project id="http://testserver/api/v1/projects/foo0">
+      <domain_name>eng.rpath.com</domain_name>
+      <short_name>foo0</short_name>
+      <name>foo0</name>
+    </project>
+    <published_by id="http://testserver/api/v1/users/2002"/>
+    <time_updated></time_updated>
+    <created_by id="http://testserver/api/v1/users/2001"/>
+    <version>releaseVersion0</version>
+    <should_mirror>0</should_mirror>
+    <time_mirrored></time_mirrored>
+    <time_published></time_published>
+    <updated_by id="http://testserver/api/v1/users/2002"/>
+  </release>
+  <release id="http://testserver/api/v1/releases/2">
+    <release_id>2</release_id>
+    <name>release1</name>
+    <description>description1</description>
+    <time_created></time_created>
+    <project id="http://testserver/api/v1/projects/foo1">
+      <domain_name>eng.rpath.com</domain_name>
+      <short_name>foo1</short_name>
+      <name>foo1</name>
+    </project>
+    <published_by id="http://testserver/api/v1/users/2002"/>
+    <time_updated></time_updated>
+    <created_by id="http://testserver/api/v1/users/2001"/>
+    <version>releaseVersion1</version>
+    <should_mirror>0</should_mirror>
+    <time_mirrored></time_mirrored>
+    <time_published></time_published>
+    <updated_by id="http://testserver/api/v1/users/2002"/>
+  </release>
+  <release id="http://testserver/api/v1/releases/3">
+    <release_id>3</release_id>
+    <name>release2</name>
+    <description>description2</description>
+    <time_created></time_created>
+    <project id="http://testserver/api/v1/projects/foo2">
+      <domain_name>eng.rpath.com</domain_name>
+      <short_name>foo2</short_name>
+      <name>foo2</name>
+    </project>
+    <published_by id="http://testserver/api/v1/users/2002"/>
+    <time_updated></time_updated>
+    <created_by id="http://testserver/api/v1/users/2001"/>
+    <version>releaseVersion2</version>
+    <should_mirror>0</should_mirror>
+    <time_mirrored></time_mirrored>
+    <time_published></time_published>
+    <updated_by id="http://testserver/api/v1/users/2002"/>
+  </release>
+</releases>
+""".strip()
+
+release_put_xml = \
+"""
+<release id="http://testserver/api/v1/releases/1">
+  <release_id>1</release_id>
+  <name>release100</name>
+  <description>description100</description>
+  <project id="http://testserver/api/v1/projects/foo0">
+    <domain_name>eng.rpath.com</domain_name>
+    <short_name>foo0</short_name>
+    <name>foo0</name>
+  </project>
+  <version>releaseVersion100</version>
+  <should_mirror>0</should_mirror>
+</release>
+""".strip()

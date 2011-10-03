@@ -182,12 +182,13 @@ class Releases(modellib.Collection):
     _xobj = xobj.XObjMetadata(tag='releases')        
 
 
-class Release(modellib.XObjModel):
+class Release(modellib.XObjIdModel):
     class Meta:
         db_table = u'publishedreleases'
 
     _xobj = xobj.XObjMetadata(
-        tag='releases')
+        tag='release')
+    _xobj_hidden_accessors = set(['image_set'])
 
     release_id = models.AutoField(primary_key=True,
         db_column='pubreleaseid')

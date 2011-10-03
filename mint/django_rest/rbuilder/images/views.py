@@ -104,10 +104,10 @@ class ReleaseService(service.BaseService):
         return self.get(release_id)
         
     def get(self, release_id):
-        if not release_id:
-            return self.mgr.getReleases()
-        else:
+        if release_id:
             return self.mgr.getReleaseById(release_id)
+        else:
+            return self.mgr.getReleases()
             
     @access.admin
     @requires('release')
