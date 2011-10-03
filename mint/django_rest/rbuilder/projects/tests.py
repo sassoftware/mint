@@ -17,6 +17,7 @@ from xobj import xobj
 from mint.django_rest.rbuilder.rbac.tests import RbacEngine
 from testutils import mock
 from mint.django_rest.rbuilder.images import models as imagesmodels
+from mint import helperfuncs
 
 class ProjectsTestCase(RbacEngine):
     fixtures = ["projects", "project_image_fixtures"]
@@ -33,6 +34,15 @@ class ProjectsTestCase(RbacEngine):
         mock.mock(manager.ProjectManager, "setProductVersionDefinition")
         self.mgr = rbuildermanager.RbuilderManager()
         self.mintConfig = self.mgr.cfg
+        
+    def _mockProdDef(self, projectVersion):
+        project = projectVersion.project
+        prodDef = helperfuncs.sanitizeProductDefinition(project.name,
+                        project.description, project.hostname, project.domain_name, 
+                        project.short_name, projectVersion.name,
+                        '', project.namespace)
+        basemanager.BaseRbuilderManager.restDb.getProductVersionDefinitionFromVersion._mock.setDefaultReturn(prodDef)
+        return prodDef
         
     def _addProject(self, short_name, namespace='ns'):
         project = models.Project()
@@ -428,7 +438,6 @@ class ProjectsTestCase(RbacEngine):
         image = imagesmodels.Image(name="image-1", description="image-1",
             project=prj, build_type=10)
         image.save()
-
         response = self._get('projects/%s/images/' % prj.short_name,
                     username='admin', password='password')
         self.assertEquals(response.status_code, 200)
@@ -524,3 +533,13 @@ class ProjectsTestCase(RbacEngine):
         images = images.image
         self.failUnlessEqual([ x.name for x in images ],
             ['image from fixture', 'image-1', 'image-2', ])
+
+    # def testUpdateProjectBranchStage(self):
+    #     self._initProject()
+    #     url = 'projects/chater-foo/project_branches/chater-foo.eng.rpath.com@rpath:chater-foo-trunk/project_branch_stages/Stage'
+    #     response = self._put(url,
+    #         username='admin', password='password', data=testsxml.project_branch_stage_put_xml)
+    #     import pdb; pdb.set_trace()
+    #     self.assertEquals(response.status_code, 200)
+    #     stage = xobj.parse(response.content).project_branch_stage
+    #     self.assertEquals(stage.name, 'NewStage')

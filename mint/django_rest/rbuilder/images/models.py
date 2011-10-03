@@ -40,7 +40,7 @@ class Images(modellib.Collection):
 class Image(modellib.XObjIdModel):
     class Meta:
         db_table = u'builds'
-        
+
     _xobj_hidden_accessors = set(['buildfile_set', 'builddata_set'])
 
     def __unicode__(self):
@@ -92,12 +92,7 @@ class Image(modellib.XObjIdModel):
     trailing_version = modellib.SyntheticField()
     released = modellib.SyntheticField()
     #actions = modellib.SyntheticField()
-    
-    # def get_absolute_url(self, request, *args, **kwargs):
-    #     if not self.image_id:
-    #         return None
-    #     return '/api/v1/images/%s' % self.image_id
-
+        
     def computeSyntheticFields(self, sender, **kwargs):
         self._computeMetadata()
         

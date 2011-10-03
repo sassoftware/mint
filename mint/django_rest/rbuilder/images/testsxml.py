@@ -105,10 +105,13 @@ images_get_xml = """
 
 image_get_xml = """
 <?xml version='1.0' encoding='UTF-8'?>
-<image>
+<image id="http://testserver/api/v1/images/1">
+  <architecture>x86</architecture>
+  <released>True</released>
+  <trailing_version>1-0-1</trailing_version>
   <trove_last_changed></trove_last_changed>
   <updated_by id="http://testserver/api/v1/users/2002"/>
-  <trove_flavor>is: x86</trove_flavor>
+  <trove_flavor>1#x86:i486:i586:i686|5#use:~!xen</trove_flavor>
   <created_by id="http://testserver/api/v1/users/2001"/>
   <systems/>
   <status_message></status_message>
@@ -125,7 +128,7 @@ image_get_xml = """
   <build_type>10</build_type>
   <time_updated></time_updated>
   <name>image-0</name>
-  <trove_version>foo@test:1/1-0-1</trove_version>
+  <trove_version>/cydonia.eng.rpath.com@rpath:cydonia-1-devel/1317221453.365:1-0-1</trove_version>
   <project id="http://testserver/api/v1/projects/foo0">
     <domain_name>eng.rpath.com</domain_name>
     <short_name>foo0</short_name>
@@ -145,7 +148,7 @@ build_file_get_xml = \
   <idx>0</idx>
   <title></title>
   <file_id>1</file_id>
-  <build/>
+  <build id="http://testserver/api/v1/images/1"/>
   <size>0</size>
 </build_file>
 """.strip()
@@ -262,7 +265,7 @@ build_files_get_xml = \
     <idx>0</idx>
     <title></title>
     <file_id>1</file_id>
-    <build/>
+    <build id="http://testserver/api/v1/images/1"/>
     <size>0</size>
   </build_file>
 </build_files>
@@ -276,7 +279,7 @@ build_file_posted_xml = \
   <idx>0</idx>
   <title>HelloWorld</title>
   <file_id>4</file_id>
-  <build/>
+  <build id="http://testserver/api/v1/images/4"/>
   <size>0</size>
 </build_file>
 """.strip()
