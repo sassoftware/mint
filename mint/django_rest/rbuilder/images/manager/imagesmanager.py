@@ -35,7 +35,7 @@ class ImagesManager(basemanager.BaseManager):
     def createImageBuild(self, image):
         outputToken = sha1helper.sha1ToString(file('/dev/urandom').read(20))
         buildData = [('outputToken', outputToken, datatypes.RDT_STRING)]
-        buildType = image.build_type
+        buildType = image.image_type
         buildName = image.name
         if image.trove_version is None:
             image.trove_version = versions.VersionFromString(
@@ -117,7 +117,7 @@ class ImagesManager(basemanager.BaseManager):
     def getImageBuildFiles(self, image_id):
         BuildFiles = models.BuildFiles()
         build_files = models.BuildFile.objects.filter(image=image_id)
-        BuildFiles.build_file = build_files
+        BuildFiles.image_file = build_files
         return BuildFiles
     
     @exposed
@@ -138,3 +138,23 @@ class ImagesManager(basemanager.BaseManager):
             models.Image(id=2, name='placeholder')
         ]
         return images
+        
+    @exposed
+    def getReleases(self):
+        Releases = models.Releases()
+        Releases.release = models.Release.objects.all()
+        return Releases
+        
+    @exposed
+    def getReleaseById(self, release_id):
+        return models.Release.objects.get(pk=release_id)
+        
+    @exposed
+    def createRelease(self, release):
+        release.save()
+        return release
+        
+    @exposed
+    def updateRelease(self, release_id, release):
+        release.save()
+        return release

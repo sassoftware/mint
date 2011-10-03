@@ -56,7 +56,7 @@ class Image(modellib.XObjIdModel):
         related_name="images", view_name="ProjectBranchStageImages", null=True))
     release = models.ForeignKey('Release', null=True,
         db_column='pubreleaseid')
-    build_type = models.IntegerField(db_column="buildtype")
+    image_type = models.IntegerField(db_column="buildtype")
     job_uuid = models.CharField(max_length=64, null=True)
     name = models.CharField(max_length=255, null=True)
     description = models.TextField(null=True)
@@ -77,7 +77,7 @@ class Image(modellib.XObjIdModel):
         null=True, db_column='timeupdated')
     updated_by = modellib.ForeignKey('users.User', db_column='updatedby',
         related_name='updated_images', null=True)
-    build_count = models.IntegerField(null=True, default=0,
+    image_count = models.IntegerField(null=True, default=0,
         db_column="buildcount")
     project_branch = models.ForeignKey('projects.ProjectVersion', null=True,
         related_name="images",
@@ -220,19 +220,19 @@ class BuildFiles(modellib.Collection):
     class Meta:
         abstract = True
         
-    _xobj = xobj.XObjMetadata(tag='build_files')
-    list_fields = ['build_file']
+    _xobj = xobj.XObjMetadata(tag='image_files')
+    list_fields = ['image_file']
     
     
 class BuildFile(modellib.XObjIdModel):
     class Meta:
         db_table = 'buildfiles'
     
-    _xobj = xobj.XObjMetadata(tag='build_file')
+    _xobj = xobj.XObjMetadata(tag='image_file')
     
     
     file_id = models.AutoField(primary_key=True, db_column='fileid')
-    image = models.ForeignKey('Image', null=False, db_column='buildid', related_name='builds')
+    image = models.ForeignKey('Image', null=False, db_column='buildid', related_name='image_files')
     idx = models.IntegerField(null=False, default=0)
     title = models.CharField(max_length=255, null=False, default='')
     size = models.IntegerField()
