@@ -41,7 +41,7 @@ class Image(modellib.XObjIdModel):
     class Meta:
         db_table = u'builds'
 
-    _xobj_hidden_accessors = set(['buildfile_set', 'builddata_set'])
+    _xobj_hidden_accessors = set(['builddata_set'])
 
     def __unicode__(self):
         return self.name
