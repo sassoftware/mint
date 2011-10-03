@@ -60,7 +60,9 @@ class ImagesTestCase(XMLTestCase):
                 description="image-%s" % i)
             image.save()
             # now buildfiles
-            buildFile = models.BuildFile(build=image, size=i, sha1='%s' % i)
+            buildFile = models.BuildFile(image=image, size=i, sha1='%s' % i)
+            buildFile.save()
+            buildFile = models.BuildFile(image=image, size=i+1, sha1='%s' % (i + 1))
             buildFile.save()
         
 
@@ -113,7 +115,7 @@ class ImagesTestCase(XMLTestCase):
         
     def testGetImageBuildFile(self):
         buildFile = models.BuildFile.objects.get(pk=1)
-        response = self._get('images/%s/build_files/%s/' % (buildFile.build_id, buildFile.pk),
+        response = self._get('images/%s/build_files/%s/' % (buildFile.image_id, buildFile.pk),
             username='admin', password='password')
         self.assertEquals(response.status_code, 200)
         self.assertXMLEquals(response.content, testsxml.build_file_get_xml)
