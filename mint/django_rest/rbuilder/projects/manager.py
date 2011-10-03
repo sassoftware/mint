@@ -21,7 +21,7 @@ from mint.django_rest.rbuilder.manager.basemanager import exposed
 from mint.django_rest.rbuilder.platforms import models as platform_models
 from mint.django_rest.rbuilder.projects import models
 from mint.django_rest.rbuilder.images import models as imagesmodels
-from mint.django_rest.rbuilder.jobs import models as jobsmodels
+# from mint.django_rest.rbuilder.jobs import models as jobsmodels
 
 from conary import conarycfg
 from conary import conaryclient
@@ -553,22 +553,23 @@ class ProjectManager(basemanager.BaseManager):
         image.save()
         return image
 
-    @exposed
-    def updateProjectBranchStage(self, project_short_name, project_branch_label, stage_name, stage):
-        stage.save()
-        project = stage.project
-        fqdn = stage.project.repository_hostname
-        version = stage.project_branch
-        client = self.restDb.productMgr.reposMgr.getConaryClient()
-        # this way doesn't seem to work inside the test suite -- prolly
-        # failure to correctly mock the prodDef.
-        pd = self.getProductVersionDefinitionByProjectVersion(version)
-        
-        # er is version or version.name supposed to be passed in...
-        # works either way
-        rpath_job.BackgroundRunner(self.restDb.productMgr._promoteGroup)(
-                client, pd, job, fqdn, version, stage_name, stage)
-        return stage
+    # FINISH: commented out until there are tests for this
+    # @exposed
+    # def updateProjectBranchStage(self, project_short_name, project_branch_label, stage_name, stage):
+    #     stage.save()
+    #     # project = stage.project
+    #     fqdn = stage.project.repository_hostname
+    #     version = stage.project_branch
+    #     client = self.restDb.productMgr.reposMgr.getConaryClient()
+    #     # this way doesn't seem to work inside the test suite -- prolly
+    #     # failure to correctly mock the prodDef.
+    #     pd = self.getProductVersionDefinitionByProjectVersion(version)
+    #     
+    #     # er is version or version.name supposed to be passed in...
+    #     # works either way
+    #     rpath_job.BackgroundRunner(self.restDb.productMgr._promoteGroup)(
+    #             client, pd, job, fqdn, version, stage_name, stage)
+    #     return stage
 
 """    
     @exposed

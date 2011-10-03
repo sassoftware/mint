@@ -533,13 +533,3 @@ class ProjectsTestCase(RbacEngine):
         images = images.image
         self.failUnlessEqual([ x.name for x in images ],
             ['image from fixture', 'image-1', 'image-2', ])
-
-    # def testUpdateProjectBranchStage(self):
-    #     self._initProject()
-    #     url = 'projects/chater-foo/project_branches/chater-foo.eng.rpath.com@rpath:chater-foo-trunk/project_branch_stages/Stage'
-    #     response = self._put(url,
-    #         username='admin', password='password', data=testsxml.project_branch_stage_put_xml)
-    #     import pdb; pdb.set_trace()
-    #     self.assertEquals(response.status_code, 200)
-    #     stage = xobj.parse(response.content).project_branch_stage
-    #     self.assertEquals(stage.name, 'NewStage')
