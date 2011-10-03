@@ -64,8 +64,8 @@ class BuildDefinitionMixIn(object):
                     id = ctemplRef,
                     name = ctemplRef,
                     displayName = displayName,
-                    options = imageParams,
                     **extraParams)
+                kw.update(options=imageParams)
                 # XXX we need to add the rest of the fields here too
 
             # url to image definition descriptor (will be served from Django)

@@ -23,7 +23,7 @@ XML="""<createApplianceDescriptor xmlns:xsi="http://www.w3.org/2001/XMLSchema-in
             <default></default>
         </field>
         <field>
-            <name>container.options.baseFileName</name>
+            <name>options.baseFileName</name>
             <help lang="en_US">@Help_image_filename@</help>
             <required>false</required>
             <descriptions>
@@ -36,7 +36,7 @@ XML="""<createApplianceDescriptor xmlns:xsi="http://www.w3.org/2001/XMLSchema-in
             <default></default>
         </field>
         <field>
-            <name>container.options.installLabelPath</name>
+            <name>options.installLabelPath</name>
             <help lang="en_US">@Help_conary_installlabelpath@</help>
             <required>false</required>
             <descriptions>
@@ -50,7 +50,7 @@ XML="""<createApplianceDescriptor xmlns:xsi="http://www.w3.org/2001/XMLSchema-in
         </field>
 
         <field>
-            <name>container.options.freespace</name>
+            <name>options.freespace</name>
             <help lang="en_US">@Help_image_freespace@</help>
             <required>false</required>
             <descriptions>
@@ -65,7 +65,7 @@ XML="""<createApplianceDescriptor xmlns:xsi="http://www.w3.org/2001/XMLSchema-in
 
 
         <field>
-            <name>container.options.swapSize</name>
+            <name>options.swapSize</name>
             <help lang="en_US">@Help_image_swapspace@</help>
             <required>false</required>
             <descriptions>
@@ -79,7 +79,7 @@ XML="""<createApplianceDescriptor xmlns:xsi="http://www.w3.org/2001/XMLSchema-in
         </field>
 
         <field>
-            <name>container.options.vmMemory</name>
+            <name>options.vmMemory</name>
             <help lang="en_US">@Help_image_ram@</help>
             <required>false</required>
             <descriptions>
@@ -93,7 +93,7 @@ XML="""<createApplianceDescriptor xmlns:xsi="http://www.w3.org/2001/XMLSchema-in
         </field>
                 
         <field>
-            <name>container.options.autoResolve</name>
+            <name>options.autoResolve</name>
             <help lang="en_US">@Help_resolve_dependencies@</help>
             <required>false</required>
             <descriptions>
@@ -107,7 +107,7 @@ XML="""<createApplianceDescriptor xmlns:xsi="http://www.w3.org/2001/XMLSchema-in
         </field>
 
         <field>
-            <name>container.options.natNetworking</name>
+            <name>options.natNetworking</name>
             <help lang="en_US">@Help_image_use_nat@</help>
             <required>false</required>
             <descriptions>
@@ -121,7 +121,7 @@ XML="""<createApplianceDescriptor xmlns:xsi="http://www.w3.org/2001/XMLSchema-in
         </field>
 
         <field>
-            <name>container.options.allowSnapshots</name>
+            <name>options.allowSnapshots</name>
             <help lang="en_US">@Help_allow_snapshots@</help>
             <required>false</required>
             <descriptions>
@@ -136,7 +136,7 @@ XML="""<createApplianceDescriptor xmlns:xsi="http://www.w3.org/2001/XMLSchema-in
         
         
         <field>
-            <name>container.options.diskAdapter</name>
+            <name>options.diskAdapter</name>
             <help lang="en_US">@Help_image_disk_driver@</help>
             <required>true</required>
             <descriptions>
@@ -166,7 +166,7 @@ XML="""<createApplianceDescriptor xmlns:xsi="http://www.w3.org/2001/XMLSchema-in
         </field>   
         
         <field>
-            <name>container.options.buildOVF10</name>
+            <name>options.buildOVF10</name>
             <help lang="en_US">@Help_build_ovf_1_0@</help>
             <required>false</required>
             <descriptions>

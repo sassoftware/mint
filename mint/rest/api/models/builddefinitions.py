@@ -64,7 +64,6 @@ class ContainerFormat(_DisplayField):
     id = fields.AbsoluteUrlField(isAttribute = True)
     name = fields.CharField()
     displayName = fields.CharField()
-    options = fields.ModelField(ImageParams)
 
     def get_absolute_url(self):
         return ('products.versions', self.hostname, self.version,
@@ -87,6 +86,7 @@ class BuildDefinition(_DisplayField):
     container = fields.ModelField(ContainerFormat)
     architecture = fields.ModelField(Architecture)
     flavorSet = fields.ModelField(FlavorSet)
+    options = fields.ModelField(ImageParams)
     descriptor = fields.ModelField(Descriptor)
 
     def get_absolute_url(self):
@@ -105,6 +105,7 @@ class BuildTemplate(_DisplayField):
     container = fields.ModelField(ContainerFormat)
     architecture = fields.ModelField(Architecture)
     flavorSet = fields.ModelField(FlavorSet)
+    options = fields.ModelField(ImageParams)
     descriptor = fields.ModelField(Descriptor)
 
     def get_absolute_url(self):

@@ -557,7 +557,7 @@ class ProductManager(manager.Manager):
         if not buildDef.container or not buildDef.container.id:
             raise errors.InvalidItem("Container missing")
         containerRef = os.path.basename(buildDef.container.id)
-        options = buildDef.container.options
+        options = buildDef.options
         bdentry = (containerRef, architectureRef, flavorSetRef)
         # Find a matching build template
         if prodDef.platform:

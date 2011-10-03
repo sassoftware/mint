@@ -23,7 +23,7 @@ XML="""<createApplianceDescriptor xmlns:xsi="http://www.w3.org/2001/XMLSchema-in
             <default></default>
         </field>
         <field>
-            <name>container.options.baseFileName</name>
+            <name>options.baseFileName</name>
             <help lang="en_US">@Help_image_filename@</help>
             <required>false</required>
             <descriptions>
@@ -36,7 +36,7 @@ XML="""<createApplianceDescriptor xmlns:xsi="http://www.w3.org/2001/XMLSchema-in
             <default></default>
         </field>
         <field>
-            <name>container.options.installLabelPath</name>
+            <name>options.installLabelPath</name>
             <help lang="en_US">@Help_conary_installlabelpath@</help>
             <required>false</required>
             <descriptions>
@@ -50,7 +50,7 @@ XML="""<createApplianceDescriptor xmlns:xsi="http://www.w3.org/2001/XMLSchema-in
         </field>
 
         <field>
-            <name>container.options.freespace</name>
+            <name>options.freespace</name>
             <help lang="en_US">@Help_image_freespace@</help>
             <required>false</required>
             <descriptions>
@@ -63,7 +63,7 @@ XML="""<createApplianceDescriptor xmlns:xsi="http://www.w3.org/2001/XMLSchema-in
             <default>256</default>
         </field>
         <field>
-            <name>container.options.autoResolve</name>
+            <name>options.autoResolve</name>
             <help lang="en_US">@Help_resolve_dependencies@</help>
             <required>false</required>
             <descriptions>
@@ -77,7 +77,7 @@ XML="""<createApplianceDescriptor xmlns:xsi="http://www.w3.org/2001/XMLSchema-in
         </field>
 
         <field>
-            <name>container.options.buildOVF10</name>
+            <name>options.buildOVF10</name>
             <help lang="en_US">@Help_build_ovf_1_0@</help>
             <required>false</required>
             <descriptions>
