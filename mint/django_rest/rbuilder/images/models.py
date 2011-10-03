@@ -232,7 +232,7 @@ class BuildFile(modellib.XObjIdModel):
     
     
     file_id = models.AutoField(primary_key=True, db_column='fileid')
-    build = models.ForeignKey('Image', null=False, db_column='buildid')
+    image = models.ForeignKey('Image', null=False, db_column='buildid', related_name='builds')
     idx = models.IntegerField(null=False, default=0)
     title = models.CharField(max_length=255, null=False, default='')
     size = models.IntegerField()
