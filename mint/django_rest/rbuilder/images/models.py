@@ -8,7 +8,11 @@
 # or may be replaced by target service.  Don't get attached.
 # **THESE ARE CURRENTLY JUST STUBS TO UNBLOCK DEVELOPMENT**
 
+import datetime
+from dateutil import tz
+
 from django.db import models
+from mint import helperfuncs
 from mint.django_rest.deco import D
 from mint.django_rest.rbuilder import modellib
 from xobj import xobj
@@ -84,6 +88,9 @@ class Image(modellib.XObjIdModel):
     status_message = models.TextField(null=True, blank=True, default='',
         db_column="statusmessage")
     metadata = modellib.SyntheticField()
+    architecture = modellib.SyntheticField()
+    trailing_version = modellib.SyntheticField()
+    released = modellib.SyntheticField()
     #actions = modellib.SyntheticField()
     
     # def get_absolute_url(self, request, *args, **kwargs):
@@ -93,6 +100,18 @@ class Image(modellib.XObjIdModel):
 
     def computeSyntheticFields(self, sender, **kwargs):
         self._computeMetadata()
+        
+        if self.trove_flavor is not None:
+            self.architecture = helperfuncs.getArchFromFlavor(str(self.trove_flavor))
+            
+        if self.trove_version is not None:
+            tv_obj = helperfuncs.parseVersion(self.trove_version)
+            self.trailing_version = str(tv_obj.trailingRevision())
+            
+        if self.release is not None:
+            self.released = True
+        else:
+            self.released = False
 
     def _computeMetadata(self):
         if self._rbmgr is None or self.output_trove is None:
@@ -146,6 +165,17 @@ class Image(modellib.XObjIdModel):
                 continue
             metadataDict[name] = str(value)
         return metadataDict
+    
+    def serialize(self, request=None):
+        xobjModel = modellib.XObjIdModel.serialize(self, request)
+        # Convert timestamp fields in the database to our standard UTC format
+        if xobjModel.time_created:
+            xobjModel.time_created = str(datetime.datetime.fromtimestamp(
+                xobjModel.time_created, tz.tzutc()))
+        if xobjModel.time_updated:
+            xobjModel.time_updated = str(datetime.datetime.fromtimestamp(
+                xobjModel.time_updated, tz.tzutc()))
+        return xobjModel
 
 
 class Releases(modellib.Collection):
