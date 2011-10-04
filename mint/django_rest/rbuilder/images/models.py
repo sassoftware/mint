@@ -111,8 +111,8 @@ class Image(modellib.XObjIdModel):
         else:
             self.released = False
             
-        if self.image_files is not None:
-            self.num_image_files = len(self.image_files.all())
+        if self.files is not None:
+            self.num_image_files = len(self.files.all())
         else:
             self.num_image_files = 0;
 
@@ -227,8 +227,8 @@ class BuildFiles(modellib.Collection):
     class Meta:
         abstract = True
         
-    _xobj = xobj.XObjMetadata(tag='image_files')
-    list_fields = ['image_file']
+    _xobj = xobj.XObjMetadata(tag='files')
+    list_fields = ['file']
     
     
 class BuildFile(modellib.XObjIdModel):
@@ -236,10 +236,10 @@ class BuildFile(modellib.XObjIdModel):
         db_table = 'buildfiles'
     
     _xobj_hidden_accessors = set(['buildfilesurlsmap_set'])
-    _xobj = xobj.XObjMetadata(tag='image_file')
+    _xobj = xobj.XObjMetadata(tag='file')
     
     file_id = models.AutoField(primary_key=True, db_column='fileid')
-    image = models.ForeignKey('Image', null=False, db_column='buildid', related_name='image_files')
+    image = models.ForeignKey('Image', null=False, db_column='buildid', related_name='files')
     idx = models.IntegerField(null=False, default=0)
     title = models.CharField(max_length=255, null=False, default='')
     size = models.IntegerField()

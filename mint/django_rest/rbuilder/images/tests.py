@@ -176,12 +176,12 @@ class ImagesTestCase(XMLTestCase):
         response = self._post('images/1/build_files/',
             username='admin', password='password', data=testsxml.build_file_post_xml)
         buildFile = xobj.parse(response.content)
-        file_id = buildFile.image_file.file_id
+        file_id = buildFile.file.file_id
         response = self._put('images/1/build_files/%s' % file_id,
             username='admin', password='password', data=testsxml.build_file_put_xml)
         buildFileUpdated = xobj.parse(response.content)
         self.assertEquals(response.status_code, 200)
-        self.assertEquals(buildFileUpdated.image_file.title, 'newtitle')
+        self.assertEquals(buildFileUpdated.file.title, 'newtitle')
         
     def testDeleteImageBuildFile(self):
         response = self._delete('images/1/build_files/1', username='admin', password='password')
