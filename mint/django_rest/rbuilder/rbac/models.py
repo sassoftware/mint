@@ -68,7 +68,8 @@ class RbacRole(modellib.XObjIdModel):
         attributes = {'id':str},
     )
 
-    summary_view = [ "name", "description", "created_by", "modified_by" ]
+    # commenting out because these seem to expand the objects in unintended ways
+    # summary_view = [ "name", "description", "created_by", "modified_by" ]
     
     # objects = modellib.RbacRoleManager() # needed because of non-integer PK?
     _xobj_explicit_accessors = set([])
@@ -154,6 +155,7 @@ class RbacPermissionType(modellib.XObjIdModel):
     _xobj = xobj.XObjMetadata(
         tag = 'permission'
     )
+
     summary_view = [ "name", "description" ]
 
     permission_id = D(models.AutoField(primary_key=True, db_column='permission_type_id'),
@@ -177,7 +179,6 @@ class RbacPermission(modellib.XObjIdModel):
         tag = 'grant'
     )
     _xobj_explicit_accessors = set([])
-    summary_view = [ 'created_by', 'modified_by' ]
 
     grant_id = D(models.AutoField(primary_key=True, db_column='permission_id'),
         "the database ID for the permission")
