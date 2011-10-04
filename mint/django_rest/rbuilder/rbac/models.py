@@ -68,7 +68,7 @@ class RbacRole(modellib.XObjIdModel):
         attributes = {'id':str},
     )
 
-    summary_view = [ "name", "description" ]
+    summary_view = [ "name", "description", "created_by", "modified_by" ]
     
     # objects = modellib.RbacRoleManager() # needed because of non-integer PK?
     _xobj_explicit_accessors = set([])
