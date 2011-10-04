@@ -29,20 +29,12 @@ class ProjectsTestCase(RbacEngine):
         mock.mock(reposmanager.ReposManager, "generateConaryrcFile")
         MockProdDef = mock.MockObject()
         MockProdDef.getImageGroup._mock.setReturn("group-foo-appliance")
+        MockProdDef.loadFromRepository._mock.setReturn(MockProdDef)
         mock.mock(basemanager.BaseRbuilderManager, "restDb")
         basemanager.BaseRbuilderManager.restDb.getProductVersionDefinitionFromVersion._mock.setDefaultReturn(MockProdDef)
         mock.mock(manager.ProjectManager, "setProductVersionDefinition")
         self.mgr = rbuildermanager.RbuilderManager()
         self.mintConfig = self.mgr.cfg
-        
-    def _mockProdDef(self, projectVersion):
-        project = projectVersion.project
-        prodDef = helperfuncs.sanitizeProductDefinition(project.name,
-                        project.description, project.hostname, project.domain_name, 
-                        project.short_name, projectVersion.name,
-                        '', project.namespace)
-        basemanager.BaseRbuilderManager.restDb.getProductVersionDefinitionFromVersion._mock.setDefaultReturn(prodDef)
-        return prodDef
         
     def _addProject(self, short_name, namespace='ns'):
         project = models.Project()
@@ -472,6 +464,14 @@ class ProjectsTestCase(RbacEngine):
         self.assertEquals(response.status_code, 200)
         stgs = xobj.parse(response.content)
         self.assertXMLEquals(stgs.toxml(), testsxml.project_branch_stages_xml)
+
+    # def testUpdateProjectBranchStage(self):
+    #     url = 'projects/chater-foo/project_branches/chater-foo.eng.rpath.com@rpath:chater-foo-trunk/project_branch_stages/Stage'
+    #     self._initProject()
+    #     projectVersion = models.ProjectVersion.objects.get(label='chater-foo.eng.rpath.com@rpath:chater-foo-trunk')
+    #     response = self._put(url,
+    #         username='admin', password='password', data=testsxml.project_branch_stage_put_xml)
+    #     self.assertEquals(response.status_code, 200)
 
     def testGetProjectBranchStage(self):
         self._initProject()
