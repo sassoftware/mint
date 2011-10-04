@@ -41,7 +41,7 @@ class Image(modellib.XObjIdModel):
     class Meta:
         db_table = u'builds'
 
-    _xobj_hidden_accessors = set(['builddata_set'])
+    _xobj_explicit_accessors = set(['image_files'])
 
     def __unicode__(self):
         return self.name
@@ -55,7 +55,7 @@ class Image(modellib.XObjIdModel):
         modellib.DeferredForeignKey('projects.Stage', db_column='stageid',
         related_name="images", view_name="ProjectBranchStageImages", null=True))
     release = models.ForeignKey('Release', null=True,
-        db_column='pubreleaseid')
+        db_column='pubreleaseid', related_name="images")
     image_type = models.IntegerField(db_column="buildtype")
     job_uuid = models.CharField(max_length=64, null=True)
     name = models.CharField(max_length=255, null=True)
@@ -194,7 +194,7 @@ class Release(modellib.XObjIdModel):
 
     _xobj = xobj.XObjMetadata(
         tag='release')
-    _xobj_hidden_accessors = set(['image_set'])
+    _xobj_explict_accessors = set(["images"])
 
     release_id = models.AutoField(primary_key=True,
         db_column='pubreleaseid')
