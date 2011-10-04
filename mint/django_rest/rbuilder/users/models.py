@@ -68,7 +68,7 @@ class User(modellib.XObjIdModel):
 
     # expand these when traversing as a foreign key relationship
     # Disabling until some decimal serialization issues can be resolved in serialization
-    # summary_view = [ 'user_name', 'full_name' ]
+    summary_view = [ 'user_name', 'full_name' ]
 
     def __unicode__(self):
         return self.user_name
