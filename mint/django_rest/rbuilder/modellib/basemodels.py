@@ -1209,12 +1209,7 @@ class XObjModel(models.Model):
         want to try to serialize it later.
         """
         syntheticFields = getattr(self._meta, 'synthetic_fields', {})
-        summary_fields = self._get_summary_fields() # FIXME: rename this better
         for key, val in self.__dict__.items():
-            if summarize and key not in summary_fields:
-                # the object was tagged for summarization and this is not one of the
-                # included fields, so skip this one.
-                continue 
             field = fields.pop(key, None)
             if field is None:
                 field = syntheticFields.get(key)
@@ -1255,33 +1250,13 @@ class XObjModel(models.Model):
                     val = val.serialize(request)
                 setattr(xobj_model, key, val)
   
-    def _get_summary_fields(self):
-        '''
-        Return the summary fields for an object if it's tagged for summarization,
-        otherwise return None.  NOTE: there is one case (the older one) where
-        things are always summarized.  This is different.  Summarize means
-        "expand these FKs to include additional info", but it also is used
-        to show only certain items in list fields, that are not FKs.  The former
-        case doesn't require the "_summarize" detector bit.
-        '''
-        should_summarize = getattr(self, '_summarize', False)
-        if not should_summarize:
-            return None
-        fields = getattr(self, 'summary_fields', None)
-        if fields is None:
-            return [ 'id' ]
-        return fields
-
     def _serialize_fk_fields(self, xobj_model, fields, request):
         """
         For each remaining field in fields, see if it's a FK field, if so set
         the create an href object and set it on xobj_model.
         TODO: accessors?
         """
-        summary_fields = self._get_summary_fields()
         for fieldName in fields:
-            if summary_fields and fieldName not in summary_fields:
-                continue
             field = fields[fieldName]
             if getattr(field, 'XObjHidden', False):
                 continue

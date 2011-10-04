@@ -100,13 +100,6 @@ class Systems(modellib.Collection):
     objects = modellib.SystemsManager()
     view_name = 'Systems'
 
-    # use summary_fields to show only certain members
-    # in list view when this is turned on.  Pretty awesome
-    # for SQL performance but needs UI support first. We'll
-    # also want to tweak what's in summary_fields.
-
-    # _supports_collapsed_collection = True
-
     def __init__(self):
         modellib.Collection.__init__(self)
 
@@ -459,8 +452,6 @@ class System(modellib.XObjIdModel):
                 tag = 'system',
                 attributes = {'id':str},
                 elements = ['networks', ])
-
-    summary_fields = [ 'name', 'hostname' ]
 
     """
     networks - a collection of network resources exposed by the system
