@@ -126,3 +126,40 @@ class ReleaseService(service.BaseService):
         release = models.Release.objects.get(pk=release_id)
         release.delete()
         return HttpResponse(status=204)
+        
+# write manager for this!
+class ImageBuildFileUrlService(service.BaseService):
+    @access.admin
+    @return_xml
+    def rest_GET(self, request, image_id, file_id):
+        return self.get(image_id, file_id)
+        
+    def get(self, image_id, file_id):
+        return models.BuildFilesUrlsMap.objects.get(file=file_id).url
+        
+    @access.admin
+    @requires('file_url')
+    @return_xml
+    def rest_POST(self, request, image_id, file_id, file_url):
+        file_url.save()
+        return file_url
+        
+# write manager for this!
+class ImageUrlDownloadsService(service.BaseService):
+    @access.admin
+    @return_xml
+    def rest_GET(self, request, image_id, file_id):
+        return self.get(image_id, file_id)
+        
+    def get(self, image_id, file_id):
+        url = models.BuildFilesUrlsMap.objects.get(file=file_id).url
+        UrlDownloads = models.UrlDownloads()
+        UrlDownloads.url_download = models.UrlDownload.objects.filter(url=url.file_url_id)
+        return UrlDownloads
+        
+    @access.admin
+    @requires('url_download')
+    @return_xml
+    def rest_POST(self, request, image_id, file_id, url_download):
+        url_download.save()
+        return url_download

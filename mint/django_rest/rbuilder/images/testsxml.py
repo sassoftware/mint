@@ -700,3 +700,58 @@ release_put_xml = \
   <should_mirror>0</should_mirror>
 </release>
 """.strip()
+
+downloads_get_xml = \
+"""
+<?xml version='1.0' encoding='UTF-8'?>
+<url_downloads count="2" next_page="" num_pages="1" previous_page="" full_collection="" end_index="1" limit="10" order_by="" per_page="10" filter_by="" start_index="0">
+  <url_download>
+    <url/>
+    <time_downloaded>0.0</time_downloaded>
+    <ip>127.0.0.1</ip>
+    <url_download_id>5</url_download_id>
+  </url_download>
+  <url_download>
+    <url/>
+    <time_downloaded>0.0</time_downloaded>
+    <ip>192.160.1.1</ip>
+    <url_download_id>6</url_download_id>
+  </url_download>
+</url_downloads>
+""".strip()
+
+download_post_xml = \
+"""
+<url_download>
+  <url>
+    <url>http://example.com/20/</url>
+    <url_type>0</url_type>
+  </url>
+  <time_downloaded>0.0</time_downloaded>
+  <ip>127.0.0.6</ip>
+</url_download>
+"""
+
+build_file_url_get_xml = \
+"""
+<?xml version='1.0' encoding='UTF-8'?>
+<file_url>
+  <url>http://example.com/0/</url>
+  <url_downloads>
+    <url_download>
+      <url/>
+      <time_downloaded>0.0</time_downloaded>
+      <ip>127.0.0.0</ip>
+      <url_download_id>1</url_download_id>
+    </url_download>
+    <url_download>
+      <url/>
+      <time_downloaded>0.0</time_downloaded>
+      <ip>192.160.1.0</ip>
+      <url_download_id>2</url_download_id>
+    </url_download>
+  </url_downloads>
+  <url_type>0</url_type>
+  <file_url_id>1</file_url_id>
+</file_url>
+""".strip()

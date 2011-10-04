@@ -235,8 +235,8 @@ class BuildFile(modellib.XObjIdModel):
     class Meta:
         db_table = 'buildfiles'
     
-    _xobj = xobj.XObjMetadata(tag='image_file')
     _xobj_hidden_accessors = set(['buildfilesurlsmap_set'])
+    _xobj = xobj.XObjMetadata(tag='image_file')
     
     file_id = models.AutoField(primary_key=True, db_column='fileid')
     image = models.ForeignKey('Image', null=False, db_column='buildid', related_name='image_files')
@@ -257,26 +257,23 @@ class BuildData(modellib.XObjIdModel):
     value = models.TextField()
     data_type = models.SmallIntegerField(null=False, db_column='datatype')
     
-class FilesUrls(modellib.Collection):
-    class Meta:
-        abstract = True
-    
-    list_fields = ['file_url']
-    _xobj = xobj.XObjMetadata(tag='files_urls')
-    
-class FileUrl(modellib.XObjModel):
+class FileUrl(modellib.XObjIdModel):
     class Meta:
         db_table = 'filesurls'
     
     _xobj = xobj.XObjMetadata(tag='file_url')
+    # _xobj_explict_accessors = set(['downloads'])
+    _xobj_hidden_accessors = set(['buildfilesurlsmap_set'])
     
-    url_id = models.AutoField(primary_key=True, db_column='urlid')
+    file_url_id = models.AutoField(primary_key=True, db_column='urlid')
     url_type = models.SmallIntegerField(null=False, db_column='urltype')
     url = models.CharField(max_length=255, null=False)
+
 
 class BuildFilesUrlsMap(modellib.XObjModel):
     class Meta:
         db_table = 'buildfilesurlsmap'
+        unique_together = ('file', 'url')
     
     build_files_urls_map_id = models.AutoField(primary_key=True, db_column='buildfilesurlsmapid')
     file = models.ForeignKey('BuildFile', null=False, db_column='fileid')
@@ -290,13 +287,16 @@ class UrlDownloads(modellib.Collection):
     _xobj = xobj.XObjMetadata(tag='url_downloads')
     list_fields = ['url_download']
     
-class UrlDownload(modellib.XObjModel):
+    
+class UrlDownload(modellib.XObjIdModel):
     class Meta:
         db_table = 'urldownloads'
         
+    _xobj = xobj.XObjMetadata(tag='url_download')
+        
     url_download_id = models.AutoField(primary_key=True, db_column='urldownloadid')
-    url = models.ForeignKey('FileUrl', null=False, db_column='urlid')
-    time_dowloaded = models.DecimalField(
+    url = models.ForeignKey('FileUrl', null=False, db_column='urlid', related_name='url_downloads')
+    time_downloaded = models.DecimalField(
         max_digits=14, decimal_places=0, null=False, default=0, db_column='timedownloaded')
     ip = models.CharField(max_length=64, null=False)
 

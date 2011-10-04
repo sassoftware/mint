@@ -59,12 +59,17 @@ class ImagesTestCase(XMLTestCase):
                 output_trove=None, project_branch=branch, stage_name='stage%s' % i,
                 description="image-%s" % i)
             image.save()
-            # now buildfiles
+            # now buildfiles and fileurls
             buildFile = models.BuildFile(image=image, size=i, sha1='%s' % i)
             buildFile.save()
             
-            fileUrl = models.FileUrl(url_type=0, url='http://example.com/')
+            fileUrl = models.FileUrl(url_type=0, url='http://example.com/%s/' % i)
             fileUrl.save()
+            
+            urlDownload = models.UrlDownload(url=fileUrl, ip='127.0.0.%s' % i)
+            urlDownload.save()
+            urlDownload = models.UrlDownload(url=fileUrl, ip='192.160.1.%s' % i)
+            urlDownload.save()
             
             buildFilesUrlsMap = models.BuildFilesUrlsMap(file=buildFile, url=fileUrl)
             buildFilesUrlsMap.save()
@@ -72,8 +77,17 @@ class ImagesTestCase(XMLTestCase):
             buildFile = models.BuildFile(image=image, size=i+1, sha1='%s' % (i + 1))
             buildFile.save()
         
+            fileUrl = models.FileUrl(url_type=0, url='http://example.com/%s/' % (i + 1))
+            fileUrl.save()
+            
+            urlDownload = models.UrlDownload(url=fileUrl, ip='127.0.0.%s' % (i + 1))
+            urlDownload.save()
+            urlDownload = models.UrlDownload(url=fileUrl, ip='192.160.1.%s' % (i + 1))
+            urlDownload.save()
+        
             buildFilesUrlsMap = models.BuildFilesUrlsMap(file=buildFile, url=fileUrl)
             buildFilesUrlsMap.save()
+            
 
     def _addProject(self, short_name, namespace='ns'):
         project = projectsmodels.Project()
@@ -205,3 +219,25 @@ class ImagesTestCase(XMLTestCase):
     def testDeleteRelease(self):
         response = self._delete('releases/1', username='admin', password='password')
         self.assertEquals(response.status_code, 204)
+        
+    def testGetUrlFileByBuildFile(self):
+        response = self._get('images/1/build_files/1/file_url', username='admin', password='password')
+        self.assertEquals(response.status_code, 200)
+        self.assertXMLEquals(response.content, testsxml.build_file_url_get_xml)
+        response = self._get('images/3/build_files/3/file_url', username='admin', password='password')
+        self.assertEquals(response.status_code, 200)
+        fileUrl = xobj.parse(response.content).file_url
+        self.assertEquals(fileUrl.url, u'http://example.com/1/')
+        self.assertEquals(fileUrl.url_type, u'0')
+
+    def testGetUrlDownloadsByBuildFile(self):
+        response = self._get('images/3/build_files/3/downloads', username='admin', password='password')
+        self.assertEquals(response.status_code, 200)
+        self.assertXMLEquals(response.content, testsxml.downloads_get_xml)
+        
+    def testCreateUrlDownload(self):
+        response = self._post('images/3/build_files/3/downloads',
+            username='admin', password='password', data=testsxml.download_post_xml)
+        downloadPosted = xobj.parse(response.content).url_download
+        download = models.UrlDownload.objects.get(pk=downloadPosted.url_download_id)
+        self.assertEquals(download.ip, downloadPosted.ip)

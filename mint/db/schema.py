@@ -430,7 +430,9 @@ def _createBuilds(db):
             fileId              integer         NOT NULL
                 REFERENCES BuildFiles ON DELETE CASCADE,
             urlId               integer         NOT NULL
-                REFERENCES FilesUrls ON DELETE CASCADE
+                REFERENCES FilesUrls ON DELETE CASCADE,
+                
+            CONSTRAINT buildfilesurlsmap_uq UNIQUE ( fileId, urlId )
         ) %(TABLEOPTS)s """ % db.keywords)
         db.tables['BuildFilesUrlsMap'] = []
 
