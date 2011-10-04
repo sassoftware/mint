@@ -102,7 +102,7 @@ class QuerySetChosenResultService(BaseQuerySetService):
 
     @rbac(rbac_can_write_queryset)
     # TODO: source fromc onstant somewhere
-    @requires(['system', 'user', 'project_branch', 'project', 'grant', 'role'])
+    @requires(['system', 'user', 'project_branch_stage', 'project_branch', 'project', 'grant', 'role'])
     @return_xml
     def rest_POST(self, request, query_set_id, *args, **kwargs):
         resource = kwargs.items()[0][1]
@@ -111,7 +111,7 @@ class QuerySetChosenResultService(BaseQuerySetService):
 
     @rbac(rbac_can_write_queryset)
     # TODO: source fromc onstant somewhere
-    @requires(['system', 'user', 'project_branch', 'project', 'grant', 'role'])
+    @requires(['system', 'user', 'project_branch_stage', 'project_branch', 'project', 'grant', 'role'])
     @return_xml
     def rest_DELETE(self, request, query_set_id, *args, **kwargs):
         resource = kwargs.items()[0][1]
