@@ -4331,6 +4331,12 @@ class TargetSystemImportTest(XMLTestCaseStandin):
         # Test that it got persisted
         savedsystem = models.System.objects.get(pk=system.pk)
 
+        resp = self._get('inventory/systems/%s' % system.system_id,
+            username='admin', password='password')
+        self.failUnlessEqual(resp.status_code, 200)
+        self.failUnlessIn('<launching_user id="http://testserver/api/v1/users/3">JeanValjean2</launching_user>',
+            resp.content)
+
         def repl(item, a, b):
             try:
                 return item.replace(a, b)
