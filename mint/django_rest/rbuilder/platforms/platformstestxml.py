@@ -438,9 +438,9 @@ deferred_image_descriptor_xml = """
   </dataFields>
   <metadata>
     <descriptions>
-      <desc>Deferred Image Configuration</desc>
+      <desc>Layered Image Configuration</desc>
     </descriptions>
-    <displayName>Deferred Image Configuration</displayName>
+    <displayName>Layered Image Configuration</displayName>
     <rootElement>createApplianceDescriptor</rootElement>
   </metadata>
 </createApplianceDescriptor>
