@@ -426,6 +426,7 @@ def _createBuilds(db):
     if 'BuildFilesUrlsMap' not in db.tables:
         cu.execute("""
         CREATE TABLE BuildFilesUrlsMap (
+            buildFilesUrlsMapId %(PRIMARYKEY)s,
             fileId              integer         NOT NULL
                 REFERENCES BuildFiles ON DELETE CASCADE,
             urlId               integer         NOT NULL
@@ -438,11 +439,12 @@ def _createBuilds(db):
     if 'UrlDownloads' not in db.tables:
         cu.execute("""
         CREATE TABLE UrlDownloads (
+            urlDownloadId       %(PRIMARYKEY)s,
             urlId               integer         NOT NULL
                 REFERENCES FilesUrls ON DELETE CASCADE,
             timeDownloaded      numeric(14,0)   NOT NULL    DEFAULT 0,
             ip                  varchar(64)     NOT NULL
-        )""" % db.keywords)
+        ) %(TABLEOPTS)s """ % db.keywords)
         db.tables['UrlDownloads'] = []
 
 
