@@ -554,22 +554,22 @@ class ProjectManager(basemanager.BaseManager):
         return image
 
     # FINISH: commented out until there are tests for this
-    @exposed
-    def updateProjectBranchStage(self, project_short_name, project_branch_label, stage_name, stage):
-        stage.save()
-        # project = stage.project
-        fqdn = stage.project.repository_hostname
-        version = stage.project_branch
-        client = self.restDb.productMgr.reposMgr.getConaryClient()
-        # this way doesn't seem to work inside the test suite -- prolly
-        # failure to correctly mock the prodDef.
-        pd = self.getProductVersionDefinitionByProjectVersion(version)
-        
-        # er is version or version.name supposed to be passed in...
-        # works either way
-        rpath_job.BackgroundRunner(self.restDb.productMgr._promoteGroup)(
-                client, pd, job, fqdn, version, stage_name, stage)
-        return stage
+    # @exposed
+    # def updateProjectBranchStage(self, project_short_name, project_branch_label, stage_name, stage):
+    #     stage.save()
+    #     # project = stage.project
+    #     fqdn = stage.project.repository_hostname
+    #     version = stage.project_branch
+    #     client = self.restDb.productMgr.reposMgr.getConaryClient()
+    #     # this way doesn't seem to work inside the test suite -- prolly
+    #     # failure to correctly mock the prodDef.
+    #     pd = self.getProductVersionDefinitionByProjectVersion(version)
+    #     
+    #     # er is version or version.name supposed to be passed in...
+    #     # works either way
+    #     rpath_job.BackgroundRunner(self.restDb.productMgr._promoteGroup)(
+    #             client, pd, job, fqdn, version, stage_name, stage)
+    #     return stage
 
 """    
     @exposed
