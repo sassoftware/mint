@@ -100,8 +100,8 @@ class PlatformManager(basemanager.BaseManager):
         '''
         desc = smartform.descriptor.ConfigurationDescriptor()
         desc.setRootElement("createApplianceDescriptor")
-        desc.setDisplayName("Deferred Image Configuration")
-        desc.addDescription("Deferred Image Configuration")
+        desc.setDisplayName("Layered Image Configuration")
+        desc.addDescription("Layered Image Configuration")
 
         # TODO: this might be filtered more aggressively later
         # right now the image list could get very large

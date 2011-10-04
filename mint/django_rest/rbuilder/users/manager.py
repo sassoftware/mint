@@ -75,6 +75,7 @@ class UsersManager(basemanager.BaseManager):
             # adminship has been proven.
             dbuser.setIsAdmin(is_admin)
             dbuser.save()
+        self.mgr.invalidateQuerySetByName('All Users')
         return dbuser
 
     def _setPassword(self, user, password):

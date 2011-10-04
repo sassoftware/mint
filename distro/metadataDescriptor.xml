@@ -127,7 +127,7 @@
     </field>
     <field>
       <name>metadata.credentials_username</name>
-      <help lang="en_US">Administrator account name used to take control of this image at deploy time.</help>
+      <help lang="en_US">Administrator account name used to take control of this image at deploy time.  For Linux layered images, this field is ignored and root is always used.</help>
       <descriptions>
         <desc>User Name</desc>
       </descriptions>
@@ -135,9 +135,9 @@
     </field>
     <field>
       <name>metadata.credentials_password</name>
-      <help lang="en_US">Administrator password used to take control of this image at deploy time.</help>
+      <help lang="en_US">Administrator password used to take control of this image at deploy time.  If SSH key is provided, this value is used to unlock the SSH key.</help>
       <descriptions>
-        <desc>Password</desc>
+        <desc>Password/Passphrase</desc>
       </descriptions>
       <type>str</type>
     </field>
