@@ -377,10 +377,11 @@ class Stage(modellib.XObjIdModel):
         return [ self.project.short_name, self.project_branch.label, self.name ]
 
     def serialize(self, request=None):
-        href = 'https://' + request.get_host().strip('/') + '/api/products/%s/repos/search?type=group&label=%s'
-        short_name = self.project.short_name # aka project's short_name
-        label = self.label
-        self.groups = Group(href=href % (short_name, label))
+        if request:
+            href = 'https://' + request.get_host().strip('/') + '/api/products/%s/repos/search?type=group&label=%s'
+            short_name = self.project.short_name # aka project's short_name
+            label = self.label
+            self.groups = Group(href=href % (short_name, label))
         xobjModel = modellib.XObjIdModel.serialize(self, request)
         return xobjModel
 

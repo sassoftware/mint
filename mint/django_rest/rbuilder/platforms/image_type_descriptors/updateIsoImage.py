@@ -23,7 +23,7 @@ XML="""<createApplianceDescriptor xmlns:xsi="http://www.w3.org/2001/XMLSchema-in
             <default></default>
         </field>
         <field>
-            <name>container.options.baseFileName</name>
+            <name>options.baseFileName</name>
             <help lang="en_US">@Help_image_filename@</help>
             <required>false</required>
             <descriptions>
@@ -36,7 +36,7 @@ XML="""<createApplianceDescriptor xmlns:xsi="http://www.w3.org/2001/XMLSchema-in
             <default></default>
         </field>
         <field>
-            <name>container.options.installLabelPath</name>
+            <name>options.installLabelPath</name>
             <help lang="en_US">@Help_conary_installlabelpath@</help>
             <required>false</required>
             <descriptions>
@@ -50,7 +50,7 @@ XML="""<createApplianceDescriptor xmlns:xsi="http://www.w3.org/2001/XMLSchema-in
         </field>
 
         <field>
-            <name>container.options.bugsUrl</name>
+            <name>options.bugsUrl</name>
             <help lang="en_US">@Help_bug_report_url@</help>
             <required>false</required>
             <descriptions>
@@ -63,7 +63,7 @@ XML="""<createApplianceDescriptor xmlns:xsi="http://www.w3.org/2001/XMLSchema-in
             <default></default>
         </field>
         <field>
-            <name>container.options.betaNag</name>
+            <name>options.betaNag</name>
             <help lang="en_US">@Help_beta@</help>
             <required>false</required>
             <descriptions>
@@ -76,7 +76,7 @@ XML="""<createApplianceDescriptor xmlns:xsi="http://www.w3.org/2001/XMLSchema-in
             <default></default>
         </field>
         <field>
-            <name>container.options.showMediaCheck</name>
+            <name>options.showMediaCheck</name>
             <help lang="en_US">@Help_cd_verify@</help>
             <required>false</required>
             <descriptions>
@@ -90,7 +90,7 @@ XML="""<createApplianceDescriptor xmlns:xsi="http://www.w3.org/2001/XMLSchema-in
         </field>
 
         <field>
-            <name>container.options.anacondaTemplatesTrove</name>
+            <name>options.anacondaTemplatesTrove</name>
             <help lang="en_US">@Help_anaconda_templates@</help>
             <required>false</required>
             <descriptions>
@@ -103,7 +103,7 @@ XML="""<createApplianceDescriptor xmlns:xsi="http://www.w3.org/2001/XMLSchema-in
             <default></default>
         </field>
         <field>
-            <name>container.options.anacondaCustomTrove</name>
+            <name>options.anacondaCustomTrove</name>
             <help lang="en_US">@Help_anaconda_custom@</help>
             <required>false</required>
             <descriptions>
@@ -116,7 +116,7 @@ XML="""<createApplianceDescriptor xmlns:xsi="http://www.w3.org/2001/XMLSchema-in
             <default></default>
         </field>
         <field>
-            <name>container.options.mediaTemplateTrove</name>
+            <name>options.mediaTemplateTrove</name>
             <help lang="en_US">@Help_media_template@</help>
             <required>false</required>
             <descriptions>
@@ -130,7 +130,7 @@ XML="""<createApplianceDescriptor xmlns:xsi="http://www.w3.org/2001/XMLSchema-in
         </field>
         
         <field>
-            <name>container.options.maxIsoSize</name>
+            <name>options.maxIsoSize</name>
             <help lang="en_US">@Help_iso_size@</help>
             <required>true</required>
             <descriptions>
@@ -174,7 +174,7 @@ XML="""<createApplianceDescriptor xmlns:xsi="http://www.w3.org/2001/XMLSchema-in
         </field>   
                 
         <field>
-            <name>container.options.autoResolve</name>
+            <name>options.autoResolve</name>
             <help lang="en_US">@Help_resolve_dependencies@</help>
             <required>false</required>
             <descriptions>

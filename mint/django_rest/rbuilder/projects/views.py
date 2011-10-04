@@ -62,6 +62,17 @@ class PBSCallbacks(object):
         return False
 
     @staticmethod
+    def rbac_can_write_stage_by_project(view,
+        request, project_short_name, project_branch_label, stage_name, *args, **kwargs):
+        obj = view.mgr.getProjectBranchStage(project_short_name, project_branch_label, stage_name)
+        user = request._authUser
+        if not stage_name and request._is_admin:
+            return True
+        elif stage_name:
+            return view.mgr.userHasRbacPermission(user, obj, READMEMBERS)
+        return False
+
+    @staticmethod
     def rbac_can_read_pbs_by_project_short_name(view, request, project_short_name):
         user = request._authUser
         collection = projectmodels.Stage.objects.filter(project__short_name=project_short_name)
@@ -222,6 +233,13 @@ class ProjectBranchStageService(service.BaseService):
                 project_branch_label, stage_name)
         return self.mgr.getProjectBranchStages(project_short_name,
             project_branch_label)
+
+    @rbac(PBSCallbacks.rbac_can_write_stage_by_project)
+    @requires('stage')
+    @return_xml
+    def rest_PUT(self, request, project_short_name, project_branch_label, stage_name, stage):
+        return self.mgr.updateProjectBranchStage(
+            project_short_name, project_branch_label, stage_name, stage)
 
 
 class ProjectImageService(service.BaseService):

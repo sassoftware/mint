@@ -1,14 +1,13 @@
 #!/bin/sh
 #
 #  chkconfig: 345 30 50
-#  description: Start-up script for the Twisted service "%(tap_file)s".
+#  description: rBuilder external authentication service
 #
 # Copyright (c) 2011 rPath, Inc.
 #
-# All rights reserved.
-#
 
-serivcename=authsrv
+scriptname=`basename $0`
+servicename=authsrv
 pidfile=/var/run/rbuilder-authn.pid
 rundir=/var/lib/twisted-taps/rbuilder-authn/
 logfile=/var/log/rbuilder/rbuilder-authn.log
@@ -31,33 +30,45 @@ then
     mkdir -p "${rundir}"
 fi
 
-
+result=0
 case "$1" in
     start)
         echo -n "Starting rbuilder-authn: twistd"
-        daemon twistd \\
-                --pidfile=$pidfile \\
-                --rundir=$rundir \\
-                --logfile=$logfile \\
-                $servicename
-        status rbuilder-authn
+        twistd --pidfile=$pidfile --rundir=$rundir --logfile=$logfile $servicename
+        result=$?
+        if [ "$result" -eq 0 ]
+        then
+            success
+            touch /var/lock/subsys/$scriptname
+        else
+            failure
+        fi
+        echo
         ;;
 
     stop)
         echo -n "Stopping rbuilder-authn: twistd"
-        kill `cat "${pidfile}"`
-        status rbuilder-authn
+        killproc -p $pidfile $scriptname
+        result=$?
+        rm -f /var/lock/subsys/$scriptname
+        echo
         ;;
 
     restart)
         "${0}" stop
         "${0}" start
+        result=$?
+        ;;
+
+    status)
+        status -p $pidfile $scriptname
+        result=$?
         ;;
 
     *)
-        echo "Usage: ${0} {start|stop|restart}" >&2
-        exit 1
+        echo "Usage: ${0} {start|stop|restart|status}" >&2
+        result=1
         ;;
 esac
 
-exit 0
+exit $result

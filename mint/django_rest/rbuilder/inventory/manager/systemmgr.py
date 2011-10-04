@@ -1346,13 +1346,14 @@ class SystemManager(basemanager.BaseManager):
             full = source.trove_version
             tokens = full.split("/")
             projectLabel = tokens[1]
+            installTrove = "group-%s-appliance" % source.project.short_name
 
             log.info("project label=%s" % projectLabel)
 
             params = repClient.AssimilatorParams(host=destination,
                 caCert=cert, sshAuth=event_data,
                 eventUuid=eventUuid, projectLabel=projectLabel,
-                installTrove='group-appliance')
+                installTrove=installTrove)
 
         resultsLocation = repClient.ResultsLocation(
             path = "/api/v1/inventory/systems/%d" % event.system.pk,

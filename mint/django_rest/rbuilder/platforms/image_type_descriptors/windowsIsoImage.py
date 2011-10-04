@@ -24,7 +24,7 @@ XML="""<createApplianceDescriptor xmlns:xsi="http://www.w3.org/2001/XMLSchema-in
         </field>
 
         <field>
-            <name>container.options.platformIsoKitTrove</name>
+            <name>options.platformIsoKitTrove</name>
             <help lang="en_US">@Help_platform_isokit@</help>
             <required>false</required>
             <descriptions>
@@ -37,7 +37,7 @@ XML="""<createApplianceDescriptor xmlns:xsi="http://www.w3.org/2001/XMLSchema-in
             <default></default>
         </field>
         <field>
-            <name>container.options.mediaTemplateTrove</name>
+            <name>options.mediaTemplateTrove</name>
             <help lang="en_US">@Help_media_template@</help>
             <required>false</required>
             <descriptions>
@@ -51,7 +51,7 @@ XML="""<createApplianceDescriptor xmlns:xsi="http://www.w3.org/2001/XMLSchema-in
         </field>
         
         <field>
-            <name>container.options.baseFileName</name>
+            <name>options.baseFileName</name>
             <help lang="en_US">@Help_image_filename@</help>
             <required>false</required>
             <descriptions>

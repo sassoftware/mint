@@ -53,14 +53,16 @@ class ImagesTestCase(XMLTestCase):
             release.save()
             # images
             image = models.Image(
-                project=proj, release=release, build_type=10, job_uuid='1',
-                name="image-%s" % i, trove_name='troveName%s' % i, trove_version='foo@test:1/1-%d-1' % i,
-                trove_flavor='is: x86', created_by=user1, updated_by=user2, build_count=1,
+                project=proj, release=release, image_type=10, job_uuid='1',
+                name="image-%s" % i, trove_name='troveName%s' % i, trove_version='/cydonia.eng.rpath.com@rpath:cydonia-1-devel/1317221453.365:1-%d-1' % i,
+                trove_flavor='1#x86:i486:i586:i686|5#use:~!xen', created_by=user1, updated_by=user2, image_count=1,
                 output_trove=None, project_branch=branch, stage_name='stage%s' % i,
                 description="image-%s" % i)
             image.save()
             # now buildfiles
-            buildFile = models.BuildFile(build=image, size=i, sha1='%s' % i)
+            buildFile = models.BuildFile(image=image, size=i, sha1='%s' % i)
+            buildFile.save()
+            buildFile = models.BuildFile(image=image, size=i+1, sha1='%s' % (i + 1))
             buildFile.save()
         
 
@@ -113,7 +115,7 @@ class ImagesTestCase(XMLTestCase):
         
     def testGetImageBuildFile(self):
         buildFile = models.BuildFile.objects.get(pk=1)
-        response = self._get('images/%s/build_files/%s/' % (buildFile.build_id, buildFile.pk),
+        response = self._get('images/%s/build_files/%s/' % (buildFile.image_id, buildFile.pk),
             username='admin', password='password')
         self.assertEquals(response.status_code, 200)
         self.assertXMLEquals(response.content, testsxml.build_file_get_xml)
@@ -151,13 +153,46 @@ class ImagesTestCase(XMLTestCase):
         response = self._post('images/1/build_files/',
             username='admin', password='password', data=testsxml.build_file_post_xml)
         buildFile = xobj.parse(response.content)
-        file_id = buildFile.build_file.file_id
+        file_id = buildFile.image_file.file_id
         response = self._put('images/1/build_files/%s' % file_id,
             username='admin', password='password', data=testsxml.build_file_put_xml)
         buildFileUpdated = xobj.parse(response.content)
         self.assertEquals(response.status_code, 200)
-        self.assertEquals(buildFileUpdated.build_file.title, 'newtitle')
+        self.assertEquals(buildFileUpdated.image_file.title, 'newtitle')
         
     def testDeleteImageBuildFile(self):
         response = self._delete('images/1/build_files/1', username='admin', password='password')
+        self.assertEquals(response.status_code, 204)
+        
+    def testGetRelease(self):
+        response = self._get('releases/1', username='admin', password='password')
+        self.assertEquals(response.status_code, 200)
+        self.assertXMLEquals(response.content, testsxml.release_get_xml)
+        
+    def testGetReleases(self):
+        response = self._get('releases/', username='admin', password='password')
+        self.assertEquals(response.status_code, 200)
+        self.assertXMLEquals(response.content, testsxml.releases_get_xml)
+        
+    def testCreateRelease(self):
+        response = self._post('releases/',
+            username='admin', password='password', data=testsxml.release_post_xml)
+        self.assertEquals(response.status_code, 200)
+        release = xobj.parse(response.content).release
+        self.assertEquals(release.name, u'release100')
+        self.assertEquals(release.description, u'description100')
+        self.assertEquals(release.project.id, u"http://testserver/api/v1/projects/foo0")
+        self.assertEquals(release.published_by.id, u"http://testserver/api/v1/users/2002")
+        
+    def testUpdateRelease(self):
+        response = self._put('releases/1',
+            username='admin', password='password', data=testsxml.release_put_xml)
+        self.assertEquals(response.status_code, 200)
+        release = xobj.parse(response.content).release
+        self.assertEquals(release.name, u'release100')
+        self.assertEquals(release.description, u'description100')
+        self.assertEquals(release.version, u'releaseVersion100')
+        
+    def testDeleteRelease(self):
+        response = self._delete('releases/1', username='admin', password='password')
         self.assertEquals(response.status_code, 204)

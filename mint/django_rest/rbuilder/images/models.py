@@ -8,7 +8,11 @@
 # or may be replaced by target service.  Don't get attached.
 # **THESE ARE CURRENTLY JUST STUBS TO UNBLOCK DEVELOPMENT**
 
+import datetime
+from dateutil import tz
+
 from django.db import models
+from mint import helperfuncs
 from mint.django_rest.deco import D
 from mint.django_rest.rbuilder import modellib
 from xobj import xobj
@@ -36,11 +40,8 @@ class Images(modellib.Collection):
 class Image(modellib.XObjIdModel):
     class Meta:
         db_table = u'builds'
-        
-    _xobj = xobj.XObjMetadata(
-        tag="image")
-    _xobj_hidden_accessors = set(['buildfile_set', 'builddata_set'])
-    view_name = "ProjectImage"
+
+    _xobj_hidden_accessors = set(['builddata_set'])
 
     def __unicode__(self):
         return self.name
@@ -55,7 +56,7 @@ class Image(modellib.XObjIdModel):
         related_name="images", view_name="ProjectBranchStageImages", null=True))
     release = models.ForeignKey('Release', null=True,
         db_column='pubreleaseid')
-    build_type = models.IntegerField(db_column="buildtype")
+    image_type = models.IntegerField(db_column="buildtype")
     job_uuid = models.CharField(max_length=64, null=True)
     name = models.CharField(max_length=255, null=True)
     description = models.TextField(null=True)
@@ -76,7 +77,7 @@ class Image(modellib.XObjIdModel):
         null=True, db_column='timeupdated')
     updated_by = modellib.ForeignKey('users.User', db_column='updatedby',
         related_name='updated_images', null=True)
-    build_count = models.IntegerField(null=True, default=0,
+    image_count = models.IntegerField(null=True, default=0,
         db_column="buildcount")
     project_branch = models.ForeignKey('projects.ProjectVersion', null=True,
         related_name="images",
@@ -87,15 +88,32 @@ class Image(modellib.XObjIdModel):
     status_message = models.TextField(null=True, blank=True, default='',
         db_column="statusmessage")
     metadata = modellib.SyntheticField()
+    architecture = modellib.SyntheticField()
+    trailing_version = modellib.SyntheticField()
+    released = modellib.SyntheticField()
+    num_image_files = modellib.SyntheticField()
     #actions = modellib.SyntheticField()
-    
-    # def get_absolute_url(self, request, *args, **kwargs):
-    #     if not self.image_id:
-    #         return None
-    #     return '/api/v1/images/%s' % self.image_id
-
+        
     def computeSyntheticFields(self, sender, **kwargs):
         self._computeMetadata()
+        
+        if self.trove_flavor is not None:
+            self.architecture = helperfuncs.getArchFromFlavor(str(self.trove_flavor))
+            
+        if self.trove_version is not None:
+            tv_obj = helperfuncs.parseVersion(self.trove_version)
+            if tv_obj is not None:
+                self.trailing_version = str(tv_obj.trailingRevision())
+
+        if self.release is not None:
+            self.released = True
+        else:
+            self.released = False
+            
+        if self.image_files is not None:
+            self.num_image_files = len(self.image_files.all())
+        else:
+            self.num_image_files = 0;
 
     def _computeMetadata(self):
         if self._rbmgr is None or self.output_trove is None:
@@ -149,6 +167,17 @@ class Image(modellib.XObjIdModel):
                 continue
             metadataDict[name] = str(value)
         return metadataDict
+    
+    def serialize(self, request=None):
+        xobjModel = modellib.XObjIdModel.serialize(self, request)
+        # Convert timestamp fields in the database to our standard UTC format
+        if xobjModel.time_created:
+            xobjModel.time_created = str(datetime.datetime.fromtimestamp(
+                xobjModel.time_created, tz.tzutc()))
+        if xobjModel.time_updated:
+            xobjModel.time_updated = str(datetime.datetime.fromtimestamp(
+                xobjModel.time_updated, tz.tzutc()))
+        return xobjModel
 
 
 class Releases(modellib.Collection):
@@ -159,13 +188,13 @@ class Releases(modellib.Collection):
     _xobj = xobj.XObjMetadata(tag='releases')        
 
 
-class Release(modellib.XObjModel):
+class Release(modellib.XObjIdModel):
     class Meta:
         db_table = u'publishedreleases'
 
     _xobj = xobj.XObjMetadata(
-        tag='releases')
-    view_name = "ProjectRelease"
+        tag='release')
+    _xobj_hidden_accessors = set(['image_set'])
 
     release_id = models.AutoField(primary_key=True,
         db_column='pubreleaseid')
@@ -197,19 +226,19 @@ class BuildFiles(modellib.Collection):
     class Meta:
         abstract = True
         
-    _xobj = xobj.XObjMetadata(tag='build_files')
-    list_fields = ['build_file']
+    _xobj = xobj.XObjMetadata(tag='image_files')
+    list_fields = ['image_file']
     
     
 class BuildFile(modellib.XObjIdModel):
     class Meta:
         db_table = 'buildfiles'
     
-    _xobj = xobj.XObjMetadata(tag='build_file')
+    _xobj = xobj.XObjMetadata(tag='image_file')
     
     
     file_id = models.AutoField(primary_key=True, db_column='fileid')
-    build = models.ForeignKey('Image', null=False, db_column='buildid')
+    image = models.ForeignKey('Image', null=False, db_column='buildid', related_name='image_files')
     idx = models.IntegerField(null=False, default=0)
     title = models.CharField(max_length=255, null=False, default='')
     size = models.IntegerField()

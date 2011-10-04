@@ -23,7 +23,7 @@ XML="""<createApplianceDescriptor xmlns:xsi="http://www.w3.org/2001/XMLSchema-in
             <default></default>
         </field>
         <field>
-            <name>container.options.baseFileName</name>
+            <name>options.baseFileName</name>
             <help lang="en_US">@Help_image_filename@</help>
             <required>false</required>
             <descriptions>
@@ -36,7 +36,7 @@ XML="""<createApplianceDescriptor xmlns:xsi="http://www.w3.org/2001/XMLSchema-in
             <default></default>
         </field>
         <field>
-            <name>container.options.installLabelPath</name>
+            <name>options.installLabelPath</name>
             <help lang="en_US">@Help_conary_installlabelpath@</help>
             <required>false</required>
             <descriptions>
@@ -49,7 +49,7 @@ XML="""<createApplianceDescriptor xmlns:xsi="http://www.w3.org/2001/XMLSchema-in
             <default></default>
         </field>
         <field>
-            <name>container.options.autoResolve</name>
+            <name>options.autoResolve</name>
             <help lang="en_US">@Help_resolve_dependencies@</help>
             <required>false</required>
             <descriptions>

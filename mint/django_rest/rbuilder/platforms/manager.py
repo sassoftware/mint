@@ -131,7 +131,7 @@ class PlatformManager(basemanager.BaseManager):
             descriptions = ['Image Name', ],
         )
 
-        desc.addDataField("baseImageTrove",
+        desc.addDataField("options.baseImageTrove",
             required = True,
             multiple = False,
             type = desc.EnumeratedType(smartform_values)

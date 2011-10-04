@@ -403,80 +403,6 @@ platformStatus2Xml = """\
 </SourceStatus>
 """
 
-#unchanged
-platformImageDefXml = """\
-<imageTypeDefinitions>
-  <imageTypeDefinition id="http://localhost:8000/api/platforms/1/imageTypeDefinitions/9a1ffeb422bd48550ac2f3ccef4b6204">
-    <name>Citrix XenServer 32-bit</name>
-    <displayName>Citrix XenServer 32-bit</displayName>
-    <container id="http://localhost:8000/api/platforms/1/imagesTypeDefinitions/9a1ffeb422bd48550ac2f3ccef4b6204/containers/xenOvaImage">
-      <name>xenOvaImage</name>
-      <displayName>Citrix(R) XenServer(TM) Appliance</displayName>
-      <options autoResolve="true" baseFileName="" freespace="1024" installLabelPath="" swapSize="512" vmMemory="256"/>
-    </container>
-    <architecture id="http://localhost:8000/api/platforms/1/imagesTypeDefinitions/9a1ffeb422bd48550ac2f3ccef4b6204/architectures/x86">
-      <name>x86</name>
-      <displayName>x86</displayName>
-    </architecture>
-    <flavorSet id="http://localhost:8000/api/platforms/1/imagesTypeDefinitions/9a1ffeb422bd48550ac2f3ccef4b6204/flavorsets/xen">
-      <name>xen</name>
-      <displayName>Xen DomU</displayName>
-    </flavorSet>
-  </imageTypeDefinition>
-  <imageTypeDefinition id="http://localhost:8000/api/platforms/1/imageTypeDefinitions/71a60de01b7e8675254175584fdb9db2">
-    <name>Citrix XenServer 64-bit</name>
-    <displayName>Citrix XenServer 64-bit</displayName>
-    <container id="http://localhost:8000/api/platforms/1/imagesTypeDefinitions/71a60de01b7e8675254175584fdb9db2/containers/xenOvaImage">
-      <name>xenOvaImage</name>
-      <displayName>Citrix(R) XenServer(TM) Appliance</displayName>
-      <options autoResolve="true" baseFileName="" freespace="1024" installLabelPath="" swapSize="512" vmMemory="256"/>
-    </container>
-    <architecture id="http://localhost:8000/api/platforms/1/imagesTypeDefinitions/71a60de01b7e8675254175584fdb9db2/architectures/x86_64">
-      <name>x86_64</name>
-      <displayName>x86 (64-bit)</displayName>
-    </architecture>
-    <flavorSet id="http://localhost:8000/api/platforms/1/imagesTypeDefinitions/71a60de01b7e8675254175584fdb9db2/flavorsets/xen">
-      <name>xen</name>
-      <displayName>Xen DomU</displayName>
-    </flavorSet>
-  </imageTypeDefinition>
-  <imageTypeDefinition id="http://localhost:8000/api/platforms/1/imageTypeDefinitions/072f6883c0290204e26de6f4e66c5c54">
-    <name>VMware ESX 32-bit</name>
-    <displayName>VMware ESX 32-bit</displayName>
-    <container id="http://localhost:8000/api/platforms/1/imagesTypeDefinitions/072f6883c0290204e26de6f4e66c5c54/containers/vmwareEsxImage">
-      <name>vmwareEsxImage</name>
-      <displayName>VMware(R) ESX(R) Server Virtual Appliance</displayName>
-      <options autoResolve="true" baseFileName="" freespace="1024" installLabelPath="" natNetworking="true" swapSize="512" vmMemory="256" vmSnapshots="true"/>
-    </container>
-    <architecture id="http://localhost:8000/api/platforms/1/imagesTypeDefinitions/072f6883c0290204e26de6f4e66c5c54/architectures/x86">
-      <name>x86</name>
-      <displayName>x86</displayName>
-    </architecture>
-    <flavorSet id="http://localhost:8000/api/platforms/1/imagesTypeDefinitions/072f6883c0290204e26de6f4e66c5c54/flavorsets/vmware">
-      <name>vmware</name>
-      <displayName>VMware</displayName>
-    </flavorSet>
-  </imageTypeDefinition>
-  <imageTypeDefinition id="http://localhost:8000/api/platforms/1/imageTypeDefinitions/e0b2438053d04a63f74ef5e7794e42a1">
-    <name>VMware ESX 64-bit</name>
-    <displayName>VMware ESX 64-bit</displayName>
-    <container id="http://localhost:8000/api/platforms/1/imagesTypeDefinitions/e0b2438053d04a63f74ef5e7794e42a1/containers/vmwareEsxImage">
-      <name>vmwareEsxImage</name>
-      <displayName>VMware(R) ESX(R) Server Virtual Appliance</displayName>
-      <options autoResolve="true" baseFileName="" freespace="1024" installLabelPath="" natNetworking="true" swapSize="512" vmMemory="256" vmSnapshots="true"/>
-    </container>
-    <architecture id="http://localhost:8000/api/platforms/1/imagesTypeDefinitions/e0b2438053d04a63f74ef5e7794e42a1/architectures/x86_64">
-      <name>x86_64</name>
-      <displayName>x86 (64-bit)</displayName>
-    </architecture>
-    <flavorSet id="http://localhost:8000/api/platforms/1/imagesTypeDefinitions/e0b2438053d04a63f74ef5e7794e42a1/flavorsets/vmware">
-      <name>vmware</name>
-      <displayName>VMware</displayName>
-    </flavorSet>
-  </imageTypeDefinition>
-</imageTypeDefinitions>
-"""
-
 deferred_image_descriptor_xml = """
 <createApplianceDescriptor xmlns="http://www.rpath.com/permanent/descriptor-1.0.xsd" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.rpath.com/permanent/descriptor-1.0.xsd descriptor-1.0.xsd">
   <dataFields>
@@ -506,7 +432,7 @@ deferred_image_descriptor_xml = """
         </describedValue>
       </enumeratedType>
       <multiple>false</multiple>
-      <name>baseImageTrove</name>
+      <name>options.baseImageTrove</name>
       <required>true</required>
     </field>
   </dataFields>
