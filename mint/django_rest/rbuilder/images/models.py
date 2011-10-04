@@ -91,6 +91,7 @@ class Image(modellib.XObjIdModel):
     architecture = modellib.SyntheticField()
     trailing_version = modellib.SyntheticField()
     released = modellib.SyntheticField()
+    num_image_files = modellib.SyntheticField()
     #actions = modellib.SyntheticField()
         
     def computeSyntheticFields(self, sender, **kwargs):
@@ -108,6 +109,11 @@ class Image(modellib.XObjIdModel):
             self.released = True
         else:
             self.released = False
+            
+        if self.image_files is not None:
+            self.num_image_files = len(self.image_files.all())
+        else:
+            self.num_image_files = 0;
 
     def _computeMetadata(self):
         if self._rbmgr is None or self.output_trove is None:

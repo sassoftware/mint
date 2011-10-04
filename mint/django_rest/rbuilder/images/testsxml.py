@@ -46,6 +46,7 @@ images_get_xml = """
       <short_name>foo0</short_name>
       <name>foo0</name>
     </project>
+    <num_image_files>2</num_image_files>
     <output_trove></output_trove>
     <architecture>x86</architecture>
     <release id="http://testserver/api/v1/releases/1"/>
@@ -97,6 +98,7 @@ images_get_xml = """
       <short_name>foo1</short_name>
       <name>foo1</name>
     </project>
+    <num_image_files>2</num_image_files>
     <output_trove></output_trove>
     <architecture>x86</architecture>
     <release id="http://testserver/api/v1/releases/2"/>
@@ -148,6 +150,7 @@ images_get_xml = """
       <short_name>foo2</short_name>
       <name>foo2</name>
     </project>
+    <num_image_files>2</num_image_files>
     <output_trove></output_trove>
     <architecture>x86</architecture>
     <release id="http://testserver/api/v1/releases/3"/>
@@ -204,6 +207,7 @@ image_get_xml = """
     <short_name>foo0</short_name>
     <name>foo0</name>
   </project>
+  <num_image_files>2</num_image_files>
   <output_trove></output_trove>
   <architecture>x86</architecture>
   <release id="http://testserver/api/v1/releases/1"/>
