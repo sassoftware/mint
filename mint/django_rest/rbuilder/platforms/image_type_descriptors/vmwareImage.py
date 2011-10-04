@@ -176,7 +176,7 @@ XML="""<createApplianceDescriptor xmlns:xsi="http://www.w3.org/2001/XMLSchema-in
                 <desc>Check to generate the image in OVF 1.0 format.</desc>
             </prompt>
             <type>bool</type>
-            <default>false</default>
+            <default>true</default>
         </field>
                 
       </dataFields>
