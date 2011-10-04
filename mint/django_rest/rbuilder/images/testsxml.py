@@ -23,24 +23,24 @@ images_get_xml = """
     <name>image-0</name>
     <trove_version>/cydonia.eng.rpath.com@rpath:cydonia-1-devel/1317221453.365:1-0-1</trove_version>
     <image_id>1</image_id>
-    <image_files>
-      <image_file>
+    <files>
+      <file>
         <sha1>0</sha1>
         <idx>0</idx>
         <title></title>
         <image id="http://testserver/api/v1/images/1"/>
         <file_id>1</file_id>
         <size>0</size>
-      </image_file>
-      <image_file>
+      </file>
+      <file>
         <sha1>1</sha1>
         <idx>0</idx>
         <title></title>
         <image id="http://testserver/api/v1/images/1"/>
         <file_id>2</file_id>
         <size>1</size>
-      </image_file>
-    </image_files>
+      </file>
+    </files>
     <project id="http://testserver/api/v1/projects/foo0">
       <domain_name>eng.rpath.com</domain_name>
       <short_name>foo0</short_name>
@@ -75,24 +75,24 @@ images_get_xml = """
     <name>image-1</name>
     <trove_version>/cydonia.eng.rpath.com@rpath:cydonia-1-devel/1317221453.365:1-1-1</trove_version>
     <image_id>2</image_id>
-    <image_files>
-      <image_file>
+    <files>
+      <file>
         <sha1>1</sha1>
         <idx>0</idx>
         <title></title>
         <image id="http://testserver/api/v1/images/2"/>
         <file_id>3</file_id>
         <size>1</size>
-      </image_file>
-      <image_file>
+      </file>
+      <file>
         <sha1>2</sha1>
         <idx>0</idx>
         <title></title>
         <image id="http://testserver/api/v1/images/2"/>
         <file_id>4</file_id>
         <size>2</size>
-      </image_file>
-    </image_files>
+      </file>
+    </files>
     <project id="http://testserver/api/v1/projects/foo1">
       <domain_name>eng.rpath.com</domain_name>
       <short_name>foo1</short_name>
@@ -127,24 +127,24 @@ images_get_xml = """
     <name>image-2</name>
     <trove_version>/cydonia.eng.rpath.com@rpath:cydonia-1-devel/1317221453.365:1-2-1</trove_version>
     <image_id>3</image_id>
-    <image_files>
-      <image_file>
+    <files>
+      <file>
         <sha1>2</sha1>
         <idx>0</idx>
         <title></title>
         <image id="http://testserver/api/v1/images/3"/>
         <file_id>5</file_id>
         <size>2</size>
-      </image_file>
-      <image_file>
+      </file>
+      <file>
         <sha1>3</sha1>
         <idx>0</idx>
         <title></title>
         <image id="http://testserver/api/v1/images/3"/>
         <file_id>6</file_id>
         <size>3</size>
-      </image_file>
-    </image_files>
+      </file>
+    </files>
     <project id="http://testserver/api/v1/projects/foo2">
       <domain_name>eng.rpath.com</domain_name>
       <short_name>foo2</short_name>
@@ -184,24 +184,24 @@ image_get_xml = """
   <name>image-0</name>
   <trove_version>/cydonia.eng.rpath.com@rpath:cydonia-1-devel/1317221453.365:1-0-1</trove_version>
   <image_id>1</image_id>
-  <image_files>
-    <image_file>
+  <files>
+    <file>
       <sha1>0</sha1>
       <idx>0</idx>
       <title></title>
       <image id="http://testserver/api/v1/images/1"/>
       <file_id>1</file_id>
       <size>0</size>
-    </image_file>
-    <image_file>
+    </file>
+    <file>
       <sha1>1</sha1>
       <idx>0</idx>
       <title></title>
       <image id="http://testserver/api/v1/images/1"/>
       <file_id>2</file_id>
       <size>1</size>
-    </image_file>
-  </image_files>
+    </file>
+  </files>
   <project id="http://testserver/api/v1/projects/foo0">
     <domain_name>eng.rpath.com</domain_name>
     <short_name>foo0</short_name>
@@ -219,14 +219,14 @@ image_get_xml = """
 build_file_get_xml = \
 """
 <?xml version='1.0' encoding='UTF-8'?>
-<image_file>
+<file>
   <sha1>0</sha1>
   <idx>0</idx>
   <title></title>
   <file_id>1</file_id>
   <image id="http://testserver/api/v1/images/1"/>
   <size>0</size>
-</image_file>
+</file>
 """.strip()
 
 image_post_xml = """
@@ -295,7 +295,7 @@ image_put_xml = """
 
 build_file_post_xml = \
 """
-<image_file>
+<file>
     <image>
       <trove_last_changed></trove_last_changed>
       <updated_by id="http://testserver/api/v1/users/2002"/>
@@ -329,55 +329,55 @@ build_file_post_xml = \
     <idx>0</idx>
     <title>HelloWorld</title>
     <size>0</size>
-</image_file>
+</file>
 """.strip()
 
 build_files_get_xml = \
 """
 <?xml version='1.0' encoding='UTF-8'?>
-<image_files count="2" next_page="" num_pages="1" previous_page="" full_collection="" end_index="1" limit="10" order_by="" per_page="10" filter_by="" start_index="0">
-  <image_file>
+<files count="2" next_page="" num_pages="1" previous_page="" full_collection="" end_index="1" limit="10" order_by="" per_page="10" filter_by="" start_index="0">
+  <file>
     <sha1>0</sha1>
     <idx>0</idx>
     <title></title>
     <image id="http://testserver/api/v1/images/1"/>
     <file_id>1</file_id>
     <size>0</size>
-  </image_file>
-  <image_file>
+  </file>
+  <file>
     <sha1>1</sha1>
     <idx>0</idx>
     <title></title>
     <image id="http://testserver/api/v1/images/1"/>
     <file_id>2</file_id>
     <size>1</size>
-  </image_file>
-</image_files>
+  </file>
+</files>
 """.strip()
 
 build_file_posted_xml = \
 """
 <?xml version='1.0' encoding='UTF-8'?>
-<image_file>
+<file>
   <sha1>0</sha1>
   <idx>0</idx>
   <title>HelloWorld</title>
   <image id="http://testserver/api/v1/images/4"/>
   <file_id>7</file_id>
   <size>0</size>
-</image_file>
+</file>
 
 """.strip()
 
 build_file_put_xml = \
 """
-<image_file>
+<file>
   <sha1>0</sha1>
   <idx>0</idx>
   <title>newtitle</title>
   <file_id>4</file_id>
   <size>0</size>
-</image_file>
+</file>
 """.strip()
 
 release_get_xml = \
