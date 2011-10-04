@@ -62,9 +62,18 @@ class ImagesTestCase(XMLTestCase):
             # now buildfiles
             buildFile = models.BuildFile(image=image, size=i, sha1='%s' % i)
             buildFile.save()
+            
+            fileUrl = models.FileUrl(url_type=0, url='http://example.com/')
+            fileUrl.save()
+            
+            buildFilesUrlsMap = models.BuildFilesUrlsMap(file=buildFile, url=fileUrl)
+            buildFilesUrlsMap.save()
+            
             buildFile = models.BuildFile(image=image, size=i+1, sha1='%s' % (i + 1))
             buildFile.save()
         
+            buildFilesUrlsMap = models.BuildFilesUrlsMap(file=buildFile, url=fileUrl)
+            buildFilesUrlsMap.save()
 
     def _addProject(self, short_name, namespace='ns'):
         project = projectsmodels.Project()

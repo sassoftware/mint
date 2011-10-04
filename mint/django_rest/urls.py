@@ -609,7 +609,7 @@ urlpatterns = patterns('',
         targetsviews.AllTargetJobsService(),
         name='TargetJobs'),
     
-    # Begin Images service
+    # Begin all things Images service
     URL(r'images/?$',
         imagesviews.ImagesService(),
         name='Images'),
@@ -622,6 +622,15 @@ urlpatterns = patterns('',
     URL(r'images/(?P<image_id>\d+)/build_files/(?P<file_id>\d+)/?$',
         imagesviews.ImageBuildFileService(),
         name='BuildFile'),
+    URL(r'images/(?P<image_id>\d+)/build_files/(?P<file_id>\d+)/file_urls/?$',
+        imagesviews.ImageBuildFileUrlService(),
+        name='FilesUrls'),
+    URL(r'images/(?P<image_id>\d+)/build_files/(?P<file_id>\d+)/file_urls/(?P<file_url_id>\d+)/?$',
+        imagesviews.ImageBuildFileUrlService(),
+        name='FileUrl'),
+    URL(r'images/(?P<image_id>\d+)/build_files/(?P<file_id>\d+)/file_urls/(?P<file_url_id>\d+)/downloads?$',
+        imagesviews.ImageUrlDownloadsService(),
+        name='UrlDownloads'),
         
     # Begin Releases service
     URL(r'releases/?$',

@@ -42,7 +42,8 @@ class Image(modellib.XObjIdModel):
         db_table = u'builds'
 
     _xobj_explicit_accessors = set(['image_files'])
-
+    # _xobj_hidden_accessors = set(['buildfilesurlsmap_set'])
+    
     def __unicode__(self):
         return self.name
 
@@ -235,7 +236,7 @@ class BuildFile(modellib.XObjIdModel):
         db_table = 'buildfiles'
     
     _xobj = xobj.XObjMetadata(tag='image_file')
-    
+    _xobj_hidden_accessors = set(['buildfilesurlsmap_set'])
     
     file_id = models.AutoField(primary_key=True, db_column='fileid')
     image = models.ForeignKey('Image', null=False, db_column='buildid', related_name='image_files')
@@ -256,7 +257,7 @@ class BuildData(modellib.XObjIdModel):
     value = models.TextField()
     data_type = models.SmallIntegerField(null=False, db_column='datatype')
     
-class FilesUrl(modellib.Collection):
+class FilesUrls(modellib.Collection):
     class Meta:
         abstract = True
     
@@ -273,12 +274,12 @@ class FileUrl(modellib.XObjModel):
     url_type = models.SmallIntegerField(null=False, db_column='urltype')
     url = models.CharField(max_length=255, null=False)
 
-class BuildFilesUrlsMap(modellib.XObjIdModel):
+class BuildFilesUrlsMap(modellib.XObjModel):
     class Meta:
         db_table = 'buildfilesurlsmap'
     
     build_files_urls_map_id = models.AutoField(primary_key=True, db_column='buildfilesurlsmapid')
-    file = models.ForeignKey('BuildFiles', null=False, db_column='fileid')
+    file = models.ForeignKey('BuildFile', null=False, db_column='fileid')
     url = models.ForeignKey('FileUrl', null=False, db_column='urlid')
 
 
@@ -296,7 +297,7 @@ class UrlDownload(modellib.XObjModel):
     url_download_id = models.AutoField(primary_key=True, db_column='urldownloadid')
     url = models.ForeignKey('FileUrl', null=False, db_column='urlid')
     time_dowloaded = models.DecimalField(
-        number_places=14, number_digits=0, null=False, default=0, db_column='timedownloaded')
+        max_digits=14, decimal_places=0, null=False, default=0, db_column='timedownloaded')
     ip = models.CharField(max_length=64, null=False)
 
 
