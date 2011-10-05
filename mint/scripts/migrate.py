@@ -3051,7 +3051,7 @@ class MigrateTo_57(SchemaMigration):
 
 
 class MigrateTo_58(SchemaMigration):
-    Version = (58, 71)
+    Version = (58, 72)
 
     def migrate(self):
         return True
@@ -4335,6 +4335,20 @@ class MigrateTo_58(SchemaMigration):
             ALTER TABLE BuildData
                 ADD CONSTRAINT builddata_uq UNIQUE (buildid, name)""")
         return True
+
+    def migrate72(self):
+        cu = self.db.cursor()
+        cu.execute("""
+            ALTER TABLE BuildFilesUrlsMap
+                DROP CONSTRAINT buildfilesurlsmap_pkey""")
+        cu.execute("""
+            ALTER TABLE BuildFilesUrlsMap
+                ADD COLUMN buildfilesurlsmapid serial PRIMARY KEY""")
+        cu.execute("""
+            ALTER TABLE BuildFilesUrlsMap
+                ADD CONSTRAINT buildfilesurlsmap_uq UNIQUE (fileid, urlid)""")
+        return True
+
 
 #### SCHEMA MIGRATIONS END HERE #############################################
 
