@@ -363,7 +363,7 @@ class ProjectsTestCase(RbacEngine):
         response = self._put('projects/postgres/project_branches/postgres.rpath.com@rpath:postgres-1',
             data=testsxml.project_version_put_xml,
             username="testuser", password="password")
-        self.assertEquals(response.status_code, 401)
+        self.assertEquals(response.status_code, 403)
 
     def testDeleteProjectBranch(self):
         response = self._delete('projects/postgres/project_branches/postgres.rpath.com@rpath:postgres-1',
