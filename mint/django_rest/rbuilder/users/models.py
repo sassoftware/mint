@@ -38,6 +38,7 @@ class User(modellib.XObjIdModel):
         models.BooleanField(default=False, db_column='is_admin')))
 
     is_admin = modellib.SyntheticField()
+    external_auth = modellib.SyntheticField(modellib.BooleanField())
 
     # Field used for the clear-text password when it is to be
     # set/changed
@@ -104,8 +105,17 @@ class User(modellib.XObjIdModel):
         if self._is_admin is not None:
             self.is_admin = str(bool(self._is_admin)).lower()
 
+    def _populateExternalAuthField(self):
+        """
+        Compute external auth field based on whether or not the password
+        is set.
+        """
+
+        self.external_auth = self.password is None
+
     def computeSyntheticFields(self, sender, **kwargs):
         self._populateAdminField()
+        self._populateExternalAuthField()
         # sub-collections off of user
         self.roles = modellib.HrefField(
            href="/api/v1/users/%s/roles" % self.user_id

@@ -69,6 +69,8 @@ class UsersTable(database.KeyedTable):
         return False
 
     def _mungePassword(self, password):
+        if password is None or password == '':
+            return None, None
         m = md5()
         salt = os.urandom(4)
         m.update(salt)
