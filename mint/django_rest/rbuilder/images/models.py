@@ -50,6 +50,8 @@ class Image(modellib.XObjIdModel):
     class Meta:
         db_table = u'builds'
 
+    view_name ='Images'
+
     _xobj_explicit_accessors = set(['image_files'])
     # _xobj_hidden_accessors = set(['buildfilesurlsmap_set'])
     
@@ -102,7 +104,8 @@ class Image(modellib.XObjIdModel):
     trailing_version = modellib.SyntheticField()
     released = modellib.SyntheticField()
     num_image_files = modellib.SyntheticField()
-    build_log = modellib.SyntheticField()
+    # build_log = modellib.SyntheticField()
+    build_log = modellib.HrefField(href='build_log')
     #actions = modellib.SyntheticField()
         
     def computeSyntheticFields(self, sender, **kwargs):
@@ -126,7 +129,7 @@ class Image(modellib.XObjIdModel):
         else:
             self.num_image_files = 0;
         
-        self.build_log = BuildLogHref(self)
+        # self.build_log = BuildLogHref(self)
 
 
     def _computeMetadata(self):

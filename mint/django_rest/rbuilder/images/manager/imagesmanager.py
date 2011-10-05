@@ -161,7 +161,7 @@ class ImagesManager(basemanager.BaseManager):
         
     @exposed
     def getBuildLog(self, image_id):
-        import pdb; pdb.set_trace()
-        pass
+        buildLogUrl = ''
+        return None
         
         
