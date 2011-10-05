@@ -160,8 +160,11 @@ class ImagesManager(basemanager.BaseManager):
         return release
         
     @exposed
-    def getBuildLog(self, image_id):
-        buildLogUrl = ''
-        return None
+    def getBuildLog(self, image_id, host):
+        image = models.Image.objects.get(pk=image_id)
+        buildLog = image._getBuildLog()
+        buildLogUrl = 'http://' + host.rstrip('/') + buildLog.serialize_value().id
+        import pdb; pdb.set_trace()
+        return buildLogUrl
         
         

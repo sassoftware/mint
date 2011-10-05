@@ -148,7 +148,8 @@ class ImageBuildFileUrlService(service.BaseService):
 class BuildLogService(service.BaseService):
     @access.admin
     def rest_GET(self, request, image_id):
-        return self.get(image_id)
+        host = request.get_host()
+        return self.get(image_id, host)
         
-    def get(self, image_id):
-        return self.mgr.getBuildLog(image_id)
+    def get(self, image_id, host):
+        return self.mgr.getBuildLog(image_id, host)
