@@ -144,22 +144,16 @@ class ImageBuildFileUrlService(service.BaseService):
         file_url.save()
         return file_url
         
-# write manager for this!
-class ImageUrlDownloadsService(service.BaseService):
-    @access.admin
-    @return_xml
-    def rest_GET(self, request, image_id, file_id):
-        return self.get(image_id, file_id)
         
-    def get(self, image_id, file_id):
-        url = models.BuildFilesUrlsMap.objects.get(file=file_id).url
-        UrlDownloads = models.UrlDownloads()
-        UrlDownloads.url_download = models.UrlDownload.objects.filter(url=url.file_url_id)
-        return UrlDownloads
-        
+class BuildLogService(service.BaseService):
     @access.admin
-    @requires('url_download')
-    @return_xml
-    def rest_POST(self, request, image_id, file_id, url_download):
-        url_download.save()
-        return url_download
+    def rest_GET(self, request, image_id):
+        # host = request.get_host()
+        return self.get(image_id)
+        
+    def get(self, image_id):
+        buildLog = self.mgr.getBuildLog(image_id)
+        response = HttpResponse()
+        response['Content-Type'] = 'text/plain'
+        response.write(buildLog)
+        return response

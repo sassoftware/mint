@@ -158,3 +158,9 @@ class ImagesManager(basemanager.BaseManager):
     def updateRelease(self, release_id, release):
         release.save()
         return release
+        
+    @exposed
+    def getBuildLog(self, image_id):
+        image = models.Image.objects.get(pk=image_id)
+        hostname = image.project.hostname
+        return self.restDb.getImageFile(hostname, image_id, 'build.log')

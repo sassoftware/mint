@@ -36,10 +36,21 @@ class Images(modellib.Collection):
     def get_url_key(self, *args, **kwargs):
         return self.url_key
 
+class BuildLogHref(modellib.HrefFieldFromModel):
+    def __init__(self, model):
+        modellib.HrefFieldFromModel.__init__(self, model)
+
+    def serialize_value(self, request=None):
+        "Extracts the URL from the given model and builds an href from it"
+        url = self.model.get_absolute_url(request)
+        url = self._getRelativeHref(url=url)
+        return modellib.XObjHrefModel(url + '/build_log')
 
 class Image(modellib.XObjIdModel):
     class Meta:
         db_table = u'builds'
+
+    view_name ='Image'
 
     _xobj_explicit_accessors = set(['image_files'])
     # _xobj_hidden_accessors = set(['buildfilesurlsmap_set'])
@@ -93,6 +104,7 @@ class Image(modellib.XObjIdModel):
     trailing_version = modellib.SyntheticField()
     released = modellib.SyntheticField()
     num_image_files = modellib.SyntheticField()
+    build_log = modellib.SyntheticField()
     #actions = modellib.SyntheticField()
         
     def computeSyntheticFields(self, sender, **kwargs):
@@ -115,6 +127,11 @@ class Image(modellib.XObjIdModel):
             self.num_image_files = len(self.files.all())
         else:
             self.num_image_files = 0;
+        
+        self.build_log = self._getBuildLog()
+
+    def _getBuildLog(self):
+        return BuildLogHref(self)
 
     def _computeMetadata(self):
         if self._rbmgr is None or self.output_trove is None:
