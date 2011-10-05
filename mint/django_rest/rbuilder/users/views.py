@@ -60,8 +60,6 @@ class UsersService(service.BaseService):
     @requires('user')
     @return_xml
     def rest_POST(self, request, user):
-        if not user.password:
-            return HttpResponse(status=400)
         if not user.user_name:
             return HttpResponse(status=400)
         return self.mgr.addUser(user)
