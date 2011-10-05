@@ -30,6 +30,7 @@ user_get_xml_with_roles = """
   <full_name>ExampleIntern</full_name>
   <is_admin>false</is_admin>
   <roles id="http://testserver/api/v1/users/2003/roles"/>
+  <external_auth>false</external_auth>
   <user_id>2003</user_id>
   <user_name>ExampleIntern</user_name>
 </user>
@@ -511,6 +512,7 @@ users_in_role_xml = """
     <full_name>Test User</full_name>
     <is_admin>false</is_admin>
     <roles id="http://testserver/api/v1/users/2000/roles"/>
+    <external_auth>false</external_auth>
     <user_id>2000</user_id>
     <user_name>testuser</user_name>
   </user>
@@ -521,6 +523,7 @@ users_in_role_xml = """
     <full_name>Administrator</full_name>
     <is_admin>true</is_admin>
     <roles id="http://testserver/api/v1/users/1/roles"/>
+    <external_auth>false</external_auth>
     <user_id>1</user_id>
     <user_name>admin</user_name>
   </user>
