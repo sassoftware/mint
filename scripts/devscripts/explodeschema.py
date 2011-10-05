@@ -38,8 +38,11 @@ def main(args):
 def diff(old_db, new_db):
     old_schema = _load(old_db)
     new_schema = _load(new_db)
+    count = 0
     for addremove, subpath, value in new_schema.diff(old_schema):
         print addremove, subpath, value
+        count += 1
+    return count
 
 
 def quoteId(name):

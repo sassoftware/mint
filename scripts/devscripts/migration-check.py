@@ -179,12 +179,39 @@ def dumpdb(server, dbname, path):
         sys.exit("dump failed")
 
 
+def restoredb(server, dbname, path):
+    if os.system("psql -U conary -p %s -d %s -f %s -1 -X" % (server.port,
+            dbname, path)):
+        sys.exit("restore failed")
+
+
+def hgresolve(tag):
+    p = subprocess.Popen(['hg', 'id', '-ir', tag], stdout=subprocess.PIPE)
+    rev = p.communicate()[0].strip()
+    if not rev or p.returncode:
+        raise RuntimeError("Failed to resolve hg tag %r" % (tag,))
+    return rev.split()[0]
+
+
 def main():
     log.setupLogging(consoleLevel=logging.DEBUG, consoleFormat='file')
 
     start, end = sys.argv[1:]
 
-    if os.system("hg id |grep -q +") == 0:
+    if os.path.exists(start):
+        startrev = None
+        if end == '.':
+            # file -> working copy
+            endrev = None
+        else:
+            # file -> revision
+            endrev = hgresolve(end)
+    else:
+        # revision -> revision
+        startrev = hgresolve(start)
+        endrev = hgresolve(end)
+
+    if (startrev or endrev) and os.system("hg id |grep -q +") == 0:
         sys.exit("working copy is not clean, commit or qrefresh first")
 
     workdir = None
@@ -198,36 +225,62 @@ def main():
 
         # Initialize the old version
         migrated_db = createdb(server)
-        if os.system("hg up -C %s 1>&2" % start):
-            sys.exit("hg failed")
-        print 'Migrating from:'
-        sys.stdout.flush()
-        os.system("hg parents")
+        if startrev:
+            if os.system("hg up -C %s 1>&2" % startrev):
+                sys.exit("hg failed")
+            print 'Migrating from:'
+            sys.stdout.flush()
+            os.system("hg parents")
+        else:
+            restoredb(server, migrated_db, start)
+            print 'Migrating from file', start
         migratedb(server, migrated_db)
         dumpdb(server, migrated_db, 'old.sql')
+        with open('old.sql', 'a') as f:
+            print >> f, '-- Generated on %s from revision %s' % (
+                    time.strftime('%F %T %z'), startrev or '<unknown>')
         # Migrate to the new version
-        if os.system("hg up -C %s 1>&2" % end):
-            sys.exit("hg failed")
-        print 'Migrating to:'
-        sys.stdout.flush()
-        os.system("hg parents")
+        if endrev:
+            if os.system("hg up -C %s 1>&2" % endrev):
+                sys.exit("hg failed")
+            print 'Migrating to:'
+            sys.stdout.flush()
+            os.system("hg parents")
+        else:
+            print 'Migrating to working copy'
         migratedb(server, migrated_db)
         dumpdb(server, migrated_db, 'migrated.sql')
+        with open('migrated.sql', 'a') as f:
+            print >> f, ('-- Generated on %s by migrating from revision %s '
+                    'to revision %s' % (time.strftime('%F %T %z'),
+                        startrev or '<unknown>',
+                        endrev or '<unknown>'))
 
         # Initialize a fresh copy of the new version
         fresh_db = createdb(server)
         migratedb(server, fresh_db)
         dumpdb(server, fresh_db, 'fresh.sql')
+        with open('fresh.sql', 'a') as f:
+            print >> f, '-- Generated on %s from revision %s' % (
+                    time.strftime('%F %T %z'), endrev or '<unknown>')
 
         # Compare
-        #os.system("diff -u %s %s" % (migrated_sql.name, fresh_sql.name))
+        print
+        print
+        print 'Comparison result:'
         import explodeschema
-        explodeschema.diff(server.connectPsyco(migrated_db),
+        result = explodeschema.diff(server.connectPsyco(migrated_db),
                 server.connectPsyco(fresh_db))
 
     finally:
         server.kill()
         util.rmtree(workdir)
+
+    print
+    if result:
+        print 'FAILURE'
+    else:
+        print 'SUCCESS'
 
 
 if __name__ == '__main__':
