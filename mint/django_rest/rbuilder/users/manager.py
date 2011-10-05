@@ -57,6 +57,8 @@ class UsersManager(basemanager.BaseManager):
             user.display_email = ''
         if not user.blurb:
             user.blurb = ''
+        if not user.password:
+            user.password = ''
         # Create a MintServer object, because that gives us access to
         # the Users class. We won't use registerNewUser, since that
         # performs additional checks that are not necessary (all auth
