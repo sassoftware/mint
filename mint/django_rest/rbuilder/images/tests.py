@@ -66,11 +66,6 @@ class ImagesTestCase(XMLTestCase):
             fileUrl = models.FileUrl(url_type=0, url='http://example.com/%s/' % i)
             fileUrl.save()
             
-            urlDownload = models.UrlDownload(url=fileUrl, ip='127.0.0.%s' % i)
-            urlDownload.save()
-            urlDownload = models.UrlDownload(url=fileUrl, ip='192.160.1.%s' % i)
-            urlDownload.save()
-            
             buildFilesUrlsMap = models.BuildFilesUrlsMap(file=buildFile, url=fileUrl)
             buildFilesUrlsMap.save()
             
@@ -79,11 +74,6 @@ class ImagesTestCase(XMLTestCase):
         
             fileUrl = models.FileUrl(url_type=0, url='http://example.com/%s/' % (i + 1))
             fileUrl.save()
-            
-            urlDownload = models.UrlDownload(url=fileUrl, ip='127.0.0.%s' % (i + 1))
-            urlDownload.save()
-            urlDownload = models.UrlDownload(url=fileUrl, ip='192.160.1.%s' % (i + 1))
-            urlDownload.save()
         
             buildFilesUrlsMap = models.BuildFilesUrlsMap(file=buildFile, url=fileUrl)
             buildFilesUrlsMap.save()
@@ -232,5 +222,4 @@ class ImagesTestCase(XMLTestCase):
         
     def testGetBuildLog(self):
         response = self._get('images/3/build_log', username='admin', password='password')
-        import pdb; pdb.set_trace()
         pass

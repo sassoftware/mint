@@ -297,27 +297,6 @@ class BuildFilesUrlsMap(modellib.XObjModel):
     url = models.ForeignKey('FileUrl', null=False, db_column='urlid')
 
 
-class UrlDownloads(modellib.Collection):
-    class Meta:
-        abstract = True
-    
-    _xobj = xobj.XObjMetadata(tag='url_downloads')
-    list_fields = ['url_download']
-    
-    
-class UrlDownload(modellib.XObjIdModel):
-    class Meta:
-        db_table = 'urldownloads'
-        
-    _xobj = xobj.XObjMetadata(tag='url_download')
-        
-    url_download_id = models.AutoField(primary_key=True, db_column='urldownloadid')
-    url = models.ForeignKey('FileUrl', null=False, db_column='urlid', related_name='url_downloads')
-    time_downloaded = models.DecimalField(
-        max_digits=14, decimal_places=0, null=False, default=0, db_column='timedownloaded')
-    ip = models.CharField(max_length=64, null=False)
-
-
 for mod_obj in sys.modules[__name__].__dict__.values():
     if hasattr(mod_obj, '_xobj'):
         if mod_obj._xobj.tag:

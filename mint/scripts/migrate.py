@@ -4352,6 +4352,20 @@ class MigrateTo_58(SchemaMigration):
                 ADD COLUMN urlDownloadId bigserial PRIMARY KEY""")
         return True
 
+    def migrate72(self):
+        cu = self.db.cursor()
+        cu.execute("""
+            ALTER TABLE BuildFilesUrlsMap
+                DROP CONSTRAINT buildfilesurlsmap_pkey""")
+        cu.execute("""
+            ALTER TABLE BuildFilesUrlsMap
+                ADD COLUMN buildfilesurlsmapid serial PRIMARY KEY""")
+        cu.execute("""
+            ALTER TABLE BuildFilesUrlsMap
+                ADD CONSTRAINT buildfilesurlsmap_uq UNIQUE (fileid, urlid)""")
+        return True
+
+
 #### SCHEMA MIGRATIONS END HERE #############################################
 
 def _getMigration(major):

@@ -4,18 +4,12 @@ images_get_xml = """
   <image id="http://testserver/api/v1/images/1">
   <build_log id="http://testserver/api/v1/images/1/build_log"/>
     <trove_last_changed></trove_last_changed>
-    <updated_by id="http://testserver/api/v1/users/2002">
-      <user_name>janephoo</user_name>
-      <full_name>Jane Phoo</full_name>
-    </updated_by>
+    <updated_by id="http://testserver/api/v1/users/2002"/>
     <trailing_version>1-0-1</trailing_version>
     <num_image_files>2</num_image_files>
     <image_type>10</image_type>
     <trove_flavor>1#x86:i486:i586:i686|5#use:~!xen</trove_flavor>
-    <created_by id="http://testserver/api/v1/users/2001">
-      <user_name>jimphoo</user_name>
-      <full_name>Jim Phoo</full_name>
-    </created_by>
+    <created_by id="http://testserver/api/v1/users/2001"/>
     <status_message></status_message>
     <trove_name>troveName0</trove_name>
     <status>-1</status>
@@ -44,18 +38,12 @@ images_get_xml = """
   <image id="http://testserver/api/v1/images/2">
   <build_log id="http://testserver/api/v1/images/2/build_log"/>
     <trove_last_changed></trove_last_changed>
-    <updated_by id="http://testserver/api/v1/users/2002">
-      <user_name>janephoo</user_name>
-      <full_name>Jane Phoo</full_name>
-    </updated_by>
+    <updated_by id="http://testserver/api/v1/users/2002"/>
     <trailing_version>1-1-1</trailing_version>
     <num_image_files>2</num_image_files>
     <image_type>10</image_type>
     <trove_flavor>1#x86:i486:i586:i686|5#use:~!xen</trove_flavor>
-    <created_by id="http://testserver/api/v1/users/2001">
-      <user_name>jimphoo</user_name>
-      <full_name>Jim Phoo</full_name>
-    </created_by>
+    <created_by id="http://testserver/api/v1/users/2001"/>
     <status_message></status_message>
     <trove_name>troveName1</trove_name>
     <status>-1</status>
@@ -84,18 +72,12 @@ images_get_xml = """
   <image id="http://testserver/api/v1/images/3">
   <build_log id="http://testserver/api/v1/images/3/build_log"/>
     <trove_last_changed></trove_last_changed>
-    <updated_by id="http://testserver/api/v1/users/2002">
-      <user_name>janephoo</user_name>
-      <full_name>Jane Phoo</full_name>
-    </updated_by>
+    <updated_by id="http://testserver/api/v1/users/2002"/>
     <trailing_version>1-2-1</trailing_version>
     <num_image_files>2</num_image_files>
     <image_type>10</image_type>
     <trove_flavor>1#x86:i486:i586:i686|5#use:~!xen</trove_flavor>
-    <created_by id="http://testserver/api/v1/users/2001">
-      <user_name>jimphoo</user_name>
-      <full_name>Jim Phoo</full_name>
-    </created_by>
+    <created_by id="http://testserver/api/v1/users/2001"/>
     <status_message></status_message>
     <trove_name>troveName2</trove_name>
     <status>-1</status>
@@ -129,18 +111,12 @@ image_get_xml = """
 <image id="http://testserver/api/v1/images/1">
   <build_log id="http://testserver/api/v1/images/1/build_log"/>
   <trove_last_changed></trove_last_changed>
-  <updated_by id="http://testserver/api/v1/users/2002">
-    <user_name>janephoo</user_name>
-    <full_name>Jane Phoo</full_name>
-  </updated_by>
+  <updated_by id="http://testserver/api/v1/users/2002"/>
   <trailing_version>1-0-1</trailing_version>
   <num_image_files>2</num_image_files>
   <image_type>10</image_type>
   <trove_flavor>1#x86:i486:i586:i686|5#use:~!xen</trove_flavor>
-  <created_by id="http://testserver/api/v1/users/2001">
-    <user_name>jimphoo</user_name>
-    <full_name>Jim Phoo</full_name>
-  </created_by>
+  <created_by id="http://testserver/api/v1/users/2001"/>
   <status_message></status_message>
   <trove_name>troveName0</trove_name>
   <status>-1</status>
@@ -343,32 +319,20 @@ release_get_xml = \
     <name>foo0</name>
   </project>
   <should_mirror>0</should_mirror>
-  <published_by id="http://testserver/api/v1/users/2002">
-    <user_name>janephoo</user_name>
-    <full_name>Jane Phoo</full_name>
-  </published_by>
+  <published_by id="http://testserver/api/v1/users/2002"/>
   <time_updated></time_updated>
-  <created_by id="http://testserver/api/v1/users/2001">
-    <user_name>jimphoo</user_name>
-    <full_name>Jim Phoo</full_name>
-  </created_by>
+  <created_by id="http://testserver/api/v1/users/2001"/>
   <version>releaseVersion0</version>
   <images>
     <image id="http://testserver/api/v1/images/1">
       <build_log id="http://testserver/api/v1/images/1/build_log"/>
       <trove_last_changed></trove_last_changed>
-      <updated_by id="http://testserver/api/v1/users/2002">
-        <user_name>janephoo</user_name>
-        <full_name>Jane Phoo</full_name>
-      </updated_by>
+      <updated_by id="http://testserver/api/v1/users/2002"/>
       <trailing_version>1-0-1</trailing_version>
       <num_image_files>2</num_image_files>
       <image_type>10</image_type>
       <trove_flavor>1#x86:i486:i586:i686|5#use:~!xen</trove_flavor>
-      <created_by id="http://testserver/api/v1/users/2001">
-        <user_name>jimphoo</user_name>
-        <full_name>Jim Phoo</full_name>
-      </created_by>
+      <created_by id="http://testserver/api/v1/users/2001"/>
       <status_message></status_message>
       <trove_name>troveName0</trove_name>
       <status>-1</status>
@@ -397,10 +361,7 @@ release_get_xml = \
   </images>
   <time_mirrored></time_mirrored>
   <time_published></time_published>
-  <updated_by id="http://testserver/api/v1/users/2002">
-    <user_name>janephoo</user_name>
-    <full_name>Jane Phoo</full_name>
-  </updated_by>
+  <updated_by id="http://testserver/api/v1/users/2002"/>
 </release>
 """.strip()
 
@@ -439,32 +400,20 @@ releases_get_xml = \
       <name>foo0</name>
     </project>
     <should_mirror>0</should_mirror>
-    <published_by id="http://testserver/api/v1/users/2002">
-      <user_name>janephoo</user_name>
-      <full_name>Jane Phoo</full_name>
-    </published_by>
+    <published_by id="http://testserver/api/v1/users/2002"/>
     <time_updated></time_updated>
-    <created_by id="http://testserver/api/v1/users/2001">
-      <user_name>jimphoo</user_name>
-      <full_name>Jim Phoo</full_name>
-    </created_by>
+    <created_by id="http://testserver/api/v1/users/2001"/>
     <version>releaseVersion0</version>
     <images>
       <image id="http://testserver/api/v1/images/1">
         <build_log id="http://testserver/api/v1/images/1/build_log"/>
         <trove_last_changed></trove_last_changed>
-        <updated_by id="http://testserver/api/v1/users/2002">
-          <user_name>janephoo</user_name>
-          <full_name>Jane Phoo</full_name>
-        </updated_by>
+        <updated_by id="http://testserver/api/v1/users/2002"/>
         <trailing_version>1-0-1</trailing_version>
         <num_image_files>2</num_image_files>
         <image_type>10</image_type>
         <trove_flavor>1#x86:i486:i586:i686|5#use:~!xen</trove_flavor>
-        <created_by id="http://testserver/api/v1/users/2001">
-          <user_name>jimphoo</user_name>
-          <full_name>Jim Phoo</full_name>
-        </created_by>
+        <created_by id="http://testserver/api/v1/users/2001"/>
         <status_message></status_message>
         <trove_name>troveName0</trove_name>
         <status>-1</status>
@@ -493,10 +442,7 @@ releases_get_xml = \
     </images>
     <time_mirrored></time_mirrored>
     <time_published></time_published>
-    <updated_by id="http://testserver/api/v1/users/2002">
-      <user_name>janephoo</user_name>
-      <full_name>Jane Phoo</full_name>
-    </updated_by>
+    <updated_by id="http://testserver/api/v1/users/2002"/>
   </release>
   <release id="http://testserver/api/v1/releases/2">
     <release_id>2</release_id>
@@ -509,32 +455,20 @@ releases_get_xml = \
       <name>foo1</name>
     </project>
     <should_mirror>0</should_mirror>
-    <published_by id="http://testserver/api/v1/users/2002">
-      <user_name>janephoo</user_name>
-      <full_name>Jane Phoo</full_name>
-    </published_by>
+    <published_by id="http://testserver/api/v1/users/2002"/>
     <time_updated></time_updated>
-    <created_by id="http://testserver/api/v1/users/2001">
-      <user_name>jimphoo</user_name>
-      <full_name>Jim Phoo</full_name>
-    </created_by>
+    <created_by id="http://testserver/api/v1/users/2001"/>
     <version>releaseVersion1</version>
     <images>
       <image id="http://testserver/api/v1/images/2">
         <build_log id="http://testserver/api/v1/images/2/build_log"/>
         <trove_last_changed></trove_last_changed>
-        <updated_by id="http://testserver/api/v1/users/2002">
-          <user_name>janephoo</user_name>
-          <full_name>Jane Phoo</full_name>
-        </updated_by>
+        <updated_by id="http://testserver/api/v1/users/2002"/>
         <trailing_version>1-1-1</trailing_version>
         <num_image_files>2</num_image_files>
         <image_type>10</image_type>
         <trove_flavor>1#x86:i486:i586:i686|5#use:~!xen</trove_flavor>
-        <created_by id="http://testserver/api/v1/users/2001">
-          <user_name>jimphoo</user_name>
-          <full_name>Jim Phoo</full_name>
-        </created_by>
+        <created_by id="http://testserver/api/v1/users/2001"/>
         <status_message></status_message>
         <trove_name>troveName1</trove_name>
         <status>-1</status>
@@ -563,10 +497,7 @@ releases_get_xml = \
     </images>
     <time_mirrored></time_mirrored>
     <time_published></time_published>
-    <updated_by id="http://testserver/api/v1/users/2002">
-      <user_name>janephoo</user_name>
-      <full_name>Jane Phoo</full_name>
-    </updated_by>
+    <updated_by id="http://testserver/api/v1/users/2002"/>
   </release>
   <release id="http://testserver/api/v1/releases/3">
     <release_id>3</release_id>
@@ -579,32 +510,20 @@ releases_get_xml = \
       <name>foo2</name>
     </project>
     <should_mirror>0</should_mirror>
-    <published_by id="http://testserver/api/v1/users/2002">
-      <user_name>janephoo</user_name>
-      <full_name>Jane Phoo</full_name>
-    </published_by>
+    <published_by id="http://testserver/api/v1/users/2002"/>
     <time_updated></time_updated>
-    <created_by id="http://testserver/api/v1/users/2001">
-      <user_name>jimphoo</user_name>
-      <full_name>Jim Phoo</full_name>
-    </created_by>
+    <created_by id="http://testserver/api/v1/users/2001"/>
     <version>releaseVersion2</version>
     <images>
       <image id="http://testserver/api/v1/images/3">
         <build_log id="http://testserver/api/v1/images/3/build_log"/>
         <trove_last_changed></trove_last_changed>
-        <updated_by id="http://testserver/api/v1/users/2002">
-          <user_name>janephoo</user_name>
-          <full_name>Jane Phoo</full_name>
-        </updated_by>
+        <updated_by id="http://testserver/api/v1/users/2002"/>
         <trailing_version>1-2-1</trailing_version>
         <num_image_files>2</num_image_files>
         <image_type>10</image_type>
         <trove_flavor>1#x86:i486:i586:i686|5#use:~!xen</trove_flavor>
-        <created_by id="http://testserver/api/v1/users/2001">
-          <user_name>jimphoo</user_name>
-          <full_name>Jim Phoo</full_name>
-        </created_by>
+        <created_by id="http://testserver/api/v1/users/2001"/>
         <status_message></status_message>
         <trove_name>troveName2</trove_name>
         <status>-1</status>
@@ -633,10 +552,7 @@ releases_get_xml = \
     </images>
     <time_mirrored></time_mirrored>
     <time_published></time_published>
-    <updated_by id="http://testserver/api/v1/users/2002">
-      <user_name>janephoo</user_name>
-      <full_name>Jane Phoo</full_name>
-    </updated_by>
+    <updated_by id="http://testserver/api/v1/users/2002"/>
   </release>
 </releases>
 """.strip()
@@ -662,20 +578,6 @@ build_file_url_get_xml = \
 <?xml version='1.0' encoding='UTF-8'?>
 <file_url>
   <url>http://example.com/0/</url>
-  <url_downloads>
-    <url_download>
-      <url/>
-      <time_downloaded>0.0</time_downloaded>
-      <ip>127.0.0.0</ip>
-      <url_download_id>1</url_download_id>
-    </url_download>
-    <url_download>
-      <url/>
-      <time_downloaded>0.0</time_downloaded>
-      <ip>192.160.1.0</ip>
-      <url_download_id>2</url_download_id>
-    </url_download>
-  </url_downloads>
   <url_type>0</url_type>
   <file_url_id>1</file_url_id>
 </file_url>
