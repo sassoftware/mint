@@ -344,9 +344,10 @@ class ProjectManager(basemanager.BaseManager):
         pd.setBaseLabel(projectVersion.label)
 
         # FIXME: use the href and look up the platform in the DB instead
-        platformLabel = getattr(projectVersion.platform, 'label', None)
+        platformLabel = str(projectVersion.platform_label or '')
         if platformLabel:
-            platform = platform_models.Platform.objects.select_related().get(label=str(platformLabel))
+            platform = platform_models.Platform.objects.select_related(
+                    ).get(label=platformLabel)
             cclient = self.mgr.getAdminClient(write=True)
             pd.rebase(cclient, platform.label)
         self.saveProductVersionDefinition(projectVersion, pd)
