@@ -2,6 +2,7 @@ images_get_xml = """
 <?xml version='1.0' encoding='UTF-8'?>
 <images count="3" next_page="" num_pages="1" previous_page="" full_collection="" end_index="2" limit="10" order_by="" per_page="10" filter_by="" start_index="0">
   <image id="http://testserver/api/v1/images/1">
+  <build_log id="http://testserver/api/v1/images/1/build_log"/>
     <trove_last_changed></trove_last_changed>
     <updated_by id="http://testserver/api/v1/users/2002">
       <user_name>janephoo</user_name>
@@ -41,6 +42,7 @@ images_get_xml = """
     <job_uuid>1</job_uuid>
   </image>
   <image id="http://testserver/api/v1/images/2">
+  <build_log id="http://testserver/api/v1/images/2/build_log"/>
     <trove_last_changed></trove_last_changed>
     <updated_by id="http://testserver/api/v1/users/2002">
       <user_name>janephoo</user_name>
@@ -80,6 +82,7 @@ images_get_xml = """
     <job_uuid>1</job_uuid>
   </image>
   <image id="http://testserver/api/v1/images/3">
+  <build_log id="http://testserver/api/v1/images/3/build_log"/>
     <trove_last_changed></trove_last_changed>
     <updated_by id="http://testserver/api/v1/users/2002">
       <user_name>janephoo</user_name>
@@ -124,6 +127,7 @@ images_get_xml = """
 image_get_xml = """
 <?xml version='1.0' encoding='UTF-8'?>
 <image id="http://testserver/api/v1/images/1">
+  <build_log id="http://testserver/api/v1/images/1/build_log"/>
   <trove_last_changed></trove_last_changed>
   <updated_by id="http://testserver/api/v1/users/2002">
     <user_name>janephoo</user_name>
@@ -351,6 +355,7 @@ release_get_xml = \
   <version>releaseVersion0</version>
   <images>
     <image id="http://testserver/api/v1/images/1">
+      <build_log id="http://testserver/api/v1/images/1/build_log"/>
       <trove_last_changed></trove_last_changed>
       <updated_by id="http://testserver/api/v1/users/2002">
         <user_name>janephoo</user_name>
@@ -446,6 +451,7 @@ releases_get_xml = \
     <version>releaseVersion0</version>
     <images>
       <image id="http://testserver/api/v1/images/1">
+        <build_log id="http://testserver/api/v1/images/1/build_log"/>
         <trove_last_changed></trove_last_changed>
         <updated_by id="http://testserver/api/v1/users/2002">
           <user_name>janephoo</user_name>
@@ -515,6 +521,7 @@ releases_get_xml = \
     <version>releaseVersion1</version>
     <images>
       <image id="http://testserver/api/v1/images/2">
+        <build_log id="http://testserver/api/v1/images/2/build_log"/>
         <trove_last_changed></trove_last_changed>
         <updated_by id="http://testserver/api/v1/users/2002">
           <user_name>janephoo</user_name>
@@ -584,6 +591,7 @@ releases_get_xml = \
     <version>releaseVersion2</version>
     <images>
       <image id="http://testserver/api/v1/images/3">
+        <build_log id="http://testserver/api/v1/images/3/build_log"/>
         <trove_last_changed></trove_last_changed>
         <updated_by id="http://testserver/api/v1/users/2002">
           <user_name>janephoo</user_name>
@@ -648,37 +656,6 @@ release_put_xml = \
   <should_mirror>0</should_mirror>
 </release>
 """.strip()
-
-downloads_get_xml = \
-"""
-<?xml version='1.0' encoding='UTF-8'?>
-<url_downloads count="2" next_page="" num_pages="1" previous_page="" full_collection="" end_index="1" limit="10" order_by="" per_page="10" filter_by="" start_index="0">
-  <url_download>
-    <url/>
-    <time_downloaded>0.0</time_downloaded>
-    <ip>127.0.0.1</ip>
-    <url_download_id>5</url_download_id>
-  </url_download>
-  <url_download>
-    <url/>
-    <time_downloaded>0.0</time_downloaded>
-    <ip>192.160.1.1</ip>
-    <url_download_id>6</url_download_id>
-  </url_download>
-</url_downloads>
-""".strip()
-
-download_post_xml = \
-"""
-<url_download>
-  <url>
-    <url>http://example.com/20/</url>
-    <url_type>0</url_type>
-  </url>
-  <time_downloaded>0.0</time_downloaded>
-  <ip>127.0.0.6</ip>
-</url_download>
-"""
 
 build_file_url_get_xml = \
 """

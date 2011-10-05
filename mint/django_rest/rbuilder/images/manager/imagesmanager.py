@@ -158,3 +158,10 @@ class ImagesManager(basemanager.BaseManager):
     def updateRelease(self, release_id, release):
         release.save()
         return release
+        
+    @exposed
+    def getBuildLog(self, image_id):
+        import pdb; pdb.set_trace()
+        pass
+        
+        

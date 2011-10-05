@@ -229,15 +229,8 @@ class ImagesTestCase(XMLTestCase):
         fileUrl = xobj.parse(response.content).file_url
         self.assertEquals(fileUrl.url, u'http://example.com/1/')
         self.assertEquals(fileUrl.url_type, u'0')
-
-    def testGetUrlDownloadsByBuildFile(self):
-        response = self._get('images/3/build_files/3/downloads', username='admin', password='password')
-        self.assertEquals(response.status_code, 200)
-        self.assertXMLEquals(response.content, testsxml.downloads_get_xml)
         
-    def testCreateUrlDownload(self):
-        response = self._post('images/3/build_files/3/downloads',
-            username='admin', password='password', data=testsxml.download_post_xml)
-        downloadPosted = xobj.parse(response.content).url_download
-        download = models.UrlDownload.objects.get(pk=downloadPosted.url_download_id)
-        self.assertEquals(download.ip, downloadPosted.ip)
+    def testGetBuildLog(self):
+        response = self._get('images/3/build_log', username='admin', password='password')
+        import pdb; pdb.set_trace()
+        pass

@@ -616,6 +616,12 @@ urlpatterns = patterns('',
     URL(r'images/(?P<image_id>\d+)/?$',
         imagesviews.ImagesService(),
         name='Image'),
+    
+    # Digress for build_log
+    URL(r'images/(?P<image_id>\d+)/build_log/?$',
+        imagesviews.BuildLogService(),
+        name='BuildLog'),
+    
     URL(r'images/(?P<image_id>\d+)/build_files/?$',
         imagesviews.ImageBuildFileService(),
         name='BuildFiles'),
@@ -625,12 +631,6 @@ urlpatterns = patterns('',
     URL(r'images/(?P<image_id>\d+)/build_files/(?P<file_id>\d+)/file_url/?$',
         imagesviews.ImageBuildFileUrlService(),
         name='FileUrl'),
-    URL(r'images/(?P<image_id>\d+)/build_files/(?P<file_id>\d+)/downloads/?$',
-        imagesviews.ImageUrlDownloadsService(),
-        name='UrlDownloads'),
-    URL(r'images/(?P<image_id>\d+)/build_files/(?P<file_id>\d+)/downloads/(?P<download_id>\d+)/?$',
-        imagesviews.ImageUrlDownloadsService(),
-        name='UrlDownload'),
         
     # Begin Releases service
     URL(r'releases/?$',
