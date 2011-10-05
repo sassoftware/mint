@@ -68,6 +68,8 @@ class RbacRole(modellib.XObjIdModel):
         attributes = {'id':str},
     )
 
+    summary_view = [ 'name', 'description' ] 
+ 
     # commenting out because these seem to expand the objects in unintended ways
     # summary_view = [ "name", "description", "created_by", "modified_by" ]
     
