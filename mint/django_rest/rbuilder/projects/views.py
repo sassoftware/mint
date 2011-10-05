@@ -105,15 +105,27 @@ class AllProjectBranchesStagesService(service.BaseService):
 
 
 class AllProjectBranchesService(service.BaseService):
-    @access.admin
+
+    # these RBAC policies have to change prior to release
+    # resolving temporarily for demo purposes
+    # 
+    # we have a couple of options... actually gate the PB on the PB
+    # and make the queryset manageable
+    #
+    # make the PB gate on the P, with the stipulation that
+    # the PB is always read only, which it is NOT
+
+    @access.authenticated # was admin
     @return_xml
     def rest_GET(self, request):
         return self.mgr.getAllProjectBranches()
 
-    @access.admin
+    @access.authenticated # was admin
     @requires('project_branch')
     @return_xml
     def rest_POST(self, request, project_branch):
+        # FIXME: should call into manager
+        # FIXME: no validation that we are not overwriting an existing PB
         project_branch.save()
         return project_branch
 
@@ -132,7 +144,9 @@ class ProjectAllBranchStagesService(service.BaseService):
 
 
 class ProjectBranchService(service.BaseService):
-    @access.admin
+
+    # HACKED FOR DEMO ONLY, see NOTE above regarding RBAC strategy
+    @access.authenticated # was admin
     @return_xml
     def rest_GET(self, request, project_short_name, project_branch_label=None):
         return self.get(project_short_name, project_branch_label)
@@ -140,19 +154,22 @@ class ProjectBranchService(service.BaseService):
     def get(self, project_short_name, project_branch_label):
         return self.mgr.getProjectBranch(project_short_name, project_branch_label)
 
-    @access.admin
+    # HACKED FOR DEMO ONLY, see NOTE above regarding RBAC strategy
+    @access.authenticated # was admin
     @requires("project_branch")
     @return_xml
     def rest_POST(self, request, project_short_name, project_branch):
         return self.mgr.addProjectBranch(project_short_name, project_branch)
 
-    @access.admin
+    # HACKED FOR DEMO ONLY, see NOTE above regarding RBAC strategy
+    @access.authenticated # was admin
     @requires("project_branch")
     @return_xml
     def rest_PUT(self, request, project_short_name, project_branch_label, project_branch):
         return self.mgr.updateProjectBranch(project_branch)
 
-    @access.admin
+    # HACKED FOR DEMO ONLY, see NOTE above regarding RBAC strategy
+    @access.authenticated # was admin
     def rest_DELETE(self, request, project_short_name, project_branch_label):
         projectBranch = self.get(project_short_name, project_branch_label)
         self.mgr.deleteProjectBranch(projectBranch)
@@ -208,8 +225,10 @@ class ProjectService(service.BaseService):
 class ProjectStageService(service.BaseService):
     
     # FIXME if no longer in use, add access.admin until we are sure we can remove it.
-    # else it's a security leak
-    @access.admin
+    # else it's a security hole
+
+    # HACKED FOR DEMO PURPOSES ONLY, must change for release
+    @access.authenticated # was admin
     @return_xml
     def rest_GET(self, request, stage_id=None):
         return self.get(request, stage_id)
@@ -305,8 +324,12 @@ class ProjectJobDescriptorServiceservice.BaseService):
                
         
 class ProjectImageBuildsJobService(service.BaseService):   
-    
-    @access.admin
+   
+    # FIXME: RBAC IS NOT CORRECT, SHOULD GATE ON THE PROJECT
+    # and require modify access
+    # HACKED FOR DEMO ONLY, DO NOT SHIP
+ 
+    @access.authenticated # admin
     @xObjRequires('job')
     @return_xml
     def rest_POST(self, request, job):
