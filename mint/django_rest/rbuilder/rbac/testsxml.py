@@ -215,10 +215,7 @@ permission_list_xml = """
       <name>ModMembers</name>
     </permission>
     <queryset id="http://testserver/api/v1/query_sets/16"/>
-    <role id="http://testserver/api/v1/rbac/roles/2">
-      <description/>
-      <name>developer</name>
-    </role>
+    <role id="http://testserver/api/v1/rbac/roles/2"/>
   </grant>
   <grant id="http://testserver/api/v1/rbac/grants/1">
     <created_by id="http://testserver/api/v1/users/1"/>
@@ -229,10 +226,7 @@ permission_list_xml = """
       <name>ModMembers</name>
     </permission>
     <queryset id="http://testserver/api/v1/query_sets/17"/>
-    <role id="http://testserver/api/v1/rbac/roles/1">
-      <description/>
-      <name>sysadmin</name>
-    </role>
+    <role id="http://testserver/api/v1/rbac/roles/1"/>
   </grant>
   <grant id="http://testserver/api/v1/rbac/grants/2">
     <created_by id="http://testserver/api/v1/users/1"/>
@@ -243,10 +237,7 @@ permission_list_xml = """
       <name>ReadMembers</name>
     </permission>
     <queryset id="http://testserver/api/v1/query_sets/17"/>
-    <role id="http://testserver/api/v1/rbac/roles/2">
-      <description/>
-      <name>developer</name>
-    </role>
+    <role id="http://testserver/api/v1/rbac/roles/2"/>
   </grant>
 </grants>
 """
@@ -262,10 +253,7 @@ permission_list_xml_for_role = """
       <name>ModMembers</name>
     </permission>
     <queryset id="http://testserver/api/v1/query_sets/17"/>
-    <role id="http://testserver/api/v1/rbac/roles/1">
-      <description/>
-      <name>sysadmin</name>
-    </role>
+    <role id="http://testserver/api/v1/rbac/roles/1"/>
   </grant>
 </grants>
 """
@@ -281,10 +269,7 @@ permission_queryset_xml = """
        <name>ModMembers</name>
      </permission>
      <queryset id="http://testserver/api/v1/query_sets/17"/>
-    <role id="http://testserver/api/v1/rbac/roles/1">
-      <description/>
-      <name>sysadmin</name>
-    </role>
+    <role id="http://testserver/api/v1/rbac/roles/1"/>
    </grant>
    <grant id="http://testserver/api/v1/rbac/grants/2">
      <created_by id="http://testserver/api/v1/users/1"/>
@@ -295,10 +280,7 @@ permission_queryset_xml = """
       <name>ReadMembers</name>
      </permission>
      <queryset id="http://testserver/api/v1/query_sets/17"/>
-     <role id="http://testserver/api/v1/rbac/roles/2">
-      <description/>
-      <name>developer</name>
-    </role>
+     <role id="http://testserver/api/v1/rbac/roles/2"/>
    </grant>
    <grant id="http://testserver/api/v1/rbac/grants/3">
      <created_by id="http://testserver/api/v1/users/1"/>
@@ -309,10 +291,7 @@ permission_queryset_xml = """
         <name>ModMembers</name>
      </permission>
      <queryset id="http://testserver/api/v1/query_sets/16"/>
-     <role id="http://testserver/api/v1/rbac/roles/2">
-      <description/>
-      <name>developer</name>
-    </role>
+     <role id="http://testserver/api/v1/rbac/roles/2"/>
    </grant>
 </grants>
 """
@@ -325,10 +304,7 @@ permission_get_xml = """
   </permission>
   <grant_id>1</grant_id>
   <queryset id="http://testserver/api/v1/query_sets/17"/>
-  <role id="http://testserver/api/v1/rbac/roles/1">
-    <description/>
-    <name>sysadmin</name>
-  </role>
+  <role id="http://testserver/api/v1/rbac/roles/1"/>
   <created_by id="http://testserver/api/v1/users/1"/>
   <modified_by id="http://testserver/api/v1/users/1"/>
 </grant>
@@ -353,10 +329,7 @@ permission_post_xml_output="""
   </permission>
   <queryset id="http://testserver/api/v1/query_sets/15"/>
   <grant_id>4</grant_id>
-  <role id="http://testserver/api/v1/rbac/roles/2">
-    <description/>
-    <name>developer</name>
-  </role>
+  <role id="http://testserver/api/v1/rbac/roles/2"/>
   <created_by id="http://testserver/api/v1/users/1"/>
   <modified_by id="http://testserver/api/v1/users/1"/>
 </grant>
@@ -384,9 +357,7 @@ permission_put_xml_output="""
    </permission>
    <grant_id>1</grant_id>
    <queryset id="http://testserver/api/v1/query_sets/17"/>
-   <role id="http://testserver/api/v1/rbac/roles/3">
-    <name>intern</name>
-   </role>
+   <role id="http://testserver/api/v1/rbac/roles/3"/>
    <created_by id="http://testserver/api/v1/users/1"/>
    <modified_by id="http://testserver/api/v1/users/1"/>
  </grant>
