@@ -43,7 +43,7 @@ class AuthenticationManager(manager.Manager):
             raise errors.ProductNotFound(hostname)
 
     def requireProductDeveloper(self, hostname):
-        if self.isAdmin:
+        if self.isAdmin or self.cfg.disableAuthorization:
             return
         cu = self.db.cursor()
         cu.execute('''SELECT hidden,level from Projects
@@ -58,7 +58,7 @@ class AuthenticationManager(manager.Manager):
             raise errors.PermissionDeniedError(hostname)
 
     def requireProductOwner(self, hostname):
-        if self.isAdmin:
+        if self.isAdmin or self.cfg.disableAuthorization:
             return
         cu = self.db.cursor()
         cu.execute('''SELECT hidden,level from Projects
