@@ -261,6 +261,16 @@ class BuildFile(modellib.XObjIdModel):
     title = models.CharField(max_length=255, null=False, default='')
     size = models.IntegerField()
     sha1 = models.CharField(max_length=40)
+    url = modellib.SyntheticField()
+    
+    def serialize(self, request=None):
+        try:
+            fileUrl = BuildFilesUrlsMap.objects.get(file=self.file_id).url
+            self.url = fileUrl.url
+        except: # happens for "MatchingQueryDoesNotExist"
+            pass
+        xobjModel = modellib.XObjIdModel.serialize(self, request)
+        return xobjModel
 
 
 class BuildData(modellib.XObjIdModel):
