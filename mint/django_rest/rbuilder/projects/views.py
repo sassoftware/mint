@@ -111,7 +111,7 @@ class AllProjectBranchesStagesService(service.BaseService):
     """
     get all pbs's
     """
-    @access.authenticated # FIXME: the answer is not admin
+    @access.authenticated # FIXME: HACKED FOR DEMO: the answer is not admin
     @return_xml
     def rest_GET(self, request):
         qs = querymodels.QuerySet.objects.get(name='All Project Stages')
@@ -169,21 +169,21 @@ class ProjectBranchService(service.BaseService):
     def get(self, project_short_name, project_branch_label):
         return self.mgr.getProjectBranch(project_short_name, project_branch_label)
 
-    # HACKED FOR DEMO ONLY, see NOTE above regarding RBAC strategy
+    # FIXME: HACKED FOR DEMO ONLY, see NOTE above regarding RBAC strategy
     @access.authenticated # was admin
     @requires("project_branch")
     @return_xml
     def rest_POST(self, request, project_short_name, project_branch):
         return self.mgr.addProjectBranch(project_short_name, project_branch)
 
-    # HACKED FOR DEMO ONLY, see NOTE above regarding RBAC strategy
+    # FIXME: HACKED FOR DEMO ONLY, see NOTE above regarding RBAC strategy
     @access.authenticated # was admin
     @requires("project_branch")
     @return_xml
     def rest_PUT(self, request, project_short_name, project_branch_label, project_branch):
         return self.mgr.updateProjectBranch(project_branch)
 
-    # HACKED FOR DEMO ONLY, see NOTE above regarding RBAC strategy
+    # FIXME: HACKED FOR DEMO ONLY, see NOTE above regarding RBAC strategy
     @access.authenticated # was admin
     def rest_DELETE(self, request, project_short_name, project_branch_label):
         projectBranch = self.get(project_short_name, project_branch_label)
@@ -234,15 +234,9 @@ class ProjectService(service.BaseService):
         response = HttpResponse(status=204)
         return response
 
-
-# XXX StageProxyService is no longer in use, is
-#     ProjectStageService still being used by anything?
 class ProjectStageService(service.BaseService):
     
-    # FIXME if no longer in use, add access.admin until we are sure we can remove it.
-    # else it's a security hole
-
-    # HACKED FOR DEMO PURPOSES ONLY, must change for release
+    # FIXME: HACKED FOR DEMO PURPOSES ONLY, must rbac for release
     @access.authenticated # was admin
     @return_xml
     def rest_GET(self, request, stage_id=None):
@@ -304,21 +298,18 @@ class ProjectBranchStageImagesService(service.BaseService):
         return self.mgr.getProjectBranchStageImages(project_short_name,
             project_branch_label, stage_name)
     
-    # FIXME -- HACKED FOR DEMO, WE NEED TESTS FOR THE POSITIVE CASE!
-    @access.authenticated
-    #@rbac(StageCallbacks.rbac_can_read_stage_by_project)
+    @rbac(StageCallbacks.rbac_can_read_stage_by_project)
     @return_xml
     def rest_GET(self, request, project_short_name, project_branch_label, stage_name):
         return self.get(request, project_short_name, project_branch_label, stage_name)
      
-    # FIXME -- HACKED FOR DEMO
-    @access.authenticated
-    #@rbac(StageCallbacks.rbac_can_write_image_by_pbs)
+    @rbac(StageCallbacks.rbac_can_write_image_by_pbs)
     @requires("image")
     @return_xml
     def rest_POST(self, request, project_short_name, project_branch_label, stage_name, image):
         return self.mgr.createProjectBranchStageImage(image)
 
+# FIXME -- not sure why this is commented out?
 """        
 class ProjectJobDescriptorServiceservice.BaseService):
 
@@ -344,11 +335,7 @@ class ProjectJobDescriptorServiceservice.BaseService):
         
 class ProjectImageBuildsJobService(service.BaseService):   
    
-    # FIXME: RBAC IS NOT CORRECT, SHOULD GATE ON THE PROJECT
-    # and require modify access
-    # HACKED FOR DEMO ONLY, DO NOT SHIP
- 
-    @access.authenticated # admin
+    @access.admin
     @xObjRequires('job')
     @return_xml
     def rest_POST(self, request, job):
