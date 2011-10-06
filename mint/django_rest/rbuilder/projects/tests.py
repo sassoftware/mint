@@ -41,7 +41,7 @@ class ProjectsTestCase(RbacEngine):
         # developer user does NOT have access to these .. skipping XML versions here as these
         # are well covered in rbac/tests.py
                   
-        role          = rbacmodels.RbacRole.objects.get(name='sysadmin')
+        role          = rbacmodels.RbacRole.objects.get(name='developer')
         all_projects  = querymodels.QuerySet.objects.get(name='All Projects')
         all_pbs       = querymodels.QuerySet.objects.get(name='All Project Stages')
         modmembers    = rbacmodels.RbacPermissionType.objects.get(name='ModMembers')
@@ -65,6 +65,7 @@ class ProjectsTestCase(RbacEngine):
     def _retagQuerySets(self):
         self.mgr.retagQuerySetsByType('project')
         self.mgr.retagQuerySetsByType('project_branch_stage')
+
  
     def _addProject(self, short_name, namespace='ns'):
         project = models.Project()

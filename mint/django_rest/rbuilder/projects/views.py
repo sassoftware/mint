@@ -33,8 +33,10 @@ class ProjectCallbacks(object):
         user = request._authUser
         if request.method == 'PUT' and \
             obj.short_name != project_short_name:
+            #print "REJECT: differeing short names"
             return False
         if view.mgr.userHasRbacPermission(user, obj, action):
+            #print "ACCEPT FOR ACTION: %s" % action
             return True
 
         # if no explicit Project permission, check all PBSes
@@ -47,8 +49,10 @@ class ProjectCallbacks(object):
                 project = obj
             )
             for stage in stages_for_project:
+                #print "TRYING TO INFER FROM: %s" % stage.name
                 if view.mgr.userHasRbacPermission(user, stage, action):
                     return True
+        #print "FAIL, ALL DEFAULTS NO MATCH FOR: %s, %s" % (request._authUser.full_name, action)
         return False
 
     @staticmethod
@@ -56,7 +60,9 @@ class ProjectCallbacks(object):
         """
         project_short_name needs to be a kwarg until the views are more granularly refactored.
         """
-        return ProjectCallbacks._checkPermissions(view, request, project_short_name, READMEMBERS)
+        rc =  ProjectCallbacks._checkPermissions(view, request, project_short_name, READMEMBERS)
+        #print "CAN READ PROJECT? %s -> %s" % (request._authUser.full_name, rc)
+        return rc
 
     @staticmethod
     def can_write_project(view, request, project_short_name, *args, **kwargs):
@@ -89,6 +95,7 @@ class BranchCallbacks(object):
         for stage in stages_for_project:
             if view.mgr.userHasRbacPermission(request._authUser, stage, action):
                 return True
+        #print "BRANCH FAIL FOR: %s, %s" % (request._authUser.full_name, action)
         return False
         
     @staticmethod
@@ -110,7 +117,9 @@ class StageCallbacks(object):
         if not stage_name and request._is_admin:
             return True
         elif stage_name:
-            return view.mgr.userHasRbacPermission(user, obj, READMEMBERS)
+            if view.mgr.userHasRbacPermission(user, obj, READMEMBERS):
+                return True
+        #print "BRANCH FAIL FOR: %s, %s" % (request._authUser.full_name, action)
         return False
 
     @staticmethod
@@ -121,7 +130,9 @@ class StageCallbacks(object):
         if not stage_name and request._is_admin:
             return True
         elif stage_name:
-            return view.mgr.userHasRbacPermission(user, obj, READMEMBERS)
+            if view.mgr.userHasRbacPermission(user, obj, READMEMBERS):
+                return True
+        print "BRANCH FAIL FOR: %s, %s" % (request._authUser.full_name, READMEMBERS)
         return False
 
     @staticmethod
@@ -131,6 +142,7 @@ class StageCallbacks(object):
         tv = all(view.mgr.userHasRbacPermission(user, obj, READMEMBERS) for obj in collection)
         if tv:
             return True
+        #print "DEBUG: FAIL can_read_all_for_project"
         return False
 
     @staticmethod
@@ -142,6 +154,7 @@ class StageCallbacks(object):
             return True
         elif stage_name:
             return view.mgr.userHasRbacPermission(user, obj, READMEMBERS)
+        #print "DEBUG: can_write_image FAIL"
         return False
 
 class AllProjectBranchesStagesService(service.BaseService):
