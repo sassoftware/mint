@@ -96,7 +96,7 @@ class ProjectsTestCase(RbacEngine):
 
     def testGetProjects(self):
         # as admin or granted user, should succeed
-        for username in [ 'admin', 'sysadmin' ]:
+        for username in [ 'admin', 'ExampleDeveloper' ]:
             response = self._get('projects/',
                 username="admin", password="password")
             self.assertEquals(response.status_code, 200)
@@ -114,7 +114,7 @@ class ProjectsTestCase(RbacEngine):
     def testGetProject(self):
 
         # admins and grants can get in
-        for username in [ 'admin', 'sysadmin' ]:
+        for username in [ 'admin', 'ExampleDeveloper' ]:
             response = self._get('projects/chater-foo/',
                 username=username, password='password'
             )
@@ -123,7 +123,7 @@ class ProjectsTestCase(RbacEngine):
         
         # other users cannot
         response = self._get('projects/chater-foo/',
-            username='ExampleDeveloper', password='password')
+            username='ExampleSysadmin', password='password')
         self.assertEquals(response.status_code, 403)
         
         # anon obviously cannot
