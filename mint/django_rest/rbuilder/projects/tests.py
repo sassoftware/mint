@@ -234,11 +234,11 @@ class ProjectsTestCase(RbacEngine):
         self.assertEquals(response.status_code, 403)
 
             
-    def testUpdateProjectAuthenticatedNoWritePerms(self):
+    def testUpdateProjectAuthenticatedWithGrant(self):
         response = self._put('projects/chater-foo',
             data=testsxml.project_put_xml,
             username='ExampleDeveloper', password='password')
-        self.assertEquals(response.status_code, 403)
+        self.assertEquals(response.status_code, 200)
 
     def testDeleteProject_admin(self):
         response = self._delete('projects/chater-foo',
@@ -376,7 +376,7 @@ class ProjectsTestCase(RbacEngine):
             ])
 
         response = self._get('projects/chater-foo/project_branch_stages',
-            username='ExampleDeveloper', password="password")
+            username='testuser', password="password")
         self.assertEquals(response.status_code, 403)
 
     def testGetProjectImages(self):
