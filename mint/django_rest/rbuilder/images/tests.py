@@ -223,3 +223,11 @@ class ImagesTestCase(XMLTestCase):
     def testGetBuildLog(self):
         response = self._get('images/3/build_log', username='admin', password='password')
         pass
+        
+    def testGetImageTypes(self):
+        response = self._get('image_types/', username='admin', password='password')
+        pass
+        
+    def testGetImageType(self):
+        response = self._get('image_types/1', username='admin', password='password')
+        pass

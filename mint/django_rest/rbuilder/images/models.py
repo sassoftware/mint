@@ -21,6 +21,7 @@ from conary import trovetup
 from conary import versions
 from conary.deps import deps
 import sys
+from mint.django_rest.rbuilder.images.manager import models_manager
 
 APIReadOnly = modellib.APIReadOnly
 
@@ -47,9 +48,20 @@ class BuildLogHref(modellib.HrefFieldFromModel):
         url = self._getRelativeHref(url=url)
         return modellib.XObjHrefModel(url + '/build_log')
 
+class ImageTypes(modellib.Collection):
+    class Meta:
+        abstract = True
+        
+    list_fields = ['image_type']
+    
+
 class ImageType(modellib.XObjIdModel):
     class Meta:
         abstract = True
+        
+    _xobj = xobj.XObjMetadata(tag='image_type', attributes={'id':str})
+        
+    objects = models_manager.ImageTypeManager()
     image_type_id = models.IntegerField()
     key = models.CharField()
     name = models.CharField()
@@ -64,6 +76,12 @@ class ImageType(modellib.XObjIdModel):
             key = cls.ImageTypeKeys.get(imageTypeId),
             name = buildtypes.typeNamesShort.get(imageTypeId),
             description = buildtypes.typeNames.get(imageTypeId))
+
+    def serialize(self, request=None):
+        xobjModel = modellib.XObjIdModel.serialize(self, request)
+        xobjModel.id = 'http://' + request.get_host() + '/api/v1/image_types/%s' % self.image_type_id
+        return xobjModel
+
 
 class Image(modellib.XObjIdModel):
     class Meta:

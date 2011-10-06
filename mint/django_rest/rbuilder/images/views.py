@@ -157,3 +157,16 @@ class BuildLogService(service.BaseService):
         response['Content-Type'] = 'text/plain'
         response.write(buildLog)
         return response
+        
+class ImageTypeService(service.BaseService):
+    @access.admin
+    @return_xml
+    def rest_GET(self, request, image_type_id=None):
+        return self.get(image_type_id)
+        
+    def get(self, image_type_id):
+        if image_type_id:
+            return self.mgr.getImageType(image_type_id)
+        else:
+            return self.mgr.getImageTypes()
+        

@@ -164,3 +164,12 @@ class ImagesManager(basemanager.BaseManager):
         image = models.Image.objects.get(pk=image_id)
         hostname = image.project.hostname
         return self.restDb.getImageFile(hostname, image_id, 'build.log')
+        
+    @exposed
+    def getImageType(self, image_type_id):
+        return models.ImageType.objects.get(image_type_id=image_type_id)
+        
+    @exposed
+    def getImageTypes(self):
+        return models.ImageType.objects.all()
+        
