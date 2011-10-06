@@ -41,7 +41,7 @@ class ProjectsTestCase(RbacEngine):
         # developer user does NOT have access to these .. skipping XML versions here as these
         # are well covered in rbac/tests.py
                   
-        role          = rbacmodels.RbacRole.objects.get(name='sysadmin')
+        role          = rbacmodels.RbacRole.objects.get(name='developer')
         all_projects  = querymodels.QuerySet.objects.get(name='All Projects')
         all_pbs       = querymodels.QuerySet.objects.get(name='All Project Stages')
         modmembers    = rbacmodels.RbacPermissionType.objects.get(name='ModMembers')
@@ -65,6 +65,7 @@ class ProjectsTestCase(RbacEngine):
     def _retagQuerySets(self):
         self.mgr.retagQuerySetsByType('project')
         self.mgr.retagQuerySetsByType('project_branch_stage')
+
  
     def _addProject(self, short_name, namespace='ns'):
         project = models.Project()
@@ -95,7 +96,7 @@ class ProjectsTestCase(RbacEngine):
 
     def testGetProjects(self):
         # as admin or granted user, should succeed
-        for username in [ 'admin', 'sysadmin' ]:
+        for username in [ 'admin', 'ExampleDeveloper' ]:
             response = self._get('projects/',
                 username="admin", password="password")
             self.assertEquals(response.status_code, 200)
@@ -113,7 +114,7 @@ class ProjectsTestCase(RbacEngine):
     def testGetProject(self):
 
         # admins and grants can get in
-        for username in [ 'admin', 'sysadmin' ]:
+        for username in [ 'admin', 'ExampleDeveloper' ]:
             response = self._get('projects/chater-foo/',
                 username=username, password='password'
             )
@@ -122,7 +123,7 @@ class ProjectsTestCase(RbacEngine):
         
         # other users cannot
         response = self._get('projects/chater-foo/',
-            username='developer', password='password')
+            username='ExampleSysadmin', password='password')
         self.assertEquals(response.status_code, 403)
         
         # anon obviously cannot
@@ -133,17 +134,17 @@ class ProjectsTestCase(RbacEngine):
         self._initProject()
 
         # FIXME: missing XML tests
-        response = self._get('projects/chater-foo/project_branches', username='developer', password='password')
+        response = self._get('projects/chater-foo/project_branches', username='ExampleDeveloper', password='password')
         self.assertEquals(response.status_code, 200)
 
         response = self._get('projects/chater-foo/project_branches/chater-foo.eng.rpath.com@rpath:chater-foo-trunk',
-            username='developer', password='password')
+            username='ExampleDeveloper', password='password')
         self.assertEquals(response.status_code, 200)
         
-        response = self._get('projects/chater-foo/project_branches/chater-foo.eng.rpath.com@rpath:chater-foo-trunk/project_branch_stages', username='developer', password='password')
+        response = self._get('projects/chater-foo/project_branches/chater-foo.eng.rpath.com@rpath:chater-foo-trunk/project_branch_stages', username='ExampleDeveloper', password='password')
         self.assertEquals(response.status_code, 200)
 
-        response = self._get('projects/chater-foo/project_branches/chater-foo.eng.rpath.com@rpath:chater-foo-trunk/project_branch_stages/Stage', username='developer', password='password')
+        response = self._get('projects/chater-foo/project_branches/chater-foo.eng.rpath.com@rpath:chater-foo-trunk/project_branch_stages/Stage', username='ExampleDeveloper', password='password')
         self.assertEquals(response.status_code, 200)
 
     def testAddProject(self):
@@ -216,7 +217,7 @@ class ProjectsTestCase(RbacEngine):
         
     def testUpdateProject(self):
 
-        for username in [ 'admin', 'developer' ]:
+        for username in [ 'admin', 'ExampleDeveloper' ]:
             response = self._put('projects/chater-foo',
                 data=testsxml.project_put_xml,
                 username="admin", password="password")
@@ -233,11 +234,11 @@ class ProjectsTestCase(RbacEngine):
         self.assertEquals(response.status_code, 403)
 
             
-    def testUpdateProjectAuthenticatedNoWritePerms(self):
+    def testUpdateProjectAuthenticatedWithGrant(self):
         response = self._put('projects/chater-foo',
             data=testsxml.project_put_xml,
-            username=self.developer_user.user_name, password='password')
-        self.assertEquals(response.status_code, 403)
+            username='ExampleDeveloper', password='password')
+        self.assertEquals(response.status_code, 200)
 
     def testDeleteProject_admin(self):
         response = self._delete('projects/chater-foo',
@@ -246,7 +247,7 @@ class ProjectsTestCase(RbacEngine):
 
     def testDeleteProject_grant(self):
         response = self._delete('projects/chater-foo',
-            username="developer", password="password")
+            username="ExampleDeveloper", password="password")
         self.assertEquals(response.status_code, 204)
 
     def testDeleteProject_nogrant(self):
@@ -255,7 +256,7 @@ class ProjectsTestCase(RbacEngine):
         self.assertEquals(response.status_code, 403)
 
     def testGetAggregateProjectBranches(self):
-        for username in [ 'admin', 'developer' ]:
+        for username in [ 'admin', 'ExampleDeveloper' ]:
             response = self._get('project_branches/',
                 username="admin", password="password")
             self.assertEquals(response.status_code, 200)
@@ -271,7 +272,7 @@ class ProjectsTestCase(RbacEngine):
         self._addProject("foo")
         response = self._post('projects/foo/project_branches/',
             data=testsxml.project_version_post_with_project_xml,
-            username="developer", password="password")
+            username="ExampleDeveloper", password="password")
         self.assertEquals(response.status_code, 200)
         branch = xobj.parse(response.content).project_branch
         branch = models.ProjectVersion.objects.get(pk=branch.branch_id)
@@ -288,7 +289,7 @@ class ProjectsTestCase(RbacEngine):
         # add project as admin    
         response = self._post('projects',
             data=testsxml.project_post_xml,
-            username="developer", password="password")
+            username="ExampleDeveloper", password="password")
         self.assertEquals(response.status_code, 200)
         
         # try to add project as different user
@@ -301,7 +302,7 @@ class ProjectsTestCase(RbacEngine):
     def testUpdateProjectBranch(self):
         response = self._put('projects/postgres/project_branches/postgres.rpath.com@rpath:postgres-1',
             data=testsxml.project_version_put_xml,
-            username="developer", password="password")
+            username="ExampleDeveloper", password="password")
         self.assertEquals(response.status_code, 200)
         branch = xobj.parse(response.content).project_branch
         branch = models.ProjectVersion.objects.get(pk=branch.branch_id)
@@ -317,7 +318,7 @@ class ProjectsTestCase(RbacEngine):
         response = self._put('projects/postgres/project_branches/postgres.rpath.com@rpath:postgres-1',
             data=testsxml.project_version_put_xml,
             username="testuser", password="password")
-        self.assertEquals(response.status_code, 401)
+        self.assertEquals(response.status_code, 403)
 
     def testDeleteProjectBranch(self):
         response = self._delete('projects/postgres/project_branches/postgres.rpath.com@rpath:postgres-1',
@@ -331,7 +332,7 @@ class ProjectsTestCase(RbacEngine):
     def testGetAggregateProjectBranchStages(self):
         self._initProject()
         response = self._get('project_branch_stages/',
-            username="developer", password="password", pagination=';start_index=0;limit=9999')
+            username="ExampleDeveloper", password="password", pagination=';start_index=0;limit=9999')
         self.assertEquals(response.status_code, 200)
         stages = xobj.parse(response.content).project_branch_stages.project_branch_stage
         oldMaxDiff = self.maxDiff
@@ -355,13 +356,13 @@ class ProjectsTestCase(RbacEngine):
         self.maxDiff = oldMaxDiff
         
         response = self._get('project_branch_stages/',
-            username=self.developer_user.user_name, password="password")
+            username='ExampleDeveloper', password="password")
         self.assertEquals(response.status_code, 401)
         
     def testGetProjectAllBranchStages(self):
         self._initProject()
         response = self._get('projects/chater-foo/project_branch_stages',
-            username="developer", password="password")
+            username="ExampleDeveloper", password="password")
         self.assertEquals(response.status_code, 200)
         stages = xobj.parse(response.content).project_branch_stages.project_branch_stage
 
@@ -375,7 +376,7 @@ class ProjectsTestCase(RbacEngine):
             ])
 
         response = self._get('projects/chater-foo/project_branch_stages',
-            username=self.developer_user.user_name, password="password")
+            username='testuser', password="password")
         self.assertEquals(response.status_code, 403)
 
     def testGetProjectImages(self):
@@ -391,7 +392,7 @@ class ProjectsTestCase(RbacEngine):
         self.assertEquals(image.image_type, 10)
         
         response = self._get('projects/%s/images/' % prj.short_name,
-                    username=self.developer_user.user_name, password='password')
+                    username='ExampleDeveloper', password='password')
         self.assertEquals(response.status_code, 403)
 
     def testAddProjectBranchStageImage(self):
@@ -404,8 +405,9 @@ class ProjectsTestCase(RbacEngine):
         url = "projects/%s/project_branches/%s/project_branch_stages/%s/images/"
         urlparams = (prj.short_name, branch.label, stage.name)
         response = self._post(url % urlparams, 
-            username='developer', password='password', data=testsxml.project_branch_stage_images_post_xml)
+            username='ExampleDeveloper', password='password', data=testsxml.project_branch_stage_images_post_xml)
         self.assertEquals(response.status_code, 200)
+        
 
     def testGetProjectBranchStagesByProject(self):
         self._initProject()
@@ -414,7 +416,7 @@ class ProjectsTestCase(RbacEngine):
             project__project_id=prj.project_id, name='trunk')
         url = ('projects/%s/project_branches/%s/project_branch_stages/' %
                 (prj.short_name, branch.label))
-        response = self._get(url, username='developer', password='password')
+        response = self._get(url, username='ExampleDeveloper', password='password')
         self.assertEquals(response.status_code, 200)
         stgs = xobj.parse(response.content)
         self.assertXMLEquals(stgs.toxml(), testsxml.project_branch_stages_xml)
@@ -440,7 +442,7 @@ class ProjectsTestCase(RbacEngine):
 
         url = ('projects/%s/project_branches/%s/project_branch_stages/%s' %
                 (prj.short_name, branch.label, stage.name))
-        response = self._get(url, username='developer', password='password')
+        response = self._get(url, username='ExampleDeveloper', password='password')
         self.assertEquals(response.status_code, 200)
         stg = xobj.parse(response.content).project_branch_stage
 
@@ -453,7 +455,7 @@ class ProjectsTestCase(RbacEngine):
 
         url += '/images'
         response = self._get(url,
-            username="developer", password="password")
+            username="ExampleDeveloper", password="password")
         self.assertEquals(response.status_code, 200)
         images = xobj.parse(response.content).images
         self.failUnlessEqual(images.id, 'http://testserver/api/v1/projects/chater-foo/project_branches/chater-foo.eng.rpath.com@rpath:chater-foo-trunk/project_branch_stages/Development/images;start_index=0;limit=10')
@@ -465,13 +467,13 @@ class ProjectsTestCase(RbacEngine):
         # Test project images too
         url = 'projects/%s' % (prj.short_name, )
         response = self._get(url,
-            username="developer", password="password")
+            username="ExampleDeveloper", password="password")
         self.assertEquals(response.status_code, 200)
         project = xobj.parse(response.content).project
         self.failUnlessEqual(project.images.id, 'http://testserver/api/v1/projects/chater-foo/images')
         url += '/images'
         response = self._get(url,
-            username="developer", password="password")
+            username="ExampleDeveloper", password="password")
         self.assertEquals(response.status_code, 200)
         images = xobj.parse(response.content).images
         self.failUnlessEqual(images.id, 'http://testserver/api/v1/projects/chater-foo/images;start_index=0;limit=10')

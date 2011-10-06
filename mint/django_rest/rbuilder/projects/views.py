@@ -23,81 +23,130 @@ class ProjectCallbacks(object):
     """
     @staticmethod
     def _checkPermissions(view, request, project_short_name, action):
-        if project_short_name:
-            obj = view.mgr.getProject(project_short_name)
-            user = request._authUser
-            if request.method == 'PUT' and \
-                obj.short_name != project_short_name:
-                return False
-            if view.mgr.userHasRbacPermission(user, obj, action):
-                return True
-
-            # if no explicit Project permission, check all PBSes
-            # that have this project, ability to access any implies 
-            # access on the project, this will be a bit sluggish
-            # but prevents confusion in setting up an extra set of QS
-            # permissions.  Unsafe for anything but reads
-            if action in [ READMEMBERS ] :
-                stages_for_project = projectmodels.Stage.objects.filter(
-                    project = obj
-                )
-                for stage in stages_for_project:
-                    if view.mgr.userHasRbacPermission(user, stage, action):
-                        return True
-
-        elif request._is_admin:
+        if request._is_admin:
             return True
+
+        if not project_short_name:
+            raise Exception("internal error: invalid permission check usage")
+
+        obj = view.mgr.getProject(project_short_name)
+        user = request._authUser
+        if request.method == 'PUT' and \
+            obj.short_name != project_short_name:
+            #print "REJECT: differeing short names"
+            return False
+        if view.mgr.userHasRbacPermission(user, obj, action):
+            #print "ACCEPT FOR ACTION: %s" % action
+            return True
+
+        # if no explicit Project permission, check all PBSes
+        # that have this project, ability to access any implies 
+        # access on the project, this will be a bit sluggish
+        # but prevents confusion in setting up an extra set of QS
+        # permissions.  Unsafe for anything but reads
+        if action in [ READMEMBERS ] :
+            stages_for_project = projectmodels.Stage.objects.filter(
+                project = obj
+            )
+            for stage in stages_for_project:
+                #print "TRYING TO INFER FROM: %s" % stage.name
+                if view.mgr.userHasRbacPermission(user, stage, action):
+                    return True
+        #print "FAIL, ALL DEFAULTS NO MATCH FOR: %s, %s" % (request._authUser.full_name, action)
         return False
 
     @staticmethod
-    def rbac_can_read_project(view, request, project_short_name=None, *args, **kwargs):
+    def can_read_project(view, request, project_short_name=None, *args, **kwargs):
         """
         project_short_name needs to be a kwarg until the views are more granularly refactored.
         """
-        return ProjectCallbacks._checkPermissions(view, request, project_short_name, READMEMBERS)
+        rc =  ProjectCallbacks._checkPermissions(view, request, project_short_name, READMEMBERS)
+        #print "CAN READ PROJECT? %s -> %s" % (request._authUser.full_name, rc)
+        return rc
 
     @staticmethod
-    def rbac_can_write_project(view, request, project_short_name, *args, **kwargs):
+    def can_write_project(view, request, project_short_name, *args, **kwargs):
         """
         project_short_name always required for write to succeed, so don't make it kwarg
         """
         return ProjectCallbacks._checkPermissions(view, request, project_short_name, MODMEMBERS)
+
+class BranchCallbacks(object):
+    """
+    RBAC callbacks for Project Branches
+    """
+    @staticmethod
+    def _checkPermissions(view, request, branch_or_label, action):
+        if request._is_admin:
+            return True
+
+        branch = branch_or_label
+        if isinstance(branch_or_label, basestring):
+            branch = projectmodels.ProjectVersion.objects.get(label=branch_or_label)
         
+        # if no explicit Project permission, check all PBSes
+        # that have this project, ability to access any implies 
+        # access on the project, this will be a bit sluggish
+        # but prevents confusion in setting up an extra set of QS
+        # permissions.  Unsafe for anything but reads
+        stages_for_project = projectmodels.Stage.objects.filter(
+            project_branch = branch
+        )
+        for stage in stages_for_project:
+            if view.mgr.userHasRbacPermission(request._authUser, stage, action):
+                return True
+        #print "BRANCH FAIL FOR: %s, %s" % (request._authUser.full_name, action)
+        return False
+        
+    @staticmethod
+    def can_read_branch(view, request, branch_or_label=None, *args, **kwargs):
+        return BranchCallbacks._checkPermissions(view, request, branch_or_label, READMEMBERS)
+    
+    @staticmethod
+    def can_write_branch(view, request, branch_or_label=None, *args, **kwargs):
+        return BranchCallbacks._checkPermissions(view, request, branch_or_label, MODMEMBERS)
+
+
 class StageCallbacks(object):
     
     @staticmethod
-    def rbac_can_read_stage(view, 
+    def can_read_stage(view, 
         request, project_short_name, project_branch_label, stage_name=None, *args, **kwargs):
         obj = view.mgr.getProjectBranchStage(project_short_name, project_branch_label, stage_name)
         user = request._authUser
         if not stage_name and request._is_admin:
             return True
         elif stage_name:
-            return view.mgr.userHasRbacPermission(user, obj, READMEMBERS)
+            if view.mgr.userHasRbacPermission(user, obj, READMEMBERS):
+                return True
+        #print "BRANCH FAIL FOR: %s, %s" % (request._authUser.full_name, action)
         return False
 
     @staticmethod
-    def rbac_can_write_stage(view,
+    def can_write_stage(view,
         request, project_short_name, project_branch_label, stage_name, *args, **kwargs):
         obj = view.mgr.getProjectBranchStage(project_short_name, project_branch_label, stage_name)
         user = request._authUser
         if not stage_name and request._is_admin:
             return True
         elif stage_name:
-            return view.mgr.userHasRbacPermission(user, obj, READMEMBERS)
+            if view.mgr.userHasRbacPermission(user, obj, READMEMBERS):
+                return True
+        print "BRANCH FAIL FOR: %s, %s" % (request._authUser.full_name, READMEMBERS)
         return False
 
     @staticmethod
-    def rbac_can_read_all_for_project(view, request, project_short_name):
+    def can_read_all_for_project(view, request, project_short_name):
         user = request._authUser
         collection = projectmodels.Stage.objects.filter(project__short_name=project_short_name)
         tv = all(view.mgr.userHasRbacPermission(user, obj, READMEMBERS) for obj in collection)
         if tv:
             return True
+        #print "DEBUG: FAIL can_read_all_for_project"
         return False
 
     @staticmethod
-    def rbac_can_write_image(view, 
+    def can_write_image(view, 
         request, project_short_name, project_branch_label, stage_name, *args, **kwargs):
         obj = view.mgr.getProjectBranchStage(project_short_name, project_branch_label, stage_name)
         user = request._authUser
@@ -105,6 +154,7 @@ class StageCallbacks(object):
             return True
         elif stage_name:
             return view.mgr.userHasRbacPermission(user, obj, READMEMBERS)
+        #print "DEBUG: can_write_image FAIL"
         return False
 
 class AllProjectBranchesStagesService(service.BaseService):
@@ -130,12 +180,13 @@ class AllProjectBranchesService(service.BaseService):
     # make the PB gate on the P, with the stipulation that
     # the PB is always read only, which it is NOT
 
-    @access.authenticated # was admin
+    # UI does not call this, correct?
+    @access.authenticated # FIXME -- opened up temporarily
     @return_xml
     def rest_GET(self, request):
         return self.mgr.getAllProjectBranches()
 
-    @access.authenticated # was admin
+    @rbac(BranchCallbacks.can_write_branch)
     @requires('project_branch')
     @return_xml
     def rest_POST(self, request, project_branch):
@@ -149,10 +200,12 @@ class ProjectAllBranchStagesService(service.BaseService):
     """
     returns all pbs associated with a given project. manual rbac
     """
-    @access.authenticated
+
+    # branches are secured through project in this case
+    @rbac(ProjectCallbacks.can_read_project)
     @return_xml
     def rest_GET(self, request, project_short_name):
-        if StageCallbacks.rbac_can_read_all_for_project(
+        if StageCallbacks.can_read_all_for_project(
             self, request, project_short_name):
             return self.mgr.getProjectAllBranchStages(project_short_name)
         raise PermissionDenied()
@@ -160,8 +213,7 @@ class ProjectAllBranchStagesService(service.BaseService):
 
 class ProjectBranchService(service.BaseService):
 
-    # HACKED FOR DEMO ONLY, see NOTE above regarding RBAC strategy
-    @access.authenticated # was admin
+    @rbac(BranchCallbacks.can_read_branch)
     @return_xml
     def rest_GET(self, request, project_short_name, project_branch_label=None):
         return self.get(project_short_name, project_branch_label)
@@ -169,22 +221,19 @@ class ProjectBranchService(service.BaseService):
     def get(self, project_short_name, project_branch_label):
         return self.mgr.getProjectBranch(project_short_name, project_branch_label)
 
-    # FIXME: HACKED FOR DEMO ONLY, see NOTE above regarding RBAC strategy
-    @access.authenticated # was admin
+    @rbac(BranchCallbacks.can_write_branch)
     @requires("project_branch")
     @return_xml
     def rest_POST(self, request, project_short_name, project_branch):
         return self.mgr.addProjectBranch(project_short_name, project_branch)
 
-    # FIXME: HACKED FOR DEMO ONLY, see NOTE above regarding RBAC strategy
-    @access.authenticated # was admin
+    @rbac(BranchCallbacks.can_write_branch)
     @requires("project_branch")
     @return_xml
     def rest_PUT(self, request, project_short_name, project_branch_label, project_branch):
         return self.mgr.updateProjectBranch(project_branch)
 
-    # FIXME: HACKED FOR DEMO ONLY, see NOTE above regarding RBAC strategy
-    @access.authenticated # was admin
+    @rbac(BranchCallbacks.can_write_branch)
     def rest_DELETE(self, request, project_short_name, project_branch_label):
         projectBranch = self.get(project_short_name, project_branch_label)
         self.mgr.deleteProjectBranch(projectBranch)
@@ -197,37 +246,35 @@ class ProjectService(service.BaseService):
     @access.authenticated
     @return_xml
     def rest_GET(self, request, project_short_name=None):
-        if ProjectCallbacks.rbac_can_read_project(
-            self, request, project_short_name):
-            if project_short_name:
+        if project_short_name:
+            if ProjectCallbacks.can_read_project(self, request, project_short_name):
                 return self.get(project_short_name)
-            else:
-                qs = querymodels.QuerySet.objects.get(name='All Projects')
-                url = '/api/v1/query_sets/%s/all%s' % (qs.pk, request.params)
-                return HttpResponseRedirect(url)
-        raise PermissionDenied()
+            raise PermissionDenied()
+        else:
+            # all security here done by the queryset
+            qs = querymodels.QuerySet.objects.get(name='All Projects')
+            url = '/api/v1/query_sets/%s/all%s' % (qs.pk, request.params)
+            return HttpResponseRedirect(url)
 
     def get(self, project_short_name):
         assert project_short_name is not None
         model = self.mgr.getProject(project_short_name)
         return model
     
-    # Unknown bug requires manual rbac
+    # anybody can create a new project for now
+    @access.authenticated
     @requires('project')
     @return_xml
     def rest_POST(self, request, project):
-        user = request._authUser
-        if self.mgr.userHasRbacPermission(user, project, MODMEMBERS):
-            return self.mgr.addProject(project)
-        raise PermissionDenied()
+        return self.mgr.addProject(project)
 
-    @rbac(ProjectCallbacks.rbac_can_write_project)
+    @rbac(ProjectCallbacks.can_write_project)
     @requires('project')
     @return_xml
     def rest_PUT(self, request, project_short_name, project):
         return self.mgr.updateProject(project)
 
-    @rbac(ProjectCallbacks.rbac_can_write_project)
+    @rbac(ProjectCallbacks.can_write_project)
     def rest_DELETE(self, request, project_short_name):
         project = self.get(project_short_name)
         self.mgr.deleteProject(project)
@@ -250,7 +297,7 @@ class ProjectStageService(service.BaseService):
 
 
 class ProjectBranchStageService(service.BaseService):
-    @rbac(StageCallbacks.rbac_can_read_stage)
+    @rbac(StageCallbacks.can_read_stage)
     @return_xml
     def rest_GET(self, request, project_short_name, project_branch_label, stage_name=None):
         return self.get(project_short_name, project_branch_label, stage_name)
@@ -262,7 +309,7 @@ class ProjectBranchStageService(service.BaseService):
         return self.mgr.getProjectBranchStages(project_short_name,
             project_branch_label)
 
-    @rbac(StageCallbacks.rbac_can_write_stage)
+    @rbac(StageCallbacks.can_write_stage)
     @requires('stage')
     @return_xml
     def rest_PUT(self, request, project_short_name, project_branch_label, stage_name, stage):
@@ -272,7 +319,7 @@ class ProjectBranchStageService(service.BaseService):
 
 class ProjectImageService(service.BaseService):
 
-    @rbac(ProjectCallbacks.rbac_can_read_project)
+    @rbac(ProjectCallbacks.can_read_project)
     @return_xml
     def rest_GET(self, request, project_short_name, image_id=None):
         return self.get(request, project_short_name, image_id)
@@ -284,7 +331,7 @@ class ProjectImageService(service.BaseService):
             model = self.mgr.getImagesForProject(project_short_name)
         return model
 
-    @rbac(ProjectCallbacks.rbac_can_write_project)
+    @rbac(ProjectCallbacks.can_write_project)
     @requires("image")
     @return_xml
     def rest_PUT(self, request, project_short_name, image_id, image):
@@ -298,12 +345,12 @@ class ProjectBranchStageImagesService(service.BaseService):
         return self.mgr.getProjectBranchStageImages(project_short_name,
             project_branch_label, stage_name)
     
-    @rbac(StageCallbacks.rbac_can_read_stage)
+    @rbac(StageCallbacks.can_read_stage)
     @return_xml
     def rest_GET(self, request, project_short_name, project_branch_label, stage_name):
         return self.get(request, project_short_name, project_branch_label, stage_name)
      
-    @rbac(StageCallbacks.rbac_can_write_image)
+    @rbac(StageCallbacks.can_write_image)
     @requires("image")
     @return_xml
     def rest_POST(self, request, project_short_name, project_branch_label, stage_name, image):
@@ -348,7 +395,7 @@ class ProjectImageBuildsJobService(service.BaseService):
 
 
 class ProjectMemberService(service.BaseService):
-    @rbac(ProjectCallbacks.rbac_can_read_project)
+    @rbac(ProjectCallbacks.can_read_project)
     @return_xml
     def rest_GET(self, request, project_short_name):
         return self.get(project_short_name)
