@@ -11,6 +11,7 @@
 import datetime
 from dateutil import tz
 
+from mint import buildtypes
 from django.db import models
 from mint import helperfuncs
 from mint.django_rest.deco import D
@@ -45,6 +46,24 @@ class BuildLogHref(modellib.HrefFieldFromModel):
         url = self.model.get_absolute_url(request)
         url = self._getRelativeHref(url=url)
         return modellib.XObjHrefModel(url + '/build_log')
+
+class ImageType(modellib.XObjIdModel):
+    class Meta:
+        abstract = True
+    image_type_id = models.IntegerField()
+    key = models.CharField()
+    name = models.CharField()
+    description = models.CharField()
+
+    ImageTypeKeys = dict((y, x) for (x, y) in buildtypes.validBuildTypes.items())
+
+    @classmethod
+    def fromImageTypeId(cls, imageTypeId):
+         return cls(
+            image_type_id = imageTypeId,
+            key = cls.ImageTypeKeys.get(imageTypeId),
+            name = buildtypes.typeNamesShort.get(imageTypeId),
+            description = buildtypes.typeNames.get(imageTypeId))
 
 class Image(modellib.XObjIdModel):
     class Meta:
@@ -106,13 +125,13 @@ class Image(modellib.XObjIdModel):
     num_image_files = modellib.SyntheticField()
     build_log = modellib.SyntheticField()
     #actions = modellib.SyntheticField()
-        
+
     def computeSyntheticFields(self, sender, **kwargs):
         self._computeMetadata()
-        
+
         if self.trove_flavor is not None:
             self.architecture = helperfuncs.getArchFromFlavor(str(self.trove_flavor))
-            
+
         if self.trove_version is not None:
             tv_obj = helperfuncs.parseVersion(self.trove_version)
             if tv_obj is not None:
@@ -122,12 +141,12 @@ class Image(modellib.XObjIdModel):
             self.released = True
         else:
             self.released = False
-            
+
         if self.files is not None:
             self.num_image_files = len(self.files.all())
         else:
             self.num_image_files = 0;
-        
+
         self.build_log = self._getBuildLog()
 
     def _getBuildLog(self):
