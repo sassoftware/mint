@@ -62,7 +62,42 @@ class ProjectCallbacks(object):
         project_short_name always required for write to succeed, so don't make it kwarg
         """
         return ProjectCallbacks._checkPermissions(view, request, project_short_name, MODMEMBERS)
+
+class BranchCallbacks(object):
+    """
+    RBAC callbacks for Project Branches
+    """
+    @staticmethod
+    def _checkPermissions(view, request, branch_or_label, action):
+
+        branch = branch_or_label
+        if isinstance(branch_or_label, basestring):
+            branch = models.ProjectVersion.objects.get(label=branch_or_label)
         
+        # if no explicit Project permission, check all PBSes
+        # that have this project, ability to access any implies 
+        # access on the project, this will be a bit sluggish
+        # but prevents confusion in setting up an extra set of QS
+        # permissions.  Unsafe for anything but reads
+        stages_for_project = projectmodels.Stage.objects.filter(
+            project_branch_BOOKMARK = branch
+        )
+        for stage in stages_for_project:
+            if view.mgr.userHasRbacPermission(user, stage, action):
+                return True
+        elif request._is_admin:
+            # FIXME: this should be checked first to bypass checking code
+            return True
+        return False
+        
+    @staticmethod
+    def can_read_branch(view, request, branch_or_label=None, *args, **kwargs):
+        return BranchCallbacks._checkPermissions(view, request, branch_or_label, READMEMBERS)
+    
+    def can_write_branch(view, request, branch_or_label=None, *args, **kwargs):
+        return BranchCallbacks._checkPermissions(view, request, branch_or_label, MODMEMBERS)
+
+
 class StageCallbacks(object):
     
     @staticmethod
@@ -130,12 +165,13 @@ class AllProjectBranchesService(service.BaseService):
     # make the PB gate on the P, with the stipulation that
     # the PB is always read only, which it is NOT
 
-    @access.authenticated # was admin
+    # UI does not call this, correct?
+    @access.authenticated # FIXME -- opened up temporarily
     @return_xml
     def rest_GET(self, request):
         return self.mgr.getAllProjectBranches()
 
-    @access.authenticated # was admin
+    @rbac(StageCallbacks.can_write_branch)
     @requires('project_branch')
     @return_xml
     def rest_POST(self, request, project_branch):
@@ -149,7 +185,9 @@ class ProjectAllBranchStagesService(service.BaseService):
     """
     returns all pbs associated with a given project. manual rbac
     """
-    @access.authenticated
+
+    # branches are secured through project in this case
+    @rbac(ProjectCallbacks.can_read_project)
     @return_xml
     def rest_GET(self, request, project_short_name):
         if StageCallbacks.rbac_can_read_all_for_project(
@@ -160,8 +198,7 @@ class ProjectAllBranchStagesService(service.BaseService):
 
 class ProjectBranchService(service.BaseService):
 
-    # HACKED FOR DEMO ONLY, see NOTE above regarding RBAC strategy
-    @access.authenticated # was admin
+    @rbac(BranchCallbacks.can_read_branch)
     @return_xml
     def rest_GET(self, request, project_short_name, project_branch_label=None):
         return self.get(project_short_name, project_branch_label)
@@ -169,22 +206,19 @@ class ProjectBranchService(service.BaseService):
     def get(self, project_short_name, project_branch_label):
         return self.mgr.getProjectBranch(project_short_name, project_branch_label)
 
-    # FIXME: HACKED FOR DEMO ONLY, see NOTE above regarding RBAC strategy
-    @access.authenticated # was admin
+    @rbac(BranchCallbacks.can_write_branch)
     @requires("project_branch")
     @return_xml
     def rest_POST(self, request, project_short_name, project_branch):
         return self.mgr.addProjectBranch(project_short_name, project_branch)
 
-    # FIXME: HACKED FOR DEMO ONLY, see NOTE above regarding RBAC strategy
-    @access.authenticated # was admin
+    @rbac(BranchCallbacks.can_write_branch)
     @requires("project_branch")
     @return_xml
     def rest_PUT(self, request, project_short_name, project_branch_label, project_branch):
         return self.mgr.updateProjectBranch(project_branch)
 
-    # FIXME: HACKED FOR DEMO ONLY, see NOTE above regarding RBAC strategy
-    @access.authenticated # was admin
+    @rbac(BranchCallbacks.can_write_branch)
     def rest_DELETE(self, request, project_short_name, project_branch_label):
         projectBranch = self.get(project_short_name, project_branch_label)
         self.mgr.deleteProjectBranch(projectBranch)
