@@ -222,7 +222,7 @@ class ImagesTestCase(XMLTestCase):
         
     def testGetBuildLog(self):
         response = self._get('images/3/build_log', username='admin', password='password')
-        pass
+        self.assertEquals(response.status_code, 200)
         
     def testGetImageTypes(self):
         response = self._get('image_types/', username='admin', password='password')

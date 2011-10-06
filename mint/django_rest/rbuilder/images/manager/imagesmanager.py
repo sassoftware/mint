@@ -172,4 +172,3 @@ class ImagesManager(basemanager.BaseManager):
     @exposed
     def getImageTypes(self):
         return models.ImageType.objects.all()
-        
