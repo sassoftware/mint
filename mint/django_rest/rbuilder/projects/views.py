@@ -50,14 +50,14 @@ class ProjectCallbacks(object):
         return False
 
     @staticmethod
-    def rbac_can_read_project(view, request, project_short_name=None, *args, **kwargs):
+    def can_read_project(view, request, project_short_name=None, *args, **kwargs):
         """
         project_short_name needs to be a kwarg until the views are more granularly refactored.
         """
         return ProjectCallbacks._checkPermissions(view, request, project_short_name, READMEMBERS)
 
     @staticmethod
-    def rbac_can_write_project(view, request, project_short_name, *args, **kwargs):
+    def can_write_project(view, request, project_short_name, *args, **kwargs):
         """
         project_short_name always required for write to succeed, so don't make it kwarg
         """
@@ -101,7 +101,7 @@ class BranchCallbacks(object):
 class StageCallbacks(object):
     
     @staticmethod
-    def rbac_can_read_stage(view, 
+    def can_read_stage(view, 
         request, project_short_name, project_branch_label, stage_name=None, *args, **kwargs):
         obj = view.mgr.getProjectBranchStage(project_short_name, project_branch_label, stage_name)
         user = request._authUser
@@ -112,7 +112,7 @@ class StageCallbacks(object):
         return False
 
     @staticmethod
-    def rbac_can_write_stage(view,
+    def can_write_stage(view,
         request, project_short_name, project_branch_label, stage_name, *args, **kwargs):
         obj = view.mgr.getProjectBranchStage(project_short_name, project_branch_label, stage_name)
         user = request._authUser
@@ -123,7 +123,7 @@ class StageCallbacks(object):
         return False
 
     @staticmethod
-    def rbac_can_read_all_for_project(view, request, project_short_name):
+    def can_read_all_for_project(view, request, project_short_name):
         user = request._authUser
         collection = projectmodels.Stage.objects.filter(project__short_name=project_short_name)
         tv = all(view.mgr.userHasRbacPermission(user, obj, READMEMBERS) for obj in collection)
@@ -132,7 +132,7 @@ class StageCallbacks(object):
         return False
 
     @staticmethod
-    def rbac_can_write_image(view, 
+    def can_write_image(view, 
         request, project_short_name, project_branch_label, stage_name, *args, **kwargs):
         obj = view.mgr.getProjectBranchStage(project_short_name, project_branch_label, stage_name)
         user = request._authUser
@@ -190,7 +190,7 @@ class ProjectAllBranchStagesService(service.BaseService):
     @rbac(ProjectCallbacks.can_read_project)
     @return_xml
     def rest_GET(self, request, project_short_name):
-        if StageCallbacks.rbac_can_read_all_for_project(
+        if StageCallbacks.can_read_all_for_project(
             self, request, project_short_name):
             return self.mgr.getProjectAllBranchStages(project_short_name)
         raise PermissionDenied()
@@ -231,7 +231,7 @@ class ProjectService(service.BaseService):
     @access.authenticated
     @return_xml
     def rest_GET(self, request, project_short_name=None):
-        if ProjectCallbacks.rbac_can_read_project(
+        if ProjectCallbacks.can_read_project(
             self, request, project_short_name):
             if project_short_name:
                 return self.get(project_short_name)
@@ -255,13 +255,13 @@ class ProjectService(service.BaseService):
             return self.mgr.addProject(project)
         raise PermissionDenied()
 
-    @rbac(ProjectCallbacks.rbac_can_write_project)
+    @rbac(ProjectCallbacks.can_write_project)
     @requires('project')
     @return_xml
     def rest_PUT(self, request, project_short_name, project):
         return self.mgr.updateProject(project)
 
-    @rbac(ProjectCallbacks.rbac_can_write_project)
+    @rbac(ProjectCallbacks.can_write_project)
     def rest_DELETE(self, request, project_short_name):
         project = self.get(project_short_name)
         self.mgr.deleteProject(project)
@@ -284,7 +284,7 @@ class ProjectStageService(service.BaseService):
 
 
 class ProjectBranchStageService(service.BaseService):
-    @rbac(StageCallbacks.rbac_can_read_stage)
+    @rbac(StageCallbacks.can_read_stage)
     @return_xml
     def rest_GET(self, request, project_short_name, project_branch_label, stage_name=None):
         return self.get(project_short_name, project_branch_label, stage_name)
@@ -296,7 +296,7 @@ class ProjectBranchStageService(service.BaseService):
         return self.mgr.getProjectBranchStages(project_short_name,
             project_branch_label)
 
-    @rbac(StageCallbacks.rbac_can_write_stage)
+    @rbac(StageCallbacks.can_write_stage)
     @requires('stage')
     @return_xml
     def rest_PUT(self, request, project_short_name, project_branch_label, stage_name, stage):
@@ -306,7 +306,7 @@ class ProjectBranchStageService(service.BaseService):
 
 class ProjectImageService(service.BaseService):
 
-    @rbac(ProjectCallbacks.rbac_can_read_project)
+    @rbac(ProjectCallbacks.can_read_project)
     @return_xml
     def rest_GET(self, request, project_short_name, image_id=None):
         return self.get(request, project_short_name, image_id)
@@ -318,7 +318,7 @@ class ProjectImageService(service.BaseService):
             model = self.mgr.getImagesForProject(project_short_name)
         return model
 
-    @rbac(ProjectCallbacks.rbac_can_write_project)
+    @rbac(ProjectCallbacks.can_write_project)
     @requires("image")
     @return_xml
     def rest_PUT(self, request, project_short_name, image_id, image):
@@ -332,12 +332,12 @@ class ProjectBranchStageImagesService(service.BaseService):
         return self.mgr.getProjectBranchStageImages(project_short_name,
             project_branch_label, stage_name)
     
-    @rbac(StageCallbacks.rbac_can_read_stage)
+    @rbac(StageCallbacks.can_read_stage)
     @return_xml
     def rest_GET(self, request, project_short_name, project_branch_label, stage_name):
         return self.get(request, project_short_name, project_branch_label, stage_name)
      
-    @rbac(StageCallbacks.rbac_can_write_image)
+    @rbac(StageCallbacks.can_write_image)
     @requires("image")
     @return_xml
     def rest_POST(self, request, project_short_name, project_branch_label, stage_name, image):
@@ -382,7 +382,7 @@ class ProjectImageBuildsJobService(service.BaseService):
 
 
 class ProjectMemberService(service.BaseService):
-    @rbac(ProjectCallbacks.rbac_can_read_project)
+    @rbac(ProjectCallbacks.can_read_project)
     @return_xml
     def rest_GET(self, request, project_short_name):
         return self.get(project_short_name)
