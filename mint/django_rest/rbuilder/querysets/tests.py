@@ -40,12 +40,6 @@ class QueryTestCase(XMLTestCase):
             return []
         return self.xobjHack(systems)
     
-    #def xobjSystem(self, url):
-    #    response = self._get(url,
-    #        username="admin", password="password")
-    #    xobjModel = xobj.parse(response.content)
-    #    return xobjModel.system
-
     def xobjHack(self, result):
         '''get a list from an xobj, even if N=1. Bug/feature in xobj'''
         if type(result) != list:
@@ -150,10 +144,6 @@ class QuerySetTestCase(QueryTestCase):
         self.assertEqual(len(chosen1), 0)
         self.assertEqual(len(filtered1), 38)
         
-        #qs2 = models.QuerySet.objects.get(name='All Systems')
-        #qs1.children.add(qs2)
-        #xml = qs1.to_xml()
-
         # verify the counts are consistent with having a large
         # child set.
         response = self._put("query_sets/%s" % qs1.pk,
