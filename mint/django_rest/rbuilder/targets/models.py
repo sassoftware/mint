@@ -20,6 +20,8 @@ class TargetType(modellib.XObjIdModel):
     class Meta:
          db_table = 'target_types'
 
+    summary_view = [ 'name', 'description' ] 
+
     _xobj_explicit_accessors = set(['targets'])
 
     target_type_id = models.AutoField(primary_key=True)
