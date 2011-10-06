@@ -397,7 +397,10 @@ def rbac_can_read_system_id(view, request, system_id, *args, **kwargs):
 class InventorySystemsSystemService(BaseInventoryService):
 
     @return_xml
-    @rbac(READMEMBERS)
+    @access.authenticated
+    # FIXME -- HACKED FOR DEMO BECAUSE TARGET SERVICE DOES NOT INVALIDATE AND REFRESH
+    # DO NOT SHIP
+    #@rbac(READMEMBERS)
     def rest_GET(self, request, system_id):
         return self.get(system_id)
 
