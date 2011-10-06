@@ -23,7 +23,10 @@ target_GET = \
   <jobs id="http://testserver/api/v1/targets/4/jobs"/>
   <name>Target Name openstack</name>
   <target_id>4</target_id>
-  <target_type id="http://testserver/api/v1/target_types/3"/>
+  <target_type id="http://testserver/api/v1/target_types/3">
+     <description>OpenStack</description>
+     <name>openstack</name>
+  </target_type>
   <zone id="http://testserver/api/v1/inventory/zones/1"/>
 </target>
 """.strip()
