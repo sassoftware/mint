@@ -462,7 +462,9 @@ class RepositoryHandle(object):
         if self.hasDatabase:
             # Only local repositories (regular and mirrored) can require
             # authentication.
-            if userId == ANY_WRITER:
+            if self._cfg.disableAuthorization:
+                level = userlevels.ADMIN
+            elif userId == ANY_WRITER:
                 level = userlevels.ADMIN
             elif userId == ANY_READER:
                 level = userlevels.USER
@@ -562,8 +564,6 @@ class RepositoryHandle(object):
                 # If the password was not valid, just ignore it -- the password
                 # might actually be intended for something we're proxying to.
                 # See RBL-5269
-        # Passing level to getAuthToken saves another DB query, but it's just a
-        # shortcut.
         return self.getAuthToken(userId, level=level, authToken=mintToken,
                 extraRoles=extraRoles)
 

@@ -109,6 +109,7 @@ class MintConfig(conarycfg.ConfigFile):
     dbDriver                = (CfgString, 'sqlite')
     dbPath                  = (CfgString, None)
     debugMode               = (CfgBool, False)
+    disableAuthorization    = (CfgBool, False)
     maintenanceLockPath     = (CfgPath, RBUILDER_DATA + '/run/maintenance.lock') 
     profiling               = (CfgBool, False)
     sendNotificationEmails  = (CfgBool, True)
