@@ -936,6 +936,7 @@ class SystemManager(basemanager.BaseManager):
         self.log_system(system, "System launched in target %s (%s)" %
             (target.name, target.target_type.name))
         self.addSystem(system)
+        self.mgr.retagQuerySetsByType('system')
         return system
 
     def _getCredentialsForUser(self, target):
