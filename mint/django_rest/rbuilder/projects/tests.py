@@ -5,11 +5,9 @@
 # All rights reserved.
 #
 
-from mint.django_rest.rbuilder.inventory.tests import XMLTestCase
-
-from mint.django_rest.rbuilder.projects import manager # pyflakes=ignore
-from mint.django_rest.rbuilder.projects import models # pyflakes=ignore
-from mint.django_rest.rbuilder.projects import testsxml # pyflakes=ignore
+from mint.django_rest.rbuilder.projects import manager
+from mint.django_rest.rbuilder.projects import models
+from mint.django_rest.rbuilder.projects import testsxml
 from mint.django_rest.rbuilder.repos import manager as reposmanager
 from mint.django_rest.rbuilder.manager import basemanager
 from mint.django_rest.rbuilder.manager import rbuildermanager
@@ -17,7 +15,10 @@ from xobj import xobj
 from mint.django_rest.rbuilder.rbac.tests import RbacEngine
 from testutils import mock
 from mint.django_rest.rbuilder.images import models as imagesmodels
-from mint import helperfuncs
+from mint.django_rest.rbuilder.rbac import models as rbacmodels
+from mint.django_rest.rbuilder.querysets import models as querymodels
+from mint.django_rest.rbuilder.users import models as usersmodels
+from datetime import datetime
 
 class ProjectsTestCase(RbacEngine):
     fixtures = ["projects", "project_image_fixtures"]
@@ -35,7 +36,36 @@ class ProjectsTestCase(RbacEngine):
         mock.mock(manager.ProjectManager, "setProductVersionDefinition")
         self.mgr = rbuildermanager.RbuilderManager()
         self.mintConfig = self.mgr.cfg
-        
+    
+        # add sysadmin user with permission to "All Projects" and "All Project Branch Stages"
+        # developer user does NOT have access to these .. skipping XML versions here as these
+        # are well covered in rbac/tests.py
+                  
+        role          = rbacmodels.RbacRole.objects.get(name='sysadmin')
+        all_projects  = querymodels.QuerySet.objects.get(name='All Projects')
+        all_pbs       = querymodels.QuerySet.objects.get(name='All Project Stages')
+        modmembers    = rbacmodels.RbacPermissionType.objects.get(name='ModMembers')
+        admin         = usersmodels.User.objects.get(user_name='admin')
+
+        for queryset in [ all_projects, all_pbs ]:
+            for permission in [ modmembers ]:
+                rbacmodels.RbacPermission(
+                    queryset      = queryset,
+                    role          = role,
+                    permission    = permission,
+                    created_by    = admin,
+                    modified_by   = admin,
+                    created_date  = datetime.now(),
+                    modified_date = datetime.now()
+                ).save()
+
+        self._retagQuerySets()
+ 
+        # invalidate the querysets so tags can be applied
+    def _retagQuerySets(self):
+        self.mgr.retagQuerySetsByType('project')
+        self.mgr.retagQuerySetsByType('project_branch_stage')
+ 
     def _addProject(self, short_name, namespace='ns'):
         project = models.Project()
         project.name = project.hostname = project.short_name = short_name
@@ -71,7 +101,7 @@ class ProjectsTestCase(RbacEngine):
 
     def testGetProjectsUser(self):
         response = self._get('projects/',
-            username="admin", password="password")
+            username="testuser", password="password")
         self.assertEquals(response.status_code, 200)
         projects = xobj.parse(response.content).projects.project
         self.assertEquals(len(projects), 4)
