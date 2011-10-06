@@ -227,7 +227,9 @@ class ImagesTestCase(XMLTestCase):
     def testGetImageTypes(self):
         response = self._get('image_types/', username='admin', password='password')
         self.assertEquals(response.status_code, 200)
+        self.assertXMLEquals(response.content, testsxml.image_types_get_xml)
         
     def testGetImageType(self):
         response = self._get('image_types/1', username='admin', password='password')
         self.assertEquals(response.status_code, 200)
+        self.assertXMLEquals(response.content, testsxml.image_type_get_xml)
