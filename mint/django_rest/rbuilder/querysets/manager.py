@@ -146,6 +146,24 @@ class QuerySetManager(basemanager.BaseManager):
         qs.save()
 
     @exposed
+    def retagQuerySetsByType(self, type):
+        '''
+        Invalidates all querysets of a given type and then recomputes their data.
+        This is needed on addition of some resource types when security context of all
+        tags must be applied atomically.   The result is the next request to the queryset
+        can operate from tags and attempts to access the resource directly by ID
+        will work regardless of RBAC queryset granting access and whether the queryset
+        was requested or not -- otherwise application of security rules is latent until
+        the next time the queryset members are accessed.  This avoids that.
+        '''
+        all_sets = models.QuerySet.objects.filter(resource_type=type)
+        for qs in all_sets:
+            qs.tagged_date = None
+            qs.save()
+            self.getQuerySetAllResult(qs, use_tags=False)
+        
+
+    @exposed
     def updateQuerySet(self, querySet):
         '''edit a query set'''
         if not querySet.can_modify:

@@ -144,8 +144,8 @@ class ProjectManager(basemanager.BaseManager):
                 level=userlevels.OWNER)
             member.save()
 
-        self.mgr.invalidateQuerySetByName('All Projects')
-        self.mgr.invalidateQuerySetByName('All Project Stages')
+        self.mgr.retagQuerySetsByType('project_branch')
+        self.mgr.retagQuerySetsByType('project_branch_stage')
         return project
 
     def _validateExternalProject(self, project):
