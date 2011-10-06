@@ -91,22 +91,24 @@ class ProjectsTestCase(RbacEngine):
         stage = models.Stage(project=proj,
             project_branch=branch, name="Release", label="foo@ns:trunk")
         stage.save()
+        self._retagQuerySets()
 
-    def testGetProjectsAdmin(self):
-        response = self._get('projects/',
-            username="admin", password="password")
-        self.assertEquals(response.status_code, 200)
-        projects = xobj.parse(response.content).projects.project
-        self.assertEquals(len(projects), 4)
+    def testGetProjects(self):
 
-    def testGetProjectsUser(self):
+        # as admin or granted user, should succeed
+
+        for username in [ 'admin', 'sysadmin' ]:
+            response = self._get('projects/',
+                username="admin", password="password")
+            self.assertEquals(response.status_code, 200)
+            projects = xobj.parse(response.content).projects.project
+            self.assertEquals(len(projects), 4)
+
+        # as testuser, should fail
+
         response = self._get('projects/',
             username="testuser", password="password")
-        self.assertEquals(response.status_code, 200)
-        projects = xobj.parse(response.content).projects.project
-        self.assertEquals(len(projects), 4)
-        self.assertEquals([p.short_name for p in projects],
-            [u'chater-foo', u'postgres', u'postgres-private', u'example2'])
+        self.assertEquals(response.status_code, 403)
 
     # TODO: this module needs tests to show that if a user has a grant
     # he can get at these resources even if not admin
