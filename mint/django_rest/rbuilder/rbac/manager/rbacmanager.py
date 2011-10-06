@@ -292,6 +292,7 @@ class RbacManager(basemanager.BaseManager):
             return False 
         role_maps = models.RbacUserRole.objects.filter(user=user)
         role_ids = [ x.role.pk for x in role_maps ]
+        all_roles = [ x.role for x in role_maps ]
 
         # if the user has no roles on this queryset, fail immediately
         if len(role_ids) == 0:
@@ -310,9 +311,8 @@ class RbacManager(basemanager.BaseManager):
         # there is queryset/roles info, so now find the permissions associated
         # with the queryset
         resource_permissions = models.RbacPermission.objects.select_related('rbac_permission_type').filter(
-            queryset__in = querysets
-        ).extra(
-            where=['role_id=%s'], params=role_ids
+            queryset__in = querysets,
+            role__in = all_roles
         )
 
         # permit user if they have one of the permissions we want...
