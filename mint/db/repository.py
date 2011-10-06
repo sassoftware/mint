@@ -78,7 +78,8 @@ class RepomanMixin(object):
     def _repoInit(self, bypass=False):
         self.bypass = bypass
         self.reposDBCache = {}
-        self.authClient = auth_client.getClient(self.cfg.authSocket)
+        self.authClient = auth_client.getClient(self.cfg and
+                self.cfg.authSocket)
 
     def reset(self):
         """

@@ -264,11 +264,14 @@ class BuildFile(modellib.XObjIdModel):
     url = modellib.SyntheticField()
     
     def serialize(self, request=None):
-        try:
-            fileUrl = BuildFilesUrlsMap.objects.get(file=self.file_id).url
-            self.url = fileUrl.url
-        except: # happens for "MatchingQueryDoesNotExist"
-            pass
+        fileUrls = BuildFilesUrlsMap.objects.filter(file=self.file_id
+                ).order_by('url').all()
+        if fileUrls and request:
+            # Not actually a URL, but a path to the image file.
+            fileUrl = fileUrls[0].url
+            self.url = request.build_absolute_uri(
+                    '/downloadImage?fileId=%d&urlType=%d' % (self.file_id,
+                        fileUrl.url_type))
         xobjModel = modellib.XObjIdModel.serialize(self, request)
         return xobjModel
 
