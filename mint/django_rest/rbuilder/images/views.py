@@ -169,4 +169,3 @@ class ImageTypeService(service.BaseService):
             return self.mgr.getImageType(image_type_id)
         else:
             return self.mgr.getImageTypes()
-        
