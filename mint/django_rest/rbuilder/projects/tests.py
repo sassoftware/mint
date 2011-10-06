@@ -77,17 +77,10 @@ class ProjectsTestCase(RbacEngine):
         self.assertEquals(len(projects), 4)
         self.assertEquals([p.short_name for p in projects],
             [u'chater-foo', u'postgres', u'postgres-private', u'example2'])
-        
-        # XXX: Below is a good thing to check, put this back in.  It
-        #      was taken out because of the way rbac handles collections,
-        #      rbac won't validate the permissions unless the user is admin
-    
-        # response = self._get('projects/',
-        #     username="testuser", password="password")
-        # self.assertEquals(response.status_code, 200)
-        # projects = xobj.parse(response.content).projects.project
-        # self.assertEquals(len(projects), 3)
-    
+
+    # TODO: this module needs tests to show that if a user has a grant
+    # he can get at these resources even if not admin
+
     def testGetProjectAuthenticatedNonAdmin(self):
         response = self._get('projects/chater-foo/',
             username=self.sysadmin_user.user_name, password='password')
@@ -97,102 +90,30 @@ class ProjectsTestCase(RbacEngine):
             username=self.developer_user.user_name, password='password')
         self.assertEquals(response.status_code, 403)
         
-    # def testGetProjectsAnon(self):
-    #     response = self._get('projects/')
-    #     self.assertEquals(response.status_code, 200)
-    #     projects = xobj.parse(response.content).projects.project
-    #     self.failUnlessEqual([ x.name for x in projects ],
-    #         ['chater-foo', 'postgres', 'name2', ])
-    #     self.failUnlessEqual([ x.id for x in projects ],
-    #       [
-    #         'http://testserver/api/v1/projects/chater-foo',
-    #         'http://testserver/api/v1/projects/postgres',
-    #         'http://testserver/api/v1/projects/example2',
-    #       ])
-
     def testGetProjectsAnon(self):
         # needs to fail for user w/o rbac/rmember perms
         response = self._get('projects/')
         self.assertEquals(response.status_code, 401)
 
-    # def testGetProjectAnon(self):
-    #     response = self._get('projects/chater-foo')
-    #     self.assertEquals(response.status_code, 200)
-    #     project = xobj.parse(response.content).project
-    #     self.failUnlessEqual(project.short_name, 'chater-foo')
-    #     self.failUnlessEqual(project.project_branches.id,
-    #         'http://testserver/api/v1/projects/chater-foo/project_branches')
-
     def testGetProjectAnon(self):
         response = self._get('projects/chater-foo')
         self.assertEquals(response.status_code, 401)
-
-    # def testGetProjectBranchesAnon(self):
-    #     self._initProject()
-    #     response = self._get('projects/chater-foo/project_branches')
-    #     self.assertEquals(response.status_code, 200)
-    #     branches = xobj.parse(response.content).project_branches.project_branch
-    #     self.failUnlessEqual([ x.name for x in branches ],
-    #         ['1', 'trunk'])
-    #     self.failUnlessEqual([ x.project_branch_stages.id for x in branches ],
-    #         [
-    #             'http://testserver/api/v1/projects/chater-foo/project_branches/chater-foo.eng.rpath.com@rpath:chater-foo-1/project_branch_stages',
-    #             'http://testserver/api/v1/projects/chater-foo/project_branches/chater-foo.eng.rpath.com@rpath:chater-foo-trunk/project_branch_stages',
-    #         ])
 
     def testGetProjectBranchesAnon(self):
         self._initProject()
         response = self._get('projects/chater-foo/project_branches')
         self.assertEquals(response.status_code, 401)
 
-    # def testGetProjectBranchAnon(self):
-    #     self._initProject()
-    #     response = self._get('projects/chater-foo/project_branches/chater-foo.eng.rpath.com@rpath:chater-foo-trunk')
-    #     self.assertEquals(response.status_code, 200)
-    #     branch = xobj.parse(response.content).project_branch
-    #     self.failUnlessEqual(branch.name, 'trunk')
-    #     self.failUnlessEqual(branch.project_branch_stages.id,
-    #             'http://testserver/api/v1/projects/chater-foo/project_branches/chater-foo.eng.rpath.com@rpath:chater-foo-trunk/project_branch_stages')
-    #     # Comparing XML is more involved maintenance-wise, avoid doing
-    #     # that for collections
-    #     self.assertXMLEquals(response.content, testsxml.project_branch_xml)
-
     def testGetProjectBranchAnon(self):
         self._initProject()
         response = self._get('projects/chater-foo/project_branches/chater-foo.eng.rpath.com@rpath:chater-foo-trunk')
         self.assertEquals(response.status_code, 401)
-
-    # def testGetProjectBranchStagesAnon(self):
-    #     self._initProject()
-    #     response = self._get('projects/chater-foo/project_branches/chater-foo.eng.rpath.com@rpath:chater-foo-trunk/project_branch_stages')
-    #     self.assertEquals(response.status_code, 200)
-    #     stages = xobj.parse(response.content).project_branch_stages.project_branch_stage
-    #     self.failUnlessEqual([ x.name for x in stages ], ['Development', 'QA', 'Stage', 'Release'])
-    #     self.failUnlessEqual([ x.id for x in stages ],
-    #       [
-    #         'http://testserver/api/v1/projects/chater-foo/project_branches/chater-foo.eng.rpath.com@rpath:chater-foo-trunk/project_branch_stages/Development',
-    #         'http://testserver/api/v1/projects/chater-foo/project_branches/chater-foo.eng.rpath.com@rpath:chater-foo-trunk/project_branch_stages/QA',
-    #         'http://testserver/api/v1/projects/chater-foo/project_branches/chater-foo.eng.rpath.com@rpath:chater-foo-trunk/project_branch_stages/Stage',
-    #         'http://testserver/api/v1/projects/chater-foo/project_branches/chater-foo.eng.rpath.com@rpath:chater-foo-trunk/project_branch_stages/Release',
-    #      ])
 
     def testGetProjectBranchStagesAnon(self):
         self._initProject()
         response = self._get('projects/chater-foo/project_branches/chater-foo.eng.rpath.com@rpath:chater-foo-trunk/project_branch_stages')
         self.assertEquals(response.status_code, 401)
 
-    # def testGetProjectBranchStageAnon(self):
-    #     self._initProject()
-    #     response = self._get('projects/chater-foo/project_branches/chater-foo.eng.rpath.com@rpath:chater-foo-trunk/project_branch_stages/Stage')
-    #     self.assertEquals(response.status_code, 200)
-    #     stage = xobj.parse(response.content).project_branch_stage
-    #     self.failUnlessEqual(stage.name, 'Stage')
-    #     self.failUnlessEqual(stage.id, 'http://testserver/api/v1/projects/chater-foo/project_branches/chater-foo.eng.rpath.com@rpath:chater-foo-trunk/project_branch_stages/Stage')
-    # 
-    #     # Comparing XML is more involved maintenance-wise, avoid doing
-    #     # that for collections
-    #     self.assertXMLEquals(response.content, testsxml.project_branch_stage_xml)
-    
     def testGetProjectBranchStageAnon(self):
         self._initProject()
         response = self._get('projects/chater-foo/project_branches/chater-foo.eng.rpath.com@rpath:chater-foo-trunk/project_branch_stages/Stage')
