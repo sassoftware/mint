@@ -414,6 +414,18 @@ class ProjectManager(basemanager.BaseManager):
         return dbStage
 
     @exposed
+    def getStageByProjectBranchAndStageName(self, projectBranch, stageName):
+        if hasattr(projectBranch, 'branch_id'):
+            projectBranchId = projectBranch.branch_id
+        else:
+            projectBranchId = projectBranch
+        stages = models.Stage.objects.filter(project_branch_id=projectBranchId,
+            name=stageName)
+        if stages:
+            return stages[0]
+        return None
+
+    @exposed
     def getImage(self, image_id):
         return imagesmodels.Image.objects.select_related().get(pk=image_id)
 
@@ -551,8 +563,7 @@ class ProjectManager(basemanager.BaseManager):
 
     @exposed
     def createProjectBranchStageImage(self, image):
-        image.save()
-        return image
+        return self.mgr.imagesManager.createImageBuild(image)
 
     # FINISH: commented out until there are tests for this
     # @exposed

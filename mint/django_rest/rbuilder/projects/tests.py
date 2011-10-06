@@ -383,14 +383,16 @@ class ProjectsTestCase(RbacEngine):
         # Add image
         prj = self._addProject("foo")
         image = imagesmodels.Image(name="image-1", description="image-1",
-            project=prj, image_type=10)
+            project=prj, _image_type=10)
         image.save()
         response = self._get('projects/%s/images/' % prj.short_name,
                     username='admin', password='password')
         self.assertEquals(response.status_code, 200)
         image = imagesmodels.Image.objects.get(pk=image.pk)
-        self.assertEquals(image.image_type, 10)
-        
+        self.assertEquals(image.image_type.image_type_id, 10)
+        self.assertEquals(image.image_type.name, 'Microsoft (R) Hyper-V')
+        self.assertEquals(image.image_type.description, 'VHD for Microsoft (R) Hyper-V')
+
         response = self._get('projects/%s/images/' % prj.short_name,
                     username='ExampleDeveloper', password='password')
         self.assertEquals(response.status_code, 403)
@@ -431,13 +433,14 @@ class ProjectsTestCase(RbacEngine):
 
         # First image has no stage reference
         image = imagesmodels.Image(name="image-1", description="image-1",
-            project=prj, project_branch=branch, image_type=10,
+            project=prj, project_branch=branch, _image_type=10,
             stage_name=stage.name)
         image.save()
 
         # Second image has a stage reference
         image = imagesmodels.Image(name="image-2", description="image-2",
-            project=prj, project_branch=branch, project_branch_stage=stage, image_type=10)
+            project=prj, project_branch=branch, project_branch_stage=stage,
+            _image_type=10)
         image.save()
 
         url = ('projects/%s/project_branches/%s/project_branch_stages/%s' %
