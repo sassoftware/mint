@@ -98,20 +98,16 @@ class BranchCallbacks(object):
         
     @staticmethod
     def can_read_branch(view, request, *args, **kwargs):
-        #print "DEBUG: can_read_branch? %s, %s" % (request._authUser.full_name, kwargs)
         branch_or_label = kwargs.get('project_branch_label', kwargs.get('project_branch',None))
         rc = BranchCallbacks._checkPermissions(view, request, branch_or_label, READMEMBERS)
-        #print "DEBUG: rc=%s" % rc
         return rc
     
 
     @staticmethod
     def can_write_branch(view, request, *args, **kwargs):
-        #print "DEBUG: can_write_branch? %s %s" % (request._authUser.full_name, kwargs)
         # must use project_branch_label first or security is wrong on PUTs
         branch_or_label = kwargs.get('project_branch_label', kwargs.get('project_branch', None))
         rc = BranchCallbacks._checkPermissions(view, request, branch_or_label, MODMEMBERS)
-        #print "DEBUG: rc=%s" % rc
         return rc
 
 
