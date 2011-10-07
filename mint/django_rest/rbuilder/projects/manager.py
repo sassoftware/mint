@@ -562,8 +562,21 @@ class ProjectManager(basemanager.BaseManager):
         return images
 
     @exposed
+    def createCreateProjectBranch(self, project_branch):
+        project_branch.save()
+        return project_branch
+
+    @exposed
     def createProjectBranchStageImage(self, image):
         return self.mgr.imagesManager.createImageBuild(image)
+
+    @exposed
+    def getAllProjectBranchesForProject(self, project_short_name):
+        ProjectBranches = models.ProjectVersions()
+        allProjectBranches = models.ProjectVersion.objects.filter(
+            project__short_name=project_short_name).order_by('project_id')
+        ProjectBranches.project_branches = allProjectBranches
+        return ProjectBranches
 
     # FINISH: commented out until there are tests for this
     # @exposed
