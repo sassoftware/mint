@@ -53,7 +53,7 @@ class ImagesTestCase(XMLTestCase):
             release.save()
             # images
             image = models.Image(
-                project=proj, release=release, image_type=10, job_uuid='1',
+                project=proj, release=release, _image_type=10, job_uuid='1',
                 name="image-%s" % i, trove_name='troveName%s' % i, trove_version='/cydonia.eng.rpath.com@rpath:cydonia-1-devel/1317221453.365:1-%d-1' % i,
                 trove_flavor='1#x86:i486:i586:i686|5#use:~!xen', created_by=user1, updated_by=user2, image_count=1,
                 output_trove=None, project_branch=branch, stage_name='stage%s' % i,
@@ -222,4 +222,14 @@ class ImagesTestCase(XMLTestCase):
         
     def testGetBuildLog(self):
         response = self._get('images/3/build_log', username='admin', password='password')
-        pass
+        self.assertEquals(response.status_code, 200)
+
+    def testGetImageTypes(self):
+        response = self._get('image_types/', username='admin', password='password')
+        self.assertEquals(response.status_code, 200)
+        self.assertXMLEquals(response.content, testsxml.image_types_get_xml)
+        
+    def testGetImageType(self):
+        response = self._get('image_types/1', username='admin', password='password')
+        self.assertEquals(response.status_code, 200)
+        self.assertXMLEquals(response.content, testsxml.image_type_get_xml)

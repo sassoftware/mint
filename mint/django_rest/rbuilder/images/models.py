@@ -21,6 +21,7 @@ from conary import trovetup
 from conary import versions
 from conary.deps import deps
 import sys
+from mint.django_rest.rbuilder.images.manager import models_manager
 
 APIReadOnly = modellib.APIReadOnly
 
@@ -47,9 +48,19 @@ class BuildLogHref(modellib.HrefFieldFromModel):
         url = self._getRelativeHref(url=url)
         return modellib.XObjHrefModel(url + '/build_log')
 
+class ImageTypes(modellib.Collection):
+    class Meta:
+        abstract = True
+        
+    list_fields = ['image_type']
+
 class ImageType(modellib.XObjIdModel):
     class Meta:
         abstract = True
+        
+    _xobj = xobj.XObjMetadata(tag='image_type', attributes={'id':str})
+
+    objects = models_manager.ImageTypeManager()
     image_type_id = models.IntegerField()
     key = models.CharField()
     name = models.CharField()
@@ -59,11 +70,28 @@ class ImageType(modellib.XObjIdModel):
 
     @classmethod
     def fromImageTypeId(cls, imageTypeId):
-         return cls(
+        # if imageTypeId is not known, we return an empty object
+        return cls(
             image_type_id = imageTypeId,
             key = cls.ImageTypeKeys.get(imageTypeId),
             name = buildtypes.typeNamesShort.get(imageTypeId),
             description = buildtypes.typeNames.get(imageTypeId))
+
+    @classmethod
+    def fromXobjModel(cls, xobjModel):
+        imageTypeId = getattr(xobjModel, 'image_type_id', None)
+        if imageTypeId is None:
+            # Look up by key
+            key = getattr(xobjModel, 'key', None)
+            if key:
+                imageTypeId = cls.ImageTypeKeys.get(key)
+        else:
+            # Get rid of xobj strings
+            imageTypeId = str(imageTypeId)
+        return cls.fromImageTypeId(imageTypeId)
+
+    def get_url_key(self):
+        return [ self.image_type_id ]
 
 class Image(modellib.XObjIdModel):
     class Meta:
@@ -73,7 +101,7 @@ class Image(modellib.XObjIdModel):
 
     _xobj_explicit_accessors = set(['files'])
     # _xobj_hidden_accessors = set(['buildfilesurlsmap_set'])
-    
+
     def __unicode__(self):
         return self.name
 
@@ -87,7 +115,10 @@ class Image(modellib.XObjIdModel):
         related_name="images", view_name="ProjectBranchStageImages", null=True))
     release = models.ForeignKey('Release', null=True,
         db_column='pubreleaseid', related_name="images")
-    image_type = models.IntegerField(db_column="buildtype")
+    _image_type = modellib.XObjHidden(APIReadOnly(
+        models.IntegerField(db_column="buildtype")))
+    image_type = modellib.SyntheticField()
+
     job_uuid = models.CharField(max_length=64, null=True)
     name = models.CharField(max_length=255, null=True)
     description = models.TextField(null=True)
@@ -148,6 +179,9 @@ class Image(modellib.XObjIdModel):
             self.num_image_files = 0;
 
         self.build_log = self._getBuildLog()
+
+        if self._image_type is not None:
+            self.image_type = ImageType.fromImageTypeId(self._image_type)
 
     def _getBuildLog(self):
         return BuildLogHref(self)
@@ -216,6 +250,12 @@ class Image(modellib.XObjIdModel):
                 xobjModel.time_updated, tz.tzutc()))
         return xobjModel
 
+    def save(self):
+        if self.image_type is not None:
+            imageType = ImageType.fromXobjModel(self.image_type)
+            if self._image_type != imageType.image_type_id:
+                self._image_type = imageType.image_type_id
+        return modellib.XObjIdModel.save(self)
 
 class Releases(modellib.Collection):
     class Meta:
@@ -295,17 +335,17 @@ class BuildFile(modellib.XObjIdModel):
         return xobjModel
 
 
-class BuildData(modellib.XObjIdModel):
+class ImageData(modellib.XObjIdModel):
     class Meta:
         db_table = 'builddata'
-        unique_together = ('build', 'name')
-    
-    build_data_id = models.AutoField(primary_key=True, db_column='builddataid')
-    build = models.ForeignKey('Image', db_column='buildid')
+        unique_together = ('image', 'name')
+
+    image_data_id = models.AutoField(primary_key=True, db_column='builddataid')
+    image = models.ForeignKey('Image', db_column='buildid', related_name="image_data")
     name = models.CharField(max_length=32, null=False)
     value = models.TextField()
     data_type = models.SmallIntegerField(null=False, db_column='datatype')
-    
+
 class FileUrl(modellib.XObjIdModel):
     class Meta:
         db_table = 'filesurls'

@@ -35,59 +35,45 @@ class ImagesManager(basemanager.BaseManager):
     def createImageBuild(self, image):
         outputToken = sha1helper.sha1ToString(file('/dev/urandom').read(20))
         buildData = [('outputToken', outputToken, datatypes.RDT_STRING)]
-        buildType = image.image_type
-        buildName = image.name
+
+        now = time.time()
+        image.time_created = image.time_updated = "%.5f" % now
+        image.created_by_id = self.user.user_id
+        image.image_count = 0
+        if image.project_branch_stage_id:
+            image.stage_name = image.project_branch_stage.name
+
+        if (image.trove_version and image.project_branch_stage_id is None
+                and image.project_branch_id is None):
+            # Try to determine the PBS from the trove version
+            troveLabel = versions.ThawVersion(image.trove_version).trailingLabel()
+            pbId, stage = self.restDb.productMgr.getProductVersionForLabel(
+                image.project.repository_hostname, troveLabel)
+            pbs = self.mgr.getStageByProjectBranchAndStageName(pbId, stage)
+            if pbs:
+                self.project_branch_stage_id = pbs.stage_id
+
         if image.trove_version is None:
-            image.trove_version = versions.VersionFromString(
-                '/local@local:COOK/1-1-1', timeStamps = [ 0.1 ])
-        
-        # Look up the build type by name too - and fall back to what the user
-        # specified
-        buildType = buildtypes.xmlTagNameImageTypeMap.get(buildType, buildType)
-        cu = connection.cursor()
-        fqdn = image.project.repository_hostname
-        productId = self.restDb.getProductId(fqdn)
-        troveTuple = self._getOutputTrove(image)
-        if image.trove_version and image.stage_name:
-            stage = image.stage_name
-            productVersionId = image.project.project_branches.values()[0]['branch_id']
-        else:
-            troveLabel = troveTuple[1].trailingLabel()
-            productVersionId, stage = self.restDb.productMgr.getProductVersionForLabel(
-                                                    fqdn, troveLabel)
+            image.trove_version = str(versions.VersionFromString(
+                '/local@local:COOK/1-1-1', timeStamps = [ 0.1 ]))
 
-        sql = '''INSERT INTO Builds (projectId, name, buildType, timeCreated, 
-                                    buildCount, createdBy, troveName, 
-                                    troveVersion, troveFlavor, stageName, 
-                                    productVersionId) 
-                           VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)'''
+        if not image.trove_flavor and image.architecture:
+            image.trove_flavor = "is: %s" % image.architecture
 
-        cu.execute(
-        sql, [productId, buildName, buildType, time.time(), 0, self.restDb.auth.userId,
-             image.trove_name, image.trove_version, image.trove_flavor, stage, productVersionId])
-        
-        buildId = cu.lastrowid        
-        buildDataTable = self.restDb.db.buildData
-        for name, value, dataType in buildData:
-            try:
-                buildData = models.BuildData.objects.get(build__image_id=buildId, name=name)
-            except: # come back and catch MatchingQueryDoesNotExist
-                build = models.Image.objects.get(pk=buildId)
-                buildData = models.BuildData(build=build, name=name)
-            buildData.value = value
-            buildData.data_type = dataType
-            buildData.save()
+        # Fill in the redundant information starting with the most
+        # specific part
+        if image.project_branch_stage_id:
+            image.project_branch_id = image.project_branch_stage.branch_id
+            image.project_id = image.project_branch_stage.project_id
+        elif image.project_branch_id:
+            image.project_id = image.project_branch.project_id
 
-        # FINISH
-        
-        # # clear out all "important flavors"
-        # for x in buildtypes.flavorFlags.keys():
-        #     buildDataTable.removeDataValue(buildId, x, commit=False)
-        # 
-        # # and set the new ones
-        # for x in builds.getImportantFlavors(troveTuple[2]):
-        #     buildDataTable.setDataValue(buildId, x, 1, data.RDT_INT, 
-        #                                 commit=False)
+        image.save()
+
+        for bdName, bdValue, bdType in buildData:
+            image.image_data.add(models.ImageData(name=bdName, value=bdValue,
+                data_type=bdType))
+
         return image
 
     def _getOutputTrove(self, image):
@@ -164,3 +150,11 @@ class ImagesManager(basemanager.BaseManager):
         image = models.Image.objects.get(pk=image_id)
         hostname = image.project.hostname
         return self.restDb.getImageFile(hostname, image_id, 'build.log')
+
+    @exposed
+    def getImageType(self, image_type_id):
+        return models.ImageType.objects.get(image_type_id=image_type_id)
+
+    @exposed
+    def getImageTypes(self):
+        return models.ImageType.objects.all()

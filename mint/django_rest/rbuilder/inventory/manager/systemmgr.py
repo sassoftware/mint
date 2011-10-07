@@ -859,8 +859,8 @@ class SystemManager(basemanager.BaseManager):
             # Now check to see if the source image has a base image trove in the
             # builddata. This means it is a deferred image and we need to lookup
             # the base image.
-            builddata = imagemodels.BuildData.objects.filter(
-                build=system.source_image, name='baseImageTrove')
+            builddata = imagemodels.ImageData.objects.filter(
+                image=system.source_image, name='baseImageTrove')
 
             if not builddata:
                 return

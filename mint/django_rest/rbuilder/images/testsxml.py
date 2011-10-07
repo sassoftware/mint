@@ -26,7 +26,12 @@ images_get_xml = """
     <updated_by id="http://testserver/api/v1/users/2002"/>
     <trailing_version>1-0-1</trailing_version>
     <num_image_files>2</num_image_files>
-    <image_type>10</image_type>
+    <image_type id="http://testserver/api/v1/image_types/10">
+      <description>VHD for Microsoft (R) Hyper-V</description>
+      <image_type_id>10</image_type_id>
+      <key>VIRTUAL_PC_IMAGE</key>
+      <name>Microsoft (R) Hyper-V</name>
+    </image_type>
     <build_log id="http://testserver/api/v1/images/1/build_log"/>
     <trove_flavor>1#x86:i486:i586:i686|5#use:~!xen</trove_flavor>
     <created_by id="http://testserver/api/v1/users/2001"/>
@@ -80,7 +85,12 @@ images_get_xml = """
     <updated_by id="http://testserver/api/v1/users/2002"/>
     <trailing_version>1-1-1</trailing_version>
     <num_image_files>2</num_image_files>
-    <image_type>10</image_type>
+    <image_type id="http://testserver/api/v1/image_types/10">
+      <description>VHD for Microsoft (R) Hyper-V</description>
+      <image_type_id>10</image_type_id>
+      <key>VIRTUAL_PC_IMAGE</key>
+      <name>Microsoft (R) Hyper-V</name>
+    </image_type>
     <build_log id="http://testserver/api/v1/images/2/build_log"/>
     <trove_flavor>1#x86:i486:i586:i686|5#use:~!xen</trove_flavor>
     <created_by id="http://testserver/api/v1/users/2001"/>
@@ -134,7 +144,12 @@ images_get_xml = """
     <updated_by id="http://testserver/api/v1/users/2002"/>
     <trailing_version>1-2-1</trailing_version>
     <num_image_files>2</num_image_files>
-    <image_type>10</image_type>
+    <image_type id="http://testserver/api/v1/image_types/10">
+      <description>VHD for Microsoft (R) Hyper-V</description>
+      <image_type_id>10</image_type_id>
+      <key>VIRTUAL_PC_IMAGE</key>
+      <name>Microsoft (R) Hyper-V</name>
+    </image_type>
     <build_log id="http://testserver/api/v1/images/3/build_log"/>
     <trove_flavor>1#x86:i486:i586:i686|5#use:~!xen</trove_flavor>
     <created_by id="http://testserver/api/v1/users/2001"/>
@@ -193,7 +208,12 @@ image_get_xml = """
   <updated_by id="http://testserver/api/v1/users/2002"/>
   <trailing_version>1-0-1</trailing_version>
   <num_image_files>2</num_image_files>
-  <image_type>10</image_type>
+  <image_type id="http://testserver/api/v1/image_types/10">
+    <description>VHD for Microsoft (R) Hyper-V</description>
+    <image_type_id>10</image_type_id>
+    <key>VIRTUAL_PC_IMAGE</key>
+    <name>Microsoft (R) Hyper-V</name>
+  </image_type>
   <build_log id="http://testserver/api/v1/images/1/build_log"/>
   <trove_flavor>1#x86:i486:i586:i686|5#use:~!xen</trove_flavor>
   <created_by id="http://testserver/api/v1/users/2001"/>
@@ -254,10 +274,15 @@ image_post_xml = """
   </project_branch>
   <description>image-20</description>
   <time_created></time_created>
-  <image_type>10</image_type>
+  <image_type id="http://testserver/api/v1/image_types/10">
+    <description>VHD for Microsoft (R) Hyper-V</description>
+    <image_type_id>10</image_type_id>
+    <key>VIRTUAL_PC_IMAGE</key>
+    <name>Microsoft (R) Hyper-V</name>
+  </image_type>
   <time_updated></time_updated>
   <name>image-20</name>
-  <trove_version>foo0@test:1/1-0-1</trove_version>
+  <trove_version>/cydonia.eng.rpath.com@rpath:cydonia-1-devel/1317221453.365:1-0-1</trove_version>
   <project id="http://testserver/api/v1/projects/foo0">
     <domain_name>eng.rpath.com</domain_name>
     <short_name>foo0</short_name>
@@ -285,10 +310,15 @@ image_put_xml = """
   </project_branch>
   <description>image-20</description>
   <time_created></time_created>
-  <image_type>10</image_type>
+  <image_type id="http://testserver/api/v1/image_types/10">
+    <description>VHD for Microsoft (R) Hyper-V</description>
+    <image_type_id>10</image_type_id>
+    <key>VIRTUAL_PC_IMAGE</key>
+    <name>Microsoft (R) Hyper-V</name>
+  </image_type>
   <time_updated></time_updated>
   <name>image-20</name>
-  <trove_version>newfoo@test:1/1-0-1</trove_version>
+  <trove_version>/cydonia.eng.rpath.com@rpath:cydonia-1-devel/1317221453.365:1-0-1</trove_version>
   <project id="http://testserver/api/v1/projects/foo0">
     <domain_name>eng.rpath.com</domain_name>
     <short_name>foo0</short_name>
@@ -318,7 +348,12 @@ build_file_post_xml = \
       </project_branch>
       <description>image-20</description>
       <time_created></time_created>
-      <image_type>10</image_type>
+      <image_type id="http://testserver/api/v1/image_types/10">
+        <description>VHD for Microsoft (R) Hyper-V</description>
+        <image_type_id>10</image_type_id>
+        <key>VIRTUAL_PC_IMAGE</key>
+        <name>Microsoft (R) Hyper-V</name>
+      </image_type>
       <time_updated></time_updated>
       <name>image-20</name>
       <trove_version>newfoo@test:1/1-0-1</trove_version>
@@ -433,7 +468,12 @@ release_get_xml = \
       <updated_by id="http://testserver/api/v1/users/2002"/>
       <trailing_version>1-0-1</trailing_version>
       <num_image_files>2</num_image_files>
-      <image_type>10</image_type>
+      <image_type id="http://testserver/api/v1/image_types/10">
+        <description>VHD for Microsoft (R) Hyper-V</description>
+        <image_type_id>10</image_type_id>
+        <key>VIRTUAL_PC_IMAGE</key>
+        <name>Microsoft (R) Hyper-V</name>
+      </image_type>
       <build_log id="http://testserver/api/v1/images/1/build_log"/>
       <trove_flavor>1#x86:i486:i586:i686|5#use:~!xen</trove_flavor>
       <created_by id="http://testserver/api/v1/users/2001"/>
@@ -534,7 +574,12 @@ releases_get_xml = \
         <updated_by id="http://testserver/api/v1/users/2002"/>
         <trailing_version>1-0-1</trailing_version>
         <num_image_files>2</num_image_files>
-        <image_type>10</image_type>
+        <image_type id="http://testserver/api/v1/image_types/10">
+          <description>VHD for Microsoft (R) Hyper-V</description>
+          <image_type_id>10</image_type_id>
+          <key>VIRTUAL_PC_IMAGE</key>
+          <name>Microsoft (R) Hyper-V</name>
+        </image_type>
         <build_log id="http://testserver/api/v1/images/1/build_log"/>
         <trove_flavor>1#x86:i486:i586:i686|5#use:~!xen</trove_flavor>
         <created_by id="http://testserver/api/v1/users/2001"/>
@@ -609,7 +654,12 @@ releases_get_xml = \
         <updated_by id="http://testserver/api/v1/users/2002"/>
         <trailing_version>1-1-1</trailing_version>
         <num_image_files>2</num_image_files>
-        <image_type>10</image_type>
+        <image_type id="http://testserver/api/v1/image_types/10">
+          <description>VHD for Microsoft (R) Hyper-V</description>
+          <image_type_id>10</image_type_id>
+          <key>VIRTUAL_PC_IMAGE</key>
+          <name>Microsoft (R) Hyper-V</name>
+        </image_type>
         <build_log id="http://testserver/api/v1/images/2/build_log"/>
         <trove_flavor>1#x86:i486:i586:i686|5#use:~!xen</trove_flavor>
         <created_by id="http://testserver/api/v1/users/2001"/>
@@ -684,7 +734,12 @@ releases_get_xml = \
         <updated_by id="http://testserver/api/v1/users/2002"/>
         <trailing_version>1-2-1</trailing_version>
         <num_image_files>2</num_image_files>
-        <image_type>10</image_type>
+        <image_type id="http://testserver/api/v1/image_types/10">
+          <description>VHD for Microsoft (R) Hyper-V</description>
+          <image_type_id>10</image_type_id>
+          <key>VIRTUAL_PC_IMAGE</key>
+          <name>Microsoft (R) Hyper-V</name>
+        </image_type>
         <build_log id="http://testserver/api/v1/images/3/build_log"/>
         <trove_flavor>1#x86:i486:i586:i686|5#use:~!xen</trove_flavor>
         <created_by id="http://testserver/api/v1/users/2001"/>
@@ -746,3 +801,80 @@ build_file_url_get_xml = \
   <file_url_id>1</file_url_id>
 </file_url>
 """.strip()
+
+image_types_get_xml = \
+"""
+<image_types count="22" next_page="http://testserver/api/v1/image_types;start_index=10;limit=10" num_pages="3" previous_page="" full_collection="http://testserver/api/v1/image_types" end_index="9" limit="10" order_by="" per_page="10" filter_by="" id="http://testserver/api/v1/image_types;start_index=0;limit=10" start_index="0">
+  <image_type id="http://testserver/api/v1/image_types/0">
+    <description></description>
+    <name></name>
+    <key>BOOTABLE_IMAGE</key>
+    <image_type_id>0</image_type_id>
+  </image_type>
+  <image_type id="http://testserver/api/v1/image_types/1">
+    <description>Installable CD/DVD</description>
+    <name>Inst CD/DVD</name>
+    <key>INSTALLABLE_ISO</key>
+    <image_type_id>1</image_type_id>
+  </image_type>
+  <image_type id="http://testserver/api/v1/image_types/2">
+    <description>Stub Image</description>
+    <name>Stub</name>
+    <key>STUB_IMAGE</key>
+    <image_type_id>2</image_type_id>
+  </image_type>
+  <image_type id="http://testserver/api/v1/image_types/3">
+    <description>Raw Filesystem Image</description>
+    <name>Raw FS</name>
+    <key>RAW_FS_IMAGE</key>
+    <image_type_id>3</image_type_id>
+  </image_type>
+  <image_type id="http://testserver/api/v1/image_types/4">
+    <description>Netboot Image</description>
+    <name>Netboot</name>
+    <key>NETBOOT_IMAGE</key>
+    <image_type_id>4</image_type_id>
+  </image_type>
+  <image_type id="http://testserver/api/v1/image_types/5">
+    <description>Compressed Tar File</description>
+    <name>Tar</name>
+    <key>TARBALL</key>
+    <image_type_id>5</image_type_id>
+  </image_type>
+  <image_type id="http://testserver/api/v1/image_types/6">
+    <description>Demo CD/DVD (Live CD/DVD)</description>
+    <name>Demo CD/DVD</name>
+    <key>LIVE_ISO</key>
+    <image_type_id>6</image_type_id>
+  </image_type>
+  <image_type id="http://testserver/api/v1/image_types/7">
+    <description>Raw Hard Disk Image</description>
+    <name>HDD</name>
+    <key>RAW_HD_IMAGE</key>
+    <image_type_id>7</image_type_id>
+  </image_type>
+  <image_type id="http://testserver/api/v1/image_types/8">
+    <description>VMware (R) Virtual Appliance</description>
+    <name>VMware (R)</name>
+    <key>VMWARE_IMAGE</key>
+    <image_type_id>8</image_type_id>
+  </image_type>
+  <image_type id="http://testserver/api/v1/image_types/9">
+    <description>VMware (R) ESX Server Virtual Appliance</description>
+    <name>VMware (R) ESX</name>
+    <key>VMWARE_ESX_IMAGE</key>
+    <image_type_id>9</image_type_id>
+  </image_type>
+</image_types>
+"""
+
+image_type_get_xml = \
+"""
+<?xml version='1.0' encoding='UTF-8'?>
+<image_type id="http://testserver/api/v1/image_types/1">
+  <description>Installable CD/DVD</description>
+  <name>Inst CD/DVD</name>
+  <key>INSTALLABLE_ISO</key>
+  <image_type_id>1</image_type_id>
+</image_type>
+"""
