@@ -206,9 +206,17 @@ class ProjectAllBranchesService(service.BaseService):
     @rbac(ProjectCallbacks.can_read_project)
     @return_xml
     def rest_GET(self, request, project_short_name):
-        # FIXME -- we need this implemented
-        import exceptions
-        raise exceptions.NotImplementedError()
+        return self.get(project_short_name)
+        
+    def get(self, project_short_name):
+        return self.mgr.getAllProjectBranchesForProject(project_short_name)
+
+    @rbac(ProjectCallbacks.can_write_project)
+    @requires('project_branch')
+    @return_xml
+    def rest_POST(self, request, project_short_name, project_branch):
+        return self.mgr.createProjectBranch(project_branch)
+        
 
 class ProjectBranchService(service.BaseService):
 
