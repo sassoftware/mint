@@ -583,7 +583,6 @@ class RbacEngine(RbacTestCase):
         mk_permission(self.datacenter_queryset, 'developer', READMEMBERS)
         mk_permission(self.sys_queryset, 'sysadmin', READSET)
         mk_permission(self.user_queryset, 'sysadmin', READMEMBERS)
-        mk_permission(self.projects_queryset, 'sysadmin', READMEMBERS)
 
         self.admin_user     = usersmodels.User.objects.get(user_name='admin')
         self.admin_user._is_admin = True
@@ -712,7 +711,7 @@ class RbacEngineTests(RbacEngine):
         xobj_querysets = xobj.parse(response.content)
         results = xobj_querysets.query_sets.query_set
         # granted permission to 2 systems querysets + 1 user queryset
-        self.assertEquals(len(results), 4, 'sysadmin user gets fewer results')
+        self.assertEquals(len(results), 3, 'sysadmin user gets fewer results')
  
         # sysadmin user CAN see & use the all systems queryset
         # because he has permissions on it

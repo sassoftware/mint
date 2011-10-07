@@ -3051,7 +3051,7 @@ class MigrateTo_57(SchemaMigration):
 
 
 class MigrateTo_58(SchemaMigration):
-    Version = (58, 72)
+    Version = (58, 73)
 
     def migrate(self):
         return True
@@ -4347,6 +4347,17 @@ class MigrateTo_58(SchemaMigration):
         cu.execute("""
             ALTER TABLE BuildFilesUrlsMap
                 ADD CONSTRAINT buildfilesurlsmap_uq UNIQUE (fileid, urlid)""")
+        return True
+
+    def migrate73(self):
+        cu = self.db.cursor()
+        cu.execute("""ALTER TABLE Builds ADD base_image integer
+            REFERENCES Builds ON DELETE SET NULL""")
+        cu.execute("""UPDATE Builds b SET base_image = (
+            SELECT o.buildId FROM BuildData d
+            JOIN Builds o ON d.value = o.output_trove
+            AND d.name = 'baseImageTrove'
+            AND d.buildId = b.buildId)""")
         return True
 
 
