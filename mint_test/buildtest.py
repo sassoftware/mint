@@ -1248,7 +1248,7 @@ class ProductVersionBuildTest(fixtures.FixturedProductVersionTest):
         build = client.getBuild(buildIds[0])
         self.assertEquals(build.getDataDict().get('showMediaCheck'), True)
 
-        data = json.loads(client.server.serializeBuild(buildIds[0]))
+        data = client.server.serializeBuild(buildIds[0])
         self.assertEquals(data['proddefLabel'], 'foo.rpath.local2@ns:foo-FooV1')
 
     @fixtures.fixture('Full')

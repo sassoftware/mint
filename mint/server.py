@@ -2544,7 +2544,7 @@ If you would not like to be %s %s of this project, you may resign from this proj
         self.buildData.setDataValue(buildId, 'outputToken',
             r['outputToken'], data.RDT_STRING)
 
-        return json.dumps(r)
+        return r
 
     #
     # published releases 
@@ -2965,28 +2965,42 @@ If you would not like to be %s %s of this project, you may resign from this proj
                     if 'windows' in tags:
                         return self.startWindowsImageJob(buildId, jobData)
 
-                client = self._getMcpClient()
-                uuid = client.new_job(client.LOCAL_RBUILDER, jobData)
-                self.buildData.setDataValue(buildId, 'uuid', uuid,
-                        data.RDT_STRING)
-                return uuid
+                return self.startMcpImageJob(buildId, jobData)
             except:
                 log.exception("Failed to start image job:")
                 self.db.builds.update(buildId, status=jobstatus.FAILED,
                         statusMessage="Failed to start image job - check logs")
                 raise
 
+    def startMcpImageJob(self, buildId, jobData):
+        """Start a standard MCP image job."""
+        client = self._getMcpClient()
+        uuid = client.new_job(client.LOCAL_RBUILDER, jobData)
+        self.buildData.setDataValue(buildId, 'uuid', uuid, data.RDT_STRING)
+        return uuid
+
     def startWindowsImageJob(self, buildId, jobData):
         """Direct Windows image builds to rMake 3."""
+        jsonData = json.dumps(jobData)
         cli = wig_client.WigClient(self._getRmakeClient())
-        job_uuid, job = cli.createJob(jobData, subscribe=False)
+        job_uuid, job = cli.createJob(jsonData, subscribe=False)
         log.info("Created Windows image job, UUID %s", job_uuid)
         self.builds.update(buildId, job_uuid=str(job_uuid))
         return str(job_uuid)
 
     def startDeferredImageJob(self, buildId, jobData):
         """Create a deferred image record in the database."""
-        self.db.builds.update(buildId, status=jobstatus.FINISHED,
+        baseTrove = jobData['data'].get('baseImageTrove', '')
+        try:
+            baseId = self.db.builds.getIdByColumn('output_trove',
+                    baseTrove)
+        except database.ItemNotFound:
+            self.db.builds.update(buildId, status=jobstatus.FAILED,
+                    statusMessage="Base image %r not found" % (baseTrove,))
+            return -1
+        self.db.builds.update(buildId,
+                base_image=baseId,
+                status=jobstatus.FINISHED,
                 statusMessage="Deferred image has been recorded")
         return 1
 

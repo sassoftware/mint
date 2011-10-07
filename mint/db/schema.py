@@ -28,7 +28,7 @@ from conary.dbstore import sqlerrors, sqllib
 log = logging.getLogger(__name__)
 
 # database schema major version
-RBUILDER_DB_VERSION = sqllib.DBversion(58, 72)
+RBUILDER_DB_VERSION = sqllib.DBversion(58, 73)
 
 
 def _createTrigger(db, table, column="changed"):
@@ -379,7 +379,9 @@ def _createBuilds(db):
             stageName            varchar(255)               DEFAULT '',
             status               integer                    DEFAULT -1,
             statusMessage        text                       DEFAULT '',
-            output_trove         text
+            output_trove         text,
+            base_image           integer
+                REFERENCES Builds ON DELETE SET NULL
         ) %(TABLEOPTS)s """ % db.keywords)
         db.tables['Builds'] = []
 
