@@ -286,7 +286,7 @@ urlpatterns = patterns('',
         projectviews.ProjectMemberService(),
         name='ProjectMembers'),
     URL(r'projects/(?P<project_short_name>(\w|\-)*)/project_branches/?$',
-        projectviews.ProjectBranchService(),
+        projectviews.ProjectAllBranchesService(),  # WRONG
         name='ProjectVersions'),
     URL(r'projects/(?P<project_short_name>(\w|\-)*)/project_branches/(?P<project_branch_label>[a-zA-Z0-9]+(\.|\w|\-|\@|\:)*)/?$',
         projectviews.ProjectBranchService(),

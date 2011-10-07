@@ -121,7 +121,7 @@ class ProjectsTestCase(RbacEngine):
             # FIXME: missing XML tests!, need to add
             self.assertEquals(response.status_code, 200)
         
-        # other users cannot
+        # other users cannot get this item
         response = self._get('projects/chater-foo/',
             username='ExampleSysadmin', password='password')
         self.assertEquals(response.status_code, 403)
@@ -133,7 +133,7 @@ class ProjectsTestCase(RbacEngine):
     def testGetProjectBranchesFunctionsFromGrant(self):
         self._initProject()
 
-        # FIXME: missing XML tests
+        # FIXME: missing XML tip
         response = self._get('projects/chater-foo/project_branches', username='ExampleDeveloper', password='password')
         self.assertEquals(response.status_code, 200)
 
