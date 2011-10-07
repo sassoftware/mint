@@ -35,7 +35,7 @@ class ProjectCallbacks(object):
             obj.short_name != project_short_name:
             return False
         if view.mgr.userHasRbacPermission(user, obj, action):
-            return True
+           return True
 
         # if no explicit Project permission, check all PBSes
         # that have this project, ability to access any implies 
@@ -107,7 +107,7 @@ class BranchCallbacks(object):
 
     @staticmethod
     def can_write_branch(view, request, *args, **kwargs):
-        #print "DEBUG: can_write_branch?" % (request._authUser.full_name, kwargs)
+        #print "DEBUG: can_write_branch? %s %s" % (request._authUser.full_name, kwargs)
         # must use project_branch_label first or security is wrong on PUTs
         branch_or_label = kwargs.get('project_branch_label', kwargs.get('project_branch', None))
         rc = BranchCallbacks._checkPermissions(view, request, branch_or_label, MODMEMBERS)
