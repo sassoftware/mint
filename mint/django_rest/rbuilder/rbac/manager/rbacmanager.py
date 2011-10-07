@@ -161,6 +161,8 @@ class RbacManager(basemanager.BaseManager):
  
     @exposed
     def addRbacPermission(self, permission, by_user):
+        if permission.queryset.resource_type in [ 'grant', 'role' ]:
+            raise Exception("RBAC configuration rights cannot be delegated")
         permission.created_by  = by_user
         permission.modified_by = by_user
         permission.save()

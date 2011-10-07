@@ -110,8 +110,10 @@ class BranchCallbacks(object):
         #print "DEBUG: can_write_branch? %s %s" % (request._authUser.full_name, kwargs)
         # must use project_branch_label first or security is wrong on PUTs
         branch_or_label = kwargs.get('project_branch_label', kwargs.get('project_branch', None))
+        print "DEBUG: branch_or_label=%s for %s, %s, %s" % (branch_or_label, request._authUser, action)
         rc = BranchCallbacks._checkPermissions(view, request, branch_or_label, MODMEMBERS)
         #print "DEBUG: rc=%s" % rc
+        print "DEBUG: result=%s" % rc
         return rc
 
 
