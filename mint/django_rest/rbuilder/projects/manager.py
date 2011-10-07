@@ -562,7 +562,7 @@ class ProjectManager(basemanager.BaseManager):
         return images
 
     @exposed
-    def createCreateProjectBranch(self, project_branch):
+    def createProjectBranch(self, project_branch):
         project_branch.save()
         return project_branch
 
