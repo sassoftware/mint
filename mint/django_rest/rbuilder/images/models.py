@@ -113,7 +113,7 @@ class Image(modellib.XObjIdModel):
     project_branch_stage = modellib.XObjHidden(
         modellib.DeferredForeignKey('projects.Stage', db_column='stageid',
         related_name="images", view_name="ProjectBranchStageImages", null=True))
-    release = models.ForeignKey('Release', null=True,
+    release = models.ForeignKey('projects.Release', null=True,
         db_column='pubreleaseid', related_name="images")
     _image_type = modellib.XObjHidden(APIReadOnly(
         models.IntegerField(db_column="buildtype")))
@@ -256,47 +256,6 @@ class Image(modellib.XObjIdModel):
             if self._image_type != imageType.image_type_id:
                 self._image_type = imageType.image_type_id
         return modellib.XObjIdModel.save(self)
-
-class Releases(modellib.Collection):
-    class Meta:
-        abstract = True
-
-    list_fields = ['release']
-    _xobj = xobj.XObjMetadata(tag='releases')        
-
-
-class Release(modellib.XObjIdModel):
-    class Meta:
-        db_table = u'publishedreleases'
-
-    _xobj = xobj.XObjMetadata(
-        tag='release')
-    _xobj_explict_accessors = set(["images"])
-
-    release_id = models.AutoField(primary_key=True,
-        db_column='pubreleaseid')
-    project = modellib.DeferredForeignKey('projects.Project', db_column='projectid', 
-        related_name='releases')
-    name = models.CharField(max_length=255, blank=True, default='')
-    version = models.CharField(max_length=32, blank=True, default='')
-    description = models.TextField()
-    time_created = models.DecimalField(max_digits=14, decimal_places=3,
-        db_column='timecreated', null=True)
-    created_by = modellib.ForeignKey('users.User', db_column='createdby',
-        related_name='created_releases', null=True)
-    time_updated = models.DecimalField(max_digits=14, decimal_places=3,
-        null=True, db_column='timeupdated')
-    updated_by = modellib.ForeignKey('users.User', db_column='updatedby',
-        related_name='updated_releases', null=True)
-    time_published = models.DecimalField(max_digits=14, decimal_places=3,
-        db_column='timepublished', null=True)
-    published_by = modellib.ForeignKey('users.User', 
-        db_column='publishedby', related_name='published_releases',
-        null=True)
-    should_mirror = models.SmallIntegerField(db_column='shouldmirror',
-        blank=True, default=0)
-    time_mirrored = models.DecimalField(max_digits=14, decimal_places=3,
-        null=True, db_column='timemirrored')  
 
 
 class BuildFiles(modellib.Collection):
