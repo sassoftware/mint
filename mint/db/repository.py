@@ -477,10 +477,55 @@ class RepositoryHandle(object):
             elif userId < 0:
                 raise RuntimeError("Invalid userId %d" % userId)
             elif level is None:
+                # Crikey, that's a big one!
                 cu = self._db.cursor()
-                cu.execute("""SELECT level FROM ProjectUsers
-                        WHERE projectId = ? AND userId = ?""",
-                        self.projectId, userId)
+                cu.execute("""
+SELECT MIN(level) FROM (
+    -- Permissions from a project set
+    SELECT CASE rpt.name
+            WHEN 'ReadMembers' THEN 2
+            WHEN 'ModMembers' THEN 0
+            ELSE NULL
+        END AS level
+    FROM rbac_permission rp
+    JOIN rbac_user_role rur USING ( role_id )
+    JOIN rbac_permission_type rpt
+        ON rpt.permission_type_id = rp.permission_type_id
+    JOIN querysets_projecttag qpt
+        ON qpt.query_set_id = rp.queryset_id
+    WHERE rur.user_id = :user_id AND qpt.project_id = :project_id
+    AND rpt.name in ('ReadMembers', 'ModMembers')
+
+    UNION ALL
+
+    -- Permissions from a project stage set
+    SELECT CASE rpt.name
+            WHEN 'ReadMembers' THEN 2
+            WHEN 'ModMembers' THEN 0
+            ELSE NULL
+        END AS level
+    FROM rbac_permission rp
+    JOIN rbac_user_role rur USING ( role_id )
+    JOIN rbac_permission_type rpt
+        ON rpt.permission_type_id = rp.permission_type_id
+    JOIN querysets_stagetag qst
+        ON qst.query_set_id = rp.queryset_id
+    JOIN project_branch_stage pbs USING (stage_id)
+    WHERE rur.user_id = :user_id AND pbs.project_id = :project_id
+    AND rpt.name in ('ReadMembers', 'ModMembers')
+
+    UNION ALL
+
+    -- Oldschool project membership
+    SELECT level
+    FROM ProjectUsers pu
+    WHERE userId = :user_id AND projectId = :project_id
+
+) AS levelgen
+WHERE level >= 0
+                    """,
+                    dict(user_id=userId, project_id=self.projectId))
+
                 try:
                     level, = cu.next()
                 except StopIteration:
@@ -545,27 +590,22 @@ class RepositoryHandle(object):
             else:
                 extraRoles.update(roleIds)
         userId = ANONYMOUS
-        level = None
         if mintToken.user != 'anonymous':
-            # If the user's password is valid, grant them the access given by
-            # their project membership.
+            # Check if the user's password is valid. getAuthToken will handle
+            # the determination of what access level they have.
             cu = self._db.cursor()
             cu.execute("""
-                SELECT pu.level, u.userId, u.salt, u.passwd
-                FROM ProjectUsers pu
-                JOIN Users u USING (userId)
-                WHERE u.username = ? AND pu.projectId = ?
-                """, mintToken.user, self.projectId)
+                SELECT userId, salt, passwd FROM Users WHERE username = ?
+                """, mintToken.user)
             row = cu.fetchone()
             if row:
-                maybeLevel, maybeUserId, userSalt, userPass = row
+                maybeUserId, userSalt, userPass = row
                 if self._checkPassword(mintToken, userSalt, userPass):
                     userId = maybeUserId
-                    level = maybeLevel
                 # If the password was not valid, just ignore it -- the password
                 # might actually be intended for something we're proxying to.
                 # See RBL-5269
-        return self.getAuthToken(userId, level=level, authToken=mintToken,
+        return self.getAuthToken(userId, level=None, authToken=mintToken,
                 extraRoles=extraRoles)
 
     def _checkPassword(self, mintToken, salt, digest):
