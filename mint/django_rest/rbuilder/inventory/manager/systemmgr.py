@@ -891,6 +891,12 @@ class SystemManager(basemanager.BaseManager):
             target_type__name=targetTypeName, name=targetName)
 
     @exposed
+    def captureSystem(self, system, params):
+        if not system.target_id:
+            raise errors.SystemNotDeployed()
+        # XXX more stuff to happen here
+
+    @exposed
     def addLaunchedSystem(self, system, dnsName=None, targetName=None,
             targetType=None):
         if isinstance(targetType, basestring):

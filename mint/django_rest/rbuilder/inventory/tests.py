@@ -95,10 +95,12 @@ class AssimilatorTestCase(XMLTestCaseStandin):
         # xobj hack: obj doesn't listify 1 element lists
         # don't break tests if there is only 1 action
         actions = obj.system.actions.action
-        if type(actions) != type(list):
-           actions = [actions] 
-        descs = [ x.description for x in actions ]
-        self.assertTrue('System assimilation' in descs)
+        if not isinstance(actions, list):
+           actions = [actions]
+        self.failUnlessEqual([ x.name for x in actions ],
+            ['Assimilate system', "system capture"])
+        self.failUnlessEqual([ x.description for x in actions ],
+            ['Assimilate system', "Capture a system's image"])
 
     def testFetchActionsDescriptor(self): 
         # can we determine what smartform we need to populate?
@@ -446,8 +448,8 @@ class SystemTypesTestCase(XMLTestCaseStandin):
             system.system_type.system_type_id,
             username="testuser", password="password")
         self.assertEquals(response.status_code, 200)
-        self.assertXMLEquals(response.content,
-            testsxml.system_type_systems_xml, ignoreNodes = [ 'created_date' ])
+        self.assertXMLEquals(response.content, testsxml.system_type_systems_xml,
+            ignoreNodes = [ 'created_date', 'actions',  ])
         
     def testPutSystemTypeAuth(self):
         """
@@ -1641,7 +1643,7 @@ class SystemsTestCase(XMLTestCaseStandin):
             (system.networks.all()[0].created_date.isoformat(), system.created_date.isoformat()),
             ignoreNodes = [ 'created_date', 'ssl_client_certificate',
                             'time_created', 'time_updated',
-                            'registration_date'])
+                            'registration_date', 'actions', ])
 
     def testPostSystemThroughManagementNode(self):
         # Send the identity of the management node
@@ -2966,7 +2968,8 @@ class SystemVersionsTestCase(XMLTestCaseStandin):
                 system.created_date.isoformat())).replace(
              'installed_software/', 'installed_software')
         self.assertXMLEquals(response.content, expected,
-            ignoreNodes = [ 'created_date', 'last_available_update_refresh' ])
+            ignoreNodes = [ 'actions', 'created_date',
+                'last_available_update_refresh' ])
 
     def testGetInstalledSoftwareRest(self):
         system = self._saveSystem()
@@ -3006,7 +3009,7 @@ class SystemVersionsTestCase(XMLTestCaseStandin):
             username="admin", password="password")
         self.assertXMLEquals(response.content, 
             testsxml.system_available_updates_xml,
-            ignoreNodes=['created_date', 'last_available_update_refresh'])
+            ignoreNodes=['actions', 'created_date', 'last_available_update_refresh'])
 
     def testApplyUpdate(self):
         system = self._saveSystem()
@@ -3134,7 +3137,8 @@ class SystemVersionsTestCase(XMLTestCaseStandin):
         response = self._get(url, username="admin", password="password")
         self.assertEquals(response.status_code, 200)
         self.assertXMLEquals(response.content,
-            testsxml.system_installed_software_version_stage_xml)
+            testsxml.system_installed_software_version_stage_xml,
+            ignoreNodes=['actions', 'created_date',],)
 
 class EventTypeTestCase(XMLTestCaseStandin):
 
@@ -4362,6 +4366,29 @@ class TargetSystemImportTest(XMLTestCaseStandin):
             params['target_system_description'])
         self.failUnlessEqual(system.description, params['description'])
 
+    def testCaptureSystem(self):
+        user2 = usersmodels.User.objects.get(user_name='JeanValjean2')
+        self.mgr.user = user2
+        params = dict(
+            target_system_id = "target-system-id-001",
+            target_system_name = "target-system-name 001",
+            target_system_description = "target-system-description 001",
+            target_system_state = "Frisbulating",
+            ssl_client_certificate = "ssl client certificate 001",
+            ssl_client_key = "ssl client key 001",
+        )
+        dnsName = 'dns-name-1'
+        system = self.newSystem(**params)
+        system = self.mgr.addLaunchedSystem(system,
+            dnsName=dnsName,
+            targetName=self.tgt2.name,
+            targetType=self.tgt2.target_type)
+
+        stage = projectmodels.Stage.objects.filter(project__name='chater-foo',
+            name='Development')[0]
+        params = dict(stage=stage, imageName="foo image")
+        self.mgr.captureSystem(system, params)
+
 class CollectionTest(XMLTestCaseStandin):
     fixtures = ['system_collection']
 
@@ -4375,7 +4402,8 @@ class CollectionTest(XMLTestCaseStandin):
     def testGetDefaultCollection(self):
         response = self._get('inventory/systems/',
             username="admin", password="password")
-        self.assertXMLEquals(response.content, testsxml.systems_collection_xml)
+        self.assertXMLEquals(response.content, testsxml.systems_collection_xml,
+            ignoreNodes=['actions', 'created_date', ])
         xobjModel = xobj.parse(response.content)
         systems = xobjModel.systems
         self.assertEquals(systems.count, '201')

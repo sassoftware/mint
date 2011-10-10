@@ -310,7 +310,10 @@ class EventType(modellib.XObjIdModel):
 
     SYSTEM_ASSIMILATE             = 'system assimilation'
     SYSTEM_ASSIMILATE_DESCRIPTION = 'System assimilation'
-   
+
+    SYSTEM_CAPTURE = 'system capture'
+    SYSTEM_CAPTURE_DESCRIPTION = "Capture a system's image"
+
     # resource type = image ##########################################
     IMAGE_BUILDS = 'image builds'
     IMAGE_BUILDS_DESCRIPTION = 'Image builds'
@@ -355,6 +358,7 @@ class EventType(modellib.XObjIdModel):
         (SYSTEM_CONFIG_IMMEDIATE,
          SYSTEM_CONFIG_IMMEDIATE_DESCRIPTION),
         (SYSTEM_ASSIMILATE, SYSTEM_ASSIMILATE_DESCRIPTION),
+        (SYSTEM_CAPTURE, SYSTEM_CAPTURE_DESCRIPTION),
         (IMAGE_BUILDS, IMAGE_BUILDS_DESCRIPTION),
         (QUERYSET_INVALIDATE, QUERYSET_INVALIDATE_DESCRIPTION),
         (TARGET_REFRESH_IMAGES, TARGET_REFRESH_IMAGES_DESCRIPTION),

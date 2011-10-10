@@ -30,6 +30,7 @@ from mint.django_rest.rbuilder.inventory import zones as zmodels
 from mint.django_rest.rbuilder.jobs import models as jobmodels
 from mint.django_rest.rbuilder.users import models as usermodels
 from mint.django_rest.rbuilder.manager import rbuildermanager
+from .rbuilder.modellib import Cache
 
 from testrunner import testcase
 
@@ -140,6 +141,7 @@ class XMLTestCase(TestCase, testcase.MockMixIn):
         # Default to 10 items per page in the tests
         from django.conf import settings
         settings.PER_PAGE = 10
+        Cache.reset()
         return TestCase.setUp(self)
 
     def getUser(self, userName):

@@ -22,10 +22,16 @@ from mint.django_rest.rbuilder.querysets import models as qsmodels
 from smartform import descriptor
 
 class CatalogServiceHelper(object):
+    _driverCache = {}
+
     @classmethod
     def getDriverClass(cls, targetType):
+        drvClass = cls._driverCache.get(targetType.name)
+        if drvClass is not None:
+            return drvClass
         moduleName = "catalogService.rest.drivers.%s" % targetType.name
         DriverClass = __import__(moduleName, {}, {}, '.driver').driver
+        cls._driverCache[targetType.name] = DriverClass
         return DriverClass
 
 class TargetsManager(basemanager.BaseManager, CatalogServiceHelper):

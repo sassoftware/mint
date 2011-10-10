@@ -192,6 +192,14 @@ event_types_xml="""\
     <resource_type>Target</resource_type>
     <system_events/>
   </event_type>
+  <event_type id="http://testserver/api/v1/inventory/event_types/21">
+    <description>Capture a system's image</description>
+    <job_type_id>21</job_type_id>
+    <name>system capture</name>
+    <priority>105</priority>
+    <resource_type>System</resource_type>
+    <system_events/>
+  </event_type>
 </event_types>"""
 
 event_type_put_xml="""\
@@ -938,6 +946,15 @@ systems_xml = """\
 <?xml version="1.0" encoding="UTF-8"?>
 <systems count="2" end_index="1" filter_by="" full_collection="http://testserver/api/v1/query_sets/5/all" id="http://testserver/api/v1/query_sets/5/all;start_index=0;limit=10" limit="10" next_page="" num_pages="1" order_by="" per_page="10" previous_page="" start_index="0">
   <system id="http://testserver/api/v1/inventory/systems/2">
+    <actions>
+      <action>
+        <description>Capture a system's image</description>
+        <descriptor id="http://testserver/api/v1/inventory/systems/2/descriptor_capture"/>
+        <enabled>false</enabled>
+        <job_type id="http://testserver/api/v1/inventory/event_types/21"/>
+        <name>system capture</name>
+      </action>
+    </actions>
     <agent_port/>
     <project/>
     <credentials id="http://testserver/api/v1/inventory/systems/2/credentials"/>
@@ -1003,6 +1020,15 @@ systems_xml = """\
     <source_image/>
   </system>
   <system id="http://testserver/api/v1/inventory/systems/3">
+    <actions>
+      <action>
+        <description>Capture a system's image</description>
+        <descriptor id="http://testserver/api/v1/inventory/systems/3/descriptor_capture"/>
+        <enabled>false</enabled>
+        <job_type id="http://testserver/api/v1/inventory/event_types/21"/>
+        <name>system capture</name>
+      </action>
+    </actions>
     <agent_port>5989</agent_port>
     <project/>
     <credentials id="http://testserver/api/v1/inventory/systems/3/credentials"/>
@@ -1208,6 +1234,15 @@ systems_put_mothball_xml = """\
 system_xml = """\
 <?xml version="1.0" encoding="UTF-8"?>
 <system id="http://testserver/api/v1/inventory/systems/3">
+  <actions>
+    <action>
+      <description>Capture a system's image</description>
+      <descriptor id="http://testserver/api/v1/inventory/systems/3/descriptor_capture"/>
+      <enabled>false</enabled>
+      <job_type id="http://testserver/api/v1/inventory/event_types/21"/>
+      <name>system capture</name>
+    </action>
+  </actions>
   <agent_port>5989</agent_port>
   <project/>
   <credentials id="http://testserver/api/v1/inventory/systems/3/credentials"/>
@@ -1276,6 +1311,15 @@ system_xml = """\
 system_post_xml = """\
 <?xml version="1.0" encoding="UTF-8"?>
 <system>
+  <actions>
+    <action>
+      <description>Capture a system's image</description>
+      <descriptor id="http://testserver/api/v1/inventory/systems/3/descriptor_capture"/>
+      <enabled>false</enabled>
+      <job_type id="http://testserver/api/v1/inventory/event_types/13"/>
+      <name>system capture</name>
+    </action>
+  </actions>
   <managing_zone id="http://testserver/api/v1/inventory/zones/1">Local rBuilder</managing_zone>
   <ssl_client_key>testsystemsslclientkey</ssl_client_key>
   <out_of_date>False</out_of_date>
@@ -1535,6 +1579,15 @@ system_post_xml_dup2 = system_post_xml_dup.replace(
 system_target_xml = """\
 <?xml version="1.0" encoding="UTF-8"?>
 <system id="http://testserver/api/v1/inventory/systems/3">
+  <actions>
+    <action>
+      <description>Capture a system's image</description>
+      <descriptor id="http://testserver/api/v1/inventory/systems/3/descriptor_capture"/>
+      <enabled>true</enabled>
+      <job_type id="http://testserver/api/v1/inventory/event_types/21"/>
+      <name>system capture</name>
+   </action>
+  </actions>
   <agent_port>5989</agent_port>
   <project/>
   <credentials id="http://testserver/api/v1/inventory/systems/3/credentials"/>
@@ -2351,6 +2404,15 @@ Aj/9jaPTk+mjBIgXSVEHkJCtxfGZWYFx/eNItfaAAfZVX68txm5Hyp2J6Equnr82
 
 system_with_target = """\
 <system id="http://testserver/api/v1/inventory/systems/4">
+  <actions>
+    <action>
+      <description>Capture a system's image</description>
+      <descriptor id="http://testserver/api/v1/inventory/systems/4/descriptor_capture"/>
+      <enabled>true</enabled>
+      <job_type id="http://testserver/api/v1/inventory/event_types/21"/>
+      <name>system capture</name>
+    </action>
+  </actions>
   <system_events id="http://testserver/api/v1/inventory/systems/4/system_events"/>
   <generated_uuid/>
   <networks>

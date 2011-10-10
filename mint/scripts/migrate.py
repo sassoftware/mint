@@ -3051,7 +3051,7 @@ class MigrateTo_57(SchemaMigration):
 
 
 class MigrateTo_58(SchemaMigration):
-    Version = (58, 73)
+    Version = (58, 74)
 
     def migrate(self):
         return True
@@ -4360,6 +4360,14 @@ class MigrateTo_58(SchemaMigration):
             AND d.buildId = b.buildId)""")
         return True
 
+    def migrate74(self):
+        schema._addTableRows(self.db, 'jobs_job_type', 'name', [
+         dict(name="system capture",
+              description="Capture a system's image",
+              priority=105,
+              resource_type="System"),
+        ])
+        return True
 
 #### SCHEMA MIGRATIONS END HERE #############################################
 
