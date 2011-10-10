@@ -47,7 +47,7 @@ class ImagesTestCase(XMLTestCase):
                 project_branch=branch, name="Release", label="foo%s@ns:trunk" % i)
             stage.save()
             # release
-            release = models.Release(project=proj,
+            release = projectsmodels.Release(project=proj,
                 name='release%s' % i, version='releaseVersion%s' % i, description='description%s' % i,
                 created_by=user1, updated_by=user2, published_by=user2)
             release.save()

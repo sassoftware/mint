@@ -463,9 +463,7 @@ class RepositoryHandle(object):
         if self.hasDatabase:
             # Only local repositories (regular and mirrored) can require
             # authentication.
-            if self._cfg.disableAuthorization:
-                level = userlevels.ADMIN
-            elif userId == ANY_WRITER:
+            if userId == ANY_WRITER:
                 level = userlevels.ADMIN
             elif userId == ANY_READER:
                 level = userlevels.USER

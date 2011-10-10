@@ -7,6 +7,7 @@
 from django.db import connection
 import logging
 from mint.django_rest.rbuilder.images import models 
+from mint.django_rest.rbuilder.projects import models as projectsmodels
 from mint.django_rest.rbuilder.manager import basemanager
 from conary.lib import sha1helper
 from mint.lib import data as datatypes
@@ -127,13 +128,13 @@ class ImagesManager(basemanager.BaseManager):
         
     @exposed
     def getReleases(self):
-        Releases = models.Releases()
-        Releases.release = models.Release.objects.all()
+        Releases = projectsmodels.Releases()
+        Releases.release = projectsmodels.Release.objects.all()
         return Releases
         
     @exposed
     def getReleaseById(self, release_id):
-        return models.Release.objects.get(pk=release_id)
+        return projectsmodels.Release.objects.get(pk=release_id)
         
     @exposed
     def createRelease(self, release):

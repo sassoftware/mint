@@ -1728,7 +1728,7 @@ class Cache(object):
 
     @classmethod
     def reset(cls):
-        cls._cache.reset()
+        cls._cache.clear()
 
     @classmethod
     def _cacheData(cls, modelClass):

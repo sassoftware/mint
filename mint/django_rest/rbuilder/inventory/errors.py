@@ -29,3 +29,7 @@ class IncompatibleSameEvent(IncompatibleEvent):
 class IncompatibleEvents(IncompatibleEvent):
     """The event type %(firstEventType)s is already running, an event type
     %(secondEventType)s can not be run at the same time."""
+
+class SystemNotDeployed(InventoryError):
+    "The system is not deployed on a target"
+    status = 400

@@ -24,6 +24,7 @@ from mint.django_rest.rbuilder.users import models as usersmodels
 from mint.django_rest.rbuilder.jobs import models as jobmodels
 from mint.django_rest.rbuilder.inventory import zones as zmodels
 from mint.django_rest.rbuilder.targets import models as targetmodels
+from ..targets import manager as tmgr
 from xobj import xobj
 
 Cache = modellib.Cache
@@ -815,20 +816,38 @@ class System(modellib.XObjIdModel):
     def _computeActions(self):
         '''What actions are available on the system?'''
 
+        self.actions = actions = jobmodels.Actions()
+        actions.action = []
         if self.management_interface is not None:
 
             if self.management_interface.name == 'ssh':
-                self.actions = jobmodels.Actions()
-                self.actions.action = []
-                self.actions.action.append(
+                actions.action.append(
                     jobmodels.EventType.makeAction(
                         jobmodels.EventType.SYSTEM_ASSIMILATE,
+                        actionName="Assimilate system",
+                        actionDescription="Assimilate system",
                     )
                 )
 
-        # TODO LATER: we should always have a collection
-        # of actions, regardless of interface type, this requires
-        # lots of testsxml updates.
+        if self.target_id:
+            targetsMap = dict((x.pk, x)
+                for x in Cache.all(targetmodels.Target))
+            targetTypesMap = dict((x.pk, x)
+                for x in Cache.all(targetmodels.TargetType))
+            target = targetsMap[self.target_id]
+            targetType = targetTypesMap[target.target_type_id]
+            drvCls = tmgr.CatalogServiceHelper.getDriverClass(targetType)
+            enabled = hasattr(drvCls, "drvCaptureSystem")
+        else:
+            enabled = False
+        action = jobmodels.EventType.makeAction(
+            jobmodels.EventType.SYSTEM_CAPTURE,
+            descriptorModel=self,
+            descriptorHref="descriptor_capture",
+            enabled=enabled)
+        actions.action.append(action)
+
+        return action
 
 class ManagementNode(System):
     

@@ -11,6 +11,7 @@ from django.http import HttpResponse
 from mint.django_rest.deco import requires, return_xml, access #, requires
 from mint.django_rest.rbuilder import service
 from mint.django_rest.rbuilder.images import models
+from mint.django_rest.rbuilder.projects import models as projectsmodels
 
 """
 FIXME:
@@ -123,7 +124,7 @@ class ReleaseService(service.BaseService):
         
     @access.admin
     def rest_DELETE(self, request, release_id):
-        release = models.Release.objects.get(pk=release_id)
+        release = projectsmodels.Release.objects.get(pk=release_id)
         release.delete()
         return HttpResponse(status=204)
         
