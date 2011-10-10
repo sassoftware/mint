@@ -2975,7 +2975,7 @@ If you would not like to be %s %s of this project, you may resign from this proj
     def startMcpImageJob(self, buildId, jobData):
         """Start a standard MCP image job."""
         client = self._getMcpClient()
-        uuid = client.new_job(client.LOCAL_RBUILDER, jobData)
+        uuid = client.new_job(client.LOCAL_RBUILDER, json.dumps(jobData))
         self.buildData.setDataValue(buildId, 'uuid', uuid, data.RDT_STRING)
         return uuid
 
