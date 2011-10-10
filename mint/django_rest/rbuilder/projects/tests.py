@@ -277,9 +277,6 @@ class ProjectsTestCase(RbacEngine):
 
     def testAddProjectVersionToProject(self):
         self._addProject("foo")
-        # response = self._post('projects/foo/project_branches/',
-        #     data=testsxml.project_version_post_with_project_xml,
-        #     username="ExampleDeveloper", password="password")
         response = self._post('projects/foo/project_branches/',
             data=testsxml.project_version_post_with_project_xml,
             username="admin", password="password")
@@ -294,9 +291,22 @@ class ProjectsTestCase(RbacEngine):
         self.assertEquals(len(branch.project_branch_stages.all()), 3)
 
     def testAddProjectVersionToProjectTwo(self):
-        # add project as admin    
+        # add project as developer    
         response = self._post('projects',
             data=testsxml.project_post_xml,
+            username="ExampleDeveloper", password="password")
+        self.assertEquals(response.status_code, 200)
+        
+        # try POSTing pb with data that specifies a project
+        # the user doesn't have access to
+        response = self._post('projects/test-project/project_branches',
+            data=testsxml.project_version_post_with_project_xml,
+            username="ExampleDeveloper", password="password")
+        self.assertEquals(response.status_code, 403)
+        
+        # try POSTing with pb pointing to project with valid perms        
+        response = self._post('projects/test-project/project_branches',
+            data=testsxml.project_version_post_with_project_xml2,
             username="ExampleDeveloper", password="password")
         self.assertEquals(response.status_code, 200)
         

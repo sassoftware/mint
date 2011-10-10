@@ -91,6 +91,7 @@ class BranchCallbacks(object):
         stages_for_project = projectmodels.Stage.objects.filter(
             project_branch = branch
         )
+        project = branch.project
         for stage in stages_for_project:
             if view.mgr.userHasRbacPermission(request._authUser, stage, action):
                 return True
@@ -102,7 +103,6 @@ class BranchCallbacks(object):
         rc = BranchCallbacks._checkPermissions(view, request, branch_or_label, READMEMBERS)
         return rc
     
-
     @staticmethod
     def can_write_branch(view, request, *args, **kwargs):
         # must use project_branch_label first or security is wrong on PUTs
@@ -110,6 +110,10 @@ class BranchCallbacks(object):
         rc = BranchCallbacks._checkPermissions(view, request, branch_or_label, MODMEMBERS)
         return rc
 
+    @staticmethod
+    def can_write_branch_by_project(view, request, project_short_name, *args, **kwargs):
+        retval = ProjectCallbacks._checkPermissions(view, request, project_short_name, MODMEMBERS)
+        return retval
 
 class StageCallbacks(object):
     
@@ -207,7 +211,7 @@ class ProjectAllBranchesService(service.BaseService):
     def get(self, project_short_name):
         return self.mgr.getAllProjectBranchesForProject(project_short_name)
 
-    @rbac(ProjectCallbacks.can_write_project)
+    @rbac(BranchCallbacks.can_write_branch_by_project)
     @requires('project_branch')
     @return_xml
     def rest_POST(self, request, project_short_name, project_branch):

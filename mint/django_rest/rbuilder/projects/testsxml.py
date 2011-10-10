@@ -172,6 +172,16 @@ project_version_post_with_project_xml = """\
   </project_branch>
 """
 
+project_version_post_with_project_xml2 = """\
+  <project_branch>
+    <project id="http://127.0.0.1:8000/api/v1/projects/test-project"/>
+    <description>2</description>
+    <namespace>rpath</namespace>
+    <name>50</name>
+    <platform id=""/>
+  </project_branch>
+"""
+
 project_version_post_with_project_no_auth_xml = """\
   <project_branch>
     <project id="http://127.0.0.1:8000/api/v1/projects/test-project"/>
