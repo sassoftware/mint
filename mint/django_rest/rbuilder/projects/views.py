@@ -211,7 +211,7 @@ class ProjectAllBranchesService(service.BaseService):
     @requires('project_branch')
     @return_xml
     def rest_POST(self, request, project_short_name, project_branch):
-        return self.mgr.createProjectBranch(project_branch)
+        return self.mgr.addProjectBranch(project_short_name, project_branch)
         
 
 class ProjectBranchService(service.BaseService):

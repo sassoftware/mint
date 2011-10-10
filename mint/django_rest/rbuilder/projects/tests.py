@@ -76,6 +76,13 @@ class ProjectsTestCase(RbacEngine):
         
         return project
 
+    def _setupTestFoo(self):
+        proj = self._addProject("foo")
+        stage = models.Stage(project=proj, name="Development", label="foo@ns:trunk-devel")
+        stage.save()
+        stage = models.Stage(project=proj, name="QA", label="foo@ns:trunk-qa")
+        stage.save()
+
     def _initProject(self, name='chater-foo'):
         proj = models.Project.objects.get(name='chater-foo')
         branch = models.ProjectVersion(project=proj, name="trunk", label="chater-foo.eng.rpath.com@rpath:chater-foo-trunk")
@@ -270,16 +277,17 @@ class ProjectsTestCase(RbacEngine):
 
     def testAddProjectVersionToProject(self):
         self._addProject("foo")
+        # response = self._post('projects/foo/project_branches/',
+        #     data=testsxml.project_version_post_with_project_xml,
+        #     username="ExampleDeveloper", password="password")
         response = self._post('projects/foo/project_branches/',
             data=testsxml.project_version_post_with_project_xml,
-            username="ExampleDeveloper", password="password")
+            username="admin", password="password")
         self.assertEquals(response.status_code, 200)
         branch = xobj.parse(response.content).project_branch
         branch = models.ProjectVersion.objects.get(pk=branch.branch_id)
         self.assertEquals('42', branch.name)
-
         # FIXME: convert to XML test
-
         # make sure stages are there
         # XXX project creation does not handle stage creation at the
         # moment
