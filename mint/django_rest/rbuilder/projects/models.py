@@ -223,7 +223,6 @@ class Project(modellib.XObjIdModel):
             # use it.
             label.label = self.repository_hostname + '@dummy:label'
             label.save()
-
         return modellib.XObjIdModel.save(self, *args, **kwargs)
 
 class Members(modellib.Collection):
@@ -384,6 +383,7 @@ class Stage(modellib.XObjIdModel):
             self.groups = Group(href=href % (short_name, label))
         xobjModel = modellib.XObjIdModel.serialize(self, request)
         return xobjModel
+
 
 # class Releases(modellib.Collection):
 #     class Meta:
