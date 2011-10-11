@@ -145,6 +145,7 @@ class Database(DBInterface):
         self.awsMgr = awshandler.AWSHandler(cfg, self, auth)
         self.pkiMgr = pkimgr.PKIManager(cfg, self, auth)
         self.systemMgr = systemmgr.SystemManager(cfg, self, auth)
+        self.reposShim = reposdb.RepositoryManager(cfg, db._db)
         if subscribers is None:
             subscribers = []
             subscribers.append(emailnotifier.EmailNotifier(cfg, self,
@@ -161,14 +162,14 @@ class Database(DBInterface):
 
     def close(self):
         DBInterface.close(self)
-        self.productMgr.reposMgr.close()
+        self.reposShim.close()
 
     def reopen_fork(self):
         DBInterface.reopen_fork(self)
-        self.productMgr.reposMgr.reopen_fork()
+        self.reposShim.reopen_fork()
 
     def reset(self):
-        self.productMgr.reposMgr.reset()
+        self.reposShim.reset()
 
     def setAuth(self, auth, authToken):
         self.auth.setAuth(auth, authToken)

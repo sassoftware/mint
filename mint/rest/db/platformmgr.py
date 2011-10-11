@@ -491,7 +491,7 @@ class Platforms(object):
             outFile.close()
 
             callback._message('Download Complete. Loading preload...')
-            reposManager = self.db.productMgr.reposMgr.reposManager
+            reposManager = self.db.reposShim
             repoHandle = reposManager.getRepositoryFromFQDN(
                     platform.repositoryHostname)
             repoHandle.restoreBundle(outFilePath, replaceExisting=True,
@@ -727,7 +727,7 @@ class Platforms(object):
             # any local repo map.
             sourceUrl = self._getUrl(platform)
             try:
-                serverProxy = self.db.productMgr.reposMgr.reposManager.getServerProxy(host,
+                serverProxy = self.db.reposShim.getServerProxy(host,
                     sourceUrl, None, [entitlement])
                 client.repos.c.cache[host] = serverProxy
                 platDef = proddef.PlatformDefinition()
@@ -1403,7 +1403,7 @@ class PlatformDefCache(persistentcache.PersistentCache):
                     entitlement = reposMgr.db.siteAuth.entitlementKey
                 else:
                     entitlement = None
-                serverProxy = reposMgr.reposManager.getServerProxy(host,
+                serverProxy = reposMgr.db.reposShim.getServerProxy(host,
                     sourceUrl, None, [entitlement])
                 client.repos.c.cache[host] = serverProxy
                 platDef = self._getPlatDef(client, labelStr)

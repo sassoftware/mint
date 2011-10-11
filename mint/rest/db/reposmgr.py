@@ -38,18 +38,7 @@ class RepositoryManager(manager.Manager):
         self.cfg = cfg
         self.auth = auth
         self.profiler = None
-        self.reposManager = reposdb.RepositoryManager(cfg, db.db._db)
         self.cache = mintutils.CacheWrapper(cfg.memCache)
-
-    def close(self):
-        self.reposManager.close()
-
-    def reopen_fork(self):
-        self.reposManager.close_fork()
-        self.reposManager = reposdb.RepositoryManager(self.cfg, self.db.db._db)
-
-    def reset(self):
-        self.reposManager.reset()
 
     def createRepositorySafe(self, productId, createMaps=True):
         try:
@@ -58,7 +47,7 @@ class RepositoryManager(manager.Manager):
             pass
 
     def createRepository(self, productId, createMaps=True):
-        repos = self.reposManager.getRepositoryFromProjectId(productId)
+        repos = self.db.reposShim.getRepositoryFromProjectId(productId)
 
         authInfo = models.AuthInfo('userpass',
                 self.cfg.authUser, self.cfg.authPass)
@@ -176,7 +165,7 @@ class RepositoryManager(manager.Manager):
             userId = reposdb.ANY_WRITER
         else:
             userId = reposdb.ANY_READER
-        return self.reposManager.getClient(userId)
+        return self.db.reposShim.getClient(userId)
 
     def getUserClient(self):
         """
@@ -193,7 +182,7 @@ class RepositoryManager(manager.Manager):
             userId = reposdb.ANONYMOUS
         else:
             userId = self.auth.userId
-        client = self.reposManager.getClient(userId)
+        client = self.db.reposShim.getClient(userId)
         if self.auth.username:
             client.cfg.name = self.auth.username
             client.cfg.contact = self.auth.fullName or ''
@@ -252,11 +241,11 @@ class RepositoryManager(manager.Manager):
 
     def _getRepositoryHandle(self, fqdn):
         if '.' in fqdn:
-            return self.reposManager.getRepositoryFromFQDN(fqdn)
+            return self.db.reposShim.getRepositoryFromFQDN(fqdn)
         elif fqdn.isdigit():
-            return self.reposManager.getRepositoryFromProjectId(fqdn)
+            return self.db.reposShim.getRepositoryFromProjectId(fqdn)
         else:
-            return self.reposManager.getRepositoryFromShortName(fqdn)
+            return self.db.reposShim.getRepositoryFromShortName(fqdn)
 
     def _getBaseConfig(self):
         global _cachedCfg
@@ -510,7 +499,7 @@ class RepositoryManager(manager.Manager):
 
     def _getFullRepositoryMap(self):
         repoMap = {}
-        for handle in self.reposManager.iterRepositories(
+        for handle in self.db.reposShim.iterRepositories(
                 'NOT hidden AND NOT disabled'):
             repoMap[handle.fqdn] = handle.getURL()
         return repoMap
