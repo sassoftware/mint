@@ -16,6 +16,7 @@ from mint.django_rest.rbuilder.rbac.manager.rbacmanager import \
    READMEMBERS, MODMEMBERS
 from mint.django_rest.rbuilder.querysets import models as querymodels
 from mint.django_rest.rbuilder.projects import models as projectmodels
+from mint.django_rest.rbuilder.images import models as imagemodels
 
 class ProjectCallbacks(object):
     """
@@ -409,3 +410,41 @@ class ProjectMemberService(service.BaseService):
 
     def get(self, project_short_name):
         return self.mgr.getProjectMembers(project_short_name)
+
+
+class ProjectReleaseService(service.BaseService):
+    @return_xml
+    def rest_GET(self, request, project_short_name):
+        return self.get(project_short_name)
+
+    def get(self, project_short_name):
+        Releases = projectmodels.Releases()
+        Releases.release = projectmodels.Release.objects.filter(
+                project__short_name=project_short_name)
+        return Releases
+
+    @requires('release')
+    @return_xml
+    def rest_POST(self, request, project_short_name, release):
+        release.save()
+        return release
+        
+class ProjectReleaseImageService(service.BaseService):
+    @return_xml
+    def rest_GET(self, request, project_short_name, release_id, image_id=None):
+        return self.get(project_short_name, release_id, image_id)
+        
+    def get(self, project_short_name, release_id, image_id):
+        if image_id:
+            return self.mgr.getImageBuild(image_id)
+        else:
+            Images = imagemodels.Images()
+            Images.image = imagemodels.Image.objects.filter(release__release_id=release_id)
+            return Images
+    
+    @requires('image')
+    @return_xml
+    def rest_POST(self, request, project_short_name, release_id, image):
+        return self.mgr.createImageBuild(image)
+        
+

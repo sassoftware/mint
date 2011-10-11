@@ -76,14 +76,7 @@ class ProjectsTestCase(RbacEngine):
         
         return project
 
-    def _setupTestFoo(self):
-        proj = self._addProject("foo")
-        stage = models.Stage(project=proj, name="Development", label="foo@ns:trunk-devel")
-        stage.save()
-        stage = models.Stage(project=proj, name="QA", label="foo@ns:trunk-qa")
-        stage.save()
-
-    def _initProject(self, name='chater-foo'):
+    def _initProject(self, name='chater-foo', adorn=False):
         proj = models.Project.objects.get(name='chater-foo')
         branch = models.ProjectVersion(project=proj, name="trunk", label="chater-foo.eng.rpath.com@rpath:chater-foo-trunk")
         branch.save()
@@ -99,8 +92,20 @@ class ProjectsTestCase(RbacEngine):
         stage = models.Stage(project=proj,
             project_branch=branch, name="Release", label="foo@ns:trunk")
         stage.save()
+        if adorn:
+            for i in range(1, 3):
+                release = models.Release(project=proj,
+                    name='release%s' % i, version='releaseVersion%s' % i, description='description%s' % i)
+                release.save()
+                image = imagesmodels.Image(
+                    project=proj, release=release, _image_type=10, job_uuid='1',
+                    name="image-%s" % i, trove_name='troveName%s' % i, trove_version='/cydonia.eng.rpath.com@rpath:cydonia-1-devel/1317221453.365:1-%d-1' % i,
+                    trove_flavor='1#x86:i486:i586:i686|5#use:~!xen', image_count=1,
+                    output_trove=None, project_branch=branch, stage_name='stage%s' % i,
+                    description="image-%s" % i)
+                image.save()
         self._retagQuerySets()
-
+        
     def testGetProjects(self):
         # as admin or granted user, should succeed
         for username in [ 'admin', 'ExampleDeveloper' ]:
@@ -501,4 +506,20 @@ class ProjectsTestCase(RbacEngine):
 
         images = images.image
         self.failUnlessEqual([ x.name for x in images ],
-            ['image from fixture', 'image-1', 'image-2', ])
+            [u'image from fixture', u'image-1', u'image-2'])
+
+    def testGetReleasesByProject(self):
+        self._initProject(adorn=True)
+        response = self._get('projects/chater-foo/releases', username='admin', password='password')
+        self.assertEquals(response.status_code, 200)
+        self.assertXMLEquals(response.content, testsxml.releases_by_project_get_xml)
+        
+    def testAddRelease(self):
+        pass
+    
+    def testGetImagesByRelease(self):
+        self._initProject(adorn=True)
+        url = 'projects/chater-foo/releases/1/images/'
+        response = self._get(url, username='admin', password='password')
+        self.assertEquals(response.status_code, 200)
+        self.assertXMLEquals(response.content, testsxml.image_by_release_get_xml)
