@@ -200,7 +200,11 @@ then
     service jobmaster start
 
     # Create initial platforms
-    /usr/share/rbuilder/scripts/create-platforms
+    echo Updating platforms ...
+    $scriptdir/create-platforms
+
+    echo Updating branch/stage information ...
+    $scriptdir/repository-sync
 
     # Start cron back (RBL-7973)
     service crond start
