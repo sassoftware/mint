@@ -36,9 +36,10 @@ class Group(modellib.XObjIdModel):
     
     # tag name is only groups for the sake of calculating project_branch_stage(s)
     # once Group(s) is moved over, change back to singular
-    _xobj = xobj.XObjMetadata(tag='groups', attributes={'href':str})
-    
+    _xobj = xobj.XObjMetadata(tag='groups', attributes={'href':str, 'promote_href':str})
+
     href = models.CharField(max_length=1026)
+    promote_href = models.CharField(max_length=1026)
     # group_id = models.AutoField(primary_key=True)
     # hostname = models.CharField(max_length=1026)
     # name = models.CharField(max_length=1026)
@@ -49,11 +50,13 @@ class Group(modellib.XObjIdModel):
     # time_stamp = models.DecimalField()
     # images = modellib.DeferredForeignKey('Image')
     # image_count = models.IntegerField()
-    
-    def __init__(self, href=None, *args, **kwargs):
+
+    def __init__(self, href=None, promote_href=None, *args, **kwargs):
         if href:
             self.href = href
-    
+        if promote_href:
+            self.promote_href = promote_href
+
 
 class Projects(modellib.Collection):
     class Meta:
@@ -378,10 +381,20 @@ class Stage(modellib.XObjIdModel):
 
     def serialize(self, request=None):
         if request:
-            href = 'https://' + request.get_host().strip('/') + '/api/products/%s/repos/search?type=group&label=%s'
-            short_name = self.project.short_name # aka project's short_name
+            product = ('https://' + request.get_host().strip('/') +
+                '/api/products/%s')
+
+            href = product + '/repos/search?type=group&label=%s'
+            short_name = self.project.short_name
             label = self.label
-            self.groups = Group(href=href % (short_name, label))
+
+            # FIXME: This should be moved into a job later.
+            promote_href = product + '/versions/%s/stages/%s'
+
+            self.groups = Group(
+                href=href % (short_name, label),
+                promote_href=promote_href
+                    % (short_name, self.project_branch.name, self.name))
         xobjModel = modellib.XObjIdModel.serialize(self, request)
         return xobjModel
 
