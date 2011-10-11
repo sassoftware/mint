@@ -165,7 +165,7 @@ class Database(DBInterface):
 
     def reopen_fork(self):
         DBInterface.reopen_fork(self)
-        self.reposShim.reopen_fork()
+        self.reposShim.close_fork()
 
     def reset(self):
         self.reposShim.reset()

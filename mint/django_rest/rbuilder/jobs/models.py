@@ -24,16 +24,6 @@ APIReadOnly = modellib.APIReadOnly
 # no parameters required for assimilation --- just
 # uses the management_interface credentials directly
 
-system_assimilate_descriptor = """
-<descriptor>
-</descriptor>
-"""
-
-image_builds_descriptor = """
-<descriptor>
-</descriptor>
-"""
-
 # ==========================================================
 
 class Actions(modellib.XObjModel):
@@ -369,14 +359,6 @@ class EventType(modellib.XObjIdModel):
         (TARGET_CONFIGURE_CREDENTIALS, TARGET_CONFIGURE_CREDENTIALS_DESCRIPTION),
     )
 
-    # what smartform descriptor templates are needed to launch jobs of
-    # certain types?
-    DESCRIPTOR_MAP = {
-        SYSTEM_ASSIMILATE : system_assimilate_descriptor,
-        IMAGE_BUILDS : image_builds_descriptor
-    }
-    
-    
     name = D(APIReadOnly(models.CharField(max_length=8092, unique=True,
         choices=EVENT_TYPES)), "the event type name (read-only)")
     description = D(models.CharField(max_length=8092), "the event type description")

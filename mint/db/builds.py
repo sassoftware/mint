@@ -184,8 +184,9 @@ class BuildsTable(database.KeyedTable):
                                      ON (Targets.targetId = tuc.targetId)
                                 JOIN TargetCredentials AS tc
                                      ON (tuc.targetCredentialsId = tc.targetCredentialsId)
-                               WHERE Targets.targetType = '%s'
-                                 AND Targets.targetName = '%s') as subq
+                                JOIN target_types AS tt ON (Targets.target_type_id = tt.target_type_id)
+                               WHERE tt.name = '%s'
+                                 AND Targets.name = '%s') as subq
                               ON (b.createdBy = subq.userId)
                             ''' % (self.EC2TargetType, self.EC2TargetName)
 

@@ -38,6 +38,17 @@ from smartform import descriptor
 log = logging.getLogger(__name__)
 exposed = basemanager.exposed
 
+system_assimilate_descriptor = """<descriptor>
+  <metadata>
+  <displayName>System Assimilation</displayName>
+    <descriptions>
+      <desc>System Assimilation</desc>
+    </descriptions>
+  </metadata>
+  <dataFields/>
+</descriptor>
+"""
+
 class SystemManager(basemanager.BaseManager):
     RegistrationEvents = set([ jobmodels.EventType.SYSTEM_REGISTRATION ])
     PollEvents = set([
@@ -1925,21 +1936,30 @@ class SystemManager(basemanager.BaseManager):
         return systemTag
 
     @exposed
+    def getSystemDescriptorForAction(self, systemId, descriptorType, params):
+        # This will validate the system
+        system = models.System.objects.get(pk=systemId)
+        methodMap = dict(
+            assimilation = self.getDescriptorAssimilation,
+            capture = self.getDescriptorCaptureSystem,
+        )
+        method = methodMap.get(descriptorType)
+        if method is None:
+            raise errors.errors.ResourceNotFound()
+        return method(systemId, params)
+
+    def getDescriptorAssimilation(self, systemId, *args, **kwargs):
+        descr = descriptor.ConfigurationDescriptor(
+            fromStream=system_assimilate_descriptor)
+        return descr
+
+    @exposed
     def getDescriptorForSystemAction(self, system_id, job_type, query_dict):
         '''To submit a job to the system, what smartform data do I need?'''
-        system     = models.System.objects.get(pk=system_id)
-        event_type = jobmodels.EventType.objects.get(pk=job_type).name
-        descriptor = jobmodels.EventType.DESCRIPTOR_MAP.get(event_type, None)
-        if descriptor is None:
-            raise Exception("no descriptor for job type %s" % event_type)
-        # NOTE: it may be that depending on system context and event type
-        # we may need to dynamically create parameters.  For instance,
-        # if foo=3 on VMware.  When that happens, add some conditionals
-        # here based on system state.
-        query_dict = query_dict.copy()
-        query_dict['system_id'] = system_id
-        result = descriptor % query_dict
-        return result
+        eventType = jobmodels.EventType.objects.get(pk=job_type).name
+        if eventType != jobmodels.EventType.SYSTEM_ASSIMILATE:
+            raise Exception("no descriptor for job type %s" % eventType)
+        return self.getDescriptorAssimilation(system_id)
 
     @exposed
     def scheduleJobAction(self, system, job):
@@ -1953,20 +1973,7 @@ class SystemManager(basemanager.BaseManager):
         be more complete.
         '''
         # get integer job type even if not a django model
-        job_name = None
-        try:
-            # FIXME: hack, port to misa's new job system eventually
-            # if a real django model
-            job_name = job.job_type.name
-        except:
-            # if a partial django model
-            jt = job.job_type.id
-            if str(jt).find("/") != -1:
-                jt = int(jt.split("/")[-1])
-            event_type = jobmodels.EventType.objects.get(job_type_id=jt)
-            job_name   = event_type.name
-
-        event = None
+        job_name = job.job_type.name
 
         if job_name == jobmodels.EventType.SYSTEM_ASSIMILATE:
             creds = self.getSystemCredentials(system)
@@ -1992,8 +1999,7 @@ class SystemManager(basemanager.BaseManager):
             raise Exception("failed to schedule event")
         return event
 
-    @exposed
-    def getDescriptorCaptureSystem(self, systemId):
+    def getDescriptorCaptureSystem(self, systemId, *args, **kwargs):
         system = models.System.objects.get(pk=systemId)
         DriverClass = targetmodels.Target.getDriverClassForTargetId(system.target_id)
         if not hasattr(DriverClass, "drvCaptureSystem"):
@@ -2022,10 +2028,9 @@ class SystemManager(basemanager.BaseManager):
         return ' / '.join(labelComponents)
 
     @exposed
-    def serializeDescriptorCaptureSystem(self, systemId):
-        descr = self.getDescriptorCaptureSystem(systemId)
+    def serializeDescriptor(self, descriptor):
         wrapper = models.modellib.etreeObjectWrapper(
-            descr.getElementTree(validate=True))
+            descriptor.getElementTree(validate=True))
         return wrapper
 
 class Configuration(object):
