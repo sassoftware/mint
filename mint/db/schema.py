@@ -618,7 +618,8 @@ def _createProductVersions(db):
                     REFERENCES ProductVersions (productVersionId)
                     ON DELETE CASCADE,
                 "promotable" bool,
-                "created_date" timestamp with time zone NOT NULL,
+                "created_date" timestamp with time zone NOT NULL
+                    DEFAULT current_timestamp,
                 UNIQUE ( project_branch_id, name )
             )""" % db.keywords)
         db.tables['project_branch_stage'] = []
