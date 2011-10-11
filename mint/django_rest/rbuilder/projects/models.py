@@ -281,7 +281,8 @@ class ProjectVersion(modellib.XObjIdModel):
 
     images = modellib.SyntheticField()
     definition = modellib.SyntheticField()
-    platform = modellib.SyntheticField(modellib.HrefField())
+    platform = models.ForeignKey('platforms.Platform', null=False,
+        related_name='branches')
     platform_version = modellib.SyntheticField()
     imageDefinitions = modellib.SyntheticField(modellib.HrefField()) # only camelCase for compatibility reasons, CHANGE
     image_type_definitions = modellib.SyntheticField(modellib.HrefField())
