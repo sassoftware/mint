@@ -187,7 +187,9 @@ class RepositoryManager(manager.Manager):
         built-in conary proxy. Additionally, site admins will have admin access
         to any repository.
         """
-        if self.auth.userId < 0:
+        if self.auth.isAdmin:
+            userId = reposdb.ANY_WRITER
+        elif self.auth.userId < 0:
             userId = reposdb.ANONYMOUS
         else:
             userId = self.auth.userId
