@@ -475,65 +475,9 @@ class RepositoryHandle(object):
             elif userId < 0:
                 raise RuntimeError("Invalid userId %d" % userId)
             elif level is None:
-                # Crikey, that's a big one!
-                cu = self._db.cursor()
-                cu.execute("""
-SELECT MIN(level) FROM (
-    -- Permissions from a project set
-    SELECT CASE rpt.name
-            WHEN 'ReadMembers' THEN 2
-            WHEN 'ModMembers' THEN 0
-            ELSE NULL
-        END AS level
-    FROM rbac_permission rp
-    JOIN rbac_user_role rur USING ( role_id )
-    JOIN rbac_permission_type rpt
-        ON rpt.permission_type_id = rp.permission_type_id
-    JOIN querysets_projecttag qpt
-        ON qpt.query_set_id = rp.queryset_id
-    WHERE rur.user_id = :user_id AND qpt.project_id = :project_id
-    AND rpt.name in ('ReadMembers', 'ModMembers')
-
-    UNION ALL
-
-    -- Permissions from a project stage set
-    SELECT CASE rpt.name
-            WHEN 'ReadMembers' THEN 2
-            WHEN 'ModMembers' THEN 0
-            ELSE NULL
-        END AS level
-    FROM rbac_permission rp
-    JOIN rbac_user_role rur USING ( role_id )
-    JOIN rbac_permission_type rpt
-        ON rpt.permission_type_id = rp.permission_type_id
-    JOIN querysets_stagetag qst
-        ON qst.query_set_id = rp.queryset_id
-    JOIN project_branch_stage pbs USING (stage_id)
-    WHERE rur.user_id = :user_id AND pbs.project_id = :project_id
-    AND rpt.name in ('ReadMembers', 'ModMembers')
-
-    UNION ALL
-
-    -- Oldschool project membership
-    SELECT level
-    FROM ProjectUsers pu
-    WHERE userId = :user_id AND projectId = :project_id
-
-) AS levelgen
-WHERE level >= 0
-                    """,
-                    dict(user_id=userId, project_id=self.projectId))
-
-                try:
-                    level, = cu.next()
-                except StopIteration:
-                    if self.isHidden:
-                        # Not a member on a private project -> project not found
-                        raise ProductNotFound(self.shortName)
-                    else:
-                        # Not a member on a public project -> "user" level
-                        level = userlevels.USER
-
+                level = self.getLevelForUser(userId)
+            else:
+                raise TypeError("Invalid parameters to getAuthToken")
             # Turn the user level into an abstract repository role.
             allRoles = set(extraRoles)
             if level is not None:
@@ -605,6 +549,75 @@ WHERE level >= 0
                 # See RBL-5269
         return self.getAuthToken(userId, level=None, authToken=mintToken,
                 extraRoles=extraRoles)
+
+    def getLevelForUser(self, userId):
+        """
+        Return the project membership level of a given user, utilizing not only
+        direct project membership but also permissions from RBAC grants.
+
+        Raises ProductNotFound if the user does not have read access.
+        """
+        # Crikey, that's a big one!
+        cu = self._db.cursor()
+        cu.execute("""
+SELECT MIN(level) FROM (
+    -- Permissions from a project set
+    SELECT CASE rpt.name
+            WHEN 'ReadMembers' THEN 2
+            WHEN 'ModMembers' THEN 0
+            ELSE NULL
+        END AS level
+    FROM rbac_permission rp
+    JOIN rbac_user_role rur
+        ON rur.role_id = rp.role_id
+    JOIN rbac_permission_type rpt
+        ON rpt.permission_type_id = rp.permission_type_id
+    JOIN querysets_projecttag qpt
+        ON qpt.query_set_id = rp.queryset_id
+    WHERE rur.user_id = :user_id AND qpt.project_id = :project_id
+    AND rpt.name in ('ReadMembers', 'ModMembers')
+
+    UNION ALL
+
+    -- Permissions from a project stage set
+    SELECT CASE rpt.name
+            WHEN 'ReadMembers' THEN 2
+            WHEN 'ModMembers' THEN 0
+            ELSE NULL
+        END AS level
+    FROM rbac_permission rp
+    JOIN rbac_user_role rur
+        ON rur.role_id = rp.role_id
+    JOIN rbac_permission_type rpt
+        ON rpt.permission_type_id = rp.permission_type_id
+    JOIN querysets_stagetag qst
+        ON qst.query_set_id = rp.queryset_id
+    JOIN project_branch_stage pbs
+        ON pbs.stage_id = qst.stage_id
+    WHERE rur.user_id = :user_id AND pbs.project_id = :project_id
+    AND rpt.name in ('ReadMembers', 'ModMembers')
+
+    UNION ALL
+
+    -- Oldschool project membership
+    SELECT level
+    FROM ProjectUsers pu
+    WHERE userId = :user_id AND projectId = :project_id
+
+) AS levelgen
+WHERE level >= 0
+            """,
+            dict(user_id=userId, project_id=self.projectId))
+
+        level, = cu.next()
+        if level is not None:
+            return level
+        elif self.isHidden:
+            # Not a member on a private project -> project not found
+            raise ProductNotFound(self.shortName)
+        else:
+            # Not a member on a public project -> "user" level
+            return userlevels.USER
 
     def _checkPassword(self, mintToken, salt, digest):
         if mintToken.password is ValidPasswordToken:
