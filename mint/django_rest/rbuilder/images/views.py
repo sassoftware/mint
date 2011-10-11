@@ -127,7 +127,7 @@ class ReleaseService(service.BaseService):
         release = projectsmodels.Release.objects.get(pk=release_id)
         release.delete()
         return HttpResponse(status=204)
-        
+
 # write manager for this!
 class ImageBuildFileUrlService(service.BaseService):
     @access.admin
