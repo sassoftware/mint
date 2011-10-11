@@ -290,3 +290,11 @@ class QuerySetTestCase(QueryTestCase):
             username="admin", password="password")
         self.assertEquals(response.status_code, 200)
 
+    def testGetFilterDescriptor(self):
+        # querysets from filter descriptor differ by type of object
+        qsid = self._getQs('All Systems')
+        response = self._get("query_sets/%s/filter_descriptor/" % qsid,
+            username="admin", password="password")
+        self.assertEquals(response.status_code, 200)
+
+

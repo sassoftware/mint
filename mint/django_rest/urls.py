@@ -255,7 +255,7 @@ urlpatterns = patterns('',
     URL(r'query_sets/(?P<query_set_id>\d+)/jobs/?$',
         querysetviews.QuerySetJobsService(),
         name='QuerySetJobs'),
-    URL(r'query_sets/filter_descriptor/?$',
+    URL(r'query_sets/(?P<query_set_id>\d+)/filter_descriptor/?$',
         querysetviews.QuerySetFilterDescriptorService(),
         name='QuerySetFilterDescriptor'),
 

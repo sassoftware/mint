@@ -148,14 +148,8 @@ class QuerySetJobsService(BaseQuerySetService):
 
 class QuerySetFilterDescriptorService(BaseQuerySetService):
 
-    @access.authenticated
-    def rest_GET(self, request):
-        filterDescriptor = models.FilterDescriptor()
-        filterDescriptorId = filterDescriptor.get_absolute_url(request)
-        code = 200
-        response = http.HttpResponse(status=code, content_type='text/xml')
-        response.content = \
-            filterdescriptors.system_filter_descriptor.replace('@@ID@@', 
-                filterDescriptorId)
-        return response
+    # @access.authenticated
+    @return_xml
+    def rest_GET(self, request, query_set_id=None):
+        return  self.mgr.getQuerySetFilterDescriptor(query_set_id)
 

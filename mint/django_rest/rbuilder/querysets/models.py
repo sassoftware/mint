@@ -66,10 +66,16 @@ class QuerySets(modellib.Collection):
     query_set = []
 
 class FilterDescriptor(modellib.XObjIdModel):
+
+    # this is a stub for serialization of a URL only, 
+    # see the other FilterDescriptor in descriptors.py 
+
     class Meta:
         abstract = True
     _xobj = xobj.XObjMetadata(
                 tag = "filter_descriptor")
+
+    id = models.AutoField(primary_key=True)
     view_name = "QuerySetFilterDescriptor"
 
 class CollectionId(modellib.XObjIdModel):
@@ -145,15 +151,8 @@ class QuerySet(modellib.XObjIdModel):
         childM._parents = [self]
         xobjModel.child_members = childM.serialize(request)
 
-        fd = FilterDescriptor()
+        fd = FilterDescriptor(id=self.query_set_id)
         xobjModel.filter_descriptor = fd.serialize(request)
-
-        # do not need to include this
-        #from mint.django_rest.rbuilder.querysets import manager
-        #collectionId = CollectionId()
-        #collectionId.view_name = \
-        #    modellib.type_map[manager.QuerySetManager.resourceCollectionMap[self.resource_type]].view_name
-        #xobjModel.collection = collectionId.serialize(request)
 
         xobjModel.is_top_level = self.isTopLevel()
 
@@ -282,8 +281,6 @@ class SystemTag(modellib.XObjIdModel):
         related_name="tags"))
     query_set = XObjHidden(modellib.ForeignKey(QuerySet, related_name="system_tags",
         text_field="name"))
-    #inclusion_method = modellib.SerializedForeignKey(InclusionMethod,
-    #    related_name="system_tags")
     inclusion_method = XObjHidden(modellib.ForeignKey(InclusionMethod,
         related_name="system_tags"))
 

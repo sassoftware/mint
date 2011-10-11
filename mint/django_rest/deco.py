@@ -18,8 +18,9 @@ class ACCESS(object):
     AUTH_TOKEN = 8
     LOCALHOST = 16
 
-def D(field, docstring):
+def D(field, docstring, short=None):
     field.docstring = docstring
+    field.shortname = short
     return field
 
 def _getXobjModel(request, model_names):

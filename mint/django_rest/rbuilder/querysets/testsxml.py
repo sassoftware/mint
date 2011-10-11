@@ -105,7 +105,7 @@ queryset_with_actions = """
   <children/>
   <chosen_members id="http://testserver/api/v1/query_sets/5/chosen"/>
   <description>All systems</description>
-  <filter_descriptor id="http://testserver/api/v1/query_sets/filter_descriptor"/>
+  <filter_descriptor id="http://testserver/api/v1/query_sets/5/filter_descriptor"/>
   <filter_entries>
     <filter_entry>
       <field>system.name</field>

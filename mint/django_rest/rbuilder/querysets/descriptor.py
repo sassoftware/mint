@@ -108,9 +108,17 @@ def getFieldOperatorChoices(field):
 
     return operatorChoices
 
-def getFieldDescriptors(field, prefix=None, processedModels=[]):
+def getFieldDescriptors(field, prefix=None, processedModels=[], depth=0):
     fds = []
     # Not using get_all_field_names in this function b/c of infinite recursion
+
+    if depth > 1:
+        # try not to suck down all of our models into crazy-land
+        # we may also want to require that any associations more than X away
+        # have a shortname to get in the list.  TODO: some concept of advanced
+        # option is on sed's eventual feature list.
+        return fds
+
     if isinstance(field, models.ForeignKey) or \
        isinstance(field, models.ManyToManyField):
         # Skip the model if it has already been processed, as long as it is
@@ -122,7 +130,7 @@ def getFieldDescriptors(field, prefix=None, processedModels=[]):
                 _prefix = '%s.%s' % (prefix, field.name)
             else:
                 _prefix = field.name
-            _fds = getFieldDescriptors(f, _prefix, processedModels)
+            _fds = getFieldDescriptors(f, _prefix, processedModels, depth+1)
             [fds.append(_fd) for _fd in _fds]
         processedModels.append(field.rel.to)
     elif isinstance(field, related.RelatedObject):
@@ -133,7 +141,7 @@ def getFieldDescriptors(field, prefix=None, processedModels=[]):
                 _prefix = '%s.%s' % (prefix, field.get_accessor_name())
             else:
                 _prefix = field.get_accessor_name()
-            _fds = getFieldDescriptors(f, _prefix, processedModels)
+            _fds = getFieldDescriptors(f, _prefix, processedModels, depth+1)
             [fds.append(_fd) for _fd in _fds]
         processedModels.append(field.model())
     else:   
@@ -142,7 +150,7 @@ def getFieldDescriptors(field, prefix=None, processedModels=[]):
             key = '%s.%s' % (prefix, field.name)
         else:
             key = field.name
-        fd.field_label = getattr(field, 'docstring', field.name)
+        fd.field_label = getattr(field, 'shortname', key)
         fd.field_key = key
         fd.value_type = getFieldValueType(field)
         fd.value_options = getFieldValueOptions(field)

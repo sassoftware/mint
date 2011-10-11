@@ -34,6 +34,9 @@ TAG_REFRESH_INTERVAL=60
 class QuerySetManager(basemanager.BaseManager):
 
     # TODO: make this more pluggable/OO so these maps aren't needed
+    # there are some inconsistencies between queryset DB and XML tags
+
+    # queryset tag method for each queryset resource type
     tagMethodMap = {
         'system'               : '_tagSystems',
         'user'                 : '_tagUsers',
@@ -43,6 +46,7 @@ class QuerySetManager(basemanager.BaseManager):
         'role'                 : '_tagRoles',
         'target'               : '_tagTargets',
     }
+    # container for each queryset resource type
     resourceCollectionMap = {
         'system'               : 'systems',
         'user'                 : 'users',
@@ -52,6 +56,7 @@ class QuerySetManager(basemanager.BaseManager):
         'role'                 : 'roles',
         'target'               : 'targets',
     }
+    # tag finder method per queryset resource type
     tagLookupMap = {
         'system'               : '_lookupTaggedSystems',
         'user'                 : '_lookupTaggedUsers', 
@@ -61,16 +66,14 @@ class QuerySetManager(basemanager.BaseManager):
         'role'                 : '_lookupTaggedRoles',
         'target'               : '_lookupTaggedTargets',
     }
+    # Django tag model for each queryset resource type
     tagModelMap = {
         'system'               : 'system_tag',
         'user'                 : 'user_tag',
         'project_branch_stage' : 'stage_tag',
         'project'              : 'project_tag',
         'target'               : 'target_tag',
-        # grants are presently untagged
-        # roles are presently untagged
     }
-    
 
     def __init__(self, mgr):
         basemanager.BaseManager.__init__(self, mgr)
