@@ -1,5 +1,4 @@
 import testsxml
-import time
 from xobj import xobj
 
 import logging
