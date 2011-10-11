@@ -1937,6 +1937,7 @@ class SystemManager(basemanager.BaseManager):
 
     @exposed
     def getSystemDescriptorForAction(self, systemId, descriptorType, params):
+        # This will validate the system
         system = models.System.objects.get(pk=systemId)
         methodMap = dict(
             assimilation = self.getDescriptorAssimilation,
@@ -1955,11 +1956,10 @@ class SystemManager(basemanager.BaseManager):
     @exposed
     def getDescriptorForSystemAction(self, system_id, job_type, query_dict):
         '''To submit a job to the system, what smartform data do I need?'''
-        system = models.System.objects.get(pk=system_id)
         eventType = jobmodels.EventType.objects.get(pk=job_type).name
         if eventType != jobmodels.EventType.SYSTEM_ASSIMILATE:
             raise Exception("no descriptor for job type %s" % eventType)
-        return self.getDescriptorAssimilation()
+        return self.getDescriptorAssimilation(system_id)
 
     @exposed
     def scheduleJobAction(self, system, job):

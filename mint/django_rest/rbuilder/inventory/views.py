@@ -10,7 +10,7 @@ from django.http import HttpResponse, HttpResponseNotFound, HttpResponseRedirect
 from django_restapi import resource
 
 from mint.django_rest.deco import requires, return_xml, access, \
-    HttpAuthenticationRequired, xObjRequires, Flags
+    HttpAuthenticationRequired, Flags
 from mint.django_rest.rbuilder.users import models as usersmodels
 from mint.django_rest.rbuilder import service
 from mint.django_rest.rbuilder.inventory import models
