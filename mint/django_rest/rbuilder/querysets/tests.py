@@ -246,6 +246,27 @@ class QuerySetTestCase(QueryTestCase):
         systems = self.xobjSystems("query_sets/%s/child/" % qsid)
         self.assertEquals(len(systems), 0)
 
+        # delete the chosen item
+        response = self._delete("query_sets/%s/chosen/" % qsid,
+            username="admin", password="password",
+            data=system_xml)
+        self.assertEquals(response.status_code, 200)
+       
+        # verify the chosen item is no longer present
+        systems = self.xobjSystems("query_sets/%s/chosen/" % qsid)
+        # self.assertTrue(systems[0].name, system.name)
+        self.assertEquals(len(systems), 0)        
+        
+        # exercise the very similar "PUT" loop which replaces the chosen
+        # collection
+        response = self._put("query_sets/%s/chosen/" % qsid,
+            username="admin", password="password",
+            data=testsxml.system_put_chosen_xml)
+        self.assertEquals(response.status_code, 200)
+        systems = self.xobjSystems("query_sets/%s/chosen/" % qsid)
+        self.assertTrue(systems[0].name, system.name)
+        self.assertEquals(len(systems), 1)        
+
     def testBaseQuerySets(self):
         # run through various querysets that ship with the app
         # to make sure they don't explode

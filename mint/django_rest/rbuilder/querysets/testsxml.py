@@ -81,6 +81,13 @@ queryset_put_xml = """
 </query_set>
 """
 
+system_put_chosen_xml = """
+<systems>
+<system id="http://testserver/api/v1/inventory/systems/2">
+</system>
+</systems>
+"""
+
 queryset_with_actions = """
 <query_set id="http://testserver/api/v1/query_sets/5">
   <actions>

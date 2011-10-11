@@ -642,12 +642,19 @@ class QuerySetManager(basemanager.BaseManager):
         It must be of the same collection type, querysets are not
         heterogeneous.
         '''
+
         querySet = self._querySet(querySetId)
         # we do not update the queryset tag date here because it could
         # still be stale with respect to child or filtered results
         tagMethod = self._tagMethod(querySet)
         # if we support tagging this resource type yet
         # then tag it, otherwise, basically no-op.
+
+        t1 = resource._xobj.tag
+        t2 = querySet.resource_type
+        if t1 != t2:
+            raise Exception("attempting to add an object of the wrong type (%s vs %s)" % (t1, t2))
+
         if tagMethod is not None:
             tagMethod([resource], querySet, self._chosenMethod())
         return self.getQuerySetChosenResult(querySetId)
@@ -661,6 +668,12 @@ class QuerySetManager(basemanager.BaseManager):
         # TODO: update transitive items
         querySet = self._querySet(querySetId)
         resources_out = getattr(resources, querySet.resource_type)
+
+        if len(resources_out) > 0:
+            t1 = resources_out[0]._xobj.tag
+            t2 = querySet.resource_type
+            if t1 != t2:
+                raise Exception("attempting to add an object of the wrong type (%s vs %s)" % (t1, t2))
 
         # Delete all previously tagged resources
         tagModel = modellib.type_map[self.tagModelMap[querySet.resource_type]]
