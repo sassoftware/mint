@@ -3224,7 +3224,9 @@ class MigrateTo_58(SchemaMigration):
 
     def migrate16(self):
         cu = self.db.cursor()
-        cu.execute("""ALTER TABLE project_branch_stage ADD COLUMN created_date timestamp with time zone NOT NULL""")
+        cu.execute("""ALTER TABLE project_branch_stage
+                ADD COLUMN created_date timestamp with time zone NOT NULL
+                DEFAULT current_timestamp""")
         return True
 
     def migrate17(self):

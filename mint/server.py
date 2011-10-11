@@ -333,7 +333,7 @@ class MintServer(object):
         finally:
             prof.stopXml(methodName)
             if self.restDb:
-                self.restDb.close()
+                self.restDb.reset()
 
     def __getattr__(self, key):
         if key[0] != '_':

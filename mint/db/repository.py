@@ -86,17 +86,12 @@ class RepomanMixin(object):
         Reset all open database connections. Call this before finishing a
         request.
         """
-        for key, reposDB in self.reposDBCache.items():
-            if reposDB.poolmode:
-                reposDB.close()
-                del self.reposDBCache[key]
-            elif reposDB.inTransaction(default=True):
-                reposDB.rollback()
-
-    def close(self):
         while self.reposDBCache:
             reposDB = self.reposDBCache.popitem()[1]
             reposDB.close()
+
+    def close(self):
+        self.reset()
 
     def close_fork(self):
         while self.reposDBCache:
