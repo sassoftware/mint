@@ -438,6 +438,7 @@ release_get_xml = \
     <name>foo0</name>
   </project>
   <should_mirror>0</should_mirror>
+  <published>True</published>
   <published_by id="http://testserver/api/v1/users/2002"/>
   <time_updated></time_updated>
   <created_by id="http://testserver/api/v1/users/2001"/>
@@ -520,6 +521,7 @@ release_post_xml = \
     <short_name>foo0</short_name>
     <name>foo0</name>
   </project>
+  <published>True</published>
   <published_by id="http://testserver/api/v1/users/2002"/>
   <time_updated></time_updated>
   <created_by id="http://testserver/api/v1/users/2001"/>
@@ -544,6 +546,7 @@ releases_get_xml = \
       <name>foo0</name>
     </project>
     <should_mirror>0</should_mirror>
+    <published>True</published>
     <published_by id="http://testserver/api/v1/users/2002"/>
     <time_updated></time_updated>
     <created_by id="http://testserver/api/v1/users/2001"/>
@@ -624,6 +627,7 @@ releases_get_xml = \
       <name>foo1</name>
     </project>
     <should_mirror>0</should_mirror>
+    <published>True</published>
     <published_by id="http://testserver/api/v1/users/2002"/>
     <time_updated></time_updated>
     <created_by id="http://testserver/api/v1/users/2001"/>
@@ -704,6 +708,7 @@ releases_get_xml = \
       <name>foo2</name>
     </project>
     <should_mirror>0</should_mirror>
+    <published>True</published>
     <published_by id="http://testserver/api/v1/users/2002"/>
     <time_updated></time_updated>
     <created_by id="http://testserver/api/v1/users/2001"/>

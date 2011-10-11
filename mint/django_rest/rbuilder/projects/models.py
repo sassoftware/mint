@@ -424,7 +424,31 @@ class Release(modellib.XObjIdModel):
     should_mirror = models.SmallIntegerField(db_column='shouldmirror',
         blank=True, default=0)
     time_mirrored = models.DecimalField(max_digits=14, decimal_places=3,
-        null=True, db_column='timemirrored')  
+        null=True, db_column='timemirrored')
+    published = modellib.SyntheticField()
+    
+    def computeSyntheticFields(self, sender, **kwargs):
+        if self.published_by is not None:
+            self.published = True
+        else:
+            self.published = False
+    
+    def serialize(self, request=None):
+        xobjModel = modellib.XObjIdModel.serialize(self, request)
+        # Convert timestamp fields in the database to our standard UTC format
+        if xobjModel.time_created:
+            xobjModel.time_created = str(datetime.datetime.fromtimestamp(
+                xobjModel.time_created, tz.tzutc()))
+        if xobjModel.time_updated:
+            xobjModel.time_updated = str(datetime.datetime.fromtimestamp(
+                xobjModel.time_updated, tz.tzutc()))
+        if xobjModel.time_published:
+            xobjModel.time_published = str(datetime.datetime.fromtimestamp(
+                xobjModel.time_published, tz.tzutc()))
+        if xobjModel.time_mirrored:
+            xobjModel.time_mirrored = str(datetime.datetime.fromtimestamp(
+                xobjModel.time_mirrored, tz.tzutc()))
+        return xobjModel
     
 class InboundMirror(modellib.XObjModel):
     _xobj = xobj.XObjMetadata(tag="inbound_mirror")
