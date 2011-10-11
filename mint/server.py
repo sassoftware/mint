@@ -52,6 +52,7 @@ from mint.reports import MintReport
 from mint.helperfuncs import getUrlHost
 from mint.image_gen.wig import client as wig_client
 from mint import packagecreator
+from mint.rest import errors as rest_errors
 
 from conary import changelog
 from conary import conarycfg
@@ -332,7 +333,7 @@ class MintServer(object):
         finally:
             prof.stopXml(methodName)
             if self.restDb:
-                self.restDb.productMgr.reposMgr.close()
+                self.restDb.close()
 
     def __getattr__(self, key):
         if key[0] != '_':
@@ -537,20 +538,14 @@ class MintServer(object):
     # can't always know which param is the projectId.
     # We'll just call it at the begining of every function that needs it.
     def _filterProjectAccess(self, projectId):
-        project = self.projects.get(projectId)
-
         # Allow admins to see all projects
         if list(self.authToken) == [self.cfg.authUser, self.cfg.authPass] or self.auth.admin:
             return
-        # Allow anyone to see public projects
-        if not project['hidden']:
-            return
-        # Project is hidden, so user must be a member to see it.
-        if (self.projectUsers.getUserlevelForProjectMember(projectId,
-            self.auth.userId) in userlevels.LEVELS):
-                return
-        # All the above checks must have failed, raise exception.
-        raise mint_error.ItemNotFound()
+        handle = self.reposMgr.getRepositoryFromProjectId(projectId)
+        try:
+            level = handle.getLevelForUser(self.auth.userId)
+        except rest_errors.ProductNotFound:
+            raise mint_error.ItemNotFound('project')
 
     def _filterBuildAccess(self, buildId):
         try:

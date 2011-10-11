@@ -1,7 +1,5 @@
 #
-# Copyright (c) 2009 rPath, Inc.
-#
-# All Rights Reserved
+# Copyright (c) 2011 rPath, Inc.
 #
 import decorator
 import logging
@@ -15,6 +13,7 @@ from mint import jobstatus
 from mint import mint_error
 from mint import projects
 from mint import userlevels
+from mint.db import repository as reposdb
 from mint.lib import siteauth
 from mint.rest.api import models
 from mint.rest import errors

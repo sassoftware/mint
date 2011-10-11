@@ -487,7 +487,7 @@ class ProjectManager(basemanager.BaseManager):
     def _projectValidator(self, obj):
         if self.checkProjectAccess(obj.project):
             return obj
-        raise errors.NotFound()
+        raise errors.ResourceNotFound()
 
     @exposed
     def getProjectBranchStage(self, project_short_name, project_branch_label, stage_name):
@@ -513,7 +513,7 @@ class ProjectManager(basemanager.BaseManager):
         else:              #  asking for specific stage
             if self.checkProjectAccess(stages[0].project):
                 return stages[0]
-            raise errors.NotFound()
+            raise errors.ResourceNotFound()
 
     @exposed
     def getProjectAllBranchStages(self, project_short_name):
