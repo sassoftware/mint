@@ -830,13 +830,8 @@ class System(modellib.XObjIdModel):
                 )
 
         if self.target_id:
-            targetsMap = dict((x.pk, x)
-                for x in Cache.all(targetmodels.Target))
-            targetTypesMap = dict((x.pk, x)
-                for x in Cache.all(targetmodels.TargetType))
-            target = targetsMap[self.target_id]
-            targetType = targetTypesMap[target.target_type_id]
-            drvCls = tmgr.CatalogServiceHelper.getDriverClass(targetType)
+            drvCls = targetmodels.Target.getDriverClassForTargetId(
+                self.target_id)
             enabled = hasattr(drvCls, "drvCaptureSystem")
         else:
             enabled = False

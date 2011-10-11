@@ -5,7 +5,6 @@
 #
 
 import json
-from lxml import etree
 
 from django.db import connection
 from django.db.models import Q
@@ -160,7 +159,7 @@ class TargetsManager(basemanager.BaseManager, CatalogServiceHelper):
     @exposed
     def serializeDescriptorConfigureCredentials(self, target_id):
         descr = self.getDescriptorConfigureCredentials(target_id)
-        wrapper = etreeObjectWrapper(descr.getElementTree(validate=True))
+        wrapper = modellib.etreeObjectWrapper(descr.getElementTree(validate=True))
         return wrapper
 
     @exposed
@@ -176,7 +175,7 @@ class TargetsManager(basemanager.BaseManager, CatalogServiceHelper):
     @exposed
     def serializeDescriptorRefreshImages(self, targetId):
         descr = self.getDescriptorRefreshImages(targetId)
-        wrapper = etreeObjectWrapper(descr.getElementTree(validate=True))
+        wrapper = modellib.etreeObjectWrapper(descr.getElementTree(validate=True))
         return wrapper
 
     @exposed
@@ -338,16 +337,8 @@ class TargetTypesManager(basemanager.BaseManager, CatalogServiceHelper):
     @exposed
     def serializeDescriptorCreateTargetByTargetType(self, target_type_id):
         descr = self.getDescriptorCreateTargetByTargetType(target_type_id)
-        wrapper = etreeObjectWrapper(descr.getElementTree(validate=True))
+        wrapper = modellib.etreeObjectWrapper(descr.getElementTree(validate=True))
         return wrapper
-
-# XXX This should go in modellib most likely
-class etreeObjectWrapper(object):
-    def __init__(self, element):
-        self.element = element
-    def to_xml(self, request=None, xobj_model=None):
-        return etree.tostring(self.element, pretty_print=False,
-            encoding="UTF-8", xml_declaration=False)
 
 class TargetTypeJobsManager(basemanager.BaseManager):
     @exposed

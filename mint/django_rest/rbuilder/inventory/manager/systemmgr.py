@@ -33,6 +33,8 @@ from mint.django_rest.rbuilder.jobs import models as jobmodels
 from mint.django_rest.rbuilder.images import models as imagemodels
 from mint.rest import errors as mint_rest_errors
 
+from smartform import descriptor
+
 log = logging.getLogger(__name__)
 exposed = basemanager.exposed
 
@@ -1990,6 +1992,41 @@ class SystemManager(basemanager.BaseManager):
             raise Exception("failed to schedule event")
         return event
 
+    @exposed
+    def getDescriptorCaptureSystem(self, systemId):
+        system = models.System.objects.get(pk=systemId)
+        DriverClass = targetmodels.Target.getDriverClassForTargetId(system.target_id)
+        if not hasattr(DriverClass, "drvCaptureSystem"):
+            raise errors.InvalidData()
+
+        descr = descriptor.ConfigurationDescriptor(
+            fromStream=DriverClass.systemCaptureXmlData)
+        descr.setRootElement("descriptor_data")
+        field = descr.getDataField('instanceId')
+        field.set_default(system.target_system_id)
+        from mint.django_rest.rbuilder.projects import models as projmodels
+        # XXX Needs RBAC here
+        stages = sorted((x.stage_id, self._makeStageLabel(x)) for x in projmodels.Stage.objects.all())
+        descr.addDataField('stageId',
+            descriptions = 'Project Stage',
+            required = True,
+            type = descr.EnumeratedType(descr.ValueWithDescription(
+                                            str(sid), descriptions=slabel)
+                for sid, slabel in stages),
+            default=str(stages[0][0]))
+        return descr
+
+    @classmethod
+    def _makeStageLabel(cls, stage):
+        labelComponents = [ stage.project.name, stage.project_branch.name, stage.name ]
+        return ' / '.join(labelComponents)
+
+    @exposed
+    def serializeDescriptorCaptureSystem(self, systemId):
+        descr = self.getDescriptorCaptureSystem(systemId)
+        wrapper = models.modellib.etreeObjectWrapper(
+            descr.getElementTree(validate=True))
+        return wrapper
 
 class Configuration(object):
     _xobj = xobj.XObjMetadata(

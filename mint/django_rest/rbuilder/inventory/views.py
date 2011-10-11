@@ -651,6 +651,15 @@ class InventorySystemJobsService(BaseInventoryService):
             system, job
         )
 
+class InventorySystemDescriptorCaptureService(BaseInventoryService):
+    @return_xml
+    def rest_GET(self, request, system_id):
+        "Fetch capture descriptor"
+        return self.get(system_id)
+
+    def get(self, system_id):
+        return self.mgr.serializeDescriptorCaptureSystem(system_id)
+
 class InventorySystemJobDescriptorService(BaseInventoryService):
 
     @rbac(rbac_can_read_system_id)

@@ -4662,3 +4662,41 @@ class AntiRecursiveSaving(XMLTestCaseStandin):
         interfaces = list(models.ManagementInterface.objects.all())
         self.assertEquals(len(interfaces), 3, 'no interfaces added')
 
+class DescriptorTestCase(XMLTestCase, test_utils.SmartformMixIn):
+    def setUp(self):
+        XMLTestCase.setUp(self)
+        self.setUpSchemaDir()
+
+    def testGetDescriptorCaptureSystem(self):
+        models.System.objects.all().delete()
+        targetType = targetmodels.TargetType.objects.get(name='vmware')
+        target = targetmodels.Target(target_type=targetType,
+            name='testtargetname', description='testtargetdescription',
+            zone=self.localZone)
+        target.save()
+        system = self._saveSystem()
+        system.target = target
+        system.target_system_id = "efe28c20-bbda-434c-87ae-9f4006114a1f"
+        system.save()
+
+        response = self._get('inventory/systems/%s/descriptor_capture' % 1999,
+            username='testuser', password='password')
+        self.assertEquals(response.status_code, 404)
+        response = self._get('inventory/systems/%s/descriptor_capture' % system.system_id,
+            username='testuser', password='password')
+        self.assertEquals(response.status_code, 200)
+        obj = xobj.parse(response.content)
+        self.failUnlessEqual(obj.descriptor.metadata.rootElement, 'descriptor_data')
+        self.failUnlessEqual(
+            [ x.name for x in obj.descriptor.dataFields.field ],
+            [
+                'instanceId', 'imageName', 'stageId',
+        ])
+        stageDescs = obj.descriptor.dataFields.field[2].enumeratedType.describedValue
+        self.failUnlessEqual(
+            [ x.descriptions.desc for x in stageDescs ],
+            [
+                'chater-foo / 1 / Development',
+                'chater-foo / 1 / QA',
+                'chater-foo / 1 / Release',
+            ])

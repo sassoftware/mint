@@ -111,6 +111,18 @@ class Target(modellib.XObjIdModel):
                 descriptorModel=self, descriptorHref="descriptor_refresh_images")
         return action
 
+    @classmethod
+    def getDriverClassForTargetId(cls, targetId):
+        from .manager import CatalogServiceHelper
+        targetsMap = dict((x.pk, x)
+            for x in modellib.Cache.all(Target))
+        targetTypesMap = dict((x.pk, x)
+            for x in modellib.Cache.all(TargetType))
+        target = targetsMap[targetId]
+        targetType = targetTypesMap[target.target_type_id]
+        drvCls = CatalogServiceHelper.getDriverClass(targetType)
+        return drvCls
+
 class TargetData(modellib.XObjModel):
     class Meta:
         db_table = u'targetdata'

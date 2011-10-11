@@ -10,6 +10,7 @@ from dateutil import parser
 from dateutil import tz
 import inspect
 import urlparse
+from lxml import etree
 
 from conary.lib import util
 
@@ -60,6 +61,13 @@ class Flags(BaseFlags):
 # model class to use for deserialization of xml.  All models.py should add
 # their models to this dict.
 type_map = {}
+
+class etreeObjectWrapper(object):
+    def __init__(self, element):
+        self.element = element
+    def to_xml(self, request=None, xobj_model=None):
+        return etree.tostring(self.element, pretty_print=False,
+            encoding="UTF-8", xml_declaration=False)
 
 def XObjHidden(field):
     """
