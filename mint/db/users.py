@@ -286,8 +286,9 @@ class UsersTable(database.KeyedTable):
               JOIN TargetUserCredentials AS tuc USING (userId)
               JOIN TargetCredentials AS tc USING (targetCredentialsId)
               JOIN Targets AS t ON (t.targetId=tuc.targetId)
-             WHERE t.targetType = ?
-               AND t.targetName = ?
+              JOIN target_types AS tt ON (t.target_type_id = t.target_type_id)
+             WHERE tt.name = ?
+               AND t.name = ?
             """
         cu.execute(SQL, self.EC2TargetType, self.EC2TargetName)
         results = cu.fetchall()
