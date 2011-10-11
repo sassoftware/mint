@@ -58,7 +58,7 @@ class XMLTestCaseStandin(XMLTestCase):
             response = XMLTestCaseStandin._get(self, new_url, username=username, password=password)
         return response
 
-class AssimilatorTestCase(XMLTestCaseStandin):
+class AssimilatorTestCase(XMLTestCaseStandin, test_utils.SmartformMixIn):
     ''' 
     This tests actions as well as the assimilator.  See if we can list the jobs on 
     a system, get the descriptor for spawning that job, and whether we can actually
@@ -86,6 +86,7 @@ class AssimilatorTestCase(XMLTestCaseStandin):
         # system.save not required
         self.system = models.System.objects.get(pk=self.system.pk)
         self.assertTrue(self.mgr.sysMgr.getSystemHasHostInfo(self.system))
+        self.setUpSchemaDir()
 
     def testExpectedActions(self):
         # do we see assimilate as a possible action?
@@ -103,14 +104,22 @@ class AssimilatorTestCase(XMLTestCaseStandin):
             ['Assimilate system', "Capture a system's image"])
 
     def testFetchActionsDescriptor(self): 
+        descriptorType = 'assimilation'
         # can we determine what smartform we need to populate?
-        url = "inventory/systems/%s/descriptors/%s" % (self.system.pk, self.type_id)
+        url = "inventory/systems/%s/descriptors/%s" % (self.system.pk, descriptorType)
         response = self._get(url, username="admin", password="password")
-        self.assertTrue(response.content.find("<descriptor>") != -1)
+        self.failUnlessEqual(response.status_code, 200)
+        obj = xobj.parse(response.content)
+        self.failUnlessEqual(obj.descriptor.metadata.displayName, 'System Assimilation')
+        self.failUnlessEqual(obj.descriptor.metadata.descriptions.desc, 'System Assimilation')
         # make sure the same works with parameters
-        url = "inventory/systems/%s/descriptors/%s?foo=bar" % (self.system.pk, self.type_id)
+        url = "inventory/systems/%s/descriptors/%s?foo=bar" % (self.system.pk,
+            descriptorType)
         response = self._get(url, username="admin", password="password")
-        self.assertTrue(response.content.find("<descriptor>") != -1)
+        self.failUnlessEqual(response.status_code, 200)
+        obj = xobj.parse(response.content)
+        self.failUnlessEqual(obj.descriptor.metadata.displayName, 'System Assimilation')
+        self.failUnlessEqual(obj.descriptor.metadata.descriptions.desc, 'System Assimilation')
 
     def testSpawnAction(self):
         # can we launch the job>?
@@ -4678,12 +4687,14 @@ class DescriptorTestCase(XMLTestCase, test_utils.SmartformMixIn):
         system.target = target
         system.target_system_id = "efe28c20-bbda-434c-87ae-9f4006114a1f"
         system.save()
+        self.mgr.retagQuerySetsByType('system')
 
-        response = self._get('inventory/systems/%s/descriptor_capture' % 1999,
-            username='testuser', password='password')
+        # Use admin for now, rbac write is required
+        response = self._get('inventory/systems/%s/descriptors/capture' % 1999,
+            username='admin', password='password')
         self.assertEquals(response.status_code, 404)
-        response = self._get('inventory/systems/%s/descriptor_capture' % system.system_id,
-            username='testuser', password='password')
+        response = self._get('inventory/systems/%s/descriptors/capture' % system.system_id,
+            username='admin', password='password')
         self.assertEquals(response.status_code, 200)
         obj = xobj.parse(response.content)
         self.failUnlessEqual(obj.descriptor.metadata.rootElement, 'descriptor_data')

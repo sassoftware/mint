@@ -949,7 +949,7 @@ systems_xml = """\
     <actions>
       <action>
         <description>Capture a system's image</description>
-        <descriptor id="http://testserver/api/v1/inventory/systems/2/descriptor_capture"/>
+        <descriptor id="http://testserver/api/v1/inventory/systems/2/descriptors/capture"/>
         <enabled>false</enabled>
         <job_type id="http://testserver/api/v1/inventory/event_types/21"/>
         <name>system capture</name>
@@ -1023,7 +1023,7 @@ systems_xml = """\
     <actions>
       <action>
         <description>Capture a system's image</description>
-        <descriptor id="http://testserver/api/v1/inventory/systems/3/descriptor_capture"/>
+        <descriptor id="http://testserver/api/v1/inventory/systems/3/descriptors/capture"/>
         <enabled>false</enabled>
         <job_type id="http://testserver/api/v1/inventory/event_types/21"/>
         <name>system capture</name>
@@ -1237,7 +1237,7 @@ system_xml = """\
   <actions>
     <action>
       <description>Capture a system's image</description>
-      <descriptor id="http://testserver/api/v1/inventory/systems/3/descriptor_capture"/>
+      <descriptor id="http://testserver/api/v1/inventory/systems/3/descriptors/capture"/>
       <enabled>false</enabled>
       <job_type id="http://testserver/api/v1/inventory/event_types/21"/>
       <name>system capture</name>
@@ -1314,7 +1314,7 @@ system_post_xml = """\
   <actions>
     <action>
       <description>Capture a system's image</description>
-      <descriptor id="http://testserver/api/v1/inventory/systems/3/descriptor_capture"/>
+      <descriptor id="http://testserver/api/v1/inventory/systems/3/descriptors/capture"/>
       <enabled>false</enabled>
       <job_type id="http://testserver/api/v1/inventory/event_types/13"/>
       <name>system capture</name>
@@ -1582,7 +1582,7 @@ system_target_xml = """\
   <actions>
     <action>
       <description>Capture a system's image</description>
-      <descriptor id="http://testserver/api/v1/inventory/systems/3/descriptor_capture"/>
+      <descriptor id="http://testserver/api/v1/inventory/systems/3/descriptors/capture"/>
       <enabled>true</enabled>
       <job_type id="http://testserver/api/v1/inventory/event_types/21"/>
       <name>system capture</name>
@@ -2407,7 +2407,7 @@ system_with_target = """\
   <actions>
     <action>
       <description>Capture a system's image</description>
-      <descriptor id="http://testserver/api/v1/inventory/systems/4/descriptor_capture"/>
+      <descriptor id="http://testserver/api/v1/inventory/systems/4/descriptors/capture"/>
       <enabled>true</enabled>
       <job_type id="http://testserver/api/v1/inventory/event_types/21"/>
       <name>system capture</name>
@@ -3520,8 +3520,11 @@ Methods:
 </systems>
 """
 
-system_assimilator_xml="""<job>
-<job_type id='https://localhost/api/v1/inventory/event_types/12'>system assimilation</job_type>
+system_assimilator_xml = """\
+<job>
+  <job_type id='https://localhost/api/v1/inventory/event_types/12'>system assimilation</job_type>
+  <descriptor id='https://localhost/api/v1/inventory/systems/3/descriptors/assimilation'/>
+  <descriptor_data/>
 </job>
 """
 

@@ -826,6 +826,8 @@ class System(modellib.XObjIdModel):
                         jobmodels.EventType.SYSTEM_ASSIMILATE,
                         actionName="Assimilate system",
                         actionDescription="Assimilate system",
+                        descriptorModel=self,
+                        descriptorHref="descriptors/assimilation",
                     )
                 )
 
@@ -838,7 +840,7 @@ class System(modellib.XObjIdModel):
         action = jobmodels.EventType.makeAction(
             jobmodels.EventType.SYSTEM_CAPTURE,
             descriptorModel=self,
-            descriptorHref="descriptor_capture",
+            descriptorHref="descriptors/capture",
             enabled=enabled)
         actions.action.append(action)
 

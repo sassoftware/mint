@@ -10,7 +10,7 @@ from django.http import HttpResponse, HttpResponseNotFound, HttpResponseRedirect
 from django_restapi import resource
 
 from mint.django_rest.deco import requires, return_xml, access, \
-    HttpAuthenticationRequired, xObjRequires
+    HttpAuthenticationRequired, xObjRequires, Flags
 from mint.django_rest.rbuilder.users import models as usersmodels
 from mint.django_rest.rbuilder import service
 from mint.django_rest.rbuilder.inventory import models
@@ -642,43 +642,32 @@ class InventorySystemJobsService(BaseInventoryService):
         return self.mgr.getSystemJobs(system_id)
 
     @rbac(rbac_can_write_system_id)
-    @xObjRequires('job')
+    @requires('job', flags=Flags(save=False))
     @return_xml
     def rest_POST(self, request, system_id, job):
         '''request starting a job on this system'''
         system = self.mgr.getSystem(system_id)
-        return self.mgr.scheduleJobAction(
-            system, job
-        )
-
-class InventorySystemDescriptorCaptureService(BaseInventoryService):
-    @return_xml
-    def rest_GET(self, request, system_id):
-        "Fetch capture descriptor"
-        return self.get(system_id)
-
-    def get(self, system_id):
-        return self.mgr.serializeDescriptorCaptureSystem(system_id)
+        if job.job_type.name == job.job_type.SYSTEM_ASSIMILATE:
+            return self.mgr.scheduleJobAction(system, job)
+        return self.mgr.addJob(job)
 
 class InventorySystemJobDescriptorService(BaseInventoryService):
 
     @rbac(rbac_can_read_system_id)
     @return_xml
-    def rest_GET(self, request, system_id, job_type):
+    def rest_GET(self, request, system_id, descriptor_type):
         '''
         Get a smartform descriptor for starting a action on
         InventorySystemJobsService.  An action is not *quite* a job.
         It's a request to start a job.
         '''
-        content = self.get(system_id, job_type, request.GET.copy())
-        response = HttpResponse(status=200, content=content)
-        response['Content-Type'] = 'text/xml'
-        return response
+        content = self.get(system_id, descriptor_type, request.GET.copy())
+        return content
 
-    def get(self, system_id, job_type, parameters):
-        return self.mgr.getDescriptorForSystemAction(
-            system_id, job_type, parameters
-        )
+    def get(self, system_id, descriptor_type, parameters):
+        descriptor = self.mgr.getSystemDescriptorForAction(system_id,
+            descriptor_type, parameters)
+        return self.mgr.serializeDescriptor(descriptor)
 
 class InventorySystemJobStatesService(BaseInventoryService):
 

@@ -483,3 +483,6 @@ class JobHandlerRegistry(HandlerRegistry):
                 for k in descriptorData.getFields())
             self.mgr.mgr.setTargetUserCredentials(self.target, creds)
             return self.target
+
+    class SystemCapture(DescriptorJobHandler):
+        jobType = models.EventType.SYSTEM_CAPTURE
