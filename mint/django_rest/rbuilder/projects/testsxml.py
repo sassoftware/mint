@@ -412,3 +412,112 @@ project_branch_stage_images_post_return_xml = \
   </image>
 </images>
 """.strip()
+
+releases_by_project_get_xml = \
+"""
+<?xml version='1.0' encoding='UTF-8'?>
+<releases count="2" next_page="" num_pages="1" previous_page="" full_collection="http://testserver/api/v1/releases" end_index="1" limit="10" order_by="" per_page="10" filter_by="" id="http://testserver/api/v1/releases;start_index=0;limit=10" start_index="0">
+  <release id="http://testserver/api/v1/releases/1">
+    <release_id>1</release_id>
+    <name>release1</name>
+    <description>description1</description>
+    <time_created></time_created>
+    <project id="http://testserver/api/v1/projects/chater-foo">
+      <domain_name>eng.rpath.com</domain_name>
+      <short_name>chater-foo</short_name>
+      <name>chater-foo</name>
+    </project>
+    <should_mirror>0</should_mirror>
+    <published_by></published_by>
+    <time_updated></time_updated>
+    <created_by></created_by>
+    <version>releaseVersion1</version>
+    <images/>
+    <time_mirrored></time_mirrored>
+    <time_published></time_published>
+    <updated_by></updated_by>
+  </release>
+  <release id="http://testserver/api/v1/releases/2">
+    <release_id>2</release_id>
+    <name>release2</name>
+    <description>description2</description>
+    <time_created></time_created>
+    <project id="http://testserver/api/v1/projects/chater-foo">
+      <domain_name>eng.rpath.com</domain_name>
+      <short_name>chater-foo</short_name>
+      <name>chater-foo</name>
+    </project>
+    <should_mirror>0</should_mirror>
+    <published_by></published_by>
+    <time_updated></time_updated>
+    <created_by></created_by>
+    <version>releaseVersion2</version>
+    <images/>
+    <time_mirrored></time_mirrored>
+    <time_published></time_published>
+    <updated_by></updated_by>
+  </release>
+</releases>
+""".strip()
+
+release_by_project_post_xml = \
+"""
+<release>
+  <name>release2002</name>
+  <description>description2002</description>
+  <project id="http://testserver/api/v1/projects/chater-foo">
+    <domain_name>eng.rpath.com</domain_name>
+    <short_name>chater-foo</short_name>
+    <name>chater-foo</name>
+  </project>
+  <should_mirror>0</should_mirror>
+  <created_by id="http://testserver/api/v1/users/2">
+  <version>releaseVersion2002</version>
+  <images/>
+</release>
+"""
+
+image_by_release_get_xml = \
+"""
+<?xml version='1.0' encoding='UTF-8'?>
+<image id="http://testserver/api/v1/images/2">
+  <files/>
+  <trove_last_changed></trove_last_changed>
+  <updated_by></updated_by>
+  <trailing_version>1-1-1</trailing_version>
+  <num_image_files>0</num_image_files>
+  <image_type id="http://testserver/api/v1/image_types/10">
+    <description>VHD for Microsoft (R) Hyper-V</description>
+    <name>Microsoft (R) Hyper-V</name>
+    <key>VIRTUAL_PC_IMAGE</key>
+    <image_type_id>10</image_type_id>
+  </image_type>
+  <build_log id="http://testserver/api/v1/images/2/build_log"/>
+  <trove_flavor>1#x86:i486:i586:i686|5#use:~!xen</trove_flavor>
+  <created_by></created_by>
+  <status_message></status_message>
+  <trove_name>troveName1</trove_name>
+  <status>-1</status>
+  <stage_name>stage1</stage_name>
+  <project_branch id="http://testserver/api/v1/projects/chater-foo/project_branches/chater-foo.eng.rpath.com@rpath:chater-foo-trunk">
+    <name>trunk</name>
+  </project_branch>
+  <description>image-1</description>
+  <image_id>2</image_id>
+  <time_created></time_created>
+  <time_updated></time_updated>
+  <name>image-1</name>
+  <trove_version>/cydonia.eng.rpath.com@rpath:cydonia-1-devel/1317221453.365:1-1-1</trove_version>
+  <released>True</released>
+  <project id="http://testserver/api/v1/projects/chater-foo">
+    <domain_name>eng.rpath.com</domain_name>
+    <short_name>chater-foo</short_name>
+    <name>chater-foo</name>
+  </project>
+  <output_trove></output_trove>
+  <architecture>x86</architecture>
+  <release id="http://testserver/api/v1/releases/1"/>
+  <image_count>1</image_count>
+  <job_uuid>1</job_uuid>
+</image>
+""".strip()
