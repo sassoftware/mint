@@ -2003,7 +2003,7 @@ class SystemManager(basemanager.BaseManager):
             fromStream=DriverClass.systemCaptureXmlData)
         descr.setRootElement("descriptor_data")
         field = descr.getDataField('instanceId')
-        field.set_default(system.target_system_id)
+        field.set_default([system.target_system_id])
         from mint.django_rest.rbuilder.projects import models as projmodels
         # XXX Needs RBAC here
         stages = sorted((x.stage_id, self._makeStageLabel(x)) for x in projmodels.Stage.objects.all())

@@ -4700,3 +4700,6 @@ class DescriptorTestCase(XMLTestCase, test_utils.SmartformMixIn):
                 'chater-foo / 1 / QA',
                 'chater-foo / 1 / Release',
             ])
+        self.failUnlessEqual(obj.descriptor.dataFields.field[0].default,
+            system.target_system_id)
+        self.failUnlessEqual(obj.descriptor.dataFields.field[2].default, '1')
