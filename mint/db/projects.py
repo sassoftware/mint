@@ -156,24 +156,67 @@ class ProjectsTable(database.KeyedTable):
 
     def getProjectDataByMember(self, userId, filter = False):
         cu = self.db.cursor()
-        # audited for sql injection. check sat.
         # We used to filter these results with another condition that if the
         # project was hidden, you had to be a userlevels.WRITER.  That has
         # been changed to allow normal users to browse hidden projects of
         # which they are a member.
-        stmt = """SELECT Projects.*, ProjectUsers.level,
-                     EXISTS(SELECT 1 FROM MembershipRequests
-                            WHERE projectId=Projects.projectid) AS hasRequests
-                  FROM ProjectUsers
-                  JOIN Projects ON Projects.projectId=ProjectUsers.projectId
-                  WHERE ProjectUsers.userId=?"""
-        if filter:
-            stmt += " AND NOT hidden"
-        cu.execute(stmt, userId)
+        stmt = """
+SELECT ep.*, grouped.level FROM (
+SELECT allperms.project_id, MIN(allperms.level) AS level
+FROM (
+    -- Permissions from a project set
+    SELECT qpt.project_id, CASE rpt.name
+            WHEN 'ReadMembers' THEN 2
+            WHEN 'ModMembers' THEN 0
+            ELSE NULL
+        END AS level
+    FROM rbac_user_role rur
+    JOIN rbac_permission rp
+        ON rp.role_id = rur.role_id
+    JOIN rbac_permission_type rpt
+        ON rpt.permission_type_id = rp.permission_type_id
+    JOIN querysets_projecttag qpt
+        ON qpt.query_set_id = rp.queryset_id
+    WHERE rur.user_id = :user_id
+    AND rpt.name in ('ReadMembers', 'ModMembers')
+
+    UNION ALL
+
+    -- Permissions from a project stage set
+    SELECT pbs.project_id, CASE rpt.name
+            WHEN 'ReadMembers' THEN 2
+            WHEN 'ModMembers' THEN 0
+            ELSE NULL
+        END AS level
+    FROM rbac_user_role rur
+    JOIN rbac_permission rp
+        ON rp.role_id = rur.role_id
+    JOIN rbac_permission_type rpt
+        ON rpt.permission_type_id = rp.permission_type_id
+    JOIN querysets_stagetag qst
+        ON qst.query_set_id = rp.queryset_id
+    JOIN project_branch_stage pbs
+        ON pbs.stage_id = qst.stage_id
+    WHERE rur.user_id = :user_id
+    AND rpt.name in ('ReadMembers', 'ModMembers')
+
+    UNION ALL
+
+    -- Oldschool project membership
+    SELECT projectid AS project_id, level
+    FROM ProjectUsers pu
+    WHERE userId = :user_id
+) allperms
+GROUP BY allperms.project_id
+) grouped
+JOIN Projects ep
+    ON ep.projectId = grouped.project_id
+"""
+        cu.execute(stmt, dict(user_id=userId))
         ret = []
         for x in cu.fetchall_dict():
             level = x.pop('level')
-            hasRequests = x.pop('hasRequests')
+            hasRequests = False
             if x['creatorId'] is None:
                 del x['creatorId']
             ret.append((x, level, hasRequests))
