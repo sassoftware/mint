@@ -144,6 +144,7 @@ class ProjectManager(basemanager.BaseManager):
                 level=userlevels.OWNER)
             member.save()
 
+        self.mgr.retagQuerySetsByType('project')
         self.mgr.retagQuerySetsByType('project_branch')
         self.mgr.retagQuerySetsByType('project_branch_stage')
         return project

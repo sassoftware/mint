@@ -549,15 +549,10 @@ release_by_project_post_xml = \
 <release>
   <name>release2002</name>
   <description>description2002</description>
-  <project id="http://testserver/api/v1/projects/chater-foo">
-    <domain_name>eng.rpath.com</domain_name>
-    <short_name>chater-foo</short_name>
-    <name>chater-foo</name>
-  </project>
+  <project id="http://testserver/api/v1/projects/foo"/>
   <should_mirror>0</should_mirror>
-  <created_by id="http://testserver/api/v1/users/2">
+  <created_by id="http://testserver/api/v1/users/2"/>
   <version>releaseVersion2002</version>
-  <images/>
 </release>
 """
 

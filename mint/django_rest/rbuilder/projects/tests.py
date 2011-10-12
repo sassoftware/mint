@@ -515,7 +515,10 @@ class ProjectsTestCase(RbacEngine):
         self.assertXMLEquals(response.content, testsxml.releases_by_project_get_xml)
         
     def testAddRelease(self):
-        pass
+        self._initProject('foo')
+        response = self._post('projects/foo/releases',
+            username='admin', password='password', data=testsxml.release_by_project_post_xml)
+        self.assertEquals(response.status_code, 200)
     
     def testGetImagesByRelease(self):
         self._initProject(adorn=True)
