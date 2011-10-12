@@ -9,7 +9,6 @@ from django.http import HttpResponse, HttpResponseRedirect
 
 from mint.django_rest.deco import access, return_xml, requires
 from mint.django_rest.rbuilder import service
-from mint import userlevels as userlevels
 from mint.django_rest.rbuilder.inventory.views import StageProxyService
 from mint.django_rest.rbuilder.rbac.rbacauth import rbac
 from mint.django_rest.rbuilder.errors import PermissionDenied
@@ -84,32 +83,7 @@ class BranchCallbacks(object):
         if isinstance(branch_or_label, basestring):
             branch = projectmodels.ProjectVersion.objects.get(label=branch_or_label)
 
-        # permissions are additive, if I can write the project via the old
-        # system, (or read as specified) I can assume true and skip the explicit
-        # granting...  this solves some catch-22s where I need to create a PB
-        # and need to know if I can write it to create it, but might not have
-        # the project in the queryset yet because the UI has yet to add it
-        # and plans to in the immediate next REST call
-
-        project = branch.project
-        membership = None
-        if action in [ MODMEMBERS ] :
-            # write access
-            membership = projectmodels.Member.objects.filter(
-                user      = request._authUser,
-                level__in = [ userlevels.ADMIN, userlevels.OWNER ] ,
-                project   = project
-            ) 
-        else:
-            # read access
-            membership = projectmodels.Member.objects.filter(
-                user       = request._authUser,
-                level__gte = 0,
-                project    = project
-            ) 
-        if len(membership) > 0:
-            return True   
-       
+        
         # if no explicit Project permission, check all PBSes
         # that have this project, ability to access any implies 
         # access on the project, this will be a bit sluggish
