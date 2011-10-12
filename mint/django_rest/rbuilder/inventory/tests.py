@@ -4671,46 +4671,7 @@ class AntiRecursiveSaving(XMLTestCaseStandin):
         interfaces = list(models.ManagementInterface.objects.all())
         self.assertEquals(len(interfaces), 3, 'no interfaces added')
 
-class DescriptorTestCase(XMLTestCase, test_utils.SmartformMixIn):
+class DescriptorTestCase(XMLTestCase, test_utils.RepeaterMixIn):
     def setUp(self):
         XMLTestCase.setUp(self)
-        self.setUpSchemaDir()
-
-    def testGetDescriptorCaptureSystem(self):
-        models.System.objects.all().delete()
-        targetType = targetmodels.TargetType.objects.get(name='vmware')
-        target = targetmodels.Target(target_type=targetType,
-            name='testtargetname', description='testtargetdescription',
-            zone=self.localZone)
-        target.save()
-        system = self._saveSystem()
-        system.target = target
-        system.target_system_id = "efe28c20-bbda-434c-87ae-9f4006114a1f"
-        system.save()
-        self.mgr.retagQuerySetsByType('system')
-
-        # Use admin for now, rbac write is required
-        response = self._get('inventory/systems/%s/descriptors/capture' % 1999,
-            username='admin', password='password')
-        self.assertEquals(response.status_code, 404)
-        response = self._get('inventory/systems/%s/descriptors/capture' % system.system_id,
-            username='admin', password='password')
-        self.assertEquals(response.status_code, 200)
-        obj = xobj.parse(response.content)
-        self.failUnlessEqual(obj.descriptor.metadata.rootElement, 'descriptor_data')
-        self.failUnlessEqual(
-            [ x.name for x in obj.descriptor.dataFields.field ],
-            [
-                'instanceId', 'imageName', 'stageId',
-        ])
-        stageDescs = obj.descriptor.dataFields.field[2].enumeratedType.describedValue
-        self.failUnlessEqual(
-            [ x.descriptions.desc for x in stageDescs ],
-            [
-                'chater-foo / 1 / Development',
-                'chater-foo / 1 / QA',
-                'chater-foo / 1 / Release',
-            ])
-        self.failUnlessEqual(obj.descriptor.dataFields.field[0].default,
-            system.target_system_id)
-        self.failUnlessEqual(obj.descriptor.dataFields.field[2].default, '1')
+        self.setUpRepeaterClient()

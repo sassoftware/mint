@@ -123,6 +123,30 @@ class XMLTestCase(TestCase, testcase.MockMixIn):
         cfg.namespace = 'ns'
         cfg.authUser = 'auth_user_abcdefg' 
         cfg.authPass = 'auth_pass_abcdefg'
+        metadataDescriptorFile = os.path.join(self.workDir, "metadataDescriptor.xml")
+        file(metadataDescriptorFile, "w").write("""\
+<metadataDescriptor>
+  <metadata>
+  </metadata>
+  <dataFields>
+    <field>
+      <name>metadata.owner</name>
+      <descriptions><desc>Owner</desc></descriptions>
+      <type>str</type>
+      <required>true</required>
+      <readonly>true</readonly>
+    </field>
+    <field>
+      <name>metadata.admin</name>
+      <descriptions><desc>Admin</desc></descriptions>
+      <type>str</type>
+      <required>true</required>
+      <readonly>true</readonly>
+    </field>
+  </dataFields>
+</metadataDescriptor>
+""")
+        cfg.metadataDescriptorPath = metadataDescriptorFile
         return cfg
 
     def setUp(self):
@@ -596,6 +620,10 @@ class RepeaterMixIn(SmartformMixIn):
         # it to mockGetRmakeJob
         self.mock(jobmodels.Job, 'getRmakeJob',
             lambda slf: self.mockGetRmakeJob(slf))
+
+        from mint.django_rest.rbuilder.inventory.manager import repeatermgr
+        self.mock(repeatermgr.RepeaterManager, 'repeaterClient',
+            self.mgr.repeaterMgr.repeaterClient)
 
     def mockGetRmakeJob(self, slf, *args, **kwargs):
         return self.RmakeJobFactory(slf.job_uuid, 200, "Mocked - all good",

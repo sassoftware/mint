@@ -9,6 +9,7 @@ import collections
 
 from mint.django_rest.test_utils import XMLTestCase, RepeaterMixIn
 from mint.django_rest.rbuilder.inventory import zones as zmodels
+from mint.django_rest.rbuilder.inventory import models as invmodels
 from mint.django_rest.rbuilder.users import models as umodels
 from mint.django_rest.rbuilder.jobs import models as jmodels
 from mint.django_rest.rbuilder.targets import models
@@ -648,3 +649,111 @@ class JobCreationTest(BaseTargetsTest, RepeaterMixIn):
             target_image_credentials__target_credentials=creds)
         self.failUnlessEqual([ x.name for x in images ],
             ['modified product name for id2', 'product name for id3'])
+
+    def testCaptureSystem(self):
+        invmodels.System.objects.all().delete()
+        targetType = models.TargetType.objects.get(name='vmware')
+        target = models.Target.objects.filter(target_type=targetType)[0]
+        system = self._saveSystem()
+        system.target = target
+        system.target_system_id = "efe28c20-bbda-434c-87ae-9f4006114a1f"
+        system.save()
+        self.mgr.retagQuerySetsByType('system')
+
+        targetCredentials = dict(username="vmwareuser", password="sikrit")
+        # Add target user credentials for admin
+        self.mgr.setTargetUserCredentials(target, targetCredentials)
+
+        # Use admin for now, rbac write is required
+        response = self._get('inventory/systems/%s/descriptors/capture' % 1999,
+            username='admin', password='password')
+        self.assertEquals(response.status_code, 404)
+        response = self._get('inventory/systems/%s/descriptors/capture' % system.system_id,
+            username='admin', password='password')
+        self.assertEquals(response.status_code, 200)
+        obj = xobj.parse(response.content)
+        self.failUnlessEqual(obj.descriptor.metadata.rootElement, 'descriptor_data')
+        self.failUnlessEqual(
+            [ x.name for x in obj.descriptor.dataFields.field ],
+            [
+                'instanceId', 'imageTitle', 'imageName', 'stageId',
+                'metadata.owner', 'metadata.admin',
+        ])
+        stageDescs = obj.descriptor.dataFields.field[3].enumeratedType.describedValue
+        self.failUnlessEqual(
+            [ x.descriptions.desc for x in stageDescs ],
+            [
+                'chater-foo / 1 / Development',
+                'chater-foo / 1 / QA',
+                'chater-foo / 1 / Release',
+            ])
+        self.failUnlessEqual(
+            [ x.key for x in stageDescs ],
+            [ '1', '2', '3', ])
+        self.failUnlessEqual(obj.descriptor.dataFields.field[0].default,
+            system.target_system_id)
+        self.failUnlessEqual(obj.descriptor.dataFields.field[3].default, '1')
+
+        # Post a job
+        jobXmlTmpl = """
+<job>
+  <job_type id="http://localhost/api/v1/inventory/event_types/%(jobTypeId)s"/>
+  <descriptor id="http://testserver/api/v1/inventory/systems/%(systemId)s/descriptors/capture"/>
+  <descriptor_data>
+    <imageTitle>%(imageTitle)s</imageTitle>
+    <imageName>%(imageName)s</imageName>
+    <instanceId>%(instanceId)s</instanceId>
+    <stageId>%(stageId)s</stageId>
+    <metadata.owner>%(owner)s</metadata.owner>
+    <metadata.admin>%(admin)s</metadata.admin>
+  </descriptor_data>
+</job>
+"""
+        systemId = system.system_id
+        jobXml = jobXmlTmpl % dict(jobTypeId=21, systemId=systemId,
+            instanceId=system.target_system_id,
+            imageTitle="Captured image from system 1",
+            imageName="captured-system-image",
+            owner="Owner",
+            admin="Admin",
+            stageId='1')
+        jobUrl = "inventory/systems/%s/jobs" % systemId
+        response = self._post(jobUrl, jobXml,
+            username='admin', password='password')
+        self.assertEquals(response.status_code, 200)
+        obj = xobj.parse(response.content)
+        job = obj.job
+        self.failUnlessEqual(job.descriptor.id,
+            "http://testserver/api/v1/inventory/systems/%s/descriptors/capture"
+                % systemId)
+
+        dbjob = jmodels.Job.objects.get(job_uuid=job.job_uuid)
+        self.failUnlessEqual(dbjob.job_type.name, dbjob.job_type.SYSTEM_CAPTURE)
+        self.failUnlessEqual(
+            [ x.system.name for x in dbjob.systems.all() ],
+            [ 'testsystemname' ],
+        )
+
+        calls = self.mgr.repeaterMgr.repeaterClient.getCallList()
+        self.failUnlessEqual([ x.name for x in calls ],
+            [
+                'targets.TargetConfiguration', 'targets.TargetUserCredentials',
+                'targets.configure', 'targets.captureSystem',
+            ])
+        realCall = calls[-1]
+        params = {
+            'imageName': u'captured-system-image',
+            'imageTitle': u'Captured image from system 1',
+            'instanceId': 'efe28c20-bbda-434c-87ae-9f4006114a1f',
+            'metadata.admin': u'Admin',
+            'metadata.owner': u'Owner',
+            'imageUploadUrl': 'https://rpath.com/uploadBuild/1',
+            'imageFilesCommitUrl': u'https://rpath.com/api/products/chater-foo/images/1/files',
+        }
+        from ..images import models as imgmodels
+        outputToken = imgmodels.ImageData.objects.filter(name='outputToken')[0].value
+        params['outputToken'] = outputToken
+        self.failUnlessEqual(realCall.args, (system.target_system_id, params))
+        self.failUnlessEqual(realCall.kwargs, {})
+        self.mgr.repeaterMgr.repeaterClient.reset()
+

@@ -49,13 +49,19 @@ class JobManager(basemanager.BaseManager):
         return job
 
     @exposed
-    def addJob(self, job):
+    def addJob(self, job, **extraArgs):
+        """
+        extraArgs can be used for passing additional information that ties
+        the job to a particular resource (or verifies it). For instance,
+        the identity of the related resource may be present both in the
+        job URL and in the descriptor URL, and they should match
+        """
         job.created_by = self.user
         factory = JobHandlerRegistry.getHandlerFactory(job.job_type.name)
         if factory is None:
             raise errors.InvalidData()
         jhandler = factory(self)
-        jhandler.create(job)
+        jhandler.create(job, extraArgs)
         return job
 
     @exposed
@@ -104,10 +110,11 @@ class JobManager(basemanager.BaseManager):
         return job
 
 class AbstractHandler(object):
-    __slots__ = [ 'mgrRef', ]
+    __slots__ = [ 'mgrRef', 'extraArgs', ]
 
     def __init__(self, mgr):
         self.mgrRef = weakref.ref(mgr)
+        self.extraArgs = {}
         self._init()
 
     def _init(self):
@@ -146,7 +153,8 @@ class HandlerRegistry(object):
 class BaseJobHandler(AbstractHandler):
     __slots__ = []
 
-    def create(self, job):
+    def create(self, job, extraArgs=None):
+        self.extraArgs.update(extraArgs or {})
         uuid, rmakeJob = self.createRmakeJob(job)
         job.setValuesFromRmakeJob(rmakeJob)
         jobToken = rmakeJob.data.getObject().data.get('authToken')
@@ -240,7 +248,11 @@ class ResultsProcessingMixIn(object):
         job.status_code = 500
 
 class DescriptorJobHandler(BaseJobHandler, ResultsProcessingMixIn):
-    __slots__ = [ 'results', ]
+    __slots__ = [ 'results', 'descriptor', 'descriptorData', ]
+
+    def _init(self):
+        ResultsProcessingMixIn._init(self)
+        self.descriptor = self.descriptorData = None
 
     def extractDescriptorData(self, job):
         "Executed when the job is created"
@@ -302,6 +314,7 @@ class _TargetDescriptorJobHandler(DescriptorJobHandler):
     __slots__ = [ 'target', ]
 
     def _init(self):
+        DescriptorJobHandler._init(self)
         self.target = None
 
     def getDescriptor(self, descriptorId):
@@ -347,6 +360,7 @@ class JobHandlerRegistry(HandlerRegistry):
     BaseHandlerClass = BaseJobHandler
 
     class TargetRefreshImages(_TargetDescriptorJobHandler):
+        __slots__ = []
         jobType = models.EventType.TARGET_REFRESH_IMAGES
         ResultsTag = 'images'
 
@@ -354,7 +368,7 @@ class JobHandlerRegistry(HandlerRegistry):
             return self.mgr.mgr.getDescriptorRefreshImages
 
         def getRepeaterMethod(self, cli, job):
-            descriptor, descriptorData = self.extractDescriptorData(job)
+            self.descriptor, self.descriptorData = self.extractDescriptorData(job)
             targetConfiguration = self._buildTargetConfigurationFromDb(cli)
             targetUserCredentials = self._buildTargetCredentialsFromDb(cli)
             zone = self.mgr.mgr.getTargetZone(self.target)
@@ -384,13 +398,16 @@ class JobHandlerRegistry(HandlerRegistry):
             return self.target
 
     class TargetRefreshSystems(DescriptorJobHandler):
+        __slots__ = []
         jobType = models.EventType.TARGET_REFRESH_SYSTEMS
         ResultsTag = 'instances'
 
     class TargetDeployImage(DescriptorJobHandler):
+        __slots__ = []
         jobType = models.EventType.TARGET_DEPLOY_IMAGE
 
     class TargetLaunchSystem(DescriptorJobHandler):
+        __slots__ = []
         jobType = models.EventType.TARGET_LAUNCH_SYSTEM
 
 
@@ -400,6 +417,7 @@ class JobHandlerRegistry(HandlerRegistry):
         ResultsTag = 'target'
 
         def _init(self):
+            DescriptorJobHandler._init(self)
             self.targetType = None
 
         def getDescriptor(self, descriptorId):
@@ -421,7 +439,7 @@ class JobHandlerRegistry(HandlerRegistry):
             return self.targetType
 
         def getRepeaterMethod(self, cli, job):
-            descriptor, descriptorData = self.extractDescriptorData(job)
+            self.descriptor, self.descriptorData = self.extractDescriptorData(job)
             targetType, targetName, targetData = self._createTargetConfiguration(job, self.targetType)
             zone = targetData.pop('zone')
             targetConfiguration = cli.targets.TargetConfiguration(targetType.name,
@@ -451,20 +469,17 @@ class JobHandlerRegistry(HandlerRegistry):
 
 
     class TargetCredentialsConfigurator(_TargetDescriptorJobHandler):
-        __slots__ = [ 'target', ]
+        __slots__ = []
         jobType = models.EventType.TARGET_CONFIGURE_CREDENTIALS
         ResultsTag = 'target'
-
-        def _init(self):
-            self.target = None
 
         def _getDescriptorMethod(self):
             return self.mgr.mgr.getDescriptorConfigureCredentials
 
         def getRepeaterMethod(self, cli, job):
-            descriptor, descriptorData = self.extractDescriptorData(job)
+            self.descriptor, self.descriptorData = self.extractDescriptorData(job)
             creds = dict((k.getName(), k.getValue())
-                for k in descriptorData.getFields())
+                for k in self.descriptorData.getFields())
             targetConfiguration = self._buildTargetConfigurationFromDb(cli)
             targetUserCredentials = self._buildTargetCredentials(cli, creds)
             zone = self.mgr.mgr.getTargetZone(self.target)
@@ -484,5 +499,65 @@ class JobHandlerRegistry(HandlerRegistry):
             self.mgr.mgr.setTargetUserCredentials(self.target, creds)
             return self.target
 
-    class SystemCapture(DescriptorJobHandler):
+    class SystemCapture(_TargetDescriptorJobHandler):
+        __slots__ = [ 'system' ]
         jobType = models.EventType.SYSTEM_CAPTURE
+
+        def _init(self):
+            _TargetDescriptorJobHandler._init(self)
+            self.target = self.system = None
+
+        def getDescriptor(self, descriptorId):
+            try:
+                match = urlresolvers.resolve(descriptorId)
+            except urlresolvers.Resolver404:
+                return None
+
+            systemId = int(match.kwargs['system_id'])
+            if str(systemId) != str(self.extraArgs.get('system_id')):
+                raise errors.InvalidData()
+            self._setSystem(systemId)
+            descr = self._getDescriptorMethod()(systemId)
+            return descr
+
+        def _getDescriptorMethod(self):
+            return self.mgr.mgr.sysMgr.getDescriptorCaptureSystem
+
+        def getRepeaterMethod(self, cli, job):
+            self.descriptor, self.descriptorData = self.extractDescriptorData(job)
+            targetConfiguration = self._buildTargetConfigurationFromDb(cli)
+            targetUserCredentials = self._buildTargetCredentialsFromDb(cli)
+            zone = self.mgr.mgr.getTargetZone(self.target)
+            cli.targets.configure(zone.name, targetConfiguration,
+                targetUserCredentials)
+            return cli.targets.captureSystem
+
+        def getRepeaterMethodArgs(self, job):
+            params = dict((x.getName(), x.getValue())
+                for x in self.descriptorData.getFields())
+            stageId = int(params.pop('stageId'))
+            stage = self.mgr.mgr.getStage(stageId)
+            image = self.mgr.mgr.createImage(
+                name=params.get('imageTitle'),
+                project_branch_stage=stage)
+            image = self.mgr.mgr.createImageBuild(image)
+            outputToken = image.image_data.get(name='outputToken').value
+            host = self.mgr.mgr.restDb.cfg.siteHost
+            params['outputToken'] = outputToken
+            params['imageUploadUrl'] = 'https://%s/uploadBuild/%s' % (
+                host, image.image_id)
+            params['imageFilesCommitUrl'] = 'https://%s/api/products/%s/images/%s/files' % (
+                host, stage.project.short_name, image.image_id)
+            return (self.system.target_system_id, params), {}
+
+        def getRelatedThroughModel(self, descriptor):
+            return inventorymodels.SystemJob
+
+        def getRelatedResource(self, descriptor):
+            return self.system
+
+        def _setSystem(self, systemId):
+            system = inventorymodels.System.objects.get(system_id=systemId)
+            self.system = system
+            self.target = system.target
+
