@@ -78,7 +78,7 @@ class Project(modellib.XObjIdModel):
     view_name = "Project"
     url_key = ["short_name"]
     summary_view = ["name", "short_name", "domain_name"]
-    
+
     project_id = models.AutoField(primary_key=True, db_column="projectid",
         blank=True)
     hostname = models.CharField(unique=True, max_length=63)
@@ -139,7 +139,7 @@ class Project(modellib.XObjIdModel):
             if member:
                 role = userlevels.names[member[0].level]
                 xobjModel.role = role
-                
+
         # Convert timestamp fields in the database to our standard UTC format
         xobjModel.created_date = str(datetime.datetime.fromtimestamp(
             xobjModel.created_date, tz.tzutc()))
@@ -279,7 +279,7 @@ class ProjectVersion(modellib.XObjIdModel):
 
     branch_id = models.AutoField(primary_key=True,
         db_column='productversionid')
-    project = modellib.DeferredForeignKey(Project, db_column='projectid',
+    project = modellib.ForeignKey(Project, db_column='projectid',
         related_name="project_branches", view_name="ProjectVersions")
     label = models.TextField(unique=True, null=False)
     source_group = models.TextField(null=True)
@@ -295,12 +295,24 @@ class ProjectVersion(modellib.XObjIdModel):
     definition = modellib.SyntheticField(modellib.HrefField())
     platform = models.ForeignKey('platforms.Platform', null=False,
         related_name='branches')
-    platform_version = modellib.SyntheticField()
+    platform_version = modellib.SyntheticField(modellib.HrefField())
     imageDefinitions = modellib.SyntheticField(modellib.HrefField()) # only camelCase for compatibility reasons, CHANGE
     image_type_definitions = modellib.SyntheticField(modellib.HrefField())
 
     def __unicode__(self):
         return self.name
+
+    def computeSyntheticFields(self, sender, **kwargs):
+        self._computePlatformVersion()
+
+    def _computePlatformVersion(self):
+        if self.platform is None:
+            return
+
+        self.platform_version = modellib.HrefField(
+            href='/api/products/%s/versions/%s/platformVersion'
+                % (self.project.short_name, self.name),
+        )
 
     def save(self, *args, **kwargs):
         if self.created_date is None:
