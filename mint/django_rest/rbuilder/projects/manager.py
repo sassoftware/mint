@@ -314,7 +314,7 @@ class ProjectManager(basemanager.BaseManager):
             dbStage.save()
 
     def setProductVersionDefinition(self, prodDef):
-        cclient = self.mgr.getUserClient()
+        cclient = self.mgr.getAdminClient(write=True)
         prodDef.saveToRepository(cclient,
                 'Product Definition commit from rBuilder\n')
 
@@ -360,9 +360,15 @@ class ProjectManager(basemanager.BaseManager):
 
     @exposed
     def updateProjectBranch(self, projectVersion):
-        # NOTE: I live in shame
-        if not self.isProjectOwner(projectVersion.project):
-            raise errors.PermissionDenied()
+        # NOTE: rbac already checks to see if the user is a
+        # project owner, user can have perms on a stage, on
+        # a project w/o perms but will inherit the write
+        # perms from the stage.  perms. lotta use of the word.
+        # loathe the 80's, or whenever it was that men and
+        # women did this to themselves.  you should be ashamed.
+        #
+        # if not self.isProjectOwner(projectVersion.project):
+        #     raise errors.PermissionDenied()
         projectVersion.save()
         return projectVersion
 
