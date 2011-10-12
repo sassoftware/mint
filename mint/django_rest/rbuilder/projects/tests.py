@@ -423,7 +423,7 @@ class ProjectsTestCase(RbacEngine):
         self.assertEquals(image.image_type.description, 'VHD for Microsoft (R) Hyper-V')
 
         response = self._get('projects/%s/images/' % prj.short_name,
-                    username='ExampleDeveloper', password='password')
+                    username='testuser', password='password')
         self.assertEquals(response.status_code, 403)
 
     def testAddProjectBranchStageImage(self):
