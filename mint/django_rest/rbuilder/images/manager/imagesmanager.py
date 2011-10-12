@@ -33,6 +33,14 @@ class ImagesManager(basemanager.BaseManager):
         return Images
 
     @exposed
+    def createImage(self, **kwargs):
+        """
+        Image factory. Useful so we don't have to access the model directly.
+        """
+        image = models.Image(**kwargs)
+        return image
+
+    @exposed
     def createImageBuild(self, image):
         outputToken = sha1helper.sha1ToString(file('/dev/urandom').read(20))
         buildData = [('outputToken', outputToken, datatypes.RDT_STRING)]
@@ -64,7 +72,7 @@ class ImagesManager(basemanager.BaseManager):
         # Fill in the redundant information starting with the most
         # specific part
         if image.project_branch_stage_id:
-            image.project_branch_id = image.project_branch_stage.branch_id
+            image.project_branch_id = image.project_branch_stage.project_branch_id
             image.project_id = image.project_branch_stage.project_id
         elif image.project_branch_id:
             image.project_id = image.project_branch.project_id

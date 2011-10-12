@@ -259,9 +259,8 @@ class SystemManager(basemanager.BaseManager):
     @exposed
     def getImageImportMetadataDescriptor(self):
         importDescriptorFile = open(self.cfg.metadataDescriptorPath)
-        importDescriptorData = importDescriptorFile.read()
-        importDescriptorFile.close()
-        return importDescriptorData
+        descr = descriptor.ConfigurationDescriptor(fromStream=importDescriptorFile)
+        return descr
 
     @exposed
     def getInfrastructureSystems(self):
@@ -2020,6 +2019,9 @@ class SystemManager(basemanager.BaseManager):
                                             str(sid), descriptions=slabel)
                 for sid, slabel in stages),
             default=str(stages[0][0]))
+        imageImportDescriptor = self.getImageImportMetadataDescriptor()
+        for f in imageImportDescriptor.getDataFields():
+            descr.addDataField(f)
         return descr
 
     @classmethod
