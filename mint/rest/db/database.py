@@ -166,6 +166,7 @@ class Database(DBInterface):
     def reopen_fork(self):
         DBInterface.reopen_fork(self)
         self.reposShim.close_fork()
+        self.reposShim = reposdb.RepositoryManager(self.cfg, self.db._db)
 
     def reset(self):
         self.reposShim.reset()
