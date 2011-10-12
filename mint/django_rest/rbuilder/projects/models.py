@@ -289,6 +289,7 @@ class ProjectVersion(modellib.XObjIdModel):
     platform_version = modellib.SyntheticField()
     imageDefinitions = modellib.SyntheticField(modellib.HrefField()) # only camelCase for compatibility reasons, CHANGE
     image_type_definitions = modellib.SyntheticField(modellib.HrefField())
+    repository_url = modellib.SyntheticField(modellib.HrefField())
 
     def __unicode__(self):
         return self.name
@@ -326,6 +327,8 @@ class ProjectVersion(modellib.XObjIdModel):
         self.definition = modellib.HrefField(
             href='/api/products/%s/versions/%s/definition',
             values=oldUrlValues)
+        self.repository_url = modellib.HrefField(
+            href='/repos/%s/api' % self.project.short_name)
         xobjModel = modellib.XObjIdModel.serialize(self, request)
         # Convert timestamp fields in the database to our standard UTC format
         if xobjModel.created_date:
