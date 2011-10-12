@@ -40,6 +40,7 @@ class Action(modellib.XObjModel):
     _xobj = xobj.XObjMetadata(tag='action', attributes={})
 
     job_type    = modellib.HrefField()
+    key         = models.CharField(max_length=1026)
     name        = models.CharField(max_length=1026)
     description = models.TextField()
     descriptor  = modellib.HrefField()
@@ -384,10 +385,13 @@ class EventType(modellib.XObjIdModel):
 
     @classmethod
     def makeAction(cls, jobTypeName, actionName=None, actionDescription=None,
+            actionKey=None,
             enabled=True, descriptorModel=None, descriptorHref=None,
             descriptorHrefValues=None, descriptorViewName=None):
         '''Return a related Action object for spawning this jobtype'''
         obj = modellib.Cache.get(cls, name=jobTypeName)
+        if actionKey is None:
+            actionKey = jobTypeName.replace(' ', '_')
         if actionName is None:
             if actionDescription is None:
                 actionDescription = obj.description
@@ -395,6 +399,7 @@ class EventType(modellib.XObjIdModel):
         if actionDescription is None:
             actionDescription = actionName
         action = Action(
+            key = actionKey,
             job_type = modellib.HrefFieldFromModel(obj),
             name = actionName,
             description = actionDescription,

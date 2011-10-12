@@ -818,18 +818,17 @@ class System(modellib.XObjIdModel):
 
         self.actions = actions = jobmodels.Actions()
         actions.action = []
-        if self.management_interface is not None:
-
-            if self.management_interface.name == 'ssh':
-                actions.action.append(
-                    jobmodels.EventType.makeAction(
-                        jobmodels.EventType.SYSTEM_ASSIMILATE,
-                        actionName="Assimilate system",
-                        actionDescription="Assimilate system",
-                        descriptorModel=self,
-                        descriptorHref="descriptors/assimilation",
-                    )
-                )
+        enabled = bool(self.management_interface_id and self.management_interface.name == 'ssh')
+        actions.action.append(
+            jobmodels.EventType.makeAction(
+                jobmodels.EventType.SYSTEM_ASSIMILATE,
+                actionName="Assimilate system",
+                actionDescription="Assimilate system",
+                descriptorModel=self,
+                descriptorHref="descriptors/assimilation",
+                enabled=enabled,
+            )
+        )
 
         if self.target_id:
             drvCls = targetmodels.Target.getDriverClassForTargetId(
