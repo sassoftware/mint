@@ -68,18 +68,22 @@ class ProjectsTestCase(RbacEngine):
         self.mgr.retagQuerySetsByType('project_branch_stage')
 
  
-    def _addProject(self, short_name, namespace='ns'):
+    def _addProject(self, short_name, namespace='ns', user=None):
         project = models.Project()
         project.name = project.hostname = project.short_name = short_name
         project.namespace = namespace
         project.domain_name = 'test.local2'
+        if user:
+            project.creator = user
         project = self.mgr.projectManager.addProject(project)
-        
         return project
-
+        
     def _initProject(self, name='chater-foo', adorn=False):
-        proj = models.Project.objects.get(name='chater-foo')
-        branch = models.ProjectVersion(project=proj, name="trunk", label="chater-foo.eng.rpath.com@rpath:chater-foo-trunk")
+        proj = models.Project.objects.get(name=name)
+        platform = platformsmodels.Platform(
+            label='label-foo', platform_name='foo-platform-name')
+        platform.save()
+        branch = models.ProjectVersion(project=proj, platform=platform, name="trunk", label="chater-foo.eng.rpath.com@rpath:chater-foo-trunk")
         branch.save()
         stage = models.Stage(project=proj,
             project_branch=branch, name="Development", label="foo@ns:trunk-devel")
@@ -269,17 +273,16 @@ class ProjectsTestCase(RbacEngine):
         self.assertEquals(response.status_code, 403)
 
     def testGetAggregateProjectBranches(self):
-        for username in [ 'admin', 'ExampleDeveloper' ]:
-            response = self._get('project_branches/',
-                username="admin", password="password")
-            self.assertEquals(response.status_code, 200)
-            # FIXME: convert to XML test
-            branches = xobj.parse(response.content).project_branches.project_branch
-            self.failUnlessEqual([ x.label for x in branches ],
-                ['chater-foo.eng.rpath.com@rpath:chater-foo-1',
-                 'postgres.rpath.com@rpath:postgres-1',
-                 'postgres.rpath.com@rpath:postgres-2',
-                 'postgres-private.rpath.com@rpath:postgres-private-1'])
+        response = self._get('project_branches/',
+            username='admin', password="password")
+        self.assertEquals(response.status_code, 200)
+        # FIXME: convert to XML test
+        branches = xobj.parse(response.content).project_branches.project_branch
+        self.failUnlessEqual([ x.label for x in branches ],
+            ['chater-foo.eng.rpath.com@rpath:chater-foo-1',
+             'postgres.rpath.com@rpath:postgres-1',
+             'postgres.rpath.com@rpath:postgres-2',
+             'postgres-private.rpath.com@rpath:postgres-private-1'])
 
     def testAddProjectVersionToProject(self):
         self._addProject("foo")
@@ -308,14 +311,6 @@ class ProjectsTestCase(RbacEngine):
         platform = platformsmodels.Platform(
             label='label-foo', platform_name='foo-platform-name')
         platform.save()
-        
-        # FIXME: this throws a 500 when it shouldn't
-        # try POSTing pb with data that specifies a project
-        # the user doesn't have access to
-        # response = self._post('projects/test-project/project_branches',
-        #     data=testsxml.project_version_post_with_project_xml,
-        #     username="ExampleDeveloper", password="password")
-        # self.assertEquals(response.status_code, 403)
         
         # try POSTing with pb pointing to project with valid perms        
         response = self._post('projects/test-project/project_branches',
@@ -443,7 +438,6 @@ class ProjectsTestCase(RbacEngine):
         response = self._post(url % urlparams, 
             username='ExampleDeveloper', password='password', data=testsxml.project_branch_stage_images_post_xml)
         self.assertEquals(response.status_code, 200)
-        
 
     def testGetProjectBranchStagesByProject(self):
         self._initProject()
