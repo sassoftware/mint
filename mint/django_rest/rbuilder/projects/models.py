@@ -112,7 +112,7 @@ class Project(modellib.XObjIdModel):
     database = models.CharField(max_length=128, null=True)
     members = modellib.DeferredManyToManyField(usermodels.User, 
         through="Member")
-    
+
     # synthetic properties hoisted from labels - these will eventually be merged
     # into the projects schema instead of a labels table
     upstream_url = modellib.SyntheticField()
@@ -121,6 +121,7 @@ class Project(modellib.XObjIdModel):
     password = modellib.SyntheticField()
     entitlement = modellib.SyntheticField()
     actions = modellib.SyntheticField()
+    repository_api = modellib.SyntheticField(modellib.HrefField())
 
     load_fields = [ short_name ]
 
@@ -157,6 +158,14 @@ class Project(modellib.XObjIdModel):
                 xobjModel.password = label.password
                 xobjModel.entitlement = label.entitlement
         return xobjModel
+
+    def computeSyntheticFields(self, sender, **kwargs):
+        self._populateRepositoryAPI()
+
+    def _populateRepositoryAPI(self):
+        self.repository_api = modellib.HrefField(
+            href='/repos/%s/api' % self.short_name,
+        )
 
     def setIsAppliance(self):
         self.is_appliance = (self.project_type in self._ApplianceTypes)
