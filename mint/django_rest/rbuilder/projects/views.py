@@ -182,7 +182,8 @@ class AllProjectBranchesService(service.BaseService):
         # ProjectBranches = projectmodels.ProjectVersions()
         # ProjectBranches.project_branch = projectmodels.ProjectVersion.objects.all()
         # return ProjectBranches
-        return self.mgr.getAllProjectBranches()
+        retval = self.mgr.getAllProjectBranches()
+        return retval
 
     @rbac(BranchCallbacks.can_write_branch)
     @requires('project_branch')
