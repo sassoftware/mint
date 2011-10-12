@@ -361,7 +361,7 @@ class ProjectsTestCase(RbacEngine):
     def testGetAggregateProjectBranchStages(self):
         self._initProject()
         response = self._get('project_branch_stages/',
-            username="ExampleDeveloper", password="password", pagination=';start_index=0;limit=9999')
+            username="admin", password="password", pagination=';start_index=0;limit=9999')
         self.assertEquals(response.status_code, 200)
         stages = xobj.parse(response.content).project_branch_stages.project_branch_stage
         oldMaxDiff = self.maxDiff
@@ -386,7 +386,7 @@ class ProjectsTestCase(RbacEngine):
         
         response = self._get('project_branch_stages/',
             username='ExampleDeveloper', password="password")
-        self.assertEquals(response.status_code, 401)
+        self.assertEquals(response.status_code, 403)
         
     def testGetProjectAllBranchStages(self):
         self._initProject()
