@@ -278,7 +278,7 @@ class ProjectVersion(modellib.XObjIdModel):
 
     branch_id = models.AutoField(primary_key=True,
         db_column='productversionid')
-    project = modellib.ForeignKey(Project, db_column='projectid',
+    project = modellib.DeferredForeignKey(Project, db_column='projectid',
         related_name="project_branches", view_name="ProjectVersions")
     label = models.TextField(unique=True, null=False)
     source_group = models.TextField(null=True)

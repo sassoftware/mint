@@ -521,7 +521,12 @@ class ProjectManager(basemanager.BaseManager):
             
     @exposed
     def getProjectBranchStage(self, project_short_name, project_branch_label, stage_name):
-        stage = models.Stage.objects.select_related(depth=2).get(
+        # stage = models.Stage.objects.select_related(depth=2).get(
+        #     project__short_name=project_short_name,
+        #     project_branch__label=project_branch_label,
+        #     name=stage_name)
+        # return stage
+        stage = models.Stage.objects.get(
             project__short_name=project_short_name,
             project_branch__label=project_branch_label,
             name=stage_name)
