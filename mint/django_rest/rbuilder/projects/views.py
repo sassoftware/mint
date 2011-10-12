@@ -121,14 +121,22 @@ class StageCallbacks(object):
     @staticmethod
     def can_read_stage(view, request, project_short_name, project_branch_label, 
             stage_name=None, *args, **kwargs):
-        obj = view.mgr.getProjectBranchStage(project_short_name, project_branch_label, stage_name)
         user = request._authUser
-        if not stage_name and request._is_admin:
-            return True
-        elif stage_name:
-            if view.mgr.userHasRbacPermission(user, obj, READMEMBERS):
+        if stage_name:
+            obj = view.mgr.getProjectBranchStage(project_short_name, project_branch_label, stage_name)
+            if not stage_name and request._is_admin:
                 return True
-        return False
+            elif stage_name:
+                if view.mgr.userHasRbacPermission(user, obj, READMEMBERS):
+                    return True
+        else:
+            # user must have permissions for all stages in order to 
+            # see all stages
+            obj = view.mgr.getProjectBranchStages(project_short_name, project_branch_label)
+            for stage in obj.project_branch_stage:
+                if view.mgr.userHasRbacPermission(user, stage, READMEMBERS):
+                    return True
+            return False
 
     @staticmethod
     def can_write_stage(view, request, project_short_name, project_branch_label, 
