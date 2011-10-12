@@ -256,10 +256,13 @@ class SystemManager(basemanager.BaseManager):
             models.System.objects.select_related().filter(system_type__infrastructure=False)
         return systems
 
+    class MetadataDescriptor(descriptor.ConfigurationDescriptor):
+        RootNode = "metadataDescriptor"
+
     @exposed
     def getImageImportMetadataDescriptor(self):
         importDescriptorFile = open(self.cfg.metadataDescriptorPath)
-        descr = descriptor.ConfigurationDescriptor(fromStream=importDescriptorFile)
+        descr = self.MetadataDescriptor(fromStream=importDescriptorFile)
         return descr
 
     @exposed
@@ -2031,8 +2034,11 @@ class SystemManager(basemanager.BaseManager):
 
     @exposed
     def serializeDescriptor(self, descriptor):
+        # We need to turn validation off because we change the
+        # descriptor root node. This needs to be re-discussed
+        validate = False
         wrapper = models.modellib.etreeObjectWrapper(
-            descriptor.getElementTree(validate=True))
+            descriptor.getElementTree(validate=validate))
         return wrapper
 
 class Configuration(object):
