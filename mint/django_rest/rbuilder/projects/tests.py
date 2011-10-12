@@ -83,7 +83,7 @@ class ProjectsTestCase(RbacEngine):
         platform = platformsmodels.Platform(
             label='label-foo', platform_name='foo-platform-name')
         platform.save()
-        branch = models.ProjectVersion(project=proj, platform=platform, name="trunk", label="chater-foo.eng.rpath.com@rpath:chater-foo-trunk")
+        branch = models.ProjectVersion(project=proj, name="trunk", label="chater-foo.eng.rpath.com@rpath:chater-foo-trunk")
         branch.save()
         stage = models.Stage(project=proj,
             project_branch=branch, name="Development", label="foo@ns:trunk-devel")
