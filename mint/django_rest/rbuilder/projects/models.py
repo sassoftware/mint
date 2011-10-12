@@ -78,7 +78,7 @@ class Project(modellib.XObjIdModel):
     view_name = "Project"
     url_key = ["short_name"]
     summary_view = ["name", "short_name", "domain_name"]
-    
+
     project_id = models.AutoField(primary_key=True, db_column="projectid",
         blank=True)
     hostname = models.CharField(unique=True, max_length=63)
@@ -112,7 +112,7 @@ class Project(modellib.XObjIdModel):
     database = models.CharField(max_length=128, null=True)
     members = modellib.DeferredManyToManyField(usermodels.User, 
         through="Member")
-    
+
     # synthetic properties hoisted from labels - these will eventually be merged
     # into the projects schema instead of a labels table
     upstream_url = modellib.SyntheticField()
@@ -121,6 +121,7 @@ class Project(modellib.XObjIdModel):
     password = modellib.SyntheticField()
     entitlement = modellib.SyntheticField()
     actions = modellib.SyntheticField()
+    repository_api = modellib.SyntheticField(modellib.HrefField())
 
     load_fields = [ short_name ]
 
@@ -138,7 +139,7 @@ class Project(modellib.XObjIdModel):
             if member:
                 role = userlevels.names[member[0].level]
                 xobjModel.role = role
-                
+
         # Convert timestamp fields in the database to our standard UTC format
         xobjModel.created_date = str(datetime.datetime.fromtimestamp(
             xobjModel.created_date, tz.tzutc()))
@@ -157,6 +158,14 @@ class Project(modellib.XObjIdModel):
                 xobjModel.password = label.password
                 xobjModel.entitlement = label.entitlement
         return xobjModel
+
+    def computeSyntheticFields(self, sender, **kwargs):
+        self._populateRepositoryAPI()
+
+    def _populateRepositoryAPI(self):
+        self.repository_api = modellib.HrefField(
+            href='/repos/%s/api' % self.short_name,
+        )
 
     def setIsAppliance(self):
         self.is_appliance = (self.project_type in self._ApplianceTypes)
@@ -270,7 +279,7 @@ class ProjectVersion(modellib.XObjIdModel):
 
     branch_id = models.AutoField(primary_key=True,
         db_column='productversionid')
-    project = modellib.DeferredForeignKey(Project, db_column='projectid',
+    project = modellib.ForeignKey(Project, db_column='projectid',
         related_name="project_branches", view_name="ProjectVersions")
     label = models.TextField(unique=True, null=False)
     source_group = models.TextField(null=True)
@@ -282,17 +291,45 @@ class ProjectVersion(modellib.XObjIdModel):
     created_date = models.DecimalField(max_digits=14, decimal_places=3,
         db_column="timecreated")
 
+    platform_id = modellib.XObjHidden(models.IntegerField(null=True, db_column='platform_id'))
+
     images = modellib.SyntheticField()
     definition = modellib.SyntheticField(modellib.HrefField())
-    platform = models.ForeignKey('platforms.Platform', null=False,
-        related_name='branches')
-    platform_version = modellib.SyntheticField()
+# FIXME: This should be a FK rather than a ref to the old platform API once
+#        the new platform api is in use.
+#    platform = models.ForeignKey('platforms.Platform', null=True,
+#        related_name='branches')
+
+    platform = modellib.SyntheticField(modellib.HrefField())
+
+    platform_version = modellib.SyntheticField(modellib.HrefField())
     imageDefinitions = modellib.SyntheticField(modellib.HrefField()) # only camelCase for compatibility reasons, CHANGE
     image_type_definitions = modellib.SyntheticField(modellib.HrefField())
     repository_url = modellib.SyntheticField(modellib.HrefField())
 
     def __unicode__(self):
         return self.name
+
+    def computeSyntheticFields(self, sender, **kwargs):
+        self._computePlatform()
+        self._computePlatformVersion()
+
+    def _computePlatform(self):
+        if self.platform_id is None:
+            return
+
+        self.platform = modellib.HrefField(
+            href='/api/platforms/%s' % self.platform_id,
+        )
+
+    def _computePlatformVersion(self):
+        if self.platform_id is None:
+            return
+
+        self.platform_version = modellib.HrefField(
+            href='/api/products/%s/versions/%s/platformVersion'
+                % (self.project.short_name, self.name),
+        )
 
     def save(self, *args, **kwargs):
         if self.created_date is None:

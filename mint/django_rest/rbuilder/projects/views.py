@@ -179,6 +179,9 @@ class AllProjectBranchesService(service.BaseService):
     @access.admin
     @return_xml
     def rest_GET(self, request):
+        # ProjectBranches = projectmodels.ProjectVersions()
+        # ProjectBranches.project_branch = projectmodels.ProjectVersion.objects.all()
+        # return ProjectBranches
         return self.mgr.getAllProjectBranches()
 
     @rbac(BranchCallbacks.can_write_branch)
@@ -212,7 +215,7 @@ class ProjectAllBranchesService(service.BaseService):
     def get(self, project_short_name):
         return self.mgr.getAllProjectBranchesForProject(project_short_name)
 
-    @rbac(BranchCallbacks.can_write_branch_by_project)
+    @rbac(ProjectCallbacks.can_write_project)
     @requires('project_branch')
     @return_xml
     def rest_POST(self, request, project_short_name, project_branch):

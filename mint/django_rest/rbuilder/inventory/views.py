@@ -374,12 +374,11 @@ class ImageImportMetadataDescriptorService(BaseInventoryService):
     @access.anonymous
     @return_xml
     def rest_GET(self, request):
-        response = HttpResponse(status=200, content=self.get())
-        response['Content-Type'] = 'text/xml'
-        return response
+        return self.get()
 
     def get(self):
-        return self.mgr.getImageImportMetadataDescriptor()
+        descriptor = self.mgr.getImageImportMetadataDescriptor()
+        return self.mgr.serializeDescriptor(descriptor)
 
 
 def rbac_can_write_system_id(view, request, system_id, *args, **kwargs):
@@ -649,7 +648,7 @@ class InventorySystemJobsService(BaseInventoryService):
         system = self.mgr.getSystem(system_id)
         if job.job_type.name == job.job_type.SYSTEM_ASSIMILATE:
             return self.mgr.scheduleJobAction(system, job)
-        return self.mgr.addJob(job)
+        return self.mgr.addJob(job, system_id=system_id)
 
 class InventorySystemJobDescriptorService(BaseInventoryService):
 

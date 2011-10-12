@@ -28,29 +28,29 @@ class Platforms(modellib.Collection):
 class Platform(modellib.XObjIdModel):
     class Meta:
         db_table = 'platforms'
-    
+
     _xobj = xobj.XObjMetadata(tag='platform')
-    
+
     _MODE_CHOICES = (('manual', 'manual'), ('auto', 'auto'))
-    
+
     platform_id = models.AutoField(primary_key=True, db_column='platformid')
     label = models.CharField(max_length=1026, unique=True)
     mode = models.CharField(max_length=1026, default='manual', choices=_MODE_CHOICES)
     enabled = models.IntegerField(default=1)
-    projects = modellib.DeferredForeignKey('projects.Project', db_column='projectid', null=True)
+    project = modellib.DeferredForeignKey('projects.Project', db_column='projectid', null=True)
     platform_name = models.CharField(max_length=1026, db_column='platformname')
     configurable = models.BooleanField(default=False)
     abstract = models.BooleanField(default=False)
     is_from_disk = models.BooleanField(default=False, db_column='isfromdisk')
     time_refreshed = basemodels.DateTimeUtcField(auto_now_add=True) # hack, modellib keeps evaluating to None
-    
+
     # SyntheticFields -- fields with no column in the db
     # most of these are deferred fk's, M2M's, or CharFields in the old code
     platform_trove_name = modellib.SyntheticField() # charfield
     repository_host_name = modellib.SyntheticField() # charfield
-    repository_url = modellib.SyntheticField() # genuine synthetic field
+    repository_api = modellib.SyntheticField(modellib.HrefField()) # genuine synthetic field
     product_version = modellib.SyntheticField() # fk
-    platform_version = modellib.SyntheticField() # fk, is this different from product_version ?
+    platform_versions = modellib.SyntheticField(modellib.HrefField()) # fk, is this different from product_version ?
     platform_usage_terms = modellib.SyntheticField() # charfield
     mirror_permission = modellib.SyntheticField() # boolean
     platform_type = modellib.SyntheticField() # charfield
@@ -58,7 +58,25 @@ class Platform(modellib.XObjIdModel):
     image_type_definitions = modellib.SyntheticField() # fk
     platform_status = modellib.SyntheticField() # fk
     is_platform = modellib.SyntheticField() # booleanfield
-    
+
+    def computeSyntheticFields(self, sender, **kwargs):
+        # Platform has yet to be enabled.
+        if self.project is None:
+            return
+
+        self._computeRepositoryURL()
+        self._computePlatformVersions()
+
+    def _computeRepositoryURL(self):
+        self.repository_api = modellib.HrefField(
+            href='/repos/%s/api' % self.project.short_name,
+        )
+
+    def _computePlatformVersions(self):
+        self.platform_versions = modellib.HrefField(
+            href='/api/platforms/%s/platformVersions' % self.platform_id,
+        )
+
 class ContentSources(modellib.Collection):
     """
     Container for model that used to be called PlatformSource

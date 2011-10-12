@@ -164,21 +164,21 @@ project_put_xml = """\
 
 project_version_post_with_project_xml = """\
   <project_branch>
-    <project id="http://127.0.0.1:8000/api/v1/projects/foo"/>
+    <project id="http://testserver/api/v1/projects/foo"/>
     <description>1</description>
     <namespace>rpath</namespace>
     <name>42</name>
-    <platform id=""/>
+    <platform id="http://testserver/api/v1/platforms/1"/>
   </project_branch>
 """
 
 project_version_post_with_project_xml2 = """\
   <project_branch>
-    <project id="http://127.0.0.1:8000/api/v1/projects/test-project"/>
+    <project id="http://testserver/api/v1/projects/test-project"/>
     <description>2</description>
     <namespace>rpath</namespace>
     <name>50</name>
-    <platform id=""/>
+    <platform id="http://testserver/api/v1/platforms/1"/>
   </project_branch>
 """
 
