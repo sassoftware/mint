@@ -283,7 +283,7 @@ class ProjectVersion(modellib.XObjIdModel):
         db_column="timecreated")
 
     images = modellib.SyntheticField()
-    definition = modellib.SyntheticField()
+    definition = modellib.SyntheticField(modellib.HrefField())
     platform = models.ForeignKey('platforms.Platform', null=False,
         related_name='branches')
     platform_version = modellib.SyntheticField()
@@ -322,6 +322,9 @@ class ProjectVersion(modellib.XObjIdModel):
             values=oldUrlValues)
         self.image_type_definitions = modellib.HrefField(
             href='/api/products/%s/versions/%s/imageTypeDefinitions',
+            values=oldUrlValues)
+        self.definition = modellib.HrefField(
+            href='/api/products/%s/versions/%s/definition',
             values=oldUrlValues)
         xobjModel = modellib.XObjIdModel.serialize(self, request)
         # Convert timestamp fields in the database to our standard UTC format
