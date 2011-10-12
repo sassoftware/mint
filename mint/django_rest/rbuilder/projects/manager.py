@@ -314,7 +314,7 @@ class ProjectManager(basemanager.BaseManager):
             dbStage.save()
 
     def setProductVersionDefinition(self, prodDef):
-        cclient = self.mgr.getUserClient()
+        cclient = self.mgr.getAdminClient(write=True)
         prodDef.saveToRepository(cclient,
                 'Product Definition commit from rBuilder\n')
 
