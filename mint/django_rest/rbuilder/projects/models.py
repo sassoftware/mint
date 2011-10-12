@@ -421,12 +421,19 @@ class Stage(modellib.XObjIdModel):
     promotable = models.BooleanField(default=False)
     created_date = modellib.DateTimeUtcField(auto_now_add=True)
     groups = modellib.SyntheticField()
+    repository_api = modellib.SyntheticField(modellib.HrefField())
 
     def get_url_key(self, *args, **kwargs):
         return [ self.project.short_name, self.project_branch.label, self.name ]
 
+    def _computeRepositoryAPI(self):
+        self.repository_api = modellib.HrefField(
+            href='/repos/%s/api' % self.project.short_name,
+        )
+
     def serialize(self, request=None):
         if request:
+            self._computeRepositoryAPI()
             product = ('https://' + request.get_host().strip('/') +
                 '/api/products/%s')
 
