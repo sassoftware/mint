@@ -64,10 +64,10 @@ class Platform(modellib.XObjIdModel):
         if self.project is None:
             return
 
-        self._computeRepositoryURL()
+        self._computeRepositoryAPI()
         self._computePlatformVersions()
 
-    def _computeRepositoryURL(self):
+    def _computeRepositoryAPI(self):
         self.repository_api = modellib.HrefField(
             href='/repos/%s/api' % self.project.short_name,
         )
