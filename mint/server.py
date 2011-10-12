@@ -2226,20 +2226,27 @@ If you would not like to be %s %s of this project, you may resign from this proj
         filterArch = helperfuncs.getArchFromFlavor(arch)
         flavorSetFlavor = deps.overrideFlavor(flavorSet, customFlavor)
         completeFlavor = deps.overrideFlavor(flavorSet, arch)
-        # If filterFlavor has an instruction set, the major
-        # architecture must match that of the group so
-        # an 'is: x86' filter does not match 'is: x86 x86_64' groups
-        # even though the flavor is technically satisfied.
-        maxVersion = max(x[1] for x in groupList)
-        groupList = [ x for x in groupList 
-                      if (helperfuncs.getArchFromFlavor(x[2]) == filterArch
-                          and x[1] == maxVersion
-                          and x[2].satisfies(completeFlavor)) ]
-        if not groupList:
+        # Hard filtering is done strictly by major architecture. This ensures
+        # two things:
+        #  * "is: x86" filter does NOT match "is: x86 x86_64" group
+        #  * "is: x86 x86_64" filter DOES match "is: x86_64" group
+        # After that, any remaining contests are broken using flavor scoring,
+        # but the vast majority of proddefs use one flavor per arch only and
+        # thus that case needs to be the most robust.
+        archMatches = [ x for x in groupList
+                if helperfuncs.getArchFromFlavor(x[2]) == filterArch ]
+        if not archMatches:
+            # Nothing even had the correct architecture, bail out.
             return []
-        scored = sorted((x[2].score(completeFlavor), x) for x in groupList)
+        maxVersion = max(x[1] for x in archMatches)
+        latest = [x for x in archMatches if x[1] == maxVersion]
+        if len(latest) < 2:
+            # A single group flavor matched the architecture so no need for
+            # flavor scoring.
+            return latest
+        scored = sorted((x[2].score(completeFlavor), x) for x in latest)
         maxScore = scored[-1][0]
-        return sorted([ x[1] for x in scored if x[0] == maxScore ], 
+        return sorted([ x[1] for x in scored if x[0] == maxScore ],
                       key=lambda x: x[2])[-1:]
 
     def _deleteBuild(self, buildId, force=False):
