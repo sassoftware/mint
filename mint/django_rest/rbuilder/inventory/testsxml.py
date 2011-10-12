@@ -948,10 +948,19 @@ systems_xml = """\
   <system id="http://testserver/api/v1/inventory/systems/2">
     <actions>
       <action>
+        <description>Assimilate system</description>
+        <descriptor id="http://testserver/api/v1/inventory/systems/2/descriptors/assimilation"/>
+        <enabled>false</enabled>
+        <job_type id="http://testserver/api/v1/inventory/event_types/12"/>
+        <key>system_assimilation</key>
+        <name>Assimilate system</name>
+      </action>
+      <action>
         <description>Capture a system's image</description>
         <descriptor id="http://testserver/api/v1/inventory/systems/2/descriptors/capture"/>
         <enabled>false</enabled>
         <job_type id="http://testserver/api/v1/inventory/event_types/21"/>
+        <key>system_capture</key>
         <name>system capture</name>
       </action>
     </actions>
@@ -1022,10 +1031,19 @@ systems_xml = """\
   <system id="http://testserver/api/v1/inventory/systems/3">
     <actions>
       <action>
+        <description>Assimilate system</description>
+        <descriptor id="http://testserver/api/v1/inventory/systems/3/descriptors/assimilation"/>
+        <enabled>false</enabled>
+        <job_type id="http://testserver/api/v1/inventory/event_types/12"/>
+        <key>system_assimilation</key>
+        <name>Assimilate system</name>
+      </action>
+      <action>
         <description>Capture a system's image</description>
         <descriptor id="http://testserver/api/v1/inventory/systems/3/descriptors/capture"/>
         <enabled>false</enabled>
         <job_type id="http://testserver/api/v1/inventory/event_types/21"/>
+        <key>system_capture</key>
         <name>system capture</name>
       </action>
     </actions>
@@ -1236,10 +1254,19 @@ system_xml = """\
 <system id="http://testserver/api/v1/inventory/systems/3">
   <actions>
     <action>
+      <description>Assimilate system</description>
+      <descriptor id="http://testserver/api/v1/inventory/systems/3/descriptors/assimilation"/>
+      <enabled>false</enabled>
+      <job_type id="http://testserver/api/v1/inventory/event_types/12"/>
+      <key>system_assimilation</key>
+      <name>Assimilate system</name>
+    </action>
+    <action>
       <description>Capture a system's image</description>
       <descriptor id="http://testserver/api/v1/inventory/systems/3/descriptors/capture"/>
       <enabled>false</enabled>
       <job_type id="http://testserver/api/v1/inventory/event_types/21"/>
+      <key>system_capture</key>
       <name>system capture</name>
     </action>
   </actions>
@@ -1313,10 +1340,19 @@ system_post_xml = """\
 <system>
   <actions>
     <action>
+      <description>Assimilate system</description>
+      <descriptor id="http://testserver/api/v1/inventory/systems/3/descriptors/assimilation"/>
+      <enabled>false</enabled>
+      <job_type id="http://testserver/api/v1/inventory/event_types/12"/>
+      <key>system_assimilation</key>
+      <name>Assimilate system</name>
+    </action>
+    <action>
       <description>Capture a system's image</description>
       <descriptor id="http://testserver/api/v1/inventory/systems/3/descriptors/capture"/>
       <enabled>false</enabled>
-      <job_type id="http://testserver/api/v1/inventory/event_types/13"/>
+      <job_type id="http://testserver/api/v1/inventory/event_types/21"/>
+      <key>system_capture</key>
       <name>system capture</name>
     </action>
   </actions>
@@ -1581,10 +1617,19 @@ system_target_xml = """\
 <system id="http://testserver/api/v1/inventory/systems/3">
   <actions>
     <action>
+      <description>Assimilate system</description>
+      <descriptor id="http://testserver/api/v1/inventory/systems/3/descriptors/assimilation"/>
+      <enabled>false</enabled>
+      <job_type id="http://testserver/api/v1/inventory/event_types/12"/>
+      <key>system_assimilation</key>
+      <name>Assimilate system</name>
+    </action>
+    <action>
       <description>Capture a system's image</description>
       <descriptor id="http://testserver/api/v1/inventory/systems/3/descriptors/capture"/>
       <enabled>true</enabled>
       <job_type id="http://testserver/api/v1/inventory/event_types/21"/>
+      <key>system_capture</key>
       <name>system capture</name>
    </action>
   </actions>
@@ -2406,10 +2451,19 @@ system_with_target = """\
 <system id="http://testserver/api/v1/inventory/systems/4">
   <actions>
     <action>
+      <description>Assimilate system</description>
+      <descriptor id="http://testserver/api/v1/inventory/systems/4/descriptors/assimilation"/>
+      <enabled>false</enabled>
+      <job_type id="http://testserver/api/v1/inventory/event_types/12"/>
+      <key>system_assimilation</key>
+      <name>Assimilate system</name>
+    </action>
+    <action>
       <description>Capture a system's image</description>
       <descriptor id="http://testserver/api/v1/inventory/systems/4/descriptors/capture"/>
       <enabled>true</enabled>
       <job_type id="http://testserver/api/v1/inventory/event_types/21"/>
+      <key>system_capture</key>
       <name>system capture</name>
     </action>
   </actions>
