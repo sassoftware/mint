@@ -360,15 +360,8 @@ class ProjectManager(basemanager.BaseManager):
 
     @exposed
     def updateProjectBranch(self, projectVersion):
-        # NOTE: rbac already checks to see if the user is a
-        # project owner, user can have perms on a stage, on
-        # a project w/o perms but will inherit the write
-        # perms from the stage.  perms. lotta use of the word.
-        # loathe the 80's, or whenever it was that men and
-        # women did this to themselves.  you should be ashamed.
-        #
-        # if not self.isProjectOwner(projectVersion.project):
-        #     raise errors.PermissionDenied()
+        # NOTE: rbac already covers security checks so no
+        # need to call self.isProjectOwner here
         projectVersion.save()
         return projectVersion
 
