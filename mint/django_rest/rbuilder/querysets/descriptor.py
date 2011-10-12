@@ -108,7 +108,7 @@ def getFieldOperatorChoices(field):
 
     return operatorChoices
 
-def getFieldDescriptors(field, prefix=None, processedModels=[], depth=0):
+def _getFieldDescriptors(field, prefix=None, processedModels=[], depth=0):
     fds = []
     # Not using get_all_field_names in this function b/c of infinite recursion
 
@@ -130,7 +130,7 @@ def getFieldDescriptors(field, prefix=None, processedModels=[], depth=0):
                 _prefix = '%s.%s' % (prefix, field.name)
             else:
                 _prefix = field.name
-            _fds = getFieldDescriptors(f, _prefix, processedModels, depth+1)
+            _fds = _getFieldDescriptors(f, _prefix, processedModels, depth+1)
             [fds.append(_fd) for _fd in _fds]
         processedModels.append(field.rel.to)
     elif isinstance(field, related.RelatedObject):
@@ -141,7 +141,7 @@ def getFieldDescriptors(field, prefix=None, processedModels=[], depth=0):
                 _prefix = '%s.%s' % (prefix, field.get_accessor_name())
             else:
                 _prefix = field.get_accessor_name()
-            _fds = getFieldDescriptors(f, _prefix, processedModels, depth+1)
+            _fds = _getFieldDescriptors(f, _prefix, processedModels, depth+1)
             [fds.append(_fd) for _fd in _fds]
         processedModels.append(field.model())
     else:   
@@ -158,6 +158,23 @@ def getFieldDescriptors(field, prefix=None, processedModels=[], depth=0):
         fds.append(fd)
     return fds
 
+def getFieldDescriptors(field, prefix=None, processedModels=[], depth=0):
+    # see _getFieldDescriptors for implementation... this filters out
+    # duplicate names found twice in travesal to the one closest the root object
+    list = _getFieldDescriptors(field, prefix=None, processedModels=[], depth=0)
+    fds_by_name = {}
+    for x in list:
+        if x is None or x.field_label is None:
+            continue 
+        if fds_by_name.has_key(x.field_label):
+            old = fds_by_name[x.field_label]
+            if len(x.field_key) < len(old.field_key):
+                fds_by_name[x.field_label] = x
+        else:
+            fds_by_name[x.field_label] = x
+    values = fds_by_name.values()
+    values.sort(key = lambda x: str.lower(x.field_label))
+    return values
 
 def getFilterDescriptor(model):
     processedModels = []

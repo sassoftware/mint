@@ -462,20 +462,20 @@ class System(modellib.XObjIdModel):
     # need our own object manager for dup detection
     objects = modellib.SystemManager()
     system_id = D(models.AutoField(primary_key=True),
-        "the database ID for the system")
+        "the database ID for the system", short="System ID")
     name = D(models.CharField(max_length=8092),
-        "the system name")
+        "the system name", short="System name")
     description = D(models.CharField(max_length=8092, null=True),
-        "the system description")
+        "the system description", short="System description")
     created_date = D(modellib.DateTimeUtcField(auto_now_add=True),
         "the date the system was added to inventory (UTC)")
     hostname = D(models.CharField(max_length=8092, null=True),
-        "the system hostname")
+        "the system hostname", short="System hostname")
     # Launch date is nullable, we may get it reported from the hypervisor or
     # physical target, we may not.
     launch_date = D(modellib.DateTimeUtcField(null=True),
         "the date the system was deployed (only applies if system is on a "
-        "virtual target)")
+        "virtual target)", short="System launch date")
     target = D(modellib.ForeignKey(targetmodels.Target, null=True, 
         text_field="name"),
         "the virtual target the system was deployed to (only applies if "
@@ -483,25 +483,25 @@ class System(modellib.XObjIdModel):
     target_system_id = D(models.CharField(max_length=255,
             null=True),
         "the system ID as reported by its target (only applies if system is "
-        "on a virtual target)")
+        "on a virtual target)", short="System target system ID")
     target_system_name = D(APIReadOnly(models.CharField(max_length=255,
             null=True)),
         "the system name as reported by its target (only applies if system "
-        "is on a virtual target)")
+        "is on a virtual target)", short="System target system name")
     target_system_description = D(APIReadOnly(models.CharField(max_length=1024,
             null=True)),
         "the system description as reported by its target (only applies if "
-        "system is on a virtual target)")
+        "system is on a virtual target)", short="System target system description")
     target_system_state = D(APIReadOnly(models.CharField(max_length=64,
             null=True)),
         "the system state as reported by its target (only applies if system "
-        "is on a virtual target)")
+        "is on a virtual target)", short="System target system state")
     registration_date = D(modellib.DateTimeUtcField(null=True),
-        "the date the system was registered in inventory (UTC)")
+        "the date the system was registered in inventory (UTC)", short="System registration date")
     generated_uuid = D(models.CharField(max_length=64, null=True),
-        "a UUID that is randomly generated")
+        "a UUID that is randomly generated", short="System UUID")
     local_uuid = D(models.CharField(max_length=64, null=True),
-        "a UUID created from the system hardware profile")
+        "a UUID created from the system hardware profile", short="System local UUID")
     ssl_client_certificate = D(APIReadOnly(models.CharField(
         max_length=8092, null=True)),
         "an x509 certificate of an authorized client that can use the "
@@ -518,7 +518,7 @@ class System(modellib.XObjIdModel):
         "virtual target)")
     current_state = D(modellib.SerializedForeignKey(
             SystemState, null=True, related_name='systems'),
-        "the current state of the system")
+        "the current state of the system", short="System state")
     installed_software = D(models.ManyToManyField('Trove', null=True),
         "a collection of top-level items installed on the system")
     managing_zone = D(modellib.ForeignKey(zmodels.Zone, null=False,
@@ -526,7 +526,7 @@ class System(modellib.XObjIdModel):
         "a link to the management zone in which this system resides")
     jobs = models.ManyToManyField(jobmodels.Job, through="SystemJob")
     agent_port = D(models.IntegerField(null=True),
-          "the port used by the system's CIM broker")
+          "the port used by the system's CIM broker", short="System agent port")
     state_change_date = XObjHidden(APIReadOnly(modellib.DateTimeUtcField(
         auto_now_add=True, default=datetime.datetime.now(tz.tzutc()))))
     event_uuid = D(XObjHidden(modellib.SyntheticField()),
@@ -553,7 +553,7 @@ class System(modellib.XObjIdModel):
     configuration_descriptor = D(XObjHidden(modellib.SyntheticField()),
         "the descriptor of available fields to set system configuration "
         "parameters")
-    network_address = D(NetworkAddress, "Network address for this system")
+    network_address = D(NetworkAddress, "Network address for this system", short="System network address")
     actions = D(modellib.SyntheticField(jobmodels.Actions),
         "actions available on the system")
     source_image = D(APIReadOnly(models.ForeignKey('images.Image', null=True,

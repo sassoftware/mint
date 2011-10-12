@@ -81,22 +81,27 @@ class Project(modellib.XObjIdModel):
 
     project_id = models.AutoField(primary_key=True, db_column="projectid",
         blank=True)
-    hostname = models.CharField(unique=True, max_length=63)
-    name = models.CharField(unique=True, max_length=128)
-    namespace = models.CharField(max_length=16, null=True)
-    domain_name = models.CharField(max_length=128, db_column="domainname")
-    short_name = models.CharField(unique=True, max_length=63, 
-        db_column="shortname")
-    project_url = models.CharField(max_length=128, blank=True,
-        db_column= "projecturl")
-    repository_hostname = models.CharField(max_length=255, db_column="fqdn")
-    description = models.TextField(null=True, blank=True)
-    project_type = models.CharField(max_length=128, db_column="prodtype",
-        default="Appliance")
-    commit_email = models.CharField(max_length=128, null=True, blank=True, 
-        db_column="commitemail")
-    backup_external = models.BooleanField(default=False,
-        db_column="backupexternal")
+    hostname = D(models.CharField(unique=True, max_length=63), 
+        "Project hostname", short="Project hostname")
+    name = D(models.CharField(unique=True, max_length=128), 
+        "Project name", short="Project name")
+    namespace = D(models.CharField(max_length=16, null=True), 
+        "Project namespace", short="Project namespace")
+    domain_name = D(models.CharField(max_length=128, db_column="domainname"), 
+        "Project domain name", short="Project domain name")
+    short_name = D(models.CharField(unique=True, max_length=63, db_column="shortname"), 
+        "Project short name", short="Project short name")
+    project_url = D(models.CharField(max_length=128, blank=True, db_column= "projecturl"), 
+        "Project URL", short="Project URL")
+    repository_hostname = D(models.CharField(max_length=255, db_column="fqdn"), 
+        "Project repository hostname", short="Project repository hostname")
+    description = D(models.TextField(null=True, blank=True), 
+        "Project description", short="Project description")
+    project_type = D(models.CharField(max_length=128, db_column="prodtype", default="Appliance"), 
+        "Project type", short="Project type")
+    commit_email = D(models.CharField(max_length=128, null=True, blank=True, db_column="commitemail"), 
+        "Project commit email", short="Project commit email")
+    backup_external = models.BooleanField(default=False, db_column="backupexternal")
     created_date = models.DecimalField(max_digits=14, decimal_places=3,
         blank=True, db_column="timecreated")
     modified_date = models.DecimalField(max_digits=14, decimal_places=3,
