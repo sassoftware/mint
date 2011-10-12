@@ -160,9 +160,9 @@ class Project(modellib.XObjIdModel):
         return xobjModel
 
     def computeSyntheticFields(self, sender, **kwargs):
-        self._populateRepositoryAPI()
+        self._computeRepositoryAPI()
 
-    def _populateRepositoryAPI(self):
+    def _computeRepositoryAPI(self):
         self.repository_api = modellib.HrefField(
             href='/repos/%s/api' % self.short_name,
         )
@@ -311,7 +311,6 @@ class ProjectVersion(modellib.XObjIdModel):
 
     def computeSyntheticFields(self, sender, **kwargs):
         self._computePlatform()
-        self._computeRepositoryAPI()
         self._computePlatformVersion()
 
     def _computePlatform(self):
@@ -359,6 +358,8 @@ class ProjectVersion(modellib.XObjIdModel):
         return [ self.project.short_name, self.label ]
 
     def serialize(self, request=None):
+#        if request is not None:
+#            self._computeRepositoryAPI()
         oldUrlValues = (self.project.short_name, self.name)
         self.imageDefinitions = modellib.HrefField(
             href='/api/products/%s/versions/%s/imageDefinitions',
