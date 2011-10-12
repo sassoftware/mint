@@ -291,10 +291,17 @@ class ProjectVersion(modellib.XObjIdModel):
     created_date = models.DecimalField(max_digits=14, decimal_places=3,
         db_column="timecreated")
 
+    platform_id = modellib.XObjHidden(models.IntegerField(null=True, db_column='platform_id'))
+
     images = modellib.SyntheticField()
     definition = modellib.SyntheticField(modellib.HrefField())
-    platform = models.ForeignKey('platforms.Platform', null=True,
-        related_name='branches')
+# FIXME: This should be a FK rather than a ref to the old platform API once
+#        the new platform api is in use.
+#    platform = models.ForeignKey('platforms.Platform', null=True,
+#        related_name='branches')
+
+    platform = modellib.SyntheticField(modellib.HrefField())
+
     platform_version = modellib.SyntheticField(modellib.HrefField())
     imageDefinitions = modellib.SyntheticField(modellib.HrefField()) # only camelCase for compatibility reasons, CHANGE
     image_type_definitions = modellib.SyntheticField(modellib.HrefField())
@@ -303,10 +310,19 @@ class ProjectVersion(modellib.XObjIdModel):
         return self.name
 
     def computeSyntheticFields(self, sender, **kwargs):
+        self._computePlatform()
         self._computePlatformVersion()
 
+    def _computePlatform(self):
+        if self.platform_id is None:
+            return
+
+        self.platform = modellib.HrefField(
+            href='/api/platforms/%s' % self.platform_id,
+        )
+
     def _computePlatformVersion(self):
-        if self.platform is None:
+        if self.platform_id is None:
             return
 
         self.platform_version = modellib.HrefField(
