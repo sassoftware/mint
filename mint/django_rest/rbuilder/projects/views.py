@@ -191,6 +191,7 @@ class AllProjectBranchesStagesService(service.BaseService):
     get all pbs's
     """
 
+    # redirect, no rbac needed
     @access.authenticated
     @return_xml
     def rest_GET(self, request):
@@ -202,7 +203,6 @@ class AllProjectBranchesStagesService(service.BaseService):
 
 
 class AllProjectBranchesService(service.BaseService):
-
 
     # UI is not allowed to request All Project Branches
     # and should be fetching all PBS and all P, and then getting
@@ -284,6 +284,7 @@ class ProjectBranchService(service.BaseService):
 
 
 class ProjectService(service.BaseService):
+
     # manual RBAC, see get function
     @access.authenticated
     @return_xml
@@ -302,7 +303,8 @@ class ProjectService(service.BaseService):
         assert project_short_name is not None
         model = self.mgr.getProject(project_short_name)
         return model
-    
+
+    # FIXME -- rbac -- need MODMEMBER access on at least one Project query set / admin
     # anybody can create a new project for now
     @access.authenticated
     @requires('project')
@@ -325,8 +327,8 @@ class ProjectService(service.BaseService):
 
 class ProjectStageService(service.BaseService):
     
-    # FIXME: HACKED FOR DEMO PURPOSES ONLY, must rbac for release
-    @access.authenticated # was admin
+    # FIXME: RBAC MISSING
+    @access.authenticated 
     @return_xml
     def rest_GET(self, request, stage_id=None):
         return self.get(request, stage_id)
@@ -339,6 +341,7 @@ class ProjectStageService(service.BaseService):
 
 
 class ProjectBranchStageService(service.BaseService):
+
     @rbac(StageCallbacks.can_read_stage)
     @return_xml
     def rest_GET(self, request, project_short_name, project_branch_label, stage_name=None):
@@ -391,6 +394,7 @@ class ProjectBranchStageImagesService(service.BaseService):
         return self.mgr.createProjectBranchStageImage(image)
 
 class ProjectMemberService(service.BaseService):
+
     @rbac(ProjectCallbacks.can_read_project)
     @return_xml
     def rest_GET(self, request, project_short_name):
@@ -401,6 +405,8 @@ class ProjectMemberService(service.BaseService):
 
 
 class ProjectReleaseService(service.BaseService):
+ 
+    # FIXME -- RBAC MISSING
     @return_xml
     def rest_GET(self, request, project_short_name):
         return self.get(project_short_name)
@@ -411,6 +417,7 @@ class ProjectReleaseService(service.BaseService):
                 project__short_name=project_short_name)
         return Releases
 
+    # FIXME -- RBAC MISSING
     @requires('release')
     @return_xml
     def rest_POST(self, request, project_short_name, release):
@@ -418,6 +425,8 @@ class ProjectReleaseService(service.BaseService):
         return release
         
 class ProjectReleaseImageService(service.BaseService):
+
+    # FIXME -- RBAC MISSING
     @return_xml
     def rest_GET(self, request, project_short_name, release_id, image_id=None):
         return self.get(project_short_name, release_id, image_id)
@@ -430,6 +439,7 @@ class ProjectReleaseImageService(service.BaseService):
             Images.image = imagemodels.Image.objects.filter(release__release_id=release_id)
             return Images
     
+    # FIXME -- RBAC MISSING
     @requires('image')
     @return_xml
     def rest_POST(self, request, project_short_name, release_id, image):
