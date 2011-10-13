@@ -8,8 +8,7 @@ from xobj import xobj
 import sys
 
 from mint.django_rest.rbuilder.users import manager_model
-from django.db import connection
-
+from mint.django_rest.deco import D
 
 class Users(modellib.Collection):
     class Meta:
@@ -20,25 +19,27 @@ class Users(modellib.Collection):
     view_name = 'Users'
 
 class User(modellib.XObjIdModel):
+
     objects = manager_model.UserManager()
-    user_id = models.AutoField(primary_key=True, db_column='userid')
-    user_name = models.CharField(unique=True, max_length=128, db_column='username')
-    full_name = models.CharField(max_length=128, db_column='fullname')
+
+    user_id = D(models.AutoField(primary_key=True, db_column='userid'), "User id", short="User id")
+    user_name = D(models.CharField(unique=True, max_length=128, db_column='username'), "User name", short="User name")
+    full_name = D(models.CharField(max_length=128, db_column='fullname'), "User full name", short="User full name")
     # salt and password should be hidden, users shouldn't see crypted
     # passwords
     salt = modellib.XObjHidden(models.TextField(null=True))
     passwd = modellib.XObjHidden(models.CharField(max_length=254, null=True))
-    email = models.CharField(max_length=128)
-    display_email = models.TextField(db_column='displayemail')
-    created_date = modellib.DecimalField(max_digits=14, decimal_places=3, db_column='timecreated')
-    modified_date = modellib.DecimalField(max_digits=14, decimal_places=3, db_column='timeaccessed')
+    email = D(models.CharField(max_length=128), "User email", short="User email")
+    display_email = D(models.TextField(db_column='displayemail'), "User display email", short="User display email")
+    created_date = D(modellib.DecimalField(max_digits=14, decimal_places=3, db_column='timecreated'), "User created date", short="User created date")
+    modified_date = D(modellib.DecimalField(max_digits=14, decimal_places=3, db_column='timeaccessed'), "User active", short="User active")
     active = modellib.XObjHidden(modellib.APIReadOnly(models.SmallIntegerField()))
     blurb = models.TextField()
     _is_admin = modellib.XObjHidden(modellib.APIReadOnly(
         models.BooleanField(default=False, db_column='is_admin')))
 
-    is_admin = modellib.SyntheticField()
-    external_auth = modellib.SyntheticField(models.BooleanField())
+    is_admin = D(modellib.SyntheticField(), "User is admin?", short="User is admin?")
+    external_auth = D(modellib.SyntheticField(models.BooleanField()), "User external auth?", short="User external auth?")
 
     # Field used for the clear-text password when it is to be
     # set/changed
