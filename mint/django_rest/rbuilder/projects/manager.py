@@ -494,39 +494,9 @@ class ProjectManager(basemanager.BaseManager):
             return obj
         raise errors.ResourceNotFound()
 
-    # @exposed
-    # def getProjectBranchStage(self, project_short_name, project_branch_label, stage_name):
-    #     # stage = models.Stage.objects.select_related(depth=2).get(
-    #     #     project__short_name=project_short_name,
-    #     #     project_branch__label=project_branch_label,
-    #     #     name=stage_name)
-    #     stages = models.Stage.objects.filter(
-    #             project__short_name=project_short_name,
-    #             project_branch__label=project_branch_label,
-    #             name=stage_name)
-    #     # differentiate between the cases where we are asking for
-    #     # a specific stage, or a filtered collection of stages
-    #     if not stage_name:  # asking for collection
-    #         Stages = models.Stages()
-    #         Stages.project_branch_stage = []
-    #         # check access for each individual stage in the
-    #         # django query set
-    #         for stage in stages:
-    #             if self.checkProjectAccess(stage.project):
-    #                 Stages.project_branch_stage.append(stage)
-    #         return Stages
-    #     else:              #  asking for specific stage
-    #         if self.checkProjectAccess(stages[0].project):
-    #             return stages[0]
-    #         raise errors.ResourceNotFound()
             
     @exposed
     def getProjectBranchStage(self, project_short_name, project_branch_label, stage_name):
-        # stage = models.Stage.objects.select_related(depth=2).get(
-        #     project__short_name=project_short_name,
-        #     project_branch__label=project_branch_label,
-        #     name=stage_name)
-        # return stage
         stage = models.Stage.objects.get(
             project__short_name=project_short_name,
             project_branch__label=project_branch_label,
