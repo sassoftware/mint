@@ -83,6 +83,7 @@ class Target(modellib.XObjIdModel):
     name = models.TextField(null=False)
     description = models.TextField(null=False)
     unique_together = (target_type, name)
+    credentials_valid = modellib.SyntheticField()
 
     actions = D(modellib.SyntheticField(jobmodels.Actions),
         "actions available for this target")
@@ -94,6 +95,10 @@ class Target(modellib.XObjIdModel):
         actions.action.append(self._actionConfigureUserCredentials())
         actions.action.append(self._actionRefreshImages())
         self.jobs = modellib.HrefField("jobs")
+        if self.target_user_credentials:
+            self.credentials_valid = len(self.target_user_credentials.all()) > 0
+        else:
+            self.credentials_valid = False
 
     def _actionConfigureUserCredentials(self):
         actionName = "Configure user credentials for target"
@@ -153,7 +158,7 @@ class TargetCredentials(modellib.XObjModel):
     credentials = models.TextField(null=False, unique=True)
 
 class TargetUserCredentials(modellib.XObjModel):
-    target = models.ForeignKey(Target, db_column="targetid")
+    target = models.ForeignKey(Target, db_column="targetid", related_name='target_user_credentials')
     user = models.ForeignKey(usersmodels.User, db_column="userid",
         related_name='target_user_credentials')
     target_credentials = models.ForeignKey('TargetCredentials',
