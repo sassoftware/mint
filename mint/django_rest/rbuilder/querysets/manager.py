@@ -516,14 +516,6 @@ class QuerySetManager(basemanager.BaseManager):
         querySet = self._querySet(querySetId)
         lookupFn = self._searchMethod(querySet)
         result_data = None
-        # NO LONGER SUPPORTED
-        #if lookupFn is None:
-        #    # if the queryset does not support tagging, it does not support
-        #    # chosen results.  This is so far only true for QuerySets that are not
-        #    # user configurable.
-        #    model = modellib.type_map[querySet.resource_type]
-        #    result_data = EmptyQuerySet(model)
-        #else:
         result_data = self._getQuerySetChosenResultFast(querySet, lookupFn)
         resourceCollection = self._getResourceCollection(querySet, result_data, for_user=for_user)
         resourceCollection.view_name = "QuerySetChosenResult"
