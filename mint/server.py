@@ -921,6 +921,9 @@ class MintServer(object):
         self._filterProjectAccess(id)
         project = self.projects.get(id)
 
+        if not hasattr(self, 'clientVer'):
+            return project
+
         if self.clientVer < 3:
             del project['isAppliance']
 
@@ -1664,7 +1667,10 @@ If you would not like to be %s %s of this project, you may resign from this proj
     @typeCheck(int, str)
     @private
     def setPassword(self, userId, newPassword):
-        if self.auth.admin or list(self.authToken) == [self.cfg.authUser, self.cfg.authPass] or self.auth.userId == userId:
+        if (self.auth.admin or
+            list(self.authToken) == [self.cfg.authUser, self.cfg.authPass] or
+            self.auth.userId == userId):
+
             username = self.users.get(userId)['username']
 
             for projectId, level in self.getProjectIdsByMember(userId):
@@ -1672,7 +1678,8 @@ If you would not like to be %s %s of this project, you may resign from this proj
 
                 if not project.external:
                     authRepo = self._getProjectRepo(project)
-                    authRepo.changePassword(versions.Label(project.getLabel()), username, newPassword)
+                    authRepo.changePassword(project.getFQDN(), username,
+                        newPassword)
 
             self.users.changePassword(username, newPassword)
 
