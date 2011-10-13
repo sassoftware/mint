@@ -28,18 +28,29 @@ from mint.django_rest.rbuilder.images import views as imagesviews
 handler404 = 'mint.django_rest.handler.handler404'
 handler500 = 'mint.django_rest.handler.handler500'
 
-VERSION = '1'
-def URL(regex, *args, **kwargs):
-    if not regex.startswith('^'):
-        regex = "^api/v%s/%s" % (VERSION, regex)
-    return url(regex, *args, **kwargs)
+class URLRegistry(object):
+    _registry = {}
+    VERSION = '1'
+    @classmethod
+    def URL(cls, regex, *args, **kwargs):
+        if not regex.startswith('^'):
+            regex = "^api/v%s/%s" % (cls.VERSION, regex)
+        viewName = kwargs.get('name')
+        if viewName:
+            oldUrl = cls._registry.get(viewName)
+            if oldUrl:
+                raise Exception("Duplicate view name: %s (urls: %s, %s)" %
+                    (viewName, oldUrl, regex))
+            cls._registry[viewName] = regex
+        return url(regex, *args, **kwargs)
+URL = URLRegistry.URL
 
 urlpatterns = patterns('',
     # Versioning. Note that this URL does NOT get versioned
     URL(r'^api/?$',
         discoveryviews.VersionsService(),
         name='API'),
-    URL(r'^api/v%s/?$' % VERSION,
+    URL(r'^api/v%s/?$' % URLRegistry.VERSION,
         discoveryviews.ApiVersionService(),
         name='APIVersion'),
     # Reporting urls
@@ -86,10 +97,10 @@ urlpatterns = patterns('',
         name='ManagementNode'),
     URL(r'inventory/zones/(?P<zone_id>\d+)/management_nodes/?$',
         inventoryviews.InventoryZoneManagementNodeService(),
-        name='ManagementNodes'),
+        name='ZoneManagementNodes'),
     URL(r'inventory/zones/(?P<zone_id>\d+)/management_nodes/(?P<management_node_id>\d+)/?$',
         inventoryviews.InventoryZoneManagementNodeService(),
-        name='ManagementNode'),
+        name='ZoneManagementNode'),
         
     # Management Interfaces
     URL(r'inventory/management_interfaces/?$',
@@ -224,7 +235,7 @@ urlpatterns = patterns('',
     # Products
     URL(r'products/(\w|\-)*/?$',
         inventoryviews.ApplianceService(),
-        name='Projects'),
+        name='Products'),
 
     # URL(r'projects/(?P<short_name>(\w|\-)*)/project_branches/(?P<project_branch_name>(\w|\-|[0-9])*)/repos/?$',
     #        projectviews.ProjectBranchService(),
@@ -290,16 +301,16 @@ urlpatterns = patterns('',
         name='ProjectMembers'),
     URL(r'projects/(?P<project_short_name>(\w|\-)*)/releases/?$',
         projectviews.ProjectReleaseService(),
-        name='Releases'),
+        name='ProjectReleases'),
     URL(r'projects/(?P<project_short_name>(\w|\-)*)/releases/(?P<release_id>\d+)/?$',
         projectviews.ProjectReleaseService(),
-        name='Release'),
+        name='ProjectRelease'),
     URL(r'projects/(?P<project_short_name>(\w|\-)*)/releases/(?P<release_id>\d+)/images/?$',
         projectviews.ProjectReleaseImageService(),
-        name='Images'),
+        name='ProjectReleaseImages'),
     URL(r'projects/(?P<project_short_name>(\w|\-)*)/releases/(?P<release_id>\d+)/images/(?P<image_id>\d+)/?$',
         projectviews.ProjectReleaseImageService(),
-        name='Image'),
+        name='ProjectReleaseImage'),
     URL(r'projects/(?P<project_short_name>(\w|\-)*)/project_branches/?$',
         projectviews.ProjectAllBranchesService(),  # WRONG
         name='ProjectVersions'),
@@ -458,7 +469,7 @@ urlpatterns = patterns('',
     
     URL(r'notices/users/(?P<user_id>\d+)/?$',
         noticesviews.UserNoticesService(),
-        name='UserNotices'),
+        name='UserNotices2'),
 
     # Begin all things platforms
     URL(r'platforms/?$',
@@ -502,10 +513,10 @@ urlpatterns = patterns('',
         name='ContentSources'),
     URL(r'platforms/content_sources/(?P<source_type>[_a-zA-Z0-9]+)/?$',
         platformsviews.SourceService(),
-        name='ContentSources'),
+        name='ContentSource'),
     URL(r'platforms/content_sources/(?P<source_type>[_a-zA-Z0-9]+)/(?P<short_name>(\w|\-)*)/?$',
         platformsviews.SourceService(),
-        name='ContentSource'),
+        name='ContentSourceShortName'),
     # URL(r'platforms/content_sources/(?P<source_type>[_a-zA-Z0-9]+)/(?P<short_name>(\w|\-)*)/source_status/?$',
     #     platformsviews.SourceStatusService(),
     #     name='SourceStatus'),
@@ -529,7 +540,7 @@ urlpatterns = patterns('',
         name='ContentSourceType'),
     URL(r'platforms/content_source_types/(?P<source_type>[_a-zA-Z0-9]+)/(?P<content_source_type_id>\d+)/?$',
         platformsviews.SourceTypeService(),
-        name='ContentSourceType'),
+        name='ContentSourceTypeById'),
     URL(r'platforms/image_type_definition_descriptors/(?P<name>\w+)/?$',
         platformsviews.ImageTypeDefinitionDescriptorService(),
         name='ImageTypeDefinitionDescriptor'),
@@ -584,7 +595,7 @@ urlpatterns = patterns('',
         name='Target'),
     URL(r'targets/(?P<target_id>\d+)/target_types/?$',
         targetsviews.TargetTypeByTargetService(),
-        name='TargetTypes'),
+        name='TargetTypeByTarget'),
     URL(r'targets/(?P<target_id>\d+)/target_credentials/(?P<target_credentials_id>\d+)/?$',
         targetsviews.TargetCredentialsService(),
         name='TargetCredentials'),
@@ -622,7 +633,7 @@ urlpatterns = patterns('',
         name='TargetJobs'),
     URL(r'target_jobs/?$',
         targetsviews.AllTargetJobsService(),
-        name='TargetJobs'),
+        name='AllTargetJobs'),
     
     # Begin all things Images service
     URL(r'images/?$',
