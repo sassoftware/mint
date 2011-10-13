@@ -539,7 +539,6 @@ class QuerySetManager(basemanager.BaseManager):
         # because we only have one type of tagged_date
         querySet = self._querySet(querySetId)
         stale = self._areResourceTagsStale(querySet)
-        lookupFn = self._searchMethod(querySet)
         resultData = self._getQuerySetFilteredResult(querySet)
         resourceCollection = self._getResourceCollection(querySet, resultData, for_user=for_user)
         resourceCollection.view_name = "Systems"
