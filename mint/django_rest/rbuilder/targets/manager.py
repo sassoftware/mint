@@ -121,6 +121,7 @@ class TargetsManager(basemanager.BaseManager, CatalogServiceHelper):
             td = models.TargetData(target=target, name=k, value=v)
             td.save()
         self._addTargetQuerySet(target)
+        self.mgr.retagQuerySetsByType('target')
         return target
 
     def _addTargetQuerySet(self, target):
