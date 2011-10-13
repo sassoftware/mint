@@ -303,7 +303,6 @@ class ProjectService(service.BaseService):
             return HttpResponseRedirect(url)
 
     def get(self, project_short_name):
-        assert project_short_name is not None
         model = self.mgr.getProject(project_short_name)
         return model
 
