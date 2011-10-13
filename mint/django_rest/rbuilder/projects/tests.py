@@ -585,5 +585,3 @@ class ProjectsTestCase(RbacEngine):
             username='ExampleDeveloper', password='password', data=testsxml.image_by_release_post_xml)
         self.assertEquals(response.status_code, 200)
         self.assertXMLEquals(response.content, testsxml.image_by_release_post_result_xml)
-
-        
