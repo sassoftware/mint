@@ -9,6 +9,7 @@ target_GET = \
       <descriptor id="http://testserver/api/v1/targets/4/descriptor_configure_credentials"/>
       <enabled>true</enabled>
       <job_type id="http://testserver/api/v1/inventory/event_types/20"/>
+      <key>configure_target_credentials</key>
       <name>Configure user credentials for target</name>
     </action>
     <action>
@@ -16,6 +17,7 @@ target_GET = \
       <descriptor id="http://testserver/api/v1/targets/4/descriptor_refresh_images"/>
       <enabled>true</enabled>
       <job_type id="http://testserver/api/v1/inventory/event_types/15"/>
+      <key>refresh_target_images</key>
       <name>Refresh images</name>
     </action>
   </actions>
