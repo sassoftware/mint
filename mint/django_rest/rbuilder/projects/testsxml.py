@@ -607,7 +607,77 @@ image_by_release_get_xml = \
 </images>
 """.strip()
 
+image_by_release_post_xml = \
+"""
+<image>
+  <trailing_version>1-1-1</trailing_version>
+  <num_image_files>0</num_image_files>
+  <image_type id="http://testserver/api/v1/image_types/10">
+    <description>VHD for Microsoft (R) Hyper-V</description>
+    <name>Microsoft (R) Hyper-V</name>
+    <key>VIRTUAL_PC_IMAGE</key>
+    <image_type_id>10</image_type_id>
+  </image_type>
+  <trove_flavor>1#x86:i486:i586:i686|5#use:~!xen</trove_flavor>
+  <trove_name>troveName1</trove_name>
+  <status>-1</status>
+  <stage_name>image by release</stage_name>
+  <project_branch id="http://testserver/api/v1/projects/chater-foo/project_branches/chater-foo.eng.rpath.com@rpath:chater-foo-trunk" />
+  <description>image-1</description>
+  <name>image-2000</name>
+  <trove_version>/cydonia.eng.rpath.com@rpath:cydonia-1-devel/1317221453.365:1-1-1</trove_version>
+  <released>True</released>
+  <project id="http://testserver/api/v1/projects/chater-foo" />
+  <architecture>x86</architecture>
+  <image_count>1</image_count>
+  <job_uuid>1</job_uuid>
+</image>
+"""
 empty_projects="""
 <projects count="0" end_index="0" filter_by="" full_collection="http://testserver/api/v1/query_sets/11/all" id="http://testserver/api/v1/query_sets/11/all;start_index=0;limit=10" limit="10" next_page="" num_pages="1" order_by="" per_page="10" previous_page="" start_index="0"/>
 """
 
+image_by_release_post_result_xml = \
+"""
+<?xml version='1.0' encoding='UTF-8'?>
+<image id="http://testserver/api/v1/images/4">
+  <files/>
+  <trove_last_changed></trove_last_changed>
+  <updated_by></updated_by>
+  <trailing_version>1-1-1</trailing_version>
+  <num_image_files>0</num_image_files>
+  <image_type id="http://testserver/api/v1/image_types/10">
+    <description></description>
+    <name></name>
+    <key></key>
+    <image_type_id>10</image_type_id>
+  </image_type>
+  <build_log id="http://testserver/api/v1/images/4/build_log"/>
+  <trove_flavor>1#x86:i486:i586:i686|5#use:~!xen</trove_flavor>
+  <created_by id="http://testserver/api/v1/users/2002"/>
+  <status_message></status_message>
+  <trove_name>troveName1</trove_name>
+  <status>-1</status>
+  <stage_name>image by release</stage_name>
+  <project_branch id="http://testserver/api/v1/projects/chater-foo/project_branches/chater-foo.eng.rpath.com@rpath:chater-foo-trunk">
+    <name>trunk</name>
+  </project_branch>
+  <description>image-1</description>
+  <image_id>4</image_id>
+  <time_created>2011-10-13 13:48:41.901060+00:00</time_created>
+  <time_updated>2011-10-13 13:48:41.901060+00:00</time_updated>
+  <name>image-2000</name>
+  <trove_version>/cydonia.eng.rpath.com@rpath:cydonia-1-devel/1317221453.365:1-1-1</trove_version>
+  <released>False</released>
+  <project id="http://testserver/api/v1/projects/chater-foo">
+    <domain_name>eng.rpath.com</domain_name>
+    <short_name>chater-foo</short_name>
+    <name>chater-foo</name>
+  </project>
+  <output_trove></output_trove>
+  <architecture>x86</architecture>
+  <release></release>
+  <image_count>0</image_count>
+  <job_uuid>1</job_uuid>
+</image>
+""".strip()

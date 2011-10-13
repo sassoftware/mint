@@ -67,6 +67,36 @@ class ProjectsTestCase(RbacEngine):
         self.mgr.retagQuerySetsByType('project')
         self.mgr.retagQuerySetsByType('project_branch_stage')
 
+    def _testRbacHttpMethodPerms(self, url, methodType='GET', data=None):
+        """
+        Check the following:
+        Unauthenticated user
+        Authenticated user w/o permissions
+        Authenticated user with permissions
+        Admin user
+        
+        TODO: Come back and update code to handle POST's and PUT's.  Since we want to do
+        more XML testing, we need an intuitive way to handle returning the response's content
+        """
+        usernames = {'NonAuthUser':401, 'testuser':403, 'ExampleDeveloper':200, 'admin':200}
+        passwd = 'password'
+        methodType = methodType.lower()
+        
+        if methodType == 'get':
+            method = lambda username: self._get(url, username=username, password=passwd)
+        # elif methodType == 'post':
+        #     method = lambda username: self._post(url, username=username, password=passwd, data=data)
+        # elif methodType == 'put':
+        #     method = lambda username: self._put(url, username=username, password=passwd, data=data)
+        else:
+            raise Exception('Invalid HTTP Method')
+        
+        statusCodeResults = {}
+        for uname, status in usernames.items():
+            response = method(uname)
+            statusCodeResults[uname] = (status, response.status_code)
+            
+        return statusCodeResults
  
     def _addProject(self, short_name, namespace='ns', user=None):
         project = models.Project()
@@ -526,7 +556,7 @@ class ProjectsTestCase(RbacEngine):
         self.assertXMLEquals(response.content, testsxml.releases_by_project_get_xml)
         
     def testAddRelease(self):
-        self._initProject('foo')
+        self._addProject('foo')
         response = self._post('projects/foo/releases',
             username='admin', password='password', data=testsxml.release_by_project_post_xml)
         self.assertEquals(response.status_code, 200)
@@ -534,6 +564,26 @@ class ProjectsTestCase(RbacEngine):
     def testGetImagesByRelease(self):
         self._initProject(adorn=True)
         url = 'projects/chater-foo/releases/1/images/'
-        response = self._get(url, username='admin', password='password')
-        self.assertEquals(response.status_code, 200)
+        status_codes = self._testRbacHttpMethodPerms(url)
+        for expectedCode, responseCode in status_codes.values():
+            self.assertEquals(expectedCode, responseCode)          
+        response = self._get(url, username='ExampleDeveloper', password='password')
         self.assertXMLEquals(response.content, testsxml.image_by_release_get_xml)
+        
+    def testAddImageByRelease(self):
+        self._initProject(adorn=True)
+        url = 'projects/chater-foo/releases/1/images/'
+        # try unauthenticated
+        response = self._post(url,data=testsxml.image_by_release_post_xml)
+        self.assertEquals(response.status_code, 401)
+        # try authenticated w/o perms
+        response = self._post(url,
+            username='testuser', password='password', data=testsxml.image_by_release_post_xml)
+        self.assertEquals(response.status_code, 403)
+        # try authenticated user with write perms
+        response = self._post(url,
+            username='ExampleDeveloper', password='password', data=testsxml.image_by_release_post_xml)
+        self.assertEquals(response.status_code, 200)
+        self.assertXMLEquals(response.content, testsxml.image_by_release_post_result_xml)
+
+        
