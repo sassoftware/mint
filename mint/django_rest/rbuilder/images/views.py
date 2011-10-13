@@ -36,7 +36,7 @@ class BaseImageService(service.BaseService):
 
 class ImagesService(BaseImageService):
 
-    @access.admin
+    @access.authenticated
     @return_xml
     def rest_GET(self, request, image_id=None):
         return self.get(image_id)
@@ -67,7 +67,7 @@ class ImagesService(BaseImageService):
         
 class ImageBuildFileService(service.BaseService):
     
-    @access.admin
+    @access.anonymous
     @return_xml
     def rest_GET(self, request, image_id, file_id=None):
         return self.get(image_id, file_id)
