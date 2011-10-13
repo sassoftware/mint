@@ -555,11 +555,9 @@ class ProjectManager(basemanager.BaseManager):
 
     @exposed
     def getAllProjectBranchesForProject(self, project_short_name):
-        ProjectBranches = models.ProjectVersions()
         allProjectBranches = models.ProjectVersion.objects.filter(
-            project__short_name=project_short_name).order_by('project_id')
-        ProjectBranches.project_branches = allProjectBranches
-        return ProjectBranches
+            project__short_name=project_short_name)
+        return self._branchFilter(allProjectBranches)
 
     @exposed
     def updateProjectBranchStage(self, project_short_name, project_branch_label, stage_name, stage):
