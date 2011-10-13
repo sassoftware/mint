@@ -747,6 +747,7 @@ class JobCreationTest(BaseTargetsTest, RepeaterMixIn):
             'instanceId': 'efe28c20-bbda-434c-87ae-9f4006114a1f',
             'metadata.admin': u'Admin',
             'metadata.owner': u'Owner',
+            'image_id': 'https://rpath.com/api/v1/images/1',
             'imageUploadUrl': 'https://rpath.com/uploadBuild/1',
             'imageFilesCommitUrl': u'https://rpath.com/api/products/chater-foo/images/1/files',
         }

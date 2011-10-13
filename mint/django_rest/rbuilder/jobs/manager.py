@@ -548,6 +548,8 @@ class JobHandlerRegistry(HandlerRegistry):
                 host, image.image_id)
             params['imageFilesCommitUrl'] = 'https://%s/api/products/%s/images/%s/files' % (
                 host, stage.project.short_name, image.image_id)
+            params['image_id'] = 'https://%s/api/v1/images/%s' % (
+                host, image.image_id)
             return (self.system.target_system_id, params), {}
 
         def getRelatedThroughModel(self, descriptor):
