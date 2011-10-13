@@ -650,7 +650,7 @@ urlpatterns = patterns('',
         name='Releases'),
     URL(r'releases/(?P<release_id>\d+)/?$',
         imagesviews.ReleaseService(),
-        name='Release'),
+        name='TopLevelRelease'),
     
     # Begin image types
     URL(r'image_types/?$',

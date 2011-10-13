@@ -98,15 +98,24 @@ class ProjectsTestCase(RbacEngine):
             
         return statusCodeResults
  
-    def _addProject(self, short_name, namespace='ns', user=None):
+    def _addProject(self, short_name, namespace='ns'):
         project = models.Project()
         project.name = project.hostname = project.short_name = short_name
         project.namespace = namespace
         project.domain_name = 'test.local2'
-        if user:
-            project.creator = user
         project = self.mgr.projectManager.addProject(project)
         return project
+    
+    def _addProjectWithUser(self, short_name, username, namespace='ns'):
+        user = usersmodels.User.objects.get(user_name=username)
+        project = models.Project()
+        project.name = project.hostname = project.short_name = short_name
+        project.namespace = namespace
+        project.domain_name = 'test.local2'
+        project.creator = user
+        project = self.mgr.projectManager.addProject(project)
+        return project
+        
         
     def _initProject(self, name='chater-foo', adorn=False):
         proj = models.Project.objects.get(name=name)
@@ -168,7 +177,6 @@ class ProjectsTestCase(RbacEngine):
             )
             # FIXME: missing XML tests!, need to add
             self.assertEquals(response.status_code, 200)
-        
         # other users cannot get this item
         response = self._get('projects/chater-foo/',
             username='ExampleSysadmin', password='password')
@@ -556,10 +564,14 @@ class ProjectsTestCase(RbacEngine):
         self.assertXMLEquals(response.content, testsxml.releases_by_project_get_xml)
         
     def testAddRelease(self):
-        self._addProject('foo')
+        self._addProjectWithUser('foo', 'ExampleDeveloper')
         response = self._post('projects/foo/releases',
-            username='admin', password='password', data=testsxml.release_by_project_post_xml)
+            username='ExampleDeveloper', password='password', data=testsxml.release_by_project_post_xml)
         self.assertEquals(response.status_code, 200)
+        release = xobj.parse(response.content).release
+        self.assertEquals(release.description, 'description2002')
+        self.assertEquals(release.project.id, 'http://testserver/api/v1/projects/foo')
+        self.assertEquals(release.id, "http://testserver/api/v1/releases/1")
     
     def testGetImagesByRelease(self):
         self._initProject(adorn=True)
