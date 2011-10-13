@@ -354,14 +354,6 @@ class ProjectBranchStageService(service.BaseService):
         return self.mgr.getProjectBranchStages(project_short_name,
             project_branch_label)
 
-    @rbac(StageCallbacks.can_write_stage)
-    @requires('stage')
-    @return_xml
-    def rest_PUT(self, request, project_short_name, project_branch_label, stage_name, stage):
-        return self.mgr.updateProjectBranchStage(
-            project_short_name, project_branch_label, stage_name, stage)
-
-
 class ProjectImageService(service.BaseService):
 
     @rbac(ProjectCallbacks.can_read_project)
