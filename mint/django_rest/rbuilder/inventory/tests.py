@@ -4680,3 +4680,9 @@ class DescriptorTestCase(XMLTestCase, test_utils.RepeaterMixIn):
         response = self._get("inventory/image_import_metadata_descriptor",
             username='testuser', password='password')
         self.failUnlessEqual(response.status_code, 200)
+        obj = xobj.parse(response.content)
+        fields = obj.descriptor.dataFields.field
+        # These are coming from test_utils, not from the real descriptor
+        self.failUnlessEqual(
+            [x.name for x in fields],
+            ['metadata.owner', 'metadata.admin'])

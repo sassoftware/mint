@@ -256,13 +256,10 @@ class SystemManager(basemanager.BaseManager):
             models.System.objects.select_related().filter(system_type__infrastructure=False)
         return systems
 
-    class MetadataDescriptor(descriptor.ConfigurationDescriptor):
-        RootNode = "metadataDescriptor"
-
     @exposed
     def getImageImportMetadataDescriptor(self):
         importDescriptorFile = open(self.cfg.metadataDescriptorPath)
-        descr = self.MetadataDescriptor(fromStream=importDescriptorFile)
+        descr = descriptor.ConfigurationDescriptor(fromStream=importDescriptorFile)
         return descr
 
     @exposed
