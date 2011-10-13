@@ -8,7 +8,6 @@ from xobj import xobj
 import sys
 
 from mint.django_rest.rbuilder.users import manager_model
-from django.db import connection
 from mint.django_rest.deco import D
 
 class Users(modellib.Collection):
