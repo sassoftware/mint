@@ -606,3 +606,8 @@ image_by_release_get_xml = \
   </image>
 </images>
 """.strip()
+
+empty_projects="""
+<projects count="0" end_index="0" filter_by="" full_collection="http://testserver/api/v1/query_sets/11/all" id="http://testserver/api/v1/query_sets/11/all;start_index=0;limit=10" limit="10" next_page="" num_pages="1" order_by="" per_page="10" previous_page="" start_index="0"/>
+"""
+

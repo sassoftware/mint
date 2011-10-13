@@ -733,11 +733,21 @@ class RbacEngineTests(RbacEngine):
             password='password'
         )
         self.assertEquals(response.status_code, 403)
+        
+        # is allowed to get in because ANYBODY can access to try the set
+        # but because no permissions are to be matched there should be 
+        # size zero results
+
         response = self._get("query_sets/%s/all" % self.sys_queryset.pk,
             username=self.intern_user.user_name,
             password='password'
         )
-        self.assertEquals(response.status_code, 403)
+         
+        self.assertEquals(response.status_code, 200)
+        self.assertXMLEquals(response.content, testsxml.empty_systems_set)
+
+        # TODO: add a more complex test showing size < full but > 0 
+        # results.
 
         # intern user can't read info about sysadmin user
         response = self._get("users/%s" % self.sysadmin_user.pk,
@@ -755,6 +765,10 @@ class RbacEngineTests(RbacEngine):
 
         # intern user cannot fetch the whole user list
         # (which is not queryset based, needs admin)
+
+        # FIXME -- doesn't this redirect to the All Users QS?
+        # it should.
+
         response = self._get("users/",
             username=self.intern_user.user_name,
             password='password',

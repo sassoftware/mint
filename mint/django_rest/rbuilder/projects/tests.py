@@ -123,7 +123,8 @@ class ProjectsTestCase(RbacEngine):
         # as testuser, should fail
         response = self._get('projects/',
             username="testuser", password="password")
-        self.assertEquals(response.status_code, 403)
+        self.assertEquals(response.status_code, 200)
+        self.assertXMLEquals(response.content, testsxml.empty_projects)
         
         response = self._get('projects/')
         self.assertEquals(response.status_code, 401)
@@ -383,10 +384,15 @@ class ProjectsTestCase(RbacEngine):
                 'foo@ns:trunk'
             ])
         self.maxDiff = oldMaxDiff
-        
+       
+        # developer can still fetch all stages collection since it's a queryset,
+        # though it should return only what he can see.  FIXME: determine
+        # if what we get is actually correct before adding XML test.
         response = self._get('project_branch_stages/',
             username='ExampleDeveloper', password="password")
-        self.assertEquals(response.status_code, 403)
+        self.assertEquals(response.status_code, 200)
+        # self.assertXMLEquals(response.content, testsxml.developer_stages)
+
         
     def testGetProjectAllBranchStages(self):
         self._initProject()

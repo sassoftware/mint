@@ -23,6 +23,7 @@ from mint.django_rest.rbuilder.projects import models as projectmodels
 from mint.django_rest.rbuilder.rbac import models as rbacmodels
 from mint.django_rest.rbuilder.jobs import models as jobmodels
 from mint.django_rest.rbuilder.targets import models as targetmodels
+from mint.django_rest.rbuilder.rbac.manager.rbacmanager import READMEMBERS, MODMEMBERS
 
 # retag if a new query is made and the results are greater
 # than this many seconds old
@@ -322,19 +323,34 @@ class QuerySetManager(basemanager.BaseManager):
 
         return retval
 
-    def _getResourceCollection(self, querySet, resources):
+    def _getResourceCollection(self, querySet, resources, for_user=None):
         '''
         Given a queryset and a list of matched resources, 
         construct and return a collection object.'''
         resourceCollection = modellib.type_map[
             self.resourceCollectionMap[querySet.resource_type]]
         resourceCollection = resourceCollection()
+
+        if for_user is None:
+            # this happens when relabelling or when the user already has READMEMBER on the set.
+            pass
+        # FIXME: accomodate for some sqlite/modellib stupidity, let's fix in modellib
+        elif for_user.is_admin and str(for_user.is_admin).lower() != 'false': 
+            # admin users can see everything in the set
+            pass
+        else:
+            # return all things that would be matched that I already have permissions on
+            resources = resources.filter(
+                tags__query_set__grants__role__rbacuserrole__user = for_user,
+                tags__query_set__grants__permission__name__in = [ READMEMBERS, MODMEMBERS ] 
+            )
+        
         setattr(resourceCollection, querySet.resource_type, resources)
         resourceCollection._parents = [querySet]
         return resourceCollection
 
     @exposed
-    def getQuerySetAllResult(self, querySetId, use_tags=True):
+    def getQuerySetAllResult(self, querySetId, use_tags=True, for_user=None):
         '''
         The results for a queryset are typically the 'all' result.  It is
         also possible to be more fine grained and only see matches
@@ -358,7 +374,7 @@ class QuerySetManager(basemanager.BaseManager):
         else:
             qsAllResult = self._getQuerySetAllResultFast(querySet, lookupFn)
 
-        resourceCollection = self._getResourceCollection(querySet, qsAllResult)
+        resourceCollection = self._getResourceCollection(querySet, qsAllResult, for_user=for_user)
         resourceCollection.view_name = "QuerySetAllResult"
         return resourceCollection
 
@@ -492,7 +508,7 @@ class QuerySetManager(basemanager.BaseManager):
         return tags
 
     @exposed
-    def getQuerySetChosenResult(self, querySetId): #, use_tags=False):
+    def getQuerySetChosenResult(self, querySetId, for_user=None):
         '''
         For a given query set, return only the chosen matches, aka resources
         explicitly placed in the queryset
@@ -509,12 +525,12 @@ class QuerySetManager(basemanager.BaseManager):
         #    result_data = EmptyQuerySet(model)
         #else:
         result_data = self._getQuerySetChosenResultFast(querySet, lookupFn)
-        resourceCollection = self._getResourceCollection(querySet, result_data)
+        resourceCollection = self._getResourceCollection(querySet, result_data, for_user=for_user)
         resourceCollection.view_name = "QuerySetChosenResult"
         return resourceCollection
 
     @exposed
-    def getQuerySetFilteredResult(self, querySetId, use_tags=True, nocache=False):
+    def getQuerySetFilteredResult(self, querySetId, use_tags=True, nocache=False, for_user=None):
         '''
         For a given queryset, return only the portion of it's matches
         that correspond to "smart match" style comparison checks.
@@ -525,7 +541,7 @@ class QuerySetManager(basemanager.BaseManager):
         stale = self._areResourceTagsStale(querySet)
         lookupFn = self._searchMethod(querySet)
         resultData = self._getQuerySetFilteredResult(querySet)
-        resourceCollection = self._getResourceCollection(querySet, resultData)
+        resourceCollection = self._getResourceCollection(querySet, resultData, for_user=for_user)
         resourceCollection.view_name = "Systems"
         resourceCollection._parents = []
         resourceCollection.filter_by = querySet.getFilterBy()
@@ -565,7 +581,7 @@ class QuerySetManager(basemanager.BaseManager):
             tagMethod(results, querySet, self._transitiveMethod())
 
     @exposed
-    def getQuerySetChildResult(self, querySetId, use_tags=True):
+    def getQuerySetChildResult(self, querySetId, use_tags=True, for_user=None):
         ''' 
         Return the portion of queryset match data that comes from child
         querysets, regardless of whether those child matches are themselves
@@ -575,7 +591,7 @@ class QuerySetManager(basemanager.BaseManager):
         stale = self._areResourceTagsStale(querySet)
         lookupFn = self._searchMethod(querySet)
         result_data = self._getQuerySetChildResult(querySet)
-        resourceCollection = self._getResourceCollection(querySet, result_data)
+        resourceCollection = self._getResourceCollection(querySet, result_data, for_user=for_user)
         resourceCollection.view_name = "QuerySetChildResult"
         return resourceCollection
 
