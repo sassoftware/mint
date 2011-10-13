@@ -157,6 +157,7 @@ class StageCallbacks(object):
             elif stage_name:
                 if view.mgr.userHasRbacPermission(user, obj, READMEMBERS):
                     return True
+            return False
         else:
             # if user has permissions on any stage then allow to read all stages
             obj = view.mgr.getProjectBranchStages(project_short_name, project_branch_label)
