@@ -24,6 +24,13 @@ XObjHidden = modellib.XObjHidden
 
 OPERATOR_CHOICES = [(k, v) for k, v in modellib.filterTermMap.items()]
 
+class Universe(modellib.XObjIdModel):
+    '''Reference to the absolute all of a Given Type parent of any queryset'''
+    class Meta:
+        abstract = True
+    _xobj = xobj.XObjMetadata(tag = "universe")
+    view_name = "QuerySetUniverseResult"
+
 class AllMembers(modellib.XObjIdModel):
     '''Query set results matched regardless of match type (below)'''
     class Meta:
@@ -150,6 +157,9 @@ class QuerySet(modellib.XObjIdModel):
         childM = ChildMembers()
         childM._parents = [self]
         xobjModel.child_members = childM.serialize(request)
+        universe = Universe()
+        universe._parents = [self]
+        xobjModel.universe = universe.serialize(request)
 
         fd = FilterDescriptor(id=self.query_set_id)
         xobjModel.filter_descriptor = fd.serialize(request)

@@ -102,6 +102,12 @@ class QuerySetTestCase(QueryTestCase):
         self.assertEquals(response.status_code, 200)
         self.assertXMLEquals(response.content, testsxml.queryset_with_actions)
 
+        # every queryset should have a "universe" URL that points to the all
+        # collection for the given queryset type
+        response = self._get("query_sets/%s/universe" % qsid,
+            username="admin", password="password")
+        self.assertEquals(response.status_code, 302)
+
         # the tagged date should be set because we ran the queryset 
         # at least once.
         # post the invalidation job to the queryset and verify the tagged

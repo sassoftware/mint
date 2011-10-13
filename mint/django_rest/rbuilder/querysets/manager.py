@@ -57,6 +57,15 @@ class QuerySetManager(basemanager.BaseManager):
         'role'                 : 'roles',
         'target'               : 'targets',
     }
+    universeMap = {
+        'system'               : 'All Systems',
+        'user'                 : 'All Users',
+        'project'              : 'All Projects',
+        'project_branch_stage' : 'All Project Stages',
+        'grant'                : 'All Grants',
+        'role'                 : 'All Roles',
+        'target'               : 'All Targets',
+    }
     # tag finder method per queryset resource type
     tagLookupMap = {
         'system'               : '_lookupTaggedSystems',
@@ -121,6 +130,17 @@ class QuerySetManager(basemanager.BaseManager):
     def getQuerySet(self, querySetId):
         '''look up a query set object'''
         return models.QuerySet.objects.get(pk=querySetId)
+
+    @exposed
+    def getQuerySetUniverseSet(self, query_set_id):
+        ''' 
+        For a given queryset, eg. Systems XYZ, return
+        the universe queryset, ex: All Systems
+        '''
+        qs = self.getQuerySet(query_set_id)
+        return models.QuerySet.objects.get(
+            name=self.universeMap.get(qs.resource_type)
+        )
 
     @exposed
     def getQuerySets(self):

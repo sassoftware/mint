@@ -6,6 +6,8 @@
 #
 
 from django import http
+from django.core.urlresolvers import reverse
+from django.http import HttpResponseRedirect
 
 from mint.django_rest.deco import return_xml, requires, access, xObjRequires
 from mint.django_rest.rbuilder import service
@@ -87,6 +89,16 @@ class QuerySetAllResultService(BaseQuerySetService):
             return self.mgr.getQuerySetAllResult(query_set_id)
         else:
             return self.mgr.getQuerySetAllResult(query_set_id, for_user=request._authUser)
+
+class QuerySetUniverseResultService(BaseQuerySetService):
+    '''the parent queryset of all objects of a given type'''
+
+    @access.authenticated
+    @return_xml
+    def rest_GET(self, request, query_set_id):
+        self.mgr.getQuerySetUniverseSet(query_set_id)
+        url = reverse('QuerySetAllResult', args=[query_set_id])
+        return HttpResponseRedirect(url)
 
 class QuerySetChosenResultService(BaseQuerySetService):
 

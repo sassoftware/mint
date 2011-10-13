@@ -96,7 +96,8 @@ queryset_with_actions = """
       <descriptor id="http://testserver/api/v1/query_sets/5/descriptors/14"/>
       <enabled>true</enabled>
       <job_type id="http://testserver/api/v1/inventory/event_types/14"/>
-      <name>refresh_queryset</name>
+      <key>refresh_queryset</key>
+      <name>refresh queryset</name>
     </action>
   </actions>
   <all_members id="http://testserver/api/v1/query_sets/5/all"/>
@@ -122,6 +123,7 @@ queryset_with_actions = """
   <query_set_id>5</query_set_id>
   <resource_type>system</resource_type>
   <tagged_date>2011-08-29T21:44:24.358194+00:00</tagged_date>
+  <universe id="http://testserver/api/v1/query_sets/5/universe"/>
 </query_set>
 """
 
