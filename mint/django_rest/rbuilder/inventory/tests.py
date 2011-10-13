@@ -4675,3 +4675,8 @@ class DescriptorTestCase(XMLTestCase, test_utils.RepeaterMixIn):
     def setUp(self):
         XMLTestCase.setUp(self)
         self.setUpRepeaterClient()
+
+    def testGetImageMetadataImportDescriptor(self):
+        response = self._get("inventory/image_import_metadata_descriptor",
+            username='testuser', password='password')
+        self.failUnlessEqual(response.status_code, 200)

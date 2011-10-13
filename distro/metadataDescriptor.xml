@@ -1,5 +1,5 @@
 <?xml version="1.0"?>
-<metadataDescriptor xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns="http://www.rpath.com/permanent/descriptor-1.0.xsd" xsi:schemaLocation="http://www.rpath.com/permanent/descriptor-1.0.xsd descriptor-1.0.xsd">
+<descriptor xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns="http://www.rpath.com/permanent/descriptor-1.0.xsd" xsi:schemaLocation="http://www.rpath.com/permanent/descriptor-1.0.xsd descriptor-1.0.xsd">
   <metadata>
     <displayName>Metadata Descriptor</displayName>
     <rootElement>descriptor_data</rootElement>
@@ -15,6 +15,7 @@
       <type>str</type>
       <default/>
       <required>true</required>
+      <readonly>true</readonly>
     </field>
     <field>
       <name>metadata.admin</name>
@@ -25,6 +26,7 @@
       <type>str</type>
       <default/>
       <required>true</required>
+      <readonly>true</readonly>
     </field>
     <field>
       <name>metadata.location</name>
@@ -142,6 +144,7 @@
       </descriptions>
       <help lang="en_US" href="@Help_import_image_metadata_credentials_password@"/>
       <type>str</type>
+      <password>true</password>
     </field>
     <field> 
       <name>metadata.credentials_sshkey</name>
@@ -160,4 +163,4 @@
       <allowFileContent>true</allowFileContent> 
     </field>
   </dataFields>
-</metadataDescriptor>
+</descriptor>
