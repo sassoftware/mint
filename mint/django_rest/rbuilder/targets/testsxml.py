@@ -21,6 +21,7 @@ target_GET = \
       <name>Refresh images</name>
     </action>
   </actions>
+  <credentials_valid>False</credentials_valid>
   <description>Target Description openstack</description>
   <jobs id="http://testserver/api/v1/targets/4/jobs"/>
   <name>Target Name openstack</name>
