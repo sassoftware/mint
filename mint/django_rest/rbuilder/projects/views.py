@@ -71,6 +71,19 @@ class ProjectCallbacks(object):
         """
         return ProjectCallbacks._checkPermissions(view, request, project_short_name, MODMEMBERS)
 
+    @staticmethod
+    def can_create_project(view, request, *args, **kwargs):
+        if request._is_admin:
+            return True
+        
+        import mint.django_rest.rbuilder.rbac.models as rbacmodels
+        perms = rbacmodels.RbacPermission.objects.filter(
+            role__rbacuserrole__user = request._authUser,
+            queryset__resource_type = 'project',
+            permission__name = MODMEMBERS
+        )
+        return len(perms) > 0
+
 class BranchCallbacks(object):
     """
     RBAC callbacks for Project Branches
@@ -308,7 +321,7 @@ class ProjectService(service.BaseService):
 
     # FIXME -- rbac -- need MODMEMBER access on at least one Project query set / admin
     # anybody can create a new project for now
-    @access.authenticated
+    @rbac(ProjectCallbacks.can_create_project)
     @requires('project')
     @return_xml
     def rest_POST(self, request, project):
