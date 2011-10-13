@@ -201,7 +201,6 @@ class StageCallbacks(object):
             return True
         return False
 
-
 class AllProjectBranchesStagesService(service.BaseService):
     """
     get all pbs's
@@ -340,19 +339,20 @@ class ProjectService(service.BaseService):
         response = HttpResponse(status=204)
         return response
 
-class ProjectStageService(service.BaseService):
-    
-    # FIXME: RBAC MISSING
-    @access.authenticated 
-    @return_xml
-    def rest_GET(self, request, stage_id=None):
-        return self.get(request, stage_id)
-    
-    def get(self, request, stage_id=None):
-        if stage_id:
-            return StageProxyService.getStageAndSetGroup(request, stage_id)
-        else:
-            return StageProxyService.getStagesAndSetGroup(request)
+# Deprecated -- candidate for future removal
+# class ProjectStageService(service.BaseService):
+#     
+#     # FIXME: RBAC MISSING
+#     @access.authenticated
+#     @return_xml
+#     def rest_GET(self, request, stage_id=None):
+#         return self.get(request, stage_id)
+#     
+#     def get(self, request, stage_id=None):
+#         if stage_id:
+#             return StageProxyService.getStageAndSetGroup(request, stage_id)
+#         else:
+#             return StageProxyService.getStagesAndSetGroup(request)
 
 
 class ProjectBranchStageService(service.BaseService):
@@ -421,7 +421,7 @@ class ProjectMemberService(service.BaseService):
 
 class ProjectReleaseService(service.BaseService):
  
-    # FIXME -- RBAC MISSING
+    @rbac(ProjectCallbacks.can_read_project)
     @return_xml
     def rest_GET(self, request, project_short_name):
         return self.get(project_short_name)
@@ -432,7 +432,7 @@ class ProjectReleaseService(service.BaseService):
                 project__short_name=project_short_name)
         return Releases
 
-    # FIXME -- RBAC MISSING
+    @rbac(ProjectCallbacks.can_write_project)
     @requires('release')
     @return_xml
     def rest_POST(self, request, project_short_name, release):
@@ -441,7 +441,7 @@ class ProjectReleaseService(service.BaseService):
         
 class ProjectReleaseImageService(service.BaseService):
 
-    # FIXME -- RBAC MISSING
+    @rbac(ProjectCallbacks.can_read_project)
     @return_xml
     def rest_GET(self, request, project_short_name, release_id, image_id=None):
         return self.get(project_short_name, release_id, image_id)
@@ -454,7 +454,7 @@ class ProjectReleaseImageService(service.BaseService):
             Images.image = imagemodels.Image.objects.filter(release__release_id=release_id)
             return Images
     
-    # FIXME -- RBAC MISSING
+    @rbac(ProjectCallbacks.can_write_project)
     @requires('image')
     @return_xml
     def rest_POST(self, request, project_short_name, release_id, image):
