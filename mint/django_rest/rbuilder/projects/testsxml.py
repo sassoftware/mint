@@ -555,7 +555,6 @@ release_by_project_post_xml = \
   <description>description2002</description>
   <project id="http://testserver/api/v1/projects/foo"/>
   <should_mirror>0</should_mirror>
-  <created_by id="http://testserver/api/v1/users/2"/>
   <version>releaseVersion2002</version>
 </release>
 """

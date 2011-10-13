@@ -469,6 +469,8 @@ class Release(modellib.XObjIdModel):
     class Meta:
         db_table = u'publishedreleases'
 
+    view_name = 'TopLevelRelease'
+    
     _xobj = xobj.XObjMetadata(
         tag='release')
     _xobj_explict_accessors = set(["images"])
@@ -476,7 +478,7 @@ class Release(modellib.XObjIdModel):
     release_id = models.AutoField(primary_key=True,
         db_column='pubreleaseid')
     project = modellib.DeferredForeignKey('projects.Project', db_column='projectid', 
-        related_name='releases')
+        related_name='releases', view_name='Releases')
     name = models.CharField(max_length=255, blank=True, default='')
     version = models.CharField(max_length=32, blank=True, default='')
     description = models.TextField()
