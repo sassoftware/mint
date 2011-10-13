@@ -119,6 +119,8 @@ class BranchCallbacks(object):
             project_branch = branch
         )
         project = branch.project
+
+        # FIXME: WRITES should not flow as noted below, only READ
         for stage in stages_for_project:
             if view.mgr.userHasRbacPermission(request._authUser, stage, action):
                 return True
