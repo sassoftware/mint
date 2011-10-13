@@ -96,7 +96,7 @@ queryset_with_actions = """
       <descriptor id="http://testserver/api/v1/query_sets/5/descriptors/14"/>
       <enabled>true</enabled>
       <job_type id="http://testserver/api/v1/inventory/event_types/14"/>
-      <name>refresh queryset</name>
+      <name>refresh_queryset</name>
     </action>
   </actions>
   <all_members id="http://testserver/api/v1/query_sets/5/all"/>

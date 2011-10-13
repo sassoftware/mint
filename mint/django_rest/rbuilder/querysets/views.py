@@ -80,17 +80,23 @@ class QuerySetService(BaseQuerySetService):
 
 class QuerySetAllResultService(BaseQuerySetService):
     
-    @rbac(rbac_can_read_queryset)
+    @access.authenticated
     @return_xml
     def rest_GET(self, request, query_set_id):
-        return self.mgr.getQuerySetAllResult(query_set_id)
+        if rbac_can_read_queryset(self, request, query_set_id):
+            return self.mgr.getQuerySetAllResult(query_set_id)
+        else:
+            return self.mgr.getQuerySetAllResult(query_set_id, for_user=request._authUser)
 
 class QuerySetChosenResultService(BaseQuerySetService):
 
-    @rbac(rbac_can_read_queryset)
+    @access.authenticated
     @return_xml
     def rest_GET(self, request, query_set_id):
-        return self.mgr.getQuerySetChosenResult(query_set_id)
+        if rbac_can_read_queryset(self, request, query_set_id):
+            return self.mgr.getQuerySetChosenResult(query_set_id)
+        else:
+            return self.mgr.getQuerySetChosenResult(query_set_id, for_user=request._authUser)
 
     @rbac(rbac_can_write_queryset)
     # TODO: source fromc onstant somewhere
@@ -119,17 +125,23 @@ class QuerySetChosenResultService(BaseQuerySetService):
 
 class QuerySetFilteredResultService(BaseQuerySetService):
 
-    @rbac(rbac_can_read_queryset)
+    @access.authenticated
     @return_xml
     def rest_GET(self, request, query_set_id):
-        return self.mgr.getQuerySetFilteredResult(query_set_id)
+        if rbac_can_read_queryset(self, request, query_set_id):
+            return self.mgr.getQuerySetFilteredResult(query_set_id)
+        else:
+            return self.mgr.getQuerySetFilteredResult(query_set_id, for_user=request.authUser)
 
 class QuerySetChildResultService(BaseQuerySetService):
 
-    @rbac(rbac_can_read_queryset)
+    @access.authenticated
     @return_xml
     def rest_GET(self, request, query_set_id):
-        return self.mgr.getQuerySetChildResult(query_set_id)
+        if rbac_can_read_queryset(self, request, query_set_id):
+            return self.mgr.getQuerySetChildResult(query_set_id)
+        else:
+            return self.mgr.getQuerySetChildResult(query_set_id, for_user=request.authUser)
 
 class QuerySetJobsService(BaseQuerySetService):
 
