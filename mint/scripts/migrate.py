@@ -3051,7 +3051,7 @@ class MigrateTo_57(SchemaMigration):
 
 
 class MigrateTo_58(SchemaMigration):
-    Version = (58, 74)
+    Version = (58, 75)
 
     def migrate(self):
         return True
@@ -4369,6 +4369,14 @@ class MigrateTo_58(SchemaMigration):
               priority=105,
               resource_type="System"),
         ])
+        return True
+
+    def migrate75(self):
+        # keep dirk target querysets working
+        self.db.cursor().execute("""
+             UPDATE querysets_filterentry SET field = 'target.target_id' WHERE
+                 field = 'target.targetid'
+        """)
         return True
 
 #### SCHEMA MIGRATIONS END HERE #############################################

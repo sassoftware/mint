@@ -1,3 +1,7 @@
+# test migrations to see if they create the same thing as the schema
+# usage: ./scripts/devscripts/migration-check.py scripts/devscripts/migration-reference.sql . 
+
+
 import os
 import sys
 
