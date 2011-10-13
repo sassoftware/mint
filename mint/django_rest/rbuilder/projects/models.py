@@ -434,8 +434,7 @@ class Stage(modellib.XObjIdModel):
 
     def _computeRepositoryAPI(self):
         self.repository_api = modellib.HrefField(
-            href='/repos/%s/api' % self.project.short_name,
-        )
+            href='/api/products/%s/repos/search?label=%s' % (self.project.short_name, self.label))
 
     def serialize(self, request=None):
         if request:

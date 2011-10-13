@@ -275,7 +275,7 @@ project_branch_stages_xml = \
       <name>trunk</name>
     </project_branch>
     <name>Development</name>
-    <repository_api id="http://testserver/repos/chater-foo/api"/>
+    <repository_api id="http://testserver/api/products/chater-foo/repos/search?label=foo@ns:trunk-devel"/>
     <label>foo@ns:trunk-devel</label>
     <project id="http://testserver/api/v1/projects/chater-foo">
       <domain_name>eng.rpath.com</domain_name>
@@ -294,7 +294,7 @@ project_branch_stages_xml = \
       <name>trunk</name>
     </project_branch>
     <name>QA</name>
-    <repository_api id="http://testserver/repos/chater-foo/api"/>
+    <repository_api id="http://testserver/api/products/chater-foo/repos/search?label=foo@ns:trunk-qa"/>
     <label>foo@ns:trunk-qa</label>
     <project id="http://testserver/api/v1/projects/chater-foo">
       <domain_name>eng.rpath.com</domain_name>
@@ -313,7 +313,7 @@ project_branch_stages_xml = \
       <name>trunk</name>
     </project_branch>
     <name>Stage</name>
-    <repository_api id="http://testserver/repos/chater-foo/api"/>
+    <repository_api id="http://testserver/api/products/chater-foo/repos/search?label=foo@ns:trunk-stage"/>
     <label>foo@ns:trunk-stage</label>
     <project id="http://testserver/api/v1/projects/chater-foo">
       <domain_name>eng.rpath.com</domain_name>
@@ -332,7 +332,7 @@ project_branch_stages_xml = \
       <name>trunk</name>
     </project_branch>
     <name>Release</name>
-    <repository_api id="http://testserver/repos/chater-foo/api"/>
+    <repository_api id="http://testserver/api/products/chater-foo/repos/search?label=foo@ns:trunk"/>
     <label>foo@ns:trunk</label>
     <project id="http://testserver/api/v1/projects/chater-foo">
       <domain_name>eng.rpath.com</domain_name>
