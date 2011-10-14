@@ -20,7 +20,7 @@ from django.core.exceptions import ObjectDoesNotExist
 from mint.django_rest.rbuilder.inventory import models
 from mint.django_rest.rbuilder.manager import basemanager
 from mint.django_rest.rbuilder.projects.models import Project, ProjectVersion
-from mint.rest.errors import ProductNotFound
+from mint.rest.errors import ProductNotFound, ProductVersionNotFound
 
 log = logging.getLogger(__name__)
 exposed = basemanager.exposed
@@ -68,7 +68,10 @@ class VersionManager(basemanager.BaseManager):
             system.installed_software.remove(trove)
         for trove in toAdd:
             system.installed_software.add(trove)
-            self.setStage(system, trove)
+            try:
+                self.setStage(system, trove)
+            except ProductVersionNotFound:
+                system.project = None
         for trove in system.installed_software.all():
             self.set_available_updates(trove, force=True)
         system.save()
