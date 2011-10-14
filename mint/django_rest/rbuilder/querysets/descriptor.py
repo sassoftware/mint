@@ -108,7 +108,7 @@ def getFieldOperatorChoices(field):
 
     return operatorChoices
 
-def _getFieldDescriptors(field, prefix=None, processedModels=[], depth=0):
+def getFieldDescriptors(field, prefix=None, processedModels=[], depth=0):
     fds = []
     # Not using get_all_field_names in this function b/c of infinite recursion
 
@@ -130,7 +130,7 @@ def _getFieldDescriptors(field, prefix=None, processedModels=[], depth=0):
                 _prefix = '%s.%s' % (prefix, field.name)
             else:
                 _prefix = field.name
-            _fds = _getFieldDescriptors(f, _prefix, processedModels, depth+1)
+            _fds = getFieldDescriptors(f, _prefix, processedModels, depth+1)
             [fds.append(_fd) for _fd in _fds]
         processedModels.append(field.rel.to)
     elif isinstance(field, related.RelatedObject):
@@ -141,7 +141,7 @@ def _getFieldDescriptors(field, prefix=None, processedModels=[], depth=0):
                 _prefix = '%s.%s' % (prefix, field.get_accessor_name())
             else:
                 _prefix = field.get_accessor_name()
-            _fds = _getFieldDescriptors(f, _prefix, processedModels, depth+1)
+            _fds = getFieldDescriptors(f, _prefix, processedModels, depth+1)
             [fds.append(_fd) for _fd in _fds]
         processedModels.append(field.model())
     else:   
@@ -158,25 +158,7 @@ def _getFieldDescriptors(field, prefix=None, processedModels=[], depth=0):
         fds.append(fd)
     return fds
 
-def getFieldDescriptors(field, prefix=None, processedModels=[], depth=0):
-    # see _getFieldDescriptors for implementation... this filters out
-    # duplicate names found twice in travesal to the one closest the root object
-    list = _getFieldDescriptors(field, prefix=None, processedModels=[], depth=0)
-    fds_by_name = {}
-    for x in list:
-        if x is None or x.field_label is None:
-            continue 
-        if fds_by_name.has_key(x.field_label):
-            old = fds_by_name[x.field_label]
-            if len(x.field_key) < len(old.field_key):
-                fds_by_name[x.field_label] = x
-        else:
-            fds_by_name[x.field_label] = x
-    values = fds_by_name.values()
-    values.sort(key = lambda x: str.lower(x.field_label))
-    return values
-
-def getFilterDescriptor(model):
+def getFilterDescriptor(model, queryset):
     processedModels = []
     processedModels.append(model)
     fd = FilterDescriptor()
@@ -187,5 +169,57 @@ def getFilterDescriptor(model):
         field = model._meta.get_field_by_name(fieldName)[0]
         _fds = getFieldDescriptors(field, None, processedModels)
         [fd.field_descriptors.descriptors.append(_fd) for _fd in _fds]
+
+    # uniquify values as some systems resolve to themselves and so forth
+    list = fd.field_descriptors.descriptors
+    fds_by_name = {}
+    for x in list:
+        if x is None or x.field_label is None:
+            continue
+        if fds_by_name.has_key(x.field_label):
+            old = fds_by_name[x.field_label]
+            if len(x.field_key) < len(old.field_key):
+                fds_by_name[x.field_label] = x
+        else:
+            fds_by_name[x.field_label] = x
+    values = fds_by_name.values()
+    values.sort(key = lambda x: str.lower(x.field_label))
+    fd.field_descriptors.descriptors = values
+
+    def filter_sort(one, two):
+       '''
+       Sort alphabetically except that the most important item for each filter
+       type must rise to the top
+       '''
+
+       if one == two:
+           return 0
+
+       # TODO: take filter sort key from the queryset model
+       if queryset.resource_type == 'system':
+           if one.field_label == 'System name':
+               return -1
+       if queryset.resource_type == 'user':
+           if one.field_label == 'User name':
+               return -1
+       if queryset.resource_type == 'project':
+           if one.field_label == 'Project name':
+               return -1
+       if queryset.resource_type == 'project_branch_stage':
+           if one.field_label == 'Stage name':
+               return -1
+       if queryset.resource_type == 'grant':
+           if one.field_label == 'Grant name':
+               return -1
+       if queryset.resource_type == 'role':
+           if one.field_label == 'Role name':
+               return -1
+       if queryset.resource_type == 'target':
+           if one.field_label == 'Target name':
+               return -1
+       return cmp(one.field_label, two.field_label)
+
+    fd.field_descriptors.descriptors.sort(cmp=filter_sort)
+
     return fd
 
