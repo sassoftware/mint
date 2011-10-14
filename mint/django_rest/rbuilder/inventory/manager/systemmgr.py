@@ -1355,19 +1355,15 @@ class SystemManager(basemanager.BaseManager):
             cert   = hcerts[0].x509_pem
 
             # look at the source image to find the label
-            # TODO: don't require the appliance group to have the
-            # name 'group-appliance' ?
             # TODO: breakout into function
             source = event.system.source_image
-            if source is None:
-                raise Exception("system without source image cannot be assimilated")
-
-            full = source.trove_version
-            tokens = full.split("/")
-            projectLabel = tokens[1]
-            installTrove = "group-%s-appliance" % source.project.short_name
-
-            log.info("project label=%s" % projectLabel)
+            projectLabel = None
+            installTrove = None
+            if source is not None:
+                full = source.trove_version
+                tokens = full.split("/")
+                projectLabel = tokens[1]
+                installTrove = "group-%s-appliance" % source.project.short_name
 
             params = repClient.AssimilatorParams(host=destination,
                 caCert=cert, sshAuth=event_data,
