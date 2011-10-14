@@ -70,7 +70,7 @@ class VersionManager(basemanager.BaseManager):
             system.installed_software.add(trove)
             try:
                 self.setStage(system, trove)
-            except mint.rest.errors.ProductVersionNotFound:
+            except ProductVersionNotFound:
                 system.project = None
         for trove in system.installed_software.all():
             self.set_available_updates(trove, force=True)
