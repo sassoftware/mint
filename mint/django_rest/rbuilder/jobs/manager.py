@@ -539,8 +539,8 @@ class JobHandlerRegistry(HandlerRegistry):
             stage = self.mgr.mgr.getStage(stageId)
             image = self.mgr.mgr.createImage(
                 name=params.get('imageTitle'),
-                project_branch_stage=stage,
-                architecture=params.get('architecture'))
+                project_branch_stage=stage)
+            image.architecture = params.get('architecture')
             image = self.mgr.mgr.createImageBuild(image)
             outputToken = image.image_data.get(name='outputToken').value
             host = self.mgr.mgr.restDb.cfg.siteHost
