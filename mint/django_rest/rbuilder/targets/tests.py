@@ -677,7 +677,7 @@ class JobCreationTest(BaseTargetsTest, RepeaterMixIn):
             [ x.name for x in obj.descriptor.dataFields.field ],
             [
                 'instanceId', 'imageTitle', 'imageName', 'architecture', 'stageId',
-                'metadata.owner', 'metadata.admin',
+                'metadata_owner', 'metadata_admin',
         ])
         stageDescs = obj.descriptor.dataFields.field[4].enumeratedType.describedValue
         self.failUnlessEqual(
@@ -705,8 +705,8 @@ class JobCreationTest(BaseTargetsTest, RepeaterMixIn):
     <instanceId>%(instanceId)s</instanceId>
     <stageId>%(stageId)s</stageId>
     <architecture>%(arch)s</architecture>
-    <metadata.owner>%(owner)s</metadata.owner>
-    <metadata.admin>%(admin)s</metadata.admin>
+    <metadata_owner>%(owner)s</metadata_owner>
+    <metadata_admin>%(admin)s</metadata_admin>
   </descriptor_data>
 </job>
 """
@@ -748,8 +748,8 @@ class JobCreationTest(BaseTargetsTest, RepeaterMixIn):
             'imageName': u'captured-system-image',
             'imageTitle': u'Captured image from system 1',
             'instanceId': 'efe28c20-bbda-434c-87ae-9f4006114a1f',
-            'metadata.admin': u'Admin',
-            'metadata.owner': u'Owner',
+            'metadata_admin': u'Admin',
+            'metadata_owner': u'Owner',
             'image_id': 'https://rpath.com/api/v1/images/1',
             'imageUploadUrl': 'https://rpath.com/uploadBuild/1',
             'imageFilesCommitUrl': u'https://rpath.com/api/products/chater-foo/images/1/files',

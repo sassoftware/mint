@@ -2021,6 +2021,9 @@ class SystemManager(basemanager.BaseManager):
             default=str(stages[0][0]))
         imageImportDescriptor = self.getImageImportMetadataDescriptor()
         for f in imageImportDescriptor.getDataFields():
+            # The flex implementation assumes structured objects
+            # whenever they see a dot, so avoid that for now
+            f.set_name(f.get_name().replace('metadata.', 'metadata_'))
             descr.addDataField(f)
         return descr
 
