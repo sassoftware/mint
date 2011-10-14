@@ -661,7 +661,7 @@ class QuerySetManager(basemanager.BaseManager):
         '''
         querySet = self._querySet(querySetId)
         model = modellib.type_map[querySet.resource_type]
-        filterDescriptor = descriptor.getFilterDescriptor(model)
+        filterDescriptor = descriptor.getFilterDescriptor(model, querySet)
         filterDescriptor.pk = querySetId
         return filterDescriptor
 
