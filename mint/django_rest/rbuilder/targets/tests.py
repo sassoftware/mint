@@ -730,6 +730,7 @@ class JobCreationTest(BaseTargetsTest, RepeaterMixIn):
                 % systemId)
 
         dbjob = jmodels.Job.objects.get(job_uuid=job.job_uuid)
+        jobToken = dbjob.job_token
         self.failUnlessEqual(dbjob.job_type.name, dbjob.job_type.SYSTEM_CAPTURE)
         self.failUnlessEqual(
             [ x.system.name for x in dbjob.systems.all() ],
@@ -760,4 +761,21 @@ class JobCreationTest(BaseTargetsTest, RepeaterMixIn):
         self.failUnlessEqual(realCall.args, (system.target_system_id, params))
         self.failUnlessEqual(realCall.kwargs, {})
         self.mgr.repeaterMgr.repeaterClient.reset()
+
+        jobXml = """
+<job>
+  <job_state>Completed</job_state>
+  <status_code>200</status_code>
+  <status_text>Some status here</status_text>
+  <results encoding="identity">
+    <image id="/1"/>
+  </results>
+</job>
+"""
+        jobUrl = "jobs/%s" % dbjob.job_uuid
+        response = self._put(jobUrl, jobXml, jobToken=jobToken)
+        self.assertEquals(response.status_code, 200)
+        obj = xobj.parse(response.content)
+        self.failUnlessEqual(obj.job.id, "http://testserver/api/v1/" + jobUrl)
+        self.failUnlessEqual(obj.job.results.id, "http://testserver/api/v1/images/1")
 

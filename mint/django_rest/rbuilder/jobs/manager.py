@@ -507,6 +507,7 @@ class JobHandlerRegistry(HandlerRegistry):
     class SystemCapture(_TargetDescriptorJobHandler):
         __slots__ = [ 'system' ]
         jobType = models.EventType.SYSTEM_CAPTURE
+        ResultsTag = 'image'
 
         def _init(self):
             _TargetDescriptorJobHandler._init(self)
@@ -571,3 +572,11 @@ class JobHandlerRegistry(HandlerRegistry):
 
         def postprocessRelatedResource(self, model):
             model.event_uuid = str(uuid.uuid4())
+
+        def _processJobResults(self, job):
+            imageId = getattr(self.results, 'id', None)
+            if imageId is None:
+                raise errors.InvalidData()
+            imageId = int(os.path.basename(imageId))
+            image = self.mgr.mgr.getImageBuild(imageId)
+            return image
