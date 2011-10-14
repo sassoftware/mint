@@ -15,6 +15,7 @@ from django.db import IntegrityError, transaction
 from xobj import xobj
 from smartform import descriptor as smartdescriptor
 
+from mint.lib import uuid
 from mint.django_rest.rbuilder import errors
 from mint.django_rest.rbuilder import modellib
 from mint.django_rest.rbuilder.manager import basemanager
@@ -155,7 +156,7 @@ class BaseJobHandler(AbstractHandler):
 
     def create(self, job, extraArgs=None):
         self.extraArgs.update(extraArgs or {})
-        uuid, rmakeJob = self.createRmakeJob(job)
+        uuid_, rmakeJob = self.createRmakeJob(job)
         job.setValuesFromRmakeJob(rmakeJob)
         jobToken = rmakeJob.data.getObject().data.get('authToken')
         if jobToken:
@@ -308,7 +309,11 @@ class DescriptorJobHandler(BaseJobHandler, ResultsProcessingMixIn):
             return
         relatedFieldName = relatedFields[0].name
         setattr(model, relatedFieldName, job._relatedResource)
+        self.postprocessRelatedResource(model)
         model.save()
+
+    def postprocessRelatedResource(self, model):
+        pass
 
 class _TargetDescriptorJobHandler(DescriptorJobHandler):
     __slots__ = [ 'target', ]
@@ -564,3 +569,5 @@ class JobHandlerRegistry(HandlerRegistry):
             self.system = system
             self.target = system.target
 
+        def postprocessRelatedResource(self, model):
+            model.event_uuid = str(uuid.uuid4())
