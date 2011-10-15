@@ -135,7 +135,7 @@ class QuerySetFilteredResultService(BaseQuerySetService):
     @access.authenticated
     @return_xml
     def rest_GET(self, request, query_set_id):
-        return self.mgr.getQuerySetFilteredResult(query_set_id, for_user=request.authUser)
+        return self.mgr.getQuerySetFilteredResult(query_set_id, for_user=request._authUser)
 
 class QuerySetChildResultService(BaseQuerySetService):
 
@@ -145,7 +145,7 @@ class QuerySetChildResultService(BaseQuerySetService):
         if rbac_can_read_queryset(self, request, query_set_id):
             return self.mgr.getQuerySetChildResult(query_set_id)
         else:
-            return self.mgr.getQuerySetChildResult(query_set_id, for_user=request.authUser)
+            return self.mgr.getQuerySetChildResult(query_set_id, for_user=request._authUser)
 
 class QuerySetJobsService(BaseQuerySetService):
 
