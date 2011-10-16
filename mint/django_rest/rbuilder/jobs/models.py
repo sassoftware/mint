@@ -66,7 +66,11 @@ class Jobs(modellib.Collection):
         (/api/inventory/jobs or /api/inventory/systems/{systemId}/jobs).  We
         need to ask the request to build the id for us based on the path.
         """
-        return request.build_absolute_uri(request.get_full_path())
+        uri = request.build_absolute_uri(request.get_full_path())
+        # hack to remove possible query options
+        return uri.split("?")[0]
+
+
 
 class Job(modellib.XObjIdModel):
     
