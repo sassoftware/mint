@@ -770,10 +770,8 @@ class ProductManager(manager.Manager):
         return dict((specMap[x[0]], x[1]) for x in results.items())
 
     def _promoteGroup(self, client, pd, job, hostname, version, stageName, trv):
-
         callback = ProductVersionCallback(hostname, version, job) 
         nextStage = str(stageName)
-        nextLabel = pd.getLabelForStage(nextStage)
         activeStage = None
         activeLabel = str(trv.label)
 
