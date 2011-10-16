@@ -210,8 +210,6 @@ class AllProjectBranchesStagesService(service.BaseService):
     @access.authenticated
     @return_xml
     def rest_GET(self, request):
-        # BIG FIXME: querysets should filter out what items you can't see
-        # in them
         qs = querymodels.QuerySet.objects.get(name='All Project Stages')
         url = '/api/v1/query_sets/%s/all%s' % (qs.pk, request.params)
         return HttpResponseRedirect(url)
