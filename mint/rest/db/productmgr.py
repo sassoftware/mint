@@ -770,7 +770,7 @@ class ProductManager(manager.Manager):
         return dict((specMap[x[0]], x[1]) for x in results.items())
 
     def _promoteGroup(self, client, pd, job, hostname, version, stageName, trove): 
-       
+
         callback = ProductVersionCallback(hostname, version, job) 
         nextStage = str(stageName)
         nextLabel = pd.getLabelForStage(nextStage)
@@ -781,10 +781,10 @@ class ProductManager(manager.Manager):
             if str(stage.name) == nextStage:
                 break
             activeStage = stage.name
-        
+
         callback._message('Getting all trove information for the promotion')
 
-	# Collect a list of groups to promote.
+        # Collect a list of groups to promote.
         groupSpecs = [ '%s[%s]' % x for x in self.getVersionGroupFlavors(pd, trove.version) ]
         allTroves = self._findTrovesFlattened(client, groupSpecs, activeLabel)
 
@@ -793,7 +793,7 @@ class ProductManager(manager.Manager):
         promoteMap = dict((versions.Label(str(fromLabel)),
                         versions.VersionFromString(str(toLabel)))
                         for (fromLabel, toLabel) in fromTo.iteritems())
-        
+
         callback._message('Creating clone changeset')
         success, cs = client.createSiblingCloneChangeSet(promoteMap,
                         allTroves,cloneSources=True)
