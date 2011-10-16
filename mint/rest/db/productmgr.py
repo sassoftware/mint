@@ -801,6 +801,7 @@ class ProductManager(manager.Manager):
         if success:
             callback._message('Committing ChangeSet')
             client.getRepos().commitChangeSet(cs)
+            callback._message('Committed')
             callback.done()
         else:
             callback.error('Changeset was not cloned')
