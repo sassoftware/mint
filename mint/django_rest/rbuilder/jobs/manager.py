@@ -16,6 +16,7 @@ from django.db import IntegrityError, transaction
 from xobj import xobj
 from smartform import descriptor as smartdescriptor
 
+from mint import buildtypes
 from mint.lib import uuid
 from mint.django_rest.rbuilder import errors
 from mint.django_rest.rbuilder import modellib
@@ -548,6 +549,9 @@ class JobHandlerRegistry(HandlerRegistry):
             image = self.mgr.mgr.createImage(
                 name=imageTitle,
                 project_branch_stage=stage)
+            # XXX FIXME: really, we need to let the user pick the image
+            # type
+            image._image_type = buildtypes.VMWARE_ESX_IMAGE
             image.architecture = params.get('architecture')
             image = self.mgr.mgr.createImageBuild(image)
             outputToken = image.image_data.get(name='outputToken').value

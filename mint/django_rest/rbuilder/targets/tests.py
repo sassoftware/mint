@@ -793,3 +793,9 @@ class JobCreationTest(BaseTargetsTest, RepeaterMixIn):
         self.failUnlessEqual(obj.job.id, "http://testserver/api/v1/" + jobUrl)
         self.failUnlessEqual(obj.job.results.id, "http://testserver/api/v1/images/1")
 
+        response = self._get("images/1",
+            username='admin', password='password')
+        self.assertEquals(response.status_code, 200)
+        obj = xobj.parse(response.content)
+        self.failUnlessEqual(obj.image.name, params['imageTitle'])
+        self.failUnlessEqual(obj.image.image_type.key, 'VMWARE_ESX_IMAGE')
