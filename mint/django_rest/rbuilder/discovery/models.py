@@ -106,6 +106,7 @@ class ApiVersion(modellib.XObjIdModel):
     roles = modellib.HrefField("rbac/roles")
     grants = modellib.HrefField("rbac/grants")
     permissions = modellib.HrefField("rbac/permissions")
+    targets = modellib.HrefField("targets")
     config_info = ConfigInfo()
     version_info = VersionInfo()
 

@@ -84,6 +84,7 @@ class VersionsTestCase(XMLTestCase):
   <roles id="http://testserver/api/v1/rbac/roles"/>
   <users id="http://testserver/api/v1/users"/>
   <session id="http://testserver/api/v1/session"/>
+  <targets id="http://testserver/api/v1/targets"/>
   <version_info>
     <conary_version>conary-version-42</conary_version>
     <product_definition_schema_version>4.3</product_definition_schema_version>
