@@ -99,7 +99,7 @@ class PlatformManager(basemanager.BaseManager):
         based on the project name.
         '''
         desc = smartform.descriptor.ConfigurationDescriptor()
-        desc.setRootElement("createApplianceDescriptor")
+        desc.setRootElement('descriptor_data')
         desc.setDisplayName("Layered Image Configuration")
         desc.addDescription("Layered Image Configuration")
 
@@ -140,11 +140,6 @@ class PlatformManager(basemanager.BaseManager):
         sio = StringIO.StringIO()
         desc.serialize(sio)
         result = sio.getvalue()
-
-        # FIXME -- setRootElement does not set the actual root, just the
-        # metadata, this is temporary until I find the right way to use the lib.
-        result = result.replace("<descriptor ", "<createApplianceDescriptor ")
-        result = result.replace("</descriptor>", "</createApplianceDescriptor>")
         return result
 
 class SourceManager(basemanager.BaseManager):

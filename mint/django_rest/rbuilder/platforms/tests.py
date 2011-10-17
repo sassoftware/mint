@@ -15,11 +15,12 @@
 from mint.django_rest.rbuilder.platforms import models as platform_models
 from mint.django_rest.rbuilder.projects import models as project_models
 from mint.django_rest.rbuilder.images import models as imagemodels
-from mint.django_rest.rbuilder.inventory.tests import XMLTestCase
 from xobj import xobj
 from lxml import etree
 from mint.django_rest.rbuilder.platforms import platformstestxml as testsxml
-import mint.buildtypes 
+import mint.buildtypes
+
+from test_utils import XMLTestCase, SmartformMixIn
 
 class PlatformsTestCase(XMLTestCase):
     
@@ -85,7 +86,10 @@ class PlatformsTestCase(XMLTestCase):
 
 
 
-class NewPlatformTest(XMLTestCase):
+class NewPlatformTest(XMLTestCase, SmartformMixIn):
+    def setUp(self):
+        XMLTestCase.setUp(self)
+        self.setUpSchemaDir()
     
     def xobjResponse(self, url):
         response = self._get(url, username="admin", password="password")
@@ -159,16 +163,14 @@ class NewPlatformTest(XMLTestCase):
         for image_type in mint.buildtypes.xmlTagNameImageTypeMap.keys():
             # we do not have XML for netboot/live because they're deprecated
             # and deferred is special so we want to test differently
-            if image_type not in ['netbootImage', 'liveIsoImage',
-                    'deferredImage']:
-                # verify we can get the descriptor and it looks XML-ish
-                url = "platforms/image_type_definition_descriptors/%s" % image_type
-                response = self._get(url) #, username='admin', password='password')
-                self.assertEquals(response.status_code, 200)
-                content = response.content.strip()
-                self.assertTrue(content.startswith('<createApplianceDescriptor'))
-                self.assertTrue(content.endswith('</createApplianceDescriptor>'))
-                model = xobj.parse(content)
+            if image_type in ['netbootImage', 'liveIsoImage', 'deferredImage']:
+                continue
+            # verify we can get the descriptor
+            url = "platforms/image_type_definition_descriptors/%s" % image_type
+            response = self._get(url) #, username='admin', password='password')
+            self.assertEquals(response.status_code, 200)
+            model = xobj.parse(response.content)
+            self.failUnlessEqual(model.descriptor._xobj.tag, 'descriptor')
 
         # FIXME
         # we want to leave ITD's anonymous, but this is interesting... we're populating

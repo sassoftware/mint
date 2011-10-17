@@ -404,7 +404,7 @@ platformStatus2Xml = """\
 """
 
 deferred_image_descriptor_xml = """
-<createApplianceDescriptor xmlns="http://www.rpath.com/permanent/descriptor-1.0.xsd" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.rpath.com/permanent/descriptor-1.0.xsd descriptor-1.0.xsd">
+<descriptor xmlns="http://www.rpath.com/permanent/descriptor-1.0.xsd" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.rpath.com/permanent/descriptor-1.0.xsd descriptor-1.0.xsd">
   <dataFields>
     <field>
       <descriptions>
@@ -441,9 +441,9 @@ deferred_image_descriptor_xml = """
       <desc>Layered Image Configuration</desc>
     </descriptions>
     <displayName>Layered Image Configuration</displayName>
-    <rootElement>createApplianceDescriptor</rootElement>
+    <rootElement>descriptor_data</rootElement>
   </metadata>
-</createApplianceDescriptor>
+</descriptor>
 """
 
 

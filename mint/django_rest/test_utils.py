@@ -30,7 +30,7 @@ from mint.django_rest.rbuilder.inventory import zones as zmodels
 from mint.django_rest.rbuilder.jobs import models as jobmodels
 from mint.django_rest.rbuilder.users import models as usermodels
 from mint.django_rest.rbuilder.manager import rbuildermanager
-from .rbuilder.modellib import Cache
+from mint.django_rest.rbuilder.modellib import Cache
 
 from testrunner import testcase
 
