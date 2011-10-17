@@ -1221,7 +1221,11 @@ class XObjModel(models.Model):
             field = fields.pop(key, None)
             if field is None:
                 field = syntheticFields.get(key)
-                if field is not None and val is not None:
+                # XXX using isinstance seems bad. We should make sure
+                # val is an acceptable value for a field, and that can
+                # be any field, model or xobj object, and it's hard
+                if (field is not None and val is not None
+                        and not isinstance(val, (int, bool))):
                     # The user specified a value for the synthetic field.
                     # We'll use that instead of the one from the class def
                     field = val

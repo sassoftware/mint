@@ -141,6 +141,22 @@ class TargetsTestCase(BaseTargetsTest, RepeaterMixIn):
         self.failUnlessEqual(targets_gotten.targets.jobs.id,
             'http://testserver/api/v1/target_jobs')
 
+    def testGetTarget_credentials_valid(self):
+        # Remove credentials for one of the targets
+        # openstack won't have creds anyway
+        models.TargetUserCredentials.objects.get(target__name = 'Target Name xenent').delete()
+        response = self._get('targets/', username='testuser', password='password')
+        targetsObj = xobj.parse(response.content)
+        self.failUnlessEqual([ x.name for x in targetsObj.targets.target ],
+            [
+                'Target Name vmware',
+                'Target Name ec2',
+                'Target Name xenent',
+                'Target Name openstack',
+            ])
+        self.failUnlessEqual([ x.credentials_valid for x in targetsObj.targets.target ],
+            ['true', 'true', 'false', 'false', ])
+
     def testGetTarget(self):
         target = models.Target.objects.get(name = 'Target Name openstack')
         response = self._get('targets/%s' % target.pk,
