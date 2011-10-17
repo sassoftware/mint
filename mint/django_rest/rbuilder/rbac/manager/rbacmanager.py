@@ -11,6 +11,7 @@ from mint.django_rest.rbuilder.manager import basemanager
 from mint.django_rest.rbuilder.querysets import models as querymodels
 from django.db import connection, transaction
 from datetime import datetime
+from django.core.exceptions import ObjectDoesNotExist
 
 log = logging.getLogger(__name__)
 exposed = basemanager.exposed
@@ -161,6 +162,19 @@ class RbacManager(basemanager.BaseManager):
  
     @exposed
     def addRbacPermission(self, permission, by_user):
+        try:
+            # if already exists, it's ok, do nothing. 
+            # want a better way to handle this generically in
+            # modellib later, as way to define this in the model
+            previous = models.RbacPermission.objects.get(
+                role = permission.role,
+                queryset = permission.queryset,
+                permission = permission.permission
+            )
+            return previous
+        except ObjectDoesNotExist:
+            pass
+
         if permission.queryset.resource_type in [ 'grant', 'role' ]:
             raise Exception("RBAC configuration rights cannot be delegated")
         permission.created_by  = by_user
