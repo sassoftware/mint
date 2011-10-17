@@ -208,6 +208,9 @@ then
 
     # Start cron back (RBL-7973)
     service crond start
+
+    # Restart the authentication service
+    service rbuilder-authn restart
 fi
 
 # Fix notifications with a bad GUID
