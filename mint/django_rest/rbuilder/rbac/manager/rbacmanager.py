@@ -9,7 +9,6 @@ from mint.django_rest.rbuilder.rbac import models
 from mint.django_rest.rbuilder.users import models as usersmodels
 from mint.django_rest.rbuilder.manager import basemanager
 from mint.django_rest.rbuilder.querysets import models as querymodels
-from django.db import connection, transaction
 from datetime import datetime
 from django.core.exceptions import ObjectDoesNotExist
 
