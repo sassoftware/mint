@@ -806,3 +806,4 @@ class JobCreationTest(BaseTargetsTest, RepeaterMixIn):
         obj = xobj.parse(response.content)
         self.failUnlessEqual(obj.image.name, params['imageTitle'])
         self.failUnlessEqual(obj.image.image_type.key, 'VMWARE_ESX_IMAGE')
+        self.failUnlessEqual(obj.image.job_uuid, dbjob.job_uuid)

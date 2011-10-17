@@ -311,10 +311,10 @@ class DescriptorJobHandler(BaseJobHandler, ResultsProcessingMixIn):
             return
         relatedFieldName = relatedFields[0].name
         setattr(model, relatedFieldName, job._relatedResource)
-        self.postprocessRelatedResource(model)
+        self.postprocessRelatedResource(job, model)
         model.save()
 
-    def postprocessRelatedResource(self, model):
+    def postprocessRelatedResource(self, job, model):
         pass
 
 class _TargetDescriptorJobHandler(DescriptorJobHandler):
@@ -507,13 +507,13 @@ class JobHandlerRegistry(HandlerRegistry):
             return self.target
 
     class SystemCapture(_TargetDescriptorJobHandler):
-        __slots__ = [ 'system' ]
+        __slots__ = [ 'system', 'image' ]
         jobType = models.EventType.SYSTEM_CAPTURE
         ResultsTag = 'image'
 
         def _init(self):
             _TargetDescriptorJobHandler._init(self)
-            self.target = self.system = None
+            self.target = self.system = self.image = None
 
         def getDescriptor(self, descriptorId):
             try:
@@ -553,7 +553,8 @@ class JobHandlerRegistry(HandlerRegistry):
             # type
             image._image_type = buildtypes.VMWARE_ESX_IMAGE
             image.architecture = params.get('architecture')
-            image = self.mgr.mgr.createImageBuild(image)
+            image.job_uuid = job.job_uuid
+            self.image = image = self.mgr.mgr.createImageBuild(image)
             outputToken = image.image_data.get(name='outputToken').value
             host = self.mgr.mgr.restDb.cfg.siteHost
             params['outputToken'] = outputToken
@@ -581,8 +582,10 @@ class JobHandlerRegistry(HandlerRegistry):
             self.system = system
             self.target = system.target
 
-        def postprocessRelatedResource(self, model):
+        def postprocessRelatedResource(self, job, model):
             model.event_uuid = str(uuid.uuid4())
+            self.image.job_uuid = job.job_uuid
+            self.image.save()
 
         def _processJobResults(self, job):
             imageId = getattr(self.results, 'id', None)
