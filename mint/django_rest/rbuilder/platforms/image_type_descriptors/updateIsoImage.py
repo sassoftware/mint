@@ -11,7 +11,7 @@ XML="""<createApplianceDescriptor xmlns:xsi="http://www.w3.org/2001/XMLSchema-in
     <dataFields>
         <field>
             <name>displayName</name>
-            <help lang="en_US">@Help_image_name@</help>
+            <help lang="en_US" href="@Help_image_name@"/>
             <required>true</required>
             <descriptions>
                 <desc>Image name</desc>
@@ -24,7 +24,7 @@ XML="""<createApplianceDescriptor xmlns:xsi="http://www.w3.org/2001/XMLSchema-in
         </field>
         <field>
             <name>options.baseFileName</name>
-            <help lang="en_US">@Help_image_filename@</help>
+            <help lang="en_US" href="@Help_image_filename@"/>
             <required>false</required>
             <descriptions>
                 <desc>Image filename</desc>
@@ -37,7 +37,7 @@ XML="""<createApplianceDescriptor xmlns:xsi="http://www.w3.org/2001/XMLSchema-in
         </field>
         <field>
             <name>options.installLabelPath</name>
-            <help lang="en_US">@Help_conary_installlabelpath@</help>
+            <help lang="en_US" href="@Help_conary_installlabelpath@"/>
             <required>false</required>
             <descriptions>
                 <desc>Conary installLabelPath</desc>
@@ -51,7 +51,7 @@ XML="""<createApplianceDescriptor xmlns:xsi="http://www.w3.org/2001/XMLSchema-in
 
         <field>
             <name>options.bugsUrl</name>
-            <help lang="en_US">@Help_bug_report_url@</help>
+            <help lang="en_US" href="@Help_bug_report_url@"/>
             <required>false</required>
             <descriptions>
                 <desc>Bug Report URL</desc>
@@ -64,7 +64,7 @@ XML="""<createApplianceDescriptor xmlns:xsi="http://www.w3.org/2001/XMLSchema-in
         </field>
         <field>
             <name>options.betaNag</name>
-            <help lang="en_US">@Help_beta@</help>
+            <help lang="en_US" href="@Help_beta@"/>
             <required>false</required>
             <descriptions>
                 <desc>Beta?</desc>
@@ -77,7 +77,7 @@ XML="""<createApplianceDescriptor xmlns:xsi="http://www.w3.org/2001/XMLSchema-in
         </field>
         <field>
             <name>options.showMediaCheck</name>
-            <help lang="en_US">@Help_cd_verify@</help>
+            <help lang="en_US" href="@Help_cd_verify@"/>
             <required>false</required>
             <descriptions>
                 <desc>CD verify?</desc>
@@ -91,7 +91,7 @@ XML="""<createApplianceDescriptor xmlns:xsi="http://www.w3.org/2001/XMLSchema-in
 
         <field>
             <name>options.anacondaTemplatesTrove</name>
-            <help lang="en_US">@Help_anaconda_templates@</help>
+            <help lang="en_US" href="@Help_anaconda_templates@"/>
             <required>false</required>
             <descriptions>
                 <desc>anaconda-templates</desc>
@@ -104,7 +104,7 @@ XML="""<createApplianceDescriptor xmlns:xsi="http://www.w3.org/2001/XMLSchema-in
         </field>
         <field>
             <name>options.anacondaCustomTrove</name>
-            <help lang="en_US">@Help_anaconda_custom@</help>
+            <help lang="en_US" href="@Help_anaconda_custom@"/>
             <required>false</required>
             <descriptions>
                 <desc>anaconda-custom</desc>
@@ -117,7 +117,7 @@ XML="""<createApplianceDescriptor xmlns:xsi="http://www.w3.org/2001/XMLSchema-in
         </field>
         <field>
             <name>options.mediaTemplateTrove</name>
-            <help lang="en_US">@Help_media_template@</help>
+            <help lang="en_US" href="@Help_media_template@"/>
             <required>false</required>
             <descriptions>
                 <desc>media-template</desc>
@@ -131,7 +131,7 @@ XML="""<createApplianceDescriptor xmlns:xsi="http://www.w3.org/2001/XMLSchema-in
         
         <field>
             <name>options.maxIsoSize</name>
-            <help lang="en_US">@Help_iso_size@</help>
+            <help lang="en_US" href="@Help_iso_size@"/>
             <required>true</required>
             <descriptions>
                 <desc>ISO Size</desc>
@@ -175,7 +175,7 @@ XML="""<createApplianceDescriptor xmlns:xsi="http://www.w3.org/2001/XMLSchema-in
                 
         <field>
             <name>options.autoResolve</name>
-            <help lang="en_US">@Help_resolve_dependencies@</help>
+            <help lang="en_US" href="@Help_resolve_dependencies@"/>
             <required>false</required>
             <descriptions>
                 <desc>Autoinstall Dependencies</desc>

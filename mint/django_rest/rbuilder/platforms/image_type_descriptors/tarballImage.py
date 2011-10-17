@@ -11,7 +11,7 @@ XML="""<createApplianceDescriptor xmlns:xsi="http://www.w3.org/2001/XMLSchema-in
     <dataFields>
         <field>
             <name>displayName</name>
-            <help lang="en_US">@Help_image_name@</help>
+            <help lang="en_US" href="@Help_image_name@"/>
             <required>true</required>
             <descriptions>
                 <desc>Image name</desc>
@@ -24,7 +24,7 @@ XML="""<createApplianceDescriptor xmlns:xsi="http://www.w3.org/2001/XMLSchema-in
         </field>
         <field>
             <name>options.baseFileName</name>
-            <help lang="en_US">@Help_image_filename@</help>
+            <help lang="en_US" href="@Help_image_filename@"/>
             <required>false</required>
             <descriptions>
                 <desc>Image filename</desc>
@@ -37,7 +37,7 @@ XML="""<createApplianceDescriptor xmlns:xsi="http://www.w3.org/2001/XMLSchema-in
         </field>
         <field>
             <name>options.installLabelPath</name>
-            <help lang="en_US">@Help_conary_installlabelpath@</help>
+            <help lang="en_US" href="@Help_conary_installlabelpath@"/>
             <required>false</required>
             <descriptions>
                 <desc>Conary installLabelPath</desc>
@@ -51,7 +51,7 @@ XML="""<createApplianceDescriptor xmlns:xsi="http://www.w3.org/2001/XMLSchema-in
 
         <field>
             <name>options.autoResolve</name>
-            <help lang="en_US">@Help_resolve_dependencies@</help>
+            <help lang="en_US" href="@Help_resolve_dependencies@"/>
             <required>false</required>
             <descriptions>
                 <desc>Autoinstall Dependencies</desc>
@@ -65,7 +65,7 @@ XML="""<createApplianceDescriptor xmlns:xsi="http://www.w3.org/2001/XMLSchema-in
 
         <field>
             <name>options.buildOVF10</name>
-            <help lang="en_US">@Help_build_ovf_1_0@</help>
+            <help lang="en_US" href="@Help_build_ovf_1_0@"/>
             <required>false</required>
             <descriptions>
                 <desc>Generate in OVF 1.0?</desc>
