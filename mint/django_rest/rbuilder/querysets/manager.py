@@ -562,6 +562,13 @@ class QuerySetManager(basemanager.BaseManager):
          '''
          Does the query set need to be retagged?
          '''
+         # hack -- restlib has transaction issues with calling Django land
+         # so temporarily assume "All Targets" is always invalid.  This really
+         # doesn't do any damage (not enough to ever be slow) and can be removed
+         # once targets are fully Djangofied
+         if querySet.resource_type == 'target':
+             return True
+
          if querySet.tagged_date is None:
              # never been tagged before
              return True
