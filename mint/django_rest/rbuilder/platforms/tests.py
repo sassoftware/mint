@@ -20,7 +20,7 @@ from lxml import etree
 from mint.django_rest.rbuilder.platforms import platformstestxml as testsxml
 import mint.buildtypes
 
-from test_utils import XMLTestCase, SmartformMixIn
+from mint.django_rest.test_utils import XMLTestCase, SmartformMixIn
 
 class PlatformsTestCase(XMLTestCase):
     
