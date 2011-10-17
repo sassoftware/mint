@@ -8,7 +8,7 @@
 # rbuilder-custom.conf (located in /srv/rbuilder/config).
 
 # This is rBuilder
-productName             rBuilder
+productName             rPath Cloud Engine
 
 # Use SQLite backend
 dbDriver                sqlite
