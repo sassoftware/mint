@@ -83,7 +83,7 @@ class Target(modellib.XObjIdModel):
     name = models.TextField(null=False)
     description = models.TextField(null=False)
     unique_together = (target_type, name)
-    credentials_valid = modellib.SyntheticField()
+    credentials_valid = modellib.SyntheticField(models.BooleanField())
 
     actions = D(modellib.SyntheticField(jobmodels.Actions),
         "actions available for this target")
@@ -95,10 +95,14 @@ class Target(modellib.XObjIdModel):
         actions.action.append(self._actionConfigureUserCredentials())
         actions.action.append(self._actionRefreshImages())
         self.jobs = modellib.HrefField("jobs")
-        if self.target_user_credentials:
-            self.credentials_valid = len(self.target_user_credentials.all()) > 0
-        else:
-            self.credentials_valid = False
+        self._setCredentialsValid()
+
+    def _setCredentialsValid(self):
+        if self._rbmgr is None:
+            return
+        # XXX FIXME: we should not repeatedly hit the DB here. We should
+        # intelligently cache data, especially for multiple targets.
+        self.credentials_valid = bool(len(TargetUserCredentials.objects.filter(target=self, user=self._rbmgr.user)))
 
     def _actionConfigureUserCredentials(self):
         actionName = "Configure user credentials for target"

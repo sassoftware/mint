@@ -9,8 +9,8 @@ import itertools
 import time
 import types
 
+from conary import trove
 from conary import versions
-from conary.conaryclient import callbacks
 from conary.conaryclient import cmdline
 from conary.deps import deps
 from conary.dbstore import sqlerrors
@@ -769,13 +769,11 @@ class ProductManager(manager.Manager):
                                    allowMissing=allowMissing)
         return dict((specMap[x[0]], x[1]) for x in results.items())
 
-    def _promoteGroup(self, client, pd, job, hostname, version, stageName, trove): 
-
+    def _promoteGroup(self, client, pd, job, hostname, version, stageName, trv):
         callback = ProductVersionCallback(hostname, version, job) 
         nextStage = str(stageName)
-        nextLabel = pd.getLabelForStage(nextStage)
         activeStage = None
-        activeLabel = str(trove.label)
+        activeLabel = str(trv.label)
 
         for stage in pd.getStages():
             if str(stage.name) == nextStage:
@@ -785,7 +783,8 @@ class ProductManager(manager.Manager):
         callback._message('Getting all trove information for the promotion')
 
         # Collect a list of groups to promote.
-        groupSpecs = [ '%s[%s]' % x for x in self.getVersionGroupFlavors(pd, trove.version) ]
+        groupSpecs = [ '%s[%s]' % x for x in self.getVersionGroupFlavors(pd,
+            trv.version) ]
         allTroves = self._findTrovesFlattened(client, groupSpecs, activeLabel)
 
         fromTo = pd.getPromoteMapsForStages(activeStage, nextStage)
@@ -804,6 +803,31 @@ class ProductManager(manager.Manager):
             callback._message('Committed')
             callback.done()
         else:
-            callback.error('Changeset was not cloned')
 
-        return
+            # Check to see if the trove that we are trying to promote is already
+            # on the target label.
+            targetSpecs = client.repos.findTroves(None,
+                [(n, promoteMap.get(v.trailingLabel()), f)
+                for n, v, f in allTroves ], getLeaves=False)
+
+            reqSpecs = sorted([ x for x in
+                itertools.chain(*targetSpecs.values()) ])
+
+            ti = client.repos.getTroveInfo(trove._TROVEINFO_TAG_CLONEDFROM,
+                reqSpecs)
+
+            sourceVersions = [ (n, t(), f) for (n, v, f), t in
+                itertools.izip(reqSpecs, ti) ]
+
+            error = False
+            for spec in allTroves:
+                if spec not in sourceVersions:
+                    error = True
+                    break
+
+            if error:
+                callback.error('Changeset was not cloned')
+
+            else:
+                callback._message('This version has already been promoted')
+                callback.done()
