@@ -692,10 +692,10 @@ class JobCreationTest(BaseTargetsTest, RepeaterMixIn):
         self.failUnlessEqual(
             [ x.name for x in obj.descriptor.dataFields.field ],
             [
-                'instanceId', 'imageTitle', 'imageName', 'architecture', 'stageId',
+                'instanceId', 'imageTitle', 'architecture', 'stageId',
                 'metadata_owner', 'metadata_admin',
         ])
-        stageDescs = obj.descriptor.dataFields.field[4].enumeratedType.describedValue
+        stageDescs = obj.descriptor.dataFields.field[3].enumeratedType.describedValue
         self.failUnlessEqual(
             [ x.descriptions.desc for x in stageDescs ],
             [
@@ -708,7 +708,7 @@ class JobCreationTest(BaseTargetsTest, RepeaterMixIn):
             [ '1', '2', '3', ])
         self.failUnlessEqual(obj.descriptor.dataFields.field[0].default,
             system.target_system_id)
-        self.failUnlessEqual(obj.descriptor.dataFields.field[4].default, '1')
+        self.failUnlessEqual(obj.descriptor.dataFields.field[3].default, '1')
 
         # Post a job
         jobXmlTmpl = """
@@ -717,7 +717,6 @@ class JobCreationTest(BaseTargetsTest, RepeaterMixIn):
   <descriptor id="http://testserver/api/v1/inventory/systems/%(systemId)s/descriptors/capture"/>
   <descriptor_data>
     <imageTitle>%(imageTitle)s</imageTitle>
-    <imageName>%(imageName)s</imageName>
     <instanceId>%(instanceId)s</instanceId>
     <stageId>%(stageId)s</stageId>
     <architecture>%(arch)s</architecture>
@@ -730,7 +729,6 @@ class JobCreationTest(BaseTargetsTest, RepeaterMixIn):
         jobXml = jobXmlTmpl % dict(jobTypeId=21, systemId=systemId,
             instanceId=system.target_system_id,
             imageTitle="Captured image from system 1",
-            imageName="captured-system-image",
             arch='x86_64',
             owner="Owner",
             admin="Admin",
@@ -762,7 +760,7 @@ class JobCreationTest(BaseTargetsTest, RepeaterMixIn):
         realCall = calls[-1]
         params = {
             'architecture' : 'x86_64',
-            'imageName': u'captured-system-image',
+            'imageName': u'Captured_image_from_system_1.ova',
             'imageTitle': u'Captured image from system 1',
             'instanceId': 'efe28c20-bbda-434c-87ae-9f4006114a1f',
             'metadata_admin': u'Admin',

@@ -6,6 +6,7 @@
 
 import inspect
 import os
+import re
 import weakref
 import StringIO
 import urlparse
@@ -543,8 +544,9 @@ class JobHandlerRegistry(HandlerRegistry):
                 for x in self.descriptorData.getFields())
             stageId = int(params.pop('stageId'))
             stage = self.mgr.mgr.getStage(stageId)
+            imageTitle = params.get('imageTitle')
             image = self.mgr.mgr.createImage(
-                name=params.get('imageTitle'),
+                name=imageTitle,
                 project_branch_stage=stage)
             image.architecture = params.get('architecture')
             image = self.mgr.mgr.createImageBuild(image)
@@ -557,7 +559,12 @@ class JobHandlerRegistry(HandlerRegistry):
                 host, stage.project.short_name, image.image_id)
             params['image_id'] = 'https://%s/api/v1/images/%s' % (
                 host, image.image_id)
+            params['imageName'] = "%s.ova" % self._sanitizeString(imageTitle)
             return (self.system.target_system_id, params), {}
+
+        @classmethod
+        def _sanitizeString(cls, strobj):
+            return re.sub('[^-\w.]', '_', strobj)
 
         def getRelatedThroughModel(self, descriptor):
             return inventorymodels.SystemJob
