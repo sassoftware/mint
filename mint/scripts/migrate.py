@@ -3796,10 +3796,10 @@ class MigrateTo_58(SchemaMigration):
         cu = self.db.cursor()
         db = self.db
         filterId = schema._addQuerySetFilterEntry(db, "rbac_role.role_id", "IS_NULL", "false")
-        qsId = schema._addQuerySet(db, "All Roles", "All roles", "role", False, filterId, 'rbac',
+        schema._addQuerySet(db, "All Roles", "All roles", "role", False, filterId, 'rbac',
                version=(58,56))
         filterId = schema._addQuerySetFilterEntry(db, "rbac_permission.permission_id", "IS_NULL", "false")
-        qsId = schema._addQuerySet(db, "All Grants", "All grants", "grant", False, filterId, 'rbac',
+        schema._addQuerySet(db, "All Grants", "All grants", "grant", False, filterId, 'rbac',
                version=(58,56))
         createTable(self.db, """ 
             CREATE TABLE "querysets_permissiontag" (
@@ -4311,7 +4311,7 @@ class MigrateTo_58(SchemaMigration):
 
         # TODO: also have to add filter entry
         filterId = schema._addQuerySetFilterEntry(db, "target.name", "IS_NULL", "false")
-        qsId = schema._addQuerySet(db, "All Targets", "All targets", "target", False, filterId,
+        schema._addQuerySet(db, "All Targets", "All targets", "target", False, filterId,
             version=(58,69))
 
         return True

@@ -1342,7 +1342,6 @@ class XObjModel(models.Model):
                            text       = val._xobj.text,
                            tag        = serialized_as
                         ) 
-                        # import epdb; epdb.st()
                         setattr(xobj_model, serialized_as, val)
                 else:
                     setattr(xobj_model, fieldName, '')
