@@ -662,12 +662,12 @@ class SaveableManyToManyManager(BaseManager):
         accessor = getattr(model, m2m_accessor)
         try:
             accessor.add(rel_mod)
-        except pyexceptions.ValueError, ve:
-            if not (m2m_accessor in model._m2m_safe_to_create):
-               raise Exception("unable to save %s" % m2m_accessor)
+        except pyexceptions.ValueError:
             if flags and flags.original_flags and flags.original_flags.save: 
-               rel_mod.save()
-               accessor.add(rel_mod)
+                if not (m2m_accessor in model._m2m_safe_to_create):
+                    raise Exception("unable to save %s" % m2m_accessor)
+                rel_mod.save()
+                accessor.add(rel_mod)
 
 
 class VersionManager(BaseManager):
