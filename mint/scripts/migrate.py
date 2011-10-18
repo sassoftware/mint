@@ -3151,9 +3151,9 @@ class MigrateTo_58(SchemaMigration):
     def migrate9(self):
         cu = self.db.cursor()
         cu.execute("""ALTER TABLE querysets_queryset ADD COLUMN presentation_type TEXT""")
-        schema._createInfrastructureSystemsQuerySetSchema(self.db)
-        schema._createWindowsBuildSystemsQuerySet(self.db)
-        schema._createUpdateSystemsQuerySet(self.db)
+        schema._createInfrastructureSystemsQuerySetSchema(self.db, version=(58,9))
+        schema._createWindowsBuildSystemsQuerySet(self.db, version=(58,9))
+        schema._createUpdateSystemsQuerySet(self.db, version=(58,9))
         return True
     
     def migrate10(self):
@@ -3190,7 +3190,7 @@ class MigrateTo_58(SchemaMigration):
     def migrate13(self):
         cu = self.db.cursor()
         cu.execute("""DELETE FROM querysets_queryset WHERE name='All Appliances'""")
-        schema._createAllProjectBranchStages13(self.db)
+        schema._createAllProjectBranchStages13(self.db, version=(58,13))
         
         createTable(self.db, """
             CREATE TABLE "querysets_stagetag" (
@@ -3254,7 +3254,7 @@ class MigrateTo_58(SchemaMigration):
             ['queryset_id', 'filterentry_id'])
 
         # add new query sets
-        schema._createAllPlatformBranchStages(self.db)
+        schema._createAllPlatformBranchStages(self.db, version=(58,18))
         return True
 
     def migrate19(self):
@@ -3266,7 +3266,7 @@ class MigrateTo_58(SchemaMigration):
         cu = self.db.cursor()
         cu.execute("""UPDATE querysets_queryset SET resource_type='project' WHERE name='All Projects'""")
         cu.execute("""UPDATE querysets_queryset SET presentation_type=NULL WHERE name='All Projects'""")
-        schema._createAllProjectBranchStages(self.db)
+        schema._createAllProjectBranchStages(self.db, version=(58,20))
         return True
 
     def migrate21(self):
@@ -3679,9 +3679,9 @@ class MigrateTo_58(SchemaMigration):
         cu.execute("DELETE FROM querysets_queryset WHERE name='All Platforms'")
         cu.execute("DELETE FROM querysets_queryset WHERE name='All Projects'")
     
-        schema._createAllProjectBranchStages(self.db)
-        schema._createAllPlatformBranchStages(self.db)
-        schema._createAllProjects(self.db)
+        schema._createAllProjectBranchStages(self.db, version=(58,50))
+        schema._createAllPlatformBranchStages(self.db, version=(58,50))
+        schema._createAllProjects(self.db, version=(58,50))
 
         return True
 
@@ -3796,9 +3796,11 @@ class MigrateTo_58(SchemaMigration):
         cu = self.db.cursor()
         db = self.db
         filterId = schema._addQuerySetFilterEntry(db, "rbac_role.role_id", "IS_NULL", "false")
-        qsId = schema._addQuerySet(db, "All Roles", "All roles", "role", False, filterId, 'rbac')
+        qsId = schema._addQuerySet(db, "All Roles", "All roles", "role", False, filterId, 'rbac',
+               version=(58,56))
         filterId = schema._addQuerySetFilterEntry(db, "rbac_permission.permission_id", "IS_NULL", "false")
-        qsId = schema._addQuerySet(db, "All Grants", "All grants", "grant", False, filterId, 'rbac')
+        qsId = schema._addQuerySet(db, "All Grants", "All grants", "grant", False, filterId, 'rbac',
+               version=(58,56))
         createTable(self.db, """ 
             CREATE TABLE "querysets_permissiontag" (
                 "permission_tag_id" TEXT PRIMARY KEY,
@@ -4309,7 +4311,8 @@ class MigrateTo_58(SchemaMigration):
 
         # TODO: also have to add filter entry
         filterId = schema._addQuerySetFilterEntry(db, "target.name", "IS_NULL", "false")
-        qsId = schema._addQuerySet(db, "All Targets", "All targets", "target", False, filterId)
+        qsId = schema._addQuerySet(db, "All Targets", "All targets", "target", False, filterId,
+            version=(58,69))
 
         return True
 
@@ -4376,6 +4379,29 @@ class MigrateTo_58(SchemaMigration):
         self.db.cursor().execute("""
              UPDATE querysets_filterentry SET field = 'target.target_id' WHERE
                  field = 'target.targetid'
+        """)
+        return True
+
+class MigrateTo_59(SchemaMigration):
+    '''Edge-P2'''
+    Version = (59, 0)
+
+    def migrate(self):
+        '''make some querysets always visible regardless of RBAC'''
+        cu = self.db.cursor()
+        cu.execute("""
+            ALTER TABLE querysets_queryset 
+                ADD COLUMN is_public BOOLEAN NOT NULL DEFAULT FALSE
+        """)
+
+        cu.execute("""
+            UPDATE querysets_queryset SET is_public = FALSE;
+        """)
+        cu.execute("""
+            UPDATE querysets_queryset SET is_public = TRUE WHERE
+               name='All Systems' OR name='All Projects' 
+               OR name='All Project Stages' OR NAME='All Users'
+               OR name='All Targets' OR name='All Platforms'
         """)
         return True
 

@@ -122,6 +122,9 @@ class QuerySet(modellib.XObjIdModel):
     can_modify = D(models.BooleanField(default=True),
         "Whether this query set can be deleted through the API.")
     actions = D(modellib.SyntheticField(jobmodels.Actions), 'Available actions on this query set')
+    # public querysets are querysets like "All Systems" and do not require rbac ReadSet permissions
+    # to be visible, but will be empty unless ReadMember(ship) is conveyed on some of their contents.
+    is_public = XObjHidden(models.BooleanField(default=False))
 
     load_fields = [name]
 
