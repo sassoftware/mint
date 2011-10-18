@@ -702,7 +702,8 @@ class RbacEngineTests(RbacEngine):
         results = xobj_querysets.query_sets.query_set
         self.assertEquals(len(results), len(actual_qs), 'admin gets full queryset results')
 
-        # syadmin user can only see some query sets       
+        # syadmin user can only see some query sets -- those which he has Read Set
+        # on and those marked 'public'   
         response = self._get(url,
                username=self.sysadmin_user.user_name,
                password='password'
@@ -711,7 +712,7 @@ class RbacEngineTests(RbacEngine):
         xobj_querysets = xobj.parse(response.content)
         results = xobj_querysets.query_sets.query_set
         # granted permission to 2 systems querysets + 1 user queryset
-        self.assertEquals(len(results), 3, 'sysadmin user gets fewer results')
+        self.assertEquals(len(results), 7, 'sysadmin user gets fewer results')
  
         # sysadmin user CAN see & use the all systems queryset
         # because he has permissions on it
@@ -727,8 +728,14 @@ class RbacEngineTests(RbacEngine):
         self.assertEquals(response.status_code, 200)
  
         # intern user can't see or use the datacenter query set
-        # because he hasn't been given permissions on it
+        # because he hasn't been given permissions on it, but he can
+        # see all systems -- it is public
         response = self._get("query_sets/%s" % self.sys_queryset.pk,
+            username=self.intern_user.user_name,
+            password='password'
+        )
+        self.assertEquals(response.status_code, 200)
+        response = self._get("query_sets/%s" % self.lab_queryset.pk,
             username=self.intern_user.user_name,
             password='password'
         )

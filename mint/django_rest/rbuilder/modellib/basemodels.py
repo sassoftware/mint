@@ -1335,7 +1335,15 @@ class XObjModel(models.Model):
                         setattr(xobj_model, fieldName, refModel)
                     else:
                         val = val.serialize(request)
-                        setattr(xobj_model, fieldName, val)
+                        serialized_as = getattr(val, 'serialized_as', fieldName)
+                        val._xobj = xobj.XObjMetadata(
+                           elements   = val._xobj.elements,
+                           attributes = val._xobj.attributes,
+                           text       = val._xobj.text,
+                           tag        = serialized_as
+                        ) 
+                        # import epdb; epdb.st()
+                        setattr(xobj_model, serialized_as, val)
                 else:
                     setattr(xobj_model, fieldName, '')
 
@@ -1647,6 +1655,7 @@ class SerializedForeignKey(ForeignKey):
     def __init__(self, *args, **kwargs):
         self.text_field = None
         self.serialized = True
+        self.serialized_as = kwargs.pop('serialized_as', None)
         super(SerializedForeignKey, self).__init__(*args, **kwargs)
 
 class DeferredForeignKeyMixIn(object):
