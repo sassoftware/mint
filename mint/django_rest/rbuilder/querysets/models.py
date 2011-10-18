@@ -11,7 +11,6 @@ from django.db import models
 
 from mint.django_rest.deco import D
 from mint.django_rest.rbuilder import modellib
-#from mint.django_rest.rbuilder.inventory import models as inventorymodels
 from mint.django_rest.rbuilder.users import models as usersmodels
 from mint.django_rest.rbuilder.projects import models as projectsmodels
 from mint.django_rest.rbuilder.rbac import models as rbacmodels
@@ -94,9 +93,11 @@ class CollectionId(modellib.XObjIdModel):
 class QuerySet(modellib.XObjIdModel):
     '''An individual queryset, ex: "All Systems"'''
 
+    objects = modellib.SaveableManyToManyManager()
     _xobj = xobj.XObjMetadata(
                 tag = "query_set")
     _xobj_explicit_accessors = set(['grants', ])
+    _m2m_safe_to_create = [ 'filter_entries' ]
 
     query_set_id = D(models.AutoField(primary_key=True),
         "The database id for the query set")
@@ -240,6 +241,7 @@ class QuerySet(modellib.XObjIdModel):
         return results
 
 class FilterEntry(modellib.XObjIdModel):
+
     class Meta:
         unique_together = ('field', 'operator', 'value')
 
