@@ -176,6 +176,13 @@ class QuerySetTestCase(QueryTestCase):
         filtered2 = self.xobjSystems("query_sets/%s/filtered/" % qs1.pk)
         self.assertEquals(len(filtered2), 38)
 
+        # try to add new filter terms on edit
+        # without supplying a database ID for them
+        response = self._put("query_sets/%s" % qs1.pk,
+            username="admin", password="password",
+            data=testsxml.queryset_put_xml_different)
+        self.assertEquals(response.status_code, 200)
+
     def testPostQuerySet(self):
         # show that we can add a new query set
         # get before result
