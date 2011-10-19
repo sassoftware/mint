@@ -101,7 +101,11 @@ class QuerySetTestCase(QueryTestCase):
             username="admin", password="password")
         self.assertEquals(response.status_code, 200)
         self.assertXMLEquals(response.content, testsxml.queryset_with_actions,
-          ignoreNodes=['filter_entry_id','created_date','tagged_date','modified_date'])
+          ignoreNodes=[
+             'filter_entry_id', 'created_date',
+             'last_login_date', 'created_by', 'modified_by',
+             'tagged_date', 'modified_date',
+          ])
 
         # every queryset should have a "universe" URL that points to the all
         # collection for the given queryset type

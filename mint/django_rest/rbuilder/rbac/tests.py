@@ -120,18 +120,13 @@ class RbacTestCase(XMLTestCase):
         elif is_authenticated:
              response = method_map[method](url, username="testuser", password="password", **kwargs)
         else:
-             response = method_map[method](url, **kwargs)
+            response = method_map[method](url, **kwargs)
         #if response.status_code != expect:
         #     print "RESPONSE: %s\n" % response.content
         self.failUnlessEqual(response.status_code, expect, "Expected status code of %s for %s" % (expect, url))
         return response.content
 
 class RbacBasicTestCase(RbacTestCase):
-
-    #def setUp(self):
-    #    # just a stub for later...
-    #    XMLTestCase.setUp(self)
-    #    pass
 
     def testModelsForRbacRoles(self):
         '''verify django models for roles work'''

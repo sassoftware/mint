@@ -87,7 +87,7 @@ class ExceptionLoggerMiddleware(BaseMiddleware):
             code=404
             if request.method not in [ 'GET', 'DELETE' ]:
                 code = 400
-
+ 
             # log full details, but don't present to user, in case
             # XML submitted was rather confusing and we can't tell what
             # was not found on the lookup, which could happen

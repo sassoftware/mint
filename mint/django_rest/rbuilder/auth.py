@@ -8,7 +8,6 @@ from hashlib import md5
 import base64
 import cPickle
 
-
 def getCookieAuth(request):
     # the pysid cookie contains the session reference that we can use to
     # look up the proper credentials
@@ -90,3 +89,4 @@ class rBuilderBackend(object):
             return User.objects.get(pk=user_id)
         except User.DoesNotExist:
             return None
+

@@ -60,9 +60,11 @@ class UsersService(service.BaseService):
     @requires('user')
     @return_xml
     def rest_POST(self, request, user):
+        # TODO: verify we have a user
+        by_user = getattr(request, '_authUser', None) 
         if not user.user_name:
             return HttpResponse(status=400)
-        return self.mgr.addUser(user)
+        return self.mgr.addUser(user, by_user)
 
     @rbac(rbac_can_write_user)
     @requires('user')
@@ -71,7 +73,7 @@ class UsersService(service.BaseService):
         oldUser = self.mgr.getUser(user_id)
         if oldUser.pk != user.pk:
             raise PermissionDenied()
-        return self.mgr.updateUser(user_id, user)
+        return self.mgr.updateUser(user_id, user, request._authUser)
 
     @access.admin
     def rest_DELETE(self, request, user_id):

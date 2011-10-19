@@ -11,6 +11,7 @@ from dateutil import tz
 
 from mint.django_rest.rbuilder.users import manager_model
 from mint.django_rest.deco import D
+APIReadOnly = modellib.APIReadOnly
 
 class Users(modellib.Collection):
     class Meta:
@@ -33,8 +34,9 @@ class User(modellib.XObjIdModel):
     passwd = modellib.XObjHidden(models.CharField(max_length=254, null=True))
     email = D(models.CharField(max_length=128), "User email", short="User email")
     display_email = D(models.TextField(db_column='displayemail'), "User display email", short="User display email")
-    created_date = D(modellib.DecimalField(max_digits=14, decimal_places=3, db_column='timecreated'), "User created date", short="User created date")
-    modified_date = D(modellib.DecimalField(max_digits=14, decimal_places=3, db_column='timeaccessed'), "User active", short="User active")
+    created_date = D(APIReadOnly(modellib.DecimalField(max_digits=14, decimal_places=3, db_column='timecreated')), "User created date", short="User created date")
+    last_login_date = D(APIReadOnly(modellib.DecimalField(max_digits=14, decimal_places=3, db_column='timeaccessed')), "User last login date", short="User last login date")
+    modified_date = D(APIReadOnly(modellib.DecimalField(max_digits=14, decimal_places=3, db_column='timemodified')), "User modified date", short="User modified date")
     active = modellib.XObjHidden(modellib.APIReadOnly(models.SmallIntegerField()))
     blurb = models.TextField()
     _is_admin = modellib.XObjHidden(modellib.APIReadOnly(
@@ -42,6 +44,11 @@ class User(modellib.XObjIdModel):
 
     is_admin = D(modellib.SyntheticField(), "User is admin?", short="User is admin?")
     external_auth = D(modellib.SyntheticField(models.BooleanField()), "User external auth?", short="User external auth?")
+
+    created_by = D(APIReadOnly(models.ForeignKey('User', related_name='+', db_column='created_by', null=True)), 
+        "User created by", short="User created by")
+    modified_by = D(APIReadOnly(models.ForeignKey('User', related_name='+', db_column='modified_by', null=True)), 
+        "User modified by", short="User modified by")
 
     # Field used for the clear-text password when it is to be
     # set/changed
@@ -130,9 +137,12 @@ class User(modellib.XObjIdModel):
         # Convert timestamp fields in the database to our standard UTC format
         xobjModel.created_date = str(datetime.datetime.fromtimestamp(
             xobjModel.created_date, tz.tzutc()))
-        xobjModel.modified_date = str(datetime.datetime.fromtimestamp(
-            xobjModel.modified_date, tz.tzutc()))
-        
+        if self.modified_date is not None:
+            xobjModel.modified_date = str(datetime.datetime.fromtimestamp(
+                xobjModel.modified_date, tz.tzutc()))
+        if self.last_login_date is not None:
+           xobjModel.last_login_date = str(datetime.datetime.fromtimestamp(
+               xobjModel.last_login_date, tz.tzutc()))
         return xobjModel
 
 class Session(modellib.XObjIdModel):

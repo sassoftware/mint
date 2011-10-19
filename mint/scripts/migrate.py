@@ -4384,7 +4384,7 @@ class MigrateTo_58(SchemaMigration):
 
 class MigrateTo_59(SchemaMigration):
     '''Edge-P2'''
-    Version = (59, 0)
+    Version = (59, 1)
 
     def migrate(self):
         '''make some querysets always visible regardless of RBAC'''
@@ -4404,6 +4404,24 @@ class MigrateTo_59(SchemaMigration):
                OR name='All Targets' OR name='All Platforms'
         """)
         return True
+
+    def migrate1(self):
+        '''track additional audit params on users'''
+        cu = self.db.cursor()
+        cu.execute(""" 
+            ALTER TABLE Users ADD COLUMN
+                timeModified numeric(14,3)
+        """)
+        cu.execute("""
+            ALTER TABLE Users ADD COLUMN created_by integer
+                REFERENCES Users ON DELETE SET NULL
+        """)
+        cu.execute("""
+            ALTER TABLE Users ADD COLUMN modified_by integer
+                REFERENCES Users ON DELETE SET NULL
+        """)
+        return True
+
 
 #### SCHEMA MIGRATIONS END HERE #############################################
 
