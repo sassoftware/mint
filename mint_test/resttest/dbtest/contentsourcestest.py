@@ -70,9 +70,9 @@ class ContentSourceTypeTest(mint_rephelp.MintDatabaseHelper):
         class Mock(base.Mock):
             class TransportDefaults(object):
                 dataMap = {
-                    'auth.login' : (":sessionHandle:", ),
+                    'auth.login' : ":sessionHandle:",
                     'channel.software.availableEntitlements' : {
-                        (':sessionHandle:', 'rhel-i386-as-4') : (10, ),
+                        (':sessionHandle:', 'rhel-i386-as-4') : 10,
                     },
                 }
             class Transport(base.Mock.Transport):

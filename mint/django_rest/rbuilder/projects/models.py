@@ -2,22 +2,15 @@
 # Copyright (c) 2011 rPath, Inc.
 #
 
-import datetime
 import re
 import sys
 import time
-from conary import trovetup
-from conary import versions
-from conary.deps import deps
-from dateutil import tz
 from django.db import models
 from mint import projects as mintprojects
 from mint import helperfuncs, userlevels
-from mint import mint_error
 from mint.django_rest.rbuilder import modellib
 from mint.django_rest.deco import D
 from mint.django_rest.rbuilder.users import models as usermodels
-from mint.django_rest.rbuilder.jobs import models as jobmodels
 from xobj import xobj
 
 
@@ -102,9 +95,9 @@ class Project(modellib.XObjIdModel):
     commit_email = D(models.CharField(max_length=128, null=True, blank=True, db_column="commitemail"), 
         "Project commit email", short="Project commit email")
     backup_external = models.BooleanField(default=False, db_column="backupexternal")
-    created_date = D(models.DecimalField(max_digits=14, decimal_places=3,
+    created_date = D(modellib.DecimalTimestampField(
         blank=True, db_column="timecreated"), "Project created ate", short="Project created date")
-    modified_date = D(models.DecimalField(max_digits=14, decimal_places=3,
+    modified_date = D(modellib.DecimalTimestampField(
         blank=True, db_column="timemodified"), "Project modified date", short="Project modified date")
     hidden = models.BooleanField(default=False)
     creator = D(models.ForeignKey(usermodels.User,
@@ -145,12 +138,6 @@ class Project(modellib.XObjIdModel):
                 role = userlevels.names[member[0].level]
                 xobjModel.role = role
 
-        # Convert timestamp fields in the database to our standard UTC format
-        xobjModel.created_date = str(datetime.datetime.fromtimestamp(
-            xobjModel.created_date, tz.tzutc()))
-        xobjModel.modified_date = str(datetime.datetime.fromtimestamp(
-            xobjModel.modified_date, tz.tzutc()))
-
         # Attach URL and auth data from Labels if and only if this is a
         # proxy-mode external project. Otherwise these fields are meaningless.
         if not self.database:
@@ -177,7 +164,7 @@ class Project(modellib.XObjIdModel):
 
     @classmethod
     def Now(cls):
-        return "%.2f" % time.time()
+        return time.time()
 
     @classmethod
     def validateNamespace(cls, namespace):
@@ -292,7 +279,7 @@ class ProjectVersion(modellib.XObjIdModel):
     name = D(models.CharField(max_length=16), "Branch name", short="Branch name")
     description = D(models.TextField(), "Branch description", short="Branch description")
     platform_label = D(models.TextField(null=True), "Branch platform label", short="Branch platform label")
-    created_date = D(models.DecimalField(max_digits=14, decimal_places=3,
+    created_date = D(modellib.DecimalTimestampField(
         db_column="timecreated"), "Branch created date", short="Branch created date")
 
     platform_id = modellib.XObjHidden(models.IntegerField(null=True, db_column='platform_id'))
@@ -375,10 +362,6 @@ class ProjectVersion(modellib.XObjIdModel):
             href='/api/products/%s/versions/%s/definition',
             values=oldUrlValues)
         xobjModel = modellib.XObjIdModel.serialize(self, request)
-        # Convert timestamp fields in the database to our standard UTC format
-        if xobjModel.created_date:
-            xobjModel.created_date = str(datetime.datetime.fromtimestamp(
-                xobjModel.created_date, tz.tzutc()))
         # XXX FIXME: this should not be needed
         xobjModel.project_branch_stages.id = "%s/project_branch_stages" % (xobjModel.id, )
         return xobjModel
@@ -482,22 +465,22 @@ class Release(modellib.XObjIdModel):
     name = models.CharField(max_length=255, blank=True, default='')
     version = models.CharField(max_length=32, blank=True, default='')
     description = models.TextField()
-    time_created = models.DecimalField(max_digits=14, decimal_places=3,
+    time_created = modellib.DecimalTimestampField(
         db_column='timecreated', null=True)
     created_by = modellib.ForeignKey('users.User', db_column='createdby',
         related_name='created_releases', null=True)
-    time_updated = models.DecimalField(max_digits=14, decimal_places=3,
+    time_updated = modellib.DecimalTimestampField(
         null=True, db_column='timeupdated')
     updated_by = modellib.ForeignKey('users.User', db_column='updatedby',
         related_name='updated_releases', null=True)
-    time_published = models.DecimalField(max_digits=14, decimal_places=3,
+    time_published = modellib.DecimalTimestampField(
         db_column='timepublished', null=True)
     published_by = modellib.ForeignKey('users.User', 
         db_column='publishedby', related_name='published_releases',
         null=True)
     should_mirror = models.SmallIntegerField(db_column='shouldmirror',
         blank=True, default=0)
-    time_mirrored = models.DecimalField(max_digits=14, decimal_places=3,
+    time_mirrored = modellib.DecimalTimestampField(
         null=True, db_column='timemirrored')
     published = modellib.SyntheticField()
     
@@ -506,24 +489,8 @@ class Release(modellib.XObjIdModel):
             self.published = True
         else:
             self.published = False
-    
-    def serialize(self, request=None):
-        xobjModel = modellib.XObjIdModel.serialize(self, request)
-        # Convert timestamp fields in the database to our standard UTC format
-        if xobjModel.time_created:
-            xobjModel.time_created = str(datetime.datetime.fromtimestamp(
-                xobjModel.time_created, tz.tzutc()))
-        if xobjModel.time_updated:
-            xobjModel.time_updated = str(datetime.datetime.fromtimestamp(
-                xobjModel.time_updated, tz.tzutc()))
-        if xobjModel.time_published:
-            xobjModel.time_published = str(datetime.datetime.fromtimestamp(
-                xobjModel.time_published, tz.tzutc()))
-        if xobjModel.time_mirrored:
-            xobjModel.time_mirrored = str(datetime.datetime.fromtimestamp(
-                xobjModel.time_mirrored, tz.tzutc()))
-        return xobjModel
-    
+
+
 class InboundMirror(modellib.XObjModel):
     _xobj = xobj.XObjMetadata(tag="inbound_mirror")
     class Meta:

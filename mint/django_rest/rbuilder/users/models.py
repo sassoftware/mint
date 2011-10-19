@@ -6,8 +6,6 @@ from django.db import models
 from mint.django_rest.rbuilder import modellib
 from xobj import xobj
 import sys
-import datetime
-from dateutil import tz
 
 from mint.django_rest.rbuilder.users import manager_model
 from mint.django_rest.deco import D
@@ -34,9 +32,9 @@ class User(modellib.XObjIdModel):
     passwd = modellib.XObjHidden(models.CharField(max_length=254, null=True))
     email = D(models.CharField(max_length=128), "User email", short="User email")
     display_email = D(models.TextField(db_column='displayemail'), "User display email", short="User display email")
-    created_date = D(APIReadOnly(modellib.DecimalField(max_digits=14, decimal_places=3, db_column='timecreated')), "User created date", short="User created date")
-    last_login_date = D(APIReadOnly(modellib.DecimalField(max_digits=14, decimal_places=3, db_column='timeaccessed')), "User last login date", short="User last login date")
-    modified_date = D(APIReadOnly(modellib.DecimalField(max_digits=14, decimal_places=3, db_column='timemodified')), "User modified date", short="User modified date")
+    created_date = D(APIReadOnly(modellib.DecimalTimestampField(max_digits=14, decimal_places=3, db_column='timecreated')), "User created date", short="User created date")
+    last_login_date = D(APIReadOnly(modellib.DecimalTimestampField(max_digits=14, decimal_places=3, db_column='timeaccessed')), "User last login date", short="User last login date")
+    modified_date = D(APIReadOnly(modellib.DecimalTimestampField(max_digits=14, decimal_places=3, db_column='timemodified')), "User modified date", short="User modified date")
     active = modellib.XObjHidden(modellib.APIReadOnly(models.SmallIntegerField()))
     blurb = models.TextField()
     _is_admin = modellib.XObjHidden(modellib.APIReadOnly(
@@ -130,20 +128,6 @@ class User(modellib.XObjIdModel):
         self.roles = modellib.HrefField(
            href="/api/v1/users/%s/roles" % self.user_id
         )
-
-    def serialize(self, request=None):
-        xobjModel = modellib.XObjIdModel.serialize(self, request)
-
-        # Convert timestamp fields in the database to our standard UTC format
-        xobjModel.created_date = str(datetime.datetime.fromtimestamp(
-            xobjModel.created_date, tz.tzutc()))
-        if self.modified_date is not None:
-            xobjModel.modified_date = str(datetime.datetime.fromtimestamp(
-                xobjModel.modified_date, tz.tzutc()))
-        if self.last_login_date is not None:
-           xobjModel.last_login_date = str(datetime.datetime.fromtimestamp(
-               xobjModel.last_login_date, tz.tzutc()))
-        return xobjModel
 
 class Session(modellib.XObjIdModel):
     class Meta:

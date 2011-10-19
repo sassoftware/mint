@@ -2,9 +2,7 @@
 #
 # Copyright (c) 2011 rPath, Inc.
 #
-# All rights reserved.
-#
-import types
+
 import datetime
 from dateutil import parser
 from dateutil import tz
@@ -1270,6 +1268,8 @@ class XObjModel(models.Model):
                     continue
                 if val is None:
                     val = ''
+                elif hasattr(field, 'to_xobj'):
+                    val = field.to_xobj(val, request)
                 # Special handling of DateTimeFields.  Could make this OO by
                 # calling .seriaize(...) on each field, and overriding that
                 # behavior for DateTimeField's, but as long as it's just this
@@ -1685,6 +1685,22 @@ class DecimalField(models.DecimalField):
         if isinstance(value, float):
             value = str(value)
         return models.DecimalField.to_python(self, value)
+
+
+class DecimalTimestampField(DecimalField):
+
+    def __init__(self, **kwargs):
+        kwargs.setdefault('max_digits', 14)
+        kwargs.setdefault('decimal_places', 3)
+        DecimalField.__init__(self, **kwargs)
+
+    def to_xobj(self, val, request):
+        if val is not None:
+            ts = datetime.datetime.fromtimestamp(val, tz.tzutc())
+            return str(ts)
+        else:
+            return ''
+
 
 class DateTimeUtcField(models.DateTimeField):
     """
