@@ -62,7 +62,7 @@ class UsersTestCase(RbacEngine):
         class FakeUsers(object):
             def registerNewUser(slf, userName, password, fullName,
                     email, displayEmail, blurb, active):
-                now = "%.3f" % time.time()
+                now = time.time()
                 salt, pw = self._mungePassword(password)
                 cu = connection.cursor()
                 try:

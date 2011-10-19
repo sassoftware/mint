@@ -45,8 +45,7 @@ class ImagesManager(basemanager.BaseManager):
         outputToken = sha1helper.sha1ToString(file('/dev/urandom').read(20))
         buildData = [('outputToken', outputToken, datatypes.RDT_STRING)]
 
-        now = time.time()
-        image.time_created = image.time_updated = "%.5f" % now
+        image.time_created = image.time_updated = time.time()
         image.created_by_id = self.user.user_id
         image.image_count = 0
         if image.project_branch_stage_id:
