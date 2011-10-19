@@ -6,6 +6,8 @@ from django.db import models
 from mint.django_rest.rbuilder import modellib
 from xobj import xobj
 import sys
+import datetime
+from dateutil import tz
 
 from mint.django_rest.rbuilder.users import manager_model
 from mint.django_rest.deco import D
@@ -122,6 +124,16 @@ class User(modellib.XObjIdModel):
            href="/api/v1/users/%s/roles" % self.user_id
         )
 
+    def serialize(self, request=None):
+        xobjModel = modellib.XObjIdModel.serialize(self, request)
+
+        # Convert timestamp fields in the database to our standard UTC format
+        xobjModel.created_date = str(datetime.datetime.fromtimestamp(
+            xobjModel.created_date, tz.tzutc()))
+        xobjModel.modified_date = str(datetime.datetime.fromtimestamp(
+            xobjModel.modified_date, tz.tzutc()))
+        
+        return xobjModel
 
 class Session(modellib.XObjIdModel):
     class Meta:
