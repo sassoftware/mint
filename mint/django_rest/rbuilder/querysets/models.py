@@ -128,6 +128,21 @@ class QuerySet(modellib.XObjIdModel):
 
     load_fields = [name]
 
+    # the name of the most important key (default) in the filter descriptor
+    _queryset_search_key_map = {
+        'system'               : 'System name' ,
+        'user'                 : 'User name'   ,
+        'project'              : 'Project name',
+        'project_branch_stage' : 'Project name',
+        'grant'                : 'Grant name'  ,
+        'role'                 : 'Role name'   ,
+        'target'               : 'Target name' , 
+    }
+
+    def searchKey(self):
+        '''The name of the most important item in the filter descriptor'''
+        return self._queryset_search_key_map[self.resource_type]
+
     def computeSyntheticFields(self, sender, **kwargs):
         ''' Compute non-database fields.'''
         self._computeActions()

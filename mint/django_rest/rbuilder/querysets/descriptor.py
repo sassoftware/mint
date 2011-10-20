@@ -191,35 +191,15 @@ def getFilterDescriptor(model, queryset):
        Sort alphabetically except that the most important item for each filter
        type must rise to the top
        '''
-
        if one == two:
            return 0
-
-       # TODO: take filter sort key from the queryset model
-       if queryset.resource_type == 'system':
-           if one.field_label == 'System name':
-               return -1
-       if queryset.resource_type == 'user':
-           if one.field_label == 'User name':
-               return -1
-       if queryset.resource_type == 'project':
-           if one.field_label == 'Project name':
-               return -1
-       if queryset.resource_type == 'project_branch_stage':
-           if one.field_label == 'Stage name':
-               return -1
-       if queryset.resource_type == 'grant':
-           if one.field_label == 'Grant name':
-               return -1
-       if queryset.resource_type == 'role':
-           if one.field_label == 'Role name':
-               return -1
-       if queryset.resource_type == 'target':
-           if one.field_label == 'Target name':
-               return -1
+       search_key = queryset.searchKey()
+       if one.field_label == search_key:
+           return -1
+       if two.field_label == search_key:
+           return 1
        return cmp(one.field_label, two.field_label)
 
     fd.field_descriptors.descriptors.sort(cmp=filter_sort)
-
     return fd
 
