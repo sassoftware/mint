@@ -371,7 +371,18 @@ class QuerySetManager(basemanager.BaseManager):
                 resources = resources | usermodels.User.objects.filter(
                     pk = for_user.pk
                 ).distinct()
-        
+            # while rbac permissions are handled largely in views and can delegate
+            # we need to do more here such that read access on a project implies I can read
+            # the stage in *listing* them.
+            if querySet.resource_type == 'project_branch_stage':
+               # django can't actually combine the two queries, so for now, just show the PBSes implied from P
+               # if there are no explicit grants on the PBS.
+               if len(list(resources)) == 0:
+                   resources = projectmodels.Stage.objects.filter(
+                       project__tags__query_set__grants__role__rbacuserrole__user = for_user,
+                       project__tags__query_set__grants__permission__name__in = [ READMEMBERS, MODMEMBERS ] 
+                   )
+ 
         setattr(resourceCollection, querySet.resource_type, resources)
         resourceCollection._parents = [querySet]
         return resourceCollection
