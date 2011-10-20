@@ -1695,7 +1695,7 @@ class DecimalTimestampField(DecimalField):
         DecimalField.__init__(self, **kwargs)
 
     def to_xobj(self, val, request):
-        if val is not None:
+        if val is not None and val != 0:
             ts = datetime.datetime.fromtimestamp(val, tz.tzutc())
             return str(ts)
         else:
