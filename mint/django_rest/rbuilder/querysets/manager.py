@@ -734,7 +734,8 @@ class QuerySetManager(basemanager.BaseManager):
         # set the tagged_date back to NULL so it will be retagged next time
         querySet = self._querySet(querySetId)
         tagModel = modellib.type_map[self.tagModelMap[querySet.resource_type]]
-        resourceArg = {querySet.resource_type:resource}
+        taggedField = getattr(tagModel, 'tagged_field', querySet.resource_type)
+        resourceArg = {taggedField:resource}
         tagModels = tagModel.objects.filter(query_set=querySet,
             inclusion_method=self._chosenMethod(), **resourceArg)
         tagModels.delete()

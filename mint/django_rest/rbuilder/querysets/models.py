@@ -506,6 +506,9 @@ class StageTag(modellib.XObjIdModel):
     )    
 
     load_fields = [stage, query_set, inclusion_method]
+    # Queryset resource_type is 'project_branch_stage' but the field here is
+    # just called 'stage', so a special override is needed.
+    tagged_field = 'stage'
     
     def get_absolute_url(self, *args, **kwargs):
         self._parents = [self.stage, self]
