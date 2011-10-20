@@ -230,7 +230,7 @@ role_list_xml = """
 """
 
 role_queryset_xml = """
-<roles count="3" end_index="2" filter_by="" full_collection="http://testserver/api/v1/query_sets/12/all" id="http://testserver/api/v1/query_sets/12/all;start_index=0;limit=10" limit="10" next_page="" num_pages="1" order_by="" per_page="10" previous_page="" start_index="0">
+<roles count="3" end_index="2" filter_by="" full_collection="http://testserver/api/v1/query_sets/11/all" id="http://testserver/api/v1/query_sets/11/all;start_index=0;limit=10" limit="10" next_page="" num_pages="1" order_by="" per_page="10" previous_page="" start_index="0">
   <role id="http://testserver/api/v1/rbac/roles/1">
     <users id="http://testserver/api/v1/rbac/roles/1/users/"/>
     <grants id="http://testserver/api/v1/rbac/roles/1/grants/"/>
@@ -467,7 +467,7 @@ permission_list_xml = """
       <name>ModMembers</name>
     </permission>
     <grant_id>3</grant_id>
-    <queryset id="http://testserver/api/v1/query_sets/16"/>
+    <queryset id="http://testserver/api/v1/query_sets/15"/>
     <created_by id="http://testserver/api/v1/users/1">
       <modified_date>1283530322.49</modified_date>
       <user_id>1</user_id>
@@ -507,7 +507,7 @@ permission_list_xml = """
       <name>ModMembers</name>
     </permission>
     <grant_id>1</grant_id>
-    <queryset id="http://testserver/api/v1/query_sets/17"/>
+    <queryset id="http://testserver/api/v1/query_sets/16"/>
     <created_by id="http://testserver/api/v1/users/1">
       <modified_date>1283530322.49</modified_date>
       <user_id>1</user_id>
@@ -547,7 +547,7 @@ permission_list_xml = """
       <name>ReadMembers</name>
     </permission>
     <grant_id>2</grant_id>
-    <queryset id="http://testserver/api/v1/query_sets/17"/>
+    <queryset id="http://testserver/api/v1/query_sets/16"/>
     <created_by id="http://testserver/api/v1/users/1">
       <modified_date>1283530322.49</modified_date>
       <user_id>1</user_id>
@@ -600,7 +600,7 @@ permission_list_xml_for_role = """
       <description>Modify Member Resources</description>
       <name>ModMembers</name>
     </permission>
-    <queryset id="http://testserver/api/v1/query_sets/17"/>
+    <queryset id="http://testserver/api/v1/query_sets/16"/>
     <role id="http://testserver/api/v1/rbac/roles/1">
       <description/>
       <name>sysadmin</name>
@@ -610,7 +610,7 @@ permission_list_xml_for_role = """
 """
 
 permission_queryset_xml = """
-<grants count="3" end_index="2" filter_by="" full_collection="http://testserver/api/v1/query_sets/13/all" id="http://testserver/api/v1/query_sets/13/all;start_index=0;limit=10" limit="10" next_page="" num_pages="1" order_by="" per_page="10" previous_page="" start_index="0">
+<grants count="3" end_index="2" filter_by="" full_collection="http://testserver/api/v1/query_sets/12/all" id="http://testserver/api/v1/query_sets/12/all;start_index=0;limit=10" limit="10" next_page="" num_pages="1" order_by="" per_page="10" previous_page="" start_index="0">
    <grant id="http://testserver/api/v1/rbac/grants/1">
   <created_by id="http://testserver/api/v1/users/1">
       <blurb/>
@@ -639,7 +639,7 @@ permission_queryset_xml = """
        <description>Modify Member Resources</description>
        <name>ModMembers</name>
      </permission>
-     <queryset id="http://testserver/api/v1/query_sets/17"/>
+     <queryset id="http://testserver/api/v1/query_sets/16"/>
     <role id="http://testserver/api/v1/rbac/roles/1">
       <description/>
       <name>sysadmin</name>
@@ -673,7 +673,7 @@ permission_queryset_xml = """
       <description>Read Member Resources</description>
       <name>ReadMembers</name>
      </permission>
-     <queryset id="http://testserver/api/v1/query_sets/17"/>
+     <queryset id="http://testserver/api/v1/query_sets/16"/>
      <role id="http://testserver/api/v1/rbac/roles/2">
       <description/>
       <name>developer</name>
@@ -707,7 +707,7 @@ permission_queryset_xml = """
         <description>Modify Member Resources</description>
         <name>ModMembers</name>
      </permission>
-     <queryset id="http://testserver/api/v1/query_sets/16"/>
+     <queryset id="http://testserver/api/v1/query_sets/15"/>
      <role id="http://testserver/api/v1/rbac/roles/2">
       <description/>
       <name>developer</name>
@@ -723,7 +723,7 @@ permission_get_xml = """
      <name>ModMembers</name>
   </permission>
   <grant_id>1</grant_id>
-  <queryset id="http://testserver/api/v1/query_sets/17"/>
+  <queryset id="http://testserver/api/v1/query_sets/16"/>
   <role id="http://testserver/api/v1/rbac/roles/1">
     <description/>
     <name>sysadmin</name>
@@ -759,7 +759,7 @@ permission_post_xml_input="""
      <description>Modify Member Resources</description>
      <name>ModMembers</name>
   </permission>
-  <queryset id="http://testserver/api/v1/query_sets/15"/>
+  <queryset id="http://testserver/api/v1/query_sets/14"/>
   <role id="http://testserver/api/v1/rbac/roles/2"/>
 </grant>
 """
@@ -770,7 +770,7 @@ permission_post_xml_output="""
      <description>Modify Member Resources</description>
      <name>ModMembers</name>
   </permission>
-  <queryset id="http://testserver/api/v1/query_sets/15"/>
+  <queryset id="http://testserver/api/v1/query_sets/14"/>
   <grant_id>4</grant_id>
   <role id="http://testserver/api/v1/rbac/roles/2">
     <description/>
@@ -807,7 +807,7 @@ permission_put_xml_input="""
     <description>Modify Member Resources</description>
     <name>ModMembers</name>
   </permission>
-  <queryset id="http://testserver/api/v1/query_sets/17"/>
+  <queryset id="http://testserver/api/v1/query_sets/16"/>
   <role id="http://testserver/api/v1/rbac/roles/3">
     <description/>
     <name>intern</name>
@@ -822,7 +822,7 @@ permission_put_xml_output="""
       <name>ModMembers</name>
    </permission>
    <grant_id>1</grant_id>
-   <queryset id="http://testserver/api/v1/query_sets/17"/>
+   <queryset id="http://testserver/api/v1/query_sets/16"/>
    <role id="http://testserver/api/v1/rbac/roles/3">
     <name>intern</name>
    </role>

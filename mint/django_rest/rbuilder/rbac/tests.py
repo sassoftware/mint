@@ -707,7 +707,7 @@ class RbacEngineTests(RbacEngine):
         xobj_querysets = xobj.parse(response.content)
         results = xobj_querysets.query_sets.query_set
         # granted permission to 2 systems querysets + 1 user queryset
-        self.assertEquals(len(results), 7, 'sysadmin user gets fewer results')
+        self.assertEquals(len(results), 6, 'sysadmin user gets fewer results')
  
         # sysadmin user CAN see & use the all systems queryset
         # because he has permissions on it

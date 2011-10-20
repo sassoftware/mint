@@ -633,7 +633,7 @@ image_by_release_post_xml = \
 </image>
 """
 empty_projects="""
-<projects count="0" end_index="0" filter_by="" full_collection="http://testserver/api/v1/query_sets/11/all" id="http://testserver/api/v1/query_sets/11/all;start_index=0;limit=10" limit="10" next_page="" num_pages="1" order_by="" per_page="10" previous_page="" start_index="0"/>
+<projects count="0" end_index="0" filter_by="" full_collection="http://testserver/api/v1/query_sets/10/all" id="http://testserver/api/v1/query_sets/10/all;start_index=0;limit=10" limit="10" next_page="" num_pages="1" order_by="" per_page="10" previous_page="" start_index="0"/>
 """
 
 image_by_release_post_result_xml = \
