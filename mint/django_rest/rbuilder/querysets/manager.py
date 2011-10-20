@@ -350,7 +350,7 @@ class QuerySetManager(basemanager.BaseManager):
         resourceCollection = modellib.type_map[
             self.resourceCollectionMap[querySet.resource_type]]
         resourceCollection = resourceCollection()
-
+                
         if for_user is None:
             # this happens when relabelling or when the user already has READMEMBER on the set.
             pass
@@ -360,10 +360,17 @@ class QuerySetManager(basemanager.BaseManager):
             pass
         else:
             # return all things that would be matched that I already have permissions on
+           
             resources = resources.filter(
                 tags__query_set__grants__role__rbacuserrole__user = for_user,
                 tags__query_set__grants__permission__name__in = [ READMEMBERS, MODMEMBERS ] 
             )
+              
+            # user hack, should always be able to see yourself in All Users
+            if querySet.resource_type == 'user' and querySet.is_public and querySet.name == 'All Users':
+                resources = resources | usermodels.User.objects.filter(
+                    pk = for_user.pk
+                ).distinct()
         
         setattr(resourceCollection, querySet.resource_type, resources)
         resourceCollection._parents = [querySet]
