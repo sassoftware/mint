@@ -78,6 +78,16 @@ def strOperatorChoices():
     operators = [modellib.operatorMap[o] for o in modellib.operatorMap
         if o not in ('LESS_THAN', 'LESS_THAN_OR_EQUAL', 'GREATER_THAN',
             'GREATER_THAN_OR_EQUAL', 'IS_NULL', None)]
+
+    def operator_sorter(one, two):
+        # put negative choices to the bottom of the list
+        if one.filterTerm.startswith("NOT") and not two.filterTerm.startswith("NOT"):
+            return 1
+        if two.filterTerm.startswith("NOT") and not one.filterTerm.startswith("NOT"):
+            return -1
+        return cmp(one.description, two.description)
+    operators.sort(cmp=operator_sorter)
+
     for operator in operators:
         operatorChoices.choices.append(OperatorChoice(operator.filterTerm, 
             operator.description))
