@@ -28,7 +28,7 @@ from conary.dbstore import sqlerrors, sqllib
 log = logging.getLogger(__name__)
 
 # database schema major version
-RBUILDER_DB_VERSION = sqllib.DBversion(59, 1)
+RBUILDER_DB_VERSION = sqllib.DBversion(59, 2)
 
 def _createTrigger(db, table, column="changed"):
     retInsert = db.createTrigger(table, column, "INSERT")
@@ -451,6 +451,17 @@ def _createBuilds(db):
             ip                  varchar(64)     NOT NULL
         ) %(TABLEOPTS)s """ % db.keywords)
         db.tables['UrlDownloads'] = []
+
+    createTable(db, 'auth_tokens', """
+        CREATE TABLE auth_tokens (
+            token_id            %(BIGPRIMARYKEY)s,
+            token               text            NOT NULL UNIQUE,
+            expires_date        timestamptz     NOT NULL,
+            user_id             integer         NOT NULL
+                REFERENCES Users ON UPDATE CASCADE ON DELETE CASCADE,
+            image_id            integer
+                REFERENCES Builds ON UPDATE CASCADE ON DELETE CASCADE
+        )""")
 
 
 def _createCommits(db):

@@ -28,6 +28,7 @@ from mint.lib import database as dblib
 
 class TableCache(object):
     def __init__(self, db, cfg):
+        self.auth_tokens = builds.AuthTokensTable(db)
         self.labels = projects.LabelsTable(db, cfg)
         self.projects = projects.ProjectsTable(db, cfg)
         self.buildFiles = jobs.BuildFilesTable(db)
@@ -76,6 +77,7 @@ class Database(object):
         self._openDb()
 
     def _copyTables(self, tables):
+        self.auth_tokens = tables.auth_tokens
         self.labels = tables.labels
         self.projects = tables.projects
         self.buildFiles = tables.buildFiles

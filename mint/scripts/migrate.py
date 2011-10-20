@@ -4384,7 +4384,7 @@ class MigrateTo_58(SchemaMigration):
 
 class MigrateTo_59(SchemaMigration):
     '''Edge-P2'''
-    Version = (59, 1)
+    Version = (59, 2)
 
     def migrate(self):
         '''make some querysets always visible regardless of RBAC'''
@@ -4420,6 +4420,19 @@ class MigrateTo_59(SchemaMigration):
             ALTER TABLE Users ADD COLUMN modified_by integer
                 REFERENCES Users ON DELETE SET NULL
         """)
+        return True
+
+    def migrate2(self):
+        createTable(self.db, """
+            CREATE TABLE auth_tokens (
+                token_id            %(BIGPRIMARYKEY)s,
+                token               text            NOT NULL UNIQUE,
+                expires_date        timestamptz     NOT NULL,
+                user_id             integer         NOT NULL
+                    REFERENCES Users ON UPDATE CASCADE ON DELETE CASCADE,
+                image_id            integer
+                    REFERENCES Builds ON UPDATE CASCADE ON DELETE CASCADE
+            )""")
         return True
 
 

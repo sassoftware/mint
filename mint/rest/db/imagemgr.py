@@ -518,6 +518,7 @@ class ImageManager(manager.Manager):
     def _postFinished(self, imageId, status):
         if status.code != jobstatus.FINISHED:
             return
+        self.db.db.auth_tokens.removeTokenByImage(imageId)
         imageType = self._getImageType(imageId)
         if imageType != buildtypes.AMI:
             # for now we only have to do something special for AMIs

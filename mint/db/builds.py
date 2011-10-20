@@ -343,10 +343,30 @@ class BuildsTable(database.KeyedTable):
                 unpublished.append(res[1])
         return published, unpublished
 
-# XXX This table is deprecated in favor of BuildDataTable
-class ReleaseDataTable(data.GenericDataTable):
-    name = "ReleaseData"
 
 class BuildDataTable(data.GenericDataTable):
     name = "BuildData"
 
+
+class AuthTokensTable(database.KeyedTable):
+    name = 'auth_tokens'
+    key = 'token_id'
+
+    fields = [
+            'token_id',
+            'token',
+            'expires_date',
+            'user_id',
+            'image_id',
+            ]
+
+    def addToken(self, token, user_id, image_id=None):
+        cu = self.db.cursor()
+        cu.execute("""INSERT INTO auth_tokens
+            (token, expires_date, user_id, image_id)
+            VALUES (?, now() + '1 day', ?, ?)""",
+            token, user_id, image_id)
+
+    def removeTokenByImage(self, image_id):
+        cu = self.db.cursor()
+        cu.execute("DELETE FROM auth_tokens WHERE image_id = ?", image_id)
