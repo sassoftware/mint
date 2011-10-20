@@ -38,7 +38,7 @@ class UnknownFilterOperator(RbuilderError):
     status = BAD_REQUEST
 
 class InvalidFilterValue(RbuilderError):
-    "%(value)s in an invalid value for filter operator %(filter)s"
+    "%(value)s is an invalid value for filter operator %(filter)s"
     status = BAD_REQUEST
 
 

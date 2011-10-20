@@ -62,16 +62,16 @@ class CollectionPage(paginator.Page):
         return self.number > 0
 
 filterTermMap = {
-    'EQUAL' : 'exact',
-    'NOT_EQUAL' : 'exact',
+    'EQUAL' : 'iexact',
+    'NOT_EQUAL' : 'iexact', 
     'LESS_THAN' : 'lt',
     'LESS_THAN_OR_EQUAL' : 'lte',
     'GREATER_THAN' : 'gt',
     'GREATER_THAN_OR_EQUAL' : 'gte',
     'LIKE' : 'contains',
-    'NOT_LIKE' : 'contains',
+    'NOT_LIKE' : 'contains', 
     'IN' : 'in',
-    'NOT_IN' : 'in',
+    'NOT_IN' : 'in',  
     'IS_NULL' : 'isnull',
 }
 
@@ -112,10 +112,6 @@ class InOperator(Operator):
     description = 'in'
 
     def prepValue(self, field, valueStr):
-        if not (valueStr.startswith('(') and valueStr.endswith(')')):
-            raise errors.InvalidFilterValue(value=valueStr,
-                filter=self.filterTerm)
-
         valueStr = valueStr.strip('(').strip(')')
         values = valueStr.split(',')
         values = [field.get_prep_value(v) for v in values]
