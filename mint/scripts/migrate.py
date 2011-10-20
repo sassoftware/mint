@@ -3243,6 +3243,8 @@ class MigrateTo_58(SchemaMigration):
         cu.execute("""DELETE FROM querysets_filterentry WHERE field='is_appliance' AND operator='EQUAL' AND value='1'""")
 
         # add the filter terms for "all" in the set
+        # NOTE: this is bad form for the future, always use system.name, ETC so we can migrate
+        # them, not just "name"
         allFilterId = schema._addQuerySetFilterEntry(self.db, "name", "IS_NULL", "False")
 
         # get the all projects qs
@@ -3253,8 +3255,6 @@ class MigrateTo_58(SchemaMigration):
             [dict(queryset_id=qsId, filterentry_id=allFilterId)],
             ['queryset_id', 'filterentry_id'])
 
-        # add new query sets
-        schema._createAllPlatformBranchStages(self.db, version=(58,18))
         return True
 
     def migrate19(self):
@@ -3676,11 +3676,9 @@ class MigrateTo_58(SchemaMigration):
         cu = self.db.cursor()
     
         cu.execute("DELETE FROM querysets_queryset WHERE name='All Project Stages'")
-        cu.execute("DELETE FROM querysets_queryset WHERE name='All Platforms'")
         cu.execute("DELETE FROM querysets_queryset WHERE name='All Projects'")
     
         schema._createAllProjectBranchStages(self.db, version=(58,50))
-        schema._createAllPlatformBranchStages(self.db, version=(58,50))
         schema._createAllProjects(self.db, version=(58,50))
 
         return True
@@ -4384,7 +4382,7 @@ class MigrateTo_58(SchemaMigration):
 
 class MigrateTo_59(SchemaMigration):
     '''Edge-P2'''
-    Version = (59, 2)
+    Version = (59, 3)
 
     def migrate(self):
         '''make some querysets always visible regardless of RBAC'''
@@ -4401,7 +4399,7 @@ class MigrateTo_59(SchemaMigration):
             UPDATE querysets_queryset SET is_public = TRUE WHERE
                name='All Systems' OR name='All Projects' 
                OR name='All Project Stages' OR NAME='All Users'
-               OR name='All Targets' OR name='All Platforms'
+               OR name='All Targets'
         """)
         return True
 
@@ -4435,6 +4433,14 @@ class MigrateTo_59(SchemaMigration):
             )""")
         return True
 
+    def migrate3(self):
+       # All Platforms is not a valid queryset, so don't ship, but
+       # don't delete any that are just named coincidentally (by users)
+       cu = self.db.cursor()
+       cu.execute("""
+           DELETE from querysets_queryset WHERE name='All Platforms'
+       """)
+       return True
 
 #### SCHEMA MIGRATIONS END HERE #############################################
 

@@ -28,7 +28,7 @@ from conary.dbstore import sqlerrors, sqllib
 log = logging.getLogger(__name__)
 
 # database schema major version
-RBUILDER_DB_VERSION = sqllib.DBversion(59, 2)
+RBUILDER_DB_VERSION = sqllib.DBversion(59, 3)
 
 def _createTrigger(db, table, column="changed"):
     retInsert = db.createTrigger(table, column, "INSERT")
@@ -2191,16 +2191,6 @@ def _createAllProjectBranchStages13(db, version=None):
     return True
 
 
-def _createAllPlatformBranchStages(db, version=None):
-    """Add the platform branch stages query set"""
-    # AllFilterId is None
-    filterId = _addQuerySetFilterEntry(db, "platform.name", "IS_NULL", "false")
-    _addQuerySet(db, "All Platforms", "All platforms",
-            "project_branch_stage", False, filterId, "platform", public=True,
-            version=version)
-    return True
-
-
 def _createAllProjectBranchStages(db, version=None):
     """Add the project branch stages query set"""
     filterId = _addQuerySetFilterEntry(db, "project_branch_stage.name",
@@ -2908,7 +2898,6 @@ def createSchema(db, doCommit=True, cfg=None):
     _createWindowsBuildSystemsQuerySet(db)
     _createUpdateSystemsQuerySet(db)
     _createAllProjectBranchStages(db)
-    _createAllPlatformBranchStages(db)
     _createAllProjects(db)
     _createChangeLogSchema(db)
     _createPackageSchema(db)
