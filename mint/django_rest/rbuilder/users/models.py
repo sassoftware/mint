@@ -22,6 +22,7 @@ class Users(modellib.Collection):
 class User(modellib.XObjIdModel):
 
     objects = manager_model.UserManager()
+    summary_view = ["user_name", "full_name"]
 
     user_id = D(models.AutoField(primary_key=True, db_column='userid'), "User id", short="User id")
     user_name = D(models.CharField(unique=True, max_length=128, db_column='username'), "User name", short="User name")
