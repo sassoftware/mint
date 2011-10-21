@@ -47,19 +47,6 @@ class ProjectManager(basemanager.BaseManager):
         project = models.Project.objects.select_related().get(short_name=project_name)
         return project
 
-    # this checks ownership and is fundamnetally incompatible with RBAC to subtract
-    # access but could be used to provide ADDITIONAL access in the view (additively)
-
-    def isProjectOwner(self, project):
-        # Admins can see all projects
-        if auth.isAdmin(self.user):
-            return True
-        membership = project.membership.filter(user=self.user)
-        if not membership:
-            return False
-        membership = membership[0]
-        return membership.level == userlevels.OWNER
-
     @exposed
     def addProject(self, project):
         label = None
@@ -335,8 +322,6 @@ class ProjectManager(basemanager.BaseManager):
 
     @exposed
     def updateProjectBranch(self, projectVersion):
-        # NOTE: rbac already covers security checks so no
-        # need to call self.isProjectOwner here
         projectVersion.save()
         return projectVersion
 
