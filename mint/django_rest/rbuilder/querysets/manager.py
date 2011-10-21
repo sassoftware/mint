@@ -228,7 +228,6 @@ class QuerySetManager(basemanager.BaseManager):
             for kid in qs.children.all():
                 if not kid.is_static:
                     qs.is_static=False
-            print "SETTING: %s to %s" % (qs.name, qs.is_static)
             qs.save()
 
     @exposed
