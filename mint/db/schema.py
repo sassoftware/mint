@@ -2098,9 +2098,9 @@ def _addQuerySet(db, name, description, resource_type, can_modify,
     # cloning.. don't send all options to older migrations because
     # those columns aren't added yet
 
-    if not version or version[0] >= 59:
+    if not version or version >= (59, 0):
         options['is_public'] = public
-    if not version or (version[0] >= 59 and version[1] >= 4):
+    if not version or version >= (59, 4):
         options['is_static'] = static
  
     _addTableRows(db, "querysets_queryset", "name", [options])    
