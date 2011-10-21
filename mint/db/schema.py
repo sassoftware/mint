@@ -28,7 +28,7 @@ from conary.dbstore import sqlerrors, sqllib
 log = logging.getLogger(__name__)
 
 # database schema major version
-RBUILDER_DB_VERSION = sqllib.DBversion(59, 3)
+RBUILDER_DB_VERSION = sqllib.DBversion(59, 4)
 
 def _createTrigger(db, table, column="changed"):
     retInsert = db.createTrigger(table, column, "INSERT")
@@ -71,7 +71,7 @@ def _createUsers(db):
             created_by          integer
                 REFERENCES Users ON DELETE SET NULL,
             modified_by         integer
-                REFERENCES Users ON DELETE SET NULL 
+                REFERENCES Users ON DELETE SET NULL
         ) %(TABLEOPTS)s""" % db.keywords)
         db.tables['Users'] = []
     db.createIndex('Users', 'UsersActiveIdx', 'username, active')
@@ -2078,7 +2078,7 @@ def _createPKI(db):
 
 def _addQuerySet(db, name, description, resource_type, can_modify,
         filter_id=None, presentation_type=None, public=False,
-        version=None):
+        static=False, version=None):
     """Add a new query set"""
 
     if presentation_type is None:
@@ -2100,7 +2100,9 @@ def _addQuerySet(db, name, description, resource_type, can_modify,
 
     if not version or version[0] >= 59:
         options['is_public'] = public
-    
+    if not version or (version[0] >= 59 and version[1] >= 4):
+        options['is_static'] = static
+ 
     _addTableRows(db, "querysets_queryset", "name", [options])    
 
     # add the query tag
@@ -2263,7 +2265,8 @@ def _createQuerySetSchema(db):
             "resource_type" TEXT NOT NULL,
             "presentation_type" TEXT,
             "can_modify" BOOLEAN NOT NULL DEFAULT TRUE,
-            "is_public" BOOLEAN NOT NULL DEFAULT FALSE
+            "is_public" BOOLEAN NOT NULL DEFAULT FALSE,
+            "is_static" BOOLEAN NOT NULL DEFAULT FALSE
         )""")
 
     createTable(db, 'querysets_filterentry', """

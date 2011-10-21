@@ -125,6 +125,7 @@ class QuerySet(modellib.XObjIdModel):
     # public querysets are querysets like "All Systems" and do not require rbac ReadSet permissions
     # to be visible, but will be empty unless ReadMember(ship) is conveyed on some of their contents.
     is_public = XObjHidden(models.BooleanField(default=False))
+    is_static = XObjHidden(models.BooleanField(default=False))
 
     load_fields = [name]
 
@@ -249,13 +250,14 @@ class QuerySet(modellib.XObjIdModel):
  
     def ancestors(self):
         '''querysets that directly or indirectly include this queryset'''
-        return self._ancestors([]) 
+        return self._ancestors([], 0) 
 
-    def _ancestors(self, results):
+    def _ancestors(self, results, depth):
+        self._depth = depth
         my_parents = self.parents()
         results.extend(my_parents)
         for parent in my_parents:
-            results.extend(parent.parents())
+            results.extend(parent._ancestors(results, depth-1))
         return results
 
 class FilterEntry(modellib.XObjIdModel):

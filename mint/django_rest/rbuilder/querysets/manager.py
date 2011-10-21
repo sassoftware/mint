@@ -155,6 +155,7 @@ class QuerySetManager(basemanager.BaseManager):
         # this is probably a duplicate save because of how xobj
         # is used.
         querySet.save()
+        self._recomputeStatic(querySet)
         return querySet
 
     @exposed
@@ -207,7 +208,28 @@ class QuerySetManager(basemanager.BaseManager):
 
         querySet.tagged_date = None
         querySet.save()
+        self._recomputeStatic(querySet)
         return querySet
+
+    def _recomputeStatic(self, querySet):
+        # the static bit keeps track of querysets who have no
+        # filter terms or child sets with filter terms.  Certain
+        # restrictions apply to querysts that are NOT static.
+        self._depth = 1
+        to_process = querySet.ancestors()
+        to_process.append(querySet)
+        # start at lowest nodes in DAG, work up 
+        to_process.sort(cmp=lambda x,y: cmp(y._depth, x._depth))
+        for qs in to_process:
+            # assume static until proven otherwise
+            qs.is_static = True
+            if len(qs.filter_entries.all()) > 0:
+                qs.is_static = False
+            for kid in qs.children.all():
+                if not kid.is_static:
+                    qs.is_static=False
+            print "SETTING: %s to %s" % (qs.name, qs.is_static)
+            qs.save()
 
     @exposed
     def deleteQuerySet(self, querySet):
@@ -741,7 +763,7 @@ class QuerySetManager(basemanager.BaseManager):
         tagMethod = self._tagMethod(querySet)
         tagMethod(resources_out, querySet, self._chosenMethod())
 
-        return self.getQuerySetChosenResult(querySetId)
+        return self.getQuerySetChosenResult(querySet)
 
     @exposed
     def deleteQuerySetChosen(self, querySetId, resource):

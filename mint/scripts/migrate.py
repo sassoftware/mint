@@ -4382,7 +4382,7 @@ class MigrateTo_58(SchemaMigration):
 
 class MigrateTo_59(SchemaMigration):
     '''Edge-P2'''
-    Version = (59, 3)
+    Version = (59, 4)
 
     def migrate(self):
         '''make some querysets always visible regardless of RBAC'''
@@ -4434,13 +4434,21 @@ class MigrateTo_59(SchemaMigration):
         return True
 
     def migrate3(self):
-       # All Platforms is not a valid queryset, so don't ship, but
-       # don't delete any that are just named coincidentally (by users)
-       cu = self.db.cursor()
-       cu.execute("""
-           DELETE from querysets_queryset WHERE name='All Platforms'
-       """)
-       return True
+        # All Platforms is not a valid queryset, so don't ship, but
+        # don't delete any that are just named coincidentally (by users)
+        cu = self.db.cursor()
+        cu.execute("""
+            DELETE from querysets_queryset WHERE name='All Platforms'
+        """)
+        return True
+
+    def migrate4(self):
+        cu = self.db.cursor()
+        cu.execute("""
+            ALTER TABLE querysets_queryset ADD COLUMN
+               is_static BOOLEAN NOT NULL DEFAULT FALSE    
+        """) 
+        return True
 
 #### SCHEMA MIGRATIONS END HERE #############################################
 
