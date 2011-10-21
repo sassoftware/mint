@@ -11,6 +11,7 @@ from mint.django_rest.rbuilder.manager import basemanager
 from mint.django_rest.rbuilder.querysets import models as querymodels
 from datetime import datetime
 from django.core.exceptions import ObjectDoesNotExist
+from mint.django_rest.rbuilder.errors import PermissionDenied
 
 log = logging.getLogger(__name__)
 exposed = basemanager.exposed
@@ -175,7 +176,14 @@ class RbacManager(basemanager.BaseManager):
             pass
 
         if permission.queryset.resource_type in [ 'grant', 'role' ]:
-            raise Exception("RBAC configuration rights cannot be delegated")
+            raise PermissionDenied(msg="RBAC configuration rights cannot be delegated")
+
+        # enforce restrictions on who can modify querysets -- this will
+        # be upgraded later when we support rbac grant delegation
+        if permission.permission.name == MODSETDEF:
+            if not permission.queryset.is_static:
+               raise PermissionDenied(msg="Modify Set Definition cannot be granted on dynamic querysets")
+
         permission.created_by  = by_user
         permission.modified_by = by_user
         permission.save()
