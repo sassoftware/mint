@@ -42,6 +42,14 @@ class ProjectManager(basemanager.BaseManager):
     def __init__(self, *args, **kwargs):
         basemanager.BaseManager.__init__(self, *args, **kwargs)
 
+    @exposed
+    def addRelease(self, release, *args, **kwargs):
+        """
+        TODO: put necessary crap here, see old rest code
+        for more info
+        """
+        pass
+        
     @exposed 
     def getProjects(self):
         # FIXME -- this needs to be rewritten to run in a constant number of queries
@@ -111,7 +119,7 @@ class ProjectManager(basemanager.BaseManager):
                 label.auth_type = project.auth_type
                 label.user_name = project.user_name
                 label.password = project.password
-                label.entitlement = project.entitlement
+                label.entitlement = str(project.entitlement)
         else:
             # Internal projects always need a database
             project.auth_type = label.auth_type = 'none'
