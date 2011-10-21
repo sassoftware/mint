@@ -42,36 +42,13 @@ class ProjectManager(basemanager.BaseManager):
     def __init__(self, *args, **kwargs):
         basemanager.BaseManager.__init__(self, *args, **kwargs)
 
-    @exposed 
-    def getProjects(self):
-        # FIXME -- this needs to be rewritten to run in a constant number of queries
-        allProjects = models.Projects()
-        # We better return things in a stable order
-        allProjects.project = sorted(
-            (p for p in models.Project.objects.select_related().all() if self.checkProjectAccess(p)),
-            key=lambda x: x.project_id)
-        return allProjects
-
     @exposed
     def getProject(self, project_name):
         project = models.Project.objects.select_related().get(short_name=project_name)
-        if self.checkProjectAccess(project):   
-            return project
-        raise errors.PermissionDenied() 
+        return project
 
-    def checkProjectAccess(self, project):
-        # Admins can see all projects
-        if auth.isAdmin(self.user):
-            return True
-        # Public projects are visible to all
-        if not project.hidden:
-            return True
-        if self.user is None:
-            return False
-        # Is the current user a project member
-        if [ x for x in project.members.filter(user_id=self.user.user_id) ]:
-            return True
-        return False
+    # this checks ownership and is fundamnetally incompatible with RBAC to subtract
+    # access but could be used to provide ADDITIONAL access in the view (additively)
 
     def isProjectOwner(self, project):
         # Admins can see all projects
@@ -322,9 +299,6 @@ class ProjectManager(basemanager.BaseManager):
     @exposed
     def addProjectBranch(self, projectShortName, projectVersion):
 
-        if not self.isProjectOwner(projectVersion.project):
-            raise errors.PermissionDenied()
-
         if not projectVersion.namespace:
             projectVersion.namespace = projectVersion.project.namespace
 
@@ -368,8 +342,6 @@ class ProjectManager(basemanager.BaseManager):
 
     @exposed
     def deleteProjectBranch(self, projectVersion):
-        if not self.isProjectOwner(projectVersion.project):
-            raise errors.PermissionDenied()
         projectVersion.delete()
 
     @exposed
@@ -481,19 +453,18 @@ class ProjectManager(basemanager.BaseManager):
 
     def _objectFilterOnProjects(self, iterator, modelClass, fieldName):
         # We need to check project permissions for all objects in the iterator
+        # now we don't -- we have rbac now, do not subtract access via rbac
+        # FIXME: make this function a no-op.
         model = modelClass()
         collector = []
         setattr(model, fieldName, collector)
         for obj in iterator:
-            if self.checkProjectAccess(obj.project):
-                collector.append(obj)
+            collector.append(obj)
         return model
 
     def _projectValidator(self, obj):
-        if self.checkProjectAccess(obj.project):
-            return obj
-        raise errors.ResourceNotFound()
-
+        # no need for checking access -- use rbac
+        return obj
             
     @exposed
     def getProjectBranchStage(self, project_short_name, project_branch_label, stage_name):
