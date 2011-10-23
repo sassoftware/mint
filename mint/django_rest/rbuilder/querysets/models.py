@@ -19,6 +19,7 @@ from mint.django_rest.rbuilder.jobs import models as jobmodels
 
 from xobj import xobj
 
+APIReadOnly = modellib.APIReadOnly
 XObjHidden = modellib.XObjHidden
 
 OPERATOR_CHOICES = [(k, v) for k, v in modellib.filterTermMap.items()]
@@ -124,8 +125,8 @@ class QuerySet(modellib.XObjIdModel):
     actions = D(modellib.SyntheticField(jobmodels.Actions), 'Available actions on this query set')
     # public querysets are querysets like "All Systems" and do not require rbac ReadSet permissions
     # to be visible, but will be empty unless ReadMember(ship) is conveyed on some of their contents.
-    is_public = XObjHidden(models.BooleanField(default=False))
-    is_static = XObjHidden(models.BooleanField(default=False))
+    is_public = APIReadOnly(models.BooleanField(default=False))
+    is_static = APIReadOnly(models.BooleanField(default=False))
 
     load_fields = [name]
 

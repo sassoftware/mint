@@ -104,7 +104,7 @@ class QuerySetTestCase(QueryTestCase):
           ignoreNodes=[
              'filter_entry_id', 'created_date',
              'last_login_date', 'created_by', 'modified_by',
-             'tagged_date', 'modified_date',
+             'tagged_date', 'modified_date', 'is_public', 'is_static',
           ])
 
         # every queryset should have a "universe" URL that points to the all
