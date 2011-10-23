@@ -453,6 +453,10 @@ class System(modellib.XObjIdModel):
                 tag = 'system',
                 attributes = {'id':str},
                 elements = ['networks', ])
+    # avoid expanding launching_user as, for now, rpath_models can't
+    # deal with it and registration is affected when set
+    _xobj_summary_view_hide = [ 'launching_user' ]
+
 
     """
     networks - a collection of network resources exposed by the system

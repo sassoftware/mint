@@ -1326,7 +1326,7 @@ class XObjModel(models.Model):
                                             attributes = {"id":str})
                         setattr(refModel, "id", 
                             val.get_absolute_url(request))
-                        if hasattr(val, "summary_view"):
+                        if hasattr(val, "summary_view") and fieldName not in getattr(self, '_xobj_summary_view_hide', []):
                             for sField in val.summary_view:
                                 setattr(refModel, sField, getattr(val, sField))
                         else:
