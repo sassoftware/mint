@@ -109,7 +109,7 @@ class BooleanOperator(Operator):
 class InOperator(Operator):
     filterTerm = 'IN'
     operator = 'in'
-    description = 'in'
+    description = 'In list'
 
     def prepValue(self, field, valueStr):
         valueStr = valueStr.strip('(').strip(')')
@@ -119,7 +119,7 @@ class InOperator(Operator):
 
 class NotInOperator(InOperator):
     filterTerm = 'NOT_IN'
-    description = 'Not present in'
+    description = 'Not in list'
 
 class NullOperator(BooleanOperator):
     filterTerm = 'IS_NULL'
@@ -128,7 +128,7 @@ class NullOperator(BooleanOperator):
 
 class EqualOperator(Operator):
     filterTerm = 'EQUAL'
-    operator = 'exact'
+    operator = 'iexact'
     description = 'Equal to'
 
 class NotEqualOperator(EqualOperator):
@@ -157,13 +157,13 @@ class GreaterThanEqualOperator(Operator):
 
 class LikeOperator(Operator):
     filterTerm = 'LIKE'
-    operator = 'contains'
-    description = 'Contains'
+    operator = 'icontains'
+    description = 'Like'
 
 class NotLikeOperator(LikeOperator):
     filterTerm = 'NOT_LIKE'
-    operator = 'contains'
-    description = 'Does not contain'
+    operator = 'icontains'
+    description = 'Not like'
 
 def operatorFactory(operator):
     return operatorMap[operator]
