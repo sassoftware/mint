@@ -358,21 +358,6 @@ class ProjectManager(basemanager.BaseManager):
         return stage
 
     @exposed
-    def getStageOld(self, shortName, projectVersionId, stageName):
-        projectVersion = models.ProjectVersion.objects.select_related(depth=2).get(
-            pk=projectVersionId) 
-        project = projectVersion.project
-        pd = self.getProductVersionDefinitionByProjectVersion(projectVersion)
-        pdStages = pd.getStages()
-        stage = [s for s in pdStages if s.name == stageName][0]
-        promotable = ((stage.name != pdStages[-1].name and True) or False)
-        dbStage = models.Stage(name=str(stage.name),
-             label=str(pd.getLabelForStage(stage.name)),
-             hostname=project.hostname, project_version=projectVersion,
-             Promotable=promotable)
-        return dbStage
-
-    @exposed
     def getStageByProjectBranchAndStageName(self, projectBranch, stageName):
         if hasattr(projectBranch, 'branch_id'):
             projectBranchId = projectBranch.branch_id
