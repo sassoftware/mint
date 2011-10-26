@@ -171,34 +171,55 @@ def operatorFactory(operator):
 def filterPseudoQuerySet(resources, field, operator, value):
     return [ x for x in resources if getattr(x, field) == value ]
 
-def filterDjangoQuerySet(djangoQuerySet, field, operator, value):
-    # Ignore fields that don't exist on the model
+def filterDjangoQuerySet(djangoQuerySet, field, operator, value, 
+        collection=None, queryset=None):
+
+    # hack, the name field is not useful for sorting a PBS, in general every object
+    # should have a sortable name if it can be added to a queryset.
+    if field == 'project_branch_stage.name' or field == 'name':
+        if (queryset and queryset.resource_type == 'project_branch_stage') or \
+           (collection and collection._xobj.tag == 'project_branch_stages'):
+            field = 'project.name'
+    # another, TODO: subclasses of QuerySet with a factory to fetch them?
+    if field == 'user.name' or field == 'name':
+        if (queryset and queryset.resource_type == 'user') or \
+           (collection and collection._xobj.tag == 'users'):
+            field = 'user.user_name'
+    
     fieldName = field.split('.')[0]
+    if fieldName not in djangoQuerySet.model._meta.get_all_field_names():
+        # if the model field didn't exist, try just the fieldName, 
+        # it's possible the model was renamed and a custom query set
+        # is no longer accurate.  
+        field = field.split('.', 1)[-1]
 
     if type(djangoQuerySet) == list:
         # this only happens when returning synthethic querysets
         # i.e. the queryset of querysets, subject to RBAC filtering
         # here we have to "filter" out of the DB.
         return filterPseudoQuerySet(djangoQuerySet, field, operator, value)
-
-    if fieldName not in djangoQuerySet.model._meta.get_all_field_names():
-        # if the model field didn't exist, try just the fieldName, 
-        # it's possible the model was renamed and a custom query set
-        # is no longer accurate.  
-        field = fieldName = field.split('.')[-1]
-        if fieldName not in djangoQuerySet.model._meta.get_all_field_names():
-            return djangoQuerySet
-
+    
     if value is None:
         value = False
-
+    
     fields = field.split('.')
-
+    
     if operator in operatorMap:
         nextModel = djangoQuerySet.model()
+        first = True
         for f in fields[:-1]:
-            nextModel = nextModel._meta.get_field_by_name(f)[0].rel.to()
-        fieldCls = nextModel._meta.get_field_by_name(fields[-1])[0]
+            try:
+                nextModel = nextModel._meta.get_field_by_name(f)[0].rel.to()
+            except:
+                # allow querysets to be specified as system.name
+                # when the top level item is already 'system'
+                if not first:
+                    raise errors.InvalidFilterKey(field=field)
+                first = False
+        try:
+            fieldCls = nextModel._meta.get_field_by_name(fields[-1])[0]
+        except:
+            raise errors.InvalidFilterKey(field=field)
         operatorCls = operatorFactory(operator)()
         try:
             value = operatorCls.prepValue(fieldCls, value)
@@ -207,6 +228,7 @@ def filterDjangoQuerySet(djangoQuerySet, field, operator, value):
                 filter=operatorCls.filterTerm)
     else:
         raise errors.UnknownFilterOperator(filter=operator)
+
 
     # Replace all '.' with '__', to handle fields that span
     # relationships
@@ -308,7 +330,7 @@ class Collection(XObjIdModel):
                 filtString = filt.strip(',').strip('[').strip(']')
                 field, oper, value = filtString.split(',', 2)
                 modelList = filterDjangoQuerySet(modelList,
-                    field, oper, value)
+                    field, oper, value, collection=self)
 
         return modelList
 
@@ -355,16 +377,10 @@ class Collection(XObjIdModel):
 
         modelList = getattr(self, listField)
         
-        # NEW
         if request:
             modelList = self.filterBy(request, modelList)
             modelList = self.orderBy(request, modelList)
             self.paginate(request, listField, modelList)
-
-        # OLD
-        # modelList = self.filterBy(request, modelList)
-        # modelList = self.orderBy(request, modelList)
-        # self.paginate(request, listField, modelList)
 
         xobj_model = XObjIdModel.serialize(self, request)
 

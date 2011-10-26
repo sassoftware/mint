@@ -357,7 +357,7 @@ class QuerySetManager(basemanager.BaseManager):
             resources = model.objects.select_related().all()
         for filt in querySet.filter_entries.select_related().all():
             resources = modellib.filterDjangoQuerySet(resources, 
-                filt.field, filt.operator, filt.value)
+                filt.field, filt.operator, filt.value, queryset=querySet)
         retval = resources.distinct()
 
         self._updateTransitiveTags(querySet, resources)
