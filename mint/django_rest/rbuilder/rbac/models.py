@@ -17,6 +17,7 @@ from xobj import xobj
 from django.core.urlresolvers import reverse
 
 APIReadOnly = modellib.APIReadOnly
+XObjHidden  = modellib.XObjHidden
 
 class Rbac(modellib.XObjModel):
 
@@ -92,6 +93,7 @@ class RbacRole(modellib.XObjIdModel):
         'user who last modified this resource')
     grants        =  D(modellib.SyntheticField(), 'permissions granted on this role')
     users         =  D(modellib.SyntheticField(), 'users with this role')
+    is_identity   =  D(XObjHidden(models.BooleanField(default=False)), 'is identity role?')
     
     def computeSyntheticFields(self, sender, **kwargs):
         self.grants = modellib.HrefField(

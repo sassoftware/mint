@@ -28,7 +28,7 @@ from conary.dbstore import sqlerrors, sqllib
 log = logging.getLogger(__name__)
 
 # database schema major version
-RBUILDER_DB_VERSION = sqllib.DBversion(59, 4)
+RBUILDER_DB_VERSION = sqllib.DBversion(60, 0)
 
 def _createTrigger(db, table, column="changed"):
     retInsert = db.createTrigger(table, column, "INSERT")
@@ -71,7 +71,8 @@ def _createUsers(db):
             created_by          integer
                 REFERENCES Users ON DELETE SET NULL,
             modified_by         integer
-                REFERENCES Users ON DELETE SET NULL
+                REFERENCES Users ON DELETE SET NULL,
+            can_create           BOOLEAN       NOT NULL    DEFAULT false
         ) %(TABLEOPTS)s""" % db.keywords)
         db.tables['Users'] = []
     db.createIndex('Users', 'UsersActiveIdx', 'username, active')
@@ -140,6 +141,7 @@ def _createRbac(db):
         dict(name="ModMembers", description='Modify Member Resources'),
         dict(name="ReadSet", description='Read Set'),
         dict(name="ModSetDef", description='Modify Set Definition'),
+        dict(name="CreateResource", description='Create Resource'), 
     ])
 
     if 'rbac_role' not in db.tables:
@@ -155,7 +157,8 @@ def _createRbac(db):
                ON DELETE CASCADE,
             modified_by   INTEGER
                REFERENCES Users ( userId )
-               ON DELETE CASCADE
+               ON DELETE CASCADE,
+            is_identity  BOOLEAN NOT NULL DEFAULT FALSE
         ) %(TABLEOPTS)s """ % db.keywords)
         db.tables['rbac_role'] = []
 
@@ -1144,7 +1147,14 @@ def _createInventorySchema(db, cfg):
                     DEFAULT FALSE, 
                 "source_image_id" INTEGER 
                     REFERENCES "builds" ("buildid")
-                    ON DELETE CASCADE
+                    ON DELETE CASCADE,
+                "created_by" integer
+                    REFERENCES "users" ("userid")
+                    ON DELETE SET NULL,
+                "modified_by" integer
+                    REFERENCES "users" ("userid")
+                    ON DELETE SET NULL,
+                "modified_date" TIMESTAMP WITH TIME ZONE
             ) %(TABLEOPTS)s""" % db.keywords)
         db.tables['inventory_system'] = []
         db.createIndex("inventory_system",
@@ -2266,7 +2276,13 @@ def _createQuerySetSchema(db):
             "presentation_type" TEXT,
             "can_modify" BOOLEAN NOT NULL DEFAULT TRUE,
             "is_public" BOOLEAN NOT NULL DEFAULT FALSE,
-            "is_static" BOOLEAN NOT NULL DEFAULT FALSE
+            "is_static" BOOLEAN NOT NULL DEFAULT FALSE,
+            "created_by" INTEGER
+                REFERENCES Users ON DELETE SET NULL,
+            "modified_by" INTEGER
+                REFERENCES Users ON DELETE SET NULL,
+            "personal_for" INTEGER
+                REFERENCES Users ON DELETE SET NULL
         )""")
 
     createTable(db, 'querysets_filterentry', """

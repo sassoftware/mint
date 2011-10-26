@@ -563,7 +563,16 @@ class System(modellib.XObjIdModel):
     source_image = D(APIReadOnly(models.ForeignKey('images.Image', null=True,
          related_name='systems')), 
          'rBuilder image used to deploy the system, if any')
-
+    created_by = D(modellib.ForeignKey(usersmodels.User, null=True, 
+        related_name='+', db_column='created_by'), 
+        "User who created system",
+        short="System created by")
+    modified_by = D(modellib.ForeignKey(usersmodels.User, null=True, 
+        related_name='+', db_column='modified_by'),
+        "User who last modified system",
+        short="System last modified by")
+    modified_date = D(modellib.DateTimeUtcField(null=True),
+        "the date the system was last modified", short="System modified date")
 
     logged_fields = ['name', 'installed_software']
 

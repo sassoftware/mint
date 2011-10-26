@@ -4450,6 +4450,35 @@ class MigrateTo_59(SchemaMigration):
         """) 
         return True
 
+class MigrateTo_60(SchemaMigration):
+    '''Edge-P3'''
+    Version = (60, 0)
+
+    def migrate(self):
+        '''"My" querysets feature'''
+        cu = self.db.cursor()
+        for field in [ 'created_by', 'modified_by', 'personal_for' ]:
+            cu.execute("""
+                ALTER TABLE querysets_queryset ADD COLUMN %s INTEGER REFERENCES Users (userid) ON DELETE SET NULL
+            """ % field)
+        for field in [ 'created_by', 'modified_by' ]:
+            cu.execute("""
+                ALTER TABLE inventory_system ADD COLUMN %s INTEGER REFERENCES Users (userid) ON DELETE SET NULL
+            """ % (field))
+        cu.execute("""
+            ALTER TABLE inventory_system ADD COLUMN modified_date TIMESTAMP WITH TIME ZONE
+        """)
+        cu.execute("""
+            ALTER TABLE Users ADD COLUMN can_create BOOLEAN NOT NULL DEFAULT FALSE
+        """)
+        cu.execute("""
+            ALTER TABLE rbac_role ADD COLUMN is_identity BOOLEAN NOT NULL DEFAULT FALSE
+        """)
+        schema._addTableRows(self.db, 'rbac_permission_type', 'name', [
+            dict(name="CreateResource", description='Create Resource'),    
+        ])
+        return True
+
 #### SCHEMA MIGRATIONS END HERE #############################################
 
 def _getMigration(major):

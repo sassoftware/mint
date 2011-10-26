@@ -127,6 +127,9 @@ class QuerySet(modellib.XObjIdModel):
     # to be visible, but will be empty unless ReadMember(ship) is conveyed on some of their contents.
     is_public = APIReadOnly(models.BooleanField(default=False))
     is_static = APIReadOnly(models.BooleanField(default=False))
+    created_by = APIReadOnly(modellib.ForeignKey('users.User', related_name='+', null=True, db_column='created_by'))
+    modified_by = APIReadOnly(modellib.ForeignKey('users.User', related_name='+', null=True, db_column='modified_by'))
+    personal_for = XObjHidden(modellib.ForeignKey('users.User', related_name='+', db_column='personal_for', null=True))
 
     load_fields = [name]
 

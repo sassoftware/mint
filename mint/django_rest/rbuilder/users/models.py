@@ -48,6 +48,7 @@ class User(modellib.XObjIdModel):
         "User created by", short="User created by")
     modified_by = D(APIReadOnly(models.ForeignKey('User', related_name='+', db_column='modified_by', null=True)), 
         "User modified by", short="User modified by")
+    can_create = D(models.BooleanField(default=False), "User can create resources?", short="User can create?")
 
     # Field used for the clear-text password when it is to be
     # set/changed
