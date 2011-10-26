@@ -150,12 +150,14 @@ class QuerySetManager(basemanager.BaseManager):
         return querySets
 
     @exposed
-    def addQuerySet(self, querySet):
+    def addQuerySet(self, querySet, by_user):
         '''create a new query set'''
         # this is probably a duplicate save because of how xobj
         # is used.
         querySet.save()
         self._recomputeStatic(querySet)
+        querySet.created_by = by_user
+        querySet.modified_by = by_user
         return querySet
 
     @exposed
@@ -189,7 +191,7 @@ class QuerySetManager(basemanager.BaseManager):
         
 
     @exposed
-    def updateQuerySet(self, querySet):
+    def updateQuerySet(self, querySet, by_user):
         '''edit a query set'''
         if not querySet.can_modify:
             raise errors.QuerySetReadOnly(querySetName=querySet.name)
@@ -207,6 +209,8 @@ class QuerySetManager(basemanager.BaseManager):
             self._updateQuerySetTaggedDate(qs)
 
         querySet.tagged_date = None
+        querySet.modified_by = by_user
+        querySet.modified_date = datetime.now()
         querySet.save()
         self._recomputeStatic(querySet)
         return querySet
@@ -712,7 +716,7 @@ class QuerySetManager(basemanager.BaseManager):
         return filterDescriptor
 
     @exposed
-    def updateQuerySetChosen(self, querySetId, resource):
+    def updateQuerySetChosen(self, querySetId, resource, by_user):
         '''
         Add a resource explicitly to the query set match results.
         It must be of the same collection type, querysets are not
@@ -733,10 +737,15 @@ class QuerySetManager(basemanager.BaseManager):
 
         if tagMethod is not None:
             tagMethod([resource], querySet, self._chosenMethod())
+
+        querySet.modified_by = by_user
+        querySet.modified_date = datetime.now()
+        querySet.save()
+
         return self.getQuerySetChosenResult(querySetId)
 
     @exposed
-    def addQuerySetChosen(self, querySetId, resources):
+    def addQuerySetChosen(self, querySetId, resources, by_user):
         '''
         Add a list of matched systems to a chosen query set result list.
         Deletes all previous matches.
@@ -762,10 +771,14 @@ class QuerySetManager(basemanager.BaseManager):
         tagMethod = self._tagMethod(querySet)
         tagMethod(resources_out, querySet, self._chosenMethod())
 
+        querySet.modified_by = by_user
+        querySet.modified_date = datetime.now()
+        querySet.save()
+
         return self.getQuerySetChosenResult(querySet)
 
     @exposed
-    def deleteQuerySetChosen(self, querySetId, resource):
+    def deleteQuerySetChosen(self, querySetId, resource, by_user):
         '''
         Remove a resource from a queryset chosen result.
         '''
@@ -778,6 +791,11 @@ class QuerySetManager(basemanager.BaseManager):
         tagModels = tagModel.objects.filter(query_set=querySet,
             inclusion_method=self._chosenMethod(), **resourceArg)
         tagModels.delete()
+
+        querySet.modified_by = by_user
+        querySet.modified_date = datetime.now()
+        querySet.save()
+
         return self.getQuerySetChosenResult(querySetId)
 
     @exposed

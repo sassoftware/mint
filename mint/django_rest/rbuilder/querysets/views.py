@@ -70,7 +70,7 @@ class QuerySetService(BaseQuerySetService):
     @requires('query_set', load=False)
     @return_xml
     def rest_POST(self, request, query_set):
-        return self.mgr.addQuerySet(query_set)
+        return self.mgr.addQuerySet(query_set, request._authUser)
 
     @access.admin
     @requires('query_set')
@@ -79,7 +79,7 @@ class QuerySetService(BaseQuerySetService):
         oldQuerySet = self.mgr.getQuerySet(query_set_id)
         if oldQuerySet.pk != query_set.pk:
             raise PermissionDenied()
-        return self.mgr.updateQuerySet(query_set)
+        return self.mgr.updateQuerySet(query_set, request._authUser)
 
     @access.admin
     def rest_DELETE(self, request, query_set_id):
@@ -118,7 +118,7 @@ class QuerySetChosenResultService(BaseQuerySetService):
     @return_xml
     def rest_PUT(self, request, query_set_id, *args, **kwargs):
         resources = kwargs.items()[0][1]
-        return self.mgr.addQuerySetChosen(query_set_id, resources)
+        return self.mgr.addQuerySetChosen(query_set_id, resources, request._authUser)
 
     @rbac(rbac_can_write_queryset)
     # TODO: source fromc onstant somewhere
@@ -126,7 +126,7 @@ class QuerySetChosenResultService(BaseQuerySetService):
     @return_xml
     def rest_POST(self, request, query_set_id, *args, **kwargs):
         resource = kwargs.items()[0][1]
-        self.mgr.updateQuerySetChosen(query_set_id, resource)
+        self.mgr.updateQuerySetChosen(query_set_id, resource, request._authUser)
         return resource
 
     @rbac(rbac_can_write_queryset)
@@ -135,7 +135,7 @@ class QuerySetChosenResultService(BaseQuerySetService):
     @return_xml
     def rest_DELETE(self, request, query_set_id, *args, **kwargs):
         resource = kwargs.items()[0][1]
-        return self.mgr.deleteQuerySetChosen(query_set_id, resource)
+        return self.mgr.deleteQuerySetChosen(query_set_id, resource, request._authUser)
 
 class QuerySetFilteredResultService(BaseQuerySetService):
 

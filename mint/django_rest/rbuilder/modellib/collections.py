@@ -174,18 +174,23 @@ def filterPseudoQuerySet(resources, field, operator, value):
 def filterDjangoQuerySet(djangoQuerySet, field, operator, value, 
         collection=None, queryset=None):
 
-    # hack, the name field is not useful for sorting a PBS, in general every object
-    # should have a sortable name if it can be added to a queryset.
+    # FIXME -- hack, really want a "DWIM" typemap
+    # that attempts to preserve backwards compat against legacy
+    # or incorrect filter terms, and drop all filter terms
+    # that we know match everything
     if field == 'project_branch_stage.name' or field == 'name':
         if (queryset and queryset.resource_type == 'project_branch_stage') or \
            (collection and collection._xobj.tag == 'project_branch_stages'):
             field = 'project.name'
-    # another, TODO: subclasses of QuerySet with a factory to fetch them?
     if field == 'user.name' or field == 'name':
         if (queryset and queryset.resource_type == 'user') or \
            (collection and collection._xobj.tag == 'users'):
             field = 'user.user_name'
-    
+    if field == 'rbac_permission.permission_id' or field == 'permission_id':
+        if (queryset and queryset.resource_type == 'grant') or \
+           (collection and collection._xobj.tag == 'grants'):
+            field = 'rbac_permission.grant_id'
+ 
     fieldName = field.split('.')[0]
     if fieldName not in djangoQuerySet.model._meta.get_all_field_names():
         # if the model field didn't exist, try just the fieldName, 

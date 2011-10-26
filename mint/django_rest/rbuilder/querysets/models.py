@@ -6,7 +6,6 @@
 #
 
 import sys
-
 from django.db import models
 
 from mint.django_rest.deco import D
