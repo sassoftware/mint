@@ -98,27 +98,7 @@ class UsersTestCase(RbacEngine):
         response = self._post('users/',
             data=testsxml.users_post_xml,
         )
-        self.assertEquals(200, response.status_code)
-        user_posted = self.toXObj(response.content)
-        self.assertEquals(u'dcohn', user_posted.user_name)
-        self.assertEquals(u'Dan Cohn', user_posted.full_name)
-        ### NOTE: Below is commented out because id of user_posted
-        ###       is subject to change depending on what fixtures
-        ###       are loaded.
-        # self.failUnlessEqual(user_posted.user_id, '2001')
-        
-        user = models.User.objects.get(user_name=user_posted.user_name)
-        self.failUnlessEqual(user.salt, '0' * 8)
-        self.failUnlessEqual(user.getIsAdmin(), False)
-
-        # Try again
-        response = self._post('users/',
-            data=testsxml.users_post_xml,
-        )
-        self.failUnlessEqual(response.status_code, 403)
-        fault = self.toXObj(response.content)
-        self.failUnlessEqual(fault.code, '403')
-        self.failUnlessEqual(fault.message, 'User already exists')
+        self.assertEquals(401, response.status_code)
 
         # Create new user, now as an admin
         xml = testsxml.users_post_xml.replace('dcohn', 'testuser001')

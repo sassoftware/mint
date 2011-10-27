@@ -55,8 +55,7 @@ class UsersService(service.BaseService):
         assert user_id is not None
         return self.mgr.getUser(user_id)
 
-    # Has to be public, so one can create an account before logging in
-    @access.anonymous
+    @access.admin
     @requires('user')
     @return_xml
     def rest_POST(self, request, user):
