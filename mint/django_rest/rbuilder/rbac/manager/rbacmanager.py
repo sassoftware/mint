@@ -32,6 +32,9 @@ MODMEMBERS = 'ModMembers'
 READSET = 'ReadSet' 
 # ability to modify/delete a query set
 MODSETDEF = 'ModSetDef' 
+# ability to create a resource -- also specifies what queryset
+# to add the resource as a chosen member to
+CREATERESOURCE = 'CreateResource'
 
 class RbacManager(basemanager.BaseManager):
 
@@ -68,7 +71,7 @@ class RbacManager(basemanager.BaseManager):
     @exposed
     def getRbacPermissionTypes(self):
         return self._getThings(models.RbacPermissionTypes,
-            models.RbacPermissionType, 'permission', order_by=['permission_id'])
+            models.RbacPermissionType, 'permission', order_by=['description'])
 
     @exposed
     def getRbacPermissionType(self, permission_type):
@@ -183,6 +186,19 @@ class RbacManager(basemanager.BaseManager):
         if permission.permission.name == MODSETDEF:
             if not permission.queryset.is_static:
                raise PermissionDenied(msg="Modify Set Definition cannot be granted on dynamic querysets")
+
+        if permission.permission.name == CREATERESOURCE:
+            # there can be only one CreateResource per resource type
+            try:
+                previous = models.RbacPermission.objects.get(
+                    role = permission.role,
+                    queryset__resource_type = permission.queryset.resource_type,
+                    permission = permission.permission
+                )
+                error_args = (permission.queryset.resource_type, previous.role.name, previous.queryset.name)
+                raise PermissionDenied(msg="Create Resource for queryset type (%s) can only be granted once per role (%s), already exists for queryset: %s" % error_args)
+            except ObjectDoesNotExist:
+                pass
 
         permission.created_by  = by_user
         permission.modified_by = by_user
