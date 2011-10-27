@@ -103,7 +103,7 @@ class ProjectsTestCase(RbacEngine):
         project.name = project.hostname = project.short_name = short_name
         project.namespace = namespace
         project.domain_name = 'test.local2'
-        project = self.mgr.projectManager.addProject(project)
+        project = self.mgr.projectManager.addProject(project, None)
         return project
     
     def _addProjectWithUser(self, short_name, username, namespace='ns'):
@@ -112,8 +112,8 @@ class ProjectsTestCase(RbacEngine):
         project.name = project.hostname = project.short_name = short_name
         project.namespace = namespace
         project.domain_name = 'test.local2'
-        project.creator = user
-        project = self.mgr.projectManager.addProject(project)
+        project.created_by = user
+        project = self.mgr.projectManager.addProject(project, user)
         return project
         
         
@@ -215,7 +215,7 @@ class ProjectsTestCase(RbacEngine):
         projectId = project.project_id
         project = models.Project.objects.get(pk=projectId)
         self.assertEquals("test-project", project.name)
-        self.assertEquals(1, project.creator.user_id)
+        self.assertEquals(1, project.created_by.user_id)
         
     def testAddProjectNoHostname(self):
         response = self._post('projects',
@@ -236,7 +236,7 @@ class ProjectsTestCase(RbacEngine):
         projectId = project.project_id
         project = models.Project.objects.get(pk=projectId)
         self.assertEquals("test-project.eng.rpath.com", project.repository_hostname)
-        self.assertEquals(1, project.creator.user_id)
+        self.assertEquals(1, project.created_by.user_id)
         
     def testAddProjectNoDomainName(self):
         response = self._post('projects',
@@ -249,7 +249,7 @@ class ProjectsTestCase(RbacEngine):
         projectId = project.project_id
         project = models.Project.objects.get(pk=projectId)
         self.failUnlessEqual(project.repository_hostname, 'test-project.rpath.local2')
-        self.assertEquals(project.creator.user_id, 1)
+        self.assertEquals(project.created_by.user_id, 1)
         
     def testAddProjectNoNamespace(self):
         response = self._post('projects',
@@ -260,7 +260,7 @@ class ProjectsTestCase(RbacEngine):
         projectId = project.project_id
         project = models.Project.objects.get(pk=projectId)
         self.assertEquals(project.namespace, 'ns')
-        self.assertEquals(1, project.creator.user_id)
+        self.assertEquals(1, project.created_by.user_id)
         
     def testAddProjectExternal(self):
         response = self._post('projects',

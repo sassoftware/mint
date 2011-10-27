@@ -4452,7 +4452,7 @@ class MigrateTo_59(SchemaMigration):
 
 class MigrateTo_60(SchemaMigration):
     '''Edge-P3'''
-    Version = (60, 0)
+    Version = (60, 1)
 
     def migrate(self):
         '''"My" querysets feature'''
@@ -4477,6 +4477,14 @@ class MigrateTo_60(SchemaMigration):
         schema._addTableRows(self.db, 'rbac_permission_type', 'name', [
             dict(name="CreateResource", description='Create Resource'),    
         ])
+        return True
+
+    def migrate1(self):
+        '''continued ownership tracking for "My QuerySets"'''
+        cu = self.db.cursor()
+        cu.execute("""
+            ALTER TABLE projects ADD COLUMN modified_by INTEGER REFERENCES Users (userid) ON DELETE SET NULL
+        """) 
         return True
 
 #### SCHEMA MIGRATIONS END HERE #############################################

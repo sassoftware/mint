@@ -370,7 +370,7 @@ Aj/9jaPTk+mjBIgXSVEHkJCtxfGZWYFx/eNItfaAAfZVX68txm5Hyp2J6Equnr82
     <field type="DecimalField" name="modified_date">0</field>
     <field type="SmallIntegerField" name="hidden">0</field>
     <field type="CharField" name="database">sqlite chater-foo</field>
-    <field to="users.User" name="creator" rel="ManyToOneRel">1</field>
+    <field to="users.User" name="created_by" rel="ManyToOneRel">1</field>
   </object>
   <object pk="1" model="projects.projectversion">
     <field to="projects.project" name="project" rel="ManyToOneRel">1</field>

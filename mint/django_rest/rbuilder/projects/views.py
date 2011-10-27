@@ -322,13 +322,13 @@ class ProjectService(service.BaseService):
     @requires('project')
     @return_xml
     def rest_POST(self, request, project):
-        return self.mgr.addProject(project)
+        return self.mgr.addProject(project, for_user=request._authUser)
 
     @rbac(ProjectCallbacks.can_write_project)
     @requires('project')
     @return_xml
     def rest_PUT(self, request, project_short_name, project):
-        return self.mgr.updateProject(project)
+        return self.mgr.updateProject(project, for_user=request._authUser)
 
     @rbac(ProjectCallbacks.can_write_project)
     def rest_DELETE(self, request, project_short_name):
@@ -336,22 +336,6 @@ class ProjectService(service.BaseService):
         self.mgr.deleteProject(project)
         response = HttpResponse(status=204)
         return response
-
-# Deprecated -- candidate for future removal
-# class ProjectStageService(service.BaseService):
-#     
-#     # FIXME: RBAC MISSING
-#     @access.authenticated
-#     @return_xml
-#     def rest_GET(self, request, stage_id=None):
-#         return self.get(request, stage_id)
-#     
-#     def get(self, request, stage_id=None):
-#         if stage_id:
-#             return StageProxyService.getStageAndSetGroup(request, stage_id)
-#         else:
-#             return StageProxyService.getStagesAndSetGroup(request)
-
 
 class ProjectBranchStageService(service.BaseService):
 

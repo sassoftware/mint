@@ -100,8 +100,8 @@ class Project(modellib.XObjIdModel):
     modified_date = D(modellib.DecimalTimestampField(
         blank=True, db_column="timemodified"), "Project modified date", short="Project modified date")
     hidden = models.BooleanField(default=False)
-    creator = D(models.ForeignKey(usermodels.User,
-        related_name="creator", null=True, db_column="creatorid"), "Project creator", short="Project creator")
+    created_by = D(models.ForeignKey(usermodels.User,
+        related_name="+", null=True, db_column="creatorid"), "Project creator", short="Project creator")
     external = D(models.BooleanField(default=False), "Is the project external?", short="Project external?")
     disabled = D(models.BooleanField(default=False), "Is the project disabled?", short="Project disabled?")
     is_appliance = models.BooleanField(default=True, db_column="isappliance")
@@ -110,6 +110,8 @@ class Project(modellib.XObjIdModel):
     database = D(models.CharField(max_length=128, null=True), "Project database", short="Project database")
     members = modellib.DeferredManyToManyField(usermodels.User, 
         through="Member")
+    modified_by = D(models.ForeignKey(usermodels.User, null=True, related_name='+', db_column="modified_by"), 
+        "Project modified by", short="Project modified by")
 
     # synthetic properties hoisted from labels - these will eventually be merged
     # into the projects schema instead of a labels table
@@ -163,14 +165,12 @@ class Project(modellib.XObjIdModel):
         self.is_appliance = (self.project_type in self._ApplianceTypes)
 
     @classmethod
-    def Now(cls):
-        return time.time()
-
-    @classmethod
     def validateNamespace(cls, namespace):
         return mintprojects._validateNamespace(namespace)
 
     def save(self, *args, **kwargs):
+        # FIXME: move code into mgr.addProject
+
         if self._rbmgr is not None:
             cfg = self._rbmgr.cfg
         else:
@@ -195,12 +195,6 @@ class Project(modellib.XObjIdModel):
             self.project_url = ''
 
         self.setIsAppliance()
-
-        now = self.Now()
-        if self.created_date is None:
-            self.created_date = now
-        if self.modified_date is None:
-            self.modified_date = now
 
         if not self.repository_hostname and self.hostname and self.domain_name:
             self.repository_hostname = '%s.%s' % (self.hostname, self.domain_name)
@@ -327,8 +321,6 @@ class ProjectVersion(modellib.XObjIdModel):
         )
 
     def save(self, *args, **kwargs):
-        if self.created_date is None:
-            self.created_date = Project.Now()
         prodDef = self._getSanitizedProductDefinition()
         if self.label is None:
             self.label = prodDef.getProductDefinitionLabel()

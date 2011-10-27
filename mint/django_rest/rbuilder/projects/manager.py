@@ -6,6 +6,7 @@
 import logging
 import os
 import exceptions
+import time
 
 from conary.lib import util
 
@@ -48,7 +49,7 @@ class ProjectManager(basemanager.BaseManager):
         return project
 
     @exposed
-    def addProject(self, project):
+    def addProject(self, project, for_user):
         label = None
         if project.labels and len(project.labels.all()) > 0:
             label = project.labels.all()[0]
@@ -92,8 +93,10 @@ class ProjectManager(basemanager.BaseManager):
                 raise projects.ProductVersionInvalid
 
         # Set creator to current user
-        if self.user:
-            project.creator = self.user
+        project.created_by  = for_user
+        project.modified_by = for_user
+        project.created_date = time.time()
+        project.modified_date = time.time()
 
         # Save the project, we need the pk populated to create the repository
         project.save()
@@ -103,9 +106,10 @@ class ProjectManager(basemanager.BaseManager):
         # Create project repository
         self.mgr.createRepositoryForProject(project)
 
+        # legacy permissions system
         # Add current user as project owner
-        if self.user:
-            member = models.Member(project=project, user=self.user, 
+        if for_user:
+            member = models.Member(project=project, user=for_user, 
                 level=userlevels.OWNER)
             member.save()
 
@@ -148,7 +152,7 @@ class ProjectManager(basemanager.BaseManager):
             project.upstream_url = 'https://%s/conary/' % (fqdn,)
 
     @exposed
-    def updateProject(self, project):
+    def updateProject(self, project, for_user):
         # Only an admin can hide a project.
         # XXX Is this correct?
         if project.hidden:
@@ -169,6 +173,8 @@ class ProjectManager(basemanager.BaseManager):
 
         project.save()
         self.mgr.generateConaryrcFile()
+        project.modified_by = for_user
+        project.modifed_date = time.time()
         return project
 
     @exposed
