@@ -19,7 +19,7 @@ from mint.django_rest.rbuilder.querysets import models as querymodels
 from mint.django_rest.rbuilder.rbac.rbacauth import rbac
 from mint.django_rest.rbuilder.errors import PermissionDenied
 from mint.django_rest.rbuilder.rbac.manager.rbacmanager import \
-   READMEMBERS, MODMEMBERS
+   READMEMBERS, MODMEMBERS, CREATERESOURCE
 
 class RestDbPassthrough(resource.Resource):
     pass
@@ -395,6 +395,9 @@ def rbac_can_read_system_id(view, request, system_id, *args, **kwargs):
     obj = view.mgr.getSystem(system_id)
     user = request._authUser
     return view.mgr.userHasRbacPermission(user, obj, READMEMBERS)
+
+# NOTE: rbac_can_create_system does not exist because registration (temporarily)
+# must be anonymous for rpath_register.   
    
 class InventorySystemsSystemService(BaseInventoryService):
 

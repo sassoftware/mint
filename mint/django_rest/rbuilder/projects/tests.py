@@ -42,14 +42,15 @@ class ProjectsTestCase(RbacEngine):
         # developer user does NOT have access to these .. skipping XML versions here as these
         # are well covered in rbac/tests.py
                   
-        role          = rbacmodels.RbacRole.objects.get(name='developer')
-        all_projects  = querymodels.QuerySet.objects.get(name='All Projects')
-        all_pbs       = querymodels.QuerySet.objects.get(name='All Project Stages')
-        modmembers    = rbacmodels.RbacPermissionType.objects.get(name='ModMembers')
-        admin         = usersmodels.User.objects.get(user_name='admin')
+        role           = rbacmodels.RbacRole.objects.get(name='developer')
+        self.all_projects   = querymodels.QuerySet.objects.get(name='All Projects')
+        self.all_pbs        = querymodels.QuerySet.objects.get(name='All Project Stages')
+        modmembers     = rbacmodels.RbacPermissionType.objects.get(name='ModMembers')
+        createresource = rbacmodels.RbacPermissionType.objects.get(name='CreateResource')
+        admin          = usersmodels.User.objects.get(user_name='admin')
 
-        for queryset in [ all_projects, all_pbs ]:
-            for permission in [ modmembers ]:
+        for queryset in [ self.all_projects, self.all_pbs ]:
+            for permission in [ modmembers, createresource  ]:
                 rbacmodels.RbacPermission(
                     queryset      = queryset,
                     role          = role,
@@ -350,7 +351,7 @@ class ProjectsTestCase(RbacEngine):
         platform = platformsmodels.Platform(
             label='label-foo', platform_name='foo-platform-name')
         platform.save()
-        
+ 
         # try POSTing with pb pointing to project with valid perms        
         response = self._post('projects/test-project/project_branches',
             data=testsxml.project_version_post_with_project_xml2,
@@ -368,6 +369,12 @@ class ProjectsTestCase(RbacEngine):
         # FIXME: XML tests??
 
     def testUpdateProjectBranch(self):
+        # can update the branch if we can update the P, but need P tags first.
+        # tests above didn't add these objects using the API so invalidations didn't happen
+        response = self._get("query_sets/%s/all" % self.all_projects.pk,
+            username="ExampleDeveloper", password="password")
+        self.assertEquals(response.status_code, 200)
+
         response = self._put('projects/postgres/project_branches/postgres.rpath.com@rpath:postgres-1',
             data=testsxml.project_version_put_xml,
             username="ExampleDeveloper", password="password")

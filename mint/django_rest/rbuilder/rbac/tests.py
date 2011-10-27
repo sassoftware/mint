@@ -4,7 +4,7 @@ from mint.django_rest.rbuilder.rbac import models
 from mint.django_rest.rbuilder.users import models as usersmodels
 from mint.django_rest.rbuilder.querysets import models as querymodels
 from mint.django_rest.rbuilder.rbac.manager.rbacmanager import \
-   READMEMBERS, MODMEMBERS, READSET, MODSETDEF
+   READMEMBERS, MODMEMBERS, READSET, MODSETDEF, CREATERESOURCE
 from datetime import datetime
 
 # Suppress all non critical msg's from output
@@ -323,15 +323,16 @@ class RbacPermissionViews(RbacTestCase):
                 modified_date = datetime.now()
             ).save()
 
-        models.RbacPermission(
-            queryset      = self.datacenter_queryset,
-            role          = models.RbacRole.objects.get(name='sysadmin'),
-            permission    = models.RbacPermissionType.objects.get(name=MODMEMBERS),
-            created_by    = usersmodels.User.objects.get(user_name='admin'),
-            modified_by   = usersmodels.User.objects.get(user_name='admin'),
-            created_date  = datetime.now(),
-            modified_date = datetime.now()
-        ).save()
+        for permission in [ MODMEMBERS, CREATERESOURCE ] :
+            models.RbacPermission(
+                queryset      = self.datacenter_queryset,
+                role          = models.RbacRole.objects.get(name='sysadmin'),
+                permission    = models.RbacPermissionType.objects.get(name=permission),
+                created_by    = usersmodels.User.objects.get(user_name='admin'),
+                modified_by   = usersmodels.User.objects.get(user_name='admin'),
+                created_date  = datetime.now(),
+                modified_date = datetime.now()
+            ).save()
         models.RbacPermission(
             queryset       = self.datacenter_queryset,
             role           = models.RbacRole.objects.get(name='developer'),
@@ -341,15 +342,17 @@ class RbacPermissionViews(RbacTestCase):
             created_date  = datetime.now(),
             modified_date = datetime.now()
         ).save()
-        models.RbacPermission(
-            queryset       = self.lab_queryset,
-            role           = models.RbacRole.objects.get(name='developer'),
-            permission     = models.RbacPermissionType.objects.get(name=MODMEMBERS),
-            created_by     = usersmodels.User.objects.get(user_name='admin'),
-            modified_by    = usersmodels.User.objects.get(user_name='admin'),
-            created_date  = datetime.now(),
-            modified_date = datetime.now()
-        ).save()
+       
+        for permission in [ MODMEMBERS, CREATERESOURCE ] :
+            models.RbacPermission(
+                queryset       = self.lab_queryset,
+                role           = models.RbacRole.objects.get(name='developer'),
+                permission     = models.RbacPermissionType.objects.get(name=permission),
+                created_by     = usersmodels.User.objects.get(user_name='admin'),
+                modified_by    = usersmodels.User.objects.get(user_name='admin'),
+                created_date  = datetime.now(),
+                modified_date = datetime.now()
+            ).save()
 
     def testCanListPermissions(self):
         url = 'rbac/grants'
@@ -358,7 +361,7 @@ class RbacPermissionViews(RbacTestCase):
 
         obj = xobj.parse(content)
         found_items = self._xobj_list_hack(obj.grants.grant)
-        self.assertEqual(len(found_items), 3, 'right number of items')
+        self.assertEqual(len(found_items), 5, 'right number of items')
         self.assertXMLEquals(content, testsxml.permission_list_xml)
 
         # verify that grants also show up on roles objects
@@ -405,7 +408,7 @@ class RbacPermissionViews(RbacTestCase):
         self.req(url, method='DELETE', expect=401, is_authenticated=True)
         self.req(url, method='DELETE', expect=204, is_admin=True)
         all = models.RbacPermission.objects.all()
-        self.assertEqual(len(all), 2, 'deleted an object')
+        self.assertEqual(len(all), 4, 'deleted an object')
 
 
     def testCanUpdatePermissions(self):
@@ -573,6 +576,7 @@ class RbacEngine(RbacTestCase):
             return dbuser
 
         mk_permission(self.datacenter_queryset, 'sysadmin',  MODMEMBERS)
+        mk_permission(self.datacenter_queryset, 'sysadmin',  CREATERESOURCE)
         mk_permission(self.datacenter_queryset, 'developer', READMEMBERS)
         mk_permission(self.sys_queryset, 'sysadmin', READSET)
         mk_permission(self.user_queryset, 'sysadmin', READMEMBERS)
@@ -630,6 +634,11 @@ class RbacEngineTests(RbacEngine):
                 self.assertTrue(self.mgr.userHasRbacPermission(
                     self.admin_user, system, action
                 ))
+        # CreateResource uses a different check
+        self.assertTrue(self.mgr.userHasRbacCreatePermission(
+            self.admin_user, 'project'
+        ))
+
 
     def testRbacDecoratorThroughView(self):
         # this tests the decorator in rbac_auth.py

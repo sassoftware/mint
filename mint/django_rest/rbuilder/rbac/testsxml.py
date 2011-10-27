@@ -766,13 +766,13 @@ permission_post_xml_input="""
 """
 
 permission_post_xml_output="""
-<grant id="http://testserver/api/v1/rbac/grants/4">
+<grant id="http://testserver/api/v1/rbac/grants/6">
   <permission id="http://testserver/api/v1/rbac/permissions/2">
      <description>Modify Member Resources</description>
      <name>ModMembers</name>
   </permission>
   <queryset id="http://testserver/api/v1/query_sets/14"/>
-  <grant_id>4</grant_id>
+  <grant_id>6</grant_id>
   <role id="http://testserver/api/v1/rbac/roles/2">
     <description/>
     <name>developer</name>

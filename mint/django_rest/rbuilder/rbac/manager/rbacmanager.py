@@ -302,6 +302,57 @@ class RbacManager(basemanager.BaseManager):
         querysets_obj.query_set = results
         return querysets_obj
 
+    def __is_admin_like(self, user, request):
+        # if the user is an admin, immediately let them by
+        if request is not None and request._is_admin:
+            return True
+        # some of the tests use this path, but the main app doesn't
+        # TODO: modify tests so they act like everything else
+        if getattr(user, '_is_admin', False):
+            return True
+        # this will trigger on DB users even if request is not passed in
+        # so we could probably eliminate the request check
+        # TODO: make it happen
+        if user.getIsAdmin():
+            return True
+        return False
+
+    def resourceHome(self, user, resource_type, request=None):
+        '''
+        When creating a resource, what querysets should I auto-add the resource to
+        as a chosen member?  The resource_type is a queryset resource
+        type, not a model, database,  or tag name.
+        '''
+        log.info("LOOKING for resourceHome with type = %s" % resource_type)
+        #tags__query_set__grants__role__rbacuserrole__user = for_user,
+        #tags__query_set__grants__permission__name__in = [ READMEMBERS, MODMEMBERS ]
+        granting_sets = querymodels.QuerySet.objects.filter(
+            resource_type = resource_type,
+            grants__role__rbacuserrole__user = user,
+            grants__permission__name = CREATERESOURCE
+        )
+        if len(granting_sets) == 0:
+            return None
+        # the grant code shouldn't allow x>1 but we shouldn't choke either
+        # just add it to the first
+        return granting_sets[0]
+ 
+    @exposed
+    def userHasRbacCreatePermission(self, user, resource_type, request=None):
+        '''
+        Checks to see if a user can create a new resource of a given type.
+        Some resources may have CREATERESOURCE grants
+        (because they act as pointers to chosen querysets) and still further
+        restrict access... thus CREATERESOURCE may be used by object types
+        that do NOT call this function.
+        '''  
+        if self.__is_admin_like(user, request):
+            return True
+        home = self.resourceHome(user, resource_type, request)
+        if home is None:
+            return False
+        return True
+
     @exposed
     def userHasRbacPermission(self, user, resource, permission, 
         request=None):
@@ -317,18 +368,10 @@ class RbacManager(basemanager.BaseManager):
         depending on usage.  
         '''
 
+        if permission == CREATERESOURCE:
+            raise Exception("Internal error: use userHasRbacCreatePermission instead")
 
-        # if the user is an admin, immediately let them by
-        if request is not None and request._is_admin:
-            return True
-        # some of the tests use this path, but the main app doesn't
-        # TODO: modify tests so they act like everything else
-        if getattr(user, '_is_admin', False):
-            return True
-        # this will trigger on DB users even if request is not passed in
-        # so we could probably eliminate the request check
-        # TODO: make it happen
-        if user.getIsAdmin():
+        if self.__is_admin_like(user, request):
             return True
         
         # input permission is a permission name, upconvert to PermissionType object
