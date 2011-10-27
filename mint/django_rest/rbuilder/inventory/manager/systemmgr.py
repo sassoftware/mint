@@ -482,14 +482,14 @@ class SystemManager(basemanager.BaseManager):
         return system_log
 
     @exposed
-    def addSystems(self, systemList):
+    def addSystems(self, systemList, for_user=None):
         '''Add add one or more systems to inventory'''
         for system in systemList:
-            self.addSystem(system)
+            self.addSystem(system, for_user=for_user)
 
     @exposed
     def addSystem(self, system, generateCertificates=False,
-                  withManagementInterfaceDetection=True):
+                  withManagementInterfaceDetection=True, for_user=None):
         '''Add a new system to inventory'''
 
         if not system:
@@ -500,6 +500,9 @@ class SystemManager(basemanager.BaseManager):
                 return self.addManagementNode(system)
         except ObjectDoesNotExist:
             pass # will default later on
+
+        system.created_by = for_user
+        system.modified_by = for_user
 
         # add the system
         system.save()
@@ -723,7 +726,7 @@ class SystemManager(basemanager.BaseManager):
         system.save()
 
     @exposed
-    def updateSystem(self, system):
+    def updateSystem(self, system, for_user=None):
         # XXX This will have to change and be done in modellib, most likely.
         if self.checkAndApplyShutdown(system):
             return
@@ -734,6 +737,9 @@ class SystemManager(basemanager.BaseManager):
             self.addSystem(system, generateCertificates=False,
                 withManagementInterfaceDetection=False)
         self.setSystemStateFromJob(system)
+        if for_user:
+            system.modified_by = for_user
+        system.modified_date = datetime.datetime.now()
         system.save()
 
     def checkInstalledSoftware(self, system):
@@ -910,7 +916,7 @@ class SystemManager(basemanager.BaseManager):
 
     @exposed
     def addLaunchedSystem(self, system, dnsName=None, targetName=None,
-            targetType=None):
+            targetType=None, for_user=None):
         if isinstance(targetType, basestring):
             targetTypeName = targetType
         else:
@@ -924,6 +930,9 @@ class SystemManager(basemanager.BaseManager):
         oldModel, system = models.System.objects.load_or_create(system,
             withReadOnly=True)
         system.launching_user = self.user
+        if for_user:
+            system.created_by  = for_user
+            system.modified_by = for_user
         system.launch_date = self.now()
         # Copy some of the data from the target
         if not system.name:

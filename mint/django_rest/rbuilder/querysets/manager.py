@@ -154,10 +154,10 @@ class QuerySetManager(basemanager.BaseManager):
         '''create a new query set'''
         # this is probably a duplicate save because of how xobj
         # is used.
-        querySet.save()
-        self._recomputeStatic(querySet)
         querySet.created_by = by_user
         querySet.modified_by = by_user
+        querySet.save()
+        self._recomputeStatic(querySet)
         return querySet
 
     @exposed

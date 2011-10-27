@@ -340,10 +340,13 @@ class InventorySystemsService(BaseInventoryService):
     @requires(['system', 'systems'])
     @return_xml
     def rest_POST(self, request, system=None, systems=None):
+        # FIXME -- determine if request._authUser is available if authentication is supplied
+        # but method is still anonymous <-- MPD
+        authUser = getattr(request, '_authUser', None)
         if system is not None:
-            system = self.mgr.addSystem(system, generateCertificates=True)
+            system = self.mgr.addSystem(system, generateCertificates=True, for_user=authUser)
             return system
-        systems = self.mgr.addSystems(systems.system)
+        systems = self.mgr.addSystems(systems.system, for_user=authUser)
         return self.mgr.getSystems()
 
 class InventoryInventorySystemsService(BaseInventoryService):
@@ -422,7 +425,8 @@ class InventorySystemsSystemService(BaseInventoryService):
             if not request._is_admin:
                 return HttpAuthenticationRequired
         # This really should be an update
-        self.mgr.updateSystem(system)
+        authUser = getattr(request, '_authUser', None)
+        self.mgr.updateSystem(system, for_user=authUser)
         return self.mgr.getSystem(system_id)
 
     @rbac(rbac_can_write_system_id)

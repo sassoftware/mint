@@ -71,7 +71,7 @@ class RbacManager(basemanager.BaseManager):
     @exposed
     def getRbacPermissionTypes(self):
         return self._getThings(models.RbacPermissionTypes,
-            models.RbacPermissionType, 'permission', order_by=['description'])
+            models.RbacPermissionType, 'permission', order_by=['permission_id'])
 
     @exposed
     def getRbacPermissionType(self, permission_type):
