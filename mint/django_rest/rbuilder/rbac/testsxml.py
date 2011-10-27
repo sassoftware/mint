@@ -572,7 +572,7 @@ permission_list_xml = """
 """
 
 permission_list_xml_for_role = """
-<grants count="1" end_index="0" filter_by="" full_collection="http://testserver/api/v1/rbac/grants" id="http://testserver/api/v1/rbac/grants;start_index=0;limit=10" limit="10" next_page="" num_pages="1" order_by="" per_page="10" previous_page="" start_index="0">
+<grants count="2" end_index="1" filter_by="" full_collection="http://testserver/api/v1/rbac/grants" id="http://testserver/api/v1/rbac/grants;start_index=0;limit=10" limit="10" next_page="" num_pages="1" order_by="" per_page="10" previous_page="" start_index="0">
   <grant id="http://testserver/api/v1/rbac/grants/1">
   <created_by id="http://testserver/api/v1/users/1">
       <blurb/>
@@ -600,6 +600,18 @@ permission_list_xml_for_role = """
     <permission id="http://testserver/api/v1/rbac/permissions/2">
       <description>Modify Member Resources</description>
       <name>ModMembers</name>
+    </permission>
+    <queryset id="http://testserver/api/v1/query_sets/16"/>
+    <role id="http://testserver/api/v1/rbac/roles/1">
+      <description/>
+      <name>sysadmin</name>
+    </role>
+  </grant>
+  <grant id="http://testserver/api/v1/rbac/grants/2">
+    <grant_id>2</grant_id>
+    <permission id="http://testserver/api/v1/rbac/permissions/5">
+      <description>Create Resource</description>
+      <name>CreateResource</name>
     </permission>
     <queryset id="http://testserver/api/v1/query_sets/16"/>
     <role id="http://testserver/api/v1/rbac/roles/1">

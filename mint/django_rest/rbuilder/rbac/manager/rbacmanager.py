@@ -13,7 +13,6 @@ from datetime import datetime
 from django.core.exceptions import ObjectDoesNotExist
 from mint.django_rest.rbuilder.errors import PermissionDenied
 
-log = logging.getLogger(__name__)
 exposed = basemanager.exposed
 
 # resource types that we can manipulate RBAC context on:
@@ -323,7 +322,6 @@ class RbacManager(basemanager.BaseManager):
         as a chosen member?  The resource_type is a queryset resource
         type, not a model, database,  or tag name.
         '''
-        log.info("LOOKING for resourceHome with type = %s" % resource_type)
         #tags__query_set__grants__role__rbacuserrole__user = for_user,
         #tags__query_set__grants__permission__name__in = [ READMEMBERS, MODMEMBERS ]
         granting_sets = querymodels.QuerySet.objects.filter(
