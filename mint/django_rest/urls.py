@@ -28,6 +28,7 @@ from mint.django_rest.rbuilder.images import views as imagesviews
 handler404 = 'mint.django_rest.handler.handler404'
 handler500 = 'mint.django_rest.handler.handler500'
 
+
 class URLRegistry(object):
     _registry = {}
     VERSION = '1'
@@ -35,14 +36,19 @@ class URLRegistry(object):
     def URL(cls, regex, *args, **kwargs):
         if not regex.startswith('^'):
             regex = "^api/v%s/%s" % (cls.VERSION, regex)
-        viewName = kwargs.get('name')
+        viewName = kwargs.get('name', None)
         if viewName:
             oldUrl = cls._registry.get(viewName)
             if oldUrl:
                 raise Exception("Duplicate view name: %s (urls: %s, %s)" %
                     (viewName, oldUrl, regex))
             cls._registry[viewName] = regex
-        return url(regex, *args, **kwargs)
+        # try and get model name
+        modelName = kwargs.pop('model', None)
+        u = url(regex, *args, **kwargs)
+        u.model = modelName
+        return u
+        
 URL = URLRegistry.URL
 
 urlpatterns = patterns('',
@@ -91,16 +97,20 @@ urlpatterns = patterns('',
     # Management Nodes
     URL(r'inventory/management_nodes/?$',
         inventoryviews.InventoryManagementNodeService(),
-        name='ManagementNodes'),
+        name='ManagementNodes',
+        model='ManagementNodes'),
     URL(r'inventory/management_nodes/(?P<management_node_id>\d+)/?$',
         inventoryviews.InventoryManagementNodeService(),
-        name='ManagementNode'),
+        name='ManagementNode',
+        model='ManagementNode'),
     URL(r'inventory/zones/(?P<zone_id>\d+)/management_nodes/?$',
         inventoryviews.InventoryZoneManagementNodeService(),
-        name='ZoneManagementNodes'),
+        name='ZoneManagementNodes',
+        model='ZoneManagementNodes'),
     URL(r'inventory/zones/(?P<zone_id>\d+)/management_nodes/(?P<management_node_id>\d+)/?$',
         inventoryviews.InventoryZoneManagementNodeService(),
-        name='ZoneManagementNode'),
+        name='ZoneManagementNode',
+        model='ZoneManagementNode'),
         
     # Management Interfaces
     URL(r'inventory/management_interfaces/?$',
@@ -113,10 +123,12 @@ urlpatterns = patterns('',
     # System types
     URL(r'inventory/system_types/?$',
         inventoryviews.InventorySystemTypeService(),
-        name='SystemTypes'),
+        name='SystemTypes',
+        model='SystemTypes'),
     URL(r'inventory/system_types/(?P<system_type_id>\d+)/?$',
         inventoryviews.InventorySystemTypeService(),
-        name='SystemType'),
+        name='SystemType',
+        model='SystemType'),
     URL(r'inventory/system_types/(?P<system_type_id>\d+)/systems/?$',
         inventoryviews.InventorySystemTypeSystemsService(),
         name='SystemTypeSystems'),
@@ -124,16 +136,19 @@ urlpatterns = patterns('',
     # Networks
     URL(r'inventory/networks/?$',
         inventoryviews.InventoryNetworkService(),
-        name='Networks'),
+        name='Networks',
+        model='Networks'),
     URL(r'inventory/networks/(?P<network_id>\d+)/?$',
         inventoryviews.InventoryNetworkService(),
-        name='Network'),
+        name='Network',
+        model='Network'),
 
     # Systems
     # RBL-8919 - accept double slashes to accommodate an rpath-tools bug
     URL(r'inventory//?systems/?$',
         inventoryviews.InventorySystemsService(),
-        name='Systems'),
+        name='Systems',
+        model='Systems'),
     # support outdated rpath-register (needed for older platforms)
     URL(r'^api/inventory/systems/?$',
         inventoryviews.InventorySystemsService(),
@@ -149,7 +164,8 @@ urlpatterns = patterns('',
         name='InfrastructureSystems'),
     URL(r'inventory/systems/(?P<system_id>\d+)/?$',
         inventoryviews.InventorySystemsSystemService(),
-        name='System'),
+        name='System',
+        model='System'),
     URL(r'inventory/systems/(?P<system_id>\d+)/system_log/?$',
         inventoryviews.InventorySystemsSystemLogService(),
         name='SystemLog'),
@@ -211,10 +227,12 @@ urlpatterns = patterns('',
     # Jobs
     URL(r'jobs/?$',
         jobviews.JobsService(),
-        name='Jobs'),
+        name='Jobs',
+        model='Jobs'),
     URL(r'jobs/(?P<job_uuid>[-a-zA-Z0-9]+)/?$',
         jobviews.JobsService(),
-        name='Job'),
+        name='Job',
+        model='Job'),
 
     # Job States
     URL(r'job_states/?$',
@@ -244,10 +262,12 @@ urlpatterns = patterns('',
     # Query Sets
     URL(r'query_sets/?$',
         querysetviews.QuerySetService(),
-        name='QuerySets'),
+        name='QuerySets',
+        model='QuerySets'),
     URL(r'query_sets/(?P<query_set_id>\d+)/?$',
         querysetviews.QuerySetService(),
-        name='QuerySet'),
+        name='QuerySet',
+        model='QuerySet'),
     URL(r'query_sets/(?P<query_set_id>\d+)/all/?$',
         querysetviews.QuerySetAllResultService(),
         name='QuerySetAllResult'),
@@ -282,62 +302,78 @@ urlpatterns = patterns('',
     # Aggregate all project branches
     URL(r'project_branches/?$',
         projectviews.AllProjectBranchesService(),
-        name='AllProjectBranches'),
+        name='AllProjectBranches',
+        model='ProjectVersions'),
 
     # Aggregate all project branch stages
     URL(r'project_branch_stages/?$',
         projectviews.AllProjectBranchesStagesService(),
-        name='AllProjectBranchStages'),
+        name='AllProjectBranchStages',
+        model='Stages'),
 
     # Proper hierarchy for projects
     URL(r'projects/?$',
         projectviews.ProjectService(),
-        name='Projects'),
+        name='Projects',
+        model='Projects'),
     URL(r'projects/(?P<project_short_name>(\w|\-)*)/?$',
         projectviews.ProjectService(),
-        name='Project'),
+        name='Project',
+        model='Project'),
     URL(r'projects/(?P<project_short_name>(\w|\-)*)/members/?$',
         projectviews.ProjectMemberService(),
         name='ProjectMembers'),
     URL(r'projects/(?P<project_short_name>(\w|\-)*)/releases/?$',
         projectviews.ProjectReleaseService(),
-        name='ProjectReleases'),
+        name='ProjectReleases',
+        model='Releases'),
     URL(r'projects/(?P<project_short_name>(\w|\-)*)/releases/(?P<release_id>\d+)/?$',
         projectviews.ProjectReleaseService(),
-        name='ProjectRelease'),
+        name='ProjectRelease',
+        model='Release'),
     URL(r'projects/(?P<project_short_name>(\w|\-)*)/releases/(?P<release_id>\d+)/images/?$',
         projectviews.ProjectReleaseImageService(),
-        name='ProjectReleaseImages'),
+        name='ProjectReleaseImages',
+        model='Images'),
     URL(r'projects/(?P<project_short_name>(\w|\-)*)/releases/(?P<release_id>\d+)/images/(?P<image_id>\d+)/?$',
         projectviews.ProjectReleaseImageService(),
-        name='ProjectReleaseImage'),
+        name='ProjectReleaseImage',
+        model='Image'),
     URL(r'projects/(?P<project_short_name>(\w|\-)*)/project_branches/?$',
         projectviews.ProjectAllBranchesService(),  # WRONG
-        name='ProjectVersions'),
+        name='ProjectVersions',
+        model='ProjectVersions'),
     URL(r'projects/(?P<project_short_name>(\w|\-)*)/project_branches/(?P<project_branch_label>[a-zA-Z0-9]+(\.|\w|\-|\@|\:)*)/?$',
         projectviews.ProjectBranchService(),
-        name='ProjectVersion'),
+        name='ProjectVersion',
+        model='ProjectVersion'),
     URL(r'projects/(?P<project_short_name>(\w|\-)*)/project_branches/(?P<project_branch_label>[a-zA-Z0-9]+(\.|\w|\-|\@|\:)*)/project_branch_stages/?$',
         projectviews.ProjectBranchStageService(),
-        name='ProjectBranchStages'),
+        name='ProjectBranchStages',
+        model='Stages'),
     URL(r'projects/(?P<project_short_name>(\w|\-)*)/project_branches/(?P<project_branch_label>[a-zA-Z0-9]+(\.|\w|\-|\@|\:)*)/project_branch_stages/(?P<stage_name>(\w|-)+)$',
         projectviews.ProjectBranchStageService(),
-        name='ProjectBranchStage'),
+        name='ProjectBranchStage',
+        model='Stage'),
     URL(r'projects/(?P<project_short_name>(\w|\-)*)/project_branches/(?P<project_branch_label>[a-zA-Z0-9]+(\.|\w|\-|\@|\:)*)/project_branch_stages/(?P<stage_name>(\w|-)+)/images/?$',
         projectviews.ProjectBranchStageImagesService(),
-        name='ProjectBranchStageImages'),
+        name='ProjectBranchStageImages',
+        model='Images'),
 
     # Aggregate all stages for a project
     URL(r'projects/(?P<project_short_name>(\w|\-)*)/project_branch_stages/?$',
         projectviews.ProjectAllBranchStagesService(),
-        name='ProjectBranchesAllStages'),
+        name='ProjectBranchesAllStages',
+        model='Stages'),
 
     URL(r'projects/(?P<project_short_name>(\w|\-)*)/images/?$',
         projectviews.ProjectImageService(),
-        name='ProjectImages'),
+        name='ProjectImages',
+        model='Images'),
     URL(r'projects/(?P<project_short_name>(\w|\-)*)/images/(?P<image_id>\d+)/?$',
         projectviews.ProjectImageService(),
-        name='ProjectImage'),
+        name='ProjectImage',
+        model='Image'),
 
     # Packages
     URL(r'packages/?$',
@@ -456,11 +492,13 @@ urlpatterns = patterns('',
     # Users
     URL(r'users/?$',
         usersviews.UsersService(),
-        name='Users'),
+        name='Users',
+        model='Users'),
     
     URL(r'users/(?P<user_id>\d+)/?$',
         usersviews.UsersService(),
-        name='User'),
+        name='User',
+        model='User'),
 
     # UserNotices
     URL(r'users/(?P<user_id>\d+)/notices/?$',
@@ -589,13 +627,16 @@ urlpatterns = patterns('',
     # Begin Targets/TargetTypes
     URL(r'targets/?$',
         targetsviews.TargetService(),
-        name='Targets'),
+        name='Targets',
+        model='Targets'),
     URL(r'targets/(?P<target_id>\d+)/?$',
         targetsviews.TargetService(),
-        name='Target'),
+        name='Target',
+        model='Target'),
     URL(r'targets/(?P<target_id>\d+)/target_types/?$',
         targetsviews.TargetTypeByTargetService(),
-        name='TargetTypeByTarget'),
+        name='TargetTypeByTarget',
+        model='TargetTypes'),
     URL(r'targets/(?P<target_id>\d+)/target_credentials/(?P<target_credentials_id>\d+)/?$',
         targetsviews.TargetCredentialsService(),
         name='TargetCredentials'),
@@ -610,13 +651,16 @@ urlpatterns = patterns('',
         name='TargetRefreshImages'),
     URL(r'target_types/?$',
         targetsviews.TargetTypeService(),
-        name='TargetTypes'),
+        name='TargetTypes',
+        model='TargetTypes'),
     URL(r'target_types/(?P<target_type_id>\d+)/?$',
         targetsviews.TargetTypeService(),
-        name='TargetType'),
+        name='TargetType',
+        model='TargetType'),
     URL(r'target_types/(?P<target_type_id>\d+)/targets/?$',
         targetsviews.TargetTypeTargetsService(),
-        name='TargetTypeTargets'),
+        name='TargetTypeTargets',
+        model='TargetTypes'),
     URL(r'target_types/(?P<target_type_id>\d+)/descriptor_create_target/?$',
         targetsviews.TargetTypeCreateTargetService(),
         name='TargetTypeCreateTarget'),
@@ -638,10 +682,12 @@ urlpatterns = patterns('',
     # Begin all things Images service
     URL(r'images/?$',
         imagesviews.ImagesService(),
-        name='Images'),
+        name='Images',
+        model='Images'),
     URL(r'images/(?P<image_id>\d+)/?$',
         imagesviews.ImagesService(),
-        name='Image'),
+        name='Image',
+        model='Image'),
     
     # Digress for build_log
     URL(r'images/(?P<image_id>\d+)/build_log/?$',
@@ -661,10 +707,12 @@ urlpatterns = patterns('',
     # Begin Releases service
     URL(r'releases/?$',
         imagesviews.ReleaseService(),
-        name='Releases'),
+        name='Releases',
+        model='Releases'),
     URL(r'releases/(?P<release_id>\d+)/?$',
         imagesviews.ReleaseService(),
-        name='TopLevelRelease'),
+        name='TopLevelRelease',
+        model='Release'),
     
     # Begin image types
     URL(r'image_types/?$',
