@@ -4,7 +4,6 @@
 # All Rights Reserved
 #
 
-import logging
 from mint.django_rest.rbuilder.rbac import models 
 from mint.django_rest.rbuilder.users import models as usermodels
 from mint.django_rest.rbuilder.manager import basemanager
@@ -278,8 +277,6 @@ class RbacManager(basemanager.BaseManager):
             return querysets_obj
         if user.is_admin:
             return querysets_obj
-        querysets = querysets_obj.query_set
-
         roles = models.RbacUserRole.objects.select_related().filter(
             user = user
         )
@@ -460,10 +457,10 @@ class RbacManager(basemanager.BaseManager):
         role.description = "identity role for user"
         role.save()
         user = usermodels.User.objects.get(user_name=user.user_name)
-        mapping = models.RbacUserRole.objects.get_or_create(
+        models.RbacUserRole.objects.get_or_create(
             user=user, 
             role=role
-        )[0]
+        )
         return role
 
     @exposed
