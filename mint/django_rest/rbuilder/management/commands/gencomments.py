@@ -217,4 +217,3 @@ class Command(BaseCommand):
         changes management_nodes to ManagementNodes
         """
         return ''.join([s.capitalize() for s in name.split('_')])
-        
