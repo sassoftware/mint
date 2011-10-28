@@ -12,7 +12,7 @@
 	    <field type="DecimalField" name="modified_date">1283530322.491</field>
 	    <field type="SmallIntegerField" name="active">1</field>
 	    <field type="TextField" name="blurb"/>
-      <field type="BooleanField" name="_is_admin">True</field>
+      <field type="BooleanField" name="is_admin">True</field>
 	</object>
 	<object pk="2000" model="users.user">
 	    <field type="CharField" name="user_name">testuser</field>
@@ -25,7 +25,7 @@
 	    <field type="DecimalField" name="modified_date">1283530359.041</field>
 	    <field type="SmallIntegerField" name="active">1</field>
 	    <field type="TextField" name="blurb">null</field>
-      <field type="BooleanField" name="_is_admin">False</field>
+      <field type="BooleanField" name="is_admin">False</field>
 	</object>
   <object pk="2" model="inventory.system">
         <field type="CharField" name="name">rPath Update Service</field>

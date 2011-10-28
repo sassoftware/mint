@@ -6,7 +6,7 @@
 
 import logging
 from mint.django_rest.rbuilder.rbac import models 
-from mint.django_rest.rbuilder.users import models as usersmodels
+from mint.django_rest.rbuilder.users import models as usermodels
 from mint.django_rest.rbuilder.manager import basemanager
 from mint.django_rest.rbuilder.querysets import models as querymodels
 from datetime import datetime
@@ -151,12 +151,12 @@ class RbacManager(basemanager.BaseManager):
     @exposed
     def getRbacUsersForRole(self, role):
         role = self._role(role)
-        users = usersmodels.Users()
+        users = usermodels.Users()
         rbac_user_roles = models.RbacUserRole.objects.all()
         rbac_user_roles = models.RbacUserRole.objects.filter(
             role = role
         ).order_by('user')
-        user_results = usersmodels.User.objects.filter(
+        user_results = usermodels.User.objects.filter(
             user_roles__in = rbac_user_roles
         )
         users.user = user_results
@@ -233,7 +233,7 @@ class RbacManager(basemanager.BaseManager):
 
     def _user(self, value):
         '''cast input as a user'''
-        return self._orId(value, usersmodels.User)
+        return self._orId(value, usermodels.User)
 
     #########################################################
     # RBAC USER_ROLE METHODS
@@ -276,7 +276,7 @@ class RbacManager(basemanager.BaseManager):
         '''
         if request is not None and request._is_admin:
             return querysets_obj
-        if getattr(user, '_is_admin', False):
+        if user.is_admin:
             return querysets_obj
         querysets = querysets_obj.query_set
 
@@ -305,14 +305,7 @@ class RbacManager(basemanager.BaseManager):
         # if the user is an admin, immediately let them by
         if request is not None and request._is_admin:
             return True
-        # some of the tests use this path, but the main app doesn't
-        # TODO: modify tests so they act like everything else
-        if getattr(user, '_is_admin', False):
-            return True
-        # this will trigger on DB users even if request is not passed in
-        # so we could probably eliminate the request check
-        # TODO: make it happen
-        if user.getIsAdmin():
+        if user.is_admin:
             return True
         return False
 
@@ -444,5 +437,65 @@ class RbacManager(basemanager.BaseManager):
         # so it doesn't make sense to return the role
         # as what we've deleted.
         return mapping
-    
+     
+    ##################################################################
+    # Support for the "My Querysets" feature of allowing
+    # users to automatically have access to what they create and
+    # having a createable place to put resources set up with
+    # the user account
+
+    @exposed
+    def getOrCreateIdentityRole(self, user):
+        # users need to be a in group that contains them
+        # similar to Unix user groups in this respect
+        # except only create them if we know the user
+        # will have "My Querysets"
+        if not user.can_create:
+            raise Exception('internal error: user creation rights not set')
+        role_name = "user:%s" % user.user_name
+        role = models.RbacRole.objects.get_or_create(
+            name = role_name,
+            is_identity = True
+        )[0]
+        role.description = "identity role for user"
+        role.save()
+        user = usermodels.User.objects.get(user_name=user.user_name)
+        mapping = models.RbacUserRole.objects.get_or_create(
+            user=user, 
+            role=role
+        )[0]
+        return role
+
+    @exposed
+    def removeIdentityRole(self, user):
+        # user can no longer create anything, so remove
+        # the role, and by sql cascade effects, delete
+        # the grants. It is ok if it's already missing
+        role_name = "user:%s" % user.user_name
+        roles = models.RbacRole.objects.filter(
+            name = role_name,
+            is_identity = True
+        )
+        for role in roles:
+            role.delete()
+        # grants will be deleted by cascade
+
+    @exposed
+    def addIdentityRoleGrants(self, queryset, role):
+        # for a my queryset, add permissions so that it's fully usable --
+        # a user can create and can see/edit what they own
+        if queryset.personal_for is None:
+            raise Exception("internal error: not a 'My' Queryset")
+        if role.is_identity is None:
+            raise Exception("internal error: not an identity role")
+        createresource = models.RbacPermissionType.objects.get(name=CREATERESOURCE)
+        modmembers = models.RbacPermissionType.objects.get(name=MODMEMBERS)
+        readset = models.RbacPermissionType.objects.get(name=READSET)
+        for permission_type in [ createresource, modmembers, readset ]: 
+            models.RbacPermission.objects.get_or_create(
+                role = role,
+                queryset = queryset,
+                permission = permission_type
+            )[0]
+  
 

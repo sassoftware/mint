@@ -179,7 +179,7 @@ class BaseAuthService(BaseService):
         else:
             authToken = (user.user_name, "FAKE PASSWORD")
             userId = user.user_id
-            isAdmin = bool(user._is_admin)
+            isAdmin = bool(user.is_admin)
         userName = authToken[0]
         mintAuth = users.Authorization(username=userName,
             token=authToken, admin=isAdmin, userId=userId)

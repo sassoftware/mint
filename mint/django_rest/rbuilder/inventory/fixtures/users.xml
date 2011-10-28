@@ -11,7 +11,7 @@
     <field type="DecimalField" name="modified_date">1283530359.041</field>
     <field type="SmallIntegerField" name="active">1</field>
     <field type="TextField" name="blurb">null</field>
-    <field type="BooleanField" name="_is_admin">False</field>
+    <field type="BooleanField" name="is_admin">False</field>
   </object>
   <object pk="3" model="users.user">
     <field type="CharField" name="user_name">JeanValjean2</field>
@@ -24,7 +24,7 @@
     <field type="DecimalField" name="modified_date">1283530359.041</field>
     <field type="SmallIntegerField" name="active">1</field>
     <field type="TextField" name="blurb">null</field>
-    <field type="BooleanField" name="_is_admin">False</field>
+    <field type="BooleanField" name="is_admin">False</field>
   </object>
   <object pk="4" model="users.user">
     <field type="CharField" name="user_name">JeanValjean3</field>
@@ -37,6 +37,6 @@
     <field type="DecimalField" name="modified_date">1283530359.041</field>
     <field type="SmallIntegerField" name="active">1</field>
     <field type="TextField" name="blurb">null</field>
-    <field type="BooleanField" name="_is_admin">False</field>
+    <field type="BooleanField" name="is_admin">False</field>
   </object>
 </django-objects>

@@ -9,9 +9,8 @@ from datetime import datetime
 
 # Suppress all non critical msg's from output
 # still emits traceback for failed tests
-
-import logging
-logging.disable(logging.CRITICAL)
+#import logging
+#logging.disable(logging.CRITICAL)
 
 from mint.django_rest import test_utils
 XMLTestCase = test_utils.XMLTestCase
@@ -580,7 +579,7 @@ class RbacEngine(RbacTestCase):
         mk_permission(self.user_queryset, 'sysadmin', READMEMBERS)
 
         self.admin_user     = usersmodels.User.objects.get(user_name='admin')
-        self.admin_user._is_admin = True
+        self.admin_user.is_admin = True # already set?
         self.sysadmin_user  = mk_user('ExampleSysadmin', False, 'sysadmin')
         self.developer_user = mk_user('ExampleDeveloper', False, 'developer')
         self.intern_user    = mk_user('ExampleIntern', False, 'intern')
@@ -712,7 +711,8 @@ class RbacEngineTests(RbacEngine):
         xobj_querysets = xobj.parse(response.content)
         results = xobj_querysets.query_sets.query_set
         # granted permission to 2 systems querysets + 1 user queryset
-        self.assertEquals(len(results), 6, 'sysadmin user gets fewer results')
+        # + 3 "My" querysets (projects+images+systems) ... soon to be more
+        self.assertEquals(len(results), 9, 'sysadmin user gets fewer results')
  
         # sysadmin user CAN see & use the all systems queryset
         # because he has permissions on it
@@ -854,13 +854,6 @@ class RbacEngineTests(RbacEngine):
             self.assertTrue(self.mgr.userHasRbacPermission(
                 self.admin_user, self.lost_system, action,
             ))
-
-    def testCannotLookupPermissionsOnNonConfiguredAction(self):
-        # if you test against an action type that does not
-        # exist (due to code error?) you don't get in
-        self.failUnlessRaises(Exception, lambda: self.mgr.userHasRbacPermission(
-            self.developer_user, self.lost_system, 'some fake action type'
-        ))
 
 # SEE ALSO (PENDING) tests in inventory and other services
 

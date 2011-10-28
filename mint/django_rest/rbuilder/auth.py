@@ -57,7 +57,7 @@ def getAuth(request):
 def isAdmin(user):
     if not isinstance(user, User):
         return False
-    return user.getIsAdmin()
+    return user.is_admin
 
 def isAuthenticated(user):
      if user is not None and isinstance(user, User):

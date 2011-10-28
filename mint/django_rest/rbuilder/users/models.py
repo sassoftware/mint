@@ -38,16 +38,15 @@ class User(modellib.XObjIdModel):
     modified_date = D(APIReadOnly(modellib.DecimalTimestampField(max_digits=14, decimal_places=3, db_column='timemodified')), "User modified date", short="User modified date")
     active = modellib.XObjHidden(modellib.APIReadOnly(models.SmallIntegerField()))
     blurb = models.TextField()
-    _is_admin = modellib.XObjHidden(modellib.APIReadOnly(
-        models.BooleanField(default=False, db_column='is_admin')))
-
-    is_admin = D(modellib.SyntheticField(), "User is admin?", short="User is admin?")
+    # code in manager prevents this from being set by non-admins
+    is_admin = models.BooleanField(default=False, db_column='is_admin')
     external_auth = D(modellib.SyntheticField(models.BooleanField()), "User external auth?", short="User external auth?")
 
     created_by = D(APIReadOnly(models.ForeignKey('User', related_name='+', db_column='created_by', null=True)), 
         "User created by", short="User created by")
     modified_by = D(APIReadOnly(models.ForeignKey('User', related_name='+', db_column='modified_by', null=True)), 
         "User modified by", short="User modified by")
+    # code in manager prevents this from being set by non-admins
     can_create = D(models.BooleanField(default=False), "User can create resources?", short="User can create?")
 
     # Field used for the clear-text password when it is to be
@@ -77,54 +76,17 @@ class User(modellib.XObjIdModel):
         'user_roles', 'jobs',
     ])
 
-    # expand these when traversing as a foreign key relationship
-    # Disabling until some decimal serialization issues can be resolved in serialization
-    # Disabling even more, because rpath-models expects launching_user
-    # to be a plain string.
-    #summary_view = [ 'user_name', 'full_name' ]
-
     def __unicode__(self):
         return self.user_name
-
-    @staticmethod
-    def _toBool(val):
-        if val is None:
-            return None
-        if not isinstance(val, basestring):
-            val = str(val)
-        val = val.lower()
-        if val in ('true', 'false'):
-            return val == 'true'
-        if val == '1':
-            return True
-        return False
-
-    def setIsAdmin(self, isAdmin):
-        """Set private admin flag, to be called after the caller's adminship
-        has been verified only.
-        """
-        self._is_admin = isAdmin
-
-    def getIsAdmin(self):
-        return self._toBool(self._is_admin)
-
-    def _populateAdminField(self):
-        """Copy private is_admin value to public field."""
-        # Unfortunately we don't have boolean synthetic fields yet, so
-        # let's save the string representation of it
-        if self._is_admin is not None:
-            self.is_admin = str(bool(self._is_admin)).lower()
 
     def _populateExternalAuthField(self):
         """
         Compute external auth field based on whether or not the password
         is set.
         """
-
         self.external_auth = str(self.passwd is None).lower()
 
     def computeSyntheticFields(self, sender, **kwargs):
-        self._populateAdminField()
         self._populateExternalAuthField()
         # sub-collections off of user
         self.roles = modellib.HrefField(

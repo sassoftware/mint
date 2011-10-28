@@ -19,6 +19,7 @@ user_post_xml = """
 <email>email@example.com</email>
 <blurb>something here</blurb>
 <is_admin>%s</is_admin>
+<can_create>true</can_create>
 </user>
 """
 

@@ -832,3 +832,104 @@ class QuerySetManager(basemanager.BaseManager):
 
         return None
 
+    #######################################################################
+    # "My Querysets" feature
+
+    @exposed
+    def configureMyQuerysets(self, user):
+        '''
+        My Querysets allow the user a home for items they create.
+        They are created when a user is saved with the can_create bit
+        set and removed when it is not set
+        '''
+        if user.can_create:
+            self._createMyQuerysets(user)
+        else:
+            self._removeMyQuerysets(user)
+
+    def _createMyQuerysets(self, user):
+        '''create a user's personal querysets, roles, and grants'''
+        role = self.mgr.getOrCreateIdentityRole(user)
+
+        # TODO: add My Images once available
+        querysets = [
+            self._createMyProjects(user),
+            self._createMyStages(user),
+            self._createMySystems(user),
+        ]
+        for qs in querysets:
+            self.mgr.addIdentityRoleGrants(qs, role)
+
+    def _myQuerySet(self, user, name, resource_type, presentation_type=None):
+        # common code between each type of personal queryset
+
+        name = "%s (%s)" % (name, user.user_name)
+        description = "resources created by user %s" % (user.user_name)
+
+        matching = models.QuerySet.objects.filter(
+            personal_for = user,
+            name = name
+        ).all()
+
+        if len(matching) > 0:
+            return matching[0]
+
+        if not presentation_type:
+            presentation_type = resource_type
+
+        possible_qs = models.QuerySet.objects.filter(
+            name = name,
+            resource_type = resource_type,
+            personal_for = user
+        )
+        qs = None
+        if len(possible_qs) == 0:
+            qs = models.QuerySet(
+                name = name,
+                description = description,
+                presentation_type = presentation_type,
+                resource_type = resource_type, 
+                is_public = False,
+                personal_for = user
+            )
+            qs = self.mgr.addQuerySet(qs, None)
+        else:
+            qs = possible_qs[0]
+
+        filterEntry = models.FilterEntry.objects.get_or_create(
+            field = 'created_by.owner.pk',
+            operator = 'EQUAL',
+            value = user.pk
+        )[0]
+        if len(qs.filter_entries.all()) == 0:
+            # if the queryset already exists we won't try to repair it
+            qs.filter_entries.add(filterEntry)
+            qs.save()
+        return qs
+
+    def _createMyProjects(self, user):
+        return self._myQuerySet(user, 'My Projects', 'project')
+
+    def _createMyStages(self, user):
+        return self._myQuerySet(user, 'My Stages', 'stage')
+
+    def _createMySystems(self, user):
+        return self._myQuerySet(user, 'My Systems', 'system')
+
+    # TODO: add My Images once unified images are available
+     
+    def _removeMyQuerysets(self, user):
+        # by removing the identity role all grants
+        # will be removed via cascade, but the actual
+        # querysets must be manually deleted
+        self.mgr.removeIdentityRole(user)
+        models.QuerySet.objects.filter(
+           personal_for = user
+        ).delete()
+    
+    ######################################################################
+       
+          
+
+
+
