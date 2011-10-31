@@ -62,6 +62,14 @@ class ChildMembers(modellib.XObjIdModel):
                 tag = "child_members")
     view_name = "QuerySetChildResult"
 
+class GrantMatrix(modellib.XObjIdModel):
+    '''Permissions on queryset arranged in a UI-friendly way'''
+    class Meta:
+        abstract = True
+    _xobj = xobj.XObjMetadata(
+                tag = "grant_matrix")
+    view_name = "QuerySetGrantMatrix"
+
 class QuerySets(modellib.Collection):
     '''A list of all query sets in the rBuilder'''
     class Meta:
@@ -183,6 +191,9 @@ class QuerySet(modellib.XObjIdModel):
         universe = Universe()
         universe._parents = [self]
         xobjModel.universe = universe.serialize(request)
+        grant_matrix = GrantMatrix()
+        grant_matrix._parents = [self]
+        xobjModel.grant_matrix = grant_matrix.serialize(request)
 
         fd = FilterDescriptor(id=self.query_set_id)
         xobjModel.filter_descriptor = fd.serialize(request)
