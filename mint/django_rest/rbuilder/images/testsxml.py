@@ -56,6 +56,7 @@ images_get_xml = """
     </project>
     <output_trove></output_trove>
     <architecture>x86</architecture>
+    <base_image/>
     <release id="http://testserver/api/v1/releases/1"/>
     <image_count>1</image_count>
     <job_uuid>1</job_uuid>
@@ -115,6 +116,7 @@ images_get_xml = """
     </project>
     <output_trove></output_trove>
     <architecture>x86</architecture>
+    <base_image/>
     <release id="http://testserver/api/v1/releases/2"/>
     <image_count>1</image_count>
     <job_uuid>1</job_uuid>
@@ -174,6 +176,7 @@ images_get_xml = """
     </project>
     <output_trove></output_trove>
     <architecture>x86</architecture>
+    <base_image/>
     <release id="http://testserver/api/v1/releases/3"/>
     <image_count>1</image_count>
     <job_uuid>1</job_uuid>
@@ -238,6 +241,7 @@ image_get_xml = """
   </project>
   <output_trove></output_trove>
   <architecture>x86</architecture>
+  <base_image/>
   <release id="http://testserver/api/v1/releases/1"/>
   <image_count>1</image_count>
   <job_uuid>1</job_uuid>
@@ -499,6 +503,7 @@ release_get_xml = \
       </project>
       <output_trove></output_trove>
       <architecture>x86</architecture>
+      <base_image/>
       <release id="http://testserver/api/v1/releases/1"/>
       <image_count>1</image_count>
       <job_uuid>1</job_uuid>
@@ -607,6 +612,7 @@ releases_get_xml = \
         </project>
         <output_trove></output_trove>
         <architecture>x86</architecture>
+        <base_image/>
         <release id="http://testserver/api/v1/releases/1"/>
         <image_count>1</image_count>
         <job_uuid>1</job_uuid>
@@ -688,6 +694,7 @@ releases_get_xml = \
         </project>
         <output_trove></output_trove>
         <architecture>x86</architecture>
+        <base_image/>
         <release id="http://testserver/api/v1/releases/2"/>
         <image_count>1</image_count>
         <job_uuid>1</job_uuid>
@@ -769,6 +776,7 @@ releases_get_xml = \
         </project>
         <output_trove></output_trove>
         <architecture>x86</architecture>
+        <base_image/>
         <release id="http://testserver/api/v1/releases/3"/>
         <image_count>1</image_count>
         <job_uuid>1</job_uuid>

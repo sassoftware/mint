@@ -474,6 +474,7 @@ releases_by_project_get_xml = \
         </project>
         <output_trove></output_trove>
         <architecture>x86</architecture>
+        <base_image/>
         <release id="http://testserver/api/v1/releases/1"/>
         <image_count>1</image_count>
         <job_uuid>1</job_uuid>
@@ -536,6 +537,7 @@ releases_by_project_get_xml = \
         </project>
         <output_trove></output_trove>
         <architecture>x86</architecture>
+        <base_image/>
         <release id="http://testserver/api/v1/releases/2"/>
         <image_count>1</image_count>
         <job_uuid>1</job_uuid>
@@ -599,6 +601,7 @@ image_by_release_get_xml = \
     </project>
     <output_trove></output_trove>
     <architecture>x86</architecture>
+    <base_image/>
     <release id="http://testserver/api/v1/releases/1"/>
     <image_count>1</image_count>
     <job_uuid>1</job_uuid>
@@ -628,6 +631,7 @@ image_by_release_post_xml = \
   <released>True</released>
   <project id="http://testserver/api/v1/projects/chater-foo" />
   <architecture>x86</architecture>
+  <base_image/>
   <image_count>1</image_count>
   <job_uuid>1</job_uuid>
 </image>
@@ -675,6 +679,7 @@ image_by_release_post_result_xml = \
   </project>
   <output_trove></output_trove>
   <architecture>x86</architecture>
+  <base_image/>
   <release></release>
   <image_count>0</image_count>
   <job_uuid>1</job_uuid>
