@@ -173,7 +173,7 @@ class QuerySetManager(basemanager.BaseManager):
         qs.save()
 
     @exposed
-    def retagQuerySetsByType(self, type):
+    def retagQuerySetsByType(self, type, for_user=None):
         '''
         Invalidates all querysets of a given type and then recomputes their data.
         This is needed on addition of some resource types when security context of all
@@ -183,7 +183,17 @@ class QuerySetManager(basemanager.BaseManager):
         was requested or not -- otherwise application of security rules is latent until
         the next time the queryset members are accessed.  This avoids that.
         '''
-        all_sets = models.QuerySet.objects.filter(resource_type=type)
+        all_sets = None
+        if for_user is None:
+            all_sets = models.QuerySet.objects.filter(resource_type=type)
+        else:
+            all_sets = models.QuerySet.objects.filter(
+                resource_type    = type,
+                personal_for     = for_user
+            ).distinct() | models.QuerySet.objects.filter(
+                resource_type        = type,
+                personal_for__isnull = True,
+            ).distinct()
         for qs in all_sets:
             qs.tagged_date = None
             qs.save()
