@@ -143,7 +143,7 @@ class ConaryHandler(WebHandler, productversion.ProductVersionView):
         try:
             v = versions.ThawVersion(v)
             f = deps.ThawFlavor(f)
-        except conaryerrors.ParseError:
+        except (conaryerrors.ParseError, ValueError):
             raise HttpBadRequest
 
         try:
