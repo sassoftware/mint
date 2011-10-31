@@ -289,6 +289,10 @@ urlpatterns = patterns('',
     URL(r'query_sets/(?P<query_set_id>\d+)/filter_descriptor/?$',
         querysetviews.QuerySetFilterDescriptorService(),
         name='QuerySetFilterDescriptor'),
+    URL(r'query_sets/(?P<query_set_id>\d+)/grant_matrix/?$',
+        rbacviews.RbacQuerySetGrantMatrixService(),
+        name='QuerySetGrantMatrix'),
+
 
     # Change Logs
     URL(r'changelogs/?$',

@@ -726,6 +726,14 @@ class RbacEngineTests(RbacEngine):
             password='password'
         )
         self.assertEquals(response.status_code, 200)
+
+        # able to dump the grant matrix report (UI specific) for
+        # queryset
+        response = self._get("query_sets/%s/grant_matrix" % self.sys_queryset.pk,
+            username='admin',
+            password='password'
+        )
+        self.assertEquals(response.status_code, 200)
  
         # intern user can't see or use the datacenter query set
         # because he hasn't been given permissions on it, but he can

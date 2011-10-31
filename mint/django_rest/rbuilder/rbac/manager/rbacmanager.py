@@ -4,6 +4,7 @@
 # All Rights Reserved
 #
 
+from mint.django_rest.rbuilder import modellib
 from mint.django_rest.rbuilder.rbac import models 
 from mint.django_rest.rbuilder.users import models as usermodels
 from mint.django_rest.rbuilder.manager import basemanager
@@ -13,11 +14,6 @@ from django.core.exceptions import ObjectDoesNotExist
 from mint.django_rest.rbuilder.errors import PermissionDenied
 
 exposed = basemanager.exposed
-
-# resource types that we can manipulate RBAC context on:
-RESOURCE_TYPE_SYSTEM   = 'system'
-RESOURCE_TYPE_PLATFORM = 'platform'
-RESOURCE_TYPE_IMAGE    = 'image'
 
 # the following constants are used to lookup RbacPermissionTypes
 # in the database and are not to be used directly.
@@ -33,6 +29,14 @@ MODSETDEF = 'ModSetDef'
 # ability to create a resource -- also specifies what queryset
 # to add the resource as a chosen member to
 CREATERESOURCE = 'CreateResource'
+
+PERMISSION_TYPES = [ 
+    READSET, 
+    MODSETDEF, 
+    CREATERESOURCE, 
+    READMEMBERS, 
+    MODMEMBERS,
+]
 
 class RbacManager(basemanager.BaseManager):
 
@@ -86,6 +90,56 @@ class RbacManager(basemanager.BaseManager):
     def getRbacRoles(self):
         return self._getThings(models.RbacRoles, 
             models.RbacRole, 'role', order_by=['role_id'])
+
+    @exposed
+    def getRbacGrantMatrix(self, query_set_id, request):
+        # a very UI specific view into grants for a given queryset
+        # this will not scale very well but grants per queryset should
+        # be quite low
+        qs = querymodels.QuerySet.objects.get(pk=query_set_id)
+        grants = models.RbacPermission.objects.filter(
+           queryset = qs
+        ) 
+        roles = set([ grant.role for grant in grants ])
+        roles_obj = models.RbacRoles()
+        roles_obj.role = [ role for role in roles ]
+       
+        def mod_serialize(request, *args, **kwargs):
+            xobj_model = modellib.XObjIdModel.serialize(roles_obj, request)
+            xobj_model.foo = 1 
+            xobj_model.id = roles_obj.get_absolute_url(request)
+            for role in xobj_model.role:
+                actual_role = models.RbacRole.objects.get(pk = role.role_id)
+                tweaked_grants = []
+                for ptype in PERMISSION_TYPES:
+                    xgrant = None
+                    permission_type = models.RbacPermissionType.objects.get(name=ptype)
+                    try:
+                        grant = models.RbacPermission.objects.get(
+                            queryset = qs,
+                            role = actual_role,
+                            permission = permission_type
+                        )
+                        xgrant = modellib.XObjIdModel.serialize(grant, request)
+                        xgrant.set = 'true'
+                    except models.RbacPermission.DoesNotExist:
+                        # important: should NOT be saved
+                        grant = models.RbacPermission(
+                            queryset = qs,
+                            role = actual_role,
+                            permission = permission_type
+                        )
+                        xgrant = modellib.XObjIdModel.serialize(grant, request)
+                        xgrant.set = 'false'
+                    tweaked_grants.append(xgrant)
+                grants = models.RbacPermissions()
+                xgrants = modellib.XObjIdModel.serialize(grants, request)
+                xgrants.grant = tweaked_grants
+                role.grants = xgrants
+            return xobj_model
+
+        roles_obj.serialize = mod_serialize
+        return roles_obj
 
     @exposed
     def getRbacRole(self, role):

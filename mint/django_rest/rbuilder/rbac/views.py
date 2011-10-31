@@ -97,6 +97,16 @@ class RbacPermissionsService(BaseRbacService):
         self.mgr.deleteRbacPermission(permission_id)
         return HttpResponse(status=204)
 
+class RbacQuerySetGrantMatrixService(BaseRbacService):
+    '''
+    query_set/N/grant_matrix -- a very UI specific
+    transmogrification of grants data
+    '''
+
+    @access.admin
+    @return_xml
+    def rest_GET(self, request, query_set_id):
+        return self.mgr.getRbacGrantMatrix(query_set_id, request)
 
 class RbacRolesService(BaseRbacService):
     """
