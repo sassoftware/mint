@@ -73,16 +73,7 @@ class ProjectCallbacks(object):
 
     @staticmethod
     def can_create_project(view, request, *args, **kwargs):
-        if request._is_admin:
-            return True
-        
-        import mint.django_rest.rbuilder.rbac.models as rbacmodels
-        perms = rbacmodels.RbacPermission.objects.filter(
-            role__rbacuserrole__user = request._authUser,
-            queryset__resource_type = 'project',
-            permission__name = MODMEMBERS
-        )
-        return len(perms) > 0
+        return view.mgr.userHasRbacCreatePermission(request._authUser, 'project')
 
 class BranchCallbacks(object):
     """
@@ -90,6 +81,14 @@ class BranchCallbacks(object):
     """
     @staticmethod
     def _checkPermissions(view, request, branch_or_label, action):
+  
+        # this is very special cased because:
+        #    (A) legacy access control exists in the repo
+        #    (B) there are attemps to make P and PBS do the right thing without
+        #        having to set up very explicit perms
+        #    (C) branches aren't queryseted, and RBAC wants querysets
+        # do _NOT_ use this as a model on how to rbac other resources -- MPD       
+ 
         if request._is_admin:
             return True
 
@@ -122,21 +121,21 @@ class BranchCallbacks(object):
             )
         if len(membership) > 0:
             return True
-        
-        # if no explicit Project permission, check all PBSes
-        # that have this project, ability to access any implies 
-        # access on the project, this will be a bit sluggish
-        # but prevents confusion in setting up an extra set of QS
-        # permissions.  Unsafe for anything but reads
-        stages_for_project = projectmodels.Stage.objects.filter(
-            project_branch = branch
-        )
-        project = branch.project
+       
+        # if no old-school membership, we can read the branch if we can
+        # read any of the stages (which might not exist yet) 
+        if action == READMEMBERS:
+            stages_for_project = projectmodels.Stage.objects.filter(
+                project_branch = branch
+            )
+            for stage in stages_for_project:
+                if view.mgr.userHasRbacPermission(request._authUser, stage, action):
+                    return True
 
-        # FIXME: WRITES should not flow as noted below, only READ
-        for stage in stages_for_project:
-            if view.mgr.userHasRbacPermission(request._authUser, stage, action):
-                return True
+        # we can X on the stage if we can X on the project
+        if view.mgr.userHasRbacPermission(request._authUser, branch.project, action):
+            return True
+
         return False
         
     @staticmethod
@@ -316,19 +315,17 @@ class ProjectService(service.BaseService):
         model = self.mgr.getProject(project_short_name)
         return model
 
-    # FIXME -- rbac -- need MODMEMBER access on at least one Project query set / admin
-    # anybody can create a new project for now
     @rbac(ProjectCallbacks.can_create_project)
     @requires('project')
     @return_xml
     def rest_POST(self, request, project):
-        return self.mgr.addProject(project)
+        return self.mgr.addProject(project, for_user=request._authUser)
 
     @rbac(ProjectCallbacks.can_write_project)
     @requires('project')
     @return_xml
     def rest_PUT(self, request, project_short_name, project):
-        return self.mgr.updateProject(project)
+        return self.mgr.updateProject(project, for_user=request._authUser)
 
     @rbac(ProjectCallbacks.can_write_project)
     def rest_DELETE(self, request, project_short_name):
@@ -336,22 +333,6 @@ class ProjectService(service.BaseService):
         self.mgr.deleteProject(project)
         response = HttpResponse(status=204)
         return response
-
-# Deprecated -- candidate for future removal
-# class ProjectStageService(service.BaseService):
-#     
-#     # FIXME: RBAC MISSING
-#     @access.authenticated
-#     @return_xml
-#     def rest_GET(self, request, stage_id=None):
-#         return self.get(request, stage_id)
-#     
-#     def get(self, request, stage_id=None):
-#         if stage_id:
-#             return StageProxyService.getStageAndSetGroup(request, stage_id)
-#         else:
-#             return StageProxyService.getStagesAndSetGroup(request)
-
 
 class ProjectBranchStageService(service.BaseService):
 

@@ -340,10 +340,13 @@ class InventorySystemsService(BaseInventoryService):
     @requires(['system', 'systems'])
     @return_xml
     def rest_POST(self, request, system=None, systems=None):
+        # FIXME -- determine if request._authUser is available if authentication is supplied
+        # but method is still anonymous <-- MPD
+        authUser = getattr(request, '_authUser', None)
         if system is not None:
-            system = self.mgr.addSystem(system, generateCertificates=True)
+            system = self.mgr.addSystem(system, generateCertificates=True, for_user=authUser)
             return system
-        systems = self.mgr.addSystems(systems.system)
+        systems = self.mgr.addSystems(systems.system, for_user=authUser)
         return self.mgr.getSystems()
 
 class InventoryInventorySystemsService(BaseInventoryService):
@@ -392,6 +395,9 @@ def rbac_can_read_system_id(view, request, system_id, *args, **kwargs):
     obj = view.mgr.getSystem(system_id)
     user = request._authUser
     return view.mgr.userHasRbacPermission(user, obj, READMEMBERS)
+
+# NOTE: rbac_can_create_system does not exist because registration (temporarily)
+# must be anonymous for rpath_register.   
    
 class InventorySystemsSystemService(BaseInventoryService):
 
@@ -422,7 +428,8 @@ class InventorySystemsSystemService(BaseInventoryService):
             if not request._is_admin:
                 return HttpAuthenticationRequired
         # This really should be an update
-        self.mgr.updateSystem(system)
+        authUser = getattr(request, '_authUser', None)
+        self.mgr.updateSystem(system, for_user=authUser)
         return self.mgr.getSystem(system_id)
 
     @rbac(rbac_can_write_system_id)

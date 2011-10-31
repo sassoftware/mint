@@ -15,7 +15,7 @@
     <field type="DecimalField" name="created_date">123</field>
     <field type="DecimalField" name="modified_date">132</field>
     <field type="BooleanField" name="hidden">0</field>
-    <field to="users.user" name="creator" rel="ManyToOneRel"><None></None></field>
+    <field to="users.user" name="created_by" rel="ManyToOneRel"><None></None></field>
     <field type="BooleanField" name="external">0</field>
     <field type="BooleanField" name="disabled">0</field>
     <field type="BooleanField" name="is_appliance">1</field>
@@ -37,7 +37,7 @@
     <field type="DecimalField" name="created_date">123</field>
     <field type="DecimalField" name="modified_date">132</field>
     <field type="BooleanField" name="hidden">0</field>
-    <field to="users.user" name="creator" rel="ManyToOneRel"><None></None></field>
+    <field to="users.user" name="created_by" rel="ManyToOneRel"><None></None></field>
     <field type="BooleanField" name="external">0</field>
     <field type="BooleanField" name="disabled">0</field>
     <field type="BooleanField" name="is_appliance">1</field>
@@ -59,7 +59,7 @@
     <field type="DecimalField" name="created_date">123</field>
     <field type="DecimalField" name="modified_date">132</field>
     <field type="BooleanField" name="hidden">0</field>
-    <field to="users.user" name="creator" rel="ManyToOneRel"><None></None></field>
+    <field to="users.user" name="created_by" rel="ManyToOneRel"><None></None></field>
     <field type="BooleanField" name="external">0</field>
     <field type="BooleanField" name="disabled">0</field>
     <field type="BooleanField" name="is_appliance">1</field>

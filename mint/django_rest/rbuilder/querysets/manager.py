@@ -150,10 +150,12 @@ class QuerySetManager(basemanager.BaseManager):
         return querySets
 
     @exposed
-    def addQuerySet(self, querySet):
+    def addQuerySet(self, querySet, by_user):
         '''create a new query set'''
         # this is probably a duplicate save because of how xobj
         # is used.
+        querySet.created_by = by_user
+        querySet.modified_by = by_user
         querySet.save()
         self._recomputeStatic(querySet)
         return querySet
@@ -189,7 +191,7 @@ class QuerySetManager(basemanager.BaseManager):
         
 
     @exposed
-    def updateQuerySet(self, querySet):
+    def updateQuerySet(self, querySet, by_user):
         '''edit a query set'''
         if not querySet.can_modify:
             raise errors.QuerySetReadOnly(querySetName=querySet.name)
@@ -207,6 +209,8 @@ class QuerySetManager(basemanager.BaseManager):
             self._updateQuerySetTaggedDate(qs)
 
         querySet.tagged_date = None
+        querySet.modified_by = by_user
+        querySet.modified_date = datetime.now()
         querySet.save()
         self._recomputeStatic(querySet)
         return querySet
@@ -357,7 +361,7 @@ class QuerySetManager(basemanager.BaseManager):
             resources = model.objects.select_related().all()
         for filt in querySet.filter_entries.select_related().all():
             resources = modellib.filterDjangoQuerySet(resources, 
-                filt.field, filt.operator, filt.value)
+                filt.field, filt.operator, filt.value, queryset=querySet)
         retval = resources.distinct()
 
         self._updateTransitiveTags(querySet, resources)
@@ -712,7 +716,14 @@ class QuerySetManager(basemanager.BaseManager):
         return filterDescriptor
 
     @exposed
-    def updateQuerySetChosen(self, querySetId, resource):
+    def addToMyQuerySet(self, resource, by_user):
+        resource_type = resource._queryset_resource_type 
+        home = self.mgr.resourceHomeQuerySet(by_user, resource_type)
+        if home is not None:
+            self.updateQuerySetChosen(home, resource, by_user)
+
+    @exposed
+    def updateQuerySetChosen(self, querySetId, resource, by_user):
         '''
         Add a resource explicitly to the query set match results.
         It must be of the same collection type, querysets are not
@@ -733,10 +744,15 @@ class QuerySetManager(basemanager.BaseManager):
 
         if tagMethod is not None:
             tagMethod([resource], querySet, self._chosenMethod())
+
+        querySet.modified_by = by_user
+        querySet.modified_date = datetime.now()
+        querySet.save()
+
         return self.getQuerySetChosenResult(querySetId)
 
     @exposed
-    def addQuerySetChosen(self, querySetId, resources):
+    def addQuerySetChosen(self, querySetId, resources, by_user):
         '''
         Add a list of matched systems to a chosen query set result list.
         Deletes all previous matches.
@@ -762,10 +778,14 @@ class QuerySetManager(basemanager.BaseManager):
         tagMethod = self._tagMethod(querySet)
         tagMethod(resources_out, querySet, self._chosenMethod())
 
+        querySet.modified_by = by_user
+        querySet.modified_date = datetime.now()
+        querySet.save()
+
         return self.getQuerySetChosenResult(querySet)
 
     @exposed
-    def deleteQuerySetChosen(self, querySetId, resource):
+    def deleteQuerySetChosen(self, querySetId, resource, by_user):
         '''
         Remove a resource from a queryset chosen result.
         '''
@@ -778,6 +798,11 @@ class QuerySetManager(basemanager.BaseManager):
         tagModels = tagModel.objects.filter(query_set=querySet,
             inclusion_method=self._chosenMethod(), **resourceArg)
         tagModels.delete()
+
+        querySet.modified_by = by_user
+        querySet.modified_date = datetime.now()
+        querySet.save()
+
         return self.getQuerySetChosenResult(querySetId)
 
     @exposed
@@ -813,4 +838,112 @@ class QuerySetManager(basemanager.BaseManager):
             raise Exception("action dispatch not yet supported on job type: %s" % jt)
 
         return None
+
+    #######################################################################
+    # "My Querysets" feature
+
+    @exposed
+    def configureMyQuerysets(self, user):
+        '''
+        My Querysets allow the user a home for items they create.
+        They are created when a user is saved with the can_create bit
+        set and removed when it is not set
+        '''
+        if user.can_create:
+            self._createMyQuerysets(user)
+        else:
+            self._removeMyQuerysets(user)
+
+    def _createMyQuerysets(self, user):
+        '''create a user's personal querysets, roles, and grants'''
+        role = self.mgr.getOrCreateIdentityRole(user)
+
+        # TODO: add My Images once available
+        querysets = [
+            self._createMyProjects(user),
+            self._createMyStages(user),
+            self._createMySystems(user),
+        ]
+        for qs in querysets:
+            self.mgr.addIdentityRoleGrants(qs, role)
+
+    def _myQuerySet(self, user, name, resource_type, presentation_type=None):
+        # common code between each type of personal queryset
+
+        name = "%s (%s)" % (name, user.user_name)
+        description = "resources created by user %s" % (user.user_name)
+
+        matching = models.QuerySet.objects.filter(
+            personal_for = user,
+            name = name
+        ).all()
+
+        if len(matching) > 0:
+            return matching[0]
+
+        if not presentation_type:
+            presentation_type = resource_type
+
+        possible_qs = models.QuerySet.objects.filter(
+            name = name,
+            resource_type = resource_type,
+            personal_for = user
+        )
+        qs = None
+        if len(possible_qs) == 0:
+            qs = models.QuerySet(
+                name = name,
+                description = description,
+                presentation_type = presentation_type,
+                resource_type = resource_type, 
+                is_public = False,
+                personal_for = user
+            )
+            qs = self.mgr.addQuerySet(qs, None)
+        else:
+            qs = possible_qs[0]
+
+        # most objects should call addToMyQuerySet(resource, user)
+        # though PBSes have to be dynamic because they are created
+        # as a side effect.  addToMyQuerySet is more generic and
+        # can also be used on resources w/o ownership metadata
+
+        if resource_type == 'project_branch_stage':
+            filterEntry = models.FilterEntry.objects.get_or_create(
+                field = 'created_by.owner.pk',
+                operator = 'EQUAL',
+                value = user.pk
+            )[0]
+            if len(qs.filter_entries.all()) == 0:
+                # if the queryset already exists we won't try to repair it
+                qs.filter_entries.add(filterEntry)
+                qs.save()
+
+        return qs
+
+    def _createMyProjects(self, user):
+        return self._myQuerySet(user, 'My Projects', 'project')
+
+    def _createMyStages(self, user):
+        return self._myQuerySet(user, 'My Stages', 'stage')
+
+    def _createMySystems(self, user):
+        return self._myQuerySet(user, 'My Systems', 'system')
+
+    # TODO: add My Images once unified images are available
+     
+    def _removeMyQuerysets(self, user):
+        # by removing the identity role all grants
+        # will be removed via cascade, but the actual
+        # querysets must be manually deleted
+        self.mgr.removeIdentityRole(user)
+        models.QuerySet.objects.filter(
+           personal_for = user
+        ).delete()
+    
+    ######################################################################
+       
+          
+
+
 

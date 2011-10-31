@@ -15,7 +15,7 @@
     <field type="DecimalField" name="created_date">0</field>
     <field type="DecimalField" name="modified_date">0</field>
     <field type="BooleanField" name="hidden">False</field>
-    <field to="users.user" name="creator" rel="ManyToOneRel">1</field>
+    <field to="users.user" name="created_by" rel="ManyToOneRel">1</field>
     <field type="BooleanField" name="external">False</field>
     <field type="BooleanField" name="disabled">False</field>
     <field type="BooleanField" name="is_appliance">True</field>

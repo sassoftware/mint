@@ -4,16 +4,14 @@
 # All Rights Reserved
 #
 
-import logging
 from mint.django_rest.rbuilder.rbac import models 
-from mint.django_rest.rbuilder.users import models as usersmodels
+from mint.django_rest.rbuilder.users import models as usermodels
 from mint.django_rest.rbuilder.manager import basemanager
 from mint.django_rest.rbuilder.querysets import models as querymodels
 from datetime import datetime
 from django.core.exceptions import ObjectDoesNotExist
 from mint.django_rest.rbuilder.errors import PermissionDenied
 
-log = logging.getLogger(__name__)
 exposed = basemanager.exposed
 
 # resource types that we can manipulate RBAC context on:
@@ -32,6 +30,9 @@ MODMEMBERS = 'ModMembers'
 READSET = 'ReadSet' 
 # ability to modify/delete a query set
 MODSETDEF = 'ModSetDef' 
+# ability to create a resource -- also specifies what queryset
+# to add the resource as a chosen member to
+CREATERESOURCE = 'CreateResource'
 
 class RbacManager(basemanager.BaseManager):
 
@@ -149,12 +150,12 @@ class RbacManager(basemanager.BaseManager):
     @exposed
     def getRbacUsersForRole(self, role):
         role = self._role(role)
-        users = usersmodels.Users()
+        users = usermodels.Users()
         rbac_user_roles = models.RbacUserRole.objects.all()
         rbac_user_roles = models.RbacUserRole.objects.filter(
             role = role
         ).order_by('user')
-        user_results = usersmodels.User.objects.filter(
+        user_results = usermodels.User.objects.filter(
             user_roles__in = rbac_user_roles
         )
         users.user = user_results
@@ -183,6 +184,19 @@ class RbacManager(basemanager.BaseManager):
         if permission.permission.name == MODSETDEF:
             if not permission.queryset.is_static:
                raise PermissionDenied(msg="Modify Set Definition cannot be granted on dynamic querysets")
+
+        if permission.permission.name == CREATERESOURCE:
+            # there can be only one CreateResource per resource type
+            try:
+                previous = models.RbacPermission.objects.get(
+                    role = permission.role,
+                    queryset__resource_type = permission.queryset.resource_type,
+                    permission = permission.permission
+                )
+                error_args = (permission.queryset.resource_type, previous.role.name, previous.queryset.name)
+                raise PermissionDenied(msg="Create Resource for queryset type (%s) can only be granted once per role (%s), already exists for queryset: %s" % error_args)
+            except ObjectDoesNotExist:
+                pass
 
         permission.created_by  = by_user
         permission.modified_by = by_user
@@ -218,7 +232,7 @@ class RbacManager(basemanager.BaseManager):
 
     def _user(self, value):
         '''cast input as a user'''
-        return self._orId(value, usersmodels.User)
+        return self._orId(value, usermodels.User)
 
     #########################################################
     # RBAC USER_ROLE METHODS
@@ -261,10 +275,8 @@ class RbacManager(basemanager.BaseManager):
         '''
         if request is not None and request._is_admin:
             return querysets_obj
-        if getattr(user, '_is_admin', False):
+        if user.is_admin:
             return querysets_obj
-        querysets = querysets_obj.query_set
-
         roles = models.RbacUserRole.objects.select_related().filter(
             user = user
         )
@@ -286,6 +298,50 @@ class RbacManager(basemanager.BaseManager):
         querysets_obj.query_set = results
         return querysets_obj
 
+    def __is_admin_like(self, user, request):
+        # if the user is an admin, immediately let them by
+        if request is not None and request._is_admin:
+            return True
+        if user.is_admin:
+            return True
+        return False
+
+    @exposed
+    def resourceHomeQuerySet(self, user, resource_type):
+        '''
+        When creating a resource, what querysets should I auto-add the resource to
+        as a chosen member?  The resource_type is a queryset resource
+        type, not a model, database,  or tag name.
+        '''
+        #tags__query_set__grants__role__rbacuserrole__user = for_user,
+        #tags__query_set__grants__permission__name__in = [ READMEMBERS, MODMEMBERS ]
+        granting_sets = querymodels.QuerySet.objects.filter(
+            resource_type = resource_type,
+            grants__role__rbacuserrole__user = user,
+            grants__permission__name = CREATERESOURCE
+        )
+        if len(granting_sets) == 0:
+            return None
+        # the grant code shouldn't allow x>1 but we shouldn't choke either
+        # just add it to the first
+        return granting_sets[0]
+ 
+    @exposed
+    def userHasRbacCreatePermission(self, user, resource_type, request=None):
+        '''
+        Checks to see if a user can create a new resource of a given type.
+        Some resources may have CREATERESOURCE grants
+        (because they act as pointers to chosen querysets) and still further
+        restrict access... thus CREATERESOURCE may be used by object types
+        that do NOT call this function.
+        '''  
+        if self.__is_admin_like(user, request):
+            return True
+        home = self.resourceHomeQuerySet(user, resource_type)
+        if home is None:
+            return False
+        return True
+
     @exposed
     def userHasRbacPermission(self, user, resource, permission, 
         request=None):
@@ -301,18 +357,10 @@ class RbacManager(basemanager.BaseManager):
         depending on usage.  
         '''
 
+        if permission == CREATERESOURCE:
+            raise Exception("Internal error: use userHasRbacCreatePermission instead")
 
-        # if the user is an admin, immediately let them by
-        if request is not None and request._is_admin:
-            return True
-        # some of the tests use this path, but the main app doesn't
-        # TODO: modify tests so they act like everything else
-        if getattr(user, '_is_admin', False):
-            return True
-        # this will trigger on DB users even if request is not passed in
-        # so we could probably eliminate the request check
-        # TODO: make it happen
-        if user.getIsAdmin():
+        if self.__is_admin_like(user, request):
             return True
         
         # input permission is a permission name, upconvert to PermissionType object
@@ -387,5 +435,65 @@ class RbacManager(basemanager.BaseManager):
         # so it doesn't make sense to return the role
         # as what we've deleted.
         return mapping
-    
+     
+    ##################################################################
+    # Support for the "My Querysets" feature of allowing
+    # users to automatically have access to what they create and
+    # having a createable place to put resources set up with
+    # the user account
+
+    @exposed
+    def getOrCreateIdentityRole(self, user):
+        # users need to be a in group that contains them
+        # similar to Unix user groups in this respect
+        # except only create them if we know the user
+        # will have "My Querysets"
+        if not user.can_create:
+            raise Exception('internal error: user creation rights not set')
+        role_name = "user:%s" % user.user_name
+        role = models.RbacRole.objects.get_or_create(
+            name = role_name,
+            is_identity = True
+        )[0]
+        role.description = "identity role for user"
+        role.save()
+        user = usermodels.User.objects.get(user_name=user.user_name)
+        models.RbacUserRole.objects.get_or_create(
+            user=user, 
+            role=role
+        )
+        return role
+
+    @exposed
+    def removeIdentityRole(self, user):
+        # user can no longer create anything, so remove
+        # the role, and by sql cascade effects, delete
+        # the grants. It is ok if it's already missing
+        role_name = "user:%s" % user.user_name
+        roles = models.RbacRole.objects.filter(
+            name = role_name,
+            is_identity = True
+        )
+        for role in roles:
+            role.delete()
+        # grants will be deleted by cascade
+
+    @exposed
+    def addIdentityRoleGrants(self, queryset, role):
+        # for a my queryset, add permissions so that it's fully usable --
+        # a user can create and can see/edit what they own
+        if queryset.personal_for is None:
+            raise Exception("internal error: not a 'My' Queryset")
+        if role.is_identity is None:
+            raise Exception("internal error: not an identity role")
+        createresource = models.RbacPermissionType.objects.get(name=CREATERESOURCE)
+        modmembers = models.RbacPermissionType.objects.get(name=MODMEMBERS)
+        readset = models.RbacPermissionType.objects.get(name=READSET)
+        for permission_type in [ createresource, modmembers, readset ]: 
+            models.RbacPermission.objects.get_or_create(
+                role = role,
+                queryset = queryset,
+                permission = permission_type
+            )[0]
+  
 

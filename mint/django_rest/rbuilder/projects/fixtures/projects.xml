@@ -15,7 +15,7 @@
     <field type="DecimalField" name="created_date">1297714268.362</field>
     <field type="DecimalField" name="modified_date">1297714268.362</field>
     <field type="SmallIntegerField" name="hidden">0</field>
-    <field to="users.user" name="creator" rel="ManyToOneRel">1</field>
+    <field to="users.user" name="created_by" rel="ManyToOneRel">1</field>
   </object>
   <object pk="2" model="projects.projectversion">
     <field to="projects.project" name="project" rel="ManyToOneRel">2</field>
@@ -91,7 +91,7 @@
     <field type="DecimalField" name="created_date">1297714268.362</field>
     <field type="DecimalField" name="modified_date">1297714268.362</field>
     <field type="SmallIntegerField" name="hidden">1</field>
-    <field to="users.user" name="creator" rel="ManyToOneRel">1</field>
+    <field to="users.user" name="created_by" rel="ManyToOneRel">1</field>
   </object>
   <object pk="4" model="projects.projectversion">
     <field to="projects.project" name="project" rel="ManyToOneRel">3</field>

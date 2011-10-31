@@ -53,6 +53,7 @@ class UsersManager(basemanager.BaseManager):
 
     @exposed
     def addUser(self, user, by_user=None):
+
         # Sanitize user fields
         if not user.display_email:
             user.display_email = ''
@@ -72,16 +73,12 @@ class UsersManager(basemanager.BaseManager):
         except (mint_error.PermissionDenied, mint_error.InvalidError), e:
             raise self.exceptions.MintException(e)
         dbuser = models.User.objects.get(user_name=user.user_name)
-        if self.auth and self.auth.admin:
-            is_admin = self._toBool(user.is_admin)
-            # Copy "model" field to "database" field, now that caller's
-            # adminship has been proven.
-            dbuser.setIsAdmin(is_admin)
-        else:
-            dbuser.setIsAdmin(False) 
+        dbuser.can_create  = user.can_create
         dbuser.created_by  = by_user
         dbuser.modified_by = by_user
+        dbuser.is_admin    = user.is_admin
         dbuser.save()
+        self.mgr.configureMyQuerysets(dbuser)
         self.mgr.retagQuerySetsByType('user')
         return dbuser
 
@@ -107,30 +104,27 @@ class UsersManager(basemanager.BaseManager):
 
     @exposed
     def updateUser(self, user_id, user, by_user=None):
-        if not self.auth.admin:
-            if user_id != str(self.user.user_id):
-                # Non-admin users can only edit themselves
-                raise self.exceptions.AdminRequiredException()
-        dbusers = models.User.objects.filter(pk=user_id)
-        if not dbusers:
-            raise self.exceptions.UserNotFoundException()
-        dbuser = dbusers[0]
+
+        dbuser = models.User.objects.get(pk=user_id)
         if user.user_name and user.user_name != dbuser.user_name:
             raise self.exceptions.UserCannotChangeNameException()
-        # Copy all fields the user may have chosen to change
-        models.User.objects._copyFields(dbuser, user)
-        if self.auth.admin and user.is_admin is not None:
-            # Copy "model" field to "database" field, now that caller's
-            # adminship has been proven. Admin users cannot drop the admin flag
-            # for themselves
-            if user_id != str(self.user.user_id):
-                is_admin = self._toBool(user.is_admin)
-                dbuser.setIsAdmin(is_admin)
-        dbuser.modified_by = by_user
-        dbuser.modified_date = time.time()
-        dbuser.save()
-        dbuser = self._setPassword(dbuser, user.password)
-        return dbuser
+
+        # only admins can edit these bits
+        if not by_user or not by_user.is_admin:
+            user.is_admin   = dbuser.is_admin
+            user.can_create = dbuser.can_create
+            user.user_name  = dbuser.user_name
+            
+        if by_user.is_admin and by_user.pk == dbuser.pk:
+            # can't de-admin yourself
+            user.is_admin = True
+
+        user.modified_by = by_user
+        user.modified_date = time.time()
+        user.save()
+        user = self._setPassword(user, user.password)
+        self.mgr.configureMyQuerysets(user)
+        return user
 
     def _commit(self):
         if transaction.is_managed():

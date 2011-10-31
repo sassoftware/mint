@@ -27,7 +27,7 @@ class Project(database.TableObject):
         'domainname', 'namespace', 'projecturl', 'hidden', 'external',
         'isAppliance', 'disabled', 'timeCreated', 'timeModified',
         'commitEmail', 'shortname', 'prodtype', 'version', 'backupExternal',
-        'fqdn', 'database')
+        'fqdn', 'database', 'modified_by')
 
     def getItem(self, id):
         return self.server.getProject(id)

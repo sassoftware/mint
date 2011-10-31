@@ -6,6 +6,7 @@
 import logging
 import os
 import exceptions
+import time
 
 from conary.lib import util
 
@@ -44,11 +45,11 @@ class ProjectManager(basemanager.BaseManager):
 
     @exposed
     def getProject(self, project_name):
-        project = models.Project.objects.select_related().get(short_name=project_name)
+        project = models.Project.objects.select_related(depth=2).get(short_name=project_name)
         return project
 
     @exposed
-    def addProject(self, project):
+    def addProject(self, project, for_user):
         label = None
         if project.labels and len(project.labels.all()) > 0:
             label = project.labels.all()[0]
@@ -92,8 +93,10 @@ class ProjectManager(basemanager.BaseManager):
                 raise projects.ProductVersionInvalid
 
         # Set creator to current user
-        if self.user:
-            project.creator = self.user
+        project.created_by  = for_user
+        project.modified_by = for_user
+        project.created_date = time.time()
+        project.modified_date = time.time()
 
         # Save the project, we need the pk populated to create the repository
         project.save()
@@ -103,15 +106,19 @@ class ProjectManager(basemanager.BaseManager):
         # Create project repository
         self.mgr.createRepositoryForProject(project)
 
+        # legacy permissions system
         # Add current user as project owner
-        if self.user:
-            member = models.Member(project=project, user=self.user, 
+        if for_user:
+            member = models.Member(project=project, user=for_user, 
                 level=userlevels.OWNER)
             member.save()
 
         self.mgr.retagQuerySetsByType('project')
         self.mgr.retagQuerySetsByType('project_branch')
         self.mgr.retagQuerySetsByType('project_branch_stage')
+
+        self.mgr.addToMyQuerySet(project, for_user)
+
         return project
 
     def _validateExternalProject(self, project):
@@ -148,7 +155,7 @@ class ProjectManager(basemanager.BaseManager):
             project.upstream_url = 'https://%s/conary/' % (fqdn,)
 
     @exposed
-    def updateProject(self, project):
+    def updateProject(self, project, for_user):
         # Only an admin can hide a project.
         # XXX Is this correct?
         if project.hidden:
@@ -169,6 +176,8 @@ class ProjectManager(basemanager.BaseManager):
 
         project.save()
         self.mgr.generateConaryrcFile()
+        project.modified_by = for_user
+        project.modifed_date = time.time()
         return project
 
     @exposed
@@ -309,7 +318,7 @@ class ProjectManager(basemanager.BaseManager):
         # FIXME: use the href and look up the platform in the DB instead
         platformLabel = str(projectVersion.platform_label or '')
         if platformLabel:
-            platform = platform_models.Platform.objects.select_related(
+            platform = platform_models.Platform.objects.select_related(depth=2
                     ).get(label=platformLabel)
             cclient = self.mgr.getAdminClient(write=True)
             pd.rebase(cclient, platform.label)
@@ -331,11 +340,11 @@ class ProjectManager(basemanager.BaseManager):
 
     @exposed
     def getProjectMembers(self, shortName):
-        project = models.Project.objects.select_related().get(short_name=shortName)
+        project = models.Project.objects.select_related(depth=2).get(short_name=shortName)
         members = models.Members()
         # FIXME -- to avoid serialization overhead, should this be a paged
         # collection versus inline?
-        members.member = [m for m in project.members.select_related().all()]
+        members.member = [m for m in project.members.select_related(depth=2).all()]
         members._parents = [project]
         return members
 
@@ -354,23 +363,8 @@ class ProjectManager(basemanager.BaseManager):
 
     @exposed
     def getStage(self, stageId):
-        stage = models.Stage.objects.select_related().get(pk=stageId)
+        stage = models.Stage.objects.select_related(depth=2).get(pk=stageId)
         return stage
-
-    @exposed
-    def getStageOld(self, shortName, projectVersionId, stageName):
-        projectVersion = models.ProjectVersion.objects.select_related().get(
-            pk=projectVersionId) 
-        project = projectVersion.project
-        pd = self.getProductVersionDefinitionByProjectVersion(projectVersion)
-        pdStages = pd.getStages()
-        stage = [s for s in pdStages if s.name == stageName][0]
-        promotable = ((stage.name != pdStages[-1].name and True) or False)
-        dbStage = models.Stage(name=str(stage.name),
-             label=str(pd.getLabelForStage(stage.name)),
-             hostname=project.hostname, project_version=projectVersion,
-             Promotable=promotable)
-        return dbStage
 
     @exposed
     def getStageByProjectBranchAndStageName(self, projectBranch, stageName):
@@ -386,13 +380,13 @@ class ProjectManager(basemanager.BaseManager):
 
     @exposed
     def getImage(self, image_id):
-        return imagesmodels.Image.objects.select_related().get(pk=image_id)
+        return imagesmodels.Image.objects.select_related(depth=2).get(pk=image_id)
 
     @exposed
     def getImagesForProject(self, short_name):
         project = self.getProject(short_name)
         Images = imagesmodels.Images()
-        Images.image = imagesmodels.Image.objects.select_related().filter(
+        Images.image = imagesmodels.Image.objects.select_related(depth=2).filter(
             project__project_id=project.project_id).order_by('image_id')
         Images.url_key = [ short_name ]
         Images.view_name = 'ProjectImages'
@@ -411,46 +405,24 @@ class ProjectManager(basemanager.BaseManager):
         if project_branch_label:
             # Even though technically doing a GET and letting it fail
             # is not efficient, this is what most of the code does
-            branch = models.ProjectVersion.objects.select_related(depth=2).get(
+            return models.ProjectVersion.objects.select_related(depth=2).get(
                 label=project_branch_label, project__short_name=project_name)
-            return self._projectValidator(branch)
 
-        ProjectVersions = models.ProjectVersions()
-        iterator = models.ProjectVersion.objects.select_related(depth=2).filter(
+        projectVersions = models.ProjectVersions()
+        projectVersions.project_branches = models.ProjectVersion.objects.select_related(depth=2).filter(
             project__short_name=project_name).order_by('branch_id')
-        return self._branchFilter(iterator)
+        return projectVersions
 
     @exposed
     def getAllProjectBranches(self):
         """
         FIXME, two different ways of retrieving pb's, both giving different results
         """
-        # use select_related so we catch projects in the same query
-        iterator = models.ProjectVersion.objects.select_related(depth=2).order_by(
+        branches = models.ProjectVersions()
+        branches.project_branch = models.ProjectVersion.objects.select_related(depth=2).order_by(
             'project__project_id', 'branch_id')
-        return self._branchFilter(iterator)
+        return branches
 
-    def _branchFilter(self, iterator):
-        return self._objectFilterOnProjects(iterator, models.ProjectVersions, 'project_branch')
-
-    def _stageFilter(self, iterator):
-        return self._objectFilterOnProjects(iterator, models.Stages, 'project_branch_stage')
-
-    def _objectFilterOnProjects(self, iterator, modelClass, fieldName):
-        # We need to check project permissions for all objects in the iterator
-        # now we don't -- we have rbac now, do not subtract access via rbac
-        # FIXME: make this function a no-op.
-        model = modelClass()
-        collector = []
-        setattr(model, fieldName, collector)
-        for obj in iterator:
-            collector.append(obj)
-        return model
-
-    def _projectValidator(self, obj):
-        # no need for checking access -- use rbac
-        return obj
-            
     @exposed
     def getProjectBranchStage(self, project_short_name, project_branch_label, stage_name):
         stage = models.Stage.objects.get(
@@ -461,25 +433,27 @@ class ProjectManager(basemanager.BaseManager):
         
     @exposed
     def getProjectAllBranchStages(self, project_short_name):
-        iterator = models.Stage.objects.select_related().filter(
+        stages = models.Stages()
+        stages.project_branch_stage = models.Stage.objects.select_related(depth=2).filter(
                 project__short_name=project_short_name).order_by(
                     'project__project_id', 'project_branch__branch_id', 'stage_id')
-        return self._stageFilter(iterator)
-
+        return stages
 
     @exposed
     def getProjectBranchStages(self, project_short_name, project_branch_label):
-        iterator = models.Stage.objects.select_related().filter(
+        stages = models.Stages()
+        stages.project_branch_stage = models.Stage.objects.select_related(depth=2).filter(
                 project__short_name=project_short_name,
                 project_branch__label=project_branch_label).order_by(
                     'project__project_id', 'project_branch__branch_id', 'stage_id')
-        return self._stageFilter(iterator)
+        return stages
 
     @exposed
     def getAllProjectBranchStages(self):
-        iterator = models.Stage.objects.select_related(depth=2).order_by(
+        stages = models.Stages()
+        stages.project_branch_stage = models.Stage.objects.select_related(depth=2).order_by(
             'project__project_id', 'project_branch__branch_id', 'stage_id')
-        return self._stageFilter(iterator)
+        return stages
 
     @exposed
     def getProjectBranchStageImages(self, project_short_name, project_branch_label, stage_name):
@@ -511,9 +485,10 @@ class ProjectManager(basemanager.BaseManager):
 
     @exposed
     def getAllProjectBranchesForProject(self, project_short_name):
-        allProjectBranches = models.ProjectVersion.objects.filter(
+        branches = models.ProjectVersions()
+        branches.project_branch = models.ProjectVersion.objects.filter(
             project__short_name=project_short_name)
-        return self._branchFilter(allProjectBranches)
+        return branches
 
     @exposed
     def updateProjectBranchStage(self, project_short_name, project_branch_label, stage_name, stage):

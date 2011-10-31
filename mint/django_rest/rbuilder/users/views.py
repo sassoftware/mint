@@ -55,19 +55,17 @@ class UsersService(service.BaseService):
         assert user_id is not None
         return self.mgr.getUser(user_id)
 
-    # Has to be public, so one can create an account before logging in
-    @access.anonymous
-    @requires('user')
+    @access.admin
+    @requires('user', save=False)
     @return_xml
     def rest_POST(self, request, user):
         # TODO: verify we have a user
-        by_user = getattr(request, '_authUser', None) 
         if not user.user_name:
             return HttpResponse(status=400)
-        return self.mgr.addUser(user, by_user)
+        return self.mgr.addUser(user, request._authUser)
 
     @rbac(rbac_can_write_user)
-    @requires('user')
+    @requires('user', save=False)
     @return_xml
     def rest_PUT(self, request, user_id, user):
         oldUser = self.mgr.getUser(user_id)
