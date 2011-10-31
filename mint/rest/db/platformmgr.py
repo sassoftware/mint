@@ -370,6 +370,8 @@ class Platforms(object):
 
         try:
             platformId = self.db.db.platforms.new(**params)
+            log.info("Created platform %s with id %s", platformLabel,
+                    platformId)
         except mint_error.DuplicateItem, e:
             platformId = self.db.db.platforms.getIdByColumn('label',
                 platformLabel)
@@ -914,6 +916,8 @@ class ContentSources(object):
                     defaultSource=int(source.defaultSource),
                     contentSourceType=typeName,
                     orderIndex=source.orderIndex)
+            log.info("Created platform source %s with type %s and id %s",
+                    source.name, typeName, sourceId)
         except mint_error.DuplicateItem, e:
             return self.db.db.platformSources.getIdFromShortName(source.shortName)
 
@@ -985,6 +989,8 @@ class ContentSources(object):
         return models.SourceInstances(dbSources)            
 
     def _linkPlatformToContentSource(self, platformId, sourceId):
+        log.info("Adding platform source %s to platform %s",
+                sourceId, platformId)
         self.db.db.platformsPlatformSources.new(platformId=platformId,
                     platformSourceId=sourceId)
 
@@ -997,6 +1003,7 @@ class ContentSources(object):
 
     def delete(self, shortName):
         sourceId = self.db.db.platformSources.getIdFromShortName(shortName)
+        log.info("Deleting platform source %s", sourceId)
         self.db.db.platformSources.delete(sourceId)
 
     def create(self, source):

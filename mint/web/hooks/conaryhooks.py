@@ -240,6 +240,8 @@ def conaryHandler(context):
                 fqdn = fqdn[:-1]
         else:
             hostName = hostPart
+    elif 'x-conary-servername' in req.headers_in:
+        fqdn = req.headers_in['x-conary-servername']
     else:
         fqdn = req.hostname
 

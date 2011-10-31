@@ -272,7 +272,6 @@ JOIN Projects ep
 
         searchcols = ['Projects.name', 'Projects.description', 'hostname']
         leftJoins = [ ('tmpLatestReleases', 'projectId'),
-                      ('LatestCommit', 'projectId'),
                       ('TopProjects', 'projectId') ]
 
         cu = self.db.cursor()
