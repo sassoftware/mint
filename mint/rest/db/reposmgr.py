@@ -7,7 +7,6 @@ from cStringIO import StringIO
 import os
 import sys
 
-from mint import helperfuncs
 from mint import mint_error
 from mint import userlevels
 from mint.db import projects
@@ -574,3 +573,29 @@ class RepositoryManager(manager.Manager):
 
         client.repos.commitChangeSet(changeSet)
         return newTups
+
+    def deleteTroves(self, troveTups, admin=False):
+        # NB: this doesn't recurse since it's initially used for deleting
+        # source troves
+        if not troveTups:
+            return []
+        if admin:
+            client = self.getAdminClient(write=True)
+        else:
+            client = self.getUserClient()
+        repos = client.repos
+        changeSet = changeset.ChangeSet()
+        added = False
+        for tup in troveTups:
+            # Resolve trovetup to trovetup with timestamp
+            try:
+                tup = sorted(repos.findTrove(None, tup))[0]
+            except reposerrors.TroveNotFound:
+                continue
+            antiTrove = cny_trove.Trove(*tup,
+                    type=cny_trove.TROVE_TYPE_REMOVED)
+            antiTrove.computeDigests()
+            changeSet.newTrove(antiTrove.diff(None, absolute=True)[0])
+            added = True
+        if added:
+            repos.commitChangeSet(changeSet)

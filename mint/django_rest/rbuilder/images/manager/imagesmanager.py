@@ -101,7 +101,10 @@ class ImagesManager(basemanager.BaseManager):
 
     @exposed
     def deleteImageBuild(self, image_id):
-        image = models.Image.objects.get(image_id=image_id)
+        image = models.Image.objects.get(pk=image_id)
+        log.info("Deleting image %s from project %s" % (image_id,
+            image.project.short_name))
+        # Delete image files from finished-images
         for imageFile in models.BuildFile.objects.filter(image=image_id):
             for urlMap in models.BuildFilesUrlsMap.objects.filter(
                     file=imageFile):
@@ -122,7 +125,19 @@ class ImagesManager(basemanager.BaseManager):
         except OSError, err:
             if err.args[0] not in (errno.ENOENT, errno.ENOTEMPTY):
                 raise
-        models.Image.objects.get(pk=image_id).delete()
+        image.delete()
+        # Delete the image trove from the repository if it is not referenced by
+        # any other image.
+        if image.output_trove:
+            others = models.Image.objects.filter(output_trove=image.output_trove)
+            if others:
+                log.info("Keeping image trove %s because it is claimed by "
+                        "other images", image.output_trove)
+            else:
+                log.info("Deleting image trove %s", image.output_trove)
+                reposMgr = self.mgr._restDb.productMgr.reposMgr
+                tup = trovetup.TroveSpec.fromString(image.output_trove)
+                reposMgr.deleteTroves([tup])
 
     @exposed
     def getImageBuildFile(self, image_id, file_id):
