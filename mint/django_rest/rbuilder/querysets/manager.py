@@ -885,7 +885,8 @@ class QuerySetManager(basemanager.BaseManager):
 
         matching = models.QuerySet.objects.filter(
             personal_for = user,
-            name = name
+            name = name,
+            resource_type = resource_type
         ).all()
 
         if len(matching) > 0:
@@ -918,16 +919,16 @@ class QuerySetManager(basemanager.BaseManager):
         # as a side effect.  addToMyQuerySet is more generic and
         # can also be used on resources w/o ownership metadata
 
-        if resource_type == 'project_branch_stage':
-            filterEntry = models.FilterEntry.objects.get_or_create(
-                field = 'created_by.owner.pk',
-                operator = 'EQUAL',
-                value = user.pk
-            )[0]
-            if len(qs.filter_entries.all()) == 0:
-                # if the queryset already exists we won't try to repair it
-                qs.filter_entries.add(filterEntry)
-                qs.save()
+        #if resource_type == 'project_branch_stage':
+        #    filterEntry = models.FilterEntry.objects.get_or_create(
+        #        field = 'created_by.owner.pk',
+        #        operator = 'EQUAL',
+        #        value = user.pk
+        #    )[0]
+        #    if len(qs.filter_entries.all()) == 0:
+        #        # if the queryset already exists we won't try to repair it
+        #        qs.filter_entries.add(filterEntry)
+        #        qs.save()
 
         return qs
 
@@ -935,7 +936,7 @@ class QuerySetManager(basemanager.BaseManager):
         return self._myQuerySet(user, 'My Projects', 'project')
 
     def _createMyStages(self, user):
-        return self._myQuerySet(user, 'My Stages', 'stage')
+        return self._myQuerySet(user, 'My Stages', 'project_branch_stage')
 
     def _createMySystems(self, user):
         return self._myQuerySet(user, 'My Systems', 'system')
