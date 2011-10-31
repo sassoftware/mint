@@ -456,7 +456,7 @@ class System(modellib.XObjIdModel):
     # avoid expanding launching_user as, for now, rpath_models can't
     # deal with it and registration is affected when set
     _xobj_summary_view_hide = [ 'launching_user' ]
-
+    _queryset_resource_type = 'system'
 
     """
     networks - a collection of network resources exposed by the system

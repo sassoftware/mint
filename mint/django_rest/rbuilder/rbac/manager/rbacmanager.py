@@ -306,7 +306,8 @@ class RbacManager(basemanager.BaseManager):
             return True
         return False
 
-    def resourceHome(self, user, resource_type, request=None):
+    @exposed
+    def resourceHomeQuerySet(self, user, resource_type):
         '''
         When creating a resource, what querysets should I auto-add the resource to
         as a chosen member?  The resource_type is a queryset resource
@@ -336,7 +337,7 @@ class RbacManager(basemanager.BaseManager):
         '''  
         if self.__is_admin_like(user, request):
             return True
-        home = self.resourceHome(user, resource_type, request)
+        home = self.resourceHomeQuerySet(user, resource_type)
         if home is None:
             return False
         return True

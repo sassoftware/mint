@@ -522,6 +522,9 @@ class SystemManager(basemanager.BaseManager):
         if system.event_uuid:
             self.postprocessEvent(system)
 
+        if for_user:
+            self.mgr.addToMyQuerySet(system, for_user)
+
         return system
 
     def mergeSystems(self, system):

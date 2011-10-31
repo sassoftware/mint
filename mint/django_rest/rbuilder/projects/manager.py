@@ -116,6 +116,9 @@ class ProjectManager(basemanager.BaseManager):
         self.mgr.retagQuerySetsByType('project')
         self.mgr.retagQuerySetsByType('project_branch')
         self.mgr.retagQuerySetsByType('project_branch_stage')
+
+        self.mgr.addToMyQuerySet(project, for_user)
+
         return project
 
     def _validateExternalProject(self, project):

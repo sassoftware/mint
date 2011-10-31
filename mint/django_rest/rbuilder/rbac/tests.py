@@ -9,8 +9,8 @@ from datetime import datetime
 
 # Suppress all non critical msg's from output
 # still emits traceback for failed tests
-#import logging
-#logging.disable(logging.CRITICAL)
+import logging
+logging.disable(logging.CRITICAL)
 
 from mint.django_rest import test_utils
 XMLTestCase = test_utils.XMLTestCase

@@ -716,6 +716,13 @@ class QuerySetManager(basemanager.BaseManager):
         return filterDescriptor
 
     @exposed
+    def addToMyQuerySet(self, resource, by_user):
+        resource_type = resource._queryset_resource_type 
+        home = self.mgr.resourceHomeQuerySet(by_user, resource_type)
+        if home is not None:
+            self.updateQuerySetChosen(home, resource, by_user)
+
+    @exposed
     def updateQuerySetChosen(self, querySetId, resource, by_user):
         '''
         Add a resource explicitly to the query set match results.
@@ -896,15 +903,22 @@ class QuerySetManager(basemanager.BaseManager):
         else:
             qs = possible_qs[0]
 
-        filterEntry = models.FilterEntry.objects.get_or_create(
-            field = 'created_by.owner.pk',
-            operator = 'EQUAL',
-            value = user.pk
-        )[0]
-        if len(qs.filter_entries.all()) == 0:
-            # if the queryset already exists we won't try to repair it
-            qs.filter_entries.add(filterEntry)
-            qs.save()
+        # most objects should call addToMyQuerySet(resource, user)
+        # though PBSes have to be dynamic because they are created
+        # as a side effect.  addToMyQuerySet is more generic and
+        # can also be used on resources w/o ownership metadata
+
+        if resource_type == 'project_branch_stage':
+            filterEntry = models.FilterEntry.objects.get_or_create(
+                field = 'created_by.owner.pk',
+                operator = 'EQUAL',
+                value = user.pk
+            )[0]
+            if len(qs.filter_entries.all()) == 0:
+                # if the queryset already exists we won't try to repair it
+                qs.filter_entries.add(filterEntry)
+                qs.save()
+
         return qs
 
     def _createMyProjects(self, user):
