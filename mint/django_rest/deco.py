@@ -52,7 +52,7 @@ def requires(model_names, save=True, load=True, flags=None):
     and it's unlikely to be saveable.
     """
     if flags is None:
-        flags = Flags(save=save, load=load)
+        flags = Flags(save=save, load=load, original_flags=None)
     def decorate(function):
 
         def inner(*args, **kw):

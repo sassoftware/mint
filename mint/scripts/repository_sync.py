@@ -41,7 +41,8 @@ class SyncTool(object):
         if not db:
             db = database.Database(cfg)
         self.db = db
-        self.reposManager = repository.RepositoryManager(self.cfg, self.db.db)
+        self.reposManager = repository.RepositoryManager(self.cfg, self.db.db,
+                bypass=True)
         self.client = self.reposManager.getClient(userId=repository.ANY_READER)
         self.repos = self.client.getRepos()
         self._platformMap = None

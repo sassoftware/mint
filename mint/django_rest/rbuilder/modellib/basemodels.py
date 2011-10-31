@@ -2,15 +2,14 @@
 #
 # Copyright (c) 2011 rPath, Inc.
 #
-# All rights reserved.
-#
-import types
+
 import datetime
 from dateutil import parser
 from dateutil import tz
 import inspect
 import urlparse
 from lxml import etree
+import exceptions as pyexceptions
 
 from conary.lib import util
 
@@ -42,7 +41,14 @@ class BaseFlags(util.Flags):
             defaults.update(getattr(cls, '__defaults__', {}))
             slots.update(getattr(cls, '__slots__', ()))
         for flag in slots:
-            setattr(self, flag, kwargs.get(flag, defaults.get(flag, False)))
+            value = kwargs.get(flag, defaults.get(flag, False))
+            setattr(self, flag, value)
+
+    def __setattr__(self, flag, val):
+        # original conary version can only store booleans... logical for a
+        # a flags class, but we need more state.  Eventually, make this 
+        # class smarter and not rely on it
+        object.__setattr__(self, flag, val)
 
     def copy(self, **kwargs):
         vals = {}
@@ -53,8 +59,8 @@ class BaseFlags(util.Flags):
         return self.__class__(**vals)
 
 class Flags(BaseFlags):
-    __slots__ = [ 'save', 'load', ]
-    __defaults__ = dict(save=True, load=True)
+    __slots__ = [ 'save', 'load', 'original_flags']
+    __defaults__ = dict(save=True, load=True, original_flags=None)
 
 # Dict to hold the union of all models' tags as keys, and the model class as
 # values.  Needed so that there is exactly one place to look to determine what
@@ -415,7 +421,7 @@ class BaseManager(models.Manager):
 
         return model
 
-    def _get_accessors(self, model, xobjModel, request=None):
+    def _get_accessors(self, model, xobjModel, request=None, flags=None):
         """
         Build and return a dict of accessor name and list of accessor
         objects.
@@ -427,7 +433,13 @@ class BaseManager(models.Manager):
         # that's going to reference a system, well since system is
         # not yet set as  FK, we can't save the network model yet,
         # so pass False for the save flag.
-        flags = Flags(save=False)
+        #
+        # BUT: in doing so, we forgot our original intent, and in some
+        # cases we need this behavior... unfortuantely... really we need
+        # to make loading just use the xobj models as much as possible
+        # as requiring many2many relationships to pre-exist is complicated
+        # (original_flags is largely for this purpose, see below)
+        flags = Flags(save=False, original_flags=flags)
 
         for key, val in xobjModel.__dict__.items():
             if key in accessors:
@@ -456,7 +468,7 @@ class BaseManager(models.Manager):
                 getattr(model, key).add(v)
         return model
 
-    def _set_m2m_accessor(self, model, m2m_accessor, rel_mod):
+    def _set_m2m_accessor(self, model, m2m_accessor, rel_mod, flags=None):
         """
         Add rel_mod to the correct many to many accessor on model.  Needs to
         be in a seperate method so that it can be overridden.
@@ -475,7 +487,7 @@ class BaseManager(models.Manager):
         Populate the many to many accessors on model based on the xobj model
         in xobjModel.
         """
-        flags = flags.copy(save=False)
+        flags = flags.copy(save=False, original_flags=flags)
         for m2m_accessor, m2m_mgr in model._get_m2m_accessor_dict().items():
             _xobj = getattr(m2m_mgr.model, '_xobj', None)
             if _xobj:
@@ -495,7 +507,7 @@ class BaseManager(models.Manager):
                 if rel_mod is None:
                     rel_mod = modelCls.objects.load_from_object(
                         rel_obj, request, flags=flags)
-                self._set_m2m_accessor(model, m2m_accessor, rel_mod)
+                self._set_m2m_accessor(model, m2m_accessor, rel_mod, flags=flags)
 
         return model
 
@@ -546,6 +558,7 @@ class BaseManager(models.Manager):
         """
         if flags is None:
             flags = Flags(save=True, load=True)
+
         # Every manager has access to the model it's a manager for, create an
         # empty model instance to start with.
         model = self.model()
@@ -558,7 +571,7 @@ class BaseManager(models.Manager):
         # may be used in load_or_create
         model = self._add_synthetic_fields(model, xobjModel, request)
         model = self._add_fields(model, xobjModel, request, flags=flags)
-        accessors = self._get_accessors(model, xobjModel, request)
+        accessors = self._get_accessors(model, xobjModel, request, flags=flags)
 
         # Only try to load the model if load is True.  
         if not flags.load:
@@ -620,10 +633,10 @@ class TroveManager(BaseManager):
             return
         BaseManager._clear_m2m_accessor(self, model, m2m_accessor)
 
-    def _set_m2m_accessor(self, model, m2m_accessor, rel_mod):
+    def _set_m2m_accessor(self, model, m2m_accessor, rel_mod, flags=None):
         if m2m_accessor == 'available_updates':
             return
-        return BaseManager._set_m2m_accessor(self, model, m2m_accessor, rel_mod)
+        return BaseManager._set_m2m_accessor(self, model, m2m_accessor, rel_mod, flags=flags)
 
     def _add_fields(self, model, obj, request, flags=None):
         nmodel = BaseManager._add_fields(self, model, obj, request, flags=flags)
@@ -633,6 +646,27 @@ class TroveManager(BaseManager):
 
     def _load_from_href(self, *args, **kwargs):
         return None
+
+class SaveableManyToManyManager(BaseManager):
+
+    # our many to many handling needs some help, in the case where we want
+    # to make new relations, some may have IDs and some may not, and we
+    # must precreate ones that don't so we can add them, but we never
+    # want to do this on load if our intent is not to save at the end for
+    # security reasons, because GETs have a different set of permissions and
+    # users could be destructive.
+
+    def _set_m2m_accessor(self, model, m2m_accessor, rel_mod, flags=None):
+        accessor = getattr(model, m2m_accessor)
+        try:
+            accessor.add(rel_mod)
+        except pyexceptions.ValueError:
+            if flags and flags.original_flags and flags.original_flags.save: 
+                if not (m2m_accessor in model._m2m_safe_to_create):
+                    raise Exception("unable to save %s" % m2m_accessor)
+                rel_mod.save()
+                accessor.add(rel_mod)
+
 
 class VersionManager(BaseManager):
     def _add_fields(self, model, obj, request, flags=None):
@@ -761,7 +795,7 @@ class SystemManager(BaseManager):
             return
         BaseManager._clear_m2m_accessor(self, model, m2m_accessor)
 
-    def _set_m2m_accessor(self, model, m2m_accessor, rel_mod):
+    def _set_m2m_accessor(self, model, m2m_accessor, rel_mod, flags=None):
         # XXX Need a better way to handle this
         if m2m_accessor == 'installed_software':
             if model.new_versions is None:
@@ -770,7 +804,7 @@ class SystemManager(BaseManager):
         elif m2m_accessor == 'jobs':
             self._handleSystemJob(model, rel_mod)
         else:
-            BaseManager._set_m2m_accessor(self, model, m2m_accessor, rel_mod)
+            BaseManager._set_m2m_accessor(self, model, m2m_accessor, rel_mod, flags=flags)
 
     def _handleSystemJob(self, system, job):
         self.lastJob = None
@@ -1234,6 +1268,8 @@ class XObjModel(models.Model):
                     continue
                 if val is None:
                     val = ''
+                elif hasattr(field, 'to_xobj'):
+                    val = field.to_xobj(val, request)
                 # Special handling of DateTimeFields.  Could make this OO by
                 # calling .seriaize(...) on each field, and overriding that
                 # behavior for DateTimeField's, but as long as it's just this
@@ -1290,7 +1326,7 @@ class XObjModel(models.Model):
                                             attributes = {"id":str})
                         setattr(refModel, "id", 
                             val.get_absolute_url(request))
-                        if hasattr(val, "summary_view"):
+                        if hasattr(val, "summary_view") and fieldName not in getattr(self, '_xobj_summary_view_hide', []):
                             for sField in val.summary_view:
                                 setattr(refModel, sField, getattr(val, sField))
                         else:
@@ -1299,7 +1335,14 @@ class XObjModel(models.Model):
                         setattr(xobj_model, fieldName, refModel)
                     else:
                         val = val.serialize(request)
-                        setattr(xobj_model, fieldName, val)
+                        serialized_as = getattr(val, 'serialized_as', fieldName)
+                        val._xobj = xobj.XObjMetadata(
+                           elements   = val._xobj.elements,
+                           attributes = val._xobj.attributes,
+                           text       = val._xobj.text,
+                           tag        = serialized_as
+                        ) 
+                        setattr(xobj_model, serialized_as, val)
                 else:
                     setattr(xobj_model, fieldName, '')
 
@@ -1611,6 +1654,7 @@ class SerializedForeignKey(ForeignKey):
     def __init__(self, *args, **kwargs):
         self.text_field = None
         self.serialized = True
+        self.serialized_as = kwargs.pop('serialized_as', None)
         super(SerializedForeignKey, self).__init__(*args, **kwargs)
 
 class DeferredForeignKeyMixIn(object):
@@ -1641,6 +1685,22 @@ class DecimalField(models.DecimalField):
         if isinstance(value, float):
             value = str(value)
         return models.DecimalField.to_python(self, value)
+
+
+class DecimalTimestampField(DecimalField):
+
+    def __init__(self, **kwargs):
+        kwargs.setdefault('max_digits', 14)
+        kwargs.setdefault('decimal_places', 3)
+        DecimalField.__init__(self, **kwargs)
+
+    def to_xobj(self, val, request):
+        if val is not None and val != 0:
+            ts = datetime.datetime.fromtimestamp(val, tz.tzutc())
+            return str(ts)
+        else:
+            return ''
+
 
 class DateTimeUtcField(models.DateTimeField):
     """

@@ -61,15 +61,16 @@ class ReportTypeDescriptorTestCase(unittest.TestCase):
 class ImagesPerProductTestCase(unittest.TestCase):
     def setUp(self):
         self.client = Client()
+        now = time.time()
         self.user = User.objects.create(user_name='user',full_name='User T. Foo',passwd='foo',
-            email='foo@bar.com', time_created=str(time.time()), time_accessed=str(time.time()),
+            email='foo@bar.com', time_created=now, time_accessed=now,
             active=1)
         self.product = Project.objects.create(hostname='foo',name='foo Applicance', 
             namespace='rpath',domainname='eng.rpath.com',repositoryHostName='foo.eng.rpath.com',
-            prodtype='Appliance',hidden=False,creatorid=self.user,timecreated=str(time.time()),
-            timemodified=str(time.time()), shortname='foo')
+            prodtype='Appliance',hidden=False,creatorid=self.user,timecreated=now,
+            timemodified=now, shortname='foo')
         self.version = Project.Version.objects.create(productId=self.product,namespace='foo',name='bar',
-            timecreated=str(time.time()))
+            timecreated=now)
             
         dt = datetime.date(2008,1,1)
         timeint = time.mktime(dt.timetuple())
@@ -77,7 +78,7 @@ class ImagesPerProductTestCase(unittest.TestCase):
         for i in range(0,50):
             Project.Image.objects.create(name='Image'+str(i),product_id=self.product, created_by=self.user, build_type=1,
                 time_created=str(timeint), trove_name='foo', trove_version='bar',trove_flavor='baz',
-                trove_last_changed=str(time.time()), deleted=0, stage_name='Development',product_version_id=
+                trove_last_changed=now, deleted=0, stage_name='Development',product_version_id=
                 self.version, build_count=1, status=300)
                 
             timeint += 60*60*72

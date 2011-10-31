@@ -11,6 +11,7 @@ from mint.django_rest.rbuilder.manager import basemanager
 from mint.django_rest.rbuilder.querysets import models as querymodels
 from datetime import datetime
 from django.core.exceptions import ObjectDoesNotExist
+from mint.django_rest.rbuilder.errors import PermissionDenied
 
 log = logging.getLogger(__name__)
 exposed = basemanager.exposed
@@ -175,7 +176,14 @@ class RbacManager(basemanager.BaseManager):
             pass
 
         if permission.queryset.resource_type in [ 'grant', 'role' ]:
-            raise Exception("RBAC configuration rights cannot be delegated")
+            raise PermissionDenied(msg="RBAC configuration rights cannot be delegated")
+
+        # enforce restrictions on who can modify querysets -- this will
+        # be upgraded later when we support rbac grant delegation
+        if permission.permission.name == MODSETDEF:
+            if not permission.queryset.is_static:
+               raise PermissionDenied(msg="Modify Set Definition cannot be granted on dynamic querysets")
+
         permission.created_by  = by_user
         permission.modified_by = by_user
         permission.save()
@@ -247,6 +255,9 @@ class RbacManager(basemanager.BaseManager):
         '''
         Modify a querysets collection to contain only the querysets
         the user is allowed to see, leaving the others hidden.
+        Applies only to querysets collections themselves, member filtering is
+        done in the querysets module.  Querysets are collected in collections
+        NOT querysets.
         '''
         if request is not None and request._is_admin:
             return querysets_obj
@@ -261,11 +272,17 @@ class RbacManager(basemanager.BaseManager):
         perms = models.RbacPermission.objects.select_related().filter(
            role__in = my_roles,
         )
+        publics = querymodels.QuerySet.objects.select_related().filter(
+           is_public = True
+        )
 
         results = []
         for p in perms:
             if p.queryset not in results:
                 results.append(p.queryset)
+        for public_qs in publics:
+            if public_qs not in results:
+                results.append(public_qs)
         querysets_obj.query_set = results
         return querysets_obj
 

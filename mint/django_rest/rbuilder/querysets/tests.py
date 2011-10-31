@@ -100,7 +100,12 @@ class QuerySetTestCase(QueryTestCase):
         response = self._get("query_sets/%s" % qsid,
             username="admin", password="password")
         self.assertEquals(response.status_code, 200)
-        self.assertXMLEquals(response.content, testsxml.queryset_with_actions)
+        self.assertXMLEquals(response.content, testsxml.queryset_with_actions,
+          ignoreNodes=[
+             'filter_entry_id', 'created_date',
+             'last_login_date', 'created_by', 'modified_by',
+             'tagged_date', 'modified_date', 'is_public', 'is_static',
+          ])
 
         # every queryset should have a "universe" URL that points to the all
         # collection for the given queryset type
@@ -175,6 +180,13 @@ class QuerySetTestCase(QueryTestCase):
         self.assertEquals(len(chosen2), 0)
         filtered2 = self.xobjSystems("query_sets/%s/filtered/" % qs1.pk)
         self.assertEquals(len(filtered2), 38)
+
+        # try to add new filter terms on edit
+        # without supplying a database ID for them
+        response = self._put("query_sets/%s" % qs1.pk,
+            username="admin", password="password",
+            data=testsxml.queryset_put_xml_different)
+        self.assertEquals(response.status_code, 200)
 
     def testPostQuerySet(self):
         # show that we can add a new query set
@@ -287,11 +299,6 @@ class QuerySetTestCase(QueryTestCase):
         self.assertEquals(response.status_code, 200)
         
         qsid = self._getQs('All Project Stages')
-        response = self._get("query_sets/%s/all/" % qsid,
-            username="admin", password="password")
-        self.assertEquals(response.status_code, 200)
-        
-        qsid = self._getQs('All Platforms')
         response = self._get("query_sets/%s/all/" % qsid,
             username="admin", password="password")
         self.assertEquals(response.status_code, 200)

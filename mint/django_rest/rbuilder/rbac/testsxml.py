@@ -72,8 +72,28 @@ role_put_xml_output = """
    <role_id>2</role_id>
    <name>rocketsurgeon</name>
    <description></description>
-   <created_by id="http://testserver/api/v1/users/1"/>
-   <modified_by id="http://testserver/api/v1/users/1"/>
+   <created_by id="http://testserver/api/v1/users/1">
+      <blurb/>
+      <display_email/>
+      <email>admin@rpath.com</email>
+      <external_auth>false</external_auth>
+      <full_name>Administrator</full_name>
+      <is_admin>true</is_admin>
+      <roles id="http://testserver/api/v1/users/1/roles"/>
+      <user_id>1</user_id>
+      <user_name>admin</user_name>
+    </created_by>
+    <modified_by id="http://testserver/api/v1/users/1">
+       <blurb/>
+       <display_email/>
+       <email>admin@rpath.com</email>
+       <external_auth>false</external_auth>
+       <full_name>Administrator</full_name>
+       <is_admin>true</is_admin>
+       <roles id="http://testserver/api/v1/users/1/roles"/>
+       <user_id>1</user_id>
+       <user_name>admin</user_name>
+    </modified_by>
 </role>
 """
 
@@ -91,8 +111,28 @@ role_post_xml_output = """
   <role_id>4</role_id>
   <name>rocketsurgeon</name>
   <description/>
-  <created_by id="http://testserver/api/v1/users/1"/>
-  <modified_by id="http://testserver/api/v1/users/1"/>
+  <created_by id="http://testserver/api/v1/users/1">
+      <blurb/>
+      <display_email/>
+      <email>admin@rpath.com</email>
+      <external_auth>false</external_auth>
+      <full_name>Administrator</full_name>
+      <is_admin>true</is_admin>
+      <roles id="http://testserver/api/v1/users/1/roles"/>
+      <user_id>1</user_id>
+      <user_name>admin</user_name>
+   </created_by>
+   <modified_by id="http://testserver/api/v1/users/1">
+       <blurb/>
+       <display_email/>
+       <email>admin@rpath.com</email>
+       <external_auth>false</external_auth>
+       <full_name>Administrator</full_name>
+       <is_admin>true</is_admin>
+       <roles id="http://testserver/api/v1/users/1/roles"/>
+       <user_id>1</user_id>
+       <user_name>admin</user_name>
+    </modified_by>
 </role>
 """
 
@@ -104,8 +144,28 @@ role_list_xml = """
     <role_id>1</role_id>
     <description/>
     <name>developer</name>
-    <created_by id="http://testserver/api/v1/users/1"/>
-    <modified_by id="http://testserver/api/v1/users/1"/>
+  <created_by id="http://testserver/api/v1/users/1">
+      <blurb/>
+      <display_email/>
+      <email>admin@rpath.com</email>
+      <external_auth>false</external_auth>
+      <full_name>Administrator</full_name>
+      <is_admin>true</is_admin>
+      <roles id="http://testserver/api/v1/users/1/roles"/>
+      <user_id>1</user_id>
+      <user_name>admin</user_name>
+   </created_by>
+   <modified_by id="http://testserver/api/v1/users/1">
+       <blurb/>
+       <display_email/>
+       <email>admin@rpath.com</email>
+       <external_auth>false</external_auth>
+       <full_name>Administrator</full_name>
+       <is_admin>true</is_admin>
+       <roles id="http://testserver/api/v1/users/1/roles"/>
+       <user_id>1</user_id>
+       <user_name>admin</user_name>
+    </modified_by>
   </role>
   </role>
   <role id="http://testserver/api/v1/rbac/roles/2">
@@ -114,8 +174,28 @@ role_list_xml = """
     <role_id>2</role_id>
     <description/>
     <name>sysadmin</name>
-    <created_by id="http://testserver/api/v1/users/1"/>
-    <modified_by id="http://testserver/api/v1/users/1"/>
+    <created_by id="http://testserver/api/v1/users/1">
+      <blurb/>
+      <display_email/>
+      <email>admin@rpath.com</email>
+      <external_auth>false</external_auth>
+      <full_name>Administrator</full_name>
+      <is_admin>true</is_admin>
+      <roles id="http://testserver/api/v1/users/1/roles"/>
+      <user_id>1</user_id>
+      <user_name>admin</user_name>
+     </created_by>
+     <modified_by id="http://testserver/api/v1/users/1">
+       <blurb/>
+       <display_email/>
+       <email>admin@rpath.com</email>
+       <external_auth>false</external_auth>
+       <full_name>Administrator</full_name>
+       <is_admin>true</is_admin>
+       <roles id="http://testserver/api/v1/users/1/roles"/>
+       <user_id>1</user_id>
+       <user_name>admin</user_name>
+    </modified_by>
   </role>
   <role id="http://testserver/api/v1/rbac/roles/3">
     <users id="http://testserver/api/v1/rbac/roles/3/users/"/>
@@ -123,22 +203,62 @@ role_list_xml = """
     <role_id>2</role_id>
     <description/>
     <name>intern</name>
-    <created_by id="http://testserver/api/v1/users/1"/>
-    <modified_by id="http://testserver/api/v1/users/1"/>
+  <created_by id="http://testserver/api/v1/users/1">
+      <blurb/>
+      <display_email/>
+      <email>admin@rpath.com</email>
+      <external_auth>false</external_auth>
+      <full_name>Administrator</full_name>
+      <is_admin>true</is_admin>
+      <roles id="http://testserver/api/v1/users/1/roles"/>
+      <user_id>1</user_id>
+      <user_name>admin</user_name>
+   </created_by>
+   <modified_by id="http://testserver/api/v1/users/1">
+       <blurb/>
+       <display_email/>
+       <email>admin@rpath.com</email>
+       <external_auth>false</external_auth>
+       <full_name>Administrator</full_name>
+       <is_admin>true</is_admin>
+       <roles id="http://testserver/api/v1/users/1/roles"/>
+       <user_id>1</user_id>
+       <user_name>admin</user_name>
+    </modified_by>
    </role>
 </roles>
 """
 
 role_queryset_xml = """
-<roles count="3" end_index="2" filter_by="" full_collection="http://testserver/api/v1/query_sets/12/all" id="http://testserver/api/v1/query_sets/12/all;start_index=0;limit=10" limit="10" next_page="" num_pages="1" order_by="" per_page="10" previous_page="" start_index="0">
+<roles count="3" end_index="2" filter_by="" full_collection="http://testserver/api/v1/query_sets/11/all" id="http://testserver/api/v1/query_sets/11/all;start_index=0;limit=10" limit="10" next_page="" num_pages="1" order_by="" per_page="10" previous_page="" start_index="0">
   <role id="http://testserver/api/v1/rbac/roles/1">
     <users id="http://testserver/api/v1/rbac/roles/1/users/"/>
     <grants id="http://testserver/api/v1/rbac/roles/1/grants/"/>
     <role_id>1</role_id>
     <description/>
     <name>sysadmin</name>
-    <created_by id="http://testserver/api/v1/users/1"/>
-    <modified_by id="http://testserver/api/v1/users/1"/>
+  <created_by id="http://testserver/api/v1/users/1">
+      <blurb/>
+      <display_email/>
+      <email>admin@rpath.com</email>
+      <external_auth>false</external_auth>
+      <full_name>Administrator</full_name>
+      <is_admin>true</is_admin>
+      <roles id="http://testserver/api/v1/users/1/roles"/>
+      <user_id>1</user_id>
+      <user_name>admin</user_name>
+   </created_by>
+   <modified_by id="http://testserver/api/v1/users/1">
+       <blurb/>
+       <display_email/>
+       <email>admin@rpath.com</email>
+       <external_auth>false</external_auth>
+       <full_name>Administrator</full_name>
+       <is_admin>true</is_admin>
+       <roles id="http://testserver/api/v1/users/1/roles"/>
+       <user_id>1</user_id>
+       <user_name>admin</user_name>
+    </modified_by>
   </role>
   <role id="http://testserver/api/v1/rbac/roles/2">
     <users id="http://testserver/api/v1/rbac/roles/2/users/"/>
@@ -146,8 +266,28 @@ role_queryset_xml = """
     <role_id>2</role_id>
     <description/>
     <name>developer</name>
-    <created_by id="http://testserver/api/v1/users/1"/>
-    <modified_by id="http://testserver/api/v1/users/1"/>
+  <created_by id="http://testserver/api/v1/users/1">
+      <blurb/>
+      <display_email/>
+      <email>admin@rpath.com</email>
+      <external_auth>false</external_auth>
+      <full_name>Administrator</full_name>
+      <is_admin>true</is_admin>
+      <roles id="http://testserver/api/v1/users/1/roles"/>
+      <user_id>1</user_id>
+      <user_name>admin</user_name>
+   </created_by>
+   <modified_by id="http://testserver/api/v1/users/1">
+       <blurb/>
+       <display_email/>
+       <email>admin@rpath.com</email>
+       <external_auth>false</external_auth>
+       <full_name>Administrator</full_name>
+       <is_admin>true</is_admin>
+       <roles id="http://testserver/api/v1/users/1/roles"/>
+       <user_id>1</user_id>
+       <user_name>admin</user_name>
+    </modified_by>
   </role>
   <role id="http://testserver/api/v1/rbac/roles/3">
     <users id="http://testserver/api/v1/rbac/roles/3/users/"/>
@@ -155,8 +295,28 @@ role_queryset_xml = """
     <role_id>3</role_id>
     <description/>
     <name>intern</name>
-    <created_by id="http://testserver/api/v1/users/1"/>
-    <modified_by id="http://testserver/api/v1/users/1"/>
+  <created_by id="http://testserver/api/v1/users/1">
+      <blurb/>
+      <display_email/>
+      <email>admin@rpath.com</email>
+      <external_auth>false</external_auth>
+      <full_name>Administrator</full_name>
+      <is_admin>true</is_admin>
+      <roles id="http://testserver/api/v1/users/1/roles"/>
+      <user_id>1</user_id>
+      <user_name>admin</user_name>
+   </created_by>
+   <modified_by id="http://testserver/api/v1/users/1">
+       <blurb/>
+       <display_email/>
+       <email>admin@rpath.com</email>
+       <external_auth>false</external_auth>
+       <full_name>Administrator</full_name>
+       <is_admin>true</is_admin>
+       <roles id="http://testserver/api/v1/users/1/roles"/>
+       <user_id>1</user_id>
+       <user_name>admin</user_name>
+    </modified_by>
   </role>
 </roles>
 """
@@ -164,29 +324,89 @@ role_queryset_xml = """
 role_list_xml_with_grants = """
 <roles count="3" end_index="2" filter_by="" full_collection="http://testserver/api/v1/rbac/roles" id="http://testserver/api/v1/rbac/roles;start_index=0;limit=10" limit="10" next_page="" num_pages="1" order_by="" per_page="10" previous_page="" start_index="0">
   <role id="http://testserver/api/v1/rbac/roles/1">
-    <created_by id="http://testserver/api/v1/users/1"/>
+  <created_by id="http://testserver/api/v1/users/1">
+      <blurb/>
+      <display_email/>
+      <email>admin@rpath.com</email>
+      <external_auth>false</external_auth>
+      <full_name>Administrator</full_name>
+      <is_admin>true</is_admin>
+      <roles id="http://testserver/api/v1/users/1/roles"/>
+      <user_id>1</user_id>
+      <user_name>admin</user_name>
+   </created_by>
+   <modified_by id="http://testserver/api/v1/users/1">
+       <blurb/>
+       <display_email/>
+       <email>admin@rpath.com</email>
+       <external_auth>false</external_auth>
+       <full_name>Administrator</full_name>
+       <is_admin>true</is_admin>
+       <roles id="http://testserver/api/v1/users/1/roles"/>
+       <user_id>1</user_id>
+       <user_name>admin</user_name>
+    </modified_by>
     <description/>
     <grants id="http://testserver/api/v1/rbac/roles/1/grants/"/>
     <users id="http://testserver/api/v1/rbac/roles/1/users/"/>
-    <modified_by id="http://testserver/api/v1/users/1"/>
     <name>sysadmin</name>
     <role_id>1</role_id>
   </role>
   <role id="http://testserver/api/v1/rbac/roles/2">
-    <created_by id="http://testserver/api/v1/users/1"/>
+  <created_by id="http://testserver/api/v1/users/1">
+      <blurb/>
+      <display_email/>
+      <email>admin@rpath.com</email>
+      <external_auth>false</external_auth>
+      <full_name>Administrator</full_name>
+      <is_admin>true</is_admin>
+      <roles id="http://testserver/api/v1/users/1/roles"/>
+      <user_id>1</user_id>
+      <user_name>admin</user_name>
+   </created_by>
+   <modified_by id="http://testserver/api/v1/users/1">
+       <blurb/>
+       <display_email/>
+       <email>admin@rpath.com</email>
+       <external_auth>false</external_auth>
+       <full_name>Administrator</full_name>
+       <is_admin>true</is_admin>
+       <roles id="http://testserver/api/v1/users/1/roles"/>
+       <user_id>1</user_id>
+       <user_name>admin</user_name>
+    </modified_by>
     <description/>
     <grants id="http://testserver/api/v1/rbac/roles/2/grants/"/>
     <users id="http://testserver/api/v1/rbac/roles/2/users/"/>
-    <modified_by id="http://testserver/api/v1/users/1"/>
     <name>developer</name>
     <role_id>2</role_id>
   </role>
   <role id="http://testserver/api/v1/rbac/roles/3">
-    <created_by id="http://testserver/api/v1/users/1"/>
+  <created_by id="http://testserver/api/v1/users/1">
+      <blurb/>
+      <display_email/>
+      <email>admin@rpath.com</email>
+      <external_auth>false</external_auth>
+      <full_name>Administrator</full_name>
+      <is_admin>true</is_admin>
+      <roles id="http://testserver/api/v1/users/1/roles"/>
+      <user_id>1</user_id>
+      <user_name>admin</user_name>
+   </created_by>
+   <modified_by id="http://testserver/api/v1/users/1">
+       <blurb/>
+       <display_email/>
+       <email>admin@rpath.com</email>
+       <external_auth>false</external_auth>
+       <full_name>Administrator</full_name>
+       <is_admin>true</is_admin>
+       <roles id="http://testserver/api/v1/users/1/roles"/>
+       <user_id>1</user_id>
+       <user_name>admin</user_name>
+    </modified_by>
     <description/>
     <grants id="http://testserver/api/v1/rbac/roles/3/grants/"/>
     <users id="http://testserver/api/v1/rbac/roles/3/users/"/>
-    <modified_by id="http://testserver/api/v1/users/1"/>
     <name>intern</name>
     <role_id>3</role_id>
   </role>
@@ -200,54 +420,152 @@ role_get_xml = """
   <role_id>2</role_id>
   <name>developer</name>
   <description/>
-  <created_by id="http://testserver/api/v1/users/1"/>
-  <modified_by id="http://testserver/api/v1/users/1"/>
+  <created_by id="http://testserver/api/v1/users/1">
+      <blurb/>
+      <display_email/>
+      <email>admin@rpath.com</email>
+      <external_auth>false</external_auth>
+      <full_name>Administrator</full_name>
+      <is_admin>true</is_admin>
+      <roles id="http://testserver/api/v1/users/1/roles"/>
+      <user_id>1</user_id>
+      <user_name>admin</user_name>
+   </created_by>
+   <modified_by id="http://testserver/api/v1/users/1">
+       <blurb/>
+       <display_email/>
+       <email>admin@rpath.com</email>
+       <external_auth>false</external_auth>
+       <full_name>Administrator</full_name>
+       <is_admin>true</is_admin>
+       <roles id="http://testserver/api/v1/users/1/roles"/>
+       <user_id>1</user_id>
+       <user_name>admin</user_name>
+    </modified_by>
 </role>
 """
 
 permission_list_xml = """
-<grants count="3" end_index="2" filter_by="" full_collection="http://testserver/api/v1/rbac/grants" id="http://testserver/api/v1/rbac/grants;start_index=0;limit=10" limit="10" next_page="" num_pages="1" order_by="" per_page="10" previous_page="" start_index="0">
- <grant id="http://testserver/api/v1/rbac/grants/3">
-    <created_by id="http://testserver/api/v1/users/1"/>
-    <grant_id>3</grant_id>
-    <modified_by id="http://testserver/api/v1/users/1"/>
+<grants count="3" next_page="" num_pages="1" previous_page="" full_collection="http://testserver/api/v1/rbac/grants" end_index="2" limit="10" order_by="" per_page="10" filter_by="" id="http://testserver/api/v1/rbac/grants;start_index=0;limit=10" start_index="0">
+  <grant id="http://testserver/api/v1/rbac/grants/3">
+    <modified_date>2011-10-18T21:47:57.584967+00:00</modified_date>
+    <modified_by id="http://testserver/api/v1/users/1">
+      <modified_date>1283530322.49</modified_date>
+      <user_id>1</user_id>
+      <display_email></display_email>
+      <roles id="http://testserver/api/v1/users/1/roles"/>
+      <external_auth>false</external_auth>
+      <is_admin>true</is_admin>
+      <full_name>Administrator</full_name>
+      <created_date>1283523987.85</created_date>
+      <user_name>admin</user_name>
+      <email>admin@rpath.com</email>
+      <blurb></blurb>
+    </modified_by>
     <permission id="http://testserver/api/v1/rbac/permissions/2">
       <description>Modify Member Resources</description>
       <name>ModMembers</name>
     </permission>
-    <queryset id="http://testserver/api/v1/query_sets/16"/>
+    <grant_id>3</grant_id>
+    <queryset id="http://testserver/api/v1/query_sets/15"/>
+    <created_by id="http://testserver/api/v1/users/1">
+      <modified_date>1283530322.49</modified_date>
+      <user_id>1</user_id>
+      <display_email></display_email>
+      <roles id="http://testserver/api/v1/users/1/roles"/>
+      <external_auth>false</external_auth>
+      <is_admin>true</is_admin>
+      <full_name>Administrator</full_name>
+      <created_date>1283523987.85</created_date>
+      <user_name>admin</user_name>
+      <email>admin@rpath.com</email>
+      <blurb></blurb>
+    </created_by>
     <role id="http://testserver/api/v1/rbac/roles/2">
-      <description/>
+      <description></description>
       <name>developer</name>
     </role>
+    <created_date>2011-10-18T21:47:57.584888+00:00</created_date>
   </grant>
   <grant id="http://testserver/api/v1/rbac/grants/1">
-    <created_by id="http://testserver/api/v1/users/1"/>
-    <grant_id>1</grant_id>
-    <modified_by id="http://testserver/api/v1/users/1"/>
+    <modified_date>2011-10-18T21:47:57.557181+00:00</modified_date>
+    <modified_by id="http://testserver/api/v1/users/1">
+      <modified_date>1283530322.49</modified_date>
+      <user_id>1</user_id>
+      <display_email></display_email>
+      <roles id="http://testserver/api/v1/users/1/roles"/>
+      <external_auth>false</external_auth>
+      <is_admin>true</is_admin>
+      <full_name>Administrator</full_name>
+      <created_date>1283523987.85</created_date>
+      <user_name>admin</user_name>
+      <email>admin@rpath.com</email>
+      <blurb></blurb>
+    </modified_by>
     <permission id="http://testserver/api/v1/rbac/permissions/2">
       <description>Modify Member Resources</description>
       <name>ModMembers</name>
     </permission>
-    <queryset id="http://testserver/api/v1/query_sets/17"/>
+    <grant_id>1</grant_id>
+    <queryset id="http://testserver/api/v1/query_sets/16"/>
+    <created_by id="http://testserver/api/v1/users/1">
+      <modified_date>1283530322.49</modified_date>
+      <user_id>1</user_id>
+      <display_email></display_email>
+      <roles id="http://testserver/api/v1/users/1/roles"/>
+      <external_auth>false</external_auth>
+      <is_admin>true</is_admin>
+      <full_name>Administrator</full_name>
+      <created_date>1283523987.85</created_date>
+      <user_name>admin</user_name>
+      <email>admin@rpath.com</email>
+      <blurb></blurb>
+    </created_by>
     <role id="http://testserver/api/v1/rbac/roles/1">
-      <description/>
+      <description></description>
       <name>sysadmin</name>
     </role>
+    <created_date>2011-10-18T21:47:57.557098+00:00</created_date>
   </grant>
   <grant id="http://testserver/api/v1/rbac/grants/2">
-    <created_by id="http://testserver/api/v1/users/1"/>
-    <grant_id>2</grant_id>
-    <modified_by id="http://testserver/api/v1/users/1"/>
+    <modified_date>2011-10-18T21:47:57.570894+00:00</modified_date>
+    <modified_by id="http://testserver/api/v1/users/1">
+      <modified_date>1283530322.49</modified_date>
+      <user_id>1</user_id>
+      <display_email></display_email>
+      <roles id="http://testserver/api/v1/users/1/roles"/>
+      <external_auth>false</external_auth>
+      <is_admin>true</is_admin>
+      <full_name>Administrator</full_name>
+      <created_date>1283523987.85</created_date>
+      <user_name>admin</user_name>
+      <email>admin@rpath.com</email>
+      <blurb></blurb>
+    </modified_by>
     <permission id="http://testserver/api/v1/rbac/permissions/1">
       <description>Read Member Resources</description>
       <name>ReadMembers</name>
     </permission>
-    <queryset id="http://testserver/api/v1/query_sets/17"/>
+    <grant_id>2</grant_id>
+    <queryset id="http://testserver/api/v1/query_sets/16"/>
+    <created_by id="http://testserver/api/v1/users/1">
+      <modified_date>1283530322.49</modified_date>
+      <user_id>1</user_id>
+      <display_email></display_email>
+      <roles id="http://testserver/api/v1/users/1/roles"/>
+      <external_auth>false</external_auth>
+      <is_admin>true</is_admin>
+      <full_name>Administrator</full_name>
+      <created_date>1283523987.85</created_date>
+      <user_name>admin</user_name>
+      <email>admin@rpath.com</email>
+      <blurb></blurb>
+    </created_by>
     <role id="http://testserver/api/v1/rbac/roles/2">
-      <description/>
+      <description></description>
       <name>developer</name>
     </role>
+    <created_date>2011-10-18T21:47:57.570811+00:00</created_date>
   </grant>
 </grants>
 """
@@ -255,14 +573,34 @@ permission_list_xml = """
 permission_list_xml_for_role = """
 <grants count="1" end_index="0" filter_by="" full_collection="http://testserver/api/v1/rbac/grants" id="http://testserver/api/v1/rbac/grants;start_index=0;limit=10" limit="10" next_page="" num_pages="1" order_by="" per_page="10" previous_page="" start_index="0">
   <grant id="http://testserver/api/v1/rbac/grants/1">
-    <created_by id="http://testserver/api/v1/users/1"/>
+  <created_by id="http://testserver/api/v1/users/1">
+      <blurb/>
+      <display_email/>
+      <email>admin@rpath.com</email>
+      <external_auth>false</external_auth>
+      <full_name>Administrator</full_name>
+      <is_admin>true</is_admin>
+      <roles id="http://testserver/api/v1/users/1/roles"/>
+      <user_id>1</user_id>
+      <user_name>admin</user_name>
+   </created_by>
+   <modified_by id="http://testserver/api/v1/users/1">
+       <blurb/>
+       <display_email/>
+       <email>admin@rpath.com</email>
+       <external_auth>false</external_auth>
+       <full_name>Administrator</full_name>
+       <is_admin>true</is_admin>
+       <roles id="http://testserver/api/v1/users/1/roles"/>
+       <user_id>1</user_id>
+       <user_name>admin</user_name>
+    </modified_by>
     <grant_id>1</grant_id>
-    <modified_by id="http://testserver/api/v1/users/1"/>
     <permission id="http://testserver/api/v1/rbac/permissions/2">
       <description>Modify Member Resources</description>
       <name>ModMembers</name>
     </permission>
-    <queryset id="http://testserver/api/v1/query_sets/17"/>
+    <queryset id="http://testserver/api/v1/query_sets/16"/>
     <role id="http://testserver/api/v1/rbac/roles/1">
       <description/>
       <name>sysadmin</name>
@@ -272,44 +610,104 @@ permission_list_xml_for_role = """
 """
 
 permission_queryset_xml = """
-<grants count="3" end_index="2" filter_by="" full_collection="http://testserver/api/v1/query_sets/13/all" id="http://testserver/api/v1/query_sets/13/all;start_index=0;limit=10" limit="10" next_page="" num_pages="1" order_by="" per_page="10" previous_page="" start_index="0">
+<grants count="3" end_index="2" filter_by="" full_collection="http://testserver/api/v1/query_sets/12/all" id="http://testserver/api/v1/query_sets/12/all;start_index=0;limit=10" limit="10" next_page="" num_pages="1" order_by="" per_page="10" previous_page="" start_index="0">
    <grant id="http://testserver/api/v1/rbac/grants/1">
-     <created_by id="http://testserver/api/v1/users/1"/>
+  <created_by id="http://testserver/api/v1/users/1">
+      <blurb/>
+      <display_email/>
+      <email>admin@rpath.com</email>
+      <external_auth>false</external_auth>
+      <full_name>Administrator</full_name>
+      <is_admin>true</is_admin>
+      <roles id="http://testserver/api/v1/users/1/roles"/>
+      <user_id>1</user_id>
+      <user_name>admin</user_name>
+   </created_by>
+   <modified_by id="http://testserver/api/v1/users/1">
+       <blurb/>
+       <display_email/>
+       <email>admin@rpath.com</email>
+       <external_auth>false</external_auth>
+       <full_name>Administrator</full_name>
+       <is_admin>true</is_admin>
+       <roles id="http://testserver/api/v1/users/1/roles"/>
+       <user_id>1</user_id>
+       <user_name>admin</user_name>
+    </modified_by>
      <grant_id>1</grant_id>
-     <modified_by id="http://testserver/api/v1/users/1"/>
      <permission id="http://testserver/api/v1/rbac/permissions/2">
        <description>Modify Member Resources</description>
        <name>ModMembers</name>
      </permission>
-     <queryset id="http://testserver/api/v1/query_sets/17"/>
+     <queryset id="http://testserver/api/v1/query_sets/16"/>
     <role id="http://testserver/api/v1/rbac/roles/1">
       <description/>
       <name>sysadmin</name>
     </role>
    </grant>
    <grant id="http://testserver/api/v1/rbac/grants/2">
-     <created_by id="http://testserver/api/v1/users/1"/>
      <grant_id>2</grant_id>
-     <modified_by id="http://testserver/api/v1/users/1"/>
+    <created_by id="http://testserver/api/v1/users/1">
+      <blurb/>
+      <display_email/>
+      <email>admin@rpath.com</email>
+      <external_auth>false</external_auth>
+      <full_name>Administrator</full_name>
+      <is_admin>true</is_admin>
+      <roles id="http://testserver/api/v1/users/1/roles"/>
+      <user_id>1</user_id>
+      <user_name>admin</user_name>
+    </created_by>
+    <modified_by id="http://testserver/api/v1/users/1">
+      <blurb/>
+      <display_email/>
+      <email>admin@rpath.com</email>
+      <external_auth>false</external_auth>
+      <full_name>Administrator</full_name>
+      <is_admin>true</is_admin>
+      <roles id="http://testserver/api/v1/users/1/roles"/>
+      <user_id>1</user_id>
+      <user_name>admin</user_name>
+    </modified_by>
     <permission id="http://testserver/api/v1/rbac/permissions/1">
       <description>Read Member Resources</description>
       <name>ReadMembers</name>
      </permission>
-     <queryset id="http://testserver/api/v1/query_sets/17"/>
+     <queryset id="http://testserver/api/v1/query_sets/16"/>
      <role id="http://testserver/api/v1/rbac/roles/2">
       <description/>
       <name>developer</name>
     </role>
    </grant>
    <grant id="http://testserver/api/v1/rbac/grants/3">
-     <created_by id="http://testserver/api/v1/users/1"/>
+  <created_by id="http://testserver/api/v1/users/1">
+      <blurb/>
+      <display_email/>
+      <email>admin@rpath.com</email>
+      <external_auth>false</external_auth>
+      <full_name>Administrator</full_name>
+      <is_admin>true</is_admin>
+      <roles id="http://testserver/api/v1/users/1/roles"/>
+      <user_id>1</user_id>
+      <user_name>admin</user_name>
+   </created_by>
+   <modified_by id="http://testserver/api/v1/users/1">
+       <blurb/>
+       <display_email/>
+       <email>admin@rpath.com</email>
+       <external_auth>false</external_auth>
+       <full_name>Administrator</full_name>
+       <is_admin>true</is_admin>
+       <roles id="http://testserver/api/v1/users/1/roles"/>
+       <user_id>1</user_id>
+       <user_name>admin</user_name>
+    </modified_by>
      <grant_id>3</grant_id>
-     <modified_by id="http://testserver/api/v1/users/1"/>
      <permission id="http://testserver/api/v1/rbac/permissions/2">
         <description>Modify Member Resources</description>
         <name>ModMembers</name>
      </permission>
-     <queryset id="http://testserver/api/v1/query_sets/16"/>
+     <queryset id="http://testserver/api/v1/query_sets/15"/>
      <role id="http://testserver/api/v1/rbac/roles/2">
       <description/>
       <name>developer</name>
@@ -325,13 +723,33 @@ permission_get_xml = """
      <name>ModMembers</name>
   </permission>
   <grant_id>1</grant_id>
-  <queryset id="http://testserver/api/v1/query_sets/17"/>
+  <queryset id="http://testserver/api/v1/query_sets/16"/>
   <role id="http://testserver/api/v1/rbac/roles/1">
     <description/>
     <name>sysadmin</name>
   </role>
-  <created_by id="http://testserver/api/v1/users/1"/>
-  <modified_by id="http://testserver/api/v1/users/1"/>
+  <created_by id="http://testserver/api/v1/users/1">
+      <blurb/>
+      <display_email/>
+      <email>admin@rpath.com</email>
+      <external_auth>false</external_auth>
+      <full_name>Administrator</full_name>
+      <is_admin>true</is_admin>
+      <roles id="http://testserver/api/v1/users/1/roles"/>
+      <user_id>1</user_id>
+      <user_name>admin</user_name>
+   </created_by>
+   <modified_by id="http://testserver/api/v1/users/1">
+       <blurb/>
+       <display_email/>
+       <email>admin@rpath.com</email>
+       <external_auth>false</external_auth>
+       <full_name>Administrator</full_name>
+       <is_admin>true</is_admin>
+       <roles id="http://testserver/api/v1/users/1/roles"/>
+       <user_id>1</user_id>
+       <user_name>admin</user_name>
+    </modified_by>
 </grant>
 """
 
@@ -341,7 +759,7 @@ permission_post_xml_input="""
      <description>Modify Member Resources</description>
      <name>ModMembers</name>
   </permission>
-  <queryset id="http://testserver/api/v1/query_sets/15"/>
+  <queryset id="http://testserver/api/v1/query_sets/14"/>
   <role id="http://testserver/api/v1/rbac/roles/2"/>
 </grant>
 """
@@ -352,14 +770,34 @@ permission_post_xml_output="""
      <description>Modify Member Resources</description>
      <name>ModMembers</name>
   </permission>
-  <queryset id="http://testserver/api/v1/query_sets/15"/>
+  <queryset id="http://testserver/api/v1/query_sets/14"/>
   <grant_id>4</grant_id>
   <role id="http://testserver/api/v1/rbac/roles/2">
     <description/>
     <name>developer</name>
   </role>
-  <created_by id="http://testserver/api/v1/users/1"/>
-  <modified_by id="http://testserver/api/v1/users/1"/>
+  <created_by id="http://testserver/api/v1/users/1">
+      <blurb/>
+      <display_email/>
+      <email>admin@rpath.com</email>
+      <external_auth>false</external_auth>
+      <full_name>Administrator</full_name>
+      <is_admin>true</is_admin>
+      <roles id="http://testserver/api/v1/users/1/roles"/>
+      <user_id>1</user_id>
+      <user_name>admin</user_name>
+   </created_by>
+   <modified_by id="http://testserver/api/v1/users/1">
+       <blurb/>
+       <display_email/>
+       <email>admin@rpath.com</email>
+       <external_auth>false</external_auth>
+       <full_name>Administrator</full_name>
+       <is_admin>true</is_admin>
+       <roles id="http://testserver/api/v1/users/1/roles"/>
+       <user_id>1</user_id>
+       <user_name>admin</user_name>
+    </modified_by>
 </grant>
 """
 
@@ -369,7 +807,7 @@ permission_put_xml_input="""
     <description>Modify Member Resources</description>
     <name>ModMembers</name>
   </permission>
-  <queryset id="http://testserver/api/v1/query_sets/17"/>
+  <queryset id="http://testserver/api/v1/query_sets/16"/>
   <role id="http://testserver/api/v1/rbac/roles/3">
     <description/>
     <name>intern</name>
@@ -384,12 +822,32 @@ permission_put_xml_output="""
       <name>ModMembers</name>
    </permission>
    <grant_id>1</grant_id>
-   <queryset id="http://testserver/api/v1/query_sets/17"/>
+   <queryset id="http://testserver/api/v1/query_sets/16"/>
    <role id="http://testserver/api/v1/rbac/roles/3">
     <name>intern</name>
    </role>
-   <created_by id="http://testserver/api/v1/users/1"/>
-   <modified_by id="http://testserver/api/v1/users/1"/>
+  <created_by id="http://testserver/api/v1/users/1">
+      <blurb/>
+      <display_email/>
+      <email>admin@rpath.com</email>
+      <external_auth>false</external_auth>
+      <full_name>Administrator</full_name>
+      <is_admin>true</is_admin>
+      <roles id="http://testserver/api/v1/users/1/roles"/>
+      <user_id>1</user_id>
+      <user_name>admin</user_name>
+   </created_by>
+   <modified_by id="http://testserver/api/v1/users/1">
+       <blurb/>
+       <display_email/>
+       <email>admin@rpath.com</email>
+       <external_auth>false</external_auth>
+       <full_name>Administrator</full_name>
+       <is_admin>true</is_admin>
+       <roles id="http://testserver/api/v1/users/1/roles"/>
+       <user_id>1</user_id>
+       <user_name>admin</user_name>
+    </modified_by>
  </grant>
 """
 
@@ -401,8 +859,28 @@ user_role_list_xml = """
     <role_id>1</role_id>
     <name>sysadmin</name>
     <description/>
-    <created_by id="http://testserver/api/v1/users/1"/>
-    <modified_by id="http://testserver/api/v1/users/1"/>
+  <created_by id="http://testserver/api/v1/users/1">
+      <blurb/>
+      <display_email/>
+      <email>admin@rpath.com</email>
+      <external_auth>false</external_auth>
+      <full_name>Administrator</full_name>
+      <is_admin>true</is_admin>
+      <roles id="http://testserver/api/v1/users/1/roles"/>
+      <user_id>1</user_id>
+      <user_name>admin</user_name>
+   </created_by>
+   <modified_by id="http://testserver/api/v1/users/1">
+       <blurb/>
+       <display_email/>
+       <email>admin@rpath.com</email>
+       <external_auth>false</external_auth>
+       <full_name>Administrator</full_name>
+       <is_admin>true</is_admin>
+       <roles id="http://testserver/api/v1/users/1/roles"/>
+       <user_id>1</user_id>
+       <user_name>admin</user_name>
+    </modified_by>
   </role>
   <role id="http://testserver/api/v1/rbac/roles/2">
     <grants id="http://testserver/api/v1/rbac/roles/2/grants/"/>
@@ -410,8 +888,28 @@ user_role_list_xml = """
     <role_id>2</role_id>
     <name>developer</name>
     <description/>
-    <created_by id="http://testserver/api/v1/users/1"/>
-    <modified_by id="http://testserver/api/v1/users/1"/>
+  <created_by id="http://testserver/api/v1/users/1">
+      <blurb/>
+      <display_email/>
+      <email>admin@rpath.com</email>
+      <external_auth>false</external_auth>
+      <full_name>Administrator</full_name>
+      <is_admin>true</is_admin>
+      <roles id="http://testserver/api/v1/users/1/roles"/>
+      <user_id>1</user_id>
+      <user_name>admin</user_name>
+   </created_by>
+   <modified_by id="http://testserver/api/v1/users/1">
+       <blurb/>
+       <display_email/>
+       <email>admin@rpath.com</email>
+       <external_auth>false</external_auth>
+       <full_name>Administrator</full_name>
+       <is_admin>true</is_admin>
+       <roles id="http://testserver/api/v1/users/1/roles"/>
+       <user_id>1</user_id>
+       <user_name>admin</user_name>
+    </modified_by>
   </role>
 </roles>
 """
@@ -423,8 +921,28 @@ user_role_get_xml = """
   <role_id>1</role_id>
   <name>sysadmin</name>
   <description/>
-  <created_by id="http://testserver/api/v1/users/1"/>
-  <modified_by id="http://testserver/api/v1/users/1"/>
+  <created_by id="http://testserver/api/v1/users/1">
+      <blurb/>
+      <display_email/>
+      <email>admin@rpath.com</email>
+      <external_auth>false</external_auth>
+      <full_name>Administrator</full_name>
+      <is_admin>true</is_admin>
+      <roles id="http://testserver/api/v1/users/1/roles"/>
+      <user_id>1</user_id>
+      <user_name>admin</user_name>
+   </created_by>
+   <modified_by id="http://testserver/api/v1/users/1">
+       <blurb/>
+       <display_email/>
+       <email>admin@rpath.com</email>
+       <external_auth>false</external_auth>
+       <full_name>Administrator</full_name>
+       <is_admin>true</is_admin>
+       <roles id="http://testserver/api/v1/users/1/roles"/>
+       <user_id>1</user_id>
+       <user_name>admin</user_name>
+    </modified_by>
 </role>
 """
 
@@ -475,13 +993,33 @@ user_role_post_bad_xml_input = """
 
 user_role_post_xml_output = """
 <role id="http://testserver/api/v1/rbac/roles/3">
-  <created_by id="http://testserver/api/v1/users/1"/>
   <description/>
   <grants id="http://testserver/api/v1/rbac/roles/3/grants/"/>
   <users id="http://testserver/api/v1/rbac/roles/3/users/"/>
-  <modified_by id="http://testserver/api/v1/users/1"/>
   <name>intern</name>
   <role_id>3</role_id>
+  <created_by id="http://testserver/api/v1/users/1">
+      <blurb/>
+      <display_email/>
+      <email>admin@rpath.com</email>
+      <external_auth>false</external_auth>
+      <full_name>Administrator</full_name>
+      <is_admin>true</is_admin>
+      <roles id="http://testserver/api/v1/users/1/roles"/>
+      <user_id>1</user_id>
+      <user_name>admin</user_name>
+   </created_by>
+   <modified_by id="http://testserver/api/v1/users/1">
+       <blurb/>
+       <display_email/>
+       <email>admin@rpath.com</email>
+       <external_auth>false</external_auth>
+       <full_name>Administrator</full_name>
+       <is_admin>true</is_admin>
+       <roles id="http://testserver/api/v1/users/1/roles"/>
+       <user_id>1</user_id>
+       <user_name>admin</user_name>
+    </modified_by>
 </role>
 """
 
@@ -493,8 +1031,28 @@ user_role_get_list_xml_after_delete = """
     <role_id>2</role_id>
     <name>developer</name>
     <description/>
-    <created_by id="http://testserver/api/v1/users/1"/>
-    <modified_by id="http://testserver/api/v1/users/1"/>
+  <created_by id="http://testserver/api/v1/users/1">
+      <blurb/>
+      <display_email/>
+      <email>admin@rpath.com</email>
+      <external_auth>false</external_auth>
+      <full_name>Administrator</full_name>
+      <is_admin>true</is_admin>
+      <roles id="http://testserver/api/v1/users/1/roles"/>
+      <user_id>1</user_id>
+      <user_name>admin</user_name>
+   </created_by>
+   <modified_by id="http://testserver/api/v1/users/1">
+       <blurb/>
+       <display_email/>
+       <email>admin@rpath.com</email>
+       <external_auth>false</external_auth>
+       <full_name>Administrator</full_name>
+       <is_admin>true</is_admin>
+       <roles id="http://testserver/api/v1/users/1/roles"/>
+       <user_id>1</user_id>
+       <user_name>admin</user_name>
+    </modified_by>
   </role>
 </roles>
 """

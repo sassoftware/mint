@@ -28,8 +28,7 @@ from conary.dbstore import sqlerrors, sqllib
 log = logging.getLogger(__name__)
 
 # database schema major version
-RBUILDER_DB_VERSION = sqllib.DBversion(58, 75)
-
+RBUILDER_DB_VERSION = sqllib.DBversion(59, 4)
 
 def _createTrigger(db, table, column="changed"):
     retInsert = db.createTrigger(table, column, "INSERT")
@@ -67,7 +66,12 @@ def _createUsers(db):
             timeAccessed        numeric(14,3),
             active              smallint,
             blurb               text,
-            is_admin            boolean         NOT NULL    DEFAULT false
+            is_admin            boolean         NOT NULL    DEFAULT false,
+            timeModified        numeric(14,3),
+            created_by          integer
+                REFERENCES Users ON DELETE SET NULL,
+            modified_by         integer
+                REFERENCES Users ON DELETE SET NULL
         ) %(TABLEOPTS)s""" % db.keywords)
         db.tables['Users'] = []
     db.createIndex('Users', 'UsersActiveIdx', 'username, active')
@@ -447,6 +451,17 @@ def _createBuilds(db):
             ip                  varchar(64)     NOT NULL
         ) %(TABLEOPTS)s """ % db.keywords)
         db.tables['UrlDownloads'] = []
+
+    createTable(db, 'auth_tokens', """
+        CREATE TABLE auth_tokens (
+            token_id            %(BIGPRIMARYKEY)s,
+            token               text            NOT NULL UNIQUE,
+            expires_date        timestamptz     NOT NULL,
+            user_id             integer         NOT NULL
+                REFERENCES Users ON UPDATE CASCADE ON DELETE CASCADE,
+            image_id            integer
+                REFERENCES Builds ON UPDATE CASCADE ON DELETE CASCADE
+        )""")
 
 
 def _createCommits(db):
@@ -2062,21 +2077,33 @@ def _createPKI(db):
 
 
 def _addQuerySet(db, name, description, resource_type, can_modify,
-        filter_id=None, presentation_type=None):
+        filter_id=None, presentation_type=None, public=False,
+        static=False, version=None):
     """Add a new query set"""
 
     if presentation_type is None:
         presentation_type = resource_type
 
     # add the query set
-    _addTableRows(db, "querysets_queryset", "name",
-        [dict(name=name, resource_type=resource_type,
+    options = dict(name=name, resource_type=resource_type,
             description=description,
             created_date=str(datetime.datetime.now(tz.tzutc())),
             modified_date=str(datetime.datetime.now(tz.tzutc())),
             presentation_type=presentation_type,
-            can_modify=can_modify),
-        ])
+            can_modify=can_modify,
+    )
+
+    # various prior migrations didn't bother to fork this method
+    # so this is how we're handling it to avoid a lot of method
+    # cloning.. don't send all options to older migrations because
+    # those columns aren't added yet
+
+    if not version or version >= (59, 0):
+        options['is_public'] = public
+    if not version or version >= (59, 4):
+        options['is_static'] = static
+ 
+    _addTableRows(db, "querysets_queryset", "name", [options])    
 
     # add the query tag
     qsId = _getRowPk(db, "querysets_queryset", "query_set_id",
@@ -2121,106 +2148,106 @@ def _addQuerySetChildToInfrastructureSystems(db, child_qs_id):
     return _addQuerySetChild(db, qsId, child_qs_id)
 
 
-def _createInfrastructureSystemsQuerySetSchema(db):
+def _createInfrastructureSystemsQuerySetSchema(db, version=None):
     """Add the infrastructure systems query set"""
     filterId = _addQuerySetFilterEntry(db, "system_type.infrastructure",
             "EQUAL", "true")
     _addQuerySet(db, "Infrastructure Systems",
             "Systems that make up the rPath infrastructure", "system",
-            False, filterId)
+            False, filterId, version=version)
     return True
 
 
-def _createWindowsBuildSystemsQuerySet(db):
+def _createWindowsBuildSystemsQuerySet(db, version=None):
     """Add the windows build systems query set"""
     filterId = _addQuerySetFilterEntry(db, "system_type.name", "EQUAL",
             "infrastructure-windows-build-node")
     qsId = _addQuerySet(db, "rPath Windows Build Services",
             "rPath infrastructure services for "
-            "building Windows packages/images", "system", False, filterId)
+            "building Windows packages/images", "system", False, filterId,
+            version=version)
     _addQuerySetChildToInfrastructureSystems(db, qsId)
     return True
 
 
-def _createUpdateSystemsQuerySet(db):
+def _createUpdateSystemsQuerySet(db, version=None):
     """Add the windows build systems query set"""
     filterId = _addQuerySetFilterEntry(db, "system_type.name", "EQUAL",
             "infrastructure-management-node")
     qsId = _addQuerySet(db, "rPath Update Services",
             "rPath infrastructure services for managing systems",
-            "system", False, filterId)
+            "system", False, filterId, version=version)
     _addQuerySetChildToInfrastructureSystems(db, qsId)
     return True
 
 
-def _createAllProjectBranchStages13(db):
+def _createAllProjectBranchStages13(db, version=None):
     """Add the project branch stages query set"""
 
     # do not change this, froxen to migrate13
     # (NOTE -- this value will NOT be in the final result schema and is wrong!)
     filterId = _addQuerySetFilterEntry(db, "name", "IS_NULL", "False")
     _addQuerySet(db, "All Projects", "All projects",
-            "project_branch_stage", False, filterId, "project")
+            "project_branch_stage", False, filterId, "project", public=True,
+             version=(58,13))
     return True
 
 
-def _createAllPlatformBranchStages(db):
-    """Add the platform branch stages query set"""
-    # AllFilterId is None
-    filterId = _addQuerySetFilterEntry(db, "platform.name", "IS_NULL", "false")
-    _addQuerySet(db, "All Platforms", "All platforms",
-            "project_branch_stage", False, filterId, "platform")
-    return True
-
-
-def _createAllProjectBranchStages(db):
+def _createAllProjectBranchStages(db, version=None):
     """Add the project branch stages query set"""
     filterId = _addQuerySetFilterEntry(db, "project_branch_stage.name",
             "IS_NULL", "false")
     _addQuerySet(db, "All Project Stages", "All project stages",
-            "project_branch_stage", False, filterId, "project")
+            "project_branch_stage", False, filterId, "project", public=True,
+            version=version)
     return True
 
 
-def _createAllProjects(db):
+def _createAllProjects(db, version=None):
     """Add the projects query set"""
     # filterId = _getAllFilterId(db)
     filterId = _addQuerySetFilterEntry(db, "project.name", "IS_NULL", "false")
     _addQuerySet(db, "All Projects", "All projects", "project", False,
-            filterId)
+            filterId, public=True, version=version)
     return True
 
+def _createAllUsers(db, version=None):
+    """Add the all users query set"""
+    filterId = _addQuerySetFilterEntry(db, "name", "IS_NULL", "false")
+    _addQuerySet(db, "All Users", "All users", "user", False,
+            filterId, public=True, version=version)
+    return True
 
-def _createAllSystems(db):
+def _createAllSystems(db, version=None):
     """Add the all systems query set"""
     filterId = _addQuerySetFilterEntry(db, "system.name", "IS_NULL", "false")
     _addQuerySet(db, "All Systems", "All systems", "system", False,
-            filterId)
+            filterId, public=True, version=version)
     return True
 
-def _createAllTargets(db):
+def _createAllTargets(db, version=None):
     """Add the all targets query set"""
     filterId = _addQuerySetFilterEntry(db, "target.name", "IS_NULL", "false")
     _addQuerySet(db, "All Targets", "All targets", "target", False,
-            filterId)
+            filterId, public=True, version=version)
     return True
 
 
-def _createAllRoles(db):
+def _createAllRoles(db, version=None):
     """Add the all roles query set"""
     filterId = _addQuerySetFilterEntry(db, "rbac_role.role_id", "IS_NULL",
             "false")
     _addQuerySet(db, "All Roles", "All roles", "role", False, filterId,
-            'rbac')
+            'rbac', version=version)
     return True
 
 
-def _createAllGrants(db):
+def _createAllGrants(db, version=None):
     """Add the all systems query set"""
     filterId = _addQuerySetFilterEntry(db, "rbac_permission.permission_id",
             "IS_NULL", "false")
     _addQuerySet(db, "All Grants", "All grants", "grant", False,
-            filterId, 'rbac')
+            filterId, 'rbac', version=version)
     return True
 
 
@@ -2237,7 +2264,9 @@ def _createQuerySetSchema(db):
             "tagged_date" TIMESTAMP WITH TIME ZONE,
             "resource_type" TEXT NOT NULL,
             "presentation_type" TEXT,
-            "can_modify" BOOLEAN NOT NULL DEFAULT TRUE
+            "can_modify" BOOLEAN NOT NULL DEFAULT TRUE,
+            "is_public" BOOLEAN NOT NULL DEFAULT FALSE,
+            "is_static" BOOLEAN NOT NULL DEFAULT FALSE
         )""")
 
     createTable(db, 'querysets_filterentry', """
@@ -2264,7 +2293,7 @@ def _createQuerySetSchema(db):
         )""")
 
     # unique value was 'name', not queryset_id
-    _addTableRows(db, "querysets_queryset", "name", [
+    qs_rows=[
          dict(name="Active Systems", resource_type="system",
             description="Active Systems",
             created_date=str(datetime.datetime.now(tz.tzutc())),
@@ -2286,15 +2315,10 @@ def _createQuerySetSchema(db):
             can_modify=False,
             presentation_type='system'
          ),
-         dict(name="All Users", resource_type='user',
-            description='All users',
-            created_date=str(datetime.datetime.now(tz.tzutc())),
-            modified_date=str(datetime.datetime.now(tz.tzutc())),
-            can_modify=False,
-            presentation_type='user'
-         )
-    ])
+    ]
+    _addTableRows(db, "querysets_queryset", "name", qs_rows)
 
+    _createAllUsers(db)
     _createAllSystems(db)
 
     allQSId = _getRowPk(db, "querysets_queryset", "query_set_id",
@@ -2877,7 +2901,6 @@ def createSchema(db, doCommit=True, cfg=None):
     _createWindowsBuildSystemsQuerySet(db)
     _createUpdateSystemsQuerySet(db)
     _createAllProjectBranchStages(db)
-    _createAllPlatformBranchStages(db)
     _createAllProjects(db)
     _createChangeLogSchema(db)
     _createPackageSchema(db)

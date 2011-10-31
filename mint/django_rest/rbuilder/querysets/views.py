@@ -11,7 +11,6 @@ from django.http import HttpResponseRedirect
 
 from mint.django_rest.deco import return_xml, requires, access, xObjRequires
 from mint.django_rest.rbuilder import service
-from mint.django_rest.rbuilder.querysets import filterdescriptors
 from mint.django_rest.rbuilder.querysets import models
 from mint.django_rest.rbuilder.rbac.rbacauth import rbac
 from mint.django_rest.rbuilder.errors import PermissionDenied
@@ -20,6 +19,11 @@ from mint.django_rest.rbuilder.rbac.manager.rbacmanager import \
 
 def rbac_can_read_queryset(view, request, query_set_id, *args, **kwargs):
     obj = view.mgr.getQuerySet(query_set_id)
+    if obj.is_public:
+        # existance of querysets like "All Systems", etc, are not stealthed.
+        # but may vary in size depending on the user accessing them's permissions
+        # (ReadMember) on their contents.
+        return True
     user = view.mgr.getSessionInfo().user[0]
     ok = view.mgr.userHasRbacPermission(user, obj, READSET)
     return ok
@@ -34,8 +38,11 @@ class BaseQuerySetService(service.BaseService):
 
 class QuerySetService(BaseQuerySetService):
 
-    # rbac is handled semimanually for this function, because it is the only
-    # on that has result filtering
+    # rbac is handled semimanually for this function -- show only 
+    # querysets that we have permission to see
+    # but don't use full rbac code, because that is implemented using querysets
+    # and is too meta.
+
     @return_xml
     @access.authenticated
     def rest_GET(self, request, query_set_id=None):
@@ -45,7 +52,7 @@ class QuerySetService(BaseQuerySetService):
             return self.mgr.filterRbacQuerysets(user, querysets, request)
         else:
             queryset = self.mgr.getQuerySet(query_set_id)
-            if not self.mgr.userHasRbacPermission(
+            if not queryset.is_public and not self.mgr.userHasRbacPermission(
                 user, queryset, READSET, request
             ):
                 raise PermissionDenied()

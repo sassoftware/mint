@@ -11,9 +11,10 @@ from mint.django_rest.rbuilder.manager import basemanager
 from mint.django_rest.rbuilder.users import models
 from mint import mint_error, server
 
-exposed = basemanager.exposed
+from django.db import connection, transaction
+import time
 
-from django.db import connection, IntegrityError, transaction
+exposed = basemanager.exposed
 
 class UserExceptions(object):
     class BaseException(errors.RbuilderError):
@@ -51,7 +52,7 @@ class UsersManager(basemanager.BaseManager):
         return Users
 
     @exposed
-    def addUser(self, user):
+    def addUser(self, user, by_user=None):
         # Sanitize user fields
         if not user.display_email:
             user.display_email = ''
@@ -76,7 +77,11 @@ class UsersManager(basemanager.BaseManager):
             # Copy "model" field to "database" field, now that caller's
             # adminship has been proven.
             dbuser.setIsAdmin(is_admin)
-            dbuser.save()
+        else:
+            dbuser.setIsAdmin(False) 
+        dbuser.created_by  = by_user
+        dbuser.modified_by = by_user
+        dbuser.save()
         self.mgr.retagQuerySetsByType('user')
         return dbuser
 
@@ -101,7 +106,7 @@ class UsersManager(basemanager.BaseManager):
         return models.User.objects.get(user_name=user.user_name)
 
     @exposed
-    def updateUser(self, user_id, user):
+    def updateUser(self, user_id, user, by_user=None):
         if not self.auth.admin:
             if user_id != str(self.user.user_id):
                 # Non-admin users can only edit themselves
@@ -121,6 +126,8 @@ class UsersManager(basemanager.BaseManager):
             if user_id != str(self.user.user_id):
                 is_admin = self._toBool(user.is_admin)
                 dbuser.setIsAdmin(is_admin)
+        dbuser.modified_by = by_user
+        dbuser.modified_date = time.time()
         dbuser.save()
         dbuser = self._setPassword(dbuser, user.password)
         return dbuser

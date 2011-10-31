@@ -78,6 +78,16 @@ def strOperatorChoices():
     operators = [modellib.operatorMap[o] for o in modellib.operatorMap
         if o not in ('LESS_THAN', 'LESS_THAN_OR_EQUAL', 'GREATER_THAN',
             'GREATER_THAN_OR_EQUAL', 'IS_NULL', None)]
+
+    def operator_sorter(one, two):
+        # put negative choices to the bottom of the list
+        if one.filterTerm.startswith("NOT") and not two.filterTerm.startswith("NOT"):
+            return 1
+        if two.filterTerm.startswith("NOT") and not one.filterTerm.startswith("NOT"):
+            return -1
+        return cmp(one.description, two.description)
+    operators.sort(cmp=operator_sorter)
+
     for operator in operators:
         operatorChoices.choices.append(OperatorChoice(operator.filterTerm, 
             operator.description))
@@ -191,35 +201,15 @@ def getFilterDescriptor(model, queryset):
        Sort alphabetically except that the most important item for each filter
        type must rise to the top
        '''
-
        if one == two:
            return 0
-
-       # TODO: take filter sort key from the queryset model
-       if queryset.resource_type == 'system':
-           if one.field_label == 'System name':
-               return -1
-       if queryset.resource_type == 'user':
-           if one.field_label == 'User name':
-               return -1
-       if queryset.resource_type == 'project':
-           if one.field_label == 'Project name':
-               return -1
-       if queryset.resource_type == 'project_branch_stage':
-           if one.field_label == 'Stage name':
-               return -1
-       if queryset.resource_type == 'grant':
-           if one.field_label == 'Grant name':
-               return -1
-       if queryset.resource_type == 'role':
-           if one.field_label == 'Role name':
-               return -1
-       if queryset.resource_type == 'target':
-           if one.field_label == 'Target name':
-               return -1
+       search_key = queryset.searchKey()
+       if one.field_label == search_key:
+           return -1
+       if two.field_label == search_key:
+           return 1
        return cmp(one.field_label, two.field_label)
 
     fd.field_descriptors.descriptors.sort(cmp=filter_sort)
-
     return fd
 

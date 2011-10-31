@@ -1,5 +1,5 @@
 #
-# Copyright (c) 2009 rPath, Inc.
+# Copyright (c) 2011 rPath, Inc.
 #
 # This program is distributed under the terms of the Common Public License,
 # version 1.0. A copy of this license should have been distributed with this
@@ -12,12 +12,16 @@
 # full details.
 #
 
+import logging
 from mint.lib import data
 from mint.lib import database
 from mint import mint_error
 
 dbReader = database.dbReader
 dbWriter = database.dbWriter
+
+log = logging.getLogger(__name__)
+
 
 class PlatformsContentSourceTypesTable(database.DatabaseTable):
     name = 'platformsContentSourceTypes'
@@ -37,6 +41,8 @@ class PlatformsContentSourceTypesTable(database.DatabaseTable):
 
     @dbWriter
     def delete(self, cu, platformId, contentSourceType):
+        log.info("Deleting content source type %s from platform %s",
+                contentSourceType, platformId)
         sql = """
             DELETE
               FROM platformsContentSourceTypes
@@ -56,6 +62,8 @@ class PlatformsContentSourceTypesTable(database.DatabaseTable):
             try:
                 self.new(
                     platformId=platformId, contentSourceType=contentSourceType)
+                log.info("Added content source type %s to platform %s",
+                        contentSourceType, platformId)
             except mint_error.DuplicateItem:
                 # No need to raise this, the data is already created.
                 pass
@@ -211,6 +219,8 @@ class PlatformsPlatformSourcesTable(database.DatabaseTable):
         oldIds = set(x['platformSourceId']
             for x in self.getAllByPlatformId(platformId))
         for platformSourceId in newIds.difference(oldIds):
+            log.info("Adding platform source %s to platform %s",
+                    platformSourceId, platformId)
             self.new(platformId=platformId,
                 platformSourceId=platformSourceId)
         # XXX is removal necessary?

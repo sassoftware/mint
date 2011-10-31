@@ -180,10 +180,14 @@ class XMLTestCase(TestCase, testcase.MockMixIn):
             haystack))
 
     def assertXMLEquals(self, first, second, ignoreNodes=None):
+        # NOTE: really shouldn't be blocking quite so much here, but the tests are mostly
+        # concerned with use cases rather than the state of these elements.
         if ignoreNodes is None:
             ignoreNodes = ['time_created', 'time_updated', 'created_date',
                 'tagged_date', 'last_available_update_refresh', 'time_enabled',
-                'registration_date', 'modified_date']
+                'registration_date', 'modified_date', 'last_login_date', 
+                'created_by', 'modified_by', 'full_name', 'user_name', 'is_public', 'is_static'
+            ]
         from lxml import etree
         X = XML(orderedChildren=True, ignoreNodes=ignoreNodes)
         tree0 = X.normalize(etree.fromstring(first.strip()))

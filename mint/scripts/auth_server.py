@@ -95,4 +95,9 @@ class AuthServerFactory(ti_protocol.ServerFactory):
         return result
 
     def _checkPAM(self, username, password):
+        if '\\' in username:
+            username = username.replace('\\', '@')
+        if '@' in username:
+            user, domain = username.split('@')
+            username = '%s@%s' % (user, domain.upper())
         return pam.authenticate(username, password, self.pamService)

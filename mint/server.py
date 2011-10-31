@@ -1677,9 +1677,8 @@ If you would not like to be %s %s of this project, you may resign from this proj
                 project = projects.Project(self, projectId)
 
                 if not project.external:
-                    authRepo = self._getProjectRepo(project)
-                    authRepo.changePassword(project.getFQDN(), username,
-                        newPassword)
+                    authRepo = self._getProjectRepo(project, useServer=True)
+                    authRepo.auth.changePassword(username, newPassword)
 
             self.users.changePassword(username, newPassword)
 
@@ -2464,8 +2463,9 @@ If you would not like to be %s %s of this project, you may resign from this proj
         self._addInternalConaryConfig(cc)
 
         cfgBuffer = StringIO.StringIO()
-        cc.displayKey('user', cfgBuffer)
         cc.displayKey('repositoryMap', cfgBuffer)
+        repoToken = os.urandom(16).encode('hex')
+        print >> cfgBuffer, 'user %s %s' % (self.auth.username, repoToken)
         cfgData = cfgBuffer.getvalue()
 
         r = {}
@@ -2481,7 +2481,9 @@ If you would not like to be %s %s of this project, you may resign from this proj
         r['project'] = {'name' : project.name,
                         'hostname' : project.hostname,
                         'label' : project.getLabel(),
-                        'conaryCfg' : cfgData}
+                        'conaryCfg' : cfgData,
+                        'repoToken': repoToken,
+                        }
         if buildDict['productVersionId']:
             r['proddefLabel'] = self._getProductVersionLabel(project,
                     buildDict['productVersionId'])
@@ -2981,8 +2983,13 @@ If you would not like to be %s %s of this project, you may resign from this proj
                         statusMessage="Failed to start image job - check logs")
                 raise
 
+    def _addRepoToken(self, buildId, jobData):
+        repoToken = jobData['project']['repoToken']
+        self.db.auth_tokens.addToken(repoToken, self.auth.userId, buildId)
+
     def startMcpImageJob(self, buildId, jobData):
         """Start a standard MCP image job."""
+        self._addRepoToken(buildId, jobData)
         client = self._getMcpClient()
         uuid = client.new_job(client.LOCAL_RBUILDER, json.dumps(jobData))
         self.buildData.setDataValue(buildId, 'uuid', uuid, data.RDT_STRING)
@@ -2990,6 +2997,7 @@ If you would not like to be %s %s of this project, you may resign from this proj
 
     def startWindowsImageJob(self, buildId, jobData):
         """Direct Windows image builds to rMake 3."""
+        self._addRepoToken(buildId, jobData)
         jsonData = json.dumps(jobData)
         cli = wig_client.WigClient(self._getRmakeClient())
         job_uuid, job = cli.createJob(jsonData, subscribe=False)
@@ -4762,10 +4770,6 @@ If you would not like to be %s %s of this project, you may resign from this proj
         dummy = self.users.get(userId)
         return self.users.getAMIBuildsForUser(userId)
 
-        if not affectedAMIIds:
-            return False
-
-        ec2Wrap = ec2.EC2Wrapper(authToken, self.cfg.proxy.get('https'))
     def getAvailablePlatforms(self):
         """
         Returns a list of available platforms and their names (descriptions).

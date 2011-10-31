@@ -9,6 +9,7 @@ import sys
 
 from mint.django_rest.rbuilder.users import manager_model
 from mint.django_rest.deco import D
+APIReadOnly = modellib.APIReadOnly
 
 class Users(modellib.Collection):
     class Meta:
@@ -21,6 +22,7 @@ class Users(modellib.Collection):
 class User(modellib.XObjIdModel):
 
     objects = manager_model.UserManager()
+    summary_view = ["user_name", "full_name"]
 
     user_id = D(models.AutoField(primary_key=True, db_column='userid'), "User id", short="User id")
     user_name = D(models.CharField(unique=True, max_length=128, db_column='username'), "User name", short="User name")
@@ -31,8 +33,9 @@ class User(modellib.XObjIdModel):
     passwd = modellib.XObjHidden(models.CharField(max_length=254, null=True))
     email = D(models.CharField(max_length=128), "User email", short="User email")
     display_email = D(models.TextField(db_column='displayemail'), "User display email", short="User display email")
-    created_date = D(modellib.DecimalField(max_digits=14, decimal_places=3, db_column='timecreated'), "User created date", short="User created date")
-    modified_date = D(modellib.DecimalField(max_digits=14, decimal_places=3, db_column='timeaccessed'), "User active", short="User active")
+    created_date = D(APIReadOnly(modellib.DecimalTimestampField(max_digits=14, decimal_places=3, db_column='timecreated')), "User created date", short="User created date")
+    last_login_date = D(APIReadOnly(modellib.DecimalTimestampField(max_digits=14, decimal_places=3, db_column='timeaccessed')), "User last login date", short="User last login date")
+    modified_date = D(APIReadOnly(modellib.DecimalTimestampField(max_digits=14, decimal_places=3, db_column='timemodified')), "User modified date", short="User modified date")
     active = modellib.XObjHidden(modellib.APIReadOnly(models.SmallIntegerField()))
     blurb = models.TextField()
     _is_admin = modellib.XObjHidden(modellib.APIReadOnly(
@@ -40,6 +43,11 @@ class User(modellib.XObjIdModel):
 
     is_admin = D(modellib.SyntheticField(), "User is admin?", short="User is admin?")
     external_auth = D(modellib.SyntheticField(models.BooleanField()), "User external auth?", short="User external auth?")
+
+    created_by = D(APIReadOnly(models.ForeignKey('User', related_name='+', db_column='created_by', null=True)), 
+        "User created by", short="User created by")
+    modified_by = D(APIReadOnly(models.ForeignKey('User', related_name='+', db_column='modified_by', null=True)), 
+        "User modified by", short="User modified by")
 
     # Field used for the clear-text password when it is to be
     # set/changed
@@ -121,7 +129,6 @@ class User(modellib.XObjIdModel):
         self.roles = modellib.HrefField(
            href="/api/v1/users/%s/roles" % self.user_id
         )
-
 
 class Session(modellib.XObjIdModel):
     class Meta:

@@ -7,7 +7,7 @@ from mint.lib import auth_client
 from hashlib import md5
 import base64
 import cPickle
-
+import time
 
 def getCookieAuth(request):
     # the pysid cookie contains the session reference that we can use to
@@ -78,15 +78,26 @@ class rBuilderBackend(object):
             salt = user.salt.decode('hex')
             m = md5(salt + password)
             if (m.hexdigest() == user.passwd):
+	        self.update_login_time(user)
                 return user
         if mintConfig:
             client = auth_client.getClient(mintConfig.authSocket)
             if client.checkPassword(username, password):
+	        self.update_login_time(user)
                 return user
         return None
+
+    def update_login_time(self, user):
+        '''
+        user logins already keep this updated (elsewhere), 
+        direct API hits also need it updated
+        '''
+        user.last_login_date = time.time()
+        user.save()
 
     def get_user(self, user_id):
         try:
             return User.objects.get(pk=user_id)
         except User.DoesNotExist:
             return None
+

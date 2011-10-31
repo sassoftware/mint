@@ -305,7 +305,7 @@ class ProjectService(service.BaseService):
         if project_short_name:
             if ProjectCallbacks.can_read_project(self, request, project_short_name):
                 return self.get(project_short_name)
-            raise PermissionDenied()
+            raise PermissionDenied(msg='Missing read permissions on project')
         else:
             # all security here done by the queryset
             qs = querymodels.QuerySet.objects.get(name='All Projects')

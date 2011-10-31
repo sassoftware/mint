@@ -529,19 +529,15 @@ class RepositoryHandle(object):
         userId = ANONYMOUS
         if mintToken.user != 'anonymous':
             # Check if the user's password is valid. getAuthToken will handle
-            # the determination of what access level they have.
-            cu = self._db.cursor()
-            cu.execute("""
-                SELECT userId, salt, passwd FROM Users WHERE username = ?
-                """, mintToken.user)
-            row = cu.fetchone()
-            if row:
-                maybeUserId, userSalt, userPass = row
-                if self._checkPassword(mintToken, userSalt, userPass):
-                    userId = maybeUserId
-                # If the password was not valid, just ignore it -- the password
-                # might actually be intended for something we're proxying to.
-                # See RBL-5269
+            # the determination of what access level they have. Authentication
+            # tokens are used as substitute passwords, so check those here as
+            # well.
+            # If the password is not valid, just ignore it -- the password
+            # might actually be intended for something we're proxying to.
+            # See RBL-5269
+            maybeUserId = self._getUserIdFromToken(mintToken)
+            if maybeUserId is not None:
+                userId = maybeUserId
         return self.getAuthToken(userId, level=None, authToken=mintToken,
                 extraRoles=extraRoles)
 
@@ -613,6 +609,35 @@ WHERE level >= 0
         else:
             # Not a member on a public project -> "user" level
             return userlevels.USER
+
+    def _getUserIdFromToken(self, mintToken):
+        cu = self._db.cursor()
+        cu.execute("""
+            SELECT * FROM (
+                SELECT userId, salt, passwd, 0 AS is_token
+                FROM Users
+                WHERE username = :user
+
+                UNION
+
+                SELECT userId, NULL AS salt, token AS passwd, 1 AS is_token
+                FROM Users u
+                JOIN auth_tokens t ON t.user_id = u.userId
+                WHERE username = :user AND expires_date >= now()
+            ) x ORDER BY is_token DESC
+            """, dict(user=mintToken.user))
+        # The preceding query can return one password and zero or many tokens,
+        # so check each one in turn. We could ask just for the matching token,
+        # but then if the query had a real password we would we leaking it to
+        # the database where it might get logged.
+        for userId, userSalt, userPass, isToken in cu:
+            if isToken:
+                if userPass == mintToken.password:
+                    return userId
+            else:
+                if self._checkPassword(mintToken, userSalt, userPass):
+                    return userId
+        return None
 
     def _checkPassword(self, mintToken, salt, digest):
         if mintToken.password is ValidPasswordToken:

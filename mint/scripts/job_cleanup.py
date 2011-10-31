@@ -69,9 +69,13 @@ class Script(GenericScript):
         # Skip builds newer than 1 minute, as there is a window between when
         # the job is created and when it is submitted to the dispatcher.
         cutoff = time.time() - 60
+        runningBuilds = set()
 
         for (buildId, timeCreated, rmk_uuid, mcp_uuid, title, amiId, status,
                 ) in cu:
+            # As a failsafe, start by assuming every build is running then try
+            # to prove that assumption wrong.
+            runningBuilds.add(buildId)
             if timeCreated > cutoff:
                 continue
             newStatus = jobstatus.FAILED
@@ -110,9 +114,26 @@ class Script(GenericScript):
                     newMessage = 'Job Finished'
                     newStatus = jobstatus.FINISHED
 
+            else:
+                # No idea what this is, so don't kill it.
+                continue
+
             log.info("Setting build %d status to %d %s", buildId, newStatus,
                     newMessage)
             cu2.execute("""UPDATE Builds SET status = ?, statusMessage = ?
                     WHERE buildId = ?""", newStatus, newMessage, buildId)
+            runningBuilds.remove(buildId)
+
+        # Sweep up dead authentication tokens that are related to images. Other
+        # tokens can be checked here once such a thing exists.
+        if runningBuilds:
+            # NOTE: This "NOT IN" implies that image_id is not NULL.
+            # NOTE 2: Injection safe because %d forces an integer type check
+            ids = ','.join(['%d' % x for x in runningBuilds])
+            cu.execute("DELETE FROM auth_tokens WHERE image_id NOT IN (%s)" %
+                    ids)
+        else:
+            cu.execute("DELETE FROM auth_tokens WHERE image_id IS NOT NULL")
+        cu.execute("DELETE FROM auth_tokens WHERE expires_date < now()")
 
         db.commit()

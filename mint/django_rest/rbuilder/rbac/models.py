@@ -84,10 +84,12 @@ class RbacRole(modellib.XObjIdModel):
         "creation date")
     modified_date = D(APIReadOnly(modellib.DateTimeUtcField(auto_now_add=True)),
         "modification date")
-    created_by   =  D(APIReadOnly(modellib.ForeignKey(usersmodels.User, null=True, 
-        related_name='+', db_column='created_by')), 'user who created this resource')
-    modified_by   =  D(APIReadOnly(modellib.ForeignKey(usersmodels.User, null=True, 
-        related_name='+', db_column='modified_by')), 'user who last modified this resource')
+    created_by   =  D(APIReadOnly(modellib.SerializedForeignKey(usersmodels.User, null=True, 
+        related_name='+', db_column='created_by', serialized_as='created_by')), 
+        'user who created this resource')
+    modified_by   =  D(APIReadOnly(modellib.SerializedForeignKey(usersmodels.User, null=True, 
+        related_name='+', db_column='modified_by', serialized_as='modified_by')), 
+        'user who last modified this resource')
     grants        =  D(modellib.SyntheticField(), 'permissions granted on this role')
     users         =  D(modellib.SyntheticField(), 'users with this role')
     
@@ -195,10 +197,10 @@ class RbacPermission(modellib.XObjIdModel):
         "creation date")
     modified_date = D(APIReadOnly(modellib.DateTimeUtcField(auto_now_add=True)),
         "modification date")
-    created_by   =  D(APIReadOnly(modellib.ForeignKey(usersmodels.User, null=True, 
-        related_name='+', db_column='created_by')), 'user who created this resource')
-    modified_by   =  D(APIReadOnly(modellib.ForeignKey(usersmodels.User, null=True, 
-        related_name='+', db_column='modified_by')), 'user who last modified this resource')
+    created_by   =  D(APIReadOnly(modellib.SerializedForeignKey(usersmodels.User, null=True, 
+        related_name='+', db_column='created_by', serialized_as='created_by')), 'user who created this resource')
+    modified_by   =  D(APIReadOnly(modellib.SerializedForeignKey(usersmodels.User, null=True, 
+        related_name='+', db_column='modified_by', serialized_as='modified_by')), 'user who last modified this resource')
 
 class RbacUserRoles(modellib.Collection):
     '''
@@ -250,10 +252,10 @@ class RbacUserRole(modellib.XObjIdModel):
         "creation date")
     modified_date = D(APIReadOnly(modellib.DateTimeUtcField(auto_now_add=True)),
         "modification date")
-    created_by   =  D(APIReadOnly(modellib.ForeignKey(usersmodels.User, null=True, 
-        related_name='+', db_column='created_by')), 'user who created this resource')
-    modified_by   =  D(APIReadOnly(modellib.ForeignKey(usersmodels.User, null=True, 
-        related_name='+', db_column='modified_by')), 'user who last modified this resource')
+    created_by   =  D(APIReadOnly(modellib.SerializedForeignKey(usersmodels.User, null=True, 
+        related_name='+', db_column='created_by', serialized_as='created_by')), 'user who created this resource')
+    modified_by   =  D(APIReadOnly(modellib.SerializedForeignKey(usersmodels.User, null=True, 
+        related_name='+', db_column='modified_by', serialized_as='modified_by')), 'user who last modified this resource')
 
     def serialize(self, request):
         xobj_model = modellib.XObjIdModel.serialize(self, request)
@@ -267,11 +269,5 @@ for mod_obj in sys.modules[__name__].__dict__.values():
     if hasattr(mod_obj, '_xobj'):
         if mod_obj._xobj.tag:
             modellib.type_map[mod_obj._xobj.tag] = mod_obj
-#for mod_obj in rbuildermodels.__dict__.values():
-#    if hasattr(mod_obj, '_meta'):
-#        modellib.type_map[mod_obj._meta.verbose_name] = mod_obj
-#for mod_obj in usersmodels.__dict__.values():
-#    if hasattr(mod_obj, '_meta'):
-#       modellib.type_map[mod_obj._meta.verbose_name] = mod_obj
 
 

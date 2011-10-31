@@ -11,7 +11,6 @@ from django.db import models
 
 from mint.django_rest.deco import D
 from mint.django_rest.rbuilder import modellib
-#from mint.django_rest.rbuilder.inventory import models as inventorymodels
 from mint.django_rest.rbuilder.users import models as usersmodels
 from mint.django_rest.rbuilder.projects import models as projectsmodels
 from mint.django_rest.rbuilder.rbac import models as rbacmodels
@@ -20,6 +19,7 @@ from mint.django_rest.rbuilder.jobs import models as jobmodels
 
 from xobj import xobj
 
+APIReadOnly = modellib.APIReadOnly
 XObjHidden = modellib.XObjHidden
 
 OPERATOR_CHOICES = [(k, v) for k, v in modellib.filterTermMap.items()]
@@ -94,9 +94,11 @@ class CollectionId(modellib.XObjIdModel):
 class QuerySet(modellib.XObjIdModel):
     '''An individual queryset, ex: "All Systems"'''
 
+    objects = modellib.SaveableManyToManyManager()
     _xobj = xobj.XObjMetadata(
                 tag = "query_set")
     _xobj_explicit_accessors = set(['grants', ])
+    _m2m_safe_to_create = [ 'filter_entries' ]
 
     query_set_id = D(models.AutoField(primary_key=True),
         "The database id for the query set")
@@ -121,8 +123,27 @@ class QuerySet(modellib.XObjIdModel):
     can_modify = D(models.BooleanField(default=True),
         "Whether this query set can be deleted through the API.")
     actions = D(modellib.SyntheticField(jobmodels.Actions), 'Available actions on this query set')
+    # public querysets are querysets like "All Systems" and do not require rbac ReadSet permissions
+    # to be visible, but will be empty unless ReadMember(ship) is conveyed on some of their contents.
+    is_public = APIReadOnly(models.BooleanField(default=False))
+    is_static = APIReadOnly(models.BooleanField(default=False))
 
     load_fields = [name]
+
+    # the name of the most important key (default) in the filter descriptor
+    _queryset_search_key_map = {
+        'system'               : 'System name' ,
+        'user'                 : 'User name'   ,
+        'project'              : 'Project name',
+        'project_branch_stage' : 'Project name',
+        'grant'                : 'Grant name'  ,
+        'role'                 : 'Role name'   ,
+        'target'               : 'Target name' , 
+    }
+
+    def searchKey(self):
+        '''The name of the most important item in the filter descriptor'''
+        return self._queryset_search_key_map[self.resource_type]
 
     def computeSyntheticFields(self, sender, **kwargs):
         ''' Compute non-database fields.'''
@@ -230,16 +251,18 @@ class QuerySet(modellib.XObjIdModel):
  
     def ancestors(self):
         '''querysets that directly or indirectly include this queryset'''
-        return self._ancestors([]) 
+        return self._ancestors([], 0) 
 
-    def _ancestors(self, results):
+    def _ancestors(self, results, depth):
+        self._depth = depth
         my_parents = self.parents()
         results.extend(my_parents)
         for parent in my_parents:
-            results.extend(parent.parents())
+            results.extend(parent._ancestors(results, depth-1))
         return results
 
 class FilterEntry(modellib.XObjIdModel):
+
     class Meta:
         unique_together = ('field', 'operator', 'value')
 
@@ -486,6 +509,9 @@ class StageTag(modellib.XObjIdModel):
     )    
 
     load_fields = [stage, query_set, inclusion_method]
+    # Queryset resource_type is 'project_branch_stage' but the field here is
+    # just called 'stage', so a special override is needed.
+    tagged_field = 'stage'
     
     def get_absolute_url(self, *args, **kwargs):
         self._parents = [self.stage, self]

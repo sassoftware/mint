@@ -8,9 +8,6 @@
 # or may be replaced by target service.  Don't get attached.
 # **THESE ARE CURRENTLY JUST STUBS TO UNBLOCK DEVELOPMENT**
 
-import datetime
-from dateutil import tz
-
 from mint import buildtypes
 from django.db import models
 from mint import helperfuncs
@@ -128,14 +125,13 @@ class Image(modellib.XObjIdModel):
         db_column='troveversion')
     trove_flavor = models.CharField(max_length=4096, null=True,
         db_column='troveflavor')
-    trove_last_changed = models.DecimalField(max_digits=14,
-        decimal_places=3, null=True, db_column='trovelastchanged')
+    trove_last_changed = modellib.DecimalTimestampField(null=True,
+            db_column='trovelastchanged')
     output_trove = models.TextField(null=True)
-    time_created = models.DecimalField(max_digits=14, decimal_places=3,
-        db_column='timecreated')
+    time_created = modellib.DecimalTimestampField(db_column='timecreated')
     created_by = modellib.ForeignKey('users.User',
         db_column='createdby',null=True, related_name='created_images')
-    time_updated = models.DecimalField(max_digits=14, decimal_places=3,
+    time_updated = modellib.DecimalTimestampField(
         null=True, db_column='timeupdated')
     updated_by = modellib.ForeignKey('users.User', db_column='updatedby',
         related_name='updated_images', null=True)
@@ -238,17 +234,6 @@ class Image(modellib.XObjIdModel):
                 continue
             metadataDict[name] = str(value)
         return metadataDict
-    
-    def serialize(self, request=None):
-        xobjModel = modellib.XObjIdModel.serialize(self, request)
-        # Convert timestamp fields in the database to our standard UTC format
-        if xobjModel.time_created:
-            xobjModel.time_created = str(datetime.datetime.fromtimestamp(
-                xobjModel.time_created, tz.tzutc()))
-        if xobjModel.time_updated:
-            xobjModel.time_updated = str(datetime.datetime.fromtimestamp(
-                xobjModel.time_updated, tz.tzutc()))
-        return xobjModel
 
     def save(self):
         if self.image_type is not None:

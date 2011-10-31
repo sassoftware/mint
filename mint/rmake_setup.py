@@ -47,7 +47,7 @@ def setupRmake(cfg, rmakeConfigFilePath, restartRmake=False):
         rmakePassword)
 
     _writeRmakeConfig(rmakeConfigFilePath, rmakeUser, rmakePassword,
-        "https://localhost",
+        "https://%s" % cfg.siteHost,
         "%s.%s" % (shortName, cfg.projectDomainName),
         "https://localhost/repos/%s" % (shortName,))
 

@@ -37,10 +37,14 @@ class Package(modellib.XObjIdModel):
     server_name = models.TextField(db_column="servername")
     branch_name = models.TextField(db_column="branchname")
     is_source = models.IntegerField(db_column="issource", default=0)
+    trailing_label = modellib.SyntheticField()
+    trailing_version = modellib.SyntheticField()
 
     def serialize(self, *args, **kwargs):
         xobjModel = modellib.XObjIdModel.serialize(self, *args, **kwargs)
         trailingLabel = \
             versions.VersionFromString(self.version).trailingLabel().asString()
         xobjModel.trailing_label = trailingLabel
+        if xobjModel.version:
+            xobjModel.trailing_version = xobjModel.version.split("/")[-1]
         return xobjModel 

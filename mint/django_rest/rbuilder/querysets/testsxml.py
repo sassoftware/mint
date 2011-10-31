@@ -127,6 +127,22 @@ queryset_with_actions = """
 </query_set>
 """
 
+queryset_put_xml_different = """
+<query_set id="https://rbalast.eng.rpath.com/api/v1/query_sets/15" href="https://rbalast.eng.rpath.com/api/v1/query_sets/15">
+        <filter_entries>
+        <filter_entry>
+           <field>system.name</field>
+           <operator>LIKE</operator>
+          <value>newterm</value>
+        </filter_entry>
+        </filter_entries>
+        <can_modify>true</can_modify>
+        <description />
+        <is_top_level>true</is_top_level>
+        <name>JB Test</name>
+</query_set>
+"""
+
 queryset_invalidate_post_xml = """
 <job>
 <job_type id='https://localhost/api/v1/inventory/event_types/14'>queryset refresh</job_type>

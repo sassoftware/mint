@@ -15,7 +15,11 @@ class RbuilderError(Exception):
 
     def __init__(self, **kwargs):
         cls = self.__class__
-        self.msg = cls.__doc__
+        kwargs_msg = kwargs.get('msg', None)
+        if kwargs_msg:
+            self.msg = kwargs_msg
+        else:
+            self.msg = cls.__doc__
         self.kwargs = kwargs
 
     def __str__(self):
@@ -38,7 +42,7 @@ class UnknownFilterOperator(RbuilderError):
     status = BAD_REQUEST
 
 class InvalidFilterValue(RbuilderError):
-    "%(value)s in an invalid value for filter operator %(filter)s"
+    "%(value)s is an invalid value for filter operator %(filter)s"
     status = BAD_REQUEST
 
 

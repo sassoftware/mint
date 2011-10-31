@@ -155,6 +155,7 @@ class QuerySetManager(basemanager.BaseManager):
         # this is probably a duplicate save because of how xobj
         # is used.
         querySet.save()
+        self._recomputeStatic(querySet)
         return querySet
 
     @exposed
@@ -207,7 +208,27 @@ class QuerySetManager(basemanager.BaseManager):
 
         querySet.tagged_date = None
         querySet.save()
+        self._recomputeStatic(querySet)
         return querySet
+
+    def _recomputeStatic(self, querySet):
+        # the static bit keeps track of querysets who have no
+        # filter terms or child sets with filter terms.  Certain
+        # restrictions apply to querysts that are NOT static.
+        self._depth = 1
+        to_process = querySet.ancestors()
+        to_process.append(querySet)
+        # start at lowest nodes in DAG, work up 
+        to_process.sort(cmp=lambda x,y: cmp(y._depth, x._depth))
+        for qs in to_process:
+            # assume static until proven otherwise
+            qs.is_static = True
+            if len(qs.filter_entries.all()) > 0:
+                qs.is_static = False
+            for kid in qs.children.all():
+                if not kid.is_static:
+                    qs.is_static=False
+            qs.save()
 
     @exposed
     def deleteQuerySet(self, querySet):
@@ -350,7 +371,7 @@ class QuerySetManager(basemanager.BaseManager):
         resourceCollection = modellib.type_map[
             self.resourceCollectionMap[querySet.resource_type]]
         resourceCollection = resourceCollection()
-
+                
         if for_user is None:
             # this happens when relabelling or when the user already has READMEMBER on the set.
             pass
@@ -360,11 +381,29 @@ class QuerySetManager(basemanager.BaseManager):
             pass
         else:
             # return all things that would be matched that I already have permissions on
+           
             resources = resources.filter(
                 tags__query_set__grants__role__rbacuserrole__user = for_user,
                 tags__query_set__grants__permission__name__in = [ READMEMBERS, MODMEMBERS ] 
             )
-        
+              
+            # user hack, should always be able to see yourself in All Users
+            if querySet.resource_type == 'user' and querySet.is_public and querySet.name == 'All Users':
+                resources = resources | usermodels.User.objects.filter(
+                    pk = for_user.pk
+                ).distinct()
+            # while rbac permissions are handled largely in views and can delegate
+            # we need to do more here such that read access on a project implies I can read
+            # the stage in *listing* them.
+            if querySet.resource_type == 'project_branch_stage':
+               # django can't actually combine the two queries, so for now, just show the PBSes implied from P
+               # if there are no explicit grants on the PBS.
+               if len(list(resources)) == 0:
+                   resources = projectmodels.Stage.objects.filter(
+                       project__tags__query_set__grants__role__rbacuserrole__user = for_user,
+                       project__tags__query_set__grants__permission__name__in = [ READMEMBERS, MODMEMBERS ] 
+                   )
+ 
         setattr(resourceCollection, querySet.resource_type, resources)
         resourceCollection._parents = [querySet]
         return resourceCollection
@@ -723,7 +762,7 @@ class QuerySetManager(basemanager.BaseManager):
         tagMethod = self._tagMethod(querySet)
         tagMethod(resources_out, querySet, self._chosenMethod())
 
-        return self.getQuerySetChosenResult(querySetId)
+        return self.getQuerySetChosenResult(querySet)
 
     @exposed
     def deleteQuerySetChosen(self, querySetId, resource):
@@ -734,7 +773,8 @@ class QuerySetManager(basemanager.BaseManager):
         # set the tagged_date back to NULL so it will be retagged next time
         querySet = self._querySet(querySetId)
         tagModel = modellib.type_map[self.tagModelMap[querySet.resource_type]]
-        resourceArg = {querySet.resource_type:resource}
+        taggedField = getattr(tagModel, 'tagged_field', querySet.resource_type)
+        resourceArg = {taggedField:resource}
         tagModels = tagModel.objects.filter(query_set=querySet,
             inclusion_method=self._chosenMethod(), **resourceArg)
         tagModels.delete()
