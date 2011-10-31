@@ -106,8 +106,18 @@ class RbacManager(basemanager.BaseManager):
        
         def mod_serialize(request, *args, **kwargs):
             xobj_model = modellib.XObjIdModel.serialize(roles_obj, request)
-            xobj_model.foo = 1 
+            # xobj gets confused with one element entries
+            if type(xobj_model.role) != list:
+               xobj_model.role = [ xobj_model.role ] 
+            xobj_model.num_pages = 1
+            xobj_model.next_page = 0
+            xobj_model.previous_page = 0
+            xobj_model.count = len(xobj_model.role)
+            xobj_model.end_index = len(xobj_model.role) - 1
+            xobj_model.limit = 999999 
+            xobj_model.per_page = xobj_model.count
             xobj_model.id = roles_obj.get_absolute_url(request)
+            xobj_model.start_index = 0
             for role in xobj_model.role:
                 actual_role = models.RbacRole.objects.get(pk = role.role_id)
                 tweaked_grants = []
@@ -134,6 +144,17 @@ class RbacManager(basemanager.BaseManager):
                     tweaked_grants.append(xgrant)
                 grants = models.RbacPermissions()
                 xgrants = modellib.XObjIdModel.serialize(grants, request)
+                del xgrants.count
+                del xgrants.next_page
+                del xgrants.num_pages
+                del xgrants.previous_page
+                del xgrants.full_collection
+                del xgrants.limit
+                del xgrants.order_by
+                del xgrants.per_page
+                del xgrants.filter_by
+                del xgrants.start_index
+                del xgrants.end_index
                 xgrants.grant = tweaked_grants
                 role.grants = xgrants
             return xobj_model
