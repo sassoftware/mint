@@ -173,7 +173,7 @@ class QuerySetManager(basemanager.BaseManager):
         qs.save()
 
     @exposed
-    def retagQuerySetsByType(self, type):
+    def retagQuerySetsByType(self, type, for_user=None):
         '''
         Invalidates all querysets of a given type and then recomputes their data.
         This is needed on addition of some resource types when security context of all
@@ -183,7 +183,17 @@ class QuerySetManager(basemanager.BaseManager):
         was requested or not -- otherwise application of security rules is latent until
         the next time the queryset members are accessed.  This avoids that.
         '''
-        all_sets = models.QuerySet.objects.filter(resource_type=type)
+        all_sets = None
+        if for_user is None:
+            all_sets = models.QuerySet.objects.filter(resource_type=type)
+        else:
+            all_sets = models.QuerySet.objects.filter(
+                resource_type    = type,
+                personal_for     = for_user
+            ).distinct() | models.QuerySet.objects.filter(
+                resource_type        = type,
+                personal_for__isnull = True,
+            ).distinct()
         for qs in all_sets:
             qs.tagged_date = None
             qs.save()
@@ -875,7 +885,8 @@ class QuerySetManager(basemanager.BaseManager):
 
         matching = models.QuerySet.objects.filter(
             personal_for = user,
-            name = name
+            name = name,
+            resource_type = resource_type
         ).all()
 
         if len(matching) > 0:
@@ -910,9 +921,9 @@ class QuerySetManager(basemanager.BaseManager):
 
         if resource_type == 'project_branch_stage':
             filterEntry = models.FilterEntry.objects.get_or_create(
-                field = 'created_by.owner.pk',
-                operator = 'EQUAL',
-                value = user.pk
+                field = 'project.members.user_id',
+                operator = 'IN',
+                value = str(user.pk)
             )[0]
             if len(qs.filter_entries.all()) == 0:
                 # if the queryset already exists we won't try to repair it
@@ -925,7 +936,7 @@ class QuerySetManager(basemanager.BaseManager):
         return self._myQuerySet(user, 'My Projects', 'project')
 
     def _createMyStages(self, user):
-        return self._myQuerySet(user, 'My Stages', 'stage')
+        return self._myQuerySet(user, 'My Stages', 'project_branch_stage', 'project')
 
     def _createMySystems(self, user):
         return self._myQuerySet(user, 'My Systems', 'system')

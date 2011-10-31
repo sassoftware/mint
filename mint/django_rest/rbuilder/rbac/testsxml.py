@@ -1121,7 +1121,7 @@ users_in_role_xml = """
     <external_auth>false</external_auth>
     <user_id>2000</user_id>
     <user_name>testuser</user_name>
-    <can_create>false</can_create>
+    <can_create>true</can_create>
   </user>
   <user id="http://testserver/api/v1/users/1">
     <blurb/>
@@ -1133,7 +1133,7 @@ users_in_role_xml = """
     <external_auth>false</external_auth>
     <user_id>1</user_id>
     <user_name>admin</user_name>
-    <can_create>false</can_create>
+    <can_create>true</can_create>
   </user>
 </users>
 """

@@ -79,7 +79,7 @@ class UsersManager(basemanager.BaseManager):
         dbuser.is_admin    = user.is_admin
         dbuser.save()
         self.mgr.configureMyQuerysets(dbuser)
-        self.mgr.retagQuerySetsByType('user')
+        self.mgr.retagQuerySetsByType('user', by_user)
         return dbuser
 
     def _setPassword(self, user, password):

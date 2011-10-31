@@ -107,6 +107,10 @@ def handler(req):
 
     ret = apache.HTTP_NOT_FOUND
     try:
+        # Proxied Conary requests can have all sorts of paths, so look for a
+        # header instead.
+        if 'x-conary-servername' in req.headers_in:
+            return _tryHandler(conaryHandler, context)
         for match, urlHandler in urls:
             if pathInfo.startswith(match):
                 ret = _tryHandler(urlHandler, context)

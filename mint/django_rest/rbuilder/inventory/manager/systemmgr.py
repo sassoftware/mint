@@ -524,6 +524,7 @@ class SystemManager(basemanager.BaseManager):
 
         if for_user:
             self.mgr.addToMyQuerySet(system, for_user)
+        self.mgr.retagQuerySetsByType('system', for_user)
 
         return system
 
@@ -965,8 +966,7 @@ class SystemManager(basemanager.BaseManager):
             self.scheduleLaunchWaitForNetworkEvent(system)
         self.log_system(system, "System launched in target %s (%s)" %
             (target.name, target.target_type.name))
-        self.addSystem(system)
-        self.mgr.retagQuerySetsByType('system')
+        self.addSystem(system, for_user=for_user)
         return system
 
     def _getCredentialsForUser(self, target):
