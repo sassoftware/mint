@@ -145,6 +145,9 @@ class Image(modellib.XObjIdModel):
     status = models.IntegerField(null=True, default=-1)
     status_message = models.TextField(null=True, blank=True, default='',
         db_column="statusmessage")
+    base_image = modellib.DeferredForeignKey('Image', null=True,
+        related_name='layered_images', db_column='base_image')
+
     metadata = modellib.SyntheticField()
     architecture = modellib.SyntheticField()
     trailing_version = modellib.SyntheticField()

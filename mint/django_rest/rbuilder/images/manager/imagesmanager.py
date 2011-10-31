@@ -4,8 +4,9 @@
 # All Rights Reserved
 #
 
-from django.db import connection
+import errno
 import logging
+import os
 from mint.django_rest.rbuilder.images import models 
 from mint.django_rest.rbuilder.projects import models as projectsmodels
 from mint.django_rest.rbuilder.manager import basemanager
@@ -97,16 +98,52 @@ class ImagesManager(basemanager.BaseManager):
     def updateImageBuild(self, image_id, image):
         image.save()
         return image
-        
+
     @exposed
     def deleteImageBuild(self, image_id):
-        models.Image.objects.get(pk=image_id).delete()
+        image = models.Image.objects.get(pk=image_id)
+        log.info("Deleting image %s from project %s" % (image_id,
+            image.project.short_name))
+        # Delete image files from finished-images
+        for imageFile in models.BuildFile.objects.filter(image=image_id):
+            for urlMap in models.BuildFilesUrlsMap.objects.filter(
+                    file=imageFile):
+                fileUrl = urlMap.url
+                path = fileUrl.url
+                if path.startswith('/') and os.path.exists(path):
+                    os.unlink(path)
+                fileUrl.delete()
+        imageDir = os.path.join(self.cfg.imagesPath, image.project.short_name,
+                str(image_id))
+        for name in ['build.log', 'trace.txt']:
+            path = os.path.join(imageDir, name)
+            if os.path.exists(path):
+                os.unlink(path)
+        # Delete the parent directory, if it's empty.
+        try:
+            os.rmdir(imageDir)
+        except OSError, err:
+            if err.args[0] not in (errno.ENOENT, errno.ENOTEMPTY):
+                raise
+        image.delete()
+        # Delete the image trove from the repository if it is not referenced by
+        # any other image.
+        if image.output_trove:
+            others = models.Image.objects.filter(output_trove=image.output_trove)
+            if others:
+                log.info("Keeping image trove %s because it is claimed by "
+                        "other images", image.output_trove)
+            else:
+                log.info("Deleting image trove %s", image.output_trove)
+                reposMgr = self.mgr._restDb.productMgr.reposMgr
+                tup = trovetup.TroveSpec.fromString(image.output_trove)
+                reposMgr.deleteTroves([tup])
 
     @exposed
     def getImageBuildFile(self, image_id, file_id):
         build_file = models.BuildFile.objects.get(file_id=file_id)
         return build_file
-        
+
     @exposed
     def getImageBuildFiles(self, image_id):
         BuildFiles = models.BuildFiles()
