@@ -289,6 +289,8 @@ class QuerySetManager(basemanager.BaseManager):
         if len(resources) == 0:
             return
 
+        tagClass.objects.lock()
+
         if inclusionMethod.name != 'chosen':
             old_tags = tagClass.objects.filter(
                 query_set=queryset,
@@ -301,8 +303,10 @@ class QuerySetManager(basemanager.BaseManager):
         insertParams = [(resource.pk, queryset.pk, inclusionMethod.pk) for \
             resource in resources]
         cursor = connection.cursor()
-        cursor.executemany(query, insertParams)
+        cursor.executemany(query, insertParams) 
         transaction.commit_unless_managed()
+
+        # transaction will unlock
 
     def _tagSystems(self, resources, tag, inclusionMethod):
         self._tagGeneric(resources, tag, inclusionMethod,
