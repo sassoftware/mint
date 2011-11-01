@@ -11,6 +11,14 @@ from xobj import xobj
 
 from mint.django_rest.rbuilder import modellib
 
+# because we don't want to include relations of the same
+# type multiple times, we do not offer up some items
+# in the filter descriptor.  This does NOT mean
+# they can't be added via REST.  Only removed
+# as it would be confusing since we don't include
+# the actual field name in the dropdown.
+EXCLUDE_FIELD_NAMES = [ 'modified_by', 'modified_date']
+
 class FieldDescriptor(object):
     _xobj = xobj.XObjMetadata(tag='field_descriptor',
         elements=[
@@ -175,7 +183,10 @@ def getFilterDescriptor(model, queryset):
     fd.field_descriptors = FieldDescriptors()
     fd.field_descriptors.descriptors = []
     fieldNames = model._meta.get_all_field_names()
+    fieldNames.sort()
     for fieldName in fieldNames:
+        if fieldName in EXCLUDE_FIELD_NAMES:
+            continue 
         field = model._meta.get_field_by_name(fieldName)[0]
         _fds = getFieldDescriptors(field, None, processedModels)
         [fd.field_descriptors.descriptors.append(_fd) for _fd in _fds]
