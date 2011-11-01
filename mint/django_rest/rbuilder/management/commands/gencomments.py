@@ -122,17 +122,6 @@ class Command(BaseCommand):
             finally:
                 f.close()
 
-    # def getModelTag(self, modelName):
-    #     # if model is None then the calling view's entry
-    #     # in urls.py doesn't specify a model kwarg
-    #     model = self.aggregateModels.get(modelName, None)
-    #     if model is None:
-    #         return self.toUnderscore(modelName)
-    #     _xobj = getattr(model, '_xobj', None)
-    #     if _xobj and _xobj.tag:
-    #         return _xobj.tag
-    #     import pdb; pdb.set_trace()
-
     def getPkgNameFromView(self, view):
         cls = view.__class__
         # ie: path = ../../../include/mint/django_rest/rbuilder/users/views.pyc
