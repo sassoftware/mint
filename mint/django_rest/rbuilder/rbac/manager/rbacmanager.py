@@ -150,7 +150,15 @@ class RbacManager(basemanager.BaseManager):
                         permission_type._xobj.tag = ptypename
                         xperm.set = 'false'
                     setattr(role, "%s_permission" % ptypename, xperm)
-
+                # since this collection is not actually paged, (because it's not relative to the true
+                # DB structure, and is a great reason why we shouldn't do this again), 
+                # avoid XML spam of data we don't need.
+                del role.grants
+                del role.users
+                del role.created_by
+                del role.modified_by
+                del role.created_date
+                del role.modified_date
             return xobj_model
 
         roles_obj.serialize = mod_serialize
