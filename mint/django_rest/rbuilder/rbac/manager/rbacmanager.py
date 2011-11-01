@@ -96,7 +96,12 @@ class RbacManager(basemanager.BaseManager):
     def getRbacGrantMatrix(self, query_set_id, request):
         # a very UI specific view into grants for a given queryset
         # this will not scale very well but grants per queryset should
-        # be quite low
+        # be quite low.  
+        # 
+        # this is obviously heinous -- do not repeat
+        # principle cause is inverting roles and grants in a way that doesn't
+        # jive with the actual model
+
         qs = querymodels.QuerySet.objects.get(pk=query_set_id)
         dbroles = models.RbacRole.objects.filter(
             is_identity = False
@@ -137,7 +142,16 @@ class RbacManager(basemanager.BaseManager):
                         permission_type._xobj = deepcopy(permission_type._xobj)
                         xperm = modellib.XObjIdModel.serialize(permission_type, request)
                         permission_type._xobj.tag = ptypename
-                        xperm.set = 'true'
+                        xgrant = modellib.XObjIdModel.serialize(grant, request)
+                        del xgrant.modified_by 
+                        del xgrant.modified_date
+                        del xgrant.created_by
+                        del xgrant.created_date
+                        del xgrant.grant_id
+                        del xgrant.role
+                        del xgrant.queryset
+                        del xgrant.permission
+                        xperm.grant = xgrant
                     except models.RbacPermission.DoesNotExist:
                         # important: should NOT be saved
                         grant = models.RbacPermission(
@@ -148,7 +162,6 @@ class RbacManager(basemanager.BaseManager):
                         permission_type._xobj = deepcopy(permission_type._xobj)
                         xperm = modellib.XObjIdModel.serialize(permission_type, request)
                         permission_type._xobj.tag = ptypename
-                        xperm.set = 'false'
                     setattr(role, "%s_permission" % ptypename, xperm)
                 # since this collection is not actually paged, (because it's not relative to the true
                 # DB structure, and is a great reason why we shouldn't do this again), 
