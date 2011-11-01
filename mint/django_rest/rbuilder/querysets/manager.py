@@ -292,7 +292,7 @@ class QuerySetManager(basemanager.BaseManager):
         tagClass.objects.lock()
 
         if inclusionMethod.name != 'chosen':
-            old_tags = tagClass.objects.filter(
+            tagClass.objects.filter(
                 query_set=queryset,
                 inclusion_method=inclusionMethod
             ).delete()
