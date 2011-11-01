@@ -235,10 +235,24 @@ def filterDjangoQuerySet(djangoQuerySet, field, operator, value,
         raise errors.UnknownFilterOperator(filter=operator)
 
 
+    operator_name = operatorCls.operator
+
+    # work around Django SQL generator bug where iexact does not 
+    # properly quote things that look like numbers, there is no
+    # issue with like queries
+    if operator_name == 'iexact':
+        try:
+            float(value)
+            operator_name = 'in'
+            value = [ value ]
+        except ValueError:
+            # not numeric
+            pass
+            
     # Replace all '.' with '__', to handle fields that span
     # relationships
-    k = '%s__%s' % (field.replace('.', '__'), operatorCls.operator)
-    filtDict = {k:value}
+    k = '%s__%s' % (field.replace('.', '__'), operator_name)
+    filtDict = { k : value }
     if operator.startswith('NOT_'):
         djangoQuerySet = djangoQuerySet.filter(~Q(**filtDict))
     else:
