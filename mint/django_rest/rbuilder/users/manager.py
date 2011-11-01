@@ -78,6 +78,7 @@ class UsersManager(basemanager.BaseManager):
         dbuser.modified_by = by_user
         dbuser.is_admin    = user.is_admin
         dbuser.save()
+        self.mgr.getOrCreateIdentityRole(user)
         self.mgr.configureMyQuerysets(dbuser)
         self.mgr.retagQuerySetsByType('user', by_user)
         return dbuser

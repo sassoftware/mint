@@ -170,12 +170,6 @@ class UsersTestCase(RbacEngine):
         self.failUnlessEqual(response.status_code, 200)
 
         # verify my querysets are now missing
-        # along with identity roles
-        roles = rbacmodels.RbacRole.objects.filter(
-            name = "user:%s" % user.user_name,
-            is_identity = True,
-        )
-        self.failUnlessEqual(len(roles), 0)
         sets = querymodels.QuerySet.objects.filter(
             personal_for__user_name = user.user_name
         )

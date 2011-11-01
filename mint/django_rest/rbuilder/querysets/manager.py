@@ -944,10 +944,7 @@ class QuerySetManager(basemanager.BaseManager):
     # TODO: add My Images once unified images are available
      
     def _removeMyQuerysets(self, user):
-        # by removing the identity role all grants
-        # will be removed via cascade, but the actual
-        # querysets must be manually deleted
-        self.mgr.removeIdentityRole(user)
+        # this will also remove associated grants via cascade
         models.QuerySet.objects.filter(
            personal_for = user
         ).delete()
