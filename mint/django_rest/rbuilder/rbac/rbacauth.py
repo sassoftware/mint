@@ -1,6 +1,17 @@
 from mint.django_rest.deco import ACCESS
 from mint.django_rest.rbuilder.errors import PermissionDenied
 
+def manual_rbac(*args, **kwargs):
+    """
+    For marking methods with a manual rbac.  Use as follows:
+    
+    @rbac(manual)
+    ...
+    def rest_GET(self, request, ...):
+        pass
+    """
+    return True
+
 class rbac(object):
     """
     Decorator that sets rbac permissions required to access a resource.
@@ -66,6 +77,9 @@ class rbac(object):
         access = getattr(fcn, 'ACCESS', None)
         if access:
             callFcn.ACCESS = access
+        # setting RBAC flag on fcn helps build time comment generation to
+        # correctly determine which type of authentication is being used
+        callFcn.RBAC = True
         return callFcn
 
 
