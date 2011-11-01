@@ -104,7 +104,7 @@ class QuerySet(modellib.XObjIdModel):
     objects = modellib.SaveableManyToManyManager()
     _xobj = xobj.XObjMetadata(
                 tag = "query_set")
-    _xobj_explicit_accessors = set(['grants', ])
+    _xobj_explicit_accessors = set([])
     _m2m_safe_to_create = [ 'filter_entries' ]
 
     query_set_id = D(models.AutoField(primary_key=True),

@@ -264,6 +264,10 @@ urlpatterns = patterns('',
         querysetviews.QuerySetService(),
         name='QuerySets',
         model='QuerySets'),
+    URL(r'favorites/query_sets/?$',
+        querysetviews.FavoriteQuerySetService(),
+        name='FavoriteQuerySets',
+        model='FavoriteQuerySets'),
     URL(r'query_sets/(?P<query_set_id>\d+)/?$',
         querysetviews.QuerySetService(),
         name='QuerySet',
@@ -292,7 +296,7 @@ urlpatterns = patterns('',
     URL(r'query_sets/(?P<query_set_id>\d+)/grant_matrix/?$',
         rbacviews.RbacQuerySetGrantMatrixService(),
         name='QuerySetGrantMatrix'),
-
+    
 
     # Change Logs
     URL(r'changelogs/?$',

@@ -36,6 +36,19 @@ def rbac_can_write_queryset(view, request, query_set_id, *args, **kwargs):
 class BaseQuerySetService(service.BaseService):
     pass
 
+class FavoriteQuerySetService(BaseQuerySetService):
+
+    # return the list of querysets that I can see that I should also
+    # show in the UI left nav.  Eventually this will support a bookmarks
+    # feature, now it just applies some basic logic.    
+
+    @access.authenticated
+    @return_xml
+    def rest_GET(self, request):
+        user = request._authUser
+        querysets = self.mgr.getQuerySets() 
+        return self.mgr.favoriteRbacedQuerysets(user, querysets, request)
+
 class QuerySetService(BaseQuerySetService):
 
     # rbac is handled semimanually for this function -- show only 
@@ -43,10 +56,10 @@ class QuerySetService(BaseQuerySetService):
     # but don't use full rbac code, because that is implemented using querysets
     # and is too meta.
 
-    @return_xml
     @access.authenticated
+    @return_xml
     def rest_GET(self, request, query_set_id=None):
-        user = self.mgr.getSessionInfo().user[0]
+        user = request._authUser
         if query_set_id is None:
             querysets = self.mgr.getQuerySets() 
             return self.mgr.filterRbacQuerysets(user, querysets, request)

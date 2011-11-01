@@ -98,6 +98,8 @@ class Session(modellib.XObjIdModel):
         abstract = True
     _xobj = xobj.XObjMetadata(tag='session', attributes = {'id':str})
     view_name = 'Session'
+    
+    favorite_querysets = modellib.HrefField(href="/api/v1/favorites/query_sets")
 
     # Blargh. If I add user as a regular field, it won't get serialized,
     # because get_field_dict() won't pick it up. So we cheat here and

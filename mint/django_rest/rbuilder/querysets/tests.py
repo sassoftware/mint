@@ -63,6 +63,15 @@ class QuerySetTestCase(QueryTestCase):
         # ok to bump this if we add more QS in the db
         self.assertEqual(length, 10)
 
+        # favorite queryset view returns what to show in
+        # the UI navigation
+        response = self._get('favorites/query_sets/',
+            username="admin", password="password")
+        self.assertEquals(response.status_code, 200)
+        querySets = xobj.parse(response.content)
+        length = len(querySets.query_sets.query_set)
+        self.assertEqual(length, 5)
+
     def testGetQuerySet(self):
         # show that we can get the definition of a queryset
         qsid = self._getQs("All Systems")

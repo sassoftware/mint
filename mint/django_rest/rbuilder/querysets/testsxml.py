@@ -116,7 +116,6 @@ queryset_with_actions = """
     </filter_entry>
   </filter_entries>
   <filtered_members id="http://testserver/api/v1/query_sets/5/filtered"/>
-  <grants/>
   <is_top_level>True</is_top_level>
   <name>All Systems</name>
   <presentation_type>system</presentation_type>

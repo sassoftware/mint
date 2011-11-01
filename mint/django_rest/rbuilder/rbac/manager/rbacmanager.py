@@ -340,7 +340,7 @@ class RbacManager(basemanager.BaseManager):
         return queryset_or_id
 
     @exposed
-    def filterRbacQuerysets(self, user, querysets_obj, request=None):
+    def filterRbacQuerysets(self, user, querysets_obj, request=None, _favorites=False):
         '''
         Modify a querysets collection to contain only the querysets
         the user is allowed to see, leaving the others hidden.
@@ -348,30 +348,47 @@ class RbacManager(basemanager.BaseManager):
         done in the querysets module.  Querysets are collected in collections
         NOT querysets.
         '''
-        if request is not None and request._is_admin:
-            return querysets_obj
-        if user.is_admin:
-            return querysets_obj
-        roles = models.RbacUserRole.objects.select_related().filter(
-            user = user
-        )
-        my_roles = [ x.role for x in roles ] 
-        perms = models.RbacPermission.objects.select_related().filter(
-           role__in = my_roles,
-        )
-        publics = querymodels.QuerySet.objects.select_related().filter(
-           is_public = True
-        )
+        orig_results = querysets_obj.query_set
+        if request is not None and request._is_admin or user.is_admin:
+            if not _favorites:
+                # show all querysets
+                return querysets_obj
+            else:
+                # show admin only non-personal querysets
+                results = querymodels.QuerySet.objects.filter(
+                    personal_for__isnull = True
+                )
+        results = orig_results.filter(
+            is_public = True,
+        ).distinct() 
+        if not _favorites:
+            # always show things I have ReadSet on, as well as sets marked
+            # public
+            results = results | orig_results.filter(
+                grants__role__rbacuserrole__user = user, 
+                grants__permission__name__in = [ READSET, MODSETDEF ]
+            ).distinct()
+        else:
+            # show public sets but do not show things I have permissions
+            # on unless that is marked personal_for me (My Querysets)
+            #
+            # if I can read Foo, it will appear in the set browser but
+            # not in 'favorites' ... to be extended later when things
+            # are actually bookmarkable
+            results = results | orig_results.filter(
+                grants__role__rbacuserrole__user = user,
+                grants__permission__name__in = [ READSET, MODSETDEF ],
+                personal_for = user
+            ).distinct()
 
-        results = []
-        for p in perms:
-            if p.queryset not in results:
-                results.append(p.queryset)
-        for public_qs in publics:
-            if public_qs not in results:
-                results.append(public_qs)
+        querysets_obj = querymodels.QuerySets()
         querysets_obj.query_set = results
         return querysets_obj
+
+    @exposed
+    def favoriteRbacedQuerysets(self, user, querysets, request):
+        # return the querysets to show in navigation
+        return self.filterRbacQuerysets(user, querysets, request, _favorites=True)
 
     def __is_admin_like(self, user, request):
         # if the user is an admin, immediately let them by
