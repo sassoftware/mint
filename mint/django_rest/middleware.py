@@ -195,16 +195,19 @@ class AddCommentsMiddleware(BaseMiddleware):
             response.status_code in (200, 201, 206, 207):
 
             # get view + documentation
-            view_name = request._view_func.__class__.__name__
-            path = os.path.join(os.path.dirname(__file__), 'rbuilder/inventory/docs/%s.txt' % view_name)
+            viewFunc = request._view_func
+            view_name = viewFunc.__class__.__name__
+            appName = self._getAppNameFromViewFunc(viewFunc)
+            path = os.path.join(os.path.dirname(__file__),
+                'rbuilder/docs/%s/%s.txt' % (appName, view_name))
             try:
                 f = open(path, 'r')
             except IOError:
                 return response
             try:
                 contents = response.content.split('\n')
-                docs = '<!--' + f.read().strip() + '-->'
-                response.content = contents[0] + docs + '\n'.join(contents[1:])
+                docs = '\n<!--\n' + f.read().strip() + '\n-->\n'
+                response.content = contents[0] + docs + '\n'.join(contents[1:])                
             finally:
                 f.close()
         return response
@@ -213,6 +216,9 @@ class AddCommentsMiddleware(BaseMiddleware):
         request._view_func = view_func
         return None
 
+    def _getAppNameFromViewFunc(self, viewFunc):
+        module = viewFunc.__module__
+        return module.split('.')[-2]
 
 class CachingMiddleware(BaseMiddleware):
     def _process_request(self, request):
