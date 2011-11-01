@@ -11,7 +11,7 @@ from mint.django_rest.rbuilder.manager import basemanager
 from mint.django_rest.rbuilder.users import models
 from mint import mint_error, server
 
-from django.db import connection, transaction
+from django.db import transaction
 import time
 import random
 
