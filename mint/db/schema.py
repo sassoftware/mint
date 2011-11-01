@@ -28,7 +28,7 @@ from conary.dbstore import sqlerrors, sqllib
 log = logging.getLogger(__name__)
 
 # database schema major version
-RBUILDER_DB_VERSION = sqllib.DBversion(60, 2)
+RBUILDER_DB_VERSION = sqllib.DBversion(60, 3)
 
 def _createTrigger(db, table, column="changed"):
     retInsert = db.createTrigger(table, column, "INSERT")
@@ -72,7 +72,8 @@ def _createUsers(db):
                 REFERENCES Users ON DELETE SET NULL,
             modified_by         integer
                 REFERENCES Users ON DELETE SET NULL,
-            can_create           BOOLEAN       NOT NULL    DEFAULT false
+            can_create           BOOLEAN       NOT NULL    DEFAULT false,
+            deleted              BOOLEAN       NOT NULL    DEFAULT false
         ) %(TABLEOPTS)s""" % db.keywords)
         db.tables['Users'] = []
     db.createIndex('Users', 'UsersActiveIdx', 'username, active')

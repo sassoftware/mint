@@ -13,6 +13,7 @@ from mint import mint_error, server
 
 from django.db import connection, transaction
 import time
+import random
 
 exposed = basemanager.exposed
 
@@ -77,6 +78,7 @@ class UsersManager(basemanager.BaseManager):
         dbuser.created_by  = by_user
         dbuser.modified_by = by_user
         dbuser.is_admin    = user.is_admin
+        dbuser.deleted     = False
         dbuser.save()
         self.mgr.getOrCreateIdentityRole(user)
         self.mgr.configureMyQuerysets(dbuser)
@@ -106,7 +108,7 @@ class UsersManager(basemanager.BaseManager):
     @exposed
     def updateUser(self, user_id, user, by_user=None):
 
-        dbuser = models.User.objects.get(pk=user_id)
+        dbuser = models.User.objects.get(pk=user_id, deleted=False)
         if user.user_name and user.user_name != dbuser.user_name:
             raise self.exceptions.UserCannotChangeNameException()
 
@@ -122,6 +124,7 @@ class UsersManager(basemanager.BaseManager):
 
         user.modified_by = by_user
         user.modified_date = time.time()
+        user.deleted = False
         user.save()
         user = self._setPassword(user, user.password)
         self.mgr.configureMyQuerysets(user)
@@ -152,12 +155,26 @@ class UsersManager(basemanager.BaseManager):
 
     @exposed
     def deleteUser(self, user_id):
+        # users are not actually deleted, they are only set to deleted
+        # to preserve metadata and relations around them.
         if user_id == str(self.user.user_id):
             raise self.exceptions.UserSelfRemovalException()
-        cu = connection.cursor()
-        cu.execute("DELETE FROM users WHERE userid = %s", [ user_id ])
-        if not cu.rowcount:
+        deleting = models.User.objects.filter(pk=user_id, deleted=False)
+        if not len(deleting) > 0:
             raise self.exceptions.UserNotFoundException()
+        deleting = deleting[0]
+
+        # so that the old user name can be recycled, add a random number
+        # on the end 
+        deleting.user_name = "%s:%s" % (deleting.user_name, random.randint(0,99999999))
+        # if the user name was actually using close to the 127 allowed characters (god, why?)
+        # don't worry so much about the random number... a rather unlikely scenario
+        excess = 126 - len(deleting.user_name) - 1
+        if excess < 0:
+            deleting.user_name = deleting.user_name[0:excess]
+
+        deleting.deleted = True
+        deleting.save()
 
     @exposed
     def getSessionInfo(self):

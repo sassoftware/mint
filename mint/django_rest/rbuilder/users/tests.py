@@ -391,6 +391,7 @@ class UsersTestCase(RbacEngine):
         user.full_name = 'Jim Phoo'
         user.email = 'jphoo@noreply.com'
         user.password = 'abc'
+        user.deleted = False
         self.mgr.addUser(user)
         user = models.User.objects.get(user_name='jphoo')
         response = self._get('users/%s' % user.pk, username=user.user_name, password='abc')

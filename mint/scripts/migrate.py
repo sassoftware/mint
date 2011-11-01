@@ -4452,7 +4452,7 @@ class MigrateTo_59(SchemaMigration):
 
 class MigrateTo_60(SchemaMigration):
     '''Edge-P3'''
-    Version = (60, 2)
+    Version = (60, 3)
 
     def migrate(self):
         '''"My" querysets feature'''
@@ -4493,7 +4493,14 @@ class MigrateTo_60(SchemaMigration):
                 set credentials_descriptor=? where name='wmi'""" ,
                 schema.wmi_credentials_descriptor)
         return True
-
+    
+    def migrate3(self):
+        '''do not delete users, mark them as deleted'''
+        cu = self.db.cursor()
+        cu.execute("""
+            ALTER TABLE users ADD COLUMN deleted BOOLEAN NOT NULL DEFAULT false
+        """)
+        return True
 
 #### SCHEMA MIGRATIONS END HERE #############################################
 
