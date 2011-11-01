@@ -28,7 +28,7 @@ from conary.dbstore import sqlerrors, sqllib
 log = logging.getLogger(__name__)
 
 # database schema major version
-RBUILDER_DB_VERSION = sqllib.DBversion(60, 3)
+RBUILDER_DB_VERSION = sqllib.DBversion(60, 4)
 
 def _createTrigger(db, table, column="changed"):
     retInsert = db.createTrigger(table, column, "INSERT")
@@ -262,6 +262,8 @@ def _createRbac(db):
             CONSTRAINT querysets_roletag_uq UNIQUE ("role_id", "query_set_id",
                 "inclusion_method_id")
         )""")
+    
+    _createNonIdentityRoles(db)
 
 
 def _createProjects(db):
@@ -2254,6 +2256,12 @@ def _createAllRoles(db, version=None):
             'rbac', version=version)
     return True
 
+def _createNonIdentityRoles(db, version=None):
+    '''all roles that are intended for multiple users'''
+    filterId = _addQuerySetFilterEntry(db, "rbac_role.is_identity", "EQUAL", "false")
+    _addQuerySet(db, "All Non-Identity Roles", "All non-identity roles", "role", False, filterId,
+            'rbac', version=version)
+    return True
 
 def _createAllGrants(db, version=None):
     """Add the all systems query set"""
