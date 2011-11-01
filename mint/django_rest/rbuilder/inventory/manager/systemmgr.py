@@ -892,17 +892,20 @@ class SystemManager(basemanager.BaseManager):
                 output_trove=baseImageTrove)
 
             md = baseImage.metadata
-            username = password = key = ''
+            username = password = domain = key = ''
             if hasattr(md, 'credentials_username'):
                 username = md.credentials_username
             if hasattr(md, 'credentials_password'):
                 password = md.credentials_password
+            if hasattr(md, 'credentials_domain'):
+                domain = md.credentials_domain
             if hasattr(md, 'credentials_sshkey'):
                 key = md.credentials_sshkey
 
             creds = dict(
                 username=username,
                 password=password,
+                domain=domain,
                 key=key,
             )
 
@@ -1314,6 +1317,10 @@ class SystemManager(basemanager.BaseManager):
         credentialsString = system.credentials
         if credentialsString:
             kwargs.update(self.unmarshalCredentials(credentialsString))
+            if not kwargs.get('domain'):
+                # Copy hostname or IP to domain field if not provided, to
+                # indicate that the credentials are for the local system
+                kwargs['domain'] = destination.upper()
         kwargs.update(
             host=destination,
             port=system.agent_port,

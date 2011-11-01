@@ -4452,7 +4452,7 @@ class MigrateTo_59(SchemaMigration):
 
 class MigrateTo_60(SchemaMigration):
     '''Edge-P3'''
-    Version = (60, 1)
+    Version = (60, 2)
 
     def migrate(self):
         '''"My" querysets feature'''
@@ -4486,6 +4486,14 @@ class MigrateTo_60(SchemaMigration):
             ALTER TABLE projects ADD COLUMN modified_by INTEGER REFERENCES Users (userid) ON DELETE SET NULL
         """) 
         return True
+
+    def migrate2(self):
+        cu = self.db.cursor()
+        cu.execute("""update inventory_management_interface
+                set credentials_descriptor=? where name='wmi'""" ,
+                schema.wmi_credentials_descriptor)
+        return True
+
 
 #### SCHEMA MIGRATIONS END HERE #############################################
 

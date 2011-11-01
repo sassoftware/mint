@@ -28,7 +28,7 @@ from conary.dbstore import sqlerrors, sqllib
 log = logging.getLogger(__name__)
 
 # database schema major version
-RBUILDER_DB_VERSION = sqllib.DBversion(60, 1)
+RBUILDER_DB_VERSION = sqllib.DBversion(60, 2)
 
 def _createTrigger(db, table, column="changed"):
     retInsert = db.createTrigger(table, column, "INSERT")
@@ -1611,7 +1611,7 @@ wmi_credentials_descriptor = r"""<descriptor xmlns:xsi="http://www.w3.org/2001/X
       </descriptions>
       <type>str</type>
       <default></default>
-      <required>true</required>
+      <required>false</required>
     </field>
     <field>
       <name>username</name>
