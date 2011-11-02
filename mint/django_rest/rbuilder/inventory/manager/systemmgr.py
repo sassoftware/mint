@@ -11,6 +11,8 @@ import datetime
 import random
 import time
 import traceback
+from conary import versions as cny_versions
+from conary.deps import deps as cny_deps
 from dateutil import tz
 from xobj import xobj
 
@@ -1379,10 +1381,11 @@ class SystemManager(basemanager.BaseManager):
             projectLabel = None
             installTrove = None
             if source is not None:
-                full = source.trove_version
-                tokens = full.split("/")
-                projectLabel = tokens[1]
-                installTrove = "group-%s-appliance" % source.project.short_name
+                version = cny_versions.ThawVersion(str(source.trove_version))
+                flavor = cny_deps.ThawFlavor(str(source.trove_flavor))
+                installTrove = '%s=%s[%s]' % (source.trove_name, version,
+                        flavor)
+                projectLabel = str(version.trailingLabel())
 
             params = repClient.AssimilatorParams(host=destination,
                 caCert=cert, sshAuth=event_data,
