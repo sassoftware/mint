@@ -213,6 +213,7 @@ project_branch_stage_xml = """\
   </project_branch>
   <promotable>false</promotable>
   <stage_id>12</stage_id>
+  <systems/>
 </project_branch_stage>"""
 
 project_branch_stage_put_xml = \
@@ -232,6 +233,7 @@ project_branch_stage_put_xml = \
   </project_branch>
   <promotable>false</promotable>
   <stage_id>12</stage_id>
+  <systems/>
 </stage>
 """.strip()
 
@@ -280,6 +282,7 @@ project_branch_stages_xml = \
       <short_name>chater-foo</short_name>
       <name>chater-foo</name>
     </project>
+    <systems/>
     <groups promote_href="https://testserver/api/products/chater-foo/versions/trunk/stages/Development" href="https://testserver/api/products/chater-foo/repos/search?type=group&amp;label=foo@ns:trunk-devel"/>
     <created_date>2011-10-12T21:22:24.206535+00:00</created_date>
     <images id="http://testserver/api/v1/projects/chater-foo/project_branches/chater-foo.eng.rpath.com@rpath:chater-foo-trunk/project_branch_stages/Development/images"/>
@@ -298,6 +301,7 @@ project_branch_stages_xml = \
       <short_name>chater-foo</short_name>
       <name>chater-foo</name>
     </project>
+    <systems/>
     <groups promote_href="https://testserver/api/products/chater-foo/versions/trunk/stages/QA" href="https://testserver/api/products/chater-foo/repos/search?type=group&amp;label=foo@ns:trunk-qa"/>
     <created_date>2011-10-12T21:22:24.209524+00:00</created_date>
     <images id="http://testserver/api/v1/projects/chater-foo/project_branches/chater-foo.eng.rpath.com@rpath:chater-foo-trunk/project_branch_stages/QA/images"/>
@@ -316,6 +320,7 @@ project_branch_stages_xml = \
       <short_name>chater-foo</short_name>
       <name>chater-foo</name>
     </project>
+    <systems/>
     <groups promote_href="https://testserver/api/products/chater-foo/versions/trunk/stages/Stage" href="https://testserver/api/products/chater-foo/repos/search?type=group&amp;label=foo@ns:trunk-stage"/>
     <created_date>2011-10-12T21:22:24.212755+00:00</created_date>
     <images id="http://testserver/api/v1/projects/chater-foo/project_branches/chater-foo.eng.rpath.com@rpath:chater-foo-trunk/project_branch_stages/Stage/images"/>
@@ -334,6 +339,7 @@ project_branch_stages_xml = \
       <short_name>chater-foo</short_name>
       <name>chater-foo</name>
     </project>
+    <systems/>
     <groups promote_href="https://testserver/api/products/chater-foo/versions/trunk/stages/Release" href="https://testserver/api/products/chater-foo/repos/search?type=group&amp;label=foo@ns:trunk"/>
     <created_date>2011-10-12T21:22:24.215180+00:00</created_date>
     <images id="http://testserver/api/v1/projects/chater-foo/project_branches/chater-foo.eng.rpath.com@rpath:chater-foo-trunk/project_branch_stages/Release/images"/>

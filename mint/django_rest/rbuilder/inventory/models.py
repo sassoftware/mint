@@ -545,13 +545,13 @@ class System(modellib.XObjIdModel):
         related_name='systems', text_field='description'),
         "the type of the system")
     stage = D(APIReadOnly(modellib.DeferredForeignKey(Stage, null=True, 
-        text_field='name', related_name="+")),
+        text_field='name', related_name="systems")),
         "the project stage of the system")
     major_version = D(APIReadOnly(modellib.DeferredForeignKey(ProjectVersion, null=True,
-        text_field='name', related_name="+")),
+        text_field='name', related_name="systems")),
         "the project major version of the system")
     project = D(APIReadOnly(modellib.DeferredForeignKey(Project, null=True,
-        text_field='short_name', related_name="+")),
+        text_field='short_name', related_name="systems")),
         "the project of the system")
     configuration = APIReadOnly(XObjHidden(models.TextField(null=True)))
     configuration_descriptor = D(XObjHidden(modellib.SyntheticField()),
