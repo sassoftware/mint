@@ -289,22 +289,26 @@ class QuerySetManager(basemanager.BaseManager):
         if len(resources) == 0:
             return
 
-        tagClass.objects.lock()
+        cursor = connection.cursor()
 
         if inclusionMethod.name != 'chosen':
-            tagClass.objects.filter(
-                query_set=queryset,
-                inclusion_method=inclusionMethod
-            ).delete()
+            cursor.execute("DELETE FROM %s WHERE query_set_id = %s AND inclusion_method_id = %s" % (
+                tagTable, queryset.pk, inclusionMethod.pk
+            ))
+
+        insertParams = None
+        if type(resources) == list:
+            # inserting chosens, should be a small quantity
+            insertParams = [(r.pk,) for r in resources]
+        else:
+            resources = resources.values_list('pk', flat=True)
+            insertParams = [(r,) for r in resources]
 
         query = "INSERT INTO %s" % tagTable 
         query = query + " (%s, query_set_id, inclusion_method_id)" % idColumn
-        query = query + " VALUES (%s, %s, %s)"
-        insertParams = [(resource.pk, queryset.pk, inclusionMethod.pk) for \
-            resource in resources]
-        cursor = connection.cursor()
+        query = query + " VALUES (%s, " + " %s, %s)" % (queryset.pk, inclusionMethod.pk)
         cursor.executemany(query, insertParams) 
-        transaction.commit_unless_managed()
+        transaction.commit()
 
         # transaction will unlock
 
