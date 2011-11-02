@@ -11,7 +11,7 @@ from django.http import HttpResponseRedirect
 
 from mint.django_rest.deco import return_xml, requires, access, xObjRequires
 from mint.django_rest.rbuilder import service
-from mint.django_rest.rbuilder.querysets import models
+# from mint.django_rest.rbuilder.querysets import models
 from mint.django_rest.rbuilder.rbac.rbacauth import rbac, manual_rbac
 from mint.django_rest.rbuilder.errors import PermissionDenied
 from mint.django_rest.rbuilder.rbac.manager.rbacmanager import \
