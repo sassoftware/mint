@@ -141,6 +141,8 @@ class RbacManager(basemanager.BaseManager):
                         )
                         permission_type._xobj = deepcopy(permission_type._xobj)
                         xperm = modellib.XObjIdModel.serialize(permission_type, request)
+                        xperm.matrix_permission_id = xperm.id
+                        del xperm.id
                         permission_type._xobj.tag = ptypename
                         xgrant = modellib.XObjIdModel.serialize(grant, request)
                         del xgrant.modified_by 
@@ -161,6 +163,8 @@ class RbacManager(basemanager.BaseManager):
                         )
                         permission_type._xobj = deepcopy(permission_type._xobj)
                         xperm = modellib.XObjIdModel.serialize(permission_type, request)
+                        xperm.matrix_permission_id = xperm.id
+                        del xperm.id
                         permission_type._xobj.tag = ptypename
                     setattr(role, "%s_permission" % ptypename, xperm)
                 # since this collection is not actually paged, (because it's not relative to the true
