@@ -616,7 +616,7 @@ WHERE level >= 0
             SELECT * FROM (
                 SELECT userId, salt, passwd, 0 AS is_token
                 FROM Users
-                WHERE username = :user
+                WHERE username = :user AND NOT deleted
 
                 UNION
 
@@ -624,6 +624,7 @@ WHERE level >= 0
                 FROM Users u
                 JOIN auth_tokens t ON t.user_id = u.userId
                 WHERE username = :user AND expires_date >= now()
+                AND NOT deleted
             ) x ORDER BY is_token DESC
             """, dict(user=mintToken.user))
         # The preceding query can return one password and zero or many tokens,

@@ -82,7 +82,7 @@ class UsersTable(database.KeyedTable):
 
         cu = self.db.cursor()
         cu.execute("""SELECT salt, passwd, is_admin
-            FROM Users WHERE username=?""", user)
+            FROM Users WHERE username=? AND NOT deleted""", user)
         r = cu.fetchone()
         if r and self._checkPassword(user, r[0], r[1], challenge):
             isAdmin = r[2]
