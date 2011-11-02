@@ -256,7 +256,7 @@ def filterDjangoQuerySet(djangoQuerySet, field, operator, value,
  
     # never be able to list a deleted user account, they are 
     # present for admin metadata only
-    if queryset.resource_type == 'user':
+    if queryset and queryset.resource_type == 'user':
         filtDict['deleted'] = False 
 
     if operator.startswith('NOT_'):
