@@ -7,6 +7,7 @@
 
 from mint.django_rest.deco import return_xml, requires
 from mint.django_rest.rbuilder import service
+from django.http import HttpResponse
 
 class BasePackageService(service.BaseService):
     pass

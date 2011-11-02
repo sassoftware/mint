@@ -66,20 +66,8 @@ class Command(BaseCommand):
             MODEL_NAME = getattr(u, 'model', None)
             currentModel = self.aggregateModels.get(MODEL_NAME, None)
             # Skip all views that don't specify a model name
-            if not MODEL_NAME or not currentModel:
-                continue
-                
-            # get the tag name of model.  the _xobj tag may be different
-            # than the default (undercase/underscored model name) and
-            # user only needs the requested resource's tag, not the actual
-            # model name.
-            # NOTE: after some experimentation, it's become apparent
-            # that the tag name returned by getTag does not always
-            # return the underscored model name in the case that an
-            # _xobj is not explicitly specified.  Keep this in mind
-            # when refactoring getAttributesDocumentation -- see
-            # FIXME inside getAttributesDocumentation.
-            MODEL_TAG = currentModel.getTag()
+            if not MODEL_NAME or not currentModel: continue
+            
             # dict indexed by REST methods for the model
             METHODS = self.getMethodsFromView(view)
             # text formed by concatenating attr name with value of the docstring
@@ -154,6 +142,14 @@ class Command(BaseCommand):
         return allModels
 
     def getAttributesDocumentation(self, modelName):
+        """
+        after some experimentation, it's become apparent
+        that the tag name returned by getTag does not always
+        return the underscored model name in the case that an
+        _xobj is not explicitly specified.  Keep this in mind
+        when refactoring getAttributesDocumentation -- see
+        FIXME inside getAttributesDocumentation.
+        """
         # getAttributesDocumentation is called recursively to
         # calculate the attributes of models included by a
         # collection.  The terminating condition is a model name
