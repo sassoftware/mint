@@ -13,7 +13,6 @@ import time
 from mint.lib import database
 from mint.helperfuncs import truncateForDisplay
 from mint import helperfuncs
-from mint import mailinglists
 from mint import userlevels
 from mint.mint_error import *
 
@@ -181,20 +180,11 @@ class Project(database.TableObject):
     def onlyOwner(self, userId):
         return self.server.onlyOwner(self.id, userId)
 
-    def orphan(self, mlenabled, mlbaseurl, mlpasswd):
-        if mlenabled:
-            #Take care of mailing lists
-            # FIXME: mailing lists should be handled elsewhere
-            mlists = mailinglists.MailingListClient(mlbaseurl + 'RPC2')
-            mlists.orphan_lists(mlpasswd, self.getHostname())
+    def orphan(self):
+        pass
 
-    def adopt(self, auth, mlenabled, mlbaseurl, mlpasswd):
+    def adopt(self, auth):
         self.addMemberByName(auth.username, userlevels.OWNER)
-        if mlenabled:
-            # Take care of mailing lists
-            # FIXME: mailing lists should be handled elsewhere
-            mlists = mailinglists.MailingListClient(mlbaseurl + 'RPC2')
-            mlists.adopt_lists(auth, mlpasswd, self.getHostname())
 
     def getUrl(self, baseUrl=None):
         if not baseUrl:

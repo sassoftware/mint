@@ -3,7 +3,7 @@
 # All rights reserved
 #
 
-from mint.mint_error import *
+from mint.mint_error import MintError
 from mint.web.fields import strFields
 from mint.web.decorators import writersOnly
 

@@ -477,7 +477,10 @@ class JobHandlerRegistry(HandlerRegistry):
 
         def getRepeaterMethodArgs(self, job):
             # XXX FIXME
-            return (), {}
+            params = dict(
+                descriptor_data=job._descriptor_data,
+            )
+            return (params, ), {}
 
         def getRelatedThroughModel(self, descriptor):
             return imagemodels.JobImage

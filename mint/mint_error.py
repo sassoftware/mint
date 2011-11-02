@@ -153,7 +153,6 @@ class MailError(ServerError):
     "There was a problem sending email."
     status = 500
 
-class MailingListException(ServerError): pass
 class MaintenanceMode(ServerError): "Repositories are currently offline."
 class MessageException(ServerError): pass
 class MultipleImageTypes(InvalidError):
