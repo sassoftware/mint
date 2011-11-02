@@ -78,9 +78,9 @@ class rBuilderBackend(object):
             salt = user.salt.decode('hex')
             m = md5(salt + password)
             if (m.hexdigest() == user.passwd):
-	        self.update_login_time(user)
+                self.update_login_time(user)
                 return user
-        if mintConfig:
+        elif mintConfig:
             client = auth_client.getClient(mintConfig.authSocket)
             if client.checkPassword(username, password):
 	        self.update_login_time(user)

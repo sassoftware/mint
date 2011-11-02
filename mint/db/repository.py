@@ -648,9 +648,10 @@ WHERE level >= 0
             testPass = hashlib.md5(salt + mintToken.password).hexdigest()
             if testPass.lower() == digest.lower():
                 return True
-        authClient = self._manager().authClient
-        if authClient.checkPassword(mintToken.user, mintToken.password):
-            return True
+        else:
+            authClient = self._manager().authClient
+            if authClient.checkPassword(mintToken.user, mintToken.password):
+                return True
         return False
 
     def _getShimServerProxy(self, userId=None):

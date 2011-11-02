@@ -64,8 +64,9 @@ class UsersTable(database.KeyedTable):
             m = md5(salt.decode('hex') + challenge)
             if m.hexdigest() == password:
                 return True
-        if self.authClient.checkPassword(user, challenge):
-            return True
+        else:
+            if self.authClient.checkPassword(user, challenge):
+                return True
         return False
 
     def _mungePassword(self, password):
