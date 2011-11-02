@@ -392,7 +392,7 @@ system_type_systems_xml="""
     <launch_date/>
     <launching_user/>
     <local_uuid>testsystemlocaluuid</local_uuid>
-    <major_version/>
+    <project_branch/>
     <management_interface id="http://testserver/api/v1/inventory/management_interfaces/1">Common Information Model (CIM)</management_interface>
     <managing_zone id="http://testserver/api/v1/inventory/zones/1">Local rBuilder</managing_zone>
     <name>testsystemname</name>
@@ -628,7 +628,7 @@ management_nodes_xml = """\
     <zone id="http://testserver/api/v1/inventory/zones/2"/>
     <system_ptr id="http://testserver/api/v1/inventory/systems/3"/>
     <local_uuid>test management node luuid</local_uuid>
-    <major_version/>
+    <project_branch/>
     <management_interface id="http://testserver/api/v1/inventory/management_interfaces/1">Common Information Model (CIM)</management_interface>
     <current_state id="http://testserver/api/v1/inventory/system_states/3">
       <created_date>%s</created_date>
@@ -703,7 +703,7 @@ management_node_xml = """\
   <zone id="http://testserver/api/v1/inventory/zones/2"/>
   <system_ptr id="http://testserver/api/v1/inventory/systems/3"/>
   <local_uuid>test management node luuid</local_uuid>
-  <major_version/>
+  <project_branch/>
   <management_interface id="http://testserver/api/v1/inventory/management_interfaces/1">Common Information Model (CIM)</management_interface>
   <current_state id="http://testserver/api/v1/inventory/system_states/3">
     <created_date>%s</created_date>
@@ -749,7 +749,7 @@ management_node_post_xml = """\
   <ssl_client_certificate>test management node client cert</ssl_client_certificate>
   <description>test management node desc</description>
   <local_uuid>test management node luuid</local_uuid>
-  <major_version/>
+  <project_branch/>
   <management_interface id="http://testserver/api/v1/inventory/management_interfaces/1">Common Information Model (CIM)</management_interface>
 </management_node>"""
 
@@ -814,7 +814,7 @@ management_node_post_response_xml = """\
   <target/>
   <system_ptr id="http://testserver/api/v1/inventory/systems/3"/>
   <local_uuid>test management node luuid</local_uuid>
-  <major_version/>
+  <project_branch/>
   <management_interface id="http://testserver/api/v1/inventory/management_interfaces/1">Common Information Model (CIM)</management_interface>
   <current_state id="http://testserver/api/v1/inventory/system_states/3">
     <created_date>%s</created_date>
@@ -859,7 +859,7 @@ management_node_zone_post_xml = """\
   <description>test management node desc</description>
   <zone id="http://testserver/api/v1/inventory/zones/2"/>
   <local_uuid>test management node luuid</local_uuid>
-  <major_version/>
+  <project_branch/>
   <management_interface id="http://testserver/api/v1/inventory/management_interfaces/1">Common Information Model (CIM)</management_interface>
   <managing_zone id="http://testserver/api/v1/inventory/zones/1"/>
 </management_node>"""
@@ -925,7 +925,7 @@ management_node_zone_post_response_xml = """\
   <zone id="http://testserver/api/v1/inventory/zones/2"/>
   <system_ptr id="http://testserver/api/v1/inventory/systems/3"/>
   <local_uuid>test management node luuid</local_uuid>
-  <major_version/>
+  <project_branch/>
   <management_interface id="http://testserver/api/v1/inventory/management_interfaces/1">Common Information Model (CIM)</management_interface>
   <current_state id="http://testserver/api/v1/inventory/system_states/3">
     <created_date>%s</created_date>
@@ -992,7 +992,7 @@ systems_xml = """\
     <launch_date/>
     <launching_user/>
     <local_uuid/>
-    <major_version/>
+    <project_branch/>
     <management_interface/>
     <managing_zone id="http://testserver/api/v1/inventory/zones/1">Local rBuilder</managing_zone>
     <name>rPath Update Service</name>
@@ -1075,7 +1075,7 @@ systems_xml = """\
     <launch_date/>
     <launching_user/>
     <local_uuid>testsystemlocaluuid</local_uuid>
-    <major_version/>
+    <project_branch/>
     <management_interface id="http://testserver/api/v1/inventory/management_interfaces/1">Common Information Model (CIM)</management_interface>
     <managing_zone id="http://testserver/api/v1/inventory/zones/1">Local rBuilder</managing_zone>
     <name>testsystemname</name>
@@ -1150,7 +1150,7 @@ systems_put_xml = """\
     <system_events id="http://testserver/api/v1/inventory/systems/1/system_events"/>
     <name>testsystemname</name>
     <local_uuid>testsystemlocaluuid</local_uuid>
-    <major_version/>
+    <project_branch/>
     <management_interface id="http://testserver/api/v1/inventory/management_interfaces/1">Common Information Model (CIM)</management_interface>
     <current_state id="http://testserver/api/v1/inventory/system_states/2">
       <description>Initial synchronization pending</description>
@@ -1193,7 +1193,7 @@ systems_put_xml = """\
     <system_events id="http://testserver/api/v1/inventory/systems/2/system_events"/>
     <name>testsystemname</name>
     <local_uuid>testsystem2localuuid</local_uuid>
-    <major_version/>
+    <project_branch/>
     <management_interface id="http://testserver/api/v1/inventory/management_interfaces/1">Common Information Model (CIM)</management_interface>
     <current_state id="http://testserver/api/v1/inventory/system_states/2">
       <description>Initial synchronization pending</description>
@@ -1239,7 +1239,7 @@ systems_put_mothball_xml = """\
   <system_events id="http://testserver/api/v1/inventory/systems/1/system_events"/>
   <name>testsystemname</name>
   <local_uuid>testsystemlocaluuid</local_uuid>
-  <major_version/>
+  <project_branch/>
   <management_interface id="http://testserver/api/v1/inventory/management_interfaces/1">Common Information Model (CIM)</management_interface>
   <current_state id="http://testserver/api/v1/inventory/system_states/12">
     <description>Retired</description>
@@ -1324,7 +1324,7 @@ system_xml = """\
   <target/>
   <name>testsystemname</name>
   <local_uuid>testsystemlocaluuid</local_uuid>
-  <major_version/>
+  <project_branch/>
   <management_interface id="http://testserver/api/v1/inventory/management_interfaces/1">Common Information Model (CIM)</management_interface>
   <current_state id="http://testserver/api/v1/inventory/system_states/3">
     <description>Initial synchronization pending</description>
@@ -1386,7 +1386,7 @@ system_post_xml = """\
   <target_system_state/>
   <name>testsystemname</name>
   <local_uuid>testsystemlocaluuid</local_uuid>
-  <major_version/>
+  <project_branch/>
   <management_interface id="http://testserver/api/v1/inventory/management_interfaces/1">Common Information Model (CIM)</management_interface>
   <source_image/>
 </system>"""
@@ -1424,7 +1424,7 @@ system_mgmt_interface_put_xml = """\
   <target_system_state/>
   <name>testsystemname</name>
   <local_uuid>testsystemlocaluuid</local_uuid>
-  <major_version/>
+  <project_branch/>
   <management_interface id="http://testserver/api/v1/inventory/management_interfaces/2">Windows Management Instrumentation (WMI)</management_interface>
   <source_image/>
 </system>"""
@@ -1463,7 +1463,7 @@ system_delete_mgmt_interface_put_xml = """\
   <system_type id="http://testserver/api/v1/inventory/system_types/1">Inventory</system_type>
   <name>testsystemname</name>
   <local_uuid>testsystemlocaluuid</local_uuid>
-  <major_version/>
+  <project_branch/>
   <management_interface/>
   <source_image/>
 </system>"""
@@ -1525,7 +1525,7 @@ system_post_xml_response = """\
   <name>testsystemname</name>
   <target/>
   <local_uuid>testsystemlocaluuid</local_uuid>
-  <major_version/>
+  <project_branch/>
   <management_interface id="http://testserver/api/v1/inventory/management_interfaces/1">Common Information Model (CIM)</management_interface>
   <current_state id="http://testserver/api/v1/inventory/system_states/3">
     <description>Initial synchronization pending</description>
@@ -1603,7 +1603,7 @@ system_post_xml_dup = """\
   <target_system_state/>
   <name>testsystemname</name>
   <local_uuid>testsystemlocaluuid</local_uuid>
-  <major_version/>
+  <project_branch/>
   <management_interface id="http://testserver/api/v1/inventory/management_interfaces/1">Common Information Model (CIM)</management_interface>
   <source_image/>
 </system>"""
@@ -1687,7 +1687,7 @@ system_target_xml = """\
   <name>testsystemname</name>
   <target id="http://testserver/api/v1/targets/4">testtargetname</target>
   <local_uuid>testsystemlocaluuid</local_uuid>
-  <major_version/>
+  <project_branch/>
   <management_interface id="http://testserver/api/v1/inventory/management_interfaces/1">Common Information Model (CIM)</management_interface>
   <current_state id="http://testserver/api/v1/inventory/system_states/3">
     <description>Initial synchronization pending</description>
@@ -2033,7 +2033,7 @@ system_version_xml = """\
   <target/>
   <name>testsystemname</name>
   <local_uuid>testsystemlocaluuid</local_uuid>
-  <major_version/>
+  <project_branch/>
   <management_interface id="http://testserver/api/v1/inventory/management_interfaces/1">Common Information Model (CIM)</management_interface>
   <current_state id="http://testserver/api/v1/inventory/system_states/3">
     <description>Initial synchronization pending</description>
@@ -2170,7 +2170,7 @@ system_version_put_response_xml = """\
   <target/>
   <name/>
   <local_uuid>testsystemlocaluuid</local_uuid>
-  <major_version/>
+  <project_branch/>
   <management_interface id="http://testserver/api/v1/inventory/management_interfaces/1">Common Information Model (CIM)</management_interface>
   <current_state id="http://testserver/api/v1/inventory/system_states/2">
     <description>Initial synchronization pending</description>
@@ -2310,7 +2310,7 @@ system_available_updates_xml = """\
   <target/>
   <name>testsystemname</name>
   <local_uuid>testsystemlocaluuid</local_uuid>
-  <major_version/>
+  <project_branch/>
   <management_interface id="http://testserver/api/v1/inventory/management_interfaces/1">Common Information Model (CIM)</management_interface>
   <current_state id="http://testserver/api/v1/inventory/system_states/3">
     <description>Initial synchronization pending</description>
@@ -2518,7 +2518,7 @@ system_with_target = """\
     <address>vsphere1-002</address>
   </network_address>
   <local_uuid/>
-  <major_version/>
+  <project_branch/>
   <management_interface/>
   <target_system_state/>
   <system_type id="http://testserver/api/v1/inventory/system_types/1">Inventory</system_type>
@@ -2780,9 +2780,9 @@ system_installed_software_version_stage_xml = """\
   <name>testsystemname</name>
   <local_uuid>testsystemlocaluuid</local_uuid>
   <target_system_state/>
-  <major_version id="http://testserver/api/v1/projects/chater-foo/project_branches/chater-foo.eng.rpath.com@rpath:chater-foo-1">
+  <project_branch id="http://testserver/api/v1/projects/chater-foo/project_branches/chater-foo.eng.rpath.com@rpath:chater-foo-1">
     <name>1</name>
-  </major_version>
+  </project_branch>
   <current_state id="http://testserver/api/v1/inventory/system_states/3">
     <system_state_id>3</system_state_id>
     <description>Initial synchronization pending</description>
@@ -2826,7 +2826,7 @@ System Properties:
    launch_date - the date the system was deployed (only applies if system is on a virtual target)
    launching_user - the user that deployed the system (only applies if system is on a virtual target)
    local_uuid - a UUID created from the system hardware profile
-   major_version - the appliance major version of the system
+   project_branch - the appliance major version of the system
    management_interface - the management interface used to communicate with the system (CIM, WMI, etc.)
    managing_zone - a link to the management zone in which this system resides
    name - the name assigned when system was added to the inventory
@@ -2965,7 +2965,7 @@ Methods:
     <name>rPath Update Service</name>
     <local_uuid/>
     <target_system_state/>
-    <major_version/>
+    <project_branch/>
     <current_state id="http://testserver/api/v1/inventory/system_states/1">
       <system_state_id>1</system_state_id>
       <description>Unmanaged</description>
@@ -3031,7 +3031,7 @@ Methods:
     <name>System name 3</name>
     <local_uuid>system-3-local-uuid</local_uuid>
     <target_system_state/>
-    <major_version/>
+    <project_branch/>
     <current_state id="http://testserver/api/v1/inventory/system_states/1">
       <system_state_id>1</system_state_id>
       <description>Unmanaged</description>
@@ -3097,7 +3097,7 @@ Methods:
     <name>System name 4</name>
     <local_uuid>system-4-local-uuid</local_uuid>
     <target_system_state/>
-    <major_version/>
+    <project_branch/>
     <current_state id="http://testserver/api/v1/inventory/system_states/1">
       <system_state_id>1</system_state_id>
       <description>Unmanaged</description>
@@ -3163,7 +3163,7 @@ Methods:
     <name>System name 5</name>
     <local_uuid>system-5-local-uuid</local_uuid>
     <target_system_state/>
-    <major_version/>
+    <project_branch/>
     <current_state id="http://testserver/api/v1/inventory/system_states/1">
       <system_state_id>1</system_state_id>
       <description>Unmanaged</description>
@@ -3229,7 +3229,7 @@ Methods:
     <name>System name 6</name>
     <local_uuid>system-6-local-uuid</local_uuid>
     <target_system_state/>
-    <major_version/>
+    <project_branch/>
     <current_state id="http://testserver/api/v1/inventory/system_states/1">
       <system_state_id>1</system_state_id>
       <description>Unmanaged</description>
@@ -3295,7 +3295,7 @@ Methods:
     <name>System name 7</name>
     <local_uuid>system-7-local-uuid</local_uuid>
     <target_system_state/>
-    <major_version/>
+    <project_branch/>
     <current_state id="http://testserver/api/v1/inventory/system_states/1">
       <system_state_id>1</system_state_id>
       <description>Unmanaged</description>
@@ -3361,7 +3361,7 @@ Methods:
     <name>System name 8</name>
     <local_uuid>system-8-local-uuid</local_uuid>
     <target_system_state/>
-    <major_version/>
+    <project_branch/>
     <current_state id="http://testserver/api/v1/inventory/system_states/1">
       <system_state_id>1</system_state_id>
       <description>Unmanaged</description>
@@ -3427,7 +3427,7 @@ Methods:
     <name>System name 9</name>
     <local_uuid>system-9-local-uuid</local_uuid>
     <target_system_state/>
-    <major_version/>
+    <project_branch/>
     <current_state id="http://testserver/api/v1/inventory/system_states/1">
       <system_state_id>1</system_state_id>
       <description>Unmanaged</description>
@@ -3493,7 +3493,7 @@ Methods:
     <name>System name 10</name>
     <local_uuid>system-10-local-uuid</local_uuid>
     <target_system_state/>
-    <major_version/>
+    <project_branch/>
     <current_state id="http://testserver/api/v1/inventory/system_states/1">
       <system_state_id>1</system_state_id>
       <description>Unmanaged</description>
@@ -3559,7 +3559,7 @@ Methods:
     <name>System name 11</name>
     <local_uuid>system-11-local-uuid</local_uuid>
     <target_system_state/>
-    <major_version/>
+    <project_branch/>
     <current_state id="http://testserver/api/v1/inventory/system_states/1">
       <system_state_id>1</system_state_id>
       <description>Unmanaged</description>
@@ -3614,7 +3614,7 @@ system_post_forge_object = """<?xml version="1.0" encoding="UTF-8"?>
   <target_system_state/>
   <name>testsystemname</name>
   <local_uuid>testsystemlocaluuid</local_uuid>
-  <major_version/>
+  <project_branch/>
   <management_interface id="http://testserver/api/v1/inventory/management_interfaces/9999">Should Not Exist</management_interface>
   <source_image/>
 </system>"""

@@ -121,7 +121,7 @@ class VersionManager(basemanager.BaseManager):
             label=trove.version.label, name=stage.name, project=project)
 
         system.stage = stage
-        system.major_version = majorVersion
+        system.project_branch = majorVersion
         system.project = project
 
     @exposed

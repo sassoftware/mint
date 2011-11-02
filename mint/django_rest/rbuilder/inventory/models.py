@@ -547,8 +547,8 @@ class System(modellib.XObjIdModel):
     stage = D(APIReadOnly(modellib.DeferredForeignKey(Stage, null=True, 
         text_field='name', related_name="systems")),
         "the project stage of the system")
-    major_version = D(APIReadOnly(modellib.DeferredForeignKey(ProjectVersion, null=True,
-        text_field='name', related_name="systems")),
+    project_branch = D(APIReadOnly(modellib.DeferredForeignKey(ProjectVersion, null=True,
+        db_column="major_version_id", text_field='name', related_name="systems")),
         "the project major version of the system")
     project = D(APIReadOnly(modellib.DeferredForeignKey(Project, null=True,
         text_field='short_name', related_name="systems")),
