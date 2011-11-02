@@ -49,6 +49,32 @@ class FavoriteQuerySetService(BaseQuerySetService):
         querysets = self.mgr.getQuerySets() 
         return self.mgr.favoriteRbacedQuerysets(user, querysets, request)
 
+class QuerySetsService(BaseQuerySetService):
+
+    # rbac is handled semimanually for this function -- show only 
+    # querysets that we have permission to see
+    # but don't use full rbac code, because that is implemented using querysets
+    # and is too meta.
+
+    @access.authenticated
+    @return_xml
+    def rest_GET(self, request):
+        user = request._authUser
+        querysets = self.mgr.getQuerySets()
+        return self.mgr.filterRbacQuerysets(user, querysets, request)
+
+    # not used above, but still needed by load_from_href and other
+    # functions
+    def get(self):
+        return self.mgr.getQuerySets() 
+
+    @access.admin
+    @requires('query_set', load=False)
+    @return_xml
+    def rest_POST(self, request, query_set):
+        return self.mgr.addQuerySet(query_set, request._authUser)
+
+
 class QuerySetService(BaseQuerySetService):
 
     # rbac is handled semimanually for this function -- show only 
@@ -58,32 +84,19 @@ class QuerySetService(BaseQuerySetService):
 
     @access.authenticated
     @return_xml
-    def rest_GET(self, request, query_set_id=None):
+    def rest_GET(self, request, query_set_id):
         user = request._authUser
-        if query_set_id is None:
-            querysets = self.mgr.getQuerySets() 
-            return self.mgr.filterRbacQuerysets(user, querysets, request)
-        else:
-            queryset = self.mgr.getQuerySet(query_set_id)
-            if not queryset.is_public and not self.mgr.userHasRbacPermission(
-                user, queryset, READSET, request
-            ):
-                raise PermissionDenied()
-            return queryset
+        queryset = self.mgr.getQuerySet(query_set_id)
+        if not queryset.is_public and not self.mgr.userHasRbacPermission(
+            user, queryset, READSET, request
+        ):
+            raise PermissionDenied()
+        return queryset
 
     # not used above, but still needed by load_from_href and other
     # functions
-    def get(self, query_set_id=None):
-        if query_set_id is None:
-            return self.mgr.getQuerySets() 
-        else:
-            return self.mgr.getQuerySet(query_set_id) 
-
-    @access.admin
-    @requires('query_set', load=False)
-    @return_xml
-    def rest_POST(self, request, query_set):
-        return self.mgr.addQuerySet(query_set, request._authUser)
+    def get(self, query_set_id):
+        return self.mgr.getQuerySet(query_set_id) 
 
     @access.admin
     @requires('query_set')
@@ -100,6 +113,7 @@ class QuerySetService(BaseQuerySetService):
         self.mgr.deleteQuerySet(querySet)
         response = http.HttpResponse(status=204)
         return response
+
 
 class QuerySetAllResultService(BaseQuerySetService):
     

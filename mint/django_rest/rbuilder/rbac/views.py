@@ -34,21 +34,31 @@ class RbacService(BaseRbacService):
     def rest_GET(self, request):
         return models.Rbac()
 
-class RbacPermissionTypeService(BaseRbacService):
+class RbacPermissionTypesService(BaseRbacService):
     """ 
     Returns the list of permissions configurable for RBAC
     """
     
     @access.anonymous
     @return_xml
-    def rest_GET(self, request, permission_type_id=None):
+    def rest_GET(self, request):
+        return self.get()
+
+    def get(self):
+        return self.mgr.getRbacPermissionTypes()
+
+class RbacPermissionTypeService(BaseRbacService):
+    """ 
+    Returns the list of permissions configurable for RBAC
+    """
+
+    @access.anonymous
+    @return_xml
+    def rest_GET(self, request, permission_type_id):
         return self.get(permission_type_id)
 
-    def get(self, permission_type_id=None):
-        if permission_type_id is not None:
-            return self.mgr.getRbacPermissionType(permission_type_id)
-        else:
-            return self.mgr.getRbacPermissionTypes()
+    def get(self, permission_type_id):
+        return self.mgr.getRbacPermissionType(permission_type_id)
 
  
 class RbacPermissionsService(BaseRbacService):
@@ -68,14 +78,11 @@ class RbacPermissionsService(BaseRbacService):
     # READ
     @access.admin
     @return_xml
-    def rest_GET(self, request, permission_id=None):
-        return self.get(permission_id)
+    def rest_GET(self, request):
+        return self.get()
 
-    def get(self, permission_id=None):
-        if permission_id is not None:
-            return self.mgr.getRbacPermission(permission_id)
-        else:
-            return self.mgr.getRbacPermissions()
+    def get(self):
+        return self.mgr.getRbacPermissions()
 
     # CREATE
     @access.admin
@@ -83,6 +90,17 @@ class RbacPermissionsService(BaseRbacService):
     @return_xml
     def rest_POST(self, request, grant):
         return self.mgr.addRbacPermission(grant, request._authUser)
+
+
+class RbacPermissionService(BaseRbacService):
+    # READ
+    @access.admin
+    @return_xml
+    def rest_GET(self, request, permission_id):
+        return self.get(permission_id)
+
+    def get(self, permission_id):
+        return self.mgr.getRbacPermission(permission_id)
 
     # UPDATE
     @access.admin
@@ -121,21 +139,32 @@ class RbacRolesService(BaseRbacService):
     # READ
     @access.admin
     @return_xml
-    def rest_GET(self, request, role_id=None):
-        return self.get(role_id)
+    def rest_GET(self, request):
+        return self.get()
 
-    def get(self, role_id=None):
-        if role_id is not None:
-            return self.mgr.getRbacRole(role_id)
-        else:
-            return self.mgr.getRbacRoles()
+    def get(self):
+        return self.mgr.getRbacRoles()
 
-    # CREATE
+
+
+class RbacRoleService(BaseRbacService):
+    """
+    Adds and edits roles.
+    <roles>
+       <role id="http://hostname/api/rbac/roles/sysadmin">
+           <role_id>sysadmin</role_id>
+       </role>
+    </roles>    
+    """
+
+    # READ
     @access.admin
     @return_xml
-    @requires('role', save=False)
-    def rest_POST(self, request, role):
-        return self.mgr.addRbacRole(role, request._authUser)
+    def rest_GET(self, request, role_id):
+        return self.get(role_id)
+
+    def get(self, role_id):
+        return self.mgr.getRbacRole(role_id)
 
     # UPDATE
     @access.admin
@@ -149,6 +178,7 @@ class RbacRolesService(BaseRbacService):
     def rest_DELETE(self, request, role_id):
         self.mgr.deleteRbacRole(role_id)
         return HttpResponse(status=204)
+
 
 class RbacUserRolesService(BaseRbacService):
     """

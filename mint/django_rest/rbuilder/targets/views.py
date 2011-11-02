@@ -9,17 +9,23 @@ from mint.django_rest.deco import access, return_xml, requires, Flags
 from mint.django_rest.rbuilder import service
 # from mint.django_rest.rbuilder.errors import PermissionDenied
 
-class TargetService(service.BaseService):
+class TargetsService(service.BaseService):
     
     @return_xml
-    def rest_GET(self, request, target_id=None):
+    def rest_GET(self, request):
+        return self.get()
+
+    def get(self):
+        return self.mgr.getTargets()
+
+class TargetService(service.BaseService):
+
+    @return_xml
+    def rest_GET(self, request, target_id):
         return self.get(target_id)
 
     def get(self, target_id):
-        if target_id:
-            return self.mgr.getTargetById(target_id)
-        else:
-            return self.mgr.getTargets()
+        return self.mgr.getTargetById(target_id)
 
     @access.admin
     def rest_DELETE(self, request, target_id):
@@ -27,16 +33,21 @@ class TargetService(service.BaseService):
         return HttpResponse(status=204)
 
 
+class TargetTypesService(service.BaseService):
+    @return_xml
+    def rest_GET(self, request):
+        return self.get()
+
+    def get(self):
+        return self.mgr.getTargetTypes()
+
 class TargetTypeService(service.BaseService):
     @return_xml
-    def rest_GET(self, request, target_type_id=None):
+    def rest_GET(self, request, target_type_id):
         return self.get(target_type_id)
 
     def get(self, target_type_id):
-        if target_type_id is not None:
-            return self.mgr.getTargetTypeById(target_type_id)
-        else:
-            return self.mgr.getTargetTypes()
+        return self.mgr.getTargetTypeById(target_type_id)
 
 class TargetTypeByTargetService(service.BaseService):
     @return_xml
@@ -46,7 +57,6 @@ class TargetTypeByTargetService(service.BaseService):
     def get(self, target_id):
         return self.mgr.getTargetTypesByTargetId(target_id)
         
-
 class TargetTypeTargetsService(service.BaseService):
     @return_xml
     def rest_GET(self, request, target_type_id):

@@ -334,32 +334,49 @@ class ProjectService(service.BaseService):
         response = HttpResponse(status=204)
         return response
 
+class ProjectBranchStagesService(service.BaseService):
+
+    @rbac(StageCallbacks.can_read_stage)
+    @return_xml
+    def rest_GET(self, request, project_short_name, project_branch_label):
+        return self.get(project_short_name, project_branch_label)
+
+    def get(self, project_short_name, project_branch_label):
+        return self.mgr.getProjectBranchStages(project_short_name,
+            project_branch_label)
+
 class ProjectBranchStageService(service.BaseService):
 
     @rbac(StageCallbacks.can_read_stage)
     @return_xml
-    def rest_GET(self, request, project_short_name, project_branch_label, stage_name=None):
+    def rest_GET(self, request, project_short_name, project_branch_label, stage_name):
         return self.get(project_short_name, project_branch_label, stage_name)
 
     def get(self, project_short_name, project_branch_label, stage_name):
-        if stage_name:
-            return self.mgr.getProjectBranchStage(project_short_name,
-                project_branch_label, stage_name)
-        return self.mgr.getProjectBranchStages(project_short_name,
-            project_branch_label)
+        return self.mgr.getProjectBranchStage(project_short_name,
+            project_branch_label, stage_name)
+
+
+class ProjectImagesService(service.BaseService):
+
+    @rbac(ProjectCallbacks.can_read_project)
+    @return_xml
+    def rest_GET(self, request, project_short_name):
+        return self.get(request, project_short_name)
+
+    def get(self, request, project_short_name):
+        return self.mgr.getImagesForProject(project_short_name)
+
 
 class ProjectImageService(service.BaseService):
 
     @rbac(ProjectCallbacks.can_read_project)
     @return_xml
-    def rest_GET(self, request, project_short_name, image_id=None):
+    def rest_GET(self, request, project_short_name, image_id):
         return self.get(request, project_short_name, image_id)
 
     def get(self, request, project_short_name, image_id):
-        if image_id:
-            model = self.mgr.getImage(image_id)
-        else:
-            model = self.mgr.getImagesForProject(project_short_name)
+        model = self.mgr.getImage(image_id)
         return model
 
     @rbac(ProjectCallbacks.can_write_project)
@@ -368,7 +385,6 @@ class ProjectImageService(service.BaseService):
     def rest_PUT(self, request, project_short_name, image_id, image):
         image.image_id = image_id
         return self.mgr.updateImage(image)
-
 
 class ProjectBranchStageImagesService(service.BaseService):
     
@@ -398,7 +414,7 @@ class ProjectMemberService(service.BaseService):
         return self.mgr.getProjectMembers(project_short_name)
 
 
-class ProjectReleaseService(service.BaseService):
+class ProjectReleasesService(service.BaseService):
  
     @rbac(ProjectCallbacks.can_read_project)
     @return_xml
@@ -418,20 +434,27 @@ class ProjectReleaseService(service.BaseService):
         release.save()
         return release
         
-class ProjectReleaseImageService(service.BaseService):
+class ProjectReleaseService(service.BaseService):
 
     @rbac(ProjectCallbacks.can_read_project)
     @return_xml
-    def rest_GET(self, request, project_short_name, release_id, image_id=None):
-        return self.get(project_short_name, release_id, image_id)
+    def rest_GET(self, request, project_short_name, release_id):
+        return self.get(project_short_name, release_id)
+
+    def get(self, project_short_name, release_id):
+        return projectmodels.Release.objects.get(release_id=release_id)
         
-    def get(self, project_short_name, release_id, image_id):
-        if image_id:
-            return self.mgr.getImageBuild(image_id)
-        else:
-            Images = imagemodels.Images()
-            Images.image = imagemodels.Image.objects.filter(release__release_id=release_id)
-            return Images
+class ProjectReleaseImagesService(service.BaseService):
+
+    @rbac(ProjectCallbacks.can_read_project)
+    @return_xml
+    def rest_GET(self, request, project_short_name, release_id):
+        return self.get(project_short_name, release_id)
+        
+    def get(self, project_short_name, release_id):
+        Images = imagemodels.Images()
+        Images.image = imagemodels.Image.objects.filter(release__release_id=release_id)
+        return Images
     
     @rbac(ProjectCallbacks.can_write_project)
     @requires('image')
@@ -439,4 +462,11 @@ class ProjectReleaseImageService(service.BaseService):
     def rest_POST(self, request, project_short_name, release_id, image):
         return self.mgr.createImageBuild(image)
         
-
+class ProjectReleaseImageService(service.BaseService):
+    @rbac(ProjectCallbacks.can_read_project)
+    @return_xml
+    def rest_GET(self, request, project_short_name, release_id, image_id):
+        return self.get(project_short_name, release_id, image_id)
+        
+    def get(self, project_short_name, release_id, image_id):
+        return self.mgr.getImageBuild(image_id)

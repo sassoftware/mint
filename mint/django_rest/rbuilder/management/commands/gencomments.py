@@ -205,7 +205,7 @@ class Command(BaseCommand):
                 # ProjectVersion as a list field.  However, the tag name for
                 # ProjectVersion is "project_branches", and ProjectVersion has the
                 # tag "project_branch".
-                parsed_name = self.parseName(listedModelName)
+                parsed_name = self.toCamelCaps(listedModelName)
                 subModel = self.aggregateModels.get(parsed_name, None)
                 
                 # FIXME: This code is ugly if nothing else, and is a
@@ -259,6 +259,8 @@ class Command(BaseCommand):
                 if restMethod is not None:
                     access = getattr(restMethod, 'ACCESS', None)
                     rbac = getattr(restMethod, 'RBAC', None)
+                    # default to AUTHENTICATED if no AUTH
+                    # is explicitly set
                     if rbac:
                         resultsDict[method] = 'RBAC'
                     elif access == ACCESS.ANONYMOUS:
@@ -267,9 +269,12 @@ class Command(BaseCommand):
                         resultsDict[method] = 'AUTHENTICATED'
                     elif access == ACCESS.ADMIN:
                         resultsDict[method] = 'ADMIN'
+                    elif access == ACCESS.AUTH_TOKEN:
+                        resultsDict[method] = 'AUTH_TOKEN'
+                    elif access == ACCESS.LOCALHOST:
+                        resultsDict[method] = 'LOCALHOST'
                     else:
-                        print Warning(
-                            'View method %s has an unrecognized authentication method' % view)
+                        resultsDict[method] = 'AUTHENTICATED'
         return resultsDict
         
     def getNotes(self, modelName):
@@ -290,7 +295,7 @@ class Command(BaseCommand):
                 methodsDict[method] = 'Supported'
         return methodsDict
 
-    def parseName(self, name):
+    def toCamelCaps(self, name):
         """
         changes management_nodes to ManagementNodes
         """
