@@ -374,10 +374,16 @@ class RbacManager(basemanager.BaseManager):
                 # show all querysets
                 return querysets_obj
             else:
-                # show admin only non-personal querysets
+                # show admin only public querysets + My QS
+                # if I happen to have any, though I don't really need them
                 results = querymodels.QuerySet.objects.filter(
-                    personal_for__isnull = True
-                )
+                    is_public    = True
+                ).distinct() | querymodels.QuerySet.objects.filter(
+                    personal_for = user
+                ).distinct()
+                querysets_obj = querymodels.QuerySets()
+                querysets_obj.query_set = results
+                return querysets_obj
         results = orig_results.filter(
             is_public = True,
         ).distinct() 
