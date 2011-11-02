@@ -168,6 +168,9 @@ class Command(BaseCommand):
         for field in sorted(model._meta.fields, key=lambda x: x.name):
             name = field.name
             if name.startswith('_'): continue
+            if getattr(field, 'XObjHidden', False): continue
+            if getattr(field, 'APIReadOnly', False):
+                name = name + ' ' + '(Readonly)'
             docstring = getattr(field, 'docstring', 'N/A')
             line = ATTRIBUTE_TEMPLATE % {'ATTRNAME':name, 'DOCSTRING':docstring}
             text.append(line)
