@@ -236,7 +236,7 @@ class XMLTestCase(TestCase, testcase.MockMixIn):
             name="Development", label="label@rpath:foo-devel"):
         if project is None:
             project = branch.project
-        stage = models.Stage(project=project,
+        stage = projmodels.Stage(project=project,
             project_branch=branch, name=name, label=label)
         stage.save()
 

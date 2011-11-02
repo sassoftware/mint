@@ -20,6 +20,9 @@ from mint.django_rest.rbuilder.querysets import models as qsmodels
 
 from smartform import descriptor
 
+import logging
+log = logging.getLogger(__name__)
+
 class CatalogServiceHelper(object):
     _driverCache = {}
 
