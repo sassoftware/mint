@@ -792,7 +792,18 @@ class SystemManager(basemanager.BaseManager):
             system.current_state = nstate
             system.state_change_date = self.now()
             system.save()
-            
+
+    @staticmethod
+    def _getTrovesForLayeredImage(system):
+        image = getattr(system, 'source_image', None)
+        if not image:
+            return None, None
+        version = cny_versions.ThawVersion(str(image.trove_version))
+        flavor = cny_deps.ThawFlavor(str(image.trove_flavor))
+        installTrove = '%s=%s[%s]' % (image.trove_name, version, flavor)
+        projectLabel = str(version.trailingLabel())
+        return installTrove, projectLabel
+
     def getNextSystemState(self, system, job):
 
         # Return None if the state hasn't changed
@@ -833,10 +844,13 @@ class SystemManager(basemanager.BaseManager):
                         # to queue now, it's not ready
                     return None
 
-                # But if it's a WMI system and we have no credentials, skip
-                # directly to UNMANAGED_CREDENTIALS_REQUIRED (RBL-7439)
                 if system.management_interface_id == wmiIfaceId:
-                    if not system.credentials:
+                    if system.credentials and system.hasSourceImage():
+                        # Ready to migrate after a layered image deployment.
+                        trove, _ = self._getTrovesForLayeredImage(system)
+                        self.scheduleSystemApplyUpdateEvent(system, [trove])
+                    elif not system.credentials:
+                        # No credentials avaiable, prompt the user for them.
                         return models.SystemState.UNMANAGED_CREDENTIALS_REQUIRED
                 self.scheduleSystemRegistrationEvent(system)
                 return None
@@ -878,40 +892,41 @@ class SystemManager(basemanager.BaseManager):
         return None
 
     def _copyImageCredentials(self, system):
-        # Make sure this system has a source_image
-        if hasattr(system, 'source_image'):
-            # Now check to see if the source image has a base image trove in the
-            # builddata. This means it is a deferred image and we need to lookup
-            # the base image.
-            builddata = imagemodels.ImageData.objects.filter(
+        if not system.hasSourceImage():
+            return
+
+        # Now check to see if the source image has a base image trove in the
+        # builddata. This means it is a deferred image and we need to lookup
+        # the base image.
+        builddata = imagemodels.ImageData.objects.filter(
                 image=system.source_image, name='baseImageTrove')
 
-            if not builddata:
-                return
+        if not builddata:
+            return
 
-            baseImageTrove = builddata[0].value
-            baseImage = imagemodels.Image.objects.get(
-                output_trove=baseImageTrove)
+        baseImageTrove = builddata[0].value
+        baseImage = imagemodels.Image.objects.filter(
+                output_trove=baseImageTrove)[0]
 
-            md = baseImage.metadata
-            username = password = domain = key = ''
-            if hasattr(md, 'credentials_username'):
-                username = md.credentials_username
-            if hasattr(md, 'credentials_password'):
-                password = md.credentials_password
-            if hasattr(md, 'credentials_domain'):
-                domain = md.credentials_domain
-            if hasattr(md, 'credentials_sshkey'):
-                key = md.credentials_sshkey
+        md = baseImage.metadata
+        username = password = domain = key = ''
+        if hasattr(md, 'credentials_username'):
+            username = md.credentials_username
+        if hasattr(md, 'credentials_password'):
+            password = md.credentials_password
+        if hasattr(md, 'credentials_domain'):
+            domain = md.credentials_domain
+        if hasattr(md, 'credentials_sshkey'):
+            key = md.credentials_sshkey
 
-            creds = dict(
-                username=username,
-                password=password,
-                domain=domain,
-                key=key,
-            )
+        creds = dict(
+            username=username,
+            password=password,
+            domain=domain,
+            key=key,
+        )
 
-            self._addSystemCredentials(system, creds)
+        self._addSystemCredentials(system, creds)
 
     def lookupTarget(self, targetTypeName, targetName):
         return targetmodels.Target.objects.get(
@@ -1376,17 +1391,8 @@ class SystemManager(basemanager.BaseManager):
             cert   = hcerts[0].x509_pem
 
             # look at the source image to find the label
-            # TODO: breakout into function
-            source = event.system.source_image
-            projectLabel = None
-            installTrove = None
-            if source is not None:
-                version = cny_versions.ThawVersion(str(source.trove_version))
-                flavor = cny_deps.ThawFlavor(str(source.trove_flavor))
-                installTrove = '%s=%s[%s]' % (source.trove_name, version,
-                        flavor)
-                projectLabel = str(version.trailingLabel())
-
+            installTrove, projectLabel = self._getTrovesForLayeredImage(
+                    event.system)
             params = repClient.AssimilatorParams(host=destination,
                 caCert=cert, sshAuth=event_data,
                 eventUuid=eventUuid, projectLabel=projectLabel,

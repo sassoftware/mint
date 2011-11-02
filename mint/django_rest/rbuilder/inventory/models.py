@@ -858,6 +858,10 @@ class System(modellib.XObjIdModel):
 
         return action
 
+    def hasSourceImage(self):
+        return bool(getattr(self, 'source_image', None))
+
+
 class ManagementNode(System):
     
     XSL = 'managementNode.xsl'
