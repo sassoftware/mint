@@ -10,8 +10,6 @@ AUTH_TEMPLATE = "%(ROLE)s: %(PERMS)s"
 ATTRIBUTE_TEMPLATE = "    %(ATTRNAME)s : %(DOCSTRING)s"
 DOCUMENT_TEMPLATE = \
 """
-Resource Name: %(NAME)s
-
 GET: %(GET_SUPPORTED)s
     Auth [%(GET_AUTH)s]
         
@@ -26,8 +24,6 @@ DELETE: %(DELETE_SUPPORTED)s
         
 Attributes:
 %(ATTRIBUTES)s
-
-Notes: %(NOTES)s
 """.strip()
 
 HORIZ_ARROW = '---'
@@ -91,11 +87,8 @@ class Command(BaseCommand):
             # dict keyed by REST method type with value one of:
             # anonymous, authenticated, admin, or rbac
             AUTH = self.getAuthDocumentation(MODEL_NAME, view)
-            # any raw text from a model's _NOTE class attribute
-            NOTES = self.getNotes(MODEL_NAME)
             
-            TEXT = {'NAME':MODEL_TAG,
-                    'GET_SUPPORTED':METHODS['GET'],
+            TEXT = {'GET_SUPPORTED':METHODS['GET'],
                     'GET_AUTH':AUTH['GET'],
                     'POST_SUPPORTED':METHODS['POST'],
                     'POST_AUTH':AUTH['POST'],
@@ -104,7 +97,6 @@ class Command(BaseCommand):
                     'DELETE_SUPPORTED':METHODS['DELETE'],
                     'DELETE_AUTH':AUTH['DELETE'],
                     'ATTRIBUTES':ATTRIBUTES,
-                    'NOTES':NOTES,
                     }
             
             # absolute path to the containing pkg and
@@ -221,12 +213,12 @@ class Command(BaseCommand):
                 # references its children through a different tag name
                 subModelName = None
                 if subModel is None:
-                    # _xobjData := (tag name, model) or None
+                    # _xobjData[model name] := (tag name, model) or None
                     _xobjData = xobjTags.get(parsed_name, None)
                     if _xobjData is not None and _xobjData[0]:
                         subModel = _xobjData[1]
                         subModelName = subModel.__name__
-                    # reverseXObjTags := (model name, model)
+                    # reverseXObjTags[tag name] := (model name, model)
                     elif listedModelName in reverseXObjTags:
                         subModel = reverseXObjTags[listedModelName][1]
                         subModelName = reverseXObjTags[listedModelName][0]
@@ -282,15 +274,6 @@ class Command(BaseCommand):
                     else:
                         resultsDict[method] = 'AUTHENTICATED'
         return resultsDict
-        
-    def getNotes(self, modelName):
-        """
-        Allows user to define a _NOTE attribute on the model with some
-        text to insert.  Right now triple quoted text is encouraged to
-        simplify the formatting process.
-        """
-        model = self.aggregateModels.get(modelName, None)
-        return getattr(model, '_NOTE', 'Empty')
 
     def getMethodsFromView(self, view):
         methodsDict = {'GET':'Not Supported', 'POST':'Not Supported',
