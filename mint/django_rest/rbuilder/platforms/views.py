@@ -126,7 +126,7 @@ class SourceTypeService(service.BaseService):
     def get(self, source_type, content_source_type_id):
         return self.mgr.getSourceTypeById(content_source_type_id)
 
-    @access.anonymous # change
+    @access.authenticated
     @requires('content_source_type')
     @return_xml
     def rest_PUT(self, request, source_type, content_source_type_id, content_source_type):
@@ -155,7 +155,6 @@ class PlatformSourceService(service.BaseService):
     def get(self, platform_id):
         return self.mgr.getSourcesByPlatform(platform_id)
 
-    @access.anonymous
     @requires('content_source')
     @return_xml
     def rest_POST(self, request, platform_id, content_source):
@@ -211,7 +210,7 @@ class PlatformVersionService(service.BaseService):
 
 
 class PlatformsService(service.BaseService):
-    @access.anonymous
+    @access.authenticated
     @return_xml
     def rest_GET(self, request):
         return self.get()
@@ -219,14 +218,14 @@ class PlatformsService(service.BaseService):
     def get(self):
         return self.mgr.getPlatforms()
 
-    @access.anonymous # needs to change!
+    @access.authenticated
     @requires('platform')
     @return_xml
     def rest_POST(self, request, platform):
         return self.mgr.createPlatform(platform)
     
 class PlatformService(service.BaseService):
-    @access.anonymous
+    @access.authenticated
     @return_xml
     def rest_GET(self, request, platform_id):
         return self.get(platform_id)
@@ -234,7 +233,7 @@ class PlatformService(service.BaseService):
     def get(self, platform_id):
         return self.mgr.getPlatform(platform_id)
     
-    @access.anonymous
+    @access.authenticated
     @requires('platform')
     @return_xml
     def rest_PUT(self, request, platform_id, platform):
