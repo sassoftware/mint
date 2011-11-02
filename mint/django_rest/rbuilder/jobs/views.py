@@ -10,7 +10,7 @@ from mint.django_rest.rbuilder.jobs import models
 from mint.django_rest.rbuilder import service
 from mint.django_rest.deco import requires, return_xml, access, Flags
 
-class JobsService(service.BaseAuthService):
+class JobsBaseService(service.BaseAuthService):
     def _check_uuid_auth(self, request, kwargs):
         headerName = 'X-rBuilder-Job-Token'
         jobToken = self.getHeaderValue(request, headerName)
@@ -25,21 +25,28 @@ class JobsService(service.BaseAuthService):
         self._setMintAuth(jobs[0].created_by)
         return True
 
+class JobsService(JobsBaseService):
     @access.anonymous
     @return_xml
-    def rest_GET(self, request, job_uuid=None):
-        return self.get(job_uuid=job_uuid)
+    def rest_GET(self, request):
+        return self.get()
 
-    def get(self, job_uuid):
-        if job_uuid:
-            return self.mgr.getJob(job_uuid=job_uuid)
-        else:
-            return self.mgr.getJobs()
+    def get(self):
+        return self.mgr.getJobs()
 
     @requires("job", flags=Flags(save=False))
     @return_xml
     def rest_POST(self, request, job):
         return self.mgr.addJob(job)
+
+class JobService(JobsBaseService):
+    @access.anonymous
+    @return_xml
+    def rest_GET(self, request, job_uuid):
+        return self.get(job_uuid)
+
+    def get(self, job_uuid):
+        return self.mgr.getJob(job_uuid=job_uuid)
 
     @access.auth_token
     @requires("job")
@@ -56,14 +63,21 @@ class JobStatesService(service.BaseService):
 
     @access.anonymous
     @return_xml
-    def rest_GET(self, request, job_state_id=None):
+    def rest_GET(self, request):
+        return self.get()
+
+    def get(self):
+        return self.mgr.getJobStates()
+
+class JobStateService(service.BaseService):
+
+    @access.anonymous
+    @return_xml
+    def rest_GET(self, request, job_state_id):
         return self.get(job_state_id)
 
     def get(self, job_state_id):
-        if job_state_id:
-            return self.mgr.getJobState(job_state_id)
-        else:
-            return self.mgr.getJobStates()
+        return self.mgr.getJobState(job_state_id)
 
 class JobStatesJobsService(service.BaseService):
 

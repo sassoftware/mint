@@ -145,7 +145,12 @@ class RbacRolesService(BaseRbacService):
     def get(self):
         return self.mgr.getRbacRoles()
 
-
+    # CREATE
+    @access.admin
+    @return_xml
+    @requires('role', save=False)
+    def rest_POST(self, request, role):
+        return self.mgr.addRbacRole(role, request._authUser)
 
 class RbacRoleService(BaseRbacService):
     """

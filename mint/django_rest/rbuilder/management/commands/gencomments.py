@@ -73,10 +73,16 @@ class Command(BaseCommand):
             if not MODEL_NAME or not currentModel:
                 continue
                 
-            # get tag name of model.  the tag may be different
-            # than the underscored version of the model name,
-            # which is implementation dependent.  user only
-            # needs the requested resource's tag
+            # get the tag name of model.  the _xobj tag may be different
+            # than the default (undercase/underscored model name) and
+            # user only needs the requested resource's tag, not the actual
+            # model name.
+            # NOTE: after some experimentation, it's become apparent
+            # that the tag name returned by getTag does not always
+            # return the underscored model name in the case that an
+            # _xobj is not explicitly specified.  Keep this in mind
+            # when refactoring getAttributesDocumentation -- see
+            # FIXME inside getAttributesDocumentation.
             MODEL_TAG = currentModel.getTag()
             # dict indexed by REST methods for the model
             METHODS = self.getMethodsFromView(view)
