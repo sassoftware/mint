@@ -10,8 +10,6 @@ AUTH_TEMPLATE = "%(ROLE)s: %(PERMS)s"
 ATTRIBUTE_TEMPLATE = "    %(ATTRNAME)s : %(DOCSTRING)s"
 DOCUMENT_TEMPLATE = \
 """
-Resource Name: %(NAME)s
-
 GET: %(GET_SUPPORTED)s
     Auth [%(GET_AUTH)s]
         
@@ -26,8 +24,6 @@ DELETE: %(DELETE_SUPPORTED)s
         
 Attributes:
 %(ATTRIBUTES)s
-
-Notes: %(NOTES)s
 """.strip()
 
 HORIZ_ARROW = '---'
@@ -73,10 +69,16 @@ class Command(BaseCommand):
             if not MODEL_NAME or not currentModel:
                 continue
                 
-            # get tag name of model.  the tag may be different
-            # than the underscored version of the model name,
-            # which is implementation dependent.  user only
-            # needs the requested resource's tag
+            # get the tag name of model.  the _xobj tag may be different
+            # than the default (undercase/underscored model name) and
+            # user only needs the requested resource's tag, not the actual
+            # model name.
+            # NOTE: after some experimentation, it's become apparent
+            # that the tag name returned by getTag does not always
+            # return the underscored model name in the case that an
+            # _xobj is not explicitly specified.  Keep this in mind
+            # when refactoring getAttributesDocumentation -- see
+            # FIXME inside getAttributesDocumentation.
             MODEL_TAG = currentModel.getTag()
             # dict indexed by REST methods for the model
             METHODS = self.getMethodsFromView(view)
@@ -85,11 +87,8 @@ class Command(BaseCommand):
             # dict keyed by REST method type with value one of:
             # anonymous, authenticated, admin, or rbac
             AUTH = self.getAuthDocumentation(MODEL_NAME, view)
-            # any raw text from a model's _NOTE class attribute
-            NOTES = self.getNotes(MODEL_NAME)
             
-            TEXT = {'NAME':MODEL_TAG,
-                    'GET_SUPPORTED':METHODS['GET'],
+            TEXT = {'GET_SUPPORTED':METHODS['GET'],
                     'GET_AUTH':AUTH['GET'],
                     'POST_SUPPORTED':METHODS['POST'],
                     'POST_AUTH':AUTH['POST'],
@@ -98,7 +97,6 @@ class Command(BaseCommand):
                     'DELETE_SUPPORTED':METHODS['DELETE'],
                     'DELETE_AUTH':AUTH['DELETE'],
                     'ATTRIBUTES':ATTRIBUTES,
-                    'NOTES':NOTES,
                     }
             
             # absolute path to the containing pkg and
@@ -205,7 +203,7 @@ class Command(BaseCommand):
                 # ProjectVersion as a list field.  However, the tag name for
                 # ProjectVersion is "project_branches", and ProjectVersion has the
                 # tag "project_branch".
-                parsed_name = self.parseName(listedModelName)
+                parsed_name = self.toCamelCaps(listedModelName)
                 subModel = self.aggregateModels.get(parsed_name, None)
                 
                 # FIXME: This code is ugly if nothing else, and is a
@@ -215,12 +213,12 @@ class Command(BaseCommand):
                 # references its children through a different tag name
                 subModelName = None
                 if subModel is None:
-                    # _xobjData := (tag name, model) or None
+                    # _xobjData[model name] := (tag name, model) or None
                     _xobjData = xobjTags.get(parsed_name, None)
                     if _xobjData is not None and _xobjData[0]:
                         subModel = _xobjData[1]
                         subModelName = subModel.__name__
-                    # reverseXObjTags := (model name, model)
+                    # reverseXObjTags[tag name] := (model name, model)
                     elif listedModelName in reverseXObjTags:
                         subModel = reverseXObjTags[listedModelName][1]
                         subModelName = reverseXObjTags[listedModelName][0]
@@ -259,6 +257,8 @@ class Command(BaseCommand):
                 if restMethod is not None:
                     access = getattr(restMethod, 'ACCESS', None)
                     rbac = getattr(restMethod, 'RBAC', None)
+                    # default to AUTHENTICATED if no AUTH
+                    # is explicitly set
                     if rbac:
                         resultsDict[method] = 'RBAC'
                     elif access == ACCESS.ANONYMOUS:
@@ -267,19 +267,13 @@ class Command(BaseCommand):
                         resultsDict[method] = 'AUTHENTICATED'
                     elif access == ACCESS.ADMIN:
                         resultsDict[method] = 'ADMIN'
+                    elif access == ACCESS.AUTH_TOKEN:
+                        resultsDict[method] = 'AUTH_TOKEN'
+                    elif access == ACCESS.LOCALHOST:
+                        resultsDict[method] = 'LOCALHOST'
                     else:
-                        print Warning(
-                            'View method %s has an unrecognized authentication method' % view)
+                        resultsDict[method] = 'AUTHENTICATED'
         return resultsDict
-        
-    def getNotes(self, modelName):
-        """
-        Allows user to define a _NOTE attribute on the model with some
-        text to insert.  Right now triple quoted text is encouraged to
-        simplify the formatting process.
-        """
-        model = self.aggregateModels.get(modelName, None)
-        return getattr(model, '_NOTE', 'Empty')
 
     def getMethodsFromView(self, view):
         methodsDict = {'GET':'Not Supported', 'POST':'Not Supported',
@@ -290,7 +284,7 @@ class Command(BaseCommand):
                 methodsDict[method] = 'Supported'
         return methodsDict
 
-    def parseName(self, name):
+    def toCamelCaps(self, name):
         """
         changes management_nodes to ManagementNodes
         """
