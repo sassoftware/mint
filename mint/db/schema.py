@@ -28,7 +28,7 @@ from conary.dbstore import sqlerrors, sqllib
 log = logging.getLogger(__name__)
 
 # database schema major version
-RBUILDER_DB_VERSION = sqllib.DBversion(60, 1)
+RBUILDER_DB_VERSION = sqllib.DBversion(60, 4)
 
 def _createTrigger(db, table, column="changed"):
     retInsert = db.createTrigger(table, column, "INSERT")
@@ -72,7 +72,8 @@ def _createUsers(db):
                 REFERENCES Users ON DELETE SET NULL,
             modified_by         integer
                 REFERENCES Users ON DELETE SET NULL,
-            can_create           BOOLEAN       NOT NULL    DEFAULT false
+            can_create           BOOLEAN       NOT NULL    DEFAULT false,
+            deleted              BOOLEAN       NOT NULL    DEFAULT false
         ) %(TABLEOPTS)s""" % db.keywords)
         db.tables['Users'] = []
     db.createIndex('Users', 'UsersActiveIdx', 'username, active')
@@ -261,6 +262,8 @@ def _createRbac(db):
             CONSTRAINT querysets_roletag_uq UNIQUE ("role_id", "query_set_id",
                 "inclusion_method_id")
         )""")
+    
+    _createNonIdentityRoles(db)
 
 
 def _createProjects(db):
@@ -1611,7 +1614,7 @@ wmi_credentials_descriptor = r"""<descriptor xmlns:xsi="http://www.w3.org/2001/X
       </descriptions>
       <type>str</type>
       <default></default>
-      <required>true</required>
+      <required>false</required>
     </field>
     <field>
       <name>username</name>
@@ -2253,6 +2256,12 @@ def _createAllRoles(db, version=None):
             'rbac', version=version)
     return True
 
+def _createNonIdentityRoles(db, version=None):
+    '''all roles that are intended for multiple users'''
+    filterId = _addQuerySetFilterEntry(db, "rbac_role.is_identity", "EQUAL", "false")
+    _addQuerySet(db, "All Non-Identity Roles", "All non-identity roles", "role", False, filterId,
+            'rbac', version=version)
+    return True
 
 def _createAllGrants(db, version=None):
     """Add the all systems query set"""

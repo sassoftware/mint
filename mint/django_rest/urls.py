@@ -504,7 +504,7 @@ urlpatterns = patterns('',
         model='Users'),
     
     URL(r'users/(?P<user_id>\d+)/?$',
-        usersviews.UsersService(),
+        usersviews.UserService(),
         name='User',
         model='User'),
 

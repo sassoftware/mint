@@ -24,12 +24,12 @@ queryset_post_xml = """
 # querysets change, when that happens, subsitute the M
 # and the N programatically, not implementing just now
 queryset_put_xml = """
-<query_set id="/api/v1/query_sets/15">
+<query_set id="/api/v1/query_sets/16">
   <filter_entries>
     <filter_entry>
       <operator>LIKE</operator>
       <field>system.name</field>
-      <filter_entry_id>15</filter_entry_id>
+      <filter_entry_id>16</filter_entry_id>
       <value>3</value>
     </filter_entry>
   </filter_entries>
@@ -37,15 +37,15 @@ queryset_put_xml = """
   <can_modify>true</can_modify>
   <presentation_type></presentation_type>
   <modified_date>2011-08-17T14:52:58.737001+00:00</modified_date>
-  <filtered_members id="/api/v1/query_sets/15/filtered"/>
+  <filtered_members id="/api/v1/query_sets/16/filtered"/>
   <is_top_level>True</is_top_level>
   <tagged_date></tagged_date>
   <name>New Query Set</name>
-  <chosen_members id="/api/v1/query_sets/15/chosen"/>
+  <chosen_members id="/api/v1/query_sets/16/chosen"/>
   <query_set_id>15</query_set_id>
-  <child_members id="/api/v1/query_sets/15/child"/>
+  <child_members id="/api/v1/query_sets/16/child"/>
   <created_date>2011-08-17T14:52:58.736901+00:00</created_date>
-  <all_members id="/api/v1/query_sets/15/all"/>
+  <all_members id="/api/v1/query_sets/16/all"/>
   <children>
     <query_set id="/api/v1/query_sets/5">
       <filter_entries>

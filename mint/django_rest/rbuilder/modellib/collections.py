@@ -253,6 +253,12 @@ def filterDjangoQuerySet(djangoQuerySet, field, operator, value,
     # relationships
     k = '%s__%s' % (field.replace('.', '__'), operator_name)
     filtDict = { k : value }
+ 
+    # never be able to list a deleted user account, they are 
+    # present for admin metadata only
+    if queryset and queryset.resource_type == 'user':
+        filtDict['deleted'] = False 
+
     if operator.startswith('NOT_'):
         djangoQuerySet = djangoQuerySet.filter(~Q(**filtDict))
     else:

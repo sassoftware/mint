@@ -12,6 +12,7 @@ from mint.django_rest.rbuilder.querysets import models as querymodels
 from datetime import datetime
 from django.core.exceptions import ObjectDoesNotExist
 from mint.django_rest.rbuilder.errors import PermissionDenied
+from copy import deepcopy
 
 exposed = basemanager.exposed
 
@@ -95,20 +96,27 @@ class RbacManager(basemanager.BaseManager):
     def getRbacGrantMatrix(self, query_set_id, request):
         # a very UI specific view into grants for a given queryset
         # this will not scale very well but grants per queryset should
-        # be quite low
+        # be quite low.  
+        # 
+        # this is obviously heinous -- do not repeat
+        # principle cause is inverting roles and grants in a way that doesn't
+        # jive with the actual model
+
         qs = querymodels.QuerySet.objects.get(pk=query_set_id)
-        grants = models.RbacPermission.objects.filter(
-           queryset = qs
+        dbroles = models.RbacRole.objects.filter(
+            is_identity = False
         ) 
-        roles = set([ grant.role for grant in grants ])
         roles_obj = models.RbacRoles()
-        roles_obj.role = [ role for role in roles ]
-       
+        roles_obj.role = dbroles
+                    
+        permissions = dict([ (x, models.RbacPermissionType.objects.get(name=x)) for x in PERMISSION_TYPES ])
+
         def mod_serialize(request, *args, **kwargs):
             xobj_model = modellib.XObjIdModel.serialize(roles_obj, request)
             # xobj gets confused with one element entries
             if type(xobj_model.role) != list:
                xobj_model.role = [ xobj_model.role ] 
+            xobj_model.id = xobj_model.id.replace("/rbac/roles","/query_sets/%s/grant_matrix" % qs.pk)
             xobj_model.num_pages = 1
             xobj_model.next_page = 0
             xobj_model.previous_page = 0
@@ -122,16 +130,30 @@ class RbacManager(basemanager.BaseManager):
                 actual_role = models.RbacRole.objects.get(pk = role.role_id)
                 tweaked_grants = []
                 for ptype in PERMISSION_TYPES:
-                    xgrant = None
-                    permission_type = models.RbacPermissionType.objects.get(name=ptype)
+                    xperm = None
+                    permission_type = permissions[ptype]
+                    ptypename = "%s_permission" % ptype.lower()
                     try:
                         grant = models.RbacPermission.objects.get(
                             queryset = qs,
                             role = actual_role,
                             permission = permission_type
                         )
+                        permission_type._xobj = deepcopy(permission_type._xobj)
+                        xperm = modellib.XObjIdModel.serialize(permission_type, request)
+                        xperm.matrix_permission_id = xperm.id
+                        del xperm.id
+                        permission_type._xobj.tag = ptypename
                         xgrant = modellib.XObjIdModel.serialize(grant, request)
-                        xgrant.set = 'true'
+                        del xgrant.modified_by 
+                        del xgrant.modified_date
+                        del xgrant.created_by
+                        del xgrant.created_date
+                        del xgrant.grant_id
+                        del xgrant.role
+                        del xgrant.queryset
+                        del xgrant.permission
+                        xperm.grant = xgrant
                     except models.RbacPermission.DoesNotExist:
                         # important: should NOT be saved
                         grant = models.RbacPermission(
@@ -139,24 +161,21 @@ class RbacManager(basemanager.BaseManager):
                             role = actual_role,
                             permission = permission_type
                         )
-                        xgrant = modellib.XObjIdModel.serialize(grant, request)
-                        xgrant.set = 'false'
-                    tweaked_grants.append(xgrant)
-                grants = models.RbacPermissions()
-                xgrants = modellib.XObjIdModel.serialize(grants, request)
-                del xgrants.count
-                del xgrants.next_page
-                del xgrants.num_pages
-                del xgrants.previous_page
-                del xgrants.full_collection
-                del xgrants.limit
-                del xgrants.order_by
-                del xgrants.per_page
-                del xgrants.filter_by
-                del xgrants.start_index
-                del xgrants.end_index
-                xgrants.grant = tweaked_grants
-                role.grants = xgrants
+                        permission_type._xobj = deepcopy(permission_type._xobj)
+                        xperm = modellib.XObjIdModel.serialize(permission_type, request)
+                        xperm.matrix_permission_id = xperm.id
+                        del xperm.id
+                        permission_type._xobj.tag = ptypename
+                    setattr(role, "%s_permission" % ptypename, xperm)
+                # since this collection is not actually paged, (because it's not relative to the true
+                # DB structure, and is a great reason why we shouldn't do this again), 
+                # avoid XML spam of data we don't need.
+                del role.grants
+                del role.users
+                del role.created_by
+                del role.modified_by
+                del role.created_date
+                del role.modified_date
             return xobj_model
 
         roles_obj.serialize = mod_serialize

@@ -4452,7 +4452,7 @@ class MigrateTo_59(SchemaMigration):
 
 class MigrateTo_60(SchemaMigration):
     '''Edge-P3'''
-    Version = (60, 1)
+    Version = (60, 4)
 
     def migrate(self):
         '''"My" querysets feature'''
@@ -4485,6 +4485,25 @@ class MigrateTo_60(SchemaMigration):
         cu.execute("""
             ALTER TABLE projects ADD COLUMN modified_by INTEGER REFERENCES Users (userid) ON DELETE SET NULL
         """) 
+        return True
+
+    def migrate2(self):
+        cu = self.db.cursor()
+        cu.execute("""update inventory_management_interface
+                set credentials_descriptor=? where name='wmi'""" ,
+                schema.wmi_credentials_descriptor)
+        return True
+    
+    def migrate3(self):
+        '''do not delete users, mark them as deleted'''
+        cu = self.db.cursor()
+        cu.execute("""
+            ALTER TABLE users ADD COLUMN deleted BOOLEAN NOT NULL DEFAULT false
+        """)
+        return True
+
+    def migrate4(self):
+        schema._createNonIdentityRoles(self.db, version=(60,4))
         return True
 
 #### SCHEMA MIGRATIONS END HERE #############################################

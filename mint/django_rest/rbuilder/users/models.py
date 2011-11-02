@@ -36,6 +36,8 @@ class User(modellib.XObjIdModel):
     created_date = D(APIReadOnly(modellib.DecimalTimestampField(max_digits=14, decimal_places=3, db_column='timecreated')), "User created date", short="User created date")
     last_login_date = D(APIReadOnly(modellib.DecimalTimestampField(max_digits=14, decimal_places=3, db_column='timeaccessed')), "User last login date", short="User last login date")
     modified_date = D(APIReadOnly(modellib.DecimalTimestampField(max_digits=14, decimal_places=3, db_column='timemodified')), "User modified date", short="User modified date")
+    # this is a Django-ism and is not the same as deleted below, Django inactive users are re-activeatable
+    # and we largely don't use this
     active = modellib.XObjHidden(modellib.APIReadOnly(models.SmallIntegerField()))
     blurb = models.TextField()
     # code in manager prevents this from being set by non-admins
@@ -48,6 +50,7 @@ class User(modellib.XObjIdModel):
         "User modified by", short="User modified by")
     # code in manager prevents this from being set by non-admins
     can_create = D(models.BooleanField(default=True), "User can create resources?", short="User can create?")
+    deleted = modellib.XObjHidden(models.BooleanField(default=False))
 
     # Field used for the clear-text password when it is to be
     # set/changed
