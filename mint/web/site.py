@@ -7,40 +7,34 @@ import email
 import logging
 import os
 import stat
-import tempfile
-import time
-from urllib import quote, unquote, quote_plus, urlencode
+from urllib import unquote, quote_plus
 from mimetypes import guess_type
 
 from mint import buildtypes
-from mint import constants
 from mint import urltypes
 from mint.lib import data
 from mint import helperfuncs
 from mint import mint_error
 from mint import maintenance
-from mint import mailinglists
 from mint import projects
 from mint import searcher
 from mint import shimclient
 from mint import users
 from mint import userlevels
 from mint.client import timeDelta
-from mint.config import isRBO
 from mint.lib.unixutils import AtomicFile
 from mint.helperfuncs import getProjectText
 from mint.session import SqlSession
 
 from mint.web.fields import boolFields, dictFields, intFields, listFields, strFields
-from mint.web.decorators import mailList, requiresAdmin, requiresAuth, \
+from mint.web.decorators import requiresAdmin, requiresAuth, \
      requiresHttps, redirectHttps, redirectHttp
 from mint.web.webhandler import (WebHandler, normPath, setCacheControl,
-    HttpNotFound, HttpOK, HttpMethodNotAllowed, HttpForbidden, HttpBadRequest)
+    HttpNotFound, HttpMethodNotAllowed, HttpForbidden, HttpBadRequest)
 
 from conary.lib import digestlib
 from conary.lib import util
 from conary import versions
-from conary import conaryclient
 
 from rpath_proddef import api1 as proddef
 
@@ -456,29 +450,6 @@ class SiteHandler(WebHandler):
                    'isPrivate': self.cfg.rBuilderOnline and 'off' or 'on',
                    'platformLabel': platformLabel})
 
-    @mailList
-    def _createProjectLists(self, mlists, auth, projectName, optlists = []):
-        #Get the formatted list of optional lists
-        lists = mailinglists.GetLists(projectName, optlists)
-        #Get the formatted list of default lists and add them to "lists"
-        lists.update(mailinglists.GetLists(projectName, mailinglists.defaultlists))
-        success = True
-        error = False
-        for name, values in lists.items():
-            # Create the lists
-            success = mlists.add_list(self.cfg.MailListPass, name, '', values['description'], auth.email, True, values['moderate'])
-            if not success: error = False
-        #add the commits sender address
-        try:
-            mlists.server.Mailman.setOptions(
-                    mailinglists.listnames[mailinglists.PROJECT_COMMITS]%projectName,
-                    self.cfg.MailListPass,
-                    {'accept_these_nonmembers': self.cfg.commitEmail }
-                )
-        except: 
-            mailinglists.MailingListException("Mailing List Error")
-        return not error
-
     @strFields(title = '', hostname = '', domainname = '', projecturl = '', 
                blurb = '', appliance = 'unknown', shortname = '', namespace = '',
                prodtype = 'Appliance', version = '', commitEmail='', isPrivate = '',
@@ -522,15 +493,6 @@ class SiteHandler(WebHandler):
                     domainname, projecturl, blurb, appliance, shortname, 
                     namespace, prodtype, version, commitEmail, isPrivate,
                     platformLabel)
-                
-                # now create the mailing lists
-                if self.cfg.EnableMailLists and not self._getErrors():
-                    if not self._createProjectLists(auth=auth,
-                                                    projectName=hostname,
-                                                    optlists=optlists):
-                        raise mailinglists.MailingListException("Could not create the mailing lists, check the mailing list page to set up your desired lists.")
-            except mailinglists.MailingListException:
-                raise
             except projects.DuplicateHostname, e:
                 self._addErrors(str(e))
             except projects.DuplicateName, e:

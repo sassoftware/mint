@@ -137,9 +137,6 @@ class MintConfig(conarycfg.ConfigFile):
 
     # Web features
     diffCacheDir            = (CfgPath, RBUILDER_DATA + '/diffcache/')
-    EnableMailLists         = (CfgBool, False)
-    MailListBaseURL         = (CfgString, 'http://lists.rpath.org/mailman/')
-    MailListPass            = (CfgString, 'adminpass')
     licenseCryptoReports    = (CfgBool, True)
     removeTrovesVisible     = (CfgBool, False)
     hideFledgling           = (CfgBool, False)
@@ -296,6 +293,9 @@ class MintConfig(conarycfg.ConfigFile):
     VAMUser                 = (CfgString, '')
     VAMPassword             = (CfgString, '')
     newsRssFeed             = (CfgString, '')
+    EnableMailLists         = None
+    MailListBaseURL         = None
+    MailListPass            = None
 
     # AMI configuration -- migrated in schema (45, 6)
     ec2PublicKey            = (CfgString, '', "The AWS account id")
@@ -330,10 +330,6 @@ class MintConfig(conarycfg.ConfigFile):
         self.postCfg()
 
     def postCfg(self):
-        #Make sure MailListBaseURL has a slash on the end of it
-        if self.MailListBaseURL[-1:] != '/':
-            self.setValue('MailListBaseURL', self.MailListBaseURL + '/')
-
         if not self.projectDomainName:
             self.projectDomainName = self.siteDomainName
 

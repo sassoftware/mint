@@ -6,9 +6,8 @@
 from project import BaseProjectHandler
 from mint.web import productversion
 from mint.web.packagecreator import PackageCreatorMixin
-from mint.web.decorators import ownerOnly, writersOnly, requiresAuth, \
-        requiresAdmin, mailList, redirectHttp
-from mint.web.fields import strFields, intFields, listFields, boolFields, dictFields
+from mint.web.decorators import writersOnly
+from mint.web.fields import strFields, listFields, boolFields
 from mint import mint_error
 
 import itertools
