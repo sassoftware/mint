@@ -384,12 +384,13 @@ urlpatterns = patterns('',
         model='Image'),
 
     # Packages
-    URL(r'packages/?$',
-        packageindexviews.PackageService(),
-        name='Packages'),
-    URL(r'packages/(?P<package_id>\d+)/?$',
-        packageindexviews.PackageService(),
-        name='Package'),
+    # --incomplete -- do not reinstate until completed/RBAC'd
+    #URL(r'packages/?$',
+    #    packageindexviews.PackageService(),
+    #    name='Packages'),
+    #URL(r'packages/(?P<package_id>\d+)/?$',
+    #    packageindexviews.PackageService(),
+    #    name='Package'),
 
 ### Commented out future packages API
 #     # Packages
