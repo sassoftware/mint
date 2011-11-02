@@ -8,7 +8,7 @@
 # as target service evolves
 
 from django.http import HttpResponse 
-from mint.django_rest.deco import requires, return_xml, access #, requires
+from mint.django_rest.deco import requires, return_xml, access, Flags
 from mint.django_rest.rbuilder import service
 from mint.django_rest.rbuilder.images import models
 from mint.django_rest.rbuilder.projects import models as projectsmodels
@@ -63,8 +63,21 @@ class ImagesService(BaseImageService):
     def rest_DELETE(self, request, image_id):
         self.mgr.deleteImageBuild(image_id)
         return HttpResponse(status=204)
-    
-        
+
+
+class ImageJobsService(BaseImageService):
+    @return_xml
+    def rest_GET(self, request, image_id):
+        return self.get(image_id)
+
+    def get(self, imageId):
+        return self.mgr.getJobsByImageId(imageId)
+
+    @requires("job", flags=Flags(save=False))
+    @return_xml
+    def rest_POST(self, request, image_id, job):
+        return self.mgr.addJob(job)
+
 class ImageBuildFileService(service.BaseService):
     
     @access.anonymous

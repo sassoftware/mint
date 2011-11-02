@@ -14,7 +14,7 @@ from dateutil import tz
 from conary import files as cny_files
 from conary.conarycfg import loadEntitlement, EntitlementList
 from conary.dbstore import migration, sqlerrors
-from mint import userlevels
+from mint import buildtypes, userlevels
 from mint.db import repository
 from mint.db import schema
 
@@ -4452,7 +4452,7 @@ class MigrateTo_59(SchemaMigration):
 
 class MigrateTo_60(SchemaMigration):
     '''Edge-P3'''
-    Version = (60, 4)
+    Version = (60, 5)
 
     def migrate(self):
         '''"My" querysets feature'''
@@ -4504,6 +4504,45 @@ class MigrateTo_60(SchemaMigration):
 
     def migrate4(self):
         schema._createNonIdentityRoles(self.db, version=(60,4))
+        return True
+
+    def migrate5(self):
+        db = self.db
+        cu = db.cursor()
+        add_columns(db, "target_types", "build_type_id INTEGER")
+        # Rename xenent to xen-enterprise, so simplify driver discovery
+        cu.execute("UPDATE target_types SET name='xen-enterprise' WHERE name='xenent'")
+        tbmap = [
+            ('ec2', buildtypes.AMI),
+            ('eucalyptus', buildtypes.RAW_FS_IMAGE),
+            ('openstack', buildtypes.RAW_HD_IMAGE),
+            ('vcloud', buildtypes.VMWARE_ESX_IMAGE),
+            ('vmware', buildtypes.VMWARE_ESX_IMAGE),
+            ('xen-enterprise', buildtypes.XEN_OVA),
+        ]
+        q = "UPDATE target_types SET build_type_id=? WHERE name=?"
+        for targetTypeName, buildTypeId in tbmap:
+            cu.execute(q, buildTypeId, targetTypeName)
+        cu.execute("ALTER TABLE target_types ALTER COLUMN build_type_id SET NOT NULL")
+        schema.createTable(db, 'target_deployable_image', """
+                target_deployable_image_id %(PRIMARYKEY)s,
+                target_id               integer             NOT NULL
+                    REFERENCES Targets ON DELETE CASCADE,
+                target_image_id         INTEGER
+                    REFERENCES target_image ON DELETE CASCADE,
+                file_id                 integer NOT NULL
+                    REFERENCES BuildFiles ON DELETE CASCADE,
+        """)
+
+        schema.createTable(db, 'jobs_job_image', """
+            id          %(PRIMARYKEY)s,
+            job_id      integer NOT NULL
+                        REFERENCES jobs_job(job_id)
+                        ON DELETE CASCADE,
+            image_id integer NOT NULL
+                        REFERENCES Builds(buildId)
+                        ON DELETE CASCADE,
+        """)
         return True
 
 #### SCHEMA MIGRATIONS END HERE #############################################

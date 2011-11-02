@@ -28,7 +28,7 @@ from conary.dbstore import sqlerrors, sqllib
 log = logging.getLogger(__name__)
 
 # database schema major version
-RBUILDER_DB_VERSION = sqllib.DBversion(60, 4)
+RBUILDER_DB_VERSION = sqllib.DBversion(60, 5)
 
 def _createTrigger(db, table, column="changed"):
     retInsert = db.createTrigger(table, column, "INSERT")
@@ -44,6 +44,12 @@ def createTable(db, name, definition):
     if name and name in db.tables:
         return False
     cu = db.cursor()
+    if not definition.lstrip()[:20].upper().startswith('CREATE TABLE'):
+        # Avoid duplication for name; if the statement doesn't start
+        # with CREATE TABLE, then assume it's just a straight list of
+        # fields
+        definition = "CREATE TABLE %s (\n        %s\n) %%(TABLEOPTS)s" % (
+            name, definition.strip().rstrip(','))
     cu.execute(definition % db.keywords)
     db.tables[name] = []
     return True
@@ -649,6 +655,7 @@ def _createProductVersions(db):
 
 
 def _createTargets(db):
+    from mint import buildtypes
     cu = db.cursor()
     if 'target_types' not in db.tables:
         cu.execute("""
@@ -656,6 +663,8 @@ def _createTargets(db):
             target_type_id     %(PRIMARYKEY)s,
             name              TEXT NOT NULL UNIQUE,
             description       TEXT NOT NULL,
+            -- For now, build_type_id is not an FK
+            build_type_id     INTEGER NOT NULL,
             created_date      TIMESTAMP WITH TIME ZONE NOT NULL
                 DEFAULT current_timestamp,
             modified_date     TIMESTAMP WITH TIME ZONE NOT NULL
@@ -665,17 +674,23 @@ def _createTargets(db):
         _addTableRows(db, 'target_types', 'name',
             [
                 dict(name="ec2",
-                    description="Amazon Elastic Compute Cloud"),
+                    description="Amazon Elastic Compute Cloud",
+                    build_type_id=buildtypes.AMI),
                 dict(name="eucalyptus",
-                    description="Eucalyptus"),
+                    description="Eucalyptus",
+                    build_type_id=buildtypes.RAW_FS_IMAGE),
                 dict(name="openstack",
-                    description="OpenStack"),
+                    description="OpenStack",
+                    build_type_id=buildtypes.RAW_HD_IMAGE),
                 dict(name="vcloud",
-                    description="VMware vCloud"),
+                    description="VMware vCloud",
+                    build_type_id=buildtypes.VMWARE_ESX_IMAGE),
                 dict(name="vmware",
-                    description="VMware ESX/vSphere"),
-                dict(name="xenent",
-                    description="Citrix Xen Server"),
+                    description="VMware ESX/vSphere",
+                    build_type_id=buildtypes.VMWARE_ESX_IMAGE),
+                dict(name="xen-enterprise",
+                    description="Citrix Xen Server",
+                    build_type_id=buildtypes.XEN_OVA),
             ])
 
     if 'Targets' not in db.tables:
@@ -764,6 +779,16 @@ def _createTargets(db):
                 target_credentials_id   INTEGER NOT NULL
                     REFERENCES TargetCredentials ON DELETE CASCADE
             ) %(TABLEOPTS)s""")
+
+    createTable(db, 'target_deployable_image', """
+                target_deployable_image_id %(PRIMARYKEY)s,
+                target_id               integer             NOT NULL
+                    REFERENCES Targets ON DELETE CASCADE,
+                target_image_id         INTEGER
+                    REFERENCES target_image ON DELETE CASCADE,
+                file_id                 integer NOT NULL
+                    REFERENCES BuildFiles ON DELETE CASCADE,
+            """)
 
 def _createPlatforms(db):
     cu = db.cursor()
@@ -2871,10 +2896,6 @@ def _createPackageSchema(db):
 
 
 def _createTargetJobs(db):
-    # before edge, django would just go out by itself to create its
-    # tables.
-    # we need to do it here. There is no migration needed for old
-    # schema versions.
     createTable(db, 'jobs_job_target_type', """
         CREATE TABLE jobs_job_target_type (
             id          %(PRIMARYKEY)s,
@@ -2896,6 +2917,16 @@ def _createTargetJobs(db):
                         ON DELETE CASCADE
     )""")
 
+def _createJobThroughTables(db):
+    createTable(db, 'jobs_job_image', """
+            id          %(PRIMARYKEY)s,
+            job_id      integer NOT NULL
+                        REFERENCES jobs_job(job_id)
+                        ON DELETE CASCADE,
+            image_id integer NOT NULL
+                        REFERENCES Builds(buildId)
+                        ON DELETE CASCADE,
+    """)
 
 # create the (permanent) server repository schema
 def createSchema(db, doCommit=True, cfg=None):
@@ -2934,6 +2965,7 @@ def createSchema(db, doCommit=True, cfg=None):
     _createDjangoSchema(db)
     _createRbac(db)
     _createTargetJobs(db)
+    _createJobThroughTables(db)
 
     if doCommit:
         db.commit()

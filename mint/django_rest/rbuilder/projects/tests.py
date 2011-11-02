@@ -98,26 +98,7 @@ class ProjectsTestCase(RbacEngine):
             statusCodeResults[uname] = (status, response.status_code)
             
         return statusCodeResults
- 
-    def _addProject(self, short_name, namespace='ns'):
-        project = models.Project()
-        project.name = project.hostname = project.short_name = short_name
-        project.namespace = namespace
-        project.domain_name = 'test.local2'
-        project = self.mgr.projectManager.addProject(project, None)
-        return project
-    
-    def _addProjectWithUser(self, short_name, username, namespace='ns'):
-        user = usersmodels.User.objects.get(user_name=username)
-        project = models.Project()
-        project.name = project.hostname = project.short_name = short_name
-        project.namespace = namespace
-        project.domain_name = 'test.local2'
-        project.created_by = user
-        project = self.mgr.projectManager.addProject(project, user)
-        return project
-        
-        
+
     def _initProject(self, name='chater-foo', adorn=False):
         proj = models.Project.objects.get(name=name)
         platform = platformsmodels.Platform(
@@ -325,7 +306,7 @@ class ProjectsTestCase(RbacEngine):
              'postgres-private.rpath.com@rpath:postgres-private-1'])
 
     def testAddProjectVersionToProject(self):
-        self._addProject("foo")
+        self.addProject("foo")
         platform = platformsmodels.Platform(
             label='label-foo', platform_name='foo-platform-name')
         platform.save()
@@ -461,7 +442,7 @@ class ProjectsTestCase(RbacEngine):
 
     def testGetProjectImages(self):
         # Add image
-        prj = self._addProject("foo")
+        prj = self.addProject("foo")
         image = imagesmodels.Image(name="image-1", description="image-1",
             project=prj, _image_type=10)
         image.save()
@@ -571,7 +552,7 @@ class ProjectsTestCase(RbacEngine):
         self.assertXMLEquals(response.content, testsxml.releases_by_project_get_xml)
         
     def testAddRelease(self):
-        self._addProjectWithUser('foo', 'ExampleDeveloper')
+        self.addProject('foo', user='ExampleDeveloper')
         response = self._post('projects/foo/releases',
             username='ExampleDeveloper', password='password', data=testsxml.release_by_project_post_xml)
         self.assertEquals(response.status_code, 200)

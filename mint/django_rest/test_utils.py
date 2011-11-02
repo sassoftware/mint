@@ -28,6 +28,7 @@ from mint.db import schema
 from mint.django_rest.rbuilder.inventory import models as invmodels
 from mint.django_rest.rbuilder.inventory import zones as zmodels
 from mint.django_rest.rbuilder.jobs import models as jobmodels
+from mint.django_rest.rbuilder.projects import models as projmodels
 from mint.django_rest.rbuilder.users import models as usermodels
 from mint.django_rest.rbuilder.manager import rbuildermanager
 from mint.django_rest.rbuilder.modellib import Cache
@@ -203,6 +204,41 @@ class XMLTestCase(TestCase, testcase.MockMixIn):
             if 0:
                 diff += "\nNode diff: %s" % (nd, )
             self.fail(diff)
+
+    def getProject(self, shortName):
+        return projmodels.Project.objects.get(short_name=shortName)
+
+    def addProject(self, shortName, domainName='test.local2',
+            namespace='ns', user=None):
+        project = projmodels.Project()
+        project.name = project.hostname = project.short_name = shortName
+        project.namespace = namespace
+        project.domain_name = domainName
+        if user is not None:
+            if isinstance(user, basestring):
+                user = self.getUser(user)
+        project = self.mgr.projectManager.addProject(project, for_user=user)
+        return project
+
+    def getProjectBranch(self, label=None):
+        return projmodels.ProjectVersion.objects.get(label=label)
+
+    def addProjectBranch(self, project, name="trunk", label="label@rpath:foo"):
+        branch = projmodels.ProjectVersion(project=project, name=name,
+            label=label)
+        branch.save()
+        return branch
+
+    def getProjectBranchStage(self, branch=None, name=None):
+        return projmodels.Stage.objects.get(project_branch=branch, name=name)
+
+    def addProjectBranchStage(self, project=None, branch=None,
+            name="Development", label="label@rpath:foo-devel"):
+        if project is None:
+            project = branch.project
+        stage = models.Stage(project=project,
+            project_branch=branch, name=name, label=label)
+        stage.save()
 
     def newSystem(self, **kwargs):
         if 'managing_zone' not in kwargs:
@@ -573,6 +609,16 @@ class RepeaterClient(CallProxy):
             return self.__dict__ == other.__dict__
         def __repr__(self):
             return repr(self.__dict__)
+
+    def getJob(self, uuid):
+        job = RmakeJob(uuid, 200, "status text", "status detail", True)
+        # XXX FIXME: rpath-repeater has a problem serializing stuff, the
+        # inner object is not freezable
+        job.data.data = self._jobData
+        return job
+
+    def setJobData(self, jobData):
+        self._jobData = jobData
 
 class RmakeJob(object):
     Status = namedtuple("Status", "code text detail final")

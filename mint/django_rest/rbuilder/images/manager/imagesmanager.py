@@ -7,7 +7,8 @@
 import errno
 import logging
 import os
-from mint.django_rest.rbuilder.images import models 
+from mint.django_rest.rbuilder.jobs import models as jobsmodels
+from mint.django_rest.rbuilder.images import models
 from mint.django_rest.rbuilder.projects import models as projectsmodels
 from mint.django_rest.rbuilder.manager import basemanager
 from conary.lib import sha1helper
@@ -42,9 +43,11 @@ class ImagesManager(basemanager.BaseManager):
         return image
 
     @exposed
-    def createImageBuild(self, image):
+    def createImageBuild(self, image, buildData=None):
         outputToken = sha1helper.sha1ToString(file('/dev/urandom').read(20))
-        buildData = [('outputToken', outputToken, datatypes.RDT_STRING)]
+        if buildData is None:
+            buildData = []
+        buildData.append(('outputToken', outputToken, datatypes.RDT_STRING))
 
         image.time_created = image.time_updated = time.time()
         image.created_by_id = self.user.user_id
@@ -84,6 +87,25 @@ class ImagesManager(basemanager.BaseManager):
                 data_type=bdType))
 
         return image
+
+    @exposed
+    def createImageBuildFile(self, image, **kwargs):
+        from mint import urltypes
+        url = kwargs.pop('url')
+        urlType = kwargs.pop('urlType', urltypes.LOCAL)
+        urlobj = models.FileUrl(url=url, url_type=urlType)
+        urlobj.save()
+        bf = models.BuildFile(image=image, **kwargs)
+        bf.save()
+        bfum = models.BuildFilesUrlsMap(file=bf, url=urlobj)
+        bfum.save()
+        return bf
+
+    def recordTargetInternalId(self, buildFile, target, targetInternalId):
+        from mint.django_rest.rbuilder.targets import models as tgtmodels
+        m = tgtmodels.TargetImagesDeployed(build_file=buildFile,
+            target=target, target_image_id=targetInternalId)
+        m.save()
 
     def _getOutputTrove(self, image):
         if image.output_trove is None:
@@ -203,3 +225,10 @@ class ImagesManager(basemanager.BaseManager):
     @exposed
     def getImageTypes(self):
         return models.ImageType.objects.all()
+
+    @exposed
+    def getJobsByImageId(self, imageId):
+        jobs = jobsmodels.Job.objects.filter(images__image__image_id=imageId).order_by("-job_id")
+        Jobs = jobsmodels.Jobs()
+        Jobs.job = jobs
+        return Jobs

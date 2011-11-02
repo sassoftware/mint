@@ -2,6 +2,7 @@ images_get_xml = """
 <?xml version='1.0' encoding='UTF-8'?>
 <images count="3" next_page="" num_pages="1" previous_page="" full_collection="" end_index="2" limit="10" order_by="" per_page="10" filter_by="" start_index="0">
   <image id="http://testserver/api/v1/images/1">
+    <actions/>
     <files>
       <file>
         <sha1>0</sha1>
@@ -60,8 +61,10 @@ images_get_xml = """
     <release id="http://testserver/api/v1/releases/1"/>
     <image_count>1</image_count>
     <job_uuid>1</job_uuid>
+    <jobs id="http://testserver/api/v1/images/1/jobs"/>
   </image>
   <image id="http://testserver/api/v1/images/2">
+    <actions/>
     <files>
       <file>
         <sha1>1</sha1>
@@ -120,8 +123,10 @@ images_get_xml = """
     <release id="http://testserver/api/v1/releases/2"/>
     <image_count>1</image_count>
     <job_uuid>1</job_uuid>
+    <jobs id="http://testserver/api/v1/images/2/jobs"/>
   </image>
   <image id="http://testserver/api/v1/images/3">
+    <actions/>
     <files>
       <file>
         <sha1>2</sha1>
@@ -180,6 +185,7 @@ images_get_xml = """
     <release id="http://testserver/api/v1/releases/3"/>
     <image_count>1</image_count>
     <job_uuid>1</job_uuid>
+    <jobs id="http://testserver/api/v1/images/3/jobs"/>
   </image>
 </images>
 """.strip()
@@ -187,6 +193,7 @@ images_get_xml = """
 image_get_xml = """
 <?xml version='1.0' encoding='UTF-8'?>
 <image id="http://testserver/api/v1/images/1">
+  <actions/>
   <files>
     <file>
       <sha1>0</sha1>
@@ -245,6 +252,7 @@ image_get_xml = """
   <release id="http://testserver/api/v1/releases/1"/>
   <image_count>1</image_count>
   <job_uuid>1</job_uuid>
+  <jobs id="http://testserver/api/v1/images/1/jobs"/>
 </image>
 """
 
@@ -449,6 +457,7 @@ release_get_xml = \
   <version>releaseVersion0</version>
   <images>
     <image id="http://testserver/api/v1/images/1">
+      <actions/>
       <files>
         <file>
           <sha1>0</sha1>
@@ -507,6 +516,7 @@ release_get_xml = \
       <release id="http://testserver/api/v1/releases/1"/>
       <image_count>1</image_count>
       <job_uuid>1</job_uuid>
+      <jobs id="http://testserver/api/v1/images/1/jobs"/>
     </image>
   </images>
   <time_mirrored></time_mirrored>
@@ -558,6 +568,7 @@ releases_get_xml = \
     <version>releaseVersion0</version>
     <images>
       <image id="http://testserver/api/v1/images/1">
+        <actions/>
         <files>
           <file>
             <sha1>0</sha1>
@@ -616,6 +627,7 @@ releases_get_xml = \
         <release id="http://testserver/api/v1/releases/1"/>
         <image_count>1</image_count>
         <job_uuid>1</job_uuid>
+        <jobs id="http://testserver/api/v1/images/1/jobs"/>
       </image>
     </images>
     <time_mirrored></time_mirrored>
@@ -640,6 +652,7 @@ releases_get_xml = \
     <version>releaseVersion1</version>
     <images>
       <image id="http://testserver/api/v1/images/2">
+        <actions/>
         <files>
           <file>
             <sha1>1</sha1>
@@ -698,6 +711,7 @@ releases_get_xml = \
         <release id="http://testserver/api/v1/releases/2"/>
         <image_count>1</image_count>
         <job_uuid>1</job_uuid>
+        <jobs id="http://testserver/api/v1/images/2/jobs"/>
       </image>
     </images>
     <time_mirrored></time_mirrored>
@@ -722,6 +736,7 @@ releases_get_xml = \
     <version>releaseVersion2</version>
     <images>
       <image id="http://testserver/api/v1/images/3">
+        <actions/>
         <files>
           <file>
             <sha1>2</sha1>
@@ -780,6 +795,7 @@ releases_get_xml = \
         <release id="http://testserver/api/v1/releases/3"/>
         <image_count>1</image_count>
         <job_uuid>1</job_uuid>
+        <jobs id="http://testserver/api/v1/images/3/jobs"/>
       </image>
     </images>
     <time_mirrored></time_mirrored>

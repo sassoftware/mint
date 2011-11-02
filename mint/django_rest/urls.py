@@ -657,6 +657,9 @@ urlpatterns = patterns('',
     URL(r'targets/(?P<target_id>\d+)/descriptor_refresh_images/?$',
         targetsviews.TargetRefreshImagesService(),
         name='TargetRefreshImages'),
+    URL(r'targets/(?P<target_id>\d+)/descriptors/deploy/file/(?P<file_id>\d+)/?$',
+        targetsviews.TargetImageDeploymentService(),
+        name='TargetImageDeployment'),
     URL(r'target_types/?$',
         targetsviews.TargetTypeService(),
         name='TargetTypes',
@@ -696,7 +699,12 @@ urlpatterns = patterns('',
         imagesviews.ImagesService(),
         name='Image',
         model='Image'),
-    
+
+    URL(r'images/(?P<image_id>\d+)/jobs/?$',
+        imagesviews.ImageJobsService(),
+        name='ImageJobs',
+        model='Jobs'),
+
     # Digress for build_log
     URL(r'images/(?P<image_id>\d+)/build_log/?$',
         imagesviews.BuildLogService(),

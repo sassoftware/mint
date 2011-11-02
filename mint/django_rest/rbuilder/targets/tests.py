@@ -8,9 +8,11 @@
 import collections
 import re
 
+from mint import buildtypes
 from mint.django_rest.test_utils import XMLTestCase, RepeaterMixIn
 from mint.django_rest.rbuilder.inventory import zones as zmodels
 from mint.django_rest.rbuilder.inventory import models as invmodels
+from mint.django_rest.rbuilder.images import models as imgmodels
 from mint.django_rest.rbuilder.users import models as umodels
 from mint.django_rest.rbuilder.jobs import models as jmodels
 from mint.django_rest.rbuilder.targets import models
@@ -25,7 +27,7 @@ class BaseTargetsTest(XMLTestCase):
 
     def _initTestFixtures(self):
         sampleTargetTypes = [ models.TargetType.objects.get(name=x)
-            for x in ['vmware', 'ec2', 'xenent', 'openstack'] ]
+            for x in ['vmware', 'ec2', 'xen-enterprise', 'openstack'] ]
 
         lz = zmodels.Zone.objects.get(name=zmodels.Zone.LOCAL_ZONE)
 
@@ -117,7 +119,7 @@ class TargetsTestCase(BaseTargetsTest, RepeaterMixIn):
                 'Create target of type openstack',
                 'Create target of type vcloud',
                 'Create target of type vmware',
-                'Create target of type xenent',
+                'Create target of type xen-enterprise',
             ])
         self.failUnlessEqual(
             [ x.descriptor.id for x in actions ],
@@ -145,14 +147,14 @@ class TargetsTestCase(BaseTargetsTest, RepeaterMixIn):
     def testGetTarget_credentials_valid(self):
         # Remove credentials for one of the targets
         # openstack won't have creds anyway
-        models.TargetUserCredentials.objects.get(target__name = 'Target Name xenent').delete()
+        models.TargetUserCredentials.objects.get(target__name = 'Target Name xen-enterprise').delete()
         response = self._get('targets/', username='testuser', password='password')
         targetsObj = xobj.parse(response.content)
         self.failUnlessEqual([ x.name for x in targetsObj.targets.target ],
             [
                 'Target Name vmware',
                 'Target Name ec2',
-                'Target Name xenent',
+                'Target Name xen-enterprise',
                 'Target Name openstack',
             ])
         self.failUnlessEqual([ x.credentials_valid for x in targetsObj.targets.target ],
@@ -340,7 +342,7 @@ class JobCreationTest(BaseTargetsTest, RepeaterMixIn):
         # Make sure the job is related to the target type
         self.failUnlessEqual(
             [ x.target_type.name for x in dbjob.jobtargettype_set.all() ],
-            [ 'xenent' ],
+            [ 'xen-enterprise' ],
         )
 
         calls = self.mgr.repeaterMgr.repeaterClient.getCallList()
@@ -807,3 +809,182 @@ class JobCreationTest(BaseTargetsTest, RepeaterMixIn):
         self.failUnlessEqual(obj.image.name, params['imageTitle'])
         self.failUnlessEqual(obj.image.image_type.key, 'VMWARE_ESX_IMAGE')
         self.failUnlessEqual(obj.image.job_uuid, dbjob.job_uuid)
+
+    def _setupImages(self):
+        targetType = models.TargetType.objects.get(name='vmware')
+        target1 = models.Target.objects.filter(target_type=targetType)[0]
+        targetType = models.TargetType.objects.get(name='openstack')
+        target2 = models.Target.objects.filter(target_type=targetType)[0]
+
+        targetData = [
+            (target1, buildtypes.VMWARE_ESX_IMAGE),
+            (target2, buildtypes.RAW_HD_IMAGE),
+        ]
+
+        # We need to set a user, image creation needs it
+        user = self.getUser('testuser')
+        self.mgr.user = user
+
+        # Create a project for the images
+        branch = self.getProjectBranch(label='chater-foo.eng.rpath.com@rpath:chater-foo-1')
+        stage = self.getProjectBranchStage(branch=branch, name="Development")
+
+        targetImageIdTempl = "target-internal-id-%02d"
+        imgmgr = self.mgr.imagesManager
+        for i in range(4):
+            for target, imageType in targetData:
+                image = imgmgr.createImage(
+                    _image_type=imageType,
+                    name = "image %02d" % i,
+                    description = "image %02d description" % i,
+                    project_branch_stage=stage,
+                )
+                imgmgr.createImageBuild(image)
+                bf = imgmgr.createImageBuildFile(image,
+                    url="filename-%02d-%02d" % (imageType, i),
+                    title="Image File Title %02d" % i,
+                    size=100+i,
+                    sha1="%040d" % i)
+                if i % 2 == 0:
+                    imgbuild = imgmgr.recordTargetInternalId(
+                        buildFile=bf, target=target,
+                        targetInternalId=targetImageIdTempl % i)
+
+                # Add a bunch of target images
+                j = i + 2
+                models.TargetImage.objects.create(
+                    target = target,
+                    name="target image name %02d" % j,
+                    description="target image description %02d" % j,
+                    target_internal_id=targetImageIdTempl % j)
+
+        return [ target1, target2 ]
+
+    def testRecomputeTargetDeployableImages(self):
+        targets = self._setupImages()
+        self.mgr.targetsManager.recomputeTargetDeployableImages()
+
+        target1 = targets[0]
+
+        for imgName in [ "image 00", "image 01", "image 03" ]:
+            img = imgmodels.Image.objects.get(name=imgName, _image_type=buildtypes.VMWARE_ESX_IMAGE)
+            self.failUnlessEqual(
+                [
+                    [ tdi.target_image
+                        for tdi in imgfile.target_deployable_images.all() ]
+                    for imgfile in img.files.all() ],
+                [[None]]
+            )
+
+        imgName = "image 02"
+        img = imgmodels.Image.objects.get(name=imgName, _image_type=buildtypes.VMWARE_ESX_IMAGE)
+        self.failUnlessEqual(
+            [
+                [ tdi.target_image.target_internal_id
+                    for tdi in imgfile.target_deployable_images.all() ]
+                for imgfile in img.files.all() ],
+            [['target-internal-id-02']]
+        )
+
+        url = "images/%s" % img.image_id
+        resp = self._get(url, username="testuser", password="password")
+        self.failUnlessEqual(resp.status_code, 200)
+        doc = xobj.parse(resp.content)
+        actions = doc.image.actions.action
+        self.failUnlessEqual([ x.name for x in actions ],
+            ["Deploy image on 'Target Name vmware' (vmware)",
+             "Launch system on 'Target Name vmware' (vmware)",
+            ])
+        file1 = img.files.all()[0]
+        self.failUnlessEqual([ x.descriptor.id for x in actions ],
+            [
+            'http://testserver/api/v1/targets/%s/descriptors/deploy/file/%s' %
+                (target1.target_id, file1.file_id),
+            'http://testserver/api/v1/targets/%s/descriptors/launch/file/%s' %
+                (target1.target_id, file1.file_id),
+            ])
+        self.failUnlessEqual(doc.image.jobs.id, 'http://testserver/api/v1/images/5/jobs')
+
+        # Fetch deployment descriptor
+        url = 'targets/%s/descriptors/deploy/file/%s' % (target1.target_id,
+            file1.file_id)
+
+        self.mgr.repeaterMgr.repeaterClient.setJobData("""\
+<descriptor>
+  <metadata>
+    <displayName>FooDescriptor</displayName>
+    <rootElement>blah</rootElement>
+    <descriptions><desc>Description</desc></descriptions>
+  </metadata>
+  <dataFields>
+    <field>
+      <name>imageId</name>
+      <descriptions>
+        <desc>Image ID</desc>
+      </descriptions>
+      <type>str</type>
+      <required>true</required>
+      <hidden>true</hidden>
+    </field>
+  </dataFields>
+</descriptor>""")
+        resp = self._get(url, username="testuser", password="password")
+        self.failUnlessEqual(resp.status_code, 200)
+        doc = xobj.parse(resp.content)
+        self.failUnlessEqual(doc.descriptor.metadata.displayName, "FooDescriptor")
+        self.failUnlessEqual(doc.descriptor.metadata.rootElement, "descriptor_data")
+        self.failUnlessEqual(doc.descriptor.dataFields.field.default, "5")
+
+    def testDeployImage(self):
+        targets = self._setupImages()
+        self.mgr.targetsManager.recomputeTargetDeployableImages()
+
+        # Post a job
+        jobXmlTmpl = """
+<job>
+  <job_type id="http://localhost/api/v1/inventory/event_types/%(jobTypeId)s"/>
+  <descriptor id="http://testserver/api/v1/targets/%(targetId)s/descriptors/deploy/file/%(buildFileId)s"/>
+  <descriptor_data>
+    <imageId>%(buildFileId)s</imageId>
+  </descriptor_data>
+</job>
+"""
+
+        imgName = "image 02"
+        img = imgmodels.Image.objects.get(name=imgName, _image_type=buildtypes.VMWARE_ESX_IMAGE)
+        buildFileId = img.files.all()[0].file_id
+        targetId = targets[0].target_id
+        jobTypeId = self.mgr.sysMgr.eventType(jmodels.EventType.TARGET_DEPLOY_IMAGE).job_type_id
+
+        jobXml = jobXmlTmpl % dict(
+                jobTypeId=jobTypeId,
+                imageId = img.image_id,
+                targetId=targetId,
+                buildFileId = buildFileId,)
+        jobUrl = "images/%s/jobs" % img.image_id
+        response = self._post(jobUrl, jobXml,
+            username='testuser', password='password')
+        self.failUnlessEqual(response.status_code, 200)
+        obj = xobj.parse(response.content)
+
+        job = obj.job
+        self.failUnlessEqual(job.descriptor.id,
+            "http://testserver/api/v1/targets/%s/descriptors/deploy/file/%s"
+                % (targetId, buildFileId))
+
+        dbjob = jmodels.Job.objects.get(job_uuid=job.job_uuid)
+        jobToken = dbjob.job_token
+        self.failUnlessEqual(dbjob.job_type.name, dbjob.job_type.TARGET_DEPLOY_IMAGE)
+        self.failUnlessEqual(
+            [ x.image.name for x in dbjob.images.all() ],
+            [ 'image 02' ],
+        )
+
+        calls = self.mgr.repeaterMgr.repeaterClient.getCallList()
+        self.failUnlessEqual([ x.name for x in calls ],
+            [
+                'targets.TargetConfiguration', 'targets.TargetUserCredentials',
+                'targets.configure', 'targets.deployImage',
+            ])
+        realCall = calls[-1]
+        # XXX test calls

@@ -1541,7 +1541,7 @@ class SystemManager(basemanager.BaseManager):
 
     @classmethod
     def eventType(cls, name):
-        return jobmodels.EventType.objects.get(name=name)
+        return models.Cache.get(jobmodels.EventType, name=name)
 
     @classmethod
     def jobState(cls, name):
@@ -1977,14 +1977,6 @@ class SystemManager(basemanager.BaseManager):
         return descr
 
     @exposed
-    def getDescriptorForSystemAction(self, system_id, job_type, query_dict):
-        '''To submit a job to the system, what smartform data do I need?'''
-        eventType = jobmodels.EventType.objects.get(pk=job_type).name
-        if eventType != jobmodels.EventType.SYSTEM_ASSIMILATE:
-            raise Exception("no descriptor for job type %s" % eventType)
-        return self.getDescriptorAssimilation(system_id)
-
-    @exposed
     def scheduleJobAction(self, system, job):
         '''
         An action is a bare job submission that is a request to start
@@ -2057,10 +2049,7 @@ class SystemManager(basemanager.BaseManager):
         return ' / '.join(labelComponents)
 
     @exposed
-    def serializeDescriptor(self, descriptor):
-        # We need to turn validation off because we change the
-        # descriptor root node. This needs to be re-discussed
-        validate = False
+    def serializeDescriptor(self, descriptor, validate=True):
         wrapper = models.modellib.etreeObjectWrapper(
             descriptor.getElementTree(validate=validate))
         return wrapper

@@ -28,7 +28,12 @@ class CatalogServiceHelper(object):
         drvClass = cls._driverCache.get(targetType.name)
         if drvClass is not None:
             return drvClass
-        moduleName = "catalogService.rest.drivers.%s" % targetType.name
+        driverName = targetType.name
+        # xen enterprise is a one-off
+        if driverName == 'xen-enterprise':
+            driverName = 'xenent'
+
+        moduleName = "catalogService.rest.drivers.%s" % driverName
         DriverClass = __import__(moduleName, {}, {}, '.driver').driver
         cls._driverCache[targetType.name] = DriverClass
         return DriverClass
@@ -158,12 +163,6 @@ class TargetsManager(basemanager.BaseManager, CatalogServiceHelper):
         return descr
 
     @exposed
-    def serializeDescriptorConfigureCredentials(self, target_id):
-        descr = self.getDescriptorConfigureCredentials(target_id)
-        wrapper = modellib.etreeObjectWrapper(descr.getElementTree(validate=True))
-        return wrapper
-
-    @exposed
     def getDescriptorRefreshImages(self, target_id):
         # This will validate the target
         self.getTargetById(target_id)
@@ -174,10 +173,51 @@ class TargetsManager(basemanager.BaseManager, CatalogServiceHelper):
         return descr
 
     @exposed
-    def serializeDescriptorRefreshImages(self, targetId):
-        descr = self.getDescriptorRefreshImages(targetId)
-        wrapper = modellib.etreeObjectWrapper(descr.getElementTree(validate=True))
-        return wrapper
+    def getDescriptorDeployImage(self, targetId, buildFileId):
+        repClient = self.mgr.repeaterMgr.repeaterClient
+        if repClient is None:
+            log.info("Failed loading repeater client, expected in local mode only")
+            return
+        target = self.getTargetById(targetId)
+        targetConfiguration = self._buildTargetConfigurationFromDb(repClient, target)
+        targetUserCredentials = self._buildTargetCredentialsFromDb(repClient, target)
+        zone = self.getTargetZone(target)
+        repClient.targets.configure(zone.name, targetConfiguration,
+            targetUserCredentials)
+        uuid, job = repClient.targets.imageDeploymentDescriptor()
+        job = self.mgr.waitForRmakeJob(uuid, interval=.1)
+        if not job.status.final:
+            raise Exception("Final state not reached")
+        descrXml = job.data.data
+        descr = descriptor.ConfigurationDescriptor(fromStream=descrXml)
+        descr.setRootElement("descriptor_data")
+        # Fill in imageId
+        field = descr.getDataField('imageId')
+        field.set_default([str(buildFileId)])
+        return descr
+
+    def _buildTargetConfigurationFromDb(self, cli, target):
+        targetData = self.mgr.getTargetConfiguration(target)
+        targetTypeName = modellib.Cache.get(models.TargetType,
+            pk=target.target_type_id).name
+        targetConfiguration = cli.targets.TargetConfiguration(
+            targetTypeName, target.name, targetData.get('alias'),
+            targetData)
+        return targetConfiguration
+
+    def _buildTargetCredentialsFromDb(self, cli, target):
+        creds = self.mgr.getTargetCredentialsForCurrentUser(target)
+        if creds is None:
+            raise errors.InvalidData()
+        return self._buildTargetCredentials(cli, creds)
+
+    def _buildTargetCredentials(self, cli, creds):
+        userCredentials = cli.targets.TargetUserCredentials(
+            credentials=creds,
+            rbUser=self.user.user_name,
+            rbUserId=self.user.user_id,
+            isAdmin=self.user.is_admin)
+        return userCredentials
 
     @exposed
     def updateTargetImages(self, target, images):
@@ -270,6 +310,60 @@ class TargetsManager(basemanager.BaseManager, CatalogServiceHelper):
         """
         cu.execute(query)
         cu.execute("DROP TABLE tmp_target_image")
+        self.recomputeTargetDeployableImages()
+
+    def recomputeTargetDeployableImages(self):
+        cu = connection.cursor()
+        cu.execute("""
+            CREATE TEMPORARY TABLE tmp_target_image (
+                target_id INT,
+                target_image_id INT,
+                file_id INT
+            )
+        """)
+        try:
+            self._recomputeTargetDeployableImages()
+        finally:
+            cu.execute("DROP TABLE tmp_target_image")
+
+    def _recomputeTargetDeployableImages(self):
+        cu = connection.cursor()
+        # First, compute all deployed images
+        query = """
+            INSERT INTO tmp_target_image (target_id, target_image_id, file_id)
+                SELECT tid.targetId, ti.target_image_id, tid.fileId
+                  FROM TargetImagesDeployed AS tid
+                  JOIN target_image AS ti
+                        ON (ti.target_id = tid.targetId
+                            AND ti.target_internal_id = tid.targetImageId)
+        """
+        cu.execute(query)
+        # Add undeployed images
+        query = """
+            INSERT INTO tmp_target_image (target_id, target_image_id, file_id)
+                SElECT t.targetId, NULL, imgf.fileId
+                  FROM Targets AS t
+                  JOIN target_types AS tt USING (target_type_id)
+                  JOIN Builds AS img ON (tt.build_type_id = img.buildType)
+                  JOIN BuildFiles AS imgf ON (img.buildId = imgf.buildId)
+                 WHERE NOT EXISTS (
+                       SELECT 1
+                         FROM tmp_target_image
+                        WHERE target_id = t.targetId
+                          AND file_id = imgf.fileId)
+        """
+        cu.execute(query)
+        # XXX Deal with EC2 images
+        # XXX prefer ova vs ovf 0.9
+
+        # XXX this should do smart replaces instead of this wholesale
+        # replace
+        cu.execute("DELETE FROM target_deployable_image")
+        cu.execute("""
+            INSERT INTO target_deployable_image
+                (target_id, target_image_id, file_id)
+            SELECT target_id, target_image_id, file_id
+              FROM tmp_target_image""")
 
     def _image(self, target, image):
         imageName = self._unXobj(getattr(image, 'productName',
@@ -334,12 +428,6 @@ class TargetTypesManager(basemanager.BaseManager, CatalogServiceHelper):
             required=True)
 
         return descr
-
-    @exposed
-    def serializeDescriptorCreateTargetByTargetType(self, target_type_id):
-        descr = self.getDescriptorCreateTargetByTargetType(target_type_id)
-        wrapper = modellib.etreeObjectWrapper(descr.getElementTree(validate=True))
-        return wrapper
 
 class TargetTypeJobsManager(basemanager.BaseManager):
     @exposed
