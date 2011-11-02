@@ -127,7 +127,9 @@ class RbacManager(basemanager.BaseManager):
             xobj_model.id = roles_obj.get_absolute_url(request)
             xobj_model.start_index = 0
             for role in xobj_model.role:
+                role.matrix_role_id = role.id
                 actual_role = models.RbacRole.objects.get(pk = role.role_id)
+                del role.id
                 tweaked_grants = []
                 for ptype in PERMISSION_TYPES:
                     xperm = None
