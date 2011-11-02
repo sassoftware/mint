@@ -130,7 +130,6 @@ class RbacManager(basemanager.BaseManager):
                 role.matrix_role_id = role.id
                 actual_role = models.RbacRole.objects.get(pk = role.role_id)
                 del role.id
-                tweaked_grants = []
                 for ptype in PERMISSION_TYPES:
                     xperm = None
                     permission_type = permissions[ptype]
