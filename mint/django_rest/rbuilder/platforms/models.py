@@ -83,6 +83,9 @@ class ContentSources(modellib.Collection):
     """
     class Meta:
         abstract = True
+    
+    _xobj = xobj.XObjMetadata(tag='content_sources')
+        
     list_fields = ['content_source']
     
     
@@ -117,7 +120,8 @@ class ContentSourceTypes(modellib.Collection):
     """
     class Meta:
         abstract = True
-    
+        
+    _xobj = xobj.XObjMetadata(tag='content_source_types')
     list_fields = ['content_source_type']
     
 
@@ -173,7 +177,7 @@ class PlatformLoads(modellib.Collection):
     class Meta:
         abstract = True
     list_fields = ['platform_load']
-
+    _xobj = xobj.XObjMetadata(tag='platform_loads')
 
 class PlatformLoad(modellib.XObjIdModel):
     class Meta:

@@ -210,8 +210,6 @@ class rBuilderProduct(CPackageRecipe):
         r.Requires('rbuilder:python(%(version)s)',
                    '%(sitepkg)s/mint/web/webhandler.pyc')
         r.Requires('rbuilder:python(%(version)s)',
-                   '%(localstatedir)s/mailman/bin/mmsettingspolicy.py.rbuilder')
-        r.Requires('rbuilder:python(%(version)s)',
                    '%(datadir)s/rbuilder/scripts/migrate-config')
 
         # Our rAPA plugins require rapa-plugin-rPath

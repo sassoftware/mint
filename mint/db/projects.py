@@ -15,7 +15,6 @@ from mint.lib import data as mintdata
 from mint.helperfuncs import truncateForDisplay, rewriteUrlProtocolPort, \
         hostPortParse, configureClientProxies, getProjectText
 from mint import helperfuncs
-from mint import mailinglists
 from mint import searcher
 from mint import userlevels
 from mint.mint_error import *

@@ -1,8 +1,0 @@
-if [ $PYTHONPATH ]; then
-    PYTHONPATH=$PYTHONPATH:/var/mailman
-else
-    PYTHONPATH=/var/mailman
-fi
-LOC=/var/mailman/bin
-
-PYTHONPATH=$PYTHONPATH python ${LOC}/mmsettingspolicy.py
