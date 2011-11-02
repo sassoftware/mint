@@ -417,7 +417,7 @@ system_type_systems_xml="""
     <registration_date/>
     <ssl_client_certificate>testsystemsslclientcertificate</ssl_client_certificate>
     <ssl_server_certificate>testsystemsslservercertificate</ssl_server_certificate>
-    <stage/>
+    <project_branch_stage/>
     <system_events id="http://testserver/api/v1/inventory/systems/3/system_events"/>
     <system_id>3</system_id>
     <system_log id="http://testserver/api/v1/inventory/systems/3/system_log"/>
@@ -602,7 +602,7 @@ management_nodes_xml = """\
     <node_jid>superduperjid2@rbuilder.rpath</node_jid>
     <ssl_client_certificate>test management node client cert</ssl_client_certificate>
     <ssl_server_certificate>test management node server cert</ssl_server_certificate>
-    <stage/>
+    <project_branch_stage/>
     <managing_zone id="http://testserver/api/v1/inventory/zones/2">Local Zone</managing_zone>
     <hostname/>
     <name>test management node</name>
@@ -677,7 +677,7 @@ management_node_xml = """\
   <node_jid>superduperjid2@rbuilder.rpath</node_jid>
   <ssl_client_certificate>test management node client cert</ssl_client_certificate>
   <ssl_server_certificate>test management node server cert</ssl_server_certificate>
-  <stage/>
+  <project_branch_stage/>
   <managing_zone id="http://testserver/api/v1/inventory/zones/2">Local Zone</managing_zone>
   <hostname/>
   <name>test management node</name>
@@ -738,7 +738,7 @@ management_node_post_xml = """\
   <node_jid>abcd</node_jid>
   <ssl_client_certificate>test management node client cert</ssl_client_certificate>
   <ssl_server_certificate>test management node server cert</ssl_server_certificate>
-  <stage/>
+  <project_branch_stage/>
   <zone id="http://testserver/api/v1/inventory/zones/1"/>
   <managing_zone id="http://testserver/api/v1/inventory/zones/1"/>
   <hostname>myhostname</hostname>
@@ -789,7 +789,7 @@ management_node_post_response_xml = """\
   <node_jid>abcd</node_jid>
   <ssl_client_certificate/>
   <ssl_server_certificate>test management node server cert</ssl_server_certificate>
-  <stage/>
+  <project_branch_stage/>
   <managing_zone id="http://testserver/api/v1/inventory/zones/1">Local rBuilder</managing_zone>
   <jobs id="http://testserver/api/v1/inventory/systems/3/jobs">
     <completed_jobs id="http://testserver/api/v1/inventory/systems/3/job_states/3/jobs"/>
@@ -849,7 +849,7 @@ management_node_zone_post_xml = """\
   <node_jid>abcd</node_jid>
   <ssl_client_certificate>test management node client cert</ssl_client_certificate>
   <ssl_server_certificate>test management node server cert</ssl_server_certificate>
-  <stage/>
+  <project_branch_stage/>
   <hostname>myhostname</hostname>
   <name>test management node</name>
   <system_id>1</system_id>
@@ -899,7 +899,7 @@ management_node_zone_post_response_xml = """\
   <node_jid>abcd</node_jid>
   <ssl_client_certificate/>
   <ssl_server_certificate>test management node server cert</ssl_server_certificate>
-  <stage/>
+  <project_branch_stage/>
   <managing_zone id="http://testserver/api/v1/inventory/zones/1">Local rBuilder</managing_zone>
   <hostname>myhostname</hostname>
   <name>test management node</name>
@@ -1016,7 +1016,7 @@ systems_xml = """\
     </networks>
     <ssl_client_certificate/>
     <ssl_server_certificate/>
-    <stage/>
+    <project_branch_stage/>
     <system_events id="http://testserver/api/v1/inventory/systems/2/system_events"/>
     <system_id>2</system_id>
     <system_log id="http://testserver/api/v1/inventory/systems/2/system_log"/>
@@ -1099,7 +1099,7 @@ systems_xml = """\
     </networks>
     <ssl_client_certificate>testsystemsslclientcertificate</ssl_client_certificate>
     <ssl_server_certificate>testsystemsslservercertificate</ssl_server_certificate>
-    <stage/>
+    <project_branch_stage/>
     <system_events id="http://testserver/api/v1/inventory/systems/3/system_events"/>
     <system_id>3</system_id>
     <system_log id="http://testserver/api/v1/inventory/systems/3/system_log"/>
@@ -1137,7 +1137,7 @@ systems_put_xml = """\
     </networks>
     <ssl_client_certificate>testsystemsslclientcertificate</ssl_client_certificate>
     <ssl_server_certificate>testsystemsslservercertificate</ssl_server_certificate>
-    <stage/>
+    <project_branch_stage/>
     <launch_date/>
     <ssl_client_certificate>testsystemsslclientcertificate</ssl_client_certificate>
     <description>testsystemdescription</description>
@@ -1180,7 +1180,7 @@ systems_put_xml = """\
     </networks>
     <ssl_client_certificate>testsystemsslclientcertificate</ssl_client_certificate>
     <ssl_server_certificate>testsystemsslservercertificate</ssl_server_certificate>
-    <stage/>
+    <project_branch_stage/>
     <launch_date/>
     <ssl_client_certificate>testsystemsslclientcertificate</ssl_client_certificate>
     <description>testsystemdescription</description>
@@ -1227,7 +1227,7 @@ systems_put_mothball_xml = """\
   </networks>
   <ssl_client_certificate>testsystemsslclientcertificate</ssl_client_certificate>
   <ssl_server_certificate>testsystemsslservercertificate</ssl_server_certificate>
-  <stage/>
+  <project_branch_stage/>
   <launch_date/>
   <ssl_client_certificate>testsystemsslclientcertificate</ssl_client_certificate>
   <description>testsystemdescription</description>
@@ -1309,7 +1309,7 @@ system_xml = """\
   </networks>
   <ssl_client_certificate>testsystemsslclientcertificate</ssl_client_certificate>
   <ssl_server_certificate>testsystemsslservercertificate</ssl_server_certificate>
-  <stage/>
+  <project_branch_stage/>
   <system_id>3</system_id>
   <launching_user/>
   <launch_date/>
@@ -1375,7 +1375,7 @@ system_post_xml = """\
   </networks>
   <ssl_client_certificate>testsystemsslclientcertificate</ssl_client_certificate>
   <ssl_server_certificate>testsystemsslservercertificate</ssl_server_certificate>
-  <stage/>
+  <project_branch_stage/>
   <launch_date/>
   <ssl_client_certificate>testsystemsslclientcertificate</ssl_client_certificate>
   <description>testsystemdescription</description>
@@ -1413,7 +1413,7 @@ system_mgmt_interface_put_xml = """\
   </networks>
   <ssl_client_certificate>testsystemsslclientcertificate</ssl_client_certificate>
   <ssl_server_certificate>testsystemsslservercertificate</ssl_server_certificate>
-  <stage/>
+  <project_branch_stage/>
   <launch_date/>
   <ssl_client_certificate>testsystemsslclientcertificate</ssl_client_certificate>
   <description>testsystemdescription</description>
@@ -1451,7 +1451,7 @@ system_delete_mgmt_interface_put_xml = """\
   </networks>
   <ssl_client_certificate>testsystemsslclientcertificate</ssl_client_certificate>
   <ssl_server_certificate>testsystemsslservercertificate</ssl_server_certificate>
-  <stage/>
+  <project_branch_stage/>
   <launch_date/>
   <ssl_client_certificate>testsystemsslclientcertificate</ssl_client_certificate>
   <description>testsystemdescription</description>
@@ -1502,7 +1502,7 @@ system_post_xml_response = """\
   </networks>
   <ssl_client_certificate>testsystemsslclientcertificate</ssl_client_certificate>
   <ssl_server_certificate>testsystemsslservercertificate</ssl_server_certificate>
-  <stage/>
+  <project_branch_stage/>
   <managing_zone id="http://testserver/api/v1/inventory/zones/1">Local rBuilder</managing_zone>
   <hostname/>
   <system_id>3</system_id>
@@ -1592,7 +1592,7 @@ system_post_xml_dup = """\
   </networks>
   <ssl_client_certificate>testsystemsslclientcertificate</ssl_client_certificate>
   <ssl_server_certificate>testsystemsslservercertificate</ssl_server_certificate>
-  <stage/>
+  <project_branch_stage/>
   <launch_date/>
   <ssl_client_certificate>testsystemsslclientcertificate</ssl_client_certificate>
   <description>testsystemdescription</description>
@@ -1664,7 +1664,7 @@ system_target_xml = """\
   </networks>
   <ssl_client_certificate>testsystemsslclientcertificate</ssl_client_certificate>
   <ssl_server_certificate>testsystemsslservercertificate</ssl_server_certificate>
-  <stage/>
+  <project_branch_stage/>
   <managing_zone id="http://testserver/api/v1/inventory/zones/1">Local rBuilder</managing_zone>
   <hostname/>
   <system_id>3</system_id>
@@ -2018,7 +2018,7 @@ system_version_xml = """\
   </networks>
   <ssl_client_certificate>testsystemsslclientcertificate</ssl_client_certificate>
   <ssl_server_certificate>testsystemsslservercertificate</ssl_server_certificate>
-  <stage/>
+  <project_branch_stage/>
   <system_id>3</system_id>
   <launching_user/>
   <launch_date/>
@@ -2155,7 +2155,7 @@ system_version_put_response_xml = """\
   </networks>
   <ssl_client_certificate>testsystemsslclientcertificate</ssl_client_certificate>
   <ssl_server_certificate>testsystemsslservercertificate</ssl_server_certificate>
-  <stage/>
+  <project_branch_stage/>
   <system_id>2</system_id>
   <launching_user/>
   <launch_date/>
@@ -2292,7 +2292,7 @@ system_available_updates_xml = """\
   </networks>
   <ssl_client_certificate>testsystemsslclientcertificate</ssl_client_certificate>
   <ssl_server_certificate>testsystemsslservercertificate</ssl_server_certificate>
-  <stage/>
+  <project_branch_stage/>
   <managing_zone id="http://testserver/api/v1/inventory/zones/1">Local rBuilder</managing_zone>
   <hostname/>
   <system_id>3</system_id>
@@ -2485,7 +2485,7 @@ system_with_target = """\
     </network>
   </networks>
   <ssl_server_certificate/>
-  <stage/>
+  <project_branch_stage/>
   <managing_zone id="http://testserver/api/v1/inventory/zones/1">Local rBuilder</managing_zone>
   <hostname/>
   <system_id>4</system_id>
@@ -2773,9 +2773,9 @@ system_installed_software_version_stage_xml = """\
   <credentials id="http://testserver/api/v1/inventory/systems/3/credentials"/>
   <configuration id="http://testserver/api/v1/inventory/systems/3/configuration"/>
   <agent_port>5989</agent_port>
-  <stage id="http://testserver/api/v1/projects/chater-foo/project_branches/chater-foo.eng.rpath.com@rpath:chater-foo-1/project_branch_stages/Development">
+  <project_branch_stage id="http://testserver/api/v1/projects/chater-foo/project_branches/chater-foo.eng.rpath.com@rpath:chater-foo-1/project_branch_stages/Development">
     <name>Development</name>
-  </stage>
+  </project_branch_stage>
   <out_of_date>False</out_of_date>
   <name>testsystemname</name>
   <local_uuid>testsystemlocaluuid</local_uuid>
@@ -2834,7 +2834,7 @@ System Properties:
    ssl_client_certificate - an x509 certificate of an authorized client that can use the system's CIM broker
    ssl_client_key - an x509 private key of an authorized client that can use the system's CIM broker
    ssl_server_certificate - an x509 public certificate of the system's CIM broker
-   stage - the appliance stage of the system
+   project_branch_stage - the appliance project_branch_stage of the system
    system_id - the database ID for the system
    system_log - an entry point into the log data for this system
    system_type - the type of the system
@@ -2960,7 +2960,7 @@ Methods:
     <credentials id="http://testserver/api/v1/inventory/systems/2/credentials"/>
     <configuration id="http://testserver/api/v1/inventory/systems/2/configuration"/>
     <agent_port/>
-    <stage/>
+    <project_branch_stage/>
     <out_of_date>False</out_of_date>
     <name>rPath Update Service</name>
     <local_uuid/>
@@ -3026,7 +3026,7 @@ Methods:
     <credentials id="http://testserver/api/v1/inventory/systems/3/credentials"/>
     <configuration id="http://testserver/api/v1/inventory/systems/3/configuration"/>
     <agent_port/>
-    <stage/>
+    <project_branch_stage/>
     <out_of_date>False</out_of_date>
     <name>System name 3</name>
     <local_uuid>system-3-local-uuid</local_uuid>
@@ -3092,7 +3092,7 @@ Methods:
     <credentials id="http://testserver/api/v1/inventory/systems/4/credentials"/>
     <configuration id="http://testserver/api/v1/inventory/systems/4/configuration"/>
     <agent_port/>
-    <stage/>
+    <project_branch_stage/>
     <out_of_date>False</out_of_date>
     <name>System name 4</name>
     <local_uuid>system-4-local-uuid</local_uuid>
@@ -3158,7 +3158,7 @@ Methods:
     <credentials id="http://testserver/api/v1/inventory/systems/5/credentials"/>
     <configuration id="http://testserver/api/v1/inventory/systems/5/configuration"/>
     <agent_port/>
-    <stage/>
+    <project_branch_stage/>
     <out_of_date>False</out_of_date>
     <name>System name 5</name>
     <local_uuid>system-5-local-uuid</local_uuid>
@@ -3224,7 +3224,7 @@ Methods:
     <credentials id="http://testserver/api/v1/inventory/systems/6/credentials"/>
     <configuration id="http://testserver/api/v1/inventory/systems/6/configuration"/>
     <agent_port/>
-    <stage/>
+    <project_branch_stage/>
     <out_of_date>False</out_of_date>
     <name>System name 6</name>
     <local_uuid>system-6-local-uuid</local_uuid>
@@ -3290,7 +3290,7 @@ Methods:
     <credentials id="http://testserver/api/v1/inventory/systems/7/credentials"/>
     <configuration id="http://testserver/api/v1/inventory/systems/7/configuration"/>
     <agent_port/>
-    <stage/>
+    <project_branch_stage/>
     <out_of_date>False</out_of_date>
     <name>System name 7</name>
     <local_uuid>system-7-local-uuid</local_uuid>
@@ -3356,7 +3356,7 @@ Methods:
     <credentials id="http://testserver/api/v1/inventory/systems/8/credentials"/>
     <configuration id="http://testserver/api/v1/inventory/systems/8/configuration"/>
     <agent_port/>
-    <stage/>
+    <project_branch_stage/>
     <out_of_date>False</out_of_date>
     <name>System name 8</name>
     <local_uuid>system-8-local-uuid</local_uuid>
@@ -3422,7 +3422,7 @@ Methods:
     <credentials id="http://testserver/api/v1/inventory/systems/9/credentials"/>
     <configuration id="http://testserver/api/v1/inventory/systems/9/configuration"/>
     <agent_port/>
-    <stage/>
+    <project_branch_stage/>
     <out_of_date>False</out_of_date>
     <name>System name 9</name>
     <local_uuid>system-9-local-uuid</local_uuid>
@@ -3488,7 +3488,7 @@ Methods:
     <credentials id="http://testserver/api/v1/inventory/systems/10/credentials"/>
     <configuration id="http://testserver/api/v1/inventory/systems/10/configuration"/>
     <agent_port/>
-    <stage/>
+    <project_branch_stage/>
     <out_of_date>False</out_of_date>
     <name>System name 10</name>
     <local_uuid>system-10-local-uuid</local_uuid>
@@ -3554,7 +3554,7 @@ Methods:
     <credentials id="http://testserver/api/v1/inventory/systems/11/credentials"/>
     <configuration id="http://testserver/api/v1/inventory/systems/11/configuration"/>
     <agent_port/>
-    <stage/>
+    <project_branch_stage/>
     <out_of_date>False</out_of_date>
     <name>System name 11</name>
     <local_uuid>system-11-local-uuid</local_uuid>
@@ -3603,7 +3603,7 @@ system_post_forge_object = """<?xml version="1.0" encoding="UTF-8"?>
   </networks>
   <ssl_client_certificate>testsystemsslclientcertificate</ssl_client_certificate>
   <ssl_server_certificate>testsystemsslservercertificate</ssl_server_certificate>
-  <stage/>
+  <project_branch_stage/>
   <launch_date/>
   <ssl_client_certificate>testsystemsslclientcertificate</ssl_client_certificate>
   <description>testsystemdescription</description>
