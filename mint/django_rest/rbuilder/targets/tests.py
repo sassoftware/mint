@@ -777,10 +777,7 @@ class JobCreationTest(BaseTargetsTest, RepeaterMixIn):
         params['outputToken'] = outputToken
         # XXX get around stipid siteHost being mocked by who knows whom
         self.failUnlessEqual(realCall.args[0], system.target_system_id)
-        r = re.compile('https://([^/]*)/')
-        mungedParams = dict((x, r.sub('https://bubba.com/', y))
-            for (x, y) in realCall.args[1].items()
-                if isinstance(y, basestring))
+        mungedParams = self._mungeDict(realCall.args[1])
         self.failUnlessEqual(mungedParams, params)
         self.failUnlessEqual(realCall.kwargs, {})
         self.mgr.repeaterMgr.repeaterClient.reset()
@@ -809,6 +806,13 @@ class JobCreationTest(BaseTargetsTest, RepeaterMixIn):
         self.failUnlessEqual(obj.image.name, params['imageTitle'])
         self.failUnlessEqual(obj.image.image_type.key, 'VMWARE_ESX_IMAGE')
         self.failUnlessEqual(obj.image.job_uuid, dbjob.job_uuid)
+
+    def _mungeDict(self, dictObj):
+        r = re.compile('https://([^/]*)/')
+        mungedParams = dict((x, r.sub('https://bubba.com/', y))
+            for (x, y) in dictObj.items()
+                if isinstance(y, basestring))
+        return mungedParams
 
     def _setupImages(self):
         targetType = models.TargetType.objects.get(name='vmware')
@@ -987,4 +991,11 @@ class JobCreationTest(BaseTargetsTest, RepeaterMixIn):
                 'targets.configure', 'targets.deployImage',
             ])
         realCall = calls[-1]
-        # XXX test calls
+        self.failUnlessEqual(self._mungeDict(realCall.args[0]),
+          {
+            'descriptor_data': "<?xml version='1.0' encoding='UTF-8'?>\n<descriptor_data>\n  <imageId>5</imageId>\n</descriptor_data>\n",
+            'imageDownloadUrl': 'https://bubba.com/downloadImage?fileId=5',
+            'imageTargetLinkUrl': 'https://bubba.com/.../5',
+          })
+        self.failUnlessEqual(realCall.args[1:], ())
+        self.failUnlessEqual(realCall.kwargs, {})

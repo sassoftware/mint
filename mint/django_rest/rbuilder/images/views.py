@@ -11,6 +11,7 @@ from django.http import HttpResponse
 from mint.django_rest.deco import requires, return_xml, access, Flags
 from mint.django_rest.rbuilder import service
 from mint.django_rest.rbuilder.images import models
+from mint.django_rest.rbuilder.jobs import models as jobsmodels
 from mint.django_rest.rbuilder.projects import models as projectsmodels
 
 """
@@ -101,7 +102,22 @@ class ImageBuildFilesService(service.BaseService):
         return file
 
 
-class ImageBuildFileService(service.BaseService):
+class ImageBuildFileService(service.BaseAuthService):
+    def _check_uuid_auth(self, request, kwargs):
+        request._withAuthToken = False
+        headerName = 'X-rBuilder-Job-Token'
+        jobToken = self.getHeaderValue(request, headerName)
+        if not jobToken:
+            return None
+        fileId = kwargs['file_id']
+        # Check for existance
+        jobs = jobsmodels.Job.objects.filter(
+            images__image__files__file_id=fileId, job_token=jobToken)
+        if not jobs:
+            return False
+        self._setMintAuth(jobs[0].created_by)
+        request._withAuthToken = True
+        return True
 
     @access.anonymous
     @return_xml
@@ -111,10 +127,13 @@ class ImageBuildFileService(service.BaseService):
     def get(self, image_id, file_id):
         return self.mgr.getImageBuildFile(image_id, file_id)
 
+    @access.auth_token
     @access.admin
     @requires('file')
     @return_xml
     def rest_PUT(self, request, image_id, file_id, file):
+        if request._withAuthToken:
+            self.mgr.addTargetImagesForFile(file)
         file.save()
         return file
 

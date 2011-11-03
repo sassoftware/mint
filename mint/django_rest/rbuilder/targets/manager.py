@@ -223,6 +223,21 @@ class TargetsManager(basemanager.BaseManager, CatalogServiceHelper):
         return userCredentials
 
     @exposed
+    def addTargetImage(self, target, image):
+        creds = self._getTargetCredentialsForCurrentUser(target)
+        if creds is None:
+            raise errors.InvalidData()
+        credsId = creds.target_credentials_id
+
+        timg = self._image(target, image)
+        timg.save()
+
+        models.TargetImageCredentials.objects.create(target_image=timg,
+            target_credentials_id=credsId)
+        self.recomputeTargetDeployableImages()
+        return timg
+
+    @exposed
     def updateTargetImages(self, target, images):
         creds = self._getTargetCredentialsForCurrentUser(target)
         if creds is None:
@@ -390,14 +405,19 @@ class TargetsManager(basemanager.BaseManager, CatalogServiceHelper):
 
 class TargetTypesManager(basemanager.BaseManager, CatalogServiceHelper):
     @exposed
-    def getTargetTypeById(self, target_type_id):
-        return models.TargetType.objects.get(pk=target_type_id)
-        
+    def getTargetTypeById(self, targetTypeId):
+        return modellib.Cache.get(models.TargetType, pk=targetTypeId)
+
+    @exposed
+    def getTargetTypeByName(self, targetTypeName):
+        return modellib.Cache.get(models.TargetType, name=targetTypeName)
+
     @exposed
     def getTargetTypes(self):
-        TargetTypes = models.TargetTypes()
-        TargetTypes.target_type = models.TargetType.objects.order_by('target_type_id')
-        return TargetTypes
+        targetTypes = modellib.Cache.all(models.TargetType)
+        ret = models.TargetTypes()
+        ret.target_type = sorted(targetTypes, key=lambda x: x.target_type_id)
+        return ret
 
     @exposed
     def getTargetsByTargetType(self, target_type_id):
