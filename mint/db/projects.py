@@ -498,11 +498,12 @@ class LabelsTable(database.KeyedTable):
         if not p:
             raise LabelMissing
         else:
+            label = p[0] or ''
             username = p[3] is not None and p[3] or ''
             password = p[4] is not None and p[4] or ''
             entitlement = p[5] is not None and p[5] or ''
             url = p[1] or ''  # seems to be unused
-            return dict(label=p[0], url=url, authType=p[2],
+            return dict(label=label, url=url, authType=p[2],
                 username=username, password=password, entitlement=entitlement)
 
     @database.dbWriter
