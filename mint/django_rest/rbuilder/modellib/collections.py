@@ -315,14 +315,7 @@ class Collection(XObjIdModel):
                 url += ';filter_by=%s' % self.filter_by
         return url
 
-    def pseudoOrderBy(self, request, modelList):
-        # this is not a queryset but a list, TODO: call sort here
-        return modelList;
-
     def orderBy(self, request, modelList):
-
-        if type(modelList) == list:
-            return self.pseudoOrderBy(request, modelList)
 
         orderBy = request.GET.get('order_by', None)
         if orderBy:
