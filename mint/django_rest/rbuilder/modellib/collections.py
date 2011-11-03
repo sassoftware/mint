@@ -80,42 +80,13 @@ class Operator(object):
     operator = None
     description = None
 
-    def prepValue(self, field, valueStr):
-        if isinstance(field, fields.BooleanField):
-            valueStr = self.castToBool(valueStr)
-        return field.get_prep_value(valueStr)
-
-    def castToBool(self, valueStr):
-        """
-        The field could either be a boolean field, or the operator might only
-        accept boolean values.  Either way, we need a helper method to cast
-        strings that correspond to bool values.
-        """
-        # Might be a bool already.
-        if isinstance(valueStr, bool):
-            return valueStr
-
-        if valueStr.lower() == 'true':
-            return True
-        elif valueStr.lower() == 'false' or valueStr == '0':
-            return False
-        else:
-            return bool(valueStr)
-
 class BooleanOperator(Operator):
-    def prepValue(self, field, valueStr):
-        return self.castToBool(valueStr)
+    pass
 
 class InOperator(Operator):
     filterTerm = 'IN'
     operator = 'in'
     description = 'In list'
-
-    def prepValue(self, field, valueStr):
-        valueStr = valueStr.strip('(').strip(')')
-        values = valueStr.split(',')
-        values = [field.get_prep_value(v) for v in values]
-        return values
 
 class NotInOperator(InOperator):
     filterTerm = 'NOT_IN'
@@ -168,12 +139,9 @@ class NotLikeOperator(LikeOperator):
 def operatorFactory(operator):
     return operatorMap[operator]
 
-def filterPseudoQuerySet(resources, field, operator, value):
-    return [ x for x in resources if getattr(x, field) == value ]
-
 def filterDjangoQuerySet(djangoQuerySet, field, operator, value, 
         collection=None, queryset=None):
-
+    
     # FIXME -- hack, really want a "DWIM" typemap
     # that attempts to preserve backwards compat against legacy
     # or incorrect filter terms, and drop all filter terms
@@ -198,44 +166,14 @@ def filterDjangoQuerySet(djangoQuerySet, field, operator, value,
         # is no longer accurate.  
         field = field.split('.', 1)[-1]
 
-    if type(djangoQuerySet) == list:
-        # this only happens when returning synthethic querysets
-        # i.e. the queryset of querysets, subject to RBAC filtering
-        # here we have to "filter" out of the DB.
-        return filterPseudoQuerySet(djangoQuerySet, field, operator, value)
-    
     if value is None:
         value = False
     
     fields = field.split('.')
-    
-    if operator in operatorMap:
-        nextModel = djangoQuerySet.model()
-        first = True
-        for f in fields[:-1]:
-            try:
-                nextModel = nextModel._meta.get_field_by_name(f)[0].rel.to()
-            except:
-                # allow querysets to be specified as system.name
-                # when the top level item is already 'system'
-                if not first:
-                    raise errors.InvalidFilterKey(field=field)
-                first = False
-        try:
-            fieldCls = nextModel._meta.get_field_by_name(fields[-1])[0]
-        except:
-            raise errors.InvalidFilterKey(field=field)
-        operatorCls = operatorFactory(operator)()
-        try:
-            value = operatorCls.prepValue(fieldCls, value)
-        except:
-            raise errors.InvalidFilterValue(value=value,
-                filter=operatorCls.filterTerm)
-    else:
-        raise errors.UnknownFilterOperator(filter=operator)
 
-
+    operatorCls = operatorFactory(operator)()
     operator_name = operatorCls.operator
+    # TODO: see why Boolean and Int fields are not getting correct operator choices
 
     # work around Django SQL generator bug where iexact does not 
     # properly quote things that look like numbers, there is no
@@ -244,28 +182,53 @@ def filterDjangoQuerySet(djangoQuerySet, field, operator, value,
         try:
             float(value)
             operator_name = 'in'
-            value = [ value ]
         except ValueError:
             # not numeric
             pass
-            
+
+    # lists can be entered seperated by commas
+    if operator_name == 'in':
+        value = value.split(",") 
+
+    # if things look boolean, no need for Django operator
+    # as it will just mess up the SQL
+    if operator_name == 'iexact':
+        lower = str(value).lower()
+        if lower in [ 'true', 'false' ]:
+            if lower == "true":
+                value = True
+            elif lower == "false":
+                value = False
+            operator_name = ''
+  
+    if operator_name == "isnull":
+        lower = str(value).lower()
+        if lower in [ 'true', 'false' ]:
+            if lower == "true":
+                value = True
+            elif lower == "false":
+                value = False
+ 
     # Replace all '.' with '__', to handle fields that span
     # relationships
-    k = '%s__%s' % (field.replace('.', '__'), operator_name)
+    operator_name = "__%s" % operator_name
+    if operator_name == '__':
+        operator_name = ''
+    k = "%s%s" % (field.replace('.', '__'), operator_name)
     filtDict = { k : value }
- 
+
     # never be able to list a deleted user account, they are 
     # present for admin metadata only
     if queryset and queryset.resource_type == 'user':
         filtDict['deleted'] = False 
 
     if operator.startswith('NOT_'):
-        djangoQuerySet = djangoQuerySet.filter(~Q(**filtDict))
+        qs = djangoQuerySet.filter(~Q(**filtDict))
     else:
-        djangoQuerySet = djangoQuerySet.filter(**filtDict)
-
-    return djangoQuerySet
+        qs = djangoQuerySet.filter(**filtDict)
+    return qs
  
+
 class Collection(XObjIdModel):
 
     _xobj = xobj.XObjMetadata(
