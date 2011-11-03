@@ -8,7 +8,6 @@
 import sys
 
 from django.db import models
-from django.db.models import fields
 from django.db.models import Q
 from django.conf import settings
 from django.core import exceptions
@@ -169,8 +168,6 @@ def filterDjangoQuerySet(djangoQuerySet, field, operator, value,
     if value is None:
         value = False
     
-    fields = field.split('.')
-
     operatorCls = operatorFactory(operator)()
     operator_name = operatorCls.operator
     # TODO: see why Boolean and Int fields are not getting correct operator choices
