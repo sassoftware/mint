@@ -477,8 +477,13 @@ class JobHandlerRegistry(HandlerRegistry):
 
         def getRepeaterMethodArgs(self, job):
             # XXX FIXME
+            host = self.mgr.mgr.restDb.cfg.siteHost
+            imageDownloadUrl = self.mgr.mgr.restDb.imageMgr.getDownloadUrl(self.image_file.file_id)
             params = dict(
                 descriptor_data=job._descriptor_data,
+                imageDownloadUrl=imageDownloadUrl,
+                imageTargetLinkUrl='https://%s/.../%s' % (
+                        host, self.image_file.file_id),
             )
             return (params, ), {}
 

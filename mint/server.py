@@ -3377,15 +3377,12 @@ If you would not like to be %s %s of this project, you may resign from this proj
     @typeCheck(int)
     # @requiresAuth
     def getAllProjectLabels(self, projectId):
-        defaultLabel = projects.Project(self, projectId).getLabel()
-        serverName = versions.Label(defaultLabel).getHost()
         cu = self.db.cursor()
-        cu.execute("""SELECT DISTINCT(%s) FROM PackageIndex WHERE projectId=?
-                      AND serverName=?""" % database.concat(self.db,
-                            'serverName', "'@'",  'branchName'),
-                      projectId, serverName)
+        cu.execute("SELECT DISTINCT(%s) FROM PackageIndex WHERE projectId=?"
+                % database.concat(self.db, 'serverName', "'@'",  'branchName'),
+            projectId)
         labels = cu.fetchall()
-        return [x[0] for x in labels] or [defaultLabel]
+        return [x[0] for x in labels]
 
     @typeCheck(int)
     @requiresAuth
@@ -3394,8 +3391,7 @@ If you would not like to be %s %s of this project, you may resign from this proj
         project = projects.Project(self, projectId)
 
         nc = self._getProjectRepo(project, False)
-        label = versions.Label(project.getLabel())
-        troves = nc.troveNamesOnServer(label.getHost())
+        troves = nc.troveNamesOnServer(project.fqdn)
 
         troves = sorted(trove for trove in troves if
             (trove.startswith('group-') or

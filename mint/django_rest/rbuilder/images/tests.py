@@ -8,6 +8,7 @@ logging.disable(logging.CRITICAL)
 from mint.django_rest import test_utils
 XMLTestCase = test_utils.XMLTestCase
 
+from mint.lib import uuid
 from mint.django_rest.rbuilder.images import models
 from mint.django_rest.rbuilder.jobs import models as jobsmodels
 from mint.django_rest.rbuilder.projects import models as projectsmodels
@@ -165,7 +166,66 @@ class ImagesTestCase(XMLTestCase):
         buildFileUpdated = xobj.parse(response.content)
         self.assertEquals(response.status_code, 200)
         self.assertEquals(buildFileUpdated.file.title, 'newtitle')
-        
+
+    def testUpdateImabeBuildFileAuthToken(self):
+        user = self.getUser('testuser')
+        self.mgr.user = user
+
+        # Needed by setTargetUserCredentials
+        class Auth(object):
+            def __init__(self, user):
+                self.userId = user.user_id
+                self.user = user
+
+        self.mgr._auth = Auth(user)
+
+        img = models.Image.objects.get(name='image-0')
+        imgFile = img.files.all()[0]
+        targetImageId = str(uuid.uuid4())
+
+        # We need a job for authentication
+        jobUuid = str(uuid.uuid4())
+        jobToken = str(uuid.uuid4())
+        job = self._newJob(jobUuid, jobToken=jobToken,
+            jobType=jobsmodels.EventType.TARGET_DEPLOY_IMAGE,
+            createdBy=user)
+        models.JobImage.objects.create(job=job, image=img)
+        tgtType = self.mgr.getTargetTypeByName('vmware')
+
+        tgt = self.mgr.createTarget(tgtType, 'tgtname',
+            dict(zone='Local rBuilder'))
+        self.mgr.setTargetUserCredentials(tgt, dict(username='foo', password='bar'))
+
+        xmlTemplate = """\
+<file>
+  <target_images>
+    <target_image>
+      <target id="/api/v1/targets/%(targetId)s"/>
+      <image id="id1">
+        <imageId>id1</imageId>
+        <longName>long name for id1</longName>
+        <shortName>short name for id1</shortName>
+        <productName>product name for id1</productName>
+        <internalTargetId>%(targetImageId)s</internalTargetId>
+      </image>
+    </target_image>
+  </target_images>
+</file>
+"""
+        xml = xmlTemplate % dict(targetId=tgt.target_id,
+            targetImageId=targetImageId)
+        url = 'images/%s/build_files/%s' % (img.image_id, imgFile.file_id)
+        xml = xml
+        response = self._put(url, data=xml, jobToken=jobToken)
+        self.assertEquals(response.status_code, 200)
+        doc = xobj.parse(response.content)
+        self.failUnlessEqual(doc.file.file_id, str(imgFile.file_id))
+        # Make sure the target image id was saved
+        tids = imgFile.targetimagesdeployed_set.all()
+        self.failUnlessEqual(
+            [ x.target_image_id for x in tids ],
+            [ targetImageId ])
+
     def testDeleteImageBuildFile(self):
         response = self._delete('images/1/build_files/1', username='admin', password='password')
         self.assertEquals(response.status_code, 204)
