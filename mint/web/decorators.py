@@ -8,7 +8,6 @@ import inspect
 
 from mod_python import apache
 
-from mint import mailinglists
 from mint import mint_error
 from mint import userlevels
 from mint.mint_error import *
@@ -141,19 +140,3 @@ def postOnly(func):
 
     postOnlyWrapper.__wrapped_func__ = func
     return postOnlyWrapper
-
-def mailList(func):
-    """
-    Decorate a method so that it is passed a MailingListClient object
-    properly formatted and ready to use inside an error handler.
-    """
-    def mailListWrapper(self, **kwargs):
-        mlists = mailinglists.MailingListClient(self.cfg.MailListBaseURL + 'RPC2')
-        try:
-            return weak_signature_call(func, self, mlists=mlists, **kwargs)
-        except MailingListException, e:
-            return self._write("error", shortError = "Mailing List Error",
-                error = "An error occurred while talking to the mailing list server: %s" % str(e))
-
-    mailListWrapper.__wrapped_func__ = func
-    return mailListWrapper

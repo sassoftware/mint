@@ -28,7 +28,7 @@ from conary.dbstore import sqlerrors, sqllib
 log = logging.getLogger(__name__)
 
 # database schema major version
-RBUILDER_DB_VERSION = sqllib.DBversion(59, 4)
+RBUILDER_DB_VERSION = sqllib.DBversion(60, 5)
 
 def _createTrigger(db, table, column="changed"):
     retInsert = db.createTrigger(table, column, "INSERT")
@@ -44,6 +44,12 @@ def createTable(db, name, definition):
     if name and name in db.tables:
         return False
     cu = db.cursor()
+    if not definition.lstrip()[:20].upper().startswith('CREATE TABLE'):
+        # Avoid duplication for name; if the statement doesn't start
+        # with CREATE TABLE, then assume it's just a straight list of
+        # fields
+        definition = "CREATE TABLE %s (\n        %s\n) %%(TABLEOPTS)s" % (
+            name, definition.strip().rstrip(','))
     cu.execute(definition % db.keywords)
     db.tables[name] = []
     return True
@@ -71,7 +77,9 @@ def _createUsers(db):
             created_by          integer
                 REFERENCES Users ON DELETE SET NULL,
             modified_by         integer
-                REFERENCES Users ON DELETE SET NULL
+                REFERENCES Users ON DELETE SET NULL,
+            can_create           BOOLEAN       NOT NULL    DEFAULT false,
+            deleted              BOOLEAN       NOT NULL    DEFAULT false
         ) %(TABLEOPTS)s""" % db.keywords)
         db.tables['Users'] = []
     db.createIndex('Users', 'UsersActiveIdx', 'username, active')
@@ -140,6 +148,7 @@ def _createRbac(db):
         dict(name="ModMembers", description='Modify Member Resources'),
         dict(name="ReadSet", description='Read Set'),
         dict(name="ModSetDef", description='Modify Set Definition'),
+        dict(name="CreateResource", description='Create Resource'), 
     ])
 
     if 'rbac_role' not in db.tables:
@@ -155,7 +164,8 @@ def _createRbac(db):
                ON DELETE CASCADE,
             modified_by   INTEGER
                REFERENCES Users ( userId )
-               ON DELETE CASCADE
+               ON DELETE CASCADE,
+            is_identity  BOOLEAN NOT NULL DEFAULT FALSE
         ) %(TABLEOPTS)s """ % db.keywords)
         db.tables['rbac_role'] = []
 
@@ -258,6 +268,8 @@ def _createRbac(db):
             CONSTRAINT querysets_roletag_uq UNIQUE ("role_id", "query_set_id",
                 "inclusion_method_id")
         )""")
+    
+    _createNonIdentityRoles(db)
 
 
 def _createProjects(db):
@@ -287,7 +299,9 @@ def _createProjects(db):
             prodtype            varchar(128)                DEFAULT '',
             version             varchar(128)                DEFAULT '',
             backupExternal      boolean        NOT NULL    DEFAULT FALSE,
-            database            varchar(128)
+            database            varchar(128),
+            modified_by         integer
+                REFERENCES Users ( userId ) ON DELETE SET NULL
         ) %(TABLEOPTS)s """ % db.keywords)
         db.tables['Projects'] = []
     db.createIndex('Projects', 'ProjectsHostnameIdx', 'hostname')
@@ -641,6 +655,7 @@ def _createProductVersions(db):
 
 
 def _createTargets(db):
+    from mint import buildtypes
     cu = db.cursor()
     if 'target_types' not in db.tables:
         cu.execute("""
@@ -648,6 +663,8 @@ def _createTargets(db):
             target_type_id     %(PRIMARYKEY)s,
             name              TEXT NOT NULL UNIQUE,
             description       TEXT NOT NULL,
+            -- For now, build_type_id is not an FK
+            build_type_id     INTEGER NOT NULL,
             created_date      TIMESTAMP WITH TIME ZONE NOT NULL
                 DEFAULT current_timestamp,
             modified_date     TIMESTAMP WITH TIME ZONE NOT NULL
@@ -657,17 +674,23 @@ def _createTargets(db):
         _addTableRows(db, 'target_types', 'name',
             [
                 dict(name="ec2",
-                    description="Amazon Elastic Compute Cloud"),
+                    description="Amazon Elastic Compute Cloud",
+                    build_type_id=buildtypes.AMI),
                 dict(name="eucalyptus",
-                    description="Eucalyptus"),
+                    description="Eucalyptus",
+                    build_type_id=buildtypes.RAW_FS_IMAGE),
                 dict(name="openstack",
-                    description="OpenStack"),
+                    description="OpenStack",
+                    build_type_id=buildtypes.RAW_HD_IMAGE),
                 dict(name="vcloud",
-                    description="VMware vCloud"),
+                    description="VMware vCloud",
+                    build_type_id=buildtypes.VMWARE_ESX_IMAGE),
                 dict(name="vmware",
-                    description="VMware ESX/vSphere"),
-                dict(name="xenent",
-                    description="Citrix Xen Server"),
+                    description="VMware ESX/vSphere",
+                    build_type_id=buildtypes.VMWARE_ESX_IMAGE),
+                dict(name="xen-enterprise",
+                    description="Citrix Xen Server",
+                    build_type_id=buildtypes.XEN_OVA),
             ])
 
     if 'Targets' not in db.tables:
@@ -756,6 +779,16 @@ def _createTargets(db):
                 target_credentials_id   INTEGER NOT NULL
                     REFERENCES TargetCredentials ON DELETE CASCADE
             ) %(TABLEOPTS)s""")
+
+    createTable(db, 'target_deployable_image', """
+                target_deployable_image_id %(PRIMARYKEY)s,
+                target_id               integer             NOT NULL
+                    REFERENCES Targets ON DELETE CASCADE,
+                target_image_id         INTEGER
+                    REFERENCES target_image ON DELETE CASCADE,
+                file_id                 integer NOT NULL
+                    REFERENCES BuildFiles ON DELETE CASCADE,
+            """)
 
 def _createPlatforms(db):
     cu = db.cursor()
@@ -1144,7 +1177,14 @@ def _createInventorySchema(db, cfg):
                     DEFAULT FALSE, 
                 "source_image_id" INTEGER 
                     REFERENCES "builds" ("buildid")
-                    ON DELETE CASCADE
+                    ON DELETE CASCADE,
+                "created_by" integer
+                    REFERENCES "users" ("userid")
+                    ON DELETE SET NULL,
+                "modified_by" integer
+                    REFERENCES "users" ("userid")
+                    ON DELETE SET NULL,
+                "modified_date" TIMESTAMP WITH TIME ZONE
             ) %(TABLEOPTS)s""" % db.keywords)
         db.tables['inventory_system'] = []
         db.createIndex("inventory_system",
@@ -1599,7 +1639,7 @@ wmi_credentials_descriptor = r"""<descriptor xmlns:xsi="http://www.w3.org/2001/X
       </descriptions>
       <type>str</type>
       <default></default>
-      <required>true</required>
+      <required>false</required>
     </field>
     <field>
       <name>username</name>
@@ -2241,6 +2281,12 @@ def _createAllRoles(db, version=None):
             'rbac', version=version)
     return True
 
+def _createNonIdentityRoles(db, version=None):
+    '''all roles that are intended for multiple users'''
+    filterId = _addQuerySetFilterEntry(db, "rbac_role.is_identity", "EQUAL", "false")
+    _addQuerySet(db, "All Non-Identity Roles", "All non-identity roles", "role", False, filterId,
+            'rbac', version=version)
+    return True
 
 def _createAllGrants(db, version=None):
     """Add the all systems query set"""
@@ -2266,7 +2312,13 @@ def _createQuerySetSchema(db):
             "presentation_type" TEXT,
             "can_modify" BOOLEAN NOT NULL DEFAULT TRUE,
             "is_public" BOOLEAN NOT NULL DEFAULT FALSE,
-            "is_static" BOOLEAN NOT NULL DEFAULT FALSE
+            "is_static" BOOLEAN NOT NULL DEFAULT FALSE,
+            "created_by" INTEGER
+                REFERENCES Users ON DELETE SET NULL,
+            "modified_by" INTEGER
+                REFERENCES Users ON DELETE SET NULL,
+            "personal_for" INTEGER
+                REFERENCES Users ON DELETE SET NULL
         )""")
 
     createTable(db, 'querysets_filterentry', """
@@ -2844,10 +2896,6 @@ def _createPackageSchema(db):
 
 
 def _createTargetJobs(db):
-    # before edge, django would just go out by itself to create its
-    # tables.
-    # we need to do it here. There is no migration needed for old
-    # schema versions.
     createTable(db, 'jobs_job_target_type', """
         CREATE TABLE jobs_job_target_type (
             id          %(PRIMARYKEY)s,
@@ -2869,6 +2917,16 @@ def _createTargetJobs(db):
                         ON DELETE CASCADE
     )""")
 
+def _createJobThroughTables(db):
+    createTable(db, 'jobs_job_image', """
+            id          %(PRIMARYKEY)s,
+            job_id      integer NOT NULL
+                        REFERENCES jobs_job(job_id)
+                        ON DELETE CASCADE,
+            image_id integer NOT NULL
+                        REFERENCES Builds(buildId)
+                        ON DELETE CASCADE,
+    """)
 
 # create the (permanent) server repository schema
 def createSchema(db, doCommit=True, cfg=None):
@@ -2907,6 +2965,7 @@ def createSchema(db, doCommit=True, cfg=None):
     _createDjangoSchema(db)
     _createRbac(db)
     _createTargetJobs(db)
+    _createJobThroughTables(db)
 
     if doCommit:
         db.commit()

@@ -11,8 +11,8 @@ from django.http import HttpResponseRedirect
 
 from mint.django_rest.deco import return_xml, requires, access, xObjRequires
 from mint.django_rest.rbuilder import service
-from mint.django_rest.rbuilder.querysets import models
-from mint.django_rest.rbuilder.rbac.rbacauth import rbac
+# from mint.django_rest.rbuilder.querysets import models
+from mint.django_rest.rbuilder.rbac.rbacauth import rbac, manual_rbac
 from mint.django_rest.rbuilder.errors import PermissionDenied
 from mint.django_rest.rbuilder.rbac.manager.rbacmanager import \
    READSET, MODSETDEF
@@ -36,6 +36,45 @@ def rbac_can_write_queryset(view, request, query_set_id, *args, **kwargs):
 class BaseQuerySetService(service.BaseService):
     pass
 
+class FavoriteQuerySetService(BaseQuerySetService):
+
+    # return the list of querysets that I can see that I should also
+    # show in the UI left nav.  Eventually this will support a bookmarks
+    # feature, now it just applies some basic logic.    
+
+    @access.authenticated
+    @return_xml
+    def rest_GET(self, request):
+        user = request._authUser
+        querysets = self.mgr.getQuerySets() 
+        return self.mgr.favoriteRbacedQuerysets(user, querysets, request)
+
+class QuerySetsService(BaseQuerySetService):
+
+    # rbac is handled semimanually for this function -- show only 
+    # querysets that we have permission to see
+    # but don't use full rbac code, because that is implemented using querysets
+    # and is too meta.
+
+    @access.authenticated
+    @return_xml
+    def rest_GET(self, request):
+        user = request._authUser
+        querysets = self.mgr.getQuerySets()
+        return self.mgr.filterRbacQuerysets(user, querysets, request)
+
+    # not used above, but still needed by load_from_href and other
+    # functions
+    def get(self):
+        return self.mgr.getQuerySets() 
+
+    @access.admin
+    @requires('query_set', load=False)
+    @return_xml
+    def rest_POST(self, request, query_set):
+        return self.mgr.addQuerySet(query_set, request._authUser)
+
+
 class QuerySetService(BaseQuerySetService):
 
     # rbac is handled semimanually for this function -- show only 
@@ -43,34 +82,21 @@ class QuerySetService(BaseQuerySetService):
     # but don't use full rbac code, because that is implemented using querysets
     # and is too meta.
 
+    @rbac(manual_rbac)
     @return_xml
-    @access.authenticated
-    def rest_GET(self, request, query_set_id=None):
-        user = self.mgr.getSessionInfo().user[0]
-        if query_set_id is None:
-            querysets = self.mgr.getQuerySets() 
-            return self.mgr.filterRbacQuerysets(user, querysets, request)
-        else:
-            queryset = self.mgr.getQuerySet(query_set_id)
-            if not queryset.is_public and not self.mgr.userHasRbacPermission(
-                user, queryset, READSET, request
-            ):
-                raise PermissionDenied()
-            return queryset
+    def rest_GET(self, request, query_set_id):
+        user = request._authUser
+        queryset = self.mgr.getQuerySet(query_set_id)
+        if not queryset.is_public and not self.mgr.userHasRbacPermission(
+            user, queryset, READSET, request
+        ):
+            raise PermissionDenied()
+        return queryset
 
     # not used above, but still needed by load_from_href and other
     # functions
-    def get(self, query_set_id=None):
-        if query_set_id is None:
-            return self.mgr.getQuerySets() 
-        else:
-            return self.mgr.getQuerySet(query_set_id) 
-
-    @access.admin
-    @requires('query_set', load=False)
-    @return_xml
-    def rest_POST(self, request, query_set):
-        return self.mgr.addQuerySet(query_set)
+    def get(self, query_set_id):
+        return self.mgr.getQuerySet(query_set_id) 
 
     @access.admin
     @requires('query_set')
@@ -79,7 +105,7 @@ class QuerySetService(BaseQuerySetService):
         oldQuerySet = self.mgr.getQuerySet(query_set_id)
         if oldQuerySet.pk != query_set.pk:
             raise PermissionDenied()
-        return self.mgr.updateQuerySet(query_set)
+        return self.mgr.updateQuerySet(query_set, request._authUser)
 
     @access.admin
     def rest_DELETE(self, request, query_set_id):
@@ -87,6 +113,7 @@ class QuerySetService(BaseQuerySetService):
         self.mgr.deleteQuerySet(querySet)
         response = http.HttpResponse(status=204)
         return response
+
 
 class QuerySetAllResultService(BaseQuerySetService):
     
@@ -118,7 +145,7 @@ class QuerySetChosenResultService(BaseQuerySetService):
     @return_xml
     def rest_PUT(self, request, query_set_id, *args, **kwargs):
         resources = kwargs.items()[0][1]
-        return self.mgr.addQuerySetChosen(query_set_id, resources)
+        return self.mgr.addQuerySetChosen(query_set_id, resources, request._authUser)
 
     @rbac(rbac_can_write_queryset)
     # TODO: source fromc onstant somewhere
@@ -126,7 +153,7 @@ class QuerySetChosenResultService(BaseQuerySetService):
     @return_xml
     def rest_POST(self, request, query_set_id, *args, **kwargs):
         resource = kwargs.items()[0][1]
-        self.mgr.updateQuerySetChosen(query_set_id, resource)
+        self.mgr.updateQuerySetChosen(query_set_id, resource, request._authUser)
         return resource
 
     @rbac(rbac_can_write_queryset)
@@ -135,7 +162,7 @@ class QuerySetChosenResultService(BaseQuerySetService):
     @return_xml
     def rest_DELETE(self, request, query_set_id, *args, **kwargs):
         resource = kwargs.items()[0][1]
-        return self.mgr.deleteQuerySetChosen(query_set_id, resource)
+        return self.mgr.deleteQuerySetChosen(query_set_id, resource, request._authUser)
 
 class QuerySetFilteredResultService(BaseQuerySetService):
 

@@ -456,7 +456,7 @@ class System(modellib.XObjIdModel):
     # avoid expanding launching_user as, for now, rpath_models can't
     # deal with it and registration is affected when set
     _xobj_summary_view_hide = [ 'launching_user' ]
-
+    _queryset_resource_type = 'system'
 
     """
     networks - a collection of network resources exposed by the system
@@ -544,14 +544,14 @@ class System(modellib.XObjIdModel):
     system_type = D(modellib.ForeignKey(SystemType, null=False,
         related_name='systems', text_field='description'),
         "the type of the system")
-    stage = D(APIReadOnly(modellib.DeferredForeignKey(Stage, null=True, 
-        text_field='name', related_name="systems")),
+    project_branch_stage = D(APIReadOnly(modellib.DeferredForeignKey(Stage, null=True, 
+        db_column="stage_id", text_field='name', related_name="+")),
         "the project stage of the system")
-    major_version = D(APIReadOnly(modellib.DeferredForeignKey(ProjectVersion, null=True,
-        text_field='name', related_name="systems")),
+    project_branch = D(APIReadOnly(modellib.DeferredForeignKey(ProjectVersion, null=True,
+        db_column="major_version_id", text_field='name', related_name="systems")),
         "the project major version of the system")
     project = D(APIReadOnly(modellib.DeferredForeignKey(Project, null=True,
-        text_field='short_name', related_name="systems")),
+        text_field='short_name', related_name="+")),
         "the project of the system")
     configuration = APIReadOnly(XObjHidden(models.TextField(null=True)))
     configuration_descriptor = D(XObjHidden(modellib.SyntheticField()),
@@ -563,7 +563,16 @@ class System(modellib.XObjIdModel):
     source_image = D(APIReadOnly(models.ForeignKey('images.Image', null=True,
          related_name='systems')), 
          'rBuilder image used to deploy the system, if any')
-
+    created_by = D(modellib.ForeignKey(usersmodels.User, null=True, 
+        related_name='+', db_column='created_by'), 
+        "User who created system",
+        short="System created by")
+    modified_by = D(modellib.ForeignKey(usersmodels.User, null=True, 
+        related_name='+', db_column='modified_by'),
+        "User who last modified system",
+        short="System last modified by")
+    modified_date = D(modellib.DateTimeUtcField(null=True),
+        "the date the system was last modified", short="System modified date")
 
     logged_fields = ['name', 'installed_software']
 
@@ -848,6 +857,10 @@ class System(modellib.XObjIdModel):
         actions.action.append(action)
 
         return action
+
+    def hasSourceImage(self):
+        return bool(getattr(self, 'source_image', None))
+
 
 class ManagementNode(System):
     

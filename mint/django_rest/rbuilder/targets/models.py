@@ -10,6 +10,7 @@ from mint.django_rest.deco import D
 from mint.django_rest.rbuilder import modellib
 from mint.django_rest.rbuilder.jobs import models as jobmodels
 from mint.django_rest.rbuilder.users import models as usersmodels
+from mint.django_rest.rbuilder.images import models as imagemodels
 from mint.django_rest.rbuilder.inventory import zones as zmodels
 from xobj import xobj
 import sys
@@ -27,6 +28,7 @@ class TargetType(modellib.XObjIdModel):
     target_type_id = models.AutoField(primary_key=True)
     name = D(models.TextField(unique=True), "Target Type Name")
     description = D(models.TextField(null=False), "Target Type Description")
+    build_type_id = XObjHidden(models.IntegerField(null=False))
     created_date = D(modellib.DateTimeUtcField(auto_now_add=True), "the date the resource was created (UTC)")
     modified_date = D(modellib.DateTimeUtcField(auto_now_add=True), "the date the resource was modified (UTC)")
     descriptor_create_target = modellib.SyntheticField(modellib.HrefField())
@@ -177,7 +179,7 @@ class TargetImagesDeployed(modellib.XObjModel):
     Images deployed from the rBuilder onto a target get recorded in this table
     """
     target = models.ForeignKey(Target, db_column="targetid")
-    file_id = models.IntegerField(null=False, db_column='fileid')
+    build_file = models.ForeignKey(imagemodels.BuildFile, db_column='fileId')
     target_image_id = models.CharField(max_length=128, db_column='targetimageid')
     class Meta:
         db_table = u'targetimagesdeployed'
@@ -188,6 +190,8 @@ class TargetImage(modellib.XObjModel):
     """
     class Meta:
         db_table = "target_image"
+
+    _xobj_explicit_accessors = set()
 
     target_image_id = models.AutoField(primary_key=True)
     name = D(models.TextField(unique=True), "Image Name")
@@ -200,6 +204,20 @@ class TargetImage(modellib.XObjModel):
     created_date = D(modellib.DateTimeUtcField(auto_now_add=True), "the date the resource was created (UTC)")
     modified_date = D(modellib.DateTimeUtcField(auto_now_add=True), "the date the resource was modified (UTC)")
     unique_together = (target, target_internal_id)
+
+class TargetDeployableImage(modellib.XObjModel):
+    class Meta:
+        db_table = "target_deployable_image"
+
+    target_deployable_image_id = models.AutoField(primary_key=True)
+    target = D(models.ForeignKey(Target, related_name='target_deployable_images'),
+        "Target the image is part of")
+    target_image = D(models.ForeignKey(TargetImage,
+        related_name='target_deployable_images', null=True),
+        "Image representation pn the target")
+    build_file = D(models.ForeignKey(imagemodels.BuildFile,
+        related_name='target_deployable_images', db_column='file_id'),
+        "Build file")
 
 class TargetImageCredentials(modellib.XObjModel):
     """

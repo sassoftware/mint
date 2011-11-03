@@ -104,13 +104,12 @@
             <h3>Follow or Join a ${projectText().title()}</h3>
             <p>While a Conary update for installed packages is automated, eliminating the
             need to visit a ${projectText().lower()} in rBuilder, you may choose to watch the ${projectText().lower()} in
-            rBuilder or follow discussions in a ${projectText().lower()}'s mailing lists.  rBuilder users
+            rBuilder.  rBuilder users
             can create a watch list available on the right side of each rBuilder page, and
-            registered and unregistered users alike can subscribe to mailing lists and RSS
+            registered and unregistered users alike can subscribe to RSS
             feeds for the ${projectText().lower()}.  </p>
 
             <ul>
-                <li><a href="http://wiki.rpath.com/wiki/rBuilder:Mailing_Lists?version=${constants.mintVersion}">Subscribe to a ${projectText().lower()} mailing list</a> from a ${projectText().lower()}s <i>Mailing Lists</i> page</li>
                 <li> Subscribe to an RSS feed for ${projectText().lower()} release news using the RSS link on a ${projectText().lower()}'s main page</li>
                 <li> <a href="http://wiki.rpath.com/wiki/rBuilder:Watch_a_Project?version=${constants.mintVersion}">Watch a ${projectText().lower()}</a> to bookmark it in your rBuilder watch list</li>
             </ul>

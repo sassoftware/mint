@@ -213,7 +213,6 @@ project_branch_stage_xml = """\
   </project_branch>
   <promotable>false</promotable>
   <stage_id>12</stage_id>
-  <systems/>
 </project_branch_stage>"""
 
 project_branch_stage_put_xml = \
@@ -233,7 +232,6 @@ project_branch_stage_put_xml = \
   </project_branch>
   <promotable>false</promotable>
   <stage_id>12</stage_id>
-  <systems/>
 </stage>
 """.strip()
 
@@ -282,7 +280,6 @@ project_branch_stages_xml = \
       <short_name>chater-foo</short_name>
       <name>chater-foo</name>
     </project>
-    <systems/>
     <groups promote_href="https://testserver/api/products/chater-foo/versions/trunk/stages/Development" href="https://testserver/api/products/chater-foo/repos/search?type=group&amp;label=foo@ns:trunk-devel"/>
     <created_date>2011-10-12T21:22:24.206535+00:00</created_date>
     <images id="http://testserver/api/v1/projects/chater-foo/project_branches/chater-foo.eng.rpath.com@rpath:chater-foo-trunk/project_branch_stages/Development/images"/>
@@ -301,7 +298,6 @@ project_branch_stages_xml = \
       <short_name>chater-foo</short_name>
       <name>chater-foo</name>
     </project>
-    <systems/>
     <groups promote_href="https://testserver/api/products/chater-foo/versions/trunk/stages/QA" href="https://testserver/api/products/chater-foo/repos/search?type=group&amp;label=foo@ns:trunk-qa"/>
     <created_date>2011-10-12T21:22:24.209524+00:00</created_date>
     <images id="http://testserver/api/v1/projects/chater-foo/project_branches/chater-foo.eng.rpath.com@rpath:chater-foo-trunk/project_branch_stages/QA/images"/>
@@ -320,7 +316,6 @@ project_branch_stages_xml = \
       <short_name>chater-foo</short_name>
       <name>chater-foo</name>
     </project>
-    <systems/>
     <groups promote_href="https://testserver/api/products/chater-foo/versions/trunk/stages/Stage" href="https://testserver/api/products/chater-foo/repos/search?type=group&amp;label=foo@ns:trunk-stage"/>
     <created_date>2011-10-12T21:22:24.212755+00:00</created_date>
     <images id="http://testserver/api/v1/projects/chater-foo/project_branches/chater-foo.eng.rpath.com@rpath:chater-foo-trunk/project_branch_stages/Stage/images"/>
@@ -339,7 +334,6 @@ project_branch_stages_xml = \
       <short_name>chater-foo</short_name>
       <name>chater-foo</name>
     </project>
-    <systems/>
     <groups promote_href="https://testserver/api/products/chater-foo/versions/trunk/stages/Release" href="https://testserver/api/products/chater-foo/repos/search?type=group&amp;label=foo@ns:trunk"/>
     <created_date>2011-10-12T21:22:24.215180+00:00</created_date>
     <images id="http://testserver/api/v1/projects/chater-foo/project_branches/chater-foo.eng.rpath.com@rpath:chater-foo-trunk/project_branch_stages/Release/images"/>
@@ -439,6 +433,7 @@ releases_by_project_get_xml = \
     <published>False</published>
     <images>
       <image id="http://testserver/api/v1/images/2">
+        <actions/>
         <files/>
         <trove_last_changed></trove_last_changed>
         <updated_by></updated_by>
@@ -474,9 +469,11 @@ releases_by_project_get_xml = \
         </project>
         <output_trove></output_trove>
         <architecture>x86</architecture>
+        <base_image/>
         <release id="http://testserver/api/v1/releases/1"/>
         <image_count>1</image_count>
         <job_uuid>1</job_uuid>
+        <jobs id="http://testserver/api/v1/images/2/jobs"/>
       </image>
     </images>
     <time_mirrored></time_mirrored>
@@ -501,6 +498,7 @@ releases_by_project_get_xml = \
     <published>False</published>
     <images>
       <image id="http://testserver/api/v1/images/3">
+        <actions/>
         <files/>
         <trove_last_changed></trove_last_changed>
         <updated_by></updated_by>
@@ -536,9 +534,11 @@ releases_by_project_get_xml = \
         </project>
         <output_trove></output_trove>
         <architecture>x86</architecture>
+        <base_image/>
         <release id="http://testserver/api/v1/releases/2"/>
         <image_count>1</image_count>
         <job_uuid>1</job_uuid>
+        <jobs id="http://testserver/api/v1/images/3/jobs"/>
       </image>
     </images>
     <time_mirrored></time_mirrored>
@@ -564,6 +564,7 @@ image_by_release_get_xml = \
 <?xml version='1.0' encoding='UTF-8'?>
 <images count="1" next_page="" num_pages="1" previous_page="" full_collection="" end_index="0" limit="10" order_by="" per_page="10" filter_by="" start_index="0">
   <image id="http://testserver/api/v1/images/2">
+    <actions/>
     <files/>
     <trove_last_changed></trove_last_changed>
     <updated_by></updated_by>
@@ -599,9 +600,11 @@ image_by_release_get_xml = \
     </project>
     <output_trove></output_trove>
     <architecture>x86</architecture>
+    <base_image/>
     <release id="http://testserver/api/v1/releases/1"/>
     <image_count>1</image_count>
     <job_uuid>1</job_uuid>
+    <jobs id="http://testserver/api/v1/images/2/jobs"/>
   </image>
 </images>
 """.strip()
@@ -628,6 +631,7 @@ image_by_release_post_xml = \
   <released>True</released>
   <project id="http://testserver/api/v1/projects/chater-foo" />
   <architecture>x86</architecture>
+  <base_image/>
   <image_count>1</image_count>
   <job_uuid>1</job_uuid>
 </image>
@@ -640,6 +644,7 @@ image_by_release_post_result_xml = \
 """
 <?xml version='1.0' encoding='UTF-8'?>
 <image id="http://testserver/api/v1/images/4">
+  <actions/>
   <files/>
   <trove_last_changed></trove_last_changed>
   <updated_by></updated_by>
@@ -675,8 +680,10 @@ image_by_release_post_result_xml = \
   </project>
   <output_trove></output_trove>
   <architecture>x86</architecture>
+  <base_image/>
   <release></release>
   <image_count>0</image_count>
   <job_uuid>1</job_uuid>
+  <jobs id="http://testserver/api/v1/images/4/jobs"/>
 </image>
 """.strip()

@@ -5,7 +5,6 @@
 import email
 import re
 import sys
-from mint import mailinglists
 from mint.db import jobs
 from mint import jobstatus
 from mint import builds
@@ -28,7 +27,7 @@ from mint.web.packagecreator import PackageCreatorMixin
 from mint.web.fields import strFields, intFields, listFields, boolFields, dictFields
 from mint.web.webhandler import WebHandler, normPath, HttpNotFound
 from mint.web.decorators import ownerOnly, writersOnly, requiresAuth, \
-        mailList, redirectHttp
+        redirectHttp
 
 from conary.deps import deps
 from conary import versions
@@ -822,90 +821,6 @@ class ProjectHandler(BaseProjectHandler, PackageCreatorMixin):
 
         self._predirect("build?id=%d" % buildId)
 
-    def _mailingLists(self, auth, mlists, messages=[]):
-        if not self.cfg.EnableMailLists:
-            raise mailinglists.MailingListException("Mail Lists Disabled")
-        hostname = self.project.getHostname()
-        lists = mlists.list_lists(hostname)
-        return self._write("mailingListsUI", lists=lists, mailhost=self.cfg.MailListBaseURL, hostname=hostname, messages=messages)
-
-    @mailList
-    def mailingLists(self, auth, mlists, messages=[]):
-        return self._mailingLists(auth, mlists, messages)
-
-    @ownerOnly
-    @strFields(listname=None, description='', listpw='', listpw2='')
-    @mailList
-    def createList(self, auth, mlists, listname, description, listpw, listpw2):
-        # no new lists may be created as of 05/01/2007
-        raise mailinglists.MailingListException("Mail Lists Disabled")
-
-        if listpw == listpw2:
-            members = self.project.getMembers()
-            owners = []
-            for member in members:
-                if member[2] == userlevels.OWNER:
-                    owner = self.client.getUser(member[0])
-                    owners.append(owner.getEmail())
-            hostname = self.project.getHostname()
-            if not mlists.add_list(self.cfg.MailListPass, hostname+'-'+listname, listpw, description, owners):
-                raise mailinglists.MailingListException("Mailing list not created")
-            return self._mailingLists(auth, mlists, ['Mailing list "%s" created' % hostname+'-'+listname])
-        else:
-            raise mailinglists.MailingListException("Passwords do not match")
-
-    @ownerOnly
-    @boolFields(confirmed = False)
-    @mailList
-    @dictFields(yesArgs = {})
-    def resetPassword(self, auth, confirmed, mlists, **yesArgs):
-        if confirmed:
-            if mlists.reset_list_password(str(yesArgs['list']), self.cfg.MailListPass):
-                return self._mailingLists(auth, mlists, ['Mailing list password reset for %s' % str(yesArgs['list'])])
-            else:
-                return self._mailingLists(auth, mlists, ['Mailing list password for %s was not reset' % str(yesArgs['list'])])
-        else:
-            return self._write("confirm", message = "Reset the administrator password for the %s mailing list and send a reminder to the list owners?" % str(yesArgs['list']),
-                yesArgs = {'func':'resetPassword', 'list':str(yesArgs['list']), 'confirmed':'1'}, noLink = "mailingLists")
-
-
-    @ownerOnly
-    @strFields(list=None)
-    @mailList
-    def deleteList(self, auth, mlists, list, confirmed=0, **kwargs):
-        if not confirmed:
-            return self._write("confirm", message = 'Are you sure you want to delete the mailing list "%s"' % list, yesArgs = {'func':'deleteList', 'confirmed':'1', 'list':list}, noLink =  'mailingLists')
-        hostname = self.project.getHostname()
-        pcre = re.compile('^%s$|^%s-'%(hostname, hostname), re.I)
-        if pcre.search(list):
-            #Do not delete mailing list archives by default.  This means that
-            #archives must be deleted manually if necessary.
-            if not mlists.delete_list(self.cfg.MailListPass, list, False):
-                raise mailinglists.MailingListException("Mailing list not deleted")
-        else:
-            raise mailinglists.MailingListException("You cannot delete this list")
-        return self._mailingLists(auth, mlists, ['Mailing list "%s" deleted' % list])
-
-    @requiresAuth
-    @strFields(list=None)
-    @mailList
-    def subscribe(self, auth, mlists, list):
-        if not self.cfg.EnableMailLists:
-            raise mailinglists.MailingListException("Mail Lists Disabled")
-
-        return_data = 'You have been subscribed to %s' % list
-        try:
-            mlists.server.Mailman.addMember(list, self.cfg.MailListPass, auth.email, auth.fullName, '', False, True)
-        except:
-            exc_data = sys.exc_info()
-            if re.search("Errors\.MMAlreadyAMember", str(exc_data)):
-                return_data = "You are already subscribed to %s" % list
-            elif re.search("Errors\.MMBadEmailError", str(exc_data)):
-                raise mailinglists.MailingListException("Bad E-Mail Address")
-            else:
-                raise mailinglists.MailingListException("Mailing List Error")
-        return self._mailingLists(auth, mlists, [return_data])
-
     @requiresAuth
     @ownerOnly
     def editProject(self, auth):
@@ -1369,8 +1284,7 @@ class ProjectHandler(BaseProjectHandler, PackageCreatorMixin):
     @requiresAuth
     def adopt(self, auth):
         if self._isAdoptable():
-            self.project.adopt(auth, self.cfg.EnableMailLists, self.cfg.MailListBaseURL,
-                    self.cfg.MailListPass)
+            self.project.adopt(auth)
             self._setInfo("You have successfully adopted %s" % self.project.getNameForDisplay())
         else:
             self.req.log_error("User %s attempted to illegally adopt "

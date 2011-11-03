@@ -23,9 +23,13 @@ class TargetManagerTest(mint_rephelp.MintDatabaseHelper):
 
         db = self.openMintDatabase(createRepos=False)
         cu = db.cursor()
-        for ttype in [ 'type1', 'type2' ]:
-            cu.execute("INSERT INTO target_types (name, description) VALUES (?, ?)",
-                ttype, ttype + " description")
+        tbmap = [
+            ('type1', buildtypes.RAW_HD_IMAGE),
+            ('type2', buildtypes.VMWARE_ESX_IMAGE),
+        ]
+        for ttype, buildTypeId in tbmap:
+            cu.execute("INSERT INTO target_types (name, description, build_type_id) VALUES (?, ?, ?)",
+                ttype, ttype + " description", buildTypeId)
         db.commit()
 
     def _newTarget(self, targetType=None, targetName=None, targetData=None):

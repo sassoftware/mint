@@ -41,10 +41,13 @@ class UnknownFilterOperator(RbuilderError):
     "%(filter)s is an invalid filter operator."
     status = BAD_REQUEST
 
+class InvalidFilterKey(RbuilderError):
+    "%(field)s is an invalid field name."
+    status = BAD_REQUEST
+
 class InvalidFilterValue(RbuilderError):
     "%(value)s is an invalid value for filter operator %(filter)s"
     status = BAD_REQUEST
-
 
 class MirrorCredentialsInvalid(RbuilderError):
     "The supplied %(creds)s credentials do not grant mirror access to the repository at %(url)s"

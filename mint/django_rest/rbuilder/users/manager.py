@@ -11,8 +11,9 @@ from mint.django_rest.rbuilder.manager import basemanager
 from mint.django_rest.rbuilder.users import models
 from mint import mint_error, server
 
-from django.db import connection, transaction
+from django.db import transaction
 import time
+import random
 
 exposed = basemanager.exposed
 
@@ -53,6 +54,7 @@ class UsersManager(basemanager.BaseManager):
 
     @exposed
     def addUser(self, user, by_user=None):
+
         # Sanitize user fields
         if not user.display_email:
             user.display_email = ''
@@ -72,17 +74,15 @@ class UsersManager(basemanager.BaseManager):
         except (mint_error.PermissionDenied, mint_error.InvalidError), e:
             raise self.exceptions.MintException(e)
         dbuser = models.User.objects.get(user_name=user.user_name)
-        if self.auth and self.auth.admin:
-            is_admin = self._toBool(user.is_admin)
-            # Copy "model" field to "database" field, now that caller's
-            # adminship has been proven.
-            dbuser.setIsAdmin(is_admin)
-        else:
-            dbuser.setIsAdmin(False) 
+        dbuser.can_create  = user.can_create
         dbuser.created_by  = by_user
         dbuser.modified_by = by_user
+        dbuser.is_admin    = user.is_admin
+        dbuser.deleted     = False
         dbuser.save()
-        self.mgr.retagQuerySetsByType('user')
+        self.mgr.getOrCreateIdentityRole(user)
+        self.mgr.configureMyQuerysets(dbuser)
+        self.mgr.retagQuerySetsByType('user', by_user)
         return dbuser
 
     def _setPassword(self, user, password):
@@ -107,30 +107,28 @@ class UsersManager(basemanager.BaseManager):
 
     @exposed
     def updateUser(self, user_id, user, by_user=None):
-        if not self.auth.admin:
-            if user_id != str(self.user.user_id):
-                # Non-admin users can only edit themselves
-                raise self.exceptions.AdminRequiredException()
-        dbusers = models.User.objects.filter(pk=user_id)
-        if not dbusers:
-            raise self.exceptions.UserNotFoundException()
-        dbuser = dbusers[0]
+
+        dbuser = models.User.objects.get(pk=user_id, deleted=False)
         if user.user_name and user.user_name != dbuser.user_name:
             raise self.exceptions.UserCannotChangeNameException()
-        # Copy all fields the user may have chosen to change
-        models.User.objects._copyFields(dbuser, user)
-        if self.auth.admin and user.is_admin is not None:
-            # Copy "model" field to "database" field, now that caller's
-            # adminship has been proven. Admin users cannot drop the admin flag
-            # for themselves
-            if user_id != str(self.user.user_id):
-                is_admin = self._toBool(user.is_admin)
-                dbuser.setIsAdmin(is_admin)
-        dbuser.modified_by = by_user
-        dbuser.modified_date = time.time()
-        dbuser.save()
-        dbuser = self._setPassword(dbuser, user.password)
-        return dbuser
+
+        # only admins can edit these bits
+        if not by_user or not by_user.is_admin:
+            user.is_admin   = dbuser.is_admin
+            user.can_create = dbuser.can_create
+            user.user_name  = dbuser.user_name
+            
+        if by_user.is_admin and by_user.pk == dbuser.pk:
+            # can't de-admin yourself
+            user.is_admin = True
+
+        user.modified_by = by_user
+        user.modified_date = time.time()
+        user.deleted = False
+        user.save()
+        user = self._setPassword(user, user.password)
+        self.mgr.configureMyQuerysets(user)
+        return user
 
     def _commit(self):
         if transaction.is_managed():
@@ -157,12 +155,26 @@ class UsersManager(basemanager.BaseManager):
 
     @exposed
     def deleteUser(self, user_id):
+        # users are not actually deleted, they are only set to deleted
+        # to preserve metadata and relations around them.
         if user_id == str(self.user.user_id):
             raise self.exceptions.UserSelfRemovalException()
-        cu = connection.cursor()
-        cu.execute("DELETE FROM users WHERE userid = %s", [ user_id ])
-        if not cu.rowcount:
+        deleting = models.User.objects.filter(pk=user_id, deleted=False)
+        if not len(deleting) > 0:
             raise self.exceptions.UserNotFoundException()
+        deleting = deleting[0]
+
+        # so that the old user name can be recycled, add a random number
+        # on the end 
+        deleting.user_name = "%s:%s" % (deleting.user_name, random.randint(0,99999999))
+        # if the user name was actually using close to the 127 allowed characters (god, why?)
+        # don't worry so much about the random number... a rather unlikely scenario
+        excess = 126 - len(deleting.user_name) - 1
+        if excess < 0:
+            deleting.user_name = deleting.user_name[0:excess]
+
+        deleting.deleted = True
+        deleting.save()
 
     @exposed
     def getSessionInfo(self):

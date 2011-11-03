@@ -9,19 +9,16 @@ from django.http import HttpResponse
 from mint.django_rest.rbuilder import service
 from mint.django_rest.deco import requires, return_xml, access
 
-class PackageService(service.BaseService):
+class PackagesService(service.BaseService):
     """docstring for PackageService"""
     
     @return_xml
-    def rest_GET(self, request, package_id=None):
+    def rest_GET(self, request):
         """docstring for rest_GET"""
-        return self.get(package_id)
+        return self.get()
     
-    def get(self, package_id):
-        if package_id:
-            return self.mgr.getPackage(package_id)
-        else:
-            return self.mgr.getPackages()
+    def get(self):
+        return self.mgr.getPackages()
 
     # access.admin
     @requires('package')
@@ -29,6 +26,17 @@ class PackageService(service.BaseService):
     def rest_POST(self, request, package):
         """docstring for rest_POST"""
         return self.mgr.addPackage(package)
+
+class PackageService(service.BaseService):
+    """docstring for PackageService"""
+    
+    @return_xml
+    def rest_GET(self, request, package_id):
+        """docstring for rest_GET"""
+        return self.get(package_id)
+    
+    def get(self, package_id):
+        return self.mgr.getPackage(package_id)
     
     # @access.admin
     @requires('package')

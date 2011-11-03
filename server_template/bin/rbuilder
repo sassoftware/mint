@@ -1,9 +1,0 @@
-#!/bin/sh -x
-REPO=@REPOSDBDRIVER@
-MINTDB=@MINTDBDRIVER@
-SERVER_PATH=@SERVER_PATH@
-if [ "$REPO" = "postgresql" -o "$MINTDB" = "postgresql" ]; 
-then
-$SERVER_PATH/scripts/postgres
-fi
-$SERVER_PATH/bin/rbuilder-watch $SERVER_PATH

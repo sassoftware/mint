@@ -16,7 +16,7 @@ users_post_xml = \
 """
 <user>
 <full_name>Dan Cohn</full_name>
-<display_email>True</display_email>
+<display_email>true</display_email>
 <password>12345</password>
 <user_name>dcohn</user_name>
 <time_accessed>1283530322.49</time_accessed>
@@ -24,10 +24,24 @@ users_post_xml = \
 <active>1</active>
 <email>dcohn@rpath.com</email>
 <blurb>something here</blurb>
-<is_admin>1</is_admin>
+<is_admin>true</is_admin>
 </user>
 """.strip()
 
+users_post_xml_can_create = \
+"""
+<user>
+<user_name>cancreatestuff</user_name>
+<full_name>Ima UserWhoCanCreate</full_name>
+<display_email>true</display_email>
+<password>12345</password>
+<active>1</active>
+<email>cancreatestuff@example.com</email>
+<blurb>...</blurb>
+<is_admin>0</is_admin>
+<can_create>true</can_create>
+</user>
+"""
 
 users_put_xml = \
 """

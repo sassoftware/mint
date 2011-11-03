@@ -14,7 +14,7 @@ from dateutil import tz
 from conary import files as cny_files
 from conary.conarycfg import loadEntitlement, EntitlementList
 from conary.dbstore import migration, sqlerrors
-from mint import userlevels
+from mint import buildtypes, userlevels
 from mint.db import repository
 from mint.db import schema
 
@@ -4448,6 +4448,101 @@ class MigrateTo_59(SchemaMigration):
             ALTER TABLE querysets_queryset ADD COLUMN
                is_static BOOLEAN NOT NULL DEFAULT FALSE    
         """) 
+        return True
+
+class MigrateTo_60(SchemaMigration):
+    '''Edge-P3'''
+    Version = (60, 5)
+
+    def migrate(self):
+        '''"My" querysets feature'''
+        cu = self.db.cursor()
+        for field in [ 'created_by', 'modified_by', 'personal_for' ]:
+            cu.execute("""
+                ALTER TABLE querysets_queryset ADD COLUMN %s INTEGER REFERENCES Users (userid) ON DELETE SET NULL
+            """ % field)
+        for field in [ 'created_by', 'modified_by' ]:
+            cu.execute("""
+                ALTER TABLE inventory_system ADD COLUMN %s INTEGER REFERENCES Users (userid) ON DELETE SET NULL
+            """ % (field))
+        cu.execute("""
+            ALTER TABLE inventory_system ADD COLUMN modified_date TIMESTAMP WITH TIME ZONE
+        """)
+        cu.execute("""
+            ALTER TABLE Users ADD COLUMN can_create BOOLEAN NOT NULL DEFAULT FALSE
+        """)
+        cu.execute("""
+            ALTER TABLE rbac_role ADD COLUMN is_identity BOOLEAN NOT NULL DEFAULT FALSE
+        """)
+        schema._addTableRows(self.db, 'rbac_permission_type', 'name', [
+            dict(name="CreateResource", description='Create Resource'),    
+        ])
+        return True
+
+    def migrate1(self):
+        '''continued ownership tracking for "My QuerySets"'''
+        cu = self.db.cursor()
+        cu.execute("""
+            ALTER TABLE projects ADD COLUMN modified_by INTEGER REFERENCES Users (userid) ON DELETE SET NULL
+        """) 
+        return True
+
+    def migrate2(self):
+        cu = self.db.cursor()
+        cu.execute("""update inventory_management_interface
+                set credentials_descriptor=? where name='wmi'""" ,
+                schema.wmi_credentials_descriptor)
+        return True
+    
+    def migrate3(self):
+        '''do not delete users, mark them as deleted'''
+        cu = self.db.cursor()
+        cu.execute("""
+            ALTER TABLE users ADD COLUMN deleted BOOLEAN NOT NULL DEFAULT false
+        """)
+        return True
+
+    def migrate4(self):
+        schema._createNonIdentityRoles(self.db, version=(60,4))
+        return True
+
+    def migrate5(self):
+        db = self.db
+        cu = db.cursor()
+        add_columns(db, "target_types", "build_type_id INTEGER")
+        # Rename xenent to xen-enterprise, so simplify driver discovery
+        cu.execute("UPDATE target_types SET name='xen-enterprise' WHERE name='xenent'")
+        tbmap = [
+            ('ec2', buildtypes.AMI),
+            ('eucalyptus', buildtypes.RAW_FS_IMAGE),
+            ('openstack', buildtypes.RAW_HD_IMAGE),
+            ('vcloud', buildtypes.VMWARE_ESX_IMAGE),
+            ('vmware', buildtypes.VMWARE_ESX_IMAGE),
+            ('xen-enterprise', buildtypes.XEN_OVA),
+        ]
+        q = "UPDATE target_types SET build_type_id=? WHERE name=?"
+        for targetTypeName, buildTypeId in tbmap:
+            cu.execute(q, buildTypeId, targetTypeName)
+        cu.execute("ALTER TABLE target_types ALTER COLUMN build_type_id SET NOT NULL")
+        schema.createTable(db, 'target_deployable_image', """
+                target_deployable_image_id %(PRIMARYKEY)s,
+                target_id               integer             NOT NULL
+                    REFERENCES Targets ON DELETE CASCADE,
+                target_image_id         INTEGER
+                    REFERENCES target_image ON DELETE CASCADE,
+                file_id                 integer NOT NULL
+                    REFERENCES BuildFiles ON DELETE CASCADE,
+        """)
+
+        schema.createTable(db, 'jobs_job_image', """
+            id          %(PRIMARYKEY)s,
+            job_id      integer NOT NULL
+                        REFERENCES jobs_job(job_id)
+                        ON DELETE CASCADE,
+            image_id integer NOT NULL
+                        REFERENCES Builds(buildId)
+                        ON DELETE CASCADE,
+        """)
         return True
 
 #### SCHEMA MIGRATIONS END HERE #############################################

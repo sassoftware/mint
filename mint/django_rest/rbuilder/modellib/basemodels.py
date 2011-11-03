@@ -13,7 +13,7 @@ import exceptions as pyexceptions
 
 from conary.lib import util
 
-from django.db import connection
+from django.db import connection, connections
 from django.db import models
 from django.db.models import fields as djangofields
 from django.db.models.fields import related
@@ -275,6 +275,13 @@ class BaseManager(models.Manager):
         else:
             return None
 
+    def lock(self):
+        """Lock table."""
+        if 'sqlite' in connections[self.db].settings_dict['ENGINE'].lower():
+            return
+        cursor = connection.cursor()
+        cursor.execute("LOCK TABLE %s" % self.model._meta.db_table)
+        
     def _add_fields(self, model, xobjModel, request, flags=None):
         """
         For each xobjModel attribute, if the attribute matches a field name on

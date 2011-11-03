@@ -3,6 +3,7 @@
 import os
 import testsetup
 
+from mint import buildtypes
 from mint import mint_error
 from mint.rest import errors
 from mint_test import mint_rephelp
@@ -17,9 +18,12 @@ class UserManagerTest(mint_rephelp.MintDatabaseHelper):
                 lambda *args, **kwargs: True)
         db = self.openMintDatabase(createRepos=False)
         cu = db.cursor()
-        for ttype in [ 'tType', ]:
-            cu.execute("INSERT INTO target_types (name, description) VALUES (?, ?)",
-                ttype, ttype + " description")
+        tbmap = [
+            ('tType', buildtypes.RAW_HD_IMAGE),
+        ]
+        for ttype, buildTypeId in tbmap:
+            cu.execute("INSERT INTO target_types (name, description, build_type_id) VALUES (?, ?, ?)",
+                ttype, ttype + " description", buildTypeId)
         db.commit()
 
     def testCancelUserAccount(self):

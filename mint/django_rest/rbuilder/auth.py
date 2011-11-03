@@ -57,7 +57,7 @@ def getAuth(request):
 def isAdmin(user):
     if not isinstance(user, User):
         return False
-    return user.getIsAdmin()
+    return user.is_admin
 
 def isAuthenticated(user):
      if user is not None and isinstance(user, User):
@@ -71,16 +71,16 @@ class rBuilderBackend(object):
 
     def authenticate(self, username=None, password=None, mintConfig=None):
         try:
-            user = User.objects.get(user_name=username)
+            user = User.objects.get(user_name=username, deleted=False)
         except User.DoesNotExist:
             return None
         if user.passwd and user.salt:
             salt = user.salt.decode('hex')
             m = md5(salt + password)
             if (m.hexdigest() == user.passwd):
-	        self.update_login_time(user)
+                self.update_login_time(user)
                 return user
-        if mintConfig:
+        elif mintConfig:
             client = auth_client.getClient(mintConfig.authSocket)
             if client.checkPassword(username, password):
 	        self.update_login_time(user)
@@ -97,7 +97,7 @@ class rBuilderBackend(object):
 
     def get_user(self, user_id):
         try:
-            return User.objects.get(pk=user_id)
+            return User.objects.get(pk=user_id, deleted=False)
         except User.DoesNotExist:
             return None
 

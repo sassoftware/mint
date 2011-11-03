@@ -4,9 +4,11 @@
 # All Rights Reserved
 #
 
-from django.db import connection
+import errno
 import logging
-from mint.django_rest.rbuilder.images import models 
+import os
+from mint.django_rest.rbuilder.jobs import models as jobsmodels
+from mint.django_rest.rbuilder.images import models
 from mint.django_rest.rbuilder.projects import models as projectsmodels
 from mint.django_rest.rbuilder.manager import basemanager
 from conary.lib import sha1helper
@@ -41,9 +43,11 @@ class ImagesManager(basemanager.BaseManager):
         return image
 
     @exposed
-    def createImageBuild(self, image):
+    def createImageBuild(self, image, buildData=None):
         outputToken = sha1helper.sha1ToString(file('/dev/urandom').read(20))
-        buildData = [('outputToken', outputToken, datatypes.RDT_STRING)]
+        if buildData is None:
+            buildData = []
+        buildData.append(('outputToken', outputToken, datatypes.RDT_STRING))
 
         image.time_created = image.time_updated = time.time()
         image.created_by_id = self.user.user_id
@@ -84,6 +88,25 @@ class ImagesManager(basemanager.BaseManager):
 
         return image
 
+    @exposed
+    def createImageBuildFile(self, image, **kwargs):
+        from mint import urltypes
+        url = kwargs.pop('url')
+        urlType = kwargs.pop('urlType', urltypes.LOCAL)
+        urlobj = models.FileUrl(url=url, url_type=urlType)
+        urlobj.save()
+        bf = models.BuildFile(image=image, **kwargs)
+        bf.save()
+        bfum = models.BuildFilesUrlsMap(file=bf, url=urlobj)
+        bfum.save()
+        return bf
+
+    def recordTargetInternalId(self, buildFile, target, targetInternalId):
+        from mint.django_rest.rbuilder.targets import models as tgtmodels
+        m = tgtmodels.TargetImagesDeployed(build_file=buildFile,
+            target=target, target_image_id=targetInternalId)
+        m.save()
+
     def _getOutputTrove(self, image):
         if image.output_trove is None:
             return None
@@ -97,16 +120,52 @@ class ImagesManager(basemanager.BaseManager):
     def updateImageBuild(self, image_id, image):
         image.save()
         return image
-        
+
     @exposed
     def deleteImageBuild(self, image_id):
-        models.Image.objects.get(pk=image_id).delete()
+        image = models.Image.objects.get(pk=image_id)
+        log.info("Deleting image %s from project %s" % (image_id,
+            image.project.short_name))
+        # Delete image files from finished-images
+        for imageFile in models.BuildFile.objects.filter(image=image_id):
+            for urlMap in models.BuildFilesUrlsMap.objects.filter(
+                    file=imageFile):
+                fileUrl = urlMap.url
+                path = fileUrl.url
+                if path.startswith('/') and os.path.exists(path):
+                    os.unlink(path)
+                fileUrl.delete()
+        imageDir = os.path.join(self.cfg.imagesPath, image.project.short_name,
+                str(image_id))
+        for name in ['build.log', 'trace.txt']:
+            path = os.path.join(imageDir, name)
+            if os.path.exists(path):
+                os.unlink(path)
+        # Delete the parent directory, if it's empty.
+        try:
+            os.rmdir(imageDir)
+        except OSError, err:
+            if err.args[0] not in (errno.ENOENT, errno.ENOTEMPTY):
+                raise
+        image.delete()
+        # Delete the image trove from the repository if it is not referenced by
+        # any other image.
+        if image.output_trove:
+            others = models.Image.objects.filter(output_trove=image.output_trove)
+            if others:
+                log.info("Keeping image trove %s because it is claimed by "
+                        "other images", image.output_trove)
+            else:
+                log.info("Deleting image trove %s", image.output_trove)
+                reposMgr = self.mgr._restDb.productMgr.reposMgr
+                tup = trovetup.TroveSpec.fromString(image.output_trove)
+                reposMgr.deleteTroves([tup])
 
     @exposed
     def getImageBuildFile(self, image_id, file_id):
         build_file = models.BuildFile.objects.get(file_id=file_id)
         return build_file
-        
+
     @exposed
     def getImageBuildFiles(self, image_id):
         BuildFiles = models.BuildFiles()
@@ -166,3 +225,10 @@ class ImagesManager(basemanager.BaseManager):
     @exposed
     def getImageTypes(self):
         return models.ImageType.objects.all()
+
+    @exposed
+    def getJobsByImageId(self, imageId):
+        jobs = jobsmodels.Job.objects.filter(images__image__image_id=imageId).order_by("-job_id")
+        Jobs = jobsmodels.Jobs()
+        Jobs.job = jobs
+        return Jobs

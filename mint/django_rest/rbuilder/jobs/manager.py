@@ -9,6 +9,7 @@ import os
 import re
 import weakref
 import StringIO
+import time
 import urlparse
 from django.core import urlresolvers
 from django.db import IntegrityError, transaction
@@ -21,6 +22,7 @@ from mint.lib import uuid
 from mint.django_rest.rbuilder import errors
 from mint.django_rest.rbuilder import modellib
 from mint.django_rest.rbuilder.manager import basemanager
+from mint.django_rest.rbuilder.images import models as imagemodels
 from mint.django_rest.rbuilder.jobs import models
 from mint.django_rest.rbuilder.inventory import models as inventorymodels
 from mint.django_rest.rbuilder.targets import models as targetmodels
@@ -99,6 +101,19 @@ class JobManager(basemanager.BaseManager):
     def getSystemJobs(self, system_id):
         system = inventorymodels.System.objects.get(pk=system_id)
         return self._jobsFromIterator(system.jobs.all())
+
+    @exposed
+    def waitForRmakeJob(self, jobUuid, timeout=10, interval=1):
+        cli = self.mgr.repeaterMgr.repeaterClient
+        end = time.time() + timeout
+        while time.time() < end:
+            job = cli.getJob(jobUuid)
+            if job.status.final:
+                return job
+            time.sleep(interval)
+        # Even if we timed out, we'll still return the job, it's up to
+        # the caller to decide what to do
+        return job
 
     @classmethod
     def _jobsFromIterator(cls, iterator):
@@ -267,24 +282,35 @@ class DescriptorJobHandler(BaseJobHandler, ResultsProcessingMixIn):
         descriptor = self.getDescriptor(descriptorId)
 
         # Save the original URL for the descriptor
-        descriptor.setId(descriptorId)
+        self._setDescriptorId(descriptorId, descriptor)
 
         # Related resources are linked to jobs through a many-to-many
         # relationship
         job._relatedResource = self.getRelatedResource(descriptor)
         job._relatedThroughModel = self.getRelatedThroughModel(descriptor)
 
+        descriptorDataObj = self._processDescriptor(descriptor, descriptorDataXml)
+        descrXml = self._serializeDescriptor(descriptor)
+        job._descriptor = descrXml
+        job._descriptor_data = descriptorDataXml
+        return descriptor, descriptorDataObj
+
+    def _setDescriptorId(self, descriptorId, descriptor):
+        descriptor.setId(descriptorId)
+
+    def _processDescriptor(self, descriptor, descriptorDataXml):
         descriptor.setRootElement("descriptor_data")
         descriptorDataObj = smartdescriptor.DescriptorData(
             fromStream=descriptorDataXml,
             descriptor=descriptor,
             validate=False)
+        return descriptorDataObj
+
+    def _serializeDescriptor(self, descriptor):
         # Serialize descriptor for the job
         sio = StringIO.StringIO()
         descriptor.serialize(sio)
-        job._descriptor = sio.getvalue()
-        job._descriptor_data = descriptorDataXml
-        return descriptor, descriptorDataObj
+        return sio.getvalue()
 
     def getRelatedResource(self, descriptor):
         descriptorId = descriptor.getId()
@@ -297,7 +323,7 @@ class DescriptorJobHandler(BaseJobHandler, ResultsProcessingMixIn):
         return match.func.get(**match.kwargs)
 
     def getDescriptor(self, descriptorId):
-        return None
+        raise NotImplementedError()
 
     def linkRelatedResource(self, job):
         if job._relatedResource is None:
@@ -409,9 +435,58 @@ class JobHandlerRegistry(HandlerRegistry):
         jobType = models.EventType.TARGET_REFRESH_SYSTEMS
         ResultsTag = 'instances'
 
-    class TargetDeployImage(DescriptorJobHandler):
-        __slots__ = []
+    class TargetDeployImage(_TargetDescriptorJobHandler):
+        __slots__ = ['image', 'image_file', ]
         jobType = models.EventType.TARGET_DEPLOY_IMAGE
+
+        def getDescriptor(self, descriptorId):
+            try:
+                match = urlresolvers.resolve(descriptorId)
+            except urlresolvers.Resolver404:
+                return None
+
+            targetId = int(match.kwargs['target_id'])
+            fileId = int(match.kwargs['file_id'])
+
+            self._setTarget(targetId)
+            self._setImage(fileId)
+            return descriptorId
+
+        def _setDescriptorId(self, descriptorId, descriptor):
+            pass
+
+        def _serializeDescriptor(self, descriptor):
+            descriptorXml = '<descriptor id="%s"/>' % descriptor
+            return descriptorXml
+
+        def _setImage(self, fileId):
+            self.image_file = imagemodels.BuildFile.objects.get(file_id=fileId)
+            self.image = self.image_file.image
+
+        def _processDescriptor(self, descriptor, descriptorDataXml):
+            return descriptorDataXml
+
+        def getRepeaterMethod(self, cli, job):
+            self.extractDescriptorData(job)
+            targetConfiguration = self._buildTargetConfigurationFromDb(cli)
+            targetUserCredentials = self._buildTargetCredentialsFromDb(cli)
+            zone = self.mgr.mgr.getTargetZone(self.target)
+            cli.targets.configure(zone.name, targetConfiguration,
+                targetUserCredentials)
+            return cli.targets.deployImage
+
+        def getRepeaterMethodArgs(self, job):
+            # XXX FIXME
+            params = dict(
+                descriptor_data=job._descriptor_data,
+            )
+            return (params, ), {}
+
+        def getRelatedThroughModel(self, descriptor):
+            return imagemodels.JobImage
+
+        def getRelatedResource(self, descriptor):
+            return self.image
 
     class TargetLaunchSystem(DescriptorJobHandler):
         __slots__ = []

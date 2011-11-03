@@ -6,7 +6,6 @@
 #
 
 import sys
-
 from django.db import models
 
 from mint.django_rest.deco import D
@@ -63,6 +62,14 @@ class ChildMembers(modellib.XObjIdModel):
                 tag = "child_members")
     view_name = "QuerySetChildResult"
 
+class GrantMatrix(modellib.XObjIdModel):
+    '''Permissions on queryset arranged in a UI-friendly way'''
+    class Meta:
+        abstract = True
+    _xobj = xobj.XObjMetadata(
+                tag = "grant_matrix")
+    view_name = "QuerySetGrantMatrix"
+
 class QuerySets(modellib.Collection):
     '''A list of all query sets in the rBuilder'''
     class Meta:
@@ -97,7 +104,7 @@ class QuerySet(modellib.XObjIdModel):
     objects = modellib.SaveableManyToManyManager()
     _xobj = xobj.XObjMetadata(
                 tag = "query_set")
-    _xobj_explicit_accessors = set(['grants', ])
+    _xobj_explicit_accessors = set([])
     _m2m_safe_to_create = [ 'filter_entries' ]
 
     query_set_id = D(models.AutoField(primary_key=True),
@@ -127,6 +134,9 @@ class QuerySet(modellib.XObjIdModel):
     # to be visible, but will be empty unless ReadMember(ship) is conveyed on some of their contents.
     is_public = APIReadOnly(models.BooleanField(default=False))
     is_static = APIReadOnly(models.BooleanField(default=False))
+    created_by = APIReadOnly(modellib.ForeignKey('users.User', related_name='+', null=True, db_column='created_by'))
+    modified_by = APIReadOnly(modellib.ForeignKey('users.User', related_name='+', null=True, db_column='modified_by'))
+    personal_for = APIReadOnly(modellib.ForeignKey('users.User', related_name='+', db_column='personal_for', null=True))
 
     load_fields = [name]
 
@@ -181,6 +191,9 @@ class QuerySet(modellib.XObjIdModel):
         universe = Universe()
         universe._parents = [self]
         xobjModel.universe = universe.serialize(request)
+        grant_matrix = GrantMatrix()
+        grant_matrix._parents = [self]
+        xobjModel.grant_matrix = grant_matrix.serialize(request)
 
         fd = FilterDescriptor(id=self.query_set_id)
         xobjModel.filter_descriptor = fd.serialize(request)

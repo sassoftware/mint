@@ -1,3 +1,4 @@
+from testutils import mock
 import testsxml
 from xobj import xobj
 
@@ -7,8 +8,9 @@ logging.disable(logging.CRITICAL)
 from mint.django_rest import test_utils
 XMLTestCase = test_utils.XMLTestCase
 
-from mint.django_rest.rbuilder.projects import models as projectsmodels
 from mint.django_rest.rbuilder.images import models
+from mint.django_rest.rbuilder.jobs import models as jobsmodels
+from mint.django_rest.rbuilder.projects import models as projectsmodels
 from mint.django_rest.rbuilder.users import models as usermodels
 
 class ImagesTestCase(XMLTestCase):
@@ -18,7 +20,7 @@ class ImagesTestCase(XMLTestCase):
         self._init()
 
     def _init(self):
-        
+        mock.mock(self.mgr, "createRepositoryForProject")
         user1 = usermodels.User(
             user_name='jimphoo', full_name='Jim Phoo', email='jimphoo@noreply.com')
         user1.save()
@@ -28,7 +30,7 @@ class ImagesTestCase(XMLTestCase):
             
         for i in range(3):
             # make project
-            proj = self._addProject("foo%s" % i)
+            proj = self.addProject("foo%s" % i, domainName='eng.rpath.com')
             # and branch
             branch = projectsmodels.ProjectVersion(
                 project=proj, name="trunk", label="foo%s.eng.rpath.com@rpath:foo-trunk" % i)
@@ -78,15 +80,6 @@ class ImagesTestCase(XMLTestCase):
             buildFilesUrlsMap = models.BuildFilesUrlsMap(file=buildFile, url=fileUrl)
             buildFilesUrlsMap.save()
             
-
-    def _addProject(self, short_name, namespace='ns'):
-        project = projectsmodels.Project()
-        project.name = project.hostname = project.short_name = short_name
-        project.namespace = namespace
-        project.domain_name = 'eng.rpath.com'
-        # project = self.mgr.projectManager.addProject(project)
-        project.save()
-        return project
 
     # def testCanListAndAccessImages(self):
     # 
@@ -233,3 +226,28 @@ class ImagesTestCase(XMLTestCase):
         response = self._get('image_types/1', username='admin', password='password')
         self.assertEquals(response.status_code, 200)
         self.assertXMLEquals(response.content, testsxml.image_type_get_xml)
+
+    def testGetImageJobs(self):
+        imageId = 3
+
+        for i in range(3):
+            jobTypes = [ jobsmodels.EventType.TARGET_DEPLOY_IMAGE,
+                jobsmodels.EventType.TARGET_LAUNCH_SYSTEM ]
+            for j, jobType in enumerate(jobTypes):
+                jobUuid = "job-uuid-%02d-%02d" % (i, j)
+                job = self._newJob(jobUuid, jobType=jobType)
+                models.JobImage.objects.create(job=job, image_id=imageId)
+
+        response = self._get('images/%s/jobs' % imageId,
+            username='testuser', password='password')
+        self.failUnlessEqual(response.status_code, 200)
+        doc = xobj.parse(response.content)
+        self.failUnlessEqual([ x.job_uuid for x in doc.jobs.job ],
+            [
+                'job-uuid-02-01',
+                'job-uuid-02-00',
+                'job-uuid-01-01',
+                'job-uuid-01-00',
+                'job-uuid-00-01',
+                'job-uuid-00-00',
+            ])

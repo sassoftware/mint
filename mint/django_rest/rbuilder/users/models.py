@@ -36,18 +36,21 @@ class User(modellib.XObjIdModel):
     created_date = D(APIReadOnly(modellib.DecimalTimestampField(max_digits=14, decimal_places=3, db_column='timecreated')), "User created date", short="User created date")
     last_login_date = D(APIReadOnly(modellib.DecimalTimestampField(max_digits=14, decimal_places=3, db_column='timeaccessed')), "User last login date", short="User last login date")
     modified_date = D(APIReadOnly(modellib.DecimalTimestampField(max_digits=14, decimal_places=3, db_column='timemodified')), "User modified date", short="User modified date")
+    # this is a Django-ism and is not the same as deleted below, Django inactive users are re-activeatable
+    # and we largely don't use this
     active = modellib.XObjHidden(modellib.APIReadOnly(models.SmallIntegerField()))
     blurb = models.TextField()
-    _is_admin = modellib.XObjHidden(modellib.APIReadOnly(
-        models.BooleanField(default=False, db_column='is_admin')))
-
-    is_admin = D(modellib.SyntheticField(), "User is admin?", short="User is admin?")
+    # code in manager prevents this from being set by non-admins
+    is_admin = models.BooleanField(default=False, db_column='is_admin')
     external_auth = D(modellib.SyntheticField(models.BooleanField()), "User external auth?", short="User external auth?")
 
     created_by = D(APIReadOnly(models.ForeignKey('User', related_name='+', db_column='created_by', null=True)), 
         "User created by", short="User created by")
     modified_by = D(APIReadOnly(models.ForeignKey('User', related_name='+', db_column='modified_by', null=True)), 
         "User modified by", short="User modified by")
+    # code in manager prevents this from being set by non-admins
+    can_create = D(models.BooleanField(default=True), "User can create resources?", short="User can create?")
+    deleted = modellib.XObjHidden(models.BooleanField(default=False))
 
     # Field used for the clear-text password when it is to be
     # set/changed
@@ -76,54 +79,17 @@ class User(modellib.XObjIdModel):
         'user_roles', 'jobs',
     ])
 
-    # expand these when traversing as a foreign key relationship
-    # Disabling until some decimal serialization issues can be resolved in serialization
-    # Disabling even more, because rpath-models expects launching_user
-    # to be a plain string.
-    #summary_view = [ 'user_name', 'full_name' ]
-
     def __unicode__(self):
         return self.user_name
-
-    @staticmethod
-    def _toBool(val):
-        if val is None:
-            return None
-        if not isinstance(val, basestring):
-            val = str(val)
-        val = val.lower()
-        if val in ('true', 'false'):
-            return val == 'true'
-        if val == '1':
-            return True
-        return False
-
-    def setIsAdmin(self, isAdmin):
-        """Set private admin flag, to be called after the caller's adminship
-        has been verified only.
-        """
-        self._is_admin = isAdmin
-
-    def getIsAdmin(self):
-        return self._toBool(self._is_admin)
-
-    def _populateAdminField(self):
-        """Copy private is_admin value to public field."""
-        # Unfortunately we don't have boolean synthetic fields yet, so
-        # let's save the string representation of it
-        if self._is_admin is not None:
-            self.is_admin = str(bool(self._is_admin)).lower()
 
     def _populateExternalAuthField(self):
         """
         Compute external auth field based on whether or not the password
         is set.
         """
-
         self.external_auth = str(self.passwd is None).lower()
 
     def computeSyntheticFields(self, sender, **kwargs):
-        self._populateAdminField()
         self._populateExternalAuthField()
         # sub-collections off of user
         self.roles = modellib.HrefField(
@@ -135,6 +101,8 @@ class Session(modellib.XObjIdModel):
         abstract = True
     _xobj = xobj.XObjMetadata(tag='session', attributes = {'id':str})
     view_name = 'Session'
+    
+    favorite_querysets = modellib.HrefField(href="/api/v1/favorites/query_sets")
 
     # Blargh. If I add user as a regular field, it won't get serialized,
     # because get_field_dict() won't pick it up. So we cheat here and

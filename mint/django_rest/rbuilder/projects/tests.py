@@ -42,14 +42,15 @@ class ProjectsTestCase(RbacEngine):
         # developer user does NOT have access to these .. skipping XML versions here as these
         # are well covered in rbac/tests.py
                   
-        role          = rbacmodels.RbacRole.objects.get(name='developer')
-        all_projects  = querymodels.QuerySet.objects.get(name='All Projects')
-        all_pbs       = querymodels.QuerySet.objects.get(name='All Project Stages')
-        modmembers    = rbacmodels.RbacPermissionType.objects.get(name='ModMembers')
-        admin         = usersmodels.User.objects.get(user_name='admin')
+        role           = rbacmodels.RbacRole.objects.get(name='developer')
+        self.all_projects   = querymodels.QuerySet.objects.get(name='All Projects')
+        self.all_pbs        = querymodels.QuerySet.objects.get(name='All Project Stages')
+        modmembers     = rbacmodels.RbacPermissionType.objects.get(name='ModMembers')
+        createresource = rbacmodels.RbacPermissionType.objects.get(name='CreateResource')
+        admin          = usersmodels.User.objects.get(user_name='admin')
 
-        for queryset in [ all_projects, all_pbs ]:
-            for permission in [ modmembers ]:
+        for queryset in [ self.all_projects, self.all_pbs ]:
+            for permission in [ modmembers, createresource  ]:
                 rbacmodels.RbacPermission(
                     queryset      = queryset,
                     role          = role,
@@ -97,26 +98,7 @@ class ProjectsTestCase(RbacEngine):
             statusCodeResults[uname] = (status, response.status_code)
             
         return statusCodeResults
- 
-    def _addProject(self, short_name, namespace='ns'):
-        project = models.Project()
-        project.name = project.hostname = project.short_name = short_name
-        project.namespace = namespace
-        project.domain_name = 'test.local2'
-        project = self.mgr.projectManager.addProject(project)
-        return project
-    
-    def _addProjectWithUser(self, short_name, username, namespace='ns'):
-        user = usersmodels.User.objects.get(user_name=username)
-        project = models.Project()
-        project.name = project.hostname = project.short_name = short_name
-        project.namespace = namespace
-        project.domain_name = 'test.local2'
-        project.creator = user
-        project = self.mgr.projectManager.addProject(project)
-        return project
-        
-        
+
     def _initProject(self, name='chater-foo', adorn=False):
         proj = models.Project.objects.get(name=name)
         platform = platformsmodels.Platform(
@@ -215,7 +197,7 @@ class ProjectsTestCase(RbacEngine):
         projectId = project.project_id
         project = models.Project.objects.get(pk=projectId)
         self.assertEquals("test-project", project.name)
-        self.assertEquals(1, project.creator.user_id)
+        self.assertEquals(1, project.created_by.user_id)
         
     def testAddProjectNoHostname(self):
         response = self._post('projects',
@@ -236,7 +218,7 @@ class ProjectsTestCase(RbacEngine):
         projectId = project.project_id
         project = models.Project.objects.get(pk=projectId)
         self.assertEquals("test-project.eng.rpath.com", project.repository_hostname)
-        self.assertEquals(1, project.creator.user_id)
+        self.assertEquals(1, project.created_by.user_id)
         
     def testAddProjectNoDomainName(self):
         response = self._post('projects',
@@ -249,7 +231,7 @@ class ProjectsTestCase(RbacEngine):
         projectId = project.project_id
         project = models.Project.objects.get(pk=projectId)
         self.failUnlessEqual(project.repository_hostname, 'test-project.rpath.local2')
-        self.assertEquals(project.creator.user_id, 1)
+        self.assertEquals(project.created_by.user_id, 1)
         
     def testAddProjectNoNamespace(self):
         response = self._post('projects',
@@ -260,7 +242,7 @@ class ProjectsTestCase(RbacEngine):
         projectId = project.project_id
         project = models.Project.objects.get(pk=projectId)
         self.assertEquals(project.namespace, 'ns')
-        self.assertEquals(1, project.creator.user_id)
+        self.assertEquals(1, project.created_by.user_id)
         
     def testAddProjectExternal(self):
         response = self._post('projects',
@@ -324,7 +306,7 @@ class ProjectsTestCase(RbacEngine):
              'postgres-private.rpath.com@rpath:postgres-private-1'])
 
     def testAddProjectVersionToProject(self):
-        self._addProject("foo")
+        self.addProject("foo")
         platform = platformsmodels.Platform(
             label='label-foo', platform_name='foo-platform-name')
         platform.save()
@@ -350,7 +332,7 @@ class ProjectsTestCase(RbacEngine):
         platform = platformsmodels.Platform(
             label='label-foo', platform_name='foo-platform-name')
         platform.save()
-        
+ 
         # try POSTing with pb pointing to project with valid perms        
         response = self._post('projects/test-project/project_branches',
             data=testsxml.project_version_post_with_project_xml2,
@@ -368,6 +350,12 @@ class ProjectsTestCase(RbacEngine):
         # FIXME: XML tests??
 
     def testUpdateProjectBranch(self):
+        # can update the branch if we can update the P, but need P tags first.
+        # tests above didn't add these objects using the API so invalidations didn't happen
+        response = self._get("query_sets/%s/all" % self.all_projects.pk,
+            username="ExampleDeveloper", password="password")
+        self.assertEquals(response.status_code, 200)
+
         response = self._put('projects/postgres/project_branches/postgres.rpath.com@rpath:postgres-1',
             data=testsxml.project_version_put_xml,
             username="ExampleDeveloper", password="password")
@@ -454,7 +442,7 @@ class ProjectsTestCase(RbacEngine):
 
     def testGetProjectImages(self):
         # Add image
-        prj = self._addProject("foo")
+        prj = self.addProject("foo")
         image = imagesmodels.Image(name="image-1", description="image-1",
             project=prj, _image_type=10)
         image.save()
@@ -564,7 +552,7 @@ class ProjectsTestCase(RbacEngine):
         self.assertXMLEquals(response.content, testsxml.releases_by_project_get_xml)
         
     def testAddRelease(self):
-        self._addProjectWithUser('foo', 'ExampleDeveloper')
+        self.addProject('foo', user='ExampleDeveloper')
         response = self._post('projects/foo/releases',
             username='ExampleDeveloper', password='password', data=testsxml.release_by_project_post_xml)
         self.assertEquals(response.status_code, 200)

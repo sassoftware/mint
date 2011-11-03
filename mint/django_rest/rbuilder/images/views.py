@@ -8,7 +8,7 @@
 # as target service evolves
 
 from django.http import HttpResponse 
-from mint.django_rest.deco import requires, return_xml, access #, requires
+from mint.django_rest.deco import requires, return_xml, access, Flags
 from mint.django_rest.rbuilder import service
 from mint.django_rest.rbuilder.images import models
 from mint.django_rest.rbuilder.projects import models as projectsmodels
@@ -38,20 +38,26 @@ class ImagesService(BaseImageService):
 
     @access.authenticated
     @return_xml
-    def rest_GET(self, request, image_id=None):
-        return self.get(image_id)
+    def rest_GET(self, request):
+        return self.get()
     
-    def get(self, image_id):
-        if image_id:
-            return self.mgr.getImageBuild(image_id)
-        else:
-            return self.mgr.getImageBuilds()
+    def get(self):
+        return self.mgr.getImageBuilds()
     
     @access.admin
     @requires('image')
     @return_xml
     def rest_POST(self, request, image):
         return self.mgr.createImageBuild(image)
+    
+class ImageService(BaseImageService):
+    @access.authenticated
+    @return_xml
+    def rest_GET(self, request, image_id):
+        return self.get(image_id)
+    
+    def get(self, image_id):
+        return self.mgr.getImageBuild(image_id)
     
     @access.admin
     @requires('image')
@@ -63,20 +69,29 @@ class ImagesService(BaseImageService):
     def rest_DELETE(self, request, image_id):
         self.mgr.deleteImageBuild(image_id)
         return HttpResponse(status=204)
-    
-        
-class ImageBuildFileService(service.BaseService):
-    
+
+
+class ImageJobsService(BaseImageService):
+    @return_xml
+    def rest_GET(self, request, image_id):
+        return self.get(image_id)
+
+    def get(self, imageId):
+        return self.mgr.getJobsByImageId(imageId)
+
+    @requires("job", flags=Flags(save=False))
+    @return_xml
+    def rest_POST(self, request, image_id, job):
+        return self.mgr.addJob(job)
+
+class ImageBuildFilesService(service.BaseService):
     @access.anonymous
     @return_xml
-    def rest_GET(self, request, image_id, file_id=None):
-        return self.get(image_id, file_id)
+    def rest_GET(self, request, image_id):
+        return self.get(image_id)
         
-    def get(self, image_id, file_id):
-        if file_id:
-            return self.mgr.getImageBuildFile(image_id, file_id)
-        else:
-            return self.mgr.getImageBuildFiles(image_id)
+    def get(self, image_id):
+        return self.mgr.getImageBuildFiles(image_id)
             
     @access.admin
     @requires('file')
@@ -85,48 +100,67 @@ class ImageBuildFileService(service.BaseService):
         file.save()
         return file
 
+
+class ImageBuildFileService(service.BaseService):
+
+    @access.anonymous
+    @return_xml
+    def rest_GET(self, request, image_id, file_id):
+        return self.get(image_id, file_id)
+
+    def get(self, image_id, file_id):
+        return self.mgr.getImageBuildFile(image_id, file_id)
+
     @access.admin
     @requires('file')
     @return_xml
     def rest_PUT(self, request, image_id, file_id, file):
         file.save()
-        return file  
-        
+        return file
+
     @access.admin
     def rest_DELETE(self, request, image_id, file_id):
         models.BuildFile.objects.get(pk=file_id).delete()
         return HttpResponse(status=204)
-        
-        
-class ReleaseService(service.BaseService):
+
+
+class ReleasesService(service.BaseService):
     @access.admin
     @return_xml
-    def rest_GET(self, request, release_id=None):
-        return self.get(release_id)
+    def rest_GET(self, request):
+        return self.get()
         
-    def get(self, release_id):
-        if release_id:
-            return self.mgr.getReleaseById(release_id)
-        else:
-            return self.mgr.getReleases()
+    def get(self):
+        return self.mgr.getReleases()
             
     @access.admin
     @requires('release')
     @return_xml
     def rest_POST(self, request, release):
         return self.mgr.createRelease(release)
-        
+
+
+class ReleaseService(service.BaseService):
+    @access.admin
+    @return_xml
+    def rest_GET(self, request, release_id):
+        return self.get(release_id)
+
+    def get(self, release_id):
+        return self.mgr.getReleaseById(release_id)
+
     @access.admin
     @requires('release')
     @return_xml
     def rest_PUT(self, request, release_id, release):
         return self.mgr.updateRelease(release_id, release)
-        
+
     @access.admin
     def rest_DELETE(self, request, release_id):
         release = projectsmodels.Release.objects.get(pk=release_id)
         release.delete()
         return HttpResponse(status=204)
+
 
 # write manager for this!
 class ImageBuildFileUrlService(service.BaseService):
@@ -159,14 +193,20 @@ class BuildLogService(service.BaseService):
         response.write(buildLog)
         return response
         
+class ImageTypesService(service.BaseService):
+    @access.admin
+    @return_xml
+    def rest_GET(self, request):
+        return self.get()
+        
+    def get(self):
+        return self.mgr.getImageTypes()
+
 class ImageTypeService(service.BaseService):
     @access.admin
     @return_xml
-    def rest_GET(self, request, image_type_id=None):
+    def rest_GET(self, request, image_type_id):
         return self.get(image_type_id)
-        
+
     def get(self, image_type_id):
-        if image_type_id:
-            return self.mgr.getImageType(image_type_id)
-        else:
-            return self.mgr.getImageTypes()
+        return self.mgr.getImageType(image_type_id)

@@ -7,7 +7,7 @@
 from django.http import HttpResponse, HttpResponseRedirect
 from mint.django_rest.rbuilder import service
 from mint.django_rest.deco import requires, return_xml, access
-from mint.django_rest.rbuilder.rbac.rbacauth import rbac
+from mint.django_rest.rbuilder.rbac.rbacauth import rbac, manual_rbac
 from mint.django_rest.rbuilder.errors import PermissionDenied
 from mint.django_rest.rbuilder.querysets import models as querymodels
 from mint.django_rest.rbuilder.rbac.manager.rbacmanager import \
@@ -33,41 +33,43 @@ def rbac_can_write_user(view, request, user_id, *args, **kwargs):
 class UsersService(service.BaseService):
     
     # manual rbac
-    @access.authenticated
+    @rbac(manual_rbac)
     @return_xml
     def rest_GET(self, request, user_id=None):
-        if user_id is not None:
-             if rbac_can_read_user(self, request, user_id):
-                 return self.get(user_id)
-             raise PermissionDenied()
-        else:
-             # non-priveledged users should use a queryset
-             # they have access to in order to obtain all results
-             if request._is_admin:
-                 qs = querymodels.QuerySet.objects.get(name='All Users')
-                 url = '/api/v1/query_sets/%s/all%s' % (qs.pk, request.params)
-                 return HttpResponseRedirect(url)
-             raise PermissionDenied()
+         # non-priveledged users should use a queryset
+         # they have access to in order to obtain all results
+         if request._is_admin:
+             qs = querymodels.QuerySet.objects.get(name='All Users')
+             url = '/api/v1/query_sets/%s/all%s' % (qs.pk, request.params)
+             return HttpResponseRedirect(url)
+         raise PermissionDenied()
+
+    @access.admin
+    @requires('user', save=False)
+    @return_xml
+    def rest_POST(self, request, user):
+        # TODO: verify we have a user
+        if not user.user_name:
+            return HttpResponse(status=400)
+        return self.mgr.addUser(user, request._authUser)
+
+class UserService(service.BaseService):
+
+    # manual rbac
+    @rbac(manual_rbac)
+    @return_xml
+    def rest_GET(self, request, user_id):
+         if rbac_can_read_user(self, request, user_id):
+             return self.get(user_id)
+         raise PermissionDenied()
 
     def get(self, user_id):
         # if user_id is None then we have bypassed rbac
         # (which is manually run inside rest_GET)
-        assert user_id is not None
         return self.mgr.getUser(user_id)
 
-    # Has to be public, so one can create an account before logging in
-    @access.anonymous
-    @requires('user')
-    @return_xml
-    def rest_POST(self, request, user):
-        # TODO: verify we have a user
-        by_user = getattr(request, '_authUser', None) 
-        if not user.user_name:
-            return HttpResponse(status=400)
-        return self.mgr.addUser(user, by_user)
-
     @rbac(rbac_can_write_user)
-    @requires('user')
+    @requires('user', save=False)
     @return_xml
     def rest_PUT(self, request, user_id, user):
         oldUser = self.mgr.getUser(user_id)
@@ -79,7 +81,6 @@ class UsersService(service.BaseService):
     def rest_DELETE(self, request, user_id):
         self.mgr.deleteUser(user_id)
         return HttpResponse(status=204)
-
 
 class SessionService(service.BaseService):
 

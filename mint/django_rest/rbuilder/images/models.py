@@ -19,6 +19,7 @@ from conary import versions
 from conary.deps import deps
 import sys
 from mint.django_rest.rbuilder.images.manager import models_manager
+from mint.django_rest.rbuilder.jobs import models as jobmodels
 
 APIReadOnly = modellib.APIReadOnly
 
@@ -145,13 +146,19 @@ class Image(modellib.XObjIdModel):
     status = models.IntegerField(null=True, default=-1)
     status_message = models.TextField(null=True, blank=True, default='',
         db_column="statusmessage")
+    base_image = modellib.DeferredForeignKey('Image', null=True,
+        related_name='layered_images', db_column='base_image')
+
     metadata = modellib.SyntheticField()
     architecture = modellib.SyntheticField()
     trailing_version = modellib.SyntheticField()
     released = modellib.SyntheticField()
     num_image_files = modellib.SyntheticField()
     build_log = modellib.SyntheticField()
-    #actions = modellib.SyntheticField()
+    actions = D(modellib.SyntheticField(jobmodels.Actions),
+        "actions available on the system")
+    jobs = D(modellib.SyntheticField(modellib.HrefField()),
+        "jobs for this system")
 
     def computeSyntheticFields(self, sender, **kwargs):
         self._computeMetadata()
@@ -178,6 +185,8 @@ class Image(modellib.XObjIdModel):
 
         if self._image_type is not None:
             self.image_type = ImageType.fromImageTypeId(self._image_type)
+        self.jobs = modellib.HrefFieldFromModel(self, "ImageJobs")
+        self._computeActions()
 
     def _getBuildLog(self):
         return BuildLogHref(self)
@@ -242,6 +251,54 @@ class Image(modellib.XObjIdModel):
                 self._image_type = imageType.image_type_id
         return modellib.XObjIdModel.save(self)
 
+    def _computeActions(self):
+        # Lazy import to prevent circular imports
+        from mint.django_rest.rbuilder.targets import models as tgtmodels
+
+        # Prime caches
+        modellib.Cache.all(tgtmodels.TargetType)
+        modellib.Cache.all(tgtmodels.Target)
+
+        self.actions = actions = jobmodels.Actions()
+        actions.action = []
+        # XXX FIXME REALLY BADLY: this needs to be cached
+        uqDeploy = dict()
+        uqLaunch = dict()
+        for bfile in self.files.all():
+            for tdi in bfile.target_deployable_images.all():
+                # If target_image_id is None, the image is not deployed,
+                # so we need to enable the action
+                enabled = (tdi.target_image_id is None)
+                uqDeploy[tdi.target_id] = (bfile.file_id, enabled)
+                uqLaunch[tdi.target_id] = bfile.file_id
+        for targetId, (buildFileId, enabled) in sorted(uqDeploy.items()):
+            tgt = modellib.Cache.get(tgtmodels.Target, pk=targetId)
+            tgtType = modellib.Cache.get(tgtmodels.TargetType, pk=tgt.target_type_id)
+            actionName = "Deploy image on '%s' (%s)" % (tgt.name, tgtType.name)
+            action = jobmodels.EventType.makeAction(
+                jobmodels.EventType.TARGET_DEPLOY_IMAGE,
+                actionName=actionName,
+                actionDescription=actionName,
+                descriptorModel=tgt,
+                descriptorHref="descriptors/deploy/file/%s" % ( buildFileId, ),
+                enabled=enabled)
+            actions.action.append(action)
+
+        for targetId, buildFileId in sorted(uqLaunch.items()):
+            enabled = True
+            tgt = modellib.Cache.get(tgtmodels.Target, pk=targetId)
+            tgtType = modellib.Cache.get(tgtmodels.TargetType, pk=tgt.target_type_id)
+            actionName = "Launch system on '%s' (%s)" % (tgt.name, tgtType.name)
+            action = jobmodels.EventType.makeAction(
+                jobmodels.EventType.TARGET_LAUNCH_SYSTEM,
+                actionName=actionName,
+                actionDescription=actionName,
+                descriptorModel=tgt,
+                descriptorHref="descriptors/launch/file/%s" % (buildFileId),
+                enabled=enabled)
+            actions.action.append(action)
+
+        return actions
 
 class BuildFiles(modellib.Collection):
     class Meta:
@@ -255,7 +312,7 @@ class BuildFile(modellib.XObjIdModel):
     class Meta:
         db_table = 'buildfiles'
     
-    _xobj_hidden_accessors = set(['buildfilesurlsmap_set'])
+    _xobj_explicit_accessors = set()
     _xobj = xobj.XObjMetadata(tag='file')
     
     file_id = models.AutoField(primary_key=True, db_column='fileid')
@@ -293,11 +350,10 @@ class ImageData(modellib.XObjIdModel):
 class FileUrl(modellib.XObjIdModel):
     class Meta:
         db_table = 'filesurls'
-    
+
     _xobj = xobj.XObjMetadata(tag='file_url')
-    # _xobj_explict_accessors = set(['downloads'])
-    _xobj_hidden_accessors = set(['buildfilesurlsmap_set'])
-    
+    _xobj_explicit_accessors = set(['downloads'])
+
     file_url_id = models.AutoField(primary_key=True, db_column='urlid')
     url_type = models.SmallIntegerField(null=False, db_column='urltype')
     url = models.CharField(max_length=255, null=False)
@@ -312,6 +368,15 @@ class BuildFilesUrlsMap(modellib.XObjModel):
     file = models.ForeignKey('BuildFile', null=False, db_column='fileid')
     url = models.ForeignKey('FileUrl', null=False, db_column='urlid')
 
+class JobImage(modellib.XObjModel):
+    class Meta:
+        db_table = u'jobs_job_image'
+
+    _xobj = xobj.XObjMetadata(tag='job_image')
+
+    id = models.AutoField(primary_key=True)
+    job = models.ForeignKey(jobmodels.Job, null=False, related_name='images')
+    image = models.ForeignKey(Image, null=False, related_name='_jobs')
 
 for mod_obj in sys.modules[__name__].__dict__.values():
     if hasattr(mod_obj, '_xobj'):

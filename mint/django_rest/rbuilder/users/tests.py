@@ -22,6 +22,8 @@ from conary.lib import digestlib
 
 from mint import mint_error
 from mint.django_rest.rbuilder.users import models
+from mint.django_rest.rbuilder.rbac import models as rbacmodels
+from mint.django_rest.rbuilder.querysets import models as querymodels
 from mint.django_rest.rbuilder.rbac.tests import RbacEngine
 from mint.django_rest.rbuilder.users import testsxml
 
@@ -98,27 +100,7 @@ class UsersTestCase(RbacEngine):
         response = self._post('users/',
             data=testsxml.users_post_xml,
         )
-        self.assertEquals(200, response.status_code)
-        user_posted = self.toXObj(response.content)
-        self.assertEquals(u'dcohn', user_posted.user_name)
-        self.assertEquals(u'Dan Cohn', user_posted.full_name)
-        ### NOTE: Below is commented out because id of user_posted
-        ###       is subject to change depending on what fixtures
-        ###       are loaded.
-        # self.failUnlessEqual(user_posted.user_id, '2001')
-        
-        user = models.User.objects.get(user_name=user_posted.user_name)
-        self.failUnlessEqual(user.salt, '0' * 8)
-        self.failUnlessEqual(user.getIsAdmin(), False)
-
-        # Try again
-        response = self._post('users/',
-            data=testsxml.users_post_xml,
-        )
-        self.failUnlessEqual(response.status_code, 403)
-        fault = self.toXObj(response.content)
-        self.failUnlessEqual(fault.code, '403')
-        self.failUnlessEqual(fault.message, 'User already exists')
+        self.assertEquals(401, response.status_code)
 
         # Create new user, now as an admin
         xml = testsxml.users_post_xml.replace('dcohn', 'testuser001')
@@ -130,7 +112,72 @@ class UsersTestCase(RbacEngine):
         user = self.toXObj(response.content)
         self.failUnlessEqual(user.is_admin, 'true')
         user = models.User.objects.get(user_name=user.user_name)
-        self.failUnlessEqual(user.getIsAdmin(), True)
+        self.failUnlessEqual(user.is_admin, True)
+
+    def testAddUserWithMyQuerysets(self):
+        self.mockMint()
+        response = self._post('users/',
+            data=testsxml.users_post_xml_can_create,
+            username='admin', password='password'
+        )
+        self.assertEquals(200, response.status_code)
+
+        user = self.toXObj(response.content)
+        self.failUnlessEqual(user.can_create, 'true')
+
+        # verify identity role exists
+        rbacmodels.RbacRole.objects.get(
+            name        = "user:%s" % user.user_name,
+            is_identity = True,
+        )
+        # verify personal querysets exist
+        sets = querymodels.QuerySet.objects.filter(
+            personal_for__user_name = user.user_name
+        )
+        self.failUnlessEqual(len(sets), 3)
+        for qs in sets:
+            grants = rbacmodels.RbacPermission.objects.filter(
+                queryset = qs
+            )
+            # should have create, modmember, and readset
+            self.failUnlessEqual(len(grants), 3)
+
+        # verify 3 grants exist for each personal queryset
+        # update the user to verify that nothing is mangled
+        # by re-saving with the can_create bit still set.
+        response = self._put("users/%s" % user.user_id,
+            data=testsxml.users_post_xml_can_create,
+            username='admin', password='password'
+        )
+        self.failUnlessEqual(response.status_code, 200)
+
+        # verify querysets are still present
+        rbacmodels.RbacRole.objects.get(
+            name        = "user:%s" % user.user_name,
+            is_identity = True,
+        )
+ 
+        # now save user back without the can create
+        # bit and see if things go away
+        cannot_create = testsxml.users_post_xml_can_create.replace(
+            '<can_create>true</can_create>',
+            '<can_create>false</can_create>'
+        )
+        response = self._put('users/%s' % user.user_id,
+            data=cannot_create,
+            username='admin', password='password'
+        )
+        self.failUnlessEqual(response.status_code, 200)
+
+        # verify my querysets are now missing
+        sets = querymodels.QuerySet.objects.filter(
+            personal_for__user_name = user.user_name
+        )
+        self.failUnlessEqual(len(sets), 0)
+        grants = rbacmodels.RbacPermission.objects.filter(
+            queryset__personal_for__user_name = user.user_name
+        )
+        self.failUnlessEqual(len(grants), 0)
 
     def testUpdateUser(self):
         self.mockMint()
@@ -148,9 +195,9 @@ class UsersTestCase(RbacEngine):
             data=testsxml.users_put_xml,
             username='admin', password='password')
         self.assertEquals(response.status_code, 200)
-        user_putted = self.toXObj(response.content)
-        self.assertEquals(user_putted.full_name, 'Changed Full Name')
-        self.assertEquals(user_putted.blurb, 'fear me')
+        user_put = self.toXObj(response.content)
+        self.assertEquals(user_put.full_name, 'Changed Full Name')
+        self.assertEquals(user_put.blurb, 'fear me')
 
         xml = "<user><user_name>foo</user_name></user>"
         response = self._put('users/1',
@@ -239,7 +286,7 @@ class UsersTestCase(RbacEngine):
         user = self.toXObj(response.content)
         self.failUnlessEqual(user.is_admin, 'false')
         user = models.User.objects.get(pk=user.user_id)
-        self.failUnlessEqual(user.getIsAdmin(), False)
+        self.failUnlessEqual(user.is_admin, False)
 
         # admin user unsetting is_admin
         xml = "<user><is_admin>false</is_admin></user>"
@@ -250,10 +297,10 @@ class UsersTestCase(RbacEngine):
         user = self.toXObj(response.content)
         self.failUnlessEqual(user.is_admin, 'true')
         user = models.User.objects.get(pk=1)
-        self.failUnlessEqual(user.getIsAdmin(), True)
+        self.failUnlessEqual(user.is_admin, True)
 
         # admin user promoting user to admin
-        xml = "<user><is_admin>1</is_admin></user>"
+        xml = "<user><is_admin>true</is_admin></user>"
         response = self._put('users/2000',
             data=xml,
             username='admin', password='password')
@@ -261,7 +308,7 @@ class UsersTestCase(RbacEngine):
         user = self.toXObj(response.content)
         self.failUnlessEqual(user.is_admin, 'true')
         user = models.User.objects.get(pk=user.user_id)
-        self.failUnlessEqual(user.getIsAdmin(), True)
+        self.failUnlessEqual(user.is_admin, True)
 
         # And doing it again
         response = self._put('users/2000',
@@ -269,7 +316,7 @@ class UsersTestCase(RbacEngine):
             username='admin', password='password')
         self.assertEquals(response.status_code, 200)
         user = models.User.objects.get(pk=user.user_id)
-        self.failUnlessEqual(user.getIsAdmin(), True)
+        self.failUnlessEqual(user.is_admin, True)
 
         # admin user demoting user from admin
         xml = "<user><is_admin>0</is_admin></user>"
@@ -279,7 +326,7 @@ class UsersTestCase(RbacEngine):
         user = self.toXObj(response.content)
         self.failUnlessEqual(user.is_admin, 'false')
         user = models.User.objects.get(pk=user.user_id)
-        self.failUnlessEqual(user.getIsAdmin(), False)
+        self.failUnlessEqual(user.is_admin, False)
 
     def testDeleteUser(self):
         # Can't delete yourself
@@ -310,18 +357,18 @@ class UsersTestCase(RbacEngine):
 
     def testUserGetIsAdmin(self):
         user = models.User.objects.get(user_name='admin')
-        self.failUnlessEqual(user.getIsAdmin(), True)
+        self.failUnlessEqual(user.is_admin, True)
         user = models.User.objects.get(user_name='testuser')
-        self.failUnlessEqual(user.getIsAdmin(), False)
+        self.failUnlessEqual(user.is_admin, False)
         # New user, not saved yet
         user = models.User(user_name='blah')
-        self.failUnlessEqual(user.getIsAdmin(), False)
+        self.failUnlessEqual(user.is_admin, False)
 
     def testIsAdmin(self):
         user = self.xobjResponse('users/1')
-        self.failUnlessEqual(user.is_admin, "true")
+        self.failUnlessEqual(user.is_admin, 'true')
         user = self.xobjResponse('users/2000')
-        self.failUnlessEqual(user.is_admin, "false")
+        self.failUnlessEqual(user.is_admin, 'false')
 
     def testGetSession(self):
         # Unauthenticated. We get back an empty <user/>
@@ -344,6 +391,7 @@ class UsersTestCase(RbacEngine):
         user.full_name = 'Jim Phoo'
         user.email = 'jphoo@noreply.com'
         user.password = 'abc'
+        user.deleted = False
         self.mgr.addUser(user)
         user = models.User.objects.get(user_name='jphoo')
         response = self._get('users/%s' % user.pk, username=user.user_name, password='abc')

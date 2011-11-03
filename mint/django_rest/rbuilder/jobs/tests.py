@@ -184,7 +184,7 @@ class JobCreationTest(BaseJobsTest, RepeaterMixIn):
         # Make sure the job is related to the target type
         self.failUnlessEqual(
             [ x.target_type.name for x in dbjob.jobtargettype_set.all() ],
-            [ 'xenent' ],
+            [ 'xen-enterprise' ],
         )
 
 
