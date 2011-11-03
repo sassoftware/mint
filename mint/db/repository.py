@@ -6,7 +6,6 @@
 A unified interface to rBuilder project repositories.
 """
 
-
 import errno
 import hashlib
 import logging
@@ -14,6 +13,7 @@ import os
 import time
 import weakref
 from collections import namedtuple
+from contextlib import contextmanager
 from conary import callbacks
 from conary import conarycfg
 from conary import conaryclient
@@ -938,11 +938,10 @@ class PostgreSQLRepositoryHandle(RepositoryHandle):
         controlDb = self._getControlConnection()
         ccu = controlDb.cursor()
 
-        if self._dbExists(controlDb, params.database):
-            # Database exists
-            log.error("PostgreSQL database %r already exists while "
-                    "creating project %r", params.database, self.shortName)
-            raise RepositoryAlreadyExists(self.shortName)
+        with self._safeReplace(controlDb) as replacedName:
+            if replacedName:
+                log.info("Renamed existing repository database %s to %s" %
+                        (params.database, replacedName))
 
         extra = ''
         if empty:
@@ -1028,7 +1027,7 @@ class PostgreSQLRepositoryHandle(RepositoryHandle):
         callback.restoreStarted(self.fqdn)
 
         try:
-            self._restore(path, params, tmpParams, controlDb, replaceExisting,
+            self._restore(path, tmpParams, controlDb, replaceExisting,
                     callback)
         except:
             failure = util.SavedException()
@@ -1040,7 +1039,7 @@ class PostgreSQLRepositoryHandle(RepositoryHandle):
                 log.exception("Failed to drop temporary database %s:", tmpName)
             failure.throw()
 
-    def _restore(self, path, params, tmpParams, controlDb, replaceExisting,
+    def _restore(self, path, tmpParams, controlDb, replaceExisting,
             callback):
         tmpName = tmpParams.database
         cxnArgs = "-h '%s' -p '%s' -U postgres" % (tmpParams.host,
@@ -1069,35 +1068,41 @@ class PostgreSQLRepositoryHandle(RepositoryHandle):
 
         # Rename into place
         ccu = controlDb.cursor()
-        replacedName = None
-        if self._dbExists(controlDb, params.database):
-            if not replaceExisting:
-                raise RuntimeError("Repository database %s already exists" %
-                        (params.database,))
-            # Rename the old database instead of dropping because it will be
-            # much faster.
-            replacedName = '_removed_%s_%s' % (params.database,
-                    os.urandom(6).encode('hex'))
-            callback.restoreRenaming(self.fqdn)
+        name = self._getParams().database
+        with self._safeReplace(controlDb) as replacedName:
+            ccu.execute('ALTER DATABASE "%s" RENAME TO "%s"' % (tmpName, name))
+            if replacedName:
+                callback.cleanupStarted(self.fqdn)
+                try:
+                    ccu.execute('DROP DATABASE "%s"' % (replacedName,))
+                except:
+                    log.exception(
+                            "Failed to drop old database %s; continuing:",
+                            replacedName)
+            callback.restoreCompleted(self.fqdn)
+
+    @contextmanager
+    def _safeReplace(self, controlDb):
+        """
+        On entry, suspend the DB and rename it to a temporary name.
+        Binds the temporary name.
+        On exit, resume.
+        """
+        name = self._getParams().database
+        if self._dbExists(controlDb, name):
+            temp = '_old_%s_%s' % (name, os.urandom(6).encode('hex'))
             bouncerDb = self._getBouncerConnection()
-            self._doBounce(bouncerDb, "KILL " + params.database)
-            ccu.execute('ALTER DATABASE "%s" RENAME TO "%s"' %
-                    (params.database, replacedName))
-
-        ccu.execute('ALTER DATABASE "%s" RENAME TO "%s"' % (tmpName,
-            params.database))
-        callback.restoreCompleted(self.fqdn)
-
-        callback.cleanupStarted(self.fqdn)
-        if replacedName:
-            self._doBounce(bouncerDb, "RESUME " + params.database)
+            self._doBounce(bouncerDb, "KILL " + name)
+            ccu = controlDb.cursor()
+            ccu.execute('ALTER DATABASE "%s" RENAME TO "%s"' % (name, temp))
+            yield temp
             try:
+                self._doBounce(bouncerDb, "RESUME " + name)
                 bouncerDb.close()
-                ccu.execute('DROP DATABASE "%s"' % (replacedName,))
             except:
-                log.exception("Failed to drop old database %s; continuing:",
-                        replacedName)
-        callback.cleanupCompleted(self.fqdn)
+                log.exception("Failed to resume database %s; continuing:", name)
+        else:
+            yield None
 
 
 class ConnectString(namedtuple('ConnectString', 'user host port database')):
@@ -1139,9 +1144,6 @@ class DatabaseRestoreCallback(callbacks.Callback):
 
     def cleanupStarted(self, fqdn):
         self._info("Cleaning up old database for project %s", fqdn)
-
-    def cleanupCompleted(self, fqdn):
-        self._info("Finished cleanup of project %s", fqdn)
 
     def _info(self, message, *args):
         log.info(message, *args)
