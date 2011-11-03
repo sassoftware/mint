@@ -433,6 +433,7 @@ releases_by_project_get_xml = \
     <published>False</published>
     <images>
       <image id="http://testserver/api/v1/images/2">
+        <actions/>
         <files/>
         <trove_last_changed></trove_last_changed>
         <updated_by></updated_by>
@@ -472,6 +473,7 @@ releases_by_project_get_xml = \
         <release id="http://testserver/api/v1/releases/1"/>
         <image_count>1</image_count>
         <job_uuid>1</job_uuid>
+        <jobs id="http://testserver/api/v1/images/2/jobs"/>
       </image>
     </images>
     <time_mirrored></time_mirrored>
@@ -496,6 +498,7 @@ releases_by_project_get_xml = \
     <published>False</published>
     <images>
       <image id="http://testserver/api/v1/images/3">
+        <actions/>
         <files/>
         <trove_last_changed></trove_last_changed>
         <updated_by></updated_by>
@@ -535,6 +538,7 @@ releases_by_project_get_xml = \
         <release id="http://testserver/api/v1/releases/2"/>
         <image_count>1</image_count>
         <job_uuid>1</job_uuid>
+        <jobs id="http://testserver/api/v1/images/3/jobs"/>
       </image>
     </images>
     <time_mirrored></time_mirrored>
@@ -560,6 +564,7 @@ image_by_release_get_xml = \
 <?xml version='1.0' encoding='UTF-8'?>
 <images count="1" next_page="" num_pages="1" previous_page="" full_collection="" end_index="0" limit="10" order_by="" per_page="10" filter_by="" start_index="0">
   <image id="http://testserver/api/v1/images/2">
+    <actions/>
     <files/>
     <trove_last_changed></trove_last_changed>
     <updated_by></updated_by>
@@ -599,6 +604,7 @@ image_by_release_get_xml = \
     <release id="http://testserver/api/v1/releases/1"/>
     <image_count>1</image_count>
     <job_uuid>1</job_uuid>
+    <jobs id="http://testserver/api/v1/images/2/jobs"/>
   </image>
 </images>
 """.strip()
@@ -638,6 +644,7 @@ image_by_release_post_result_xml = \
 """
 <?xml version='1.0' encoding='UTF-8'?>
 <image id="http://testserver/api/v1/images/4">
+  <actions/>
   <files/>
   <trove_last_changed></trove_last_changed>
   <updated_by></updated_by>
@@ -677,5 +684,6 @@ image_by_release_post_result_xml = \
   <release></release>
   <image_count>0</image_count>
   <job_uuid>1</job_uuid>
+  <jobs id="http://testserver/api/v1/images/4/jobs"/>
 </image>
 """.strip()
