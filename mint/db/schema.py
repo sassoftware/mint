@@ -28,7 +28,7 @@ from conary.dbstore import sqlerrors, sqllib
 log = logging.getLogger(__name__)
 
 # database schema major version
-RBUILDER_DB_VERSION = sqllib.DBversion(60, 5)
+RBUILDER_DB_VERSION = sqllib.DBversion(60, 6)
 
 def _createTrigger(db, table, column="changed"):
     retInsert = db.createTrigger(table, column, "INSERT")
@@ -82,6 +82,10 @@ def _createUsers(db):
             deleted              BOOLEAN       NOT NULL    DEFAULT false
         ) %(TABLEOPTS)s""" % db.keywords)
         db.tables['Users'] = []
+    if db.driver != 'sqlite':
+        # Create a case-insensitive unique constraint on username
+        db.createIndex('Users', 'users_username_casei_uq',
+                '( UPPER(username) )', unique=True)
     db.createIndex('Users', 'UsersActiveIdx', 'username, active')
 
     if 'UserData' not in db.tables:
@@ -308,6 +312,10 @@ def _createProjects(db):
     db.createIndex('Projects', 'ProjectsShortnameIdx', 'shortname')
     db.createIndex('Projects', 'ProjectsDisabledIdx', 'disabled')
     db.createIndex('Projects', 'ProjectsHiddenIdx', 'hidden')
+    if db.driver != 'sqlite':
+        # Case-insensitive constraints
+        db.createIndex('Projects', 'projects_shortname_casei_uq',
+                '( UPPER(shortname) )', unique=True)
 
     if 'ProjectUsers' not in db.tables:
         cu.execute("""

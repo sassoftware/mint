@@ -4452,7 +4452,7 @@ class MigrateTo_59(SchemaMigration):
 
 class MigrateTo_60(SchemaMigration):
     '''Edge-P3'''
-    Version = (60, 5)
+    Version = (60, 6)
 
     def migrate(self):
         '''"My" querysets feature'''
@@ -4544,6 +4544,16 @@ class MigrateTo_60(SchemaMigration):
                         ON DELETE CASCADE,
         """)
         return True
+
+    def migrate6(self):
+        # Case-insensitive unique constraints
+        if self.db.driver != 'sqlite':
+            self.db.createIndex('Users', 'users_username_casei_uq',
+                    '( UPPER(username) )', unique=True)
+            self.db.createIndex('Projects', 'projects_shortname_casei_uq',
+                    '( UPPER(shortname) )', unique=True)
+        return True
+
 
 #### SCHEMA MIGRATIONS END HERE #############################################
 
