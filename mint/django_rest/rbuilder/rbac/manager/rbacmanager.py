@@ -381,7 +381,7 @@ class RbacManager(basemanager.BaseManager):
                 ).distinct() | querymodels.QuerySet.objects.filter(
                     personal_for = user
                 ).distinct()
-                querysets_obj = querymodels.QuerySets()
+                querysets_obj = querymodels.FavoriteQuerySets()
                 querysets_obj.query_set = results
                 return querysets_obj
         results = orig_results.filter(
@@ -407,7 +407,10 @@ class RbacManager(basemanager.BaseManager):
                 personal_for = user
             ).distinct()
 
-        querysets_obj = querymodels.QuerySets()
+        if not _favorites:
+            querysets_obj = querymodels.QuerySets()
+        else:
+            querysets_obj = querymodels.FavoriteQuerySets()
         querysets_obj.query_set = results
         return querysets_obj
 

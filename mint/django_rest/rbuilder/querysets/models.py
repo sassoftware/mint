@@ -70,6 +70,16 @@ class GrantMatrix(modellib.XObjIdModel):
                 tag = "grant_matrix")
     view_name = "QuerySetGrantMatrix"
 
+class FavoriteQuerySets(modellib.Collection):
+    '''A list of all query sets in the rBuilder'''
+    class Meta:
+        abstract = True
+    _xobj = xobj.XObjMetadata(
+                tag = "favorite_query_sets")
+    list_fields = ["query_set"]
+    query_set = []
+    view_name = 'FavoriteQuerySets'
+
 class QuerySets(modellib.Collection):
     '''A list of all query sets in the rBuilder'''
     class Meta:
