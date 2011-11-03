@@ -861,31 +861,31 @@ class QuerySetManager(basemanager.BaseManager):
     # "My Querysets" feature
 
     @exposed
-    def configureMyQuerysets(self, user):
+    def configureMyQuerysets(self, user, byUser):
         '''
         My Querysets allow the user a home for items they create.
         They are created when a user is saved with the can_create bit
         set and removed when it is not set
         '''
         if user.can_create:
-            self._createMyQuerysets(user)
+            self._createMyQuerysets(user, byUser)
         else:
             self._removeMyQuerysets(user)
 
-    def _createMyQuerysets(self, user):
+    def _createMyQuerysets(self, user, byUser):
         '''create a user's personal querysets, roles, and grants'''
-        role = self.mgr.getOrCreateIdentityRole(user)
+        role = self.mgr.getOrCreateIdentityRole(user, byUser)
 
         # TODO: add My Images once available
         querysets = [
-            self._createMyProjects(user),
-            self._createMyStages(user),
-            self._createMySystems(user),
+            self._createMyProjects(user, byUser),
+            self._createMyStages(user, byUser),
+            self._createMySystems(user, byUser),
         ]
         for qs in querysets:
-            self.mgr.addIdentityRoleGrants(qs, role)
+            self.mgr.addIdentityRoleGrants(qs, role, byUser)
 
-    def _myQuerySet(self, user, name, resource_type, presentation_type=None):
+    def _myQuerySet(self, user, byUser, name, resource_type, presentation_type=None):
         # common code between each type of personal queryset
 
         name = "%s (%s)" % (name, user.user_name)
@@ -916,9 +916,9 @@ class QuerySetManager(basemanager.BaseManager):
                 presentation_type = presentation_type,
                 resource_type = resource_type, 
                 is_public = False,
-                personal_for = user
+                personal_for = user,
             )
-            qs = self.mgr.addQuerySet(qs, None)
+            qs = self.mgr.addQuerySet(qs, byUser)
         else:
             qs = possible_qs[0]
 
@@ -940,14 +940,14 @@ class QuerySetManager(basemanager.BaseManager):
 
         return qs
 
-    def _createMyProjects(self, user):
-        return self._myQuerySet(user, 'My Projects', 'project')
+    def _createMyProjects(self, user, byUser):
+        return self._myQuerySet(user, byUser, 'My Projects', 'project')
 
-    def _createMyStages(self, user):
-        return self._myQuerySet(user, 'My Stages', 'project_branch_stage', 'project')
+    def _createMyStages(self, user, byUser):
+        return self._myQuerySet(user, byUser, 'My Stages', 'project_branch_stage', 'project')
 
-    def _createMySystems(self, user):
-        return self._myQuerySet(user, 'My Systems', 'system')
+    def _createMySystems(self, user, byUser):
+        return self._myQuerySet(user, byUser, 'My Systems', 'system')
 
     # TODO: add My Images once unified images are available
      

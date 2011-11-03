@@ -392,7 +392,7 @@ class UsersTestCase(RbacEngine):
         user.email = 'jphoo@noreply.com'
         user.password = 'abc'
         user.deleted = False
-        self.mgr.addUser(user)
+        self.mgr.addUser(user, user)
         user = models.User.objects.get(user_name='jphoo')
         response = self._get('users/%s' % user.pk, username=user.user_name, password='abc')
         self.assertEquals(response.status_code, 200)

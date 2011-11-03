@@ -561,7 +561,7 @@ class RbacManager(basemanager.BaseManager):
     # the user account
 
     @exposed
-    def getOrCreateIdentityRole(self, user):
+    def getOrCreateIdentityRole(self, user, byUser):
         # users need to be a in group that contains them
         # similar to Unix user groups in this respect
         # except only create them if we know the user
@@ -569,12 +569,15 @@ class RbacManager(basemanager.BaseManager):
         if not user.can_create:
             raise Exception('internal error: user creation rights not set')
         role_name = "user:%s" % user.user_name
-        role = models.RbacRole.objects.get_or_create(
+        role, created = models.RbacRole.objects.get_or_create(
             name = role_name,
             is_identity = True
-        )[0]
-        role.description = "identity role for user"
-        role.save()
+        )
+        if created:
+            role.description = "identity role"
+            role.created_by = byUser
+            role.modified_by = byUser
+            role.save()
         user = usermodels.User.objects.get(user_name=user.user_name)
         models.RbacUserRole.objects.get_or_create(
             user=user, 
@@ -597,7 +600,7 @@ class RbacManager(basemanager.BaseManager):
         # grants will be deleted by cascade
 
     @exposed
-    def addIdentityRoleGrants(self, queryset, role):
+    def addIdentityRoleGrants(self, queryset, role, byUser):
         # for a my queryset, add permissions so that it's fully usable --
         # a user can create and can see/edit what they own
         if queryset.personal_for is None:
@@ -608,10 +611,14 @@ class RbacManager(basemanager.BaseManager):
         modmembers = models.RbacPermissionType.objects.get(name=MODMEMBERS)
         readset = models.RbacPermissionType.objects.get(name=READSET)
         for permission_type in [ createresource, modmembers, readset ]: 
-            models.RbacPermission.objects.get_or_create(
+            perm, created = models.RbacPermission.objects.get_or_create(
                 role = role,
                 queryset = queryset,
                 permission = permission_type
-            )[0]
-  
+            )
+            if created:
+                perm.created_by = byUser
+                perm.modified_by = byUser
+                perm.save()
+            
 

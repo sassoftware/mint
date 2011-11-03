@@ -106,6 +106,7 @@ class QuerySet(modellib.XObjIdModel):
                 tag = "query_set")
     _xobj_explicit_accessors = set([])
     _m2m_safe_to_create = [ 'filter_entries' ]
+    summary_view = [ 'name', 'description' ]
 
     query_set_id = D(models.AutoField(primary_key=True),
         "The database id for the query set")

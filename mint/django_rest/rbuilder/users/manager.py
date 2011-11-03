@@ -80,8 +80,8 @@ class UsersManager(basemanager.BaseManager):
         dbuser.is_admin    = user.is_admin
         dbuser.deleted     = False
         dbuser.save()
-        self.mgr.getOrCreateIdentityRole(user)
-        self.mgr.configureMyQuerysets(dbuser)
+        self.mgr.getOrCreateIdentityRole(user, by_user)
+        self.mgr.configureMyQuerysets(dbuser, by_user)
         self.mgr.retagQuerySetsByType('user', by_user)
         return dbuser
 
@@ -127,7 +127,7 @@ class UsersManager(basemanager.BaseManager):
         user.deleted = False
         user.save()
         user = self._setPassword(user, user.password)
-        self.mgr.configureMyQuerysets(user)
+        self.mgr.configureMyQuerysets(user, by_user)
         return user
 
     def _commit(self):
