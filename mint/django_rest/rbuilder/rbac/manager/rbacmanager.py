@@ -483,6 +483,11 @@ class RbacManager(basemanager.BaseManager):
             return True
         
         querysets = self.mgr.getQuerySetsForResource(resource)
+        if type(querysets) != list:
+            querysets = querysets.values_list('pk', flat=True)
+        else:
+            querysets = [q.pk for q in querysets]
+
         if len(querysets) == 0:
             return False 
 
@@ -496,7 +501,7 @@ class RbacManager(basemanager.BaseManager):
         # there is queryset/roles info, so now find the permissions associated
         # with the queryset
         permitted = models.RbacPermission.objects.select_related('rbac_permission_type').filter(
-            queryset__in = querysets,
+            queryset__pk__in = querysets,
             role__rbacuserrole__user = user,
             permission__name__in = acceptable_permissions
         ).count()
