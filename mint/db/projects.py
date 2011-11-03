@@ -478,6 +478,8 @@ class LabelsTable(database.KeyedTable):
                 userMap.append((host, (username, password)))
             elif authType == 'entitlement':
                 entMap.append((host, ('', entitlement)))
+            else:
+                userMap.append((host, (self.cfg.authUser, self.cfg.authPass)))
 
         return labelIdMap, repoMap, userMap, entMap
 
