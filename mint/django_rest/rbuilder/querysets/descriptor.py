@@ -111,8 +111,9 @@ def boolOperatorChoices():
     return operatorChoices
 
 def getFieldOperatorChoices(field):
+
     operatorChoices = None
-    if isinstance(field, models.IntegerField):
+    if isinstance(field, models.IntegerField) or isinstance(field, models.AutoField):
         operatorChoices = allOperatorChoices()
     elif isinstance(field, models.BooleanField):
         operatorChoices = boolOperatorChoices()
