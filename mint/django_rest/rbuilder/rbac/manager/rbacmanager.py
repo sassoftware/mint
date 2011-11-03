@@ -434,8 +434,6 @@ class RbacManager(basemanager.BaseManager):
         as a chosen member?  The resource_type is a queryset resource
         type, not a model, database,  or tag name.
         '''
-        #tags__query_set__grants__role__rbacuserrole__user = for_user,
-        #tags__query_set__grants__permission__name__in = [ READMEMBERS, MODMEMBERS ]
         granting_sets = querymodels.QuerySet.objects.filter(
             resource_type = resource_type,
             grants__role__rbacuserrole__user = user,
