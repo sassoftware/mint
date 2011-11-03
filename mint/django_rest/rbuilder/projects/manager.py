@@ -75,7 +75,7 @@ class ProjectManager(basemanager.BaseManager):
                 label.auth_type = project.auth_type
                 label.user_name = project.user_name
                 label.password = project.password
-                label.entitlement = project.entitlement
+                label.entitlement = str(project.entitlement)
         else:
             # Internal projects always need a database
             project.auth_type = label.auth_type = 'none'

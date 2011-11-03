@@ -1677,9 +1677,8 @@ If you would not like to be %s %s of this project, you may resign from this proj
                 project = projects.Project(self, projectId)
 
                 if not project.external:
-                    authRepo = self._getProjectRepo(project)
-                    authRepo.changePassword(project.getFQDN(), username,
-                        newPassword)
+                    authRepo = self._getProjectRepo(project, useServer=True)
+                    authRepo.auth.changePassword(username, newPassword)
 
             self.users.changePassword(username, newPassword)
 
