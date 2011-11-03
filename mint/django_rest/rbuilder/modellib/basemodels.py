@@ -1799,7 +1799,10 @@ class Cache(object):
     def get(cls, modelClass, **kwargs):
         cached = cls._getCachedClass(modelClass)
         keyName, keyValue = kwargs.items()[0]
-        return cached.get(keyName, keyValue)
+        try:
+            return cached.get(keyName, keyValue)
+        except KeyError:
+            raise modelClass.DoesNotExist()
 
     @classmethod
     def all(cls, modelClass):

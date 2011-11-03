@@ -406,7 +406,7 @@ class TargetsManager(basemanager.BaseManager, CatalogServiceHelper):
 class TargetTypesManager(basemanager.BaseManager, CatalogServiceHelper):
     @exposed
     def getTargetTypeById(self, targetTypeId):
-        return modellib.Cache.get(models.TargetType, pk=targetTypeId)
+        return modellib.Cache.get(models.TargetType, pk=int(targetTypeId))
 
     @exposed
     def getTargetTypeByName(self, targetTypeName):
