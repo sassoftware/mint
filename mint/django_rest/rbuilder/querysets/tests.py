@@ -69,7 +69,7 @@ class QuerySetTestCase(QueryTestCase):
             username="admin", password="password")
         self.assertEquals(response.status_code, 200)
         querySets = xobj.parse(response.content)
-        length = len(querySets.query_sets.query_set)
+        length = len(querySets.favorite_query_sets.query_set)
         self.assertEqual(length, 5)
 
     def testGetQuerySet(self):
