@@ -43,13 +43,10 @@ class MirrorOutbound(MirrorScript):
             cfg = mirror.MirrorFileConfiguration()
 
             sourceProject = client.getProject(int(sourceProjectId))
-            sourceLabelId = sourceProject.getLabelIdMap().values()[0]
             log.info("Mirroring %s", sourceProject.name)
 
             try:
-                labelInfo = client.getLabel(sourceLabelId)
-                labelStr = labelInfo['label']
-                cfg.host = reposHost = versions.Label(labelStr).getHost()
+                cfg.host = reposHost = sourceProject.fqdn
 
                 sourceProjCCfg = sourceProject.getConaryConfig()
                 sourceUrl = sourceProjCCfg.repositoryMap[reposHost]

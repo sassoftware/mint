@@ -53,7 +53,7 @@ class Project(database.TableObject):
         return self.hostname
 
     def getFQDN(self):
-        return '.'.join((self.hostname, self.domainname))
+        return self.fqdn
 
     def getLabel(self):
         return self.server.getDefaultProjectLabel(self.id)
