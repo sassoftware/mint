@@ -384,8 +384,11 @@ class TargetsManager(basemanager.BaseManager, CatalogServiceHelper):
               FROM tmp_target_image""")
 
     def _image(self, target, image):
-        imageName = self._unXobj(getattr(image, 'productName',
-            getattr(image, 'shortName', getattr(image, 'longName'))))
+        imageName = self._unXobj(getattr(image, 'productName', None))
+        if imageName is None:
+            imageName = self._unXobj(getattr(image, 'shortName', None))
+        if imageName is None:
+            imageName = self._unXobj(getattr(image, 'longName', None))
         imageDescription = self._unXobj(getattr(image, 'longName', imageName))
         imageId = self._unXobj(getattr(image, 'internalTargetId'))
         rbuilderImageId = self._unXobj(getattr(image, 'imageId'))
