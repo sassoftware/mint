@@ -17,7 +17,7 @@ from django.db import IntegrityError, transaction
 from xobj import xobj
 from smartform import descriptor as smartdescriptor
 
-from mint import buildtypes
+from mint import buildtypes, urltypes
 from mint.lib import uuid
 from mint.django_rest.rbuilder import errors
 from mint.django_rest.rbuilder import modellib
@@ -475,15 +475,39 @@ class JobHandlerRegistry(HandlerRegistry):
                 targetUserCredentials)
             return cli.targets.deployImage
 
+        def _getImageBaseFileName(self):
+            vals = self.image.image_data.filter(name='baseFileName').values('value')
+            if not vals:
+                return None
+            return vals[0]['value']
+
         def getRepeaterMethodArgs(self, job):
-            # XXX FIXME
-            host = self.mgr.mgr.restDb.cfg.siteHost
             imageDownloadUrl = self.mgr.mgr.restDb.imageMgr.getDownloadUrl(self.image_file.file_id)
+            hostname = self.image.project.short_name
+            baseFileName = self._getImageBaseFileName()
+            troveFlavor = (self.image.trove_flavor or '').encode('ascii')
+            baseFileName = self.mgr.mgr.restDb.imageMgr._getBaseFileName(
+                baseFileName, hostname, self.image.trove_name,
+                self.image.trove_version, troveFlavor,
+            )
+
+            urls = self.image_file.buildfilesurlsmap_set.filter(
+                url__url_type=urltypes.LOCAL).values('url__url')
+            imageFileInfo = dict(
+                size=self.image_file.size,
+                sha1=self.image_file.sha1,
+                fileId=self.image_file.file_id,
+                baseFileName=baseFileName,
+            )
+            if urls:
+                imageFileInfo['name'] = os.path.basename(urls[0]['url__url'])
             params = dict(
-                descriptor_data=job._descriptor_data,
+                descriptorData=job._descriptor_data,
+                imageFileInfo=imageFileInfo,
                 imageDownloadUrl=imageDownloadUrl,
-                imageTargetLinkUrl='https://%s/.../%s' % (
-                        host, self.image_file.file_id),
+                targetImageXmlTemplate=self._targetImageXmlTemplate(),
+                imageFileUpdateUrl='http://localhost/api/v1/images/%s/build_files/%s' % (
+                        self.image.image_id, self.image_file.file_id),
             )
             return (params, ), {}
 
@@ -492,6 +516,18 @@ class JobHandlerRegistry(HandlerRegistry):
 
         def getRelatedResource(self, descriptor):
             return self.image
+
+        def _targetImageXmlTemplate(self):
+            tmpl = """\
+<file>
+  <target_images>
+    <target_image>
+      <target id="/api/v1/targets/%(targetId)s"/>
+      %%(image)s
+    </target_image>
+  </target_images>
+</file>"""
+            return tmpl % dict(targetId=self.target.target_id)
 
     class TargetLaunchSystem(DescriptorJobHandler):
         __slots__ = []

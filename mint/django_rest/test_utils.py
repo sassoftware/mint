@@ -153,6 +153,9 @@ class XMLTestCase(TestCase, testcase.MockMixIn):
         return cfg
 
     def setUp(self):
+        # django tries to be smart and not print large diffs. That's not
+        # very helpful
+        self.maxDiff = None
         self.workDir = tempfile.mkdtemp(dir="/tmp", prefix="rbuilder-django-")
         mintCfgPath = os.path.join(self.workDir, "mint.cfg")
         self.mintCfg = self._getMintConfig()

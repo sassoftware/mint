@@ -9,8 +9,7 @@ from django.http import HttpResponse, HttpResponseRedirect
 
 from mint.django_rest.deco import access, return_xml, requires
 from mint.django_rest.rbuilder import service
-from mint.django_rest.rbuilder.inventory.views import StageProxyService
-from mint.django_rest.rbuilder.rbac.rbacauth import rbac
+from mint.django_rest.rbuilder.rbac.rbacauth import rbac, manual_rbac
 from mint.django_rest.rbuilder.errors import PermissionDenied
 from mint.django_rest.rbuilder.rbac.manager.rbacmanager import \
    READMEMBERS, MODMEMBERS
@@ -295,31 +294,39 @@ class ProjectBranchService(service.BaseService):
         return response
 
 
-class ProjectService(service.BaseService):
+class ProjectsService(service.BaseService):
 
     # manual RBAC, see get function
-    @access.authenticated
+    @rbac(manual_rbac)
     @return_xml
-    def rest_GET(self, request, project_short_name=None):
-        if project_short_name:
-            if ProjectCallbacks.can_read_project(self, request, project_short_name):
-                return self.get(project_short_name)
-            raise PermissionDenied(msg='Missing read permissions on project')
-        else:
-            # all security here done by the queryset
-            qs = querymodels.QuerySet.objects.get(name='All Projects')
-            url = '/api/v1/query_sets/%s/all%s' % (qs.pk, request.params)
-            return HttpResponseRedirect(url)
+    def rest_GET(self, request):
+        # all security here done by the queryset
+        qs = querymodels.QuerySet.objects.get(name='All Projects')
+        url = '/api/v1/query_sets/%s/all%s' % (qs.pk, request.params)
+        return HttpResponseRedirect(url)
 
-    def get(self, project_short_name):
-        model = self.mgr.getProject(project_short_name)
-        return model
+    def get(self):
+        pass
 
     @rbac(ProjectCallbacks.can_create_project)
     @requires('project')
     @return_xml
     def rest_POST(self, request, project):
         return self.mgr.addProject(project, for_user=request._authUser)
+
+class ProjectService(service.BaseService):
+
+    # manual RBAC, see get function
+    @rbac(manual_rbac)
+    @return_xml
+    def rest_GET(self, request, project_short_name):
+        if ProjectCallbacks.can_read_project(self, request, project_short_name):
+            return self.get(project_short_name)
+        raise PermissionDenied(msg='Missing read permissions on project')
+
+    def get(self, project_short_name):
+        model = self.mgr.getProject(project_short_name)
+        return model
 
     @rbac(ProjectCallbacks.can_write_project)
     @requires('project')
