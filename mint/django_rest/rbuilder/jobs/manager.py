@@ -487,9 +487,10 @@ class JobHandlerRegistry(HandlerRegistry):
             imageDownloadUrl = self.mgr.mgr.restDb.imageMgr.getDownloadUrl(self.image_file.file_id)
             hostname = self.image.project.short_name
             baseFileName = self._getImageBaseFileName()
+            troveFlavor = (self.image.trove_flavor or '').encode('ascii')
             baseFileName = self.mgr.mgr.restDb.imageMgr._getBaseFileName(
                 baseFileName, hostname, self.image.trove_name,
-                self.image.trove_version, self.image.trove_flavor,
+                self.image.trove_version, troveFlavor,
             )
 
             urls = self.image_file.buildfilesurlsmap_set.filter(
