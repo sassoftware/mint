@@ -28,7 +28,7 @@ from conary.dbstore import sqlerrors, sqllib
 log = logging.getLogger(__name__)
 
 # database schema major version
-RBUILDER_DB_VERSION = sqllib.DBversion(60, 5)
+RBUILDER_DB_VERSION = sqllib.DBversion(60, 8)
 
 def _createTrigger(db, table, column="changed"):
     retInsert = db.createTrigger(table, column, "INSERT")
@@ -82,6 +82,10 @@ def _createUsers(db):
             deleted              BOOLEAN       NOT NULL    DEFAULT false
         ) %(TABLEOPTS)s""" % db.keywords)
         db.tables['Users'] = []
+    if db.driver != 'sqlite':
+        # Create a case-insensitive unique constraint on username
+        db.createIndex('Users', 'users_username_casei_uq',
+                '( UPPER(username) )', unique=True)
     db.createIndex('Users', 'UsersActiveIdx', 'username, active')
 
     if 'UserData' not in db.tables:
@@ -271,6 +275,27 @@ def _createRbac(db):
     
     _createNonIdentityRoles(db)
 
+    createTable(db, 'querysets_imagetag', """
+        CREATE TABLE "querysets_imagetag" (
+            "image_tag_id" %(BIGPRIMARYKEY)s,
+            "image_id" INTEGER
+                REFERENCES "builds" ("buildid")
+                ON DELETE CASCADE
+                NOT NULL,
+            "query_set_id" INTEGER
+                REFERENCES "querysets_queryset" ("query_set_id")
+                ON DELETE CASCADE,
+            "inclusion_method_id" INTEGER
+                REFERENCES "querysets_inclusionmethod" ("inclusion_method_id")
+                ON DELETE CASCADE
+                NOT NULL,
+            CONSTRAINT querysets_imagetag_uq UNIQUE ("image_id", "query_set_id",
+                "inclusion_method_id")
+        )""")
+
+
+    _createAllImages(db)
+
 
 def _createProjects(db):
     cu = db.cursor()
@@ -308,6 +333,10 @@ def _createProjects(db):
     db.createIndex('Projects', 'ProjectsShortnameIdx', 'shortname')
     db.createIndex('Projects', 'ProjectsDisabledIdx', 'disabled')
     db.createIndex('Projects', 'ProjectsHiddenIdx', 'hidden')
+    if db.driver != 'sqlite':
+        # Case-insensitive constraints
+        db.createIndex('Projects', 'projects_shortname_casei_uq',
+                '( UPPER(shortname) )', unique=True)
 
     if 'ProjectUsers' not in db.tables:
         cu.execute("""
@@ -2294,6 +2323,14 @@ def _createAllGrants(db, version=None):
             "IS_NULL", "false")
     _addQuerySet(db, "All Grants", "All grants", "grant", False,
             filterId, 'rbac', version=version)
+    return True
+
+def _createAllImages(db, version=None):
+    """Add the all images query set"""
+    filterId = _addQuerySetFilterEntry(db, "image.image_id",
+            "IS_NULL", "false")
+    _addQuerySet(db, "All Images", "All images", "image", False,
+            filterId, 'image', version=version)
     return True
 
 

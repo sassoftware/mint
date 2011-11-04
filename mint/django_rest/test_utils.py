@@ -128,6 +128,8 @@ class XMLTestCase(TestCase, testcase.MockMixIn):
         file(metadataDescriptorFile, "w").write("""\
 <metadataDescriptor>
   <metadata>
+    <displayName>Metadata Descriptor</displayName>
+    <descriptions/>
   </metadata>
   <dataFields>
     <field>

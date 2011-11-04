@@ -7,9 +7,11 @@
 import errno
 import logging
 import os
+from django.core import urlresolvers
 from mint.django_rest.rbuilder.jobs import models as jobsmodels
 from mint.django_rest.rbuilder.images import models
 from mint.django_rest.rbuilder.projects import models as projectsmodels
+from mint.django_rest.rbuilder.targets import models as tgtmodels
 from mint.django_rest.rbuilder.manager import basemanager
 from conary.lib import sha1helper
 from mint.lib import data as datatypes
@@ -102,7 +104,6 @@ class ImagesManager(basemanager.BaseManager):
         return bf
 
     def recordTargetInternalId(self, buildFile, target, targetInternalId):
-        from mint.django_rest.rbuilder.targets import models as tgtmodels
         m = tgtmodels.TargetImagesDeployed(build_file=buildFile,
             target=target, target_image_id=targetInternalId)
         m.save()
@@ -232,3 +233,27 @@ class ImagesManager(basemanager.BaseManager):
         Jobs = jobsmodels.Jobs()
         Jobs.job = jobs
         return Jobs
+
+    @exposed
+    def addTargetImagesForFile(self, obj):
+        targetImages = getattr(obj, 'target_images', None)
+        if targetImages is None:
+            return
+        targetImages = getattr(targetImages, 'target_image', None)
+        if targetImages is None:
+            return
+        if not isinstance(targetImages, list):
+            targetImages = [ targetImages ]
+        for targetImage in targetImages:
+            targetId = targetImage.target.id
+            match = urlresolvers.resolve(targetId)
+            if not match:
+                continue
+            targetId = match.kwargs['target_id']
+            target = tgtmodels.Target.objects.get(target_id=targetId)
+            img = targetImage.image
+            timgModel = self.mgr.addTargetImage(target, img)
+            tgtmodels.TargetImagesDeployed.objects.create(target=target,
+                target_image_id=timgModel.target_internal_id,
+                build_file=obj)
+

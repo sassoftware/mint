@@ -1,6 +1,7 @@
 #
 # Copyright (c) 2011 rPath, Inc.
 #
+from conary.repository.netrepos.netauth import ValidPasswordToken
 from mint.django_rest.rbuilder.models import Sessions
 from mint.django_rest.rbuilder.users.models import User
 from mint.lib import auth_client
@@ -27,6 +28,8 @@ def getCookieAuth(request):
         session = Sessions.objects.get(sid=sid)
         d = cPickle.loads(str(session.data))
         username, password = d['_data']['authToken']
+        if password == '':
+            password = ValidPasswordToken
         return (username, password)
     except:
         pass
@@ -74,6 +77,9 @@ class rBuilderBackend(object):
             user = User.objects.get(user_name=username, deleted=False)
         except User.DoesNotExist:
             return None
+        if password is ValidPasswordToken:
+            self.update_login_time(user)
+            return user
         if user.passwd and user.salt:
             salt = user.salt.decode('hex')
             m = md5(salt + password)

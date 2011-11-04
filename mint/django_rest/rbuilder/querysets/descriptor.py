@@ -111,13 +111,14 @@ def boolOperatorChoices():
     return operatorChoices
 
 def getFieldOperatorChoices(field):
-    if isinstance(field, models.IntegerField):
-        operatorChoices = allOperatorChoices()
-    if isinstance(field, models.BooleanField):
-        operatorChoices = boolOperatorChoices()
 
-    # Default to str
-    operatorChoices = strOperatorChoices()
+    operatorChoices = None
+    if isinstance(field, models.IntegerField) or isinstance(field, models.AutoField):
+        operatorChoices = allOperatorChoices()
+    elif isinstance(field, models.BooleanField):
+        operatorChoices = boolOperatorChoices()
+    else:
+        operatorChoices = strOperatorChoices()
 
     if field.null:
         operator = modellib.operatorMap['IS_NULL']

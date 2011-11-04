@@ -70,6 +70,7 @@ from conary.repository.errors import TroveNotFound, UserNotFound
 from conary.repository import netclient
 from conary.repository import shimclient
 from conary.repository.netrepos.reposlog import RepositoryCallLogger as CallLogger
+from conary.repository.netrepos.netauth import ValidPasswordToken
 from conary import errors as conary_errors
 
 from mcp import client as mcp_client
@@ -268,19 +269,12 @@ class MintServer(object):
                 # the session id from the client is a hmac-signed string
                 # containing the actual session id.
                 if isinstance(authToken, basestring):
-                    # Until the session is proven valid, assume anonymous
-                    # access -- we don't want a broken session preventing
-                    # anonymous access or logins.
-                    sid, authToken = authToken, ('anonymous', 'anonymous')
-                    if len(sid) != 32:
-                        # unknown
-                        sid = None
-
-                    if sid:
-                        d = self.sessions.load(sid)
-                        if d:
-                            if d.get('_data', []).get('authToken', None):
-                                authToken = d['_data']['authToken']
+                    authToken = self._getCookieAuth(authToken)
+                    if not authToken:
+                        # Until the session is proven valid, assume anonymous
+                        # access -- we don't want a broken session preventing
+                        # anonymous access or logins.
+                        authToken = ('anonymous', 'anonymous')
 
                 auth = self.users.checkAuth(authToken)
                 self.authToken = authToken
@@ -335,6 +329,20 @@ class MintServer(object):
             if self.restDb:
                 self.restDb.reset()
 
+    def _getCookieAuth(self, pysid):
+        if len(pysid) != 32:
+            return None
+        d = self.sessions.load(pysid)
+        if not d:
+            return None
+        authToken = d.get('_data', []).get('authToken', None)
+        if not authToken:
+            return None
+        if authToken[1] == '':
+            # Pre-authenticated session
+            authToken = (authToken[0], ValidPasswordToken)
+        return authToken
+
     def __getattr__(self, key):
         if key[0] != '_':
             # backwards-compatible reference to all the database table objects.
@@ -350,7 +358,7 @@ class MintServer(object):
             self.callLog.log(self.remoteIp, list(authToken) + [None, None],
                 methodName, str_args, exception = e)
 
-    def _addInternalConaryConfig(self, ccfg, repoMaps=True):
+    def _addInternalConaryConfig(self, ccfg, repoMaps=True, repoToken=None):
         """
         Adds user lines and repository maps for the current user.
         """
@@ -361,8 +369,9 @@ class MintServer(object):
             otherProject = projects.Project(self,
                     otherProjectData['projectId'],
                     initialData=otherProjectData)
+            passwd = repoToken or self.authToken[1]
             ccfg.user.addServerGlob(otherProject.getFQDN(),
-                self.authToken[0], self.authToken[1])
+                self.authToken[0], passwd)
 
         # Also add repositoryMap entries for external cached projects.
         if repoMaps:
@@ -372,7 +381,7 @@ class MintServer(object):
                     continue
                 ccfg.repositoryMap.append((repos.fqdn, repos.getURL()))
 
-    def _getProjectConaryConfig(self, project, internal=True):
+    def _getProjectConaryConfig(self, project, internal=True, repoToken=None):
         """
         Creates a conary configuration object, suitable for internal or external
         rBuilder use.
@@ -393,7 +402,8 @@ class MintServer(object):
         if os.path.exists(conarycfgFile):
             ccfg.read(conarycfgFile)
 
-        self._addInternalConaryConfig(ccfg, repoMaps=False)
+        self._addInternalConaryConfig(ccfg, repoMaps=False,
+                repoToken=repoToken)
 
         return ccfg
 
@@ -1414,7 +1424,8 @@ If you would not like to be %s %s of this project, you may resign from this proj
     @private
     @typeCheck(str, str)
     def pwCheck(self, user, password):
-        return self.users.checkAuth((user, password))['authorized']
+        return self.users.checkAuth((user, password), useToken=True
+                )['authorized']
 
     @typeCheck(int)
     @requiresAuth
@@ -3377,15 +3388,12 @@ If you would not like to be %s %s of this project, you may resign from this proj
     @typeCheck(int)
     # @requiresAuth
     def getAllProjectLabels(self, projectId):
-        defaultLabel = projects.Project(self, projectId).getLabel()
-        serverName = versions.Label(defaultLabel).getHost()
         cu = self.db.cursor()
-        cu.execute("""SELECT DISTINCT(%s) FROM PackageIndex WHERE projectId=?
-                      AND serverName=?""" % database.concat(self.db,
-                            'serverName', "'@'",  'branchName'),
-                      projectId, serverName)
+        cu.execute("SELECT DISTINCT(%s) FROM PackageIndex WHERE projectId=?"
+                % database.concat(self.db, 'serverName', "'@'",  'branchName'),
+            projectId)
         labels = cu.fetchall()
-        return [x[0] for x in labels] or [defaultLabel]
+        return [x[0] for x in labels]
 
     @typeCheck(int)
     @requiresAuth
@@ -3394,8 +3402,7 @@ If you would not like to be %s %s of this project, you may resign from this proj
         project = projects.Project(self, projectId)
 
         nc = self._getProjectRepo(project, False)
-        label = versions.Label(project.getLabel())
-        troves = nc.troveNamesOnServer(label.getHost())
+        troves = nc.troveNamesOnServer(project.fqdn)
 
         troves = sorted(trove for trove in troves if
             (trove.startswith('group-') or
@@ -4036,7 +4043,10 @@ If you would not like to be %s %s of this project, you may resign from this proj
         # We should use internal=False here because the configuration we
         # generate here is used by the package creator service, not rBuilder.
         # However, pcreator is always localhost, so use that for proxying.
-        cfg = self._getProjectConaryConfig(project, internal=False)
+        repoToken = os.urandom(16).encode('hex')
+        self.db.auth_tokens.addToken(repoToken, self.auth.userId)
+        cfg = self._getProjectConaryConfig(project, internal=False,
+                repoToken=repoToken)
         cfg['name'] = self.auth.username
         cfg['contact'] = ''
         localhost = 'localhost'
@@ -4047,7 +4057,8 @@ If you would not like to be %s %s of this project, you may resign from this proj
         cfg.configLine('conaryProxy https http://%s/conary/' % localhost)
 
         #package creator service should get the searchpath from the product definition
-        mincfg = packagecreator.MinimalConaryConfiguration( cfg)
+        rmakeUser = (self.authToken[0], repoToken)
+        mincfg = packagecreator.MinimalConaryConfiguration(cfg, rmakeUser)
         return mincfg
 
     @typeCheck(int, ((str,unicode),), int, ((str,unicode),), ((str,unicode),), ((str,unicode),))
@@ -4096,9 +4107,9 @@ If you would not like to be %s %s of this project, you may resign from this proj
         #Register the file
         pc = self.getPackageCreatorClient()
         project = projects.Project(self, projectId)
-        mincfg = self._getMinCfg(project)
 
         if not sessionHandle:
+            mincfg = self._getMinCfg(project)
             #Get the version object
             version = self.getProductVersion(versionId)
             #Start the PC Session
@@ -4874,8 +4885,6 @@ If you would not like to be %s %s of this project, you may resign from this proj
     def getPackageCreatorClient(self):
         callback = notices_callbacks.PackageNoticesCallback(self.cfg, self.authToken[0])
         return self._getPackageCreatorClient(callback)
-        return packagecreator.getPackageCreatorClient(self.cfg, self.authToken,
-            callback = callback)
 
     def getApplianceCreatorClient(self):
         callback = notices_callbacks.ApplianceNoticesCallback(self.cfg, self.authToken[0])

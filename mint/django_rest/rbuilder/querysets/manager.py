@@ -23,19 +23,29 @@ from mint.django_rest.rbuilder.projects import models as projectmodels
 from mint.django_rest.rbuilder.rbac import models as rbacmodels
 from mint.django_rest.rbuilder.jobs import models as jobmodels
 from mint.django_rest.rbuilder.targets import models as targetmodels
+from mint.django_rest.rbuilder.images import models as imagemodels
 from mint.django_rest.rbuilder.rbac.manager.rbacmanager import READMEMBERS, MODMEMBERS
+
+# how to add a new queryset resouce type
+# (there is a fair amount of boilerplate we could refactor here)
+#
+# * add the "All Foos" queryset to db & schema
+# * add querysets_footag table to db & schema
+# * add models to imports above
+# * update the maps
+# * add the _lookupTaggedFoos and _tagFoos functions
+# * add a FooTag model to querysets
+# * update the getQuerysetsForResourceType function
+# * consider if favoriteRbacedQuerySets needs to change
+# * apply rbac & decorators to the service
+# * on the resource being querysetted, add _queryset_resource_type = 'foo'
+
 
 # retag if a new query is made and the results are greater
 # than this many seconds old
 TAG_REFRESH_INTERVAL=60
 
-# TODO: this code passes around ids way too much and should be passing
-# around objects to reduce SQL usage
-
 class QuerySetManager(basemanager.BaseManager):
-
-    # TODO: make this more pluggable/OO so these maps aren't needed
-    # there are some inconsistencies between queryset DB and XML tags
 
     # queryset tag method for each queryset resource type
     tagMethodMap = {
@@ -46,6 +56,7 @@ class QuerySetManager(basemanager.BaseManager):
         'grant'                : '_tagGrants',
         'role'                 : '_tagRoles',
         'target'               : '_tagTargets',
+        'image'                : '_tagImages',
     }
     # container for each queryset resource type
     resourceCollectionMap = {
@@ -56,7 +67,9 @@ class QuerySetManager(basemanager.BaseManager):
         'grant'                : 'grants',
         'role'                 : 'roles',
         'target'               : 'targets',
+        'image'                : 'images',
     }
+    # what's the name of the All Set for each resource?
     universeMap = {
         'system'               : 'All Systems',
         'user'                 : 'All Users',
@@ -65,6 +78,7 @@ class QuerySetManager(basemanager.BaseManager):
         'grant'                : 'All Grants',
         'role'                 : 'All Roles',
         'target'               : 'All Targets',
+        'image'                : 'All Images',
     }
     # tag finder method per queryset resource type
     tagLookupMap = {
@@ -75,6 +89,7 @@ class QuerySetManager(basemanager.BaseManager):
         'grant'                : '_lookupTaggedGrants',
         'role'                 : '_lookupTaggedRoles',
         'target'               : '_lookupTaggedTargets',
+        'image'                : '_lookupTaggedImages',
     }
     # Django tag model for each queryset resource type
     tagModelMap = {
@@ -83,6 +98,7 @@ class QuerySetManager(basemanager.BaseManager):
         'project_branch_stage' : 'stage_tag',
         'project'              : 'project_tag',
         'target'               : 'target_tag',
+        'image'                : 'image_tag',
     }
 
     def __init__(self, mgr):
@@ -289,24 +305,25 @@ class QuerySetManager(basemanager.BaseManager):
         if len(resources) == 0:
             return
 
-        tagClass.objects.lock()
+        cursor = connection.cursor()
 
         if inclusionMethod.name != 'chosen':
-            tagClass.objects.filter(
-                query_set=queryset,
-                inclusion_method=inclusionMethod
-            ).delete()
+            cursor.execute("DELETE FROM %s WHERE query_set_id = %s AND inclusion_method_id = %s" % (
+                tagTable, queryset.pk, inclusionMethod.pk
+            ))
+
+        insertParams = None
+        if type(resources) == list:
+            # inserting chosens, should be a small quantity
+            insertParams = [(r.pk,) for r in resources]
+        else:
+            resources = resources.values_list('pk', flat=True)
+            insertParams = [(r,) for r in resources]
 
         query = "INSERT INTO %s" % tagTable 
         query = query + " (%s, query_set_id, inclusion_method_id)" % idColumn
-        query = query + " VALUES (%s, %s, %s)"
-        insertParams = [(resource.pk, queryset.pk, inclusionMethod.pk) for \
-            resource in resources]
-        cursor = connection.cursor()
+        query = query + " VALUES (%s, " + " %s, %s)" % (queryset.pk, inclusionMethod.pk)
         cursor.executemany(query, insertParams) 
-        transaction.commit_unless_managed()
-
-        # transaction will unlock
 
     def _tagSystems(self, resources, tag, inclusionMethod):
         self._tagGeneric(resources, tag, inclusionMethod,
@@ -349,15 +366,12 @@ class QuerySetManager(basemanager.BaseManager):
            tagClass=models.PermissionTag,
            tagTable='querysets_permissiontag',
            idColumn='permission_id')
-
-    def _classByName(self, kls):
-        '''helper method to load modules'''
-        parts = kls.split('.')
-        module = ".".join(parts[:-1])
-        m = __import__(module)
-        for comp in parts[1:]:
-            m = getattr(m, comp)            
-        return m
+    
+    def _tagImages(self, resources, tag, inclusionMethod):
+        self._tagGeneric(resources, tag, inclusionMethod,
+           tagClass=models.ImageTag,
+           tagTable='querysets_imagetag',
+           idColumn='image_id')
 
     def filterQuerySet(self, querySet):
         '''Return resources matching specific filter criteria'''
@@ -522,32 +536,34 @@ class QuerySetManager(basemanager.BaseManager):
         ).distinct().order_by('user_id')
 
     def _lookupTaggedProjects(self, querySet, methods):
-        # TODO: eliminate duplication here
         return projectmodels.Project.objects.filter(
             tags__query_set=querySet,
             tags__inclusion_method__inclusion_method_id__in=methods
         ).distinct().order_by('project_id')
 
     def _lookupTaggedStages(self, querySet, methods):
-        # TODO: eliminate duplication here
         return projectmodels.Stage.objects.filter(
             tags__query_set=querySet,
             tags__inclusion_method__inclusion_method_id__in=methods
         ).distinct().order_by('stage_id')
 
     def _lookupTaggedRoles(self, querySet, methods):
-        # TODO: eliminate duplication here
         return rbacmodels.RbacRole.objects.filter(
             tags__query_set=querySet,
             tags__inclusion_method__inclusion_method_id__in=methods
         ).distinct().order_by('role_id')
 
     def _lookupTaggedGrants(self, querySet, methods):
-        # TODO: eliminate duplication here
         return rbacmodels.RbacPermission.objects.filter(
             tags__query_set=querySet,
             tags__inclusion_method__inclusion_method_id__in=methods
         ).distinct().order_by('grant_id')
+    
+    def _lookupTaggedImages(self, querySet, methods):
+        return imagemodels.Image.objects.filter(
+            tags__query_set=querySet,
+            tags__inclusion_method__inclusion_method_id__in=methods
+        ).distinct().order_by('image_id')
 
     @exposed
     def getQuerySetsForResource(self, resource):
@@ -857,31 +873,31 @@ class QuerySetManager(basemanager.BaseManager):
     # "My Querysets" feature
 
     @exposed
-    def configureMyQuerysets(self, user):
+    def configureMyQuerysets(self, user, byUser):
         '''
         My Querysets allow the user a home for items they create.
         They are created when a user is saved with the can_create bit
         set and removed when it is not set
         '''
         if user.can_create:
-            self._createMyQuerysets(user)
+            self._createMyQuerysets(user, byUser)
         else:
             self._removeMyQuerysets(user)
 
-    def _createMyQuerysets(self, user):
+    def _createMyQuerysets(self, user, byUser):
         '''create a user's personal querysets, roles, and grants'''
-        role = self.mgr.getOrCreateIdentityRole(user)
+        role = self.mgr.getOrCreateIdentityRole(user, byUser)
 
         # TODO: add My Images once available
         querysets = [
-            self._createMyProjects(user),
-            self._createMyStages(user),
-            self._createMySystems(user),
+            self._createMyProjects(user, byUser),
+            self._createMyStages(user, byUser),
+            self._createMySystems(user, byUser),
         ]
         for qs in querysets:
-            self.mgr.addIdentityRoleGrants(qs, role)
+            self.mgr.addIdentityRoleGrants(qs, role, byUser)
 
-    def _myQuerySet(self, user, name, resource_type, presentation_type=None):
+    def _myQuerySet(self, user, byUser, name, resource_type, presentation_type=None):
         # common code between each type of personal queryset
 
         name = "%s (%s)" % (name, user.user_name)
@@ -912,9 +928,9 @@ class QuerySetManager(basemanager.BaseManager):
                 presentation_type = presentation_type,
                 resource_type = resource_type, 
                 is_public = False,
-                personal_for = user
+                personal_for = user,
             )
-            qs = self.mgr.addQuerySet(qs, None)
+            qs = self.mgr.addQuerySet(qs, byUser)
         else:
             qs = possible_qs[0]
 
@@ -936,14 +952,14 @@ class QuerySetManager(basemanager.BaseManager):
 
         return qs
 
-    def _createMyProjects(self, user):
-        return self._myQuerySet(user, 'My Projects', 'project')
+    def _createMyProjects(self, user, byUser):
+        return self._myQuerySet(user, byUser, 'My Projects', 'project')
 
-    def _createMyStages(self, user):
-        return self._myQuerySet(user, 'My Stages', 'project_branch_stage', 'project')
+    def _createMyStages(self, user, byUser):
+        return self._myQuerySet(user, byUser, 'My Stages', 'project_branch_stage', 'project')
 
-    def _createMySystems(self, user):
-        return self._myQuerySet(user, 'My Systems', 'system')
+    def _createMySystems(self, user, byUser):
+        return self._myQuerySet(user, byUser, 'My Systems', 'system')
 
     # TODO: add My Images once unified images are available
      

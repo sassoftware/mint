@@ -98,7 +98,7 @@ class Image(modellib.XObjIdModel):
     view_name ='Image'
 
     _xobj_explicit_accessors = set(['files'])
-    # _xobj_hidden_accessors = set(['buildfilesurlsmap_set'])
+    _queryset_resource_type = 'image'
 
     def __unicode__(self):
         return self.name
@@ -311,10 +311,10 @@ class BuildFiles(modellib.Collection):
 class BuildFile(modellib.XObjIdModel):
     class Meta:
         db_table = 'buildfiles'
-    
+
     _xobj_explicit_accessors = set()
     _xobj = xobj.XObjMetadata(tag='file')
-    
+
     file_id = models.AutoField(primary_key=True, db_column='fileid')
     image = models.ForeignKey('Image', null=False, db_column='buildid', related_name='files')
     idx = models.IntegerField(null=False, default=0)
@@ -322,7 +322,8 @@ class BuildFile(modellib.XObjIdModel):
     size = models.IntegerField()
     sha1 = models.CharField(max_length=40)
     url = modellib.SyntheticField()
-    
+    target_images = modellib.XObjHidden(modellib.SyntheticField())
+
     def serialize(self, request=None):
         fileUrls = BuildFilesUrlsMap.objects.filter(file=self.file_id
                 ).order_by('url').all()

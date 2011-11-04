@@ -69,8 +69,8 @@ class QuerySetTestCase(QueryTestCase):
             username="admin", password="password")
         self.assertEquals(response.status_code, 200)
         querySets = xobj.parse(response.content)
-        length = len(querySets.query_sets.query_set)
-        self.assertEqual(length, 5)
+        length = len(querySets.favorite_query_sets.query_set)
+        self.assertEqual(length, 8)
 
     def testGetQuerySet(self):
         # show that we can get the definition of a queryset
@@ -163,7 +163,7 @@ class QuerySetTestCase(QueryTestCase):
         self.assertEqual(len(all1), 38)
         self.assertEqual(len(chosen1), 0)
         self.assertEqual(len(filtered1), 38)
-        
+       
         # verify the counts are consistent with having a large
         # child set.
         response = self._put("query_sets/%s" % qs1.pk,
