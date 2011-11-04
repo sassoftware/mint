@@ -482,8 +482,6 @@ class JobHandlerRegistry(HandlerRegistry):
             return vals[0]['value']
 
         def getRepeaterMethodArgs(self, job):
-            # XXX FIXME
-            host = self.mgr.mgr.restDb.cfg.siteHost
             imageDownloadUrl = self.mgr.mgr.restDb.imageMgr.getDownloadUrl(self.image_file.file_id)
             hostname = self.image.project.short_name
             baseFileName = self._getImageBaseFileName()
@@ -508,8 +506,8 @@ class JobHandlerRegistry(HandlerRegistry):
                 imageFileInfo=imageFileInfo,
                 imageDownloadUrl=imageDownloadUrl,
                 targetImageXmlTemplate=self._targetImageXmlTemplate(),
-                imageFileUpdateUrl='https://%s/api/v1/images/%s/build_files/%s' % (
-                        host, self.image.image_id, self.image_file.file_id),
+                imageFileUpdateUrl='http://localhost/api/v1/images/%s/build_files/%s' % (
+                        self.image.image_id, self.image_file.file_id),
             )
             return (params, ), {}
 

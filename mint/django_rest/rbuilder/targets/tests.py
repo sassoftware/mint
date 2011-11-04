@@ -1004,7 +1004,7 @@ class JobCreationTest(BaseTargetsTest, RepeaterMixIn):
             },
             'descriptorData': "<?xml version='1.0' encoding='UTF-8'?>\n<descriptor_data>\n  <imageId>5</imageId>\n</descriptor_data>\n",
             'imageDownloadUrl': 'https://bubba.com/downloadImage?fileId=5',
-            'imageFileUpdateUrl': 'https://bubba.com/api/v1/images/5/build_files/5',
+            'imageFileUpdateUrl': 'http://localhost/api/v1/images/5/build_files/5',
             'targetImageXmlTemplate': '<file>\n  <target_images>\n    <target_image>\n      <target id="/api/v1/targets/1"/>\n      %(image)s\n    </target_image>\n  </target_images>\n</file>'
           })
         self.failUnlessEqual(realCall.args[1:], ())
