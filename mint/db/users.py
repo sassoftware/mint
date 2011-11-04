@@ -79,7 +79,18 @@ class UsersTable(database.KeyedTable):
         m.update(password)
         return salt.encode('hex'), m.hexdigest()
 
-    def checkAuth(self, authToken):
+    def _checkToken(self, userId, token):
+        # Don't send the token to the database, if it's actually a user
+        # password it might end up in the DB logs.
+        cu = self.db.cursor()
+        cu.execute("""
+            SELECT token FROM auth_tokens
+            WHERE user_id = ?  AND expires_date >= now()
+            """, userId)
+        tokens = [x[0] for x in cu]
+        return token in tokens
+
+    def checkAuth(self, authToken, useToken=False):
         noAuth = {'authorized': False, 'userId': -1}
         if authToken == ('anonymous', 'anonymous'):
             return noAuth
@@ -95,7 +106,13 @@ class UsersTable(database.KeyedTable):
             return noAuth
         (userId, email, displayEmail, fullName, blurb, timeAccessed, salt,
                 digest, isAdmin) = r
-        if password is not ValidPasswordToken:
+        if password is ValidPasswordToken:
+            # Pre-authenticated session
+            pass
+        elif useToken and self._checkToken(userId, password):
+            # Repository token
+            pass
+        else:
             try:
                 if not self._checkPassword(username, salt, digest, password):
                     # Password failed

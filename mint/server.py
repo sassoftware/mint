@@ -1424,7 +1424,8 @@ If you would not like to be %s %s of this project, you may resign from this proj
     @private
     @typeCheck(str, str)
     def pwCheck(self, user, password):
-        return self.users.checkAuth((user, password))['authorized']
+        return self.users.checkAuth((user, password), useToken=True
+                )['authorized']
 
     @typeCheck(int)
     @requiresAuth
@@ -4056,7 +4057,8 @@ If you would not like to be %s %s of this project, you may resign from this proj
         cfg.configLine('conaryProxy https http://%s/conary/' % localhost)
 
         #package creator service should get the searchpath from the product definition
-        mincfg = packagecreator.MinimalConaryConfiguration( cfg)
+        rmakeUser = (self.authToken[0], repoToken)
+        mincfg = packagecreator.MinimalConaryConfiguration(cfg, rmakeUser)
         return mincfg
 
     @typeCheck(int, ((str,unicode),), int, ((str,unicode),), ((str,unicode),), ((str,unicode),))
