@@ -358,7 +358,7 @@ class MintServer(object):
             self.callLog.log(self.remoteIp, list(authToken) + [None, None],
                 methodName, str_args, exception = e)
 
-    def _addInternalConaryConfig(self, ccfg, repoMaps=True):
+    def _addInternalConaryConfig(self, ccfg, repoMaps=True, repoToken=None):
         """
         Adds user lines and repository maps for the current user.
         """
@@ -369,8 +369,9 @@ class MintServer(object):
             otherProject = projects.Project(self,
                     otherProjectData['projectId'],
                     initialData=otherProjectData)
+            passwd = repoToken or self.authToken[1]
             ccfg.user.addServerGlob(otherProject.getFQDN(),
-                self.authToken[0], self.authToken[1])
+                self.authToken[0], repoToken)
 
         # Also add repositoryMap entries for external cached projects.
         if repoMaps:
@@ -380,7 +381,7 @@ class MintServer(object):
                     continue
                 ccfg.repositoryMap.append((repos.fqdn, repos.getURL()))
 
-    def _getProjectConaryConfig(self, project, internal=True):
+    def _getProjectConaryConfig(self, project, internal=True, repoToken=None):
         """
         Creates a conary configuration object, suitable for internal or external
         rBuilder use.
@@ -401,7 +402,8 @@ class MintServer(object):
         if os.path.exists(conarycfgFile):
             ccfg.read(conarycfgFile)
 
-        self._addInternalConaryConfig(ccfg, repoMaps=False)
+        self._addInternalConaryConfig(ccfg, repoMaps=False,
+                repoToken=repoToken)
 
         return ccfg
 
@@ -4040,7 +4042,10 @@ If you would not like to be %s %s of this project, you may resign from this proj
         # We should use internal=False here because the configuration we
         # generate here is used by the package creator service, not rBuilder.
         # However, pcreator is always localhost, so use that for proxying.
-        cfg = self._getProjectConaryConfig(project, internal=False)
+        repoToken = os.urandom(16).encode('hex')
+        self.db.auth_tokens.addToken(repoToken, self.auth.userId)
+        cfg = self._getProjectConaryConfig(project, internal=False,
+                repoToken=repoToken)
         cfg['name'] = self.auth.username
         cfg['contact'] = ''
         localhost = 'localhost'
@@ -4100,9 +4105,9 @@ If you would not like to be %s %s of this project, you may resign from this proj
         #Register the file
         pc = self.getPackageCreatorClient()
         project = projects.Project(self, projectId)
-        mincfg = self._getMinCfg(project)
 
         if not sessionHandle:
+            mincfg = self._getMinCfg(project)
             #Get the version object
             version = self.getProductVersion(versionId)
             #Start the PC Session
@@ -4878,8 +4883,6 @@ If you would not like to be %s %s of this project, you may resign from this proj
     def getPackageCreatorClient(self):
         callback = notices_callbacks.PackageNoticesCallback(self.cfg, self.authToken[0])
         return self._getPackageCreatorClient(callback)
-        return packagecreator.getPackageCreatorClient(self.cfg, self.authToken,
-            callback = callback)
 
     def getApplianceCreatorClient(self):
         callback = notices_callbacks.ApplianceNoticesCallback(self.cfg, self.authToken[0])
