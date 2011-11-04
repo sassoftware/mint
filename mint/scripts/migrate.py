@@ -4452,7 +4452,7 @@ class MigrateTo_59(SchemaMigration):
 
 class MigrateTo_60(SchemaMigration):
     '''Edge-P3'''
-    Version = (60, 6)
+    Version = (60, 7)
 
     def migrate(self):
         '''"My" querysets feature'''
@@ -4554,6 +4554,9 @@ class MigrateTo_60(SchemaMigration):
                     '( UPPER(shortname) )', unique=True)
         return True
 
+    def migrate7(self):
+        schema._createAllImages(self.db, version=(60,7))
+        return True
 
 #### SCHEMA MIGRATIONS END HERE #############################################
 
