@@ -380,6 +380,8 @@ class RbacManager(basemanager.BaseManager):
                     is_public    = True
                 ).distinct() | querymodels.QuerySet.objects.filter(
                     personal_for = user
+                ).distinct() | querymodels.QuerySet.objects.filter(
+                    presentation_type = 'rbac'
                 ).distinct()
                 querysets_obj = querymodels.FavoriteQuerySets()
                 querysets_obj.query_set = results
