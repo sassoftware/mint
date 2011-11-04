@@ -55,7 +55,7 @@ def getApps():
     return apps
 
 def getApp(appName):
-    allApps = self.getApps()
+    allApps = getApps()
     return allApps[appName]
 
 def findModels():
