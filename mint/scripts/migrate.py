@@ -4452,7 +4452,7 @@ class MigrateTo_59(SchemaMigration):
 
 class MigrateTo_60(SchemaMigration):
     '''Edge-P3'''
-    Version = (60, 8)
+    Version = (60, 9)
 
     def migrate(self):
         '''"My" querysets feature'''
@@ -4575,6 +4575,14 @@ class MigrateTo_60(SchemaMigration):
                 NOT NULL,
             CONSTRAINT querysets_imagetag_uq UNIQUE ("image_id", "query_set_id",
                 "inclusion_method_id")
+        """)
+        return True
+
+    def migrate9(self):
+        cu = self.db.cursor()
+        cu.execute("""
+            UPDATE querysets_queryset set is_public=true
+            WHERE name like 'All Images'
         """)
         return True
 

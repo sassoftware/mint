@@ -28,7 +28,7 @@ from conary.dbstore import sqlerrors, sqllib
 log = logging.getLogger(__name__)
 
 # database schema major version
-RBUILDER_DB_VERSION = sqllib.DBversion(60, 8)
+RBUILDER_DB_VERSION = sqllib.DBversion(60, 9)
 
 def _createTrigger(db, table, column="changed"):
     retInsert = db.createTrigger(table, column, "INSERT")
@@ -2330,7 +2330,7 @@ def _createAllImages(db, version=None):
     filterId = _addQuerySetFilterEntry(db, "image.image_id",
             "IS_NULL", "false")
     _addQuerySet(db, "All Images", "All images", "image", False,
-            filterId, 'image', version=version)
+            filterId, 'image', public=True, version=version)
     return True
 
 
