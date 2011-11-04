@@ -242,18 +242,26 @@ class ImageManager(manager.Manager):
         ret = {}
         for imageId in imageIds:
             troveName, troveVersion, troveFlavor, baseFileName = imageTroveMap[imageId]
-            baseFileName = self._sanitizeString(baseFileName)
-            if not baseFileName:
-                troveVersion = helperfuncs.parseVersion(troveVersion)
-                troveArch = helperfuncs.getArchFromFlavor(troveFlavor)
-                baseFileName = "%(name)s-%(version)s-%(arch)s" % dict(
-                    # XXX One would assume hostname == troveName, but that's
-                    # how server.py had the code written
-                    name = hostname,
-                    version = troveVersion.trailingRevision().version,
-                    arch = troveArch)
+            baseFileName = self._getBaseFileName(baseFileName, hostname,
+                troveName, troveVersion, troveFlavor)
             ret[imageId] = baseFileName
         return ret
+
+    @classmethod
+    def _getBaseFileName(self, baseFileName, hostname,
+            troveName, troveVersion, troveFlavor):
+        baseFileName = self._sanitizeString(baseFileName)
+        if baseFileName:
+            return baseFileName
+        troveVersion = helperfuncs.parseVersion(troveVersion)
+        troveArch = helperfuncs.getArchFromFlavor(troveFlavor)
+        baseFileName = "%(name)s-%(version)s-%(arch)s" % dict(
+            # XXX One would assume hostname == troveName, but that's
+            # how server.py had the code written
+            name = hostname,
+            version = troveVersion.trailingRevision().version,
+            arch = troveArch)
+        return baseFileName
 
     @classmethod
     def _sanitizeString(cls, string):

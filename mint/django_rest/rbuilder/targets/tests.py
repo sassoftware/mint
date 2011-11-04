@@ -812,6 +812,8 @@ class JobCreationTest(BaseTargetsTest, RepeaterMixIn):
         mungedParams = dict((x, r.sub('https://bubba.com/', y))
             for (x, y) in dictObj.items()
                 if isinstance(y, basestring))
+        mungedParams.update((x, y) for (x, y) in dictObj.items()
+                if not isinstance(y, basestring))
         return mungedParams
 
     def _setupImages(self):
@@ -993,9 +995,17 @@ class JobCreationTest(BaseTargetsTest, RepeaterMixIn):
         realCall = calls[-1]
         self.failUnlessEqual(self._mungeDict(realCall.args[0]),
           {
-            'descriptor_data': "<?xml version='1.0' encoding='UTF-8'?>\n<descriptor_data>\n  <imageId>5</imageId>\n</descriptor_data>\n",
+            'imageFileInfo': {
+                'fileId' : 5,
+                'name' : u'filename-09-02',
+                'sha1' : u'0000000000000000000000000000000000000002',
+                'size' : 102,
+                'baseFileName' : 'chater-foo-1-',
+            },
+            'descriptorData': "<?xml version='1.0' encoding='UTF-8'?>\n<descriptor_data>\n  <imageId>5</imageId>\n</descriptor_data>\n",
             'imageDownloadUrl': 'https://bubba.com/downloadImage?fileId=5',
-            'imageTargetLinkUrl': 'https://bubba.com/.../5',
+            'imageFileUpdateUrl': 'https://bubba.com/api/v1/images/5/build_files/5',
+            'targetImageXmlTemplate': '<file>\n  <target_images>\n    <target_image>\n      <target id="/api/v1/targets/1"/>\n      %(image)s\n    </target_image>\n  </target_images>\n</file>'
           })
         self.failUnlessEqual(realCall.args[1:], ())
         self.failUnlessEqual(realCall.kwargs, {})
