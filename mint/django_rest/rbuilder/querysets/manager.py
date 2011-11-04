@@ -308,9 +308,6 @@ class QuerySetManager(basemanager.BaseManager):
         query = query + " (%s, query_set_id, inclusion_method_id)" % idColumn
         query = query + " VALUES (%s, " + " %s, %s)" % (queryset.pk, inclusionMethod.pk)
         cursor.executemany(query, insertParams) 
-        transaction.commit()
-
-        # transaction will unlock
 
     def _tagSystems(self, resources, tag, inclusionMethod):
         self._tagGeneric(resources, tag, inclusionMethod,
