@@ -371,7 +371,7 @@ class MintServer(object):
                     initialData=otherProjectData)
             passwd = repoToken or self.authToken[1]
             ccfg.user.addServerGlob(otherProject.getFQDN(),
-                self.authToken[0], repoToken)
+                self.authToken[0], passwd)
 
         # Also add repositoryMap entries for external cached projects.
         if repoMaps:
