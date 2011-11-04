@@ -28,7 +28,7 @@ from conary.dbstore import sqlerrors, sqllib
 log = logging.getLogger(__name__)
 
 # database schema major version
-RBUILDER_DB_VERSION = sqllib.DBversion(60, 7)
+RBUILDER_DB_VERSION = sqllib.DBversion(60, 8)
 
 def _createTrigger(db, table, column="changed"):
     retInsert = db.createTrigger(table, column, "INSERT")
@@ -274,6 +274,27 @@ def _createRbac(db):
         )""")
     
     _createNonIdentityRoles(db)
+
+    createTable(db, 'querysets_imagetag', """
+        CREATE TABLE "querysets_imagetag" (
+            "image_tag_id" %(BIGPRIMARYKEY)s,
+            "image_id" INTEGER
+                REFERENCES "builds" ("buildid")
+                ON DELETE CASCADE
+                NOT NULL,
+            "query_set_id" INTEGER
+                REFERENCES "querysets_queryset" ("query_set_id")
+                ON DELETE CASCADE,
+            "inclusion_method_id" INTEGER
+                REFERENCES "querysets_inclusionmethod" ("inclusion_method_id")
+                ON DELETE CASCADE
+                NOT NULL,
+            CONSTRAINT querysets_imagetag_uq UNIQUE ("image_id", "query_set_id",
+                "inclusion_method_id")
+        )""")
+
+
+    _createAllImages(db)
 
 
 def _createProjects(db):

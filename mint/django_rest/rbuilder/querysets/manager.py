@@ -23,19 +23,29 @@ from mint.django_rest.rbuilder.projects import models as projectmodels
 from mint.django_rest.rbuilder.rbac import models as rbacmodels
 from mint.django_rest.rbuilder.jobs import models as jobmodels
 from mint.django_rest.rbuilder.targets import models as targetmodels
+from mint.django_rest.rbuilder.images import models as imagemodels
 from mint.django_rest.rbuilder.rbac.manager.rbacmanager import READMEMBERS, MODMEMBERS
+
+# how to add a new queryset resouce type
+# (there is a fair amount of boilerplate we could refactor here)
+#
+# * add the "All Foos" queryset to db & schema
+# * add querysets_footag table to db & schema
+# * add models to imports above
+# * update the maps
+# * add the _lookupTaggedFoos and _tagFoos functions
+# * add a FooTag model to querysets
+# * update the getQuerysetsForResourceType function
+# * consider if favoriteRbacedQuerySets needs to change
+# * apply rbac & decorators to the service
+# * on the resource being querysetted, add _queryset_resource_type = 'foo'
+
 
 # retag if a new query is made and the results are greater
 # than this many seconds old
 TAG_REFRESH_INTERVAL=60
 
-# TODO: this code passes around ids way too much and should be passing
-# around objects to reduce SQL usage
-
 class QuerySetManager(basemanager.BaseManager):
-
-    # TODO: make this more pluggable/OO so these maps aren't needed
-    # there are some inconsistencies between queryset DB and XML tags
 
     # queryset tag method for each queryset resource type
     tagMethodMap = {
@@ -46,6 +56,7 @@ class QuerySetManager(basemanager.BaseManager):
         'grant'                : '_tagGrants',
         'role'                 : '_tagRoles',
         'target'               : '_tagTargets',
+        'image'                : '_tagImages',
     }
     # container for each queryset resource type
     resourceCollectionMap = {
@@ -56,7 +67,9 @@ class QuerySetManager(basemanager.BaseManager):
         'grant'                : 'grants',
         'role'                 : 'roles',
         'target'               : 'targets',
+        'image'                : 'images',
     }
+    # what's the name of the All Set for each resource?
     universeMap = {
         'system'               : 'All Systems',
         'user'                 : 'All Users',
@@ -65,6 +78,7 @@ class QuerySetManager(basemanager.BaseManager):
         'grant'                : 'All Grants',
         'role'                 : 'All Roles',
         'target'               : 'All Targets',
+        'image'                : 'All Images',
     }
     # tag finder method per queryset resource type
     tagLookupMap = {
@@ -75,6 +89,7 @@ class QuerySetManager(basemanager.BaseManager):
         'grant'                : '_lookupTaggedGrants',
         'role'                 : '_lookupTaggedRoles',
         'target'               : '_lookupTaggedTargets',
+        'image'                : '_lookupTaggedImages',
     }
     # Django tag model for each queryset resource type
     tagModelMap = {
@@ -83,6 +98,7 @@ class QuerySetManager(basemanager.BaseManager):
         'project_branch_stage' : 'stage_tag',
         'project'              : 'project_tag',
         'target'               : 'target_tag',
+        'image'                : 'image_tag',
     }
 
     def __init__(self, mgr):
@@ -350,15 +366,12 @@ class QuerySetManager(basemanager.BaseManager):
            tagClass=models.PermissionTag,
            tagTable='querysets_permissiontag',
            idColumn='permission_id')
-
-    def _classByName(self, kls):
-        '''helper method to load modules'''
-        parts = kls.split('.')
-        module = ".".join(parts[:-1])
-        m = __import__(module)
-        for comp in parts[1:]:
-            m = getattr(m, comp)            
-        return m
+    
+    def _tagImages(self, resources, tag, inclusionMethod):
+        self._tagGeneric(resources, tag, inclusionMethod,
+           tagClass=models.ImageTag,
+           tagTable='querysets_imagetag',
+           idColumn='image_id')
 
     def filterQuerySet(self, querySet):
         '''Return resources matching specific filter criteria'''
@@ -523,32 +536,34 @@ class QuerySetManager(basemanager.BaseManager):
         ).distinct().order_by('user_id')
 
     def _lookupTaggedProjects(self, querySet, methods):
-        # TODO: eliminate duplication here
         return projectmodels.Project.objects.filter(
             tags__query_set=querySet,
             tags__inclusion_method__inclusion_method_id__in=methods
         ).distinct().order_by('project_id')
 
     def _lookupTaggedStages(self, querySet, methods):
-        # TODO: eliminate duplication here
         return projectmodels.Stage.objects.filter(
             tags__query_set=querySet,
             tags__inclusion_method__inclusion_method_id__in=methods
         ).distinct().order_by('stage_id')
 
     def _lookupTaggedRoles(self, querySet, methods):
-        # TODO: eliminate duplication here
         return rbacmodels.RbacRole.objects.filter(
             tags__query_set=querySet,
             tags__inclusion_method__inclusion_method_id__in=methods
         ).distinct().order_by('role_id')
 
     def _lookupTaggedGrants(self, querySet, methods):
-        # TODO: eliminate duplication here
         return rbacmodels.RbacPermission.objects.filter(
             tags__query_set=querySet,
             tags__inclusion_method__inclusion_method_id__in=methods
         ).distinct().order_by('grant_id')
+    
+    def _lookupTaggedImages(self, querySet, methods):
+        return imagemodels.Image.objects.filter(
+            tags__query_set=querySet,
+            tags__inclusion_method__inclusion_method_id__in=methods
+        ).distinct().order_by('image_id')
 
     @exposed
     def getQuerySetsForResource(self, resource):

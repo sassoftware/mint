@@ -4452,7 +4452,7 @@ class MigrateTo_59(SchemaMigration):
 
 class MigrateTo_60(SchemaMigration):
     '''Edge-P3'''
-    Version = (60, 7)
+    Version = (60, 8)
 
     def migrate(self):
         '''"My" querysets feature'''
@@ -4556,6 +4556,26 @@ class MigrateTo_60(SchemaMigration):
 
     def migrate7(self):
         schema._createAllImages(self.db, version=(60,7))
+        return True
+
+    def migrate8(self):
+        # add tag tables for image querysets
+        schema.createTable(self.db, 'querysets_imagetag', """
+            "image_tag_id" %(BIGPRIMARYKEY)s,
+            "image_id" INTEGER
+                REFERENCES "builds" ("buildid")
+                ON DELETE CASCADE
+                NOT NULL,
+            "query_set_id" INTEGER
+                REFERENCES "querysets_queryset" ("query_set_id")
+                ON DELETE CASCADE,
+            "inclusion_method_id" INTEGER
+                REFERENCES "querysets_inclusionmethod" ("inclusion_method_id")
+                ON DELETE CASCADE
+                NOT NULL,
+            CONSTRAINT querysets_imagetag_uq UNIQUE ("image_id", "query_set_id",
+                "inclusion_method_id")
+        """)
         return True
 
 #### SCHEMA MIGRATIONS END HERE #############################################

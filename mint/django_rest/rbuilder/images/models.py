@@ -98,7 +98,7 @@ class Image(modellib.XObjIdModel):
     view_name ='Image'
 
     _xobj_explicit_accessors = set(['files'])
-    # _xobj_hidden_accessors = set(['buildfilesurlsmap_set'])
+    _queryset_resource_type = 'image'
 
     def __unicode__(self):
         return self.name

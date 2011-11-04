@@ -163,7 +163,7 @@ class QuerySetTestCase(QueryTestCase):
         self.assertEqual(len(all1), 38)
         self.assertEqual(len(chosen1), 0)
         self.assertEqual(len(filtered1), 38)
-        
+       
         # verify the counts are consistent with having a large
         # child set.
         response = self._put("query_sets/%s" % qs1.pk,

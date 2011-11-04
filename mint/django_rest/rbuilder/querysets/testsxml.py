@@ -29,7 +29,6 @@ queryset_put_xml = """
     <filter_entry>
       <operator>LIKE</operator>
       <field>system.name</field>
-      <filter_entry_id>16</filter_entry_id>
       <value>3</value>
     </filter_entry>
   </filter_entries>
@@ -42,7 +41,7 @@ queryset_put_xml = """
   <tagged_date></tagged_date>
   <name>New Query Set</name>
   <chosen_members id="/api/v1/query_sets/16/chosen"/>
-  <query_set_id>15</query_set_id>
+  <query_set_id>16</query_set_id>
   <child_members id="/api/v1/query_sets/16/child"/>
   <created_date>2011-08-17T14:52:58.736901+00:00</created_date>
   <all_members id="/api/v1/query_sets/16/all"/>
@@ -129,7 +128,7 @@ queryset_with_actions = """
 """
 
 queryset_put_xml_different = """
-<query_set id="https://rbalast.eng.rpath.com/api/v1/query_sets/15" href="https://rbalast.eng.rpath.com/api/v1/query_sets/15">
+<query_set id="https://rbalast.eng.rpath.com/api/v1/query_sets/16" href="https://rbalast.eng.rpath.com/api/v1/query_sets/16">
         <filter_entries>
         <filter_entry>
            <field>system.name</field>
