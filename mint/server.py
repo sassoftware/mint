@@ -70,6 +70,7 @@ from conary.repository.errors import TroveNotFound, UserNotFound
 from conary.repository import netclient
 from conary.repository import shimclient
 from conary.repository.netrepos.reposlog import RepositoryCallLogger as CallLogger
+from conary.repository.netrepos.netauth import ValidPasswordToken
 from conary import errors as conary_errors
 
 from mcp import client as mcp_client
@@ -268,19 +269,12 @@ class MintServer(object):
                 # the session id from the client is a hmac-signed string
                 # containing the actual session id.
                 if isinstance(authToken, basestring):
-                    # Until the session is proven valid, assume anonymous
-                    # access -- we don't want a broken session preventing
-                    # anonymous access or logins.
-                    sid, authToken = authToken, ('anonymous', 'anonymous')
-                    if len(sid) != 32:
-                        # unknown
-                        sid = None
-
-                    if sid:
-                        d = self.sessions.load(sid)
-                        if d:
-                            if d.get('_data', []).get('authToken', None):
-                                authToken = d['_data']['authToken']
+                    authToken = self._getCookieAuth(authToken)
+                    if not authToken:
+                        # Until the session is proven valid, assume anonymous
+                        # access -- we don't want a broken session preventing
+                        # anonymous access or logins.
+                        authToken = ('anonymous', 'anonymous')
 
                 auth = self.users.checkAuth(authToken)
                 self.authToken = authToken
@@ -334,6 +328,20 @@ class MintServer(object):
             prof.stopXml(methodName)
             if self.restDb:
                 self.restDb.reset()
+
+    def _getCookieAuth(self, pysid):
+        if len(pysid) != 32:
+            return None
+        d = self.sessions.load(pysid)
+        if not d:
+            return None
+        authToken = d.get('_data', []).get('authToken', None)
+        if not authToken:
+            return None
+        if authToken[1] == '':
+            # Pre-authenticated session
+            authToken = (authToken[0], ValidPasswordToken)
+        return authToken
 
     def __getattr__(self, key):
         if key[0] != '_':

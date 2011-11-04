@@ -10,11 +10,12 @@ from conary.lib.digestlib import md5
 from conary.lib import sha1helper
 
 from conary.repository.netrepos.netauth import nameCharacterSet
+from conary.repository.netrepos.netauth import ValidPasswordToken
 
 from mint import templates
 from mint import searcher
 from mint import userlisting
-from mint.mint_error import (AuthRepoError, DuplicateItem, InvalidUsername,
+from mint.mint_error import (DuplicateItem, InvalidUsername,
         IllegalUsername, UserAlreadyExists, AlreadyConfirmed, ItemNotFound)
 from mint.lib import auth_client
 from mint.lib import data
@@ -78,52 +79,44 @@ class UsersTable(database.KeyedTable):
         m.update(password)
         return salt.encode('hex'), m.hexdigest()
 
-    def _checkAuth(self, authToken):
-        user, challenge = authToken
-
-        cu = self.db.cursor()
-        cu.execute("""SELECT salt, passwd, is_admin
-            FROM Users WHERE username=? AND NOT deleted""", user)
-        r = cu.fetchone()
-        if r and self._checkPassword(user, r[0], r[1], challenge):
-            isAdmin = r[2]
-            return True, isAdmin
-        else:
-            return False, False
-
     def checkAuth(self, authToken):
-        auth = {'authorized': False, 'userId': -1}
+        noAuth = {'authorized': False, 'userId': -1}
         if authToken == ('anonymous', 'anonymous'):
-            return auth
+            return noAuth
 
         username, password = authToken
         cu = self.db.cursor()
         cu.execute("""SELECT userId, email, displayEmail, fullName, blurb,
-                        timeAccessed FROM Users
+                        timeAccessed, salt, passwd, is_admin FROM Users
                       WHERE username=? AND active=1""", username)
         r = cu.fetchone()
-
-        if r:
+        if not r:
+            # No matching uer
+            return noAuth
+        (userId, email, displayEmail, fullName, blurb, timeAccessed, salt,
+                digest, isAdmin) = r
+        if password is not ValidPasswordToken:
             try:
-                ok, isAdmin = self._checkAuth(authToken)
+                if not self._checkPassword(username, salt, digest, password):
+                    # Password failed
+                    return noAuth
             except repository.errors.OpenError:
-                return auth
+                # External (HTTP) auth failed
+                return noAuth
 
-            if ok:
-                auth = {'authorized':   True,
-                        'userId':       int(r[0]),
-                        'username':     username,
-                        'email':        r[1],
-                        'displayEmail': r[2],
-                        'fullName':     r[3],
-                        'blurb':        r[4],
-                        'timeAccessed': r[5],
-                        'stagnant':     self.isUserStagnant(r[0]),
-                        'groups':       [],
-                        'admin':        isAdmin,
-                        }
-
-        return auth
+        return {
+                'authorized':   True,
+                'userId':       int(userId),
+                'username':     username,
+                'email':        email,
+                'displayEmail': displayEmail,
+                'fullName':     fullName,
+                'blurb':        blurb,
+                'timeAccessed': timeAccessed,
+                'stagnant':     False,
+                'groups':       [],
+                'admin':        isAdmin,
+                }
 
     def validateNewEmail(self, userId, email):
         user = self.get(userId)
@@ -201,14 +194,6 @@ class UsersTable(database.KeyedTable):
         else:
             self.db.commit()
         return userId
-
-    def isUserStagnant(self, userId):
-        cu = self.db.cursor()
-        cu.execute("SELECT timeRequested FROM Confirmations WHERE userId=?", userId)
-        results = cu.fetchall()
-        if len(results) == 1:
-            return True
-        return False
 
     def confirm(self, confirm):
         cu = self.db.cursor()

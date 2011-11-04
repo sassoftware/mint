@@ -13,6 +13,8 @@ from mint import shimclient
 from mint.rest.api import models
 from mint.rest.modellib import converter
 from mint.rest import errors
+from conary.repository.netrepos.netauth import ValidPasswordToken
+
 
 # Decorator for public (unauthenticated) methods/functions
 def public(deco):
@@ -98,7 +100,11 @@ class AuthenticationCallback(object):
             sid = sid,
             timeout = 86400,
             lock = False)
-        return session.get('authToken', None)
+        authToken = session.get('authToken', None)
+        if authToken and authToken[1] == '':
+            # Pre-authenticated session
+            authToken = (authToken[0], ValidPasswordToken)
+        return authToken
 
     def _checkAuth(self, authToken):
         mintClient = shimclient.ShimMintClient(self.cfg, authToken,
