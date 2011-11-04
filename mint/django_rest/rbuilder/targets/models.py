@@ -179,7 +179,7 @@ class TargetImagesDeployed(modellib.XObjModel):
     Images deployed from the rBuilder onto a target get recorded in this table
     """
     target = models.ForeignKey(Target, db_column="targetid")
-    build_file = models.ForeignKey(imagemodels.BuildFile, db_column='fileId')
+    build_file = models.ForeignKey(imagemodels.BuildFile, db_column='fileid')
     target_image_id = models.CharField(max_length=128, db_column='targetimageid')
     class Meta:
         db_table = u'targetimagesdeployed'
