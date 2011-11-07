@@ -1,9 +1,7 @@
 #
 # Copyright (c) 2005-2009 rPath, Inc.
 #
-# All rights reserved
-#
-import email
+
 import logging
 import os
 import stat
@@ -978,62 +976,6 @@ class SiteHandler(WebHandler):
         else:
             # Everyone else gets the maintenance notice
             return self._write("maintenance", reason="maintenance")
-
-    @strFields(feed = 'newProjects')
-    def rss(self, auth, feed):
-        pText = getProjectText()
-        if feed == "newProjects":
-            results = self.client.getNewProjects(10, showFledgling = False)
-
-            title = "%s - New %ss" % (self.cfg.productName,pText.title())
-            link = "http://%s%srss?feed=newProjects" % (self.cfg.siteHost, self.cfg.basePath)
-            desc = "New %ss created on %s" % (pText.lower(),self.cfg.productName) 
-
-            items = []
-            for p in results:
-                item = {}
-                project = self.client.getProject(p[0])
-
-                item['title'] = project.getName()
-                item['link'] = project.getUrl(self.baseUrl)
-                item['content'] = "<p>A new %s named <a href=\"%s\">%s</a> has been created.</p>" % \
-                    (pText.lower(),project.getUrl(self.baseUrl), project.getName())
-                desc = project.getDesc().strip()
-                if desc:
-                    item['content'] += "%s description:"%pText.title()
-                    item['content'] += "<blockquote>%s</blockquote>" % desc
-                item['date_822'] = email.Utils.formatdate(project.getTimeCreated())
-                item['creator'] = "http://%s%s" % (self.siteHost, self.cfg.basePath)
-                items.append(item)
-        elif feed == "newReleases":
-            results = self.client.getPublishedReleaseList()
-            title = "%s - Latest releases" % self.cfg.productName
-            link = "http://%s%srss?feed=newReleases" % (self.cfg.siteHost, self.cfg.basePath)
-            desc = "New releases published on %s" % self.cfg.productName
-
-            items = []
-            for p in results:
-                item = {}
-                projectName, hostname, release = p
-                item['title'] = "%s" % release.name
-                if release.version:
-                    item['title'] += " (version %s)" % (release.version)
-                item['link'] = '%sproject/%s/release?id=%d' % (self.baseUrl, hostname, release.getId())
-                item['content'] = "<p>A new release has been published by the <a href=\"%sproject/%s\">%s</a> %s.</p>\n" % (self.baseUrl, hostname, projectName, pText.lower())
-                item['content']  += "This release contains the following builds:"
-                item['content'] += "<ul>"
-                builds = [self.client.getBuild(x) for x in release.getBuilds()]
-                for build in builds:
-                    item['content'] += "<li><a href=\"http://%s%sproject/%s/build?id=%ld\">%s (%s %s)</a></li>" % (self.cfg.siteHost, self.cfg.basePath, hostname, build.id, build.getName(), build.getArch(), buildtypes.typeNamesShort[build.buildType])
-                item['content'] += "</ul>"
-
-                item['date_822'] = email.Utils.formatdate(release.timePublished)
-                item['creator'] = "http://%s%s" % (self.siteHost, self.cfg.basePath)
-                items.append(item)
-        else:
-            raise HttpNotFound
-
-        return self._writeRss(items = items, title = title, link = link, desc = desc)
 
     @intFields(userId = None)
     @strFields(operation = None)

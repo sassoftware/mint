@@ -16,10 +16,6 @@ from mint.web.templatesupport import projectText
 -->
     <head>
         <title>${formatTitle('Front Page')}</title>
-        <link rel="alternate" type="application/rss+xml"
-              title="New ${cfg.productName} Projects" href="${baseUrl}rss?feed=newProjects" />
-        <link rel="alternate" type="application/rss+xml"
-          title="New ${cfg.productName} Releases" href="${baseUrl}rss?feed=newReleases" />
     </head>
     <body>
         <div class="fullpage">
