@@ -1,4 +1,3 @@
-
 target_GET = \
 """
 <?xml version='1.0' encoding='UTF-8'?>
@@ -30,6 +29,7 @@ target_GET = \
      <description>OpenStack</description>
      <name>openstack</name>
   </target_type>
+  <target_user_credentials id="http://testserver/api/v1/targets/4/target_user_credentials"/>
   <zone id="http://testserver/api/v1/inventory/zones/1"/>
 </target>
 """.strip()
