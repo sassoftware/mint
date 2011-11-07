@@ -96,7 +96,7 @@ class Target(modellib.XObjIdModel):
         actions.action = []
         actions.action.append(self._actionConfigureUserCredentials())
         actions.action.append(self._actionRefreshImages())
-        self.jobs = modellib.HrefField("jobs")
+        self.jobs = modellib.HrefFieldFromModel(self, "TargetJobs")
         self._setCredentialsValid()
 
     def _setCredentialsValid(self):
