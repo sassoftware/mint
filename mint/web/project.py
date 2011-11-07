@@ -7,9 +7,8 @@ from mint import buildtypes
 from mint import userlevels
 from mint.mint_error import ItemNotFound
 
-from mint.web.fields import strFields, intFields
+from mint.web.fields import strFields
 from mint.web.webhandler import WebHandler, normPath, HttpNotFound
-from mint.web.decorators import writersOnly, requiresAuth
 
 
 def getUserDict(members):
@@ -62,12 +61,6 @@ class BaseProjectHandler(WebHandler):
     def handler_customizations(self, context):
         """ Override this if necessary """
 
-    def _predirect(self, path = "", temporary=True):
-        self._redirectHttp('project/%s/%s' % (self.project.hostname, path),
-                temporary=temporary)
-
-    def help(self, auth):
-        return self._write("help")
 
 class ProjectHandler(BaseProjectHandler):
     def handler_customizations(self, context):
@@ -82,36 +75,6 @@ class ProjectHandler(BaseProjectHandler):
         else:
             self.latestPublishedRelease = None
             self.latestBuildsWithFiles = []
-
-    @requiresAuth
-    @writersOnly
-    @intFields(span = 7)
-    @strFields(format = 'png')
-    def downloadChartImg(self, auth, span, format):
-        contentTypes = {
-            'png': 'image/png',
-            'svg': 'image/svg+xml',
-            'pdf': 'application/pdf',
-        }
-
-        self.req.content_type = contentTypes[format]
-
-        # constrain the span to a reasonable limit
-        span = span <= 30 and span or 30
-
-        return self.client.getDownloadChart(self.project.id, days = span, format = format)
-
-    @requiresAuth
-    @writersOnly
-    @intFields(span = 7)
-    def downloads(self, auth, span):
-        return self._write("downloads", span = span)
-
-    @requiresAuth
-    @writersOnly
-    @intFields(span = 7)
-    def downloadsUI(self, auth, span):
-        return self._write("downloadsUI", span = span)
 
     @strFields(feed= "releases")
     def rss(self, auth, feed):

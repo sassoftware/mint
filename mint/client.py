@@ -657,9 +657,6 @@ class MintClient:
     def getReport(self, name):
         return self.server.getReport(name)
 
-    def getDownloadChart(self, projectId, days, format = 'png'):
-        return self.server.getDownloadChart(projectId, days, format)
-
     def addInboundMirror(self, targetProjectId, sourceLabels,
             sourceUrl, sourceAuthType='none', sourceUsername='',
             sourcePassword='', sourceEntitlement='', allLabels = False):
