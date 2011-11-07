@@ -430,33 +430,6 @@ class WebProjectTest(WebProjectBaseTest):
         assert re.search('create a <a href=".*newpackage">new package</a>', page.body.lower())
         assert 'manage this %s'%pText.lower() in page.body.lower()
 
-    def testBasicTroves(self):
-        raise testsuite.SkipTestException("This test relies on external repositories!")
-        projectHandler = project.ProjectHandler()
-        projectHandler.cfg = self.mintCfg
-        util.mkdirChain(os.path.join(self.mintCfg.dataPath, 'config'))
-        f = open(os.path.join(self.mintCfg.dataPath, 'config', 'conaryrc'), 'w')
-        f.close()
-        troveNames, troveDict, metadata, messages = projectHandler._getBasicTroves()
-        refNamesRpl1 = ('group-appliance-platform', 'group-base',
-                        'group-devel', 'group-dist-extras', 'group-gnome',
-                        'group-kde', 'group-netserver', 'group-xorg')
-
-        refNamesRaa = ('group-raa', )
-
-        for troveName in refNamesRpl1:
-            assert troveName in troveNames['conary.rpath.com@rpl:1']
-
-        self.failIf(messages['conary.rpath.com@rpl:1'] != 'These groups come from rPath Linux on the conary.rpath.com@rpl:1 label')
-
-        self.failIf(set(troveDict.keys()) != set(metadata),
-                    "trove metadata doesn't match the actual trove list")
-
-        self.failIf(set(refNamesRpl1) != set(troveNames['conary.rpath.com@rpl:1']), "troveDict doesn't match trove names list")
-        self.failIf(set(refNamesRaa) != set(troveNames['raa.rpath.org@rpath:raa-2']), "troveDict doesn't match trove names list")
-
-        self.assertEquals(set(troveDict.keys()), set(refNamesRaa + refNamesRpl1))
-
 
 class DirectProjectTest(testsuite.TestCase):
     testsuite.context('more_cowbell')
