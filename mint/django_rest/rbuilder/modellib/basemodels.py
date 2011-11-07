@@ -1303,6 +1303,8 @@ class XObjModel(models.Model):
                     # allow nested synthetic fields to override serialization
                     # if the child of the synthetic field is an XObjIdModel
                     val = val.serialize(request)
+                elif hasattr(val, "getElementTree"):
+                    val = val.getElementTree().element
                 setattr(xobj_model, key, val)
   
     def _serialize_fk_fields(self, xobj_model, fields, request):

@@ -77,6 +77,25 @@ class TargetsManager(basemanager.BaseManager, CatalogServiceHelper):
         return mintdata.unmarshalTargetUserCredentials(creds.credentials)
 
     @exposed
+    def getModelTargetCredentialsForCurrentUser(self, targetId):
+        target = self.getTargetById(targetId)
+        creds = self.getTargetCredentialsForCurrentUser(target)
+        if not creds:
+            raise errors.ResourceNotFound()
+        credModel= models.TargetUserCredentialsModel(user=self.user)
+        credModel.setCredentials(creds)
+        return credModel
+
+    @exposed
+    def deleteTargetUserCredentialsForCurrentUser(self, targetId):
+        target = self.getTargetById(targetId)
+        models.TargetUserCredentials.objects.filter(target=target,
+            user__user_id=self.auth.userId).delete()
+        self._pruneTargetCredentials()
+        credModel = models.TargetUserCredentialsModel(user=self.user)
+        return credModel
+
+    @exposed
     def setTargetUserCredentials(self, target, credentials):
         data = mintdata.marshalTargetUserCredentials(credentials)
         tcred, created = models.TargetCredentials.objects.get_or_create(

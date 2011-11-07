@@ -493,6 +493,27 @@ class JobCreationTest(BaseTargetsTest, RepeaterMixIn):
                         'target_credentials_id', flat=True)],
             [])
 
+        # Make sure we can fetch credentials too
+        url = "targets/%s/target_user_credentials" % target.target_id
+        resp = self._get(url, username="admin", password="password")
+        self.failUnlessEqual(resp.status_code, 200)
+        doc = xobj.parse(resp.content)
+        self.failUnlessEqual(doc.target_user_credentials.user.id,
+            "http://testserver/api/v1/users/1")
+        self.failUnlessEqual(doc.target_user_credentials.credentials.username,
+            "forrest")
+
+        # Reset user credentials
+        resp = self._delete(url, username="admin", password="password")
+        doc = xobj.parse(resp.content)
+        self.failUnlessEqual(doc.target_user_credentials.user.id,
+            "http://testserver/api/v1/users/1")
+        self.failUnlessEqual(resp.status_code, 200)
+
+        # Gone, baby, gone
+        resp = self._get(url, username="admin", password="password")
+        self.failUnlessEqual(resp.status_code, 404)
+
     def testRefreshTargetImages(self):
         jobType = jmodels.EventType.objects.get(name=jmodels.EventType.TARGET_REFRESH_IMAGES)
         target = models.Target.objects.get(name='Target Name vmware')

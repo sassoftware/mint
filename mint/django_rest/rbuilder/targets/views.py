@@ -84,11 +84,15 @@ class TargetConfigureCredentialsService(service.BaseService):
 
 class TargetUserCredentialsService(service.BaseService):
     @return_xml
-    def rest_GET(self, request, target_id, user_id):
-        return self.get(target_id, user_id)
-        
-    def get(self, target_id, user_id):
-        return self.mgr.getTargetCredentialsForTargetByUserId(target_id, user_id)
+    def rest_GET(self, request, target_id):
+        return self.get(target_id)
+
+    def get(self, target_id):
+        return self.mgr.getModelTargetCredentialsForCurrentUser(target_id)
+
+    @return_xml
+    def rest_DELETE(self, request, target_id):
+        return self.mgr.deleteTargetUserCredentialsForCurrentUser(target_id)
 
 class TargetRefreshImagesService(service.BaseService):
     @return_xml

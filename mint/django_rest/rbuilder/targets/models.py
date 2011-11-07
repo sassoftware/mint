@@ -12,7 +12,7 @@ from mint.django_rest.rbuilder.jobs import models as jobmodels
 from mint.django_rest.rbuilder.users import models as usersmodels
 from mint.django_rest.rbuilder.images import models as imagemodels
 from mint.django_rest.rbuilder.inventory import zones as zmodels
-from xobj import xobj
+from xobj import xobj, xobj2
 import sys
 
 XObjHidden = modellib.XObjHidden
@@ -173,6 +173,16 @@ class TargetUserCredentials(modellib.XObjModel):
 
     class Meta:
         db_table = u'targetusercredentials'
+
+class TargetUserCredentialsModel(modellib.XObjIdModel):
+    class Meta:
+        abstract = True
+    _xobj = xobj.XObjMetadata(tag='target_user_credentials')
+    user = models.ForeignKey(usersmodels.User)
+    credentials = modellib.SyntheticField()
+
+    def setCredentials(self, credentials):
+        self.credentials = xobj2.Document(root=credentials, rootName='credentials')
 
 class TargetImagesDeployed(modellib.XObjModel):
     """
