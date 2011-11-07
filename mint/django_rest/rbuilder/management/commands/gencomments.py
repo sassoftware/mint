@@ -1,4 +1,5 @@
 from django.db import models as djmodels
+from django.db.models.fields import related as djRelated
 from django.core.management.base import BaseCommand
 from mint.django_rest.urls import urlpatterns
 from mint.django_rest import settings_common as settings
@@ -66,11 +67,11 @@ def findModels():
             if not inspect.isclass(obj) or not \
                 issubclass(obj, djmodels.Model):
                 continue
-
-            if objName in [n.split('.')[-1] for n in allModels.keys()]:
-                print Warning(
-                    '%s in app %s shares the same name with '
-                    'one or more other models in different apps' % (objName, appName))
+            # 
+            # if objName in [n.split('.')[-1] for n in allModels.keys()]:
+            #     print Warning(
+            #         '%s in app %s shares the same name with '
+            #         'one or more other models in different apps' % (objName, appName))
 
             combinedName = appName + '.' + objName
             allModels[combinedName] = obj
@@ -227,7 +228,12 @@ class DocMetadata(object):
         
     @property
     def backwardReferences(self):
-        pass
+        related = self.model._meta.get_all_related_objects()
+        backRefs = {}
+        for ref in related:
+            backRefs[ref.field.rel.related_name] = ref.field
+        return backRefs
+        
     
     @property
     def readonlyFields(self):
@@ -241,7 +247,7 @@ class DocMetadata(object):
 
     @property
     def hiddenAccessors(self):
-        return getattr(self.model, '_xobj_hidden_accessors', None)
+        return getattr(self.model, '_xobj_hidden_accessors', {})
 
     @property
     def urls(self):
@@ -335,8 +341,10 @@ class Command(BaseCommand):
         """
         text = []
 
-        # begin compiling attributes text
-        for fieldname, field in metadata.simpleFields.items():
+        # begin compiling attributes text for simple fields
+        # and foreign keys
+        for field in metadata.fields:
+            fieldname = field.name
             if fieldname.startswith('_'): continue
             if fieldname in metadata.hiddenFields: continue
             if fieldname in metadata.readonlyFields: 
@@ -346,10 +354,19 @@ class Command(BaseCommand):
             line = ATTRIBUTE_TEMPLATE % {'ATTRNAME':fieldname, 'DOCSTRING':docstring}
             text.append(line)
     
-        # do FK's and M2M's
-        # for fieldname, field in metadata.forwardReferences.items():
-        #     pass
-        # 
+        # do backreferences
+        for fieldname, field in metadata.backwardReferences.items():
+            if not fieldname: break
+            if fieldname.startswith('_'): continue
+            if fieldname in metadata.hiddenFields: continue
+            if fieldname in metadata.hiddenAccessors: continue
+            if fieldname in metadata.readonlyFields: 
+                fieldname = fieldname + ' ' + '(Readonly)'
+    
+            docstring = getattr(field, 'docstring', 'N/A')
+            line = ATTRIBUTE_TEMPLATE % {'ATTRNAME':fieldname, 'DOCSTRING':docstring}
+            text.append(line)
+        
         # # pickup all back refs
         # for fieldname, field in metadata.backwardReferences.items():
         #     pass
