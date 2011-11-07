@@ -1030,3 +1030,18 @@ class JobCreationTest(BaseTargetsTest, RepeaterMixIn):
           })
         self.failUnlessEqual(realCall.args[1:], ())
         self.failUnlessEqual(realCall.kwargs, {})
+
+        jobXml = """
+<job>
+  <job_state>Completed</job_state>
+  <status_code>200</status_code>
+  <status_text>Some status here</status_text>
+  <results encoding="identity">
+    <image id="/1">
+      <baseFileName>cobbler-clone</baseFileName>
+    </image>
+  </results>
+</job>
+"""
+        jobUrl = "jobs/%s" % dbjob.job_uuid
+        response = self._put(jobUrl, jobXml, jobToken=jobToken)

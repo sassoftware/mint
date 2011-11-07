@@ -438,6 +438,7 @@ class JobHandlerRegistry(HandlerRegistry):
     class TargetDeployImage(_TargetDescriptorJobHandler):
         __slots__ = ['image', 'image_file', ]
         jobType = models.EventType.TARGET_DEPLOY_IMAGE
+        ResultsTag = 'image'
 
         def getDescriptor(self, descriptorId):
             try:
@@ -449,7 +450,7 @@ class JobHandlerRegistry(HandlerRegistry):
             fileId = int(match.kwargs['file_id'])
 
             self._setTarget(targetId)
-            self._setImage(fileId)
+            self._setImageFromFileId(fileId)
             return descriptorId
 
         def _setDescriptorId(self, descriptorId, descriptor):
@@ -459,12 +460,18 @@ class JobHandlerRegistry(HandlerRegistry):
             descriptorXml = '<descriptor id="%s"/>' % descriptor
             return descriptorXml
 
-        def _setImage(self, fileId):
+        def _setImageFromFileId(self, fileId):
             self.image_file = imagemodels.BuildFile.objects.get(file_id=fileId)
             self.image = self.image_file.image
 
         def _processDescriptor(self, descriptor, descriptorDataXml):
             return descriptorDataXml
+
+        def _processJobResults(self, job):
+            # Nothing to be done, there is another call that posts the
+            # image
+            self.image = job.images.all()[0].image
+            return self.image
 
         def getRepeaterMethod(self, cli, job):
             self.extractDescriptorData(job)
