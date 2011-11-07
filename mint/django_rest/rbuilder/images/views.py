@@ -83,7 +83,7 @@ class ImageJobsService(BaseImageService):
     @requires("job", flags=Flags(save=False))
     @return_xml
     def rest_POST(self, request, image_id, job):
-        return self.mgr.addJob(job)
+        return self.mgr.addJob(job, imageId=image_id)
 
 class ImageBuildFilesService(service.BaseService):
     @access.anonymous

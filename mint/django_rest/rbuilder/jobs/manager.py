@@ -328,17 +328,22 @@ class DescriptorJobHandler(BaseJobHandler, ResultsProcessingMixIn):
     def linkRelatedResource(self, job):
         if job._relatedResource is None:
             return
-        model = job._relatedThroughModel(job=job)
-        # Find the name of the related field
-        relatedClass = job._relatedResource.__class__
-        relatedFields = [ x for x in job._relatedThroughModel._meta.fields
-            if x.rel and x.rel.to == relatedClass ]
-        if not relatedFields:
-            return
-        relatedFieldName = relatedFields[0].name
-        setattr(model, relatedFieldName, job._relatedResource)
-        self.postprocessRelatedResource(job, model)
-        model.save()
+        # It's possible to link multiple resources to a job
+        relatedResources = job._relatedResource
+        if not isinstance(relatedResources, list):
+            relatedResources = [ relatedResources ]
+        relatedClass = relatedResources[0].__class__
+        for relatedResource in relatedResources:
+            model = job._relatedThroughModel(job=job)
+            # Find the name of the related field
+            relatedFields = [ x for x in job._relatedThroughModel._meta.fields
+                if x.rel and x.rel.to == relatedClass ]
+            if not relatedFields:
+                return
+            relatedFieldName = relatedFields[0].name
+            setattr(model, relatedFieldName, relatedResource)
+            self.postprocessRelatedResource(job, model)
+            model.save()
 
     def postprocessRelatedResource(self, job, model):
         pass
@@ -522,7 +527,13 @@ class JobHandlerRegistry(HandlerRegistry):
             return imagemodels.JobImage
 
         def getRelatedResource(self, descriptor):
-            return self.image
+            imageId = self.extraArgs['imageId']
+            relatedResources = [ self.image ]
+            if imageId != str(self.image.image_id):
+                # We have a base image
+                relatedResources.append(
+                    imagemodels.Image.objects.get(image_id=imageId))
+            return relatedResources
 
         def _targetImageXmlTemplate(self):
             tmpl = """\
