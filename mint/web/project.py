@@ -4,25 +4,20 @@
 
 import email
 import re
-import sys
 from mint.db import jobs
 from mint import jobstatus
 from mint import builds
 from mint import buildtypes
 from mint import userlevels
-from mint.mint_error import (ItemNotFound, TroveNotFoundForBuildDefinition,
-        NotEntitledError, BuildOptionValidationException,
-        DuplicateItem, ProductDefinitionVersionExternalNotSup,
-        ProductDefinitionInvalidStage, ProductVersionInvalid,
+from mint.mint_error import (ItemNotFound, NotEntitledError,
+        BuildOptionValidationException, DuplicateItem,
         )
 
 from mint import buildtemplates
 from mint import helperfuncs
 from mint.helperfuncs import getProjectText
 from mint.lib.data import RDT_STRING, RDT_BOOL, RDT_INT, RDT_ENUM, RDT_TROVE
-from mint.logerror import logWebErrorAndEmail
 from mint.lib.maillib import sendMailWithChecks
-from mint.web import productversion
 from mint.web.fields import strFields, intFields, listFields, boolFields, dictFields
 from mint.web.webhandler import WebHandler, normPath, HttpNotFound
 from mint.web.decorators import ownerOnly, writersOnly, requiresAuth, \
@@ -33,9 +28,8 @@ from conary import versions
 from conary.conaryclient.cmdline import parseTroveSpec
 from conary.errors import ParseError
 
-from rpath_proddef import api1 as proddef
-
 import json
+
 
 def getUserDict(members):
     users = { userlevels.USER: [],
@@ -45,7 +39,7 @@ def getUserDict(members):
         users[level].append((userId, username,))
     return users
 
-class BaseProjectHandler(WebHandler, productversion.ProductVersionView):
+class BaseProjectHandler(WebHandler):
 
     def handle(self, context):
         self.__dict__.update(**context)
@@ -71,8 +65,6 @@ class BaseProjectHandler(WebHandler, productversion.ProductVersionView):
         # add the project name to the base path
         self.basePath += "project/%s" % (cmds[0])
         self.basePath = normPath(self.basePath)
-
-        self.setupView()
 
         if not cmds[1]:
             return self.index
@@ -161,41 +153,6 @@ class ProjectHandler(BaseProjectHandler):
     def groups(self, auth):
         # leave this here until old UI is completely removed
         return self._write("groups")
-
-    @writersOnly
-    @productversion.productVersionRequired
-    def newBuildsFromProductDefinition(self, auth):
-        return self._write("newBuildsFromProductDefinition")
-
-    @strFields(action = "cancel", productStageName = None)
-    @boolFields(force = False)
-    @dictFields(yesArgs = None)
-    @writersOnly
-    @productversion.productVersionRequired
-    def processNewBuildsFromProductDefinition(self, auth, productStageName, action, force, **yesArgs):
-
-        if action.lower() == 'cancel':
-            self._predirect('builds')
-
-        try:
-            self.client.newBuildsFromProductDefinition(self.currentVersion,
-                    productStageName, force)
-        except TroveNotFoundForBuildDefinition, tnffbd:
-            return self._write("confirm",
-                    message = "Some builds will not be built because of the following errors: %s. Continue?" % ', '.join(tnffbd.errlist),
-                    yesArgs = { 'func': 'processNewBuildsFromProductDefinition',
-                                'productStageName': productStageName,
-                                'action': 'submit',
-                                'force': '1'},
-                    noLink = "builds")
-        except Exception, e:
-            logWebErrorAndEmail(self.req, self.cfg, *sys.exc_info())
-            self._addErrors("Problem encountered when creating build(s): %s" % str(e))
-            self._predirect('newBuildsFromProductDefinition')
-        else:
-            self._setInfo("Builds created.")
-            self._predirect('builds')
-
 
     @writersOnly
     def newBuild(self, auth):
@@ -763,380 +720,6 @@ class ProjectHandler(BaseProjectHandler):
         else:
             self._setInfo("Updated %s %s" % (pText.lower(), name))
             self._predirect()
-
-    @requiresAuth
-    @ownerOnly
-    @intFields(id = -1)
-    def editVersion(self, auth, id, *args, **kwargs):
-        isNew = (id == -1)
-        
-        # external projects can't use this yet
-        if self.project.external:
-            raise ProductDefinitionVersionExternalNotSup();
-        
-        availablePlatforms = self.client.getAvailablePlatforms()
-        try:
-            # Assume that the first available platform is the default
-            kwargs['platformLabel'] = availablePlatforms[0][0]
-        except IndexError:
-            # Failing that, we don't have a platform label
-            kwargs['platformLabel'] = ''
-
-        platformName = None
-        customPlatform = ()
-        acceptablePlatform = True
-
-        if not isNew:
-            kwargs.update(self.client.getProductVersion(id))
-            pd = self.client.getProductDefinitionForVersion(id)
-            platformSourceTrove = pd.getPlatformSourceTrove()
-            if platformSourceTrove:
-                n,v,f = parseTroveSpec(platformSourceTrove)
-                vObj = versions.VersionFromString(v)
-                kwargs['platformLabel'] = str(vObj.trailingLabel())
-                for lbl, name in availablePlatforms:
-                    if lbl == kwargs['platformLabel']:
-                        platformName = name
-                        break
-                if not platformName:
-                    platformName = 'Custom appliance platform on %s' % kwargs['platformLabel']
-                    customPlatform = (kwargs['platformLabel'], platformName)
-                    acceptablePlatform = \
-                            self.client.isPlatformAcceptable(kwargs['platformLabel'])
-
-            kwargs['namespace'] = pd.getConaryNamespace()
-        else:
-            pd = proddef.ProductDefinition()
-            helperfuncs.addDefaultStagesToProductDefinition(pd)
-            # XXX: this should be carried forward when images and other values are
-            kwargs['namespace'] = self.project.namespace
-        helperfuncs.addDefaultPlatformToProductDefinition(pd)
-
-        return self._write("editVersion",
-                isNew = isNew,
-                id=id,
-                visibleBuildTypes = self._productVersionAvaliableBuildTypes(pd),
-                buildTemplateValueToIdMap = buildtemplates.getValueToTemplateIdMap(),
-                productDefinition = pd,
-                availablePlatforms = availablePlatforms,
-                acceptablePlatform = acceptablePlatform,
-                platformName = platformName,
-                customPlatform = customPlatform,
-                kwargs = kwargs)
-
-    @intFields(id = -1)
-    @strFields(namespace = '', name = '', description = '', baseFlavor = '', action = 'Cancel', platformLabel = '')
-    @requiresAuth
-    @ownerOnly
-    def processEditVersion(self, auth, id, namespace, name, description, action, baseFlavor, platformLabel, **kwargs):
-
-        isNew = (id == -1)
-
-        if not namespace:
-            self._addErrors('Missing namespace')
-        else:
-            err = helperfuncs.validateNamespace(namespace)
-            if err != True:
-                self._addErrors(err)
-
-        if not name:
-            self._addErrors("Missing major version")
-
-        # Load the current project definition for this version
-        # If this is new, use our template product definition
-        # generator. Otherwise, just get it from the repository.
-        if isNew:
-            pd = proddef.ProductDefinition()
-        else:
-            pd = self.client.getProductDefinitionForVersion(id)
-
-        pd = helperfuncs.sanitizeProductDefinition(
-                    self.project.name,
-                    self.project.description,
-                    self.project.hostname,
-                    self.project.domainname,
-                    self.project.shortname,
-                    name,
-                    description,
-                    namespace,
-                    pd)
-
-        # Gather all grouped inputs
-        collatedDict = helperfuncs.collateDictByKeyPrefix(kwargs,
-                coerceValues=True)
-
-        # Process stages
-        stages = collatedDict.get('pdstages', {})
-        try:
-            self._validateStages(stages)
-        except ProductDefinitionInvalidStage, e:
-            self._addErrors(str(e))
-
-        pd.clearStages()
-        for s in stages:
-            pd.addStage(s['name'], s['labelSuffix'])
-
-        # Process build definitions
-        buildDefsList = collatedDict.get('pdbuilddef',[])
-
-        # Currently, stageNames for each build is
-        # defined as the full set of stages.
-        stageNames = [x.name for x in pd.getStages()]
-
-        pd.clearBuildDefinition()
-
-        validationErrors = []
-        warnedNoNameAlready = False
-        for builddef in buildDefsList:
-            buildType = int(builddef.get('_buildType'))
-            xmlTagName = buildtypes.imageTypeXmlTagNameMap[buildType]
-            buildName = builddef.pop('name', '')
-            proposedBuildSettings = dict(x for x in builddef.iteritems() if not x[0].startswith('_'))
-            bTmpl = buildtemplates.getDataTemplate(buildType)
-            buildSettings = bTmpl.getDefaultDict()
-            buildSettings.update(proposedBuildSettings)
-
-            # only add this error once
-            if not buildName and not warnedNoNameAlready:
-                self._addErrors("Missing name for build definition(s)")
-                warnedNoNameAlready = True
-            else:
-                try:
-                    bTmpl.validate(**buildSettings)
-                except BuildOptionValidationException, e:
-                    validationErrors.extend(e.errlist)
-            # add regardless of errors.  if an error occurred, we want the user
-            # to see what they entered.
-
-            # Coerce trove type options back to their class name
-            buildSettings = dict([
-                (buildtemplates.reversedOptionNameMap.get(k, k), v)
-                 for k, v in buildSettings.iteritems()
-                    if v != '' and v is not None
-            ])
-
-            flvSetArchRef = builddef.get('flvSetArchRef')
-            if flvSetArchRef:
-                flavorSetRef, architectureRef = flvSetArchRef.split(',')
-            else:
-                self._addErrors("The combination of image type and architecture for image '%s' is not compatible with your platform. Please remove it from your image set." % buildName)
-                flavorSetRef = architectureRef = None
-            pd.addBuildDefinition(name=buildName,
-                flavorSetRef = flavorSetRef,
-                architectureRef = architectureRef,
-                containerTemplateRef = xmlTagName,
-                image = pd.imageType(None, buildSettings),
-                stages = stageNames)
-
-        for ve in validationErrors:
-            self._addErrors(str(ve))
-
-        if not self._getErrors():
-            if isNew:
-                try:
-                    id = self.client.addProductVersion(self.project.id,
-                                            namespace, name, description)
-                except ProductVersionInvalid, e:
-                    self._addErrors(str(e))
-            else:
-                self.client.editProductVersion(id, description)
-
-        if id != -1 and not self._getErrors():
-            if isNew:
-                self.client.setProductDefinitionForVersion(id, pd, platformLabel)
-            else:
-                self.client.setProductDefinitionForVersion(id, pd)
-
-            if kwargs.has_key('linked'):
-                # we got here from the "create a product menu" so output
-                # accordingly.  Note that the value of linked is the name
-                # of the project.
-                visibility = self.project.hidden and "private" or "public"
-                self._setInfo("Successfully created %s %s '%s' version '%s'" % \
-                              (visibility, getProjectText().lower(), 
-                               self.project.name,
-                               name))
-            else:
-                action = isNew and "Created" or "Updated"
-                self._setInfo("%s %s version '%s'" % \
-                              (action, getProjectText().lower(), name))
-            #Set the currentVersion to the just created one
-            self._setCurrentProductVersion(id)
-            self._predirect()
-        else:
-            # we're displaying the page 
-            availablePlatforms = self.client.getAvailablePlatforms()
-            platformName = ''
-            customPlatform = ()
-            acceptablePlatform = True
-            for lbl, pName in availablePlatforms:
-                if lbl == platformLabel:
-                    platformName = pName
-                    break
-            if not platformName:
-                if not platformLabel and pd.getPlatformSourceTrove():
-                    platformTroveSpec = pd.getPlatformSourceTrove()
-                    platformNVF = parseTroveSpec(platformTroveSpec)
-                    platformVersion = versions.VersionFromString(platformNVF[1])
-                    platformLabel = str(platformVersion.trailingLabel())
-                if platformLabel:
-                    platformName = 'Custom appliance platform on %s' % platformLabel
-                    acceptablePlatform = \
-                            self.client.isPlatformAcceptable(platformLabel)
-                else:
-                    platformName = 'None'
-                    acceptablePlatform = False
-                customPlatform = (platformLabel, platformName)
-
-
-            kwargs.update(name = name, description = description,
-                    platformLabel = platformLabel, namespace = namespace)
-            return self._write("editVersion", 
-               isNew = isNew,
-               id=id,
-               visibleBuildTypes = self._productVersionAvaliableBuildTypes(pd),
-               buildTemplateValueToIdMap = buildtemplates.getValueToTemplateIdMap(),
-               availablePlatforms = availablePlatforms,
-               acceptablePlatform = acceptablePlatform,
-               platformName = platformName,
-               customPlatform = customPlatform,
-               productDefinition = pd, kwargs = kwargs)
-
-    @intFields(id = -1)
-    @requiresAuth
-    @ownerOnly
-    def rebaseProductVersion(self, auth, id):
-
-        return_to = ''
-        if self.req.headers_in.has_key('referer') and \
-                self.project.getUrl(self.baseUrl) in self.req.headers_in['referer']:
-            return_to = self.req.headers_in['referer'].split('/')[-1]
-
-        productVersion = self.client.getProductVersion(id)
-        availablePlatforms = self.client.getAvailablePlatforms()
-        try:
-            # Assume that the first available platform is the default
-            platformLabel = availablePlatforms[0][0]
-        except IndexError:
-            # Failing that, we don't have a platform label
-            platformLabel = ''
-
-        platformName = None
-        customPlatform = ()
-        pd = self.client.getProductDefinitionForVersion(id)
-
-        platformSourceTrove = pd.getPlatformSourceTrove()
-        if platformSourceTrove:
-            n,v,f = parseTroveSpec(platformSourceTrove)
-            vObj = versions.VersionFromString(v)
-            platformLabel = str(vObj.trailingLabel())
-            for lbl, name in availablePlatforms:
-                if lbl == platformLabel:
-                    platformName = name
-                    break
-            if not platformName:
-                platformName = 'Custom appliance platform on %s' % platformLabel
-                customPlatform = (platformLabel, platformName)
-
-        return self._write("rebaseProductVersion",
-                id = id,
-                productName = self.project.name,
-                versionName = productVersion.get('name',''),
-                currentPlatformLabel = platformLabel,
-                customPlatform = customPlatform,
-                availablePlatforms = availablePlatforms,
-                return_to = return_to)
-
-    @intFields(id = -1)
-    @strFields(platformLabel = '', action = 'Cancel', return_to='')
-    @requiresAuth
-    @ownerOnly
-    def processRebaseProductVersion(self, auth, id, platformLabel, action, return_to):
-        if action == 'Cancel':
-            self._predirect(return_to)
-
-        pd = self.client.getProductDefinitionForVersion(id)
-        if self.client.setProductDefinitionForVersion(id, pd, platformLabel):
-            self._setInfo("Product version updated")
-        else:
-            self._addError("Problem updating product version")
-        self._predirect(return_to)
-
-    def _productVersionAvaliableBuildTypes(self, pd):
-        """
-        Get a list of the available build types for build defs
-        """
-        # get a list of all the types this rBuilder knows about
-        availableTypes = helperfuncs.getBuildDefsAvaliableBuildTypes(
-            self.client.getAvailableBuildTypes())
-
-        # get a list of all the containerTemplates this proddef has defined
-        # filter any containers that don't actually have defined flavors
-        definedTypes = set()
-        containerTemplates = []
-        buildTemplates = []
-
-        if hasattr(pd, 'platform') and pd.platform:
-            containerTemplates = pd.platform.containerTemplates
-            buildTemplates = pd.platform.buildTemplates
-        containerTemplates += pd.getContainerTemplates()
-        buildTemplates += pd.getBuildTemplates()
-        definedContainers = set([x.containerTemplateRef \
-                for x in buildTemplates])
-
-        for template in containerTemplates:
-            if template.containerFormat not in definedContainers:
-                continue
-            definedTypes.add(buildtypes.xmlTagNameImageTypeMap[template.containerFormat])
-
-        return list(definedTypes.intersection(availableTypes))
-
-    def _validateStages(self, stagesList):
-        """
-        Validate the release stages
-        """
-        if not stagesList:
-            raise ProductDefinitionInvalidStage(
-                    'You must have one or more release stages defined')
-        
-        for stage in stagesList:
-            # name is required
-            if not stage.has_key('name'):
-                raise ProductDefinitionInvalidStage(
-                    'The release stage name must be specified')
-            # make sure all stages have a labelSuffix
-            # value since we allow it to be empty
-            if not stage.has_key('labelSuffix'):
-                stage['labelSuffix'] = ""
-                
-    def _getValidatedUpstreamSource(self, us):
-        """
-        Return the validated troveName and label for the specified upstream
-        sources dict.  Any keys missing from the dict will be set to '' so 
-        that errors can be properly handled.
-        """
-        
-        # validate the trove name
-        if not us.has_key('troveName'):
-            troveName = ''
-            self._addErrors("Missing trove name for upstream source")
-        else:
-            troveName = us['troveName']
-            
-        # validate the label
-        if not us.has_key('label'):
-            label = ''
-            self._addErrors("Missing label for upstream source")
-        else:
-            try:
-                labelObj = versions.Label(us['label'])
-                label = labelObj.freeze()
-            except Exception ,e:
-                label = us['label']
-                self._addErrors("Invalid label for upstream source: %s" \
-                                % str(e))
-            
-        return troveName, label
 
     def _isAdoptable(self, memberList=None):
         if memberList is None:

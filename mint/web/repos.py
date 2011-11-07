@@ -19,7 +19,6 @@ import json
 from mint import userlevels
 from mint import helperfuncs
 from mint.mint_error import ItemNotFound, PermissionDenied
-from mint.web import productversion
 from mint.web.fields import strFields, listFields, intFields
 from mint.web.webhandler import (WebHandler, normPath, HttpForbidden,
         HttpNotFound, HttpBadRequest)
@@ -36,7 +35,7 @@ from conary import conarycfg
 from conary import errors as conaryerrors
 from conary.trove import Trove
 
-class ConaryHandler(WebHandler, productversion.ProductVersionView):
+class ConaryHandler(WebHandler):
     def _filterAuth(self, **kwargs):
         memberList = kwargs.get('memberList', [])
         if isinstance(memberList, str):
@@ -797,8 +796,6 @@ class ConaryHandler(WebHandler, productversion.ProductVersionView):
 
         d = self.fields
         d['auth'] = self.authToken
-
-        self.setupView()
 
         try:
             d['auth'] = self.authToken
