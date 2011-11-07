@@ -11,7 +11,7 @@ from mint import builds
 from mint import buildtypes
 from mint import userlevels
 from mint.mint_error import (ItemNotFound, TroveNotFoundForBuildDefinition,
-        NotEntitledError, BuildOptionValidationException, MintError,
+        NotEntitledError, BuildOptionValidationException,
         DuplicateItem, ProductDefinitionVersionExternalNotSup,
         ProductDefinitionInvalidStage, ProductVersionInvalid,
         )
@@ -23,7 +23,6 @@ from mint.lib.data import RDT_STRING, RDT_BOOL, RDT_INT, RDT_ENUM, RDT_TROVE
 from mint.logerror import logWebErrorAndEmail
 from mint.lib.maillib import sendMailWithChecks
 from mint.web import productversion
-from mint.web.packagecreator import PackageCreatorMixin
 from mint.web.fields import strFields, intFields, listFields, boolFields, dictFields
 from mint.web.webhandler import WebHandler, normPath, HttpNotFound
 from mint.web.decorators import ownerOnly, writersOnly, requiresAuth, \
@@ -97,7 +96,7 @@ class BaseProjectHandler(WebHandler, productversion.ProductVersionView):
     def help(self, auth):
         return self._write("help")
 
-class ProjectHandler(BaseProjectHandler, PackageCreatorMixin):
+class ProjectHandler(BaseProjectHandler):
     def handler_customizations(self, context):
         # go ahead and fetch the release / commits data, too
         self.projectReleases = [self.client.getPublishedRelease(x) for x in self.project.getPublishedReleases()]
@@ -510,107 +509,6 @@ class ProjectHandler(BaseProjectHandler, PackageCreatorMixin):
                 amiS3Manifest = amiS3Manifest,
                 anacondaVars = anacondaVars,
                 showLaunchButton = showLaunchButton)
-
-    @writersOnly
-    @productversion.productVersionRequired
-    def newPackage(self, auth):
-        uploadDirectoryHandle = self.client.createPackageTmpDir()
-        if not self.versions:
-            self._addErrors('You must create a product version before using the package creator')
-            self._predirect('editVersion', temporary=True)
-        return self._write('createPackage', message = '',
-                uploadDirectoryHandle = uploadDirectoryHandle,
-                sessionHandle=None, name=None)
-
-    @writersOnly
-    @strFields(uploadId=None, fieldname=None)
-    @boolFields(debug=False)
-    def upload_iframe(self, auth, uploadId, fieldname, debug):
-        return self._write('uploadPackageFrame', uploadId = uploadId,
-                fieldname = fieldname, project = self.project.hostname,
-                debug=debug)
-
-    @writersOnly
-    @productversion.productVersionRequired
-    @strFields(uploadDirectoryHandle=None, upload_url='', sessionHandle='')
-    def getPackageFactories(self, auth, uploadDirectoryHandle, upload_url, sessionHandle):
-        ret = self._getPackageFactories(uploadDirectoryHandle, self.currentVersion, sessionHandle, upload_url)
-        return self._write('createPackageInterview', message=None, **ret)
-
-    @writersOnly
-    @strFields(name=None, label=None, prodVer=None, namespace=None)
-    def newUpload(self, auth, name, label, prodVer, namespace):
-        """"""
-        #Start both the upload and the pc sessions
-        uploadDirectoryHandle = self.client.createPackageTmpDir()
-        sessionHandle = self.client.startPackageCreatorSession(self.project.getId(), prodVer, namespace, name, label)
-        return self._write('createPackage', message = '',
-                uploadDirectoryHandle = uploadDirectoryHandle,
-                sessionHandle=sessionHandle, prodVer=prodVer, namespace=namespace, name=name)
-
-    @writersOnly
-    @strFields(name=None, label=None, prodVer=None, namespace=None)
-    def maintainPackageInterview(self, auth, name, label, prodVer, namespace):
-        """"""
-        try:
-            sessionHandle, factories, prevChoices = self.client.getPackageFactoriesFromRepoArchive(self.project.getId(), prodVer, namespace, name, label)
-            isDefault, recipeContents = self.client.getPackageCreatorRecipe(sessionHandle)
-
-        except MintError, e:
-            self._addErrors(str(e))
-            self._predirect('newPackage', temporary=True)
-        return self._write('createPackageInterview',
-                editing = True, sessionHandle = sessionHandle,
-                factories = factories, message = None, prevChoices=prevChoices,
-                recipeContents = recipeContents,
-                useOverrideRecipe = not isDefault)
-
-    @writersOnly
-    @strFields(sessionHandle=None, factoryHandle=None, recipeContents='')
-    @boolFields(useOverrideRecipe=False)
-    def savePackage(self, auth, sessionHandle, factoryHandle, recipeContents, useOverrideRecipe, **kwargs):
-        #It is assumed that the package creator service will validate the input
-        if not useOverrideRecipe:
-            recipeContents = ''
-        self.client.savePackageCreatorRecipe(sessionHandle, recipeContents)
-        self.client.savePackage(sessionHandle, factoryHandle, kwargs)
-        return self._write('buildPackage', sessionHandle = sessionHandle,
-                message = None)
-
-    @writersOnly
-    @productversion.productVersionRequired
-    def packageCreatorPackages(self, auth):
-        pkgList = {}
-        version = None
-        namespace = None
-        allPackageCreatorPackagesList = self.client.getPackageCreatorPackages(self.project.getId())
-        try:
-            ver = self.client.getProductVersion(self.currentVersion)
-            version = ver['name']
-            namespace = ver['namespace']
-            pkgList = dict([x for x in allPackageCreatorPackagesList[ver['name']][ver['namespace']].items() if not x[0].startswith('group-')])
-        except KeyError:
-            pass # no packages for our namespace / version combo
-
-        return self._write('packageList', pkgList=pkgList, version=version,
-                namespace=namespace, message=None)
-
-    @writersOnly
-    def sourcePackages(self, auth):
-        #This method is not supported, and should not be used
-        versionId = self._getCurrentProductVersion()
-        pkgList = self.client.getProductVersionSourcePackages(self.project.getId(), versionId)
-        pkgList = [(x[0], versions.ThawVersion(x[1])) for x in pkgList]
-        return self._write('sourcePackageList', pkgList=pkgList, message=None)
-
-    @writersOnly
-    @strFields(troveName=None, troveVersion='')
-    def buildSourcePackage(self, auth, troveName, troveVersion):
-        #This method is not supported, and should not be used
-        versionId = self._getCurrentProductVersion()
-        sesH = self.client.buildSourcePackage(self.project.getId(), versionId, troveName, troveVersion)
-        return self._write('buildPackage', sessionHandle = sesH,
-                message = None)
 
     @ownerOnly
     def newRelease(self, auth):
