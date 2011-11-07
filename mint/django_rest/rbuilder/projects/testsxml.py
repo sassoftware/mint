@@ -559,6 +559,16 @@ release_by_project_post_xml = \
 </release>
 """
 
+release_by_project_no_project_post_xml = \
+"""
+<release>
+  <name>release2002</name>
+  <description>description2002</description>
+  <should_mirror>0</should_mirror>
+  <version>releaseVersion2002</version>
+</release>
+""".strip()
+
 image_by_release_get_xml = \
 """
 <?xml version='1.0' encoding='UTF-8'?>

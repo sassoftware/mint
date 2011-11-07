@@ -482,7 +482,12 @@ class Release(modellib.XObjIdModel):
             self.published = True
         else:
             self.published = False
-
+    
+    def save(self, *args, **kwargs):
+        with_project = kwargs.pop('with_project', None)
+        if with_project is not None:
+            self.project = with_project
+        return modellib.XObjIdModel.save(self, *args, **kwargs)
 
 class InboundMirror(modellib.XObjModel):
     _xobj = xobj.XObjMetadata(tag="inbound_mirror")

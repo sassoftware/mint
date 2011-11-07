@@ -438,7 +438,8 @@ class ProjectReleasesService(service.BaseService):
     @requires('release')
     @return_xml
     def rest_POST(self, request, project_short_name, release):
-        release.save()
+        project = projectmodels.Project.objects.get(short_name=project_short_name)
+        release.save(with_project=project)
         return release
         
 class ProjectReleaseService(service.BaseService):

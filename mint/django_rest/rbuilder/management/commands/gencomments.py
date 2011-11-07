@@ -66,11 +66,13 @@ def findModels():
             if not inspect.isclass(obj) or not \
                 issubclass(obj, djmodels.Model):
                 continue
-            combinedName = appName + '.' + objName
+
             if objName in [n.split('.')[-1] for n in allModels.keys()]:
                 print Warning(
                     '%s in app %s shares the same name with '
                     'one or more other models in different apps' % (objName, appName))
+
+            combinedName = appName + '.' + objName
             allModels[combinedName] = obj
     return allModels
 
@@ -114,7 +116,6 @@ class DocMetadata(object):
     
     def __init__(self, view, model):
         # preprocess -- turn view into an instance of a view
-        # and get the app if it is referenced by name
         self.view = view() if not isinstance(view, object) else view
         self.model = model
         
@@ -145,41 +146,47 @@ class DocMetadata(object):
         """
         get all the models referenced in the parent's list_fields.  note
         that the tag name in list_fields has to match the tag name of the
-        model, which may be different from the default tag.
+        model's tag, which may be different from the default tag.
         
         1) if tag in current app, return model from current app
-        2) if not (1) and tag in different app, return model from different app
-        3) if not (1) or (2) and tag exists in two or more different apps
-           then skip, returning None.
+        2) if not (1) and tag in one and only one different app,
+           return the model from that app
+        
+        ** ideally, we should have a (3) that does the following **
+        
+        3) if not (1) and not (2), then tag either exists in two or
+           more different apps, or it doesn't exist at all.  Skip it.
+        
+        FIXME: can't have condition (3) right now as it mysteriously
+        causes the code to invalidate the list fields for a number of
+        unambiguous cases...
+        
+        In the meantime, we accept that the algorithm works in almost
+        all cases but a few, and that there might be some slight
+        inaccuracies 
         """
         xobjTags, reverseXObjTags = self._calculateXObjTags()
         
         listFieldsModels = {}
         if self.listFields:
+            allApps = getApps()
+            
             for listedModelTag in self.listFields:
                 # from model tag, try to reconstruct the default
                 # tag name for the listed model
                 camelCasedName = toCamelCaps(listedModelTag)
-                # ie rbuilder.Jobs
+                # ie jobs.Jobs
                 fullName = self.appName + '.' + camelCasedName
                 listedModel = DocMetadata._allModels.get(fullName, None)
                 # listedModel is None when the default tag name isn't being used
+                # or when the model is in a different app
                 if listedModel is None:
                     # try and pull out the model by its overridden tag name
-                    fullName = self.appName + '.' + listedModelTag
-                    if fullName in reverseXObjTags:
-                        listedModel = reverseXObjTags[fullName]
-                    # search other apps for the model    
-                    else:
-                        modelApps = _calculateModelApps(camelCasedName)
-                        modelAppNames = modelApps[camelCasedName]
-                        # if there is more than one app containing
-                        # models of the same tag name then disregard
-                        # and let listedModel be None.
-                        if len(modelAppNames) == 1:
-                            fullName = modelAppNames[0] + '.' + listedModelTag
-                            if fullName in reverseXObjTags:
-                                listedModel = reverseXObjTags[fullName]
+                    for appName in allApps.keys():
+                        overridenFullName = appName + '.' + listedModelTag
+                        # model having the tag name has been found
+                        if overridenFullName in reverseXObjTags:
+                            listedModel = reverseXObjTags[overridenFullName]
                 # populate dictionary, don't worry too much whether
                 # or not listedModel is None -- that will be handled
                 # inside the gencomment command's getAttrDocumentation
@@ -340,8 +347,8 @@ class Command(BaseCommand):
             text.append(line)
     
         # do FK's and M2M's
-        for fieldname, field in metadata.forwardReferences.items():
-            pass
+        # for fieldname, field in metadata.forwardReferences.items():
+        #     pass
         # 
         # # pickup all back refs
         # for fieldname, field in metadata.backwardReferences.items():

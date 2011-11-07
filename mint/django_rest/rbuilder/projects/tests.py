@@ -561,6 +561,19 @@ class ProjectsTestCase(RbacEngine):
         self.assertEquals(release.project.id, 'http://testserver/api/v1/projects/foo')
         self.assertEquals(release.id, "http://testserver/api/v1/releases/1")
     
+    def testAddRelease2(self):
+        self.addProject('foo', user='admin')
+        response = self._post('projects/foo/releases',
+            username='admin', password='password', data=testsxml.release_by_project_no_project_post_xml)
+        import pdb; pdb.set_trace()
+        self.assertEquals(response.status_code, 200)
+        release = xobj.parse(response.content).release
+        self.assertEquals(release.name, 'release2002')
+        self.assertEquals(release.project.id, 'http://testserver/api/v1/projects/foo')
+        self.assertEquals(release.should_mirror, u'0')
+        self.assertEquals(release.version, 'releaseVersion2002')
+        import pdb; pdb.set_trace()
+    
     def testGetImagesByRelease(self):
         self._initProject(adorn=True)
         url = 'projects/chater-foo/releases/1/images/'
