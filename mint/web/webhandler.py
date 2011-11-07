@@ -6,10 +6,7 @@
 import base64
 import kid
 import kid.parser
-if hasattr(kid.parser, 'START'):
-    from kid.parser import START, TEXT, END
-else:
-    from kid.pull import START, TEXT, END
+from kid.parser import START, TEXT, END
 
 
 import os
@@ -306,7 +303,6 @@ def make_i18n_filter(localeDir, locale = 'en'):
             if ev==START:
                 l = item.get(lang_attr)
                 if l:
-                    locale = l
                     locales.append(l)
             elif ev==TEXT:
                 prefix = ''
@@ -320,7 +316,6 @@ def make_i18n_filter(localeDir, locale = 'en'):
             elif ev==END:
                 if item.get(lang_attr):
                     locales.pop()
-                    locale = locales[-1]
             yield (ev, item)
 
     return i18n_filter

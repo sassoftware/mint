@@ -14,7 +14,6 @@ from mod_python import Cookie
 from mod_python.util import FieldStorage
 
 from mint.session import SqlSession
-from mint.client import timeDelta
 from mint import server
 from mint import shimclient
 from mint import userlevels

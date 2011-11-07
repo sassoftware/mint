@@ -19,11 +19,8 @@ from mint.web.fields import strFields, intFields, listFields, boolFields
 
 from conary import versions
 
-import kid.parser
-if hasattr(kid.parser, 'XML'):
-    from kid.parser import XML
-else:
-    from kid.pull import XML  # pyflakes=ignore
+from kid.parser import XML
+
 
 log = logging.getLogger(__name__)
 
@@ -137,7 +134,7 @@ class AdminHandler(WebHandler):
                 # skip a redundant label specification
                 if l != label:
                     try:
-                        testlabel = versions.Label(l)
+                        versions.Label(l)
                         additionalLabels.append(l)
                     except versions.ParseError:
                         self._addErrors("Invalid additional label %s" % l)
@@ -232,7 +229,6 @@ class AdminHandler(WebHandler):
             project.editLabel(labelId, str(extLabel), url,
                 authType, externalUser, externalPass, externalEntKey)
 
-            mirror = self.client.getInboundMirror(projectId)
             # set up the mirror, if requested
             if useMirror == 'net':
                 localUrl = "http%s://%s%srepos/%s/" % (self.cfg.SSL and 's' or\
@@ -288,7 +284,6 @@ class AdminHandler(WebHandler):
 
         fqdn = versions.Label(label).getHost()
         initialKwargs['url'] = conaryCfg.repositoryMap[fqdn]
-        userMap = conaryCfg.user.find(fqdn)
 
         initialKwargs['authType'] = labelInfo['authType']
         initialKwargs['externalUser'] = labelInfo['username']
@@ -472,7 +467,6 @@ class AdminHandler(WebHandler):
                 matchTroveList.extend(mirror.INCLUDE_ALL_MATCH_TROVES)
 
         if not self._getErrors():
-            project = self.client.getProject(projectId)
             recurse = (mirrorBy == 'group')
             outboundMirrorId = self.client.addOutboundMirror(projectId,
                     labelList, allLabels, recurse, useReleases, id=id)

@@ -1,7 +1,8 @@
-from conary.repository.netrepos import proxy
+#
+# Copyright 2011 rPath, Inc.
+#
 
 import restlib.http.modpython
-from restlib import response
 
 import crest.root
 import crest.webhooks
@@ -51,7 +52,6 @@ class CrestRepositoryCallback(crest.webhooks.ReposCallback):
         if 'host' in kwargs:
             cu = self.db.cursor()
             fqdn = kwargs['host']
-            hostname = fqdn.split('.', 1)[0]
             cu.execute('''SELECT shortname FROM Projects
                           WHERE fqdn=?''', fqdn)
             try:
