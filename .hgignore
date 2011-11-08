@@ -62,3 +62,5 @@
 ^VERSION$
 ^INSTALL$
 ^\..*project
+
+^mint/django_rest/rbuilder/docs/.*\.txt$
