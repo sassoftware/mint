@@ -80,6 +80,7 @@ class UsersManager(basemanager.BaseManager):
         dbuser.is_admin    = user.is_admin
         dbuser.deleted     = False
         dbuser.save()
+            
         self.mgr.getOrCreateIdentityRole(user, by_user)
         self.mgr.configureMyQuerysets(dbuser, by_user)
         self.mgr.retagQuerySetsByType('user', by_user)
