@@ -1,0 +1,12 @@
+Target properties:
+    N/A
+
+Methods:
+    GET:
+        Authentication: user
+    POST:
+        not supported
+    PUT:
+        not supported
+    DELETE:
+        Authentication: admin

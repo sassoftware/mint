@@ -2,7 +2,7 @@
 
 Methods:
     GET:
-        Authentication: none
+        Authentication: user
     POST:
         not supported
     PUT:

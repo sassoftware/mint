@@ -1,14 +1,10 @@
-Zone properties:
-    created_date - the date the zone was created (UTC)
-    description - the zone description
-    name - the zone name
-    zone_id - the database id for the zone
+
 
 Methods:
     GET:
         Authentication: user
     POST:
-        Authentication: admin
+        not supported
     PUT:
         Authentication: admin
     DELETE:

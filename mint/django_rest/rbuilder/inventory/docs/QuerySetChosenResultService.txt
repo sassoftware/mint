@@ -4,8 +4,8 @@ Methods:
     GET:
         Authentication: user
     POST:
-        Authentication: admin
+        Authentication: user
     PUT:
-        Authentication: admin
+        Authentication: user
     DELETE:
-        Authentication: admin
+        Authentication: user

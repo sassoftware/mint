@@ -1,0 +1,12 @@
+BuildFile properties:
+    N/A
+
+Methods:
+    GET:
+        Authentication: none
+    POST:
+        not supported
+    PUT:
+        Authentication: admin
+    DELETE:
+        Authentication: admin

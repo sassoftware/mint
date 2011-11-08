@@ -1,0 +1,19 @@
+TargetTypes properties:
+    N/A
+
+
+TargetType properties:
+    created_date - the date the resource was created (UTC)
+    description - Target Type Description
+    modified_date - the date the resource was modified (UTC)
+    name - Target Type Name
+
+Methods:
+    GET:
+        Authentication: user
+    POST:
+        not supported
+    PUT:
+        not supported
+    DELETE:
+        not supported

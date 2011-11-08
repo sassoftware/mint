@@ -1,0 +1,16 @@
+ContentSources properties:
+    N/A
+
+
+ContentSource properties:
+    N/A
+
+Methods:
+    GET:
+        Authentication: none
+    POST:
+        Authentication: none
+    PUT:
+        not supported
+    DELETE:
+        not supported

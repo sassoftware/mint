@@ -1,0 +1,19 @@
+ProjectVersion properties:
+    branch_id - Branch ID
+    created_date - Branch created date
+    description - Branch description
+    label - Branch label
+    name - Branch name
+    namespace - Branch namespace
+    platform_label - Branch platform label
+    source_group - Branch source group
+
+Methods:
+    GET:
+        Authentication: user
+    POST:
+        Authentication: user
+    PUT:
+        Authentication: user
+    DELETE:
+        Authentication: user

@@ -1,0 +1,16 @@
+Images properties:
+    N/A
+
+
+Image properties:
+    N/A
+
+Methods:
+    GET:
+        Authentication: user
+    POST:
+        Authentication: admin
+    PUT:
+        not supported
+    DELETE:
+        not supported

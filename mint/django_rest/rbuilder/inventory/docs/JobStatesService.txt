@@ -1,3 +1,7 @@
+JobStates properties:
+    N/A
+
+
 JobState properties:
     job_state_id - the database ID for the job state
     name - the name of the job state

@@ -1,12 +1,11 @@
-ContentSourceType properties:
-    N/A
+
 
 Methods:
     GET:
-        Authentication: user
+        Authentication: none
     POST:
         not supported
     PUT:
-        not supported
+        Authentication: user
     DELETE:
         not supported

@@ -5,7 +5,7 @@ Methods:
     GET:
         Authentication: user
     POST:
-        Authentication: user
+        not supported
     PUT:
         Authentication: user
     DELETE:

@@ -1,0 +1,16 @@
+EventType properties:
+    description - the event type description
+    job_type_id - the database id of the  type
+    name - the event type name (read-only)
+    priority - the event type priority where > priority wins
+    resource_type - the resource type for the job
+
+Methods:
+    GET:
+        Authentication: none
+    POST:
+        not supported
+    PUT:
+        Authentication: admin
+    DELETE:
+        not supported

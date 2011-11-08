@@ -1,0 +1,21 @@
+SystemTypes properties:
+    N/A
+
+
+SystemType properties:
+    created_date - the date the system type was added to inventory (UTC)
+    creation_descriptor - the descriptor of available fields to create systems of this type
+    description - the description of the system type
+    infrastructure - whether or not the system type is infrastructure
+    name - the name of the system type
+    system_type_id - the database ID for the system type
+
+Methods:
+    GET:
+        Authentication: none
+    POST:
+        not supported
+    PUT:
+        not supported
+    DELETE:
+        not supported

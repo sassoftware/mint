@@ -4,8 +4,8 @@ Methods:
     GET:
         Authentication: user
     POST:
-        not supported
+        Authentication: user
     PUT:
-        not supported
+        Authentication: user
     DELETE:
         not supported
