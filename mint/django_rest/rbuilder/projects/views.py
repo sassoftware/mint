@@ -438,8 +438,8 @@ class ProjectReleasesService(service.BaseService):
     @requires('release')
     @return_xml
     def rest_POST(self, request, project_short_name, release):
-        project = projectmodels.Project.objects.get(short_name=project_short_name)
-        release.save(with_project=project)
+        # import pdb; pdb.set_trace()
+        release.save(short_name=project_short_name)
         return release
         
 class ProjectReleaseService(service.BaseService):
