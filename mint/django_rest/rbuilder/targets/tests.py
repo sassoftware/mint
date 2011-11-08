@@ -96,6 +96,12 @@ class TargetsTestCase(BaseTargetsTest, RepeaterMixIn):
         RepeaterMixIn.setUpRepeaterClient(self)
         BaseTargetsTest._mock(self)
 
+    def testGetTargetConfigurationDescriptor(self):
+        response = self._get('targets/1/target_configuration/',
+            username='admin', password='password')
+        configDescriptor = xobj.parse(response.content)
+        ### FIXME: Finish damnit
+
     def testGetTargets(self):
         targets = models.Target.objects.order_by('target_id')
         response = self._get('targets/', username='testuser', password='password')

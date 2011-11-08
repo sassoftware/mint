@@ -8,6 +8,8 @@ from django.http import HttpResponse# HttpResponseRedirect
 from mint.django_rest.deco import access, return_xml, requires, Flags
 from mint.django_rest.rbuilder import service
 # from mint.django_rest.rbuilder.errors import PermissionDenied
+from mint.django_rest.rbuilder.targets import models
+from mint.django_rest.rbuilder import modellib
 
 class TargetsService(service.BaseService):
     
@@ -168,3 +170,9 @@ class AllTargetJobsService(service.BaseService):
         
     def get(self):
         return self.mgr.getAllTargetJobs()
+
+class TargetConfigurationService(service.BaseService):
+    @return_xml
+    def rest_GET(self, request, target_id):
+        targetConfig = models.TargetConfiguration(target_id)
+        return targetConfig

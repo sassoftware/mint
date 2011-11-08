@@ -58,6 +58,8 @@ class TargetsManager(basemanager.BaseManager, CatalogServiceHelper):
         for obj in models.TargetData.objects.filter(target=target):
             targetConfig[obj.name] = self._stripUnicode(json.loads(obj.value))
         targetConfig['zone'] = self.getTargetZone(target).name
+        targetConfig['name'] = target.name
+        targetConfig['description'] = target.description
         return targetConfig
 
     def _getTargetCredentialsForCurrentUser(self, target):

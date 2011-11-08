@@ -5,7 +5,7 @@
 #
 
 from django.db import models
-
+from django.db.models.fields import Field as BaseField
 from mint.django_rest.deco import D
 from mint.django_rest.rbuilder import modellib
 from mint.django_rest.rbuilder.jobs import models as jobmodels
@@ -142,6 +142,20 @@ class TargetData(modellib.XObjModel):
     target = models.ForeignKey(Target, db_column="targetid")
     name = models.CharField(max_length=255, null=False)
     value = models.TextField()
+
+class TargetConfiguration(modellib.XObjModel):
+    class Meta:
+        abstract = True
+
+    def __init__(self, target_id):
+        self._target = Target.objects.get(pk=target_id)
+        
+    def serialize(self, request=None):
+        xobjModel = modellib.XObjModel.serialize(self, request)
+        getTargetConfig = self._rbmgr.targetsManager.getTargetConfiguration
+        for k, v in getTargetConfig(self._target).items():
+            setattr(xobjModel, k, v)
+        return xobjModel
 
 class Credentials(modellib.Collection):
     class Meta:
