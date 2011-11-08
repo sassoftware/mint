@@ -13,7 +13,6 @@ from mint.django_rest.deco import D
 from mint.django_rest.rbuilder.users import models as usermodels
 from xobj import xobj
 
-
 class Groups(modellib.XObjModel):
     class Meta:
         abstract = True
@@ -484,9 +483,9 @@ class Release(modellib.XObjIdModel):
             self.published = False
     
     def save(self, *args, **kwargs):
-        with_project = kwargs.pop('with_project', None)
-        if with_project is not None:
-            self.project = with_project
+        short_name = kwargs.pop('short_name', None)
+        if short_name is not None:
+            self.project = Project.objects.get(short_name=short_name)
         return modellib.XObjIdModel.save(self, *args, **kwargs)
 
 class InboundMirror(modellib.XObjModel):

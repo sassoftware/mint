@@ -89,6 +89,7 @@ class Target(modellib.XObjIdModel):
     unique_together = (target_type, name)
     credentials_valid = modellib.SyntheticField(models.BooleanField())
     target_user_credentials = modellib.SyntheticField()
+    target_configuration = modellib.SyntheticField()
 
     actions = D(modellib.SyntheticField(jobmodels.Actions),
         "actions available for this target")
@@ -105,6 +106,13 @@ class Target(modellib.XObjIdModel):
         self.target_user_credentials = modellib.HrefFieldFromModel(self,
             "TargetUserCredentials")
         self._setCredentialsValid()
+        
+    def serialize(self, request=None):
+        self.target_configuration = modellib.HrefField(
+            href='target_configuration')
+        xobjModel = modellib.XObjIdModel.serialize(self, request)
+        return xobjModel
+        
 
     def _setCredentialsValid(self):
         if self._rbmgr is None:
@@ -164,9 +172,11 @@ class TargetData(modellib.XObjModel):
     name = models.CharField(max_length=255, null=False)
     value = models.TextField()
 
-class TargetConfiguration(modellib.XObjModel):
+class TargetConfiguration(modellib.XObjIdModel):
     class Meta:
         abstract = True
+    
+    view_name = 'TargetConfiguration'
 
     def __init__(self, target_id):
         self._target = Target.objects.get(pk=target_id)
@@ -177,7 +187,10 @@ class TargetConfiguration(modellib.XObjModel):
         for k, v in getTargetConfig(self._target).items():
             setattr(xobjModel, k, v)
         return xobjModel
-
+        
+    def get_url_key(self, *args, **kwargs):
+        return [self.target_id]
+        
 class Credentials(modellib.Collection):
     class Meta:
         abstract = True
