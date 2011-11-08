@@ -13,7 +13,7 @@ all: default-all comments
 install: pyfiles-install default-install
 
 comments:
-	python manage_local.py generatecomments
+	python manage_local.py gencomments
 
 clean: default-clean
 
