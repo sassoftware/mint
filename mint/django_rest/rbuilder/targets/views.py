@@ -117,15 +117,15 @@ class TargetRefreshImagesService(service.BaseService):
         return self.mgr.serializeDescriptor(
             self.mgr.getDescriptorRefreshImages(target_id))
 
-    @requires('target_credentials')
+class TargetRefreshSystemsService(service.BaseService):
     @return_xml
-    def rest_POST(self, request, target_credentials):
-        return self.mgr.createTargetCredentials(target_credentials)
-        
-    @requires('target_credentials')
-    @return_xml
-    def rest_PUT(self, request, target_credentials_id, target_credentials):
-        return self.mgr.updateTargetCredentials(target_credentials_id, target_credentials)
+    def rest_GET(self, request, target_id):
+        return self.get(target_id)
+
+    def get(self, target_id):
+        return self.mgr.serializeDescriptor(
+            self.mgr.getDescriptorRefreshSystems(target_id))
+
 
 class TargetImageDeploymentService(service.BaseService):
     @return_xml
