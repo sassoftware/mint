@@ -1,5 +1,4 @@
 from django.db import models as djmodels
-from django.db.models.fields import related as djRelated
 from django.core.management.base import BaseCommand
 from mint.django_rest.urls import urlpatterns
 from mint.django_rest import settings_common as settings
