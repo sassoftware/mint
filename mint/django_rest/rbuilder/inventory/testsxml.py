@@ -200,6 +200,14 @@ event_types_xml="""\
     <resource_type>System</resource_type>
     <system_events/>
   </event_type>
+  <event_type id="http://testserver/api/v1/inventory/event_types/22">
+    <description>Configure target</description>
+    <job_type_id>22</job_type_id>
+    <name>configure target</name>
+    <priority>105</priority>
+    <resource_type>TargetType</resource_type>
+    <system_events/>
+  </event_type>
 </event_types>"""
 
 event_type_put_xml="""\

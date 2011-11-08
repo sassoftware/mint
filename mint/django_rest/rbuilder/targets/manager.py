@@ -43,6 +43,13 @@ class CatalogServiceHelper(object):
 
 class TargetsManager(basemanager.BaseManager, CatalogServiceHelper):
     @exposed
+    def authTargetJob(self, job):
+        requireAdmin = set(self.mgr.sysMgr.eventType(x).job_type_id
+            for x in [ jobsmodels.EventType.TARGET_CREATE, jobsmodels.EventType.TARGET_CONFIGURE, ])
+        if job.job_type_id in requireAdmin and not self.user.is_admin:
+            raise errors.PermissionDenied()
+
+    @exposed
     def getTargetById(self, target_id):
         return models.Target.objects.get(pk=target_id)
 
@@ -135,18 +142,53 @@ class TargetsManager(basemanager.BaseManager, CatalogServiceHelper):
         return value
 
     @exposed
+    def addTarget(self, targetSrc, configured=False):
+        if configured:
+            state = 0
+        else:
+            state = 1
+        target = models.Target(name=targetSrc.name,
+            description=targetSrc.description,
+            target_type=targetSrc.target_type,
+            zone=targetSrc.zone,
+            state=state)
+        target.save()
+        return target
+
+    @exposed
     def createTarget(self, targetType, targetName, targetData):
         targetData.pop('name', None)
         description = targetData.get('description', targetName)
         zoneName = targetData.pop('zone')
         zone = modellib.Cache.get(zones.Zone, name=zoneName)
         target = models.Target(name=targetName, description=description,
-            target_type=targetType, zone=zone)
+            target_type=targetType, zone=zone,
+            state=models.Target.States.OPERATIONAL)
         target.save()
+        self._setTargetData(target, targetData)
+        self._addTargetQuerySet(target)
+        self.mgr.retagQuerySetsByType('target', for_user=None)
+        return target
+
+    def _setTargetData(self, target, targetData):
         for k, v in targetData.iteritems():
             v = json.dumps(v)
             td = models.TargetData(target=target, name=k, value=v)
             td.save()
+
+    @exposed
+    def updateTargetConfiguration(self, target, targetName, targetData):
+        targetData.pop('name', None)
+        description = targetData.get('description', targetName)
+        zoneName = targetData.pop('zone')
+        zone = modellib.Cache.get(zones.Zone, name=zoneName)
+        target.name = targetName
+        target.description = description
+        target.zone = zone
+        target.state = models.Target.States.OPERATIONAL
+        target.save()
+        models.TargetData.objects.filter(target=target).delete()
+        self._setTargetData(target, targetData)
         self._addTargetQuerySet(target)
         self.mgr.retagQuerySetsByType('target', for_user=None)
         return target
@@ -158,6 +200,12 @@ class TargetsManager(basemanager.BaseManager, CatalogServiceHelper):
 
         fe, created = qsmodels.FilterEntry.objects.get_or_create(field=feField,
             operator=feOperator, value=feValue)
+
+        if not created:
+            # Delete the old query set
+            qsmodels.QuerySet.objects.filter(
+                filter_entries__filter_entry_id=fe.filter_entry_id,
+                resource_type='system').delete()
 
         querySetName = "All %s systems (%s)" % (target.name,
             target.target_type.name)
@@ -424,6 +472,13 @@ class TargetsManager(basemanager.BaseManager, CatalogServiceHelper):
         if value is None:
             return None
         return unicode(value)
+
+    @exposed
+    def getDescriptorTargetConfiguration(self, targetId):
+        target = self.getTargetById(targetId)
+        descr = self.mgr.getDescriptorCreateTargetByTargetType(target.target_type_id)
+        return descr
+
 
 class TargetTypesManager(basemanager.BaseManager, CatalogServiceHelper):
     @exposed

@@ -331,6 +331,8 @@ class EventType(modellib.XObjIdModel):
     TARGET_CREATE_DESCRIPTION = 'Create target'
     TARGET_CONFIGURE_CREDENTIALS = 'configure target credentials'
     TARGET_CONFIGURE_CREDENTIALS_DESCRIPTION = 'Configure target credentials for the current user'
+    TARGET_CONFIGURE = 'configure target'
+    TARGET_CONFIGURE_DESCRIPTION = 'Configure target'
 
     job_type_id = D(models.AutoField(primary_key=True), "the database id of the  type")
     EVENT_TYPES = (

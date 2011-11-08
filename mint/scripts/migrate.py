@@ -4452,7 +4452,7 @@ class MigrateTo_59(SchemaMigration):
 
 class MigrateTo_60(SchemaMigration):
     '''Edge-P3'''
-    Version = (60, 9)
+    Version = (60, 10)
 
     def migrate(self):
         '''"My" querysets feature'''
@@ -4584,6 +4584,19 @@ class MigrateTo_60(SchemaMigration):
             UPDATE querysets_queryset set is_public=true
             WHERE name like 'All Images'
         """)
+        return True
+
+    def migrate10(self):
+        cu = self.db.cursor()
+        cu.execute("""
+            ALTER TABLE Targets ADD COLUMN state INTEGER NOT NULL DEFAULT 0
+        """)
+        schema._addTableRows(self.db, 'jobs_job_type', 'name', [
+             dict(name="configure target",
+                  description="Configure target",
+                  priority=105,
+                  resource_type="TargetType"),
+        ])
         return True
 
 #### SCHEMA MIGRATIONS END HERE #############################################

@@ -28,7 +28,7 @@ from conary.dbstore import sqlerrors, sqllib
 log = logging.getLogger(__name__)
 
 # database schema major version
-RBUILDER_DB_VERSION = sqllib.DBversion(60, 9)
+RBUILDER_DB_VERSION = sqllib.DBversion(60, 10)
 
 def _createTrigger(db, table, column="changed"):
     retInsert = db.createTrigger(table, column, "INSERT")
@@ -734,6 +734,7 @@ def _createTargets(db):
                 zone_id           integer NOT NULL
                     REFERENCES inventory_zone (zone_id)
                     ON DELETE CASCADE,
+                state             integer NOT NULL DEFAULT 0,
                 created_date      TIMESTAMP WITH TIME ZONE NOT NULL
                     DEFAULT current_timestamp,
                 modified_date     TIMESTAMP WITH TIME ZONE NOT NULL
@@ -1397,6 +1398,10 @@ def _createInventorySchema(db, cfg):
                   description="Capture a system's image",
                   priority=105,
                   resource_type="System"),
+             dict(name="configure target",
+                  description="Configure target",
+                  priority=105,
+                  resource_type="TargetType"),
             ])
 
     if 'inventory_system_event' not in db.tables:

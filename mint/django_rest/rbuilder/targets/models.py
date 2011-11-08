@@ -72,6 +72,9 @@ class Targets(modellib.Collection):
         return action
 
 class Target(modellib.XObjIdModel):
+    class States(object):
+        OPERATIONAL = 0
+        UNCONFIGURED = 1
     _xobj_explicit_accessors = set()
 
     class Meta:
@@ -91,10 +94,12 @@ class Target(modellib.XObjIdModel):
     actions = D(modellib.SyntheticField(jobmodels.Actions),
         "actions available for this target")
     jobs = modellib.SyntheticField(modellib.HrefField())
+    state = XObjHidden(models.IntegerField(null=False))
 
     def computeSyntheticFields(self, sender, **kwargs):
         self.actions = actions = jobmodels.Actions()
         actions.action = []
+        actions.action.append(self._actionConfigure())
         actions.action.append(self._actionConfigureUserCredentials())
         actions.action.append(self._actionRefreshImages())
         self.jobs = modellib.HrefFieldFromModel(self, "TargetJobs")
@@ -109,19 +114,33 @@ class Target(modellib.XObjIdModel):
         # intelligently cache data, especially for multiple targets.
         self.credentials_valid = bool(len(TargetUserCredentials.objects.filter(target=self, user=self._rbmgr.user)))
 
+    def _actionConfigure(self):
+        actionName = "Configure target"
+        enabled = True
+        action = jobmodels.EventType.makeAction(
+                jobTypeName=jobmodels.EventType.TARGET_CONFIGURE,
+                actionName=actionName,
+                enabled=enabled,
+                descriptorModel=self, descriptorViewName="TargetConfigurationDescriptor")
+        return action
+
     def _actionConfigureUserCredentials(self):
         actionName = "Configure user credentials for target"
+        enabled = (self.state != self.States.UNCONFIGURED)
         action = jobmodels.EventType.makeAction(
                 jobTypeName=jobmodels.EventType.TARGET_CONFIGURE_CREDENTIALS,
                 actionName=actionName,
+                enabled=enabled,
                 descriptorModel=self, descriptorHref="descriptor_configure_credentials")
         return action
 
     def _actionRefreshImages(self):
         actionName = "Refresh images"
+        enabled = (self.state != self.States.UNCONFIGURED)
         action = jobmodels.EventType.makeAction(
                 jobTypeName=jobmodels.EventType.TARGET_REFRESH_IMAGES,
                 actionName=actionName,
+                enabled=enabled,
                 descriptorModel=self, descriptorHref="descriptor_refresh_images")
         return action
 

@@ -355,10 +355,18 @@ class _TargetDescriptorJobHandler(DescriptorJobHandler):
         DescriptorJobHandler._init(self)
         self.target = None
 
+    def _splitDescriptorId(self, descriptorId):
+        try:
+            match = urlresolvers.resolve(descriptorId)
+        except urlresolvers.Resolver404:
+            raise errors.InvalidData()
+
+        return match
+
     def getDescriptor(self, descriptorId):
-        # XXX
-        targetId = os.path.basename(os.path.dirname(descriptorId))
-        targetId = int(targetId)
+        match = self._splitDescriptorId(descriptorId)
+        targetId = int(match.kwargs['target_id'])
+        self._setTarget(targetId)
         self._setTarget(targetId)
         descr = self._getDescriptorMethod()(targetId)
         return descr
@@ -608,6 +616,39 @@ class JobHandlerRegistry(HandlerRegistry):
         def _createTarget(self, targetType, targetName, config):
             return self.mgr.mgr.createTarget(targetType, targetName, config)
 
+
+    class TargetConfigurator(_TargetDescriptorJobHandler):
+        __slots__ = []
+        jobType = models.EventType.TARGET_CONFIGURE
+        ResultsTag = 'target'
+
+        def _getDescriptorMethod(self):
+            return self.mgr.mgr.getDescriptorTargetConfiguration
+
+        def getRepeaterMethod(self, cli, job):
+            self.descriptor, self.descriptorData = self.extractDescriptorData(job)
+            targetType, targetName, targetData = self._createTargetConfiguration(job, self.target.target_type)
+            zone = targetData.pop('zone')
+            targetConfiguration = cli.targets.TargetConfiguration(targetType.name,
+                targetName, targetData.get('alias'), targetData)
+            userCredentials = None
+            cli.targets.configure(zone, targetConfiguration, userCredentials)
+            return cli.targets.checkCreate
+
+        def getRelatedResource(self, descriptor):
+            return self.target
+
+        def _processJobResults(self, job):
+            targetId = job.target_jobs.all()[0].target_id
+            self._setTarget(targetId)
+            targetType, targetName, targetData = self._createTargetConfiguration(job, self.target.target_type)
+            target = self._createTarget(targetType, targetName, targetData)
+            return target
+
+        def _createTarget(self, targetType, targetName, config):
+            # We don't allow for the type to change
+            return self.mgr.mgr.updateTargetConfiguration(self.target,
+                targetName, config)
 
     class TargetCredentialsConfigurator(_TargetDescriptorJobHandler):
         __slots__ = []
