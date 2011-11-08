@@ -32,7 +32,8 @@ class ProjectsTestCase(RbacEngine):
         MockProdDef = mock.MockObject()
         MockProdDef.getImageGroup._mock.setReturn("group-foo-appliance")
         MockProdDef.loadFromRepository._mock.setReturn(MockProdDef)
-        mock.mock(basemanager.BaseRbuilderManager, "restDb")
+        # Discard mock at the end of the test
+        self.mock(basemanager.BaseRbuilderManager, "restDb", mock.MockObject())
         basemanager.BaseRbuilderManager.restDb.getProductVersionDefinitionFromVersion._mock.setDefaultReturn(MockProdDef)
         mock.mock(manager.ProjectManager, "setProductVersionDefinition")
         self.mgr = rbuildermanager.RbuilderManager()

@@ -404,16 +404,6 @@ def getProductVersionDefaultStagesList():
             dict(name='Release',
                  labelSuffix='')]
         
-def getBuildDefsAvaliableBuildTypes(allBuildTypes):
-    """
-    Get a list of the available build types for build defs
-    """
-    # get the build types to allow
-    #    remove online update builds (i.e. imageless)
-    if buildtypes.IMAGELESS in allBuildTypes:
-        allBuildTypes.remove(buildtypes.IMAGELESS)
-    return allBuildTypes
-
 def addDefaultStagesToProductDefinition(productDefinitionObj):
     """
     Given a product definition object, add the canned set of

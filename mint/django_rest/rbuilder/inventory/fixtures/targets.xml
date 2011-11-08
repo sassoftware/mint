@@ -4,18 +4,21 @@
     <field to="targets.target_type" name="target_type" rel="ManyToOneRel">5</field>
     <field type="CharField" name="name">vsphere1.eng.rpath.com</field>
     <field type="CharField" name="description">vsphere1.eng.rpath.com description</field>
+    <field type="IntField" name="state">0</field>
     <field to="zones.zone" name="zone" rel="ManyToOneRel">1</field>
   </object>
   <object pk="2" model="targets.target">
     <field to="targets.target_type" name="target_type" rel="ManyToOneRel">5</field>
     <field type="CharField" name="name">vsphere2.eng.rpath.com</field>
     <field type="CharField" name="description">vsphere2.eng.rpath.com description</field>
+    <field type="IntField" name="state">0</field>
     <field to="zones.zone" name="zone" rel="ManyToOneRel">1</field>
   </object>
   <object pk="3" model="targets.target">
     <field to="targets.target_type" name="target_type" rel="ManyToOneRel">1</field>
     <field type="CharField" name="name">aws</field>
     <field type="CharField" name="description">aws description</field>
+    <field type="IntField" name="state">0</field>
     <field to="zones.zone" name="zone" rel="ManyToOneRel">1</field>
   </object>
   <object pk="1" model="targets.targetdata">

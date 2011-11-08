@@ -294,16 +294,25 @@ class QuerySetManager(basemanager.BaseManager):
         method = self._tagMethod(querySet)
         method(resources, querySet, self._transitiveMethod())
 
+    def newTransaction(self):
+        # try to avoid some confusing database locks that prevent executemany
+        # from continuing on
+        if transaction.is_managed():
+            if transaction.is_dirty():
+                transaction.commit()
+            transaction.leave_transaction_management()
+            transaction.enter_transaction_management(managed=True)
+
     def _tagGeneric(self, resources, queryset, inclusionMethod, tagClass, tagTable, idColumn):
         '''
         store that a given query tag matched the system 
         for caching purposes
         '''
-        # TODO: make this pluggable so we don't neeed model 
-        # specific methods
 
         if len(resources) == 0:
             return
+        
+        self.newTransaction()
 
         cursor = connection.cursor()
 
@@ -320,10 +329,15 @@ class QuerySetManager(basemanager.BaseManager):
             resources = resources.values_list('pk', flat=True)
             insertParams = [(r,) for r in resources]
 
+
         query = "INSERT INTO %s" % tagTable 
         query = query + " (%s, query_set_id, inclusion_method_id)" % idColumn
         query = query + " VALUES (%s, " + " %s, %s)" % (queryset.pk, inclusionMethod.pk)
         cursor.executemany(query, insertParams) 
+        
+        self.newTransaction()
+
+        
 
     def _tagSystems(self, resources, tag, inclusionMethod):
         self._tagGeneric(resources, tag, inclusionMethod,

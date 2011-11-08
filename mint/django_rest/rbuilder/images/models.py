@@ -252,6 +252,13 @@ class Image(modellib.XObjIdModel):
         return modellib.XObjIdModel.save(self)
 
     def _computeActions(self):
+        if self._image_type == buildtypes.DEFERRED_IMAGE:
+            self.actions = self._computeActionsForImage(self.base_image)
+        else:
+            self.actions = self._computeActionsForImage(self)
+
+    @classmethod
+    def _computeActionsForImage(cls, image):
         # Lazy import to prevent circular imports
         from mint.django_rest.rbuilder.targets import models as tgtmodels
 
@@ -259,12 +266,12 @@ class Image(modellib.XObjIdModel):
         modellib.Cache.all(tgtmodels.TargetType)
         modellib.Cache.all(tgtmodels.Target)
 
-        self.actions = actions = jobmodels.Actions()
+        actions = jobmodels.Actions()
         actions.action = []
         # XXX FIXME REALLY BADLY: this needs to be cached
         uqDeploy = dict()
         uqLaunch = dict()
-        for bfile in self.files.all():
+        for bfile in image.files.all():
             for tdi in bfile.target_deployable_images.all():
                 # If target_image_id is None, the image is not deployed,
                 # so we need to enable the action

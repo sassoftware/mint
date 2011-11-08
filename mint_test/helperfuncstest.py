@@ -578,14 +578,6 @@ Much like Powdermilk Biscuits[tm]."""
                 self.failUnless(isinstance(v, str),
                                 'Should be str value')
                 
-    def testGetBuildDefsAvaliableBuildTypes(self):
-        client, userId = self.quickMintUser('foouser','foopass')
-        buildTypes = getBuildDefsAvaliableBuildTypes(
-                         client.getAvailableBuildTypes())
-        
-        # make sure imageless is not in there
-        self.assertTrue(buildtypes.IMAGELESS not in buildTypes)
-        
     def testValidateNamespace(self):
         """
         Test valid/invalid config namespace values

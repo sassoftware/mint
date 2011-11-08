@@ -18,9 +18,7 @@ import json
 
 from mint import userlevels
 from mint import helperfuncs
-from mint.mint_error import *
-from mint.web import productversion
-from mint.web.templates import repos
+from mint.mint_error import ItemNotFound, PermissionDenied
 from mint.web.fields import strFields, listFields, intFields
 from mint.web.webhandler import (WebHandler, normPath, HttpForbidden,
         HttpNotFound, HttpBadRequest)
@@ -37,7 +35,7 @@ from conary import conarycfg
 from conary import errors as conaryerrors
 from conary.trove import Trove
 
-class ConaryHandler(WebHandler, productversion.ProductVersionView):
+class ConaryHandler(WebHandler):
     def _filterAuth(self, **kwargs):
         memberList = kwargs.get('memberList', [])
         if isinstance(memberList, str):
@@ -560,8 +558,8 @@ class ConaryHandler(WebHandler, productversion.ProductVersionView):
     def editPerm(self, auth, role, label, trove, oldlabel, oldtrove,
                 writeperm, remove):
         writeperm = (writeperm == "on")
-        capped = (capped == "on")
-        admin = (admin == "on")
+        capped = False
+        admin = False
         remove = (remove == "on")
 
         try:
@@ -717,9 +715,6 @@ class ConaryHandler(WebHandler, productversion.ProductVersionView):
     # repServer is a NetworkRepositoryServer instance and is used by 
     # most the the PGP and repository permissions methods
     def __init__(self, req, cfg, repServer = None):
-        protocol = 'http'
-        port = 80
-
         if repServer:
             self.repServer = repServer
             self.troveStore = self.repServer.troveStore
@@ -801,8 +796,6 @@ class ConaryHandler(WebHandler, productversion.ProductVersionView):
 
         d = self.fields
         d['auth'] = self.authToken
-
-        self.setupView()
 
         try:
             d['auth'] = self.authToken

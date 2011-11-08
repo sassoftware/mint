@@ -1,9 +1,16 @@
-
 target_GET = \
 """
 <?xml version='1.0' encoding='UTF-8'?>
 <target id="http://testserver/api/v1/targets/4">
   <actions>
+    <action>
+      <description>Configure target</description>
+      <descriptor id="http://testserver/api/v1/targets/4/descriptors/configuration"/>
+      <enabled>true</enabled>
+      <job_type id="http://testserver/api/v1/inventory/event_types/22"/>
+      <key>configure_target</key>
+      <name>Configure target</name>
+    </action>
     <action>
       <description>Configure user credentials for target</description>
       <descriptor id="http://testserver/api/v1/targets/4/descriptor_configure_credentials"/>
@@ -30,6 +37,7 @@ target_GET = \
      <description>OpenStack</description>
      <name>openstack</name>
   </target_type>
+  <target_user_credentials id="http://testserver/api/v1/targets/4/target_user_credentials"/>
   <zone id="http://testserver/api/v1/inventory/zones/1"/>
 </target>
 """.strip()
@@ -40,10 +48,7 @@ target_POST = \
 <target>
   <target_id>4</target_id>
   <name>Target Name 4</name>
-  <target_type>
-    <type>Amazon's Crap</type>
-    <description>Stuff here</description>
-  </target_type>
+  <description>Target Description</description>
 </target>
 """.strip()
 

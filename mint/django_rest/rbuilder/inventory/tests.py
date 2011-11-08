@@ -1617,6 +1617,7 @@ class SystemsTestCase(XMLTestCaseStandin):
         targetType = targetmodels.TargetType.objects.get(name='vmware')
         target = targetmodels.Target(target_type=targetType,
             name='testtargetname', description='testtargetdescription',
+            state=targetmodels.Target.States.OPERATIONAL,
             zone=self.localZone)
         target.save()
         system = self._saveSystem()

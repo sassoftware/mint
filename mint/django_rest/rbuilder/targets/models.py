@@ -11,7 +11,7 @@ from mint.django_rest.rbuilder.jobs import models as jobmodels
 from mint.django_rest.rbuilder.users import models as usersmodels
 from mint.django_rest.rbuilder.images import models as imagemodels
 from mint.django_rest.rbuilder.inventory import zones as zmodels
-from xobj import xobj
+from xobj import xobj, xobj2
 import sys
 
 XObjHidden = modellib.XObjHidden
@@ -71,6 +71,9 @@ class Targets(modellib.Collection):
         return action
 
 class Target(modellib.XObjIdModel):
+    class States(object):
+        OPERATIONAL = 0
+        UNCONFIGURED = 1
     _xobj_explicit_accessors = set()
 
     class Meta:
@@ -85,17 +88,22 @@ class Target(modellib.XObjIdModel):
     description = models.TextField(null=False)
     unique_together = (target_type, name)
     credentials_valid = modellib.SyntheticField(models.BooleanField())
+    target_user_credentials = modellib.SyntheticField()
 
     actions = D(modellib.SyntheticField(jobmodels.Actions),
         "actions available for this target")
     jobs = modellib.SyntheticField(modellib.HrefField())
+    state = XObjHidden(models.IntegerField(null=False))
 
     def computeSyntheticFields(self, sender, **kwargs):
         self.actions = actions = jobmodels.Actions()
         actions.action = []
+        actions.action.append(self._actionConfigure())
         actions.action.append(self._actionConfigureUserCredentials())
         actions.action.append(self._actionRefreshImages())
-        self.jobs = modellib.HrefField("jobs")
+        self.jobs = modellib.HrefFieldFromModel(self, "TargetJobs")
+        self.target_user_credentials = modellib.HrefFieldFromModel(self,
+            "TargetUserCredentials")
         self._setCredentialsValid()
 
     def _setCredentialsValid(self):
@@ -105,19 +113,33 @@ class Target(modellib.XObjIdModel):
         # intelligently cache data, especially for multiple targets.
         self.credentials_valid = bool(len(TargetUserCredentials.objects.filter(target=self, user=self._rbmgr.user)))
 
+    def _actionConfigure(self):
+        actionName = "Configure target"
+        enabled = True
+        action = jobmodels.EventType.makeAction(
+                jobTypeName=jobmodels.EventType.TARGET_CONFIGURE,
+                actionName=actionName,
+                enabled=enabled,
+                descriptorModel=self, descriptorViewName="TargetConfigurationDescriptor")
+        return action
+
     def _actionConfigureUserCredentials(self):
         actionName = "Configure user credentials for target"
+        enabled = (self.state != self.States.UNCONFIGURED)
         action = jobmodels.EventType.makeAction(
                 jobTypeName=jobmodels.EventType.TARGET_CONFIGURE_CREDENTIALS,
                 actionName=actionName,
+                enabled=enabled,
                 descriptorModel=self, descriptorHref="descriptor_configure_credentials")
         return action
 
     def _actionRefreshImages(self):
         actionName = "Refresh images"
+        enabled = (self.state != self.States.UNCONFIGURED)
         action = jobmodels.EventType.makeAction(
                 jobTypeName=jobmodels.EventType.TARGET_REFRESH_IMAGES,
                 actionName=actionName,
+                enabled=enabled,
                 descriptorModel=self, descriptorHref="descriptor_refresh_images")
         return action
 
@@ -177,7 +199,7 @@ class TargetCredentials(modellib.XObjModel):
     credentials = models.TextField(null=False, unique=True)
 
 class TargetUserCredentials(modellib.XObjModel):
-    target = models.ForeignKey(Target, db_column="targetid", related_name='target_user_credentials')
+    target = models.ForeignKey(Target, db_column="targetid", related_name='_target_user_credentials')
     user = models.ForeignKey(usersmodels.User, db_column="userid",
         related_name='target_user_credentials')
     target_credentials = models.ForeignKey('TargetCredentials',
@@ -187,12 +209,22 @@ class TargetUserCredentials(modellib.XObjModel):
     class Meta:
         db_table = u'targetusercredentials'
 
+class TargetUserCredentialsModel(modellib.XObjIdModel):
+    class Meta:
+        abstract = True
+    _xobj = xobj.XObjMetadata(tag='target_user_credentials')
+    user = models.ForeignKey(usersmodels.User)
+    credentials = modellib.SyntheticField()
+
+    def setCredentials(self, credentials):
+        self.credentials = xobj2.Document(root=credentials, rootName='credentials')
+
 class TargetImagesDeployed(modellib.XObjModel):
     """
     Images deployed from the rBuilder onto a target get recorded in this table
     """
     target = models.ForeignKey(Target, db_column="targetid")
-    build_file = models.ForeignKey(imagemodels.BuildFile, db_column='fileId')
+    build_file = models.ForeignKey(imagemodels.BuildFile, db_column='fileid')
     target_image_id = models.CharField(max_length=128, db_column='targetimageid')
     class Meta:
         db_table = u'targetimagesdeployed'

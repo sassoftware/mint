@@ -17,7 +17,7 @@ from django.db import IntegrityError, transaction
 from xobj import xobj
 from smartform import descriptor as smartdescriptor
 
-from mint import buildtypes
+from mint import buildtypes, urltypes
 from mint.lib import uuid
 from mint.django_rest.rbuilder import errors
 from mint.django_rest.rbuilder import modellib
@@ -328,17 +328,22 @@ class DescriptorJobHandler(BaseJobHandler, ResultsProcessingMixIn):
     def linkRelatedResource(self, job):
         if job._relatedResource is None:
             return
-        model = job._relatedThroughModel(job=job)
-        # Find the name of the related field
-        relatedClass = job._relatedResource.__class__
-        relatedFields = [ x for x in job._relatedThroughModel._meta.fields
-            if x.rel and x.rel.to == relatedClass ]
-        if not relatedFields:
-            return
-        relatedFieldName = relatedFields[0].name
-        setattr(model, relatedFieldName, job._relatedResource)
-        self.postprocessRelatedResource(job, model)
-        model.save()
+        # It's possible to link multiple resources to a job
+        relatedResources = job._relatedResource
+        if not isinstance(relatedResources, list):
+            relatedResources = [ relatedResources ]
+        relatedClass = relatedResources[0].__class__
+        for relatedResource in relatedResources:
+            model = job._relatedThroughModel(job=job)
+            # Find the name of the related field
+            relatedFields = [ x for x in job._relatedThroughModel._meta.fields
+                if x.rel and x.rel.to == relatedClass ]
+            if not relatedFields:
+                return
+            relatedFieldName = relatedFields[0].name
+            setattr(model, relatedFieldName, relatedResource)
+            self.postprocessRelatedResource(job, model)
+            model.save()
 
     def postprocessRelatedResource(self, job, model):
         pass
@@ -350,10 +355,18 @@ class _TargetDescriptorJobHandler(DescriptorJobHandler):
         DescriptorJobHandler._init(self)
         self.target = None
 
+    def _splitDescriptorId(self, descriptorId):
+        try:
+            match = urlresolvers.resolve(descriptorId)
+        except urlresolvers.Resolver404:
+            raise errors.InvalidData()
+
+        return match
+
     def getDescriptor(self, descriptorId):
-        # XXX
-        targetId = os.path.basename(os.path.dirname(descriptorId))
-        targetId = int(targetId)
+        match = self._splitDescriptorId(descriptorId)
+        targetId = int(match.kwargs['target_id'])
+        self._setTarget(targetId)
         self._setTarget(targetId)
         descr = self._getDescriptorMethod()(targetId)
         return descr
@@ -438,6 +451,7 @@ class JobHandlerRegistry(HandlerRegistry):
     class TargetDeployImage(_TargetDescriptorJobHandler):
         __slots__ = ['image', 'image_file', ]
         jobType = models.EventType.TARGET_DEPLOY_IMAGE
+        ResultsTag = 'image'
 
         def getDescriptor(self, descriptorId):
             try:
@@ -449,7 +463,7 @@ class JobHandlerRegistry(HandlerRegistry):
             fileId = int(match.kwargs['file_id'])
 
             self._setTarget(targetId)
-            self._setImage(fileId)
+            self._setImageFromFileId(fileId)
             return descriptorId
 
         def _setDescriptorId(self, descriptorId, descriptor):
@@ -459,12 +473,18 @@ class JobHandlerRegistry(HandlerRegistry):
             descriptorXml = '<descriptor id="%s"/>' % descriptor
             return descriptorXml
 
-        def _setImage(self, fileId):
+        def _setImageFromFileId(self, fileId):
             self.image_file = imagemodels.BuildFile.objects.get(file_id=fileId)
             self.image = self.image_file.image
 
         def _processDescriptor(self, descriptor, descriptorDataXml):
             return descriptorDataXml
+
+        def _processJobResults(self, job):
+            # Nothing to be done, there is another call that posts the
+            # image
+            self.image = job.images.all()[0].image
+            return self.image
 
         def getRepeaterMethod(self, cli, job):
             self.extractDescriptorData(job)
@@ -475,15 +495,39 @@ class JobHandlerRegistry(HandlerRegistry):
                 targetUserCredentials)
             return cli.targets.deployImage
 
+        def _getImageBaseFileName(self):
+            vals = self.image.image_data.filter(name='baseFileName').values('value')
+            if not vals:
+                return None
+            return vals[0]['value']
+
         def getRepeaterMethodArgs(self, job):
-            # XXX FIXME
-            host = self.mgr.mgr.restDb.cfg.siteHost
             imageDownloadUrl = self.mgr.mgr.restDb.imageMgr.getDownloadUrl(self.image_file.file_id)
+            hostname = self.image.project.short_name
+            baseFileName = self._getImageBaseFileName()
+            troveFlavor = (self.image.trove_flavor or '').encode('ascii')
+            baseFileName = self.mgr.mgr.restDb.imageMgr._getBaseFileName(
+                baseFileName, hostname, self.image.trove_name,
+                self.image.trove_version, troveFlavor,
+            )
+
+            urls = self.image_file.buildfilesurlsmap_set.filter(
+                url__url_type=urltypes.LOCAL).values('url__url')
+            imageFileInfo = dict(
+                size=self.image_file.size,
+                sha1=self.image_file.sha1,
+                fileId=self.image_file.file_id,
+                baseFileName=baseFileName,
+            )
+            if urls:
+                imageFileInfo['name'] = os.path.basename(urls[0]['url__url'])
             params = dict(
-                descriptor_data=job._descriptor_data,
+                descriptorData=job._descriptor_data,
+                imageFileInfo=imageFileInfo,
                 imageDownloadUrl=imageDownloadUrl,
-                imageTargetLinkUrl='https://%s/.../%s' % (
-                        host, self.image_file.file_id),
+                targetImageXmlTemplate=self._targetImageXmlTemplate(),
+                imageFileUpdateUrl='http://localhost/api/v1/images/%s/build_files/%s' % (
+                        self.image.image_id, self.image_file.file_id),
             )
             return (params, ), {}
 
@@ -491,7 +535,25 @@ class JobHandlerRegistry(HandlerRegistry):
             return imagemodels.JobImage
 
         def getRelatedResource(self, descriptor):
-            return self.image
+            imageId = self.extraArgs['imageId']
+            relatedResources = [ self.image ]
+            if imageId != str(self.image.image_id):
+                # We have a base image
+                relatedResources.append(
+                    imagemodels.Image.objects.get(image_id=imageId))
+            return relatedResources
+
+        def _targetImageXmlTemplate(self):
+            tmpl = """\
+<file>
+  <target_images>
+    <target_image>
+      <target id="/api/v1/targets/%(targetId)s"/>
+      %%(image)s
+    </target_image>
+  </target_images>
+</file>"""
+            return tmpl % dict(targetId=self.target.target_id)
 
     class TargetLaunchSystem(DescriptorJobHandler):
         __slots__ = []
@@ -554,6 +616,39 @@ class JobHandlerRegistry(HandlerRegistry):
         def _createTarget(self, targetType, targetName, config):
             return self.mgr.mgr.createTarget(targetType, targetName, config)
 
+
+    class TargetConfigurator(_TargetDescriptorJobHandler):
+        __slots__ = []
+        jobType = models.EventType.TARGET_CONFIGURE
+        ResultsTag = 'target'
+
+        def _getDescriptorMethod(self):
+            return self.mgr.mgr.getDescriptorTargetConfiguration
+
+        def getRepeaterMethod(self, cli, job):
+            self.descriptor, self.descriptorData = self.extractDescriptorData(job)
+            targetType, targetName, targetData = self._createTargetConfiguration(job, self.target.target_type)
+            zone = targetData.pop('zone')
+            targetConfiguration = cli.targets.TargetConfiguration(targetType.name,
+                targetName, targetData.get('alias'), targetData)
+            userCredentials = None
+            cli.targets.configure(zone, targetConfiguration, userCredentials)
+            return cli.targets.checkCreate
+
+        def getRelatedResource(self, descriptor):
+            return self.target
+
+        def _processJobResults(self, job):
+            targetId = job.target_jobs.all()[0].target_id
+            self._setTarget(targetId)
+            targetType, targetName, targetData = self._createTargetConfiguration(job, self.target.target_type)
+            target = self._createTarget(targetType, targetName, targetData)
+            return target
+
+        def _createTarget(self, targetType, targetName, config):
+            # We don't allow for the type to change
+            return self.mgr.mgr.updateTargetConfiguration(self.target,
+                targetName, config)
 
     class TargetCredentialsConfigurator(_TargetDescriptorJobHandler):
         __slots__ = []

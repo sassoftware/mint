@@ -795,8 +795,11 @@ class SystemManager(basemanager.BaseManager):
 
     @staticmethod
     def _getTrovesForLayeredImage(system):
-        image = getattr(system, 'source_image', None)
-        if not image:
+        image = system.source_image
+        # do not send down trove info for images we did not build,
+        # images we built but never stored the source, or images
+        # that are not layered/deferred
+        if not image or not image.base_image:
             return None, None
         version = cny_versions.ThawVersion(str(image.trove_version))
         flavor = cny_deps.ThawFlavor(str(image.trove_flavor))

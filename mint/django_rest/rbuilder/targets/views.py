@@ -7,7 +7,6 @@
 from django.http import HttpResponse# HttpResponseRedirect
 from mint.django_rest.deco import access, return_xml, requires, Flags
 from mint.django_rest.rbuilder import service
-# from mint.django_rest.rbuilder.errors import PermissionDenied
 from mint.django_rest.rbuilder.targets import models
 
 class TargetsService(service.BaseService):
@@ -18,6 +17,12 @@ class TargetsService(service.BaseService):
 
     def get(self):
         return self.mgr.getTargets()
+
+    @access.admin
+    @requires("target", flags=Flags(save=False))
+    @return_xml
+    def rest_POST(self, request, target):
+        return self.mgr.addTarget(target, configured=False)
 
 class TargetService(service.BaseService):
 
@@ -33,6 +38,14 @@ class TargetService(service.BaseService):
         self.mgr.deleteTarget(target_id)
         return HttpResponse(status=204)
 
+class TargetConfigurationDescriptorService(service.BaseService):
+    @return_xml
+    def rest_GET(self, request, target_id):
+        return self.get(target_id)
+
+    def get(self, target_id):
+        return self.mgr.serializeDescriptor(
+            self.mgr.getDescriptorTargetConfiguration(target_id))
 
 class TargetTypesService(service.BaseService):
     @return_xml
@@ -85,11 +98,15 @@ class TargetConfigureCredentialsService(service.BaseService):
 
 class TargetUserCredentialsService(service.BaseService):
     @return_xml
-    def rest_GET(self, request, target_id, user_id):
-        return self.get(target_id, user_id)
-        
-    def get(self, target_id, user_id):
-        return self.mgr.getTargetCredentialsForTargetByUserId(target_id, user_id)
+    def rest_GET(self, request, target_id):
+        return self.get(target_id)
+
+    def get(self, target_id):
+        return self.mgr.getModelTargetCredentialsForCurrentUser(target_id)
+
+    @return_xml
+    def rest_DELETE(self, request, target_id):
+        return self.mgr.deleteTargetUserCredentialsForCurrentUser(target_id)
 
 class TargetRefreshImagesService(service.BaseService):
     @return_xml
@@ -160,6 +177,7 @@ class TargetJobsService(service.BaseService):
     @requires("job", flags=Flags(save=False))
     @return_xml
     def rest_POST(self, request, target_id, job):
+        self.mgr.authTargetJob(job)
         return self.mgr.addJob(job)
 
 class AllTargetJobsService(service.BaseService):

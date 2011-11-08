@@ -1,21 +1,14 @@
 #
 # Copyright (c) 2008 rPath, Inc.
 #
-# All Rights Reserved
-#
 
-import base64
 import os
 
-from mod_python import Cookie
 from conary.lib import coveragehook
 from mint import maintenance
-from mint import shimclient
 from mint.db import database
-from mint.session import SqlSession
 
 from catalogService import handler_apache
-from catalogService.rest.middleware import auth
 from catalogService.rest.database import RestDatabase
 
 class RbuilderCatalogRESTHandler(handler_apache.ApacheRESTHandler):

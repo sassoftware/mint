@@ -17,10 +17,6 @@ import tempfile
 import StringIO
 
 from mint import buildtypes
-try:
-    from mint import charts
-except ImportError:
-    charts = None
 import mint.db.database
 import mint.rest.db.reposmgr
 import mint.rest.db.database
@@ -3479,14 +3475,6 @@ If you would not like to be %s %s of this project, you may resign from this proj
         if name not in reports.getAvailableReports():
             raise mint_error.PermissionDenied
         return base64.b64encode(self._getReportObject(name).getPdf())
-
-    
-    if charts:
-        @private
-        @typeCheck(int, int, str)
-        def getDownloadChart(self, projectId, days, format):
-            chart = charts.DownloadChart(self.db, projectId, span = days)
-            return chart.getImageData(format)
 
     # mirrored labels
     @private

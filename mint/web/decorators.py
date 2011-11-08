@@ -6,11 +6,9 @@
 
 import inspect
 
-from mod_python import apache
-
 from mint import mint_error
 from mint import userlevels
-from mint.mint_error import *
+from mint.mint_error import ItemNotFound
 from mint.web import webhandler
 
 
