@@ -5,7 +5,6 @@
 #
 
 from django.db import models
-from django.db.models.fields import Field as BaseField
 from mint.django_rest.deco import D
 from mint.django_rest.rbuilder import modellib
 from mint.django_rest.rbuilder.jobs import models as jobmodels
