@@ -660,7 +660,7 @@ class QuerySetManager(basemanager.BaseManager):
              # never been tagged before
              return True
          else:
-             then  = querySet.tagged_date.replace(tzinfo=None)
+             then  = querySet.tagged_date
              delta = timeutils.now() - then
              return (delta.seconds > TAG_REFRESH_INTERVAL)
 
