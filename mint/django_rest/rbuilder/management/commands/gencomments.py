@@ -84,6 +84,8 @@ class DocMetadata(object):
         # list fields.  Attaches attr listFieldsModels (a dict)
         # which contains the following information:
         # listFieldsModels[list_fields tag] = submodel
+        # A known corner case happens when a two or more different
+        # apps share a model of the same name or tag-name.
         self.listFieldsModels = self._calculateListFieldsModels()
     
     def _calculateXObjTags(self):
@@ -188,6 +190,9 @@ class DocMetadata(object):
         
     @property
     def backwardReferences(self):
+        """
+        Works almost all the time but still misses the occasional field.
+        """
         # get all fields that have a reverse relationship
         # with self.model
         backRefs = {}
@@ -254,14 +259,17 @@ class Command(BaseCommand):
     
     def handle(self, *args, **options):
         for u in urlpatterns:
+            # instance of view service for this url
             view = u.callback
             # Name of model, taken from URL inside urlpatterns
             MODEL_NAME = getattr(u, 'model', None)
             currentModel = DocMetadata._allModels.get(MODEL_NAME, None)
-            docMetadata = DocMetadata(view, currentModel)
             # Skip all views that don't specify a model name
+            # or that erroneously point to a non-existent model
             if not MODEL_NAME or not currentModel: continue
-        
+            
+            docMetadata = DocMetadata(view, currentModel)
+            
             # dict indexed by REST methods for the model
             METHODS = docMetadata.permittedMethods
             # text formed by concatenating attr name with value of the docstring
@@ -311,7 +319,7 @@ class Command(BaseCommand):
         # sacrifice some efficiency for clarity.  getAttributesDocumentation
         # may be recursive, so defining a nested fcn is a little excessive.
         # however, getAttributesDocumentation will be almost always terminate
-        # in less than 2 calls.
+        # in less than 2 calls so this isn't much of a limitation.
         def shouldContinue(fieldname):
             if fieldname.startswith('_'): return True
             if fieldname in metadata.hiddenFields: return True
