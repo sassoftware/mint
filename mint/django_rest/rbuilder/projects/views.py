@@ -17,6 +17,7 @@ from mint.django_rest.rbuilder.querysets import models as querymodels
 from mint.django_rest.rbuilder.projects import models as projectmodels
 from mint.django_rest.rbuilder.images import models as imagemodels
 from mint import userlevels
+from mint.django_rest.rbuilder.modellib import Flags
 
 class ProjectCallbacks(object):
     """
@@ -435,10 +436,9 @@ class ProjectReleasesService(service.BaseService):
         return Releases
 
     @rbac(ProjectCallbacks.can_write_project)
-    @requires('release')
+    @requires('release', flags=Flags(save=False))
     @return_xml
     def rest_POST(self, request, project_short_name, release):
-        # import pdb; pdb.set_trace()
         release.save(short_name=project_short_name)
         return release
         
