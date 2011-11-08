@@ -1,8 +1,13 @@
+EventTypes properties:
+    N/A
+
+
 EventType properties:
     description - the event type description
-    event_type_id - the database id of the event type
+    job_type_id - the database id of the  type
     name - the event type name (read-only)
     priority - the event type priority where > priority wins
+    resource_type - the resource type for the job
 
 Methods:
     GET:
@@ -10,6 +15,6 @@ Methods:
     POST:
         not supported
     PUT:
-        Authentication: admin
+        not supported
     DELETE:
         not supported

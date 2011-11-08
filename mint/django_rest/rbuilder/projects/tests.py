@@ -5,6 +5,7 @@
 # All rights reserved.
 #
 
+from mint.django_rest import timeutils
 from mint.django_rest.rbuilder.projects import manager
 from mint.django_rest.rbuilder.projects import models
 from mint.django_rest.rbuilder.projects import testsxml
@@ -19,7 +20,6 @@ from mint.django_rest.rbuilder.rbac import models as rbacmodels
 from mint.django_rest.rbuilder.querysets import models as querymodels
 from mint.django_rest.rbuilder.users import models as usersmodels
 from mint.django_rest.rbuilder.platforms import models as platformsmodels
-from datetime import datetime
 
 class ProjectsTestCase(RbacEngine):
     fixtures = ["projects", "project_image_fixtures"]
@@ -58,8 +58,8 @@ class ProjectsTestCase(RbacEngine):
                     permission    = permission,
                     created_by    = admin,
                     modified_by   = admin,
-                    created_date  = datetime.now(),
-                    modified_date = datetime.now()
+                    created_date  = timeutils.now(),
+                    modified_date = timeutils.now()
                 ).save()
 
         self._retagQuerySets()

@@ -1,13 +1,4 @@
-UserNotices properties:
-    N/A
 
-
-UserNotice properties:
-    N/A
-
-
-GlobalNotice properties:
-    N/A
 
 Methods:
     GET:

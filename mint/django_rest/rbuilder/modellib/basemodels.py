@@ -5,7 +5,6 @@
 
 import datetime
 from dateutil import parser
-from dateutil import tz
 import inspect
 import urlparse
 from lxml import etree
@@ -24,6 +23,7 @@ from django.core import urlresolvers
 
 from xobj import xobj
 
+from mint.django_rest import timeutils
 from mint.django_rest.rbuilder import errors
 from mint.lib import mintutils
 from mint.lib import data as mintdata
@@ -824,7 +824,7 @@ class SystemManager(BaseManager):
             return
         # Update time_updated, this should in theory be the time when the
         # job completes
-        job.time_updated = datetime.datetime.now(tz.tzutc())
+        job.time_updated = timeutils.now()
         # XXX This just doesn't seem right
         job.save()
         # Save the job so we know to update the system state
@@ -1282,7 +1282,7 @@ class XObjModel(models.Model):
                 # behavior for DateTimeField's, but as long as it's just this
                 # one case, we'll leave it like this.
                 elif isinstance(field, models.DateTimeField):
-                    val = val.replace(tzinfo=tz.tzutc())
+                    val = val.replace(tzinfo=timeutils.TZUTC)
                     val = val.isoformat()
                 elif isinstance(field, (djangofields.BooleanField,
                                         djangofields.NullBooleanField)):
@@ -1705,7 +1705,7 @@ class DecimalTimestampField(DecimalField):
 
     def to_xobj(self, val, request):
         if val is not None and val != 0:
-            ts = datetime.datetime.fromtimestamp(val, tz.tzutc())
+            ts = timeutils.fromtimestamp(val)
             return str(ts)
         else:
             return ''
@@ -1718,7 +1718,7 @@ class DateTimeUtcField(models.DateTimeField):
     """
     def pre_save(self, model_instance, add):
         if self.auto_now or (self.auto_now_add and add):
-            value = datetime.datetime.now(tz.tzutc())
+            value = timeutils.now()
             setattr(model_instance, self.attname, value)
             return value
         else:
@@ -1733,7 +1733,7 @@ class DateTimeUtcField(models.DateTimeField):
         prep_value = super(models.DateTimeField, self).get_prep_value(
             *new_args, **kwargs)
         if isinstance(prep_value, datetime.datetime):
-            return prep_value.replace(tzinfo=tz.tzutc())
+            return prep_value.replace(tzinfo=timeutils.TZUTC)
         else:
             return prep_value
 
@@ -1760,7 +1760,7 @@ class DateTimeUtcField(models.DateTimeField):
             pass
         python_value = super(DateTimeUtcField, self).to_python(value)
         if isinstance(python_value, datetime.datetime):
-            return python_value.replace(tzinfo=tz.tzutc())
+            return python_value.replace(tzinfo=timeutils.TZUTC)
         else:
             return python_value
 

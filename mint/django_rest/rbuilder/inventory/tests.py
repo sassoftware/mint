@@ -1,6 +1,5 @@
 import base64
 import cPickle
-import datetime
 import os
 import random
 from dateutil import tz
@@ -13,8 +12,8 @@ from django.contrib.redirects import models as redirectmodels
 from django.db import connection
 from django.template import TemplateDoesNotExist
 
+from mint.django_rest import timeutils
 from mint.django_rest.rbuilder import models as rbuildermodels
-from mint.django_rest.rbuilder.inventory import views
 from mint.django_rest.rbuilder.manager import rbuildermanager
 from mint.django_rest.rbuilder.users import models as usersmodels
 from mint.django_rest.rbuilder.inventory import models
@@ -2823,7 +2822,7 @@ class SystemStateTestCase(XMLTestCaseStandin):
 
         self.mgr.cfg.deadStateTimeout = 10
         self.mgr.cfg.mothballedStateTimeout = 10
-        stateChange = self.mgr.sysMgr.now() - datetime.timedelta(days=10)
+        stateChange = self.mgr.sysMgr.now() - timeutils.timedelta(days=10)
         for (job, jobState, oldState, newState) in tests:
             system.current_state = self.mgr.sysMgr.systemState(oldState)
             system.state_change_date = stateChange
@@ -2894,8 +2893,7 @@ class SystemVersionsTestCase(XMLTestCaseStandin):
         trove.version = version
         trove.flavor = \
             '~!dom0,~!domU,vmware,~!xen is: x86(i486,i586,i686,sse,sse2)'
-        trove.last_available_update_refresh = \
-            datetime.datetime.now(tz.tzutc())
+        trove.last_available_update_refresh = timeutils.now()
         trove.save()
 
         version_update = models.Version()
@@ -2926,8 +2924,7 @@ class SystemVersionsTestCase(XMLTestCaseStandin):
         trove2.name = 'emacs'
         trove2.version = version2
         trove2.flavor = version2.flavor
-        trove2.last_available_update_refresh = \
-            datetime.datetime.now(tz.tzutc())
+        trove2.last_available_update_refresh = timeutils.now()
         trove2.save()
 
         trove2.available_updates.add(version2)
@@ -3358,7 +3355,7 @@ class SystemEventTestCase(XMLTestCaseStandin):
         event = models.SystemEvent.objects.filter(system=self.system,event_type=pn_event).get()
         assert(event is not None)
         # should have been enabled immediately
-        assert(event.time_enabled <= datetime.datetime.now(tz.tzutc()))
+        assert(event.time_enabled <= timeutils.now())
         
         # make sure we have our log event
         log = models.SystemLog.objects.filter(system=self.system).get()
@@ -3374,7 +3371,7 @@ class SystemEventTestCase(XMLTestCaseStandin):
         event = models.SystemEvent.objects.filter(system=self.system,event_type=registration_event).get()
         assert(event is not None)
         # should have been enabled immediately
-        assert(event.time_enabled <= datetime.datetime.now(tz.tzutc()))
+        assert(event.time_enabled <= timeutils.now())
         
         # make sure we have our log event
         log = models.SystemLog.objects.filter(system=self.system).get()
@@ -3393,7 +3390,7 @@ class SystemEventTestCase(XMLTestCaseStandin):
         registration_event = self.mgr.sysMgr.eventType(jobmodels.EventType.SYSTEM_REGISTRATION)
         systemEvent = models.SystemEvent(system=self.system, 
             event_type=registration_event, priority=registration_event.priority,
-            time_enabled=datetime.datetime.now(tz.tzutc()))
+            time_enabled=timeutils.now())
         systemEvent.save()
         assert(systemEvent is not None)
         self.mgr.addSystemSystemEvent(self.system.system_id, systemEvent)
@@ -3404,7 +3401,7 @@ class SystemEventTestCase(XMLTestCaseStandin):
         config_event = self.mgr.sysMgr.eventType(jobmodels.EventType.SYSTEM_CONFIG_IMMEDIATE)
         systemEvent = models.SystemEvent(system=self.system, 
             event_type=config_event, priority=config_event.priority,
-            time_enabled=datetime.datetime.now(tz.tzutc()))
+            time_enabled=timeutils.now())
         systemEvent.save()
         assert(systemEvent is not None)
         self.mgr.addSystemSystemEvent(self.system.system_id, systemEvent)
@@ -3415,7 +3412,7 @@ class SystemEventTestCase(XMLTestCaseStandin):
         poll_now_event = self.mgr.sysMgr.eventType(jobmodels.EventType.SYSTEM_POLL_IMMEDIATE)
         systemEvent = models.SystemEvent(system=self.system, 
             event_type=poll_now_event, priority=poll_now_event.priority,
-            time_enabled=datetime.datetime.now(tz.tzutc()))
+            time_enabled=timeutils.now())
         systemEvent.save()
         assert(systemEvent is not None)
         self.mgr.addSystemSystemEvent(self.system.system_id, systemEvent)
@@ -3426,7 +3423,7 @@ class SystemEventTestCase(XMLTestCaseStandin):
         poll_event = self.mgr.sysMgr.eventType(jobmodels.EventType.SYSTEM_POLL)
         systemEvent = models.SystemEvent(system=self.system, 
             event_type=poll_event, priority=poll_event.priority,
-            time_enabled=datetime.datetime.now(tz.tzutc()))
+            time_enabled=timeutils.now())
         systemEvent.save()
         assert(systemEvent is not None)
         self.mgr.addSystemSystemEvent(self.system.system_id, systemEvent)
@@ -3586,7 +3583,7 @@ class SystemEventProcessingTestCase(XMLTestCaseStandin):
         orgPollEvent = event
         new_poll_event = models.SystemEvent(system=orgPollEvent.system, 
             event_type=orgPollEvent.event_type, priority=orgPollEvent.priority + 1,
-            time_enabled=orgPollEvent.time_enabled + datetime.timedelta(1))
+            time_enabled=orgPollEvent.time_enabled + timeutils.timedelta(1))
         new_poll_event.save()
         events = self.mgr.sysMgr.getSystemEventsForProcessing()
         self.failUnlessEqual(len(events), 1)

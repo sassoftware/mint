@@ -1,0 +1,11 @@
+
+
+Methods:
+    GET:
+        Authentication: user
+    POST:
+        Authentication: admin
+    PUT:
+        not supported
+    DELETE:
+        not supported

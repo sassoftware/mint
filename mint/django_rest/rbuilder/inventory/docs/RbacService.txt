@@ -1,0 +1,14 @@
+Rbac properties:
+    grants - permissions granted to roles
+    permissions - supported access control permission types
+    roles - access control roles
+
+Methods:
+    GET:
+        Authentication: none
+    POST:
+        not supported
+    PUT:
+        not supported
+    DELETE:
+        not supported

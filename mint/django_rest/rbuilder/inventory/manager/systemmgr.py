@@ -7,13 +7,11 @@
 import cPickle
 import logging
 import sys
-import datetime
 import random
 import time
 import traceback
 from conary import versions as cny_versions
 from conary.deps import deps as cny_deps
-from dateutil import tz
 from xobj import xobj
 
 from django.db import connection
@@ -24,6 +22,7 @@ from django.core.exceptions import ObjectDoesNotExist
 
 from mint.lib import uuid, x509
 from mint.lib import data as mintdata
+from mint.django_rest import timeutils
 from mint.django_rest.rbuilder import models as rbuildermodels
 from mint.django_rest.rbuilder.inventory import errors
 from mint.django_rest.rbuilder.inventory import models
@@ -104,7 +103,6 @@ class SystemManager(basemanager.BaseManager):
              jobmodels.EventType.SYSTEM_SHUTDOWN_IMMEDIATE],
     }
 
-    TZ = tz.tzutc()
     X509 = x509.X509
 
     NonresponsiveStates = set([
@@ -116,9 +114,7 @@ class SystemManager(basemanager.BaseManager):
         models.SystemState.NONRESPONSIVE_CREDENTIALS,
     ])
 
-    @classmethod
-    def now(cls):
-        return datetime.datetime.now(cls.TZ)
+    now = timeutils.now
 
     @exposed
     def getEventTypes(self):
@@ -745,7 +741,7 @@ class SystemManager(basemanager.BaseManager):
         self.setSystemStateFromJob(system)
         if for_user:
             system.modified_by = for_user
-        system.modified_date = datetime.datetime.now()
+        system.modified_date = timeutils.now()
         system.save()
 
     def checkInstalledSoftware(self, system):
@@ -1208,7 +1204,7 @@ class SystemManager(basemanager.BaseManager):
         if systemEvent.dispatchImmediately():
             enable_time = self.now()
         else:
-            enable_time = self.now() + datetime.timedelta(minutes=self.cfg.systemEventsPollDelay)
+            enable_time = self.now() + timeutils.timedelta(minutes=self.cfg.systemEventsPollDelay)
             
         self.logSystemEvent(systemEvent, enable_time)
         
@@ -1634,7 +1630,7 @@ class SystemManager(basemanager.BaseManager):
         if self.getSystemHasHostInfo(system) or \
                 eventType.name in self.LaunchWaitForNetworkEvents:
             if not enableTime:
-                enableTime = self.now() + datetime.timedelta(
+                enableTime = self.now() + timeutils.timedelta(
                     minutes=self.cfg.systemEventsPollDelay)
             if eventData is not None and not isinstance(eventData, basestring):
                 pickledData = cPickle.dumps(eventData)

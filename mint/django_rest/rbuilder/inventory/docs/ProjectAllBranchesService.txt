@@ -1,0 +1,12 @@
+ProjectVersions properties:
+    N/A
+
+Methods:
+    GET:
+        Authentication: user
+    POST:
+        Authentication: user
+    PUT:
+        not supported
+    DELETE:
+        not supported

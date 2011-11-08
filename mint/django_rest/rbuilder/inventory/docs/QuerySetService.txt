@@ -7,12 +7,13 @@ QuerySet properties:
     presentation_type - A classification for client to use when displaying the objects.  For example, stages can be on projects, branches, platforms, etc.
     query_set_id - The database id for the query set
     resource_type - Name of the resource this query set operates on
+    tagged_date - Date the query set was last tagged
 
 Methods:
     GET:
         Authentication: user
     POST:
-        Authentication: admin
+        not supported
     PUT:
         Authentication: admin
     DELETE:

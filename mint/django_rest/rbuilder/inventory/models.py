@@ -3,11 +3,9 @@
 #
 # All Rights Reserved
 #
-import datetime
 import sys
 import urllib
 import urlparse
-from dateutil import tz
 
 from conary import versions
 from conary.deps import deps
@@ -16,6 +14,7 @@ from django.conf import settings
 from django.db import connection, models
 from django.db.backends import signals
 
+from mint.django_rest import timeutils
 from mint.django_rest.deco import D
 from mint.django_rest.rbuilder import modellib
 from mint.django_rest.rbuilder import models as rbuildermodels
@@ -532,7 +531,7 @@ class System(modellib.XObjIdModel):
     agent_port = D(models.IntegerField(null=True),
           "the port used by the system's CIM broker", short="System agent port")
     state_change_date = XObjHidden(APIReadOnly(modellib.DateTimeUtcField(
-        auto_now_add=True, default=datetime.datetime.now(tz.tzutc()))))
+        auto_now_add=True, default=timeutils.now())))
     event_uuid = D(XObjHidden(modellib.SyntheticField()),
         "a UUID used to link system events with their returned responses")
     boot_uuid = D(XObjHidden(modellib.SyntheticField()),
@@ -931,7 +930,7 @@ class SystemEvent(modellib.XObjIdModel):
         related_name='system_events', db_column='job_type_id')
     time_created = modellib.DateTimeUtcField(auto_now_add=True)
     time_enabled = modellib.DateTimeUtcField(
-        default=datetime.datetime.now(tz.tzutc()), db_index=True)
+        default=timeutils.now(), db_index=True)
     priority = models.SmallIntegerField(db_index=True)
     event_data = models.TextField(null=True)
 

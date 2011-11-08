@@ -8,7 +8,7 @@ SystemType properties:
 
 Methods:
     GET:
-        Authentication: user
+        Authentication: none
     POST:
         not supported
     PUT:

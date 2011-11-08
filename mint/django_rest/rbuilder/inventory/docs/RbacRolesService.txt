@@ -1,0 +1,12 @@
+RbacRoles properties:
+    N/A
+
+Methods:
+    GET:
+        Authentication: admin
+    POST:
+        Authentication: admin
+    PUT:
+        not supported
+    DELETE:
+        not supported

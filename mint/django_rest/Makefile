@@ -8,9 +8,12 @@ SUBDIRS = rbuilder templates
 
 python_files = $(wildcard *.py)
 
-all: default-all
+all: default-all comments
 
 install: pyfiles-install default-install
+
+comments:
+	python manage_local.py generatecomments
 
 clean: default-clean
 

@@ -1,0 +1,24 @@
+QuerySets properties:
+    N/A
+
+
+QuerySet properties:
+    can_modify - Whether this query set can be deleted through the API.
+    created_date - Date the query set was created
+    description - Query set description
+    modified_date - Date the query set was modified
+    name - Query set name
+    presentation_type - A classification for client to use when displaying the objects.  For example, stages can be on projects, branches, platforms, etc.
+    query_set_id - The database id for the query set
+    resource_type - Name of the resource this query set operates on
+    tagged_date - Date the query set was last tagged
+
+Methods:
+    GET:
+        Authentication: user
+    POST:
+        Authentication: admin
+    PUT:
+        not supported
+    DELETE:
+        not supported
