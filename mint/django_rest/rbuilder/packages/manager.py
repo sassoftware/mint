@@ -4,11 +4,9 @@
 # All Rights Reserved
 #
 
-import datetime
-from dateutil import tz
-
 from conary import conarycfg
 
+from mint.django_rest import timeutils
 from mint.django_rest.rbuilder.manager import basemanager
 from mint.django_rest.rbuilder.jobs import models as jobmodels
 from mint.django_rest.rbuilder.packages import errors
@@ -131,7 +129,7 @@ class PackageVersionManager(BaseManager):
         packageVersion.package_version_urls.all().delete()
         for pvUrl in package_version_urls.package_version_url:
             pvUrl.package_version = packageVersion
-            pvUrl.downloaded_date = datetime.datetime.now(tz.tzutc())
+            pvUrl.downloaded_date = timeutils.now()
             pvUrl.modified_by = self.user
             pvUrl.save()
 

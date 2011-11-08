@@ -4,12 +4,12 @@
 # All Rights Reserved
 #
 
+from mint.django_rest import timeutils
 from mint.django_rest.rbuilder import modellib
 from mint.django_rest.rbuilder.rbac import models 
 from mint.django_rest.rbuilder.users import models as usermodels
 from mint.django_rest.rbuilder.manager import basemanager
 from mint.django_rest.rbuilder.querysets import models as querymodels
-from datetime import datetime
 from django.core.exceptions import ObjectDoesNotExist
 from mint.django_rest.rbuilder.errors import PermissionDenied
 from copy import deepcopy
@@ -202,7 +202,7 @@ class RbacManager(basemanager.BaseManager):
         if old_obj.created_date is None:
             raise Exception("ERROR: invalid previous object?")
         role.created_date = old_obj.created_date
-        role.modified_date = datetime.now()
+        role.modified_date = timeutils.now()
         role.modified_by = by_user
         role.save()
         self.mgr.invalidateQuerySetByName('All Roles')
@@ -312,7 +312,7 @@ class RbacManager(basemanager.BaseManager):
             raise Exception("ERROR: invalid previous object?")
         permission.created_by    = old_obj.created_by
         permission.created_date  = old_obj.created_date
-        permission.modified_date = datetime.now()
+        permission.modified_date = timeutils.now()
         permission.modified_by   = by_user
         permission.save()
         self.mgr.invalidateQuerySetByName('All Grants')

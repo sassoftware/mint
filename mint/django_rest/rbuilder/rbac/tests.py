@@ -1,11 +1,11 @@
 import testsxml
 from xobj import xobj
+from mint.django_rest import timeutils
 from mint.django_rest.rbuilder.rbac import models
 from mint.django_rest.rbuilder.users import models as usersmodels
 from mint.django_rest.rbuilder.querysets import models as querymodels
 from mint.django_rest.rbuilder.rbac.manager.rbacmanager import \
    READMEMBERS, MODMEMBERS, READSET, MODSETDEF, CREATERESOURCE
-from datetime import datetime
 
 # Suppress all non critical msg's from output
 # still emits traceback for failed tests
@@ -132,16 +132,16 @@ class RbacBasicTestCase(RbacTestCase):
             name='sysadmin',
             created_by=usersmodels.User.objects.get(user_name='admin'),
             modified_by=usersmodels.User.objects.get(user_name='admin'),
-            created_date=datetime.now(),
-            modified_date=datetime.now(),
+            created_date=timeutils.now(),
+            modified_date=timeutils.now(),
         )
         sysadmin.save()
         developer = models.RbacRole(
             name='developer',
             created_by=usersmodels.User.objects.get(user_name='admin'),
             modified_by=usersmodels.User.objects.get(user_name='admin'),
-            created_date=datetime.now(),
-            modified_date=datetime.now()
+            created_date=timeutils.now(),
+            modified_date=timeutils.now()
         )
         developer.save()
 
@@ -164,8 +164,8 @@ class RbacBasicTestCase(RbacTestCase):
             name='sysadmin',
             created_by=usersmodels.User.objects.get(user_name='admin'),
             modified_by=usersmodels.User.objects.get(user_name='admin'),
-            created_date=datetime.now(),
-            modified_date=datetime.now()
+            created_date=timeutils.now(),
+            modified_date=timeutils.now()
         )
         role1.save()
         role1    = models.RbacRole.objects.get(name='sysadmin')
@@ -176,8 +176,8 @@ class RbacBasicTestCase(RbacTestCase):
            permission      = models.RbacPermissionType.objects.get(name=action_name),
            created_by=usersmodels.User.objects.get(user_name='admin'),
            modified_by=usersmodels.User.objects.get(user_name='admin'),
-           created_date=datetime.now(),
-           modified_date=datetime.now()
+           created_date=timeutils.now(),
+           modified_date=timeutils.now()
         )
         permission.save()
         permissions2 = models.RbacPermission.objects.filter(
@@ -210,8 +210,8 @@ class RbacBasicTestCase(RbacTestCase):
             role = role1,
             created_by=usersmodels.User.objects.get(user_name='admin'),
             modified_by=usersmodels.User.objects.get(user_name='admin'),
-            created_date=datetime.now(),
-            modified_date=datetime.now()
+            created_date=timeutils.now(),
+            modified_date=timeutils.now()
         ) 
         mapping.save()
         mappings2  = models.RbacUserRole.objects.filter(
@@ -318,8 +318,8 @@ class RbacPermissionViews(RbacTestCase):
             models.RbacRole(name=item,
                 created_by  = usersmodels.User.objects.get(user_name='admin'),
                 modified_by = usersmodels.User.objects.get(user_name='admin'),
-                created_date  = datetime.now(),
-                modified_date = datetime.now()
+                created_date  = timeutils.now(),
+                modified_date = timeutils.now()
             ).save()
 
         for permission in [ MODMEMBERS, CREATERESOURCE ] :
@@ -329,8 +329,8 @@ class RbacPermissionViews(RbacTestCase):
                 permission    = models.RbacPermissionType.objects.get(name=permission),
                 created_by    = usersmodels.User.objects.get(user_name='admin'),
                 modified_by   = usersmodels.User.objects.get(user_name='admin'),
-                created_date  = datetime.now(),
-                modified_date = datetime.now()
+                created_date  = timeutils.now(),
+                modified_date = timeutils.now()
             ).save()
         models.RbacPermission(
             queryset       = self.datacenter_queryset,
@@ -338,8 +338,8 @@ class RbacPermissionViews(RbacTestCase):
             permission     = models.RbacPermissionType.objects.get(name=READMEMBERS),
             created_by     = usersmodels.User.objects.get(user_name='admin'),
             modified_by    = usersmodels.User.objects.get(user_name='admin'),
-            created_date  = datetime.now(),
-            modified_date = datetime.now()
+            created_date  = timeutils.now(),
+            modified_date = timeutils.now()
         ).save()
        
         for permission in [ MODMEMBERS, CREATERESOURCE ] :
@@ -349,8 +349,8 @@ class RbacPermissionViews(RbacTestCase):
                 permission     = models.RbacPermissionType.objects.get(name=permission),
                 created_by     = usersmodels.User.objects.get(user_name='admin'),
                 modified_by    = usersmodels.User.objects.get(user_name='admin'),
-                created_date  = datetime.now(),
-                modified_date = datetime.now()
+                created_date  = timeutils.now(),
+                modified_date = timeutils.now()
             ).save()
 
     def testCanListPermissions(self):
@@ -544,8 +544,8 @@ class RbacEngine(RbacTestCase):
                 permission    = models.RbacPermissionType.objects.get(name=action),
                 created_by    = usersmodels.User.objects.get(user_name='admin'),
                 modified_by   = usersmodels.User.objects.get(user_name='admin'),
-                created_date  = datetime.now(),
-                modified_date = datetime.now()
+                created_date  = timeutils.now(),
+                modified_date = timeutils.now()
             ).save()
 
         def mk_user(name, is_admin, role):

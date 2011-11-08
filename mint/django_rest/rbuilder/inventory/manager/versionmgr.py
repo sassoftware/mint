@@ -4,11 +4,9 @@
 # All Rights Reserved
 #
 
-import datetime
 import itertools
 import logging
 import xml
-from dateutil import tz
 from xml.dom import minidom
 
 from conary import conaryclient, versions
@@ -17,6 +15,7 @@ from conary.errors import RepositoryError
 
 from django.core.exceptions import ObjectDoesNotExist
 
+from mint.django_rest import timeutils
 from mint.django_rest.rbuilder.inventory import models
 from mint.django_rest.rbuilder.manager import basemanager
 from mint.django_rest.rbuilder.projects.models import Project, ProjectVersion
@@ -194,9 +193,8 @@ class VersionManager(basemanager.BaseManager):
         return self._cclient
 
     def _checkCacheExpired(self, trove):
-        one_day = datetime.timedelta(1)
-        return (trove.last_available_update_refresh + one_day) < \
-            datetime.datetime.now(tz.tzutc())
+        one_day = timeutils.timedelta(1)
+        return (trove.last_available_update_refresh + one_day) < timeutils.now()
 
     @exposed
     def set_available_updates(self, trove, force=False):
@@ -205,7 +203,7 @@ class VersionManager(basemanager.BaseManager):
         # last_available_update_refresh.
         if trove.last_available_update_refresh is not None:
             trove.last_available_update_refresh = \
-                trove.last_available_update_refresh.replace(tzinfo=tz.tzutc())
+                trove.last_available_update_refresh.replace(timeutils.TZUTC)
 
         if force or \
            trove.last_available_update_refresh is None or \
@@ -213,8 +211,7 @@ class VersionManager(basemanager.BaseManager):
 
             refreshed = self.refresh_available_updates(trove)
             if refreshed:
-                trove.last_available_update_refresh = \
-                    datetime.datetime.now(tz.tzutc())
+                trove.last_available_update_refresh = timeutils.now()
                 trove.save()
 
     def refresh_available_updates(self, trove):

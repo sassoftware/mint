@@ -9,8 +9,8 @@ from django.db.models import Q
 from django.db.models.query import EmptyQuerySet
 from django.core.exceptions import ObjectDoesNotExist
 from django.db import connection, transaction
-from datetime import datetime
 
+from mint.django_rest import timeutils
 from mint.django_rest.rbuilder import modellib
 from mint.django_rest.rbuilder.manager import basemanager
 from mint.django_rest.rbuilder.manager.basemanager import exposed
@@ -236,7 +236,7 @@ class QuerySetManager(basemanager.BaseManager):
 
         querySet.tagged_date = None
         querySet.modified_by = by_user
-        querySet.modified_date = datetime.now()
+        querySet.modified_date = timeutils.now()
         querySet.save()
         self._recomputeStatic(querySet)
         return querySet
@@ -484,7 +484,7 @@ class QuerySetManager(basemanager.BaseManager):
         return resourceCollection
 
     def _updateQuerySetTaggedDate(self, querySet):
-        querySet.tagged_date = datetime.now()
+        querySet.tagged_date = timeutils.now()
         querySet.save()
  
     def _getQuerySetAllResult(self, querySet):
@@ -661,7 +661,7 @@ class QuerySetManager(basemanager.BaseManager):
              return True
          else:
              then  = querySet.tagged_date.replace(tzinfo=None)
-             delta = datetime.now() - then
+             delta = timeutils.now() - then
              return (delta.seconds > TAG_REFRESH_INTERVAL)
 
     def _getQuerySetFilteredResult(self, querySet):
@@ -790,7 +790,7 @@ class QuerySetManager(basemanager.BaseManager):
             tagMethod([resource], querySet, self._chosenMethod())
 
         querySet.modified_by = by_user
-        querySet.modified_date = datetime.now()
+        querySet.modified_date = timeutils.now()
         querySet.save()
 
         return self.getQuerySetChosenResult(querySetId)
@@ -823,7 +823,7 @@ class QuerySetManager(basemanager.BaseManager):
         tagMethod(resources_out, querySet, self._chosenMethod())
 
         querySet.modified_by = by_user
-        querySet.modified_date = datetime.now()
+        querySet.modified_date = timeutils.now()
         querySet.save()
 
         return self.getQuerySetChosenResult(querySet)
@@ -844,7 +844,7 @@ class QuerySetManager(basemanager.BaseManager):
         tagModels.delete()
 
         querySet.modified_by = by_user
-        querySet.modified_date = datetime.now()
+        querySet.modified_date = timeutils.now()
         querySet.save()
 
         return self.getQuerySetChosenResult(querySetId)
