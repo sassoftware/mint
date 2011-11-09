@@ -18,12 +18,21 @@ from mint.django_rest.rbuilder.jobs import models as jmodels
 from mint.django_rest.rbuilder.targets import models
 from mint.django_rest.rbuilder.targets import testsxml
 from xobj import xobj
+from mint.django_rest.rbuilder.rbac import models as rbacmodels
+from mint.django_rest.rbuilder.querysets import models as querymodels
+from mint.django_rest.rbuilder.users import models as usermodels
+from mint.django_rest.rbuilder.rbac.tests import RbacEngine
+from mint.django_rest import timeutils
 
-class BaseTargetsTest(XMLTestCase):
+
+# TODO: would be nice to make RbacSetup more of a mixin
+class BaseTargetsTest(RbacEngine):
+
     def setUp(self):
-        XMLTestCase.setUp(self)
+        RbacEngine.setUp(self)
         self._initTestFixtures()
         self._mock()
+        self._setupRbac()
 
     def _initTestFixtures(self):
         sampleTargetTypes = [ models.TargetType.objects.get(name=x)
@@ -90,6 +99,38 @@ class BaseTargetsTest(XMLTestCase):
         tmgr = self.mgr.targetsManager
         fakeAuth = collections.namedtuple("FakeAuth", "userId")
         self.mock(tmgr.mgr, '_auth', fakeAuth(1))
+
+    # invalidate the querysets so tags can be applied
+    def _retagQuerySets(self):
+        self.mgr.retagQuerySetsByType('project')
+        self.mgr.retagQuerySetsByType('images')
+
+    def _setupRbac(self):
+
+        # RbacEngine test base class has already done a decent amount of setup
+        # now just add the grants for the things we are working with
+
+        role              = rbacmodels.RbacRole.objects.get(name='developer')
+        self.all_targets  = querymodels.QuerySet.objects.get(name='All Targets')
+        self.all_images   = querymodels.QuerySet.objects.get(name='All Images')
+        modmembers        = rbacmodels.RbacPermissionType.objects.get(name='ModMembers')
+        readset           = rbacmodels.RbacPermissionType.objects.get(name='ReadSet')
+        createresource    = rbacmodels.RbacPermissionType.objects.get(name='CreateResource')
+        admin             = usermodels.User.objects.get(user_name='admin')
+
+        for queryset in [ self.all_targets, self.all_images ]:
+            for permission in [ modmembers, createresource, readset  ]:
+                rbacmodels.RbacPermission(
+                    queryset      = queryset,
+                    role          = role,
+                    permission    = permission,
+                    created_by    = admin,
+                    modified_by   = admin,
+                    created_date  = timeutils.now(),
+                    modified_date = timeutils.now()
+                ).save()
+
+        self._retagQuerySets()
 
 class TargetsTestCase(BaseTargetsTest, RepeaterMixIn):
     def _mock(self):

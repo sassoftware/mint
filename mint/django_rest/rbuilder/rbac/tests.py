@@ -50,7 +50,9 @@ class RbacTestCase(XMLTestCase):
         self.projects_queryset     = querymodels.QuerySet.objects.get(
             name='All Projects')
         self.images_queryset     = querymodels.QuerySet.objects.get(
-            name='All Projects')
+            name='All Images')
+        self.targets_queryset     = querymodels.QuerySet.objects.get(
+            name='All Targets')
  
         self.test_querysets = [
             self.tradingfloor_queryset, 
@@ -97,6 +99,8 @@ class RbacTestCase(XMLTestCase):
         self.req('query_sets/%s/all' % self.projects_queryset.pk,
              method='GET', expect=200, is_admin=True)
         self.req('query_sets/%s/all' % self.images_queryset.pk,
+             method='GET', expect=200, is_admin=True)
+        self.req('query_sets/%s/all' % self.targets_queryset.pk,
              method='GET', expect=200, is_admin=True)
 
     def _xobj_list_hack(self, item):
@@ -714,11 +718,7 @@ class RbacEngineTests(RbacEngine):
         self.assertEquals(response.status_code, 200, 'qs lookup')
         xobj_querysets = xobj.parse(response.content)
         results = xobj_querysets.query_sets.query_set
-        # granted permission to 2 systems querysets + 1 user queryset
-        # All users/systems/projects/targets are public
-        # (ReadSet on public sets is redundant)
-        # + 3 "My" querysets (projects+images+systems) ... soon to be more
-        self.assertEquals(len(results), 8, 'sysadmin user gets fewer results')
+        self.assertEquals(len(results), 10, 'sysadmin user gets fewer results')
  
         # sysadmin user CAN see & use the all systems queryset
         # because he has permissions on it
