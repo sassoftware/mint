@@ -9,6 +9,8 @@ from django.db.models import Q
 from django.db.models.query import EmptyQuerySet
 from django.core.exceptions import ObjectDoesNotExist
 from django.db import connection, transaction
+import fcntl
+import os
 
 from mint.django_rest import timeutils
 from mint.django_rest.rbuilder import modellib
@@ -310,34 +312,46 @@ class QuerySetManager(basemanager.BaseManager):
         store that a given query tag matched the system 
         for caching purposes
         '''
-
-        if len(resources) == 0:
-            return
         
-        self.newTransaction()
+        try:
+            # we have to hop out of transactions because Django will deadlock... but we need locking
+            # so a request to retag isn't done in parallel, so this is somewhat evil.  Would love
+            # to hand tune the SQL but it's pretty ingrained into querysets.
 
-        cursor = connection.cursor()
+            fd = open("/tmp/rbuilder-%s.taglock" % os.getuid(), "w")
+            fcntl.flock(fd.fileno(), fcntl.LOCK_EX)
 
-        if inclusionMethod.name != 'chosen':
-            cursor.execute("DELETE FROM %s WHERE query_set_id = %s AND inclusion_method_id = %s" % (
-                tagTable, queryset.pk, inclusionMethod.pk
-            ))
-
-        insertParams = None
-        if type(resources) == list:
-            # inserting chosens, should be a small quantity
-            insertParams = [(r.pk,) for r in resources]
-        else:
-            resources = resources.values_list('pk', flat=True)
-            insertParams = [(r,) for r in resources]
-
-
-        query = "INSERT INTO %s" % tagTable 
-        query = query + " (%s, query_set_id, inclusion_method_id)" % idColumn
-        query = query + " VALUES (%s, " + " %s, %s)" % (queryset.pk, inclusionMethod.pk)
-        cursor.executemany(query, insertParams) 
+            if len(resources) == 0:
+                return
         
-        self.newTransaction()
+            self.newTransaction()
+
+            cursor = connection.cursor()
+
+            if inclusionMethod.name != 'chosen':
+                cursor.execute("DELETE FROM %s WHERE query_set_id = %s AND inclusion_method_id = %s" % (
+                    tagTable, queryset.pk, inclusionMethod.pk
+                ))
+
+            insertParams = None
+            if type(resources) == list:
+                # inserting chosens, should be a small quantity
+                insertParams = [(r.pk,) for r in resources]
+            else:
+                resources = resources.values_list('pk', flat=True)
+                insertParams = [(r,) for r in resources]
+
+
+            query = "INSERT INTO %s" % tagTable 
+            query = query + " (%s, query_set_id, inclusion_method_id)" % idColumn
+            query = query + " VALUES (%s, " + " %s, %s)" % (queryset.pk, inclusionMethod.pk)
+            cursor.executemany(query, insertParams) 
+        
+            self.newTransaction()
+
+        finally:
+            fcntl.flock(fd.fileno(), fcntl.LOCK_UN)
+
 
         
 
