@@ -26,7 +26,7 @@ class MirrorInbound(MirrorScript):
 
     def action(self):
         self.resetLogging()
-        client = MintClient(self.args[0])
+        client = MintClient(self.mintUrl)
         cfg = mirror.MirrorConfiguration()
 
         proxy = self.cfg.proxy
