@@ -160,6 +160,7 @@ class QuerySet(modellib.XObjIdModel):
         'grant'                : 'Grant name'  ,
         'role'                 : 'Role name'   ,
         'target'               : 'Target name' , 
+        'image'                : 'Image name'  ,
     }
 
     def searchKey(self):

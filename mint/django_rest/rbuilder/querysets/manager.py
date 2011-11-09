@@ -43,7 +43,7 @@ from mint.django_rest.rbuilder.rbac.manager.rbacmanager import READMEMBERS, MODM
 # * consider if favoriteRbacedQuerySets needs to change
 # * apply rbac & decorators to the service
 # * on the resource being querysetted, add _queryset_resource_type = 'foo'
-
+# * add to queryset_search_key map in the QuerySet class
 
 # retag if a new query is made and the results are greater
 # than this many seconds old
