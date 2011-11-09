@@ -55,9 +55,10 @@ target_POST = \
 """
 <?xml version='1.0' encoding='UTF-8'?>
 <target>
-  <target_id>4</target_id>
   <name>Target Name 4</name>
   <description>Target Description</description>
+  <target_type_name>vmware</target_type_name>
+  <zone_name>other zone</zone_name>
 </target>
 """.strip()
 

@@ -87,6 +87,15 @@ class TargetCredentialsService(service.BaseService):
     def get(self, target_id, target_credentials_id):
         return self.mgr.getTargetCredentialsForTarget(target_id, target_credentials_id)
 
+class DescriptorTargetsCreationService(service.BaseService):
+    @return_xml
+    def rest_GET(self, request):
+        return self.get()
+
+    def get(self):
+        return self.mgr.serializeDescriptor(
+            self.mgr.getDescriptorTargetCreation())
+
 class TargetConfigureCredentialsService(service.BaseService):
     @return_xml
     def rest_GET(self, request, target_id):

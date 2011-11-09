@@ -681,7 +681,12 @@ urlpatterns = patterns('',
         rbacviews.RbacPermissionTypeService(),
         name='RbacPermissionType',
         model='RbacPermissionType'),
-    
+
+    # Generic descriptors for creating resources
+    URL(r'descriptors/targets/create/?$',
+        targetsviews.DescriptorTargetsCreationService(),
+        name='DescriptorsTargetsCreate'),
+
     # Begin Targets/TargetTypes
     URL(r'targets/?$',
         targetsviews.TargetsService(),

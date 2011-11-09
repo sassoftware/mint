@@ -96,6 +96,24 @@ class TargetsTestCase(BaseTargetsTest, RepeaterMixIn):
         RepeaterMixIn.setUpRepeaterClient(self)
         BaseTargetsTest._mock(self)
 
+    def testGetDescriptorTargetsCreation(self):
+        zmodels.Zone.objects.create(name='other zone', description = "Other Zone")
+        response = self._get('descriptors/targets/create',
+            username='testuser', password='password')
+        self.failUnlessEqual(response.status_code, 200)
+        document = xobj.parse(response.content)
+        self.failUnlessEqual(document.descriptor.metadata.rootElement,
+            'descriptor_data')
+        fields = document.descriptor.dataFields.field
+        self.failUnlessEqual([ x.name for x in fields ],
+            ['name', 'description', 'target_type_name', 'zone_name'])
+        self.failUnlessEqual(
+            [ x.key for x in fields[2].enumeratedType.describedValue ],
+            ['ec2', 'eucalyptus', 'openstack', 'vcloud', 'vmware', 'xen-enterprise'])
+        self.failUnlessEqual(
+            [ x.key for x in fields[3].enumeratedType.describedValue ],
+            ['Local rBuilder', 'other zone'])
+
     def testGetTargetConfigurationDescriptor(self):
         response = self._get('targets/1/target_configuration/',
             username='admin', password='password')
@@ -105,8 +123,8 @@ class TargetsTestCase(BaseTargetsTest, RepeaterMixIn):
     def testGetTargets(self):
         targets = models.Target.objects.order_by('target_id')
         response = self._get('targets/', username='testuser', password='password')
-        targets_gotten = xobj.parse(response.content)
         self.assertEquals(response.status_code, 200)
+        targets_gotten = xobj.parse(response.content)
         self.failUnlessEqual([ x.name for x in targets_gotten.targets.target ],
             [ x.name for x in targets ])
         self.failUnlessEqual([ x.id for x in targets_gotten.targets.target ],
@@ -149,6 +167,8 @@ class TargetsTestCase(BaseTargetsTest, RepeaterMixIn):
             ])
         self.failUnlessEqual(targets_gotten.targets.jobs.id,
             'http://testserver/api/v1/target_jobs')
+        self.failUnlessEqual(targets_gotten.targets.descriptor_create.id,
+            'http://testserver/api/v1/descriptors/targets/create')
 
     def testGetTarget_credentials_valid(self):
         # Remove credentials for one of the targets
@@ -195,6 +215,7 @@ class TargetsTestCase(BaseTargetsTest, RepeaterMixIn):
         ])
 
     def testCreateTarget(self):
+        zmodels.Zone.objects.create(name='other zone', description = "Other Zone")
         response = self._post('targets/', username='admin', password='password',
             data=testsxml.target_POST)
         self.assertEquals(response.status_code, 200)
@@ -212,6 +233,10 @@ class TargetsTestCase(BaseTargetsTest, RepeaterMixIn):
           ])
         self.failUnlessEqual([ x.enabled for x in actions ],
           [ 'true', 'false', 'false', 'false', ])
+        dbobj = models.Target.objects.get(target_id=target.target_id)
+        self.failUnlessEqual(dbobj.target_type.name, 'vmware')
+        self.failUnlessEqual(dbobj.zone.name, 'other zone')
+
 
     def testUpdateTarget(self):
         response = self._put('targets/1', username='admin', password='password',
