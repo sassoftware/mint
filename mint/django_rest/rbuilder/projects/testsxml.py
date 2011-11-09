@@ -587,6 +587,14 @@ release_by_project_do_publish_xml = \
 </release>
 """.strip()
 
+release_by_project_unpublish_xml = \
+"""
+<release>
+  <should_mirror>0</should_mirror>
+  <published>False</published>
+</release>
+""".strip()
+
 published_release_xml = \
 """
 <release id="http://testserver/api/v1/releases/1">

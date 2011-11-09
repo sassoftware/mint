@@ -442,7 +442,7 @@ class ProjectReleasesService(service.BaseService):
     def rest_POST(self, request, project_short_name, release):
         project = projectmodels.Project.objects.get(short_name=project_short_name)
         user = request._authUser
-        return self.mgr.createReleaseByProject(release, user, project)
+        return self.mgr.createRelease(release, user, project=project)
         
 class ProjectReleaseService(service.BaseService):
 
@@ -458,8 +458,6 @@ class ProjectReleaseService(service.BaseService):
     @requires('release')
     def rest_PUT(self, request, project_short_name, release_id, release):
         user = request._authUser
-        oldRelease = projectmodels.Release.objects.get(pk=release.release_id)
-        
         if release.published == u'True':
             self.mgr.publishRelease(release, user)
             release.published_by = user
@@ -469,8 +467,10 @@ class ProjectReleaseService(service.BaseService):
             release.published_by = None
             release.time_published = None
             
-        if release.should_mirror == 1 and oldRelease.should_mirror == 0:
+        if release.should_mirror != 0:
             release.time_mirrored = time.time()
+        elif release.should_mirror == 0:
+            release.time_mirrored = None 
         
         release.updated_by = user
         release.time_updated = time.time()
@@ -524,7 +524,7 @@ class TopLevelReleasesService(service.BaseService):
     @return_xml
     def rest_POST(self, request, release):
         createdBy = request._authUser
-        return self.mgr.createReleaseByProject(release, createdBy)
+        return self.mgr.createRelease(release, createdBy)
 
 class TopLevelReleaseService(service.BaseService):
     @access.admin

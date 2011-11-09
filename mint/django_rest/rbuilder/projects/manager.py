@@ -535,8 +535,8 @@ class ProjectManager(basemanager.BaseManager):
                       [None, None, 0, releaseId])
         
     @exposed
-    def createReleaseByProject(self, release, creatingUser, project=None):
-        if not release.project:
+    def createRelease(self, release, creatingUser, project=None):
+        if project is not None:
             release.project = project
         release.created_by = creatingUser
         release.time_created = time.time()
