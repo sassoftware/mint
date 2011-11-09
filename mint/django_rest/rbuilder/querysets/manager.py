@@ -7,7 +7,6 @@
 
 from django.db.models import Q
 from django.db.models.query import EmptyQuerySet
-from django.core.exceptions import ObjectDoesNotExist
 from django.db import connection, transaction
 import fcntl
 import os
