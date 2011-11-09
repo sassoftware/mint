@@ -212,10 +212,10 @@ class Project(modellib.XObjIdModel):
                 label.entitlement = None
             else:
                 assert self.external
-                label.url = self.upstream_url
-                label.auth_type = self.auth_type
-                label.user_name = self.user_name
-                label.password = self.password
+                label.url = str(self.upstream_url)
+                label.auth_type = str(self.auth_type)
+                label.user_name = str(self.user_name)
+                label.password = str(self.password)
                 label.entitlement = str(self.entitlement)
             # This field doesn't mean anything but some old code might still
             # use it.
