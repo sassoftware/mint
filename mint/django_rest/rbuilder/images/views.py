@@ -172,9 +172,7 @@ class ImageBuildFileService(service.BaseAuthService):
         request._withAuthToken = True
         return True
 
-    # explicitly allowed so image files can be passed around
-    # URL is hard to guess
-    @access.anonymous
+    @rbac(can_read_image)
     @return_xml
     def rest_GET(self, request, image_id, file_id):
         return self.get(image_id, file_id)
@@ -182,11 +180,8 @@ class ImageBuildFileService(service.BaseAuthService):
     def get(self, image_id, file_id):
         return self.mgr.getImageBuildFile(image_id, file_id)
 
-    # FIXME: ok to leave admin only and not rbacify this?
-    # rbac may need to be taught to coexist with
-    # auth_token
     @access.auth_token
-    @access.admin
+    @rbac(can_write_image)
     @requires('file')
     @return_xml
     def rest_PUT(self, request, image_id, file_id, file):

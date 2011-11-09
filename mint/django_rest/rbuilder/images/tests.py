@@ -277,8 +277,8 @@ class ImagesTestCase(RbacEngine):
         file_id = buildFile.file.file_id
         response = self._put('images/1/build_files/%s' % file_id,
             username=username, password='password', data=testsxml.build_file_put_xml)
-        buildFileUpdated = xobj.parse(response.content)
         self.assertEquals(response.status_code, expected_code)
+        buildFileUpdated = xobj.parse(response.content)
         self.assertEquals(buildFileUpdated.file.title, 'newtitle')
 
     def testUpdateImageBuildFileAdmin(self):
@@ -413,11 +413,12 @@ class ImagesTestCase(RbacEngine):
     def _testUpdateRelease(self, username, expected_code):
         response = self._put('releases/1',
             username=username, password='password', data=testsxml.release_put_xml)
-        self.assertEquals(response.status_code, 200)
-        release = xobj.parse(response.content).release
-        self.assertEquals(release.name, u'release100')
-        self.assertEquals(release.description, u'description100')
-        self.assertEquals(release.version, u'releaseVersion100')
+        self.assertEquals(response.status_code, expected_code)
+        if expected_code == 200:
+            release = xobj.parse(response.content).release
+            self.assertEquals(release.name, u'release100')
+            self.assertEquals(release.description, u'description100')
+            self.assertEquals(release.version, u'releaseVersion100')
         
     def testUpdateReleaseAdmin(self):
         self._testUpdateRelease('admin', 200)
