@@ -18,6 +18,37 @@ from mint.django_rest.rbuilder.projects import models as projectmodels
 from mint.django_rest.rbuilder.images import models as imagemodels
 from mint import userlevels
 from mint.django_rest.rbuilder.modellib import Flags
+import time
+
+def _rbac_release_access_check(view, request, release_id, action, *args, **kwargs):
+    release = view.mgr.getReleaseById(release_id)
+    project = release.project 
+    user = request._authUser
+    return view.mgr.userHasRbacPermission(user, project, action)
+
+def can_read_release(view, request, release_id, *args, **kwargs):
+    return _rbac_release_access_check(
+        view, request, release_id, 
+        READMEMBERS, *args, **kwargs
+    )
+
+def can_write_release(view, request, release_id, *args, **kwargs):
+    return _rbac_release_access_check(
+        view, request, release_id, 
+        MODMEMBERS, *args, **kwargs
+    )
+
+def can_write_release_through_project(view, request, short_name, release):
+    return can_write_release(view, request, release.release_id)
+
+def can_read_release_through_project(view, request, short_name, release_id, *args, **kwargs):
+    return can_read_release(view, request, release_id)
+
+def can_create_release(view, request, *args, **kwargs):
+    user = request._authUser
+    project = kwargs['release'].project
+    return view.mgr.userHasRbacPermission(user, project, MODMEMBERS)
+
 
 class ProjectCallbacks(object):
     """
@@ -435,25 +466,52 @@ class ProjectReleasesService(service.BaseService):
                 project__short_name=project_short_name)
         return Releases
 
-    @rbac(ProjectCallbacks.can_write_project)
+    @rbac(can_write_release_through_project)
     @requires('release', flags=Flags(save=False))
     @return_xml
     def rest_POST(self, request, project_short_name, release):
-        release.save(short_name=project_short_name)
-        return release
+        project = projectmodels.Project.objects.get(short_name=project_short_name)
+        user = request._authUser
+        return self.mgr.createRelease(release, user, project=project)
         
 class ProjectReleaseService(service.BaseService):
 
-    @rbac(ProjectCallbacks.can_read_project)
+    @rbac(can_read_release_through_project)
     @return_xml
     def rest_GET(self, request, project_short_name, release_id):
         return self.get(project_short_name, release_id)
 
     def get(self, project_short_name, release_id):
         return projectmodels.Release.objects.get(release_id=release_id)
+    
+    @rbac(can_create_release)
+    @return_xml
+    @requires('release')
+    def rest_PUT(self, request, project_short_name, release_id, release):
+        user = request._authUser
+        if release.published == u'True':
+            self.mgr.publishRelease(release, user)
+            release.published_by = user
+            release.time_published = time.time()
+        elif release.published == u'False':
+            self.mgr.unpublishRelease(release)
+            release.published_by = None
+            release.time_published = None
+            
+        if release.should_mirror != 0:
+            release.time_mirrored = time.time()
+        elif release.should_mirror == 0:
+            release.time_mirrored = None 
+        
+        release.updated_by = user
+        release.time_updated = time.time()
+        release.save()
+        
+        return release
         
 class ProjectReleaseImagesService(service.BaseService):
 
+    # FIXME: wrong rbac, need to get the rbac from images
     @rbac(ProjectCallbacks.can_read_project)
     @return_xml
     def rest_GET(self, request, project_short_name, release_id):
@@ -464,13 +522,15 @@ class ProjectReleaseImagesService(service.BaseService):
         Images.image = imagemodels.Image.objects.filter(release__release_id=release_id)
         return Images
     
+    # FIXME: wrong rbac, need to get the rbac from images
     @rbac(ProjectCallbacks.can_write_project)
     @requires('image')
     @return_xml
     def rest_POST(self, request, project_short_name, release_id, image):
-        return self.mgr.createImageBuild(image)
+        return self.mgr.addImageToRelease(release_id, image)
         
 class ProjectReleaseImageService(service.BaseService):
+    # FIXME: wrong rbac, need to get the rbac from images
     @rbac(ProjectCallbacks.can_read_project)
     @return_xml
     def rest_GET(self, request, project_short_name, release_id, image_id):
@@ -478,3 +538,51 @@ class ProjectReleaseImageService(service.BaseService):
         
     def get(self, project_short_name, release_id, image_id):
         return self.mgr.getImageBuild(image_id)
+
+    # FIXME: wrong rbac beet to get the rbac from images
+    @rbac(ProjectCallbacks.can_write_project)
+    def rest_DELETE(self, request, project_short_name, release_id, image_id):
+        imagemodels.Image.objects.get(pk=image_id).delete()
+        return HttpResponse(status=204)
+
+class TopLevelReleasesService(service.BaseService):
+    # FIXME what rbac should this be
+    @access.admin
+    @return_xml
+    def rest_GET(self, request):
+        return self.get()
+
+    def get(self):
+        Releases = projectmodels.Releases()
+        Releases.release = projectmodels.Release.objects.all()
+        return Releases
+        
+    @rbac(can_create_release)
+    @requires('release')
+    @return_xml
+    def rest_POST(self, request, release):
+        createdBy = request._authUser
+        return self.mgr.createRelease(release, createdBy)
+
+class TopLevelReleaseService(service.BaseService):
+    @rbac(can_read_release)
+    @return_xml
+    def rest_GET(self, request, release_id):
+        return self.get(release_id)
+
+    def get(self, release_id):
+        release = projectmodels.Release.objects.get(pk=release_id)
+        return release
+
+    @rbac(can_write_release)
+    @requires('release')
+    @return_xml
+    def rest_PUT(self, request, release_id, release):
+        updatingUser = request._authUser
+        return self.mgr.updateRelease(release, updatingUser)
+
+    @rbac(can_write_release)
+    def rest_DELETE(self, request, release_id):
+        release = projectmodels.Release.objects.get(pk=release_id)
+        release.delete()
+        return HttpResponse(status=204)

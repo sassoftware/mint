@@ -796,11 +796,11 @@ urlpatterns = patterns('',
         
     # Begin Releases service
     URL(r'releases/?$',
-        imagesviews.ReleasesService(),
+        projectviews.TopLevelReleasesService(),
         name='Releases',
         model='projects.Releases'),
     URL(r'releases/(?P<release_id>\d+)/?$',
-        imagesviews.ReleaseService(),
+        projectviews.TopLevelReleaseService(),
         name='TopLevelRelease',
         model='projects.Release'),
     
