@@ -96,7 +96,7 @@ class ImagesService(BaseImageService):
     @requires('image')
     @return_xml
     def rest_POST(self, request, image):
-        return self.mgr.createImageBuild(image)
+        return self.mgr.createImageBuild(image, for_user=request._authUser)
     
 class ImageService(BaseImageService):
 

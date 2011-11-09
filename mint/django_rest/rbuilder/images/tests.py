@@ -194,7 +194,6 @@ class ImagesTestCase(RbacEngine):
         response = self._get(url, username='ExampleDeveloper', password='password')
         self.assertEquals(response.status_code, 200)
 
-        # hey, what's up with this?   Should image files be guessable?
         response = self._get(url, username='testuser', password='password')
         self.assertEquals(response.status_code, 403)
         
@@ -268,20 +267,30 @@ class ImagesTestCase(RbacEngine):
     def testCreateImageBuildFileNoAuthz(self):
         self._testCreateImageBuildFile('testuser', 403)
 
-    # TODO: ---- continue adding rbac tests below this line ---
-
-    def testUpdateImageBuildFile(self):
+    def _testUpdateImageBuildFile(self, username, expected_code):
         response = self._post('images/1/build_files/',
-            username='admin', password='password', data=testsxml.build_file_post_xml)
+            username=username, password='password', data=testsxml.build_file_post_xml)
+        self.assertEqual(response.status_code, expected_code)
+        if expected_code != 200:
+            return
         buildFile = xobj.parse(response.content)
         file_id = buildFile.file.file_id
         response = self._put('images/1/build_files/%s' % file_id,
-            username='admin', password='password', data=testsxml.build_file_put_xml)
+            username=username, password='password', data=testsxml.build_file_put_xml)
         buildFileUpdated = xobj.parse(response.content)
-        self.assertEquals(response.status_code, 200)
+        self.assertEquals(response.status_code, expected_code)
         self.assertEquals(buildFileUpdated.file.title, 'newtitle')
 
-    def testUpdateImabeBuildFileAuthToken(self):
+    def testUpdateImageBuildFileAdmin(self):
+        self._testUpdateImageBuildFile('admin', 200)
+
+    def testUpdateImageBuildFileNonAdmin(self):
+        self._testUpdateImageBuildFile('ExampleDeveloper', 200)
+
+    def testUpdateImageBuildFileNoAuthz(self):
+        self._testUpdateImageBuildFile('testuser', 403)
+
+    def testUpdateImageBuildFileAuthToken(self):
         user = self.getUser('testuser')
         self.mgr.user = user
 
@@ -340,39 +349,85 @@ class ImagesTestCase(RbacEngine):
             [ x.target_image_id for x in tids ],
             [ targetImageId ])
 
-    def testDeleteImageBuildFile(self):
-        response = self._delete('images/1/build_files/1', username='admin', password='password')
-        self.assertEquals(response.status_code, 204)
+    def _testDeleteImageBuildFile(self, username, expected_code):
+        response = self._delete('images/1/build_files/1', username=username, password='password')
+        self.assertEquals(response.status_code, expected_code)
+
+    def testDeleteImageBuildFileAdmin(self):
+        self._testDeleteImageBuildFile('admin', 204)
+
+    def testDeleteImageBuildFileNonAdmin(self):
+        self._testDeleteImageBuildFile('ExampleDeveloper', 204)
+
+    def testDeleteImageBuildFileNonAuthz(self):
+        self._testDeleteImageBuildFile('testuser', 403)
         
     def testGetRelease(self):
-        response = self._get('releases/1', username='admin', password='password')
+        url = 'releases/1'
+        response = self._get(url, username='admin', password='password')
         self.assertEquals(response.status_code, 200)
         self.assertXMLEquals(response.content, testsxml.release_get_xml)
+
+        response = self._get(url, username='ExampleDeveloper', password='password')
+        self.assertEquals(response.status_code, 200)
+        
+        response = self._get(url, username='testuser', password='password')
+        self.assertEquals(response.status_code, 403)
         
     def testGetReleases(self):
-        response = self._get('releases/', username='admin', password='password')
+
+        # there is no releases queryset so nothing to redirect to, only admins
+        # can read this
+        url = 'releases/'
+        response = self._get(url, username='admin', password='password')
         self.assertEquals(response.status_code, 200)
         self.assertXMLEquals(response.content, testsxml.releases_get_xml)
         
-    def testCreateRelease(self):
+        # FIXME: non-admin accessing admin resources in API returns wrong
+        # error code, fix @access.admin!
+        response = self._get(url, username='ExampleDeveloper', password='password')
+        self.assertEquals(response.status_code, 401)  # should be 403
+
+    def _testCreateRelease(self, username, expected_code):
+
         response = self._post('releases/',
-            username='admin', password='password', data=testsxml.release_post_xml)
-        self.assertEquals(response.status_code, 200)
+            username=username, password='password', data=testsxml.release_post_xml)
+        self.assertEquals(response.status_code, expected_code)
+        if expected_code != 200:
+            return
         release = xobj.parse(response.content).release
         self.assertEquals(release.name, u'release100')
         self.assertEquals(release.description, u'description100')
         self.assertEquals(release.project.id, u"http://testserver/api/v1/projects/foo0")
         self.assertEquals(release.published_by.id, u"http://testserver/api/v1/users/2002")
         
-    def testUpdateRelease(self):
+    def testCreateReleaseAdmin(self):
+        self._testCreateRelease('admin', 200)
+
+    def testCreateReleaseNonAdmin(self):
+        self._testCreateRelease('ExampleDeveloper', 200)
+
+    def testCreateReleaseNoAuth(self):
+        self._testCreateRelease('testuser', 403)
+
+    def _testUpdateRelease(self, username, expected_code):
         response = self._put('releases/1',
-            username='admin', password='password', data=testsxml.release_put_xml)
+            username=username, password='password', data=testsxml.release_put_xml)
         self.assertEquals(response.status_code, 200)
         release = xobj.parse(response.content).release
         self.assertEquals(release.name, u'release100')
         self.assertEquals(release.description, u'description100')
         self.assertEquals(release.version, u'releaseVersion100')
         
+    def testUpdateReleaseAdmin(self):
+        self._testUpdateRelease('admin', 200)
+
+    def testUpdateReleaseNonAdmin(self):
+        self._testUpdateRelease('ExampleDeveloper', 200)
+
+    def testUpdateReleaseNoAuthz(self):
+        self._testUpdateRelease('testuser', 403)
+
     def testDeleteRelease(self):
         response = self._delete('releases/1', username='admin', password='password')
         self.assertEquals(response.status_code, 204)

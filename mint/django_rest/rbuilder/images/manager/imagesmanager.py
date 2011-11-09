@@ -45,7 +45,7 @@ class ImagesManager(basemanager.BaseManager):
         return image
 
     @exposed
-    def createImageBuild(self, image, buildData=None):
+    def createImageBuild(self, image, buildData=None, for_user=None):
         outputToken = sha1helper.sha1ToString(file('/dev/urandom').read(20))
         if buildData is None:
             buildData = []
@@ -88,6 +88,7 @@ class ImagesManager(basemanager.BaseManager):
             image.image_data.add(models.ImageData(name=bdName, value=bdValue,
                 data_type=bdType))
 
+        self.mgr.retagQuerySetsByType('image', for_user)
         return image
 
     @exposed
