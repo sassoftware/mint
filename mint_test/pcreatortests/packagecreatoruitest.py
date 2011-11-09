@@ -467,7 +467,7 @@ class PkgCreatorReposTest(mint_rephelp.MintRepositoryHelper):
     def _createProductVersion(self, mintclient, project, version, namespace, description=''):
         versionId = mintclient.addProductVersion(project.id, namespace, version, description)
         pd = helperfuncs.sanitizeProductDefinition(project.name,
-                    project.description, project.hostname, project.domainname,
+                    project.description, project.hostname + '.' + project.domainname,
                     project.shortname, version, description, namespace)
         mintclient.setProductDefinitionForVersion(versionId, pd)
         return versionId

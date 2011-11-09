@@ -194,10 +194,8 @@ class Database(DBInterface):
     @readonly
     def getProductFQDNFromId(self, productId):
         cu = self.db.cursor()
-        cu.execute('SELECT hostname, domainname from Projects where projectId=?', productId)
-        hostname, domainname = self._getOne(cu, errors.ProductNotFound, 
-                                            productId)
-        return hostname + '.' + domainname
+        cu.execute('SELECT fqdn FROM Projects where projectId=?', productId)
+        return self._getOne(cu, errors.ProductNotFound, productId)[0]
 
     @readonly
     def getProduct(self, hostname):

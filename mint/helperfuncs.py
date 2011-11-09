@@ -444,7 +444,7 @@ def getDefaultImageGroupName(shortname):
     return 'group-%s-appliance' % shortname
 
 def sanitizeProductDefinition(projectName, projectDescription,
-        hostname, domainname, shortname, version,
+        repositoryHostname, shortname, version,
         versionDescription, namespace, productDefinition=None):
     """
     Sanitize a product definition object to make sure that 
@@ -461,8 +461,7 @@ def sanitizeProductDefinition(projectName, projectDescription,
     productDefinition.setProductVersion(version)
     productDefinition.setProductVersionDescription(versionDescription)
     productDefinition.setConaryNamespace(namespace)
-    productDefinition.setConaryRepositoryHostname("%s.%s" % \
-            (shortname, domainname))
+    productDefinition.setConaryRepositoryHostname(repositoryHostname)
     productDefinition.setImageGroup(getDefaultImageGroupName(shortname))
 
     addDefaultStagesToProductDefinition(productDefinition)

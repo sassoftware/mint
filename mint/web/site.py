@@ -503,8 +503,9 @@ class SiteHandler(WebHandler):
             try:
                 versionId = self.client.addProductVersion(projectId, namespace, version);
                 pd = proddef.ProductDefinition()
+                fqdn = '.'.join((hostname, domainname))
                 pd = helperfuncs.sanitizeProductDefinition(title,
-                        blurb, hostname, domainname, shortname, version,
+                        blurb, fqdn, shortname, version,
                         '', namespace)
                 self.client.setProductDefinitionForVersion(versionId, pd, platformLabel)
 

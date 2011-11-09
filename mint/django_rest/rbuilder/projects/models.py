@@ -333,7 +333,7 @@ class ProjectVersion(modellib.XObjIdModel):
             self.namespace = project.namespace
         Project.validateNamespace(self.namespace)
         prodDef = helperfuncs.sanitizeProductDefinition(
-            project.name, project.description, project.hostname, project.domain_name,
+            project.name, project.description, project.repository_hostname,
             project.short_name, self.name, self.description, self.namespace)
         return prodDef
 

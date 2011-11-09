@@ -595,7 +595,7 @@ Much like Powdermilk Biscuits[tm]."""
         
 
     def testProductDefinition(self):
-        prd = sanitizeProductDefinition('foo', '', 'foo', 'rpath.local',
+        prd = sanitizeProductDefinition('foo', '', 'foo.rpath.local',
                 'foo', '1', '', 'foo')
         self.failUnless(prd.platform.containerTemplates)
         self.failUnless(prd.platform.architectures)
@@ -610,7 +610,7 @@ Much like Powdermilk Biscuits[tm]."""
         plt.addContainerTemplate(prd.imageType('installableIsoImage'))
         prd.platform = plt
 
-        prd2 = sanitizeProductDefinition('foo', '', 'foo', 'rpath.local',
+        prd2 = sanitizeProductDefinition('foo', '', 'foo.rpath.local',
                 'foo', '1', '', 'foo', productDefinition = prd)
 
         self.failUnless(prd2.platform.containerTemplates)

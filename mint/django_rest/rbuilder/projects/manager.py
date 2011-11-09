@@ -307,8 +307,7 @@ class ProjectManager(basemanager.BaseManager):
         pd = helperfuncs.sanitizeProductDefinition(
                 projectName=project.name,
                 projectDescription=project.description or '',
-                hostname=project.hostname,
-                domainname=project.domain_name,
+                repositoryHostname=project.repository_hostname,
                 shortname=project.short_name,
                 version=projectVersion.name,
                 versionDescription=projectVersion.description or '',

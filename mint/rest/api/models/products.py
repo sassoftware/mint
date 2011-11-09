@@ -56,8 +56,8 @@ class Product(Model):
         return self.repositoryHostname
 
     def __repr__(self):
-        return 'models.Product(%r, %r)' % (self.productId, 
-                                  self.hostname + '.' + str(self.domainname))
+        return 'models.Product(%r, %r)' % (self.productId,
+                self.repositoryHostname)
 
 class ProductSearchResultList(Model):
     class Meta(object):
