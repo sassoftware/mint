@@ -10,6 +10,7 @@ from django.db import connection
 from django.db.models import Q
 
 from mint.lib import data as mintdata
+from mint.django_rest import timeutils
 from mint.django_rest.rbuilder import errors, modellib
 from mint.django_rest.rbuilder.manager import basemanager
 from mint.django_rest.rbuilder.manager.basemanager import exposed
@@ -149,10 +150,12 @@ class TargetsManager(basemanager.BaseManager, CatalogServiceHelper):
             state = 0
         else:
             state = 1
+        zone = modellib.Cache.get(zones.Zone, name=targetSrc.zone_name)
+        targetType = self.mgr.getTargetTypeByName(targetSrc.target_type_name)
         target = models.Target(name=targetSrc.name,
             description=targetSrc.description,
-            target_type=targetSrc.target_type,
-            zone=targetSrc.zone,
+            target_type=targetType,
+            zone=zone,
             state=state)
         target.save()
         return target
@@ -226,6 +229,45 @@ class TargetsManager(basemanager.BaseManager, CatalogServiceHelper):
         target.delete()
 
     @exposed
+    def getDescriptorTargetCreation(self):
+        descr = descriptor.ConfigurationDescriptor()
+        descr.setRootElement('descriptor_data')
+        descr.setDisplayName("Create target")
+        descr.addDescription("Create target")
+        descr.addDataField('name',
+                descriptions='Target Name',
+                type='str',
+                required=True)
+        descr.addDataField('description',
+                descriptions='Target Description',
+                type='str',
+                required=True)
+
+        allTypes = sorted(modellib.Cache.all(models.TargetType),
+            key=lambda x: x.target_type_id)
+        typeList = [ (x.name, x.description)
+            for x in allTypes ]
+        typeList = [ descr.ValueWithDescription(n, descriptions=d)
+            for (n, d) in typeList ]
+        descr.addDataField('target_type_name',
+            descriptions = "Target Type",
+            type = typeList,
+            required=True)
+
+        allZones = sorted(modellib.Cache.all(zones.Zone),
+            key=lambda x: x.zone_id)
+        zoneList = [ (x.name, x.description)
+            for x in allZones ]
+        zoneList = [ descr.ValueWithDescription(n, descriptions=d)
+            for (n, d) in zoneList ]
+        descr.addDataField('zone_name',
+            descriptions = "Zone",
+            type = zoneList,
+            required=True)
+
+        return descr
+
+    @exposed
     def getDescriptorConfigureCredentials(self, target_id):
         target = self.getTargetById(target_id)
         DriverClass = self.getDriverClass(target.target_type)
@@ -242,6 +284,16 @@ class TargetsManager(basemanager.BaseManager, CatalogServiceHelper):
         descr.setRootElement('descriptor_data')
         descr.setDisplayName("Refresh images")
         descr.addDescription("Refresh images")
+        return descr
+
+    @exposed
+    def getDescriptorRefreshSystems(self, target_id):
+        # This will validate the target
+        self.getTargetById(target_id)
+        descr = descriptor.ConfigurationDescriptor()
+        descr.setRootElement('descriptor_data')
+        descr.setDisplayName("Refresh systems")
+        descr.addDescription("Refresh systems")
         return descr
 
     @exposed
@@ -399,6 +451,115 @@ class TargetsManager(basemanager.BaseManager, CatalogServiceHelper):
         cu.execute("DROP TABLE tmp_target_image")
         self.recomputeTargetDeployableImages()
 
+    @exposed
+    def updateTargetSystems(self, target, systems):
+        creds = self._getTargetCredentialsForCurrentUser(target)
+        if creds is None:
+            raise errors.InvalidData()
+        cu = connection.cursor()
+        cu.execute("""
+            CREATE TEMPORARY TABLE tmp_target_system (
+                name TEXT,
+                description TEXT,
+                target_internal_id TEXT,
+                ip_addr_1 TEXT,
+                ip_addr_2 TEXT,
+                state TEXT,
+                created_date TIMESTAMP WITH TIME ZONE
+            )
+        """)
+        try:
+            self._updateTargetSystems(cu, target, creds, systems)
+        finally:
+            cu.execute("DROP TABLE tmp_target_system")
+
+    def _updateTargetSystems(self, cu, target, creds, systems):
+        credsId = creds.target_credentials_id
+        query = """
+            INSERT INTO tmp_target_system
+                (name, description, target_internal_id, ip_addr_1, ip_addr_2, state, created_date)
+            VALUES (%s, %s, %s, %s, %s, %s, %s)
+        """
+        tsys = [ self._system(target, x) for x in systems ]
+        # Eliminate dupes
+        tsysMap = dict((x.target_internal_id, x) for x in tsys)
+        params = [ (x.name, x.description, x.target_internal_id,
+            x.ip_addr_1, x.ip_addr_2, x.state, x.created_date)
+                for x in tsysMap.values() ]
+        cu.executemany(query, params)
+        # Retrieve systems to be updated
+        query = """
+            SELECT ts.target_system_id, ts.target_internal_id
+              FROM tmp_target_system AS tmptsys
+              JOIN target_system AS ts USING (target_internal_id)
+             WHERE ts.target_id = %s
+               AND (ts.name != tmptsys.name
+                   OR ts.description != tmptsys.description
+                   OR ts.ip_addr_1 != tmptsys.ip_addr_1
+                   OR ts.ip_addr_2 != tmptsys.ip_addr_2
+                   OR ts.state != tmptsys.state
+                   OR (ts.created_date IS NULL AND tmptsys.created_date IS NOT NULL)
+                   OR ts.created_date != tmptsys.created_date)
+        """
+        cu.execute(query, [ target.target_id ])
+        toUpdate = cu.fetchall()
+        now = self.mgr.sysMgr.now()
+        for targetSystemId, targetInternalId in toUpdate:
+            model = models.TargetSystem.objects.get(target_system_id=targetSystemId)
+            src = tsysMap[targetInternalId]
+            model.name = src.name
+            model.description = src.description
+            model.ip_addr_1 = src.ip_addr_1
+            model.ip_addr_2 = src.ip_addr_2
+            model.state = src.state
+            if src.created_date is not None:
+                model.created_date = src.created_date
+            model.modified_date = now
+            model.save()
+        # Insert all new systems
+        query = """
+            INSERT INTO target_system
+                (target_id, name, description, target_internal_id, ip_addr_1, ip_addr_2, state, created_date)
+            SELECT %s, name, description, target_internal_id, ip_addr_1, ip_addr_2, state, created_date
+              FROM tmp_target_system
+             WHERE target_internal_id NOT IN
+               (SELECT target_internal_id FROM target_system WHERE target_id=%s)
+        """
+        cu.execute(query, [ target.target_id, target.target_id ])
+        # Relink systems to target credentials
+        # First, remove the ones not in this list
+        query = """
+            DELETE FROM target_system_credentials
+             WHERE target_credentials_id = %s
+               AND target_system_id NOT IN (
+                   SELECT ts.target_system_id
+                     FROM target_system AS ts
+                     JOIN tmp_target_system AS tmptsys USING (target_internal_id)
+                    WHERE ts.target_id = %s)"""
+        cu.execute(query, [ credsId, target.target_id ])
+        # Add the new ones
+        query = """
+            INSERT INTO target_system_credentials
+                (target_system_id, target_credentials_id)
+            SELECT ts.target_system_id, %s
+              FROM target_system AS ts
+              JOIN tmp_target_system AS tmptsys USING (target_internal_id)
+             WHERE ts.target_id = %s
+               AND ts.target_system_id NOT IN
+               (SELECT target_system_id FROM target_system_credentials
+                WHERE target_credentials_id=%s)
+        """
+        cu.execute(query, [ credsId, target.target_id, credsId ])
+        # Finally, remove all systems that have no credentials
+        query = """
+            DELETE FROM target_system
+             WHERE target_system_id NOT IN (
+               SELECT target_system_id FROM target_system_credentials
+             )
+        """
+        cu.execute(query)
+        #self.recomputeTargetSystems()
+
     def recomputeTargetDeployableImages(self):
         cu = connection.cursor()
         cu.execute("""
@@ -467,6 +628,23 @@ class TargetsManager(basemanager.BaseManager, CatalogServiceHelper):
         model = models.TargetImage(target=target,
             name=imageName, description=imageDescription,
             target_internal_id=imageId, rbuilder_image_id=rbuilderImageId)
+        return model
+
+    def _system(self, target, system):
+        name = self._unXobj(getattr(system, 'instanceName', None))
+        description = self._unXobj(getattr(system, 'instanceDescription', name))
+        systemId = self._unXobj(getattr(system, 'instanceId'))
+        ipAddr1 = self._unXobj(getattr(system, 'publicDnsName', None))
+        ipAddr2 = self._unXobj(getattr(system, 'privateDnsName', None))
+        state = self._unXobj(getattr(system, 'state'))
+        createdDate = self._unXobj(getattr(system, 'launchTime', None))
+        if createdDate is not None:
+            createdDate = timeutils.fromtimestamp(createdDate)
+
+        model = models.TargetSystem(target=target,
+            name=name, description=description,
+            target_internal_id=systemId, ip_addr_1=ipAddr1, ip_addr_2=ipAddr2,
+            state=state, created_date=createdDate)
         return model
 
     @classmethod

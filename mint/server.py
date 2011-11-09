@@ -74,6 +74,7 @@ from mcp import mcp_error
 from rmake.lib import procutil
 from rmake3 import client as rmk_client
 from rpath_proddef import api1 as proddef
+from pcreator import errors as pcreator_errors
 
 
 import gettext
@@ -307,7 +308,7 @@ class MintServer(object):
                     self.callLog.log(self.remoteIp,
                         list(authToken) + [None, None], methodName, str_args)
 
-            except mint_error.MintError, e:
+            except (mint_error.MintError, pcreator_errors.PackageCreatorError), e:
                 e_type, e_value, e_tb = sys.exc_info()
                 self._handleError(e, authToken, methodName, args)
                 frozen = (e.__class__.__name__, e.freeze())
@@ -1379,13 +1380,12 @@ If you would not like to be %s %s of this project, you may resign from this proj
     def getProjectsByUser(self, userId):
         cu = self.db.cursor()
 
-        fqdnConcat = database.concat(self.db, "hostname", "'.'", "domainname")
         # audited for SQL injection.
-        cu.execute("""SELECT %s, name, level
+        cu.execute("""SELECT fqdn, name, level
                       FROM Projects, ProjectUsers
                       WHERE Projects.projectId=ProjectUsers.projectId AND
                             ProjectUsers.userId=?
-                      ORDER BY level, name""" % fqdnConcat, userId)
+                      ORDER BY level, name""", userId)
 
         rows = []
         for r in cu.fetchall():
@@ -2794,15 +2794,14 @@ If you would not like to be %s %s of this project, you may resign from this proj
 
     def _getProductVersionForLabel(self, projectId, label):
         cu = self.db.cursor()
-        cu.execute('''SELECT productVersionId, hostname, 
-                             domainname, shortname, 
+        cu.execute('''SELECT productVersionId, fqdn,
+                             shortname, 
                              ProductVersions.namespace, 
                              ProductVersions.name 
                       FROM Projects 
                       JOIN ProductVersions USING(projectId)
                       WHERE projectId=?''', projectId)
-        for versionId, hostname, domainname, shortname, namespace, name in cu:
-            fqdn = '%s.%s' % (hostname, domainname)
+        for versionId, fqdn, shortname, namespace, name in cu:
             pd = proddef.ProductDefinition()
             pd.setProductShortname(shortname)
             pd.setConaryRepositoryHostname(fqdn)

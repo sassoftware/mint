@@ -87,6 +87,15 @@ class TargetCredentialsService(service.BaseService):
     def get(self, target_id, target_credentials_id):
         return self.mgr.getTargetCredentialsForTarget(target_id, target_credentials_id)
 
+class DescriptorTargetsCreationService(service.BaseService):
+    @return_xml
+    def rest_GET(self, request):
+        return self.get()
+
+    def get(self):
+        return self.mgr.serializeDescriptor(
+            self.mgr.getDescriptorTargetCreation())
+
 class TargetConfigureCredentialsService(service.BaseService):
     @return_xml
     def rest_GET(self, request, target_id):
@@ -117,15 +126,15 @@ class TargetRefreshImagesService(service.BaseService):
         return self.mgr.serializeDescriptor(
             self.mgr.getDescriptorRefreshImages(target_id))
 
-    @requires('target_credentials')
+class TargetRefreshSystemsService(service.BaseService):
     @return_xml
-    def rest_POST(self, request, target_credentials):
-        return self.mgr.createTargetCredentials(target_credentials)
-        
-    @requires('target_credentials')
-    @return_xml
-    def rest_PUT(self, request, target_credentials_id, target_credentials):
-        return self.mgr.updateTargetCredentials(target_credentials_id, target_credentials)
+    def rest_GET(self, request, target_id):
+        return self.get(target_id)
+
+    def get(self, target_id):
+        return self.mgr.serializeDescriptor(
+            self.mgr.getDescriptorRefreshSystems(target_id))
+
 
 class TargetImageDeploymentService(service.BaseService):
     @return_xml

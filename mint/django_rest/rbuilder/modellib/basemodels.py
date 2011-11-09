@@ -1611,14 +1611,18 @@ class HrefFieldFromModel(HrefField):
     """
     Build an href out of another model
     """
-    def __init__(self, model, viewName=None):
+    def __init__(self, model=None, viewName=None):
         self.model = model
         self.viewName = viewName
         HrefField.__init__(self)
 
     def serialize_value(self, request=None):
         "Extracts the URL from the given model and builds an href from it"
-        url = self.model.get_absolute_url(request, view_name=self.viewName)
+        if self.model is None:
+            url = urlresolvers.reverse(self.viewName)
+            url = request.build_absolute_uri(url)
+        else:
+            url = self.model.get_absolute_url(request, view_name=self.viewName)
         url = self._getRelativeHref(url=url)
         return XObjHrefModel(url)
 

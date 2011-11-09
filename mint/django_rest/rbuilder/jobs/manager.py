@@ -314,8 +314,6 @@ class DescriptorJobHandler(BaseJobHandler, ResultsProcessingMixIn):
 
     def getRelatedResource(self, descriptor):
         descriptorId = descriptor.getId()
-        # Strip the descriptor part, hopefully that gives us a resource
-        descriptorId = os.path.dirname(descriptorId)
         try:
             match = urlresolvers.resolve(descriptorId)
         except urlresolvers.Resolver404:
@@ -355,7 +353,8 @@ class _TargetDescriptorJobHandler(DescriptorJobHandler):
         DescriptorJobHandler._init(self)
         self.target = None
 
-    def _splitDescriptorId(self, descriptorId):
+    @classmethod
+    def _splitDescriptorId(cls, descriptorId):
         try:
             match = urlresolvers.resolve(descriptorId)
         except urlresolvers.Resolver404:
@@ -374,6 +373,9 @@ class _TargetDescriptorJobHandler(DescriptorJobHandler):
     def _setTarget(self, targetId):
         target = self.mgr.mgr.getTargetById(targetId)
         self.target = target
+
+    def getRelatedResource(self, descriptor):
+        return self.target
 
     def getRelatedThroughModel(self, descriptor):
         return targetmodels.JobTarget
@@ -443,10 +445,30 @@ class JobHandlerRegistry(HandlerRegistry):
             self.mgr.mgr.setTargetUserCredentials(self.target, creds)
             return self.target
 
-    class TargetRefreshSystems(DescriptorJobHandler):
+    class TargetRefreshSystems(TargetRefreshImages):
+
         __slots__ = []
         jobType = models.EventType.TARGET_REFRESH_SYSTEMS
         ResultsTag = 'instances'
+        def _getDescriptorMethod(self):
+            return self.mgr.mgr.getDescriptorRefreshSystems
+
+        def getRepeaterMethod(self, cli, job):
+            super(JobHandlerRegistry.TargetRefreshSystems, self).getRepeaterMethod(cli, job)
+            return cli.targets.listInstances
+
+        def _processJobResults(self, job):
+            targetId = job.target_jobs.all()[0].target_id
+            self._setTarget(targetId)
+            if not hasattr(self.results, 'instance'):
+                systems = []
+            else:
+                systems = self.results.instance
+                if not isinstance(systems, list):
+                    systems = [ systems ]
+            self.mgr.mgr.updateTargetSystems(self.target, systems)
+            return self.target
+
 
     class TargetDeployImage(_TargetDescriptorJobHandler):
         __slots__ = ['image', 'image_file', ]
@@ -454,10 +476,7 @@ class JobHandlerRegistry(HandlerRegistry):
         ResultsTag = 'image'
 
         def getDescriptor(self, descriptorId):
-            try:
-                match = urlresolvers.resolve(descriptorId)
-            except urlresolvers.Resolver404:
-                return None
+            match = self._splitDescriptorId(descriptorId)
 
             targetId = int(match.kwargs['target_id'])
             fileId = int(match.kwargs['file_id'])
@@ -570,9 +589,9 @@ class JobHandlerRegistry(HandlerRegistry):
             self.targetType = None
 
         def getDescriptor(self, descriptorId):
-            # XXX
-            targetTypeId = os.path.basename(os.path.dirname(descriptorId))
-            targetTypeId = int(targetTypeId)
+            match = _TargetDescriptorJobHandler._splitDescriptorId(descriptorId)
+
+            targetTypeId = int(match.kwargs['target_type_id'])
             self._setTargetType(targetTypeId)
             descr = self.mgr.mgr.getDescriptorCreateTargetByTargetType(targetTypeId)
             return descr
@@ -596,6 +615,9 @@ class JobHandlerRegistry(HandlerRegistry):
             userCredentials = None
             cli.targets.configure(zone, targetConfiguration, userCredentials)
             return cli.targets.checkCreate
+
+        def getRelatedResource(self, descriptor):
+            return self.targetType
 
         def getRelatedThroughModel(self, descriptor):
             return targetmodels.JobTargetType
@@ -691,10 +713,7 @@ class JobHandlerRegistry(HandlerRegistry):
             self.target = self.system = self.image = None
 
         def getDescriptor(self, descriptorId):
-            try:
-                match = urlresolvers.resolve(descriptorId)
-            except urlresolvers.Resolver404:
-                return None
+            match = self._splitDescriptorId(descriptorId)
 
             systemId = int(match.kwargs['system_id'])
             if str(systemId) != str(self.extraArgs.get('system_id')):

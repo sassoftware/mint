@@ -70,7 +70,7 @@ class QuerySetTestCase(QueryTestCase):
         self.assertEquals(response.status_code, 200)
         querySets = xobj.parse(response.content)
         length = len(querySets.favorite_query_sets.query_set)
-        self.assertEqual(length, 8)
+        self.assertEqual(length, 9)
 
     def testGetQuerySet(self):
         # show that we can get the definition of a queryset

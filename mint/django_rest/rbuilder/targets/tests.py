@@ -18,12 +18,21 @@ from mint.django_rest.rbuilder.jobs import models as jmodels
 from mint.django_rest.rbuilder.targets import models
 from mint.django_rest.rbuilder.targets import testsxml
 from xobj import xobj
+from mint.django_rest.rbuilder.rbac import models as rbacmodels
+from mint.django_rest.rbuilder.querysets import models as querymodels
+from mint.django_rest.rbuilder.users import models as usermodels
+from mint.django_rest.rbuilder.rbac.tests import RbacEngine
+from mint.django_rest import timeutils
 
-class BaseTargetsTest(XMLTestCase):
+
+# TODO: would be nice to make RbacSetup more of a mixin
+class BaseTargetsTest(RbacEngine):
+
     def setUp(self):
-        XMLTestCase.setUp(self)
+        RbacEngine.setUp(self)
         self._initTestFixtures()
         self._mock()
+        self._setupRbac()
 
     def _initTestFixtures(self):
         sampleTargetTypes = [ models.TargetType.objects.get(name=x)
@@ -91,10 +100,60 @@ class BaseTargetsTest(XMLTestCase):
         fakeAuth = collections.namedtuple("FakeAuth", "userId")
         self.mock(tmgr.mgr, '_auth', fakeAuth(1))
 
+    # invalidate the querysets so tags can be applied
+    def _retagQuerySets(self):
+        self.mgr.retagQuerySetsByType('project')
+        self.mgr.retagQuerySetsByType('images')
+
+    def _setupRbac(self):
+
+        # RbacEngine test base class has already done a decent amount of setup
+        # now just add the grants for the things we are working with
+
+        role              = rbacmodels.RbacRole.objects.get(name='developer')
+        self.all_targets  = querymodels.QuerySet.objects.get(name='All Targets')
+        self.all_images   = querymodels.QuerySet.objects.get(name='All Images')
+        modmembers        = rbacmodels.RbacPermissionType.objects.get(name='ModMembers')
+        readset           = rbacmodels.RbacPermissionType.objects.get(name='ReadSet')
+        createresource    = rbacmodels.RbacPermissionType.objects.get(name='CreateResource')
+        admin             = usermodels.User.objects.get(user_name='admin')
+
+        for queryset in [ self.all_targets, self.all_images ]:
+            for permission in [ modmembers, createresource, readset  ]:
+                rbacmodels.RbacPermission(
+                    queryset      = queryset,
+                    role          = role,
+                    permission    = permission,
+                    created_by    = admin,
+                    modified_by   = admin,
+                    created_date  = timeutils.now(),
+                    modified_date = timeutils.now()
+                ).save()
+
+        self._retagQuerySets()
+
 class TargetsTestCase(BaseTargetsTest, RepeaterMixIn):
     def _mock(self):
         RepeaterMixIn.setUpRepeaterClient(self)
         BaseTargetsTest._mock(self)
+
+    def testGetDescriptorTargetsCreation(self):
+        zmodels.Zone.objects.create(name='other zone', description = "Other Zone")
+        response = self._get('descriptors/targets/create',
+            username='testuser', password='password')
+        self.failUnlessEqual(response.status_code, 200)
+        document = xobj.parse(response.content)
+        self.failUnlessEqual(document.descriptor.metadata.rootElement,
+            'descriptor_data')
+        fields = document.descriptor.dataFields.field
+        self.failUnlessEqual([ x.name for x in fields ],
+            ['name', 'description', 'target_type_name', 'zone_name'])
+        self.failUnlessEqual(
+            [ x.key for x in fields[2].enumeratedType.describedValue ],
+            ['ec2', 'eucalyptus', 'openstack', 'vcloud', 'vmware', 'xen-enterprise'])
+        self.failUnlessEqual(
+            [ x.key for x in fields[3].enumeratedType.describedValue ],
+            ['Local rBuilder', 'other zone'])
 
     def testGetTargetConfigurationDescriptor(self):
         response = self._get('targets/1/target_configuration/',
@@ -105,8 +164,8 @@ class TargetsTestCase(BaseTargetsTest, RepeaterMixIn):
     def testGetTargets(self):
         targets = models.Target.objects.order_by('target_id')
         response = self._get('targets/', username='testuser', password='password')
-        targets_gotten = xobj.parse(response.content)
         self.assertEquals(response.status_code, 200)
+        targets_gotten = xobj.parse(response.content)
         self.failUnlessEqual([ x.name for x in targets_gotten.targets.target ],
             [ x.name for x in targets ])
         self.failUnlessEqual([ x.id for x in targets_gotten.targets.target ],
@@ -149,6 +208,8 @@ class TargetsTestCase(BaseTargetsTest, RepeaterMixIn):
             ])
         self.failUnlessEqual(targets_gotten.targets.jobs.id,
             'http://testserver/api/v1/target_jobs')
+        self.failUnlessEqual(targets_gotten.targets.descriptor_create.id,
+            'http://testserver/api/v1/descriptors/targets/create')
 
     def testGetTarget_credentials_valid(self):
         # Remove credentials for one of the targets
@@ -195,6 +256,7 @@ class TargetsTestCase(BaseTargetsTest, RepeaterMixIn):
         ])
 
     def testCreateTarget(self):
+        zmodels.Zone.objects.create(name='other zone', description = "Other Zone")
         response = self._post('targets/', username='admin', password='password',
             data=testsxml.target_POST)
         self.assertEquals(response.status_code, 200)
@@ -208,9 +270,14 @@ class TargetsTestCase(BaseTargetsTest, RepeaterMixIn):
             'Configure target',
             'Configure user credentials for target',
             'Refresh images',
+            'Refresh systems',
           ])
         self.failUnlessEqual([ x.enabled for x in actions ],
-          [ 'true', 'false', 'false', ])
+          [ 'true', 'false', 'false', 'false', ])
+        dbobj = models.Target.objects.get(target_id=target.target_id)
+        self.failUnlessEqual(dbobj.target_type.name, 'vmware')
+        self.failUnlessEqual(dbobj.zone.name, 'other zone')
+
 
     def testUpdateTarget(self):
         response = self._put('targets/1', username='admin', password='password',
@@ -294,10 +361,10 @@ class TargetsTestCase(BaseTargetsTest, RepeaterMixIn):
         ])
 
     def testGetTargetDescriptorConfigureCredentials(self):
-        response = self._get('targets/1024/descriptor_configure_credentials',
+        response = self._get('targets/1024/descriptors/configure_credentials',
             username='testuser', password='password')
         self.assertEquals(response.status_code, 404)
-        response = self._get('targets/1/descriptor_configure_credentials',
+        response = self._get('targets/1/descriptors/configure_credentials',
             username='testuser', password='password')
         self.assertEquals(response.status_code, 200)
         obj = xobj.parse(response.content)
@@ -310,10 +377,10 @@ class TargetsTestCase(BaseTargetsTest, RepeaterMixIn):
             ])
 
     def testGetTargetDescriptorRefreshImages(self):
-        response = self._get('targets/1024/descriptor_refresh_images',
+        response = self._get('targets/1024/descriptors/refresh_images',
             username='testuser', password='password')
         self.assertEquals(response.status_code, 404)
-        response = self._get('targets/1/descriptor_refresh_images',
+        response = self._get('targets/1/descriptors/refresh_images',
             username='testuser', password='password')
         self.assertEquals(response.status_code, 200)
         obj = xobj.parse(response.content)
@@ -526,7 +593,7 @@ class JobCreationTest(BaseTargetsTest, RepeaterMixIn):
         jobXml = """
 <job>
   <job_type id="http://localhost/api/v1/inventory/event_types/%(jobTypeId)s"/>
-  <descriptor id="http://testserver/api/v1/targets/%(targetId)s/descriptor_configure_credentials"/>
+  <descriptor id="http://testserver/api/v1/targets/%(targetId)s/descriptors/configure_credentials"/>
   <descriptor_data>
     <username>bubba</username>
     <password>shrimp</password>
@@ -541,7 +608,7 @@ class JobCreationTest(BaseTargetsTest, RepeaterMixIn):
         obj = xobj.parse(response.content)
         job = obj.job
         self.failUnlessEqual(job.descriptor.id,
-            "http://testserver/api/v1/targets/%s/descriptor_configure_credentials" %  target.target_id)
+            "http://testserver/api/v1/targets/%s/descriptors/configure_credentials" %  target.target_id)
 
         dbjob = jmodels.Job.objects.get(job_uuid=job.job_uuid)
         # Make sure the job is related to the target type
@@ -644,7 +711,7 @@ class JobCreationTest(BaseTargetsTest, RepeaterMixIn):
         jobXml = """
 <job>
   <job_type id="http://localhost/api/v1/inventory/event_types/%(jobTypeId)s"/>
-  <descriptor id="http://testserver/api/v1/targets/%(targetId)s/descriptor_refresh_images"/>
+  <descriptor id="http://testserver/api/v1/targets/%(targetId)s/descriptors/refresh_images"/>
   <descriptor_data/>
 </job>
 """
@@ -657,7 +724,7 @@ class JobCreationTest(BaseTargetsTest, RepeaterMixIn):
         obj = xobj.parse(response.content)
         job = obj.job
         self.failUnlessEqual(job.descriptor.id,
-            "http://testserver/api/v1/targets/%s/descriptor_refresh_images" %  target.target_id)
+            "http://testserver/api/v1/targets/%s/descriptors/refresh_images" %  target.target_id)
 
         dbjob = jmodels.Job.objects.get(job_uuid=job.job_uuid)
         # Make sure the job is related to the target type
@@ -693,6 +760,7 @@ class JobCreationTest(BaseTargetsTest, RepeaterMixIn):
         self.assertEquals(response.status_code, 200)
         obj = xobj.parse(response.content)
         job = obj.job
+        self.failUnlessEqual(job.status_code, '401')
 
 
         jobXml = """
@@ -813,6 +881,191 @@ class JobCreationTest(BaseTargetsTest, RepeaterMixIn):
             target_image_credentials__target_credentials=creds)
         self.failUnlessEqual([ x.name for x in images ],
             ['modified product name for id2', 'product name for id3'])
+
+    def testRefreshTargetSystems(self):
+        jobType = jmodels.EventType.objects.get(name=jmodels.EventType.TARGET_REFRESH_SYSTEMS)
+        target = models.Target.objects.get(name='Target Name vmware')
+        jobXml = """
+<job>
+  <job_type id="http://localhost/api/v1/inventory/event_types/%(jobTypeId)s"/>
+  <descriptor id="http://testserver/api/v1/targets/%(targetId)s/descriptors/refresh_systems"/>
+  <descriptor_data/>
+</job>
+"""
+        params = dict(targetId=target.target_id, jobTypeId=jobType.job_type_id)
+        response = self._post('targets/%s/jobs' % target.target_id,
+            jobXml % params,
+            username='testuser', password='password')
+
+        self.assertEquals(response.status_code, 200)
+        obj = xobj.parse(response.content)
+        job = obj.job
+        self.failUnlessEqual(job.descriptor.id,
+            "http://testserver/api/v1/targets/%s/descriptors/refresh_systems" %  target.target_id)
+
+        dbjob = jmodels.Job.objects.get(job_uuid=job.job_uuid)
+        # Make sure the job is related to the target type
+        self.failUnlessEqual(
+            [ x.target.name for x in dbjob.target_jobs.all() ],
+            [ target.name ],
+        )
+
+        calls = self.mgr.repeaterMgr.repeaterClient.getCallList()
+        self.failUnlessEqual([ x.name for x in calls ],
+            ['targets.TargetConfiguration', 'targets.TargetUserCredentials',
+                'targets.configure', 'targets.listInstances'])
+        realCall = calls[-1]
+        self.failUnlessEqual(realCall.args, ())
+        self.failUnlessEqual(realCall.kwargs, {})
+        self.mgr.repeaterMgr.repeaterClient.reset()
+
+        jobXml = """
+<job>
+  <job_state>Failed</job_state>
+  <status_code>401</status_code>
+  <status_text>Invalid target credentials</status_text>
+</job>
+"""
+
+        # No images initially
+        models.TargetSystem.objects.all().delete()
+
+        # Grab token
+        jobToken = dbjob.job_token
+        jobUrl = "jobs/%s" % dbjob.job_uuid
+        response = self._put(jobUrl, jobXml, jobToken=jobToken)
+        self.assertEquals(response.status_code, 200)
+        obj = xobj.parse(response.content)
+        job = obj.job
+        self.failUnlessEqual(job.status_code, '401')
+
+
+        jobXml = """
+<job>
+  <job_state>Completed</job_state>
+  <status_code>200</status_code>
+  <status_text>Some status here</status_text>
+  <results encoding="identity">
+    <instances>
+      <instance id="/clouds/vmware/instances/vsphere.eng.rpath.com/instances/4234dc2c-6b91-5188-2a3c-5e6f88b61835" xmlNodeHash="7094de9821eaf555e995cd537f2af331bc434893">
+        <dnsName>172.16.175.73</dnsName>
+        <instanceDescription/>
+        <instanceId>4234dc2c-6b91-5188-2a3c-5e6f88b61835</instanceId>
+        <instanceName>Target System 1</instanceName>
+        <launchTime>1312812708</launchTime>
+        <publicDnsName>172.16.175.73</publicDnsName>
+        <reservationId>4234dc2c-6b91-5188-2a3c-5e6f88b61835</reservationId>
+        <state>poweredOn</state>
+      </instance>
+    </instances>
+  </results>
+</job>
+"""
+        response = self._put(jobUrl, jobXml, jobToken=jobToken)
+        self.assertEquals(response.status_code, 200)
+        obj = xobj.parse(response.content)
+        self.failUnlessEqual(obj.job.id, "http://testserver/api/v1/" + jobUrl)
+
+        systems = models.TargetSystem.objects.filter(target=target)
+        self.failUnlessEqual([ x.name for x in systems ],
+            ['Target System 1'])
+        self.failUnlessEqual([ x.description for x in systems ],
+            [''])
+
+        # Add 2 more images
+        jobXml = """
+<job>
+  <job_state>Completed</job_state>
+  <status_code>200</status_code>
+  <status_text>Some status here</status_text>
+  <results encoding="identity">
+    <instances>
+      <instance id="/clouds/vmware/instances/vsphere.eng.rpath.com/instances/4234dc2c-6b91-5188-2a3c-5e6f88b61835" xmlNodeHash="7094de9821eaf555e995cd537f2af331bc434893">
+        <dnsName>172.16.175.73</dnsName>
+        <instanceDescription/>
+        <instanceId>4234dc2c-6b91-5188-2a3c-5e6f88b61835</instanceId>
+        <instanceName>Target System 1</instanceName>
+        <launchTime>1312812708</launchTime>
+        <publicDnsName>172.16.175.73</publicDnsName>
+        <reservationId>4234dc2c-6b91-5188-2a3c-5e6f88b61835</reservationId>
+        <state>poweredOn</state>
+      </instance>
+      <instance id="id2">
+        <instanceId>id2</instanceId>
+        <instanceName>name for id2</instanceName>
+        <instanceDescription>long name for id2</instanceDescription>
+        <launchTime>1234567890</launchTime>
+        <state>suspended</state>
+      </instance>
+      <instance id="id3">
+        <instanceId>id3</instanceId>
+        <instanceName>name for id3</instanceName>
+        <instanceDescription>long name for id3</instanceDescription>
+        <launchTime>1234567891</launchTime>
+        <state>blabbering</state>
+      </instance>
+    </instances>
+  </results>
+</job>
+"""
+
+        response = self._put(jobUrl, jobXml, jobToken=jobToken)
+        self.assertEquals(response.status_code, 200)
+        obj = xobj.parse(response.content)
+        self.failUnlessEqual(obj.job.id, "http://testserver/api/v1/" + jobUrl)
+
+        systems = models.TargetSystem.objects.filter(target=target)
+        self.failUnlessEqual([ x.name for x in systems ],
+            ['Target System 1', 'name for id2', 'name for id3', ])
+        self.failUnlessEqual([ x.description for x in systems ],
+            ['', 'long name for id2', 'long name for id3', ])
+
+        # Remove first, modify second
+        jobXml = """
+<job>
+  <job_state>Completed</job_state>
+  <status_code>200</status_code>
+  <status_text>Some status here</status_text>
+  <results encoding="identity">
+    <instances>
+      <instance id="id2">
+        <instanceId>id2</instanceId>
+        <instanceName>name for id2</instanceName>
+        <instanceDescription>long name for id2</instanceDescription>
+        <launchTime>1234567890</launchTime>
+        <state>blabbering</state>
+      </instance>
+      <instance id="id3">
+        <instanceId>id3</instanceId>
+        <instanceName>name for id3</instanceName>
+        <instanceDescription>long name for id3</instanceDescription>
+        <launchTime>1234567891</launchTime>
+        <state>blabbering</state>
+      </instance>
+    </instances>
+  </results>
+</job>
+"""
+        response = self._put(jobUrl, jobXml, jobToken=jobToken)
+        self.assertEquals(response.status_code, 200)
+        obj = xobj.parse(response.content)
+        self.failUnlessEqual(obj.job.id, "http://testserver/api/v1/" + jobUrl)
+
+        systems = models.TargetSystem.objects.filter(target=target)
+        self.failUnlessEqual([ x.name for x in systems ],
+            ['name for id2', 'name for id3', ])
+        self.failUnlessEqual([ x.description for x in systems ],
+            ['long name for id2', 'long name for id3', ])
+        self.failUnlessEqual([ x.state for x in systems ],
+            ['blabbering', 'blabbering', ])
+
+        # Make sure we have proper linkage in target_image_credentials
+        creds = models.TargetCredentials.objects.filter(
+            target_user_credentials__user__user_name='testuser')[0]
+        systems = models.TargetSystem.objects.filter(
+            target_system_credentials__target_credentials=creds)
+        self.failUnlessEqual([ x.name for x in systems ],
+            ['name for id2', 'name for id3', ])
 
     def testCaptureSystem(self):
         invmodels.System.objects.all().delete()

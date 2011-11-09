@@ -45,6 +45,7 @@ class Targets(modellib.Collection):
     actions = D(modellib.SyntheticField(jobmodels.Actions),
         "actions available for targets")
     jobs = modellib.SyntheticField(modellib.HrefField())
+    descriptor_create = modellib.SyntheticField(modellib.HrefField())
 
     def __init__(self, targetTypeFilter=None):
         # Initialize our own fields before anything else, or else the
@@ -59,7 +60,8 @@ class Targets(modellib.Collection):
             targetTypes = [ x for x in targetTypes if x in self.targetTypeFilter ]
         targetTypes = [ modellib.Cache.get(TargetType, pk=x) for x in targetTypes ]
         actions.action = [ self._newAction(x) for x in targetTypes ]
-        self.jobs = modellib.HrefField("../target_jobs")
+        self.jobs = modellib.HrefFieldFromModel(viewName="AllTargetJobs")
+        self.descriptor_create = modellib.HrefFieldFromModel(viewName="DescriptorsTargetsCreate")
 
     @classmethod
     def _newAction(cls, targetType):
@@ -95,6 +97,9 @@ class Target(modellib.XObjIdModel):
         "actions available for this target")
     jobs = modellib.SyntheticField(modellib.HrefField())
     state = XObjHidden(models.IntegerField(null=False))
+    # Needed for creation from descriptor data
+    target_type_name = XObjHidden(modellib.SyntheticField())
+    zone_name = XObjHidden(modellib.SyntheticField())
 
     def computeSyntheticFields(self, sender, **kwargs):
         self.actions = actions = jobmodels.Actions()
@@ -102,14 +107,15 @@ class Target(modellib.XObjIdModel):
         actions.action.append(self._actionConfigure())
         actions.action.append(self._actionConfigureUserCredentials())
         actions.action.append(self._actionRefreshImages())
+        actions.action.append(self._actionRefreshSystems())
         self.jobs = modellib.HrefFieldFromModel(self, "TargetJobs")
         self.target_user_credentials = modellib.HrefFieldFromModel(self,
-            "TargetUserCredentials")
+            viewName="TargetUserCredentials")
+        self.target_configuration = modellib.HrefFieldFromModel(self,
+            viewName="TargetConfiguration")
         self._setCredentialsValid()
         
     def serialize(self, request=None):
-        self.target_configuration = modellib.HrefField(
-            href='target_configuration')
         xobjModel = modellib.XObjIdModel.serialize(self, request)
         return xobjModel
         
@@ -138,7 +144,7 @@ class Target(modellib.XObjIdModel):
                 jobTypeName=jobmodels.EventType.TARGET_CONFIGURE_CREDENTIALS,
                 actionName=actionName,
                 enabled=enabled,
-                descriptorModel=self, descriptorHref="descriptor_configure_credentials")
+                descriptorModel=self, descriptorViewName="TargetConfigureCredentials")
         return action
 
     def _actionRefreshImages(self):
@@ -148,7 +154,17 @@ class Target(modellib.XObjIdModel):
                 jobTypeName=jobmodels.EventType.TARGET_REFRESH_IMAGES,
                 actionName=actionName,
                 enabled=enabled,
-                descriptorModel=self, descriptorHref="descriptor_refresh_images")
+                descriptorModel=self, descriptorViewName="TargetRefreshImages")
+        return action
+
+    def _actionRefreshSystems(self):
+        actionName = "Refresh systems"
+        enabled = (self.state != self.States.UNCONFIGURED)
+        action = jobmodels.EventType.makeAction(
+                jobTypeName=jobmodels.EventType.TARGET_REFRESH_SYSTEMS,
+                actionName=actionName,
+                enabled=enabled,
+                descriptorModel=self, descriptorViewName="TargetRefreshSystems")
         return action
 
     @classmethod
@@ -263,6 +279,28 @@ class TargetImage(modellib.XObjModel):
     modified_date = D(modellib.DateTimeUtcField(auto_now_add=True), "the date the resource was modified (UTC)")
     unique_together = (target, target_internal_id)
 
+class TargetSystem(modellib.XObjModel):
+    """
+    A representation of all systems from a target
+    """
+    class Meta:
+        db_table = "target_system"
+
+    _xobj_explicit_accessors = set()
+
+    target_system_id = models.AutoField(primary_key=True)
+    name = D(models.TextField(unique=True), "System Name")
+    description = D(models.TextField(null=False), "System Description")
+    target = D(models.ForeignKey(Target, related_name='target_systems'),
+        "Target the system is part of")
+    target_internal_id = D(models.TextField(null=False), "System identifier on the target")
+    ip_addr_1 = D(models.TextField(null=True), "IP address 1")
+    ip_addr_2 = D(models.TextField(null=True), "IP address 2")
+    state = D(models.TextField(null=False), "State")
+    created_date = D(modellib.DateTimeUtcField(auto_now_add=True), "the date the resource was created (UTC)")
+    modified_date = D(modellib.DateTimeUtcField(auto_now_add=True), "the date the resource was modified (UTC)")
+    unique_together = (target, target_internal_id)
+
 class TargetDeployableImage(modellib.XObjModel):
     class Meta:
         db_table = "target_deployable_image"
@@ -289,6 +327,19 @@ class TargetImageCredentials(modellib.XObjModel):
     target_credentials = models.ForeignKey('TargetCredentials',
         related_name='target_image_credentials')
     unique_together = (target_image, target_credentials)
+
+class TargetSystemCredentials(modellib.XObjModel):
+    """
+    Links a system to the credentials that were used to fetch it
+    """
+    class Meta:
+        db_table = "target_system_credentials"
+
+    target_system = models.ForeignKey(TargetSystem,
+        related_name="target_system_credentials")
+    target_credentials = models.ForeignKey('TargetCredentials',
+        related_name='target_system_credentials')
+    unique_together = (target_system, target_credentials)
 
 class TargetTypes(modellib.Collection):
     class Meta:

@@ -4452,7 +4452,7 @@ class MigrateTo_59(SchemaMigration):
 
 class MigrateTo_60(SchemaMigration):
     '''Edge-P3'''
-    Version = (60, 10)
+    Version = (60, 11)
 
     def migrate(self):
         '''"My" querysets feature'''
@@ -4598,6 +4598,36 @@ class MigrateTo_60(SchemaMigration):
                   resource_type="TargetType"),
         ])
         return True
+
+
+    def migrate11(self):
+        db = self.db
+        schema.createTable(db, 'target_system', """
+                target_system_id        %(PRIMARYKEY)s,
+                name                    TEXT NOT NULL,
+                description             TEXT NOT NULL,
+                target_id               integer             NOT NULL
+                    REFERENCES Targets ON DELETE CASCADE,
+                target_internal_id      TEXT             NOT NULL,
+                ip_addr_1               TEXT,
+                ip_addr_2               TEXT,
+                state                   TEXT NOT NULL,
+                created_date            TIMESTAMP WITH TIME ZONE NOT NULL
+                    DEFAULT current_timestamp,
+                modified_date           TIMESTAMP WITH TIME ZONE NOT NULL
+                    DEFAULT current_timestamp,
+                UNIQUE ( target_id, target_internal_id )
+            """)
+
+        schema.createTable(db, 'target_system_credentials', """
+                id                      %(PRIMARYKEY)s,
+                target_system_id        INTEGER NOT NULL
+                    REFERENCES target_system ON DELETE CASCADE,
+                target_credentials_id   INTEGER NOT NULL
+                    REFERENCES TargetCredentials ON DELETE CASCADE
+            """)
+        return True
+
 
 #### SCHEMA MIGRATIONS END HERE #############################################
 

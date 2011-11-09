@@ -269,8 +269,7 @@ class ProductManager(manager.Manager):
             raise mint_error.InvalidError(e.msg)
 
         if bool(oldproduct.hidden) == True and hidden == False:
-            self.reposMgr.addUser('.'.join((oldproduct.hostname,
-                                            oldproduct.domainname)), 
+            self.reposMgr.addUser(oldproduct.repositoryHostname,
                                   'anonymous',
                                   password='anonymous',
                                   level=userlevels.USER)   
@@ -342,8 +341,8 @@ class ProductManager(manager.Manager):
 
     def _getProductFQDN(self, projectId):
         cu = self.db.cursor()
-        cu.execute('SELECT hostname, domainname from Projects where projectId=?', projectId)
-        return '.'.join(tuple(cu.next()))
+        cu.execute('SELECT fqdn FROM Projects where projectId=?', projectId)
+        return cu.next()[0]
 
     def setMemberLevel(self, projectId, userId, level, notify=True):
         fqdn = self._getProductFQDN(projectId)
@@ -412,7 +411,7 @@ class ProductManager(manager.Manager):
 
         # initial product definition
         prodDef = helperfuncs.sanitizeProductDefinition(product.name,
-                        description, product.hostname, product.domainname, 
+                        description, product.repositoryHostname,
                         product.shortname, version,
                         '', namespace)
         label = prodDef.getDefaultLabel()
@@ -453,15 +452,14 @@ class ProductManager(manager.Manager):
 
     def getProductVersionForLabel(self, fqdn, label):
         cu = self.db.cursor()
-        cu.execute('''SELECT productVersionId, hostname, 
-                             domainname, shortname, 
+        cu.execute('''SELECT productVersionId, fqdn,
+                             shortname, 
                              ProductVersions.namespace,    
                              ProductVersions.name 
                       FROM Projects 
                       JOIN ProductVersions USING(projectId)
                       WHERE hostname=?''', fqdn.split('.')[0])
-        for versionId, hostname, domainname, shortname, namespace, name in cu:
-            fqdn = '%s.%s' % (hostname, domainname)
+        for versionId, fqdn, shortname, namespace, name in cu:
             pd = proddef.ProductDefinition()
             pd.setProductShortname(shortname)
             pd.setConaryRepositoryHostname(fqdn)

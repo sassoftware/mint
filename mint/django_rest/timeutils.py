@@ -18,7 +18,7 @@ class Datetime(object):
         """
         if tz is None:
             tz = cls.TZUTC
-        return datetime.datetime.fromtimestamp(timestamp, tz)
+        return datetime.datetime.fromtimestamp(float(timestamp), tz)
 
     @classmethod
     def now(cls):

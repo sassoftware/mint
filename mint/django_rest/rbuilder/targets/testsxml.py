@@ -13,7 +13,7 @@ target_GET = \
     </action>
     <action>
       <description>Configure user credentials for target</description>
-      <descriptor id="http://testserver/api/v1/targets/4/descriptor_configure_credentials"/>
+      <descriptor id="http://testserver/api/v1/targets/4/descriptors/configure_credentials"/>
       <enabled>true</enabled>
       <job_type id="http://testserver/api/v1/inventory/event_types/20"/>
       <key>configure_target_credentials</key>
@@ -21,11 +21,19 @@ target_GET = \
     </action>
     <action>
       <description>Refresh images</description>
-      <descriptor id="http://testserver/api/v1/targets/4/descriptor_refresh_images"/>
+      <descriptor id="http://testserver/api/v1/targets/4/descriptors/refresh_images"/>
       <enabled>true</enabled>
       <job_type id="http://testserver/api/v1/inventory/event_types/15"/>
       <key>refresh_target_images</key>
       <name>Refresh images</name>
+    </action>
+    <action>
+      <description>Refresh systems</description>
+      <descriptor id="http://testserver/api/v1/targets/4/descriptors/refresh_systems"/>
+      <enabled>true</enabled>
+      <job_type id="http://testserver/api/v1/inventory/event_types/16"/>
+      <key>refresh_target_systems</key>
+      <name>Refresh systems</name>
     </action>
   </actions>
   <credentials_valid>false</credentials_valid>
@@ -37,6 +45,7 @@ target_GET = \
      <description>OpenStack</description>
      <name>openstack</name>
   </target_type>
+  <target_configuration id="http://testserver/api/v1/targets/4/target_configuration"/>
   <target_user_credentials id="http://testserver/api/v1/targets/4/target_user_credentials"/>
   <zone id="http://testserver/api/v1/inventory/zones/1"/>
 </target>
@@ -46,9 +55,10 @@ target_POST = \
 """
 <?xml version='1.0' encoding='UTF-8'?>
 <target>
-  <target_id>4</target_id>
   <name>Target Name 4</name>
   <description>Target Description</description>
+  <target_type_name>vmware</target_type_name>
+  <zone_name>other zone</zone_name>
 </target>
 """.strip()
 

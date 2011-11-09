@@ -491,7 +491,7 @@ class ImagesTest(restbase.BaseRestTest):
         contents = re.sub('<date>.*</date>',
             '<date>@DATE@</date>', contents)
         self.failUnlessEqual(contents, """\
-<item><title>Image `Image 1' built (testproject version 1.0)</title><description>&lt;b&gt;Appliance Name:&lt;/b&gt; testproject&lt;br/&gt;&lt;b&gt;Appliance Major Version:&lt;/b&gt; 1.0&lt;br/&gt;&lt;b&gt;Image Type:&lt;/b&gt; VMware(R) Virtual Appliance&lt;br/&gt;&lt;b&gt;File Name:&lt;/b&gt; file1.txt&lt;br/&gt;&lt;b&gt;Download URL:&lt;/b&gt; &lt;a href="https://test.rpath.local/downloadImage?fileId=4"&gt;https://test.rpath.local/downloadImage?fileId=4&lt;/a&gt;&lt;br/&gt;&lt;b&gt;File Name:&lt;/b&gt; file2.txt&lt;br/&gt;&lt;b&gt;Download URL:&lt;/b&gt; &lt;a href="https://test.rpath.local/downloadImage?fileId=5"&gt;https://test.rpath.local/downloadImage?fileId=5&lt;/a&gt;&lt;br/&gt;&lt;b&gt;Created On:&lt;/b&gt; @CREATED-ON@</description><date>@DATE@</date><category>success</category><guid>/api/users/adminuser/notices/contexts/builder/1</guid></item>""")
+<item><title>Image `Image 1' built (testproject version 1.0)</title><description>&lt;b&gt;Appliance Name:&lt;/b&gt; testproject&lt;br/&gt;&lt;b&gt;Appliance Major Version:&lt;/b&gt; 1.0&lt;br/&gt;&lt;b&gt;Image Type:&lt;/b&gt; VMware(R) Workstation/Fusion Virtual Appliance&lt;br/&gt;&lt;b&gt;File Name:&lt;/b&gt; file1.txt&lt;br/&gt;&lt;b&gt;Download URL:&lt;/b&gt; &lt;a href="https://test.rpath.local/downloadImage?fileId=4"&gt;https://test.rpath.local/downloadImage?fileId=4&lt;/a&gt;&lt;br/&gt;&lt;b&gt;File Name:&lt;/b&gt; file2.txt&lt;br/&gt;&lt;b&gt;Download URL:&lt;/b&gt; &lt;a href="https://test.rpath.local/downloadImage?fileId=5"&gt;https://test.rpath.local/downloadImage?fileId=5&lt;/a&gt;&lt;br/&gt;&lt;b&gt;Created On:&lt;/b&gt; @CREATED-ON@</description><date>@DATE@</date><category>success</category><guid>/api/users/adminuser/notices/contexts/builder/1</guid></item>""")
 
 
     def testSetImageStatusAMI(self):
@@ -643,6 +643,6 @@ class ImagesTest(restbase.BaseRestTest):
         contents = re.sub('<date>.*</date>',
             '<date>@DATE@</date>', contents)
         self.failUnlessEqual(contents, """\
-<item><title>Image `Image 1' failed to build (testproject version 1.0)</title><description>&lt;b&gt;Appliance Name:&lt;/b&gt; testproject&lt;br/&gt;&lt;b&gt;Appliance Major Version:&lt;/b&gt; 1.0&lt;br/&gt;&lt;b&gt;Image Type:&lt;/b&gt; VMware(R) Virtual Appliance&lt;br/&gt;&lt;b&gt;Created On:&lt;/b&gt; @CREATED-ON@</description><date>@DATE@</date><category>error</category><guid>/api/users/adminuser/notices/contexts/builder/1</guid></item>""")
+<item><title>Image `Image 1' failed to build (testproject version 1.0)</title><description>&lt;b&gt;Appliance Name:&lt;/b&gt; testproject&lt;br/&gt;&lt;b&gt;Appliance Major Version:&lt;/b&gt; 1.0&lt;br/&gt;&lt;b&gt;Image Type:&lt;/b&gt; VMware(R) Workstation/Fusion Virtual Appliance&lt;br/&gt;&lt;b&gt;Created On:&lt;/b&gt; @CREATED-ON@</description><date>@DATE@</date><category>error</category><guid>/api/users/adminuser/notices/contexts/builder/1</guid></item>""")
 
 testsetup.main()

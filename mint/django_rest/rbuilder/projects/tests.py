@@ -43,12 +43,12 @@ class ProjectsTestCase(RbacEngine):
         # developer user does NOT have access to these .. skipping XML versions here as these
         # are well covered in rbac/tests.py
                   
-        role           = rbacmodels.RbacRole.objects.get(name='developer')
-        self.all_projects   = querymodels.QuerySet.objects.get(name='All Projects')
-        self.all_pbs        = querymodels.QuerySet.objects.get(name='All Project Stages')
-        modmembers     = rbacmodels.RbacPermissionType.objects.get(name='ModMembers')
-        createresource = rbacmodels.RbacPermissionType.objects.get(name='CreateResource')
-        admin          = usersmodels.User.objects.get(user_name='admin')
+        role              = rbacmodels.RbacRole.objects.get(name='developer')
+        self.all_projects = querymodels.QuerySet.objects.get(name='All Projects')
+        self.all_pbs      = querymodels.QuerySet.objects.get(name='All Project Stages')
+        modmembers        = rbacmodels.RbacPermissionType.objects.get(name='ModMembers')
+        createresource    = rbacmodels.RbacPermissionType.objects.get(name='CreateResource')
+        admin             = usersmodels.User.objects.get(user_name='admin')
 
         for queryset in [ self.all_projects, self.all_pbs ]:
             for permission in [ modmembers, createresource  ]:
