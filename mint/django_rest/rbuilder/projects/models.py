@@ -212,10 +212,10 @@ class Project(modellib.XObjIdModel):
                 label.entitlement = None
             else:
                 assert self.external
-                label.url = self.upstream_url
-                label.auth_type = self.auth_type
-                label.user_name = self.user_name
-                label.password = self.password
+                label.url = str(self.upstream_url)
+                label.auth_type = str(self.auth_type)
+                label.user_name = str(self.user_name)
+                label.password = str(self.password)
                 label.entitlement = str(self.entitlement)
             # This field doesn't mean anything but some old code might still
             # use it.
@@ -333,7 +333,7 @@ class ProjectVersion(modellib.XObjIdModel):
             self.namespace = project.namespace
         Project.validateNamespace(self.namespace)
         prodDef = helperfuncs.sanitizeProductDefinition(
-            project.name, project.description, project.hostname, project.domain_name,
+            project.name, project.description, project.repository_hostname,
             project.short_name, self.name, self.description, self.namespace)
         return prodDef
 
@@ -463,6 +463,8 @@ class Release(modellib.XObjIdModel):
         related_name='created_releases', null=True)
     time_updated = modellib.DecimalTimestampField(
         null=True, db_column='timeupdated')
+    # to be consistent with the rest of the models, this really should be modified_by
+    # but not changing before 11/14/11 release, feel free to fix later
     updated_by = modellib.ForeignKey('users.User', db_column='updatedby',
         related_name='updated_releases', null=True)
     time_published = modellib.DecimalTimestampField(

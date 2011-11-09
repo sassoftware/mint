@@ -150,10 +150,12 @@ class TargetsManager(basemanager.BaseManager, CatalogServiceHelper):
             state = 0
         else:
             state = 1
+        zone = modellib.Cache.get(zones.Zone, name=targetSrc.zone_name)
+        targetType = self.mgr.getTargetTypeByName(targetSrc.target_type_name)
         target = models.Target(name=targetSrc.name,
             description=targetSrc.description,
-            target_type=targetSrc.target_type,
-            zone=targetSrc.zone,
+            target_type=targetType,
+            zone=zone,
             state=state)
         target.save()
         return target
@@ -225,6 +227,45 @@ class TargetsManager(basemanager.BaseManager, CatalogServiceHelper):
     def deleteTarget(self, target_id):
         target = models.Target.objects.get(pk=target_id)
         target.delete()
+
+    @exposed
+    def getDescriptorTargetCreation(self):
+        descr = descriptor.ConfigurationDescriptor()
+        descr.setRootElement('descriptor_data')
+        descr.setDisplayName("Create target")
+        descr.addDescription("Create target")
+        descr.addDataField('name',
+                descriptions='Target Name',
+                type='str',
+                required=True)
+        descr.addDataField('description',
+                descriptions='Target Description',
+                type='str',
+                required=True)
+
+        allTypes = sorted(modellib.Cache.all(models.TargetType),
+            key=lambda x: x.target_type_id)
+        typeList = [ (x.name, x.description)
+            for x in allTypes ]
+        typeList = [ descr.ValueWithDescription(n, descriptions=d)
+            for (n, d) in typeList ]
+        descr.addDataField('target_type_name',
+            descriptions = "Target Type",
+            type = typeList,
+            required=True)
+
+        allZones = sorted(modellib.Cache.all(zones.Zone),
+            key=lambda x: x.zone_id)
+        zoneList = [ (x.name, x.description)
+            for x in allZones ]
+        zoneList = [ descr.ValueWithDescription(n, descriptions=d)
+            for (n, d) in zoneList ]
+        descr.addDataField('zone_name',
+            descriptions = "Zone",
+            type = zoneList,
+            required=True)
+
+        return descr
 
     @exposed
     def getDescriptorConfigureCredentials(self, target_id):

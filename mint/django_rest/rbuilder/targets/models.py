@@ -45,6 +45,7 @@ class Targets(modellib.Collection):
     actions = D(modellib.SyntheticField(jobmodels.Actions),
         "actions available for targets")
     jobs = modellib.SyntheticField(modellib.HrefField())
+    descriptor_create = modellib.SyntheticField(modellib.HrefField())
 
     def __init__(self, targetTypeFilter=None):
         # Initialize our own fields before anything else, or else the
@@ -59,7 +60,8 @@ class Targets(modellib.Collection):
             targetTypes = [ x for x in targetTypes if x in self.targetTypeFilter ]
         targetTypes = [ modellib.Cache.get(TargetType, pk=x) for x in targetTypes ]
         actions.action = [ self._newAction(x) for x in targetTypes ]
-        self.jobs = modellib.HrefField("../target_jobs")
+        self.jobs = modellib.HrefFieldFromModel(viewName="AllTargetJobs")
+        self.descriptor_create = modellib.HrefFieldFromModel(viewName="DescriptorsTargetsCreate")
 
     @classmethod
     def _newAction(cls, targetType):
@@ -95,6 +97,9 @@ class Target(modellib.XObjIdModel):
         "actions available for this target")
     jobs = modellib.SyntheticField(modellib.HrefField())
     state = XObjHidden(models.IntegerField(null=False))
+    # Needed for creation from descriptor data
+    target_type_name = XObjHidden(modellib.SyntheticField())
+    zone_name = XObjHidden(modellib.SyntheticField())
 
     def computeSyntheticFields(self, sender, **kwargs):
         self.actions = actions = jobmodels.Actions()
@@ -105,12 +110,12 @@ class Target(modellib.XObjIdModel):
         actions.action.append(self._actionRefreshSystems())
         self.jobs = modellib.HrefFieldFromModel(self, "TargetJobs")
         self.target_user_credentials = modellib.HrefFieldFromModel(self,
-            "TargetUserCredentials")
+            viewName="TargetUserCredentials")
+        self.target_configuration = modellib.HrefFieldFromModel(self,
+            viewName="TargetConfiguration")
         self._setCredentialsValid()
         
     def serialize(self, request=None):
-        self.target_configuration = modellib.HrefField(
-            href='target_configuration')
         xobjModel = modellib.XObjIdModel.serialize(self, request)
         return xobjModel
         

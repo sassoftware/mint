@@ -13,11 +13,15 @@ from mint.django_rest.rbuilder.images import models
 from mint.django_rest.rbuilder.jobs import models as jobsmodels
 from mint.django_rest.rbuilder.projects import models as projectsmodels
 from mint.django_rest.rbuilder.users import models as usermodels
+from mint.django_rest.rbuilder.rbac import models as rbacmodels
+from mint.django_rest.rbuilder.querysets import models as querymodels
+from mint.django_rest.rbuilder.rbac.tests import RbacEngine
+from mint.django_rest import timeutils
 
-class ImagesTestCase(XMLTestCase):
+class ImagesTestCase(RbacEngine):
 
     def setUp(self):
-        XMLTestCase.setUp(self)
+        RbacEngine.setUp(self)
         self._init()
 
     def _init(self):
@@ -28,6 +32,8 @@ class ImagesTestCase(XMLTestCase):
         user2 = usermodels.User(
             user_name='janephoo', full_name='Jane Phoo', email='janephoo@noreply.com')
         user2.save()
+
+        self._setupRbac()
             
         for i in range(3):
             # make project
@@ -80,7 +86,38 @@ class ImagesTestCase(XMLTestCase):
         
             buildFilesUrlsMap = models.BuildFilesUrlsMap(file=buildFile, url=fileUrl)
             buildFilesUrlsMap.save()
+
+    # invalidate the querysets so tags can be applied
+    def _retagQuerySets(self):
+        self.mgr.retagQuerySetsByType('project')
+        self.mgr.retagQuerySetsByType('images')
             
+    def _setupRbac(self):
+ 
+        # RbacEngine test base class has already done a decent amount of setup
+        # now just add the grants for the things we are working with
+
+        role              = rbacmodels.RbacRole.objects.get(name='developer')
+        self.all_projects = querymodels.QuerySet.objects.get(name='All Projects')
+        self.all_images   = querymodels.QuerySet.objects.get(name='All Images')
+        modmembers        = rbacmodels.RbacPermissionType.objects.get(name='ModMembers')
+        readset           = rbacmodels.RbacPermissionType.objects.get(name='ReadSet')
+        createresource    = rbacmodels.RbacPermissionType.objects.get(name='CreateResource')
+        admin             = usermodels.User.objects.get(user_name='admin')
+
+        for queryset in [ self.all_projects, self.all_images ]:
+            for permission in [ modmembers, createresource, readset  ]:
+                rbacmodels.RbacPermission(
+                    queryset      = queryset,
+                    role          = role,
+                    permission    = permission,
+                    created_by    = admin,
+                    modified_by   = admin,
+                    created_date  = timeutils.now(),
+                    modified_date = timeutils.now()
+                ).save()
+
+        self._retagQuerySets()
 
     # def testCanListAndAccessImages(self):
     # 
@@ -107,55 +144,132 @@ class ImagesTestCase(XMLTestCase):
         self.assertEquals(response.status_code, 200)
         self.assertXMLEquals(response.content, testsxml.images_get_xml)
 
+        # now as non-admin, should get filtered results, full contents
+        response = self._get('images/', username='ExampleDeveloper', password='password')
+        self.assertEquals(response.status_code, 200)
+        self.assertXMLEquals(response.content, testsxml.images_get_xml)
+        
+        # now as user with no permissions, should get 0 results post redirect
+        # pending redirection code change (FIXME)
+        # response = self._get('images/', username='testuser', password='password')
+        # self.assertEquals(response.status_code, 403)
+
     def testGetImage(self):
+
         image = models.Image.objects.get(pk=1)
-        response = self._get('images/%s' % image.pk, 
-            username='admin', password='password')
+        url = "images/%s" % image.pk
+
+        response = self._get(url, username='admin', password='password')
         self.assertEquals(response.status_code, 200)
         self.assertXMLEquals(response.content, testsxml.image_get_xml)
         
+        response = self._get(url, username='ExampleDeveloper', password='password')
+        self.assertEquals(response.status_code, 200)
+        
+        response = self._get(url, username='testuser', password='password')
+        self.assertEquals(response.status_code, 403)
+
     def testGetImageBuildFiles(self):
         image = models.Image.objects.get(pk=1)
-        response = self._get('images/%s/build_files/' % image.pk, username='admin', password='password')
+        url = "images/%s/build_files/" % image.pk
+        
+        response = self._get(url, username='admin', password='password')
         self.assertEquals(response.status_code, 200)
         self.assertXMLEquals(response.content, testsxml.build_files_get_xml)
         
+        response = self._get(url, username='ExampleDeveloper', password='password')
+        self.assertEquals(response.status_code, 200)
+        
+        response = self._get(url, username='testuser', password='password')
+        self.assertEquals(response.status_code, 403)
+        
     def testGetImageBuildFile(self):
         buildFile = models.BuildFile.objects.get(pk=1)
-        response = self._get('images/%s/build_files/%s/' % (buildFile.image_id, buildFile.pk),
-            username='admin', password='password')
+        url = "images/%s/build_files/%s/" % (buildFile.image_id, buildFile.pk)
+
+        response = self._get(url, username='admin', password='password')
         self.assertEquals(response.status_code, 200)
         self.assertXMLEquals(response.content, testsxml.build_file_get_xml)
-        
-    def testCreateImage(self):
-        response = self._post('images/',
-            username='admin', password='password', data=testsxml.image_post_xml)
+
+        response = self._get(url, username='ExampleDeveloper', password='password')
         self.assertEquals(response.status_code, 200)
-        image = xobj.parse(response.content)
-        self.assertEquals(image.image.name, 'image-20')
-        self.assertEquals(image.image.trove_name, 'troveName20')
-        self.assertEquals(image.image.image_id, u'4')
+
+        # hey, what's up with this?   Should image files be guessable?
+        response = self._get(url, username='testuser', password='password')
+        self.assertEquals(response.status_code, 403)
         
-    def testUpdateImage(self):
+    def _testCreateImage(self, username, expected_code):
+        url = 'images/'
+        response = self._post(url, username=username, password='password', data=testsxml.image_post_xml)
+        self.assertEquals(response.status_code, expected_code)
+        if expected_code == 200:
+            image = xobj.parse(response.content)
+            self.assertEquals(image.image.name, 'image-20')
+            self.assertEquals(image.image.trove_name, 'troveName20')
+            self.assertEquals(image.image.image_id, u'4')
+       
+    def testCreateImageAdmin(self):
+        self._testCreateImage('admin', 200)
+
+    def testCreateImageNonAdmin(self):
+        self._testCreateImage('ExampleDeveloper', 200)
+
+    def testCreateImageNoAuthz(self):
+        self._testCreateImage('testuser', 403)
+ 
+    def _testUpdateImage(self, username, expected_code):
         response = self._post('images/',
-            username='admin', password='password', data=testsxml.image_post_xml)
+            username=username, password='password', data=testsxml.image_post_xml)
+        self.assertEquals(response.status_code, expected_code)
+        if expected_code != 200:
+            return
         image = xobj.parse(response.content)
         response = self._put('images/%s' % image.image.image_id,
-            username='admin', password='password', data=testsxml.image_put_xml)
-        self.assertEquals(response.status_code, 200)
+            username=username, password='password', data=testsxml.image_put_xml)
+        self.assertEquals(response.status_code, expected_code)
         image_updated = xobj.parse(response.content)
         self.assertEquals(image_updated.image.trove_name, 'troveName20-Changed')
         
-    def testDeleteImage(self):
-        response = self._delete('images/1', username='admin', password='password')
-        self.assertEquals(response.status_code, 204)
+    def testUpdateImageAdmin(self):
+        self._testUpdateImage('admin', 200)
+ 
+    def testUpdateImageNonAdmin(self):
+        self._testUpdateImage('ExampleDeveloper', 200)
+
+    def testUpdateImageNoAuthz(self):
+        self._testUpdateImage('testuser', 403)
+
+    def _testDeleteImage(self, username, expected_code):
+        response = self._delete('images/1', username=username, password='password')
+        self.assertEquals(response.status_code, expected_code)
         
-    def testCreateImageBuildFile(self):
+    def testDeleteImageAdmin(self):
+        self._testDeleteImage('admin', 204)
+
+    def testDeleteImageNonAdmin(self):
+        self._testDeleteImage('ExampleDeveloper', 204)
+
+    def testDeleteImageNoAuthz(self):
+        self._testDeleteImage('testuser', 403)
+
+    def _testCreateImageBuildFile(self, username, expected_code):
         response = self._post('images/1/build_files/',
-            username='admin', password='password', data=testsxml.build_file_post_xml)
-        self.assertEquals(response.status_code, 200)
-        self.assertXMLEquals(response.content, testsxml.build_file_posted_xml)
-        
+            username=username, password='password', data=testsxml.build_file_post_xml)
+        self.assertEquals(response.status_code, expected_code)
+        if expected_code == 200:
+            self.assertXMLEquals(response.content, testsxml.build_file_posted_xml)
+
+    def testCreateImageBuildFileAdmin(self):
+        self._testCreateImageBuildFile('admin', 200)
+
+    def testCreateImageBuildFileNonAdmin(self):
+        self._testCreateImageBuildFile('ExampleDeveloper', 200)
+
+    def testCreateImageBuildFileNoAuthz(self):
+        self._testCreateImageBuildFile('testuser', 403)
+
+    # TODO: ---- continue adding rbac tests below this line ---
+
     def testUpdateImageBuildFile(self):
         response = self._post('images/1/build_files/',
             username='admin', password='password', data=testsxml.build_file_post_xml)
@@ -298,8 +412,9 @@ class ImagesTestCase(XMLTestCase):
                 job = self._newJob(jobUuid, jobType=jobType)
                 models.JobImage.objects.create(job=job, image_id=imageId)
 
+        # TODO: add tests for non-admon access w/ rights
         response = self._get('images/%s/jobs' % imageId,
-            username='testuser', password='password')
+            username='admin', password='password')
         self.failUnlessEqual(response.status_code, 200)
         doc = xobj.parse(response.content)
         self.failUnlessEqual([ x.job_uuid for x in doc.jobs.job ],

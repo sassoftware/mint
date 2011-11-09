@@ -27,7 +27,8 @@ from mint.django_rest.rbuilder.images import models as imagemodels
 from mint.django_rest.rbuilder.rbac.manager.rbacmanager import READMEMBERS, MODMEMBERS
 
 # how to add a new queryset resouce type
-# (there is a fair amount of boilerplate we could refactor here)
+# (there is a fair amount of boilerplate we could refactor here by instantiating
+# a QuerySetType class and having a basic kind of factory around it)
 #
 # * add the "All Foos" queryset to db & schema
 # * add querysets_footag table to db & schema
@@ -36,6 +37,7 @@ from mint.django_rest.rbuilder.rbac.manager.rbacmanager import READMEMBERS, MODM
 # * add the _lookupTaggedFoos and _tagFoos functions
 # * add a FooTag model to querysets
 # * update the getQuerysetsForResourceType function
+# * update the getQuerysetsForResource function
 # * consider if favoriteRbacedQuerySets needs to change
 # * apply rbac & decorators to the service
 # * on the resource being querysetted, add _queryset_resource_type = 'foo'
@@ -609,6 +611,10 @@ class QuerySetManager(basemanager.BaseManager):
             tags = models.QuerySet.objects.select_related().filter(
                 system_tags__system = resource
             )
+        elif type(resource) == imagemodels.Image:
+            tags = models.QuerySet.objects.select_related().filter(
+                image_tags__image = resource
+            )
         else:
             raise Exception("resource is not searchable by queryset tags")
 
@@ -907,6 +913,7 @@ class QuerySetManager(basemanager.BaseManager):
             self._createMyProjects(user, byUser),
             self._createMyStages(user, byUser),
             self._createMySystems(user, byUser),
+            self._createMyImages(user, byUser),
         ]
         for qs in querysets:
             self.mgr.addIdentityRoleGrants(qs, role, byUser)
@@ -974,6 +981,9 @@ class QuerySetManager(basemanager.BaseManager):
 
     def _createMySystems(self, user, byUser):
         return self._myQuerySet(user, byUser, 'My Systems', 'system')
+    
+    def _createMyImages(self, user, byUser):
+        return self._myQuerySet(user, byUser, 'My Images', 'image')
 
     # TODO: add My Images once unified images are available
      

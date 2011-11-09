@@ -90,7 +90,7 @@ class BaseRestTest(mint_rephelp.MintDatabaseHelper):
                                   description=description,
                                   namespace=self.mintCfg.namespace)
         pd = helperfuncs.sanitizeProductDefinition(
-            projectName, '', shortName, domainName,
+            projectName, '', '.'.join((shortName, domainName)),
             shortName, version, '', self.mintCfg.namespace)
         stageRefs = [ x.name for x in pd.getStages() ]
         for _name, displayName, _flavor in self.architectures:

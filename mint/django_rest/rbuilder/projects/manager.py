@@ -72,10 +72,10 @@ class ProjectManager(basemanager.BaseManager):
             if not project.database:
                 # These fields only make sense for proxy mode, otherwise the
                 # ones on the inbound mirror model are used.
-                label.url = project.upstream_url
-                label.auth_type = project.auth_type
-                label.user_name = project.user_name
-                label.password = project.password
+                label.url = str(project.upstream_url)
+                label.auth_type = str(project.auth_type)
+                label.user_name = str(project.user_name)
+                label.password = str(project.password)
                 label.entitlement = str(project.entitlement)
         else:
             # Internal projects always need a database
@@ -307,8 +307,7 @@ class ProjectManager(basemanager.BaseManager):
         pd = helperfuncs.sanitizeProductDefinition(
                 projectName=project.name,
                 projectDescription=project.description or '',
-                hostname=project.hostname,
-                domainname=project.domain_name,
+                repositoryHostname=project.repository_hostname,
                 shortname=project.short_name,
                 version=projectVersion.name,
                 versionDescription=projectVersion.description or '',

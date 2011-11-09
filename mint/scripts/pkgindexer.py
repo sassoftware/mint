@@ -192,11 +192,10 @@ class UpdatePackageIndexExternal(PackageIndexer):
         self.db.commit()
 
         cu = self.db.cursor()
-        cu.execute("""SELECT projectId, %s, EXISTS(SELECT * FROM InboundMirrors
+        cu.execute("""SELECT projectId, fqdn, EXISTS(SELECT * FROM InboundMirrors
                            WHERE projectId=targetProjectId) AS localMirror
                          FROM Projects
-                         WHERE external AND NOT hidden AND NOT disabled""" % \
-                   database.concat(self.db, 'hostname', "'.'", 'domainname'))
+                         WHERE external AND NOT hidden AND NOT disabled""")
 
         labels = {}
         projectIds = {}

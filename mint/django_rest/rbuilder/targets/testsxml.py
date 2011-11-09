@@ -45,6 +45,7 @@ target_GET = \
      <description>OpenStack</description>
      <name>openstack</name>
   </target_type>
+  <target_configuration id="http://testserver/api/v1/targets/4/target_configuration"/>
   <target_user_credentials id="http://testserver/api/v1/targets/4/target_user_credentials"/>
   <zone id="http://testserver/api/v1/inventory/zones/1"/>
 </target>
@@ -54,9 +55,10 @@ target_POST = \
 """
 <?xml version='1.0' encoding='UTF-8'?>
 <target>
-  <target_id>4</target_id>
   <name>Target Name 4</name>
   <description>Target Description</description>
+  <target_type_name>vmware</target_type_name>
+  <zone_name>other zone</zone_name>
 </target>
 """.strip()
 
