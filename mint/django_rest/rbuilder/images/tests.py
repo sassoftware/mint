@@ -433,31 +433,53 @@ class ImagesTestCase(RbacEngine):
         response = self._delete('releases/1', username='admin', password='password')
         self.assertEquals(response.status_code, 204)
         
-    def testGetUrlFileByBuildFile(self):
-        response = self._get('images/1/build_files/1/file_url', username='admin', password='password')
-        self.assertEquals(response.status_code, 200)
+    def _testGetUrlFileByBuildFile(self, username, expected_code):
+        response = self._get('images/1/build_files/1/file_url', username=username, password='password')
+        self.assertEquals(response.status_code, expected_code)
+        if expected_code != 200:
+            return
         self.assertXMLEquals(response.content, testsxml.build_file_url_get_xml)
-        response = self._get('images/3/build_files/3/file_url', username='admin', password='password')
-        self.assertEquals(response.status_code, 200)
+        response = self._get('images/3/build_files/3/file_url', username=username, password='password')
+        self.assertEquals(response.status_code, expected_code)
         fileUrl = xobj.parse(response.content).file_url
         self.assertEquals(fileUrl.url, u'http://example.com/1/')
         self.assertEquals(fileUrl.url_type, u'0')
+
+    def testGetUrlFileByBuildFileAdmin(self):
+        self._testGetUrlFileByBuildFile('admin', 200)
+
+    def testGetUrlFileByBuildFileNonAdmin(self):
+        self._testGetUrlFileByBuildFile('ExampleDeveloper', 200)
+
+    def testGetUrlFileByBuildFileNoAuthz(self):
+        self._testGetUrlFileByBuildFile('testuser', 403)
         
     def testGetBuildLog(self):
-        response = self._get('images/3/build_log', username='admin', password='password')
+        url = 'images/3/build_log'
+        response = self._get(url, username='admin', password='password')
         self.assertEquals(response.status_code, 200)
+        response = self._get(url, username='ExampleDeveloper', password='password')
+        self.assertEquals(response.status_code, 200)
+        response = self._get(url, username='testuser', password='password')
+        self.assertEquals(response.status_code, 403)
 
     def testGetImageTypes(self):
-        response = self._get('image_types/', username='admin', password='password')
+        # is anonymous
+        response = self._get('image_types/', username='testuser', password='password')
         self.assertEquals(response.status_code, 200)
         self.assertXMLEquals(response.content, testsxml.image_types_get_xml)
         
     def testGetImageType(self):
-        response = self._get('image_types/1', username='admin', password='password')
+        # is anonymous
+        response = self._get('image_types/1', username='testuser', password='password')
         self.assertEquals(response.status_code, 200)
         self.assertXMLEquals(response.content, testsxml.image_type_get_xml)
 
     def testGetImageJobs(self):
+
+        # TODO: rbac tests somewhat missing -- need to isolate some errors
+        # with rmake mocking not working in my environment -- MPD
+
         imageId = 3
 
         for i in range(3):

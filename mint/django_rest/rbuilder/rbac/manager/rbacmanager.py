@@ -423,6 +423,11 @@ class RbacManager(basemanager.BaseManager):
 
     def __is_admin_like(self, user, request):
         # if the user is an admin, immediately let them by
+        if user is None:
+            # this occurs when using the RBAC decorator with the access token
+            # decorator...higher level rbac code will deny access to unauthenticated
+            # users
+            return True
         if request is not None and request._is_admin:
             return True
         if user.is_admin:
