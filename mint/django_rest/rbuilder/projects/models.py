@@ -463,6 +463,8 @@ class Release(modellib.XObjIdModel):
         related_name='created_releases', null=True)
     time_updated = modellib.DecimalTimestampField(
         null=True, db_column='timeupdated')
+    # to be consistent with the rest of the models, this really should be modified_by
+    # but not changing before 11/14/11 release, feel free to fix later
     updated_by = modellib.ForeignKey('users.User', db_column='updatedby',
         related_name='updated_releases', null=True)
     time_published = modellib.DecimalTimestampField(

@@ -13,11 +13,15 @@ from mint.django_rest.rbuilder.images import models
 from mint.django_rest.rbuilder.jobs import models as jobsmodels
 from mint.django_rest.rbuilder.projects import models as projectsmodels
 from mint.django_rest.rbuilder.users import models as usermodels
+from mint.django_rest.rbuilder.rbac import models as rbacmodels
+from mint.django_rest.rbuilder.querysets import models as querymodels
+from mint.django_rest.rbuilder.rbac.tests import RbacEngine
+from mint.django_rest import timeutils
 
-class ImagesTestCase(XMLTestCase):
+class ImagesTestCase(RbacEngine):
 
     def setUp(self):
-        XMLTestCase.setUp(self)
+        RbacEngine.setUp(self)
         self._init()
 
     def _init(self):
@@ -28,6 +32,8 @@ class ImagesTestCase(XMLTestCase):
         user2 = usermodels.User(
             user_name='janephoo', full_name='Jane Phoo', email='janephoo@noreply.com')
         user2.save()
+
+        self._setupRbac()
             
         for i in range(3):
             # make project
@@ -80,7 +86,38 @@ class ImagesTestCase(XMLTestCase):
         
             buildFilesUrlsMap = models.BuildFilesUrlsMap(file=buildFile, url=fileUrl)
             buildFilesUrlsMap.save()
+
+    # invalidate the querysets so tags can be applied
+    def _retagQuerySets(self):
+        self.mgr.retagQuerySetsByType('project')
+        self.mgr.retagQuerySetsByType('images')
             
+    def _setupRbac(self):
+ 
+        # RbacEngine test base class has already done a decent amount of setup
+        # now just add the grants for the things we are working with
+
+        role              = rbacmodels.RbacRole.objects.get(name='developer')
+        self.all_projects = querymodels.QuerySet.objects.get(name='All Projects')
+        self.all_images   = querymodels.QuerySet.objects.get(name='All Images')
+        modmembers        = rbacmodels.RbacPermissionType.objects.get(name='ModMembers')
+        readset           = rbacmodels.RbacPermissionType.objects.get(name='ReadSet')
+        createresource    = rbacmodels.RbacPermissionType.objects.get(name='CreateResource')
+        admin             = usermodels.User.objects.get(user_name='admin')
+
+        for queryset in [ self.all_projects, self.all_images ]:
+            for permission in [ modmembers, createresource, readset  ]:
+                rbacmodels.RbacPermission(
+                    queryset      = queryset,
+                    role          = role,
+                    permission    = permission,
+                    created_by    = admin,
+                    modified_by   = admin,
+                    created_date  = timeutils.now(),
+                    modified_date = timeutils.now()
+                ).save()
+
+        self._retagQuerySets()
 
     # def testCanListAndAccessImages(self):
     # 
@@ -107,13 +144,31 @@ class ImagesTestCase(XMLTestCase):
         self.assertEquals(response.status_code, 200)
         self.assertXMLEquals(response.content, testsxml.images_get_xml)
 
+        # now as non-admin, should get filtered results, full contents
+        response = self._get('images/', username='ExampleDeveloper', password='password')
+        self.assertEquals(response.status_code, 200)
+        self.assertXMLEquals(response.content, testsxml.images_get_xml)
+        
+        # now as user with no permissions, should get 0 results post redirect
+        # pending redirection code change (FIXME)
+        # response = self._get('images/', username='testuser', password='password')
+        # self.assertEquals(response.status_code, 403)
+
     def testGetImage(self):
+
         image = models.Image.objects.get(pk=1)
-        response = self._get('images/%s' % image.pk, 
-            username='admin', password='password')
+        url = "images/%s" % image.pk
+
+        response = self._get(url, username='admin', password='password')
         self.assertEquals(response.status_code, 200)
         self.assertXMLEquals(response.content, testsxml.image_get_xml)
         
+        response = self._get(url, username='ExampleDeveloper', password='password')
+        self.assertEquals(response.status_code, 200)
+        
+        response = self._get(url, username='testuser', password='password')
+        self.assertEquals(response.status_code, 403)
+
     def testGetImageBuildFiles(self):
         image = models.Image.objects.get(pk=1)
         response = self._get('images/%s/build_files/' % image.pk, username='admin', password='password')

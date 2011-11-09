@@ -49,6 +49,8 @@ class RbacTestCase(XMLTestCase):
         )       
         self.projects_queryset     = querymodels.QuerySet.objects.get(
             name='All Projects')
+        self.images_queryset     = querymodels.QuerySet.objects.get(
+            name='All Projects')
  
         self.test_querysets = [
             self.tradingfloor_queryset, 
@@ -93,6 +95,8 @@ class RbacTestCase(XMLTestCase):
         self.req('query_sets/%s/chosen/' % self.tradingfloor_queryset.pk,
              method='GET', expect=200, is_admin=True)
         self.req('query_sets/%s/all' % self.projects_queryset.pk,
+             method='GET', expect=200, is_admin=True)
+        self.req('query_sets/%s/all' % self.images_queryset.pk,
              method='GET', expect=200, is_admin=True)
 
     def _xobj_list_hack(self, item):

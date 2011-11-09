@@ -192,7 +192,7 @@ class XMLTestCase(TestCase, testcase.MockMixIn):
             ignoreNodes = ['time_created', 'time_updated', 'created_date',
                 'tagged_date', 'last_available_update_refresh', 'time_enabled',
                 'registration_date', 'modified_date', 'last_login_date', 
-                'created_by', 'modified_by', 'full_name', 'user_name', 'is_public', 'is_static'
+                'created_by', 'modified_by', 'updated_by', 'full_name', 'user_name', 'is_public', 'is_static'
             ]
         from lxml import etree
         X = XML(orderedChildren=True, ignoreNodes=ignoreNodes)
