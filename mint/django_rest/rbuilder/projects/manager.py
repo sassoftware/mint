@@ -23,7 +23,9 @@ from mint.django_rest.rbuilder.manager.basemanager import exposed
 from mint.django_rest.rbuilder.platforms import models as platform_models
 from mint.django_rest.rbuilder.projects import models
 from mint.django_rest.rbuilder.images import models as imagesmodels
-# from mint.django_rest.rbuilder.jobs import models as jobsmodels
+from mint.django_rest.rbuilder.projects import models as projectsmodels
+from mint.django_rest.rbuilder import modellib
+from django.db import connection
 
 from conary import conarycfg
 from conary import conaryclient
@@ -494,3 +496,96 @@ class ProjectManager(basemanager.BaseManager):
     def updateProjectBranchStage(self, project_short_name, project_branch_label, stage_name, stage):
         raise exceptions.NotImplementedError()
 
+    @exposed
+    def isReleasePublished(self, release_id):
+        cu = connection.cursor()
+        published = cu.execute('''SELECT timePublished FROM PublishedReleases 
+                                   WHERE pubReleaseId=?''', str(release_id)).next()
+        if len(published) == 1 and published[0] is None:
+            return False
+        return True
+
+    @exposed
+    def publishRelease(self, release, publishedBy):
+        releaseId = release.release_id
+        shouldMirror = release.should_mirror
+        userId = publishedBy.user_id
+            
+        if not self._getBuildCount(releaseId):
+            raise mint_error.PublishedReleaseEmpty
+  
+        if self.isReleasePublished(releaseId):
+            raise mint_error.PublishedReleasePublished
+
+        cu = connection.cursor()
+        cu.execute('''UPDATE PublishedReleases 
+                      SET timePublished=?, publishedBy=?, 
+                      shouldMirror=? WHERE pubReleaseId=?''', 
+                      [time.time(), userId, int(shouldMirror), releaseId])
+
+    @exposed
+    def unpublishRelease(self, release):
+        releaseId = release.release_id
+        if not self.isReleasePublished(releaseId):
+            raise mint_error.PublishedReleaseNotPublished
+
+        cu = connection.cursor()
+        cu.execute('''UPDATE PublishedReleases 
+                      SET timePublished=?, publishedBy=?, 
+                      shouldMirror=? WHERE pubReleaseId=?''', 
+                      [None, None, 0, releaseId])
+        
+    @exposed
+    def createReleaseByProject(self, release, creatingUser, project=None):
+        if not release.project:
+            release.project = project
+        release.created_by = creatingUser
+        release.time_created = time.time()
+        release.save()
+        return release
+        
+    @exposed
+    def updateRelease(self, release, updatedBy):
+        if release.published is u'True':
+            self.publishRelease(release, publishedBy=publishedBy)
+        elif release.published is u'False':
+            self.unpublishRelease(release.release_id)
+        release.time_updated = time.time()
+        release.updated_by = updatedBy
+        release.save()
+        return release
+        
+    @exposed
+    def addImageToRelease(self, release_id, image):
+        if image.release and release_id != image.release.release_id:
+            raise mint_error.BuildPublished()
+        release = projectsmodels.Release.objects.get(pk=release_id)
+        image.release = release
+        
+        # FIXME: is this still needed?
+        # if (image.image_type not in ('amiImage', 'imageless')
+        #         and not image.files.files):
+        #     raise mint_error.BuildEmpty()
+        # cu = connection.cursor()
+        # cu.execute('''UPDATE Builds SET pubReleaseId=?
+        #               WHERE buildId=?''', [release_id, image_id])
+        image.save()
+        return image
+
+    @exposed
+    def createTopLevelRelease(self, release):
+        release.save()
+        return release
+
+    @exposed
+    def getTopLevelReleases(self):
+        Releases = projectsmodels.Releases()
+        Releases.release = projectsmodels.Release.objects.all()
+        return Releases
+
+    def _getBuildCount(self, releaseId):
+        cu = connection.cursor()
+        buildCount, = cu.execute(
+                    'SELECT COUNT(*) from Builds WHERE pubReleaseId=?',
+                    [releaseId]).next()
+        return buildCount

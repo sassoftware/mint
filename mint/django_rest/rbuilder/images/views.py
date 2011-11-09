@@ -143,44 +143,6 @@ class ImageBuildFileService(service.BaseAuthService):
         return HttpResponse(status=204)
 
 
-class ReleasesService(service.BaseService):
-    @access.admin
-    @return_xml
-    def rest_GET(self, request):
-        return self.get()
-        
-    def get(self):
-        return self.mgr.getReleases()
-            
-    @access.admin
-    @requires('release')
-    @return_xml
-    def rest_POST(self, request, release):
-        return self.mgr.createRelease(release)
-
-
-class ReleaseService(service.BaseService):
-    @access.admin
-    @return_xml
-    def rest_GET(self, request, release_id):
-        return self.get(release_id)
-
-    def get(self, release_id):
-        return self.mgr.getReleaseById(release_id)
-
-    @access.admin
-    @requires('release')
-    @return_xml
-    def rest_PUT(self, request, release_id, release):
-        return self.mgr.updateRelease(release_id, release)
-
-    @access.admin
-    def rest_DELETE(self, request, release_id):
-        release = projectsmodels.Release.objects.get(pk=release_id)
-        release.delete()
-        return HttpResponse(status=204)
-
-
 # write manager for this!
 class ImageBuildFileUrlService(service.BaseService):
     @access.admin

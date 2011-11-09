@@ -194,26 +194,6 @@ class ImagesManager(basemanager.BaseManager):
         return images
         
     @exposed
-    def getReleases(self):
-        Releases = projectsmodels.Releases()
-        Releases.release = projectsmodels.Release.objects.all()
-        return Releases
-        
-    @exposed
-    def getReleaseById(self, release_id):
-        return projectsmodels.Release.objects.get(pk=release_id)
-        
-    @exposed
-    def createRelease(self, release):
-        release.save()
-        return release
-        
-    @exposed
-    def updateRelease(self, release_id, release):
-        release.save()
-        return release
-        
-    @exposed
     def getBuildLog(self, image_id):
         image = models.Image.objects.get(pk=image_id)
         hostname = image.project.hostname

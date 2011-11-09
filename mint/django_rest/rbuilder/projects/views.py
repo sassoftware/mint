@@ -18,6 +18,7 @@ from mint.django_rest.rbuilder.projects import models as projectmodels
 from mint.django_rest.rbuilder.images import models as imagemodels
 from mint import userlevels
 from mint.django_rest.rbuilder.modellib import Flags
+import time
 
 class ProjectCallbacks(object):
     """
@@ -439,8 +440,9 @@ class ProjectReleasesService(service.BaseService):
     @requires('release', flags=Flags(save=False))
     @return_xml
     def rest_POST(self, request, project_short_name, release):
-        release.save(short_name=project_short_name)
-        return release
+        project = projectmodels.Project.objects.get(short_name=project_short_name)
+        user = request._authUser
+        return self.mgr.createReleaseByProject(release, user, project)
         
 class ProjectReleaseService(service.BaseService):
 
@@ -451,6 +453,30 @@ class ProjectReleaseService(service.BaseService):
 
     def get(self, project_short_name, release_id):
         return projectmodels.Release.objects.get(release_id=release_id)
+        
+    @return_xml
+    @requires('release')
+    def rest_PUT(self, request, project_short_name, release_id, release):
+        user = request._authUser
+        oldRelease = projectmodels.Release.objects.get(pk=release.release_id)
+        
+        if release.published == u'True':
+            self.mgr.publishRelease(release, user)
+            release.published_by = user
+            release.time_published = time.time()
+        elif release.published == u'False':
+            self.mgr.unpublishRelease(release)
+            release.published_by = None
+            release.time_published = None
+            
+        if release.should_mirror == 1 and oldRelease.should_mirror == 0:
+            release.time_mirrored = time.time()
+        
+        release.updated_by = user
+        release.time_updated = time.time()
+        release.save()
+        
+        return release
         
 class ProjectReleaseImagesService(service.BaseService):
 
@@ -468,7 +494,7 @@ class ProjectReleaseImagesService(service.BaseService):
     @requires('image')
     @return_xml
     def rest_POST(self, request, project_short_name, release_id, image):
-        return self.mgr.createImageBuild(image)
+        return self.mgr.addImageToRelease(release_id, image)
         
 class ProjectReleaseImageService(service.BaseService):
     @rbac(ProjectCallbacks.can_read_project)
@@ -478,3 +504,46 @@ class ProjectReleaseImageService(service.BaseService):
         
     def get(self, project_short_name, release_id, image_id):
         return self.mgr.getImageBuild(image_id)
+
+    @rbac(ProjectCallbacks.can_write_project)
+    def rest_DELETE(self, request, project_short_name, release_id, image_id):
+        imagemodels.Image.objects.get(pk=image_id).delete()
+        return HttpResponse(status=204)
+
+class TopLevelReleasesService(service.BaseService):
+    @access.admin
+    @return_xml
+    def rest_GET(self, request):
+        return self.get()
+
+    def get(self):
+        return self.mgr.getReleases()
+
+    @access.admin
+    @requires('release')
+    @return_xml
+    def rest_POST(self, request, release):
+        createdBy = request._authUser
+        return self.mgr.createReleaseByProject(release, createdBy)
+
+class TopLevelReleaseService(service.BaseService):
+    @access.admin
+    @return_xml
+    def rest_GET(self, request, release_id):
+        return self.get(release_id)
+
+    def get(self, release_id):
+        return self.mgr.getReleaseById(release_id)
+
+    @access.admin
+    @requires('release')
+    @return_xml
+    def rest_PUT(self, request, release_id, release):
+        updatingUser = request._authUser
+        return self.mgr.updateRelease(release, updatingUser)
+
+    @access.admin
+    def rest_DELETE(self, request, release_id):
+        release = projectsmodels.Release.objects.get(pk=release_id)
+        release.delete()
+        return HttpResponse(status=204)

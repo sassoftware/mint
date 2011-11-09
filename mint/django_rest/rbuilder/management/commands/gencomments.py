@@ -187,7 +187,13 @@ class DocMetadata(object):
     def forwardReferences(self):
         return dict(
             (fld.name, fld) for fld in self.fields if isinstance(fld, djmodels.ForeignKey))
-        
+    
+    @property
+    def syntheticFields(self):
+        if self.model.__name__ == 'User':
+            import pdb; pdb.set_trace()
+        return {}
+    
     @property
     def backwardReferences(self):
         """
@@ -350,6 +356,9 @@ class Command(BaseCommand):
             docstring = getattr(field, 'docstring', 'N/A')
             line = ATTRIBUTE_TEMPLATE % {'ATTRNAME':fieldname, 'DOCSTRING':docstring}
             text.append(line)
+    
+        for fieldname, field in metadata.syntheticFields.items():
+            pass
     
         # if subModel is None then its listFields refers to an indeterminate
         # model tag (ie a model that exists in two or more different apps)
