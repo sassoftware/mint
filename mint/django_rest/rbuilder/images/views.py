@@ -13,8 +13,8 @@ from mint.django_rest.rbuilder import service
 from mint.django_rest.rbuilder.images import models
 from mint.django_rest.rbuilder.jobs import models as jobsmodels
 from mint.django_rest.rbuilder.projects import models as projectsmodels
-from mint.django_rest.rbuilder.rbac.rbacauth import rbac, manual_rbac
-from mint.django_rest.rbuilder.errors import PermissionDenied
+from mint.django_rest.rbuilder.rbac.rbacauth import rbac #, manual_rbac
+# from mint.django_rest.rbuilder.errors import PermissionDenied
 from mint.django_rest.rbuilder.rbac.manager.rbacmanager import \
    READMEMBERS, MODMEMBERS
 
