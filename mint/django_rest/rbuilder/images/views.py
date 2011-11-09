@@ -25,7 +25,7 @@ while the naming scheme for the corresponding manager methods are worked out.
 This is a mess and should be corrected ASAP.
 """
 
-def _rbac_access_check(view, request, image_id, action, *args, **kwargs):
+def _rbac_image_access_check(view, request, image_id, action, *args, **kwargs):
     '''core rbac policy for images'''
     # first look to explicit access on the image, if available, if not
     # then inherit permissions based on the project
@@ -35,17 +35,17 @@ def _rbac_access_check(view, request, image_id, action, *args, **kwargs):
         return True
     project = obj.project
     return view.mgr.userHasRbacPermission(user, project, action)
-
+       
 def can_write_image(view, request, image_id, *args, **kwargs):
     '''can the user write this?'''
-    return _rbac_access_check(
+    return _rbac_image_access_check(
         view, request, image_id, 
         MODMEMBERS, *args, **kwargs
     )
 
 def can_read_image(view, request, image_id, *args, **kwargs):
     '''can the user read this?'''
-    return _rbac_access_check(
+    return _rbac_image_access_check(
         view, request, image_id, 
         READMEMBERS, *args, **kwargs
     )
@@ -53,6 +53,29 @@ def can_read_image(view, request, image_id, *args, **kwargs):
 def can_create_image(view, request, *args, **kwargs):
     '''can a user create new images?'''
     return view.mgr.userHasRbacCreatePermission(request._authUser, 'image')
+
+def _rbac_release_access_check(view, request, release_id, action, *args, **kwargs):
+    release = view.mgr.getReleaseById(release_id)
+    project = release.project 
+    user = request._authUser
+    return view.mgr.userHasRbacPermission(user, project, action)
+
+def can_read_release(view, request, release_id, *args, **kwargs):
+    return _rbac_release_access_check(
+        view, request, release_id, 
+        READMEMBERS, *args, **kwargs
+    )
+
+def can_write_release(view, request, release_id, *args, **kwargs):
+    return _rbac_release_access_check(
+        view, request, release_id, 
+        MODMEMBERS, *args, **kwargs
+    )
+
+def can_create_release(view, request, *args, **kwargs):
+    user = request._authUser
+    project = kwargs['release'].project
+    return view.mgr.userHasRbacPermission(user, project, MODMEMBERS)
 
 class BaseImageService(service.BaseService):
     pass
@@ -182,18 +205,21 @@ class ReleasesService(service.BaseService):
 
     # TODO: list of all releases w/ no params?
     # does the UI ever use this?  If not, it can stay 
-    # admin
+    # admin -- all releases of everything would ignore any kind
+    # of multi-tenancy
     @access.admin
     @return_xml
     def rest_GET(self, request):
         return self.get()
         
+    # no ability to redirect to a filtered RBAC queryset
+    # since releases are not themselves queryseted (nor
+    # should they be)
     def get(self):
         return self.mgr.getReleases()
             
-    # see TODO above
-    @access.admin
     @requires('release')
+    @rbac(can_create_release)
     @return_xml
     def rest_POST(self, request, release):
         return self.mgr.createRelease(release)
@@ -204,8 +230,7 @@ class ReleasesService(service.BaseService):
 
 class ReleaseService(service.BaseService):
 
-    # FIXME: @rbac(can_read_release)
-    @access.admin
+    @rbac(can_read_release)
     @return_xml
     def rest_GET(self, request, release_id):
         return self.get(release_id)
@@ -213,15 +238,13 @@ class ReleaseService(service.BaseService):
     def get(self, release_id):
         return self.mgr.getReleaseById(release_id)
 
-    # FIXME: @rbac(can_write_release)
-    @access.admin
+    @rbac(can_write_release)
     @requires('release')
     @return_xml
     def rest_PUT(self, request, release_id, release):
         return self.mgr.updateRelease(release_id, release)
 
-    # FIXME: @rbac(can_write_release)
-    @access.admin
+    @rbac(can_write_release)
     def rest_DELETE(self, request, release_id):
         release = projectsmodels.Release.objects.get(pk=release_id)
         release.delete()
