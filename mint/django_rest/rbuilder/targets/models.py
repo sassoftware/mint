@@ -105,12 +105,12 @@ class Target(modellib.XObjIdModel):
         actions.action.append(self._actionRefreshSystems())
         self.jobs = modellib.HrefFieldFromModel(self, "TargetJobs")
         self.target_user_credentials = modellib.HrefFieldFromModel(self,
-            "TargetUserCredentials")
+            viewName="TargetUserCredentials")
+        self.target_configuration = modellib.HrefFieldFromModel(self,
+            viewName="TargetConfiguration")
         self._setCredentialsValid()
         
     def serialize(self, request=None):
-        self.target_configuration = modellib.HrefField(
-            href='target_configuration')
         xobjModel = modellib.XObjIdModel.serialize(self, request)
         return xobjModel
         
