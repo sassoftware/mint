@@ -7,13 +7,14 @@
 # Services related to images -- expect heavy changes
 # as target service evolves
 
-from django.http import HttpResponse 
+from django.http import HttpResponse, HttpResponseRedirect 
 from mint.django_rest.deco import requires, return_xml, access, Flags
 from mint.django_rest.rbuilder import service
 from mint.django_rest.rbuilder.images import models
 from mint.django_rest.rbuilder.jobs import models as jobsmodels
 from mint.django_rest.rbuilder.projects import models as projectsmodels
-from mint.django_rest.rbuilder.rbac.rbacauth import rbac #, manual_rbac
+from mint.django_rest.rbuilder.querysets import models as querymodels
+from mint.django_rest.rbuilder.rbac.rbacauth import rbac, manual_rbac
 # from mint.django_rest.rbuilder.errors import PermissionDenied
 from mint.django_rest.rbuilder.rbac.manager.rbacmanager import \
    READMEMBERS, MODMEMBERS
@@ -82,15 +83,12 @@ class BaseImageService(service.BaseService):
 
 class ImagesService(BaseImageService):
 
-    # FIXME: will be @rbac(manual_rbac) after redirect
-    @access.authenticated
+    @rbac(manual_rbac)
     @return_xml
     def rest_GET(self, request):
-        # FIXME: redirect to queryset required, see inventory/systems
-        return self.get()
-    
-    def get(self):
-        return self.mgr.getImageBuilds()
+        qs = querymodels.QuerySet.objects.get(name='All Images')
+        url = '/api/v1/query_sets/%s/all%s' % (qs.pk, request.params)
+        return HttpResponseRedirect(url)
     
     @rbac(can_create_image)
     @requires('image')

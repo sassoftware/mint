@@ -103,6 +103,9 @@ class Image(modellib.XObjIdModel):
     def __unicode__(self):
         return self.name
 
+    # FIXME: images need descriptions fleshed out so filter descriptors
+    # and comments will be sensible
+
     image_id = models.AutoField(primary_key=True, db_column='buildid')
     project = modellib.DeferredForeignKey('projects.Project', db_column='projectid',
         related_name="images", view_name="ProjectImages")
@@ -118,7 +121,7 @@ class Image(modellib.XObjIdModel):
     image_type = modellib.SyntheticField()
 
     job_uuid = models.CharField(max_length=64, null=True)
-    name = models.CharField(max_length=255, null=True)
+    name = D(models.CharField(max_length=255, null=True), "Image name", "Image name")
     description = models.TextField(null=True)
     trove_name = models.CharField(max_length=128, null=True,
         db_column='trovename')
