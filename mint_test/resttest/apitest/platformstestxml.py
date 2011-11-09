@@ -609,7 +609,7 @@ platformImageDefXml = """\
     <displayName>VMware ESX 32-bit</displayName>
     <container id="http://localhost:8000/api/platforms/1/imagesTypeDefinitions/724a58650a441a12a0103e8961c4f4fd/containers/vmwareEsxImage">
       <name>vmwareEsxImage</name>
-      <displayName>VMware(R) ESX(R) Server Virtual Appliance</displayName>
+      <displayName>VMware(R) ESX/VCD Virtual Appliance</displayName>
     </container>
     <architecture id="http://localhost:8000/api/platforms/1/imagesTypeDefinitions/724a58650a441a12a0103e8961c4f4fd/architectures/x86">
       <name>x86</name>
@@ -626,7 +626,7 @@ platformImageDefXml = """\
     <displayName>VMware ESX 64-bit</displayName>
     <container id="http://localhost:8000/api/platforms/1/imagesTypeDefinitions/b2cbbc10ed9cc9f756cab7f7d8685708/containers/vmwareEsxImage">
       <name>vmwareEsxImage</name>
-      <displayName>VMware(R) ESX(R) Server Virtual Appliance</displayName>
+      <displayName>VMware(R) ESX/VCD Virtual Appliance</displayName>
     </container>
     <architecture id="http://localhost:8000/api/platforms/1/imagesTypeDefinitions/b2cbbc10ed9cc9f756cab7f7d8685708/architectures/x86_64">
       <name>x86_64</name>
