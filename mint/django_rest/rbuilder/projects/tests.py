@@ -562,6 +562,48 @@ class ProjectsTestCase(RbacEngine):
         self.assertEquals(release.project.id, 'http://testserver/api/v1/projects/foo')
         self.assertEquals(release.id, "http://testserver/api/v1/releases/1")
     
+    def testPublishRelease(self):
+        proj = self.addProject('foo', user='ExampleDeveloper')
+        release = models.Release(project=proj,
+            name='release42', version='releaseVersion42', description='description42')
+        user = usersmodels.User.objects.get(user_name='ExampleDeveloper')
+        release = self.mgr.createRelease(release, user, project=proj)
+        release.save()
+        image = imagesmodels.Image(
+            project=proj, release=release, _image_type=10, job_uuid='1',
+            name="image-42", trove_name='troveName42', trove_version='/cydonia.eng.rpath.com@rpath:cydonia-1-devel/1317221453.365:1-42-1',
+            trove_flavor='1#x86:i486:i586:i686|5#use:~!xen', image_count=1,
+            output_trove=None, description="image-42")
+        image.save()
+        response = self._put('projects/foo/releases/%s' % release.release_id,
+            username='admin', password='password', data=testsxml.release_by_project_do_publish_xml)
+        release = xobj.parse(response.content).release
+        self.assertEquals(response.status_code, 200)
+        self.assertEquals(release.published, u'True')
+        self.assertXMLEquals(response.content, testsxml.published_release_xml)
+        
+    def testUnpublishRelease(self):
+        proj = self.addProject('foo', user='ExampleDeveloper')
+        release = models.Release(project=proj,
+            name='release42', version='releaseVersion42', description='description42')
+        user = usersmodels.User.objects.get(user_name='ExampleDeveloper')
+        release = self.mgr.createRelease(release, user, project=proj)
+        release.save()
+        image = imagesmodels.Image(
+            project=proj, release=release, _image_type=10, job_uuid='1',
+            name="image-42", trove_name='troveName42', trove_version='/cydonia.eng.rpath.com@rpath:cydonia-1-devel/1317221453.365:1-42-1',
+            trove_flavor='1#x86:i486:i586:i686|5#use:~!xen', image_count=1,
+            output_trove=None, description="image-42")
+        image.save()
+        response = self._put('projects/foo/releases/%s' % release.release_id,
+            username='admin', password='password', data=testsxml.release_by_project_do_publish_xml)
+        self.assertEquals(response.status_code, 200)
+        response = self._put('projects/foo/releases/%s' % release.release_id,
+            username='admin', password='password', data=testsxml.release_by_project_unpublish_xml)
+        release = xobj.parse(response.content).release
+        self.assertEquals(release.published, u'False')
+    
+    
     def testAddReleaseByInferringProject(self):
         self.addProject('foo', user='admin')
         response = self._post('projects/foo/releases',

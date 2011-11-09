@@ -195,57 +195,6 @@ class ImageBuildFileService(service.BaseAuthService):
         models.BuildFile.objects.get(pk=file_id).delete()
         return HttpResponse(status=204)
 
-
-class ReleasesService(service.BaseService):
-
-    # TODO: list of all releases w/ no params?
-    # does the UI ever use this?  If not, it can stay 
-    # admin -- all releases of everything would ignore any kind
-    # of multi-tenancy
-    @access.admin
-    @return_xml
-    def rest_GET(self, request):
-        return self.get()
-        
-    # no ability to redirect to a filtered RBAC queryset
-    # since releases are not themselves queryseted (nor
-    # should they be)
-    def get(self):
-        return self.mgr.getReleases()
-            
-    @requires('release')
-    @rbac(can_create_release)
-    @return_xml
-    def rest_POST(self, request, release):
-        return self.mgr.createRelease(release)
-
-# FIXME: this is really in the wrong file
-# access to releases should be gated on the access
-# to the *project*, not the *release*
-
-class ReleaseService(service.BaseService):
-
-    @rbac(can_read_release)
-    @return_xml
-    def rest_GET(self, request, release_id):
-        return self.get(release_id)
-
-    def get(self, release_id):
-        return self.mgr.getReleaseById(release_id)
-
-    @rbac(can_write_release)
-    @requires('release')
-    @return_xml
-    def rest_PUT(self, request, release_id, release):
-        return self.mgr.updateRelease(release_id, release)
-
-    @rbac(can_write_release)
-    def rest_DELETE(self, request, release_id):
-        release = projectsmodels.Release.objects.get(pk=release_id)
-        release.delete()
-        return HttpResponse(status=204)
-
-
 # write manager for this!
 class ImageBuildFileUrlService(service.BaseService):
 
