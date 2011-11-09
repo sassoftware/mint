@@ -74,6 +74,7 @@ from mcp import mcp_error
 from rmake.lib import procutil
 from rmake3 import client as rmk_client
 from rpath_proddef import api1 as proddef
+from pcreator import errors as pcreator_errors
 
 
 import gettext
@@ -307,7 +308,7 @@ class MintServer(object):
                     self.callLog.log(self.remoteIp,
                         list(authToken) + [None, None], methodName, str_args)
 
-            except mint_error.MintError, e:
+            except (mint_error.MintError, pcreator_errors.PackageCreatorError), e:
                 e_type, e_value, e_tb = sys.exc_info()
                 self._handleError(e, authToken, methodName, args)
                 frozen = (e.__class__.__name__, e.freeze())
