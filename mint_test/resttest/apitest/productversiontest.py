@@ -140,7 +140,7 @@ class ProductVersionTest(restbase.BaseRestTest):
     <stage href="http://%(server)s:%(port)s/api/products/testproject/versions/1.0/stages/Release"/>
     <container id="http://%(server)s:%(port)s/api/products/testproject/versions/1.0/containers/vmwareEsxImage">
       <name>vmwareEsxImage</name>
-      <displayName>VMware(R) ESX(R) Server Virtual Appliance</displayName>
+      <displayName>VMware(R) ESX/VCD Virtual Appliance</displayName>
     </container>
     <architecture id="http://%(server)s:%(port)s/api/products/testproject/versions/1.0/architectures/x86">
       <name>x86</name>
@@ -162,7 +162,7 @@ class ProductVersionTest(restbase.BaseRestTest):
     <stage href="http://%(server)s:%(port)s/api/products/testproject/versions/1.0/stages/Release"/>
     <container id="http://%(server)s:%(port)s/api/products/testproject/versions/1.0/containers/vmwareEsxImage">
       <name>vmwareEsxImage</name>
-      <displayName>VMware(R) ESX(R) Server Virtual Appliance</displayName>
+      <displayName>VMware(R) ESX/VCD Virtual Appliance</displayName>
     </container>
     <architecture id="http://%(server)s:%(port)s/api/products/testproject/versions/1.0/architectures/x86_64">
       <name>x86_64</name>
@@ -244,7 +244,7 @@ class ProductVersionTest(restbase.BaseRestTest):
     <stage href="http://%(server)s:%(port)s/api/products/testproject/versions/1.0/stages/Release"/>
     <container id="http://%(server)s:%(port)s/api/products/testproject/versions/1.0/containers/vmwareEsxImage">
       <name>vmwareEsxImage</name>
-      <displayName>VMware(R) ESX(R) Server Virtual Appliance</displayName>
+      <displayName>VMware(R) ESX/VCD Virtual Appliance</displayName>
     </container>
     <architecture id="http://%(server)s:%(port)s/api/products/testproject/versions/1.0/architectures/x86">
       <name>x86</name>
@@ -266,7 +266,7 @@ class ProductVersionTest(restbase.BaseRestTest):
     <stage href="http://%(server)s:%(port)s/api/products/testproject/versions/1.0/stages/Release"/>
     <container id="http://%(server)s:%(port)s/api/products/testproject/versions/1.0/containers/vmwareEsxImage">
       <name>vmwareEsxImage</name>
-      <displayName>VMware(R) ESX(R) Server Virtual Appliance</displayName>
+      <displayName>VMware(R) ESX/VCD Virtual Appliance</displayName>
     </container>
     <architecture id="http://%(server)s:%(port)s/api/products/testproject/versions/1.0/architectures/x86_64">
       <name>x86_64</name>
@@ -540,7 +540,7 @@ class ProductVersionTest(restbase.BaseRestTest):
     <displayName>VMware</displayName>
     <container id="http://%(server)s:%(port)s/api/products/testproject/versions/1.0/containers/vmwareImage">
       <name>vmwareImage</name>
-      <displayName>VMware(R) Virtual Appliance</displayName>
+      <displayName>VMware(R) Workstation/Fusion Virtual Appliance</displayName>
     </container>
     <architecture id="http://%(server)s:%(port)s/api/products/testproject/versions/1.0/architectures/x86">
       <name>x86</name>
@@ -558,7 +558,7 @@ class ProductVersionTest(restbase.BaseRestTest):
     <displayName>VMware</displayName>
     <container id="http://%(server)s:%(port)s/api/products/testproject/versions/1.0/containers/vmwareEsxImage">
       <name>vmwareEsxImage</name>
-      <displayName>VMware(R) ESX(R) Server Virtual Appliance</displayName>
+      <displayName>VMware(R) ESX/VCD Virtual Appliance</displayName>
     </container>
     <architecture id="http://%(server)s:%(port)s/api/products/testproject/versions/1.0/architectures/x86">
       <name>x86</name>
@@ -576,7 +576,7 @@ class ProductVersionTest(restbase.BaseRestTest):
     <displayName>VMware</displayName>
     <container id="http://%(server)s:%(port)s/api/products/testproject/versions/1.0/containers/vmwareImage">
       <name>vmwareImage</name>
-      <displayName>VMware(R) Virtual Appliance</displayName>
+      <displayName>VMware(R) Workstation/Fusion Virtual Appliance</displayName>
     </container>
     <architecture id="http://%(server)s:%(port)s/api/products/testproject/versions/1.0/architectures/x86_64">
       <name>x86_64</name>
@@ -594,7 +594,7 @@ class ProductVersionTest(restbase.BaseRestTest):
     <displayName>VMware</displayName>
     <container id="http://%(server)s:%(port)s/api/products/testproject/versions/1.0/containers/vmwareEsxImage">
       <name>vmwareEsxImage</name>
-      <displayName>VMware(R) ESX(R) Server Virtual Appliance</displayName>
+      <displayName>VMware(R) ESX/VCD Virtual Appliance</displayName>
     </container>
     <architecture id="http://%(server)s:%(port)s/api/products/testproject/versions/1.0/architectures/x86_64">
       <name>x86_64</name>
