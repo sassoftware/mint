@@ -8,8 +8,6 @@
 from django.db.models import Q
 from django.db.models.query import EmptyQuerySet
 from django.db import connection, transaction
-import fcntl
-import os
 
 from mint.django_rest import timeutils
 from mint.django_rest.rbuilder import modellib
@@ -317,8 +315,9 @@ class QuerySetManager(basemanager.BaseManager):
             # so a request to retag isn't done in parallel, so this is somewhat evil.  Would love
             # to hand tune the SQL but it's pretty ingrained into querysets.
 
-            fd = open("/tmp/rbuilder-%s.taglock" % os.getuid(), "w")
-            fcntl.flock(fd.fileno(), fcntl.LOCK_EX)
+            # this should not be necc. if our transactions are marked correctly
+            # fd = open("/tmp/rbuilder-%s.taglock" % os.getuid(), "w")
+            # fcntl.flock(fd.fileno(), fcntl.LOCK_EX)
 
             if len(resources) == 0:
                 return
@@ -341,16 +340,19 @@ class QuerySetManager(basemanager.BaseManager):
                 insertParams = [(r,) for r in resources]
 
 
+
             query = "INSERT INTO %s" % tagTable 
             query = query + " (%s, query_set_id, inclusion_method_id)" % idColumn
             query = query + " VALUES (%s, " + " %s, %s)" % (queryset.pk, inclusionMethod.pk)
+    
             cursor.executemany(query, insertParams) 
         
+            transaction.set_dirty()
             self.newTransaction()
 
         finally:
-            fcntl.flock(fd.fileno(), fcntl.LOCK_UN)
-
+            #fcntl.flock(fd.fileno(), fcntl.LOCK_UN)
+            pass
 
         
 
