@@ -20,6 +20,7 @@ from mint import userlevels
 from mint.django_rest.rbuilder.modellib import Flags
 import time
 
+
 def _rbac_release_access_check(view, request, release_id, action, *args, **kwargs):
     release = view.mgr.getRelease(release_id)
     project = release.project 
@@ -38,27 +39,23 @@ def can_write_release(view, request, release_id, *args, **kwargs):
         MODMEMBERS, *args, **kwargs
     )
 
-# not-working
-# def can_write_release_through_project(view, request, project_short_name, release):
-#     return can_write_release(view, request, release.release_id)
-
-def can_read_release_through_project(view, request, project_short_name, release_id, *args, **kwargs):
-    return can_read_release(view, request, release_id)
-
 def can_create_release(view, request, release, *args, **kwargs):
     user = request._authUser
     project = release.project
     return view.mgr.userHasRbacPermission(user, project, MODMEMBERS)
 
-def can_create_release_through_project(view, request, project_short_name, *args, **kwargs):
-    user = request._authUser
-    project = projectmodels.Project.objects.get(short_name=project_short_name)
-    return view.mgr.userHasRbacPermission(user, project, MODMEMBERS)
+# unneeded
+# 
+#def can_create_release_through_project(view, request, project_short_name, *args, **kwargs):
+#    user = request._authUser
+#    project = projectmodels.Project.objects.get(short_name=project_short_name)
+#    return view.mgr.userHasRbacPermission(user, project, MODMEMBERS)
 
 class ProjectCallbacks(object):
     """
     RBAC callbacks for Project(s)
     """
+
     @staticmethod
     def _checkPermissions(view, request, project_short_name, action, transitive=True):
         if request._is_admin:
@@ -115,6 +112,7 @@ class BranchCallbacks(object):
     """
     RBAC callbacks for Project Branches
     """
+
     @staticmethod
     def _checkPermissions(view, request, branch_or_label, action):
   
@@ -242,7 +240,7 @@ class AllProjectBranchesStagesService(service.BaseService):
     """
 
     # redirect, no rbac needed
-    @access.authenticated
+    @rbac(manual_rbac)
     @return_xml
     def rest_GET(self, request):
         qs = querymodels.QuerySet.objects.get(name='All Project Stages')
@@ -255,7 +253,7 @@ class AllProjectBranchesService(service.BaseService):
     # UI is not allowed to request All Project Branches
     # and should be fetching all PBS and all P, and then getting
     # the PB for any PBS acquired.
-
+    #
     # UI does not call this, correct?
     @access.admin
     @return_xml
@@ -343,6 +341,7 @@ class ProjectsService(service.BaseService):
         return HttpResponseRedirect(url)
 
     def get(self):
+        # possibly needed to appease modellib? 
         pass
 
     @rbac(ProjectCallbacks.can_create_project)
@@ -481,7 +480,7 @@ class ProjectReleasesService(service.BaseService):
         
 class ProjectReleaseService(service.BaseService):
 
-    @rbac(can_read_release_through_project)
+    @rbac(ProjectCallbacks.can_read_project)
     @return_xml
     def rest_GET(self, request, project_short_name, release_id):
         return self.get(project_short_name, release_id)
@@ -493,6 +492,10 @@ class ProjectReleaseService(service.BaseService):
     @return_xml
     @requires('release')
     def rest_PUT(self, request, project_short_name, release_id, release):
+
+        if str(release_id) != str(release.pk):
+            raise PermissionDenied(msg="release ID must match URL (%s,%s)" % (release_id, release.pk))
+
         user = request._authUser
         if release.published == u'True':
             self.mgr.publishRelease(release, user)
@@ -516,7 +519,6 @@ class ProjectReleaseService(service.BaseService):
         
 class ProjectReleaseImagesService(service.BaseService):
 
-    # FIXME: wrong rbac, need to get the rbac from images
     @rbac(ProjectCallbacks.can_read_project)
     @return_xml
     def rest_GET(self, request, project_short_name, release_id):
@@ -527,7 +529,6 @@ class ProjectReleaseImagesService(service.BaseService):
         Images.image = imagemodels.Image.objects.filter(release__release_id=release_id)
         return Images
     
-    # FIXME: wrong rbac, need to get the rbac from images
     @rbac(ProjectCallbacks.can_write_project)
     @requires('image')
     @return_xml
@@ -535,7 +536,7 @@ class ProjectReleaseImagesService(service.BaseService):
         return self.mgr.addImageToRelease(release_id, image)
         
 class ProjectReleaseImageService(service.BaseService):
-    # FIXME: wrong rbac, need to get the rbac from images
+
     @rbac(ProjectCallbacks.can_read_project)
     @return_xml
     def rest_GET(self, request, project_short_name, release_id, image_id):
@@ -544,14 +545,16 @@ class ProjectReleaseImageService(service.BaseService):
     def get(self, project_short_name, release_id, image_id):
         return self.mgr.getImageBuild(image_id)
 
-    # FIXME: wrong rbac beet to get the rbac from images
     @rbac(ProjectCallbacks.can_write_project)
     def rest_DELETE(self, request, project_short_name, release_id, image_id):
         imagemodels.Image.objects.get(pk=image_id).delete()
         return HttpResponse(status=204)
 
 class TopLevelReleasesService(service.BaseService):
-    # FIXME what rbac should this be
+
+    # the list of all releases should NOT be something the UI requests
+    # because there is no way to filter non-queryset paged collections.
+    # if we want to change this, we'd have to queryset releases
     @access.admin
     @return_xml
     def rest_GET(self, request):
@@ -572,6 +575,7 @@ class TopLevelReleasesService(service.BaseService):
         raise PermissionDenied()
 
 class TopLevelReleaseService(service.BaseService):
+
     @rbac(can_read_release)
     @return_xml
     def rest_GET(self, request, release_id):
@@ -585,6 +589,8 @@ class TopLevelReleaseService(service.BaseService):
     @requires('release')
     @return_xml
     def rest_PUT(self, request, release_id, release):
+        if str(release_id) != str(release.pk):
+            raise PermissionDenied(msg="release ID must match URL")
         updatingUser = request._authUser
         return self.mgr.updateRelease(release, updatingUser)
 
@@ -593,3 +599,5 @@ class TopLevelReleaseService(service.BaseService):
         release = projectmodels.Release.objects.get(pk=release_id)
         release.delete()
         return HttpResponse(status=204)
+
+
