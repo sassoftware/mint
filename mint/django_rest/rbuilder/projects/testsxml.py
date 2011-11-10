@@ -417,9 +417,10 @@ releases_by_project_get_xml = \
 <releases count="2" next_page="" num_pages="1" previous_page="" full_collection="http://testserver/api/v1/releases" end_index="1" limit="10" order_by="" per_page="10" filter_by="" id="http://testserver/api/v1/releases;start_index=0;limit=10" start_index="0">
   <release id="http://testserver/api/v1/releases/1">
     <release_id>1</release_id>
-    <name>release1</name>
     <description>description1</description>
+    <num_images>1</num_images>
     <time_created></time_created>
+    <name>release1</name>
     <project id="http://testserver/api/v1/projects/chater-foo">
       <domain_name>eng.rpath.com</domain_name>
       <short_name>chater-foo</short_name>
@@ -431,11 +432,13 @@ releases_by_project_get_xml = \
     <created_by></created_by>
     <version>releaseVersion1</version>
     <published>False</published>
-    <images>
+    <images id="http://testserver/api/v1/projects/chater-foo/releases/images">
       <image id="http://testserver/api/v1/images/2">
-        <actions/>
         <files/>
-        <trove_last_changed></trove_last_changed>
+        <actions/>
+        <project_branch id="http://testserver/api/v1/projects/chater-foo/project_branches/chater-foo.eng.rpath.com@rpath:chater-foo-trunk">
+          <name>trunk</name>
+        </project_branch>
         <updated_by></updated_by>
         <trailing_version>1-1-1</trailing_version>
         <num_image_files>0</num_image_files>
@@ -448,16 +451,15 @@ releases_by_project_get_xml = \
         <build_log id="http://testserver/api/v1/images/2/build_log"/>
         <trove_flavor>1#x86:i486:i586:i686|5#use:~!xen</trove_flavor>
         <created_by></created_by>
+        <base_image></base_image>
         <status_message></status_message>
         <trove_name>troveName1</trove_name>
         <status>-1</status>
         <stage_name>stage1</stage_name>
-        <project_branch id="http://testserver/api/v1/projects/chater-foo/project_branches/chater-foo.eng.rpath.com@rpath:chater-foo-trunk">
-          <name>trunk</name>
-        </project_branch>
+        <jobs id="http://testserver/api/v1/images/2/jobs"/>
         <description>image-1</description>
         <image_id>2</image_id>
-        <time_created></time_created>
+        <trove_last_changed></trove_last_changed>
         <time_updated></time_updated>
         <name>image-1</name>
         <trove_version>/cydonia.eng.rpath.com@rpath:cydonia-1-devel/1317221453.365:1-1-1</trove_version>
@@ -469,11 +471,10 @@ releases_by_project_get_xml = \
         </project>
         <output_trove></output_trove>
         <architecture>x86</architecture>
-        <base_image/>
+        <time_created></time_created>
         <release id="http://testserver/api/v1/releases/1"/>
         <image_count>1</image_count>
         <job_uuid>1</job_uuid>
-        <jobs id="http://testserver/api/v1/images/2/jobs"/>
       </image>
     </images>
     <time_mirrored></time_mirrored>
@@ -482,9 +483,10 @@ releases_by_project_get_xml = \
   </release>
   <release id="http://testserver/api/v1/releases/2">
     <release_id>2</release_id>
-    <name>release2</name>
     <description>description2</description>
+    <num_images>1</num_images>
     <time_created></time_created>
+    <name>release2</name>
     <project id="http://testserver/api/v1/projects/chater-foo">
       <domain_name>eng.rpath.com</domain_name>
       <short_name>chater-foo</short_name>
@@ -496,11 +498,13 @@ releases_by_project_get_xml = \
     <created_by></created_by>
     <version>releaseVersion2</version>
     <published>False</published>
-    <images>
+    <images id="http://testserver/api/v1/projects/chater-foo/releases/images">
       <image id="http://testserver/api/v1/images/3">
-        <actions/>
         <files/>
-        <trove_last_changed></trove_last_changed>
+        <actions/>
+        <project_branch id="http://testserver/api/v1/projects/chater-foo/project_branches/chater-foo.eng.rpath.com@rpath:chater-foo-trunk">
+          <name>trunk</name>
+        </project_branch>
         <updated_by></updated_by>
         <trailing_version>1-2-1</trailing_version>
         <num_image_files>0</num_image_files>
@@ -513,16 +517,15 @@ releases_by_project_get_xml = \
         <build_log id="http://testserver/api/v1/images/3/build_log"/>
         <trove_flavor>1#x86:i486:i586:i686|5#use:~!xen</trove_flavor>
         <created_by></created_by>
+        <base_image></base_image>
         <status_message></status_message>
         <trove_name>troveName2</trove_name>
         <status>-1</status>
         <stage_name>stage2</stage_name>
-        <project_branch id="http://testserver/api/v1/projects/chater-foo/project_branches/chater-foo.eng.rpath.com@rpath:chater-foo-trunk">
-          <name>trunk</name>
-        </project_branch>
+        <jobs id="http://testserver/api/v1/images/3/jobs"/>
         <description>image-2</description>
         <image_id>3</image_id>
-        <time_created></time_created>
+        <trove_last_changed></trove_last_changed>
         <time_updated></time_updated>
         <name>image-2</name>
         <trove_version>/cydonia.eng.rpath.com@rpath:cydonia-1-devel/1317221453.365:1-2-1</trove_version>
@@ -534,11 +537,10 @@ releases_by_project_get_xml = \
         </project>
         <output_trove></output_trove>
         <architecture>x86</architecture>
-        <base_image/>
+        <time_created></time_created>
         <release id="http://testserver/api/v1/releases/2"/>
         <image_count>1</image_count>
         <job_uuid>1</job_uuid>
-        <jobs id="http://testserver/api/v1/images/3/jobs"/>
       </image>
     </images>
     <time_mirrored></time_mirrored>
@@ -597,11 +599,13 @@ release_by_project_unpublish_xml = \
 
 published_release_xml = \
 """
+<?xml version='1.0' encoding='UTF-8'?>
 <release id="http://testserver/api/v1/releases/1">
   <release_id>1</release_id>
-  <name>release42</name>
   <description>description42</description>
-  <time_created>2011-11-09 19:57:33.670000+00:00</time_created>
+  <num_images>1</num_images>
+  <time_created>2011-11-10 18:37:03.780000+00:00</time_created>
+  <name>release42</name>
   <project id="http://testserver/api/v1/projects/foo">
     <domain_name>test.local2</domain_name>
     <short_name>foo</short_name>
@@ -612,14 +616,14 @@ published_release_xml = \
     <user_name>admin</user_name>
     <full_name>Administrator</full_name>
   </published_by>
-  <time_updated>2011-11-09 19:57:33.747871+00:00</time_updated>
+  <time_updated>2011-11-10 18:37:03.871964+00:00</time_updated>
   <created_by id="http://testserver/api/v1/users/2002">
     <user_name>ExampleDeveloper</user_name>
     <full_name>ExampleDeveloper</full_name>
   </created_by>
   <version>releaseVersion42</version>
   <published>True</published>
-  <images>
+  <images id="http://testserver/api/v1/projects/foo/releases/1/images">
     <image id="http://testserver/api/v1/images/2">
       <files/>
       <actions/>
@@ -662,8 +666,8 @@ published_release_xml = \
       <job_uuid>1</job_uuid>
     </image>
   </images>
-  <time_mirrored>2011-11-09 19:57:33.747815+00:00</time_mirrored>
-  <time_published>2011-11-09 19:57:33.747806+00:00</time_published>
+  <time_mirrored>2011-11-10 18:37:03.871925+00:00</time_mirrored>
+  <time_published>2011-11-10 18:37:03.871917+00:00</time_published>
   <updated_by id="http://testserver/api/v1/users/1">
     <user_name>admin</user_name>
     <full_name>Administrator</full_name>
@@ -757,9 +761,11 @@ image_by_release_post_result_xml = \
 """
 <?xml version='1.0' encoding='UTF-8'?>
 <image id="http://testserver/api/v1/images/4">
-  <actions/>
   <files/>
-  <trove_last_changed></trove_last_changed>
+  <actions/>
+  <project_branch id="http://testserver/api/v1/projects/chater-foo/project_branches/chater-foo.eng.rpath.com@rpath:chater-foo-trunk">
+    <name>trunk</name>
+  </project_branch>
   <updated_by></updated_by>
   <trailing_version>1-1-1</trailing_version>
   <num_image_files>0</num_image_files>
@@ -771,21 +777,20 @@ image_by_release_post_result_xml = \
   </image_type>
   <build_log id="http://testserver/api/v1/images/4/build_log"/>
   <trove_flavor>1#x86:i486:i586:i686|5#use:~!xen</trove_flavor>
-  <created_by id="http://testserver/api/v1/users/2002"/>
+  <created_by></created_by>
+  <base_image></base_image>
   <status_message></status_message>
   <trove_name>troveName1</trove_name>
   <status>-1</status>
   <stage_name>image by release</stage_name>
-  <project_branch id="http://testserver/api/v1/projects/chater-foo/project_branches/chater-foo.eng.rpath.com@rpath:chater-foo-trunk">
-    <name>trunk</name>
-  </project_branch>
+  <jobs id="http://testserver/api/v1/images/4/jobs"/>
   <description>image-1</description>
   <image_id>4</image_id>
-  <time_created>2011-10-13 13:48:41.901060+00:00</time_created>
-  <time_updated>2011-10-13 13:48:41.901060+00:00</time_updated>
+  <trove_last_changed></trove_last_changed>
+  <time_updated></time_updated>
   <name>image-2000</name>
   <trove_version>/cydonia.eng.rpath.com@rpath:cydonia-1-devel/1317221453.365:1-1-1</trove_version>
-  <released>False</released>
+  <released>True</released>
   <project id="http://testserver/api/v1/projects/chater-foo">
     <domain_name>eng.rpath.com</domain_name>
     <short_name>chater-foo</short_name>
@@ -793,10 +798,9 @@ image_by_release_post_result_xml = \
   </project>
   <output_trove></output_trove>
   <architecture>x86</architecture>
-  <base_image/>
-  <release></release>
-  <image_count>0</image_count>
+  <time_created></time_created>
+  <release id="http://testserver/api/v1/releases/1"/>
+  <image_count>1</image_count>
   <job_uuid>1</job_uuid>
-  <jobs id="http://testserver/api/v1/images/4/jobs"/>
 </image>
 """.strip()
