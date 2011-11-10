@@ -63,7 +63,7 @@ class ImagesManager(basemanager.BaseManager):
                 image.project.repository_hostname, troveLabel)
             pbs = self.mgr.getStageByProjectBranchAndStageName(pbId, stage)
             if pbs:
-                self.project_branch_stage_id = pbs.stage_id
+                image.project_branch_stage_id = pbs.stage_id
 
         if image.trove_version is None:
             image.trove_version = str(versions.VersionFromString(

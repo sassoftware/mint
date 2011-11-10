@@ -371,7 +371,7 @@ class ProjectManager(basemanager.BaseManager):
             projectBranchId = projectBranch.branch_id
         else:
             projectBranchId = projectBranch
-        stages = models.Stage.objects.filter(project_branch_id=projectBranchId,
+        stages = models.Stage.objects.filter(project_branch__branch_id=projectBranchId,
             name=stageName)
         if stages:
             return stages[0]

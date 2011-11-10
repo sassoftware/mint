@@ -571,16 +571,6 @@ release_by_project_no_project_post_xml = \
 </release>
 """.strip()
 
-release_by_project_no_project_post_xml = \
-"""
-<release>
-  <name>release2002</name>
-  <description>description2002</description>
-  <should_mirror>0</should_mirror>
-  <version>releaseVersion2002</version>
-</release>
-""".strip()
-
 release_by_project_do_publish_xml = \
 """
 <release>
