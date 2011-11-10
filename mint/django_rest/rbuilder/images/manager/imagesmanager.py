@@ -88,6 +88,7 @@ class ImagesManager(basemanager.BaseManager):
             image.image_data.add(models.ImageData(name=bdName, value=bdValue,
                 data_type=bdType))
 
+        self.mgr.addToMyQuerySet(image, for_user)
         self.mgr.retagQuerySetsByType('image', for_user)
         return image
 

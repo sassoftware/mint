@@ -97,6 +97,7 @@ class Image(modellib.XObjIdModel):
 
     view_name ='Image'
 
+    _xobj = xobj.XObjMetadata(tag='image')
     _xobj_explicit_accessors = set(['files'])
     _queryset_resource_type = 'image'
 
