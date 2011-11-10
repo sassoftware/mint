@@ -134,7 +134,7 @@ class UsersTestCase(RbacEngine):
         sets = querymodels.QuerySet.objects.filter(
             personal_for__user_name = user.user_name
         )
-        self.failUnlessEqual(len(sets), 3)
+        self.failUnlessEqual(len(sets), 4)
         for qs in sets:
             grants = rbacmodels.RbacPermission.objects.filter(
                 queryset = qs

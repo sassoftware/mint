@@ -578,6 +578,8 @@ class RbacManager(basemanager.BaseManager):
             user=user, 
             role=role
         )
+        if created:
+            self.mgr.retagQuerySetsByType('role', byUser)
         return role
 
     @exposed
