@@ -491,6 +491,10 @@ class ProjectManager(basemanager.BaseManager):
         return branches
 
     @exposed
+    def getRelease(self, release_id):
+        return models.Release.objects.get(pk=release_id)
+        
+    @exposed
     def updateProjectBranchStage(self, project_short_name, project_branch_label, stage_name, stage):
         raise exceptions.NotImplementedError()
 

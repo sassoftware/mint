@@ -21,7 +21,7 @@ from mint.django_rest.rbuilder.modellib import Flags
 import time
 
 def _rbac_release_access_check(view, request, release_id, action, *args, **kwargs):
-    release = view.mgr.getReleaseById(release_id)
+    release = view.mgr.getRelease(release_id)
     project = release.project 
     user = request._authUser
     return view.mgr.userHasRbacPermission(user, project, action)
@@ -44,11 +44,15 @@ def can_write_release_through_project(view, request, short_name, release):
 def can_read_release_through_project(view, request, short_name, release_id, *args, **kwargs):
     return can_read_release(view, request, release_id)
 
-def can_create_release(view, request, *args, **kwargs):
+def can_create_release(view, request, release, *args, **kwargs):
     user = request._authUser
-    project = kwargs['release'].project
+    project = release.project
     return view.mgr.userHasRbacPermission(user, project, MODMEMBERS)
 
+def can_create_release_through_project(view, request, project_short_name, *args, **kwargs):
+    user = request._authUser
+    project = projectmodels.Project.objects.get(short_name=project_short_name)
+    return view.mgr.userHasRbacPermission(user, project, MODMEMBERS)
 
 class ProjectCallbacks(object):
     """
@@ -484,7 +488,7 @@ class ProjectReleaseService(service.BaseService):
     def get(self, project_short_name, release_id):
         return projectmodels.Release.objects.get(release_id=release_id)
     
-    @rbac(can_create_release)
+    @rbac(can_create_release_through_project)
     @return_xml
     @requires('release')
     def rest_PUT(self, request, project_short_name, release_id, release):
@@ -557,12 +561,14 @@ class TopLevelReleasesService(service.BaseService):
         Releases.release = projectmodels.Release.objects.all()
         return Releases
         
-    @rbac(can_create_release)
+    @rbac(manual_rbac)
     @requires('release')
     @return_xml
     def rest_POST(self, request, release):
-        createdBy = request._authUser
-        return self.mgr.createRelease(release, createdBy)
+        if can_create_release(self, request, release):
+            createdBy = request._authUser
+            return self.mgr.createRelease(release, createdBy)
+        raise PermissionDenied()
 
 class TopLevelReleaseService(service.BaseService):
     @rbac(can_read_release)
