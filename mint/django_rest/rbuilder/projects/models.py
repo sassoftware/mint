@@ -493,7 +493,7 @@ class Release(modellib.XObjIdModel):
         xobjModel = modellib.XObjIdModel.serialize(self, request)
         if request is not None:
             xobjModel.images._xobj = xobj.XObjMetadata(attributes={'id':str})
-            imagesId = 'http://' + request.get_host() + request.path + '%s/images' % self.release_id
+            imagesId = 'http://' + request.get_host() + request.get_full_path() + 'images'
             xobjModel.images.id = imagesId
         return xobjModel
 

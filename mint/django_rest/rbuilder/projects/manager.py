@@ -24,7 +24,7 @@ from mint.django_rest.rbuilder.platforms import models as platform_models
 from mint.django_rest.rbuilder.projects import models
 from mint.django_rest.rbuilder.images import models as imagesmodels
 from mint.django_rest.rbuilder.projects import models as projectsmodels
-from django.db import connection
+from mint.django_rest.rbuilder.users import models as usermodels
 
 from conary import conarycfg
 from conary import conaryclient
@@ -499,10 +499,8 @@ class ProjectManager(basemanager.BaseManager):
 
     @exposed
     def isReleasePublished(self, release_id):
-        cu = connection.cursor()
-        published = cu.execute('''SELECT timePublished FROM PublishedReleases 
-                                   WHERE pubReleaseId=?''', str(release_id)).next()
-        if len(published) == 1 and published[0] is None:
+        release = models.Release.objects.get(pk=release_id)
+        if not release.time_published:
             return False
         return True
 
@@ -512,17 +510,15 @@ class ProjectManager(basemanager.BaseManager):
         shouldMirror = release.should_mirror
         userId = publishedBy.user_id
             
-        if not self._getBuildCount(releaseId):
+        if int(release.num_images) == 0:
             raise mint_error.PublishedReleaseEmpty
   
         if self.isReleasePublished(releaseId):
             raise mint_error.PublishedReleasePublished
 
-        cu = connection.cursor()
-        cu.execute('''UPDATE PublishedReleases 
-                      SET timePublished=?, publishedBy=?, 
-                      shouldMirror=? WHERE pubReleaseId=?''', 
-                      [time.time(), userId, int(shouldMirror), releaseId])
+        release.time_published = time.time()
+        release.published_by = usermodels.User.objects.get(pk=userId)
+        release.should_mirror = shouldMirror
 
     @exposed
     def unpublishRelease(self, release):
@@ -530,11 +526,9 @@ class ProjectManager(basemanager.BaseManager):
         if not self.isReleasePublished(releaseId):
             raise mint_error.PublishedReleaseNotPublished
 
-        cu = connection.cursor()
-        cu.execute('''UPDATE PublishedReleases 
-                      SET timePublished=?, publishedBy=?, 
-                      shouldMirror=? WHERE pubReleaseId=?''', 
-                      [None, None, 0, releaseId])
+        release.time_published = None
+        release.published_by = None
+        release.should_mirror = 0
         
     @exposed
     def createRelease(self, release, creatingUser, project=None):
@@ -588,5 +582,5 @@ class ProjectManager(basemanager.BaseManager):
         cu = connection.cursor()
         buildCount, = cu.execute(
                     'SELECT COUNT(*) from Builds WHERE pubReleaseId=?',
-                    [releaseId]).next()
+                    [int(releaseId)]).next()
         return buildCount
