@@ -39,6 +39,7 @@ target_GET = \
   <credentials_valid>false</credentials_valid>
   <description>Target Description openstack</description>
   <jobs id="http://testserver/api/v1/targets/4/jobs"/>
+  <is_configured>true</is_configured>
   <name>Target Name openstack</name>
   <target_id>4</target_id>
   <target_type id="http://testserver/api/v1/target_types/3">

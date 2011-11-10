@@ -14,7 +14,7 @@ from mint.django_rest.rbuilder.images import models
 from mint.django_rest.rbuilder.jobs import models as jobsmodels
 from mint.django_rest.rbuilder.querysets import models as querymodels
 from mint.django_rest.rbuilder.rbac.rbacauth import rbac, manual_rbac
-# from mint.django_rest.rbuilder.errors import PermissionDenied
+from mint.django_rest.rbuilder.errors import PermissionDenied
 from mint.django_rest.rbuilder.rbac.manager.rbacmanager import \
    READMEMBERS, MODMEMBERS
 
@@ -86,6 +86,8 @@ class ImageService(BaseImageService):
     @requires('image')
     @return_xml
     def rest_PUT(self, request, image_id, image):
+        if str(image_id) != str(image.pk):
+            raise PermissionDenied(msg="id does not match URL")
         return self.mgr.updateImageBuild(image_id, image)
 
     @rbac(can_write_image)
@@ -159,6 +161,8 @@ class ImageBuildFileService(service.BaseAuthService):
     @requires('file')
     @return_xml
     def rest_PUT(self, request, image_id, file_id, file):
+        if str(file_id) != str(file.pk):
+            raise PermissionDenied(msg="id does not match URL")
         if request._withAuthToken:
             self.mgr.addTargetImagesForFile(file)
         file.save()
