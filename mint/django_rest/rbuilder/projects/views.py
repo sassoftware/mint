@@ -38,10 +38,11 @@ def can_write_release(view, request, release_id, *args, **kwargs):
         MODMEMBERS, *args, **kwargs
     )
 
-def can_write_release_through_project(view, request, short_name, release):
-    return can_write_release(view, request, release.release_id)
+# not-working
+# def can_write_release_through_project(view, request, project_short_name, release):
+#     return can_write_release(view, request, release.release_id)
 
-def can_read_release_through_project(view, request, short_name, release_id, *args, **kwargs):
+def can_read_release_through_project(view, request, project_short_name, release_id, *args, **kwargs):
     return can_read_release(view, request, release_id)
 
 def can_create_release(view, request, release, *args, **kwargs):
@@ -470,7 +471,7 @@ class ProjectReleasesService(service.BaseService):
                 project__short_name=project_short_name)
         return Releases
 
-    @rbac(can_write_release_through_project)
+    @rbac(ProjectCallbacks.can_write_project)
     @requires('release', flags=Flags(save=False))
     @return_xml
     def rest_POST(self, request, project_short_name, release):
@@ -488,7 +489,7 @@ class ProjectReleaseService(service.BaseService):
     def get(self, project_short_name, release_id):
         return projectmodels.Release.objects.get(release_id=release_id)
     
-    @rbac(can_create_release_through_project)
+    @rbac(ProjectCallbacks.can_write_project)
     @return_xml
     @requires('release')
     def rest_PUT(self, request, project_short_name, release_id, release):
