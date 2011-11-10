@@ -339,15 +339,15 @@ class QuerySetManager(basemanager.BaseManager):
                 resources = resources.values_list('pk', flat=True)
                 insertParams = [(r,) for r in resources]
 
-
-
             query = "INSERT INTO %s" % tagTable 
             query = query + " (%s, query_set_id, inclusion_method_id)" % idColumn
             query = query + " VALUES (%s, " + " %s, %s)" % (queryset.pk, inclusionMethod.pk)
     
             cursor.executemany(query, insertParams) 
         
-            transaction.set_dirty()
+            if transaction.is_managed():
+                # inside login method (only), transactions are disabled
+                transaction.set_dirty()
             self.newTransaction()
 
         finally:
