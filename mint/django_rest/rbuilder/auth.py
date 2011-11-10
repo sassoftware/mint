@@ -4,7 +4,6 @@
 from conary.repository.netrepos.netauth import ValidPasswordToken
 from mint.django_rest.rbuilder.models import Sessions
 from mint.django_rest.rbuilder.users.models import User
-from mint.django_rest.rbuilder.users.manager import UsersManager
 from mint.django_rest.rbuilder.manager import rbuildermanager
 from mint.lib import auth_client
 from hashlib import md5
@@ -91,7 +90,7 @@ class rBuilderBackend(object):
         elif mintConfig:
             client = auth_client.getClient(mintConfig.authSocket)
             if client.checkPassword(username, password):
-	        self.update_login_time(user)
+                self.update_login_time(user)
                 return self.updateUserOnLogin(user)
         return None
 
