@@ -66,7 +66,7 @@ class Project(modellib.XObjIdModel):
 
     _xobj = xobj.XObjMetadata(tag='project')
     _xobj_hidden_accessors = set(['membership', 'package_set', 
-        'platform_set', 'productplatform_set', 'project_tags', 'abstractplatform_set', 'labels'])
+        'platform_set', 'productplatform_set', 'tags', 'project_tags', 'abstractplatform_set', 'labels'])
     _queryset_resource_type = 'project'
     view_name = "Project"
     url_key = ["short_name"]
