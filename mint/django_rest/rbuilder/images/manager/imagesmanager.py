@@ -10,12 +10,10 @@ import os
 from django.core import urlresolvers
 from mint.django_rest.rbuilder.jobs import models as jobsmodels
 from mint.django_rest.rbuilder.images import models
-from mint.django_rest.rbuilder.projects import models as projectsmodels
 from mint.django_rest.rbuilder.targets import models as tgtmodels
 from mint.django_rest.rbuilder.manager import basemanager
 from conary.lib import sha1helper
 from mint.lib import data as datatypes
-from mint import buildtypes
 from conary import trovetup
 from conary import versions
 from conary.deps import deps

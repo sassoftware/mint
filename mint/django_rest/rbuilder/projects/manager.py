@@ -15,7 +15,7 @@ from mint import mint_error
 from mint import userlevels
 from mint import projects
 
-from mint.django_rest.rbuilder import auth
+
 from mint.django_rest.rbuilder import errors
 from mint.django_rest.rbuilder.manager import basemanager
 from mint.django_rest.rbuilder.repos import models as repomodels
@@ -349,7 +349,6 @@ class ProjectManager(basemanager.BaseManager):
         return members
 
     def getProductVersionDefinitionByProjectVersion(self, projectVersion):
-        project = projectVersion.project
         pd = proddef.ProductDefinition()
         pd.setBaseLabel(projectVersion.label)
         cclient = self.mgr.getAdminClient(write=False)

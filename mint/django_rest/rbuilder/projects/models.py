@@ -4,7 +4,6 @@
 
 import re
 import sys
-import time
 from django.db import models
 from mint import projects as mintprojects
 from mint import helperfuncs, userlevels
@@ -477,12 +476,26 @@ class Release(modellib.XObjIdModel):
     time_mirrored = modellib.DecimalTimestampField(
         null=True, db_column='timemirrored')
     published = modellib.SyntheticField()
+    num_images = modellib.SyntheticField()
     
     def computeSyntheticFields(self, sender, **kwargs):
         if self.published_by is not None:
             self.published = True
         else:
             self.published = False
+        self.num_images = self.images.count()
+
+
+    def serialize(self, request=None):
+        """
+        necessary to make an id show up on the inlined images collection
+        """
+        xobjModel = modellib.XObjIdModel.serialize(self, request)
+        if request is not None:
+            xobjModel.images._xobj = xobj.XObjMetadata(attributes={'id':str})
+            imagesId = 'http://' + request.get_host() + request.path + 'images'
+            xobjModel.images.id = imagesId
+        return xobjModel
 
 class InboundMirror(modellib.XObjModel):
     _xobj = xobj.XObjMetadata(tag="inbound_mirror")
