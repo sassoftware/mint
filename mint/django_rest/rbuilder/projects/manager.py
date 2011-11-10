@@ -507,7 +507,6 @@ class ProjectManager(basemanager.BaseManager):
     @exposed
     def publishRelease(self, release, publishedBy):
         releaseId = release.release_id
-        shouldMirror = release.should_mirror
         userId = publishedBy.user_id
             
         if int(release.num_images) == 0:
@@ -518,7 +517,6 @@ class ProjectManager(basemanager.BaseManager):
 
         release.time_published = time.time()
         release.published_by = usermodels.User.objects.get(pk=userId)
-        release.should_mirror = shouldMirror
 
     @exposed
     def unpublishRelease(self, release):
@@ -547,6 +545,8 @@ class ProjectManager(basemanager.BaseManager):
             self.unpublishRelease(release.release_id)
         release.time_updated = time.time()
         release.updated_by = updatedBy
+        if int(release.should_mirror) != 0:
+            release.time_mirrored = time.time()
         release.save()
         return release
         
