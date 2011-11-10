@@ -190,8 +190,6 @@ class DocMetadata(object):
     
     @property
     def syntheticFields(self):
-        if self.model.__name__ == 'User':
-            import pdb; pdb.set_trace()
         return {}
     
     @property

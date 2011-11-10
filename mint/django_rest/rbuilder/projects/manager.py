@@ -24,7 +24,6 @@ from mint.django_rest.rbuilder.platforms import models as platform_models
 from mint.django_rest.rbuilder.projects import models
 from mint.django_rest.rbuilder.images import models as imagesmodels
 from mint.django_rest.rbuilder.projects import models as projectsmodels
-from mint.django_rest.rbuilder import modellib
 from django.db import connection
 
 from conary import conarycfg
@@ -546,7 +545,7 @@ class ProjectManager(basemanager.BaseManager):
     @exposed
     def updateRelease(self, release, updatedBy):
         if release.published is u'True':
-            self.publishRelease(release, publishedBy=publishedBy)
+            self.publishRelease(release, publishedBy=updatedBy)
         elif release.published is u'False':
             self.unpublishRelease(release.release_id)
         release.time_updated = time.time()
