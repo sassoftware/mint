@@ -10,12 +10,10 @@ import os
 from django.core import urlresolvers
 from mint.django_rest.rbuilder.jobs import models as jobsmodels
 from mint.django_rest.rbuilder.images import models
-from mint.django_rest.rbuilder.projects import models as projectsmodels
 from mint.django_rest.rbuilder.targets import models as tgtmodels
 from mint.django_rest.rbuilder.manager import basemanager
 from conary.lib import sha1helper
 from mint.lib import data as datatypes
-from mint import buildtypes
 from conary import trovetup
 from conary import versions
 from conary.deps import deps
@@ -65,7 +63,7 @@ class ImagesManager(basemanager.BaseManager):
                 image.project.repository_hostname, troveLabel)
             pbs = self.mgr.getStageByProjectBranchAndStageName(pbId, stage)
             if pbs:
-                self.project_branch_stage_id = pbs.stage_id
+                image.project_branch_stage_id = pbs.stage_id
 
         if image.trove_version is None:
             image.trove_version = str(versions.VersionFromString(

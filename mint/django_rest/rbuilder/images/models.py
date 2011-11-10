@@ -28,7 +28,7 @@ class Images(modellib.Collection):
         abstract = True
         
     list_fields = ['image']
-    _xobj = xobj.XObjMetadata(tag='images')
+    _xobj = xobj.XObjMetadata(tag='images', attributes={'id':str})
     
     actions = D(modellib.SyntheticField('jobs.Actions'),
         "actions available on the images")
@@ -115,8 +115,8 @@ class Image(modellib.XObjIdModel):
     project_branch_stage = modellib.XObjHidden(
         modellib.DeferredForeignKey('projects.Stage', db_column='stageid',
         related_name="images", view_name="ProjectBranchStageImages", null=True))
-    release = models.ForeignKey('projects.Release', null=True,
-        db_column='pubreleaseid', related_name="images")
+    release = modellib.ForeignKey('projects.Release', null=True,
+        db_column='pubreleaseid', related_name="images", view_name='ProjectReleaseImages')
     _image_type = modellib.XObjHidden(APIReadOnly(
         models.IntegerField(db_column="buildtype")))
     image_type = modellib.SyntheticField()
