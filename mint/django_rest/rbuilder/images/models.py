@@ -121,42 +121,42 @@ class Image(modellib.XObjIdModel):
     image_type = modellib.SyntheticField()
 
     job_uuid = models.CharField(max_length=64, null=True)
-    name = D(models.CharField(max_length=255, null=True), "Image name", "Image name")
-    description = models.TextField(null=True)
-    trove_name = models.CharField(max_length=128, null=True,
-        db_column='trovename')
-    trove_version = models.CharField(max_length=255, null=True,
-        db_column='troveversion')
-    trove_flavor = models.CharField(max_length=4096, null=True,
-        db_column='troveflavor')
-    trove_last_changed = modellib.DecimalTimestampField(null=True,
-            db_column='trovelastchanged')
-    output_trove = models.TextField(null=True)
-    time_created = modellib.DecimalTimestampField(db_column='timecreated')
-    created_by = modellib.ForeignKey('users.User',
-        db_column='createdby',null=True, related_name='created_images')
-    time_updated = modellib.DecimalTimestampField(
-        null=True, db_column='timeupdated')
-    updated_by = modellib.ForeignKey('users.User', db_column='updatedby',
-        related_name='updated_images', null=True)
-    image_count = models.IntegerField(null=True, default=0,
-        db_column="buildcount")
+    name = D(models.CharField(max_length=255, null=True), "Image name", short="Image name")
+    description = D(models.TextField(null=True), "Image description", short="Image description")
+    trove_name = D(models.CharField(max_length=128, null=True,
+        db_column='trovename'), "Image trove name", short="Image trove name")
+    trove_version = D(models.CharField(max_length=255, null=True,
+        db_column='troveversion'), "Image trove version", short="Image trove version")
+    trove_flavor = D(models.CharField(max_length=4096, null=True,
+        db_column='troveflavor'), "Image trove flavor", short="Image trove flavor")
+    trove_last_changed = D(modellib.DecimalTimestampField(null=True,
+            db_column='trovelastchanged'), "Image trove last changed", short="Image trove last changed")
+    output_trove = D(models.TextField(null=True), "Image output trove", short="Image output trove")
+    time_created = D(modellib.DecimalTimestampField(db_column='timecreated'), "Image time created", short="Image time created")
+    created_by = D(modellib.ForeignKey('users.User',
+        db_column='createdby',null=True, related_name='created_images'), "Image created by", short="Image created by")
+    time_updated = D(modellib.DecimalTimestampField(
+        null=True, db_column='timeupdated'), "Image time updated", short="Image time updated")
+    updated_by = D(modellib.ForeignKey('users.User', db_column='updatedby',
+        related_name='updated_images', null=True), "Image updated by", short="Image updated by")
+    image_count = D(models.IntegerField(null=True, default=0,
+        db_column="buildcount"), "Image count", short="Image count")
     project_branch = models.ForeignKey('projects.ProjectVersion', null=True,
         related_name="images",
         db_column='productversionid')
-    stage_name = models.CharField(max_length=255, db_column='stagename',
-        null=True, blank=True, default='')
-    status = models.IntegerField(null=True, default=-1)
-    status_message = models.TextField(null=True, blank=True, default='',
-        db_column="statusmessage")
-    base_image = modellib.DeferredForeignKey('Image', null=True,
-        related_name='layered_images', db_column='base_image')
+    stage_name = D(models.CharField(max_length=255, db_column='stagename',
+        null=True, blank=True, default=''), "Image stage name", short="Image stage name")
+    status = D(models.IntegerField(null=True, default=-1), "Image status", short="Image status")
+    status_message = D(models.TextField(null=True, blank=True, default='',
+        db_column="statusmessage"), "Image status message", short="Image status message")
+    base_image = D(modellib.DeferredForeignKey('Image', null=True,
+        related_name='layered_images', db_column='base_image'), "Image base image", short="Image base image")
 
-    metadata = modellib.SyntheticField()
-    architecture = modellib.SyntheticField()
+    metadata = D(modellib.SyntheticField(), "Image metadata", short="Image metadata")
+    architecture = D(modellib.SyntheticField(), "Image architecture", short="Image architecture")
     trailing_version = modellib.SyntheticField()
     released = modellib.SyntheticField()
-    num_image_files = modellib.SyntheticField()
+    num_image_files = D(modellib.SyntheticField(), "Image file count", short="Image file count")
     build_log = modellib.SyntheticField()
     actions = D(modellib.SyntheticField(jobmodels.Actions),
         "actions available on the system")
