@@ -28,6 +28,7 @@ from mint.rest import errors
 from mint.rest.api import models
 from mint.rest.db import manager
 from mint.rest.db import reposmgr
+from mint.rest.db import platformmgr
 from mint.templates import groupTemplate
 
 class ProductVersionCallback(object):
@@ -60,8 +61,9 @@ class ProductJobStore(rpath_job.JobStore):
 
 class ProductManager(manager.Manager):
     def __init__(self, cfg, db, auth, publisher=None):
-	manager.Manager.__init__(self, cfg, db, auth, publisher)
+        manager.Manager.__init__(self, cfg, db, auth, publisher)
         self.reposMgr = reposmgr.RepositoryManager(cfg, db, auth)
+        self.platformMgr = platformmgr.PlatformManager(cfg, db, auth)
         self.jobStore = ProductJobStore(
             os.path.join(self.cfg.dataPath, 'jobs'))
 
@@ -598,13 +600,13 @@ class ProductManager(manager.Manager):
         promoteJob.version = version
         promoteJob.stage = stageName
         promoteJob.group = str(trove.name)
-        
+
         client = self.reposMgr.getConaryClient()
         pd = self.getProductVersionDefinition(hostname, version)
 
-        rpath_job.BackgroundRunner(self._promoteGroup) (
-                client, pd, job, hostname, version, stageName, trove)        
- 
+        rpath_job.BackgroundRunner(self._promoteAndPublishPlatformDef) (
+                client, pd, job, hostname, version, stageName, trove)
+
         return promoteJob
 
     def getGroupPromoteJobStatus(self, hostname, version, stage, jobId):
@@ -767,11 +769,28 @@ class ProductManager(manager.Manager):
                                    allowMissing=allowMissing)
         return dict((specMap[x[0]], x[1]) for x in results.items())
 
-    def _promoteGroup(self, client, pd, job, hostname, version, stageName, trv):
-        callback = ProductVersionCallback(hostname, version, job) 
+    def _promoteAndPublishPlatformDef(self, client, pd, job, hostname, version, stageName, trv):
+        callback = ProductVersionCallback(hostname, version, job)
+
+        shouldPublish, targetLabels = self._promoteGroup(client, pd, job,
+                hostname, version, stageName, trv, callback)
+
+        # Republish platform definitions if this project is a platform and we
+        # are promoting to the release stage.
+        if shouldPublish and str(stageName) == 'Release':
+            self._updatePlatformDefinition(targetLabels, callback)
+
+        callback.done()
+
+    def _promoteGroup(self, client, pd, job, hostname, version, stageName, trv,
+        callback=None):
+
         nextStage = str(stageName)
         activeStage = None
         activeLabel = str(trv.label)
+
+        if callback is None:
+            callback = ProductVersionCallback(hostname, version, job)
 
         for stage in pd.getStages():
             if str(stage.name) == nextStage:
@@ -787,9 +806,14 @@ class ProductManager(manager.Manager):
 
         fromTo = pd.getPromoteMapsForStages(activeStage, nextStage)
 
-        promoteMap = dict((versions.Label(str(fromLabel)),
-                        versions.VersionFromString(str(toLabel)))
-                        for (fromLabel, toLabel) in fromTo.iteritems())
+        targetLabels = set()
+        promoteMap = {}
+        for (fromLabel, toLabel) in fromTo.iteritems():
+            source = versions.Label(str(fromLabel))
+            target = versions.VersionFromString(str(toLabel))
+            promoteMap[source] = target
+
+            targetLabels.add(target.label().asString())
 
         callback._message('Creating clone changeset')
         success, cs = client.createSiblingCloneChangeSet(promoteMap,
@@ -799,7 +823,6 @@ class ProductManager(manager.Manager):
             callback._message('Committing ChangeSet')
             client.getRepos().commitChangeSet(cs)
             callback._message('Committed')
-            callback.done()
         else:
 
             # Check to see if the trove that we are trying to promote is already
@@ -825,7 +848,35 @@ class ProductManager(manager.Manager):
 
             if error:
                 callback.error('Changeset was not cloned')
+                return False, None
 
             else:
                 callback._message('This version has already been promoted')
-                callback.done()
+
+        return True, targetLabels
+
+    def _updatePlatformDefinition(self, labels, callback):
+        self.db.db.reopen()
+        cu = self.db.db.cursor()
+
+        found = False
+        for label in labels:
+            cu.execute("SELECT platformId FROM Platforms WHERE label = ?",
+                (label, ))
+            row = cu.fetchone()
+            if row:
+                found = True
+                break
+
+        if not found:
+            return
+
+        callback._message('Publishing platform definition')
+
+        # Update the platform definition
+        pl = self.platformMgr._lookupFromRepository(label, True)
+
+        if pl is not None:
+            callback._message('Published')
+        else:
+            callback.error('Error publising platform definition')
