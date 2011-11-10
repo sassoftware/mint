@@ -54,32 +54,6 @@ def can_create_image(view, request, *args, **kwargs):
     '''can a user create new images?'''
     return view.mgr.userHasRbacCreatePermission(request._authUser, 'image')
 
-# Has been moved to projects app -- keep here until ready to push then
-# delete once sure removing here doesn't cause a problem
-#
-# def _rbac_release_access_check(view, request, release_id, action, *args, **kwargs):
-#     release = view.mgr.getReleaseById(release_id)
-#     project = release.project 
-#     user = request._authUser
-#     return view.mgr.userHasRbacPermission(user, project, action)
-# 
-# def can_read_release(view, request, release_id, *args, **kwargs):
-#     return _rbac_release_access_check(
-#         view, request, release_id, 
-#         READMEMBERS, *args, **kwargs
-#     )
-# 
-# def can_write_release(view, request, release_id, *args, **kwargs):
-#     return _rbac_release_access_check(
-#         view, request, release_id, 
-#         MODMEMBERS, *args, **kwargs
-#     )
-# 
-# def can_create_release(view, request, *args, **kwargs):
-#     user = request._authUser
-#     project = kwargs['release'].project
-#     return view.mgr.userHasRbacPermission(user, project, MODMEMBERS)
-
 class BaseImageService(service.BaseService):
     pass
 
