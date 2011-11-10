@@ -89,7 +89,10 @@ class Target(modellib.XObjIdModel):
     name = models.TextField(null=False)
     description = models.TextField(null=False)
     unique_together = (target_type, name)
-    credentials_valid = modellib.SyntheticField(models.BooleanField())
+    is_configured = D(modellib.SyntheticField(models.BooleanField()),
+        'True if the target is configured')
+    credentials_valid = D(modellib.SyntheticField(models.BooleanField()),
+        'True if the current user has credentials configured on the target')
     target_user_credentials = modellib.SyntheticField()
     target_configuration = modellib.SyntheticField()
 
@@ -114,7 +117,8 @@ class Target(modellib.XObjIdModel):
         self.target_configuration = modellib.HrefFieldFromModel(self,
             viewName="TargetConfiguration")
         self._setCredentialsValid()
-        
+        self.is_configured = (self.state != self.States.UNCONFIGURED)
+
     def serialize(self, request=None):
         xobjModel = modellib.XObjIdModel.serialize(self, request)
         return xobjModel
