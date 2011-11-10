@@ -112,6 +112,37 @@ class ImageJobsService(BaseImageService):
     def rest_POST(self, request, image_id, job):
         return self.mgr.addJob(job, imageId=image_id)
 
+class ImageSystemsService(service.BaseAuthService):
+    def _check_uuid_auth(self, request, kwargs):
+        request._withAuthToken = False
+        headerName = 'X-rBuilder-Job-Token'
+        jobToken = self.getHeaderValue(request, headerName)
+        if not jobToken:
+            return None
+        imageId = kwargs['image_id']
+        # Check for existance
+        jobs = jobsmodels.Job.objects.filter(
+            images__image__image_id=imageId, job_token=jobToken)
+        if not jobs:
+            return False
+        self._setMintAuth(jobs[0].created_by)
+        request._withAuthToken = True
+        return True
+
+    @return_xml
+    def rest_GET(self, request, image_id):
+        return self.get(image_id)
+
+    def get(self, imageId):
+        # XXX Not implemented yet
+        return self.mgr.getSystemsByImageId(imageId)
+
+    @access.auth_token
+    @requires("systems", flags=Flags(save=False))
+    @return_xml
+    def rest_POST(self, request, image_id, systems):
+        return self.mgr.addLaunchedSystems(systems, image_id)
+
 class ImageBuildFilesService(service.BaseService):
  
     @rbac(can_read_image)
@@ -128,7 +159,6 @@ class ImageBuildFilesService(service.BaseService):
     def rest_POST(self, request, image_id, file):
         file.save()
         return file
-
 
 class ImageBuildFileService(service.BaseAuthService):
 

@@ -10,6 +10,7 @@ XMLTestCase = test_utils.XMLTestCase
 
 from mint.lib import uuid
 from mint.django_rest.rbuilder.images import models
+from mint.django_rest.rbuilder.inventory import models as invmodels
 from mint.django_rest.rbuilder.jobs import models as jobsmodels
 from mint.django_rest.rbuilder.projects import models as projectsmodels
 from mint.django_rest.rbuilder.users import models as usermodels
@@ -503,3 +504,76 @@ class ImagesTestCase(RbacEngine):
                 'job-uuid-00-01',
                 'job-uuid-00-00',
             ])
+
+    def testAddLaunchedSystemForImage(self):
+        user = self.getUser('testuser')
+        self.mgr.user = user
+
+        # Needed by setTargetUserCredentials
+        class Auth(object):
+            def __init__(self, user):
+                self.userId = user.user_id
+                self.user = user
+
+        self.mgr._auth = Auth(user)
+
+        img = models.Image.objects.get(name='image-0')
+        imgFile = img.files.all()[0]
+        targetImageId = str(uuid.uuid4())
+
+        # We need a job for authentication
+        jobUuid = str(uuid.uuid4())
+        jobToken = str(uuid.uuid4())
+        job = self._newJob(jobUuid, jobToken=jobToken,
+            jobType=jobsmodels.EventType.TARGET_LAUNCH_SYSTEM,
+            createdBy=user)
+        models.JobImage.objects.create(job=job, image=img)
+        tgtType = self.mgr.getTargetTypeByName('vmware')
+
+        tgt = self.mgr.createTarget(tgtType, 'tgtname',
+            dict(zone='Local rBuilder'))
+        self.mgr.setTargetUserCredentials(tgt, dict(username='foo', password='bar'))
+
+        xmlTemplate = """\
+<systems>
+  <system>
+    <target_system_id>long-id-1</target_system_id>
+    <target_system_name>target-system-name-1</target_system_name>
+    <target_system_description>target-system-description-1</target_system_description>
+    <ssl_client_certificate>ssl-client-certificate-1</ssl_client_certificate>
+    <ssl_client_key>ssl-client-key-1</ssl_client_key>
+    <targetType>vmware</targetType>
+    <targetName>tgtname</targetName>
+    <dnsName>1.2.3.4</dnsName>
+  </system>
+  <system>
+    <target_system_id>long-id-2</target_system_id>
+    <target_system_name>target-system-name-2</target_system_name>
+    <target_system_description>target-system-description-2</target_system_description>
+    <ssl_client_certificate>ssl-client-certificate-2</ssl_client_certificate>
+    <ssl_client_key>ssl-client-key-2</ssl_client_key>
+    <targetType>vmware</targetType>
+    <targetName>tgtname</targetName>
+    <dnsName>1.2.3.5</dnsName>
+  </system>
+</systems>
+"""
+        xml = xmlTemplate % dict(targetId=tgt.target_id,
+            targetImageId=targetImageId)
+        url = 'images/%s/systems' % (img.image_id, )
+        xml = xml
+        response = self._post(url, data=xml, jobToken=jobToken)
+        self.assertEquals(response.status_code, 200)
+        doc = xobj.parse(response.content)
+        systems = doc.systems.system
+        self.failUnlessEqual(
+            [ x.target_system_id for x in systems ],
+            ['long-id-1', 'long-id-2'])
+
+        systemIds = [ x.system_id for x in systems ]
+        expNetworks = [ '1.2.3.4', '1.2.3.5', ]
+
+        for systemId, expNetwork in zip(systemIds, expNetworks):
+            system = invmodels.System.objects.get(system_id=systemId)
+            network = system.networks.all()[0]
+            self.failUnlessEqual(network.dns_name, expNetwork)

@@ -540,6 +540,9 @@ class JobHandlerRegistry(HandlerRegistry):
             )
             if urls:
                 imageFileInfo['name'] = os.path.basename(urls[0]['url__url'])
+            targetImageIdList = [ x.target_image_id
+                for x in self.image_file.targetimagesdeployed_set.all() ]
+
             params = dict(
                 descriptorData=job._descriptor_data,
                 imageFileInfo=imageFileInfo,
@@ -547,6 +550,7 @@ class JobHandlerRegistry(HandlerRegistry):
                 targetImageXmlTemplate=self._targetImageXmlTemplate(),
                 imageFileUpdateUrl='http://localhost/api/v1/images/%s/build_files/%s' % (
                         self.image.image_id, self.image_file.file_id),
+                targetImageIdList=targetImageIdList,
             )
             return (params, ), {}
 
@@ -574,10 +578,22 @@ class JobHandlerRegistry(HandlerRegistry):
 </file>"""
             return tmpl % dict(targetId=self.target.target_id)
 
-    class TargetLaunchSystem(DescriptorJobHandler):
+    class TargetLaunchSystem(TargetDeployImage):
         __slots__ = []
         jobType = models.EventType.TARGET_LAUNCH_SYSTEM
+        ResultsTag = 'systems'
 
+        def getRepeaterMethod(self, cli, job):
+            JobHandlerRegistry.TargetDeployImage.getRepeaterMethod(self, cli, job)
+            return cli.targets.launchSystem
+
+        def getRepeaterMethodArgs(self, job):
+            args, kwargs = JobHandlerRegistry.TargetDeployImage.getRepeaterMethodArgs(self, job)
+            params = args[0]
+            params.update(systemsCreateUrl =
+                "http://localhost/api/v1/images/%s/systems" %
+                    (self.image.image_id, ))
+            return args, kwargs
 
     class TargetCreator(DescriptorJobHandler):
         __slots__ = [ 'targetType', ]
