@@ -441,23 +441,29 @@ release_get_xml = \
 <?xml version='1.0' encoding='UTF-8'?>
 <release id="http://testserver/api/v1/releases/1">
   <release_id>1</release_id>
-  <name>release0</name>
   <description>description0</description>
+  <num_images>1</num_images>
   <time_created></time_created>
+  <name>release0</name>
   <project id="http://testserver/api/v1/projects/foo0">
     <domain_name>eng.rpath.com</domain_name>
     <short_name>foo0</short_name>
     <name>foo0</name>
   </project>
   <should_mirror>0</should_mirror>
-  <published>True</published>
-  <published_by id="http://testserver/api/v1/users/2002"/>
+  <published_by id="http://testserver/api/v1/users/2005">
+    <user_name>janephoo</user_name>
+    <full_name>Jane Phoo</full_name>
+  </published_by>
   <time_updated></time_updated>
-  <created_by id="http://testserver/api/v1/users/2001"/>
+  <created_by id="http://testserver/api/v1/users/2004">
+    <user_name>jimphoo</user_name>
+    <full_name>Jim Phoo</full_name>
+  </created_by>
   <version>releaseVersion0</version>
-  <images>
+  <published>True</published>
+  <images id="http://testserver/api/v1/releases/1/images">
     <image id="http://testserver/api/v1/images/1">
-      <actions/>
       <files>
         <file>
           <sha1>0</sha1>
@@ -478,29 +484,37 @@ release_get_xml = \
           <size>1</size>
         </file>
       </files>
-      <trove_last_changed></trove_last_changed>
-      <updated_by id="http://testserver/api/v1/users/2002"/>
+      <actions/>
+      <project_branch id="http://testserver/api/v1/projects/foo0/project_branches/foo0.eng.rpath.com@rpath:foo-trunk">
+        <name>trunk</name>
+      </project_branch>
+      <updated_by id="http://testserver/api/v1/users/2005">
+        <user_name>janephoo</user_name>
+        <full_name>Jane Phoo</full_name>
+      </updated_by>
       <trailing_version>1-0-1</trailing_version>
       <num_image_files>2</num_image_files>
       <image_type id="http://testserver/api/v1/image_types/10">
         <description>VHD for Microsoft (R) Hyper-V</description>
-        <image_type_id>10</image_type_id>
-        <key>VIRTUAL_PC_IMAGE</key>
         <name>Microsoft (R) Hyper-V</name>
+        <key>VIRTUAL_PC_IMAGE</key>
+        <image_type_id>10</image_type_id>
       </image_type>
       <build_log id="http://testserver/api/v1/images/1/build_log"/>
       <trove_flavor>1#x86:i486:i586:i686|5#use:~!xen</trove_flavor>
-      <created_by id="http://testserver/api/v1/users/2001"/>
+      <created_by id="http://testserver/api/v1/users/2004">
+        <user_name>jimphoo</user_name>
+        <full_name>Jim Phoo</full_name>
+      </created_by>
+      <base_image></base_image>
       <status_message></status_message>
       <trove_name>troveName0</trove_name>
       <status>-1</status>
       <stage_name>stage0</stage_name>
-      <project_branch id="http://testserver/api/v1/projects/foo0/project_branches/foo0.eng.rpath.com@rpath:foo-trunk">
-        <name>trunk</name>
-      </project_branch>
+      <jobs id="http://testserver/api/v1/images/1/jobs"/>
       <description>image-0</description>
       <image_id>1</image_id>
-      <time_created></time_created>
+      <trove_last_changed></trove_last_changed>
       <time_updated></time_updated>
       <name>image-0</name>
       <trove_version>/cydonia.eng.rpath.com@rpath:cydonia-1-devel/1317221453.365:1-0-1</trove_version>
@@ -512,16 +526,18 @@ release_get_xml = \
       </project>
       <output_trove></output_trove>
       <architecture>x86</architecture>
-      <base_image/>
+      <time_created></time_created>
       <release id="http://testserver/api/v1/releases/1"/>
       <image_count>1</image_count>
       <job_uuid>1</job_uuid>
-      <jobs id="http://testserver/api/v1/images/1/jobs"/>
     </image>
   </images>
   <time_mirrored></time_mirrored>
   <time_published></time_published>
-  <updated_by id="http://testserver/api/v1/users/2002"/>
+  <updated_by id="http://testserver/api/v1/users/2005">
+    <user_name>janephoo</user_name>
+    <full_name>Jane Phoo</full_name>
+  </updated_by>
 </release>
 """.strip()
 
@@ -552,23 +568,29 @@ releases_get_xml = \
 <releases count="3" next_page="" num_pages="1" previous_page="" full_collection="http://testserver/api/v1/releases" end_index="2" limit="10" order_by="" per_page="10" filter_by="" id="http://testserver/api/v1/releases;start_index=0;limit=10" start_index="0">
   <release id="http://testserver/api/v1/releases/1">
     <release_id>1</release_id>
-    <name>release0</name>
     <description>description0</description>
+    <num_images>1</num_images>
     <time_created></time_created>
+    <name>release0</name>
     <project id="http://testserver/api/v1/projects/foo0">
       <domain_name>eng.rpath.com</domain_name>
       <short_name>foo0</short_name>
       <name>foo0</name>
     </project>
     <should_mirror>0</should_mirror>
-    <published>True</published>
-    <published_by id="http://testserver/api/v1/users/2002"/>
+    <published_by id="http://testserver/api/v1/users/2005">
+      <user_name>janephoo</user_name>
+      <full_name>Jane Phoo</full_name>
+    </published_by>
     <time_updated></time_updated>
-    <created_by id="http://testserver/api/v1/users/2001"/>
+    <created_by id="http://testserver/api/v1/users/2004">
+      <user_name>jimphoo</user_name>
+      <full_name>Jim Phoo</full_name>
+    </created_by>
     <version>releaseVersion0</version>
-    <images>
+    <published>True</published>
+    <images id="http://testserver/api/v1/releases/images">
       <image id="http://testserver/api/v1/images/1">
-        <actions/>
         <files>
           <file>
             <sha1>0</sha1>
@@ -589,29 +611,37 @@ releases_get_xml = \
             <size>1</size>
           </file>
         </files>
-        <trove_last_changed></trove_last_changed>
-        <updated_by id="http://testserver/api/v1/users/2002"/>
+        <actions/>
+        <project_branch id="http://testserver/api/v1/projects/foo0/project_branches/foo0.eng.rpath.com@rpath:foo-trunk">
+          <name>trunk</name>
+        </project_branch>
+        <updated_by id="http://testserver/api/v1/users/2005">
+          <user_name>janephoo</user_name>
+          <full_name>Jane Phoo</full_name>
+        </updated_by>
         <trailing_version>1-0-1</trailing_version>
         <num_image_files>2</num_image_files>
         <image_type id="http://testserver/api/v1/image_types/10">
           <description>VHD for Microsoft (R) Hyper-V</description>
-          <image_type_id>10</image_type_id>
-          <key>VIRTUAL_PC_IMAGE</key>
           <name>Microsoft (R) Hyper-V</name>
+          <key>VIRTUAL_PC_IMAGE</key>
+          <image_type_id>10</image_type_id>
         </image_type>
         <build_log id="http://testserver/api/v1/images/1/build_log"/>
         <trove_flavor>1#x86:i486:i586:i686|5#use:~!xen</trove_flavor>
-        <created_by id="http://testserver/api/v1/users/2001"/>
+        <created_by id="http://testserver/api/v1/users/2004">
+          <user_name>jimphoo</user_name>
+          <full_name>Jim Phoo</full_name>
+        </created_by>
+        <base_image></base_image>
         <status_message></status_message>
         <trove_name>troveName0</trove_name>
         <status>-1</status>
         <stage_name>stage0</stage_name>
-        <project_branch id="http://testserver/api/v1/projects/foo0/project_branches/foo0.eng.rpath.com@rpath:foo-trunk">
-          <name>trunk</name>
-        </project_branch>
+        <jobs id="http://testserver/api/v1/images/1/jobs"/>
         <description>image-0</description>
         <image_id>1</image_id>
-        <time_created></time_created>
+        <trove_last_changed></trove_last_changed>
         <time_updated></time_updated>
         <name>image-0</name>
         <trove_version>/cydonia.eng.rpath.com@rpath:cydonia-1-devel/1317221453.365:1-0-1</trove_version>
@@ -623,36 +653,44 @@ releases_get_xml = \
         </project>
         <output_trove></output_trove>
         <architecture>x86</architecture>
-        <base_image/>
+        <time_created></time_created>
         <release id="http://testserver/api/v1/releases/1"/>
         <image_count>1</image_count>
         <job_uuid>1</job_uuid>
-        <jobs id="http://testserver/api/v1/images/1/jobs"/>
       </image>
     </images>
     <time_mirrored></time_mirrored>
     <time_published></time_published>
-    <updated_by id="http://testserver/api/v1/users/2002"/>
+    <updated_by id="http://testserver/api/v1/users/2005">
+      <user_name>janephoo</user_name>
+      <full_name>Jane Phoo</full_name>
+    </updated_by>
   </release>
   <release id="http://testserver/api/v1/releases/2">
     <release_id>2</release_id>
-    <name>release1</name>
     <description>description1</description>
+    <num_images>1</num_images>
     <time_created></time_created>
+    <name>release1</name>
     <project id="http://testserver/api/v1/projects/foo1">
       <domain_name>eng.rpath.com</domain_name>
       <short_name>foo1</short_name>
       <name>foo1</name>
     </project>
     <should_mirror>0</should_mirror>
-    <published>True</published>
-    <published_by id="http://testserver/api/v1/users/2002"/>
+    <published_by id="http://testserver/api/v1/users/2005">
+      <user_name>janephoo</user_name>
+      <full_name>Jane Phoo</full_name>
+    </published_by>
     <time_updated></time_updated>
-    <created_by id="http://testserver/api/v1/users/2001"/>
+    <created_by id="http://testserver/api/v1/users/2004">
+      <user_name>jimphoo</user_name>
+      <full_name>Jim Phoo</full_name>
+    </created_by>
     <version>releaseVersion1</version>
-    <images>
+    <published>True</published>
+    <images id="http://testserver/api/v1/releases/images">
       <image id="http://testserver/api/v1/images/2">
-        <actions/>
         <files>
           <file>
             <sha1>1</sha1>
@@ -673,29 +711,37 @@ releases_get_xml = \
             <size>2</size>
           </file>
         </files>
-        <trove_last_changed></trove_last_changed>
-        <updated_by id="http://testserver/api/v1/users/2002"/>
+        <actions/>
+        <project_branch id="http://testserver/api/v1/projects/foo1/project_branches/foo1.eng.rpath.com@rpath:foo-trunk">
+          <name>trunk</name>
+        </project_branch>
+        <updated_by id="http://testserver/api/v1/users/2005">
+          <user_name>janephoo</user_name>
+          <full_name>Jane Phoo</full_name>
+        </updated_by>
         <trailing_version>1-1-1</trailing_version>
         <num_image_files>2</num_image_files>
         <image_type id="http://testserver/api/v1/image_types/10">
           <description>VHD for Microsoft (R) Hyper-V</description>
-          <image_type_id>10</image_type_id>
-          <key>VIRTUAL_PC_IMAGE</key>
           <name>Microsoft (R) Hyper-V</name>
+          <key>VIRTUAL_PC_IMAGE</key>
+          <image_type_id>10</image_type_id>
         </image_type>
         <build_log id="http://testserver/api/v1/images/2/build_log"/>
         <trove_flavor>1#x86:i486:i586:i686|5#use:~!xen</trove_flavor>
-        <created_by id="http://testserver/api/v1/users/2001"/>
+        <created_by id="http://testserver/api/v1/users/2004">
+          <user_name>jimphoo</user_name>
+          <full_name>Jim Phoo</full_name>
+        </created_by>
+        <base_image></base_image>
         <status_message></status_message>
         <trove_name>troveName1</trove_name>
         <status>-1</status>
         <stage_name>stage1</stage_name>
-        <project_branch id="http://testserver/api/v1/projects/foo1/project_branches/foo1.eng.rpath.com@rpath:foo-trunk">
-          <name>trunk</name>
-        </project_branch>
+        <jobs id="http://testserver/api/v1/images/2/jobs"/>
         <description>image-1</description>
         <image_id>2</image_id>
-        <time_created></time_created>
+        <trove_last_changed></trove_last_changed>
         <time_updated></time_updated>
         <name>image-1</name>
         <trove_version>/cydonia.eng.rpath.com@rpath:cydonia-1-devel/1317221453.365:1-1-1</trove_version>
@@ -707,36 +753,44 @@ releases_get_xml = \
         </project>
         <output_trove></output_trove>
         <architecture>x86</architecture>
-        <base_image/>
+        <time_created></time_created>
         <release id="http://testserver/api/v1/releases/2"/>
         <image_count>1</image_count>
         <job_uuid>1</job_uuid>
-        <jobs id="http://testserver/api/v1/images/2/jobs"/>
       </image>
     </images>
     <time_mirrored></time_mirrored>
     <time_published></time_published>
-    <updated_by id="http://testserver/api/v1/users/2002"/>
+    <updated_by id="http://testserver/api/v1/users/2005">
+      <user_name>janephoo</user_name>
+      <full_name>Jane Phoo</full_name>
+    </updated_by>
   </release>
   <release id="http://testserver/api/v1/releases/3">
     <release_id>3</release_id>
-    <name>release2</name>
     <description>description2</description>
+    <num_images>1</num_images>
     <time_created></time_created>
+    <name>release2</name>
     <project id="http://testserver/api/v1/projects/foo2">
       <domain_name>eng.rpath.com</domain_name>
       <short_name>foo2</short_name>
       <name>foo2</name>
     </project>
     <should_mirror>0</should_mirror>
-    <published>True</published>
-    <published_by id="http://testserver/api/v1/users/2002"/>
+    <published_by id="http://testserver/api/v1/users/2005">
+      <user_name>janephoo</user_name>
+      <full_name>Jane Phoo</full_name>
+    </published_by>
     <time_updated></time_updated>
-    <created_by id="http://testserver/api/v1/users/2001"/>
+    <created_by id="http://testserver/api/v1/users/2004">
+      <user_name>jimphoo</user_name>
+      <full_name>Jim Phoo</full_name>
+    </created_by>
     <version>releaseVersion2</version>
-    <images>
+    <published>True</published>
+    <images id="http://testserver/api/v1/releases/images">
       <image id="http://testserver/api/v1/images/3">
-        <actions/>
         <files>
           <file>
             <sha1>2</sha1>
@@ -757,29 +811,37 @@ releases_get_xml = \
             <size>3</size>
           </file>
         </files>
-        <trove_last_changed></trove_last_changed>
-        <updated_by id="http://testserver/api/v1/users/2002"/>
+        <actions/>
+        <project_branch id="http://testserver/api/v1/projects/foo2/project_branches/foo2.eng.rpath.com@rpath:foo-trunk">
+          <name>trunk</name>
+        </project_branch>
+        <updated_by id="http://testserver/api/v1/users/2005">
+          <user_name>janephoo</user_name>
+          <full_name>Jane Phoo</full_name>
+        </updated_by>
         <trailing_version>1-2-1</trailing_version>
         <num_image_files>2</num_image_files>
         <image_type id="http://testserver/api/v1/image_types/10">
           <description>VHD for Microsoft (R) Hyper-V</description>
-          <image_type_id>10</image_type_id>
-          <key>VIRTUAL_PC_IMAGE</key>
           <name>Microsoft (R) Hyper-V</name>
+          <key>VIRTUAL_PC_IMAGE</key>
+          <image_type_id>10</image_type_id>
         </image_type>
         <build_log id="http://testserver/api/v1/images/3/build_log"/>
         <trove_flavor>1#x86:i486:i586:i686|5#use:~!xen</trove_flavor>
-        <created_by id="http://testserver/api/v1/users/2001"/>
+        <created_by id="http://testserver/api/v1/users/2004">
+          <user_name>jimphoo</user_name>
+          <full_name>Jim Phoo</full_name>
+        </created_by>
+        <base_image></base_image>
         <status_message></status_message>
         <trove_name>troveName2</trove_name>
         <status>-1</status>
         <stage_name>stage2</stage_name>
-        <project_branch id="http://testserver/api/v1/projects/foo2/project_branches/foo2.eng.rpath.com@rpath:foo-trunk">
-          <name>trunk</name>
-        </project_branch>
+        <jobs id="http://testserver/api/v1/images/3/jobs"/>
         <description>image-2</description>
         <image_id>3</image_id>
-        <time_created></time_created>
+        <trove_last_changed></trove_last_changed>
         <time_updated></time_updated>
         <name>image-2</name>
         <trove_version>/cydonia.eng.rpath.com@rpath:cydonia-1-devel/1317221453.365:1-2-1</trove_version>
@@ -791,16 +853,18 @@ releases_get_xml = \
         </project>
         <output_trove></output_trove>
         <architecture>x86</architecture>
-        <base_image/>
+        <time_created></time_created>
         <release id="http://testserver/api/v1/releases/3"/>
         <image_count>1</image_count>
         <job_uuid>1</job_uuid>
-        <jobs id="http://testserver/api/v1/images/3/jobs"/>
       </image>
     </images>
     <time_mirrored></time_mirrored>
     <time_published></time_published>
-    <updated_by id="http://testserver/api/v1/users/2002"/>
+    <updated_by id="http://testserver/api/v1/users/2005">
+      <user_name>janephoo</user_name>
+      <full_name>Jane Phoo</full_name>
+    </updated_by>
   </release>
 </releases>
 """.strip()
