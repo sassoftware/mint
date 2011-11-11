@@ -405,12 +405,6 @@ class BaseManager(models.Manager):
         For each list_field on the model, get the objects off of xobjModel, load
         their corresponding model and add them to our model in a list.
         """
-        # We force a save here, even if the parent object was
-        # abstract.
-        # XXX the save keyword should be redesigned, I thought it
-        # meant something else - passing it around was not a good
-        # idea -- misa
-        flags = flags.copy(save=True)
         for key in model.list_fields:
             # xobj deserializes lists by adding a list as an attribute to the
             # model named after the element.
@@ -570,9 +564,11 @@ class BaseManager(models.Manager):
         # empty model instance to start with.
         model = self.model()
 
+        origFlags = flags
+
         # Don't even attempt to save abstract models
         if model._meta.abstract:
-            flags.save = False
+            flags = flags.copy(save=False)
 
         # We need access to synthetic fields before loading from the DB, they
         # may be used in load_or_create
@@ -598,8 +594,10 @@ class BaseManager(models.Manager):
         # Copy the synthetic fields again - this is unfortunate
         model = self._add_synthetic_fields(model, xobjModel, request)
 
+        # If this is an abstract model, we want to pass down the
+        # original flags, because we've turned saving off here.
         model = self._add_m2m_accessors(model, xobjModel, request, flags=flags)
-        model = self._add_list_fields(model, xobjModel, request, flags=flags)
+        model = self._add_list_fields(model, xobjModel, request, flags=origFlags)
         model = self._add_accessors(model, accessors)
         model = self._add_abstract_fields(model, xobjModel)
 

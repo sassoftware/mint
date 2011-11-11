@@ -60,7 +60,7 @@ class BaseTargetsTest(RbacEngine):
         jobUuid3 = 'rmakeuuid003'
         system = self._saveSystem()
         
-        user = self.getUser('testuser')
+        user = self.getUser('ExampleDeveloper')
 
         jobs = []
         jobs.append(self._newSystemJob(system, eventUuid1, jobUuid1,
@@ -89,7 +89,7 @@ class BaseTargetsTest(RbacEngine):
             targetCredentials = models.TargetCredentials.objects.create(credentials='abc%s' % i)
             models.TargetUserCredentials.objects.create(
                 target=sampleTargets[i],
-                user=umodels.User.objects.get(user_name='testuser'),
+                user=umodels.User.objects.get(user_name='ExampleDeveloper'),
                 target_credentials=targetCredentials)
                 
         self.target_credentials = models.TargetCredentials.objects.all()
@@ -140,7 +140,7 @@ class TargetsTestCase(BaseTargetsTest, RepeaterMixIn):
     def testGetDescriptorTargetsCreation(self):
         zmodels.Zone.objects.create(name='other zone', description = "Other Zone")
         response = self._get('descriptors/targets/create',
-            username='testuser', password='password')
+            username='ExampleDeveloper', password='password')
         self.failUnlessEqual(response.status_code, 200)
         document = xobj.parse(response.content)
         self.failUnlessEqual(document.descriptor.metadata.rootElement,
@@ -163,7 +163,7 @@ class TargetsTestCase(BaseTargetsTest, RepeaterMixIn):
 
     def testGetTargets(self):
         targets = models.Target.objects.order_by('target_id')
-        response = self._get('targets/', username='testuser', password='password')
+        response = self._get('targets/', username='ExampleDeveloper', password='password')
         self.assertEquals(response.status_code, 200)
         targets_gotten = xobj.parse(response.content)
         self.failUnlessEqual([ x.name for x in targets_gotten.targets.target ],
@@ -215,7 +215,7 @@ class TargetsTestCase(BaseTargetsTest, RepeaterMixIn):
         # Remove credentials for one of the targets
         # openstack won't have creds anyway
         models.TargetUserCredentials.objects.get(target__name = 'Target Name xen-enterprise').delete()
-        response = self._get('targets/', username='testuser', password='password')
+        response = self._get('targets/', username='ExampleDeveloper', password='password')
         targetsObj = xobj.parse(response.content)
         self.failUnlessEqual([ x.name for x in targetsObj.targets.target ],
             [
@@ -230,7 +230,7 @@ class TargetsTestCase(BaseTargetsTest, RepeaterMixIn):
     def testGetTarget(self):
         target = models.Target.objects.get(name = 'Target Name openstack')
         response = self._get('targets/%s' % target.pk,
-            username='testuser', password='password')
+            username='ExampleDeveloper', password='password')
         target_gotten = xobj.parse(response.content).target
         self.assertEquals(response.status_code, 200)
         self.assertEquals(target.name, target_gotten.name)
@@ -239,7 +239,7 @@ class TargetsTestCase(BaseTargetsTest, RepeaterMixIn):
     def testGetTargetConfigurationDescriptor(self):
         target = models.Target.objects.get(name = 'Target Name openstack')
         response = self._get('targets/%s/descriptors/configuration' % target.pk,
-            username='testuser', password='password')
+            username='ExampleDeveloper', password='password')
         self.assertEquals(response.status_code, 200)
         obj = xobj.parse(response.content)
         self.failUnlessEqual(obj.descriptor.metadata.rootElement, 'descriptor_data')
@@ -286,14 +286,14 @@ class TargetsTestCase(BaseTargetsTest, RepeaterMixIn):
         self.assertEquals(response.status_code, 405)
 
     def testDeleteTarget(self):
-        response = self._delete('targets/1', username='testuser', password='password')
+        response = self._delete('targets/1', username='ExampleDeveloper', password='password')
         self.assertEquals(response.status_code, 401)
         response = self._delete('targets/1', username='admin', password='password')
         self.assertEquals(response.status_code, 204)
 
     def testGetTargetTypes(self):
         targetTypesExpected = models.TargetType.objects.order_by('target_type_id')
-        response = self._get('target_types/', username='testuser', password='password')
+        response = self._get('target_types/', username='ExampleDeveloper', password='password')
         self.assertEquals(response.status_code, 200)
         targetTypes = xobj.parse(response.content)
         self.failUnlessEqual(
@@ -303,7 +303,7 @@ class TargetsTestCase(BaseTargetsTest, RepeaterMixIn):
     def testGetTargetType(self):
         targetType = models.TargetType.objects.get(name='openstack')
         response = self._get('target_types/%s' % targetType.pk,
-            username='testuser', password='password')
+            username='ExampleDeveloper', password='password')
         self.assertEquals(response.status_code, 200)
         self.assertXMLEquals(response.content, testsxml.target_type_GET)
 
@@ -314,7 +314,7 @@ class TargetsTestCase(BaseTargetsTest, RepeaterMixIn):
             name="test openstack", description="test openstack",
             zone=self.localZone)
         response = self._get('target_types/%s/targets' % targetType.pk,
-            username='testuser', password='password')
+            username='ExampleDeveloper', password='password')
         self.assertEquals(response.status_code, 200)
         obj = xobj.parse(response.content)
         targets = [ obj.targets.target ]
@@ -332,16 +332,16 @@ class TargetsTestCase(BaseTargetsTest, RepeaterMixIn):
 
     def testGetTargetTypeByTargetId(self):
         response = self._get('targets/1/target_types',
-            username='testuser', password='password')
+            username='ExampleDeveloper', password='password')
         self.assertEquals(response.status_code, 200)
         self.assertXMLEquals(response.content, testsxml.target_type_by_target_id_GET)
 
     def testGetTargetTypeDescriptorCreateTarget(self):
         response = self._get('target_types/1024/descriptor_create_target',
-            username='testuser', password='password')
+            username='ExampleDeveloper', password='password')
         self.assertEquals(response.status_code, 404)
         response = self._get('target_types/1/descriptor_create_target',
-            username='testuser', password='password')
+            username='ExampleDeveloper', password='password')
         self.assertEquals(response.status_code, 200)
         obj = xobj.parse(response.content)
         self.failUnlessEqual(obj.descriptor.metadata.rootElement, 'descriptor_data')
@@ -362,10 +362,10 @@ class TargetsTestCase(BaseTargetsTest, RepeaterMixIn):
 
     def testGetTargetDescriptorConfigureCredentials(self):
         response = self._get('targets/1024/descriptors/configure_credentials',
-            username='testuser', password='password')
+            username='ExampleDeveloper', password='password')
         self.assertEquals(response.status_code, 404)
         response = self._get('targets/1/descriptors/configure_credentials',
-            username='testuser', password='password')
+            username='ExampleDeveloper', password='password')
         self.assertEquals(response.status_code, 200)
         obj = xobj.parse(response.content)
         self.failUnlessEqual(obj.descriptor.metadata.rootElement, 'descriptor_data')
@@ -378,10 +378,10 @@ class TargetsTestCase(BaseTargetsTest, RepeaterMixIn):
 
     def testGetTargetDescriptorRefreshImages(self):
         response = self._get('targets/1024/descriptors/refresh_images',
-            username='testuser', password='password')
+            username='ExampleDeveloper', password='password')
         self.assertEquals(response.status_code, 404)
         response = self._get('targets/1/descriptors/refresh_images',
-            username='testuser', password='password')
+            username='ExampleDeveloper', password='password')
         self.assertEquals(response.status_code, 200)
         obj = xobj.parse(response.content)
         self.failUnlessEqual(obj.descriptor.metadata.rootElement, 'descriptor_data')
@@ -395,7 +395,7 @@ class TargetsTestCase(BaseTargetsTest, RepeaterMixIn):
 
     def testGetAllTargetTypeJobs(self):
         url = 'target_type_jobs'
-        response = self._get(url, username='testuser', password='password')
+        response = self._get(url, username='ExampleDeveloper', password='password')
         self.assertEquals(response.status_code, 200)
         obj = xobj.parse(response.content)
         self.failUnlessEqual([ x.job_uuid for x in obj.jobs.job ],
@@ -436,7 +436,7 @@ class JobCreationTest(BaseTargetsTest, RepeaterMixIn):
 </job>
 """
         response = self._post('target_type_jobs', jobXml,
-            username='testuser', password='password')
+            username='ExampleDeveloper', password='password')
         self.assertEquals(response.status_code, 200)
         obj = xobj.parse(response.content)
         job = obj.job
@@ -502,7 +502,7 @@ class JobCreationTest(BaseTargetsTest, RepeaterMixIn):
     def testTargetConfiguration(self):
         # Add credentials for admin
         target = models.Target.objects.filter(target_type__target_type_id=5)[0]
-        testUser = self.getUser('testuser')
+        testUser = self.getUser('ExampleDeveloper')
         adminUser = self.getUser('admin')
         models.TargetUserCredentials.objects.create(
             target=target,
@@ -523,7 +523,7 @@ class JobCreationTest(BaseTargetsTest, RepeaterMixIn):
 </job>
 """ % dict(targetId=target.target_id)
         response = self._post('targets/%s/jobs' % target.target_id, jobXml,
-            username='testuser', password='password')
+            username='ExampleDeveloper', password='password')
         self.assertEquals(response.status_code, 403)
 
         response = self._post('targets/%s/jobs' % target.target_id, jobXml,
@@ -603,7 +603,7 @@ class JobCreationTest(BaseTargetsTest, RepeaterMixIn):
         params = dict(targetId=target.target_id, jobTypeId=jobType.job_type_id)
         response = self._post('targets/%s/jobs' % target.target_id,
             jobXml % params,
-            username='testuser', password='password')
+            username='ExampleDeveloper', password='password')
         self.assertEquals(response.status_code, 200)
         obj = xobj.parse(response.content)
         job = obj.job
@@ -718,7 +718,7 @@ class JobCreationTest(BaseTargetsTest, RepeaterMixIn):
         params = dict(targetId=target.target_id, jobTypeId=jobType.job_type_id)
         response = self._post('targets/%s/jobs' % target.target_id,
             jobXml % params,
-            username='testuser', password='password')
+            username='ExampleDeveloper', password='password')
 
         self.assertEquals(response.status_code, 200)
         obj = xobj.parse(response.content)
@@ -876,7 +876,7 @@ class JobCreationTest(BaseTargetsTest, RepeaterMixIn):
 
         # Make sure we have proper linkage in target_image_credentials
         creds = models.TargetCredentials.objects.filter(
-            target_user_credentials__user__user_name='testuser')[0]
+            target_user_credentials__user__user_name='ExampleDeveloper')[0]
         images = models.TargetImage.objects.filter(
             target_image_credentials__target_credentials=creds)
         self.failUnlessEqual([ x.name for x in images ],
@@ -895,7 +895,7 @@ class JobCreationTest(BaseTargetsTest, RepeaterMixIn):
         params = dict(targetId=target.target_id, jobTypeId=jobType.job_type_id)
         response = self._post('targets/%s/jobs' % target.target_id,
             jobXml % params,
-            username='testuser', password='password')
+            username='ExampleDeveloper', password='password')
 
         self.assertEquals(response.status_code, 200)
         obj = xobj.parse(response.content)
@@ -1061,7 +1061,7 @@ class JobCreationTest(BaseTargetsTest, RepeaterMixIn):
 
         # Make sure we have proper linkage in target_image_credentials
         creds = models.TargetCredentials.objects.filter(
-            target_user_credentials__user__user_name='testuser')[0]
+            target_user_credentials__user__user_name='ExampleDeveloper')[0]
         systems = models.TargetSystem.objects.filter(
             target_system_credentials__target_credentials=creds)
         self.failUnlessEqual([ x.name for x in systems ],
@@ -1226,7 +1226,7 @@ class JobCreationTest(BaseTargetsTest, RepeaterMixIn):
         ]
 
         # We need to set a user, image creation needs it
-        user = self.getUser('testuser')
+        user = self.getUser('ExampleDeveloper')
         self.mgr.user = user
 
         # Create a project for the images
@@ -1278,6 +1278,7 @@ class JobCreationTest(BaseTargetsTest, RepeaterMixIn):
             base_image=baseImage)
         imgmgr.createImageBuild(image)
         # Deferred images have no build files
+        self._retagQuerySets()
         return image
 
     def testRecomputeTargetDeployableImages(self):
@@ -1307,7 +1308,7 @@ class JobCreationTest(BaseTargetsTest, RepeaterMixIn):
         )
 
         url = "images/%s" % img.image_id
-        resp = self._get(url, username="testuser", password="password")
+        resp = self._get(url, username="ExampleDeveloper", password="password")
         self.failUnlessEqual(resp.status_code, 200)
         doc = xobj.parse(resp.content)
         actions = doc.image.actions.action
@@ -1349,7 +1350,7 @@ class JobCreationTest(BaseTargetsTest, RepeaterMixIn):
     </field>
   </dataFields>
 </descriptor>""")
-        resp = self._get(url, username="testuser", password="password")
+        resp = self._get(url, username="ExampleDeveloper", password="password")
         self.failUnlessEqual(resp.status_code, 200)
         doc = xobj.parse(resp.content)
         self.failUnlessEqual(doc.descriptor.metadata.displayName, "FooDescriptor")
@@ -1365,7 +1366,7 @@ class JobCreationTest(BaseTargetsTest, RepeaterMixIn):
             _image_type=buildtypes.DEFERRED_IMAGE)
 
         url = "images/%s" % img.image_id
-        resp = self._get(url, username="testuser", password="password")
+        resp = self._get(url, username="ExampleDeveloper", password="password")
         self.failUnlessEqual(resp.status_code, 200)
         doc = xobj.parse(resp.content)
         actions = doc.image.actions.action
@@ -1426,7 +1427,7 @@ class JobCreationTest(BaseTargetsTest, RepeaterMixIn):
                 buildFileId = buildFileId,)
         jobUrl = "images/%s/jobs" % imageId
         response = self._post(jobUrl, jobXml,
-            username='testuser', password='password')
+            username='ExampleDeveloper', password='password')
         self.failUnlessEqual(response.status_code, 200)
         obj = xobj.parse(response.content)
 
@@ -1464,7 +1465,103 @@ class JobCreationTest(BaseTargetsTest, RepeaterMixIn):
             'descriptorData': "<?xml version='1.0' encoding='UTF-8'?>\n<descriptor_data>\n  <imageId>%s</imageId>\n</descriptor_data>\n" % buildFileId,
             'imageDownloadUrl': 'https://bubba.com/downloadImage?fileId=%s' % buildFileId,
             'imageFileUpdateUrl': 'http://localhost/api/v1/images/%s/build_files/%s' % (baseImg.image_id, buildFileId),
-            'targetImageXmlTemplate': '<file>\n  <target_images>\n    <target_image>\n      <target id="/api/v1/targets/1"/>\n      %(image)s\n    </target_image>\n  </target_images>\n</file>'
+            'targetImageXmlTemplate': '<file>\n  <target_images>\n    <target_image>\n      <target id="/api/v1/targets/1"/>\n      %(image)s\n    </target_image>\n  </target_images>\n</file>',
+            'targetImageIdList': ['target-internal-id-02'],
+          })
+        self.failUnlessEqual(realCall.args[1:], ())
+        self.failUnlessEqual(realCall.kwargs, {})
+
+        jobXml = """
+<job>
+  <job_state>Completed</job_state>
+  <status_code>200</status_code>
+  <status_text>Some status here</status_text>
+  <results encoding="identity">
+    <image id="/1">
+      <baseFileName>cobbler-clone</baseFileName>
+    </image>
+  </results>
+</job>
+"""
+        jobUrl = "jobs/%s" % dbjob.job_uuid
+        response = self._put(jobUrl, jobXml, jobToken=jobToken)
+        self.failUnlessEqual(response.status_code, 200)
+
+    def testLaunchSystem(self):
+        targets = self._setupImages()
+        imgName = "image 02"
+        img = imgmodels.Image.objects.get(name=imgName, _image_type=buildtypes.VMWARE_ESX_IMAGE)
+        self._testLaunchSystem(targets, img)
+
+    def _testLaunchSystem(self, targets, img, baseImg=None):
+        self.mgr.targetsManager.recomputeTargetDeployableImages()
+
+        # Post a job
+        jobXmlTmpl = """
+<job>
+  <job_type id="http://localhost/api/v1/inventory/event_types/%(jobTypeId)s"/>
+  <descriptor id="http://testserver/api/v1/targets/%(targetId)s/descriptors/launch/file/%(buildFileId)s"/>
+  <descriptor_data>
+    <imageId>%(buildFileId)s</imageId>
+  </descriptor_data>
+</job>
+"""
+
+        if baseImg is None:
+            baseImg = img
+
+        buildFileId = baseImg.files.all()[0].file_id
+        imageId = img.image_id
+        targetId = targets[0].target_id
+        jobTypeId = self.mgr.sysMgr.eventType(jmodels.EventType.TARGET_LAUNCH_SYSTEM).job_type_id
+
+        jobXml = jobXmlTmpl % dict(
+                jobTypeId=jobTypeId,
+                targetId=targetId,
+                buildFileId = buildFileId,)
+        jobUrl = "images/%s/jobs" % imageId
+        response = self._post(jobUrl, jobXml,
+            username='ExampleDeveloper', password='password')
+        self.failUnlessEqual(response.status_code, 200)
+        obj = xobj.parse(response.content)
+
+        job = obj.job
+        self.failUnlessEqual(job.descriptor.id,
+            "http://testserver/api/v1/targets/%s/descriptors/launch/file/%s"
+                % (targetId, buildFileId))
+
+        dbjob = jmodels.Job.objects.get(job_uuid=job.job_uuid)
+        jobToken = dbjob.job_token
+        self.failUnlessEqual(dbjob.job_type.name, dbjob.job_type.TARGET_LAUNCH_SYSTEM)
+        imageNames = [ 'image 02' ]
+        if baseImg is not img:
+            imageNames.append(img.name)
+        self.failUnlessEqual(
+            [ x.image.name for x in dbjob.images.all() ],
+            imageNames)
+
+        calls = self.mgr.repeaterMgr.repeaterClient.getCallList()
+        self.failUnlessEqual([ x.name for x in calls ],
+            [
+                'targets.TargetConfiguration', 'targets.TargetUserCredentials',
+                'targets.configure', 'targets.launchSystem',
+            ])
+        realCall = calls[-1]
+        self.failUnlessEqual(self._mungeDict(realCall.args[0]),
+          {
+            'imageFileInfo': {
+                'fileId' : buildFileId,
+                'name' : u'filename-09-02',
+                'sha1' : u'0000000000000000000000000000000000000002',
+                'size' : 102,
+                'baseFileName' : 'chater-foo-1-',
+            },
+            'descriptorData': "<?xml version='1.0' encoding='UTF-8'?>\n<descriptor_data>\n  <imageId>%s</imageId>\n</descriptor_data>\n" % buildFileId,
+            'imageDownloadUrl': 'https://bubba.com/downloadImage?fileId=%s' % buildFileId,
+            'imageFileUpdateUrl': 'http://localhost/api/v1/images/%s/build_files/%s' % (baseImg.image_id, buildFileId),
+            'targetImageXmlTemplate': '<file>\n  <target_images>\n    <target_image>\n      <target id="/api/v1/targets/1"/>\n      %(image)s\n    </target_image>\n  </target_images>\n</file>',
+            'systemsCreateUrl': 'http://localhost/api/v1/images/9/systems',
+            'targetImageIdList': ['target-internal-id-02'],
           })
         self.failUnlessEqual(realCall.args[1:], ())
         self.failUnlessEqual(realCall.kwargs, {})

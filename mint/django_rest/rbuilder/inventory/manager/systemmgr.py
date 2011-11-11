@@ -938,6 +938,13 @@ class SystemManager(basemanager.BaseManager):
         # XXX more stuff to happen here
 
     @exposed
+    def addLaunchedSystems(self, systems, imageId=None):
+        for system in systems.system:
+            self.mgr.addLaunchedSystem(system, dnsName=system.dnsName,
+                targetName=system.targetName, targetType=system.targetType)
+        return systems
+
+    @exposed
     def addLaunchedSystem(self, system, dnsName=None, targetName=None,
             targetType=None, for_user=None):
         if isinstance(targetType, basestring):

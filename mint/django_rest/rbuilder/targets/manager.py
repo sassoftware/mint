@@ -297,7 +297,17 @@ class TargetsManager(basemanager.BaseManager, CatalogServiceHelper):
         return descr
 
     @exposed
+    def getDescriptorLaunchSystem(self, targetId, buildFileId):
+        return self._getDescriptorFromCatalogService(targetId, buildFileId,
+            'systemLaunchDescriptor')
+
+    @exposed
     def getDescriptorDeployImage(self, targetId, buildFileId):
+        return self._getDescriptorFromCatalogService(targetId, buildFileId,
+            'imageDeploymentDescriptor')
+
+    def _getDescriptorFromCatalogService(self, targetId, buildFileId,
+                rmakeMethodName):
         repClient = self.mgr.repeaterMgr.repeaterClient
         if repClient is None:
             log.info("Failed loading repeater client, expected in local mode only")
@@ -308,7 +318,8 @@ class TargetsManager(basemanager.BaseManager, CatalogServiceHelper):
         zone = self.getTargetZone(target)
         repClient.targets.configure(zone.name, targetConfiguration,
             targetUserCredentials)
-        uuid, job = repClient.targets.imageDeploymentDescriptor()
+        method = getattr(repClient.targets, rmakeMethodName)
+        uuid, job = method()
         job = self.mgr.waitForRmakeJob(uuid, interval=.1)
         if not job.status.final:
             raise Exception("Final state not reached")

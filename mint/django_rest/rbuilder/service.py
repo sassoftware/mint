@@ -183,5 +183,5 @@ class BaseAuthService(BaseService):
         userName = authToken[0]
         mintAuth = users.Authorization(username=userName,
             token=authToken, admin=isAdmin, userId=userId)
-        self.mgr._auth = mintAuth
+        self.mgr.setAuth(mintAuth, user)
 

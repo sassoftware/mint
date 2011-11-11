@@ -281,9 +281,10 @@ class XMLTestCase(TestCase, testcase.MockMixIn):
         return self.client.get(path, params, follow, **extra)
 
     def _post(self, path, data={}, content_type='application/xml',
-             username=None, password=None, follow=False, headers=None):
+             username=None, password=None, follow=False, headers=None,
+             jobToken=None):
         path = self._fixPath(path)
-        extra = self._addRequestAuth(username, password)
+        extra = self._addRequestAuth(username, password, jobToken=jobToken)
         extra.update(headers or {})
         return self.client.post(path, data, content_type, follow, **extra)
 

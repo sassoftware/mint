@@ -145,6 +145,15 @@ class TargetImageDeploymentService(service.BaseService):
         return self.mgr.serializeDescriptor(
             self.mgr.getDescriptorDeployImage(target_id, file_id))
 
+class TargetSystemLaunchService(service.BaseService):
+    @return_xml
+    def rest_GET(self, request, target_id, file_id):
+        return self.get(target_id, file_id)
+
+    def get(self, target_id, file_id):
+        return self.mgr.serializeDescriptor(
+            self.mgr.getDescriptorLaunchSystem(target_id, file_id))
+
 class TargetTypeCreateTargetService(service.BaseService):
     @return_xml
     def rest_GET(self, request, target_type_id):
