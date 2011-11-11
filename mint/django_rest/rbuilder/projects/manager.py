@@ -115,9 +115,8 @@ class ProjectManager(basemanager.BaseManager):
             member.save()
 
         self.mgr.retagQuerySetsByType('project', for_user)
-        self.mgr.retagQuerySetsByType('project_branch', for_user)
-        self.mgr.retagQuerySetsByType('project_branch_stage', for_user)
-
+        # UI or API consumer will follow up this with a seperate call to create
+        # the branch via addProjectBranch, so no need to retag stages now
         self.mgr.addToMyQuerySet(project, for_user)
 
         return project
@@ -294,7 +293,7 @@ class ProjectManager(basemanager.BaseManager):
                 'Product Definition commit from rBuilder\n')
 
     @exposed
-    def addProjectBranch(self, projectShortName, projectVersion):
+    def addProjectBranch(self, projectShortName, projectVersion, forUser):
 
         if not projectVersion.namespace:
             projectVersion.namespace = projectVersion.project.namespace
@@ -326,7 +325,7 @@ class ProjectManager(basemanager.BaseManager):
 
         projectVersion.save()
         
-        self.mgr.invalidateQuerySetByName('All Project Stages')
+        self.mgr.retagQuerySetsByType('project_branch_stage', forUser)
         return projectVersion
 
     @exposed
