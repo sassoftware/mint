@@ -589,7 +589,7 @@ releases_get_xml = \
     </created_by>
     <version>releaseVersion0</version>
     <published>True</published>
-    <images id="http://testserver/api/v1/releases/images">
+    <images id="http://testserver/api/v1/releases/1/images">
       <image id="http://testserver/api/v1/images/1">
         <files>
           <file>
@@ -689,7 +689,7 @@ releases_get_xml = \
     </created_by>
     <version>releaseVersion1</version>
     <published>True</published>
-    <images id="http://testserver/api/v1/releases/images">
+    <images id="http://testserver/api/v1/releases/2/images">
       <image id="http://testserver/api/v1/images/2">
         <files>
           <file>
@@ -789,7 +789,7 @@ releases_get_xml = \
     </created_by>
     <version>releaseVersion2</version>
     <published>True</published>
-    <images id="http://testserver/api/v1/releases/images">
+    <images id="http://testserver/api/v1/releases/3/images">
       <image id="http://testserver/api/v1/images/3">
         <files>
           <file>

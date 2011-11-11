@@ -432,7 +432,7 @@ releases_by_project_get_xml = \
     <created_by></created_by>
     <version>releaseVersion1</version>
     <published>False</published>
-    <images id="http://testserver/api/v1/projects/chater-foo/releases/images">
+    <images id="http://testserver/api/v1/projects/chater-foo/releases/1/images">
       <image id="http://testserver/api/v1/images/2">
         <files/>
         <actions/>
@@ -498,7 +498,7 @@ releases_by_project_get_xml = \
     <created_by></created_by>
     <version>releaseVersion2</version>
     <published>False</published>
-    <images id="http://testserver/api/v1/projects/chater-foo/releases/images">
+    <images id="http://testserver/api/v1/projects/chater-foo/releases/2/images">
       <image id="http://testserver/api/v1/images/3">
         <files/>
         <actions/>
