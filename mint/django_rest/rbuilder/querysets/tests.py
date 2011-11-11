@@ -150,6 +150,13 @@ class QuerySetTestCase(QueryTestCase):
             data=testsxml.queryset_post_xml,
             username="admin", password="password")
         self.assertEquals(response.status_code, 200)
+
+        # post the queryset AGAIN using the same data
+        # to see if we get any duplicate key constraint
+        # problems
+        response = self._post('query_sets/',
+            data=testsxml.queryset_post_xml2,
+            username="admin", password="password")
         self.assertEquals(response.status_code, 200)
 
         # some Django model tweaks so we don't have to fixture
@@ -192,10 +199,12 @@ class QuerySetTestCase(QueryTestCase):
 
         # try to add new filter terms on edit
         # without supplying a database ID for them
-        response = self._put("query_sets/%s" % qs1.pk,
-            username="admin", password="password",
-            data=testsxml.queryset_put_xml_different)
-        self.assertEquals(response.status_code, 200)
+        # do this TWICE, to make sure we don't get duplicate key errors
+        for x in range(0,1):
+            response = self._put("query_sets/%s" % qs1.pk,
+                username="admin", password="password",
+                data=testsxml.queryset_put_xml_different)
+            self.assertEquals(response.status_code, 200)
 
         # removal of child query set
         response = self._delete("query_sets/%s/child" % qs1.pk,

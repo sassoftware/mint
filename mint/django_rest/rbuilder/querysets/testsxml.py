@@ -20,6 +20,21 @@ queryset_post_xml = """
 </query_set>
 """
 
+queryset_post_xml2 = """
+<query_set>
+  <filter_entries>
+    <filter_entry>
+      <field>system.name</field>
+      <operator>LIKE</operator>
+      <value>3</value>
+    </filter_entry>
+  </filter_entries>
+  <name>New Query Set 2</name>
+  <resource_type>system</resource_type>
+  <description>New Query Set 2</description>
+</query_set>
+"""
+
 # some hardcodes here, may need to be updated when installed
 # querysets change, when that happens, subsitute the M
 # and the N programatically, not implementing just now

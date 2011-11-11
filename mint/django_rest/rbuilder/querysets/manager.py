@@ -171,8 +171,10 @@ class QuerySetManager(basemanager.BaseManager):
         '''create a new query set'''
         # this is probably a duplicate save because of how xobj
         # is used.
+
         querySet.created_by = by_user
         querySet.modified_by = by_user
+        querySet.tagged_date = None
         querySet.save()
         self._recomputeStatic(querySet)
         return querySet
@@ -222,6 +224,7 @@ class QuerySetManager(basemanager.BaseManager):
         '''edit a query set'''
         if not querySet.can_modify:
             raise errors.QuerySetReadOnly(querySetName=querySet.name)
+        querySet.tagged_date = None
 
         # in case the filter terms changed, evaluate queryset and
         # all parents so they can contain accurate membership.  Transitive
@@ -235,7 +238,6 @@ class QuerySetManager(basemanager.BaseManager):
             self._tagSingleQuerySetTransitive(qs, qsAllResult)
             self._updateQuerySetTaggedDate(qs)
 
-        querySet.tagged_date = None
         querySet.modified_by = by_user
         querySet.modified_date = timeutils.now()
         querySet.save()
