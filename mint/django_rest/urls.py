@@ -411,13 +411,13 @@ urlpatterns = patterns('',
         model='images.Image'),
 
     # Packages
-    # --incomplete -- do not reinstate until completed/RBAC'd
-    #URL(r'packages/?$',
-    #    packageindexviews.PackageService(),
-    #    name='Packages'),
-    #URL(r'packages/(?P<package_id>\d+)/?$',
-    #    packageindexviews.PackageService(),
-    #    name='Package'),
+    # --incomplete -- 
+    URL(r'packages/?$',
+        packageindexviews.PackageService(),
+        name='Packages'),
+    URL(r'packages/(?P<package_id>\d+)/?$',
+        packageindexviews.PackageService(),
+        name='Package'),
 
 ### Commented out future packages API
 #     # Packages
