@@ -1708,7 +1708,7 @@ class DecimalTimestampField(DecimalField):
     def to_xobj(self, val, request):
         if val is not None and val != 0:
             ts = timeutils.fromtimestamp(val)
-            return str(ts)
+            return ts.isoformat()
         else:
             return ''
 
