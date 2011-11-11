@@ -181,6 +181,17 @@ class QuerySetChildResultService(BaseQuerySetService):
         else:
             return self.mgr.getQuerySetChildResult(query_set_id, for_user=request._authUser)
 
+    # this is not expected to be our final API for removing child members
+    # but serves as a temporary one in case someone needs it.   Deleting
+    # the queryset is not an option to clear it out because associated
+    # grants would be purged.
+    @rbac(rbac_can_write_queryset)
+    @requires('query_set')
+    @return_xml
+    def rest_DELETE(self, request, query_set_id, query_set):
+        return self.mgr.deleteQuerySetChild(query_set_id, query_set, for_user=request._authUser)
+        
+
 class QuerySetJobsService(BaseQuerySetService):
 
     # no way to list running jobs at the moment

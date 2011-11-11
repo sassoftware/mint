@@ -871,6 +871,18 @@ class QuerySetManager(basemanager.BaseManager):
         return self.getQuerySetChosenResult(querySetId)
 
     @exposed
+    def deleteQuerySetChild(self, querySetId, queryset, for_user):
+        '''
+        Remove a child queryset from a queryset
+        '''
+        source = self._querySet(querySetId)
+        source.children.remove(queryset)
+        source.modified_by = for_user
+        source.modified_date = timeutils.now()
+        source.save()
+        return source
+
+    @exposed
     def scheduleQuerySetJobAction(self, querySet, job):
         '''
         An action is a bare job submission that is a request to start
