@@ -106,7 +106,7 @@ class ImageJobsService(BaseImageService):
     def get(self, imageId):
         return self.mgr.getJobsByImageId(imageId)
 
-    @rbac(can_write_image)
+    @rbac(can_read_image)
     @requires("job", flags=Flags(save=False))
     @return_xml
     def rest_POST(self, request, image_id, job):
