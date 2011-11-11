@@ -80,6 +80,78 @@ queryset_put_xml = """
 </query_set>
 """
 
+remove_child_xml = """
+<query_set id="/api/v1/query_sets/5">
+      <filter_entries>
+        <filter_entry>
+          <operator>IS_NULL</operator>
+          <field>system.name</field>
+          <filter_entry_id>1</filter_entry_id>
+          <value>false</value>
+        </filter_entry>
+      </filter_entries>
+      <filter_descriptor id="/api/v1/query_sets/filter_descriptor"/>
+      <can_modify>false</can_modify>
+      <presentation_type></presentation_type>
+      <modified_date>2011-08-17T14:52:28.162448+00:00</modified_date>
+      <filtered_members id="/api/v1/query_sets/5/filtered"/>
+      <is_top_level>False</is_top_level>
+      <tagged_date></tagged_date>
+      <name>All Systems</name>
+      <presentation_type>system</presentation_type>
+      <chosen_members id="/api/v1/query_sets/5/chosen"/>
+      <query_set_id>5</query_set_id>
+      <child_members id="/api/v1/query_sets/5/child"/>
+      <created_date>2011-08-17T14:52:28.162426+00:00</created_date>
+      <all_members id="/api/v1/query_sets/5/all"/>
+      <children/>
+      <resource_type>system</resource_type>
+      <description>All systems</description>
+</query_set>
+"""
+
+removed_child_xml = """
+<query_set id="http://testserver/api/v1/query_sets/16">
+  <filter_entries>
+    <filter_entry>
+      <operator>LIKE</operator>
+      <field>system.name</field>
+      <filter_entry_id>18</filter_entry_id>
+      <value>newterm</value>
+    </filter_entry>
+  </filter_entries>
+  <personal_for></personal_for>
+  <actions/>
+  <grant_matrix id="http://testserver/api/v1/query_sets/16/grant_matrix"/>
+  <child_members id="http://testserver/api/v1/query_sets/16/child"/>
+  <children/>
+  <is_top_level>True</is_top_level>
+  <can_modify>true</can_modify>
+  <modified_date>2011-11-11T15:36:46.749229+00:00</modified_date>
+  <modified_by id="http://testserver/api/v1/users/1">
+    <user_name>admin</user_name>
+    <full_name>Administrator</full_name>
+  </modified_by>
+  <filtered_members id="http://testserver/api/v1/query_sets/16/filtered"/>
+  <query_set_id>16</query_set_id>
+  <created_by id="http://testserver/api/v1/users/1">
+    <user_name>admin</user_name>
+    <full_name>Administrator</full_name>
+  </created_by>
+  <description></description>
+  <presentation_type></presentation_type>
+  <chosen_members id="http://testserver/api/v1/query_sets/16/chosen"/>
+  <is_public>false</is_public>
+  <is_static>false</is_static>
+  <filter_descriptor id="http://testserver/api/v1/query_sets/16/filter_descriptor"/>
+  <name>JB Test</name>
+  <universe id="http://testserver/api/v1/query_sets/16/universe"/>
+  <tagged_date></tagged_date>
+  <all_members id="http://testserver/api/v1/query_sets/16/all"/>
+  <created_date>2011-08-17T14:52:58.736901+00:00</created_date>
+  <resource_type>system</resource_type>
+</query_set>
+"""
 system_put_chosen_xml = """
 <systems>
 <system id="http://testserver/api/v1/inventory/systems/2">
