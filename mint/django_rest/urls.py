@@ -413,7 +413,7 @@ urlpatterns = patterns('',
     # Packages
     # --incomplete -- 
     URL(r'packages/?$',
-        packageindexviews.PackageService(),
+        packageindexviews.PackagesService(),
         name='Packages'),
     URL(r'packages/(?P<package_id>\d+)/?$',
         packageindexviews.PackageService(),
