@@ -128,6 +128,8 @@ class RbacTestCase(XMLTestCase):
              response = method_map[method](url, username="testuser", password="password", **kwargs)
         else:
             response = method_map[method](url, **kwargs)
+        #if expect == 200 and response.status_code != expect:
+        #    print response.content
         self.failUnlessEqual(response.status_code, expect, "Expected status code of %s for %s" % (expect, url))
         return response.content
 
@@ -235,6 +237,7 @@ class RbacRoleViews(RbacTestCase):
     def setUp(self):
         RbacTestCase.setUp(self)
         self.seed_data = [ 'sysadmin', 'developer', 'intern' ]
+        created_by=usersmodels.User.objects.get(user_name='admin'),
         for item in self.seed_data:
             models.RbacRole(
                 name=item,
@@ -245,6 +248,8 @@ class RbacRoleViews(RbacTestCase):
     def testCanListRoles(self):
 
         url = 'rbac/roles'
+        # the fact that @access.admin retuns 401 and not 403 is a bug and we should resolve
+        # it.
         content = self.req(url, method='GET', expect=401, is_authenticated=True)
         content = self.req(url, method='GET', expect=200, is_admin=True)
 
@@ -266,7 +271,7 @@ class RbacRoleViews(RbacTestCase):
     def testCanGetSingleRole(self):
 
         url = 'rbac/roles/2'
-        content = self.req(url, method='GET', expect=401, is_authenticated=True)
+        content = self.req(url, method='GET', expect=403, is_authenticated=True)
         content = self.req(url, method='GET', expect=200, is_admin=True)
         obj = xobj.parse(content)
         self.assertEqual(obj.role.name, 'developer')
@@ -415,7 +420,6 @@ class RbacPermissionViews(RbacTestCase):
         all = models.RbacPermission.objects.all()
         self.assertEqual(len(all), 4, 'deleted an object')
 
-
     def testCanUpdatePermissions(self):
         
         url = 'rbac/grants/1'
@@ -477,7 +481,7 @@ class RbacUserRoleViewTests(RbacTestCase):
     def testCanListUserRoles(self):
         user_id = self.admin_user.pk
         url = "users/%s/roles/" % user_id
-        content = self.req(url, method='GET', expect=401, is_authenticated=True)
+        content = self.req(url, method='GET', expect=403, is_authenticated=True)
         content = self.req(url, method='GET', expect=200, is_admin=True)
         obj = xobj.parse(content)
         found_items = self._xobj_list_hack(obj.roles.role)
@@ -493,7 +497,7 @@ class RbacUserRoleViewTests(RbacTestCase):
 
         user_id = self.admin_user.pk
         url = "users/%s/roles/1" % user_id # developer role
-        content = self.req(url, method='GET', expect=401, is_authenticated=True)
+        content = self.req(url, method='GET', expect=403, is_authenticated=True)
         content = self.req(url, method='GET', expect=200, is_admin=True)
         self.assertXMLEquals(content, testsxml.user_role_get_xml)
         # now verify if the role isn't assigned to the user, we can't fetch it
@@ -532,65 +536,72 @@ class RbacUserRoleViewTests(RbacTestCase):
         content = self.req(get_url, method='GET', expect=200, is_admin=True)
         self.assertXMLEquals(content, testsxml.user_role_get_list_xml_after_delete)
 
+def setup_core(self):
+    '''suitable function for using in any RBAC based tests for general RBAC setup'''
+
+    RbacTestCase.setUp(self)
+
+    role_seed_data = [ 'sysadmin', 'developer', 'intern' ]
+    for item in role_seed_data:
+        models.RbacRole(
+            name=item,
+            created_by=usersmodels.User.objects.get(user_name='admin'),
+            modified_by=usersmodels.User.objects.get(user_name='admin')
+        ).save()
+
+    def mk_permission(queryset, role, action):
+        models.RbacPermission(
+            queryset      = queryset,
+            role          = models.RbacRole.objects.get(name=role),
+            permission    = models.RbacPermissionType.objects.get(name=action),
+            created_by    = usersmodels.User.objects.get(user_name='admin'),
+            modified_by   = usersmodels.User.objects.get(user_name='admin'),
+            created_date  = timeutils.now(),
+            modified_date = timeutils.now()
+        ).save()
+
+    def mk_user(name, is_admin, role):
+
+        xml = testsxml.user_post_xml % (
+            name, name, is_admin 
+        )
+        # admins must register admins
+        response = self._post('users/',
+            data=xml,
+            username='admin', password='password'
+        )
+        assert response.status_code == 200
+        user = xobj.parse(response.content)
+
+        dbuser = usersmodels.User.objects.get(pk = int(user.user.user_id))
+
+        # add rbac role mapping
+        models.RbacUserRole(
+           user = dbuser,
+           role = models.RbacRole.objects.get(name=role),
+           created_by=usersmodels.User.objects.get(user_name='admin'),
+           modified_by=usersmodels.User.objects.get(user_name='admin')
+        ).save()
+        return dbuser
+
+    self.developer_role = models.RbacRole.objects.get(name='developer')
+
+    mk_permission(self.datacenter_queryset, 'sysadmin',  MODMEMBERS)
+    mk_permission(self.datacenter_queryset, 'sysadmin',  CREATERESOURCE)
+    mk_permission(self.datacenter_queryset, 'developer', READMEMBERS)
+    mk_permission(self.sys_queryset, 'sysadmin', READSET)
+    mk_permission(self.user_queryset, 'sysadmin', READMEMBERS)
+
+    self.admin_user     = usersmodels.User.objects.get(user_name='admin')
+    self.admin_user.is_admin = True # already set?
+    self.sysadmin_user  = mk_user('ExampleSysadmin', False, 'sysadmin')
+    self.developer_user = mk_user('ExampleDeveloper', False, 'developer')
+    self.intern_user    = mk_user('ExampleIntern', False, 'intern')
 
 class RbacEngine(RbacTestCase):
+
     def setUp(self):
-        RbacTestCase.setUp(self)
-
-        role_seed_data = [ 'sysadmin', 'developer', 'intern' ]
-        for item in role_seed_data:
-            models.RbacRole(
-                name=item,
-                created_by=usersmodels.User.objects.get(user_name='admin'),
-                modified_by=usersmodels.User.objects.get(user_name='admin')
-            ).save()
-
-        def mk_permission(queryset, role, action):
-            models.RbacPermission(
-                queryset      = queryset,
-                role          = models.RbacRole.objects.get(name=role),
-                permission    = models.RbacPermissionType.objects.get(name=action),
-                created_by    = usersmodels.User.objects.get(user_name='admin'),
-                modified_by   = usersmodels.User.objects.get(user_name='admin'),
-                created_date  = timeutils.now(),
-                modified_date = timeutils.now()
-            ).save()
-
-        def mk_user(name, is_admin, role):
-
-            xml = testsxml.user_post_xml % (
-                name, name, is_admin 
-            )
-            # admins must register admins
-            response = self._post('users/',
-                data=xml,
-                username='admin', password='password'
-            )
-            assert response.status_code == 200
-            user = xobj.parse(response.content)
-
-            dbuser = usersmodels.User.objects.get(pk = int(user.user.user_id))
-
-            # add rbac role mapping
-            models.RbacUserRole(
-               user = dbuser,
-               role = models.RbacRole.objects.get(name=role),
-               created_by=usersmodels.User.objects.get(user_name='admin'),
-               modified_by=usersmodels.User.objects.get(user_name='admin')
-            ).save()
-            return dbuser
-
-        mk_permission(self.datacenter_queryset, 'sysadmin',  MODMEMBERS)
-        mk_permission(self.datacenter_queryset, 'sysadmin',  CREATERESOURCE)
-        mk_permission(self.datacenter_queryset, 'developer', READMEMBERS)
-        mk_permission(self.sys_queryset, 'sysadmin', READSET)
-        mk_permission(self.user_queryset, 'sysadmin', READMEMBERS)
-
-        self.admin_user     = usersmodels.User.objects.get(user_name='admin')
-        self.admin_user.is_admin = True # already set?
-        self.sysadmin_user  = mk_user('ExampleSysadmin', False, 'sysadmin')
-        self.developer_user = mk_user('ExampleDeveloper', False, 'developer')
-        self.intern_user    = mk_user('ExampleIntern', False, 'intern')
+        setup_core(self)
 
     def _get(self, url, username=None, password=None, pagination='', *args, **kwargs):
         """
@@ -869,5 +880,51 @@ class RbacEngineTests(RbacEngine):
                 self.admin_user, self.lost_system, action,
             ))
 
-# SEE ALSO (PENDING) tests in inventory and other services
+class MetaRbac(RbacTestCase):
+    '''Tests that involve RBAC on the RBAC'''
+
+    def setUp(self):
+        setup_core(self)
+
+    def testRoleWithRbac(self):
+        # user can get a role they are in
+        # this role should NOT leak other members in the role
+        url = "rbac/roles/%s" % self.developer_role.pk
+        response = self._get(url, username="ExampleDeveloper", password="password")
+        self.assertEqual(response.status_code, 200)
+        self.assertXMLEquals(response.content, testsxml.role_get_xml)
+        # user outside of role cannot see role
+        response = self._get(url, username="ExampleIntern", password="password")
+        self.assertEqual(response.status_code, 403)
+        # admin users can always get in
+        response = self._get(url, username="admin", password="password")
+        self.assertEqual(response.status_code, 200)
+ 
+    def testCanViewUserRoles(self):
+        # ExampleDeveloper can also see his roles
+        user_id = self.developer_user.pk
+        url = "users/%s/roles/" % user_id
+        response = self._get(url, username="ExampleDeveloper", password="password")
+        self.assertEqual(response.status_code, 200)
+        # but another user cannot see another user's roles
+        response = self._get(url, username="ExampleIntern", password="password")
+        self.assertEqual(response.status_code, 403)
+
+        # of course admin users can always get in
+        response = self._get(url, username="admin", password="password")
+        self.assertEqual(response.status_code, 200)
+        # also make sure role is visible by alternative URL
+        url = "users/%s/roles/%s" % (user_id, self.developer_role.pk)
+        response = self._get(url, username="ExampleDeveloper", password="password")
+        self.assertEqual(response.status_code, 200)
+        # but not by users not in the role
+        response = self._get(url, username="ExampleIntern", password="password")
+        self.assertEqual(response.status_code, 403)
+        # though admins can
+        response = self._get(url, username="admin", password="password")
+        self.assertEqual(response.status_code, 200)
+
+#####################################################
+#  NOTE: RBAC tests for other modules (403 vs 200, etc, also exist in other modules)
+
 

@@ -6,20 +6,11 @@
 
 # Services related to role based access control.
 
-#import os
-#import time
-#
-from django.http import HttpResponse #, HttpResponseNotFound
-#from django_restapi import resource
-#
-#from mint.db import database
-#from mint import users
-from mint.django_rest.deco import return_xml, access, requires #, ACCESS, \
-#    HttpAuthenticationRequired, getHeaderValue, xObjRequires
-#from mint.django_rest.rbuilder.users import models as usersmodels
+from django.http import HttpResponse
+from mint.django_rest.deco import return_xml, access, requires
 from mint.django_rest.rbuilder import service
 from mint.django_rest.rbuilder.rbac import models
-#from mint.django_rest.rbuilder.projects import models as projectsmodels
+from mint.django_rest.rbuilder.rbac.rbacauth import rbac
 
 class BaseRbacService(service.BaseService):
     pass
@@ -152,6 +143,30 @@ class RbacRolesService(BaseRbacService):
     def rest_POST(self, request, role):
         return self.mgr.addRbacRole(role, request._authUser)
 
+def can_read_role(view, request, role_id, *args, **kwargs):
+    # users are allowed to see their roles, you will notice this
+    # doesn't run through RBAC *directly* because we can't use
+    # RBAC to RBAC RBAC (actually, it might work, but...)
+    user = request._authUser
+    if user.is_admin:
+        return True
+    in_role = view.mgr.isUserInRole(user, role_id)
+    if in_role:
+        return True
+    return False
+
+def can_read_user_roles(view, request, user_id, role_id=None, *args, **kwargs):
+    # users can see their roles
+    user = request._authUser
+    if role_id is None:
+        if user.is_admin:
+            return True
+        if str(user.pk) == str(user_id):
+            return True
+        return False
+    else: 
+        return can_read_role(view, request, role_id, *args, **kwargs)
+
 class RbacRoleService(BaseRbacService):
     """
     Adds and edits roles.
@@ -163,7 +178,7 @@ class RbacRoleService(BaseRbacService):
     """
 
     # READ
-    @access.admin
+    @rbac(can_read_role)
     @return_xml
     def rest_GET(self, request, role_id):
         return self.get(role_id)
@@ -194,11 +209,13 @@ class RbacUserRolesService(BaseRbacService):
     """
 
     # READ
-    @access.admin
+    @rbac(can_read_user_roles)
     @return_xml
     def rest_GET(self, request, user_id, role_id=None):
         return self.get(user_id, role_id)
 
+    # TODO: this really should be split out into two services
+    # functions should not return multiple types of entities
     def get(self, user_id, role_id=None):
         if role_id is not None:
             return self.mgr.getRbacUserRole(user_id, role_id)

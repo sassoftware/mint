@@ -92,6 +92,15 @@ class RbacManager(basemanager.BaseManager):
         return self._getThings(models.RbacRoles, 
             models.RbacRole, 'role', order_by=['role_id'])
 
+    @exposed 
+    def isUserInRole(self, user, role_id):
+        role = self._role(role_id)
+        mappings = models.RbacUserRole.objects.filter(
+            user = user,
+            role = role
+        ).count()
+        return (mappings == 1)
+
     @exposed
     def getRbacGrantMatrix(self, query_set_id, request):
         # a very UI specific view into grants for a given queryset
