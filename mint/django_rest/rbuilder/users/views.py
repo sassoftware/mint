@@ -79,7 +79,7 @@ class UserService(service.BaseService):
 
     @access.admin
     def rest_DELETE(self, request, user_id):
-        self.mgr.deleteUser(user_id)
+        self.mgr.deleteUser(user_id, request._authUser)
         return HttpResponse(status=204)
 
 class SessionService(service.BaseService):

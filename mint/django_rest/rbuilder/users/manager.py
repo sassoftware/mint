@@ -155,7 +155,7 @@ class UsersManager(basemanager.BaseManager):
         return False
 
     @exposed
-    def deleteUser(self, user_id):
+    def deleteUser(self, user_id, forUser=None):
         # users are not actually deleted, they are only set to deleted
         # to preserve metadata and relations around them.
         if user_id == str(self.user.user_id):
@@ -176,6 +176,9 @@ class UsersManager(basemanager.BaseManager):
 
         deleting.deleted = True
         deleting.save()
+        # need to retag because we haven't actually deleted it, otherwise
+        # cascade takes care of tag removal for other resources
+        self.mgr.retagQuerySetsByType('user', forUser)
 
     @exposed
     def getSessionInfo(self):
