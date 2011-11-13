@@ -50,12 +50,10 @@ class SyncTool(object):
     def syncAll(self):
         for handle in self.reposManager.iterRepositories():
             self._syncReposMaybe(handle)
-        self.db.commit()
 
     def syncReposByFQDN(self, fqdn):
         handle = self.reposManager.getRepositoryFromFQDN(fqdn)
         self._syncReposMaybe(handle)
-        self.db.commit()
 
     def _syncReposMaybe(self, handle):
         self._syncRepos(handle)
@@ -88,6 +86,7 @@ class SyncTool(object):
                 self.db.rollback()
                 continue
             else:
+                self.db.commit()
                 break
         else:
             raise

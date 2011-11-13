@@ -4,7 +4,7 @@
 # All Rights Reserved
 #
 
-SUBDIRS = artwork postgresql stubs platforms
+SUBDIRS = artwork postgresql stubs platforms project-templates
 
 generated_files = custom.cfg rbuilder.conf
 
