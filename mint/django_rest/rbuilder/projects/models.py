@@ -451,30 +451,37 @@ class Release(modellib.XObjIdModel):
 
     release_id = models.AutoField(primary_key=True,
         db_column='pubreleaseid')
-    project = modellib.DeferredForeignKey('projects.Project', db_column='projectid', 
-        related_name='releases', view_name='ProjectReleases')
-    name = models.CharField(max_length=255, blank=True, default='')
-    version = models.CharField(max_length=32, blank=True, default='')
-    description = models.TextField()
-    time_created = modellib.DecimalTimestampField(
-        db_column='timecreated', null=True)
-    created_by = modellib.ForeignKey('users.User', db_column='createdby',
-        related_name='created_releases', null=True)
-    time_updated = modellib.DecimalTimestampField(
-        null=True, db_column='timeupdated')
+    project = D(modellib.DeferredForeignKey('projects.Project', db_column='projectid', 
+        related_name='releases', view_name='ProjectReleases'),
+        'project to which the release belongs to')
+    name = D(models.CharField(max_length=255, blank=True, default=''),
+        'Release name')
+    version = D(models.CharField(max_length=32, blank=True, default=''),
+        'Release version')
+    description = D(models.TextField(), 'Description')
+    time_created = D(modellib.DecimalTimestampField(
+        db_column='timecreated', null=True), 'When the release was created')
+    created_by = D(modellib.ForeignKey('users.User', db_column='createdby',
+        related_name='created_releases', null=True),
+        'User who created the release')
+    time_updated = D(modellib.DecimalTimestampField(
+        null=True, db_column='timeupdated'),
+        'Time user updated the release')
     # to be consistent with the rest of the models, this really should be modified_by
     # but not changing before 11/14/11 release, feel free to fix later
-    updated_by = modellib.ForeignKey('users.User', db_column='updatedby',
-        related_name='updated_releases', null=True)
+    updated_by = D(modellib.ForeignKey('users.User', db_column='updatedby',
+        related_name='updated_releases', null=True),
+        'User who updated the release')
     time_published = modellib.DecimalTimestampField(
         db_column='timepublished', null=True)
-    published_by = modellib.ForeignKey('users.User', 
+    published_by = D(modellib.ForeignKey('users.User', 
         db_column='publishedby', related_name='published_releases',
-        null=True)
-    should_mirror = models.SmallIntegerField(db_column='shouldmirror',
-        blank=True, default=0)
-    time_mirrored = modellib.DecimalTimestampField(
-        null=True, db_column='timemirrored')
+        null=True), 'User who published the release')
+    should_mirror = D(models.SmallIntegerField(db_column='shouldmirror',
+        blank=True, default=0), 'Should the release be mirrored, default is 0')
+    time_mirrored = D(modellib.DecimalTimestampField(
+        null=True, db_column='timemirrored'),
+        'When the release was mirrored')
     published = modellib.SyntheticField()
     num_images = modellib.SyntheticField()
     
