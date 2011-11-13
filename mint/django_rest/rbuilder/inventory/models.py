@@ -63,11 +63,6 @@ class Pk(object):
 
 class Inventory(modellib.XObjModel):
 
-    #FIXME Inventory needs class attribute XSL for generatecomments to do
-    #      its thing.  However, because the field definitions are inside
-    #      an init, nothing will get picked up until they are moved outside
-    XSL = 'inventory.xsl'
-
     class Meta:
         abstract = True
     _xobj = xobj.XObjMetadata(
@@ -89,8 +84,6 @@ class Inventory(modellib.XObjModel):
 
 class Systems(modellib.Collection):
 
-    XSL = 'systems.xsl'
-    
     class Meta:
         abstract = True
     _xobj = xobj.XObjMetadata(
@@ -108,8 +101,6 @@ class Systems(modellib.Collection):
 
 class SystemStates(modellib.XObjModel):
 
-    XSL = 'systemStates.xsl'
-
     class Meta:
         abstract = True
     _xobj = xobj.XObjMetadata(
@@ -121,8 +112,6 @@ class SystemStates(modellib.XObjModel):
         return [s.save() for s in self.system_state]
     
 class ManagementNodes(modellib.XObjModel):
-
-    XSL = 'managementNodes.xsl'
 
     class Meta:
         abstract = True
@@ -157,8 +146,6 @@ class SystemEvents(modellib.XObjModel):
 
 class Networks(modellib.XObjModel):
 
-    XSL = 'networks.xsl'
-
     class Meta:
         abstract = True
     _xobj = xobj.XObjMetadata(
@@ -169,8 +156,6 @@ class Networks(modellib.XObjModel):
     systems = D(modellib.HrefField('../systems'), "an entry point into system inventory")
     
 class Credentials(modellib.XObjIdModel):
-    
-    XSL = 'credentials.xsl'
     
     class Meta:
         abstract = True
@@ -193,8 +178,6 @@ class Credentials(modellib.XObjIdModel):
         return xobj.toxml(self)
     
 class Configuration(modellib.XObjIdModel):
-    
-    XSL = 'configuration.xsl'
     
     class Meta:
         abstract = True
@@ -230,8 +213,6 @@ class ConfigurationDescriptor(modellib.XObjIdModel):
         return xobj.toxml(self)
 
 class SystemState(modellib.XObjIdModel):
-    
-    XSL = 'systemState.xsl'
     
     serialize_accessors = False
     class Meta:
@@ -301,8 +282,6 @@ class SystemState(modellib.XObjIdModel):
 
 class ManagementInterfaces(modellib.XObjModel):
     
-    XSL = 'managementInterfaces.xsl'
-    
     class Meta:
         abstract = True
     _xobj = xobj.XObjMetadata(
@@ -311,8 +290,6 @@ class ManagementInterfaces(modellib.XObjModel):
     list_fields = ['management_interface']
     
 class ManagementInterface(modellib.XObjIdModel):
-    
-    XSL = "managementInterface.xsl"
     
     class Meta:
         db_table = 'inventory_management_interface'
@@ -352,9 +329,7 @@ class ManagementInterface(modellib.XObjIdModel):
     load_fields = [name]
 
 class SystemTypes(modellib.XObjModel):
-    
-    XSL = 'systemTypes.xsl'
-    
+
     class Meta:
         abstract = True
     _xobj = xobj.XObjMetadata(
@@ -363,7 +338,7 @@ class SystemTypes(modellib.XObjModel):
     list_fields = ['system_type']
     
 class SystemType(modellib.XObjIdModel):
-    XSL = "systemType.xsl"
+    
     class Meta:
         db_table = 'inventory_system_type'
     _xobj = xobj.XObjMetadata(
@@ -437,7 +412,7 @@ class AssimilationCredential(modellib.XObjModel):
     ssh_key      = D(models.TextField(null=True), "SSH key")
 
 class System(modellib.XObjIdModel):
-    XSL = "system.xsl"
+    
     class Meta:
         db_table = 'inventory_system'
 
@@ -868,8 +843,6 @@ class System(modellib.XObjIdModel):
 
 class ManagementNode(System):
     
-    XSL = 'managementNode.xsl'
-    
     class Meta:
         db_table = 'inventory_zone_management_node'
     _xobj = xobj.XObjMetadata(
@@ -903,9 +876,7 @@ class SystemTargetCredentials(modellib.XObjModel):
         null=False, related_name = 'systems')
 
 class InstalledSoftware(modellib.XObjIdModel):
-    
-    XSL = 'installedSoftware.xsl'
-    
+
     class Meta:
         abstract = True
     _xobj = xobj.XObjMetadata(
@@ -957,9 +928,7 @@ class SystemEvent(modellib.XObjIdModel):
         modellib.XObjIdModel.save(self, *args, **kw)
 
 class Network(modellib.XObjIdModel):
-    
-    XSL = 'network.xsl'
-    
+
     class Meta:
         db_table = 'inventory_system_network'
         unique_together = (('system', 'dns_name', 'ip_address', 'ipv6_address'),)
@@ -986,8 +955,6 @@ class Network(modellib.XObjIdModel):
         return self.ip_address, self.dns_name
 
 class SystemLog(modellib.XObjIdModel):
-    
-    XSL = 'systemLog.xsl'
     
     class Meta:
         db_table = 'inventory_system_log'
