@@ -190,7 +190,8 @@ class DocMetadata(object):
     
     @property
     def syntheticFields(self):
-        return {}
+        fields = self.model._meta.synthetic_fields
+        return fields
     
     @property
     def backwardReferences(self):
@@ -321,7 +322,7 @@ class Command(BaseCommand):
         """
         
         # sacrifice some efficiency for clarity.  getAttributesDocumentation
-        # may be recursive, so defining a nested fcn is a little excessive.
+        # is be recursive, so defining a nested fcn is a little excessive.
         # however, getAttributesDocumentation will be almost always terminate
         # in less than 2 calls so this isn't much of a limitation.
         def shouldContinue(fieldname):
@@ -354,9 +355,6 @@ class Command(BaseCommand):
             docstring = getattr(field, 'docstring', 'N/A')
             line = ATTRIBUTE_TEMPLATE % {'ATTRNAME':fieldname, 'DOCSTRING':docstring}
             text.append(line)
-    
-        for fieldname, field in metadata.syntheticFields.items():
-            pass
     
         # if subModel is None then its listFields refers to an indeterminate
         # model tag (ie a model that exists in two or more different apps)
