@@ -147,8 +147,10 @@ class Database(DBInterface):
         self.reposShim = reposdb.RepositoryManager(cfg, db._db)
         if subscribers is None:
             subscribers = []
-            subscribers.append(emailnotifier.EmailNotifier(cfg, self,
-                                                           auth))
+            # Email notifications we have no longer make sense.  See
+            # http://mingle.eng.rpath.com/projects/rbuilder/cards/959 for more
+            # information.
+            # subscribers.append(emailnotifier.EmailNotifier(cfg, self, auth))
             subscribers.append(self.awsMgr)
         for subscriber in subscribers:
             self.publisher.subscribe(subscriber)
