@@ -21,8 +21,6 @@ XObjHidden  = modellib.XObjHidden
 
 class Rbac(modellib.XObjModel):
 
-    # XSL = 'rbac.xsl'
-
     class Meta:
         abstract = True
 
@@ -38,7 +36,6 @@ class RbacRoles(modellib.Collection):
     A collection of RbacRoles
     '''
 
-    # XSL = 'fixme.xsl' # TODO
     class Meta:
         abstract = True
     _xobj = xobj.XObjMetadata(tag = 'roles')
@@ -59,7 +56,6 @@ class RbacRole(modellib.XObjIdModel):
     An RbacRole represents a role a user has that is used to determine a RbacPermission
     on an RbacContext.  Example roles could be "syadmin", "developer", or "it_architect"
     '''
-    # XSL = "fixme.xsl" # TODO
     class Meta:
         db_table = 'rbac_role'
 
@@ -108,7 +104,6 @@ class RbacPermissions(modellib.Collection):
     A collection of RbacPermissions
     '''
 
-    # XSL = 'fixme.xsl' # TODO
     class Meta:
         abstract = True
     _xobj = xobj.XObjMetadata(tag = 'grants')
@@ -128,7 +123,6 @@ class RbacPermissionTypes(modellib.Collection):
     A collection of RbacPermissionTypes
     '''
 
-    # XSL = 'fixme.xsl' # TODO
     class Meta:
         abstract = True
     _xobj = xobj.XObjMetadata(tag = 'permissions')
@@ -152,7 +146,6 @@ class RbacPermissionType(modellib.XObjIdModel):
     #        "name" TEXT,
     #        "description" TEXT
 
-    XSL = "fixme.xsl" # TODO
     class Meta:
         db_table = 'rbac_permission_type'
 
@@ -175,7 +168,6 @@ class RbacPermission(modellib.XObjIdModel):
     and an action.  For example, on systems tagged "datacenter" a user
     with the "sysadmin" role can "write".
     '''
-    # XSL = "fixme.xsl" # TODO
     class Meta:
         db_table = 'rbac_permission'
 
@@ -209,7 +201,6 @@ class RbacUserRoles(modellib.Collection):
     A collection of RbacUserRoles
     '''
 
-    # XSL = 'fixme.xsl' # TODO
     class Meta:
         abstract = True
     _xobj = xobj.XObjMetadata(tag = 'user_roles')
@@ -235,7 +226,6 @@ class RbacUserRole(modellib.XObjIdModel):
     This may be used when NOT using a live directory for role mappings, i.e. standalone
     or via a sync script.
     '''
-    # XSL = "fixme.xsl" # TODO
     class Meta:
         db_table = 'rbac_user_role'
 

@@ -48,8 +48,6 @@ class Action(modellib.XObjModel):
 
 class Jobs(modellib.Collection):
     
-    XSL = 'jobs.xsl'
-    
     class Meta:
         abstract = True
     _xobj = xobj.XObjMetadata(
@@ -73,8 +71,6 @@ class Jobs(modellib.Collection):
 
 
 class Job(modellib.XObjIdModel):
-    
-    XSL = 'job.xsl'
     
     class Meta:
         db_table = 'jobs_job'
@@ -188,8 +184,6 @@ class Job(modellib.XObjIdModel):
 
 class JobStates(modellib.Collection):
     
-    XSL = 'jobStates.xsl'
-    
     class Meta:
         abstract = True
     _xobj = xobj.XObjMetadata(
@@ -199,8 +193,6 @@ class JobStates(modellib.Collection):
     job_state = []
 
 class JobState(modellib.XObjIdModel):
-    
-    XSL = 'jobState.xsl'
     
     class Meta:
         db_table = "jobs_job_state"
@@ -224,9 +216,7 @@ class JobState(modellib.XObjIdModel):
     load_fields = [ name ]
 
 class EventTypes(modellib.XObjModel):
-
-    XSL = 'eventTypes.xsl'
-
+    
     class Meta:
         abstract = True
     _xobj = xobj.XObjMetadata(
@@ -238,8 +228,6 @@ class EventTypes(modellib.XObjModel):
         return [s.save() for s in self.event_type]
 
 class EventType(modellib.XObjIdModel):
-    
-    XSL = 'eventType.xsl'
     
     class Meta:
         db_table = 'jobs_job_type'

@@ -12,7 +12,6 @@ from mint.django_rest.deco import D
 from mint.django_rest.rbuilder import modellib
 
 class Zones(modellib.XObjModel):
-    XSL = 'zones.xsl'
 
     class Meta:
         abstract = True
@@ -22,7 +21,6 @@ class Zones(modellib.XObjModel):
     list_fields = ['zone']
 
 class Zone(modellib.XObjIdModel):
-    XSL = 'zone.xsl'
 
     LOCAL_ZONE = "Local rBuilder"
     class Meta:
