@@ -580,8 +580,6 @@ class System(modellib.XObjIdModel):
     targetType = XObjHidden(modellib.SyntheticField())
     targetName = XObjHidden(modellib.SyntheticField())
 
-    logged_fields = ['name', 'installed_software']
-
     # We need to distinguish between an <installed_software> node not being
     # present at all, and being present and empty
     new_versions = None

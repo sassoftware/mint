@@ -14,7 +14,6 @@ from mint.django_rest.rbuilder.inventory.manager.versionmgr import VersionManage
 from mint.django_rest.rbuilder.inventory.manager.repeatermgr import RepeaterManager
 from mint.django_rest.rbuilder.jobs.manager import JobManager
 from mint.django_rest.rbuilder.querysets.manager import QuerySetManager
-from mint.django_rest.rbuilder.changelog.manager import ChangeLogManager
 from mint.django_rest.rbuilder.packageindex.manager import PackageManager
 from mint.django_rest.rbuilder.projects.manager import ProjectManager
 from mint.django_rest.rbuilder.users.manager import UsersManager
@@ -50,7 +49,6 @@ class RbuilderManager(basemanager.BaseRbuilderManager):
         'repeaterMgr' : RepeaterManager,
         'jobMgr' : JobManager,
         'querySetMgr' : QuerySetManager,
-        'changeLogMgr' : ChangeLogManager,
         'packageMgr' : PackageManager,
         'usersMgr' : UsersManager,
         'projectManager' : ProjectManager,

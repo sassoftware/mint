@@ -56,7 +56,6 @@ class VersionsTestCase(XMLTestCase):
         self.failUnlessEqual(response.status_code, 200)
         self.assertXMLEquals(response.content, """\
 <api_version id="http://testserver/api/v1" name="v1" description="rBuilder REST API version 1">
-  <changelogs id="http://testserver/api/v1/changelogs"/>
   <config_info>
     <account_creation_requires_admin>false</account_creation_requires_admin>
     <hostname>superduper.example.com</hostname>

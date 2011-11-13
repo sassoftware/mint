@@ -14,7 +14,6 @@ from mint.django_rest.rbuilder.inventory import views as inventoryviews
 from mint.django_rest.rbuilder.querysets import views as querysetviews
 # from mint.django_rest.rbuilder.packages import views as packageviews
 from mint.django_rest.rbuilder.packageindex import views as packageindexviews
-from mint.django_rest.rbuilder.changelog import views as changelogviews
 from mint.django_rest.rbuilder.projects import views as projectviews
 from mint.django_rest.rbuilder.users import views as usersviews
 from mint.django_rest.rbuilder.notices import views as noticesviews
@@ -321,17 +320,6 @@ urlpatterns = patterns('',
         name='QuerySetGrantMatrix',
         model='querysets.GrantMatrix'),
     
-
-    # Change Logs
-    URL(r'changelogs/?$',
-        changelogviews.ChangeLogService(),
-        name='ChangeLogs',
-        model='changelog.ChangeLogs'),
-    URL(r'changelogs/(?P<change_log_id>\d+)/?$',
-        changelogviews.ChangeLogService(),
-        name='ChangeLog',
-        model='changelog.ChangeLog'),
-
     # These are aggregates
     # Aggregate all project branches
     URL(r'project_branches/?$',

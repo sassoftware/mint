@@ -987,10 +987,6 @@ class XObjModel(models.Model):
     # All models use our BaseManager as their manager
     objects = BaseManager()
 
-    # Fields that when changed, cause a log to get created in the changelog
-    # application.
-    logged_fields = []
-
     # Fields which should be serialized/deserialized as lists.  This is a hint
     # for the to_xml method, e.g., given the Systems model with 'system' in
     # list_fields, it knows to look for a system attribute which is a list of
@@ -1094,26 +1090,6 @@ class XObjModel(models.Model):
         if not tag:
             tag = cls.__name__.lower()
         return tag
-
-    def _saveFields(self):
-        if self._meta.abstract:
-            return
-        fieldNames = self._get_field_dict().keys()
-        if self.pk:
-            self._savedFields = dict((f, getattr(self, f)) \
-                            for f in self.logged_fields \
-                            if f in fieldNames)
-        else:
-            self._savedFields = None
-
-    def _getChangedFields(self):
-        changedFields = {}
-        if self._savedFields is None:
-            return changedFields
-        for k, v in self._savedFields.items():
-            if v != getattr(self, k):
-                changedFields[k] = v
-        return changedFields
 
     def _load_fields_dict(self):
         """

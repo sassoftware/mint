@@ -101,7 +101,6 @@ INSTALLED_APPS = (
     'mint.django_rest.rbuilder.inventory',
     'mint.django_rest.rbuilder.metrics',
     'mint.django_rest.rbuilder.querysets',
-    'mint.django_rest.rbuilder.changelog',
     'mint.django_rest.rbuilder.packageindex',
     'mint.django_rest.rbuilder.packages',
     'mint.django_rest.rbuilder.projects',
