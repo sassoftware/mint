@@ -11,7 +11,6 @@ from mint import config
 from mint import mint_error
 from mint.lib import database
 from mint import userlevels
-from mint import mailinglists
 from mint.web import decorators, webhandler
 from mint.users import Authorization
 
@@ -135,21 +134,6 @@ class WebDecoratorTest(unittest.TestCase):
         # admin
         self.auth = Authorization(admin = True)
         assert(w(self, auth = self.auth))
-
-    # hack for the MailingListException hack:
-    def _write(self, *args, **kwargs):
-        return "it's magic!"
-
-    def testMailList(self):
-        def raiseMailError(*args, **kwargs):
-            raise mailinglists.MailingListException("ugh")
-
-        w = decorators.mailList(dummy)
-
-        assert(w(self))
-
-        w = decorators.mailList(raiseMailError)
-        assert(w(self) == "it's magic!")
 
     def testPostOnly(self):
         w = decorators.postOnly(dummy)

@@ -17,7 +17,6 @@ static_files =				\
 	fix-ec2-certificates		\
 	generate-certs.sh		\
 	group-script			\
-	init-extproducts	        \
 	load-offline-mirror		\
 	mcp-stack			\
 	migrate-all-projects		\
