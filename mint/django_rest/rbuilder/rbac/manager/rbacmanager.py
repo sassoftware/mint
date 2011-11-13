@@ -570,8 +570,6 @@ class RbacManager(basemanager.BaseManager):
         # similar to Unix user groups in this respect
         # except only create them if we know the user
         # will have "My Querysets"
-        if not user.can_create:
-            raise Exception('internal error: user creation rights not set')
         role_name = "user:%s" % user.user_name
         role, created = models.RbacRole.objects.get_or_create(
             name = role_name,
