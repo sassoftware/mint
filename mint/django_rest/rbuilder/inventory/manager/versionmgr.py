@@ -203,7 +203,7 @@ class VersionManager(basemanager.BaseManager):
         # last_available_update_refresh.
         if trove.last_available_update_refresh is not None:
             trove.last_available_update_refresh = \
-                trove.last_available_update_refresh.replace(tzinfo=tz.tzutc())
+                trove.last_available_update_refresh.replace(tzinfo=timeutils.TZUTC)
 
         if force or \
            trove.last_available_update_refresh is None or \
