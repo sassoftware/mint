@@ -143,7 +143,7 @@ class ImagesTest(restbase.BaseRestTest):
         self.failUnlessEqual(image.metadata['cost'], 'sdfg')
 
         self.failUnlessEqual(baseUrl.path,
-            '/api/products/createdproject/images/4/')
+            '/api/products/createdproject/images/5/')
 
     def testGetReleases(self):
         return self._testGetReleases()
@@ -186,7 +186,7 @@ class ImagesTest(restbase.BaseRestTest):
     <creator href="http://localhost:8000/api/users/adminuser">adminuser</creator>
     <timeCreated></timeCreated>
     <shouldMirror>false</shouldMirror>
-    <imageCount>2</imageCount>
+    <imageCount>3</imageCount>
   </release>
 </releases>
 """
@@ -194,7 +194,7 @@ class ImagesTest(restbase.BaseRestTest):
             txt = re.sub("<%s>.*</%s>" % (pat, pat),
              "<%s></%s>" % (pat, pat),
             txt)
-        self.failUnlessEqual(txt, 
+        self.assertXMLEquals(txt,
             exp % dict(server = 'localhost', port = '8000'))
 
         # These tests are very expensive, so cram the image test here as well
@@ -278,6 +278,43 @@ class ImagesTest(restbase.BaseRestTest):
         <sha1>da4b9237bacccdf19c0760cab7aec4a8359010b0</sha1>
         <fileName>imagefile_2.iso</fileName>
         <url urlType="0">http://localhost:8000/downloadImage?fileId=2&amp;urlType=0</url>
+      </file>
+    </files>
+    <baseFileName>testproject-1-</baseFileName>
+  </image>
+  <image id="http://localhost:8000/api/products/testproject/images/3">
+    <imageId>3</imageId>
+    <hostname>testproject</hostname>
+    <release href="http://localhost:8000/api/products/testproject/releases/1">Release Name</release>
+    <imageType>vmwareEsxImage</imageType>
+    <imageTypeName>VMware(R) ESX/VCD Virtual Appliance</imageTypeName>
+    <name>Image 3 vmware esx</name>
+    <architecture></architecture>
+    <troveName>group-foo</troveName>
+    <troveVersion>/testproject.rpath.local2@yournamespace:testproject-1.0-devel/1-1-1</troveVersion>
+    <trailingVersion>1-1-1</trailingVersion>
+    <troveFlavor></troveFlavor>
+    <released>true</released>
+    <published>false</published>
+    <version href="http://localhost:8000/api/products/testproject/versions/1.0">1.0</version>
+    <stage href="http://localhost:8000/api/products/testproject/versions/1.0/stages/Development">Development</stage>
+    <creator href="http://localhost:8000/api/users/adminuser">adminuser</creator>
+    <timeCreated></timeCreated>
+    <buildCount>0</buildCount>
+    <buildLog href="http://localhost:8000/api/products/testproject/images/3/buildLog"/>
+    <imageStatus id="http://localhost:8000/api/products/testproject/images/3/status">
+      <code>-1</code>
+      <message></message>
+      <isFinal>false</isFinal>
+    </imageStatus>
+    <files id="http://localhost:8000/api/products/testproject/images/3/files">
+      <file>
+        <fileId>3</fileId>
+        <title>Image File 3</title>
+        <size>3072</size>
+        <sha1>77de68daecd823babbb58edb1c8e14d7106e83bb</sha1>
+        <fileName>imagefile_3.iso</fileName>
+        <url urlType="0">http://localhost:8000/downloadImage?fileId=3&amp;urlType=0</url>
       </file>
     </files>
     <baseFileName>testproject-1-</baseFileName>
@@ -544,8 +581,8 @@ class ImagesTest(restbase.BaseRestTest):
             'Created On:&lt;/b&gt; @CREATED-ON@</desc', contents)
         contents = re.sub('<date>.*</date>',
             '<date>@DATE@</date>', contents)
-        self.failUnlessEqual(contents, """\
-<item><title>Image `Image 1' built (testproject version 1.0)</title><description>&lt;b&gt;Appliance Name:&lt;/b&gt; testproject&lt;br/&gt;&lt;b&gt;Appliance Major Version:&lt;/b&gt; 1.0&lt;br/&gt;&lt;b&gt;Image Type:&lt;/b&gt; VMware(R) Workstation/Fusion Virtual Appliance&lt;br/&gt;&lt;b&gt;File Name:&lt;/b&gt; file1.txt&lt;br/&gt;&lt;b&gt;Download URL:&lt;/b&gt; &lt;a href="https://test.rpath.local/downloadImage?fileId=4"&gt;https://test.rpath.local/downloadImage?fileId=4&lt;/a&gt;&lt;br/&gt;&lt;b&gt;File Name:&lt;/b&gt; file2.txt&lt;br/&gt;&lt;b&gt;Download URL:&lt;/b&gt; &lt;a href="https://test.rpath.local/downloadImage?fileId=5"&gt;https://test.rpath.local/downloadImage?fileId=5&lt;/a&gt;&lt;br/&gt;&lt;b&gt;Created On:&lt;/b&gt; @CREATED-ON@</description><date>@DATE@</date><category>success</category><guid>/api/users/adminuser/notices/contexts/builder/1</guid></item>""")
+        self.assertXMLEquals(contents, """\
+<item><title>Image `Image 1' built (testproject version 1.0)</title><description>&lt;b&gt;Appliance Name:&lt;/b&gt; testproject&lt;br/&gt;&lt;b&gt;Appliance Major Version:&lt;/b&gt; 1.0&lt;br/&gt;&lt;b&gt;Image Type:&lt;/b&gt; VMware(R) Workstation/Fusion Virtual Appliance&lt;br/&gt;&lt;b&gt;File Name:&lt;/b&gt; file1.txt&lt;br/&gt;&lt;b&gt;Download URL:&lt;/b&gt; &lt;a href="https://test.rpath.local/downloadImage?fileId=5"&gt;https://test.rpath.local/downloadImage?fileId=5&lt;/a&gt;&lt;br/&gt;&lt;b&gt;File Name:&lt;/b&gt; file2.txt&lt;br/&gt;&lt;b&gt;Download URL:&lt;/b&gt; &lt;a href="https://test.rpath.local/downloadImage?fileId=6"&gt;https://test.rpath.local/downloadImage?fileId=6&lt;/a&gt;&lt;br/&gt;&lt;b&gt;Created On:&lt;/b&gt; @CREATED-ON@</description><date>@DATE@</date><category>success</category><guid>/api/users/adminuser/notices/contexts/builder/1</guid></item>""")
 
 
     def testSetImageStatusAMI(self):
