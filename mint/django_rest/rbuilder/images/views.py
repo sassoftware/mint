@@ -50,10 +50,6 @@ def can_read_image(view, request, image_id, *args, **kwargs):
         READMEMBERS, *args, **kwargs
     )
 
-def can_create_image(view, request, *args, **kwargs):
-    '''can a user create new images?'''
-    return view.mgr.userHasRbacCreatePermission(request._authUser, 'image')
-
 class BaseImageService(service.BaseService):
     pass
 
@@ -66,11 +62,18 @@ class ImagesService(BaseImageService):
         url = '/api/v1/query_sets/%s/all%s' % (qs.pk, request.params)
         return HttpResponseRedirect(url)
     
-    @rbac(can_create_image)
+    @rbac(manual_rbac)
     @requires('image')
     @return_xml
     def rest_POST(self, request, image):
-        return self.mgr.createImageBuild(image, for_user=request._authUser)
+        # RBAC depends on two resources so you can't build an image you can't
+        # read.
+        user = request._authUser
+        if not self.mgr.userHasRbacCreatePermission(user, 'image'):
+            raise PermissionDenied(msg="missing create permission on image")
+        if not self.mgr.userHasRbacPermission(user, image.project, READMEMBERS):
+            raise PermissionDenied(msg="missing read permission on project")
+        return self.mgr.createImageBuild(image, for_user=user)
     
 class ImageService(BaseImageService):
 
