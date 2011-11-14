@@ -638,6 +638,7 @@ class ImageManager(manager.Manager):
             self.db.commit()
             try:
                 self.db.djMgr.targetsManager.recomputeTargetDeployableImages()
+                self.db.djMgr.commit()
             except:
                 self.db.djMgr.rollback()
                 raise
@@ -686,7 +687,6 @@ class ImageManager(manager.Manager):
         if files.metadata is not None:
             self._addImageToRepository(hostname, imageId, files.metadata)
 
-        self.db.djMgr.commit()
         return self.listFilesForImage(hostname, imageId)
 
     @classmethod
