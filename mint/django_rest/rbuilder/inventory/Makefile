@@ -12,7 +12,7 @@
 # full details.
 #
 
-SUBDIRS =	fixtures manager models_xsl
+SUBDIRS =	fixtures manager
 python_files =	$(wildcard *.py)
 template_files = $(wildcard *.html *.xsl)
 
