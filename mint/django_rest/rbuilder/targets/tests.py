@@ -278,6 +278,15 @@ class TargetsTestCase(BaseTargetsTest, RepeaterMixIn):
         self.failUnlessEqual(dbobj.target_type.name, 'vmware')
         self.failUnlessEqual(dbobj.zone.name, 'other zone')
 
+        # Fetch target configuration
+        response = self._get('targets/%s/target_configuration' % dbobj.target_id,
+            username='admin', password='password')
+        self.assertEquals(response.status_code, 200)
+        obj = xobj.parse(response.content)
+        self.failUnlessEqual(obj.target_configuration.description,
+            'Target Description')
+        self.failUnlessEqual(obj.target_configuration.name, 'Target Name 4')
+        self.failUnlessEqual(obj.target_configuration.zone, 'other zone')
 
     def testUpdateTarget(self):
         response = self._put('targets/1', username='admin', password='password',
