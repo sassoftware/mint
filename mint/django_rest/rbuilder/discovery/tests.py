@@ -67,6 +67,7 @@ class VersionsTestCase(XMLTestCase):
   </config_info>
   <grants id="http://testserver/api/v1/rbac/grants"/>
   <inventory id="http://testserver/api/v1/inventory"/>
+  <images id="http://testserver/api/v1/images"/>
   <jobs id="http://testserver/api/v1/jobs"/>
   <module_hooks id="http://testserver/api/v1/module_hooks"/>
   <notices id="http://testserver/api/v1/notices"/>

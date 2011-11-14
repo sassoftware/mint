@@ -88,6 +88,7 @@ class ApiVersion(modellib.XObjIdModel):
     name = modellib.SyntheticField()
     description = modellib.SyntheticField()
     inventory = modellib.HrefField("inventory")
+    images = modellib.HrefField("images")
     jobs = modellib.HrefField("jobs")
     module_hooks = modellib.HrefField("module_hooks")
     notices = modellib.HrefField("notices")
