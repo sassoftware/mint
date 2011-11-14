@@ -729,7 +729,8 @@ class Database(DBInterface):
         self.auth.requireBuildsOnHost(hostname, [imageId])
         return self.imageMgr.listFilesForImage(hostname, imageId)
 
-    @commitafter
+    # setFilesForImage does its own transaction management, because it
+    # has to hand off to django
     def setFilesForImage(self, hostname, imageId, imageToken, files):
         self.auth.requireImageToken(hostname, imageId, imageToken)
         return self.imageMgr.setFilesForImage(hostname, imageId, files)

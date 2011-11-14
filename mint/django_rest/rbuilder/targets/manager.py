@@ -600,7 +600,7 @@ class TargetsManager(basemanager.BaseManager, CatalogServiceHelper):
         # Add undeployed images
         query = """
             INSERT INTO tmp_target_image (target_id, target_image_id, file_id)
-                SElECT t.targetId, NULL, imgf.fileId
+                SELECT t.targetId, NULL, imgf.fileId
                   FROM Targets AS t
                   JOIN target_types AS tt USING (target_type_id)
                   JOIN Builds AS img ON (tt.build_type_id = img.buildType)

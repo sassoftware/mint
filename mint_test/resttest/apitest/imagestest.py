@@ -359,7 +359,7 @@ class ImagesTest(restbase.BaseRestTest):
                 for x in resp.files ],
             exp)
 
-    def DISABLEDtestSetFilesRecomputeTargetDeployableImages(self):
+    def testSetFilesRecomputeTargetDeployableImages(self):
         userName = 'JeanValjean'
         self.createUser(userName, admin = False)
 
@@ -385,20 +385,33 @@ class ImagesTest(restbase.BaseRestTest):
                 'content-type': 'text/plain',
                 'x-rbuilder-outputtoken': token,
                 }
+        from rmake3.lib import uuid
+        sha1 = str(uuid.uuid4())
         data = """\
 <files>
-  <file title="title1" size="10" sha1="d68146c2e5fe437a9f2c7a8affb88271cff46182" fileName="imagefile_1.iso" />
+  <file title="title1" size="10" sha1="%s" fileName="imagefile_1.ova" />
 </files>
-"""
+""" % sha1
         resp = client.call('PUT', 'products/testproject/images/3/files',
                 data, headers=headers)[1]
 
-        exp = [ ('title1', 10,
-            'd68146c2e5fe437a9f2c7a8affb88271cff46182', 'imagefile_1.iso')]
+        exp = [ ('title1', 10, sha1, 'imagefile_1.ova') ]
         self.failUnlessEqual(
             [ (x.title, x.size, x.sha1, x.fileName)
                 for x in resp.files ],
             exp)
+
+        # Make sure we have something in the db
+        cu = db.cursor()
+        cu.execute("""
+            SELECT t.name
+              FROM targets AS t
+              JOIN target_deployable_image AS tdi ON (t.targetid = tdi.target_id)
+              JOIN buildfiles AS bf ON (tdi.file_id = bf.fileid)
+             WHERE bf.buildid = ?
+               AND bf.sha1 = ?""", 3, sha1)
+        row = cu.fetchone()
+        self.failUnlessEqual(row[0], 'mytarget')
 
     def testSetFilesForImagePushToRepo(self):
         client = self.getRestClient(username='adminuser')

@@ -632,6 +632,21 @@ class ImageManager(manager.Manager):
         return
 
     def setFilesForImage(self, fqdn, imageId, files):
+        try:
+            ret = self._setFilesForImage(fqdn, imageId, files)
+            # We need to commit so we unlock the database for django
+            self.db.commit()
+            try:
+                self.db.djMgr.targetsManager.recomputeTargetDeployableImages()
+            except:
+                self.db.djMgr.rollback()
+                raise
+            return ret
+        except:
+            self.db.rollback()
+            raise
+
+    def _setFilesForImage(self, fqdn, imageId, files):
         hostname = fqdn.split('.')[0]
         cu = self.db.cursor()
 
@@ -671,13 +686,6 @@ class ImageManager(manager.Manager):
         if files.metadata is not None:
             self._addImageToRepository(hostname, imageId, files.metadata)
 
-        # We need to commit so we unlock the database for django
-        self.db.commit()
-        try:
-            self.db.djMgr.targetsManager.recomputeTargetDeployableImages()
-        except:
-            self.db.djMgr.rollback()
-            raise
         self.db.djMgr.commit()
         return self.listFilesForImage(hostname, imageId)
 
