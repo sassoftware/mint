@@ -939,14 +939,19 @@ class SystemManager(basemanager.BaseManager):
 
     @exposed
     def addLaunchedSystems(self, systems, imageId=None):
+        if imageId is not None:
+            img = imagemodels.Image.objects.get(image_id=imageId)
+        else:
+            img = None
         for system in systems.system:
             self.mgr.addLaunchedSystem(system, dnsName=system.dnsName,
-                targetName=system.targetName, targetType=system.targetType)
+                targetName=system.targetName, targetType=system.targetType,
+                sourceImage=img)
         return systems
 
     @exposed
     def addLaunchedSystem(self, system, dnsName=None, targetName=None,
-            targetType=None, for_user=None):
+            targetType=None, for_user=None, sourceImage=None):
         if isinstance(targetType, basestring):
             targetTypeName = targetType
         else:
@@ -954,6 +959,7 @@ class SystemManager(basemanager.BaseManager):
         target = self.lookupTarget(targetTypeName=targetTypeName,
             targetName=targetName)
         system.target = target
+        system.source_image = sourceImage
         if system.managing_zone_id is None:
             system.managing_zone = self.getLocalZone()
         # For bayonet, we only launch in the local zone

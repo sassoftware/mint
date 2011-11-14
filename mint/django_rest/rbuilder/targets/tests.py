@@ -1526,6 +1526,14 @@ class JobCreationTest(BaseTargetsTest, RepeaterMixIn):
         img = imgmodels.Image.objects.get(name=imgName, _image_type=buildtypes.VMWARE_ESX_IMAGE)
         self._testLaunchSystem(targets, img)
 
+    def testLaunchSystemFromDeferredImage(self):
+        targets = self._setupImages()
+        imgName = "image 02"
+        img = imgmodels.Image.objects.get(name=imgName, _image_type=buildtypes.VMWARE_ESX_IMAGE)
+        deferredImg = imgmodels.Image.objects.get(base_image=img)
+        self._testLaunchSystem(targets, deferredImg, img)
+
+
     def _testLaunchSystem(self, targets, img, baseImg=None):
         self.mgr.targetsManager.recomputeTargetDeployableImages()
 
@@ -1566,9 +1574,9 @@ class JobCreationTest(BaseTargetsTest, RepeaterMixIn):
         dbjob = jmodels.Job.objects.get(job_uuid=job.job_uuid)
         jobToken = dbjob.job_token
         self.failUnlessEqual(dbjob.job_type.name, dbjob.job_type.TARGET_LAUNCH_SYSTEM)
-        imageNames = [ 'image 02' ]
-        if baseImg is not img:
-            imageNames.append(img.name)
+        # The revolving job only links to the current image, unlike
+        # deployment which links to both the base and the deferred image
+        imageNames = [ img.name ]
         self.failUnlessEqual(
             [ x.image.name for x in dbjob.images.all() ],
             imageNames)
@@ -1593,7 +1601,8 @@ class JobCreationTest(BaseTargetsTest, RepeaterMixIn):
             'imageDownloadUrl': 'https://bubba.com/downloadImage?fileId=%s' % buildFileId,
             'imageFileUpdateUrl': 'http://localhost/api/v1/images/%s/build_files/%s' % (baseImg.image_id, buildFileId),
             'targetImageXmlTemplate': '<file>\n  <target_images>\n    <target_image>\n      <target id="/api/v1/targets/1"/>\n      %(image)s\n    </target_image>\n  </target_images>\n</file>',
-            'systemsCreateUrl': 'http://localhost/api/v1/images/9/systems',
+            'systemsCreateUrl': 'http://localhost/api/v1/images/%s/systems' %
+                img.image_id,
             'targetImageIdList': ['target-internal-id-02'],
           })
         self.failUnlessEqual(realCall.args[1:], ())

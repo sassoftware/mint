@@ -590,10 +590,19 @@ class JobHandlerRegistry(HandlerRegistry):
         def getRepeaterMethodArgs(self, job):
             args, kwargs = JobHandlerRegistry.TargetDeployImage.getRepeaterMethodArgs(self, job)
             params = args[0]
+            # Use the original image id, which should be the non-base
+            # image
+            imageId = self.extraArgs['imageId']
             params.update(systemsCreateUrl =
-                "http://localhost/api/v1/images/%s/systems" %
-                    (self.image.image_id, ))
+                "http://localhost/api/v1/images/%s/systems" % (imageId, ))
             return args, kwargs
+
+        def getRelatedResource(self, descriptor):
+            imageId = self.extraArgs['imageId']
+            if imageId != str(self.image.image_id):
+                # image ID in url corresponds to the deferred image
+                return [ imagemodels.Image.objects.get(image_id=imageId) ]
+            return [ self.image ]
 
     class TargetCreator(DescriptorJobHandler):
         __slots__ = [ 'targetType', ]

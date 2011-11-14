@@ -577,3 +577,4 @@ class ImagesTestCase(RbacEngine):
             system = invmodels.System.objects.get(system_id=systemId)
             network = system.networks.all()[0]
             self.failUnlessEqual(network.dns_name, expNetwork)
+            self.failUnlessEqual(system.source_image, img)
