@@ -22,7 +22,7 @@ from mint.django_rest.rbuilder.repos import models as repomodels
 from mint.django_rest.rbuilder.manager.basemanager import exposed
 from mint.django_rest.rbuilder.platforms import models as platform_models
 from mint.django_rest.rbuilder.projects import models
-from mint.django_rest.rbuilder.images import models as imagesmodels
+from mint.django_rest.rbuilder.images import models as imagemodels
 from mint.django_rest.rbuilder.projects import models as projectsmodels
 from mint.django_rest.rbuilder.users import models as usermodels
 
@@ -378,17 +378,18 @@ class ProjectManager(basemanager.BaseManager):
 
     @exposed
     def getImage(self, image_id):
-        return imagesmodels.Image.objects.select_related(depth=2).get(pk=image_id)
+        return imagemodels.Image.objects.select_related(depth=2).get(pk=image_id)
 
     @exposed
     def getImagesForProject(self, short_name):
         project = self.getProject(short_name)
-        Images = imagesmodels.Images()
-        Images.image = imagesmodels.Image.objects.select_related(depth=2).filter(
-            project__project_id=project.project_id).order_by('image_id')
-        Images.url_key = [ short_name ]
-        Images.view_name = 'ProjectImages'
-        return Images
+        images = imagemodels.Images()
+        images.image = imagemodels.Image.objects.select_related(depth=2).filter(
+            project__project_id=project.project_id
+        ).order_by('image_id').all()
+        images.url_key = [ short_name ]
+        images.view_name = 'ProjectImages'
+        return images
 
     @exposed
     def updateImage(self, image):
@@ -457,22 +458,15 @@ class ProjectManager(basemanager.BaseManager):
     def getProjectBranchStageImages(self, project_short_name, project_branch_label, stage_name):
         stage = self.getProjectBranchStage(project_short_name, project_branch_label, stage_name)
 
-        # FIXME -- this needs to be rewritten to run in a constant number of queries
+        my_images = imagemodels.Image.objects.select_related(depth=2).filter(
+            project_branch_stage__stage_id=stage.stage_id
+        ).distinct() | imagemodels.Image.objects.select_related(depth=2).filter(
+            project_branch__branch_id=stage.project_branch.branch_id,
+            stage_name=stage.name
+        ).distinct()
 
-        # First, find all images directly linked to this stage
-        imagesMap = dict((x.image_id, x)
-            for x in imagesmodels.Image.objects.select_related().filter(
-                project_branch_stage__stage_id=stage.stage_id))
-        # Then get the ones belonging to the same branch, that only have
-        # a stage name
-        imagesMap.update((x.image_id, x)
-            for x in imagesmodels.Image.objects.filter(
-                project_branch__branch_id=stage.project_branch.branch_id,
-                stage_name=stage.name))
-
-        # Sort images by image id
-        images = imagesmodels.Images()
-        images.image = [ x[1] for x in sorted(imagesMap.items()) ]
+        images = imagemodels.Images()
+        images.image = my_images
         images.url_key = [ project_short_name, project_branch_label, stage_name ]
         images.view_name = 'ProjectBranchStageImages'
         return images
