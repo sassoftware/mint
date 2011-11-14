@@ -123,6 +123,7 @@ class TargetsManager(basemanager.BaseManager, CatalogServiceHelper):
             target_credentials=tcred)
         tucreds.save()
         self._pruneTargetCredentials()
+        self.recomputeTargetDeployableImages()
         return tucreds
 
     def _pruneTargetCredentials(self):

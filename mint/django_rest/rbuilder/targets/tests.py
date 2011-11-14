@@ -659,6 +659,25 @@ class JobCreationTest(BaseTargetsTest, RepeaterMixIn):
         self.failUnlessEqual(job.results.id, "http://testserver/api/v1/targets/1")
 
     def testSetTargetUserCredentials(self):
+        user = self.getUser('ExampleDeveloper')
+        self.mgr.user = user
+        branch = self.getProjectBranch('chater-foo.eng.rpath.com@rpath:chater-foo-1')
+        stage = self.getProjectBranchStage(branch, name='Development')
+
+        img = imgmodels.Image(project_branch_stage=stage, name="test 1",
+            _image_type=buildtypes.VMWARE_ESX_IMAGE)
+        self.mgr.createImageBuild(img)
+        bf = self.mgr.imagesManager.createImageBuildFile(img,
+            url="file-foo",
+            title="Image File Title",
+            size=100,
+            sha1="%040d" % 334)
+
+        # No deployable image yet
+        self.failUnlessEqual(
+            [ x.build_file_id for x in models.TargetDeployableImage.objects.all() ],
+            [])
+
         target = models.Target.objects.get(pk=1)
         creds0 = dict(username="bubba", password="shrimp")
         creds1 = dict(username="forrest", password="jennay")
@@ -670,6 +689,11 @@ class JobCreationTest(BaseTargetsTest, RepeaterMixIn):
         # Do it again, the credentials should be the same
         tucreds2 = tmgr.setTargetUserCredentials(target, creds0)
         self.failUnlessEqual(tucreds.id, tucreds2.id)
+
+        # Make sure we've recomputed deployable images
+        self.failUnlessEqual(
+            [ x.build_file_id for x in models.TargetDeployableImage.objects.all() ],
+            [ bf.file_id ])
 
         tcredid = tucreds.target_credentials_id
 
