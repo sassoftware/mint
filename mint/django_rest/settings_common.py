@@ -94,7 +94,6 @@ INSTALLED_APPS = (
     'django.contrib.redirects',
     'django.contrib.sessions',
     'django.contrib.sites',
-    'debug_toolbar',
     'mint.django_rest.rbuilder',
     'mint.django_rest.rbuilder.discovery',
     'mint.django_rest.rbuilder.reporting',
