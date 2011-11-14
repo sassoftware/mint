@@ -472,6 +472,12 @@ class ProjectsTestCase(RbacEngine):
             username='ExampleDeveloper', password='password', data=testsxml.project_branch_stage_images_post_xml)
         self.assertEquals(response.status_code, 200)
 
+        # get the XML back, also see if the image list is sortable
+        url = "projects/%s/project_branches/%s/project_branch_stages/%s/images/;limit=100;order_by=name;start_index=0"
+        response = self._get(url % urlparams, username='ExampleDeveloper', password='password')
+        self.assertEquals(response.status_code, 200)
+         
+
     def testGetProjectBranchStagesByProject(self):
         self._initProject()
         prj = models.Project.objects.get(name='chater-foo')
