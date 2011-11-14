@@ -163,18 +163,19 @@ def getFieldDescriptors(field, prefix=None, processedModels=[], depth=0):
             _fds = getFieldDescriptors(f, _prefix, processedModels, depth+1)
             [fds.append(_fd) for _fd in _fds]
         processedModels.append(field.model())
-    else:   
+    else:
         fd = FieldDescriptor()
         if prefix:
             key = '%s.%s' % (prefix, field.name)
         else:
             key = field.name
-        fd.field_label = getattr(field, 'shortname', key)
+        fd.field_label = getattr(field, 'shortname', None)
         fd.field_key = key
-        fd.value_type = getFieldValueType(field)
-        fd.value_options = getFieldValueOptions(field)
-        fd.operator_choices = getFieldOperatorChoices(field)
-        fds.append(fd)
+        if fd.field_label is not None and not fd.field_key.startswith("_"):
+            fd.value_type = getFieldValueType(field)
+            fd.value_options = getFieldValueOptions(field)
+            fd.operator_choices = getFieldOperatorChoices(field)
+            fds.append(fd)
     return fds
 
 def getFilterDescriptor(model, queryset):

@@ -25,8 +25,8 @@ class TargetType(modellib.XObjIdModel):
     _xobj_explicit_accessors = set(['targets'])
 
     target_type_id = models.AutoField(primary_key=True)
-    name = D(models.TextField(unique=True), "Target Type Name")
-    description = D(models.TextField(null=False), "Target Type Description")
+    name = D(models.TextField(unique=True), "Target Type name", short="Target Type name")
+    description = D(models.TextField(null=False), "Target Type description", short="Target Type description")
     build_type_id = XObjHidden(models.IntegerField(null=False))
     created_date = D(modellib.DateTimeUtcField(auto_now_add=True), "the date the resource was created (UTC)")
     modified_date = D(modellib.DateTimeUtcField(auto_now_add=True), "the date the resource was modified (UTC)")
@@ -86,8 +86,8 @@ class Target(modellib.XObjIdModel):
         related_name='targets', view_name='TargetTypeTargets')
     zone = modellib.DeferredForeignKey(zmodels.Zone, null=False,
         related_name='targets')
-    name = models.TextField(null=False)
-    description = models.TextField(null=False)
+    name = D(models.TextField(null=False), "Target name", short="Target name")
+    description = D(models.TextField(null=False), "Target description", short="Target description")
     unique_together = (target_type, name)
     is_configured = D(modellib.SyntheticField(models.BooleanField()),
         'True if the target is configured')
