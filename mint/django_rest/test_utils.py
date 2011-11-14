@@ -629,7 +629,7 @@ class RepeaterClient(CallProxy):
         self._jobData = jobData
 
 class RmakeJob(object):
-    Status = namedtuple("Status", "code text detail final")
+    Status = namedtuple("Status", "code text detail final failed")
     class _RmakeJobData(object):
         class _Inner(object):
             def __init__(self, data):
@@ -640,10 +640,12 @@ class RmakeJob(object):
         def getObject(self):
             return self.data
 
-    def __init__(self, uuid, statusCode, statusText, statusDetail, final):
+    def __init__(self, uuid, statusCode, statusText, statusDetail, final,
+            failed=False):
         self.job_uuid = uuid
         self.data = self._RmakeJobData(dict(authToken='auth-token-'+uuid))
-        self.status = self.Status(statusCode, statusText, statusDetail, final)
+        self.status = self.Status(statusCode, statusText, statusDetail, final,
+            failed)
 
 def makeRepeaterData(serial):
     uuid = "uuid%03d" % serial
