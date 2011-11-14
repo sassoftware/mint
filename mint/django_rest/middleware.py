@@ -102,7 +102,8 @@ class ExceptionLoggerMiddleware(BaseMiddleware):
 
         if isinstance(exception, (errors.RbuilderError, IntegrityError)):
             code = getattr(exception, 'status', errors.BAD_REQUEST)
-            fault = models.Fault(code=code, message=str(exception))
+            tbStr = getattr(exception, 'traceback', None)
+            fault = models.Fault(code=code, message=str(exception), traceback=tbStr)
             response = HttpResponse(status=code, content_type='text/xml')
             response.content = fault.to_xml(request)
             log.error(str(exception))

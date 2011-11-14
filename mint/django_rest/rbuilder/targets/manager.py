@@ -324,6 +324,9 @@ class TargetsManager(basemanager.BaseManager, CatalogServiceHelper):
         job = self.mgr.waitForRmakeJob(uuid, interval=.1)
         if not job.status.final:
             raise Exception("Final state not reached")
+        if job.status.failed:
+            raise errors.RbuilderError(msg=job.status.text,
+                traceback=job.status.detail)
         descrXml = job.data.data
         descr = descriptor.ConfigurationDescriptor(fromStream=descrXml)
         descr.setRootElement("descriptor_data")

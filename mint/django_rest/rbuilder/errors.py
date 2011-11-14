@@ -15,12 +15,13 @@ class RbuilderError(Exception):
 
     def __init__(self, **kwargs):
         cls = self.__class__
-        kwargs_msg = kwargs.get('msg', None)
+        kwargs_msg = kwargs.pop('msg', None)
         if kwargs_msg:
             self.msg = kwargs_msg
         else:
             self.msg = cls.__doc__
         self.kwargs = kwargs
+        self.traceback = kwargs.pop('traceback', None)
 
     def __str__(self):
         try:
