@@ -675,7 +675,7 @@ class ImageManager(manager.Manager):
         self.db.commit()
         try:
             self.db.djMgr.targetsManager.recomputeTargetDeployableImages()
-        except Exception, e:
+        except:
             self.db.djMgr.rollback()
             raise
         self.db.djMgr.commit()
