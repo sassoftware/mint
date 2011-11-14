@@ -1572,9 +1572,7 @@ class JobCreationTest(BaseTargetsTest, RepeaterMixIn):
   <status_code>200</status_code>
   <status_text>Some status here</status_text>
   <results encoding="identity">
-    <image id="/1">
-      <baseFileName>cobbler-clone</baseFileName>
-    </image>
+    <systems />
   </results>
 </job>
 """
