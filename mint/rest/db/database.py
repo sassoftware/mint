@@ -160,6 +160,14 @@ class Database(DBInterface):
         self.siteAuth = None
         if not dbOnly:
             self.siteAuth = siteauth.getSiteAuth(cfg.siteAuthCfgPath)
+        self._djMgr = None
+
+    @property
+    def djMgr(self):
+        if self._djMgr is None:
+            from mint.django_rest.rbuilder.manager import rbuildermanager
+            self._djMgr = rbuildermanager.RbuilderManager()
+        return self._djMgr
 
     def close(self):
         DBInterface.close(self)

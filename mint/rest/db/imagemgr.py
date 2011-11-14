@@ -671,6 +671,14 @@ class ImageManager(manager.Manager):
         if files.metadata is not None:
             self._addImageToRepository(hostname, imageId, files.metadata)
 
+        # We need to commit so we unlock the database for django
+        self.db.commit()
+        try:
+            self.db.djMgr.targetsManager.recomputeTargetDeployableImages()
+        except Exception, e:
+            self.db.djMgr.rollback()
+            raise
+        self.db.djMgr.commit()
         return self.listFilesForImage(hostname, imageId)
 
     @classmethod

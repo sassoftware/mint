@@ -359,6 +359,47 @@ class ImagesTest(restbase.BaseRestTest):
                 for x in resp.files ],
             exp)
 
+    def DISABLEDtestSetFilesRecomputeTargetDeployableImages(self):
+        userName = 'JeanValjean'
+        self.createUser(userName, admin = False)
+
+        targetType = 'vmware'
+        targetName = 'mytarget'
+        targetData = dict(alias='my target alias')
+
+        db = self.openMintDatabase(createRepos=False)
+        tmgr = db.targetMgr
+        tmgr.addTarget(targetType, targetName, targetData)
+
+        credentials = dict(username = 'aaa', password='bbb')
+        # No need to run the target import script
+        tmgr.auth.isAdmin = False
+        tmgr.setTargetCredentialsForUser(targetType, targetName, userName,
+            credentials)
+        db.commit()
+
+        client = self.getRestClient(username='adminuser')
+        token = self._setOutputToken(3)
+
+        headers = {
+                'content-type': 'text/plain',
+                'x-rbuilder-outputtoken': token,
+                }
+        data = """\
+<files>
+  <file title="title1" size="10" sha1="d68146c2e5fe437a9f2c7a8affb88271cff46182" fileName="imagefile_1.iso" />
+</files>
+"""
+        resp = client.call('PUT', 'products/testproject/images/3/files',
+                data, headers=headers)[1]
+
+        exp = [ ('title1', 10,
+            'd68146c2e5fe437a9f2c7a8affb88271cff46182', 'imagefile_1.iso')]
+        self.failUnlessEqual(
+            [ (x.title, x.size, x.sha1, x.fileName)
+                for x in resp.files ],
+            exp)
+
     def testSetFilesForImagePushToRepo(self):
         client = self.getRestClient(username='adminuser')
         token = self._setOutputToken(1)

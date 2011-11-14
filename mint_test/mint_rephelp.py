@@ -534,8 +534,13 @@ class RestDBMixIn(object):
 
     def setDjangoDB(self):
         from django.db import connections, DEFAULT_DB_ALIAS
-        sd = connections[DEFAULT_DB_ALIAS].settings_dict
-        sd['NAME'] = sd['TEST_NAME'] = self.mintCfg.dbPath
+        conn = connections[DEFAULT_DB_ALIAS]
+        sd = conn.settings_dict
+        dbPath = self.mintCfg.dbPath
+        if sd['NAME'] != dbPath or sd['TEST_NAME'] != dbPath:
+            sd['NAME'] = sd['TEST_NAME'] = self.mintCfg.dbPath
+            # Force re-open
+            conn.close()
 
     def createUser(self, name, password=None, admin=False):
         db = self.openRestDatabase()

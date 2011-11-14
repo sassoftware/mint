@@ -136,6 +136,7 @@ class BaseRestTest(mint_rephelp.MintDatabaseHelper):
         images = [
             ('Image 1', buildtypes.INSTALLABLE_ISO),
             ('Image 2', buildtypes.TARBALL),
+            ('Image 3 vmware esx', buildtypes.VMWARE_ESX_IMAGE),
         ]
         groupName = groupTrv.getName()
         groupVer = groupTrv.getVersion().freeze()

@@ -6,6 +6,7 @@
 
 import weakref
 
+from django.db import connection, transaction
 from mint.django_rest.rbuilder.manager import basemanager
 
 from mint.django_rest.rbuilder.discovery.manager import DiscoveryManager
@@ -91,3 +92,18 @@ class RbuilderManager(basemanager.BaseRbuilderManager):
                     if hasattr(self, objName):
                         raise Exception("Conflict for method %s" % objName)
                     setattr(self, objName, obj)
+
+    def commit(self):
+        if transaction.is_managed():
+            if transaction.is_dirty():
+                transaction.commit()
+            transaction.leave_transaction_management()
+            transaction.enter_transaction_management(managed=True)
+            return
+        connection.commit_unless_managed()
+
+    def rollback(self):
+        if transaction.is_managed():
+            transaction.rollback()
+            return
+        connection.rollback_unless_managed()
