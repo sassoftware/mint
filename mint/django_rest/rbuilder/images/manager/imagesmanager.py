@@ -236,4 +236,4 @@ class ImagesManager(basemanager.BaseManager):
             tgtmodels.TargetImagesDeployed.objects.create(target=target,
                 target_image_id=timgModel.target_internal_id,
                 build_file=obj)
-
+        self.mgr.recomputeTargetDeployableImages()

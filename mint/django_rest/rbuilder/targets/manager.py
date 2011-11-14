@@ -575,6 +575,7 @@ class TargetsManager(basemanager.BaseManager, CatalogServiceHelper):
         cu.execute(query)
         #self.recomputeTargetSystems()
 
+    @exposed
     def recomputeTargetDeployableImages(self):
         cu = connection.cursor()
         cu.execute("""

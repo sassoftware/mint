@@ -348,6 +348,11 @@ class ImagesTestCase(RbacEngine):
         self.failUnlessEqual(
             [ x.target_image_id for x in tids ],
             [ targetImageId ])
+        # Make sure we have entries in target_deployable_image
+        self.failUnlessEqual(
+            [ x.target_image.target_internal_id
+                for x in imgFile.target_deployable_images.all() ],
+            [ targetImageId ])
 
     def _testDeleteImageBuildFile(self, username, expected_code):
         response = self._delete('images/1/build_files/1', username=username, password='password')
