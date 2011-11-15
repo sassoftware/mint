@@ -592,7 +592,7 @@ class JobHandlerRegistry(HandlerRegistry):
             params = args[0]
             # Use the original image id, which should be the non-base
             # image
-            imageId = self.extraArgs['imageId']
+            imageId = self.extraArgs['imageId'].encode('ascii')
             params.update(systemsCreateUrl =
                 "http://localhost/api/v1/images/%s/systems" % (imageId, ))
             return args, kwargs
