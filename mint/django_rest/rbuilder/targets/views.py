@@ -22,7 +22,7 @@ class TargetsService(service.BaseService):
     @requires("target", flags=Flags(save=False))
     @return_xml
     def rest_POST(self, request, target):
-        return self.mgr.addTarget(target, configured=False)
+        return self.mgr.addTarget(target, configured=False, forUser=request._authUser)
 
 class TargetService(service.BaseService):
 

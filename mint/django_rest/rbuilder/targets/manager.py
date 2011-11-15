@@ -146,7 +146,7 @@ class TargetsManager(basemanager.BaseManager, CatalogServiceHelper):
         return value
 
     @exposed
-    def addTarget(self, targetSrc, configured=False):
+    def addTarget(self, targetSrc, configured=False, forUser=None):
         if configured:
             state = 0
         else:
@@ -159,6 +159,7 @@ class TargetsManager(basemanager.BaseManager, CatalogServiceHelper):
             zone=zone,
             state=state)
         target.save()
+        self.mgr.retagQuerySetsByType('target', forUser)
         return target
 
     @exposed
