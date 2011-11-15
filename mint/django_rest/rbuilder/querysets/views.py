@@ -141,7 +141,7 @@ class QuerySetChosenResultService(BaseQuerySetService):
 
     @rbac(rbac_can_write_queryset)
     # TODO: source fromc onstant somewhere
-    @requires(['systems', 'users', 'project_branch_stages', 'projects', 'grants', 'roles'])
+    @requires(['systems', 'users', 'image', 'project_branch_stages', 'projects', 'grants', 'roles'])
     @return_xml
     def rest_PUT(self, request, query_set_id, *args, **kwargs):
         resources = kwargs.items()[0][1]
@@ -149,7 +149,7 @@ class QuerySetChosenResultService(BaseQuerySetService):
 
     @rbac(rbac_can_write_queryset)
     # TODO: source fromc onstant somewhere
-    @requires(['system', 'user', 'project_branch_stage', 'project_branch', 'project', 'grant', 'role'])
+    @requires(['system', 'user', 'image', 'project_branch_stage', 'project_branch', 'project', 'grant', 'role'])
     @return_xml
     def rest_POST(self, request, query_set_id, *args, **kwargs):
         resource = kwargs.items()[0][1]
@@ -158,7 +158,7 @@ class QuerySetChosenResultService(BaseQuerySetService):
 
     @rbac(rbac_can_write_queryset)
     # TODO: source fromc onstant somewhere
-    @requires(['system', 'user', 'project_branch_stage', 'project_branch', 'project', 'grant', 'role'])
+    @requires(['system', 'user', 'image', 'project_branch_stage', 'project_branch', 'project', 'grant', 'role'])
     @return_xml
     def rest_DELETE(self, request, query_set_id, *args, **kwargs):
         resource = kwargs.items()[0][1]
