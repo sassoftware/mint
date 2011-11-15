@@ -95,36 +95,6 @@ queryset_put_xml = """
 </query_set>
 """
 
-queryset_put_xml_different = """
-<query_set id="/api/v1/query_sets/16">
-  <filter_entries>
-    <filter_entry>
-      <operator>LIKE</operator>
-      <field>system.name</field>
-      <value>newterm</value>
-    </filter_entry>
-  </filter_entries>
-  <filter_descriptor id="/api/v1/query_sets/filter_descriptor"/>
-  <can_modify>true</can_modify>
-  <presentation_type></presentation_type>
-  <modified_date>2011-08-17T14:52:58.737001+00:00</modified_date>
-  <filtered_members id="/api/v1/query_sets/16/filtered"/>
-  <is_top_level>True</is_top_level>
-  <tagged_date></tagged_date>
-  <name>New Query Set</name>
-  <chosen_members id="/api/v1/query_sets/16/chosen"/>
-  <query_set_id>16</query_set_id>
-  <child_members id="/api/v1/query_sets/16/child"/>
-  <created_date>2011-08-17T14:52:58.736901+00:00</created_date>
-  <all_members id="/api/v1/query_sets/16/all"/>
-  <children>
-  </children>
-  <resource_type>system</resource_type>
-  <description>modified</description>
-  <actions/>
-</query_set>
-"""
-
 remove_child_xml = """
 <query_set id="/api/v1/query_sets/5">
       <filter_entries>
@@ -244,16 +214,19 @@ queryset_with_actions = """
 </query_set>
 """
 
-remove_filters_xml = """
-<query_set id="http://testserver/api/v1/query_sets/16">
-  <children/>
-  <filter_entries/>
-  <is_top_level>True</is_top_level>
-  <name>Foo</name>
-  <presentation_type>system</presentation_type>
-  <query_set_id>16</query_set_id>
-  <resource_type>system</resource_type>
-  <personal_for/>
+queryset_put_xml_different = """
+<query_set id="https://rbalast.eng.rpath.com/api/v1/query_sets/16" href="https://rbalast.eng.rpath.com/api/v1/query_sets/16">
+        <filter_entries>
+        <filter_entry>
+           <field>system.name</field>
+           <operator>LIKE</operator>
+          <value>newterm</value>
+        </filter_entry>
+        </filter_entries>
+        <can_modify>true</can_modify>
+        <description />
+        <is_top_level>true</is_top_level>
+        <name>JB Test</name>
 </query_set>
 """
 
