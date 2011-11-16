@@ -391,7 +391,7 @@ class ImagesTestCase(RbacEngine):
         # FIXME: non-admin accessing admin resources in API returns wrong
         # error code, fix @access.admin!
         response = self._get(url, username='ExampleDeveloper', password='password')
-        self.assertEquals(response.status_code, 401)  # should be 403
+        self.assertEquals(response.status_code, 403)
 
     def _testCreateRelease(self, username, expected_code):
 
