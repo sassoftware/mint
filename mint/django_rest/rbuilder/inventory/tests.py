@@ -257,7 +257,7 @@ class ZonesTestCase(XMLTestCaseStandin):
         response = self._post('inventory/zones/',
             data=testsxml.zone_post_xml,
             username="testuser", password="password")
-        self.assertEquals(response.status_code, 401)
+        self.assertEquals(response.status_code, 403)
         
     def testPostZone(self):
         zmodels.Zone.objects.all().delete()
@@ -288,7 +288,7 @@ class ZonesTestCase(XMLTestCaseStandin):
         response = self._put('inventory/zones/1/', 
             data=testsxml.zone_put_xml % zone.created_date,
             username="testuser", password="password")
-        self.assertEquals(response.status_code, 401)
+        self.assertEquals(response.status_code, 403)
         
     def testPutZoneNotFound(self):
         """
@@ -323,7 +323,7 @@ class ZonesTestCase(XMLTestCaseStandin):
         
         response = self._delete('inventory/zones/1/',
             username="testuser", password="password")
-        self.assertEquals(response.status_code, 401)
+        self.assertEquals(response.status_code, 403)
         
     def testDeleteZone(self):
         """
@@ -384,7 +384,7 @@ class ManagementInterfacesTestCase(XMLTestCaseStandin):
         response = self._put('inventory/management_interfaces/1/', 
             data=testsxml.management_interface_put_xml,
             username="testuser", password="password")
-        self.assertEquals(response.status_code, 401)
+        self.assertEquals(response.status_code, 403)
 
     def testPutManagementInterfaceNotFound(self):
         """
@@ -470,7 +470,7 @@ class SystemTypesTestCase(XMLTestCaseStandin):
         response = self._put('inventory/system_types/1/', 
             data=testsxml.system_types_put_xml,
             username="testuser", password="password")
-        self.assertEquals(response.status_code, 401)
+        self.assertEquals(response.status_code, 403)
         
     def XXXtestPutSystemTypes(self):
         """
@@ -594,7 +594,7 @@ class NetworkTestCase(XMLTestCaseStandin):
         response = self._put('inventory/networks/1/', 
             data=testsxml.network_put_xml,
             username="testuser", password="password")
-        self.assertEquals(response.status_code, 401)
+        self.assertEquals(response.status_code, 403)
         
     def testPutNetworkNotFound(self):
         """
@@ -628,7 +628,7 @@ class NetworkTestCase(XMLTestCaseStandin):
         
         response = self._delete('inventory/networks/1/', 
             username="testuser", password="password")
-        self.assertEquals(response.status_code, 401)
+        self.assertEquals(response.status_code, 403)
         
     def testDeleteNetwork(self):
         models.System.objects.all().delete()
@@ -730,7 +730,7 @@ class ManagementNodesTestCase(XMLTestCaseStandin):
         response = self._put('inventory/management_nodes',
             headers={'X-rPath-Repeater' : 'does not matter'},
             data=data)
-        self.failUnlessEqual(response.status_code, 401)
+        self.failUnlessEqual(response.status_code, 403)
 
         # Now a valid PUT
         response = self._put('inventory/management_nodes',
@@ -811,7 +811,7 @@ class ManagementNodesTestCase(XMLTestCaseStandin):
         response = self._post('inventory/management_nodes/', 
             data=testsxml.management_node_post_xml, content_type='text/xml',
             username="testuser", password="password")
-        self.assertEquals(response.status_code, 401)
+        self.assertEquals(response.status_code, 403)
         
         response = self._post('inventory/management_nodes/', 
             data=testsxml.management_node_post_xml, content_type='text/xml',
@@ -909,7 +909,7 @@ class ManagementNodesTestCase(XMLTestCaseStandin):
         response = self._post('inventory/zones/%d/management_nodes/' % zone.zone_id, 
             data=testsxml.management_node_zone_post_xml, content_type='text/xml',
             username="testuser", password="password")
-        self.assertEquals(response.status_code, 401)
+        self.assertEquals(response.status_code, 403)
         
         response = self._post('inventory/zones/%d/management_nodes/' % zone.zone_id, 
             data=testsxml.management_node_zone_post_xml, content_type='text/xml',
@@ -3173,7 +3173,7 @@ class EventTypeTestCase(XMLTestCaseStandin):
         response = self._put('inventory/event_types/1/', 
             data=testsxml.event_type_put_xml, content_type='text/xml',
             username="testuser", password="password")
-        self.assertEquals(response.status_code, 401)
+        self.assertEquals(response.status_code, 403)
         
     def testPutEventType(self):
         jobmodels.EventType.objects.all().delete()

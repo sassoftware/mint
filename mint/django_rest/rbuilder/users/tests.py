@@ -368,7 +368,7 @@ class UsersTestCase(RbacEngine):
         # Non-admin
         response = self._delete('users/2000',
             username='testuser', password='password')
-        self.failUnlessEqual(response.status_code, 401)
+        self.failUnlessEqual(response.status_code, 403)
 
         # Admin deleting another user
         response = self._delete('users/2000',

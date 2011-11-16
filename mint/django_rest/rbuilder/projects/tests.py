@@ -80,16 +80,17 @@ class ProjectsTestCase(RbacEngine):
         TODO: Come back and update code to handle POST's and PUT's.  Since we want to do
         more XML testing, we need an intuitive way to handle returning the response's content
         """
-        usernames = {'NonAuthUser':401, 'testuser':403, 'ExampleDeveloper':200, 'admin':200}
+        usernames = { 
+            'NonAuthUser'      : 401, 
+            'testuser'         : 403, 
+            'ExampleDeveloper' : 200, 
+            'admin'            : 200
+        }
         passwd = 'password'
         methodType = methodType.lower()
         
         if methodType == 'get':
             method = lambda username: self._get(url, username=username, password=passwd)
-        # elif methodType == 'post':
-        #     method = lambda username: self._post(url, username=username, password=passwd, data=data)
-        # elif methodType == 'put':
-        #     method = lambda username: self._put(url, username=username, password=passwd, data=data)
         else:
             raise Exception('Invalid HTTP Method')
         

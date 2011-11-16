@@ -11,7 +11,7 @@ from django_restapi import resource
 
 from mint.db import database
 from mint import users
-from mint.django_rest.deco import getHeaderValue, access, ACCESS, HttpAuthenticationRequired
+from mint.django_rest.deco import getHeaderValue, access, ACCESS, HttpAuthenticationRequired, HttpAuthorizationRequired
 from mint.django_rest.rbuilder.manager import rbuildermanager
 
 MANAGER_CLASS = rbuildermanager.RbuilderManager
@@ -101,8 +101,9 @@ class BaseService(resource.Resource):
         # we're allowing anonymous access
         if request._auth != (None, None) and not request._is_authenticated:
             return HttpAuthenticationRequired
-        if not self._auth_filter(request, access, kwargs):
-            return HttpAuthenticationRequired
+        (authOk, errorResponse) = self._auth_filter(request, access, kwargs)
+        if not authOk:
+            return errorResponse
         # Set the manager into one of the model's base classes. It will be
         # freed in SerializeXmlMiddleware, which is the last place that might
         # need access to the attached database.
@@ -118,16 +119,20 @@ class BaseService(resource.Resource):
 
         if access & ACCESS.LOCALHOST:
             if self._check_localhost(request):
-                return True
+                return (True, None)
 
         if access & ACCESS.ADMIN:
-            return request._is_admin
+            if not request._is_authenticated:
+                return (False, HttpAuthenticationRequired)
+            return (request._is_admin, HttpAuthorizationRequired)
         if access & ACCESS.AUTHENTICATED:
-            return request._is_authenticated
+            return (request._is_authenticated, HttpAuthenticationRequired)
         if access & ACCESS.ANONYMOUS:
-            return True
+            return (True, None)
 
-        return False
+        # no decorator supplied for method 
+        # should be a 500 internal error perhaps?
+        return (False, HttpAuthorizationRequired)
 
     @classmethod
     def _check_localhost(cls, request):
@@ -147,22 +152,25 @@ class BaseAuthService(BaseService):
 
         if access & ACCESS.LOCALHOST:
             if self._check_localhost(request):
-                return True
+                return (True, None)
 
         if access & ACCESS.AUTH_TOKEN:
             ret = self._check_uuid_auth(request, kwargs)
             if ret is not None:
                 # A bad event UUID should fail the auth check
-                return ret
+                return (ret, HttpAuthenticationRequired)
 
         if access & ACCESS.ADMIN:
-            return request._is_admin
+            if not request._is_authenticated:
+                return (False, HttpAuthenticationRequired)
+            return (request._is_admin, HttpAuthorizationRequired)
         if access & ACCESS.AUTHENTICATED:
-            return request._is_authenticated
-        if access & ACCESS.ANONYMOUS:
-            return True
+            return (request._is_authenticated, HttpAuthenticationRequired)
 
-        return False
+        if access & ACCESS.ANONYMOUS:
+            return (True, None)
+
+        return (False, HttpAuthorizationRequired)
 
     def _check_uuid_auth(self, request, kwargs):
         return False
