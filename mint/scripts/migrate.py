@@ -4628,6 +4628,15 @@ class MigrateTo_60(SchemaMigration):
             """)
         return True
 
+class MigrateTo_61(SchemaMigration):
+    '''Edge-P4'''
+    Version = (61, 0)
+
+    def migrate(self):
+        cu = self.db.cursor()
+        cu.execute("""DROP TABLE changelog_change_log_entry""")
+        cu.execute("""DROP TABLE changelog_change_log""")
+        return True
 
 #### SCHEMA MIGRATIONS END HERE #############################################
 

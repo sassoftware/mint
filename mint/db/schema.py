@@ -28,7 +28,7 @@ from conary.dbstore import sqlerrors, sqllib
 log = logging.getLogger(__name__)
 
 # database schema major version
-RBUILDER_DB_VERSION = sqllib.DBversion(60, 11)
+RBUILDER_DB_VERSION = sqllib.DBversion(61, 0)
 
 def _createTrigger(db, table, column="changed"):
     retInsert = db.createTrigger(table, column, "INSERT")
@@ -2606,27 +2606,6 @@ def _createQuerySetSchema(db):
         )""")
 
 
-def _createChangeLogSchema(db):
-    """ChangeLog tables"""
-
-    createTable(db, 'changelog_change_log', """
-        CREATE TABLE "changelog_change_log" (
-            "change_log_id" %(PRIMARYKEY)s,
-            "resource_type" TEXT NOT NULL,
-            "resource_id" INTEGER NOT NULL
-        )""")
-
-    createTable(db, 'changelog_change_log_entry', """
-        CREATE TABLE "changelog_change_log_entry" (
-            "change_log_entry_id" %(PRIMARYKEY)s,
-            "change_log_id" INTEGER
-                REFERENCES "changelog_change_log" ("change_log_id")
-                ON DELETE CASCADE NOT NULL,
-            "entry_text" TEXT NOT NULL,
-            "entry_date" TIMESTAMP WITH TIME ZONE NOT NULL
-        )""")
-
-
 def _createDjangoSchema(db):
     # before edge, django would just go out by itself to create its
     # tables.
@@ -3027,7 +3006,6 @@ def createSchema(db, doCommit=True, cfg=None):
     _createUpdateSystemsQuerySet(db)
     _createAllProjectBranchStages(db)
     _createAllProjects(db)
-    _createChangeLogSchema(db)
     _createPackageSchema(db)
     _createDjangoSchema(db)
     _createRbac(db)
