@@ -4590,9 +4590,64 @@ refProductDefintion1 = """\
 </productDefinition>
 """
 
+class Retirement(XMLTestCase):
+    '''
+    Some tests above attempt to test retirement in the model, this is an API
+    test.
+    '''
+    def setUp(self):
+        # make a new system
+        XMLTestCase.setUp(self)
+        self.system = self.newSystem(name="blinky", description="ghost")
+        self.system.management_interface = models.ManagementInterface.objects.get(name='ssh')
+        self.mgr.addSystem(self.system)
+
+    def testRetire(self):
+        generatedUuid = 'generateduuid001'
+        localUuid = 'localuuid001'
+
+        system = self.newSystem(name='blippy', local_uuid=localUuid,
+             generated_uuid=generatedUuid)
+        system.current_state = self.mgr.sysMgr.systemState(
+            models.SystemState.RESPONSIVE)
+        system.save()
+        
+        response = self._get("inventory/systems/%s" % self.system.pk,
+            username='admin', password='password')
+        self.assertEquals(response.status_code, 200)
+
+        response = self._post('inventory/systems/%s/credentials' % \
+            self.system.pk,
+            data=testsxml.credentials_xml,
+            username="admin", password="password")
+        self.assertEquals(response.status_code, 200)
+
+        params = dict(
+            localUuid=localUuid, 
+            generatedUuid=generatedUuid,
+            zoneId=self.localZone.zone_id
+        )
+        xml = testsxml.retirement_xml % params
+
+        # response from put indicates same state as subsequent get
+        response = self._put("inventory/systems/%s" % self.system.pk,
+            username='admin', password='password', data=testsxml.retirement_xml)
+        self.assertEquals(response.status_code, 200)
+        obj = xobj.parse(response.content)
+        xObjModel = obj.system
+        self.failUnlessEqual(obj.system.current_state.name, "mothballed")
+        
+        response = self._get("inventory/systems/%s" % self.system.pk,
+            username='admin', password='password')
+        self.assertEquals(response.status_code, 200)
+        obj = xobj.parse(response.content)
+        xObjModel = obj.system
+        self.failUnlessEqual(obj.system.current_state.name, "mothballed")
+
+
 class AntiRecursiveSaving(XMLTestCase):
     '''
-    Generalized xobj test.  Make sure that when saving an object with child members, 
+       Generalized xobj test.  Make sure that when saving an object with child members, 
     in this case a system & a management interface, and we go to EDIT
     that system, we can't CREATE a new, non-existant management interface OR
     rename an existing management interface.   This, if present, would
