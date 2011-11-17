@@ -189,8 +189,6 @@ class ProjectsTestCase(RbacEngine):
 
     def testAddProject(self):
 
-        # FIXME: can anyone create a project or just admin?   We need to come up with a policy for this.
-
         response = self._post('projects',
             data=testsxml.project_post_xml,
             username="admin", password="password")
@@ -558,7 +556,12 @@ class ProjectsTestCase(RbacEngine):
         response = self._get('projects/chater-foo/releases', username='admin', password='password')
         self.assertEquals(response.status_code, 200)
         self.assertXMLEquals(response.content, testsxml.releases_by_project_get_xml)
-        
+        response = self._get('projects/chater-foo/releases', username='ExampleDeveloper', password='password')
+        self.assertEquals(response.status_code, 200)
+        response = self._get('projects/chater-foo/releases', username='testuser', password='password')
+        self.assertEquals(response.status_code, 403)
+       
+ 
     def testAddRelease(self):
         self.addProject('foo', user='ExampleDeveloper')
         response = self._post('projects/foo/releases',
@@ -614,7 +617,7 @@ class ProjectsTestCase(RbacEngine):
     def testAddReleaseByInferringProject(self):
         self.addProject('foo', user='admin')
         response = self._post('projects/foo/releases',
-            username='admin', password='password', data=testsxml.release_by_project_no_project_post_xml)
+            username='ExampleDeveloper', password='password', data=testsxml.release_by_project_no_project_post_xml)
         self.assertEquals(response.status_code, 200)
         release = xobj.parse(response.content).release
         self.assertEquals(release.name, 'release2002')
@@ -646,3 +649,4 @@ class ProjectsTestCase(RbacEngine):
             username='ExampleDeveloper', password='password', data=testsxml.image_by_release_post_xml)
         self.assertEquals(response.status_code, 200)
         self.assertXMLEquals(response.content, testsxml.image_by_release_post_result_xml)
+
