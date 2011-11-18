@@ -638,7 +638,7 @@ class TargetsManager(basemanager.BaseManager, CatalogServiceHelper):
               JOIN Builds AS img ON (imgf.buildId = img.buildId)
               JOIN BuildFilesUrlsMap AS bfum ON (imgf.fileId = bfum.fileId)
               JOIN FilesUrls AS fu ON (bfum.urlId = fu.urlId)
-             WHERE img.buildType = ?
+             WHERE img.buildType = %s
              ORDER BY tti.target_id, tti.file_id
         """
         cu.execute(query, [ buildtypes.VMWARE_ESX_IMAGE ])
