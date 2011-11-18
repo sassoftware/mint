@@ -25,6 +25,10 @@ from mint.django_rest.rbuilder.targets import models as targetmodels
 from mint.django_rest.rbuilder.images import models as imagemodels
 from mint.django_rest.rbuilder.rbac.manager.rbacmanager import READMEMBERS, MODMEMBERS
 
+import logging
+import traceback
+log = logging.getLogger(__name__)
+
 # how to add a new queryset resouce type
 # (there is a fair amount of boilerplate we could refactor here by instantiating
 # a QuerySetType class and having a basic kind of factory around it)
@@ -216,8 +220,15 @@ class QuerySetManager(basemanager.BaseManager):
         for qs in all_sets:
             qs.tagged_date = None
             qs.save()
-            self.getQuerySetAllResult(qs, use_tags=False)
-        
+            try:
+                 self.getQuerySetAllResult(qs, use_tags=False)
+            except Exception, e:
+                 # any error during retagging should only be logged
+                 # possibly the Django model changed and the database needs
+                 # manual repair -- must still be raised on QS direct access
+                 log.error("error retagging queryset %s (%s) [type=%s], filter term editing required to repair?\n %s" % (
+                     qs.pk, qs.name, qs.resource_type, traceback.format_exc()
+                 )) 
 
     @exposed
     def updateQuerySet(self, querySet, by_user):

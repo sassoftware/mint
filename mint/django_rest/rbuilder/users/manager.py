@@ -164,7 +164,7 @@ class UsersManager(basemanager.BaseManager):
         if not len(deleting) > 0:
             raise self.exceptions.UserNotFoundException()
         deleting = deleting[0]
-
+        
         # so that the old user name can be recycled, add a random number
         # on the end 
         deleting.user_name = "%s:%s" % (deleting.user_name, random.randint(0,99999999))
@@ -179,6 +179,12 @@ class UsersManager(basemanager.BaseManager):
         # need to retag because we haven't actually deleted it, otherwise
         # cascade takes care of tag removal for other resources
         self.mgr.retagQuerySetsByType('user', forUser)
+        # delete querysets for cleanup reasons, but also so the username
+        # can be recycled as My Querysets have the user name in them
+        from mint.django_rest.rbuilder.querysets import models as querymodels
+        querymodels.QuerySet.objects.filter(
+            personal_for=deleting
+        ).delete()
 
     @exposed
     def getSessionInfo(self):

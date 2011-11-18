@@ -112,7 +112,7 @@ class FuzzyModel(object):
             qs_all = getattr(module, mdlName).objects.all()
             qs_filtered = qs_all.filter(**kwargs)
             instance = self.rand_instance_from_qs(qs_filtered)
-        except Exception, e:
+        except Exception:
             instance = self.model()
         return instance
 
@@ -230,17 +230,17 @@ class FuzzyGraph(set):
 
     def union(self, fzG):
         un = set.union(self, fzG)
-        fzs1 = dict((hsh, self.registry[hsh]) for hsh in self)
-        fzs2 = dict((hsh, fzG.regsitry[hsh]) for hsh in fzG)
+        fzs1 = dict((hsh, self.registry[hsh]) for hsh in self) # pyflakes:ignore
+        fzs2 = dict((hsh, fzG.regsitry[hsh]) for hsh in fzG) # pyflakes:ignore
         
         
         dict_union = {}
         dict_union.update
-        union = FuzzyGraph()
+        union = FuzzyGraph() # pyflakes:ignore
         return un
     
     def intersection(self, fzG):
-        fzG_intersection = FuzzyGraph()
+        fzG_intersection = FuzzyGraph() # pyflakes:ignore
         inter = set.intersection(self, fzG)
         FuzzyGraph.syncRegistry(inter)
         return inter
@@ -396,7 +396,7 @@ class Fuzzer(object):
         if parent_hsh in Fuzzer.GRAPH:
             result = Fuzzer.GRAPH.get(parent_hsh)
             if not result:
-                import pdb; pdb.set_trace()
+                raise Exception('no result')
             assert len(result) == 1, 'len(result) > 1, result == %s' % result
             setattr(fz.instance, field.name, result[0].instance)
         else:
@@ -440,7 +440,7 @@ class Fuzzer(object):
             Fuzzer.saveFz(FuzzyModel(t))
             
         else:
-            import pdb; pdb.set_trace()
+            raise Exception("should not be here")
 
     def save(self):
         Fuzzer.saveFz(self.fz)
@@ -460,7 +460,7 @@ class Fuzzer(object):
             elif fname in fz.M2MFields:
                 Fuzzer.fuzzFzM2M(fz, bad)
             else:
-                import pdb; pdb.set_trace()
+                raise Exception("should not be here")
 
         def resolveErrors(e):
             for fname, errors in e.error_data.items():
@@ -483,7 +483,7 @@ class Fuzzer(object):
                 fz.clean()
             except FzValidationError, e:
                 resolveErrors(e)
-                import pdb; pdb.set_trace()
+                raise Exception("internal error")
         fz.save()
 
     @staticmethod

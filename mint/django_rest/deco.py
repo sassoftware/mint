@@ -128,6 +128,7 @@ def _injectZone(request, xobjModel, modelName, modelClass):
     setattr(xobjModel, propName, mzone)
 
 HttpAuthenticationRequired = http.HttpResponse(status=401)
+HttpAuthorizationRequired  = http.HttpResponse(status=403)
 
 class access(object):
     @classmethod

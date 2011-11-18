@@ -120,7 +120,7 @@ class QuerySetTestCase(QueryTestCase):
         # collection for the given queryset type
         response = self._get("query_sets/%s/universe" % qsid,
             username="admin", password="password")
-        self.assertEquals(response.status_code, 302)
+        self.assertEquals(response.status_code, 200)
 
         # the tagged date should be set because we ran the queryset 
         # at least once.

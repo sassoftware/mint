@@ -1,7 +1,5 @@
 #
-# Copyright (c) 2010 rPath, Inc.
-#
-# All rights reserved.
+# Copyright (c) 2011 rPath, Inc.
 #
 
 import logging
@@ -13,7 +11,7 @@ from conary.repository import errors
 from mint import users
 from mint import maintenance
 from mint.helperfuncs import getProjectText, configureClientProxies
-from mint.scripts import mirror
+from mint.scripts import mirror as mirrormod
 from mint.web.webhandler import normPath, WebHandler, HttpNotFound, HttpForbidden
 from mint.web.fields import strFields, intFields, listFields, boolFields
 
@@ -228,6 +226,7 @@ class AdminHandler(WebHandler):
             # set up the authentication
             project.editLabel(labelId, str(extLabel), url,
                 authType, externalUser, externalPass, externalEntKey)
+            inboundMirror = self.client.getInboundMirror(projectId)
 
             # set up the mirror, if requested
             if useMirror == 'net':
@@ -239,8 +238,8 @@ class AdminHandler(WebHandler):
                 project.editLabel(labelId, str(extLabel), localUrl,
                     'userpass', self.cfg.authUser, self.cfg.authPass, '')
 
-                if mirror and editing:
-                    mirrorId = mirror['inboundMirrorId']
+                if inboundMirror and editing:
+                    mirrorId = inboundMirror['inboundMirrorId']
                     self.client.editInboundMirror(mirrorId, [str(extLabel)] +
                         additionalLabels, url, authType, externalUser,
                         externalPass, externalEntKey, allLabels)
@@ -249,8 +248,8 @@ class AdminHandler(WebHandler):
                         additionalLabels, url, authType, externalUser,
                         externalPass, externalEntKey, allLabels)
             # remove mirroring if requested
-            elif useMirror == 'none' and mirror and editing:
-                self.client.delInboundMirror(mirror['inboundMirrorId'])
+            elif useMirror == 'none' and inboundMirror and editing:
+                self.client.delInboundMirror(inboundMirror['inboundMirrorId'])
 
             verb = editing and "Edited" or "Added"
             self._setInfo("%s external %s %s" % (verb, getProjectText().lower(), name))
@@ -392,7 +391,7 @@ class AdminHandler(WebHandler):
             mirrorData['ordinal'] = i
             matchStrings = self.client.getOutboundMirrorMatchTroves(outboundMirrorId)
             mirrorData['groups'] = self.client.getOutboundMirrorGroups(outboundMirrorId)
-            mirrorData['mirrorSources'] = not set(mirror.EXCLUDE_SOURCE_MATCH_TROVES).issubset(set(matchStrings)) and not (useReleases or mirrorData['groups'])
+            mirrorData['mirrorSources'] = not set(mirrormod.EXCLUDE_SOURCE_MATCH_TROVES).issubset(set(matchStrings)) and not (useReleases or mirrorData['groups'])
             rows.append(mirrorData)
 
         return self._write('admin/outbound', rows = rows)
@@ -407,7 +406,7 @@ class AdminHandler(WebHandler):
             obmg = self.client.getOutboundMirrorGroups(id)
             obmt = self.client.getOutboundMirrorTargets(id)
             kwargs.update({'projectId': obm['sourceProjectId'],
-                           'mirrorSources': not set(mirror.EXCLUDE_SOURCE_MATCH_TROVES).issubset(set(obm['matchStrings'].split())),
+                           'mirrorSources': not set(mirrormod.EXCLUDE_SOURCE_MATCH_TROVES).issubset(set(obm['matchStrings'].split())),
                            'useReleases': int(obm['useReleases']),
                            'allLabels': obm['allLabels'],
                            'selectedLabels': json.dumps(obm['targetLabels'].split()),
@@ -461,10 +460,10 @@ class AdminHandler(WebHandler):
                     matchTroveList.extend(['+%s' % (g,) for g in groups])
             else:
                 if not mirrorSources:
-                    matchTroveList.extend(mirror.EXCLUDE_SOURCE_MATCH_TROVES)
+                    matchTroveList.extend(mirrormod.EXCLUDE_SOURCE_MATCH_TROVES)
                 # make sure we include everything else if we are not in
                 # mirror by group mode
-                matchTroveList.extend(mirror.INCLUDE_ALL_MATCH_TROVES)
+                matchTroveList.extend(mirrormod.INCLUDE_ALL_MATCH_TROVES)
 
         if not self._getErrors():
             recurse = (mirrorBy == 'group')

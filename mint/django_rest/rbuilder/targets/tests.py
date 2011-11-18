@@ -298,7 +298,7 @@ class TargetsTestCase(BaseTargetsTest, RepeaterMixIn):
 
     def testDeleteTarget(self):
         response = self._delete('targets/1', username='ExampleDeveloper', password='password')
-        self.assertEquals(response.status_code, 401)
+        self.assertEquals(response.status_code, 403)
         response = self._delete('targets/1', username='admin', password='password')
         self.assertEquals(response.status_code, 204)
 
