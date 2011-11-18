@@ -166,7 +166,7 @@ jobs_by_target_GET = \
 
 all_target_jobs_GET = \
 """
-<jobs count="20" next_page="http://testserver/api/v1/target_jobs/" num_pages="2" previous_page="" full_collection="http://testserver/api/v1/target_jobs/" end_index="9" limit="10" order_by="" per_page="10" filter_by="" id="http://testserver/api/v1/target_jobs/" start_index="0">
+<jobs count="24" next_page="http://testserver/api/v1/target_jobs/" num_pages="3" previous_page="" full_collection="http://testserver/api/v1/target_jobs/" end_index="9" limit="10" order_by="" per_page="10" filter_by="" id="http://testserver/api/v1/target_jobs/" start_index="0">
   <job id="http://testserver/api/v1/jobs/rmakeuuid001">
     <created_by id="http://testserver/api/v1/users/2000"/>
     <time_updated>2011-09-22T14:47:51.267860+00:00</time_updated>

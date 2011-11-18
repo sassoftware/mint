@@ -36,7 +36,7 @@ class BaseTargetsTest(RbacEngine):
 
     def _initTestFixtures(self):
         sampleTargetTypes = [ models.TargetType.objects.get(name=x)
-            for x in ['vmware', 'ec2', 'xen-enterprise', 'openstack'] ]
+            for x in ['vmware', 'ec2', 'xen-enterprise', 'openstack', 'vcloud'] ]
 
         lz = zmodels.Zone.objects.get(name=zmodels.Zone.LOCAL_ZONE)
 
@@ -174,6 +174,7 @@ class TargetsTestCase(BaseTargetsTest, RepeaterMixIn):
                 'http://testserver/api/v1/targets/2',
                 'http://testserver/api/v1/targets/3',
                 'http://testserver/api/v1/targets/4',
+                'http://testserver/api/v1/targets/5',
             ])
         actions = targets_gotten.targets.actions.action
         self.failUnlessEqual(
@@ -223,9 +224,10 @@ class TargetsTestCase(BaseTargetsTest, RepeaterMixIn):
                 'Target Name ec2',
                 'Target Name xen-enterprise',
                 'Target Name openstack',
+                'Target Name vcloud',
             ])
         self.failUnlessEqual([ x.credentials_valid for x in targetsObj.targets.target ],
-            ['true', 'true', 'false', 'false', ])
+            ['true', 'true', 'false', 'false', 'false', ])
 
     def testGetTarget(self):
         target = models.Target.objects.get(name = 'Target Name openstack')
@@ -496,7 +498,7 @@ class JobCreationTest(BaseTargetsTest, RepeaterMixIn):
         self.assertEquals(response.status_code, 200)
         obj = xobj.parse(response.content)
         job = obj.job
-        self.failUnlessEqual(job.results.id, "http://testserver/api/v1/targets/5")
+        self.failUnlessEqual(job.results.id, "http://testserver/api/v1/targets/6")
         self.failUnlessEqual(job.status_code, "200")
         self.failUnlessEqual(job.status_text, "Done")
 
@@ -1252,10 +1254,12 @@ class JobCreationTest(BaseTargetsTest, RepeaterMixIn):
         target1 = models.Target.objects.filter(target_type=targetType)[0]
         targetType = models.TargetType.objects.get(name='openstack')
         target2 = models.Target.objects.filter(target_type=targetType)[0]
+        targetType = models.TargetType.objects.get(name='vcloud')
+        target3 = models.Target.objects.filter(target_type=targetType)[0]
 
         targetData = [
-            (target1, buildtypes.VMWARE_ESX_IMAGE),
-            (target2, buildtypes.RAW_HD_IMAGE),
+            (target1, buildtypes.VMWARE_ESX_IMAGE, [ 'ova', 'tar.gz', ]),
+            (target2, buildtypes.RAW_HD_IMAGE, [ 'tar.gz' ]),
         ]
 
         # We need to set a user, image creation needs it
@@ -1268,8 +1272,8 @@ class JobCreationTest(BaseTargetsTest, RepeaterMixIn):
 
         targetImageIdTempl = "target-internal-id-%02d"
         imgmgr = self.mgr.imagesManager
-        for i in range(4):
-            for target, imageType in targetData:
+        for i in range(5):
+            for target, imageType, fileExtensions in targetData:
                 image = imgmgr.createImage(
                     _image_type=imageType,
                     name = "image %02d" % i,
@@ -1277,15 +1281,20 @@ class JobCreationTest(BaseTargetsTest, RepeaterMixIn):
                     project_branch_stage=stage,
                 )
                 imgmgr.createImageBuild(image)
-                bf = imgmgr.createImageBuildFile(image,
-                    url="filename-%02d-%02d" % (imageType, i),
-                    title="Image File Title %02d" % i,
-                    size=100+i,
-                    sha1="%040d" % i)
-                if i % 2 == 0:
-                    imgbuild = imgmgr.recordTargetInternalId(
-                        buildFile=bf, target=target,
-                        targetInternalId=targetImageIdTempl % i)
+                for fileExtension in fileExtensions:
+                    if i == 4 and fileExtension == 'ova':
+                        # Skip this one, to force an ovf 0.9 only image
+                        continue
+                    fileName = "filename-%02d-%02d.%s" % (imageType, i, fileExtension)
+                    bf = imgmgr.createImageBuildFile(image,
+                        url=fileName,
+                        title="Image File Title %02d" % i,
+                        size=100+i,
+                        sha1="%040d" % i)
+                    if i % 2 == 0:
+                        imgbuild = imgmgr.recordTargetInternalId(
+                            buildFile=bf, target=target,
+                            targetInternalId=targetImageIdTempl % i)
 
                 # Add a bunch of target images
                 j = i + 2
@@ -1300,7 +1309,7 @@ class JobCreationTest(BaseTargetsTest, RepeaterMixIn):
                     "Deferred image based on %s" % image.image_id,
                     projectBranchStage=stage)
 
-        return [ target1, target2 ]
+        return [ target1, target2, target3 ]
 
     def createDefferredImage(self, baseImage, name, description=None,
             projectBranchStage=None):
@@ -1319,6 +1328,7 @@ class JobCreationTest(BaseTargetsTest, RepeaterMixIn):
         self.mgr.targetsManager.recomputeTargetDeployableImages()
 
         target1 = targets[0]
+        target3 = targets[2]
 
         for imgName in [ "image 00", "image 01", "image 03" ]:
             img = imgmodels.Image.objects.get(name=imgName, _image_type=buildtypes.VMWARE_ESX_IMAGE)
@@ -1326,19 +1336,41 @@ class JobCreationTest(BaseTargetsTest, RepeaterMixIn):
                 [
                     [ tdi.target_image
                         for tdi in imgfile.target_deployable_images.all() ]
-                    for imgfile in img.files.all() ],
-                [[None]]
+                    for imgfile in img.files.order_by('file_id') ],
+                [[None, None], []]
             )
 
-        imgName = "image 02"
+        imgName = "image 04"
         img = imgmodels.Image.objects.get(name=imgName, _image_type=buildtypes.VMWARE_ESX_IMAGE)
         self.failUnlessEqual(
             [
-                [ tdi.target_image.target_internal_id
+                [ (tdi.target.name, tdi.target_image.target_internal_id)
                     for tdi in imgfile.target_deployable_images.all() ]
-                for imgfile in img.files.all() ],
-            [['target-internal-id-02']]
+                for imgfile in img.files.order_by('file_id') ],
+            [[('Target Name vmware', 'target-internal-id-04')]]
         )
+
+        imgName = "image 02"
+        img = imgmodels.Image.objects.get(name=imgName, _image_type=buildtypes.VMWARE_ESX_IMAGE)
+        imgfiles = img.files.order_by('file_id')
+
+        # Helper function, targetImage may be null
+        def _g(targetImage):
+            if targetImage is None:
+                return None
+            return targetImage.target_internal_id
+        self.failUnlessEqual(
+                [
+                    [ (tdi.target.name, _g(tdi.target_image))
+                        for tdi in imgfile.target_deployable_images.order_by('target__target_id') ]
+                    for imgfile in imgfiles ],
+                [
+                    [
+                        ('Target Name vmware', 'target-internal-id-02'),
+                        ('Target Name vcloud', None),
+                    ],
+                    []
+                ])
 
         url = "images/%s" % img.image_id
         resp = self._get(url, username="ExampleDeveloper", password="password")
@@ -1347,15 +1379,21 @@ class JobCreationTest(BaseTargetsTest, RepeaterMixIn):
         actions = doc.image.actions.action
         self.failUnlessEqual([ x.name for x in actions ],
             ["Deploy image on 'Target Name vmware' (vmware)",
+             "Deploy image on 'Target Name vcloud' (vcloud)",
              "Launch system on 'Target Name vmware' (vmware)",
+             "Launch system on 'Target Name vcloud' (vcloud)",
             ])
         file1 = img.files.all()[0]
         self.failUnlessEqual([ x.descriptor.id for x in actions ],
             [
             'http://testserver/api/v1/targets/%s/descriptors/deploy/file/%s' %
                 (target1.target_id, file1.file_id),
+            'http://testserver/api/v1/targets/%s/descriptors/deploy/file/%s' %
+                (target3.target_id, file1.file_id),
             'http://testserver/api/v1/targets/%s/descriptors/launch/file/%s' %
                 (target1.target_id, file1.file_id),
+            'http://testserver/api/v1/targets/%s/descriptors/launch/file/%s' %
+                (target3.target_id, file1.file_id),
             ])
         self.failUnlessEqual(doc.image.jobs.id,
             'http://testserver/api/v1/images/%s/jobs' % img.image_id)
@@ -1388,7 +1426,7 @@ class JobCreationTest(BaseTargetsTest, RepeaterMixIn):
         doc = xobj.parse(resp.content)
         self.failUnlessEqual(doc.descriptor.metadata.displayName, "FooDescriptor")
         self.failUnlessEqual(doc.descriptor.metadata.rootElement, "descriptor_data")
-        self.failUnlessEqual(doc.descriptor.dataFields.field.default, "5")
+        self.failUnlessEqual(doc.descriptor.dataFields.field.default, "7")
 
         baseImg = img
 
@@ -1404,8 +1442,11 @@ class JobCreationTest(BaseTargetsTest, RepeaterMixIn):
         doc = xobj.parse(resp.content)
         actions = doc.image.actions.action
         self.failUnlessEqual([ x.name for x in actions ],
-            ["Deploy image on 'Target Name vmware' (vmware)",
+            [
+             "Deploy image on 'Target Name vmware' (vmware)",
+             "Deploy image on 'Target Name vcloud' (vcloud)",
              "Launch system on 'Target Name vmware' (vmware)",
+             "Launch system on 'Target Name vcloud' (vcloud)",
             ])
         # We should be referring to the base image's files
         file1 = baseImg.files.all()[0]
@@ -1413,8 +1454,12 @@ class JobCreationTest(BaseTargetsTest, RepeaterMixIn):
             [
             'http://testserver/api/v1/targets/%s/descriptors/deploy/file/%s' %
                 (target1.target_id, file1.file_id),
+            'http://testserver/api/v1/targets/%s/descriptors/deploy/file/%s' %
+                (target3.target_id, file1.file_id),
             'http://testserver/api/v1/targets/%s/descriptors/launch/file/%s' %
                 (target1.target_id, file1.file_id),
+            'http://testserver/api/v1/targets/%s/descriptors/launch/file/%s' %
+                (target3.target_id, file1.file_id),
             ])
         self.failUnlessEqual(doc.image.jobs.id,
             'http://testserver/api/v1/images/%s/jobs' % img.image_id)
@@ -1490,7 +1535,7 @@ class JobCreationTest(BaseTargetsTest, RepeaterMixIn):
           {
             'imageFileInfo': {
                 'fileId' : buildFileId,
-                'name' : u'filename-09-02',
+                'name' : u'filename-09-02.ova',
                 'sha1' : u'0000000000000000000000000000000000000002',
                 'size' : 102,
                 'baseFileName' : 'chater-foo-1-',
@@ -1592,7 +1637,7 @@ class JobCreationTest(BaseTargetsTest, RepeaterMixIn):
           {
             'imageFileInfo': {
                 'fileId' : buildFileId,
-                'name' : u'filename-09-02',
+                'name' : u'filename-09-02.ova',
                 'sha1' : u'0000000000000000000000000000000000000002',
                 'size' : 102,
                 'baseFileName' : 'chater-foo-1-',
