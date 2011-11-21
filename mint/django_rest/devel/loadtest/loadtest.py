@@ -33,8 +33,8 @@ QUERYSET_SEARCH = {
     'image'                : 'name'
 
 }
-ROLE_COUNT = 10
-USERS_PER_ROLE = 10
+ROLE_COUNT = 100
+USERS_PER_ROLE = 20
 SYSTEMS_PER_USER = 10
 TOTAL_SYSTEMS = SYSTEMS_PER_USER * USERS_PER_ROLE * ROLE_COUNT
 URL_TIMES = {}
@@ -42,7 +42,7 @@ URL_TIMES = {}
 class Requestor(object):
 
     def _req(self, method, url, server=None, auth=None, headers=None, 
-        body=None, noparse=False, responseCode=200, timing=True):
+        body=None, noparse=False, responseCode=200):
      
         if not server:
             server = '127.0.0.1'
@@ -54,12 +54,17 @@ class Requestor(object):
                 os.environ.get('RPASS', 'password')
             )
         method = getattr(requests,method)
-        start = time.time()
         response = method(url, auth=auth, headers=headers, data=body)
-        end = time.time()
-        if timing:
-            # store time info in usable datastructure for future statistics
-            pass
+
+        if response.status_code == 302:
+            print "redirect..."
+            url = response.headers['Location']
+            print "URL=%s" % url
+            response = self._req( 
+                method, url, server, auth, headers,
+                body, noparse, responseCode
+            )
+
         if response.status_code != responseCode:
             try:
                 print response.content
@@ -115,8 +120,15 @@ class ObjectSpammer(Requestor):
         self.roles     = {}
         self.projects  = {}
         self.systems   = {}
+        self.allUsers  = 0
+
+        self.addUserTimes = []
+        self.getUserTimes = []
 
     def run(self):
+
+        allUsers = self._get('/query_sets;start_index=0;limit=100?filter_by=[name,EQUAL,All%20Users')
+        self.allUsers = int(allUsers.query_sets.query_set.query_set_id)
 
         for roleCt in xrange(0, ROLE_COUNT):
             print "ADDING ROLE: %s" % roleCt
@@ -125,9 +137,13 @@ class ObjectSpammer(Requestor):
                 print "... querysets: %s" % resourceType
                 qsId = self.addQuerySet(roleId, resourceType)
                 self.addGrants(qsId, roleId)
+                # adding everyone to be able to see all of all users
+                # as it's an easy way to build up a large list of both resources
+                # and users at the same time
+                self.addGrants(self.allUsers, roleId)
                 print "... users: (%s)" % USERS_PER_ROLE
                 for userCt in xrange(0, USERS_PER_ROLE):
-                    userName = "%s-%s" % (TESTPREFIX, userCt)
+                    userName = "%s-%s-%s" % (TESTPREFIX, roleCt, userCt)
                     if not self.userNames.has_key(userName):
                         self.addUserWithRole(userName, roleId)
                     #if resource_type == 'system':
@@ -179,9 +195,19 @@ class ObjectSpammer(Requestor):
             'name' : userName
         })
         userId = int(xUser.user.user_id)
-        xUser = self._post("/rbac/roles/%s/users" % roleId, 
-            createxml.addUserToRole % { 'userId' : userId }
+        start1 = time.time()
+        self._post("/rbac/roles/%s/users" % roleId, createxml.addUserToRole % 
+            { 'userId' : userId }
         )
+        end1 = time.time()
+        start2 = time.time()
+        # access *as* the user as rbac is more expensive
+        getResp = self._get("/query_sets/%s/all" % self.allUsers, 
+            auth=(userName, '12345'), noparse=True
+        )
+        end2 = time.time()
+        self.addUserTimes.append(end1-start1)
+        self.getUserTimes.append(end2-start2)
         self.users[userId] = None
         self.userNames[userName] = None
         return userId
@@ -212,6 +238,7 @@ if __name__ == '__main__':
     req      = Requestor()
     cleanup  = Cleanup()
     spammer  = ObjectSpammer()
+
     accessor = AccessTester()
 
     try:
@@ -219,6 +246,10 @@ if __name__ == '__main__':
         cleanup.run()
         print "-- populating the API"
         spammer.run()
+        print "--ADDITIONS"
+        print spammer.addUserTimes
+        print "--GETUSERS"
+        print spammer.getUserTimes
         print "-- testing queryset speed"
         accessor.run()
     finally:

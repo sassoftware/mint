@@ -182,8 +182,13 @@ class UsersManager(basemanager.BaseManager):
         # delete querysets for cleanup reasons, but also so the username
         # can be recycled as My Querysets have the user name in them
         from mint.django_rest.rbuilder.querysets import models as querymodels
+        from mint.django_rest.rbuilder.rbac import models as rbacmodels
         querymodels.QuerySet.objects.filter(
             personal_for=deleting
+        ).delete()
+        rbacmodels.RbacRole.objects.filter(
+            rbacuserrole__user=deleting,
+            is_identity=True
         ).delete()
 
     @exposed

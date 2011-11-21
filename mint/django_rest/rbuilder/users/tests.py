@@ -206,6 +206,11 @@ class UsersTestCase(RbacEngine):
             personal_for__pk = deletedUser.user_id
         )
         self.failUnlessEqual(len(remaining), 0)
+        remaining2 = rbacmodels.RbacRole.objects.filter(
+            rbacuserrole__user__pk = deletedUser.user_id,
+            is_identity = True
+        )
+        self.failUnlessEqual(len(remaining2), 0)
 
     def testUpdateUser(self):
         self.mockMint()
