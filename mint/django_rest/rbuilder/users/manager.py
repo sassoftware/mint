@@ -167,6 +167,7 @@ class UsersManager(basemanager.BaseManager):
 
         # so that the old user name can be recycled, add a random number
         # on the end 
+        oldUserName = deleting.user_name
         deleting.user_name = "%s:%s" % (deleting.user_name, random.randint(0,99999999))
         # if the user name was actually using close to the 127 allowed characters (god, why?)
         # don't worry so much about the random number... a rather unlikely scenario
@@ -187,8 +188,7 @@ class UsersManager(basemanager.BaseManager):
             personal_for=deleting
         ).delete()
         rbacmodels.RbacRole.objects.filter(
-            rbacuserrole__user=deleting,
-            is_identity=True
+            name="user:%s" % oldUserName
         ).delete()
 
     @exposed
