@@ -5,6 +5,7 @@
 #
 
 import json
+import sys
 
 from django.db import connection
 from django.db.models import Q
@@ -589,7 +590,15 @@ class TargetsManager(basemanager.BaseManager, CatalogServiceHelper):
         """)
         try:
             self._recomputeTargetDeployableImages()
-        finally:
+        except:
+            exc = sys.exc_info()
+            try:
+                self.mgr.rollback()
+            except:
+                # Ignore this exception
+                pass
+            raise exc[0], exc[1], exc[2]
+        else:
             cu.execute("DROP TABLE tmp_target_image")
 
     def _recomputeTargetDeployableImages(self):
@@ -672,17 +681,17 @@ class TargetsManager(basemanager.BaseManager, CatalogServiceHelper):
             # target_image_id
             query = """
                 DELETE FROM tmp_target_image
-                 WHERE target_id = ?
+                 WHERE target_id = %s
                    AND target_image_id IS NULL
-                   AND file_id = ?
+                   AND file_id = %s
             """
             cu.executemany(query, [ (x[0], x[2]) for x in todelete
                 if x[1] is None ])
             query = """
                 DELETE FROM tmp_target_image
-                 WHERE target_id = ?
-                   AND target_image_id = ?
-                   AND file_id = ?
+                 WHERE target_id = %s
+                   AND target_image_id = %s
+                   AND file_id = %s
             """
             cu.executemany(query, [ x[:3] for x in todelete
                 if x[1] is not None ])
