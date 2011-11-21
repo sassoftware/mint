@@ -42,3 +42,43 @@ addUserToRole = """
 <user id="https://127.0.0.1/api/v1/users/%(userId)s"/>
 """
 
+# not used, to avoid lots of seperate postgresql databases
+# though we need to test that too
+createProjectNonExternal = """
+  <project>
+    <commit_email>nospam@rpath.com</commit_email>
+    <project_url>http://</project_url>
+    <disabled>0</disabled>
+    <isAppliance>1</isAppliance>
+    <short_name>%(name)s</short_name>
+    <hostname>%(name)s</hostname>
+    <namespace>rpath</namespace>
+    <domain_name>eng.rpath.com</domain_name>
+    <hidden>false</hidden>
+    <description>%(name)s description</description>
+    <backup_external>0</backup_external>
+    <repository_hostname>%(name)s</repository_hostname>
+    <external>false</external>
+    <name>%(name)s</name>
+  </project>
+"""
+
+createProject = """
+  <project>
+    <project_url>http://</project_url>
+    <short_name>%(name)s</short_name>
+    <hostname>%(name)s</hostname>
+    <namespace>rpath</namespace>
+    <domain_name>eng.rpath.com</domain_name>
+    <hidden>false</hidden>
+    <description>test project description</description>
+    <external>true</external>
+    <name>%(name)s</name>
+    <auth_type>userpass</auth_type>
+    <entitlement/>
+    <upstream_url>https://rb.rpath.com/repos/rwbs/browse</upstream_url>
+    <label>rwbs.rb.rpath.com@rpath:rwbs-1-devel</label>
+    <password>somepassword</password>
+    <user_name>someuser</user_name>
+  </project>
+"""

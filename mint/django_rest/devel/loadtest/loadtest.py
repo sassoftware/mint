@@ -31,13 +31,18 @@ QUERYSET_SEARCH = {
     'target'               : 'name',
     'system'               : 'name',
     'image'                : 'name'
-
 }
-ROLE_COUNT = 100
+ROLE_COUNT = 50
 USERS_PER_ROLE = 20
-SYSTEMS_PER_USER = 10
-TOTAL_SYSTEMS = SYSTEMS_PER_USER * USERS_PER_ROLE * ROLE_COUNT
+PROJECTS_PER_USER = 5
+TOTAL_PROJECTS = PROJECTS_PER_USER * USERS_PER_ROLE * ROLE_COUNT
 URL_TIMES = {}
+
+print "------"
+print "creating %s roles" % ROLE_COUNT
+print "creating %s users" % USERS_PER_ROLE * ROLE_COUNT
+print "creating %s projects" % TOTAL_PROJECTS
+print "------"
 
 class Requestor(object):
 
@@ -55,15 +60,6 @@ class Requestor(object):
             )
         method = getattr(requests,method)
         response = method(url, auth=auth, headers=headers, data=body)
-
-        if response.status_code == 302:
-            print "redirect..."
-            url = response.headers['Location']
-            print "URL=%s" % url
-            response = self._req( 
-                method, url, server, auth, headers,
-                body, noparse, responseCode
-            )
 
         if response.status_code != responseCode:
             try:
@@ -122,8 +118,10 @@ class ObjectSpammer(Requestor):
         self.systems   = {}
         self.allUsers  = 0
 
-        self.addUserTimes = []
-        self.getUserTimes = []
+        #self.addUserTimes = []
+        #self.getUserTimes = []
+        #self.addProjectTimes = []
+        #self.getProjectTimes = []
 
     def run(self):
 
@@ -146,8 +144,8 @@ class ObjectSpammer(Requestor):
                     userName = "%s-%s-%s" % (TESTPREFIX, roleCt, userCt)
                     if not self.userNames.has_key(userName):
                         self.addUserWithRole(userName, roleId)
-                    #if resource_type == 'system':
-                    #    self.addSystems(userId)
+                    if resourceType == 'project':
+                        self.addProjects(userName)
 
     def addRole(self, roleCt):
         name = "%s-%s" % (TESTPREFIX, roleCt)
@@ -206,18 +204,38 @@ class ObjectSpammer(Requestor):
             auth=(userName, '12345'), noparse=True
         )
         end2 = time.time()
-        self.addUserTimes.append(end1-start1)
-        self.getUserTimes.append(end2-start2)
+        #self.addUserTimes.append(end1-start1)
+        #self.getUserTimes.append(end2-start2)
         self.users[userId] = None
         self.userNames[userName] = None
         return userId
 
-    def addSystems(self, userId):
-        print "!! system additions to implemented yet --"
-        #for x in range(0, SYSTEMS_PER_USER):
-        #    name = "%s-%s-%s" % (TESTPREFIX, userId, x)
-        #    systemId = 123
-        #    self.systems[systemId] = None
+    def addProject(self, userName, projCount):
+        name = "%s-%s" % (userName, projCount)
+        start = time.time()
+        xml = createxml.createProject % { 'name' : name }
+        resp = self._post(
+             "/projects/", 
+             xml,
+             auth=(userName, '12345')
+        )
+        end = time.time()
+        #self.addProjectTimes.append(end-start)
+        print "project %s addition time=%s" % (name, end-start)
+        # no need to pull off of xobj as project names appear in URL
+        # will have to fix if we ever move these back to use IDs
+        return name
+
+    def addProjects(self, userName):
+        for x in range(0, PROJECTS_PER_USER):
+            projectId = self.addProject(userName, x)
+            start2 = time.time()
+            getResp = self._get("/projects/%s" % projectId,
+                auth=(userName, '12345'), noparse=True
+            )
+            end2 = time.time()
+            #self.getProjectTimes.append(end2-start2)
+            # print "project access=%s" % (end2-start2)
 
 class AccessTester(object):
 
@@ -246,12 +264,14 @@ if __name__ == '__main__':
         cleanup.run()
         print "-- populating the API"
         spammer.run()
-        print "--ADDITIONS"
-        print spammer.addUserTimes
-        print "--GETUSERS"
-        print spammer.getUserTimes
-        print "-- testing queryset speed"
-        accessor.run()
+        #print "--USER TIMES:"
+        #print spammer.addUserTimes
+        #print spammer.getUserTimes
+        #print "--PROJECT TIMES:"
+        #print spammer.addProjectTimes
+        #print spammer.getProjectTimes
+        #print "-- testing queryset speed"
+        #accessor.run()
     finally:
         print "-- cleaning up from test run"
         if CLEANUP_POST_TEST:
