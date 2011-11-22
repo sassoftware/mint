@@ -75,12 +75,12 @@ class RbacRole(modellib.XObjIdModel):
 
     role_id = D(models.AutoField(primary_key=True),
         "the database ID for the role")
-    name = D(models.TextField(unique=True, db_column="role_name"), "name of the role")
-    description = D(models.TextField(), 'description')
+    name = D(models.TextField(unique=True, db_column="role_name"), "Role name", short="Role name")
+    description = D(models.TextField(), 'Role description', short="Role description")
     created_date = D(APIReadOnly(modellib.DateTimeUtcField(auto_now_add=True)),
-        "creation date")
+        "Role creation date")
     modified_date = D(APIReadOnly(modellib.DateTimeUtcField(auto_now_add=True)),
-        "modification date")
+        "Role modification date")
     created_by   =  D(APIReadOnly(modellib.SerializedForeignKey(usersmodels.User, null=True, 
         related_name='+', db_column='created_by', serialized_as='created_by')), 
         'user who created this resource')
@@ -159,8 +159,8 @@ class RbacPermissionType(modellib.XObjIdModel):
 
     permission_id = D(models.AutoField(primary_key=True, db_column='permission_type_id'),
         "the database ID for the permission type")
-    name         =  D(models.TextField(), 'internal role name/code')
-    description  =  D(models.TextField(), 'role description')
+    name         =  D(models.TextField(), "Permission name", short="Permission name")
+    description  =  D(models.TextField(), "Permission description", short="Permission description")
 
 class RbacPermission(modellib.XObjIdModel):
     '''

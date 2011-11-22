@@ -157,6 +157,14 @@ def filterDjangoQuerySet(djangoQuerySet, field, operator, value,
         if (queryset and queryset.resource_type == 'grant') or \
            (collection and collection._xobj.tag == 'grants'):
             field = 'rbac_permission.grant_id'
+    # this in particular is a UI workaround since it doesn't know to get
+    # the first element of the filter descriptor yet to use the primary
+    # search key.  'name' should be renamed 'defaultSearchKey' or something
+    # in a future release and made to work more generically
+    if field == 'name':
+        if (queryset and queryset.resource_type == 'grant'):
+            field = 'rbac_permission.name'
+        
  
     fieldName = field.split('.')[0]
     if fieldName not in djangoQuerySet.model._meta.get_all_field_names():
