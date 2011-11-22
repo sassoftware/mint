@@ -25,6 +25,7 @@ from mint.django_rest.rbuilder.targets import models as targetmodels
 from mint.django_rest.rbuilder.images import models as imagemodels
 from mint.django_rest.rbuilder.rbac.manager.rbacmanager import READMEMBERS, MODMEMBERS
 
+from django.db.utils import IntegrityError
 import logging
 import traceback
 log = logging.getLogger(__name__)
@@ -825,7 +826,12 @@ class QuerySetManager(basemanager.BaseManager):
 
         querySet.modified_by = by_user
         querySet.modified_date = timeutils.now()
-        querySet.save()
+        try:
+            querySet.save()
+        except IntegrityError:
+            # no penalty for trying to add to chosen twice
+            # and trying to insert duplicate queryset queryset tags
+            pass
 
         return self.getQuerySetChosenResult(querySetId)
 
