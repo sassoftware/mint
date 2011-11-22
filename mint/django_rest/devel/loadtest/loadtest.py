@@ -20,7 +20,8 @@ TABLES = {
    'inventory_system'   : 'name',
    'users'              : 'username',
    'rbac_role'          : 'role_name',
-   'querysets_queryset' : 'name'
+   'querysets_queryset' : 'name',
+   'projects'           : 'name'
 }
 # queryset resource_type list
 QUERYSET_TYPES = [ 'user', 'project', 'project_branch_stage', 'target', 'system', 'image', ]

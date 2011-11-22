@@ -218,18 +218,21 @@ class QuerySetManager(basemanager.BaseManager):
                 resource_type        = type,
                 personal_for__isnull = True,
             ).distinct()
+
         for qs in all_sets:
-            qs.tagged_date = None
-            qs.save()
-            try:
-                 self.getQuerySetAllResult(qs, use_tags=False)
-            except Exception, e:
-                 # any error during retagging should only be logged
-                 # possibly the Django model changed and the database needs
-                 # manual repair -- must still be raised on QS direct access
-                 log.error("error retagging queryset %s (%s) [type=%s], filter term editing required to repair?\n %s" % (
-                     qs.pk, qs.name, qs.resource_type, traceback.format_exc()
-                 )) 
+            if not qs.is_static: 
+                qs.tagged_date = None
+                qs.save()
+                try:
+                    self.getQuerySetAllResult(qs, use_tags=False)
+                except Exception, e:
+                    # any error during retagging should only be logged
+                    # possibly the Django model changed and the database needs
+                    # manual repair -- must still be raised on QS direct access
+                    log.error("error retagging queryset %s (%s) [type=%s], filter term editing required to repair?\n %s" % (
+                        qs.pk, qs.name, qs.resource_type, traceback.format_exc()
+                    )) 
+
 
     @exposed
     def updateQuerySet(self, querySet, by_user):
