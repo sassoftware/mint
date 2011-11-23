@@ -25,7 +25,6 @@ from mint.django_rest.rbuilder.targets import models as targetmodels
 from mint.django_rest.rbuilder.images import models as imagemodels
 from mint.django_rest.rbuilder.rbac.manager.rbacmanager import READMEMBERS, MODMEMBERS
 
-from django.db.utils import IntegrityError
 import logging
 import traceback
 log = logging.getLogger(__name__)
@@ -181,7 +180,9 @@ class QuerySetManager(basemanager.BaseManager):
         querySet.modified_by = by_user
         querySet.tagged_date = None
         querySet.save()
-        self._recomputeStatic(querySet)
+        querySet = self.mgr.getQuerySet(querySet.pk)
+        # recompute this and everything up the chain
+        self._recomputeStatic(querySet, skip_self=querySet.is_static)
         return querySet
 
     @exposed
@@ -233,7 +234,6 @@ class QuerySetManager(basemanager.BaseManager):
                         qs.pk, qs.name, qs.resource_type, traceback.format_exc()
                     )) 
 
-
     @exposed
     def updateQuerySet(self, querySet, by_user):
         '''edit a query set'''
@@ -259,7 +259,7 @@ class QuerySetManager(basemanager.BaseManager):
         self._recomputeStatic(querySet)
         return querySet
 
-    def _recomputeStatic(self, querySet):
+    def _recomputeStatic(self, querySet, skip_self=False):
         # the static bit keeps track of querysets who have no
         # filter terms or child sets with filter terms.  Certain
         # restrictions apply to querysts that are NOT static.
@@ -269,14 +269,20 @@ class QuerySetManager(basemanager.BaseManager):
         # start at lowest nodes in DAG, work up 
         to_process.sort(cmp=lambda x,y: cmp(y._depth, x._depth))
         for qs in to_process:
+            if skip_self and qs.pk == querySet.pk:
+                # if the querySet was static when added no need
+                # to recompute, save some work
+                continue
             # assume static until proven otherwise
-            qs.is_static = True
+            static = True
             if len(qs.filter_entries.all()) > 0:
-                qs.is_static = False
+                static = False
             for kid in qs.children.all():
                 if not kid.is_static:
-                    qs.is_static=False
-            qs.save()
+                    static=False
+            if querySet.is_static != static:
+                qs.is_static = static
+                qs.save()
 
     @exposed
     def deleteQuerySet(self, querySet):
@@ -1018,8 +1024,9 @@ class QuerySetManager(basemanager.BaseManager):
             if len(qs.filter_entries.all()) == 0:
                 # if the queryset already exists we won't try to repair it
                 qs.filter_entries.add(filterEntry)
-                qs.save()
-
+                qs.is_static = False
+            qs.save()
+          
         return qs
 
     def _createMyProjects(self, user, byUser):
