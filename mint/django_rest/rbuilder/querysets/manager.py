@@ -48,7 +48,6 @@ log = logging.getLogger(__name__)
 
 # retag if a new query is made and the results are greater
 # than this many seconds old
-TAG_REFRESH_INTERVAL=60
 
 class QuerySetManager(basemanager.BaseManager):
 
@@ -701,12 +700,13 @@ class QuerySetManager(basemanager.BaseManager):
              return True
 
          if querySet.tagged_date is None:
-             # never been tagged before
+             # never been tagged before or explicitly marked for retag
              return True
          else:
-             then  = querySet.tagged_date
-             delta = timeutils.now() - then
-             return (delta.seconds > TAG_REFRESH_INTERVAL)
+             for kid in querySet.children.all():
+                 if self._areResourceTagsStale(kid):
+                     return True
+             return False
 
     def _getQuerySetFilteredResult(self, querySet):
 
