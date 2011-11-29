@@ -600,6 +600,7 @@ class TargetsManager(basemanager.BaseManager, CatalogServiceHelper):
             raise exc[0], exc[1], exc[2]
         else:
             cu.execute("DROP TABLE tmp_target_image")
+        self.mgr.retagQuerySetsByType('image')
 
     def _recomputeTargetDeployableImages(self):
         cu = connection.cursor()

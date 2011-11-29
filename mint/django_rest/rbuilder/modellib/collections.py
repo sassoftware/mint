@@ -15,6 +15,7 @@ from django.core import paginator
 
 from mint.django_rest.rbuilder import errors
 from mint.django_rest.rbuilder.modellib import XObjIdModel
+from mint.jobstatus import FINISHED
 
 from xobj import xobj
 
@@ -227,6 +228,9 @@ def filterDjangoQuerySet(djangoQuerySet, field, operator, value,
     # present for admin metadata only
     if queryset and queryset.resource_type == 'user':
         filtDict['deleted'] = False 
+    # image querysets should not show non-successful images
+    if queryset and queryset.resource_type == 'image':
+        filtDict['status'] = FINISHED
 
     if operator.startswith('NOT_'):
         qs = djangoQuerySet.filter(~Q(**filtDict))

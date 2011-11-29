@@ -211,6 +211,8 @@ class QuerySetManager(basemanager.BaseManager):
         if for_user is None:
             all_sets = models.QuerySet.objects.filter(resource_type=type)
         else:
+            # avoid retagging everyone's My Stages when adding a new stage ... not neccessary
+            # to pass for_user where we know all of the My Querysets are static.
             all_sets = models.QuerySet.objects.filter(
                 resource_type    = type,
                 personal_for     = for_user
