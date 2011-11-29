@@ -168,10 +168,10 @@ class UsersManager(basemanager.BaseManager):
         # so that the old user name can be recycled, add a random number
         # on the end 
         oldUserName = deleting.user_name
-        deleting.user_name = "%s:%s" % (deleting.user_name, random.randint(0,99999999))
+        deleting.user_name = "%s:deleted:%s" % (deleting.user_name, random.randint(0,99999999))
         # if the user name was actually using close to the 127 allowed characters (god, why?)
         # don't worry so much about the random number... a rather unlikely scenario
-        excess = 126 - len(deleting.user_name) - 1
+        excess = 118 - len(deleting.user_name) - 1
         if excess < 0:
             deleting.user_name = deleting.user_name[0:excess]
 
