@@ -527,20 +527,6 @@ class MintServer(object):
         pd.setProductVersion(version.name)
         return pd.getProductDefinitionLabel()
 
-    def _fillInEmptyEC2Creds(self, authToken):
-        """
-        Convenience method that fills in the rBuilder's default
-        credentials for EC2 if the authToken is an empty tuple.
-        Otherwise it passes back what it was passed in.
-        """
-        assert(isinstance(authToken, (list, tuple)))
-        amiData = self._getTargetData('ec2', 'aws', supressException = True)
-        if len(authToken) == 0:
-            return (amiData.get('ec2AccountId', ""),
-                    amiData.get('ec2PublicKey', ""),
-                    amiData.get('ec2PrivateKey', ""))
-        return authToken
-
     # unfortunately this function can't be a proper decorator because we
     # can't always know which param is the projectId.
     # We'll just call it at the begining of every function that needs it.
