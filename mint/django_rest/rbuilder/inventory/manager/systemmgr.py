@@ -938,7 +938,7 @@ class SystemManager(basemanager.BaseManager):
         # XXX more stuff to happen here
 
     @exposed
-    def addLaunchedSystems(self, systems, imageId=None):
+    def addLaunchedSystems(self, systems, imageId=None, forUser=None):
         if imageId is not None:
             img = imagemodels.Image.objects.get(image_id=imageId)
         else:
@@ -946,7 +946,7 @@ class SystemManager(basemanager.BaseManager):
         for system in systems.system:
             self.mgr.addLaunchedSystem(system, dnsName=system.dnsName,
                 targetName=system.targetName, targetType=system.targetType,
-                sourceImage=img)
+                sourceImage=img, for_user=forUser)
         return systems
 
     @exposed
@@ -1841,15 +1841,16 @@ class SystemManager(basemanager.BaseManager):
             self._systemsMap = {}
 
         def addSystem(self, targetType, targetName, userName, instanceId,
-                instanceName, instanceDescription, dnsName, state):
+                instanceName, instanceDescription, dnsName, state, forUser=None):
             # We key by (targetTypeName, targetName). The value is another
             # dictionary keyed on instanceId (since within a single target,
             # the instance id is unique). The same system may be available to
             # multiple users.
             targetSystems = self._systemsMap.setdefault((targetType, targetName),
                 {})
-            system = targetSystems.setdefault(instanceId, self.System(
-                instanceName, instanceDescription, dnsName, state))
+            newSys = self.System(instanceName, instanceDescription, dnsName, state,
+                instanceName, instanceDescription, dnsName, state)
+            system = targetSystems.setdefault(instanceId, newSys)
             # weak attempt to enforce uniqueness of instanceId
             if (system.instanceName != instanceName or
                     system.instanceDescription != instanceDescription):
