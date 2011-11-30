@@ -228,11 +228,14 @@ class QuerySetManager(basemanager.BaseManager):
                 try:
                     self.getQuerySetAllResult(qs, use_tags=False)
                 except Exception, e:
+                    msg = traceback.format_exc()
+                    if msg.find("already exists") != -1:
+                        continue   
                     # any error during retagging should only be logged
                     # possibly the Django model changed and the database needs
                     # manual repair -- must still be raised on QS direct access
                     log.error("error retagging queryset %s (%s) [type=%s], filter term editing required to repair?\n %s" % (
-                        qs.pk, qs.name, qs.resource_type, traceback.format_exc()
+                        qs.pk, qs.name, qs.resource_type, msg
                     )) 
 
     @exposed

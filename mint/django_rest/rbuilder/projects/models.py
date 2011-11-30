@@ -150,6 +150,10 @@ class Project(modellib.XObjIdModel):
                 xobjModel.user_name = label.user_name
                 xobjModel.password = label.password
                 xobjModel.entitlement = label.entitlement
+
+        # XXX FIXME: this should not be needed
+        xobjModel.project_branch_stages.id = "%s/project_branch_stages" % xobjModel.id
+
         return xobjModel
 
     def computeSyntheticFields(self, sender, **kwargs):
