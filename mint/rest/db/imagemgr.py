@@ -527,6 +527,14 @@ class ImageManager(manager.Manager):
         if status.code != jobstatus.FINISHED:
             return
         self.db.db.auth_tokens.removeTokenByImage(imageId)
+   
+        try:
+            self.db.djMgr.recomputeTargetDeployableImages(newImageId=imageId)
+            self.db.djMgr.commit()
+        except:
+            self.db.djMgr.rollback()
+            raise
+
         imageType = self._getImageType(imageId)
         if imageType != buildtypes.AMI:
             # for now we only have to do something special for AMIs

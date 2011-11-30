@@ -706,13 +706,6 @@ class JobCreationTest(BaseTargetsTest, RepeaterMixIn):
             [ x.build_file_id for x in models.TargetDeployableImage.objects.all() ],
             [ bf.file_id ])
 
-        # Make sure the recomputation added queryset tags so results
-        # show up in querysets
-        tags = querymodels.ImageTag.objects.filter(
-             image_id = bf.file_id
-        )
-        self.assertTrue(len(tags) > 0)
-
         tcredid = tucreds.target_credentials_id
 
         # New creds

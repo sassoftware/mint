@@ -20,6 +20,7 @@ from mint.django_rest.rbuilder.targets import models
 from mint.django_rest.rbuilder.inventory import zones
 from mint.django_rest.rbuilder.jobs import models as jobsmodels
 from mint.django_rest.rbuilder.querysets import models as qsmodels
+from mint.django_rest.rbuilder.images import models as imagemodels
 
 from smartform import descriptor
 
@@ -579,7 +580,8 @@ class TargetsManager(basemanager.BaseManager, CatalogServiceHelper):
         #self.recomputeTargetSystems()
 
     @exposed
-    def recomputeTargetDeployableImages(self):
+    def recomputeTargetDeployableImages(self, newImageId=None):
+
         cu = connection.cursor()
         cu.execute("""
             CREATE TEMPORARY TABLE tmp_target_image (
@@ -600,6 +602,20 @@ class TargetsManager(basemanager.BaseManager, CatalogServiceHelper):
             raise exc[0], exc[1], exc[2]
         else:
             cu.execute("DROP TABLE tmp_target_image")
+
+        # if the image is finished, this will be called with newImageId
+        # and we can now show the image in "My Images"
+        if newImageId is not None:
+            image = imagemodels.Image.objects.get(pk=newImageId)
+            # image won't show up in retag of dynamic sets 
+            # if status is still running though we already know it's finished
+            # so ensure tagging is done correctly
+            image.status = jobstatus.FINISHED
+            image.save()
+
+            self.mgr.addToMyQuerySet(image, image.created_by)
+        
+ 
         self.mgr.retagQuerySetsByType('image')
 
     def _recomputeTargetDeployableImages(self):
