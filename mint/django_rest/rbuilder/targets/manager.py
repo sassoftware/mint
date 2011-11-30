@@ -21,6 +21,7 @@ from mint.django_rest.rbuilder.inventory import zones
 from mint.django_rest.rbuilder.jobs import models as jobsmodels
 from mint.django_rest.rbuilder.querysets import models as qsmodels
 from mint.django_rest.rbuilder.images import models as imagemodels
+from mint import jobstatus
 
 from smartform import descriptor
 
