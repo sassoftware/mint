@@ -9,6 +9,7 @@ import collections
 import re
 
 from mint import buildtypes
+from mint.lib import uuid
 from mint.django_rest.test_utils import XMLTestCase, RepeaterMixIn
 from mint.django_rest.rbuilder.inventory import zones as zmodels
 from mint.django_rest.rbuilder.inventory import models as invmodels
@@ -516,7 +517,7 @@ class JobCreationTest(BaseTargetsTest, RepeaterMixIn):
         self.assertEquals(response.status_code, 200)
         obj = xobj.parse(response.content)
         job = obj.job
-        self.failUnlessEqual(job.status_code, "400")
+        self.failUnlessEqual(job.status_code, "409")
         self.failUnlessEqual(job.status_text, "Duplicate Target")
 
     def testTargetConfiguration(self):
@@ -536,14 +537,19 @@ class JobCreationTest(BaseTargetsTest, RepeaterMixIn):
   <job_type id="http://localhost/api/v1/inventory/event_types/22"/>
   <descriptor id="http://testserver/api/v1/targets/%(targetId)s/descriptors/configuration"/>
   <descriptor_data>
-    <alias>newbie</alias>
-    <description>Brand new cloud</description>
-    <name>newbie.eng.rpath.com</name>
+    <alias>%(targetAlias)s</alias>
+    <description>%(targetDescription)s</description>
+    <name>%(targetName)s</name>
     <zone>Local rBuilder</zone>
   </descriptor_data>
 </job>
 """
-        jobXml = jobXmlTmpl % dict(targetId=target.target_id)
+        targetAlias = 'newbie'
+        targetName = 'newbie.eng.rpath.com'
+        targetDescription = 'Brand new cloud'
+        jobXml = jobXmlTmpl % dict(targetId=target.target_id,
+            targetName=targetName, targetDescription=targetDescription,
+            targetAlias=targetAlias)
         response = self._post('targets/%s/jobs' % target.target_id, jobXml,
             username='ExampleDeveloper', password='password')
         self.assertEquals(response.status_code, 403)
@@ -607,7 +613,71 @@ class JobCreationTest(BaseTargetsTest, RepeaterMixIn):
         self.failUnlessEqual(job.status_text, "Done")
 
         target = models.Target.objects.get(target_id=target.target_id)
-        self.failUnlessEqual(target.name, 'newbie.eng.rpath.com')
+        self.failUnlessEqual(target.name, targetName)
+
+    def testTargetConfigurationDuplicate(self):
+        targetType = self.mgr.getTargetTypeByName('vmware')
+        target = models.Target.objects.filter(target_type=targetType)[0]
+
+        tmpName = str(uuid.uuid4())
+        target1 = models.Target.objects.create(
+            name=tmpName, description="description for %s" % tmpName,
+            target_type=targetType,
+            zone=self.localZone,
+            state=0)
+
+        jobXmlTmpl  = """
+<job>
+  <job_type id="http://localhost/api/v1/inventory/event_types/22"/>
+  <descriptor id="http://testserver/api/v1/targets/%(targetId)s/descriptors/configuration"/>
+  <descriptor_data>
+    <alias>%(targetAlias)s</alias>
+    <description>%(targetDescription)s</description>
+    <name>%(targetName)s</name>
+    <zone>Local rBuilder</zone>
+  </descriptor_data>
+</job>
+"""
+        # Try to reconfigure target using the same config as target1
+        # We should catch the duplicate
+        jobXml = jobXmlTmpl % dict(targetId=target.target_id,
+            targetName=tmpName, targetDescription=tmpName, targetAlias=tmpName)
+
+        response = self._post('targets/%s/jobs' % target1.target_id, jobXml,
+            username='admin', password='password')
+        self.assertEquals(response.status_code, 200)
+
+        obj = xobj.parse(response.content)
+        job = obj.job
+        self.failUnlessEqual(job.descriptor.id,
+            "http://testserver/api/v1/targets/%d/descriptors/configuration" % target.target_id)
+
+        dbjob = jmodels.Job.objects.get(job_uuid=job.job_uuid)
+
+        jobXml = """
+<job>
+  <job_state>Completed</job_state>
+  <status_code>200</status_code>
+  <status_text>Done</status_text>
+  <results>
+    <target/>
+  </results>
+</job>
+"""
+        # Grab token
+        jobToken = dbjob.job_token
+        jobUrl = "jobs/%s" % dbjob.job_uuid
+        response = self._put(jobUrl, jobXml, jobToken=jobToken)
+        self.assertEquals(response.status_code, 200)
+
+        response = self._get(jobUrl)
+        self.assertEquals(response.status_code, 200)
+
+        obj = xobj.parse(response.content)
+        job = obj.job
+        self.failUnlessEqual(job.job_state, 'Failed')
+        self.failUnlessEqual(job.status_code, '409')
+        self.failUnlessEqual(job.status_text, 'Duplicate Target')
 
     def testTargetCredentialsConfiguration(self):
         jobType = jmodels.EventType.objects.get(name=jmodels.EventType.TARGET_CONFIGURE_CREDENTIALS)

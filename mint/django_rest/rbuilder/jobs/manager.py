@@ -81,6 +81,10 @@ class JobManager(basemanager.BaseManager):
         return jobStates
 
     @exposed
+    def getJobStateByName(self, name):
+        return modellib.Cache.get(models.JobState, name=name)
+
+    @exposed
     def getJobState(self, jobStateId):
         jobState = models.JobState.objects.get(pk=jobStateId)
         return jobState
@@ -655,8 +659,9 @@ class JobHandlerRegistry(HandlerRegistry):
 
         def handleError(self, job, exc):
             if isinstance(exc, IntegrityError):
+                job.job_state = self.mgr.getJobStateByName(models.JobState.FAILED)
                 job.status_text = "Duplicate Target"
-                job.status_code = 400
+                job.status_code = 409
             else:
                 DescriptorJobHandler.handleError(self, job, exc)
 
@@ -696,6 +701,14 @@ class JobHandlerRegistry(HandlerRegistry):
             # We don't allow for the type to change
             return self.mgr.mgr.updateTargetConfiguration(self.target,
                 targetName, config)
+
+        def handleError(self, job, exc):
+            if isinstance(exc, IntegrityError):
+                job.job_state = self.mgr.getJobStateByName(models.JobState.FAILED)
+                job.status_text = "Duplicate Target"
+                job.status_code = 409
+            else:
+                DescriptorJobHandler.handleError(self, job, exc)
 
     class TargetCredentialsConfigurator(_TargetDescriptorJobHandler):
         __slots__ = []
