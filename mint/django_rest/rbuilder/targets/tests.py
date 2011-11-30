@@ -10,7 +10,7 @@ import re
 
 from mint import buildtypes
 from mint.lib import uuid
-from mint.django_rest.test_utils import XMLTestCase, RepeaterMixIn
+from mint.django_rest.test_utils import RepeaterMixIn
 from mint.django_rest.rbuilder.inventory import zones as zmodels
 from mint.django_rest.rbuilder.inventory import models as invmodels
 from mint.django_rest.rbuilder.images import models as imgmodels
