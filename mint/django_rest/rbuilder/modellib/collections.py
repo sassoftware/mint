@@ -237,7 +237,10 @@ def filterDjangoQuerySet(djangoQuerySet, field, operator, value,
     else:
         qs = djangoQuerySet.filter(**filtDict)
     return qs
- 
+
+class UnpaginatedCollection(XObjIdModel):
+    class Meta:
+        abstract = True
 
 class Collection(XObjIdModel):
 

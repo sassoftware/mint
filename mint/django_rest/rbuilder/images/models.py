@@ -292,7 +292,7 @@ class Image(modellib.XObjIdModel):
                 actionDescription=actionName,
                 descriptorModel=tgt,
                 descriptorHref="descriptors/deploy/file/%s" % ( buildFileId, ),
-                enabled=enabled)
+                enabled=enabled, resources = [ tgt ])
             actions.action.append(action)
 
         for targetId, buildFileId in sorted(uqLaunch.items()):
@@ -306,7 +306,7 @@ class Image(modellib.XObjIdModel):
                 actionDescription=actionName,
                 descriptorModel=tgt,
                 descriptorHref="descriptors/launch/file/%s" % (buildFileId),
-                enabled=enabled)
+                enabled=enabled, resources = [ tgt ])
             actions.action.append(action)
 
         return actions

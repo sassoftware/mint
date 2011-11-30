@@ -26,6 +26,14 @@ APIReadOnly = modellib.APIReadOnly
 
 # ==========================================================
 
+class ActionResources(modellib.UnpaginatedCollection):
+    class Meta:
+        abstract = True
+    _xobj = xobj.XObjMetadata(
+                tag = 'resources')
+    list_fields = ['resource']
+    resource = []
+
 class Actions(modellib.XObjModel):
     class Meta:
         abstract = True
@@ -45,6 +53,7 @@ class Action(modellib.XObjModel):
     description = models.TextField()
     descriptor  = modellib.HrefField()
     enabled     = models.BooleanField(default=True)
+    resources   = modellib.SyntheticField()
 
 class Jobs(modellib.Collection):
     
@@ -381,7 +390,8 @@ class EventType(modellib.XObjIdModel):
     def makeAction(cls, jobTypeName, actionName=None, actionDescription=None,
             actionKey=None,
             enabled=True, descriptorModel=None, descriptorHref=None,
-            descriptorHrefValues=None, descriptorViewName=None):
+            descriptorHrefValues=None, descriptorViewName=None,
+            resources=None):
         '''Return a related Action object for spawning this jobtype'''
         obj = modellib.Cache.get(cls, name=jobTypeName)
         if actionKey is None:
@@ -408,6 +418,12 @@ class EventType(modellib.XObjIdModel):
         else:
             action.descriptor = modellib.HrefField("descriptors/%s",
                 values=(obj.job_type_id, ))
+        if resources:
+            #action.resources = modellib.HrefFieldFromModel(model=resources[0])
+            action.resources = ActionResources()
+            for resource in resources:
+                action.resources.resource.append(
+                    modellib.HrefFieldFromModel(resource, tag=resource._xobj.tag))
         return action
     
 

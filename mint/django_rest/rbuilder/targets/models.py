@@ -76,6 +76,7 @@ class Target(modellib.XObjIdModel):
     class States(object):
         OPERATIONAL = 0
         UNCONFIGURED = 1
+    _xobj = xobj.XObjMetadata(tag='target')
     _xobj_explicit_accessors = set()
 
     class Meta:

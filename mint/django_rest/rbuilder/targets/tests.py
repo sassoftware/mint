@@ -521,7 +521,8 @@ class JobCreationTest(BaseTargetsTest, RepeaterMixIn):
 
     def testTargetConfiguration(self):
         # Add credentials for admin
-        target = models.Target.objects.filter(target_type__target_type_id=5)[0]
+        targetType = self.mgr.getTargetTypeByName('vmware')
+        target = models.Target.objects.filter(target_type=targetType)[0]
         testUser = self.getUser('ExampleDeveloper')
         adminUser = self.getUser('admin')
         models.TargetUserCredentials.objects.create(
@@ -530,7 +531,7 @@ class JobCreationTest(BaseTargetsTest, RepeaterMixIn):
             target_credentials=models.TargetCredentials.objects.filter(
                 target_user_credentials__user=testUser,
                 target_user_credentials__target=target)[0])
-        jobXml = """
+        jobXmlTmpl  = """
 <job>
   <job_type id="http://localhost/api/v1/inventory/event_types/22"/>
   <descriptor id="http://testserver/api/v1/targets/%(targetId)s/descriptors/configuration"/>
@@ -541,7 +542,8 @@ class JobCreationTest(BaseTargetsTest, RepeaterMixIn):
     <zone>Local rBuilder</zone>
   </descriptor_data>
 </job>
-""" % dict(targetId=target.target_id)
+"""
+        jobXml = jobXmlTmpl % dict(targetId=target.target_id)
         response = self._post('targets/%s/jobs' % target.target_id, jobXml,
             username='ExampleDeveloper', password='password')
         self.assertEquals(response.status_code, 403)
@@ -1404,6 +1406,17 @@ class JobCreationTest(BaseTargetsTest, RepeaterMixIn):
                 (target1.target_id, file1.file_id),
             'http://testserver/api/v1/targets/%s/descriptors/launch/file/%s' %
                 (target3.target_id, file1.file_id),
+            ])
+        self.failUnlessEqual([ x.resources.target.id for x in actions ],
+            [
+            'http://testserver/api/v1/targets/%s' %
+                (target1.target_id, ),
+            'http://testserver/api/v1/targets/%s' %
+                (target3.target_id, ),
+            'http://testserver/api/v1/targets/%s' %
+                (target1.target_id, ),
+            'http://testserver/api/v1/targets/%s' %
+                (target3.target_id, ),
             ])
         self.failUnlessEqual(doc.image.jobs.id,
             'http://testserver/api/v1/images/%s/jobs' % img.image_id)
