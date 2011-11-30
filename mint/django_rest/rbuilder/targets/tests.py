@@ -23,7 +23,7 @@ from mint.django_rest.rbuilder.querysets import models as querymodels
 from mint.django_rest.rbuilder.users import models as usermodels
 from mint.django_rest.rbuilder.rbac.tests import RbacEngine
 from mint.django_rest import timeutils
-
+import mint.jobstatus as jobstatus
 
 # TODO: would be nice to make RbacSetup more of a mixin
 class BaseTargetsTest(RbacEngine):
@@ -33,6 +33,15 @@ class BaseTargetsTest(RbacEngine):
         self._initTestFixtures()
         self._mock()
         self._setupRbac()
+
+    def _markAllImagesAsFinished(self):
+        # images are RBACed and images don't show up in querysets unless finished.
+        # querysets are the basis of RBAC.  Ergo, make stuff not 403
+        images = imgmodels.Image.objects.all()
+        for x in images:
+            x.status = jobstatus.FINISHED
+            x.save()
+        self._retagQuerySets() 
 
     def _initTestFixtures(self):
         sampleTargetTypes = [ models.TargetType.objects.get(name=x)
@@ -1309,6 +1318,7 @@ class JobCreationTest(BaseTargetsTest, RepeaterMixIn):
                     "Deferred image based on %s" % image.image_id,
                     projectBranchStage=stage)
 
+        self._markAllImagesAsFinished()
         return [ target1, target2, target3 ]
 
     def createDefferredImage(self, baseImage, name, description=None,
