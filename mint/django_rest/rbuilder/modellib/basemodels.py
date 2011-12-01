@@ -1786,8 +1786,17 @@ class Cache(object):
 
     @classmethod
     def get(cls, modelClass, **kwargs):
-        cached = cls._getCachedClass(modelClass)
         keyName, keyValue = kwargs.items()[0]
+        try:
+            return cls._get(modelClass, keyName, keyValue)
+        except modelClass.DoesNotExist:
+            # Try again, after we invalidate the cache
+            cls._cache.pop(modelClass, None)
+            return cls._get(modelClass, keyName, keyValue)
+
+    @classmethod
+    def _get(cls, modelClass, keyName, keyValue):
+        cached = cls._getCachedClass(modelClass)
         try:
             return cached.get(keyName, keyValue)
         except KeyError:
