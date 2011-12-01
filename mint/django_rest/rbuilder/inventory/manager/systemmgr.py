@@ -1848,8 +1848,7 @@ class SystemManager(basemanager.BaseManager):
             # multiple users.
             targetSystems = self._systemsMap.setdefault((targetType, targetName),
                 {})
-            newSys = self.System(instanceName, instanceDescription, dnsName, state,
-                instanceName, instanceDescription, dnsName, state)
+            newSys = self.System(instanceName, instanceDescription, dnsName, state)
             system = targetSystems.setdefault(instanceId, newSys)
             # weak attempt to enforce uniqueness of instanceId
             if (system.instanceName != instanceName or
