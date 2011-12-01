@@ -19,6 +19,16 @@ from mint.django_rest.rbuilder import modellib
 # the actual field name in the dropdown.
 EXCLUDE_FIELD_NAMES = [ 'modified_by', 'modified_date']
 
+# certain fields are eclipsed by the default search key
+# being named "name" when there is another "name".  This is a workaround
+# that ensures the QS engine does not try to interpolate them, allowing
+# a way to keep them from being eclipsed when prefixed by the string
+# "literal:".
+
+LITERAL_FIELDS = [
+    'Stage name'
+]
+
 class FieldDescriptor(object):
     _xobj = xobj.XObjMetadata(tag='field_descriptor',
         elements=[
@@ -170,6 +180,8 @@ def getFieldDescriptors(field, prefix=None, processedModels=[], depth=0):
         else:
             key = field.name
         fd.field_label = getattr(field, 'shortname', None)
+        if fd.field_label in LITERAL_FIELDS:
+            key = "literal:%s" % key
         fd.field_key = key
         if fd.field_label is not None and not fd.field_key.startswith("_"):
             fd.value_type = getFieldValueType(field)
