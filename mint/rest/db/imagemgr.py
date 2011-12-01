@@ -527,6 +527,7 @@ class ImageManager(manager.Manager):
         if status.code != jobstatus.FINISHED:
             return
         self.db.db.auth_tokens.removeTokenByImage(imageId)
+        self.db.commit()
    
         try:
             self.db.djMgr.recomputeTargetDeployableImages(newImageId=imageId)
