@@ -828,4 +828,5 @@ class JobHandlerRegistry(HandlerRegistry):
             image.status = jobstatus.FINISHED
             image.status_message = 'System captured'
             image.save()
+            self.mgr.mgr.finishImageBuild(image)
             return image
