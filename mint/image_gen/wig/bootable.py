@@ -49,7 +49,7 @@ class ImageConverter(object):
         # to be here.
         self.basefilename = self.jobData['baseFileName']
         self.baseFlavor = self.jobData['troveTup'].flavor
-        self.buildOVF10 = self.jobData.getBuildData('buildOVF10')
+        self.buildOVF10 = self.jobData.getBuildData('buildOVF10') or self.alwaysOvf10
         self.outputDir = self.scratchDir
         self.outputFileList = []
         self.workingDir = os.path.join(self.scratchDir, self.basefilename)
