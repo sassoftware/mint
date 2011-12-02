@@ -24,6 +24,7 @@ from mint.django_rest.rbuilder.jobs import models as jobmodels
 from mint.django_rest.rbuilder.targets import models as targetmodels
 from mint.django_rest.rbuilder.images import models as imagemodels
 from mint.django_rest.rbuilder.rbac.manager.rbacmanager import READMEMBERS, MODMEMBERS
+from django.db import IntegrityError
 
 import logging
 import traceback
@@ -337,50 +338,43 @@ class QuerySetManager(basemanager.BaseManager):
         for caching purposes
         '''
         
-        try:
-            # we have to hop out of transactions because Django will deadlock... but we need locking
-            # so a request to retag isn't done in parallel, so this is somewhat evil.  Would love
-            # to hand tune the SQL but it's pretty ingrained into querysets.
-
-            # this should not be necc. if our transactions are marked correctly
-            # fd = open("/tmp/rbuilder-%s.taglock" % os.getuid(), "w")
-            # fcntl.flock(fd.fileno(), fcntl.LOCK_EX)
-
-            if len(resources) == 0:
-                return
+        if len(resources) == 0:
+            return
         
-            self.newTransaction()
+        # we have to hop out of transactions because Django will deadlock... 
+        self.newTransaction()
 
-            cursor = connection.cursor()
+        cursor = connection.cursor()
 
-            if inclusionMethod.name != 'chosen':
-                cursor.execute("DELETE FROM %s WHERE query_set_id = %s AND inclusion_method_id = %s" % (
-                    tagTable, queryset.pk, inclusionMethod.pk
-                ))
+        if inclusionMethod.name != 'chosen':
+            cursor.execute("DELETE FROM %s WHERE query_set_id = %s AND inclusion_method_id = %s" % (
+                tagTable, queryset.pk, inclusionMethod.pk
+            ))
 
-            insertParams = None
-            if type(resources) == list:
-                # inserting chosens, should be a small quantity
-                insertParams = [(r.pk,) for r in resources]
-            else:
-                resources = resources.values_list('pk', flat=True)
-                insertParams = [(r,) for r in resources]
+        insertParams = None
+        if type(resources) == list:
+            # inserting chosens, should be a small quantity
+            insertParams = [(r.pk,) for r in resources]
+        else:
+            resources = resources.values_list('pk', flat=True)
+            insertParams = [(r,) for r in resources]
 
-            query = "INSERT INTO %s" % tagTable 
-            query = query + " (%s, query_set_id, inclusion_method_id)" % idColumn
-            query = query + " VALUES (%s, " + " %s, %s)" % (queryset.pk, inclusionMethod.pk)
+        query = "INSERT INTO %s" % tagTable 
+        query = query + " (%s, query_set_id, inclusion_method_id)" % idColumn
+        query = query + " VALUES (%s, " + " %s, %s)" % (queryset.pk, inclusionMethod.pk)
     
-            cursor.executemany(query, insertParams) 
-        
-            if transaction.is_managed():
-                # inside login method (only), transactions are disabled
-                transaction.set_dirty()
-            self.newTransaction()
+        try:
+             cursor.executemany(query, insertParams) 
+        except IntegrityError:
+             # an attempt to add something to a chosen queryset twice is not an error
+             # but errors with other forms of tagging still are errors
+             if inclusionMethod.pk != self._chosenMethod().pk:
+                 raise 
 
-        finally:
-            #fcntl.flock(fd.fileno(), fcntl.LOCK_UN)
-            pass
-
+        if transaction.is_managed():
+            # inside login method (only), transactions are disabled
+            transaction.set_dirty()
+        self.newTransaction()
         
 
     def _tagSystems(self, resources, tag, inclusionMethod):
