@@ -1287,7 +1287,10 @@ class JobCreationTest(BaseTargetsTest, RepeaterMixIn):
             'imageFilesCommitUrl': u'https://bubba.com/api/products/chater-foo/images/1/files',
         }
         from ..images import models as imgmodels
-        outputToken = imgmodels.ImageData.objects.filter(name='outputToken')[0].value
+        imgdata = imgmodels.ImageData.objects.filter(name='outputToken')[0]
+        outputToken = imgdata.value
+        img = imgdata.image
+
         params['outputToken'] = outputToken
         # XXX get around stipid siteHost being mocked by who knows whom
         self.failUnlessEqual(realCall.args[0], system.target_system_id)
@@ -1312,6 +1315,11 @@ class JobCreationTest(BaseTargetsTest, RepeaterMixIn):
         obj = xobj.parse(response.content)
         self.failUnlessEqual(obj.job.id, "http://testserver/api/v1/" + jobUrl)
         self.failUnlessEqual(obj.job.results.id, "http://testserver/api/v1/images/1")
+
+        # Refresh image
+        img = imgmodels.Image.objects.get(image_id=img.image_id)
+        self.failUnlessEqual(img.status, 300)
+        self.failUnlessEqual(img.status_message, 'System captured')
 
         response = self._get("images/1",
             username='admin', password='password')

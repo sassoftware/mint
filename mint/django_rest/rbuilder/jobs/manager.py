@@ -17,7 +17,7 @@ from django.db import IntegrityError, transaction
 from xobj import xobj
 from smartform import descriptor as smartdescriptor
 
-from mint import buildtypes, urltypes
+from mint import buildtypes, jobstatus, urltypes
 from mint.lib import uuid
 from mint.django_rest.rbuilder import errors
 from mint.django_rest.rbuilder import modellib
@@ -825,4 +825,7 @@ class JobHandlerRegistry(HandlerRegistry):
                 raise errors.InvalidData()
             imageId = int(os.path.basename(imageId))
             image = self.mgr.mgr.getImageBuild(imageId)
+            image.status = jobstatus.FINISHED
+            image.status_message = 'System captured'
+            image.save()
             return image
