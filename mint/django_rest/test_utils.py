@@ -269,20 +269,20 @@ class XMLTestCase(TestCase, testcase.MockMixIn):
             return path
         return '/api/v1/' + path
 
+    # Ugly
+    def _parseRedirect(self, http_redirect, pagination=''):
+        redirect_url = http_redirect['Location']
+        return redirect_url.split('/api/v1/')[1].strip('/') + pagination
+
     def _get(self, url, username=None, password=None, pagination='', *args, **kwargs):
         """
         HTTP GET. Handles redirects & pagination.
         The pagination parameter allows us to include an offset and
         limit big enough that our test data will not be truncated.
         """
-        # Ugly
-        def _parseRedirect(http_redirect):
-            redirect_url = http_redirect['Location']
-            return redirect_url.split('/api/v1/')[1].strip('/') + pagination
-
         response = self._get_internal(url, username=username, password=password)
         if str(response.status_code).startswith('3') and response.has_header('Location'):
-            new_url = _parseRedirect(response)
+            new_url = self._parseRedirect(response, pagination)
             response = self._get_internal(new_url, username=username, password=password)
         return response
 
