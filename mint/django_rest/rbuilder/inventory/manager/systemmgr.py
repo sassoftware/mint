@@ -729,8 +729,7 @@ class SystemManager(basemanager.BaseManager):
 
     @exposed
     def updateSystem(self, system, for_user=None):
-        # XXX This will have to change and be done in modellib, most likely.
-        if self.checkAndApplyShutdown(system):
+        if not system.event_uuid and self.checkAndApplyShutdown(system):
             return
         self.checkInstalledSoftware(system)
         last_job = getattr(system, 'lastJob', None)
