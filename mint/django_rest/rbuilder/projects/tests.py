@@ -108,18 +108,16 @@ class ProjectsTestCase(RbacEngine):
         platform.save()
         branch = models.ProjectVersion(project=proj, name="trunk", label="chater-foo.eng.rpath.com@rpath:chater-foo-trunk")
         branch.save()
-        stage = models.Stage(project=proj,
-            project_branch=branch, name="Development", label="foo@ns:trunk-devel")
-        stage.save()
-        stage = models.Stage(project=proj,
-            project_branch=branch, name="QA", label="foo@ns:trunk-qa")
-        stage.save()
-        stage = models.Stage(project=proj,
-            project_branch=branch, name="Stage", label="foo@ns:trunk-stage")
-        stage.save()
-        stage = models.Stage(project=proj,
-            project_branch=branch, name="Release", label="foo@ns:trunk")
-        stage.save()
+        stageMap = [
+            ("Development", "foo@ns:trunk-devel"),
+            ("QA", "foo@ns:trunk-qa"),
+            ("Stage", "foo@ns:trunk-stage"),
+            ("Release", "foo@ns:trunk"),
+        ]
+        for stageName, stageLabel in stageMap:
+            stage = models.Stage(project=proj, project_branch=branch,
+                name=stageName, label=stageLabel)
+            stage.save()
         if adorn:
             for i in range(1, 3):
                 release = models.Release(project=proj,
