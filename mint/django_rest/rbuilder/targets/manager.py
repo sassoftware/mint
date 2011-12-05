@@ -164,10 +164,13 @@ class TargetsManager(basemanager.BaseManager, CatalogServiceHelper):
             state=state)
         target.save()
         self.mgr.retagQuerySetsByType('target', forUser)
+        self.mgr.recomputeTargetDeployableImages()
         return target
 
     @exposed
     def createTarget(self, targetType, targetName, targetData):
+        # Only used in the testsuite, the views don't touch this
+        # function
         targetData.pop('name', None)
         description = targetData.get('description', targetName)
         zoneName = targetData.pop('zone')
@@ -179,6 +182,7 @@ class TargetsManager(basemanager.BaseManager, CatalogServiceHelper):
         self._setTargetData(target, targetData)
         self._addTargetQuerySet(target)
         self.mgr.retagQuerySetsByType('target', for_user=None)
+        self.mgr.recomputeTargetDeployableImages()
         return target
 
     def _setTargetData(self, target, targetData):
