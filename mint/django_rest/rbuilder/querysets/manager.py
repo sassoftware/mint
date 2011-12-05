@@ -323,15 +323,6 @@ class QuerySetManager(basemanager.BaseManager):
         method = self._tagMethod(querySet)
         method(resources, querySet, self._transitiveMethod())
 
-    def newTransaction(self):
-        # try to avoid some confusing database locks that prevent executemany
-        # from continuing on
-        if transaction.is_managed():
-            if transaction.is_dirty():
-                transaction.commit()
-            transaction.leave_transaction_management()
-            transaction.enter_transaction_management(managed=True)
-
     def _tagGeneric(self, resources, queryset, inclusionMethod, tagClass, tagTable, idColumn):
         '''
         store that a given query tag matched the system 
@@ -341,8 +332,7 @@ class QuerySetManager(basemanager.BaseManager):
         if len(resources) == 0:
             return
         
-        # we have to hop out of transactions because Django will deadlock... 
-        self.newTransaction()
+        tsid = transaction.savepoint()
 
         cursor = connection.cursor()
 
@@ -367,15 +357,7 @@ class QuerySetManager(basemanager.BaseManager):
              cursor.executemany(query, insertParams) 
         except IntegrityError:
              # an attempt to add something to a chosen queryset twice is not an error
-             # but errors with other forms of tagging still are errors
-             if inclusionMethod.pk != self._chosenMethod().pk:
-                 raise 
-
-        if transaction.is_managed():
-            # inside login method (only), transactions are disabled
-            transaction.set_dirty()
-        self.newTransaction()
-        
+             transaction.savepoint_rollback(tsid)
 
     def _tagSystems(self, resources, tag, inclusionMethod):
         self._tagGeneric(resources, tag, inclusionMethod,
