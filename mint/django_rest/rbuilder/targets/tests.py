@@ -778,8 +778,6 @@ class JobCreationTest(BaseTargetsTest, RepeaterMixIn):
     def testSetTargetUserCredentials(self):
         user = self.getUser('ExampleDeveloper')
         self.mgr.user = user
-        branch = self.getProjectBranch('chater-foo.eng.rpath.com@rpath:chater-foo-1')
-        stage = self.getProjectBranchStage(branch, name='Development')
 
         img = self.addImage(name="test 1",
             imageType=buildtypes.VMWARE_ESX_IMAGE)
