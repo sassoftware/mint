@@ -15,17 +15,6 @@ from xobj import xobj
 XObjHidden = modellib.XObjHidden
 APIReadOnly = modellib.APIReadOnly
 
-# ==========================================================
-# descriptors needed to launch certain jobs, when adding
-# items here also update DESCRIPTOR_MAP below and make
-# sure the descriptor serving service for your resource
-# (ex: system, image, etc) knows about the new type
-
-# no parameters required for assimilation --- just
-# uses the management_interface credentials directly
-
-# ==========================================================
-
 class ActionResources(modellib.UnpaginatedCollection):
     class Meta:
         abstract = True
