@@ -437,6 +437,14 @@ class ImagesTest(restbase.BaseRestTest):
             [ (x.title, x.size, x.sha1, x.fileName)
                 for x in resp.files ],
             exp)
+        # Set the image status, this is what triggers the recomputation
+        # of deployable images
+        data = """\
+<imageStatus code="%d" message="%s" />
+""" % (jobstatus.FINISHED, jobstatus.statusNames[jobstatus.FINISHED])
+        url = 'products/testproject/images/3/status'
+        resp = client.call('PUT', url, data, headers=headers)[1]
+        self.failUnlessEqual(resp.code, jobstatus.FINISHED)
 
         # Make sure we have something in the db
         cu = db.cursor()
