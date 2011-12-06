@@ -87,22 +87,8 @@ class AMIPermissionsManager(object):
         targetId = self.db.targets.getTargetId('ec2', 'aws', None)
         if targetId is None:
             raise mint_error.EC2NotConfigured()
-        data = self.db.targetData.getTargetData(targetId)
-
-        newKeys = {
-            'ec2PrivateKey': 'secretAccessKey',
-            'ec2CertificateKey': 'certificateKeyData',
-            'ec2Certificate': 'certificateData',
-            'ec2S3Bucket': 's3Bucket',
-            'ec2PublicKey': 'publicAccessKeyId',
-            'ec2AccountId': 'accountId',
-        }
-
-        for old, new in newKeys.iteritems():
-            if new in data:
-                data[old] = data[new]
-
-        return data
+        amiData = self.db.targetData.getTargetData(targetId)
+        return amiData
 
     def uploadBundle(self, filePath, callback = None):
         targetData = self.getTargetData()
