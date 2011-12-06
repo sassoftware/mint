@@ -2519,10 +2519,9 @@ If you would not like to be %s %s of this project, you may resign from this proj
             amiData = {}
 
             try:
-                storedAmiData = self.amiPerms.getTargetData()
+                storedAmiData = self._getTargetData('ec2', 'aws')
             except mint_error.TargetMissing, e:
                 raise mint_error.EC2NotConfigured
-
             for k in ('ec2PublicKey', 'ec2PrivateKey', 'ec2AccountId',
                        'ec2S3Bucket', 'ec2LaunchUsers', 'ec2LaunchGroups',
                        'ec2Certificate', 'ec2CertificateKey'):
