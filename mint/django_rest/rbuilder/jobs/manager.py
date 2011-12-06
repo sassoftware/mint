@@ -257,13 +257,8 @@ class ResultsProcessingMixIn(object):
         driverClass = self.mgr.mgr.targetsManager.getDriverClass(targetType)
 
         cloudName = driverClass.getCloudNameFromDescriptorData(descriptorData)
-        config = dict((k.getName(), k.getValue())
-            for k in descriptorData.getFields())
+        config = driverClass.getTargetConfigFromDescriptorData(descriptorData)
         return targetType, cloudName, config
-
-        if self.targetType is None:
-            targetTypeId = job.jobtargettype_set.all()[0].target_type_id
-            self._setTargetType(targetTypeId)
 
     def handleError(self, job, exc):
         job.status_text = "Unknown exception, please check logs"
