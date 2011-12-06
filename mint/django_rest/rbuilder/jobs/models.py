@@ -22,7 +22,7 @@ class JobSystemArtifact(modellib.XObjModel):
     _xobj = xobj.XObjMetadata(tag = 'system_artifact')
     
     creation_id = XObjHidden(models.AutoField(primary_key=True))
-    job         = XObjHidden(modellib.ForeignKey('Job', db_column='job_id', related_name='system_artifacts'))
+    job         = XObjHidden(modellib.ForeignKey('Job', db_column='job_id', related_name='created_system'))
     system      = modellib.ForeignKey('inventory.System', db_column='system_id', related_name='+')
 
 class JobImageArtifact(modellib.XObjModel):
@@ -31,7 +31,7 @@ class JobImageArtifact(modellib.XObjModel):
     _xobj = xobj.XObjMetadata(tag = 'image_artifact')
 
     creation_id = XObjHidden(models.AutoField(primary_key=True))
-    job         = XObjHidden(modellib.ForeignKey('Job', db_column='job_id', related_name='image_artifacts'))
+    job         = XObjHidden(modellib.ForeignKey('Job', db_column='job_id', related_name='created_image'))
     image       = modellib.ForeignKey('images.Image', db_column='image_id', related_name='+')
 
 class ActionResources(modellib.UnpaginatedCollection):
@@ -94,7 +94,7 @@ class Job(modellib.XObjIdModel):
     _xobj = xobj.XObjMetadata(
                 tag = 'job',
                 attributes = {'id':str})
-    _xobj_explicit_accessors = set(['systems', 'image_artifacts', 'system_artifacts'])
+    _xobj_explicit_accessors = set(['systems', 'created_image', 'created_system'])
 
     #objects = modellib.JobManager()
 
@@ -197,6 +197,16 @@ class Job(modellib.XObjIdModel):
         xobj_model = modellib.XObjIdModel.serialize(self, request)
         self.setValuesFromRmake()
         xobj_model.job_description = self.job_type.description
+
+        image = xobj_model.created_image
+
+        # remove a layer of nesting so the API doesn't have to see it
+        system = xobj_model.created_system
+        if getattr(image, 'image_artifact', False):
+            xobj_model.created_image = image.image_artifact[0].image
+        if getattr(system, 'system_artifact', False):
+            xobj_model.created_system = system.system_artifact[0].system
+
         return xobj_model
 
 class JobStates(modellib.Collection):
