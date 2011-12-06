@@ -51,7 +51,8 @@ class ImagesManager(basemanager.BaseManager):
         buildData.append(('outputToken', outputToken, datatypes.RDT_STRING))
 
         image.time_created = image.time_updated = time.time()
-        image.created_by_id = self.user.user_id
+        if self.user is not None:
+            image.created_by_id = self.user.user_id
         image.image_count = 0
         if image.project_branch_stage_id:
             image.stage_name = image.project_branch_stage.name

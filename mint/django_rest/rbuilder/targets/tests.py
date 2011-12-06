@@ -278,6 +278,16 @@ class TargetsTestCase(BaseTargetsTest, RepeaterMixIn):
 
     def testCreateTarget(self):
         zmodels.Zone.objects.create(name='other zone', description = "Other Zone")
+
+        img = self.addImage(name="image sample",
+            imageType=buildtypes.VMWARE_ESX_IMAGE)
+        self.mgr.retagQuerySetsByType('image')
+
+        # No deployable images
+        self.failUnlessEqual(
+            [ x for x in models.TargetDeployableImage.objects.all() ],
+            [])
+
         response = self._post('targets/', username='admin', password='password',
             data=testsxml.target_POST)
         self.assertEquals(response.status_code, 200)
@@ -308,6 +318,12 @@ class TargetsTestCase(BaseTargetsTest, RepeaterMixIn):
             'Target Description')
         self.failUnlessEqual(obj.target_configuration.name, 'Target Name 4')
         self.failUnlessEqual(obj.target_configuration.zone, 'other zone')
+
+        tdi = models.TargetDeployableImage.objects.filter(target=dbobj)
+        bf = img.files.all()[0]
+        self.failUnlessEqual(
+            [ x.build_file.file_id for x in tdi ],
+            [ bf.file_id, ])
 
     def testUpdateTarget(self):
         response = self._put('targets/1', username='admin', password='password',
@@ -628,7 +644,7 @@ class JobCreationTest(BaseTargetsTest, RepeaterMixIn):
         targetType = self.mgr.getTargetTypeByName('vmware')
         target = models.Target.objects.filter(target_type=targetType)[0]
 
-        tmpName = str(uuid.uuid4())
+        tmpName = str(self.uuid4())
         target1 = models.Target.objects.create(
             name=tmpName, description="description for %s" % tmpName,
             target_type=targetType,
@@ -762,17 +778,9 @@ class JobCreationTest(BaseTargetsTest, RepeaterMixIn):
     def testSetTargetUserCredentials(self):
         user = self.getUser('ExampleDeveloper')
         self.mgr.user = user
-        branch = self.getProjectBranch('chater-foo.eng.rpath.com@rpath:chater-foo-1')
-        stage = self.getProjectBranchStage(branch, name='Development')
 
-        img = imgmodels.Image(project_branch_stage=stage, name="test 1",
-            _image_type=buildtypes.VMWARE_ESX_IMAGE)
-        self.mgr.createImageBuild(img)
-        bf = self.mgr.imagesManager.createImageBuildFile(img,
-            url="file-foo",
-            title="Image File Title",
-            size=100,
-            sha1="%040d" % 334)
+        img = self.addImage(name="test 1",
+            imageType=buildtypes.VMWARE_ESX_IMAGE)
 
         # No deployable image yet
         self.failUnlessEqual(
@@ -790,6 +798,8 @@ class JobCreationTest(BaseTargetsTest, RepeaterMixIn):
         # Do it again, the credentials should be the same
         tucreds2 = tmgr.setTargetUserCredentials(target, creds0)
         self.failUnlessEqual(tucreds.id, tucreds2.id)
+
+        bf = img.files.all()[0]
 
         # Make sure we've recomputed deployable images
         self.failUnlessEqual(
@@ -1403,24 +1413,22 @@ class JobCreationTest(BaseTargetsTest, RepeaterMixIn):
                     target_internal_id=targetImageIdTempl % j)
 
                 # Create deferred images too
-                self.createDefferredImage(image,
+                self.createDeferredImage(image,
                     "Deferred image based on %s" % image.image_id,
                     projectBranchStage=stage)
 
         self._markAllImagesAsFinished()
         return [ target1, target2, target3 ]
 
-    def createDefferredImage(self, baseImage, name, description=None,
+    def createDeferredImage(self, baseImage, name, description=None,
             projectBranchStage=None):
-        imgmgr = self.mgr.imagesManager
-        image = imgmgr.createImage(_image_type=buildtypes.DEFERRED_IMAGE,
-            name=name, description=None,
-            project_branch_stage=projectBranchStage,
-            base_image=baseImage)
-        imgmgr.createImageBuild(image)
         # Deferred images have no build files
+        img = self.addImage(name=name, description=description,
+            imageType=buildtypes.DEFERRED_IMAGE,
+            stage=projectBranchStage, baseImage=baseImage,
+            files=[])
         self._retagQuerySets()
-        return image
+        return img
 
     def testRecomputeTargetDeployableImages(self):
         targets = self._setupImages()
