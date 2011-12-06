@@ -2062,7 +2062,7 @@ If you would not like to be %s %s of this project, you may resign from this proj
                 buildSettings = containerTemplate.fields.copy()
 
             for key, val in buildImage.fields.iteritems():
-                if val is not None:
+                if val is not None and val != '':
                     buildSettings[key] = val
             buildType = buildImage.containerFormat and \
                     str(buildImage.containerFormat) or ''
