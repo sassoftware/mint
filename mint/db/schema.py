@@ -28,7 +28,7 @@ from conary.dbstore import sqlerrors, sqllib
 log = logging.getLogger(__name__)
 
 # database schema major version
-RBUILDER_DB_VERSION = sqllib.DBversion(61, 1)
+RBUILDER_DB_VERSION = sqllib.DBversion(61, 2)
 
 def _createTrigger(db, table, column="changed"):
     retInsert = db.createTrigger(table, column, "INSERT")
@@ -1506,6 +1506,27 @@ def _createInventorySchema(db, cfg):
             content         TEXT NOT NULL,
             created_date    TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT current_timestamp
         ) %(TABLEOPTS)s""")
+
+    createTable(db, 'jobs_created_system', """
+        CREATE TABLE jobs_created_system
+        (
+            creation_id     %(PRIMARYKEY)s,
+            job_id          INTEGER NOT NULL
+                REFERENCES jobs_job ON DELETE CASCADE,
+            system_id       INTEGER NOT NULL
+                REFERENCES inventory_system ON DELETE SET NULL
+        ) %(TABLEOPTS)s""")
+
+    createTable(db, 'jobs_created_image', """
+        CREATE TABLE jobs_created_image
+        (
+            creation_id     %(PRIMARYKEY)s,
+            job_id          INTEGER NOT NULL
+                REFERENCES jobs_job ON DELETE CASCADE,
+            image_id        INTEGER NOT NULL
+                REFERENCES builds (buildid) ON DELETE SET NULL
+        ) %(TABLEOPTS)s""")
+
 
     tableName = "inventory_system_job"
     if 'inventory_system_job' not in db.tables:

@@ -250,6 +250,20 @@ class ResultsProcessingMixIn(object):
         # Also the xml should not be <results id="blah"/>, but
         # <results><target id="blah"/></results>
         job.results = modellib.HrefFieldFromModel(resources)
+        if type(resources) != list:
+            resources = [ resources ]
+        for resource in resources:
+            tag = resource._xobj.tag
+            if tag == 'system':
+                models.JobSystemArtifact(job=job, system=resource).save()
+            elif tag == 'image':
+                models.JobImageArtifact(job=job, image=resource).save()
+            elif tag == 'target':
+                # not used in production yet, but mentioned in tests, so we don't
+                # have to save it.
+                pass
+            else:
+                raise Exception("internal error, don't know how to save resource: %s" % tag)
         return resources
 
     def _createTargetConfiguration(self, job, targetType):
@@ -830,3 +844,4 @@ class JobHandlerRegistry(HandlerRegistry):
             image.save()
             self.mgr.mgr.finishImageBuild(image)
             return image
+

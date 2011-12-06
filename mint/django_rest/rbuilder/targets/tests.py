@@ -1699,6 +1699,7 @@ class JobCreationTest(BaseTargetsTest, RepeaterMixIn):
         jobUrl = "jobs/%s" % dbjob.job_uuid
         response = self._put(jobUrl, jobXml, jobToken=jobToken)
         self.failUnlessEqual(response.status_code, 200)
+        self.assertXMLEquals(response.content, testsxml.job_xml_with_artifacts)
 
     def testLaunchSystem(self):
         targets = self._setupImages()

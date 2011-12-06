@@ -10,10 +10,29 @@ from django.db import models
 from mint.django_rest.deco import D
 from mint.django_rest.rbuilder import modellib
 from mint.django_rest.rbuilder.users import models as usermodels
+
 from xobj import xobj
 
 XObjHidden = modellib.XObjHidden
 APIReadOnly = modellib.APIReadOnly
+
+class JobSystemArtifact(modellib.XObjModel):
+    class Meta:
+        db_table = 'jobs_created_system'
+    _xobj = xobj.XObjMetadata(tag = 'system_artifact')
+    
+    creation_id = XObjHidden(models.AutoField(primary_key=True))
+    job         = XObjHidden(modellib.ForeignKey('Job', db_column='job_id', related_name='system_artifacts'))
+    system      = modellib.ForeignKey('inventory.System', db_column='system_id', related_name='+')
+
+class JobImageArtifact(modellib.XObjModel):
+    class Meta:
+        db_table = 'jobs_created_image'
+    _xobj = xobj.XObjMetadata(tag = 'image_artifact')
+
+    creation_id = XObjHidden(models.AutoField(primary_key=True))
+    job         = XObjHidden(modellib.ForeignKey('Job', db_column='job_id', related_name='image_artifacts'))
+    image       = modellib.ForeignKey('images.Image', db_column='image_id', related_name='+')
 
 class ActionResources(modellib.UnpaginatedCollection):
     class Meta:
@@ -75,7 +94,7 @@ class Job(modellib.XObjIdModel):
     _xobj = xobj.XObjMetadata(
                 tag = 'job',
                 attributes = {'id':str})
-    _xobj_explicit_accessors = set(['systems'])
+    _xobj_explicit_accessors = set(['systems', 'image_artifacts', 'system_artifacts'])
 
     #objects = modellib.JobManager()
 
