@@ -73,7 +73,7 @@ class ImageType(modellib.XObjIdModel):
             image_type_id = imageTypeId,
             key = cls.ImageTypeKeys.get(imageTypeId),
             name = buildtypes.typeNamesShort.get(imageTypeId),
-            description = buildtypes.typeNames.get(imageTypeId))
+            description = buildtypes.typeNamesMarketing.get(imageTypeId))
 
     @classmethod
     def fromXobjModel(cls, xobjModel):

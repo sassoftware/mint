@@ -2062,7 +2062,7 @@ If you would not like to be %s %s of this project, you may resign from this proj
                 buildSettings = containerTemplate.fields.copy()
 
             for key, val in buildImage.fields.iteritems():
-                if val is not None:
+                if val is not None and val != '':
                     buildSettings[key] = val
             buildType = buildImage.containerFormat and \
                     str(buildImage.containerFormat) or ''
@@ -2378,11 +2378,6 @@ If you would not like to be %s %s of this project, you may resign from this proj
 
             # Determine search path; start with imageGroup's label
             searchPath.append(igV.branch().label())
-
-        # Handle anacond-templates using a fallback
-        if specialTroveName == 'anaconda-templates':
-            # Need to search our system-wide fallback for anaconda templates
-            searchPath.append(versions.Label(self.cfg.anacondaTemplatesFallback))
 
         # if no flavor specified, use the top level group's flavor
         if not specialTroveFlavor:

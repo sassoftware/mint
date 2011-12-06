@@ -395,8 +395,8 @@ class TargetsTestCase(BaseTargetsTest, RepeaterMixIn):
             [ x.name for x in obj.descriptor.dataFields.field ],
             [
                 'name',
-                'cloudAlias',
-                'fullDescription',
+                'alias',
+                'description',
                 'accountId',
                 'publicAccessKeyId',
                 'secretAccessKey',
