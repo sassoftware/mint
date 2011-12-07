@@ -73,7 +73,7 @@ class ImageType(modellib.XObjIdModel):
             image_type_id = imageTypeId,
             key = cls.ImageTypeKeys.get(imageTypeId),
             name = buildtypes.typeNamesShort.get(imageTypeId),
-            description = buildtypes.typeNames.get(imageTypeId))
+            description = buildtypes.typeNamesMarketing.get(imageTypeId))
 
     @classmethod
     def fromXobjModel(cls, xobjModel):
@@ -266,8 +266,7 @@ class Image(modellib.XObjIdModel):
         else:
             self.actions = self._computeActionsForImage(self)
 
-    @classmethod
-    def _computeActionsForImage(cls, image):
+    def _computeActionsForImage(self, image):
         # Lazy import to prevent circular imports
         from mint.django_rest.rbuilder.targets import models as tgtmodels
 
@@ -275,6 +274,11 @@ class Image(modellib.XObjIdModel):
         modellib.Cache.all(tgtmodels.TargetType)
         modellib.Cache.all(tgtmodels.Target)
 
+        targetsWithCredentials = set()
+        if self._rbmgr is not None:
+            targetsWithCredentials.update(x.target_id
+                for x in tgtmodels.TargetUserCredentials.objects.filter(
+                    user=self._rbmgr.user))
         actions = jobmodels.Actions()
         actions.action = []
         # XXX FIXME REALLY BADLY: this needs to be cached
@@ -284,9 +288,11 @@ class Image(modellib.XObjIdModel):
             for tdi in bfile.target_deployable_images.all():
                 # If target_image_id is None, the image is not deployed,
                 # so we need to enable the action
-                enabled = (tdi.target_image_id is None)
+                targetId = tdi.target_id
+                enabled = targetId in targetsWithCredentials
+                uqLaunch[tdi.target_id] = (bfile.file_id, enabled)
+                enabled = enabled and tdi.target_image_id is None
                 uqDeploy[tdi.target_id] = (bfile.file_id, enabled)
-                uqLaunch[tdi.target_id] = bfile.file_id
         for targetId, (buildFileId, enabled) in sorted(uqDeploy.items()):
             tgt = modellib.Cache.get(tgtmodels.Target, pk=targetId)
             tgtType = modellib.Cache.get(tgtmodels.TargetType, pk=tgt.target_type_id)
@@ -297,11 +303,10 @@ class Image(modellib.XObjIdModel):
                 actionDescription=actionName,
                 descriptorModel=tgt,
                 descriptorHref="descriptors/deploy/file/%s" % ( buildFileId, ),
-                enabled=enabled)
+                enabled=enabled, resources = [ tgt ])
             actions.action.append(action)
 
-        for targetId, buildFileId in sorted(uqLaunch.items()):
-            enabled = True
+        for targetId, (buildFileId, enabled) in sorted(uqLaunch.items()):
             tgt = modellib.Cache.get(tgtmodels.Target, pk=targetId)
             tgtType = modellib.Cache.get(tgtmodels.TargetType, pk=tgt.target_type_id)
             actionName = "Launch system on '%s' (%s)" % (tgt.name, tgtType.name)
@@ -311,7 +316,7 @@ class Image(modellib.XObjIdModel):
                 actionDescription=actionName,
                 descriptorModel=tgt,
                 descriptorHref="descriptors/launch/file/%s" % (buildFileId),
-                enabled=enabled)
+                enabled=enabled, resources = [ tgt ])
             actions.action.append(action)
 
         return actions

@@ -1478,6 +1478,8 @@ class XObjModel(models.Model):
                     if getattr(self, '_supports_collapsed_collection', False):
                         val._summarize = True
                     xobjModelVal = val.serialize(request)
+                elif isinstance(val, HrefField):
+                    xobjModelVal = val.serialize_value(request)
                 else:
                     xobjModelVal = val
                 listFieldVals.append(xobjModelVal)
@@ -1585,9 +1587,10 @@ class HrefFieldFromModel(HrefField):
     """
     Build an href out of another model
     """
-    def __init__(self, model=None, viewName=None):
+    def __init__(self, model=None, viewName=None, tag=None):
         self.model = model
         self.viewName = viewName
+        self.tag = tag
         HrefField.__init__(self)
 
     def serialize_value(self, request=None):
@@ -1598,7 +1601,13 @@ class HrefFieldFromModel(HrefField):
         else:
             url = self.model.get_absolute_url(request, view_name=self.viewName)
         url = self._getRelativeHref(url=url)
-        return XObjHrefModel(url)
+        hrefModel = XObjHrefModel(url)
+        if self.tag:
+            # We need to instantiate an instance xobj metadata, setting
+            # it here directly would change the class-wide one
+            hrefModel._xobj = hrefModel._xobj.copy()
+            hrefModel._xobj.tag = self.tag
+        return hrefModel
 
 class ForeignKey(models.ForeignKey):
     """
@@ -1777,8 +1786,17 @@ class Cache(object):
 
     @classmethod
     def get(cls, modelClass, **kwargs):
-        cached = cls._getCachedClass(modelClass)
         keyName, keyValue = kwargs.items()[0]
+        try:
+            return cls._get(modelClass, keyName, keyValue)
+        except modelClass.DoesNotExist:
+            # Try again, after we invalidate the cache
+            cls._cache.pop(modelClass, None)
+            return cls._get(modelClass, keyName, keyValue)
+
+    @classmethod
+    def _get(cls, modelClass, keyName, keyValue):
+        cached = cls._getCachedClass(modelClass)
         try:
             return cached.get(keyName, keyValue)
         except KeyError:

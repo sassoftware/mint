@@ -13,7 +13,6 @@ import time
 import traceback
 
 from mint import config
-from mint import maintenance
 from mint.lib import scriptlibrary
 from mint.db import repository
 from conary import dbstore
@@ -65,16 +64,6 @@ class MigrateAllProjects(scriptlibrary.SingletonScript):
         scriptlibrary.setupScriptLogger(self.logPath,
                 consoleLevel=logging.INFO)
         self.log = scriptlibrary.getScriptLogger()
-
-        # check a few important things
-        ec = os.system('/sbin/service httpd status > /dev/null')
-        isRunningHttpd = bool((ec >> 8) == 0)
-        isRunningInMaintenanceMode = \
-                (maintenance.getMaintenanceMode(self.cfg)==maintenance.LOCKED_MODE)
-
-        if isRunningHttpd and not isRunningInMaintenanceMode:
-            self.log.error("rBuilder repositories are not locked. You must place the site in maintenance mode or shut down the Apache Web Server (httpd) before continuing.")
-            return 1
 
         self.log.info("Migrating Conary repository databases...")
 

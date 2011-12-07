@@ -13,12 +13,6 @@ from mint.django_rest.rbuilder.querysets import testsxml
 from mint.django_rest.rbuilder.querysets import manager as mgr
 from xobj import xobj
 
-# turn off tag cache delay for tests, effectively always
-# forcing a retag
-mgr.TAG_REFRESH_INTERVAL=-1
-
-
-
 class QueryTestCase(XMLTestCase):
 
     def setUp(self):
@@ -95,7 +89,6 @@ class QuerySetTestCase(QueryTestCase):
         # now hit it again and run down the "tagged" path
         # for code coverage purposes & make sure we get
         # the same result
-        mgr.TAG_REFRESH_INTERVAL=9999
         response = self._get("query_sets/%s/all;start_index=0;limit=9999" % qsid,
             username="admin", password="password")
         self.assertEquals(response.status_code, 200)
@@ -120,7 +113,7 @@ class QuerySetTestCase(QueryTestCase):
         # collection for the given queryset type
         response = self._get("query_sets/%s/universe" % qsid,
             username="admin", password="password")
-        self.assertEquals(response.status_code, 302)
+        self.assertEquals(response.status_code, 200)
 
         # the tagged date should be set because we ran the queryset 
         # at least once.

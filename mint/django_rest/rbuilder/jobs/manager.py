@@ -17,7 +17,7 @@ from django.db import IntegrityError, transaction
 from xobj import xobj
 from smartform import descriptor as smartdescriptor
 
-from mint import buildtypes, urltypes
+from mint import buildtypes, jobstatus, urltypes
 from mint.lib import uuid
 from mint.django_rest.rbuilder import errors
 from mint.django_rest.rbuilder import modellib
@@ -79,6 +79,10 @@ class JobManager(basemanager.BaseManager):
         jobStates = models.JobStates()
         jobStates.job_state = models.JobState.objects.all()
         return jobStates
+
+    @exposed
+    def getJobStateByName(self, name):
+        return modellib.Cache.get(models.JobState, name=name)
 
     @exposed
     def getJobState(self, jobStateId):
@@ -246,6 +250,20 @@ class ResultsProcessingMixIn(object):
         # Also the xml should not be <results id="blah"/>, but
         # <results><target id="blah"/></results>
         job.results = modellib.HrefFieldFromModel(resources)
+        if type(resources) != list:
+            resources = [ resources ]
+        for resource in resources:
+            tag = resource._xobj.tag
+            if tag == 'system':
+                models.JobSystemArtifact(job=job, system=resource).save()
+            elif tag == 'image':
+                models.JobImageArtifact(job=job, image=resource).save()
+            elif tag == 'target':
+                # not used in production yet, but mentioned in tests, so we don't
+                # have to save it.
+                pass
+            else:
+                raise Exception("internal error, don't know how to save resource: %s" % tag)
         return resources
 
     def _createTargetConfiguration(self, job, targetType):
@@ -253,13 +271,8 @@ class ResultsProcessingMixIn(object):
         driverClass = self.mgr.mgr.targetsManager.getDriverClass(targetType)
 
         cloudName = driverClass.getCloudNameFromDescriptorData(descriptorData)
-        config = dict((k.getName(), k.getValue())
-            for k in descriptorData.getFields())
+        config = driverClass.getTargetConfigFromDescriptorData(descriptorData)
         return targetType, cloudName, config
-
-        if self.targetType is None:
-            targetTypeId = job.jobtargettype_set.all()[0].target_type_id
-            self._setTargetType(targetTypeId)
 
     def handleError(self, job, exc):
         job.status_text = "Unknown exception, please check logs"
@@ -655,8 +668,9 @@ class JobHandlerRegistry(HandlerRegistry):
 
         def handleError(self, job, exc):
             if isinstance(exc, IntegrityError):
+                job.job_state = self.mgr.getJobStateByName(models.JobState.FAILED)
                 job.status_text = "Duplicate Target"
-                job.status_code = 400
+                job.status_code = 409
             else:
                 DescriptorJobHandler.handleError(self, job, exc)
 
@@ -696,6 +710,14 @@ class JobHandlerRegistry(HandlerRegistry):
             # We don't allow for the type to change
             return self.mgr.mgr.updateTargetConfiguration(self.target,
                 targetName, config)
+
+        def handleError(self, job, exc):
+            if isinstance(exc, IntegrityError):
+                job.job_state = self.mgr.getJobStateByName(models.JobState.FAILED)
+                job.status_text = "Duplicate Target"
+                job.status_code = 409
+            else:
+                DescriptorJobHandler.handleError(self, job, exc)
 
     class TargetCredentialsConfigurator(_TargetDescriptorJobHandler):
         __slots__ = []
@@ -812,4 +834,9 @@ class JobHandlerRegistry(HandlerRegistry):
                 raise errors.InvalidData()
             imageId = int(os.path.basename(imageId))
             image = self.mgr.mgr.getImageBuild(imageId)
+            image.status = jobstatus.FINISHED
+            image.status_message = 'System captured'
+            image.save()
+            self.mgr.mgr.finishImageBuild(image)
             return image
+

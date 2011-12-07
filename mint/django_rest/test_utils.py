@@ -6,6 +6,7 @@
 
 import base64
 import os
+import random
 import shutil
 import tempfile
 import urllib
@@ -24,6 +25,7 @@ from django.test.simple import DjangoTestSuiteRunner
 from django.utils.http import urlencode
 
 from mint import config as mintconfig
+from mint import buildtypes
 from mint.db import schema
 from mint.django_rest.rbuilder.inventory import models as invmodels
 from mint.django_rest.rbuilder.inventory import zones as zmodels
@@ -100,6 +102,13 @@ class TestRunner(DjangoTestSuiteRunner):
             conn.close()
 
 class XMLTestCase(TestCase, testcase.MockMixIn):
+    ImageFile = namedtuple('ImageFile', 'title url size sha1')
+
+    @classmethod
+    def uuid4(cls):
+        from mint.lib import uuid
+        return uuid.uuid4()
+
     def _fixture_setup(self):
         "Called by django's testsuite"
         alias = DEFAULT_DB_ALIAS
@@ -252,6 +261,34 @@ class XMLTestCase(TestCase, testcase.MockMixIn):
             kwargs['managing_zone'] = self.localZone
         return invmodels.System(**kwargs)
 
+    def addImage(self, name, description=None,
+            imageType=buildtypes.VMWARE_ESX_IMAGE,
+            stage=None, files=None, baseImage=None,
+            fileNameTemplate='file-name-%s.ova', seed=None):
+        if stage is None:
+            branch = self.getProjectBranch(label='chater-foo.eng.rpath.com@rpath:chater-foo-1')
+            stage = self.getProjectBranchStage(branch=branch, name="Development")
+        if files is None:
+            if seed is None:
+                seed = random.randint(1024, 10240)
+            files = [ self.ImageFile(url=fileNameTemplate % seed,
+                title='Image Title %s' % seed, size=seed, sha1="%040d" % seed) ]
+        # To create deferred images, pass files=[]
+
+        img = self.mgr.createImage(name=name, description=description,
+            project_branch_stage=stage,
+            _image_type=imageType, base_image=baseImage)
+        self.mgr.createImageBuild(img)
+        for fileUrl, fileTitle, fileSize, fileSha1 in files:
+            self.mgr.createImageBuildFile(img,
+                url=fileUrl,
+                title=fileTitle,
+                size=fileSize,
+                sha1=fileSha1,
+            )
+        # No retagging in this function
+        return img
+
     def _addRequestAuth(self, username=None, password=None, jobToken=None, **extra):
         if username:
             type, password = self._authHeader(username, password)
@@ -269,7 +306,24 @@ class XMLTestCase(TestCase, testcase.MockMixIn):
             return path
         return '/api/v1/' + path
 
-    def _get(self, path, data={}, username=None, password=None, follow=False, headers=None):
+    # Ugly
+    def _parseRedirect(self, http_redirect, pagination=''):
+        redirect_url = http_redirect['Location']
+        return redirect_url.split('/api/v1/')[1].strip('/') + pagination
+
+    def _get(self, url, username=None, password=None, pagination='', *args, **kwargs):
+        """
+        HTTP GET. Handles redirects & pagination.
+        The pagination parameter allows us to include an offset and
+        limit big enough that our test data will not be truncated.
+        """
+        response = self._get_internal(url, username=username, password=password)
+        if str(response.status_code).startswith('3') and response.has_header('Location'):
+            new_url = self._parseRedirect(response, pagination)
+            response = self._get_internal(new_url, username=username, password=password)
+        return response
+
+    def _get_internal(self, path, data={}, username=None, password=None, follow=False, headers=None):
         path = self._fixPath(path)
         params = data.copy()
         parsed = urlparse.urlparse(path)

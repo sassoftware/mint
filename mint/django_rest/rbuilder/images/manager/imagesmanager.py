@@ -8,6 +8,7 @@ import errno
 import logging
 import os
 from django.core import urlresolvers
+from mint import jobstatus
 from mint.django_rest.rbuilder.jobs import models as jobsmodels
 from mint.django_rest.rbuilder.images import models
 from mint.django_rest.rbuilder.targets import models as tgtmodels
@@ -50,7 +51,8 @@ class ImagesManager(basemanager.BaseManager):
         buildData.append(('outputToken', outputToken, datatypes.RDT_STRING))
 
         image.time_created = image.time_updated = time.time()
-        image.created_by_id = self.user.user_id
+        if self.user is not None:
+            image.created_by_id = self.user.user_id
         image.image_count = 0
         if image.project_branch_stage_id:
             image.stage_name = image.project_branch_stage.name
@@ -236,4 +238,20 @@ class ImagesManager(basemanager.BaseManager):
             tgtmodels.TargetImagesDeployed.objects.create(target=target,
                 target_image_id=timgModel.target_internal_id,
                 build_file=obj)
+        self.mgr.recomputeTargetDeployableImages()
+
+    @exposed
+    def finishImageBuild(self, image):
+        if isinstance(image, (int, basestring)):
+            image = models.Image.objects.get(image_id=image)
+
+        if image.status != jobstatus.FINISHED:
+            # image won't show up in retag of dynamic sets if status is
+            # still running
+            # This is because we call this function from mint.rest
+            # before we set the status
+            image.status = jobstatus.FINISHED
+            image.save()
+
+        self.mgr.addToMyQuerySet(image, image.created_by)
         self.mgr.recomputeTargetDeployableImages()

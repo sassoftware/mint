@@ -108,18 +108,16 @@ class ProjectsTestCase(RbacEngine):
         platform.save()
         branch = models.ProjectVersion(project=proj, name="trunk", label="chater-foo.eng.rpath.com@rpath:chater-foo-trunk")
         branch.save()
-        stage = models.Stage(project=proj,
-            project_branch=branch, name="Development", label="foo@ns:trunk-devel")
-        stage.save()
-        stage = models.Stage(project=proj,
-            project_branch=branch, name="QA", label="foo@ns:trunk-qa")
-        stage.save()
-        stage = models.Stage(project=proj,
-            project_branch=branch, name="Stage", label="foo@ns:trunk-stage")
-        stage.save()
-        stage = models.Stage(project=proj,
-            project_branch=branch, name="Release", label="foo@ns:trunk")
-        stage.save()
+        stageMap = [
+            ("Development", "foo@ns:trunk-devel"),
+            ("QA", "foo@ns:trunk-qa"),
+            ("Stage", "foo@ns:trunk-stage"),
+            ("Release", "foo@ns:trunk"),
+        ]
+        for stageName, stageLabel in stageMap:
+            stage = models.Stage(project=proj, project_branch=branch,
+                name=stageName, label=stageLabel)
+            stage.save()
         if adorn:
             for i in range(1, 3):
                 release = models.Release(project=proj,
@@ -188,8 +186,6 @@ class ProjectsTestCase(RbacEngine):
         self.assertEquals(response.status_code, 200)
 
     def testAddProject(self):
-
-        # FIXME: can anyone create a project or just admin?   We need to come up with a policy for this.
 
         response = self._post('projects',
             data=testsxml.project_post_xml,
@@ -454,7 +450,7 @@ class ProjectsTestCase(RbacEngine):
         image = imagesmodels.Image.objects.get(pk=image.pk)
         self.assertEquals(image.image_type.image_type_id, 10)
         self.assertEquals(image.image_type.name, 'Microsoft (R) Hyper-V')
-        self.assertEquals(image.image_type.description, 'VHD for Microsoft (R) Hyper-V')
+        self.assertEquals(image.image_type.description, 'VHD for Microsoft(R) Hyper-V(R)')
 
         response = self._get('projects/%s/images/' % prj.short_name,
                     username='testuser', password='password')
@@ -558,7 +554,12 @@ class ProjectsTestCase(RbacEngine):
         response = self._get('projects/chater-foo/releases', username='admin', password='password')
         self.assertEquals(response.status_code, 200)
         self.assertXMLEquals(response.content, testsxml.releases_by_project_get_xml)
-        
+        response = self._get('projects/chater-foo/releases', username='ExampleDeveloper', password='password')
+        self.assertEquals(response.status_code, 200)
+        response = self._get('projects/chater-foo/releases', username='testuser', password='password')
+        self.assertEquals(response.status_code, 403)
+       
+ 
     def testAddRelease(self):
         self.addProject('foo', user='ExampleDeveloper')
         response = self._post('projects/foo/releases',
@@ -614,7 +615,7 @@ class ProjectsTestCase(RbacEngine):
     def testAddReleaseByInferringProject(self):
         self.addProject('foo', user='admin')
         response = self._post('projects/foo/releases',
-            username='admin', password='password', data=testsxml.release_by_project_no_project_post_xml)
+            username='ExampleDeveloper', password='password', data=testsxml.release_by_project_no_project_post_xml)
         self.assertEquals(response.status_code, 200)
         release = xobj.parse(response.content).release
         self.assertEquals(release.name, 'release2002')
@@ -646,3 +647,4 @@ class ProjectsTestCase(RbacEngine):
             username='ExampleDeveloper', password='password', data=testsxml.image_by_release_post_xml)
         self.assertEquals(response.status_code, 200)
         self.assertXMLEquals(response.content, testsxml.image_by_release_post_result_xml)
+

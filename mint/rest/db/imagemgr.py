@@ -527,6 +527,15 @@ class ImageManager(manager.Manager):
         if status.code != jobstatus.FINISHED:
             return
         self.db.db.auth_tokens.removeTokenByImage(imageId)
+        self.db.commit()
+   
+        try:
+            self.db.djMgr.finishImageBuild(imageId)
+            self.db.djMgr.commit()
+        except:
+            self.db.djMgr.rollback()
+            raise
+
         imageType = self._getImageType(imageId)
         if imageType != buildtypes.AMI:
             # for now we only have to do something special for AMIs
@@ -632,22 +641,6 @@ class ImageManager(manager.Manager):
         return
 
     def setFilesForImage(self, fqdn, imageId, files):
-        try:
-            ret = self._setFilesForImage(fqdn, imageId, files)
-            # We need to commit so we unlock the database for django
-            self.db.commit()
-            try:
-                self.db.djMgr.targetsManager.recomputeTargetDeployableImages()
-                self.db.djMgr.commit()
-            except:
-                self.db.djMgr.rollback()
-                raise
-            return ret
-        except:
-            self.db.rollback()
-            raise
-
-    def _setFilesForImage(self, fqdn, imageId, files):
         hostname = fqdn.split('.')[0]
         cu = self.db.cursor()
 

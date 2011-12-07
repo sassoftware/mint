@@ -4630,12 +4630,38 @@ class MigrateTo_60(SchemaMigration):
 
 class MigrateTo_61(SchemaMigration):
     '''Edge-P4'''
-    Version = (61, 0)
+    Version = (61, 2)
 
     def migrate(self):
         cu = self.db.cursor()
         cu.execute("""DROP TABLE changelog_change_log_entry""")
         cu.execute("""DROP TABLE changelog_change_log""")
+        return True
+
+    def migrate1(self):
+        # account for some previously renamed model names that could be in queryset filter terms
+        cu = self.db.cursor()
+        cu.execute("update querysets_filterentry set field = 'target.name' where field = 'target.targetname'")
+        cu.execute("update querysets_filterentry set field = 'project_branch.namespace' where field = 'major_version.namespace'")
+        return True
+
+    def migrate2(self):
+
+        schema.createTable(self.db, 'jobs_created_system', """
+            creation_id     %(PRIMARYKEY)s,
+            job_id          INTEGER NOT NULL
+                REFERENCES jobs_job ON DELETE CASCADE,
+            system_id       INTEGER NOT NULL
+                REFERENCES inventory_system ON DELETE SET NULL,
+        """)
+
+        schema.createTable(self.db, 'jobs_created_image', """
+            creation_id     %(PRIMARYKEY)s,
+            job_id          INTEGER NOT NULL
+                REFERENCES jobs_job ON DELETE CASCADE,
+            image_id        INTEGER NOT NULL
+                REFERENCES builds (buildid) ON DELETE SET NULL,
+        """)
         return True
 
 #### SCHEMA MIGRATIONS END HERE #############################################

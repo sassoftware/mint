@@ -10,21 +10,37 @@ from django.db import models
 from mint.django_rest.deco import D
 from mint.django_rest.rbuilder import modellib
 from mint.django_rest.rbuilder.users import models as usermodels
+
 from xobj import xobj
 
 XObjHidden = modellib.XObjHidden
 APIReadOnly = modellib.APIReadOnly
 
-# ==========================================================
-# descriptors needed to launch certain jobs, when adding
-# items here also update DESCRIPTOR_MAP below and make
-# sure the descriptor serving service for your resource
-# (ex: system, image, etc) knows about the new type
+class JobSystemArtifact(modellib.XObjModel):
+    class Meta:
+        db_table = 'jobs_created_system'
+    _xobj = xobj.XObjMetadata(tag = 'system_artifact')
+    
+    creation_id = XObjHidden(models.AutoField(primary_key=True))
+    job         = XObjHidden(modellib.ForeignKey('Job', db_column='job_id', related_name='created_system'))
+    system      = modellib.ForeignKey('inventory.System', db_column='system_id', related_name='+')
 
-# no parameters required for assimilation --- just
-# uses the management_interface credentials directly
+class JobImageArtifact(modellib.XObjModel):
+    class Meta:
+        db_table = 'jobs_created_image'
+    _xobj = xobj.XObjMetadata(tag = 'image_artifact')
 
-# ==========================================================
+    creation_id = XObjHidden(models.AutoField(primary_key=True))
+    job         = XObjHidden(modellib.ForeignKey('Job', db_column='job_id', related_name='created_image'))
+    image       = modellib.ForeignKey('images.Image', db_column='image_id', related_name='+')
+
+class ActionResources(modellib.UnpaginatedCollection):
+    class Meta:
+        abstract = True
+    _xobj = xobj.XObjMetadata(
+                tag = 'resources')
+    list_fields = ['resource']
+    resource = []
 
 class Actions(modellib.XObjModel):
     class Meta:
@@ -45,6 +61,7 @@ class Action(modellib.XObjModel):
     description = models.TextField()
     descriptor  = modellib.HrefField()
     enabled     = models.BooleanField(default=True)
+    resources   = modellib.SyntheticField()
 
 class Jobs(modellib.Collection):
     
@@ -77,7 +94,7 @@ class Job(modellib.XObjIdModel):
     _xobj = xobj.XObjMetadata(
                 tag = 'job',
                 attributes = {'id':str})
-    _xobj_explicit_accessors = set(['systems'])
+    _xobj_explicit_accessors = set(['systems', 'created_image', 'created_system'])
 
     #objects = modellib.JobManager()
 
@@ -180,6 +197,16 @@ class Job(modellib.XObjIdModel):
         xobj_model = modellib.XObjIdModel.serialize(self, request)
         self.setValuesFromRmake()
         xobj_model.job_description = self.job_type.description
+
+        image = xobj_model.created_image
+
+        # remove a layer of nesting so the API doesn't have to see it
+        system = xobj_model.created_system
+        if getattr(image, 'image_artifact', False):
+            xobj_model.created_image = image.image_artifact[0].image
+        if getattr(system, 'system_artifact', False):
+            xobj_model.created_system = system.system_artifact[0].system
+
         return xobj_model
 
 class JobStates(modellib.Collection):
@@ -382,7 +409,8 @@ class EventType(modellib.XObjIdModel):
     def makeAction(cls, jobTypeName, actionName=None, actionDescription=None,
             actionKey=None,
             enabled=True, descriptorModel=None, descriptorHref=None,
-            descriptorHrefValues=None, descriptorViewName=None):
+            descriptorHrefValues=None, descriptorViewName=None,
+            resources=None):
         '''Return a related Action object for spawning this jobtype'''
         obj = modellib.Cache.get(cls, name=jobTypeName)
         if actionKey is None:
@@ -409,6 +437,12 @@ class EventType(modellib.XObjIdModel):
         else:
             action.descriptor = modellib.HrefField("descriptors/%s",
                 values=(obj.job_type_id, ))
+        if resources:
+            #action.resources = modellib.HrefFieldFromModel(model=resources[0])
+            action.resources = ActionResources()
+            for resource in resources:
+                action.resources.resource.append(
+                    modellib.HrefFieldFromModel(resource, tag=resource._xobj.tag))
         return action
     
 

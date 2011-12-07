@@ -601,24 +601,6 @@ class RbacEngine(RbacTestCase):
     def setUp(self):
         setup_core(self)
 
-    def _get(self, url, username=None, password=None, pagination='', *args, **kwargs):
-        """
-        Handles redirects resulting from rbac requirement that we
-        return a query set for resources that are collections.
-        The pagination parameter allows us to include an offset and
-        limit big enough that our test data will not be truncated.
-        """
-        # Ugly
-        def _parseRedirect(http_redirect):
-            redirect_url = http_redirect['Location']
-            return redirect_url.split('/api/v1/')[1].strip('/') + pagination
-
-        response = super(RbacTestCase, self)._get(url, username=username, password=password)
-        if str(response.status_code).startswith('3') and response.has_header('Location'):
-            new_url = _parseRedirect(response)
-            response = RbacTestCase._get(self, new_url, username=username, password=password)
-        return response
-
 class RbacEngineTests(RbacEngine):
     '''Do we know when to grant or deny access?'''
 

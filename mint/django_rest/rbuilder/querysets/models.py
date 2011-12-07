@@ -121,9 +121,9 @@ class QuerySet(modellib.XObjIdModel):
     query_set_id = D(models.AutoField(primary_key=True),
         "The database id for the query set")
     name = D(models.TextField(unique=True),
-        "Query set name, must be unique")
+        "Query set name, must be unique", short="Queryset name")
     description = D(models.TextField(null=True),
-        "Query set description, is null by default")
+        "Query set description, is null by default", short="Queryset description")
     created_date = D(modellib.DateTimeUtcField(auto_now_add=True),
         "Date the query set was created")
     modified_date = D(modellib.DateTimeUtcField(auto_now_add=True),

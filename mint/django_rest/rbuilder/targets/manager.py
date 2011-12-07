@@ -5,10 +5,12 @@
 #
 
 import json
+import sys
 
 from django.db import connection
 from django.db.models import Q
 
+from mint import buildtypes
 from mint.lib import data as mintdata
 from mint.django_rest import timeutils
 from mint.django_rest.rbuilder import errors, modellib
@@ -18,6 +20,8 @@ from mint.django_rest.rbuilder.targets import models
 from mint.django_rest.rbuilder.inventory import zones
 from mint.django_rest.rbuilder.jobs import models as jobsmodels
 from mint.django_rest.rbuilder.querysets import models as qsmodels
+from mint.django_rest.rbuilder.images import models as imagemodels
+from mint import jobstatus
 
 from smartform import descriptor
 
@@ -160,10 +164,13 @@ class TargetsManager(basemanager.BaseManager, CatalogServiceHelper):
             state=state)
         target.save()
         self.mgr.retagQuerySetsByType('target', forUser)
+        self.mgr.recomputeTargetDeployableImages()
         return target
 
     @exposed
     def createTarget(self, targetType, targetName, targetData):
+        # Only used in the testsuite, the views don't touch this
+        # function
         targetData.pop('name', None)
         description = targetData.get('description', targetName)
         zoneName = targetData.pop('zone')
@@ -175,6 +182,7 @@ class TargetsManager(basemanager.BaseManager, CatalogServiceHelper):
         self._setTargetData(target, targetData)
         self._addTargetQuerySet(target)
         self.mgr.retagQuerySetsByType('target', for_user=None)
+        self.mgr.recomputeTargetDeployableImages()
         return target
 
     def _setTargetData(self, target, targetData):
@@ -578,6 +586,7 @@ class TargetsManager(basemanager.BaseManager, CatalogServiceHelper):
 
     @exposed
     def recomputeTargetDeployableImages(self):
+
         cu = connection.cursor()
         cu.execute("""
             CREATE TEMPORARY TABLE tmp_target_image (
@@ -588,8 +597,17 @@ class TargetsManager(basemanager.BaseManager, CatalogServiceHelper):
         """)
         try:
             self._recomputeTargetDeployableImages()
-        finally:
+        except:
+            exc = sys.exc_info()
+            try:
+                self.mgr.rollback()
+            except:
+                # Ignore this exception
+                pass
+            raise exc[0], exc[1], exc[2]
+        else:
             cu.execute("DROP TABLE tmp_target_image")
+        self.mgr.retagQuerySetsByType('image')
 
     def _recomputeTargetDeployableImages(self):
         cu = connection.cursor()
@@ -619,7 +637,72 @@ class TargetsManager(basemanager.BaseManager, CatalogServiceHelper):
         """
         cu.execute(query)
         # XXX Deal with EC2 images
-        # XXX prefer ova vs ovf 0.9
+
+        # Build target to target type mapping
+        query = """
+            SELECT Targets.targetid, target_types.name
+              FROM Targets JOIN target_types USING (target_type_id)
+        """
+        cu.execute(query)
+        targetToTargetTypes = dict(x for x in cu)
+
+        # Select all VMWARE_ESX_IMAGE and prefer ova over ovf 0.9
+        query = """
+            SELECT tti.target_id, tti.target_image_id, tti.file_id, img.buildId,
+                   fu.url
+              FROM tmp_target_image AS tti
+              JOIN BuildFiles AS imgf ON (tti.file_id = imgf.fileId)
+              JOIN Builds AS img ON (imgf.buildId = img.buildId)
+              JOIN BuildFilesUrlsMap AS bfum ON (imgf.fileId = bfum.fileId)
+              JOIN FilesUrls AS fu ON (bfum.urlId = fu.urlId)
+             WHERE img.buildType = %s
+             ORDER BY tti.target_id, tti.file_id
+        """
+        cu.execute(query, [ buildtypes.VMWARE_ESX_IMAGE ])
+        todelete = []
+        tokeep = dict()
+        for row in cu:
+            targetId = row[0]
+            imageId, imageUrl = row[-2:]
+            tokeepKey = (targetId, imageId)
+            targetType = targetToTargetTypes[targetId]
+            if targetType == 'vcloud' and not imageUrl.endswith('.ova'):
+                # vcloud only supports OVA builds
+                todelete.append(row)
+                continue
+
+            prevRow = tokeep.get(tokeepKey)
+            if prevRow is not None:
+                if (not prevRow[-1].endswith('.ova') and
+                            imageUrl.endswith('.ova')):
+                    # Replace existing
+                    tokeep[tokeepKey] = row
+                    todelete.append(prevRow)
+                    continue
+                # Delete current
+                todelete.append(row)
+                continue
+            tokeep[tokeepKey] = row
+
+        if todelete:
+            # Oh well. We need to split the null and non-null values for
+            # target_image_id
+            query = """
+                DELETE FROM tmp_target_image
+                 WHERE target_id = %s
+                   AND target_image_id IS NULL
+                   AND file_id = %s
+            """
+            cu.executemany(query, [ (x[0], x[2]) for x in todelete
+                if x[1] is None ])
+            query = """
+                DELETE FROM tmp_target_image
+                 WHERE target_id = %s
+                   AND target_image_id = %s
+                   AND file_id = %s
+            """
+            cu.executemany(query, [ x[:3] for x in todelete
+                if x[1] is not None ])
 
         # XXX this should do smart replaces instead of this wholesale
         # replace
@@ -627,7 +710,7 @@ class TargetsManager(basemanager.BaseManager, CatalogServiceHelper):
         cu.execute("""
             INSERT INTO target_deployable_image
                 (target_id, target_image_id, file_id)
-            SELECT target_id, target_image_id, file_id
+            SELECT DISTINCT target_id, target_image_id, file_id
               FROM tmp_target_image""")
 
     def _image(self, target, image):

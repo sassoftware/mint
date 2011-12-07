@@ -144,7 +144,7 @@ class ImageSystemsService(service.BaseAuthService):
     @requires("systems", flags=Flags(save=False))
     @return_xml
     def rest_POST(self, request, image_id, systems):
-        return self.mgr.addLaunchedSystems(systems, image_id)
+        return self.mgr.addLaunchedSystems(systems, image_id, forUser=self.mgr.user)
 
 class ImageBuildFilesService(service.BaseService):
  
