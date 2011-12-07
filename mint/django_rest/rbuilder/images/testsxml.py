@@ -28,7 +28,7 @@ images_get_xml = """
     <trailing_version>1-0-1</trailing_version>
     <num_image_files>2</num_image_files>
     <image_type id="http://testserver/api/v1/image_types/10">
-      <description>VHD for Microsoft (R) Hyper-V</description>
+      <description>VHD for Microsoft(R) Hyper-V(R)</description>
       <image_type_id>10</image_type_id>
       <key>VIRTUAL_PC_IMAGE</key>
       <name>Microsoft (R) Hyper-V</name>
@@ -90,7 +90,7 @@ images_get_xml = """
     <trailing_version>1-1-1</trailing_version>
     <num_image_files>2</num_image_files>
     <image_type id="http://testserver/api/v1/image_types/10">
-      <description>VHD for Microsoft (R) Hyper-V</description>
+      <description>VHD for Microsoft(R) Hyper-V(R)</description>
       <image_type_id>10</image_type_id>
       <key>VIRTUAL_PC_IMAGE</key>
       <name>Microsoft (R) Hyper-V</name>
@@ -152,7 +152,7 @@ images_get_xml = """
     <trailing_version>1-2-1</trailing_version>
     <num_image_files>2</num_image_files>
     <image_type id="http://testserver/api/v1/image_types/10">
-      <description>VHD for Microsoft (R) Hyper-V</description>
+      <description>VHD for Microsoft(R) Hyper-V(R)</description>
       <image_type_id>10</image_type_id>
       <key>VIRTUAL_PC_IMAGE</key>
       <name>Microsoft (R) Hyper-V</name>
@@ -219,7 +219,7 @@ image_get_xml = """
   <trailing_version>1-0-1</trailing_version>
   <num_image_files>2</num_image_files>
   <image_type id="http://testserver/api/v1/image_types/10">
-    <description>VHD for Microsoft (R) Hyper-V</description>
+    <description>VHD for Microsoft(R) Hyper-V(R)</description>
     <image_type_id>10</image_type_id>
     <key>VIRTUAL_PC_IMAGE</key>
     <name>Microsoft (R) Hyper-V</name>
@@ -287,7 +287,7 @@ image_post_xml = """
   <description>image-20</description>
   <time_created></time_created>
   <image_type id="http://testserver/api/v1/image_types/10">
-    <description>VHD for Microsoft (R) Hyper-V</description>
+    <description>VHD for Microsoft(R) Hyper-V(R)</description>
     <image_type_id>10</image_type_id>
     <key>VIRTUAL_PC_IMAGE</key>
     <name>Microsoft (R) Hyper-V</name>
@@ -323,7 +323,7 @@ image_put_xml = """
   <description>image-20</description>
   <time_created></time_created>
   <image_type id="http://testserver/api/v1/image_types/10">
-    <description>VHD for Microsoft (R) Hyper-V</description>
+    <description>VHD for Microsoft(R) Hyper-V(R)</description>
     <image_type_id>10</image_type_id>
     <key>VIRTUAL_PC_IMAGE</key>
     <name>Microsoft (R) Hyper-V</name>
@@ -361,7 +361,7 @@ build_file_post_xml = \
       <description>image-20</description>
       <time_created></time_created>
       <image_type id="http://testserver/api/v1/image_types/10">
-        <description>VHD for Microsoft (R) Hyper-V</description>
+        <description>VHD for Microsoft(R) Hyper-V(R)</description>
         <image_type_id>10</image_type_id>
         <key>VIRTUAL_PC_IMAGE</key>
         <name>Microsoft (R) Hyper-V</name>
@@ -495,7 +495,7 @@ release_get_xml = \
       <trailing_version>1-0-1</trailing_version>
       <num_image_files>2</num_image_files>
       <image_type id="http://testserver/api/v1/image_types/10">
-        <description>VHD for Microsoft (R) Hyper-V</description>
+        <description>VHD for Microsoft(R) Hyper-V(R)</description>
         <name>Microsoft (R) Hyper-V</name>
         <key>VIRTUAL_PC_IMAGE</key>
         <image_type_id>10</image_type_id>
@@ -622,7 +622,7 @@ releases_get_xml = \
         <trailing_version>1-0-1</trailing_version>
         <num_image_files>2</num_image_files>
         <image_type id="http://testserver/api/v1/image_types/10">
-          <description>VHD for Microsoft (R) Hyper-V</description>
+          <description>VHD for Microsoft(R) Hyper-V(R)</description>
           <name>Microsoft (R) Hyper-V</name>
           <key>VIRTUAL_PC_IMAGE</key>
           <image_type_id>10</image_type_id>
@@ -722,7 +722,7 @@ releases_get_xml = \
         <trailing_version>1-1-1</trailing_version>
         <num_image_files>2</num_image_files>
         <image_type id="http://testserver/api/v1/image_types/10">
-          <description>VHD for Microsoft (R) Hyper-V</description>
+          <description>VHD for Microsoft(R) Hyper-V(R)</description>
           <name>Microsoft (R) Hyper-V</name>
           <key>VIRTUAL_PC_IMAGE</key>
           <image_type_id>10</image_type_id>
@@ -822,7 +822,7 @@ releases_get_xml = \
         <trailing_version>1-2-1</trailing_version>
         <num_image_files>2</num_image_files>
         <image_type id="http://testserver/api/v1/image_types/10">
-          <description>VHD for Microsoft (R) Hyper-V</description>
+          <description>VHD for Microsoft(R) Hyper-V(R)</description>
           <name>Microsoft (R) Hyper-V</name>
           <key>VIRTUAL_PC_IMAGE</key>
           <image_type_id>10</image_type_id>
@@ -905,7 +905,7 @@ image_types_get_xml = \
     <image_type_id>0</image_type_id>
   </image_type>
   <image_type id="http://testserver/api/v1/image_types/1">
-    <description>Installable CD/DVD</description>
+    <description>Legacy Installable CD/DVD</description>
     <name>Inst CD/DVD</name>
     <key>INSTALLABLE_ISO</key>
     <image_type_id>1</image_type_id>
@@ -917,7 +917,7 @@ image_types_get_xml = \
     <image_type_id>2</image_type_id>
   </image_type>
   <image_type id="http://testserver/api/v1/image_types/3">
-    <description>Raw Filesystem Image</description>
+    <description>Eucalyptus/Mountable Filesystem</description>
     <name>Raw FS</name>
     <key>RAW_FS_IMAGE</key>
     <image_type_id>3</image_type_id>
@@ -929,7 +929,7 @@ image_types_get_xml = \
     <image_type_id>4</image_type_id>
   </image_type>
   <image_type id="http://testserver/api/v1/image_types/5">
-    <description>Compressed Tar File</description>
+    <description>TAR File</description>
     <name>Tar</name>
     <key>TARBALL</key>
     <image_type_id>5</image_type_id>
@@ -941,19 +941,19 @@ image_types_get_xml = \
     <image_type_id>6</image_type_id>
   </image_type>
   <image_type id="http://testserver/api/v1/image_types/7">
-    <description>Raw Hard Disk Image</description>
+    <description>KVM/Parallels/QEMU/Raw Hard Disk</description>
     <name>HDD</name>
     <key>RAW_HD_IMAGE</key>
     <image_type_id>7</image_type_id>
   </image_type>
   <image_type id="http://testserver/api/v1/image_types/8">
-    <description>VMware (R) Virtual Appliance</description>
+    <description>VMware(R) Workstation/Fusion Virtual Appliance</description>
     <name>VMware (R)</name>
     <key>VMWARE_IMAGE</key>
     <image_type_id>8</image_type_id>
   </image_type>
   <image_type id="http://testserver/api/v1/image_types/9">
-    <description>VMware (R) ESX Server Virtual Appliance</description>
+    <description>VMware(R) ESX/VCD Virtual Appliance</description>
     <name>VMware (R) ESX</name>
     <key>VMWARE_ESX_IMAGE</key>
     <image_type_id>9</image_type_id>
@@ -965,7 +965,7 @@ image_type_get_xml = \
 """
 <?xml version='1.0' encoding='UTF-8'?>
 <image_type id="http://testserver/api/v1/image_types/1">
-  <description>Installable CD/DVD</description>
+  <description>Legacy Installable CD/DVD</description>
   <name>Inst CD/DVD</name>
   <key>INSTALLABLE_ISO</key>
   <image_type_id>1</image_type_id>
