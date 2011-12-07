@@ -473,7 +473,7 @@ class ProjectsTestCase(RbacEngine):
         url = "projects/%s/project_branches/%s/project_branch_stages/%s/images/;limit=100;order_by=name;start_index=0"
         response = self._get(url % urlparams, username='ExampleDeveloper', password='password')
         self.assertEquals(response.status_code, 200)
-         
+        self.assertXMLEquals(response.content, testsxml.test_get_images_from_pbs_xml)
 
     def testGetProjectBranchStagesByProject(self):
         self._initProject()

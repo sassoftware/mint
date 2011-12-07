@@ -794,3 +794,49 @@ image_by_release_post_result_xml = \
   <job_uuid>1</job_uuid>
 </image>
 """.strip()
+
+test_get_images_from_pbs_xml = \
+"""
+<?xml version='1.0' encoding='UTF-8'?>
+<images count="1" next_page="" num_pages="1" previous_page="" full_collection="http://testserver/api/v1/projects/chater-foo/project_branches/chater-foo.eng.rpath.com@rpath:chater-foo-trunk/project_branch_stages/Development/images;order_by=name" end_index="0" limit="100" order_by="name" per_page="100" filter_by="" id="http://testserver/api/v1/projects/chater-foo/project_branches/chater-foo.eng.rpath.com@rpath:chater-foo-trunk/project_branch_stages/Development/images;start_index=0;limit=100;order_by=name" start_index="0">
+  <image id="http://testserver/api/v1/images/2">
+    <files/>
+    <actions/>
+    <project_branch id="http://testserver/api/v1/projects/chater-foo/project_branches/chater-foo.eng.rpath.com@rpath:chater-foo-trunk">
+      <name>trunk</name>
+    </project_branch>
+    <updated_by></updated_by>
+    <trailing_version>1-1-1</trailing_version>
+    <num_image_files>0</num_image_files>
+    <build_log id="http://testserver/api/v1/images/2/build_log"/>
+    <trove_flavor></trove_flavor>
+    <created_by id="http://testserver/api/v1/users/2002">
+      <user_name>ExampleDeveloper</user_name>
+      <full_name>ExampleDeveloper</full_name>
+    </created_by>
+    <base_image></base_image>
+    <status_message></status_message>
+    <trove_name></trove_name>
+    <status>-1</status>
+    <stage_name>Development</stage_name>
+    <jobs id="http://testserver/api/v1/images/2/jobs"/>
+    <description>image-1</description>
+    <image_id>2</image_id>
+    <trove_last_changed></trove_last_changed>
+    <time_updated>2011-11-30T14:48:20.430000+00:00</time_updated>
+    <name>image-1</name>
+    <trove_version>/local@local:COOK/1-1-1</trove_version>
+    <released>False</released>
+    <project id="http://testserver/api/v1/projects/chater-foo">
+      <domain_name>eng.rpath.com</domain_name>
+      <short_name>chater-foo</short_name>
+      <name>chater-foo</name>
+    </project>
+    <output_trove></output_trove>
+    <time_created>2011-11-30T14:48:20.430000+00:00</time_created>
+    <release></release>
+    <image_count>0</image_count>
+    <job_uuid></job_uuid>
+  </image>
+</images>
+""".strip()

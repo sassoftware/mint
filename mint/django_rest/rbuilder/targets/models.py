@@ -24,9 +24,10 @@ class TargetType(modellib.XObjIdModel):
 
     _xobj_explicit_accessors = set(['targets'])
 
-    target_type_id = models.AutoField(primary_key=True)
-    name = D(models.TextField(unique=True), "Target Type name", short="Target Type name")
-    description = D(models.TextField(null=False), "Target Type description", short="Target Type description")
+    target_type_id = D(models.AutoField(primary_key=True), 'ID of the target')
+    name = D(models.TextField(unique=True), "Target Type name, must be unique", short="Target Type name")
+    description = D(models.TextField(null=False),
+        "Target Type description, null by default", short="Target Type description")
     build_type_id = XObjHidden(models.IntegerField(null=False))
     created_date = D(modellib.DateTimeUtcField(auto_now_add=True), "the date the resource was created (UTC)")
     modified_date = D(modellib.DateTimeUtcField(auto_now_add=True), "the date the resource was modified (UTC)")
@@ -82,13 +83,16 @@ class Target(modellib.XObjIdModel):
     class Meta:
         db_table = u'targets'
 
-    target_id = models.AutoField(primary_key=True, db_column='targetid')
-    target_type = modellib.DeferredForeignKey(TargetType, null=False,
-        related_name='targets', view_name='TargetTypeTargets')
-    zone = modellib.DeferredForeignKey(zmodels.Zone, null=False,
-        related_name='targets')
-    name = D(models.TextField(null=False), "Target name", short="Target name")
-    description = D(models.TextField(null=False), "Target description", short="Target description")
+    target_id = D(models.AutoField(primary_key=True, db_column='targetid'), 'The ID of the target')
+    target_type = D(modellib.DeferredForeignKey(TargetType, null=False,
+        related_name='targets', view_name='TargetTypeTargets'),
+        'Type of target, cannot be null, unique together with name')
+    zone = D(modellib.DeferredForeignKey(zmodels.Zone, null=False,
+        related_name='targets'), 'Zone for the target, cannot be null')
+    name = D(models.TextField(null=False),
+            "Target name, cannot be null unique with target type", short="Target name")
+    description = D(models.TextField(null=False),
+            "Target description, cannot be null", short="Target description")
     unique_together = (target_type, name)
     is_configured = D(modellib.SyntheticField(models.BooleanField()),
         'True if the target is configured')
@@ -188,10 +192,11 @@ class TargetData(modellib.XObjModel):
     class Meta:
         db_table = u'targetdata'
         
-    targetdata_id = models.AutoField(primary_key=True, db_column='targetdataid')    
-    target = models.ForeignKey(Target, db_column="targetid")
-    name = models.CharField(max_length=255, null=False)
-    value = models.TextField()
+    targetdata_id = D(models.AutoField(primary_key=True, db_column='targetdataid'),
+        'ID of target data')
+    target = D(models.ForeignKey(Target, db_column="targetid"), 'Associated target')
+    name = D(models.CharField(max_length=255, null=False), 'Data name, cannot be null')
+    value = D(models.TextField(), 'Value of the data')
 
 class TargetConfiguration(modellib.XObjIdModel):
     class Meta:
@@ -230,14 +235,17 @@ class TargetCredentials(modellib.XObjModel):
         db_table = u'targetcredentials'
     target_credentials_id = models.AutoField(primary_key=True,
         db_column="targetcredentialsid")
-    credentials = models.TextField(null=False, unique=True)
+    credentials = D(models.TextField(null=False, unique=True),
+        'The credentials for a target, cannot be null and must be unique')
 
 class TargetUserCredentials(modellib.XObjModel):
-    target = models.ForeignKey(Target, db_column="targetid", related_name='_target_user_credentials')
-    user = models.ForeignKey(usersmodels.User, db_column="userid",
-        related_name='target_user_credentials')
-    target_credentials = models.ForeignKey('TargetCredentials',
-        db_column="targetcredentialsid", related_name='target_user_credentials')
+    target = D(models.ForeignKey(Target, db_column="targetid", related_name='_target_user_credentials'),
+        'Target belonging to these credentials, unique with user')
+    user = D(models.ForeignKey(usersmodels.User, db_column="userid",
+        related_name='target_user_credentials'), 'User having credentials for this target, unique with target')
+    target_credentials = D(models.ForeignKey('TargetCredentials',
+        db_column="targetcredentialsid", related_name='target_user_credentials'),
+        'Actual credentials')
     unique_together = ( target, user, )
 
     class Meta:
@@ -257,9 +265,10 @@ class TargetImagesDeployed(modellib.XObjModel):
     """
     Images deployed from the rBuilder onto a target get recorded in this table
     """
-    target = models.ForeignKey(Target, db_column="targetid")
-    build_file = models.ForeignKey(imagemodels.BuildFile, db_column='fileid')
-    target_image_id = models.CharField(max_length=128, db_column='targetimageid')
+    target = D(models.ForeignKey(Target, db_column="targetid"), 'Target on deployed images')
+    build_file = D(models.ForeignKey(imagemodels.BuildFile, db_column='fileid'), 'The build file')
+    target_image_id = D(models.CharField(max_length=128, db_column='targetimageid'),
+        'The ID of the deployed target image')
     class Meta:
         db_table = u'targetimagesdeployed'
 
@@ -272,14 +281,16 @@ class TargetImage(modellib.XObjModel):
 
     _xobj_explicit_accessors = set()
 
-    target_image_id = models.AutoField(primary_key=True)
-    name = D(models.TextField(unique=True), "Image Name")
-    description = D(models.TextField(null=False), "Image Description")
+    target_image_id = D(models.AutoField(primary_key=True), 
+        'The target image ID')
+    name = D(models.TextField(unique=True), "Image Name, must be unique")
+    description = D(models.TextField(null=False), "Image Description, cannot be null")
     target = D(models.ForeignKey(Target, related_name='target_images'),
-        "Target the image is part of")
-    target_internal_id = D(models.TextField(null=False), "Image identifier on the target")
+        "Target the image is part of, is unique with target_internal_id")
+    target_internal_id = D(models.TextField(null=False),
+        "Image identifier on the target, cannot be null, is unique with target")
     rbuilder_image_id = D(models.TextField(null=True),
-        "Image identifier on the rbuilder, as reported by the target")
+        "Image identifier on the rbuilder, as reported by the target, is null by default")
     created_date = D(modellib.DateTimeUtcField(auto_now_add=True), "the date the resource was created (UTC)")
     modified_date = D(modellib.DateTimeUtcField(auto_now_add=True), "the date the resource was modified (UTC)")
     unique_together = (target, target_internal_id)
@@ -294,14 +305,14 @@ class TargetSystem(modellib.XObjModel):
     _xobj_explicit_accessors = set()
 
     target_system_id = models.AutoField(primary_key=True)
-    name = D(models.TextField(unique=True), "System Name")
+    name = D(models.TextField(unique=True), "System Name, is unique")
     description = D(models.TextField(null=False), "System Description")
     target = D(models.ForeignKey(Target, related_name='target_systems'),
-        "Target the system is part of")
-    target_internal_id = D(models.TextField(null=False), "System identifier on the target")
-    ip_addr_1 = D(models.TextField(null=True), "IP address 1")
-    ip_addr_2 = D(models.TextField(null=True), "IP address 2")
-    state = D(models.TextField(null=False), "State")
+        "Target the system is part of, unique with target_internal_id")
+    target_internal_id = D(models.TextField(null=False), "System identifier on the target, cannot be null")
+    ip_addr_1 = D(models.TextField(null=True), "IP address 1, is null by default")
+    ip_addr_2 = D(models.TextField(null=True), "IP address 2, is null by default")
+    state = D(models.TextField(null=False), "State, cannot be null")
     created_date = D(modellib.DateTimeUtcField(auto_now_add=True), "the date the resource was created (UTC)")
     modified_date = D(modellib.DateTimeUtcField(auto_now_add=True), "the date the resource was modified (UTC)")
     unique_together = (target, target_internal_id)
@@ -315,7 +326,7 @@ class TargetDeployableImage(modellib.XObjModel):
         "Target the image is part of")
     target_image = D(models.ForeignKey(TargetImage,
         related_name='target_deployable_images', null=True),
-        "Image representation pn the target")
+        "Image representation on the target, is null by default")
     build_file = D(models.ForeignKey(imagemodels.BuildFile,
         related_name='target_deployable_images', db_column='file_id'),
         "Build file")
@@ -327,10 +338,10 @@ class TargetImageCredentials(modellib.XObjModel):
     class Meta:
         db_table = "target_image_credentials"
 
-    target_image = models.ForeignKey(TargetImage,
-        related_name="target_image_credentials")
-    target_credentials = models.ForeignKey('TargetCredentials',
-        related_name='target_image_credentials')
+    target_image = D(models.ForeignKey(TargetImage,
+        related_name="target_image_credentials"), 'Target image, is unique with target_credentials')
+    target_credentials = D(models.ForeignKey('TargetCredentials',
+        related_name='target_image_credentials'), 'is unique with target_image')
     unique_together = (target_image, target_credentials)
 
 class TargetSystemCredentials(modellib.XObjModel):
@@ -340,10 +351,10 @@ class TargetSystemCredentials(modellib.XObjModel):
     class Meta:
         db_table = "target_system_credentials"
 
-    target_system = models.ForeignKey(TargetSystem,
-        related_name="target_system_credentials")
-    target_credentials = models.ForeignKey('TargetCredentials',
-        related_name='target_system_credentials')
+    target_system = D(models.ForeignKey(TargetSystem,
+        related_name="target_system_credentials"), 'Target system credentials, unique with target_credentials')
+    target_credentials = D(models.ForeignKey('TargetCredentials',
+        related_name='target_system_credentials'), 'The target credentials, unique with target_system')
     unique_together = (target_system, target_credentials)
 
 class TargetTypes(modellib.Collection):
