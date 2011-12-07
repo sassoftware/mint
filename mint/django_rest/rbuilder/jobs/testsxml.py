@@ -4,8 +4,8 @@ jobs_xml = """\
 <?xml version="1.0"?>
 <jobs count="3" end_index="2" filter_by="" full_collection="http://testserver/api/v1/jobs/" id="http://testserver/api/v1/jobs/" limit="10" next_page="" num_pages="1" order_by="" per_page="10" previous_page="" start_index="0">
   <job id="http://testserver/api/v1/jobs/rmakeuuid001">
-    <image_artifacts/>
-    <system_artifacts/>
+    <created_image/>
+    <created_system/>
     <created_by id="http://testserver/api/v1/users/2000"/>
     <job_description>System registration</job_description>
     <time_updated>2010-09-16T13:36:25.939154+00:00</time_updated>
@@ -18,8 +18,8 @@ jobs_xml = """\
     <status_text>Initializing</status_text>
   </job>
   <job id="http://testserver/api/v1/jobs/rmakeuuid002">
-    <image_artifacts/>
-    <system_artifacts/>
+    <created_image/>
+    <created_system/>
     <created_by id="http://testserver/api/v1/users/2000"/>
     <job_description>System synchronization</job_description>
     <time_updated>2010-09-16T13:36:25.943043+00:00</time_updated>
@@ -32,8 +32,8 @@ jobs_xml = """\
     <status_text>Initializing</status_text>
   </job>
   <job id="http://testserver/api/v1/jobs/rmakeuuid003">
-    <image_artifacts/>
-    <system_artifacts/>
+    <created_image/>
+    <created_system/>
     <created_by id="http://testserver/api/v1/users/2000"/>
     <job_description>On-demand system synchronization</job_description>
     <time_updated>2010-09-16T13:36:25.946773+00:00</time_updated>
@@ -50,8 +50,8 @@ jobs_xml = """\
 job_xml = """\
 <?xml version="1.0"?>
 <job id="http://testserver/api/v1/jobs/rmakeuuid001">
-  <image_artifacts/>
-  <system_artifacts/>
+  <created_image/>
+  <created_system/>
   <created_by id="http://testserver/api/v1/users/2000"/>
   <job_description>System registration</job_description>
   <time_updated>2010-09-16T13:53:18.402208+00:00</time_updated>
@@ -101,8 +101,8 @@ systems_jobs_xml = """\
 <?xml version="1.0"?>
 <jobs count="3" end_index="2" filter_by="" full_collection="http://testserver/api/v1/inventory/systems/3/jobs/" id="http://testserver/api/v1/inventory/systems/3/jobs/" limit="10" next_page="" num_pages="1" order_by="" per_page="10" previous_page="" start_index="0">
   <job id="http://testserver/api/v1/jobs/rmakeuuid001">
-    <image_artifacts/>
-    <system_artifacts/>
+    <created_image/>
+    <created_system/>
     <created_by id="http://testserver/api/v1/users/2000"/>
     <job_description>System registration</job_description>
     <time_updated>2010-09-16T20:13:13.325788+00:00</time_updated>
@@ -115,8 +115,8 @@ systems_jobs_xml = """\
     <status_text>Initializing</status_text>
   </job>
   <job id="http://testserver/api/v1/jobs/rmakeuuid002">
-    <image_artifacts/>
-    <system_artifacts/>
+    <created_image/>
+    <created_system/>
     <created_by id="http://testserver/api/v1/users/2000"/>
     <job_description>System synchronization</job_description>
     <time_updated>2010-09-16T20:13:13.334487+00:00</time_updated>
@@ -129,8 +129,8 @@ systems_jobs_xml = """\
     <status_text>Initializing</status_text>
   </job>
   <job id="http://testserver/api/v1/jobs/rmakeuuid003">
-    <image_artifacts/>
-    <system_artifacts/>
+    <created_image/>
+    <created_system/>
     <created_by id="http://testserver/api/v1/users/2000"/>
     <job_description>On-demand system synchronization</job_description>
     <time_updated>2010-09-16T20:13:13.339408+00:00</time_updated>
