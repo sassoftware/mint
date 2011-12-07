@@ -22,7 +22,7 @@ class JobSystemArtifact(modellib.XObjModel):
     _xobj = xobj.XObjMetadata(tag = 'system_artifact')
     
     creation_id = XObjHidden(models.AutoField(primary_key=True))
-    job         = XObjHidden(modellib.ForeignKey('Job', db_column='job_id', related_name='created_system'))
+    job         = XObjHidden(modellib.ForeignKey('Job', db_column='job_id', related_name='created_systems'))
     system      = modellib.ForeignKey('inventory.System', db_column='system_id', related_name='+')
 
 class JobImageArtifact(modellib.XObjModel):
@@ -31,7 +31,7 @@ class JobImageArtifact(modellib.XObjModel):
     _xobj = xobj.XObjMetadata(tag = 'image_artifact')
 
     creation_id = XObjHidden(models.AutoField(primary_key=True))
-    job         = XObjHidden(modellib.ForeignKey('Job', db_column='job_id', related_name='created_image'))
+    job         = XObjHidden(modellib.ForeignKey('Job', db_column='job_id', related_name='created_images'))
     image       = modellib.ForeignKey('images.Image', db_column='image_id', related_name='+')
 
 class ActionResources(modellib.UnpaginatedCollection):
@@ -39,6 +39,14 @@ class ActionResources(modellib.UnpaginatedCollection):
         abstract = True
     _xobj = xobj.XObjMetadata(
                 tag = 'resources')
+    list_fields = ['resource']
+    resource = []
+
+class JobCreatedResources(modellib.UnpaginatedCollection):
+    class Meta:
+        abstract = True
+    _xobj = xobj.XObjMetadata(
+                tag = 'created_resources')
     list_fields = ['resource']
     resource = []
 
@@ -94,7 +102,7 @@ class Job(modellib.XObjIdModel):
     _xobj = xobj.XObjMetadata(
                 tag = 'job',
                 attributes = {'id':str})
-    _xobj_explicit_accessors = set(['systems', 'created_image', 'created_system'])
+    _xobj_explicit_accessors = set(['systems'])
 
     #objects = modellib.JobManager()
 
@@ -131,6 +139,8 @@ class Job(modellib.XObjIdModel):
     job_description = D(modellib.SyntheticField(),
         "a description of the job")
     results = modellib.SyntheticField()
+    created_resources = modellib.SyntheticField()
+
     created_by = D(modellib.APIReadOnly(modellib.DeferredForeignKey(
             usermodels.User, related_name="jobs", null=True,
             db_column="created_by")),
@@ -193,19 +203,22 @@ class Job(modellib.XObjIdModel):
     def get_url_key(self, *args, **kwargs):
         return [ self.job_uuid ]
 
+    def computeSyntheticFields(self, *args, **kwargs):
+
+        # removes some layers of nesting by not showing the artifact records
+        # but instead presenting a unified collection of results containing
+        # multiple types of resources
+        self.created_resources = JobCreatedResources()
+        resources = []
+        resources.extend([ x.image for x in self.created_images.all() ])
+        resources.extend([ x.system for x in self.created_systems.all() ])
+        self.created_resources.resource = [ modellib.HrefFieldFromModel(
+            r, tag=r._xobj.tag) for r in resources ]
+
     def serialize(self, request=None):
         xobj_model = modellib.XObjIdModel.serialize(self, request)
         self.setValuesFromRmake()
         xobj_model.job_description = self.job_type.description
-
-        image = xobj_model.created_image
-
-        # remove a layer of nesting so the API doesn't have to see it
-        system = xobj_model.created_system
-        if getattr(image, 'image_artifact', False):
-            xobj_model.created_image = image.image_artifact[0].image
-        if getattr(system, 'system_artifact', False):
-            xobj_model.created_system = system.system_artifact[0].system
 
         return xobj_model
 

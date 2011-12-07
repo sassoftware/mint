@@ -107,8 +107,7 @@ jobs_by_target_type_GET = \
 <?xml version='1.0' encoding='UTF-8'?>
 <jobs count="2" next_page="" num_pages="1" previous_page="" full_collection="http://testserver/api/v1/target_types/1/jobs/" end_index="1" limit="10" order_by="" per_page="10" filter_by="" id="http://testserver/api/v1/target_types/1/jobs/" start_index="0">
   <job id="http://testserver/api/v1/jobs/rmakeuuid002">
-    <created_image/>
-    <created_system/>
+    <created_resources/>
     <created_by id="http://testserver/api/v1/users/2000"/>
     <time_updated>2011-09-21T17:32:00.921176+00:00</time_updated>
     <status_code>100</status_code>
@@ -121,8 +120,7 @@ jobs_by_target_type_GET = \
     <job_description>System synchronization</job_description>
   </job>
   <job id="http://testserver/api/v1/jobs/rmakeuuid001">
-    <created_image/>
-    <created_system/>
+    <created_resources/>
     <created_by id="http://testserver/api/v1/users/2000"/>
     <time_updated>2011-09-21T17:32:00.913831+00:00</time_updated>
     <status_code>100</status_code>
@@ -141,8 +139,7 @@ jobs_by_target_GET = \
 """
 <jobs count="2" next_page="" num_pages="1" previous_page="" full_collection="http://testserver/api/v1/targets/1/jobs/" end_index="1" limit="10" order_by="" per_page="10" filter_by="" id="http://testserver/api/v1/targets/1/jobs/" start_index="0">
   <job id="http://testserver/api/v1/jobs/rmakeuuid002">
-    <created_image/>
-    <created_system/>
+    <created_resources/>
     <created_by id="http://testserver/api/v1/users/2000"/>
     <time_updated>2011-09-21T17:31:12.245350+00:00</time_updated>
     <status_code>100</status_code>
@@ -155,8 +152,7 @@ jobs_by_target_GET = \
     <job_description>System synchronization</job_description>
   </job>
   <job id="http://testserver/api/v1/jobs/rmakeuuid001">
-    <created_image/>
-    <created_system/>
+    <created_resources/>
     <created_by id="http://testserver/api/v1/users/2000"/>
     <time_updated>2011-09-21T17:31:12.237794+00:00</time_updated>
     <status_code>100</status_code>
@@ -176,8 +172,7 @@ all_target_jobs_GET = \
 """
 <jobs count="28" next_page="http://testserver/api/v1/target_jobs/" num_pages="3" previous_page="" full_collection="http://testserver/api/v1/target_jobs/" end_index="9" limit="10" order_by="" per_page="10" filter_by="" id="http://testserver/api/v1/target_jobs/" start_index="0">
   <job id="http://testserver/api/v1/jobs/rmakeuuid001">
-    <created_image/>
-    <created_system/>
+    <created_resources/>
     <created_by id="http://testserver/api/v1/users/2000"/>
     <time_updated>2011-09-22T14:47:51.267860+00:00</time_updated>
     <status_code>100</status_code>
@@ -190,8 +185,7 @@ all_target_jobs_GET = \
     <job_description>System registration</job_description>
   </job>
   <job id="http://testserver/api/v1/jobs/rmakeuuid002">
-    <created_image/>
-    <created_system/>
+    <created_resources/>
     <created_by id="http://testserver/api/v1/users/2000"/>
     <time_updated>2011-09-22T14:47:51.275877+00:00</time_updated>
     <status_code>100</status_code>
@@ -204,8 +198,7 @@ all_target_jobs_GET = \
     <job_description>System synchronization</job_description>
   </job>
   <job id="http://testserver/api/v1/jobs/rmakeuuid002">
-    <created_image/>
-    <created_system/>
+    <created_resources/>
     <created_by id="http://testserver/api/v1/users/2000"/>
     <time_updated>2011-09-22T14:47:51.275877+00:00</time_updated>
     <status_code>100</status_code>
@@ -218,8 +211,7 @@ all_target_jobs_GET = \
     <job_description>System synchronization</job_description>
   </job>
   <job id="http://testserver/api/v1/jobs/rmakeuuid002">
-    <created_image/>
-    <created_system/>
+    <created_resources/>
     <created_by id="http://testserver/api/v1/users/2000"/>
     <time_updated>2011-09-22T14:47:51.275877+00:00</time_updated>
     <status_code>100</status_code>
@@ -232,8 +224,7 @@ all_target_jobs_GET = \
     <job_description>System synchronization</job_description>
   </job>
   <job id="http://testserver/api/v1/jobs/rmakeuuid001">
-    <created_image/>
-    <created_system/>
+    <created_resources/>
     <created_by id="http://testserver/api/v1/users/2000"/>
     <time_updated>2011-09-22T14:47:51.267860+00:00</time_updated>
     <status_code>100</status_code>
@@ -246,8 +237,7 @@ all_target_jobs_GET = \
     <job_description>System registration</job_description>
   </job>
   <job id="http://testserver/api/v1/jobs/rmakeuuid001">
-    <created_image/>
-    <created_system/>
+    <created_resources/>
     <created_by id="http://testserver/api/v1/users/2000"/>
     <time_updated>2011-09-22T14:47:51.267860+00:00</time_updated>
     <status_code>100</status_code>
@@ -260,8 +250,7 @@ all_target_jobs_GET = \
     <job_description>System registration</job_description>
   </job>
   <job id="http://testserver/api/v1/jobs/rmakeuuid001">
-    <created_image/>
-    <created_system/>
+    <created_resources/>
     <created_by id="http://testserver/api/v1/users/2000"/>
     <time_updated>2011-09-22T14:47:51.267860+00:00</time_updated>
     <status_code>100</status_code>
@@ -274,8 +263,7 @@ all_target_jobs_GET = \
     <job_description>System registration</job_description>
   </job>
   <job id="http://testserver/api/v1/jobs/rmakeuuid002">
-    <created_image/>
-    <created_system/>
+    <created_resources/>
     <created_by id="http://testserver/api/v1/users/2000"/>
     <time_updated>2011-09-22T14:47:51.275877+00:00</time_updated>
     <status_code>100</status_code>
@@ -288,8 +276,7 @@ all_target_jobs_GET = \
     <job_description>System synchronization</job_description>
   </job>
   <job id="http://testserver/api/v1/jobs/rmakeuuid002">
-    <created_image/>
-    <created_system/>
+    <created_resources/>
     <created_by id="http://testserver/api/v1/users/2000"/>
     <time_updated>2011-09-22T14:47:51.275877+00:00</time_updated>
     <status_code>100</status_code>
@@ -302,8 +289,7 @@ all_target_jobs_GET = \
     <job_description>System synchronization</job_description>
   </job>
   <job id="http://testserver/api/v1/jobs/rmakeuuid002">
-    <created_image/>
-    <created_system/>
+    <created_resources/>
     <created_by id="http://testserver/api/v1/users/2000"/>
     <time_updated>2011-09-22T14:47:51.275877+00:00</time_updated>
     <status_code>100</status_code>
@@ -320,8 +306,9 @@ all_target_jobs_GET = \
 
 job_xml_with_artifacts="""
 <job id="http://testserver/api/v1/jobs/uuid003">
-  <created_image id="http://testserver/api/v1/images/9"/>
-  <created_system/>
+  <created_resources>
+     <image id="http://testserver/api/v1/images/9"/>
+  </created_resources>
   <status_code>200</status_code>
   <job_state id="http://testserver/api/v1/job_states/3">Completed</job_state>
   <job_type id="http://testserver/api/v1/inventory/event_types/17">deploy image on target</job_type>
