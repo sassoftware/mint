@@ -75,7 +75,8 @@ class RbacRole(modellib.XObjIdModel):
 
     role_id = D(models.AutoField(primary_key=True),
         "the database ID for the role")
-    name = D(models.TextField(unique=True, db_column="role_name"), "name of the role")
+    name = D(models.TextField(unique=True, db_column="role_name"),
+        "name of the role, must be unique")
     description = D(models.TextField(), 'description')
     created_date = D(APIReadOnly(modellib.DateTimeUtcField(auto_now_add=True)),
         "creation date")
@@ -83,10 +84,10 @@ class RbacRole(modellib.XObjIdModel):
         "modification date")
     created_by   =  D(APIReadOnly(modellib.SerializedForeignKey(usersmodels.User, null=True, 
         related_name='+', db_column='created_by', serialized_as='created_by')), 
-        'user who created this resource')
+        'user who created this resource, is null by default')
     modified_by   =  D(APIReadOnly(modellib.SerializedForeignKey(usersmodels.User, null=True, 
         related_name='+', db_column='modified_by', serialized_as='modified_by')), 
-        'user who last modified this resource')
+        'user who last modified this resource, is null by default')
     grants        =  D(modellib.SyntheticField(), 'permissions granted on this role')
     users         =  D(modellib.SyntheticField(), 'users with this role')
     is_identity   =  D(XObjHidden(models.BooleanField(default=False)), 'is identity role?')
@@ -181,20 +182,24 @@ class RbacPermission(modellib.XObjIdModel):
     grant_id = D(models.AutoField(primary_key=True, db_column='permission_id'),
         "the database ID for the permission")
     role         =  D(modellib.ForeignKey(RbacRole, 
-        null=False, db_column='role_id', related_name='rbac_grants'), 'rbac_role id')
+        null=False, db_column='role_id', related_name='rbac_grants'),
+        'rbac_role id, cannot be null')
     queryset     =  D(modellib.ForeignKey('querysets.QuerySet', 
-        null=False, db_column='queryset_id', related_name='grants'), 'queryset id')
+        null=False, db_column='queryset_id', related_name='grants'),
+        'queryset id, cannot be null')
     permission  = D(models.ForeignKey(RbacPermissionType,
         null=False, db_column='permission_type_id', related_name='+'),
-        'permission')
+        'permission, cannot be null')
     created_date = D(APIReadOnly(modellib.DateTimeUtcField(auto_now_add=True)),
         "creation date")
     modified_date = D(APIReadOnly(modellib.DateTimeUtcField(auto_now_add=True)),
         "modification date")
     created_by   =  D(APIReadOnly(modellib.SerializedForeignKey(usersmodels.User, null=True, 
-        related_name='+', db_column='created_by', serialized_as='created_by')), 'user who created this resource')
+        related_name='+', db_column='created_by', serialized_as='created_by')),
+        'user who created this resource, is null by default')
     modified_by   =  D(APIReadOnly(modellib.SerializedForeignKey(usersmodels.User, null=True, 
-        related_name='+', db_column='modified_by', serialized_as='modified_by')), 'user who last modified this resource')
+        related_name='+', db_column='modified_by', serialized_as='modified_by')),
+        'user who last modified this resource, is null by default')
 
 class RbacUserRoles(modellib.Collection):
     '''
@@ -237,17 +242,19 @@ class RbacUserRole(modellib.XObjIdModel):
 
     rbac_user_role_id = D(models.AutoField(primary_key=True),
         "the database ID for the rbac_user_role")
-    role    =  D(modellib.ForeignKey(RbacRole, null=False), 'rbac_role id')
+    role    =  D(modellib.ForeignKey(RbacRole, null=False), 'rbac_role id, cannot be null')
     user    =  D(modellib.ForeignKey(usersmodels.User, null=False, 
-        related_name='user_roles'), 'user id')
+        related_name='user_roles'), 'user id, cannot be null')
     created_date = D(APIReadOnly(modellib.DateTimeUtcField(auto_now_add=True)),
         "creation date")
     modified_date = D(APIReadOnly(modellib.DateTimeUtcField(auto_now_add=True)),
         "modification date")
     created_by   =  D(APIReadOnly(modellib.SerializedForeignKey(usersmodels.User, null=True, 
-        related_name='+', db_column='created_by', serialized_as='created_by')), 'user who created this resource')
+        related_name='+', db_column='created_by', serialized_as='created_by')),
+        'user who created this resource, null by default')
     modified_by   =  D(APIReadOnly(modellib.SerializedForeignKey(usersmodels.User, null=True, 
-        related_name='+', db_column='modified_by', serialized_as='modified_by')), 'user who last modified this resource')
+        related_name='+', db_column='modified_by', serialized_as='modified_by')),
+        'user who last modified this resource, null by default')
 
     def serialize(self, request):
         xobj_model = modellib.XObjIdModel.serialize(self, request)

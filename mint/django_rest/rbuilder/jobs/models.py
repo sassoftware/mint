@@ -85,7 +85,7 @@ class Job(modellib.XObjIdModel):
     job_id = D(XObjHidden(models.AutoField(primary_key=True)),
         "the database id of the job")
     job_uuid = D(models.CharField(max_length=64, unique=True),
-        "a UUID for job tracking purposes")
+        "a UUID for job tracking purposes, must be unique")
     job_token = D(XObjHidden(APIReadOnly(
         models.CharField(max_length=64, null=True, unique=True))),
         "cookie token for updating this job")
@@ -95,12 +95,12 @@ class Job(modellib.XObjIdModel):
     status_code = D(models.IntegerField(default=100),
         "the current status code of the job, typically an http status code")
     status_text = D(models.TextField(default='Initializing'),
-        "the message associated with the current status")
+        "the message associated with the current status, defaults to 'Initializing'")
     status_detail = D(XObjHidden(models.TextField(null=True)),
         "documentation missing")
     job_type = D(modellib.DeferredForeignKey("EventType",
         text_field='name', related_name="jobs", null=False),
-        "The job type")
+        "The job type, cannot be null")
     _descriptor = D(XObjHidden(models.TextField(null=True, db_column="descriptor")),
         " ")
     _descriptor_data = D(XObjHidden(models.TextField(null=True, db_column="descriptor_data")),
@@ -211,7 +211,8 @@ class JobState(modellib.XObjIdModel):
                 attributes = {'id':str})
 
     job_state_id = D(models.AutoField(primary_key=True), "the database ID for the job state")
-    name = D(models.CharField(max_length=64, unique=True, choices=choices), "the name of the job state")
+    name = D(models.CharField(max_length=64, unique=True, choices=choices),
+        "the name of the job state, must be unique")
 
     load_fields = [ name ]
 
@@ -355,7 +356,7 @@ class EventType(modellib.XObjIdModel):
     )
 
     name = D(APIReadOnly(models.CharField(max_length=8092, unique=True,
-        choices=EVENT_TYPES)), "the event type name (read-only)")
+        choices=EVENT_TYPES)), "the event type name (read-only), must be unique")
     description = D(models.CharField(max_length=8092), "the event type description")
     priority = D(models.SmallIntegerField(db_index=True), "the event type priority where > priority wins")
     resource_type = D(models.TextField(), "the resource type for the job")

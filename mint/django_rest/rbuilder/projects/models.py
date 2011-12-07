@@ -74,43 +74,46 @@ class Project(modellib.XObjIdModel):
     project_id = models.AutoField(primary_key=True, db_column="projectid",
         blank=True)
     hostname = D(models.CharField(unique=True, max_length=63), 
-        "Project hostname", short="Project hostname")
+        "Project hostname, must be unique", short="Project hostname")
     name = D(models.CharField(unique=True, max_length=128), 
-        "Project name", short="Project name")
+        "Project name, must be unique", short="Project name")
     namespace = D(models.CharField(max_length=16, null=True), 
-        "Project namespace", short="Project namespace")
+        "Project namespace, defaults to null", short="Project namespace")
     domain_name = D(models.CharField(max_length=128, db_column="domainname"), 
         "Project domain name", short="Project domain name")
     short_name = D(models.CharField(unique=True, max_length=63, db_column="shortname"), 
-        "Project short name", short="Project short name")
+        "Project short name, must be unique", short="Project short name")
     project_url = D(models.CharField(max_length=128, blank=True, db_column= "projecturl"), 
-        "Project URL", short="Project URL")
+        "Project URL, is blank by default", short="Project URL")
     repository_hostname = D(models.CharField(max_length=255, db_column="fqdn"), 
         "Project repository hostname", short="Project repository hostname")
     description = D(models.TextField(null=True, blank=True), 
-        "Project description", short="Project description")
+        "Project description, null and blank by default", short="Project description")
     project_type = D(models.CharField(max_length=128, db_column="prodtype", default="Appliance"), 
-        "Project type", short="Project type")
+        "Project type, defaults to 'Appliance'", short="Project type")
     commit_email = D(models.CharField(max_length=128, null=True, blank=True, db_column="commitemail"), 
-        "Project commit email", short="Project commit email")
-    backup_external = models.BooleanField(default=False, db_column="backupexternal")
+        "Project commit email, defaults to null and blank", short="Project commit email")
+    backup_external = D(models.BooleanField(default=False, db_column="backupexternal"),
+        "Boolean, defaults to False")
     created_date = D(modellib.DecimalTimestampField(
-        blank=True, db_column="timecreated"), "Project created ate", short="Project created date")
+        blank=True, db_column="timecreated"), "Project created date, is blank by default", short="Project created date")
     modified_date = D(modellib.DecimalTimestampField(
-        blank=True, db_column="timemodified"), "Project modified date", short="Project modified date")
-    hidden = models.BooleanField(default=False)
+        blank=True, db_column="timemodified"), "Project modified date, is blank by default", short="Project modified date")
+    hidden = D(models.BooleanField(default=False), 'Boolean, defaults to False')
     created_by = D(models.ForeignKey(usermodels.User,
-        related_name="+", null=True, db_column="creatorid"), "Project creator", short="Project creator")
-    external = D(models.BooleanField(default=False), "Is the project external?", short="Project external?")
-    disabled = D(models.BooleanField(default=False), "Is the project disabled?", short="Project disabled?")
-    is_appliance = models.BooleanField(default=True, db_column="isappliance")
+        related_name="+", null=True, db_column="creatorid"), "Project creator, null by default", short="Project creator")
+    external = D(models.BooleanField(default=False),
+        "Is the project external?  Boolean, defaults to False", short="Project external?")
+    disabled = D(models.BooleanField(default=False),
+        "Is the project disabled? Boolean, defaults to False", short="Project disabled?")
+    is_appliance = D(models.BooleanField(default=True, db_column="isappliance"), 'Boolean, defaults to False')
     version = D(models.CharField(max_length=128, null=True, blank=True,
-        default=''), "Project version", short="Project version")
-    database = D(models.CharField(max_length=128, null=True), "Project database", short="Project database")
-    members = modellib.DeferredManyToManyField(usermodels.User, 
-        through="Member")
+        default=''), "Project version, is blank and null by default", short="Project version")
+    database = D(models.CharField(max_length=128, null=True), "Project database, is null by default", short="Project database")
+    members = D(modellib.DeferredManyToManyField(usermodels.User, 
+        through="Member"), 'User member')
     modified_by = D(models.ForeignKey(usermodels.User, null=True, related_name='+', db_column="modified_by"), 
-        "Project modified by", short="Project modified by")
+        "Project modified by, defaults to null", short="Project modified by")
 
     # synthetic properties hoisted from labels - these will eventually be merged
     # into the projects schema instead of a labels table
@@ -231,11 +234,11 @@ class Members(modellib.Collection):
     view_name = "ProjectMembers"
 
 class Member(modellib.XObjModel):
-    project = models.ForeignKey(Project, db_column='projectid',
-        related_name='membership', primary_key=True)
-    user = modellib.DeferredForeignKey(usermodels.User, db_column='userid',
-        related_name='project_membership')
-    level = models.SmallIntegerField()
+    project = D(models.ForeignKey(Project, db_column='projectid',
+        related_name='membership', primary_key=True), 'Project member')
+    user = D(modellib.DeferredForeignKey(usermodels.User, db_column='userid',
+        related_name='project_membership'), 'User with membership')
+    level = D(models.SmallIntegerField(), 'User level, is integer')
     class Meta:
         db_table = u'projectusers'
 
@@ -263,15 +266,18 @@ class ProjectVersion(modellib.XObjIdModel):
 
     branch_id = D(models.AutoField(primary_key=True,
         db_column='productversionid'), "Branch ID", short="Project Branch ID")
-    project = modellib.DeferredForeignKey(Project, db_column='projectid',
-        related_name="project_branches", view_name="ProjectVersions")
-    label = D(models.TextField(unique=True, null=False), "Branch label", short="Branch label")
-    source_group = D(models.TextField(null=True), "Branch source group", short="Branch source group")
+    project = D(modellib.DeferredForeignKey(Project, db_column='projectid',
+        related_name="project_branches", view_name="ProjectVersions"), 'Project attached to the project branch')
+    label = D(models.TextField(unique=True, null=False),
+        "Branch label, cannot be null and must be unique", short="Branch label")
+    source_group = D(models.TextField(null=True),
+        "Branch source group, defaults to null", short="Branch source group")
     cache_key = modellib.XObjHidden(models.TextField(null=True))
     namespace = D(models.CharField(max_length=16), "Branch namespace", short="Branch namespace")
     name = D(models.CharField(max_length=16), "Branch name", short="Branch name")
     description = D(models.TextField(), "Branch description", short="Branch description")
-    platform_label = D(models.TextField(null=True), "Branch platform label", short="Branch platform label")
+    platform_label = D(models.TextField(null=True),
+        "Branch platform label, defaults to null", short="Branch platform label")
     created_date = D(modellib.DecimalTimestampField(
         db_column="timecreated"), "Branch created date", short="Branch created date")
 
@@ -391,13 +397,15 @@ class Stage(modellib.XObjIdModel):
     summary_view = ["name"]
 
     stage_id = D(models.AutoField(primary_key=True), "Stage id", short="Project Stage id")
-    project = modellib.DeferredForeignKey(Project,
-        related_name="project_branch_stages", view_name="Stages")
-    project_branch = modellib.DeferredForeignKey(ProjectVersion,
-        related_name="project_branch_stages", view_name="ProjectVersion")
+    project = D(modellib.DeferredForeignKey(Project,
+        related_name="project_branch_stages", view_name="Stages"), "Project for the stage")
+    project_branch = D(modellib.DeferredForeignKey(ProjectVersion,
+        related_name="project_branch_stages", view_name="ProjectVersion"),
+        'Project branch for the stage')
     name = D(models.CharField(max_length=256), "Stage name", short="Stage name")
-    label = D(models.TextField(null=False), "Stage label", short="Stage label")
-    promotable = D(models.BooleanField(default=False), "Stage promotable?", short="Stage promotable?")
+    label = D(models.TextField(null=False), "Stage label, cannot be null", short="Stage label")
+    promotable = D(models.BooleanField(default=False),
+        "Stage promotable? Boolean, defaults to False", short="Stage promotable?")
     created_date = D(modellib.DateTimeUtcField(auto_now_add=True), "Stage created date", short="Stage created date")
     groups = modellib.SyntheticField()
     repository_api = modellib.SyntheticField(modellib.HrefField())

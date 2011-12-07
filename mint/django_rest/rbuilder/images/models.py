@@ -59,10 +59,10 @@ class ImageType(modellib.XObjIdModel):
     _xobj = xobj.XObjMetadata(tag='image_type', attributes={'id':str})
 
     objects = models_manager.ImageTypeManager()
-    image_type_id = models.IntegerField()
-    key = models.CharField()
-    name = models.CharField()
-    description = models.CharField()
+    image_type_id = D(models.IntegerField(), 'The id of the image type')
+    key = D(models.CharField(), 'Key to image type')
+    name = D(models.CharField(), 'Image type name')
+    description = D(models.CharField(), 'Description')
 
     ImageTypeKeys = dict((y, x) for (x, y) in buildtypes.validBuildTypes.items())
 
@@ -107,51 +107,56 @@ class Image(modellib.XObjIdModel):
     # FIXME: images need descriptions fleshed out so filter descriptors
     # and comments will be sensible
 
-    image_id = models.AutoField(primary_key=True, db_column='buildid')
-    project = modellib.DeferredForeignKey('projects.Project', db_column='projectid',
-        related_name="images", view_name="ProjectImages")
+    image_id = D(models.AutoField(primary_key=True, db_column='buildid'), 'ID of image')
+    project = D(modellib.DeferredForeignKey('projects.Project', db_column='projectid',
+        related_name="images", view_name="ProjectImages"), 'Project attached to the image')
     #The images need to be linked to the project branch stages and the project
     #Until then, hide project_branch_stage
     project_branch_stage = modellib.XObjHidden(
         modellib.DeferredForeignKey('projects.Stage', db_column='stageid',
         related_name="images", view_name="ProjectBranchStageImages", null=True))
-    release = modellib.ForeignKey('projects.Release', null=True,
-        db_column='pubreleaseid', related_name="images", view_name='ProjectReleaseImages')
+    release = D(modellib.ForeignKey('projects.Release', null=True,
+        db_column='pubreleaseid', related_name="images", view_name='ProjectReleaseImages'),
+        'Release attached to the image, by default is null')
     _image_type = modellib.XObjHidden(APIReadOnly(
         models.IntegerField(db_column="buildtype")))
     image_type = modellib.SyntheticField()
 
-    job_uuid = models.CharField(max_length=64, null=True)
-    name = D(models.CharField(max_length=255, null=True), "Image name", short="Image name")
-    description = D(models.TextField(null=True), "Image description", short="Image description")
+    job_uuid = D(models.CharField(max_length=64, null=True), 'ID of job to do, by default is null')
+    name = D(models.CharField(max_length=255, null=True),
+            "Image name, by default is null", short="Image name")
+    description = D(models.TextField(null=True),
+            "Image description, by default is null", short="Image description")
     trove_name = D(models.CharField(max_length=128, null=True,
-        db_column='trovename'), "Image trove name", short="Image trove name")
+        db_column='trovename'), "Image trove name, by default is null", short="Image trove name")
     trove_version = D(models.CharField(max_length=255, null=True,
-        db_column='troveversion'), "Image trove version", short="Image trove version")
+        db_column='troveversion'), "Image trove version, by default is null", short="Image trove version")
     trove_flavor = D(models.CharField(max_length=4096, null=True,
-        db_column='troveflavor'), "Image trove flavor", short="Image trove flavor")
+        db_column='troveflavor'), "Image trove flavor, by default is null", short="Image trove flavor")
     trove_last_changed = D(modellib.DecimalTimestampField(null=True,
-            db_column='trovelastchanged'), "Image trove last changed", short="Image trove last changed")
-    output_trove = D(models.TextField(null=True), "Image output trove", short="Image output trove")
+            db_column='trovelastchanged'),
+            "Image trove last changed, by default is null", short="Image trove last changed")
+    output_trove = D(models.TextField(null=True),
+    "Image output trove, by default is null", short="Image output trove")
     time_created = D(modellib.DecimalTimestampField(db_column='timecreated'), "Image time created", short="Image time created")
     created_by = D(modellib.ForeignKey('users.User',
         db_column='createdby',null=True, related_name='created_images'), "Image created by", short="Image created by")
     time_updated = D(modellib.DecimalTimestampField(
         null=True, db_column='timeupdated'), "Image time updated", short="Image time updated")
     updated_by = D(modellib.ForeignKey('users.User', db_column='updatedby',
-        related_name='updated_images', null=True), "Image updated by", short="Image updated by")
+        related_name='updated_images', null=True), "Image updated by, by default is null", short="Image updated by")
     image_count = D(models.IntegerField(null=True, default=0,
-        db_column="buildcount"), "Image count", short="Image count")
-    project_branch = models.ForeignKey('projects.ProjectVersion', null=True,
+        db_column="buildcount"), "Image count, by default is null", short="Image count")
+    project_branch = D(models.ForeignKey('projects.ProjectVersion', null=True,
         related_name="images",
-        db_column='productversionid')
+        db_column='productversionid'), 'Project Branch attached to the image, by default is null')
     stage_name = D(models.CharField(max_length=255, db_column='stagename',
-        null=True, blank=True, default=''), "Image stage name", short="Image stage name")
-    status = D(models.IntegerField(null=True, default=-1), "Image status", short="Image status")
+        null=True, blank=True, default=''), "Image stage name, by default is null", short="Image stage name")
+    status = D(models.IntegerField(null=True, default=-1), "Image status, by default is null", short="Image status")
     status_message = D(models.TextField(null=True, blank=True, default='',
-        db_column="statusmessage"), "Image status message", short="Image status message")
+        db_column="statusmessage"), "Image status message, by default is null", short="Image status message")
     base_image = D(modellib.DeferredForeignKey('Image', null=True,
-        related_name='layered_images', db_column='base_image'), "Image base image", short="Image base image")
+        related_name='layered_images', db_column='base_image'), "Image base image, by default is null", short="Image base image")
 
     metadata = D(modellib.SyntheticField(), "Image metadata", short="Image metadata")
     architecture = D(modellib.SyntheticField(), "Image architecture", short="Image architecture")
@@ -326,12 +331,15 @@ class BuildFile(modellib.XObjIdModel):
     _xobj_explicit_accessors = set()
     _xobj = xobj.XObjMetadata(tag='file')
 
-    file_id = models.AutoField(primary_key=True, db_column='fileid')
-    image = models.ForeignKey('Image', null=False, db_column='buildid', related_name='files')
-    idx = models.IntegerField(null=False, default=0)
-    title = models.CharField(max_length=255, null=False, default='')
-    size = models.IntegerField()
-    sha1 = models.CharField(max_length=40)
+    file_id = D(models.AutoField(primary_key=True, db_column='fileid'), 'ID of the build file')
+    image = D(models.ForeignKey('Image', null=False, db_column='buildid', related_name='files'),
+                'Image attached to the Build File, cannot be null')
+    idx = D(models.IntegerField(null=False, default=0), 'cannot be null, default is 0')
+    title = D(models.CharField(max_length=255, null=False, default=''),
+        'File title, defaults to empty string')
+    size = D(models.IntegerField(), 'Size of file')
+    sha1 = D(models.CharField(max_length=40),
+        'sha1 associated with the build file, max length is 40 characters')
     url = modellib.SyntheticField()
     target_images = modellib.XObjHidden(modellib.SyntheticField())
 
@@ -354,10 +362,13 @@ class ImageData(modellib.XObjIdModel):
         unique_together = ('image', 'name')
 
     image_data_id = models.AutoField(primary_key=True, db_column='builddataid')
-    image = models.ForeignKey('Image', db_column='buildid', related_name="image_data")
-    name = models.CharField(max_length=32, null=False)
-    value = models.TextField()
-    data_type = models.SmallIntegerField(null=False, db_column='datatype')
+    image = D(models.ForeignKey('Image', db_column='buildid', related_name="image_data"),
+            'Attached image, is unique with name')
+    name = D(models.CharField(max_length=32, null=False),
+        'Name for image data, unique with image, max length is 32')
+    value = D(models.TextField(), 'Image data value')
+    data_type = D(models.SmallIntegerField(null=False, db_column='datatype'),
+            'The data type assigned to the given image data, cannot be null')
 
 class FileUrl(modellib.XObjIdModel):
     class Meta:
@@ -366,9 +377,10 @@ class FileUrl(modellib.XObjIdModel):
     _xobj = xobj.XObjMetadata(tag='file_url')
     _xobj_explicit_accessors = set(['downloads'])
 
-    file_url_id = models.AutoField(primary_key=True, db_column='urlid')
-    url_type = models.SmallIntegerField(null=False, db_column='urltype')
-    url = models.CharField(max_length=255, null=False)
+    file_url_id = D(models.AutoField(primary_key=True, db_column='urlid'), 'File url ID')
+    url_type = D(models.SmallIntegerField(null=False, db_column='urltype'),
+        'File type, is integer')
+    url = D(models.CharField(max_length=255, null=False), 'Fully qualified url, cannot be null')
 
 
 class BuildFilesUrlsMap(modellib.XObjModel):
@@ -386,9 +398,11 @@ class JobImage(modellib.XObjModel):
 
     _xobj = xobj.XObjMetadata(tag='job_image')
 
-    id = models.AutoField(primary_key=True)
-    job = models.ForeignKey(jobmodels.Job, null=False, related_name='images')
-    image = models.ForeignKey(Image, null=False, related_name='_jobs')
+    id = D(models.AutoField(primary_key=True), 'Job image ID')
+    job = D(models.ForeignKey(jobmodels.Job, null=False, related_name='images'),
+        'Job attached to the job image, cannot be null')
+    image = D(models.ForeignKey(Image, null=False, related_name='_jobs'),
+        'Image for the job, cannot be null')
 
 for mod_obj in sys.modules[__name__].__dict__.values():
     if hasattr(mod_obj, '_xobj'):

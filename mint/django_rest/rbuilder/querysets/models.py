@@ -121,9 +121,9 @@ class QuerySet(modellib.XObjIdModel):
     query_set_id = D(models.AutoField(primary_key=True),
         "The database id for the query set")
     name = D(models.TextField(unique=True),
-        "Query set name")
+        "Query set name, must be unique")
     description = D(models.TextField(null=True),
-        "Query set description")
+        "Query set description, is null by default")
     created_date = D(modellib.DateTimeUtcField(auto_now_add=True),
         "Date the query set was created")
     modified_date = D(modellib.DateTimeUtcField(auto_now_add=True),
@@ -139,7 +139,7 @@ class QuerySet(modellib.XObjIdModel):
     presentation_type = D(models.TextField(),
         "A classification for client to use when displaying the objects.  For example, stages can be on projects, branches, platforms, etc.")
     can_modify = D(models.BooleanField(default=True),
-        "Whether this query set can be deleted through the API.")
+        "Whether this query set can be deleted through the API.  Boolean, defaults to False")
     actions = D(modellib.SyntheticField(jobmodels.Actions), 'Available actions on this query set')
     # public querysets are querysets like "All Systems" and do not require rbac ReadSet permissions
     # to be visible, but will be empty unless ReadMember(ship) is conveyed on some of their contents.
@@ -300,7 +300,7 @@ class FilterEntry(modellib.XObjIdModel):
     operator = D(models.TextField(choices=OPERATOR_CHOICES),
         "Operator for this filter")
     value = D(models.TextField(null=True),
-        "Value for this filter")
+        "Value for this filter, defaults to null")
 
     load_fields = [field, operator, value]
 
@@ -353,7 +353,7 @@ class SystemTag(modellib.XObjIdModel):
     _xobj = xobj.XObjMetadata(
                 tag = 'system_tag')
 
-    system_tag_id = models.AutoField(primary_key=True)
+    system_tag_id = D(models.AutoField(primary_key=True), 'The ID of the system tag')
     system = XObjHidden(modellib.ForeignKey('inventory.System',
         related_name="tags"))
     query_set = XObjHidden(modellib.ForeignKey(QuerySet, related_name="system_tags",
@@ -384,7 +384,7 @@ class ImageTag(modellib.XObjIdModel):
     _xobj = xobj.XObjMetadata(
                 tag = 'image_tag')
 
-    image_tag_id = models.AutoField(primary_key=True)
+    image_tag_id = D(models.AutoField(primary_key=True), 'The ID of the image tag')
     image = XObjHidden(modellib.ForeignKey('images.Image',
         related_name="tags"))
     query_set = XObjHidden(modellib.ForeignKey(QuerySet, related_name="image_tags",
@@ -405,7 +405,7 @@ class TargetTag(modellib.XObjIdModel):
     _xobj = xobj.XObjMetadata(
                 tag = 'target_tag')
 
-    target_tag_id = models.AutoField(primary_key=True)
+    target_tag_id = D(models.AutoField(primary_key=True), 'The ID of the target tag')
     target = XObjHidden(modellib.ForeignKey('targets.Target',
         related_name="tags"))
     query_set = XObjHidden(modellib.ForeignKey(QuerySet, related_name="target_tags",
@@ -427,7 +427,7 @@ class RoleTag(modellib.XObjIdModel):
     _xobj = xobj.XObjMetadata(
                 tag = 'role_tag')
 
-    role_tag_id = models.AutoField(primary_key=True)
+    role_tag_id = D(models.AutoField(primary_key=True), 'The ID of the role tag')
     role = XObjHidden(modellib.ForeignKey(rbacmodels.RbacRole,
         related_name="tags"))
     query_set = XObjHidden(modellib.ForeignKey(QuerySet, related_name="role_tags",
@@ -452,7 +452,7 @@ class PermissionTag(modellib.XObjIdModel):
     # NOTE: we call permissions "GRANTS" in the XML api, though these
     # tags will largely be hidden here, and we can call fields by their
     # internal names, knowing this data need not be surfaced.
-    permission_tag_id = models.AutoField(primary_key=True)
+    permission_tag_id = D(models.AutoField(primary_key=True), 'The ID of a permission tag')
     permission = XObjHidden(modellib.ForeignKey(rbacmodels.RbacPermission,
         related_name="tags"))
     query_set = XObjHidden(modellib.ForeignKey(QuerySet, related_name="permission_tags",
@@ -470,8 +470,8 @@ class UserTag(modellib.XObjIdModel):
 
     _xobj = xobj.XObjMetadata(tag='user_tag')
     
-    user_tag_id = models.AutoField(primary_key=True)
-    user = modellib.ForeignKey(usersmodels.User, related_name='tags')
+    user_tag_id = D(models.AutoField(primary_key=True), 'The ID of a user tag')
+    user = D(modellib.ForeignKey(usersmodels.User, related_name='tags'), 'User having tag')
     query_set = XObjHidden(
         modellib.ForeignKey(QuerySet, related_name='user_tags', text_field='name')
     )
@@ -489,8 +489,9 @@ class ProjectTag(modellib.XObjIdModel):
     
     _xobj = xobj.XObjMetadata(tag='project_tag')
     
-    project_tag_id = models.AutoField(primary_key=True)
-    project = modellib.ForeignKey(projectsmodels.Project, related_name='tags')
+    project_tag_id = D(models.AutoField(primary_key=True), 'ID of the project tag')
+    project = D(modellib.ForeignKey(projectsmodels.Project, related_name='tags'),
+        'Project attached to the tag')
     query_set = XObjHidden(
         modellib.ForeignKey(QuerySet, related_name='project_tags', text_field='name')
     )
@@ -508,8 +509,9 @@ class StageTag(modellib.XObjIdModel):
     
     _xobj = xobj.XObjMetadata(tag='stage_tag')
     
-    stage_tag_id = models.AutoField(primary_key=True)
-    stage = modellib.ForeignKey(projectsmodels.Stage, related_name='tags')
+    stage_tag_id = D(models.AutoField(primary_key=True), 'The id of a stage tag')
+    stage = D(modellib.ForeignKey(projectsmodels.Stage, related_name='tags'),
+        'Associated stage')
     query_set = XObjHidden(
         modellib.ForeignKey(QuerySet, related_name='stage_tags', text_field='name')
     )

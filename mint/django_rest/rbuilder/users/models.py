@@ -25,7 +25,7 @@ class User(modellib.XObjIdModel):
     summary_view = ["user_name", "full_name"]
 
     user_id = D(models.AutoField(primary_key=True, db_column='userid'), "User id", short="User id")
-    user_name = D(models.CharField(unique=True, max_length=128, db_column='username'), "User name", short="User name")
+    user_name = D(models.CharField(unique=True, max_length=128, db_column='username'), "User name, is unique", short="User name")
     full_name = D(models.CharField(max_length=128, db_column='fullname'), "User full name", short="User full name")
     # salt and password should be hidden, users shouldn't see crypted
     # passwords
@@ -41,15 +41,15 @@ class User(modellib.XObjIdModel):
     active = modellib.XObjHidden(modellib.APIReadOnly(models.SmallIntegerField()))
     blurb = models.TextField()
     # code in manager prevents this from being set by non-admins
-    is_admin = models.BooleanField(default=False, db_column='is_admin')
+    is_admin = D(models.BooleanField(default=False, db_column='is_admin'), 'Is user an admin, boolean field, default is "False"')
     external_auth = D(modellib.SyntheticField(models.BooleanField()), "User external auth?", short="User external auth?")
 
     created_by = D(APIReadOnly(models.ForeignKey('User', related_name='+', db_column='created_by', null=True)), 
-        "User created by", short="User created by")
+        "User created by, is null by default", short="User created by")
     modified_by = D(APIReadOnly(models.ForeignKey('User', related_name='+', db_column='modified_by', null=True)), 
-        "User modified by", short="User modified by")
+        "User modified by, is null by default", short="User modified by")
     # code in manager prevents this from being set by non-admins
-    can_create = D(models.BooleanField(default=True), "User can create resources?", short="User can create?")
+    can_create = D(models.BooleanField(default=True), "User can create resources? Defaults to 'True'", short="User can create?")
     deleted = modellib.XObjHidden(models.BooleanField(default=False))
 
     # Field used for the clear-text password when it is to be
