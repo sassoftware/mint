@@ -443,7 +443,7 @@ releases_by_project_get_xml = \
         <trailing_version>1-1-1</trailing_version>
         <num_image_files>0</num_image_files>
         <image_type id="http://testserver/api/v1/image_types/10">
-          <description>VHD for Microsoft (R) Hyper-V</description>
+          <description>VHD for Microsoft(R) Hyper-V(R)</description>
           <name>Microsoft (R) Hyper-V</name>
           <key>VIRTUAL_PC_IMAGE</key>
           <image_type_id>10</image_type_id>
@@ -509,7 +509,7 @@ releases_by_project_get_xml = \
         <trailing_version>1-2-1</trailing_version>
         <num_image_files>0</num_image_files>
         <image_type id="http://testserver/api/v1/image_types/10">
-          <description>VHD for Microsoft (R) Hyper-V</description>
+          <description>VHD for Microsoft(R) Hyper-V(R)</description>
           <name>Microsoft (R) Hyper-V</name>
           <key>VIRTUAL_PC_IMAGE</key>
           <image_type_id>10</image_type_id>
@@ -622,7 +622,7 @@ published_release_xml = \
       <trailing_version>1-42-1</trailing_version>
       <num_image_files>0</num_image_files>
       <image_type id="http://testserver/api/v1/image_types/10">
-        <description>VHD for Microsoft (R) Hyper-V</description>
+        <description>VHD for Microsoft(R) Hyper-V(R)</description>
         <name>Microsoft (R) Hyper-V</name>
         <key>VIRTUAL_PC_IMAGE</key>
         <image_type_id>10</image_type_id>
@@ -678,7 +678,7 @@ image_by_release_get_xml = \
     <trailing_version>1-1-1</trailing_version>
     <num_image_files>0</num_image_files>
     <image_type id="http://testserver/api/v1/image_types/10">
-      <description>VHD for Microsoft (R) Hyper-V</description>
+      <description>VHD for Microsoft(R) Hyper-V(R)</description>
       <name>Microsoft (R) Hyper-V</name>
       <key>VIRTUAL_PC_IMAGE</key>
       <image_type_id>10</image_type_id>
@@ -722,7 +722,7 @@ image_by_release_post_xml = \
   <trailing_version>1-1-1</trailing_version>
   <num_image_files>0</num_image_files>
   <image_type id="http://testserver/api/v1/image_types/10">
-    <description>VHD for Microsoft (R) Hyper-V</description>
+    <description>VHD for Microsoft(R) Hyper-V(R)</description>
     <name>Microsoft (R) Hyper-V</name>
     <key>VIRTUAL_PC_IMAGE</key>
     <image_type_id>10</image_type_id>
