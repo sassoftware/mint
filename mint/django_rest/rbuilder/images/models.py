@@ -272,7 +272,15 @@ class Image(modellib.XObjIdModel):
 
         # Prime caches
         modellib.Cache.all(tgtmodels.TargetType)
-        modellib.Cache.all(tgtmodels.Target)
+        targets = modellib.Cache.all(tgtmodels.Target)
+
+        # XXX avoid loading drivers, so for now we're whitelisting
+        # target types that can deploy images
+        targetTypesWithDeployImage = set(
+            modellib.Cache.get(tgtmodels.TargetType, name=x).target_type_id
+            for x in [ 'vmware', 'vcloud' ])
+        targetsWithDeployImage = set(x.target_id for x in targets
+            if x.target_type_id in targetTypesWithDeployImage)
 
         targetsWithCredentials = set()
         if self._rbmgr is not None:
@@ -291,7 +299,7 @@ class Image(modellib.XObjIdModel):
                 targetId = tdi.target_id
                 enabled = targetId in targetsWithCredentials
                 uqLaunch[tdi.target_id] = (bfile.file_id, enabled)
-                enabled = enabled and tdi.target_image_id is None
+                enabled = enabled and targetId in targetsWithDeployImage and tdi.target_image_id is None
                 uqDeploy[tdi.target_id] = (bfile.file_id, enabled)
         for targetId, (buildFileId, enabled) in sorted(uqDeploy.items()):
             tgt = modellib.Cache.get(tgtmodels.Target, pk=targetId)
