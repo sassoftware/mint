@@ -227,7 +227,6 @@ class StageCallbacks(object):
     @staticmethod
     def can_read_all_for_project(view, request, project_short_name):
         user = request._authUser
-        # BOOKMARK 
         collection = projectmodels.Stage.objects.filter(project__short_name=project_short_name)
         tv = all(view.mgr.userHasRbacPermission(user, obj, READMEMBERS) for obj in collection)
         if tv:

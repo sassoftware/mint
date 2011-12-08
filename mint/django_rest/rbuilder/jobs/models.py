@@ -212,8 +212,11 @@ class Job(modellib.XObjIdModel):
         resources = []
         resources.extend([ x.image for x in self.created_images.all() ])
         resources.extend([ x.system for x in self.created_systems.all() ])
-        self.created_resources.resource = [ modellib.HrefFieldFromModel(
-            r, tag=r._xobj.tag) for r in resources ]
+        resources2 = []
+        for r in resources:
+            res = modellib.HrefFieldFromModel(r, tag=r._xobj.tag)
+            resources2.append(res)
+        self.created_resources.resource = resources2
 
     def serialize(self, request=None):
         xobj_model = modellib.XObjIdModel.serialize(self, request)

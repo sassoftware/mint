@@ -326,4 +326,25 @@ job_xml_with_artifacts="""
 </job>
 """
 
+job_created_system="""
+<job id="http://testserver/api/v1/jobs/uuid003">
+  <time_updated>2011-12-08T21:52:25.223096+00:00</time_updated>
+  <status_code>200</status_code>
+  <job_state id="http://testserver/api/v1/job_states/3">Completed</job_state>
+  <job_type id="http://testserver/api/v1/inventory/event_types/18">launch system on target</job_type>
+  <created_by id="http://testserver/api/v1/users/2002">
+    <user_name>ExampleDeveloper</user_name>
+    <full_name>ExampleDeveloper</full_name>
+  </created_by>
+  <created_resources>
+    <system id="http://testserver/api/v1/inventory/systems/8"/>
+  </created_resources>
+  <systems/>
+  <time_created>2011-12-08T21:52:25.222999+00:00</time_created>
+  <status_text>Some status here</status_text>
+  <job_uuid>uuid003</job_uuid>
+  <job_description>Launch system on target</job_description>
+</job>
+"""
+
 

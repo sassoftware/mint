@@ -1797,16 +1797,52 @@ class JobCreationTest(BaseTargetsTest, RepeaterMixIn):
         self.failUnlessEqual(realCall.args[1:], ())
         self.failUnlessEqual(realCall.kwargs, {})
 
-        jobXml = """
-<job>
+        jobXml = """<job>
   <job_state>Completed</job_state>
   <status_code>200</status_code>
   <status_text>Some status here</status_text>
   <results encoding="identity">
-    <systems />
-  </results>
+  <systems>
+    <system>
+      <targetType>xen-enterprise</targetType>
+      <target_system_id>0c24c2d8-2fde-11d0-67ab-599b1d93616c</target_system_id>
+      <description>misa-foobar-4</description>
+      <target_system_state>Running</target_system_state>
+      <ssl_client_certificate>foo</ssl_client_certificate>
+      <target_system_description>misa-foobar-4</target_system_description>
+      <ssl_client_key>foo</ssl_client_key>
+      <target_system_name>misa-foobar-4</target_system_name>
+      <dnsName>172.16.175.51</dnsName>
+      <targetName>Target Name xen-enterprise</targetName>
+      <name>misa-foobar-4</name>
+    </system>
+  </systems>
+</results>
 </job>
 """
+
+        # since we need to associate the system to the job, quickly save a real target
+        # and system so this can succeed
+        jmodels.JobSystemArtifact.objects.all().delete()
+        invmodels.System.objects.all().delete()
+        targetType = models.TargetType.objects.get(name='xen-enterprise')
+        target = models.Target.objects.filter(target_type=targetType)[0]
+        system = self._saveSystem()
+        system.target = target
+        system.target_system_id = "0c24c2d8-2fde-11d0-67ab-599b1d93616c"
+        system.save()
+        self.mgr.retagQuerySetsByType('system') # not really needed
+
         jobUrl = "jobs/%s" % dbjob.job_uuid
         response = self._put(jobUrl, jobXml, jobToken=jobToken)
         self.failUnlessEqual(response.status_code, 200)
+
+        artifacts = jmodels.JobSystemArtifact.objects.all()
+        self.failUnlessEqual(len(artifacts), 1)
+        
+        jobUrl = "jobs/%s" % dbjob.job_uuid
+        response = self._get(jobUrl, username='admin', password='password')
+
+        self.assertXMLEquals(response.content, testsxml.job_created_system)
+
+ 

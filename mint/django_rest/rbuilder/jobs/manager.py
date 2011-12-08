@@ -253,18 +253,9 @@ class ResultsProcessingMixIn(object):
             resources = [ resources ]
         for resource in resources:
             tag = resource._xobj.tag
-            #log.error("GOT RESOURCE=%s" % resource._xobj.tag)
-            #if tag == 'systems':
-            #    if type(resource.system) != list:
-            #        resource.system = [ resource.system ]
-            #    for system in resource.system:
-            #        system = inventorymodels.System.objects.get(
-            #            target__pk = system.target.target_id,
-            #            target_system_id = system.target_system_id
-            #        ) 
-            #        models.JobSystemArtifact(job=job, system=resource).save()
-            if tag == 'systems':
-                pass
+
+            if tag == 'system':
+                models.JobSystemArtifact(job=job, system=resource).save()
             elif tag == 'image':
                 models.JobImageArtifact(job=job, image=resource).save()
             elif tag == 'target':
@@ -273,7 +264,7 @@ class ResultsProcessingMixIn(object):
                 pass
             else:
                 raise Exception("internal error, don't know how to save resource: %s" % tag)
-        return resources
+        return resources[0]
 
     def _createTargetConfiguration(self, job, targetType):
         descriptorData = self.loadDescriptorData(job)
@@ -618,6 +609,28 @@ class JobHandlerRegistry(HandlerRegistry):
             params.update(systemsCreateUrl =
                 "http://localhost/api/v1/images/%s/systems" % (imageId, ))
             return args, kwargs
+
+        def _processJobResults(self, job):
+            # Nothing to be done, there is another call that posts the
+            # image
+            self.image = job.images.all()[0].image
+
+            systems = job.results.systems.system
+            if type(systems) != list: 
+                systems = [ systems ]
+
+            results = []
+            for targetSystem in systems:
+                # System XML does not contain a target id, hence duplicate lookup
+                # we should fix this
+                target = targetmodels.Target.objects.get(name=targetSystem.targetName)
+                realSystem = inventorymodels.System.objects.get(
+                    target = target,
+                    target_system_id = targetSystem.target_system_id
+                )
+                results.append(realSystem)
+
+            return results
 
         def getRelatedResource(self, descriptor):
             imageId = self.extraArgs['imageId']

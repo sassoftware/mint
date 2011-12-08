@@ -1599,7 +1599,12 @@ class HrefFieldFromModel(HrefField):
             url = urlresolvers.reverse(self.viewName)
             url = request.build_absolute_uri(url)
         else:
+            # FIXME: why is this hack required? something is returning something
+            # wrong up the chain
+            if type(self.model) == list:
+                self.model = self.model[0]
             url = self.model.get_absolute_url(request, view_name=self.viewName)
+                  
         url = self._getRelativeHref(url=url)
         hrefModel = XObjHrefModel(url)
         if self.tag:
