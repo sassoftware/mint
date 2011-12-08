@@ -246,16 +246,25 @@ class ResultsProcessingMixIn(object):
                 job.job_uuid, e)
             self.handleError(job, e)
             return None
-        # XXX technically this should be saved to the DB
-        # Also the xml should not be <results id="blah"/>, but
-        # <results><target id="blah"/></results>
+        
+        # save the results from ramke to the DB
         job.results = modellib.HrefFieldFromModel(resources)
         if type(resources) != list:
             resources = [ resources ]
         for resource in resources:
             tag = resource._xobj.tag
-            if tag == 'system':
-                models.JobSystemArtifact(job=job, system=resource).save()
+            #log.error("GOT RESOURCE=%s" % resource._xobj.tag)
+            #if tag == 'systems':
+            #    if type(resource.system) != list:
+            #        resource.system = [ resource.system ]
+            #    for system in resource.system:
+            #        system = inventorymodels.System.objects.get(
+            #            target__pk = system.target.target_id,
+            #            target_system_id = system.target_system_id
+            #        ) 
+            #        models.JobSystemArtifact(job=job, system=resource).save()
+            if tag == 'systems':
+                pass
             elif tag == 'image':
                 models.JobImageArtifact(job=job, image=resource).save()
             elif tag == 'target':

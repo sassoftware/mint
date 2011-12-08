@@ -368,7 +368,7 @@ class QuerySetManager(basemanager.BaseManager):
         except IntegrityError:
              # an attempt to add something to a chosen queryset twice is not an error
              # but errors with other forms of tagging still are errors
-             pass
+             transaction.rollback()
 
         if transaction.is_managed():
             # inside login method (only), transactions are disabled
