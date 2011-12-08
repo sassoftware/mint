@@ -668,7 +668,13 @@ class System(modellib.XObjIdModel):
             if j.job_state_id == self.runningJobState.job_state_id])
 
     def serialize(self, request=None):
-        jobs = self.jobs.all()
+        
+        try:
+            jobs = self.jobs.all()
+        except:
+            # system apparently wasn't saved yet so can't access Many2Many
+            # relations
+            jobs = []
 
         # hide some data in collapsed collections 
         summarize = getattr(self, '_summarize', False)
