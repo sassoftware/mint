@@ -221,6 +221,18 @@ class AddCommentsMiddleware(BaseMiddleware):
         module = viewFunc.__module__
         return module.split('.')[-2]
 
+class FlashErrorCodeMiddleware(BaseMiddleware):
+    def _process_response(self, request, response):
+        isFlash = False
+        try:
+            isFlash = request._meta.get('HTTP_HTTP_X_FLASH_VERSION')
+        except:
+             # test code mocking things weirdly?
+             pass
+        if isFlash and (response.status_code >= 400):
+            response.status_code = 200
+        return response
+
 class CachingMiddleware(BaseMiddleware):
     def _process_request(self, request):
         from mint.django_rest.rbuilder import modellib
