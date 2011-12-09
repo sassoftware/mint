@@ -192,6 +192,7 @@ class AddCommentsMiddleware(BaseMiddleware):
     useXForm = True
 
     def _process_response(self, request, response):
+
         if self.useXForm and response.content and  \
             response.status_code in (200, 201, 206, 207):
 

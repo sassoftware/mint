@@ -196,7 +196,13 @@ class ProjectsTestCase(RbacEngine):
         project = models.Project.objects.get(pk=projectId)
         self.assertEquals("test-project", project.name)
         self.assertEquals(1, project.created_by.user_id)
-        
+    
+        # adding project again should give a 400 error
+        response = self._post('projects',
+            data=testsxml.project_post_xml,
+            username="admin", password="password")
+        self.assertEquals(response.status_code, 400) 
+    
     def testAddProjectNoHostname(self):
         response = self._post('projects',
             data=testsxml.project_post_no_hostname_xml,

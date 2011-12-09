@@ -50,7 +50,16 @@ class ProjectManager(basemanager.BaseManager):
         return project
 
     @exposed
+    def projectNameInUse(self, project):
+        found = projectsmodels.Project.objects.filter(name=project.name)
+        if len(found) > 0:
+            return True
+        return False
+
+    @exposed
     def addProject(self, project, for_user):
+        project.save()
+
         label = None
         if project.labels and len(project.labels.all()) > 0:
             label = project.labels.all()[0]
