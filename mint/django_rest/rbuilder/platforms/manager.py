@@ -111,19 +111,27 @@ class PlatformManager(basemanager.BaseManager):
         )
 
         smartform_values = []
-        for img in deployable_images:
-            val = desc.ValueWithDescription(img.output_trove,
-                descriptions=img.name)
-
-            flv = deps.ThawFlavor(str(img.trove_flavor))
-            if flv.stronglySatisfies(deps.parseFlavor('is: x86_64')):
-                arch = 'x86_64'
-            else:
-                arch = 'x86'
-
-            val.architecture = arch
+        
+        noImages=False
+        if not deployable_images:
+            val = desc.ValueWithDescription('nobaseimagesavailable',
+                    descriptions='No base images available')
             smartform_values.append(val)
-
+            noImages=True
+        else:
+            for img in deployable_images:
+                val = desc.ValueWithDescription(img.output_trove,
+                    descriptions=img.name)
+    
+                flv = deps.ThawFlavor(str(img.trove_flavor))
+                if flv.stronglySatisfies(deps.parseFlavor('is: x86_64')):
+                    arch = 'x86_64'
+                else:
+                    arch = 'x86'
+    
+                val.architecture = arch
+                smartform_values.append(val)
+        
         desc.addDataField('displayName',
             required = True,
             multiple = False,
@@ -134,6 +142,8 @@ class PlatformManager(basemanager.BaseManager):
         desc.addDataField("options.baseImageTrove",
             required = True,
             multiple = False,
+            readonly = noImages,
+            default = noImages and 'nobaseimagesavailable' or None,
             type = desc.EnumeratedType(smartform_values)
         )
 
