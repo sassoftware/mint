@@ -193,6 +193,10 @@ class AddCommentsMiddleware(BaseMiddleware):
 
     def _process_response(self, request, response):
 
+        # do not add comments to error messages
+        if response.status_code != 200:
+            return response
+
         if self.useXForm and response.content and  \
             response.status_code in (200, 201, 206, 207):
 

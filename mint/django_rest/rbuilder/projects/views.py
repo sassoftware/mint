@@ -5,7 +5,7 @@
 # All rights reserved.
 #
 
-from django.http import HttpResponse, HttpResponseRedirect, HttpResponseBadRequest
+from django.http import HttpResponse, HttpResponseRedirect
 
 from mint.django_rest.deco import access, return_xml, requires
 from mint.django_rest.rbuilder import service
@@ -348,7 +348,7 @@ class ProjectsService(service.BaseService):
     @return_xml
     def rest_POST(self, request, project):
         if self.mgr.projectNameInUse(project):
-            return HttpResponseBadRequest('project name already in use')
+            raise PermissionDenied(msg='Project name already in use')
         return self.mgr.addProject(project, for_user=request._authUser)
 
 class ProjectService(service.BaseService):
