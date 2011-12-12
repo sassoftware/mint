@@ -190,6 +190,35 @@ def getFieldDescriptors(field, prefix=None, processedModels=[], depth=0):
             fds.append(fd)
     return fds
 
+def _explicitlyAddSearchTerms(descriptorList, model, querySet):
+    """
+    Add some search terms that are perhaps too far away from the object
+    but still should be any user-interface oriented list.  A hack of sorts
+    in an otherwise self-generating descriptor system, but better than
+    setting the recursion depth too large.
+    """
+    if querySet.resource_type == 'system':
+
+        # ipv4 address
+        desc = FieldDescriptor()
+        desc.field_label = "System network address (ipv4)"
+        desc.field_key = "networks.ip_address"
+        desc.value_type = 'str'
+        desc.value_options = ValueOptions()
+        desc.value_options.options = [] 
+        desc.operator_choices = allOperatorChoices()
+        descriptorList.append(desc) 
+        
+        # ipv6 address
+        desc = FieldDescriptor()
+        desc.field_label = "System network address (ipv6)"
+        desc.field_key = "networks.ipv6_address"
+        desc.value_type = 'str'
+        desc.value_options = ValueOptions()
+        desc.value_options.options = [] 
+        desc.operator_choices = allOperatorChoices()
+        descriptorList.append(desc) 
+
 def getFilterDescriptor(model, queryset):
     processedModels = []
     processedModels.append(model)
@@ -204,6 +233,8 @@ def getFilterDescriptor(model, queryset):
         field = model._meta.get_field_by_name(fieldName)[0]
         _fds = getFieldDescriptors(field, None, processedModels)
         [fd.field_descriptors.descriptors.append(_fd) for _fd in _fds]
+
+    _explicitlyAddSearchTerms(fd.field_descriptors.descriptors, model, queryset)
 
     # uniquify values as some systems resolve to themselves and so forth
     list = fd.field_descriptors.descriptors
