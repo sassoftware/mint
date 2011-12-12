@@ -6,6 +6,7 @@
 import sys
 import urllib
 import urlparse
+import re
 
 from conary import versions
 from conary.deps import deps
@@ -17,6 +18,7 @@ from django.db.backends import signals
 from mint.django_rest import timeutils
 from mint.django_rest.deco import D
 from mint.django_rest.rbuilder import modellib
+from mint.django_rest.rbuilder import errors
 from mint.django_rest.rbuilder import models as rbuildermodels
 from mint.django_rest.rbuilder.projects.models import Project, ProjectVersion, Stage
 from mint.django_rest.rbuilder.users import models as usersmodels
@@ -589,6 +591,12 @@ class System(modellib.XObjIdModel):
         #   from the xobj model
         # * curNetAddr is the state of the network in the db, which may
         #   have been altered since we loaded the object.
+       
+        if self.network_address is not None:
+            dnsName = self.network_address.address
+            address = re.compile('^[a-zA-Z0-9:._-]+$')
+            if dnsName and not re.match(address, dnsName):
+                raise errors.RbuilderError(msg="invalid hostname/DNS name", status=errors.BAD_REQUEST)
 
         currentNw = self.__class__.extractNetworkToUse(self)
         curNetAddr = self.newNetworkAddress(currentNw)
@@ -607,7 +615,9 @@ class System(modellib.XObjIdModel):
             self.networks.filter(pinned=True).delete()
         else:
             self.networks.all().delete()
-        nw = Network(system=self, dns_name=self.network_address.address,
+ 
+
+        nw = Network(system=self, dns_name=dnsName, 
             pinned=self.network_address.pinned)
         nw.save()
 

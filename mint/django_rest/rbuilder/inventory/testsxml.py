@@ -1399,6 +1399,28 @@ system_post_xml = """\
   <source_image/>
 </system>"""
 
+system_post_xml_bad_network = """
+<system>
+    <configuration />
+    <current_state />
+    <description>exampleNewDescription</description>
+    <installed_software />
+    <management_interface />
+    <managing_zone id="http://testserver/api/v1/inventory/zones/1">Local rBuilder</managing_zone>
+    <name>exampleNewSystem</name>
+    <network_address>
+        <address>user@notanemail.address.rpath.com</address>
+        <pinned>true</pinned>
+    </network_address>
+    <networks />
+    <refresh_delay>0</refresh_delay>
+    <should_migrate>false</should_migrate>
+    <system_tags />
+    <system_type id="https://dhcp244.eng.rpath.com/api/v1/inventory/system_types/1" href="https://dhcp244.eng.rpath.com/api/v1/inventory/system_types/1" />
+</system>
+"""
+
+
 system_mgmt_interface_put_xml = """\
 <?xml version="1.0" encoding="UTF-8"?>
 <system>

@@ -1615,7 +1615,15 @@ class SystemsTestCase(XMLTestCase):
         response = self._post('inventory/systems/',
             data=system_xml, username="admin", password="password")
         self.assertEquals(response.status_code, 200)
-        
+       
+    def testPostSystemBadNetwork(self):
+        """Ensure network address validation is done pre-save"""
+        system_xml = testsxml.system_post_xml_bad_network
+        response = self._post('inventory/systems/',
+            data=system_xml, username="admin", password="password")
+        self.assertEquals(response.status_code, 400)
+        self.assertTrue(response.content.find('<fault>') != -1)
+ 
     def testPostSystem(self):
         models.System.objects.all().delete()
         system_xml = testsxml.system_post_xml
@@ -3460,7 +3468,7 @@ class SystemEventTestCase(XMLTestCase):
         response = self._post(url,
             data=testsxml.system_event_immediate_poll_post_xml,
             username="admin", password="password")
-        self.assertEquals(response.status_code, 200)
+        self.assertEquals(response.status_code, 500)
         self.assertTrue('<fault>' in response.content)
 
         # Clear system events
@@ -3477,7 +3485,7 @@ class SystemEventTestCase(XMLTestCase):
         response = self._post(url,
             data=testsxml.system_event_immediate_shutdown_post_xml,
             username="admin", password="password")
-        self.assertEquals(response.status_code, 200)
+        self.assertEquals(response.status_code, 500)
         self.assertTrue('<fault>' in response.content)
         
         # Clear system events
