@@ -433,6 +433,7 @@ deferred_image_descriptor_xml = """
       </enumeratedType>
       <multiple>false</multiple>
       <name>options.baseImageTrove</name>
+      <readonly>false</readonly>
       <required>true</required>
     </field>
   </dataFields>
