@@ -841,7 +841,8 @@ class QuerySetManager(basemanager.BaseManager):
         except IntegrityError:
             # no penalty for trying to add to chosen twice
             # and trying to insert duplicate queryset queryset tags
-            pass
+            if transaction.is_managed():
+                transaction.rollback()
 
         return self.getQuerySetChosenResult(querySetId)
 
