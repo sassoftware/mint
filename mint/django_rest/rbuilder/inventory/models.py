@@ -596,7 +596,7 @@ class System(modellib.XObjIdModel):
             dnsName = self.network_address.address
             address = re.compile('^[a-zA-Z0-9:._-]+$')
             if dnsName and not re.match(address, dnsName):
-                raise errors.RbuilderError(msg="invalid hostname/DNS name", status=errors.BAD_REQUEST)
+                raise errors.InvalidData(msg="invalid hostname/DNS name")
 
         currentNw = self.__class__.extractNetworkToUse(self)
         curNetAddr = self.newNetworkAddress(currentNw)
