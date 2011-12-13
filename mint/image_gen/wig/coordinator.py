@@ -1,14 +1,16 @@
 #
-# Copyright (c) 2010 rPath, Inc.
-#
-# All rights reserved.
+# Copyright (c) 2011 rPath, Inc.
 #
 
+import logging
 import random
+import socket
 from twisted.internet import defer as tw_defer
 from twisted.internet import protocol as tw_proto
 from twisted.web import client as tw_web_client
 from xobj import xobj
+
+log = logging.getLogger(__name__)
 
 
 class Coordinator(object):
@@ -60,25 +62,43 @@ class Coordinator(object):
                 networks = system.networks.network
             else:
                 networks = [system.networks.network]
-            # Pick a network. Any network.
+            # Pick a network. Prefer 'pinned' addresses, and within each object
+            # prefer IP over DNS since DNS often lies.
+            candidates = []
             for network in networks:
                 if network.dns_name:
-                    hostnames.add(network.dns_name)
-                    break
+                    pinned = network.pinned.lower() == 'true'
+                    candidates.append((
+                        pinned, network.ip_address, network.dns_name))
+            if candidates:
+                pinned, ip_address, dns_name = sorted(candidates)[-1]
+                if ip_address:
+                    hostnames.add(ip_address)
+                elif dns_name:
+                    hostnames.add(dns_name)
         return hostnames
 
     def getBuildService(self):
         d = self.listSystems()
         def acquire(hostnames):
-            if not hostnames:
-                raise RuntimeError("No rPath Windows Build Service nodes are "
-                        "present. Please check the 'Infrastructure' view "
-                        "and try again.")
             # TODO: track how many jobs are on each host and use that to pick
             # the one with the fewest jobs active.
-            hostname = random.choice(list(hostnames))
-            return 'http://%s/api' % (hostname,)
-        d.addCallback(acquire)
+            hostnames = list(hostnames)
+            random.shuffle(hostnames)
+            # Test the hostnames to make sure they work
+            for hostname in hostnames:
+                try:
+                    socket.getaddrinfo(hostname, 0, 0, socket.SOCK_STREAM)
+                except socket.gaierror, err:
+                    log.error("Skipping Windows Build Service %r because it "
+                            "is not resolvable: %s", hostname, str(err))
+                    pass
+                else:
+                    return 'http://%s/api' % (hostname,)
+            raise RuntimeError("No rPath Windows Build Service nodes are "
+                    "present. Please check the 'Infrastructure' view "
+                    "and try again.")
+        d.adrCallback(acquire)
         return d
 
 
