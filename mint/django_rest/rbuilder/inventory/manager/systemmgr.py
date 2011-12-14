@@ -959,6 +959,10 @@ class SystemManager(basemanager.BaseManager):
             targetName=targetName)
         system.target = target
         system.source_image = sourceImage
+        if sourceImage is not None:
+            system.project_id = sourceImage.project_id
+            system.project_branch_id = sourceImage.project_branch_id
+            system.project_branch_stage_id = sourceImage.project_branch_stage_id
         if system.managing_zone_id is None:
             system.managing_zone = self.getLocalZone()
         # For bayonet, we only launch in the local zone

@@ -583,3 +583,6 @@ class ImagesTestCase(RbacEngine):
             network = system.networks.all()[0]
             self.failUnlessEqual(network.dns_name, expNetwork)
             self.failUnlessEqual(system.source_image, img)
+            self.failUnlessEqual(system.project_id, img.project_id)
+            self.failUnlessEqual(system.project_branch_id, img.project_branch_id)
+            self.failUnlessEqual(system.project_branch_stage_id, img.project_branch_stage_id)
