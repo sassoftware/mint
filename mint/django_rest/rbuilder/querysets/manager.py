@@ -323,16 +323,7 @@ class QuerySetManager(basemanager.BaseManager):
         method = self._tagMethod(querySet)
         method(resources, querySet, self._transitiveMethod())
 
-    def newTransaction(self):
-        # try to avoid some confusing database locks that prevent executemany
-        # from continuing on
-        if transaction.is_managed():
-            if transaction.is_dirty():
-                transaction.commit()
-            transaction.leave_transaction_management()
-            transaction.enter_transaction_management(managed=True)
-
-    def _tagGeneric(self, resources, queryset, inclusionMethod, tagClass, tagTable, idColumn):
+    def _tagGeneric(self, resources, queryset, inclusionMethod, tagClass, field):
         '''
         store that a given query tag matched the system 
         for caching purposes
@@ -341,91 +332,71 @@ class QuerySetManager(basemanager.BaseManager):
         if len(resources) == 0:
             return
         
-        # we have to hop out of transactions because Django will deadlock... 
-        self.newTransaction()
-
-        cursor = connection.cursor()
-
         if inclusionMethod.name != 'chosen':
-            cursor.execute("DELETE FROM %s WHERE query_set_id = %s AND inclusion_method_id = %s" % (
-                tagTable, queryset.pk, inclusionMethod.pk
-            ))
+            tagClass.objects.filter(
+                query_set = queryset,
+                inclusion_method = inclusionMethod
+            ).delete()
 
         insertParams = None
         if type(resources) == list:
             # inserting chosens, should be a small quantity
-            insertParams = [(r.pk,) for r in resources]
+            insertParams = [r.pk for r in resources]
         else:
-            resources = resources.values_list('pk', flat=True)
-            insertParams = [(r,) for r in resources]
+            insertParams = resources.values_list('pk', flat=True)
 
-        query = "INSERT INTO %s" % tagTable 
-        query = query + " (%s, query_set_id, inclusion_method_id)" % idColumn
-        query = query + " VALUES (%s, " + " %s, %s)" % (queryset.pk, inclusionMethod.pk)
-    
-        try:
-             cursor.executemany(query, insertParams) 
-        except IntegrityError:
-             # an attempt to add something to a chosen queryset twice is not an error
-             # but errors with other forms of tagging still are errors
-             if transaction.is_managed():
-                 transaction.rollback()
+        # should be a nice bulk insert but unrolling to avoid
+        # some Django-ey problems, cleanup later
+        for x in insertParams:
+            fname = "%s_id" % field
+            kwargs = {}
+            kwargs[fname] = x
+            kwargs['query_set'] = queryset    
+            kwargs['inclusion_method'] = inclusionMethod
+            (pk, created) = tagClass.objects.get_or_create(
+               **kwargs
+            )
 
-
-        if transaction.is_managed():
-            # inside login method (only), transactions are disabled
-            transaction.set_dirty()
-
-        self.newTransaction()
-        
 
     def _tagSystems(self, resources, tag, inclusionMethod):
         self._tagGeneric(resources, tag, inclusionMethod,
            tagClass=models.SystemTag,
-           tagTable='querysets_systemtag',
-           idColumn='system_id')
+           field='system')
 
     def _tagTargets(self, resources, tag, inclusionMethod):
         self._tagGeneric(resources, tag, inclusionMethod,
            tagClass=models.TargetTag,
-           tagTable='querysets_targettag',
-           idColumn='target_id')
+           field='target')
 
     def _tagUsers(self, resources, tag, inclusionMethod):
         self._tagGeneric(resources, tag, inclusionMethod,
            tagClass=models.UserTag,
-           tagTable='querysets_usertag',
-           idColumn='user_id')
+           field='user')
 
     def _tagProjects(self, resources, tag, inclusionMethod):
         self._tagGeneric(resources, tag, inclusionMethod,
            tagClass=models.ProjectTag,
-           tagTable='querysets_projecttag',
-           idColumn='project_id')
+           field='project')
 
     def _tagStages(self, resources, tag, inclusionMethod):
         self._tagGeneric(resources, tag, inclusionMethod,
            tagClass=models.StageTag,
-           tagTable='querysets_stagetag',
-           idColumn='stage_id')
+           field='stage')
 
     def _tagRoles(self, resources, tag, inclusionMethod):
         self._tagGeneric(resources, tag, inclusionMethod,
            tagClass=models.RoleTag,
-           tagTable='querysets_roletag',
-           idColumn='role_id')
+           field='role')
 
     def _tagGrants(self, resources, tag, inclusionMethod):
         self._tagGeneric(resources, tag, inclusionMethod,
            tagClass=models.PermissionTag,
-           tagTable='querysets_permissiontag',
-           idColumn='permission_id')
+           field='permission')
     
     def _tagImages(self, resources, tag, inclusionMethod):
         self._tagGeneric(resources, tag, inclusionMethod,
            tagClass=models.ImageTag,
-           tagTable='querysets_imagetag',
-           idColumn='image_id')
+           field='image')
 
     def filterQuerySet(self, querySet):
         '''Return resources matching specific filter criteria'''
@@ -836,13 +807,7 @@ class QuerySetManager(basemanager.BaseManager):
 
         querySet.modified_by = by_user
         querySet.modified_date = timeutils.now()
-        try:
-            querySet.save()
-        except IntegrityError:
-            # no penalty for trying to add to chosen twice
-            # and trying to insert duplicate queryset queryset tags
-            if transaction.is_managed():
-                transaction.rollback()
+        querySet.save()
 
         return self.getQuerySetChosenResult(querySetId)
 
