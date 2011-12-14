@@ -3468,7 +3468,7 @@ class SystemEventTestCase(XMLTestCase):
         response = self._post(url,
             data=testsxml.system_event_immediate_poll_post_xml,
             username="admin", password="password")
-        self.assertEquals(response.status_code, 500)
+        self.assertEquals(response.status_code, 409)
         self.assertTrue('<fault>' in response.content)
 
         # Clear system events
@@ -3485,7 +3485,7 @@ class SystemEventTestCase(XMLTestCase):
         response = self._post(url,
             data=testsxml.system_event_immediate_shutdown_post_xml,
             username="admin", password="password")
-        self.assertEquals(response.status_code, 500)
+        self.assertEquals(response.status_code, 409)
         self.assertTrue('<fault>' in response.content)
         
         # Clear system events
