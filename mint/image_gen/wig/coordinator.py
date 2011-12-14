@@ -98,7 +98,7 @@ class Coordinator(object):
             raise RuntimeError("No rPath Windows Build Service nodes are "
                     "present. Please check the 'Infrastructure' view "
                     "and try again.")
-        d.adrCallback(acquire)
+        d.addCallback(acquire)
         return d
 
 
