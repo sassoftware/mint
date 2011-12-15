@@ -4630,7 +4630,7 @@ class MigrateTo_60(SchemaMigration):
 
 class MigrateTo_61(SchemaMigration):
     '''Edge-P4'''
-    Version = (61, 2)
+    Version = (61, 3)
 
     def migrate(self):
         cu = self.db.cursor()
@@ -4663,6 +4663,23 @@ class MigrateTo_61(SchemaMigration):
                 REFERENCES builds (buildid) ON DELETE SET NULL,
         """)
         return True
+
+    def migrate3(self):
+        # See mingle #1456
+        cu = self.db.cursor()
+        cu.execute("""UPDATE BuildFiles f
+            SET title = 'VMware (R) ESX OVF 1.0 Image'
+            FROM BuildFilesUrlsMap m JOIN FilesUrls u USING (urlId)
+            WHERE m.fileId = f.fileId
+            AND u.url LIKE '%.ova' AND f.title = ''
+            """)
+        cu.execute("""UPDATE BuildFiles
+            SET title = 'Unknown build file' WHERE title = '' """)
+        cu.execute("""ALTER TABLE BuildFiles
+            ADD CONSTRAINT title_not_empty CHECK (title != ''),
+            ALTER title DROP DEFAULT""")
+        return True
+
 
 #### SCHEMA MIGRATIONS END HERE #############################################
 

@@ -68,7 +68,8 @@ class ImagesTestCase(RbacEngine):
                 description="image-%s" % i)
             image.save()
             # now buildfiles and fileurls
-            buildFile = models.BuildFile(image=image, size=i, sha1='%s' % i)
+            buildFile = models.BuildFile(image=image, size=i, sha1='%s' % i,
+                    title='foo')
             buildFile.save()
             
             fileUrl = models.FileUrl(url_type=0, url='http://example.com/%s/' % i)
@@ -77,7 +78,8 @@ class ImagesTestCase(RbacEngine):
             buildFilesUrlsMap = models.BuildFilesUrlsMap(file=buildFile, url=fileUrl)
             buildFilesUrlsMap.save()
             
-            buildFile = models.BuildFile(image=image, size=i+1, sha1='%s' % (i + 1))
+            buildFile = models.BuildFile(image=image, size=i+1,
+                    sha1='%s' % (i + 1), title='foo')
             buildFile.save()
         
             fileUrl = models.FileUrl(url_type=0, url='http://example.com/%s/' % (i + 1))
@@ -321,6 +323,7 @@ class ImagesTestCase(RbacEngine):
 
         xmlTemplate = """\
 <file>
+  <title>dummy file</title>
   <target_images>
     <target_image>
       <target id="/api/v1/targets/%(targetId)s"/>

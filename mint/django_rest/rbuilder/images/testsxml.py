@@ -7,7 +7,7 @@ images_get_xml = """
       <file>
         <sha1>0</sha1>
         <idx>0</idx>
-        <title></title>
+        <title>foo</title>
         <url>http://testserver/downloadImage?fileId=1&amp;urlType=0</url>
         <image id="http://testserver/api/v1/images/1"/>
         <file_id>1</file_id>
@@ -16,7 +16,7 @@ images_get_xml = """
       <file>
         <sha1>1</sha1>
         <idx>0</idx>
-        <title></title>
+        <title>foo</title>
         <url>http://testserver/downloadImage?fileId=2&amp;urlType=0</url>
         <image id="http://testserver/api/v1/images/1"/>
         <file_id>2</file_id>
@@ -69,7 +69,7 @@ images_get_xml = """
       <file>
         <sha1>1</sha1>
         <idx>0</idx>
-        <title></title>
+        <title>foo</title>
         <url>http://testserver/downloadImage?fileId=3&amp;urlType=0</url>
         <image id="http://testserver/api/v1/images/2"/>
         <file_id>3</file_id>
@@ -78,7 +78,7 @@ images_get_xml = """
       <file>
         <sha1>2</sha1>
         <idx>0</idx>
-        <title></title>
+        <title>foo</title>
         <url>http://testserver/downloadImage?fileId=4&amp;urlType=0</url>
         <image id="http://testserver/api/v1/images/2"/>
         <file_id>4</file_id>
@@ -131,7 +131,7 @@ images_get_xml = """
       <file>
         <sha1>2</sha1>
         <idx>0</idx>
-        <title></title>
+        <title>foo</title>
         <url>http://testserver/downloadImage?fileId=5&amp;urlType=0</url>
         <image id="http://testserver/api/v1/images/3"/>
         <file_id>5</file_id>
@@ -140,7 +140,7 @@ images_get_xml = """
       <file>
         <sha1>3</sha1>
         <idx>0</idx>
-        <title></title>
+        <title>foo</title>
         <url>http://testserver/downloadImage?fileId=6&amp;urlType=0</url>
         <image id="http://testserver/api/v1/images/3"/>
         <file_id>6</file_id>
@@ -198,7 +198,7 @@ image_get_xml = """
     <file>
       <sha1>0</sha1>
       <idx>0</idx>
-      <title></title>
+      <title>foo</title>
       <url>http://testserver/downloadImage?fileId=1&amp;urlType=0</url>
       <image id="http://testserver/api/v1/images/1"/>
       <file_id>1</file_id>
@@ -207,7 +207,7 @@ image_get_xml = """
     <file>
       <sha1>1</sha1>
       <idx>0</idx>
-      <title></title>
+      <title>foo</title>
       <url>http://testserver/downloadImage?fileId=2&amp;urlType=0</url>
       <image id="http://testserver/api/v1/images/1"/>
       <file_id>2</file_id>
@@ -262,7 +262,7 @@ build_file_get_xml = \
 <file>
   <sha1>0</sha1>
   <idx>0</idx>
-  <title></title>
+  <title>foo</title>
   <url>http://testserver/downloadImage?fileId=1&amp;urlType=0</url>
   <image id="http://testserver/api/v1/images/1"/>
   <file_id>1</file_id>
@@ -392,7 +392,7 @@ build_files_get_xml = \
   <file>
     <sha1>0</sha1>
     <idx>0</idx>
-    <title></title>
+    <title>foo</title>
     <url>http://testserver/downloadImage?fileId=1&amp;urlType=0</url>
     <image id="http://testserver/api/v1/images/1"/>
     <file_id>1</file_id>
@@ -401,7 +401,7 @@ build_files_get_xml = \
   <file>
     <sha1>1</sha1>
     <idx>0</idx>
-    <title></title>
+    <title>foo</title>
     <url>http://testserver/downloadImage?fileId=2&amp;urlType=0</url>
     <image id="http://testserver/api/v1/images/1"/>
     <file_id>2</file_id>
@@ -468,7 +468,7 @@ release_get_xml = \
         <file>
           <sha1>0</sha1>
           <idx>0</idx>
-          <title></title>
+          <title>foo</title>
           <url>http://testserver/downloadImage?fileId=1&amp;urlType=0</url>
           <image id="http://testserver/api/v1/images/1"/>
           <file_id>1</file_id>
@@ -477,7 +477,7 @@ release_get_xml = \
         <file>
           <sha1>1</sha1>
           <idx>0</idx>
-          <title></title>
+          <title>foo</title>
           <url>http://testserver/downloadImage?fileId=2&amp;urlType=0</url>
           <image id="http://testserver/api/v1/images/1"/>
           <file_id>2</file_id>
@@ -595,7 +595,7 @@ releases_get_xml = \
           <file>
             <sha1>0</sha1>
             <idx>0</idx>
-            <title></title>
+            <title>foo</title>
             <url>http://testserver/downloadImage?fileId=1&amp;urlType=0</url>
             <image id="http://testserver/api/v1/images/1"/>
             <file_id>1</file_id>
@@ -604,7 +604,7 @@ releases_get_xml = \
           <file>
             <sha1>1</sha1>
             <idx>0</idx>
-            <title></title>
+            <title>foo</title>
             <url>http://testserver/downloadImage?fileId=2&amp;urlType=0</url>
             <image id="http://testserver/api/v1/images/1"/>
             <file_id>2</file_id>
@@ -695,7 +695,7 @@ releases_get_xml = \
           <file>
             <sha1>1</sha1>
             <idx>0</idx>
-            <title></title>
+            <title>foo</title>
             <url>http://testserver/downloadImage?fileId=3&amp;urlType=0</url>
             <image id="http://testserver/api/v1/images/2"/>
             <file_id>3</file_id>
@@ -704,7 +704,7 @@ releases_get_xml = \
           <file>
             <sha1>2</sha1>
             <idx>0</idx>
-            <title></title>
+            <title>foo</title>
             <url>http://testserver/downloadImage?fileId=4&amp;urlType=0</url>
             <image id="http://testserver/api/v1/images/2"/>
             <file_id>4</file_id>
@@ -795,7 +795,7 @@ releases_get_xml = \
           <file>
             <sha1>2</sha1>
             <idx>0</idx>
-            <title></title>
+            <title>foo</title>
             <url>http://testserver/downloadImage?fileId=5&amp;urlType=0</url>
             <image id="http://testserver/api/v1/images/3"/>
             <file_id>5</file_id>
@@ -804,7 +804,7 @@ releases_get_xml = \
           <file>
             <sha1>3</sha1>
             <idx>0</idx>
-            <title></title>
+            <title>foo</title>
             <url>http://testserver/downloadImage?fileId=6&amp;urlType=0</url>
             <image id="http://testserver/api/v1/images/3"/>
             <file_id>6</file_id>

@@ -28,7 +28,7 @@ from conary.dbstore import sqlerrors, sqllib
 log = logging.getLogger(__name__)
 
 # database schema major version
-RBUILDER_DB_VERSION = sqllib.DBversion(61, 2)
+RBUILDER_DB_VERSION = sqllib.DBversion(61, 3)
 
 def _createTrigger(db, table, column="changed"):
     retInsert = db.createTrigger(table, column, "INSERT")
@@ -457,9 +457,10 @@ def _createBuilds(db):
             buildId             integer         NOT NULL
                 REFERENCES Builds ON DELETE CASCADE,
             idx                 smallint        NOT NULL    DEFAULT 0,
-            title               varchar(255)    NOT NULL    DEFAULT '',
+            title               varchar(255)    NOT NULL,
             size                bigint,
-            sha1                char(40)
+            sha1                char(40),
+            CONSTRAINT title_not_empty CHECK (title != '')
         ) %(TABLEOPTS)s """ % db.keywords)
         db.tables['BuildFiles'] = []
 

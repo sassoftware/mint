@@ -348,8 +348,7 @@ class BuildFile(modellib.XObjIdModel):
     image = D(models.ForeignKey('Image', null=False, db_column='buildid', related_name='files'),
                 'Image attached to the Build File, cannot be null')
     idx = D(models.IntegerField(null=False, default=0), 'cannot be null, default is 0')
-    title = D(models.CharField(max_length=255, null=False, default=''),
-        'File title, defaults to empty string')
+    title = D(models.CharField(max_length=255, null=False), 'File title')
     size = D(models.IntegerField(), 'Size of file')
     sha1 = D(models.CharField(max_length=40),
         'sha1 associated with the build file, max length is 40 characters')
