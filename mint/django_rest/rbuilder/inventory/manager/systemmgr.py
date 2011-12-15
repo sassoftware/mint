@@ -942,10 +942,14 @@ class SystemManager(basemanager.BaseManager):
             img = imagemodels.Image.objects.get(image_id=imageId)
         else:
             img = None
-        for system in systems.system:
-            self.mgr.addLaunchedSystem(system, dnsName=system.dnsName,
+        # Copy the incoming systems; we'll replace them with real ones
+        slist = systems.system
+        rlist = systems.system = []
+        for system in slist:
+            rlist.append(self.mgr.addLaunchedSystem(system,
+                dnsName=system.dnsName,
                 targetName=system.targetName, targetType=system.targetType,
-                sourceImage=img, for_user=forUser)
+                sourceImage=img, for_user=forUser))
         return systems
 
     @exposed
