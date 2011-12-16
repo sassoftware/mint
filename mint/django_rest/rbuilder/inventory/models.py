@@ -482,14 +482,16 @@ class System(modellib.XObjIdModel):
         "a UUID that is randomly generated", short="System UUID")
     local_uuid = D(models.CharField(max_length=64, null=True),
         "a UUID created from the system hardware profile", short="System local UUID")
-    ssl_client_certificate = D(APIReadOnly(models.CharField(
-        max_length=8092, null=True)),
+    ssl_client_certificate = D(modellib.SyntheticField(),
         "an x509 certificate of an authorized client that can use the "
         "system's CIM broker")
-    ssl_client_key = D(XObjHidden(APIReadOnly(models.CharField(
-        max_length=8092, null=True))),
+    _ssl_client_certificate = XObjHidden(APIReadOnly(models.CharField(
+        max_length=8092, null=True, db_column='ssl_client_certificate')))
+    ssl_client_key = D(XObjHidden(modellib.SyntheticField()),
         "an x509 private key of an authorized client that can use the "
         "system's CIM broker")
+    _ssl_client_key = XObjHidden(APIReadOnly(models.CharField(
+        max_length=8092, null=True, db_column='ssl_client_key')))
     ssl_server_certificate = D(models.CharField(max_length=8092, null=True),
         "an x509 public certificate of the system's CIM broker")
     launching_user = D(modellib.ForeignKey(usersmodels.User, null=True, 
@@ -820,6 +822,7 @@ class System(modellib.XObjIdModel):
     def computeSyntheticFields(self, sender, **kwargs):
         ''' Compute non-database fields.'''
         self._computeActions()
+        self.ssl_client_certificate = self._ssl_client_certificate
 
     def _computeActions(self):
         '''What actions are available on the system?'''
@@ -880,6 +883,10 @@ class ManagementNode(System):
         self.system_type = SystemType.objects.get(
             name = SystemType.INFRASTRUCTURE_MANAGEMENT_NODE)
         System.save(self, *args, **kw)
+
+    def _computeActions(self):
+        # At least for now, management nodes don't expose actions
+        pass
 
 class SystemTargetCredentials(modellib.XObjModel):
     class Meta:

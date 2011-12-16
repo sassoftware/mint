@@ -581,7 +581,7 @@ class ImagesTestCase(RbacEngine):
         systemIds = [ x.system_id for x in systems ]
         expNetworks = [ '1.2.3.4', '1.2.3.5', ]
 
-        for systemId, expNetwork in zip(systemIds, expNetworks):
+        for i, (systemId, expNetwork) in enumerate(zip(systemIds, expNetworks)):
             system = invmodels.System.objects.get(system_id=systemId)
             network = system.networks.all()[0]
             self.failUnlessEqual(network.dns_name, expNetwork)
@@ -589,3 +589,7 @@ class ImagesTestCase(RbacEngine):
             self.failUnlessEqual(system.project_id, img.project_id)
             self.failUnlessEqual(system.project_branch_id, img.project_branch_id)
             self.failUnlessEqual(system.project_branch_stage_id, img.project_branch_stage_id)
+            self.failUnlessEqual(system._ssl_client_certificate,
+                'ssl-client-certificate-%s' % (i+1))
+            self.failUnlessEqual(system._ssl_client_key,
+                'ssl-client-key-%s' % (i+1))

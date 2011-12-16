@@ -688,8 +688,8 @@ class SystemManager(basemanager.BaseManager):
             self.scheduleSystemDetectMgmtInterfaceEvent(system)
 
     def generateSystemCertificates(self, system):
-        if system.ssl_client_certificate is not None and \
-                system.ssl_client_key is not None:
+        if system._ssl_client_certificate is not None and \
+                system._ssl_client_key is not None:
             # Certs are already generated. We may want to re-generate them at
             # some point, but not now
             return
@@ -723,8 +723,8 @@ class SystemManager(basemanager.BaseManager):
             issuer_x509=issuer_x509, issuer_pkey=issuer_pkey)
         if 0:
             del ca_crt
-        system.ssl_client_certificate = crt.x509.as_pem()
-        system.ssl_client_key = crt.pkey.as_pem(None)
+        system._ssl_client_certificate = crt.x509.as_pem()
+        system._ssl_client_key = crt.pkey.as_pem(None)
         system.save()
 
     @exposed
@@ -963,6 +963,9 @@ class SystemManager(basemanager.BaseManager):
             targetName=targetName)
         system.target = target
         system.source_image = sourceImage
+        # Copy incoming certs (otherwise read-only)
+        system._ssl_client_certificate = system.ssl_client_certificate
+        system._ssl_client_key = system.ssl_client_key
         if sourceImage is not None:
             system.project_id = sourceImage.project_id
             system.project_branch_id = sourceImage.project_branch_id
@@ -1096,8 +1099,8 @@ class SystemManager(basemanager.BaseManager):
                     systemCreds = self.unmarshalCredentials(system.credentials)
             else: 
                 systemCreds = dict(
-                    ssl_client_certificate=system.ssl_client_certificate,
-                    ssl_client_key=system.ssl_client_key)
+                    ssl_client_certificate=system._ssl_client_certificate,
+                    ssl_client_key=system._ssl_client_key)
 
         return self._getCredentialsModel(system, systemCreds)
 
@@ -1118,10 +1121,10 @@ class SystemManager(basemanager.BaseManager):
                 system.credentials = systemCreds
             elif system.management_interface.name == 'cim':
                 if credentials.has_key('ssl_client_certificate'):
-                    system.ssl_client_certificate = \
+                    system._ssl_client_certificate = \
                         credentials['ssl_client_certificate']
                 if credentials.has_key('ssl_client_key'):
-                    system.ssl_client_key = credentials['ssl_client_key']
+                    system._ssl_client_key = credentials['ssl_client_key']
 
     @exposed
     def getSystemConfigurationDescriptor(self, system_id):
@@ -1330,8 +1333,8 @@ class SystemManager(basemanager.BaseManager):
         cimParams = repClient.CimParams(host=destination,
             port=system.agent_port,
             eventUuid=eventUuid,
-            clientCert=system.ssl_client_certificate,
-            clientKey=system.ssl_client_key,
+            clientCert=system._ssl_client_certificate,
+            clientKey=system._ssl_client_key,
             requiredNetwork=requiredNetwork,
             # XXX These three do not belong to cimParams
             instanceId=system.target_system_id,

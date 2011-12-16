@@ -914,17 +914,17 @@ class SyntheticField(object):
     so must do extra work to transfer attributes to the model it wraps.
     """
 
-    def __init__(self, model=None):
-        if model is None:
-           model = str
-        self.model = model
-        hidden = getattr(self, 'XObjIdHidden', None)
-        ro     = getattr(self, 'APIReadOnly', None)
-        if hidden:
-             self.model.XObjIdHidden = hidden
-        if ro:
-             self.model.APIReadOnly  = ro
+    __slots__ = ['model', 'XObjHidden', 'APIReadOnly', 'docstring',
+        'shortname', ]
 
+    def __init__(self, model=None):
+        self.XObjHidden = False
+        self.APIReadOnly = False
+        self.docstring = ''
+        self.shortname = ''
+        if model is None:
+            model = str
+        self.model = model
 
 class XObjModel(models.Model):
     """
@@ -965,9 +965,17 @@ class XObjModel(models.Model):
 
             ret._meta.synthetic_fields = synth = dict()
             ret._meta.abstract_fields = abstr = dict()
+            # Inherit abstract and synthetic fields from the base class
+            for bc in bases:
+                meta = getattr(bc, '_meta', None)
+                if meta is None:
+                    continue
+                synth.update(getattr(meta, 'synthetic_fields', {}))
+                abstr.update(getattr(meta, 'abstract_fields', {}))
+
             for k, v in attrs.items():
                 if isinstance(v, SyntheticField):
-                    synth[k] = v.model
+                    synth[k] = v
                     # Default the value to None
                     setattr(ret, k, None)
                 meta = getattr(v, '_meta', None)
@@ -1236,14 +1244,18 @@ class XObjModel(models.Model):
             field = fields.pop(key, None)
             if field is None:
                 field = syntheticFields.get(key)
-                # XXX using isinstance seems bad. We should make sure
-                # val is an acceptable value for a field, and that can
-                # be any field, model or xobj object, and it's hard
-                if (field is not None and val is not None
-                        and not isinstance(val, (int, bool))):
-                    # The user specified a value for the synthetic field.
-                    # We'll use that instead of the one from the class def
-                    field = val
+                if field is not None:
+                    if getattr(field, 'XObjHidden', False):
+                        continue
+                    # XXX using isinstance seems bad. We should make sure
+                    # val is an acceptable value for a field, and that can
+                    # be any field, model or xobj object, and it's hard
+                    if (val is not None and not isinstance(val, (int, bool))):
+                        # The user specified a value for the synthetic field.
+                        # We'll use that instead of the one from the class def
+                        field = val
+                    else:
+                        field = ''
             if field is not None:
                 if getattr(field, 'XObjHidden', False):
                     continue

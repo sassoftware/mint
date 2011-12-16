@@ -2277,8 +2277,8 @@ class SystemsTestCase(XMLTestCase):
 
         system = self.newSystem(name='blippy', local_uuid=localUuid,
             generated_uuid=generatedUuid,
-            ssl_client_certificate=sslClientCert,
-            ssl_client_key=sslClientKey)
+            _ssl_client_certificate=sslClientCert,
+            _ssl_client_key=sslClientKey)
         system.save()
 
         xml = """\
@@ -2295,8 +2295,8 @@ class SystemsTestCase(XMLTestCase):
         model = models.System.objects.load_from_object(xobjmodel, request=None)
         self.failUnlessEqual(model.local_uuid, localUuid)
         self.failUnlessEqual(model.generated_uuid, generatedUuid)
-        self.failUnlessEqual(model.ssl_client_certificate, sslClientCert)
-        self.failUnlessEqual(model.ssl_client_key, sslClientKey)
+        self.failUnlessEqual(model._ssl_client_certificate, sslClientCert)
+        self.failUnlessEqual(model._ssl_client_key, sslClientKey)
 
     def testBooleanFieldSerialization(self):
         # XML schema sez lowercase true or false for boolean fields
@@ -2530,12 +2530,12 @@ class SystemCertificateTestCase(XMLTestCase):
         system = self.newSystem(local_uuid="localuuid001",
             generated_uuid="generateduuid001")
         system.save()
-        self.failUnlessEqual(system.ssl_client_certificate, None)
-        self.failUnlessEqual(system.ssl_client_key, None)
+        self.failUnlessEqual(system._ssl_client_certificate, None)
+        self.failUnlessEqual(system._ssl_client_key, None)
         self.mgr.sysMgr.generateSystemCertificates(system)
 
-        clientCert = system.ssl_client_certificate
-        clientKey = system.ssl_client_key
+        clientCert = system._ssl_client_certificate
+        clientKey = system._ssl_client_key
 
         crt = x509.X509(None, None)
         crt.load_from_strings(clientCert, clientKey)
@@ -2562,8 +2562,8 @@ class SystemCertificateTestCase(XMLTestCase):
 
         # Try again, we should not re-generate the cert
         self.mgr.sysMgr.generateSystemCertificates(system)
-        self.failUnlessEqual(system.ssl_client_certificate, clientCert)
-        self.failUnlessEqual(system.ssl_client_key, clientKey)
+        self.failUnlessEqual(system._ssl_client_certificate, clientCert)
+        self.failUnlessEqual(system._ssl_client_key, clientKey)
 
 class SystemStateTestCase(XMLTestCase):
     def setUp(self):
@@ -4302,8 +4302,6 @@ class TargetSystemImportTest(XMLTestCase):
             target_system_name = "target-system-name 001",
             target_system_description = "target-system-description 001",
             target_system_state = "Frisbulating",
-            ssl_client_certificate = "ssl client certificate 001",
-            ssl_client_key = "ssl client key 001",
         )
         dnsName = 'dns-name-1'
         system = self.newSystem(**params)
@@ -4311,6 +4309,8 @@ class TargetSystemImportTest(XMLTestCase):
             dnsName=dnsName,
             targetName=self.tgt2.name,
             targetType=self.tgt2.target_type)
+        system.ssl_client_certificate = "ssl client certificate 001"
+        system.ssl_client_key = "ssl client key 001"
         for k, v in params.items():
             self.failUnlessEqual(getattr(system, k), v)
         # Make sure we have credentials
@@ -4369,8 +4369,8 @@ class TargetSystemImportTest(XMLTestCase):
             target_system_name = "target-system-name 001",
             target_system_description = "target-system-description 001",
             target_system_state = "Frisbulating",
-            ssl_client_certificate = "ssl client certificate 001",
-            ssl_client_key = "ssl client key 001",
+            _ssl_client_certificate = "ssl client certificate 001",
+            _ssl_client_key = "ssl client key 001",
         )
         dnsName = 'dns-name-1'
         system = self.newSystem(**params)
