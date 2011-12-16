@@ -1255,7 +1255,7 @@ class XObjModel(models.Model):
                         # We'll use that instead of the one from the class def
                         field = val
                     else:
-                        field = ''
+                        field = field.model
             if field is not None:
                 if getattr(field, 'XObjHidden', False):
                     continue
