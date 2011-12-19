@@ -198,7 +198,6 @@ class ImageBuildFileService(service.BaseAuthService):
             raise PermissionDenied(msg="id does not match URL")
         if request._withAuthToken:
             self.mgr.addTargetImagesForFile(file)
-        file.save()
         return file
 
     @rbac(can_write_image)
