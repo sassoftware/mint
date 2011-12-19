@@ -628,6 +628,7 @@ class JobHandlerRegistry(HandlerRegistry):
                     target = target,
                     target_system_id = targetSystem.target_system_id
                 )
+                self.mgr.mgr.postSystemLaunch(realSystem)
                 results.append(realSystem)
 
             return results

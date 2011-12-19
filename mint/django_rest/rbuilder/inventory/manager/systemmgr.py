@@ -119,12 +119,12 @@ class SystemManager(basemanager.BaseManager):
     @exposed
     def getEventTypes(self):
         EventTypes = jobmodels.EventTypes()
-        EventTypes.event_type = list(jobmodels.EventType.objects.all())
+        EventTypes.event_type = list(models.Cache.all(jobmodels.EventType))
         return EventTypes
 
     @exposed
     def getEventType(self, event_type_id):
-        eventType = jobmodels.EventType.objects.get(pk=event_type_id)
+        eventType = models.Cache.get(jobmodels.EventType, pk=int(event_type_id))
         return eventType
     
     @exposed
@@ -139,13 +139,13 @@ class SystemManager(basemanager.BaseManager):
 
     @exposed
     def getZone(self, zone_id):
-        zone = zmodels.Zone.objects.get(pk=zone_id)
+        zone = models.Cache.get(zmodels.Zone, pk=int(zone_id))
         return zone
 
     @exposed
     def getLocalZone(self):
         "Return the zone for this rBuilder"
-        zone = zmodels.Zone.objects.get(name=zmodels.Zone.LOCAL_ZONE)
+        zone = models.Cache.get(zmodels.Zone, name=zmodels.Zone.LOCAL_ZONE)
         return zone
 
     @exposed
@@ -156,7 +156,7 @@ class SystemManager(basemanager.BaseManager):
     @exposed
     def getZones(self):
         Zones = zmodels.Zones()
-        Zones.zone = list(zmodels.Zone.objects.all())
+        Zones.zone = list(models.Cache.all(zmodels.Zone))
         return Zones
 
     @exposed
@@ -269,13 +269,15 @@ class SystemManager(basemanager.BaseManager):
 
     @exposed
     def getManagementInterface(self, management_interface_id):
-        managementInterface = models.ManagementInterface.objects.get(pk=management_interface_id)
+        managementInterface = models.Cache.get(models.ManagementInterface,
+                pk=int(management_interface_id))
         return managementInterface
 
     @exposed
     def getManagementInterfaces(self):
         ManagementInterfaces = models.ManagementInterfaces()
-        ManagementInterfaces.management_interface = list(models.ManagementInterface.objects.all())
+        ManagementInterfaces.management_interface = models.Cache.all(
+            models.ManagementInterface)
         return ManagementInterfaces
     
     @exposed
@@ -333,7 +335,7 @@ class SystemManager(basemanager.BaseManager):
 
     @exposed
     def getManagementNodeForZone(self, zone_id, management_node_id):
-        zone = zmodels.Zone.objects.get(pk=zone_id)
+        zone = self.getZone(zone_id)
         managementNode = models.ManagementNode.objects.get(zone=zone, pk=management_node_id)
         return managementNode
     
@@ -422,8 +424,7 @@ class SystemManager(basemanager.BaseManager):
     def addWindowsBuildService(self, name, description, network_address):
         log.info("Adding Windows Build Service with name '%s', description '%s', and network address '%s'" % (name, description, network_address))
         system = models.System(name=name, description=description)
-        system.current_state = self.mgr.sysMgr.systemState(
-            models.SystemState.UNMANAGED)
+        system.current_state = self.systemState(models.SystemState.UNMANAGED)
         system.managing_zone = self.getLocalZone()
         system.management_interface = models.ManagementInterface.objects.get(pk=1)
         system.system_type = self.getWindowsBuildServiceSystemType()
@@ -438,18 +439,19 @@ class SystemManager(basemanager.BaseManager):
 
     @exposed
     def getSystemState(self, system_state_id):
-        systemState = models.SystemState.objects.get(pk=system_state_id)
+        systemState = models.Cache.get(models.SystemState, pk=int(system_state_id))
         return systemState
 
     @exposed
     def getSystemStates(self):
         SystemStates = models.SystemStates()
-        SystemStates.system_state = list(models.SystemState.objects.all())
+        SystemStates.system_state = list(models.Cache.all(models.SystemState))
         return SystemStates
 
     @classmethod
     def systemState(cls, stateName):
-        return models.SystemState.objects.get(name = stateName)
+        return models.Cache.get(models.SystemState,
+            name=stateName)
 
     def _getProductVersionAndStage(self, nvf):
         name, version, flavor = nvf
@@ -1004,11 +1006,20 @@ class SystemManager(basemanager.BaseManager):
             network = models.Network(dns_name=dnsName,
                             active=True)
             system.networks.add(network)
-        else:
-            self.scheduleLaunchWaitForNetworkEvent(system)
         self.log_system(system, "System launched in target %s (%s)" %
             (target.name, target.target_type.name))
-        self.addSystem(system, for_user=for_user)
+        system.system_state = self.systemState(models.SystemState.UNMANAGED)
+        self.addSystem(system, for_user=for_user,
+            withManagementInterfaceDetection=False)
+        return system
+
+    @exposed
+    def postSystemLaunch(self, system):
+        network = self.extractNetworkToUse(system)
+        if network is None:
+            self.scheduleLaunchWaitForNetworkEvent()
+            return system
+        self.setSystemState(system)
         return system
 
     def _getCredentialsForUser(self, target):
