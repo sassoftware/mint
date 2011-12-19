@@ -28,6 +28,7 @@ from django.db import IntegrityError
 
 import logging
 import traceback
+import sys
 log = logging.getLogger(__name__)
 
 # how to add a new queryset resouce type
@@ -323,80 +324,113 @@ class QuerySetManager(basemanager.BaseManager):
         method = self._tagMethod(querySet)
         method(resources, querySet, self._transitiveMethod())
 
-    def _tagGeneric(self, resources, queryset, inclusionMethod, tagClass, field):
-        '''
-        store that a given query tag matched the system 
-        for caching purposes
-        '''
-        
-        if len(resources) == 0:
-            return
-        
-        if inclusionMethod.name != 'chosen':
-            tagClass.objects.filter(
-                query_set = queryset,
-                inclusion_method = inclusionMethod
-            ).delete()
+    def _tagGeneric(self, querySet, tagTableName, tagResourceField, inclusionMethod, resources):
 
+        if type(resources) == list and len(resources) == 0:
+            return 
+
+        cu = connection.cursor()
+
+        cu.execute("""
+           CREATE TEMPORARY TABLE tmp_queryset_tags (
+              query_set_id INT,
+              resource_id BIGINT,
+              inclusion_method_id INT
+           )
+        """)
+        try:
+            self._tagGeneric_internal(
+                querySet, tagTableName, tagResourceField, inclusionMethod, resources
+            )
+        except:
+            exc = sys.exc_info()
+            try:
+                self.mgr.rollback()
+            except:
+                pass
+            raise exc[0], exc[1], exc[2]
+        finally:
+            cu.execute("DROP TABLE tmp_queryset_tags")    
+
+    def _tagGeneric_internal(self, querySet, tagTableName, tagResourceField, 
+        inclusionMethod, resources):
+
+        sqlKeys = {
+            'inclusionMethod'      : inclusionMethod.pk,
+            'tagTableName'         : tagTableName,
+            'tagResourceFieldName' : tagResourceField,
+            'querySet'             : querySet.pk
+        }
+
+        cu = connection.cursor()
+
+        # put all resources to possibly add in the temp table
         insertParams = None
         if type(resources) == list:
             # inserting chosens, should be a small quantity
-            insertParams = [r.pk for r in resources]
+            insertParams = [(querySet.pk, r.pk, inclusionMethod.pk) for r in resources]
         else:
-            insertParams = resources.values_list('pk', flat=True)
+            insertParams = [(querySet.pk, r, inclusionMethod.pk) for r in resources.values_list('pk', flat=True)]
+        query = """
+            INSERT into tmp_queryset_tags (query_set_id, resource_id, inclusion_method_id) VALUES (%s, %s, %s)
+        """ 
+        cu.executemany(query, insertParams)
 
-        # should be a nice bulk insert but unrolling to avoid
-        # some Django-ey problems, cleanup later
-        for x in insertParams:
-            fname = "%s_id" % field
-            kwargs = {}
-            kwargs[fname] = x
-            kwargs['query_set'] = queryset    
-            kwargs['inclusion_method'] = inclusionMethod
-            (pk, created) = tagClass.objects.get_or_create(
-               **kwargs
-            )
+        # add tmp table rows to the real table if they are not already there
+        cmd = """
+           INSERT INTO %(tagTableName)s (query_set_id, %(tagResourceFieldName)s, inclusion_method_id)
+              SELECT t.query_set_id, t.resource_id, t.inclusion_method_id
+                  FROM tmp_queryset_tags AS t
+                  WHERE NOT EXISTS (
+                     SELECT 1 
+                          FROM %(tagTableName)s
+                          WHERE %(tagResourceFieldName)s = t.resource_id 
+                          AND   inclusion_method_id = t.inclusion_method_id
+                          AND   query_set_id = t.query_set_id
+                     )
+        """ % sqlKeys
+        cu.execute(cmd)
+
+        # if the queryset mode is not chosen, delete entries that are not in the temp
+        # table, because they have fallen out of the queryset
+        if inclusionMethod.name != 'chosen':
+            cu.execute("""
+                DELETE FROM %(tagTableName)s WHERE
+                     query_set_id = %(querySet)s AND
+                     inclusion_method_id = %(inclusionMethod)s AND
+                     NOT EXISTS (
+                         SELECT 1 
+                             FROM tmp_queryset_tags
+                             WHERE tmp_queryset_tags.resource_id = %(tagResourceFieldName)s
+                             AND tmp_queryset_tags.query_set_id = query_set_id
+                             AND tmp_queryset_tags.inclusion_method_id = inclusion_method_id
+                     )
+            """ % sqlKeys)
 
 
-    def _tagSystems(self, resources, tag, inclusionMethod):
-        self._tagGeneric(resources, tag, inclusionMethod,
-           tagClass=models.SystemTag,
-           field='system')
+    def _tagSystems(self, resources, qs, inclusionMethod):
+        self._tagGeneric(qs, 'querysets_systemtag', 'system_id', inclusionMethod, resources)
 
-    def _tagTargets(self, resources, tag, inclusionMethod):
-        self._tagGeneric(resources, tag, inclusionMethod,
-           tagClass=models.TargetTag,
-           field='target')
+    def _tagTargets(self, resources, qs, inclusionMethod):
+        self._tagGeneric(qs, 'querysets_targettag', 'target_id', inclusionMethod, resources)
 
-    def _tagUsers(self, resources, tag, inclusionMethod):
-        self._tagGeneric(resources, tag, inclusionMethod,
-           tagClass=models.UserTag,
-           field='user')
+    def _tagUsers(self, resources, qs, inclusionMethod):
+        self._tagGeneric(qs, 'querysets_usertag', 'user_id', inclusionMethod, resources)
 
-    def _tagProjects(self, resources, tag, inclusionMethod):
-        self._tagGeneric(resources, tag, inclusionMethod,
-           tagClass=models.ProjectTag,
-           field='project')
+    def _tagProjects(self, resources, qs, inclusionMethod):
+        self._tagGeneric(qs, 'querysets_projecttag', 'project_id', inclusionMethod, resources)
 
-    def _tagStages(self, resources, tag, inclusionMethod):
-        self._tagGeneric(resources, tag, inclusionMethod,
-           tagClass=models.StageTag,
-           field='stage')
+    def _tagStages(self, resources, qs, inclusionMethod):
+        self._tagGeneric(qs, 'querysets_stagetag', 'stage_id', inclusionMethod, resources)
 
-    def _tagRoles(self, resources, tag, inclusionMethod):
-        self._tagGeneric(resources, tag, inclusionMethod,
-           tagClass=models.RoleTag,
-           field='role')
+    def _tagRoles(self, resources, qs, inclusionMethod):
+        self._tagGeneric(qs, 'querysets_roletag', 'role_id', inclusionMethod, resources)
 
-    def _tagGrants(self, resources, tag, inclusionMethod):
-        self._tagGeneric(resources, tag, inclusionMethod,
-           tagClass=models.PermissionTag,
-           field='permission')
+    def _tagGrants(self, resources, qs, inclusionMethod):
+        self._tagGeneric(qs, 'querysets_permissiontag', 'permission_id', inclusionMethod, resources)
     
-    def _tagImages(self, resources, tag, inclusionMethod):
-        self._tagGeneric(resources, tag, inclusionMethod,
-           tagClass=models.ImageTag,
-           field='image')
+    def _tagImages(self, resources, qs, inclusionMethod):
+        self._tagGeneric(qs, 'querysets_imagetag', 'image_id', inclusionMethod, resources)
 
     def filterQuerySet(self, querySet):
         '''Return resources matching specific filter criteria'''
