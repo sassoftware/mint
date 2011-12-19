@@ -1,8 +1,7 @@
 #
-# Copyright (c) 2010, 2011 rPath, Inc.
+# Copyright (c) 2011 rPath, Inc.
 #
-# All Rights Reserved
-#
+
 import os
 import logging
 import traceback
@@ -100,7 +99,7 @@ class ExceptionLoggerMiddleware(BaseMiddleware):
             log.error(str(exception))
             return response
 
-        if isinstance(exception, (errors.RbuilderError, IntegrityError)):
+        if isinstance(exception, errors.RbuilderError):
             tbStr = getattr(exception, 'traceback', None)
             status = getattr(exception.__class__, 'status', 500)
             fault = models.Fault(code=status, message=str(exception), traceback=tbStr)
@@ -108,6 +107,12 @@ class ExceptionLoggerMiddleware(BaseMiddleware):
             response.content = fault.to_xml(request)
             log.error(str(exception))
             return response
+
+        if isinstance(exception, IntegrityError):
+            # IntegrityError is a bug but right now we're using it as a crutch
+            # to not send tracebacks when there's an uncaught conflict.
+            return handler.handleException(request, exception,
+                    doTraceback=False, doEmail=False)
 
         return handler.handleException(request, exception)
 
