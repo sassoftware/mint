@@ -1017,7 +1017,7 @@ class SystemManager(basemanager.BaseManager):
     def postSystemLaunch(self, system):
         network = self.extractNetworkToUse(system)
         if network is None:
-            self.scheduleLaunchWaitForNetworkEvent()
+            self.scheduleLaunchWaitForNetworkEvent(system)
             return system
         self.setSystemState(system)
         return system
