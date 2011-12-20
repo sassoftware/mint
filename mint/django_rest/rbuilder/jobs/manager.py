@@ -317,7 +317,7 @@ class DescriptorJobHandler(BaseJobHandler, ResultsProcessingMixIn):
         # relationship
         job._relatedResource = self.getRelatedResource(descriptor)
         job._relatedThroughModel = self.getRelatedThroughModel(descriptor)
-	descriptorDataObj = self._processDescriptor(descriptor, descriptorDataXml)
+        descriptorDataObj = self._processDescriptor(descriptor, descriptorDataXml)
 
         descrXml = self._serializeDescriptor(descriptor)
         job._descriptor = descrXml

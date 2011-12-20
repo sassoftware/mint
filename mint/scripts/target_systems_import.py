@@ -18,11 +18,8 @@ from mint.db import database
 from mint import config
 from catalogService.rest.database import RestDatabase
 from mint.lib import scriptlibrary
-from xobj import xobj
 
 from mint.django_rest.rbuilder.manager import rbuildermanager
-from mint.django_rest.rbuilder.jobs import models as jobmodels
-from mint.django_rest.rbuilder import modellib
 
 from mint import users
 from mint.rest.db import authmgr
