@@ -379,7 +379,6 @@ class _TargetDescriptorJobHandler(DescriptorJobHandler):
         match = self._splitDescriptorId(descriptorId)
         targetId = int(match.kwargs['target_id'])
         self._setTarget(targetId)
-        self._setTarget(targetId)
         descr = self._getDescriptorMethod()(targetId)
         return descr
 
