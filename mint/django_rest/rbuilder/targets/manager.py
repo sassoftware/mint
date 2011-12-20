@@ -76,12 +76,26 @@ class TargetsManager(basemanager.BaseManager, CatalogServiceHelper):
 
     def _getTargetCredentialsForCurrentUser(self, target):
         userId = self.auth.userId
+        return self._getTargetCredentialsForUser(target, userId)
+
+    def _getTargetCredentialsForUser(self, target, user):
+        if isinstance(user, int):
+            userId = user
+        else:
+            userId = user.user_id
         creds = models.TargetCredentials.objects.filter(
             target_user_credentials__target=target,
             target_user_credentials__user__user_id=userId)
         if not creds:
             return None
         return creds[0]
+
+    @exposed
+    def getTargetCredentialsForUser(self, target, user):
+        creds = self._getTargetCredentialsForUser(target, user)
+        if creds is None:
+            return None
+        return mintdata.unmarshalTargetUserCredentials(creds.credentials)
 
     @exposed
     def getTargetCredentialsForCurrentUser(self, target):

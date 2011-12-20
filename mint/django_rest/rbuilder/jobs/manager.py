@@ -287,12 +287,28 @@ class DescriptorJobHandler(BaseJobHandler, ResultsProcessingMixIn):
 
     def extractDescriptorData(self, job):
         "Executed when the job is created"
-        descriptorId = job.descriptor.id
-        # Strip the server-side portion
-        descriptorId = urlparse.urlsplit(descriptorId).path
-        descriptorDataXobj = job.descriptor_data
-        descriptorDataXml = xobj.toxml(descriptorDataXobj)
-        descriptor = self.getDescriptor(descriptorId)
+
+        descriptor = None
+        descriptorDataObj = None
+        descriptorId = 1
+        descriptorDataXml = ''
+        descriptorDataObj = None
+
+        if isinstance(job.descriptor, smartdescriptor.ConfigurationDescriptor):
+            # path for direct python API usage, such as target system import
+            # not yet patched up for supplying descriptor data
+            descriptorDataXobj = job.descriptor_data
+            descriptorDataXml = xobj.toxml(descriptorDataXobj)
+            descriptor        = job.descriptor
+            descriptorDataObj = None
+            descriptor        = self.getDescriptor(job.descriptor.id)
+        else:
+            descriptorId = job.descriptor.id
+            # Strip the server-side portion
+            descriptorId       = urlparse.urlsplit(descriptorId).path
+            descriptorDataXobj = job.descriptor_data
+            descriptorDataXml  = xobj.toxml(descriptorDataXobj)
+            descriptor         = self.getDescriptor(descriptorId)
 
         # Save the original URL for the descriptor
         self._setDescriptorId(descriptorId, descriptor)
@@ -301,11 +317,12 @@ class DescriptorJobHandler(BaseJobHandler, ResultsProcessingMixIn):
         # relationship
         job._relatedResource = self.getRelatedResource(descriptor)
         job._relatedThroughModel = self.getRelatedThroughModel(descriptor)
+	descriptorDataObj = self._processDescriptor(descriptor, descriptorDataXml)
 
-        descriptorDataObj = self._processDescriptor(descriptor, descriptorDataXml)
         descrXml = self._serializeDescriptor(descriptor)
         job._descriptor = descrXml
         job._descriptor_data = descriptorDataXml
+
         return descriptor, descriptorDataObj
 
     def _setDescriptorId(self, descriptorId, descriptor):
@@ -401,18 +418,30 @@ class _TargetDescriptorJobHandler(DescriptorJobHandler):
             targetData)
         return targetConfiguration
 
-    def _buildTargetCredentialsFromDb(self, cli):
-        creds = self.mgr.mgr.getTargetCredentialsForCurrentUser(self.target)
+    def _buildTargetCredentialsFromDb(self, cli, job):
+        if hasattr(job, '_user'):
+            creds = self.mgr.mgr.getTargetCredentialsForUser(self.target,
+                job._user.user_id)
+        else:
+            creds = self.mgr.mgr.getTargetCredentialsForCurrentUser(self.target)
         if creds is None:
             raise errors.InvalidData()
-        return self._buildTargetCredentials(cli, creds)
+        return self._buildTargetCredentials(cli, job, creds)
 
-    def _buildTargetCredentials(self, cli, creds):
+    def _buildTargetCredentials(self, cli, job, creds):
+        if hasattr(job, '_user'):
+            rbUser = job._user.user_name
+            rbUserId = job._user.user_id
+            isAdmin = job._user.is_admin
+        else:
+            rbUser = self.mgr.auth.username
+            rbUserId = self.mgr.auth.userId
+            isAdmin = self.mgr.auth.admin
         userCredentials = cli.targets.TargetUserCredentials(
             credentials=creds,
-            rbUser=self.mgr.auth.username,
-            rbUserId=self.mgr.auth.userId,
-            isAdmin=self.mgr.auth.admin)
+            rbUser=rbUser,
+            rbUserId=rbUserId,
+            isAdmin=isAdmin)
         return userCredentials
 
 
@@ -430,7 +459,7 @@ class JobHandlerRegistry(HandlerRegistry):
         def getRepeaterMethod(self, cli, job):
             self.descriptor, self.descriptorData = self.extractDescriptorData(job)
             targetConfiguration = self._buildTargetConfigurationFromDb(cli)
-            targetUserCredentials = self._buildTargetCredentialsFromDb(cli)
+            targetUserCredentials = self._buildTargetCredentialsFromDb(cli, job)
             zone = self.mgr.mgr.getTargetZone(self.target)
             cli.targets.configure(zone.name, targetConfiguration,
                 targetUserCredentials)
@@ -520,7 +549,7 @@ class JobHandlerRegistry(HandlerRegistry):
         def getRepeaterMethod(self, cli, job):
             self.extractDescriptorData(job)
             targetConfiguration = self._buildTargetConfigurationFromDb(cli)
-            targetUserCredentials = self._buildTargetCredentialsFromDb(cli)
+            targetUserCredentials = self._buildTargetCredentialsFromDb(cli, job)
             zone = self.mgr.mgr.getTargetZone(self.target)
             cli.targets.configure(zone.name, targetConfiguration,
                 targetUserCredentials)
@@ -754,7 +783,7 @@ class JobHandlerRegistry(HandlerRegistry):
             creds = dict((k.getName(), k.getValue())
                 for k in self.descriptorData.getFields())
             targetConfiguration = self._buildTargetConfigurationFromDb(cli)
-            targetUserCredentials = self._buildTargetCredentials(cli, creds)
+            targetUserCredentials = self._buildTargetCredentials(cli, job, creds)
             zone = self.mgr.mgr.getTargetZone(self.target)
             cli.targets.configure(zone.name, targetConfiguration,
                 targetUserCredentials)
@@ -797,7 +826,7 @@ class JobHandlerRegistry(HandlerRegistry):
         def getRepeaterMethod(self, cli, job):
             self.descriptor, self.descriptorData = self.extractDescriptorData(job)
             targetConfiguration = self._buildTargetConfigurationFromDb(cli)
-            targetUserCredentials = self._buildTargetCredentialsFromDb(cli)
+            targetUserCredentials = self._buildTargetCredentialsFromDb(cli, job)
             zone = self.mgr.mgr.getTargetZone(self.target)
             cli.targets.configure(zone.name, targetConfiguration,
                 targetUserCredentials)

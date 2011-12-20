@@ -615,6 +615,7 @@ class XML(object):
 
 class CallProxy(object):
     __slots__ = []
+    prefix = None
     class _CallProxy(object):
         _callList = []
         # If we set _callReturn to a lambda, it will be interpreted as a
@@ -622,8 +623,11 @@ class CallProxy(object):
         _callReturn = []
         #_callData = namedtuple("CallData", "name args kwargs retval")
         _callData = namedtuple("CallData", "name args kwargs")
-        def __init__(self, name):
-            self._name = name
+        def __init__(self, name, prefix=None):
+            if prefix is not None:
+                self._name = "%s.%s" % (prefix, name)
+            else:
+                self._name = name
 
         def __repr__(self):
             return "<%s for  %s>" % (self.__class__.__name__, self._name)
@@ -638,7 +642,7 @@ class CallProxy(object):
             return ret
 
     def __getattr__(self, name):
-        return self._CallProxy(name)
+        return self._CallProxy(name, prefix=self.prefix)
 
     def reset(self):
         del self._CallProxy._callList[:]
@@ -649,28 +653,42 @@ class CallProxy(object):
     def getCallList(self):
         return self._CallProxy._callList[:]
 
-class RepeaterClient(CallProxy):
-    class CimParams(object):
-        def __init__(self, **kwargs):
-            self.__dict__.update(kwargs)
-        def __eq__(self, other):
-            return self.__dict__ == other.__dict__
-        def __repr__(self):
-            return repr(self.__dict__)
+class _StorageObject(object):
+    def __init__(self, **kwargs):
+        self.__dict__.update(kwargs)
+    def __eq__(self, other):
+        return self.__dict__ == other.__dict__
+    def __repr__(self):
+        return repr(self.__dict__)
 
+class _SlotStorageObject(object):
+    __slots__ = []
+    def __init__(self, *args, **kwargs):
+        for slotName, slotVal in zip(self.__slots__, args):
+            setattr(self, slotName, slotVal)
+        for slotName in self.__slots__:
+            if slotName in kwargs:
+                setattr(self, slotName, kwargs[slotName])
+
+class Targets(CallProxy):
+    prefix = 'targets'
+    class TargetConfiguration(_SlotStorageObject):
+        __slots__ = ['targetType', 'targetName', 'alias', 'config',]
+    class TargetUserCredentials(_SlotStorageObject):
+        __slots__ = ['rbUser', 'rbUserId', 'isAdmin', 'credentials', ]
+
+class RepeaterClient(CallProxy):
+    class CimParams(_StorageObject):
+        pass
     class WmiParams(CimParams):
         pass
-
     class ManagementInterfaceParams(CimParams):
         pass
 
-    class ResultsLocation(object):
-        def __init__(self, **kwargs):
-            self.__dict__.update(kwargs)
-        def __eq__(self, other):
-            return self.__dict__ == other.__dict__
-        def __repr__(self):
-            return repr(self.__dict__)
+    class ResultsLocation(_StorageObject):
+        pass
+
+    targets = Targets()
 
     def getJob(self, uuid):
         job = RmakeJob(uuid, 200, "status text", "status detail", True)

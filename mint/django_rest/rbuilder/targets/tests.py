@@ -497,7 +497,7 @@ class JobCreationTest(BaseTargetsTest, RepeaterMixIn):
 
         calls = self.mgr.repeaterMgr.repeaterClient.getCallList()
         self.failUnlessEqual([ x.name for x in calls ],
-            ['targets.TargetConfiguration', 'targets.configure', 'targets.checkCreate'])
+            ['targets.configure', 'targets.checkCreate'])
         realCall = calls[-1]
         self.failUnlessEqual(realCall.args, ())
         self.failUnlessEqual(realCall.kwargs, {})
@@ -596,7 +596,7 @@ class JobCreationTest(BaseTargetsTest, RepeaterMixIn):
 
         calls = self.mgr.repeaterMgr.repeaterClient.getCallList()
         self.failUnlessEqual([ x.name for x in calls ],
-            ['targets.TargetConfiguration', 'targets.configure', 'targets.checkCreate'])
+            ['targets.configure', 'targets.checkCreate'])
         realCall = calls[-1]
         self.failUnlessEqual(realCall.args, ())
         self.failUnlessEqual(realCall.kwargs, {})
@@ -736,8 +736,7 @@ class JobCreationTest(BaseTargetsTest, RepeaterMixIn):
 
         calls = self.mgr.repeaterMgr.repeaterClient.getCallList()
         self.failUnlessEqual([ x.name for x in calls ],
-            ['targets.TargetConfiguration', 'targets.TargetUserCredentials',
-                'targets.configure', 'targets.checkCredentials'])
+            ['targets.configure', 'targets.checkCredentials'])
         realCall = calls[-1]
         self.failUnlessEqual(realCall.args, ())
         self.failUnlessEqual(realCall.kwargs, {})
@@ -870,8 +869,7 @@ class JobCreationTest(BaseTargetsTest, RepeaterMixIn):
 
         calls = self.mgr.repeaterMgr.repeaterClient.getCallList()
         self.failUnlessEqual([ x.name for x in calls ],
-            ['targets.TargetConfiguration', 'targets.TargetUserCredentials',
-                'targets.configure', 'targets.listImages'])
+            ['targets.configure', 'targets.listImages'])
         realCall = calls[-1]
         self.failUnlessEqual(realCall.args, ())
         self.failUnlessEqual(realCall.kwargs, {})
@@ -1047,8 +1045,7 @@ class JobCreationTest(BaseTargetsTest, RepeaterMixIn):
 
         calls = self.mgr.repeaterMgr.repeaterClient.getCallList()
         self.failUnlessEqual([ x.name for x in calls ],
-            ['targets.TargetConfiguration', 'targets.TargetUserCredentials',
-                'targets.configure', 'targets.listInstances'])
+            ['targets.configure', 'targets.listInstances'])
         realCall = calls[-1]
         self.failUnlessEqual(realCall.args, ())
         self.failUnlessEqual(realCall.kwargs, {})
@@ -1290,7 +1287,6 @@ class JobCreationTest(BaseTargetsTest, RepeaterMixIn):
         calls = self.mgr.repeaterMgr.repeaterClient.getCallList()
         self.failUnlessEqual([ x.name for x in calls ],
             [
-                'targets.TargetConfiguration', 'targets.TargetUserCredentials',
                 'targets.configure', 'targets.captureSystem',
             ])
         realCall = calls[-1]
@@ -1670,7 +1666,6 @@ class JobCreationTest(BaseTargetsTest, RepeaterMixIn):
         calls = self.mgr.repeaterMgr.repeaterClient.getCallList()
         self.failUnlessEqual([ x.name for x in calls ],
             [
-                'targets.TargetConfiguration', 'targets.TargetUserCredentials',
                 'targets.configure', 'targets.deployImage',
             ])
         realCall = calls[-1]
@@ -1773,7 +1768,6 @@ class JobCreationTest(BaseTargetsTest, RepeaterMixIn):
         calls = self.mgr.repeaterMgr.repeaterClient.getCallList()
         self.failUnlessEqual([ x.name for x in calls ],
             [
-                'targets.TargetConfiguration', 'targets.TargetUserCredentials',
                 'targets.configure', 'targets.launchSystem',
             ])
         realCall = calls[-1]

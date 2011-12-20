@@ -4059,7 +4059,7 @@ class SystemEventProcessing2TestCase(XMLTestCase, test_utils.RepeaterMixIn):
                 ),
             ])
 
-class TargetSystemImportTest(XMLTestCase):
+class TargetSystemImportTest(XMLTestCase, test_utils.RepeaterMixIn):
     fixtures = ['users', 'targets']
 
     class Driver(object):
@@ -4089,6 +4089,7 @@ class TargetSystemImportTest(XMLTestCase):
 
     def setUp(self):
         XMLTestCase.setUp(self)
+        test_utils.RepeaterMixIn.setUpRepeaterClient(self)
 
         TI = self.TargetInstance
 
@@ -4183,83 +4184,24 @@ class TargetSystemImportTest(XMLTestCase):
         nw.save()
 
     def testImportTargetSystems(self):
-        self.mgr.sysMgr.importTargetSystems(self.drivers)
-        # Make sure these systems have lost their target
-        self.failUnlessEqual(models.System.objects.get(
-            target_system_id='vsphere1-002').target, None)
-        self.failUnlessEqual(models.System.objects.get(
-            target_system_id='ec2aws-002').target, None)
-
-        for (targetTypeName, targetName, userName, tsystems) in self._targets:
-            targetType = targetmodels.TargetType.objects.get(name=targetTypeName)
-            tgt = targetmodels.Target.objects.get(target_type=targetType,
-                name=targetName)
-            for tsystem in tsystems:
-                # Make sure we linked this system to the target
-                system = models.System.objects.get(target=tgt,
-                    target_system_id=tsystem.instanceId.getText())
-                # Make sure we linked it to the user too
-                cred_ids = set(x.credentials_id
-                    for x in system.target_credentials.all())
-                try:
-                    tuc = targetmodels.TargetUserCredentials.objects.get(
-                        target=tgt, user__user_name = userName)
-                except targetmodels.TargetUserCredentials.DoesNotExist:
-                    self.fail("System %s not linked to user %s" % (
-                        system.target_system_id, userName))
-                self.failUnlessIn(
-                    tuc.target_credentials_id,
-                    cred_ids)
-                self.failUnlessEqual([
-                    x.dns_name for x in system.networks.all() ],
-                    [ tsystem.dnsName.getText() ])
-
-        # Make sure we can re-run
-        self.mgr.sysMgr.importTargetSystems(self.drivers)
-
-        # Use the API, make sure the fields come out right
-        system = models.System.objects.get(target_system_id='vsphere1-001')
-        # Fetch XML
-        response = self._get('inventory/systems/%d/' % system.system_id,
-            username="admin", password="password")
-        self.assertEquals(response.status_code, 200)
-        obj = xobj.parse(response.content)
-        xobjmodel = obj.system
-        self.failUnlessEqual(xobjmodel.name, 'vsphere1 001')
-        self.failUnlessEqual(xobjmodel.target_system_id, 'vsphere1-001')
-        self.failUnlessEqual(xobjmodel.target_system_name, 'Instance 1')
-        self.failUnlessEqual(xobjmodel.target_system_description,
-            'Instance desc 1')
-        self.failUnlessEqual(xobjmodel.target_system_state, 'running')
-        self.failUnlessEqual(xobjmodel.networks.network.dns_name, 'dnsName1-001')
-
-        # Check system log entries
-        system = models.System.objects.get(target_system_id='vsphere2-003')
-        entries = self.mgr.getSystemLogEntries(system)
+        jobs = self.mgr.sysMgr.importTargetSystems()
         self.failUnlessEqual(
-            [ x.entry for x in entries ],
+            [ [ y.target.name for y in x.target_jobs.all() ] for x in jobs ],
             [
-                'vsphere2.eng.rpath.com (vmware): using dnsName2-003 as primary contact address',
-                'vsphere2.eng.rpath.com (vmware): removing stale network information vsphere2-003 (ip unset)',
+                ['vsphere2.eng.rpath.com'],
+                ['vsphere1.eng.rpath.com'],
+                ['vsphere2.eng.rpath.com'],
+                ['aws'],
             ])
-        # Make sure we didn't overwrite the name with the one coming from the
-        # target
-        self.failUnlessEqual(system.name, "vsphere2 003")
 
-        system = models.System.objects.get(target_system_id='vsphere1-004')
-        entries = self.mgr.getSystemLogEntries(system)
-        self.failUnlessEqual(
-            [ x.entry for x in entries[1:] ],
-            [
-                'vsphere1.eng.rpath.com (vmware): using dnsName1-004 as primary contact address',
-                'System added as part of target vsphere1.eng.rpath.com (vmware)',
-            ])
-        self.failUnless(entries[0].entry.startswith("Event type 'immediate system detect management interface' registered and will be enabled on "))
-        # Make sure the zone is set
-        self.failUnlessEqual(system.managing_zone.name, 'Local rBuilder')
-        # Make sure we did set name, description etc
-        self.failUnlessEqual(system.name, system.target_system_name)
-        self.failUnlessEqual(system.description, system.target_system_description)
+        calls = self.mgr.repeaterMgr.repeaterClient.getCallList()
+        self.failUnlessEqual([ x.name for x in calls ],
+            ['targets.configure', 'targets.listInstances'] * 4)
+        realCall = calls[-1]
+        self.failUnlessEqual(realCall.args, ())
+        self.failUnlessEqual(realCall.kwargs, {})
+        self.mgr.repeaterMgr.repeaterClient.reset()
+
 
     def testIsManageable(self):
         # First, make sure these two users have the same credentials

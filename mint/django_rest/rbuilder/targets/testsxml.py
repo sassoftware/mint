@@ -305,7 +305,7 @@ all_target_jobs_GET = \
 """.strip()
 
 job_xml_with_artifacts="""
-<job id="http://testserver/api/v1/jobs/uuid003">
+<job id="http://testserver/api/v1/jobs/uuid001">
   <created_resources>
      <image id="http://testserver/api/v1/images/9"/>
   </created_resources>
@@ -321,13 +321,13 @@ job_xml_with_artifacts="""
   <job_description>Deploy image on target</job_description>
   <time_created>2011-12-06T18:54:26.784998+00:00</time_created>
   <status_text>Some status here</status_text>
-  <job_uuid>uuid003</job_uuid>
+  <job_uuid>uuid001</job_uuid>
   <systems/>
 </job>
 """
 
 job_created_system="""
-<job id="http://testserver/api/v1/jobs/uuid003">
+<job id="http://testserver/api/v1/jobs/uuid001">
   <time_updated>2011-12-08T21:52:25.223096+00:00</time_updated>
   <status_code>200</status_code>
   <job_state id="http://testserver/api/v1/job_states/3">Completed</job_state>
@@ -342,7 +342,7 @@ job_created_system="""
   <systems/>
   <time_created>2011-12-08T21:52:25.222999+00:00</time_created>
   <status_text>Some status here</status_text>
-  <job_uuid>uuid003</job_uuid>
+  <job_uuid>uuid001</job_uuid>
   <job_description>Launch system on target</job_description>
 </job>
 """

@@ -126,7 +126,11 @@ class SystemManager(basemanager.BaseManager):
     def getEventType(self, event_type_id):
         eventType = models.Cache.get(jobmodels.EventType, pk=int(event_type_id))
         return eventType
-    
+
+    @exposed
+    def getEventTypeByName(self, eventTypeName):
+        return models.Cache.get(jobmodels.EventType, name=eventTypeName)
+
     @exposed
     def updateEventType(self, event_type):
         """Update an event type"""
@@ -1724,20 +1728,39 @@ class SystemManager(basemanager.BaseManager):
                 
         return hasInfo
 
-    @exposed
-    def importTargetSystems(self, targetDrivers):
-        if not targetDrivers:
-            log.info("No targets found, nothing to import")
-            return
+    def _iterTargetUserCredentials(self):
+        "Iterate over all configured targets that have credentials"
+        uqmap = dict()
+        # We need to build a unique map of credentials for users
+        for tuc in targetmodels.TargetUserCredentials.objects.all():
+            uqmap[(tuc.target_id, tuc.target_credentials_id)] = tuc
+        for tuc in uqmap.values():
+            yield tuc
 
-        t0 = time.time()
-        targetsData = self.collectTargetsData(targetDrivers)
-        inventoryData = self.collectInventoryTargetsData()
-        todelete, toupdate = targetsData.deltaSystems(inventoryData)
-        self._disassociateFromTargets(todelete)
-        self._addSystemsToTargets(toupdate)
-        log.info("Import of systems from all targets completed in %.2f seconds" % (
-            time.time() - t0))
+    def _importTargetSystemsForTUC(self, targetUserCredentials):
+        jobType = self.getEventTypeByName(jobmodels.EventType.TARGET_REFRESH_SYSTEMS)
+        target = targetUserCredentials.target
+        job = jobmodels.Job(job_type=jobType)
+        # This takes way too long, so let's manufacture the url by hand
+        # for now
+        #url = urlresolvers.reverse('TargetRefreshSystems', None,
+        #    (target.target_id, ))
+        job.descriptor = self.mgr.getDescriptorRefreshSystems(target.pk)
+        job.descriptor.id = ("/api/v1/targets/%s/descriptors/refresh_systems" %
+           target.target_id)
+        job.descriptor_data = xobj.parse('<descriptor_data/>').descriptor_data
+        # _user is not a field for job, but we want to bypass the
+        # whole auth thing here
+        job._user = targetUserCredentials.user
+        self.mgr.addJob(job)
+        return job
+
+    @exposed
+    def importTargetSystems(self):
+        jobs = []
+        for tuc in self._iterTargetUserCredentials():
+            jobs.append(self._importTargetSystemsForTUC(tuc))
+        return jobs
 
     def _disassociateFromTargets(self, objList):
         for (targetType, targetName), systemMap in objList:
