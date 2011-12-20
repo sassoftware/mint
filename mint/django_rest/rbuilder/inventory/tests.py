@@ -4305,12 +4305,13 @@ class TargetSystemImportTest(XMLTestCase):
         )
         dnsName = 'dns-name-1'
         system = self.newSystem(**params)
+        system.boot_uuid = bootUuid = str(self.uuid4())
+        system.ssl_client_certificate = "ssl client certificate 001"
+        system.ssl_client_key = "ssl client key 001"
         system = self.mgr.addLaunchedSystem(system,
             dnsName=dnsName,
             targetName=self.tgt2.name,
             targetType=self.tgt2.target_type)
-        system.ssl_client_certificate = "ssl client certificate 001"
-        system.ssl_client_key = "ssl client key 001"
         for k, v in params.items():
             self.failUnlessEqual(getattr(system, k), v)
         # Make sure we have credentials
@@ -4335,6 +4336,17 @@ class TargetSystemImportTest(XMLTestCase):
         self.failUnlessEqual(resp.status_code, 200)
         self.failUnlessIn('<launching_user id="http://testserver/api/v1/users/3">',
             resp.content)
+
+        # Make sure we've saved the boot uuid
+        cu = connection.cursor()
+        cu.execute("""
+            SELECT j.job_uuid
+              FROM job_system AS js
+              JOIN inventory_system AS invsys USING (system_id)
+              JOIN jobs AS j ON (js.job_id=j.job_id)
+             WHERE invsys.system_id = %s""", [ system.system_id ])
+        self.failUnlessEqual([ x[0] for x in cu ],
+            [ bootUuid, ])
 
         def repl(item, a, b):
             try:

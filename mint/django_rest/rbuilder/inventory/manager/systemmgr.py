@@ -974,9 +974,10 @@ class SystemManager(basemanager.BaseManager):
             system.project_branch_stage_id = sourceImage.project_branch_stage_id
         if system.managing_zone_id is None:
             system.managing_zone = self.getLocalZone()
-        # For bayonet, we only launch in the local zone
         oldModel, system = models.System.objects.load_or_create(system,
             withReadOnly=True)
+        # Add an old style job, to persist the boot uuid
+        self._addOldStyleJob(system)
         system.launching_user = self.user
         if for_user:
             system.created_by  = for_user
@@ -1012,6 +1013,21 @@ class SystemManager(basemanager.BaseManager):
         self.addSystem(system, for_user=for_user,
             withManagementInterfaceDetection=False)
         return system
+
+    def _addOldStyleJob(self, system):
+        if system.boot_uuid is None:
+            return
+        cu = connection.cursor()
+        now = self.now()
+        cu.execute("""
+            INSERT INTO jobs (job_uuid, job_type_id, job_state_id, created_by,
+                created, modified)
+            VALUES (%s, %s, %s, %s, %s, %s)""",
+            [ system.boot_uuid, 1, 3, self.user.user_id, now, now])
+        jobId = cu.lastrowid
+
+        cu.execute("INSERT INTO job_system (job_id, system_id) VALUES (%s, %s)",
+            [ jobId, system.pk ])
 
     @exposed
     def postSystemLaunch(self, system):
