@@ -1018,7 +1018,7 @@ class SystemManager(basemanager.BaseManager):
         if system.boot_uuid is None:
             return
         cu = connection.cursor()
-        now = self.now()
+        now = time.time() # self.now()
         cu.execute("""
             INSERT INTO jobs (job_uuid, job_type_id, job_state_id, created_by,
                 created, modified)
