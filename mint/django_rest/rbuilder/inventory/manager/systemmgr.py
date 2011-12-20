@@ -1024,7 +1024,8 @@ class SystemManager(basemanager.BaseManager):
                 created, modified)
             VALUES (%s, %s, %s, %s, %s, %s)""",
             [ system.boot_uuid, 1, 3, self.user.user_id, now, now])
-        jobId = cu.lastrowid
+        cu.execute("SELECT job_id FROM jobs WHERE job_uuid = %s", [ system.boot_uuid ])
+        jobId = cu.fetchone()[0]
 
         cu.execute("INSERT INTO job_system (job_id, system_id) VALUES (%s, %s)",
             [ jobId, system.pk ])
