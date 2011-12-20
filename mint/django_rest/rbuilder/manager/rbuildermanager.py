@@ -94,7 +94,7 @@ class RbuilderManager(basemanager.BaseRbuilderManager):
                     setattr(self, objName, obj)
 
     def enterTransactionManagement(self):
-        transaction.leave_transaction_management()
+        transaction.enter_transaction_management()
 
     def commit(self):
         if transaction.is_managed():
