@@ -528,13 +528,16 @@ class ImageManager(manager.Manager):
             return
         self.db.db.auth_tokens.removeTokenByImage(imageId)
         self.db.commit()
-   
+
         try:
+            self.db.djMgr.enterTransactionManagement()
             self.db.djMgr.finishImageBuild(imageId)
             self.db.djMgr.commit()
         except:
             self.db.djMgr.rollback()
             raise
+        finally:
+            self.db.djMgr.leaveTransactionManagement()
 
         imageType = self._getImageType(imageId)
         if imageType != buildtypes.AMI:
