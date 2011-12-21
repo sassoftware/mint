@@ -10,6 +10,7 @@ import re
 
 from mint import buildtypes
 from mint.lib import uuid
+from mint.lib import data as mintdata
 from mint.django_rest.test_utils import RepeaterMixIn
 from mint.django_rest.rbuilder.inventory import zones as zmodels
 from mint.django_rest.rbuilder.inventory import models as invmodels
@@ -75,7 +76,7 @@ class BaseTargetsTest(RbacEngine):
         jobUuid3 = 'rmakeuuid003'
         system = self._saveSystem()
         
-        user = self.getUser('ExampleDeveloper')
+        user = self.developer_user
 
         jobs = []
         jobs.append(self._newSystemJob(system, eventUuid1, jobUuid1,
@@ -100,20 +101,40 @@ class BaseTargetsTest(RbacEngine):
                     job=self.jobs[i], target=self.targets[j-1])       
         self.jobTargets = models.JobTarget.objects.all()
 
-        for i in range(3):
-            targetCredentials = models.TargetCredentials.objects.create(credentials='abc%s' % i)
-            models.TargetUserCredentials.objects.create(
-                target=sampleTargets[i],
-                user=umodels.User.objects.get(user_name='ExampleDeveloper'),
-                target_credentials=targetCredentials)
-                
+        targetCredentials = []
+        for i in range(2):
+            creds = dict(username="username-%s" % i, password="password-%s" % i)
+            targetCredentials.append(models.TargetCredentials.objects.create(
+                credentials=mintdata.marshalTargetUserCredentials(creds)))
+
+        u0 = user
+        u1 = self.intern_user
+        u2 = self.sysadmin_user
+        tc0 = targetCredentials[0]
+        tc1 = targetCredentials[1]
+        # Share some of the creds between targets
+        tucmap = [
+            [ (u0, tc0), (u1, tc1), (u2, tc0) ],
+            [ (u0, tc0), (u1, tc1), (u2, tc0) ],
+            [ (u0, tc0), (u1, tc1), (u2, tc0) ],
+        ]
+
+        for i, tucList in enumerate(tucmap):
+            tgt = sampleTargets[i]
+            for u, tc in tucList:
+                models.TargetUserCredentials.objects.create(
+                    target=tgt,
+                    user=u,
+                    target_credentials=tc)
+
         self.target_credentials = models.TargetCredentials.objects.all()
         self.target_user_credentials = models.TargetUserCredentials.objects.all()
+        self.mgr.user = user
 
     def _mock(self):
         tmgr = self.mgr.targetsManager
         fakeAuth = collections.namedtuple("FakeAuth", "userId")
-        self.mock(tmgr.mgr, '_auth', fakeAuth(1))
+        self.mock(tmgr.mgr, '_auth', fakeAuth(self.mgr.user.user_id))
 
     # invalidate the querysets so tags can be applied
     def _retagQuerySets(self):
@@ -128,12 +149,13 @@ class BaseTargetsTest(RbacEngine):
         role              = rbacmodels.RbacRole.objects.get(name='developer')
         self.all_targets  = querymodels.QuerySet.objects.get(name='All Targets')
         self.all_images   = querymodels.QuerySet.objects.get(name='All Images')
+        self.all_systems  = querymodels.QuerySet.objects.get(name='All Systems')
         modmembers        = rbacmodels.RbacPermissionType.objects.get(name='ModMembers')
         readset           = rbacmodels.RbacPermissionType.objects.get(name='ReadSet')
         createresource    = rbacmodels.RbacPermissionType.objects.get(name='CreateResource')
         admin             = usermodels.User.objects.get(user_name='admin')
 
-        for queryset in [ self.all_targets, self.all_images ]:
+        for queryset in [ self.all_targets, self.all_images, self.all_systems ]:
             for permission in [ modmembers, createresource, readset  ]:
                 rbacmodels.RbacPermission(
                     queryset      = queryset,
@@ -231,7 +253,7 @@ class TargetsTestCase(BaseTargetsTest, RepeaterMixIn):
     def testGetTarget_credentials_valid(self):
         # Remove credentials for one of the targets
         # openstack won't have creds anyway
-        models.TargetUserCredentials.objects.get(target__name = 'Target Name xen-enterprise').delete()
+        models.TargetUserCredentials.objects.filter(target__name = 'Target Name xen-enterprise').delete()
         response = self._get('targets/', username='ExampleDeveloper', password='password')
         targetsObj = xobj.parse(response.content)
         self.failUnlessEqual([ x.name for x in targetsObj.targets.target ],
@@ -792,7 +814,7 @@ class JobCreationTest(BaseTargetsTest, RepeaterMixIn):
         tmgr = self.mgr.targetsManager
         tucreds = tmgr.setTargetUserCredentials(target, creds0)
         creds = sorted(models.TargetUserCredentials.objects.filter(
-            user__user_id=1, target=target).values_list('id', flat=True))
+            user__user_id=self.developer_user.user_id, target=target).values_list('id', flat=True))
         self.failUnlessEqual(creds, [tucreds.id])
         # Do it again, the credentials should be the same
         tucreds2 = tmgr.setTargetUserCredentials(target, creds0)
@@ -820,23 +842,23 @@ class JobCreationTest(BaseTargetsTest, RepeaterMixIn):
 
         # Make sure we can fetch credentials too
         url = "targets/%s/target_user_credentials" % target.target_id
-        resp = self._get(url, username="admin", password="password")
+        resp = self._get(url, username="ExampleDeveloper", password="password")
         self.failUnlessEqual(resp.status_code, 200)
         doc = xobj.parse(resp.content)
         self.failUnlessEqual(doc.target_user_credentials.user.id,
-            "http://testserver/api/v1/users/1")
+            "http://testserver/api/v1/users/%s" % self.developer_user.user_id)
         self.failUnlessEqual(doc.target_user_credentials.credentials.username,
             "forrest")
 
         # Reset user credentials
-        resp = self._delete(url, username="admin", password="password")
+        resp = self._delete(url, username="ExampleDeveloper", password="password")
         doc = xobj.parse(resp.content)
         self.failUnlessEqual(doc.target_user_credentials.user.id,
-            "http://testserver/api/v1/users/1")
+            "http://testserver/api/v1/users/%s" % self.developer_user.user_id)
         self.failUnlessEqual(resp.status_code, 200)
 
         # Gone, baby, gone
-        resp = self._get(url, username="admin", password="password")
+        resp = self._get(url, username="ExampleDeveloper", password="password")
         self.failUnlessEqual(resp.status_code, 404)
 
     def testRefreshTargetImages(self):
@@ -1088,6 +1110,11 @@ class JobCreationTest(BaseTargetsTest, RepeaterMixIn):
         <publicDnsName>172.16.175.73</publicDnsName>
         <reservationId>4234dc2c-6b91-5188-2a3c-5e6f88b61835</reservationId>
         <state>poweredOn</state>
+        <credentials>
+          <opaqueCredentialsId>1</opaqueCredentialsId>
+          <opaqueCredentialsId>2</opaqueCredentialsId>
+          <opaqueCredentialsId>3</opaqueCredentialsId>
+        </credentials>
       </instance>
     </instances>
   </results>
@@ -1121,6 +1148,11 @@ class JobCreationTest(BaseTargetsTest, RepeaterMixIn):
         <publicDnsName>172.16.175.73</publicDnsName>
         <reservationId>4234dc2c-6b91-5188-2a3c-5e6f88b61835</reservationId>
         <state>poweredOn</state>
+        <credentials>
+          <opaqueCredentialsId>1</opaqueCredentialsId>
+          <opaqueCredentialsId>2</opaqueCredentialsId>
+          <opaqueCredentialsId>3</opaqueCredentialsId>
+        </credentials>
       </instance>
       <instance id="id2">
         <instanceId>id2</instanceId>
@@ -1128,6 +1160,11 @@ class JobCreationTest(BaseTargetsTest, RepeaterMixIn):
         <instanceDescription>long name for id2</instanceDescription>
         <launchTime>1234567890</launchTime>
         <state>suspended</state>
+        <credentials>
+          <opaqueCredentialsId>1</opaqueCredentialsId>
+          <opaqueCredentialsId>2</opaqueCredentialsId>
+          <opaqueCredentialsId>3</opaqueCredentialsId>
+        </credentials>
       </instance>
       <instance id="id3">
         <instanceId>id3</instanceId>
@@ -1135,6 +1172,11 @@ class JobCreationTest(BaseTargetsTest, RepeaterMixIn):
         <instanceDescription>long name for id3</instanceDescription>
         <launchTime>1234567891</launchTime>
         <state>blabbering</state>
+        <credentials>
+          <opaqueCredentialsId>1</opaqueCredentialsId>
+          <opaqueCredentialsId>2</opaqueCredentialsId>
+          <opaqueCredentialsId>3</opaqueCredentialsId>
+        </credentials>
       </instance>
     </instances>
   </results>
@@ -1166,6 +1208,11 @@ class JobCreationTest(BaseTargetsTest, RepeaterMixIn):
         <instanceDescription>long name for id2</instanceDescription>
         <launchTime>1234567890</launchTime>
         <state>blabbering</state>
+        <credentials>
+          <opaqueCredentialsId>1</opaqueCredentialsId>
+          <opaqueCredentialsId>2</opaqueCredentialsId>
+          <opaqueCredentialsId>3</opaqueCredentialsId>
+        </credentials>
       </instance>
       <instance id="id3">
         <instanceId>id3</instanceId>
@@ -1173,6 +1220,11 @@ class JobCreationTest(BaseTargetsTest, RepeaterMixIn):
         <instanceDescription>long name for id3</instanceDescription>
         <launchTime>1234567891</launchTime>
         <state>blabbering</state>
+        <credentials>
+          <opaqueCredentialsId>1</opaqueCredentialsId>
+          <opaqueCredentialsId>2</opaqueCredentialsId>
+          <opaqueCredentialsId>3</opaqueCredentialsId>
+        </credentials>
       </instance>
     </instances>
   </results>
@@ -1195,9 +1247,78 @@ class JobCreationTest(BaseTargetsTest, RepeaterMixIn):
         creds = models.TargetCredentials.objects.filter(
             target_user_credentials__user__user_name='ExampleDeveloper')[0]
         systems = models.TargetSystem.objects.filter(
-            target_system_credentials__target_credentials=creds)
+            target_system_credentials__target_credentials=creds).order_by(
+                    'target_system_id')
         self.failUnlessEqual([ x.name for x in systems ],
             ['name for id2', 'name for id3', ])
+
+    def testUpdateTargetSystems(self):
+        invmodels.System.objects.all().delete()
+        models.TargetSystem.objects.all().delete()
+
+        # Add a system, and set its target ssytem id
+
+        targetType = models.TargetType.objects.get(name='vmware')
+        target = models.Target.objects.filter(target_type=targetType)[0]
+        system = self._saveSystem()
+        system.target = target
+        system.target_system_id = str(self.uuid4())
+        system.save()
+
+        # Quick test for an internal function
+        creds = self.mgr.getTargetAllUserCredentials(target)
+        self.failUnlessEqual(creds, [
+            (1, {u'username': 'username-0', u'password': 'password-0'}),
+            (2, {u'username': 'username-1', u'password': 'password-1'}),
+        ])
+
+        instanceStanza = """\
+<instance id="instances/%(instanceId)s">
+  <dnsName>%(dnsName)s</dnsName>
+  <instanceDescription>%(instanceDescription)s</instanceDescription>
+  <instanceId>%(instanceId)s</instanceId>
+  <instanceName>%(instanceName)s</instanceName>
+  <launchTime>%(launchTime)s</launchTime>
+  <publicDnsName>%(publicDnsName)s</publicDnsName>
+  <state>%(state)s</state>
+  <credentials>
+    <opaqueCredentialsId>1</opaqueCredentialsId>
+    <opaqueCredentialsId>2</opaqueCredentialsId>
+    <opaqueCredentialsId>3</opaqueCredentialsId>
+  </credentials>
+</instance>"""
+
+        data = [
+            # New system
+            dict(dnsName="10.1.1.1",
+                instanceName="target instance name 1",
+                instanceDescription="target instance description 1",
+                instanceId=str(self.uuid4()),
+                launchTime=1234567890.123,
+                publicDnsName="dhcp001.example.com",
+                state="poweredOn",
+            ),
+            # Existing system
+            dict(dnsName="10.1.1.2",
+                instanceName="target instance name 2",
+                instanceDescription="target instance description 2",
+                instanceId=system.target_system_id,
+                launchTime=1234567892.123,
+                publicDnsName="dhcp002.example.com",
+                state="poweredOn",
+            ),
+        ]
+        systemModels = []
+        for sdata in data:
+            xmodel = xobj.parse(instanceStanza % sdata).instance
+            systemModels.append(xmodel)
+        self.mgr.updateTargetSystems(target, systemModels)
+
+        systems = invmodels.System.objects.order_by('-system_id')
+        self.failUnlessEqual([ x.target_system_id for x in systems ],
+            [ x['instanceId'] for x in data ])
+        self.failUnlessEqual([ x.target_system_name for x in systems ],
+            [ x['instanceName'] for x in data ])
 
     def testCaptureSystem(self):
         invmodels.System.objects.all().delete()
@@ -1210,15 +1331,14 @@ class JobCreationTest(BaseTargetsTest, RepeaterMixIn):
         self.mgr.retagQuerySetsByType('system')
 
         targetCredentials = dict(username="vmwareuser", password="sikrit")
-        # Add target user credentials for admin
+        # Add target user credentials for the current user
         self.mgr.setTargetUserCredentials(target, targetCredentials)
 
-        # Use admin for now, rbac write is required
         response = self._get('inventory/systems/%s/descriptors/capture' % 1999,
-            username='admin', password='password')
+            username=self.developer_user.user_name, password='password')
         self.assertEquals(response.status_code, 404)
         response = self._get('inventory/systems/%s/descriptors/capture' % system.system_id,
-            username='admin', password='password')
+            username=self.developer_user.user_name, password='password')
         self.assertEquals(response.status_code, 200)
         obj = xobj.parse(response.content)
         self.failUnlessEqual(obj.descriptor.metadata.rootElement, 'descriptor_data')
@@ -1268,7 +1388,7 @@ class JobCreationTest(BaseTargetsTest, RepeaterMixIn):
             stageId='1')
         jobUrl = "inventory/systems/%s/jobs" % systemId
         response = self._post(jobUrl, jobXml,
-            username='admin', password='password')
+            username=self.developer_user.user_name, password='password')
         self.assertEquals(response.status_code, 200)
         obj = xobj.parse(response.content)
         job = obj.job
@@ -1337,7 +1457,7 @@ class JobCreationTest(BaseTargetsTest, RepeaterMixIn):
         self.failUnlessEqual(img.status_message, 'System captured')
 
         response = self._get("images/1",
-            username='admin', password='password')
+            username=self.developer_user.user_name, password='password')
         self.assertEquals(response.status_code, 200)
         obj = xobj.parse(response.content)
         self.failUnlessEqual(obj.image.name, params['imageTitle'])

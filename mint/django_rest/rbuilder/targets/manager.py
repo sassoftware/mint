@@ -90,6 +90,11 @@ class TargetsManager(basemanager.BaseManager, CatalogServiceHelper):
             return None
         return creds[0]
 
+    def _getTargetAllUserCredentials(self, target):
+        creds = models.TargetCredentials.objects.filter(
+            target_user_credentials__target=target).distinct()
+        return [ x for x in creds ]
+
     @exposed
     def getTargetCredentialsForUser(self, target, user):
         creds = self._getTargetCredentialsForUser(target, user)
@@ -103,6 +108,13 @@ class TargetsManager(basemanager.BaseManager, CatalogServiceHelper):
         if creds is None:
             return None
         return mintdata.unmarshalTargetUserCredentials(creds.credentials)
+
+    @exposed
+    def getTargetAllUserCredentials(self, target):
+        ret = []
+        for creds in self._getTargetAllUserCredentials(target):
+            ret.append((creds.target_credentials_id, mintdata.unmarshalTargetUserCredentials(creds.credentials)))
+        return ret
 
     @exposed
     def getModelTargetCredentialsForCurrentUser(self, targetId):
@@ -491,9 +503,6 @@ class TargetsManager(basemanager.BaseManager, CatalogServiceHelper):
 
     @exposed
     def updateTargetSystems(self, target, systems):
-        creds = self._getTargetCredentialsForCurrentUser(target)
-        if creds is None:
-            raise errors.InvalidData()
         cu = connection.cursor()
         cu.execute("""
             CREATE TEMPORARY TABLE tmp_target_system (
@@ -507,12 +516,11 @@ class TargetsManager(basemanager.BaseManager, CatalogServiceHelper):
             )
         """)
         try:
-            self._updateTargetSystems(cu, target, creds, systems)
+            self._updateTargetSystems(cu, target, systems)
         finally:
             cu.execute("DROP TABLE tmp_target_system")
 
-    def _updateTargetSystems(self, cu, target, creds, systems):
-        credsId = creds.target_credentials_id
+    def _updateTargetSystems(self, cu, target, systems):
         query = """
             INSERT INTO tmp_target_system
                 (name, description, target_internal_id, ip_addr_1, ip_addr_2, state, created_date)
@@ -565,29 +573,58 @@ class TargetsManager(basemanager.BaseManager, CatalogServiceHelper):
         """
         cu.execute(query, [ target.target_id, target.target_id ])
         # Relink systems to target credentials
-        # First, remove the ones not in this list
+        # First, remove the systems not in this list
         query = """
             DELETE FROM target_system_credentials
-             WHERE target_credentials_id = %s
-               AND target_system_id NOT IN (
+             WHERE target_system_id NOT IN (
                    SELECT ts.target_system_id
                      FROM target_system AS ts
                      JOIN tmp_target_system AS tmptsys USING (target_internal_id)
                     WHERE ts.target_id = %s)"""
-        cu.execute(query, [ credsId, target.target_id ])
-        # Add the new ones
+        cu.execute(query, [ target.target_id ])
+
+        # List existing target credentials
+        query = "SELECT targetCredentialsId FROM TargetCredentials"
+        cu.execute(query)
+        realTargetCredentials = set(x[0] for x in cu)
+
+        # List existing target system credentials for this target
+        query = """
+            SELECT ts.target_internal_id, tsc.target_system_id, tsc.target_credentials_id
+              FROM target_system_credentials AS tsc
+             JOIN target_system AS ts USING (target_system_id)
+            WHERE ts.target_id = %s"""
+        cu.execute(query, [ target.target_id ])
+
+        tsMap = {}
+        credsMap = {}
+        for targetInternalId, targetSystemId, targetCredentialsId in cu:
+            tsMap[targetInternalId] = targetSystemId
+            credsMap.setdefault(targetInternalId, set()).add(targetCredentialsId)
+        toDeleteTSCreds = set()
+        toAddTSCreds = set()
+        for targetInternalId, targetSystem in tsysMap.items():
+            usefulCreds = realTargetCredentials.intersection(
+                targetSystem._credentials)
+            dbCreds = credsMap.get(targetInternalId, set())
+            for c in usefulCreds.difference(dbCreds):
+                toAddTSCreds.add((c, targetInternalId))
+            for c in dbCreds.difference(usefulCreds):
+                toDeleteTSCreds.add((tsMap[targetInternalId], c))
+
+        query = """
+            DELETE FROM target_system_credentials
+             WHERE target_system_id = %s AND target_credentials_id = %s
+        """
+        cu.executemany(query, toDeleteTSCreds)
         query = """
             INSERT INTO target_system_credentials
-                (target_system_id, target_credentials_id)
+                   (target_system_id, target_credentials_id)
             SELECT ts.target_system_id, %s
               FROM target_system AS ts
-              JOIN tmp_target_system AS tmptsys USING (target_internal_id)
-             WHERE ts.target_id = %s
-               AND ts.target_system_id NOT IN
-               (SELECT target_system_id FROM target_system_credentials
-                WHERE target_credentials_id=%s)
-        """
-        cu.execute(query, [ credsId, target.target_id, credsId ])
+             WHERE ts.target_internal_id = %s"""
+        cu.executemany(query, toAddTSCreds)
+
         # Finally, remove all systems that have no credentials
         query = """
             DELETE FROM target_system
@@ -596,7 +633,7 @@ class TargetsManager(basemanager.BaseManager, CatalogServiceHelper):
              )
         """
         cu.execute(query)
-        #self.recomputeTargetSystems()
+        self.mgr.addSystemsFromTarget(target)
 
     @exposed
     def recomputeTargetDeployableImages(self):
@@ -754,11 +791,18 @@ class TargetsManager(basemanager.BaseManager, CatalogServiceHelper):
         createdDate = self._unXobj(getattr(system, 'launchTime', None))
         if createdDate is not None:
             createdDate = timeutils.fromtimestamp(createdDate)
+        credentials = getattr(system, 'credentials', [])
+        if credentials is not None:
+            opaqueIds = getattr(credentials, 'opaqueCredentialsId', [])
+            if not isinstance(opaqueIds, list):
+                opaqueIds = [ opaqueIds ]
+            credentials = [ int(self._unXobj(x)) for x in opaqueIds ]
 
         model = models.TargetSystem(target=target,
             name=name, description=description,
             target_internal_id=systemId, ip_addr_1=ipAddr1, ip_addr_2=ipAddr2,
             state=state, created_date=createdDate)
+        model._credentials = credentials
         return model
 
     @classmethod

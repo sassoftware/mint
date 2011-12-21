@@ -315,6 +315,7 @@ class TargetSystem(modellib.XObjModel):
     state = D(models.TextField(null=False), "State, cannot be null")
     created_date = D(modellib.DateTimeUtcField(auto_now_add=True), "the date the resource was created (UTC)")
     modified_date = D(modellib.DateTimeUtcField(auto_now_add=True), "the date the resource was modified (UTC)")
+    _credentials = XObjHidden(modellib.SyntheticField())
     unique_together = (target, target_internal_id)
 
 class TargetDeployableImage(modellib.XObjModel):

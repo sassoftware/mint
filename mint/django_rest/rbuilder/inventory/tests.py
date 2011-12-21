@@ -4297,6 +4297,11 @@ class TargetSystemImportTest(XMLTestCase, test_utils.RepeaterMixIn):
                 # booleans don't support this operatiion
                 return item
 
+        # Make sure we have an entry in target_system
+        tsys = targetmodels.TargetSystem.objects.get(target=system.target,
+            target_internal_id=system.target_system_id)
+        self.failUnlessEqual(tsys.name, system.name)
+
         # Another system that specifies a name and description
         params = dict((x, repl(y, '001', '002'))
             for (x, y) in params.items())

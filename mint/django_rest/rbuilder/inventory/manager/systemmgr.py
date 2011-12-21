@@ -1016,6 +1016,16 @@ class SystemManager(basemanager.BaseManager):
         system.system_state = self.systemState(models.SystemState.UNMANAGED)
         self.addSystem(system, for_user=for_user,
             withManagementInterfaceDetection=False)
+        # Add target system
+        tsys, _ = targetmodels.TargetSystem.objects.get_or_create(
+            target=target,
+            target_internal_id=system.target_system_id,
+            name=system.target_system_name,
+            description=system.target_system_description,
+            ip_addr_1=dnsName)
+        targetmodels.TargetSystemCredentials.objects.get_or_create(
+            target_system=tsys,
+            target_credentials=credentials)
         return system
 
     def _addOldStyleJob(self, system):
@@ -1749,9 +1759,6 @@ class SystemManager(basemanager.BaseManager):
         job.descriptor.id = ("/api/v1/targets/%s/descriptors/refresh_systems" %
            target.target_id)
         job.descriptor_data = xobj.parse('<descriptor_data/>').descriptor_data
-        # _user is not a field for job, but we want to bypass the
-        # whole auth thing here
-        job._user = targetUserCredentials.user
         self.mgr.addJob(job)
         return job
 
@@ -1774,54 +1781,57 @@ class SystemManager(basemanager.BaseManager):
                 system.save()
                 models.SystemTargetCredentials.objects.filter(system=system).delete()
 
-    def _addSystemsToTargets(self, objList):
-        for (targetTypeName, targetName), systemMap in objList:
-            t0 = time.time()
-            target = self.lookupTarget(targetTypeName, targetName)
+    @exposed
+    def addSystemsFromTarget(self, target):
+        # Iterate over all existing target systems for this target
+        tsystems = targetmodels.TargetSystem.objects.filter(target=target)
+        for tsystem in tsystems:
+            self._addSystemFromTarget(tsystem)
 
-            log.info("Importing %d systems from target %s (%s)" % (
-                len(systemMap), targetName, targetTypeName))
-            for targetSystemId, tSystem in systemMap.items():
-                self._addSystemToTarget(target, targetSystemId, tSystem)
-            log.info("Target %s (%s) import of %d systems completed in %.2f seconds" % (
-                targetName, targetTypeName, len(systemMap), time.time() - t0))
-
-    def _addSystemToTarget(self, target, targetSystemId, targetSystem):
+    def _addSystemFromTarget(self, targetSystem):
         t0 = time.time()
-        log.info("  Importing system %s (%s)" % (targetSystemId,
-            targetSystem.instanceName))
-        system, created = models.System.objects.get_or_create(target=target,
-            target_system_id=targetSystemId,
-            managing_zone = self.getLocalZone())
-        if created:
+        target = targetSystem.target
+        targetInternalId = targetSystem.target_internal_id
+        log.info("  Importing system %s (%s)" % (
+            targetInternalId, targetSystem.name))
+        existingSystems = models.System.objects.filter(target=target,
+            target_system_id=targetInternalId)
+        if existingSystems:
+            system = existingSystems[0]
+        else:
+            # Having nothing else available, we copy the target's name
+            system, _ = models.System.objects.get_or_create(target=target,
+                target_system_id=targetInternalId,
+                managing_zone=target.zone,
+                name=targetSystem.name,
+                description=targetSystem.description)
             self.log_system(system, "System added as part of target %s (%s)" %
                 (target.name, target.target_type.name))
-            # Having nothing else available, we copy the target's name
-            system.name = targetSystem.instanceName
-            system.description = targetSystem.instanceDescription
-        system.target_system_name = targetSystem.instanceName
-        system.target_system_description = targetSystem.instanceDescription
-        self._addTargetSystemNetwork(system, target, targetSystem)
+        system.managing_zone = target.zone
+        system.target_system_name = targetSystem.name
+        system.target_system_description = targetSystem.description
+        self._addTargetSystemNetwork(system, targetSystem)
         system.target_system_state = targetSystem.state
         system.save()
-        self._setSystemTargetCredentials(system, target,
-            targetSystem.userNames)
-        if created:
+        self._setSystemTargetCredentials(system, targetSystem)
+        if not existingSystems:
             t1 = time.time()
             self.scheduleSystemDetectMgmtInterfaceEvent(system)
             log.info("    Scheduling action completed in %.2f seconds" %
                 (time.time() - t1, ))
         log.info("  Importing system %s (%s) completed in %.2f seconds" %
-            (targetSystemId, targetSystem.instanceName, time.time() - t0))
+            (system.target_system_id, system.target_system_name,
+                time.time() - t0))
 
-    def _addTargetSystemNetwork(self, system, target, tsystem):
-        dnsName = tsystem.dnsName
+    def _addTargetSystemNetwork(self, system, tsystem):
+        dnsName = tsystem.ip_addr_1
         if dnsName is None:
             return
         nws = system.networks.all()
         for nw in nws:
             if dnsName in [ nw.dns_name, nw.ip_address ]:
                 return
+        target = system.target
         # Remove the other networks, they're probably stale
         for nw in nws:
             ipAddress = nw.ip_address and nw.ip_address or "ip unset"
@@ -1834,25 +1844,32 @@ class SystemManager(basemanager.BaseManager):
             (target.name, target.target_type.name, dnsName))
         nw = models.Network(system=system, dns_name=dnsName)
         nw.save()
+        if tsystem.ip_addr_2:
+            nw = models.Network(system=system, dns_name=tsystem.ip_addr_2)
+            nw.save()
 
-    def _setSystemTargetCredentials(self, system, target, userNames):
-        existingCredsMap = dict((x.credentials_id, x)
-            for x in system.target_credentials.all())
-        desiredCredsMap = dict()
-        for userName in userNames:
-            desiredCredsMap.update((x.target_credentials_id, x)
-                for x in targetmodels.TargetCredentials.objects.filter(
-                    target_user_credentials__target=target,
-                    target_user_credentials__user__user_name=userName))
-        existingCredsSet = set(existingCredsMap)
-        desiredCredsSet = set(desiredCredsMap)
-
-        for credId in existingCredsSet - desiredCredsSet:
-            existingCredsMap[credId].delete()
-        for credId in desiredCredsSet - existingCredsSet:
-            stc = models.SystemTargetCredentials(system=system,
-                credentials=desiredCredsMap[credId])
-            stc.save()
+    def _setSystemTargetCredentials(self, system, targetSystem):
+        cu = connection.cursor()
+        query = """
+            DELETE FROM inventory_system_target_credentials
+             WHERE system_id = %s
+               AND credentials_id NOT IN
+                   (SELECT target_credentials_id
+                      FROM target_system_credentials
+                     WHERE target_system_id = %s)"""
+        cu.execute(query, [ system.system_id, targetSystem.target_system_id ])
+        query = """
+            INSERT INTO inventory_system_target_credentials
+                        (system_id, credentials_id)
+            SELECT %s, target_credentials_id
+              FROM target_system_credentials
+             WHERE target_system_id = %s
+               AND target_credentials_id NOT IN
+                   (SELECT credentials_id
+                      FROM inventory_system_target_credentials
+                     WHERE system_id = %s)"""
+        cu.execute(query, [ system.system_id, targetSystem.target_system_id,
+            system.system_id ])
 
     def collectInventoryTargetsData(self):
         targetsData = self.TargetsData()
@@ -1970,46 +1987,12 @@ class SystemManager(basemanager.BaseManager):
 
             return todelMap, toupMap
 
-    def collectTargetsData(self, targetDrivers):
-        t0 = time.time()
-        targetsData = self.TargetsData()
-        for driver in targetDrivers:
-            try:
-                self.collectOneTargetData(driver, targetsData)
-            except Exception, e:
-                tb = sys.exc_info()[2]
-                traceback.print_tb(tb)
-                log.error("Failed importing systems from target %s: %s" % (driver.cloudType, e))
-        log.info("Target data collected in %.2f seconds" % (time.time() - t0))
-        return targetsData
-
     @classmethod
     def _getField(cls, system, fieldName):
         fieldVal = getattr(system, fieldName)
         if fieldVal is not None:
             return fieldVal.getText()
         return None
-
-    def collectOneTargetData(self, driver, targetsData):
-        t0 = time.time()
-        log.info("Enumerating systems for target %s (%s) as user %s" %
-            (driver.cloudName, driver.cloudType, driver.userId))
-        targetType = driver.cloudType
-        targetName = driver.cloudName
-        userName = driver.userId
-        tsystems = driver.getAllInstances()
-        for tsys in tsystems:
-            instanceId = tsys.instanceId.getText()
-            instanceName = self._getField(tsys, 'instanceName')
-            instanceDescription = self._getField(tsys, 'instanceDescription')
-            dnsName = self._getField(tsys, 'dnsName')
-            state = self._getField(tsys, 'state') or 'unknown'
-            targetsData.addSystem(targetType, targetName, userName,
-                instanceId, instanceName, instanceDescription, dnsName,
-                state)
-        log.info("Target %s (%s) as user %s enumerated in %.2f seconds" %
-            (driver.cloudName, driver.cloudType, driver.userId,
-                time.time() - t0))
 
     @exposed
     def getSystemsLog(self):

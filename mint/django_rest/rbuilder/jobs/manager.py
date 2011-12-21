@@ -419,24 +419,15 @@ class _TargetDescriptorJobHandler(DescriptorJobHandler):
         return targetConfiguration
 
     def _buildTargetCredentialsFromDb(self, cli, job):
-        if hasattr(job, '_user'):
-            creds = self.mgr.mgr.getTargetCredentialsForUser(self.target,
-                job._user.user_id)
-        else:
-            creds = self.mgr.mgr.getTargetCredentialsForCurrentUser(self.target)
+        creds = self.mgr.mgr.getTargetCredentialsForCurrentUser(self.target)
         if creds is None:
             raise errors.InvalidData()
         return self._buildTargetCredentials(cli, job, creds)
 
     def _buildTargetCredentials(self, cli, job, creds):
-        if hasattr(job, '_user'):
-            rbUser = job._user.user_name
-            rbUserId = job._user.user_id
-            isAdmin = job._user.is_admin
-        else:
-            rbUser = self.mgr.auth.username
-            rbUserId = self.mgr.auth.userId
-            isAdmin = self.mgr.auth.admin
+        rbUser = self.mgr.auth.username
+        rbUserId = self.mgr.auth.userId
+        isAdmin = self.mgr.auth.admin
         userCredentials = cli.targets.TargetUserCredentials(
             credentials=creds,
             rbUser=rbUser,
@@ -456,13 +447,16 @@ class JobHandlerRegistry(HandlerRegistry):
         def _getDescriptorMethod(self):
             return self.mgr.mgr.getDescriptorRefreshImages
 
-        def getRepeaterMethod(self, cli, job):
-            self.descriptor, self.descriptorData = self.extractDescriptorData(job)
+        def _configureTargetMethod(self, cli, job):
             targetConfiguration = self._buildTargetConfigurationFromDb(cli)
             targetUserCredentials = self._buildTargetCredentialsFromDb(cli, job)
             zone = self.mgr.mgr.getTargetZone(self.target)
             cli.targets.configure(zone.name, targetConfiguration,
                 targetUserCredentials)
+
+        def getRepeaterMethod(self, cli, job):
+            self.descriptor, self.descriptorData = self.extractDescriptorData(job)
+            self._configureTargetMethod(cli, job)
             return cli.targets.listImages
 
         def _processJobResults(self, job):
@@ -493,6 +487,26 @@ class JobHandlerRegistry(HandlerRegistry):
         ResultsTag = 'instances'
         def _getDescriptorMethod(self):
             return self.mgr.mgr.getDescriptorRefreshSystems
+
+        def _buildAllUserCredentialsFromDb(self, cli, job):
+            credsList = self.mgr.mgr.getTargetAllUserCredentials(self.target)
+            ret = []
+            for credId, creds in credsList:
+                userCredentials = cli.targets.TargetUserCredentials(
+                    credentials=creds,
+                    rbUser=None,
+                    rbUserId=None,
+                    isAdmin=False,
+                    opaqueCredentialsId=credId)
+                ret.append(userCredentials)
+            return ret
+
+        def _configureTargetMethod(self, cli, job):
+            targetConfiguration = self._buildTargetConfigurationFromDb(cli)
+            targetAllUserCredentials = self._buildAllUserCredentialsFromDb(cli, job)
+            zone = self.mgr.mgr.getTargetZone(self.target)
+            cli.targets.configure(zone.name, targetConfiguration,
+                None, targetAllUserCredentials)
 
         def getRepeaterMethod(self, cli, job):
             super(JobHandlerRegistry.TargetRefreshSystems, self).getRepeaterMethod(cli, job)
