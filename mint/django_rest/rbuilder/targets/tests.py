@@ -9,7 +9,6 @@ import collections
 import re
 
 from mint import buildtypes
-from mint.lib import uuid
 from mint.lib import data as mintdata
 from mint.django_rest.test_utils import RepeaterMixIn
 from mint.django_rest.rbuilder.inventory import zones as zmodels
