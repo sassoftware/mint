@@ -517,7 +517,15 @@ class TargetsManager(basemanager.BaseManager, CatalogServiceHelper):
         """)
         try:
             self._updateTargetSystems(cu, target, systems)
-        finally:
+        except:
+            exc = sys.exc_info()
+            try:
+                self.rollback()
+            except:
+                # Ignore this exception
+                pass
+            raise exc[0], exc[1], exc[2]
+        else:
             cu.execute("DROP TABLE tmp_target_system")
 
     def _updateTargetSystems(self, cu, target, systems):
@@ -544,8 +552,7 @@ class TargetsManager(basemanager.BaseManager, CatalogServiceHelper):
                    OR ts.ip_addr_1 != tmptsys.ip_addr_1
                    OR ts.ip_addr_2 != tmptsys.ip_addr_2
                    OR ts.state != tmptsys.state
-                   OR (ts.created_date IS NULL AND tmptsys.created_date IS NOT NULL)
-                   OR ts.created_date != tmptsys.created_date)
+                   OR (tmptsys.created_date IS NOT NULL AND ts.created_date != tmptsys.created_date))
         """
         cu.execute(query, [ target.target_id ])
         toUpdate = cu.fetchall()
@@ -563,10 +570,11 @@ class TargetsManager(basemanager.BaseManager, CatalogServiceHelper):
             model.modified_date = now
             model.save()
         # Insert all new systems
+        # If created_date is unset, we default to the current timestamp.
         query = """
             INSERT INTO target_system
                 (target_id, name, description, target_internal_id, ip_addr_1, ip_addr_2, state, created_date)
-            SELECT %s, name, description, target_internal_id, ip_addr_1, ip_addr_2, state, created_date
+            SELECT %s, name, description, target_internal_id, ip_addr_1, ip_addr_2, state, COALESCE(created_date, current_timestamp)
               FROM tmp_target_system
              WHERE target_internal_id NOT IN
                (SELECT target_internal_id FROM target_system WHERE target_id=%s)
@@ -790,7 +798,10 @@ class TargetsManager(basemanager.BaseManager, CatalogServiceHelper):
         state = self._unXobj(getattr(system, 'state'))
         createdDate = self._unXobj(getattr(system, 'launchTime', None))
         if createdDate is not None:
-            createdDate = timeutils.fromtimestamp(createdDate)
+            if createdDate:
+                createdDate = timeutils.fromtimestamp(createdDate)
+            else:
+                createdDate = None
         credentials = getattr(system, 'credentials', [])
         if credentials is not None:
             opaqueIds = getattr(credentials, 'opaqueCredentialsId', [])

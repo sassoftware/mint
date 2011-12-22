@@ -1302,7 +1302,8 @@ class JobCreationTest(BaseTargetsTest, RepeaterMixIn):
                 instanceName="target instance name 2",
                 instanceDescription="target instance description 2",
                 instanceId=system.target_system_id,
-                launchTime=1234567892.123,
+                # Force null launch time
+                launchTime='',
                 publicDnsName="dhcp002.example.com",
                 state="poweredOn",
             ),
@@ -1318,6 +1319,10 @@ class JobCreationTest(BaseTargetsTest, RepeaterMixIn):
             [ x['instanceId'] for x in data ])
         self.failUnlessEqual([ x.target_system_name for x in systems ],
             [ x['instanceName'] for x in data ])
+
+        tsystems = models.TargetSystem.objects.order_by('name')
+        self.failUnlessEqual([ x.created_date.year for x in tsystems ],
+            [2009, timeutils.now().year])
 
     def testCaptureSystem(self):
         invmodels.System.objects.all().delete()
