@@ -995,11 +995,11 @@ class SystemManager(basemanager.BaseManager):
         xobjModel = getattr(system, '_xobjModel', None)
         # Copy some of the otherwise read-only fields
         system.target_system_name = self.getXobjProperty(xobjModel,
-            'target_system_name')
+            'target_system_name', system.target_system_name)
         system.target_system_description = self.getXobjProperty(xobjModel,
-            'target_system_description')
+            'target_system_description', system.target_system_description)
         system.target_system_state= self.getXobjProperty(xobjModel,
-            'target_system_state')
+            'target_system_state', system.target_system_state)
         # Add an old style job, to persist the boot uuid
         self._addOldStyleJob(system)
         system.launching_user = self.user
