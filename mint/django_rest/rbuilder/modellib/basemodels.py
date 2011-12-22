@@ -604,6 +604,9 @@ class BaseManager(models.Manager):
         # Save a reference to the oldModel on model.  This could be helpful
         # later on to detect state changes.
         model.oldModel = oldModel
+        # Save a reference to the original xobj model, e.g. to inspect
+        # read-only fields
+        model._xobjModel = xobjModel
 
         return model
 
