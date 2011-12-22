@@ -958,6 +958,18 @@ class SystemManager(basemanager.BaseManager):
                 sourceImage=img, for_user=forUser))
         return systems
 
+    def fromXobj(self, obj):
+        if obj is None:
+            return obj
+        return unicode(obj)
+
+    @exposed
+    def getXobjProperty(self, obj, prop, default=None):
+        val = getattr(obj, prop, default)
+        if val is default:
+            return val
+        return self.fromXobj(val)
+
     @exposed
     def addLaunchedSystem(self, system, dnsName=None, targetName=None,
             targetType=None, for_user=None, sourceImage=None):
@@ -980,6 +992,14 @@ class SystemManager(basemanager.BaseManager):
             system.managing_zone = self.getLocalZone()
         oldModel, system = models.System.objects.load_or_create(system,
             withReadOnly=True)
+        xobjModel = getattr(system, '_xobjModel', None)
+        # Copy some of the otherwise read-only fields
+        system.target_system_name = self.getXobjProperty(xobjModel,
+            'target_system_name')
+        system.target_system_description = self.getXobjProperty(xobjModel,
+            'target_system_description')
+        system.target_system_state= self.getXobjProperty(xobjModel,
+            'target_system_state')
         # Add an old style job, to persist the boot uuid
         self._addOldStyleJob(system)
         system.launching_user = self.user
