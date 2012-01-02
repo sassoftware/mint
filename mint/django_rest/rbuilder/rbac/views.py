@@ -6,11 +6,12 @@
 
 # Services related to role based access control.
 
-from django.http import HttpResponse
+from django.http import HttpResponse, HttpResponseRedirect
 from mint.django_rest.deco import return_xml, access, requires
 from mint.django_rest.rbuilder import service
 from mint.django_rest.rbuilder.rbac import models
 from mint.django_rest.rbuilder.rbac.rbacauth import rbac
+from mint.django_rest.rbuilder.querysets import models as querymodels
 
 class BaseRbacService(service.BaseService):
     pass
@@ -284,10 +285,14 @@ class RbacRoleUsersService(BaseRbacService):
         return self.get(role_id, user_id)
 
     def get(self, role_id, user_id=None):
-        if user_id is not None:
-            return self.mgr.getUser(user_id)
+        if user_id is None:
+            qs = querymodels.QuerySet.objects.get(name='All Users', is_public=True)
+            url = "/api/v1/query_sets/%s/all;filter_by=[user_roles.role.pk,EQUAL,%s]" % (qs.pk, role_id)
+            return HttpResponseRedirect(url)
         else:
-            return self.mgr.getRbacUsersForRole(role_id)
+            # obsolete URL no longer linked to since redirect
+            url = "/api/v1/users/%s" % user_id
+            return HttpResponseRedirect(url)
 
     # CREATE -- ADD A RBAC USER TO A ROLE
     @access.admin

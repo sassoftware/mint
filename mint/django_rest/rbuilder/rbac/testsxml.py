@@ -1124,19 +1124,7 @@ permission_type_get_xml = """
 """
 
 users_in_role_xml = """
-<users count="2" end_index="1" filter_by="" full_collection="http://testserver/api/v1/users" id="http://testserver/api/v1/users;start_index=0;limit=10" limit="10" next_page="" num_pages="1" order_by="" per_page="10" previous_page="" start_index="0">
-  <user id="http://testserver/api/v1/users/2000">
-    <blurb>null</blurb>
-    <display_email/>
-    <email>testuser@rpath.com</email>
-    <full_name>Test User</full_name>
-    <is_admin>false</is_admin>
-    <roles id="http://testserver/api/v1/users/2000/roles"/>
-    <external_auth>false</external_auth>
-    <user_id>2000</user_id>
-    <user_name>testuser</user_name>
-    <can_create>true</can_create>
-  </user>
+<users count="2" end_index="1" filter_by="[user_roles.role.pk,EQUAL,3]" full_collection="http://testserver/api/v1/query_sets/4/all;filter_by=[user_roles.role.pk,EQUAL,3]" id="http://testserver/api/v1/query_sets/4/all;start_index=0;limit=10;filter_by=[user_roles.role.pk,EQUAL,3]" limit="10" next_page="" num_pages="1" order_by="" per_page="10" previous_page="" start_index="0">
   <user id="http://testserver/api/v1/users/1">
     <blurb/>
     <display_email/>
@@ -1147,6 +1135,18 @@ users_in_role_xml = """
     <external_auth>false</external_auth>
     <user_id>1</user_id>
     <user_name>admin</user_name>
+    <can_create>true</can_create>
+  </user>
+  <user id="http://testserver/api/v1/users/2000">
+    <blurb>null</blurb>
+    <display_email/>
+    <email>testuser@rpath.com</email>
+    <full_name>Test User</full_name>
+    <is_admin>false</is_admin>
+    <roles id="http://testserver/api/v1/users/2000/roles"/>
+    <external_auth>false</external_auth>
+    <user_id>2000</user_id>
+    <user_name>testuser</user_name>
     <can_create>true</can_create>
   </user>
 </users>
