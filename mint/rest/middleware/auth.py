@@ -211,6 +211,9 @@ class AuthenticationCallback(object):
                 if request.mintAuth.admin:
                     return None
                 else:
+                    # TODO: new way is to wrap these as XML faults and return 200 to Flash
+                    if 'HTTP_X_FLASH_VERSION' in request.headers:
+                        return Response('Unauthorized', status=403)
                     return Response(status=401,
                              headers={'WWW-Authenticate' : 'Basic realm="rBuilder"'})
             else:
@@ -220,6 +223,7 @@ class AuthenticationCallback(object):
         if (not getattr(viewMethod, 'public', False)
                 and request.mintAuth is None):
             if 'HTTP_X_FLASH_VERSION' in request.headers:
-                return Response(status=403)
+                # TODO: new way is to wrap these as XML faults and return 200 to Flash
+                return Response('Unauthorized', status=403)
             return Response(status=401,
                      headers={'WWW-Authenticate' : 'Basic realm="rBuilder"'})
