@@ -2789,10 +2789,7 @@ If you would not like to be %s %s of this project, you may resign from this proj
             pd.setConaryNamespace(namespace)
             pd.setProductVersion(name)
             baseLabel = pd.getProductDefinitionLabel()
-            # assumption to speed this up.  
-            # Stages are baselabel + '-' + extention (or just baseLabel)
-            if not str(label).lower().startswith(str(baseLabel).lower()):
-                continue
+
             try:
                 project = projects.Project(self, projectId)
                 projectCfg = self._getProjectConaryConfig(project)
