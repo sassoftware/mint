@@ -5,10 +5,32 @@
 #
 
 from django.conf.urls.defaults import url, patterns, include
-import v1
+from mint.django_rest.rbuilder.discovery import views as discoveryviews
+
+class URLRegistry(object):
+    _registry = {}
+    VERSION = '1'
+    @classmethod
+    def URL(cls, regex, *args, **kwargs):
+        if not regex.startswith('^'):
+            regex = "^" + regex
+        viewName = kwargs.get('name', None)
+        if viewName:
+            oldUrl = cls._registry.get(viewName)
+            if oldUrl:
+                raise Exception("Duplicate view name: %s (urls: %s, %s)" %
+                    (viewName, oldUrl, regex))
+            cls._registry[viewName] = regex
+        # try to get model name, is optional
+        modelName = kwargs.pop('model', None)
+        u = url(regex, *args, **kwargs)
+        u.model = modelName
+        return u
+
+URL = URLRegistry.URL
 
 urlpatterns = patterns('',
-    r'^api/v1/', include('v1'),
-  # '^api/v2/', include('urls.v2'),
+    URL(r'^api/?$', discoveryviews.VersionsService(), name='API'),
+    (r'^api/v1/', include('mint.django_rest.v1')),
 )
 
