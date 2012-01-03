@@ -5,6 +5,7 @@
 # All rights reserved.
 #
 
+import json
 import collections
 import re
 
@@ -741,7 +742,7 @@ class JobCreationTest(BaseTargetsTest, RepeaterMixIn):
         params = dict(targetId=target.target_id, jobTypeId=jobType.job_type_id)
         response = self._post('targets/%s/jobs' % target.target_id,
             jobXml % params,
-            username='ExampleDeveloper', password='password')
+            username=self.developer_user.user_name, password='password')
         self.assertEquals(response.status_code, 200)
         obj = xobj.parse(response.content)
         job = obj.job
@@ -794,6 +795,133 @@ class JobCreationTest(BaseTargetsTest, RepeaterMixIn):
         obj = xobj.parse(response.content)
         job = obj.job
         self.failUnlessEqual(job.results.id, "http://testserver/api/v1/targets/1")
+
+    def testGetTargetConfiguration_ec2(self):
+        config = dict([
+            ('name', 'aws'),
+            ('alias', 'ec2'),
+            ('description', 'Amazon Elastic Compute Cloud'),
+            ('accountId', '12345'),
+            ('publicAccessKeyId', 'public-access-key-id'),
+            ('secretAccessKey', 'secret-access-key'),
+            ('certificateData', """-----BEGIN CERTIFICATE-----
+MIICeDCCAeGgAwIBAgIFberMQ1MwDQYJKoZIhvcNAQEFBQAwUzEhMB8GA1UEAxMYQVdTIExpbWl0
+ZWQtQXNzdXJhbmNlIENBMQwwCgYDVQQLEwNBV1MxEzARBgNVBAoTCkFtYXpvbi5jb20xCzAJBgNV
+BAYTAlVTMB4XDTA3MDcxMTEwNDcwMFoXDTA3MTAwOTEwNDcwMFowUjEVMBMGA1UEAxMMZDV1bjgy
+bWxvM24zMRcwFQYDVQQLEw5BV1MtRGV2ZWxvcGVyczETMBEGA1UEChMKQW1hem9uLmNvbTELMAkG
+A1UEBhMCVVMwgZ8wDQYJKoZIhvcNAQEBBQADgY0AMIGJAoGBAK8Dw8TXGkru2qTVRt3QPSW44/Qp
+FKM4KWgtvzwlP+cnLmbuBJOl0eJKzLLC6C+S2ov4UykwXMPS9Yh7Gc1tP6+TKoHr72bhC4+/DKdw
+ld2GYQofaZVxCaSULnkf1PZOizqOUixEvdfEuwLQmpbJ9Ow9nGWku5mt1cNvdhz9vhOvAgMBAAGj
+WTBXMB8GA1UdIwQYMBaAFIY/Pp+MM/3BlYGZZk0oQNyotqOWMA4GA1UdDwEB/wQEAwIFoDAWBgNV
+HSUBAf8EDDAKBggrBgEFBQcDAjAMBgNVHRMBAf8EAjAAMA0GCSqGSIb3DQEBBQUAA4GBALWp0pas
+LeZxgGykmvzd5JzHt1KYSjIzwOUK3QqfMg/YJZRq2VqCFypJWt9E7W1yoctfC2Y2yZTbWoH5XWVI
+e1s0OFJAVc0RWZY0wL/jjPpm2Adi+0Q9iwiG+HntH+u/nbrnZLdd+KbNNIDKftwvhQvPhYziAUUQ
+9rIXl9/1m5sz
+-----END CERTIFICATE----- """),
+            ('certificateKeyData', """-----BEGIN PRIVATE KEY-----
+MIICdQIBADANBgkqhkiG9w0BAQEFAASCAl8wggJbAgEAAoGBAK8Dw8TXGkru2qTVRt3QPSW44/Qp
+FKM4KWgtvzwlP+cnLmbuBJOl0eJKzLLC6C+S2ov4UykwXMPS9Yh7Gc1tP6+TKoHr72bhC4+/DKdw
+ld2GYQofaZVxCaSULnkf1PZOizqOUixEvdfEuwLQmpbJ9Ow9nGWku5mt1cNvdhz9vhOvAgMBAAEC
+gYANQkbBkd4/EQtlc3bz9QO86N30MGyM1QNmDhkv0E6gD3rXd27HVMeq0inh3RxEBmciNYTvWOee
+Okw5s8HHq2Aop88Lqtm6F/gpS1EHtUp9+56OErjYDJ91kxv/oZahXWwqpYwIBNwgg1k2bKTlWZPU
+DXUelAnjH+gmG+uz2XTgCQJBAOlZ8NuUzquvxs6UfGq7AYCQHcXAgdUYXDwExmeo6uSraVdD+pw1
+o/9GNJozAoIF81t4qyTt+FM197rCSqt3dFUCQQDAAFbOLk598XPkBsjIYku/3yt/gqztYe7bWxtb
+m1DCooH7Dhz87gQNjXaeLiQCKZCCYc5Xj8zhzYeJ6qSG7wvzAkBvjNhQD83QUwIFxQPI/caVD8+7
+tfAazz9gTaQO77gCQlLkLZIC1L2mDYid4h6jy3ZvVrrxt3TLSnQ3aiPJ3hvVAkAlsKtZpAtye7B1
+RcOqWmlmS+fdCwjpPH1IADV5oR6UZpQ/dUDJgeu3wVpUqNgWuJQOlCaOV8MvXEpMD4ymlExzAkAs
+ttl+RgIbVKA6m16gWvEsagKe2bD/BjVFz/cwSjpMBb4xuzqxSyK8g3A6W5Eqvl4f4pyy7G0a1Kr2
+ZcY7o9aU
+-----END PRIVATE KEY----- """),
+            ('s3Bucket', 'my-bucket'),
+            ('zone', 'Local rBuilder'),
+        ])
+
+        jobType = jmodels.EventType.objects.get(name=jmodels.EventType.TARGET_CONFIGURE)
+        target = models.Target.objects.get(name='Target Name ec2')
+        jobXml = """
+<job>
+  <job_type id="http://localhost/api/v1/inventory/event_types/%(jobTypeId)s"/>
+  <descriptor id="http://testserver/api/v1/targets/%(targetId)s/descriptors/configuration"/>
+  <descriptor_data>
+    %(descriptorData)s
+  </descriptor_data>
+</job>
+"""
+        descriptorData = '    \n'.join(
+            "<%s>%s</%s>" % (x, y, x) for (x, y) in config.items())
+        params = dict(targetId=target.target_id, jobTypeId=jobType.job_type_id,
+            descriptorData=descriptorData)
+        response = self._post('targets/%s/jobs' % target.target_id,
+            jobXml % params,
+            username=self.admin_user.user_name, password='password')
+        self.assertEquals(response.status_code, 200)
+        obj = xobj.parse(response.content)
+        job = obj.job
+        self.failUnlessEqual(job.descriptor.id,
+            "http://testserver/api/v1/targets/%s/descriptors/configuration" %  target.target_id)
+
+        obj = xobj.parse(response.content)
+        job = obj.job
+        self.failUnlessEqual(job.descriptor.id,
+            "http://testserver/api/v1/targets/%s/descriptors/configuration" %  target.target_id)
+
+        dbjob = jmodels.Job.objects.get(job_uuid=job.job_uuid)
+        # Make sure the job is related to the target type
+        self.failUnlessEqual(
+            [ x.target.name for x in dbjob.target_jobs.all() ],
+            [ target.name ],
+        )
+
+        calls = self.mgr.repeaterMgr.repeaterClient.getCallList()
+        self.failUnlessEqual([ x.name for x in calls ],
+            ['targets.configure', 'targets.checkCreate'])
+        realCall = calls[-1]
+        self.failUnlessEqual(realCall.args, ())
+        self.failUnlessEqual(realCall.kwargs, {})
+        self.mgr.repeaterMgr.repeaterClient.reset()
+
+        # Grab token
+        jobToken = dbjob.job_token
+        jobUrl = "jobs/%s" % dbjob.job_uuid
+
+        jobXml = """
+<job>
+  <job_state>Completed</job_state>
+  <status_code>200</status_code>
+  <status_text>Done</status_text>
+  <results>
+    <target/>
+  </results>
+</job>
+"""
+
+        response = self._put(jobUrl, jobXml, jobToken=jobToken)
+        self.assertEquals(response.status_code, 200)
+        obj = xobj.parse(response.content)
+        job = obj.job
+        self.failUnlessEqual(job.results.id,
+            "http://testserver/api/v1/targets/%s" % target.target_id)
+
+        # Check credentials
+        tdata = models.TargetData.objects.filter(target__target_id=target.target_id)
+
+        tdata = dict((x.name, x.value) for x in tdata)
+        self.failUnlessEqual(json.loads(tdata['ec2AccountId']),
+            config['accountId'])
+        self.failUnlessEqual(json.loads(tdata['ec2PublicKey']),
+            config['publicAccessKeyId'])
+        self.failUnlessEqual(json.loads(tdata['ec2PrivateKey']),
+            config['secretAccessKey'])
+
+        # Now use the API to fetch the config
+        response = self._get('targets/%s/target_configuration/' % target.target_id,
+            username=self.admin_user.user_name, password='password')
+        self.failUnlessEqual(response.status_code, 200)
+        obj = xobj.parse(response.content)
+        tconf = obj.target_configuration
+        tconfMap = dict((x, getattr(tconf, x).strip()) for x in tconf._xobj.elements)
+        self.failUnlessEqual(tconfMap,
+            dict((x, unicode(y.strip())) for (x, y) in config.items()))
 
     def testSetTargetUserCredentials(self):
         user = self.getUser('ExampleDeveloper')
