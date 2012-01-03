@@ -4,11 +4,9 @@
 # All Rights Reserved
 #
 
-from django.conf.urls.defaults import url, patterns
+from django.conf.urls.defaults import url, patterns, include
 
-from mint.django_rest.rbuilder.reporting import reportdispatcher, \
-                                                views
-
+# FIXME: these will be moved to sub url files:
 from mint.django_rest.rbuilder.discovery import views as discoveryviews
 from mint.django_rest.rbuilder.inventory import views as inventoryviews
 from mint.django_rest.rbuilder.querysets import views as querysetviews
@@ -31,17 +29,22 @@ handler500 = 'mint.django_rest.handler.handler500'
 
 URL = urls.URLRegistry.URL
 
-urlpatterns = patterns('',
-    # Versioning. Note that this URL does NOT get versioned
-    URL(r'^/?$',
-        discoveryviews.ApiVersionService(),
-        name='APIVersion'),
-    # Reporting urls
-    URL(r'reports/(.*?)/descriptor/?$',
-        reportdispatcher.ReportDescriptor()),
-    URL(r'reports/(.*?)/data/(.*?)/?$',
-        reportdispatcher.ReportDispatcher()),
-    URL(r'reports/(.*?)/?$', views.ReportView()),
+# FIXME: view names will need the version as a prefix or postfix so resolvers
+# can support v2, can update URL function to know & append context
+
+urlpatterns = patterns(
+
+    # '',
+
+    # versioning
+    URL(r'^/?$', discoveryviews.ApiVersionService(), name='APIVersion'),
+
+    # ================================================================
+    # MIGRATED URLS:
+    (r'reports/', include('mint.django_rest.rbuilder.reporting.views.v1.urls')),
+
+    # ================================================================
+    # TODO: URLS to migrate
 
     #
     # Inventory urls

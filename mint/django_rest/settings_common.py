@@ -2,7 +2,7 @@ from mint.django_rest.rbuilder import metrics
 
 # Django settings for rbuilder project.
 
-DEBUG = False
+DEBUG = True#False
 TEMPLATE_DEBUG = DEBUG
 
 ADMINS = (
