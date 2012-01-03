@@ -10,10 +10,12 @@ from mint.django_rest.rbuilder.reporting.views.v1 import views
 from mint.django_rest import urls
 URL = urls.URLRegistry.URL
 
-urlpatterns = ( 
+urlpatterns = ('reporting.views.v1',
+
    # belongs in the one view module, really
    URL(r'(.*?)/descriptor/?$', reportdispatcher.ReportDescriptor()),
    URL(r'(.*?)/data/(.*?)/?$', reportdispatcher.ReportDispatcher()),
    URL(r'(.*?)/?$',            views.ReportView())
+
 )
 

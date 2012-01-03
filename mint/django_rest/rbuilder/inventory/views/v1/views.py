@@ -4,26 +4,23 @@
 # All Rights Reserved
 #
 
-import os
-import time
 from django.http import HttpResponse, HttpResponseNotFound, HttpResponseRedirect
-from django_restapi import resource
-
 from mint.django_rest.deco import requires, return_xml, access, \
     HttpAuthenticationRequired, Flags
-from mint.django_rest.rbuilder.users import models as usersmodels
-from mint.django_rest.rbuilder import service
 from mint.django_rest.rbuilder.inventory import models
-from mint.django_rest.rbuilder.projects import models as projectsmodels
-from mint.django_rest.rbuilder.querysets import models as querymodels
-from mint.django_rest.rbuilder.rbac.rbacauth import rbac, manual_rbac
 from mint.django_rest.rbuilder.errors import PermissionDenied
 from mint.django_rest.rbuilder.rbac.manager.rbacmanager import \
    READMEMBERS, MODMEMBERS
+from mint.django_rest.rbuilder import service
+from django_restapi import resource
+from mint.django_rest.rbuilder.rbac.rbacauth import rbac, manual_rbac
+from mint.django_rest.rbuilder.querysets import models as querymodels
 
+# FIXME: why does this exist?
 class RestDbPassthrough(resource.Resource):
     pass
 
+# FIXME: why is this in inventory???
 class StageProxyService(service.BaseAuthService):
     
     @staticmethod
@@ -68,7 +65,7 @@ class MajorVersionService(service.BaseAuthService):
             setattr(project_version, m, url)
         return project_version
 
-
+# FIXME: why does this exist?
 class ApplianceService(RestDbPassthrough):
     def get(self, project):
         return None

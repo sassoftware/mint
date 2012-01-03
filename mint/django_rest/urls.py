@@ -12,9 +12,9 @@ class URLRegistry(object):
     VERSION = '1'
     @classmethod
     def URL(cls, regex, *args, **kwargs):
-        if not regex.startswith('^'):
-            regex = "^" + regex
         viewName = kwargs.get('name', None)
+        if not regex.startswith("^"):
+            regex = "^%s" % regex
         if viewName:
             oldUrl = cls._registry.get(viewName)
             if oldUrl:
@@ -31,6 +31,11 @@ URL = URLRegistry.URL
 
 urlpatterns = patterns('',
     URL(r'^api/?$', discoveryviews.VersionsService(), name='API'),
-    (r'^api/v1/', include('mint.django_rest.v1')),
+
+    # API v1
+    URL(r'^api/v1/?$', discoveryviews.ApiVersionService(), name='APIVersion'),
+    (r'^api/v1', include('mint.django_rest.v1')),
+
+    # API v2
 )
 
