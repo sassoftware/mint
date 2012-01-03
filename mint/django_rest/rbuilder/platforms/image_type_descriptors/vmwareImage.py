@@ -127,8 +127,7 @@ XML = """<?xml version='1.0' encoding='UTF-8'?>
             </descriptions>
             <help lang="en_US" href="@Help_build_ovf_1_0@"/>
             <type>bool</type>
-            <default>true</default>
-            <hidden>true</hidden>
+            <default>false</default>
         </field>
     </dataFields>
 </descriptor>"""
