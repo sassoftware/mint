@@ -85,7 +85,7 @@ XML = """<?xml version='1.0' encoding='UTF-8'?>
             <help lang="en_US" href="@Help_image_use_nat@"/>
             <type>bool</type>
             <default>true</default>
-            <required>false</required>
+            <hidden>true</hidden>
         </field>
         <field>
             <name>options.allowSnapshots</name>
@@ -95,7 +95,7 @@ XML = """<?xml version='1.0' encoding='UTF-8'?>
             <help lang="en_US" href="@Help_allow_snapshots@"/>
             <type>bool</type>
             <default>true</default>
-            <required>false</required>
+            <hidden>true</hidden>
         </field>
     </dataFields>
 </descriptor>"""

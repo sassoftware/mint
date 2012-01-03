@@ -93,6 +93,12 @@ class RbuilderManager(basemanager.BaseRbuilderManager):
                         raise Exception("Conflict for method %s" % objName)
                     setattr(self, objName, obj)
 
+    def enterTransactionManagement(self):
+        transaction.enter_transaction_management()
+
+    def leaveTransactionManagement(self):
+        transaction.leave_transaction_management()
+
     def commit(self):
         if transaction.is_managed():
             if transaction.is_dirty():

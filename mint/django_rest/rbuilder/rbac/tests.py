@@ -248,9 +248,7 @@ class RbacRoleViews(RbacTestCase):
     def testCanListRoles(self):
 
         url = 'rbac/roles'
-        # the fact that @access.admin retuns 401 and not 403 is a bug and we should resolve
-        # it.
-        content = self.req(url, method='GET', expect=401, is_authenticated=True)
+        content = self.req(url, method='GET', expect=403, is_authenticated=True)
         content = self.req(url, method='GET', expect=200, is_admin=True)
 
         obj = xobj.parse(content)
@@ -290,7 +288,7 @@ class RbacRoleViews(RbacTestCase):
         url = 'rbac/roles'
         input = testsxml.role_post_xml_input   
         output = testsxml.role_post_xml_output
-        content = self.req(url, method='POST', data=input, expect=401, is_authenticated=True)
+        content = self.req(url, method='POST', data=input, expect=403, is_authenticated=True)
         content = self.req(url, method='POST', data=input, expect=200, is_admin=True)
         self.assertXMLEquals(content, output)
         # verify that the act of adding a role auto-invalidated the queryset tag
@@ -302,7 +300,7 @@ class RbacRoleViews(RbacTestCase):
     def testCanDeleteRoles(self):
 
         url = 'rbac/roles/1'
-        self.req(url, method='DELETE', expect=401, is_authenticated=True)
+        self.req(url, method='DELETE', expect=403, is_authenticated=True)
         self.req(url, method='DELETE', expect=204, is_admin=True)
         self.failUnlessRaises(models.RbacRole.DoesNotExist,
             lambda: models.RbacRole.objects.get(name='sysadmin'))
@@ -312,7 +310,7 @@ class RbacRoleViews(RbacTestCase):
         url = 'rbac/roles/2' # was 1, 2 == sysadmin?
         input = testsxml.role_put_xml_input   # reusing put data is fine here
         output = testsxml.role_put_xml_output
-        content = self.req(url, method='PUT', data=input, expect=401, is_authenticated=True)
+        content = self.req(url, method='PUT', data=input, expect=403, is_authenticated=True)
         content = self.req(url, method='PUT', data=input, expect=200, is_admin=True)
         found_items = models.RbacRole.objects.get(name='rocketsurgeon')
         all_roles = models.RbacRole.objects.all()
@@ -368,7 +366,7 @@ class RbacPermissionViews(RbacTestCase):
 
     def testCanListPermissions(self):
         url = 'rbac/grants'
-        content = self.req(url, method='GET', expect=401, is_authenticated=True)
+        content = self.req(url, method='GET', expect=403, is_authenticated=True)
         content = self.req(url, method='GET', expect=200, is_admin=True)
 
         obj = xobj.parse(content)
@@ -399,7 +397,7 @@ class RbacPermissionViews(RbacTestCase):
 
     def testCanGetSinglePermission(self):
         url = 'rbac/grants/1'
-        content = self.req(url, method='GET', expect=401, is_authenticated=True)
+        content = self.req(url, method='GET', expect=403, is_authenticated=True)
         content = self.req(url, method='GET', expect=200, is_admin=True)
         self.assertXMLEquals(content, testsxml.permission_get_xml)
 
@@ -407,7 +405,7 @@ class RbacPermissionViews(RbacTestCase):
         url = 'rbac/grants'
         input = testsxml.permission_post_xml_input
         output = testsxml.permission_post_xml_output
-        content = self.req(url, method='POST', data=input, expect=401, is_authenticated=True)
+        content = self.req(url, method='POST', data=input, expect=403, is_authenticated=True)
         content = self.req(url, method='POST', data=input, expect=200, is_admin=True)
         self.assertXMLEquals(content, output)
 
@@ -415,7 +413,7 @@ class RbacPermissionViews(RbacTestCase):
        
         all = models.RbacPermission.objects.all()
         url = 'rbac/grants/1'
-        self.req(url, method='DELETE', expect=401, is_authenticated=True)
+        self.req(url, method='DELETE', expect=403, is_authenticated=True)
         self.req(url, method='DELETE', expect=204, is_admin=True)
         all = models.RbacPermission.objects.all()
         self.assertEqual(len(all), 4, 'deleted an object')
@@ -425,7 +423,7 @@ class RbacPermissionViews(RbacTestCase):
         url = 'rbac/grants/1'
         input = testsxml.permission_put_xml_input
         output = testsxml.permission_put_xml_output
-        content = self.req(url, method='PUT', data=input, expect=401, is_authenticated=True)
+        content = self.req(url, method='PUT', data=input, expect=403, is_authenticated=True)
         content = self.req(url, method='PUT', data=input, expect=200, is_admin=True)
         self.assertXMLEquals(content, output)
         perm = models.RbacPermission.objects.get(pk=1)
@@ -510,7 +508,7 @@ class RbacUserRoleViewTests(RbacTestCase):
         # gives the admin user the intern role
         input = testsxml.user_role_post_xml_input
         output = testsxml.user_role_post_xml_output
-        content = self.req(url, method='POST', data=input, expect=401, is_authenticated=True)
+        content = self.req(url, method='POST', data=input, expect=403, is_authenticated=True)
         content = self.req(url, method='POST', data=input, expect=200, is_admin=True)
         self.assertXMLEquals(content, output)
         user_role = models.RbacUserRole.objects.get(user = self.admin_user, role=self.intern)
@@ -519,7 +517,7 @@ class RbacUserRoleViewTests(RbacTestCase):
 
         # list users in role to make sure that relationship collection works
         url = 'rbac/roles/3/users/'
-        content = self.req(url, method='GET', expect=401, is_authenticated=True)
+        content = self.req(url, method='GET', expect=403, is_authenticated=True)
         content = self.req(url, method='GET', expect=200, is_admin=True)
         self.assertXMLEquals(content, testsxml.users_in_role_xml)
 
@@ -528,7 +526,7 @@ class RbacUserRoleViewTests(RbacTestCase):
         url = "users/%s/roles/1" % user_id # developer role
         get_url = "users/%s/roles/" % user_id
         # make admin no longer a developer
-        self.req(url, method='DELETE', expect=401, is_authenticated=True)
+        self.req(url, method='DELETE', expect=403, is_authenticated=True)
         self.req(url, method='DELETE', expect=204, is_admin=True)
         all = models.RbacUserRole.objects.all()
         self.assertEquals(len(all), 2, 'right number of objects')
@@ -602,24 +600,6 @@ class RbacEngine(RbacTestCase):
 
     def setUp(self):
         setup_core(self)
-
-    def _get(self, url, username=None, password=None, pagination='', *args, **kwargs):
-        """
-        Handles redirects resulting from rbac requirement that we
-        return a query set for resources that are collections.
-        The pagination parameter allows us to include an offset and
-        limit big enough that our test data will not be truncated.
-        """
-        # Ugly
-        def _parseRedirect(http_redirect):
-            redirect_url = http_redirect['Location']
-            return redirect_url.split('/api/v1/')[1].strip('/') + pagination
-
-        response = super(RbacTestCase, self)._get(url, username=username, password=password)
-        if str(response.status_code).startswith('3') and response.has_header('Location'):
-            new_url = _parseRedirect(response)
-            response = RbacTestCase._get(self, new_url, username=username, password=password)
-        return response
 
 class RbacEngineTests(RbacEngine):
     '''Do we know when to grant or deny access?'''

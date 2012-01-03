@@ -144,7 +144,7 @@ class ImageSystemsService(service.BaseAuthService):
     @requires("systems", flags=Flags(save=False))
     @return_xml
     def rest_POST(self, request, image_id, systems):
-        return self.mgr.addLaunchedSystems(systems, image_id)
+        return self.mgr.addLaunchedSystems(systems, image_id, forUser=self.mgr.user)
 
 class ImageBuildFilesService(service.BaseService):
  
@@ -198,7 +198,6 @@ class ImageBuildFileService(service.BaseAuthService):
             raise PermissionDenied(msg="id does not match URL")
         if request._withAuthToken:
             self.mgr.addTargetImagesForFile(file)
-        file.save()
         return file
 
     @rbac(can_write_image)

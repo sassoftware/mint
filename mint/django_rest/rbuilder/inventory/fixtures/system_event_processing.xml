@@ -10,8 +10,8 @@
         <field type="DateTimeField" name="registration_date">2010-08-05 22:17:29</field>
         <field type="CharField" name="generated_uuid"><None></None></field>
         <field type="CharField" name="local_uuid"><None></None></field>
-        <field type="CharField" name="ssl_client_certificate"><None></None></field>
-        <field type="CharField" name="ssl_client_key"><None></None></field>
+        <field type="CharField" name="_ssl_client_certificate"><None></None></field>
+        <field type="CharField" name="_ssl_client_key"><None></None></field>
         <field type="CharField" name="ssl_server_certificate"><None></None></field>
         <field to="users.users" name="launching_user" rel="ManyToOneRel"><None></None></field>
         <field to="inventory.systemstate" name="current_state" rel="ManyToOneRel">1</field>
@@ -29,8 +29,8 @@
         <field type="DateTimeField" name="registration_date">2010-08-05 22:17:43</field>
         <field type="CharField" name="generated_uuid"><None></None></field>
         <field type="CharField" name="local_uuid"><None></None></field>
-        <field type="CharField" name="ssl_client_certificate"><None></None></field>
-        <field type="CharField" name="ssl_client_key"><None></None></field>
+        <field type="CharField" name="_ssl_client_certificate"><None></None></field>
+        <field type="CharField" name="_ssl_client_key"><None></None></field>
         <field type="CharField" name="ssl_server_certificate"><None></None></field>
         <field to="users.users" name="launching_user" rel="ManyToOneRel"><None></None></field>
         <field to="inventory.systemstate" name="current_state" rel="ManyToOneRel">1</field>
@@ -48,8 +48,8 @@
         <field type="DateTimeField" name="registration_date">2010-08-05 22:17:59</field>
         <field type="CharField" name="generated_uuid"><None></None></field>
         <field type="CharField" name="local_uuid"><None></None></field>
-        <field type="CharField" name="ssl_client_certificate"><None></None></field>
-        <field type="CharField" name="ssl_client_key"><None></None></field>
+        <field type="CharField" name="_ssl_client_certificate"><None></None></field>
+        <field type="CharField" name="_ssl_client_key"><None></None></field>
         <field type="CharField" name="ssl_server_certificate"><None></None></field>
         <field to="users.users" name="launching_user" rel="ManyToOneRel"><None></None></field>
         <field to="inventory.systemstate" name="current_state" rel="ManyToOneRel">1</field>

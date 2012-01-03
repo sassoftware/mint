@@ -50,7 +50,16 @@ class ProjectManager(basemanager.BaseManager):
         return project
 
     @exposed
+    def projectNameInUse(self, project):
+        found = projectsmodels.Project.objects.filter(name=project.name)
+        if len(found) > 0:
+            return True
+        return False
+
+    @exposed
     def addProject(self, project, for_user):
+        project.save()
+
         label = None
         if project.labels and len(project.labels.all()) > 0:
             label = project.labels.all()[0]
@@ -456,14 +465,9 @@ class ProjectManager(basemanager.BaseManager):
 
     @exposed
     def getProjectBranchStageImages(self, project_short_name, project_branch_label, stage_name):
-        stage = self.getProjectBranchStage(project_short_name, project_branch_label, stage_name)
-
-        my_images = imagemodels.Image.objects.select_related(depth=2).filter(
-            project_branch_stage__stage_id=stage.stage_id
-        ).distinct() | imagemodels.Image.objects.select_related(depth=2).filter(
-            project_branch__branch_id=stage.project_branch.branch_id,
-            stage_name=stage.name
-        ).distinct()
+        my_images = imagemodels.Image.objects.filter(
+            project_branch_stage__name=stage_name).distinct() | \
+            imagemodels.Image.objects.filter(project_branch__label=project_branch_label).distinct()
 
         images = imagemodels.Images()
         images.image = my_images

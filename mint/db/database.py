@@ -129,7 +129,6 @@ class Database(object):
 
         tables = TableCache(self._db, self._cfg)
         self._copyTables(tables)
-        self.normalizeMirrorOrder()
         if self._db.inTransaction(True):
             self._db.commit()
 
@@ -161,25 +160,6 @@ class Database(object):
 
     def inTransaction(self, default=None):
         return self._db.inTransaction(default)
-
-    def normalizeMirrorOrder(self):
-        self._normalizeMirrorOrder("OutboundMirrors", "outboundMirrorId")
-        self._normalizeMirrorOrder("InboundMirrors", "inboundMirrorId")
-
-    def _normalizeMirrorOrder(self, table, idField):
-        # normalize mirror order, in case of deletions
-        updates = []
-        cu = self.db.cursor()
-        cu.execute("SELECT mirrorOrder, %s FROM %s ORDER BY mirrorOrder ASC"
-                % (idField, table))
-        for newIndex, (oldIndex, rowId) in enumerate(cu.fetchall()):
-            if newIndex != oldIndex:
-                updates.append((newIndex, rowId))
-
-        if updates:
-            cu.executemany("UPDATE %s SET mirrorOrder=? WHERE %s=?"
-                    % (table, idField), updates)
-            self.db.commit()
 
     def _getOne(self, cu, exception, key):
         try:

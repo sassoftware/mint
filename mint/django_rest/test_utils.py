@@ -6,6 +6,7 @@
 
 import base64
 import os
+import random
 import shutil
 import tempfile
 import urllib
@@ -24,6 +25,7 @@ from django.test.simple import DjangoTestSuiteRunner
 from django.utils.http import urlencode
 
 from mint import config as mintconfig
+from mint import buildtypes
 from mint.db import schema
 from mint.django_rest.rbuilder.inventory import models as invmodels
 from mint.django_rest.rbuilder.inventory import zones as zmodels
@@ -100,6 +102,13 @@ class TestRunner(DjangoTestSuiteRunner):
             conn.close()
 
 class XMLTestCase(TestCase, testcase.MockMixIn):
+    ImageFile = namedtuple('ImageFile', 'title url size sha1')
+
+    @classmethod
+    def uuid4(cls):
+        from mint.lib import uuid
+        return uuid.uuid4()
+
     def _fixture_setup(self):
         "Called by django's testsuite"
         alias = DEFAULT_DB_ALIAS
@@ -252,6 +261,34 @@ class XMLTestCase(TestCase, testcase.MockMixIn):
             kwargs['managing_zone'] = self.localZone
         return invmodels.System(**kwargs)
 
+    def addImage(self, name, description=None,
+            imageType=buildtypes.VMWARE_ESX_IMAGE,
+            stage=None, files=None, baseImage=None,
+            fileNameTemplate='file-name-%s.ova', seed=None):
+        if stage is None:
+            branch = self.getProjectBranch(label='chater-foo.eng.rpath.com@rpath:chater-foo-1')
+            stage = self.getProjectBranchStage(branch=branch, name="Development")
+        if files is None:
+            if seed is None:
+                seed = random.randint(1024, 10240)
+            files = [ self.ImageFile(url=fileNameTemplate % seed,
+                title='Image Title %s' % seed, size=seed, sha1="%040d" % seed) ]
+        # To create deferred images, pass files=[]
+
+        img = self.mgr.createImage(name=name, description=description,
+            project_branch_stage=stage,
+            _image_type=imageType, base_image=baseImage)
+        self.mgr.createImageBuild(img)
+        for fileUrl, fileTitle, fileSize, fileSha1 in files:
+            self.mgr.createImageBuildFile(img,
+                url=fileUrl,
+                title=fileTitle,
+                size=fileSize,
+                sha1=fileSha1,
+            )
+        # No retagging in this function
+        return img
+
     def _addRequestAuth(self, username=None, password=None, jobToken=None, **extra):
         if username:
             type, password = self._authHeader(username, password)
@@ -269,7 +306,24 @@ class XMLTestCase(TestCase, testcase.MockMixIn):
             return path
         return '/api/v1/' + path
 
-    def _get(self, path, data={}, username=None, password=None, follow=False, headers=None):
+    # Ugly
+    def _parseRedirect(self, http_redirect, pagination=''):
+        redirect_url = http_redirect['Location']
+        return redirect_url.split('/api/v1/')[1].strip('/') + pagination
+
+    def _get(self, url, username=None, password=None, pagination='', *args, **kwargs):
+        """
+        HTTP GET. Handles redirects & pagination.
+        The pagination parameter allows us to include an offset and
+        limit big enough that our test data will not be truncated.
+        """
+        response = self._get_internal(url, username=username, password=password)
+        if str(response.status_code).startswith('3') and response.has_header('Location'):
+            new_url = self._parseRedirect(response, pagination)
+            response = self._get_internal(new_url, username=username, password=password)
+        return response
+
+    def _get_internal(self, path, data={}, username=None, password=None, follow=False, headers=None):
         path = self._fixPath(path)
         params = data.copy()
         parsed = urlparse.urlparse(path)
@@ -352,8 +406,8 @@ class XMLTestCase(TestCase, testcase.MockMixIn):
         system.description = 'testsystemdescription'
         system.local_uuid = 'testsystemlocaluuid'
         system.generated_uuid = 'testsystemgenerateduuid'
-        system.ssl_client_certificate = 'testsystemsslclientcertificate'
-        system.ssl_client_key = 'testsystemsslclientkey'
+        system._ssl_client_certificate = 'testsystemsslclientcertificate'
+        system._ssl_client_key = 'testsystemsslclientkey'
         system.ssl_server_certificate = 'testsystemsslservercertificate'
         system.registered = True
         system.current_state = self.mgr.sysMgr.systemState(
@@ -390,8 +444,8 @@ class XMLTestCase(TestCase, testcase.MockMixIn):
         management_node.description = 'test management node desc' + suffix
         management_node.local_uuid = 'test management node luuid' + suffix
         management_node.generated_uuid = 'test management node guuid' + suffix
-        management_node.ssl_client_certificate = 'test management node client cert' + suffix
-        management_node.ssl_client_key = 'test management node client key' + suffix
+        management_node._ssl_client_certificate = 'test management node client cert' + suffix
+        management_node._ssl_client_key = 'test management node client key' + suffix
         management_node.ssl_server_certificate = 'test management node server cert' + suffix
         management_node.registered = True
         management_node.current_state = self.mgr.sysMgr.systemState(
@@ -419,8 +473,8 @@ class XMLTestCase(TestCase, testcase.MockMixIn):
         system.description = 'testsystemdescription2'
         system.local_uuid = 'testsystemlocaluuid2'
         system.generated_uuid = 'testsystemgenerateduuid2'
-        system.ssl_client_certificate = 'testsystemsslclientcertificate2'
-        system.ssl_client_key = 'testsystemsslclientkey2'
+        system._ssl_client_certificate = 'testsystemsslclientcertificate2'
+        system._ssl_client_key = 'testsystemsslclientkey2'
         system.ssl_server_certificate = 'testsystemsslservercertificate2'
         system.registered = True
         system.current_state = self.mgr.sysMgr.systemState(
@@ -561,6 +615,7 @@ class XML(object):
 
 class CallProxy(object):
     __slots__ = []
+    prefix = None
     class _CallProxy(object):
         _callList = []
         # If we set _callReturn to a lambda, it will be interpreted as a
@@ -568,8 +623,11 @@ class CallProxy(object):
         _callReturn = []
         #_callData = namedtuple("CallData", "name args kwargs retval")
         _callData = namedtuple("CallData", "name args kwargs")
-        def __init__(self, name):
-            self._name = name
+        def __init__(self, name, prefix=None):
+            if prefix is not None:
+                self._name = "%s.%s" % (prefix, name)
+            else:
+                self._name = name
 
         def __repr__(self):
             return "<%s for  %s>" % (self.__class__.__name__, self._name)
@@ -584,7 +642,7 @@ class CallProxy(object):
             return ret
 
     def __getattr__(self, name):
-        return self._CallProxy(name)
+        return self._CallProxy(name, prefix=self.prefix)
 
     def reset(self):
         del self._CallProxy._callList[:]
@@ -595,28 +653,42 @@ class CallProxy(object):
     def getCallList(self):
         return self._CallProxy._callList[:]
 
-class RepeaterClient(CallProxy):
-    class CimParams(object):
-        def __init__(self, **kwargs):
-            self.__dict__.update(kwargs)
-        def __eq__(self, other):
-            return self.__dict__ == other.__dict__
-        def __repr__(self):
-            return repr(self.__dict__)
+class _StorageObject(object):
+    def __init__(self, **kwargs):
+        self.__dict__.update(kwargs)
+    def __eq__(self, other):
+        return self.__dict__ == other.__dict__
+    def __repr__(self):
+        return repr(self.__dict__)
 
+class _SlotStorageObject(object):
+    __slots__ = []
+    def __init__(self, *args, **kwargs):
+        for slotName, slotVal in zip(self.__slots__, args):
+            setattr(self, slotName, slotVal)
+        for slotName in self.__slots__:
+            if slotName in kwargs:
+                setattr(self, slotName, kwargs[slotName])
+
+class Targets(CallProxy):
+    prefix = 'targets'
+    class TargetConfiguration(_SlotStorageObject):
+        __slots__ = ['targetType', 'targetName', 'alias', 'config',]
+    class TargetUserCredentials(_SlotStorageObject):
+        __slots__ = ['rbUser', 'rbUserId', 'isAdmin', 'credentials', ]
+
+class RepeaterClient(CallProxy):
+    class CimParams(_StorageObject):
+        pass
     class WmiParams(CimParams):
         pass
-
     class ManagementInterfaceParams(CimParams):
         pass
 
-    class ResultsLocation(object):
-        def __init__(self, **kwargs):
-            self.__dict__.update(kwargs)
-        def __eq__(self, other):
-            return self.__dict__ == other.__dict__
-        def __repr__(self):
-            return repr(self.__dict__)
+    class ResultsLocation(_StorageObject):
+        pass
+
+    targets = Targets()
 
     def getJob(self, uuid):
         job = RmakeJob(uuid, 200, "status text", "status detail", True)

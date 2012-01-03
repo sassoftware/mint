@@ -527,20 +527,6 @@ class MintServer(object):
         pd.setProductVersion(version.name)
         return pd.getProductDefinitionLabel()
 
-    def _fillInEmptyEC2Creds(self, authToken):
-        """
-        Convenience method that fills in the rBuilder's default
-        credentials for EC2 if the authToken is an empty tuple.
-        Otherwise it passes back what it was passed in.
-        """
-        assert(isinstance(authToken, (list, tuple)))
-        amiData = self._getTargetData('ec2', 'aws', supressException = True)
-        if len(authToken) == 0:
-            return (amiData.get('ec2AccountId', ""),
-                    amiData.get('ec2PublicKey', ""),
-                    amiData.get('ec2PrivateKey', ""))
-        return authToken
-
     # unfortunately this function can't be a proper decorator because we
     # can't always know which param is the projectId.
     # We'll just call it at the begining of every function that needs it.
@@ -2076,7 +2062,7 @@ If you would not like to be %s %s of this project, you may resign from this proj
                 buildSettings = containerTemplate.fields.copy()
 
             for key, val in buildImage.fields.iteritems():
-                if val is not None:
+                if val is not None and val != '':
                     buildSettings[key] = val
             buildType = buildImage.containerFormat and \
                     str(buildImage.containerFormat) or ''
@@ -2392,11 +2378,6 @@ If you would not like to be %s %s of this project, you may resign from this proj
 
             # Determine search path; start with imageGroup's label
             searchPath.append(igV.branch().label())
-
-        # Handle anacond-templates using a fallback
-        if specialTroveName == 'anaconda-templates':
-            # Need to search our system-wide fallback for anaconda templates
-            searchPath.append(versions.Label(self.cfg.anacondaTemplatesFallback))
 
         # if no flavor specified, use the top level group's flavor
         if not specialTroveFlavor:
@@ -2808,10 +2789,7 @@ If you would not like to be %s %s of this project, you may resign from this proj
             pd.setConaryNamespace(namespace)
             pd.setProductVersion(name)
             baseLabel = pd.getProductDefinitionLabel()
-            # assumption to speed this up.  
-            # Stages are baselabel + '-' + extention (or just baseLabel)
-            if not str(label).lower().startswith(str(baseLabel).lower()):
-                continue
+
             try:
                 project = projects.Project(self, projectId)
                 projectCfg = self._getProjectConaryConfig(project)

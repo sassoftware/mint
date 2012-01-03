@@ -164,13 +164,14 @@ class UsersManager(basemanager.BaseManager):
         if not len(deleting) > 0:
             raise self.exceptions.UserNotFoundException()
         deleting = deleting[0]
-
+        
         # so that the old user name can be recycled, add a random number
         # on the end 
-        deleting.user_name = "%s:%s" % (deleting.user_name, random.randint(0,99999999))
+        oldUserName = deleting.user_name
+        deleting.user_name = "%s:deleted:%s" % (deleting.user_name, random.randint(0,99999999))
         # if the user name was actually using close to the 127 allowed characters (god, why?)
         # don't worry so much about the random number... a rather unlikely scenario
-        excess = 126 - len(deleting.user_name) - 1
+        excess = 118 - len(deleting.user_name) - 1
         if excess < 0:
             deleting.user_name = deleting.user_name[0:excess]
 
@@ -179,6 +180,16 @@ class UsersManager(basemanager.BaseManager):
         # need to retag because we haven't actually deleted it, otherwise
         # cascade takes care of tag removal for other resources
         self.mgr.retagQuerySetsByType('user', forUser)
+        # delete querysets for cleanup reasons, but also so the username
+        # can be recycled as My Querysets have the user name in them
+        from mint.django_rest.rbuilder.querysets import models as querymodels
+        from mint.django_rest.rbuilder.rbac import models as rbacmodels
+        querymodels.QuerySet.objects.filter(
+            personal_for=deleting
+        ).delete()
+        rbacmodels.RbacRole.objects.filter(
+            name="user:%s" % oldUserName
+        ).delete()
 
     @exposed
     def getSessionInfo(self):

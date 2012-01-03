@@ -28,7 +28,7 @@ from conary.dbstore import sqlerrors, sqllib
 log = logging.getLogger(__name__)
 
 # database schema major version
-RBUILDER_DB_VERSION = sqllib.DBversion(60, 11)
+RBUILDER_DB_VERSION = sqllib.DBversion(61, 3)
 
 def _createTrigger(db, table, column="changed"):
     retInsert = db.createTrigger(table, column, "INSERT")
@@ -457,9 +457,10 @@ def _createBuilds(db):
             buildId             integer         NOT NULL
                 REFERENCES Builds ON DELETE CASCADE,
             idx                 smallint        NOT NULL    DEFAULT 0,
-            title               varchar(255)    NOT NULL    DEFAULT '',
+            title               varchar(255)    NOT NULL,
             size                bigint,
-            sha1                char(40)
+            sha1                char(40),
+            CONSTRAINT title_not_empty CHECK (title != '')
         ) %(TABLEOPTS)s """ % db.keywords)
         db.tables['BuildFiles'] = []
 
@@ -1506,6 +1507,27 @@ def _createInventorySchema(db, cfg):
             content         TEXT NOT NULL,
             created_date    TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT current_timestamp
         ) %(TABLEOPTS)s""")
+
+    createTable(db, 'jobs_created_system', """
+        CREATE TABLE jobs_created_system
+        (
+            creation_id     %(PRIMARYKEY)s,
+            job_id          INTEGER NOT NULL
+                REFERENCES jobs_job ON DELETE CASCADE,
+            system_id       INTEGER NOT NULL
+                REFERENCES inventory_system ON DELETE SET NULL
+        ) %(TABLEOPTS)s""")
+
+    createTable(db, 'jobs_created_image', """
+        CREATE TABLE jobs_created_image
+        (
+            creation_id     %(PRIMARYKEY)s,
+            job_id          INTEGER NOT NULL
+                REFERENCES jobs_job ON DELETE CASCADE,
+            image_id        INTEGER NOT NULL
+                REFERENCES builds (buildid) ON DELETE SET NULL
+        ) %(TABLEOPTS)s""")
+
 
     tableName = "inventory_system_job"
     if 'inventory_system_job' not in db.tables:
@@ -2606,27 +2628,6 @@ def _createQuerySetSchema(db):
         )""")
 
 
-def _createChangeLogSchema(db):
-    """ChangeLog tables"""
-
-    createTable(db, 'changelog_change_log', """
-        CREATE TABLE "changelog_change_log" (
-            "change_log_id" %(PRIMARYKEY)s,
-            "resource_type" TEXT NOT NULL,
-            "resource_id" INTEGER NOT NULL
-        )""")
-
-    createTable(db, 'changelog_change_log_entry', """
-        CREATE TABLE "changelog_change_log_entry" (
-            "change_log_entry_id" %(PRIMARYKEY)s,
-            "change_log_id" INTEGER
-                REFERENCES "changelog_change_log" ("change_log_id")
-                ON DELETE CASCADE NOT NULL,
-            "entry_text" TEXT NOT NULL,
-            "entry_date" TIMESTAMP WITH TIME ZONE NOT NULL
-        )""")
-
-
 def _createDjangoSchema(db):
     # before edge, django would just go out by itself to create its
     # tables.
@@ -3027,7 +3028,6 @@ def createSchema(db, doCommit=True, cfg=None):
     _createUpdateSystemsQuerySet(db)
     _createAllProjectBranchStages(db)
     _createAllProjects(db)
-    _createChangeLogSchema(db)
     _createPackageSchema(db)
     _createDjangoSchema(db)
     _createRbac(db)

@@ -179,6 +179,39 @@ class UsersTestCase(RbacEngine):
         )
         self.failUnlessEqual(len(grants), 0)
 
+        # reinstate can create bits
+        response = self._put("users/%s" % user.user_id,
+            data=testsxml.users_post_xml_can_create,
+            username='admin', password='password'
+        )
+        self.failUnlessEqual(response.status_code, 200)
+        # delete the user
+        response = self._delete("users/%s" % user.user_id,
+            username='admin', password='password')
+        self.failUnlessEqual(response.status_code, 204)
+
+        # model in database is now marked deleted and name
+        # was changed to allow username reuse
+        deletedUser = models.User.objects.get(pk=user.user_id)
+        self.failUnlessEqual(deletedUser.deleted, True)
+        self.assertTrue(deletedUser.user_name != user.user_name)
+        response = self._get("users/%s" % user.user_id,
+            username='admin', password='password')
+        self.failUnlessEqual(response.status_code, 200)
+        deletedUser = self.toXObj(response.content)
+
+        # no personal querysets remain (these would prevent 
+        # creation of new QSes with the same name)
+        remaining = querymodels.QuerySet.objects.filter(
+            personal_for__pk = deletedUser.user_id
+        )
+        self.failUnlessEqual(len(remaining), 0)
+        remaining2 = rbacmodels.RbacRole.objects.filter(
+            rbacuserrole__user__pk = deletedUser.user_id,
+            is_identity = True
+        )
+        self.failUnlessEqual(len(remaining2), 0)
+
     def testUpdateUser(self):
         self.mockMint()
         response = self._put('users/10000',
@@ -340,7 +373,7 @@ class UsersTestCase(RbacEngine):
         # Non-admin
         response = self._delete('users/2000',
             username='testuser', password='password')
-        self.failUnlessEqual(response.status_code, 401)
+        self.failUnlessEqual(response.status_code, 403)
 
         # Admin deleting another user
         response = self._delete('users/2000',

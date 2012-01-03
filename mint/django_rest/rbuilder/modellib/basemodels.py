@@ -604,6 +604,9 @@ class BaseManager(models.Manager):
         # Save a reference to the oldModel on model.  This could be helpful
         # later on to detect state changes.
         model.oldModel = oldModel
+        # Save a reference to the original xobj model, e.g. to inspect
+        # read-only fields
+        model._xobjModel = xobjModel
 
         return model
 
@@ -914,17 +917,17 @@ class SyntheticField(object):
     so must do extra work to transfer attributes to the model it wraps.
     """
 
-    def __init__(self, model=None):
-        if model is None:
-           model = str
-        self.model = model
-        hidden = getattr(self, 'XObjIdHidden', None)
-        ro     = getattr(self, 'APIReadOnly', None)
-        if hidden:
-             self.model.XObjIdHidden = hidden
-        if ro:
-             self.model.APIReadOnly  = ro
+    __slots__ = ['model', 'XObjHidden', 'APIReadOnly', 'docstring',
+        'shortname', ]
 
+    def __init__(self, model=None):
+        self.XObjHidden = False
+        self.APIReadOnly = False
+        self.docstring = ''
+        self.shortname = ''
+        if model is None:
+            model = str
+        self.model = model
 
 class XObjModel(models.Model):
     """
@@ -965,9 +968,17 @@ class XObjModel(models.Model):
 
             ret._meta.synthetic_fields = synth = dict()
             ret._meta.abstract_fields = abstr = dict()
+            # Inherit abstract and synthetic fields from the base class
+            for bc in bases:
+                meta = getattr(bc, '_meta', None)
+                if meta is None:
+                    continue
+                synth.update(getattr(meta, 'synthetic_fields', {}))
+                abstr.update(getattr(meta, 'abstract_fields', {}))
+
             for k, v in attrs.items():
                 if isinstance(v, SyntheticField):
-                    synth[k] = v.model
+                    synth[k] = v
                     # Default the value to None
                     setattr(ret, k, None)
                 meta = getattr(v, '_meta', None)
@@ -1236,14 +1247,18 @@ class XObjModel(models.Model):
             field = fields.pop(key, None)
             if field is None:
                 field = syntheticFields.get(key)
-                # XXX using isinstance seems bad. We should make sure
-                # val is an acceptable value for a field, and that can
-                # be any field, model or xobj object, and it's hard
-                if (field is not None and val is not None
-                        and not isinstance(val, (int, bool))):
-                    # The user specified a value for the synthetic field.
-                    # We'll use that instead of the one from the class def
-                    field = val
+                if field is not None:
+                    if getattr(field, 'XObjHidden', False):
+                        continue
+                    # XXX using isinstance seems bad. We should make sure
+                    # val is an acceptable value for a field, and that can
+                    # be any field, model or xobj object, and it's hard
+                    if (val is not None and not isinstance(val, (int, bool))):
+                        # The user specified a value for the synthetic field.
+                        # We'll use that instead of the one from the class def
+                        field = val
+                    else:
+                        field = field.model
             if field is not None:
                 if getattr(field, 'XObjHidden', False):
                     continue
@@ -1478,6 +1493,8 @@ class XObjModel(models.Model):
                     if getattr(self, '_supports_collapsed_collection', False):
                         val._summarize = True
                     xobjModelVal = val.serialize(request)
+                elif isinstance(val, HrefField):
+                    xobjModelVal = val.serialize_value(request)
                 else:
                     xobjModelVal = val
                 listFieldVals.append(xobjModelVal)
@@ -1585,9 +1602,10 @@ class HrefFieldFromModel(HrefField):
     """
     Build an href out of another model
     """
-    def __init__(self, model=None, viewName=None):
+    def __init__(self, model=None, viewName=None, tag=None):
         self.model = model
         self.viewName = viewName
+        self.tag = tag
         HrefField.__init__(self)
 
     def serialize_value(self, request=None):
@@ -1596,9 +1614,20 @@ class HrefFieldFromModel(HrefField):
             url = urlresolvers.reverse(self.viewName)
             url = request.build_absolute_uri(url)
         else:
+            # FIXME: why is this hack required? something is returning something
+            # wrong up the chain
+            if type(self.model) == list:
+                self.model = self.model[0]
             url = self.model.get_absolute_url(request, view_name=self.viewName)
+                  
         url = self._getRelativeHref(url=url)
-        return XObjHrefModel(url)
+        hrefModel = XObjHrefModel(url)
+        if self.tag:
+            # We need to instantiate an instance xobj metadata, setting
+            # it here directly would change the class-wide one
+            hrefModel._xobj = hrefModel._xobj.copy()
+            hrefModel._xobj.tag = self.tag
+        return hrefModel
 
 class ForeignKey(models.ForeignKey):
     """
@@ -1777,8 +1806,17 @@ class Cache(object):
 
     @classmethod
     def get(cls, modelClass, **kwargs):
-        cached = cls._getCachedClass(modelClass)
         keyName, keyValue = kwargs.items()[0]
+        try:
+            return cls._get(modelClass, keyName, keyValue)
+        except modelClass.DoesNotExist:
+            # Try again, after we invalidate the cache
+            cls._cache.pop(modelClass, None)
+            return cls._get(modelClass, keyName, keyValue)
+
+    @classmethod
+    def _get(cls, modelClass, keyName, keyValue):
+        cached = cls._getCachedClass(modelClass)
         try:
             return cached.get(keyName, keyValue)
         except KeyError:

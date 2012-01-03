@@ -1,8 +1,7 @@
 #
-# Copyright (c) 2010, 2011 rPath, Inc.
+# Copyright (c) 2011 rPath, Inc.
 #
-# All Rights Reserved
-#
+
 import os
 import logging
 import traceback
@@ -100,14 +99,20 @@ class ExceptionLoggerMiddleware(BaseMiddleware):
             log.error(str(exception))
             return response
 
-        if isinstance(exception, (errors.RbuilderError, IntegrityError)):
-            code = getattr(exception, 'status', errors.BAD_REQUEST)
+        if isinstance(exception, errors.RbuilderError):
             tbStr = getattr(exception, 'traceback', None)
-            fault = models.Fault(code=code, message=str(exception), traceback=tbStr)
-            response = HttpResponse(status=code, content_type='text/xml')
+            status = getattr(exception.__class__, 'status', 500)
+            fault = models.Fault(code=status, message=str(exception), traceback=tbStr)
+            response = HttpResponse(status=status, content_type='text/xml')
             response.content = fault.to_xml(request)
             log.error(str(exception))
             return response
+
+        if isinstance(exception, IntegrityError):
+            # IntegrityError is a bug but right now we're using it as a crutch
+            # to not send tracebacks when there's an uncaught conflict.
+            return handler.handleException(request, exception,
+                    doTraceback=False, doEmail=False)
 
         return handler.handleException(request, exception)
 
@@ -192,6 +197,11 @@ class AddCommentsMiddleware(BaseMiddleware):
     useXForm = True
 
     def _process_response(self, request, response):
+
+        # do not add comments to error messages
+        if response.status_code != 200:
+            return response
+
         if self.useXForm and response.content and  \
             response.status_code in (200, 201, 206, 207):
 
@@ -220,6 +230,18 @@ class AddCommentsMiddleware(BaseMiddleware):
     def _getAppNameFromViewFunc(self, viewFunc):
         module = viewFunc.__module__
         return module.split('.')[-2]
+
+class FlashErrorCodeMiddleware(BaseMiddleware):
+    def _process_response(self, request, response):
+        isFlash = False
+        try:
+            isFlash = request._meta.get('HTTP_HTTP_X_FLASH_VERSION')
+        except:
+             # test code mocking things weirdly?
+             pass
+        if isFlash and (response.status_code >= 400):
+            response.status_code = 200
+        return response
 
 class CachingMiddleware(BaseMiddleware):
     def _process_request(self, request):

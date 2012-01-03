@@ -1399,6 +1399,28 @@ system_post_xml = """\
   <source_image/>
 </system>"""
 
+system_post_xml_bad_network = """
+<system>
+    <configuration />
+    <current_state />
+    <description>exampleNewDescription</description>
+    <installed_software />
+    <management_interface />
+    <managing_zone id="http://testserver/api/v1/inventory/zones/1">Local rBuilder</managing_zone>
+    <name>exampleNewSystem</name>
+    <network_address>
+        <address>user@notanemail.address.rpath.com</address>
+        <pinned>true</pinned>
+    </network_address>
+    <networks />
+    <refresh_delay>0</refresh_delay>
+    <should_migrate>false</should_migrate>
+    <system_tags />
+    <system_type id="https://dhcp244.eng.rpath.com/api/v1/inventory/system_types/1" href="https://dhcp244.eng.rpath.com/api/v1/inventory/system_types/1" />
+</system>
+"""
+
+
 system_mgmt_interface_put_xml = """\
 <?xml version="1.0" encoding="UTF-8"?>
 <system>
@@ -3626,3 +3648,77 @@ system_post_forge_object = """<?xml version="1.0" encoding="UTF-8"?>
   <management_interface id="http://testserver/api/v1/inventory/management_interfaces/9999">Should Not Exist</management_interface>
   <source_image/>
 </system>"""
+
+retirement_xml = """
+<system id="http://testserver/api/v1/inventory/systems/3">
+  <networks/>
+  <management_interface id="http://testserver/api/v1/inventory/management_interfaces/3">Secure Shell (SSH)</management_interface>
+  <system_events id="http://testserver/api/v1/inventory/systems/3/system_events"/>
+  <configuration_descriptor id="http://testserver/api/v1/inventory/systems/3/configuration_descriptor"/>
+  <actions>
+    <action>
+      <name>Assimilate system</name>
+      <job_type id="http://testserver/api/v1/inventory/event_types/12"/>
+      <enabled>true</enabled>
+      <descriptor id="http://testserver/api/v1/inventory/systems/3/descriptors/assimilation"/>
+      <key>system_assimilation</key>
+      <description>Assimilate system</description>
+    </action>
+    <action>
+      <name>system capture</name>
+      <job_type id="http://testserver/api/v1/inventory/event_types/21"/>
+      <enabled>false</enabled>
+      <descriptor id="http://testserver/api/v1/inventory/systems/3/descriptors/capture"/>
+      <key>system_capture</key>
+      <description>Capture a system's image</description>
+    </action>
+  </actions>
+  <has_running_jobs>False</has_running_jobs>
+  <system_type id="http://testserver/api/v1/inventory/system_types/1">Inventory</system_type>
+  <generated_uuid></generated_uuid>
+  <modified_date></modified_date>
+  <modified_by></modified_by>
+  <ssl_server_certificate></ssl_server_certificate>
+  <managing_zone id="http://testserver/api/v1/inventory/zones/1">Local rBuilder</managing_zone>
+  <hostname></hostname>
+  <created_by></created_by>
+  <agent_port>22</agent_port>
+  <project_branch_stage></project_branch_stage>
+  <system_id>3</system_id>
+  <launching_user></launching_user>
+  <launch_date></launch_date>
+  <ssl_client_certificate></ssl_client_certificate>
+  <installed_software id="http://testserver/api/v1/inventory/systems/3/installed_software"/>
+  <registration_date></registration_date>
+  <project_branch></project_branch>
+  <description>ghost</description>
+  <system_log id="http://testserver/api/v1/inventory/systems/3/system_log"/>
+  <target_system_id></target_system_id>
+  <has_active_jobs>False</has_active_jobs>
+  <target_system_name></target_system_name>
+  <jobs id="http://testserver/api/v1/inventory/systems/3/jobs">
+    <queued_jobs id="http://testserver/api/v1/inventory/systems/3/job_states/1/jobs"/>
+    <completed_jobs id="http://testserver/api/v1/inventory/systems/3/job_states/3/jobs"/>
+    <running_jobs id="http://testserver/api/v1/inventory/systems/3/job_states/2/jobs"/>
+    <failed_jobs id="http://testserver/api/v1/inventory/systems/3/job_states/4/jobs"/>
+  </jobs>
+  <credentials id="http://testserver/api/v1/inventory/systems/3/credentials"/>
+  <configuration id="http://testserver/api/v1/inventory/systems/3/configuration"/>
+  <source_image></source_image>
+  <name>blinky</name>
+  <out_of_date>False</out_of_date>
+  <target></target>
+  <local_uuid></local_uuid>
+  <target_system_state></target_system_state>
+  <generated_uuid>%(generatedUuid)s</generated_uuid>
+  <current_state>
+    <description>Retired</description>
+    <name>mothballed</name>
+    <system_state_id>12</system_state_id>
+  </current_state>
+  <project></project>
+  <created_date>2011-11-17T18:47:49.469749+00:00</created_date>
+  <target_system_description></target_system_description>
+</system>
+"""
+

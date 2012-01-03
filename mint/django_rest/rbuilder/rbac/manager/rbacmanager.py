@@ -315,7 +315,6 @@ class RbacManager(basemanager.BaseManager):
 
     @exposed
     def updateRbacPermission(self, old_id, permission, by_user):
-        # BOOKMARK
         old_obj = models.RbacPermission.objects.get(pk=permission.oldModel.grant_id)
         if old_obj.created_date is None:
             raise Exception("ERROR: invalid previous object?")

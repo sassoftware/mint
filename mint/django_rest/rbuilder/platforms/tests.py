@@ -217,5 +217,50 @@ class NewPlatformTest(XMLTestCase, SmartformMixIn):
         #    username='admin', password='password')
         self.assertEquals(response.status_code, 404)
          
+    def testCanGetImageTypeDefinitionDescriptorWithNoImages(self):
+
+        # make sure we can load all the valid types
+        for image_type in mint.buildtypes.xmlTagNameImageTypeMap.keys():
+            # we do not have XML for netboot/live because they're deprecated
+            # and deferred is special so we want to test differently
+            if image_type in ['netbootImage', 'liveIsoImage', 'deferredImage']:
+                continue
+            # verify we can get the descriptor
+            url = "platforms/image_type_definition_descriptors/%s" % image_type
+            response = self._get(url) #, username='admin', password='password')
+            self.assertEquals(response.status_code, 200)
+            model = xobj.parse(response.content)
+            self.failUnlessEqual(model.descriptor._xobj.tag, 'descriptor')
+
+        # FIXME
+        # we want to leave ITD's anonymous, but this is interesting... we're populating
+        # the list of valid target base images here, which COULD contain some confidental
+        # information.  If the type is deferred we may want to filter the list based
+        # on request._authUser and what they can see, as we'll need to do in the
+        # general collection / queryset as well.
+
+        # insert some placeholder images for the test
+        project = project_models.Project(
+           name='blippy', hostname='blippy', short_name='blippy', 
+           project_url='http://blippy.example.com', namespace='blippy'
+        ).save()
+        project = project_models.Project.objects.get(name='blippy') 
+
+        output_trove = 'dummy-trove=/example.rpath.com@dummy:label/1.0-1-1'
+
+        def noop(*args, **kwargs):
+            return None
+            
+        imagemodels.Image._computeMetadata = noop
+
+        response = self._get('platforms/image_type_definition_descriptors/deferredImage')
+        self.assertEqual(response.status_code, 200)
+        self.assertXMLEquals(response.content, 
+            testsxml.deferred_image_descriptor_no_base_images_xml)
+
+        # an invalid one should 404
+        response = self._get('platforms/image_type_definition_descriptors/doesNotExist')
+        #    username='admin', password='password')
+        self.assertEquals(response.status_code, 404)
         
 

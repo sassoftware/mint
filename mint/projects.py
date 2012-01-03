@@ -228,10 +228,6 @@ class Project(database.TableObject):
         - I{anaconda-templates}
         - I{media-template}
 
-        In the case of resolving I{anaconda-templates}, the C{MintConfig}
-        parameter I{anacondaTemplatesFallback} is used as the default
-        searchPath for the trove if all else fails.
-
         @param specialTroveName: the name of the special trove (e.g.
             'anaconda-templates')
         @type specialTroveName: C{str}

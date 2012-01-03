@@ -433,6 +433,7 @@ deferred_image_descriptor_xml = """
       </enumeratedType>
       <multiple>false</multiple>
       <name>options.baseImageTrove</name>
+      <readonly>false</readonly>
       <required>true</required>
     </field>
   </dataFields>
@@ -446,4 +447,42 @@ deferred_image_descriptor_xml = """
 </descriptor>
 """
 
+deferred_image_descriptor_no_base_images_xml = """
+<descriptor xmlns="http://www.rpath.com/permanent/descriptor-1.0.xsd" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.rpath.com/permanent/descriptor-1.0.xsd descriptor-1.0.xsd">
+  <dataFields>
+    <field>
+      <descriptions>
+        <desc>Image Name</desc>
+      </descriptions>
+      <multiple>false</multiple>
+      <name>displayName</name>
+      <required>true</required>
+      <type>str</type>
+    </field>
+    <field>
+      <descriptions/>
+      <enumeratedType>
+        <describedValue>
+          <descriptions>
+            <desc>No base images available</desc>
+          </descriptions>
+        <key>nobaseimagesavailable</key>
+        </describedValue>
+      </enumeratedType>
+      <default>nobaseimagesavailable</default>
+      <multiple>false</multiple>
+      <name>options.baseImageTrove</name>
+      <required>true</required>
+      <readonly>true</readonly>
+    </field>
+  </dataFields>
+  <metadata>
+    <descriptions>
+      <desc>Layered Image Configuration</desc>
+    </descriptions>
+    <displayName>Layered Image Configuration</displayName>
+    <rootElement>descriptor_data</rootElement>
+  </metadata>
+</descriptor>
+"""
 

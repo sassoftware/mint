@@ -16,10 +16,15 @@ class RbuilderError(Exception):
     def __init__(self, **kwargs):
         cls = self.__class__
         kwargs_msg = kwargs.pop('msg', None)
+        kwargs_status = kwargs.pop('status', None)
         if kwargs_msg:
             self.msg = kwargs_msg
         else:
             self.msg = cls.__doc__
+        if kwargs_status:
+            self.status = kwargs_status
+        else:
+            self.status = INTERNAL_SERVER_ERROR
         self.kwargs = kwargs
         self.traceback = kwargs.pop('traceback', None)
 

@@ -73,6 +73,7 @@ MIDDLEWARE_CLASSES = (
     'mint.django_rest.middleware.SetMintAdminMiddleware',
     'mint.django_rest.middleware.ExceptionLoggerMiddleware',
     'mint.django_rest.middleware.AddCommentsMiddleware',
+    'mint.django_rest.middleware.FlashErrorCodeMiddleware',
     'mint.django_rest.middleware.RedirectMiddleware',
     'mint.django_rest.middleware.PerformanceMiddleware',
     'mint.django_rest.middleware.SerializeXmlMiddleware',

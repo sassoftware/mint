@@ -209,5 +209,4 @@ class AllTargetJobsService(service.BaseService):
 class TargetConfigurationService(service.BaseService):
     @return_xml
     def rest_GET(self, request, target_id):
-        targetConfig = models.TargetConfiguration(target_id)
-        return targetConfig
+        return self.mgr.getTargetConfigurationModel(target_id)

@@ -1,7 +1,5 @@
 #
-# Copyright (c) 2010 rPath, Inc.
-#
-# All Rights Reserved
+# Copyright (c) 2011 rPath, Inc.
 #
 
 try:
@@ -74,11 +72,14 @@ def handler404(request, **kwargs):
 def handler500(request, **kwargs):
     return handleException(request)
 
-def handleException(request, exception=None):
+def handleException(request, exception=None, doEmail=True, doTraceback=True):
     ei = sys.exc_info()
-    tb = ''.join(traceback.format_tb(ei[2]))
+    if doTraceback:
+        tb = ''.join(traceback.format_tb(ei[2]))
+    else:
+        tb = None
     msg = str(ei[1])
-    logError(request, ei[0], ei[1], ei[2])
+    logError(request, ei[0], ei[1], ei[2], doEmail=doEmail)
 
     code = getattr(ei[1], 'status', 500)
     fault = models.Fault(code=code, message=msg, traceback=tb)

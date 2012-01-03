@@ -38,6 +38,18 @@ class BaseJobsTest(XMLTestCase):
 
         self.system = system
 
+class CacheTest(XMLTestCase):
+    "Simple test for the caching module"
+    def testInvalidateCache(self):
+        Cache = models.modellib.Cache
+        # Populate the cache
+        jt1 = Cache.get(models.EventType, name=models.EventType.SYSTEM_REGISTRATION)
+        # Add new job type
+        jt2 = models.EventType.objects.create(name='fake',
+            description='fakefake', priority=1)
+        jt3 = Cache.get(models.EventType, name='fake')
+        self.failUnlessEqual(jt2.job_type_id, jt3.job_type_id)
+
 class JobsTestCase(BaseJobsTest):
 
     def _mock(self):

@@ -227,7 +227,6 @@ class StageCallbacks(object):
     @staticmethod
     def can_read_all_for_project(view, request, project_short_name):
         user = request._authUser
-        # BOOKMARK 
         collection = projectmodels.Stage.objects.filter(project__short_name=project_short_name)
         tv = all(view.mgr.userHasRbacPermission(user, obj, READMEMBERS) for obj in collection)
         if tv:
@@ -345,9 +344,11 @@ class ProjectsService(service.BaseService):
         pass
 
     @rbac(ProjectCallbacks.can_create_project)
-    @requires('project')
+    @requires('project', save=False)
     @return_xml
     def rest_POST(self, request, project):
+        if self.mgr.projectNameInUse(project):
+            raise PermissionDenied(msg='Project name already in use')
         return self.mgr.addProject(project, for_user=request._authUser)
 
 class ProjectService(service.BaseService):

@@ -135,6 +135,10 @@ class WebHandler(object):
         adminClient = shimclient.ShimMintClient(self.cfg,
                 (self.cfg.authUser, self.cfg.authPass), self.db)
         user = adminClient.getUser(userId)
+
+        if not user.passwd:
+            raise Exception("not permitted to reset the password of an external auth account")
+
         user.setPassword(newpw)
 
         message = "\n".join(["Your password for username %s at %s has been reset to:" % (user.getUsername(), self.cfg.productName),

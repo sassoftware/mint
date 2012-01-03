@@ -15,6 +15,7 @@ from django.core import paginator
 
 from mint.django_rest.rbuilder import errors
 from mint.django_rest.rbuilder.modellib import XObjIdModel
+from mint.jobstatus import FINISHED
 
 from xobj import xobj
 
@@ -141,22 +142,41 @@ def operatorFactory(operator):
 def filterDjangoQuerySet(djangoQuerySet, field, operator, value, 
         collection=None, queryset=None):
     
-    # FIXME -- hack, really want a "DWIM" typemap
-    # that attempts to preserve backwards compat against legacy
-    # or incorrect filter terms, and drop all filter terms
-    # that we know match everything
-    if field == 'project_branch_stage.name' or field == 'name':
-        if (queryset and queryset.resource_type == 'project_branch_stage') or \
-           (collection and collection._xobj.tag == 'project_branch_stages'):
-            field = 'project.name'
-    if field == 'user.name' or field == 'name':
-        if (queryset and queryset.resource_type == 'user') or \
-           (collection and collection._xobj.tag == 'users'):
-            field = 'user.user_name'
-    if field == 'rbac_permission.permission_id' or field == 'permission_id':
-        if (queryset and queryset.resource_type == 'grant') or \
-           (collection and collection._xobj.tag == 'grants'):
-            field = 'rbac_permission.grant_id'
+    # a bit of a hack to deal with "eclipsed" fields where the name
+    # is the default search key but the real field named name
+    # is different, but let's be honest, all of QSes are a hack :)
+    # example:
+    #    Stage default search is by PROJECT name
+    #    stage also has a name
+    literal=False
+    if field.startswith("literal:"):
+        field = field.replace("literal:","")
+        literal=True
+
+    # attempt to DWIM when asked to search on something
+    if not literal:
+        # stage search is more logical if the search key is the project name
+        if field == 'project_branch_stage.name' or field == 'name':
+            if (queryset and queryset.resource_type == 'project_branch_stage') or \
+                (collection and collection._xobj.tag == 'project_branch_stages'):
+                field = 'project.name'
+        # user model doesn't have a name, so point at that
+        if field == 'user.name' or field == 'name':
+            if (queryset and queryset.resource_type == 'user') or \
+                (collection and collection._xobj.tag == 'users'):
+                field = 'user.user_name'
+        # I think this deals with some inconsistent model relation weirdness but
+        # it's unclear
+        if field == 'rbac_permission.permission_id' or field == 'permission_id':
+            if (queryset and queryset.resource_type == 'grant') or \
+               (collection and collection._xobj.tag == 'grants'):
+               field = 'permission.permission_id'
+        # same
+        if field == 'name':
+            if (queryset and queryset.resource_type == 'grant') or \
+                (collection and collection._xobj.tag == 'grants'):
+                field = 'permission.name'
+        
  
     fieldName = field.split('.')[0]
     if fieldName not in djangoQuerySet.model._meta.get_all_field_names():
@@ -218,13 +238,19 @@ def filterDjangoQuerySet(djangoQuerySet, field, operator, value,
     # present for admin metadata only
     if queryset and queryset.resource_type == 'user':
         filtDict['deleted'] = False 
+    # image querysets should not show non-successful images
+    if queryset and queryset.resource_type == 'image':
+        filtDict['status'] = FINISHED
 
     if operator.startswith('NOT_'):
         qs = djangoQuerySet.filter(~Q(**filtDict))
     else:
         qs = djangoQuerySet.filter(**filtDict)
     return qs
- 
+
+class UnpaginatedCollection(XObjIdModel):
+    class Meta:
+        abstract = True
 
 class Collection(XObjIdModel):
 
@@ -287,8 +313,6 @@ class Collection(XObjIdModel):
                 fieldName = orderParam.split('.')[0]
                 if fieldName.startswith('-'):
                     fieldName = fieldName[1:]
-                if fieldName not in modelList.model._meta.get_all_field_names():
-                    continue
 
                 orderParam = orderParam.replace('.', '__')
                 newOrderParams.append(orderParam)

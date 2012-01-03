@@ -5,10 +5,12 @@
 #
 
 import json
+import sys
 
 from django.db import connection
 from django.db.models import Q
 
+from mint import buildtypes
 from mint.lib import data as mintdata
 from mint.django_rest import timeutils
 from mint.django_rest.rbuilder import errors, modellib
@@ -18,6 +20,8 @@ from mint.django_rest.rbuilder.targets import models
 from mint.django_rest.rbuilder.inventory import zones
 from mint.django_rest.rbuilder.jobs import models as jobsmodels
 from mint.django_rest.rbuilder.querysets import models as qsmodels
+from mint.django_rest.rbuilder.images import models as imagemodels
+from mint import jobstatus
 
 from smartform import descriptor
 
@@ -62,16 +66,45 @@ class TargetsManager(basemanager.BaseManager, CatalogServiceHelper):
 
     @exposed
     def getTargetConfiguration(self, target):
+        if isinstance(target, (int, basestring)):
+            target = self.getTargetById(target)
+        objList = models.TargetData.objects.filter(target=target)
         targetConfig = dict()
-        for obj in models.TargetData.objects.filter(target=target):
+        for obj in objList:
             targetConfig[obj.name] = self._stripUnicode(json.loads(obj.value))
+        targetConfig = self._remapTargetConfigurationFields(target, targetConfig)
         targetConfig['zone'] = self.getTargetZone(target).name
         targetConfig['name'] = target.name
         targetConfig['description'] = target.description
         return targetConfig
 
+    def _remapTargetConfigurationFields(self, target, targetConfig):
+        ret = targetConfig.copy()
+        drvClass = self.getDriverClass(target.target_type)
+        undef = object()
+        for nameDescr, nameDb in drvClass._configNameMap:
+            val = ret.pop(nameDb, undef)
+            if val is undef:
+                continue
+            ret[nameDescr] = val
+        return ret
+
+    @exposed
+    def getTargetConfigurationModel(self, targetId):
+        m = models.TargetConfiguration(targetId)
+        config = self.getTargetConfiguration(targetId)
+        m.properties = config.items()
+        return m
+
     def _getTargetCredentialsForCurrentUser(self, target):
         userId = self.auth.userId
+        return self._getTargetCredentialsForUser(target, userId)
+
+    def _getTargetCredentialsForUser(self, target, user):
+        if isinstance(user, int):
+            userId = user
+        else:
+            userId = user.user_id
         creds = models.TargetCredentials.objects.filter(
             target_user_credentials__target=target,
             target_user_credentials__user__user_id=userId)
@@ -79,12 +112,31 @@ class TargetsManager(basemanager.BaseManager, CatalogServiceHelper):
             return None
         return creds[0]
 
+    def _getTargetAllUserCredentials(self, target):
+        creds = models.TargetCredentials.objects.filter(
+            target_user_credentials__target=target).distinct()
+        return [ x for x in creds ]
+
+    @exposed
+    def getTargetCredentialsForUser(self, target, user):
+        creds = self._getTargetCredentialsForUser(target, user)
+        if creds is None:
+            return None
+        return mintdata.unmarshalTargetUserCredentials(creds.credentials)
+
     @exposed
     def getTargetCredentialsForCurrentUser(self, target):
         creds = self._getTargetCredentialsForCurrentUser(target)
         if creds is None:
             return None
         return mintdata.unmarshalTargetUserCredentials(creds.credentials)
+
+    @exposed
+    def getTargetAllUserCredentials(self, target):
+        ret = []
+        for creds in self._getTargetAllUserCredentials(target):
+            ret.append((creds.target_credentials_id, mintdata.unmarshalTargetUserCredentials(creds.credentials)))
+        return ret
 
     @exposed
     def getModelTargetCredentialsForCurrentUser(self, targetId):
@@ -160,10 +212,13 @@ class TargetsManager(basemanager.BaseManager, CatalogServiceHelper):
             state=state)
         target.save()
         self.mgr.retagQuerySetsByType('target', forUser)
+        self.mgr.recomputeTargetDeployableImages()
         return target
 
     @exposed
     def createTarget(self, targetType, targetName, targetData):
+        # Only used in the testsuite, the views don't touch this
+        # function
         targetData.pop('name', None)
         description = targetData.get('description', targetName)
         zoneName = targetData.pop('zone')
@@ -175,6 +230,7 @@ class TargetsManager(basemanager.BaseManager, CatalogServiceHelper):
         self._setTargetData(target, targetData)
         self._addTargetQuerySet(target)
         self.mgr.retagQuerySetsByType('target', for_user=None)
+        self.mgr.recomputeTargetDeployableImages()
         return target
 
     def _setTargetData(self, target, targetData):
@@ -469,9 +525,6 @@ class TargetsManager(basemanager.BaseManager, CatalogServiceHelper):
 
     @exposed
     def updateTargetSystems(self, target, systems):
-        creds = self._getTargetCredentialsForCurrentUser(target)
-        if creds is None:
-            raise errors.InvalidData()
         cu = connection.cursor()
         cu.execute("""
             CREATE TEMPORARY TABLE tmp_target_system (
@@ -485,12 +538,19 @@ class TargetsManager(basemanager.BaseManager, CatalogServiceHelper):
             )
         """)
         try:
-            self._updateTargetSystems(cu, target, creds, systems)
-        finally:
+            self._updateTargetSystems(cu, target, systems)
+        except:
+            exc = sys.exc_info()
+            try:
+                self.rollback()
+            except:
+                # Ignore this exception
+                pass
+            raise exc[0], exc[1], exc[2]
+        else:
             cu.execute("DROP TABLE tmp_target_system")
 
-    def _updateTargetSystems(self, cu, target, creds, systems):
-        credsId = creds.target_credentials_id
+    def _updateTargetSystems(self, cu, target, systems):
         query = """
             INSERT INTO tmp_target_system
                 (name, description, target_internal_id, ip_addr_1, ip_addr_2, state, created_date)
@@ -514,8 +574,7 @@ class TargetsManager(basemanager.BaseManager, CatalogServiceHelper):
                    OR ts.ip_addr_1 != tmptsys.ip_addr_1
                    OR ts.ip_addr_2 != tmptsys.ip_addr_2
                    OR ts.state != tmptsys.state
-                   OR (ts.created_date IS NULL AND tmptsys.created_date IS NOT NULL)
-                   OR ts.created_date != tmptsys.created_date)
+                   OR (tmptsys.created_date IS NOT NULL AND ts.created_date != tmptsys.created_date))
         """
         cu.execute(query, [ target.target_id ])
         toUpdate = cu.fetchall()
@@ -533,39 +592,69 @@ class TargetsManager(basemanager.BaseManager, CatalogServiceHelper):
             model.modified_date = now
             model.save()
         # Insert all new systems
+        # If created_date is unset, we default to the current timestamp.
         query = """
             INSERT INTO target_system
                 (target_id, name, description, target_internal_id, ip_addr_1, ip_addr_2, state, created_date)
-            SELECT %s, name, description, target_internal_id, ip_addr_1, ip_addr_2, state, created_date
+            SELECT %s, name, description, target_internal_id, ip_addr_1, ip_addr_2, state, COALESCE(created_date, current_timestamp)
               FROM tmp_target_system
              WHERE target_internal_id NOT IN
                (SELECT target_internal_id FROM target_system WHERE target_id=%s)
         """
         cu.execute(query, [ target.target_id, target.target_id ])
         # Relink systems to target credentials
-        # First, remove the ones not in this list
+        # First, remove the systems not in this list
         query = """
             DELETE FROM target_system_credentials
-             WHERE target_credentials_id = %s
-               AND target_system_id NOT IN (
+             WHERE target_system_id NOT IN (
                    SELECT ts.target_system_id
                      FROM target_system AS ts
                      JOIN tmp_target_system AS tmptsys USING (target_internal_id)
                     WHERE ts.target_id = %s)"""
-        cu.execute(query, [ credsId, target.target_id ])
-        # Add the new ones
+        cu.execute(query, [ target.target_id ])
+
+        # List existing target credentials
+        query = "SELECT targetCredentialsId FROM TargetCredentials"
+        cu.execute(query)
+        realTargetCredentials = set(x[0] for x in cu)
+
+        # List existing target system credentials for this target
+        query = """
+            SELECT ts.target_internal_id, tsc.target_system_id, tsc.target_credentials_id
+              FROM target_system_credentials AS tsc
+             JOIN target_system AS ts USING (target_system_id)
+            WHERE ts.target_id = %s"""
+        cu.execute(query, [ target.target_id ])
+
+        tsMap = {}
+        credsMap = {}
+        for targetInternalId, targetSystemId, targetCredentialsId in cu:
+            tsMap[targetInternalId] = targetSystemId
+            credsMap.setdefault(targetInternalId, set()).add(targetCredentialsId)
+        toDeleteTSCreds = set()
+        toAddTSCreds = set()
+        for targetInternalId, targetSystem in tsysMap.items():
+            usefulCreds = realTargetCredentials.intersection(
+                targetSystem._credentials)
+            dbCreds = credsMap.get(targetInternalId, set())
+            for c in usefulCreds.difference(dbCreds):
+                toAddTSCreds.add((c, targetInternalId))
+            for c in dbCreds.difference(usefulCreds):
+                toDeleteTSCreds.add((tsMap[targetInternalId], c))
+
+        query = """
+            DELETE FROM target_system_credentials
+             WHERE target_system_id = %s AND target_credentials_id = %s
+        """
+        cu.executemany(query, toDeleteTSCreds)
         query = """
             INSERT INTO target_system_credentials
-                (target_system_id, target_credentials_id)
+                   (target_system_id, target_credentials_id)
             SELECT ts.target_system_id, %s
               FROM target_system AS ts
-              JOIN tmp_target_system AS tmptsys USING (target_internal_id)
-             WHERE ts.target_id = %s
-               AND ts.target_system_id NOT IN
-               (SELECT target_system_id FROM target_system_credentials
-                WHERE target_credentials_id=%s)
-        """
-        cu.execute(query, [ credsId, target.target_id, credsId ])
+             WHERE ts.target_internal_id = %s"""
+        cu.executemany(query, toAddTSCreds)
+
         # Finally, remove all systems that have no credentials
         query = """
             DELETE FROM target_system
@@ -574,10 +663,11 @@ class TargetsManager(basemanager.BaseManager, CatalogServiceHelper):
              )
         """
         cu.execute(query)
-        #self.recomputeTargetSystems()
+        self.mgr.addSystemsFromTarget(target)
 
     @exposed
     def recomputeTargetDeployableImages(self):
+
         cu = connection.cursor()
         cu.execute("""
             CREATE TEMPORARY TABLE tmp_target_image (
@@ -588,8 +678,17 @@ class TargetsManager(basemanager.BaseManager, CatalogServiceHelper):
         """)
         try:
             self._recomputeTargetDeployableImages()
-        finally:
+        except:
+            exc = sys.exc_info()
+            try:
+                self.mgr.rollback()
+            except:
+                # Ignore this exception
+                pass
+            raise exc[0], exc[1], exc[2]
+        else:
             cu.execute("DROP TABLE tmp_target_image")
+        self.mgr.retagQuerySetsByType('image')
 
     def _recomputeTargetDeployableImages(self):
         cu = connection.cursor()
@@ -619,7 +718,72 @@ class TargetsManager(basemanager.BaseManager, CatalogServiceHelper):
         """
         cu.execute(query)
         # XXX Deal with EC2 images
-        # XXX prefer ova vs ovf 0.9
+
+        # Build target to target type mapping
+        query = """
+            SELECT Targets.targetid, target_types.name
+              FROM Targets JOIN target_types USING (target_type_id)
+        """
+        cu.execute(query)
+        targetToTargetTypes = dict(x for x in cu)
+
+        # Select all VMWARE_ESX_IMAGE and prefer ova over ovf 0.9
+        query = """
+            SELECT tti.target_id, tti.target_image_id, tti.file_id, img.buildId,
+                   fu.url
+              FROM tmp_target_image AS tti
+              JOIN BuildFiles AS imgf ON (tti.file_id = imgf.fileId)
+              JOIN Builds AS img ON (imgf.buildId = img.buildId)
+              JOIN BuildFilesUrlsMap AS bfum ON (imgf.fileId = bfum.fileId)
+              JOIN FilesUrls AS fu ON (bfum.urlId = fu.urlId)
+             WHERE img.buildType = %s
+             ORDER BY tti.target_id, tti.file_id
+        """
+        cu.execute(query, [ buildtypes.VMWARE_ESX_IMAGE ])
+        todelete = []
+        tokeep = dict()
+        for row in cu:
+            targetId = row[0]
+            imageId, imageUrl = row[-2:]
+            tokeepKey = (targetId, imageId)
+            targetType = targetToTargetTypes[targetId]
+            if targetType == 'vcloud' and not imageUrl.endswith('.ova'):
+                # vcloud only supports OVA builds
+                todelete.append(row)
+                continue
+
+            prevRow = tokeep.get(tokeepKey)
+            if prevRow is not None:
+                if (not prevRow[-1].endswith('.ova') and
+                            imageUrl.endswith('.ova')):
+                    # Replace existing
+                    tokeep[tokeepKey] = row
+                    todelete.append(prevRow)
+                    continue
+                # Delete current
+                todelete.append(row)
+                continue
+            tokeep[tokeepKey] = row
+
+        if todelete:
+            # Oh well. We need to split the null and non-null values for
+            # target_image_id
+            query = """
+                DELETE FROM tmp_target_image
+                 WHERE target_id = %s
+                   AND target_image_id IS NULL
+                   AND file_id = %s
+            """
+            cu.executemany(query, [ (x[0], x[2]) for x in todelete
+                if x[1] is None ])
+            query = """
+                DELETE FROM tmp_target_image
+                 WHERE target_id = %s
+                   AND target_image_id = %s
+                   AND file_id = %s
+            """
+            cu.executemany(query, [ x[:3] for x in todelete
+                if x[1] is not None ])
 
         # XXX this should do smart replaces instead of this wholesale
         # replace
@@ -627,7 +791,7 @@ class TargetsManager(basemanager.BaseManager, CatalogServiceHelper):
         cu.execute("""
             INSERT INTO target_deployable_image
                 (target_id, target_image_id, file_id)
-            SELECT target_id, target_image_id, file_id
+            SELECT DISTINCT target_id, target_image_id, file_id
               FROM tmp_target_image""")
 
     def _image(self, target, image):
@@ -656,12 +820,22 @@ class TargetsManager(basemanager.BaseManager, CatalogServiceHelper):
         state = self._unXobj(getattr(system, 'state'))
         createdDate = self._unXobj(getattr(system, 'launchTime', None))
         if createdDate is not None:
-            createdDate = timeutils.fromtimestamp(createdDate)
+            if createdDate:
+                createdDate = timeutils.fromtimestamp(createdDate)
+            else:
+                createdDate = None
+        credentials = getattr(system, 'credentials', [])
+        if credentials is not None:
+            opaqueIds = getattr(credentials, 'opaqueCredentialsId', [])
+            if not isinstance(opaqueIds, list):
+                opaqueIds = [ opaqueIds ]
+            credentials = [ int(self._unXobj(x)) for x in opaqueIds ]
 
         model = models.TargetSystem(target=target,
             name=name, description=description,
             target_internal_id=systemId, ip_addr_1=ipAddr1, ip_addr_2=ipAddr2,
             state=state, created_date=createdDate)
+        model._credentials = credentials
         return model
 
     @classmethod

@@ -89,7 +89,7 @@
     <field type="DateTimeField" name="registration_date">2010-10-08 16:01:05</field>
     <field type="CharField" name="generated_uuid">testsystemgenerateduuid</field>
     <field type="CharField" name="local_uuid">testsystemlocaluuid</field>
-    <field type="CharField" name="ssl_client_certificate">-----BEGIN CERTIFICATE-----
+    <field type="CharField" name="_ssl_client_certificate">-----BEGIN CERTIFICATE-----
 MIIDCzCCAfOgAwIBAgIBADANBgkqhkiG9w0BAQUFADBAMRcwFQYDVQQKEw5yUGF0
 aCByQnVpbGRlcjElMCMGA1UECxMcaHR0cDovL2xvY2FsaG9zdC5sb2NhbGRvbWFp
 bjAeFw0xMDEwMDgxNjAxMTBaFw0yMDEwMDgxNjAxMTBaMEAxFzAVBgNVBAoTDnJQ
@@ -109,7 +109,7 @@ PhkbpeDz+lOecHsrbjvShLsBHBzZDiQAAWeP1HUJIlffWroYn2CTQF9SdxvxFNwg
 qUUQIF8prloO+ySSSHyR
 -----END CERTIFICATE-----
 </field>
-    <field type="CharField" name="ssl_client_key">-----BEGIN RSA PRIVATE KEY-----
+    <field type="CharField" name="_ssl_client_key">-----BEGIN RSA PRIVATE KEY-----
 MIIEowIBAAKCAQEAw53apfUc95PgHUXE0L7s8G+msjOgUIAtblJ4uPsffsUKudqT
 nTbSsqH8DmCaQj6jkIjnT2BYEXdUtk8GJgkEqQykUyuriUvaFgh1uHwn/dmhCZl7
 DTw5Ic0plMiMmwR4vSxRLwGQeG9CylsIDgq6PJRYIc9+INx2nEktukGnd0j/HEAq

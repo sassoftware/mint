@@ -68,7 +68,8 @@ class ImagesTestCase(RbacEngine):
                 description="image-%s" % i)
             image.save()
             # now buildfiles and fileurls
-            buildFile = models.BuildFile(image=image, size=i, sha1='%s' % i)
+            buildFile = models.BuildFile(image=image, size=i, sha1='%s' % i,
+                    title='foo')
             buildFile.save()
             
             fileUrl = models.FileUrl(url_type=0, url='http://example.com/%s/' % i)
@@ -77,7 +78,8 @@ class ImagesTestCase(RbacEngine):
             buildFilesUrlsMap = models.BuildFilesUrlsMap(file=buildFile, url=fileUrl)
             buildFilesUrlsMap.save()
             
-            buildFile = models.BuildFile(image=image, size=i+1, sha1='%s' % (i + 1))
+            buildFile = models.BuildFile(image=image, size=i+1,
+                    sha1='%s' % (i + 1), title='foo')
             buildFile.save()
         
             fileUrl = models.FileUrl(url_type=0, url='http://example.com/%s/' % (i + 1))
@@ -321,6 +323,7 @@ class ImagesTestCase(RbacEngine):
 
         xmlTemplate = """\
 <file>
+  <title>dummy file</title>
   <target_images>
     <target_image>
       <target id="/api/v1/targets/%(targetId)s"/>
@@ -391,7 +394,7 @@ class ImagesTestCase(RbacEngine):
         # FIXME: non-admin accessing admin resources in API returns wrong
         # error code, fix @access.admin!
         response = self._get(url, username='ExampleDeveloper', password='password')
-        self.assertEquals(response.status_code, 401)  # should be 403
+        self.assertEquals(response.status_code, 403)
 
     def _testCreateRelease(self, username, expected_code):
 
@@ -578,8 +581,15 @@ class ImagesTestCase(RbacEngine):
         systemIds = [ x.system_id for x in systems ]
         expNetworks = [ '1.2.3.4', '1.2.3.5', ]
 
-        for systemId, expNetwork in zip(systemIds, expNetworks):
+        for i, (systemId, expNetwork) in enumerate(zip(systemIds, expNetworks)):
             system = invmodels.System.objects.get(system_id=systemId)
             network = system.networks.all()[0]
             self.failUnlessEqual(network.dns_name, expNetwork)
             self.failUnlessEqual(system.source_image, img)
+            self.failUnlessEqual(system.project_id, img.project_id)
+            self.failUnlessEqual(system.project_branch_id, img.project_branch_id)
+            self.failUnlessEqual(system.project_branch_stage_id, img.project_branch_stage_id)
+            self.failUnlessEqual(system._ssl_client_certificate,
+                'ssl-client-certificate-%s' % (i+1))
+            self.failUnlessEqual(system._ssl_client_key,
+                'ssl-client-key-%s' % (i+1))

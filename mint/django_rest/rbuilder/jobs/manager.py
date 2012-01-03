@@ -17,7 +17,7 @@ from django.db import IntegrityError, transaction
 from xobj import xobj
 from smartform import descriptor as smartdescriptor
 
-from mint import buildtypes, urltypes
+from mint import buildtypes, jobstatus, urltypes
 from mint.lib import uuid
 from mint.django_rest.rbuilder import errors
 from mint.django_rest.rbuilder import modellib
@@ -79,6 +79,10 @@ class JobManager(basemanager.BaseManager):
         jobStates = models.JobStates()
         jobStates.job_state = models.JobState.objects.all()
         return jobStates
+
+    @exposed
+    def getJobStateByName(self, name):
+        return modellib.Cache.get(models.JobState, name=name)
 
     @exposed
     def getJobState(self, jobStateId):
@@ -242,24 +246,33 @@ class ResultsProcessingMixIn(object):
                 job.job_uuid, e)
             self.handleError(job, e)
             return None
-        # XXX technically this should be saved to the DB
-        # Also the xml should not be <results id="blah"/>, but
-        # <results><target id="blah"/></results>
+        
+        # save the results from ramke to the DB
         job.results = modellib.HrefFieldFromModel(resources)
-        return resources
+        if type(resources) != list:
+            resources = [ resources ]
+        for resource in resources:
+            tag = resource._xobj.tag
+
+            if tag == 'system':
+                models.JobSystemArtifact(job=job, system=resource).save()
+            elif tag == 'image':
+                models.JobImageArtifact(job=job, image=resource).save()
+            elif tag == 'target':
+                # not used in production yet, but mentioned in tests, so we don't
+                # have to save it.
+                pass
+            else:
+                raise Exception("internal error, don't know how to save resource: %s" % tag)
+        return resources[0]
 
     def _createTargetConfiguration(self, job, targetType):
         descriptorData = self.loadDescriptorData(job)
         driverClass = self.mgr.mgr.targetsManager.getDriverClass(targetType)
 
         cloudName = driverClass.getCloudNameFromDescriptorData(descriptorData)
-        config = dict((k.getName(), k.getValue())
-            for k in descriptorData.getFields())
+        config = driverClass.getTargetConfigFromDescriptorData(descriptorData)
         return targetType, cloudName, config
-
-        if self.targetType is None:
-            targetTypeId = job.jobtargettype_set.all()[0].target_type_id
-            self._setTargetType(targetTypeId)
 
     def handleError(self, job, exc):
         job.status_text = "Unknown exception, please check logs"
@@ -274,12 +287,28 @@ class DescriptorJobHandler(BaseJobHandler, ResultsProcessingMixIn):
 
     def extractDescriptorData(self, job):
         "Executed when the job is created"
-        descriptorId = job.descriptor.id
-        # Strip the server-side portion
-        descriptorId = urlparse.urlsplit(descriptorId).path
-        descriptorDataXobj = job.descriptor_data
-        descriptorDataXml = xobj.toxml(descriptorDataXobj)
-        descriptor = self.getDescriptor(descriptorId)
+
+        descriptor = None
+        descriptorDataObj = None
+        descriptorId = 1
+        descriptorDataXml = ''
+        descriptorDataObj = None
+
+        if isinstance(job.descriptor, smartdescriptor.ConfigurationDescriptor):
+            # path for direct python API usage, such as target system import
+            # not yet patched up for supplying descriptor data
+            descriptorDataXobj = job.descriptor_data
+            descriptorDataXml = xobj.toxml(descriptorDataXobj)
+            descriptor        = job.descriptor
+            descriptorDataObj = None
+            descriptor        = self.getDescriptor(job.descriptor.id)
+        else:
+            descriptorId = job.descriptor.id
+            # Strip the server-side portion
+            descriptorId       = urlparse.urlsplit(descriptorId).path
+            descriptorDataXobj = job.descriptor_data
+            descriptorDataXml  = xobj.toxml(descriptorDataXobj)
+            descriptor         = self.getDescriptor(descriptorId)
 
         # Save the original URL for the descriptor
         self._setDescriptorId(descriptorId, descriptor)
@@ -288,11 +317,12 @@ class DescriptorJobHandler(BaseJobHandler, ResultsProcessingMixIn):
         # relationship
         job._relatedResource = self.getRelatedResource(descriptor)
         job._relatedThroughModel = self.getRelatedThroughModel(descriptor)
-
         descriptorDataObj = self._processDescriptor(descriptor, descriptorDataXml)
+
         descrXml = self._serializeDescriptor(descriptor)
         job._descriptor = descrXml
         job._descriptor_data = descriptorDataXml
+
         return descriptor, descriptorDataObj
 
     def _setDescriptorId(self, descriptorId, descriptor):
@@ -366,7 +396,6 @@ class _TargetDescriptorJobHandler(DescriptorJobHandler):
         match = self._splitDescriptorId(descriptorId)
         targetId = int(match.kwargs['target_id'])
         self._setTarget(targetId)
-        self._setTarget(targetId)
         descr = self._getDescriptorMethod()(targetId)
         return descr
 
@@ -389,18 +418,21 @@ class _TargetDescriptorJobHandler(DescriptorJobHandler):
             targetData)
         return targetConfiguration
 
-    def _buildTargetCredentialsFromDb(self, cli):
+    def _buildTargetCredentialsFromDb(self, cli, job):
         creds = self.mgr.mgr.getTargetCredentialsForCurrentUser(self.target)
         if creds is None:
             raise errors.InvalidData()
-        return self._buildTargetCredentials(cli, creds)
+        return self._buildTargetCredentials(cli, job, creds)
 
-    def _buildTargetCredentials(self, cli, creds):
+    def _buildTargetCredentials(self, cli, job, creds):
+        rbUser = self.mgr.auth.username
+        rbUserId = self.mgr.auth.userId
+        isAdmin = self.mgr.auth.admin
         userCredentials = cli.targets.TargetUserCredentials(
             credentials=creds,
-            rbUser=self.mgr.auth.username,
-            rbUserId=self.mgr.auth.userId,
-            isAdmin=self.mgr.auth.admin)
+            rbUser=rbUser,
+            rbUserId=rbUserId,
+            isAdmin=isAdmin)
         return userCredentials
 
 
@@ -415,13 +447,16 @@ class JobHandlerRegistry(HandlerRegistry):
         def _getDescriptorMethod(self):
             return self.mgr.mgr.getDescriptorRefreshImages
 
-        def getRepeaterMethod(self, cli, job):
-            self.descriptor, self.descriptorData = self.extractDescriptorData(job)
+        def _configureTargetMethod(self, cli, job):
             targetConfiguration = self._buildTargetConfigurationFromDb(cli)
-            targetUserCredentials = self._buildTargetCredentialsFromDb(cli)
+            targetUserCredentials = self._buildTargetCredentialsFromDb(cli, job)
             zone = self.mgr.mgr.getTargetZone(self.target)
             cli.targets.configure(zone.name, targetConfiguration,
                 targetUserCredentials)
+
+        def getRepeaterMethod(self, cli, job):
+            self.descriptor, self.descriptorData = self.extractDescriptorData(job)
+            self._configureTargetMethod(cli, job)
             return cli.targets.listImages
 
         def _processJobResults(self, job):
@@ -452,6 +487,26 @@ class JobHandlerRegistry(HandlerRegistry):
         ResultsTag = 'instances'
         def _getDescriptorMethod(self):
             return self.mgr.mgr.getDescriptorRefreshSystems
+
+        def _buildAllUserCredentialsFromDb(self, cli, job):
+            credsList = self.mgr.mgr.getTargetAllUserCredentials(self.target)
+            ret = []
+            for credId, creds in credsList:
+                userCredentials = cli.targets.TargetUserCredentials(
+                    credentials=creds,
+                    rbUser=None,
+                    rbUserId=None,
+                    isAdmin=False,
+                    opaqueCredentialsId=credId)
+                ret.append(userCredentials)
+            return ret
+
+        def _configureTargetMethod(self, cli, job):
+            targetConfiguration = self._buildTargetConfigurationFromDb(cli)
+            targetAllUserCredentials = self._buildAllUserCredentialsFromDb(cli, job)
+            zone = self.mgr.mgr.getTargetZone(self.target)
+            cli.targets.configure(zone.name, targetConfiguration,
+                None, targetAllUserCredentials)
 
         def getRepeaterMethod(self, cli, job):
             super(JobHandlerRegistry.TargetRefreshSystems, self).getRepeaterMethod(cli, job)
@@ -508,7 +563,7 @@ class JobHandlerRegistry(HandlerRegistry):
         def getRepeaterMethod(self, cli, job):
             self.extractDescriptorData(job)
             targetConfiguration = self._buildTargetConfigurationFromDb(cli)
-            targetUserCredentials = self._buildTargetCredentialsFromDb(cli)
+            targetUserCredentials = self._buildTargetCredentialsFromDb(cli, job)
             zone = self.mgr.mgr.getTargetZone(self.target)
             cli.targets.configure(zone.name, targetConfiguration,
                 targetUserCredentials)
@@ -597,6 +652,29 @@ class JobHandlerRegistry(HandlerRegistry):
                 "http://localhost/api/v1/images/%s/systems" % (imageId, ))
             return args, kwargs
 
+        def _processJobResults(self, job):
+            # Nothing to be done, there is another call that posts the
+            # image
+            self.image = job.images.all()[0].image
+
+            systems = job.results.systems.system
+            if type(systems) != list: 
+                systems = [ systems ]
+
+            results = []
+            for targetSystem in systems:
+                # System XML does not contain a target id, hence duplicate lookup
+                # we should fix this
+                target = targetmodels.Target.objects.get(name=targetSystem.targetName)
+                realSystem = inventorymodels.System.objects.get(
+                    target = target,
+                    target_system_id = targetSystem.target_system_id
+                )
+                self.mgr.mgr.postSystemLaunch(realSystem)
+                results.append(realSystem)
+
+            return results
+
         def getRelatedResource(self, descriptor):
             imageId = self.extraArgs['imageId']
             if imageId != str(self.image.image_id):
@@ -655,8 +733,9 @@ class JobHandlerRegistry(HandlerRegistry):
 
         def handleError(self, job, exc):
             if isinstance(exc, IntegrityError):
+                job.job_state = self.mgr.getJobStateByName(models.JobState.FAILED)
                 job.status_text = "Duplicate Target"
-                job.status_code = 400
+                job.status_code = 409
             else:
                 DescriptorJobHandler.handleError(self, job, exc)
 
@@ -697,6 +776,14 @@ class JobHandlerRegistry(HandlerRegistry):
             return self.mgr.mgr.updateTargetConfiguration(self.target,
                 targetName, config)
 
+        def handleError(self, job, exc):
+            if isinstance(exc, IntegrityError):
+                job.job_state = self.mgr.getJobStateByName(models.JobState.FAILED)
+                job.status_text = "Duplicate Target"
+                job.status_code = 409
+            else:
+                DescriptorJobHandler.handleError(self, job, exc)
+
     class TargetCredentialsConfigurator(_TargetDescriptorJobHandler):
         __slots__ = []
         jobType = models.EventType.TARGET_CONFIGURE_CREDENTIALS
@@ -710,7 +797,7 @@ class JobHandlerRegistry(HandlerRegistry):
             creds = dict((k.getName(), k.getValue())
                 for k in self.descriptorData.getFields())
             targetConfiguration = self._buildTargetConfigurationFromDb(cli)
-            targetUserCredentials = self._buildTargetCredentials(cli, creds)
+            targetUserCredentials = self._buildTargetCredentials(cli, job, creds)
             zone = self.mgr.mgr.getTargetZone(self.target)
             cli.targets.configure(zone.name, targetConfiguration,
                 targetUserCredentials)
@@ -753,7 +840,7 @@ class JobHandlerRegistry(HandlerRegistry):
         def getRepeaterMethod(self, cli, job):
             self.descriptor, self.descriptorData = self.extractDescriptorData(job)
             targetConfiguration = self._buildTargetConfigurationFromDb(cli)
-            targetUserCredentials = self._buildTargetCredentialsFromDb(cli)
+            targetUserCredentials = self._buildTargetCredentialsFromDb(cli, job)
             zone = self.mgr.mgr.getTargetZone(self.target)
             cli.targets.configure(zone.name, targetConfiguration,
                 targetUserCredentials)
@@ -812,4 +899,9 @@ class JobHandlerRegistry(HandlerRegistry):
                 raise errors.InvalidData()
             imageId = int(os.path.basename(imageId))
             image = self.mgr.mgr.getImageBuild(imageId)
+            image.status = jobstatus.FINISHED
+            image.status_message = 'System captured'
+            image.save()
+            self.mgr.mgr.finishImageBuild(image)
             return image
+

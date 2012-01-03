@@ -10,7 +10,7 @@ from mint.django_rest.rbuilder import modellib
 from mint.django_rest.rbuilder.modellib import basemodels # hack, because of modellib in Platform
 import sys
 from xobj import xobj
-
+from mint.django_rest.deco import D
 
 ## TODO: Change SyntheticFields to correct type (mostly CharFields/BooleanFields/FK's)
 ##       once the schema is updated (if need be).  Some of the models are listed as
@@ -33,16 +33,19 @@ class Platform(modellib.XObjIdModel):
 
     _MODE_CHOICES = (('manual', 'manual'), ('auto', 'auto'))
 
-    platform_id = models.AutoField(primary_key=True, db_column='platformid')
-    label = models.CharField(max_length=1026, unique=True)
-    mode = models.CharField(max_length=1026, default='manual', choices=_MODE_CHOICES)
-    enabled = models.IntegerField(default=1)
-    project = modellib.DeferredForeignKey('projects.Project', db_column='projectid', null=True)
-    platform_name = models.CharField(max_length=1026, db_column='platformname')
-    configurable = models.BooleanField(default=False)
-    abstract = models.BooleanField(default=False)
-    is_from_disk = models.BooleanField(default=False, db_column='isfromdisk')
-    time_refreshed = basemodels.DateTimeUtcField(auto_now_add=True) # hack, modellib keeps evaluating to None
+    platform_id = D(models.AutoField(primary_key=True, db_column='platformid'), 'ID of the platform')
+    label = D(models.CharField(max_length=1026, unique=True), 'Platform label, must be unique')
+    mode = D(models.CharField(max_length=1026, default='manual', choices=_MODE_CHOICES),
+        'Charfield, defaults to "manual"')
+    enabled = D(models.IntegerField(default=1), 'Is enabled, defaults to integer 1')
+    project = D(modellib.DeferredForeignKey('projects.Project', db_column='projectid', null=True),
+        'Project attached to the platform, cannot be null')
+    platform_name = D(models.CharField(max_length=1026, db_column='platformname'), 'Name of the platform')
+    configurable = D(models.BooleanField(default=False), 'Boolean, defaults to False')
+    abstract = D(models.BooleanField(default=False), 'Boolean, defaults to False')
+    is_from_disk = D(models.BooleanField(default=False, db_column='isfromdisk'), 'Boolean, defaults to False')
+    time_refreshed = D(basemodels.DateTimeUtcField(auto_now_add=True),
+        'Time at which the platform was refreshed') # hack, modellib keeps evaluating to None
 
     # SyntheticFields -- fields with no column in the db
     # most of these are deferred fk's, M2M's, or CharFields in the old code
@@ -100,12 +103,16 @@ class ContentSource(modellib.XObjIdModel):
     
     _xobj_hidden_accessors = set(['content_sources'])
     
-    content_source_id = models.AutoField(primary_key=True, db_column='platformsourceid')
-    name = models.CharField(max_length=1026)
-    default_source = models.IntegerField(db_column='defaultsource', default=0)
-    short_name = modellib.UpdatableKey(models.CharField(max_length=1026, unique=True, db_column='shortname'))
-    content_source_type = models.CharField(max_length=1026, db_column='contentsourcetype')
-    order_index = models.IntegerField(db_column='orderindex')
+    content_source_id = D(models.AutoField(primary_key=True, db_column='platformsourceid'),
+        'ID of the content source')
+    name = D(models.CharField(max_length=1026), 'Name of the content source')
+    default_source = D(models.IntegerField(db_column='defaultsource', default=0),
+        'Is integer, defaults to 0')
+    short_name = D(modellib.UpdatableKey(models.CharField(max_length=1026, unique=True, db_column='shortname')),
+        'Short name of the content source, must be unique')
+    content_source_type = D(models.CharField(max_length=1026, db_column='contentsourcetype'),
+        'Type of content source')
+    order_index = D(models.IntegerField(db_column='orderindex'), 'Integer that defines the order index')
     
     # fields on the old model w/o corresponding column in the db
     enabled = modellib.SyntheticField() # booleanfield/integerfield
@@ -135,9 +142,12 @@ class ContentSourceType(modellib.XObjIdModel):
     
     _xobj = xobj.XObjMetadata(tag='content_source_type')
     
-    content_source_type_id = models.AutoField(primary_key=True, db_column='contentsourcetypeid')
-    platform_id = modellib.DeferredForeignKey('Platform', db_column='platformid', related_name='content_source_types')
-    content_source_type = models.CharField(max_length=1026, db_column='contentsourcetype')
+    content_source_type_id = D(models.AutoField(primary_key=True, db_column='contentsourcetypeid'),
+        'ID of the source type')
+    platform_id = D(modellib.DeferredForeignKey('Platform', db_column='platformid', related_name='content_source_types'),
+        'ID to a platform')
+    content_source_type = D(models.CharField(max_length=1026, db_column='contentsourcetype'),
+        'Actual source type')
     
     # Fields w/o a corresponding db column
     required = modellib.SyntheticField() # booleanfield
@@ -150,9 +160,11 @@ class ContentSourceType(modellib.XObjIdModel):
 class PlatformsPlatformSources(modellib.XObjModel):
     class Meta:
         db_table = 'platformsplatformsources'
-    platforms_platform_sources_id = models.AutoField(primary_key=True)
-    platform_id = modellib.ForeignKey('Platform', db_column='platformid', related_name='content_sources')
-    platform_source_id = modellib.ForeignKey('ContentSource', db_column='platformsourceid', related_name='content_sources')
+    platforms_platform_sources_id = D(models.AutoField(primary_key=True), 'ID of the platform sources')
+    platform_id = D(modellib.ForeignKey('Platform', db_column='platformid', related_name='content_sources'),
+        'ID of a platform')
+    platform_source_id = D(modellib.ForeignKey('ContentSource', db_column='platformsourceid', related_name='content_sources'),
+        'ID of a platform source')
 
 
 class PlatformVersions(modellib.Collection):
@@ -166,11 +178,11 @@ class PlatformVersion(modellib.XObjIdModel):
     class Meta:
         abstract = True
     
-    name = models.CharField(max_length=1026)
-    version = models.CharField(max_length=1026)
-    revision = models.CharField(max_length=1026)
+    name = D(models.CharField(max_length=1026), 'Platform version name')
+    version = D(models.CharField(max_length=1026), 'Is the platform version')
+    revision = D(models.CharField(max_length=1026), 'Is the platform revision')
     label = models.CharField(max_length=1026)
-    ordering = models.DecimalField()
+    ordering = D(models.DecimalField(), 'Ordering of the version, is a decimal')
 
 
 class PlatformLoads(modellib.Collection):
@@ -182,9 +194,9 @@ class PlatformLoads(modellib.Collection):
 class PlatformLoad(modellib.XObjIdModel):
     class Meta:
         abstract = True
-    load_uri = models.CharField(max_length=1026)
-    job_id = models.IntegerField()
-    platform_id = models.IntegerField()
+    load_uri = D(models.CharField(max_length=1026), 'Uri for the platform load')
+    job_id = D(models.IntegerField(), 'ID to a job')
+    platform_id = D(models.IntegerField(), 'ID to a platform')
     # job = fields.UrlField('platforms.load', ['platformId', 'jobId'])
     
     # SyntheticFields, fields w/o corresponding column in db
@@ -195,9 +207,9 @@ class PlatformLoadStatus(modellib.XObjIdModel):
     class Meta:
         abstract = True
         
-    code = models.IntegerField()
-    message = models.CharField(max_length=1026)
-    is_final = models.BooleanField()
+    code = D(models.IntegerField(), 'Integer')
+    message = D(models.CharField(max_length=1026), 'Status message')
+    is_final = D(models.BooleanField(), 'Is the load status final? Is boolean')
 
 
 class Status(modellib.XObjIdModel):
@@ -207,9 +219,9 @@ class Status(modellib.XObjIdModel):
     class Meta:
         abstract = True
         
-    connected = models.BooleanField()
-    valid = models.BooleanField()
-    message = models.CharField(max_length=1026)
+    connected = D(models.BooleanField(), 'Is status connected, boolean')
+    valid = D(models.BooleanField(), 'Is status valid? Is boolean')
+    message = D(models.CharField(max_length=1026), 'The status message')
     
 
 class NuSource(modellib.XObjIdModel):
@@ -259,8 +271,8 @@ class PlatformContentErrors(modellib.Collection):
 class PlatformContentError(modellib.XObjIdModel):
     class Meta:
         abstract = True
-    short_name = fields.CharField(max_length=1026, unique=True)
-    error_id = fields.IntegerField()
+    short_name = D(fields.CharField(max_length=1026, unique=True), 'Must be unique')
+    error_id = D(fields.IntegerField(), 'The id of the content error')
     
     # SyntheticFields, fields w/o corresponding db column
     content_source_type = modellib.SyntheticField() # fk

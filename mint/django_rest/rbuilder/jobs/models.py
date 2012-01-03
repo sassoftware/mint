@@ -10,21 +10,45 @@ from django.db import models
 from mint.django_rest.deco import D
 from mint.django_rest.rbuilder import modellib
 from mint.django_rest.rbuilder.users import models as usermodels
+
 from xobj import xobj
 
 XObjHidden = modellib.XObjHidden
 APIReadOnly = modellib.APIReadOnly
 
-# ==========================================================
-# descriptors needed to launch certain jobs, when adding
-# items here also update DESCRIPTOR_MAP below and make
-# sure the descriptor serving service for your resource
-# (ex: system, image, etc) knows about the new type
+class JobSystemArtifact(modellib.XObjModel):
+    class Meta:
+        db_table = 'jobs_created_system'
+    _xobj = xobj.XObjMetadata(tag = 'system_artifact')
+    
+    creation_id = XObjHidden(models.AutoField(primary_key=True))
+    job         = XObjHidden(modellib.ForeignKey('Job', db_column='job_id', related_name='created_systems'))
+    system      = modellib.ForeignKey('inventory.System', db_column='system_id', related_name='+')
 
-# no parameters required for assimilation --- just
-# uses the management_interface credentials directly
+class JobImageArtifact(modellib.XObjModel):
+    class Meta:
+        db_table = 'jobs_created_image'
+    _xobj = xobj.XObjMetadata(tag = 'image_artifact')
 
-# ==========================================================
+    creation_id = XObjHidden(models.AutoField(primary_key=True))
+    job         = XObjHidden(modellib.ForeignKey('Job', db_column='job_id', related_name='created_images'))
+    image       = modellib.ForeignKey('images.Image', db_column='image_id', related_name='+')
+
+class ActionResources(modellib.UnpaginatedCollection):
+    class Meta:
+        abstract = True
+    _xobj = xobj.XObjMetadata(
+                tag = 'resources')
+    list_fields = ['resource']
+    resource = []
+
+class JobCreatedResources(modellib.UnpaginatedCollection):
+    class Meta:
+        abstract = True
+    _xobj = xobj.XObjMetadata(
+                tag = 'created_resources')
+    list_fields = ['resource']
+    resource = []
 
 class Actions(modellib.XObjModel):
     class Meta:
@@ -45,6 +69,7 @@ class Action(modellib.XObjModel):
     description = models.TextField()
     descriptor  = modellib.HrefField()
     enabled     = models.BooleanField(default=True)
+    resources   = modellib.SyntheticField()
 
 class Jobs(modellib.Collection):
     
@@ -85,7 +110,7 @@ class Job(modellib.XObjIdModel):
     job_id = D(XObjHidden(models.AutoField(primary_key=True)),
         "the database id of the job")
     job_uuid = D(models.CharField(max_length=64, unique=True),
-        "a UUID for job tracking purposes")
+        "a UUID for job tracking purposes, must be unique")
     job_token = D(XObjHidden(APIReadOnly(
         models.CharField(max_length=64, null=True, unique=True))),
         "cookie token for updating this job")
@@ -95,12 +120,12 @@ class Job(modellib.XObjIdModel):
     status_code = D(models.IntegerField(default=100),
         "the current status code of the job, typically an http status code")
     status_text = D(models.TextField(default='Initializing'),
-        "the message associated with the current status")
+        "the message associated with the current status, defaults to 'Initializing'")
     status_detail = D(XObjHidden(models.TextField(null=True)),
         "documentation missing")
     job_type = D(modellib.DeferredForeignKey("EventType",
         text_field='name', related_name="jobs", null=False),
-        "The job type")
+        "The job type, cannot be null")
     _descriptor = D(XObjHidden(models.TextField(null=True, db_column="descriptor")),
         " ")
     _descriptor_data = D(XObjHidden(models.TextField(null=True, db_column="descriptor_data")),
@@ -114,6 +139,8 @@ class Job(modellib.XObjIdModel):
     job_description = D(modellib.SyntheticField(),
         "a description of the job")
     results = modellib.SyntheticField()
+    created_resources = modellib.SyntheticField()
+
     created_by = D(modellib.APIReadOnly(modellib.DeferredForeignKey(
             usermodels.User, related_name="jobs", null=True,
             db_column="created_by")),
@@ -176,10 +203,26 @@ class Job(modellib.XObjIdModel):
     def get_url_key(self, *args, **kwargs):
         return [ self.job_uuid ]
 
+    def computeSyntheticFields(self, *args, **kwargs):
+
+        # removes some layers of nesting by not showing the artifact records
+        # but instead presenting a unified collection of results containing
+        # multiple types of resources
+        self.created_resources = JobCreatedResources()
+        resources = []
+        resources.extend([ x.image for x in self.created_images.all() ])
+        resources.extend([ x.system for x in self.created_systems.all() ])
+        resources2 = []
+        for r in resources:
+            res = modellib.HrefFieldFromModel(r, tag=r._xobj.tag)
+            resources2.append(res)
+        self.created_resources.resource = resources2
+
     def serialize(self, request=None):
         xobj_model = modellib.XObjIdModel.serialize(self, request)
         self.setValuesFromRmake()
         xobj_model.job_description = self.job_type.description
+
         return xobj_model
 
 class JobStates(modellib.Collection):
@@ -211,7 +254,8 @@ class JobState(modellib.XObjIdModel):
                 attributes = {'id':str})
 
     job_state_id = D(models.AutoField(primary_key=True), "the database ID for the job state")
-    name = D(models.CharField(max_length=64, unique=True, choices=choices), "the name of the job state")
+    name = D(models.CharField(max_length=64, unique=True, choices=choices),
+        "the name of the job state, must be unique")
 
     load_fields = [ name ]
 
@@ -355,7 +399,7 @@ class EventType(modellib.XObjIdModel):
     )
 
     name = D(APIReadOnly(models.CharField(max_length=8092, unique=True,
-        choices=EVENT_TYPES)), "the event type name (read-only)")
+        choices=EVENT_TYPES)), "the event type name (read-only), must be unique")
     description = D(models.CharField(max_length=8092), "the event type description")
     priority = D(models.SmallIntegerField(db_index=True), "the event type priority where > priority wins")
     resource_type = D(models.TextField(), "the resource type for the job")
@@ -381,7 +425,8 @@ class EventType(modellib.XObjIdModel):
     def makeAction(cls, jobTypeName, actionName=None, actionDescription=None,
             actionKey=None,
             enabled=True, descriptorModel=None, descriptorHref=None,
-            descriptorHrefValues=None, descriptorViewName=None):
+            descriptorHrefValues=None, descriptorViewName=None,
+            resources=None):
         '''Return a related Action object for spawning this jobtype'''
         obj = modellib.Cache.get(cls, name=jobTypeName)
         if actionKey is None:
@@ -408,6 +453,12 @@ class EventType(modellib.XObjIdModel):
         else:
             action.descriptor = modellib.HrefField("descriptors/%s",
                 values=(obj.job_type_id, ))
+        if resources:
+            #action.resources = modellib.HrefFieldFromModel(model=resources[0])
+            action.resources = ActionResources()
+            for resource in resources:
+                action.resources.resource.append(
+                    modellib.HrefFieldFromModel(resource, tag=resource._xobj.tag))
         return action
     
 

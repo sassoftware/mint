@@ -492,20 +492,33 @@ class LabelsTable(database.KeyedTable):
 
     def getLabel(self, labelId):
         cu = self.db.cursor()
-        cu.execute('''SELECT label, url, authType, username, password,
-            entitlement FROM Labels WHERE labelId=?''', labelId)
+        cu.execute("""SELECT label, url, authType, username, password,
+                entitlement, fqdn
+                FROM Labels
+                JOIN Projects USING (projectId)
+                WHERE labelId=?
+                """, labelId)
 
         p = cu.fetchone()
         if not p:
             raise LabelMissing
         else:
-            label = p[0] or ''
-            username = p[3] is not None and p[3] or ''
-            password = p[4] is not None and p[4] or ''
-            entitlement = p[5] is not None and p[5] or ''
-            url = p[1] or ''  # seems to be unused
-            return dict(label=label, url=url, authType=p[2],
-                username=username, password=password, entitlement=entitlement)
+            label, url, authType, username, password, entitlement, fqdn = p
+            if not label:
+                label = fqdn + '@dummy:label'
+            if not url:
+                url = 'https://%s/repos/%s/' % (self.cfg.siteHost, fqdn)
+            out = dict(
+                    label=label,
+                    url=url,
+                    authType=authType,
+                    username=username,
+                    password=password,
+                    entitlement=entitlement)
+            for key, value in out.items():
+                if value is None:
+                    out[key] = ''
+            return out
 
     @database.dbWriter
     def addLabel(self, cu, projectId, label, url=None, authType='none',

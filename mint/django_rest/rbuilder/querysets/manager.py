@@ -24,6 +24,12 @@ from mint.django_rest.rbuilder.jobs import models as jobmodels
 from mint.django_rest.rbuilder.targets import models as targetmodels
 from mint.django_rest.rbuilder.images import models as imagemodels
 from mint.django_rest.rbuilder.rbac.manager.rbacmanager import READMEMBERS, MODMEMBERS
+from django.db import IntegrityError
+
+import logging
+import traceback
+import sys
+log = logging.getLogger(__name__)
 
 # how to add a new queryset resouce type
 # (there is a fair amount of boilerplate we could refactor here by instantiating
@@ -44,7 +50,6 @@ from mint.django_rest.rbuilder.rbac.manager.rbacmanager import READMEMBERS, MODM
 
 # retag if a new query is made and the results are greater
 # than this many seconds old
-TAG_REFRESH_INTERVAL=60
 
 class QuerySetManager(basemanager.BaseManager):
 
@@ -176,7 +181,9 @@ class QuerySetManager(basemanager.BaseManager):
         querySet.modified_by = by_user
         querySet.tagged_date = None
         querySet.save()
-        self._recomputeStatic(querySet)
+        querySet = self.mgr.getQuerySet(querySet.pk)
+        # recompute this and everything up the chain
+        self._recomputeStatic(querySet, skip_self=querySet.is_static)
         return querySet
 
     @exposed
@@ -206,6 +213,8 @@ class QuerySetManager(basemanager.BaseManager):
         if for_user is None:
             all_sets = models.QuerySet.objects.filter(resource_type=type)
         else:
+            # avoid retagging everyone's My Stages when adding a new stage ... not neccessary
+            # to pass for_user where we know all of the My Querysets are static.
             all_sets = models.QuerySet.objects.filter(
                 resource_type    = type,
                 personal_for     = for_user
@@ -213,11 +222,28 @@ class QuerySetManager(basemanager.BaseManager):
                 resource_type        = type,
                 personal_for__isnull = True,
             ).distinct()
+
         for qs in all_sets:
+            if qs.is_static:
+                continue
             qs.tagged_date = None
             qs.save()
-            self.getQuerySetAllResult(qs, use_tags=False)
-        
+
+            tsid = transaction.savepoint()
+
+            try:
+                self.getQuerySetAllResult(qs, use_tags=False)
+            except Exception, e:
+                transaction.savepoint_rollback(tsid)
+                msg = traceback.format_exc()
+                if msg.find("already exists") != -1:
+                    continue
+                # any error during retagging should only be logged
+                # possibly the Django model changed and the database needs
+                # manual repair -- must still be raised on QS direct access
+                log.error("error retagging queryset %s (%s) [type=%s], filter term editing required to repair?\n %s" % (
+                    qs.pk, qs.name, qs.resource_type, msg
+                ))
 
     @exposed
     def updateQuerySet(self, querySet, by_user):
@@ -244,7 +270,7 @@ class QuerySetManager(basemanager.BaseManager):
         self._recomputeStatic(querySet)
         return querySet
 
-    def _recomputeStatic(self, querySet):
+    def _recomputeStatic(self, querySet, skip_self=False):
         # the static bit keeps track of querysets who have no
         # filter terms or child sets with filter terms.  Certain
         # restrictions apply to querysts that are NOT static.
@@ -254,14 +280,20 @@ class QuerySetManager(basemanager.BaseManager):
         # start at lowest nodes in DAG, work up 
         to_process.sort(cmp=lambda x,y: cmp(y._depth, x._depth))
         for qs in to_process:
+            if skip_self and qs.pk == querySet.pk:
+                # if the querySet was static when added no need
+                # to recompute, save some work
+                continue
             # assume static until proven otherwise
-            qs.is_static = True
+            static = True
             if len(qs.filter_entries.all()) > 0:
-                qs.is_static = False
+                static = False
             for kid in qs.children.all():
                 if not kid.is_static:
-                    qs.is_static=False
-            qs.save()
+                    static=False
+            if querySet.is_static != static:
+                qs.is_static = static
+                qs.save()
 
     @exposed
     def deleteQuerySet(self, querySet):
@@ -297,114 +329,113 @@ class QuerySetManager(basemanager.BaseManager):
         method = self._tagMethod(querySet)
         method(resources, querySet, self._transitiveMethod())
 
-    def newTransaction(self):
-        # try to avoid some confusing database locks that prevent executemany
-        # from continuing on
-        if transaction.is_managed():
-            if transaction.is_dirty():
-                transaction.commit()
-            transaction.leave_transaction_management()
-            transaction.enter_transaction_management(managed=True)
+    def _tagGeneric(self, querySet, tagTableName, tagResourceField, inclusionMethod, resources):
 
-    def _tagGeneric(self, resources, queryset, inclusionMethod, tagClass, tagTable, idColumn):
-        '''
-        store that a given query tag matched the system 
-        for caching purposes
-        '''
-        
+        if type(resources) == list and len(resources) == 0:
+            return 
+
+        cu = connection.cursor()
+
+        cu.execute("""
+           CREATE TEMPORARY TABLE tmp_queryset_tags (
+              query_set_id INT,
+              resource_id BIGINT,
+              inclusion_method_id INT
+           )
+        """)
         try:
-            # we have to hop out of transactions because Django will deadlock... but we need locking
-            # so a request to retag isn't done in parallel, so this is somewhat evil.  Would love
-            # to hand tune the SQL but it's pretty ingrained into querysets.
-
-            # this should not be necc. if our transactions are marked correctly
-            # fd = open("/tmp/rbuilder-%s.taglock" % os.getuid(), "w")
-            # fcntl.flock(fd.fileno(), fcntl.LOCK_EX)
-
-            if len(resources) == 0:
-                return
-        
-            self.newTransaction()
-
-            cursor = connection.cursor()
-
-            if inclusionMethod.name != 'chosen':
-                cursor.execute("DELETE FROM %s WHERE query_set_id = %s AND inclusion_method_id = %s" % (
-                    tagTable, queryset.pk, inclusionMethod.pk
-                ))
-
-            insertParams = None
-            if type(resources) == list:
-                # inserting chosens, should be a small quantity
-                insertParams = [(r.pk,) for r in resources]
-            else:
-                resources = resources.values_list('pk', flat=True)
-                insertParams = [(r,) for r in resources]
-
-            query = "INSERT INTO %s" % tagTable 
-            query = query + " (%s, query_set_id, inclusion_method_id)" % idColumn
-            query = query + " VALUES (%s, " + " %s, %s)" % (queryset.pk, inclusionMethod.pk)
-    
-            cursor.executemany(query, insertParams) 
-        
-            if transaction.is_managed():
-                # inside login method (only), transactions are disabled
-                transaction.set_dirty()
-            self.newTransaction()
-
+            self._tagGeneric_internal(
+                querySet, tagTableName, tagResourceField, inclusionMethod, resources
+            )
+        except:
+            exc = sys.exc_info()
+            try:
+                self.mgr.rollback()
+            except:
+                pass
+            raise exc[0], exc[1], exc[2]
         finally:
-            #fcntl.flock(fd.fileno(), fcntl.LOCK_UN)
-            pass
+            cu.execute("DROP TABLE tmp_queryset_tags")    
 
-        
+    def _tagGeneric_internal(self, querySet, tagTableName, tagResourceField, 
+        inclusionMethod, resources):
 
-    def _tagSystems(self, resources, tag, inclusionMethod):
-        self._tagGeneric(resources, tag, inclusionMethod,
-           tagClass=models.SystemTag,
-           tagTable='querysets_systemtag',
-           idColumn='system_id')
+        sqlKeys = {
+            'inclusionMethod'      : inclusionMethod.pk,
+            'tagTableName'         : tagTableName,
+            'tagResourceFieldName' : tagResourceField,
+            'querySet'             : querySet.pk
+        }
 
-    def _tagTargets(self, resources, tag, inclusionMethod):
-        self._tagGeneric(resources, tag, inclusionMethod,
-           tagClass=models.TargetTag,
-           tagTable='querysets_targettag',
-           idColumn='target_id')
+        cu = connection.cursor()
 
-    def _tagUsers(self, resources, tag, inclusionMethod):
-        self._tagGeneric(resources, tag, inclusionMethod,
-           tagClass=models.UserTag,
-           tagTable='querysets_usertag',
-           idColumn='user_id')
+        # put all resources to possibly add in the temp table
+        insertParams = None
+        if type(resources) == list:
+            # inserting chosens, should be a small quantity
+            insertParams = [(querySet.pk, r.pk, inclusionMethod.pk) for r in resources]
+        else:
+            insertParams = [(querySet.pk, r, inclusionMethod.pk) for r in resources.values_list('pk', flat=True)]
+        query = """
+            INSERT into tmp_queryset_tags (query_set_id, resource_id, inclusion_method_id) VALUES (%s, %s, %s)
+        """ 
+        cu.executemany(query, insertParams)
 
-    def _tagProjects(self, resources, tag, inclusionMethod):
-        self._tagGeneric(resources, tag, inclusionMethod,
-           tagClass=models.ProjectTag,
-           tagTable='querysets_projecttag',
-           idColumn='project_id')
+        # add tmp table rows to the real table if they are not already there
+        cmd = """
+           INSERT INTO %(tagTableName)s (query_set_id, %(tagResourceFieldName)s, inclusion_method_id)
+              SELECT t.query_set_id, t.resource_id, t.inclusion_method_id
+                  FROM tmp_queryset_tags AS t
+                  WHERE NOT EXISTS (
+                     SELECT 1 
+                          FROM %(tagTableName)s
+                          WHERE %(tagResourceFieldName)s = t.resource_id 
+                          AND   inclusion_method_id = t.inclusion_method_id
+                          AND   query_set_id = t.query_set_id
+                     )
+        """ % sqlKeys
+        cu.execute(cmd)
 
-    def _tagStages(self, resources, tag, inclusionMethod):
-        self._tagGeneric(resources, tag, inclusionMethod,
-           tagClass=models.StageTag,
-           tagTable='querysets_stagetag',
-           idColumn='stage_id')
+        # if the queryset mode is not chosen, delete entries that are not in the temp
+        # table, because they have fallen out of the queryset
+        if inclusionMethod.name != 'chosen':
+            cu.execute("""
+                DELETE FROM %(tagTableName)s WHERE
+                     query_set_id = %(querySet)s AND
+                     inclusion_method_id = %(inclusionMethod)s AND
+                     NOT EXISTS (
+                         SELECT 1 
+                             FROM tmp_queryset_tags
+                             WHERE tmp_queryset_tags.resource_id = %(tagResourceFieldName)s
+                             AND tmp_queryset_tags.query_set_id = query_set_id
+                             AND tmp_queryset_tags.inclusion_method_id = inclusion_method_id
+                     )
+            """ % sqlKeys)
 
-    def _tagRoles(self, resources, tag, inclusionMethod):
-        self._tagGeneric(resources, tag, inclusionMethod,
-           tagClass=models.RoleTag,
-           tagTable='querysets_roletag',
-           idColumn='role_id')
 
-    def _tagGrants(self, resources, tag, inclusionMethod):
-        self._tagGeneric(resources, tag, inclusionMethod,
-           tagClass=models.PermissionTag,
-           tagTable='querysets_permissiontag',
-           idColumn='permission_id')
+    def _tagSystems(self, resources, qs, inclusionMethod):
+        self._tagGeneric(qs, 'querysets_systemtag', 'system_id', inclusionMethod, resources)
+
+    def _tagTargets(self, resources, qs, inclusionMethod):
+        self._tagGeneric(qs, 'querysets_targettag', 'target_id', inclusionMethod, resources)
+
+    def _tagUsers(self, resources, qs, inclusionMethod):
+        self._tagGeneric(qs, 'querysets_usertag', 'user_id', inclusionMethod, resources)
+
+    def _tagProjects(self, resources, qs, inclusionMethod):
+        self._tagGeneric(qs, 'querysets_projecttag', 'project_id', inclusionMethod, resources)
+
+    def _tagStages(self, resources, qs, inclusionMethod):
+        self._tagGeneric(qs, 'querysets_stagetag', 'stage_id', inclusionMethod, resources)
+
+    def _tagRoles(self, resources, qs, inclusionMethod):
+        self._tagGeneric(qs, 'querysets_roletag', 'role_id', inclusionMethod, resources)
+
+    def _tagGrants(self, resources, qs, inclusionMethod):
+        self._tagGeneric(qs, 'querysets_permissiontag', 'permission_id', inclusionMethod, resources)
     
-    def _tagImages(self, resources, tag, inclusionMethod):
-        self._tagGeneric(resources, tag, inclusionMethod,
-           tagClass=models.ImageTag,
-           tagTable='querysets_imagetag',
-           idColumn='image_id')
+    def _tagImages(self, resources, qs, inclusionMethod):
+        self._tagGeneric(qs, 'querysets_imagetag', 'image_id', inclusionMethod, resources)
 
     def filterQuerySet(self, querySet):
         '''Return resources matching specific filter criteria'''
@@ -680,12 +711,13 @@ class QuerySetManager(basemanager.BaseManager):
              return True
 
          if querySet.tagged_date is None:
-             # never been tagged before
+             # never been tagged before or explicitly marked for retag
              return True
          else:
-             then  = querySet.tagged_date
-             delta = timeutils.now() - then
-             return (delta.seconds > TAG_REFRESH_INTERVAL)
+             for kid in querySet.children.all():
+                 if self._areResourceTagsStale(kid):
+                     return True
+             return False
 
     def _getQuerySetFilteredResult(self, querySet):
 
@@ -998,8 +1030,9 @@ class QuerySetManager(basemanager.BaseManager):
             if len(qs.filter_entries.all()) == 0:
                 # if the queryset already exists we won't try to repair it
                 qs.filter_entries.add(filterEntry)
-                qs.save()
-
+                qs.is_static = False
+            qs.save()
+          
         return qs
 
     def _createMyProjects(self, user, byUser):
