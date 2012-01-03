@@ -26,35 +26,6 @@ from mint.django_rest.rbuilder.projects import models as projectsmodels
 class RestDbPassthrough(resource.Resource):
     pass
 
-# FIXME: why is this in inventory???
-class StageProxyService(service.BaseAuthService):
-    
-    @staticmethod
-    def getStageAndSetGroup(request, stage_id):
-        stage = projectsmodels.Stage.objects.get(pk=stage_id)
-        hostname = stage.project.short_name # aka project's short_name
-        label = stage.label
-        href = 'http://' + request.get_host().strip('/') + '/api/products/%s/repos/search?type=group&label=%s'
-        stage.groups = projectsmodels.Group(href=href % (hostname, label))
-        return stage
-    
-    @staticmethod
-    def getStagesAndSetGroup(request, version=None):
-        Stages = projectsmodels.Stages()
-        
-        if version:
-            project_branch_stages = projectsmodels.Stage.objects.all().filter(name=version)
-        else:
-            project_branch_stages = projectsmodels.Stage.objects.all()
-        # project_branch_stages = projectsmodels.Stage.objects.all()
-        stages_collection = []
-        
-        for stage in project_branch_stages:
-            stages_collection.append(StageProxyService.getStageAndSetGroup(request, stage.stage_id))
-        Stages.project_branch_stage = stages_collection
-        return Stages
-
-
 class MajorVersionService(service.BaseAuthService):
 
     def get(self, request, short_name, version):
