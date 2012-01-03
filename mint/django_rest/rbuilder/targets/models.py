@@ -201,22 +201,22 @@ class TargetData(modellib.XObjModel):
 class TargetConfiguration(modellib.XObjIdModel):
     class Meta:
         abstract = True
-    
-    view_name = 'TargetConfiguration'
 
-    def __init__(self, target_id):
-        self._target = Target.objects.get(pk=target_id)
-        
+    view_name = 'TargetConfiguration'
+    properties = []
+
+    def __init__(self, targetId):
+        self.target_id = targetId
+
     def serialize(self, request=None):
         xobjModel = modellib.XObjModel.serialize(self, request)
-        getTargetConfig = self._rbmgr.targetsManager.getTargetConfiguration
-        for k, v in getTargetConfig(self._target).items():
+        for k, v in self.properties:
             setattr(xobjModel, k, v)
         return xobjModel
-        
+
     def get_url_key(self, *args, **kwargs):
         return [self.target_id]
-        
+
 class Credentials(modellib.Collection):
     class Meta:
         abstract = True

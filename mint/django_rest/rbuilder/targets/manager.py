@@ -66,13 +66,35 @@ class TargetsManager(basemanager.BaseManager, CatalogServiceHelper):
 
     @exposed
     def getTargetConfiguration(self, target):
+        if isinstance(target, (int, basestring)):
+            target = self.getTargetById(target)
+        objList = models.TargetData.objects.filter(target=target)
         targetConfig = dict()
-        for obj in models.TargetData.objects.filter(target=target):
+        for obj in objList:
             targetConfig[obj.name] = self._stripUnicode(json.loads(obj.value))
+        targetConfig = self._remapTargetConfigurationFields(target, targetConfig)
         targetConfig['zone'] = self.getTargetZone(target).name
         targetConfig['name'] = target.name
         targetConfig['description'] = target.description
         return targetConfig
+
+    def _remapTargetConfigurationFields(self, target, targetConfig):
+        ret = targetConfig.copy()
+        drvClass = self.getDriverClass(target.target_type)
+        undef = object()
+        for nameDescr, nameDb in drvClass._configNameMap:
+            val = ret.pop(nameDb, undef)
+            if val is undef:
+                continue
+            ret[nameDescr] = val
+        return ret
+
+    @exposed
+    def getTargetConfigurationModel(self, targetId):
+        m = models.TargetConfiguration(targetId)
+        config = self.getTargetConfiguration(targetId)
+        m.properties = config.items()
+        return m
 
     def _getTargetCredentialsForCurrentUser(self, target):
         userId = self.auth.userId
