@@ -4,12 +4,10 @@
 # All Rights Reserved
 #
 
-from django.conf.urls.defaults import url, patterns, include
+from django.conf.urls.defaults import patterns, include
 
 # FIXME: these will be moved to sub url files until this list has zero size:
-from mint.django_rest.rbuilder.discovery import views as discoveryviews
 # FIXME: "products" used below really should be it's own seperate service?
-
 from mint.django_rest.rbuilder.inventory.views.v1 import views as inventoryviews
 from mint.django_rest.rbuilder.querysets import views as querysetviews
 # from mint.django_rest.rbuilder.packages import views as packageviews

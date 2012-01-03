@@ -15,6 +15,12 @@ from mint.django_rest.rbuilder import service
 from django_restapi import resource
 from mint.django_rest.rbuilder.rbac.rbacauth import rbac, manual_rbac
 from mint.django_rest.rbuilder.querysets import models as querymodels
+from mint.django_rest.rbuilder.users import models as usersmodels
+import os 
+import time
+ 
+# FIXME: totally seems like the wrong place for this, move it
+from mint.django_rest.rbuilder.projects import models as projectsmodels
 
 # FIXME: why does this exist?
 class RestDbPassthrough(resource.Resource):
