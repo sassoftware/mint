@@ -4,7 +4,7 @@
 # All Rights Reserved
 #
 
-from django.conf.urls.defaults import url, patterns
+from django.conf.urls.defaults import patterns
 from mint.django_rest.rbuilder.inventory.views.v1 import views as inventoryviews
 # FIXME: adjust once the job views move to the new structure
 from mint.django_rest.rbuilder.jobs import views as jobviews
