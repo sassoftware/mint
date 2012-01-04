@@ -344,12 +344,14 @@ class Platforms(object):
         abstract = kw.get('abstract', None)
         sourceTypes = kw.get('sourceTypes', [])
         mode = kw.get('mode', 'manual')
+        hidden = kw.get('hidden', None)
         platformUsageTerms = kw.get('platformUsageTerms')
         platform = models.Platform(platformId=platformId, label=label,
                 platformName=platformName, enabled=enabled,
                 platformUsageTerms=platformUsageTerms,
                 configurable=configurable, mode=mode,
-                repositoryHostname=fqdn, abstract=abstract)
+                repositoryHostname=fqdn, abstract=abstract,
+                hidden=hidden)
         platform._sourceTypes = sourceTypes
         platform._buildTypes = platformBuildTypes
         return platform

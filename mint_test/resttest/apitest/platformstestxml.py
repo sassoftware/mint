@@ -11,6 +11,7 @@ platformsXml = """\
     <enabled>false</enabled>
     <configurable>true</configurable>
     <abstract>false</abstract>
+    <hidden>false</hidden>
     <mirrorPermission>true</mirrorPermission>
     <repositoryUrl href="http://localhost:8000/repos/localhost./api"/>
     <contentSources href="http://localhost:8000/api/platforms/1/contentSources"/>
@@ -30,6 +31,7 @@ platformsXml = """\
     <enabled>false</enabled>
     <configurable>true</configurable>
     <abstract>false</abstract>
+    <hidden>false</hidden>
     <mirrorPermission>true</mirrorPermission>
     <repositoryUrl href="http://localhost:8000/repos/localhost./api"/>
     <contentSources href="http://localhost:8000/api/platforms/2/contentSources"/>
@@ -56,6 +58,7 @@ platformXmlTempl = """\
   <enabled>%(enabled)s</enabled>
   <configurable>true</configurable>
   <abstract>false</abstract>
+  <hidden>false</hidden>
   <mirrorPermission>true</mirrorPermission>
   <repositoryUrl href="http://localhost:8000/repos/localhost./api"/>
   <contentSources href="http://localhost:8000/api/platforms/1/contentSources"/>
