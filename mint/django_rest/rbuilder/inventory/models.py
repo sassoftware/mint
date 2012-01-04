@@ -849,6 +849,7 @@ class System(modellib.XObjIdModel):
             enabled = False
         action = jobmodels.EventType.makeAction(
             jobmodels.EventType.SYSTEM_CAPTURE,
+            actionName="System capture",
             descriptorModel=self,
             descriptorHref="descriptors/capture",
             enabled=enabled)

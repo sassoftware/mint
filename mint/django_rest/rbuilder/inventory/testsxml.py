@@ -969,7 +969,7 @@ systems_xml = """\
         <enabled>false</enabled>
         <job_type id="http://testserver/api/v1/inventory/event_types/21"/>
         <key>system_capture</key>
-        <name>system capture</name>
+        <name>System capture</name>
       </action>
     </actions>
     <agent_port/>
@@ -1052,7 +1052,7 @@ systems_xml = """\
         <enabled>false</enabled>
         <job_type id="http://testserver/api/v1/inventory/event_types/21"/>
         <key>system_capture</key>
-        <name>system capture</name>
+        <name>System capture</name>
       </action>
     </actions>
     <agent_port>5989</agent_port>
@@ -1275,7 +1275,7 @@ system_xml = """\
       <enabled>false</enabled>
       <job_type id="http://testserver/api/v1/inventory/event_types/21"/>
       <key>system_capture</key>
-      <name>system capture</name>
+      <name>System capture</name>
     </action>
   </actions>
   <agent_port>5989</agent_port>
@@ -1361,7 +1361,7 @@ system_post_xml = """\
       <enabled>false</enabled>
       <job_type id="http://testserver/api/v1/inventory/event_types/21"/>
       <key>system_capture</key>
-      <name>system capture</name>
+      <name>System capture</name>
     </action>
   </actions>
   <managing_zone id="http://testserver/api/v1/inventory/zones/1">Local rBuilder</managing_zone>
@@ -1660,7 +1660,7 @@ system_target_xml = """\
       <enabled>true</enabled>
       <job_type id="http://testserver/api/v1/inventory/event_types/21"/>
       <key>system_capture</key>
-      <name>system capture</name>
+      <name>System capture</name>
    </action>
   </actions>
   <agent_port>5989</agent_port>
@@ -2494,7 +2494,7 @@ system_with_target = """\
       <enabled>true</enabled>
       <job_type id="http://testserver/api/v1/inventory/event_types/21"/>
       <key>system_capture</key>
-      <name>system capture</name>
+      <name>System capture</name>
     </action>
   </actions>
   <system_events id="http://testserver/api/v1/inventory/systems/4/system_events"/>
@@ -3665,7 +3665,7 @@ retirement_xml = """
       <description>Assimilate system</description>
     </action>
     <action>
-      <name>system capture</name>
+      <name>System capture</name>
       <job_type id="http://testserver/api/v1/inventory/event_types/21"/>
       <enabled>false</enabled>
       <descriptor id="http://testserver/api/v1/inventory/systems/3/descriptors/capture"/>

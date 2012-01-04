@@ -431,12 +431,12 @@ class EventType(modellib.XObjIdModel):
         obj = modellib.Cache.get(cls, name=jobTypeName)
         if actionKey is None:
             actionKey = jobTypeName.replace(' ', '_')
+        defaultActionName = jobTypeName
+        defaultActionDescription = obj.description
         if actionName is None:
-            if actionDescription is None:
-                actionDescription = obj.description
-            actionName = jobTypeName
+            actionName = defaultActionName
         if actionDescription is None:
-            actionDescription = actionName
+            actionDescription = defaultActionDescription
         action = Action(
             key = actionKey,
             job_type = modellib.HrefFieldFromModel(obj),

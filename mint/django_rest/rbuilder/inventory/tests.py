@@ -76,7 +76,7 @@ class AssimilatorTestCase(XMLTestCase, test_utils.SmartformMixIn):
         if not isinstance(actions, list):
            actions = [actions]
         self.failUnlessEqual([ x.name for x in actions ],
-            ['Assimilate system', "system capture"])
+            ['Assimilate system', "System capture"])
         self.failUnlessEqual([ x.description for x in actions ],
             ['Assimilate system', "Capture a system's image"])
 
