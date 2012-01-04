@@ -57,7 +57,7 @@ class PlatformManager(basemanager.BaseManager):
     @exposed
     def getPlatforms(self):
         Platforms = platform_models.Platforms()
-        Platforms.platform = platform_models.Platform.objects.all()
+        Platforms.platform = platform_models.Platform.objects.order_by('platform_id')
         return Platforms
 
     @exposed

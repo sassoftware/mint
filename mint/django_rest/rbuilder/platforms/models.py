@@ -44,6 +44,7 @@ class Platform(modellib.XObjIdModel):
     configurable = D(models.BooleanField(default=False), 'Boolean, defaults to False')
     abstract = D(models.BooleanField(default=False), 'Boolean, defaults to False')
     is_from_disk = D(models.BooleanField(default=False, db_column='isfromdisk'), 'Boolean, defaults to False')
+    hidden = D(models.BooleanField(default=False), 'Boolean, defaults to False')
     time_refreshed = D(basemodels.DateTimeUtcField(auto_now_add=True),
         'Time at which the platform was refreshed') # hack, modellib keeps evaluating to None
 

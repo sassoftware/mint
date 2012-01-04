@@ -51,9 +51,11 @@ class PlatformsTestCase(XMLTestCase):
         # note that when we test getting Platforms, we are not
         # trying to retrieve a Platforms instance, but rather all
         # the platform instances that it contains
-        platforms = platform_models.Platform.objects.all()
-        self.assertEquals(len(list(platforms)), len(platforms_gotten.platform))
-    
+        platforms = platform_models.Platform.objects.order_by('platform_id')
+        self.failUnlessEqual(
+            [ x.platform_name for x in platforms_gotten.platform ],
+            [ x.platform_name for x in platforms ])
+
     def testGetContentSourceTypes(self):
         cSourceTypes = platform_models.ContentSourceType.objects.all()
         cSourceTypes_gotten = self.xobjResponse('platforms/content_source_types/')

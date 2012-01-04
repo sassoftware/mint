@@ -19,6 +19,13 @@
     <field type="DateTimeUtcField" name="time_refreshed">2011-08-09T13:13:20.590430+00:00</field>
     <field to="projects.project" name="project" rel="ManyToOneRel">3</field>
   </object>
+  <object pk="4" model="platforms.platform">
+    <field type="CharField" name="label">PlatformHidden</field>
+    <field type="CharField" name="platform_name">Hidden Platform</field>
+    <field type="BooleanField" name="hidden">True</field>
+    <field type="DateTimeUtcField" name="time_refreshed">2011-08-09T13:13:20.590430+00:00</field>
+    <field to="projects.project" name="project" rel="ManyToOneRel">3</field>
+  </object>
   <object pk="1" model="platforms.contentsourcetype">
     <field to="platforms.platform" name="platform_id" rel="ManyToOneRel">1</field>
     <field type="CharField" name="content_source_type">ContentSourceType</field>

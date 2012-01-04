@@ -4629,8 +4629,8 @@ class MigrateTo_60(SchemaMigration):
         return True
 
 class MigrateTo_61(SchemaMigration):
-    '''Edge-P4'''
-    Version = (61, 3)
+    '''Edge P4, P5'''
+    Version = (61, 4)
 
     def migrate(self):
         cu = self.db.cursor()
@@ -4680,6 +4680,11 @@ class MigrateTo_61(SchemaMigration):
             ALTER title DROP DEFAULT""")
         return True
 
+    def migrate4(self):
+        # mingle #1564
+        add_columns(self.db, 'Platforms',
+                'hidden          boolean NOT NULL DEFAULT false')
+        return True
 
 #### SCHEMA MIGRATIONS END HERE #############################################
 
