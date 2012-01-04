@@ -26,27 +26,6 @@ from mint.django_rest.rbuilder.projects import models as projectsmodels
 class RestDbPassthrough(resource.Resource):
     pass
 
-class MajorVersionService(service.BaseAuthService):
-
-    def get(self, request, short_name, version):
-        """
-        XXX defunct for now
-        """
-        modifiers = ['platform', 'platform_version', 'definition', 'image_type_definitions',
-                     'image_definitions', 'images', 'source_group']
-        project = projectsmodels.Project.objects.get(short_name=short_name)
-        project_version = projectsmodels.ProjectVersion.objects.get(project=project)
-        for m in modifiers:
-            url = r'%(host)s/api/products/%(short_name)s/versions/%(version)s/%(modifier)s/'\
-                    % dict(host= 'http://' + request.get_host(), short_name=short_name, version=version, modifier=m)
-            setattr(project_version, m, url)
-        return project_version
-
-# FIXME: why does this exist?
-class ApplianceService(RestDbPassthrough):
-    def get(self, project):
-        return None
-
 class BaseInventoryService(service.BaseAuthService):    
     def _check_uuid_auth(self, request, kwargs):
         headerName = 'X-rBuilder-Event-UUID'
