@@ -9,7 +9,7 @@ from django.conf.urls.defaults import patterns, include
 # FIXME: these will be moved to sub url files until this list has zero size:
 # FIXME: "products" used below really should be it's own seperate service?
 from mint.django_rest.rbuilder.inventory.views.v1 import views as inventoryviews
-from mint.django_rest.rbuilder.querysets import views as querysetviews
+from mint.django_rest.rbuilder.querysets.views.v1 import views as querysetviews
 # from mint.django_rest.rbuilder.packages import views as packageviews
 from mint.django_rest.rbuilder.packageindex import views as packageindexviews
 from mint.django_rest.rbuilder.projects import views as projectviews
@@ -34,100 +34,35 @@ URL = urls.URLRegistry.URL
 
 urlpatterns = patterns(
 
-    (r'/reports/?', include('mint.django_rest.rbuilder.reporting.views.v1.urls')),
+    (r'^/reports',    include('mint.django_rest.rbuilder.reporting.views.v1.urls')),
+    (r'^/inventory',  include('mint.django_rest.rbuilder.inventory.views.v1.urls')),
+    (r'^/query_sets', include('mint.django_rest.rbuilder.querysets.views.v1.urls')),
 
-    URL(r'/inventory/?$', inventoryviews.InventoryService(), name='Inventory'),
-    (r'/inventory/', include('mint.django_rest.rbuilder.inventory.views.v1.urls')),
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-    # FIXME: TODO: move into inventory?  Can't do it without a seperate urls.py because
-    # of the prefix.   need urls_products.py in inventory?
-
-    # Major Versions
+    # FIXME: this will require a seperate service
     URL(r'/products/(?P<short_name>(\w|\-)*)/versions/(?P<version>(\w|\.)*)/?$',
         inventoryviews.MajorVersionService(),
         name='MajorVersions'),
-
     # Products
     URL(r'/products/(\w|\-)*/?$',
         inventoryviews.ApplianceService(),
         name='Products'),
 
-    # URL(r'projects/(?P<short_name>(\w|\-)*)/project_branches/(?P<project_branch_name>(\w|\-|[0-9])*)/repos/?$',
-    #        projectviews.ProjectBranchService(),
-    #        name='ProjectVersion'),
-
-    # Query Sets
-    URL(r'/query_sets/?$',
-        querysetviews.QuerySetsService(),
-        name='QuerySets',
-        model='querysets.QuerySets'),
+    # FIXME: this will require a seperate service
     URL(r'/favorites/query_sets/?$',
         querysetviews.FavoriteQuerySetService(),
         name='FavoriteQuerySets',
         model='querysets.QuerySets'),
-    URL(r'/query_sets/(?P<query_set_id>\d+)/?$',
-        querysetviews.QuerySetService(),
-        name='QuerySet',
-        model='querysets.QuerySet'),
-    URL(r'/query_sets/(?P<query_set_id>\d+)/all/?$',
-        querysetviews.QuerySetAllResultService(),
-        name='QuerySetAllResult',
-        model='querysets.AllMembers'),
-    URL(r'/query_sets/(?P<query_set_id>\d+)/chosen/?$',
-        querysetviews.QuerySetChosenResultService(),
-        name='QuerySetChosenResult',
-        model='querysets.ChosenMembers'),
-    URL(r'/query_sets/(?P<query_set_id>\d+)/filtered/?$',
-        querysetviews.QuerySetFilteredResultService(),
-        name='QuerySetFilteredResult',
-        model='querysets.FilteredMembers'),
-    URL(r'/query_sets/(?P<query_set_id>\d+)/child/?$',
-        querysetviews.QuerySetChildResultService(),
-        name='QuerySetChildResult',
-        model='querysets.ChildMembers'),
-    URL(r'/query_sets/(?P<query_set_id>\d+)/universe/?$',
-        querysetviews.QuerySetUniverseResultService(),
-        name='QuerySetUniverseResult',
-        model='querysets.Universe'),
-    URL(r'/query_sets/(?P<query_set_id>\d+)/jobs/?$',
-        querysetviews.QuerySetJobsService(),
-        name='QuerySetJobs'),
-    URL(r'/query_sets/(?P<query_set_id>\d+)/filter_descriptor/?$',
-        querysetviews.QuerySetFilterDescriptorService(),
-        name='QuerySetFilterDescriptor'),
-    URL(r'/query_sets/(?P<query_set_id>\d+)/grant_matrix/?$',
-        rbacviews.RbacQuerySetGrantMatrixService(),
-        name='QuerySetGrantMatrix',
-        model='querysets.GrantMatrix'),
+
     
-    # These are aggregates
-    # Aggregate all project branches
+    # project branches
     URL(r'/project_branches/?$',
         projectviews.AllProjectBranchesService(),
         name='AllProjectBranches',
         model='projects.ProjectVersions'),
-
-    # Aggregate all project branch stages
     URL(r'/project_branch_stages/?$',
         projectviews.AllProjectBranchesStagesService(),
         name='AllProjectBranchStages',
         model='projects.Stages'),
-
-    # Proper hierarchy for projects
     URL(r'/projects/?$',
         projectviews.ProjectsService(),
         name='Projects',
@@ -157,7 +92,7 @@ urlpatterns = patterns(
         name='ProjectReleaseImage',
         model='images.Image'),
     URL(r'/projects/(?P<project_short_name>(\w|\-)*)/project_branches/?$',
-        projectviews.ProjectAllBranchesService(),  # WRONG
+        projectviews.ProjectAllBranchesService(),  
         name='ProjectVersions',
         model='projects.ProjectVersions'),
     URL(r'/projects/(?P<project_short_name>(\w|\-)*)/project_branches/(?P<project_branch_label>[a-zA-Z0-9]+(\.|\w|\-|\@|\:)*)/?$',
@@ -176,13 +111,10 @@ urlpatterns = patterns(
         projectviews.ProjectBranchStageImagesService(),
         name='ProjectBranchStageImages',
         model='images.Images'),
-
-    # Aggregate all stages for a project
     URL(r'/projects/(?P<project_short_name>(\w|\-)*)/project_branch_stages/?$',
         projectviews.ProjectAllBranchStagesService(),
         name='ProjectBranchesAllStages',
         model='projects.Stages'),
-
     URL(r'/projects/(?P<project_short_name>(\w|\-)*)/images/?$',
         projectviews.ProjectImagesService(),
         name='ProjectImages',

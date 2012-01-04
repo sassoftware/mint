@@ -6,6 +6,7 @@
 
 from django.conf.urls.defaults import url, patterns, include
 from mint.django_rest.rbuilder.discovery import views as discoveryviews
+from mint.django_rest.rbuilder.inventory.views.v1 import views as inventoryviews
 
 class URLRegistry(object):
     _registry = {}
@@ -30,6 +31,13 @@ class URLRegistry(object):
 URL = URLRegistry.URL
 
 urlpatterns = patterns('',
+
+    # not versioned
+    # support outdated rpath-register (needed for older platforms)
+    URL(r'/api/systems/?$',
+        inventoryviews.InventorySystemsService(),
+        name='SystemsHack2'),
+
     URL(r'^api/?$', discoveryviews.VersionsService(), name='API'),
 
     # API v1
