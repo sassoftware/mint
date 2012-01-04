@@ -6,7 +6,6 @@
 
 from django.conf.urls.defaults import patterns, include
 
-from mint.django_rest.rbuilder.querysets.views.v1 import views as querysetviews
 from mint.django_rest.rbuilder.packageindex import views as packageindexviews
 from mint.django_rest.rbuilder.projects import views as projectviews
 from mint.django_rest.rbuilder.users import views as usersviews
@@ -34,14 +33,8 @@ urlpatterns = patterns(
     (r'^/inventory',  include('mint.django_rest.rbuilder.inventory.views.v1.urls')),
     (r'^/query_sets', include('mint.django_rest.rbuilder.querysets.views.v1.urls')),
     (r'^/products',   include('mint.django_rest.rbuilder.products.views.v1.urls')),
+    (r'^/favorites',  include('mint.django_rest.rbuilder.favorites.views.v1.urls')),
 
-    # FIXME: this will require a seperate service
-    URL(r'/favorites/query_sets/?$',
-        querysetviews.FavoriteQuerySetService(),
-        name='FavoriteQuerySets',
-        model='querysets.QuerySets'),
-
-    
     # project branches
     URL(r'/project_branches/?$',
         projectviews.AllProjectBranchesService(),
@@ -51,6 +44,7 @@ urlpatterns = patterns(
         projectviews.AllProjectBranchesStagesService(),
         name='AllProjectBranchStages',
         model='projects.Stages'),
+
     URL(r'/projects/?$',
         projectviews.ProjectsService(),
         name='Projects',
