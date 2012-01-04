@@ -677,7 +677,8 @@ class Platforms(object):
             self._setupPlatform(platform)
 
         self.db.db.platforms.update(platformId, enabled=int(platform.enabled),
-            mode=platform.mode, configurable=bool(platform.configurable))
+            mode=platform.mode, configurable=bool(platform.configurable),
+            hidden=bool(platform.hidden))
 
         # Clear the cache of status information
         self.platformCache.clearPlatformData(platform.label)
