@@ -6,11 +6,7 @@
 
 from django.conf.urls.defaults import patterns, include
 
-# FIXME: these will be moved to sub url files until this list has zero size:
-# FIXME: "products" used below really should be it's own seperate service?
-from mint.django_rest.rbuilder.inventory.views.v1 import views as inventoryviews
 from mint.django_rest.rbuilder.querysets.views.v1 import views as querysetviews
-# from mint.django_rest.rbuilder.packages import views as packageviews
 from mint.django_rest.rbuilder.packageindex import views as packageindexviews
 from mint.django_rest.rbuilder.projects import views as projectviews
 from mint.django_rest.rbuilder.users import views as usersviews
@@ -37,15 +33,7 @@ urlpatterns = patterns(
     (r'^/reports',    include('mint.django_rest.rbuilder.reporting.views.v1.urls')),
     (r'^/inventory',  include('mint.django_rest.rbuilder.inventory.views.v1.urls')),
     (r'^/query_sets', include('mint.django_rest.rbuilder.querysets.views.v1.urls')),
-
-    # FIXME: this will require a seperate service
-    URL(r'/products/(?P<short_name>(\w|\-)*)/versions/(?P<version>(\w|\.)*)/?$',
-        inventoryviews.MajorVersionService(),
-        name='MajorVersions'),
-    # Products
-    URL(r'/products/(\w|\-)*/?$',
-        inventoryviews.ApplianceService(),
-        name='Products'),
+    (r'^/products',   include('mint.django_rest.rbuilder.products.views.v1.urls')),
 
     # FIXME: this will require a seperate service
     URL(r'/favorites/query_sets/?$',
