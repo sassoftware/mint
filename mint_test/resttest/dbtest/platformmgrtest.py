@@ -137,7 +137,7 @@ class PlatformManagerTest(restbase.BaseRestTest):
         p.hidden = True
 
         p2 = self.db.updatePlatform(p.platformId, p)
-        plat = self.db.db.platforms.get(p.platformId)
+        plat = self.db.db.platforms.get(p2.platformId)
 
         self.failUnlessEqual(plat['hidden'], True)
 
