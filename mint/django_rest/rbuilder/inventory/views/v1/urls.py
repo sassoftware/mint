@@ -12,7 +12,7 @@ from mint.django_rest import urls
 
 URL = urls.URLRegistry.URL
 
-urlpatterns = patterns('inventory.views.v1',
+urlpatterns = patterns('',
 
     # Discoverability
     URL(r'/?$', 

@@ -13,7 +13,7 @@ from mint.django_rest import urls
 
 URL = urls.URLRegistry.URL
 
-urlpatterns = patterns('querysets.views.v1',
+urlpatterns = patterns('mint.django_rest.rbuilder.querysets.views.v1.views',
 
     URL(r'/?$',
         querysetviews.QuerySetsService(),

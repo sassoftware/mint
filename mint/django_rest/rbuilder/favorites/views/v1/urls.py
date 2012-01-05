@@ -9,7 +9,7 @@ from mint.django_rest.rbuilder.favorites.views.v1 import views
 from mint.django_rest import urls
 URL = urls.URLRegistry.URL
 
-urlpatterns = patterns('favorites.views.v1',
+urlpatterns = patterns('',
 
     # FIXME: this will require a seperate service
     URL(r'/query_sets/?$',

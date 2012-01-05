@@ -34,7 +34,7 @@ urlpatterns = patterns('',
 
     # not versioned
     # support outdated rpath-register (needed for older platforms)
-    URL(r'/api/systems/?$',
+    URL(r'^api/systems/?$',
         inventoryviews.InventorySystemsService(),
         name='SystemsHack2'),
 
