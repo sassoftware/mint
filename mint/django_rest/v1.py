@@ -70,12 +70,6 @@ urlpatterns = patterns('',
     (r'^/platforms',
      include('mint.django_rest.rbuilder.platforms.views.v1.urls')),
 
-    # ModuleHooks
-    # FIXME -- migrate to new structure
-    URL(r'/module_hooks/?$',
-        modulehooksviews.ModuleHooksService(),
-        name='ModuleHooks'),
- 
     # Role Based Access Control
     # FIXME -- migrate to new structure
     URL(r'/rbac/?$',
