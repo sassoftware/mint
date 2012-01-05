@@ -8,12 +8,8 @@ from django.conf.urls.defaults import patterns, include
 
 # FIXME: to be removed as things move into new url files:
 from mint.django_rest.rbuilder.projects.views.v1 import views as projectviews
-from mint.django_rest.rbuilder.users import views as usersviews
-from mint.django_rest.rbuilder.notices import views as noticesviews
-from mint.django_rest.rbuilder.platforms import views as platformsviews
 from mint.django_rest.rbuilder.rbac import views as rbacviews
 from mint.django_rest.rbuilder.jobs import views as jobviews
-from mint.django_rest.rbuilder.modulehooks import views as modulehooksviews
 from mint.django_rest.rbuilder.targets import views as targetsviews
 from mint.django_rest.rbuilder.images import views as imagesviews
 
