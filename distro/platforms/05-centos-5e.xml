@@ -1,6 +1,6 @@
 <platform>
   <label>centos.rpath.com@rpath:centos-5e</label>
-  <platformName>Encapsulated CentOS 5 Delivered by rPath</platformName>
+  <platformName>CentOS 5</platformName>
   <abstract>false</abstract>
   <configurable>true</configurable>
 </platform>

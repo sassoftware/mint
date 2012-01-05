@@ -602,6 +602,8 @@ class Platforms(object):
             # XXX Don't leave this hard-coded forever
             if hostname == 'centos.rpath.com':
                 return 'https://centos.rpath.com/nocapsules/'
+            elif hostname == 'centos6.rpath.com':
+                return 'https://centos6.rpath.com/nocapsules/'
             return 'https://%s/conary/' % (hostname)
 
     def _getAuthInfo(self):
