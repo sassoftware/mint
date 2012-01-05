@@ -57,32 +57,15 @@ urlpatterns = patterns('',
 
     (r'^/packages',
      include('mint.django_rest.rbuilder.packages.views.v1.urls')),
-
-    URL(r'^/session/?$',
-        usersviews.SessionService(),
-        name='Session',
-        model='users.Session'),
-
-    # Users
-    # FIXME -- migrate to new structure
-
-    URL(r'^/users/?$',
-        usersviews.UsersService(),
-        name='Users',
-        model='users.Users'),
-    URL(r'^/users/(?P<user_id>\d+)/?$',
-        usersviews.UserService(),
-        name='User',
-        model='users.User'),
-    URL(r'^/users/(?P<user_id>\d+)/notices/?$',
-        noticesviews.UserNoticesService(),
-        name='UserNotices'),
-
-    # HMM... notices are disabled, right? 
-    # FIXME -- migrate to new structure
-    URL(r'^/notices/users/(?P<user_id>\d+)/?$',
-        noticesviews.UserNoticesService(),
-        name='UserNotices2'),
+    
+    (r'^/session',
+     include('mint.django_rest.rbuilder.session.views.v1.urls')),
+    
+    (r'^/users',
+     include('mint.django_rest.rbuilder.users.views.v1.urls')),
+    
+    (r'^/notices',
+     include('mint.django_rest.rbuilder.notices.views.v1.urls')),
 
     # Begin all things platforms
     # FIXME -- migrate to new structure
