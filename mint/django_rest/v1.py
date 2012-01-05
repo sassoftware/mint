@@ -8,7 +8,6 @@ from django.conf.urls.defaults import patterns, include
 
 # FIXME: to be removed as things move into new url files:
 from mint.django_rest.rbuilder.projects.views.v1 import views as projectviews
-from mint.django_rest.rbuilder.rbac import views as rbacviews
 from mint.django_rest.rbuilder.jobs import views as jobviews
 from mint.django_rest.rbuilder.targets import views as targetsviews
 from mint.django_rest.rbuilder.images import views as imagesviews
@@ -65,53 +64,9 @@ urlpatterns = patterns('',
     
     (r'^/platforms',
      include('mint.django_rest.rbuilder.platforms.views.v1.urls')),
-
-    # Role Based Access Control
-    # FIXME -- migrate to new structure
-    URL(r'/rbac/?$',
-        rbacviews.RbacService(),
-        name='Rbac',
-        model='rbac.Rbac'),
-    URL(r'/rbac/grants/?$',
-        rbacviews.RbacPermissionsService(),
-        name='RbacPermissions',
-        model='rbac.RbacPermissions'),
-    URL(r'/rbac/grants/(?P<permission_id>\d+)?$',
-        rbacviews.RbacPermissionService(),
-        name='RbacPermission',
-        model='rbac.RbacPermission'),
-    URL(r'/rbac/roles/?$',
-        rbacviews.RbacRolesService(),
-        name='RbacRoles',
-        model='rbac.RbacRoles'),
-    URL(r'/rbac/roles/(?P<role_id>\d+)?$',
-        rbacviews.RbacRoleService(),
-        name='RbacRole',
-        model='rbac.RbacRole'),
-    URL(r'/users/(?P<user_id>\d+)/roles/?$',
-        rbacviews.RbacUserRolesService(),
-        name='RbacUserRoles',
-        model='rbac.RbacUserRoles'),
-    URL(r'/rbac/roles/(?P<role_id>\d+)/grants/?$',
-        rbacviews.RbacRoleGrantsService(),
-        name='RbacRoleGrants',
-        model='rbac.RbacPermissions'),
-    URL(r'/rbac/roles/(?P<role_id>\d+)/users/?$',
-        rbacviews.RbacRoleUsersService(),
-        name='RbacRoleUser',
-        model='users.Users'),
-    URL(r'/users/(?P<user_id>\d+)/roles/(?P<role_id>\d+)?$',
-        rbacviews.RbacUserRolesService(),
-        name='RbacUserRole',
-        model='rbac.RbacUserRole'),
-    URL(r'/rbac/permissions/?$',
-        rbacviews.RbacPermissionTypesService(),
-        name='RbacPermissionTypes',
-        model='rbac.RbacPermissionTypes'),
-    URL(r'/rbac/permissions/(?P<permission_type_id>\d+)?$',
-        rbacviews.RbacPermissionTypeService(),
-        name='RbacPermissionType',
-        model='rbac.RbacPermissionType'),
+    
+    (r'^/rbac',
+     include('mint.django_rest.rbuilder.rbac.views.v1.urls')),
 
     # Generic descriptors for creating resources
     # FIXME -- migrate to new structure

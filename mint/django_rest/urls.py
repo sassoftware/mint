@@ -17,10 +17,11 @@ class URLRegistry(object):
         if not regex.startswith("^"):
             regex = "^%s" % regex
         if viewName:
-            oldUrl = cls._registry.get(viewName)
-            if oldUrl:
-                raise Exception("Duplicate view name: %s (urls: %s, %s)" %
-                    (viewName, oldUrl, regex))
+            # disabling temporarily for now as it seems to be hiding some tracebacks
+            #oldUrl = cls._registry.get(viewName)
+            #if oldUrl:
+            #    raise Exception("Duplicate view name: %s (urls: %s, %s)" %
+            #        (viewName, oldUrl, regex))
             cls._registry[viewName] = regex
         # try to get model name, is optional
         modelName = kwargs.pop('model', None)
