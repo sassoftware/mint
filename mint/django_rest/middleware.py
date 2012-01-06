@@ -356,6 +356,15 @@ class SerializeXmlMiddleware(BaseMiddleware):
             modellib.XObjModel._rbmgr = None
 
         return response
+
+class AuthHeaderMiddleware(BaseMiddleware):
+    # details on mod_python+Django issue below, marked "won't fix" in Django bug tracker
+    # https://code.djangoproject.com/ticket/4354
+    # this needs to be loaded at the end of the middleware chain
+    def _process_response(self, request, response):
+        if response.status_code == 401:
+            response['WWW-Authenticate'] = "Basic realm=\"rBuilder\""
+        return response
       
 # NOTE: must also set DEBUG=True in settings to use this. 
 class SqlLoggingMiddleware(BaseMiddleware):
