@@ -11,7 +11,6 @@ import re
 from conary import versions
 from conary.deps import deps
 
-from django.conf import settings
 from django.db import models
 from django.db.backends import signals
 
