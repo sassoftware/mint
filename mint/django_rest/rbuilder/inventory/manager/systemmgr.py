@@ -22,7 +22,7 @@ from django.core.exceptions import ObjectDoesNotExist
 
 from mint.lib import uuid, x509
 from mint.lib import data as mintdata
-from mint.django_rest import timeutils
+from mint.django_rest import signals, timeutils
 from mint.django_rest.rbuilder import models as rbuildermodels
 from mint.django_rest.rbuilder.inventory import errors
 from mint.django_rest.rbuilder.inventory import models
@@ -1349,17 +1349,15 @@ class SystemManager(basemanager.BaseManager):
         log.info("Dispatching %s event (id %d, enabled %s) for system %s (id %d)" % \
             (event.event_type.name, event.system_event_id, event.time_enabled, 
             event.system.name, event.system.system_id))
-        
-        self._dispatchSystemEvent(event)
 
-        # cleanup now that the event has been processed
-        self.cleanupSystemEvent(event)
-
-        # create the next event if needed
-        if event.event_type.name == jobmodels.EventType.SYSTEM_POLL:
-            self.scheduleSystemPollEvent(event.system)
+        try:
+            job = self._dispatchSystemEvent(event)
+        except:
+            self.cleanupSystemEvent(event)
+            raise
         else:
-            log.debug("%s events do not trigger a new event creation" % event.event_type.name)
+            if job is None:
+                self.cleanupSystemEvent(event)
 
     @classmethod
     @exposed
@@ -1488,46 +1486,48 @@ class SystemManager(basemanager.BaseManager):
 
         mgmtInterfaceName = self.getSystemManagementInterfaceName(event.system)
 
+        job = None
         # TODO: refactor
         if eventType in self.RegistrationEvents:
             method = getattr(repClient, "register_" + mgmtInterfaceName)
-            self._runSystemEvent(event, method, params, resultsLocation,
+            job = self._runSystemEvent(event, method, params, resultsLocation,
                 user=self.user, zone=zone)
         elif eventType in self.PollEvents:
             method = getattr(repClient, "poll_" + mgmtInterfaceName)
-            self._runSystemEvent(event, method, params, resultsLocation,
+            job = self._runSystemEvent(event, method, params, resultsLocation,
                 user=self.user, zone=zone)
         elif eventType in self.SystemUpdateEvents:
             data = cPickle.loads(event.event_data)
             method = getattr(repClient, "update_" + mgmtInterfaceName)
-            self._runSystemEvent(event, method, params, resultsLocation,
+            job = self._runSystemEvent(event, method, params, resultsLocation,
                 user=self.user, zone=zone, sources=data)
         elif eventType in self.SystemConfigurationEvents:
             data = event.event_data
             method = getattr(repClient, "configuration_" + mgmtInterfaceName)
-            self._runSystemEvent(event, method, params, resultsLocation,
+            job = self._runSystemEvent(event, method, params, resultsLocation,
                 user=self.user, zone=zone, configuration=data)
         elif eventType in self.ShutdownEvents:
             method = getattr(repClient, "shutdown_" + mgmtInterfaceName)
-            self._runSystemEvent(event, method, params, resultsLocation,
+            job = self._runSystemEvent(event, method, params, resultsLocation,
                 user=self.user, zone=zone)
         elif eventType in self.LaunchWaitForNetworkEvents:
             method = repClient.launchWaitForNetwork
-            self._runSystemEvent(event, method, params, resultsLocation,
+            job = self._runSystemEvent(event, method, params, resultsLocation,
                 user=self.user, zone=zone)
         elif eventType in self.ManagementInterfaceEvents:
             params = self.getManagementInterfaceParams(repClient, destination)
             params.eventUuid = eventUuid
             method = repClient.detectMgmtInterface
-            self._runSystemEvent(event, method, params, resultsLocation,
+            job = self._runSystemEvent(event, method, params, resultsLocation,
                 user=self.user, zone=zone)
         elif eventType in self.AssimilationEvents:
             method = repClient.bootstrap
-            self._runSystemEvent(event, method, params, resultsLocation,
+            job = self._runSystemEvent(event, method, params, resultsLocation,
                 user=self.user, zone=zone) # sources=data)
         else:
             log.error("Unknown event type %s" % eventType)
             raise errors.UnknownEventType(eventType=eventType)
+        return job
 
     def getManagementInterfaceParams(self, repClient, destination):
         # Enumerate all management interfaces
@@ -1580,34 +1580,26 @@ class SystemManager(basemanager.BaseManager):
         if oldServerCert != system.ssl_server_certificate:
             return True
 
-    @classmethod
-    def _runSystemEvent(cls, event, method, params, resultsLocation=None,
+    def _runSystemEvent(self, event, method, params, resultsLocation=None,
             **kwargs):
         user = kwargs.pop('user', None)
-        zone = kwargs.pop('zone', None)
         systemName = event.system.name
         eventType = event.event_type.name
         if hasattr(params, 'eventUuid'):
             eventUuid = params.eventUuid
         else:
             eventUuid = kwargs.get('eventUuid')
-        log.info("System %s (%s), task type '%s' launching" %
-            (systemName, params.host, eventType))
-        try:
-            uuid, job = method(params, resultsLocation, zone=zone, **kwargs)
-        except Exception, e:
-            tb = sys.exc_info()[2]
-            traceback.print_tb(tb)
-            log.error("System %s (%s), task type '%s' failed: %s" %
-                (systemName, params.host, eventType, str(e)))
-            return None, None
+        jobUuid = str(uuid.uuid4())
 
-        log.info("System %s (%s), task %s (%s) in progress" %
-            (systemName, params.host, uuid, eventType))
+        logFunc = lambda x: log.info("System %s (%s), task %s (%s) %s" %
+            (systemName, params.host, jobUuid, eventType, x))
+
+        logFunc("queued")
+
         job = jobmodels.Job()
-        job.job_uuid = str(uuid)
+        job.job_uuid = jobUuid
         job.job_type = event.event_type
-        job.job_state = cls.jobState(jobmodels.JobState.RUNNING)
+        job.job_state = self.jobState(jobmodels.JobState.QUEUED)
         job.created_by = user
         job.save()
 
@@ -1616,12 +1608,52 @@ class SystemManager(basemanager.BaseManager):
         sjob.system = event.system
         sjob.event_uuid = eventUuid
         sjob.save()
-        return uuid, job
+
+        deferred = lambda connection=None, **kw: self._runEventLater(
+            event, job, method, params, resultsLocation, kwargs, logFunc)
+        signals.PostCommitActions.add(deferred)
+
+        return job
+
+    def _runEventLater(self, event, job, method, params, resultsLocation, kwargs, logFunc):
+        try:
+            self._runEventLater_r(job, method, params, resultsLocation, kwargs, logFunc)
+        finally:
+            # cleanup now that the event has been processed
+            self.cleanupSystemEvent(event)
+
+    @classmethod
+    def _runEventLater_r(cls, job, method, params, resultsLocation, kwargs,
+            logFunc):
+        zone = kwargs.pop('zone', None)
+
+        logFunc("executing")
+        try:
+            method(params, resultsLocation, zone=zone, uuid=job.job_uuid, **kwargs)
+        except Exception, e:
+            tb = sys.exc_info()[2]
+            traceback.print_tb(tb)
+            logFunc("failed: %s" % (e, ))
+            return None
+
+        logFunc("in progress")
+        job.job_state = cls.jobState(jobmodels.JobState.RUNNING)
+        job.save()
+        return job
 
     def cleanupSystemEvent(self, event):
+        eventType = event.event_type
+        system = event.system
         # remove the event since it has been handled
-        log.debug("cleaning up %s event (id %d) for system %s" % (event.event_type.name, event.system_event_id,event.system.name))
+        log.debug("cleaning up %s event (id %d) for system %s" %
+            (eventType.name, event.system_event_id, system.name))
         event.delete()
+
+        # create the next event if needed
+        if eventType.name == jobmodels.EventType.SYSTEM_POLL:
+            self.scheduleSystemPollEvent(system)
+        else:
+            log.debug("%s events do not trigger a new event creation" % eventType.name)
 
     @classmethod
     def eventType(cls, name):
@@ -1959,7 +1991,7 @@ class SystemManager(basemanager.BaseManager):
             # but other actions will have work to do with them in this
             # function.
         else:
-            raise Exception("action dispatch not yet supported on job type: %s" % jt)
+            raise Exception("action dispatch not yet supported on job type: %s" % job.job_type.name)
         
         if event is None:
             # this can happen if the event preconditions are not met and the exception
