@@ -77,6 +77,7 @@ MIDDLEWARE_CLASSES = (
     'mint.django_rest.middleware.RedirectMiddleware',
     'mint.django_rest.middleware.PerformanceMiddleware',
     'mint.django_rest.middleware.SerializeXmlMiddleware',
+    'mint.django_rest.middleware.AuthHeaderMiddleware',
     'django.middleware.transaction.TransactionMiddleware',
 )
 
