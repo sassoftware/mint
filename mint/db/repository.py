@@ -935,10 +935,12 @@ class PostgreSQLRepositoryHandle(RepositoryHandle):
         params = self._getParams()
         if dbName:
             params = params._replace(database=dbName)
+        else:
+            dbName = params.database
         controlDb = self._getControlConnection()
         ccu = controlDb.cursor()
 
-        with self._safeReplace(controlDb) as replacedName:
+        with self._safeReplace(controlDb, dbName) as replacedName:
             if replacedName:
                 log.info("Renamed existing repository database %s to %s" %
                         (params.database, replacedName))
@@ -1069,7 +1071,7 @@ class PostgreSQLRepositoryHandle(RepositoryHandle):
         # Rename into place
         ccu = controlDb.cursor()
         name = self._getParams().database
-        with self._safeReplace(controlDb) as replacedName:
+        with self._safeReplace(controlDb, name) as replacedName:
             ccu.execute('ALTER DATABASE "%s" RENAME TO "%s"' % (tmpName, name))
             if replacedName:
                 callback.cleanupStarted(self.fqdn)
@@ -1082,13 +1084,12 @@ class PostgreSQLRepositoryHandle(RepositoryHandle):
             callback.restoreCompleted(self.fqdn)
 
     @contextmanager
-    def _safeReplace(self, controlDb):
+    def _safeReplace(self, controlDb, name):
         """
         On entry, suspend the DB and rename it to a temporary name.
         Binds the temporary name.
         On exit, resume.
         """
-        name = self._getParams().database
         if self._dbExists(controlDb, name):
             temp = '_old_%s_%s' % (name, os.urandom(6).encode('hex'))
             bouncerDb = self._getBouncerConnection()
