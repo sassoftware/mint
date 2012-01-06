@@ -19,13 +19,10 @@ import django.core.exceptions as core_exc
 from mint import config
 from mint.django_rest import handler
 from mint.django_rest.rbuilder import auth, errors, models
-# from mint.django_rest.rbuilder import models as rbuildermodels
 from mint.django_rest.rbuilder.users import models as usersmodels
 from mint.django_rest.rbuilder.metrics import models as metricsmodels
 from mint.django_rest.rbuilder.errors import PermissionDenied
 from mint.lib import mintutils
-
-#from lxml import etree
 
 log = logging.getLogger(__name__)
 
