@@ -1184,10 +1184,10 @@ class SystemsTestCase(XMLTestCase):
         assert(new_system is not None)
         self.failUnlessEqual(new_system.current_state.name,
             models.SystemState.UNMANAGED)
-        
+
         # make sure we scheduled our registration event
         assert(self.mock_scheduleSystemDetectMgmtInterfaceEvent_called)
-        
+
     def testAddRegisteredSystem(self):
         # create the system
         system = self.newSystem(name="mgoblue",
@@ -4090,6 +4090,25 @@ class SystemEventProcessing2TestCase(XMLTestCase, test_utils.RepeaterMixIn):
                     ),
                 ),
             ])
+
+    def testAddSystemJobGetsCreated(self):
+        # Make sure the job that gets created is in the Queued state,
+        # and the model flags are properly set
+        system = self._saveSystem()
+        newSystem = self.mgr.addSystem(system)
+        self.failUnlessEqual(newSystem.current_state.name,
+            models.SystemState.REGISTERED)
+        self.failUnlessEqual(
+            [ x.job_type.name for x in newSystem.jobs.all() ],
+            [ 'immediate system poll', ]
+        )
+        self.failUnlessEqual(
+            [ x.job_state.name for x in newSystem.jobs.all() ],
+            [ 'Queued', ]
+        )
+        xobjModel = newSystem.serialize()
+        self.failUnlessEqual(xobjModel.has_active_jobs, True)
+        self.failUnlessEqual(xobjModel.has_running_jobs, False)
 
 class TargetSystemImportTest(XMLTestCase, test_utils.RepeaterMixIn):
     fixtures = ['users', 'targets']
