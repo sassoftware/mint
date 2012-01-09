@@ -9,7 +9,7 @@ from conary import versions
 from conary.conaryclient.cmdline import parseTroveSpec
 
 from django.contrib.redirects import models as redirectmodels
-from django.db import connection
+from django.db import connection, transaction
 from django.template import TemplateDoesNotExist
 
 from mint.django_rest import timeutils
@@ -112,7 +112,9 @@ class AssimilatorTestCase(XMLTestCase, test_utils.SmartformMixIn):
         response = self._post(url, testsxml.system_assimilator_xml, 
             username="admin", password="password")
         self.assertEquals(response.status_code, 200)
-        self.assertTrue(response.content.find("<system_event>") != -1)
+        obj = xobj.parse(response.content)
+        self.failUnlessEqual(obj.system_event.event_type.id,
+            'http://testserver/api/v1/inventory/event_types/12')
 
 class InventoryTestCase(XMLTestCase):
 
@@ -1182,10 +1184,10 @@ class SystemsTestCase(XMLTestCase):
         assert(new_system is not None)
         self.failUnlessEqual(new_system.current_state.name,
             models.SystemState.UNMANAGED)
-        
+
         # make sure we scheduled our registration event
         assert(self.mock_scheduleSystemDetectMgmtInterfaceEvent_called)
-        
+
     def testAddRegisteredSystem(self):
         # create the system
         system = self.newSystem(name="mgoblue",
@@ -3514,19 +3516,15 @@ class SystemEventProcessingTestCase(XMLTestCase):
         XMLTestCase.setUp(self)
 
         self.mintConfig = self.mgr.cfg
-        self.mgr.sysMgr.cleanupSystemEvent = self.mock_cleanupSystemEvent
-        self.mgr.sysMgr.scheduleSystemPollEvent = self.mock_scheduleSystemPollEvent
-        self.mgr.sysMgr.extractNetworkToUse = self.mock_extractNetworkToUse
+        self.mock(self.mgr.sysMgr, 'scheduleSystemPollEvent',
+            self.mock_scheduleSystemPollEvent)
+        self.mock(self.mgr.sysMgr, 'extractNetworkToUse',
+            self.mock_extractNetworkToUse)
         self.resetFlags()
 
     def resetFlags(self):
-        self.mock_cleanupSystemEvent_called = False
         self.mock_scheduleSystemPollEvent_called = False
         self.mock_extractNetworkToUse_called = False
-
-    def mock_cleanupSystemEvent(self, event):
-        self.mock_cleanupSystemEvent_called = True
-        event.delete()
 
     def mock_scheduleSystemPollEvent(self, event):
         self.mock_scheduleSystemPollEvent_called = True
@@ -3642,6 +3640,10 @@ class SystemEventProcessingTestCase(XMLTestCase):
             pass
 
     def testDispatchSystemEvent(self):
+        self.resetFlags()
+        self.failIf(self.mock_scheduleSystemPollEvent_called)
+        self.failIf(self.mock_extractNetworkToUse_called)
+
         poll_event = self.mgr.sysMgr.eventType(jobmodels.EventType.SYSTEM_POLL)
         poll_now_event = self.mgr.sysMgr.eventType(jobmodels.EventType.SYSTEM_POLL_IMMEDIATE)
         act_event = self.mgr.sysMgr.eventType(jobmodels.EventType.SYSTEM_REGISTRATION)
@@ -3652,18 +3654,21 @@ class SystemEventProcessingTestCase(XMLTestCase):
         event = models.SystemEvent(system=system,event_type=poll_event, priority=poll_event.priority)
         event.save()
         self.mgr.sysMgr.dispatchSystemEvent(event)
-        self.failUnless(self.mock_cleanupSystemEvent_called)
+        transaction.commit()
+
+        self.failUnlessEqual(event.system_event_id, None)
         self.failUnless(self.mock_scheduleSystemPollEvent_called)
         # _extractNetworkToUse is only called if we have a repeater client
         self.failIf(self.mock_extractNetworkToUse_called)
 
         # sanity check dispatching poll_now event
         self.resetFlags()
-        self.mock_scheduleSystemPollEvent_called = False # reset it
         event = models.SystemEvent(system=system, event_type=poll_now_event, priority=poll_now_event.priority)
         event.save()
         self.mgr.sysMgr.dispatchSystemEvent(event)
-        self.failUnless(self.mock_cleanupSystemEvent_called)
+        transaction.commit()
+
+        self.failUnlessEqual(event.system_event_id, None)
         self.failIf(self.mock_scheduleSystemPollEvent_called)
         # _extractNetworkToUse is only called if we have a repeater client
         self.failIf(self.mock_extractNetworkToUse_called)
@@ -3673,7 +3678,9 @@ class SystemEventProcessingTestCase(XMLTestCase):
         event = models.SystemEvent(system=system, event_type=act_event, priority=act_event.priority)
         event.save()
         self.mgr.sysMgr.dispatchSystemEvent(event)
-        self.failUnless(self.mock_cleanupSystemEvent_called)
+        transaction.commit()
+
+        self.failUnlessEqual(event.system_event_id, None)
         self.failIf(self.mock_scheduleSystemPollEvent_called)
 
 class SystemEventProcessing2TestCase(XMLTestCase, test_utils.RepeaterMixIn):
@@ -3690,6 +3697,7 @@ class SystemEventProcessing2TestCase(XMLTestCase, test_utils.RepeaterMixIn):
         system.networks.add(network2)
         system.networks.add(network3)
         system.save()
+        self._uuid = 0
 
     def _setupEvent(self, eventType, eventData=None):
         self.system2.agent_port = 12345
@@ -3714,7 +3722,8 @@ class SystemEventProcessing2TestCase(XMLTestCase, test_utils.RepeaterMixIn):
 
     def _mockUuid(self):
         def mockedUuid4():
-            return "really-unique-id"
+            self._uuid += 1
+            return "really-unique-uuid-%03d" % self._uuid
         from mint.lib import uuid
         self.mock(uuid, 'uuid4', mockedUuid4)
 
@@ -3726,6 +3735,7 @@ class SystemEventProcessing2TestCase(XMLTestCase, test_utils.RepeaterMixIn):
     def testDispatchSystemEvent(self):
         event = self._setupEvent(jobmodels.EventType.SYSTEM_POLL)
         self._dispatchEvent(event)
+        transaction.commit()
 
         cimParams = self.mgr.repeaterMgr.repeaterClient.CimParams
         resLoc = self.mgr.repeaterMgr.repeaterClient.ResultsLocation
@@ -3737,7 +3747,7 @@ class SystemEventProcessing2TestCase(XMLTestCase, test_utils.RepeaterMixIn):
                         cimParams(
                             host='superduper.com',
                             port=12345,
-                            eventUuid='really-unique-id',
+                            eventUuid='really-unique-uuid-001',
                             clientKey=testsxml.pkey_pem,
                             clientCert=testsxml.x509_pem,
                             requiredNetwork=None,
@@ -3749,17 +3759,20 @@ class SystemEventProcessing2TestCase(XMLTestCase, test_utils.RepeaterMixIn):
                                 self.system2.pk,
                             port=80),
                     ),
-                    dict(zone='Local rBuilder'),
+                    dict(zone='Local rBuilder',
+                        uuid='really-unique-uuid-002',
+                    ),
                 ),
             ])
         system = self.mgr.getSystem(self.system2.system_id)
         jobs = system.jobs.all()
         self.failUnlessEqual([ x.job_uuid for x in jobs ],
-            ['uuid000'])
+            ['really-unique-uuid-002'])
 
     def testDispatchActivateSystemEvent(self):
         event = self._setupEvent(jobmodels.EventType.SYSTEM_REGISTRATION)
         self._dispatchEvent(event)
+        transaction.commit()
 
         cimParams = self.mgr.repeaterMgr.repeaterClient.CimParams
         resLoc = self.mgr.repeaterMgr.repeaterClient.ResultsLocation
@@ -3770,7 +3783,7 @@ class SystemEventProcessing2TestCase(XMLTestCase, test_utils.RepeaterMixIn):
                     (
                         cimParams(host='superduper.com',
                             port=12345,
-                            eventUuid = 'really-unique-id',
+                            eventUuid = 'really-unique-uuid-001',
                             clientKey=testsxml.pkey_pem,
                             clientCert=testsxml.x509_pem,
                             requiredNetwork=None,
@@ -3780,22 +3793,26 @@ class SystemEventProcessing2TestCase(XMLTestCase, test_utils.RepeaterMixIn):
                             launchWaitTime=300),
                         resLoc(path='/api/v1/inventory/systems/4', port=80),
                     ),
-                    dict(zone='Local rBuilder'),
+                    dict(
+                        zone='Local rBuilder',
+                        uuid='really-unique-uuid-002',
+                    ),
                 ),
             ])
         system = self.mgr.getSystem(self.system2.system_id)
         jobs = system.jobs.all()
         self.failUnlessEqual([ x.job_uuid for x in jobs ],
-            ['uuid000'])
+            ['really-unique-uuid-002'])
         # XXX find a better way to extract the additional field from the
         # many-to-many table
         self.failUnlessEqual(
             [ x.event_uuid for x in models.SystemJob.objects.filter(system__system_id = system.system_id) ],
-            [ 'really-unique-id' ])
+            [ 'really-unique-uuid-001' ])
 
     def testDispatchManagementInterfaceEvent(self):
         event = self._setupEvent(jobmodels.EventType.SYSTEM_DETECT_MANAGEMENT_INTERFACE_IMMEDIATE)
         self._dispatchEvent(event)
+        transaction.commit()
 
         mgmtIfaceParams = self.mgr.repeaterMgr.repeaterClient.ManagementInterfaceParams
         resLoc = self.mgr.repeaterMgr.repeaterClient.ResultsLocation
@@ -3805,7 +3822,7 @@ class SystemEventProcessing2TestCase(XMLTestCase, test_utils.RepeaterMixIn):
                 ('detectMgmtInterface',
                     (
                         mgmtIfaceParams(host='superduper.com',
-                            eventUuid = 'really-unique-id',
+                            eventUuid = 'really-unique-uuid-001',
                             interfacesList=[
                                 {
                                     'port': 135,
@@ -3826,18 +3843,21 @@ class SystemEventProcessing2TestCase(XMLTestCase, test_utils.RepeaterMixIn):
                         ),
                         resLoc(path='/api/v1/inventory/systems/4', port=80),
                     ),
-                    dict(zone='Local rBuilder'),
+                    dict(
+                        zone='Local rBuilder',
+                        uuid='really-unique-uuid-002',
+                    ),
                 ),
             ])
         system = self.mgr.getSystem(self.system2.system_id)
         jobs = system.jobs.all()
         self.failUnlessEqual([ x.job_uuid for x in jobs ],
-            ['uuid000'])
+            ['really-unique-uuid-002'])
         # XXX find a better way to extract the additional field from the
         # many-to-many table
         self.failUnlessEqual(
             [ x.event_uuid for x in models.SystemJob.objects.filter(system__system_id = system.system_id) ],
-            [ 'really-unique-id' ])
+            [ 'really-unique-uuid-001' ])
 
     def testDispatchPollWmi(self):
         wmiInt = models.Cache.get(models.ManagementInterface,
@@ -3849,13 +3869,14 @@ class SystemEventProcessing2TestCase(XMLTestCase, test_utils.RepeaterMixIn):
             credDict)
         event = self._setupEvent(jobmodels.EventType.SYSTEM_POLL)
         self._dispatchEvent(event)
+        transaction.commit()
 
         repClient = self.mgr.repeaterMgr.repeaterClient
         wmiParams = repClient.WmiParams
         resLoc = repClient.ResultsLocation
 
         wmiDict = credDict.copy()
-        wmiDict.update(eventUuid='really-unique-id', host='superduper.com',
+        wmiDict.update(eventUuid='really-unique-uuid-001', host='superduper.com',
             requiredNetwork=None, port=12345)
 
         self.failUnlessEqual(repClient.getCallList(),
@@ -3865,7 +3886,9 @@ class SystemEventProcessing2TestCase(XMLTestCase, test_utils.RepeaterMixIn):
                         wmiParams(**wmiDict),
                         resLoc(path='/api/v1/inventory/systems/4', port=80),
                     ),
-                    dict(zone='Local rBuilder'),
+                    dict(zone='Local rBuilder',
+                        uuid='really-unique-uuid-002',
+                    ),
                 ),
             ])
 
@@ -3882,13 +3905,14 @@ class SystemEventProcessing2TestCase(XMLTestCase, test_utils.RepeaterMixIn):
             eventData=toInstall)
 
         self._dispatchEvent(event)
+        transaction.commit()
 
         repClient = self.mgr.repeaterMgr.repeaterClient
         wmiParams = repClient.WmiParams
         resLoc = repClient.ResultsLocation
 
         wmiDict = credDict.copy()
-        wmiDict.update(eventUuid='really-unique-id', host='superduper.com',
+        wmiDict.update(eventUuid='really-unique-uuid-001', host='superduper.com',
             port=12345, requiredNetwork=None)
 
         self.failUnlessEqual(repClient.getCallList(),
@@ -3903,7 +3927,8 @@ class SystemEventProcessing2TestCase(XMLTestCase, test_utils.RepeaterMixIn):
                         sources=[
                             'group-foo=/a@b:c/1-2-3',
                             'group-bar=/a@b:c//d@e:f/1-2.1-2.2',
-                        ],),
+                        ],
+                        uuid='really-unique-uuid-002'),
                 ),
             ])
 
@@ -3952,13 +3977,15 @@ class SystemEventProcessing2TestCase(XMLTestCase, test_utils.RepeaterMixIn):
             [])
         # Dispatch the event now
         self.mgr.sysMgr.processSystemEvents()
+        # Force commit, this is normally done by the middleware
+        transaction.commit()
         self.failUnlessEqual(self.mgr.repeaterMgr.repeaterClient.getCallList(),
             [
                 ('register_cim',
                     (
                         cimParams(host='1.2.3.4',
                             port=5989,
-                            eventUuid='really-unique-id',
+                            eventUuid='really-unique-uuid-001',
                             clientKey=testsxml.pkey_pem,
                             clientCert=testsxml.x509_pem,
                             requiredNetwork=None,
@@ -3970,7 +3997,9 @@ class SystemEventProcessing2TestCase(XMLTestCase, test_utils.RepeaterMixIn):
                                 systemCim.pk,
                             port=80),
                     ),
-                    dict(zone='Local rBuilder'),
+                    dict(zone='Local rBuilder',
+                        uuid='really-unique-uuid-002',
+                    ),
                 ),
             ])
 
@@ -4020,6 +4049,7 @@ class SystemEventProcessing2TestCase(XMLTestCase, test_utils.RepeaterMixIn):
         # validation that we can do at this point
 
     def testDispatchConfigurationCim(self):
+        self._mockUuid()
         cimInt = models.Cache.get(models.ManagementInterface,
             name=models.ManagementInterface.CIM)
         self.system2.management_interface = cimInt
@@ -4029,6 +4059,7 @@ class SystemEventProcessing2TestCase(XMLTestCase, test_utils.RepeaterMixIn):
 
         self.mgr.sysMgr.scheduleSystemConfigurationEvent(self.system2,
             configDict)
+        transaction.commit()
 
         repClient = self.mgr.repeaterMgr.repeaterClient
         cimParams = repClient.CimParams
@@ -4055,9 +4086,29 @@ class SystemEventProcessing2TestCase(XMLTestCase, test_utils.RepeaterMixIn):
                     dict(
                         zone='Local rBuilder',
                         configuration='<configuration><a>1</a><b>2</b></configuration>',
+                        uuid='really-unique-uuid-002',
                     ),
                 ),
             ])
+
+    def testAddSystemJobGetsCreated(self):
+        # Make sure the job that gets created is in the Queued state,
+        # and the model flags are properly set
+        system = self._saveSystem()
+        newSystem = self.mgr.addSystem(system)
+        self.failUnlessEqual(newSystem.current_state.name,
+            models.SystemState.REGISTERED)
+        self.failUnlessEqual(
+            [ x.job_type.name for x in newSystem.jobs.all() ],
+            [ 'immediate system poll', ]
+        )
+        self.failUnlessEqual(
+            [ x.job_state.name for x in newSystem.jobs.all() ],
+            [ 'Queued', ]
+        )
+        xobjModel = newSystem.serialize()
+        self.failUnlessEqual(xobjModel.has_active_jobs, True)
+        self.failUnlessEqual(xobjModel.has_running_jobs, False)
 
 class TargetSystemImportTest(XMLTestCase, test_utils.RepeaterMixIn):
     fixtures = ['users', 'targets']

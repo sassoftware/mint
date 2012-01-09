@@ -12,7 +12,7 @@ target_GET = \
       <name>Configure target</name>
     </action>
     <action>
-      <description>Configure user credentials for target</description>
+      <description>Configure target credentials for the current user</description>
       <descriptor id="http://testserver/api/v1/targets/4/descriptors/configure_credentials"/>
       <enabled>true</enabled>
       <job_type id="http://testserver/api/v1/inventory/event_types/20"/>
@@ -20,7 +20,7 @@ target_GET = \
       <name>Configure user credentials for target</name>
     </action>
     <action>
-      <description>Refresh images</description>
+      <description>Refresh target images</description>
       <descriptor id="http://testserver/api/v1/targets/4/descriptors/refresh_images"/>
       <enabled>true</enabled>
       <job_type id="http://testserver/api/v1/inventory/event_types/15"/>
@@ -28,7 +28,7 @@ target_GET = \
       <name>Refresh images</name>
     </action>
     <action>
-      <description>Refresh systems</description>
+      <description>Refresh target systems</description>
       <descriptor id="http://testserver/api/v1/targets/4/descriptors/refresh_systems"/>
       <enabled>true</enabled>
       <job_type id="http://testserver/api/v1/inventory/event_types/16"/>

@@ -11,8 +11,7 @@ import re
 from conary import versions
 from conary.deps import deps
 
-from django.conf import settings
-from django.db import connection, models
+from django.db import models
 from django.db.backends import signals
 
 from mint.django_rest import timeutils
@@ -32,7 +31,7 @@ Cache = modellib.Cache
 XObjHidden = modellib.XObjHidden
 APIReadOnly = modellib.APIReadOnly
 
-def hasTemporaryTables():
+def hasTemporaryTables(connection):
     drvname = connection.client.executable_name
     if drvname == 'sqlite3':
         # Bummer. sqlite3 won't report temp tables in sqlite_master, so django
@@ -45,8 +44,8 @@ def hasTemporaryTables():
     else:
         raise Exception("Unsupported driver")
 
-def createTemporaryTables(**kwargs):
-    if not hasTemporaryTables():
+def createTemporaryTables(connection=None, **kwargs):
+    if not hasTemporaryTables(connection):
         cu = connection.cursor()
         cu.execute("""
             CREATE TEMPORARY TABLE inventory_tmp (

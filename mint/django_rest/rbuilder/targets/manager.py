@@ -79,15 +79,8 @@ class TargetsManager(basemanager.BaseManager, CatalogServiceHelper):
         return targetConfig
 
     def _remapTargetConfigurationFields(self, target, targetConfig):
-        ret = targetConfig.copy()
         drvClass = self.getDriverClass(target.target_type)
-        undef = object()
-        for nameDescr, nameDb in drvClass._configNameMap:
-            val = ret.pop(nameDb, undef)
-            if val is undef:
-                continue
-            ret[nameDescr] = val
-        return ret
+        return drvClass.remapTargetConfigurationFields(targetConfig)
 
     @exposed
     def getTargetConfigurationModel(self, targetId):
