@@ -103,15 +103,16 @@ class NewPlatformTest(XMLTestCase, SmartformMixIn):
         return getattr(xobjModel, root_name)
     
     def testCreatePlatform(self):
-		#Creates a new platform
+        #Creates a new platform
         response = self._post('platforms/',
             data=testsxml.platformPOSTXml,
             username="admin", password="password")
         self.assertEquals(200, response.status_code)
-        # 3 platforms were already in the fixture
-        self.assertEquals(4, len(list(platform_models.Platform.objects.all())))
+        self.failUnlessEqual(
+            [ x.platform_name for x in platform_models.Platform.objects.all() ],
+            ['Platform', 'Platform1', 'Platform2', 'Hidden Platform', 'Platform5'])
         platform = platform_models.Platform.objects.get(platform_name="Platform")
-        self.assertEquals("Platform", platform.label)
+        self.assertEquals(platform.label, "Platform")
     
     def testCreateContentSource(self):
         response = self._post('platforms/content_sources/',

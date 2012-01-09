@@ -28,6 +28,7 @@ class Platforms(modellib.Collection):
 class Platform(modellib.XObjIdModel):
     class Meta:
         db_table = 'platforms'
+        ordering = [ 'platform_id' ]
 
     _xobj = xobj.XObjMetadata(tag='platform')
 
