@@ -11,55 +11,13 @@ from django.db import models
 from django.db.models import Q
 from django.conf import settings
 from django.core import exceptions
-from django.core import paginator
 
 from mint.django_rest.rbuilder import errors
 from mint.django_rest.rbuilder.modellib import XObjIdModel
 from mint.jobstatus import FINISHED
 
 from xobj import xobj
-
-class CollectionPaginator(paginator.Paginator):
-    def validate_number(self, number):
-        if number == 0:
-            return number
-        else:
-            return paginator.Paginator.validate_number(self, number)
-
-    def page(self, number):
-        number = self.validate_number(number)
-        bottom = number * self.per_page
-        top = bottom + self.per_page
-        if top + self.orphans >= self.count:
-            top = self.count
-        return CollectionPage(self.object_list[bottom:top], number, self)
-
-class CollectionPage(paginator.Page):
-    def start_index(self):
-        # Special case, return zero if no items.
-        if self.paginator.count == 0:
-            return 0
-        return (self.paginator.per_page * self.number)
-
-    def end_index(self):
-        """
-        Calculates the end index of this page.  Accounts for the fact that the
-        last page (or first page if there's only one page) may not be a full
-        page.
-        """
-        endIndex = self.paginator.per_page * (self.number + 1) - 1
-        if self.paginator.count == 0:
-            return 0
-        elif endIndex > self.paginator.count:
-            return self.paginator.count - 1
-        else:
-            return endIndex
-
-    def has_next(self):
-        return (self.number + 1) < self.paginator.num_pages
-
-    def has_previous(self):
-        return self.number > 0
+import math
 
 filterTermMap = {
     'EQUAL' : 'iexact',
@@ -256,6 +214,7 @@ class Collection(XObjIdModel):
 
     _xobj = xobj.XObjMetadata(
         attributes = {
+            'id' : str,
             'count' : int,
             'full_collection' : str,
             'per_page' : str,
@@ -273,28 +232,33 @@ class Collection(XObjIdModel):
     class Meta:
         abstract = True
 
-    count = models.IntegerField()
+    # number of total items
+    count           = models.IntegerField()
+    # URL to the collection without pagination params?
     full_collection = models.TextField()
-
-    per_page = models.IntegerField()
-    start_index = models.IntegerField()
-    end_index = models.IntegerField()
-    num_pages = models.IntegerField()
-    next_page = models.TextField()
-    previous_page = models.TextField()
-    order_by = models.TextField()
-    filter_by = models.TextField()
-    limit = models.TextField()
+    # size of each page
+    per_page        = models.IntegerField()
+    # where in the total list we are currently at
+    start_index     = models.IntegerField()
+    # last count int he the total list, ignoring pagination
+    end_index       = models.IntegerField()
+    num_pages       = models.IntegerField()
+    # page numbers
+    next_page       = models.TextField()
+    previous_page   = models.TextField()
+    # any requested user parameters:
+    order_by        = models.TextField()
+    filter_by       = models.TextField()
+    limit           = models.TextField()
 
     def get_absolute_url(self, request=None, parents=None, model=None,
-                         page=None, full=None):
+                         paged=False, startIndex=None, full=None):
         url = XObjIdModel.get_absolute_url(self, request, parents, model)
+
         if url:
-            if not page and not full:
-                page = getattr(self, 'page', None)
-            if page:
+            if paged:
                 limit = request.GET.get('limit', settings.PER_PAGE)
-                url += ';start_index=%s;limit=%s' % (page.start_index(), limit)
+                url += ';start_index=%s;limit=%s' % (startIndex, limit)
             if self.order_by:
                 url += ';order_by=%s' % self.order_by
             if self.filter_by:
@@ -338,37 +302,58 @@ class Collection(XObjIdModel):
 
     def paginate(self, request, listField, modelList):
         startIndex = int(request.GET.get('start_index', 0))
-        limit = int(request.GET.get('limit', settings.PER_PAGE))
-        self.limit = limit
-        pagination = CollectionPaginator(modelList, limit) 
-        pageNumber = startIndex/limit
+        self.limit = int(request.GET.get('limit', settings.PER_PAGE))
 
-        try:
-            page = pagination.page(pageNumber)
-        except paginator.EmptyPage:
-            raise errors.CollectionPageNotFound()
+        if modelList is not None:
+            self.count = None
+            if type(modelList) == list:
+                self.count = len(modelList)
+            else:
+                # queryset
+                self.count = modelList.count()
+        else:
+            modelList = []
+            self.count = 0
 
-        self.page = page
-        setattr(self, listField, page.object_list)
+        # compute page counts and numbers
+        pageCount  = int(math.ceil(self.count / float(self.limit)))
+        pageNumber = int(math.floor(startIndex / float(self.limit)))
+        stopIndex  = startIndex + self.limit -1
 
-        self.count = pagination.count
+        # some somewhat confusing fenceposty stuff because we're working in ints
+        if pageCount == 0:
+            pageCount = 1
+        if stopIndex < 0:
+            stopIndex = 0
+        pageObjectList = modelList[startIndex:(stopIndex+1)]
+
+        setattr(self, listField, pageObjectList)
+
         self.full_collection = self.get_absolute_url(request, full=True)
-        self.per_page = pagination.per_page
-        self.start_index = page.start_index()
-        self.end_index = page.end_index()
-        self.num_pages = pagination.num_pages
+        self.per_page        = self.limit
+        self.start_index     = startIndex
+        self.end_index       = stopIndex
 
-        if page.has_next():
-            nextPage = pagination.page(page.next_page_number())
-            self.next_page = self.get_absolute_url(request, page=nextPage)
-        else:
-            self.next_page = ''
+        # more handling around the edges
+        if self.end_index >= self.count - 1:
+            self.end_index = self.count - 1
+        if self.end_index < 0:
+            self.end_index = 0
 
-        if page.has_previous():
-            previousPage = pagination.page(page.previous_page_number())
-            self.previous_page = self.get_absolute_url(request, page=previousPage)
-        else:
-            self.previous_page = ''
+        self.num_pages       = pageCount
+        self._pagedId        = self.get_absolute_url(request, paged=True, startIndex=startIndex)
+
+        # if there are pages left, link to a next_page
+        if self.end_index < self.count - 1:
+            nextIndex = startIndex + self.limit
+            self.next_page = self.get_absolute_url(request, paged=True, startIndex = nextIndex)
+
+        # if there are pages beforehand, link to them
+        if startIndex - self.limit >= 0:
+            prevIndex = startIndex - self.limit
+            if prevIndex < 0:
+                prevIndex = 0
+            self.previous_page = self.get_absolute_url(request, paged=True, startIndex= prevIndex)
 
     def serialize(self, request=None):
         # We only support one list field right now
@@ -385,6 +370,7 @@ class Collection(XObjIdModel):
             self.paginate(request, listField, modelList)
 
         xobj_model = XObjIdModel.serialize(self, request)
+        xobj_model.id = self._pagedId
 
         return xobj_model
 

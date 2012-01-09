@@ -128,8 +128,6 @@ class RbacTestCase(XMLTestCase):
              response = method_map[method](url, username="testuser", password="password", **kwargs)
         else:
             response = method_map[method](url, **kwargs)
-        #if expect == 200 and response.status_code != expect:
-        #    print response.content
         self.failUnlessEqual(response.status_code, expect, "Expected status code of %s for %s" % (expect, url))
         return response.content
 
