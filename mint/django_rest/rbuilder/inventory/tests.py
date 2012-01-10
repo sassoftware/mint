@@ -3755,12 +3755,12 @@ class SystemEventProcessing2TestCase(XMLTestCase, test_utils.RepeaterMixIn):
                             targetType=None,
                             instanceId=None,
                             launchWaitTime=300),
-                        resLoc(path='/api/v1/inventory/systems/%s' %
-                                self.system2.pk,
-                            port=80),
                     ),
                     dict(zone='Local rBuilder',
                         uuid='really-unique-uuid-002',
+                        resultsLocation=resLoc(
+                            path='/api/v1/inventory/systems/%s' % self.system2.pk,
+                            port=80),
                     ),
                 ),
             ])
@@ -3791,11 +3791,13 @@ class SystemEventProcessing2TestCase(XMLTestCase, test_utils.RepeaterMixIn):
                             targetType=None,
                             instanceId=None,
                             launchWaitTime=300),
-                        resLoc(path='/api/v1/inventory/systems/4', port=80),
                     ),
                     dict(
                         zone='Local rBuilder',
                         uuid='really-unique-uuid-002',
+                        resultsLocation=resLoc(
+                            path='/api/v1/inventory/systems/4',
+                            port=80),
                     ),
                 ),
             ])
@@ -3841,11 +3843,13 @@ class SystemEventProcessing2TestCase(XMLTestCase, test_utils.RepeaterMixIn):
                                 }   
                                 ]
                         ),
-                        resLoc(path='/api/v1/inventory/systems/4', port=80),
                     ),
                     dict(
                         zone='Local rBuilder',
                         uuid='really-unique-uuid-002',
+                        resultsLocation=resLoc(
+                            path='/api/v1/inventory/systems/4',
+                            port=80),
                     ),
                 ),
             ])
@@ -3884,10 +3888,12 @@ class SystemEventProcessing2TestCase(XMLTestCase, test_utils.RepeaterMixIn):
                 ('poll_wmi',
                     (
                         wmiParams(**wmiDict),
-                        resLoc(path='/api/v1/inventory/systems/4', port=80),
                     ),
                     dict(zone='Local rBuilder',
                         uuid='really-unique-uuid-002',
+                        resultsLocation=resLoc(
+                            path='/api/v1/inventory/systems/4',
+                            port=80),
                     ),
                 ),
             ])
@@ -3920,9 +3926,11 @@ class SystemEventProcessing2TestCase(XMLTestCase, test_utils.RepeaterMixIn):
                 ('update_wmi',
                     (
                         wmiParams(**wmiDict),
-                        resLoc(path='/api/v1/inventory/systems/4', port=80),
                     ),
                     dict(
+                        resultsLocation=resLoc(
+                            path='/api/v1/inventory/systems/4',
+                            port=80),
                         zone='Local rBuilder',
                         sources=[
                             'group-foo=/a@b:c/1-2-3',
@@ -3993,12 +4001,12 @@ class SystemEventProcessing2TestCase(XMLTestCase, test_utils.RepeaterMixIn):
                             targetType=None,
                             instanceId=None,
                             launchWaitTime=300),
-                        resLoc(path='/api/v1/inventory/systems/%s' %
-                                systemCim.pk,
-                            port=80),
                     ),
                     dict(zone='Local rBuilder',
                         uuid='really-unique-uuid-002',
+                        resultsLocation=resLoc(
+                            path='/api/v1/inventory/systems/%s' % systemCim.pk,
+                            port=80),
                     ),
                 ),
             ])
@@ -4080,13 +4088,14 @@ class SystemEventProcessing2TestCase(XMLTestCase, test_utils.RepeaterMixIn):
                             targetType=None,
                             instanceId=None,
                             launchWaitTime=300),
-                        resLoc(path='/api/v1/inventory/systems/%s' %
-                                self.system2.pk, port=80),
                     ),
                     dict(
                         zone='Local rBuilder',
                         configuration='<configuration><a>1</a><b>2</b></configuration>',
                         uuid='really-unique-uuid-002',
+                        resultsLocation=resLoc(
+                            path='/api/v1/inventory/systems/%s' % self.system2.pk,
+                            port=80),
                     ),
                 ),
             ])

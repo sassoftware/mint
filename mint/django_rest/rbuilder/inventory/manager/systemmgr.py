@@ -1629,7 +1629,7 @@ class SystemManager(basemanager.BaseManager):
 
         logFunc("executing")
         try:
-            method(params, resultsLocation, zone=zone, uuid=job.job_uuid, **kwargs)
+            method(params, resultsLocation=resultsLocation, zone=zone, uuid=job.job_uuid, **kwargs)
         except Exception, e:
             tb = sys.exc_info()[2]
             traceback.print_tb(tb)
