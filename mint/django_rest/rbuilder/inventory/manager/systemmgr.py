@@ -1634,6 +1634,8 @@ class SystemManager(basemanager.BaseManager):
             tb = sys.exc_info()[2]
             traceback.print_tb(tb)
             logFunc("failed: %s" % (e, ))
+            job.job_state = cls.jobState(jobmodels.JobState.FAILED)
+            job.save()
             return None
 
         logFunc("in progress")
