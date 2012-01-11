@@ -4104,6 +4104,10 @@ class SystemEventProcessing2TestCase(XMLTestCase, test_utils.RepeaterMixIn):
         # Make sure the job that gets created is in the Queued state,
         # and the model flags are properly set
         system = self._saveSystem()
+        # Important to start a new transaction; the job should be queued
+        # until we commit
+        self.mgr.enterTransactionManagement()
+
         newSystem = self.mgr.addSystem(system)
         self.failUnlessEqual(newSystem.current_state.name,
             models.SystemState.REGISTERED)
