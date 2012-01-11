@@ -1037,12 +1037,19 @@ class SystemManager(basemanager.BaseManager):
         self.addSystem(system, for_user=for_user,
             withManagementInterfaceDetection=False)
         # Add target system
-        tsys, _ = targetmodels.TargetSystem.objects.get_or_create(
+        # get_or_create needs the defaults arg to do this properly (#1631)
+        tsys, created = targetmodels.TargetSystem.objects.get_or_create(
             target=target,
             target_internal_id=system.target_system_id,
-            name=system.target_system_name,
-            description=system.target_system_description,
-            ip_addr_1=dnsName)
+            defaults=dict(
+                name=system.target_system_name,
+                description=system.target_system_description,
+                ip_addr_1=dnsName))
+        if not created:
+            tsys.name = system.target_system_name
+            tsys.description = system.target_system_description
+            tsys.ip_addr_1 = dnsName
+            tsys.save()
         targetmodels.TargetSystemCredentials.objects.get_or_create(
             target_system=tsys,
             target_credentials=credentials)
@@ -1629,11 +1636,13 @@ class SystemManager(basemanager.BaseManager):
 
         logFunc("executing")
         try:
-            method(params, resultsLocation, zone=zone, uuid=job.job_uuid, **kwargs)
+            method(params, resultsLocation=resultsLocation, zone=zone, uuid=job.job_uuid, **kwargs)
         except Exception, e:
             tb = sys.exc_info()[2]
             traceback.print_tb(tb)
             logFunc("failed: %s" % (e, ))
+            job.job_state = cls.jobState(jobmodels.JobState.FAILED)
+            job.save()
             return None
 
         logFunc("in progress")
