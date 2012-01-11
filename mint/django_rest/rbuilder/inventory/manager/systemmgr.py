@@ -1324,7 +1324,11 @@ class SystemManager(basemanager.BaseManager):
             return
 
         for event in events:
-            self.dispatchSystemEvent(event)
+            try:
+                self.dispatchSystemEvent(event)
+            except errors.IncompatibleEvent:
+                # Safely ignore this error
+                pass
 
     def checkEventCompatibility(self, event):
         runningJobs = event.system.jobs.filter(job_state__name=jobmodels.JobState.RUNNING) 
@@ -1351,7 +1355,8 @@ class SystemManager(basemanager.BaseManager):
                 self.checkEventCompatibility(event)
             except errors.IncompatibleEvent, e:
                 log.error(str(e))
-                raise e
+                self.cleanupSystemEvent(event)
+                raise
 
         log.info("Dispatching %s event (id %d, enabled %s) for system %s (id %d)" % \
             (event.event_type.name, event.system_event_id, event.time_enabled, 

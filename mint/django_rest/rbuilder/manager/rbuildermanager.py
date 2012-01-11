@@ -95,6 +95,7 @@ class RbuilderManager(basemanager.BaseRbuilderManager):
 
     def enterTransactionManagement(self):
         transaction.enter_transaction_management()
+        transaction.managed(True)
 
     def leaveTransactionManagement(self):
         transaction.leave_transaction_management()
