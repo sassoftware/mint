@@ -4630,7 +4630,7 @@ class MigrateTo_60(SchemaMigration):
 
 class MigrateTo_61(SchemaMigration):
     '''Edge P4, P5'''
-    Version = (61, 4)
+    Version = (61, 5)
 
     def migrate(self):
         cu = self.db.cursor()
@@ -4684,6 +4684,16 @@ class MigrateTo_61(SchemaMigration):
         # mingle #1564
         add_columns(self.db, 'Platforms',
                 'hidden          boolean NOT NULL DEFAULT false')
+        return True
+
+    def migrate5(self):
+        # mingle #1641
+        schema._addTableRows(self.db, 'jobs_job_type', 'name', [
+             dict(name="immediate system registration",
+                  description='On-demand system registration',
+                  priority=110,
+                  resource_type='System'),
+        ])
         return True
 
 #### SCHEMA MIGRATIONS END HERE #############################################

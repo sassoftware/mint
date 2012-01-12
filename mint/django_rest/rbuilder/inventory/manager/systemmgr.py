@@ -51,7 +51,10 @@ system_assimilate_descriptor = """<descriptor>
 """
 
 class SystemManager(basemanager.BaseManager):
-    RegistrationEvents = set([ jobmodels.EventType.SYSTEM_REGISTRATION ])
+    RegistrationEvents = set([
+        jobmodels.EventType.SYSTEM_REGISTRATION,
+        jobmodels.EventType.SYSTEM_REGISTRATION_IMMEDIATE,
+    ])
     PollEvents = set([
         jobmodels.EventType.SYSTEM_POLL,
         jobmodels.EventType.SYSTEM_POLL_IMMEDIATE,
@@ -396,8 +399,24 @@ class SystemManager(basemanager.BaseManager):
     @exposed
     def getWindowsBuildServiceSystemType(self):
         "Return the zone for this rBuilder"
-        return models.SystemType.objects.get(name=models.SystemType.INFRASTRUCTURE_WINDOWS_BUILD_NODE)
-    
+        return models.Cache.get(models.SystemType,
+            name=models.SystemType.INFRASTRUCTURE_WINDOWS_BUILD_NODE)
+
+    @exposed
+    def wmiManagementInterface(self):
+        return models.Cache.get(models.ManagementInterface,
+            name=models.ManagementInterface.WMI)
+
+    @exposed
+    def cimManagementInterface(self):
+        return models.Cache.get(models.ManagementInterface,
+            name=models.ManagementInterface.CIM)
+
+    @exposed
+    def sshManagementInterface(self):
+        return models.Cache.get(models.ManagementInterface,
+            name=models.ManagementInterface.SSH)
+
     @exposed
     def getWindowsBuildServiceNodes(self):
         nodes = []
@@ -657,6 +676,9 @@ class SystemManager(basemanager.BaseManager):
             self.log_system(system, models.SystemLogEntry.ADDED)
         registeredState = self.systemState(models.SystemState.REGISTERED)
         onlineState = self.systemState(models.SystemState.RESPONSIVE)
+        credentialsMissing = self.systemState(models.SystemState.UNMANAGED_CREDENTIALS_REQUIRED)
+        winBuildNodeType = self.getWindowsBuildServiceSystemType()
+        wmiIfaceId = self.wmiManagementInterface().management_interface_id
         if system.isNewRegistration:
             system.registration_date = self.now()
             system.current_state = registeredState
@@ -665,30 +687,39 @@ class SystemManager(basemanager.BaseManager):
                 # We really see this system the first time with its proper
                 # uuids. We'll assume it's been registered with rpath-register
                 self.log_system(system, models.SystemLogEntry.REGISTERED)
-            if not system.system_type.infrastructure or system.system_type.name == \
-                    models.SystemType.INFRASTRUCTURE_WINDOWS_BUILD_NODE:
+            if (system.management_interface_id == wmiIfaceId and not system.credentials):
+                # No credentials, nothing to do here
+                system.current_state = credentialsMissing
+                system.save()
+            elif (not system.system_type.infrastructure or
+                    system.system_type_id == winBuildNodeType.system_type_id):
                 # Schedule a poll event in the future
                 self.scheduleSystemPollEvent(system)
                 # And schedule one immediately
                 self.scheduleSystemPollNowEvent(system)
         elif system.isRegistered:
             # See if a new poll is required
-            if self.needsNewSynchronization(system):
+            if (system.current_state_id in self.NonresponsiveStates or
+                    self.needsNewSynchronization(system)):
                 system.current_state = registeredState
                 self.scheduleSystemPollNowEvent(system)
                 system.save()
-            # Already registered and no need to re-syncrhonize, if the
+            # Already registered and no need to re-synchronize, if the
             # old state was online, and the new state is registered, we must
             # be coming in through rpath-tools, so preserve the online state.
             elif (system.oldModel is not None and 
                     system.oldModel.current_state.system_state_id == \
                     onlineState.system_state_id and
-                    system.current_state.system_state_id == \
+                    system.current_state_id == \
                     registeredState.system_state_id):
                 system.current_state = onlineState
                 system.save()
             elif system.current_state == registeredState:
                 self.scheduleSystemPollNowEvent(system)
+        elif (system.management_interface_id == wmiIfaceId and not system.credentials):
+                # No credentials, nothing to do here
+                system.current_state = credentialsMissing
+                system.save()
         elif withManagementInterfaceDetection:
             # Need to dectect the management interface on the system
             self.scheduleSystemDetectMgmtInterfaceEvent(system)
@@ -822,13 +853,11 @@ class SystemManager(basemanager.BaseManager):
             if eventTypeName in self.ManagementInterfaceEvents:
                 # Management interface detection finished, need to schedule a
                 # registration event now.
-                wmiIfaceId = models.Cache.get(models.ManagementInterface,
-                    name=models.ManagementInterface.WMI).pk
+                wmiIfaceId = self.wmiManagementInterface().pk
                 # unless we are SSH, in which case, assimilation is the only
                 # way to upgrade to a interface type that can do something other
                 # than just assimilate
-                sshIfaceId = models.Cache.get(models.ManagementInterface,
-                    name=models.ManagementInterface.SSH).pk
+                sshIfaceId = self.sshManagementInterface().pk
 
                 # Copy credentials from the source image if available.
                 self._copyImageCredentials(system)
@@ -856,7 +885,7 @@ class SystemManager(basemanager.BaseManager):
                     elif not system.credentials:
                         # No credentials avaiable, prompt the user for them.
                         return models.SystemState.UNMANAGED_CREDENTIALS_REQUIRED
-                self.scheduleSystemRegistrationEvent(system)
+                self.scheduleSystemRegistrationNowEvent(system)
                 return None
             else:
                 # Add more processing here if needed
@@ -1177,10 +1206,12 @@ class SystemManager(basemanager.BaseManager):
     def addSystemCredentials(self, system_id, credentials):
         system = models.System.objects.get(pk=system_id)
         self._addSystemCredentials(system, credentials)
+        # We assume the system is unmanaged, and kick a registration
+        system.current_state = self.systemState(models.SystemState.UNMANAGED)
         system.save()
         # Schedule a system registration event after adding/updating
         # credentials.
-        self.scheduleSystemRegistrationEvent(system)
+        self.scheduleSystemRegistrationNowEvent(system)
         return self._getCredentialsModel(system, credentials)
 
     def _addSystemCredentials(self, system, credentials):
@@ -1699,6 +1730,14 @@ class SystemManager(basemanager.BaseManager):
             enableTime=self.now())
 
     @exposed
+    def scheduleSystemRegistrationNowEvent(self, system):
+        '''Schedule an event for the system to be registered'''
+        # registration events happen on demand, so enable now
+        return self._scheduleEvent(system,
+            jobmodels.EventType.SYSTEM_REGISTRATION_IMMEDIATE,
+            enableTime=self.now())
+
+    @exposed
     def scheduleSystemApplyUpdateEvent(self, system, sources):
         '''Schedule an event for the system to be updated'''
         return self._scheduleEvent(system,
@@ -1773,9 +1812,6 @@ class SystemManager(basemanager.BaseManager):
             event.save()
             self.logSystemEvent(event, enableTime)
                 
-            # NOTE: dispatch immediately will delete events as soon as we're done, making
-            # the return from this function often None in case where the event
-            # actually fired. 
             if event.dispatchImmediately():
                 self.dispatchSystemEvent(event)
         else:

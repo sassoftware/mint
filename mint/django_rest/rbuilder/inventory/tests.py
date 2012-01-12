@@ -321,7 +321,6 @@ class ZonesTestCase(XMLTestCase):
             pass # what we expect
         
 class ManagementInterfacesTestCase(XMLTestCase):
-
     def testGetManagementInterfaces(self):
         models.ManagementInterface.objects.all().delete()
         mi = models.ManagementInterface(name="foo", description="bar", port=8000, credentials_descriptor="<foo/>")
@@ -3980,11 +3979,10 @@ class SystemEventProcessing2TestCase(XMLTestCase, test_utils.RepeaterMixIn):
         models.SystemEvent.objects.all().delete()
         newState = self.mgr.sysMgr.getNextSystemState(systemCim, jobCim)
         self.failUnlessEqual(newState, None)
-        # registration events are no longer dispatched immediately (RBL-)
+        # Nothing in the call stack yet
         self.failUnlessEqual(self.mgr.repeaterMgr.repeaterClient.getCallList(),
             [])
-        # Dispatch the event now
-        self.mgr.sysMgr.processSystemEvents()
+
         # Force commit, this is normally done by the middleware
         transaction.commit()
         self.failUnlessEqual(self.mgr.repeaterMgr.repeaterClient.getCallList(),
@@ -4122,6 +4120,56 @@ class SystemEventProcessing2TestCase(XMLTestCase, test_utils.RepeaterMixIn):
         xobjModel = newSystem.serialize()
         self.failUnlessEqual(xobjModel.has_active_jobs, True)
         self.failUnlessEqual(xobjModel.has_running_jobs, False)
+
+    def testPostSystemWmiManagementInterface(self):
+
+        # Register a WMI-managed system, and don't post credentials.
+        # Make sure the system is in the proper state
+        # (NON_RESPONSIVE_CREDENTIALS) and no jobs are pending.
+        xmlTempl = """\
+<system>
+  <network_address>
+    <address>172.16.175.240</address>
+    <pinned>false</pinned>
+  </network_address>
+  <name>WmiSystem</name>
+  <management_interface href="/api/v1/inventory/management_interfaces/%(mgmtInterfaceId)s"/>
+  <managing_zone href="/api/v1/inventory/zones/1"/>
+</system>
+"""
+        mgmtIface = self.mgr.wmiManagementInterface()
+        data = xmlTempl % dict(localUuid="aaa", generatedUuid="bbb",
+            mgmtInterfaceId=mgmtIface.management_interface_id)
+        response = self._post('inventory/systems/', data=data)
+        self.failUnlessEqual(response.status_code, 200)
+        doc = xobj.parse(response.content)
+        systemId = int(doc.system.system_id)
+        system = models.System.objects.get(system_id=systemId)
+        self.failUnlessEqual(system.current_state.name, 'unmanaged-credentials')
+        # No jobs
+        self.failUnlessEqual(
+            [x for x in system.systemjob_set.all()],
+            [])
+
+        self.disablePostCommitActions()
+
+        # Now set credentials
+        url = "inventory/systems/%d/credentials" % system.system_id
+        response = self._post(url,
+            data=testsxml.credentials_xml,
+            username="admin", password="password")
+        self.failUnlessEqual(response.status_code, 200)
+
+        system = models.System.objects.get(system_id=system.system_id)
+
+        # We want a queued registration job
+        self.failUnlessEqual(
+            [x.job.job_state.name for x in system.systemjob_set.all()],
+            ['Queued'])
+
+        self.failUnlessEqual(len(self.devNullList), 1)
+        self.failUnlessEqual(system.current_state.name, 'unmanaged')
+
 
 class TargetSystemImportTest(XMLTestCase, test_utils.RepeaterMixIn):
     fixtures = ['users', 'targets']
