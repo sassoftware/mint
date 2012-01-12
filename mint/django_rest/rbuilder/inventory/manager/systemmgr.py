@@ -512,7 +512,8 @@ class SystemManager(basemanager.BaseManager):
 
     @exposed
     def addSystem(self, system, generateCertificates=False,
-                  withManagementInterfaceDetection=True, for_user=None):
+                  withManagementInterfaceDetection=True, for_user=None,
+                  withRetagging=True):
         '''Add a new system to inventory'''
 
         if not system:
@@ -545,9 +546,10 @@ class SystemManager(basemanager.BaseManager):
         if system.event_uuid:
             self.postprocessEvent(system)
 
-        if for_user:
-            self.mgr.addToMyQuerySet(system, for_user)
-        self.mgr.retagQuerySetsByType('system', for_user)
+        if withRetagging:
+            if for_user:
+                self.mgr.addToMyQuerySet(system, for_user)
+            self.mgr.retagQuerySetsByType('system', for_user)
 
         return system
 
@@ -773,7 +775,8 @@ class SystemManager(basemanager.BaseManager):
         if last_job and last_job.job_state.name == jobmodels.JobState.COMPLETED:
             # This will update the system state as a side-effect
             self.addSystem(system, generateCertificates=False,
-                withManagementInterfaceDetection=False)
+                withManagementInterfaceDetection=False,
+                withRetagging=False)
         self.setSystemStateFromJob(system)
         if for_user:
             system.modified_by = for_user
