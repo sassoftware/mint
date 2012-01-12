@@ -1072,11 +1072,11 @@ class SystemManager(basemanager.BaseManager):
             target_internal_id=system.target_system_id,
             defaults=dict(
                 name=system.target_system_name,
-                description=system.target_system_description,
+                description=system.target_system_description or '',
                 ip_addr_1=dnsName))
         if not created:
             tsys.name = system.target_system_name
-            tsys.description = system.target_system_description
+            tsys.description = system.target_system_description or ''
             tsys.ip_addr_1 = dnsName
             tsys.save()
         targetmodels.TargetSystemCredentials.objects.get_or_create(

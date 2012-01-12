@@ -4414,8 +4414,30 @@ class TargetSystemImportTest(XMLTestCase, test_utils.RepeaterMixIn):
             target_internal_id=system.target_system_id)
         self.failUnlessEqual(tsys.name, system.name)
 
+        # Another system, no description
+        params = dict((x, repl(y, '001', '003'))
+            for (x, y) in params.items())
+        params['target_system_description'] = None
+
+        system = self.newSystem(**params)
+
+        system = self.mgr.addLaunchedSystem(system,
+            dnsName=dnsName,
+            targetName=self.tgt2.name,
+            targetType=self.tgt2.target_type)
+
+        self.failUnlessEqual(system.target_system_name, params['target_system_name'])
+        self.failUnlessEqual(system.name, params['target_system_name'])
+        self.failUnlessEqual(system.target_system_description,
+            params['target_system_description'])
+        self.failUnlessEqual(system.description, params['target_system_description'])
+        tsys = targetmodels.TargetSystem.objects.get(target=system.target,
+            target_internal_id=system.target_system_id)
+        self.failUnlessEqual(tsys.name, system.name)
+        self.failUnlessEqual(tsys.description, '')
+
         # Another system that specifies a name and description
-        params = dict((x, repl(y, '001', '002'))
+        params = dict((x, repl(y, '003', '002'))
             for (x, y) in params.items())
         params.update(name="system-name-002",
             description="system-description-002")
