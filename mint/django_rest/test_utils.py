@@ -522,6 +522,20 @@ class XMLTestCase(TestCase, testcase.MockMixIn):
     def cleanUp(self):
         shutil.rmtree(self.workDir, ignore_errors=True)
 
+    def disablePostCommitActions(self):
+        """
+        Replaces the list with something that pretends to always be empty, but
+        still collects the actions
+        """
+        self.devNullList = self.DevNullList()
+        from mint.django_rest import signals
+        self.mock(signals.PostCommitActions, 'actions',
+            self.devNullList)
+
+    class DevNullList(list):
+        def __nonzero__(self):
+            return False
+
 class XML(object):
     class OrderedDict(dict):
         def items(self):

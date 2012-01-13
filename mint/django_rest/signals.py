@@ -15,12 +15,12 @@ def postCommitHandler(connection=None, **kwargs):
     if getattr(connection, '_with_post_commit_signal', None):
         return
     connection._with_post_commit_signal = True
-    origCommit = connection.commit
+    origCommit = connection._commit
     def commitWithSignal():
         ret = origCommit()
         post_commit.send(sender=connection.__class__, connection=connection)
         return ret
-    connection.commit = commitWithSignal
+    connection._commit = commitWithSignal
 
 signals.connection_created.connect(postCommitHandler)
 
@@ -48,6 +48,8 @@ class PostCommitActions(object):
         cls.actions = []
 
         if connection.is_managed():
+            if connection.is_dirty():
+                connection.commit()
             connection.leave_transaction_management()
             connection.enter_transaction_management()
         try:

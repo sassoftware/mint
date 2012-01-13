@@ -321,7 +321,6 @@ class ZonesTestCase(XMLTestCase):
             pass # what we expect
         
 class ManagementInterfacesTestCase(XMLTestCase):
-
     def testGetManagementInterfaces(self):
         models.ManagementInterface.objects.all().delete()
         mi = models.ManagementInterface(name="foo", description="bar", port=8000, credentials_descriptor="<foo/>")
@@ -3979,11 +3978,10 @@ class SystemEventProcessing2TestCase(XMLTestCase, test_utils.RepeaterMixIn):
         models.SystemEvent.objects.all().delete()
         newState = self.mgr.sysMgr.getNextSystemState(systemCim, jobCim)
         self.failUnlessEqual(newState, None)
-        # registration events are no longer dispatched immediately (RBL-)
+        # Nothing in the call stack yet
         self.failUnlessEqual(self.mgr.repeaterMgr.repeaterClient.getCallList(),
             [])
-        # Dispatch the event now
-        self.mgr.sysMgr.processSystemEvents()
+
         # Force commit, this is normally done by the middleware
         transaction.commit()
         self.failUnlessEqual(self.mgr.repeaterMgr.repeaterClient.getCallList(),
@@ -4103,6 +4101,10 @@ class SystemEventProcessing2TestCase(XMLTestCase, test_utils.RepeaterMixIn):
         # Make sure the job that gets created is in the Queued state,
         # and the model flags are properly set
         system = self._saveSystem()
+        # Important to start a new transaction; the job should be queued
+        # until we commit
+        self.mgr.enterTransactionManagement()
+
         newSystem = self.mgr.addSystem(system)
         self.failUnlessEqual(newSystem.current_state.name,
             models.SystemState.REGISTERED)
@@ -4117,6 +4119,56 @@ class SystemEventProcessing2TestCase(XMLTestCase, test_utils.RepeaterMixIn):
         xobjModel = newSystem.serialize()
         self.failUnlessEqual(xobjModel.has_active_jobs, True)
         self.failUnlessEqual(xobjModel.has_running_jobs, False)
+
+    def testPostSystemWmiManagementInterface(self):
+
+        # Register a WMI-managed system, and don't post credentials.
+        # Make sure the system is in the proper state
+        # (NON_RESPONSIVE_CREDENTIALS) and no jobs are pending.
+        xmlTempl = """\
+<system>
+  <network_address>
+    <address>172.16.175.240</address>
+    <pinned>false</pinned>
+  </network_address>
+  <name>WmiSystem</name>
+  <management_interface href="/api/v1/inventory/management_interfaces/%(mgmtInterfaceId)s"/>
+  <managing_zone href="/api/v1/inventory/zones/1"/>
+</system>
+"""
+        mgmtIface = self.mgr.wmiManagementInterface()
+        data = xmlTempl % dict(localUuid="aaa", generatedUuid="bbb",
+            mgmtInterfaceId=mgmtIface.management_interface_id)
+        response = self._post('inventory/systems/', data=data)
+        self.failUnlessEqual(response.status_code, 200)
+        doc = xobj.parse(response.content)
+        systemId = int(doc.system.system_id)
+        system = models.System.objects.get(system_id=systemId)
+        self.failUnlessEqual(system.current_state.name, 'unmanaged-credentials')
+        # No jobs
+        self.failUnlessEqual(
+            [x for x in system.systemjob_set.all()],
+            [])
+
+        self.disablePostCommitActions()
+
+        # Now set credentials
+        url = "inventory/systems/%d/credentials" % system.system_id
+        response = self._post(url,
+            data=testsxml.credentials_xml,
+            username="admin", password="password")
+        self.failUnlessEqual(response.status_code, 200)
+
+        system = models.System.objects.get(system_id=system.system_id)
+
+        # We want a queued registration job
+        self.failUnlessEqual(
+            [x.job.job_state.name for x in system.systemjob_set.all()],
+            ['Queued'])
+
+        self.failUnlessEqual(len(self.devNullList), 1)
+        self.failUnlessEqual(system.current_state.name, 'unmanaged')
+
 
 class TargetSystemImportTest(XMLTestCase, test_utils.RepeaterMixIn):
     fixtures = ['users', 'targets']
@@ -4361,8 +4413,30 @@ class TargetSystemImportTest(XMLTestCase, test_utils.RepeaterMixIn):
             target_internal_id=system.target_system_id)
         self.failUnlessEqual(tsys.name, system.name)
 
+        # Another system, no description
+        params = dict((x, repl(y, '001', '003'))
+            for (x, y) in params.items())
+        params['target_system_description'] = None
+
+        system = self.newSystem(**params)
+
+        system = self.mgr.addLaunchedSystem(system,
+            dnsName=dnsName,
+            targetName=self.tgt2.name,
+            targetType=self.tgt2.target_type)
+
+        self.failUnlessEqual(system.target_system_name, params['target_system_name'])
+        self.failUnlessEqual(system.name, params['target_system_name'])
+        self.failUnlessEqual(system.target_system_description,
+            params['target_system_description'])
+        self.failUnlessEqual(system.description, params['target_system_description'])
+        tsys = targetmodels.TargetSystem.objects.get(target=system.target,
+            target_internal_id=system.target_system_id)
+        self.failUnlessEqual(tsys.name, system.name)
+        self.failUnlessEqual(tsys.description, '')
+
         # Another system that specifies a name and description
-        params = dict((x, repl(y, '001', '002'))
+        params = dict((x, repl(y, '003', '002'))
             for (x, y) in params.items())
         params.update(name="system-name-002",
             description="system-description-002")

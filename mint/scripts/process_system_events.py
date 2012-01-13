@@ -41,7 +41,9 @@ class Script(scriptlibrary.SingletonScript):
 
         from mint.django_rest.rbuilder.manager import rbuildermanager
         mgr = rbuildermanager.RbuilderManager()
+        mgr.enterTransactionManagement()
         mgr.processSystemEvents()
+        mgr.commit()
 
     def usage(self):
         print >> sys.stderr, "Usage: %s [useLocalSettings]" % \
