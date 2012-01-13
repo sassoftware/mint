@@ -465,9 +465,12 @@ class ProjectManager(basemanager.BaseManager):
 
     @exposed
     def getProjectBranchStageImages(self, project_short_name, project_branch_label, stage_name):
+        stage = self.getProjectBranchStage(project_short_name, project_branch_label, stage_name)
+        # Union branch images and stage images
         my_images = imagemodels.Image.objects.filter(
-            project_branch_stage__name=stage_name).distinct() | \
-            imagemodels.Image.objects.filter(project_branch__label=project_branch_label).distinct()
+                project_branch_stage__stage_id=stage.stage_id).distinct() | \
+            imagemodels.Image.objects.filter(
+                project_branch__branch_id = stage.project_branch_id).distinct()
 
         images = imagemodels.Images()
         images.image = my_images
