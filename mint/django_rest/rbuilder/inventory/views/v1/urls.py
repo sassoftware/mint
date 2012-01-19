@@ -6,8 +6,6 @@
 
 from django.conf.urls.defaults import patterns
 from mint.django_rest.rbuilder.inventory.views.v1 import views as inventoryviews
-# FIXME: adjust once the job views move to the new structure
-from mint.django_rest.rbuilder.jobs import views as jobviews
 from mint.django_rest import urls
 
 URL = urls.URLRegistry.URL
@@ -180,34 +178,6 @@ urlpatterns = patterns('',
         inventoryviews.InventoryEventTypeService(),
         name='EventType',
         model='inventory.EventType'),
-
-    # a bit weird -- inventory namespace views, but exist in jobs tree
-    # go with it for now    
-
-    # Jobs
-    URL(r'/jobs/?$',
-        jobviews.JobsService(),
-        name='Jobs',
-        model='jobs.Jobs'),
-    URL(r'/jobs/(?P<job_uuid>[-a-zA-Z0-9]+)/?$',
-        jobviews.JobService(),
-        name='Job',
-        model='jobs.Job'),
-
-    # Job States
-    URL(r'/job_states/?$',
-        jobviews.JobStatesService(),
-        name='JobStates',
-        model='jobs.JobStates'),
-    URL(r'/job_states/(?P<job_state_id>[a-zA-Z0-9]+)/?$',
-        jobviews.JobStateService(),
-        name='JobState',
-        model='jobs.JobState'),
-    URL(r'/job_states/(?P<job_state_id>[a-zA-Z0-9]+)/jobs/?$',
-        jobviews.JobStatesJobsService(),
-        name='JobStateJobs',
-        model='jobs.Jobs'),
-
 )
 
 
