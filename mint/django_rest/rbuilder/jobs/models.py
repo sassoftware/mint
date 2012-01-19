@@ -295,8 +295,13 @@ class EventType(modellib.XObjIdModel):
     SYSTEM_POLL_IMMEDIATE_DESC = "On-demand system synchronization"
     
     SYSTEM_REGISTRATION = "system registration"
-    SYSTEM_REGISTRATION_PRIORITY = ON_DEMAND_BASE + 10
+    SYSTEM_REGISTRATION_PRIORITY = 70
     SYSTEM_REGISTRATION_DESC = "System registration"
+
+    SYSTEM_REGISTRATION_IMMEDIATE = "immediate system registration"
+    SYSTEM_REGISTRATION_IMMEDIATE_PRIORITY = ON_DEMAND_BASE + 10
+    SYSTEM_REGISTRATION_IMMEDIATE_DESC = "On-demand system registration"
+
 
     SYSTEM_APPLY_UPDATE = 'system apply update'
     SYSTEM_APPLY_UPDATE_PRIORITY = 50

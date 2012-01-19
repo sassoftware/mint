@@ -28,7 +28,7 @@ from conary.dbstore import sqlerrors, sqllib
 log = logging.getLogger(__name__)
 
 # database schema major version
-RBUILDER_DB_VERSION = sqllib.DBversion(61, 4)
+RBUILDER_DB_VERSION = sqllib.DBversion(61, 5)
 
 def _createTrigger(db, table, column="changed"):
     retInsert = db.createTrigger(table, column, "INSERT")
@@ -1429,6 +1429,10 @@ def _createInventorySchema(db, cfg):
                   description="Configure target",
                   priority=105,
                   resource_type="TargetType"),
+             dict(name="immediate system registration",
+                  description='On-demand system registration',
+                  priority=110,
+                  resource_type='System'),
             ])
 
     if 'inventory_system_event' not in db.tables:

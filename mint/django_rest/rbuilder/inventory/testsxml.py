@@ -208,6 +208,14 @@ event_types_xml="""\
     <resource_type>TargetType</resource_type>
     <system_events/>
   </event_type>
+  <event_type id="http://testserver/api/v1/inventory/event_types/23">
+    <description>On-demand system registration</description>
+    <job_type_id>23</job_type_id>
+    <name>immediate system registration</name>
+    <priority>110</priority>
+    <resource_type>System</resource_type>
+    <system_events/>
+  </event_type>
 </event_types>"""
 
 event_type_put_xml="""\
