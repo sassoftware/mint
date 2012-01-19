@@ -4,7 +4,7 @@
 # All rights reserved.
 #
 
-
+SUBDIRS = views
 python_files = $(wildcard *.py)
 
 all: default-all
