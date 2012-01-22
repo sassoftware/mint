@@ -1249,8 +1249,7 @@ class SystemsTestCase(XMLTestCase):
         """
         models.System.objects.all().delete()
         system_xml = testsxml.system_post_no_network_xml
-        # Also exercise RBL-8919
-        response = self._post('inventory//systems/', data=system_xml)
+        response = self._post('inventory/systems/', data=system_xml)
         self.assertEquals(response.status_code, 200)
         try:
             models.System.objects.get(pk=3)
