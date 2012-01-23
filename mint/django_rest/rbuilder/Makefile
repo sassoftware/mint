@@ -4,7 +4,7 @@
 # All rights reserved.
 #
 
-SUBDIRS = docs discovery favorites images inventory jobs manager metrics modellib notices packageindex packages platforms products projects querysets rbac reporting repos session targets users
+SUBDIRS = docs discovery favorites images inventory jobs manager metrics modellib modulehooks notices packageindex packages platforms products projects querysets rbac reporting repos session targets users
 
 python_files = $(wildcard *.py)
 
