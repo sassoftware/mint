@@ -80,11 +80,8 @@ urlpatterns = patterns('',
     (r'^/rbac',
      include('mint.django_rest.rbuilder.rbac.views.v1.urls')),
 
-    # ModuleHooks
-    # FIXME -- migrate to new structure
-    URL(r'/module_hooks/?$',
-        modulehooksviews.ModuleHooksService(),
-        name='ModuleHooks'),
+    (r'^/module_hooks',
+     include('mint.django_rest.rbuilder.modulehooks.views.v1.urls')),
 
     (r'^/targets',
      include('mint.django_rest.rbuilder.targets.views.v1.urls')),
