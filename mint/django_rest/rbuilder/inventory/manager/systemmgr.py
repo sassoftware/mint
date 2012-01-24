@@ -10,7 +10,6 @@ import sys
 import random
 import time
 import traceback
-import exceptions
 from conary import versions as cny_versions
 from conary.deps import deps as cny_deps
 from xobj import xobj
