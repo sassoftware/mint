@@ -67,8 +67,8 @@ class JobManager(basemanager.BaseManager):
             raise errors.InvalidData()
         jhandler = factory(self)
         jhandler.create(job, extraArgs)
-        for system in job.systems.all():
-            system.updateDerivedData()
+        for system_job in job.systems.all():
+            system_job.system.updateDerivedData()
         return job
 
     @exposed
@@ -76,8 +76,8 @@ class JobManager(basemanager.BaseManager):
         job = models.Job.objects.get(pk=jobId)
         systems = job.systems.all()
         job.delete()
-        for system in systems:
-            system.updateDerivedData()
+        for system_job in systems:
+            system_job.job.updateDerivedData()
 
     @exposed
     def getJobStates(self):
@@ -220,8 +220,8 @@ class ResultsProcessingMixIn(object):
         self.results = self.getJobResults(job)
         self.validateJobResults(job)
         self.processJobResults(job)
-        for system in job.systems.all():
-           system.updateDerivedData()
+        for system_job in job.systems.all():
+           system_job.system.updateDerivedData()
         job.save()
 
     def getJobResults(self, job):
