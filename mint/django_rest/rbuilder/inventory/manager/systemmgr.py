@@ -852,6 +852,7 @@ class SystemManager(basemanager.BaseManager):
         # Return None if the state hasn't changed
         jobStateName = job.job_state.name
         eventTypeName = job.job_type.name
+        system.updateDerivedData()
 
         if jobStateName == jobmodels.JobState.COMPLETED:
             if eventTypeName == jobmodels.EventType.SYSTEM_REGISTRATION:
