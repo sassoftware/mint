@@ -1120,6 +1120,7 @@ class SystemManager(basemanager.BaseManager):
             self.scheduleLaunchWaitForNetworkEvent(system)
             return system
         self.setSystemState(system)
+        system.updateDerivedData()
         return system
 
     def _getCredentialsForUser(self, target):

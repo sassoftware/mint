@@ -712,26 +712,10 @@ class System(modellib.XObjIdModel):
 
     def serialize(self, request=None):
         
-        # old and busted slow way
-        #
-        #try:
-        #    jobs = self.jobs.all()
-        #except:
-        #    # system apparently wasn't saved yet so can't access Many2Many
-        #    # relations
-        #    jobs = []
-
         # hide some data in collapsed collections 
         summarize = getattr(self, '_summarize', False)
 
         xobj_model = modellib.XObjIdModel.serialize(self, request)
-
-        # old and busted slow way
-        #
-        #if not summarize:
-        #    xobj_model.has_active_jobs = self.areJobsActive(jobs)
-        #    xobj_model.has_running_jobs = self.areJobsRunning(jobs)
-        
 
         if request:
             class CredentialsHref(object): 
@@ -803,15 +787,6 @@ class System(modellib.XObjIdModel):
         # 
         if not summarize:
             xobj_model.jobs = JobsHref(request, self)
-        #
-        #    # Set out of date flag on xobj_model
-        #    # but don't include if we're set to include this as part of a collection
-        #    out_of_date = False
-        #    for trove in self.installed_software.all():
-        #        if trove.out_of_date:
-        #            out_of_date = True
-        #            break
-        #    xobj_model.out_of_date = out_of_date
 
         xobj_model.network_address = self.__class__.extractNetworkAddress(self)
         return xobj_model
