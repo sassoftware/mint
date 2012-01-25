@@ -642,6 +642,7 @@ class SystemManager(basemanager.BaseManager):
         # Remove the other system before saving this one, or else we may stop
         # over some unique constraints (like the one on generated_uuid)
         other.delete()
+        system.updateDerivedData()
         system.save()
         return system
 
@@ -1110,6 +1111,7 @@ class SystemManager(basemanager.BaseManager):
 
         cu.execute("INSERT INTO job_system (job_id, system_id) VALUES (%s, %s)",
             [ jobId, system.pk ])
+        system.updateDerivedData()
 
     @exposed
     def postSystemLaunch(self, system):

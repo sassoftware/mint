@@ -205,6 +205,13 @@ class XMLTestCase(TestCase, testcase.MockMixIn):
                 'full_name', 'user_name', 'is_public', 'is_static', 'time_mirrored',
                 'time_published'
             ]
+
+        # contend with database False (sqlite only) vs synthetic false casing            
+        first = first.replace("true", "True")
+        first = first.replace("false", "False")
+        second = second.replace("true", "True")
+        second = second.replace("false", "False")
+
         from lxml import etree
         X = XML(orderedChildren=True, ignoreNodes=ignoreNodes)
         tree0 = X.normalize(etree.fromstring(first.strip()))

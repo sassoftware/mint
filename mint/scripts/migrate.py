@@ -4629,8 +4629,8 @@ class MigrateTo_60(SchemaMigration):
         return True
 
 class MigrateTo_61(SchemaMigration):
-    '''Edge P4, P5'''
-    Version = (61, 5)
+    '''Edge P4, P5, P6'''
+    Version = (61, 7)
 
     def migrate(self):
         cu = self.db.cursor()
@@ -4695,6 +4695,17 @@ class MigrateTo_61(SchemaMigration):
                   resource_type='System'),
         ])
         return True
+
+    def migrate6(self):
+        # served for possible P5-1 fixes
+        return True
+
+    def migrate7(self):
+        cu = self.db.cursor()
+        cu.execute("""ALTER TABLE inventory_system ADD COLUMN out_of_date BOOLEAN NOT NULL DEFAULT False""")
+        cu.execute("""ALTER TABLE inventory_system ADD COLUMN has_active_jobs BOOLEAN NOT NULL DEFAULT False""")
+        cu.execute("""ALTER TABLE inventory_system ADD COLUMN has_running_jobs BOOLEAN NOT NULL DEFAULT False""")
+        return True 
 
 #### SCHEMA MIGRATIONS END HERE #############################################
 
