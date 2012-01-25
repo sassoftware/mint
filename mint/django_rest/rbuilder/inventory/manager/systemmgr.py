@@ -851,6 +851,10 @@ class SystemManager(basemanager.BaseManager):
         # Return None if the state hasn't changed
         jobStateName = job.job_state.name
         eventTypeName = job.job_type.name
+
+        #if jobStateName == "Failed" and eventTypeName.startswith("immediate system"):
+        #    import epdb; epdb.serve()
+
         if jobStateName == jobmodels.JobState.COMPLETED:
             if eventTypeName == jobmodels.EventType.SYSTEM_REGISTRATION:
                 # hmm, actually you'll probably never get here because a job
