@@ -481,6 +481,47 @@ class ProjectsTestCase(RbacEngine):
         self.assertEquals(response.status_code, 200)
         self.assertXMLEquals(response.content, testsxml.test_get_images_from_pbs_xml)
 
+    def testgetProjectBranchStageImages(self):
+        # SUP-4166
+        self._initProject()
+        prj = models.Project.objects.get(name='chater-foo')
+        branch1 = models.ProjectVersion.objects.get(
+            project__project_id=prj.project_id, name='trunk')
+        stageDev1 = models.Stage.objects.get(
+            project_branch__branch_id=branch1.branch_id, name='Development')
+
+        branch2 = models.ProjectVersion.objects.get(
+            project__project_id=prj.project_id, name='1')
+        stageDev2 = models.Stage(project=prj, project_branch=branch2, name='Development')
+        stageDev2.save()
+
+        stages = [ stageDev1, stageDev2 ]
+
+        # Add both branch images and stage images
+        for stage in stages:
+            branch = stage.project_branch
+            imagesmodels.Image.objects.filter(project_branch=branch)
+            for i in range(2):
+                name = "image-%s-%s" % (branch.name, i)
+                image = imagesmodels.Image(name=name, description=name,
+                    project_branch=branch, _image_type=10,
+                    trove_version='/foo@rpath:1/12345:%d-1' % i,
+                    trove_flavor='1#x86:i486:i586:i686|5#use:~!xen', image_count=1)
+                self.mgr.createImageBuild(image)
+
+                name += 'devel'
+                image = imagesmodels.Image(name=name, description=name,
+                    project_branch_stage=stage, _image_type=10,
+                    trove_version='/foo@rpath:1/12345:%d-1' % i,
+                    trove_flavor='1#x86:i486:i586:i686|5#use:~!xen', image_count=1)
+                self.mgr.createImageBuild(image)
+
+        # Make sure there's no cross-polination
+        imgs = self.mgr.getProjectBranchStageImages(prj.short_name,
+            branch2.label, stageDev2.name)
+        self.failUnlessEqual([ x.name for x in imgs.image ],
+            ['image-1-0', 'image-1-0devel', 'image-1-1', 'image-1-1devel'])
+
     def testGetProjectBranchStagesByProject(self):
         self._initProject()
         prj = models.Project.objects.get(name='chater-foo')

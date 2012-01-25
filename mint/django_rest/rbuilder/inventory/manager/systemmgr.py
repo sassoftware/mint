@@ -551,6 +551,10 @@ class SystemManager(basemanager.BaseManager):
                 self.mgr.addToMyQuerySet(system, for_user)
             self.mgr.retagQuerySetsByType('system', for_user)
 
+        # registration needs to cause a configuration so that config values
+        # and embedded configurators/puppet modules are run
+        self.scheduleSystemConfigurationEvent(system, system.configuration)
+
         return system
 
     def mergeSystems(self, system):
@@ -848,8 +852,11 @@ class SystemManager(basemanager.BaseManager):
         jobStateName = job.job_state.name
         eventTypeName = job.job_type.name
         if jobStateName == jobmodels.JobState.COMPLETED:
-            if eventTypeName in self.RegistrationEvents:
-                return None
+            if eventTypeName == jobmodels.EventType.SYSTEM_REGISTRATION:
+                # hmm, actually you'll probably never get here because a job
+                # doesn't really happen for a registration response!  must
+                # rewrite FSM sometime
+                self.scheduleSystemConfigurationEvent(system, system.configuration)
             if eventTypeName in self.PollEvents or \
                     eventTypeName in self.SystemUpdateEvents:
                 return models.SystemState.RESPONSIVE
@@ -1786,6 +1793,8 @@ class SystemManager(basemanager.BaseManager):
 
     @classmethod
     def configDictToXml(cls, configuration):
+        if configuration is None:
+            configuration = {}
         obj = Configuration(**configuration)
         return xobj.toxml(obj, prettyPrint=False, xml_declaration=False)
 
