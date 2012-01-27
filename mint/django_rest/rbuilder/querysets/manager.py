@@ -1022,14 +1022,33 @@ class QuerySetManager(basemanager.BaseManager):
         # can also be used on resources w/o ownership metadata
 
         if resource_type == 'project_branch_stage':
-            filterEntry = models.FilterEntry.objects.get_or_create(
-                field = 'project.members.user_id',
-                operator = 'IN',
-                value = str(user.pk)
+            # branch RBAC looks entirely towards project RBAC
+            project_qs_name = name.replace("My Stages", "My Projects")
+            my_projects = models.QuerySet.objects.get(
+                name         = project_qs_name,
+                personal_for = user
+            )
+            # looking up related queryset by name to allow for it
+            # to be deleted and rebuilt correctly, if that were
+            # to happen, we also are allowing for queryset names
+            # to not be unique (see personal_for) between users
+            # to prevent spoofing
+            filterEntry1 = models.FilterEntry.objects.get_or_create(
+                field    = 'project.tags.query_set__name',
+                operator = 'EQUAL',
+                value    = my_projects.name
             )[0]
+            filterEntry2 = models.FilterEntry.objects.get_or_create(
+                field    = 'project.tags.query_set__personal_for',
+                operator = 'EQUAL',
+                value    = user.pk
+            )[0]
+ 
             if len(qs.filter_entries.all()) == 0:
-                # if the queryset already exists we won't try to repair it
-                qs.filter_entries.add(filterEntry)
+                # if the queryset already exists or was modified
+                # we won't try to repair it
+                qs.filter_entries.add(filterEntry1)
+                qs.filter_entries.add(filterEntry2)
                 qs.is_static = False
             qs.save()
           

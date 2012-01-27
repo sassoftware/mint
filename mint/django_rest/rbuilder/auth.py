@@ -97,12 +97,12 @@ class rBuilderBackend(object):
     def updateUserOnLogin(self, user):
         # ensure old users and RAPA new users always have MyQuerysets
         # so the resources they create are not unhomed
+        mgr = rbuildermanager.RbuilderManager()
         if user.is_admin and not user.can_create: 
             user.can_create = True
             user.save()
-            mgr = rbuildermanager.RbuilderManager()
             mgr.getOrCreateIdentityRole(user, user)
-            mgr.configureMyQuerysets(user, user)
+        mgr.configureMyQuerysets(user, user)
         return user
 
 
