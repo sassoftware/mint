@@ -282,16 +282,16 @@ class RbacRoleUsersService(BaseRbacService):
     @access.admin
     @return_xml
     def rest_GET(self, request, role_id, user_id=None):
-        return self.get(role_id, user_id)
+        return self.get(role_id, user_id, request)
 
-    def get(self, role_id, user_id=None):
+    def get(self, role_id, user_id=None, request=None):
         if user_id is None:
             qs = querymodels.QuerySet.objects.get(name='All Users', is_public=True)
-            url = "/api/v1/query_sets/%s/all;filter_by=[user_roles.role.pk,EQUAL,%s]" % (qs.pk, role_id)
+            url = "/api/v1/query_sets/%s/all;filter_by=[user_roles.role.pk,EQUAL,%s]%s" % (qs.pk, role_id, request.params)
             return HttpResponseRedirect(url)
         else:
             # obsolete URL no longer linked to since redirect
-            url = "/api/v1/users/%s" % user_id
+            url = "/api/v1/users/%s%s" % (user_id, request.params)
             return HttpResponseRedirect(url)
 
     # CREATE -- ADD A RBAC USER TO A ROLE
