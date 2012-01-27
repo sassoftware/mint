@@ -329,8 +329,9 @@ class XMLTestCase(TestCase, testcase.MockMixIn):
         parsed = urlparse.urlparse(path)
         if parsed.params:
             for param in parsed.params.split(';'):
-                k, v = param.split('=')
-                params[k] = v
+                if param.find("=") != -1:
+                    k, v = param.split('=')
+                    params[k] = v
 
         extra = self._addRequestAuth(username, password)
         extra.update(headers or {})
