@@ -4,74 +4,27 @@
 # All Rights Reserved
 #
 
-import os
-import time
 from django.http import HttpResponse, HttpResponseNotFound, HttpResponseRedirect
-from django_restapi import resource
-
 from mint.django_rest.deco import requires, return_xml, access, \
     HttpAuthenticationRequired, Flags
-from mint.django_rest.rbuilder.users import models as usersmodels
-from mint.django_rest.rbuilder import service
 from mint.django_rest.rbuilder.inventory import models
-from mint.django_rest.rbuilder.projects import models as projectsmodels
-from mint.django_rest.rbuilder.querysets import models as querymodels
-from mint.django_rest.rbuilder.rbac.rbacauth import rbac, manual_rbac
 from mint.django_rest.rbuilder.errors import PermissionDenied
 from mint.django_rest.rbuilder.rbac.manager.rbacmanager import \
    READMEMBERS, MODMEMBERS
+from mint.django_rest.rbuilder import service
+from django_restapi import resource
+from mint.django_rest.rbuilder.rbac.rbacauth import rbac, manual_rbac
+from mint.django_rest.rbuilder.querysets import models as querymodels
+from mint.django_rest.rbuilder.users import models as usersmodels
+import os 
+import time
+ 
+# FIXME: totally seems like the wrong place for this, move it
+from mint.django_rest.rbuilder.projects import models as projectsmodels
 
+# FIXME: why does this exist?
 class RestDbPassthrough(resource.Resource):
     pass
-
-class StageProxyService(service.BaseAuthService):
-    
-    @staticmethod
-    def getStageAndSetGroup(request, stage_id):
-        stage = projectsmodels.Stage.objects.get(pk=stage_id)
-        hostname = stage.project.short_name # aka project's short_name
-        label = stage.label
-        href = 'http://' + request.get_host().strip('/') + '/api/products/%s/repos/search?type=group&label=%s'
-        stage.groups = projectsmodels.Group(href=href % (hostname, label))
-        return stage
-    
-    @staticmethod
-    def getStagesAndSetGroup(request, version=None):
-        Stages = projectsmodels.Stages()
-        
-        if version:
-            project_branch_stages = projectsmodels.Stage.objects.all().filter(name=version)
-        else:
-            project_branch_stages = projectsmodels.Stage.objects.all()
-        # project_branch_stages = projectsmodels.Stage.objects.all()
-        stages_collection = []
-        
-        for stage in project_branch_stages:
-            stages_collection.append(StageProxyService.getStageAndSetGroup(request, stage.stage_id))
-        Stages.project_branch_stage = stages_collection
-        return Stages
-
-
-class MajorVersionService(service.BaseAuthService):
-
-    def get(self, request, short_name, version):
-        """
-        XXX defunct for now
-        """
-        modifiers = ['platform', 'platform_version', 'definition', 'image_type_definitions',
-                     'image_definitions', 'images', 'source_group']
-        project = projectsmodels.Project.objects.get(short_name=short_name)
-        project_version = projectsmodels.ProjectVersion.objects.get(project=project)
-        for m in modifiers:
-            url = r'%(host)s/api/products/%(short_name)s/versions/%(version)s/%(modifier)s/'\
-                    % dict(host= 'http://' + request.get_host(), short_name=short_name, version=version, modifier=m)
-            setattr(project_version, m, url)
-        return project_version
-
-
-class ApplianceService(RestDbPassthrough):
-    def get(self, project):
-        return None
 
 class BaseInventoryService(service.BaseAuthService):    
     def _check_uuid_auth(self, request, kwargs):

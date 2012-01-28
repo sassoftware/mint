@@ -1,10 +1,18 @@
+#
+# Copyright (c) 2011-2012 rPath, Inc.
+#
+# All Rights Reserved
+#
+
+import collections
+import inspect
+import os
 from django.db import models as djmodels
+from django.core import urlresolvers
 from django.core.management.base import BaseCommand
 from mint.django_rest.urls import urlpatterns
 from mint.django_rest import settings_common as settings
 from mint.django_rest.deco import ACCESS
-import inspect
-import os
 
 AUTH_TEMPLATE = "%(ROLE)s: %(PERMS)s"
 ATTRIBUTE_TEMPLATE = "    %(ATTRNAME)s: %(DOCSTRING)s"
@@ -263,7 +271,17 @@ class Command(BaseCommand):
     help = "Generate comments for the REST documentation"
     
     def handle(self, *args, **options):
-        for u in urlpatterns:
+        queue = collections.deque(urlpatterns)
+        upatterns = []
+
+        while queue:
+            item = queue.popleft()
+            if isinstance(item, urlresolvers.RegexURLResolver):
+                queue.extend(item.url_patterns)
+                continue
+            upatterns.append(item)
+
+        for u in upatterns:
             # instance of view service for this url
             view = u.callback
             # Name of model, taken from URL inside urlpatterns

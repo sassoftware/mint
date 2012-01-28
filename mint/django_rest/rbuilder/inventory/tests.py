@@ -1249,8 +1249,7 @@ class SystemsTestCase(XMLTestCase):
         """
         models.System.objects.all().delete()
         system_xml = testsxml.system_post_no_network_xml
-        # Also exercise RBL-8919
-        response = self._post('inventory//systems/', data=system_xml)
+        response = self._post('inventory/systems/', data=system_xml)
         self.assertEquals(response.status_code, 200)
         try:
             models.System.objects.get(pk=3)
@@ -4842,3 +4841,15 @@ class DescriptorTestCase(XMLTestCase, test_utils.RepeaterMixIn):
         self.failUnlessEqual(
             [x.name for x in fields],
             ['metadata.owner', 'metadata.admin'])
+
+class ModuleHooksTest(XMLTestCase):
+    """
+    Added here, so we don't add modulehooks as a django app. Surprisingly,
+    it seems to work, minus the testsuite being run.
+    """
+    def testGetModuleHooks(self):
+        response = self._get("module_hooks",
+            username="testuser", password="password")
+        self.failUnlessEqual(response.status_code, 200)
+        obj = xobj.parse(response.content)
+        self.failUnlessEqual(obj.module_hooks.count, "0")
