@@ -723,6 +723,8 @@ class SystemManager(basemanager.BaseManager):
                 system.save()
             elif system.current_state == registeredState:
                 self.scheduleSystemPollNowEvent(system)
+        elif system.isRegistrationIncomplete:
+            self.log_system(system, "Incomplete registration: missing local_uuid. Possible cause: dmidecode malfunctioning")
         elif (system.management_interface_id == wmiIfaceId and not system.credentials):
                 # No credentials, nothing to do here
                 system.current_state = credentialsMissing

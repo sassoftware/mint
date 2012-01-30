@@ -2527,6 +2527,27 @@ class SystemsTestCase(XMLTestCase):
             generated_uuid=guuid)
         self.failIf(system1.pk == system2.pk)
 
+    def testIncompleteRegistration(self):
+        # Mingle #1733
+        generatedUuid = 'JeanValjean'
+        params = dict(localUuid='', generatedUuid=generatedUuid,
+                zoneId=self.localZone.zone_id)
+        xml = """\
+<system>
+  <local_uuid>%(localUuid)s</local_uuid>
+  <generated_uuid>%(generatedUuid)s</generated_uuid>
+  <managing_zone href="http://testserver/api/v1/inventory/zones/%(zoneId)s"/>
+</system>
+""" % params
+        resp = self._post('inventory/systems', data=xml)
+        self.failUnlessEqual(resp.status_code, 200)
+        data = xobj.parse(resp.content)
+        systemId = data.system.system_id
+        system = models.System.objects.get(system_id=systemId)
+        self.failUnlessEqual(
+            [ x.entry for x in models.SystemLogEntry.objects.filter(system_log__system__system_id = system.system_id) ],
+            [ 'System added to inventory', 'Incomplete registration: missing local_uuid. Possible cause: dmidecode malfunctioning'])
+
 class SystemCertificateTestCase(XMLTestCase):
     def testGenerateSystemCertificates(self):
         system = self.newSystem(local_uuid="localuuid001",

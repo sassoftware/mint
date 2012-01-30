@@ -629,6 +629,13 @@ class System(modellib.XObjIdModel):
             pinned=self.network_address.pinned)
         nw.save()
 
+    @property
+    def isRegistrationIncomplete(self):
+        """
+        Return True if local_uuid is missing (due to possible bugs in
+        rpath-tools).
+        """
+        return self.generated_uuid is not None and not bool(self.local_uuid)
 
     @property
     def isRegistered(self):
