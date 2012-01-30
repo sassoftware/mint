@@ -8,6 +8,7 @@ from django.http import HttpResponse, HttpResponseNotFound, HttpResponseRedirect
 from mint.django_rest.deco import requires, return_xml, access, \
     HttpAuthenticationRequired, Flags
 from mint.django_rest.rbuilder.inventory import models
+from mint.django_rest.rbuilder.inventory import survey_models
 from mint.django_rest.rbuilder.errors import PermissionDenied
 from mint.django_rest.rbuilder.rbac.manager.rbacmanager import \
    READMEMBERS, MODMEMBERS
@@ -19,9 +20,6 @@ from mint.django_rest.rbuilder.users import models as usersmodels
 import os 
 import time
  
-# FIXME: totally seems like the wrong place for this, move it
-from mint.django_rest.rbuilder.projects import models as projectsmodels
-
 # FIXME: why does this exist?
 class RestDbPassthrough(resource.Resource):
     pass
@@ -757,4 +755,32 @@ class InventorySystemTagService(BaseInventoryService):
 
     def get(self, system_id, system_tag_id):
         return self.mgr.getSystemTag(system_id, system_tag_id)
+
+class SurveysService(BaseInventoryService):
+
+    # TODO: rbac filtering based on ID of related system
+    @rbac(manual_rbac)
+    @return_xml
+    def rest_GET(self, request):
+        return self.get()
+
+    def get(self):
+        # FIXME: we're going to have to queryset this...
+        s = survey_models.Surveys()
+        s.survey = [ survey_models.Survey(), survey_models.Survey() ]
+        return s
+
+class SurveyService(BaseInventoryService):
+
+    # TODO: rbac exclusion based on ID of related system
+    @rbac(manual_rbac)
+    @return_xml
+    def rest_GET(self, request, system_id):
+        return self.get(system_id)
+
+    def get(self, system_id):
+        # FIXME
+        return survey_models.Survey()
+
+
 

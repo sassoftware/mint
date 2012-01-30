@@ -178,6 +178,18 @@ urlpatterns = patterns('',
         inventoryviews.InventoryEventTypeService(),
         name='EventType',
         model='inventory.EventType'),
+
+    # Surveys & System Discovery
+    URL(r'/surveys/?$',
+        inventoryviews.SurveysService(),
+        name='Surveys',
+        model='inventory.Surveys'),
+    URL(r'/surveys/(?P<survey_id>\d+)?$',
+        inventoryviews.SurveyService(),
+        name='Survey',
+        model='inventory.Survey'),
+
+
 )
 
 

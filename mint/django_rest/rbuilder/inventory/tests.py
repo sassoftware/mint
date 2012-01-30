@@ -17,6 +17,7 @@ from mint.django_rest.rbuilder import models as rbuildermodels
 from mint.django_rest.rbuilder.manager import rbuildermanager
 from mint.django_rest.rbuilder.users import models as usersmodels
 from mint.django_rest.rbuilder.inventory import models
+from mint.django_rest.rbuilder.inventory import survey_models
 from mint.django_rest.rbuilder.inventory import zones as zmodels
 from mint.django_rest.rbuilder.targets import models as targetmodels
 from mint.django_rest.rbuilder.jobs import models as jobmodels
@@ -34,6 +35,20 @@ logging.disable(logging.CRITICAL)
 
 from mint.django_rest import test_utils
 XMLTestCase = test_utils.XMLTestCase
+
+class SurveyTests(XMLTestCase):
+
+    def setUp(self):
+        XMLTestCase.setUp(self)
+  
+    def testSurveySerialization(self):
+        # FIXME: stub test until things get more real
+        s = survey_models.Surveys()
+        s.surveys = [ survey_models.Survey(), survey_models.Survey() ]
+        response = self._get("inventory/surveys/", username='admin', password='password') 
+        # print response.content
+        self.assertEqual(response.status_code, 200)
+
 
 class AssimilatorTestCase(XMLTestCase, test_utils.SmartformMixIn):
     ''' 
