@@ -39,7 +39,7 @@ queryset_post_xml2 = """
 # querysets change, when that happens, subsitute the M
 # and the N programatically, not implementing just now
 queryset_put_xml = """
-<query_set id="/api/v1/query_sets/16">
+<query_set id="/api/v1/query_sets/20">
   <filter_entries>
     <filter_entry>
       <operator>LIKE</operator>
@@ -51,15 +51,15 @@ queryset_put_xml = """
   <can_modify>true</can_modify>
   <presentation_type></presentation_type>
   <modified_date>2011-08-17T14:52:58.737001+00:00</modified_date>
-  <filtered_members id="/api/v1/query_sets/16/filtered"/>
+  <filtered_members id="/api/v1/query_sets/20/filtered"/>
   <is_top_level>True</is_top_level>
   <tagged_date></tagged_date>
   <name>New Query Set</name>
-  <chosen_members id="/api/v1/query_sets/16/chosen"/>
+  <chosen_members id="/api/v1/query_sets/20/chosen"/>
   <query_set_id>16</query_set_id>
-  <child_members id="/api/v1/query_sets/16/child"/>
+  <child_members id="/api/v1/query_sets/20/child"/>
   <created_date>2011-08-17T14:52:58.736901+00:00</created_date>
-  <all_members id="/api/v1/query_sets/16/all"/>
+  <all_members id="/api/v1/query_sets/20/all"/>
   <children>
     <query_set id="/api/v1/query_sets/5">
       <filter_entries>
@@ -215,7 +215,7 @@ queryset_with_actions = """
 """
 
 queryset_put_xml_different = """
-<query_set id="https://rbalast.eng.rpath.com/api/v1/query_sets/16" href="https://rbalast.eng.rpath.com/api/v1/query_sets/16">
+<query_set id="https://rbalast.eng.rpath.com/api/v1/query_sets/20" href="https://rbalast.eng.rpath.com/api/v1/query_sets/20">
         <filter_entries>
         <filter_entry>
            <field>system.name</field>

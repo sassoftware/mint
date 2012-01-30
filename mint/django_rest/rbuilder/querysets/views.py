@@ -104,7 +104,7 @@ class QuerySetService(BaseQuerySetService):
     def rest_PUT(self, request, query_set_id, query_set):
         oldQuerySet = self.mgr.getQuerySet(query_set_id)
         if oldQuerySet.pk != query_set.pk:
-            raise PermissionDenied()
+            raise PermissionDenied(msg='Attempting to reassign ID')
         return self.mgr.updateQuerySet(query_set, request._authUser)
 
     @access.admin
