@@ -30,7 +30,7 @@ class Script(scriptlibrary.SingletonScript):
     newLogger = True
     
     PLATFORM_DIR = "/usr/share/rbuilder/platforms"
-    def run(self):        
+    def action(self):
         if sys.argv[0].startswith('--xyzzy='):
             self.cfgPath = sys.argv.pop(0).split('=')[1]
             print "Test mode using configuration from %s" % self.cfgPath
@@ -46,6 +46,7 @@ class Script(scriptlibrary.SingletonScript):
         self.restdb = RestDatabase(self.cfg, db)
 
         self.createPlatforms()
+        return 0
 
     def createPlatforms(self):
         onDiskPlatforms = set()
