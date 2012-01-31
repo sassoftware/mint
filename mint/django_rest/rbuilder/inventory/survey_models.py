@@ -33,25 +33,42 @@ class Survey(modellib.XObjIdModel):
     
     class Meta:
         db_table = 'inventory_survey'
-
     view_name = 'Survey'
     _xobj_explicit_accessors = set([])
     _xobj = xobj.XObjMetadata(
                 tag = 'survey',
                 attributes = {'id':str})
 
-    survey_id = D(models.AutoField(primary_key=True),
+    survey_id    = D(models.AutoField(primary_key=True),
         "the database ID for the survey", short="Survey ID")
-    # name
-    # description
-    # created_date
-    # removeable
-    # tags
-    # comment
+    tags         = models.ManyToManyField('SurveyTag', through="SurveyTags")
+    name         = models.TextField()
+    description  = models.TextField()
+    created_date = modellib.DateTimeUtcField(auto_now_add=True)
+    removeable   = models.BooleanField(default=True)
+    comment      = models.TextField()
+
+class SurveyTag(modellib.XObjIdModel):
+
+    class Meta:
+       db_table = 'inventory_survey_tag'
+    _xobj = xobj.XObjMetadata(tag='tag')
+
+    survey_tag_id = models.AutoField(primary_key=True)
+    tag = models.TextField()
+
+class SurveyTags(modellib.XObjIdModel):
+    class Meta:
+        db_table = 'inventory_survey_tags'
+    # XXX This class should never be serialized directly, but unless an _xobj
+    # field is added, we have no access to it from modellib
+    _xobj = xobj.XObjMetadata(tag='__surveyTags')
+    survey_tags_id = models.AutoField(primary_key=True)
+    survey = modellib.ForeignKey(Survey)
+    tag = models.ForeignKey('SurveyTag', unique=True, related_name='surveys')
 
 # classes to add:
 #
-# SurveyTag
 # SurveyXml --- original XML from system
 # SurveyRpmPackages
 # SurveyRpmPackage
