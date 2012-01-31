@@ -148,6 +148,8 @@ def rebuild_table(db, table, fieldsOut, fieldsIn=None, skipDropIndex=False):
 def createTable(db, definition):
     return schema.createTable(db, None, definition)
 
+def createTable2(db, name, definition):
+    return schema.createTable(db, name, definition)
 
 def columnExists(db, table, name):
     cu = db.cursor()
@@ -4706,6 +4708,93 @@ class MigrateTo_61(SchemaMigration):
         cu.execute("""ALTER TABLE inventory_system ADD COLUMN has_active_jobs BOOLEAN NOT NULL DEFAULT False""")
         cu.execute("""ALTER TABLE inventory_system ADD COLUMN has_running_jobs BOOLEAN NOT NULL DEFAULT False""")
         return True 
+
+class MigrateTo_62(SchemaMigration):
+    '''Fork!'''
+    Version = (62, 0)
+
+    def migrate(self):
+
+        createTable2(self.db, 'inventory_survey', """
+                "survey_id" %(PRIMARYKEY)s,
+                "uuid" TEXT,
+                "system_id" INTEGER NOT NULL REFERENCES "inventory_system" (system_id) ON DELETE CASCADE,
+                "name" TEXT NOT NULL,
+                "description" TEXT,
+                "comment" TEXT,
+                "created_date" TIMESTAMP WITH TIME ZONE NOT NULL,
+                "modified_date" TIMESTAMP WITH TIME ZONE NOT NULL,
+                "created_by" INTEGER NOT NULL REFERENCES "users" (userid) ON DELETE SET NULL,
+                "modified_by" INTEGER NOT NULL REFERENCES "users" (userid) ON DELETE SET NULL,
+                "removable" BOOLEAN NOT NULL DEFAULT TRUE,
+                "raw_xml" TEXT
+
+        """)
+
+        createTable2(self.db, 'inventory_survey_tags', """
+                "tag_id" %(PRIMARYKEY)s,
+                "survey_id" INTEGER REFERENCES "inventory_survey" NOT NULL,
+                "name" TEXT
+        """)
+
+        createTable2(self.db, 'inventory_rpm_package', """
+                "rpm_package_id" %(PRIMARYKEY)s,
+                "name" TEXT NOT NULL,
+                "epoch" INTEGER,
+                "version" TEXT NOT NULL,
+                "release" TEXT NOT NULL,
+                "architecture" TEXT NOT NULL, 
+                "description" TEXT,
+                "signature" TEXT,
+        """)
+
+        createTable2(self.db, 'inventory_conary_package', """
+                "conary_package_id" %(PRIMARYKEY)s,
+                "name" TEXT NOT NULL,
+                "version" TEXT NOT NULL, 
+                "flavor" TEXT NOT NULL,
+                "description" TEXT NOT NULL,
+                "revision" TEXT NOT NULL,
+                "architecture" TEXT NOT NULL,
+                "signature" TEXT NOT NULL,
+                "rpm_package_id" INTEGER REFERENCES inventory_rpm_package (rpm_package_id) ON DELETE SET NULL 
+        """)
+
+        createTable2(self.db, 'inventory_service', """
+                service_id %(PRIMARYKEY)s,
+                name TEXT,
+                autostart BOOLEAN DEFAULT FALSE,
+                runlevels TEXT
+        """)
+
+        createTable2(self.db, 'inventory_survey_rpm_package', """
+                "survey_id" INTEGER NOT NULL REFERENCES "inventory_survey" (survey_id) ON DELETE CASCADE,
+                "rpm_package_id" INTEGER NOT NULL REFERENCES "inventory_rpm_package" (rpm_package_id) ON DELETE CASCADE,
+                "install_date" TIMESTAMP WITH TIME ZONE NOT NULL
+        """)
+
+        createTable2(self.db, 'inventory_survey_conary_package', """
+                "survey_id" INTEGER NOT NULL REFERENCES "inventory_survey" (survey_id) ON DELETE CASCADE,
+                "conary_package_id" INTEGER NOT NULL REFERENCES "inventory_conary_package" (conary_package_id) ON DELETE CASCADE,
+                "install_date" TIMESTAMP WITH TIME ZONE NOT NULL
+        """)
+
+        createTable2(self.db, 'inventory_survey_service', """
+                "survey_id" INTEGER NOT NULL REFERENCES "inventory_survey" (survey_id) ON DELETE CASCADE,
+                "service_id" INTEGER NOT NULL REFERENCES "inventory_service" (service_id) ON DELETE CASCADE,
+                running BOOLEAN DEFAULT FALSE,
+                status TEXT
+        """)
+
+        createTable2(self.db, 'inventory_survey_diff', """
+                diff_id %(PRIMARYKEY)s,
+                created_date TIMESTAMP WITH TIME ZONE NOT NULL,
+                left_survey_id INTEGER NOT NULL REFERENCES "inventory_survey" ("survey_id") ON DELETE CASCADE,
+                right_survey_id INTEGER NOT NULL REFERENCES "inventory_survey" ("survey_id") ON DELETE SET NULL,
+                xml TEXT
+        """)
+
+        return True
 
 #### SCHEMA MIGRATIONS END HERE #############################################
 
