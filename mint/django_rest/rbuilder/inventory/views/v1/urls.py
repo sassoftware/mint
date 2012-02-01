@@ -180,7 +180,7 @@ urlpatterns = patterns('',
         model='inventory.EventType'),
 
     # Surveys & System Discovery
-    URL(r'/surveys/?$',
+    URL(r'/systems/(?P<system_id>\d+)/surveys/?$',
         inventoryviews.SurveysService(),
         name='Surveys',
         model='inventory.Surveys'),
@@ -188,21 +188,6 @@ urlpatterns = patterns('',
         inventoryviews.SurveyService(),
         name='Survey',
         model='inventory.Survey'),
-    # these need IDs just so they'll work with modellib though as internal
-    # objects we will redact the URLs and require admin access as the
-    # actual XML representation does not look like the model
-    URL(r'/survey_rpm_packages/(?P<id>\d+)?$',
-        inventoryviews.SurveyRawRpmService(),
-        name='SurveyRawRpmPackage',
-        model='inventory.RpmPackage'),
-    URL(r'/survey_conary_packages/(?P<id>\d+)?$',
-        inventoryviews.SurveyRawConaryService(),
-        name='SurveyRawConaryPackage',
-        model='inventory.ConaryPackage'),
-    URL(r'/survey_conary_packages/(?P<id>\d+)?$',
-        inventoryviews.SurveyRawServiceService(),
-        name='SurveyRawService',
-        model='inventory.Service'),
     
 
 )

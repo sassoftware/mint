@@ -37,18 +37,24 @@ class SurveyManager(basemanager.BaseManager):
     def getSurvey(self, uuid):
         return survey_models.Survey.objects.get(uuid=uuid)
 
-    # FIXME -- safe to remove
+    # FIXME -- safe to remove?
     @exposed
     def getRawSurveyRpm(self, id):
         return survey_models.RpmPackage.get(rpm_package_id=id)
     
-    # FIXME -- safe to remove
+    # FIXME -- safe to remove?
     @exposed
     def getRawSurveyConary(self, id):
         return survey_models.ConaryPackage.get(rpm_package_id=id)
     
-    # FIXME -- safe to remove
+    # FIXME -- safe to remove?
     @exposed
     def getRawSurveyService(self, id):
         return survey_models.Service.get(rpm_package_id=id)
 
+    @exposed
+    def getSurveysForSystem(self, system_id):
+       surveys = survey_models.Surveys()
+       surveys.survey = survey_models.Survey.objects.filter(system__pk=system_id)
+       return surveys
+       

@@ -104,6 +104,14 @@ class SurveyTests(XMLTestCase):
         response = self._get("inventory/surveys/%s" % uuid, 
             username='admin', password='password') 
         self.assertEqual(response.status_code, 200)
+        print response.content
+
+        url = "inventory/systems/%s/surveys" % sys.pk
+        print url
+        response = self._get(url,
+            username='admin', password='password')
+        print response.content
+        self.assertEqual(response.status_code, 200)
 
 class AssimilatorTestCase(XMLTestCase, test_utils.SmartformMixIn):
     ''' 
