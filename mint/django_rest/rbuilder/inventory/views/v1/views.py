@@ -767,7 +767,11 @@ class SurveysService(BaseInventoryService):
     def get(self):
         raise Exception("TODO: redirect to queryset")
 
+# FIXME -- safe to remove?
 class SurveyService(BaseInventoryService):
+    ''' 
+    Access to an individual system survey by UUID
+    '''
 
     # TODO: rbac exclusion based on ID of related system
     @rbac(manual_rbac)
@@ -778,5 +782,52 @@ class SurveyService(BaseInventoryService):
     def get(self, uuid):
         return self.mgr.getSurvey(uuid)
 
+# FIXME -- safe to remove?
+class SurveyRawRpmService(BaseInventoryService):
+    '''
+    A record of an RPM, shared between many surveys
+    and systems.
+    '''
 
+    # required for modellib though we'll remove the URLs
+    # later.  No need fo rpublic access
+    @access.admin
+    @return_xml
+    def rest_GET(self, request, id):
+        return self.get(id)
 
+    def get(self, id):
+        return self.mgr.getRawSurveyRpm(id)
+
+# FIXME -- safe to remove?
+class SurveyRawConaryService(BaseInventoryService):
+    '''
+    A record of a Conary Package, shared between many surveys
+    and systems.
+    '''
+
+    # required for modellib though we'll remove the URLs
+    # later.  No need fo rpublic access
+    @access.admin
+    @return_xml
+    def rest_GET(self, request, id):
+        return self.get(id)
+
+    def get(self, id):
+        return self.mgr.getRawSurveyConary(id)
+
+class SurveyRawServiceService(BaseInventoryService):
+    '''
+    A record of an installed Service, shared between many surveys
+    and systems.
+    '''
+
+    # required for modellib though we'll remove the URLs
+    # later.  No need fo rpublic access
+    @access.admin
+    @return_xml
+    def rest_GET(self, request, id):
+        return self.get(id)
+
+    def get(self, id):
+        return self.mgr.getRawSurveyRpm(id)

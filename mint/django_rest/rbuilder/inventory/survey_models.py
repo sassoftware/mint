@@ -80,7 +80,14 @@ class Survey(modellib.XObjIdModel):
 class RpmPackage(modellib.XObjIdModel):
      class Meta:
          db_table = 'inventory_rpm_package'
-     _xobj = xobj.XObjMetadata(tag='_rpm_package')
+     summary_view = [ 
+         "name", "epoch", "version", "release", 
+         "architecture", "description", "signature"
+     ]
+
+
+     viewname = 'SurveyRawRpmPackage'
+     _xobj = xobj.XObjMetadata(tag='raw_rpm_package')
      rpm_package_id = models.AutoField(primary_key=True)
      name           = models.TextField(null=False)
      epoch          = models.IntegerField(null=True)
@@ -93,7 +100,13 @@ class RpmPackage(modellib.XObjIdModel):
 class ConaryPackage(modellib.XObjIdModel):
     class Meta:
         db_table = 'inventory_conary_package'
-    _xobj = xobj.XObjMetadata(tag='_conary_package')
+    viewname = 'SurveyRawConaryPackage'
+    _xobj = xobj.XObjMetadata(tag='raw_conary_package')
+    summary_view = [
+         "name", "version", "flavor", "description",
+         "revision", "architecture", "signature",
+         "rpm_package"
+    ]
     conary_package_id = models.AutoField(primary_key=True)
     name              = models.TextField(null=False)
     version           = models.TextField(null=False)
@@ -107,12 +120,19 @@ class ConaryPackage(modellib.XObjIdModel):
 class Service(modellib.XObjIdModel):
     class Meta:
         db_table = 'inventory_service'
-    _xobj = xobj.XObjMetadata(tag='_service')
+    viewname = 'SurveyRawService'
+    _xobj = xobj.XObjMetadata(tag='raw_service')
+
+    summary_view = [
+        "name", "autostart", "runlevels"
+    ]
 
     service_id        = models.AutoField(primary_key=True)
     name              = models.TextField(null=False)
     autostart         = models.BooleanField(default=False)
     runlevels         = models.TextField(default='')
+
+    # FIXME: custom serialization for runlevels
 
 class SurveyTag(modellib.XObjIdModel):
 
@@ -129,29 +149,34 @@ class SurveyRpmPackage(modellib.XObjIdModel):
         db_table = 'inventory_survey_rpm_package'
     _xobj = xobj.XObjMetadata(tag='rpm_package')
     map_id        = models.AutoField(primary_key=True)
-    survey        = modellib.ForeignKey(Survey, related_name='rpm_packages')
-    rpm_package   = modellib.ForeignKey(RpmPackage, related_name='survey_rpm_packages')
+    survey        = modellib.ForeignKey(Survey, related_name='rpm_packages', null=False)
+    rpm_package_details  = modellib.ForeignKey(RpmPackage, related_name='survey_rpm_packages', db_column='rpm_package_id', null=False)
     install_date  = modellib.DateTimeUtcField(auto_now_add=True)
     
+    # FIXME: custom serialization/deserialization of details
 
 class SurveyConaryPackage(modellib.XObjIdModel):
     class Meta:
         db_table = 'inventory_survey_conary_package'
     _xobj = xobj.XObjMetadata(tag='conary_package')
     map_id         = models.AutoField(primary_key=True)
-    survey         = modellib.ForeignKey(Survey, related_name='conary_packages')
-    conary_package = modellib.ForeignKey(ConaryPackage, related_name='survey_conary_packages')
-    install_date   = modellib.DateTimeUtcField(auto_now_add=True)
+    survey         = modellib.ForeignKey(Survey, related_name='conary_packages', null=False)
+    conary_package_details = modellib.ForeignKey(ConaryPackage, related_name='survey_conary_packages', db_column='conary_package_id', null=False)
+    install_date    = modellib.DateTimeUtcField(auto_now_add=True)
+
+    # FIXME: custom serialization/deserialization of details
  
 class SurveyService(modellib.XObjIdModel):
     class Meta:
         db_table = 'inventory_survey_service'
     _xobj = xobj.XObjMetadata(tag='service')
     map_id         = models.AutoField(primary_key=True)
-    survey         = modellib.ForeignKey(Survey, related_name='services')
-    service        = modellib.ForeignKey(Service, related_name='survey_services')
+    survey         = modellib.ForeignKey(Survey, related_name='services', null=False)
+    service_details = modellib.ForeignKey(Service, related_name='survey_services', db_column='service_id', null=False)
     running        = models.BooleanField()
     status         = models.TextField()
+    
+    # FIXME: custom serialization/deserialization of details
 
 for mod_obj in sys.modules[__name__].__dict__.values():
     if hasattr(mod_obj, '_xobj'):
