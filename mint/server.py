@@ -2775,6 +2775,17 @@ If you would not like to be %s %s of this project, you may resign from this proj
 
     def _getProductVersionForLabel(self, projectId, label):
         cu = self.db.cursor()
+        # First look in the database, we may have all the data already, without
+        # loading the proddef
+        cu.execute('''
+            SELECT project_branch_id, name
+              FROM project_branch_stage
+             WHERE project_id = ?
+               AND label = ?
+        ''', projectId, str(label))
+        for versionId, stageName in cu:
+            return versionId, stageName
+        # Fall back to the old code
         cu.execute('''SELECT productVersionId, fqdn,
                              shortname, 
                              ProductVersions.namespace, 
@@ -2788,7 +2799,6 @@ If you would not like to be %s %s of this project, you may resign from this proj
             pd.setConaryRepositoryHostname(fqdn)
             pd.setConaryNamespace(namespace)
             pd.setProductVersion(name)
-            baseLabel = pd.getProductDefinitionLabel()
 
             try:
                 project = projects.Project(self, projectId)
@@ -2802,7 +2812,6 @@ If you would not like to be %s %s of this project, you may resign from this proj
                 stageLabel = pd.getLabelForStage(stage.name)
                 if str(label) == stageLabel:
                     return versionId, str(stage.name)
-            return versionId, None
         return None, None
 
     @typeCheck(int, str)
