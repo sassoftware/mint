@@ -61,7 +61,7 @@ class SurveyTests(XMLTestCase):
         response = self._get("inventory/surveys/%s" % uuid, 
             username='admin', password='password') 
         self.assertEqual(response.status_code, 200)
-        print response.content
+        # print response.content
 
 
 class AssimilatorTestCase(XMLTestCase, test_utils.SmartformMixIn):

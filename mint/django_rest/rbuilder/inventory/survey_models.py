@@ -74,7 +74,8 @@ class Survey(modellib.XObjIdModel):
     comment       = models.TextField()
 
     # FIXME: TODO: custom URL method so URL is UUID based
-
+    def get_url_key(self, *args, **kwargs):
+        return [ self.uuid ]
 
 class RpmPackage(modellib.XObjIdModel):
      class Meta:
