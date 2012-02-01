@@ -59,14 +59,19 @@ class Survey(modellib.XObjIdModel):
         tag = 'survey', attributes = {'id':str}
     )
 
-    survey_id    = D(models.AutoField(primary_key=True),
+    survey_id     = D(models.AutoField(primary_key=True),
         "the database ID for the survey", short="Survey ID")
-    name         = models.TextField()
-    uuid         = models.TextField(null=False)
-    description  = models.TextField()
-    created_date = modellib.DateTimeUtcField(auto_now_add=True)
-    removeable   = models.BooleanField(default=True)
-    comment      = models.TextField()
+    name          = models.TextField()
+    uuid          = models.TextField(null=False)
+    description   = models.TextField()
+    created_date  = modellib.DateTimeUtcField(auto_now_add=True)
+    modified_date = modellib.DateTimeUtcField(auto_now_add=True)
+    created_by    = modellib.ForeignKey('users.User', db_column='created_by', related_name='+') 
+    modified_by    = modellib.ForeignKey('users.User', db_column='modified_by', related_name='+') 
+    # FIXME: add to database schema
+    #removeable   = models.BooleanField(default=True)
+    system        = modellib.ForeignKey('inventory.System', related_name='surveys', db_column='system_id')
+    comment       = models.TextField()
 
     # FIXME: TODO: custom URL method so URL is UUID based
 
@@ -123,8 +128,8 @@ class SurveyRpmPackage(modellib.XObjIdModel):
         db_table = 'inventory_survey_rpm_package'
     _xobj = xobj.XObjMetadata(tag='rpm_package')
     map_id        = models.AutoField(primary_key=True)
-    survey_id     = modellib.ForeignKey(Survey)
-    rpm_package   = modellib.ForeignKey(RpmPackage, related_name='rpm_packages')
+    survey        = modellib.ForeignKey(Survey, related_name='rpm_packages')
+    rpm_package   = modellib.ForeignKey(RpmPackage, related_name='survey_rpm_packages')
     install_date  = modellib.DateTimeUtcField(auto_now_add=True)
     
 
@@ -133,8 +138,8 @@ class SurveyConaryPackage(modellib.XObjIdModel):
         db_table = 'inventory_survey_conary_package'
     _xobj = xobj.XObjMetadata(tag='conary_package')
     map_id         = models.AutoField(primary_key=True)
-    survey_id      = modellib.ForeignKey(Survey)
-    conary_package = modellib.ForeignKey(ConaryPackage, related_name='conary_packages')
+    survey         = modellib.ForeignKey(Survey, related_name='conary_packages')
+    conary_package = modellib.ForeignKey(ConaryPackage, related_name='survey_conary_packages')
     install_date   = modellib.DateTimeUtcField(auto_now_add=True)
  
 class SurveyService(modellib.XObjIdModel):
@@ -142,8 +147,8 @@ class SurveyService(modellib.XObjIdModel):
         db_table = 'inventory_survey_service'
     _xobj = xobj.XObjMetadata(tag='service')
     map_id         = models.AutoField(primary_key=True)
-    survey_id      = modellib.ForeignKey(Survey)
-    service        = modellib.ForeignKey(Service, related_name='services')
+    survey         = modellib.ForeignKey(Survey, related_name='services')
+    service        = modellib.ForeignKey(Service, related_name='survey_services')
     running        = models.BooleanField()
     status         = models.TextField()
 

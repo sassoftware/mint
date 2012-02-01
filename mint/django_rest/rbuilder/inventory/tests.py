@@ -37,17 +37,31 @@ from mint.django_rest import test_utils
 XMLTestCase = test_utils.XMLTestCase
 
 class SurveyTests(XMLTestCase):
+    fixtures = ['users']
 
     def setUp(self):
         XMLTestCase.setUp(self)
   
     def testSurveySerialization(self):
-        # FIXME: stub test until things get more real
-        s = survey_models.Surveys()
-        s.surveys = [ survey_models.Survey(), survey_models.Survey() ]
-        response = self._get("inventory/surveys/", username='admin', password='password') 
-        # print response.content
+        # FIXME: basic serialization test until things get more real
+        # and we can do full XML tests
+
+        uuid = '1234'
+        user1 = usersmodels.User.objects.get(user_name='JeanValjean1')
+        sys = self.newSystem(name="blinky", description="ghost")
+        sys.save()
+        survey = survey_models.Survey(
+            name='x', 
+            uuid=uuid, 
+            system=sys,
+            created_by=user1,
+            modified_by=user1
+        )
+        survey.save()
+        response = self._get("inventory/surveys/%s" % uuid, 
+            username='admin', password='password') 
         self.assertEqual(response.status_code, 200)
+        print response.content
 
 
 class AssimilatorTestCase(XMLTestCase, test_utils.SmartformMixIn):

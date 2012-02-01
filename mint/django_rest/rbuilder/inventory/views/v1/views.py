@@ -765,22 +765,18 @@ class SurveysService(BaseInventoryService):
         return self.get()
 
     def get(self):
-        # FIXME: we're going to have to queryset this...
-        s = survey_models.Surveys()
-        s.survey = [ survey_models.Survey(), survey_models.Survey() ]
-        return s
+        raise Exception("TODO: redirect to queryset")
 
 class SurveyService(BaseInventoryService):
 
     # TODO: rbac exclusion based on ID of related system
     @rbac(manual_rbac)
     @return_xml
-    def rest_GET(self, request, system_id):
-        return self.get(system_id)
+    def rest_GET(self, request, uuid):
+        return self.get(uuid)
 
-    def get(self, system_id):
-        # FIXME
-        return survey_models.Survey()
+    def get(self, uuid):
+        return self.mgr.getSurvey(uuid)
 
 
 
