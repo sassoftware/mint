@@ -67,17 +67,33 @@ class SurveyTags(modellib.XObjIdModel):
     survey = modellib.ForeignKey(Survey)
     tag = models.ForeignKey('SurveyTag', unique=True, related_name='surveys')
 
-# classes to add:
-#
-# SurveyXml --- original XML from system
-# SurveyRpmPackages
-# SurveyRpmPackage
-# SurveyConaryPackages
-# SurveyConaryPackage
-# SurveySurveyServices
-# SurveyService
-# SurveyServiceRunLevels
-# SurveyServiceRunLevel
+#class SurveyRpmPackage(modellib.XObjIdModel):
+#    class Meta:
+#        db_table = 'inventory_survey_rpm_package'
+#    survey_id     = models.AutoField(primary_key=True)
+#    rpm_package   =
+#    install_date  = mdoellib.DateTimeUtcField(auto_now_add=True)
+    
+
+#class SurveyConaryPackage(modellib.XObjIdModel):
+#    class Meta:
+#        db_table = 'inventory_survey_conary_package'
+
+#class SurveyService(modellib.XObjIdModel):
+#    class Meta:
+#        db_table = 'inventory_survey_service'
+
+#class RpmPackage(modellib.XObjIdModel):
+#    class Meta:
+#        db_table = 'inventory_conary_package'
+
+#class ConaryPackage(modellib.XObjIdModel):
+#    class Meta:
+#        db_table = 'inventory_conary_package'
+
+#class Service(modellib.XObjIdModel):
+#    class Meta:
+#        db_table = 'inventory_service'
 
 for mod_obj in sys.modules[__name__].__dict__.values():
     if hasattr(mod_obj, '_xobj'):

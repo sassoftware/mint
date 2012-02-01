@@ -1641,7 +1641,7 @@ def _createSurveyTables(db, cfg):
 
     createTable(db, 'inventory_survey', """
                 "survey_id" %(PRIMARYKEY)s,
-                "uuid" TEXT,
+                "uuid" TEXT NOT NULL,
                 "system_id" INTEGER NOT NULL REFERENCES "inventory_system" (system_id) ON DELETE CASCADE,
                 "name" TEXT NOT NULL,
                 "description" TEXT,
@@ -1692,18 +1692,21 @@ def _createSurveyTables(db, cfg):
     """)
 
     createTable(db, 'inventory_survey_rpm_package', """
+                "map_id" %(PRIMARYKEY)s,
                 "survey_id" INTEGER NOT NULL REFERENCES "inventory_survey" (survey_id) ON DELETE CASCADE,
                 "rpm_package_id" INTEGER NOT NULL REFERENCES "inventory_rpm_package" (rpm_package_id) ON DELETE CASCADE,
                 "install_date" TIMESTAMP WITH TIME ZONE NOT NULL
     """)
 
     createTable(db, 'inventory_survey_conary_package', """
+                "map_id" %(PRIMARYKEY)s,
                 "survey_id" INTEGER NOT NULL REFERENCES "inventory_survey" (survey_id) ON DELETE CASCADE,
                 "conary_package_id" INTEGER NOT NULL REFERENCES "inventory_conary_package" (conary_package_id) ON DELETE CASCADE,
                 "install_date" TIMESTAMP WITH TIME ZONE NOT NULL
     """)
 
     createTable(db, 'inventory_survey_service', """
+                "map_id" %(PRIMARYKEY)s,
                 "survey_id" INTEGER NOT NULL REFERENCES "inventory_survey" (survey_id) ON DELETE CASCADE,
                 "service_id" INTEGER NOT NULL REFERENCES "inventory_service" (service_id) ON DELETE CASCADE,
                 running BOOLEAN DEFAULT FALSE,
