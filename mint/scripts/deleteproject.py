@@ -16,7 +16,7 @@ class DeleteProject(scriptlibrary.SingletonScript):
     logFileName = 'scripts.log'
     newLogger = True
     
-    def run(self):
+    def action(self):
         args = sys.argv[1:]
         if not args:
             self.usage()
@@ -42,7 +42,8 @@ class DeleteProject(scriptlibrary.SingletonScript):
         for projectName in args:
             print "Deleting '" + projectName + "'..."
             mintClient.deleteProjectByName(projectName)
-        
+        return 0
+
     def usage(self):
         print >> sys.stderr, "Usage: %s project [project] [project] ..." % \
             sys.argv[0]

@@ -1118,10 +1118,8 @@ class SystemManager(basemanager.BaseManager):
 
     @exposed
     def postSystemLaunch(self, system):
-        network = self.extractNetworkToUse(system)
-        if network is None:
-            self.scheduleLaunchWaitForNetworkEvent(system)
-            return system
+        # No longer waiting for a network here, the target waits for
+        # network
         self.setSystemState(system)
         system.updateDerivedData()
         return system

@@ -3,9 +3,10 @@
 /srv/rbuilder/jobmaster/{config,config.d}
 /var/log/rbuilder/*.log
 /var/log/rbuilder/jobs/*
-/var/log/rmake/{*.log,xmlrpc.log,buildlogs}
+/var/log/rmake/{*.log,buildlogs}
+/var/log/rmake3/*.log
 /var/log/pgsql
 /etc/sysconfig/pgsql/*
 /etc/postgresql.conf.rbuilder
-/srv/pgsql/8.4-rbuilder/pg_log/*
+/srv/pgsql/*-rbuilder/pg_log/*
 /tmp/mint-error-*.txt
