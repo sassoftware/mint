@@ -20,7 +20,7 @@ class Script(scriptlibrary.SingletonScript):
     logFileName = 'add_windows_build_service.log'
     newLogger = True
     
-    def run(self):        
+    def action(self):
         if sys.argv[0].startswith('--xyzzy='):
             self.cfgPath = sys.argv.pop(0).split('=')[1]
             print "Test mode using configuration from %s" % self.cfgPath
@@ -48,6 +48,7 @@ class Script(scriptlibrary.SingletonScript):
         from mint.django_rest.rbuilder.inventory import manager
         mgr = manager.Manager()
         mgr.addWindowsBuildService(name, description, network_address)
+        return 0
 
     def usage(self):
         print >> sys.stderr, "Usage: %s <name> <description> <network address> [useLocalSettings]" % \

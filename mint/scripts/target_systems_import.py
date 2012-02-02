@@ -9,7 +9,6 @@ This script can be used to import running systems from predefined targets
 """
 
 import os
-import pwd
 import sys
 import logging
 
@@ -29,7 +28,7 @@ class Script(scriptlibrary.SingletonScript):
     logFileName = 'target_systems_import.log'
     newLogger = True
 
-    def run(self):
+    def action(self):
         if sys.argv[0].startswith('--xyzzy='):
             self.cfgPath = sys.argv.pop(0).split('=')[1]
             print "Test mode using configuration from %s" % self.cfgPath
@@ -74,6 +73,7 @@ class Script(scriptlibrary.SingletonScript):
         mgr.enterTransactionManagement()
         mgr.importTargetSystems()
         mgr.commit()
+        return 0
 
     def usage(self):
         print >> sys.stderr, "Usage: %s [useLocalSettings]" % \

@@ -17,7 +17,7 @@ from mcp.mcp_error import BuildSystemUnreachableError
 from mint import config
 from mint import jobstatus
 from mint.db import database
-from mint.lib.scriptlibrary import GenericScript
+from mint.lib.scriptlibrary import SingletonScript
 from rmake3 import errors as rmk_errors
 from rmake3 import client as rmk_client
 
@@ -26,7 +26,7 @@ log = logging.getLogger(__name__)
 JOB_LOST = "Job terminated unexpectedly"
 
 
-class Script(GenericScript):
+class Script(SingletonScript):
     logFileName = 'scripts.log'
     newLogger = True
     timeout = 120
