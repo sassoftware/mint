@@ -782,3 +782,27 @@ class SurveyService(BaseInventoryService):
     def get(self, uuid):
         return self.mgr.getSurvey(uuid)
 
+class SurveyRpmPackageService(BaseInventoryService):
+    pass
+
+class SurveyConaryPackageService(BaseInventoryService):
+    pass
+
+class SurveyServiceService(BaseInventoryService):
+    pass
+
+class SurveyDiffService(BaseInventoryService):
+    pass
+
+class SurveyDiffsService(BaseInventoryService):
+    pass
+
+class SurveyRpmPackageInfoService(BaseInventoryService):
+    pass
+
+class SurveyConaryPackageInfoService(BaseInventoryService):
+    pass
+
+class SurveyServiceInfoService(BaseInventoryService):
+    pass
+

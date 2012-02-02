@@ -51,66 +51,51 @@ class SurveyTests(XMLTestCase):
         sys = self.newSystem(name="blinky", description="ghost")
         sys.save()
         survey = survey_models.Survey(
-            name='x', 
-            uuid=uuid, 
-            system=sys,
-            created_by=user1,
-            modified_by=user1
+            name='x', uuid=uuid, system=sys,
+            created_by=user1, modified_by=user1
         )
         survey.save()
-        rpm_package = survey_models.RpmPackage(
-            name = 'asdf',
-            epoch = 0,
-            version = '5',
-            release = '6',
-            architecture = 'x86_64',
+        rpm_package = survey_models.RpmPackageInfo(
+            name = 'asdf', epoch = 0, version = '5',
+            release = '6', architecture = 'x86_64',
             description = 'enterprise middleware abstraction layer',
             signature = 'X'
         )
         rpm_package.save()
-        conary_package = survey_models.ConaryPackage(
-            name = 'jkl',
-            version = '7',
-            flavor = 'orange',
-            description = 'Type-R',
-            revision = '8',
-            architecture = 'ia64',
-            signature = 'X',
+        conary_package = survey_models.ConaryPackageInfo(
+            name = 'jkl', version = '7', flavor = 'orange',
+            description = 'Type-R', revision = '8',
+            architecture = 'ia64', signature = 'X',
             rpm_package = rpm_package
         )
         conary_package.save()
         scp = survey_models.SurveyConaryPackage(
             survey = survey,
-            conary_package_details = conary_package
+            conary_package_info = conary_package
         )
         scp.save()
         srp = survey_models.SurveyRpmPackage(
-            survey = survey,
-            rpm_package_details = rpm_package
+            survey = survey, rpm_package_info = rpm_package
         )
         srp.save()
-        service = survey_models.Service(
-            name = 'httpd',
-            autostart = True,
-            runlevels = '3,4,5'
+        service = survey_models.ServiceInfo(
+            name = 'httpd', autostart = True, runlevels = '3,4,5'
         )
         service.save()
         iss = survey_models.SurveyService(
-            survey = survey,
-            service_details = service,
+            survey = survey, service_info = service,
             status = 'is maybe doing stuff'
         )
         iss.save()
         response = self._get("inventory/surveys/%s" % uuid, 
             username='admin', password='password') 
         self.assertEqual(response.status_code, 200)
-        print response.content
+        #print response.content
 
         url = "inventory/systems/%s/surveys" % sys.pk
-        print url
         response = self._get(url,
             username='admin', password='password')
-        print response.content
+        #print response.content
         self.assertEqual(response.status_code, 200)
 
 class AssimilatorTestCase(XMLTestCase, test_utils.SmartformMixIn):
