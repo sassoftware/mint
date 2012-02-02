@@ -261,7 +261,7 @@ class MintConfig(conarycfg.ConfigFile):
                         "The number of days after which a non-responsive system is marked as dead")
     mothballedStateTimeout = (CfgInt, 30,
                         "The number of days after which a dead system is marked as mothballed")
-    launchWaitTime = (CfgInt, 300,
+    launchWaitTime = (CfgInt, 1200,
                         "The number of seconds to wait for a launched system's network information to become available")
 
     # inventory - configuration
