@@ -55,6 +55,11 @@ class SurveyTests(XMLTestCase):
             created_by=user1, modified_by=user1
         )
         survey.save()
+        tag1 = survey_models.SurveyTag(
+            survey = survey,
+            name = 'needs_review'
+        )
+        tag1.save()
         rpm_package = survey_models.RpmPackageInfo(
             name = 'asdf', epoch = 0, version = '5',
             release = '6', architecture = 'x86_64',
@@ -90,13 +95,12 @@ class SurveyTests(XMLTestCase):
         response = self._get("inventory/surveys/%s" % uuid, 
             username='admin', password='password') 
         self.assertEqual(response.status_code, 200)
-        #print response.content
 
         url = "inventory/systems/%s/surveys" % sys.pk
         response = self._get(url,
             username='admin', password='password')
-        #print response.content
         self.assertEqual(response.status_code, 200)
+        self.assertXMLEquals(response.content, testsxml.survey_output_xml, ignoreNodes=['created_date','install_date','modified_date'])
 
 class AssimilatorTestCase(XMLTestCase, test_utils.SmartformMixIn):
     ''' 
