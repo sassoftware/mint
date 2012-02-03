@@ -1082,10 +1082,7 @@ class SystemManager(basemanager.BaseManager):
         tsys, created = targetmodels.TargetSystem.objects.get_or_create(
             target=target,
             target_internal_id=system.target_system_id,
-            defaults=dict(
-                name=system.target_system_name,
-                description=system.target_system_description or '',
-                ip_addr_1=dnsName))
+            defaults=defaults)
         if not created:
             tsys.name = system.target_system_name
             tsys.description = system.target_system_description or ''
