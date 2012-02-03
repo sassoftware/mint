@@ -3015,15 +3015,18 @@ If you would not like to be %s %s of this project, you may resign from this proj
 
         # need to make layered images show up in querysets
         self.db.commit()
+
+        from mint.django_rest.rbuilder.manager import rbuildermanager
+        mgr = rbuildermanager.RbuilderManager()
         try:
-            self.db.djMgr.enterTransactionManagement()
-            self.db.djMgr.retagQuerySetsByType('image')
-            self.db.djMgr.commit()
+            mgr.enterTransactionManagement()
+            mgr.retagQuerySetsByType('image')
+            mgr.commit()
         except:
-            self.db.djMgr.rollback()
+            mgr.rollback()
             raise
         finally:
-            self.db.djMgr.leaveTransactionManagement()
+            mgr.leaveTransactionManagement()
 
         return 1
 
