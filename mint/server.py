@@ -3015,9 +3015,12 @@ If you would not like to be %s %s of this project, you may resign from this proj
         self.db.commit()
 
         from mint.django_rest.rbuilder.manager import rbuildermanager
+        from mint.django_rest.rbuilder.images import models as image_models
         mgr = rbuildermanager.RbuilderManager()
         try:
             mgr.enterTransactionManagement()
+            image = image_models.Image.objects.get(pk=buildId)
+            mgr.addToMyQuerySet(image, image.created_by)
             mgr.retagQuerySetsByType('image')
             mgr.commit()
         except:
