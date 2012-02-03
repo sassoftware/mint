@@ -17,6 +17,7 @@ from mint.django_rest.rbuilder import models as rbuildermodels
 from mint.django_rest.rbuilder.manager import rbuildermanager
 from mint.django_rest.rbuilder.users import models as usersmodels
 from mint.django_rest.rbuilder.inventory import models
+from mint.django_rest.rbuilder.inventory import survey_models
 from mint.django_rest.rbuilder.inventory import zones as zmodels
 from mint.django_rest.rbuilder.targets import models as targetmodels
 from mint.django_rest.rbuilder.jobs import models as jobmodels
@@ -34,6 +35,68 @@ logging.disable(logging.CRITICAL)
 
 from mint.django_rest import test_utils
 XMLTestCase = test_utils.XMLTestCase
+
+class SurveyTests(XMLTestCase):
+    fixtures = ['users']
+
+    def setUp(self):
+        XMLTestCase.setUp(self)
+  
+    def testSurveySerialization(self):
+        # FIXME: basic serialization test until things get more real
+        # and we can do full XML tests
+
+        uuid = '1234'
+        user1 = usersmodels.User.objects.get(user_name='JeanValjean1')
+        sys = self.newSystem(name="blinky", description="ghost")
+        sys.save()
+        survey = survey_models.Survey(
+            name='x', uuid=uuid, system=sys,
+            created_by=user1, modified_by=user1
+        )
+        survey.save()
+        rpm_package = survey_models.RpmPackageInfo(
+            name = 'asdf', epoch = 0, version = '5',
+            release = '6', architecture = 'x86_64',
+            description = 'enterprise middleware abstraction layer',
+            signature = 'X'
+        )
+        rpm_package.save()
+        conary_package = survey_models.ConaryPackageInfo(
+            name = 'jkl', version = '7', flavor = 'orange',
+            description = 'Type-R', revision = '8',
+            architecture = 'ia64', signature = 'X',
+            rpm_package = rpm_package
+        )
+        conary_package.save()
+        scp = survey_models.SurveyConaryPackage(
+            survey = survey,
+            conary_package_info = conary_package
+        )
+        scp.save()
+        srp = survey_models.SurveyRpmPackage(
+            survey = survey, rpm_package_info = rpm_package
+        )
+        srp.save()
+        service = survey_models.ServiceInfo(
+            name = 'httpd', autostart = True, runlevels = '3,4,5'
+        )
+        service.save()
+        iss = survey_models.SurveyService(
+            survey = survey, service_info = service,
+            status = 'is maybe doing stuff'
+        )
+        iss.save()
+        response = self._get("inventory/surveys/%s" % uuid, 
+            username='admin', password='password') 
+        self.assertEqual(response.status_code, 200)
+        #print response.content
+
+        url = "inventory/systems/%s/surveys" % sys.pk
+        response = self._get(url,
+            username='admin', password='password')
+        #print response.content
+        self.assertEqual(response.status_code, 200)
 
 class AssimilatorTestCase(XMLTestCase, test_utils.SmartformMixIn):
     ''' 
@@ -1249,8 +1312,7 @@ class SystemsTestCase(XMLTestCase):
         """
         models.System.objects.all().delete()
         system_xml = testsxml.system_post_no_network_xml
-        # Also exercise RBL-8919
-        response = self._post('inventory//systems/', data=system_xml)
+        response = self._post('inventory/systems/', data=system_xml)
         self.assertEquals(response.status_code, 200)
         try:
             models.System.objects.get(pk=3)
@@ -4842,3 +4904,15 @@ class DescriptorTestCase(XMLTestCase, test_utils.RepeaterMixIn):
         self.failUnlessEqual(
             [x.name for x in fields],
             ['metadata.owner', 'metadata.admin'])
+
+class ModuleHooksTest(XMLTestCase):
+    """
+    Added here, so we don't add modulehooks as a django app. Surprisingly,
+    it seems to work, minus the testsuite being run.
+    """
+    def testGetModuleHooks(self):
+        response = self._get("module_hooks",
+            username="testuser", password="password")
+        self.failUnlessEqual(response.status_code, 200)
+        obj = xobj.parse(response.content)
+        self.failUnlessEqual(obj.module_hooks.count, "0")
