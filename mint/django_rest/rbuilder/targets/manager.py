@@ -695,7 +695,25 @@ class TargetsManager(basemanager.BaseManager, CatalogServiceHelper):
                             AND ti.target_internal_id = tid.targetImageId)
         """
         cu.execute(query)
-        # Add undeployed images
+
+        # ec2 images are special
+        query = """
+            INSERT INTO tmp_target_image (target_id, target_image_id, file_id)
+            SELECT t.targetid, ti.target_image_id, imgfile.fileid
+              FROM Builds AS img
+              JOIN BuildData AS imgdata ON (img.buildid = imgdata.buildid)
+              JOIN BuildFiles AS imgfile ON (img.buildid = imgfile.buildid)
+        CROSS JOIN Targets AS t
+              JOIN target_types AS tt ON (t.target_type_id = tt.target_type_id)
+              JOIN target_image AS ti ON (ti.target_id = t.targetid
+                   AND ti.target_internal_id = imgdata.value)
+             WHERE imgdata.name = 'amiId'
+               AND img.buildtype = %s
+               AND tt.name = 'ec2'
+        """
+        cu.execute(query, [ buildtypes.AMI ])
+
+        # Add undeployed images (but not for AMI)
         query = """
             INSERT INTO tmp_target_image (target_id, target_image_id, file_id)
                 SELECT t.targetId, NULL, imgf.fileId
@@ -708,9 +726,9 @@ class TargetsManager(basemanager.BaseManager, CatalogServiceHelper):
                          FROM tmp_target_image
                         WHERE target_id = t.targetId
                           AND file_id = imgf.fileId)
+                   AND img.buildType != %s
         """
-        cu.execute(query)
-        # XXX Deal with EC2 images
+        cu.execute(query, [ buildtypes.AMI ])
 
         # Build target to target type mapping
         query = """
