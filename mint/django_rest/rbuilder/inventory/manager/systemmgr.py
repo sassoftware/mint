@@ -1100,16 +1100,26 @@ class SystemManager(basemanager.BaseManager):
             return
         cu = connection.cursor()
         now = time.time() # self.now()
+        # Make sure we don't insert duplicates
         cu.execute("""
             INSERT INTO jobs (job_uuid, job_type_id, job_state_id, created_by,
                 created, modified)
-            VALUES (%s, %s, %s, %s, %s, %s)""",
-            [ system.boot_uuid, 1, 3, self.user.user_id, now, now])
+            SELECT %s, %s, %s, %s, %s, %s
+            WHERE NOT EXISTS (SELECT 1 FROM jobs WHERE job_uuid = %s)""",
+            [ system.boot_uuid, 1, 3, self.user.user_id, now, now, system.boot_uuid])
         cu.execute("SELECT job_id FROM jobs WHERE job_uuid = %s", [ system.boot_uuid ])
         jobId = cu.fetchone()[0]
 
-        cu.execute("INSERT INTO job_system (job_id, system_id) VALUES (%s, %s)",
-            [ jobId, system.pk ])
+        cu.execute("""
+            INSERT INTO job_system
+                (job_id, system_id)
+            SELECT %s, %s
+            WHERE NOT EXISTS (
+                SELECT 1
+                  FROM job_system
+                 WHERE job_id = %s
+                   AND system_id = %s)""",
+        [ jobId, system.pk, jobId, system.pk ])
 
     @exposed
     def postSystemLaunch(self, system):
