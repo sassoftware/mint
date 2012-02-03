@@ -986,10 +986,13 @@ class SystemManager(basemanager.BaseManager):
         slist = systems.system
         rlist = systems.system = []
         for system in slist:
-            rlist.append(self.mgr.addLaunchedSystem(system,
+            djSystem = self.mgr.addLaunchedSystem(system,
                 dnsName=system.dnsName,
                 targetName=system.targetName, targetType=system.targetType,
-                sourceImage=img, for_user=forUser))
+                sourceImage=img, for_user=forUser)
+            rlist.append(djSystem)
+            if system.dnsName:
+                self.postSystemLaunch(djSystem)
         return systems
 
     def fromXobj(self, obj):
@@ -1072,6 +1075,10 @@ class SystemManager(basemanager.BaseManager):
             withManagementInterfaceDetection=False)
         # Add target system
         # get_or_create needs the defaults arg to do this properly (#1631)
+        defaults=dict(
+            name=system.target_system_name,
+            description=system.target_system_description or '',
+            ip_addr_1=dnsName)
         tsys, created = targetmodels.TargetSystem.objects.get_or_create(
             target=target,
             target_internal_id=system.target_system_id,
@@ -1082,7 +1089,9 @@ class SystemManager(basemanager.BaseManager):
         if not created:
             tsys.name = system.target_system_name
             tsys.description = system.target_system_description or ''
-            tsys.ip_addr_1 = dnsName
+            # Only update the address if it's not null
+            if dnsName:
+                tsys.ip_addr_1 = dnsName
             tsys.save()
         targetmodels.TargetSystemCredentials.objects.get_or_create(
             target_system=tsys,

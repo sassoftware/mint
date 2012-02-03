@@ -670,7 +670,8 @@ class JobHandlerRegistry(HandlerRegistry):
                     target = target,
                     target_system_id = targetSystem.target_system_id
                 )
-                self.mgr.mgr.postSystemLaunch(realSystem)
+                # The system may not have network info yet, so don't try
+                # to do anything clever here (Mingle #1785)
                 results.append(realSystem)
 
             return results
