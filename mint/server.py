@@ -3012,6 +3012,21 @@ If you would not like to be %s %s of this project, you may resign from this proj
                 base_image=baseId,
                 status=jobstatus.FINISHED,
                 statusMessage="Deferred image has been recorded")
+        # need to make layered images show up in querysets
+        self.db.commit()
+
+        from mint.django_rest.rbuilder.manager import rbuildermanager
+        mgr = rbuildermanager.RbuilderManager()
+        try:
+            mgr.enterTransactionManagement()
+            mgr.retagQuerySetsByType('image')
+            mgr.commit()
+        except:
+            mgr.rollback()
+            raise
+        finally:
+            mgr.leaveTransactionManagement()
+
         return 1
 
     @typeCheck(int, str, list)
