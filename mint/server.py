@@ -3012,19 +3012,6 @@ If you would not like to be %s %s of this project, you may resign from this proj
                 base_image=baseId,
                 status=jobstatus.FINISHED,
                 statusMessage="Deferred image has been recorded")
-
-        # need to make layered images show up in querysets
-        self.db.commit()
-        try:
-            self.db.djMgr.enterTransactionManagement()
-            self.db.djMgr.retagQuerySetsByType('image')
-            self.db.djMgr.commit()
-        except:
-            self.db.djMgr.rollback()
-            raise
-        finally:
-            self.db.djMgr.leaveTransactionManagement()
-
         return 1
 
     @typeCheck(int, str, list)
