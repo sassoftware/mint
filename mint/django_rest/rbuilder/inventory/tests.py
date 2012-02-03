@@ -103,7 +103,7 @@ class SurveyTests(XMLTestCase):
         self.assertEqual(response.status_code, 200)
         self.assertXMLEquals(response.content, testsxml.survey_output_xml, ignoreNodes=['created_date','install_date','modified_date'])
 
-    def test_survey_post(self):
+    def notest_survey_post(self):
         # make sure we can post a survey and it mostly looks
         # like the model saved version above -- much of the
         # data posted is not required for input (like hrefs)

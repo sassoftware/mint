@@ -769,7 +769,7 @@ class SurveysService(BaseInventoryService):
     @rbac(manual_rbac)
     @requires('survey')
     @return_xml
-    def rest_GET(self, request, system_id, survey):
+    def rest_POST(self, request, system_id, survey):
         return self.mgr.addSurveyForSystem(system_id, survey)
 
     def get(self, system_id):

@@ -18,6 +18,7 @@ import logging
 # from mint.django_rest.rbuilder.inventory import errors
 #from mint.django_rest.rbuilder.inventory import models
 from mint.django_rest.rbuilder.inventory import survey_models
+from mint.django_rest.rbuilder.inventory import models as inventory_models
 # from mint.django_rest.rbuilder.inventory import zones as zmodels
 # from mint.django_rest.rbuilder.targets import models as targetmodels
 from mint.django_rest.rbuilder.manager import basemanager
@@ -44,11 +45,11 @@ class SurveyManager(basemanager.BaseManager):
        return surveys
    
     @exposed
-    def addSurveyForSystem(self, system_id, survey):
+    def addSurveyForSystem(self, system_id, survey, by_user):
        system = inventory_models.System.objects.get(system_id)
        survey.system = system
        # TODO: any other validation/added info?
        # this is probably already done, but anyway
        survey.save()
-       survey2 = survey_models.Surveys.object.get(pk==survey.__pk)
+       survey2 = survey_models.Survey.object.get(pk=survey.__pk)
        return survey2

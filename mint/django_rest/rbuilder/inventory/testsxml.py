@@ -3823,8 +3823,6 @@ survey_output_xml = """
 survey_input_xml = """
 <survey>
     <comment></comment>
-    <modified_date>2012-02-03T16:28:08.137616+00:00</modified_date>
-    <modified_by id="http://testserver/api/v1/users/2">
     <uuid>1234</uuid>
     <tags>
       <tag>
@@ -3884,7 +3882,6 @@ survey_input_xml = """
       </conary_package>
     </conary_packages>
     <name>x</name>
-  </survey>
-</surveys>
+</survey>
 """
 
