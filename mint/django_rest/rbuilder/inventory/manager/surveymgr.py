@@ -18,6 +18,7 @@ import logging
 # from mint.django_rest.rbuilder.inventory import errors
 #from mint.django_rest.rbuilder.inventory import models
 from mint.django_rest.rbuilder.inventory import survey_models
+from mint.django_rest.rbuilder.users import models as user_models
 from mint.django_rest.rbuilder.inventory import models as inventory_models
 # from mint.django_rest.rbuilder.inventory import zones as zmodels
 # from mint.django_rest.rbuilder.targets import models as targetmodels
@@ -48,8 +49,32 @@ class SurveyManager(basemanager.BaseManager):
     def addSurveyForSystem(self, system_id, survey, by_user):
        system = inventory_models.System.objects.get(system_id)
        survey.system = system
+       if survey.created_by is None or survey.modified_by is None:
+           users = user_models.objects.order_by('user_id').all()
+           if survey.created_by is None:
+               survey.created_by = users[0]
+           if survey.modified_by is None:
+               survey.modified_by = users[0]
+   
+       # how to spin the survey IDs back in?
+
+       survey.conary_packages.clear()
+       survey.rpm_packages.clear()
+       survey.services.clear()
+
+       for scp in survey.conary_packages.all():
+            scp.survey_id = survey
+            scp.save()
+       for srp in survey.rpm_packages.all():
+            srp.survey_id = survey
+            srp.save()
+       for ss in survey.services.all():
+            ss.survey_id = survey
+            ss.save()
+
        # TODO: any other validation/added info?
        # this is probably already done, but anyway
        survey.save()
-       survey2 = survey_models.Survey.object.get(pk=survey.__pk)
-       return survey2
+       return survey
+       #survey2 = survey_models.Survey.object.get(pk=survey.__pk)
+       #return survey2

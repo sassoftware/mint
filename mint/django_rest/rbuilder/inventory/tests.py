@@ -99,11 +99,10 @@ class SurveyTests(XMLTestCase):
         url = "inventory/systems/%s/surveys" % sys.pk
         response = self._get(url,
             username='admin', password='password')
-        print response.content
         self.assertEqual(response.status_code, 200)
         self.assertXMLEquals(response.content, testsxml.survey_output_xml, ignoreNodes=['created_date','install_date','modified_date'])
 
-    def notest_survey_post(self):
+    def test_survey_post(self):
         # make sure we can post a survey and it mostly looks
         # like the model saved version above -- much of the
         # data posted is not required for input (like hrefs)
@@ -113,12 +112,12 @@ class SurveyTests(XMLTestCase):
         response = self._post(url,
             data = testsxml.survey_input_xml,
             username='admin', password='password')
-        print response.content
         self.assertEqual(response.status_code, 200)
         url = "inventory/systems/%s/surveys/1" % sys.pk
         response = self.get(url,
             username='admin', password='password')
-        print response.content
+        if response.status_code != 200:
+            print response.content
         self.assertEqual(response.status_code, 200)
         self.assertXMLEquals(response.content, testsxml.survey_output_xml)      
 
