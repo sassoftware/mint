@@ -3819,4 +3819,72 @@ survey_output_xml = """
 </surveys>
 """
 
+# input without ids
+survey_input_xml = """
+<survey>
+    <comment></comment>
+    <modified_date>2012-02-03T16:28:08.137616+00:00</modified_date>
+    <modified_by id="http://testserver/api/v1/users/2">
+    <uuid>1234</uuid>
+    <tags>
+      <tag>
+        <name>needs_review</name>
+      </tag>
+    </tags>
+    <rpm_packages>
+      <rpm_package>
+        <rpm_package_info>
+          <description>enterprise middleware abstraction layer</description>
+          <epoch>0</epoch>
+          <version>5</version>
+          <architecture>x86_64</architecture>
+          <signature>X</signature>
+          <release>6</release>
+          <name>asdf</name>
+        </rpm_package_info>
+        <install_date>2012-02-03T16:28:08.177050+00:00</install_date>
+      </rpm_package>
+    </rpm_packages>
+    <description></description>
+    <system id="http://testserver/api/v1/inventory/systems/3"/>
+    <created_by id="http://testserver/api/v1/users/2"/>
+    <created_date>2012-02-03T16:28:08.137524+00:00</created_date>
+    <services>
+      <service>
+        <status>is maybe doing stuff</status>
+        <running>false</running>
+        <service_info>
+          <name>httpd</name>
+          <autostart>1</autostart>
+          <runlevels>3,4,5</runlevels>
+        </service_info>
+      </service>
+    </services>
+    <conary_packages>
+      <conary_package>
+        <install_date>2012-02-03T16:28:08.169386+00:00</install_date>
+        <conary_package_info>
+          <description>Type-R</description>
+          <name>jkl</name>
+          <version>7</version>
+          <architecture>ia64</architecture>
+          <signature>X</signature>
+          <rpm_package_info>
+            <name>asdf</name>
+            <epoch>0</epoch>
+            <version>5</version>
+            <architecture>x86_64</architecture>
+            <signature>X</signature>
+            <release>6</release>
+            <description>enterprise middleware abstraction layer</description>
+          </rpm_package_info>
+          <flavor>orange</flavor>
+          <revision>8</revision>
+        </conary_package_info>
+      </conary_package>
+    </conary_packages>
+    <name>x</name>
+  </survey>
+</surveys>
+"""
 
