@@ -112,7 +112,6 @@ class SurveyManager(basemanager.BaseManager):
                 signature = xinfo.signature
             )
             encap = getattr(xinfo, 'rpm_package', None)
-            print "info created? %s" % created
             if encap is not None:
                 info.rpm_package = rpm_info_by_id[encap]
                 info.save()
