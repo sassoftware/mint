@@ -1193,6 +1193,10 @@ class XObjModel(models.Model):
         try:
             relative_url = urlresolvers.reverse(bits[0], None, *bits[1:3])
         except urlresolvers.NoReverseMatch:
+            try:
+                relative_url = urlresolvers.reverse(bits[0], None, None)
+            except:
+                pass
             return None
 
         # Use the request to build an absolute url.
@@ -1377,6 +1381,7 @@ class XObjModel(models.Model):
                     attributes={"id":str})
                 setattr(accessor_model, "id", href)
                 setattr(xobj_model, accessorName, accessor_model)
+
             else:
                 # In django, accessors are always lists of other models.
                 accessorModelValues = []
@@ -1393,10 +1398,24 @@ class XObjModel(models.Model):
                         accessorValues = None
                     if accessorValues is not None:
                         for rel_mod, subvalues in accessorValues:
-                            rel_mod = rel_mod.serialize(request)
-                            accessorModelValues.append(rel_mod)
+                            rel_mod_ser = rel_mod.serialize(request)
+
+                            # attempt to add IDs where known to reverse
+                            # FK relationships (aka one-to-many)
+                            view_name = getattr(rel_mod, 'view_name', None)
+                            
+                            if view_name is not None:
+                                href = rel_mod.get_absolute_url(request, 
+                                    parents=[self], 
+                                    view_name=rel_mod.view_name)
+                                rel_mod_ser._xobj = xobj.XObjMetadata(
+                                    attributes={"id":str})
+                                setattr(rel_mod_ser, "id", href)
+                            
+                            accessorModelValues.append(rel_mod_ser)
                     else:
                         accessor_model = None
+
 
                     setattr(xobj_model, accessorName, accessor_model)
 
