@@ -4711,7 +4711,7 @@ class MigrateTo_61(SchemaMigration):
 
 class MigrateTo_62(SchemaMigration):
     '''Fork!'''
-    Version = (62, 0)
+    Version = (62, 1)
 
     def migrate(self):
 
@@ -4796,7 +4796,14 @@ class MigrateTo_62(SchemaMigration):
                 right_survey_id INTEGER NOT NULL REFERENCES "inventory_survey" ("survey_id") ON DELETE SET NULL,
                 xml TEXT
         """)
+        return True
 
+    def migrate1(self):
+        cu = self.db.cursor()
+        cu.execute("""ALTER TABLE inventory_survey ALTER created_by
+            DROP NOT NULL""")
+        cu.execute("""ALTER TABLE inventory_survey ALTER modified_by
+            DROP NOT NULL""")
         return True
 
 #### SCHEMA MIGRATIONS END HERE #############################################
