@@ -290,6 +290,9 @@ class BaseManager(models.Manager):
         fields = model._get_field_dict()
         set_fields = []
 
+        #if type(xobjModel) == type([]):
+        #    import epdb; epdb.st()
+
         for key, val in xobjModel.__dict__.items():
             field = fields.get(key, None)
 
@@ -557,6 +560,7 @@ class BaseManager(models.Manager):
         xobjModel does not have to be from xobj, but it should match the
         similar structure of an object that xobj would create from xml.
         """
+        print "LOAD FROM OBJECT DEFINITION"
         if flags is None:
             flags = Flags(save=True, load=True)
 
@@ -573,6 +577,7 @@ class BaseManager(models.Manager):
         # We need access to synthetic fields before loading from the DB, they
         # may be used in load_or_create
         model = self._add_synthetic_fields(model, xobjModel, request)
+        print "DEBUG: adding fields2: %s, %s, %s, %s" % (model, xobjModel, 'r', flags)
         model = self._add_fields(model, xobjModel, request, flags=flags)
         accessors = self._get_accessors(model, xobjModel, request, flags=flags)
 
@@ -624,6 +629,7 @@ class PackageJobManager(BaseManager):
             marshalled_job_data = mintdata.marshalGenericData(job_data_dict) 
             model.job_data = marshalled_job_data
 
+        print "DEBUG: adding fields 3"
         return BaseManager._add_fields(self, model, obj, request, flags=flags)
 
 class TroveManager(BaseManager):
