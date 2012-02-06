@@ -158,7 +158,7 @@ def _createRbac(db):
         cu.execute("""
         CREATE TABLE rbac_role (
             role_id      %(PRIMARYKEY)s,
-            role_name    TEXT,
+            role_name    TEXT UNIQUE,
             description  TEXT,
             created_date timestamp with time zone NOT NULL,
             modified_date timestamp with time zone NOT NULL,
