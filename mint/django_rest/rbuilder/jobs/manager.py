@@ -67,12 +67,17 @@ class JobManager(basemanager.BaseManager):
             raise errors.InvalidData()
         jhandler = factory(self)
         jhandler.create(job, extraArgs)
+        for system_job in job.systems.all():
+            system_job.system.updateDerivedData()
         return job
 
     @exposed
     def deleteJob(self, jobId):
         job = models.Job.objects.get(pk=jobId)
+        systems = job.systems.all()
         job.delete()
+        for system_job in systems:
+            system_job.job.updateDerivedData()
 
     @exposed
     def getJobStates(self):
@@ -215,6 +220,8 @@ class ResultsProcessingMixIn(object):
         self.results = self.getJobResults(job)
         self.validateJobResults(job)
         self.processJobResults(job)
+        for system_job in job.systems.all():
+           system_job.system.updateDerivedData()
         job.save()
 
     def getJobResults(self, job):
@@ -256,6 +263,8 @@ class ResultsProcessingMixIn(object):
 
             if tag == 'system':
                 models.JobSystemArtifact(job=job, system=resource).save()
+                # store the change in the system job count
+                resource.updateDerivedData()
             elif tag == 'image':
                 models.JobImageArtifact(job=job, image=resource).save()
             elif tag == 'target':

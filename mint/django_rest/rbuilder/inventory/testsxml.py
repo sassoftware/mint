@@ -372,7 +372,7 @@ system_types_put_xml="""\
 <?xml version="1.0"?>
 <system_type id="http://testserver/api/v1/inventory/system_types/1">
   <system_type_id>1</system_type_id>
-  <infrastructure>True</infrastructure>
+  <infrastructure>true</infrastructure>
   <description>bar</description>
   <name>thisnameshouldnotstick</name>
   <created_date>2010-10-07T00:42:33.634913+00:00</created_date>
@@ -395,8 +395,8 @@ system_type_systems_xml="""
     </current_state>
     <description>testsystemdescription</description>
     <generated_uuid>testsystemgenerateduuid</generated_uuid>
-    <has_active_jobs>False</has_active_jobs>
-    <has_running_jobs>False</has_running_jobs>
+    <has_active_jobs>false</has_active_jobs>
+    <has_running_jobs>false</has_running_jobs>
     <hostname/>
     <installed_software id="http://testserver/api/v1/inventory/systems/3/installed_software"/>
     <jobs id="http://testserver/api/v1/inventory/systems/3/jobs">
@@ -429,7 +429,7 @@ system_type_systems_xml="""
         <pinned/>
       </network>
     </networks>
-    <out_of_date>False</out_of_date>
+    <out_of_date>false</out_of_date>
     <registration_date/>
     <ssl_client_certificate>testsystemsslclientcertificate</ssl_client_certificate>
     <ssl_server_certificate>testsystemsslservercertificate</ssl_server_certificate>
@@ -592,11 +592,11 @@ management_nodes_xml = """\
     <configuration id="http://testserver/api/v1/inventory/management_nodes/3/configuration"/>
     <configuration_descriptor id="http://testserver/api/v1/inventory/management_nodes/3/configuration_descriptor"/>
     <system_events id="http://testserver/api/v1/inventory/systems/3/system_events"/>
-    <out_of_date>False</out_of_date>
+    <out_of_date>false</out_of_date>
     <registration_date/>
     <generated_uuid>test management node guuid</generated_uuid>
-    <has_active_jobs>False</has_active_jobs>
-    <has_running_jobs>False</has_running_jobs>
+    <has_active_jobs>false</has_active_jobs>
+    <has_running_jobs>false</has_running_jobs>
     <network_address>
       <address>2.2.2.2</address>
     </network_address>
@@ -667,11 +667,11 @@ management_node_xml = """\
   <configuration id="http://testserver/api/v1/inventory/management_nodes/3/configuration"/>
   <configuration_descriptor id="http://testserver/api/v1/inventory/management_nodes/3/configuration_descriptor"/>
   <system_events id="http://testserver/api/v1/inventory/systems/3/system_events"/>
-  <out_of_date>False</out_of_date>
+  <out_of_date>false</out_of_date>
   <registration_date/>
   <generated_uuid>test management node guuid</generated_uuid>
-  <has_active_jobs>False</has_active_jobs>
-  <has_running_jobs>False</has_running_jobs>
+  <has_active_jobs>false</has_active_jobs>
+  <has_running_jobs>false</has_running_jobs>
   <network_address>
     <address>2.2.2.2</address>
   </network_address>
@@ -735,7 +735,7 @@ management_node_post_xml = """\
 <?xml version="1.0" encoding="UTF-8"?>
 <management_node>
   <ssl_client_key>test management node client key</ssl_client_key>
-  <out_of_date>False</out_of_date>
+  <out_of_date>false</out_of_date>
   <registration_date/>
   <generated_uuid>test management node guuid</generated_uuid>
   <networks>
@@ -761,7 +761,7 @@ management_node_post_xml = """\
   <name>test management node</name>
   <system_id>1</system_id>
   <launching_user/>
-  <local>True</local>
+  <local>true</local>
   <ssl_client_certificate>test management node client cert</ssl_client_certificate>
   <description>test management node desc</description>
   <local_uuid>test management node luuid</local_uuid>
@@ -778,11 +778,11 @@ management_node_post_response_xml = """\
   <configuration id="http://testserver/api/v1/inventory/management_nodes/3/configuration"/>
   <configuration_descriptor id="http://testserver/api/v1/inventory/management_nodes/3/configuration_descriptor"/>
   <system_events id="http://testserver/api/v1/inventory/systems/3/system_events"/>
-  <out_of_date>False</out_of_date>
+  <out_of_date>false</out_of_date>
   <registration_date/>
   <generated_uuid>test management node guuid</generated_uuid>
-  <has_active_jobs>False</has_active_jobs>
-  <has_running_jobs>False</has_running_jobs>
+  <has_active_jobs>false</has_active_jobs>
+  <has_running_jobs>false</has_running_jobs>
   <network_address>
     <address>2.2.2.2</address>
   </network_address>
@@ -846,7 +846,7 @@ management_node_zone_post_xml = """\
 <?xml version="1.0" encoding="UTF-8"?>
 <management_node>
   <ssl_client_key>test management node client key</ssl_client_key>
-  <out_of_date>False</out_of_date>
+  <out_of_date>false</out_of_date>
   <registration_date/>
   <generated_uuid>test management node guuid</generated_uuid>
   <networks>
@@ -870,7 +870,7 @@ management_node_zone_post_xml = """\
   <name>test management node</name>
   <system_id>1</system_id>
   <launching_user/>
-  <local>True</local>
+  <local>true</local>
   <ssl_client_certificate>test management node client cert</ssl_client_certificate>
   <description>test management node desc</description>
   <zone id="http://testserver/api/v1/inventory/zones/2"/>
@@ -889,11 +889,11 @@ management_node_zone_post_response_xml = """\
   <configuration id="http://testserver/api/v1/inventory/management_nodes/3/configuration"/>
   <configuration_descriptor id="http://testserver/api/v1/inventory/management_nodes/3/configuration_descriptor"/>
   <system_events id="http://testserver/api/v1/inventory/systems/3/system_events"/>
-  <out_of_date>False</out_of_date>
+  <out_of_date>false</out_of_date>
   <registration_date/>
   <generated_uuid>test management node guuid</generated_uuid>
-  <has_active_jobs>False</has_active_jobs>
-  <has_running_jobs>False</has_running_jobs>
+  <has_active_jobs>false</has_active_jobs>
+  <has_running_jobs>false</has_running_jobs>
   <network_address>
     <address>2.2.2.2</address>
   </network_address>
@@ -985,7 +985,7 @@ systems_xml = """\
     <credentials id="http://testserver/api/v1/inventory/systems/2/credentials"/>
     <configuration id="http://testserver/api/v1/inventory/systems/2/configuration"/>
     <configuration_descriptor id="http://testserver/api/v1/inventory/systems/2/configuration_descriptor"/>
-    <out_of_date>False</out_of_date>
+    <out_of_date>false</out_of_date>
     <registration_date/>
     <created_date>2010-08-18T22:28:26+00:00</created_date>
     <current_state id="http://testserver/api/v1/inventory/system_states/1">
@@ -995,8 +995,8 @@ systems_xml = """\
     </current_state>
     <description>Local rPath Update Service</description>
     <generated_uuid/>
-    <has_active_jobs>False</has_active_jobs>
-    <has_running_jobs>False</has_running_jobs>
+    <has_active_jobs>false</has_active_jobs>
+    <has_running_jobs>false</has_running_jobs>
     <hostname/>
     <installed_software id="http://testserver/api/v1/inventory/systems/2/installed_software"/>
     <jobs id="http://testserver/api/v1/inventory/systems/2/jobs">
@@ -1068,7 +1068,7 @@ systems_xml = """\
     <credentials id="http://testserver/api/v1/inventory/systems/3/credentials"/>
     <configuration id="http://testserver/api/v1/inventory/systems/3/configuration"/>
     <configuration_descriptor id="http://testserver/api/v1/inventory/systems/3/configuration_descriptor"/>
-    <out_of_date>False</out_of_date>
+    <out_of_date>false</out_of_date>
     <registration_date/>
     <created_date>%s</created_date>
     <current_state id="http://testserver/api/v1/inventory/system_states/3">
@@ -1078,8 +1078,8 @@ systems_xml = """\
     </current_state>
     <description>testsystemdescription</description>
     <generated_uuid>testsystemgenerateduuid</generated_uuid>
-    <has_active_jobs>False</has_active_jobs>
-    <has_running_jobs>False</has_running_jobs>
+    <has_active_jobs>false</has_active_jobs>
+    <has_running_jobs>false</has_running_jobs>
     <hostname/>
     <installed_software id="http://testserver/api/v1/inventory/systems/3/installed_software"/>
     <jobs id="http://testserver/api/v1/inventory/systems/3/jobs">
@@ -1135,7 +1135,7 @@ systems_put_xml = """\
 <systems>
   <system id="http://testserver/api/v1/inventory/systems/1">
     <ssl_client_key>testsystemsslclientkey</ssl_client_key>
-    <out_of_date>False</out_of_date>
+    <out_of_date>false</out_of_date>
     <registration_date/>
     <generated_uuid>testsystemgenerateduuid</generated_uuid>
     <networks>
@@ -1178,7 +1178,7 @@ systems_put_xml = """\
   </system>
   <system id="http://testserver/api/v1/inventory/systems/2">
     <ssl_client_key>testsystemsslclientkey</ssl_client_key>
-    <out_of_date>False</out_of_date>
+    <out_of_date>false</out_of_date>
     <registration_date/>
     <generated_uuid>testsystem2generateduuid</generated_uuid>
     <networks>
@@ -1225,7 +1225,7 @@ systems_put_mothball_xml = """\
 <?xml version="1.0" encoding="UTF-8"?>
 <system id="http://testserver/api/v1/inventory/systems/3">
   <ssl_client_key>testsystemsslclientkey</ssl_client_key>
-  <out_of_date>False</out_of_date>
+  <out_of_date>false</out_of_date>
   <registration_date/>
   <generated_uuid>testsystemgenerateduuid</generated_uuid>
   <networks>
@@ -1298,11 +1298,11 @@ system_xml = """\
     <queued_jobs id="http://testserver/api/v1/inventory/systems/3/job_states/1/jobs"/>
     <running_jobs id="http://testserver/api/v1/inventory/systems/3/job_states/2/jobs"/>
   </jobs>
-  <out_of_date>False</out_of_date>
+  <out_of_date>false</out_of_date>
   <registration_date/>
   <generated_uuid>testsystemgenerateduuid</generated_uuid>
-  <has_active_jobs>False</has_active_jobs>
-  <has_running_jobs>False</has_running_jobs>
+  <has_active_jobs>false</has_active_jobs>
+  <has_running_jobs>false</has_running_jobs>
   <managing_zone id="http://testserver/api/v1/inventory/zones/1">Local rBuilder</managing_zone>
   <hostname/>
   <network_address>
@@ -1374,7 +1374,7 @@ system_post_xml = """\
   </actions>
   <managing_zone id="http://testserver/api/v1/inventory/zones/1">Local rBuilder</managing_zone>
   <ssl_client_key>testsystemsslclientkey</ssl_client_key>
-  <out_of_date>False</out_of_date>
+  <out_of_date>false</out_of_date>
   <registration_date/>
   <generated_uuid>testsystemgenerateduuid</generated_uuid>
   <networks>
@@ -1434,7 +1434,7 @@ system_mgmt_interface_put_xml = """\
 <system>
   <managing_zone id="http://testserver/api/v1/inventory/zones/1">Local rBuilder</managing_zone>
   <ssl_client_key>testsystemsslclientkey</ssl_client_key>
-  <out_of_date>False</out_of_date>
+  <out_of_date>false</out_of_date>
   <registration_date/>
   <generated_uuid>testsystemgenerateduuid</generated_uuid>
   <networks>
@@ -1472,7 +1472,7 @@ system_delete_mgmt_interface_put_xml = """\
 <system>
   <managing_zone id="http://testserver/api/v1/inventory/zones/1">Local rBuilder</managing_zone>
   <ssl_client_key>testsystemsslclientkey</ssl_client_key>
-  <out_of_date>False</out_of_date>
+  <out_of_date>false</out_of_date>
   <registration_date/>
   <generated_uuid>testsystemgenerateduuid</generated_uuid>
   <networks>
@@ -1515,11 +1515,11 @@ system_post_xml_response = """\
   <configuration id="http://testserver/api/v1/inventory/systems/3/configuration"/>
   <configuration_descriptor id="http://testserver/api/v1/inventory/systems/3/configuration_descriptor"/>
   <system_events id="http://testserver/api/v1/inventory/systems/3/system_events"/>
-  <out_of_date>False</out_of_date>
+  <out_of_date>false</out_of_date>
   <registration_date/>
   <generated_uuid>testsystemgenerateduuid</generated_uuid>
-  <has_active_jobs>False</has_active_jobs>
-  <has_running_jobs>False</has_running_jobs>
+  <has_active_jobs>false</has_active_jobs>
+  <has_running_jobs>false</has_running_jobs>
   <network_address>
     <address>1.1.1.1</address>
   </network_address>
@@ -1613,7 +1613,7 @@ system_post_xml_dup = """\
 <system>
   <managing_zone id="http://testserver/api/v1/inventory/zones/1">Local rBuilder</managing_zone>
   <ssl_client_key>testsystemsslclientkey</ssl_client_key>
-  <out_of_date>False</out_of_date>
+  <out_of_date>false</out_of_date>
   <registration_date/>
   <generated_uuid>testsystemgenerateduuid</generated_uuid>
   <networks>
@@ -1677,11 +1677,11 @@ system_target_xml = """\
   <configuration id="http://testserver/api/v1/inventory/systems/3/configuration"/>
   <configuration_descriptor id="http://testserver/api/v1/inventory/systems/3/configuration_descriptor"/>
   <system_events id="http://testserver/api/v1/inventory/systems/3/system_events"/>
-  <out_of_date>False</out_of_date>
+  <out_of_date>false</out_of_date>
   <registration_date/>
   <generated_uuid>testsystemgenerateduuid</generated_uuid>
-  <has_active_jobs>False</has_active_jobs>
-  <has_running_jobs>False</has_running_jobs>
+  <has_active_jobs>false</has_active_jobs>
+  <has_running_jobs>false</has_running_jobs>
   <network_address>
     <address>1.1.1.1</address>
   </network_address>
@@ -1841,6 +1841,10 @@ system_log_xml = """\
       <system_log id="http://testserver/api/v1/inventory/systems/3/system_log"/>
       <system_log_entry_id>4</system_log_entry_id>
     </system_log_entry>
+    <system_log_entry>
+      <system_log id="http://testserver/api/v1/inventory/systems/3/system_log"/>
+      <system_log_entry_id>5</system_log_entry_id>
+    </system_log_entry>
   </system_log_entries>
   <system_log_id>1</system_log_id>
   <system id="http://testserver/api/v1/inventory/systems/3"/>
@@ -1913,7 +1917,7 @@ get_installed_software_xml = """\
         </version>
       </available_updates>
       <flavor>~!dom0,~!domU,vmware,~!xen is: x86(i486,i586,i686,sse,sse2)</flavor>
-      <is_top_level>true</is_top_level>
+      <is_top_level>True</is_top_level>
       <is_top_level_item>True</is_top_level_item>
       <last_available_update_refresh>%s</last_available_update_refresh>
       <name>group-clover-appliance</name>
@@ -1940,7 +1944,7 @@ get_installed_software_xml = """\
         </version>
       </available_updates>
       <flavor>desktop is: x86_64</flavor>
-      <is_top_level>false</is_top_level>
+      <is_top_level>False</is_top_level>
       <is_top_level_item>True</is_top_level_item>
       <last_available_update_refresh>%s</last_available_update_refresh>
       <name>emacs</name>
@@ -1980,7 +1984,7 @@ installed_software_xml = """\
         </version>
       </available_updates>
       <flavor>~!dom0,~!domU,vmware,~!xen is: x86(i486,i586,i686,sse,sse2)</flavor>
-      <is_top_level>true</is_top_level>
+      <is_top_level>True</is_top_level>
       <is_top_level_item>True</is_top_level_item>
       <last_available_update_refresh>%s</last_available_update_refresh>
       <name>group-clover-appliance</name>
@@ -1997,7 +2001,7 @@ installed_software_xml = """\
     <trove>
       <available_updates/>
       <flavor>desktop is: x86_64</flavor>
-      <is_top_level>false</is_top_level>
+      <is_top_level>False</is_top_level>
       <is_top_level_item>True</is_top_level_item>
       <last_available_update_refresh>%s</last_available_update_refresh>
       <name>emacs</name>
@@ -2029,11 +2033,11 @@ system_version_xml = """\
     <queued_jobs id="http://testserver/api/v1/inventory/systems/3/job_states/1/jobs"/>
     <running_jobs id="http://testserver/api/v1/inventory/systems/3/job_states/2/jobs"/>
   </jobs>
-  <out_of_date>True</out_of_date>
+  <out_of_date>true</out_of_date>
   <registration_date/>
   <generated_uuid>testsystemgenerateduuid</generated_uuid>
-  <has_active_jobs>False</has_active_jobs>
-  <has_running_jobs>False</has_running_jobs>
+  <has_active_jobs>false</has_active_jobs>
+  <has_running_jobs>false</has_running_jobs>
   <managing_zone id="http://testserver/api/v1/inventory/zones/1">Local rBuilder</managing_zone>
   <hostname/>
   <network_address>
@@ -2173,7 +2177,7 @@ system_version_put_response_xml = """\
   <system_events id="http://testserver/api/v1/inventory/systems/2/system_events"/>
   <registered>True</registered>
   <ssl_client_key>testsystemsslclientkey</ssl_client_key>
-  <out_of_date>False</out_of_date>
+  <out_of_date>false</out_of_date>
   <registration_date/>
   <generated_uuid>testsystemgenerateduuid</generated_uuid>
   <managing_zone/>
@@ -2268,7 +2272,7 @@ system_available_updates_xml = """\
         <version_id>1</version_id>
       </version>
       <last_available_update_refresh>2010-08-27T12:21:59.802463+00:00</last_available_update_refresh>
-      <is_top_level>true</is_top_level>
+      <is_top_level>True</is_top_level>
       <is_top_level_item>True</is_top_level_item>
       <flavor>~!dom0,~!domU,vmware,~!xen is: x86(i486,i586,i686,sse,sse2)</flavor>
     </trove>
@@ -2295,7 +2299,7 @@ system_available_updates_xml = """\
         <version_id>4</version_id>
       </version>
       <last_available_update_refresh>2010-08-27T12:21:59.815100+00:00</last_available_update_refresh>
-      <is_top_level>false</is_top_level>
+      <is_top_level>False</is_top_level>
       <is_top_level_item>True</is_top_level_item>
       <flavor>desktop is: x86_64</flavor>
     </trove>
@@ -2308,8 +2312,8 @@ system_available_updates_xml = """\
   </jobs>
   <system_events id="http://testserver/api/v1/inventory/systems/3/system_events"/>
   <generated_uuid>testsystemgenerateduuid</generated_uuid>
-  <has_active_jobs>False</has_active_jobs>
-  <has_running_jobs>False</has_running_jobs>
+  <has_active_jobs>false</has_active_jobs>
+  <has_running_jobs>false</has_running_jobs>
   <network_address>
     <address>1.1.1.1</address>
   </network_address>
@@ -2401,7 +2405,7 @@ system_apply_updates_xml = """\
         <version_id>2</version_id>
       </version>
       <last_available_update_refresh>2010-08-27T12:21:59.802463+00:00</last_available_update_refresh>
-      <is_top_level>true</is_top_level>
+      <is_top_level>True</is_top_level>
       <is_top_level_item>True</is_top_level_item>
       <flavor>~!dom0,~!domU,vmware,~!xen is: x86(i486,i586,i686,sse,sse2)</flavor>
     </trove>
@@ -2427,7 +2431,7 @@ system_apply_updates_xml = """\
         <version_id>4</version_id>
       </version>
       <last_available_update_refresh>2010-08-27T12:21:59.815100+00:00</last_available_update_refresh>
-      <is_top_level>false</is_top_level>
+      <is_top_level>False</is_top_level>
       <is_top_level_item>True</is_top_level_item>
       <flavor>desktop is: x86_64</flavor>
     </trove>
@@ -2531,7 +2535,7 @@ system_with_target = """\
   <launch_date/>
   <ssl_client_certificate/>
   <installed_software id="http://testserver/api/v1/inventory/systems/4/installed_software"/>
-  <out_of_date>False</out_of_date>
+  <out_of_date>false</out_of_date>
   <registration_date/>
   <jobs id="http://testserver/api/v1/inventory/systems/4/jobs">
     <queued_jobs id="http://testserver/api/v1/inventory/systems/4/job_states/1/jobs"/>
@@ -2543,8 +2547,8 @@ system_with_target = """\
   <system_log id="http://testserver/api/v1/inventory/systems/4/system_log"/>
   <target_system_id>vsphere1-002</target_system_id>
   <target_system_name/>
-  <has_active_jobs>False</has_active_jobs>
-  <has_running_jobs>False</has_running_jobs>
+  <has_active_jobs>false</has_active_jobs>
+  <has_running_jobs>false</has_running_jobs>
   <agent_port/>
   <project/>
   <credentials id="http://testserver/api/v1/inventory/systems/4/credentials"/>
@@ -2756,7 +2760,7 @@ system_installed_software_version_stage_xml = """\
         <version_id>5</version_id>
       </version>
       <last_available_update_refresh/>
-      <is_top_level>true</is_top_level>
+      <is_top_level>True</is_top_level>
       <flavor>is: x86</flavor>
     </trove>
     <trove id="http://testserver/repos/contrib/api/trove/vim%3D/contrib.rpath.org%40rpl%3A2/23.0.60cvs20080523-1-0.1%5Bdesktop%20is%3A%20x86_64%5D">
@@ -2774,7 +2778,7 @@ system_installed_software_version_stage_xml = """\
         <version_id>6</version_id>
       </version>
       <last_available_update_refresh/>
-      <is_top_level>false</is_top_level>
+      <is_top_level>False</is_top_level>
       <flavor>desktop is: x86_64</flavor>
     </trove>
     <trove id="http://testserver/repos/contrib/api/trove/info-sfcb%3D/contrib.rpath.org%40rpl%3A2/1-1-1%5B%5D">
@@ -2792,7 +2796,7 @@ system_installed_software_version_stage_xml = """\
         <version_id>7</version_id>
       </version>
       <last_available_update_refresh/>
-      <is_top_level>false</is_top_level>
+      <is_top_level>False</is_top_level>
       <flavor/>
     </trove>
   </installed_software>
@@ -2814,7 +2818,7 @@ system_installed_software_version_stage_xml = """\
   <project_branch_stage id="http://testserver/api/v1/projects/chater-foo/project_branches/chater-foo.eng.rpath.com@rpath:chater-foo-1/project_branch_stages/Development">
     <name>Development</name>
   </project_branch_stage>
-  <out_of_date>False</out_of_date>
+  <out_of_date>false</out_of_date>
   <name>testsystemname</name>
   <local_uuid>testsystemlocaluuid</local_uuid>
   <target_system_state/>
@@ -2972,7 +2976,7 @@ Methods:
     <system_events id="http://testserver/api/v1/inventory/systems/2/system_events"/>
     <project/>
     <configuration_descriptor id="http://testserver/api/v1/inventory/systems/2/configuration_descriptor"/>
-    <has_running_jobs>False</has_running_jobs>
+    <has_running_jobs>false</has_running_jobs>
     <system_type id="http://testserver/api/v1/inventory/system_types/2">rPath Update Service (Infrastructure)</system_type>
     <generated_uuid/>
     <ssl_server_certificate/>
@@ -2993,13 +2997,13 @@ Methods:
     <description>Local rPath Update Service</description>
     <ssl_client_certificate/>
     <registration_date/>
-    <has_active_jobs>False</has_active_jobs>
+    <has_active_jobs>false</has_active_jobs>
     <target_system_name/>
     <credentials id="http://testserver/api/v1/inventory/systems/2/credentials"/>
     <configuration id="http://testserver/api/v1/inventory/systems/2/configuration"/>
     <agent_port/>
     <project_branch_stage/>
-    <out_of_date>False</out_of_date>
+    <out_of_date>false</out_of_date>
     <name>rPath Update Service</name>
     <local_uuid/>
     <target_system_state/>
@@ -3038,7 +3042,7 @@ Methods:
     <system_events id="http://testserver/api/v1/inventory/systems/3/system_events"/>
     <project/>
     <configuration_descriptor id="http://testserver/api/v1/inventory/systems/3/configuration_descriptor"/>
-    <has_running_jobs>False</has_running_jobs>
+    <has_running_jobs>false</has_running_jobs>
     <system_type id="http://testserver/api/v1/inventory/system_types/1">Inventory</system_type>
     <generated_uuid>system-3-generated-uuid</generated_uuid>
     <ssl_server_certificate>system-3-ssl-server-certificate</ssl_server_certificate>
@@ -3059,13 +3063,13 @@ Methods:
     <description>System description 3</description>
     <ssl_client_certificate>system-3-ssl-client-certificate</ssl_client_certificate>
     <registration_date/>
-    <has_active_jobs>False</has_active_jobs>
+    <has_active_jobs>false</has_active_jobs>
     <target_system_name/>
     <credentials id="http://testserver/api/v1/inventory/systems/3/credentials"/>
     <configuration id="http://testserver/api/v1/inventory/systems/3/configuration"/>
     <agent_port/>
     <project_branch_stage/>
-    <out_of_date>False</out_of_date>
+    <out_of_date>false</out_of_date>
     <name>System name 3</name>
     <local_uuid>system-3-local-uuid</local_uuid>
     <target_system_state/>
@@ -3104,7 +3108,7 @@ Methods:
     <system_events id="http://testserver/api/v1/inventory/systems/4/system_events"/>
     <project/>
     <configuration_descriptor id="http://testserver/api/v1/inventory/systems/4/configuration_descriptor"/>
-    <has_running_jobs>False</has_running_jobs>
+    <has_running_jobs>false</has_running_jobs>
     <system_type id="http://testserver/api/v1/inventory/system_types/1">Inventory</system_type>
     <generated_uuid>system-4-generated-uuid</generated_uuid>
     <ssl_server_certificate>system-4-ssl-server-certificate</ssl_server_certificate>
@@ -3125,13 +3129,13 @@ Methods:
     <description>System description 4</description>
     <ssl_client_certificate>system-4-ssl-client-certificate</ssl_client_certificate>
     <registration_date/>
-    <has_active_jobs>False</has_active_jobs>
+    <has_active_jobs>false</has_active_jobs>
     <target_system_name/>
     <credentials id="http://testserver/api/v1/inventory/systems/4/credentials"/>
     <configuration id="http://testserver/api/v1/inventory/systems/4/configuration"/>
     <agent_port/>
     <project_branch_stage/>
-    <out_of_date>False</out_of_date>
+    <out_of_date>false</out_of_date>
     <name>System name 4</name>
     <local_uuid>system-4-local-uuid</local_uuid>
     <target_system_state/>
@@ -3170,7 +3174,7 @@ Methods:
     <system_events id="http://testserver/api/v1/inventory/systems/5/system_events"/>
     <project/>
     <configuration_descriptor id="http://testserver/api/v1/inventory/systems/5/configuration_descriptor"/>
-    <has_running_jobs>False</has_running_jobs>
+    <has_running_jobs>false</has_running_jobs>
     <system_type id="http://testserver/api/v1/inventory/system_types/1">Inventory</system_type>
     <generated_uuid>system-5-generated-uuid</generated_uuid>
     <ssl_server_certificate>system-5-ssl-server-certificate</ssl_server_certificate>
@@ -3191,13 +3195,13 @@ Methods:
     <description>System description 5</description>
     <ssl_client_certificate>system-5-ssl-client-certificate</ssl_client_certificate>
     <registration_date/>
-    <has_active_jobs>False</has_active_jobs>
+    <has_active_jobs>false</has_active_jobs>
     <target_system_name/>
     <credentials id="http://testserver/api/v1/inventory/systems/5/credentials"/>
     <configuration id="http://testserver/api/v1/inventory/systems/5/configuration"/>
     <agent_port/>
     <project_branch_stage/>
-    <out_of_date>False</out_of_date>
+    <out_of_date>false</out_of_date>
     <name>System name 5</name>
     <local_uuid>system-5-local-uuid</local_uuid>
     <target_system_state/>
@@ -3236,7 +3240,7 @@ Methods:
     <system_events id="http://testserver/api/v1/inventory/systems/6/system_events"/>
     <project/>
     <configuration_descriptor id="http://testserver/api/v1/inventory/systems/6/configuration_descriptor"/>
-    <has_running_jobs>False</has_running_jobs>
+    <has_running_jobs>false</has_running_jobs>
     <system_type id="http://testserver/api/v1/inventory/system_types/1">Inventory</system_type>
     <generated_uuid>system-6-generated-uuid</generated_uuid>
     <ssl_server_certificate>system-6-ssl-server-certificate</ssl_server_certificate>
@@ -3257,13 +3261,13 @@ Methods:
     <description>System description 6</description>
     <ssl_client_certificate>system-6-ssl-client-certificate</ssl_client_certificate>
     <registration_date/>
-    <has_active_jobs>False</has_active_jobs>
+    <has_active_jobs>false</has_active_jobs>
     <target_system_name/>
     <credentials id="http://testserver/api/v1/inventory/systems/6/credentials"/>
     <configuration id="http://testserver/api/v1/inventory/systems/6/configuration"/>
     <agent_port/>
     <project_branch_stage/>
-    <out_of_date>False</out_of_date>
+    <out_of_date>false</out_of_date>
     <name>System name 6</name>
     <local_uuid>system-6-local-uuid</local_uuid>
     <target_system_state/>
@@ -3302,7 +3306,7 @@ Methods:
     <system_events id="http://testserver/api/v1/inventory/systems/7/system_events"/>
     <project/>
     <configuration_descriptor id="http://testserver/api/v1/inventory/systems/7/configuration_descriptor"/>
-    <has_running_jobs>False</has_running_jobs>
+    <has_running_jobs>false</has_running_jobs>
     <system_type id="http://testserver/api/v1/inventory/system_types/1">Inventory</system_type>
     <generated_uuid>system-7-generated-uuid</generated_uuid>
     <ssl_server_certificate>system-7-ssl-server-certificate</ssl_server_certificate>
@@ -3323,13 +3327,13 @@ Methods:
     <description>System description 7</description>
     <ssl_client_certificate>system-7-ssl-client-certificate</ssl_client_certificate>
     <registration_date/>
-    <has_active_jobs>False</has_active_jobs>
+    <has_active_jobs>false</has_active_jobs>
     <target_system_name/>
     <credentials id="http://testserver/api/v1/inventory/systems/7/credentials"/>
     <configuration id="http://testserver/api/v1/inventory/systems/7/configuration"/>
     <agent_port/>
     <project_branch_stage/>
-    <out_of_date>False</out_of_date>
+    <out_of_date>false</out_of_date>
     <name>System name 7</name>
     <local_uuid>system-7-local-uuid</local_uuid>
     <target_system_state/>
@@ -3368,7 +3372,7 @@ Methods:
     <system_events id="http://testserver/api/v1/inventory/systems/8/system_events"/>
     <project/>
     <configuration_descriptor id="http://testserver/api/v1/inventory/systems/8/configuration_descriptor"/>
-    <has_running_jobs>False</has_running_jobs>
+    <has_running_jobs>false</has_running_jobs>
     <system_type id="http://testserver/api/v1/inventory/system_types/1">Inventory</system_type>
     <generated_uuid>system-8-generated-uuid</generated_uuid>
     <ssl_server_certificate>system-8-ssl-server-certificate</ssl_server_certificate>
@@ -3389,13 +3393,13 @@ Methods:
     <description>System description 8</description>
     <ssl_client_certificate>system-8-ssl-client-certificate</ssl_client_certificate>
     <registration_date/>
-    <has_active_jobs>False</has_active_jobs>
+    <has_active_jobs>false</has_active_jobs>
     <target_system_name/>
     <credentials id="http://testserver/api/v1/inventory/systems/8/credentials"/>
     <configuration id="http://testserver/api/v1/inventory/systems/8/configuration"/>
     <agent_port/>
     <project_branch_stage/>
-    <out_of_date>False</out_of_date>
+    <out_of_date>false</out_of_date>
     <name>System name 8</name>
     <local_uuid>system-8-local-uuid</local_uuid>
     <target_system_state/>
@@ -3434,7 +3438,7 @@ Methods:
     <system_events id="http://testserver/api/v1/inventory/systems/9/system_events"/>
     <project/>
     <configuration_descriptor id="http://testserver/api/v1/inventory/systems/9/configuration_descriptor"/>
-    <has_running_jobs>False</has_running_jobs>
+    <has_running_jobs>false</has_running_jobs>
     <system_type id="http://testserver/api/v1/inventory/system_types/1">Inventory</system_type>
     <generated_uuid>system-9-generated-uuid</generated_uuid>
     <ssl_server_certificate>system-9-ssl-server-certificate</ssl_server_certificate>
@@ -3455,13 +3459,13 @@ Methods:
     <description>System description 9</description>
     <ssl_client_certificate>system-9-ssl-client-certificate</ssl_client_certificate>
     <registration_date/>
-    <has_active_jobs>False</has_active_jobs>
+    <has_active_jobs>false</has_active_jobs>
     <target_system_name/>
     <credentials id="http://testserver/api/v1/inventory/systems/9/credentials"/>
     <configuration id="http://testserver/api/v1/inventory/systems/9/configuration"/>
     <agent_port/>
     <project_branch_stage/>
-    <out_of_date>False</out_of_date>
+    <out_of_date>false</out_of_date>
     <name>System name 9</name>
     <local_uuid>system-9-local-uuid</local_uuid>
     <target_system_state/>
@@ -3500,7 +3504,7 @@ Methods:
     <system_events id="http://testserver/api/v1/inventory/systems/10/system_events"/>
     <project/>
     <configuration_descriptor id="http://testserver/api/v1/inventory/systems/10/configuration_descriptor"/>
-    <has_running_jobs>False</has_running_jobs>
+    <has_running_jobs>false</has_running_jobs>
     <system_type id="http://testserver/api/v1/inventory/system_types/1">Inventory</system_type>
     <generated_uuid>system-10-generated-uuid</generated_uuid>
     <ssl_server_certificate>system-10-ssl-server-certificate</ssl_server_certificate>
@@ -3521,13 +3525,13 @@ Methods:
     <description>System description 10</description>
     <ssl_client_certificate>system-10-ssl-client-certificate</ssl_client_certificate>
     <registration_date/>
-    <has_active_jobs>False</has_active_jobs>
+    <has_active_jobs>false</has_active_jobs>
     <target_system_name/>
     <credentials id="http://testserver/api/v1/inventory/systems/10/credentials"/>
     <configuration id="http://testserver/api/v1/inventory/systems/10/configuration"/>
     <agent_port/>
     <project_branch_stage/>
-    <out_of_date>False</out_of_date>
+    <out_of_date>false</out_of_date>
     <name>System name 10</name>
     <local_uuid>system-10-local-uuid</local_uuid>
     <target_system_state/>
@@ -3566,7 +3570,7 @@ Methods:
     <system_events id="http://testserver/api/v1/inventory/systems/11/system_events"/>
     <project/>
     <configuration_descriptor id="http://testserver/api/v1/inventory/systems/11/configuration_descriptor"/>
-    <has_running_jobs>False</has_running_jobs>
+    <has_running_jobs>false</has_running_jobs>
     <system_type id="http://testserver/api/v1/inventory/system_types/1">Inventory</system_type>
     <generated_uuid>system-11-generated-uuid</generated_uuid>
     <ssl_server_certificate>system-11-ssl-server-certificate</ssl_server_certificate>
@@ -3587,13 +3591,13 @@ Methods:
     <description>System description 11</description>
     <ssl_client_certificate>system-11-ssl-client-certificate</ssl_client_certificate>
     <registration_date/>
-    <has_active_jobs>False</has_active_jobs>
+    <has_active_jobs>false</has_active_jobs>
     <target_system_name/>
     <credentials id="http://testserver/api/v1/inventory/systems/11/credentials"/>
     <configuration id="http://testserver/api/v1/inventory/systems/11/configuration"/>
     <agent_port/>
     <project_branch_stage/>
-    <out_of_date>False</out_of_date>
+    <out_of_date>false</out_of_date>
     <name>System name 11</name>
     <local_uuid>system-11-local-uuid</local_uuid>
     <target_system_state/>
@@ -3624,7 +3628,7 @@ system_post_forge_object = """<?xml version="1.0" encoding="UTF-8"?>
 <system>
   <managing_zone id="http://testserver/api/v1/inventory/zones/1">Local rBuilder</managing_zone>
   <ssl_client_key>testsystemsslclientkey</ssl_client_key>
-  <out_of_date>False</out_of_date>
+  <out_of_date>false</out_of_date>
   <registration_date/>
   <generated_uuid>testsystemgenerateduuid</generated_uuid>
   <networks>
@@ -3681,7 +3685,7 @@ retirement_xml = """
       <description>Capture a system's image</description>
     </action>
   </actions>
-  <has_running_jobs>False</has_running_jobs>
+  <has_running_jobs>false</has_running_jobs>
   <system_type id="http://testserver/api/v1/inventory/system_types/1">Inventory</system_type>
   <generated_uuid></generated_uuid>
   <modified_date></modified_date>
@@ -3702,7 +3706,7 @@ retirement_xml = """
   <description>ghost</description>
   <system_log id="http://testserver/api/v1/inventory/systems/3/system_log"/>
   <target_system_id></target_system_id>
-  <has_active_jobs>False</has_active_jobs>
+  <has_active_jobs>false</has_active_jobs>
   <target_system_name></target_system_name>
   <jobs id="http://testserver/api/v1/inventory/systems/3/jobs">
     <queued_jobs id="http://testserver/api/v1/inventory/systems/3/job_states/1/jobs"/>
@@ -3714,7 +3718,7 @@ retirement_xml = """
   <configuration id="http://testserver/api/v1/inventory/systems/3/configuration"/>
   <source_image></source_image>
   <name>blinky</name>
-  <out_of_date>False</out_of_date>
+  <out_of_date>false</out_of_date>
   <target></target>
   <local_uuid></local_uuid>
   <target_system_state></target_system_state>
