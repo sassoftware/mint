@@ -7,6 +7,7 @@
 from django.db import models
 from mint.django_rest.deco import D
 from mint.django_rest.rbuilder import modellib
+from mint.django_rest.rbuilder.users import models as usermodels
 from xobj import xobj
 import sys
 
@@ -86,11 +87,11 @@ class Survey(modellib.XObjIdModel):
     created_date  = modellib.DateTimeUtcField(auto_now_add=True)
     modified_date = modellib.DateTimeUtcField(auto_now_add=True)
     removable     = models.BooleanField(default=False)
-    created_by    = modellib.ForeignKey('users.User', db_column='created_by', related_name='+') 
-    modified_by   = modellib.ForeignKey('users.User', db_column='modified_by', related_name='+') 
+    created_by    = modellib.ForeignKey(usermodels.User, null=True, db_column='created_by', related_name='+') 
+    modified_by   = modellib.ForeignKey(usermodels.User, null=True, db_column='modified_by', related_name='+') 
     # FIXME: add to database schema
     #removeable   = models.BooleanField(default=True)
-    system        = modellib.ForeignKey('inventory.System', related_name='surveys', db_column='system_id')
+    system        = modellib.DeferredForeignKey('inventory.System', related_name='surveys', db_column='system_id')
     comment       = models.TextField()
 
     def get_url_key(self, *args, **kwargs):

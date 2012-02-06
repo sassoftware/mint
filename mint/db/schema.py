@@ -1648,8 +1648,8 @@ def _createSurveyTables(db, cfg):
                 "comment" TEXT,
                 "created_date" TIMESTAMP WITH TIME ZONE NOT NULL,
                 "modified_date" TIMESTAMP WITH TIME ZONE NOT NULL,
-                "created_by" INTEGER NOT NULL REFERENCES "users" (userid) ON DELETE SET NULL,
-                "modified_by" INTEGER NOT NULL REFERENCES "users" (userid) ON DELETE SET NULL,
+                "created_by" INTEGER REFERENCES "users" (userid) ON DELETE SET NULL,
+                "modified_by" INTEGER REFERENCES "users" (userid) ON DELETE SET NULL,
                 "removable" BOOLEAN NOT NULL DEFAULT TRUE,
                 "raw_xml" TEXT
 

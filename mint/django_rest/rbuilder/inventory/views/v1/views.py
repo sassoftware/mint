@@ -767,10 +767,10 @@ class SurveysService(BaseInventoryService):
     # TODO: rbac based on system shared secret proposal?
     # FIXME: also don't allow overwriting surveys
     @rbac(manual_rbac)
-    @requires('survey', save=False, load=False)
     @return_xml
-    def rest_POST(self, request, system_id, survey):
-        return self.mgr.addSurveyForSystem(system_id, survey)
+    def rest_POST(self, request, system_id):
+        xml = request.raw_post_data
+        return self.mgr.addSurveyForSystemFromXml(system_id, xml)
 
     def get(self, system_id):
         return self.mgr.getSurveysForSystem(system_id)

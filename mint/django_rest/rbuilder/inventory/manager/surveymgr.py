@@ -28,6 +28,7 @@ from mint.django_rest.rbuilder.manager import basemanager
 # from mint.django_rest.rbuilder.images import models as imagemodels
 # from mint.rest import errors as mint_rest_errors
 #from smartform import descriptor
+from xobj import xobj
 
 log = logging.getLogger(__name__)
 exposed = basemanager.exposed
@@ -44,8 +45,106 @@ class SurveyManager(basemanager.BaseManager):
        surveys = survey_models.Surveys()
        surveys.survey = survey_models.Survey.objects.filter(system__pk=system_id)
        return surveys
-   
+  
+    # xobj hack
+    def _listify(self, foo):
+       if type(foo) != list:
+           foo = [ foo ]
+       return foo
+
     @exposed
+    def addSurveyForSystemFromXml(self, system_id, xml):
+        '''
+        a temporary low level attempt at saving surveys
+        which are not completely filled out.
+        '''
+        system = inventory_models.System.objects.get(pk=system_id)
+        model = xobj.parse(xml)
+
+        xsurvey          = model.survey
+        xrpm_packages    = self._listify(
+            model.survey.rpm_packages.rpm_package)
+        xconary_packages = self._listify(
+            model.survey.conary_packages.conary_package)
+        xservices        = self._listify(
+            model.survey.services.service)
+
+        survey = survey_models.Survey(
+            name        = xsurvey.name,
+            uuid        = xsurvey.uuid,
+            description = xsurvey.description,
+            comment     = xsurvey.comment,
+            removable   = True,
+            system      = system
+        )
+        survey.save()
+
+        rpm_info_by_id     = {}
+
+        for xmodel in xrpm_packages:
+            xinfo = xmodel.rpm_package_info
+            info, created = survey_models.RpmPackageInfo.objects.get_or_create(
+               name         = xinfo.name,
+               epoch        = xinfo.epoch,
+               version      = xinfo.version,
+               release      = xinfo.release,
+               architecture = xinfo.architecture,
+               description  = xinfo.description,
+               signature    = xinfo.signature,
+            )
+            rpm_info_by_id[xmodel.id] = info
+            pkg = survey_models.SurveyRpmPackage(
+               survey           = survey,
+               rpm_package_info = info,
+               install_date     = xmodel.install_date,
+            )
+            pkg.save()
+
+        for xmodel in xconary_packages:
+            xinfo = xmodel.conary_package_info
+            info, created = survey_models.ConaryPackageInfo.objects.get_or_create(
+                name = xinfo.name,
+                version = xinfo.version,
+                flavor = xinfo.flavor,
+                description = xinfo.description,
+                revision = xinfo.revision,
+                architecture = xinfo.architecture,
+                signature = xinfo.signature
+            )
+            encap = getattr(xinfo, 'rpm_package', None)
+            print "info created? %s" % created
+            if encap is not None:
+                info.rpm_package = rpm_info_by_id[encap]
+                info.save()
+            pkg = survey_models.SurveyConaryPackage(
+                conary_package_info = info,
+                survey = survey,
+                install_date = xmodel.install_date     
+            )
+            pkg.save()
+
+
+        for xmodel in xservices:
+            xinfo = xmodel.service_info
+            info, created = survey_models.ServiceInfo.objects.get_or_create(
+                name = xinfo.name,
+                autostart = xinfo.autostart,
+                runlevels = xinfo.runlevels
+            ) 
+            service = survey_models.SurveyService(
+                service_info = info,
+                survey       = survey,
+                running      = xmodel.running,
+                status       = xmodel.status 
+            )
+            service.save()
+
+        survey = survey_models.Survey.objects.get(pk=survey.pk)
+        return survey
+        
+    @exposed
+    # TEMPORARILY NOT USED until we can get modellib recursive
+    # craziness sorted out
     def addSurveyForSystem(self, system_id, survey, by_user):
        system = inventory_models.System.objects.get(system_id)
        survey.system = system

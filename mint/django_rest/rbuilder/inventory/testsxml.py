@@ -3821,6 +3821,9 @@ survey_output_xml = """
 """
 
 # input without ids
+# FIXME -- created_by/modified_by should be nullable for system
+#          user?
+
 survey_input_xml = """
 <survey>
     <comment></comment>
@@ -3832,7 +3835,7 @@ survey_input_xml = """
       </tag>
     </tags>
     <rpm_packages>
-      <rpm_package>
+      <rpm_package id="1">
         <rpm_package_info>
           <description>enterprise middleware abstraction layer</description>
           <epoch>0</epoch>
@@ -3850,7 +3853,7 @@ survey_input_xml = """
     <created_by id="http://testserver/api/v1/users/2"/>
     <created_date>2012-02-03T16:28:08.137524+00:00</created_date>
     <services>
-      <service>
+      <service id="2">
         <status>is maybe doing stuff</status>
         <running>false</running>
         <service_info>
@@ -3861,7 +3864,7 @@ survey_input_xml = """
       </service>
     </services>
     <conary_packages>
-      <conary_package>
+      <conary_package id="3">
         <install_date>2012-02-03T16:28:08.169386+00:00</install_date>
         <conary_package_info>
           <description>Type-R</description>
@@ -3869,7 +3872,7 @@ survey_input_xml = """
           <version>7</version>
           <architecture>ia64</architecture>
           <signature>X</signature>
-          <rpm_package_info>
+          <rpm_package_info id="1">
             <name>asdf</name>
             <epoch>0</epoch>
             <version>5</version>
