@@ -131,10 +131,10 @@ class ConaryPackageInfo(modellib.XObjIdModel):
 
     view_name = 'SurveyConaryPackageInfo'
     _xobj = xobj.XObjMetadata(tag='conary_package_info')
+    # NOTE: rpm_package can't fit into summary view?  Need to fix it.
     summary_view = [
          "name", "version", "flavor", "description",
          "revision", "architecture", "signature",
-         "rpm_package"
     ]
 
     conary_package_id = models.AutoField(primary_key=True)
@@ -147,6 +147,15 @@ class ConaryPackageInfo(modellib.XObjIdModel):
     signature         = models.TextField(null=False)
     # needs to be deferrred so URL is included 
     rpm_package       = modellib.ForeignKey(RpmPackageInfo, related_name='+')
+
+    # workaround summary views and FKs not working as expected
+    # FIXME: WHAT, custom serialize not run for these relations?  OW.
+    def serialize(self, request=None):
+        xobjModel = modellib.XObjIdModel.serialize(self, request)
+        if self.rpm_package is not None:
+            rpmModel = modellib.XObjIdModel.serialize(self.rpm_package, request)
+            xobjModel.rpm_package_info = rpmModel
+        return xobjModel
 
 #***********************************************************
 
