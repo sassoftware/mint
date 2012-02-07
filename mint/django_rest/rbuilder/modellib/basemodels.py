@@ -27,7 +27,6 @@ from mint.django_rest import timeutils
 from mint.django_rest.rbuilder import errors
 from mint.lib import mintutils
 from mint.lib import data as mintdata
-import traceback
 
 class BaseFlags(util.Flags):
     __slots__ = []
