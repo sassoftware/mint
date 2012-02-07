@@ -4697,7 +4697,24 @@ class MigrateTo_61(SchemaMigration):
         return True
 
     def migrate6(self):
-        # served for possible P5-1 fixes
+        # make role names unique with DB constraint to avoid race condition
+        # this is 5.3 -- if we release it.
+        cu = self.db.cursor()
+        # first delete any duplicate role names that may exist
+        # so adding the contraint will not fail
+        seen   = {}
+        delete = []
+
+        cu.execute("SELECT role_id, role_name from rbac_role")
+        row = cu.fetchone()
+        while row is not None:
+            if seen.has_key(row[1]):
+                delete.append(row[0])
+            seen[row[1]] = 1
+            row = cu.fetchone()
+        for x in delete:
+            cu.execute("DELETE from rbac_role where role_id=%s" % x)
+        cu.execute("""ALTER TABLE rbac_role ADD UNIQUE (role_name)""")
         return True
 
     def migrate7(self):
