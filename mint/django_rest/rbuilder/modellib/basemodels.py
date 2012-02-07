@@ -27,6 +27,7 @@ from mint.django_rest import timeutils
 from mint.django_rest.rbuilder import errors
 from mint.lib import mintutils
 from mint.lib import data as mintdata
+import traceback
 
 class BaseFlags(util.Flags):
     __slots__ = []
@@ -1333,7 +1334,12 @@ class XObjModel(models.Model):
                             val.get_absolute_url(request))
                         if hasattr(val, "summary_view") and fieldName not in getattr(self, '_xobj_summary_view_hide', []):
                             for sField in val.summary_view:
-                                setattr(refModel, sField, getattr(val, sField))
+                                try:
+                                    sVal = getattr(val, sField, None)
+                                    setattr(refModel, sField, sVal)
+                                except:
+                                    # Django getattrs don't work here, nice
+                                    pass
                         else:
                             if text_field and getattr(val, text_field):
                                 refModel._xobj.text = getattr(val, text_field)
@@ -1365,16 +1371,17 @@ class XObjModel(models.Model):
             blacklist =  getattr(self, '_xobj_hidden_accessors', set())
             accessorsList = [ (k, v) for (k, v) in accessors.items()
                 if k not in blacklist ]
+
         for accessorName, accessor in accessorsList:
             # Look up the name of the related model for the accessor.  Can be
             # overriden via _xobj.  E.g., The related model name for the
             # networks accessor on system is "network".
             var_name = self.getAccessorName(accessor)
-
             # Simple object to create for our accessor
             accessor_model = type(accessorName, (object,), {})()
 
             if getattr(accessor.field, 'Deferred', False):
+
                 # The accessor is deferred.  Create an href object for it
                 # instead of a object representing the xml.
                 rel_mod = accessor.model()

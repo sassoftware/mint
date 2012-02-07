@@ -146,7 +146,7 @@ class ConaryPackageInfo(modellib.XObjIdModel):
     architecture      = models.TextField(null=False)
     signature         = models.TextField(null=False)
     # needs to be deferrred so URL is included 
-    rpm_package       = modellib.DeferredForeignKey(RpmPackageInfo, related_name='+')
+    rpm_package       = modellib.ForeignKey(RpmPackageInfo, related_name='+')
 
 #***********************************************************
 

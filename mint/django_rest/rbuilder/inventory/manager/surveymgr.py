@@ -115,17 +115,19 @@ class SurveyManager(basemanager.BaseManager):
                 architecture = xinfo.architecture,
                 signature = xinfo.signature
             )
+            print "conary info: %s" % info
             encap = getattr(xinfo, 'rpm_package', None)
             if encap is not None:
                 info.rpm_package = rpm_info_by_id[encap]
                 info.save()
+                print "nested rpm: %s" % info
             pkg = survey_models.SurveyConaryPackage(
                 conary_package_info = info,
                 survey = survey,
                 install_date = xmodel.install_date     
             )
+            print "saving conary: %s" % pkg
             pkg.save()
-
 
         for xmodel in xservices:
             xinfo = xmodel.service_info
