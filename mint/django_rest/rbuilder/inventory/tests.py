@@ -22,6 +22,7 @@ from mint.django_rest.rbuilder.inventory import zones as zmodels
 from mint.django_rest.rbuilder.targets import models as targetmodels
 from mint.django_rest.rbuilder.jobs import models as jobmodels
 from mint.django_rest.rbuilder.inventory import testsxml
+from mint.django_rest.rbuilder.inventory import testsxml2
 from mint.django_rest.rbuilder.projects import models as projectmodels
 from mint.lib import x509
 from mint.rest.api import models as restmodels
@@ -121,9 +122,20 @@ class SurveyTests(XMLTestCase):
         url = "inventory/surveys/1234"
         response = self._get(url,
             username='admin', password='password')
-        print response.content
         self.assertEqual(response.status_code, 200)
         #self.assertXMLEquals(response.content, testsxml.survey_output_xml)      
+        print response.content
+
+    # disabling until backend conforms to format
+    def notest_survey_post_long(self):
+        sys = self._makeSystem()
+        url = "inventory/systems/%s/surveys" % sys.pk
+        response = self._post(url,
+            data = testsxml2.very_long_survey,
+            username='admin', password='password')
+        print response.content
+        self.assertEqual(response.status_code, 200)
+
 
 
 class AssimilatorTestCase(XMLTestCase, test_utils.SmartformMixIn):

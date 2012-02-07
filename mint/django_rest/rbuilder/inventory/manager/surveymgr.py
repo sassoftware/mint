@@ -69,11 +69,15 @@ class SurveyManager(basemanager.BaseManager):
         xservices        = self._listify(
             model.survey.services.service)
 
+        name    = getattr(xsurvey, 'name',        "")
+        desc    = getattr(xsurvey, 'description', "")
+        comment = getattr(xsurvey, 'comment',     "")
+
         survey = survey_models.Survey(
-            name        = xsurvey.name,
+            name        = name,
             uuid        = xsurvey.uuid,
-            description = xsurvey.description,
-            comment     = xsurvey.comment,
+            description = desc,
+            comment     = comment,
             removable   = True,
             system      = system
         )
