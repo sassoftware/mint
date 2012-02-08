@@ -90,12 +90,12 @@ class SurveyManager(basemanager.BaseManager):
         a temporary low level attempt at saving surveys
         which are not completely filled out.
         '''
-        system = inventory_models.System.objects.get(pk=system_id)
         model = xobj.parse(xml)
         return self.addSurveyForSystemFromXobj(system_id, model)
 
     @exposed
     def addSurveyForSystemFromXobj(self, system_id, model):
+        system = inventory_models.System.objects.get(pk=system_id)
         xsurvey          = model.survey
         xrpm_packages    = self._listify(
             model.survey.rpm_packages.rpm_package)
