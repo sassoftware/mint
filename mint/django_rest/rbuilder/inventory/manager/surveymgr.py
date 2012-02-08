@@ -68,6 +68,8 @@ class SurveyManager(basemanager.BaseManager):
             model.survey.conary_packages.conary_package)
         xservices        = self._listify(
             model.survey.services.service)
+        xtags            = self._listify(
+            model.survey.tags.tag)
 
         name    = getattr(xsurvey, 'name',        "")
         desc    = getattr(xsurvey, 'description', "")
@@ -107,32 +109,29 @@ class SurveyManager(basemanager.BaseManager):
         for xmodel in xconary_packages:
             xinfo = xmodel.conary_package_info
             info, created = survey_models.ConaryPackageInfo.objects.get_or_create(
-                name = xinfo.name,
-                version = xinfo.version,
-                flavor = xinfo.flavor,
-                description = xinfo.description,
-                revision = xinfo.revision,
+                name         = xinfo.name,
+                version      = xinfo.version,
+                flavor       = xinfo.flavor,
+                description  = xinfo.description,
+                revision     = xinfo.revision,
                 architecture = xinfo.architecture,
-                signature = xinfo.signature
+                signature    = xinfo.signature
             )
-            print "conary info: %s" % info
-            encap = getattr(xinfo, 'rpm_package', None)
+            encap = getattr(xinfo, 'rpm_package_info', None)
             if encap is not None:
-                info.rpm_package = rpm_info_by_id[encap]
+                info.rpm_package_info = rpm_info_by_id[encap.id]
                 info.save()
-                print "nested rpm: %s" % info
             pkg = survey_models.SurveyConaryPackage(
                 conary_package_info = info,
-                survey = survey,
-                install_date = xmodel.install_date     
+                survey              = survey,
+                install_date        = xmodel.install_date     
             )
-            print "saving conary: %s" % pkg
             pkg.save()
 
         for xmodel in xservices:
             xinfo = xmodel.service_info
             info, created = survey_models.ServiceInfo.objects.get_or_create(
-                name = xinfo.name,
+                name      = xinfo.name,
                 autostart = xinfo.autostart,
                 runlevels = xinfo.runlevels
             ) 
@@ -143,6 +142,13 @@ class SurveyManager(basemanager.BaseManager):
                 status       = xmodel.status 
             )
             service.save()
+
+        for xmodel in xtags:
+            tag = survey_models.SurveyTag(
+                survey       = survey,
+                name         = xmodel.name
+            )
+            tag.save()
 
         survey = survey_models.Survey.objects.get(pk=survey.pk)
         return survey

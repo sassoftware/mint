@@ -791,26 +791,47 @@ class SurveyService(BaseInventoryService):
         return self.mgr.getSurvey(uuid)
 
 class SurveyRpmPackageService(BaseInventoryService):
+    # FIXME: rbac?
+    # FIXME: implement
     pass
 
 class SurveyConaryPackageService(BaseInventoryService):
+    # FIXME: rbac?
+    # FIXME: implement
     pass
 
 class SurveyServiceService(BaseInventoryService):
+    # FIXME: rbac?
+    # FIXME: implement
     pass
 
 class SurveyDiffService(BaseInventoryService):
+    # FIXME: rbac?
+    # FIXME: implement
     pass
 
 class SurveyDiffsService(BaseInventoryService):
+    # FIXME: rbac?
+    # FIXME: implement
     pass
 
 class SurveyRpmPackageInfoService(BaseInventoryService):
+    # FIXME: rbac?
+    # FIXME: implement
     pass
 
 class SurveyConaryPackageInfoService(BaseInventoryService):
+    # FIXME: rbac?
+    # FIXME: implement
     pass
 
 class SurveyServiceInfoService(BaseInventoryService):
+    # FIXME: rbac?
+    # FIXME: implement
+    pass
+
+class SurveyTagService(BaseInventoryService):
+    # FIXME: rbac?
+    # FIXME: implement
     pass
 

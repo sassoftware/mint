@@ -1337,7 +1337,7 @@ class XObjModel(models.Model):
                                     sVal = getattr(val, sField, None)
                                     setattr(refModel, sField, sVal)
                                 except:
-                                    # Django getattrs don't work here, nice
+                                    # if summary view references value that doesn't exist
                                     pass
                         else:
                             if text_field and getattr(val, text_field):
