@@ -79,10 +79,27 @@ class SurveyManager(basemanager.BaseManager):
         return survey_models.SurveyTag.objects.get(pk=id)
   
     # xobj hack
-    def _listify(self, foo):
-       if type(foo) != list:
-           foo = [ foo ]
-       return foo
+    @classmethod
+    def _listify(cls, foo):
+        if isinstance(foo, list):
+            return foo
+        if isinstance(foo, None):
+            return []
+        return [ foo ]
+
+    # more hacks for possible missing elements
+    @classmethod
+    def _subel(cls, obj, *path):
+        """
+        Walk over all the path items, return the last one as a list,
+        gracefully handling missing intermediate ones
+        """
+        for item in path:
+            subelem = getattr(obj, item, None)
+            if subelem is None:
+                return []
+            obj = subelem
+        return cls._listify(obj)
 
     @exposed
     def addSurveyForSystemFromXml(self, system_id, xml):
@@ -97,15 +114,10 @@ class SurveyManager(basemanager.BaseManager):
     def addSurveyForSystemFromXobj(self, system_id, model):
         system = inventory_models.System.objects.get(pk=system_id)
         xsurvey          = model.survey
-        xrpm_packages    = self._listify(
-            model.survey.rpm_packages.rpm_package)
-        xconary_packages = self._listify(
-            model.survey.conary_packages.conary_package)
-        xservices        = self._listify(
-            model.survey.services.service)
-        xtags = []
-        if getattr(model.survey, 'tags', None) is not None:
-            xtags  = self._listify(model.survey.tags.tag)
+        xrpm_packages = self._subel(xsurvey, 'rpm_packages', 'rpm_package')
+        xconary_packages = self._subel(xsurvey, 'conary_packages', 'conary_package')
+        xservices = self._subel(xsurvey, 'services', 'service')
+        xtags = self._subel(xsurvey, 'tags', 'tag')
 
         name    = getattr(xsurvey, 'name',        "")
         desc    = getattr(xsurvey, 'description', "")
