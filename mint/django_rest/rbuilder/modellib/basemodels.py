@@ -1329,8 +1329,8 @@ class XObjModel(models.Model):
                             self.__class__.__name__, (object,), {})()
                         refModel._xobj = xobj.XObjMetadata(
                                             attributes = {"id":str})
-                        setattr(refModel, "id", 
-                            val.get_absolute_url(request))
+                        absolute_url = val.get_absolute_url(request)
+                        setattr(refModel, "id", absolute_url)
                         if hasattr(val, "summary_view") and fieldName not in getattr(self, '_xobj_summary_view_hide', []):
                             for sField in val.summary_view:
                                 try:
@@ -1419,7 +1419,10 @@ class XObjModel(models.Model):
                                     view_name=rel_mod.view_name)
                                 rel_mod_ser._xobj = xobj.XObjMetadata(
                                     attributes={"id":str})
-                                setattr(rel_mod_ser, "id", href)
+                                if getattr(rel_mod_ser, 'id', None) is None:
+                                    # set the id only if already not set by a
+                                    # custom serializer
+                                    setattr(rel_mod_ser, "id", href)
                             
                             accessorModelValues.append(rel_mod_ser)
                     else:

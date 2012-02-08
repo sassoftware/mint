@@ -45,6 +45,37 @@ class SurveyManager(basemanager.BaseManager):
        surveys = survey_models.Surveys()
        surveys.survey = survey_models.Survey.objects.filter(system__pk=system_id)
        return surveys
+
+    # bunch of boilerplate so IDs to micro-survey obejcts will be valid
+    # not really that useful for API but need to work:
+
+    @exposed
+    def getSurveyRpmPackage(self, id):
+        return survey_models.SurveyRpmPackage.objects.get(pk=id)
+
+    @exposed
+    def getSurveyConaryPackage(self, id):
+        return survey_models.SurveyConaryPackage.objects.get(pk=id)
+
+    @exposed
+    def getSurveyService(self, id):
+        return survey_models.SurveyService.objects.get(pk=id)
+
+    @exposed
+    def getSurveyRpmPackageInfo(self, id):
+        return survey_models.RpmPackageInfo.objects.get(pk=id)
+
+    @exposed
+    def getSurveyConaryPackageInfo(self, id):
+        return survey_models.ConaryPackageInfo.objects.get(pk=id)
+
+    @exposed
+    def getSurveyServiceInfo(self, id):
+        return survey_models.ServiceInfo.objects.get(pk=id)
+    
+    @exposed
+    def getSurveyTag(self, id):
+        return survey_models.SurveyTag.objects.get(pk=id)
   
     # xobj hack
     def _listify(self, foo):

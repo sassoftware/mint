@@ -49,6 +49,11 @@ class SurveyTests(XMLTestCase):
         sys.managing_zone=zone
         sys.save()
         return sys
+
+    def _hiturl(self, url):
+        response = self._get(url,
+            username='admin', password='password')
+        self.assertEqual(response.status_code, 200)
  
     def notestSurveySerialization(self):
         # FIXME: basic serialization test until things get more real
@@ -129,8 +134,17 @@ class SurveyTests(XMLTestCase):
         response = self._get(url,
             username='admin', password='password')
         self.assertEqual(response.status_code, 200)
-        #self.assertXMLEquals(response.content, testsxml.survey_output_xml)      
         print response.content
+        #self.assertXMLEquals(response.content, testsxml.survey_output_xml)      
+        #print response.content
+        # make sure inline urls work
+        self._hiturl("inventory/survey_tags/1")
+        self._hiturl("inventory/survey_rpm_packages/1")
+        self._hiturl("inventory/survey_conary_packages/1")
+        self._hiturl("inventory/survey_services/1")
+        self._hiturl("inventory/rpm_package_info/1")
+        self._hiturl("inventory/conary_package_info/1")
+        self._hiturl("inventory/service_info/1")
 
     # disabling until backend conforms to format
     def notest_survey_post_long(self):

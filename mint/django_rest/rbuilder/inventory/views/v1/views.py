@@ -775,6 +775,8 @@ class SurveysService(BaseInventoryService):
     def get(self, system_id):
         return self.mgr.getSurveysForSystem(system_id)
 
+
+
 # FIXME -- safe to remove?
 class SurveyService(BaseInventoryService):
     ''' 
@@ -791,19 +793,40 @@ class SurveyService(BaseInventoryService):
         return self.mgr.getSurvey(uuid)
 
 class SurveyRpmPackageService(BaseInventoryService):
+
     # FIXME: rbac?
     # FIXME: implement
-    pass
+    @rbac(manual_rbac)
+    @return_xml
+    def rest_GET(self, request, id):
+        return self.get(id)
+
+    def get(self, id):
+        return self.mgr.getSurveyRpmPackage(id)
 
 class SurveyConaryPackageService(BaseInventoryService):
+
     # FIXME: rbac?
     # FIXME: implement
-    pass
+    @rbac(manual_rbac)
+    @return_xml
+    def rest_GET(self, request, id):
+        return self.get(id)
+
+    def get(self, id):
+        return self.mgr.getSurveyConaryPackage(id)
 
 class SurveyServiceService(BaseInventoryService):
+
     # FIXME: rbac?
     # FIXME: implement
-    pass
+    @rbac(manual_rbac)
+    @return_xml
+    def rest_GET(self, request, id):
+        return self.get(id)
+
+    def get(self, id):
+        return self.mgr.getSurveyService(id)
 
 class SurveyDiffService(BaseInventoryService):
     # FIXME: rbac?
@@ -816,22 +839,50 @@ class SurveyDiffsService(BaseInventoryService):
     pass
 
 class SurveyRpmPackageInfoService(BaseInventoryService):
+
     # FIXME: rbac?
     # FIXME: implement
-    pass
+    @rbac(manual_rbac)
+    @return_xml
+    def rest_GET(self, request, id):
+        return self.get(id)
+
+    def get(self, id):
+        return self.mgr.getSurveyRpmPackageInfo(id)
 
 class SurveyConaryPackageInfoService(BaseInventoryService):
+
     # FIXME: rbac?
     # FIXME: implement
-    pass
+    @rbac(manual_rbac)
+    @return_xml
+    def rest_GET(self, request, id):
+        return self.get(id)
+
+    def get(self, id):
+        return self.mgr.getSurveyConaryPackageInfo(id)
 
 class SurveyServiceInfoService(BaseInventoryService):
+
     # FIXME: rbac?
     # FIXME: implement
-    pass
+    @rbac(manual_rbac)
+    @return_xml
+    def rest_GET(self, request, id):
+        return self.get(id)
+
+    def get(self, id):
+        return self.mgr.getSurveyServiceInfo(id)
 
 class SurveyTagService(BaseInventoryService):
+
     # FIXME: rbac?
     # FIXME: implement
-    pass
+    @rbac(manual_rbac)
+    @return_xml
+    def rest_GET(self, request, id):
+        return self.get(id)
+
+    def get(self, id):
+        return self.mgr.getSurveyTag(id)
 

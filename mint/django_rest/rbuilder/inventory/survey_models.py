@@ -121,6 +121,13 @@ class RpmPackageInfo(modellib.XObjIdModel):
      description    = models.TextField(null=True)
      signature      = models.TextField(null=False)
 
+     def get_url_key(self, *args, **kwargs):
+         return [ self.rpm_package_id ]
+
+     def to_xml(self, request=None, xobj_model=None):
+         self.id = self.get_absolute_url(request, parents=[]) # ._system])
+         return xobj.toxml(self)
+
 #***********************************************************
 
 class ConaryPackageInfo(modellib.XObjIdModel):
@@ -150,12 +157,14 @@ class ConaryPackageInfo(modellib.XObjIdModel):
 
     # workaround summary views and FKs not working as expected
     # FIXME: WHAT, custom serialize not run for these relations?  OW.
-    def serialize(self, request=None):
-        xobjModel = modellib.XObjIdModel.serialize(self, request)
-        if self.rpm_package is not None:
-            rpmModel = modellib.XObjIdModel.serialize(self.rpm_package, request)
-            xobjModel.rpm_package_info = rpmModel
-        return xobjModel
+    #def serialize(self, request=None):
+    #    xobjModel = modellib.XObjIdModel.serialize(self, request)
+    #    if self.rpm_package is not None:
+    #        rpmModel = modellib.XObjIdModel.serialize(self.rpm_package, request)
+    #        xobjModel.rpm_package_info = rpmModel
+
+    def get_url_key(self, *args, **kwargs):
+	return [ self.conary_package_id ]
 
 #***********************************************************
 
@@ -177,6 +186,9 @@ class ServiceInfo(modellib.XObjIdModel):
     autostart         = models.BooleanField(default=False)
     runlevels         = models.TextField(default='')
 
+    def get_url_key(self, *args, **kwargs):
+	return [ self.service_id ]
+
 #***********************************************************
 
 class SurveyTag(modellib.XObjIdModel):
@@ -191,6 +203,9 @@ class SurveyTag(modellib.XObjIdModel):
     tag_id = models.AutoField(primary_key=True)
     survey = modellib.ForeignKey(Survey, related_name='tags')
     name   = models.TextField()
+    
+    def get_url_key(self, *args, **kwargs):
+	return [ self.tag_id ]
 
 #***********************************************************
 
@@ -208,6 +223,15 @@ class SurveyRpmPackage(modellib.XObjIdModel):
     rpm_package_info = modellib.ForeignKey(RpmPackageInfo, related_name='survey_rpm_packages', db_column='rpm_package_id', null=False)
     install_date     = modellib.DateTimeUtcField(auto_now_add=True)
 
+    # FIXME: shouldn't be needed with get_url_key, remove?
+    def serialize(self, request, *args, **kwargs):
+        xobj_model = modellib.XObjIdModel.serialize(self, request)
+        xobj_model.id = self.get_absolute_url(request)
+        return xobj_model
+    
+    def get_url_key(self, *args, **kwargs):
+	return [ self.rpm_package_id ]
+
 #***********************************************************
     
 class SurveyConaryPackage(modellib.XObjIdModel):
@@ -223,6 +247,9 @@ class SurveyConaryPackage(modellib.XObjIdModel):
     survey              = modellib.ForeignKey(Survey, related_name='conary_packages', null=False)
     conary_package_info = modellib.ForeignKey(ConaryPackageInfo, related_name='survey_conary_packages', db_column='conary_package_id', null=False)
     install_date        = modellib.DateTimeUtcField(auto_now_add=True)
+    
+    def get_url_key(self, *args, **kwargs):
+	return [ self.conary_package_id ] 
 
 #***********************************************************
 
@@ -240,6 +267,9 @@ class SurveyService(modellib.XObjIdModel):
     service_info    = modellib.ForeignKey(ServiceInfo, related_name='survey_services', db_column='service_id', null=False)
     running         = models.BooleanField()
     status          = models.TextField()
+    
+    def get_url_key(self, *args, **kwargs):
+	return [ self.service_id ] 
 
 #***********************************************************
     
