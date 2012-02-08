@@ -164,7 +164,7 @@ class ConaryPackageInfo(modellib.XObjIdModel):
     #        xobjModel.rpm_package_info = rpmModel
 
     def get_url_key(self, *args, **kwargs):
-	return [ self.conary_package_id ]
+        return [ self.conary_package_id ]
 
 #***********************************************************
 
@@ -187,7 +187,7 @@ class ServiceInfo(modellib.XObjIdModel):
     runlevels         = models.TextField(default='')
 
     def get_url_key(self, *args, **kwargs):
-	return [ self.service_id ]
+        return [ self.service_id ]
 
 #***********************************************************
 
@@ -205,7 +205,7 @@ class SurveyTag(modellib.XObjIdModel):
     name   = models.TextField()
     
     def get_url_key(self, *args, **kwargs):
-	return [ self.tag_id ]
+        return [ self.tag_id ]
 
 #***********************************************************
 
@@ -221,7 +221,7 @@ class SurveyRpmPackage(modellib.XObjIdModel):
     rpm_package_id   = models.AutoField(primary_key=True, db_column='map_id')
     survey           = modellib.ForeignKey(Survey, related_name='rpm_packages', null=False)
     rpm_package_info = modellib.ForeignKey(RpmPackageInfo, related_name='survey_rpm_packages', db_column='rpm_package_id', null=False)
-    install_date     = modellib.DateTimeUtcField(auto_now_add=True)
+    install_date     = modellib.DateTimeUtcField(auto_now_add=False, null=True)
 
     # FIXME: shouldn't be needed with get_url_key, remove?
     def serialize(self, request, *args, **kwargs):
@@ -230,7 +230,7 @@ class SurveyRpmPackage(modellib.XObjIdModel):
         return xobj_model
     
     def get_url_key(self, *args, **kwargs):
-	return [ self.rpm_package_id ]
+        return [ self.rpm_package_id ]
 
 #***********************************************************
     
@@ -246,10 +246,10 @@ class SurveyConaryPackage(modellib.XObjIdModel):
     conary_package_id   = models.AutoField(primary_key=True, db_column='map_id')
     survey              = modellib.ForeignKey(Survey, related_name='conary_packages', null=False)
     conary_package_info = modellib.ForeignKey(ConaryPackageInfo, related_name='survey_conary_packages', db_column='conary_package_id', null=False)
-    install_date        = modellib.DateTimeUtcField(auto_now_add=True)
+    install_date        = modellib.DateTimeUtcField(auto_now_add=False, null=True)
     
     def get_url_key(self, *args, **kwargs):
-	return [ self.conary_package_id ] 
+        return [ self.conary_package_id ] 
 
 #***********************************************************
 
@@ -269,7 +269,7 @@ class SurveyService(modellib.XObjIdModel):
     status          = models.TextField()
     
     def get_url_key(self, *args, **kwargs):
-	return [ self.service_id ] 
+        return [ self.service_id ] 
 
 #***********************************************************
     

@@ -134,7 +134,6 @@ class SurveyTests(XMLTestCase):
         response = self._get(url,
             username='admin', password='password')
         self.assertEqual(response.status_code, 200)
-        print response.content
         #self.assertXMLEquals(response.content, testsxml.survey_output_xml)      
         #print response.content
         # make sure inline urls work
@@ -145,18 +144,15 @@ class SurveyTests(XMLTestCase):
         self._hiturl("inventory/rpm_package_info/1")
         self._hiturl("inventory/conary_package_info/1")
         self._hiturl("inventory/service_info/1")
-
+        
     # disabling until backend conforms to format
-    def notest_survey_post_long(self):
+    def test_survey_post_long(self):
         sys = self._makeSystem()
         url = "inventory/systems/%s/surveys" % sys.pk
         response = self._post(url,
             data = testsxml2.very_long_survey,
             username='admin', password='password')
-        print response.content
         self.assertEqual(response.status_code, 200)
-
-
 
 class AssimilatorTestCase(XMLTestCase, test_utils.SmartformMixIn):
     ''' 

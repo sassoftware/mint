@@ -29,6 +29,7 @@ from mint.django_rest.rbuilder.manager import basemanager
 # from mint.rest import errors as mint_rest_errors
 #from smartform import descriptor
 from xobj import xobj
+import datetime
 
 log = logging.getLogger(__name__)
 exposed = basemanager.exposed
@@ -99,8 +100,9 @@ class SurveyManager(basemanager.BaseManager):
             model.survey.conary_packages.conary_package)
         xservices        = self._listify(
             model.survey.services.service)
-        xtags            = self._listify(
-            model.survey.tags.tag)
+        xtags = []
+        if getattr(model.survey, 'tags', None) is not None:
+            xtags  = self._listify(model.survey.tags.tag)
 
         name    = getattr(xsurvey, 'name',        "")
         desc    = getattr(xsurvey, 'description', "")
@@ -120,21 +122,34 @@ class SurveyManager(basemanager.BaseManager):
 
         for xmodel in xrpm_packages:
             xinfo = xmodel.rpm_package_info
+
+            # be tolerant of the way epoch comes back from node XML
+            epoch = getattr(xinfo, 'epoch', 0)
+            if epoch is None or str(epoch) == 'None':
+                epoch = 0
             info, created = survey_models.RpmPackageInfo.objects.get_or_create(
                name         = xinfo.name,
-               epoch        = xinfo.epoch,
                version      = xinfo.version,
+               epoch        = epoch,
                release      = xinfo.release,
                architecture = xinfo.architecture,
                description  = xinfo.description,
-               signature    = xinfo.signature,
+               signature    = str(xinfo.signature),
             )
+
             rpm_info_by_id[xmodel.id] = info
             pkg = survey_models.SurveyRpmPackage(
                survey           = survey,
                rpm_package_info = info,
-               install_date     = xmodel.install_date,
             )
+            idate = None
+            try:
+                idate = datetime.datetime.utcfromtimestamp(int(xmodel.install_date))
+            except ValueError:
+                # happens when posting Englishey dates and is not the normal route
+                idate = xmodel.install_date
+
+            pkg.install_date = idate
             pkg.save()
 
         for xmodel in xconary_packages:
@@ -146,7 +161,7 @@ class SurveyManager(basemanager.BaseManager):
                 description  = xinfo.description,
                 revision     = xinfo.revision,
                 architecture = xinfo.architecture,
-                signature    = xinfo.signature
+                signature    = str(xinfo.signature)
             )
             encap = getattr(xinfo, 'rpm_package_info', None)
             if encap is not None:
@@ -155,7 +170,9 @@ class SurveyManager(basemanager.BaseManager):
             pkg = survey_models.SurveyConaryPackage(
                 conary_package_info = info,
                 survey              = survey,
-                install_date        = xmodel.install_date     
+                # TODO: not yet available in conary
+                install_date        = datetime.datetime.fromtimestamp(0)
+                # None # xmodel.install_date     
             )
             pkg.save()
 
