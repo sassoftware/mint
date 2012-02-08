@@ -92,7 +92,10 @@ class SurveyManager(basemanager.BaseManager):
         '''
         system = inventory_models.System.objects.get(pk=system_id)
         model = xobj.parse(xml)
+        return self.addSurveyForSystemFromXobj(system_id, model)
 
+    @exposed
+    def addSurveyForSystemFromXobj(self, system_id, model):
         xsurvey          = model.survey
         xrpm_packages    = self._listify(
             model.survey.rpm_packages.rpm_package)
