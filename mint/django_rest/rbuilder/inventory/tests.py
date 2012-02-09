@@ -145,6 +145,14 @@ class SurveyTests(XMLTestCase):
         self._hiturl("inventory/conary_package_info/1")
         self._hiturl("inventory/service_info/1")
         
+        url = "inventory/surveys/1234"
+        response = self._put(url,
+            data = testsxml.survey_mod_xml,
+            username='admin', password='password')
+        self.assertEqual(response.status_code, 200)
+        print response.content
+         
+  
     # disabling until backend conforms to format
     def test_survey_post_long(self):
         sys = self._makeSystem()

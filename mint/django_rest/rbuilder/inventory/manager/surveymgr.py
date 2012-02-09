@@ -102,6 +102,12 @@ class SurveyManager(basemanager.BaseManager):
         return cls._listify(obj)
 
     @exposed
+    def updateSurvey(self, survey):
+        survey.save()
+        survey = survey_models.Survey.objects.get(pk=survey.pk)
+        return survey
+
+    @exposed
     def addSurveyForSystemFromXml(self, system_id, xml):
         '''
         a temporary low level attempt at saving surveys
@@ -112,12 +118,14 @@ class SurveyManager(basemanager.BaseManager):
 
     @exposed
     def addSurveyForSystemFromXobj(self, system_id, model):
+
         system = inventory_models.System.objects.get(pk=system_id)
+
         xsurvey          = model.survey
-        xrpm_packages = self._subel(xsurvey, 'rpm_packages', 'rpm_package')
+        xrpm_packages    = self._subel(xsurvey, 'rpm_packages', 'rpm_package')
         xconary_packages = self._subel(xsurvey, 'conary_packages', 'conary_package')
         xservices = self._subel(xsurvey, 'services', 'service')
-        xtags = self._subel(xsurvey, 'tags', 'tag')
+        xtags     = self._subel(xsurvey, 'tags', 'tag')
 
         name    = getattr(xsurvey, 'name',        "")
         desc    = getattr(xsurvey, 'description', "")
@@ -216,38 +224,3 @@ class SurveyManager(basemanager.BaseManager):
         survey = survey_models.Survey.objects.get(pk=survey.pk)
         return survey
         
-    @exposed
-    # TEMPORARILY NOT USED until we can get modellib recursive
-    # craziness sorted out
-    def addSurveyForSystem(self, system_id, survey, by_user):
-       system = inventory_models.System.objects.get(system_id)
-       survey.system = system
-       if survey.created_by is None or survey.modified_by is None:
-           users = user_models.objects.order_by('user_id').all()
-           if survey.created_by is None:
-               survey.created_by = users[0]
-           if survey.modified_by is None:
-               survey.modified_by = users[0]
-   
-       # how to spin the survey IDs back in?
-
-       survey.conary_packages.clear()
-       survey.rpm_packages.clear()
-       survey.services.clear()
-
-       for scp in survey.conary_packages.all():
-            scp.survey_id = survey
-            scp.save()
-       for srp in survey.rpm_packages.all():
-            srp.survey_id = survey
-            srp.save()
-       for ss in survey.services.all():
-            ss.survey_id = survey
-            ss.save()
-
-       # TODO: any other validation/added info?
-       # this is probably already done, but anyway
-       survey.save()
-       return survey
-       #survey2 = survey_models.Survey.object.get(pk=survey.__pk)
-       #return survey2

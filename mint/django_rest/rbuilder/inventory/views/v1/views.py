@@ -792,6 +792,13 @@ class SurveyService(BaseInventoryService):
     def get(self, uuid):
         return self.mgr.getSurvey(uuid)
 
+    # TODO: rbac exclusion based on permissions of system
+    @rbac(manual_rbac)
+    @return_xml
+    def rest_PUT(self, request, uuid):
+        xml = request.raw_post_data
+        return self.mgr.updateSurveyFromXml(uuid, xml)
+
 class SurveyRpmPackageService(BaseInventoryService):
 
     # FIXME: rbac?

@@ -3890,3 +3890,22 @@ survey_input_xml = """
 </survey>
 """
 
+# FIXME: add tests trying to clobber fields it should not clobber
+# or if it can erase things
+
+survey_mod_xml="""
+<survey id='http://testserver/api/v1/inventory/surveys/1234'>
+    <comment>Here is a comment</comment>
+    <uuid>1234</uuid>
+    <name>Here is a name</name>
+    <removable>True</removable>
+    <tags>
+      <tag>
+        <name>onfire</name>
+      </tag>
+      <tag>
+        <name>stat</name>
+      </tag>
+    </tags>
+</survey>
+"""
