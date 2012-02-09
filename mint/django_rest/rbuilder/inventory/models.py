@@ -748,6 +748,15 @@ class System(modellib.XObjIdModel):
 
                 def __init__(self, href):
                     self.id = href
+
+            class SurveysHref(object):
+                _xobj = xobj.XObjMetadata(
+                            tag='surveys',
+                            attributes={'id':str})
+
+                def __init__(self, href):
+                    self.id = href
+
             
             if not summarize:
                 xobj_model.credentials = CredentialsHref(request.build_absolute_uri(
@@ -758,6 +767,9 @@ class System(modellib.XObjIdModel):
             
                 xobj_model.configuration_descriptor = ConfigurationDescriptorHref(request.build_absolute_uri(
                     '%s/configuration_descriptor' % self.get_absolute_url(request)))
+                
+                xobj_model.surveys = SurveysHref(request.build_absolute_uri(
+                    '%s/surveys' % self.get_absolute_url(request)))
 
         class JobsHref(modellib.XObjIdModel):
             _xobj = xobj.XObjMetadata(tag='jobs',
