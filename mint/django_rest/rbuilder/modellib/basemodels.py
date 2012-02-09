@@ -290,9 +290,6 @@ class BaseManager(models.Manager):
         fields = model._get_field_dict()
         set_fields = []
 
-        #if type(xobjModel) == type([]):
-        #    import epdb; epdb.st()
-
         for key, val in xobjModel.__dict__.items():
             field = fields.get(key, None)
 
@@ -1417,8 +1414,8 @@ class XObjModel(models.Model):
                                 href = rel_mod.get_absolute_url(request, 
                                     parents=[self], 
                                     view_name=rel_mod.view_name)
-                                rel_mod_ser._xobj = xobj.XObjMetadata(
-                                    attributes={"id":str})
+                                #rel_mod_ser._xobj = xobj.XObjMetadata(
+                                #    attributes={"id":str})
                                 if getattr(rel_mod_ser, 'id', None) is None:
                                     # set the id only if already not set by a
                                     # custom serializer

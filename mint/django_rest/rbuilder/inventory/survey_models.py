@@ -124,10 +124,6 @@ class RpmPackageInfo(modellib.XObjIdModel):
      def get_url_key(self, *args, **kwargs):
          return [ self.rpm_package_id ]
 
-     def to_xml(self, request=None, xobj_model=None):
-         self.id = self.get_absolute_url(request, parents=[]) # ._system])
-         return xobj.toxml(self)
-
 #***********************************************************
 
 class ConaryPackageInfo(modellib.XObjIdModel):
@@ -154,14 +150,6 @@ class ConaryPackageInfo(modellib.XObjIdModel):
     signature         = models.TextField(null=False)
     # needs to be deferrred so URL is included 
     rpm_package_info  = modellib.ForeignKey(RpmPackageInfo, db_column='rpm_package_id', related_name='+')
-
-    # workaround summary views and FKs not working as expected
-    # FIXME: WHAT, custom serialize not run for these relations?  OW.
-    #def serialize(self, request=None):
-    #    xobjModel = modellib.XObjIdModel.serialize(self, request)
-    #    if self.rpm_package is not None:
-    #        rpmModel = modellib.XObjIdModel.serialize(self.rpm_package, request)
-    #        xobjModel.rpm_package_info = rpmModel
 
     def get_url_key(self, *args, **kwargs):
         return [ self.conary_package_id ]
@@ -223,12 +211,6 @@ class SurveyRpmPackage(modellib.XObjIdModel):
     rpm_package_info = modellib.ForeignKey(RpmPackageInfo, related_name='survey_rpm_packages', db_column='rpm_package_id', null=False)
     install_date     = modellib.DateTimeUtcField(auto_now_add=False, null=True)
 
-    # FIXME: shouldn't be needed with get_url_key, remove?
-    def serialize(self, request, *args, **kwargs):
-        xobj_model = modellib.XObjIdModel.serialize(self, request)
-        xobj_model.id = self.get_absolute_url(request)
-        return xobj_model
-    
     def get_url_key(self, *args, **kwargs):
         return [ self.rpm_package_id ]
 
