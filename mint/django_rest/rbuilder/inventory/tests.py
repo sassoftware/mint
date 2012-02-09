@@ -131,7 +131,6 @@ class SurveyTests(XMLTestCase):
             username='admin', password='password')
         self.assertEqual(response.status_code, 200)
         #self.assertXMLEquals(response.content, testsxml.survey_output_xml)      
-        print response.content
         # make sure inline urls work
         self._hiturl("inventory/survey_tags/1")
         self._hiturl("inventory/survey_rpm_packages/1")
@@ -149,7 +148,7 @@ class SurveyTests(XMLTestCase):
         print response.content     
   
     # disabling until backend conforms to format
-    def notest_survey_post_long(self):
+    def test_survey_post_long(self):
         sys = self._makeSystem()
         url = "inventory/systems/%s/surveys" % sys.pk
         response = self._post(url,
