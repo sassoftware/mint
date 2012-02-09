@@ -28,7 +28,7 @@ from conary.dbstore import sqlerrors, sqllib
 log = logging.getLogger(__name__)
 
 # database schema major version
-RBUILDER_DB_VERSION = sqllib.DBversion(62, 1)
+RBUILDER_DB_VERSION = sqllib.DBversion(62, 2)
 
 def _createTrigger(db, table, column="changed"):
     retInsert = db.createTrigger(table, column, "INSERT")
@@ -1438,6 +1438,10 @@ def _createInventorySchema(db, cfg):
                   description='On-demand system registration',
                   priority=110,
                   resource_type='System'),
+             dict(name="system scan",
+                  description="Scan system",
+                  priority=105,
+                  resource_type="System"),
             ])
 
     if 'inventory_system_event' not in db.tables:
@@ -1527,6 +1531,8 @@ def _createInventorySchema(db, cfg):
             system_id       INTEGER NOT NULL
                 REFERENCES inventory_system ON DELETE SET NULL
         ) %(TABLEOPTS)s""")
+    db.createIndex('jobs_created_system', 'jobs_created_system_jid_sid_uq',
+            'job_id, system_id', unique=True)
 
     createTable(db, 'jobs_created_image', """
         CREATE TABLE jobs_created_image
@@ -1537,7 +1543,8 @@ def _createInventorySchema(db, cfg):
             image_id        INTEGER NOT NULL
                 REFERENCES builds (buildid) ON DELETE SET NULL
         ) %(TABLEOPTS)s""")
-
+    db.createIndex('jobs_created_image', 'jobs_created_image_jid_iid_uq',
+            'job_id, image_id', unique=True)
 
     tableName = "inventory_system_job"
     if 'inventory_system_job' not in db.tables:
@@ -1721,7 +1728,17 @@ def _createSurveyTables(db, cfg):
                 xml TEXT
     """)
 
-
+    createTable(db, 'jobs_created_survey', """
+            id          %(PRIMARYKEY)s,
+            job_id      integer NOT NULL
+                        REFERENCES jobs_job(job_id)
+                        ON DELETE CASCADE,
+            survey_id integer NOT NULL
+                        REFERENCES inventory_survey(survey_id)
+                        ON DELETE CASCADE,
+    """)
+    db.createIndex('jobs_created_survey', 'jobs_created_survey_jid_sid_uq',
+            'job_id, survey_id', unique=True)
 
 def _addSystemStates(db, cfg):
     _addTableRows(db, 'inventory_system_state', 'name', [

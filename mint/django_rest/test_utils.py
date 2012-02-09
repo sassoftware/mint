@@ -682,6 +682,8 @@ class _StorageObject(object):
         return self.__dict__ == other.__dict__
     def __repr__(self):
         return repr(self.__dict__)
+    def pop(self, field):
+        return self.__dict__.pop(field)
 
 class _SlotStorageObject(object):
     __slots__ = []
