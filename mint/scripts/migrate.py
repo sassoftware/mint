@@ -4728,7 +4728,7 @@ class MigrateTo_61(SchemaMigration):
 
 class MigrateTo_62(SchemaMigration):
     '''Fork!'''
-    Version = (62, 1)
+    Version = (62, 2)
 
     def migrate(self):
 
@@ -4821,6 +4821,31 @@ class MigrateTo_62(SchemaMigration):
             DROP NOT NULL""")
         cu.execute("""ALTER TABLE inventory_survey ALTER modified_by
             DROP NOT NULL""")
+        return True
+
+    def migrate2(self):
+        db = self.db
+        schema._addTableRows(db, 'jobs_job_type', 'name', [
+             dict(name="system scan",
+                  description="Scan system",
+                  priority=105,
+                  resource_type="System"),
+        ])
+        db.createIndex('jobs_created_system', 'jobs_created_system_jid_sid_uq',
+            'job_id, system_id', unique=True)
+        db.createIndex('jobs_created_image', 'jobs_created_image_jid_iid_uq',
+            'job_id, image_id', unique=True)
+        createTable2(db, 'jobs_created_survey', """
+            id          %(PRIMARYKEY)s,
+            job_id      integer NOT NULL
+                        REFERENCES jobs_job(job_id)
+                        ON DELETE CASCADE,
+            survey_id integer NOT NULL
+                        REFERENCES inventory_survey(survey_id)
+                        ON DELETE CASCADE,
+        """)
+        db.createIndex('jobs_created_survey', 'jobs_created_survey_jid_sid_uq',
+            'job_id, survey_id', unique=True)
         return True
 
 #### SCHEMA MIGRATIONS END HERE #############################################

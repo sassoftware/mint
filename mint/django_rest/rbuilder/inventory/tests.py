@@ -198,27 +198,31 @@ class AssimilatorTestCase(XMLTestCase, test_utils.SmartformMixIn):
         if not isinstance(actions, list):
            actions = [actions]
         self.failUnlessEqual([ x.name for x in actions ],
-            ['Assimilate system', "System capture"])
+            ['Assimilate system', "System scan", "System capture"])
         self.failUnlessEqual([ x.description for x in actions ],
-            ['Assimilate system', "Capture a system's image"])
+            ['Assimilate system', "Scan system", "Capture a system's image"])
 
     def testFetchActionsDescriptor(self): 
-        descriptorType = 'assimilation'
-        # can we determine what smartform we need to populate?
-        url = "inventory/systems/%s/descriptors/%s" % (self.system.pk, descriptorType)
-        response = self._get(url, username="admin", password="password")
-        self.failUnlessEqual(response.status_code, 200)
-        obj = xobj.parse(response.content)
-        self.failUnlessEqual(obj.descriptor.metadata.displayName, 'System Assimilation')
-        self.failUnlessEqual(obj.descriptor.metadata.descriptions.desc, 'System Assimilation')
-        # make sure the same works with parameters
-        url = "inventory/systems/%s/descriptors/%s?foo=bar" % (self.system.pk,
-            descriptorType)
-        response = self._get(url, username="admin", password="password")
-        self.failUnlessEqual(response.status_code, 200)
-        obj = xobj.parse(response.content)
-        self.failUnlessEqual(obj.descriptor.metadata.displayName, 'System Assimilation')
-        self.failUnlessEqual(obj.descriptor.metadata.descriptions.desc, 'System Assimilation')
+        descriptorTestData = [
+            ('assimilation', 'System Assimilation', 'System Assimilation'),
+            ('survey_scan', 'System Scan', 'System Scan'),
+        ]
+        for descriptorType, descrName, descrDescr in descriptorTestData:
+            # can we determine what smartform we need to populate?
+            url = "inventory/systems/%s/descriptors/%s" % (self.system.pk, descriptorType)
+            response = self._get(url, username="admin", password="password")
+            self.failUnlessEqual(response.status_code, 200)
+            obj = xobj.parse(response.content)
+            self.failUnlessEqual(obj.descriptor.metadata.displayName, descrName)
+            self.failUnlessEqual(obj.descriptor.metadata.descriptions.desc, descrDescr)
+            # make sure the same works with parameters
+            url = "inventory/systems/%s/descriptors/%s?foo=bar" % (self.system.pk,
+                descriptorType)
+            response = self._get(url, username="admin", password="password")
+            self.failUnlessEqual(response.status_code, 200)
+            obj = xobj.parse(response.content)
+            self.failUnlessEqual(obj.descriptor.metadata.displayName, descrName)
+            self.failUnlessEqual(obj.descriptor.metadata.descriptions.desc, descrDescr)
 
     def testSpawnAction(self):
         # can we launch the job>?
@@ -2667,7 +2671,9 @@ class SystemsTestCase(XMLTestCase):
         system = models.System.objects.get(system_id=systemId)
         self.failUnlessEqual(
             [ x.entry for x in models.SystemLogEntry.objects.filter(system_log__system__system_id = system.system_id) ],
-            [ 'System added to inventory', 'Incomplete registration: missing local_uuid. Possible cause: dmidecode malfunctioning'])
+            [ 'System added to inventory',
+                'Incomplete registration: missing local_uuid. Possible cause: dmidecode malfunctioning',
+                "Unable to create event 'Update system configuration': no networking information"])
 
 class SystemCertificateTestCase(XMLTestCase):
     def testGenerateSystemCertificates(self):

@@ -101,6 +101,18 @@ class SurveyManager(basemanager.BaseManager):
             obj = subelem
         return cls._listify(obj)
 
+    @classmethod
+    def _xobjAsUnicode(cls, obj):
+        if obj is None:
+            return None
+        return unicode(obj)
+
+    @classmethod
+    def _xobjAsInt(cls, obj):
+        if obj is None or str(obj) == '':
+            return None
+        return int(obj)
+
     @exposed
     def addSurveyForSystemFromXml(self, system_id, xml):
         '''
@@ -135,6 +147,9 @@ class SurveyManager(basemanager.BaseManager):
 
     @exposed
     def addSurveyForSystemFromXobj(self, system_id, model):
+        # shortcuts
+        _u = self._xobjAsUnicode
+        _int = self._xobjAsInt
 
         system = inventory_models.System.objects.get(pk=system_id)
 
@@ -150,7 +165,7 @@ class SurveyManager(basemanager.BaseManager):
 
         survey = survey_models.Survey(
             name        = name,
-            uuid        = xsurvey.uuid,
+            uuid        = _u(xsurvey.uuid),
             description = desc,
             comment     = comment,
             removable   = True,
@@ -164,17 +179,15 @@ class SurveyManager(basemanager.BaseManager):
             xinfo = xmodel.rpm_package_info
 
             # be tolerant of the way epoch comes back from node XML
-            epoch = getattr(xinfo, 'epoch', 0)
-            if epoch is None or str(epoch) == 'None':
-                epoch = 0
+            epoch = _int(getattr(xinfo, 'epoch', None))
             info, created = survey_models.RpmPackageInfo.objects.get_or_create(
-               name         = xinfo.name,
-               version      = xinfo.version,
+               name         = _u(xinfo.name),
+               version      = _u(xinfo.version),
                epoch        = epoch,
-               release      = xinfo.release,
-               architecture = xinfo.architecture,
-               description  = xinfo.description,
-               signature    = str(xinfo.signature),
+               release      = _u(xinfo.release),
+               architecture = _u(xinfo.architecture),
+               description  = _u(xinfo.description),
+               signature    = _u(xinfo.signature),
             )
 
             rpm_info_by_id[xmodel.id] = info
@@ -195,13 +208,13 @@ class SurveyManager(basemanager.BaseManager):
         for xmodel in xconary_packages:
             xinfo = xmodel.conary_package_info
             info, created = survey_models.ConaryPackageInfo.objects.get_or_create(
-                name         = xinfo.name,
-                version      = xinfo.version,
-                flavor       = xinfo.flavor,
-                description  = xinfo.description,
-                revision     = xinfo.revision,
-                architecture = xinfo.architecture,
-                signature    = str(xinfo.signature)
+                name         = _u(xinfo.name),
+                version      = _u(xinfo.version),
+                flavor       = _u(xinfo.flavor),
+                description  = _u(xinfo.description),
+                revision     = _u(xinfo.revision),
+                architecture = _u(xinfo.architecture),
+                signature    = _u(xinfo.signature)
             )
             encap = getattr(xinfo, 'rpm_package_info', None)
             if encap is not None:
@@ -219,25 +232,24 @@ class SurveyManager(basemanager.BaseManager):
         for xmodel in xservices:
             xinfo = xmodel.service_info
             info, created = survey_models.ServiceInfo.objects.get_or_create(
-                name      = xinfo.name,
-                autostart = xinfo.autostart,
-                runlevels = xinfo.runlevels
+                name      = _u(xinfo.name),
+                autostart = _u(xinfo.autostart),
+                runlevels = _u(xinfo.runlevels),
             ) 
             service = survey_models.SurveyService(
                 service_info = info,
                 survey       = survey,
-                running      = xmodel.running,
-                status       = xmodel.status 
+                running      = _u(xmodel.running),
+                status       = _u(xmodel.status),
             )
             service.save()
 
         for xmodel in xtags:
             tag = survey_models.SurveyTag(
                 survey       = survey,
-                name         = xmodel.name
+                name         = _u(xmodel.name),
             )
             tag.save()
 
         survey = survey_models.Survey.objects.get(pk=survey.pk)
         return survey
-        

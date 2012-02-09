@@ -216,6 +216,14 @@ event_types_xml="""\
     <resource_type>System</resource_type>
     <system_events/>
   </event_type>
+  <event_type id="http://testserver/api/v1/inventory/event_types/24">
+    <description>Scan system</description>
+    <job_type_id>24</job_type_id>
+    <name>system scan</name>
+    <priority>105</priority>
+    <resource_type>System</resource_type>
+    <system_events/>
+  </event_type>
 </event_types>"""
 
 event_type_put_xml="""\
@@ -972,6 +980,14 @@ systems_xml = """\
         <name>Assimilate system</name>
       </action>
       <action>
+        <description>Scan system</description>
+        <descriptor id="http://testserver/api/v1/inventory/systems/2/descriptors/survey_scan"/>
+        <enabled>False</enabled>
+        <job_type id="http://testserver/api/v1/inventory/event_types/24"/>
+        <key>system_scan</key>
+        <name>System scan</name>
+      </action>
+      <action>
         <description>Capture a system's image</description>
         <descriptor id="http://testserver/api/v1/inventory/systems/2/descriptors/capture"/>
         <enabled>false</enabled>
@@ -1053,6 +1069,14 @@ systems_xml = """\
         <job_type id="http://testserver/api/v1/inventory/event_types/12"/>
         <key>system_assimilation</key>
         <name>Assimilate system</name>
+      </action>
+      <action>
+        <description>Scan system</description>
+        <descriptor id="http://testserver/api/v1/inventory/systems/3/descriptors/survey_scan"/>
+        <enabled>True</enabled>
+        <job_type id="http://testserver/api/v1/inventory/event_types/24"/>
+        <key>system_scan</key>
+        <name>System scan</name>
       </action>
       <action>
         <description>Capture a system's image</description>
@@ -1276,6 +1300,14 @@ system_xml = """\
       <job_type id="http://testserver/api/v1/inventory/event_types/12"/>
       <key>system_assimilation</key>
       <name>Assimilate system</name>
+    </action>
+    <action>
+      <description>Scan system</description>
+      <descriptor id="http://testserver/api/v1/inventory/systems/3/descriptors/survey_scan"/>
+      <enabled>True</enabled>
+      <job_type id="http://testserver/api/v1/inventory/event_types/24"/>
+      <key>system_scan</key>
+      <name>System scan</name>
     </action>
     <action>
       <description>Capture a system's image</description>
@@ -1661,6 +1693,14 @@ system_target_xml = """\
       <job_type id="http://testserver/api/v1/inventory/event_types/12"/>
       <key>system_assimilation</key>
       <name>Assimilate system</name>
+    </action>
+    <action>
+      <description>Scan system</description>
+      <descriptor id="http://testserver/api/v1/inventory/systems/3/descriptors/survey_scan"/>
+      <enabled>True</enabled>
+      <job_type id="http://testserver/api/v1/inventory/event_types/24"/>
+      <key>system_scan</key>
+      <name>System scan</name>
     </action>
     <action>
       <description>Capture a system's image</description>
@@ -2499,6 +2539,14 @@ system_with_target = """\
       <job_type id="http://testserver/api/v1/inventory/event_types/12"/>
       <key>system_assimilation</key>
       <name>Assimilate system</name>
+    </action>
+    <action>
+      <description>Scan system</description>
+      <descriptor id="http://testserver/api/v1/inventory/systems/4/descriptors/survey_scan"/>
+      <enabled>False</enabled>
+      <job_type id="http://testserver/api/v1/inventory/event_types/24"/>
+      <key>system_scan</key>
+      <name>System scan</name>
     </action>
     <action>
       <description>Capture a system's image</description>

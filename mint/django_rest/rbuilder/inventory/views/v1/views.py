@@ -720,9 +720,9 @@ class InventorySystemJobDescriptorService(BaseInventoryService):
         content = self.get(system_id, descriptor_type, request.GET.copy())
         return content
 
-    def get(self, system_id, descriptor_type, parameters):
+    def get(self, system_id, descriptor_type, parameters=None):
         descriptor = self.mgr.getSystemDescriptorForAction(system_id,
-            descriptor_type, parameters)
+            descriptor_type, parameters=parameters)
         return self.mgr.serializeDescriptor(descriptor)
 
 class InventorySystemJobStatesService(BaseInventoryService):

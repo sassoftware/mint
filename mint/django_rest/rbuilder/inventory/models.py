@@ -848,17 +848,25 @@ class System(modellib.XObjIdModel):
 
         self.actions = actions = jobmodels.Actions()
         actions.action = []
-        enabled = bool(self.management_interface_id and self.management_interface.name == 'ssh')
-        actions.action.append(
+        assimEnabled = bool(self.management_interface_id and self.management_interface.name == 'ssh')
+        scanEnabled = bool(self.management_interface_id and self.management_interface.name == 'cim')
+        actions.action.extend([
             jobmodels.EventType.makeAction(
                 jobmodels.EventType.SYSTEM_ASSIMILATE,
                 actionName="Assimilate system",
                 actionDescription="Assimilate system",
                 descriptorModel=self,
                 descriptorHref="descriptors/assimilation",
-                enabled=enabled,
-            )
-        )
+                enabled=assimEnabled,
+            ),
+            jobmodels.EventType.makeAction(
+                jobmodels.EventType.SYSTEM_SCAN,
+                actionName="System scan",
+                descriptorModel=self,
+                descriptorHref="descriptors/survey_scan",
+                enabled=scanEnabled,
+            ),
+        ])
 
         if self.target_id:
             drvCls = targetmodels.Target.getDriverClassForTargetId(
