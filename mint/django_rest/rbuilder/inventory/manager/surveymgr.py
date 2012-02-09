@@ -83,7 +83,7 @@ class SurveyManager(basemanager.BaseManager):
     def _listify(cls, foo):
         if isinstance(foo, list):
             return foo
-        if isinstance(foo, None):
+        if foo is None:
             return []
         return [ foo ]
 
@@ -102,19 +102,36 @@ class SurveyManager(basemanager.BaseManager):
         return cls._listify(obj)
 
     @exposed
-    def updateSurvey(self, survey):
-        survey.save()
-        survey = survey_models.Survey.objects.get(pk=survey.pk)
-        return survey
-
-    @exposed
     def addSurveyForSystemFromXml(self, system_id, xml):
         '''
         a temporary low level attempt at saving surveys
         which are not completely filled out.
         '''
-        model = xobj.parse(xml)
-        return self.addSurveyForSystemFromXobj(system_id, model)
+        xmodel = xobj.parse(xml)
+        return self.addSurveyForSystemFromXobj(system_id, xmodel)
+
+    @exposed
+    def updateSurveyFromXml(self, survey_uuid, xml):
+        xmodel = xobj.parse(xml)
+        xmodel = xmodel.survey
+        survey = survey_models.Survey.objects.get(uuid=survey_uuid)
+        xtags  = self._subel(xmodel, 'tags', 'tag')
+       
+        survey_models.SurveyTag.objects.filter(survey=survey).delete()
+
+        for xtag in xtags:
+            tag = survey_models.SurveyTag(
+                survey       = survey,
+                name         = xtag.name
+            )
+            tag.save() 
+
+        survey.name        = getattr(xmodel, 'name', None)
+        survey.description = getattr(xmodel, 'description', None)
+        survey.comment     = getattr(xmodel, 'comment', None)
+        survey.removable   = getattr(xmodel, 'removable', True)
+        survey.save()
+        return survey
 
     @exposed
     def addSurveyForSystemFromXobj(self, system_id, model):

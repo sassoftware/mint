@@ -847,9 +847,7 @@ class SurveyDiffsService(BaseInventoryService):
 
 class SurveyRpmPackageInfoService(BaseInventoryService):
 
-    # FIXME: rbac?
-    # FIXME: implement
-    @rbac(manual_rbac)
+    @access.anonymous
     @return_xml
     def rest_GET(self, request, id):
         return self.get(id)
@@ -859,8 +857,7 @@ class SurveyRpmPackageInfoService(BaseInventoryService):
 
 class SurveyConaryPackageInfoService(BaseInventoryService):
 
-    # FIXME: rbac?
-    # FIXME: implement
+    @access.anonymous
     @rbac(manual_rbac)
     @return_xml
     def rest_GET(self, request, id):
@@ -871,9 +868,7 @@ class SurveyConaryPackageInfoService(BaseInventoryService):
 
 class SurveyServiceInfoService(BaseInventoryService):
 
-    # FIXME: rbac?
-    # FIXME: implement
-    @rbac(manual_rbac)
+    @access.anonymous
     @return_xml
     def rest_GET(self, request, id):
         return self.get(id)
