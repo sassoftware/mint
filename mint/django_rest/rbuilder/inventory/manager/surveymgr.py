@@ -44,7 +44,7 @@ class SurveyManager(basemanager.BaseManager):
     @exposed
     def getSurveysForSystem(self, system_id):
        surveys = survey_models.Surveys()
-       surveys.survey = survey_models.Survey.objects.filter(system__pk=system_id)
+       surveys.survey = survey_models.ShortSurvey.objects.filter(system__pk=system_id)
        return surveys
 
     # bunch of boilerplate so IDs to micro-survey obejcts will be valid

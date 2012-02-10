@@ -11,7 +11,7 @@ from mint.django_rest.rbuilder.users import models as usermodels
 from xobj import xobj
 import sys
 
-# XObjHidden = modellib.XObjHidden
+XObjHidden = modellib.XObjHidden
 # APIReadOnly = modellib.APIReadOnly
 
 #***********************************************************
@@ -75,6 +75,8 @@ class Survey(modellib.XObjIdModel):
          'services',
          'tags',
     ])
+    # FIXME: modellib doesn't seem to respect this.
+    summary_view = [ "name", "description", "comment", "created_date" ]
     _xobj = xobj.XObjMetadata(
         tag = 'survey', attributes = {'id':str}
     )
@@ -96,6 +98,29 @@ class Survey(modellib.XObjIdModel):
 
     def get_url_key(self, *args, **kwargs):
         return [ self.uuid ]
+
+#***********************************************************
+
+class ShortSurvey(modellib.XObjIdModel):
+    '''Hack used to emulate 'summary_views' for survey collections.'''
+    # replaceable once we have "view model" support
+
+    class Meta:
+        db_table = 'inventory_survey'
+    view_name = 'Survey'
+    _xobj_explicit_accessors = set([])
+    _xobj_no_register = True
+    _xobj = xobj.XObjMetadata(
+        tag = 'survey', attributes = {'id':str}
+    )
+
+    survey_id     = D(models.AutoField(primary_key=True),
+        "the database ID for the survey", short="Survey ID")
+    system        = XObjHidden(modellib.DeferredForeignKey('inventory.System', related_name='+', db_column='system_id'))
+    name          = models.TextField()
+    description   = models.TextField()
+    removable     = models.BooleanField(default=False)
+    created_date  = modellib.DateTimeUtcField(auto_now_add=True)
 
 #***********************************************************
 
@@ -256,6 +281,6 @@ class SurveyService(modellib.XObjIdModel):
 #***********************************************************
     
 for mod_obj in sys.modules[__name__].__dict__.values():
-    if hasattr(mod_obj, '_xobj'):
+    if hasattr(mod_obj, '_xobj') and not getattr(mod_obj, '_xobj_no_register', False):
         if mod_obj._xobj.tag:
             modellib.type_map[mod_obj._xobj.tag] = mod_obj

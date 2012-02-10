@@ -125,6 +125,11 @@ class SurveyTests(XMLTestCase):
             username='admin', password='password')
         self.assertEqual(response.status_code, 200)
 
+        response = self._get(url,
+            username='admin', password='password')
+        self.assertEqual(response.status_code, 200)
+        print response.content
+
         #print response.content
         url = "inventory/surveys/1234"
         response = self._get(url,
@@ -145,7 +150,6 @@ class SurveyTests(XMLTestCase):
             data = testsxml.survey_mod_xml,
             username='admin', password='password')
         self.assertEqual(response.status_code, 200)
-        print response.content     
   
     # disabling until backend conforms to format
     def test_survey_post_long(self):
