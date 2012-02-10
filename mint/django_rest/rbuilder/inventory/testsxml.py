@@ -3928,7 +3928,7 @@ survey_input_xml = """
     <description></description>
     <system id="http://testserver/api/v1/inventory/systems/3"/>
     <created_by id="http://testserver/api/v1/users/2"/>
-    <created_date>2012-02-03T16:28:08.137524+00:00</created_date>
+    <created_date>0</created_date>
     <services>
       <service id="2">
         <status>is maybe doing stuff</status>

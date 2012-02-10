@@ -109,7 +109,7 @@ class SurveyManager(basemanager.BaseManager):
 
     @classmethod
     def _xobjAsInt(cls, obj):
-        if obj is None or str(obj) == '':
+        if obj is None or str(obj) == '' or str(obj) == 'None':
             return None
         return int(obj)
 
@@ -156,22 +156,31 @@ class SurveyManager(basemanager.BaseManager):
         xsurvey          = model.survey
         xrpm_packages    = self._subel(xsurvey, 'rpm_packages', 'rpm_package')
         xconary_packages = self._subel(xsurvey, 'conary_packages', 'conary_package')
-        xservices = self._subel(xsurvey, 'services', 'service')
-        xtags     = self._subel(xsurvey, 'tags', 'tag')
+        xservices        = self._subel(xsurvey, 'services', 'service')
+        xtags            = self._subel(xsurvey, 'tags', 'tag')
 
-        name    = getattr(xsurvey, 'name',        "")
+
+        created_date = getattr(xsurvey, 'created_date', 0)
+        created_date = datetime.datetime.utcfromtimestamp(int(created_date))
+
         desc    = getattr(xsurvey, 'description', "")
         comment = getattr(xsurvey, 'comment',     "")
 
         survey = survey_models.Survey(
-            name        = name,
-            uuid        = _u(xsurvey.uuid),
-            description = desc,
-            comment     = comment,
-            removable   = True,
-            system      = system
+            name          = "%s %s" % (system.name, created_date),
+            uuid          = _u(xsurvey.uuid),
+            description   = desc,
+            comment       = comment,
+            removable     = True,
+            system        = system,
+            created_date  = created_date,
+            # FIXME: TODO: make sure updating changes this
+            modified_date = created_date
         )
         survey.save()
+        # FIXME: TODO: update system.latest_survey if and only if it's
+        # the latest
+        # system.latest_survey = ...
 
         rpm_info_by_id     = {}
 

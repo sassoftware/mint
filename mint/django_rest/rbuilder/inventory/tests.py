@@ -128,7 +128,6 @@ class SurveyTests(XMLTestCase):
         response = self._get(url,
             username='admin', password='password')
         self.assertEqual(response.status_code, 200)
-        print response.content
 
         #print response.content
         url = "inventory/surveys/1234"
