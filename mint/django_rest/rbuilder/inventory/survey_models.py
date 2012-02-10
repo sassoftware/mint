@@ -75,8 +75,8 @@ class Survey(modellib.XObjIdModel):
          'services',
          'tags',
     ])
-    # FIXME: modellib doesn't seem to respect this.
-    summary_view = [ "name", "description", "comment", "created_date" ]
+    # not needed with ShortSurvey, also doesn't work for collection
+    # summary_view = [ "name", "description", "comment", "created_date" ]
     _xobj = xobj.XObjMetadata(
         tag = 'survey', attributes = {'id':str}
     )
