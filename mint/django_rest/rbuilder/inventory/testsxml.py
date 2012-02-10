@@ -3813,11 +3813,11 @@ retirement_xml = """
 
 surveys_xml = """
 <surveys count="1" end_index="0" filter_by="" full_collection="http://testserver/api/v1/inventory/systems/3/surveys/" id="http://testserver/api/v1/inventory/systems/3/surveys/" limit="10" next_page="" num_pages="1" order_by="" per_page="10" previous_page="" start_index="0">
-  <survey id="http://testserver/api/v1/inventory/surveys/1">
+  <survey id="http://testserver/api/v1/inventory/surveys/00000000-0000-4000-0000-000000000000">
     <description/>
     <name>x</name>
     <removable>False</removable>
-    <survey_id>1</survey_id>
+    <uuid>00000000-0000-4000-0000-000000000000</uuid>
   </survey>
 </surveys>
 """
