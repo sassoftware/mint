@@ -149,7 +149,16 @@ class SurveyTests(XMLTestCase):
             data = testsxml.survey_mod_xml,
             username='admin', password='password')
         self.assertEqual(response.status_code, 200)
-  
+        
+        # post a second survey to verify that updating the latest survey
+        # info still worksand see if the latest survey date matches
+        response = self._post("inventory/systems/%s/surveys" % sys.pk,
+            data = testsxml.survey_input_xml,
+            username='admin', password='password')
+        self.assertEqual(response.status_code, 200)
+        sys = models.System.objects.get(pk=sys.pk)
+        self.assertTrue(sys.latest_survey.created_date is not None)
+
     # disabling until backend conforms to format
     def test_survey_post_long(self):
         sys = self._makeSystem()
@@ -340,7 +349,7 @@ class ZonesTestCase(XMLTestCase):
         self.assertEquals(response.status_code, 200)
         self.assertXMLEquals(response.content,
             testsxml.zone_xml % (zone.created_date.isoformat()),
-            ignoreNodes = [ 'created_date', 'created_by', 'modified_by', 'modified_date' ])
+            ignoreNodes = [ 'created_date', 'created_by', 'modified_by', 'modified_date', 'latest_survey' ])
         
     def testAddZoneNodeNull(self):
         
@@ -457,7 +466,7 @@ class ManagementInterfacesTestCase(XMLTestCase):
             username="testuser", password="password")
         self.assertEquals(response.status_code, 200)
         self.assertXMLEquals(response.content,
-            testsxml.management_interfaces_xml, ignoreNodes = [ 'created_date', 'modified_by', 'created_by', 'modified_date' ])
+            testsxml.management_interfaces_xml, ignoreNodes = [ 'created_date', 'modified_by', 'created_by', 'modified_date', 'latest_survey' ])
 
     def testGetManagementInterfacesAuth(self):
         """
@@ -478,7 +487,7 @@ class ManagementInterfacesTestCase(XMLTestCase):
             username="testuser", password="password")
         self.assertEquals(response.status_code, 200)
         self.assertXMLEquals(response.content,
-            testsxml.management_interface_xml, ignoreNodes = [ 'created_date', 'modified_by', 'created_by', 'modified_date' ])
+            testsxml.management_interface_xml, ignoreNodes = [ 'created_date', 'modified_by', 'created_by', 'modified_date', 'latest_survey' ])
         
     def testPutManagementInterfaceAuth(self):
         """
@@ -530,7 +539,7 @@ class SystemTypesTestCase(XMLTestCase):
             username="testuser", password="password")
         self.assertEquals(response.status_code, 200)
         self.assertXMLEquals(response.content,
-            testsxml.system_types_xml, ignoreNodes = [ 'created_date', 'modified_date', 'created_by', 'modified_by' ])
+            testsxml.system_types_xml, ignoreNodes = [ 'created_date', 'modified_date', 'created_by', 'modified_by', 'latest_survey' ])
 
     def testGetSystemTypesAuth(self):
         """
@@ -555,7 +564,7 @@ class SystemTypesTestCase(XMLTestCase):
             username="testuser", password="password")
         self.assertEquals(response.status_code, 200)
         self.assertXMLEquals(response.content,
-            testsxml.system_type_xml, ignoreNodes = [ 'created_date', 'created_by', 'modified_by', 'modified_date' ])
+            testsxml.system_type_xml, ignoreNodes = [ 'created_date', 'created_by', 'modified_by', 'modified_date', 'latest_survey' ])
         
     def testGetSystemTypeSystems(self):
         system = self._saveSystem()
@@ -564,7 +573,7 @@ class SystemTypesTestCase(XMLTestCase):
             username="testuser", password="password")
         self.assertEquals(response.status_code, 200)
         self.assertXMLEquals(response.content, testsxml.system_type_systems_xml,
-            ignoreNodes = [ 'created_date', 'actions',  'created_by', 'modified_by', 'modified_date'])
+            ignoreNodes = [ 'created_date', 'actions',  'created_by', 'modified_by', 'modified_date', 'latest_survey'])
         
     def testPutSystemTypeAuth(self):
         """
@@ -1671,7 +1680,7 @@ class SystemsTestCase(XMLTestCase):
         self.assertEquals(response.status_code, 200)
         self.assertXMLEquals(response.content, 
             testsxml.systems_xml % (system.networks.all()[0].created_date.isoformat(), system.created_date.isoformat()),
-            ignoreNodes = [ 'created_date', 'modified_date', 'created_by', 'modified_by' ])
+            ignoreNodes = [ 'latest_survey', 'created_date', 'modified_date', 'created_by', 'modified_by' ])
         response = self._get('inventory/systems', username='testuser', password='password')
         self.assertEquals(response.status_code, 403)
         
@@ -1708,7 +1717,7 @@ class SystemsTestCase(XMLTestCase):
         self.assertEquals(response.status_code, 200)
         self.assertXMLEquals(response.content, 
             testsxml.system_xml % (system.networks.all()[0].created_date.isoformat(), system.created_date.isoformat()),
-            ignoreNodes = [ 'created_date', 'modified_date', 'created_by', 'modified_by', 'time_created', 'time_updated' ])
+            ignoreNodes = [ 'latest_survey', 'created_date', 'modified_date', 'created_by', 'modified_by', 'time_created', 'time_updated' ])
 
     def testDeleteSystemDoesNotExist(self):
         # deleting a system that doesn't exist should be a 404, not an error
@@ -1733,7 +1742,7 @@ class SystemsTestCase(XMLTestCase):
         self.assertEquals(response.status_code, 200)
         self.assertXMLEquals(response.content, testsxml.system_target_xml % \
             (system.networks.all()[0].created_date.isoformat(), system.created_date.isoformat()),
-            ignoreNodes = [ 'created_date', 'modified_date', 'created_by', 'modified_by', 'time_created', 'time_updated' ])
+            ignoreNodes = [ 'latest_survey', 'created_date', 'modified_date', 'created_by', 'modified_by', 'time_created', 'time_updated' ])
         
     def testPostSystemAuth(self):
         """
@@ -1768,7 +1777,7 @@ class SystemsTestCase(XMLTestCase):
                             'time_created', 'time_updated',
                             'registration_date', 'actions', 
                             'created_by', 'modified_by',
-                            'created_date', 'modified_date'])
+                            'created_date', 'modified_date', 'latest_survey'])
 
     def testPostSystemThroughManagementNode(self):
         # Send the identity of the management node
@@ -3115,7 +3124,7 @@ class SystemVersionsTestCase(XMLTestCase):
              'installed_software/', 'installed_software')
         self.assertXMLEquals(response.content, expected,
             ignoreNodes = [ 'actions', 'created_date', 'modified_date', 'created_by', 'modified_by', 
-                'last_available_update_refresh' ])
+                'last_available_update_refresh', 'latest_survey' ])
 
     def testGetInstalledSoftwareRest(self):
         system = self._saveSystem()
@@ -3142,7 +3151,7 @@ class SystemVersionsTestCase(XMLTestCase):
             data=testsxml.installed_software_post_xml)
         self.assertXMLEquals(response.content,
             testsxml.installed_software_response_xml,
-            ignoreNodes = ['last_available_update_refresh'])
+            ignoreNodes = ['last_available_update_refresh', 'latest_survey'])
 
     def testAvailableUpdatesXml(self):
         system = self._saveSystem()
@@ -3157,7 +3166,7 @@ class SystemVersionsTestCase(XMLTestCase):
         self.assertXMLEquals(response.content, 
             testsxml.system_available_updates_xml,
             ignoreNodes=['actions', 'created_date', 'modified_date', 
-                'created_by', 'modified_by', 'last_available_update_refresh'])
+                'created_by', 'modified_by', 'latest_survey', 'last_available_update_refresh'])
 
     def testApplyUpdate(self):
         system = self._saveSystem()
@@ -3287,7 +3296,7 @@ class SystemVersionsTestCase(XMLTestCase):
         self.assertEquals(response.status_code, 200)
         self.assertXMLEquals(response.content,
             testsxml.system_installed_software_version_stage_xml,
-            ignoreNodes=['actions', 'created_date', 'modified_date', 'created_by', 'modified_by'],)
+            ignoreNodes=['actions', 'latest_survey', 'created_date', 'modified_date', 'created_by', 'modified_by'],)
 
 class EventTypeTestCase(XMLTestCase):
 
@@ -4642,7 +4651,7 @@ class CollectionTest(XMLTestCase):
         response = self._get('inventory/systems/',
             username="admin", password="password")
         self.assertXMLEquals(response.content, testsxml.systems_collection_xml,
-            ignoreNodes=['actions', 'created_date', 'modified_date', 'created_by', 'modified_by' ])
+            ignoreNodes=['actions', 'latest_survey', 'created_date', 'modified_date', 'created_by', 'modified_by' ])
         xobjModel = xobj.parse(response.content)
         systems = xobjModel.systems
         self.assertEquals(systems.count, '201')

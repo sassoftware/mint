@@ -178,9 +178,12 @@ class SurveyManager(basemanager.BaseManager):
             modified_date = created_date
         )
         survey.save()
-        # FIXME: TODO: update system.latest_survey if and only if it's
+
+        # update system.latest_survey if and only if it's
         # the latest
-        # system.latest_survey = ...
+        if system.latest_survey is None or survey.created_date > system.latest_survey.created_date:
+            system.latest_survey = survey
+            system.save()
 
         rpm_info_by_id     = {}
 
