@@ -3813,7 +3813,7 @@ retirement_xml = """
 
 survey_output_xml = """
 <surveys count="1" next_page="" num_pages="1" previous_page="" full_collection="http://testserver/api/v1/inventory/systems/3/surveys/" end_index="0" limit="10" order_by="" per_page="10" filter_by="" id="http://testserver/api/v1/inventory/systems/3/surveys/" start_index="0">
-  <survey id="http://testserver/api/v1/inventory/surveys/1234">
+  <survey id="http://testserver/api/v1/inventory/surveys/00000000-0000-4000-0000-000000000000">
     <comment></comment>
     <removable>False</removable>
     <modified_date>2012-02-03T16:28:08.137616+00:00</modified_date>
@@ -3821,17 +3821,17 @@ survey_output_xml = """
       <user_name>JeanValjean1</user_name>
       <full_name></full_name>
     </modified_by>
-    <uuid>1234</uuid>
+    <uuid>00000000-0000-4000-0000-000000000000</uuid>
     <tags>
-      <tag>
-        <survey id="http://testserver/api/v1/inventory/surveys/1234"/>
+      <tag id="http://testserver/api/v1/inventory/survey_tags/1">
+        <survey id="http://testserver/api/v1/inventory/surveys/00000000-0000-4000-0000-000000000000"/>
         <name>needs_review</name>
         <tag_id>1</tag_id>
       </tag>
     </tags>
     <rpm_packages>
-      <rpm_package id="http://testserver/api/v1/inventory/surveys_rpm_packages/1234">
-        <survey id="http://testserver/api/v1/inventory/surveys/1234"/>
+      <rpm_package id="http://testserver/api/v1/inventory/survey_rpm_packages/1">
+        <survey id="http://testserver/api/v1/inventory/surveys/00000000-0000-4000-0000-000000000000"/>
         <rpm_package_id>1</rpm_package_id>
         <rpm_package_info id="http://testserver/api/v1/inventory/rpm_package_info/1">
           <description>enterprise middleware abstraction layer</description>
@@ -3853,9 +3853,9 @@ survey_output_xml = """
     </created_by>
     <created_date>2012-02-03T16:28:08.137524+00:00</created_date>
     <services>
-      <service id="http://testserver/api/v1/inventory/survey_services/1234">
+      <service id="http://testserver/api/v1/inventory/survey_services/1">
         <status>is maybe doing stuff</status>
-        <survey id="http://testserver/api/v1/inventory/surveys/1234"/>
+        <survey id="http://testserver/api/v1/inventory/surveys/00000000-0000-4000-0000-000000000000"/>
         <running>false</running>
         <service_info id="http://testserver/api/v1/inventory/service_info/1">
           <name>httpd</name>
@@ -3866,9 +3866,9 @@ survey_output_xml = """
       </service>
     </services>
     <conary_packages>
-      <conary_package id="http://testserver/api/v1/inventory/survey_conary_packages/1234">
+      <conary_package id="http://testserver/api/v1/inventory/survey_conary_packages/1">
         <conary_package_id>1</conary_package_id>
-        <survey id="http://testserver/api/v1/inventory/surveys/1234"/>
+        <survey id="http://testserver/api/v1/inventory/surveys/00000000-0000-4000-0000-000000000000"/>
         <install_date>2012-02-03T16:28:08.169386+00:00</install_date>
         <conary_package_info id="http://testserver/api/v1/inventory/conary_package_info/1">
           <description>Type-R</description>
@@ -3891,7 +3891,6 @@ survey_output_xml = """
         </conary_package_info>
       </conary_package>
     </conary_packages>
-    <survey_id>1</survey_id>
     <name>x</name>
   </survey>
 </surveys>

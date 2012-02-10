@@ -81,7 +81,7 @@ class Survey(modellib.XObjIdModel):
         tag = 'survey', attributes = {'id':str}
     )
 
-    survey_id     = D(models.AutoField(primary_key=True),
+    survey_id     = D(modellib.XObjHidden(models.AutoField(primary_key=True)),
         "the database ID for the survey", short="Survey ID")
     name          = models.TextField()
     uuid          = models.TextField(null=False)

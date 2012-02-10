@@ -55,11 +55,8 @@ class SurveyTests(XMLTestCase):
             username='admin', password='password')
         self.assertEqual(response.status_code, 200)
  
-    def notestSurveySerialization(self):
-        # FIXME: basic serialization test until things get more real
-        # and we can do full XML tests
-
-        uuid = '1234'
+    def testSurveySerialization(self):
+        uuid = '00000000-0000-4000-0000-000000000000'
         user1 = usersmodels.User.objects.get(user_name='JeanValjean1')
         sys = self._makeSystem()
         survey = survey_models.Survey(
@@ -83,16 +80,18 @@ class SurveyTests(XMLTestCase):
             name = 'jkl', version = '7', flavor = 'orange',
             description = 'Type-R', revision = '8',
             architecture = 'ia64', signature = 'X',
-            rpm_package = rpm_package
+            rpm_package_info = rpm_package
         )
         conary_package.save()
         scp = survey_models.SurveyConaryPackage(
             survey = survey,
-            conary_package_info = conary_package
+            conary_package_info = conary_package,
+            install_date=self.mgr.sysMgr.now(),
         )
         scp.save()
         srp = survey_models.SurveyRpmPackage(
-            survey = survey, rpm_package_info = rpm_package
+            survey = survey, rpm_package_info = rpm_package,
+            install_date=self.mgr.sysMgr.now(),
         )
         srp.save()
         service = survey_models.ServiceInfo(
@@ -112,7 +111,8 @@ class SurveyTests(XMLTestCase):
         response = self._get(url,
             username='admin', password='password')
         self.assertEqual(response.status_code, 200)
-        self.assertXMLEquals(response.content, testsxml.survey_output_xml, ignoreNodes=['created_date','install_date','modified_date'])
+        self.assertXMLEquals(response.content, testsxml.survey_output_xml,
+            ignoreNodes=['created_date','install_date','modified_date'])
 
     def test_survey_post(self):
         # make sure we can post a survey and it mostly looks
