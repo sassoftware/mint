@@ -173,27 +173,26 @@ class SurveyTests(XMLTestCase):
         sys = self._makeSystem()
         url = "inventory/systems/%s/surveys" % sys.pk
 
-        response = self._post(url,
-            data = testsxml2.one,
-            username='admin', password='password')
-        self.assertEqual(response.status_code, 200)
+        surveys = [ testsxml2.one, testsxml2.two, testsxml2.three, 
+            testsxml2.four, testsxml2.five ] 
 
-        response = self._post(url,
-            data = testsxml2.two,
-            username='admin', password='password')
-        self.assertEqual(response.status_code, 200)
-        
-        response = self._post(url,
-            data = testsxml2.three,
-            username='admin', password='password')
-        self.assertEqual(response.status_code, 200)
+        for x in surveys:
+            response = self._post(url,
+                data = x,
+                username='admin', password='password')
+            self.assertEqual(response.status_code, 200)
 
         # temporary test here of basic diff API correctness, to be replaced with real
         # valid tests
-        left  = survey_models.Survey.objects.get(uuid='501')
-        right = survey_models.Survey.objects.get(uuid='502')
-        x     = self.mgr.diffSurvey(left, right)
-        y     = self.mgr.diffSurvey(right, left)
+        a = survey_models.Survey.objects.get(uuid='501')
+        b = survey_models.Survey.objects.get(uuid='502')
+        c = survey_models.Survey.objects.get(uuid='503')
+        d = survey_models.Survey.objects.get(uuid='504')
+        e = survey_models.Survey.objects.get(uuid='505')
+        x = self.mgr.diffSurvey(a, b)
+        y = self.mgr.diffSurvey(b, a)
+        z = self.mgr.diffSurvey(d, e)
+        print z
 
 class AssimilatorTestCase(XMLTestCase, test_utils.SmartformMixIn):
     ''' 
