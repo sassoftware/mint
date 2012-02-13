@@ -119,6 +119,7 @@ class IsoGenerator(genmod.ImageGenerator):
     def _writeScripts(self, isoDir, rtisPath):
         # Write deployment script to copy the MSIs and first-boot script onto
         # the target system.
+        self._writeRpathrc(isoDir)
         copymsi = open(isoDir + '/rPath/copymsi.bat', 'w')
 
         osName = self.wimData.version
@@ -177,6 +178,15 @@ class IsoGenerator(genmod.ImageGenerator):
                         '/l*v "%(winUpdateDir)s\\%(rtisLog)s"\r\n'
                     % m)
         firstboot.close()
+
+    def _writeRpathrc(self, isoDir):
+        if not self.inventoryNode:
+            return
+        rpathrc = file(os.path.join(isoDir, "rPath", "rpathrc"), "w")
+        tmpl = "%s %s\r\n"
+        rpathrc.write(tmpl % ("directMethod", "[]"))
+        rpathrc.write(tmpl % ("directMethod", self.inventoryNode))
+        rpathrc.close()
 
     def unpackIsokit(self):
         ikData = self.isokitData
