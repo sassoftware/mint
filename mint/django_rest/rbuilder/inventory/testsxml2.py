@@ -3398,7 +3398,7 @@ it allows merging of information from device info files specific to a
 device. HAL provides a API through D-BUS for querying devices and
 notifying when things change. Finally, HAL provides some monitoring (in
 an unintrusive way) of devices. For further information, please refer
-to the	HAL specification.
+to the\tHAL specification.
 
 
 
@@ -3580,7 +3580,7 @@ times.
 
 Authors:
 --------
-    Jean-loup Gailly	&lt;gzip@prep.ai.mit.edu&gt;
+    Jean-loup Gailly\t&lt;gzip@prep.ai.mit.edu&gt;
 </description><signature>75711af5421e7fac771197a0e7686628405f2468</signature></rpm_package_info><install_date>1326227855</install_date><conary_package id="17" /><encapsulated>true</encapsulated></rpm_package><rpm_package id="297"><rpm_package_info><name>util-linux-lang</name><epoch /><version>2.16</version><release>6.13.1</release><architecture>i586</architecture><description>Provides translations to the package util-linux
 </description><signature>38caab26cbfd621af1cca17b47596ee6fb640027</signature></rpm_package_info><install_date>1326227875</install_date><conary_package id="296" /><encapsulated>true</encapsulated></rpm_package><rpm_package id="344"><rpm_package_info><name>libsqlite3-0</name><epoch /><version>3.6.4</version><release>2.8</release><architecture>i586</architecture><description>This package contains the shared libraries for the Embeddable SQL
 Database Engine.
@@ -3644,8 +3644,8 @@ XDF support for OS/2 is also provided.
 
 Authors:
 --------
-    Alain Knaff 	&lt;Alain.Knaff@imag.fr&gt;
-    David C. Niemi	&lt;niemidc@erols.com&gt;
+    Alain Knaff \t&lt;Alain.Knaff@imag.fr&gt;
+    David C. Niemi\t&lt;niemidc@erols.com&gt;
 </description><signature>ffbaf0378193014a3a68f3ff78f5ca6437de0b74</signature></rpm_package_info><install_date>1326227854</install_date><conary_package id="185" /><encapsulated>true</encapsulated></rpm_package><rpm_package id="430"><rpm_package_info><name>file</name><epoch /><version>4.24</version><release>43.19.1</release><architecture>i586</architecture><description>With the file command, you can obtain information on the file type of a
 specified file. File type recognition is controlled by the file
 /etc/magic, which contains the classification criteria. This command is
@@ -3730,7 +3730,7 @@ system.
 In other words, generic kernels can be built without drivers for any
 SCSI adapters that load the SCSI driver as a module.  Because the
 kernel needs to read those modules, but in this case is not able to
-address the SCSI adapter, an initial RAM disk is used.	The initial RAM
+address the SCSI adapter, an initial RAM disk is used.\tThe initial RAM
 disk is loaded by the operating system loader (normally LILO) and is
 available to the kernel as soon as the RAM disk is loaded.  The RAM
 disk loads the proper SCSI adapter and allows the kernel to mount the
@@ -4071,61 +4071,61 @@ Authors:
     Andreas Gustafsson &lt;gson@niksula.hut.fi&gt;
     Andreas Schwab &lt;schwab@suse.de&gt;
     Assar Westerlund &lt;assar@nada.kth.se&gt;
-    Ben A. Mesander	 &lt;ben@piglet.cr.usgs.gov&gt;
+    Ben A. Mesander\t &lt;ben@piglet.cr.usgs.gov&gt;
     Bengt Mertensson &lt;bengt@mathematik.uni-bremen.de&gt;
     Bernhard Daeubler &lt;Bernhard.Daeubler@physik.uni-ulm.de&gt;
     Bjorn R. Bjornsson &lt;brb@falcon.is&gt;
-    Brendan Kehoe	 &lt;brendan@cygnus.com&gt;
-    Erez Zadok	 &lt;ezk@cs.columbia.edu&gt;
-    Eric Allman	 &lt;sendmail@sendmail.ORG&gt;
-    Eric Backus	 &lt;ericb@lsid.hp.com&gt;
-    Geoff Russell	 &lt;grussell@guest.adelaide.edu.au&gt;
-    Greg A. Woods	 &lt;woods@web.apc.org&gt;
-    Hal Peterson	 &lt;hrp@pecan.cray.com&gt;
-    Hoang Uong	 &lt;hoang@ornews.intel.com&gt;
-    Ian Lance Taylor	 &lt;ian@cygnus.com&gt;
+    Brendan Kehoe\t &lt;brendan@cygnus.com&gt;
+    Erez Zadok\t &lt;ezk@cs.columbia.edu&gt;
+    Eric Allman\t &lt;sendmail@sendmail.ORG&gt;
+    Eric Backus\t &lt;ericb@lsid.hp.com&gt;
+    Geoff Russell\t &lt;grussell@guest.adelaide.edu.au&gt;
+    Greg A. Woods\t &lt;woods@web.apc.org&gt;
+    Hal Peterson\t &lt;hrp@pecan.cray.com&gt;
+    Hoang Uong\t &lt;hoang@ornews.intel.com&gt;
+    Ian Lance Taylor\t &lt;ian@cygnus.com&gt;
     Jason Merrill &lt;jason@cygnus.com&gt;
-    Jim Avera	 &lt;jima@netcom.com&gt;
-    Jim Kingdon	 &lt;kingdon@cygnus.com&gt;
-    Jim Meyering	 &lt;meyering@na-net.ornl.gov&gt;
-    Joel Sherrill	 &lt;jsherril@uahcs2.cs.uah.edu&gt;
+    Jim Avera\t &lt;jima@netcom.com&gt;
+    Jim Kingdon\t &lt;kingdon@cygnus.com&gt;
+    Jim Meyering\t &lt;meyering@na-net.ornl.gov&gt;
+    Joel Sherrill\t &lt;jsherril@uahcs2.cs.uah.edu&gt;
     John David Anglin &lt;dave@hiauly1.hia.nrc.ca&gt;
-    Joseph E. Sacco	 &lt;jsacco@ssl.com&gt;
-    Karl Berry	 &lt;karl@cs.umb.edu&gt;
-    Karl Vogel	 &lt;vogelke@c-17igp.wpafb.af.mil&gt;
-    Kaveh R. Ghazi	 &lt;ghazi@noc.rutgers.edu&gt;
-    Kristine Lund	 &lt;lund@lpnaxp.in2p3.fr&gt;
-    Krste Asanovic	 &lt;krste@icsi.berkeley.edu&gt;
-    Marion Hakanson	 &lt;hakanson@cse.ogi.edu&gt;
-    Mark Seiden	 &lt;mis@seiden.com&gt;
-    Matthias Rabe	 &lt;rabe@mathematik.uni-bielefeld.de&gt;
+    Joseph E. Sacco\t &lt;jsacco@ssl.com&gt;
+    Karl Berry\t &lt;karl@cs.umb.edu&gt;
+    Karl Vogel\t &lt;vogelke@c-17igp.wpafb.af.mil&gt;
+    Kaveh R. Ghazi\t &lt;ghazi@noc.rutgers.edu&gt;
+    Kristine Lund\t &lt;lund@lpnaxp.in2p3.fr&gt;
+    Krste Asanovic\t &lt;krste@icsi.berkeley.edu&gt;
+    Marion Hakanson\t &lt;hakanson@cse.ogi.edu&gt;
+    Mark Seiden\t &lt;mis@seiden.com&gt;
+    Matthias Rabe\t &lt;rabe@mathematik.uni-bielefeld.de&gt;
     Michael Fetterman &lt;mafetter@ichips.intel.com&gt;
     Michael L. Welcome &lt;welcome@bigbird.llnl.gov&gt;
-    Mike Lijewski	 &lt;lijewski@theory.tc.cornell.edu&gt;
+    Mike Lijewski\t &lt;lijewski@theory.tc.cornell.edu&gt;
     Nick S. Kanakakor &lt;skanan@otl.scu.edu&gt;
-    Nicolas Pioch	 &lt;pioch@inf.enst.fr&gt;
-    Noah Friedman	 &lt;friedman@gnu.org&gt;
-    Pete Chown	 &lt;pete.chown@dale.dircon.co.uk&gt;
-    Pierre Gaumond	 &lt;gaumondp@ere.umontreal.ca&gt;
-    Pierre Mathieu	 &lt;mathieu@geod.emr.ca&gt;
+    Nicolas Pioch\t &lt;pioch@inf.enst.fr&gt;
+    Noah Friedman\t &lt;friedman@gnu.org&gt;
+    Pete Chown\t &lt;pete.chown@dale.dircon.co.uk&gt;
+    Pierre Gaumond\t &lt;gaumondp@ere.umontreal.ca&gt;
+    Pierre Mathieu\t &lt;mathieu@geod.emr.ca&gt;
     Robert Bernstein &lt;rocky@panix.com&gt;
-    Rene' Seindal	 &lt;seindal@kb.dk&gt;
+    Rene' Seindal\t &lt;seindal@kb.dk&gt;
     Richard Stallman &lt;rms@gnu.org&gt;
-    Roland H. Pesch	 &lt;roland@wrs.com&gt;
-    Roland McGrath	 &lt;roland@gnu.org&gt;
+    Roland H. Pesch\t &lt;roland@wrs.com&gt;
+    Roland McGrath\t &lt;roland@gnu.org&gt;
     Scott Bartram
-    Simon Leinen	 &lt;simon@lia.di.epfl.ch&gt;
-    Skip Montanaro	 &lt;skip@automatrix.com&gt;
-    Stephen Perkins	 &lt;perkins@cps.msu.edu&gt;
+    Simon Leinen\t &lt;simon@lia.di.epfl.ch&gt;
+    Skip Montanaro\t &lt;skip@automatrix.com&gt;
+    Stephen Perkins\t &lt;perkins@cps.msu.edu&gt;
     Steve Williamson &lt;willy@uinpla.npl.uiuc.edu&gt;
-    Thorsten Ohl	 &lt;ohl@physics.harvard.edu&gt;
-    Tom McConnell	 &lt;tmcconne@sedona.intel.com&gt;
-    Tom Quinn	 &lt;trq@dionysos.thphys.ox.ac.uk&gt;
-    Tom Tromey	 &lt;tromey@cns.caltech.edu&gt;
-    Ulrich Drepper	 &lt;drepper@gnu.org&gt;
-    Vern Paxson	 &lt;vern@ee.lbl.gov&gt;
+    Thorsten Ohl\t &lt;ohl@physics.harvard.edu&gt;
+    Tom McConnell\t &lt;tmcconne@sedona.intel.com&gt;
+    Tom Quinn\t &lt;trq@dionysos.thphys.ox.ac.uk&gt;
+    Tom Tromey\t &lt;tromey@cns.caltech.edu&gt;
+    Ulrich Drepper\t &lt;drepper@gnu.org&gt;
+    Vern Paxson\t &lt;vern@ee.lbl.gov&gt;
     Vivek P. Singhal &lt;singhal@cs.utexas.edu&gt;
-    Walter Wong	 &lt;wcw+@cmu.edu&gt;
+    Walter Wong\t &lt;wcw+@cmu.edu&gt;
     Paolo Bonzini (bonzini@gnu.org)
     Philip Hazel (ph10@cam.ac.uk)
 </description><signature>bd691915706c6d7277b242ee25bf2f73094f5849</signature></rpm_package_info><install_date>1326227855</install_date><conary_package id="361" /><encapsulated>true</encapsulated></rpm_package><rpm_package id="256"><rpm_package_info><name>readline-doc</name><epoch /><version>5.2</version><release>147.9.13</release><architecture>i586</architecture><description>This package contains the documentation for using the readline library
@@ -4529,14 +4529,14 @@ GnuPG (alpha version).
 
 Authors:
 --------
-    Maintainer:	wk@g10code.com
+    Maintainer:\twk@g10code.com
 
-    Authors: 	Werner Koch &lt;wk@gnupg.org&gt;
-    		Matthew Skala &lt;mskala@ansuz.sooke.bc.ca&gt;
-    		Michael Roth &lt;mroth@nessie.de&gt;
-    		Niklas Hernaeus &lt;nh@df.lth.se&gt;
-    		R&#233;mi Guyomarch &lt;rguyom@mail.dotcom.fr&gt;
-    		Timo Schulz &lt;twoaday@freakmail.de&gt;
+    Authors: \tWerner Koch &lt;wk@gnupg.org&gt;
+    \t\tMatthew Skala &lt;mskala@ansuz.sooke.bc.ca&gt;
+    \t\tMichael Roth &lt;mroth@nessie.de&gt;
+    \t\tNiklas Hernaeus &lt;nh@df.lth.se&gt;
+    \t\tR&#233;mi Guyomarch &lt;rguyom@mail.dotcom.fr&gt;
+    \t\tTimo Schulz &lt;twoaday@freakmail.de&gt;
 </description><signature>a0e3d8ec3ce90fb1bfaa20b5e1d207a8bbcb6c63</signature></rpm_package_info><install_date>1326227852</install_date><conary_package id="488" /><encapsulated>true</encapsulated></rpm_package><rpm_package id="542"><rpm_package_info><name>cpio</name><epoch /><version>2.9</version><release>75.76.1</release><architecture>i586</architecture><description>GNU cpio is a program to manage archives of files. This package also
 includes 'mt', a tape drive control program. Cpio copies files into or
 out of a cpio or tar archive. An archive is a file that contains other
@@ -4762,7 +4762,7 @@ of the SuSE Linux distribution.
 
 RPM can be used to install and remove software packages. With rpm, it
 is easy to update packages.  RPM keeps track of all these manipulations
-in a central database.	This way it is possible to get an overview of
+in a central database.\tThis way it is possible to get an overview of
 all installed packages.  RPM also supports database queries.
 
 
@@ -4879,7 +4879,7 @@ times.
 
 Authors:
 --------
-    Jean-loup Gailly	&lt;gzip@prep.ai.mit.edu&gt;
+    Jean-loup Gailly\t&lt;gzip@prep.ai.mit.edu&gt;
 </description><signature>75711af5421e7fac771197a0e7686628405f2468</signature></rpm_package_info></conary_package_info><install_date /></conary_package><conary_package id="19"><conary_package_info><name>open-vm-tools:devellib</name><version>/sles.rpath.com@rpath:sles-11-common/1306343493.633:2010.02.23_236320-6-1</version><flavor>is: x86</flavor><description /><revision>2010.02.23_236320-6-1</revision><architecture>x86</architecture><signature>21373e14ce30a4b545ffbad8cae2aedb4dff9052fc63dd3c251961057f5890ef</signature></conary_package_info><install_date /></conary_package><conary_package id="20"><conary_package_info><name>bzip2:rpm</name><version>/sles.rpath.com@rpath:sles-11sp1/1288586524.414:1.0.5_34.253.1-1-1</version><flavor>is: x86(i486,i586,~!i686)</flavor><description /><revision>1.0.5_34.253.1-1-1</revision><architecture>x86(i486 i586 ~!i686)</architecture><signature>f56ae4f6316150b016ee6218654fd934b3e6bd652bca42a2528dcfa9a3ab31ee</signature><rpm_package_info id="21"><name>bzip2</name><epoch /><version>1.0.5</version><release>34.253.1</release><architecture>i586</architecture><description>The bzip2 program is a very powerful program for compressing files.
 
 
@@ -5224,7 +5224,7 @@ system.
 In other words, generic kernels can be built without drivers for any
 SCSI adapters that load the SCSI driver as a module.  Because the
 kernel needs to read those modules, but in this case is not able to
-address the SCSI adapter, an initial RAM disk is used.	The initial RAM
+address the SCSI adapter, an initial RAM disk is used.\tThe initial RAM
 disk is loaded by the operating system loader (normally LILO) and is
 available to the kernel as soon as the RAM disk is loaded.  The RAM
 disk loads the proper SCSI adapter and allows the kernel to mount the
@@ -5271,7 +5271,7 @@ of the SuSE Linux distribution.
 
 RPM can be used to install and remove software packages. With rpm, it
 is easy to update packages.  RPM keeps track of all these manipulations
-in a central database.	This way it is possible to get an overview of
+in a central database.\tThis way it is possible to get an overview of
 all installed packages.  RPM also supports database queries.
 
 
@@ -5728,8 +5728,8 @@ XDF support for OS/2 is also provided.
 
 Authors:
 --------
-    Alain Knaff 	&lt;Alain.Knaff@imag.fr&gt;
-    David C. Niemi	&lt;niemidc@erols.com&gt;
+    Alain Knaff \t&lt;Alain.Knaff@imag.fr&gt;
+    David C. Niemi\t&lt;niemidc@erols.com&gt;
 </description><signature>ffbaf0378193014a3a68f3ff78f5ca6437de0b74</signature></rpm_package_info></conary_package_info><install_date /></conary_package><conary_package id="187"><conary_package_info><name>info-sfcb:user</name><version>/sles.rpath.com@rpath:sles-11-common/1288561340.028:1-1-1</version><flavor /><description /><revision>1-1-1</revision><architecture /><signature>df7e81f45ea2b6ed97ed95b99ed5e35510bd990b39d1680a05cc9aa35a09c91b</signature></conary_package_info><install_date /></conary_package><conary_package id="188"><conary_package_info><name>pam:rpm</name><version>/sles.rpath.com@rpath:sles-11sp1/1320870204.274:1.0.4_0.7.1-1-1</version><flavor>is: x86(i486,i586,~!i686)</flavor><description /><revision>1.0.4_0.7.1-1-1</revision><architecture>x86(i486 i586 ~!i686)</architecture><signature>147916f929f1ba3e7ffd62d79b398ff8836505fc55d6b47059e5e3bcdb44979c</signature><rpm_package_info id="189"><name>pam</name><epoch /><version>1.0.4</version><release>0.7.1</release><architecture>i586</architecture><description>PAM (Pluggable Authentication Modules) is a system security tool that
 allows system administrators to set authentication policies without
 having to recompile programs that do authentication.
@@ -6513,61 +6513,61 @@ Authors:
     Andreas Gustafsson &lt;gson@niksula.hut.fi&gt;
     Andreas Schwab &lt;schwab@suse.de&gt;
     Assar Westerlund &lt;assar@nada.kth.se&gt;
-    Ben A. Mesander	 &lt;ben@piglet.cr.usgs.gov&gt;
+    Ben A. Mesander\t &lt;ben@piglet.cr.usgs.gov&gt;
     Bengt Mertensson &lt;bengt@mathematik.uni-bremen.de&gt;
     Bernhard Daeubler &lt;Bernhard.Daeubler@physik.uni-ulm.de&gt;
     Bjorn R. Bjornsson &lt;brb@falcon.is&gt;
-    Brendan Kehoe	 &lt;brendan@cygnus.com&gt;
-    Erez Zadok	 &lt;ezk@cs.columbia.edu&gt;
-    Eric Allman	 &lt;sendmail@sendmail.ORG&gt;
-    Eric Backus	 &lt;ericb@lsid.hp.com&gt;
-    Geoff Russell	 &lt;grussell@guest.adelaide.edu.au&gt;
-    Greg A. Woods	 &lt;woods@web.apc.org&gt;
-    Hal Peterson	 &lt;hrp@pecan.cray.com&gt;
-    Hoang Uong	 &lt;hoang@ornews.intel.com&gt;
-    Ian Lance Taylor	 &lt;ian@cygnus.com&gt;
+    Brendan Kehoe\t &lt;brendan@cygnus.com&gt;
+    Erez Zadok\t &lt;ezk@cs.columbia.edu&gt;
+    Eric Allman\t &lt;sendmail@sendmail.ORG&gt;
+    Eric Backus\t &lt;ericb@lsid.hp.com&gt;
+    Geoff Russell\t &lt;grussell@guest.adelaide.edu.au&gt;
+    Greg A. Woods\t &lt;woods@web.apc.org&gt;
+    Hal Peterson\t &lt;hrp@pecan.cray.com&gt;
+    Hoang Uong\t &lt;hoang@ornews.intel.com&gt;
+    Ian Lance Taylor\t &lt;ian@cygnus.com&gt;
     Jason Merrill &lt;jason@cygnus.com&gt;
-    Jim Avera	 &lt;jima@netcom.com&gt;
-    Jim Kingdon	 &lt;kingdon@cygnus.com&gt;
-    Jim Meyering	 &lt;meyering@na-net.ornl.gov&gt;
-    Joel Sherrill	 &lt;jsherril@uahcs2.cs.uah.edu&gt;
+    Jim Avera\t &lt;jima@netcom.com&gt;
+    Jim Kingdon\t &lt;kingdon@cygnus.com&gt;
+    Jim Meyering\t &lt;meyering@na-net.ornl.gov&gt;
+    Joel Sherrill\t &lt;jsherril@uahcs2.cs.uah.edu&gt;
     John David Anglin &lt;dave@hiauly1.hia.nrc.ca&gt;
-    Joseph E. Sacco	 &lt;jsacco@ssl.com&gt;
-    Karl Berry	 &lt;karl@cs.umb.edu&gt;
-    Karl Vogel	 &lt;vogelke@c-17igp.wpafb.af.mil&gt;
-    Kaveh R. Ghazi	 &lt;ghazi@noc.rutgers.edu&gt;
-    Kristine Lund	 &lt;lund@lpnaxp.in2p3.fr&gt;
-    Krste Asanovic	 &lt;krste@icsi.berkeley.edu&gt;
-    Marion Hakanson	 &lt;hakanson@cse.ogi.edu&gt;
-    Mark Seiden	 &lt;mis@seiden.com&gt;
-    Matthias Rabe	 &lt;rabe@mathematik.uni-bielefeld.de&gt;
+    Joseph E. Sacco\t &lt;jsacco@ssl.com&gt;
+    Karl Berry\t &lt;karl@cs.umb.edu&gt;
+    Karl Vogel\t &lt;vogelke@c-17igp.wpafb.af.mil&gt;
+    Kaveh R. Ghazi\t &lt;ghazi@noc.rutgers.edu&gt;
+    Kristine Lund\t &lt;lund@lpnaxp.in2p3.fr&gt;
+    Krste Asanovic\t &lt;krste@icsi.berkeley.edu&gt;
+    Marion Hakanson\t &lt;hakanson@cse.ogi.edu&gt;
+    Mark Seiden\t &lt;mis@seiden.com&gt;
+    Matthias Rabe\t &lt;rabe@mathematik.uni-bielefeld.de&gt;
     Michael Fetterman &lt;mafetter@ichips.intel.com&gt;
     Michael L. Welcome &lt;welcome@bigbird.llnl.gov&gt;
-    Mike Lijewski	 &lt;lijewski@theory.tc.cornell.edu&gt;
+    Mike Lijewski\t &lt;lijewski@theory.tc.cornell.edu&gt;
     Nick S. Kanakakor &lt;skanan@otl.scu.edu&gt;
-    Nicolas Pioch	 &lt;pioch@inf.enst.fr&gt;
-    Noah Friedman	 &lt;friedman@gnu.org&gt;
-    Pete Chown	 &lt;pete.chown@dale.dircon.co.uk&gt;
-    Pierre Gaumond	 &lt;gaumondp@ere.umontreal.ca&gt;
-    Pierre Mathieu	 &lt;mathieu@geod.emr.ca&gt;
+    Nicolas Pioch\t &lt;pioch@inf.enst.fr&gt;
+    Noah Friedman\t &lt;friedman@gnu.org&gt;
+    Pete Chown\t &lt;pete.chown@dale.dircon.co.uk&gt;
+    Pierre Gaumond\t &lt;gaumondp@ere.umontreal.ca&gt;
+    Pierre Mathieu\t &lt;mathieu@geod.emr.ca&gt;
     Robert Bernstein &lt;rocky@panix.com&gt;
-    Rene' Seindal	 &lt;seindal@kb.dk&gt;
+    Rene' Seindal\t &lt;seindal@kb.dk&gt;
     Richard Stallman &lt;rms@gnu.org&gt;
-    Roland H. Pesch	 &lt;roland@wrs.com&gt;
-    Roland McGrath	 &lt;roland@gnu.org&gt;
+    Roland H. Pesch\t &lt;roland@wrs.com&gt;
+    Roland McGrath\t &lt;roland@gnu.org&gt;
     Scott Bartram
-    Simon Leinen	 &lt;simon@lia.di.epfl.ch&gt;
-    Skip Montanaro	 &lt;skip@automatrix.com&gt;
-    Stephen Perkins	 &lt;perkins@cps.msu.edu&gt;
+    Simon Leinen\t &lt;simon@lia.di.epfl.ch&gt;
+    Skip Montanaro\t &lt;skip@automatrix.com&gt;
+    Stephen Perkins\t &lt;perkins@cps.msu.edu&gt;
     Steve Williamson &lt;willy@uinpla.npl.uiuc.edu&gt;
-    Thorsten Ohl	 &lt;ohl@physics.harvard.edu&gt;
-    Tom McConnell	 &lt;tmcconne@sedona.intel.com&gt;
-    Tom Quinn	 &lt;trq@dionysos.thphys.ox.ac.uk&gt;
-    Tom Tromey	 &lt;tromey@cns.caltech.edu&gt;
-    Ulrich Drepper	 &lt;drepper@gnu.org&gt;
-    Vern Paxson	 &lt;vern@ee.lbl.gov&gt;
+    Thorsten Ohl\t &lt;ohl@physics.harvard.edu&gt;
+    Tom McConnell\t &lt;tmcconne@sedona.intel.com&gt;
+    Tom Quinn\t &lt;trq@dionysos.thphys.ox.ac.uk&gt;
+    Tom Tromey\t &lt;tromey@cns.caltech.edu&gt;
+    Ulrich Drepper\t &lt;drepper@gnu.org&gt;
+    Vern Paxson\t &lt;vern@ee.lbl.gov&gt;
     Vivek P. Singhal &lt;singhal@cs.utexas.edu&gt;
-    Walter Wong	 &lt;wcw+@cmu.edu&gt;
+    Walter Wong\t &lt;wcw+@cmu.edu&gt;
     Paolo Bonzini (bonzini@gnu.org)
     Philip Hazel (ph10@cam.ac.uk)
 </description><signature>bd691915706c6d7277b242ee25bf2f73094f5849</signature></rpm_package_info></conary_package_info><install_date /></conary_package><conary_package id="363"><conary_package_info><name>openldap2-client:rpm</name><version>/sles.rpath.com@rpath:sles-11sp1/1323710765.054:2.4.26_0.12.1-1-1</version><flavor>is: x86(i486,i586,~!i686)</flavor><description /><revision>2.4.26_0.12.1-1-1</revision><architecture>x86(i486 i586 ~!i686)</architecture><signature>dc1a91eef412ca45c4c614c8f815187caa329fc842e59bb2be0a275a6d9fa902</signature><rpm_package_info id="364"><name>openldap2-client</name><epoch /><version>2.4.26</version><release>0.12.1</release><architecture>i586</architecture><description>This package contains the OpenLDAP client utilities.
@@ -7141,14 +7141,14 @@ GnuPG (alpha version).
 
 Authors:
 --------
-    Maintainer:	wk@g10code.com
+    Maintainer:\twk@g10code.com
 
-    Authors: 	Werner Koch &lt;wk@gnupg.org&gt;
-    		Matthew Skala &lt;mskala@ansuz.sooke.bc.ca&gt;
-    		Michael Roth &lt;mroth@nessie.de&gt;
-    		Niklas Hernaeus &lt;nh@df.lth.se&gt;
-    		R&#233;mi Guyomarch &lt;rguyom@mail.dotcom.fr&gt;
-    		Timo Schulz &lt;twoaday@freakmail.de&gt;
+    Authors: \tWerner Koch &lt;wk@gnupg.org&gt;
+    \t\tMatthew Skala &lt;mskala@ansuz.sooke.bc.ca&gt;
+    \t\tMichael Roth &lt;mroth@nessie.de&gt;
+    \t\tNiklas Hernaeus &lt;nh@df.lth.se&gt;
+    \t\tR&#233;mi Guyomarch &lt;rguyom@mail.dotcom.fr&gt;
+    \t\tTimo Schulz &lt;twoaday@freakmail.de&gt;
 </description><signature>a0e3d8ec3ce90fb1bfaa20b5e1d207a8bbcb6c63</signature></rpm_package_info></conary_package_info><install_date /></conary_package><conary_package id="490"><conary_package_info><name>hal:rpm</name><version>/sles.rpath.com@rpath:sles-11sp1/1310506502.092:0.5.12_23.47.4-1-1</version><flavor>is: x86(i486,i586,~!i686)</flavor><description /><revision>0.5.12_23.47.4-1-1</revision><architecture>x86(i486 i586 ~!i686)</architecture><signature>7cc7dcd4c2c839aaa796ef60f31f101cae7a5eeef4b309b7e3ca4d00454d799c</signature><rpm_package_info id="491"><name>hal</name><epoch /><version>0.5.12</version><release>23.47.4</release><architecture>i586</architecture><description>HAL is a hardware abstraction layer and aims to provide a live list of
 devices present in the system at any point in time. HAL tries to
 understand both, physical devices (such as PCI and USB) and the device
@@ -7157,7 +7157,7 @@ it allows merging of information from device info files specific to a
 device. HAL provides a API through D-BUS for querying devices and
 notifying when things change. Finally, HAL provides some monitoring (in
 an unintrusive way) of devices. For further information, please refer
-to the	HAL specification.
+to the\tHAL specification.
 
 
 
@@ -9191,7 +9191,7 @@ it allows merging of information from device info files specific to a
 device. HAL provides a API through D-BUS for querying devices and
 notifying when things change. Finally, HAL provides some monitoring (in
 an unintrusive way) of devices. For further information, please refer
-to the	HAL specification.
+to the\tHAL specification.
 
 
 
@@ -9375,7 +9375,7 @@ times.
 
 Authors:
 --------
-    Jean-loup Gailly	&lt;gzip@prep.ai.mit.edu&gt;
+    Jean-loup Gailly\t&lt;gzip@prep.ai.mit.edu&gt;
 </description><signature>75711af5421e7fac771197a0e7686628405f2468</signature></rpm_package_info><install_date>1326227855</install_date><conary_package id="17" /><encapsulated>true</encapsulated></rpm_package><rpm_package id="299"><rpm_package_info><name>util-linux-lang</name><epoch /><version>2.16</version><release>6.13.1</release><architecture>i586</architecture><description>Provides translations to the package util-linux
 </description><signature>38caab26cbfd621af1cca17b47596ee6fb640027</signature></rpm_package_info><install_date>1326227875</install_date><conary_package id="298" /><encapsulated>true</encapsulated></rpm_package><rpm_package id="287"><rpm_package_info><name>yast2-dbus-server</name><epoch /><version>2.17.3</version><release>0.3.4</release><architecture>i586</architecture><description>This package contains YaST DBus service, it provides DBus access to
 YaST components.
@@ -9420,8 +9420,8 @@ XDF support for OS/2 is also provided.
 
 Authors:
 --------
-    Alain Knaff 	&lt;Alain.Knaff@imag.fr&gt;
-    David C. Niemi	&lt;niemidc@erols.com&gt;
+    Alain Knaff \t&lt;Alain.Knaff@imag.fr&gt;
+    David C. Niemi\t&lt;niemidc@erols.com&gt;
 </description><signature>ffbaf0378193014a3a68f3ff78f5ca6437de0b74</signature></rpm_package_info><install_date>1326227854</install_date><conary_package id="187" /><encapsulated>true</encapsulated></rpm_package><rpm_package id="438"><rpm_package_info><name>file</name><epoch /><version>4.24</version><release>43.19.1</release><architecture>i586</architecture><description>With the file command, you can obtain information on the file type of a
 specified file. File type recognition is controlled by the file
 /etc/magic, which contains the classification criteria. This command is
@@ -9498,7 +9498,7 @@ system.
 In other words, generic kernels can be built without drivers for any
 SCSI adapters that load the SCSI driver as a module.  Because the
 kernel needs to read those modules, but in this case is not able to
-address the SCSI adapter, an initial RAM disk is used.	The initial RAM
+address the SCSI adapter, an initial RAM disk is used.\tThe initial RAM
 disk is loaded by the operating system loader (normally LILO) and is
 available to the kernel as soon as the RAM disk is loaded.  The RAM
 disk loads the proper SCSI adapter and allows the kernel to mount the
@@ -9882,61 +9882,61 @@ Authors:
     Andreas Gustafsson &lt;gson@niksula.hut.fi&gt;
     Andreas Schwab &lt;schwab@suse.de&gt;
     Assar Westerlund &lt;assar@nada.kth.se&gt;
-    Ben A. Mesander	 &lt;ben@piglet.cr.usgs.gov&gt;
+    Ben A. Mesander\t &lt;ben@piglet.cr.usgs.gov&gt;
     Bengt Mertensson &lt;bengt@mathematik.uni-bremen.de&gt;
     Bernhard Daeubler &lt;Bernhard.Daeubler@physik.uni-ulm.de&gt;
     Bjorn R. Bjornsson &lt;brb@falcon.is&gt;
-    Brendan Kehoe	 &lt;brendan@cygnus.com&gt;
-    Erez Zadok	 &lt;ezk@cs.columbia.edu&gt;
-    Eric Allman	 &lt;sendmail@sendmail.ORG&gt;
-    Eric Backus	 &lt;ericb@lsid.hp.com&gt;
-    Geoff Russell	 &lt;grussell@guest.adelaide.edu.au&gt;
-    Greg A. Woods	 &lt;woods@web.apc.org&gt;
-    Hal Peterson	 &lt;hrp@pecan.cray.com&gt;
-    Hoang Uong	 &lt;hoang@ornews.intel.com&gt;
-    Ian Lance Taylor	 &lt;ian@cygnus.com&gt;
+    Brendan Kehoe\t &lt;brendan@cygnus.com&gt;
+    Erez Zadok\t &lt;ezk@cs.columbia.edu&gt;
+    Eric Allman\t &lt;sendmail@sendmail.ORG&gt;
+    Eric Backus\t &lt;ericb@lsid.hp.com&gt;
+    Geoff Russell\t &lt;grussell@guest.adelaide.edu.au&gt;
+    Greg A. Woods\t &lt;woods@web.apc.org&gt;
+    Hal Peterson\t &lt;hrp@pecan.cray.com&gt;
+    Hoang Uong\t &lt;hoang@ornews.intel.com&gt;
+    Ian Lance Taylor\t &lt;ian@cygnus.com&gt;
     Jason Merrill &lt;jason@cygnus.com&gt;
-    Jim Avera	 &lt;jima@netcom.com&gt;
-    Jim Kingdon	 &lt;kingdon@cygnus.com&gt;
-    Jim Meyering	 &lt;meyering@na-net.ornl.gov&gt;
-    Joel Sherrill	 &lt;jsherril@uahcs2.cs.uah.edu&gt;
+    Jim Avera\t &lt;jima@netcom.com&gt;
+    Jim Kingdon\t &lt;kingdon@cygnus.com&gt;
+    Jim Meyering\t &lt;meyering@na-net.ornl.gov&gt;
+    Joel Sherrill\t &lt;jsherril@uahcs2.cs.uah.edu&gt;
     John David Anglin &lt;dave@hiauly1.hia.nrc.ca&gt;
-    Joseph E. Sacco	 &lt;jsacco@ssl.com&gt;
-    Karl Berry	 &lt;karl@cs.umb.edu&gt;
-    Karl Vogel	 &lt;vogelke@c-17igp.wpafb.af.mil&gt;
-    Kaveh R. Ghazi	 &lt;ghazi@noc.rutgers.edu&gt;
-    Kristine Lund	 &lt;lund@lpnaxp.in2p3.fr&gt;
-    Krste Asanovic	 &lt;krste@icsi.berkeley.edu&gt;
-    Marion Hakanson	 &lt;hakanson@cse.ogi.edu&gt;
-    Mark Seiden	 &lt;mis@seiden.com&gt;
-    Matthias Rabe	 &lt;rabe@mathematik.uni-bielefeld.de&gt;
+    Joseph E. Sacco\t &lt;jsacco@ssl.com&gt;
+    Karl Berry\t &lt;karl@cs.umb.edu&gt;
+    Karl Vogel\t &lt;vogelke@c-17igp.wpafb.af.mil&gt;
+    Kaveh R. Ghazi\t &lt;ghazi@noc.rutgers.edu&gt;
+    Kristine Lund\t &lt;lund@lpnaxp.in2p3.fr&gt;
+    Krste Asanovic\t &lt;krste@icsi.berkeley.edu&gt;
+    Marion Hakanson\t &lt;hakanson@cse.ogi.edu&gt;
+    Mark Seiden\t &lt;mis@seiden.com&gt;
+    Matthias Rabe\t &lt;rabe@mathematik.uni-bielefeld.de&gt;
     Michael Fetterman &lt;mafetter@ichips.intel.com&gt;
     Michael L. Welcome &lt;welcome@bigbird.llnl.gov&gt;
-    Mike Lijewski	 &lt;lijewski@theory.tc.cornell.edu&gt;
+    Mike Lijewski\t &lt;lijewski@theory.tc.cornell.edu&gt;
     Nick S. Kanakakor &lt;skanan@otl.scu.edu&gt;
-    Nicolas Pioch	 &lt;pioch@inf.enst.fr&gt;
-    Noah Friedman	 &lt;friedman@gnu.org&gt;
-    Pete Chown	 &lt;pete.chown@dale.dircon.co.uk&gt;
-    Pierre Gaumond	 &lt;gaumondp@ere.umontreal.ca&gt;
-    Pierre Mathieu	 &lt;mathieu@geod.emr.ca&gt;
+    Nicolas Pioch\t &lt;pioch@inf.enst.fr&gt;
+    Noah Friedman\t &lt;friedman@gnu.org&gt;
+    Pete Chown\t &lt;pete.chown@dale.dircon.co.uk&gt;
+    Pierre Gaumond\t &lt;gaumondp@ere.umontreal.ca&gt;
+    Pierre Mathieu\t &lt;mathieu@geod.emr.ca&gt;
     Robert Bernstein &lt;rocky@panix.com&gt;
-    Rene' Seindal	 &lt;seindal@kb.dk&gt;
+    Rene' Seindal\t &lt;seindal@kb.dk&gt;
     Richard Stallman &lt;rms@gnu.org&gt;
-    Roland H. Pesch	 &lt;roland@wrs.com&gt;
-    Roland McGrath	 &lt;roland@gnu.org&gt;
+    Roland H. Pesch\t &lt;roland@wrs.com&gt;
+    Roland McGrath\t &lt;roland@gnu.org&gt;
     Scott Bartram
-    Simon Leinen	 &lt;simon@lia.di.epfl.ch&gt;
-    Skip Montanaro	 &lt;skip@automatrix.com&gt;
-    Stephen Perkins	 &lt;perkins@cps.msu.edu&gt;
+    Simon Leinen\t &lt;simon@lia.di.epfl.ch&gt;
+    Skip Montanaro\t &lt;skip@automatrix.com&gt;
+    Stephen Perkins\t &lt;perkins@cps.msu.edu&gt;
     Steve Williamson &lt;willy@uinpla.npl.uiuc.edu&gt;
-    Thorsten Ohl	 &lt;ohl@physics.harvard.edu&gt;
-    Tom McConnell	 &lt;tmcconne@sedona.intel.com&gt;
-    Tom Quinn	 &lt;trq@dionysos.thphys.ox.ac.uk&gt;
-    Tom Tromey	 &lt;tromey@cns.caltech.edu&gt;
-    Ulrich Drepper	 &lt;drepper@gnu.org&gt;
-    Vern Paxson	 &lt;vern@ee.lbl.gov&gt;
+    Thorsten Ohl\t &lt;ohl@physics.harvard.edu&gt;
+    Tom McConnell\t &lt;tmcconne@sedona.intel.com&gt;
+    Tom Quinn\t &lt;trq@dionysos.thphys.ox.ac.uk&gt;
+    Tom Tromey\t &lt;tromey@cns.caltech.edu&gt;
+    Ulrich Drepper\t &lt;drepper@gnu.org&gt;
+    Vern Paxson\t &lt;vern@ee.lbl.gov&gt;
     Vivek P. Singhal &lt;singhal@cs.utexas.edu&gt;
-    Walter Wong	 &lt;wcw+@cmu.edu&gt;
+    Walter Wong\t &lt;wcw+@cmu.edu&gt;
     Paolo Bonzini (bonzini@gnu.org)
     Philip Hazel (ph10@cam.ac.uk)
 </description><signature>bd691915706c6d7277b242ee25bf2f73094f5849</signature></rpm_package_info><install_date>1326227855</install_date><conary_package id="369" /><encapsulated>true</encapsulated></rpm_package><rpm_package id="258"><rpm_package_info><name>readline-doc</name><epoch /><version>5.2</version><release>147.9.13</release><architecture>i586</architecture><description>This package contains the documentation for using the readline library
@@ -10324,14 +10324,14 @@ GnuPG (alpha version).
 
 Authors:
 --------
-    Maintainer:	wk@g10code.com
+    Maintainer:\twk@g10code.com
 
-    Authors: 	Werner Koch &lt;wk@gnupg.org&gt;
-    		Matthew Skala &lt;mskala@ansuz.sooke.bc.ca&gt;
-    		Michael Roth &lt;mroth@nessie.de&gt;
-    		Niklas Hernaeus &lt;nh@df.lth.se&gt;
-    		R&#233;mi Guyomarch &lt;rguyom@mail.dotcom.fr&gt;
-    		Timo Schulz &lt;twoaday@freakmail.de&gt;
+    Authors: \tWerner Koch &lt;wk@gnupg.org&gt;
+    \t\tMatthew Skala &lt;mskala@ansuz.sooke.bc.ca&gt;
+    \t\tMichael Roth &lt;mroth@nessie.de&gt;
+    \t\tNiklas Hernaeus &lt;nh@df.lth.se&gt;
+    \t\tR&#233;mi Guyomarch &lt;rguyom@mail.dotcom.fr&gt;
+    \t\tTimo Schulz &lt;twoaday@freakmail.de&gt;
 </description><signature>a0e3d8ec3ce90fb1bfaa20b5e1d207a8bbcb6c63</signature></rpm_package_info><install_date>1326227852</install_date><conary_package id="496" /><encapsulated>true</encapsulated></rpm_package><rpm_package id="240"><rpm_package_info><name>release-notes-sles</name><epoch /><version>11.1.1.8</version><release>0.4.1</release><architecture>i586</architecture><description>This package contains files with the most important changes for this
 SUSE Linux Enterprise Server release.  They can be found in the
 /usr/share/doc/release-notes directory.
@@ -10560,7 +10560,7 @@ of the SuSE Linux distribution.
 
 RPM can be used to install and remove software packages. With rpm, it
 is easy to update packages.  RPM keeps track of all these manipulations
-in a central database.	This way it is possible to get an overview of
+in a central database.\tThis way it is possible to get an overview of
 all installed packages.  RPM also supports database queries.
 
 
@@ -10677,7 +10677,7 @@ times.
 
 Authors:
 --------
-    Jean-loup Gailly	&lt;gzip@prep.ai.mit.edu&gt;
+    Jean-loup Gailly\t&lt;gzip@prep.ai.mit.edu&gt;
 </description><signature>75711af5421e7fac771197a0e7686628405f2468</signature></rpm_package_info></conary_package_info><install_date /></conary_package><conary_package id="19"><conary_package_info><name>open-vm-tools:devellib</name><version>/sles.rpath.com@rpath:sles-11-common/1306343493.633:2010.02.23_236320-6-1</version><flavor>is: x86</flavor><description /><revision>2010.02.23_236320-6-1</revision><architecture>x86</architecture><signature>21373e14ce30a4b545ffbad8cae2aedb4dff9052fc63dd3c251961057f5890ef</signature></conary_package_info><install_date /></conary_package><conary_package id="20"><conary_package_info><name>bzip2:rpm</name><version>/sles.rpath.com@rpath:sles-11sp1/1288586524.414:1.0.5_34.253.1-1-1</version><flavor>is: x86(i486,i586,~!i686)</flavor><description /><revision>1.0.5_34.253.1-1-1</revision><architecture>x86(i486 i586 ~!i686)</architecture><signature>f56ae4f6316150b016ee6218654fd934b3e6bd652bca42a2528dcfa9a3ab31ee</signature><rpm_package_info id="21"><name>bzip2</name><epoch /><version>1.0.5</version><release>34.253.1</release><architecture>i586</architecture><description>The bzip2 program is a very powerful program for compressing files.
 
 
@@ -11022,7 +11022,7 @@ system.
 In other words, generic kernels can be built without drivers for any
 SCSI adapters that load the SCSI driver as a module.  Because the
 kernel needs to read those modules, but in this case is not able to
-address the SCSI adapter, an initial RAM disk is used.	The initial RAM
+address the SCSI adapter, an initial RAM disk is used.\tThe initial RAM
 disk is loaded by the operating system loader (normally LILO) and is
 available to the kernel as soon as the RAM disk is loaded.  The RAM
 disk loads the proper SCSI adapter and allows the kernel to mount the
@@ -11076,7 +11076,7 @@ of the SuSE Linux distribution.
 
 RPM can be used to install and remove software packages. With rpm, it
 is easy to update packages.  RPM keeps track of all these manipulations
-in a central database.	This way it is possible to get an overview of
+in a central database.\tThis way it is possible to get an overview of
 all installed packages.  RPM also supports database queries.
 
 
@@ -11533,8 +11533,8 @@ XDF support for OS/2 is also provided.
 
 Authors:
 --------
-    Alain Knaff 	&lt;Alain.Knaff@imag.fr&gt;
-    David C. Niemi	&lt;niemidc@erols.com&gt;
+    Alain Knaff \t&lt;Alain.Knaff@imag.fr&gt;
+    David C. Niemi\t&lt;niemidc@erols.com&gt;
 </description><signature>ffbaf0378193014a3a68f3ff78f5ca6437de0b74</signature></rpm_package_info></conary_package_info><install_date /></conary_package><conary_package id="189"><conary_package_info><name>info-sfcb:user</name><version>/sles.rpath.com@rpath:sles-11-common/1288561340.028:1-1-1</version><flavor /><description /><revision>1-1-1</revision><architecture /><signature>df7e81f45ea2b6ed97ed95b99ed5e35510bd990b39d1680a05cc9aa35a09c91b</signature></conary_package_info><install_date /></conary_package><conary_package id="190"><conary_package_info><name>pam:rpm</name><version>/sles.rpath.com@rpath:sles-11sp1/1320870204.274:1.0.4_0.7.1-1-1</version><flavor>is: x86(i486,i586,~!i686)</flavor><description /><revision>1.0.4_0.7.1-1-1</revision><architecture>x86(i486 i586 ~!i686)</architecture><signature>147916f929f1ba3e7ffd62d79b398ff8836505fc55d6b47059e5e3bcdb44979c</signature><rpm_package_info id="191"><name>pam</name><epoch /><version>1.0.4</version><release>0.7.1</release><architecture>i586</architecture><description>PAM (Pluggable Authentication Modules) is a system security tool that
 allows system administrators to set authentication policies without
 having to recompile programs that do authentication.
@@ -12354,61 +12354,61 @@ Authors:
     Andreas Gustafsson &lt;gson@niksula.hut.fi&gt;
     Andreas Schwab &lt;schwab@suse.de&gt;
     Assar Westerlund &lt;assar@nada.kth.se&gt;
-    Ben A. Mesander	 &lt;ben@piglet.cr.usgs.gov&gt;
+    Ben A. Mesander\t &lt;ben@piglet.cr.usgs.gov&gt;
     Bengt Mertensson &lt;bengt@mathematik.uni-bremen.de&gt;
     Bernhard Daeubler &lt;Bernhard.Daeubler@physik.uni-ulm.de&gt;
     Bjorn R. Bjornsson &lt;brb@falcon.is&gt;
-    Brendan Kehoe	 &lt;brendan@cygnus.com&gt;
-    Erez Zadok	 &lt;ezk@cs.columbia.edu&gt;
-    Eric Allman	 &lt;sendmail@sendmail.ORG&gt;
-    Eric Backus	 &lt;ericb@lsid.hp.com&gt;
-    Geoff Russell	 &lt;grussell@guest.adelaide.edu.au&gt;
-    Greg A. Woods	 &lt;woods@web.apc.org&gt;
-    Hal Peterson	 &lt;hrp@pecan.cray.com&gt;
-    Hoang Uong	 &lt;hoang@ornews.intel.com&gt;
-    Ian Lance Taylor	 &lt;ian@cygnus.com&gt;
+    Brendan Kehoe\t &lt;brendan@cygnus.com&gt;
+    Erez Zadok\t &lt;ezk@cs.columbia.edu&gt;
+    Eric Allman\t &lt;sendmail@sendmail.ORG&gt;
+    Eric Backus\t &lt;ericb@lsid.hp.com&gt;
+    Geoff Russell\t &lt;grussell@guest.adelaide.edu.au&gt;
+    Greg A. Woods\t &lt;woods@web.apc.org&gt;
+    Hal Peterson\t &lt;hrp@pecan.cray.com&gt;
+    Hoang Uong\t &lt;hoang@ornews.intel.com&gt;
+    Ian Lance Taylor\t &lt;ian@cygnus.com&gt;
     Jason Merrill &lt;jason@cygnus.com&gt;
-    Jim Avera	 &lt;jima@netcom.com&gt;
-    Jim Kingdon	 &lt;kingdon@cygnus.com&gt;
-    Jim Meyering	 &lt;meyering@na-net.ornl.gov&gt;
-    Joel Sherrill	 &lt;jsherril@uahcs2.cs.uah.edu&gt;
+    Jim Avera\t &lt;jima@netcom.com&gt;
+    Jim Kingdon\t &lt;kingdon@cygnus.com&gt;
+    Jim Meyering\t &lt;meyering@na-net.ornl.gov&gt;
+    Joel Sherrill\t &lt;jsherril@uahcs2.cs.uah.edu&gt;
     John David Anglin &lt;dave@hiauly1.hia.nrc.ca&gt;
-    Joseph E. Sacco	 &lt;jsacco@ssl.com&gt;
-    Karl Berry	 &lt;karl@cs.umb.edu&gt;
-    Karl Vogel	 &lt;vogelke@c-17igp.wpafb.af.mil&gt;
-    Kaveh R. Ghazi	 &lt;ghazi@noc.rutgers.edu&gt;
-    Kristine Lund	 &lt;lund@lpnaxp.in2p3.fr&gt;
-    Krste Asanovic	 &lt;krste@icsi.berkeley.edu&gt;
-    Marion Hakanson	 &lt;hakanson@cse.ogi.edu&gt;
-    Mark Seiden	 &lt;mis@seiden.com&gt;
-    Matthias Rabe	 &lt;rabe@mathematik.uni-bielefeld.de&gt;
+    Joseph E. Sacco\t &lt;jsacco@ssl.com&gt;
+    Karl Berry\t &lt;karl@cs.umb.edu&gt;
+    Karl Vogel\t &lt;vogelke@c-17igp.wpafb.af.mil&gt;
+    Kaveh R. Ghazi\t &lt;ghazi@noc.rutgers.edu&gt;
+    Kristine Lund\t &lt;lund@lpnaxp.in2p3.fr&gt;
+    Krste Asanovic\t &lt;krste@icsi.berkeley.edu&gt;
+    Marion Hakanson\t &lt;hakanson@cse.ogi.edu&gt;
+    Mark Seiden\t &lt;mis@seiden.com&gt;
+    Matthias Rabe\t &lt;rabe@mathematik.uni-bielefeld.de&gt;
     Michael Fetterman &lt;mafetter@ichips.intel.com&gt;
     Michael L. Welcome &lt;welcome@bigbird.llnl.gov&gt;
-    Mike Lijewski	 &lt;lijewski@theory.tc.cornell.edu&gt;
+    Mike Lijewski\t &lt;lijewski@theory.tc.cornell.edu&gt;
     Nick S. Kanakakor &lt;skanan@otl.scu.edu&gt;
-    Nicolas Pioch	 &lt;pioch@inf.enst.fr&gt;
-    Noah Friedman	 &lt;friedman@gnu.org&gt;
-    Pete Chown	 &lt;pete.chown@dale.dircon.co.uk&gt;
-    Pierre Gaumond	 &lt;gaumondp@ere.umontreal.ca&gt;
-    Pierre Mathieu	 &lt;mathieu@geod.emr.ca&gt;
+    Nicolas Pioch\t &lt;pioch@inf.enst.fr&gt;
+    Noah Friedman\t &lt;friedman@gnu.org&gt;
+    Pete Chown\t &lt;pete.chown@dale.dircon.co.uk&gt;
+    Pierre Gaumond\t &lt;gaumondp@ere.umontreal.ca&gt;
+    Pierre Mathieu\t &lt;mathieu@geod.emr.ca&gt;
     Robert Bernstein &lt;rocky@panix.com&gt;
-    Rene' Seindal	 &lt;seindal@kb.dk&gt;
+    Rene' Seindal\t &lt;seindal@kb.dk&gt;
     Richard Stallman &lt;rms@gnu.org&gt;
-    Roland H. Pesch	 &lt;roland@wrs.com&gt;
-    Roland McGrath	 &lt;roland@gnu.org&gt;
+    Roland H. Pesch\t &lt;roland@wrs.com&gt;
+    Roland McGrath\t &lt;roland@gnu.org&gt;
     Scott Bartram
-    Simon Leinen	 &lt;simon@lia.di.epfl.ch&gt;
-    Skip Montanaro	 &lt;skip@automatrix.com&gt;
-    Stephen Perkins	 &lt;perkins@cps.msu.edu&gt;
+    Simon Leinen\t &lt;simon@lia.di.epfl.ch&gt;
+    Skip Montanaro\t &lt;skip@automatrix.com&gt;
+    Stephen Perkins\t &lt;perkins@cps.msu.edu&gt;
     Steve Williamson &lt;willy@uinpla.npl.uiuc.edu&gt;
-    Thorsten Ohl	 &lt;ohl@physics.harvard.edu&gt;
-    Tom McConnell	 &lt;tmcconne@sedona.intel.com&gt;
-    Tom Quinn	 &lt;trq@dionysos.thphys.ox.ac.uk&gt;
-    Tom Tromey	 &lt;tromey@cns.caltech.edu&gt;
-    Ulrich Drepper	 &lt;drepper@gnu.org&gt;
-    Vern Paxson	 &lt;vern@ee.lbl.gov&gt;
+    Thorsten Ohl\t &lt;ohl@physics.harvard.edu&gt;
+    Tom McConnell\t &lt;tmcconne@sedona.intel.com&gt;
+    Tom Quinn\t &lt;trq@dionysos.thphys.ox.ac.uk&gt;
+    Tom Tromey\t &lt;tromey@cns.caltech.edu&gt;
+    Ulrich Drepper\t &lt;drepper@gnu.org&gt;
+    Vern Paxson\t &lt;vern@ee.lbl.gov&gt;
     Vivek P. Singhal &lt;singhal@cs.utexas.edu&gt;
-    Walter Wong	 &lt;wcw+@cmu.edu&gt;
+    Walter Wong\t &lt;wcw+@cmu.edu&gt;
     Paolo Bonzini (bonzini@gnu.org)
     Philip Hazel (ph10@cam.ac.uk)
 </description><signature>bd691915706c6d7277b242ee25bf2f73094f5849</signature></rpm_package_info></conary_package_info><install_date /></conary_package><conary_package id="371"><conary_package_info><name>openldap2-client:rpm</name><version>/sles.rpath.com@rpath:sles-11sp1/1323710765.054:2.4.26_0.12.1-1-1</version><flavor>is: x86(i486,i586,~!i686)</flavor><description /><revision>2.4.26_0.12.1-1-1</revision><architecture>x86(i486 i586 ~!i686)</architecture><signature>dc1a91eef412ca45c4c614c8f815187caa329fc842e59bb2be0a275a6d9fa902</signature><rpm_package_info id="372"><name>openldap2-client</name><epoch /><version>2.4.26</version><release>0.12.1</release><architecture>i586</architecture><description>This package contains the OpenLDAP client utilities.
@@ -12982,14 +12982,14 @@ GnuPG (alpha version).
 
 Authors:
 --------
-    Maintainer:	wk@g10code.com
+    Maintainer:\twk@g10code.com
 
-    Authors: 	Werner Koch &lt;wk@gnupg.org&gt;
-    		Matthew Skala &lt;mskala@ansuz.sooke.bc.ca&gt;
-    		Michael Roth &lt;mroth@nessie.de&gt;
-    		Niklas Hernaeus &lt;nh@df.lth.se&gt;
-    		R&#233;mi Guyomarch &lt;rguyom@mail.dotcom.fr&gt;
-    		Timo Schulz &lt;twoaday@freakmail.de&gt;
+    Authors: \tWerner Koch &lt;wk@gnupg.org&gt;
+    \t\tMatthew Skala &lt;mskala@ansuz.sooke.bc.ca&gt;
+    \t\tMichael Roth &lt;mroth@nessie.de&gt;
+    \t\tNiklas Hernaeus &lt;nh@df.lth.se&gt;
+    \t\tR&#233;mi Guyomarch &lt;rguyom@mail.dotcom.fr&gt;
+    \t\tTimo Schulz &lt;twoaday@freakmail.de&gt;
 </description><signature>a0e3d8ec3ce90fb1bfaa20b5e1d207a8bbcb6c63</signature></rpm_package_info></conary_package_info><install_date /></conary_package><conary_package id="498"><conary_package_info><name>hal:rpm</name><version>/sles.rpath.com@rpath:sles-11sp1/1310506502.092:0.5.12_23.47.4-1-1</version><flavor>is: x86(i486,i586,~!i686)</flavor><description /><revision>0.5.12_23.47.4-1-1</revision><architecture>x86(i486 i586 ~!i686)</architecture><signature>7cc7dcd4c2c839aaa796ef60f31f101cae7a5eeef4b309b7e3ca4d00454d799c</signature><rpm_package_info id="499"><name>hal</name><epoch /><version>0.5.12</version><release>23.47.4</release><architecture>i586</architecture><description>HAL is a hardware abstraction layer and aims to provide a live list of
 devices present in the system at any point in time. HAL tries to
 understand both, physical devices (such as PCI and USB) and the device
@@ -12998,7 +12998,7 @@ it allows merging of information from device info files specific to a
 device. HAL provides a API through D-BUS for querying devices and
 notifying when things change. Finally, HAL provides some monitoring (in
 an unintrusive way) of devices. For further information, please refer
-to the	HAL specification.
+to the\tHAL specification.
 
 
 
@@ -15052,7 +15052,7 @@ it allows merging of information from device info files specific to a
 device. HAL provides a API through D-BUS for querying devices and
 notifying when things change. Finally, HAL provides some monitoring (in
 an unintrusive way) of devices. For further information, please refer
-to the	HAL specification.
+to the\tHAL specification.
 
 
 
@@ -15226,7 +15226,7 @@ times.
 
 Authors:
 --------
-    Jean-loup Gailly	&lt;gzip@prep.ai.mit.edu&gt;
+    Jean-loup Gailly\t&lt;gzip@prep.ai.mit.edu&gt;
 </description><signature>75711af5421e7fac771197a0e7686628405f2468</signature></rpm_package_info><install_date>1326227855</install_date><conary_package id="17" /><encapsulated>true</encapsulated></rpm_package><rpm_package id="299"><rpm_package_info><name>util-linux-lang</name><epoch /><version>2.16</version><release>6.13.1</release><architecture>i586</architecture><description>Provides translations to the package util-linux
 </description><signature>38caab26cbfd621af1cca17b47596ee6fb640027</signature></rpm_package_info><install_date>1326227875</install_date><conary_package id="298" /><encapsulated>true</encapsulated></rpm_package><rpm_package id="287"><rpm_package_info><name>yast2-dbus-server</name><epoch /><version>2.17.3</version><release>0.3.4</release><architecture>i586</architecture><description>This package contains YaST DBus service, it provides DBus access to
 YaST components.
@@ -15271,8 +15271,8 @@ XDF support for OS/2 is also provided.
 
 Authors:
 --------
-    Alain Knaff 	&lt;Alain.Knaff@imag.fr&gt;
-    David C. Niemi	&lt;niemidc@erols.com&gt;
+    Alain Knaff \t&lt;Alain.Knaff@imag.fr&gt;
+    David C. Niemi\t&lt;niemidc@erols.com&gt;
 </description><signature>ffbaf0378193014a3a68f3ff78f5ca6437de0b74</signature></rpm_package_info><install_date>1326227854</install_date><conary_package id="187" /><encapsulated>true</encapsulated></rpm_package><rpm_package id="436"><rpm_package_info><name>file</name><epoch /><version>4.24</version><release>43.19.1</release><architecture>i586</architecture><description>With the file command, you can obtain information on the file type of a
 specified file. File type recognition is controlled by the file
 /etc/magic, which contains the classification criteria. This command is
@@ -15349,7 +15349,7 @@ system.
 In other words, generic kernels can be built without drivers for any
 SCSI adapters that load the SCSI driver as a module.  Because the
 kernel needs to read those modules, but in this case is not able to
-address the SCSI adapter, an initial RAM disk is used.	The initial RAM
+address the SCSI adapter, an initial RAM disk is used.\tThe initial RAM
 disk is loaded by the operating system loader (normally LILO) and is
 available to the kernel as soon as the RAM disk is loaded.  The RAM
 disk loads the proper SCSI adapter and allows the kernel to mount the
@@ -15714,61 +15714,61 @@ Authors:
     Andreas Gustafsson &lt;gson@niksula.hut.fi&gt;
     Andreas Schwab &lt;schwab@suse.de&gt;
     Assar Westerlund &lt;assar@nada.kth.se&gt;
-    Ben A. Mesander	 &lt;ben@piglet.cr.usgs.gov&gt;
+    Ben A. Mesander\t &lt;ben@piglet.cr.usgs.gov&gt;
     Bengt Mertensson &lt;bengt@mathematik.uni-bremen.de&gt;
     Bernhard Daeubler &lt;Bernhard.Daeubler@physik.uni-ulm.de&gt;
     Bjorn R. Bjornsson &lt;brb@falcon.is&gt;
-    Brendan Kehoe	 &lt;brendan@cygnus.com&gt;
-    Erez Zadok	 &lt;ezk@cs.columbia.edu&gt;
-    Eric Allman	 &lt;sendmail@sendmail.ORG&gt;
-    Eric Backus	 &lt;ericb@lsid.hp.com&gt;
-    Geoff Russell	 &lt;grussell@guest.adelaide.edu.au&gt;
-    Greg A. Woods	 &lt;woods@web.apc.org&gt;
-    Hal Peterson	 &lt;hrp@pecan.cray.com&gt;
-    Hoang Uong	 &lt;hoang@ornews.intel.com&gt;
-    Ian Lance Taylor	 &lt;ian@cygnus.com&gt;
+    Brendan Kehoe\t &lt;brendan@cygnus.com&gt;
+    Erez Zadok\t &lt;ezk@cs.columbia.edu&gt;
+    Eric Allman\t &lt;sendmail@sendmail.ORG&gt;
+    Eric Backus\t &lt;ericb@lsid.hp.com&gt;
+    Geoff Russell\t &lt;grussell@guest.adelaide.edu.au&gt;
+    Greg A. Woods\t &lt;woods@web.apc.org&gt;
+    Hal Peterson\t &lt;hrp@pecan.cray.com&gt;
+    Hoang Uong\t &lt;hoang@ornews.intel.com&gt;
+    Ian Lance Taylor\t &lt;ian@cygnus.com&gt;
     Jason Merrill &lt;jason@cygnus.com&gt;
-    Jim Avera	 &lt;jima@netcom.com&gt;
-    Jim Kingdon	 &lt;kingdon@cygnus.com&gt;
-    Jim Meyering	 &lt;meyering@na-net.ornl.gov&gt;
-    Joel Sherrill	 &lt;jsherril@uahcs2.cs.uah.edu&gt;
+    Jim Avera\t &lt;jima@netcom.com&gt;
+    Jim Kingdon\t &lt;kingdon@cygnus.com&gt;
+    Jim Meyering\t &lt;meyering@na-net.ornl.gov&gt;
+    Joel Sherrill\t &lt;jsherril@uahcs2.cs.uah.edu&gt;
     John David Anglin &lt;dave@hiauly1.hia.nrc.ca&gt;
-    Joseph E. Sacco	 &lt;jsacco@ssl.com&gt;
-    Karl Berry	 &lt;karl@cs.umb.edu&gt;
-    Karl Vogel	 &lt;vogelke@c-17igp.wpafb.af.mil&gt;
-    Kaveh R. Ghazi	 &lt;ghazi@noc.rutgers.edu&gt;
-    Kristine Lund	 &lt;lund@lpnaxp.in2p3.fr&gt;
-    Krste Asanovic	 &lt;krste@icsi.berkeley.edu&gt;
-    Marion Hakanson	 &lt;hakanson@cse.ogi.edu&gt;
-    Mark Seiden	 &lt;mis@seiden.com&gt;
-    Matthias Rabe	 &lt;rabe@mathematik.uni-bielefeld.de&gt;
+    Joseph E. Sacco\t &lt;jsacco@ssl.com&gt;
+    Karl Berry\t &lt;karl@cs.umb.edu&gt;
+    Karl Vogel\t &lt;vogelke@c-17igp.wpafb.af.mil&gt;
+    Kaveh R. Ghazi\t &lt;ghazi@noc.rutgers.edu&gt;
+    Kristine Lund\t &lt;lund@lpnaxp.in2p3.fr&gt;
+    Krste Asanovic\t &lt;krste@icsi.berkeley.edu&gt;
+    Marion Hakanson\t &lt;hakanson@cse.ogi.edu&gt;
+    Mark Seiden\t &lt;mis@seiden.com&gt;
+    Matthias Rabe\t &lt;rabe@mathematik.uni-bielefeld.de&gt;
     Michael Fetterman &lt;mafetter@ichips.intel.com&gt;
     Michael L. Welcome &lt;welcome@bigbird.llnl.gov&gt;
-    Mike Lijewski	 &lt;lijewski@theory.tc.cornell.edu&gt;
+    Mike Lijewski\t &lt;lijewski@theory.tc.cornell.edu&gt;
     Nick S. Kanakakor &lt;skanan@otl.scu.edu&gt;
-    Nicolas Pioch	 &lt;pioch@inf.enst.fr&gt;
-    Noah Friedman	 &lt;friedman@gnu.org&gt;
-    Pete Chown	 &lt;pete.chown@dale.dircon.co.uk&gt;
-    Pierre Gaumond	 &lt;gaumondp@ere.umontreal.ca&gt;
-    Pierre Mathieu	 &lt;mathieu@geod.emr.ca&gt;
+    Nicolas Pioch\t &lt;pioch@inf.enst.fr&gt;
+    Noah Friedman\t &lt;friedman@gnu.org&gt;
+    Pete Chown\t &lt;pete.chown@dale.dircon.co.uk&gt;
+    Pierre Gaumond\t &lt;gaumondp@ere.umontreal.ca&gt;
+    Pierre Mathieu\t &lt;mathieu@geod.emr.ca&gt;
     Robert Bernstein &lt;rocky@panix.com&gt;
-    Rene' Seindal	 &lt;seindal@kb.dk&gt;
+    Rene' Seindal\t &lt;seindal@kb.dk&gt;
     Richard Stallman &lt;rms@gnu.org&gt;
-    Roland H. Pesch	 &lt;roland@wrs.com&gt;
-    Roland McGrath	 &lt;roland@gnu.org&gt;
+    Roland H. Pesch\t &lt;roland@wrs.com&gt;
+    Roland McGrath\t &lt;roland@gnu.org&gt;
     Scott Bartram
-    Simon Leinen	 &lt;simon@lia.di.epfl.ch&gt;
-    Skip Montanaro	 &lt;skip@automatrix.com&gt;
-    Stephen Perkins	 &lt;perkins@cps.msu.edu&gt;
+    Simon Leinen\t &lt;simon@lia.di.epfl.ch&gt;
+    Skip Montanaro\t &lt;skip@automatrix.com&gt;
+    Stephen Perkins\t &lt;perkins@cps.msu.edu&gt;
     Steve Williamson &lt;willy@uinpla.npl.uiuc.edu&gt;
-    Thorsten Ohl	 &lt;ohl@physics.harvard.edu&gt;
-    Tom McConnell	 &lt;tmcconne@sedona.intel.com&gt;
-    Tom Quinn	 &lt;trq@dionysos.thphys.ox.ac.uk&gt;
-    Tom Tromey	 &lt;tromey@cns.caltech.edu&gt;
-    Ulrich Drepper	 &lt;drepper@gnu.org&gt;
-    Vern Paxson	 &lt;vern@ee.lbl.gov&gt;
+    Thorsten Ohl\t &lt;ohl@physics.harvard.edu&gt;
+    Tom McConnell\t &lt;tmcconne@sedona.intel.com&gt;
+    Tom Quinn\t &lt;trq@dionysos.thphys.ox.ac.uk&gt;
+    Tom Tromey\t &lt;tromey@cns.caltech.edu&gt;
+    Ulrich Drepper\t &lt;drepper@gnu.org&gt;
+    Vern Paxson\t &lt;vern@ee.lbl.gov&gt;
     Vivek P. Singhal &lt;singhal@cs.utexas.edu&gt;
-    Walter Wong	 &lt;wcw+@cmu.edu&gt;
+    Walter Wong\t &lt;wcw+@cmu.edu&gt;
     Paolo Bonzini (bonzini@gnu.org)
     Philip Hazel (ph10@cam.ac.uk)
 </description><signature>bd691915706c6d7277b242ee25bf2f73094f5849</signature></rpm_package_info><install_date>1326227855</install_date><conary_package id="367" /><encapsulated>true</encapsulated></rpm_package><rpm_package id="258"><rpm_package_info><name>readline-doc</name><epoch /><version>5.2</version><release>147.9.13</release><architecture>i586</architecture><description>This package contains the documentation for using the readline library
@@ -16116,14 +16116,14 @@ GnuPG (alpha version).
 
 Authors:
 --------
-    Maintainer:	wk@g10code.com
+    Maintainer:\twk@g10code.com
 
-    Authors: 	Werner Koch &lt;wk@gnupg.org&gt;
-    		Matthew Skala &lt;mskala@ansuz.sooke.bc.ca&gt;
-    		Michael Roth &lt;mroth@nessie.de&gt;
-    		Niklas Hernaeus &lt;nh@df.lth.se&gt;
-    		R&#233;mi Guyomarch &lt;rguyom@mail.dotcom.fr&gt;
-    		Timo Schulz &lt;twoaday@freakmail.de&gt;
+    Authors: \tWerner Koch &lt;wk@gnupg.org&gt;
+    \t\tMatthew Skala &lt;mskala@ansuz.sooke.bc.ca&gt;
+    \t\tMichael Roth &lt;mroth@nessie.de&gt;
+    \t\tNiklas Hernaeus &lt;nh@df.lth.se&gt;
+    \t\tR&#233;mi Guyomarch &lt;rguyom@mail.dotcom.fr&gt;
+    \t\tTimo Schulz &lt;twoaday@freakmail.de&gt;
 </description><signature>a0e3d8ec3ce90fb1bfaa20b5e1d207a8bbcb6c63</signature></rpm_package_info><install_date>1326227852</install_date><conary_package id="494" /><encapsulated>true</encapsulated></rpm_package><rpm_package id="240"><rpm_package_info><name>release-notes-sles</name><epoch /><version>11.1.1.8</version><release>0.4.1</release><architecture>i586</architecture><description>This package contains files with the most important changes for this
 SUSE Linux Enterprise Server release.  They can be found in the
 /usr/share/doc/release-notes directory.
@@ -16392,7 +16392,7 @@ of the SuSE Linux distribution.
 
 RPM can be used to install and remove software packages. With rpm, it
 is easy to update packages.  RPM keeps track of all these manipulations
-in a central database.	This way it is possible to get an overview of
+in a central database.\tThis way it is possible to get an overview of
 all installed packages.  RPM also supports database queries.
 
 
@@ -16509,7 +16509,7 @@ times.
 
 Authors:
 --------
-    Jean-loup Gailly	&lt;gzip@prep.ai.mit.edu&gt;
+    Jean-loup Gailly\t&lt;gzip@prep.ai.mit.edu&gt;
 </description><signature>75711af5421e7fac771197a0e7686628405f2468</signature></rpm_package_info></conary_package_info><install_date /></conary_package><conary_package id="19"><conary_package_info><name>open-vm-tools:devellib</name><version>/sles.rpath.com@rpath:sles-11-common/1306343493.633:2010.02.23_236320-6-1</version><flavor>is: x86</flavor><description /><revision>2010.02.23_236320-6-1</revision><architecture>x86</architecture><signature>21373e14ce30a4b545ffbad8cae2aedb4dff9052fc63dd3c251961057f5890ef</signature></conary_package_info><install_date /></conary_package><conary_package id="20"><conary_package_info><name>bzip2:rpm</name><version>/sles.rpath.com@rpath:sles-11sp1/1288586524.414:1.0.5_34.253.1-1-1</version><flavor>is: x86(i486,i586,~!i686)</flavor><description /><revision>1.0.5_34.253.1-1-1</revision><architecture>x86(i486 i586 ~!i686)</architecture><signature>f56ae4f6316150b016ee6218654fd934b3e6bd652bca42a2528dcfa9a3ab31ee</signature><rpm_package_info id="21"><name>bzip2</name><epoch /><version>1.0.5</version><release>34.253.1</release><architecture>i586</architecture><description>The bzip2 program is a very powerful program for compressing files.
 
 
@@ -16854,7 +16854,7 @@ system.
 In other words, generic kernels can be built without drivers for any
 SCSI adapters that load the SCSI driver as a module.  Because the
 kernel needs to read those modules, but in this case is not able to
-address the SCSI adapter, an initial RAM disk is used.	The initial RAM
+address the SCSI adapter, an initial RAM disk is used.\tThe initial RAM
 disk is loaded by the operating system loader (normally LILO) and is
 available to the kernel as soon as the RAM disk is loaded.  The RAM
 disk loads the proper SCSI adapter and allows the kernel to mount the
@@ -16908,7 +16908,7 @@ of the SuSE Linux distribution.
 
 RPM can be used to install and remove software packages. With rpm, it
 is easy to update packages.  RPM keeps track of all these manipulations
-in a central database.	This way it is possible to get an overview of
+in a central database.\tThis way it is possible to get an overview of
 all installed packages.  RPM also supports database queries.
 
 
@@ -17365,8 +17365,8 @@ XDF support for OS/2 is also provided.
 
 Authors:
 --------
-    Alain Knaff 	&lt;Alain.Knaff@imag.fr&gt;
-    David C. Niemi	&lt;niemidc@erols.com&gt;
+    Alain Knaff \t&lt;Alain.Knaff@imag.fr&gt;
+    David C. Niemi\t&lt;niemidc@erols.com&gt;
 </description><signature>ffbaf0378193014a3a68f3ff78f5ca6437de0b74</signature></rpm_package_info></conary_package_info><install_date /></conary_package><conary_package id="189"><conary_package_info><name>info-sfcb:user</name><version>/sles.rpath.com@rpath:sles-11-common/1288561340.028:1-1-1</version><flavor /><description /><revision>1-1-1</revision><architecture /><signature>df7e81f45ea2b6ed97ed95b99ed5e35510bd990b39d1680a05cc9aa35a09c91b</signature></conary_package_info><install_date /></conary_package><conary_package id="190"><conary_package_info><name>pam:rpm</name><version>/sles.rpath.com@rpath:sles-11sp1/1320870204.274:1.0.4_0.7.1-1-1</version><flavor>is: x86(i486,i586,~!i686)</flavor><description /><revision>1.0.4_0.7.1-1-1</revision><architecture>x86(i486 i586 ~!i686)</architecture><signature>147916f929f1ba3e7ffd62d79b398ff8836505fc55d6b47059e5e3bcdb44979c</signature><rpm_package_info id="191"><name>pam</name><epoch /><version>1.0.4</version><release>0.7.1</release><architecture>i586</architecture><description>PAM (Pluggable Authentication Modules) is a system security tool that
 allows system administrators to set authentication policies without
 having to recompile programs that do authentication.
@@ -18175,61 +18175,61 @@ Authors:
     Andreas Gustafsson &lt;gson@niksula.hut.fi&gt;
     Andreas Schwab &lt;schwab@suse.de&gt;
     Assar Westerlund &lt;assar@nada.kth.se&gt;
-    Ben A. Mesander	 &lt;ben@piglet.cr.usgs.gov&gt;
+    Ben A. Mesander\t &lt;ben@piglet.cr.usgs.gov&gt;
     Bengt Mertensson &lt;bengt@mathematik.uni-bremen.de&gt;
     Bernhard Daeubler &lt;Bernhard.Daeubler@physik.uni-ulm.de&gt;
     Bjorn R. Bjornsson &lt;brb@falcon.is&gt;
-    Brendan Kehoe	 &lt;brendan@cygnus.com&gt;
-    Erez Zadok	 &lt;ezk@cs.columbia.edu&gt;
-    Eric Allman	 &lt;sendmail@sendmail.ORG&gt;
-    Eric Backus	 &lt;ericb@lsid.hp.com&gt;
-    Geoff Russell	 &lt;grussell@guest.adelaide.edu.au&gt;
-    Greg A. Woods	 &lt;woods@web.apc.org&gt;
-    Hal Peterson	 &lt;hrp@pecan.cray.com&gt;
-    Hoang Uong	 &lt;hoang@ornews.intel.com&gt;
-    Ian Lance Taylor	 &lt;ian@cygnus.com&gt;
+    Brendan Kehoe\t &lt;brendan@cygnus.com&gt;
+    Erez Zadok\t &lt;ezk@cs.columbia.edu&gt;
+    Eric Allman\t &lt;sendmail@sendmail.ORG&gt;
+    Eric Backus\t &lt;ericb@lsid.hp.com&gt;
+    Geoff Russell\t &lt;grussell@guest.adelaide.edu.au&gt;
+    Greg A. Woods\t &lt;woods@web.apc.org&gt;
+    Hal Peterson\t &lt;hrp@pecan.cray.com&gt;
+    Hoang Uong\t &lt;hoang@ornews.intel.com&gt;
+    Ian Lance Taylor\t &lt;ian@cygnus.com&gt;
     Jason Merrill &lt;jason@cygnus.com&gt;
-    Jim Avera	 &lt;jima@netcom.com&gt;
-    Jim Kingdon	 &lt;kingdon@cygnus.com&gt;
-    Jim Meyering	 &lt;meyering@na-net.ornl.gov&gt;
-    Joel Sherrill	 &lt;jsherril@uahcs2.cs.uah.edu&gt;
+    Jim Avera\t &lt;jima@netcom.com&gt;
+    Jim Kingdon\t &lt;kingdon@cygnus.com&gt;
+    Jim Meyering\t &lt;meyering@na-net.ornl.gov&gt;
+    Joel Sherrill\t &lt;jsherril@uahcs2.cs.uah.edu&gt;
     John David Anglin &lt;dave@hiauly1.hia.nrc.ca&gt;
-    Joseph E. Sacco	 &lt;jsacco@ssl.com&gt;
-    Karl Berry	 &lt;karl@cs.umb.edu&gt;
-    Karl Vogel	 &lt;vogelke@c-17igp.wpafb.af.mil&gt;
-    Kaveh R. Ghazi	 &lt;ghazi@noc.rutgers.edu&gt;
-    Kristine Lund	 &lt;lund@lpnaxp.in2p3.fr&gt;
-    Krste Asanovic	 &lt;krste@icsi.berkeley.edu&gt;
-    Marion Hakanson	 &lt;hakanson@cse.ogi.edu&gt;
-    Mark Seiden	 &lt;mis@seiden.com&gt;
-    Matthias Rabe	 &lt;rabe@mathematik.uni-bielefeld.de&gt;
+    Joseph E. Sacco\t &lt;jsacco@ssl.com&gt;
+    Karl Berry\t &lt;karl@cs.umb.edu&gt;
+    Karl Vogel\t &lt;vogelke@c-17igp.wpafb.af.mil&gt;
+    Kaveh R. Ghazi\t &lt;ghazi@noc.rutgers.edu&gt;
+    Kristine Lund\t &lt;lund@lpnaxp.in2p3.fr&gt;
+    Krste Asanovic\t &lt;krste@icsi.berkeley.edu&gt;
+    Marion Hakanson\t &lt;hakanson@cse.ogi.edu&gt;
+    Mark Seiden\t &lt;mis@seiden.com&gt;
+    Matthias Rabe\t &lt;rabe@mathematik.uni-bielefeld.de&gt;
     Michael Fetterman &lt;mafetter@ichips.intel.com&gt;
     Michael L. Welcome &lt;welcome@bigbird.llnl.gov&gt;
-    Mike Lijewski	 &lt;lijewski@theory.tc.cornell.edu&gt;
+    Mike Lijewski\t &lt;lijewski@theory.tc.cornell.edu&gt;
     Nick S. Kanakakor &lt;skanan@otl.scu.edu&gt;
-    Nicolas Pioch	 &lt;pioch@inf.enst.fr&gt;
-    Noah Friedman	 &lt;friedman@gnu.org&gt;
-    Pete Chown	 &lt;pete.chown@dale.dircon.co.uk&gt;
-    Pierre Gaumond	 &lt;gaumondp@ere.umontreal.ca&gt;
-    Pierre Mathieu	 &lt;mathieu@geod.emr.ca&gt;
+    Nicolas Pioch\t &lt;pioch@inf.enst.fr&gt;
+    Noah Friedman\t &lt;friedman@gnu.org&gt;
+    Pete Chown\t &lt;pete.chown@dale.dircon.co.uk&gt;
+    Pierre Gaumond\t &lt;gaumondp@ere.umontreal.ca&gt;
+    Pierre Mathieu\t &lt;mathieu@geod.emr.ca&gt;
     Robert Bernstein &lt;rocky@panix.com&gt;
-    Rene' Seindal	 &lt;seindal@kb.dk&gt;
+    Rene' Seindal\t &lt;seindal@kb.dk&gt;
     Richard Stallman &lt;rms@gnu.org&gt;
-    Roland H. Pesch	 &lt;roland@wrs.com&gt;
-    Roland McGrath	 &lt;roland@gnu.org&gt;
+    Roland H. Pesch\t &lt;roland@wrs.com&gt;
+    Roland McGrath\t &lt;roland@gnu.org&gt;
     Scott Bartram
-    Simon Leinen	 &lt;simon@lia.di.epfl.ch&gt;
-    Skip Montanaro	 &lt;skip@automatrix.com&gt;
-    Stephen Perkins	 &lt;perkins@cps.msu.edu&gt;
+    Simon Leinen\t &lt;simon@lia.di.epfl.ch&gt;
+    Skip Montanaro\t &lt;skip@automatrix.com&gt;
+    Stephen Perkins\t &lt;perkins@cps.msu.edu&gt;
     Steve Williamson &lt;willy@uinpla.npl.uiuc.edu&gt;
-    Thorsten Ohl	 &lt;ohl@physics.harvard.edu&gt;
-    Tom McConnell	 &lt;tmcconne@sedona.intel.com&gt;
-    Tom Quinn	 &lt;trq@dionysos.thphys.ox.ac.uk&gt;
-    Tom Tromey	 &lt;tromey@cns.caltech.edu&gt;
-    Ulrich Drepper	 &lt;drepper@gnu.org&gt;
-    Vern Paxson	 &lt;vern@ee.lbl.gov&gt;
+    Thorsten Ohl\t &lt;ohl@physics.harvard.edu&gt;
+    Tom McConnell\t &lt;tmcconne@sedona.intel.com&gt;
+    Tom Quinn\t &lt;trq@dionysos.thphys.ox.ac.uk&gt;
+    Tom Tromey\t &lt;tromey@cns.caltech.edu&gt;
+    Ulrich Drepper\t &lt;drepper@gnu.org&gt;
+    Vern Paxson\t &lt;vern@ee.lbl.gov&gt;
     Vivek P. Singhal &lt;singhal@cs.utexas.edu&gt;
-    Walter Wong	 &lt;wcw+@cmu.edu&gt;
+    Walter Wong\t &lt;wcw+@cmu.edu&gt;
     Paolo Bonzini (bonzini@gnu.org)
     Philip Hazel (ph10@cam.ac.uk)
 </description><signature>bd691915706c6d7277b242ee25bf2f73094f5849</signature></rpm_package_info></conary_package_info><install_date /></conary_package><conary_package id="369"><conary_package_info><name>openldap2-client:rpm</name><version>/sles.rpath.com@rpath:sles-11sp1/1323710765.054:2.4.26_0.12.1-1-1</version><flavor>is: x86(i486,i586,~!i686)</flavor><description /><revision>2.4.26_0.12.1-1-1</revision><architecture>x86(i486 i586 ~!i686)</architecture><signature>dc1a91eef412ca45c4c614c8f815187caa329fc842e59bb2be0a275a6d9fa902</signature><rpm_package_info id="370"><name>openldap2-client</name><epoch /><version>2.4.26</version><release>0.12.1</release><architecture>i586</architecture><description>This package contains the OpenLDAP client utilities.
@@ -18803,14 +18803,14 @@ GnuPG (alpha version).
 
 Authors:
 --------
-    Maintainer:	wk@g10code.com
+    Maintainer:\twk@g10code.com
 
-    Authors: 	Werner Koch &lt;wk@gnupg.org&gt;
-    		Matthew Skala &lt;mskala@ansuz.sooke.bc.ca&gt;
-    		Michael Roth &lt;mroth@nessie.de&gt;
-    		Niklas Hernaeus &lt;nh@df.lth.se&gt;
-    		R&#233;mi Guyomarch &lt;rguyom@mail.dotcom.fr&gt;
-    		Timo Schulz &lt;twoaday@freakmail.de&gt;
+    Authors: \tWerner Koch &lt;wk@gnupg.org&gt;
+    \t\tMatthew Skala &lt;mskala@ansuz.sooke.bc.ca&gt;
+    \t\tMichael Roth &lt;mroth@nessie.de&gt;
+    \t\tNiklas Hernaeus &lt;nh@df.lth.se&gt;
+    \t\tR&#233;mi Guyomarch &lt;rguyom@mail.dotcom.fr&gt;
+    \t\tTimo Schulz &lt;twoaday@freakmail.de&gt;
 </description><signature>a0e3d8ec3ce90fb1bfaa20b5e1d207a8bbcb6c63</signature></rpm_package_info></conary_package_info><install_date /></conary_package><conary_package id="496"><conary_package_info><name>hal:rpm</name><version>/sles.rpath.com@rpath:sles-11sp1/1310506502.092:0.5.12_23.47.4-1-1</version><flavor>is: x86(i486,i586,~!i686)</flavor><description /><revision>0.5.12_23.47.4-1-1</revision><architecture>x86(i486 i586 ~!i686)</architecture><signature>7cc7dcd4c2c839aaa796ef60f31f101cae7a5eeef4b309b7e3ca4d00454d799c</signature><rpm_package_info id="497"><name>hal</name><epoch /><version>0.5.12</version><release>23.47.4</release><architecture>i586</architecture><description>HAL is a hardware abstraction layer and aims to provide a live list of
 devices present in the system at any point in time. HAL tries to
 understand both, physical devices (such as PCI and USB) and the device
@@ -18819,7 +18819,7 @@ it allows merging of information from device info files specific to a
 device. HAL provides a API through D-BUS for querying devices and
 notifying when things change. Finally, HAL provides some monitoring (in
 an unintrusive way) of devices. For further information, please refer
-to the	HAL specification.
+to the\tHAL specification.
 
 
 
