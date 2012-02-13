@@ -114,11 +114,6 @@ class SurveyTests(XMLTestCase):
         self.assertEqual(response.status_code, 200)
         self.assertXMLEquals(response.content, testsxml.surveys_xml)
 
-        # temporary test here of basic diff API correctness, to be replaced with real
-        # valid tests
-        #x = self.mgr.diffSurvey(survey, survey)
-        #print x
-
     def test_survey_post(self):
         # make sure we can post a survey and it mostly looks
         # like the model saved version above -- much of the
@@ -165,8 +160,6 @@ class SurveyTests(XMLTestCase):
         self.assertTrue(sys.latest_survey.created_date is not None)
 
         
-
-    # disabling until backend conforms to format
     def test_survey_post_long(self):
         sys = self._makeSystem()
         url = "inventory/systems/%s/surveys" % sys.pk
@@ -175,7 +168,32 @@ class SurveyTests(XMLTestCase):
             username='admin', password='password')
         self.assertEqual(response.status_code, 200)
 
-    
+    def test_survey_diff(self):
+
+        sys = self._makeSystem()
+        url = "inventory/systems/%s/surveys" % sys.pk
+
+        response = self._post(url,
+            data = testsxml2.one,
+            username='admin', password='password')
+        self.assertEqual(response.status_code, 200)
+
+        response = self._post(url,
+            data = testsxml2.two,
+            username='admin', password='password')
+        self.assertEqual(response.status_code, 200)
+        
+        response = self._post(url,
+            data = testsxml2.three,
+            username='admin', password='password')
+        self.assertEqual(response.status_code, 200)
+
+        # temporary test here of basic diff API correctness, to be replaced with real
+        # valid tests
+        left  = survey_models.Survey.objects.get(uuid='501')
+        right = survey_models.Survey.objects.get(uuid='502')
+        x     = self.mgr.diffSurvey(left, right)
+        y     = self.mgr.diffSurvey(right, left)
 
 class AssimilatorTestCase(XMLTestCase, test_utils.SmartformMixIn):
     ''' 
