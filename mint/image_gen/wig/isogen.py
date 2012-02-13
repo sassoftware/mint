@@ -145,11 +145,13 @@ class IsoGenerator(genmod.ImageGenerator):
             # 2008, 2008R2
             m['winFirstBootDir'] = 'C:\\Windows\\Setup\\Scripts'
             progData = 'C:\\ProgramData'
-        m['winUpdateDir'] = progData + '\\rPath\\Updates\\DeploymentUpdate'
+        m['rpathDir'] = progData + '\\rPath'
+        m['winUpdateDir'] = m['rpathDir'] + '\\Updates\\DeploymentUpdate'
 
         copymsi.write(
                 'xcopy /e /y '
                     '"%%binpath%%\\DeploymentUpdate" "%(winUpdateDir)s"\\\r\n'
+                'copy /y "%%binpath%%\\rpathrc" "%(rpathDir)s\\rpathrc"\r\n'
                 'md "%(winFirstBootDir)s"\r\n'
                 'copy /y "%%binpath%%\\firstboot.bat" '
                     '"%(winFirstBootDir)s\\SetupComplete.cmd"\r\n'
