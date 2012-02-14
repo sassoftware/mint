@@ -836,10 +836,17 @@ class SurveyServiceService(BaseInventoryService):
         return self.mgr.getSurveyService(id)
 
 class SurveyDiffService(BaseInventoryService):
-    # FIXME: rbac?
-    # FIXME: implement
-    pass
 
+    # FIXME: rbac?
+    @access.anonymous
+    def rest_GET(self, request, uuid1, uuid2):
+        result = self.get(uuid1, uuid2, request)
+        return HttpResponse(result, status=200, content_type='text/xml')
+
+    def get(self, uuid1, uuid2, request):
+        return self.mgr.diffSurvey(uuid1, uuid2, request) 
+
+# actually I don't think we want to expose this -- MPD
 class SurveyDiffsService(BaseInventoryService):
     # FIXME: rbac?
     # FIXME: implement

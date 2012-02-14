@@ -9,7 +9,7 @@ from mint.django_rest.rbuilder.inventory import survey_models
 from mint.django_rest.rbuilder.users import models as user_models
 from mint.django_rest.rbuilder.inventory import models as inventory_models
 from mint.django_rest.rbuilder.manager import basemanager
-from mint.django_rest.rbuilder.inventory.manager.surveydiff import SurveyDiff
+from mint.django_rest.rbuilder.inventory.manager.surveydiff import SurveyDiffRender
 from xobj import xobj
 import datetime
 
@@ -249,8 +249,9 @@ class SurveyManager(basemanager.BaseManager):
         return survey
 
     @exposed
-    def diffSurvey(self, left, right):
-        differ = SurveyDiff(left, right)
-        differ.compare()
+    def diffSurvey(self, left, right, request):
+        left = survey_models.Survey.objects.get(uuid=left)
+        right = survey_models.Survey.objects.get(uuid=right)
+        differ = SurveyDiffRender(left, right, request)
         return differ.render()
 

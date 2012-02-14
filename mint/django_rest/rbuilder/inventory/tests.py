@@ -182,17 +182,10 @@ class SurveyTests(XMLTestCase):
                 username='admin', password='password')
             self.assertEqual(response.status_code, 200)
 
-        # temporary test here of basic diff API correctness, to be replaced with real
-        # valid tests
-        a = survey_models.Survey.objects.get(uuid='501')
-        b = survey_models.Survey.objects.get(uuid='502')
-        c = survey_models.Survey.objects.get(uuid='503')
-        d = survey_models.Survey.objects.get(uuid='504')
-        e = survey_models.Survey.objects.get(uuid='505')
-        x = self.mgr.diffSurvey(a, b)
-        y = self.mgr.diffSurvey(b, a)
-        z = self.mgr.diffSurvey(d, e)
-        print z
+        url = "inventory/surveys/%s/diffs/%s" % ('504', '505')
+        response = self._get(url, username='admin', password='password')
+        self.assertEqual(response.status_code, 200)
+        #print response.content
 
 class AssimilatorTestCase(XMLTestCase, test_utils.SmartformMixIn):
     ''' 
