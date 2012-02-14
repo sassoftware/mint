@@ -186,9 +186,15 @@ class SurveyDiffRender(object):
         self.request = request # for URL reversal and REST ids (optional)
         self.differ = SurveyDiff(left, right)
 
+    def _makeId(self, obj):
+        if self.request is None:
+            return { 'id' : str(obj.pk) }
+        else:
+            return { 'id' : obj.get_absolute_url(self.request) }
+
     def _renderSurvey(self, tag, survey):
         # FIXME: use url
-        elem = Element(tag, attrib={'id':str(survey.pk)})
+        elem = Element(tag, attrib=self._makeId(survey))
         elem.append(self._element('name', survey.name))
         elem.append(self._element('description', survey.description))
         elem.append(self._element('removable', survey.removable))
@@ -231,10 +237,10 @@ class SurveyDiffRender(object):
         elem = None
         if typ == survey_models.SurveyRpmPackage:
             # FIXME: ids
-            elem = Element('rpm_package', attrib={ 'id' : str(item.pk) })
+            elem = Element('rpm_package', attrib=self._makeId(item))
             elem.append(self._element('install_date', item.install_date))
             info = item.rpm_package_info
-            subElt = Element('rpm_package_info', attrib = { 'id' : str(info.pk) })
+            subElt = Element('rpm_package_info', attrib=self._makeId(info))
             subElt.append(self._element('name', info.name))
             subElt.append(self._element('epoch', info.epoch))
             subElt.append(self._element('version', info.version))
@@ -243,10 +249,10 @@ class SurveyDiffRender(object):
             subElt.append(self._element('signature', info.signature))
             elem.append(subElt)
         elif typ == survey_models.SurveyConaryPackage:
-            elem = Element('conary_package', attrib={ 'id' : str(item.pk) })
+            elem = Element('conary_package', attrib=self._makeId(item))
             elem.append(self._element('install_date', item.install_date))
             info = item.conary_package_info
-            subElt = Element('conary_package_info', attrib = { 'id' : str(info.pk) })
+            subElt = Element('conary_package_info', attrib=self._makeId(info))
             subElt.append(self._element('name', info.name))
             subElt.append(self._element('version', info.version))
             subElt.append(self._element('flavor', info.flavor))
@@ -255,11 +261,11 @@ class SurveyDiffRender(object):
             subElt.append(self._element('signature', info.signature))
             elem.append(subElt)
         elif typ == survey_models.SurveyService:
-            elem = Element('service', attrib={ 'id' : str(item.pk) })
+            elem = Element('service', attrib=self._makeId(item))
             elem.append(self._element('running', item.running))
             elem.append(self._element('status', item.status))
             info = item.service_info
-            subElt = Element('service_info', attrib = { 'id' : str(info.pk) })
+            subElt = Element('service_info', attrib=self._makeId(info))
             subElt.append(self._element('name', info.name))
             subElt.append(self._element('autostart', info.autostart))
             subElt.append(self._element('runlevels', info.runlevels))
