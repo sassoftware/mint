@@ -8,7 +8,6 @@ testsuite.setup()
 
 import time
 
-import rephelp
 import fixtures
 
 from mint.db import sessiondb
