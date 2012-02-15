@@ -186,6 +186,10 @@ class SurveyTests(XMLTestCase):
         # hit it again to test cached diff logic
         response = self._get(url, username='admin', password='password')
         self.assertEqual(response.status_code, 200)
+        
+        url = "inventory/surveys/%s/diffs/%s" % ('503', '501')
+        response = self._get(url, username='admin', password='password')
+        self.assertEqual(response.status_code, 200)
 
 class AssimilatorTestCase(XMLTestCase, test_utils.SmartformMixIn):
     ''' 

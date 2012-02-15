@@ -45,7 +45,6 @@ class SurveyDiff(object):
 
     def _matches(self, name, infoName, items):
         ''' return items in the list with the named *name* '''
-        return [ x for x in items if getattr(x, infoName).name == name ]
   
     def _computeGeneric(self, collectedName, infoName):
         ''' 
@@ -63,8 +62,8 @@ class SurveyDiff(object):
         for name in allNames:
 
             # process things one set of names at a time to prevent extra iteration
-            leftMatches  = self._matches(name, infoName, leftItems)
-            rightMatches = self._matches(name, infoName, rightItems)
+            leftMatches   = [ x for x in leftItems  if getattr(x, infoName).name == name ]
+            rightMatches  = [ x for x in rightItems if getattr(x, infoName).name == name ]
             # for things with this same name, what's different?
             localAdded, localChanged, localRemoved = self._diff(infoName, leftMatches, rightMatches)
             # add to the big list for the overall diff of survey documents
@@ -191,6 +190,7 @@ class SurveyDiffRender(object):
         self.left    = left
         self.right   = right
         self.request = request # for URL reversal and REST ids (optional)
+
         self.differ  = SurveyDiff(left, right)
 
     def _makeId(self, obj):
@@ -253,16 +253,14 @@ class SurveyDiffRender(object):
         return elem
 
 
-    def _serializeItem(self, parent, item):
+    def _serializeItem(self, elem, item):
         ''' 
         wrappers around item serialization.  TODO: find ways to leap into xobj nicely
         and pass in a request?  this is temporary.
         '''
         typ = type(item)
-        elem = None
         if typ == survey_models.SurveyRpmPackage:
-            # FIXME: ids
-            elem = Element('rpm_package', attrib=self._makeId(item))
+            elem.attrib = self._makeId(item)
             elem.append(self._element('install_date', item.install_date))
             info = item.rpm_package_info
             subElt = Element('rpm_package_info', attrib=self._makeId(info))
@@ -274,7 +272,7 @@ class SurveyDiffRender(object):
             subElt.append(self._element('signature', info.signature))
             elem.append(subElt)
         elif typ == survey_models.SurveyConaryPackage:
-            elem = Element('conary_package', attrib=self._makeId(item))
+            elem.attrib = self._makeId(item)
             elem.append(self._element('install_date', item.install_date))
             info = item.conary_package_info
             subElt = Element('conary_package_info', attrib=self._makeId(info))
@@ -286,7 +284,7 @@ class SurveyDiffRender(object):
             subElt.append(self._element('signature', info.signature))
             elem.append(subElt)
         elif typ == survey_models.SurveyService:
-            elem = Element('service', attrib=self._makeId(item))
+            elem.attrib = self._makeId(item)
             elem.append(self._element('running', item.running))
             elem.append(self._element('status', item.status))
             info = item.service_info
@@ -298,8 +296,8 @@ class SurveyDiffRender(object):
         else:
             raise Exception("unsupported type")
 
-        parent.append(elem)
-        return parent
+        # parent.append(elem)
+        return elem
 
     def _fromElement(self, parentTag, item):
         ''' generate a tag with an item serialized in it 
@@ -386,11 +384,11 @@ class SurveyDiffRender(object):
     def _renderRemovals(self, parentTag, parentElem, items):
         ''' render all of what's been removed for an object type '''
         self._renderACR(parentTag, parentElem, items, 'removed')
+        
 
     def render(self):
         ''' return XML representation of survey differences after calling compute '''
 
-        # TODO: don't compare or regenerate if already in DB
         self.differ.compare()
 
         root = self._renderRoot(self.left, self.right)
@@ -405,6 +403,6 @@ class SurveyDiffRender(object):
             self._renderDiff('service_changes', self.differ.serviceDiff),
         )
 
-        return parseString(tostring(root)).toprettyxml() 
-
+        return tostring(root)
+        # return parseString(tostring(root)).toprettyxml() 
 
