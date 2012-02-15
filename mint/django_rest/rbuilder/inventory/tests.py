@@ -26,7 +26,6 @@ from mint.django_rest.rbuilder.inventory import testsxml2
 from mint.django_rest.rbuilder.projects import models as projectmodels
 from mint.lib import x509
 from mint.rest.api import models as restmodels
-#import datetime
 
 # Suppress all non critical msg's from output
 # still emits traceback for failed tests
@@ -180,19 +179,13 @@ class SurveyTests(XMLTestCase):
                 username='admin', password='password')
             self.assertEqual(response.status_code, 200)
 
-        #t1 = datetime.datetime.now()
         url = "inventory/surveys/%s/diffs/%s" % ('504', '505')
         # TODO: time this
         response = self._get(url, username='admin', password='password')
         self.assertEqual(response.status_code, 200)
-        #t2 = datetime.datetime.now()
         # hit it again to test cached diff logic
         response = self._get(url, username='admin', password='password')
         self.assertEqual(response.status_code, 200)
-        #t3 = datetime.datetime.now()
-        #print str(t1)
-        #print str(t2)
-        #print str(t3)
 
 class AssimilatorTestCase(XMLTestCase, test_utils.SmartformMixIn):
     ''' 

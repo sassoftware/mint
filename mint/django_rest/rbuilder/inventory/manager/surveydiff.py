@@ -20,17 +20,22 @@ class SurveyDiff(object):
     ''' Compare two surveys and return a list or xobj model of their differences '''
 
     def __init__(self, left, right):
+        ''' contruct a diff object from two surveys, then call compare '''
         self.left = left
         self.right = right
 
     # FIXME: fix underscore/camel conventions
     def compare(self):
-        ''' Compute survey differences, but don't return XML '''
+        ''' 
+        Compute survey differences, but don't return XML.  Sets side
+        effects for usage by SurveyDiffRender class.
+        '''
         self.rpmDiff     = self._computeRpmPackages()
         self.conaryDiff  = self._computeConaryPackages()
         self.serviceDiff = self._computeServices()
       
     def _uniqueNames(self, infoName, left, right):
+        ''' return all the object names in left and right '''
         names = {}
         for x in left:
             names[getattr(x, infoName).name] = 1
@@ -39,8 +44,8 @@ class SurveyDiff(object):
         return names.keys()
 
     def _matches(self, name, infoName, items):
-        matches = [ x for x in items if getattr(x, infoName).name == name ]
-        return matches
+        ''' return items in the list with the named *name* '''
+        return [ x for x in items if getattr(x, infoName).name == name ]
   
     def _computeGeneric(self, collectedName, infoName):
         ''' 
@@ -179,21 +184,24 @@ class SurveyDiff(object):
 class SurveyDiffRender(object):
 
     def __init__(self, left, right, request=None):
-        ''' Render a XML diff between two surveys, using a cached copy if it already exists '''
-        # TODO: the part about the cached copy
-        self.left = left
-        self.right = right
+        ''' 
+        Render a XML diff between two surveys.  Caching on diffs 
+        already computed is handled in surveymgr.py
+        '''
+        self.left    = left
+        self.right   = right
         self.request = request # for URL reversal and REST ids (optional)
-        self.differ = SurveyDiff(left, right)
+        self.differ  = SurveyDiff(left, right)
 
     def _makeId(self, obj):
+        ''' render URL for various elements '''
         if self.request is None:
             return { 'id' : str(obj.pk) }
         else:
             return { 'id' : obj.get_absolute_url(self.request) }
 
     def _renderSurvey(self, tag, survey):
-        # FIXME: use url
+        ''' serializes the left_survey or right_survey elements '''
         elem = Element(tag, attrib=self._makeId(survey))
         elem.append(self._element('name', survey.name))
         elem.append(self._element('description', survey.description))
@@ -208,14 +216,24 @@ class SurveyDiffRender(object):
            e.text = str(text)
         return e
 
-    def _renderRoot(self):
+    def _renderRoot(self, left, right):
         ''' make root note for survey diffs '''
         elem = Element('survey_diff')
-        # FIXME: elem.created_date NOW
+        elem.append(self._renderSurvey('left_survey', left))
+        elem.append(self._renderSurvey('right_survey', right))
+        elem.append(self._element('created_date', str(datetime.datetime.now())))
         return elem
 
     def _renderDiff(self, tag, changeList):
-        ''' generate the part of the diffs that contains the actual changes '''
+        ''' generate the part of the diffs that contains the actual changes 
+ 
+        <changes> <---------------------- returns this
+            <rpm_package_changes/>
+            <conary_package_changes/>
+            <service_changes/>
+        </changes>
+        '''
+
         (added, changed, removed) = changeList
         elem = Element(tag)
         self._renderAdditions(tag, elem, added)
@@ -223,10 +241,17 @@ class SurveyDiffRender(object):
         self._renderRemovals(tag, elem, removed)
         return elem
 
-    def _changeElement(self, parentTag):
-        ''' generate the tag corresponding to a single change entry '''
-        tagName = "".join(parentTag[0:-1])
-        return Element(tagName)
+    def _changeElement(self, parentTag, mode):
+        ''' 
+        generate the tag corresponding to a single change entry, ex:
+           <something_something_changes>
+              <change> <------------------- returns this
+                 <type>added</type>
+        ''' 
+        elem = Element("".join(parentTag[0:-1]))
+        elem.append(self._element('type', mode))
+        return elem
+
 
     def _serializeItem(self, parent, item):
         ''' 
@@ -277,31 +302,48 @@ class SurveyDiffRender(object):
         return parent
 
     def _fromElement(self, parentTag, item):
-        ''' generate a tag with an item serialized in it '''
-        tagName = "from_%s" % parentTag.replace("_changes","")
-        elem = Element(tagName)
-        return self._serializeItem(elem, item)
-        
+        ''' generate a tag with an item serialized in it 
+
+        ex:
+              <from_rpm_package> <- return this
+                   <rpm_package>
+        '''
+        return self._serializeItem(
+            Element("from_%s" % parentTag.replace("_changes","")),
+            item
+        )
+
     def _toElement(self, parentTag, item):
         ''' generate a tag with an item serialized in it '''
-        tagName = "to_%s" % parentTag.replace("_changes", "")
-        elem = Element(tagName)
-        return self._serializeItem(elem, item)
+        return self._serializeItem(
+            Element("to_%s" % parentTag.replace("_changes", "")),
+            item
+        )
 
     def _addedElement(self, parentTag, item):
         ''' generate a tag with an item serialized in it '''
-        tagName = "added_%s" % parentTag.replace("_changes", "")
-        elem = Element(tagName)
-        return self._serializeItem(elem, item)
+        return self._serializeItem(
+            Element("added_%s" % parentTag.replace("_changes", "")),
+            item
+        )
 
     def _removedElement(self, parentTag, item):
         ''' generate a tag with an item serialized in it '''
-        tagName = "removed_%s" % parentTag.replace("_changes","")
-        elem = Element(tagName)
-        return self._serializeItem(elem, item)
+        return self._serializeItem(
+            Element("removed_%s" % parentTag.replace("_changes","")),
+            item
+        )
 
     def _diffElement(self, parentTag, deltas):
-        ''' differences!  these look different from the other tags '''
+        ''' differences!  these look different from the other tags 
+
+        ex:
+            <rpm_package_diff> <-------------- returns this 
+                <field_name_that_changed>
+                    <from>X</from>
+                    <to>Y</to>
+        '''
+
         tagName = "%s_diff" % parentTag.replace("_changes","")
         elem = Element(tagName)
         for changedField, values in deltas.iteritems():
@@ -318,25 +360,23 @@ class SurveyDiffRender(object):
         for a given object type.
         '''
         for x in items:
-            change = self._changeElement(parentTag)
+            change = self._changeElement(parentTag, mode)
             if mode == 'added':
-                subElt = self._addedElement(parentTag, x)
-                change.append(subElt)
+                change.append(self._addedElement(parentTag, x))
             elif mode == 'removed':
-                subElt = self._removedElement(parentTag, x)
-                change.append(subElt)
+                change.append(self._removedElement(parentTag, x))
             elif mode == 'changed':
                 (left, right, delta) = x
-                subElt = self._fromElement(parentTag, left)
-                change.append(subElt)
-                subElt = self._toElement(parentTag, right)
-                change.append(subElt)
-                subElt = self._diffElement(parentTag, delta)
-                change.append(subElt)
+                change.append(self._fromElement(parentTag, left))
+                change.append(self._toElement(parentTag, right))
+                change.append(self._diffElement(parentTag, delta))
             parentElem.append(change)
 
     def _renderAdditions(self, parentTag, parentElem, items):
-        ''' render all of what's been added for an object type'''
+        ''' 
+        render all of what's been added for an object type
+        these all go directly under the foo_changes element     
+        '''
         self._renderACR(parentTag, parentElem, items, 'added')
 
     def _renderChanges(self, parentTag, parentElem, items):
@@ -353,10 +393,7 @@ class SurveyDiffRender(object):
         # TODO: don't compare or regenerate if already in DB
         self.differ.compare()
 
-        root = self._renderRoot()
-        root.append(self._renderSurvey('left_survey', self.left))
-        root.append(self._renderSurvey('right_survey', self.right))
-        root.append(self._element('created_date', str(datetime.datetime.now())))
+        root = self._renderRoot(self.left, self.right)
 
         root.append(
             self._renderDiff('rpm_package_changes', self.differ.rpmDiff),
@@ -368,7 +405,6 @@ class SurveyDiffRender(object):
             self._renderDiff('service_changes', self.differ.serviceDiff),
         )
 
-        xml = tostring(root)
-        return parseString(xml).toprettyxml() 
+        return parseString(tostring(root)).toprettyxml() 
 
 
