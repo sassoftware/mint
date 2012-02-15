@@ -250,8 +250,31 @@ class SurveyManager(basemanager.BaseManager):
 
     @exposed
     def diffSurvey(self, left, right, request):
-        left = survey_models.Survey.objects.get(uuid=left)
-        right = survey_models.Survey.objects.get(uuid=right)
-        differ = SurveyDiffRender(left, right, request)
-        return differ.render()
+        ''' 
+        If the diff has already been calculated, return it, otherwise
+        save it and return it.  The diff will be pregenerated before 
+        returning the job result.
+        '''
+
+        left = survey_models.Survey.objects.select_related().get(uuid=left)
+        right = survey_models.Survey.objects.select_related().get(uuid=right)
+        # is there a cached copy?
+        diffs = survey_models.SurveyDiff.objects.filter(
+             left_survey  = left,
+             right_survey = right
+        )
+        if len(diffs) == 0:
+            # not cached yet, calculate, save, and return
+            differ = SurveyDiffRender(left, right, request)
+            diff = survey_models.SurveyDiff(
+                left_survey  = left,
+                right_survey = right,
+                xml          = differ.render()
+            )
+            diff.save()
+            return diff.xml
+        else:
+            # return cached copy
+            return diffs[0].xml
+
 

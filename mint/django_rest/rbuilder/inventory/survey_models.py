@@ -42,24 +42,6 @@ class Surveys(modellib.Collection):
         # shouldn't really be surfacing this
         return [s.save() for s in self.survey]
 
-#***********************************************************
-
-class Diffs(modellib.Collection):
-    ''' Collection of all diffs for a given system '''
-
-    class Meta:
-        abstract = True
-
-    _xobj = xobj.XObjMetadata(tag='survey_diffs')
-    list_fields = [ 'survey_diff']
-    survey_diff = []
-    view_name = 'SurveyDiffs'
- 
-    def __init__(self):
-        modellib.Collection.__init__(self)
-
-    def save(self):
-        return [s.save() for s in self.survey_diffs]
 
 #***********************************************************
 
@@ -98,6 +80,23 @@ class Survey(modellib.XObjIdModel):
 
     def get_url_key(self, *args, **kwargs):
         return [ self.uuid ]
+
+#***********************************************************
+
+class SurveyDiff(modellib.XObjIdModel):
+    ''' Differences between two surveys '''
+
+    class Meta:
+        db_table = 'inventory_survey_diff'
+    view_name = 'SurveyDiff'
+    
+    # to use this model, look up the XML in the object, do not use xobj
+
+    diff_id       = models.AutoField(primary_key=True)
+    left_survey   = modellib.ForeignKey(Survey, null=False, related_name='+')
+    right_survey  = modellib.ForeignKey(Survey, null=False, related_name='+')
+    created_date  = modellib.DateTimeUtcField(auto_now_add=True)
+    xml           = models.TextField()
 
 #***********************************************************
 
