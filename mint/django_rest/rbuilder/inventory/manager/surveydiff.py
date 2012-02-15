@@ -218,7 +218,13 @@ class SurveyDiffRender(object):
 
     def _renderRoot(self, left, right):
         ''' make root note for survey diffs '''
-        elem = Element('survey_diff')
+        attribs = {}
+        if self.request is not None:
+            attribs = { 'id' : "https://%s%s" % (
+                self.request.META['SERVER_NAME'], 
+                self.request.META['PATH_INFO']
+            ) }
+        elem = Element('survey_diff', attrib=attribs)
         elem.append(self._renderSurvey('left_survey', left))
         elem.append(self._renderSurvey('right_survey', right))
         elem.append(self._element('created_date', str(datetime.datetime.now())))
