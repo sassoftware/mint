@@ -15,8 +15,7 @@ import time
 import xmlrpclib
 
 from mint_test import mint_rephelp
-from mint_rephelp import MINT_HOST, MINT_PROJECT_DOMAIN, MINT_DOMAIN
-import rephelp
+from mint_rephelp import MINT_PROJECT_DOMAIN
 
 from webunit import webunittest
 
