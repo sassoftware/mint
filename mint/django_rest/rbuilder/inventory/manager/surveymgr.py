@@ -37,7 +37,15 @@ class SurveyManager(basemanager.BaseManager):
         if not survey.removable:
             return (True, False)
         else:
+            sys = survey.system
             survey.delete()
+            # point latest_survey to new latest
+            # if there are other surveys
+            surveys = survey_models.Survey.objects.filter(system=sys)
+            surveys.order_by('-created_date')
+            if len(surveys) > 0:
+                sys.latest_survey = surveys[0]
+                sys.save()
             return (True, True)
 
     @exposed

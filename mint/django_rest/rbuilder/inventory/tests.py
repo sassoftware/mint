@@ -192,15 +192,23 @@ class SurveyTests(XMLTestCase):
         url = "inventory/surveys/%s/diffs/%s" % ('503', '501')
         response = self._get(url, username='admin', password='password')
         self.assertEqual(response.status_code, 200)
+        sys = models.System.objects.get(pk=sys.pk)
+        key1 = sys.latest_survey.pk
 
         # verify we can delete the survey
-        url = "inventory/surveys/%s" % '503'
+        url = "inventory/surveys/%s" % '505'
         response = self._delete(url, username='admin', password='password')
         self.assertEqual(response.status_code, 204)
         # verify system did not cascade 
+        # and that since we deleted teh latest survey there is still a latest
+        # survey
         surl = "inventory/systems/%s" % sys.pk
         response = self._get(surl, username='admin', password='password')
         self.assertEqual(response.status_code, 200)
+        sys = models.System.objects.get(pk=sys.pk)
+        key2 = sys.latest_survey.pk
+        self.assertTrue(key1 != key2)
+
         # verify delete stuck
         response = self._get(url, username='admin', password='password')
         self.assertEqual(response.status_code, 404)
