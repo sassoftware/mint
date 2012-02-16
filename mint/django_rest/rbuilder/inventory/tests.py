@@ -146,7 +146,9 @@ class SurveyTests(XMLTestCase):
             data = testsxml.survey_mod_xml,
             username='admin', password='password')
         self.assertEqual(response.status_code, 200)
-        
+        surv = survey_models.Survey.objects.get(uuid='1234')
+        self.assertEqual(surv.removable, False)
+ 
         # post a second survey to verify that updating the latest survey
         # info still worksand see if the latest survey date matches
         response = self._post("inventory/systems/%s/surveys" % sys.pk,

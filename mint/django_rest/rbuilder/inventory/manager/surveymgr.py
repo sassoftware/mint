@@ -123,6 +123,9 @@ class SurveyManager(basemanager.BaseManager):
         xmodel = xobj.parse(xml)
         return self.addSurveyForSystemFromXobj(system_id, xmodel)
 
+    def _bool(self, x):
+        return str(x).lower == 'true'
+
     @exposed
     def updateSurveyFromXml(self, survey_uuid, xml):
         xmodel = xobj.parse(xml)
@@ -142,7 +145,7 @@ class SurveyManager(basemanager.BaseManager):
         survey.name        = getattr(xmodel, 'name', None)
         survey.description = getattr(xmodel, 'description', None)
         survey.comment     = getattr(xmodel, 'comment', None)
-        survey.removable   = getattr(xmodel, 'removable', True)
+        survey.removable   = self._bool(getattr(xmodel, 'removable', True))
         survey.save()
         return survey
 
