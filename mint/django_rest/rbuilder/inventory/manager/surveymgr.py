@@ -24,9 +24,28 @@ class SurveyManager(basemanager.BaseManager):
         return survey_models.Survey.objects.get(uuid=uuid)
 
     @exposed
+    def deleteSurvey(self, uuid):
+        ''' 
+        Deletes a survey.  Returns a tuple of (found, deleted) as
+        the survey either might not exist or it might not be marked
+        removable.  See views.py usage.
+        '''
+        surveys = survey_models.Survey.objects.filter(uuid=uuid)
+        if len(surveys) == 0:
+            return (False, False)
+        survey = surveys[0]
+        if not survey.removable:
+            return (True, False)
+        else:
+            survey.delete()
+            return (True, True)
+
+    @exposed
     def getSurveysForSystem(self, system_id):
        surveys = survey_models.Surveys()
-       surveys.survey = survey_models.ShortSurvey.objects.filter(system__pk=system_id)
+       surveys.survey = survey_models.ShortSurvey.objects.filter(
+           system__pk=system_id
+       )
        return surveys
 
     # bunch of boilerplate so IDs to micro-survey obejcts will be valid

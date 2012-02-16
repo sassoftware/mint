@@ -191,6 +191,24 @@ class SurveyTests(XMLTestCase):
         response = self._get(url, username='admin', password='password')
         self.assertEqual(response.status_code, 200)
 
+        # verify we can delete the survey
+        url = "inventory/surveys/%s" % '503'
+        response = self._delete(url, username='admin', password='password')
+        self.assertEqual(response.status_code, 204)
+        response = self._get(url, username='admin', password='password')
+        self.assertEqual(response.status_code, 404)
+        # check 404 support for survey not existing, second delete
+        response = self._delete(url, username='admin', password='password')
+        self.assertEqual(response.status_code, 404)
+        # verify that deleting a survey which is marked non-removable fails
+        smodel = survey_models.Survey.objects.get(uuid='504')
+        smodel.removable = False
+        smodel.save()
+        url = "inventory/surveys/%s" % '504'
+        response = self._delete(url, username='admin', password='password')
+        self.assertEqual(response.status_code, 403)
+       
+
 class AssimilatorTestCase(XMLTestCase, test_utils.SmartformMixIn):
     ''' 
     This tests actions as well as the assimilator.  See if we can list the jobs on 

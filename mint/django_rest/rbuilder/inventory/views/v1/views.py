@@ -798,6 +798,18 @@ class SurveyService(BaseInventoryService):
     def rest_PUT(self, request, uuid):
         xml = request.raw_post_data
         return self.mgr.updateSurveyFromXml(uuid, xml)
+    
+    # FIXME: RBAC
+    @rbac(manual_rbac)
+    @return_xml
+    def rest_DELETE(self, request, uuid):
+        (found, deleted) = self.mgr.deleteSurvey(uuid)
+        if not found:
+            return HttpResponseNotFound()
+        elif not deleted:
+            raise PermissionDenied(msg="Survey is not marked removable")
+        else:
+            return HttpResponse(status=204)    
 
 class SurveyRpmPackageService(BaseInventoryService):
 
