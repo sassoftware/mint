@@ -45,7 +45,7 @@ class SurveyManager(basemanager.BaseManager):
        surveys = survey_models.Surveys()
        surveys.survey = survey_models.ShortSurvey.objects.filter(
            system__pk=system_id
-       )
+       ).order_by('-created_date')
        return surveys
 
     # bunch of boilerplate so IDs to micro-survey obejcts will be valid
