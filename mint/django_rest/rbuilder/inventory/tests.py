@@ -197,6 +197,11 @@ class SurveyTests(XMLTestCase):
         url = "inventory/surveys/%s" % '503'
         response = self._delete(url, username='admin', password='password')
         self.assertEqual(response.status_code, 204)
+        # verify system did not cascade 
+        surl = "inventory/systems/%s" % sys.pk
+        response = self._get(surl, username='admin', password='password')
+        self.assertEqual(response.status_code, 200)
+        # verify delete stuck
         response = self._get(url, username='admin', password='password')
         self.assertEqual(response.status_code, 404)
         # check 404 support for survey not existing, second delete

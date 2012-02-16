@@ -71,8 +71,8 @@ class Survey(modellib.XObjIdModel):
     created_date  = modellib.DateTimeUtcField(auto_now_add=True)
     modified_date = modellib.DateTimeUtcField(auto_now_add=True)
     removable     = models.BooleanField(default=False)
-    created_by    = modellib.ForeignKey(usermodels.User, null=True, db_column='created_by', related_name='+') 
-    modified_by   = modellib.ForeignKey(usermodels.User, null=True, db_column='modified_by', related_name='+') 
+    created_by    = modellib.ForeignKey(usermodels.User, null=True, db_column='created_by', related_name='+', on_delete=models.SET_NULL) 
+    modified_by   = modellib.ForeignKey(usermodels.User, null=True, db_column='modified_by', related_name='+', on_delete=models.SET_NULL) 
     # FIXME: add to database schema
     #removeable   = models.BooleanField(default=True)
     system        = modellib.DeferredForeignKey('inventory.System', related_name='surveys', db_column='system_id')
