@@ -1,3 +1,5 @@
+import hashlib
+import os
 from testutils import mock
 import testsxml
 from xobj import xobj
@@ -7,6 +9,8 @@ logging.disable(logging.CRITICAL)
 
 from mint.django_rest import test_utils
 XMLTestCase = test_utils.XMLTestCase
+
+from conary import deps, trovetup, versions
 
 from mint.lib import uuid
 from mint.django_rest.rbuilder.images import models
@@ -593,3 +597,116 @@ class ImagesTestCase(RbacEngine):
                 'ssl-client-certificate-%s' % (i+1))
             self.failUnlessEqual(system._ssl_client_key,
                 'ssl-client-key-%s' % (i+1))
+
+    def testPutImageBuildFiles(self):
+        # Mock repository interaction
+        retNvf = trovetup.TroveTuple(
+            'image-blabbedy',
+            versions.VersionFromString('/example.com@test:1/1-1-1'),
+            deps.deps.Flavor(''))
+
+        createSourceTroveCallArgs = []
+        def mockCreateSourceTrove(slf, *args, **kwargs):
+            createSourceTroveCallArgs.append((args, kwargs))
+            return retNvf
+        self.mock(self.mgr.reposMgr.__class__, 'createSourceTrove', mockCreateSourceTrove)
+
+        retKVmeta = [ dict(owner='Jennay', workload='heavy') ]
+        getKeyValueMetadataCallArgs = []
+        def mockGetKeyValueMetadata(slf, *args, **kwargs):
+            getKeyValueMetadataCallArgs.append((args, kwargs))
+            return retKVmeta
+        self.mock(self.mgr.restDb.productMgr.reposMgr.__class__,
+                'getKeyValueMetadata', mockGetKeyValueMetadata)
+
+        xmlFilesTmpl = """<files>%s</files>"""
+        xmlFileTmpl = """
+  <file>
+    <title>%(title)s</title>
+    <size>%(size)s</size>
+    <sha1>%(sha1)s</sha1>
+    <filename>%(filename)s</filename>
+  </file>"""
+
+        img = models.Image.objects.get(name='image-0')
+        img.project_branch_stage = projectsmodels.Stage.objects.filter(
+            project__short_name='chater-foo',
+            project_branch__name='1',
+            name='Development')[0]
+        self.mgr.createImageBuild(img)
+
+        imgPath = os.path.join(self.mgr.cfg.imagesPath, img.project.short_name,
+            str(img.image_id))
+        os.makedirs(imgPath)
+        cmaps = [
+             ('filename1.ova', "Contents for ova file have 35 bytes"),
+             ('filename2.tar.gz', "Contents for ovf 0.99 file have 40 bytes"),
+        ]
+        xmlContentList = []
+        for idx, (fname, content) in enumerate(cmaps):
+            params = dict(
+                sha1 = hashlib.sha1(content).hexdigest(),
+                size = len(content),
+                title = "File %s" % idx,
+                filename = os.path.join(imgPath, fname),
+            )
+            xmlContentList.append(params)
+            file(params['filename'], "w").write(content)
+        xml = xmlFilesTmpl % '\n'.join(xmlFileTmpl % x for x in xmlContentList)
+
+        # Grab the image outputToken
+        outputToken = img.image_data.filter(name='outputToken')[0].value
+
+        response = self._put('images/%s/build_files' % img.image_id,
+            data=xml,
+            headers={'X-rBuilder-OutputToken': outputToken},
+        )
+
+        self.failUnlessEqual(response.status_code, 200)
+        obj = xobj.parse(response.content)
+        self.failUnlessEqual(
+            [(x.title, x.sha1) for x in obj.files.file],
+            [(x['title'], x['sha1']) for x in xmlContentList])
+
+        self.failUnlessEqual(createSourceTroveCallArgs, [])
+
+        # same deal, now with metadata
+        xmlFilesTmpl = xmlFilesTmpl.replace('</files>', """\
+  <metadata>
+    <owner>JeanValjean</owner>
+  </metadata>
+</files>""")
+
+        xmlContentList[-1].update(sha1='Fake', title='Fake')
+        xml = xmlFilesTmpl % '\n'.join(xmlFileTmpl % x for x in xmlContentList)
+
+        response = self._put('images/%s/build_files' % img.image_id,
+            data=xml,
+            headers={'X-rBuilder-OutputToken': outputToken},
+        )
+
+        self.failUnlessEqual(response.status_code, 200)
+        obj = xobj.parse(response.content)
+        self.failUnlessEqual(
+            [(x.title, x.sha1) for x in obj.files.file],
+            [(x['title'], x['sha1']) for x in xmlContentList])
+
+        self.failUnlessEqual(
+                [ (x[0][:4], x[0][4].keys(), x[1]) for x in createSourceTroveCallArgs ],
+                [
+                    (
+                        (u'chater-foo.eng.rpath.com', u'image-chater-foo',
+                            u'chater-foo.eng.rpath.com@rpath:chater-foo-1-devel',
+                            u'1'),
+                        ['filename1.ova', 'filename2.tar.gz', ],
+                        {'admin': True, 'changeLogMessage': 'Image imported',
+                            'factoryName': 'rbuilder-image',
+                            'metadata': {'owner': 'JeanValjean'}}
+                    ),
+                ])
+        self.failUnlessEqual(
+            [ ([ y.asString() for y in x[0][0] ], x[1]) for x in getKeyValueMetadataCallArgs ],
+            [
+                (['image-blabbedy=/example.com@test:1/1-1-1[]'], {}),
+                (['image-blabbedy=/example.com@test:1/1-1-1[]'], {}),
+            ])

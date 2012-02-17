@@ -146,8 +146,23 @@ class ImageSystemsService(service.BaseAuthService):
     def rest_POST(self, request, image_id, systems):
         return self.mgr.addLaunchedSystems(systems, image_id, forUser=self.mgr.user)
 
-class ImageBuildFilesService(service.BaseService):
- 
+class ImageBuildFilesService(service.BaseAuthService):
+    def _check_uuid_auth(self, request, kwargs):
+        request._withAuthToken = False
+        headerName = 'X-rBuilder-OutputToken'
+        imageOutputToken = self.getHeaderValue(request, headerName)
+        if not imageOutputToken:
+            return None
+        imageId = kwargs['image_id']
+        # Check for existance
+        imgs = models.ImageData.objects.filter(image__image_id=imageId,
+            name='outputToken', value=imageOutputToken).select_related('image__created_by')
+        if not imgs:
+            return False
+        self._setMintAuth(imgs[0].image.created_by)
+        request._withAuthToken = True
+        return True
+
     @rbac(can_read_image)
     @return_xml
     def rest_GET(self, request, image_id):
@@ -162,6 +177,12 @@ class ImageBuildFilesService(service.BaseService):
     def rest_POST(self, request, image_id, file):
         file.save()
         return file
+
+    @access.auth_token
+    @requires('files', flags=Flags(save=False))
+    @return_xml
+    def rest_PUT(self, request, image_id, files):
+        return self.mgr.updateImageBuildFiles(image_id, files)
 
 class ImageBuildFileService(service.BaseAuthService):
 

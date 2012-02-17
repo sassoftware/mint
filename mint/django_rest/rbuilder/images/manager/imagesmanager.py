@@ -9,8 +9,10 @@ import logging
 import os
 from django.core import urlresolvers
 from mint import jobstatus
+from mint import urltypes
 from mint.django_rest.rbuilder.jobs import models as jobsmodels
 from mint.django_rest.rbuilder.images import models
+from mint.django_rest.rbuilder.projects import models as projmodels
 from mint.django_rest.rbuilder.targets import models as tgtmodels
 from mint.django_rest.rbuilder.manager import basemanager
 from conary.lib import sha1helper
@@ -94,7 +96,6 @@ class ImagesManager(basemanager.BaseManager):
 
     @exposed
     def createImageBuildFile(self, image, **kwargs):
-        from mint import urltypes
         url = kwargs.pop('url')
         urlType = kwargs.pop('urlType', urltypes.LOCAL)
         urlobj = models.FileUrl(url=url, url_type=urlType)
@@ -255,3 +256,78 @@ class ImagesManager(basemanager.BaseManager):
 
         self.mgr.addToMyQuerySet(image, image.created_by)
         self.mgr.recomputeTargetDeployableImages()
+
+    @exposed
+    def updateImageBuildFiles(self, imageId, files):
+        fileList = files.file
+        # Purge files attached to this build
+        models.BuildFile.objects.filter(image__image_id=imageId).delete()
+        hostnames = projmodels.Project.objects.filter(
+            images__image_id=imageId).values_list('short_name')
+        if not hostnames:
+            raise Exception("No project associated with the image")
+        hostname = hostnames[0][0]
+        # Add files
+        for idx, fobj in enumerate(fileList):
+            fobj.image_id = imageId
+            fobj.idx = idx
+            fobj.save()
+
+            fileName = os.path.basename(fobj.filename)
+            filePath = os.path.join(self.cfg.imagesPath, hostname, str(imageId),
+                fileName)
+            url = models.FileUrl.objects.create(url_type=urltypes.LOCAL,
+                url=filePath)
+            models.BuildFilesUrlsMap.objects.create(file=fobj, url=url)
+
+        if files.metadata is not None:
+            self._addImageToRepository(imageId, files.metadata)
+
+        return self.getImageBuildFiles(imageId)
+
+    def _addImageToRepository(self, imageId, metadata):
+        metadataDict = self.mgr.restDb.imageMgr.getMetadataDict(metadata)
+        # Find the stage for this image, we need the label to commit to
+        buildLabels = projmodels.Stage.objects.filter(
+                images__image_id=imageId).values_list(
+                    'label', 'project__short_name', 'project__repository_hostname')
+        if not buildLabels:
+            raise Exception("Stage for image does not exist")
+        buildLabel, shortName, repositoryHostname = buildLabels[0]
+        factoryName = "rbuilder-image"
+        troveName = "image-%s" % shortName
+        troveVersion = imageId
+
+        filePaths = [ x[0]
+                for x in models.BuildFilesUrlsMap.objects.filter(
+                    file__image__image_id=imageId).values_list('url__url') ]
+
+        streamMap = dict((os.path.basename(x),
+            self.mgr.reposMgr.RegularFile(contents=file(x), config=False))
+                for x in filePaths)
+
+        try:
+            nvf = self.mgr.reposMgr.createSourceTrove(
+                repositoryHostname,
+                troveName,
+                buildLabel,
+                troveVersion, streamMap, changeLogMessage="Image imported",
+                factoryName=factoryName, admin=True,
+                metadata=metadataDict)
+        except Exception, e:
+            self.setImageStatus(imageId, code=jobstatus.FAILED,
+                message="Commit failed: %s" % (e, ))
+            log.error("Error: %s", e)
+            raise
+        else:
+            models.Image.objects.filter(image_id=imageId).update(
+                output_trove = nvf.asString())
+            msg = "Image committed as %s=%s/%s" % (nvf.name,
+                    nvf.version.trailingLabel(),
+                    nvf.version.trailingRevision())
+            log.info(msg)
+            #self._getImageLogger(hostname, imageId).info(msg)
+
+    def setImageStatus(self, imageId, code, message=''):
+        models.Image.objects.filter(image_id=imageId).update(status=code,
+            status_message=message)

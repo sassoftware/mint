@@ -213,54 +213,15 @@ class ReposManager(basemanager.BaseManager, reposdbmgr.RepomanMixin):
             yield self.getRepositoryForProject(project)
 
     @exposed
-    def createSourceTrove(self, fqdn, trovename, buildLabel, 
-                          upstreamVersion, streamMap, changeLogMessage,
-                          factoryName=None, admin=False, metadata=None):
-        # Get repository + client
-        if admin:
-            client = self.getAdminClient(write=True)
-        else:
-            client = self.getUserClient()
-
-        # Sanitize input
-        if ':' not in trovename:
-            trovename += ':source'
-
-        if not changeLogMessage.endswith('\n'):
-            changeLogMessage += '\n'
-
-        # create a pathdict out of the streamMap
-        pathDict = {}
-        for filename, filestream in streamMap.iteritems():
-            if isinstance(filestream, str):
-                filestream = StringIO(filestream)
-            if hasattr(filestream, 'getContents'):
-                fileobj = filestream
-            else:
-                fileobj = filetypes.RegularFile(contents=filestream,
-                                           config=True)
-
-            pathDict[filename] = fileobj
-
-        # create the changelog message using the currently
-        # logged-on user's username and fullname, if available
-        newchangelog = changelog.ChangeLog(self.auth.username or '(unset)',
-                self.auth.fullName or '(unset)', changeLogMessage.encode('utf8'))
-
-        # create a change set object from our source data
-        changeSet = client.createSourceTrove(str(trovename), str(buildLabel),
-                str(upstreamVersion), pathDict, newchangelog,
-                factory=factoryName, metadata=metadata)
-
-        # commit the change set to the repository
-        client.getRepos().commitChangeSet(changeSet)
+    def createSourceTrove(self, *args, **kwargs):
+        # Overriden only to make it exposed
+        return reposdbmgr.RepomanMixin.createSourceTrove(self, *args, **kwargs)
 
     @exposed
     def getAdminClient(self, write=False):
         # Overriden only to make it exposed
         return reposdbmgr.RepomanMixin.getAdminClient(self, write=write)
 
-    @exposed
     def getUserClient(self):
         # Overriden to make it exposed, and to provide an auth object
         return reposdbmgr.RepomanMixin.getUserClient(self, auth=self.auth)

@@ -335,8 +335,8 @@ class BuildFiles(modellib.Collection):
         
     _xobj = xobj.XObjMetadata(tag='files')
     list_fields = ['file']
-    
-    
+    metadata = modellib.SyntheticField()
+
 class BuildFile(modellib.XObjIdModel):
     class Meta:
         db_table = 'buildfiles'
@@ -352,6 +352,7 @@ class BuildFile(modellib.XObjIdModel):
     size = D(models.IntegerField(), 'Size of file')
     sha1 = D(models.CharField(max_length=40),
         'sha1 associated with the build file, max length is 40 characters')
+    filename = modellib.SyntheticField()
     url = modellib.SyntheticField()
     target_images = modellib.XObjHidden(modellib.SyntheticField())
 
