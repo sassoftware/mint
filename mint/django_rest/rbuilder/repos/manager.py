@@ -257,38 +257,10 @@ class ReposManager(basemanager.BaseManager, reposdbmgr.RepomanMixin):
 
     @exposed
     def getAdminClient(self, write=False):
-        """
-        Get a conary client object with access to all repositories. If C{write}
-        is set then the client can write to the repositories, otherwise it will
-        have only read access.
-
-        All external projects will have full read access, as if using the
-        built-in conary proxy.
-        """
-        if write:
-            userId = reposdbmgr.ANY_WRITER
-        else:
-            userId = reposdbmgr.ANY_READER
-        return self.getClient(userId)
+        # Overriden only to make it exposed
+        return reposdbmgr.RepomanMixin.getAdminClient(self, write=write)
 
     @exposed
     def getUserClient(self):
-        """
-        Get a conary client with the permissions of the current user. This
-        includes hiding private projects the user does not have access to, etc.
-
-        All external projects will have full read access, as if using the
-        built-in conary proxy. Additionally, site admins will have admin access
-        to any repository.
-        """
-        if self.auth.admin:
-            userId = reposdbmgr.ANY_WRITER
-        elif self.auth.userId < 0:
-            userId = reposdbmgr.ANONYMOUS
-        else:
-            userId = self.auth.userId
-        client = self.getClient(userId)
-        if self.auth.username:
-            client.cfg.name = self.auth.username
-            client.cfg.contact = self.auth.fullName or ''
-        return client
+        # Overriden to make it exposed, and to provide an auth object
+        return reposdbmgr.RepomanMixin.getUserClient(self, auth=self.auth)
