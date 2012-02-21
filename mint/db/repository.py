@@ -179,14 +179,13 @@ class RepomanMixin(object):
 
     def createSourceTrove(self, fqdn, trovename, buildLabel, 
                           upstreamVersion, streamMap, changeLogMessage,
-                          factoryName=None, admin=False, metadata=None):
+                          factoryName=None, admin=False, metadata=None,
+                          auth=None):
         # Get repository + client
         if admin:
             client = self.getAdminClient(write=True)
         else:
-            # getUserClient has to be overridden in sublcasses to
-            # match this signature
-            client = self.getUserClient()
+            client = self.getUserClient(auth=auth)
 
         # Sanitize input
         if ':' not in trovename:
@@ -210,8 +209,8 @@ class RepomanMixin(object):
 
         # create the changelog message using the currently
         # logged-on user's username and fullname, if available
-        newchangelog = changelog.ChangeLog(self.auth.username or '(unset)',
-                self.auth.fullName or '(unset)', changeLogMessage.encode('utf8'))
+        newchangelog = changelog.ChangeLog(auth.username or '(unset)',
+                auth.fullName or '(unset)', changeLogMessage.encode('utf8'))
 
         # create a change set object from our source data
         changeSet = client.createSourceTrove(str(trovename), str(buildLabel),
@@ -224,13 +223,13 @@ class RepomanMixin(object):
         troveTup = sorted(changeSet.newTroves.keys())[0]
         return trovetup.TroveTuple(troveTup)
 
-    def updateKeyValueMetadata(self, jobs, admin=False):
+    def updateKeyValueMetadata(self, jobs, admin=False, auth=None):
         if not jobs:
             return []
         if admin:
             client = self.getAdminClient(write=True)
         else:
-            client = self.getUserClient()
+            client = self.getUserClient(auth=auth)
 
         troveTups = [x[0] for x in jobs]
         allSpecs = [(n, '%s/%s' % (v.trailingLabel(),

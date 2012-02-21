@@ -444,8 +444,13 @@ class RepositoryManager(manager.Manager):
                 items=troveTups,
                 )
 
+    def createSourceTrove(self, *args, **kwargs):
+        kwargs.update(auth=self.auth)
+        return self.db.reposShim.createSourceTrove(*args, **kwargs)
+
     def updateKeyValueMetadata(self, jobs, admin=False):
-        return self.db.reposShim.updateKeyValueMetadata(jobs, admin=admin)
+        return self.db.reposShim.updateKeyValueMetadata(jobs, admin=admin,
+            auth=self.auth)
 
     def deleteTroves(self, troveTups, admin=False):
         # NB: this doesn't recurse since it's initially used for deleting

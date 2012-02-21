@@ -215,13 +215,21 @@ class ReposManager(basemanager.BaseManager, reposdbmgr.RepomanMixin):
     @exposed
     def createSourceTrove(self, *args, **kwargs):
         # Overriden only to make it exposed
+        kwargs.update(auth=self.auth)
         return reposdbmgr.RepomanMixin.createSourceTrove(self, *args, **kwargs)
+
+    @exposed
+    def updateKeyValueMetadata(self, *args, **kwargs):
+        # Overriden only to make it exposed
+        kwargs.update(auth=self.auth)
+        return reposdbmgr.RepomanMixin.updateKeyValueMetadata(self, *args, **kwargs)
 
     @exposed
     def getAdminClient(self, write=False):
         # Overriden only to make it exposed
         return reposdbmgr.RepomanMixin.getAdminClient(self, write=write)
 
-    def getUserClient(self):
-        # Overriden to make it exposed, and to provide an auth object
-        return reposdbmgr.RepomanMixin.getUserClient(self, auth=self.auth)
+    def getUserClient(self, auth=None):
+        if auth is None:
+            auth = self.auth
+        return reposdbmgr.RepomanMixin.getUserClient(self, auth=auth)
