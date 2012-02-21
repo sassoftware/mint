@@ -146,7 +146,8 @@ class ImageSystemsService(service.BaseAuthService):
     def rest_POST(self, request, image_id, systems):
         return self.mgr.addLaunchedSystems(systems, image_id, forUser=self.mgr.user)
 
-class ImageBuildFilesService(service.BaseAuthService):
+class _JobOutputTokenAuthService(service.BaseAuthService):
+
     def _check_uuid_auth(self, request, kwargs):
         request._withAuthToken = False
         headerName = 'X-rBuilder-OutputToken'
@@ -163,6 +164,7 @@ class ImageBuildFilesService(service.BaseAuthService):
         request._withAuthToken = True
         return True
 
+class ImageBuildFilesService(_JobOutputTokenAuthService):
     @rbac(can_read_image)
     @return_xml
     def rest_GET(self, request, image_id):
@@ -245,7 +247,7 @@ class ImageBuildFileUrlService(service.BaseService):
         return file_url
         
         
-class BuildLogService(service.BaseService):
+class BuildLogService(_JobOutputTokenAuthService):
 
     @rbac(can_read_image)
     def rest_GET(self, request, image_id):
@@ -258,7 +260,13 @@ class BuildLogService(service.BaseService):
         response['Content-Type'] = 'text/plain'
         response.write(buildLog)
         return response
-        
+
+    @access.auth_token
+    @return_xml
+    def rest_POST(self, request, image_id):
+        self.mgr.appendToBuildLog(image_id, request.read())
+        return HttpResponse(status=204)
+
 class ImageTypesService(service.BaseService):
 
     # TODO: verify there's not any reason this can't

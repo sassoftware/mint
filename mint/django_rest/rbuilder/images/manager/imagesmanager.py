@@ -20,6 +20,7 @@ from mint.lib import data as datatypes
 from conary import trovetup
 from conary import versions
 from conary.deps import deps
+from conary.lib import util
 import time
 
 log = logging.getLogger(__name__)
@@ -203,6 +204,13 @@ class ImagesManager(basemanager.BaseManager):
         return self.restDb.getImageFile(hostname, image_id, 'build.log')
 
     @exposed
+    def appendToBuildLog(self, imageId, buildLog):
+        hostname = self._getImageHostname(imageId)
+        filePath = self._getImageFilePath(hostname, imageId, 'build.log',
+            create=True)
+        file(filePath, "a").write(buildLog)
+
+    @exposed
     def getImageType(self, image_type_id):
         return models.ImageType.objects.get(image_type_id=image_type_id)
 
@@ -257,25 +265,34 @@ class ImagesManager(basemanager.BaseManager):
         self.mgr.addToMyQuerySet(image, image.created_by)
         self.mgr.recomputeTargetDeployableImages()
 
-    @exposed
-    def updateImageBuildFiles(self, imageId, files):
-        fileList = files.file
-        # Purge files attached to this build
-        models.BuildFile.objects.filter(image__image_id=imageId).delete()
+    def _getImageFilePath(self, hostname, imageId, fileName, create=False):
+        filePath = os.path.join(self.cfg.imagesPath, hostname, str(imageId),
+            os.path.basename(fileName))
+        if create:
+            util.mkdirChain(os.path.dirname(filePath))
+        return filePath
+
+    def _getImageHostname(self, imageId):
         hostnames = projmodels.Project.objects.filter(
             images__image_id=imageId).values_list('short_name')
         if not hostnames:
             raise Exception("No project associated with the image")
         hostname = hostnames[0][0]
+        return hostname
+
+    @exposed
+    def updateImageBuildFiles(self, imageId, files):
+        fileList = files.file
+        # Purge files attached to this build
+        models.BuildFile.objects.filter(image__image_id=imageId).delete()
+        hostname = self._getImageHostname(imageId)
         # Add files
         for idx, fobj in enumerate(fileList):
             fobj.image_id = imageId
             fobj.idx = idx
             fobj.save()
 
-            fileName = os.path.basename(fobj.filename)
-            filePath = os.path.join(self.cfg.imagesPath, hostname, str(imageId),
-                fileName)
+            filePath = self._getImageFilePath(hostname, imageId, fobj.filename)
             url = models.FileUrl.objects.create(url_type=urltypes.LOCAL,
                 url=filePath)
             models.BuildFilesUrlsMap.objects.create(file=fobj, url=url)

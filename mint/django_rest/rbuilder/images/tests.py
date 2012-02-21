@@ -710,3 +710,35 @@ class ImagesTestCase(RbacEngine):
                 (['image-blabbedy=/example.com@test:1/1-1-1[]'], {}),
                 (['image-blabbedy=/example.com@test:1/1-1-1[]'], {}),
             ])
+
+    def testPutImageBuildLog(self):
+        img = models.Image.objects.get(name='image-0')
+        img.project_branch_stage = projectsmodels.Stage.objects.filter(
+            project__short_name='chater-foo',
+            project_branch__name='1',
+            name='Development')[0]
+        self.mgr.createImageBuild(img)
+
+        # Grab the image outputToken
+        outputToken = img.image_data.filter(name='outputToken')[0].value
+
+        data = "Build log data here"
+        response = self._post('images/%s/build_log' % img.image_id,
+            data=data,
+            headers={'X-rBuilder-OutputToken': outputToken},
+        )
+        self.failUnlessEqual(response.status_code, 204)
+
+        buildLog = self.mgr.getBuildLog(img.image_id)
+        self.assertEqual(buildLog, data)
+
+        data2 = "\nAnd some more data"
+
+        response = self._post('images/%s/build_log' % img.image_id,
+            data=data2,
+            headers={'X-rBuilder-OutputToken': outputToken},
+        )
+        self.failUnlessEqual(response.status_code, 204)
+
+        buildLog = self.mgr.getBuildLog(img.image_id)
+        self.assertEqual(buildLog, data + data2)
