@@ -4728,7 +4728,7 @@ class MigrateTo_61(SchemaMigration):
 
 class MigrateTo_62(SchemaMigration):
     '''Fork!'''
-    Version = (62, 3)
+    Version = (62, 4)
 
     def migrate(self):
 
@@ -4855,6 +4855,16 @@ class MigrateTo_62(SchemaMigration):
             REFERENCES "inventory_survey" (survey_id) ON DELETE SET NULL
         """)
         return True 
+
+    def migrate4(self):
+        self.db.createIndex('inventory_survey', 'SurveyUuidIdx', 'uuid')
+        self.db.createIndex('inventory_survey', 'SystemIdIdx', 'system_id')
+        self.db.createIndex('inventory_survey_diff', 'SurveyDiffLeftRightIdx', 
+            'left_survey_id,right_survey_id', unique=True)
+
+        return True
+
+
 
 #### SCHEMA MIGRATIONS END HERE #############################################
 
