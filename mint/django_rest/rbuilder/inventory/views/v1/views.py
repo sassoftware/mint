@@ -4,74 +4,81 @@
 # All Rights Reserved
 #
 
-import os
-import time
 from django.http import HttpResponse, HttpResponseNotFound, HttpResponseRedirect
-from django_restapi import resource
-
 from mint.django_rest.deco import requires, return_xml, access, \
     HttpAuthenticationRequired, Flags
-from mint.django_rest.rbuilder.users import models as usersmodels
-from mint.django_rest.rbuilder import service
 from mint.django_rest.rbuilder.inventory import models
-from mint.django_rest.rbuilder.projects import models as projectsmodels
-from mint.django_rest.rbuilder.querysets import models as querymodels
-from mint.django_rest.rbuilder.rbac.rbacauth import rbac, manual_rbac
+from mint.django_rest.rbuilder.inventory import survey_models
 from mint.django_rest.rbuilder.errors import PermissionDenied
 from mint.django_rest.rbuilder.rbac.manager.rbacmanager import \
    READMEMBERS, MODMEMBERS
+from mint.django_rest.rbuilder import service
+from django_restapi import resource
+from mint.django_rest.rbuilder.rbac.rbacauth import rbac, manual_rbac
+from mint.django_rest.rbuilder.querysets import models as querymodels
+from mint.django_rest.rbuilder.users import models as usersmodels
+import os 
+import time
 
+##############################################
+# rbac decorators
+
+def rbac_can_write_system_id(view, request, system_id, *args, **kwargs):
+    '''is the system ID writeable by the user?'''
+    obj = view.mgr.getSystem(system_id)
+    user = request._authUser
+    return view.mgr.userHasRbacPermission(user, obj, MODMEMBERS)
+
+def rbac_can_read_system_id(view, request, system_id, *args, **kwargs):
+    '''is the system ID readable by the user?'''
+    obj = view.mgr.getSystem(system_id)
+    user = request._authUser
+    return view.mgr.userHasRbacPermission(user, obj, READMEMBERS)
+
+def rbac_can_write_survey_uuid(view, request, uuid, *args, **kwargs):
+    '''is a survey updateable/removable by a user?'''
+    sys = view.mgr.getSurvey(uuid).system
+    user = request._authUser
+    return view.mgr.userHasRbacPermission(user, sys, MODMEMBERS)
+
+def rbac_can_read_survey_uuid(view, request, uuid, *args, **kwargs):
+    '''is a survey readable by a user?'''
+    sys = view.mgr.getSurvey(uuid).system
+    user = request._authUser
+    return view.mgr.userHasRbacPermission(user, sys, READMEMBERS)
+
+def rbac_can_generate_survey(view, request, uuid1, uuid2, *args, **kwargs):
+    '''to diff two surveys, need to be able to read both'''
+    sys1 = view.mgr.getSurvey(uuid1).system
+    sys2 = view.mgr.getSurvey(uuid2).system
+    user = request._authUser
+    if not view.mgr.userHasRbacPermission(user, sys1, READMEMBERS):
+        return False
+    return view.mgr.userHasRbacPermission(user, sys2, READMEMBERS)
+
+def rbac_can_read_rpm_package(view, request, id, *args, **kwargs):
+    rpm = view.mgr.getSurveyRpmPackage(id)
+    return rbac_can_read_system_id(view, request, rpm.survey.system.pk)
+     
+def rbac_can_read_conary_package(view, request, id, *args, **kwargs):
+    conary = view.mgr.getSurveyConaryPackage(id)
+    return rbac_can_read_system_id(view, request, conary.survey.system.pk)
+
+def rbac_can_read_service(view, request, id, *args, **kwargs):
+    service = view.mgr.getSurveyService(id)
+    return rbac_can_read_system_id(view, request, service.survey.system.pk)
+
+def rbac_can_read_survey_tag(view, request, id, *args, **kwargs):
+    sys = view.mgr.getSurveyTag(id).survey.system
+    user = request._authUser
+    return view.mgr.userHasRbacPermission(user, sys, READMEMBERS)
+
+##############################################
+# view classes
+ 
+# FIXME: why does this exist?
 class RestDbPassthrough(resource.Resource):
     pass
-
-class StageProxyService(service.BaseAuthService):
-    
-    @staticmethod
-    def getStageAndSetGroup(request, stage_id):
-        stage = projectsmodels.Stage.objects.get(pk=stage_id)
-        hostname = stage.project.short_name # aka project's short_name
-        label = stage.label
-        href = 'http://' + request.get_host().strip('/') + '/api/products/%s/repos/search?type=group&label=%s'
-        stage.groups = projectsmodels.Group(href=href % (hostname, label))
-        return stage
-    
-    @staticmethod
-    def getStagesAndSetGroup(request, version=None):
-        Stages = projectsmodels.Stages()
-        
-        if version:
-            project_branch_stages = projectsmodels.Stage.objects.all().filter(name=version)
-        else:
-            project_branch_stages = projectsmodels.Stage.objects.all()
-        # project_branch_stages = projectsmodels.Stage.objects.all()
-        stages_collection = []
-        
-        for stage in project_branch_stages:
-            stages_collection.append(StageProxyService.getStageAndSetGroup(request, stage.stage_id))
-        Stages.project_branch_stage = stages_collection
-        return Stages
-
-
-class MajorVersionService(service.BaseAuthService):
-
-    def get(self, request, short_name, version):
-        """
-        XXX defunct for now
-        """
-        modifiers = ['platform', 'platform_version', 'definition', 'image_type_definitions',
-                     'image_definitions', 'images', 'source_group']
-        project = projectsmodels.Project.objects.get(short_name=short_name)
-        project_version = projectsmodels.ProjectVersion.objects.get(project=project)
-        for m in modifiers:
-            url = r'%(host)s/api/products/%(short_name)s/versions/%(version)s/%(modifier)s/'\
-                    % dict(host= 'http://' + request.get_host(), short_name=short_name, version=version, modifier=m)
-            setattr(project_version, m, url)
-        return project_version
-
-
-class ApplianceService(RestDbPassthrough):
-    def get(self, project):
-        return None
 
 class BaseInventoryService(service.BaseAuthService):    
     def _check_uuid_auth(self, request, kwargs):
@@ -455,19 +462,6 @@ class ImageImportMetadataDescriptorService(BaseInventoryService):
         descriptor = self.mgr.getImageImportMetadataDescriptor()
         return self.mgr.serializeDescriptor(descriptor)
 
-
-def rbac_can_write_system_id(view, request, system_id, *args, **kwargs):
-    '''is the system ID writeable by the user?'''
-    obj = view.mgr.getSystem(system_id)
-    user = request._authUser
-    return view.mgr.userHasRbacPermission(user, obj, MODMEMBERS)
-
-def rbac_can_read_system_id(view, request, system_id, *args, **kwargs):
-    '''is the system ID readable by the user?'''
-    obj = view.mgr.getSystem(system_id)
-    user = request._authUser
-    return view.mgr.userHasRbacPermission(user, obj, READMEMBERS)
-
 # NOTE: rbac_can_create_system does not exist because registration (temporarily)
 # must be anonymous for rpath_register.   
    
@@ -481,7 +475,7 @@ class InventorySystemsSystemService(BaseInventoryService):
     def get(self, system_id):
         return self.mgr.getSystem(system_id)
 
-    # FIXME -- come back, tricky -- rbac if no auth_token ???
+    # must remain accessible by rpath-register
     @access.auth_token
     @access.authenticated
     @requires('system')
@@ -769,9 +763,9 @@ class InventorySystemJobDescriptorService(BaseInventoryService):
         content = self.get(system_id, descriptor_type, request.GET.copy())
         return content
 
-    def get(self, system_id, descriptor_type, parameters):
+    def get(self, system_id, descriptor_type, parameters=None):
         descriptor = self.mgr.getSystemDescriptorForAction(system_id,
-            descriptor_type, parameters)
+            descriptor_type, parameters=parameters)
         return self.mgr.serializeDescriptor(descriptor)
 
 class InventorySystemJobStatesService(BaseInventoryService):
@@ -804,4 +798,145 @@ class InventorySystemTagService(BaseInventoryService):
 
     def get(self, system_id, system_tag_id):
         return self.mgr.getSystemTag(system_id, system_tag_id)
+
+class SurveysService(BaseInventoryService):
+    ''' Collection of all surveys on a given system '''
+
+    @rbac(rbac_can_read_system_id)
+    @return_xml
+    def rest_GET(self, request, system_id):
+        return self.get(system_id)
+
+    @rbac(rbac_can_write_system_id)
+    @return_xml
+    def rest_POST(self, request, system_id):
+        xml = request.raw_post_data
+        return self.mgr.addSurveyForSystemFromXml(system_id, xml)
+
+    def get(self, system_id):
+        return self.mgr.getSurveysForSystem(system_id)
+
+class SurveyService(BaseInventoryService):
+    ''' 
+    Access to an individual system survey by UUID
+    '''
+
+    @rbac(rbac_can_read_survey_uuid)
+    @return_xml
+    def rest_GET(self, request, uuid):
+        return self.get(uuid)
+
+    def get(self, uuid):
+        return self.mgr.getSurvey(uuid)
+
+    @rbac(rbac_can_write_survey_uuid)
+    @return_xml
+    def rest_PUT(self, request, uuid):
+        xml = request.raw_post_data
+        return self.mgr.updateSurveyFromXml(uuid, xml)
+    
+    @rbac(rbac_can_write_survey_uuid)
+    @return_xml
+    def rest_DELETE(self, request, uuid):
+        (found, deleted) = self.mgr.deleteSurvey(uuid)
+        if not found:
+            return HttpResponseNotFound()
+        elif not deleted:
+            raise PermissionDenied(msg="Survey is not marked removable")
+        else:
+            return HttpResponse(status=204)    
+
+class SurveyRpmPackageService(BaseInventoryService):
+    ''' The instance of an RPM installed on a given system (per survey) '''
+
+    @rbac(rbac_can_read_rpm_package)
+    @return_xml
+    def rest_GET(self, request, id):
+        return self.get(id)
+
+    def get(self, id):
+        return self.mgr.getSurveyRpmPackage(id)
+
+class SurveyConaryPackageService(BaseInventoryService):
+    ''' The instance of an Conary pkg installed on a given system (per survey) '''
+
+    @rbac(rbac_can_read_conary_package)
+    @return_xml
+    def rest_GET(self, request, id):
+        return self.get(id)
+
+    def get(self, id):
+        return self.mgr.getSurveyConaryPackage(id)
+
+class SurveyServiceService(BaseInventoryService):
+    ''' The instance of an service installed on a given system (per survey) '''
+
+    @rbac(rbac_can_read_service)
+    @access.authenticated
+    @return_xml
+    def rest_GET(self, request, id):
+        return self.get(id)
+
+    def get(self, id):
+        return self.mgr.getSurveyService(id)
+
+class SurveyDiffService(BaseInventoryService):
+    ''' Returns XML representing differences between two surveys '''
+
+    @rbac(rbac_can_generate_survey)
+    def rest_GET(self, request, uuid1, uuid2):
+        result = self.get(uuid1, uuid2, request)
+        return HttpResponse(result, status=200, content_type='text/xml')
+
+    def get(self, uuid1, uuid2, request):
+        return self.mgr.diffSurvey(uuid1, uuid2, request) 
+
+class SurveyRpmPackageInfoService(BaseInventoryService):
+    ''' 
+    The definition of an RPM state, shared between many systems.
+    For instance, multiple systems could have Foo, v1234, x86.
+    Each would have a different install date, but reference the same info.
+    '''
+
+    @access.authenticated
+    @return_xml
+    def rest_GET(self, request, id):
+        return self.get(id)
+
+    def get(self, id):
+        return self.mgr.getSurveyRpmPackageInfo(id)
+
+class SurveyConaryPackageInfoService(BaseInventoryService):
+    ''' The definition of a conary state, shared between many systems '''
+
+    @access.authenticated
+    @return_xml
+    def rest_GET(self, request, id):
+        return self.get(id)
+
+    def get(self, id):
+        return self.mgr.getSurveyConaryPackageInfo(id)
+
+class SurveyServiceInfoService(BaseInventoryService):
+    ''' The definition of a service state, shared between many systems '''
+
+    @access.authenticated
+    @return_xml
+    def rest_GET(self, request, id):
+        return self.get(id)
+
+    def get(self, id):
+        return self.mgr.getSurveyServiceInfo(id)
+
+class SurveyTagService(BaseInventoryService):
+    ''' User assignable tags per survey '''
+
+    @rbac(rbac_can_read_survey_tag)
+    @return_xml
+    def rest_GET(self, request, id):
+        return self.get(id)
+
+    def get(self, id):
+        return self.mgr.getSurveyTag(id)
+
 

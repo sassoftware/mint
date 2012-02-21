@@ -54,6 +54,7 @@ class ImageGenerator(object):
         self.parent = parent
         self.jobData = jobData
         self.installJob = None
+        self.inventoryNode = None
         self.workDir = tempfile.mkdtemp(dir=self.tempDir, prefix='imagegen-')
 
     def destroy(self):
@@ -80,6 +81,7 @@ class ImageGenerator(object):
         version = cny_versions.ThawVersion(data['troveVersion'])
         flavor = cny_deps.ThawFlavor(data['troveFlavor'].encode('ascii'))
         self.troveTup = trovetup.TroveTuple(name, version, flavor)
+        self.inventoryNode = data.get('inventory_node')
         data['troveTup'] = self.troveTup
 
         # Image parameters

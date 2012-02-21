@@ -148,6 +148,8 @@ def rebuild_table(db, table, fieldsOut, fieldsIn=None, skipDropIndex=False):
 def createTable(db, definition):
     return schema.createTable(db, None, definition)
 
+def createTable2(db, name, definition):
+    return schema.createTable(db, name, definition)
 
 def columnExists(db, table, name):
     cu = db.cursor()
@@ -3995,7 +3997,6 @@ class MigrateTo_58(SchemaMigration):
                 "description" TEXT NOT NULL
             )""" % db.keywords)
 
-        # BOOKMARK
         schema._addTableRows(self.db, 'rbac_permission_type', 'name', [ 
             dict(name="ReadMembers", description='Read Member Resources'),
             dict(name="ModMembers",  description='Modify Member Resources'),
@@ -4718,10 +4719,141 @@ class MigrateTo_61(SchemaMigration):
         return True
 
     def migrate7(self):
+        # this is P6
         cu = self.db.cursor()
         cu.execute("""ALTER TABLE inventory_system ADD COLUMN out_of_date BOOLEAN NOT NULL DEFAULT False""")
         cu.execute("""ALTER TABLE inventory_system ADD COLUMN has_active_jobs BOOLEAN NOT NULL DEFAULT False""")
         cu.execute("""ALTER TABLE inventory_system ADD COLUMN has_running_jobs BOOLEAN NOT NULL DEFAULT False""")
+        return True 
+
+class MigrateTo_62(SchemaMigration):
+    '''Fork!'''
+    Version = (62, 3)
+
+    def migrate(self):
+
+        createTable2(self.db, 'inventory_survey', """
+                "survey_id" %(PRIMARYKEY)s,
+                "uuid" TEXT NOT NULL,
+                "system_id" INTEGER NOT NULL REFERENCES "inventory_system" (system_id) ON DELETE CASCADE,
+                "name" TEXT NOT NULL,
+                "description" TEXT,
+                "comment" TEXT,
+                "created_date" TIMESTAMP WITH TIME ZONE NOT NULL,
+                "modified_date" TIMESTAMP WITH TIME ZONE NOT NULL,
+                "created_by" INTEGER NOT NULL REFERENCES "users" (userid) ON DELETE SET NULL,
+                "modified_by" INTEGER NOT NULL REFERENCES "users" (userid) ON DELETE SET NULL,
+                "removable" BOOLEAN NOT NULL DEFAULT TRUE,
+                "raw_xml" TEXT
+
+        """)
+
+        createTable2(self.db, 'inventory_survey_tags', """
+                "tag_id" %(PRIMARYKEY)s,
+                "survey_id" INTEGER REFERENCES "inventory_survey" NOT NULL,
+                "name" TEXT
+        """)
+
+        createTable2(self.db, 'inventory_rpm_package', """
+                "rpm_package_id" %(PRIMARYKEY)s,
+                "name" TEXT NOT NULL,
+                "epoch" INTEGER,
+                "version" TEXT NOT NULL,
+                "release" TEXT NOT NULL,
+                "architecture" TEXT NOT NULL, 
+                "description" TEXT,
+                "signature" TEXT,
+        """)
+
+        createTable2(self.db, 'inventory_conary_package', """
+                "conary_package_id" %(PRIMARYKEY)s,
+                "name" TEXT NOT NULL,
+                "version" TEXT NOT NULL, 
+                "flavor" TEXT NOT NULL,
+                "description" TEXT NOT NULL,
+                "revision" TEXT NOT NULL,
+                "architecture" TEXT NOT NULL,
+                "signature" TEXT NOT NULL,
+                "rpm_package_id" INTEGER REFERENCES inventory_rpm_package (rpm_package_id) ON DELETE SET NULL 
+        """)
+
+        createTable2(self.db, 'inventory_service', """
+                service_id %(PRIMARYKEY)s,
+                name TEXT,
+                autostart BOOLEAN DEFAULT FALSE,
+                runlevels TEXT
+        """)
+
+        createTable2(self.db, 'inventory_survey_rpm_package', """
+                "map_id" %(PRIMARYKEY)s,
+                "survey_id" INTEGER NOT NULL REFERENCES "inventory_survey" (survey_id) ON DELETE CASCADE,
+                "rpm_package_id" INTEGER NOT NULL REFERENCES "inventory_rpm_package" (rpm_package_id) ON DELETE CASCADE,
+                "install_date" TIMESTAMP WITH TIME ZONE NOT NULL
+        """)
+
+        createTable2(self.db, 'inventory_survey_conary_package', """
+                "map_id" %(PRIMARYKEY)s,
+                "survey_id" INTEGER NOT NULL REFERENCES "inventory_survey" (survey_id) ON DELETE CASCADE,
+                "conary_package_id" INTEGER NOT NULL REFERENCES "inventory_conary_package" (conary_package_id) ON DELETE CASCADE,
+                "install_date" TIMESTAMP WITH TIME ZONE NOT NULL
+        """)
+
+        createTable2(self.db, 'inventory_survey_service', """
+                "map_id" %(PRIMARYKEY)s,
+                "survey_id" INTEGER NOT NULL REFERENCES "inventory_survey" (survey_id) ON DELETE CASCADE,
+                "service_id" INTEGER NOT NULL REFERENCES "inventory_service" (service_id) ON DELETE CASCADE,
+                running BOOLEAN DEFAULT FALSE,
+                status TEXT
+        """)
+
+        createTable2(self.db, 'inventory_survey_diff', """
+                diff_id %(PRIMARYKEY)s,
+                created_date TIMESTAMP WITH TIME ZONE NOT NULL,
+                left_survey_id INTEGER NOT NULL REFERENCES "inventory_survey" ("survey_id") ON DELETE CASCADE,
+                right_survey_id INTEGER NOT NULL REFERENCES "inventory_survey" ("survey_id") ON DELETE SET NULL,
+                xml TEXT
+        """)
+        return True
+
+    def migrate1(self):
+        cu = self.db.cursor()
+        cu.execute("""ALTER TABLE inventory_survey ALTER created_by
+            DROP NOT NULL""")
+        cu.execute("""ALTER TABLE inventory_survey ALTER modified_by
+            DROP NOT NULL""")
+        return True
+
+    def migrate2(self):
+        db = self.db
+        schema._addTableRows(db, 'jobs_job_type', 'name', [
+             dict(name="system scan",
+                  description="Scan system",
+                  priority=105,
+                  resource_type="System"),
+        ])
+        db.createIndex('jobs_created_system', 'jobs_created_system_jid_sid_uq',
+            'job_id, system_id', unique=True)
+        db.createIndex('jobs_created_image', 'jobs_created_image_jid_iid_uq',
+            'job_id, image_id', unique=True)
+        createTable2(db, 'jobs_created_survey', """
+            id          %(PRIMARYKEY)s,
+            job_id      integer NOT NULL
+                        REFERENCES jobs_job(job_id)
+                        ON DELETE CASCADE,
+            survey_id integer NOT NULL
+                        REFERENCES inventory_survey(survey_id)
+                        ON DELETE CASCADE,
+        """)
+        db.createIndex('jobs_created_survey', 'jobs_created_survey_jid_sid_uq',
+            'job_id, survey_id', unique=True)
+        return True
+
+    def migrate3(self):
+        cu = self.db.cursor()
+        cu.execute("""
+            ALTER TABLE inventory_system ADD COLUMN "latest_survey_id" INTEGER
+            REFERENCES "inventory_survey" (survey_id) ON DELETE SET NULL
+        """)
         return True 
 
 #### SCHEMA MIGRATIONS END HERE #############################################

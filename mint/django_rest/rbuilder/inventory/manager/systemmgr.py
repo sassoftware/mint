@@ -50,6 +50,18 @@ system_assimilate_descriptor = """<descriptor>
 </descriptor>
 """
 
+survey_scan_descriptor = """<descriptor>
+  <metadata>
+  <displayName>System Scan</displayName>
+    <descriptions>
+      <desc>System Scan</desc>
+    </descriptions>
+  </metadata>
+  <dataFields/>
+</descriptor>
+"""
+
+
 class SystemManager(basemanager.BaseManager):
     RegistrationEvents = set([
         jobmodels.EventType.SYSTEM_REGISTRATION,
@@ -2027,21 +2039,27 @@ class SystemManager(basemanager.BaseManager):
         return systemTag
 
     @exposed
-    def getSystemDescriptorForAction(self, systemId, descriptorType, params):
+    def getSystemDescriptorForAction(self, systemId, descriptorType, parameters=None):
         # This will validate the system
         system = models.System.objects.get(pk=systemId)
         methodMap = dict(
             assimilation = self.getDescriptorAssimilation,
             capture = self.getDescriptorCaptureSystem,
+            survey_scan = self.getDescriptorSurveyScan,
         )
         method = methodMap.get(descriptorType)
         if method is None:
             raise errors.errors.ResourceNotFound()
-        return method(systemId, params)
+        return method(systemId)
 
     def getDescriptorAssimilation(self, systemId, *args, **kwargs):
         descr = descriptor.ConfigurationDescriptor(
             fromStream=system_assimilate_descriptor)
+        return descr
+
+    def getDescriptorSurveyScan(self, systemId, *args, **kwargs):
+        descr = descriptor.ConfigurationDescriptor(
+            fromStream=survey_scan_descriptor)
         return descr
 
     @exposed
