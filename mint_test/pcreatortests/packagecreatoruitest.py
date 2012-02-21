@@ -22,6 +22,7 @@ import conary.lib.util
 from conary.conaryclient import filetypes
 from conary import changelog
 from conary import versions
+from conary_test import resources
 
 from mint_test import fixtures
 from mint_test import mint_rephelp
@@ -830,7 +831,7 @@ class ReposTests(mint_rephelp.MintRepositoryHelper):
             mincfg = packagecreator.MinimalConaryConfiguration(self.cfg)
             sesH = pClient.startSession(pDefDict, mincfg)
             tarFile = 'logrotate-3.7.1.tar.gz'
-            filePath = os.path.join(pathManager.getPath('CONARY_ARCHIVE_PATH'), tarFile)
+            filePath = resources.get_archive(tarFile)
             pClient.uploadData(sesH, tarFile, filePath, 'application/x-rpm')
             res = pClient.getCandidateBuildFactories(sesH)
             self.assertEquals([x[0] for x in res],
