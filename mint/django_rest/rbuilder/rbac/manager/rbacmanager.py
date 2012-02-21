@@ -454,6 +454,12 @@ class RbacManager(basemanager.BaseManager):
             grants__role__rbacuserrole__user = user,
             grants__permission__name = CREATERESOURCE
         )
+        personal_sets = [ x for x in granting_sets if x.personal_for is not None ]
+        # if using "My Query Sets", always create the resource in THAT
+        # queryset.  Currently the idea of chosing where to create a resource
+        # is not really designed/supported.
+        if len(personal_sets) > 0:
+            return personal_sets[0]
         if len(granting_sets) == 0:
             return None
         # the grant code shouldn't allow x>1 but we shouldn't choke either
