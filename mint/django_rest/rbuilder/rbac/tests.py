@@ -514,7 +514,6 @@ class RbacUserRoleViewTests(RbacTestCase):
         # list users in role to make sure that relationship collection works
         url = 'rbac/roles/3/users/'
         content = self.req(url, method='GET', expect=403, is_authenticated=True)
-        print "URL=%s" % url
         content = self.req(url, method='GET', expect=200, is_admin=True)
         self.assertXMLEquals(content, testsxml.users_in_role_xml)
 
