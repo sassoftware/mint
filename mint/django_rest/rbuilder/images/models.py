@@ -402,8 +402,10 @@ class BuildFilesUrlsMap(modellib.XObjModel):
         unique_together = ('file', 'url')
     
     build_files_urls_map_id = models.AutoField(primary_key=True, db_column='buildfilesurlsmapid')
-    file = models.ForeignKey('BuildFile', null=False, db_column='fileid')
-    url = models.ForeignKey('FileUrl', null=False, db_column='urlid')
+    file = models.ForeignKey(BuildFile, null=False, db_column='fileid',
+        related_name='urls_map')
+    url = models.ForeignKey(FileUrl, null=False, db_column='urlid',
+        related_name='urls_map')
 
 class JobImage(modellib.XObjModel):
     class Meta:
@@ -416,6 +418,21 @@ class JobImage(modellib.XObjModel):
         'Job attached to the job image, cannot be null')
     image = D(models.ForeignKey(Image, null=False, related_name='_jobs'),
         'Image for the job, cannot be null')
+
+class AuthTokens(modellib.XObjModel):
+    class Meta:
+        db_table = 'auth_tokens'
+    id = D(models.AutoField(primary_key=True, db_column='token_id'),
+            'Token ID')
+    token = D(models.TextField(null=False, unique=True),
+            'Token string')
+    expires_date = D(modellib.DateTimeUtcField(null=False),
+            'Token expiration date')
+    user = D(modellib.ForeignKey('users.User', null=False,
+            related_name='auth_tokens'),
+            'User owning the token')
+    image = D(modellib.ForeignKey(Image, null=True, related_name='auth_tokens'),
+            'Image related to the token')
 
 for mod_obj in sys.modules[__name__].__dict__.values():
     if hasattr(mod_obj, '_xobj'):

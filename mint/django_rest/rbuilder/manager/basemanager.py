@@ -5,6 +5,7 @@
 #
 
 import logging
+from django.db import transaction
 
 from mint import config
 from mint import mint_error
@@ -18,6 +19,10 @@ log = logging.getLogger(__name__)
 def exposed(fn):
     fn.exposed = True
     return fn
+
+# Shortcut for django decorator
+autocommit = transaction.autocommit
+commitOnSuccess = transaction.commit_on_success
 
 class BaseManager(object):
     def __init__(self, mgr):

@@ -116,3 +116,14 @@ class RbuilderManager(basemanager.BaseRbuilderManager):
             transaction.rollback()
             return
         connection.rollback_unless_managed()
+
+    def prepareAutocommit(self):
+        # Commit and leave transaction management
+        if transaction.is_managed():
+            if transaction.is_dirty():
+                transaction.commit()
+            transaction.managed(False)
+            transaction.leave_transaction_management()
+            return
+        connection.commit_unless_managed()
+

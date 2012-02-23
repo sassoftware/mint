@@ -949,4 +949,3 @@ class TargetJobsManager(basemanager.BaseManager):
         Jobs = jobsmodels.Jobs()
         Jobs.job = allTargetJobs
         return Jobs
-            

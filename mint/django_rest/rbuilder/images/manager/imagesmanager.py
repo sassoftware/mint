@@ -8,6 +8,7 @@ import errno
 import logging
 import os
 from django.core import urlresolvers
+from mint import buildtypes
 from mint import jobstatus
 from mint import urltypes
 from mint.django_rest.rbuilder.jobs import models as jobsmodels
@@ -25,6 +26,7 @@ import time
 
 log = logging.getLogger(__name__)
 exposed = basemanager.exposed
+autocommit = basemanager.autocommit
 
 class ImagesManager(basemanager.BaseManager):
  
@@ -88,8 +90,7 @@ class ImagesManager(basemanager.BaseManager):
         image.save()
 
         for bdName, bdValue, bdType in buildData:
-            image.image_data.add(models.ImageData(name=bdName, value=bdValue,
-                data_type=bdType))
+            self._setImageDataValue(image.image_id, bdName, bdValue, dataType=bdType)
 
         self.mgr.addToMyQuerySet(image, for_user)
         self.mgr.retagQuerySetsByType('image', for_user)
@@ -125,6 +126,109 @@ class ImagesManager(basemanager.BaseManager):
     def updateImageBuild(self, image_id, image):
         image.save()
         return image
+
+    @exposed
+    def setImageBuildStatus(self, image):
+        self._postFinished(image)
+        self.setImageStatus(image.image_id, image.status, image.status_message)
+
+    @autocommit
+    def commitImageStatus(self, imageId, status=None, statusMessage=None):
+        self.setImageStatus(imageId, status, statusMessage)
+
+    def _postFinished(self, image):
+        if image.status != jobstatus.FINISHED:
+            return
+        # Remove auth tokens associated with this image
+        models.AuthTokens.objects.filter(image=image).delete()
+        self._handlePostImageBuildOperations(image)
+        # tag image, etc.
+        self.finishImageBuild(image.image_id)
+
+    class UploadCallback(object):
+        def __init__(self, manager, imageId):
+            self.manager = manager
+            self.imageId = imageId
+
+        def callback(self, fileName, fileIdx, fileTotal,
+                currentFileBytes, totalFileBytes, sizeCurrent, sizeTotal):
+            # Nice percentages
+            if sizeTotal == 0:
+                sizeTotal = 1024
+            pct = sizeCurrent * 100.0 / sizeTotal
+            message = "Uploading bundle: %d%%" % (pct, )
+            self.manager.commitImageStatus(self.imageId, statusMessage=message)
+            log.info("Uploading %s (%s/%s): %.1f%%, %s/%s",
+                fileName, fileIdx, fileTotal, pct, sizeCurrent, sizeTotal)
+
+
+    def _handlePostImageBuildOperations(self, image):
+        self._uploadAMI(image)
+
+    def _getImageFiles(self, imageId):
+        filePaths = [ x[0]
+                for x in models.FileUrl.objects.filter(
+                    urls_map__file__image__image_id=imageId,
+                    url_type=urltypes.LOCAL).values_list('url') ]
+        return filePaths
+
+    def _uploadAMI(self, image):
+        if image._image_type != buildtypes.AMI:
+            # for now we only have to do something special for AMIs
+            return
+        imageId = image.image_id
+        # Do all the read operations before we commit
+        # Get all builds for this image
+        filePaths = self._getImageFiles(imageId)
+        readers, writers = self.getEC2AccountNumbersForProjectUsers(
+            image.project.project_id)
+        # Move to autocommit mode. This will flush the existing
+        # transaction, and the decodated commitImageStatus will do its
+        # own commits. We need to restore transaction management when
+        # we're done.
+        self.mgr.prepareAutocommit()
+        uploadCallback = self.UploadCallback(self, imageId)
+        amiPerms = self.mgr.restDb.awsMgr.amiPerms
+        for filePath in filePaths:
+            if not os.path.exists(filePath):
+                continue
+            log.info("Uploading bundle")
+            bucketName, manifestName = amiPerms.uploadBundle(
+                filePath, callback=uploadCallback.callback)
+            message = "Registering AMI for %s/%s" % (bucketName, manifestName)
+            self.commitImageStatus(imageId, statusMessage=message)
+            log.info(message)
+            amiId, manifestPath = amiPerms.registerAMI(
+                bucketName, manifestName, readers=readers, writers=writers)
+            message = "Registered AMI %s for %s" % (amiId, manifestPath)
+            self.commitImageStatus(imageId, statusMessage=message)
+            log.info(message)
+            self._setImageDataValue(imageId, 'amiId', amiId)
+            self._setImageDataValue(imageId, 'amiManifestName', manifestPath)
+        self.mgr.commit()
+        # Restore transaction management
+        self.mgr.enterTransactionManagement()
+
+    def _setImageDataValue(self, imageId, name, value, dataType=datatypes.RDT_STRING):
+        models.ImageData.objects.create(image_id=imageId,
+            name=name, value=value, data_type=dataType)
+
+    def getEC2AccountNumbersForProjectUsers(self, projectId):
+        writers = set()
+        readers = set()
+        vals = projmodels.Member.objects.filter(
+            project__project_id = projectId,
+            user__target_user_credentials__target__target_type__name = 'ec2',
+            user__target_user_credentials__target__name = 'aws').values_list('level', 'user__target_user_credentials__target_credentials__credentials')
+        for level, creds in vals:
+            val = mintdata.unmarshalTargetUserCredentials(creds).get('accountId')
+            if val is None:
+                continue
+            if level <= 1:
+                writers.add(val)
+            else:
+                readers.add(val)
+        return sorted(writers), sorted(readers)
 
     @exposed
     def deleteImageBuild(self, image_id):
@@ -315,9 +419,7 @@ class ImagesManager(basemanager.BaseManager):
         troveName = "image-%s" % shortName
         troveVersion = imageId
 
-        filePaths = [ x[0]
-                for x in models.BuildFilesUrlsMap.objects.filter(
-                    file__image__image_id=imageId).values_list('url__url') ]
+        filePaths = self._getImageFiles(imageId)
 
         streamMap = dict((os.path.basename(x),
             self.mgr.reposMgr.RegularFile(contents=file(x), config=False))
@@ -345,6 +447,6 @@ class ImagesManager(basemanager.BaseManager):
             log.info(msg)
             #self._getImageLogger(hostname, imageId).info(msg)
 
-    def setImageStatus(self, imageId, code, message=''):
+    def setImageStatus(self, imageId, code=jobstatus.RUNNING, message=''):
         models.Image.objects.filter(image_id=imageId).update(status=code,
             status_message=message)
