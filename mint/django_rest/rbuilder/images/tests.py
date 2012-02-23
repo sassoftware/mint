@@ -837,8 +837,10 @@ class ImagesTestCase(RbacEngine):
 
         xml = xmlFilesTmpl % '\n'.join(xmlFileTmpl % x for x in fileContentList)
 
+        # Temporary fix for django being silly (1.3.1 doesn't seem to
+        # have problems with unicode): encode as utf-8
         response = self._put('images/%s/build_files' % img.image_id,
-            data=xml,
+            data=xml.encode('utf-8'),
             headers={'X-rBuilder-OutputToken': outputToken},
         )
         self.failUnlessEqual(response.status_code, 200)
