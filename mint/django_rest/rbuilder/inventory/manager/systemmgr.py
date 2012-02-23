@@ -553,12 +553,14 @@ class SystemManager(basemanager.BaseManager):
 
         # registration needs to cause a configuration so that config values
         # and embedded configurators/puppet modules are run
-        self.scheduleSystemConfigurationEvent(system, system.configuration)
+        if getattr(system, '_not_merged', False):
+            self.scheduleSystemConfigurationEvent(system, system.configuration)
 
         return system
 
     def mergeSystems(self, system):
         if not system.event_uuid:
+            system._not_merged = True
             return system
         # Look up a system with a matching event_uuid
         systems = [ x.system
@@ -862,6 +864,7 @@ class SystemManager(basemanager.BaseManager):
                 # doesn't really happen for a registration response!  must
                 # rewrite FSM sometime
                 self.scheduleSystemConfigurationEvent(system, system.configuration)
+                return models.SystemState.RESPONSIVE
             if eventTypeName in self.PollEvents or \
                     eventTypeName in self.SystemUpdateEvents:
                 return models.SystemState.RESPONSIVE
