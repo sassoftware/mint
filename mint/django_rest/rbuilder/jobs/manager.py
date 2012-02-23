@@ -599,7 +599,7 @@ class JobHandlerRegistry(HandlerRegistry):
                 self.image.trove_version, troveFlavor,
             )
 
-            urls = self.image_file.buildfilesurlsmap_set.filter(
+            urls = self.image_file.urls_map.filter(
                 url__url_type=urltypes.LOCAL).values('url__url')
             imageFileInfo = dict(
                 size=self.image_file.size,
