@@ -658,7 +658,7 @@ class ImagesTestCase(RbacEngine):
     <title>%(title)s</title>
     <size>%(size)s</size>
     <sha1>%(sha1)s</sha1>
-    <filename>%(filename)s</filename>
+    <file_name>%(filename)s</file_name>
   </file>"""
 
         img = self._setupImageOutputToken()
@@ -832,7 +832,7 @@ class ImagesTestCase(RbacEngine):
     <title>%(title)s</title>
     <size>%(size)s</size>
     <sha1>%(sha1)s</sha1>
-    <filename>%(filename)s</filename>
+    <file_name>%(filename)s</file_name>
   </file>"""
 
         xml = xmlFilesTmpl % '\n'.join(xmlFileTmpl % x for x in fileContentList)

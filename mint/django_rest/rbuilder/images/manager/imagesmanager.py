@@ -396,7 +396,7 @@ class ImagesManager(basemanager.BaseManager):
             fobj.idx = idx
             fobj.save()
 
-            filePath = self._getImageFilePath(hostname, imageId, fobj.filename)
+            filePath = self._getImageFilePath(hostname, imageId, fobj.file_name)
             url = models.FileUrl.objects.create(url_type=urltypes.LOCAL,
                 url=filePath)
             models.BuildFilesUrlsMap.objects.create(file=fobj, url=url)

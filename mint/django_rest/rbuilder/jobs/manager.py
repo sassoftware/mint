@@ -881,8 +881,8 @@ class JobHandlerRegistry(HandlerRegistry):
             params['outputToken'] = outputToken
             params['imageUploadUrl'] = 'https://%s/uploadBuild/%s' % (
                 host, image.image_id)
-            params['imageFilesCommitUrl'] = 'https://%s/api/products/%s/images/%s/files' % (
-                host, stage.project.short_name, image.image_id)
+            params['imageFilesCommitUrl'] = 'https://%s/api/v1/images/%s/files' % (
+                host, image.image_id)
             params['image_id'] = 'https://%s/api/v1/images/%s' % (
                 host, image.image_id)
             params['imageName'] = "%s.ova" % self._sanitizeString(imageTitle)
