@@ -4517,7 +4517,7 @@ If you would not like to be %s %s of this project, you may resign from this proj
     def getAvailablePackages(self, sessionHandle, refresh = False):
         pc = self.getPackageCreatorClient()
         return pc.getAvailablePackagesFrozen(sessionHandle, refresh)
-        
+
     @requiresAuth
     def getAvailablePackagesFiltered(self, sessionHandle, refresh = False, ignoreComponents = True):
         pc = self.getPackageCreatorClient()
@@ -4882,10 +4882,11 @@ If you would not like to be %s %s of this project, you may resign from this proj
         return self._getPackageCreatorClient(callback)
 
     def _getPackageCreatorClient(self, callback):
-        from mint.django_rest.rbuilder.manager import rbuildermanager
-        mgr = rbuildermanager.RbuilderManager()
+        def _getManager():
+            from mint.django_rest.rbuilder.manager import rbuildermanager
+            return rbuildermanager.RbuilderManager()
         return packagecreator.getPackageCreatorClient(self.cfg, self.authToken,
-            callback=callback, djangoManager=mgr)
+            callback=callback, djangoManagerCallback=_getManager)
 
     def getDownloadUrlTemplate(self, useRequest=True):
         if self.req and useRequest:
