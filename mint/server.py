@@ -4,7 +4,6 @@
 
 import base64
 import errno
-import hmac
 import logging
 import os
 import re
@@ -45,7 +44,6 @@ from mint import urltypes
 from mint.db import repository
 from mint.lib.unixutils import atomicOpen
 from mint.reports import MintReport
-from mint.helperfuncs import getUrlHost
 from mint.image_gen.wig import client as wig_client
 from mint import packagecreator
 from mint.rest import errors as rest_errors
@@ -204,7 +202,6 @@ def typeCheck(*paramTypes):
     """This decorator will be required on all functions callable over xmlrpc.
     This will force consistent calling conventions or explicit typecasting
     for all xmlrpc calls made to ensure extraneous calls won't be allowed."""
-    _no_default = ()
     def deco(func):
         baseFunc = deriveBaseFunc(func)
         filler = ArgFiller.fromFunc(baseFunc)
@@ -431,9 +428,6 @@ class MintServer(object):
             handle = self.reposMgr.getRepositoryFromProjectId(project.projectId)
             server = handle.getShimServer()
 
-            reposPath = os.path.join(self.cfg.reposPath, handle.fqdn)
-            tmpPath = os.path.join(reposPath, "tmp")
-
             # handle non-standard ports specified on cfg.projectDomainName,
             # most likely just used by the test suite
             if ":" in self.cfg.projectDomainName:
@@ -499,7 +493,7 @@ class MintServer(object):
             pd.setProductVersion(version.name)
             try:
                 pd.loadFromRepository(cclient)
-            except Exception, e:
+            except:
                 # XXX could this exception handler be more specific? As written
                 # any error in the proddef module will be masked.
                 raise mint_error.ProductDefinitionVersionNotFound
@@ -539,7 +533,7 @@ class MintServer(object):
             return
         handle = self.reposMgr.getRepositoryFromProjectId(projectId)
         try:
-            level = handle.getLevelForUser(self.auth.userId)
+            handle.getLevelForUser(self.auth.userId)
         except rest_errors.ProductNotFound:
             raise mint_error.ItemNotFound('project')
 
@@ -822,7 +816,6 @@ class MintServer(object):
         if not prodtype or (prodtype != 'Appliance' and prodtype != 'Component' and prodtype != 'Platform' and prodtype != 'Repository' and prodtype != 'PlatformFoundation'):
             raise mint_error.InvalidProdType
 
-        fqdn = ".".join((hostname, domainname))
         if projecturl and not (projecturl.startswith('https://') or projecturl.startswith('http://')):
             projecturl = "http://" + projecturl
 
@@ -874,9 +867,9 @@ class MintServer(object):
         if not url:
             url = 'http://%s/conary/' % (fqdn,)
 
-        database = None
+        dbSpec = None
         if mirrored:
-            database = self.cfg.defaultDatabase
+            dbSpec = self.cfg.defaultDatabase
 
         creatorId = self.auth.userId > 0 and self.auth.userId or None
 
@@ -887,8 +880,10 @@ class MintServer(object):
                     description='', shortname=hostname, fqdn=fqdn,
                     hostname=hostname, domainname=domainname, projecturl='',
                     external=True, timeModified=now, timeCreated=now,
-                    database=database, prodtype="Repository",
-                    commit=False)
+                    database=dbSpec,
+                    prodtype="Repository",
+                    commit=False,
+                    )
 
             if creatorId:
                 # create the projectUsers entry
@@ -1066,7 +1061,6 @@ class MintServer(object):
             return False
         if self.auth.admin:
             return True
-        from conary import dbstore
         self._filterProjectAccess(projectId)
 
         handle = self.reposMgr.getRepositoryFromProjectId(projectId)
@@ -1104,7 +1098,7 @@ class MintServer(object):
         self._filterProjectAccess(projectId)
         #XXX Make this atomic
         try:
-            userLevel = self.getUserLevel(userId, projectId)
+            self.getUserLevel(userId, projectId)
         except mint_error.ItemNotFound:
             raise netclient.UserNotFound()
 
@@ -1114,9 +1108,7 @@ class MintServer(object):
 
             self.amiPerms.deleteMemberFromProject(userId, projectId)
 
-            repos = self._getProjectRepo(project)
             user = self.getUser(userId)
-            label = versions.Label(project.getLabel())
 
             if notify:
                 self._notifyUser('Removed', user, project)
@@ -1533,7 +1525,6 @@ If you would not like to be %s %s of this project, you may resign from this proj
         if not self.auth.admin and userId != self.auth.userId:
             raise mint_error.PermissionDenied
         self.filterLastAdmin(userId)
-        username = self.users.getUsername(userId)
 
         self.setEC2CredentialsForUser(userId, '', '', '', True)
 
@@ -1983,14 +1974,18 @@ If you would not like to be %s %s of this project, you may resign from this proj
         # Look up the label for the stage name that was passed in.
         try:
             stageLabel = str(pd.getLabelForStage(stageName))
-        except proddef.StageNotFoundError, snfe:
-            raise mint_error.ProductDefinitionInvalidStage("Stage %s was not found in the product definition" % stageName)
-        except proddef.MissingInformationError, mie:
-            raise mint_error.ProductDefinitionError("Cannot determine the product label as the product definition is incomplete")
+        except proddef.StageNotFoundError:
+            raise mint_error.ProductDefinitionInvalidStage(
+                    "Stage %s was not found in the product definition" %
+                    stageName)
+        except proddef.MissingInformationError:
+            raise mint_error.ProductDefinitionError(
+                    "Cannot determine the product label as the product "
+                    "definition is incomplete")
 
         # Filter builds by stage
-        builds = pd.getBuildsForStage(stageName)
-        if not builds:
+        buildList = pd.getBuildsForStage(stageName)
+        if not buildList:
             raise mint_error.NoBuildsDefinedInBuildDefinition
 
         # Create build data for each defined build so we can create the builds
@@ -2001,7 +1996,7 @@ If you would not like to be %s %s of this project, you may resign from this proj
         # For some reason this can't happen through the the ShimClient
         # (CNY-2545 related?)
         repos = self._getProjectRepo(project, False)
-        groupNames = [ str(x.getBuildImageGroup()) for x in builds ]
+        groupNames = [ str(x.getBuildImageGroup()) for x in buildList ]
         if not versionSpec:
             versionSpec = stageLabel
 
@@ -2009,7 +2004,7 @@ If you would not like to be %s %s of this project, you may resign from this proj
                                        [(x, versionSpec, None) for x in 
                                          groupNames ], allowMissing = True)
 
-        for build in builds:
+        for build in buildList:
             if buildNames and build.name not in buildNames:
                 continue
             buildFlavor = deps.parseFlavor(str(build.getBuildBaseFlavor()))
@@ -2226,7 +2221,6 @@ If you would not like to be %s %s of this project, you may resign from this proj
         # Get the major architecture from filterFlavor
         arch = deps.overrideFlavor(archFlavor, customFlavor)
         filterArch = helperfuncs.getArchFromFlavor(arch)
-        flavorSetFlavor = deps.overrideFlavor(flavorSet, customFlavor)
         completeFlavor = deps.overrideFlavor(flavorSet, arch)
         # Hard filtering is done strictly by major architecture. This ensures
         # two things:
@@ -2269,7 +2263,6 @@ If you would not like to be %s %s of this project, you may resign from this proj
                 pass
 
             for filelist in self.getBuildFilenames(buildId):
-                fileId = filelist['fileId']
                 fileUrlList = filelist['fileUrls']
                 for urlId, urlType, url in fileUrlList:
                     self.filesUrls.delete(urlId, commit=False)
@@ -2518,7 +2511,7 @@ If you would not like to be %s %s of this project, you may resign from this proj
 
             try:
                 storedAmiData = self._getTargetData('ec2', 'aws')
-            except mint_error.TargetMissing, e:
+            except mint_error.TargetMissing:
                 raise mint_error.EC2NotConfigured
             for k in ('ec2PublicKey', 'ec2PrivateKey', 'ec2AccountId',
                        'ec2S3Bucket', 'ec2LaunchUsers', 'ec2LaunchGroups',
@@ -2598,7 +2591,6 @@ If you would not like to be %s %s of this project, you may resign from this proj
         projectId = self.publishedReleases.getProject(pubReleaseId)
         if not self._checkProjectAccess(projectId, [userlevels.OWNER]):
             raise mint_error.PermissionDenied
-        project = projects.Project(self, projectId)
 
         self._checkPublishedRelease(pubReleaseId, projectId)
         
@@ -2808,7 +2800,7 @@ If you would not like to be %s %s of this project, you may resign from this proj
                 projectCfg = self._getProjectConaryConfig(project)
                 cclient = conaryclient.ConaryClient(projectCfg)
                 pd.loadFromRepository(cclient)
-            except Exception, e:
+            except:
                 return versionId, None
 
             for stage in pd.getStages():
@@ -3345,8 +3337,6 @@ If you would not like to be %s %s of this project, you may resign from this proj
         project = projects.Project(self, projectId)
         trove, label = troveNameWithLabel.split('=')
         label = versions.Label(label)
-        version = None
-        flavor = None
 
         nc = self._getProjectRepo(project, useshim=False)
         versionList = nc.getTroveVersionList(project.getFQDN(), {trove: None})
@@ -3509,7 +3499,6 @@ If you would not like to be %s %s of this project, you may resign from this proj
                 sourceEntitlement = sourceEntitlement,
                 mirrorOrder = mirrorOrder, allLabels = int(allLabels))
 
-        fqdn = versions.Label(sourceLabels[0]).getHost()
         if createDB:
             self.restDb.productMgr.reposMgr.createRepository(targetProjectId,
                     createMaps=False)
@@ -3950,8 +3939,6 @@ If you would not like to be %s %s of this project, you may resign from this proj
             rebaseToPlatformLabel):
         # XXX: Need exception handling here
         pd = proddef.ProductDefinition(fromStream=productDefinitionXMLString)
-        version = projects.ProductVersions(self, versionId)
-        project = projects.Project(self, version.projectId)
 
         # TODO put back overrides
 
@@ -4255,7 +4242,6 @@ If you would not like to be %s %s of this project, you may resign from this proj
         if recipeContents:
             self.savePackageCreatorRecipe(sessionHandle, recipeContents)
 
-        path = packagecreator.getUploadDir(self.cfg, sessionHandle)
         pc = self.getPackageCreatorClient()
 
         try:
@@ -4289,7 +4275,6 @@ If you would not like to be %s %s of this project, you may resign from this proj
         built packages if any.
         @rtype: list(bool, int, string, list of three-tuples)
         """
-        path = packagecreator.getUploadDir(self.cfg, sessionHandle)
         pc = self.getPackageCreatorClient()
         try:
             return pc.isBuildFinished(sessionHandle, commit=True)
@@ -4312,7 +4297,6 @@ If you would not like to be %s %s of this project, you may resign from this proj
         @raise PackageCreatorError: If no build has been attempted, or an error
         occurs talking to the build process.
         """
-        path = packagecreator.getUploadDir(self.cfg, sessionHandle)
         pc = self.getPackageCreatorClient()
         try:
             return pc.getBuildLogs(sessionHandle)
@@ -4471,7 +4455,7 @@ If you would not like to be %s %s of this project, you may resign from this proj
                     # we just care that it doesn't raise a TroveNotFound
                     # exception
                     repos.findTrove(None, ts)
-                except TroveNotFound, e:
+                except TroveNotFound:
                     #Don't add it to our final list, no binary got built
                     pass
                 else:
@@ -4483,7 +4467,6 @@ If you would not like to be %s %s of this project, you may resign from this proj
     @requiresAuth
     def getProductVersionSourcePackages(self, projectId, versionId):
         project = projects.Project(self, projectId)
-        version = self.getProductVersion(versionId)
         pd = self._getProductDefinitionForVersionObj(versionId)
         label = versions.Label(pd.getDefaultLabel())
         repo = self._getProjectRepo(project)
@@ -4691,7 +4674,7 @@ If you would not like to be %s %s of this project, you may resign from this proj
 
             self.amiPerms.setUserKey(userId, oldAwsAccountNumber,
                                      newValues['accountId'])
-        except Exception, e:
+        except:
             self.db.rollback()
             raise
         else:
@@ -4730,7 +4713,6 @@ If you would not like to be %s %s of this project, you may resign from this proj
                 first = buildFilenames[0]
                 buildData['downloadUrl'] = first['downloadUrl']
                 buildData['sha1'] = first['sha1']
-            fileFields = [ 'idx', 'sha1', 'downloadUrl', 'size' ]
             buildData['files'] = [ self._buildFileRepr(x)
                     for x in buildFilenames or [] ]
 
@@ -4772,7 +4754,7 @@ If you would not like to be %s %s of this project, you may resign from this proj
             raise mint_error.PermissionDenied
         # Check to see if the user even exists.
         # This will raise ItemNotFound if the user doesn't exist
-        dummy = self.users.get(userId)
+        self.users.get(userId)
         return self.users.getAMIBuildsForUser(userId)
 
     def getAvailablePlatforms(self):
