@@ -91,11 +91,18 @@ class UsersTable(database.KeyedTable):
         return token in tokens
 
     def checkAuth(self, authToken, useToken=False):
+        username, password = authToken[:2]
         noAuth = {'authorized': False, 'userId': -1}
-        if authToken == ('anonymous', 'anonymous'):
+        if username == 'anonymous':
             return noAuth
+        elif username == self.cfg.authUser and password == self.cfg.authPass:
+            return {
+                    'authorized': True,
+                    'userId': -1,
+                    'username': username,
+                    'admin': True,
+                    }
 
-        username, password = authToken
         cu = self.db.cursor()
         cu.execute("""SELECT userId, email, displayEmail, fullName, blurb,
                         timeAccessed, salt, passwd, is_admin FROM Users

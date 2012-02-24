@@ -274,6 +274,7 @@ class MintServer(object):
                         authToken = ('anonymous', 'anonymous')
 
                 auth = self.users.checkAuth(authToken)
+                authToken = (authToken[0], '')
                 self.authToken = authToken
                 self.auth = users.Authorization(**auth)
 
