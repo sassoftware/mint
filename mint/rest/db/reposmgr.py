@@ -152,7 +152,7 @@ class RepositoryManager(manager.Manager):
         return self.db.reposShim.getAdminClient(write=write)
 
     def getUserClient(self):
-        return self.db.reposShim.getUserClient(auth=self.auth)
+        return self.db.reposShim.getUserClient(auth=self.auth.auth)
 
     def getConaryClient(self, admin=False):
         # DEPRECATED: Try getAdminClient or getUserClient first; this is going away.
@@ -445,12 +445,12 @@ class RepositoryManager(manager.Manager):
                 )
 
     def createSourceTrove(self, *args, **kwargs):
-        kwargs.update(auth=self.auth)
+        kwargs.update(auth=self.auth.auth)
         return self.db.reposShim.createSourceTrove(*args, **kwargs)
 
     def updateKeyValueMetadata(self, jobs, admin=False):
         return self.db.reposShim.updateKeyValueMetadata(jobs, admin=admin,
-            auth=self.auth)
+            auth=self.auth.auth)
 
     def deleteTroves(self, troveTups, admin=False):
         # NB: this doesn't recurse since it's initially used for deleting

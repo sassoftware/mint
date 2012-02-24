@@ -48,11 +48,8 @@ from mint.image_gen.wig import client as wig_client
 from mint import packagecreator
 from mint.rest import errors as rest_errors
 
-from conary import changelog
 from conary import conarycfg
-from conary import conaryclient
 from conary import versions
-from conary.conaryclient import filetypes
 from conary.conaryclient.cmdline import parseTroveSpec
 from conary.deps import deps
 from conary.lib import networking as cny_net
@@ -62,7 +59,6 @@ from conary.lib.http import http_error
 from conary.lib.http import request as cny_req
 from conary.repository.errors import TroveNotFound, UserNotFound
 from conary.repository import netclient
-from conary.repository import shimclient
 from conary.repository.netrepos.reposlog import RepositoryCallLogger as CallLogger
 from conary.repository.netrepos.netauth import ValidPasswordToken
 from conary import errors as conary_errors
@@ -404,111 +400,20 @@ class MintServer(object):
 
         return ccfg
 
-    def _getProjectRepo(self, project, useshim=True, useServer=False, pcfg = None):
-        '''
-        A helper function to get a NetworkRepositoryClient for doing repository operations.  If you need a client just call _getProjectConaryConfig and instantiate your own client.
-
-        This method returns a shim for local projects.
-        '''
-        maintenance.enforceMaintenanceMode( \
-            self.cfg, auth = None, msg = "Repositories are currently offline.")
-        if pcfg is None:
-            pcfg = self._getProjectConaryConfig(project)
-        # use a shimclient for mint-handled repositories; netclient if not
-        if not useshim or (project.external and not self.isLocalMirror(project.id)):
-            repo = conaryclient.ConaryClient(pcfg).getRepos()
-        else:
-            if self.cfg.SSL:
-                protocol = "https"
-                port = 443
-            else:
-                protocol = "http"
-                port = 80
-
-            handle = self.reposMgr.getRepositoryFromProjectId(project.projectId)
-            server = handle.getShimServer()
-
-            # handle non-standard ports specified on cfg.projectDomainName,
-            # most likely just used by the test suite
-            if ":" in self.cfg.projectDomainName:
-                port = int(self.cfg.projectDomainName.split(":")[1])
-
-            if useServer:
-                # Get a server object instead of a shim client
-                return server
-
-            pcfg = helperfuncs.configureClientProxies(pcfg, self.cfg.useInternalConaryProxy, self.cfg.proxy)
-
-            repo = shimclient.ShimNetClient(server, protocol, port,
-                (self.cfg.authUser, self.cfg.authPass, None, None),
-                pcfg.repositoryMap, pcfg.user,
-                conaryProxies=conarycfg.getProxyFromConfig(pcfg))
-        return repo
-
-    def _createSourceTrove(self, project, trovename, buildLabel, upstreamVersion, streamMap, changeLogMessage, cclient=None):
-
-        # Get repository + client
-        projectCfg = self._getProjectConaryConfig(project)
-        projectCfg.buildLabel = buildLabel
-        repos = self._getProjectRepo(project, pcfg=projectCfg)
-        client = conaryclient.ConaryClient(projectCfg, repos=repos)
-
-        # ensure that the changelog message ends with a newline
-        if not changeLogMessage.endswith('\n'):
-            changeLogMessage += '\n'
-
-        # create a pathdict out of the streamMap
-        pathDict = {}
-        for filename, filestream in streamMap.iteritems():
-            pathDict[filename] = filetypes.RegularFile(contents=filestream,
-                config=True)
-
-        # create the changelog message using the currently
-        # logged-on user's username and fullname, if available
-        newchangelog = changelog.ChangeLog(self.auth.username,
-                             self.auth.fullName or '',
-                             changeLogMessage)
-
-        # create a change set object from our source data
-        changeSet = client.createSourceTrove('%s:source' % trovename,
-                        projectCfg.buildLabel,
-                        upstreamVersion, pathDict, newchangelog)
-
-        # commit the change set to the repository
-        repos.commitChangeSet(changeSet)
-
-        if not cclient:
-            del client
-
     def _getProductDefinition(self, project, version):
-        projectCfg = self._getProjectConaryConfig(project)
-        repos = self._getProjectRepo(project, pcfg=projectCfg)
+        cclient = self.reposMgr.getAdminClient(write=False)
+        pd = proddef.ProductDefinition()
+        pd.setProductShortname(project.shortname)
+        pd.setConaryRepositoryHostname(project.getFQDN())
+        pd.setConaryNamespace(version.namespace)
+        pd.setProductVersion(version.name)
         try:
-            cclient = conaryclient.ConaryClient(projectCfg, repos=repos)
-
-            pd = proddef.ProductDefinition()
-            pd.setProductShortname(project.shortname)
-            pd.setConaryRepositoryHostname(project.getFQDN())
-            pd.setConaryNamespace(version.namespace)
-            pd.setProductVersion(version.name)
-            try:
-                pd.loadFromRepository(cclient)
-            except:
-                # XXX could this exception handler be more specific? As written
-                # any error in the proddef module will be masked.
-                raise mint_error.ProductDefinitionVersionNotFound
-
+            pd.loadFromRepository(cclient)
             return pd
-
-        finally:
-            # cclient holds a ref to the shimclient which holds a ref to a
-            # netserver which holds a ref to the database connection. cclient
-            # is full of circular refs, so the db never gets freed. Forcibly
-            # break the chain inside the shimclient since that is the easiest
-            # place to do it.
-            #
-            # This description is accurate as of conary 2.0.39
-            repos.c = None
+        except:
+            # XXX could this exception handler be more specific? As written
+            # any error in the proddef module will be masked.
+            raise mint_error.ProductDefinitionVersionNotFound
 
     def _getProductDefinitionForVersionObj(self, versionId):
         version = projects.ProductVersions(self, versionId)
@@ -727,42 +632,6 @@ class MintServer(object):
             raise mint_error.UpdateServiceUnknownError(urlhostname)
         else:
             return (mirrorUser, mirrorPassword)
-
-    def _createGroupTemplate(self, project, buildLabel, version,
-                             groupName=None, groupApplianceLabel=None):
-        if groupName is None:
-            groupName = helperfuncs.getDefaultImageGroupName(project.shortname)
-
-        label = versions.Label(buildLabel)
-
-        projectCfg = self._getProjectConaryConfig(project)
-        projectCfg.buildLabel = buildLabel
-        repos = self._getProjectRepo(project, pcfg=projectCfg)
-        client = conaryclient.ConaryClient(projectCfg, repos=repos)
-
-        trvLeaves = repos.getTroveLeavesByLabel(\
-                {groupName: {label: None} }).get(groupName, [])
-        if trvLeaves:
-            raise mint_error.GroupTroveTemplateExists
-
-        from mint.templates import groupTemplate
-        recipeStream = StringIO.StringIO()
-        if not groupApplianceLabel:
-            groupApplianceLabel = self.cfg.groupApplianceLabel
-        recipeStream.write(templates.write(groupTemplate,
-                    cfg = self.cfg,
-                    groupApplianceLabel=groupApplianceLabel,
-                    groupName=groupName,
-                    recipeClassName=util.convertPackageNameToClassName(groupName),
-                    version=version))
-        recipeStream.write('\n')
-        self._createSourceTrove(project, groupName,
-                buildLabel, version,
-                {'%s.recipe' % groupName: recipeStream},
-                'Initial appliance image group template',
-                client)
-        recipeStream.close()
-        return True
 
     def checkVersion(self):
         if self.clientVer < SERVER_VERSIONS[0]:
@@ -1439,12 +1308,10 @@ If you would not like to be %s %s of this project, you may resign from this proj
     @private
     def addUserKey(self, projectId, username, keydata):
         self._filterProjectAccess(projectId)
-        #find the project repository
+        client = self.reposMgr.getAdminClient(write=True)
         project = projects.Project(self, projectId)
-        repos = self._getProjectRepo(project)
-
-        #Call the repository's addKey function
-        repos.addNewAsciiPGPKey(versions.Label(project.getLabel()), username, keydata)
+        client.repos.addNewAsciiPGPKey(versions.Label(project.getLabel()),
+                username, keydata)
         return True
 
     @typeCheck(int, str)
@@ -1660,12 +1527,16 @@ If you would not like to be %s %s of this project, you may resign from this proj
 
             username = self.users.get(userId)['username']
 
+            # New users are no longer added to repository databases but old
+            # ones might still contain some. At the moment there's no support
+            # for having users in the repository database inherit their
+            # password from mint, so if the user exists then the password must
+            # be set and must match.
             for projectId, level in self.getProjectIdsByMember(userId):
-                project = projects.Project(self, projectId)
-
-                if not project.external:
-                    authRepo = self._getProjectRepo(project, useServer=True)
-                    authRepo.auth.changePassword(username, newPassword)
+                repoHandle = self.reposMgr.getRepositoryFromProjectId(projectId)
+                if repoHandle.hasDatabase:
+                    server = repoHandle.getNetServer()
+                    server.auth.changePassword(username, newPassword)
 
             self.users.changePassword(username, newPassword)
 
@@ -1964,7 +1835,6 @@ If you would not like to be %s %s of this project, you may resign from this proj
         @rtype: list of ints
         """
         version = projects.ProductVersions(self, versionId)
-        project = projects.Project(self, version.projectId)
         projectId = version.projectId
         self._filterProjectAccess(projectId)
 
@@ -1993,13 +1863,12 @@ If you would not like to be %s %s of this project, you may resign from this proj
         filteredBuilds = []
         buildErrors = []
 
-        # For some reason this can't happen through the the ShimClient
-        # (CNY-2545 related?)
-        repos = self._getProjectRepo(project, False)
         groupNames = [ str(x.getBuildImageGroup()) for x in buildList ]
         if not versionSpec:
             versionSpec = stageLabel
 
+        client = self.reposMgr.getUserClient(self.auth)
+        repos = client.getRepos()
         groupTroves = repos.findTroves(None, 
                                        [(x, versionSpec, None) for x in 
                                          groupNames ], allowMissing = True)
@@ -2363,10 +2232,6 @@ If you would not like to be %s %s of this project, you may resign from this proj
     @requiresAuth
     def resolveExtraTrove(self, projectId, specialTroveName, specialTroveVersion,
             specialTroveFlavor, imageGroupVersion, imageGroupFlavor):
-
-        # Get the project that the build is going to be on
-        project = projects.Project(self, projectId)
-
         searchPath = []
         if imageGroupVersion:
             # Get the image group label as the first part of the searchpath
@@ -2400,19 +2265,12 @@ If you would not like to be %s %s of this project, you may resign from this proj
             specialTroveFlavor = deps.ThawFlavor(specialTroveFlavor)
 
         # Get a Conary client
-        cfg = self._getProjectConaryConfig(project)
-        cfg.installLabelPath = searchPath
-        cfg.initializeFlavors()
-        cfg.dbPath = cfg.root = ":memory:"
-        cfg.proxy = self.cfg.proxy
-        # These special troves may be found anywhere depending on the version
-        # of specialTroveVersion, so don't use a shim client
-        repos = self._getProjectRepo(project, useshim=False, pcfg=cfg)
-
+        client = self.reposMgr.getUserClient(self.auth)
+        repos = client.getRepos()
         try:
             matches = repos.findTrove(searchPath,
                     (specialTroveName, specialTroveVersion, specialTroveFlavor),
-                    cfg.flavor)
+                    client.cfg.flavor)
             if matches:
                 strSpec = '%s=%s[%s]' % matches[0]
             else:
@@ -2780,33 +2638,6 @@ If you would not like to be %s %s of this project, you may resign from this proj
         ''', projectId, str(label))
         for versionId, stageName in cu:
             return versionId, stageName
-        # Fall back to the old code
-        cu.execute('''SELECT productVersionId, fqdn,
-                             shortname, 
-                             ProductVersions.namespace, 
-                             ProductVersions.name 
-                      FROM Projects 
-                      JOIN ProductVersions USING(projectId)
-                      WHERE projectId=?''', projectId)
-        for versionId, fqdn, shortname, namespace, name in cu:
-            pd = proddef.ProductDefinition()
-            pd.setProductShortname(shortname)
-            pd.setConaryRepositoryHostname(fqdn)
-            pd.setConaryNamespace(namespace)
-            pd.setProductVersion(name)
-
-            try:
-                project = projects.Project(self, projectId)
-                projectCfg = self._getProjectConaryConfig(project)
-                cclient = conaryclient.ConaryClient(projectCfg)
-                pd.loadFromRepository(cclient)
-            except:
-                return versionId, None
-
-            for stage in pd.getStages():
-                stageLabel = pd.getLabelForStage(stage.name)
-                if str(label) == stageLabel:
-                    return versionId, str(stage.name)
         return None, None
 
     @typeCheck(int, str)
@@ -3338,8 +3169,9 @@ If you would not like to be %s %s of this project, you may resign from this proj
         trove, label = troveNameWithLabel.split('=')
         label = versions.Label(label)
 
-        nc = self._getProjectRepo(project, useshim=False)
-        versionList = nc.getTroveVersionList(project.getFQDN(), {trove: None})
+        client = self.reposMgr.getUserClient(self.auth)
+        versionList = client.repos.getTroveVersionList(project.getFQDN(),
+                {trove: None})
 
         # group trove by major architecture
         return dictByArch(versionList, trove)
@@ -3347,11 +3179,10 @@ If you would not like to be %s %s of this project, you may resign from this proj
     @typeCheck(int, ((str, unicode),), ((str, unicode),))
     def getAllTroveLabels(self, projectId, serverName, troveName):
         self._filterProjectAccess(projectId)
+        client = self.reposMgr.getUserClient(self.auth)
 
-        project = projects.Project(self, projectId)
-        nc = self._getProjectRepo(project, False)
-
-        troves = nc.getAllTroveLeaves(str(serverName), {str(troveName): None})
+        troves = client.repos.getAllTroveLeaves(str(serverName),
+                {str(troveName): None})
         if troveName in troves:
             ret = sorted(list(set(str(x.branch().label()) for x in troves[troveName])))
         else:
@@ -3361,11 +3192,11 @@ If you would not like to be %s %s of this project, you may resign from this proj
     @typeCheck(int, ((str, unicode),), ((str, unicode),))
     def getTroveVersions(self, projectId, labelStr, troveName):
         self._filterProjectAccess(projectId)
+        client = self.reposMgr.getUserClient(self.auth)
 
-        project = projects.Project(self, projectId)
-        nc = self._getProjectRepo(project, False)
-
-        troves = nc.getTroveVersionsByLabel({str(troveName): {versions.Label(str(labelStr)): None}})[troveName]
+        troves = client.repos.getTroveVersionsByLabel(
+                    {str(troveName): {versions.Label(str(labelStr)): None}}
+                )[troveName]
         versionDict = dict((x.freeze(), [y for y in troves[x]]) for x in troves)
         versionList = sorted(versionDict.keys(), reverse = True)
 
@@ -3392,9 +3223,8 @@ If you would not like to be %s %s of this project, you may resign from this proj
     def getGroupTroves(self, projectId):
         self._filterProjectAccess(projectId)
         project = projects.Project(self, projectId)
-
-        nc = self._getProjectRepo(project, False)
-        troves = nc.troveNamesOnServer(project.fqdn)
+        client = self.reposMgr.getUserClient(self.auth)
+        troves = client.repos.troveNamesOnServer(project.fqdn)
 
         troves = sorted(trove for trove in troves if
             (trove.startswith('group-') or
@@ -3762,23 +3592,18 @@ If you would not like to be %s %s of this project, you may resign from this proj
             self.db.commit()
         return True
 
-    def _getAllRepositories(self):
+    def _iterVisibleRepositories(self):
         """
-            Return a list of netclient objects for each repository
-            rBuilder knows about and the current user has access to.
+        Yield a list of repository hostnames that rBuilder knows about and
+        that the current user has read access to.
         """
-        cu = self.db.cursor()
-        cu.execute("SELECT projectId FROM Projects")
-
-        repos = []
-        for projectId in [x[0] for x in cu.fetchall()]:
-            if self._checkProjectAccess(projectId, userlevels.LEVELS):
-                p = projects.Project(self, projectId)
-                #This has to be a shimclient for the test suite to work
-                repo = self._getProjectRepo(p)
-                repos.append((p, repo))
-
-        return repos
+        for repoHandle in self.reposMgr.iterRepositories():
+            try:
+                # This checks for user read access
+                repoHandle.getAuthToken(self.auth.userId)
+            except rest_errors.ProductNotFound:
+                continue
+            yield repoHandle.projectId, repoHandle.fqdn
 
     def _getProjectByLabel(self, label):
         hostname = label.getHost()
@@ -3795,22 +3620,18 @@ If you would not like to be %s %s of this project, you may resign from this proj
     @typeCheck(str, str, (list, str))
     def getTroveReferences(self, troveName, troveVersion, troveFlavors):
         references = []
-
+        client = self.reposMgr.getUserClient(self.auth)
         if not troveFlavors:
             v = versions.VersionFromString(troveVersion)
-            project = self._getProjectByLabel(v.branch().label())
-
-            repos = self._getProjectRepo(project)
-            flavors = repos.getAllTroveFlavors({troveName: [v]})
+            flavors = client.repos.getAllTroveFlavors({troveName: [v]})
             troveFlavors = [x.freeze() for x in flavors[troveName][v]]
 
         q = []
         for flavor in troveFlavors:
             q.append((troveName, versions.VersionFromString(troveVersion), deps.ThawFlavor(flavor)))
 
-        for p, repo in self._getAllRepositories():
-            host = versions.Label(p.getLabel()).getHost()
-            refs = repo.getTroveReferences(host, q)
+        for projectId, fqdn in self._iterVisibleRepositories():
+            refs = client.repos.getTroveReferences(fqdn, q)
 
             results = set()
             for ref in refs:
@@ -3818,7 +3639,7 @@ If you would not like to be %s %s of this project, you may resign from this proj
                     results.update([(x[0], str(x[1]), x[2].freeze()) for x in ref])
 
             if results:
-                references.append((int(p.id), list(results)))
+                references.append((projectId, list(results)))
 
         return references
 
@@ -3826,10 +3647,10 @@ If you would not like to be %s %s of this project, you may resign from this proj
     @typeCheck(str, str, str)
     def getTroveDescendants(self, troveName, troveBranch, troveFlavor):
         descendants = []
-        for p, repo in self._getAllRepositories():
+        client = self.reposMgr.getUserClient(self.auth)
+        for projectId, fqdn in self._iterVisibleRepositories():
             q = (troveName, versions.VersionFromString(troveBranch), deps.ThawFlavor(troveFlavor))
-            host = versions.Label(p.getLabel()).getHost()
-            refs = repo.getTroveDescendants(host, [q])
+            refs = client.repos.getTroveDescendants(fqdn, [q])
 
             results = set()
             for ref in refs:
@@ -3837,7 +3658,7 @@ If you would not like to be %s %s of this project, you may resign from this proj
                     results.update([(str(x[0]), x[1].freeze()) for x in ref])
 
             if results:
-                descendants.append((int(p.id), list(results)))
+                descendants.append((projectId, list(results)))
 
         return descendants
 
@@ -4122,9 +3943,9 @@ If you would not like to be %s %s of this project, you may resign from this proj
         """
         # Get the conary repository client
         project = projects.Project(self, projectId)
-        repo = self._getProjectRepo(project)
+        client = self.reposMgr.getUserClient(self.auth)
 
-        troves = repo.getPackageCreatorTroves(project.getFQDN())
+        troves = client.repos.getPackageCreatorTroves(project.getFQDN())
         #Set up a dictionary structure
         ret = dict()
 
@@ -4442,8 +4263,7 @@ If you would not like to be %s %s of this project, you may resign from this proj
     @requiresAuth
     def listApplianceTroves(self, projectId, sessionHandle):
         pc = self.getApplianceCreatorClient()
-        project = projects.Project(self, projectId)
-        repos = self._getProjectRepo(project, useshim=True)
+        client = self.reposMgr.getUserClient(self.auth)
         pkgs = []
         # we only care about explicit troves here
         for x in pc.listTroves(sessionHandle).get('explicitTroves', []):
@@ -4454,7 +4274,7 @@ If you would not like to be %s %s of this project, you may resign from this proj
                     # Later on we can use this to get a specific version, now
                     # we just care that it doesn't raise a TroveNotFound
                     # exception
-                    repos.findTrove(None, ts)
+                    client.repos.findTrove(None, ts)
                 except TroveNotFound:
                     #Don't add it to our final list, no binary got built
                     pass
@@ -4466,12 +4286,12 @@ If you would not like to be %s %s of this project, you may resign from this proj
 
     @requiresAuth
     def getProductVersionSourcePackages(self, projectId, versionId):
-        project = projects.Project(self, projectId)
         pd = self._getProductDefinitionForVersionObj(versionId)
         label = versions.Label(pd.getDefaultLabel())
-        repo = self._getProjectRepo(project)
+        client = self.reposMgr.getUserClient(self.auth)
         ret = []
-        trvlist = repo.findTroves(label, [(None, None, None)], allowMissing=True)
+        trvlist = client.repos.findTroves(label, [(None, None, None)],
+                allowMissing=True)
         for k,v in trvlist.iteritems():
             for n, v, f in v:
                 if n.endswith(':source'):

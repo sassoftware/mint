@@ -165,7 +165,7 @@ class RepomanMixin(object):
         built-in conary proxy. Additionally, site admins will have admin access
         to any repository.
         """
-        if auth.isAdmin:
+        if auth.admin:
             userId = ANY_WRITER
         elif auth.userId < 0:
             userId = ANONYMOUS
