@@ -338,7 +338,9 @@ class MintServer(object):
         if authToken[1] == '':
             # Pre-authenticated session
             authToken = (authToken[0], ValidPasswordToken)
-        return authToken
+            return authToken
+        # Discard old password-containing sessions to force a fresh login
+        return None
 
     def __getattr__(self, key):
         if key[0] != '_':

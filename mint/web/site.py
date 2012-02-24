@@ -213,7 +213,7 @@ class SiteHandler(WebHandler):
                     firstTimer = True
 
                 self._session_start(rememberMe)
-                self.session['authToken'] = authToken
+                self.session['authToken'] = (authToken[0], '')
                 self.session['firstTimer'] = firstTimer
                 self.session['firstPage'] = unquote(to)
                 user = client.getUser(auth.userId)

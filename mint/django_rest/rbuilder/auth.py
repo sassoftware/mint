@@ -33,7 +33,8 @@ def getCookieAuth(request):
         username, password = d['_data']['authToken']
         if password == '':
             password = ValidPasswordToken
-        return (username, password)
+            return (username, password)
+        # Discard old password-containing sessions to force a fresh login
     except:
         pass
         
