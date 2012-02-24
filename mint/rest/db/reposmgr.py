@@ -433,6 +433,7 @@ class RepositoryManager(manager.Manager):
         fqdn = self._getFqdn(hostname, domainname)
         cfg = conarycfg.ConaryConfiguration(readConfigFiles=False)
         cfg.proxy = self.cfg.proxy
+        cfg.proxyMap = self.cfg.proxyMap
         cfg.configLine('repositoryMap %s %s' % (fqdn, url))
         if authInfo.authType == 'entitlement':
             cfg.entitlement.addEntitlement(fqdn, authInfo.entitlement)
