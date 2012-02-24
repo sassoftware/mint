@@ -856,7 +856,10 @@ class ImagesTestCase(RbacEngine):
             data=xmlTemplate % params,
             headers={'X-rBuilder-OutputToken': outputToken},
         )
-        self.failUnlessEqual(response.status_code, 204)
+        self.failUnlessEqual(response.status_code, 200)
+        obj = xobj.parse(response.content)
+        self.assertEqual(obj.image.status, '0')
+        self.assertEqual(obj.image.status_message, 'For Godot')
 
         status = models.Image.objects.filter(
             image_id=img.image_id).values_list("status", "status_message")
@@ -869,7 +872,10 @@ class ImagesTestCase(RbacEngine):
             data=xmlTemplate % params,
             headers={'X-rBuilder-OutputToken': outputToken},
         )
-        self.failUnlessEqual(response.status_code, 204)
+        self.failUnlessEqual(response.status_code, 200)
+        obj = xobj.parse(response.content)
+        self.assertEqual(obj.image.status, '100')
+        self.assertEqual(obj.image.status_message, 'For president')
 
         status = models.Image.objects.filter(
             image_id=img.image_id).values_list("status", "status_message")
@@ -891,7 +897,10 @@ class ImagesTestCase(RbacEngine):
             data=xmlTemplate % params,
             headers={'X-rBuilder-OutputToken': outputToken},
         )
-        self.failUnlessEqual(response.status_code, 204)
+        self.failUnlessEqual(response.status_code, 200)
+        obj = xobj.parse(response.content)
+        self.assertEqual(obj.image.status, '300')
+        self.assertEqual(obj.image.status_message, 'really done')
 
         status = models.Image.objects.filter(
             image_id=img.image_id).values_list("status", "status_message")

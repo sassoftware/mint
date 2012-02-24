@@ -109,7 +109,7 @@ class ImageService(_JobOutputTokenAuthService):
             raise PermissionDenied(msg="id does not match URL")
         if request._withAuthToken:
             self.mgr.setImageBuildStatus(image)
-            return HttpResponse(status=204)
+            return self.mgr.getImageBuild(image_id)
 
         return self.mgr.updateImageBuild(image_id, image)
 
