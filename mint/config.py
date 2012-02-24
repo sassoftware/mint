@@ -199,6 +199,7 @@ class MintConfig(conarycfg.ConfigFile):
 
     # Upstream resources
     proxy                   = conarycfg.CfgProxy
+    proxyMap                = conarycfg.CfgProxyMap
 
     # Branding
     bulletinPath            = (CfgPath, '/srv/rbuilder/config/bulletin.txt')
@@ -362,9 +363,7 @@ class MintConfig(conarycfg.ConfigFile):
     def getProxyMap(self):
         # Similar to conarycfg.getProxyMap, but only supports the 'proxy'
         # option.
-        proxyDict = urllib.getproxies()
-        proxyDict.update(self.proxy)
-        return proxy_map.ProxyMap.fromDict(proxyDict)
+        return conarycfg.getProxyMap(self)
 
     def writeGeneratedConfig(self, path=RBUILDER_GENERATED_CONFIG, fObj=None):
         """
