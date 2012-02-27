@@ -1193,6 +1193,10 @@ class XObjModel(models.Model):
         try:
             relative_url = urlresolvers.reverse(bits[0], None, *bits[1:3])
         except urlresolvers.NoReverseMatch:
+            try:
+                relative_url = urlresolvers.reverse(bits[0], None, None)
+            except:
+                pass
             return None
 
         # Use the request to build an absolute url.
@@ -1322,11 +1326,16 @@ class XObjModel(models.Model):
                             self.__class__.__name__, (object,), {})()
                         refModel._xobj = xobj.XObjMetadata(
                                             attributes = {"id":str})
-                        setattr(refModel, "id", 
-                            val.get_absolute_url(request))
+                        absolute_url = val.get_absolute_url(request)
+                        setattr(refModel, "id", absolute_url)
                         if hasattr(val, "summary_view") and fieldName not in getattr(self, '_xobj_summary_view_hide', []):
                             for sField in val.summary_view:
-                                setattr(refModel, sField, getattr(val, sField))
+                                try:
+                                    sVal = getattr(val, sField, None)
+                                    setattr(refModel, sField, sVal)
+                                except:
+                                    # if summary view references value that doesn't exist
+                                    pass
                         else:
                             if text_field and getattr(val, text_field):
                                 refModel._xobj.text = getattr(val, text_field)
@@ -1358,16 +1367,17 @@ class XObjModel(models.Model):
             blacklist =  getattr(self, '_xobj_hidden_accessors', set())
             accessorsList = [ (k, v) for (k, v) in accessors.items()
                 if k not in blacklist ]
+
         for accessorName, accessor in accessorsList:
             # Look up the name of the related model for the accessor.  Can be
             # overriden via _xobj.  E.g., The related model name for the
             # networks accessor on system is "network".
             var_name = self.getAccessorName(accessor)
-
             # Simple object to create for our accessor
             accessor_model = type(accessorName, (object,), {})()
 
             if getattr(accessor.field, 'Deferred', False):
+
                 # The accessor is deferred.  Create an href object for it
                 # instead of a object representing the xml.
                 rel_mod = accessor.model()
@@ -1377,6 +1387,7 @@ class XObjModel(models.Model):
                     attributes={"id":str})
                 setattr(accessor_model, "id", href)
                 setattr(xobj_model, accessorName, accessor_model)
+
             else:
                 # In django, accessors are always lists of other models.
                 accessorModelValues = []
@@ -1393,10 +1404,27 @@ class XObjModel(models.Model):
                         accessorValues = None
                     if accessorValues is not None:
                         for rel_mod, subvalues in accessorValues:
-                            rel_mod = rel_mod.serialize(request)
-                            accessorModelValues.append(rel_mod)
+                            rel_mod_ser = rel_mod.serialize(request)
+
+                            # attempt to add IDs where known to reverse
+                            # FK relationships (aka one-to-many)
+                            view_name = getattr(rel_mod, 'view_name', None)
+                            
+                            if view_name is not None:
+                                href = rel_mod.get_absolute_url(request, 
+                                    parents=[self], 
+                                    view_name=rel_mod.view_name)
+                                #rel_mod_ser._xobj = xobj.XObjMetadata(
+                                #    attributes={"id":str})
+                                if getattr(rel_mod_ser, 'id', None) is None:
+                                    # set the id only if already not set by a
+                                    # custom serializer
+                                    setattr(rel_mod_ser, "id", href)
+                            
+                            accessorModelValues.append(rel_mod_ser)
                     else:
                         accessor_model = None
+
 
                     setattr(xobj_model, accessorName, accessor_model)
 

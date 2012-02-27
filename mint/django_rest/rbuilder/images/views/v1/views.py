@@ -50,10 +50,25 @@ def can_read_image(view, request, image_id, *args, **kwargs):
         READMEMBERS, *args, **kwargs
     )
 
-class BaseImageService(service.BaseService):
-    pass
+class _JobOutputTokenAuthService(service.BaseAuthService):
 
-class ImagesService(BaseImageService):
+    def _check_uuid_auth(self, request, kwargs):
+        request._withAuthToken = False
+        headerName = 'X-rBuilder-OutputToken'
+        imageOutputToken = self.getHeaderValue(request, headerName)
+        if not imageOutputToken:
+            return None
+        imageId = kwargs['image_id']
+        # Check for existance
+        imgs = models.ImageData.objects.filter(image__image_id=imageId,
+            name='outputToken', value=imageOutputToken).select_related('image__created_by')
+        if not imgs:
+            return False
+        self._setMintAuth(imgs[0].image.created_by)
+        request._withAuthToken = True
+        return True
+
+class ImagesService(service.BaseService):
 
     @rbac(manual_rbac)
     @return_xml
@@ -75,7 +90,7 @@ class ImagesService(BaseImageService):
             raise PermissionDenied(msg="missing read permission on project")
         return self.mgr.createImageBuild(image, for_user=user)
     
-class ImageService(BaseImageService):
+class ImageService(_JobOutputTokenAuthService):
 
     @rbac(can_read_image)
     @return_xml
@@ -85,12 +100,17 @@ class ImageService(BaseImageService):
     def get(self, image_id):
         return self.mgr.getImageBuild(image_id)
     
+    @access.auth_token
     @rbac(can_write_image)
-    @requires('image')
+    @requires('image', flags=Flags(save=False))
     @return_xml
     def rest_PUT(self, request, image_id, image):
         if str(image_id) != str(image.pk):
             raise PermissionDenied(msg="id does not match URL")
+        if request._withAuthToken:
+            self.mgr.setImageBuildStatus(image)
+            return self.mgr.getImageBuild(image_id)
+
         return self.mgr.updateImageBuild(image_id, image)
 
     @rbac(can_write_image)
@@ -99,7 +119,7 @@ class ImageService(BaseImageService):
         return HttpResponse(status=204)
 
 
-class ImageJobsService(BaseImageService):
+class ImageJobsService(service.BaseService):
 
     @rbac(can_read_image)
     @return_xml
@@ -146,8 +166,7 @@ class ImageSystemsService(service.BaseAuthService):
     def rest_POST(self, request, image_id, systems):
         return self.mgr.addLaunchedSystems(systems, image_id, forUser=self.mgr.user)
 
-class ImageBuildFilesService(service.BaseService):
- 
+class ImageBuildFilesService(_JobOutputTokenAuthService):
     @rbac(can_read_image)
     @return_xml
     def rest_GET(self, request, image_id):
@@ -162,6 +181,12 @@ class ImageBuildFilesService(service.BaseService):
     def rest_POST(self, request, image_id, file):
         file.save()
         return file
+
+    @access.auth_token
+    @requires('files', flags=Flags(save=False))
+    @return_xml
+    def rest_PUT(self, request, image_id, files):
+        return self.mgr.updateImageBuildFiles(image_id, files)
 
 class ImageBuildFileService(service.BaseAuthService):
 
@@ -224,7 +249,7 @@ class ImageBuildFileUrlService(service.BaseService):
         return file_url
         
         
-class BuildLogService(service.BaseService):
+class BuildLogService(_JobOutputTokenAuthService):
 
     @rbac(can_read_image)
     def rest_GET(self, request, image_id):
@@ -237,7 +262,13 @@ class BuildLogService(service.BaseService):
         response['Content-Type'] = 'text/plain'
         response.write(buildLog)
         return response
-        
+
+    @access.auth_token
+    @return_xml
+    def rest_POST(self, request, image_id):
+        self.mgr.appendToBuildLog(image_id, request.read())
+        return HttpResponse(status=204)
+
 class ImageTypesService(service.BaseService):
 
     # TODO: verify there's not any reason this can't

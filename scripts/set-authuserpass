@@ -28,14 +28,6 @@ def updatePassword(newPass):
     authToken = (cfg.authUser, cfg.authPass)
     mintclient = shimclient.ShimMintClient(cfg, authToken)
 
-    for x in projIds:
-        proj = mintclient.getProject(x['projectId'])
-        print "Updating project '%s'" % proj.getHostname()
-        repo = mintclient.server._server._getProjectRepo(proj)
-        repo.changePassword(proj.getLabel(), cfg.authUser, newPass)
-        cu.execute("""UPDATE Labels SET password=? WHERE ProjectId=? AND
-                      username=?""", newPass, x['projectId'], cfg.authUser)
-
     db.commit()
 
     print "\nUpdating rBuilder configuration"

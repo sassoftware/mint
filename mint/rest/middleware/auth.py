@@ -104,7 +104,9 @@ class AuthenticationCallback(object):
         if authToken and authToken[1] == '':
             # Pre-authenticated session
             authToken = (authToken[0], ValidPasswordToken)
-        return authToken
+            return authToken
+        # Discard old password-containing sessions to force a fresh login
+        return None
 
     def _checkAuth(self, authToken):
         mintClient = shimclient.ShimMintClient(self.cfg, authToken,
