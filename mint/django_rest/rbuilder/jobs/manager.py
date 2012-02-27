@@ -881,7 +881,7 @@ class JobHandlerRegistry(HandlerRegistry):
             params['outputToken'] = outputToken
             params['imageUploadUrl'] = 'https://%s/uploadBuild/%s' % (
                 host, image.image_id)
-            params['imageFilesCommitUrl'] = 'https://%s/api/v1/images/%s/files' % (
+            params['imageFilesCommitUrl'] = 'https://%s/api/v1/images/%s/build_files' % (
                 host, image.image_id)
             params['image_id'] = 'https://%s/api/v1/images/%s' % (
                 host, image.image_id)
