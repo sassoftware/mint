@@ -255,8 +255,7 @@ class RepositoryManager(manager.Manager):
         if self.cfg.useInternalConaryProxy:
             cfg.conaryProxy = self.cfg.getInternalProxies()
         else:
-            if self.cfg.proxy:
-                cfg.proxy = self.cfg.proxy
+            cfg.proxyMap = self.cfg.getProxyMap()
             # we're not using the internal proxy, therefore we
             # need to add entitlements directly.
             userMap, entMap = self._getAuthMaps()
@@ -432,7 +431,7 @@ class RepositoryManager(manager.Manager):
     def checkExternalRepositoryAccess(self, hostname, domainname, url, authInfo):
         fqdn = self._getFqdn(hostname, domainname)
         cfg = conarycfg.ConaryConfiguration(readConfigFiles=False)
-        cfg.proxy = self.cfg.proxy
+        cfg.proxyMap = self.cfg.getProxyMap()
         cfg.configLine('repositoryMap %s %s' % (fqdn, url))
         if authInfo.authType == 'entitlement':
             cfg.entitlement.addEntitlement(fqdn, authInfo.entitlement)
