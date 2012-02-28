@@ -64,7 +64,7 @@ XML = """<?xml version='1.0' encoding='UTF-8'?>
             </descriptions>
             <help lang="en_US" href="@Help_image_ram@"/>
             <type>int</type>
-            <default>512</default>
+            <default>1024</default>
             <required>false</required>
         </field>
         <field>
