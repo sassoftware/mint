@@ -325,9 +325,9 @@ class WbsGenerator(ImageGenerator):
         servicingXml = self._getServicingXml(msis)
         uploadMap['servicing.xml'] = StringIO.StringIO(servicingXml)
 
-        diskSize = (self.wimData.size
+        diskSize = (self.wimData.size * 3
                 + sum(x.size for x in msis) * 3
-                + self.jobData.getBuildData('vmMemory') * MEBI
+                + self.jobData.getBuildData('vmMemory') * MEBI * 2
                 + self.jobData.getBuildData('freespace') * MEBI
                 )
         self.wigClient.setDiskSize(diskSize // MEBI)
