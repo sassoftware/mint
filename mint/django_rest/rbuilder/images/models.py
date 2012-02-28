@@ -200,14 +200,17 @@ class Image(modellib.XObjIdModel):
     def _getBuildLog(self):
         return BuildLogHref(self)
 
-    def _computeMetadata(self):
-        if self._rbmgr is None or self.output_trove is None:
-            return
+    def getMetadata(self):
         troveTup = self._getOutputTrove()
+        if self._rbmgr is None or troveTup is None:
+            return
         reposMgr = self._rbmgr.restDb.productMgr.reposMgr
         metadata = reposMgr.getKeyValueMetadata([troveTup])[0]
+        return metadata
+
+    def _computeMetadata(self):
+        metadata = self.getMetadata()
         if metadata is None:
-            self.metadata = None
             return
         metaxml = xobj.XObj()
         for key, value in metadata.items():

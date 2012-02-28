@@ -118,11 +118,6 @@ class ImagesManager(basemanager.BaseManager):
         if flavor is None:
             flavor = deps.Flavor()
         return trovetup.TroveTuple(name, version, flavor)
-        
-    @exposed
-    def updateImageBuild(self, image_id, image):
-        image.save()
-        return image
 
     @exposed
     def deleteImageBuild(self, image_id):

@@ -86,12 +86,13 @@ class ImageService(BaseImageService):
         return self.mgr.getImageBuild(image_id)
     
     @rbac(can_write_image)
-    @requires('image')
+    @requires('image', flags=Flags(save=False))
     @return_xml
     def rest_PUT(self, request, image_id, image):
         if str(image_id) != str(image.pk):
             raise PermissionDenied(msg="id does not match URL")
-        return self.mgr.updateImageBuild(image_id, image)
+        self.mgr.updateImage(image)
+        return self.get(image_id)
 
     @rbac(can_write_image)
     def rest_DELETE(self, request, image_id):

@@ -159,6 +159,7 @@ class XMLTestCase(TestCase, testcase.MockMixIn):
 </metadataDescriptor>
 """)
         cfg.metadataDescriptorPath = metadataDescriptorFile
+        cfg.imagesPath = os.path.join(self.workDir, 'finished-images')
         return cfg
 
     def setUp(self):
