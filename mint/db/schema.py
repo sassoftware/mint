@@ -28,7 +28,7 @@ from conary.dbstore import sqlerrors, sqllib
 log = logging.getLogger(__name__)
 
 # database schema major version
-RBUILDER_DB_VERSION = sqllib.DBversion(62, 4)
+RBUILDER_DB_VERSION = sqllib.DBversion(62, 5)
 
 def _createTrigger(db, table, column="changed"):
     retInsert = db.createTrigger(table, column, "INSERT")
@@ -1700,54 +1700,126 @@ def _createSurveyTables(db, cfg):
                 "signature" TEXT NOT NULL,
                 "rpm_package_id" INTEGER REFERENCES inventory_rpm_package (rpm_package_id) ON DELETE SET NULL 
     """)
+    
+    # --- begin windows survey info
+    
+    createTable(db, 'inventory_windows_package', """
+        "windows_package_id" %(PRIMARYKEY)s,
+        "publisher" TEXT NOT NULL,
+        "product_code" TEXT NOT NULL,
+        "package_code" TEXT NOT NULL,
+        "product_name" TEXT NOT NULL,
+        "type" TEXT NOT NULL,
+        "upgrade_code" TEXT NOT NULL,
+        "version" TEXT NOT NULL
+    """)
+
+    createTable(db, 'inventory_survey_windows_package', """
+        "map_id" %(PRIMARYKEY)s,
+        "survey_id" INTEGER NOT NULL REFERENCES "inventory_survey" (survey_id) ON DELETE CASCADE,
+        "windows_package_id" INTEGER NOT NULL REFERENCES "inventory_windows_package" (windows_package_id) ON DELETE CASCADE,
+        "install_source" TEXT NOT NULL,
+        "local_package" TEXT NOT NULL
+    """)
+    db.createIndex('inventory_survey_windows_package', 'inventory_survey_windows_package_sid', 'survey_id')
+
+    createTable(db, 'inventory_windows_patch', """
+        "windows_patch_id" %(PRIMARYKEY)s,
+        "display_name" TEXT NOT NULL,
+        "uninstallable" BOOLEAN NOT NULL,
+        "patch_code" TEXT NOT NULL,
+        "product_code" TEXT NOT NULL,
+        "transforms" TEXT
+    """)
+
+    createTable(db, 'inventory_windows_patch_windows_package', """
+        "map_id" %(PRIMARYKEY)s,
+        "windows_package_id" INTEGER NOT NULL REFERENCES "inventory_windows_package" (windows_package_id) ON DELETE CASCADE,
+        "windows_patch_id" INTEGER NOT NULL REFERENCES "inventory_windows_patch" (windows_patch_id) ON DELETE CASCADE 
+    """)
+    db.createIndex('inventory_windows_patch_windows_package',
+                   'inventory_windows_patch_windows_package_uq',
+                   'windows_package_id,windows_patch_id', unique=True)
+
+    createTable(db, 'inventory_survey_windows_patch', """
+        "map_id" %(PRIMARYKEY)s,
+        "survey_id" INTEGER NOT NULL REFERENCES "inventory_survey" (survey_id) ON DELETE CASCADE,
+        "windows_package_id" INTEGER NOT NULL REFERENCES "inventory_windows_package" (windows_package_id) ON DELETE CASCADE,
+        "local_package" TEXT NOT NULL,
+        "install_date" TIMESTAMP WITH TIME ZONE NOT NULL,
+        "is_installed" BOOLEAN NOT NULL
+    """)
+
+    createTable(db, 'inventory_windows_service', """
+        "windows_service_id" %(PRIMARYKEY)s,
+        "name" TEXT NOT NULL,
+        "display_name" TEXT NOT NULL, 
+        "type" TEXT NOT NULL,
+        "handle" TEXT NOT NULL,
+        "required_services" TEXT NOT NULL 
+    """)
+    
+    createTable(db, 'inventory_survey_windows_service', """
+        "map_id" %(PRIMARYKEY)s,
+        "survey_id" INTEGER NOT NULL REFERENCES "inventory_survey" (survey_id) ON DELETE CASCADE,
+        "windows_service_id" INTEGER NOT NULL REFERENCES "inventory_windows_service" (windows_service_id) ON DELETE CASCADE,
+        "status" TEXT NOT NULL
+    """)
+    db.createIndex('inventory_survey_windows_service', 'inventory_survey_windows_service_sid', 'survey_id')
+
+    # --- end windows survey info
 
     createTable(db, 'inventory_service', """
-                service_id %(PRIMARYKEY)s,
-                name TEXT,
-                autostart BOOLEAN DEFAULT FALSE,
-                runlevels TEXT
+        "service_id" %(PRIMARYKEY)s,
+        "name" TEXT,
+        "autostart" BOOLEAN DEFAULT FALSE,
+        "runlevels" TEXT
     """)
 
     createTable(db, 'inventory_survey_rpm_package', """
-                "map_id" %(PRIMARYKEY)s,
-                "survey_id" INTEGER NOT NULL REFERENCES "inventory_survey" (survey_id) ON DELETE CASCADE,
-                "rpm_package_id" INTEGER NOT NULL REFERENCES "inventory_rpm_package" (rpm_package_id) ON DELETE CASCADE,
-                "install_date" TIMESTAMP WITH TIME ZONE NOT NULL
+        "map_id" %(PRIMARYKEY)s,
+        "survey_id" INTEGER NOT NULL REFERENCES "inventory_survey" (survey_id) ON DELETE CASCADE,
+        "rpm_package_id" INTEGER NOT NULL REFERENCES "inventory_rpm_package" (rpm_package_id) ON DELETE CASCADE,
+        "install_date" TIMESTAMP WITH TIME ZONE NOT NULL
     """)
+
+    db.createIndex('inventory_survey_rpm_package', 'inventory_survey_conary_rpm_package_sid',
+            'survey_id')
 
     createTable(db, 'inventory_survey_conary_package', """
-                "map_id" %(PRIMARYKEY)s,
-                "survey_id" INTEGER NOT NULL REFERENCES "inventory_survey" (survey_id) ON DELETE CASCADE,
-                "conary_package_id" INTEGER NOT NULL REFERENCES "inventory_conary_package" (conary_package_id) ON DELETE CASCADE,
-                "install_date" TIMESTAMP WITH TIME ZONE NOT NULL
+        "map_id" %(PRIMARYKEY)s,
+        "survey_id" INTEGER NOT NULL REFERENCES "inventory_survey" (survey_id) ON DELETE CASCADE,
+        "conary_package_id" INTEGER NOT NULL REFERENCES "inventory_conary_package" (conary_package_id) ON DELETE CASCADE,
+        "install_date" TIMESTAMP WITH TIME ZONE NOT NULL
     """)
+
+    db.createIndex('inventory_survey_conary_package', 'inventory_survey_conary_package_sid', 'survey_id')
 
     createTable(db, 'inventory_survey_service', """
-                "map_id" %(PRIMARYKEY)s,
-                "survey_id" INTEGER NOT NULL REFERENCES "inventory_survey" (survey_id) ON DELETE CASCADE,
-                "service_id" INTEGER NOT NULL REFERENCES "inventory_service" (service_id) ON DELETE CASCADE,
-                running BOOLEAN DEFAULT FALSE,
-                status TEXT
+        "map_id" %(PRIMARYKEY)s,
+        "survey_id" INTEGER NOT NULL REFERENCES "inventory_survey" (survey_id) ON DELETE CASCADE,
+        "service_id" INTEGER NOT NULL REFERENCES "inventory_service" (service_id) ON DELETE CASCADE,
+        "running" BOOLEAN DEFAULT FALSE,
+        "status" TEXT
     """)
 
+    db.createIndex('inventory_survey_service', 'inventory_survey_service_sid',
+            'survey_id')
+
     createTable(db, 'inventory_survey_diff', """
-                diff_id %(PRIMARYKEY)s,
-                created_date TIMESTAMP WITH TIME ZONE NOT NULL,
-                left_survey_id INTEGER NOT NULL REFERENCES "inventory_survey" ("survey_id") ON DELETE CASCADE,
-                right_survey_id INTEGER NOT NULL REFERENCES "inventory_survey" ("survey_id") ON DELETE SET NULL,
-                xml TEXT
+        "diff_id" %(PRIMARYKEY)s,
+        "created_date" TIMESTAMP WITH TIME ZONE NOT NULL,
+        "left_survey_id" INTEGER NOT NULL REFERENCES "inventory_survey" ("survey_id") ON DELETE CASCADE,
+        "right_survey_id" INTEGER NOT NULL REFERENCES "inventory_survey" ("survey_id") ON DELETE SET NULL,
+        "xml" TEXT
     """)
     db.createIndex('inventory_survey_diff', 'SurveyDiffLeftRightIdx', 
         'left_survey_id,right_survey_id', unique=True)
 
     createTable(db, 'jobs_created_survey', """
-            id          %(PRIMARYKEY)s,
-            job_id      integer NOT NULL
-                        REFERENCES jobs_job(job_id)
-                        ON DELETE CASCADE,
-            survey_id integer NOT NULL
-                        REFERENCES inventory_survey(survey_id)
-                        ON DELETE CASCADE,
+        "id" %(PRIMARYKEY)s,
+        "job_id" integer NOT NULL REFERENCES jobs_job(job_id) ON DELETE CASCADE,
+        "survey_id" integer NOT NULL REFERENCES inventory_survey(survey_id) ON DELETE CASCADE,
     """)
     db.createIndex('jobs_created_survey', 'jobs_created_survey_jid_sid_uq',
             'job_id, survey_id', unique=True)

@@ -4728,7 +4728,7 @@ class MigrateTo_61(SchemaMigration):
 
 class MigrateTo_62(SchemaMigration):
     '''Fork!'''
-    Version = (62, 4)
+    Version = (62, 5)
 
     def migrate(self):
 
@@ -4864,6 +4864,88 @@ class MigrateTo_62(SchemaMigration):
 
         return True
 
+    def migrate5(self):
+
+        ''' add windows survey tables & also add some more indexes on previous tables '''
+
+        db = self.db
+        createTable2(db, 'inventory_windows_package', """
+            "windows_package_id" %(PRIMARYKEY)s,
+            "publisher" TEXT NOT NULL,
+            "product_code" TEXT NOT NULL,
+            "package_code" TEXT NOT NULL,
+            "product_name" TEXT NOT NULL,
+            "type" TEXT NOT NULL,
+            "upgrade_code" TEXT NOT NULL,
+            "version" TEXT NOT NULL
+        """)
+
+        createTable2(db, 'inventory_survey_windows_package', """
+            "map_id" %(PRIMARYKEY)s,
+            "survey_id" INTEGER NOT NULL REFERENCES "inventory_survey" (survey_id) ON DELETE CASCADE,
+            "windows_package_id" INTEGER NOT NULL REFERENCES "inventory_windows_package" (windows_package_id) ON DELETE CASCADE,
+            "install_source" TEXT NOT NULL,
+            "local_package" TEXT NOT NULL
+        """)
+
+        db.createIndex('inventory_survey_windows_package', 'inventory_survey_windows_package_sid', 'survey_id')
+
+        createTable2(db, 'inventory_windows_patch', """
+            "windows_patch_id" %(PRIMARYKEY)s,
+            "display_name" TEXT NOT NULL,
+            "uninstallable" BOOLEAN NOT NULL,
+            "patch_code" TEXT NOT NULL,
+            "product_code" TEXT NOT NULL,
+            "transforms" TEXT
+        """)
+
+        createTable2(db, 'inventory_windows_patch_windows_package', """
+            "map_id" %(PRIMARYKEY)s,
+            "windows_package_id" INTEGER NOT NULL REFERENCES "inventory_windows_package" (windows_package_id) ON DELETE CASCADE,
+            "windows_patch_id" INTEGER NOT NULL REFERENCES "inventory_windows_patch" (windows_patch_id) ON DELETE CASCADE 
+        """)
+
+        db.createIndex('inventory_windows_patch_windows_package',
+            'inventory_windows_patch_windows_package_uq',
+            'windows_package_id,windows_patch_id', unique=True)
+
+        createTable2(db, 'inventory_survey_windows_patch', """
+            "map_id" %(PRIMARYKEY)s,
+            "survey_id" INTEGER NOT NULL REFERENCES "inventory_survey" (survey_id) ON DELETE CASCADE,
+            "windows_package_id" INTEGER NOT NULL REFERENCES "inventory_windows_package" (windows_package_id) ON DELETE CASCADE,
+            "local_package" TEXT NOT NULL,
+            "install_date" TIMESTAMP WITH TIME ZONE NOT NULL,
+            "is_installed" BOOLEAN NOT NULL
+        """)
+
+        createTable2(db, 'inventory_windows_service', """
+            "windows_service_id" %(PRIMARYKEY)s,
+            "name" TEXT NOT NULL,
+            "display_name" TEXT NOT NULL, 
+            "type" TEXT NOT NULL,
+            "handle" TEXT NOT NULL,
+            "required_services" TEXT NOT NULL 
+        """)
+
+        createTable2(db, 'inventory_survey_windows_service', """
+            "map_id" %(PRIMARYKEY)s,
+            "survey_id" INTEGER NOT NULL REFERENCES "inventory_survey" (survey_id) ON DELETE CASCADE,
+            "windows_service_id" INTEGER NOT NULL REFERENCES "inventory_windows_service" (windows_service_id) ON DELETE CASCADE,
+            "status" TEXT NOT NULL
+        """)
+        
+        db.createIndex('inventory_survey_windows_service', 'inventory_survey_windows_service_sid', 'survey_id')
+
+        # end windows survey tables, begin additional indices for linux tables
+ 
+        db.createIndex('inventory_survey_rpm_package', 'inventory_survey_conary_rpm_package_sid',
+            'survey_id')
+        db.createIndex('inventory_survey_conary_package', 'inventory_survey_conary_package_sid',
+            'survey_id')
+        db.createIndex('inventory_survey_service', 'inventory_survey_service_sid',
+            'survey_id')
+
+        return True
 
 
 #### SCHEMA MIGRATIONS END HERE #############################################
