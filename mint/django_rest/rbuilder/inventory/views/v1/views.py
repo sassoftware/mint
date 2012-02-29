@@ -816,6 +816,7 @@ class SurveysService(BaseInventoryService):
     def get(self, system_id):
         return self.mgr.getSurveysForSystem(system_id)
 
+
 class SurveyService(BaseInventoryService):
     ''' 
     Access to an individual system survey by UUID
@@ -868,6 +869,14 @@ class SurveyConaryPackageService(BaseInventoryService):
     def get(self, id):
         return self.mgr.getSurveyConaryPackage(id)
 
+class SurveyWindowsPackageService(BaseInventoryService):
+    # FIXME
+    pass
+
+class SurveyWindowsPatchService(BaseInventoryService):
+    # FIXME
+    pass
+
 class SurveyServiceService(BaseInventoryService):
     ''' The instance of an service installed on a given system (per survey) '''
 
@@ -879,6 +888,11 @@ class SurveyServiceService(BaseInventoryService):
 
     def get(self, id):
         return self.mgr.getSurveyService(id)
+
+class SurveyWindowsServiceService(BaseInventoryService):
+    # FIXME
+    pass
+
 
 class SurveyDiffService(BaseInventoryService):
     ''' Returns XML representing differences between two surveys '''
@@ -917,6 +931,14 @@ class SurveyConaryPackageInfoService(BaseInventoryService):
     def get(self, id):
         return self.mgr.getSurveyConaryPackageInfo(id)
 
+class SurveyWindowsPackageInfoService(BaseInventoryService):
+    # FIXME
+    pass
+
+class SurveyWindowsPatchInfoService(BaseInventoryService):
+    # FIXME
+    pass
+
 class SurveyServiceInfoService(BaseInventoryService):
     ''' The definition of a service state, shared between many systems '''
 
@@ -927,6 +949,10 @@ class SurveyServiceInfoService(BaseInventoryService):
 
     def get(self, id):
         return self.mgr.getSurveyServiceInfo(id)
+
+class SurveyWindowsServiceInfoService(BaseInventoryService):
+    # pass
+    pass
 
 class SurveyTagService(BaseInventoryService):
     ''' User assignable tags per survey '''

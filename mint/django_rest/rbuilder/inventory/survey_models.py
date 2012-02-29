@@ -182,6 +182,29 @@ class ConaryPackageInfo(modellib.XObjIdModel):
     def get_url_key(self, *args, **kwargs):
         return [ self.conary_package_id ]
 
+
+#***********************************************************
+
+class WindowsPackageInfo(modellib.XObjIdModel):
+    class Meta:
+        db_table = 'inventory_windows_package'
+
+    view_name = 'SurveyWindowsPackageInfo'
+    _xobj = xobj.XObjMetadata(tag='windows_package_info')
+
+    # TODO: COMPLETE
+
+#***********************************************************
+
+class WindowsPatchInfo(modellib.XObjIdModel):
+    class Meta:
+        db_table = 'inventory_windows_patch'
+
+    view_name = 'SurveyWindowsPatchInfo'
+    _xobj = xobj.XObjMetadata(tag='windows_patch_info')
+    
+    # TODO: COMPLETE
+
 #***********************************************************
 
 class ServiceInfo(modellib.XObjIdModel):
@@ -204,6 +227,17 @@ class ServiceInfo(modellib.XObjIdModel):
 
     def get_url_key(self, *args, **kwargs):
         return [ self.service_id ]
+
+#***********************************************************
+
+class WindowsServiceInfo(modellib.XObjIdModel):
+    class Meta:
+        db_table = 'inventory_windows_service'
+
+    view_name = 'SurveyWindowsServiceInfo'
+    _xobj = xobj.XObjMetadata(tag='windows_service_info')
+    
+    # TODO: COMPLETE
 
 #***********************************************************
 
@@ -249,7 +283,6 @@ class SurveyConaryPackage(modellib.XObjIdModel):
 
     class Meta:
         db_table = 'inventory_survey_conary_package'
-
     _xobj               = xobj.XObjMetadata(tag='conary_package')
     view_name           = 'SurveyConaryPackage'
 
@@ -263,12 +296,34 @@ class SurveyConaryPackage(modellib.XObjIdModel):
 
 #***********************************************************
 
+class SurveyWindowsPackage(modellib.XObjIdModel):
+
+    class Meta:
+        db_table = 'inventory_survey_windows_package'
+    _xobj               = xobj.XObjMetadata(tag='windows_package')
+    view_name           = 'SurveyWindowsPackage'
+    
+    # TODO: COMPLETE
+
+
+#***********************************************************
+
+class SurveyWindowsPatch(modellib.XObjIdModel):
+
+    class Meta:
+        db_table = 'inventory_survey_windows_patch'
+    _xobj               = xobj.XObjMetadata(tag='windows_patch')
+    view_name           = 'SurveyWindowsPatch'
+    
+    # TODO: COMPLETE
+
+#***********************************************************
+
 class SurveyService(modellib.XObjIdModel):
     ''' A service that exists on a given system '''
 
     class Meta:
         db_table = 'inventory_survey_service'
-
     _xobj = xobj.XObjMetadata(tag='service')
     view_name       = 'SurveyService'
 
@@ -280,6 +335,24 @@ class SurveyService(modellib.XObjIdModel):
     
     def get_url_key(self, *args, **kwargs):
         return [ self.service_id ] 
+
+#***********************************************************
+
+class SurveyWindowsService(modellib.XObjIdModel):
+    
+    class Meta:
+        db_table = 'inventory_survey_windows_service'
+    _xobj = xobj.XObjMetadata(tag='windows_service')
+    view_name       = 'SurveyWindowsService'
+    
+    # TODO: COMPLETE
+
+class SurveyWindowsPatchPackageLink(modellib.XObjIdModel):
+  
+    class Meta:
+        db_table = 'inventory_windows_patch_windows_package'
+    
+    # TODO: COMPLETE
 
 #***********************************************************
     
