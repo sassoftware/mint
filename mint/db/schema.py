@@ -1718,6 +1718,7 @@ def _createSurveyTables(db, cfg):
         "map_id" %(PRIMARYKEY)s,
         "survey_id" INTEGER NOT NULL REFERENCES "inventory_survey" (survey_id) ON DELETE CASCADE,
         "windows_package_id" INTEGER NOT NULL REFERENCES "inventory_windows_package" (windows_package_id) ON DELETE CASCADE,
+        "install_date" TIMESTAMP WITH TIME ZONE NOT NULL,
         "install_source" TEXT NOT NULL,
         "local_package" TEXT NOT NULL
     """)
@@ -1744,7 +1745,7 @@ def _createSurveyTables(db, cfg):
     createTable(db, 'inventory_survey_windows_patch', """
         "map_id" %(PRIMARYKEY)s,
         "survey_id" INTEGER NOT NULL REFERENCES "inventory_survey" (survey_id) ON DELETE CASCADE,
-        "windows_package_id" INTEGER NOT NULL REFERENCES "inventory_windows_package" (windows_package_id) ON DELETE CASCADE,
+        "windows_patch_id" INTEGER NOT NULL REFERENCES "inventory_windows_patch" (windows_patch_id) ON DELETE CASCADE,
         "local_package" TEXT NOT NULL,
         "install_date" TIMESTAMP WITH TIME ZONE NOT NULL,
         "is_installed" BOOLEAN NOT NULL

@@ -198,6 +198,8 @@ class SurveyTests(XMLTestCase):
         # verify we can delete the survey
         url = "inventory/surveys/%s" % '505'
         response = self._delete(url, username='admin', password='password')
+        if response.status_code != 204:
+            print "response.content = %s" % response.content
         self.assertEqual(response.status_code, 204)
         # verify system did not cascade 
         # and that since we deleted teh latest survey there is still a latest
