@@ -137,22 +137,28 @@ class SurveyTests(XMLTestCase):
             version      = '1.0'
         )
         windows_package.save()
+
         windows_patch = survey_models.WindowsPatchInfo(
             display_name  = 'Add Internet Multiplayer',
             uninstallable = True,
             patch_code    = 'up-c-down-c-left-c-right-c',
             product_code  = 'up-a-down-a-left-a-right-a',
             transforms    = 'bubblebee,starscream'
+
         )
+
         windows_patch.save()
+        windows_patch_info = survey_models.WindowsPatchInfo.objects.get(display_name='Add Internet Multiplayer')
+        windows_package_info = survey_models.WindowsPackageInfo.objects.get(product_name='contra')
+        windows_patch_info.save()
         windows_patch_link = survey_models.SurveyWindowsPatchPackageLink(
-            windows_patch = windows_patch,
-            windows_package = windows_package
+            windows_patch_info   = windows_patch_info,
+            windows_package_info = windows_package_info
         )
         windows_patch_link.save()
         spackage = survey_models.SurveyWindowsPackage(
             survey = survey,
-            windows_package_info = windows_package,
+            windows_package_info = windows_package_info,
             install_source='e:/path/to/stuff',
             local_package='c:/path/to/stuff',
             install_date=self.mgr.sysMgr.now(),
@@ -160,7 +166,7 @@ class SurveyTests(XMLTestCase):
         spackage.save()
         spatch = survey_models.SurveyWindowsPatch(
             survey = survey, 
-            windows_patch_info = windows_patch,
+            windows_patch_info = windows_patch_info,
             local_package='d:/path/to/stuff',
             is_installed=True,
             install_date=self.mgr.sysMgr.now(),

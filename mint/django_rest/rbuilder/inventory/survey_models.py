@@ -10,7 +10,7 @@ from mint.django_rest.rbuilder import modellib
 from mint.django_rest.rbuilder.users import models as usermodels
 from xobj import xobj
 import sys
-from xobj import xobj2
+from django.core.urlresolvers import reverse
 
 XObjHidden = modellib.XObjHidden
 # APIReadOnly = modellib.APIReadOnly
@@ -40,6 +40,24 @@ class Surveys(modellib.Collection):
     def save(self):
         # shouldn't really be surfacing this
         return [s.save() for s in self.survey]
+
+#***********************************************************
+
+class WindowsPackageInfoList(modellib.UnpaginatedCollection):
+   class Meta:
+       abstract = True
+   _xobj_no_register = True
+   _xobj = xobj.XObjMetadata(tag = 'windows_packages_info')
+   list_fields = ['windows_package']
+   windows_package = []
+   view_name = None # ???
+
+   def __init__(self):
+       modellib.UnpaginatedCollection.__init__(self)
+
+   def save(self):
+       # not supported -- saved much more manually
+       return
 
 
 #***********************************************************
@@ -207,17 +225,39 @@ class WindowsPackageInfo(modellib.XObjIdModel):
 
 #***********************************************************
 
+# get around various modellib funness
+class FakeWindowsPackageInfo(modellib.XObjIdModel):
+    class Meta:
+        abstract = True
+    _xobj = xobj.XObjMetadata(
+        tag="windows_package_info",
+        attributes= { 'id' : str }
+    )
+    _xobj_no_register = True
+ 
+    publisher          = models.TextField(null=False)
+    product_code       = models.TextField(null=False)
+    package_code       = models.TextField(null=False)
+    product_name       = models.TextField(null=False)
+    type               = models.TextField(null=False)
+    upgrade_code       = models.TextField(null=False)
+    version            = models.TextField(null=False)
+    id                 = models.TextField(null=False)
+
+#***********************************************************
+
 class WindowsPatchInfo(modellib.XObjIdModel):
     class Meta:
         db_table = 'inventory_windows_patch'
 
     view_name = 'SurveyWindowsPatchInfo'
-    _xobj = xobj.XObjMetadata(tag='windows_patch_info')
+    _xobj = xobj.XObjMetadata(tag='windows_patch_info',
+         attributes = { 'id' : str }
+    )
     summary_view = [ 
         'display_name', 'uninstallable', 'patch_code',
         'product_code', 'transforms', 'windows_packages'
     ]    
-    # FIXME: windows_packages (embedded) need to show up!
     
     windows_patch_id = models.AutoField(primary_key=True)
     display_name     = models.TextField(null=False)
@@ -225,12 +265,22 @@ class WindowsPatchInfo(modellib.XObjIdModel):
     patch_code       = models.TextField(null=False)
     product_code     = models.TextField(null=False)
     transforms       = models.TextField(null=False)
-    _windows_packages = modellib.DeferredManyToManyField('WindowsPackageInfo', through='inventory.SurveyWindowsPatchPackageLink', related_name='+')
     windows_packages = modellib.SyntheticField()
 
     def computeSyntheticFields(self, sender, **kwargs):
-        self.windows_packages = 'fixme'
-        # xobj2.Document(self, rootName='windows_packages')
+        self.windows_packages = WindowsPackageInfoList()
+        links = SurveyWindowsPatchPackageLink.objects.filter(
+            windows_patch_info = self
+        )
+        results = [ l.windows_package_info for l in links ]
+        # forgive me
+        results = [ FakeWindowsPackageInfo(
+            publisher = wp.publisher, product_code = wp.product_code,
+            package_code = wp.package_code, product_name = wp.product_name,
+            type = wp.type, upgrade_code = wp.upgrade_code, version = wp.version,
+            id = reverse('SurveyWindowsPackageInfo', args=[ wp.pk ])
+        ) for wp in results ]
+        self.windows_packages.window_package = results
  
     def get_url_key(self, *args, **kwargs):
         return [ self.windows_patch_id ] 
@@ -365,7 +415,7 @@ class SurveyWindowsPatch(modellib.XObjIdModel):
     windows_patch_id     = models.AutoField(primary_key=True, db_column='map_id')
     survey               = modellib.ForeignKey(Survey, related_name='windows_patches')
     windows_patch_info   = modellib.ForeignKey(WindowsPatchInfo, 
-        related_name='survey_windows_patches', 
+        related_name='+',
         db_column='windows_patch_id', null=False)
     local_package        = models.TextField(null=False)
     install_date         = modellib.DateTimeUtcField(auto_now_add=False, null=True)
@@ -417,9 +467,9 @@ class SurveyWindowsPatchPackageLink(modellib.XObjIdModel):
     class Meta:
         db_table = 'inventory_windows_patch_windows_package'
     
-    link_id             = models.AutoField(primary_key=True, db_column='map_id')
-    windows_package     = modellib.ForeignKey(WindowsPackageInfo)
-    windows_patch       = modellib.ForeignKey(WindowsPatchInfo)
+    link_id              = models.AutoField(primary_key=True, db_column='map_id')
+    windows_package_info = modellib.ForeignKey(WindowsPackageInfo, db_column='windows_package_id', related_name='+')
+    windows_patch_info   = modellib.ForeignKey(WindowsPatchInfo, db_column='windows_patch_id', related_name='+')
     
 
 #***********************************************************
