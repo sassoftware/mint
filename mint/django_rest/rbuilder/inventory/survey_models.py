@@ -10,6 +10,7 @@ from mint.django_rest.rbuilder import modellib
 from mint.django_rest.rbuilder.users import models as usermodels
 from xobj import xobj
 import sys
+from xobj import xobj2
 
 XObjHidden = modellib.XObjHidden
 # APIReadOnly = modellib.APIReadOnly
@@ -52,7 +53,10 @@ class Survey(modellib.XObjIdModel):
     _xobj_explicit_accessors = set([
          'conary_packages',
          'rpm_packages',
+         'windows_packages',
+         'windows_patches',
          'services',
+         'windows_services',
          'tags',
     ])
     _xobj = xobj.XObjMetadata(
@@ -185,6 +189,9 @@ class WindowsPackageInfo(modellib.XObjIdModel):
 
     view_name = 'SurveyWindowsPackageInfo'
     _xobj = xobj.XObjMetadata(tag='windows_package_info')
+    summary_view = [ 'publisher', 'product_code', 'package_code',
+                     'product_name' 'type', 'upgrade_code',
+                     'version' ]
 
     windows_package_id = models.AutoField(primary_key=True)
     publisher          = models.TextField(null=False)
@@ -194,7 +201,7 @@ class WindowsPackageInfo(modellib.XObjIdModel):
     type               = models.TextField(null=False)
     upgrade_code       = models.TextField(null=False)
     version            = models.TextField(null=False)
-    
+ 
     def get_url_key(self, *args, **kwargs):
         return [ self.windows_package_id ]
 
@@ -206,6 +213,11 @@ class WindowsPatchInfo(modellib.XObjIdModel):
 
     view_name = 'SurveyWindowsPatchInfo'
     _xobj = xobj.XObjMetadata(tag='windows_patch_info')
+    summary_view = [ 
+        'display_name', 'uninstallable', 'patch_code',
+        'product_code', 'transforms', 'windows_packages'
+    ]    
+    # FIXME: windows_packages (embedded) need to show up!
     
     windows_patch_id = models.AutoField(primary_key=True)
     display_name     = models.TextField(null=False)
@@ -213,7 +225,13 @@ class WindowsPatchInfo(modellib.XObjIdModel):
     patch_code       = models.TextField(null=False)
     product_code     = models.TextField(null=False)
     transforms       = models.TextField(null=False)
+    _windows_packages = modellib.DeferredManyToManyField('WindowsPackageInfo', through='inventory.SurveyWindowsPatchPackageLink', related_name='+')
+    windows_packages = modellib.SyntheticField()
 
+    def computeSyntheticFields(self, sender, **kwargs):
+        self.windows_packages = 'fixme'
+        # xobj2.Document(self, rootName='windows_packages')
+ 
     def get_url_key(self, *args, **kwargs):
         return [ self.windows_patch_id ] 
 
@@ -248,6 +266,10 @@ class WindowsServiceInfo(modellib.XObjIdModel):
 
     view_name = 'SurveyWindowsServiceInfo'
     _xobj = xobj.XObjMetadata(tag='windows_service_info')
+
+    summary_view = [
+        'name', 'display_name', 'type', 'handle', 'required_services'
+    ]
 
     windows_service_id = models.AutoField(primary_key=True)
     name               = models.TextField(null=False)
@@ -342,7 +364,7 @@ class SurveyWindowsPatch(modellib.XObjIdModel):
 
     windows_patch_id     = models.AutoField(primary_key=True, db_column='map_id')
     survey               = modellib.ForeignKey(Survey, related_name='windows_patches')
-    windows_package_info = modellib.ForeignKey(WindowsPatchInfo, 
+    windows_patch_info   = modellib.ForeignKey(WindowsPatchInfo, 
         related_name='survey_windows_patches', 
         db_column='windows_patch_id', null=False)
     local_package        = models.TextField(null=False)
@@ -383,7 +405,7 @@ class SurveyWindowsService(modellib.XObjIdModel):
 
     windows_service_id   = models.AutoField(primary_key=True, db_column='map_id')
     survey               = modellib.ForeignKey(Survey, related_name='windows_services', null=False)
-    windows_service_info = modellib.ForeignKey(ServiceInfo, related_name='survey_windows_services', db_column='windows_service_id', null=False)
+    windows_service_info = modellib.ForeignKey(WindowsServiceInfo, related_name='survey_windows_services', db_column='windows_service_id', null=False)
     status               = models.TextField(null=False)
  
     def get_url_key(self, *args, **kwargs):

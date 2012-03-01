@@ -53,7 +53,7 @@ class SurveyTests(XMLTestCase):
             username='admin', password='password')
         self.assertEqual(response.status_code, 200)
  
-    def testSurveySerialization(self):
+    def test_survey_serialization(self):
         uuid = '00000000-0000-4000-0000-000000000000'
         user1 = usersmodels.User.objects.get(user_name='JeanValjean1')
         sys = self._makeSystem()
@@ -111,6 +111,86 @@ class SurveyTests(XMLTestCase):
             username='admin', password='password')
         self.assertEqual(response.status_code, 200)
         self.assertXMLEquals(response.content, testsxml.surveys_xml)
+
+    def test_survey_serialization_windows(self):
+
+        uuid = '00000000-0000-8000-0000-000000000000'
+        user1 = usersmodels.User.objects.get(user_name='JeanValjean1')
+        sys = self._makeSystem()
+        survey = survey_models.Survey(
+            name='x', uuid=uuid, system=sys,
+            created_by=user1, modified_by=user1
+        )
+        survey.save()
+        tag1 = survey_models.SurveyTag(
+            survey = survey,
+            name = 'needs_review'
+        )
+        tag1.save()
+        windows_package = survey_models.WindowsPackageInfo(
+            publisher    = 'konami', 
+            product_code = 'up-up-down-down',
+            package_code = 'left-right-right-left',
+            product_name = 'contra',
+            type         = 'msi', 
+            upgrade_code = 'B-A-B-A select-start',
+            version      = '1.0'
+        )
+        windows_package.save()
+        windows_patch = survey_models.WindowsPatchInfo(
+            display_name  = 'Add Internet Multiplayer',
+            uninstallable = True,
+            patch_code    = 'up-c-down-c-left-c-right-c',
+            product_code  = 'up-a-down-a-left-a-right-a',
+            transforms    = 'bubblebee,starscream'
+        )
+        windows_patch.save()
+        windows_patch_link = survey_models.SurveyWindowsPatchPackageLink(
+            windows_patch = windows_patch,
+            windows_package = windows_package
+        )
+        windows_patch_link.save()
+        spackage = survey_models.SurveyWindowsPackage(
+            survey = survey,
+            windows_package_info = windows_package,
+            install_source='e:/path/to/stuff',
+            local_package='c:/path/to/stuff',
+            install_date=self.mgr.sysMgr.now(),
+        )
+        spackage.save()
+        spatch = survey_models.SurveyWindowsPatch(
+            survey = survey, 
+            windows_patch_info = windows_patch,
+            local_package='d:/path/to/stuff',
+            is_installed=True,
+            install_date=self.mgr.sysMgr.now(),
+        )
+        spatch.save()
+        service = survey_models.WindowsServiceInfo(
+            name = 'minesweeper', 
+            display_name='minesweeper',
+            type = 'AcmeService32',
+            handle = 'AcmeServiceHandle',
+            required_services = 'one,two,three',
+        )
+        service.save()
+        iss = survey_models.SurveyWindowsService(
+            survey = survey, windows_service_info = service,
+            status = 'running',
+        )
+        iss.save()
+        response = self._get("inventory/surveys/%s" % uuid,
+            username='admin', password='password')
+        self.assertEqual(response.status_code, 200)
+        #print response.content
+        # *** WORK IN PROGRESS ***
+        #self.assertXMLEquals(response.content, testsxml.survey_output_xml, ignoreNodes=['created_date','install_date','modified_date'])
+
+        #url = "inventory/systems/%s/surveys" % sys.pk
+        #response = self._get(url,
+        #    username='admin', password='password')
+        #self.assertEqual(response.status_code, 200)
+        #self.assertXMLEquals(response.content, testsxml.surveys_xml)
 
     def test_survey_post(self):
         # make sure we can post a survey and it mostly looks
