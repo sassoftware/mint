@@ -56,7 +56,22 @@ class WindowsPackageInfoList(modellib.UnpaginatedCollection):
        modellib.UnpaginatedCollection.__init__(self)
 
    def save(self):
-       # not supported -- saved much more manually
+       return
+#***********************************************************
+
+class WindowsRequiredServiceInfoList(modellib.UnpaginatedCollection):
+   class Meta:
+       abstract = True
+   _xobj_no_register = True
+   _xobj = xobj.XObjMetadata(tag = 'required_windows_services_info')
+   list_fields = ['windows_service']
+   windows_service = []
+   view_name = None
+
+   def __init__(self):
+       modellib.UnpaginatedCollection.__init__(self)
+
+   def save(self):
        return
 
 
@@ -326,7 +341,37 @@ class WindowsServiceInfo(modellib.XObjIdModel):
     display_name       = models.TextField(null=False)
     type               = models.TextField(null=False)
     handle             = models.TextField(null=False)
-    required_services  = models.TextField(null=False)    
+    _required_services = XObjHidden(models.TextField(null=False, db_column='required_services')) 
+
+    required_services  = modellib.SyntheticField()
+
+    def computeSyntheticFields(self, sender, **kwargs):
+        self.required_services = WindowsRequiredServiceInfoList()
+        services = []
+        if services != "":
+            services = self._required_services.split(",")
+        results = WindowsServiceInfo.objects.filter(name__in=services)
+        results = [ FakeWindowsServiceInfo(
+            name = ws.name, display_name = ws.display_name,
+            id = reverse('SurveyWindowsPackageInfo', args=[ ws.pk ])
+        ) for ws in results ]
+        self.required_services.window_service = results
+
+#***********************************************************
+
+class FakeWindowsServiceInfo(modellib.XObjIdModel):
+    class Meta:
+        abstract = True
+
+    _xobj = xobj.XObjMetadata(
+        tag="windows_package_info",
+        attributes= { 'id' : str }
+    )
+    _xobj_no_register = True
+    
+    id                 = models.TextField(null=False)
+    name               = models.TextField(null=False)
+    display_name       = models.TextField(null=False)
 
 #***********************************************************
 

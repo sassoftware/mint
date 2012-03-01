@@ -177,18 +177,33 @@ class SurveyTests(XMLTestCase):
             display_name='minesweeper',
             type = 'AcmeService32',
             handle = 'AcmeServiceHandle',
-            required_services = 'one,two,three',
+            _required_services = 'solitaire',
         )
         service.save()
+        service2 = survey_models.WindowsServiceInfo(
+            name = 'solitaire', 
+            display_name='solitare',
+            type = 'AcmeService32',
+            handle = 'AcmeServiceHandle',
+            _required_services = '',
+        )
+        service2.save()
         iss = survey_models.SurveyWindowsService(
             survey = survey, windows_service_info = service,
             status = 'running',
         )
         iss.save()
+        iss2 = survey_models.SurveyWindowsService(
+            survey = survey, windows_service_info = service2,
+            status = 'stopped',
+        )
+        iss2.save()
         response = self._get("inventory/surveys/%s" % uuid,
             username='admin', password='password')
         self.assertEqual(response.status_code, 200)
-        #print response.content
+
+
+        print response.content
         # *** WORK IN PROGRESS ***
         #self.assertXMLEquals(response.content, testsxml.survey_output_xml, ignoreNodes=['created_date','install_date','modified_date'])
 
