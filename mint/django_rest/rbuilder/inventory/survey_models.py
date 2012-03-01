@@ -438,7 +438,7 @@ class SurveyWindowsPackage(modellib.XObjIdModel):
     view_name            = 'SurveyWindowsPackage'
     
     windows_package_id   = models.AutoField(primary_key=True, db_column='map_id')
-    survey               = modellib.ForeignKey(Survey, related_name='windows_packages', null=False)
+    survey               = XObjHidden(modellib.ForeignKey(Survey, related_name='windows_packages', null=False))
     windows_package_info = modellib.ForeignKey(WindowsPackageInfo, related_name='survey_windows_packages', db_column='windows_package_id', null=False)
     
     install_source       = models.TextField(null=False)
@@ -458,7 +458,7 @@ class SurveyWindowsPatch(modellib.XObjIdModel):
     view_name            = 'SurveyWindowsPatch'
 
     windows_patch_id     = models.AutoField(primary_key=True, db_column='map_id')
-    survey               = modellib.ForeignKey(Survey, related_name='windows_patches')
+    survey               = XObjHidden(modellib.ForeignKey(Survey, related_name='windows_patches'))
     windows_patch_info   = modellib.ForeignKey(WindowsPatchInfo, 
         related_name='+',
         db_column='windows_patch_id', null=False)
@@ -499,7 +499,7 @@ class SurveyWindowsService(modellib.XObjIdModel):
     view_name       = 'SurveyWindowsService'
 
     windows_service_id   = models.AutoField(primary_key=True, db_column='map_id')
-    survey               = modellib.ForeignKey(Survey, related_name='windows_services', null=False)
+    survey               = XObjHidden(modellib.ForeignKey(Survey, related_name='windows_services', null=False))
     windows_service_info = modellib.ForeignKey(WindowsServiceInfo, related_name='survey_windows_services', db_column='windows_service_id', null=False)
     status               = models.TextField(null=False)
  

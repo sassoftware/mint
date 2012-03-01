@@ -3839,6 +3839,9 @@ survey_output_xml = """
         <tag_id>1</tag_id>
       </tag>
     </tags>
+    <windows_patches/>
+    <windows_packages/>
+    <windows_services/>
     <rpm_packages>
       <rpm_package id="http://testserver/api/v1/inventory/survey_rpm_packages/1">
         <survey id="http://testserver/api/v1/inventory/surveys/00000000-0000-4000-0000-000000000000"/>

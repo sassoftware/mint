@@ -202,8 +202,7 @@ class SurveyTests(XMLTestCase):
             username='admin', password='password')
         self.assertEqual(response.status_code, 200)
 
-
-        print response.content
+        #print response.content
         # *** WORK IN PROGRESS ***
         #self.assertXMLEquals(response.content, testsxml.survey_output_xml, ignoreNodes=['created_date','install_date','modified_date'])
 
