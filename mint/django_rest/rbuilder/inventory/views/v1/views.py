@@ -64,8 +64,20 @@ def rbac_can_read_conary_package(view, request, id, *args, **kwargs):
     conary = view.mgr.getSurveyConaryPackage(id)
     return rbac_can_read_system_id(view, request, conary.survey.system.pk)
 
+def rbac_can_read_windows_package(view, request, id, *args, **kwargs):
+    conary = view.mgr.getSurveyWindowsPackage(id)
+    return rbac_can_read_system_id(view, request, conary.survey.system.pk)
+
+def rbac_can_read_windows_patch(view, request, id, *args, **kwargs):
+    conary = view.mgr.getSurveyWindowsPatch(id)
+    return rbac_can_read_system_id(view, request, conary.survey.system.pk)
+
 def rbac_can_read_service(view, request, id, *args, **kwargs):
     service = view.mgr.getSurveyService(id)
+    return rbac_can_read_system_id(view, request, service.survey.system.pk)
+
+def rbac_can_read_windows_service(view, request, id, *args, **kwargs):
+    service = view.mgr.getSurveyWindowsService(id)
     return rbac_can_read_system_id(view, request, service.survey.system.pk)
 
 def rbac_can_read_survey_tag(view, request, id, *args, **kwargs):
@@ -870,12 +882,24 @@ class SurveyConaryPackageService(BaseInventoryService):
         return self.mgr.getSurveyConaryPackage(id)
 
 class SurveyWindowsPackageService(BaseInventoryService):
-    # FIXME
-    pass
+    
+    @rbac(rbac_can_read_windows_package)
+    @return_xml
+    def rest_GET(self, request, id):
+        return self.get(id)
+
+    def get(self, id):
+        return self.mgr.getSurveyWindowsPackage(id)
 
 class SurveyWindowsPatchService(BaseInventoryService):
-    # FIXME
-    pass
+
+    @rbac(rbac_can_read_windows_patch)
+    @return_xml
+    def rest_GET(self, request, id):
+        return self.get(id)
+
+    def get(self, id):
+        return self.mgr.getSurveyWindowsPatch(id)
 
 class SurveyServiceService(BaseInventoryService):
     ''' The instance of an service installed on a given system (per survey) '''
@@ -890,8 +914,15 @@ class SurveyServiceService(BaseInventoryService):
         return self.mgr.getSurveyService(id)
 
 class SurveyWindowsServiceService(BaseInventoryService):
-    # FIXME
-    pass
+
+    @rbac(rbac_can_read_windows_service)
+    @access.authenticated
+    @return_xml
+    def rest_GET(self, request, id):
+        return self.get(id)
+
+    def get(self, id):
+        return self.mgr.getSurveyWindowsService(id)
 
 
 class SurveyDiffService(BaseInventoryService):
@@ -932,12 +963,24 @@ class SurveyConaryPackageInfoService(BaseInventoryService):
         return self.mgr.getSurveyConaryPackageInfo(id)
 
 class SurveyWindowsPackageInfoService(BaseInventoryService):
-    # FIXME
-    pass
+
+    @access.authenticated
+    @return_xml
+    def rest_GET(self, request, id):
+        return self.get(id)
+
+    def get(self, id):
+        return self.mgr.getSurveyWindowsPackageInfo(id)
 
 class SurveyWindowsPatchInfoService(BaseInventoryService):
-    # FIXME
-    pass
+
+    @access.authenticated
+    @return_xml
+    def rest_GET(self, request, id):
+        return self.get(id)
+
+    def get(self, id):
+        return self.mgr.getSurveyWindowsPatchInfo(id)
 
 class SurveyServiceInfoService(BaseInventoryService):
     ''' The definition of a service state, shared between many systems '''
@@ -951,8 +994,15 @@ class SurveyServiceInfoService(BaseInventoryService):
         return self.mgr.getSurveyServiceInfo(id)
 
 class SurveyWindowsServiceInfoService(BaseInventoryService):
-    # pass
-    pass
+
+    @access.authenticated
+    @return_xml
+    def rest_GET(self, request, id):
+        return self.get(id)
+
+    def get(self, id):
+        return self.mgr.getSurveyWindowsServiceInfo(id)
+
 
 class SurveyTagService(BaseInventoryService):
     ''' User assignable tags per survey '''

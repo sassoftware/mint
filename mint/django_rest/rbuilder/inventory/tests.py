@@ -273,6 +273,14 @@ class SurveyTests(XMLTestCase):
             data = testsxml2.windows_upload_survey_xml,
             username='admin', password='password')
         self.assertEqual(response.status_code, 200)
+         
+        self._hiturl('inventory/survey_windows_patches/1')
+        self._hiturl('inventory/windows_patch_info/1')
+        self._hiturl('inventory/windows_package_info/1')
+        self._hiturl('inventory/survey_windows_packages/1')
+        self._hiturl('inventory/survey_windows_services/2')
+        self._hiturl('inventory/windows_service_info/1')
+
 
     def test_survey_diff(self):
 
