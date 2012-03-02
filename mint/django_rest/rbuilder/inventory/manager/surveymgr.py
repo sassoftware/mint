@@ -68,8 +68,20 @@ class SurveyManager(basemanager.BaseManager):
         return survey_models.SurveyConaryPackage.objects.get(pk=id)
 
     @exposed
+    def getSurveyWindowsPackage(self,id):
+        return survey_models.SurveyWindowsPackage.objects.get(pk=id)
+
+    @exposed
+    def getSurveyWindowsPatch(self,id):
+        return survey_models.SurveyWindowsPatch.objects.get(pk=id)
+
+    @exposed
     def getSurveyService(self, id):
         return survey_models.SurveyService.objects.get(pk=id)
+    
+    @exposed
+    def getSurveyWindowsService(self, id):
+        return survey_models.SurveyWindowsService.objects.get(pk=id)
 
     @exposed
     def getSurveyRpmPackageInfo(self, id):
@@ -80,8 +92,20 @@ class SurveyManager(basemanager.BaseManager):
         return survey_models.ConaryPackageInfo.objects.get(pk=id)
 
     @exposed
+    def getSurveyWindowsPackageInfo(self, id):
+        return survey_models.WindowsPackageInfo.objects.get(pk=id)
+
+    @exposed
+    def getSurveyWindowsPatchInfo(self, id):
+        return survey_models.WindowsPatchInfo.objects.get(pk=id)
+
+    @exposed
     def getSurveyServiceInfo(self, id):
         return survey_models.ServiceInfo.objects.get(pk=id)
+
+    @exposed
+    def getSurveyWindowsServiceInfo(self, id):
+        return survey_models.WindowsServiceInfo.objects.get(pk=id)
     
     @exposed
     def getSurveyTag(self, id):
@@ -134,6 +158,16 @@ class SurveyManager(basemanager.BaseManager):
     def _bool(self, x):
         return str(x).lower == 'true'
 
+    def _date(self, x):
+        if x == '':
+            return datetime.datetime.utcfromtimestamp(0)
+        try:
+            idate = datetime.datetime.utcfromtimestamp(int(x))
+        except ValueError:
+            # happens when posting Englishey dates and is not the normal route
+            idate = x
+        return idate
+
     @exposed
     def updateSurveyFromXml(self, survey_uuid, xml):
         xmodel = xobj.parse(xml)
@@ -165,12 +199,14 @@ class SurveyManager(basemanager.BaseManager):
 
         system = inventory_models.System.objects.get(pk=system_id)
 
-        xsurvey          = model.survey
-        xrpm_packages    = self._subel(xsurvey, 'rpm_packages', 'rpm_package')
-        xconary_packages = self._subel(xsurvey, 'conary_packages', 'conary_package')
-        xservices        = self._subel(xsurvey, 'services', 'service')
-        xtags            = self._subel(xsurvey, 'tags', 'tag')
-
+        xsurvey           = model.survey
+        xrpm_packages     = self._subel(xsurvey, 'rpm_packages', 'rpm_package')
+        xconary_packages  = self._subel(xsurvey, 'conary_packages', 'conary_package')
+        xwindows_packages = self._subel(xsurvey, 'windows_packages', 'windows_package')
+        xwindows_patches  = self._subel(xsurvey, 'windows_patches', 'windows_patch')
+        xservices         = self._subel(xsurvey, 'services', 'service')
+        xwindows_services = self._subel(xsurvey, 'windows_services', 'windows_service')
+        xtags             = self._subel(xsurvey, 'tags', 'tag')
 
         created_date = getattr(xsurvey, 'created_date', 0)
         created_date = datetime.datetime.utcfromtimestamp(int(created_date))
@@ -219,14 +255,7 @@ class SurveyManager(basemanager.BaseManager):
                survey           = survey,
                rpm_package_info = info,
             )
-            idate = None
-            try:
-                idate = datetime.datetime.utcfromtimestamp(int(xmodel.install_date))
-            except ValueError:
-                # happens when posting Englishey dates and is not the normal route
-                idate = xmodel.install_date
-
-            pkg.install_date = idate
+            pkg.install_date = self._date(xmodel.install_date)
             pkg.save()
 
         for xmodel in xconary_packages:
@@ -247,11 +276,69 @@ class SurveyManager(basemanager.BaseManager):
             pkg = survey_models.SurveyConaryPackage(
                 conary_package_info = info,
                 survey              = survey,
-                # TODO: not yet available in conary
-                install_date        = datetime.datetime.fromtimestamp(0)
-                # None # xmodel.install_date     
+                install_date        = self._date(xmodel.install_date)
             )
             pkg.save()
+
+        for xmodel in xwindows_packages:
+            xinfo = xmodel.windows_package_info
+            info,created = survey_models.WindowsPackageInfo.objects.get_or_create(
+                publisher    = _u(xinfo.publisher),
+                product_code = _u(xinfo.product_code),
+                package_code = _u(xinfo.package_code),
+                type         = _u(xinfo.type),
+                upgrade_code = _u(xinfo.upgrade_code),
+                version      = _u(xinfo.version)
+            )
+            pkg = survey_models.SurveyWindowsPackage(
+                windows_package_info = info,
+                survey = survey,
+                install_source = _u(xmodel.install_source),
+                local_package  = _u(xmodel.local_package),
+                install_date   = self._date(xmodel.install_date), 
+            )
+            pkg.save()
+
+        for xmodel in xwindows_patches:
+            # NOTE DEPENDENT SERVICES!!!
+            xinfo = xmodel.windows_patch_info
+            info,created = survey_models.WindowsPatchInfo.objects.get_or_create(
+                display_name   = _u(xinfo.display_name),
+                uninstallable  = self._bool(xinfo.uninstallable),
+                patch_code     = _u(xinfo.patch_code),
+                product_code   = _u(xinfo.product_code),
+                transforms     = _u(xinfo.transforms),
+            )
+            referenced_packages = self._subel(xinfo, 'windows_packages_info', 'windows_package_info')
+            packages_info = []
+            if created:
+                for rp in referenced_packages:
+                    package_infos = survey_models.WindowsPackageInfo.objects.filter(
+                        publisher    = _u(rp.publisher),
+                        product_code = _u(rp.product_code),
+                        package_code = _u(rp.package_code),
+                        type         = _u(rp.type),
+                        upgrade_code = _u(rp.upgrade_code),
+                        version      = _u(rp.version)
+                    )
+                    if len(package_infos) > 0:
+                        link, created_link = survey_models.SurveyWindowsPatchPackageLink.objects.get_or_create(
+                            windows_patch_info   = info,
+                            windows_package_info = package_infos[0]
+                        )
+                    else:
+                        # the XML's package reference was bad, but let's upload what we can
+                        # shouldn't really happen
+                        pass
+            pkg = survey_models.SurveyWindowsPatch(
+                survey             = survey,
+                windows_patch_info = info,
+                local_package      = _u(xmodel.local_package),
+                install_date       = self._date(xmodel.install_date),
+                is_installed       = self._bool(xmodel.is_installed)
+            )
+            pkg.save() 
+                
 
         for xmodel in xservices:
             xinfo = xmodel.service_info
@@ -267,6 +354,10 @@ class SurveyManager(basemanager.BaseManager):
                 status       = _u(xmodel.status),
             )
             service.save()
+
+        for xmodel in xwindows_services:
+            # TODO: implement
+            pass
 
         for xmodel in xtags:
             tag = survey_models.SurveyTag(

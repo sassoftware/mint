@@ -1,3 +1,81 @@
+# TODO: replace with capture from joebalt once availablewindows_survey_upload="""
+windows_upload_survey_xml="""
+<survey>
+  <uuid>123456789</uuid>
+  <created_date>1330699918</created_date>
+  <windows_patches>
+    <windows_patch id="1">
+      <local_package>d:/path/to/stuff</local_package>
+      <is_installed>true</is_installed>
+      <windows_patch_info>
+        <display_name>Add Internet Multiplayer</display_name>
+        <windows_packages_info>
+          <windows_package_info>
+            <publisher>konami</publisher>
+            <type>msi</type>
+            <version>1.0</version>
+            <package_code>left-right-right-left</package_code>
+            <product_code>up-up-down-down</product_code>
+            <upgrade_code>B-A-B-A select-start</upgrade_code>
+            <product_name>contra</product_name>
+          </windows_package_info>
+        </windows_packages_info>
+        <uninstallable>1</uninstallable>
+        <patch_code>up-c-down-c-left-c-right-c</patch_code>
+        <transforms>bubblebee,starscream</transforms>
+        <product_code>up-a-down-a-left-a-right-a</product_code>
+      </windows_patch_info>
+      <install_date>1330699918</install_date>
+    </windows_patch>
+  </windows_patches>
+  <services/>
+  <conary_packages/>
+  <windows_services>
+    <windows_service id="1">
+      <status>running</status>
+      <windows_service_info>
+        <display_name>minesweeper</display_name>
+        <required_windows_services_info>
+          <windows_package_info>
+            <display_name>solitare</display_name>
+            <name>solitaire</name>
+          </windows_package_info>
+        </required_windows_services_info>
+        <handle>AcmeServiceHandle</handle>
+        <name>minesweeper</name>
+        <type>AcmeService32</type>
+      </windows_service_info>
+    </windows_service>
+    <windows_service id="2">
+      <status>stopped</status>
+      <windows_service_info>
+        <display_name>solitare</display_name>
+        <required_windows_services_info/>
+        <handle>AcmeServiceHandle</handle>
+        <name>solitaire</name>
+        <type>AcmeService32</type>
+      </windows_service_info>
+    </windows_service>
+  </windows_services>
+  <windows_packages>
+    <windows_package id="1">
+      <windows_package_info>
+          <publisher>konami</publisher>
+          <type>msi</type>
+          <version>1.0</version>
+          <package_code>left-right-right-left</package_code>
+          <product_code>up-up-down-down</product_code>
+          <upgrade_code>B-A-B-A select-start</upgrade_code>
+          <product_name>contra</product_name>
+      </windows_package_info>
+      <install_date>1330699918</install_date>
+      <install_source>e:/path/to/stuff</install_source>
+      <local_package>c:/path/to/stuff</local_package>
+    </windows_package>
+  </windows_packages>
+</survey>
+"""
+
 very_long_survey="""
 <survey><rpm_packages><rpm_package id="62"><rpm_package_info><type>rpm</type><name>perl-Time-HiRes</name><epoch>4</epoch><version>1.9721</version><release>115.el6</release><architecture>x86_64</architecture><description>The Time::HiRes module implements a Perl interface to the usleep, nanosleep,
 ualarm, gettimeofday, and setitimer/getitimer system calls, in other words,

@@ -258,6 +258,51 @@ class SurveyTests(XMLTestCase):
         sys = models.System.objects.get(pk=sys.pk)
         self.assertTrue(sys.latest_survey.created_date is not None)
 
+    def test_survey_post(self):
+        # make sure we can post a survey and it mostly looks
+        # like the model saved version above -- much of the
+        # data posted is not required for input (like hrefs)
+        sys = self._makeSystem()
+        url = "inventory/systems/%s/surveys" % sys.pk
+        response = self._post(url,
+            data = testsxml2.survey_windows_post_xml,
+            username='admin', password='password')
+        self.assertEqual(response.status_code, 200)
+
+        response = self._get(url,
+            username='admin', password='password')
+        self.assertEqual(response.status_code, 200)
+
+        url = "inventory/surveys/1234"
+        response = self._get(url,
+            username='admin', password='password')
+        self.assertEqual(response.status_code, 200)
+        #self.assertXMLEquals(response.content, testsxml.survey_output_xml)      
+        # make sure inline urls work
+        self._hiturl("inventory/survey_tags/1")
+        self._hiturl("inventory/survey_rpm_packages/1")
+        self._hiturl("inventory/survey_conary_packages/1")
+        self._hiturl("inventory/survey_services/1")
+        self._hiturl("inventory/rpm_package_info/1")
+        self._hiturl("inventory/conary_package_info/1")
+        self._hiturl("inventory/service_info/1")
+
+        url = "inventory/surveys/1234"
+        response = self._put(url,
+            data = testsxml.survey_mod_xml,
+            username='admin', password='password')
+        self.assertEqual(response.status_code, 200)
+        surv = survey_models.Survey.objects.get(uuid='1234')
+        self.assertEqual(surv.removable, False)
+
+        # post a second survey to verify that updating the latest survey
+        # info still worksand see if the latest survey date matches
+        response = self._post("inventory/systems/%s/surveys" % sys.pk,
+            data = testsxml.survey_input_xml,
+            username='admin', password='password')
+        self.assertEqual(response.status_code, 200)
+        sys = models.System.objects.get(pk=sys.pk)
+        self.assertTrue(sys.latest_survey.created_date is not None)
         
     def test_survey_post_long(self):
         sys = self._makeSystem()
@@ -265,6 +310,15 @@ class SurveyTests(XMLTestCase):
         response = self._post(url,
             data = testsxml2.very_long_survey,
             username='admin', password='password')
+        self.assertEqual(response.status_code, 200)
+
+    def test_survey_post_windows(self):
+        sys = self._makeSystem()
+        url = "inventory/systems/%s/surveys" % sys.pk
+        response = self._post(url,
+            data = testsxml2.windows_upload_survey_xml,
+            username='admin', password='password')
+        #print response.content
         self.assertEqual(response.status_code, 200)
 
     def test_survey_diff(self):
