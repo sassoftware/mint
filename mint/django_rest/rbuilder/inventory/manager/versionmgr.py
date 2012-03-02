@@ -308,13 +308,17 @@ class VersionManager(basemanager.BaseManager):
         Generate config descriptor for all top level items on a system.
         """
 
-        desc = descriptor.BaseDescriptor()
+        desc = descriptor.SystemConfigurationDescriptor()
+        desc.setDisplayName('Configuration Descriptor')
+        desc.addDescription('Configuration Descriptor')
+
         fields = desc.getDataFields()
         for trove in system.installed_software.all():
             fields.extend(self._getTroveConfigDescriptor(trove))
 
         out = StringIO()
         desc.serialize(out)
+        out.seek(0)
 
         return out.read()
 
