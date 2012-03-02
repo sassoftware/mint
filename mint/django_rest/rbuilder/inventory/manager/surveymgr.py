@@ -356,8 +356,22 @@ class SurveyManager(basemanager.BaseManager):
             service.save()
 
         for xmodel in xwindows_services:
-            # TODO: implement
-            pass
+            xinfo = xmodel.windows_service_info
+            info, created = survey_models.WindowsServiceInfo.objects.get_or_create(
+                name         = _u(xinfo.name),
+                display_name = _u(xinfo.display_name),
+                type         = _u(xinfo.type),
+                handle       = _u(xinfo.handle),
+                # this will be rendered more properly later, but we're saving it
+                # flat to avoid a lot of ordering complexity
+                _required_services = _u(xinfo.required_services) 
+            )
+            service = survey_models.SurveyWindowsService(
+                windows_service_info = info,
+                survey               = survey,
+                status               = _u(xmodel.status),
+            )
+            service.save()
 
         for xmodel in xtags:
             tag = survey_models.SurveyTag(

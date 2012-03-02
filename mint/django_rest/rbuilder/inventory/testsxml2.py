@@ -35,12 +35,7 @@ windows_upload_survey_xml="""
       <status>running</status>
       <windows_service_info>
         <display_name>minesweeper</display_name>
-        <required_windows_services_info>
-          <windows_package_info>
-            <display_name>solitare</display_name>
-            <name>solitaire</name>
-          </windows_package_info>
-        </required_windows_services_info>
+        <required_services>solitaire</required_services>
         <handle>AcmeServiceHandle</handle>
         <name>minesweeper</name>
         <type>AcmeService32</type>
@@ -50,7 +45,7 @@ windows_upload_survey_xml="""
       <status>stopped</status>
       <windows_service_info>
         <display_name>solitare</display_name>
-        <required_windows_services_info/>
+        <required_services/>
         <handle>AcmeServiceHandle</handle>
         <name>solitaire</name>
         <type>AcmeService32</type>

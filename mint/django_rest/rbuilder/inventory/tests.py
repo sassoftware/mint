@@ -318,7 +318,6 @@ class SurveyTests(XMLTestCase):
         response = self._post(url,
             data = testsxml2.windows_upload_survey_xml,
             username='admin', password='password')
-        #print response.content
         self.assertEqual(response.status_code, 200)
 
     def test_survey_diff(self):
