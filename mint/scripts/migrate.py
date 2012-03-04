@@ -4629,8 +4629,8 @@ class MigrateTo_60(SchemaMigration):
         return True
 
 class MigrateTo_61(SchemaMigration):
-    '''Edge P4, P5'''
-    Version = (61, 5)
+    '''Edge P4, P5, P6'''
+    Version = (61, 7)
 
     def migrate(self):
         cu = self.db.cursor()
@@ -4695,6 +4695,34 @@ class MigrateTo_61(SchemaMigration):
                   resource_type='System'),
         ])
         return True
+
+    def migrate6(self):
+        # make role names unique with DB constraint to avoid race condition
+        # this is 5.3 -- if we release it.
+        cu = self.db.cursor()
+        # first delete any duplicate role names that may exist
+        # so adding the contraint will not fail
+        seen   = {}
+        delete = []
+
+        cu.execute("SELECT role_id, role_name from rbac_role")
+        row = cu.fetchone()
+        while row is not None:
+            if seen.has_key(row[1]):
+                delete.append(row[0])
+            seen[row[1]] = 1
+            row = cu.fetchone()
+        for x in delete:
+            cu.execute("DELETE from rbac_role where role_id=%s" % x)
+        cu.execute("""ALTER TABLE rbac_role ADD UNIQUE (role_name)""")
+        return True
+
+    def migrate7(self):
+        cu = self.db.cursor()
+        cu.execute("""ALTER TABLE inventory_system ADD COLUMN out_of_date BOOLEAN NOT NULL DEFAULT False""")
+        cu.execute("""ALTER TABLE inventory_system ADD COLUMN has_active_jobs BOOLEAN NOT NULL DEFAULT False""")
+        cu.execute("""ALTER TABLE inventory_system ADD COLUMN has_running_jobs BOOLEAN NOT NULL DEFAULT False""")
+        return True 
 
 #### SCHEMA MIGRATIONS END HERE #############################################
 

@@ -55,14 +55,13 @@ class rBuilderTest(TestPackageRecipe):
 
         # testsuites
         'conary-factory-test:lib',
-        'conary-test:lib',
+        'conary-test:python',
         'rapa-test:lib',
         'rpath-capsule-indexer-test:lib',
       ]
 
     pythonPath = [
         '%(libdir)s/rpath-capsule-indexer-test',
-        '%(libdir)s/conary-test',
         '%(libdir)s/raa-test',
         '%(libdir)s/raa',
       ]
@@ -96,7 +95,6 @@ class rBuilderTest(TestPackageRecipe):
 
         environ += 'RAA_PLUGINS_PATH=%(libdir)s/raa '
         environ += 'PACKAGE_CREATOR_SERVICE_TEST_PATH=%(libdir)s/conary-factory-test '
-        environ += 'CONARY_TEST_PATH=%(libdir)s/conary-test '
 
         config['repos_db'] = (
             Flags.db_pgsql and 'postgresql'

@@ -505,7 +505,7 @@ class System(modellib.XObjIdModel):
     managing_zone = D(modellib.ForeignKey(zmodels.Zone, null=False,
             related_name='systems', text_field="name"),
         "a link to the management zone in which this system resides")
-    jobs = models.ManyToManyField(jobmodels.Job, through="SystemJob")
+    jobs = models.ManyToManyField(jobmodels.Job, through="SystemJob") #, related_name='systems')
     agent_port = D(models.IntegerField(null=True),
           "the port used by the system's CIM broker", short="System agent port")
     state_change_date = XObjHidden(APIReadOnly(modellib.DateTimeUtcField(
@@ -557,6 +557,13 @@ class System(modellib.XObjIdModel):
     dnsName = XObjHidden(modellib.SyntheticField())
     targetType = XObjHidden(modellib.SyntheticField())
     targetName = XObjHidden(modellib.SyntheticField())
+
+    # these fields are derived from job & trove state
+    # stored here so serialization speed is acceptable
+    # call updateDerivedData() to recalculate
+    has_running_jobs = models.BooleanField(default=False, null=False)
+    has_active_jobs = models.BooleanField(default=False, null=False)
+    out_of_date  = models.BooleanField(default=False, null=False)
 
     # We need to distinguish between an <installed_software> node not being
     # present at all, and being present and empty
@@ -685,24 +692,37 @@ class System(modellib.XObjIdModel):
         return bool([j for j in jobs \
             if j.job_state_id == self.runningJobState.job_state_id])
 
-    def serialize(self, request=None):
-        
+    def updateDerivedData(self):
+        # call this to update cached data about the system record, so that it does not
+        # have to be called at serialization time.
+
+        jobs = []
         try:
             jobs = self.jobs.all()
         except:
             # system apparently wasn't saved yet so can't access Many2Many
             # relations
-            jobs = []
+            pass
 
+        self.has_active_jobs  = self.areJobsActive(jobs)
+        self.has_running_jobs = self.areJobsRunning(jobs)
+        self.out_of_date      = self.isOutOfDate()
+        self.save()
+
+    def isOutOfDate(self):
+        out_of_date = False
+        for trove in self.installed_software.all():
+            if trove.out_of_date:
+                return True
+        return False
+
+
+    def serialize(self, request=None):
+        
         # hide some data in collapsed collections 
         summarize = getattr(self, '_summarize', False)
 
         xobj_model = modellib.XObjIdModel.serialize(self, request)
-
-        if not summarize:
-            xobj_model.has_active_jobs = self.areJobsActive(jobs)
-            xobj_model.has_running_jobs = self.areJobsRunning(jobs)
-        
 
         if request:
             class CredentialsHref(object): 
@@ -770,17 +790,10 @@ class System(modellib.XObjIdModel):
                     self.get_absolute_url(request, parents=parents))
                 self.view_name = None
 
+        # old and busted slow way
+        # 
         if not summarize:
             xobj_model.jobs = JobsHref(request, self)
-
-            # Set out of date flag on xobj_model
-            # but don't include if we're set to include this as part of a collection
-            out_of_date = False
-            for trove in self.installed_software.all():
-                if trove.out_of_date:
-                    out_of_date = True
-                    break
-            xobj_model.out_of_date = out_of_date
 
         xobj_model.network_address = self.__class__.extractNetworkAddress(self)
         return xobj_model
