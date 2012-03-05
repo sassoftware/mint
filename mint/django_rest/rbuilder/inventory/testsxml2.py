@@ -99,6 +99,29 @@ windows_upload_survey_xml2 = """
       </windows_patch_info>
       <install_date>1330699918</install_date>
     </windows_patch>
+    <windows_patch id="100">
+      <local_package>c:/path/to/yet_more_stuff</local_package>
+      <is_installed>true</is_installed>
+      <windows_patch_info>
+        <display_name>Bonus Levels</display_name>
+        <windows_packages_info>
+          <windows_package_info>
+            <publisher>konami</publisher>
+            <type>msi</type>
+            <version>1.0</version>
+            <package_code>left-right-right-left</package_code>
+            <product_code>up-up-down-down</product_code>
+            <upgrade_code>B-A-B-A select-start</upgrade_code>
+            <product_name>contra</product_name>
+          </windows_package_info>
+        </windows_packages_info>
+        <uninstallable>True</uninstallable>
+        <patch_code>letmein</patch_code>
+        <transforms>XLST</transforms>
+        <product_code>4011</product_code>
+      </windows_patch_info>
+      <install_date>1330699940</install_date>
+    </windows_patch>
   </windows_patches>
   <services/>
   <conary_packages/>

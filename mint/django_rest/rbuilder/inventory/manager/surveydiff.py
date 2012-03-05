@@ -292,90 +292,130 @@ class SurveyDiffRender(object):
         elem.append(self._element('type', mode))
         return elem
 
+    def _serializeRpmPackage(self, elem, item):
+        elem.attrib = self._makeId(item)
+        elem.append(self._element('install_date', item.install_date))
+        info = item.rpm_package_info
+        subElt = Element('rpm_package_info', attrib=self._makeId(info))
+        subElt.append(self._element('name', info.name))
+        subElt.append(self._element('epoch', info.epoch))
+        subElt.append(self._element('version', info.version))
+        subElt.append(self._element('release', info.release))
+        subElt.append(self._element('architecture', info.architecture))
+        subElt.append(self._element('signature', info.signature))
+        elem.append(subElt)
+
+    def _serializeConaryPackage(self, elem, item):
+        elem.attrib = self._makeId(item)
+        elem.append(self._element('install_date', item.install_date))
+        info = item.conary_package_info
+        subElt = Element('conary_package_info', attrib=self._makeId(info))
+        subElt.append(self._element('name', info.name))
+        subElt.append(self._element('version', info.version))
+        subElt.append(self._element('flavor', info.flavor))
+        subElt.append(self._element('revision', info.revision))
+        subElt.append(self._element('architecture', info.architecture))
+        subElt.append(self._element('signature', info.signature))
+        elem.append(subElt)
+
+    def _serializeWindowsPackage(self, elem, item):
+        elem.attrib = self._makeId(item)
+        elem.append(self._element('install_source', item.install_source))
+        elem.append(self._element('local_package', item.local_package))
+        elem.append(self._element('install_date', item.install_date))
+        info = item.windows_package_info
+        subElt = Element('windows_package_info', attrib=self._makeId(info))
+        subElt.append(self._element('publisher', info.publisher))
+        subElt.append(self._element('product_code', info.product_code))
+        subElt.append(self._element('package_code', info.package_code))
+        subElt.append(self._element('product_name', info.product_name))
+        subElt.append(self._element('type', info.type))
+        subElt.append(self._element('upgrade_code', info.upgrade_code))
+        subElt.append(self._element('version', info.version))
+        elem.append(subElt)
+
+    def _serializeWindowsPatch(self, elem, item):
+        elem.attrib = self._makeId(item)
+        elem.append(self._element('local_package', item.local_package))
+        elem.append(self._element('install_date', item.install_date))
+        elem.append(self._element('is_installed', item.is_installed))
+        info = item.windows_patch_info
+        subElt = Element('windows_patch_info', attrib=self._makeId(info))
+        subElt.append(self._element('display_name', info.display_name))
+        subElt.append(self._element('uninstallable', info.uninstallable))
+        subElt.append(self._element('patch_code', info.patch_code))
+        subElt.append(self._element('product_code', info.product_code))
+        subElt.append(self._element('transforms', info.transforms))
+        package_elts = Element('windows_package_infos')
+        links = survey_models.SurveyWindowsPatchPackageLink.objects.filter(
+            windows_patch_info = info
+        )
+        package_objs = [ x.windows_package_info for x in links ]
+        for x in package_objs:
+            pi = Element('windows_package_info', attrib=self._makeId(x))
+            pi.append(self._element('publisher', x.publisher))
+            pi.append(self._element('product_code', x.product_code))
+            pi.append(self._element('package_code', x.package_code))
+            pi.append(self._element('product_name', x.product_name))
+            pi.append(self._element('type', x.type))
+            pi.append(self._element('upgrade_code', x.upgrade_code))
+            pi.append(self._element('version', x.version))
+            package_elts.append(pi)
+        subElt.append(package_elts)
+        elem.append(subElt)
+
+    def _serializeService(self, elem, item):
+        elem.attrib = self._makeId(item)
+        elem.append(self._element('running', item.running))
+        elem.append(self._element('status', item.status))
+        info = item.service_info
+        subElt = Element('service_info', attrib=self._makeId(info))
+        subElt.append(self._element('name', info.name))
+        subElt.append(self._element('autostart', info.autostart))
+        subElt.append(self._element('runlevels', info.runlevels))
+        elem.append(subElt)
+
+    def _serializeWindowsService(self, elem, item):
+        elem.attrib = self._makeId(item)
+        elem.append(self._element('status', item.status))
+        info = item.windows_service_info
+        subElt = Element('windows_service_info', attrib=self._makeId(info))
+        subElt.append(self._element('name', info.name))
+        subElt.append(self._element('display_name', info.display_name))
+        subElt.append(self._element('type', info.type))
+        subElt.append(self._element('handle', info.handle))
+        services = info._required_services.split(",")
+        required_objs = survey_models.WindowsServiceInfo.objects.filter(name__in=services)
+        required_elts = Element('required_services')
+        for x in required_objs:
+            si = Element('windows_service_info', attrib=self._makeId(x))
+            si.append(self._element('name', x.name))
+            si.append(self._element('display_name', x.display_name))
+            si.append(self._element('type', x.type))
+            si.append(self._element('handle', x.handle))
+            required_elts.append(si)
+        subElt.append(required_elts)
+        elem.append(subElt)
 
     def _serializeItem(self, elem, item):
         ''' 
         wrappers around item serialization.  TODO: find ways to leap into xobj nicely
         and pass in a request?  this is temporary.
         '''
+        # FIXME: hash lookup
         typ = type(item)
         if typ == survey_models.SurveyRpmPackage:
-            elem.attrib = self._makeId(item)
-            elem.append(self._element('install_date', item.install_date))
-            info = item.rpm_package_info
-            subElt = Element('rpm_package_info', attrib=self._makeId(info))
-            subElt.append(self._element('name', info.name))
-            subElt.append(self._element('epoch', info.epoch))
-            subElt.append(self._element('version', info.version))
-            subElt.append(self._element('release', info.release))
-            subElt.append(self._element('architecture', info.architecture))
-            subElt.append(self._element('signature', info.signature))
-            elem.append(subElt)
+            self._serializeRpmPackage(elem, item)
         elif typ == survey_models.SurveyConaryPackage:
-            elem.attrib = self._makeId(item)
-            elem.append(self._element('install_date', item.install_date))
-            info = item.conary_package_info
-            subElt = Element('conary_package_info', attrib=self._makeId(info))
-            subElt.append(self._element('name', info.name))
-            subElt.append(self._element('version', info.version))
-            subElt.append(self._element('flavor', info.flavor))
-            subElt.append(self._element('revision', info.revision))
-            subElt.append(self._element('architecture', info.architecture))
-            subElt.append(self._element('signature', info.signature))
-            elem.append(subElt)
+            self._serializeConaryPackage(elem, item)
         elif typ == survey_models.SurveyWindowsPackage:
-            elem.attrib = self._makeId(item)
-            elem.append(self._element('install_source', item.install_source)) 
-            elem.append(self._element('local_package', item.local_package))
-            elem.append(self._element('install_date', item.install_date))
-            info = item.windows_package_info
-            subElt = Element('windows_package_info', attrib=self._makeId(info))
-            subElt.append(self._element('publisher', info.publisher))
-            subElt.append(self._element('product_code', info.product_code))
-            subElt.append(self._element('package_code', info.package_code))
-            subElt.append(self._element('product_name', info.product_name))
-            subElt.append(self._element('type', info.type))
-            subElt.append(self._element('upgrade_code', info.upgrade_code))
-            subElt.append(self._element('version', info.version))
-            elem.append(subElt)
+            self._serializeWindowsPackage(elem, item)
         elif typ == survey_models.SurveyWindowsPatch:
-            elem.attrib = self._makeId(item)
-            elem.attrib(self._element('local_package', item.local_package))
-            elem.attrib(self._element('install_date', item.local_package))
-            elem.attrib(self._element('is_installed', item.local_package))
-            info = item.windows_patch_info
-            subElt = Element('windows_patch_info', attrib=self._makeId(info))
-            subElt.append(self._element('display_name', info.display_name))
-            subElt.append(self._element('uninstallable', info.uninstallable))
-            subElt.append(self._element('patch_code', info.patch_code))
-            subElt.append(self._element('product_code', info.product_code))
-            subElt.append(self._element('transforms', info.transforms))
-            # NOTE: skipping expanding out windows required packages for now, they are in the
-            # survey though, <-- FIXME
-            elem.append(subElt)
-
+            self._serializeWindowsPatch(elem, item)
         elif typ == survey_models.SurveyService:
-            elem.attrib = self._makeId(item)
-            elem.append(self._element('running', item.running))
-            elem.append(self._element('status', item.status))
-            info = item.service_info
-            subElt = Element('service_info', attrib=self._makeId(info))
-            subElt.append(self._element('name', info.name))
-            subElt.append(self._element('autostart', info.autostart))
-            subElt.append(self._element('runlevels', info.runlevels))
-            elem.append(subElt)
+            self._serializeService(elem, item)
         elif typ == survey_models.SurveyWindowsService:
-            elem.attrib = self._makeId(item)
-            elem.append(self._element('status', item.status))
-            info = item.windows_service_info
-            subElt = Element('windows_service_info', attrib=self._makeId(info))
-            subElt.append(self._element('name', info.name))
-            subElt.append(self._element('display_name', info.display_name))
-            subElt.append(self._element('type', info.type))
-            subElt.append(self._element('handle', info.handle))
-            # NOTE: skipping embedded services
-            elem.append(subElt)
-
+            self._serializeWindowsService(elem, item)
         else:
             raise Exception("unsupported type")
 
@@ -384,7 +424,6 @@ class SurveyDiffRender(object):
 
     def _fromElement(self, parentTag, item):
         ''' generate a tag with an item serialized in it 
-
         ex:
               <from_rpm_package> <- return this
                    <rpm_package>
@@ -487,7 +526,7 @@ class SurveyDiffRender(object):
         for elt in elts:
             root.append(elt)
 
-        return tostring(root)
+        #return tostring(root)
         # DEBUG/development only
-        #return parseString(tostring(root)).toprettyxml() 
+        return parseString(tostring(root)).toprettyxml() 
 

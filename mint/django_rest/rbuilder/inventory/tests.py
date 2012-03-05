@@ -202,16 +202,6 @@ class SurveyTests(XMLTestCase):
             username='admin', password='password')
         self.assertEqual(response.status_code, 200)
 
-        #print response.content
-        # *** WORK IN PROGRESS ***
-        #self.assertXMLEquals(response.content, testsxml.survey_output_xml, ignoreNodes=['created_date','install_date','modified_date'])
-
-        #url = "inventory/systems/%s/surveys" % sys.pk
-        #response = self._get(url,
-        #    username='admin', password='password')
-        #self.assertEqual(response.status_code, 200)
-        #self.assertXMLEquals(response.content, testsxml.surveys_xml)
-
     def test_survey_post(self):
         # make sure we can post a survey and it mostly looks
         # like the model saved version above -- much of the
