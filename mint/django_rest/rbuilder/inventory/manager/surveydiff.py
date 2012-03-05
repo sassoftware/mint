@@ -9,11 +9,15 @@ from xml.dom.minidom import parseString
 from mint.django_rest.rbuilder.inventory import survey_models
 import datetime
 
-# for things changed, but not added/removed, what fields to show in the diff?
+# for things changed, but not added/removed, what fields to show in the diff?  
+
 DIFF_FIELDS = {
-   'rpm_package_info'    : [ 'epoch', 'version', 'release', 'signature' ], 
-   'conary_package_info' : [ 'version', 'architecture', 'signature' ],
-   'service_info'        : [ 'autostart', 'runlevels' ]
+   'rpm_package_info'     : [ 'epoch', 'version', 'release', 'signature' ], 
+   'conary_package_info'  : [ 'version', 'architecture', 'signature' ],
+   'service_info'         : [ 'autostart', 'runlevels' ],
+   'windows_package_info' : [ 'publisher', 'product_code', 'package_code', 'product_name', 'type', 'upgrade_code', 'version' ],  
+   'windows_patch_info'   : [ 'display_name', 'uninstallable', 'patch_code', 'product_code', 'transforms' ],
+   'windows_service_info' : [ 'name', 'display_name', 'type', 'handle' ]
 }
 
 class SurveyDiff(object):
@@ -30,22 +34,35 @@ class SurveyDiff(object):
         Compute survey differences, but don't return XML.  Sets side
         effects for usage by SurveyDiffRender class.
         '''
-        self.rpmDiff     = self._computeRpmPackages()
-        self.conaryDiff  = self._computeConaryPackages()
-        self.serviceDiff = self._computeServices()
-      
+
+        self.rpmDiff            = self._computeRpmPackages()
+        self.conaryDiff         = self._computeConaryPackages()
+        self.serviceDiff        = self._computeServices()
+        self.windowsPackageDiff = self._computeWindowsPackages()
+        self.windowsPatchDiff   = self._computeWindowsPatches()
+        self.windowsServiceDiff = self._computeWindowsServices()
+     
+    def _name(self, obj):
+        try:
+            return getattr(obj, 'name')
+        except AttributeError:
+            # Windows doesn't quite have the name field all the time
+            # consider making this care about type(obj) <-- FIXME
+            try:
+                return getattr(obj, 'display_name')
+            except AttributeError:
+                return getattr(obj, 'product_name')
+
+ 
     def _uniqueNames(self, infoName, left, right):
         ''' return all the object names in left and right '''
         names = {}
         for x in left:
-            names[getattr(x, infoName).name] = 1
+            names[self._name(getattr(x, infoName))] = 1
         for x in right:
-            names[getattr(x, infoName).name] = 1
+            names[self._name(getattr(x, infoName))] = 1
         return names.keys()
 
-    def _matches(self, name, infoName, items):
-        ''' return items in the list with the named *name* '''
-  
     def _computeGeneric(self, collectedName, infoName):
         ''' 
         Supporting code behind arbitrary object diffs 
@@ -62,8 +79,8 @@ class SurveyDiff(object):
         for name in allNames:
 
             # process things one set of names at a time to prevent extra iteration
-            leftMatches   = [ x for x in leftItems  if getattr(x, infoName).name == name ]
-            rightMatches  = [ x for x in rightItems if getattr(x, infoName).name == name ]
+            leftMatches   = [ x for x in leftItems  if self._name(getattr(x, infoName)) == name ]
+            rightMatches  = [ x for x in rightItems if self._name(getattr(x, infoName)) == name ]
             # for things with this same name, what's different?
             localAdded, localChanged, localRemoved = self._diff(infoName, leftMatches, rightMatches)
             # add to the big list for the overall diff of survey documents
@@ -78,21 +95,29 @@ class SurveyDiff(object):
         '''
         for a given resource, we can move to having 1 item on the left side of a diff
         and multiple items on the right.  Only one is a change, the rest are additions
-        and removals
+        and removals.   This is for resources that have more than one type with
+        same name.
         '''
 
         aInfo = getattr(a, infoName)
         bInfo = getattr(b, infoName)
-        if aInfo.name != bInfo.name:
+        if self._name(aInfo) != self._name(bInfo):
             # this shouldn't really get hit in the way we are using it
             return False
         if infoName == 'rpm_package_info':
             return (aInfo.architecture == bInfo.architecture)
         elif infoName == 'conary_package_info':
             return (aInfo.architecture == bInfo.architecture and aInfo.flavor == bInfo.flavor)
+        elif infoName == 'windows_package_info':
+            return (aInfo.product_code == bInfo.product_code)
+        elif infoName == 'windows_patch_info':
+            return (aInfo.product_code == bInfo.product_code)
         elif infoName == 'service_info':
             return True
-        raise Exception("unknown info mode: %s" % infoName)
+        elif infoName == 'windows_service_info':
+            return True
+        else:
+            raise Exception("unknown info mode: %s" % infoName)
 
     def _in(self, infoName, itemList, infoPk):
         '''
@@ -179,6 +204,15 @@ class SurveyDiff(object):
 
     def _computeServices(self):
         return self._computeGeneric('services', 'service_info')
+
+    def _computeWindowsPackages(self):
+        return self._computeGeneric('windows_packages', 'windows_package_info')
+
+    def _computeWindowsPatches(self):
+        return self._computeGeneric('windows_patches', 'windows_patch_info')
+
+    def _computeWindowsServices(self):
+        return self._computeGeneric('windows_services', 'windows_service_info')
 
 class SurveyDiffRender(object):
 
@@ -289,6 +323,37 @@ class SurveyDiffRender(object):
             subElt.append(self._element('architecture', info.architecture))
             subElt.append(self._element('signature', info.signature))
             elem.append(subElt)
+        elif typ == survey_models.SurveyWindowsPackage:
+            elem.attrib = self._makeId(item)
+            elem.append(self._element('install_source', item.install_source)) 
+            elem.append(self._element('local_package', item.local_package))
+            elem.append(self._element('install_date', item.install_date))
+            info = item.windows_package_info
+            subElt = Element('windows_package_info', attrib=self._makeId(info))
+            subElt.append(self._element('publisher', info.publisher))
+            subElt.append(self._element('product_code', info.product_code))
+            subElt.append(self._element('package_code', info.package_code))
+            subElt.append(self._element('product_name', info.product_name))
+            subElt.append(self._element('type', info.type))
+            subElt.append(self._element('upgrade_code', info.upgrade_code))
+            subElt.append(self._element('version', info.version))
+            elem.append(subElt)
+        elif typ == survey_models.SurveyWindowsPatch:
+            elem.attrib = self._makeId(item)
+            elem.attrib(self._element('local_package', item.local_package))
+            elem.attrib(self._element('install_date', item.local_package))
+            elem.attrib(self._element('is_installed', item.local_package))
+            info = item.windows_patch_info
+            subElt = Element('windows_patch_info', attrib=self._makeId(info))
+            subElt.append(self._element('display_name', info.display_name))
+            subElt.append(self._element('uninstallable', info.uninstallable))
+            subElt.append(self._element('patch_code', info.patch_code))
+            subElt.append(self._element('product_code', info.product_code))
+            subElt.append(self._element('transforms', info.transforms))
+            # NOTE: skipping expanding out windows required packages for now, they are in the
+            # survey though, <-- FIXME
+            elem.append(subElt)
+
         elif typ == survey_models.SurveyService:
             elem.attrib = self._makeId(item)
             elem.append(self._element('running', item.running))
@@ -299,6 +364,18 @@ class SurveyDiffRender(object):
             subElt.append(self._element('autostart', info.autostart))
             subElt.append(self._element('runlevels', info.runlevels))
             elem.append(subElt)
+        elif typ == survey_models.SurveyWindowsService:
+            elem.attrib = self._makeId(item)
+            elem.append(self._element('status', item.status))
+            info = item.windows_service_info
+            subElt = Element('windows_service_info', attrib=self._makeId(info))
+            subElt.append(self._element('name', info.name))
+            subElt.append(self._element('display_name', info.display_name))
+            subElt.append(self._element('type', info.type))
+            subElt.append(self._element('handle', info.handle))
+            # NOTE: skipping embedded services
+            elem.append(subElt)
+
         else:
             raise Exception("unsupported type")
 
@@ -399,16 +476,18 @@ class SurveyDiffRender(object):
 
         root = self._renderRoot(self.left, self.right)
 
-        root.append(
+        elts = [
             self._renderDiff('rpm_package_changes', self.differ.rpmDiff),
-        )
-        root.append(
             self._renderDiff('conary_package_changes', self.differ.conaryDiff),
-        )
-        root.append(
             self._renderDiff('service_changes', self.differ.serviceDiff),
-        )
+            self._renderDiff('windows_package_changes', self.differ.windowsPackageDiff),
+            self._renderDiff('windows_patch_changes', self.differ.windowsPatchDiff),
+            self._renderDiff('windows_service_changes', self.differ.windowsServiceDiff),
+        ]
+        for elt in elts:
+            root.append(elt)
 
         return tostring(root)
-        # return parseString(tostring(root)).toprettyxml() 
+        # DEBUG/development only
+        #return parseString(tostring(root)).toprettyxml() 
 

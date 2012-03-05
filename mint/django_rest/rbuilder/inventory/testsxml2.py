@@ -71,6 +71,92 @@ windows_upload_survey_xml="""
 </survey>
 """
 
+windows_upload_survey_xml2 = """
+<survey>
+  <uuid>987654321</uuid>
+  <created_date>1330699918</created_date>
+  <windows_patches>
+    <windows_patch id="1">
+      <local_package>c:/path/to/stuff</local_package>
+      <is_installed>true</is_installed>
+      <windows_patch_info>
+        <display_name>Add Internet Multiplayer</display_name>
+        <windows_packages_info>
+          <windows_package_info>
+            <publisher>konami</publisher>
+            <type>msi</type>
+            <version>1.0</version>
+            <package_code>left-right-right-left</package_code>
+            <product_code>up-up-down-down</product_code>
+            <upgrade_code>B-A-B-A select-start</upgrade_code>
+            <product_name>contra</product_name>
+          </windows_package_info>
+        </windows_packages_info>
+        <uninstallable>1</uninstallable>
+        <patch_code>up-c-down-c-left-c-right-c</patch_code>
+        <transforms>bubblebee,starscream</transforms>
+        <product_code>up-a-down-a-left-a-right-a</product_code>
+      </windows_patch_info>
+      <install_date>1330699918</install_date>
+    </windows_patch>
+  </windows_patches>
+  <services/>
+  <conary_packages/>
+ <windows_services>
+    <windows_service id="1">
+      <status>running</status>
+      <windows_service_info>
+        <display_name>skifree</display_name>
+        <required_services/>
+        <handle>AcmeServiceHandle</handle>
+        <name>skifree</name>
+        <type>AcmeService32</type>
+      </windows_service_info>
+    </windows_service>
+    <windows_service id="2">
+      <status>stopped</status>
+      <windows_service_info>
+        <display_name>solitare</display_name>
+        <required_services/>
+        <handle>AcmeServiceHandle</handle>
+        <name>solitaire</name>
+        <type>AcmeService32</type>
+      </windows_service_info>
+    </windows_service>
+  </windows_services>
+  <windows_packages>
+      <windows_package id="1">
+      <windows_package_info>
+          <publisher>konami</publisher>
+          <type>msi</type>
+          <version>1.5</version>
+          <package_code>left-right-right-left</package_code>
+          <product_code>up-up-down-down</product_code>
+          <upgrade_code>B-A-B-A select-start</upgrade_code>
+          <product_name>contra</product_name>
+      </windows_package_info>
+      <install_date>1330699922</install_date>
+      <install_source>e:/path/to/other_stuff</install_source>
+      <local_package>c:/path/to/other_stuff</local_package>
+    </windows_package>
+    <windows_package id="4">
+      <windows_package_info>
+          <publisher>Microsponge</publisher>
+          <type>msi</type>
+          <version>2.0</version>
+          <package_code>paris_is_beautiful_in_the_springtime</package_code>
+          <product_code>have_you_seen_spain_in_the_fall</product_code>
+          <upgrade_code>opensesame</upgrade_code>
+          <product_name>mspaint</product_name>
+      </windows_package_info>
+      <install_date>1330699920</install_date>
+      <install_source>e:/path/to/yet_other_stuff</install_source>
+      <local_package>c:/path/to/yet_other_stuff</local_package>
+    </windows_package>
+  </windows_packages>
+</survey>
+"""
+
 very_long_survey="""
 <survey><rpm_packages><rpm_package id="62"><rpm_package_info><type>rpm</type><name>perl-Time-HiRes</name><epoch>4</epoch><version>1.9721</version><release>115.el6</release><architecture>x86_64</architecture><description>The Time::HiRes module implements a Perl interface to the usleep, nanosleep,
 ualarm, gettimeofday, and setitimer/getitimer system calls, in other words,
