@@ -43,7 +43,8 @@ class InstallJob(object):
                 [(name, (None, None), (version, flavor), True)
                     for (name, version, flavor) in self.troveList],
                 checkPathConflicts=False)
-        jobList = sorted(itertools.chain(*job.jobs))
+        jobList = [ x for x in itertools.chain(*job.jobs) ]
+        orderedTups = [ (x[0], x[2][0], x[2][1]) for x in jobList ]
 
         # Fetch a changeset with files but no contents so that individual files
         # can be selected.
@@ -60,8 +61,11 @@ class InstallJob(object):
                 if fileData is not None:
                     fileMap.setdefault(type(fileData), []).append(fileData)
 
-        for fileList in fileMap.values():
-            fileList.sort(key=lambda data: data.fileTup.fileId)
+        for dataType, fileList in fileMap.iteritems():
+            if dataType is MSIData:
+                fileList.sort(key=lambda d: orderedTups.index(d.troveTuple))
+            else:
+                fileList.sort(key=lambda d: d.fileTup.fileId)
         self.fileMap = fileMap
 
     def _getFileData(self, changeSet, trvCs, fileTup):
