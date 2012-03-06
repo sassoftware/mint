@@ -4,10 +4,11 @@
 # All Rights Reserved
 #
 
-import itertools
 import logging
-import xml
-from xml.dom import minidom
+from StringIO import StringIO
+
+from smartform import descriptor
+from smartform import descriptor_errors
 
 from conary import conaryclient, versions
 from conary import trove as conarytrove
@@ -303,37 +304,23 @@ class VersionManager(basemanager.BaseManager):
 
     @exposed
     def getConfigurationDescriptor(self, system):
-        
-        # remove this when you want it to work for real
-        #return open('/srv/www/html/config/config_pony.xml').read()
-        
-        # Create master configuration DOM and add configDicts to dataFields
-        impl = minidom.getDOMImplementation()
-        newdoc = impl.createDocument(None, 'configuration_descriptor', None)
-        top = newdoc.documentElement
-        metadata = newdoc.createElement('metadata')
-        descriptor = newdoc.createElement('descriptor')
-        dataFields = newdoc.createElement('dataFields')
-        top.appendChild(descriptor)
-        descriptor.appendChild(dataFields)
-        descriptor.appendChild(metadata)
-        # We are just adding all 
-        confDict = {}
-        # WARNING: No control over ordering! Last to iterate will override prior field keys
+        """
+        Generate config descriptor for all top level items on a system.
+        """
+
+        desc = descriptor.SystemConfigurationDescriptor()
+        desc.setDisplayName('Configuration Descriptor')
+        desc.addDescription('Configuration Descriptor')
+
+        fields = desc.getDataFields()
         for trove in system.installed_software.all():
-            confDict.update(self._getTroveConfigDescriptor(trove))
-        #trove = None
-        #confDict.update(self._getTroveConfigDescriptor(trove))
-        for x in confDict:
-            dataFields.appendChild(confDict[x])
-        # WARNING: If we reconcile provides/requires here, then we can easily get to
-        #          unresolved state if user adds a trove with configuration descriptor
-        #          with unresolved config deps
-        # Should we only provide config for the group or all troves returned?
-        # Where should the config dep resolution happen, here or in the _getTroveConfigDescriptor?
-        
-        # (03:07:56 PM) slagle: but, if you wanted to tack on an id attribute, you would do it in InventorySystemConfigurationDescriptorServices in views.py
-        return top.toxml()
+            fields.extend(self._getTroveConfigDescriptor(trove))
+
+        out = StringIO()
+        desc.serialize(out)
+        out.seek(0)
+
+        return out.read()
 
     def _getTroveConfigDescriptor(self, trove):
         client = self.get_conary_client()
@@ -347,22 +334,25 @@ class VersionManager(basemanager.BaseManager):
             referencedByDefault += [ nvf for nvf, byDefault, strongRef in
                 trv.iterTroveListInfo() if byDefault ]
 
+        # Get properties sorted by package name.
         properties = repos.getTroveInfo(conarytrove._TROVEINFO_TAG_PROPERTIES,
-            referencedByDefault)
+            sorted(referencedByDefault, cmp=lambda x, y: cmp(x[0], y[0])))
 
-        configDict = {}
+        configFields = []
         for propSet in properties:
             if propSet is None:
                 continue
-            for singleProperty in propSet.iter():
-                troveXml = singleProperty.definition()
-                try: 
-                    doc = minidom.parseString(troveXml)
-                except xml.parsers.expat.ExpatError:
+            for property in propSet.iter():
+                xml = property.definition()
+                desc = descriptor.BaseDescriptor()
+
+                try:
+                    desc.parseStream(StringIO(xml))
+
+                # Ignore any descriptors that don't parse.
+                except descriptor_errors.Error:
                     continue
 
-                for field in doc.getElementsByTagName('field'):
-                    name = field.getElementsByTagName('name')[0].lastChild.data
-                    configDict[name] = field
+                configFields.extend(desc.getDataFields())
 
-        return configDict
+        return configFields
