@@ -481,7 +481,7 @@ class SurveyDiffRender(object):
         for elt in elts:
             root.append(elt)
 
-        #return tostring(root)
+        return tostring(root)
         # DEBUG/development only
-        return parseString(tostring(root)).toprettyxml() 
+        #return parseString(tostring(root)).toprettyxml() 
 
