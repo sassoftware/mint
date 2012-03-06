@@ -28,7 +28,6 @@ class SurveyDiff(object):
         self.left = left
         self.right = right
 
-    # FIXME: fix underscore/camel conventions
     def compare(self):
         ''' 
         Compute survey differences, but don't return XML.  Sets side
@@ -43,25 +42,18 @@ class SurveyDiff(object):
         self.windowsServiceDiff = self._computeWindowsServices()
      
     def _name(self, obj):
-        try:
-            return getattr(obj, 'name')
-        except AttributeError:
-            # Windows doesn't quite have the name field all the time
-            # consider making this care about type(obj) <-- FIXME
-            try:
-                return getattr(obj, 'display_name')
-            except AttributeError:
-                return getattr(obj, 'product_name')
-
+        t = type(obj)
+        if t == survey_models.WindowsPatchInfo:
+            return obj.display_name
+        elif t == survey_models.WindowsPackageInfo:
+            return obj.product_name
+        return obj.name
  
     def _uniqueNames(self, infoName, left, right):
         ''' return all the object names in left and right '''
-        names = {}
-        for x in left:
-            names[self._name(getattr(x, infoName))] = 1
-        for x in right:
-            names[self._name(getattr(x, infoName))] = 1
-        return names.keys()
+        leftNames  = set([ self._name(getattr(x,infoName)) for x in left  ])
+        rightNames = set([ self._name(getattr(x,infoName)) for x in right ])
+        return leftNames | rightNames
 
     def _computeGeneric(self, collectedName, infoName):
         ''' 
@@ -69,11 +61,8 @@ class SurveyDiff(object):
         '''
 
         added, changed, removed = ([], [], [])
-
         leftItems   = getattr(self.left, collectedName).all()
         rightItems  = getattr(self.right, collectedName).all()
-
-
         allNames    = self._uniqueNames(infoName, leftItems, rightItems) 
 
         for name in allNames:
@@ -138,8 +127,8 @@ class SurveyDiff(object):
         for x in before:
             for y in after:
                 if self._isChanged(infoName, x, y):
-                   x._changed = y
-                   y._changed = x
+                    x._changed = y
+                    y._changed = x
 
     def _diff(self, infoName, before, after):
         ''' 
@@ -224,7 +213,6 @@ class SurveyDiffRender(object):
         self.left    = left
         self.right   = right
         self.request = request # for URL reversal and REST ids (optional)
-
         self.differ  = SurveyDiff(left, right)
 
     def _makeId(self, obj):
@@ -236,12 +224,9 @@ class SurveyDiffRender(object):
 
     def _renderSurvey(self, tag, survey):
         ''' serializes the left_survey or right_survey elements '''
-        elem = Element(tag, attrib=self._makeId(survey))
-        elem.append(self._element('name', survey.name))
-        elem.append(self._element('description', survey.description))
-        elem.append(self._element('removable', survey.removable))
-        elem.append(self._element('created_date', survey.created_date))
-        return elem
+        return self._xmlNode(tag, about=survey,
+             keys='name description removable created_date'
+        )
 
     def _element(self, name, text=None):
         ''' shorthand around etree element creation due to lame constructor API '''
@@ -249,6 +234,22 @@ class SurveyDiffRender(object):
         if text is not None:
            e.text = str(text)
         return e
+
+    def _addElement(self, to, name, value):
+        to.append(self._element(name, value))
+
+    def _addElements(self, to, **kwargs):
+        [ self._addElement(to,k,v) for (k,v) in kwargs.items() ]
+
+    def _xmlNode(self, elemName, about=None, keys=[], parent=None):
+        if type(keys) != list:
+            keys = keys.split()
+        elem = Element(elemName, attrib=self._makeId(about))
+        elts = dict([ (x, getattr(about, x)) for x in keys])
+        self._addElements(elem, **elts)
+        if parent:
+            parent.append(elem)
+        return elem
 
     def _renderRoot(self, left, right):
         ''' make root note for survey diffs '''
@@ -292,135 +293,94 @@ class SurveyDiffRender(object):
         elem.append(self._element('type', mode))
         return elem
 
-    def _serializeRpmPackage(self, elem, item):
-        elem.attrib = self._makeId(item)
-        elem.append(self._element('install_date', item.install_date))
-        info = item.rpm_package_info
-        subElt = Element('rpm_package_info', attrib=self._makeId(info))
-        subElt.append(self._element('name', info.name))
-        subElt.append(self._element('epoch', info.epoch))
-        subElt.append(self._element('version', info.version))
-        subElt.append(self._element('release', info.release))
-        subElt.append(self._element('architecture', info.architecture))
-        subElt.append(self._element('signature', info.signature))
-        elem.append(subElt)
+    def _serializeRpmPackage(self, elemName, item):
+        elem = self._xmlNode(elemName, about=item, keys='install_date')
+        self._xmlNode('rpm_package_info', 
+            about=item.rpm_package_info, parent=elem,
+            keys="name epoch version release architecture signature"
+        )
+        return elem 
 
-    def _serializeConaryPackage(self, elem, item):
-        elem.attrib = self._makeId(item)
-        elem.append(self._element('install_date', item.install_date))
-        info = item.conary_package_info
-        subElt = Element('conary_package_info', attrib=self._makeId(info))
-        subElt.append(self._element('name', info.name))
-        subElt.append(self._element('version', info.version))
-        subElt.append(self._element('flavor', info.flavor))
-        subElt.append(self._element('revision', info.revision))
-        subElt.append(self._element('architecture', info.architecture))
-        subElt.append(self._element('signature', info.signature))
-        elem.append(subElt)
+    def _serializeConaryPackage(self, elemName, item):
+        elem = self._xmlNode(elemName, about=item, keys='install_date')
+        self._xmlNode('conary_package_info', 
+            about=item.conary_package_info, parent=elem,
+            keys="name version flavor revision architecture signature"
+        )
+        return elem
 
-    def _serializeWindowsPackage(self, elem, item):
-        elem.attrib = self._makeId(item)
-        elem.append(self._element('install_source', item.install_source))
-        elem.append(self._element('local_package', item.local_package))
-        elem.append(self._element('install_date', item.install_date))
-        info = item.windows_package_info
-        subElt = Element('windows_package_info', attrib=self._makeId(info))
-        subElt.append(self._element('publisher', info.publisher))
-        subElt.append(self._element('product_code', info.product_code))
-        subElt.append(self._element('package_code', info.package_code))
-        subElt.append(self._element('product_name', info.product_name))
-        subElt.append(self._element('type', info.type))
-        subElt.append(self._element('upgrade_code', info.upgrade_code))
-        subElt.append(self._element('version', info.version))
-        elem.append(subElt)
+    def _serializeWindowsPackage(self, elemName, item):
+        elem = self._xmlNode(elemName, about=item,
+            keys='install_source local_package install_date'
+        )
+        self._xmlNode('windows_package_info', 
+            about=item.windows_package_info, parent=elem,
+            keys='publisher product_code package_code type upgrade_code version'
+        )
+        return elem
 
-    def _serializeWindowsPatch(self, elem, item):
-        elem.attrib = self._makeId(item)
-        elem.append(self._element('local_package', item.local_package))
-        elem.append(self._element('install_date', item.install_date))
-        elem.append(self._element('is_installed', item.is_installed))
-        info = item.windows_patch_info
-        subElt = Element('windows_patch_info', attrib=self._makeId(info))
-        subElt.append(self._element('display_name', info.display_name))
-        subElt.append(self._element('uninstallable', info.uninstallable))
-        subElt.append(self._element('patch_code', info.patch_code))
-        subElt.append(self._element('product_code', info.product_code))
-        subElt.append(self._element('transforms', info.transforms))
+    def _serializeWindowsPatch(self, elemName, item):
+        elem = self._xmlNode(elemName, about=item,
+            keys = 'local_package install_date is_installed'
+        )
+        self._xmlNode('windows_patch_info', 
+            about=item.windows_patch_info, parent=elem,
+            keys='display_name uninstallable patch_code product_code transforms'
+        )
         package_elts = Element('windows_package_infos')
         links = survey_models.SurveyWindowsPatchPackageLink.objects.filter(
-            windows_patch_info = info
+            windows_patch_info = item.windows_patch_info
         )
         package_objs = [ x.windows_package_info for x in links ]
         for x in package_objs:
-            pi = Element('windows_package_info', attrib=self._makeId(x))
-            pi.append(self._element('publisher', x.publisher))
-            pi.append(self._element('product_code', x.product_code))
-            pi.append(self._element('package_code', x.package_code))
-            pi.append(self._element('product_name', x.product_name))
-            pi.append(self._element('type', x.type))
-            pi.append(self._element('upgrade_code', x.upgrade_code))
-            pi.append(self._element('version', x.version))
-            package_elts.append(pi)
-        subElt.append(package_elts)
-        elem.append(subElt)
+            self._xmlNode('windows_package_info', about=x, parent=package_elts,
+                keys='publisher product_code package_code type upgrade_code version'
+            )
+        elem.append(package_elts)
+        return elem
 
-    def _serializeService(self, elem, item):
-        elem.attrib = self._makeId(item)
-        elem.append(self._element('running', item.running))
-        elem.append(self._element('status', item.status))
-        info = item.service_info
-        subElt = Element('service_info', attrib=self._makeId(info))
-        subElt.append(self._element('name', info.name))
-        subElt.append(self._element('autostart', info.autostart))
-        subElt.append(self._element('runlevels', info.runlevels))
-        elem.append(subElt)
+    def _serializeService(self, elemName, item):
+        elem = self._xmlNode(elemName, about=item,
+            keys = 'running status'
+        )
+        self._xmlNode('service_info', 
+            about=item.service_info, parent=elem,
+            keys='name autostart runlevels'
+        )
+        return elem
 
-    def _serializeWindowsService(self, elem, item):
-        elem.attrib = self._makeId(item)
-        elem.append(self._element('status', item.status))
-        info = item.windows_service_info
-        subElt = Element('windows_service_info', attrib=self._makeId(info))
-        subElt.append(self._element('name', info.name))
-        subElt.append(self._element('display_name', info.display_name))
-        subElt.append(self._element('type', info.type))
-        subElt.append(self._element('handle', info.handle))
-        services = info._required_services.split(",")
+    def _serializeWindowsService(self, elemName, item):
+        elem = self._xmlNode(elemName, about=item,
+            keys='status'
+        )
+        subElt = self._xmlNode('windows_service_info', 
+            about=item.windows_service_info, parent=elem,
+            keys='name type handle'
+        )
+        services = item.windows_service_info._required_services.split(",")
         required_objs = survey_models.WindowsServiceInfo.objects.filter(name__in=services)
         required_elts = Element('required_services')
         for x in required_objs:
-            si = Element('windows_service_info', attrib=self._makeId(x))
-            si.append(self._element('name', x.name))
-            si.append(self._element('display_name', x.display_name))
-            si.append(self._element('type', x.type))
-            si.append(self._element('handle', x.handle))
-            required_elts.append(si)
+            self._xmlNode('windows_service_info', about=x, parent=required_elts,
+                keys='name display_name type handle'
+            )
         subElt.append(required_elts)
-        elem.append(subElt)
+        return elem
 
-    def _serializeItem(self, elem, item):
+    def _serializeItem(self, elemName, item):
         ''' 
         wrappers around item serialization.  TODO: find ways to leap into xobj nicely
         and pass in a request?  this is temporary.
         '''
-        # FIXME: hash lookup
-        typ = type(item)
-        if typ == survey_models.SurveyRpmPackage:
-            self._serializeRpmPackage(elem, item)
-        elif typ == survey_models.SurveyConaryPackage:
-            self._serializeConaryPackage(elem, item)
-        elif typ == survey_models.SurveyWindowsPackage:
-            self._serializeWindowsPackage(elem, item)
-        elif typ == survey_models.SurveyWindowsPatch:
-            self._serializeWindowsPatch(elem, item)
-        elif typ == survey_models.SurveyService:
-            self._serializeService(elem, item)
-        elif typ == survey_models.SurveyWindowsService:
-            self._serializeWindowsService(elem, item)
-        else:
-            raise Exception("unsupported type")
-
-        # parent.append(elem)
-        return elem
+        serializers = {
+            survey_models.SurveyRpmPackage: self._serializeRpmPackage,
+            survey_models.SurveyConaryPackage: self._serializeConaryPackage,
+            survey_models.SurveyWindowsPackage: self._serializeWindowsPackage,
+            survey_models.SurveyWindowsPatch: self._serializeWindowsPatch,
+            survey_models.SurveyService: self._serializeService,
+            survey_models.SurveyWindowsService: self._serializeWindowsService
+        }
+        return serializers[type(item)](elemName, item)
 
     def _fromElement(self, parentTag, item):
         ''' generate a tag with an item serialized in it 
@@ -429,29 +389,25 @@ class SurveyDiffRender(object):
                    <rpm_package>
         '''
         return self._serializeItem(
-            Element("from_%s" % parentTag.replace("_changes","")),
-            item
+            "from_%s" % parentTag.replace("_changes",""), item
         )
 
     def _toElement(self, parentTag, item):
         ''' generate a tag with an item serialized in it '''
         return self._serializeItem(
-            Element("to_%s" % parentTag.replace("_changes", "")),
-            item
+            "to_%s" % parentTag.replace("_changes", ""), item
         )
 
     def _addedElement(self, parentTag, item):
         ''' generate a tag with an item serialized in it '''
         return self._serializeItem(
-            Element("added_%s" % parentTag.replace("_changes", "")),
-            item
+            "added_%s" % parentTag.replace("_changes", ""), item
         )
 
     def _removedElement(self, parentTag, item):
         ''' generate a tag with an item serialized in it '''
         return self._serializeItem(
-            Element("removed_%s" % parentTag.replace("_changes","")),
-            item
+            "removed_%s" % parentTag.replace("_changes",""), item
         )
 
     def _diffElement(self, parentTag, deltas):
@@ -512,7 +468,6 @@ class SurveyDiffRender(object):
         ''' return XML representation of survey differences after calling compute '''
 
         self.differ.compare()
-
         root = self._renderRoot(self.left, self.right)
 
         elts = [
