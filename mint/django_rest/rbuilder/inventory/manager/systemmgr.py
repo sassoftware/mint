@@ -746,7 +746,12 @@ class SystemManager(basemanager.BaseManager):
         elif withManagementInterfaceDetection:
             # Need to dectect the management interface on the system
             self.scheduleSystemDetectMgmtInterfaceEvent(system)
+        # so that a transition between Inactive and Active systems will make the system
+        # move between querysets.  Note, not retagging, would be grossly inefficient
+        # with lots of system activity
+        self.mgr.invalidateQuerySetsByType('system')
 
+        
     def generateSystemCertificates(self, system):
         if system._ssl_client_certificate is not None and \
                 system._ssl_client_key is not None:
