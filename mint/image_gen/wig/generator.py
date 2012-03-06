@@ -109,6 +109,7 @@ class ImageGenerator(object):
             ccfg.configLine(line)
         ccfg.configLine('conaryProxy http %sconary' % (data['outputUrl']))
         ccfg.configLine('conaryProxy https %sconary' % (data['outputUrl']))
+        ccfg.configLine('updateThreshold 1')
         ccfg.dbPath = ':memory:'
         self.conaryClient = conaryclient.ConaryClient(self.conaryCfg)
 
