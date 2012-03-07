@@ -31,9 +31,7 @@ class MirrorOutbound(MirrorScript):
         client = MintClient(self.mintUrl)
 
         outboundMirrors = client.getOutboundMirrors()
-
-        # get proxy configuration here
-        proxy = self.cfg.proxy
+        proxyMap = self.cfg.getProxyMap()
 
         for (outboundMirrorId, sourceProjectId, targetLabels, allLabels,
           recurse, matchStrings, _, fullSync, useReleases,
@@ -76,7 +74,6 @@ class MirrorOutbound(MirrorScript):
                 sourceCCfg.repositoryMap.update(sourceCfg.repositoryMap)
                 sourceCCfg.user = sourceCfg.user
                 sourceCCfg.entitlement = sourceCfg.entitlement
-                sourceCCfg.proxy = proxy
                 sourceCCfg.conaryProxy = conaryProxy
 
                 # privRepos is a privileged netclient for managing the
@@ -209,7 +206,7 @@ class MirrorOutbound(MirrorScript):
                     targetCCfg = conarycfg.ConaryConfiguration()
                     targetCCfg.repositoryMap.update(targetCfg.repositoryMap)
                     targetCCfg.user = targetCfg.user
-                    targetCCfg.proxy = proxy
+                    targetCCfg.proxyMap = proxyMap
                     t = conaryclient.ConaryClient(targetCCfg).getRepos()
                     targetReposes.append(t)
 

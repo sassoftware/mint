@@ -358,7 +358,7 @@ def _getProxyServer(context, fqdn, withCapsuleFilter):
     serverCfg.proxyContentsDir = cfg.proxyContentsDir
     serverCfg.changesetCacheDir = cfg.proxyChangesetCacheDir
     serverCfg.tmpDir = cfg.proxyTmpDir
-    serverCfg.proxy = cfg.proxy
+    serverCfg.proxyMap = cfg.getProxyMap()
 
     restDb = None
     if withCapsuleFilter:
