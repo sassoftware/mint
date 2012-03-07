@@ -626,6 +626,11 @@ class MintServer(object):
         which case we should succeed anyway with just the repository setup.
         """
         result = sp.configure.Network.index()
+        if 'errors' in result:
+            log.error("Error configuring update service %s", urlhostname)
+            for error in result['errors']:
+                log.error("  %s", error.rstrip())
+            return
         fqdn = result.get('host_hostName')
         if not fqdn:
             log.warning("Update service %s has no FQDN configured "
