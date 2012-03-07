@@ -22,6 +22,7 @@ from django.core import exceptions
 from django.core import urlresolvers 
 
 from xobj import xobj
+from copy import deepcopy
 
 from mint.django_rest import timeutils
 from mint.django_rest.rbuilder import errors
@@ -1653,7 +1654,7 @@ class HrefFieldFromModel(HrefField):
         if self.tag:
             # We need to instantiate an instance xobj metadata, setting
             # it here directly would change the class-wide one
-            hrefModel._xobj = hrefModel._xobj.copy()
+            hrefModel._xobj = deepcopy(hrefModel._xobj)
             hrefModel._xobj.tag = self.tag
         return hrefModel
 
