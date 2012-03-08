@@ -291,7 +291,14 @@ class ImagesTestCase(RbacEngine):
     def _testDeleteImage(self, username, expected_code):
         response = self._delete('images/1', username=username, password='password')
         self.assertEquals(response.status_code, expected_code)
-        
+    
+    def testCannotDeleteLayeredSource(self):
+        image1 = models.Image.objects.get(pk=1)
+        image2 = models.Image.objects.get(pk=2)
+        image2.base_image = image1
+        image2.save()
+        self._testDeleteImage('admin', 403)
+ 
     def testDeleteImageAdmin(self):
         self._testDeleteImage('admin', 204)
 
