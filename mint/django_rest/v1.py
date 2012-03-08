@@ -71,9 +71,6 @@ urlpatterns = patterns('',
     (r'^/users',
      include('mint.django_rest.rbuilder.users.views.v1.urls')),
     
-    (r'^/notices',
-     include('mint.django_rest.rbuilder.notices.views.v1.urls')),
-    
     (r'^/platforms',
      include('mint.django_rest.rbuilder.platforms.views.v1.urls')),
     
