@@ -196,10 +196,10 @@ class BaseJobHandler(AbstractHandler):
     def createRmakeJob(self, job):
         cli = self.mgr.mgr.repeaterMgr.repeaterClient
         method = self.getRepeaterMethod(cli, job)
-        methodArgs, methodKwargs = self.getRepeaterMethodArgs(job)
+        methodArgs, methodKwargs = self.getRepeaterMethodArgs(cli, job)
         return method(*methodArgs, **methodKwargs)
 
-    def getRepeaterMethodArgs(self, job):
+    def getRepeaterMethodArgs(self, cli, job):
         return (), {}
 
     def linkRelatedResource(self, job):
@@ -261,6 +261,8 @@ class ResultsProcessingMixIn(object):
         for resource in resources:
             tag = resource._xobj.tag
 
+            # XXX this is ugly. We should have a more extensible way to
+            # handle this
             if tag == 'system':
                 models.JobSystemArtifact(job=job, system=resource).save()
                 # store the change in the system job count
@@ -271,6 +273,8 @@ class ResultsProcessingMixIn(object):
                 # not used in production yet, but mentioned in tests, so we don't
                 # have to save it.
                 pass
+            elif tag == 'survey':
+                models.JobSurveyArtifact.objects.create(job=job, survey=resource)
             else:
                 raise Exception("internal error, don't know how to save resource: %s" % tag)
         return resources[0]
@@ -354,8 +358,8 @@ class DescriptorJobHandler(BaseJobHandler, ResultsProcessingMixIn):
     def getRelatedResource(self, descriptor):
         descriptorId = descriptor.getId()
         try:
-            match = urlresolvers.resolve(descriptorId)
-        except urlresolvers.Resolver404:
+            match = self.splitResourceId(descriptorId)
+        except errors.InvalidData:
             return None
         return match.func.get(**match.kwargs)
 
@@ -385,6 +389,16 @@ class DescriptorJobHandler(BaseJobHandler, ResultsProcessingMixIn):
     def postprocessRelatedResource(self, job, model):
         pass
 
+    @classmethod
+    def splitResourceId(cls, resourceId):
+        try:
+            match = urlresolvers.resolve(resourceId)
+        except urlresolvers.Resolver404:
+            raise errors.InvalidData()
+
+        return match
+
+
 class _TargetDescriptorJobHandler(DescriptorJobHandler):
     __slots__ = [ 'target', ]
 
@@ -392,17 +406,8 @@ class _TargetDescriptorJobHandler(DescriptorJobHandler):
         DescriptorJobHandler._init(self)
         self.target = None
 
-    @classmethod
-    def _splitDescriptorId(cls, descriptorId):
-        try:
-            match = urlresolvers.resolve(descriptorId)
-        except urlresolvers.Resolver404:
-            raise errors.InvalidData()
-
-        return match
-
     def getDescriptor(self, descriptorId):
-        match = self._splitDescriptorId(descriptorId)
+        match = self.splitResourceId(descriptorId)
         targetId = int(match.kwargs['target_id'])
         self._setTarget(targetId)
         descr = self._getDescriptorMethod()(targetId)
@@ -540,7 +545,7 @@ class JobHandlerRegistry(HandlerRegistry):
         ResultsTag = 'image'
 
         def getDescriptor(self, descriptorId):
-            match = self._splitDescriptorId(descriptorId)
+            match = self.splitResourceId(descriptorId)
 
             targetId = int(match.kwargs['target_id'])
             fileId = int(match.kwargs['file_id'])
@@ -584,7 +589,7 @@ class JobHandlerRegistry(HandlerRegistry):
                 return None
             return vals[0]['value']
 
-        def getRepeaterMethodArgs(self, job):
+        def getRepeaterMethodArgs(self, cli, job):
             imageDownloadUrl = self.mgr.mgr.restDb.imageMgr.getDownloadUrl(self.image_file.file_id)
             hostname = self.image.project.short_name
             baseFileName = self._getImageBaseFileName()
@@ -594,7 +599,7 @@ class JobHandlerRegistry(HandlerRegistry):
                 self.image.trove_version, troveFlavor,
             )
 
-            urls = self.image_file.buildfilesurlsmap_set.filter(
+            urls = self.image_file.urls_map.filter(
                 url__url_type=urltypes.LOCAL).values('url__url')
             imageFileInfo = dict(
                 size=self.image_file.size,
@@ -651,8 +656,8 @@ class JobHandlerRegistry(HandlerRegistry):
             JobHandlerRegistry.TargetDeployImage.getRepeaterMethod(self, cli, job)
             return cli.targets.launchSystem
 
-        def getRepeaterMethodArgs(self, job):
-            args, kwargs = JobHandlerRegistry.TargetDeployImage.getRepeaterMethodArgs(self, job)
+        def getRepeaterMethodArgs(self, cli, job):
+            args, kwargs = JobHandlerRegistry.TargetDeployImage.getRepeaterMethodArgs(self, cli, job)
             params = args[0]
             # Use the original image id, which should be the non-base
             # image
@@ -702,7 +707,7 @@ class JobHandlerRegistry(HandlerRegistry):
             self.targetType = None
 
         def getDescriptor(self, descriptorId):
-            match = _TargetDescriptorJobHandler._splitDescriptorId(descriptorId)
+            match = self.splitResourceId(descriptorId)
 
             targetTypeId = int(match.kwargs['target_type_id'])
             self._setTargetType(targetTypeId)
@@ -835,7 +840,7 @@ class JobHandlerRegistry(HandlerRegistry):
             self.target = self.system = self.image = None
 
         def getDescriptor(self, descriptorId):
-            match = self._splitDescriptorId(descriptorId)
+            match = self.splitResourceId(descriptorId)
 
             systemId = int(match.kwargs['system_id'])
             if str(systemId) != str(self.extraArgs.get('system_id')):
@@ -856,7 +861,7 @@ class JobHandlerRegistry(HandlerRegistry):
                 targetUserCredentials)
             return cli.targets.captureSystem
 
-        def getRepeaterMethodArgs(self, job):
+        def getRepeaterMethodArgs(self, cli, job):
             params = dict((x.getName(), x.getValue())
                 for x in self.descriptorData.getFields())
             stageId = int(params.pop('stageId'))
@@ -876,8 +881,8 @@ class JobHandlerRegistry(HandlerRegistry):
             params['outputToken'] = outputToken
             params['imageUploadUrl'] = 'https://%s/uploadBuild/%s' % (
                 host, image.image_id)
-            params['imageFilesCommitUrl'] = 'https://%s/api/products/%s/images/%s/files' % (
-                host, stage.project.short_name, image.image_id)
+            params['imageFilesCommitUrl'] = 'https://%s/api/v1/images/%s/build_files' % (
+                host, image.image_id)
             params['image_id'] = 'https://%s/api/v1/images/%s' % (
                 host, image.image_id)
             params['imageName'] = "%s.ova" % self._sanitizeString(imageTitle)
@@ -915,3 +920,60 @@ class JobHandlerRegistry(HandlerRegistry):
             self.mgr.mgr.finishImageBuild(image)
             return image
 
+    class SystemScan(DescriptorJobHandler):
+        __slots__ = [ 'system', 'eventUuid', ]
+        jobType = models.EventType.SYSTEM_SCAN
+        ResultsTag = 'surveys'
+
+        def getRepeaterMethod(self, cli, job):
+            self.descriptor, self.descriptorData = self.extractDescriptorData(job)
+            cimInterface = self.mgr.mgr.cimManagementInterface()
+            wmiInterface = self.mgr.mgr.wmiManagementInterface()
+            methodMap = {
+                cimInterface.management_interface_id : cli.survey_scan_cim,
+                wmiInterface.management_interface_id : cli.survey_scan_wmi,
+            }
+            method = methodMap.get(self.system.management_interface_id)
+            if method is None:
+                raise errors.InvalidData(msg="Unsupported management interface")
+            return method
+
+        def getDescriptor(self, descriptorId):
+            descriptor = self.mgr.mgr.sysMgr.getDescriptorSurveyScan(None)
+            match = self.splitResourceId(descriptorId)
+            systemId = int(match.kwargs['system_id'])
+            self._setSystem(systemId)
+            return descriptor
+
+        def getRelatedResource(self, descriptor):
+            return self.system
+
+        def getRelatedThroughModel(self, descriptor):
+            return inventorymodels.SystemJob
+
+        def getRepeaterMethodArgs(self, cli, job):
+            self.eventUuid = uuid.uuid4()
+            nw = self.system.extractNetworkToUse(self.system)
+            if not nw:
+                raise errors.InvalidData(msg="No network available for system")
+            destination = nw.ip_address or nw.dns_name
+            params = self.mgr.mgr.sysMgr._computeDispatcherMethodParams(cli,
+                self.system, destination, eventUuid=str(self.eventUuid),
+                requiredNetwork=None)
+            return (params, ), dict(zone=self.system.managing_zone.name)
+
+        def postprocessRelatedResource(self, job, model):
+            model.event_uuid = str(self.eventUuid)
+
+        def _setSystem(self, systemId):
+            system = inventorymodels.System.objects.get(system_id=systemId)
+            self.system = system
+
+        def _processJobResults(self, job):
+            descriptor = smartdescriptor.ConfigurationDescriptor(fromStream=job._descriptor)
+            match = self.splitResourceId(descriptor.getId())
+            systemId = int(match.kwargs['system_id'])
+            self._setSystem(systemId)
+            survey = self.mgr.mgr.addSurveyForSystemFromXobj(
+                self.system.system_id, job.results.surveys)
+            return survey

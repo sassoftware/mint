@@ -3,7 +3,6 @@
 #
 
 import copy
-from cStringIO import StringIO
 import os
 import sys
 
@@ -17,13 +16,11 @@ from mint.rest import errors
 from mint.rest.api import models
 from mint.rest.db import manager
 
-from conary import changelog
 from conary import conarycfg
 from conary import conaryclient
 from conary import trove as cny_trove
 from conary import trovetup
 from conary.build import nextversion
-from conary.conaryclient import filetypes
 from conary.repository import changeset
 from conary.repository import errors as reposerrors
 from conary.repository import shimclient
@@ -152,40 +149,10 @@ class RepositoryManager(manager.Manager):
         return bool(results[0][0])
 
     def getAdminClient(self, write=False):
-        """
-        Get a conary client object with access to all repositories. If C{write}
-        is set then the client can write to the repositories, otherwise it will
-        have only read access.
-
-        All external projects will have full read access, as if using the
-        built-in conary proxy.
-        """
-        if write:
-            userId = reposdb.ANY_WRITER
-        else:
-            userId = reposdb.ANY_READER
-        return self.db.reposShim.getClient(userId)
+        return self.db.reposShim.getAdminClient(write=write)
 
     def getUserClient(self):
-        """
-        Get a conary client with the permissions of the current user. This
-        includes hiding private projects the user does not have access to, etc.
-
-        All external projects will have full read access, as if using the
-        built-in conary proxy. Additionally, site admins will have admin access
-        to any repository.
-        """
-        if self.auth.isAdmin:
-            userId = reposdb.ANY_WRITER
-        elif self.auth.userId < 0:
-            userId = reposdb.ANONYMOUS
-        else:
-            userId = self.auth.userId
-        client = self.db.reposShim.getClient(userId)
-        if self.auth.username:
-            client.cfg.name = self.auth.username
-            client.cfg.contact = self.auth.fullName or ''
-        return client
+        return self.db.reposShim.getUserClient(auth=self.auth.auth)
 
     def getConaryClient(self, admin=False):
         # DEPRECATED: Try getAdminClient or getUserClient first; this is going away.
@@ -307,53 +274,6 @@ class RepositoryManager(manager.Manager):
             elif authType == 'entitlement':
                 entMap.append((host, entitlement))
         return userMap, entMap
-
-    RegularFile = filetypes.RegularFile
-
-    def createSourceTrove(self, fqdn, trovename, buildLabel, 
-                          upstreamVersion, streamMap, changeLogMessage,
-                          factoryName=None, admin=False, metadata=None):
-        # Get repository + client
-        if admin:
-            client = self.getAdminClient(write=True)
-        else:
-            client = self.getUserClient()
-
-        # Sanitize input
-        if ':' not in trovename:
-            trovename += ':source'
-
-        if not changeLogMessage.endswith('\n'):
-            changeLogMessage += '\n'
-
-        # create a pathdict out of the streamMap
-        pathDict = {}
-        for filename, filestream in streamMap.iteritems():
-            if isinstance(filestream, str):
-                filestream = StringIO(filestream)
-            if hasattr(filestream, 'getContents'):
-                fileobj = filestream
-            else:
-                fileobj = self.RegularFile(contents=filestream,
-                                           config=True)
-
-            pathDict[filename] = fileobj
-
-        # create the changelog message using the currently
-        # logged-on user's username and fullname, if available
-        newchangelog = changelog.ChangeLog(self.auth.username or '(unset)',
-                self.auth.fullName or '(unset)', changeLogMessage.encode('utf8'))
-
-        # create a change set object from our source data
-        changeSet = client.createSourceTrove(str(trovename), str(buildLabel),
-                str(upstreamVersion), pathDict, newchangelog,
-                factory=factoryName, metadata=metadata)
-
-        # commit the change set to the repository
-        client.getRepos().commitChangeSet(changeSet)
-
-        troveTup = sorted(changeSet.newTroves.keys())[0]
-        return trovetup.TroveTuple(troveTup)
 
     def _getFqdn(self, hostname, domainname):
         if domainname:
@@ -523,55 +443,13 @@ class RepositoryManager(manager.Manager):
                 items=troveTups,
                 )
 
+    def createSourceTrove(self, *args, **kwargs):
+        kwargs.update(auth=self.auth.auth)
+        return self.db.reposShim.createSourceTrove(*args, **kwargs)
+
     def updateKeyValueMetadata(self, jobs, admin=False):
-        if not jobs:
-            return []
-        if admin:
-            client = self.getAdminClient(write=True)
-        else:
-            client = self.getUserClient()
-
-        troveTups = [x[0] for x in jobs]
-        allSpecs = [(n, '%s/%s' % (v.trailingLabel(),
-                v.trailingRevision().getVersion()), None)
-            for (n, v, f) in troveTups]
-        metaDicts = [x[1] for x in jobs]
-
-        allVersions = client.repos.findTroves(None, allSpecs, getLeaves=False)
-
-        troves = client.repos.getTroves(troveTups, withFiles=True)
-        changeSet = changeset.ChangeSet()
-        newTups = []
-        for trv, allSpec, metaDict in zip(troves, allSpecs, metaDicts):
-            newTrv = trv.copy()
-            # Build new key-value metadata
-            keyValues = cny_trove.KeyValueItemsStream()
-            for key, value in metaDict.iteritems():
-                keyValues[key] = value
-            meta = newTrv.troveInfo.metadata
-            # Make sure there's an existing MetadataItem to work on
-            meta.addItem(cny_trove.MetadataItem())
-            # Flatten old metadata and replace the keyvalue element
-            flattened = meta.flatten(skipSet=set(['sizeOverride']))
-            for item in flattened:
-                if not item.language():
-                    item.keyValue = keyValues
-            newTrv.troveInfo.metadata = cny_trove.Metadata()
-            newTrv.troveInfo.metadata.addItems(flattened)
-            # Pick new version
-            old = trv.getVersion()
-            oldTups = allVersions[allSpec]
-            version = nextversion.nextSourceVersion(old.branch(),
-                    old.trailingRevision(), [x[1] for x in oldTups])
-            newTrv.changeVersion(version)
-            # Prepare for commit
-            newTrv.computeDigests()
-            trvCs = newTrv.diff(None, absolute=True)[0]
-            changeSet.newTrove(trvCs)
-            newTups.append(trovetup.TroveTuple(newTrv.getNameVersionFlavor()))
-
-        client.repos.commitChangeSet(changeSet)
-        return newTups
+        return self.db.reposShim.updateKeyValueMetadata(jobs, admin=admin,
+            auth=self.auth.auth)
 
     def deleteTroves(self, troveTups, admin=False):
         # NB: this doesn't recurse since it's initially used for deleting

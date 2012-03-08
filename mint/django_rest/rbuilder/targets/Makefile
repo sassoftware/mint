@@ -12,7 +12,7 @@
 # full details.
 #
 
-SUBDIRS =
+SUBDIRS = views
 python_files =	$(wildcard *.py)
 
 dist_files = Makefile $(python_files)

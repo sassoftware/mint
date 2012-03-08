@@ -198,6 +198,23 @@ class QuerySetManager(basemanager.BaseManager):
         qs.tagged_date = None
         qs.save()
 
+
+    @exposed
+    def invalidateQuerySetsByType(self, resource_type): 
+        '''
+        Requires that a queryset be retagged the next time it is requested
+        only if the queryset is non-static.  This is basically for operations
+        on querysets that could cause a state change, which means edit operations
+        as opposed to additions.
+        '''
+        matched = models.QuerySet.objects.filter(
+            resource_type=resource_type,
+            is_static=False
+        )
+        for qs in matched:
+            qs.tagged_date = None
+            qs.save()
+
     @exposed
     def retagQuerySetsByType(self, type, for_user=None):
         '''
