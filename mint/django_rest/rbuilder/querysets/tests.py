@@ -128,7 +128,11 @@ class QuerySetTestCase(QueryTestCase):
         queryset = models.QuerySet.objects.get(pk=qsid)
         self.assertEquals(queryset.tagged_date, None)
 
-
+        # verify that asking for 0 results returns 0 results
+        # (not this should happen)
+        response = self._get("query_sets/%s/all;start_index=0;limit=0" % qsid,
+            username="admin", password="password")
+        self.assertEquals(response.status_code, 200)
 
     # NOTE -- this test did not exist previously, is it
     # supported?
