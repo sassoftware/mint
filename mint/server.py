@@ -3902,7 +3902,7 @@ If you would not like to be %s %s of this project, you may resign from this proj
             info = fileuploader.parseManifest()
         except IOError, e:
             log.exception("Error parsing pcreator manifest:")
-            raise mint_error.PackageCreatorError("unable to parse uploaded file's manifest: %s" % str(e))
+            raise mint_error.PackageCreatorError("unable to download the file and/or parse the uploaded file's manifest: %s" % str(e))
         #TODO: Check for a URL
         #Now go ahead and start the Package Creator Service
 
