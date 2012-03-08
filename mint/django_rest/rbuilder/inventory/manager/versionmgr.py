@@ -317,7 +317,7 @@ class VersionManager(basemanager.BaseManager):
             fields.extend(self._getTroveConfigDescriptor(trove))
 
         out = StringIO()
-        desc.serialize(out)
+        desc.serialize(out, validate=False)
         out.seek(0)
 
         return out.read()
