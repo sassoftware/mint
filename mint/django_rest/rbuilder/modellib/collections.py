@@ -314,18 +314,26 @@ class Collection(XObjIdModel):
         else:
             modelList = []
             self.count = 0
+        if self.limit == 0:
+            self.count = 0
 
         # compute page counts and numbers
-        pageCount  = int(math.ceil(self.count / float(self.limit)))
-        pageNumber = int(math.floor(startIndex / float(self.limit)))
-        stopIndex  = startIndex + self.limit -1
+        pageCount  = 0
+        pageNumber = 1
+        stopIndex  = 0
+        if self.limit > 0:
+            pageCount  = int(math.ceil(self.count / float(self.limit)))
+            pageNumber = int(math.floor(startIndex / float(self.limit)))
+            stopIndex  = startIndex + self.limit -1
 
         # some somewhat confusing fenceposty stuff because we're working in ints
         if pageCount == 0:
             pageCount = 1
         if stopIndex < 0:
             stopIndex = 0
-        pageObjectList = modelList[startIndex:(stopIndex+1)]
+        pageObjectList = []
+        if self.limit > 0:
+            pageObjectList = modelList[startIndex:(stopIndex+1)]
 
         setattr(self, listField, pageObjectList)
 
