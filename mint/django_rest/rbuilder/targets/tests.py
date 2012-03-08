@@ -1605,7 +1605,7 @@ ZcY7o9aU
                 if not isinstance(y, basestring))
         return mungedParams
 
-    def _setupImages(self):
+    def _setupImages(self, withEc2=False):
         targetType = models.TargetType.objects.get(name='vmware')
         target1 = models.Target.objects.filter(target_type=targetType)[0]
         targetType = models.TargetType.objects.get(name='openstack')
@@ -1613,10 +1613,16 @@ ZcY7o9aU
         targetType = models.TargetType.objects.get(name='vcloud')
         target3 = models.Target.objects.filter(target_type=targetType)[0]
 
+        targetType = models.TargetType.objects.get(name='ec2')
+        targetEc2 = models.Target.objects.filter(target_type=targetType)[0]
+
         targetData = [
             (target1, buildtypes.VMWARE_ESX_IMAGE, [ 'ova', 'tar.gz', ]),
             (target2, buildtypes.RAW_HD_IMAGE, [ 'tar.gz' ]),
         ]
+
+        if withEc2:
+            targetData.append((targetEc2, buildtypes.AMI, [ '.tar.gz', ]))
 
         # We need to set a user, image creation needs it
         user = self.getUser('ExampleDeveloper')
@@ -1636,7 +1642,16 @@ ZcY7o9aU
                     description = "image %02d description" % i,
                     project_branch_stage=stage,
                 )
-                imgmgr.createImageBuild(image)
+
+                j = i + 2
+                if imageType == buildtypes.AMI:
+                    targetInternalImageId = 'rmi-%08x' % j
+                    buildData = [ ('amiId', targetInternalImageId, 0) ]
+                else:
+                    targetInternalImageId = targetImageIdTempl % j
+                    buildData = []
+
+                imgmgr.createImageBuild(image, buildData=buildData)
                 for fileExtension in fileExtensions:
                     if i == 4 and fileExtension == 'ova':
                         # Skip this one, to force an ovf 0.9 only image
@@ -1647,18 +1662,19 @@ ZcY7o9aU
                         title="Image File Title %02d" % i,
                         size=100+i,
                         sha1="%040d" % i)
-                    if i % 2 == 0:
+                    if i % 2 == 0 and imageType != buildtypes.AMI:
+                        # the amiId is not recorded with the build
+                        # file, but with the whole image
                         imgbuild = imgmgr.recordTargetInternalId(
                             buildFile=bf, target=target,
                             targetInternalId=targetImageIdTempl % i)
 
                 # Add a bunch of target images
-                j = i + 2
                 models.TargetImage.objects.create(
                     target = target,
                     name="target image name %02d" % j,
                     description="target image description %02d" % j,
-                    target_internal_id=targetImageIdTempl % j)
+                    target_internal_id=targetInternalImageId)
 
                 # Create deferred images too
                 self.createDeferredImage(image,
@@ -1666,7 +1682,10 @@ ZcY7o9aU
                     projectBranchStage=stage)
 
         self._markAllImagesAsFinished()
-        return [ target1, target2, target3 ]
+        ret = [ target1, target2, target3 ]
+        if withEc2:
+            ret.append(targetEc2)
+        return ret
 
     def createDeferredImage(self, baseImage, name, description=None,
             projectBranchStage=None):
@@ -1854,6 +1873,23 @@ ZcY7o9aU
             ])
         self.failUnlessEqual(doc.image.jobs.id,
             'http://testserver/api/v1/images/%s/jobs' % img.image_id)
+
+    def testRecomputeTargetDeployableImagesEC2(self):
+        targets = self._setupImages(withEc2=True)
+        self.mgr.targetsManager.recomputeTargetDeployableImages()
+
+        targetEC2 = targets[-1]
+        self.failUnlessEqual(targetEC2.target_type.name, 'ec2')
+
+        for i, imgName in enumerate([ "image 00", "image 01", "image 02", "image 03", "image 04" ]):
+            img = imgmodels.Image.objects.get(name=imgName, _image_type=buildtypes.AMI)
+            self.failUnlessEqual(
+                [
+                    [ tdi.target_image.target_internal_id
+                        for tdi in imgfile.target_deployable_images.all() ]
+                    for imgfile in img.files.order_by('file_id') ],
+                [["rmi-%08x" % (i+2)]]
+            )
 
     def testDeployImage(self):
         targets = self._setupImages()

@@ -7,7 +7,6 @@ import logging
 import os
 import shutil
 import pwd
-import rephelp
 import socket
 import sys
 import re
@@ -54,8 +53,10 @@ from conary.callbacks import UpdateCallback, ChangesetCallback
 from conary.deps import deps
 from conary.lib import util
 from conary.lib.digestlib import sha1
+from conary_test import rephelp
+from conary_test import resources
 
-from testrunner.testhelp import SkipTestException, findPorts
+from testrunner.testhelp import findPorts
 
 # NOTE: make sure that test.rpath.local and test.rpath.local2 is in your
 # system's /etc/hosts file (pointing to 127.0.0.1) before running this
@@ -179,7 +180,6 @@ def getIpAddresses():
     
 def getMintCfg(reposDir, serverRoot, port, securePort, reposDbPort, useProxy):
     # write Mint configuration
-    conaryPath = pathManager.getPath('CONARY_PATH')
     mintPath = pathManager.getPath('MINT_PATH')
 
 
@@ -238,13 +238,7 @@ def getMintCfg(reposDir, serverRoot, port, securePort, reposDbPort, useProxy):
     cfg.configured = True
     cfg.debugMode = True
     cfg.sendNotificationEmails = False
-    if conaryPath.startswith('/usr/'):
-        # /usr/lib/...[/conary/commitaction]
-        scriptPath = os.path.join(conaryPath, 'conary/commitaction')
-    else:
-        # /home/foo/hg/conary/[scripts/commitaction]
-        scriptPath = os.path.join(conaryPath, 'scripts/commitaction')
-
+    scriptPath = resources.get_path('scripts/commitaction')
     if serverRoot:
         cfg.commitAction = ("%s --username=mintauth --password=mintpass "
                 "--repmap='%%(repMap)s' --build-label=%%(buildLabel)s "
@@ -327,7 +321,6 @@ class MintApacheServer(rephelp.ApacheServer):
                       "%s/httpd.conf.in" % self.serverRoot)
             cmd = ("sed -e 's|@IMAGESPATH@|%s|g' -e 's|@MINTPATH@|%s|g'"
                     " -e 's|@MCPPATH@|%s|g'"
-                    " -e 's|@CONARYPATH@|%s|g'"
                     " -e 's|@PCREATORPATH@|%s|g'"
                     " -e 's|@CATALOGSERVICEPATH@|%s|g'"
                     " -e 's|@RESTLIBPATH@|%s|g'"
@@ -336,7 +329,6 @@ class MintApacheServer(rephelp.ApacheServer):
                                     "finished-images"),
                        pathManager.getPath('MINT_PATH'),
                        pathManager.getPath('MCP_PATH'),
-                       pathManager.getPath('CONARY_PATH'),
                        pathManager.getPath('PACKAGE_CREATOR_SERVICE_PATH'),
                        pathManager.getPath('CATALOG_SERVICE_PATH'),
                        pathManager.getPath('RESTLIB_PATH'),
@@ -450,12 +442,11 @@ class MintServerCache(rephelp.ServerCache):
     serverType = 'mint'
 
     def getServerClass(self, envname, useSSL):
-        name = "mint." + MINT_DOMAIN
-        server = None
-        serverDir = os.path.join(pathManager.getPath('CONARY_PATH'),'/conary/server')
+        serv = None
+        serverDir = resources.get_path('conary', 'server')
         serverClass = MintApacheServer
 
-        return server, serverClass, serverDir, None, None
+        return serv, serverClass, serverDir, None, None
 
 
 _servers = MintServerCache()
@@ -736,12 +727,13 @@ class MintRepositoryHelper(rephelp.RepositoryHelper, RestDBMixIn):
 
     def startMintServer(self, serverIdx = 0, useProxy=False):
         serverCache = self.mintServers
-        server = serverCache.getCachedServer(serverIdx)
+        serv = serverCache.getCachedServer(serverIdx)
         SQLserver = sqlharness.start(self.topDir)
         reposDir = self._getReposDir() + '-mint'
-        if not server:
-            server = serverCache.startServer(reposDir, 
-                                             pathManager.getPath('CONARY_PATH'),
+        if not serv:
+            conaryPath = resources.get_path()
+            serv = serverCache.startServer(reposDir, 
+                                             conaryPath,
                                              SQLserver,
                                              serverIdx, requireSigs=False, 
                                              serverName=None,
@@ -756,12 +748,12 @@ class MintRepositoryHelper(rephelp.RepositoryHelper, RestDBMixIn):
                                              deadlockRetry = None)
 
         else:
-            server.setNeedsReset()
+            serv.setNeedsReset()
         if serverIdx == 0 and serverCache is self.mintServers:
-            self.port = server.port
-            self.mintCfg = server.mintCfg
+            self.port = serv.port
+            self.mintCfg = serv.mintCfg
             if self.mintCfg.SSL:
-                self.securePort = server.securePort
+                self.securePort = serv.securePort
             else:
                 self.securePort = 0
         util.mkdirChain(self.mintCfg.logPath)
@@ -773,11 +765,11 @@ class MintRepositoryHelper(rephelp.RepositoryHelper, RestDBMixIn):
   
         if useProxy:
             self.cfg.configKey('conaryProxy',
-                               'http http://localhost:%s' % server.port)
+                               'http http://localhost:%s' % serv.port)
         try:
-            cli = mint.client.MintClient('http://%s:%s@localhost:%s/xmlrpc-private' % ('intuser', 'intpass', server.port))
+            cli = mint.client.MintClient('http://%s:%s@localhost:%s/xmlrpc-private' % ('intuser', 'intpass', serv.port))
         except:
-            print "Failure connecting to localhost:%s" % (server.port, )
+            print "Failure connecting to localhost:%s" % (serv.port, )
             serverCache.stopServer(serverIdx)
             raise
         auth = cli.checkAuth()

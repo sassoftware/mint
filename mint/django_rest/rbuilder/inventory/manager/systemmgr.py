@@ -551,10 +551,16 @@ class SystemManager(basemanager.BaseManager):
                 self.mgr.addToMyQuerySet(system, for_user)
             self.mgr.retagQuerySetsByType('system', for_user)
 
+        # registration needs to cause a configuration so that config values
+        # and embedded configurators/puppet modules are run
+        if getattr(system, '_not_merged', False):
+            self.scheduleSystemConfigurationEvent(system, system.configuration)
+
         return system
 
     def mergeSystems(self, system):
         if not system.event_uuid:
+            system._not_merged = True
             return system
         # Look up a system with a matching event_uuid
         systems = [ x.system
@@ -638,6 +644,7 @@ class SystemManager(basemanager.BaseManager):
         # Remove the other system before saving this one, or else we may stop
         # over some unique constraints (like the one on generated_uuid)
         other.delete()
+        system.updateDerivedData()
         system.save()
         return system
 
@@ -849,9 +856,15 @@ class SystemManager(basemanager.BaseManager):
         # Return None if the state hasn't changed
         jobStateName = job.job_state.name
         eventTypeName = job.job_type.name
+        system.updateDerivedData()
+
         if jobStateName == jobmodels.JobState.COMPLETED:
-            if eventTypeName in self.RegistrationEvents:
-                return None
+            if eventTypeName == jobmodels.EventType.SYSTEM_REGISTRATION:
+                # hmm, actually you'll probably never get here because a job
+                # doesn't really happen for a registration response!  must
+                # rewrite FSM sometime
+                self.scheduleSystemConfigurationEvent(system, system.configuration)
+                return models.SystemState.RESPONSIVE
             if eventTypeName in self.PollEvents or \
                     eventTypeName in self.SystemUpdateEvents:
                 return models.SystemState.RESPONSIVE
@@ -1120,12 +1133,14 @@ class SystemManager(basemanager.BaseManager):
                  WHERE job_id = %s
                    AND system_id = %s)""",
         [ jobId, system.pk, jobId, system.pk ])
+        system.updateDerivedData()
 
     @exposed
     def postSystemLaunch(self, system):
         # No longer waiting for a network here, the target waits for
         # network
         self.setSystemState(system)
+        system.updateDerivedData()
         return system
 
     def _getCredentialsForUser(self, target):
@@ -1802,6 +1817,8 @@ class SystemManager(basemanager.BaseManager):
 
     @classmethod
     def configDictToXml(cls, configuration):
+        if configuration is None:
+            configuration = {}
         obj = Configuration(**configuration)
         return xobj.toxml(obj, prettyPrint=False, xml_declaration=False)
 
