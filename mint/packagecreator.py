@@ -193,7 +193,7 @@ def getPackageCreatorFactories(pc, sessionHandle):
         raise mint_error.PackageCreatorError("Error gathering Candidate Build Factories: %s",
             "The file uploaded is not a supported file type")
     [x[1].seek(0) for x in factories]
-    ret = [(x[0],x[1].read(),x[3]) for x in factories]
+    ret = [(x[0],x[1].read(),x[3], x[4]) for x in factories]
     return ret, data
 
 def getFactoryDataFromXML(xmldata):
