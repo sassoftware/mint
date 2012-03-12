@@ -16,7 +16,7 @@ class ReportTestCase(unittest.TestCase):
         self.client = Client()
 
     def notestGetTypes(self):
-        response = self.client.get('/api/reports/')
+        response = self.client.get('/api/v1/reports/')
         self.assertEquals(response.status_code, 200)
         
         response = self.client.post('/api/reports/?_method=GET')

@@ -70,7 +70,6 @@ class VersionsTestCase(XMLTestCase):
   <images id="http://testserver/api/v1/images"/>
   <jobs id="http://testserver/api/v1/jobs"/>
   <module_hooks id="http://testserver/api/v1/module_hooks"/>
-  <notices id="http://testserver/api/v1/notices"/>
   <packages id="http://testserver/api/v1/packages"/>
   <permissions id="http://testserver/api/v1/rbac/permissions"/>
   <platforms id="http://testserver/api/platforms"/>
@@ -80,7 +79,6 @@ class VersionsTestCase(XMLTestCase):
   <project_branch_stages id="http://testserver/api/v1/project_branch_stages"/>
   <query_sets id="http://testserver/api/v1/query_sets"/>
   <rbac id="http://testserver/api/v1/rbac"/>
-  <reports id="http://testserver/api/v1/reports"/>
   <roles id="http://testserver/api/v1/rbac/roles"/>
   <users id="http://testserver/api/v1/users"/>
   <session id="http://testserver/api/v1/session"/>

@@ -28,7 +28,7 @@ from conary.dbstore import sqlerrors, sqllib
 log = logging.getLogger(__name__)
 
 # database schema major version
-RBUILDER_DB_VERSION = sqllib.DBversion(61, 7)
+RBUILDER_DB_VERSION = sqllib.DBversion(62, 5)
 
 def _createTrigger(db, table, column="changed"):
     retInsert = db.createTrigger(table, column, "INSERT")
@@ -53,7 +53,6 @@ def createTable(db, name, definition):
     cu.execute(definition % db.keywords)
     db.tables[name] = []
     return True
-
 
 def _createUsers(db):
     cu = db.cursor()
@@ -1439,6 +1438,10 @@ def _createInventorySchema(db, cfg):
                   description='On-demand system registration',
                   priority=110,
                   resource_type='System'),
+             dict(name="system scan",
+                  description="Scan system",
+                  priority=105,
+                  resource_type="System"),
             ])
 
     if 'inventory_system_event' not in db.tables:
@@ -1528,6 +1531,8 @@ def _createInventorySchema(db, cfg):
             system_id       INTEGER NOT NULL
                 REFERENCES inventory_system ON DELETE SET NULL
         ) %(TABLEOPTS)s""")
+    db.createIndex('jobs_created_system', 'jobs_created_system_jid_sid_uq',
+            'job_id, system_id', unique=True)
 
     createTable(db, 'jobs_created_image', """
         CREATE TABLE jobs_created_image
@@ -1538,7 +1543,8 @@ def _createInventorySchema(db, cfg):
             image_id        INTEGER NOT NULL
                 REFERENCES builds (buildid) ON DELETE SET NULL
         ) %(TABLEOPTS)s""")
-
+    db.createIndex('jobs_created_image', 'jobs_created_image_jid_iid_uq',
+            'job_id, image_id', unique=True)
 
     tableName = "inventory_system_job"
     if 'inventory_system_job' not in db.tables:
@@ -1636,6 +1642,188 @@ def _createInventorySchema(db, cfg):
             )""" % db.keywords)
         db.tables['django_redirect'] = []
 
+    _createSurveyTables(db, cfg)
+
+def _createSurveyTables(db, cfg):
+
+    createTable(db, 'inventory_survey', """
+                "survey_id" %(PRIMARYKEY)s,
+                "uuid" TEXT NOT NULL,
+                "system_id" INTEGER NOT NULL REFERENCES "inventory_system" (system_id) ON DELETE CASCADE,
+                "name" TEXT NOT NULL,
+                "description" TEXT,
+                "comment" TEXT,
+                "created_date" TIMESTAMP WITH TIME ZONE NOT NULL,
+                "modified_date" TIMESTAMP WITH TIME ZONE NOT NULL,
+                "created_by" INTEGER REFERENCES "users" (userid) ON DELETE SET NULL,
+                "modified_by" INTEGER REFERENCES "users" (userid) ON DELETE SET NULL,
+                "removable" BOOLEAN NOT NULL DEFAULT TRUE,
+                "raw_xml" TEXT
+
+    """)
+    db.createIndex('inventory_survey', 'SurveyUuidIdx', 'uuid')
+    db.createIndex('inventory_survey', 'SystemIdIdx', 'system_id')
+
+
+    cu = db.cursor()
+    cu.execute("""
+        ALTER TABLE inventory_system ADD COLUMN "latest_survey_id" INTEGER
+        REFERENCES "inventory_survey" (survey_id) ON DELETE SET NULL
+    """)
+
+
+    createTable(db, 'inventory_survey_tags', """
+                "tag_id" %(PRIMARYKEY)s,
+                "survey_id" INTEGER REFERENCES "inventory_survey" NOT NULL,
+                "name" TEXT
+    """)
+
+    createTable(db, 'inventory_rpm_package', """
+                "rpm_package_id" %(PRIMARYKEY)s,
+                "name" TEXT NOT NULL,
+                "epoch" INTEGER,
+                "version" TEXT NOT NULL,
+                "release" TEXT NOT NULL,
+                "architecture" TEXT NOT NULL, 
+                "description" TEXT,
+                "signature" TEXT,
+    """)
+
+    createTable(db, 'inventory_conary_package', """
+                "conary_package_id" %(PRIMARYKEY)s,
+                "name" TEXT NOT NULL,
+                "version" TEXT NOT NULL, 
+                "flavor" TEXT NOT NULL,
+                "description" TEXT NOT NULL,
+                "revision" TEXT NOT NULL,
+                "architecture" TEXT NOT NULL,
+                "signature" TEXT NOT NULL,
+                "rpm_package_id" INTEGER REFERENCES inventory_rpm_package (rpm_package_id) ON DELETE SET NULL 
+    """)
+    
+    # --- begin windows survey info
+    
+    createTable(db, 'inventory_windows_package', """
+        "windows_package_id" %(PRIMARYKEY)s,
+        "publisher" TEXT NOT NULL,
+        "product_code" TEXT NOT NULL,
+        "package_code" TEXT NOT NULL,
+        "product_name" TEXT NOT NULL,
+        "type" TEXT NOT NULL,
+        "upgrade_code" TEXT NOT NULL,
+        "version" TEXT NOT NULL
+    """)
+
+    createTable(db, 'inventory_survey_windows_package', """
+        "map_id" %(PRIMARYKEY)s,
+        "survey_id" INTEGER NOT NULL REFERENCES "inventory_survey" (survey_id) ON DELETE CASCADE,
+        "windows_package_id" INTEGER NOT NULL REFERENCES "inventory_windows_package" (windows_package_id) ON DELETE CASCADE,
+        "install_date" TIMESTAMP WITH TIME ZONE NOT NULL,
+        "install_source" TEXT NOT NULL,
+        "local_package" TEXT NOT NULL
+    """)
+    db.createIndex('inventory_survey_windows_package', 'inventory_survey_windows_package_sid', 'survey_id')
+
+    createTable(db, 'inventory_windows_patch', """
+        "windows_patch_id" %(PRIMARYKEY)s,
+        "display_name" TEXT NOT NULL,
+        "uninstallable" BOOLEAN NOT NULL,
+        "patch_code" TEXT NOT NULL,
+        "product_code" TEXT NOT NULL,
+        "transforms" TEXT
+    """)
+
+    createTable(db, 'inventory_windows_patch_windows_package', """
+        "map_id" %(PRIMARYKEY)s,
+        "windows_package_id" INTEGER NOT NULL REFERENCES "inventory_windows_package" (windows_package_id) ON DELETE CASCADE,
+        "windows_patch_id" INTEGER NOT NULL REFERENCES "inventory_windows_patch" (windows_patch_id) ON DELETE CASCADE 
+    """)
+    db.createIndex('inventory_windows_patch_windows_package',
+                   'inventory_windows_patch_windows_package_uq',
+                   'windows_package_id,windows_patch_id', unique=True)
+
+    createTable(db, 'inventory_survey_windows_patch', """
+        "map_id" %(PRIMARYKEY)s,
+        "survey_id" INTEGER NOT NULL REFERENCES "inventory_survey" (survey_id) ON DELETE CASCADE,
+        "windows_patch_id" INTEGER NOT NULL REFERENCES "inventory_windows_patch" (windows_patch_id) ON DELETE CASCADE,
+        "local_package" TEXT NOT NULL,
+        "install_date" TIMESTAMP WITH TIME ZONE NOT NULL,
+        "is_installed" BOOLEAN NOT NULL
+    """)
+
+    createTable(db, 'inventory_windows_service', """
+        "windows_service_id" %(PRIMARYKEY)s,
+        "name" TEXT NOT NULL,
+        "display_name" TEXT NOT NULL, 
+        "type" TEXT NOT NULL,
+        "handle" TEXT NOT NULL,
+        "required_services" TEXT NOT NULL 
+    """)
+    
+    createTable(db, 'inventory_survey_windows_service', """
+        "map_id" %(PRIMARYKEY)s,
+        "survey_id" INTEGER NOT NULL REFERENCES "inventory_survey" (survey_id) ON DELETE CASCADE,
+        "windows_service_id" INTEGER NOT NULL REFERENCES "inventory_windows_service" (windows_service_id) ON DELETE CASCADE,
+        "status" TEXT NOT NULL
+    """)
+    db.createIndex('inventory_survey_windows_service', 'inventory_survey_windows_service_sid', 'survey_id')
+
+    # --- end windows survey info
+
+    createTable(db, 'inventory_service', """
+        "service_id" %(PRIMARYKEY)s,
+        "name" TEXT,
+        "autostart" BOOLEAN DEFAULT FALSE,
+        "runlevels" TEXT
+    """)
+
+    createTable(db, 'inventory_survey_rpm_package', """
+        "map_id" %(PRIMARYKEY)s,
+        "survey_id" INTEGER NOT NULL REFERENCES "inventory_survey" (survey_id) ON DELETE CASCADE,
+        "rpm_package_id" INTEGER NOT NULL REFERENCES "inventory_rpm_package" (rpm_package_id) ON DELETE CASCADE,
+        "install_date" TIMESTAMP WITH TIME ZONE NOT NULL
+    """)
+
+    db.createIndex('inventory_survey_rpm_package', 'inventory_survey_conary_rpm_package_sid',
+            'survey_id')
+
+    createTable(db, 'inventory_survey_conary_package', """
+        "map_id" %(PRIMARYKEY)s,
+        "survey_id" INTEGER NOT NULL REFERENCES "inventory_survey" (survey_id) ON DELETE CASCADE,
+        "conary_package_id" INTEGER NOT NULL REFERENCES "inventory_conary_package" (conary_package_id) ON DELETE CASCADE,
+        "install_date" TIMESTAMP WITH TIME ZONE NOT NULL
+    """)
+
+    db.createIndex('inventory_survey_conary_package', 'inventory_survey_conary_package_sid', 'survey_id')
+
+    createTable(db, 'inventory_survey_service', """
+        "map_id" %(PRIMARYKEY)s,
+        "survey_id" INTEGER NOT NULL REFERENCES "inventory_survey" (survey_id) ON DELETE CASCADE,
+        "service_id" INTEGER NOT NULL REFERENCES "inventory_service" (service_id) ON DELETE CASCADE,
+        "running" BOOLEAN DEFAULT FALSE,
+        "status" TEXT
+    """)
+
+    db.createIndex('inventory_survey_service', 'inventory_survey_service_sid',
+            'survey_id')
+
+    createTable(db, 'inventory_survey_diff', """
+        "diff_id" %(PRIMARYKEY)s,
+        "created_date" TIMESTAMP WITH TIME ZONE NOT NULL,
+        "left_survey_id" INTEGER NOT NULL REFERENCES "inventory_survey" ("survey_id") ON DELETE CASCADE,
+        "right_survey_id" INTEGER NOT NULL REFERENCES "inventory_survey" ("survey_id") ON DELETE SET NULL,
+        "xml" TEXT
+    """)
+    db.createIndex('inventory_survey_diff', 'SurveyDiffLeftRightIdx', 
+        'left_survey_id,right_survey_id', unique=True)
+
+    createTable(db, 'jobs_created_survey', """
+        "id" %(PRIMARYKEY)s,
+        "job_id" integer NOT NULL REFERENCES jobs_job(job_id) ON DELETE CASCADE,
+        "survey_id" integer NOT NULL REFERENCES inventory_survey(survey_id) ON DELETE CASCADE,
+    """)
+    db.createIndex('jobs_created_survey', 'jobs_created_survey_jid_sid_uq',
+            'job_id, survey_id', unique=True)
 
 def _addSystemStates(db, cfg):
     _addTableRows(db, 'inventory_system_state', 'name', [
@@ -3066,8 +3254,8 @@ def checkVersion(db):
         raise sqlerrors.SchemaVersionError('Uninitialized database', version)
 
     # the major and minor versions must match
-    #if version != RBUILDER_DB_VERSION:
-    #    raise sqlerrors.SchemaVersionError('Schema version mismatch', version)
+    if version != RBUILDER_DB_VERSION:
+        raise sqlerrors.SchemaVersionError('Schema version mismatch', version)
 
     return version
 

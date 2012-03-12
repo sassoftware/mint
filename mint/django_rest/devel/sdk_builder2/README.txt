@@ -1,1 +1,0 @@
-Will need updating when django models switch from xobj to xobj2
