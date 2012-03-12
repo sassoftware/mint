@@ -13,6 +13,7 @@ from mint.django_rest.rbuilder.jobs import models as jobsmodels
 from mint.django_rest.rbuilder.images import models
 from mint.django_rest.rbuilder.targets import models as tgtmodels
 from mint.django_rest.rbuilder.manager import basemanager
+from mint.django_rest.rbuilder.errors import PermissionDenied
 from conary.lib import sha1helper
 from mint.lib import data as datatypes
 from conary import trovetup
@@ -108,8 +109,7 @@ class ImagesManager(basemanager.BaseManager):
     def recordTargetInternalId(self, buildFile, target, targetInternalId):
         m = tgtmodels.TargetImagesDeployed(build_file=buildFile,
             target=target, target_image_id=targetInternalId)
-        m.save()
-
+        m.save() 
     def _getOutputTrove(self, image):
         if image.output_trove is None:
             return None
@@ -122,6 +122,12 @@ class ImagesManager(basemanager.BaseManager):
     @exposed
     def deleteImageBuild(self, image_id):
         image = models.Image.objects.get(pk=image_id)
+
+        # see if any images have this image as a baseimage, and if so, refuse to delete
+        layered_images = models.Image.objects.filter(base_image = image)
+        if len(layered_images) > 0:
+            raise PermissionDenied(msg="Image is in use as a layered base image and cannot be deleted")
+
         log.info("Deleting image %s from project %s" % (image_id,
             image.project.short_name))
         # Delete image files from finished-images

@@ -11,30 +11,26 @@ import sys
 
 from mint import config
 from mint import shimclient
+from mint.db import database
+from mint.db import repository
 
-from conary import dbstore
 
 def updatePassword(newPass):
     cfg = config.MintConfig()
     cfg.read(config.RBUILDER_CONFIG)
-
-    db = dbstore.connect(cfg.dbPath, cfg.dbDriver)
-    cu = db.cursor()
-    cu.execute("""SELECT projectId FROM Projects WHERE external=0 OR 
-                  EXISTS(SELECT * FROM InboundMirrors WHERE 
-                  projectId=targetProjectId)""")
-    projIds = cu.fetchall_dict()
-
-    authToken = (cfg.authUser, cfg.authPass)
-    mintclient = shimclient.ShimMintClient(cfg, authToken)
-
-    for x in projIds:
-        proj = mintclient.getProject(x['projectId'])
-        print "Updating project '%s'" % proj.getHostname()
-        repo = mintclient.server._server._getProjectRepo(proj)
-        repo.changePassword(proj.getLabel(), cfg.authUser, newPass)
-        cu.execute("""UPDATE Labels SET password=? WHERE ProjectId=? AND
-                      username=?""", newPass, x['projectId'], cfg.authUser)
+    db = database.Database(cfg)
+    cu = db.db.cursor()
+    reposManager = repository.RepositoryManager(cfg, db.db, bypass=True)
+    for handle in reposManager.iterRepositories():
+        if not handle.hasDatabase:
+            continue
+        print "Updating project", handle.fqdn
+        repoServer = handle.getNetServer()
+        repoServer.auth.changePassword(cfg.authUser, newPass)
+        reposManager.reset()
+        cu.execute("""UPDATE Labels SET username = ?, password = ?
+            WHERE projectId = ? AND authtype = 'userpass'""",
+            cfg.authUser, newPass, handle.projectId)
 
     db.commit()
 

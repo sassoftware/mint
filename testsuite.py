@@ -57,11 +57,6 @@ def filteredCall(self, *args, **kwargs):
         self.handleError(result)
 
 def setup():
-    pathManager.addExecPath('CONARY_PATH')
-    conaryTestPath = pathManager.addExecPath('CONARY_TEST_PATH')
-    conaryArchivePath = conaryTestPath + '/archive'
-    pathManager.addResourcePath('CONARY_ARCHIVE_PATH',path=conaryArchivePath)
-
     global context, tests, SkipTestException, TestCase, enforceBuiltin
     from testrunner.decorators import context, tests
     from testrunner.testhelp import SkipTestException
