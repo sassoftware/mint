@@ -198,12 +198,18 @@ class TargetsManager(basemanager.BaseManager, CatalogServiceHelper):
             state = 1
         zone = modellib.Cache.get(zones.Zone, name=targetSrc.zone_name)
         targetType = self.mgr.getTargetTypeByName(targetSrc.target_type_name)
-        target = models.Target(name=targetSrc.name,
+        defaults = dict(
             description=targetSrc.description,
-            target_type=targetType,
             zone=zone,
             state=state)
-        target.save()
+        target, created = models.Target.objects.get_or_create(
+            name=targetSrc.name,
+            target_type=targetType,
+            defaults = defaults)
+        if not created:
+            # Update the defaults
+            models.Target.objects.filter(target_id=target.target_id).update(
+                **defaults)
         self.mgr.retagQuerySetsByType('target', forUser)
         self.mgr.recomputeTargetDeployableImages()
         return target
