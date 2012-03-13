@@ -1391,8 +1391,8 @@ class SystemManager(basemanager.BaseManager):
         for event in events:
             try:
                 self.dispatchSystemEvent(event)
-            except errors.IncompatibleEvent:
-                # Safely ignore this error
+            except (errors.IncompatibleEvent, errors.InvalidNetworkInformation):
+                # Safely ignore these errors
                 pass
 
     def checkEventCompatibility(self, event):
@@ -1418,7 +1418,7 @@ class SystemManager(basemanager.BaseManager):
         if event.system.hasRunningJobs():
             try:
                 self.checkEventCompatibility(event)
-            except errors.IncompatibleEvent, e:
+            except (errors.IncompatibleEvent, errors.InvalidNetworkInformation), e:
                 log.error(str(e))
                 self.cleanupSystemEvent(event)
                 raise
