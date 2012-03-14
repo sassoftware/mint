@@ -4728,7 +4728,7 @@ class MigrateTo_61(SchemaMigration):
 
 class MigrateTo_62(SchemaMigration):
     '''Fork!'''
-    Version = (62, 5)
+    Version = (62, 6)
 
     def migrate(self):
 
@@ -4948,6 +4948,39 @@ class MigrateTo_62(SchemaMigration):
 
         return True
 
+    def migrate6(self):
+        ''' Add created/modified to all types to projects, branches, and stages '''
+        cu = self.db.cursor()
+        # record creator, modifier, and modifier time for branches
+        # creation time was already tracked
+        cu.execute("""
+            ALTER TABLE productversions ADD COLUMN "created_by" INTEGER
+                REFERENCES "users" (userid) ON DELETE SET NULL
+        """) 
+        cu.execute("""
+            ALTER TABLE productversions ADD COLUMN "modified_by" INTEGER
+                REFERENCES "users" (userid) ON DELETE SET NULL
+        """) 
+        cu.execute("""
+            ALTER TABLE productversions ADD COLUMN timeModified numeric(14,3)
+        """)
+        # and the same for stages
+        # creation time was already tracked
+        cu.execute("""
+            ALTER TABLE project_branch_stage ADD COLUMN created_by INTEGER
+                REFERENCES "users" (userid) ON DELETE SET NULL
+        """) 
+        cu.execute("""
+            ALTER TABLE project_branch_stage ADD COLUMN modified_by INTEGER
+                REFERENCES "users" (userid) ON DELETE SET NULL
+        """)
+        cu.execute("""
+            ALTER TABLE project_branch_stage ADD COLUMN modified_date 
+                timestamp with time zone
+                DEFAULT current_timestamp
+        """)
+
+        return True
 
 #### SCHEMA MIGRATIONS END HERE #############################################
 

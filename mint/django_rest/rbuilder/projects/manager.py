@@ -15,7 +15,6 @@ from mint import mint_error
 from mint import userlevels
 from mint import projects
 
-
 from mint.django_rest.rbuilder import errors
 from mint.django_rest.rbuilder.manager import basemanager
 from mint.django_rest.rbuilder.repos import models as repomodels
@@ -25,6 +24,7 @@ from mint.django_rest.rbuilder.projects import models
 from mint.django_rest.rbuilder.images import models as imagemodels
 from mint.django_rest.rbuilder.projects import models as projectsmodels
 from mint.django_rest.rbuilder.users import models as usermodels
+from mint.django_rest import timeutils
 
 from conary import conarycfg
 from conary import conaryclient
@@ -311,8 +311,19 @@ class ProjectManager(basemanager.BaseManager):
         # here so the project is not be created before this error occurs
         if projects.validLabel.match(projectVersion.label) == None:
             raise mint_error.InvalidLabel(projectVersion.label)
+        
+        projectVersion.created_by = forUser
+        projectVersion.modified_by = forUser
 
         project = projectVersion.project
+
+        existing_stages = models.Stage.objects.filter(
+            project = project
+        ).all()
+        # collapse query as per Mr. Schroedinger
+        # as we'll create new rows later
+        existing_stage_pks = [ x.pk for x in existing_stages ]
+
         pd = helperfuncs.sanitizeProductDefinition(
                 projectName=project.name,
                 projectDescription=project.description or '',
@@ -332,8 +343,23 @@ class ProjectManager(basemanager.BaseManager):
             pd.rebase(cclient, platform.label)
         self.saveProductVersionDefinition(projectVersion, pd)
 
+        tnow = time.time()
+        projectVersion.created_date = tnow
+        projectVersion.modified_date = tnow
         projectVersion.save()
         
+        # get newly crated stages and assign ownership info
+        # these are created as a side effect
+        new_stages = models.Stage.objects.filter(
+               project = project
+           ).exclude(
+               pk__in = existing_stage_pks
+           ).filter()
+        for new_stage in new_stages:
+            new_stage.created_by = forUser
+            new_stage.modified_by = forUser
+            new_stage.save()
+
         self.mgr.retagQuerySetsByType('project_branch_stage', forUser)
         return projectVersion
 

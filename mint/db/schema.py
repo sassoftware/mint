@@ -28,7 +28,7 @@ from conary.dbstore import sqlerrors, sqllib
 log = logging.getLogger(__name__)
 
 # database schema major version
-RBUILDER_DB_VERSION = sqllib.DBversion(62, 5)
+RBUILDER_DB_VERSION = sqllib.DBversion(62, 6)
 
 def _createTrigger(db, table, column="changed"):
     retInsert = db.createTrigger(table, column, "INSERT")
@@ -657,7 +657,12 @@ def _createProductVersions(db):
                 namespace           varchar(16),
                 name                varchar(16)     NOT NULL,
                 description         text,
-                timeCreated         numeric(14,3)
+                timeCreated         numeric(14,3),
+                created_by          integer
+                    REFERENCES users (userid) ON DELETE SET NULL,
+                modified_by         integer
+                    REFERENCES users (userid) ON DELETE SET NULL,
+                timeModified        numeric(14,3)
         ) %(TABLEOPTS)s """ % db.keywords)
         db.tables['ProductVersions'] = []
     db.createIndex('ProductVersions', 'ProductVersions_uq',
@@ -678,6 +683,14 @@ def _createProductVersions(db):
                 "promotable" bool,
                 "created_date" timestamp with time zone NOT NULL
                     DEFAULT current_timestamp,
+                "modified_date" timestamp with time zone
+                    DEFAULT current_timestamp,
+                created_by integer
+                    REFERENCES Users (userId)
+                    ON DELETE SET NULL,
+                modified_by integer
+                    REFERENCES Users (userId)
+                    ON DELETE SET NULL,
                 UNIQUE ( project_branch_id, name )
             )""" % db.keywords)
         db.tables['project_branch_stage'] = []

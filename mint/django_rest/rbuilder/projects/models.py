@@ -284,8 +284,15 @@ class ProjectVersion(modellib.XObjIdModel):
         "Branch platform label, defaults to null", short="Branch platform label")
     created_date = D(modellib.DecimalTimestampField(
         db_column="timecreated"), "Branch created date", short="Branch created date")
+    modified_date = D(modellib.DecimalTimestampField(
+        db_column="timemodified"), "Branch modified date", short="Branch modified date")
 
     platform_id = modellib.XObjHidden(models.IntegerField(null=True, db_column='platform_id'))
+    created_by = D(modellib.DeferredForeignKey(usermodels.User, db_column='created_by', null=True, 
+        related_name='+'), "Branch creator")
+    modified_by = D(modellib.DeferredForeignKey(usermodels.User, db_column='modified_by', null=True, 
+        related_name='+'), "Branch last modified by")
+
 
     images = modellib.SyntheticField()
     definition = modellib.SyntheticField(modellib.HrefField())
@@ -411,6 +418,9 @@ class Stage(modellib.XObjIdModel):
     promotable = D(models.BooleanField(default=False),
         "Stage promotable? Boolean, defaults to False", short="Stage promotable?")
     created_date = D(modellib.DateTimeUtcField(auto_now_add=True), "Stage created date", short="Stage created date")
+    modified_date = D(modellib.DateTimeUtcField(auto_now_add=True), "Stage modified date", short="Stage modified date")
+    created_by = D(models.ForeignKey(usermodels.User, related_name="+", null=True, db_column="created_by"), "Stage creator", short="Stage creator")
+    modified_by = D(models.ForeignKey(usermodels.User, related_name="+", null=True, db_column="modified_by"), "Stage modifier", short="Stage modifier")
     groups = modellib.SyntheticField()
     repository_api = modellib.SyntheticField(modellib.HrefField())
 
