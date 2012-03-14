@@ -24,7 +24,6 @@ from mint.django_rest.rbuilder.projects import models
 from mint.django_rest.rbuilder.images import models as imagemodels
 from mint.django_rest.rbuilder.projects import models as projectsmodels
 from mint.django_rest.rbuilder.users import models as usermodels
-from mint.django_rest import timeutils
 
 from conary import conarycfg
 from conary import conaryclient
