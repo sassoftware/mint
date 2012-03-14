@@ -318,7 +318,7 @@ class ProjectBranchService(service.BaseService):
     @requires("project_branch")
     @return_xml
     def rest_PUT(self, request, project_short_name=None, project_branch_label=None, project_branch=None):
-        return self.mgr.updateProjectBranch(project_branch)
+        return self.mgr.updateProjectBranch(project_branch, request._authUser)
 
     @rbac(BranchCallbacks.can_write_branch)
     def rest_DELETE(self, request, project_short_name=None, project_branch_label=None):

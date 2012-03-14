@@ -363,8 +363,10 @@ class ProjectManager(basemanager.BaseManager):
         return projectVersion
 
     @exposed
-    def updateProjectBranch(self, projectVersion):
+    def updateProjectBranch(self, projectVersion, forUser=None):
         projectVersion.save()
+        projectVersion.modified_by = forUser
+        projectVersion.modifed_date = time.time()
         return projectVersion
 
     @exposed
@@ -520,6 +522,7 @@ class ProjectManager(basemanager.BaseManager):
         
     @exposed
     def updateProjectBranchStage(self, project_short_name, project_branch_label, stage_name, stage):
+        # if ever implemented be sure to update modified_by/modified_date
         raise exceptions.NotImplementedError()
 
     @exposed
