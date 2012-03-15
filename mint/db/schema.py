@@ -28,7 +28,7 @@ from conary.dbstore import sqlerrors, sqllib
 log = logging.getLogger(__name__)
 
 # database schema major version
-RBUILDER_DB_VERSION = sqllib.DBversion(61, 7)
+RBUILDER_DB_VERSION = sqllib.DBversion(61, 8)
 
 def _createTrigger(db, table, column="changed"):
     retInsert = db.createTrigger(table, column, "INSERT")
@@ -2286,7 +2286,7 @@ def _createInfrastructureSystemsQuerySetSchema(db, version=None):
             "EQUAL", "true")
     _addQuerySet(db, "Infrastructure Systems",
             "Systems that make up the rPath infrastructure", "system",
-            False, filterId, version=version)
+            False, filterId, version=version, public=True)
     return True
 
 
@@ -2469,6 +2469,11 @@ def _createQuerySetSchema(db):
          ),
     ]
     _addTableRows(db, "querysets_queryset", "name", qs_rows)
+
+    # add table rows doesn't work so well for this?
+    db.cursor().execute("""UPDATE querysets_queryset SET is_public=True
+       where name = 'Active Systems' and resource_type='system'
+    """)
 
     _createAllUsers(db)
     _createAllSystems(db)

@@ -4630,7 +4630,7 @@ class MigrateTo_60(SchemaMigration):
 
 class MigrateTo_61(SchemaMigration):
     '''Edge P4, P5, P6'''
-    Version = (61, 7)
+    Version = (61, 8)
 
     def migrate(self):
         cu = self.db.cursor()
@@ -4723,6 +4723,17 @@ class MigrateTo_61(SchemaMigration):
         cu.execute("""ALTER TABLE inventory_system ADD COLUMN has_active_jobs BOOLEAN NOT NULL DEFAULT False""")
         cu.execute("""ALTER TABLE inventory_system ADD COLUMN has_running_jobs BOOLEAN NOT NULL DEFAULT False""")
         return True 
+
+    def migrate8(self):
+        # make additional querysets show up in left navigation
+        cu = self.db.cursor()
+        cu.execute("""UPDATE querysets_queryset SET is_public = TRUE WHERE NAME LIKE 'Active Systems'
+                         AND resource_type='system' AND can_modify = FALSE
+        """)
+        cu.execute("""UPDATE querysets_queryset SET is_public = TRUE WHERE NAME LIKE 'Infrastructure Systems'
+                         AND resource_type='system' AND can_modify = FALSE
+        """)
+        return True
 
 #### SCHEMA MIGRATIONS END HERE #############################################
 
