@@ -2451,6 +2451,7 @@ def _createQuerySetSchema(db):
             created_date=str(datetime.datetime.now(tz.tzutc())),
             modified_date=str(datetime.datetime.now(tz.tzutc())),
             can_modify=False,
+            is_public=True,
             presentation_type='system',
          ),
          dict(name="Inactive Systems", resource_type="system",
@@ -2458,6 +2459,7 @@ def _createQuerySetSchema(db):
             created_date=str(datetime.datetime.now(tz.tzutc())),
             modified_date=str(datetime.datetime.now(tz.tzutc())),
             can_modify=False,
+            is_public=False,
             presentation_type='system'
          ),
          dict(name="Physical Systems", resource_type="system",
@@ -2465,15 +2467,11 @@ def _createQuerySetSchema(db):
             created_date=str(datetime.datetime.now(tz.tzutc())),
             modified_date=str(datetime.datetime.now(tz.tzutc())),
             can_modify=False,
+            is_public=False,
             presentation_type='system'
          ),
     ]
     _addTableRows(db, "querysets_queryset", "name", qs_rows)
-
-    # add table rows doesn't work so well for this?
-    db.cursor().execute("""UPDATE querysets_queryset SET is_public=True
-       where name = 'Active Systems' and resource_type='system'
-    """)
 
     _createAllUsers(db)
     _createAllSystems(db)
