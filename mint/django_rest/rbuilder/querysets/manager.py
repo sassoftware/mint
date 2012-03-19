@@ -264,9 +264,18 @@ class QuerySetManager(basemanager.BaseManager):
             self._tagSingleQuerySetTransitive(qs, qsAllResult)
             self._updateQuerySetTaggedDate(qs)
 
-        querySet.modified_by = by_user
-        querySet.modified_date = timeutils.now()
-        querySet.save()
+        tsid = transaction.savepoint()
+
+        self.getQuerySetAllResult(qs, use_tags=False)
+        try:
+            # parallel image builds, in particular, can deadlock in this section of code,
+            # hence rollback.
+            querySet.modified_by = by_user
+            querySet.modified_date = timeutils.now()
+            querySet.save()
+        except Exception, e:
+            transaction.savepoint_rollback(tsid)
+
         self._recomputeStatic(querySet)
         return querySet
 
