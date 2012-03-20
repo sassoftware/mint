@@ -181,6 +181,7 @@ class QuerySetManager(basemanager.BaseManager):
         querySet.modified_by = by_user
         querySet.tagged_date = None
         querySet.save()
+
         querySet = self.mgr.getQuerySet(querySet.pk)
         # recompute this and everything up the chain
         self._recomputeStatic(querySet, skip_self=querySet.is_static)
@@ -194,9 +195,7 @@ class QuerySetManager(basemanager.BaseManager):
         jobs can get reasonably results... only use for querysets of small size
         as we have a tag/cache timeout and that should be fine for larger querysets
         '''
-        qs = models.QuerySet.objects.get(name=name)
-        qs.tagged_date = None
-        qs.save()
+        models.QuerySet.objects.filter(name=name).update(tagged_date=None)
 
     @exposed
     def retagQuerySetsByType(self, type, for_user=None):
@@ -223,11 +222,9 @@ class QuerySetManager(basemanager.BaseManager):
                 personal_for__isnull = True,
             ).distinct()
 
-        for qs in all_sets:
-            if qs.is_static:
-                continue
-            qs.tagged_date = None
-            qs.save()
+        all_sets.filter(is_static=False).update(tagged_date=None)
+
+        for qs in all_sets.filter(is_static=False):
 
             tsid = transaction.savepoint()
 
@@ -263,18 +260,13 @@ class QuerySetManager(basemanager.BaseManager):
             qsAllResult = self._getQuerySetAllResult(qs)
             self._tagSingleQuerySetTransitive(qs, qsAllResult)
             self._updateQuerySetTaggedDate(qs)
+            self.getQuerySetAllResult(qs, use_tags=False)
 
-        tsid = transaction.savepoint()
-
-        self.getQuerySetAllResult(qs, use_tags=False)
-        try:
-            # parallel image builds, in particular, can deadlock in this section of code,
-            # hence rollback.
-            querySet.modified_by = by_user
-            querySet.modified_date = timeutils.now()
-            querySet.save()
-        except Exception, e:
-            transaction.savepoint_rollback(tsid)
+            # update tag info
+            update_args = dict(modified_date=timeutils.now())
+            if qs.modified_by != by_user:
+                update_args['modified_by'] = by_user
+            models.QuerySet.objects.filter(pk=qs.pk).update(**update_args)
 
         self._recomputeStatic(querySet)
         return querySet
@@ -301,8 +293,7 @@ class QuerySetManager(basemanager.BaseManager):
                 if not kid.is_static:
                     static=False
             if querySet.is_static != static:
-                qs.is_static = static
-                qs.save()
+                models.QuerySet.objects.filter(pk=qs.pk).update(is_static=static)
 
     @exposed
     def deleteQuerySet(self, querySet):
@@ -543,8 +534,7 @@ class QuerySetManager(basemanager.BaseManager):
         return resourceCollection
 
     def _updateQuerySetTaggedDate(self, querySet):
-        querySet.tagged_date = timeutils.now()
-        querySet.save()
+        models.QuerySet.objects.filter(pk=querySet.pk).update(tagged_date=timeutils.now())
  
     def _getQuerySetAllResult(self, querySet):
         '''
@@ -853,9 +843,10 @@ class QuerySetManager(basemanager.BaseManager):
         if tagMethod is not None:
             tagMethod([resource], querySet, self._chosenMethod())
 
-        querySet.modified_by = by_user
-        querySet.modified_date = timeutils.now()
-        querySet.save()
+        update_args = dict(modified_date=timeutils.now())
+        if querySet.modified_by != by_user:
+            update_args['modified_by'] = by_user
+        models.QuerySet.objects.filter(pk=querySet.pk).update(**update_args)
 
         return self.getQuerySetChosenResult(querySetId)
 
@@ -886,9 +877,10 @@ class QuerySetManager(basemanager.BaseManager):
         tagMethod = self._tagMethod(querySet)
         tagMethod(resources_out, querySet, self._chosenMethod())
 
-        querySet.modified_by = by_user
-        querySet.modified_date = timeutils.now()
-        querySet.save()
+        update_args = dict(modified_date=timeutils.now())
+        if querySet.modified_by != by_user:
+            update_args['modified_by'] = by_user
+        models.QuerySet.objects.filter(pk=querySet.pk).update(**update_args)
 
         return self.getQuerySetChosenResult(querySet)
 
@@ -907,9 +899,10 @@ class QuerySetManager(basemanager.BaseManager):
             inclusion_method=self._chosenMethod(), **resourceArg)
         tagModels.delete()
 
-        querySet.modified_by = by_user
-        querySet.modified_date = timeutils.now()
-        querySet.save()
+        update_args = dict(modified_date=timeutils.now())
+        if querySet.modified_by != by_user:
+            update_args['modified_by'] = by_user
+        models.QuerySet.objects.filter(pk=querySet.pk).update(**update_args)
 
         return self.getQuerySetChosenResult(querySetId)
 
@@ -952,8 +945,8 @@ class QuerySetManager(basemanager.BaseManager):
         job_name   = event_type.name
 
         if job_name == jobmodels.EventType.QUERYSET_INVALIDATE:
-            querySet.tagged_date = None
-            querySet.save()
+            models.QuerySet.objects.filter(pk=querySet.pk).update(
+                tagged_date=None)
         else:
             raise Exception("action dispatch not yet supported on job type: %s" % jt)
 
