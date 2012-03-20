@@ -5,6 +5,7 @@
 import os
 import logging
 import traceback
+import time
 
 from debug_toolbar import middleware
 
@@ -34,6 +35,9 @@ except ImportError:
 
 if parse_qsl is None:
     from cgi import parse_qsl
+        
+RBUILDER_DEBUG_SWITCHFILE = "/srv/rbuilder/MINT_LOGGING_ENABLE"
+RBUILDER_DEBUG_LOGPATH    = "/tmp/rbuilder_debug_logging/"
 
 class BaseMiddleware(object):
 
@@ -57,6 +61,72 @@ class BaseMiddleware(object):
 
     def isLocalServer(self, request):
         return not hasattr(request, '_req')
+
+class SwitchableLogMiddleware(BaseMiddleware):
+    ''' base class for Request and Response LogMiddleware '''
+ 
+    def shouldLog(self):
+        ''' dictates whether the middlware should log or not '''
+        # FIXME: also take into account file age
+        return os.path.exists("/srv/rbuilder/MINT_LOGGING_ENABLE")
+
+    def _getLogFilePath(self, localtime):
+        ''' keeps directories neat and organized '''
+
+        if not os.path.exists(RBUILDER_DEBUG_LOGPATH):
+            os.makedirs(RBUILDER_DEBUG_LOGPATH, mode=0600)
+
+        (year, month, mday, hour, min, sec, wday, yday, is_dst) = localtime
+        ymd = "%d-%02d-%02d" % (year, month, mday)
+        hour = "%02d" % hour
+ 
+        filePath = os.path.join(RBUILDER_DEBUG_LOGPATH, ymd, hour)
+        if not os.path.exists(filePath):
+            os.makedirs(filePath)
+
+        return (filePath, min, sec)
+
+    def getLogFile(self, isRequest, localtime, type="full"):
+        ''' returns the full log file path '''
+ 
+        filename = None
+        (path, min, sec)  = self._getLogFilePath(localtime)
+        minsec = "%02dm-%02ds" % (min, sec)
+        counter = 0
+        while True:
+            if isRequest:
+                filename = os.path.join(path, "%s-%s.request_%s.log" % (minsec, counter, type))
+            else:
+                filename = os.path.join(path, "%s-%s.response_%s.log" % (minsec, counter, type))
+            counter += 1   
+            if not os.path.exists(filename):
+                return open(filename, "w")
+
+class RequestLogMiddleware(SwitchableLogMiddleware):
+    ''' 
+    WIP...
+    '''
+
+    def _logRequest(self, request):
+        now = time.localtime()
+        logFile = self.getLogFile(True, now)
+        data = request.raw_post_data
+        with logFile as f:
+            f.write(data)
+        return request
+
+    def _process_request(self, request):
+        if self.shouldLog():
+            self._logRequest(request)
+        return None
+
+class ResponseLogMiddleware(SwitchableLogMiddleware):
+    ''' 
+    WIP...
+    '''
+
+    def _process_response(self, request, response):
+        return response
 
 class ExceptionLoggerMiddleware(BaseMiddleware):
 
@@ -295,6 +365,10 @@ class LocalQueryParameterMiddleware(BaseMiddleware):
         request.GET = http.QueryDict(request.params)
 
 class PerformanceMiddleware(BaseMiddleware, middleware.DebugToolbarMiddleware):
+    ''' 
+    Adds timing info to the requests, should be off all the time, makes things slower 
+    by doing extra serialization even if that's not reflected in metrics!
+    '''
 
     def _process_request(self, request):
         metrics = request.GET.get('metrics', None)

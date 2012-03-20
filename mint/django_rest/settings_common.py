@@ -64,6 +64,8 @@ MIDDLEWARE_CLASSES = (
     'django.middleware.common.CommonMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
+    # this debugs incoming requests.
+    'mint.django_rest.middleware.RequestLogMiddleware',
     'mint.django_rest.middleware.RequestSanitizationMiddleware',
     'mint.django_rest.middleware.CachingMiddleware',
     'mint.django_rest.middleware.SetMintConfigMiddleware',
@@ -78,6 +80,8 @@ MIDDLEWARE_CLASSES = (
     'mint.django_rest.middleware.SerializeXmlMiddleware',
     'mint.django_rest.middleware.AuthHeaderMiddleware',
     'django.middleware.transaction.TransactionMiddleware',
+    # this won't log exceptions, see ExceptionLoggerMiddleware
+    'mint.django_rest.middleware.ResponseLogMiddleware',
 )
 
 USE_ETAGS=True
