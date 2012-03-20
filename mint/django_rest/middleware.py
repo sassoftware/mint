@@ -67,8 +67,16 @@ class SwitchableLogMiddleware(BaseMiddleware):
  
     def shouldLog(self):
         ''' dictates whether the middlware should log or not '''
-        # FIXME: also take into account file age
-        return os.path.exists("/srv/rbuilder/MINT_LOGGING_ENABLE")
+        # create the switchfile and keep it newer than 1 hour to keep it logging
+        if not os.path.exists(RBUILDER_DEBUG_SWITCHFILE):
+            return False
+        if not os.path.exists(RBUILDER_DEBUG_LOGPATH):
+            return False
+        if not os.access(RBUILDER_DEBUG_LOGPATH, os.W_OK):
+            return False
+        mtime = os.path.getmtime(RBUILDER_DEBUG_SWITCHFILE)
+        delta = mtime - time.time()
+        return delta < (60*60)
 
     def _getLogFilePath(self, localtime):
         ''' keeps directories neat and organized '''
@@ -104,29 +112,21 @@ class SwitchableLogMiddleware(BaseMiddleware):
 
 class RequestLogMiddleware(SwitchableLogMiddleware):
     ''' 
-    WIP...
+    When sentinel file is present, log request traffic...
     '''
 
     def _logRequest(self, request):
         now = time.localtime()
         logFile = self.getLogFile(True, now)
-        data = request.raw_post_data
+        # this is a rough hack, can work on format later
+        data = "%s\n\n%s" % (str(request), request.raw_post_data)
         with logFile as f:
             f.write(data)
-        return request
 
     def _process_request(self, request):
         if self.shouldLog():
             self._logRequest(request)
         return None
-
-class ResponseLogMiddleware(SwitchableLogMiddleware):
-    ''' 
-    WIP...
-    '''
-
-    def _process_response(self, request, response):
-        return response
 
 class ExceptionLoggerMiddleware(BaseMiddleware):
 
@@ -397,16 +397,25 @@ class PerformanceMiddleware(BaseMiddleware, middleware.DebugToolbarMiddleware):
             xobj_model = response.model.serialize(request)
             xobj_model.metrics = metricsModel.serialize(request)
             response.content = ''
-            response.write(response.model.to_xml(request, xobj_model))
+            # was response.write()
+            response.content = response.model.to_xml(request, xobj_model)
 
             return response
         else:
             if hasattr(response, 'model'):
-                response.write(response.model.to_xml(request))
+                # was response.write()
+                response.content = response.model.to_xml(request)
             return response
 
 
-class SerializeXmlMiddleware(BaseMiddleware):
+class SerializeXmlMiddleware(SwitchableLogMiddleware):
+
+    def _logResponse(self, outdata):
+        now = time.localtime()
+        logFile = self.getLogFile(False, now)
+        with logFile as f:
+            f.write(outdata)
+
     def _process_response(self, request, response):
         if hasattr(response, 'model'):
             metrics = request.GET.get('metrics', None)
@@ -414,12 +423,16 @@ class SerializeXmlMiddleware(BaseMiddleware):
                 return response
 
             format = request.GET.get('format', 'xml')
+            outdata = ''
             if format == 'json':
-                response.write(response.model.to_json(request))
                 response['Content-Type'] = 'application/json'
+                outdata = response.model.to_json(request)
             else:
-                response.write(response.model.to_xml(request))
                 response['Content-Type'] = 'text/xml'
+                outdata = response.model.to_xml(request)
+            response.write(outdata)
+            if self.shouldLog():
+                self._logResponse(outdata)
 
         # Originally opened in BaseService. Unfortunately models in collections
         # aren't finalized until this method, so the manager can't be closed in
