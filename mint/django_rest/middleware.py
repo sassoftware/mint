@@ -158,7 +158,6 @@ class ExceptionLoggerMiddleware(SwitchableLogMiddleware):
     def _logFailure(self, code, exception_msg):
 
          now = time.localtime()
-         nowstr = time.asctime(now)
          urlsFile = RBUILDER_DEBUG_HISTORY
          urlsFile = open(RBUILDER_DEBUG_HISTORY, "a")
          (logFile, logFilePath) = self.getLogFile(False, now, type='error')
