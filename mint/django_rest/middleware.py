@@ -38,6 +38,7 @@ if parse_qsl is None:
         
 RBUILDER_DEBUG_SWITCHFILE = "/srv/rbuilder/MINT_LOGGING_ENABLE"
 RBUILDER_DEBUG_LOGPATH    = "/tmp/rbuilder_debug_logging/"
+RBUILDER_DEBUG_HISTORY    = "/tmp/rbuilder_debug_logging/history.log"
 
 class BaseMiddleware(object):
 
@@ -75,7 +76,7 @@ class SwitchableLogMiddleware(BaseMiddleware):
         if not os.access(RBUILDER_DEBUG_LOGPATH, os.W_OK):
             return False
         mtime = os.path.getmtime(RBUILDER_DEBUG_SWITCHFILE)
-        delta = mtime - time.time()
+        delta = time.time() - mtime
         return delta < (60*60)
 
     def _getLogFilePath(self, localtime):
@@ -95,7 +96,7 @@ class SwitchableLogMiddleware(BaseMiddleware):
         return (filePath, min, sec)
 
     def getLogFile(self, isRequest, localtime, type="full"):
-        ''' returns the full log file path '''
+        ''' returns log file and path for storing XML debug info'''
  
         filename = None
         (path, min, sec)  = self._getLogFilePath(localtime)
@@ -108,7 +109,7 @@ class SwitchableLogMiddleware(BaseMiddleware):
                 filename = os.path.join(path, "%s-%s.response_%s.log" % (minsec, counter, type))
             counter += 1   
             if not os.path.exists(filename):
-                return open(filename, "w")
+                return (open(filename, "w"), filename)
 
 class RequestLogMiddleware(SwitchableLogMiddleware):
     ''' 
@@ -116,12 +117,19 @@ class RequestLogMiddleware(SwitchableLogMiddleware):
     '''
 
     def _logRequest(self, request):
+
         now = time.localtime()
-        logFile = self.getLogFile(True, now)
-        # this is a rough hack, can work on format later
-        data = "%s\n\n%s" % (str(request), request.raw_post_data)
+        nowstr =time.asctime(now)
+        urlsFile = RBUILDER_DEBUG_HISTORY
+        urlsFile = open(RBUILDER_DEBUG_HISTORY, "a")
+        (logFile, logFilePath) = self.getLogFile(True, now)
+        path = "%s%s" % (request.META.get('PATH_INFO'), request.META.get('QUERY_STRING'))
+        urlsFile.write("[%s]\n     %s\n     %s\n" % (nowstr, path, logFilePath))
+        urlsFile.close()
+        outdata = "%s\n\n%s" % (str(request), request.raw_post_data)
         with logFile as f:
-            f.write(data)
+            # TODO: nicer formatting
+            f.write(outdata)
 
     def _process_request(self, request):
         if self.shouldLog():
@@ -410,9 +418,14 @@ class PerformanceMiddleware(BaseMiddleware, middleware.DebugToolbarMiddleware):
 
 class SerializeXmlMiddleware(SwitchableLogMiddleware):
 
-    def _logResponse(self, outdata):
+    def _logResponse(self, outdata, response):
         now = time.localtime()
-        logFile = self.getLogFile(False, now)
+        urlsFile = RBUILDER_DEBUG_HISTORY
+        urlsFile = open(RBUILDER_DEBUG_HISTORY, "a")
+        (logFile, logFilePath) = self.getLogFile(False, now)
+        urlsFile.write("     (%d)\n" % response.status_code)
+        urlsFile.write("     %s\n" % logFilePath)
+        urlsFile.close()
         with logFile as f:
             f.write(outdata)
 
@@ -432,7 +445,7 @@ class SerializeXmlMiddleware(SwitchableLogMiddleware):
                 outdata = response.model.to_xml(request)
             response.write(outdata)
             if self.shouldLog():
-                self._logResponse(outdata)
+                self._logResponse(outdata, response)
 
         # Originally opened in BaseService. Unfortunately models in collections
         # aren't finalized until this method, so the manager can't be closed in
