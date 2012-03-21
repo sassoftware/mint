@@ -6,6 +6,7 @@ import os
 import logging
 import traceback
 import time
+import textwrap
 
 from debug_toolbar import middleware
 
@@ -109,7 +110,20 @@ class SwitchableLogMiddleware(BaseMiddleware):
                 filename = os.path.join(path, "%s-%s.response_%s.log" % (minsec, counter, type))
             counter += 1   
             if not os.path.exists(filename):
-                return (open(filename, "w"), filename)
+                return (open(filename, "a"), filename)
+
+    def logPrint(self, handle, vars_dicts):
+        wrap = textwrap.TextWrapper(width=80) # break_long_words=False,replace_whitespace=False)
+        for vars_dict in vars_dicts:
+            for k in vars_dict.keys():
+                v = vars_dict[k]
+                if type(v) == list:
+                    # just in case...
+                    v = " ".join([ str(x) for x in v ])
+                else:
+                    v = str(v) 
+                v = "\n".join(wrap.wrap(v))
+                handle.write("%s: %s\n" % (k, v))
 
 class RequestLogMiddleware(SwitchableLogMiddleware):
     ''' 
@@ -126,10 +140,9 @@ class RequestLogMiddleware(SwitchableLogMiddleware):
         path = "%s%s" % (request.META.get('PATH_INFO'), request.META.get('QUERY_STRING'))
         urlsFile.write("[%s]\n     %s\n     %s\n" % (nowstr, path, logFilePath))
         urlsFile.close()
-        outdata = "%s\n\n%s" % (str(request), request.raw_post_data)
         with logFile as f:
-            # TODO: nicer formatting
-            f.write(outdata)
+            self.logPrint(f, [ request.META, dict(raw_post_data=request.raw_post_data) ])
+
 
     def _process_request(self, request):
         if self.shouldLog():
@@ -427,7 +440,7 @@ class SerializeXmlMiddleware(SwitchableLogMiddleware):
         urlsFile.write("     %s\n" % logFilePath)
         urlsFile.close()
         with logFile as f:
-            f.write(outdata)
+            self.logPrint(f, [ dict(status=response.status_code, content=str(outdata)) ])
 
     def _process_response(self, request, response):
         if hasattr(response, 'model'):
