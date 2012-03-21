@@ -113,16 +113,16 @@ class SwitchableLogMiddleware(BaseMiddleware):
                 return (open(filename, "a"), filename)
 
     def logPrint(self, handle, vars_dicts):
-        wrap = textwrap.TextWrapper(width=80) # break_long_words=False,replace_whitespace=False)
+        wrap = textwrap.TextWrapper(width=80, subsequent_indent=' ', break_long_words=False, replace_whitespace=False)
         for vars_dict in vars_dicts:
-            for k in vars_dict.keys():
+            for k in sorted(vars_dict.keys()):
                 v = vars_dict[k]
                 if type(v) == list:
                     # just in case...
                     v = " ".join([ str(x) for x in v ])
                 else:
-                    v = str(v) 
-                v = "\n".join(wrap.wrap(v))
+                    v = str(v)
+                v = "\n     ".join(wrap.wrap(v))
                 handle.write("%s: %s\n" % (k, v))
 
 class RequestLogMiddleware(SwitchableLogMiddleware):
@@ -137,11 +137,15 @@ class RequestLogMiddleware(SwitchableLogMiddleware):
         urlsFile = RBUILDER_DEBUG_HISTORY
         urlsFile = open(RBUILDER_DEBUG_HISTORY, "a")
         (logFile, logFilePath) = self.getLogFile(True, now)
-        path = "%s%s" % (request.META.get('PATH_INFO'), request.META.get('QUERY_STRING'))
+        path = "%s %s%s" % (
+            request.META.get('REQUEST_METHOD'), 
+            request.META.get('PATH_INFO'), 
+            request.META.get('QUERY_STRING')
+        )
         urlsFile.write("[%s]\n     %s\n     %s\n" % (nowstr, path, logFilePath))
         urlsFile.close()
         with logFile as f:
-            self.logPrint(f, [ request.META, dict(raw_post_data=request.raw_post_data) ])
+            self.logPrint(f, [ request.META, dict(zzz_raw_post_data=request.raw_post_data) ])
 
 
     def _process_request(self, request):
@@ -440,7 +444,7 @@ class SerializeXmlMiddleware(SwitchableLogMiddleware):
         urlsFile.write("     %s\n" % logFilePath)
         urlsFile.close()
         with logFile as f:
-            self.logPrint(f, [ dict(status=response.status_code, content=str(outdata)) ])
+            self.logPrint(f, [ dict(status=response.status_code, zzz_content=str(outdata)) ])
 
     def _process_response(self, request, response):
         if hasattr(response, 'model'):
