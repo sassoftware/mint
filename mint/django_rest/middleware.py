@@ -153,7 +153,25 @@ class RequestLogMiddleware(SwitchableLogMiddleware):
             self._logRequest(request)
         return None
 
-class ExceptionLoggerMiddleware(BaseMiddleware):
+class ExceptionLoggerMiddleware(SwitchableLogMiddleware):
+
+    def _logFailure(self, code, exception_msg):
+
+         now = time.localtime()
+         nowstr = time.asctime(now)
+         urlsFile = RBUILDER_DEBUG_HISTORY
+         urlsFile = open(RBUILDER_DEBUG_HISTORY, "a")
+         (logFile, logFilePath) = self.getLogFile(False, now, type='error')
+         urlsFile.write("     (ERROR (%s))\n     %s\n" % (code, logFilePath))
+         urlsFile.close()
+         with logFile as f:
+             self.logPrint(f, [ dict(code=code, zzz_content=exception_msg) ])
+
+
+    def _process_request(self, request):
+        if self.shouldLog():
+            self._logRequest(request)
+        return None
 
     def process_request(self, request):
         mintutils.setupLogging(consoleLevel=logging.INFO,
@@ -169,6 +187,8 @@ class ExceptionLoggerMiddleware(BaseMiddleware):
             response = HttpResponse(status=code, content_type='text/xml')
             response.content = fault.to_xml(request)
             log.error(str(exception))
+            if self.shouldLog():
+                self._logFailure(code, str(exception))
             return response
 
         if isinstance(exception, core_exc.ObjectDoesNotExist):
@@ -189,6 +209,8 @@ class ExceptionLoggerMiddleware(BaseMiddleware):
             response = HttpResponse(status=code, content_type='text/xml')
             response.content = fault.to_xml(request)
             log.error(str(exception))
+            if self.shouldLog():
+                self._logFailure(code, str(exception))
             return response
 
         if isinstance(exception, errors.RbuilderError):
@@ -198,11 +220,17 @@ class ExceptionLoggerMiddleware(BaseMiddleware):
             response = HttpResponse(status=status, content_type='text/xml')
             response.content = fault.to_xml(request)
             log.error(str(exception))
+            if self.shouldLog():
+                self._logFailure(code, str(exception))
             return response
 
         if isinstance(exception, IntegrityError):
             # IntegrityError is a bug but right now we're using it as a crutch
-            # to not send tracebacks when there's an uncaught conflict.
+            # (bad practice, should catch and map to reasonable errors)
+            # so do not log tracebacks when there's an uncaught conflict.
+            # user will still get an ISE w/ details
+            if self.shouldLog():
+                self._logFailure('IntegrityError', str(exception))
             return handler.handleException(request, exception,
                     doTraceback=False, doEmail=False)
 
