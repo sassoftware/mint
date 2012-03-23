@@ -1718,6 +1718,8 @@ class SystemManager(basemanager.BaseManager):
         logFunc("in progress")
         job.job_state = cls.jobState(jobmodels.JobState.RUNNING)
         job.save()
+        for system_job in job.systems.all():
+            system_job.system.updateDerivedData()
         return job
 
     def cleanupSystemEvent(self, event):
@@ -1859,6 +1861,7 @@ class SystemManager(basemanager.BaseManager):
                 "Unable to create event '%s': no networking information" %
                     eventType.description)
 
+        system.updateDerivedData()
         return event
 
     def logSystemEvent(self, event, enable_time):
