@@ -175,6 +175,9 @@ class QuerySetTestCase(QueryTestCase):
             data=testsxml.queryset_put_xml)
         self.assertEquals(response.status_code, 200)
 
+        fetched_qs = models.QuerySet.objects.get(pk=qs1.pk)
+        self.assertTrue(fetched_qs.name.find("CHANGED NAME") != -1)
+ 
         child2 = self.xobjSystems("query_sets/%s/child/" % qs1.pk)
         self.assertEquals(len(child2), 201)
         all2 = self.xobjSystems("query_sets/%s/all/" % qs1.pk)

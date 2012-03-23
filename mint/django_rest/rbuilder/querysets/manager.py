@@ -269,6 +269,7 @@ class QuerySetManager(basemanager.BaseManager):
             models.QuerySet.objects.filter(pk=qs.pk).update(**update_args)
 
         self._recomputeStatic(querySet)
+        querySet.save()
         return querySet
 
     def _recomputeStatic(self, querySet, skip_self=False):
