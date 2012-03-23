@@ -791,6 +791,8 @@ class SystemManager(basemanager.BaseManager):
             system.modified_by = for_user
         system.modified_date = timeutils.now()
         system.save()
+        self.mgr.retagQuerySetsByType('system')
+        return system
 
     def checkInstalledSoftware(self, system):
         # If there is an event_uuid set on system, assume we're just updating
