@@ -10,6 +10,7 @@ from mint.django_rest.rbuilder.users import models as user_models
 from mint.django_rest.rbuilder.inventory import models as inventory_models
 from mint.django_rest.rbuilder.manager import basemanager
 from mint.django_rest.rbuilder.inventory.manager.surveydiff import SurveyDiffRender
+from mint.django_rest import timeutils
 from xobj import xobj
 import datetime
 
@@ -184,10 +185,11 @@ class SurveyManager(basemanager.BaseManager):
             )
             tag.save() 
 
-        survey.name        = getattr(xmodel, 'name', None)
-        survey.description = getattr(xmodel, 'description', None)
-        survey.comment     = getattr(xmodel, 'comment', None)
-        survey.removable   = self._bool(getattr(xmodel, 'removable', True))
+        survey.name          = getattr(xmodel, 'name', None)
+        survey.description   = getattr(xmodel, 'description', None)
+        survey.comment       = getattr(xmodel, 'comment', None)
+        survey.removable     = self._bool(getattr(xmodel, 'removable', True))
+        survey.modified_date = timeutils.now()
         survey.save()
         return survey
 
@@ -215,14 +217,13 @@ class SurveyManager(basemanager.BaseManager):
         comment = getattr(xsurvey, 'comment',     "")
 
         survey = survey_models.Survey(
-            name          = "%s %s" % (system.name, created_date),
+            name          = system.name,
             uuid          = _u(xsurvey.uuid),
             description   = desc,
             comment       = comment,
             removable     = True,
             system        = system,
             created_date  = created_date,
-            # FIXME: TODO: make sure updating changes this
             modified_date = created_date
         )
         survey.save()
