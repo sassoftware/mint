@@ -1093,9 +1093,18 @@ class PostgreSQLRepositoryHandle(RepositoryHandle):
         if self._dbExists(controlDb, name):
             temp = '_old_%s_%s' % (name, os.urandom(6).encode('hex'))
             bouncerDb = self._getBouncerConnection()
-            self._doBounce(bouncerDb, "KILL " + name)
             ccu = controlDb.cursor()
-            ccu.execute('ALTER DATABASE "%s" RENAME TO "%s"' % (name, temp))
+            for x in range(5):
+                self._doBounce(bouncerDb, "KILL " + name)
+                try:
+                    ccu.execute('ALTER DATABASE "%s" RENAME TO "%s"'
+                            % (name, temp))
+                    break
+                except CursorError, err:
+                    if 'is being accessed by other users' in str(err):
+                        time.sleep(1)
+                        continue
+                    raise
             yield temp
             try:
                 self._doBounce(bouncerDb, "RESUME " + name)
