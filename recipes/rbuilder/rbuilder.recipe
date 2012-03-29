@@ -230,6 +230,9 @@ class rBuilderProduct(CPackageRecipe):
         # Make sure that amiconfig isn't required by our amiconfig plugin
         r.Requires(exceptDeps='python: amiconfig.*')
 
+        # Windows ISO builds requires mkisofs
+        r.Requires('cdrkit:runtime', '%(libdir)s/rmake3/.*')
+
         # Anaconda customization
         # This comes first so it is omitted from the -sources split.
         r.PackageSpec('anaconda-custom', r'/usr/share/anaconda/')
