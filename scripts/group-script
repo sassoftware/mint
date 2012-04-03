@@ -96,9 +96,12 @@ createuser -SDRU postgres jabberd &>/dev/null
 createdb -U postgres --encoding=UTF8 --owner=jabberd jabberd &>/dev/null && \
     psql -U jabberd -d jabberd -Xqf /usr/share/rbuilder/jabberd/db-setup.pgsql
 
-# rMake database
+# rMake 3 database
 createuser -SDRU postgres rmake &>/dev/null
 createdb -U postgres --encoding=UTF8 --owner=rmake rmake &>/dev/null
+
+# rMake 2 database
+createdb -U postgres --encoding=UTF8 --owner=rmake rmake2 &>/dev/null
 
 
 # Migrate the mint config
