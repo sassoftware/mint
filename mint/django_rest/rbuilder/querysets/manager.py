@@ -300,6 +300,7 @@ class QuerySetManager(basemanager.BaseManager):
         '''remove a query set unless it's one that shipped w/ rBuilder'''
         if querySet.can_modify: 
             querySet.delete()
+            models.FilterEntry.objects.filter(links=None).delete()
         else:
             raise errors.QuerySetReadOnly(querySetName=querySet.name)
 
