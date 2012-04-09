@@ -551,11 +551,6 @@ class SystemManager(basemanager.BaseManager):
                 self.mgr.addToMyQuerySet(system, for_user)
             self.mgr.retagQuerySetsByType('system', for_user)
 
-        # registration needs to cause a configuration so that config values
-        # and embedded configurators/puppet modules are run
-        if getattr(system, '_not_merged', False):
-            self.scheduleSystemConfigurationEvent(system, system.configuration)
-
         return system
 
     def mergeSystems(self, system):
@@ -791,6 +786,8 @@ class SystemManager(basemanager.BaseManager):
             system.modified_by = for_user
         system.modified_date = timeutils.now()
         system.save()
+        self.mgr.retagQuerySetsByType('system')
+        return system
 
     def checkInstalledSoftware(self, system):
         # If there is an event_uuid set on system, assume we're just updating
@@ -860,10 +857,6 @@ class SystemManager(basemanager.BaseManager):
 
         if jobStateName == jobmodels.JobState.COMPLETED:
             if eventTypeName == jobmodels.EventType.SYSTEM_REGISTRATION:
-                # hmm, actually you'll probably never get here because a job
-                # doesn't really happen for a registration response!  must
-                # rewrite FSM sometime
-                self.scheduleSystemConfigurationEvent(system, system.configuration)
                 return models.SystemState.RESPONSIVE
             if eventTypeName in self.PollEvents or \
                     eventTypeName in self.SystemUpdateEvents:
@@ -1718,6 +1711,8 @@ class SystemManager(basemanager.BaseManager):
         logFunc("in progress")
         job.job_state = cls.jobState(jobmodels.JobState.RUNNING)
         job.save()
+        for system_job in job.systems.all():
+            system_job.system.updateDerivedData()
         return job
 
     def cleanupSystemEvent(self, event):
@@ -1859,6 +1854,7 @@ class SystemManager(basemanager.BaseManager):
                 "Unable to create event '%s': no networking information" %
                     eventType.description)
 
+        system.updateDerivedData()
         return event
 
     def logSystemEvent(self, event, enable_time):

@@ -36,13 +36,9 @@ class UsersService(service.BaseService):
     @rbac(manual_rbac)
     @return_xml
     def rest_GET(self, request, user_id=None):
-         # non-priveledged users should use a queryset
-         # they have access to in order to obtain all results
-         if request._is_admin:
-             qs = querymodels.QuerySet.objects.get(name='All Users')
-             url = '/api/v1/query_sets/%s/all%s' % (qs.pk, request.params)
-             return HttpResponseRedirect(url)
-         raise PermissionDenied()
+        qs = querymodels.QuerySet.objects.get(name='All Users')
+        url = '/api/v1/query_sets/%s/all%s' % (qs.pk, request.params)
+        return HttpResponseRedirect(url)
 
     @access.admin
     @requires('user', save=False)

@@ -1841,10 +1841,6 @@ system_log_xml = """\
       <system_log id="http://testserver/api/v1/inventory/systems/3/system_log"/>
       <system_log_entry_id>4</system_log_entry_id>
     </system_log_entry>
-    <system_log_entry>
-      <system_log id="http://testserver/api/v1/inventory/systems/3/system_log"/>
-      <system_log_entry_id>5</system_log_entry_id>
-    </system_log_entry>
   </system_log_entries>
   <system_log_id>1</system_log_id>
   <system id="http://testserver/api/v1/inventory/systems/3"/>
