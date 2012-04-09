@@ -110,8 +110,9 @@ class Image(modellib.XObjIdModel):
     image_id = D(models.AutoField(primary_key=True, db_column='buildid'), 'ID of image')
     project = D(modellib.DeferredForeignKey('projects.Project', db_column='projectid',
         related_name="images", view_name="ProjectImages"), 'Project attached to the image')
-    #The images need to be linked to the project branch stages and the project
-    #Until then, hide project_branch_stage
+    # The images need to be linked to the project branch stages and the project
+    # Until then, hide project_branch_stage. 
+    # SERIOUSLY, THIS VALUE IS NULL BECAUSE NOTHING SETS IT, DO NOT ATTEMPT TO USE!
     project_branch_stage = modellib.XObjHidden(
         modellib.DeferredForeignKey('projects.Stage', db_column='stageid',
         related_name="images", view_name="ProjectBranchStageImages", null=True))

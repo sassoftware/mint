@@ -466,11 +466,12 @@ class ProjectManager(basemanager.BaseManager):
     @exposed
     def getProjectBranchStageImages(self, project_short_name, project_branch_label, stage_name):
         stage = self.getProjectBranchStage(project_short_name, project_branch_label, stage_name)
-        # Union branch images and stage images
         my_images = imagemodels.Image.objects.filter(
-                project_branch_stage__stage_id=stage.stage_id).distinct() | \
-            imagemodels.Image.objects.filter(
-                project_branch__branch_id = stage.project_branch_id).distinct()
+            # stage_id is not set in the database even though it's on the model, awesome.
+            # don't try to use the project_branch_stage relation
+            project_branch__branch_id   = stage.project_branch_id,
+            stage_name                  = stage.name
+        ).distinct()
 
         images = imagemodels.Images()
         images.image = my_images
