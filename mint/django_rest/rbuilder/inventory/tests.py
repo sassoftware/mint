@@ -2549,7 +2549,6 @@ class SystemsTestCase(XMLTestCase):
         desired = [
               u'System added to inventory', 
               u'Incomplete registration: missing local_uuid. Possible cause: dmidecode malfunctioning', 
-              u"Unable to create event 'Update system configuration': no networking information"
         ] 
         self.failUnlessEqual(actual,desired)
 
@@ -4142,11 +4141,11 @@ class SystemEventProcessing2TestCase(XMLTestCase, test_utils.RepeaterMixIn):
             models.SystemState.REGISTERED)
         self.failUnlessEqual(
             [ x.job_type.name for x in newSystem.jobs.all() ],
-            [ 'immediate system poll', 'immediate system configuration']
+            [ 'immediate system poll' ]
         )
         self.failUnlessEqual(
             [ x.job_state.name for x in newSystem.jobs.all() ],
-            [ 'Queued', 'Queued' ]
+            [ 'Queued', ]
         )
         system.updateDerivedData()
         xobjModel = newSystem.serialize()
@@ -4179,7 +4178,7 @@ class SystemEventProcessing2TestCase(XMLTestCase, test_utils.RepeaterMixIn):
         system = models.System.objects.get(system_id=systemId)
         self.failUnlessEqual(system.current_state.name, 'unmanaged-credentials')
         # No jobs
-        self.failUnlessEqual(len(system.systemjob_set.all()), 1)
+        self.failUnlessEqual(len(system.systemjob_set.all()), 0)
 
         self.disablePostCommitActions()
 
@@ -4195,7 +4194,7 @@ class SystemEventProcessing2TestCase(XMLTestCase, test_utils.RepeaterMixIn):
         # We want a queued registration job
         self.failUnlessEqual(
             [x.job.job_state.name for x in system.systemjob_set.all()],
-            ['Running', 'Queued'])
+            ['Queued'])
 
         self.failUnlessEqual(len(self.devNullList), 1)
         self.failUnlessEqual(system.current_state.name, 'unmanaged')

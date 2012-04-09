@@ -221,7 +221,7 @@ class ResultsProcessingMixIn(object):
         self.validateJobResults(job)
         self.processJobResults(job)
         for system_job in job.systems.all():
-           system_job.system.updateDerivedData()
+            system_job.system.updateDerivedData()
         job.save()
 
     def getJobResults(self, job):

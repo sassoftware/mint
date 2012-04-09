@@ -54,7 +54,7 @@ queryset_put_xml = """
   <filtered_members id="/api/v1/query_sets/20/filtered"/>
   <is_top_level>True</is_top_level>
   <tagged_date></tagged_date>
-  <name>New Query Set</name>
+  <name>New Query Set (CHANGED NAME)</name>
   <chosen_members id="/api/v1/query_sets/20/chosen"/>
   <query_set_id>16</query_set_id>
   <child_members id="/api/v1/query_sets/20/child"/>
