@@ -76,7 +76,7 @@ class User(modellib.XObjIdModel):
         'usermember', 'package_versions_created', 'packages_created', 'user',
         'created_images', 'updated_images', 'project_membership',
         'created_releases', 'updated_releases', 'published_releases', 'tags', 'user_tags',
-        'user_roles', 'jobs',
+        'user_roles', 'jobs', 'auth_tokens',
     ])
 
     def __unicode__(self):

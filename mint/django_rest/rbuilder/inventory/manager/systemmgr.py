@@ -50,6 +50,18 @@ system_assimilate_descriptor = """<descriptor>
 </descriptor>
 """
 
+survey_scan_descriptor = """<descriptor>
+  <metadata>
+  <displayName>System Scan</displayName>
+    <descriptions>
+      <desc>System Scan</desc>
+    </descriptions>
+  </metadata>
+  <dataFields/>
+</descriptor>
+"""
+
+
 class SystemManager(basemanager.BaseManager):
     RegistrationEvents = set([
         jobmodels.EventType.SYSTEM_REGISTRATION,
@@ -729,7 +741,12 @@ class SystemManager(basemanager.BaseManager):
         elif withManagementInterfaceDetection:
             # Need to dectect the management interface on the system
             self.scheduleSystemDetectMgmtInterfaceEvent(system)
+        # so that a transition between Inactive and Active systems will make the system
+        # move between querysets.  Note, not retagging, would be grossly inefficient
+        # with lots of system activity
+        self.mgr.invalidateQuerySetsByType('system')
 
+        
     def generateSystemCertificates(self, system):
         if system._ssl_client_certificate is not None and \
                 system._ssl_client_key is not None:
@@ -2026,21 +2043,27 @@ class SystemManager(basemanager.BaseManager):
         return systemTag
 
     @exposed
-    def getSystemDescriptorForAction(self, systemId, descriptorType, params):
+    def getSystemDescriptorForAction(self, systemId, descriptorType, parameters=None):
         # This will validate the system
         system = models.System.objects.get(pk=systemId)
         methodMap = dict(
             assimilation = self.getDescriptorAssimilation,
             capture = self.getDescriptorCaptureSystem,
+            survey_scan = self.getDescriptorSurveyScan,
         )
         method = methodMap.get(descriptorType)
         if method is None:
             raise errors.errors.ResourceNotFound()
-        return method(systemId, params)
+        return method(systemId)
 
     def getDescriptorAssimilation(self, systemId, *args, **kwargs):
         descr = descriptor.ConfigurationDescriptor(
             fromStream=system_assimilate_descriptor)
+        return descr
+
+    def getDescriptorSurveyScan(self, systemId, *args, **kwargs):
+        descr = descriptor.ConfigurationDescriptor(
+            fromStream=survey_scan_descriptor)
         return descr
 
     @exposed

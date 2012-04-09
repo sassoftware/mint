@@ -196,13 +196,18 @@ class ProjectsTestCase(RbacEngine):
         project = models.Project.objects.get(pk=projectId)
         self.assertEquals("test-project", project.name)
         self.assertEquals(1, project.created_by.user_id)
-    
+        self.assertEquals(1, project.modified_by.user_id)
+        self.assertTrue(project.created_date is not None)
+        self.assertTrue(project.modified_date is not None)
+
         # adding project again should give a 400 error
         response = self._post('projects',
             data=testsxml.project_post_xml,
             username="admin", password="password")
         self.assertEquals(response.status_code, 403) 
-    
+          
+        
+ 
     def testAddProjectNoHostname(self):
         response = self._post('projects',
             data=testsxml.project_post_no_hostname_xml,
@@ -321,11 +326,27 @@ class ProjectsTestCase(RbacEngine):
         branch = xobj.parse(response.content).project_branch
         branch = models.ProjectVersion.objects.get(pk=branch.branch_id)
         self.assertEquals('42', branch.name)
+        self.assertTrue(branch.created_by is not None)
+        self.assertTrue(branch.modified_by is not None)
+        self.assertTrue(branch.created_date is not None)
+        self.assertTrue(branch.modified_date is not None)
+
         # FIXME: convert to XML test
         # make sure stages are there
         # XXX project creation does not handle stage creation at the
         # moment
         self.assertEquals(len(branch.project_branch_stages.all()), 3)
+
+        # make sure creating the branch caused stages to auto vivify
+        # and they have creator/modified info
+        stages = models.Stage.objects.filter(project__name='foo')        
+        self.assertEquals(len(stages), 3, 'stages auto created')
+        for stage in stages:
+            self.assertTrue(stage.created_by is not None)
+            self.assertTrue(stage.modified_by is not None)
+            self.assertTrue(stage.created_date is not None)
+            self.assertTrue(stage.modified_date is not None)
+              
 
     def testAddProjectVersionToProjectTwo(self):
         # add project as developer    
@@ -367,6 +388,8 @@ class ProjectsTestCase(RbacEngine):
         branch = xobj.parse(response.content).project_branch
         branch = models.ProjectVersion.objects.get(pk=branch.branch_id)
         self.assertEquals(branch.description, "updated description")
+
+        # FIXME BOOKMARK -- verify that modified_date has changed
 
     def testUpdateProjectBranchSecurity(self):
         # Unauthenticated

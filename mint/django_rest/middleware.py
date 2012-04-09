@@ -314,8 +314,15 @@ class SetMintConfigMiddleware(BaseMiddleware):
 class AddCommentsMiddleware(BaseMiddleware):
     
     useXForm = True
-
+    
     def _process_response(self, request, response):
+        try:
+            return self._internal_process_response(request, response)
+        except:
+            return response
+
+
+    def _internal_process_response(self, request, response):
 
         # do not add comments to error messages
         if response.status_code != 200:

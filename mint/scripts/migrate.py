@@ -148,6 +148,8 @@ def rebuild_table(db, table, fieldsOut, fieldsIn=None, skipDropIndex=False):
 def createTable(db, definition):
     return schema.createTable(db, None, definition)
 
+def createTable2(db, name, definition):
+    return schema.createTable(db, name, definition)
 
 def columnExists(db, table, name):
     cu = db.cursor()
@@ -3995,7 +3997,6 @@ class MigrateTo_58(SchemaMigration):
                 "description" TEXT NOT NULL
             )""" % db.keywords)
 
-        # BOOKMARK
         schema._addTableRows(self.db, 'rbac_permission_type', 'name', [ 
             dict(name="ReadMembers", description='Read Member Resources'),
             dict(name="ModMembers",  description='Modify Member Resources'),
@@ -4718,6 +4719,7 @@ class MigrateTo_61(SchemaMigration):
         return True
 
     def migrate7(self):
+        # this is P6
         cu = self.db.cursor()
         cu.execute("""ALTER TABLE inventory_system ADD COLUMN out_of_date BOOLEAN NOT NULL DEFAULT False""")
         cu.execute("""ALTER TABLE inventory_system ADD COLUMN has_active_jobs BOOLEAN NOT NULL DEFAULT False""")
@@ -4729,10 +4731,263 @@ class MigrateTo_61(SchemaMigration):
         cu = self.db.cursor()
         cu.execute("""UPDATE querysets_queryset SET is_public = TRUE WHERE NAME = 'Active Systems'
                          AND resource_type='system' AND can_modify = FALSE
-        """)
         cu.execute("""UPDATE querysets_queryset SET is_public = TRUE WHERE NAME = 'Infrastructure Systems'
                          AND resource_type='system' AND can_modify = FALSE
+        return True
+
+class MigrateTo_62(SchemaMigration):
+    '''Fork!'''
+    Version = (62, 6)
+
+    def migrate(self):
+
+        createTable2(self.db, 'inventory_survey', """
+                "survey_id" %(PRIMARYKEY)s,
+                "uuid" TEXT NOT NULL,
+                "system_id" INTEGER NOT NULL REFERENCES "inventory_system" (system_id) ON DELETE CASCADE,
+                "name" TEXT NOT NULL,
+                "description" TEXT,
+                "comment" TEXT,
+                "created_date" TIMESTAMP WITH TIME ZONE NOT NULL,
+                "modified_date" TIMESTAMP WITH TIME ZONE NOT NULL,
+                "created_by" INTEGER NOT NULL REFERENCES "users" (userid) ON DELETE SET NULL,
+                "modified_by" INTEGER NOT NULL REFERENCES "users" (userid) ON DELETE SET NULL,
+                "removable" BOOLEAN NOT NULL DEFAULT TRUE,
+                "raw_xml" TEXT
         """)
+
+        createTable2(self.db, 'inventory_survey_tags', """
+                "tag_id" %(PRIMARYKEY)s,
+                "survey_id" INTEGER REFERENCES "inventory_survey" NOT NULL,
+                "name" TEXT
+        """)
+
+        createTable2(self.db, 'inventory_rpm_package', """
+                "rpm_package_id" %(PRIMARYKEY)s,
+                "name" TEXT NOT NULL,
+                "epoch" INTEGER,
+                "version" TEXT NOT NULL,
+                "release" TEXT NOT NULL,
+                "architecture" TEXT NOT NULL, 
+                "description" TEXT,
+                "signature" TEXT,
+        """)
+
+        createTable2(self.db, 'inventory_conary_package', """
+                "conary_package_id" %(PRIMARYKEY)s,
+                "name" TEXT NOT NULL,
+                "version" TEXT NOT NULL, 
+                "flavor" TEXT NOT NULL,
+                "description" TEXT NOT NULL,
+                "revision" TEXT NOT NULL,
+                "architecture" TEXT NOT NULL,
+                "signature" TEXT NOT NULL,
+                "rpm_package_id" INTEGER REFERENCES inventory_rpm_package (rpm_package_id) ON DELETE SET NULL 
+        """)
+
+        createTable2(self.db, 'inventory_service', """
+                service_id %(PRIMARYKEY)s,
+                name TEXT,
+                autostart BOOLEAN DEFAULT FALSE,
+                runlevels TEXT
+        """)
+
+        createTable2(self.db, 'inventory_survey_rpm_package', """
+                "map_id" %(PRIMARYKEY)s,
+                "survey_id" INTEGER NOT NULL REFERENCES "inventory_survey" (survey_id) ON DELETE CASCADE,
+                "rpm_package_id" INTEGER NOT NULL REFERENCES "inventory_rpm_package" (rpm_package_id) ON DELETE CASCADE,
+                "install_date" TIMESTAMP WITH TIME ZONE NOT NULL
+        """)
+
+        createTable2(self.db, 'inventory_survey_conary_package', """
+                "map_id" %(PRIMARYKEY)s,
+                "survey_id" INTEGER NOT NULL REFERENCES "inventory_survey" (survey_id) ON DELETE CASCADE,
+                "conary_package_id" INTEGER NOT NULL REFERENCES "inventory_conary_package" (conary_package_id) ON DELETE CASCADE,
+                "install_date" TIMESTAMP WITH TIME ZONE NOT NULL
+        """)
+
+        createTable2(self.db, 'inventory_survey_service', """
+                "map_id" %(PRIMARYKEY)s,
+                "survey_id" INTEGER NOT NULL REFERENCES "inventory_survey" (survey_id) ON DELETE CASCADE,
+                "service_id" INTEGER NOT NULL REFERENCES "inventory_service" (service_id) ON DELETE CASCADE,
+                running BOOLEAN DEFAULT FALSE,
+                status TEXT
+        """)
+
+        createTable2(self.db, 'inventory_survey_diff', """
+                diff_id %(PRIMARYKEY)s,
+                created_date TIMESTAMP WITH TIME ZONE NOT NULL,
+                left_survey_id INTEGER NOT NULL REFERENCES "inventory_survey" ("survey_id") ON DELETE CASCADE,
+                right_survey_id INTEGER NOT NULL REFERENCES "inventory_survey" ("survey_id") ON DELETE SET NULL,
+                xml TEXT
+        """)
+        return True
+
+    def migrate1(self):
+        cu = self.db.cursor()
+        cu.execute("""ALTER TABLE inventory_survey ALTER created_by
+            DROP NOT NULL""")
+        cu.execute("""ALTER TABLE inventory_survey ALTER modified_by
+            DROP NOT NULL""")
+        return True
+
+    def migrate2(self):
+        db = self.db
+        schema._addTableRows(db, 'jobs_job_type', 'name', [
+             dict(name="system scan",
+                  description="Scan system",
+                  priority=105,
+                  resource_type="System"),
+        ])
+        db.createIndex('jobs_created_system', 'jobs_created_system_jid_sid_uq',
+            'job_id, system_id', unique=True)
+        db.createIndex('jobs_created_image', 'jobs_created_image_jid_iid_uq',
+            'job_id, image_id', unique=True)
+        createTable2(db, 'jobs_created_survey', """
+            id          %(PRIMARYKEY)s,
+            job_id      integer NOT NULL
+                        REFERENCES jobs_job(job_id)
+                        ON DELETE CASCADE,
+            survey_id integer NOT NULL
+                        REFERENCES inventory_survey(survey_id)
+                        ON DELETE CASCADE,
+        """)
+        db.createIndex('jobs_created_survey', 'jobs_created_survey_jid_sid_uq',
+            'job_id, survey_id', unique=True)
+        return True
+
+    def migrate3(self):
+        cu = self.db.cursor()
+        cu.execute("""
+            ALTER TABLE inventory_system ADD COLUMN "latest_survey_id" INTEGER
+            REFERENCES "inventory_survey" (survey_id) ON DELETE SET NULL
+        """)
+        return True 
+
+    def migrate4(self):
+        self.db.createIndex('inventory_survey', 'SurveyUuidIdx', 'uuid')
+        self.db.createIndex('inventory_survey', 'SystemIdIdx', 'system_id')
+        self.db.createIndex('inventory_survey_diff', 'SurveyDiffLeftRightIdx', 
+            'left_survey_id,right_survey_id', unique=True)
+
+        return True
+
+    def migrate5(self):
+
+        ''' add windows survey tables & also add some more indexes on previous tables '''
+
+        db = self.db
+        createTable2(db, 'inventory_windows_package', """
+            "windows_package_id" %(PRIMARYKEY)s,
+            "publisher" TEXT NOT NULL,
+            "product_code" TEXT NOT NULL,
+            "package_code" TEXT NOT NULL,
+            "product_name" TEXT NOT NULL,
+            "type" TEXT NOT NULL,
+            "upgrade_code" TEXT NOT NULL,
+            "version" TEXT NOT NULL
+        """)
+
+        createTable2(db, 'inventory_survey_windows_package', """
+            "map_id" %(PRIMARYKEY)s,
+            "survey_id" INTEGER NOT NULL REFERENCES "inventory_survey" (survey_id) ON DELETE CASCADE,
+            "windows_package_id" INTEGER NOT NULL REFERENCES "inventory_windows_package" (windows_package_id) ON DELETE CASCADE,
+            "install_date" TIMESTAMP WITH TIME ZONE NOT NULL,
+            "install_source" TEXT NOT NULL,
+            "local_package" TEXT NOT NULL
+        """)
+
+        db.createIndex('inventory_survey_windows_package', 'inventory_survey_windows_package_sid', 'survey_id')
+
+        createTable2(db, 'inventory_windows_patch', """
+            "windows_patch_id" %(PRIMARYKEY)s,
+            "display_name" TEXT NOT NULL,
+            "uninstallable" BOOLEAN NOT NULL,
+            "patch_code" TEXT NOT NULL,
+            "product_code" TEXT NOT NULL,
+            "transforms" TEXT
+        """)
+
+        createTable2(db, 'inventory_windows_patch_windows_package', """
+            "map_id" %(PRIMARYKEY)s,
+            "windows_package_id" INTEGER NOT NULL REFERENCES "inventory_windows_package" (windows_package_id) ON DELETE CASCADE,
+            "windows_patch_id" INTEGER NOT NULL REFERENCES "inventory_windows_patch" (windows_patch_id) ON DELETE CASCADE 
+        """)
+
+        db.createIndex('inventory_windows_patch_windows_package',
+            'inventory_windows_patch_windows_package_uq',
+            'windows_package_id,windows_patch_id', unique=True)
+
+        createTable2(db, 'inventory_survey_windows_patch', """
+            "map_id" %(PRIMARYKEY)s,
+            "survey_id" INTEGER NOT NULL REFERENCES "inventory_survey" (survey_id) ON DELETE CASCADE,
+            "windows_patch_id" INTEGER NOT NULL REFERENCES "inventory_windows_patch" (windows_patch_id) ON DELETE CASCADE,
+            "local_package" TEXT NOT NULL,
+            "install_date" TIMESTAMP WITH TIME ZONE NOT NULL,
+            "is_installed" BOOLEAN NOT NULL
+        """)
+
+        createTable2(db, 'inventory_windows_service', """
+            "windows_service_id" %(PRIMARYKEY)s,
+            "name" TEXT NOT NULL,
+            "display_name" TEXT NOT NULL, 
+            "type" TEXT NOT NULL,
+            "handle" TEXT NOT NULL,
+            "required_services" TEXT NOT NULL 
+        """)
+
+        createTable2(db, 'inventory_survey_windows_service', """
+            "map_id" %(PRIMARYKEY)s,
+            "survey_id" INTEGER NOT NULL REFERENCES "inventory_survey" (survey_id) ON DELETE CASCADE,
+            "windows_service_id" INTEGER NOT NULL REFERENCES "inventory_windows_service" (windows_service_id) ON DELETE CASCADE,
+            "status" TEXT NOT NULL
+        """)
+        
+        db.createIndex('inventory_survey_windows_service', 'inventory_survey_windows_service_sid', 'survey_id')
+
+        # end windows survey tables, begin additional indices for linux tables
+ 
+        db.createIndex('inventory_survey_rpm_package', 'inventory_survey_conary_rpm_package_sid',
+            'survey_id')
+        db.createIndex('inventory_survey_conary_package', 'inventory_survey_conary_package_sid',
+            'survey_id')
+        db.createIndex('inventory_survey_service', 'inventory_survey_service_sid',
+            'survey_id')
+
+        return True
+
+    def migrate6(self):
+        ''' Add created/modified to all types to projects, branches, and stages '''
+        cu = self.db.cursor()
+        # record creator, modifier, and modifier time for branches
+        # creation time was already tracked
+        cu.execute("""
+            ALTER TABLE productversions ADD COLUMN "created_by" INTEGER
+                REFERENCES "users" (userid) ON DELETE SET NULL
+        """) 
+        cu.execute("""
+            ALTER TABLE productversions ADD COLUMN "modified_by" INTEGER
+                REFERENCES "users" (userid) ON DELETE SET NULL
+        """) 
+        cu.execute("""
+            ALTER TABLE productversions ADD COLUMN timeModified numeric(14,3)
+        """)
+        # and the same for stages
+        # creation time was already tracked
+        cu.execute("""
+            ALTER TABLE project_branch_stage ADD COLUMN created_by INTEGER
+                REFERENCES "users" (userid) ON DELETE SET NULL
+        """) 
+        cu.execute("""
+            ALTER TABLE project_branch_stage ADD COLUMN modified_by INTEGER
+                REFERENCES "users" (userid) ON DELETE SET NULL
+        """)
+        cu.execute("""
+            ALTER TABLE project_branch_stage ADD COLUMN modified_date 
+                timestamp with time zone
+                DEFAULT current_timestamp
+        """)
+
         return True
 
 #### SCHEMA MIGRATIONS END HERE #############################################

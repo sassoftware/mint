@@ -272,16 +272,6 @@ def fromDatabaseTimestamp(timeStamp):
     return (time.mktime(time.strptime(timeStamp, '%Y%m%d%H%M%S')) - \
             (time.localtime().tm_isdst and time.altzone or time.timezone))
 
-def getUrlHost(url):
-    """
-    Given a URL, pull out the hostname only.
-    """
-    host = urlparse.urlparse(url)[1]
-    if '@' in host:
-        host = host[host.find('@')+1:]
-    if ':' in host:
-        host = host[:host.find(':')]
-    return host
 
 LOCAL_CONARY_PROXIES = { 'http': 'http://localhost',
                          'https': 'https://localhost' }
