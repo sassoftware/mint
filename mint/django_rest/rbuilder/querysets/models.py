@@ -140,6 +140,10 @@ class QuerySet(modellib.XObjIdModel):
         "A classification for client to use when displaying the objects.  For example, stages can be on projects, branches, platforms, etc.")
     can_modify = D(models.BooleanField(default=True),
         "Whether this query set can be deleted through the API.  Boolean, defaults to False")
+    # TODO: make this an href field and not inline
+    config_environments = D(models.ManyToManyField("ConfigEnvironment", through='QuerySetConfigEnvironment', 
+        symmetrical=False, related_name='querysets'), "Query sets that are children of this query set")
+
     actions = D(modellib.SyntheticField(jobmodels.Actions), 'Available actions on this query set')
     # public querysets are querysets like "All Systems" and do not require rbac ReadSet permissions
     # to be visible, but will be empty unless ReadMember(ship) is conveyed on some of their contents.
@@ -285,6 +289,55 @@ class QuerySet(modellib.XObjIdModel):
         for parent in my_parents:
             results.extend(parent._ancestors(results, depth-1))
         return results
+
+# TODO: collection, ConfigEnvironments
+# RBAC based on union of querysets, etc, or just public?
+
+class ConfigEnvironment(modellib.XObjIdModel):
+    '''An individual queryset, ex: "All Systems"'''
+
+    class Meta:
+        db_table = 'config_environments'
+
+    _xobj = xobj.XObjMetadata(tag = "config_environment")
+    _xobj_explicit_accessors = set(['config_environment_settings'])
+
+    config_environment_id = D(models.AutoField(primary_key=True, db_column='id'),
+        "The database id for the config environment")
+    name = D(models.TextField(unique=True),
+        "Config environment name", short="Config environment name")
+    description = D(models.TextField(unique=False),
+        "Config environment description", short="Config environment description")
+    descriptor = models.TextField(db_column='config_descriptor')
+    created_by = D(models.ForeignKey('users.User', db_column='created_by', related_name='+'),
+        "User who created the config environment", short="Config environment created by")
+    modified_by = D(models.ForeignKey('users.User', db_column='modified_by', related_name='+'),
+        "User who last modified the config environment", short="Config environment modified by")
+    created_date = D(modellib.DateTimeUtcField(auto_now_add=True),
+        "Date the query set was created")
+    modified_date = D(modellib.DateTimeUtcField(auto_now_add=True),
+        "Date the query set was modified")   
+
+class QuerySetConfigEnvironment(modellib.XObjIdModel):
+    ''' M2M mapping table '''
+    class Meta:
+        db_table = 'querysets_queryset_config_environments'
+
+    queryset_config_environment_id = models.AutoField(primary_key=True, db_column='id')
+    config_environment = models.ForeignKey(ConfigEnvironment, db_column='config_environment_id')
+    queryset = models.ForeignKey('querysets.QuerySet', db_column='queryset_id')
+ 
+class ConfigEnvironmentSetting(modellib.XObjIdModel):
+
+    class Meta:
+        db_table = 'config_environment_config_values'
+
+    _xobj = xobj.XObjMetadata(tag='config_environment_setting')
+
+    config_setting_id = models.AutoField(primary_key=True, db_column='id')
+    config_environment = modellib.ForeignKey(ConfigEnvironment, related_name='config_environment_settings')
+    key = models.TextField(null=True)
+    value = models.TextField(null=True)
 
 class FilterEntry(modellib.XObjIdModel):
 
