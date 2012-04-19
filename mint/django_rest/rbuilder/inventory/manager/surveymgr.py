@@ -45,8 +45,7 @@ class SurveyManager(basemanager.BaseManager):
             surveys = survey_models.Survey.objects.filter(system=sys)
             surveys.order_by('-created_date')
             if len(surveys) > 0:
-                sys.latest_survey = surveys[0]
-                sys.save()
+                inventory_models.System.objects.filter(pk=sys.pk).update(latest_survey=surveys[0])
             return (True, True)
 
     @exposed
