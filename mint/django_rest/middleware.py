@@ -24,6 +24,7 @@ from mint.django_rest.rbuilder import auth, errors, models
 from mint.django_rest.rbuilder.users import models as usersmodels
 from mint.django_rest.rbuilder.metrics import models as metricsmodels
 from mint.django_rest.rbuilder.errors import PermissionDenied
+from mint.django_rest.rbuilder.inventory import errors as ierrors
 from mint.lib import mintutils
 
 log = logging.getLogger(__name__)
@@ -179,6 +180,10 @@ class ExceptionLoggerMiddleware(SwitchableLogMiddleware):
 
     def process_exception(self, request, exception):
 
+        # email will only be sent if this is True AND
+        # we don't return early from this function
+        doEmail=True
+
         if isinstance(exception, PermissionDenied):
             # TODO: factor out duplication 
             code = 403
@@ -233,7 +238,10 @@ class ExceptionLoggerMiddleware(SwitchableLogMiddleware):
             return handler.handleException(request, exception,
                     doTraceback=False, doEmail=False)
 
-        return handler.handleException(request, exception)
+        if isinstance(exception, ierrors.IncompatibleEvent):
+            doEmail = False 
+
+        return handler.handleException(request, exception, doEmail=doEmail)
 
 class RequestSanitizationMiddleware(BaseMiddleware):
     def _process_request(self, request):
