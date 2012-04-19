@@ -91,8 +91,8 @@ VERSION_STRINGS = ["RBUILDER_CLIENT:%d" % x for x in SERVER_VERSIONS]
 
 log = logging.getLogger(__name__)
 
-reservedHosts = ['admin', 'mail', 'mint', 'www', 'web', 'rpath', 'wiki', 'conary', 'lists']
-reservedExtHosts = ['admin', 'mail', 'mint', 'www', 'web', 'wiki', 'conary', 'lists']
+reservedHosts = ['admin', 'mail', 'mint', 'www', 'web', 'rpath', 'wiki', 'lists']
+reservedExtHosts = ['admin', 'mail', 'mint', 'www', 'web', 'wiki', 'lists']
 # XXX do we need to reserve localhost?
 # XXX reserve proxy hostname (see cfg.proxyHostname) if it's not
 #     localhost
