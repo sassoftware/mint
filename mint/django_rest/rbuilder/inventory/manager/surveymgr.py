@@ -31,6 +31,7 @@ class SurveyManager(basemanager.BaseManager):
         the survey either might not exist or it might not be marked
         removable.  See views.py usage.
         '''
+
         surveys = survey_models.Survey.objects.filter(uuid=uuid)
         if len(surveys) == 0:
             return (False, False)
@@ -38,6 +39,12 @@ class SurveyManager(basemanager.BaseManager):
         if not survey.removable:
             return (True, False)
         else:
+            matching_diffs = survey_models.SurveyDiff.objects.filter(
+                left_survey = survey
+            ).distinct() | survey_models.SurveyDiff.objects.filter(
+                right_survey = survey
+            ).distinct()
+            matching_diffs.delete()
             sys = survey.system
             survey.delete()
             # point latest_survey to new latest
