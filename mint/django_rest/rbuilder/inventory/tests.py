@@ -248,6 +248,11 @@ class SurveyTests(XMLTestCase):
         sys = models.System.objects.get(pk=sys.pk)
         self.assertTrue(sys.latest_survey.created_date is not None)
 
+        # delete the system, make sure nothing explodes
+        response = self._delete("inventory/systems/%s" % sys.pk,
+            username='admin', password='password')
+        self.assertEqual(response.status_code, 204)
+
     def test_survey_post_long(self):
         sys = self._makeSystem()
         url = "inventory/systems/%s/surveys" % sys.pk
@@ -338,6 +343,11 @@ class SurveyTests(XMLTestCase):
         url = "inventory/surveys/%s" % '504'
         response = self._delete(url, username='admin', password='password')
         self.assertEqual(response.status_code, 403)
+        
+        # delete the system, make sure nothing explodes
+        response = self._delete("inventory/systems/%s" % sys.pk,
+            username='admin', password='password')
+        self.assertEqual(response.status_code, 204)
 
 class AssimilatorTestCase(XMLTestCase, test_utils.SmartformMixIn):
     ''' 

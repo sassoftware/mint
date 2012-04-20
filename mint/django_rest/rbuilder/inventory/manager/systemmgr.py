@@ -27,6 +27,7 @@ from mint.django_rest.rbuilder import models as rbuildermodels
 from mint.django_rest.rbuilder.inventory import errors
 from mint.django_rest.rbuilder.inventory import models
 from mint.django_rest.rbuilder.inventory import zones as zmodels
+from mint.django_rest.rbuilder.inventory import survey_models
 from mint.django_rest.rbuilder.targets import models as targetmodels
 from mint.django_rest.rbuilder.manager import basemanager
 from mint.django_rest.rbuilder.querysets import models as querysetmodels
@@ -239,6 +240,14 @@ class SystemManager(basemanager.BaseManager):
     @exposed
     def deleteSystem(self, system_id):
         system = models.System.objects.get(pk=system_id)
+        # API deletions used here to prevent cascade delete loop issues 
+        # that occur via diffs combined with latest_survey association
+        matching_surveys = survey_models.Survey.objects.filter(
+            system=system
+        )
+        for survey in matching_surveys:
+            self.mgr.deleteSurvey(survey.uuid)
+
         system.delete()
 
     @exposed
