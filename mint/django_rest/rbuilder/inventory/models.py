@@ -707,7 +707,6 @@ class System(modellib.XObjIdModel):
         self.has_active_jobs  = self.areJobsActive(jobs)
         self.has_running_jobs = self.areJobsRunning(jobs)
         self.out_of_date      = self.isOutOfDate()
-        self.save()
 
     def isOutOfDate(self):
         out_of_date = False
