@@ -454,7 +454,7 @@ class RbacManager(basemanager.BaseManager):
             grants__role__rbacuserrole__user = user,
             grants__permission__name = CREATERESOURCE
         )
-        personal_sets = [ x for x in granting_sets if x.personal_for is not None ]
+        personal_sets = [ x for x in granting_sets if x.personal_for == user ]
         # if using "My Query Sets", always create the resource in THAT
         # queryset.  Currently the idea of chosing where to create a resource
         # is not really designed/supported.
