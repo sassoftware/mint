@@ -4007,6 +4007,13 @@ class SystemEventProcessing2TestCase(XMLTestCase, test_utils.RepeaterMixIn):
 
         # Clear out the system events table
         models.SystemEvent.objects.all().delete()
+        transaction.commit()
+        transaction.enter_transaction_management()
+        connection.managed(True)
+
+        self.failUnlessEqual(self.mgr.repeaterMgr.repeaterClient.getCallList(),
+            [])
+
         newState = self.mgr.sysMgr.getNextSystemState(systemCim, jobCim)
         self.failUnlessEqual(newState, None)
         # Nothing in the call stack yet
