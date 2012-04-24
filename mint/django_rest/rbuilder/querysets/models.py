@@ -293,6 +293,7 @@ class FilterEntry(modellib.XObjIdModel):
 
     _xobj = xobj.XObjMetadata(
                 tag = "filter_entry")
+    _xobj_hidden_accessors = set(['links'])
 
     filter_entry_id = models.AutoField(primary_key=True)
     field = D(models.TextField(),
@@ -321,7 +322,15 @@ class FilterEntry(modellib.XObjIdModel):
             # if the ID already exists, be cool about it
             pass
 
-            
+class FilterEntryLink(modellib.XObjIdModel):
+ 
+    class Meta:
+        db_table = 'querysets_queryset_filter_entries'
+
+    id = models.AutoField(primary_key=True)
+    queryset = models.ForeignKey(QuerySet, related_name='+')
+    filter_entry = models.ForeignKey(FilterEntry, 
+        db_column='filterentry_id', related_name='links')
 
 class InclusionMethod(modellib.XObjIdModel):
     '''

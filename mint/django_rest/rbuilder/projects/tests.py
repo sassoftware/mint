@@ -481,7 +481,7 @@ class ProjectsTestCase(RbacEngine):
         self.assertEquals(response.status_code, 200)
         self.assertXMLEquals(response.content, testsxml.test_get_images_from_pbs_xml)
 
-    def testgetProjectBranchStageImages(self):
+    def testGetProjectBranchStageImages(self):
         # SUP-4166
         self._initProject()
         prj = models.Project.objects.get(name='chater-foo')
@@ -503,24 +503,48 @@ class ProjectsTestCase(RbacEngine):
             imagesmodels.Image.objects.filter(project_branch=branch)
             for i in range(2):
                 name = "image-%s-%s" % (branch.name, i)
-                image = imagesmodels.Image(name=name, description=name,
-                    project_branch=branch, _image_type=10,
+                image = imagesmodels.Image(name=name, 
+                    description=name,
+                    project_branch=branch, 
+                    project=prj,
+                    # this is a for a stage name that is not set
+                    # which was a legacy thing.
+                    _image_type=10,
                     trove_version='/foo@rpath:1/12345:%d-1' % i,
-                    trove_flavor='1#x86:i486:i586:i686|5#use:~!xen', image_count=1)
+                    trove_flavor='1#x86:i486:i586:i686|5#use:~!xen', 
+                    image_count=1)
                 self.mgr.createImageBuild(image)
 
                 name += 'devel'
-                image = imagesmodels.Image(name=name, description=name,
-                    project_branch_stage=stage, _image_type=10,
+                image = imagesmodels.Image(
+                    name=name, 
+                    description=name,
+                    project=prj,
+                    # since this isn't what the real app stores (unfortunately)...
+                    project_branch_stage=stage, 
+                    # the tests must also set this...
+                    stage_name=stage.name,
+                    _image_type=10,
                     trove_version='/foo@rpath:1/12345:%d-1' % i,
-                    trove_flavor='1#x86:i486:i586:i686|5#use:~!xen', image_count=1)
+                    trove_flavor='1#x86:i486:i586:i686|5#use:~!xen', 
+                    image_count=1)
                 self.mgr.createImageBuild(image)
 
         # Make sure there's no cross-polination
         imgs = self.mgr.getProjectBranchStageImages(prj.short_name,
             branch2.label, stageDev2.name)
-        self.failUnlessEqual([ x.name for x in imgs.image ],
-            ['image-1-0', 'image-1-0devel', 'image-1-1', 'image-1-1devel'])
+
+        actual  = [ x.name for x in imgs.image ]
+        desired = [ 
+           u'image from fixture',
+           u'image-trunk-0',
+           u'image-trunk-1',
+           u'image-1-0',
+           u'image-1-0devel',
+           u'image-1-1',
+           u'image-1-1devel'
+        ]
+        self.failUnlessEqual(actual, desired)
 
     def testGetProjectBranchStagesByProject(self):
         self._initProject()
