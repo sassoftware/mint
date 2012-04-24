@@ -11,6 +11,7 @@ from mint.django_rest.rbuilder.manager import basemanager
 
 from mint.django_rest.rbuilder.discovery.manager import DiscoveryManager
 from mint.django_rest.rbuilder.inventory.manager.systemmgr import SystemManager
+from mint.django_rest.rbuilder.inventory.manager.surveymgr import SurveyManager
 from mint.django_rest.rbuilder.inventory.manager.versionmgr import VersionManager
 from mint.django_rest.rbuilder.inventory.manager.repeatermgr import RepeaterManager
 from mint.django_rest.rbuilder.jobs.manager import JobManager
@@ -46,6 +47,7 @@ class RbuilderManager(basemanager.BaseRbuilderManager):
     MANAGERS = {
         'discMgr' : DiscoveryManager,
         'sysMgr' : SystemManager,
+        'surveyMgr' : SurveyManager,
         'versionMgr' : VersionManager,
         'repeaterMgr' : RepeaterManager,
         'jobMgr' : JobManager,
@@ -114,3 +116,14 @@ class RbuilderManager(basemanager.BaseRbuilderManager):
             transaction.rollback()
             return
         connection.rollback_unless_managed()
+
+    def prepareAutocommit(self):
+        # Commit and leave transaction management
+        if transaction.is_managed():
+            if transaction.is_dirty():
+                transaction.commit()
+            transaction.managed(False)
+            transaction.leave_transaction_management()
+            return
+        connection.commit_unless_managed()
+

@@ -1561,7 +1561,7 @@ ZcY7o9aU
             'metadata_owner': u'Owner',
             'image_id': 'https://bubba.com/api/v1/images/1',
             'imageUploadUrl': 'https://bubba.com/uploadBuild/1',
-            'imageFilesCommitUrl': u'https://bubba.com/api/products/chater-foo/images/1/files',
+            'imageFilesCommitUrl': u'https://bubba.com/api/v1/images/1/build_files',
         }
         from ..images import models as imgmodels
         imgdata = imgmodels.ImageData.objects.filter(name='outputToken')[0]

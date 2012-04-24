@@ -17,15 +17,15 @@ from mint.django_rest.rbuilder import models as rbuildermodels
 from mint.django_rest.rbuilder.manager import rbuildermanager
 from mint.django_rest.rbuilder.users import models as usersmodels
 from mint.django_rest.rbuilder.inventory import models
+from mint.django_rest.rbuilder.inventory import survey_models
 from mint.django_rest.rbuilder.inventory import zones as zmodels
 from mint.django_rest.rbuilder.targets import models as targetmodels
 from mint.django_rest.rbuilder.jobs import models as jobmodels
 from mint.django_rest.rbuilder.inventory import testsxml
+from mint.django_rest.rbuilder.inventory import testsxml2
 from mint.django_rest.rbuilder.projects import models as projectmodels
 from mint.lib import x509
 from mint.rest.api import models as restmodels
-
-# from mint.django_rest.rbuilder.rbac.tests import RbacEngine
 
 # Suppress all non critical msg's from output
 # still emits traceback for failed tests
@@ -34,6 +34,320 @@ logging.disable(logging.CRITICAL)
 
 from mint.django_rest import test_utils
 XMLTestCase = test_utils.XMLTestCase
+
+class SurveyTests(XMLTestCase):
+    fixtures = ['users']
+
+    def setUp(self):
+        XMLTestCase.setUp(self)
+ 
+    def _makeSystem(self):
+        zone = self._saveZone()
+        sys = self.newSystem(name="blinky", description="ghost")
+        sys.managing_zone=zone
+        sys.save()
+        return sys
+
+    def _hiturl(self, url):
+        response = self._get(url,
+            username='admin', password='password')
+        self.assertEqual(response.status_code, 200)
+ 
+    def test_survey_serialization(self):
+        uuid = '00000000-0000-4000-0000-000000000000'
+        user1 = usersmodels.User.objects.get(user_name='JeanValjean1')
+        sys = self._makeSystem()
+        survey = survey_models.Survey(
+            name='x', uuid=uuid, system=sys,
+            created_by=user1, modified_by=user1
+        )
+        survey.save()
+        tag1 = survey_models.SurveyTag(
+            survey = survey,
+            name = 'needs_review'
+        )
+        tag1.save()
+        rpm_package = survey_models.RpmPackageInfo(
+            name = 'asdf', epoch = 0, version = '5',
+            release = '6', architecture = 'x86_64',
+            description = 'enterprise middleware abstraction layer',
+            signature = 'X'
+        )
+        rpm_package.save()
+        conary_package = survey_models.ConaryPackageInfo(
+            name = 'jkl', version = '7', flavor = 'orange',
+            description = 'Type-R', revision = '8',
+            architecture = 'ia64', signature = 'X',
+            rpm_package_info = rpm_package
+        )
+        conary_package.save()
+        scp = survey_models.SurveyConaryPackage(
+            survey = survey,
+            conary_package_info = conary_package,
+            install_date=self.mgr.sysMgr.now(),
+        )
+        scp.save()
+        srp = survey_models.SurveyRpmPackage(
+            survey = survey, rpm_package_info = rpm_package,
+            install_date=self.mgr.sysMgr.now(),
+        )
+        srp.save()
+        service = survey_models.ServiceInfo(
+            name = 'httpd', autostart = True, runlevels = '3,4,5'
+        )
+        service.save()
+        iss = survey_models.SurveyService(
+            survey = survey, service_info = service,
+            status = 'is maybe doing stuff'
+        )
+        iss.save()
+        response = self._get("inventory/surveys/%s" % uuid, 
+            username='admin', password='password') 
+        self.assertEqual(response.status_code, 200)
+        self.assertXMLEquals(response.content, testsxml.survey_output_xml, ignoreNodes=['created_date','install_date','modified_date'])
+
+        url = "inventory/systems/%s/surveys" % sys.pk
+        response = self._get(url,
+            username='admin', password='password')
+        self.assertEqual(response.status_code, 200)
+        self.assertXMLEquals(response.content, testsxml.surveys_xml)
+
+    def test_survey_serialization_windows(self):
+
+        uuid = '00000000-0000-8000-0000-000000000000'
+        user1 = usersmodels.User.objects.get(user_name='JeanValjean1')
+        sys = self._makeSystem()
+        survey = survey_models.Survey(
+            name='x', uuid=uuid, system=sys,
+            created_by=user1, modified_by=user1
+        )
+        survey.save()
+        tag1 = survey_models.SurveyTag(
+            survey = survey,
+            name = 'needs_review'
+        )
+        tag1.save()
+        windows_package = survey_models.WindowsPackageInfo(
+            publisher    = 'konami', 
+            product_code = 'up-up-down-down',
+            package_code = 'left-right-right-left',
+            product_name = 'contra',
+            type         = 'msi', 
+            upgrade_code = 'B-A-B-A select-start',
+            version      = '1.0'
+        )
+        windows_package.save()
+
+        windows_patch = survey_models.WindowsPatchInfo(
+            display_name  = 'Add Internet Multiplayer',
+            uninstallable = True,
+            patch_code    = 'up-c-down-c-left-c-right-c',
+            product_code  = 'up-a-down-a-left-a-right-a',
+            transforms    = 'bubblebee,starscream'
+
+        )
+
+        windows_patch.save()
+        windows_patch_info = survey_models.WindowsPatchInfo.objects.get(display_name='Add Internet Multiplayer')
+        windows_package_info = survey_models.WindowsPackageInfo.objects.get(product_name='contra')
+        windows_patch_info.save()
+        windows_patch_link = survey_models.SurveyWindowsPatchPackageLink(
+            windows_patch_info   = windows_patch_info,
+            windows_package_info = windows_package_info
+        )
+        windows_patch_link.save()
+        spackage = survey_models.SurveyWindowsPackage(
+            survey = survey,
+            windows_package_info = windows_package_info,
+            install_source='e:/path/to/stuff',
+            local_package='c:/path/to/stuff',
+            install_date=self.mgr.sysMgr.now(),
+        )
+        spackage.save()
+        spatch = survey_models.SurveyWindowsPatch(
+            survey = survey, 
+            windows_patch_info = windows_patch_info,
+            local_package='d:/path/to/stuff',
+            is_installed=True,
+            install_date=self.mgr.sysMgr.now(),
+        )
+        spatch.save()
+        service = survey_models.WindowsServiceInfo(
+            name = 'minesweeper', 
+            display_name='minesweeper',
+            type = 'AcmeService32',
+            handle = 'AcmeServiceHandle',
+            _required_services = 'solitaire',
+        )
+        service.save()
+        service2 = survey_models.WindowsServiceInfo(
+            name = 'solitaire', 
+            display_name='solitare',
+            type = 'AcmeService32',
+            handle = 'AcmeServiceHandle',
+            _required_services = '',
+        )
+        service2.save()
+        iss = survey_models.SurveyWindowsService(
+            survey = survey, windows_service_info = service,
+            status = 'running',
+        )
+        iss.save()
+        iss2 = survey_models.SurveyWindowsService(
+            survey = survey, windows_service_info = service2,
+            status = 'stopped',
+        )
+        iss2.save()
+        response = self._get("inventory/surveys/%s" % uuid,
+            username='admin', password='password')
+        self.assertEqual(response.status_code, 200)
+
+    def test_survey_post(self):
+        # make sure we can post a survey and it mostly looks
+        # like the model saved version above -- much of the
+        # data posted is not required for input (like hrefs)
+        sys = self._makeSystem()
+        url = "inventory/systems/%s/surveys" % sys.pk
+        response = self._post(url,
+            data = testsxml.survey_input_xml,
+            username='admin', password='password')
+        self.assertEqual(response.status_code, 200)
+
+        response = self._get(url,
+            username='admin', password='password')
+        self.assertEqual(response.status_code, 200)
+
+        url = "inventory/surveys/1234"
+        response = self._get(url,
+            username='admin', password='password')
+        self.assertEqual(response.status_code, 200)
+        #self.assertXMLEquals(response.content, testsxml.survey_output_xml)      
+        # make sure inline urls work
+        self._hiturl("inventory/survey_tags/1")
+        self._hiturl("inventory/survey_rpm_packages/1")
+        self._hiturl("inventory/survey_conary_packages/1")
+        self._hiturl("inventory/survey_services/1")
+        self._hiturl("inventory/rpm_package_info/1")
+        self._hiturl("inventory/conary_package_info/1")
+        self._hiturl("inventory/service_info/1")
+        
+        url = "inventory/surveys/1234"
+        response = self._put(url,
+            data = testsxml.survey_mod_xml,
+            username='admin', password='password')
+        self.assertEqual(response.status_code, 200)
+        surv = survey_models.Survey.objects.get(uuid='1234')
+        self.assertEqual(surv.removable, False)
+ 
+        # post a second survey to verify that updating the latest survey
+        # info still worksand see if the latest survey date matches
+        response = self._post("inventory/systems/%s/surveys" % sys.pk,
+            data = testsxml.survey_input_xml,
+            username='admin', password='password')
+        self.assertEqual(response.status_code, 200)
+        sys = models.System.objects.get(pk=sys.pk)
+        self.assertTrue(sys.latest_survey.created_date is not None)
+
+        # delete the system, make sure nothing explodes
+        response = self._delete("inventory/systems/%s" % sys.pk,
+            username='admin', password='password')
+        self.assertEqual(response.status_code, 204)
+
+    def test_survey_post_long(self):
+        sys = self._makeSystem()
+        url = "inventory/systems/%s/surveys" % sys.pk
+        response = self._post(url,
+            data = testsxml2.very_long_survey,
+            username='admin', password='password')
+        self.assertEqual(response.status_code, 200)
+
+    def test_survey_post_windows(self):
+        sys = self._makeSystem()
+        url = "inventory/systems/%s/surveys" % sys.pk
+        response = self._post(url,
+            data = testsxml2.windows_upload_survey_xml,
+            username='admin', password='password')
+        self.assertEqual(response.status_code, 200)
+        #print response.content        
+ 
+        self._hiturl('inventory/survey_windows_patches/1')
+        self._hiturl('inventory/windows_patch_info/1')
+        self._hiturl('inventory/windows_package_info/1')
+        self._hiturl('inventory/survey_windows_packages/1')
+        self._hiturl('inventory/survey_windows_services/2')
+        self._hiturl('inventory/windows_service_info/1')
+        
+        response = self._post(url,
+            data = testsxml2.windows_upload_survey_xml2,
+            username='admin', password='password')
+        self.assertEqual(response.status_code, 200)
+
+        url = "inventory/surveys/%s/diffs/%s" % ('123456789', '987654321')
+        response = self._get(url, username='admin', password='password')
+        self.assertEqual(response.status_code, 200)
+
+    def test_survey_diff_linux_heavy(self):
+
+        sys = self._makeSystem()
+        url = "inventory/systems/%s/surveys" % sys.pk
+
+        surveys = [ testsxml2.one, testsxml2.two, testsxml2.three, 
+            testsxml2.four, testsxml2.five ] 
+
+        for x in surveys:
+            response = self._post(url,
+                data = x,
+                username='admin', password='password')
+            self.assertEqual(response.status_code, 200)
+
+        url = "inventory/surveys/%s/diffs/%s" % ('504', '505')
+        # TODO: time this
+        response = self._get(url, username='admin', password='password')
+        self.assertEqual(response.status_code, 200)
+        # hit it again to test cached diff logic
+        response = self._get(url, username='admin', password='password')
+        self.assertEqual(response.status_code, 200)
+ 
+        url = "inventory/surveys/%s/diffs/%s" % ('503', '501')
+        response = self._get(url, username='admin', password='password')
+        self.assertEqual(response.status_code, 200)
+        sys = models.System.objects.get(pk=sys.pk)
+        key1 = sys.latest_survey.pk
+
+        # verify we can delete the survey
+        url = "inventory/surveys/%s" % '505'
+        response = self._delete(url, username='admin', password='password')
+        if response.status_code != 204:
+            print "response.content = %s" % response.content
+        self.assertEqual(response.status_code, 204)
+        # verify system did not cascade 
+        # and that since we deleted teh latest survey there is still a latest
+        # survey
+        surl = "inventory/systems/%s" % sys.pk
+        response = self._get(surl, username='admin', password='password')
+        self.assertEqual(response.status_code, 200)
+        sys = models.System.objects.get(pk=sys.pk)
+        key2 = sys.latest_survey.pk
+        self.assertTrue(key1 != key2)
+
+        # verify delete stuck
+        response = self._get(url, username='admin', password='password')
+        self.assertEqual(response.status_code, 404)
+        # check 404 support for survey not existing, second delete
+        response = self._delete(url, username='admin', password='password')
+        self.assertEqual(response.status_code, 404)
+        # verify that deleting a survey which is marked non-removable fails
+        smodel = survey_models.Survey.objects.get(uuid='504')
+        smodel.removable = False
+        smodel.save()
+        url = "inventory/surveys/%s" % '504'
+        response = self._delete(url, username='admin', password='password')
+        self.assertEqual(response.status_code, 403)
+        
+        # delete the system, make sure nothing explodes
+        response = self._delete("inventory/systems/%s" % sys.pk,
+            username='admin', password='password')
+        self.assertEqual(response.status_code, 204)
 
 class AssimilatorTestCase(XMLTestCase, test_utils.SmartformMixIn):
     ''' 
@@ -76,27 +390,31 @@ class AssimilatorTestCase(XMLTestCase, test_utils.SmartformMixIn):
         if not isinstance(actions, list):
            actions = [actions]
         self.failUnlessEqual([ x.name for x in actions ],
-            ['Assimilate system', "System capture"])
+            ['Assimilate system', "System scan", "System capture"])
         self.failUnlessEqual([ x.description for x in actions ],
-            ['Assimilate system', "Capture a system's image"])
+            ['Assimilate system', "Scan system", "Capture a system's image"])
 
     def testFetchActionsDescriptor(self): 
-        descriptorType = 'assimilation'
-        # can we determine what smartform we need to populate?
-        url = "inventory/systems/%s/descriptors/%s" % (self.system.pk, descriptorType)
-        response = self._get(url, username="admin", password="password")
-        self.failUnlessEqual(response.status_code, 200)
-        obj = xobj.parse(response.content)
-        self.failUnlessEqual(obj.descriptor.metadata.displayName, 'System Assimilation')
-        self.failUnlessEqual(obj.descriptor.metadata.descriptions.desc, 'System Assimilation')
-        # make sure the same works with parameters
-        url = "inventory/systems/%s/descriptors/%s?foo=bar" % (self.system.pk,
-            descriptorType)
-        response = self._get(url, username="admin", password="password")
-        self.failUnlessEqual(response.status_code, 200)
-        obj = xobj.parse(response.content)
-        self.failUnlessEqual(obj.descriptor.metadata.displayName, 'System Assimilation')
-        self.failUnlessEqual(obj.descriptor.metadata.descriptions.desc, 'System Assimilation')
+        descriptorTestData = [
+            ('assimilation', 'System Assimilation', 'System Assimilation'),
+            ('survey_scan', 'System Scan', 'System Scan'),
+        ]
+        for descriptorType, descrName, descrDescr in descriptorTestData:
+            # can we determine what smartform we need to populate?
+            url = "inventory/systems/%s/descriptors/%s" % (self.system.pk, descriptorType)
+            response = self._get(url, username="admin", password="password")
+            self.failUnlessEqual(response.status_code, 200)
+            obj = xobj.parse(response.content)
+            self.failUnlessEqual(obj.descriptor.metadata.displayName, descrName)
+            self.failUnlessEqual(obj.descriptor.metadata.descriptions.desc, descrDescr)
+            # make sure the same works with parameters
+            url = "inventory/systems/%s/descriptors/%s?foo=bar" % (self.system.pk,
+                descriptorType)
+            response = self._get(url, username="admin", password="password")
+            self.failUnlessEqual(response.status_code, 200)
+            obj = xobj.parse(response.content)
+            self.failUnlessEqual(obj.descriptor.metadata.displayName, descrName)
+            self.failUnlessEqual(obj.descriptor.metadata.descriptions.desc, descrDescr)
 
     def testSpawnAction(self):
         # can we launch the job>?
@@ -212,7 +530,7 @@ class ZonesTestCase(XMLTestCase):
         self.assertEquals(response.status_code, 200)
         self.assertXMLEquals(response.content,
             testsxml.zone_xml % (zone.created_date.isoformat()),
-            ignoreNodes = [ 'created_date', 'created_by', 'modified_by', 'modified_date' ])
+            ignoreNodes = [ 'created_date', 'created_by', 'modified_by', 'modified_date', 'latest_survey' ])
         
     def testAddZoneNodeNull(self):
         
@@ -329,7 +647,7 @@ class ManagementInterfacesTestCase(XMLTestCase):
             username="testuser", password="password")
         self.assertEquals(response.status_code, 200)
         self.assertXMLEquals(response.content,
-            testsxml.management_interfaces_xml, ignoreNodes = [ 'created_date', 'modified_by', 'created_by', 'modified_date' ])
+            testsxml.management_interfaces_xml, ignoreNodes = [ 'created_date', 'modified_by', 'created_by', 'modified_date', 'latest_survey' ])
 
     def testGetManagementInterfacesAuth(self):
         """
@@ -350,7 +668,7 @@ class ManagementInterfacesTestCase(XMLTestCase):
             username="testuser", password="password")
         self.assertEquals(response.status_code, 200)
         self.assertXMLEquals(response.content,
-            testsxml.management_interface_xml, ignoreNodes = [ 'created_date', 'modified_by', 'created_by', 'modified_date' ])
+            testsxml.management_interface_xml, ignoreNodes = [ 'created_date', 'modified_by', 'created_by', 'modified_date', 'latest_survey' ])
         
     def testPutManagementInterfaceAuth(self):
         """
@@ -402,7 +720,7 @@ class SystemTypesTestCase(XMLTestCase):
             username="testuser", password="password")
         self.assertEquals(response.status_code, 200)
         self.assertXMLEquals(response.content,
-            testsxml.system_types_xml, ignoreNodes = [ 'created_date', 'modified_date', 'created_by', 'modified_by' ])
+            testsxml.system_types_xml, ignoreNodes = [ 'created_date', 'modified_date', 'created_by', 'modified_by', 'latest_survey' ])
 
     def testGetSystemTypesAuth(self):
         """
@@ -427,7 +745,7 @@ class SystemTypesTestCase(XMLTestCase):
             username="testuser", password="password")
         self.assertEquals(response.status_code, 200)
         self.assertXMLEquals(response.content,
-            testsxml.system_type_xml, ignoreNodes = [ 'created_date', 'created_by', 'modified_by', 'modified_date' ])
+            testsxml.system_type_xml, ignoreNodes = [ 'created_date', 'created_by', 'modified_by', 'modified_date', 'latest_survey' ])
         
     def testGetSystemTypeSystems(self):
         system = self._saveSystem()
@@ -436,7 +754,7 @@ class SystemTypesTestCase(XMLTestCase):
             username="testuser", password="password")
         self.assertEquals(response.status_code, 200)
         self.assertXMLEquals(response.content, testsxml.system_type_systems_xml,
-            ignoreNodes = [ 'created_date', 'actions',  'created_by', 'modified_by', 'modified_date'])
+            ignoreNodes = [ 'created_date', 'actions',  'created_by', 'modified_by', 'modified_date', 'latest_survey'])
         
     def testPutSystemTypeAuth(self):
         """
@@ -1249,8 +1567,7 @@ class SystemsTestCase(XMLTestCase):
         """
         models.System.objects.all().delete()
         system_xml = testsxml.system_post_no_network_xml
-        # Also exercise RBL-8919
-        response = self._post('inventory//systems/', data=system_xml)
+        response = self._post('inventory/systems/', data=system_xml)
         self.assertEquals(response.status_code, 200)
         try:
             models.System.objects.get(pk=3)
@@ -1544,7 +1861,7 @@ class SystemsTestCase(XMLTestCase):
         self.assertEquals(response.status_code, 200)
         self.assertXMLEquals(response.content, 
             testsxml.systems_xml % (system.networks.all()[0].created_date.isoformat(), system.created_date.isoformat()),
-            ignoreNodes = [ 'created_date', 'modified_date', 'created_by', 'modified_by' ])
+            ignoreNodes = [ 'latest_survey', 'created_date', 'modified_date', 'created_by', 'modified_by' ])
         response = self._get('inventory/systems', username='testuser', password='password')
         self.assertEquals(response.status_code, 403)
         
@@ -1581,7 +1898,7 @@ class SystemsTestCase(XMLTestCase):
         self.assertEquals(response.status_code, 200)
         self.assertXMLEquals(response.content, 
             testsxml.system_xml % (system.networks.all()[0].created_date.isoformat(), system.created_date.isoformat()),
-            ignoreNodes = [ 'created_date', 'modified_date', 'created_by', 'modified_by', 'time_created', 'time_updated' ])
+            ignoreNodes = [ 'latest_survey', 'created_date', 'modified_date', 'created_by', 'modified_by', 'time_created', 'time_updated' ])
 
     def testDeleteSystemDoesNotExist(self):
         # deleting a system that doesn't exist should be a 404, not an error
@@ -1606,7 +1923,7 @@ class SystemsTestCase(XMLTestCase):
         self.assertEquals(response.status_code, 200)
         self.assertXMLEquals(response.content, testsxml.system_target_xml % \
             (system.networks.all()[0].created_date.isoformat(), system.created_date.isoformat()),
-            ignoreNodes = [ 'created_date', 'modified_date', 'created_by', 'modified_by', 'time_created', 'time_updated' ])
+            ignoreNodes = [ 'latest_survey', 'created_date', 'modified_date', 'created_by', 'modified_by', 'time_created', 'time_updated' ])
         
     def testPostSystemAuth(self):
         """
@@ -1641,7 +1958,7 @@ class SystemsTestCase(XMLTestCase):
                             'time_created', 'time_updated',
                             'registration_date', 'actions', 
                             'created_by', 'modified_by',
-                            'created_date', 'modified_date'])
+                            'created_date', 'modified_date', 'latest_survey'])
 
     def testPostSystemThroughManagementNode(self):
         # Send the identity of the management node
@@ -2993,7 +3310,7 @@ class SystemVersionsTestCase(XMLTestCase):
              'installed_software/', 'installed_software')
         self.assertXMLEquals(response.content, expected,
             ignoreNodes = [ 'actions', 'created_date', 'modified_date', 'created_by', 'modified_by', 
-                'last_available_update_refresh' ])
+                'last_available_update_refresh', 'latest_survey' ])
 
     def testGetInstalledSoftwareRest(self):
         system = self._saveSystem()
@@ -3020,7 +3337,7 @@ class SystemVersionsTestCase(XMLTestCase):
             data=testsxml.installed_software_post_xml)
         self.assertXMLEquals(response.content,
             testsxml.installed_software_response_xml,
-            ignoreNodes = ['last_available_update_refresh'])
+            ignoreNodes = ['last_available_update_refresh', 'latest_survey'])
 
     def testAvailableUpdatesXml(self):
         system = self._saveSystem()
@@ -3035,7 +3352,7 @@ class SystemVersionsTestCase(XMLTestCase):
         self.assertXMLEquals(response.content, 
             testsxml.system_available_updates_xml,
             ignoreNodes=['actions', 'created_date', 'modified_date', 
-                'created_by', 'modified_by', 'last_available_update_refresh'])
+                'created_by', 'modified_by', 'latest_survey', 'last_available_update_refresh'])
 
     def testApplyUpdate(self):
         system = self._saveSystem()
@@ -3165,7 +3482,7 @@ class SystemVersionsTestCase(XMLTestCase):
         self.assertEquals(response.status_code, 200)
         self.assertXMLEquals(response.content,
             testsxml.system_installed_software_version_stage_xml,
-            ignoreNodes=['actions', 'created_date', 'modified_date', 'created_by', 'modified_by'],)
+            ignoreNodes=['actions', 'latest_survey', 'created_date', 'modified_date', 'created_by', 'modified_by'],)
 
 class EventTypeTestCase(XMLTestCase):
 
@@ -4527,7 +4844,7 @@ class CollectionTest(XMLTestCase):
         response = self._get('inventory/systems/',
             username="admin", password="password")
         self.assertXMLEquals(response.content, testsxml.systems_collection_xml,
-            ignoreNodes=['actions', 'created_date', 'modified_date', 'created_by', 'modified_by' ])
+            ignoreNodes=['actions', 'latest_survey', 'created_date', 'modified_date', 'created_by', 'modified_by' ])
         xobjModel = xobj.parse(response.content)
         systems = xobjModel.systems
         self.assertEquals(systems.count, '201')
@@ -4856,3 +5173,15 @@ class DescriptorTestCase(XMLTestCase, test_utils.RepeaterMixIn):
         self.failUnlessEqual(
             [x.name for x in fields],
             ['metadata.owner', 'metadata.admin'])
+
+class ModuleHooksTest(XMLTestCase):
+    """
+    Added here, so we don't add modulehooks as a django app. Surprisingly,
+    it seems to work, minus the testsuite being run.
+    """
+    def testGetModuleHooks(self):
+        response = self._get("module_hooks",
+            username="testuser", password="password")
+        self.failUnlessEqual(response.status_code, 200)
+        obj = xobj.parse(response.content)
+        self.failUnlessEqual(obj.module_hooks.count, "0")

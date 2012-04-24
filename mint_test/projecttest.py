@@ -446,9 +446,6 @@ class ProjectTest(fixtures.FixturedUnitTest):
         self.failIf(project.getLabel() != 'conary.rpath.com@rpl:devel',
                     "Improper labels table entry for external project")
 
-        x = adminClient.server._server._getProjectRepo(project)
-        self.failIf(x is None)
-
         # test with invalid hostnames
         self.failUnlessRaises(InvalidHostname, adminClient.newExternalProject,
                               "Foo",  "www", MINT_PROJECT_DOMAIN, "label",
