@@ -4,10 +4,12 @@
 # All Rights Reserved
 #
 
+import sys
 import errno
 import logging
 import os
 from django.core import urlresolvers
+from mcp import client as mcp_client
 from mint import buildtypes
 from mint import jobstatus
 from mint import urltypes
@@ -16,13 +18,14 @@ from mint.django_rest.rbuilder.images import models
 from mint.django_rest.rbuilder.projects import models as projmodels
 from mint.django_rest.rbuilder.targets import models as tgtmodels
 from mint.django_rest.rbuilder.manager import basemanager
-from mint.django_rest.rbuilder.errors import PermissionDenied
+from mint.django_rest.rbuilder import errors
 from conary.lib import sha1helper
 from mint.lib import data as datatypes
 from conary import trovetup
 from conary import versions
 from conary.deps import deps
 from conary.lib import util
+from smartform import descriptor
 import time
 
 log = logging.getLogger(__name__)
@@ -232,7 +235,7 @@ class ImagesManager(basemanager.BaseManager):
         # see if any images have this image as a baseimage, and if so, refuse to delete
         layered_images = models.Image.objects.filter(base_image = image)
         if len(layered_images) > 0:
-            raise PermissionDenied(msg="Image is in use as a layered base image and cannot be deleted")
+            raise errors.PermissionDenied(msg="Image is in use as a layered base image and cannot be deleted")
 
         log.info("Deleting image %s from project %s" % (image_id,
             image.project.short_name))
@@ -451,3 +454,48 @@ class ImagesManager(basemanager.BaseManager):
     def setImageStatus(self, imageId, code=jobstatus.RUNNING, message=''):
         models.Image.objects.filter(image_id=imageId).update(status=code,
             status_message=message)
+
+    @exposed
+    def getImageDescriptor(self, imageId, descriptorType):
+        supportedDescriptors = dict(cancel_build=self.getImageDescriptorCancelBuild)
+        method = supportedDescriptors.get(descriptorType)
+        if method is None:
+            raise errors.ResourceNotFound()
+        return method(imageId)
+
+    def getImageDescriptorCancelBuild(self, imageId):
+        descr = descriptor.ConfigurationDescriptor()
+        descr.setDisplayName('Cancel Image Build')
+        descr.addDescription('Cancel Image Build')
+        descr.setRootElement("descriptor_data")
+        return descr
+
+    @exposed
+    def cancelImageBuild(self, image, job):
+        try:
+            self._cancelImageBuild(image)
+        except:
+            exc = sys.exc_info()
+            stream = util.BoundedStringIO()
+            util.formatTrace(*exc, stream=stream, withLocals=False)
+            stream.seek(0)
+
+            job.job_state = self.mgr.getJobStateByName(jobsmodels.JobState.FAILED)
+            job.status_code = 500
+            job.status_text = "Failed"
+            job.status_detail = stream.read()
+        else:
+            job.job_state = self.mgr.getJobStateByName(jobsmodels.JobState.COMPLETED)
+            job.status_code = 200
+            job.status_text = "Done"
+        job.save()
+
+    def _cancelImageBuild(self, image):
+        mcpJobUUID = image.image_data.filter(name='uuid')
+        if not mcpJobUUID:
+            raise Exception("Image without a build task")
+        mcpClient = self._getMcpClient()
+        mcpClient.stop_job(mcpJobUUID[0].value)
+
+    def _getMcpClient(self):
+        return mcp_client.Client(self.cfg.queueHost, self.cfg.queuePort)

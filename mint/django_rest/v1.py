@@ -62,9 +62,6 @@ urlpatterns = patterns('',
     (r'^/projects',         
      include('mint.django_rest.rbuilder.projects.views.v1.urls')),
 
-    (r'^/packages',
-     include('mint.django_rest.rbuilder.packages.views.v1.urls')),
-    
     (r'^/session',
      include('mint.django_rest.rbuilder.session.views.v1.urls')),
     

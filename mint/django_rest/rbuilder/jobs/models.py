@@ -176,6 +176,13 @@ class Job(modellib.XObjIdModel):
             return rmakeJobs[0]
         return None
 
+    def setDefaultValues(self):
+        runningState = modellib.Cache.get(JobState,
+            name=JobState.RUNNING)
+        self.job_state = runningState
+        self.status_code = 100
+        self.status_text = "Running"
+
     def setValuesFromRmake(self):
         runningState = modellib.Cache.get(JobState,
             name=JobState.RUNNING)
@@ -205,7 +212,6 @@ class Job(modellib.XObjIdModel):
                 self.job_state = failedState
         elif self.job_state_id is None:
             self.job_state = runningState
-        self.save()
 
     def get_absolute_url(self, request, parents=None, *args, **kwargs):
         if parents:
@@ -366,6 +372,9 @@ class EventType(modellib.XObjIdModel):
     # resource type = image ##########################################
     IMAGE_BUILDS = 'image builds'
     IMAGE_BUILDS_DESCRIPTION = 'Image builds'
+
+    IMAGE_CANCEL_BUILD = 'image build cancellation'
+    IMAGE_CANCEL_BUILD_DESCRIPTION = 'Cancel an image build'
      
     # resource type = queryset #######################################
     # these codes are not in the db because queryset jobs are (so far)

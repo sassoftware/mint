@@ -293,4 +293,12 @@ class ImageTypeService(service.BaseService):
     def get(self, image_type_id):
         return self.mgr.getImageType(image_type_id)
 
+class ImageDescriptorsService(service.BaseService):
+    @rbac(can_read_image)
+    @return_xml
+    def rest_GET(self, request, image_id, descriptor_type):
+        return self.get(image_id, descriptor_type)
 
+    def get(self, image_id, descriptor_type):
+        return self.mgr.serializeDescriptor(
+            self.mgr.getImageDescriptor(image_id, descriptor_type))

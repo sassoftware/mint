@@ -707,7 +707,7 @@ class RbacEngineTests(RbacEngine):
         self.assertEquals(response.status_code, 200, 'qs lookup')
         xobj_querysets = xobj.parse(response.content)
         results = xobj_querysets.query_sets.query_set
-        self.assertEquals(len(results), 10, 'sysadmin user gets fewer results')
+        self.assertEquals(len(results), 12, 'sysadmin user gets fewer results')
  
         # sysadmin user CAN see & use the all systems queryset
         # because he has permissions on it
@@ -773,8 +773,8 @@ class RbacEngineTests(RbacEngine):
         )
         self.assertEquals(response.status_code, 200)
 
-        # intern user cannot fetch the whole user list
-        # (which is not queryset based, needs admin)
+        # intern user can try to fetch the whole user list, but will get
+        # just itself
 
         # FIXME -- doesn't this redirect to the All Users QS?
         # it should.
@@ -783,7 +783,9 @@ class RbacEngineTests(RbacEngine):
             username=self.intern_user.user_name,
             password='password',
         )
-        self.assertEquals(response.status_code, 403)
+        self.assertEquals(response.status_code, 200)
+        doc = xobj.parse(response.content)
+        self.failUnlessEqual(doc.users.user.user_name, self.intern_user.user_name)
         
         # sysadmin user can't see the whole user list
         # but DOES have permission to ALL USERS queryset
@@ -793,7 +795,13 @@ class RbacEngineTests(RbacEngine):
             username=self.sysadmin_user.user_name,
             password='password',
         )
-        self.assertEquals(response.status_code, 403)
+        self.assertEquals(response.status_code, 200)
+        doc = xobj.parse(response.content)
+        self.failUnlessEqual([ x.user_name for x in doc.users.user ],
+            [ 'admin', 'testuser', 'ExampleSysadmin', 'ExampleDeveloper',
+              'ExampleIntern', ]
+        )
+
         response = self._get("query_sets/%s/all" % self.user_queryset.pk,
             username=self.admin_user.user_name,
             password='password'

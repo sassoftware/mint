@@ -700,12 +700,9 @@ class System(modellib.XObjIdModel):
         # have to be called at serialization time.
 
         jobs = []
-        try:
-            jobs = self.jobs.all()
-        except:
-            # system apparently wasn't saved yet so can't access Many2Many
-            # relations
-            pass
+        # if system was not saved yet, self.system_id is None
+        if self.system_id is not None:
+            jobs = self.jobs.filter(job_state__job_state_id__in=self.runningJobStateIds)
 
         self.has_active_jobs  = self.areJobsActive(jobs)
         self.has_running_jobs = self.areJobsRunning(jobs)

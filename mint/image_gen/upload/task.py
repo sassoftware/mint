@@ -99,7 +99,11 @@ class ImageUploadTask(plug_worker.TaskHandler):
         headers['Content-Type'] = 'text/plain'
         client = rl_client.Client(url, headers)
         client.connect()
-        client.request("POST", body=msgString)
+        try:
+            client.request("POST", body=msgString)
+        except rl_client.ResponseError, e:
+            if e.status != 204:
+                raise
 
     @classmethod
     def urlJoin(cls, *args):

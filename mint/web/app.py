@@ -28,6 +28,8 @@ from mint.web.webhandler import (WebHandler, normPath, setCacheControl,
     HttpNotFound)
 from mint import maintenance
 
+from conary.repository.netrepos.netauth import ValidPasswordToken
+
 stagnantAllowedPages = ['editUserSettings','confirm','logout', 'continueLogout', 'validateSession']
 
 # called from hooks.py if an exception was not caught
@@ -109,16 +111,18 @@ class MintApp(WebHandler):
                     self.authToken = (base64.decodestring(user_pass).split(':', 1))
                 except:
                     pass
+            self.authToken = (self.authToken[0], util.ProtectedString(self.authToken[1]))
         else:
             self.authToken = self.session.get('authToken', anonToken)
-        
-        self.authToken = (self.authToken[0], util.ProtectedString(self.authToken[1]))
+            if self.authToken[1] == '':
+                self.authToken = (self.authToken[0], ValidPasswordToken)
 
         # open up a new client with the retrieved authToken
         self.client = shimclient.ShimMintClient(self.cfg, self.authToken,
                 self.db)
+
         self.auth = self.client.checkAuth()
-        
+
         if not self.auth.admin and pathInfo not in (
                 '/maintenance/', '/processLogin/', '/logout/',
                 '/validateSession/', '/continueLogin/', '/continueLogout/'):

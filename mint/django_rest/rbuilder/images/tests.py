@@ -1007,3 +1007,88 @@ ec2LaunchGroups: []
         subprocess.call(["tar", "zcf", tarFile, "-C", self.workDir, "image.ami"])
         return tarFile
 
+    def testImageBuildCancellation(self):
+        img = self._setupImageOutputToken()
+        # Mark image as complete, action should be disabled
+        img.status = 300
+        img.save()
+        response = self._get('images/%s' % img.image_id,
+            username='admin', password='password')
+        doc = xobj.parse(response.content)
+
+        self.failUnlessEqual(doc.image.jobs.id,
+            'http://testserver/api/v1/images/%s/jobs' % img.image_id)
+
+        actions = doc.image.actions.action
+        if not isinstance(actions, list):
+            actions = [ actions ]
+        # Make sure we have an image cancellation action
+        self.failUnlessEqual([ x.job_type.id for x in actions ],
+            [ 'http://testserver/api/v1/inventory/event_types/25' ])
+        self.failUnlessEqual([ x.enabled for x in actions ],
+            [ 'false', ])
+        self.failUnlessEqual([ x.descriptor.id for x in actions ],
+            [ 'http://testserver/api/v1/images/%s/descriptors/cancel_build' % img.image_id ])
+
+        # Mark image as running
+        img.status = 100
+        img.save()
+
+        models.ImageData.objects.create(image=img, name='uuid',
+            value='0xDEADBEEF', data_type=0)
+
+        response = self._get('images/%s' % img.image_id,
+            username='admin', password='password')
+        doc = xobj.parse(response.content)
+        actions = doc.image.actions.action
+        if not isinstance(actions, list):
+            actions = [ actions ]
+        self.failUnlessEqual([ x.enabled for x in actions ],
+            [ 'true', ])
+
+        # Fetch the descriptor
+        response = self._get('images/%s/descriptors/cancel_build' % img.image_id,
+            username='admin', password='password')
+        self.assertEquals(response.status_code, 200)
+        doc = xobj.parse(response.content)
+        self.assertEquals(doc.descriptor.metadata.displayName,
+            'Cancel Image Build')
+        self.assertEquals(doc.descriptor.metadata.descriptions.desc,
+            'Cancel Image Build')
+
+        # Mock mcp
+        from mcp import client as mcpclient
+        class MockClient(test_utils.CallProxy):
+            def __call__(slf, *args, **kwargs):
+                # Trick to record the class constructor
+                slf._fake_init(*args, **kwargs)
+                return slf
+        self.mock(mcpclient, "Client", MockClient())
+
+        # Compose job
+        templ = """\
+<job>
+  <job_type id="http://testserver/api/v1/inventory/event_types/25"/>
+  <descriptor id="http://testserver/api/v1/images/%(imageId)s/descriptors/cancel_build"/>
+  <descriptor_data/>
+</job>
+"""
+        data = templ % dict(imageId = img.image_id)
+        response = self._post('images/%s/jobs' % img.image_id, data=data,
+            username='admin', password='password')
+        self.assertEquals(response.status_code, 200)
+        doc = xobj.parse(response.content)
+        jobId = os.path.basename(doc.job.id)
+
+        # Fetch call list
+        callList = mcpclient.Client.getCallList()
+        self.assertEquals([ (x.name, x.args, x.kwargs) for x in callList ],
+            [
+                ('_fake_init', ('127.0.0.1', 50900), {}),
+                ('stop_job', (u'0xDEADBEEF',), {}),
+            ])
+
+        response = self._get('jobs/%s' % jobId, user="admin", password="password")
+        self.assertEquals(response.status_code, 200)
+        doc = xobj.parse(response.content)
+        self.assertEquals(doc.job.status_text, "Done")
