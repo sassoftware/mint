@@ -183,15 +183,20 @@ class BaseJobHandler(AbstractHandler):
     def create(self, job, extraArgs=None):
         self.extraArgs.update(extraArgs or {})
         uuid_, rmakeJob = self.createRmakeJob(job)
-        job.setValuesFromRmakeJob(rmakeJob)
-        jobToken = rmakeJob.data.getObject().data.get('authToken')
-        if jobToken:
-            job.job_token = str(jobToken)
+        job.job_uuid = str(uuid_)
+        if rmakeJob is not None:
+            job.setValuesFromRmakeJob(rmakeJob)
+            jobToken = rmakeJob.data.getObject().data.get('authToken')
+            if jobToken:
+                job.job_token = str(jobToken)
+        else:
+            job.setDefaultValues()
         job.save()
         # Blank out the descriptor data, we don't need it in the return
         # value
         job.descriptor_data = None
         self.linkRelatedResource(job)
+        self.postCreateJob(job)
 
     def createRmakeJob(self, job):
         cli = self.mgr.mgr.repeaterMgr.repeaterClient
@@ -203,6 +208,9 @@ class BaseJobHandler(AbstractHandler):
         return (), {}
 
     def linkRelatedResource(self, job):
+        pass
+
+    def postCreateJob(self, job):
         pass
 
 class ResultsProcessingMixIn(object):
@@ -977,3 +985,34 @@ class JobHandlerRegistry(HandlerRegistry):
             survey = self.mgr.mgr.addSurveyForSystemFromXobj(
                 self.system.system_id, job.results.surveys)
             return survey
+
+    class ImageBuildCancellation(DescriptorJobHandler):
+        __slots__ = [ 'image', ]
+        jobType = models.EventType.IMAGE_CANCEL_BUILD
+        ResultsTag = 'image'
+
+        def createRmakeJob(self, job):
+            self.extractDescriptorData(job)
+            return str(uuid.uuid4()), None
+
+        def getDescriptor(self, descriptorId):
+            match = self.splitResourceId(descriptorId)
+
+            imageId = int(match.kwargs['image_id'])
+            if str(imageId) != str(self.extraArgs.get('imageId')):
+                raise errors.InvalidData()
+            self._setImage(imageId)
+            return smartdescriptor.ConfigurationDescriptor()
+
+        def getRelatedResource(self, descriptor):
+            return self.image
+
+        def getRelatedThroughModel(self, descriptor):
+            return imagemodels.JobImage
+
+        def _setImage(self, imageId):
+            image = imagemodels.Image.objects.get(image_id=imageId)
+            self.image = image
+
+        def postCreateJob(self, job):
+            self.mgr.mgr.cancelImageBuild(self.image, job)

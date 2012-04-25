@@ -331,6 +331,17 @@ class Image(modellib.XObjIdModel):
                 enabled=enabled, resources = [ tgt ])
             actions.action.append(action)
 
+        actionName = "Cancel image build"
+        enabled = (self.status < 200)
+        action = jobmodels.EventType.makeAction(
+            jobmodels.EventType.IMAGE_CANCEL_BUILD,
+            actionName=actionName,
+            actionDescription=actionName,
+            descriptorModel=self,
+            descriptorHref="descriptors/cancel_build",
+            enabled=enabled)
+        actions.action.append(action)
+
         return actions
 
 class BuildFiles(modellib.Collection):
