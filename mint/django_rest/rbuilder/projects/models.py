@@ -421,11 +421,19 @@ class Stage(modellib.XObjIdModel):
     modified_date = D(modellib.DateTimeUtcField(auto_now_add=True), "Stage modified date", short="Stage modified date")
     created_by = D(models.ForeignKey(usermodels.User, related_name="+", null=True, db_column="created_by"), "Stage creator", short="Stage creator")
     modified_by = D(models.ForeignKey(usermodels.User, related_name="+", null=True, db_column="modified_by"), "Stage modifier", short="Stage modifier")
+    external = modellib.SyntheticField(models.BooleanField())
     groups = modellib.SyntheticField()
     repository_api = modellib.SyntheticField(modellib.HrefField())
 
     def get_url_key(self, *args, **kwargs):
         return [ self.project.short_name, self.project_branch.label, self.name ]
+
+    def computeSyntheticFields(self, sender, **kwargs):
+        ''' Compute non-database fields.'''
+        if self.project_id is None:
+            self.external = False
+        else:
+            self.external = self.project.external
 
     def _computeRepositoryAPI(self):
         self.repository_api = modellib.HrefField(
