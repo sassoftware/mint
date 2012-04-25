@@ -10,7 +10,6 @@ import logging
 import os
 from django.core import urlresolvers
 from mcp import client as mcp_client
-from mcp import mcp_error
 from mint import buildtypes
 from mint import jobstatus
 from mint import urltypes
