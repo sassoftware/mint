@@ -111,7 +111,7 @@ class ImageService(_JobOutputTokenAuthService):
             self.mgr.setImageBuildStatus(image)
             return self.mgr.getImageBuild(image_id)
 
-        return self.mgr.updateImageBuild(image_id, image)
+        return self.mgr.updateImage(image)
 
     @rbac(can_write_image)
     def rest_DELETE(self, request, image_id):

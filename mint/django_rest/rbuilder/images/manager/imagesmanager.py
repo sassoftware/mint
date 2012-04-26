@@ -137,6 +137,9 @@ class ImagesManager(basemanager.BaseManager):
     def _postFinished(self, image):
         if image.status != jobstatus.FINISHED:
             return
+        # We're not done just yet
+        self.setImageStatus(image.image_id, code=jobstatus.RUNNING,
+            message="Finalizing image build")
         # Remove auth tokens associated with this image
         models.AuthTokens.objects.filter(image=image).delete()
         self._handlePostImageBuildOperations(image)
@@ -181,7 +184,7 @@ class ImagesManager(basemanager.BaseManager):
         readers, writers = self.getEC2AccountNumbersForProjectUsers(
             image.project.project_id)
         # Move to autocommit mode. This will flush the existing
-        # transaction, and the decodated commitImageStatus will do its
+        # transaction, and the decorated commitImageStatus will do its
         # own commits. We need to restore transaction management when
         # we're done.
         self.mgr.prepareAutocommit()
@@ -362,13 +365,8 @@ class ImagesManager(basemanager.BaseManager):
         if isinstance(image, (int, basestring)):
             image = models.Image.objects.get(image_id=image)
 
-        if image.status != jobstatus.FINISHED:
-            # image won't show up in retag of dynamic sets if status is
-            # still running
-            # This is because we call this function from mint.rest
-            # before we set the status
-            image.status = jobstatus.FINISHED
-            image.save()
+        self.setImageStatus(image.image_id, code=jobstatus.FINISHED,
+            message="Image built")
 
         self.mgr.addToMyQuerySet(image, image.created_by)
         self.mgr.recomputeTargetDeployableImages()
