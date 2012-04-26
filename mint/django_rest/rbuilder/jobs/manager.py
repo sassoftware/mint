@@ -1002,7 +1002,7 @@ class JobHandlerRegistry(HandlerRegistry):
             if str(imageId) != str(self.extraArgs.get('imageId')):
                 raise errors.InvalidData()
             self._setImage(imageId)
-            return smartdescriptor.ConfigurationDescriptor()
+            return self.mgr.mgr.imagesManager.getImageDescriptorCancelBuild(imageId)
 
         def getRelatedResource(self, descriptor):
             return self.image

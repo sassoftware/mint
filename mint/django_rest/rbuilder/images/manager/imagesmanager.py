@@ -473,7 +473,7 @@ class ImagesManager(basemanager.BaseManager):
     @exposed
     def cancelImageBuild(self, image, job):
         try:
-            self._cancelImageBuild(image)
+            self._cancelImageBuild(image, job)
         except:
             exc = sys.exc_info()
             stream = util.BoundedStringIO()
@@ -490,12 +490,35 @@ class ImagesManager(basemanager.BaseManager):
             job.status_text = "Done"
         job.save()
 
-    def _cancelImageBuild(self, image):
+    def _cancelImageBuild(self, image, job=None):
         mcpJobUUID = image.image_data.filter(name='uuid')
         if not mcpJobUUID:
             raise Exception("Image without a build task")
+        mcpJobUUID = mcpJobUUID[0].value
         mcpClient = self._getMcpClient()
-        mcpClient.stop_job(mcpJobUUID[0].value)
+        mcpClient.stop_job(mcpJobUUID)
+
+        if job and job.created_by:
+            msg = "User %s requested stopping of image build with job %s" % (
+                job.created_by.user_name, mcpJobUUID, )
+        else:
+            msg = "User requested stopping of image build with job %s" % (
+                mcpJobUUID, )
+
+        sio = util.BoundedStringIO()
+        lhandler = logging.StreamHandler(sio)
+        lhandler.setFormatter(util.log._getFormatter('file'))
+        oldLevel = log.level
+        try:
+            # Capture log
+            log.setLevel(logging.DEBUG)
+            log.addHandler(lhandler)
+            log.info(msg)
+            sio.seek(0)
+            self.appendToBuildLog(image.image_id, sio.read())
+        finally:
+            log.removeHandler(lhandler)
+            log.setLevel(oldLevel)
 
     def _getMcpClient(self):
         return mcp_client.Client(self.cfg.queueHost, self.cfg.queuePort)
