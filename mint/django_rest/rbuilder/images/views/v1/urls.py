@@ -43,4 +43,7 @@ urlpatterns = patterns('',
         imagesviews.ImageBuildFileUrlService(),
         name='FileUrl',
         model='images.FileUrl'),
+    URL(r'/(?P<image_id>\d+)/descriptors/(?P<descriptor_type>[_A-Za-z]+)/?$',
+        imagesviews.ImageDescriptorsService(),
+        name='images.Descriptors'),
 )

@@ -25,7 +25,7 @@ class SurveyManager(basemanager.BaseManager):
         return survey_models.Survey.objects.get(uuid=uuid)
 
     @exposed
-    def deleteSurvey(self, uuid):
+    def deleteSurvey(self, uuid, force=False):
         ''' 
         Deletes a survey.  Returns a tuple of (found, deleted) as
         the survey either might not exist or it might not be marked
@@ -36,7 +36,7 @@ class SurveyManager(basemanager.BaseManager):
         if len(surveys) == 0:
             return (False, False)
         survey = surveys[0]
-        if not survey.removable:
+        if not survey.removable and not force:
             return (True, False)
         else:
             matching_diffs = survey_models.SurveyDiff.objects.filter(

@@ -4737,7 +4737,7 @@ class MigrateTo_61(SchemaMigration):
 
 class MigrateTo_62(SchemaMigration):
     '''Fork!'''
-    Version = (62, 6)
+    Version = (62, 7)
 
     def migrate(self):
 
@@ -4988,6 +4988,16 @@ class MigrateTo_62(SchemaMigration):
                 DEFAULT current_timestamp
         """)
 
+        return True
+
+    def migrate7(self):
+        db = self.db
+        schema._addTableRows(db, 'jobs_job_type', 'name', [
+             dict(name="image build cancellation",
+                  description="Cancel an image build",
+                  priority=105,
+                  resource_type="Image"),
+        ])
         return True
 
 #### SCHEMA MIGRATIONS END HERE #############################################
