@@ -163,7 +163,7 @@ class SurveyManager(basemanager.BaseManager):
         return self.addSurveyForSystemFromXobj(system_id, xmodel)
 
     def _bool(self, x):
-        return str(x).lower == 'true'
+        return str(x).lower() == 'true'
 
     def _date(self, x):
         if x == '':

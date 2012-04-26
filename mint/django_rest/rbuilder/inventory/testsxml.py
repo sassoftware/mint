@@ -3982,7 +3982,7 @@ survey_mod_xml="""
     <comment>Here is a comment</comment>
     <uuid>1234</uuid>
     <name>Here is a name</name>
-    <removable>False</removable>
+    <removable>True</removable>
     <tags>
       <tag>
         <name>onfire</name>
