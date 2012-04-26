@@ -847,7 +847,16 @@ releases_get_xml = \
             <size>3</size>
           </file>
         </files>
-        <actions/>
+        <actions>
+          <action>
+            <description>Cancel image build</description>
+            <descriptor id="http://testserver/api/v1/images/3/descriptors/cancel_build"/>
+            <enabled>True</enabled>
+            <job_type id="http://testserver/api/v1/inventory/event_types/25"/>
+            <key>image_build_cancellation</key>
+            <name>Cancel image build</name>
+          </action>
+        </actions>
         <project_branch id="http://testserver/api/v1/projects/foo2/project_branches/foo2.eng.rpath.com@rpath:foo-trunk">
           <name>trunk</name>
         </project_branch>
