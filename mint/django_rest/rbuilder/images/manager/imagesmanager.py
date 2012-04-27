@@ -132,6 +132,8 @@ class ImagesManager(basemanager.BaseManager):
 
     @autocommit
     def commitImageStatus(self, imageId, status=None, statusMessage=None):
+        if status is None:
+            status = jobstatus.RUNNING
         self.setImageStatus(imageId, status, statusMessage)
 
     def _postFinished(self, image):
