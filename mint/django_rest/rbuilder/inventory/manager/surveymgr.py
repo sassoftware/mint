@@ -215,12 +215,17 @@ class SurveyManager(basemanager.BaseManager):
         xservices         = self._subel(xsurvey, 'services', 'service')
         xwindows_services = self._subel(xsurvey, 'windows_services', 'windows_service')
         xtags             = self._subel(xsurvey, 'tags', 'tag')
+        xvalues           = getattr(xsurvey, 'values', None)
 
         created_date = getattr(xsurvey, 'created_date', 0)
         created_date = datetime.datetime.utcfromtimestamp(int(created_date))
 
         desc    = getattr(xsurvey, 'description', "")
         comment = getattr(xsurvey, 'comment',     "")
+
+        values = None
+        if xvalues is not None:
+            values = xobj.toxml(xsurvey.values)
 
         survey = survey_models.Survey(
             name          = system.name,
@@ -230,7 +235,8 @@ class SurveyManager(basemanager.BaseManager):
             removable     = True,
             system        = system,
             created_date  = created_date,
-            modified_date = created_date
+            modified_date = created_date,
+            values        = values
         )
         survey.save()
 

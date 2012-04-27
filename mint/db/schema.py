@@ -28,7 +28,7 @@ from conary.dbstore import sqlerrors, sqllib
 log = logging.getLogger(__name__)
 
 # database schema major version
-RBUILDER_DB_VERSION = sqllib.DBversion(62, 7)
+RBUILDER_DB_VERSION = sqllib.DBversion(62, 8)
 
 def _createTrigger(db, table, column="changed"):
     retInsert = db.createTrigger(table, column, "INSERT")
@@ -1675,6 +1675,7 @@ def _createSurveyTables(db, cfg):
                 "created_by" INTEGER REFERENCES "users" (userid) ON DELETE SET NULL,
                 "modified_by" INTEGER REFERENCES "users" (userid) ON DELETE SET NULL,
                 "removable" BOOLEAN NOT NULL DEFAULT TRUE,
+                "values_xml" TEXT,
                 "raw_xml" TEXT
 
     """)

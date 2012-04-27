@@ -4737,7 +4737,7 @@ class MigrateTo_61(SchemaMigration):
 
 class MigrateTo_62(SchemaMigration):
     '''Fork!'''
-    Version = (62, 7)
+    Version = (62, 8)
 
     def migrate(self):
 
@@ -4999,7 +4999,12 @@ class MigrateTo_62(SchemaMigration):
                   resource_type="Image"),
         ])
         return True
-
+    
+    def migrate8(self):
+        db = self.db
+        self.db.cursor().execute("ALTER TABLE inventory_survey ADD COLUMN values_xml TEXT")
+        return True
+ 
 #### SCHEMA MIGRATIONS END HERE #############################################
 
 def _getMigration(major):

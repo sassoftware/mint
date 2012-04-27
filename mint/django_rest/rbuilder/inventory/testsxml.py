@@ -3917,6 +3917,7 @@ survey_output_xml = """
       </conary_package>
     </conary_packages>
     <name>x</name>
+    <values></values>
 </survey>
 """
 
