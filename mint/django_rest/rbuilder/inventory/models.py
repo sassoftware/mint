@@ -1017,6 +1017,10 @@ class Network(modellib.XObjIdModel):
     def natural_key(self):
         return self.ip_address, self.dns_name
 
+    def save(self, *args, **kwargs):
+        if not self.ip_address.startswith(("169.254", "fe80:")):
+            return super(Network, self).save(*args, **kwargs)
+
 class SystemLog(modellib.XObjIdModel):
     
     class Meta:

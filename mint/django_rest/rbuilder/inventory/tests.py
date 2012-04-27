@@ -892,7 +892,24 @@ class NetworkTestCase(XMLTestCase):
             data=testsxml.network_put_xml,
             username="testuser", password="password")
         self.assertEquals(response.status_code, 403)
-        
+
+    def testPutNetworkLocalIp(self):
+        """
+        Ensure Network models are not saved if pointing to link-local IPs.
+        """
+        models.System.objects.all().delete()
+        self._saveSystem()
+        old_count = models.Network.objects.count()
+        self._put('inventory/networks/1/', 
+                  data=testsxml.network_put_xml_opt_ip_addr % "169.254.4.4",
+                  username="admin", password="password")
+        self.assertEquals(old_count, models.Network.objects.count())
+
+        self._put('inventory/networks/1/', 
+                  data=testsxml.network_put_xml_opt_ip_addr % "4.4.4.4",
+                  username="admin", password="password")
+        self.assertEquals(old_count + 1, models.Network.objects.count())
+
     def testPutNetworkNotFound(self):
         """
         Ensure we return 404 if we update network that doesn't exist
