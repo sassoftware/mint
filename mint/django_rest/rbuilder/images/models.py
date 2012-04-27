@@ -331,6 +331,17 @@ class Image(modellib.XObjIdModel):
                 enabled=enabled, resources = [ tgt ])
             actions.action.append(action)
 
+        actionName = "Cancel image build"
+        enabled = (self.status < 200)
+        action = jobmodels.EventType.makeAction(
+            jobmodels.EventType.IMAGE_CANCEL_BUILD,
+            actionName=actionName,
+            actionDescription=actionName,
+            descriptorModel=self,
+            descriptorHref="descriptors/cancel_build",
+            enabled=enabled)
+        actions.action.append(action)
+
         return actions
 
 class BuildFiles(modellib.Collection):
@@ -339,8 +350,8 @@ class BuildFiles(modellib.Collection):
         
     _xobj = xobj.XObjMetadata(tag='files')
     list_fields = ['file']
-    
-    
+    metadata = modellib.SyntheticField()
+
 class BuildFile(modellib.XObjIdModel):
     class Meta:
         db_table = 'buildfiles'
@@ -356,6 +367,7 @@ class BuildFile(modellib.XObjIdModel):
     size = D(models.IntegerField(), 'Size of file')
     sha1 = D(models.CharField(max_length=40),
         'sha1 associated with the build file, max length is 40 characters')
+    file_name = modellib.SyntheticField()
     url = modellib.SyntheticField()
     target_images = modellib.XObjHidden(modellib.SyntheticField())
 
@@ -405,8 +417,10 @@ class BuildFilesUrlsMap(modellib.XObjModel):
         unique_together = ('file', 'url')
     
     build_files_urls_map_id = models.AutoField(primary_key=True, db_column='buildfilesurlsmapid')
-    file = models.ForeignKey('BuildFile', null=False, db_column='fileid')
-    url = models.ForeignKey('FileUrl', null=False, db_column='urlid')
+    file = models.ForeignKey(BuildFile, null=False, db_column='fileid',
+        related_name='urls_map')
+    url = models.ForeignKey(FileUrl, null=False, db_column='urlid',
+        related_name='urls_map')
 
 class JobImage(modellib.XObjModel):
     class Meta:
@@ -419,6 +433,21 @@ class JobImage(modellib.XObjModel):
         'Job attached to the job image, cannot be null')
     image = D(models.ForeignKey(Image, null=False, related_name='_jobs'),
         'Image for the job, cannot be null')
+
+class AuthTokens(modellib.XObjModel):
+    class Meta:
+        db_table = 'auth_tokens'
+    id = D(models.AutoField(primary_key=True, db_column='token_id'),
+            'Token ID')
+    token = D(models.TextField(null=False, unique=True),
+            'Token string')
+    expires_date = D(modellib.DateTimeUtcField(null=False),
+            'Token expiration date')
+    user = D(modellib.ForeignKey('users.User', null=False,
+            related_name='auth_tokens'),
+            'User owning the token')
+    image = D(modellib.ForeignKey(Image, null=True, related_name='auth_tokens'),
+            'Image related to the token')
 
 for mod_obj in sys.modules[__name__].__dict__.values():
     if hasattr(mod_obj, '_xobj'):

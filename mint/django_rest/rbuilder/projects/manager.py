@@ -15,7 +15,6 @@ from mint import mint_error
 from mint import userlevels
 from mint import projects
 
-
 from mint.django_rest.rbuilder import errors
 from mint.django_rest.rbuilder.manager import basemanager
 from mint.django_rest.rbuilder.repos import models as repomodels
@@ -311,8 +310,19 @@ class ProjectManager(basemanager.BaseManager):
         # here so the project is not be created before this error occurs
         if projects.validLabel.match(projectVersion.label) == None:
             raise mint_error.InvalidLabel(projectVersion.label)
+        
+        projectVersion.created_by = forUser
+        projectVersion.modified_by = forUser
 
         project = projectVersion.project
+
+        existing_stages = models.Stage.objects.filter(
+            project = project
+        ).all()
+        # collapse query as per Mr. Schroedinger
+        # as we'll create new rows later
+        existing_stage_pks = [ x.pk for x in existing_stages ]
+
         pd = helperfuncs.sanitizeProductDefinition(
                 projectName=project.name,
                 projectDescription=project.description or '',
@@ -332,14 +342,31 @@ class ProjectManager(basemanager.BaseManager):
             pd.rebase(cclient, platform.label)
         self.saveProductVersionDefinition(projectVersion, pd)
 
+        tnow = time.time()
+        projectVersion.created_date = tnow
+        projectVersion.modified_date = tnow
         projectVersion.save()
         
+        # get newly crated stages and assign ownership info
+        # these are created as a side effect
+        new_stages = models.Stage.objects.filter(
+               project = project
+           ).exclude(
+               pk__in = existing_stage_pks
+           ).filter()
+        for new_stage in new_stages:
+            new_stage.created_by = forUser
+            new_stage.modified_by = forUser
+            new_stage.save()
+
         self.mgr.retagQuerySetsByType('project_branch_stage', forUser)
         return projectVersion
 
     @exposed
-    def updateProjectBranch(self, projectVersion):
+    def updateProjectBranch(self, projectVersion, forUser=None):
         projectVersion.save()
+        projectVersion.modified_by = forUser
+        projectVersion.modifed_date = time.time()
         return projectVersion
 
     @exposed
@@ -466,7 +493,6 @@ class ProjectManager(basemanager.BaseManager):
     @exposed
     def getProjectBranchStageImages(self, project_short_name, project_branch_label, stage_name):
         project = self.getProject(project_short_name)
-        print "DEBUG: got project=%s" % project
         stage = self.getProjectBranchStage(project_short_name, project_branch_label, stage_name)
         my_images = imagemodels.Image.objects.filter(
             # stage_id is not set in the database even though it's on the model, awesome.
@@ -504,6 +530,7 @@ class ProjectManager(basemanager.BaseManager):
         
     @exposed
     def updateProjectBranchStage(self, project_short_name, project_branch_label, stage_name, stage):
+        # if ever implemented be sure to update modified_by/modified_date
         raise exceptions.NotImplementedError()
 
     @exposed

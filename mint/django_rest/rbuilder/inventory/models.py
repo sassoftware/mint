@@ -422,7 +422,7 @@ class System(modellib.XObjIdModel):
     # XXX this is hopefully a temporary solution to not serialize the FK
     # part of a many-to-many relationship
     _xobj_hidden_accessors = set(['systemjob_set', 'target_credentials',
-        'managementnode', 'jobsystem_set', 'tags'])
+        'managementnode', 'jobsystem_set', 'tags', 'surveys'])
     _xobj_hidden_m2m = set()
     _xobj = xobj.XObjMetadata(
                 tag = 'system',
@@ -550,6 +550,9 @@ class System(modellib.XObjIdModel):
         short="System last modified by")
     modified_date = D(modellib.DateTimeUtcField(null=True),
         "the date the system was last modified", short="System modified date")
+    latest_survey = modellib.DeferredForeignKey('inventory.Survey',
+        null=True, related_name='+', on_delete=models.SET_NULL)
+
     # Note the camel-case here. It is intentional, this is a field sent
     # only by catalog-service via rmake, to simplify creation of system
     # objects (otherwise we'd have to create networks too and we may
@@ -745,6 +748,15 @@ class System(modellib.XObjIdModel):
 
                 def __init__(self, href):
                     self.id = href
+
+            class SurveysHref(object):
+                _xobj = xobj.XObjMetadata(
+                            tag='surveys',
+                            attributes={'id':str})
+
+                def __init__(self, href):
+                    self.id = href
+
             
             if not summarize:
                 xobj_model.credentials = CredentialsHref(request.build_absolute_uri(
@@ -755,6 +767,9 @@ class System(modellib.XObjIdModel):
             
                 xobj_model.configuration_descriptor = ConfigurationDescriptorHref(request.build_absolute_uri(
                     '%s/configuration_descriptor' % self.get_absolute_url(request)))
+                
+                xobj_model.surveys = SurveysHref(request.build_absolute_uri(
+                    '%s/surveys' % self.get_absolute_url(request)))
 
         class JobsHref(modellib.XObjIdModel):
             _xobj = xobj.XObjMetadata(tag='jobs',
@@ -845,17 +860,25 @@ class System(modellib.XObjIdModel):
 
         self.actions = actions = jobmodels.Actions()
         actions.action = []
-        enabled = bool(self.management_interface_id and self.management_interface.name == 'ssh')
-        actions.action.append(
+        assimEnabled = bool(self.management_interface_id and self.management_interface.name == 'ssh')
+        scanEnabled = bool(self.management_interface_id and self.management_interface.name == 'cim')
+        actions.action.extend([
             jobmodels.EventType.makeAction(
                 jobmodels.EventType.SYSTEM_ASSIMILATE,
                 actionName="Assimilate system",
                 actionDescription="Assimilate system",
                 descriptorModel=self,
                 descriptorHref="descriptors/assimilation",
-                enabled=enabled,
-            )
-        )
+                enabled=assimEnabled,
+            ),
+            jobmodels.EventType.makeAction(
+                jobmodels.EventType.SYSTEM_SCAN,
+                actionName="System scan",
+                descriptorModel=self,
+                descriptorHref="descriptors/survey_scan",
+                enabled=scanEnabled,
+            ),
+        ])
 
         if self.target_id:
             drvCls = targetmodels.Target.getDriverClassForTargetId(
@@ -993,6 +1016,16 @@ class Network(modellib.XObjIdModel):
 
     def natural_key(self):
         return self.ip_address, self.dns_name
+
+    def save(self, *args, **kwargs):
+        """
+        Disallow saving of link-local IPs.
+        FIXME: Additionally allow edge case where the ip_address field
+        is missing but we want to save the model anyway.
+        """
+        if self.ip_address and self.ip_address.startswith(("169.254", "fe80:")):
+            return
+        return super(Network, self).save(*args, **kwargs)
 
 class SystemLog(modellib.XObjIdModel):
     

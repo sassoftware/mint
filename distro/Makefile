@@ -39,6 +39,7 @@ install: default-install httpd-sysconfig
 	install -D -m0644 rmake2/serverrc.main $(DESTDIR)/etc/rmake/server.d/20_rbuilder.conf
 	install -D -m0644 rmake2/chrootcache.conf $(DESTDIR)/etc/rmake/node.d/chrootcache.conf
 	install -D -m0644 rmake2/clientrc.root $(DESTDIR)/root/.rmakerc
+	install -D -m0644 rmake2/server.sysconfig $(DESTDIR)/etc/sysconfig/rmake
 	# rmake 3
 	install -D -m0644 rmake3/dispatcher.conf $(DESTDIR)/etc/rmake3/server.d/20_rbuilder.conf
 	install -D -m0644 rmake3/worker.conf $(DESTDIR)/etc/rmake3/node.d/20_rbuilder.conf

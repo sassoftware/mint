@@ -5,6 +5,8 @@ from conary.repository.netrepos.netauth import ValidPasswordToken
 from mint.django_rest.rbuilder.models import Sessions
 from mint.django_rest.rbuilder.users.models import User
 from mint.django_rest.rbuilder.manager import rbuildermanager
+from django.db import transaction
+from django.db.utils import IntegrityError
 from mint.lib import auth_client
 from hashlib import md5
 import base64
@@ -31,7 +33,8 @@ def getCookieAuth(request):
         username, password = d['_data']['authToken']
         if password == '':
             password = ValidPasswordToken
-        return (username, password)
+            return (username, password)
+        # Discard old password-containing sessions to force a fresh login
     except:
         pass
         
@@ -101,7 +104,14 @@ class rBuilderBackend(object):
         if user.is_admin and not user.can_create: 
             user.can_create = True
             user.save()
-            mgr.getOrCreateIdentityRole(user, user)
+            tsid = transaction.savepoint()
+            try:
+                mgr.getOrCreateIdentityRole(user, user)
+            except IntegrityError:
+                # in event of two API parallel requests 
+                # it's ok if this doesn't succeed
+                transaction.savepoint_rollback(tsid)
+                
         mgr.configureMyQuerysets(user, user)
         return user
 

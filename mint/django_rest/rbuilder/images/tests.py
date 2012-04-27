@@ -1,3 +1,6 @@
+import hashlib
+import os
+import subprocess
 from testutils import mock
 import testsxml
 from xobj import xobj
@@ -8,6 +11,9 @@ logging.disable(logging.CRITICAL)
 from mint.django_rest import test_utils
 XMLTestCase = test_utils.XMLTestCase
 
+from conary import deps, trovetup, versions
+
+from mint import jobstatus
 from mint.lib import uuid
 from mint.django_rest.rbuilder.images import models
 from mint.django_rest.rbuilder.inventory import models as invmodels
@@ -17,6 +23,7 @@ from mint.django_rest.rbuilder.users import models as usermodels
 from mint.django_rest.rbuilder.rbac import models as rbacmodels
 from mint.django_rest.rbuilder.querysets import models as querymodels
 from mint.django_rest.rbuilder.rbac.tests import RbacEngine
+from mint.django_rest.rbuilder.targets import models as tgtmodels
 from mint.django_rest import timeutils
 
 class ImagesTestCase(RbacEngine):
@@ -234,7 +241,7 @@ class ImagesTestCase(RbacEngine):
         return
         #image_updated = xobj.parse(response.content)
         #self.assertEquals(image_updated.image.trove_name, 'troveName20-Changed')
-        
+
     def testUpdateImageAdmin(self):
         self._testUpdateImage('admin', 200)
  
@@ -657,3 +664,431 @@ class ImagesTestCase(RbacEngine):
             name='Development')[0]
         self.mgr.createImageBuild(img)
         return img
+
+    def _setupFileContentsList(self, img, contentMap=None):
+        imgPath = os.path.join(self.mgr.cfg.imagesPath, img.project.short_name,
+            str(img.image_id))
+        os.makedirs(imgPath)
+        if contentMap is None:
+            contentMap = [
+                ('filename1.ova', "Contents for ova file have 35 bytes"),
+                ('filename2.tar.gz', "Contents for ovf 0.99 file have 40 bytes"),
+            ]
+        fileContentList = []
+        for idx, (fname, content) in enumerate(contentMap):
+            params = dict(
+                sha1 = hashlib.sha1(content).hexdigest(),
+                size = len(content),
+                title = "File %s" % idx,
+                filename = os.path.join(imgPath, fname),
+            )
+            fileContentList.append(params)
+            file(params['filename'], "w").write(content)
+        return fileContentList
+
+    def testPutImageBuildFiles(self):
+        # Mock repository interaction
+        retNvf = trovetup.TroveTuple(
+            'image-blabbedy',
+            versions.VersionFromString('/example.com@test:1/1-1-1'),
+            deps.deps.Flavor(''))
+
+        createSourceTroveCallArgs = []
+        def mockCreateSourceTrove(slf, *args, **kwargs):
+            createSourceTroveCallArgs.append((args, kwargs))
+            return retNvf
+        self.mock(self.mgr.reposMgr.__class__, 'createSourceTrove', mockCreateSourceTrove)
+
+        retKVmeta = [ dict(owner='Jennay', workload='heavy') ]
+        getKeyValueMetadataCallArgs = []
+        def mockGetKeyValueMetadata(slf, *args, **kwargs):
+            getKeyValueMetadataCallArgs.append((args, kwargs))
+            return retKVmeta
+        self.mock(self.mgr.restDb.productMgr.reposMgr.__class__,
+                'getKeyValueMetadata', mockGetKeyValueMetadata)
+
+        xmlFilesTmpl = """<files>%s</files>"""
+        xmlFileTmpl = """
+  <file>
+    <title>%(title)s</title>
+    <size>%(size)s</size>
+    <sha1>%(sha1)s</sha1>
+    <file_name>%(filename)s</file_name>
+  </file>"""
+
+        img = self._setupImageOutputToken()
+        fileContentList = self._setupFileContentsList(img)
+
+        xml = xmlFilesTmpl % '\n'.join(xmlFileTmpl % x for x in fileContentList)
+
+        # Grab the image outputToken
+        outputToken = img.image_data.filter(name='outputToken')[0].value
+
+        response = self._put('images/%s/build_files' % img.image_id,
+            data=xml,
+            headers={'X-rBuilder-OutputToken': outputToken},
+        )
+
+        self.failUnlessEqual(response.status_code, 200)
+        obj = xobj.parse(response.content)
+        self.failUnlessEqual(
+            [(x.title, x.sha1) for x in obj.files.file],
+            [(x['title'], x['sha1']) for x in fileContentList])
+
+        self.failUnlessEqual(createSourceTroveCallArgs, [])
+
+        # same deal, now with metadata
+        xmlFilesTmpl = xmlFilesTmpl.replace('</files>', """\
+  <metadata>
+    <owner>JeanValjean</owner>
+  </metadata>
+</files>""")
+
+        fileContentList[-1].update(sha1='Fake', title='Fake')
+        xml = xmlFilesTmpl % '\n'.join(xmlFileTmpl % x for x in fileContentList)
+
+        response = self._put('images/%s/build_files' % img.image_id,
+            data=xml,
+            headers={'X-rBuilder-OutputToken': outputToken},
+        )
+
+        self.failUnlessEqual(response.status_code, 200)
+        obj = xobj.parse(response.content)
+        self.failUnlessEqual(
+            [(x.title, x.sha1) for x in obj.files.file],
+            [(x['title'], x['sha1']) for x in fileContentList])
+
+        self.failUnlessEqual(
+                [ (x[0][:4], x[0][4].keys(), x[1]) for x in createSourceTroveCallArgs ],
+                [
+                    (
+                        (u'chater-foo.eng.rpath.com', u'image-chater-foo',
+                            u'chater-foo.eng.rpath.com@rpath:chater-foo-1-devel',
+                            u'1'),
+                        ['filename1.ova', 'filename2.tar.gz', ],
+                        {'admin': True, 'changeLogMessage': 'Image imported',
+                            'factoryName': 'rbuilder-image',
+                            'metadata': {'owner': 'JeanValjean'}}
+                    ),
+                ])
+        self.failUnlessEqual(
+            [ ([ y.asString() for y in x[0][0] ], x[1]) for x in getKeyValueMetadataCallArgs ],
+            [
+                (['image-blabbedy=/example.com@test:1/1-1-1[]'], {}),
+                (['image-blabbedy=/example.com@test:1/1-1-1[]'], {}),
+            ])
+
+    def testPutImageBuildLog(self):
+        img = self._setupImageOutputToken()
+
+        # Grab the image outputToken
+        outputToken = img.image_data.filter(name='outputToken')[0].value
+
+        data = "Build log data here"
+        response = self._post('images/%s/build_log' % img.image_id,
+            data=data,
+            headers={'X-rBuilder-OutputToken': outputToken},
+        )
+        self.failUnlessEqual(response.status_code, 204)
+
+        buildLog = self.mgr.getBuildLog(img.image_id)
+        self.assertEqual(buildLog, data)
+
+        data2 = "\nAnd some more data"
+
+        response = self._post('images/%s/build_log' % img.image_id,
+            data=data2,
+            headers={'X-rBuilder-OutputToken': outputToken},
+        )
+        self.failUnlessEqual(response.status_code, 204)
+
+        buildLog = self.mgr.getBuildLog(img.image_id)
+        self.assertEqual(buildLog, data + data2)
+
+    class MockKey(object):
+        class MockPolicy(object):
+            class MockACL(object):
+                def add_user_grant(self, permission, user_id):
+                    pass
+
+            def __init__(self):
+                self.acl = self.MockACL()
+
+        def __init__(self, keyName):
+            self.keyName = keyName
+
+        def set_contents_from_file(self, fp, cb = None, policy = None):
+            if cb:
+                cb(10, 16)
+
+        def get_acl(self):
+            return self.MockPolicy()
+
+        def set_acl(self, acl):
+            pass
+
+    class MockBucket(test_utils.CallProxy):
+        def new_key(self, key_name):
+            return self.MockKey(key_name)
+        def get_key(self, key_name):
+            return self.MockKey(key_name)
+    MockBucket.MockKey = MockKey
+
+    def testPutImageStatus(self):
+        # Set up EC2
+        # Needed by setTargetUserCredentials
+        class Auth(object):
+            def __init__(self, user):
+                self.userId = user.user_id
+                self.user = user
+
+        user = self.getUser('jimphoo')
+        self.mgr._auth = Auth(user)
+
+        tgtType = self.mgr.getTargetTypeByName('ec2')
+        tgt = self.mgr.createTarget(tgtType, 'aws', targetData=dict(
+            ec2AccountId="8675309",
+            ec2S3Bucket="bukkit",
+            ec2PublicKey="rbuilder-wide public key",
+            ec2PrivateKey="rbuilder-wide private key",
+            ec2Certificate ="ec2 certificate",
+            ec2CertificateKey="ec2 certificate key",
+            zone='Local rBuilder',
+        ))
+        self.mgr.setTargetUserCredentials(tgt, dict(accountId="12345",
+            publicAccessKeyId="public key", secretAccessKey="secret key"))
+
+        from mint import ec2
+        self.mock(ec2.S3Wrapper, 'createBucket',
+            lambda *args, **kwargs: self.MockBucket())
+
+        statusFile = os.path.join(self.workDir, "registerAMI.status")
+        def mockedRegisterAMI(slf, bucketName, manifestName, *args, **kwargs):
+            f = file(statusFile, "a")
+            f.write("ec2LaunchUsers: %s\n" % kwargs.get('ec2LaunchUsers'))
+            f.write("ec2LaunchGroups: %s\n" % kwargs.get('ec2LaunchGroups'))
+            f.close()
+            return ('ami-01234', '%s/%s' % (bucketName, manifestName))
+        self.mock(ec2.EC2Wrapper, 'registerAMI', mockedRegisterAMI)
+
+        img = self._setupImageOutputToken()
+        archiveContents = file(self.createFakeAmiBuild()).read()
+        fileContentList = self._setupFileContentsList(img, contentMap=[
+            ('image.tar.gz', archiveContents)
+        ])
+
+        # Grab the image outputToken
+        outputToken = img.image_data.filter(name='outputToken')[0].value
+
+        # Set up some files for the image
+        xmlFilesTmpl = """<files>%s</files>"""
+        xmlFileTmpl = """
+  <file>
+    <title>%(title)s</title>
+    <size>%(size)s</size>
+    <sha1>%(sha1)s</sha1>
+    <file_name>%(filename)s</file_name>
+  </file>"""
+
+        xml = xmlFilesTmpl % '\n'.join(xmlFileTmpl % x for x in fileContentList)
+
+        # Temporary fix for django being silly (1.3.1 doesn't seem to
+        # have problems with unicode): encode as utf-8
+        response = self._put('images/%s/build_files' % img.image_id,
+            data=xml.encode('utf-8'),
+            headers={'X-rBuilder-OutputToken': outputToken},
+        )
+        self.failUnlessEqual(response.status_code, 200)
+
+        xmlTemplate = """\
+<image>
+  <status>%(status)s</status>
+  <status_message>%(statusMessage)s</status_message>
+</image>"""
+
+        params = dict(status=jobstatus.WAITING, statusMessage="For Godot")
+        response = self._put('images/%s' % img.image_id,
+            data=xmlTemplate % params,
+            headers={'X-rBuilder-OutputToken': outputToken},
+        )
+        self.failUnlessEqual(response.status_code, 200)
+        obj = xobj.parse(response.content)
+        self.assertEqual(obj.image.status, '0')
+        self.assertEqual(obj.image.status_message, 'For Godot')
+
+        status = models.Image.objects.filter(
+            image_id=img.image_id).values_list("status", "status_message")
+        self.assertEqual(status[0],
+            (params['status'], params['statusMessage']))
+
+        # Update status to another non-final state
+        params = dict(status=jobstatus.RUNNING, statusMessage="For president")
+        response = self._put('images/%s' % img.image_id,
+            data=xmlTemplate % params,
+            headers={'X-rBuilder-OutputToken': outputToken},
+        )
+        self.failUnlessEqual(response.status_code, 200)
+        obj = xobj.parse(response.content)
+        self.assertEqual(obj.image.status, '100')
+        self.assertEqual(obj.image.status_message, 'For president')
+
+        status = models.Image.objects.filter(
+            image_id=img.image_id).values_list("status", "status_message")
+        self.assertEqual(status[0],
+            (params['status'], params['statusMessage']))
+
+        # Update status to FINISHED
+        # To test auth token removal
+        authToken = models.AuthTokens.objects.create(token=str(self.uuid4()),
+            user=img.created_by, image=img,
+            expires_date=self.mgr.sysMgr.now())
+        # To test AMI image upload
+        from mint import buildtypes
+        models.Image.objects.filter(image_id=img.image_id).update(
+            _image_type=buildtypes.AMI)
+
+        params = dict(status=jobstatus.FINISHED, statusMessage="really done")
+        response = self._put('images/%s' % img.image_id,
+            data=xmlTemplate % params,
+            headers={'X-rBuilder-OutputToken': outputToken},
+        )
+        self.failUnlessEqual(response.status_code, 200)
+        obj = xobj.parse(response.content)
+        self.assertEqual(obj.image.status, '300')
+        self.assertEqual(obj.image.status_message, 'really done')
+
+        status = models.Image.objects.filter(
+            image_id=img.image_id).values_list("status", "status_message")
+        self.assertEqual(status[0],
+            (params['status'], params['statusMessage']))
+
+        # Token should be gone
+        self.assertEquals(
+            list(models.AuthTokens.objects.filter(token=authToken.token)),
+            [])
+
+        self.assertEqual(file(statusFile).read(), """\
+ec2LaunchUsers: []
+ec2LaunchGroups: []
+""")
+        self.assertEqual(
+            sorted((x.name, x.value)
+                for x in models.ImageData.objects.filter(
+                    image__image_id=img.image_id)),
+            [
+                ('amiId', 'ami-01234'),
+                ('amiManifestName', 'bukkit/image.img.manifest.xml'),
+                ('outputToken', outputToken),
+            ]
+        )
+
+        # This is kind of a bug, we should add the newly deployed AMI in
+        # the list if deployed images immediately
+        self.assertEqual(list(
+            tgtmodels.TargetImagesDeployed.objects.filter(build_file__image__image_id=img.image_id).values_list('target__name')),
+            [ ])
+
+        # We can't deploy the image again
+        self.assertEqual(list(
+            tgtmodels.TargetDeployableImage.objects.filter(build_file__image__image_id=img.image_id).values_list('target__name')),
+            [ ])
+
+        # Did we tag this image?
+        # XXX write test
+
+    def createFakeAmiBuild(self):
+        dirPath = os.path.join(self.workDir, "image.ami")
+        os.makedirs(dirPath)
+        file(os.path.join(dirPath, "image.img.part.1"), "w")
+        file(os.path.join(dirPath, "image.img.part.2"), "w")
+        file(os.path.join(dirPath, "image.img.part.3"), "w")
+        file(os.path.join(dirPath, "image.img.manifest.xml"), "w")
+        tarFile = os.path.join(self.workDir, "image.ami.tar.gz")
+        subprocess.call(["tar", "zcf", tarFile, "-C", self.workDir, "image.ami"])
+        return tarFile
+
+    def testImageBuildCancellation(self):
+        img = self._setupImageOutputToken()
+        # Mark image as complete, action should be disabled
+        img.status = 300
+        img.save()
+        response = self._get('images/%s' % img.image_id,
+            username='admin', password='password')
+        doc = xobj.parse(response.content)
+
+        self.failUnlessEqual(doc.image.jobs.id,
+            'http://testserver/api/v1/images/%s/jobs' % img.image_id)
+
+        actions = doc.image.actions.action
+        if not isinstance(actions, list):
+            actions = [ actions ]
+        # Make sure we have an image cancellation action
+        self.failUnlessEqual([ x.job_type.id for x in actions ],
+            [ 'http://testserver/api/v1/inventory/event_types/25' ])
+        self.failUnlessEqual([ x.enabled for x in actions ],
+            [ 'false', ])
+        self.failUnlessEqual([ x.descriptor.id for x in actions ],
+            [ 'http://testserver/api/v1/images/%s/descriptors/cancel_build' % img.image_id ])
+
+        # Mark image as running
+        img.status = 100
+        img.save()
+
+        models.ImageData.objects.create(image=img, name='uuid',
+            value='0xDEADBEEF', data_type=0)
+
+        response = self._get('images/%s' % img.image_id,
+            username='admin', password='password')
+        doc = xobj.parse(response.content)
+        actions = doc.image.actions.action
+        if not isinstance(actions, list):
+            actions = [ actions ]
+        self.failUnlessEqual([ x.enabled for x in actions ],
+            [ 'true', ])
+
+        # Fetch the descriptor
+        response = self._get('images/%s/descriptors/cancel_build' % img.image_id,
+            username='admin', password='password')
+        self.assertEquals(response.status_code, 200)
+        doc = xobj.parse(response.content)
+        self.assertEquals(doc.descriptor.metadata.displayName,
+            'Cancel Image Build')
+        self.assertEquals(doc.descriptor.metadata.descriptions.desc,
+            'Cancel Image Build')
+
+        # Mock mcp
+        from mcp import client as mcpclient
+        class MockClient(test_utils.CallProxy):
+            def __call__(slf, *args, **kwargs):
+                # Trick to record the class constructor
+                slf._fake_init(*args, **kwargs)
+                return slf
+        self.mock(mcpclient, "Client", MockClient())
+
+        # Compose job
+        templ = """\
+<job>
+  <job_type id="http://testserver/api/v1/inventory/event_types/25"/>
+  <descriptor id="http://testserver/api/v1/images/%(imageId)s/descriptors/cancel_build"/>
+  <descriptor_data/>
+</job>
+"""
+        data = templ % dict(imageId = img.image_id)
+        response = self._post('images/%s/jobs' % img.image_id, data=data,
+            username='admin', password='password')
+        self.assertEquals(response.status_code, 200)
+        doc = xobj.parse(response.content)
+        jobId = os.path.basename(doc.job.id)
+
+        # Fetch call list
+        callList = mcpclient.Client.getCallList()
+        self.assertEquals([ (x.name, x.args, x.kwargs) for x in callList ],
+            [
+                ('_fake_init', ('127.0.0.1', 50900), {}),
+                ('stop_job', (u'0xDEADBEEF',), {}),
+            ])
+
+        response = self._get('jobs/%s' % jobId, user="admin", password="password")
+        self.assertEquals(response.status_code, 200)
+        doc = xobj.parse(response.content)
+        self.assertEquals(doc.job.status_text, "Done")
