@@ -247,6 +247,7 @@ class SurveyManager(basemanager.BaseManager):
             system.save()
 
         rpm_info_by_id     = {}
+        rpms_by_info_id    = {}
 
         for xmodel in xrpm_packages:
             xinfo = xmodel.rpm_package_info
@@ -268,6 +269,9 @@ class SurveyManager(basemanager.BaseManager):
                survey           = survey,
                rpm_package_info = info,
             )
+
+            rpms_by_info_id[info.pk] = pkg
+
             pkg.install_date = self._date(xmodel.install_date)
             pkg.save()
 
@@ -283,13 +287,23 @@ class SurveyManager(basemanager.BaseManager):
                 signature    = _u(xinfo.signature)
             )
             encap = getattr(xinfo, 'rpm_package_info', None)
+
+            use_date = self._date(xmodel.install_date)
+
             if encap is not None:
                 info.rpm_package_info = rpm_info_by_id[encap.id]
                 info.save()
+                # conary may not support install_date yet so cheat
+                # and get it from the RPM if available
+                if xmodel.install_date in [ 0, '', None ]:
+                    rpm_package = rpms_by_info_id.get(info.rpm_package_info.pk, None)
+                    if rpm_package is not None:
+                        use_date = rpm_package.install_date
+ 
             pkg = survey_models.SurveyConaryPackage(
                 conary_package_info = info,
                 survey              = survey,
-                install_date        = self._date(xmodel.install_date)
+                install_date        = use_date
             )
             pkg.save()
 
