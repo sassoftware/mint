@@ -111,7 +111,7 @@ class ImageService(_JobOutputTokenAuthService):
             self.mgr.setImageBuildStatus(image)
             return self.mgr.getImageBuild(image_id)
 
-        return self.mgr.updateImageBuild(image_id, image)
+        return self.mgr.updateImage(image)
 
     @rbac(can_write_image)
     def rest_DELETE(self, request, image_id):
@@ -293,4 +293,12 @@ class ImageTypeService(service.BaseService):
     def get(self, image_type_id):
         return self.mgr.getImageType(image_type_id)
 
+class ImageDescriptorsService(service.BaseService):
+    @rbac(can_read_image)
+    @return_xml
+    def rest_GET(self, request, image_id, descriptor_type):
+        return self.get(image_id, descriptor_type)
 
+    def get(self, image_id, descriptor_type):
+        return self.mgr.serializeDescriptor(
+            self.mgr.getImageDescriptor(image_id, descriptor_type))

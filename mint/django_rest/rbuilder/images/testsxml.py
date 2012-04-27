@@ -193,7 +193,16 @@ images_get_xml = """
 image_get_xml = """
 <?xml version='1.0' encoding='UTF-8'?>
 <image id="http://testserver/api/v1/images/1">
-  <actions/>
+  <actions>
+    <action>
+      <description>Cancel image build</description>
+      <descriptor id="http://testserver/api/v1/images/1/descriptors/cancel_build"/>
+      <enabled>True</enabled>
+      <job_type id="http://testserver/api/v1/inventory/event_types/25"/>
+      <key>image_build_cancellation</key>
+      <name>Cancel image build</name>
+    </action>
+  </actions>
   <files>
     <file>
       <sha1>0</sha1>
@@ -484,7 +493,16 @@ release_get_xml = \
           <size>1</size>
         </file>
       </files>
-      <actions/>
+      <actions>
+        <action>
+          <description>Cancel image build</description>
+          <descriptor id="http://testserver/api/v1/images/1/descriptors/cancel_build"/>
+          <enabled>True</enabled>
+          <job_type id="http://testserver/api/v1/inventory/event_types/25"/>
+          <key>image_build_cancellation</key>
+          <name>Cancel image build</name>
+        </action>
+      </actions>
       <project_branch id="http://testserver/api/v1/projects/foo0/project_branches/foo0.eng.rpath.com@rpath:foo-trunk">
         <name>trunk</name>
       </project_branch>
@@ -611,7 +629,16 @@ releases_get_xml = \
             <size>1</size>
           </file>
         </files>
-        <actions/>
+        <actions>
+          <action>
+            <description>Cancel image build</description>
+            <descriptor id="http://testserver/api/v1/images/1/descriptors/cancel_build"/>
+            <enabled>True</enabled>
+            <job_type id="http://testserver/api/v1/inventory/event_types/25"/>
+            <key>image_build_cancellation</key>
+            <name>Cancel image build</name>
+          </action>
+        </actions>
         <project_branch id="http://testserver/api/v1/projects/foo0/project_branches/foo0.eng.rpath.com@rpath:foo-trunk">
           <name>trunk</name>
         </project_branch>
@@ -711,7 +738,16 @@ releases_get_xml = \
             <size>2</size>
           </file>
         </files>
-        <actions/>
+        <actions>
+          <action>
+            <description>Cancel image build</description>
+            <descriptor id="http://testserver/api/v1/images/2/descriptors/cancel_build"/>
+            <enabled>True</enabled>
+            <job_type id="http://testserver/api/v1/inventory/event_types/25"/>
+            <key>image_build_cancellation</key>
+            <name>Cancel image build</name>
+          </action>
+        </actions>
         <project_branch id="http://testserver/api/v1/projects/foo1/project_branches/foo1.eng.rpath.com@rpath:foo-trunk">
           <name>trunk</name>
         </project_branch>
@@ -811,7 +847,16 @@ releases_get_xml = \
             <size>3</size>
           </file>
         </files>
-        <actions/>
+        <actions>
+          <action>
+            <description>Cancel image build</description>
+            <descriptor id="http://testserver/api/v1/images/3/descriptors/cancel_build"/>
+            <enabled>True</enabled>
+            <job_type id="http://testserver/api/v1/inventory/event_types/25"/>
+            <key>image_build_cancellation</key>
+            <name>Cancel image build</name>
+          </action>
+        </actions>
         <project_branch id="http://testserver/api/v1/projects/foo2/project_branches/foo2.eng.rpath.com@rpath:foo-trunk">
           <name>trunk</name>
         </project_branch>

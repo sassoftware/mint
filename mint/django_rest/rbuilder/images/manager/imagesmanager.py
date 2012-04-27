@@ -4,10 +4,12 @@
 # All Rights Reserved
 #
 
+import sys
 import errno
 import logging
 import os
 from django.core import urlresolvers
+from mcp import client as mcp_client
 from mint import buildtypes
 from mint import jobstatus
 from mint import urltypes
@@ -16,13 +18,14 @@ from mint.django_rest.rbuilder.images import models
 from mint.django_rest.rbuilder.projects import models as projmodels
 from mint.django_rest.rbuilder.targets import models as tgtmodels
 from mint.django_rest.rbuilder.manager import basemanager
-from mint.django_rest.rbuilder.errors import PermissionDenied
+from mint.django_rest.rbuilder import errors
 from conary.lib import sha1helper
 from mint.lib import data as datatypes
 from conary import trovetup
 from conary import versions
 from conary.deps import deps
 from conary.lib import util
+from smartform import descriptor
 import time
 
 log = logging.getLogger(__name__)
@@ -129,11 +132,16 @@ class ImagesManager(basemanager.BaseManager):
 
     @autocommit
     def commitImageStatus(self, imageId, status=None, statusMessage=None):
+        if status is None:
+            status = jobstatus.RUNNING
         self.setImageStatus(imageId, status, statusMessage)
 
     def _postFinished(self, image):
         if image.status != jobstatus.FINISHED:
             return
+        # We're not done just yet
+        self.setImageStatus(image.image_id, code=jobstatus.RUNNING,
+            message="Finalizing image build")
         # Remove auth tokens associated with this image
         models.AuthTokens.objects.filter(image=image).delete()
         self._handlePostImageBuildOperations(image)
@@ -178,7 +186,7 @@ class ImagesManager(basemanager.BaseManager):
         readers, writers = self.getEC2AccountNumbersForProjectUsers(
             image.project.project_id)
         # Move to autocommit mode. This will flush the existing
-        # transaction, and the decodated commitImageStatus will do its
+        # transaction, and the decorated commitImageStatus will do its
         # own commits. We need to restore transaction management when
         # we're done.
         self.mgr.prepareAutocommit()
@@ -232,7 +240,7 @@ class ImagesManager(basemanager.BaseManager):
         # see if any images have this image as a baseimage, and if so, refuse to delete
         layered_images = models.Image.objects.filter(base_image = image)
         if len(layered_images) > 0:
-            raise PermissionDenied(msg="Image is in use as a layered base image and cannot be deleted")
+            raise errors.PermissionDenied(msg="Image is in use as a layered base image and cannot be deleted")
 
         log.info("Deleting image %s from project %s" % (image_id,
             image.project.short_name))
@@ -359,13 +367,8 @@ class ImagesManager(basemanager.BaseManager):
         if isinstance(image, (int, basestring)):
             image = models.Image.objects.get(image_id=image)
 
-        if image.status != jobstatus.FINISHED:
-            # image won't show up in retag of dynamic sets if status is
-            # still running
-            # This is because we call this function from mint.rest
-            # before we set the status
-            image.status = jobstatus.FINISHED
-            image.save()
+        self.setImageStatus(image.image_id, code=jobstatus.FINISHED,
+            message="Image built")
 
         self.mgr.addToMyQuerySet(image, image.created_by)
         self.mgr.recomputeTargetDeployableImages()
@@ -451,3 +454,71 @@ class ImagesManager(basemanager.BaseManager):
     def setImageStatus(self, imageId, code=jobstatus.RUNNING, message=''):
         models.Image.objects.filter(image_id=imageId).update(status=code,
             status_message=message)
+
+    @exposed
+    def getImageDescriptor(self, imageId, descriptorType):
+        supportedDescriptors = dict(cancel_build=self.getImageDescriptorCancelBuild)
+        method = supportedDescriptors.get(descriptorType)
+        if method is None:
+            raise errors.ResourceNotFound()
+        return method(imageId)
+
+    def getImageDescriptorCancelBuild(self, imageId):
+        descr = descriptor.ConfigurationDescriptor()
+        descr.setDisplayName('Cancel Image Build')
+        descr.addDescription('Cancel Image Build')
+        descr.setRootElement("descriptor_data")
+        return descr
+
+    @exposed
+    def cancelImageBuild(self, image, job):
+        try:
+            self._cancelImageBuild(image, job)
+        except:
+            exc = sys.exc_info()
+            stream = util.BoundedStringIO()
+            util.formatTrace(*exc, stream=stream, withLocals=False)
+            stream.seek(0)
+
+            job.job_state = self.mgr.getJobStateByName(jobsmodels.JobState.FAILED)
+            job.status_code = 500
+            job.status_text = "Failed"
+            job.status_detail = stream.read()
+        else:
+            job.job_state = self.mgr.getJobStateByName(jobsmodels.JobState.COMPLETED)
+            job.status_code = 200
+            job.status_text = "Done"
+        job.save()
+
+    def _cancelImageBuild(self, image, job=None):
+        mcpJobUUID = image.image_data.filter(name='uuid')
+        if not mcpJobUUID:
+            raise Exception("Image without a build task")
+        mcpJobUUID = mcpJobUUID[0].value
+        mcpClient = self._getMcpClient()
+        mcpClient.stop_job(mcpJobUUID)
+
+        if job and job.created_by:
+            msg = "User %s requested stopping of image build with job %s" % (
+                job.created_by.user_name, mcpJobUUID, )
+        else:
+            msg = "User requested stopping of image build with job %s" % (
+                mcpJobUUID, )
+
+        sio = util.BoundedStringIO()
+        lhandler = logging.StreamHandler(sio)
+        lhandler.setFormatter(util.log._getFormatter('file'))
+        oldLevel = log.level
+        try:
+            # Capture log
+            log.setLevel(logging.DEBUG)
+            log.addHandler(lhandler)
+            log.info(msg)
+            sio.seek(0)
+            self.appendToBuildLog(image.image_id, sio.read())
+        finally:
+            log.removeHandler(lhandler)
+            log.setLevel(oldLevel)
+
+    def _getMcpClient(self):
+        return mcp_client.Client(self.cfg.queueHost, self.cfg.queuePort)

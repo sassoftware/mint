@@ -1017,6 +1017,16 @@ class Network(modellib.XObjIdModel):
     def natural_key(self):
         return self.ip_address, self.dns_name
 
+    def save(self, *args, **kwargs):
+        """
+        Disallow saving of link-local IPs.
+        FIXME: Additionally allow edge case where the ip_address field
+        is missing but we want to save the model anyway.
+        """
+        if self.ip_address and self.ip_address.startswith(("169.254", "fe80:")):
+            return
+        return super(Network, self).save(*args, **kwargs)
+
 class SystemLog(modellib.XObjIdModel):
     
     class Meta:

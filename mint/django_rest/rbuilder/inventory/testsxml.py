@@ -507,6 +507,22 @@ network_put_xml = """\
   <pinned/>
 </network>"""
 
+network_put_xml_opt_ip_addr = """\
+<?xml version="1.0"?>
+<network id="http://testserver/api/v1/inventory/networks/1">
+  <active/>
+  <created_date>2010-09-15T21:41:40.142078+00:00</created_date>
+  <device_name>eth0</device_name>
+  <dns_name>new.com</dns_name>
+  <ip_address>%s</ip_address>
+  <ipv6_address/>
+  <netmask>255.255.255.0</netmask>
+  <network_id>2</network_id>
+  <port_type>lan</port_type>
+  <system id="http://testserver/api/v1/inventory/systems/3"/>
+  <pinned/>
+</network>"""
+
 system_states_xml = """\
 <?xml version="1.0" encoding="UTF-8"?>
 <system_states>
@@ -3982,7 +3998,7 @@ survey_mod_xml="""
     <comment>Here is a comment</comment>
     <uuid>1234</uuid>
     <name>Here is a name</name>
-    <removable>False</removable>
+    <removable>True</removable>
     <tags>
       <tag>
         <name>onfire</name>
