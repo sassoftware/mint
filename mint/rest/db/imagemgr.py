@@ -459,7 +459,7 @@ class ImageManager(manager.Manager):
             # over the wire
             ifile = rcli.ImageFile(
                 title=self._u(fileItem.fileName),
-                fileName=self._u(fileItem.fileName),
+                file_name=self._u(fileItem.fileName),
                 url=url, destination=destination)
             fileList.append(ifile)
         if not fileList:

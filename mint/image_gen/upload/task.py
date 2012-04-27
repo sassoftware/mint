@@ -22,13 +22,19 @@ class ImageUploadTask(plug_worker.TaskHandler):
         image = self.params.image
 
         for imageFile in image.files:
-            self._uploadFile(imageFile)
+            try:
+                self._uploadFile(imageFile)
+            except rl_client.ConnectionError, e:
+                self.sendStatus(iconst.IUP_JOB_FAILED,
+                    "Failed to import image URL %s %s" %
+                        (imageFile.url.asString(), str(e)))
+                return
 
         self._commitImage()
         self.sendStatus(iconst.IUP_JOB_DONE, "Image uploaded")
 
     def _uploadFile(self, imageFile):
-        progStr = "Uploading file %s" % (imageFile.fileName,)
+        progStr = "Uploading file %s" % (imageFile.file_name,)
         self.sendStatus(iconst.IUP_JOB_UPLOADING, progStr)
 
         srcUrl = imageFile.url
@@ -68,7 +74,7 @@ class ImageUploadTask(plug_worker.TaskHandler):
             ET.SubElement(fx, 'title').text = imageFile.title
             ET.SubElement(fx, 'size').text = str(imageFile.size)
             ET.SubElement(fx, 'sha1').text = imageFile.sha1
-            ET.SubElement(fx, 'fileName').text = imageFile.fileName
+            ET.SubElement(fx, 'fileName').text = imageFile.file_name
         mx = ET.SubElement(root, 'metadata')
         for key, value in self.params.image.metadata.items():
             ET.SubElement(mx, key).text = str(value)
