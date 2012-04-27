@@ -68,6 +68,12 @@ windows_upload_survey_xml="""
       <local_package>c:/path/to/stuff</local_package>
     </windows_package>
   </windows_packages>
+  <values>
+       <some_random_tag>
+           <key>values.xml is stored verbatim</key>
+           <value>this is not shredded anyway</value>
+       </some_random_tag>
+  </values>
 </survey>
 """
 
