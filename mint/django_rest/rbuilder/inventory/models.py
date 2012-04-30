@@ -595,6 +595,15 @@ class System(modellib.XObjIdModel):
             system_log.save()
         return system_log
 
+    def _matchNetwork(self, address, **kwargs):
+        ret = self.networks.filter(ip_address=address, **kwargs)
+        if ret:
+            return ret[0]
+        ret = self.networks.filter(dns_name=address, **kwargs)
+        if ret:
+            return ret[0]
+        return None
+
     def createNetworks(self):
         # * oldNetAddr is the state of the system in the db, before any
         #   fields from the xobj model were copied
