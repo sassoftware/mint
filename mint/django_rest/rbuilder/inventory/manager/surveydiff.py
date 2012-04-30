@@ -224,9 +224,14 @@ class SurveyDiffRender(object):
 
     def _renderSurvey(self, tag, survey):
         ''' serializes the left_survey or right_survey elements '''
-        return self._xmlNode(tag, about=survey,
-             keys='name description removable created_date'
+        node = self._xmlNode(tag, about=survey,
+             keys='name description removable created_date comment'
         )
+        tags = Element('tags')
+        for tag in survey.tags.all():
+            self._addElement(tags, 'tag', tag.name)
+        node.append(tags)
+        return node
 
     def _element(self, name, text=None):
         ''' shorthand around etree element creation due to lame constructor API '''

@@ -1,6 +1,14 @@
 # TODO: replace with capture from joebalt once availablewindows_survey_upload="""
 windows_upload_survey_xml="""
 <survey>
+  <tags>
+      <tag>
+        <name>needs_review</name>
+      </tag>
+      <tag>
+        <name>you're it</name>
+      </tag>
+  </tags>
   <uuid>123456789</uuid>
   <created_date>1330699918</created_date>
   <windows_patches>
