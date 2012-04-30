@@ -224,6 +224,14 @@ event_types_xml="""\
     <resource_type>System</resource_type>
     <system_events/>
   </event_type>
+  <event_type id="http://testserver/api/v1/inventory/event_types/25">
+    <description>Cancel an image build</description>
+    <job_type_id>25</job_type_id>
+    <name>image build cancellation</name>
+    <priority>105</priority>
+    <resource_type>Image</resource_type>
+    <system_events/>
+  </event_type>
 </event_types>"""
 
 event_type_put_xml="""\
