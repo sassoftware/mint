@@ -4728,12 +4728,15 @@ class TargetSystemImportTest(XMLTestCase, test_utils.RepeaterMixIn):
             target_system_state = "Frisbulating",
         )
         dnsName = 'dns-name-1'
+        ipAddress = '1.2.3.4'
         system = self.newSystem(**params)
+
         system.boot_uuid = bootUuid = str(self.uuid4())
         system.ssl_client_certificate = "ssl client certificate 001"
         system.ssl_client_key = "ssl client key 001"
+        # To mimic the workflow from target, we initially add the target
+        # system with no networking info
         system = self.mgr.addLaunchedSystem(system,
-            dnsName=dnsName,
             targetName=self.tgt2.name,
             targetType=self.tgt2.target_type)
         for k, v in params.items():
@@ -4771,6 +4774,22 @@ class TargetSystemImportTest(XMLTestCase, test_utils.RepeaterMixIn):
              WHERE invsys.system_id = %s""", [ system.system_id ])
         self.failUnlessEqual([ x[0] for x in cu ],
             [ bootUuid, ])
+
+        # Mingle #1962: don't add the same network entry multiple times
+        # Add networks, to pretend the system registered while we were
+        # waiting for the target to report its ip address.
+        models.Network.objects.filter(system=savedsystem).delete()
+        models.Network.objects.create(system=savedsystem,
+            dns_name=dnsName, ip_address=ipAddress, device_name='eth0',
+            active=True)
+
+        system = self.mgr.addLaunchedSystem(system,
+            dnsName=dnsName,
+            targetName=self.tgt2.name,
+            targetType=self.tgt2.target_type)
+        self.failUnlessEqual(
+            [ (x.dns_name, x.ip_address) for x in system.networks.all() ],
+            [ (dnsName, ipAddress) ])
 
         def repl(item, a, b):
             try:
