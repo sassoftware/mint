@@ -303,7 +303,7 @@ class Image(modellib.XObjIdModel):
                 targetId = tdi.target_id
                 enabled = targetId in targetsWithCredentials
                 uqLaunch[tdi.target_id] = (bfile.file_id, enabled)
-                enabled = enabled and targetId in targetsWithDeployImage and tdi.target_image_id is None
+                enabled = enabled and targetId in targetsWithDeployImage
                 uqDeploy[tdi.target_id] = (bfile.file_id, enabled)
         for targetId, (buildFileId, enabled) in sorted(uqDeploy.items()):
             tgt = modellib.Cache.get(tgtmodels.Target, pk=targetId)
