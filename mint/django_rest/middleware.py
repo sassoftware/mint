@@ -225,7 +225,7 @@ class ExceptionLoggerMiddleware(SwitchableLogMiddleware):
             response.content = fault.to_xml(request)
             log.error(str(exception))
             if self.shouldLog():
-                self._logFailure(code, str(exception))
+                self._logFailure(status, str(exception))
             return response
 
         if isinstance(exception, IntegrityError):
