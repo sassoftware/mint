@@ -291,10 +291,22 @@ class Collection(XObjIdModel):
             if hasattr(modelList, 'order_by'):
                 modelList = modelList.order_by(*newOrderParams)
             else:
+
+                param = newOrderParams[0]
+                invert = False
+                    
+                if param.startswith("-"):
+                    invert = True
+                if param[0] in [ '+', '-', ' ' ]:
+                    param = param[1:].strip()
+
                 # a list, not a query set
                 modelList = sorted(modelList, 
-                    key=lambda f: getattr(f, newOrderParams[0])
+                    key=lambda f: getattr(f, param)
                 )
+                if invert:
+                    modelList.reverse()
+
         self.order_by = orderBy
 
         return modelList
