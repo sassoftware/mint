@@ -265,6 +265,9 @@ class Collection(XObjIdModel):
                 url += ';filter_by=%s' % self.filter_by
         return url
 
+    def _sortByField(key):
+        return lambda field: getattr(field, key, None)
+
     def orderBy(self, request, modelList):
 
         orderBy = request.GET.get('order_by', None)
@@ -281,7 +284,13 @@ class Collection(XObjIdModel):
                 orderParam = orderParam.replace('.', '__')
                 newOrderParams.append(orderParam)
 
-            modelList = modelList.order_by(*newOrderParams)
+            if hasattr(modelList, 'order_by'):
+                modelList = modelList.order_by(*newOrderParams)
+            else:
+                # a list, not a query set
+                modelList = sorted(modelList, 
+                    key=lambda f: getattr(f, newOrderParams[0])
+                )
         self.order_by = orderBy
 
         return modelList

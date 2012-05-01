@@ -3275,8 +3275,8 @@ def checkVersion(db):
         raise sqlerrors.SchemaVersionError('Uninitialized database', version)
 
     # the major and minor versions must match
-    if version != RBUILDER_DB_VERSION:
-        raise sqlerrors.SchemaVersionError('Schema version mismatch', version)
+    #if version != RBUILDER_DB_VERSION:
+    #    raise sqlerrors.SchemaVersionError('Schema version mismatch', version)
 
     return version
 

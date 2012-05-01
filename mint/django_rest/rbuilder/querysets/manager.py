@@ -194,6 +194,9 @@ class QuerySetManager(basemanager.BaseManager):
         to the queryset that does NOT want to bother with queryset invalidation
         jobs can get reasonably results... only use for querysets of small size
         as we have a tag/cache timeout and that should be fine for larger querysets
+ 
+        NOTE:  it is probably much better to call retagQuerySetByType(type, defer=True)
+        to make sure all possible querysets are invalidated rather than using this method
         '''
         models.QuerySet.objects.filter(name=name).update(tagged_date=None)
 
@@ -215,7 +218,7 @@ class QuerySetManager(basemanager.BaseManager):
             qs.save()
 
     @exposed
-    def retagQuerySetsByType(self, type, for_user=None):
+    def retagQuerySetsByType(self, type, for_user=None, defer=False):
         '''
         Invalidates all querysets of a given type and then recomputes their data.
         This is needed on addition of some resource types when security context of all
@@ -224,6 +227,8 @@ class QuerySetManager(basemanager.BaseManager):
         will work regardless of RBAC queryset granting access and whether the queryset
         was requested or not -- otherwise application of security rules is latent until
         the next time the queryset members are accessed.  This avoids that.
+
+        If defer is True, retag will happen on next queryset access.
         '''
         all_sets = None
         if for_user is None:
@@ -240,6 +245,9 @@ class QuerySetManager(basemanager.BaseManager):
             ).distinct()
 
         all_sets.filter(is_static=False).update(tagged_date=None)
+
+        if defer:
+            return
 
         for qs in all_sets.filter(is_static=False):
 
