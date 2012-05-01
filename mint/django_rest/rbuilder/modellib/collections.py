@@ -137,6 +137,10 @@ def filterDjangoQuerySet(djangoQuerySet, field, operator, value,
         
  
     fieldName = field.split('.')[0]
+
+    if not hasattr(djangoQuerySet, 'model'):
+        raise Exception("filtering is not supported on non-database collections")
+
     if fieldName not in djangoQuerySet.model._meta.get_all_field_names():
         # if the model field didn't exist, try just the fieldName, 
         # it's possible the model was renamed and a custom query set
