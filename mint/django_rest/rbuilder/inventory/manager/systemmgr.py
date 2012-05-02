@@ -740,7 +740,12 @@ class SystemManager(basemanager.BaseManager):
                 system.current_state = onlineState
                 system.save()
             elif system.current_state == registeredState:
-                self.scheduleSystemPollNowEvent(system)
+                # system is registered and scanned, should just go ahead and mark online
+                # definitely do not poll again as the initial registration polled.  Orchestrate if you
+                # want crazy amounts of extra polling.
+                system.current_state = onlineState
+                system.save()
+                return None
         elif system.isRegistrationIncomplete:
             self.log_system(system, "Incomplete registration: missing local_uuid. Possible cause: dmidecode malfunctioning")
         elif (system.management_interface_id == wmiIfaceId and not system.credentials):
@@ -880,6 +885,7 @@ class SystemManager(basemanager.BaseManager):
         jobStateName = job.job_state.name
         eventTypeName = job.job_type.name
         system.updateDerivedData()
+
 
         if jobStateName == jobmodels.JobState.COMPLETED:
             if eventTypeName == jobmodels.EventType.SYSTEM_REGISTRATION:
@@ -1655,6 +1661,8 @@ class SystemManager(basemanager.BaseManager):
         fields have changed that would cause a new synchronization to be
         needed.
         """
+        # MPD: this code still syncs 2 times too many, but now one less than before
+        # 4 syncs will break you, 3 is ok.  You only wish I was kidding.
         oldModel = getattr(system, 'oldModel', None)
         if not oldModel:
             return False
@@ -1675,6 +1683,7 @@ class SystemManager(basemanager.BaseManager):
 
         if oldServerCert != system.ssl_server_certificate:
             return True
+        return False
 
     def _runSystemEvent(self, event, method, params, resultsLocation=None,
             **kwargs):

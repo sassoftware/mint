@@ -137,6 +137,10 @@ def filterDjangoQuerySet(djangoQuerySet, field, operator, value,
         
  
     fieldName = field.split('.')[0]
+
+    if not hasattr(djangoQuerySet, 'model'):
+        raise Exception("filtering is not supported on non-database collections")
+
     if fieldName not in djangoQuerySet.model._meta.get_all_field_names():
         # if the model field didn't exist, try just the fieldName, 
         # it's possible the model was renamed and a custom query set
@@ -265,6 +269,9 @@ class Collection(XObjIdModel):
                 url += ';filter_by=%s' % self.filter_by
         return url
 
+    def _sortByField(key):
+        return lambda field: getattr(field, key, None)
+
     def orderBy(self, request, modelList):
 
         orderBy = request.GET.get('order_by', None)
@@ -281,7 +288,25 @@ class Collection(XObjIdModel):
                 orderParam = orderParam.replace('.', '__')
                 newOrderParams.append(orderParam)
 
-            modelList = modelList.order_by(*newOrderParams)
+            if hasattr(modelList, 'order_by'):
+                modelList = modelList.order_by(*newOrderParams)
+            else:
+
+                param = newOrderParams[0]
+                invert = False
+                    
+                if param.startswith("-"):
+                    invert = True
+                if param[0] in [ '+', '-', ' ' ]:
+                    param = param[1:].strip()
+
+                # a list, not a query set
+                modelList = sorted(modelList, 
+                    key=lambda f: getattr(f, param)
+                )
+                if invert:
+                    modelList.reverse()
+
         self.order_by = orderBy
 
         return modelList
