@@ -84,6 +84,7 @@ class IsoGenerator(genmod.ImageGenerator):
         logCall(['mkisofs',
             '-udf',
             '-b', 'boot/etfsboot.com',
+            '-allow-limited-size',
             '-no-emul-boot',
             '-o', self.workDir + '/output.iso',
             isoDir,
