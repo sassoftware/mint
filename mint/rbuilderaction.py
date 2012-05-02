@@ -23,6 +23,7 @@ from mint.lib import mintutils
 from mint.mint_error import ItemNotFound
 from mint.logerror import logErrorAndEmail
 from mint.scripts import repository_sync
+from mint.notices_callbacks import PackageNoticesCallback
 
 log = logging.getLogger(__name__)
 
@@ -87,6 +88,7 @@ def registerCommits(argSet, commitList):
 
     now = time.time()
     projectIdCache = {}
+    groups = set()
     trovesSeen = set()
     proddefHosts = set()
     for name, version, _ in commitList:
@@ -99,6 +101,8 @@ def registerCommits(argSet, commitList):
             hostname = version.getHost()
         if name == 'product-definition:source':
             proddefHosts.add(hostname)
+        if name.startswith('group-') and not name.endswith(':source'):
+            groups.add((name, version))
 
         if hostname in projectIdCache:
             projectId = projectIdCache[hostname]
@@ -124,3 +128,7 @@ def registerCommits(argSet, commitList):
         tool = repository_sync.SyncTool(cfg, db)
         for hostname in proddefHosts:
             tool.syncReposByFQDN(hostname)
+
+
+    if groups:
+        PackageNoticesCallback.refreshCachedUpdates(groups)
