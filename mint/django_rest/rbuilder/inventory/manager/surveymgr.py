@@ -377,7 +377,7 @@ class SurveyManager(basemanager.BaseManager):
             service = survey_models.SurveyService(
                 service_info = info,
                 survey       = survey,
-                running      = _u(xmodel.running),
+                running      = self._bool(xmodel.running),
                 status       = _u(xmodel.status),
             )
             service.save()
