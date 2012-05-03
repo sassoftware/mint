@@ -227,10 +227,13 @@ class SurveyDiffRender(object):
         node = self._xmlNode(tag, about=survey,
              keys='name description removable created_date comment'
         )
-        tags = Element('tags')
+        xtags = Element('tags')
         for tag in survey.tags.all():
-            self._addElement(tags, 'tag', tag.name)
-        node.append(tags)
+            xtag = self._element('tag')
+            xname = self._element('name', tag.name)
+            xtag.append(xname)
+            xtags.append(xtag)
+        node.append(xtags)
         return node
 
     def _element(self, name, text=None):
