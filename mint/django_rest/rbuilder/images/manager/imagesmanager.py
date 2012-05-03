@@ -170,7 +170,7 @@ class ImagesManager(basemanager.BaseManager):
 
     def _getImageFiles(self, imageId):
         filePaths = []
-        for path in models.FileUrl.objects.filter(
+        for path, in models.FileUrl.objects.filter(
                 urls_map__file__image__image_id=imageId,
                 url_type=urltypes.LOCAL).values_list('url'):
             if isinstance(path, unicode):
