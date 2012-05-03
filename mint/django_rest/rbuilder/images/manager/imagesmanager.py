@@ -169,10 +169,13 @@ class ImagesManager(basemanager.BaseManager):
         self._uploadAMI(image)
 
     def _getImageFiles(self, imageId):
-        filePaths = [ x[0]
-                for x in models.FileUrl.objects.filter(
-                    urls_map__file__image__image_id=imageId,
-                    url_type=urltypes.LOCAL).values_list('url') ]
+        filePaths = []
+        for path in models.FileUrl.objects.filter(
+                urls_map__file__image__image_id=imageId,
+                url_type=urltypes.LOCAL).values_list('url'):
+            if isinstance(path, unicode):
+                path = path.encode('utf8')
+            filePaths.append(path)
         return filePaths
 
     def _uploadAMI(self, image):
