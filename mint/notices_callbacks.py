@@ -191,8 +191,13 @@ class PackageNoticesCallback(NoticesCallback):
 
     @classmethod
     def refreshCachedUpdates(cls, troveBinaries):
+        # Make sure django settings module is set before trying to import
+        # anything from django.
+        import mint.django_rest.rbuilder  # pyflakes=ignore
+
         from django import db
         db.close_connection()
+
         from mint.django_rest.rbuilder import service as rbuilder_service
         srv = rbuilder_service.BaseAuthService()
         srv._setMintAuth()
