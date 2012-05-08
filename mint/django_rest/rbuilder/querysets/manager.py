@@ -212,10 +212,7 @@ class QuerySetManager(basemanager.BaseManager):
         matched = models.QuerySet.objects.filter(
             resource_type=resource_type,
             is_static=False
-        )
-        for qs in matched:
-            qs.tagged_date = None
-            qs.save()
+        ).update(tagged_date=None)
 
     @exposed
     def retagQuerySetsByType(self, type, for_user=None, defer=False):

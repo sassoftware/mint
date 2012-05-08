@@ -22,6 +22,7 @@ L{migrate<mint.migrate>} module.
 
 import logging
 import datetime
+import os
 from dateutil import tz
 from conary.dbstore import sqlerrors, sqllib
 
@@ -3275,8 +3276,9 @@ def checkVersion(db):
         raise sqlerrors.SchemaVersionError('Uninitialized database', version)
 
     # the major and minor versions must match
-    if version != RBUILDER_DB_VERSION:
-        raise sqlerrors.SchemaVersionError('Schema version mismatch', version)
+    if not os.path.exists("/tmp/NO_SCHEMA_CHECK"):
+        if version != RBUILDER_DB_VERSION:
+            raise sqlerrors.SchemaVersionError('Schema version mismatch', version)
 
     return version
 
