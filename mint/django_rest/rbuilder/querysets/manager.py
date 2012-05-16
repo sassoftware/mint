@@ -188,20 +188,6 @@ class QuerySetManager(basemanager.BaseManager):
         return querySet
 
     @exposed
-    def invalidateQuerySetByName(self, name):
-        ''' 
-        to be called after adding an object such that a regular request
-        to the queryset that does NOT want to bother with queryset invalidation
-        jobs can get reasonably results... only use for querysets of small size
-        as we have a tag/cache timeout and that should be fine for larger querysets
- 
-        NOTE:  it is probably much better to call retagQuerySetByType(type, defer=True)
-        to make sure all possible querysets are invalidated rather than using this method
-        '''
-        models.QuerySet.objects.filter(name=name).update(tagged_date=None)
-
-
-    @exposed
     def invalidateQuerySetsByType(self, resource_type): 
         '''
         Requires that a queryset be retagged the next time it is requested
