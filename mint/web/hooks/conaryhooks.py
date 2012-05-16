@@ -125,10 +125,11 @@ def proxyExternalRestRequest(context, fqdn, handle, authToken):
 
     opener = transport.URLOpener(proxyMap=context.cfg.getProxyMap())
     headers = [
-            ('X-Conary-Entitlement', entitlement),
             ('X-Conary-Servername', fqdn),
             ('User-agent', transport.Transport.user_agent),
             ]
+    if entitlement:
+        headers.append(('X-Conary-Entitlement', entitlement))
 
     # make the request
     try:
