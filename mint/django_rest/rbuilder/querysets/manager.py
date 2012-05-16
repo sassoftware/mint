@@ -227,10 +227,10 @@ class QuerySetManager(basemanager.BaseManager):
 
         If defer is True, retag will happen on next queryset access.
         '''
-        all_sets = None
-        if for_user is None:
-            all_sets = models.QuerySet.objects.filter(resource_type=type)
-        else:
+        all_sets = models.QuerySet.objects.filter(resource_type=type)
+        if len(all_sets) == 0:
+            raise Exception("error -- no querysets matched -- invalid type name? %s" % type)
+        if for_user is not None:
             # avoid retagging everyone's My Stages when adding a new stage ... not neccessary
             # to pass for_user where we know all of the My Querysets are static.
             all_sets = models.QuerySet.objects.filter(
@@ -240,7 +240,6 @@ class QuerySetManager(basemanager.BaseManager):
                 resource_type        = type,
                 personal_for__isnull = True,
             ).distinct()
-
         all_sets.filter(is_static=False).update(tagged_date=None)
 
         if defer:
