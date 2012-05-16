@@ -1105,7 +1105,7 @@ class SystemManager(basemanager.BaseManager):
         if dnsName:
             network = system._matchNetwork(dnsName)
             if network is None:
-                models.Network(system=system, dns_name=dnsName, active=True)
+                models.Network.objects.create(system=system, dns_name=dnsName, active=True)
         self.log_system(system, "System launched in target %s (%s)" %
             (target.name, target.target_type.name))
         system.system_state = self.systemState(models.SystemState.UNMANAGED)
