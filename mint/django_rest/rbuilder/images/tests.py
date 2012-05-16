@@ -561,8 +561,11 @@ class ImagesTestCase(RbacEngine):
                 models.JobImage.objects.create(job=job, image_id=imageId)
 
         # TODO: add tests for non-admon access w/ rights
+        self.mgr.retagQuerySetsByType('image')
         response = self._get('images/%s/jobs' % imageId,
             username='admin', password='password')
+        if response.status_code != 200:
+            print response.content
         self.failUnlessEqual(response.status_code, 200)
         doc = xobj.parse(response.content)
         self.failUnlessEqual([ x.job_uuid for x in doc.jobs.job ],

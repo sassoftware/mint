@@ -139,7 +139,7 @@ class BaseTargetsTest(RbacEngine):
     # invalidate the querysets so tags can be applied
     def _retagQuerySets(self):
         self.mgr.retagQuerySetsByType('project')
-        self.mgr.retagQuerySetsByType('images')
+        self.mgr.retagQuerySetsByType('image')
 
     def _setupRbac(self):
 
@@ -1763,6 +1763,7 @@ ZcY7o9aU
                 ])
 
         url = "images/%s" % img.image_id
+        self._retagQuerySets()
         resp = self._get(url, username="ExampleDeveloper", password="password")
         self.failUnlessEqual(resp.status_code, 200)
         doc = xobj.parse(resp.content)
@@ -1941,6 +1942,7 @@ ZcY7o9aU
                 targetId=targetId,
                 buildFileId = buildFileId,)
         jobUrl = "images/%s/jobs" % imageId
+        self._retagQuerySets()
         response = self._post(jobUrl, jobXml,
             username='ExampleDeveloper', password='password')
         self.failUnlessEqual(response.status_code, 200)
@@ -2042,6 +2044,7 @@ ZcY7o9aU
                 jobTypeId=jobTypeId,
                 targetId=targetId,
                 buildFileId = buildFileId,)
+        self._retagQuerySets()
         jobUrl = "images/%s/jobs" % imageId
         response = self._post(jobUrl, jobXml,
             username='ExampleDeveloper', password='password')
