@@ -567,6 +567,7 @@ class System(modellib.XObjIdModel):
     has_running_jobs = models.BooleanField(default=False, null=False)
     has_active_jobs = models.BooleanField(default=False, null=False)
     out_of_date  = models.BooleanField(default=False, null=False)
+    is_configured = modellib.SyntheticField(models.BooleanField(default=False, null=False))
 
     # We need to distinguish between an <installed_software> node not being
     # present at all, and being present and empty
@@ -863,6 +864,10 @@ class System(modellib.XObjIdModel):
         ''' Compute non-database fields.'''
         self._computeActions()
         self.ssl_client_certificate = self._ssl_client_certificate
+
+        self.is_configured = False
+        if self.configuration is not None:
+            self.is_configured = True
 
     def _computeActions(self):
         '''What actions are available on the system?'''
