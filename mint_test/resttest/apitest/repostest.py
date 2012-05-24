@@ -91,6 +91,7 @@ class ReposTest(restbase.BaseRestTest):
     <timeStamp>%(timestamp)s</timeStamp>
     <images href="http://%(server)s:%(port)s/api/products/testproject/repos/items/group-foo%3D/testproject.rpath.local2%40yournamespace%3Atestproject-1.0-devel/1-1-1%5B%5D/images"/>
     <imageCount>0</imageCount>
+    <configuration_descriptor></configuration_descriptor>
   </trove>
 </troves>
 """

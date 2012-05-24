@@ -4,12 +4,15 @@
 # All Rights Reserved
 #
 import mimetypes
+from StringIO import StringIO
 
-from conary.deps import deps
 from conary import trove
 from conary import versions
 from conary.conaryclient import cmdline
 from conary.lib import sha1helper
+
+from smartform import descriptor
+from smartform import descriptor_errors
 
 from restlib import response
 
@@ -210,6 +213,68 @@ class RepositoryController(BaseReposController):
                                timeStamp=timeStamp,
                                trailingVersion=trailingVersion,
                                label=label, imageCount=imageCount)
+                    # This may be a group, check it for config descriptors
+                    if name.startswith('group-'):
+                        desc = self._getConfigDescriptor(name, version, flavor)
+                        trv.configuration_descriptor = desc
                     troveList.append(trv)
         troveList = sorted(troveList, key = lambda x: x.timeStamp)
         return models.TroveList(troveList)
+
+    ###
+    # The following two functions were mostly copied from
+    # django_rest/rbuilder/inventory/managers/versionmgr.py.
+    # If you change them make sure to update in both places.
+    ###
+
+    def _getConfigDescriptor(self, name, version, flavor):
+        desc = descriptor.ConfigurationDescriptor()
+        desc.setDisplayName('Configuration Descriptor')
+        desc.addDescription('Configuration Descriptor')
+
+        newFields = self._getTroveConfigDescriptor(name, version, flavor)
+
+        if not newFields:
+            return ''
+
+        fields = desc.getDataFields()
+        fields.extend(newFields)
+
+        out = StringIO()
+        desc.serialize(out, validate=False)
+        out.seek(0)
+
+        return out.read()
+
+    def _getTroveConfigDescriptor(self, name, version, flavor):
+        repos = self.getRepos(version.getHost())
+
+        trvList = repos.getTroves([(name, version, flavor)])
+
+        referencedByDefault = []
+        for trv in trvList:
+            referencedByDefault += [ nvf for nvf, byDefault, strongRef in
+                trv.iterTroveListInfo() if byDefault ]
+
+        # Get properties sorted by package name.
+        properties = repos.getTroveInfo(trove._TROVEINFO_TAG_PROPERTIES,
+            sorted(referencedByDefault, cmp=lambda x, y: cmp(x[0], y[0])))
+
+        configFields = []
+        for propSet in properties:
+            if propSet is None:
+                continue
+            for property in propSet.iter():
+                xml = property.definition()
+                desc = descriptor.BaseDescriptor()
+
+                try:
+                    desc.parseStream(StringIO(xml))
+
+                # Ignore any descriptors that don't parse.
+                except descriptor_errors.Error:
+                    continue
+
+                configFields.extend(desc.getDataFields())
+
+        return configFields

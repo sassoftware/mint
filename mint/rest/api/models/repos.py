@@ -54,6 +54,7 @@ class Trove(Model):
                                       ['hostname', 'nvf'])
     files            = fields.ListField(TroveFile, displayName='file')
     imageCount       = fields.IntegerField()
+    configuration_descriptor = fields.CharField()
 
     def getNVF(self):
         return '%s=%s[%s]' % (self.name, self.version, self.flavor)
