@@ -188,6 +188,22 @@ class QuerySet(modellib.XObjIdModel):
     def serialize(self, request=None):
         xobjModel = modellib.XObjIdModel.serialize(self, request)
 
+        # whether the user can create any resource of this type or not
+        # determines whether the UI should show the "+" button as enabled.
+        # in RBAC 1.5, this logic will likely want to change.
+
+        xobjModel.user_create_permission = False
+        user = getattr(request, '_authUser', None)
+        if getattr(request, '_is_admin', False):
+           xobjModel.user_create_permission = True
+        elif user is not None or getattr(request, '_is_admin', False):
+            matching_grants = rbacmodels.RbacPermission.objects.filter(
+                queryset__resource_type=self.resource_type, 
+                permission__name='CreateResource'
+            )
+            if len(matching_grants) > 0:
+                xobjModel.user_create_permission = True
+
         am = AllMembers()
         am._parents = [self]
         xobjModel.all_members = am.serialize(request)

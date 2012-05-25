@@ -176,6 +176,7 @@ system_put_chosen_xml = """
 
 queryset_with_actions = """
 <query_set id="http://testserver/api/v1/query_sets/5">
+  <user_create_permission>True</user_create_permission>
   <actions>
     <action>
       <description>Refresh queryset</description>
