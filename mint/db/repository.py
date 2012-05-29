@@ -209,8 +209,11 @@ class RepomanMixin(object):
 
         # create the changelog message using the currently
         # logged-on user's username and fullname, if available
-        newchangelog = changelog.ChangeLog(auth.username or '(unset)',
-                auth.fullName or '(unset)', changeLogMessage.encode('utf8'))
+        unset = '(unset)'
+        username  = getattr(auth, 'username', unset)
+        full_name = getattr(auth, 'fullName', unset)
+
+        newchangelog = changelog.ChangeLog(username, full_name, changeLogMessage.encode('utf8'))
 
         # create a change set object from our source data
         changeSet = client.createSourceTrove(str(trovename), str(buildLabel),
