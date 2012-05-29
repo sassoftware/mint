@@ -196,12 +196,13 @@ class QuerySet(modellib.XObjIdModel):
         user = getattr(request, '_authUser', None)
         if getattr(request, '_is_admin', False):
            xobjModel.user_create_permission = True
-        elif user is not None or getattr(request, '_is_admin', False):
+        elif user is not None:
             matching_grants = rbacmodels.RbacPermission.objects.filter(
                 queryset__resource_type=self.resource_type, 
+                role__rbacuserrole__user=user,
                 permission__name='CreateResource'
             )
-            if len(matching_grants) > 0:
+            if matching_grants.count() > 0:
                 xobjModel.user_create_permission = True
 
         am = AllMembers()
