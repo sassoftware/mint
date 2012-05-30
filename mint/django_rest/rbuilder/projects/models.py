@@ -10,6 +10,8 @@ from mint import helperfuncs, userlevels
 from mint.django_rest.rbuilder import modellib
 from mint.django_rest.deco import D
 from mint.django_rest.rbuilder.users import models as usermodels
+# avoid circular reference:
+#from mint.django_rest.rbuilder.querysets import models as querymodels
 from xobj import xobj
 
 class Groups(modellib.XObjModel):
@@ -173,6 +175,26 @@ class Project(modellib.XObjIdModel):
     @classmethod
     def validateNamespace(cls, namespace):
         return mintprojects._validateNamespace(namespace)
+
+    def serialize(self, request=None):
+
+        xobjModel = modellib.XObjIdModel.serialize(self, request)
+        xobjModel.user_modify_permission = False
+
+        user = getattr(request, '_authUser', None)
+        if getattr(request, '_is_admin', False):
+           xobjModel.user_modify_permission = True
+        elif user is not None:
+            from mint.django_rest.rbuilder.querysets import models as querymodels
+            matching_grants = querymodels.ProjectTag.objects.filter(
+                project=self,
+                query_set__grants__role__rbacuserrole__user=user,
+                query_set__grants__permission__name='ModMembers'
+            )
+            if matching_grants.count() > 0:
+                xobjModel.user_modify_permission = True
+
+        return xobjModel
 
     def save(self, *args, **kwargs):
         # FIXME: move code into mgr.addProject
@@ -359,6 +381,7 @@ class ProjectVersion(modellib.XObjIdModel):
     def serialize(self, request=None):
 #        if request is not None:
 #            self._computeRepositoryAPI()
+
         oldUrlValues = (self.project.short_name, self.name)
         self.imageDefinitions = modellib.HrefField(
             href='/api/products/%s/versions/%s/imageDefinitions',
@@ -372,6 +395,7 @@ class ProjectVersion(modellib.XObjIdModel):
         xobjModel = modellib.XObjIdModel.serialize(self, request)
         # XXX FIXME: this should not be needed
         xobjModel.project_branch_stages.id = "%s/project_branch_stages" % (xobjModel.id, )
+
         return xobjModel
 
     @classmethod
