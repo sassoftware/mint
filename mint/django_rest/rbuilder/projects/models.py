@@ -176,26 +176,6 @@ class Project(modellib.XObjIdModel):
     def validateNamespace(cls, namespace):
         return mintprojects._validateNamespace(namespace)
 
-    def serialize(self, request=None):
-
-        xobjModel = modellib.XObjIdModel.serialize(self, request)
-        xobjModel.user_modify_permission = False
-
-        user = getattr(request, '_authUser', None)
-        if getattr(request, '_is_admin', False):
-           xobjModel.user_modify_permission = True
-        elif user is not None:
-            from mint.django_rest.rbuilder.querysets import models as querymodels
-            matching_grants = querymodels.ProjectTag.objects.filter(
-                project=self,
-                query_set__grants__role__rbacuserrole__user=user,
-                query_set__grants__permission__name='ModMembers'
-            )
-            if matching_grants.count() > 0:
-                xobjModel.user_modify_permission = True
-
-        return xobjModel
-
     def save(self, *args, **kwargs):
         # FIXME: move code into mgr.addProject
 
