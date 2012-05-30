@@ -10,6 +10,8 @@ from mint import helperfuncs, userlevels
 from mint.django_rest.rbuilder import modellib
 from mint.django_rest.deco import D
 from mint.django_rest.rbuilder.users import models as usermodels
+# avoid circular reference:
+#from mint.django_rest.rbuilder.querysets import models as querymodels
 from xobj import xobj
 
 class Groups(modellib.XObjModel):
@@ -359,6 +361,7 @@ class ProjectVersion(modellib.XObjIdModel):
     def serialize(self, request=None):
 #        if request is not None:
 #            self._computeRepositoryAPI()
+
         oldUrlValues = (self.project.short_name, self.name)
         self.imageDefinitions = modellib.HrefField(
             href='/api/products/%s/versions/%s/imageDefinitions',
@@ -372,6 +375,7 @@ class ProjectVersion(modellib.XObjIdModel):
         xobjModel = modellib.XObjIdModel.serialize(self, request)
         # XXX FIXME: this should not be needed
         xobjModel.project_branch_stages.id = "%s/project_branch_stages" % (xobjModel.id, )
+
         return xobjModel
 
     @classmethod
