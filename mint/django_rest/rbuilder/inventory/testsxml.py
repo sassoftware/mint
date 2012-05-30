@@ -3953,7 +3953,7 @@ survey_output_xml = """
       </conary_package>
     </conary_packages>
     <name>x</name>
-    <values></values>
+    <config_values></config_values>
 </survey>
 """
 

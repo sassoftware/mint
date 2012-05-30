@@ -108,8 +108,7 @@ class Survey(modellib.XObjIdModel):
     modified_by   = modellib.ForeignKey(usermodels.User, null=True, db_column='modified_by', related_name='+', on_delete=models.SET_NULL) 
     system        = modellib.DeferredForeignKey('inventory.System', related_name='surveys', db_column='system_id')
     comment       = models.TextField()
-    values        = models.TextField(db_column='values_xml')
-    # FIXME: raw_xml exists as a database field and is not saved, safe to remove
+    config_values = models.TextField(db_column='values_xml')
   
     def get_url_key(self, *args, **kwargs):
         return [ self.uuid ]

@@ -217,6 +217,13 @@ class SurveyManager(basemanager.BaseManager):
         xtags             = self._subel(xsurvey, 'tags', 'tag')
         xvalues           = getattr(xsurvey, 'values', None)
 
+        # prevent against the backend sending <values><values> and
+        # recording it that way
+
+        subvalues         = getattr(xvalues, 'values', None)
+        if subvalues:
+            xvalues = subvalues
+
         created_date = getattr(xsurvey, 'created_date', 0)
         created_date = datetime.datetime.utcfromtimestamp(int(created_date))
 
@@ -236,7 +243,7 @@ class SurveyManager(basemanager.BaseManager):
             system        = system,
             created_date  = created_date,
             modified_date = created_date,
-            values        = values
+            config_values = values
         )
         survey.save()
 
