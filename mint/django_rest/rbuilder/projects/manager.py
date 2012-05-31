@@ -49,6 +49,10 @@ class ProjectManager(basemanager.BaseManager):
         return project
 
     @exposed
+    def getProjectById(self, project_id):
+        return models.Project.objects.get(pk=project_id)
+
+    @exposed
     def projectNameInUse(self, project):
         found = projectsmodels.Project.objects.filter(name=project.name)
         if len(found) > 0:

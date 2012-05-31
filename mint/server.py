@@ -1843,6 +1843,19 @@ If you would not like to be %s %s of this project, you may resign from this proj
         projectId = version.projectId
         self._filterProjectAccess(projectId)
 
+        # must check mint RBAC mechanism to see if images are buildable
+        # unless using mint-auth or an admin user.
+        if self.auth and self.auth.userId > 0 and not self.auth.admin:
+            from mint.django_rest.rbuilder.manager import rbuildermanager
+            djMgr = rbuildermanager.RbuilderManager()
+            user = djMgr.getUser(self.auth.userId)
+            project = djMgr.getProjectById(projectId)
+            if not djMgr.userHasRbacCreatePermission(user, 'image'):
+                raise mint_error.PermissionDenied
+            if not djMgr.userHasRbacPermission(user, project, 'ReadMembers'):
+                raise mint_error.PermissionDenied
+
+
         # Read build definition from product definition.
         pd = self._getProductDefinitionForVersionObj(versionId)
 
