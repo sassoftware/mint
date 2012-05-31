@@ -360,7 +360,13 @@ class Collection(XObjIdModel):
         if self.limit > 0:
             pageObjectList = modelList[startIndex:(stopIndex+1)]
 
-        setattr(self, listField, pageObjectList)
+        # Force qs evaluation here, to catch order_by errors
+        try:
+            setattr(self, listField, list(pageObjectList))
+        except exceptions.FieldError, e:
+            if e.args and e.args[0].startswith("Cannot resolve keyword"):
+                raise errors.InvalidFilterKey(msg=e.args[0])
+            raise
 
         self.full_collection = self.get_absolute_url(request, full=True)
         self.per_page        = self.limit

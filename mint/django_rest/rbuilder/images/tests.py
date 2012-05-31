@@ -1,6 +1,7 @@
 import hashlib
 import os
 import subprocess
+
 from testutils import mock
 import testsxml
 from xobj import xobj
@@ -577,6 +578,17 @@ class ImagesTestCase(RbacEngine):
                 'job-uuid-00-01',
                 'job-uuid-00-00',
             ])
+
+        # Test sorting by job description
+        response = self._get('images/%s/jobs?order_by=job_description' % imageId,
+            username='admin', password='password')
+        self.unmock()
+        self.assertEquals(response.status_code, 400)
+        doc = xobj.parse(response.content)
+        self.assertEquals(doc.fault.code, '400')
+        self.assertTrue(doc.fault.message.startswith(
+            "Cannot resolve keyword u'job_description' into field."),
+            doc.fault.message)
 
     def testAddLaunchedSystemForImage(self):
         user = self.getUser('testuser')
