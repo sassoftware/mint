@@ -516,6 +516,16 @@ class SerializeXmlMiddleware(SwitchableLogMiddleware):
 
         return response
 
+    def process_response(self, request, response):
+        try:
+            return self._process_response(request, response)
+        except Exception, e:
+            # Don't spam if the exception has a status code lower than 500
+            isISE = (getattr(e, 'status', 500) >= 500)
+            return handler.handleException(request, e,
+                doEmail=isISE, doTraceback=isISE)
+
+
 class AuthHeaderMiddleware(BaseMiddleware):
     # details on mod_python+Django issue below, marked "won't fix" in Django bug tracker
     # https://code.djangoproject.com/ticket/4354
