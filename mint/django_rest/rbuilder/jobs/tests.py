@@ -365,3 +365,8 @@ class JobCreationTest(BaseJobsTest, RepeaterMixIn):
             [ x.survey.uuid for x in dbjob.created_surveys.all() ],
             [ 'aa-bb-cc-dd' ]
         )
+
+        # #2337 - make sure active flags are not set
+        dbsystem = system.__class__.objects.get(system_id=system.system_id)
+        self.assertEquals(bool(dbsystem.has_active_jobs), False)
+        self.assertEquals(bool(dbsystem.has_running_jobs), False)

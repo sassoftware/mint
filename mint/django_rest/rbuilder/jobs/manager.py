@@ -225,6 +225,9 @@ class ResultsProcessingMixIn(object):
         if job.oldModel is None:
             # We won't allow job creation to happen here
             raise errors.InvalidData()
+        # Flush job state to the DB, it is needed by processJobResults
+        models.Job.objects.filter(job_id=job.job_id).update(
+            job_state=job.job_state)
         self.results = self.getJobResults(job)
         self.validateJobResults(job)
         self.processJobResults(job)
