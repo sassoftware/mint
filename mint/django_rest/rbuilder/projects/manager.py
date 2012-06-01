@@ -168,23 +168,17 @@ class ProjectManager(basemanager.BaseManager):
 
     @exposed
     def updateProject(self, project, for_user):
-        # Only an admin can hide a project.
-        # XXX Is this correct?
-        if project.hidden:
-            if self.auth.admin:
-                project.hidden = True
-            else:
-                project.hidden = False
-
         oldProject = models.Project.objects.get(hostname=project.hostname)
         if not project.hidden and oldProject.hidden:
             self.restDb.publisher.notify('ProductUnhidden', oldProject.pk)
-            self.mgr.addUser('.'.join((oldProject.hostname,
-                                            oldProject.domain_name)), 
-                                  'anonymous',
-                                  password='anonymous',
-                                  level=userlevels.USER)   
-            self.publisher.notify('ProductUnhidden', oldProject.id)
+        elif project.hidden:
+            handle = self.mgr.getRepositoryForProject(oldProject)
+            try:
+                handle.deleteUser('anonymous')
+            except repoerrors.UserNotFound:
+                pass
+            if not oldProject.hidden:
+                self.restDb.publisher.notify('ProductHidden', oldProject.pk)
 
         project.save()
         self.mgr.generateConaryrcFile()
@@ -240,11 +234,6 @@ class ProjectManager(basemanager.BaseManager):
             oldMember.level = level
             oldMember.save()
 
-            # Edit repository perms for non-external projects
-            if not project.external:
-                repos = self.mgr.getRepositoryForProject(project)
-                self.mgr.editUser(repos, user.username, level)
-
             # Send notification
             if notify:
                 self.restDb.publisher.notify('UserProductChanged',
@@ -254,12 +243,6 @@ class ProjectManager(basemanager.BaseManager):
             member = models.Project.member(project=project, user=user, 
                 level=level)
             member.save()
-
-            # Add repository perms for non-external projects
-            if not project.external:
-                repos = self.mgr.getRepositoryForProject(project)
-                self.mgr.addUserByMd5(repos, user.username,
-                    user.salt, user.password, level)
 
             # Send notification
             if notify:

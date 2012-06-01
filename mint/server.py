@@ -1140,11 +1140,6 @@ If you would not like to be %s %s of this project, you may resign from this proj
             raise mint_error.PermissionDenied
 
         self.amiPerms.unhideProject(projectId)
-        project = projects.Project(self, projectId)
-        fqdn = project.getFQDN()
-        self.restDb.productMgr.reposMgr.addUser(fqdn, 'anonymous', 
-                                                password='anonymous',
-                                                level=userlevels.USER)
         self.projects.unhide(projectId)
         self._generateConaryRcFile()
         return True

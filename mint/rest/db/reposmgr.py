@@ -59,16 +59,12 @@ class RepositoryManager(manager.Manager):
             self.populateUsers(repos)
 
     def populateUsers(self, repos):
-        if not repos.isHidden:
-            self.addUser(repos.fqdn, 'anonymous', password='anonymous',
-                    level=userlevels.USER)
-
         # here we automatically create the USER and DEVELOPER levels
         # This avoids the chance of paying a high price for adding
         # them later - instead we amortize the cost over every commit
+        netServer = repos.getNetServer()
+        self._getRoleForLevel(netServer, userlevels.USER)
         if not repos.isExternal:
-            netServer = repos.getNetServer()
-            self._getRoleForLevel(netServer, userlevels.USER)
             self._getRoleForLevel(netServer, userlevels.DEVELOPER)
             self._getRoleForLevel(netServer, userlevels.OWNER)
 

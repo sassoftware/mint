@@ -271,10 +271,6 @@ class ProductManager(manager.Manager):
             raise mint_error.InvalidError(e.msg)
 
         if bool(oldproduct.hidden) == True and hidden == False:
-            self.reposMgr.addUser(oldproduct.repositoryHostname,
-                                  'anonymous',
-                                  password='anonymous',
-                                  level=userlevels.USER)   
             self.publisher.notify('ProductUnhidden', oldproduct.id)
             self.reposMgr._generateConaryrcFile()
 
