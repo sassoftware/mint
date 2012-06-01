@@ -212,8 +212,8 @@ class RepomanMixin(object):
         unset = '(unset)'
         username  = getattr(auth, 'username', unset)
         full_name = getattr(auth, 'fullName', unset)
-
-        newchangelog = changelog.ChangeLog(username, full_name, changeLogMessage.encode('utf8'))
+        newchangelog = changelog.ChangeLog(_encode(username),
+                _encode(full_name), _encode(changeLogMessage))
 
         # create a change set object from our source data
         changeSet = client.createSourceTrove(str(trovename), str(buildLabel),
@@ -1359,3 +1359,10 @@ class MultiShimNetClient(shimclient.ShimNetClient):
                 proxyMap=proxyMap)
 
         self.c = MultiShimServerCache(manager, userId, proxyMap=proxyMap)
+
+
+def _encode(val):
+    if isinstance(val, unicode):
+        return val.encode('utf8')
+    else:
+        return val
