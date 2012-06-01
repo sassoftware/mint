@@ -20,6 +20,13 @@ DIFF_FIELDS = {
    'windows_service_info' : [ 'name', 'display_name', 'type', 'handle' ]
 }
 
+# not really about the infos, but the state of the things themselves
+# see usage below
+DIFF_TOP_LEVEL_FIELDS = {
+   'windows_service_info' : [ 'running' ],
+   'service_info' : [ 'running' ],
+}
+
 class SurveyDiff(object):
     ''' Compare two surveys and return a list or xobj model of their differences '''
 
@@ -173,16 +180,32 @@ class SurveyDiff(object):
         is a tuple of the left value and right value
         '''
         fields = DIFF_FIELDS[mode]
+        top_level_fields = DIFF_TOP_LEVEL_FIELDS.get(mode,[])
         differences = {}
         leftInfo = getattr(leftItem, mode)
         rightInfo = getattr(rightItem, mode)
-        if leftInfo.pk == rightInfo.pk:
+        if leftInfo.pk == rightInfo.pk and len(top_level_fields) == 0:
             return None
-        for f in fields:
-            lval = getattr(leftInfo, f)
-            rval = getattr(rightInfo, f)
+        if leftInfo.pk != rightInfo.pk:
+            for f in fields:
+                lval = getattr(leftInfo, f)
+                rval = getattr(rightInfo, f)
+                if lval != rval:
+                    differences[f] = (lval, rval)
+
+        # we are not actually diffing the info, but also a state change in the way the 
+        # object exists presently.  This only happens with services because they can be 
+        # running or not running even though they are installed the same.  Packages
+        # do not behave this way.
+        for f in top_level_fields:
+            lval = getattr(leftItem, f)
+            rval = getattr(rightItem, f)
             if lval != rval:
                 differences[f] = (lval, rval)
+
+        if len(differences) == 0:
+            return None
+
         return differences
 
     def _computeRpmPackages(self):
