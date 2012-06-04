@@ -5005,6 +5005,58 @@ class MigrateTo_62(SchemaMigration):
         self.db.cursor().execute("ALTER TABLE inventory_survey ADD COLUMN values_xml TEXT")
         return True
  
+class MigrateTo_63(SchemaMigration):
+    '''Goad'''
+    Version = (63, 0)
+
+    def migrate(self):
+        ''' add initial tables for config environments '''
+
+        createTable2(self.db, "config_environments", """
+            "id" %(PRIMARYKEY)s,
+            "name" TEXT UNIQUE,
+            "description" TEXT,
+            created_by INTEGER
+                REFERENCES Users ON DELETE SET NULL,
+            modified_by INTEGER
+                REFERENCES Users ON DELETE SET NULL,
+            created_date TIMESTAMP WITH TIME ZONE NOT NULL
+                DEFAULT current_timestamp,
+            modified_date TIMESTAMP WITH TIME ZONE NOT NULL
+                DEFAULT current_timestamp,
+            config_descriptor TEXT,
+        """)
+
+        createTable2(self.db, "querysets_queryset_config_environments", """
+            "id" %(PRIMARYKEY)s,
+            "queryset_id" INTEGER
+                REFERENCES "querysets_queryset" ("query_set_id")
+                ON DELETE CASCADE
+                NOT NULL,
+            "config_environment_id" INTEGER
+                REFERENCES "config_environments" ("id")
+                ON DELETE CASCADE
+                NOT NULL
+        """)
+
+        createTable2(self.db, "config_environment_config_values", """
+            "id" %(PRIMARYKEY)s,
+            "config_environment_id" INTEGER REFERENCES "config_environments" ("id") ON DELETE CASCADE,
+            "key" TEXT,
+            "value" TEXT
+        """)
+
+        createTable2(self.db, "system_config_values", """
+            "id" %(PRIMARYKEY)s,
+            "system_id" INTEGER REFERENCES "inventory_system" ("system_id") ON DELETE CASCADE,
+            "key" TEXT,
+            "value" TEXT
+        """)
+
+        # TODO: also want to save shredded key/value data for systems...
+
+        return True
+
 #### SCHEMA MIGRATIONS END HERE #############################################
 
 def _getMigration(major):
@@ -5047,7 +5099,7 @@ def migrateSchema(db, cfg=None):
     version = db.getVersion()
     # migrate to the latest major
     while version.major < schema.RBUILDER_DB_VERSION.major:
-        migrateFunc = _getMigration(version.major+1)
+        migrateFunc = _getMigration(int(version.major)+1)
         newVersion = tryMigrate(db, migrateFunc(db, cfg))
         assert(newVersion.major == version.major+1)
         version = newVersion
