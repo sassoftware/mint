@@ -366,12 +366,12 @@ class ImagesManager(basemanager.BaseManager):
         self.mgr.recomputeTargetDeployableImages()
 
     @exposed
-    def finishImageBuild(self, image):
+    def finishImageBuild(self, image, imageStatus="Image built"):
         if isinstance(image, (int, basestring)):
             image = models.Image.objects.get(image_id=image)
 
         self.setImageStatus(image.image_id, code=jobstatus.FINISHED,
-            message="Image built")
+            message=imageStatus)
 
         self.mgr.addToMyQuerySet(image, image.created_by)
         self.mgr.recomputeTargetDeployableImages()

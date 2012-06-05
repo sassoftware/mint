@@ -928,7 +928,7 @@ class JobHandlerRegistry(HandlerRegistry):
             image.status = jobstatus.FINISHED
             image.status_message = 'System captured'
             image.save()
-            self.mgr.mgr.finishImageBuild(image)
+            self.mgr.mgr.finishImageBuild(image, image.status_message)
             return image
 
     class SystemScan(DescriptorJobHandler):
