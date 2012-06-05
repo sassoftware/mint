@@ -363,7 +363,16 @@ releases_by_project_get_xml = \
     <images id="http://testserver/api/v1/projects/chater-foo/releases/1/images">
       <image id="http://testserver/api/v1/images/2">
         <files/>
-        <actions/>
+        <actions>
+          <action>
+            <description>Cancel image build</description>
+            <descriptor id="http://testserver/api/v1/images/2/descriptors/cancel_build"/>
+            <enabled>True</enabled>
+            <job_type id="http://testserver/api/v1/inventory/event_types/25"/>
+            <key>image_build_cancellation</key>
+            <name>Cancel image build</name>
+          </action>
+        </actions>
         <project_branch id="http://testserver/api/v1/projects/chater-foo/project_branches/chater-foo.eng.rpath.com@rpath:chater-foo-trunk">
           <name>trunk</name>
         </project_branch>
@@ -429,7 +438,16 @@ releases_by_project_get_xml = \
     <images id="http://testserver/api/v1/projects/chater-foo/releases/2/images">
       <image id="http://testserver/api/v1/images/3">
         <files/>
-        <actions/>
+        <actions>
+          <action>
+            <description>Cancel image build</description>
+            <descriptor id="http://testserver/api/v1/images/3/descriptors/cancel_build"/>
+            <enabled>True</enabled>
+            <job_type id="http://testserver/api/v1/inventory/event_types/25"/>
+            <key>image_build_cancellation</key>
+            <name>Cancel image build</name>
+          </action>
+        </actions>
         <project_branch id="http://testserver/api/v1/projects/chater-foo/project_branches/chater-foo.eng.rpath.com@rpath:chater-foo-trunk">
           <name>trunk</name>
         </project_branch>
@@ -544,7 +562,16 @@ published_release_xml = \
   <images id="http://testserver/api/v1/projects/foo/releases/1/images">
     <image id="http://testserver/api/v1/images/2">
       <files/>
-      <actions/>
+      <actions>
+        <action>
+          <description>Cancel image build</description>
+          <descriptor id="http://testserver/api/v1/images/2/descriptors/cancel_build"/>
+          <enabled>True</enabled>
+          <job_type id="http://testserver/api/v1/inventory/event_types/25"/>
+          <key>image_build_cancellation</key>
+          <name>Cancel image build</name>
+        </action>
+      </actions>
       <project_branch></project_branch>
       <updated_by></updated_by>
       <trailing_version>1-42-1</trailing_version>
@@ -599,7 +626,16 @@ image_by_release_get_xml = \
 <?xml version='1.0' encoding='UTF-8'?>
 <images count="1" next_page="" num_pages="1" previous_page="" full_collection="" end_index="0" limit="10" order_by="" per_page="10" filter_by="" start_index="0">
   <image id="http://testserver/api/v1/images/2">
-    <actions/>
+    <actions>
+      <action>
+        <description>Cancel image build</description>
+        <descriptor id="http://testserver/api/v1/images/2/descriptors/cancel_build"/>
+        <enabled>True</enabled>
+        <job_type id="http://testserver/api/v1/inventory/event_types/25"/>
+        <key>image_build_cancellation</key>
+        <name>Cancel image build</name>
+      </action>
+    </actions>
     <files/>
     <trove_last_changed></trove_last_changed>
     <updated_by></updated_by>
@@ -680,7 +716,16 @@ image_by_release_post_result_xml = \
 <?xml version='1.0' encoding='UTF-8'?>
 <image id="http://testserver/api/v1/images/4">
   <files/>
-  <actions/>
+  <actions>
+    <action>
+      <description>Cancel image build</description>
+      <descriptor id="http://testserver/api/v1/images/4/descriptors/cancel_build"/>
+      <enabled>True</enabled>
+      <job_type id="http://testserver/api/v1/inventory/event_types/25"/>
+      <key>image_build_cancellation</key>
+      <name>Cancel image build</name>
+    </action>
+  </actions>
   <project_branch id="http://testserver/api/v1/projects/chater-foo/project_branches/chater-foo.eng.rpath.com@rpath:chater-foo-trunk">
     <name>trunk</name>
   </project_branch>
@@ -726,10 +771,70 @@ image_by_release_post_result_xml = \
 test_get_images_from_pbs_xml = \
 """
 <?xml version='1.0' encoding='UTF-8'?>
-<images count="1" next_page="" num_pages="1" previous_page="" full_collection="http://testserver/api/v1/projects/chater-foo/project_branches/chater-foo.eng.rpath.com@rpath:chater-foo-trunk/project_branch_stages/Development/images;order_by=name" end_index="0" limit="100" order_by="name" per_page="100" filter_by="" id="http://testserver/api/v1/projects/chater-foo/project_branches/chater-foo.eng.rpath.com@rpath:chater-foo-trunk/project_branch_stages/Development/images;start_index=0;limit=100;order_by=name" start_index="0">
+<images count="2" next_page="" num_pages="1" previous_page="" full_collection="http://testserver/api/v1/projects/chater-foo/project_branches/chater-foo.eng.rpath.com@rpath:chater-foo-trunk/project_branch_stages/Development/images;order_by=name" end_index="1" limit="100" order_by="name" per_page="100" filter_by="" id="http://testserver/api/v1/projects/chater-foo/project_branches/chater-foo.eng.rpath.com@rpath:chater-foo-trunk/project_branch_stages/Development/images;start_index=0;limit=100;order_by=name" start_index="0">
+  <image id="http://testserver/api/v1/images/1">
+    <files/>
+    <actions>
+      <action>
+        <description>Cancel image build</description>
+        <descriptor id="http://testserver/api/v1/images/1/descriptors/cancel_build"/>
+        <enabled>True</enabled>
+        <job_type id="http://testserver/api/v1/inventory/event_types/25"/>
+        <key>image_build_cancellation</key>
+        <name>Cancel image build</name>
+      </action>
+    </actions>
+    <image_type id="http://testserver/api/v1/image_types/2">
+      <description>Stub Image</description>
+      <image_type_id>2</image_type_id>
+      <key>STUB_IMAGE</key>
+      <name>Stub</name>
+    </image_type>
+    <project_branch/>
+    <updated_by></updated_by>
+    <num_image_files>0</num_image_files>
+    <build_log id="http://testserver/api/v1/images/1/build_log"/>
+    <trove_flavor></trove_flavor>
+    <created_by id="http://testserver/api/v1/users/2002">
+      <user_name>ExampleDeveloper</user_name>
+      <full_name>ExampleDeveloper</full_name>
+    </created_by>
+    <base_image></base_image>
+    <status_message></status_message>
+    <trove_name></trove_name>
+    <status>-1</status>
+    <stage_name/>
+    <jobs id="http://testserver/api/v1/images/1/jobs"/>
+    <description/>
+    <image_id>1</image_id>
+    <trove_last_changed></trove_last_changed>
+    <time_updated>2011-11-30T14:48:20.430000+00:00</time_updated>
+    <name>image from fixture</name>
+    <trove_version/>
+    <released>False</released>
+    <project id="http://testserver/api/v1/projects/chater-foo">
+      <domain_name>eng.rpath.com</domain_name>
+      <short_name>chater-foo</short_name>
+      <name>chater-foo</name>
+    </project>
+    <output_trove></output_trove>
+    <time_created>2011-11-30T14:48:20.430000+00:00</time_created>
+    <release></release>
+    <image_count>0</image_count>
+    <job_uuid></job_uuid>
+  </image>
   <image id="http://testserver/api/v1/images/2">
     <files/>
-    <actions/>
+    <actions>
+      <action>
+        <description>Cancel image build</description>
+        <descriptor id="http://testserver/api/v1/images/2/descriptors/cancel_build"/>
+        <enabled>True</enabled>
+        <job_type id="http://testserver/api/v1/inventory/event_types/25"/>
+        <key>image_build_cancellation</key>
+        <name>Cancel image build</name>
+      </action>
+    </actions>
     <project_branch id="http://testserver/api/v1/projects/chater-foo/project_branches/chater-foo.eng.rpath.com@rpath:chater-foo-trunk">
       <name>trunk</name>
     </project_branch>
