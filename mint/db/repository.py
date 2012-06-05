@@ -210,8 +210,8 @@ class RepomanMixin(object):
         # create the changelog message using the currently
         # logged-on user's username and fullname, if available
         unset = '(unset)'
-        username  = getattr(auth, 'username', unset)
-        full_name = getattr(auth, 'fullName', unset)
+        username  = getattr(auth, 'username', None) or unset
+        full_name = getattr(auth, 'fullName', None) or unset
         newchangelog = changelog.ChangeLog(_encode(username),
                 _encode(full_name), _encode(changeLogMessage))
 
