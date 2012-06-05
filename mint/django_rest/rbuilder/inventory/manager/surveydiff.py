@@ -198,8 +198,8 @@ class SurveyDiff(object):
         # running or not running even though they are installed the same.  Packages
         # do not behave this way.
         for f in top_level_fields:
-            lval = getattr(leftItem, f)
-            rval = getattr(rightItem, f)
+            lval = getattr(leftItem, f, None)
+            rval = getattr(rightItem, f, None)
             if lval != rval:
                 differences[f] = (lval, rval)
 
