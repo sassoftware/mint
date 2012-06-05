@@ -809,8 +809,8 @@ management_node_post_xml = """\
 
 management_node_post_response_xml = """\
 <?xml version="1.0" encoding="UTF-8"?>
+<management_node id="http://testserver/api/v1/inventory/management_nodes/3">
   <is_configured>False</is_configured>
-  <management_node id="http://testserver/api/v1/inventory/management_nodes/3">
   <surveys id="http://testserver/api/v1/inventory/management_nodes/3/surveys"/>
   <agent_port>5989</agent_port> 
   <project/>
