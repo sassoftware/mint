@@ -50,6 +50,7 @@ class ProductVersionTest(restbase.BaseRestTest):
   <nameSpace>yournamespace</nameSpace>
   <description>Version description</description>
   <timeCreated></timeCreated>
+  <label>testproject.rpath.local2@yournamespace:testproject-1.0</label>
   <platform href="http://%(server)s:%(port)s/api/products/testproject/versions/1.0/platform"/>
   <platformVersion href="http://localhost:8000/api/products/testproject/versions/1.0/platformVersion"/>
   <stages href="http://%(server)s:%(port)s/api/products/testproject/versions/1.0/stages/"/>

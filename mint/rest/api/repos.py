@@ -21,9 +21,12 @@ from mint.rest.api import base
 from mint.rest.api import models
 
 class BaseReposController(base.BaseController):
-    def getRepos(self, hostname):
-        return self.db.productMgr.reposMgr.getRepositoryClientForProduct(
-                                                                    hostname)
+    def getRepos(self, admin=False):
+        if admin:
+            cli = self.db.productMgr.reposMgr.getAdminClient()
+        else:
+            cli = self.db.productMgr.reposMgr.getUserClient()
+        return cli.repos
 
     def _getTuple(self, troveString):
         try:
@@ -42,7 +45,7 @@ class BaseReposController(base.BaseController):
 
     def _checkTrove(self, hostname, troveString):
         name, version, flavor = self._getTuple(troveString)
-        repos = self.getRepos(hostname)
+        repos = self.getRepos()
         if not repos.hasTrove(name, version, flavor):
             raise errors.TroveNotFound(troveString)
         trv = models.Trove(hostname=hostname, 
@@ -55,7 +58,7 @@ class RepositoryFilesController(BaseReposController):
     urls = {'contents' : 'contents' }
 
     def _getFileInfo(self, hostname, troveString, pathHash):
-        repos = self.getRepos(hostname)
+        repos = self.getRepos()
         name, version, flavor = self._getTuple(troveString)
         try:
             trv = repos.getTrove(name, version, flavor, withFiles=True)
@@ -129,7 +132,7 @@ class RepositoryItemsController(BaseReposController):
 
 
     def get(self, request, hostname, troveString):
-        repos = self.getRepos(hostname)
+        repos = self.getRepos()
         name, version, flavor = self._getTuple(troveString)
         trv = repos.getTrove(name, version, flavor, withFiles=True)
         fileList = []
@@ -180,7 +183,7 @@ class RepositoryController(BaseReposController):
                                      status = 400)
 
         checkFn = checkFnDict[searchType]
-        repos = self.getRepos(hostname)
+        repos = self.getRepos()
         if latest:
             queryFn = repos.getTroveLatestByLabel
         else:
@@ -247,7 +250,7 @@ class RepositoryController(BaseReposController):
         return out.read()
 
     def _getTroveConfigDescriptor(self, name, version, flavor):
-        repos = self.getRepos(version.getHost())
+        repos = self.getRepos()
 
         trvList = repos.getTroves([(name, version, flavor)])
 

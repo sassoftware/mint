@@ -78,7 +78,7 @@ class ReposManagerTest(mint_rephelp.MintDatabaseHelper, auth_helper.AuthHelper):
         repos = reposMgr.getConaryClientForProduct('bar').getRepos()
         self.addComponent('foo:run=bar.rpath.local2@rpl:1', repos=repos)
         self.setDbUser(db, 'other')
-        repos = reposMgr.getRepositoryClientForProduct('bar')
+        repos = reposMgr.getUserClient().repos
         label = versions.Label("bar.rpath.local2@rpl:1")
         assert(repos.troveNames(label) == ['foo:run'])
 
