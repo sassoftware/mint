@@ -757,13 +757,15 @@ WHERE level >= 0
         cu = self._db.cursor()
         cu.execute("""
             SELECT * FROM (
-                SELECT userId, salt, passwd, 0 AS is_token
+                SELECT userId, salt, passwd, is_admin,
+                    0 AS is_token
                 FROM Users
                 WHERE username = :user AND NOT deleted
 
                 UNION
 
-                SELECT userId, NULL AS salt, token AS passwd, 1 AS is_token
+                SELECT userId, NULL AS salt, token AS passwd, is_admin,
+                    1 AS is_token
                 FROM Users u
                 JOIN auth_tokens t ON t.user_id = u.userId
                 WHERE username = :user AND expires_date >= now()
@@ -774,7 +776,9 @@ WHERE level >= 0
         # so check each one in turn. We could ask just for the matching token,
         # but then if the query had a real password we would we leaking it to
         # the database where it might get logged.
-        for userId, userSalt, userPass, isToken in cu:
+        for userId, userSalt, userPass, isAdmin, isToken in cu:
+            if isAdmin:
+                userId = ANY_WRITER
             if isToken:
                 if userPass == mintToken.password:
                     return userId
