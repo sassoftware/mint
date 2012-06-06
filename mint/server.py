@@ -3094,7 +3094,7 @@ If you would not like to be %s %s of this project, you may resign from this proj
                              USING (urlId)
                       WHERE bf.buildId = ? ORDER BY bf.fileId""", buildId)
 
-        results = cu.fetchall_dict()
+        results = cu.fetchall()
 
         downloadUrlTemplate = self.getDownloadUrlTemplate()
 
@@ -3389,9 +3389,11 @@ If you would not like to be %s %s of this project, you may resign from this proj
     def getInboundMirror(self, projectId):
         cu = self.db.cursor()
         cu.execute("SELECT * FROM InboundMirrors WHERE targetProjectId=?", projectId)
-        x = cu.fetchone_dict()
+        x = cu.fetchone()
         if x:
-            return x
+            # bw compat: psycopg2 driver returns case-folded keys
+            keys = self.db.inboundMirrors.fields
+            return dict((key, x[key]) for key in keys)
         else:
             return {}
 

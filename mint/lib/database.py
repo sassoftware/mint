@@ -1,8 +1,8 @@
 #
-# Copyright (c) 2005-2008 rPath, Inc.
+# Copyright (c) rPath, Inc.
 #
-# All Rights Reserved
-#
+
+import decimal
 import sys
 import weakref
 
@@ -38,7 +38,7 @@ dbWriter = dbMethod(True)
 def concat(db, *items):
     if db.driver == "mysql":
         return "CONCAT(%s)" % ", ".join(items)
-    elif db.driver in ('sqlite', 'postgresql', 'pgpool'):
+    elif db.kind in ('sqlite', 'postgresql'):
         return " || ".join(items)
     raise Exception("Unsupported database")
 
@@ -64,7 +64,8 @@ class TableObject(object):
         return d
 
     def _loadData(self, data={}):
-        data = sqllib.CaselessDict(data)
+        if not isinstance(data, sqllib.Row):
+            data = sqllib.CaselessDict(data)
         for x in set(self.__slots__):
             setattr(self, x, data.pop(x, None))
         if data:
@@ -212,10 +213,12 @@ class KeyedTable(DatabaseTable):
 
         data = {}
         for i, key in enumerate(fields):
-            if r[i] != None:
-                data[key] = r[i]
-            else:
-                data[key] = ''
+            value = r[i]
+            if isinstance(value, decimal.Decimal):
+                value = float(value)
+            elif value is None:
+                value = ''
+            data[key] = value
 
         return data
 

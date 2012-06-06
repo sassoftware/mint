@@ -370,7 +370,7 @@ class UsersTable(database.KeyedTable):
               JOIN buildData bd ON (bd.buildId = b.buildId)
             WHERE bd.name = 'amiId'
               AND pu.userId = ?""", userId)
-        return cu.fetchall_dict()
+        return cu.fetchall()
 
 
 class UserDataTable(data.GenericDataTable):

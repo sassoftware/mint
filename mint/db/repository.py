@@ -37,7 +37,7 @@ from conary.server import schema as conary_schema
 
 from mint import userlevels
 from mint.lib import auth_client
-from mint.mint_error import RepositoryDatabaseError, RepositoryAlreadyExists
+from mint.mint_error import RepositoryDatabaseError
 from mint.rest.errors import ProductNotFound
 
 log = logging.getLogger(__name__)
@@ -351,7 +351,7 @@ class RepositoryHandle(object):
         if self.hasDatabase:
             if self.driver == 'sqlite':
                 self.__class__ = SQLiteRepositoryHandle
-            elif self.driver in ('postgresql', 'pgpool'):
+            elif self.driver in ('postgresql', 'pgpool', 'psycopg2'):
                 self.__class__ = PostgreSQLRepositoryHandle
 
     def __repr__(self):
@@ -896,7 +896,7 @@ WHERE level >= 0
                 raise RuntimeError("Bundle is for repository %s but this is %s"
                         % (metadata['serverName'], self.fqdn))
 
-            if self.driver == 'pgpool':
+            if self.driver in ['pgpool', 'psycopg2']:
                 expectType = 'postgresql'
             else:
                 expectType = self.driver
@@ -1097,15 +1097,19 @@ class PostgreSQLRepositoryHandle(RepositoryHandle):
             # Clone template0 when restoring from a dump since the dump already
             # has all the prefab stuff like plpgsql.
             extra += ' TEMPLATE template0'
-        ccu.execute("CREATE DATABASE %s ENCODING 'UTF8'%s" % (params.database,
-            extra))
+        controlDb.runAutoCommit(ccu.execute,
+                "CREATE DATABASE %s ENCODING 'UTF8'%s" % (params.database,
+                    extra))
 
     def _doBounce(self, bouncerDb, command):
         # A little bit of trickery is needed to get around the fact that
         # python-pgsql's primary API always uses prepared statements, which
         # aren't supported by pgbouncer's admin interface.
         bcu = bouncerDb.cursor()
-        bcu._cursor._source.query(command)
+        if bouncerDb.driver in ['postgresql', 'pgpool']: # NOT psycopg2
+            bcu._cursor._source.query(command)
+        else:
+            bcu.execute(command)
 
     def drop(self, dbName=None):
         params = self._getParams()
@@ -1129,7 +1133,8 @@ class PostgreSQLRepositoryHandle(RepositoryHandle):
             ccu = controlDb.cursor()
             for n in range(5):
                 try:
-                    ccu.execute("DROP DATABASE %s" % (params.database,))
+                    controlDb.runAutoCommit(ccu.execute,
+                            "DROP DATABASE %s" % (params.database,))
                 except CursorError, err:
                     if 'is being accessed by other users' not in err.msg:
                         raise
@@ -1219,11 +1224,13 @@ class PostgreSQLRepositoryHandle(RepositoryHandle):
         ccu = controlDb.cursor()
         name = self._getParams().database
         with self._safeReplace(controlDb, name) as replacedName:
-            ccu.execute('ALTER DATABASE "%s" RENAME TO "%s"' % (tmpName, name))
+            controlDb.runAutoCommit(ccu.execute,
+                    'ALTER DATABASE "%s" RENAME TO "%s"' % (tmpName, name))
             if replacedName:
                 callback.cleanupStarted(self.fqdn)
                 try:
-                    ccu.execute('DROP DATABASE "%s"' % (replacedName,))
+                    controlDb.runAutoCommit(ccu.execute,
+                            'DROP DATABASE "%s"' % (replacedName,))
                 except:
                     log.exception(
                             "Failed to drop old database %s; continuing:",
@@ -1244,8 +1251,8 @@ class PostgreSQLRepositoryHandle(RepositoryHandle):
             for x in range(5):
                 self._doBounce(bouncerDb, "KILL " + name)
                 try:
-                    ccu.execute('ALTER DATABASE "%s" RENAME TO "%s"'
-                            % (name, temp))
+                    controlDb.runAutoCommit(ccu.execute,
+                            'ALTER DATABASE "%s" RENAME TO "%s"' % (name, temp))
                     break
                 except CursorError, err:
                     if 'is being accessed by other users' in str(err):
