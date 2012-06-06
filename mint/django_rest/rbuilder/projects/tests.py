@@ -623,7 +623,7 @@ class ProjectsTestCase(RbacEngine):
 
         images = images.image
         self.failUnlessEqual([ x.name for x in images ],
-            ['image-1', 'image-2' ])
+            ['image from fixture', 'image-1', 'image-2' ])
 
         # Test project images too
         url = 'projects/%s' % (prj.short_name, )

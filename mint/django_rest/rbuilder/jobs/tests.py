@@ -66,7 +66,9 @@ class JobsTestCase(BaseJobsTest):
     def testGetJobsSortBySyntheticFields(self):
         response = self._get('jobs/?order_by=job_description')
         self.assertEquals(response.status_code, 200)
-        self.assertXMLEquals(response.content, testsxml.jobs_xml)
+        self.assertXMLEquals(response.content,
+            testsxml.jobs_xml.replace('order_by=""',
+                'order_by="job_description"'))
 
     def testGetJobStates(self):
         response = self._get('job_states/')

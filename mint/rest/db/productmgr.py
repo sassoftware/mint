@@ -174,7 +174,7 @@ class ProductManager(manager.Manager):
         cu = self.db.cursor()
         cu.execute('''SELECT productVersionId as versionId, 
                           PVTable.namespace, PVTable.name, PVTable.description,
-                          PVTable.timeCreated, Projects.hostname
+                          PVTable.timeCreated, Projects.hostname, PVTable.label
                       FROM Projects 
                       JOIN ProductVersions as PVTable USING (projectId)
                       WHERE Projects.hostname=? AND PVTable.name=?''', 
@@ -494,10 +494,13 @@ class ProductManager(manager.Manager):
     def getProductVersionDefinitionByProductVersion(self, hostname, productVersion):
         product = self.getProduct(hostname)
         pd = proddef.ProductDefinition()
-        pd.setProductShortname(product.shortname)
-        pd.setConaryRepositoryHostname(product.getFQDN())
-        pd.setConaryNamespace(productVersion.namespace)
-        pd.setProductVersion(productVersion.name)
+        if productVersion.label:
+            pd.setBaseLabel(productVersion.label)
+        else:
+            pd.setProductShortname(product.shortname)
+            pd.setConaryRepositoryHostname(product.getFQDN())
+            pd.setConaryNamespace(productVersion.namespace)
+            pd.setProductVersion(productVersion.name)
         cclient = self.reposMgr.getAdminClient(write=False)
         try:
             pd.loadFromRepository(cclient)
