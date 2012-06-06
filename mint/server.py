@@ -403,10 +403,7 @@ class MintServer(object):
     def _getProductDefinition(self, project, version):
         cclient = self.reposMgr.getAdminClient(write=False)
         pd = proddef.ProductDefinition()
-        pd.setProductShortname(project.shortname)
-        pd.setConaryRepositoryHostname(project.getFQDN())
-        pd.setConaryNamespace(version.namespace)
-        pd.setProductVersion(version.name)
+        pd.setBaseLabel(version.label)
         try:
             pd.loadFromRepository(cclient)
             return pd
@@ -422,12 +419,7 @@ class MintServer(object):
 
     def _getProductVersionLabel(self, project, versionId):
         version = projects.ProductVersions(self, versionId)
-        pd = proddef.ProductDefinition()
-        pd.setProductShortname(project.shortname)
-        pd.setConaryRepositoryHostname(project.getFQDN())
-        pd.setConaryNamespace(version.namespace)
-        pd.setProductVersion(version.name)
-        return pd.getProductDefinitionLabel()
+        return version.label
 
     # unfortunately this function can't be a proper decorator because we
     # can't always know which param is the projectId.

@@ -729,6 +729,7 @@ class ProductVersionsTable(database.KeyedTable):
                'namespace',
                'name',
                'description',
+               'label',
              ]
 
     def __init__(self, db, cfg):
