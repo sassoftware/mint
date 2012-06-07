@@ -16,7 +16,7 @@ createdb -U postgres --encoding=UTF8 --owner=rmake rmake2
 
 ./deleteproject --force rmake-repository \
     || echo "Warning: failed to delete project rmake-repository"
-/sbin/service rmake reset --force \
+/usr/sbin/rmake-server reset \
     || echo "Warning: failed to delete rMake database"
 sudo -u apache ./rmake-setup
 
