@@ -846,9 +846,6 @@ class MintClient:
     def getTargetData(self, targetType, targetName):
         return self.server.getTargetData(targetType, targetName)
 
-    def getAMIBuildsForUser(self, userId):
-        return self.server.getAMIBuildsForUser(userId)
-
     def getAllBuildsByType(self, buildType):
         return self.server.getAllBuildsByType(buildType)
 

@@ -22,14 +22,13 @@ L{migrate<mint.migrate>} module.
 
 import logging
 import datetime
-import os
 from dateutil import tz
 from conary.dbstore import sqlerrors, sqllib
 
 log = logging.getLogger(__name__)
 
 # database schema major version
-RBUILDER_DB_VERSION = sqllib.DBversion(62, 8)
+RBUILDER_DB_VERSION = sqllib.DBversion(63, 0)
 
 def _createTrigger(db, table, column="changed"):
     retInsert = db.createTrigger(table, column, "INSERT")
@@ -2650,6 +2649,47 @@ def _createQuerySetSchema(db):
                 NOT NULL,
             UNIQUE ("queryset_id", "filterentry_id")
         )""")
+            
+    createTable(db, "config_environments", """
+            "id" %(PRIMARYKEY)s,
+            "name" TEXT UNIQUE,
+            "description" TEXT,
+            created_by INTEGER
+                REFERENCES Users ON DELETE SET NULL,
+            modified_by INTEGER
+                REFERENCES Users ON DELETE SET NULL,
+            created_date TIMESTAMP WITH TIME ZONE NOT NULL
+                DEFAULT current_timestamp,
+            modified_date TIMESTAMP WITH TIME ZONE NOT NULL
+                DEFAULT current_timestamp,
+            config_descriptor TEXT,
+    """)
+
+    createTable(db, "querysets_queryset_config_environments", """
+        "id" %(PRIMARYKEY)s,
+        "queryset_id" INTEGER
+                REFERENCES "querysets_queryset" ("query_set_id")
+                ON DELETE CASCADE
+                NOT NULL,
+        "config_environment_id" INTEGER
+                REFERENCES "config_environments" ("id")
+                ON DELETE CASCADE
+                NOT NULL
+    """)   
+
+    createTable(db, "config_environment_config_values", """
+            "id" %(PRIMARYKEY)s,
+            "config_environment_id" INTEGER REFERENCES "config_environments" ("id") ON DELETE CASCADE,
+            "key" TEXT,
+            "value" TEXT
+    """)
+
+    createTable(db, "system_config_values", """
+            "id" %(PRIMARYKEY)s,
+            "system_id" INTEGER REFERENCES "inventory_system" ("system_id") ON DELETE CASCADE,
+            "key" TEXT,
+            "value" TEXT
+    """)
 
     # unique value was 'name', not queryset_id
     qs_rows=[

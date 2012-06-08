@@ -212,6 +212,7 @@ queryset_with_actions = """
   <universe id="http://testserver/api/v1/query_sets/5/universe"/>
   <grant_matrix id="http://testserver/api/v1/query_sets/5/grant_matrix"/>
   <personal_for/>
+  <config_environments/>
 </query_set>
 """
 

@@ -403,10 +403,7 @@ class MintServer(object):
     def _getProductDefinition(self, project, version):
         cclient = self.reposMgr.getAdminClient(write=False)
         pd = proddef.ProductDefinition()
-        pd.setProductShortname(project.shortname)
-        pd.setConaryRepositoryHostname(project.getFQDN())
-        pd.setConaryNamespace(version.namespace)
-        pd.setProductVersion(version.name)
+        pd.setBaseLabel(version.label)
         try:
             pd.loadFromRepository(cclient)
             return pd
@@ -422,12 +419,7 @@ class MintServer(object):
 
     def _getProductVersionLabel(self, project, versionId):
         version = projects.ProductVersions(self, versionId)
-        pd = proddef.ProductDefinition()
-        pd.setProductShortname(project.shortname)
-        pd.setConaryRepositoryHostname(project.getFQDN())
-        pd.setConaryNamespace(version.namespace)
-        pd.setProductVersion(version.name)
-        return pd.getProductDefinitionLabel()
+        return version.label
 
     # unfortunately this function can't be a proper decorator because we
     # can't always know which param is the projectId.
@@ -3102,7 +3094,7 @@ If you would not like to be %s %s of this project, you may resign from this proj
                              USING (urlId)
                       WHERE bf.buildId = ? ORDER BY bf.fileId""", buildId)
 
-        results = cu.fetchall_dict()
+        results = cu.fetchall()
 
         downloadUrlTemplate = self.getDownloadUrlTemplate()
 
@@ -3397,9 +3389,11 @@ If you would not like to be %s %s of this project, you may resign from this proj
     def getInboundMirror(self, projectId):
         cu = self.db.cursor()
         cu.execute("SELECT * FROM InboundMirrors WHERE targetProjectId=?", projectId)
-        x = cu.fetchone_dict()
+        x = cu.fetchone()
         if x:
-            return x
+            # bw compat: psycopg2 driver returns case-folded keys
+            keys = self.db.inboundMirrors.fields
+            return dict((key, x[key]) for key in keys)
         else:
             return {}
 

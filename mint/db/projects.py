@@ -1,29 +1,24 @@
 #
-# Copyright (c) 2005-2009 rPath, Inc.
+# Copyright (c) 2011 rPath, Inc.
 #
-# All Rights Reserved
-#
-import base64
+
 import os
 import string
-import sys
 import time
 
 from mint import buildtypes
 from mint.lib import database
 from mint.lib import data as mintdata
-from mint.helperfuncs import truncateForDisplay, rewriteUrlProtocolPort, \
-        hostPortParse, configureClientProxies, getProjectText
+from mint.helperfuncs import rewriteUrlProtocolPort, hostPortParse
 from mint import helperfuncs
 from mint import searcher
 from mint import userlevels
-from mint.mint_error import *
+from mint.mint_error import (ItemNotFound, DuplicateItem, DuplicateName,
+        DuplicateShortname, DuplicateHostname, DuplicateLabel, LabelMissing,
+        RepositoryAlreadyExists, LastOwner)
 
 from conary import dbstore
-from conary.deps import deps
 from conary.lib import util
-from conary.repository.netrepos import netserver
-from conary.conarycfg import ConaryConfiguration
 
 # functions to convert a repository name to a database-safe name string
 transTables = {
@@ -31,6 +26,7 @@ transTables = {
     'mysql':        string.maketrans("-.:", "___"),
     'postgresql':   string.maketrans("-.:", "___").lower(),
     'pgpool':       string.maketrans("-.:", "___").lower(),
+    'psycopg2':     string.maketrans("-.:", "___").lower(),
 }
 
 class ProjectsTable(database.KeyedTable):
@@ -55,7 +51,7 @@ class ProjectsTable(database.KeyedTable):
     def new(self, **kwargs):
         try:
             id = database.KeyedTable.new(self, **kwargs)
-        except DuplicateItem, e:
+        except DuplicateItem:
             self.db.rollback()
             cu = self.db.cursor()
             cu.execute("SELECT projectId FROM Projects WHERE hostname=?", kwargs['hostname'])
@@ -213,7 +209,7 @@ JOIN Projects ep
 """
         cu.execute(stmt, dict(user_id=userId))
         ret = []
-        for x in cu.fetchall_dict():
+        for x in cu:
             level = x.pop('level')
             hasRequests = False
             if x['creatorId'] is None:
@@ -645,7 +641,6 @@ class PostgreSqlRepositoryDatabase(RepositoryDatabase):
                         self._getTemplate()[1] % dbName, self.driver)
                 reposDb.loadSchema()
                 reposCu = reposDb.cursor()
-                tableList = []
                 for t in reposDb.tempTables:
                     reposCu.execute("DROP TABLE %s" % (t,))
                 for t in reposDb.tables:
@@ -671,6 +666,10 @@ class PostgreSqlRepositoryDatabase(RepositoryDatabase):
 
 class PGPoolRepositoryDatabase(PostgreSqlRepositoryDatabase):
     driver = 'pgpool'
+
+
+class PsycoRepositoryDatabase(PostgreSqlRepositoryDatabase):
+    driver = 'psycopg2'
 
 
 class MySqlRepositoryDatabase(RepositoryDatabase):
@@ -719,6 +718,8 @@ def getFactoryForRepos(driver):
         return PostgreSqlRepositoryDatabase
     elif driver == 'pgpool':
         return PGPoolRepositoryDatabase
+    elif driver == 'psycopg2':
+        return PsycoRepositoryDatabase
 
 
 class ProductVersionsTable(database.KeyedTable):
@@ -729,6 +730,7 @@ class ProductVersionsTable(database.KeyedTable):
                'namespace',
                'name',
                'description',
+               'label',
              ]
 
     def __init__(self, db, cfg):

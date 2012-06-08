@@ -7,6 +7,7 @@
 
 from mint.django_rest.rbuilder.inventory.tests import XMLTestCase
 from mint.django_rest.rbuilder.inventory import models as inventorymodels
+from mint.django_rest.rbuilder.users import models as usermodels
 from mint.django_rest.rbuilder.querysets import models
 from mint.django_rest.rbuilder.querysets import testsxml
 #from mint.django_rest.rbuilder.manager import rbuildermanager
@@ -335,5 +336,59 @@ class QuerySetTestCase(QueryTestCase):
         response = self._get("query_sets/%s/filter_descriptor/" % qsid,
             username="admin", password="password")
         self.assertEquals(response.status_code, 200)
+
+class ConfigEnvironmentsTestCase(QueryTestCase):
+
+    fixtures = ['system_collection']
+
+    def setUp(self):
+        QueryTestCase.setUp(self)
+
+    def testConfigEnvironmentModels(self):
+        # show that we can list all query sets
+
+        qs = models.QuerySet.objects.get(pk=1)
+        user = usermodels.User.objects.get(pk=1)
+
+        ce = models.ConfigEnvironment(
+           name = 'testce',
+           created_by = user,
+           modified_by = user
+           # descriptor = "..."
+        )
+        ce.save()
+
+        qsce = models.QuerySetConfigEnvironment(
+           queryset = qs,
+           config_environment = ce,
+        )
+        qsce.save()
+
+        set1 = models.ConfigEnvironmentSetting(
+           config_environment = ce,
+           key='http_port',
+           value='80'
+        )
+        set2 = models.ConfigEnvironmentSetting(
+           config_environment = ce,
+           key='motd',
+           value='one does not simply telnet into mordor'
+        )
+        set1.save()
+        set2.save()
+         
+
+        # ConfigEnvironmentSetting(...)
+
+        response = self._get("query_sets/%s" % qs.pk,
+            username="admin", password="password")
+        print response.content
+        self.assertEquals(response.status_code, 200)
+
+        
+        #querySets = xobj.parse(response.content)
+        #length = len(querySets.query_sets.query_set)
+        # ok to bump this if we add more QS in the db
+        #self.assertEqual(length, 10)
 
 
