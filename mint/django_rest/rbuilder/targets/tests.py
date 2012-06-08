@@ -192,12 +192,6 @@ class TargetsTestCase(BaseTargetsTest, RepeaterMixIn):
             [ x.key for x in fields[3].enumeratedType.describedValue ],
             ['Local rBuilder', 'other zone'])
 
-    def testGetTargetConfigurationDescriptor(self):
-        response = self._get('targets/1/target_configuration/',
-            username='admin', password='password')
-        configDescriptor = xobj.parse(response.content)
-        ### FIXME: Finish damnit
-
     def testGetTargets(self):
         targets = models.Target.objects.order_by('target_id')
         response = self._get('targets/', username='ExampleDeveloper', password='password')
@@ -280,6 +274,10 @@ class TargetsTestCase(BaseTargetsTest, RepeaterMixIn):
         self.assertXMLEquals(response.content, testsxml.target_GET)
 
     def testGetTargetConfigurationDescriptor(self):
+        # #2289: multi-zone with no zone description should not break
+        # the code
+        zmodels.Zone.objects.create(name="zone without description")
+
         target = models.Target.objects.get(name = 'Target Name openstack')
         response = self._get('targets/%s/descriptors/configuration' % target.pk,
             username='ExampleDeveloper', password='password')
@@ -297,6 +295,14 @@ class TargetsTestCase(BaseTargetsTest, RepeaterMixIn):
                 'description',
                 'zone',
         ])
+        self.failUnlessEqual(
+            [ (x.key, x.descriptions.desc)
+                for x in obj.descriptor.dataFields.field[-1].enumeratedType.describedValue ],
+            [
+                (u'Local rBuilder', u'Local rBuilder management zone'),
+                (u'zone without description', u'zone without description'),
+            ]
+        )
 
     def testCreateTarget(self):
         zmodels.Zone.objects.create(name='other zone', description = "Other Zone")
