@@ -906,7 +906,8 @@ class TargetTypesManager(basemanager.BaseManager, CatalogServiceHelper):
             fromStream=DriverClass.configurationDescriptorXmlData)
         descr.setRootElement("descriptor_data")
         allZones = sorted(modellib.Cache.all(zones.Zone), key=lambda x: x.zone_id)
-        zoneList = [ (x.name, x.description)
+        # Use the name, if the description is not set
+        zoneList = [ (x.name, (x.description or x.name))
             for x in allZones ]
         zoneList = [ descr.ValueWithDescription(n, descriptions=d)
             for (n, d) in zoneList ]
