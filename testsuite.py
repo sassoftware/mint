@@ -12,10 +12,8 @@ import os.path
 from testrunner import pathManager
 
 os.environ['DJANGO_SETTINGS_MODULE'] = 'mint.django_rest.settings_local'
-from django import http
-from django.conf import settings
-from django.test import utils
 
+from django import http
 # Django will mistakengly set this to None when running under mod_python as we
 # do in our testsuite.
 if http.parse_qsl is None:
@@ -143,6 +141,7 @@ def setup_django_database(**kwargs):
     Code taken from django.test.simple for setting up the django database for
     django tests.
     """
+    from django.conf import settings
     try:
         if settings.DATABASE_ENGINE == 'sqlite3':
             os.unlink(settings.TEST_DATABASE_NAME)
@@ -171,6 +170,7 @@ def main(argv=None, individual=True):
     if argv is None:
         argv = sys.argv
     from testrunner import testhelp
+    from django.test import utils
     setup_django_database()
     utils.setup_test_environment()
     handlerClass = testhelp.getHandlerClass(testhelp.ConaryTestSuite,
@@ -182,6 +182,7 @@ def main(argv=None, individual=True):
     results = handler.main(argv)
 
     # Need to delete the database used by django tests.
+    from django.conf import settings
     if settings.DATABASE_ENGINE == 'sqlite3':
         try:
             os.unlink(settings.TEST_DATABASE_NAME)

@@ -17,10 +17,6 @@ except:
     DATABASE_NAME = os.path.realpath('../mint-local.db')
 TEST_DATABASE_NAME = '../test-mint-local.db'
 
-appsList = list(INSTALLED_APPS)
-appsList.append('django.contrib.admin')
-INSTALLED_APPS = tuple(appsList)
-
 AUTHENTICATION_BACKENDS = (
     'mint.django_rest.rbuilder.auth.rBuilderBackend',
     'django.contrib.auth.backends.ModelBackend'
@@ -29,9 +25,13 @@ AUTHENTICATION_BACKENDS = (
 MIDDLEWARE_CLASSES = tuple(
     x for x in MIDDLEWARE_CLASSES
         if x != 'mint.django_rest.middleware.SetMintConfigMiddleware')
+MIDDLEWARE_CLASSES = \
+     ('mint.django_rest.middleware.LocalQueryParameterMiddleware',) + \
+     MIDDLEWARE_CLASSES
 MIDDLEWARE_CLASSES = MIDDLEWARE_CLASSES + \
     ('mint.django_rest.middleware.LocalSetMintAdminMiddleware',
-     'mint.django_rest.middleware.SetMintConfigLocalMiddleware')
+     'mint.django_rest.middleware.LocalSetMintConfigMiddleware',)
+
 
 # Custom setting for if we should manage/create the tables in rbuilder.models
 MANAGE_RBUILDER_MODELS = True

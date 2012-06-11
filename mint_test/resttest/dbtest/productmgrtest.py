@@ -66,50 +66,87 @@ class ProductManagerTest(mint_rephelp.MintDatabaseHelper):
     def testListProducts(self):
         db = self.openMintDatabase(createRepos=False)
         self.createUser('admin', admin=True)
-        self.createUser('user', admin=False)
-        self.createProduct('foo', owners=['admin'], db=db, private=True)
-        self.createProduct('bar', owners=['user'], db=db, private=True)
+        self.createUser('user1', admin=False)
+        self.createUser('user2', admin=False)
+        # One public product from an admin user
+        self.createProduct('foo0', owners=['admin'], db=db, private=False)
+        # One private product from an admin user
+        self.createProduct('foo1', owners=['admin'], db=db, private=True)
+        # One public product from a non-admin user
+        self.createProduct('bar0', owners=['user1'], db=db, private=False)
+        # One private product with developer access for user2
+        self.createProduct('bar1', owners=['user1'], developers=['user2'],
+            db=db, private=True)
+        # One private product with user access for user2
+        self.createProduct('bar2', owners=['user1'], users=['user2'],
+            db=db, private=True)
+        # One private product
+        self.createProduct('bar3', owners=['user1'], db=db, private=True)
+        # Product owned by user2
+        self.createProduct('baz', owners=['user2'], db=db, private=True)
 
         # User can't see other hidden projects
-        self.setDbUser(db, 'user')
+        self.setDbUser(db, 'user1')
         products = db.listProducts().products
-        self.assertEqual(len(products), 1)
-        self.assertEqual(products[0].shortname, 'bar')
+        self.assertEqual([ x.shortname for x in products ],
+            ['bar0', 'bar1', 'bar2', 'bar3', 'foo0', ])
+        self.assertEqual([ x.role for x in products ],
+            ['Owner', 'Owner', 'Owner', 'Owner', 'User', ])
+
+        self.setDbUser(db, 'user2')
+        products = db.listProducts().products
+        self.assertEqual([ x.shortname for x in products ],
+            ['bar0', 'bar1', 'bar2', 'baz', 'foo0', ])
+        self.assertEqual([ x.role for x in products ],
+            ['User', 'Developer', 'User', 'Owner', 'User', ])
+
+        products = db.listProducts(roles=['Owner',]).products
+        self.assertEqual([ x.shortname for x in products ],
+            ['baz', ])
+
+        products = db.listProducts(roles=['Developer',]).products
+        self.assertEqual([ x.shortname for x in products ],
+            ['bar1', ])
+
+        products = db.listProducts(roles=['User',]).products
+        self.assertEqual([ x.shortname for x in products ],
+            ['bar0', 'bar2', 'foo0', ])
+
+        products = db.listProducts(
+                roles=['Owner', 'Developer', 'User']).products
 
         # Admin can see all projects; check sorting.
         self.setDbUser(db, 'admin')
         products = db.listProducts().products
-        self.assertEqual(len(products), 2)
-        self.assertEqual(products[0].shortname, 'bar')
-        self.assertEqual(products[1].shortname, 'foo')
+        self.assertEqual([ x.shortname for x in products],
+            [ 'bar0', 'bar1', 'bar2', 'bar3', 'baz', 'foo0', 'foo1', ])
+        self.assertEqual([ x.role for x in products ],
+            ['User', 'User', 'User', 'User', 'User', 'Owner', 'Owner', ])
 
         # List by role
         products = db.listProducts(roles=('Owner',)).products
-        self.assertEqual(len(products), 1)
-        self.assertEqual(products[0].shortname, 'foo')
+        self.assertEqual([ x.shortname for x in products ],
+            [ 'foo0', 'foo1', ])
 
         products = db.listProducts(
                 roles=['Owner', 'Developer', 'User']).products
-        self.assertEqual(len(products), 1)
-        self.assertEqual(products[0].shortname, 'foo')
+        self.assertEqual([ x.shortname for x in products ],
+            [ 'bar0', 'bar1', 'bar2', 'bar3', 'baz', 'foo0', 'foo1', ])
 
         # Query limits; check sorting
         products = db.listProducts(limit=1).products
-        self.assertEqual(len(products), 1)
-        self.assertEqual(products[0].shortname, 'bar')
+        self.assertEqual([ x.shortname for x in products ], [ 'bar0', ])
 
         # Query prodtype
-        self.createProduct('baz', owners=['user'], db=db, private=True,
+        self.createProduct('bloop', owners=['user1'], db=db, private=True,
                            prodtype='Repository')
 
         products = db.listProducts(prodtype='repository').products
-        self.assertEqual(len(products), 1)
-        self.assertEqual(products[0].shortname, 'baz')
+        self.assertEqual([ x.shortname for x in products ], [ 'bloop', ])
 
         products = db.listProducts(prodtype='appliance').products
-        self.assertEqual(len(products), 2)
-        self.assertEqual(products[0].shortname, 'bar')
-        self.assertEqual(products[1].shortname, 'foo')
+        self.assertEqual([ x.shortname for x in products ],
+            [ 'bar0', 'bar1', 'bar2', 'bar3', 'baz', 'foo0', 'foo1', ])
 
         products = db.listProducts(prodtype='foo').products
         self.assertEqual(len(products), 0)

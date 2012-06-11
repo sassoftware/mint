@@ -1,0 +1,94 @@
+<?xml version="1.0"?>
+<django-objects version="1.0">
+
+  <object pk="1" model="querysets.inclusionmethod">
+    <field type="TextField" name="name">chosen</field>
+  </object>
+  <object pk="2" model="querysets.inclusionmethod">
+    <field type="TextField" name="name">filtered</field>
+  </object>
+
+  <object pk="1" model="querysets.filterentry">
+    <field type="TextField" name="field">current_state.name</field>
+    <field type="TextField" name="operator">EQUAL</field>
+    <field type="TextField" name="value">responsive</field>
+  </object>
+  <object pk="2" model="querysets.filterentry">
+    <field type="TextField" name="field">current_state.name</field>
+    <field type="TextField" name="operator">IN</field>
+    <field type="TextField" name="value">(unmanaged,unmanaged-credentials,registered,non-responsive-unknown,non-responsive-net,non-responsive-host,non-responsive-shutdown,non-responsive-suspended,non-responsive-credentials)</field>
+  </object>
+  <object pk="3" model="querysets.filterentry">
+    <field type="TextField" name="field">target</field>
+    <field type="TextField" name="operator">IS_NULL</field>
+    <field type="TextField" name="value">True</field>
+  </object>
+
+  <object pk="1" model="querysets.queryset">
+    <field type="TextField" name="name">All Systems</field>
+    <field type="TextField" name="description">All Systems</field>
+    <field type="DateTimeField" name="created_date">2011-01-26 21:59:59</field>
+    <field type="DateTimeField" name="modified_date">2011-01-26 21:59:59</field>
+    <field type="TextField" name="resource_type">system</field>
+    <field to="querysets.queryset" name="children" rel="ManyToManyRel">
+      <object pk="2"/>
+      <object pk="3"/>
+    </field>
+    <field to="querysets.filterentry" name="filter_entries" rel="ManyToManyRel"/>
+    <field type="BooleanField" name="can_modify">False</field>
+  </object>
+  <object pk="2" model="querysets.queryset">
+    <field type="TextField" name="name">Active Systems</field>
+    <field type="TextField" name="description">Active Systems</field>
+    <field type="DateTimeField" name="created_date">2011-01-26 21:59:59</field>
+    <field type="DateTimeField" name="modified_date">2011-01-26 21:59:59</field>
+    <field type="TextField" name="resource_type">system</field>
+    <field to="querysets.queryset" name="children" rel="ManyToManyRel"/>
+    <field to="querysets.filterentry" name="filter_entries" rel="ManyToManyRel">
+      <object pk="1"/>
+    </field>
+    <field type="BooleanField" name="can_modify">False</field>
+  </object>
+  <object pk="3" model="querysets.queryset">
+    <field type="TextField" name="name">Inactive Systems</field>
+    <field type="TextField" name="description">Inactive Systems</field>
+    <field type="DateTimeField" name="created_date">2011-01-26 21:59:59</field>
+    <field type="DateTimeField" name="modified_date">2011-01-26 21:59:59</field>
+    <field type="TextField" name="resource_type">system</field>
+    <field to="querysets.queryset" name="children" rel="ManyToManyRel"/>
+    <field to="querysets.filterentry" name="filter_entries" rel="ManyToManyRel">
+      <object pk="2"/>
+    </field>
+    <field type="BooleanField" name="can_modify">False</field>
+  </object>
+  <object pk="4" model="querysets.queryset">
+    <field type="TextField" name="name">Physical Systems</field>
+    <field type="TextField" name="description">Physical Systems</field>
+    <field type="DateTimeField" name="created_date">2011-01-26 21:59:59</field>
+    <field type="DateTimeField" name="modified_date">2011-01-26 21:59:59</field>
+    <field type="TextField" name="resource_type">system</field>
+    <field to="querysets.queryset" name="children" rel="ManyToManyRel"/>
+    <field to="querysets.filterentry" name="filter_entries" rel="ManyToManyRel">
+      <object pk="3"/>
+    </field>
+    <field type="BooleanField" name="can_modify">False</field>
+  </object>
+
+  <object pk="1" model="querysets.querytag">
+    <field to="querysets.queryset" name="query_set" rel="ManyToOneRel">1</field>
+    <field type="TextField" name="name">query-tag-All_Systems-1</field>
+  </object>
+  <object pk="2" model="querysets.querytag">
+    <field to="querysets.queryset" name="query_set" rel="ManyToOneRel">2</field>
+    <field type="TextField" name="name">query-tag-Active_Systems-2</field>
+  </object>
+  <object pk="3" model="querysets.querytag">
+    <field to="querysets.queryset" name="query_set" rel="ManyToOneRel">3</field>
+    <field type="TextField" name="name">query-tag-Inactive_Systems-3</field>
+  </object>
+  <object pk="4" model="querysets.querytag">
+    <field to="querysets.queryset" name="query_set" rel="ManyToOneRel">4</field>
+    <field type="TextField" name="name">query-tag-Physical_Systems-4</field>
+  </object>
+</django-objects>
+

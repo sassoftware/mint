@@ -1,20 +1,27 @@
 #!/usr/bin/python
+#
+# Copyright (c) 2011 rPath, Inc.
+#
+# All rights reserved.
+#
 
 import datetime
 from dateutil import parser
 from dateutil import tz
 import urlparse
 
-from mint.lib import mintutils
-
 from django.db import connection
 from django.db import models
 from django.db.models import fields as djangofields
 from django.db.models.fields import related
+from django.db.utils import IntegrityError
 from django.core import exceptions
 from django.core import urlresolvers 
 
 from xobj import xobj
+
+from mint.django_rest.rbuilder import errors
+from mint.lib import mintutils
 
 def XObjHidden(field):
     """
@@ -49,7 +56,7 @@ class BaseManager(models.Manager):
     deserialize an object from xobj into an instance of the model.
     """
 
-    def load_from_db(self, model_inst, accessors=None):
+    def load_from_db(self, model_inst):
         """
         Load a model from the db based on model_inst.  Uses load_fields on the
         model to look up a corresponding model in the db. 
@@ -76,7 +83,7 @@ class BaseManager(models.Manager):
         except exceptions.MultipleObjectsReturned:
             return None, None
 
-    def load(self, model_inst, accessors=None, withReadOnly=False):
+    def load(self, model_inst, xobjModel, withReadOnly=False):
         """
         Load a model based on model_inst, which is an instance of the model.
         Allows for checking to see if model_inst already exists in the db, and
@@ -90,14 +97,21 @@ class BaseManager(models.Manager):
         This should never be done when src is "unsafe" (i.e. loaded from XML)
         """
 
-        oldModel, loaded_model = self.load_from_db(model_inst, accessors)
+        # First try to load by an id or href attribute on xobjModel.  This
+        # attribute (if present) should a be the full url of the model.
+        loaded_model = self.load_from_href(xobjModel)
+        if loaded_model:
+            oldModel = loaded_model.serialize()
+        else:
+            # Fall back to loading from the db by model_inst
+            oldModel, loaded_model = self.load_from_db(model_inst)
 
         # For each field on loaded_model, see if that field is defined on
         # model_inst, if it is and the value is different, update the value on
         # loaded_model.  In this case we are most likely handling a PUT or an
         # update to a model.
         if loaded_model:
-            self.copyFields(loaded_model, model_inst,
+            self.copyFields(loaded_model, model_inst, xobjModel,
                 withReadOnly=withReadOnly)
             return oldModel, loaded_model
 
@@ -111,7 +125,7 @@ class BaseManager(models.Manager):
                 setattr(model_inst, field.name, None)
         return oldModel, loaded_model
 
-    def copyFields(self, dest, src, withReadOnly=False):
+    def copyFields(self, dest, src, xobjModel=object(), withReadOnly=False):
         """
         Copy fields from src to dest
         If withReadOnly is set to True, read-only fields will also be copied
@@ -130,20 +144,20 @@ class BaseManager(models.Manager):
                 newFieldVal = getattr(src, field.name, None)
             except exceptions.ObjectDoesNotExist:
                 newFieldVal = None
-            if newFieldVal is None:
+            if newFieldVal is None and not hasattr(xobjModel, field.name):
                 continue
             oldFieldVal = getattr(dest, field.name)
             if newFieldVal != oldFieldVal:
                 setattr(dest, field.name, newFieldVal)
 
-    def load_or_create(self, model_inst, accessors=None, withReadOnly=False):
+    def load_or_create(self, model_inst, xobjModel=None, withReadOnly=False):
         """
         Similar in vein to django's get_or_create API.  Try to load a model
         from the db, if one wasn't found, create one and return it.
         """
         # Load the model from the db.
-        oldModel, loaded_model = self.load(model_inst, accessors,
-            withReadOnly=withReadOnly)
+        oldModel, loaded_model = self.load(model_inst,
+            xobjModel=xobjModel, withReadOnly=withReadOnly)
         if not loaded_model:
             # No matching model was found. We need to save.  This scenario
             # means we must be creating something new (POST), so it's safe to
@@ -154,13 +168,21 @@ class BaseManager(models.Manager):
 
         return oldModel, loaded_model
 
-    def load_from_href(self, href):
+    def load_from_href(self, xobjModel, refAttr="href"):
         """
-        Given an href, return the corresponding model.
+        Given an xobjModel, and an attribute to look at on that xobjModel for
+        a url, try to load the corresponding django model identified by that
+        url.
         """
+
+        if xobjModel is None:
+            return None
+
+        href = getattr(xobjModel, refAttr, None)
+
         if href:
             path = urlparse.urlparse(href)[2]
-            # Look up the view function that corrosponds to the href using the
+            # Look up the view function that corresponds to the href using the
             # django API.
             resolver = urlresolvers.resolve(path)
             # resolver contains a function and it's arguments that django
@@ -199,13 +221,8 @@ class BaseManager(models.Manager):
                 # Look up the inlined value
                 val = field.related.parent_model.objects.get(**lookup)
             elif isinstance(field, related.RelatedField):
-                href = getattr(val, 'href', None)
-                parentModel = field.related.parent_model
-                if href is not None:
-                    val = parentModel.objects.load_from_href(href)
-                else:
-                    # Maybe the object was inlined for convenience?
-                    val = parentModel.objects.load_from_object(val, request,
+                parentModel = field.rel.to
+                val = parentModel.objects.load_from_object(val, request,
                         save=save)
             elif isinstance(field, (djangofields.BooleanField,
                                     djangofields.NullBooleanField)):
@@ -291,7 +308,8 @@ class BaseManager(models.Manager):
         for key, val in obj.__dict__.items():
             if key in accessors:
                 ret_accessors[key] = []
-                rel_obj_name = accessors[key].var_name
+                rel_obj_model = accessors[key].model
+                rel_obj_name = rel_obj_model.getTag()
                 rel_objs = getattr(val, rel_obj_name, None)
                 if rel_objs is None:
                     continue
@@ -334,19 +352,29 @@ class BaseManager(models.Manager):
 
     def add_m2m_accessors(self, model, obj, request):
         """
-        Populate the many tom many accessors on model based on the xobj model
+        Populate the many to many accessors on model based on the xobj model
         in obj.
         """
         for m2m_accessor, m2m_mgr in model.get_m2m_accessor_dict().items():
-            rel_obj_name = m2m_mgr.target_field_name
-            self.clear_m2m_accessor(model, m2m_accessor)
+            _xobj = getattr(m2m_mgr.model, '_xobj', None)
+            if _xobj:
+                rel_obj_name = _xobj.tag or m2m_mgr.target_field_name
+            else:
+                rel_obj_name = m2m_mgr.target_field_name
+
             acobj = getattr(obj, m2m_accessor, None)
             objlist = getattr(acobj, rel_obj_name, None)
-            if objlist is not None and not isinstance(objlist, list):
-                objlist = [ objlist ]
+            if objlist is not None:
+                self.clear_m2m_accessor(model, m2m_accessor)
+                if not isinstance(objlist, list):
+                    objlist = [ objlist ]
             for rel_obj in objlist or []:
-                rel_mod = type_map[rel_obj_name].objects.load_from_object(
-                    rel_obj, request)
+                modelCls = m2m_mgr.model
+                refName = getattr(modelCls, 'refName', 'href')
+                rel_mod = modelCls.objects.load_from_href(rel_obj, refName)
+                if rel_mod is None:
+                    rel_mod = modelCls.objects.load_from_object(
+                        rel_obj, request)
                 self.set_m2m_accessor(model, m2m_accessor, rel_mod)
 
         return model
@@ -361,10 +389,32 @@ class BaseManager(models.Manager):
             setattr(model, fieldName, val)
         return model
 
-    def load_from_object(self, obj, request, save=True):
+    def add_abstract_fields(self, model, obj):
+        abstractFields = getattr(model._meta, 'abstract_fields', None)
+        if not abstractFields:
+            return model
+        for fieldName, mdl in abstractFields.items():
+            val = getattr(obj, fieldName, None)
+            if val is None:
+                continue
+            currentVal = getattr(model, fieldName, None)
+            if currentVal is None:
+                mdlinst = mdl()
+                setattr(model, fieldName, mdlinst)
+            else:
+                mdlinst = currentVal
+
+            mdl.objects.add_fields(mdlinst, val, request=None)
+        return model
+
+
+    def load_from_object(self, obj, request, save=True, load=True):
         """
         Given an object (obj) from xobj, create and return the  corresponding
-        model, loading it from the db if one exists.  obj does not have to be
+        model.  If load is True, load the model from the db and apply the
+        updates to it based on obj, otherwise, always create a new model.
+        
+        obj does not have to be
         from xobj, but it should match the similar structure of an object that
         xobj would create from xml.
         """
@@ -381,10 +431,17 @@ class BaseManager(models.Manager):
         model = self.add_synthetic_fields(model, obj)
         model = self.add_fields(model, obj, request, save=save)
         accessors = self.get_accessors(model, obj, request)
-        if save:
-            oldModel, model = self.load_or_create(model, accessors)
+        if not load:
+            try:
+                model.save()
+            except IntegrityError, e:
+                e.status = errors.BAD_REQUEST
+                raise e
+            oldModel = None
+        elif save:
+            oldModel, model = self.load_or_create(model, obj)
         else:
-            oldModel, dbmodel = self.load(model, accessors)
+            oldModel, dbmodel = self.load(model, obj)
             if dbmodel:
                 model = dbmodel
         # Copy the synthetic fields again - this is unfortunate
@@ -393,18 +450,20 @@ class BaseManager(models.Manager):
         model = self.add_m2m_accessors(model, obj, request)
         model = self.add_list_fields(model, obj, request, save=save)
         model = self.add_accessors(model, accessors)
+        model = self.add_abstract_fields(model, obj)
         model.oldModel = oldModel
 
         return model
 
 class TroveManager(BaseManager):
-    def load_from_object(self, obj, request, save=True):
+    def load_from_object(self, obj, request, save=True, load=True):
         # None flavor fixup
         if getattr(obj, 'flavor', None) is None:
             obj.flavor = ''
         # Fix up the flavor in the version object
         obj.version.flavor = obj.flavor
-        return BaseManager.load_from_object(self, obj, request, save=save)
+        return BaseManager.load_from_object(self, obj, request, save=save,
+            load=load)
 
     def clear_m2m_accessor(self, model, m2m_accessor):
         # We don't want available_updates to be published via REST
@@ -434,8 +493,8 @@ class VersionManager(BaseManager):
         return nmodel
 
 class JobManager(BaseManager):
-    def load_from_db(self, model_inst, accessors):
-        oldModel, loaded_model = BaseManager.load_from_db(self, model_inst, accessors)
+    def load_from_db(self, model_inst):
+        oldModel, loaded_model = BaseManager.load_from_db(self, model_inst)
         if loaded_model:
             return oldModel, loaded_model
         # We could not find the job. Create one just because we need to
@@ -448,21 +507,21 @@ class JobManager(BaseManager):
         return oldModel, model
 
 class CredentialsManager(BaseManager):
-    def load_from_object(self, obj, request, save=False):
+    def load_from_object(self, obj, request, save=False, load=True):
         model = self.model(system=None)
         for k, v in obj.__dict__.items():
             setattr(model, k, v)
         return model
     
 class ConfigurationManager(BaseManager):
-    def load_from_object(self, obj, request, save=False):
+    def load_from_object(self, obj, request, save=False, load=True):
         model = self.model(system=None)
         for k, v in obj.__dict__.items():
             setattr(model, k, v)
         return model
     
 class ConfigurationDescriptorManager(BaseManager):
-    def load_from_object(self, obj, request, save=False):
+    def load_from_object(self, obj, request, save=False, load=True):
         model = self.model(system=None)
         for k, v in obj.__dict__.items():
             setattr(model, k, v)
@@ -470,7 +529,7 @@ class ConfigurationDescriptorManager(BaseManager):
 
 class SystemManager(BaseManager):
     
-    def load_from_db(self, model_inst, accessors):
+    def load_from_db(self, model_inst):
         """
         Overridden because systems have several checks required to determine 
         if the system already exists.
@@ -479,14 +538,14 @@ class SystemManager(BaseManager):
         if model_inst.system_id is not None:
             loaded_model = self.tryLoad(dict(system_id=model_inst.system_id))
             if loaded_model:
-                return loaded_model.serialize(), loaded_model
+                return self._fromDb(loaded_model)
         # only check uuids if they are not none
         if model_inst.local_uuid and model_inst.generated_uuid:
             loaded_model = self.tryLoad(dict(local_uuid=model_inst.local_uuid,
                 generated_uuid=model_inst.generated_uuid))
             if loaded_model:
-                # a system matching (local_uuid, generated_uuid) was found)
-                return loaded_model.serialize(), loaded_model
+                # a system matching (local_uuid, generated_uuid) was found
+                return self._fromDb(loaded_model)
         if model_inst.event_uuid:
             # Look up systems by event_uuid
             systems = [ x.system
@@ -494,7 +553,7 @@ class SystemManager(BaseManager):
                     event_uuid = model_inst.event_uuid) ]
             if systems:
                 system = systems[0]
-                return system.serialize(), system
+                return self._fromDb(system)
         if model_inst.boot_uuid:
             # Look up systems by old-style jobs
             cu = connection.cursor()
@@ -518,14 +577,20 @@ class SystemManager(BaseManager):
             rs = list(cu)
             if rs:
                 loaded_model = self.tryLoad(dict(system_id=rs[0][0]))
-                return loaded_model.serialize(), loaded_model
+                return self._fromDb(loaded_model)
         if model_inst.target and model_inst.target_system_id:
             loaded_model = self.tryLoad(dict(target=model_inst.target,
                 target_system_id=model_inst.target_system_id))
             if loaded_model:
-                return loaded_model.serialize(), loaded_model
+                return self._fromDb(loaded_model)
 
         return None, None
+
+    def _fromDb(self, obj):
+        if obj is None:
+            return None, None
+        obj.network_address = obj.__class__.extractNetworkAddress(obj)
+        return obj.serialize(), obj
 
     def tryLoad(self, loadDict):
         try:
@@ -580,6 +645,8 @@ class SystemManager(BaseManager):
         for key, val in accessors.items():
             if key == 'networks':
                 model.networks.all().delete()
+            if key == "system_tags":
+                model.system_tags.all().delete()
             for v in val:
                 getattr(model, key).add(v)
         return model
@@ -589,8 +656,8 @@ class ManagementNodeManager(SystemManager):
     Overridden because management nodes have several checks required to
     determine if the system already exists.
     """
-    def load_from_db(self, model_inst, accessors):
-        oldModel, loaded_model = BaseManager.load_from_db(self, model_inst, accessors)
+    def load_from_db(self, model_inst):
+        oldModel, loaded_model = BaseManager.load_from_db(self, model_inst)
         if loaded_model:
             if loaded_model.managing_zone_id is None:
                 loaded_model.managing_zone = loaded_model.zone
@@ -612,7 +679,7 @@ class ManagementNodeManager(SystemManager):
         return zone
 
 class SystemsManager(BaseManager):
-    def load(self, model_inst, accessors=None):
+    def load(self, *args, **kwargs):
         """
         Overridden because systems has no direct representation in the db - we
         need to load individual objects
@@ -625,6 +692,10 @@ class ManagementNodesManager(SystemsManager):
 
 class InstalledSoftwareManager(SystemsManager):
     pass
+
+class ProductsManager(BaseManager):
+    def load_from_href(self, *args, **kwargs):
+        return None
 
 class XObjModel(models.Model):
     """
@@ -639,6 +710,21 @@ class XObjModel(models.Model):
             underscoreName = mintutils.Transformations.strToUnderscore(
                 name[0].lower() + name[1:])
             ret._xobjClass = type(underscoreName, (object, ), {})
+
+            retXObj = getattr(ret, '_xobj', None)
+            if retXObj:
+                for base in bases:
+                    _xobj = getattr(base, '_xobj', None)
+                    if not _xobj:
+                        continue
+                    newAttrs = _xobj.attributes.copy()
+                    newAttrs.update(ret._xobj.attributes)
+                    ret._xobj.attributes = newAttrs
+
+                    for elem in _xobj.elements:
+                        if elem not in ret._xobj.elements:
+                            ret._xobj.elements.append(elem)
+
             return ret
 
     class Meta:
@@ -646,6 +732,9 @@ class XObjModel(models.Model):
 
     # All models use our BaseManager as their manager
     objects = BaseManager()
+
+    # Fields that when changed, cause a log to get created.
+    logged_fields = []
 
     # Fields which should be serialized/deserialized as lists.  This is a hint
     # for the to_xml method, e.g., given the Systems model with 'system' in
@@ -733,6 +822,36 @@ class XObjModel(models.Model):
             return m2model._xobj.tag
         return m2model._meta.verbose_name
 
+    @classmethod
+    def getTag(cls):
+        tag = None
+        _xobj = getattr(cls, '_xobj', None)
+        if _xobj:
+            tag = _xobj.tag
+        if not tag:
+            tag = cls.__name__.lower()
+        return tag
+
+    def _saveFields(self):
+        if self._meta.abstract:
+            return
+        fieldNames = self.get_field_dict().keys()
+        if self.pk:
+            self._savedFields = dict((f, getattr(self, f)) \
+                            for f in self.logged_fields \
+                            if f in fieldNames)
+        else:
+            self._savedFields = None
+
+    def getChangedFields(self):
+        changedFields = {}
+        if self._savedFields is None:
+            return changedFields
+        for k, v in self._savedFields.items():
+            if v != getattr(self, k):
+                changedFields[k] = v
+        return changedFields
+
     def load_fields_dict(self):
         """
         Returns a dict of field name, field value for each field in
@@ -743,11 +862,12 @@ class XObjModel(models.Model):
             fields_dict[f.name] = getattr(self, f.name, None)
         return fields_dict
 
-    def to_xml(self, request=None):
+    def to_xml(self, request=None, xobj_model=None):
         """
         Returns the xml serialization of this model.
         """
-        xobj_model = self.serialize(request)
+        if not xobj_model:
+            xobj_model = self.serialize(request)
         return xobj.toxml(xobj_model, xobj_model.__class__.__name__)
 
     def get_absolute_url(self, request=None, parents=None, model=None):
@@ -764,13 +884,21 @@ class XObjModel(models.Model):
         # specified so that when generating a url for a Network model, the
         # system parent can be sent in, such that the result is
         # /api/inventory/systems/1/networks, where 1 is the system pk.
-        if not parents:
-            url_key = getattr(self, 'pk', [])
-            url_key = [str(url_key)]
-        else:
+        _parents = getattr(self, '_parents', None)
+        if parents:
             url_key = []
             for parent in parents:
                 url_key.append(str(parent.pk))
+        elif _parents:
+            url_key = []
+            for parent in _parents:
+                url_key.append(str(parent.pk))
+        else:
+            url_key = getattr(self, 'pk', None)
+            if url_key:
+                url_key = [str(url_key)]
+            else:
+                url_key = []
 
         # Now do what models.pattern does.
         bits = (view_name, url_key)
@@ -784,16 +912,6 @@ class XObjModel(models.Model):
             return request.build_absolute_uri(relative_url)
         else:
             return relative_url
-
-    def _serialize_hrefs(self, request=None):
-        """
-        Serialize each occurence of where an XObjHrefModel has been set as
-        an attribute on this model.
-        """
-        href_fields = [(f, v) for f, v in self.__class__.__dict__.items() \
-                        if isinstance(v, XObjHrefModel)]
-        for href in href_fields:
-            href[1].serialize(request)
 
     def get_field_dict(self):
         """
@@ -854,10 +972,8 @@ class XObjModel(models.Model):
                     if val is None:
                         continue
                     val = xobj.parse(val)
-                setattr(xobj_model, key, val)
-            # TODO: is this still needed, we already called serialize_hrefs.?
-            elif isinstance(val, XObjHrefModel):
-                val.serialize(request)
+                elif isinstance(field, HrefField):
+                    val = field.serialize_value(request)
                 setattr(xobj_model, key, val)
 
     def serialize_fk_fields(self, xobj_model, fields, request, values=None):
@@ -877,6 +993,7 @@ class XObjModel(models.Model):
                 text_field = getattr(field, 'text_field', None)
                 serialized = getattr(field, 'serialized', False)
                 visible = getattr(field, 'visible', None)
+                refName = getattr(field, 'refName', 'href')
                 if val:
                     if visible:
                         # If the visible prop is set, we want to copy the
@@ -884,14 +1001,15 @@ class XObjModel(models.Model):
                         setattr(xobj_model, fieldName,
                             getattr(val, visible))
                     elif not serialized:
-                        href_model = type('%s_href' % \
+                        refModel = type('%s_ref' % \
                             self.__class__.__name__, (object,), {})()
-                        href_model._xobj = xobj.XObjMetadata(
-                                            attributes = {'href':str})
-                        href_model.href = val.get_absolute_url(request)
+                        refModel._xobj = xobj.XObjMetadata(
+                                            attributes = {refName:str})
+                        setattr(refModel, refName, 
+                            val.get_absolute_url(request))
                         if text_field and getattr(val, text_field):
-                            href_model._xobj.text = getattr(val, text_field)
-                        setattr(xobj_model, fieldName, href_model)
+                            refModel._xobj.text = getattr(val, text_field)
+                        setattr(xobj_model, fieldName, refModel)
                     else:
                         val = val.serialize(request)
                         setattr(xobj_model, fieldName, val)
@@ -1036,10 +1154,13 @@ class XObjModel(models.Model):
         Serialize this model into an object that can be passed blindly into
         xobj to produce the xml that we require.
         """
-        self._serialize_hrefs(request)
         # Basic object to use to send to xobj.
         xobjModelClass = self._xobjClass
         xobj_model = xobjModelClass()
+
+        _xobj = getattr(self, '_xobj', None)
+        if _xobj:
+            xobj_model._xobj = _xobj
 
         fields = self.get_field_dict()
         m2m_accessors = self.get_m2m_accessor_dict()
@@ -1055,7 +1176,6 @@ class XObjModel(models.Model):
         self.serialize_list_fields(xobj_model, request, values=values)
 
         return xobj_model
-
 
 class SyntheticField(object):
     """A field that has no database storage, but is de-serialized"""
@@ -1073,17 +1193,26 @@ class XObjIdModel(XObjModel):
             ret = XObjModel.__metaclass__.__new__(cls, name, bases, attrs)
             # Find synthetic fields
             ret._meta.synthetic_fields = synth = set()
+            ret._meta.abstract_fields = abstr = dict()
             for k, v in attrs.items():
                 if isinstance(v, SyntheticField):
                     synth.add(k)
                     # Default the value to None
                     setattr(ret, k, None)
+                meta = getattr(v, '_meta', None)
+                if meta is not None and meta.abstract:
+                    abstr[k] = v
+                    setattr(ret, k, None)
             return ret
 
     def serialize(self, request=None, values=None):
         xobj_model = XObjModel.serialize(self, request, values=values)
-        xobj_model._xobj = xobj.XObjMetadata(
-                            attributes = {'id':str})
+        _xobj = getattr(xobj_model, '_xobj', None)
+        if _xobj:
+            xobj_model._xobj.attributes['id'] = str
+        else:
+            xobj_model._xobj = xobj.XObjMetadata(
+                                attributes = {'id':str})
         xobj_model.id = self.get_absolute_url(request, model=xobj_model)
         return xobj_model
 
@@ -1095,14 +1224,21 @@ class XObjHrefModel(XObjModel):
         abstract = True
 
     _xobj = xobj.XObjMetadata(
-                attributes = {'href':str})
+                attributes = {})
 
+    def __init__(self, refValue, refName='href'):
+        self._xobj.attributes[refName] = str
+        setattr(self, refName, refValue)
+        
+class HrefField(models.Field):
     def __init__(self, href=None):
         self.href = href
+        models.Field.__init__(self)
 
-    def serialize(self, request=None, values=None):
-        self.href = request.build_absolute_uri(self.href)
-        
+    def serialize_value(self, request=None, values=None):
+        hrefModel = XObjHrefModel(request.build_absolute_uri(self.href))
+        return hrefModel
+
 class ForeignKey(models.ForeignKey):
     """
     Wrapper of django foreign key for use in models
@@ -1119,7 +1255,30 @@ class ForeignKey(models.ForeignKey):
             self.text_field = kwargs.pop('text_field')
         except KeyError:
             pass # text wasn't specified, that is fine
+
+        self.refName = 'href'
+        try:
+            self.refName = kwargs.pop('refName')
+        except KeyError:
+            pass # text wasn't specified, that is fine
+
         super(ForeignKey, self).__init__(*args, **kwargs)
+
+class ManyToManyField(models.ManyToManyField):
+    """
+    Wrapper of ManyToManyFields
+
+    Adds the ability to specify refName, which is an attribute name whose
+    value will be an absolute url of the model.
+    """
+    def __init__(self, *args, **kwargs):
+        self.refName = 'href'
+        try:
+            self.refName = kwargs.pop('refName')
+        except KeyError:
+            pass # text wasn't specified, that is fine
+
+        super(ManyToManyField, self).__init__(*args, **kwargs)
 
 class SerializedForeignKey(ForeignKey):
     """

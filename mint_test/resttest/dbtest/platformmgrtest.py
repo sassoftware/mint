@@ -140,7 +140,7 @@ class PlatformManagerTest(restbase.BaseRestTest):
         platformLoad = mock.MockObject()
         uri = mock.MockObject()
         uri.encode._mock.setDefaultReturn(u'http://no.such.host/1234')
-        platformLoad._mock.set(uri = uri)
+        platformLoad._mock.set(loadUri=uri)
 
         from conary.build import lookaside
         lookasideClass = mock.MockObject()

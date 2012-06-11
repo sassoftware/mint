@@ -266,7 +266,7 @@ def setDebugHook():
 
 
 def call(cmd, ignoreErrors=False, logCmd=True, logLevel=logging.INFO,
-        captureOutput=True, wait=True, **kw):
+        captureOutput=True, wait=True, callback=None, **kw):
     """
     Run command C{cmd}, optionally logging the invocation and output.
 
@@ -286,6 +286,12 @@ def call(cmd, ignoreErrors=False, logCmd=True, logLevel=logging.INFO,
     @type  captureOutput: C{bool}
     @param kw: All other keyword arguments are passed to L{subprocess.Popen}
     @type  kw: C{dict}
+    @param wait: If captureOutput and wait are False, do not wait for the
+            process to exit. Always returns the subprocess object.
+    @type  wait: C{bool}
+    @param callback: A function to be called with (pipe, line) for each line of
+            stdout or stderr received.
+    @type  callback: callable
     """
     logger = _getLogger(kw.pop('_levels', 2))
 
@@ -312,6 +318,12 @@ def call(cmd, ignoreErrors=False, logCmd=True, logLevel=logging.INFO,
         # Can't grab output if we don't have any pipes.
         captureOutput = False
 
+    def _lineHook(whichPipe, line):
+        if logCmd and line.strip():
+            logger.log(logLevel, "++ (%s) %s", whichPipe, line.rstrip())
+        if callback:
+            callback(whichPipe, line)
+
     stdout = stderr = ''
     if captureOutput:
         while p.poll() is None:
@@ -325,21 +337,18 @@ def call(cmd, ignoreErrors=False, logCmd=True, logLevel=logging.INFO,
                 else:
                     which = 'stderr'
                     stderr += line
-                if logCmd and line.strip():
-                    logger.log(logLevel, "++ (%s) %s", which, line.rstrip())
+                _lineHook(which, line)
 
         # pylint: disable-msg=E1103
         stdout_, stderr_ = p.communicate()
         if stderr_ is not None:
             stderr += stderr_
-            if logCmd:
-                for x in stderr_.splitlines():
-                    logger.log(logLevel, "++ (stderr) %s", x)
+            for x in stderr_.splitlines():
+                _lineHook('stderr', x)
         if stdout_ is not None:
             stdout += stdout_
-            if logCmd:
-                for x in stdout_.splitlines():
-                    logger.log(logLevel, "++ (stdout) %s", x)
+            for x in stdout_.splitlines():
+                _lineHook('stdout', x)
     elif wait:
         tryInterruptable(p.wait)
 

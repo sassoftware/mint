@@ -11,31 +11,13 @@ Description:
 <xsl:copy-of select="$system_state_model_properties" />
 </xsl:variable>
 
-<xsl:variable name="system_state_model_properties"><![CDATA[
-SystemState Properties:
-  name - the state name
-  description - the state description
-  system_state_id - the database id for the state
-  created_date - the date the state was created (UTC)]]>
+<xsl:variable name="system_state_model_properties"><![CDATA[   created_date - the date the state was created (UTC)
+   description - the state description
+   name - the state name
+   system_state_id - the database id for the state]]>
 </xsl:variable>
 
-<xsl:variable name="system_state_methods"><![CDATA[
-Methods: 
-  GET:
-    Authentication: none
-    Response Format:
-       <system_state id="http://hostname/api/inventory/system_states/1/">
-         ...
-       </system_state>
-      
-  POST:
-    not supported
-    
-  PUT:
-    not supported
-    
-  DELETE:
-    not supported]]>
+<xsl:variable name="system_state_methods"><![CDATA[@@METHODS@@]]>
 </xsl:variable>
 
 </xsl:stylesheet>

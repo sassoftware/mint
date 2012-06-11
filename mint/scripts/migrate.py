@@ -11,6 +11,7 @@ import sys
 import datetime
 from dateutil import tz
 
+from conary import files as cny_files
 from conary.conarycfg import loadEntitlement, EntitlementList
 from conary.dbstore import migration, sqlerrors
 from mint import userlevels
@@ -2304,6 +2305,386 @@ class MigrateTo_52(SchemaMigration):
             SET last_available_update_refresh = NULL
         """)
 
+        return True
+
+class MigrateTo_53(SchemaMigration):
+    Version = (53, 6)
+
+    def migrate(self):
+        db = self.db
+
+        schema.createTable(db, 'querysets_queryset', """
+            CREATE TABLE "querysets_queryset" (
+                "query_set_id" %(PRIMARYKEY)s,
+                "name" TEXT NOT NULL UNIQUE,
+                "created_date" TIMESTAMP WITH TIME ZONE NOT NULL,
+                "modified_date" TIMESTAMP WITH TIME ZONE NOT NULL,
+                "resource_type" TEXT NOT NULL
+            )""")
+        schema._addTableRows(db, "querysets_queryset", "name",
+            [dict(name="All Systems", resource_type="system",
+                created_date=str(datetime.datetime.now(tz.tzutc())),
+                modified_date=str(datetime.datetime.now(tz.tzutc()))),
+             dict(name="Active Systems", resource_type="system",
+                created_date=str(datetime.datetime.now(tz.tzutc())),
+                modified_date=str(datetime.datetime.now(tz.tzutc()))),
+             dict(name="Inactive Systems", resource_type="system",
+                created_date=str(datetime.datetime.now(tz.tzutc())),
+                modified_date=str(datetime.datetime.now(tz.tzutc()))),
+             dict(name="Physical Systems", resource_type="system",
+                created_date=str(datetime.datetime.now(tz.tzutc())),
+                modified_date=str(datetime.datetime.now(tz.tzutc()))),
+            ])
+        allQSId = schema._getRowPk(db, "querysets_queryset", "query_set_id", 
+            name="All Systems")
+        activeQSId = schema._getRowPk(db, "querysets_queryset", "query_set_id", 
+            name="Active Systems")
+        inactiveQSId = schema._getRowPk(db, "querysets_queryset", "query_set_id", 
+            name="Inactive Systems")
+        physicalQSId = schema._getRowPk(db, "querysets_queryset", "query_set_id", 
+            name="Physical Systems")
+
+        schema.createTable(db, 'querysets_filterentry', """
+            CREATE TABLE "querysets_filterentry" (
+                "filter_entry_id" %(PRIMARYKEY)s,
+                "field" TEXT NOT NULL,
+                "operator" TEXT NOT NULL,
+                "value" TEXT,
+                UNIQUE("field", "operator", "value")
+            )""")
+        schema._addTableRows(db, "querysets_filterentry",
+            'filter_entry_id',
+            [dict(field="current_state.name", operator="EQUAL", value="responsive"),
+             dict(field="current_state.name", operator="IN", 
+                value="(unmanaged,unmanaged-credentials,registered,non-responsive-unknown,non-responsive-net,non-responsive-host,non-responsive-shutdown,non-responsive-suspended,non-responsive-credentials)"),
+             dict(field="target", operator='IS_NULL', value="True")],
+            ['field', 'operator', 'value'])
+        activeFiltId = schema._getRowPk(db, "querysets_filterentry", 'filter_entry_id',
+            field="current_state.name", operator="EQUAL", value="responsive")
+        inactiveFiltId = schema._getRowPk(db, "querysets_filterentry", 'filter_entry_id',
+            field="current_state.name", operator="IN", 
+                        value="(unmanaged,unmanaged-credentials,registered,non-responsive-unknown,non-responsive-net,non-responsive-host,non-responsive-shutdown,non-responsive-suspended,non-responsive-credentials)")
+        physicalFiltId = schema._getRowPk(db, "querysets_filterentry", 'filter_entry_id',
+            field="target", operator='IS_NULL', value="True")
+
+        schema.createTable(db, 'querysets_querytag', """
+            CREATE TABLE "querysets_querytag" (
+                "query_tag_id" %(PRIMARYKEY)s,
+                "query_set_id" INTEGER
+                    REFERENCES "querysets_queryset" ("query_set_id")
+                    ON DELETE CASCADE,
+                "query_tag" TEXT NOT NULL UNIQUE
+            )""")
+        schema._addTableRows(db, "querysets_querytag", "query_tag",
+            [dict(query_set_id=allQSId, query_tag="query-tag-All Systems-1"),
+             dict(query_set_id=activeQSId, query_tag="query-tag-Active Systems-2"),
+             dict(query_set_id=inactiveQSId, query_tag="query-tag-Inactive Systems-3"),
+             dict(query_set_id=physicalQSId, query_tag="query-tag-Physical Systems-4"),
+            ])
+
+        schema.createTable(db, 'querysets_inclusionmethod', """
+            CREATE TABLE "querysets_inclusionmethod" (
+                "inclusion_method_id" %(PRIMARYKEY)s,
+                "inclusion_method" TEXT NOT NULL UNIQUE
+            )""")
+        schema._addTableRows(db, "querysets_inclusionmethod",
+            "inclusion_method",
+            [dict(inclusion_method="chosen"),
+             dict(inclusion_method="filtered")])
+
+        schema.createTable(db, 'querysets_systemtag', """
+            CREATE TABLE "querysets_systemtag" (
+                "system_tag_id" %(PRIMARYKEY)s,
+                "system_id" INTEGER
+                    REFERENCES "inventory_system" ("system_id")
+                    ON DELETE CASCADE
+                    NOT NULL,
+                "query_tag_id" INTEGER
+                    REFERENCES "querysets_querytag" ("query_tag_id")
+                    ON DELETE CASCADE
+                    NOT NULL,
+                "inclusion_method_id" INTEGER
+                    REFERENCES "querysets_inclusionmethod" ("inclusion_method_id")
+                    ON DELETE CASCADE
+                    NOT NULL,
+                UNIQUE ("system_id", "query_tag_id", "inclusion_method_id")
+            )""")
+
+        schema.createTable(db, "querysets_queryset_filter_entries", """
+            CREATE TABLE "querysets_queryset_filter_entries" (
+                "id" %(PRIMARYKEY)s,
+                "queryset_id" INTEGER
+                    REFERENCES "querysets_queryset" ("query_set_id")
+                    ON DELETE CASCADE
+                    NOT NULL,
+                "filterentry_id" INTEGER
+                    REFERENCES "querysets_filterentry" ("filter_entry_id")
+                    ON DELETE CASCADE
+                    NOT NULL,
+                UNIQUE ("queryset_id", "filterentry_id")
+            )""")
+
+        schema._addTableRows(db, "querysets_queryset_filter_entries",
+            'id',
+            [dict(queryset_id=activeQSId, filterentry_id=activeFiltId),
+             dict(queryset_id=inactiveQSId, filterentry_id=inactiveFiltId),
+             dict(queryset_id=physicalQSId, filterentry_id=physicalFiltId)],
+            ['queryset_id', 'filterentry_id'])
+
+        schema.createTable(db, "querysets_queryset_children", """
+            CREATE TABLE "querysets_queryset_children" (
+                "id" %(PRIMARYKEY)s,
+                "from_queryset_id" INTEGER
+                    REFERENCES "querysets_queryset" ("query_set_id")
+                    ON DELETE CASCADE
+                    NOT NULL,
+                "to_queryset_id" INTEGER
+                    REFERENCES "querysets_queryset" ("query_set_id")
+                    ON DELETE CASCADE
+                    NOT NULL,
+                UNIQUE ("from_queryset_id", "to_queryset_id")
+            )""")
+        schema._addTableRows(db, "querysets_queryset_children",
+            'id',
+            [dict(from_queryset_id=allQSId, to_queryset_id=activeQSId),
+             dict(from_queryset_id=allQSId, to_queryset_id=inactiveQSId)],
+            uniqueCols=('from_queryset_id', 'to_queryset_id'))
+
+        return True
+
+    def migrate1(self):
+        db = self.db
+
+        schema.createTable(db, 'changelog_change_log', """
+            CREATE TABLE "changelog_change_log" (
+                "change_log_id" %(PRIMARYKEY)s,
+                "resource_type" TEXT NOT NULL,
+                "resource_id" INTEGER NOT NULL
+            )""")
+
+        schema.createTable(db, 'changelog_change_log_entry', """
+            CREATE TABLE "changelog_change_log_entry" (
+                "change_log_entry_id" %(PRIMARYKEY)s,
+                "change_log_id" INTEGER
+                    REFERENCES "changelog_change_log" ("change_log_id")
+                    ON DELETE CASCADE NOT NULL,
+                "entry_text" TEXT NOT NULL,
+                "entry_date" TIMESTAMP WITH TIME ZONE NOT NULL
+            )""")
+
+        return True
+
+    def migrate2(self):
+        cursor = self.db.cursor()
+        cursor.execute("""
+            ALTER TABLE "querysets_queryset"
+            ADD COLUMN "description" TEXT
+        """)
+        cursor.execute("""
+            UPDATE "querysets_queryset"
+            SET "description" = "name"
+        """)
+
+        return True
+
+    def migrate3(self):
+        cursor = self.db.cursor()
+        cursor.execute("""
+            ALTER TABLE "querysets_queryset"
+            ADD COLUMN "can_modify" BOOLEAN NOT NULL DEFAULT TRUE
+        """)
+        cursor.execute("""
+            UPDATE "querysets_queryset" SET "can_modify" = false
+        """)
+
+        return True
+
+    def migrate4(self):
+        cu = self.db.cursor()
+        cu.execute("""
+            ALTER TABLE inventory_stage 
+            DROP CONSTRAINT inventory_stage_major_version_id_fkey
+        """)
+        cu.execute("""
+            ALTER TABLE inventory_stage 
+            ADD CONSTRAINT inventory_stage_major_version_id_fkey 
+            FOREIGN KEY (major_version_id) 
+            REFERENCES productversions(productversionid) ON DELETE SET NULL
+        """)
+
+        return True
+
+    def migrate5(self):
+        cu = self.db.cursor()
+        cu.execute("""
+            ALTER TABLE querysets_querytag
+            RENAME query_tag to name
+        """)
+
+        cu.execute("""
+            ALTER TABLE querysets_inclusionmethod
+            RENAME inclusion_method to name
+        """)
+
+        cu.execute("""
+            UPDATE querysets_querytag
+            SET name='query-tag-All_Systems-1'
+            WHERE name='query-tag-All Systems-1'
+        """)
+        cu.execute("""
+            UPDATE querysets_querytag
+            SET name='query-tag-Active_Systems-2'
+            WHERE name='query-tag-Active Systems-2'
+        """)
+        cu.execute("""
+            UPDATE querysets_querytag
+            SET name='query-tag-Inactive_Systems-3'
+            WHERE name='query-tag-Inactive Systems-3'
+        """)
+        cu.execute("""
+            UPDATE querysets_querytag
+            SET name='query-tag-Physical_Systems-4'
+            WHERE name='query-tag-Physical Systems-4'
+        """)
+
+        cu.execute("""
+            ALTER TABLE querysets_querytag
+            ADD CONSTRAINT querysets_querytag_query_set_id_uq
+            UNIQUE (query_set_id)
+        """)
+
+        cu.execute("""
+            ALTER TABLE querysets_querytag
+            ALTER query_set_id SET NOT NULL
+        """)
+
+        return True
+
+    def migrate6(self):
+        cu = self.db.cursor()
+        if not columnExists(self.db, "inventory_trove", "out_of_date"):
+            cu.execute("""
+                ALTER TABLE inventory_trove
+                ADD out_of_date BOOL
+            """)
+
+        # Invalidate trove update cache so that all updates will be recomputed
+        cu.execute("""
+            UPDATE inventory_trove
+            SET last_available_update_refresh = NULL
+        """)
+
+        return True
+
+class MigrateTo_54(SchemaMigration):
+    Version = (54, 0)
+
+    def migrate(self):
+        return True
+
+class MigrateTo_55(SchemaMigration):
+    Version = (55, 3)
+
+    def migrate(self):
+        return True
+
+    def migrate1(self):
+        cu = self.db.cursor()
+        cu.execute("UPDATE inventory_event_type SET priority=70 WHERE name = 'system registration'")
+        return True
+
+    def migrate2(self):
+        # Add field for imported images. The best way to find that linkage post
+        # facto is to look in the repository by SHA1, yecch.
+        cu = self.db.cursor()
+        cu.execute("ALTER TABLE Builds ADD output_trove text")
+
+        # Skip the computed part if we're running a test or initial schema.
+        if not self.cfg:
+            return True
+
+        cu.execute("""SELECT fqdn, buildId, sha1 FROM Builds
+            JOIN BuildFiles USING (buildId)
+            JOIN Projects USING (projectId)
+            WHERE troveVersion = '/local@local:COOK/0.100:1-1-1'""")
+        buildsBySha1ByProject = {}
+        for fqdn, buildId, sha1 in cu:
+            buildsBySha1ByProject.setdefault(fqdn, {}
+                    ).setdefault(sha1, set()).add(buildId)
+
+        manager = repository.RepositoryManager(self.cfg, self.db, bypass=True)
+        client = manager.getClient(userId=repository.ANY_READER)
+        repos = client.repos
+        updates = []
+        for fqdn, buildsBySha1 in buildsBySha1ByProject.items():
+            # Get latest versions of all troves, then filter to just the
+            # image-foo troves
+            leaves = repos.getAllTroveLeaves(fqdn, {})
+            allQuery = {}
+            for name, versions in leaves.iteritems():
+                if not name.startswith('image-'):
+                    continue
+                for version in versions:
+                    allQuery.setdefault(name, {})[version.trailingLabel()
+                            ] = None
+            if not allQuery:
+                manager.reset()
+                continue
+            # Get all versions of all image troves
+            allVersions = repos.getTroveVersionsByLabel(allQuery)
+            allJobs = set()
+            for name, versions in allVersions.iteritems():
+                for version, flavors in versions.items():
+                    for flavor in flavors:
+                        allJobs.add(
+                                (name, (None, None), (version, flavor), True))
+            # Get changeset of all image troves with files but not contents.
+            # Map contents SHA-1 back to the trove tuple.
+            allJobs = sorted(allJobs)
+            cs = repos.createChangeSet(allJobs, withFiles=True,
+                    withFileContents=False, recurse=False)
+            troveSpecsBySha1 = {}
+            for name, _, (version, flavor), _ in allJobs:
+                try:
+                    trvCs = cs.getNewTroveVersion(name, version, flavor)
+                except KeyError:
+                    # Trove is missing
+                    continue
+                if trvCs.getTroveInfo().factory() != 'rbuilder-image':
+                    # Not an imported image
+                    continue
+                for pathId, path, fileId, fileVer in trvCs.getNewFileList():
+                    fileStreamBlob = cs.getFileChange(None, fileId)
+                    fileStream = cny_files.ThawFile(fileStreamBlob, pathId)
+                    sha1 = fileStream.contents.sha1()
+                    if sha1:
+                        sha1 = sha1.encode('hex')
+                        tup = '%s=%s' % (name, version)
+                        troveSpecsBySha1.setdefault(sha1, set()
+                                ).add((version, tup))
+            manager.reset()
+
+            for sha1, buildIds in buildsBySha1.items():
+                tups = troveSpecsBySha1.get(sha1)
+                if not tups:
+                    continue
+                # Pick latest version if more than one trove had that SHA-1
+                tup = sorted(tups)[-1][1]
+                for buildId in buildIds:
+                    updates.append((tup, buildId))
+
+        if updates:
+            cu.executemany("""UPDATE Builds SET output_trove = ?
+                    WHERE buildId = ?""", updates)
+
+        return True
+
+    def migrate3(self):
+        db = self.db
+        schema._addTableRows(db, 'job_types', 'name',
+        [
+          dict(name="image-deployment", description="Image Deployment"),
+        ])
         return True
 
 #### SCHEMA MIGRATIONS END HERE #############################################

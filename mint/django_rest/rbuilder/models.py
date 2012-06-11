@@ -1,11 +1,8 @@
-# This is an auto-generated Django model module.
-# You'll have to do the following manually to clean this up:
-#     * Rearrange models' order
-#     * Make sure each model has one field with primary_key=True
-# Feel free to rename the models, but don't rename db_table values or field names.
 #
-# Also note: You'll have to insert the output of 'django-admin.py sqlcustom [appname]'
-# into your database.
+# Copyright (c) 2011 rPath, Inc.
+#
+# All Rights Reserved
+#
 
 import urlparse
 
@@ -15,6 +12,13 @@ from django.conf import settings
 from mint.django_rest.rbuilder import modellib
 
 XObjHidden = modellib.XObjHidden
+
+class Fault(modellib.XObjModel):
+    class Meta:
+        abstract = True
+    code = models.IntegerField(null=True)
+    message = models.CharField(max_length=8092, null=True)
+    traceback = models.TextField(null=True)
 
 class DatabaseVersion(modellib.XObjModel):
     class Meta:
@@ -68,7 +72,7 @@ class Products(modellib.XObjModel):
     productId = models.AutoField(primary_key=True, db_column='projectid', blank=True)
     hostname = models.CharField(unique=True, max_length=63)
     name = models.CharField(unique=True, max_length=128)
-    namespace = models.CharField(max_length=16)
+    namespace = models.CharField(max_length=16, null=True)
     domainname = models.CharField(max_length=128)
     shortname = models.CharField(unique=True, max_length=63)
     projecturl = models.CharField(max_length=128, null=True, blank=True)
@@ -84,6 +88,7 @@ class Products(modellib.XObjModel):
     members = models.ManyToManyField(Users, through="Members", related_name='members')
     
     view_name = 'Projects'
+    objects = modellib.ProductsManager()
     
     class Meta:
         managed = settings.MANAGE_RBUILDER_MODELS

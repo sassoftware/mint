@@ -89,16 +89,17 @@ class BuildDefinitionMixIn(object):
 
     @classmethod
     def computeBuildDefinitionDigest(cls, buildDef):
-        # Since we don't have unique IDs for builds, we need to manufacture
-        # some - we'll digest the three refs.
-        digest = digestlib.md5()
-        if buildDef.containerTemplateRef:
-            digest.update(buildDef.containerTemplateRef)
-        if buildDef.architectureRef:
-            digest.update(buildDef.architectureRef)
-        if buildDef.flavorSetRef:
-            digest.update(buildDef.flavorSetRef)
+        # We'll serialize the build def and hash it to get an ID
+        digest = cls.Digester_md5()
+        buildDef.export(digest, level=0, namespace_='')
         return digest.hexdigest()
+
+    class Digester_md5(object):
+        def __init__(self):
+            self._digest = digestlib.md5()
+            self.hexdigest = self._digest.hexdigest
+        def write(self, data):
+            self._digest.update(data)
 
 class PromotionJobStatusController(base.BaseController):
     modelName = 'jobs'
@@ -171,9 +172,10 @@ class ProductVersionDefinition(base.BaseController):
 class ProductVersionController(base.BaseController, BuildDefinitionMixIn):
 
     modelName = 'version'
-    urls = {'platform'   : dict(GET='getPlatform',
-                                PUT='setPlatform',
-                                POST='updatePlatform'),
+    urls = {'platformVersion' : dict(GET='getPlatformVersion',
+                                     PUT='setPlatformVersion',
+                                     POST='updatePlatformVersion'),
+            'platform' : dict(GET='getPlatform'),
             'stages'     : ProductVersionStages,
             'definition' : ProductVersionDefinition,
             'images'     : dict(GET='getImages'),
@@ -206,14 +208,19 @@ class ProductVersionController(base.BaseController, BuildDefinitionMixIn):
     def getPlatform(self, request, hostname, version):
         return self.db.getProductVersionPlatform(hostname, version)
 
-    @requires('platform', models.Platform)
-    def setPlatform(self, request, hostname, version, platform):
-        self.db.rebaseProductVersionPlatform(hostname, version, platform.label)
-        return self.getPlatform(request, hostname, version)
+    @auth.public
+    def getPlatformVersion(self, request, hostname, version):
+        return self.db.getProductVersionPlatformVersion(hostname, version)
 
-    def updatePlatform(self, request, hostname, version):
-        self.db.rebaseProductVersionPlatform(hostname, version)
-        return self.getPlatform(request, hostname, version)
+    @requires('platformVersion', models.PlatformVersion)
+    def setPlatformVersion(self, request, hostname, version, platformVersion):
+        self.db.rebaseProductVersionPlatform(hostname, version, platformVersion)
+        return self.getPlatformVersion(request, hostname, version)
+
+    @requires('platformVersion', models.PlatformVersion)
+    def updatePlatformVersion(self, request, hostname, version, platformVersion):
+        self.db.rebaseProductVersionPlatform(hostname, version, platformVersion)
+        return self.getPlatformVersion(request, hostname, version)
 
     @auth.public
     def getImageTypeDefinitions(self, request, hostname, version):

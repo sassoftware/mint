@@ -11,37 +11,20 @@ Description:
 <xsl:copy-of select="$network_model_properties" />
 </xsl:variable>
 
-<xsl:variable name="network_model_properties"><![CDATA[
-Network Properties:
-  device_name - the network device name
-  network_id - the database ID for the network
-  created_date - the date the network was created (UTC)
-  ip_address - the network IP address
-  ipv6_address - the network IPv6 address
-  dns_name - the network DNS name
-  netmask - the network netmask
-  port_type - the network port type
-  active - whether or not this is the active network device on the system
-  required - whether or not a user has required that this network device be the ones used to manage the system]]>
+<xsl:variable name="network_model_properties"><![CDATA[   active - whether or not this is the active network device on the system
+   created_date - the date the network was created (UTC)
+   device_name - the network device name
+   dns_name - the network DNS name
+   ip_address - the network IP address
+   ipv6_address - the network IPv6 address
+   netmask - the network netmask
+   network_id - the database ID for the network
+   port_type - the network port type
+   required - whether or not a user has required that this network device be the ones used to manage the system
+   system - documentation missing]]>
 </xsl:variable>
 
-<xsl:variable name="network_methods"><![CDATA[
-Methods: 
-  GET:
-    Authentication: user
-    Response Format:
-       <network id="http://hostname/api/inventory/networks/1/">
-         ...
-       </network>
-
-  POST:
-    not supported
-    
-  PUT:
-    Authentication: admin
-    
-  DELETE:
-    Authentication: admin]]>
+<xsl:variable name="network_methods"><![CDATA[@@METHODS@@]]>
 </xsl:variable>
 
 </xsl:stylesheet>

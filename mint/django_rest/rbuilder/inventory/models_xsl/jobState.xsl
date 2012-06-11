@@ -11,30 +11,11 @@ Description:
 <xsl:copy-of select="$jobState_model_properties" />
 </xsl:variable>
 
-<xsl:variable name="jobState_model_properties"><![CDATA[
-JobState Properties:
-  job_state_id - the database ID for the job state
-  name - the name of the job state
-  jobs - an entry point into the collection of jobs in this job state]]>
+<xsl:variable name="jobState_model_properties"><![CDATA[   job_state_id - the database ID for the job state
+   name - the name of the job state]]>
 </xsl:variable>
 
-<xsl:variable name="jobState_methods"><![CDATA[
-Methods: 
-  GET:
-    Authentication: anonymous
-    Response Format:
-      <job_state id="http://hostname/api/inventory/job_states/1/">
-        ...
-      </job_state>
-
-  POST:
-    not supported
-    
-  PUT:
-    not supported
-      
-  DELETE:
-    not supported]]>
+<xsl:variable name="jobState_methods"><![CDATA[@@METHODS@@]]>
 </xsl:variable>
 
 </xsl:stylesheet>

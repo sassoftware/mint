@@ -49,6 +49,12 @@ class ProductImagesController(base.BaseController):
         self.db.uploadImageFiles(hostname, image, outputToken=outputToken)
         return self.get(request, hostname, imageId)
 
+    @requires('image', models.Image)
+    def update(self, request, hostname, imageId, image):
+        image.imageId = imageId
+        self.db.updateImage(hostname, image)
+        return self.db.getImageForProduct(hostname, imageId)
+
     def stop(self, request, hostname, imageId):
         return self.db.stopImageJob(hostname, imageId)
 

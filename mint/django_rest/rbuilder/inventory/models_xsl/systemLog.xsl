@@ -11,30 +11,11 @@ Description:
 <xsl:copy-of select="$systemLog_model_properties" />
 </xsl:variable>
 
-<xsl:variable name="systemLog_model_properties"><![CDATA[
-SystemLog Properties:
-  system_log_id - the database ID for the system log
-  system_log_entries - a collection of log entries for the system
-  system - a entry point to the system this log is for]]>
+<xsl:variable name="systemLog_model_properties"><![CDATA[   system - a entry point to the system this log is for
+   system_log_id - the database ID for the system log]]>
 </xsl:variable>
 
-<xsl:variable name="systemLog_methods"><![CDATA[
-Methods: 
-  GET:
-    Authentication: user
-    Response Format:
-      <system_log id="http://hostname/api/inventory/systems/1/system_log">
-        ...
-      </system_log>
-
-  POST:
-    not supported
-    
-  PUT:
-    not supported
-      
-  DELETE:
-    not supported]]>
+<xsl:variable name="systemLog_methods"><![CDATA[@@METHODS@@]]>
 </xsl:variable>
 
 </xsl:stylesheet>

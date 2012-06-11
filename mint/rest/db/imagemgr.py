@@ -1,29 +1,29 @@
 #
-# Copyright (c) 2009 rPath, Inc.
+# Copyright (c) 2011 rPath, Inc.
 #
-# All Rights Reserved
-#
+
 import logging
 import os
-import sys
 import time
+from xobj import xobj
 
-from conary.deps import deps
+from conary import trovetup
 from conary import versions
+from conary.deps import deps
+from conary.lib.log import FORMATS
+from rpath_repeater import client as repeater_client
 
 from mint import builds
 from mint import buildtypes
 from mint import jobstatus
 from mint import helperfuncs
-from mint import mint_error
 from mint import notices_callbacks
 from mint import urltypes
+from mint.image_gen.upload import client as iup_client
 from mint.lib import data
 from mint.rest import errors
 from mint.rest.db import manager
 from mint.rest.api import models
-
-from conary.lib import cfgtypes
 
 log = logging.getLogger(__name__)
 
@@ -47,7 +47,7 @@ class ImageManager(manager.Manager):
                     b.troveName, b.troveVersion, b.troveFlavor,
                     b.troveLastChanged, b.timeCreated, b.timeUpdated,
                     b.status AS statusCode, b.statusMessage, b.buildCount,
-                    b.stageName AS stage,
+                    b.stageName AS stage, b.output_trove,
                 pr.timePublished,
                 pr.name AS release,
                 cr_user.username AS creator, up_user.username AS updater,
@@ -81,6 +81,7 @@ class ImageManager(manager.Manager):
             rows = cu
 
         images = []
+        toGetMetadata = {}
         for row in rows:
             imageType = row['imageType']
             row['released'] = bool(row['releaseId'])
@@ -107,9 +108,12 @@ class ImageManager(manager.Manager):
             status.set_status(code=row.pop('statusCode'),
                     message=row.pop('statusMessage'))
 
+            outputTrove = row.pop('output_trove')
             image = models.Image(row)
             image.imageStatus = status
             images.append(image)
+            if outputTrove:
+                toGetMetadata.setdefault(outputTrove, []).append(image)
 
         imageIds = [ x.imageId for x in images ]
         imagesBaseFileNameMap = self.getImagesBaseFileName(hostname, imageIds)
@@ -118,6 +122,26 @@ class ImageManager(manager.Manager):
         for image, imageFiles in zip(images, imagesFiles):
             image.files = imageFiles
             image.baseFileName = imagesBaseFileNameMap[image.imageId]
+
+        if toGetMetadata:
+            metaSpecs = sorted(toGetMetadata)
+            metaTups = []
+            for metaSpec in metaSpecs:
+                name, version, flavor = trovetup.TroveSpec.fromString(metaSpec)
+                version = versions.VersionFromString(version)
+                if flavor is None:
+                    flavor = deps.Flavor()
+                metaTups.append((name, version, flavor))
+            allMetadata = self.db.productMgr.reposMgr.getKeyValueMetadata(
+                    metaTups)
+            for metaSpec, metadata in zip(metaSpecs, allMetadata):
+                if metadata is None:
+                    continue
+                metaxml = xobj.XObj()
+                for key, value in metadata.items():
+                    setattr(metaxml, key, value)
+                for image in toGetMetadata[metaSpec]:
+                    image.metadata = metaxml
 
         if getOne:
             return images[0]
@@ -362,31 +386,54 @@ class ImageManager(manager.Manager):
                                         commit=False)
         return buildId
 
-    def getRepeaterClient(self):
-        try:
-            from rpath_repeater import client as repeater_client
-        except:
-            return None
+    def updateImage(self, fqdn, image):
+        if image.metadata is None:
+            return
+        hostname = fqdn.split('.')[0]
+        imageId = image.imageId
+        metadata = self.getMetadataDict(image.metadata)
+        cu = self.db.cursor()
+        cu.execute("""
+            SELECT b.output_trove
+            FROM Builds b
+            JOIN Projects p ON p.projectId = b.projectId
+            WHERE b.buildId = ?
+            AND p.hostname = ?
+            """, imageId, hostname)
+        oldTup, = self.db._getOne(cu, errors.ImageNotFound, imageId)
+        name, version, flavor = trovetup.TroveSpec.fromString(oldTup)
+        version = versions.VersionFromString(version)
+        if flavor is None:
+            flavor = deps.Flavor()
+        oldTup = trovetup.TroveTuple(name, version, flavor)
+        nvf = self.db.productMgr.reposMgr.updateKeyValueMetadata(
+                [(oldTup, metadata)], admin=True)[0]
+        cu.execute("UPDATE Builds SET output_trove = ? WHERE buildId = ?",
+                nvf.asString(), imageId)
+        msg = "Updated image committed as %s=%s/%s" % (nvf.name,
+                nvf.version.trailingLabel(),
+                nvf.version.trailingRevision())
+        log.info(msg)
+        self._getImageLogger(hostname, imageId).info(msg)
 
+    def getRepeaterClient(self):
         return repeater_client.RepeaterClient()
 
     def uploadImageFiles(self, hostname, image, outputToken=None):
         if not image.files.files:
             return None
         rcli = self.getRepeaterClient()
-        if rcli is None:
-            return None
-        path = "/api/products/%s/images/%s/" % (hostname, image.imageId)
-        stPath = path + 'status'
-        putFilesPath = path + 'files'
+        relPath="/api/products/%s/images/%s/" % (hostname, image.imageId)
+        imageURL = rcli.URL(
+                scheme='http',
+                host='localhost',
+                path=relPath,
+                unparsedPath=relPath,
+                headers={'X-rBuilder-OutputToken' : outputToken},
+                )
         uploadPath = "/uploadBuild/%s/" % (image.imageId, )
         headers = { 'X-rBuilder-OutputToken' : outputToken }
         fileList = []
-        putFilesURL = rcli.URL(scheme="http", host="localhost",
-            path=putFilesPath, unparsedPath=putFilesPath,
-            headers=headers)
-        statusReportURL = rcli.URL(scheme="http", host="localhost",
-                path=stPath, unparsedPath=stPath, headers=headers)
         for fileItem in image.files.files:
             if not fileItem.urls:
                 continue
@@ -405,10 +452,15 @@ class ImageManager(manager.Manager):
             fileList.append(ifile)
         if not fileList:
             return None
-        meta = rcli.ImageMetadata(**dict(image.metadata.getValues()))
-        image = rcli.Image(name=self._u(image.name), metadata=meta,
+        metaDict = self.getMetadataDict(image.metadata)
+        imodel = rcli.Image(name=self._u(image.name), metadata=metaDict,
             architecture=self._u(image.architecture), files=fileList)
-        uuid, job = rcli.download_images(image, statusReportURL, putFilesURL)
+
+        uploadClient = iup_client.UploadClient(rcli.client)
+        uuid, job = uploadClient.downloadImages(imodel, imageURL)
+        cu = self.db.cursor()
+        cu.execute("UPDATE builds SET job_uuid = ? WHERE buildId = ?",
+                str(uuid), image.imageId)
 
     @classmethod
     def _u(cls, obj):
@@ -603,7 +655,7 @@ class ImageManager(manager.Manager):
                     fileId, urlId) VALUES ( ?, ? )""",
                     fileId, urlId)
 
-        if files.metadata:
+        if files.metadata is not None:
             self._addImageToRepository(hostname, imageId, files.metadata)
 
         return self.listFilesForImage(hostname, imageId)
@@ -612,9 +664,11 @@ class ImageManager(manager.Manager):
     def getMetadataDict(cls, metadata):
         if metadata is None:
             return None
-        metadataValues = ((x, getattr(metadata, x, None)) for x in metadata._fields)
-        metadataDict = dict((x, str(y)) for (x, y) in metadataValues
-            if y is not None)
+        metadataDict = {}
+        for name, value in metadata.__dict__.items():
+            if name.startswith('_'):
+                continue
+            metadataDict[name] = str(value)
         return metadataDict
 
     def _addImageToRepository(self, hostname, imageId, metadata):
@@ -632,24 +686,30 @@ class ImageManager(manager.Manager):
 
         factoryName = "rbuilder-image"
         troveName = "image-%s" % hostname
-        troveVersion = img.version
+        troveVersion = imageId
         RegularFile = productMgr.reposMgr.RegularFile
         streamMap = dict((os.path.basename(x),
             RegularFile(contents=file(x), config=False)) for x in filePaths)
         try:
-            self._setStatus(imageId, message="Committing image to repository")
-            productMgr.reposMgr.createSourceTrove(fqdn, troveName, buildLabel,
+            nvf = productMgr.reposMgr.createSourceTrove(fqdn, troveName,
+                buildLabel,
                 troveVersion, streamMap, changeLogMessage="Image imported",
                 factoryName=factoryName, admin=True,
                 metadata=metadataDict)
         except Exception, e:
-            self._setStatus(imageId, message="Commit failed: %s" % (e, ))
+            self._setStatus(imageId, code=jobstatus.FAILED,
+                message="Commit failed: %s" % (e, ))
             log.error("Error: %s", e)
             raise
         else:
-            message = "Image committed as %s:source=%s" % (troveName, buildLabel)
-            self._setStatus(imageId, message=message)
-            log.info(message)
+            cu = self.db.cursor()
+            cu.execute("UPDATE Builds SET output_trove = ? WHERE buildId = ?",
+                    nvf.asString(), imageId)
+            msg = "Image committed as %s=%s/%s" % (nvf.name,
+                    nvf.version.trailingLabel(),
+                    nvf.version.trailingRevision())
+            log.info(msg)
+            self._getImageLogger(hostname, imageId).info(msg)
 
     def getAllImagesByType(self, imageType):
         images = self.db.db.builds.getAllBuildsByType(imageType,
@@ -687,3 +747,12 @@ class ImageManager(manager.Manager):
             imageId = imageData['buildId']
             imageData['baseFileName'] = imagesBaseFileNameMap[imageId]
         return images
+
+    def _getImageLogger(self, hostname, imageId):
+        fileObj = self.db.fileMgr.openImageFile(
+                hostname, imageId, 'build.log', 'a')
+        handler = logging.StreamHandler(fileObj)
+        handler.setFormatter(FORMATS['apache'])
+        log = logging.Logger('image')
+        log.addHandler(handler)
+        return log

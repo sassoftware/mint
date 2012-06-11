@@ -26,6 +26,7 @@ from mint.rest import errors
 from mint.rest.api import models
 from mint.rest.db import contentsources
 from mint.rest.db import manager
+from mint.scripts import pkgindexer
 
 from rpath_proddef import api1 as proddef
 from rpath_job import api1 as rpath_job
@@ -84,11 +85,13 @@ class ContentSourceTypes(object):
         self.cfg = cfg
         self.mgr = weakref.ref(mgr)
 
-    def _contentSourceTypeModelFactory(self, name, singleton = None, id = None):
+    @classmethod
+    def contentSourceTypeModelFactory(cls, name, singleton = None, id = None,
+            required=False):
         if id is None:
             id = name
         return models.SourceType(contentSourceType=name, singleton=singleton,
-            id = name)
+            id = name, required=required)
 
     def _listFromCfg(self):
         allTypesMap = dict()
@@ -98,14 +101,15 @@ class ContentSourceTypes(object):
             sourceTypes = platform._sourceTypes
             for t, isSingleton in sourceTypes or []:
                 if t not in allTypes:
+                    cst = contentsources.contentSourceTypes[t]
                     allTypes.append(t)
-                    allTypesMap[t] = isSingleton
+                    allTypesMap[t] = (isSingleton, cst.isRequired)
 
         stypes = []
         for stype in allTypes:
-            isSingleton = allTypesMap[stype]
-            stype = self._contentSourceTypeModelFactory(name=stype,
-                singleton=isSingleton)
+            isSingleton, isRequired = allTypesMap[stype]
+            stype = self.contentSourceTypeModelFactory(name=stype,
+                singleton=isSingleton, required=isRequired)
             stypes.append(stype)
 
         return stypes
@@ -230,6 +234,77 @@ class Platforms(object):
         if withComputedFields:
             self._addComputedFields(platform)
         return platform
+
+    def _getPlatformTroveName(self, platform):
+        platformDef = self.platformCache.get(str(platform.label))
+        srcTroves = [s for s in platformDef.getSearchPaths() \
+            if s.isPlatformTrove]
+        if srcTroves:
+            return srcTroves[0].troveName
+        else:
+            return None
+
+    def getPlatformVersions(self, platformId, platformVersionId=None):
+        platform = self.getById(platformId)
+
+        if platformVersionId:
+            platformTroveName, revision = platformVersionId.split('=')
+        else:
+            platformTroveName = self._getPlatformTroveName(platform)
+            if not platformTroveName:
+                platformVersions = models.PlatformVersions()
+                platformVersions.platformVersion = []
+                return platformVersions
+            revision = None
+
+        host = platform.label.split('@')[:1][0]
+        label = platform.label
+        if not label.startswith('/'):
+            label = '/%s' % label
+        conaryLabel = versions.VersionFromString(label).label()
+        repos = self.db.productMgr.reposMgr.getRepositoryClientForProduct(host)
+        repoTroves = repos.findTroves(conaryLabel, 
+            [(platformTroveName, None, None)], getLeaves=False)
+
+        try:
+            platformTroves = repoTroves[(platformTroveName, None, None)]
+        except KeyError, e:
+            # TODO: something else?
+            raise e
+
+        _platformVersions = []
+        seenRevisions = []
+        for platformTrove in platformTroves:
+            version = platformTrove[1]
+            versionRevision = version.trailingRevision()
+            strRevision = versionRevision.asString()
+
+            # Because of flavors, there may be multiples of the same revision.
+            # We don't need to worry about flavors when rebasing.
+            if strRevision in seenRevisions:
+                continue
+
+            seenRevisions.append(strRevision)
+            timeStamp = versionRevision.timeStamp
+                
+            platformVersion = models.PlatformVersion(
+                name=platformTroveName, version=version.asString(),
+                revision=strRevision, label=label,
+                ordering=timeStamp)
+            platformVersion._platformId = platformId
+
+            if revision is not None and revision == strRevision:
+                return platformVersion
+
+            _platformVersions.append(platformVersion)
+
+        platformVersions = models.PlatformVersions()
+        platformVersions.platformVersion = _platformVersions
+
+        return platformVersions
+
+    def getPlatformVersion(self, platformId, platformVersionId):
+        return self.getPlatformVersions(platformId, platformVersionId)
 
     def _updatePlatformFromPlatformDefinition(self, platformModel, platformDef):
         if platformDef is None:
@@ -373,24 +448,24 @@ class Platforms(object):
         platform = self.getById(platformId)
         host = platform.label.split('@')[:1][0]
         repos = self.db.productMgr.reposMgr.getRepositoryClientForProduct(host)
-        uri = platformLoad.uri.encode('utf-8')
+        loadUri = platformLoad.loadUri.encode('utf-8')
         headers = {}
         fd, outFilePath = tempfile.mkstemp('.tar', 'platform-load-')
 
         finder = lookaside.FileFinder(None, None, cfg = self.cfg)
-        inFile = finder._fetchUrl(uri, headers)
+        inFile = finder._fetchUrl(loadUri, headers)
 
         if not inFile:
-            raise errors.PlatformLoadFileNotFound(uri)
+            raise errors.PlatformLoadFileNotFound(loadUri)
 
         job = self.jobStore.create()
 
         platLoad = models.PlatformLoad()
         platLoad.jobId = job.id
         platLoad.platformId = platformId
-        platLoad.uri = platformLoad.uri
+        platLoad.loadUri = platformLoad.loadUri
 
-        self.loader(platform, job.id, inFile, outFilePath, uri, repos)
+        self.loader(platform, job.id, inFile, outFilePath, loadUri, repos)
 
         return platLoad
 
@@ -534,6 +609,20 @@ class Platforms(object):
         else:
             return models.AuthInfo(authType='none')
 
+    def _updateInternalPackageIndex(self):
+        """
+        Update the internal package index
+        """
+        upi = pkgindexer.UpdatePackageIndex()
+        return upi.run()
+
+    def _updateExternalPackageIndex(self):
+        """
+        Update the external package index.
+        """
+        upie = pkgindexer.UpdatePackageIndexExternal()
+        return upie.run()
+
     def _setupPlatform(self, platform):
         platformId = int(platform.platformId)
         platformName = str(platform.platformName)
@@ -547,19 +636,22 @@ class Platforms(object):
 
         # Get the projectId to see if this platform has already been
         # associated with an external project.
-        projectId = self._getUsableProject(platformId, hostname)
+        projectId = self._getProjectId(platformId)
 
         if not projectId:
             projectId = self._getUsableProject(platformId, hostname)
             if projectId:
-                if projectId:
-                    # Add the project to our platform
-                    self.db.db.platforms.update(platformId, 
-                        projectId=projectId)
+                # Add the project to our platform
+                self.db.db.platforms.update(platformId, 
+                    projectId=projectId)
                 project = self.db.db.projects.get(projectId)
                 if project['external'] == 1:
                     self._setupExternalProject(hostname, domainname, 
                         authInfo, url, projectId, mirror)
+                    self._updateExternalPackageIndex()
+                else:
+                    self._updateInternalPackageIndex()
+                
 
         if not projectId:            
             # Still no project, we need to create a new one.
@@ -572,6 +664,8 @@ class Platforms(object):
 
             self.db.db.platforms.update(platformId, projectId=projectId)
 
+            self._updateExternalPackageIndex()
+
         return projectId
 
     def update(self, platformId, platform):
@@ -580,6 +674,9 @@ class Platforms(object):
 
         self.db.db.platforms.update(platformId, enabled=int(platform.enabled),
             mode=platform.mode, configurable=bool(platform.configurable))
+
+        # Clear the cache of status information
+        self.platformCache.clearPlatformData(platform.label)
 
         return self.getById(platformId)
 
@@ -617,9 +714,9 @@ class Platforms(object):
         openMsg = "Repository not responding: %s."
         connectMsg = "Error connecting to repository %s: %s."
         pDefNotFoundMsg = "Platform definition not found in repository %s."
-        sliceUrl = "http://docs.rpath.com/platforms/platform_repositories.html"
+        preloadUrl = "http://docs.rpath.com/platforms/platform_repositories.html"
         pDefNotFoundMsgLocal = "Repository is empty, please manually load " + \
-            "the base slice for this platform available from %s."
+            "the preload for this platform available from %s."
         successMsg = "Available."
 
         if platform.mode == 'auto':
@@ -676,7 +773,7 @@ class Platforms(object):
         except proddef.ProductDefinitionTroveNotFoundError, e:
             local = False
             localConnected = True
-            localMessage = pDefNotFoundMsgLocal % sliceUrl
+            localMessage = pDefNotFoundMsgLocal % preloadUrl
         except Exception, e:
             local = False
             localConnected = False
@@ -976,7 +1073,9 @@ class ContentSources(object):
         return models.ContentSourceInstances(sources)            
 
     def getStatus(self, source):        
-        sourceInst = self.mgr().contentSourceTypes._getSourceTypeInstance(source)
+        pmgr = self.mgr()
+        sourceInst = pmgr.contentSourceTypes._getSourceTypeInstance(source)
+        dataSources = pmgr.getDataSourcesForContentSourceType(source.contentSourceType)
 
         missing = []
         for field in sourceInst.fields:
@@ -991,6 +1090,7 @@ class ContentSources(object):
             status = models.SourceStatus(connected=False, valid=False,
                                 message=message)
         else:
+            sourceInst.setDataSources(dataSources)
             ret = sourceInst.status()
             status = models.SourceStatus(connected=ret[0],
                                 valid=ret[1], message=ret[2])
@@ -1012,6 +1112,12 @@ class PlatformManager(manager.Manager):
 
     def getPlatform(self, platformId):
         return self.platforms.getById(platformId)
+
+    def getPlatformVersion(self, platformId, platformVersionId):
+        return self.platforms.getPlatformVersion(platformId, platformVersionId)
+
+    def getPlatformVersions(self, platformId):
+        return self.platforms.getPlatformVersions(platformId)
 
     def _lookupFromRepository(self, platformLabel, createPlatDef):
         # If there is a product definition, this call will publish it as a
@@ -1051,6 +1157,27 @@ class PlatformManager(manager.Manager):
                 pl = None
            
         return pl
+
+    def getDataSourcesForContentSourceType(self, contentSourceType):
+        pcache = self.platformCache
+        sql = """
+            SELECT DISTINCT platforms.label
+              FROM platformsContentSourceTypes
+              JOIN platforms USING (platformid)
+             WHERE contentSourceType = ?
+        """
+        cu = self.db.db.cursor()
+        cu.execute(sql, (contentSourceType, ))
+        dsset = set()
+        for row in cu:
+            pdef = pcache.get(row[0])
+            if pdef is None:
+                continue
+            contentProvider = pdef.getContentProvider()
+            if contentProvider is None:
+                continue
+            dsset.update(ds.name for ds in contentProvider.dataSources)
+        return dsset
 
     def createPlatform(self, platform, createPlatDef=True):
         platformLabel = platform.label
@@ -1164,8 +1291,10 @@ class PlatformManager(manager.Manager):
         platform = self.platforms.getById(platformId)
         types = []
         for sourceType, isSingleton in platform._sourceTypes:
-            types.append(models.SourceType(contentSourceType=sourceType,
-                singleton=isSingleton))
+            cst = contentsources.contentSourceTypes[sourceType]
+            types.append(ContentSourceTypes.contentSourceTypeModelFactory(
+                name=sourceType, singleton=isSingleton,
+                required=cst.isRequired))
 
         return models.SourceTypes(types)
 
@@ -1230,9 +1359,11 @@ class PlatformDefCache(persistentcache.PersistentCache):
             platDef = proddef.PlatformDefinition()
             platDef.loadFromRepository(client, labelStr)
             self.clearPlatformData(labelStr)
+        except proddef.ProductDefinitionTroveNotFoundError:
+            raise
         except reposErrors.InsufficientPermission, err:
-            log.error("Failed to lookup platform definition on label %s: %s",
-                    labelStr, str(err))
+            log.info("Platform %s is not accessible because "
+                    "it is not entitled.", labelStr)
             self.clearPlatformData(labelStr)
             return None
         except:
@@ -1257,9 +1388,6 @@ class PlatformDefCache(persistentcache.PersistentCache):
             platDef = self._getPlatDef(client, labelStr)
             return platDef
         except proddef.ProductDefinitionTroveNotFoundError, e:
-            log.error("Failed to find product definition  for platform.  Will "
-                      "try looking on platform source label.")
-
             # Need to look at inboundmirrors table to get the sourceurl 
             # for the platform so that we bypass the local repo.
             sourceUrl = reposMgr.getIncomingMirrorUrlByLabel(labelStr)
@@ -1279,8 +1407,14 @@ class PlatformDefCache(persistentcache.PersistentCache):
                 client.repos.c.cache[host] = serverProxy
                 platDef = self._getPlatDef(client, labelStr)
                 return platDef
-            except Exception, e:
-                log.error("Platform Definition not found for %s: %s" % (labelStr, e))
+            except (proddef.ProductDefinitionTroveNotFoundError,
+                    reposErrors.InsufficientPermission):
+                log.info("Platform %s is not accessible because "
+                        "it is not entitled.", labelStr)
+                return None
+            except:
+                log.exception("Failed to lookup platform definition "
+                        "on label %s:", labelStr)
                 return None
 
     def _getPlatform(self, labelStr, platform, commit=True):
@@ -1335,3 +1469,4 @@ class PlatformDefCache(persistentcache.PersistentCache):
     def clearPlatformData(self, labelStr, commit=True):
         self._clearMirrorPermission(labelStr, commit=commit)
         self._clearStatus(labelStr, commit=commit)
+        self.clearKey(labelStr, commit)

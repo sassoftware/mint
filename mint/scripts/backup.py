@@ -21,7 +21,7 @@ from mint.lib import mintutils, siteauth
 log = logging.getLogger(__name__)
 
 schemaCutoff = 37
-knownGroupVersions = ('3\.1\.(\d{2}|[56789])(\.\d+)?$', '4\..*', '5\..*')
+knownGroupVersions = ('3\.1\.(\d{2}|[56789])(\.\d+)?$', '4\..*', '5\..*', '6\..*')
 
 
 def backup(cfg, out, backupMirrors = False):

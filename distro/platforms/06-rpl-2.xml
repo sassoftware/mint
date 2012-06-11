@@ -1,6 +1,0 @@
-<platform>
-  <label>conary.rpath.com@rpl:2</label>
-  <platformName>rPath Linux 2</platformName>
-  <abstract>false</abstract>
-  <configurable>false</configurable>
-</platform>

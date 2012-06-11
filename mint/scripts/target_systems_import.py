@@ -73,8 +73,8 @@ class Script(scriptlibrary.SingletonScript):
         restdb.auth.userId = userId
         restdb.auth.setAuth(mintAuth, authToken)
         
-        from mint.django_rest.rbuilder.inventory import manager
-        mgr = manager.Manager()
+        from mint.django_rest.rbuilder.manager import rbuildermanager
+        mgr = rbuildermanager.RbuilderManager()
         targetDrivers = self.loadTargetDrivers(restdb)
         mgr.importTargetSystems(targetDrivers)
         self.resetLogFilePerms()

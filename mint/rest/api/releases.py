@@ -3,6 +3,9 @@
 #
 # All Rights Reserved
 #
+
+import os
+
 from mint.rest.api import requires
 from mint.rest.api import base
 from mint.rest.api import models
@@ -72,8 +75,12 @@ class ProductReleasesController(base.BaseController):
 
     @requires('image', models.ImageId)
     def addImage(self, request, hostname, releaseId, image):
-        self.db.addImageToRelease(hostname, releaseId, image.imageId)
-        return self.db.getImageForProduct(hostname, image.imageId)
+        if image.id:
+            imageId = os.path.basename(image.id)
+        else:
+            imageId = image.imageId
+        self.db.addImageToRelease(hostname, releaseId, imageId)
+        return self.db.getImageForProduct(hostname, imageId)
 
     @requires('images', models.ImageList)
     def setImages(self, request, hostname, releaseId, images):
@@ -83,4 +90,4 @@ class ProductReleasesController(base.BaseController):
             images.images = []
         self.db.updateImagesForRelease(hostname, releaseId,
 			       [x.imageId for x in images.images])
-        return self.get(request, hostname, releaseId)
+        return self.images(request, hostname, releaseId)

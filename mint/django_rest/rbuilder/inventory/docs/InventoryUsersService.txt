@@ -1,0 +1,11 @@
+
+
+Methods:
+    GET:
+        not supported
+    POST:
+        not supported
+    PUT:
+        not supported
+    DELETE:
+        not supported

@@ -31,23 +31,7 @@ Identification of Duplicate System Inventory Entries:
            to lookup a specific system.]]>
 </xsl:variable>
 
-<xsl:variable name="system_methods"><![CDATA[
-Methods: 
-  GET:
-    Authentication: user
-    Response Format:
-       <system id="http://hostname/api/inventory/systems/1/">
-         ...
-       </system>
-
-  POST:
-    not supported
-    
-  PUT:
-    Authentication: user
-    
-  DELETE:
-    Authentication: admin]]>
+<xsl:variable name="system_methods"><![CDATA[@@METHODS@@]]>
 </xsl:variable>
 
 </xsl:stylesheet>

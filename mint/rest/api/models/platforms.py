@@ -90,6 +90,7 @@ class SourceType(Model):
     class Meta(object):
         name = 'contentSourceType'
     contentSourceType = fields.CharField()
+    required = fields.BooleanField()
     singleton = fields.BooleanField()
     instances = fields.UrlField('contentSources.instances', ['contentSourceType'])
     configDescriptor = fields.UrlField('contentSources.descriptor', ['contentSourceType'])
@@ -116,6 +117,29 @@ class SourceInstances(Model):
     class Meta(object):
         name = 'instances'
     instance = fields.ListField(Source, displayName='contentSource')
+
+class PlatformVersion(Model):
+    class Meta(object):
+        name = 'platformVersion'
+    name = fields.CharField()
+    version = fields.CharField()
+    revision = fields.CharField()
+    label = fields.CharField()
+    ordering = fields.CharField()
+    _platformId = fields.CharField()
+
+    id = fields.AbsoluteUrlField(isAttribute=True)
+
+    def get_absolute_url(self):
+        return ('platforms', self._platformId,
+                'platformVersions', '%s=%s' % (self.name, self.revision))
+
+class EmptyPlatformVersion(Model):
+    class Meta(object):
+        name = 'platformVersion'
+
+class PlatformVersions(Model):
+    platformVersion = fields.ListField(PlatformVersion)
 
 class Platform(Model):
     platformId = fields.CharField()
@@ -144,6 +168,8 @@ class Platform(Model):
     imageTypeDefinitions = fields.UrlField('platforms.imageTypeDefinitions',
                                          ['platformId'])
     isPlatform = fields.BooleanField()
+    platformVersions = fields.UrlField('platforms.platformVersions',
+        ['platformId'])
 
     id = fields.AbsoluteUrlField(isAttribute=True)
 
@@ -170,7 +196,7 @@ class PlatformLoadStatusStub(Model):
         return ('platforms.load', self.platformId, self.jobId)
 
 class PlatformLoad(Model):
-    uri = fields.CharField()
+    loadUri = fields.CharField()
     jobId = fields.CharField()
     platformId = fields.IntegerField()
     job = fields.UrlField('platforms.load', ['platformId', 'jobId'])

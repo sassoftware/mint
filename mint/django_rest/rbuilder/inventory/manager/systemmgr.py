@@ -25,12 +25,14 @@ from mint.lib import data as mintdata
 from mint.django_rest.rbuilder import models as rbuildermodels
 from mint.django_rest.rbuilder.inventory import errors
 from mint.django_rest.rbuilder.inventory import models
-from mint.django_rest.rbuilder.inventory.manager import base
+from mint.django_rest.rbuilder.manager import basemanager
+from mint.django_rest.rbuilder.querysets import models as querysetmodels
 from mint.rest import errors as mint_rest_errors
 
 log = logging.getLogger(__name__)
+exposed = basemanager.exposed
 
-class SystemManager(base.BaseManager):
+class SystemManager(basemanager.BaseManager):
     RegistrationEvents = set([ models.EventType.SYSTEM_REGISTRATION ])
     PollEvents = set([
         models.EventType.SYSTEM_POLL,
@@ -96,18 +98,18 @@ class SystemManager(base.BaseManager):
     def now(cls):
         return datetime.datetime.now(cls.TZ)
 
-    @base.exposed
+    @exposed
     def getEventTypes(self):
         EventTypes = models.EventTypes()
         EventTypes.event_type = list(models.EventType.objects.all())
         return EventTypes
 
-    @base.exposed
+    @exposed
     def getEventType(self, event_type_id):
         eventType = models.EventType.objects.get(pk=event_type_id)
         return eventType
     
-    @base.exposed
+    @exposed
     def updateEventType(self, event_type):
         """Update an event type"""
 
@@ -117,29 +119,29 @@ class SystemManager(base.BaseManager):
         event_type.save()
         return event_type
 
-    @base.exposed
+    @exposed
     def getZone(self, zone_id):
         zone = models.Zone.objects.get(pk=zone_id)
         return zone
 
-    @base.exposed
+    @exposed
     def getLocalZone(self):
         "Return the zone for this rBuilder"
         zone = models.Zone.objects.get(name='Local rBuilder')
         return zone
 
-    @base.exposed
+    @exposed
     def getZoneByJID(self, node_jid):
         zone = models.ManagementNode.objects.get(node_jid=node_jid).zone
         return zone
 
-    @base.exposed
+    @exposed
     def getZones(self):
         Zones = models.Zones()
         Zones.zone = list(models.Zone.objects.all())
         return Zones
 
-    @base.exposed
+    @exposed
     def addZone(self, zone):
         """Add a zone"""
 
@@ -149,7 +151,7 @@ class SystemManager(base.BaseManager):
         zone.save()
         return zone
     
-    @base.exposed
+    @exposed
     def updateZone(self, zone):
         """Update a zone"""
 
@@ -159,7 +161,7 @@ class SystemManager(base.BaseManager):
         zone.save()
         return zone
     
-    @base.exposed
+    @exposed
     def deleteZone(self, zone):
         """Update a zone"""
 
@@ -170,18 +172,18 @@ class SystemManager(base.BaseManager):
         
         return
 
-    @base.exposed
+    @exposed
     def getNetwork(self, network_id):
         network = models.Network.objects.get(pk=network_id)
         return network
     
-    @base.exposed
+    @exposed
     def getNetworks(self):
         Networks = models.Networks()
         Networks.network = list(models.Network.objects.all())
         return Networks
     
-    @base.exposed
+    @exposed
     def updateNetwork(self, network):
         """Update a network"""
 
@@ -191,12 +193,12 @@ class SystemManager(base.BaseManager):
         network.save()
         return network
     
-    @base.exposed
+    @exposed
     def deleteNetwork(self, network_id):
         network = models.Network.objects.get(pk=network_id)
         network.delete()
 
-    @base.exposed
+    @exposed
     def getSystem(self, system_id):
         system = models.System.objects.get(pk=system_id)
 
@@ -208,12 +210,12 @@ class SystemManager(base.BaseManager):
                 self.mgr.versionMgr.set_available_updates(trove)
         return system
 
-    @base.exposed
+    @exposed
     def deleteSystem(self, system_id):
         system = models.System.objects.get(pk=system_id)
         system.delete()
 
-    @base.exposed
+    @exposed
     def getSystemByTargetSystemId(self, target_system_id):
         systems = models.System.objects.filter(
             target_system_id=target_system_id)
@@ -221,15 +223,6 @@ class SystemManager(base.BaseManager):
             return systems[0]
         else:
             return None
-
-    @base.exposed
-    def XXXgetSystems(self):
-        Systems = models.Systems()
-        qs = models.System.objects.select_related(
-            'current_state', 'target', 'launching_user', 'managing_zone',
-            'management_node', )
-        Systems.system = list(qs)
-        return Systems
 
     @classmethod
     def _getClassName(cls, field):
@@ -240,190 +233,45 @@ class SystemManager(base.BaseManager):
             clsName = field._meta.verbose_name
         return models.modellib.type_map[clsName]
 
-    def bulkLoad(self, cursor, baseCls, depth):
-        baseTableName = baseCls._meta.db_table
-        baseTablePkName = baseCls._meta.auto_field.name
-        baseObjects = baseCls.objects.extra(
-            select = dict(_baseId = 'inventory_tmp.res_id'),
-            tables=["inventory_tmp"],
-            where=["inventory_tmp.res_id = %s.%s" %
-                        (baseTableName, baseTablePkName),
-                   "inventory_tmp.depth = %s" % depth])
-        baseObjectsMap = dict((x.pk, x) for x in baseObjects)
-        valuesMap = {}
-        for fk in baseCls.iterForeignKeys():
-            cls = self._getClassName(fk.rel.to)
-            dbTable = fk.rel.to._meta.db_table
-            dbColumn = fk.rel.get_related_field().db_column
-            if not dbColumn:
-                dbColumn = fk.rel.field_name
-            # Because this is a pure FK, we lose track of the source object,
-            # so we add it as an extra select
-            objects = cls.objects.extra(
-                select = dict(_baseId = 'inventory_tmp.res_id'),
-                tables=["inventory_tmp", baseTableName, dbTable],
-                where=["inventory_tmp.res_id = %s.%s" %
-                        (baseTableName, baseTablePkName),
-                       "%s.%s = %s.%s" % (baseTableName, fk.column,
-                            dbTable, dbColumn),
-                   "inventory_tmp.depth = %s" % depth])
-            if objects:
-                valuesMap[fk.name] = dict((x._baseId, x) for x in objects)
-        for fk in baseCls.iterAccessors(withHidden=False):
-            if getattr(fk.field, 'Deferred', False):
-                # XXX FIXME
-                continue
-            cls = self._getClassName(fk.model)
-            dbTable = fk.opts.db_table
-            dbColumn = fk.field.column
-            objects = cls.objects.extra(
-                tables=["inventory_tmp", dbTable],
-                where=["inventory_tmp.res_id = %s.%s" %
-                            (dbTable, dbColumn),
-                   "inventory_tmp.depth = %s" % depth])
-            vmKey = fk.get_accessor_name()
-            valuesMap[vmKey] = vmap = {}
-            # Prepare the values. Accessor values are lists
-            for obj in objects:
-                # k = getattr(getattr(x, fk.field.name)
-                k = getattr(obj, dbColumn)
-                # We're cheating a bit. We know the base object is related to
-                # this object already, so we're adding it as a value. This
-                # prevents another recursive bulkLoad
-                revFieldName = fk.field.related.field.name
-                svmap = { revFieldName : baseObjectsMap[k] }
-                vmap.setdefault(k, []).append((obj, svmap))
-        for m2m in baseCls.iterM2MAccessors(withHidden=False):
-            cls = m2m.rel.to
-            #if m2m.rel.through:
-            #    cls = m2m.rel.through
-            #else:
-            #    cls = self._getClassName(m2m.model)
-            field = m2m.m2m_field_name()
-            m2mTable = m2m.m2m_db_table()
-            m2mFieldFrom = getattr(m2m.rel.through, field).field.rel.field_name
-            toField = m2m.rel.get_related_field().name
+    @exposed
+    def getSystems(self):
+        systems = models.Systems()
+        systems.system = models.System.objects.all()
+        return systems
 
-            # Track objects for this m2m relationship
-            sql = """
-                SELECT DISTINCT inventory_tmp.res_id, %s.%s
-                  FROM inventory_tmp
-                  JOIN %s ON (inventory_tmp.res_id = %s.%s)
-                 WHERE inventory_tmp.depth = %%s
-            """ % (m2mTable, toField, m2mTable, m2mTable, m2mFieldFrom)
-            subobjMap = {}
-            cursor.execute(sql, [ depth ])
-            res = cursor.fetchall()
-            for (resId, relId) in res:
-                subobjMap.setdefault(relId, []).append(resId)
-
-            sql = """
-                DELETE FROM inventory_tmp WHERE depth = %s
-            """
-            cursor.execute(sql, [ depth + 1 ])
-            sql = """
-                INSERT INTO inventory_tmp (res_id, depth)
-                SELECT DISTINCT %s.%s, %%s
-                  FROM inventory_tmp
-                  JOIN %s ON (inventory_tmp.res_id = %s.%s)
-                 WHERE inventory_tmp.depth = %%s
-            """ % (m2mTable, toField,
-                m2mTable, m2mTable, m2mFieldFrom)
-            cursor.execute(sql, [ depth + 1, depth ])
-
-            objects, subvaluesMap = self.bulkLoad(cursor, cls, depth + 1)
-            vmKey = m2m.name
-            valuesMap[vmKey] = vmap = {}
-            for obj in objects:
-                objPk = obj.pk
-                baseObjectIds = subobjMap.get(objPk, [])
-                subvMap = subvaluesMap.get(objPk, {})
-                for baseObjectId in baseObjectIds:
-                    vmap.setdefault(baseObjectId, []).append((obj, subvMap))
-        # Reassemble valuesMap to be keyed on the baseObject's pk
-        retvMap = {}
-        for vmKey, vhash in valuesMap.items():
-            for resId, values in vhash.items():
-                retvMap.setdefault(resId, {})[vmKey] = values
-        return baseObjects, retvMap
-
-    @base.exposed
-    def getSystems(self, request):
-        profiling = False
-        if profiling:
-            from django.db import settings
-            settings.DEBUG = True
-            t0 = time.time()
-            del connection.queries[:]
-        cu = connection.cursor()
-        cu.execute("DELETE FROM inventory_tmp")
-        # XXX we will have to change this to allow for filtering too
-        sql = """
-            INSERT INTO inventory_tmp (res_id, depth)
-            SELECT system_id, 0 FROM inventory_system"""
-        cu.execute(sql)
-        baseCls = models.System
-        depth = 0
-        systems, valuesMap = self.bulkLoad(cu, baseCls, depth)
-        ret = self.bulkSerialize(request, systems, valuesMap)
-        Systems = models.Systems()
-        Systems.system = ret
-        if profiling:
-            settings.DEBUG = False
-            now = time.time()
-            elapsed = now - t0
-            f = file("/tmp/queries-%.2f" % now, "w")
-            for q in connection.queries:
-                f.write("qtime: %s s: %s\n\n" % (q['time'], q['sql'].strip()))
-            f.write("PID: %d; %d queries, %.2f s\n" %
-                (os.getpid(), len(connection.queries), elapsed))
-        return Systems
-
-    def bulkSerialize(self, request, objects, valuesMap):
-        ret = []
-        for obj in objects:
-            pk = obj.pk
-            ret.append(self.bulkSerializeOne(request, obj,
-                valuesMap.get(pk, {})))
-        return ret
-
-    def bulkSerializeOne(self, request, obj, values):
-        ret = obj.serialize(request, values=values)
-        return ret
-    
-    @base.exposed
+    @exposed
     def getInventorySystems(self):
         systems = models.Systems()
         systems.system = \
             models.System.objects.filter(system_type__infrastructure=False)
         return systems
 
-    @base.exposed
+    @exposed
     def getImageImportMetadataDescriptor(self):
         importDescriptorFile = open(self.cfg.metadataDescriptorPath)
         importDescriptorData = importDescriptorFile.read()
         importDescriptorFile.close()
         return importDescriptorData
 
-    @base.exposed
+    @exposed
     def getInfrastructureSystems(self):
         systems = models.Systems()
         systems.system = \
             models.System.objects.filter(system_type__infrastructure=True)
         return systems
 
-    @base.exposed
+    @exposed
     def getManagementInterface(self, management_interface_id):
         managementInterface = models.ManagementInterface.objects.get(pk=management_interface_id)
         return managementInterface
 
-    @base.exposed
+    @exposed
     def getManagementInterfaces(self):
         ManagementInterfaces = models.ManagementInterfaces()
         ManagementInterfaces.management_interface = list(models.ManagementInterface.objects.all())
         return ManagementInterfaces
     
-    @base.exposed
+    @exposed
     def updateManagementInterface(self, management_interface):
         """Update a management interface"""
 
@@ -433,18 +281,18 @@ class SystemManager(base.BaseManager):
         management_interface.save()
         return management_interface
 
-    @base.exposed
+    @exposed
     def getManagementNode(self, management_node_id):
         managementNode = models.ManagementNode.objects.get(pk=management_node_id)
         return managementNode
 
-    @base.exposed
+    @exposed
     def getManagementNodes(self):
         ManagementNodes = models.ManagementNodes()
         ManagementNodes.management_node = list(models.ManagementNode.objects.all())
         return ManagementNodes
     
-    @base.exposed
+    @exposed
     def addManagementNode(self, managementNode):
         """Add a management node to the inventory"""
         
@@ -457,7 +305,7 @@ class SystemManager(base.BaseManager):
         #TO-DO Need to add the JID to the models.ManagementNode object
         return managementNode
 
-    @base.exposed
+    @exposed
     def synchronizeZones(self, managementNodes):
         # Grab all existing management nodes
         newhash = set(x.pk for x in managementNodes.management_node)
@@ -475,13 +323,13 @@ class SystemManager(base.BaseManager):
             x.managing_zone_id = x.zone_id
             x.save()
 
-    @base.exposed
+    @exposed
     def getManagementNodeForZone(self, zone_id, management_node_id):
         zone = models.Zone.objects.get(pk=zone_id)
         managementNode = models.ManagementNode.objects.get(zone=zone, pk=management_node_id)
         return managementNode
     
-    @base.exposed
+    @exposed
     def addManagementNodeForZone(self, zone_id, managementNode):
         """Add a management node to the inventory"""
         
@@ -496,25 +344,25 @@ class SystemManager(base.BaseManager):
         #TO-DO Need to add the JID to the models.ManagementNode object
         return managementNode
 
-    @base.exposed
+    @exposed
     def getManagementNodesForZone(self, zone_id):
         zone = models.Zone.objects.get(pk=zone_id)
         ManagementNodes = models.ManagementNodes()
         ManagementNodes.management_node = list(models.ManagementNode.objects.filter(zone=zone).all())
         return ManagementNodes
 
-    @base.exposed
+    @exposed
     def getSystemType(self, system_type_id):
         systemType = models.SystemType.objects.get(pk=system_type_id)
         return systemType
 
-    @base.exposed
+    @exposed
     def getSystemTypes(self):
         SystemTypes = models.SystemTypes()
         SystemTypes.system_type = list(models.SystemType.objects.all())
         return SystemTypes
     
-    @base.exposed
+    @exposed
     def updateSystemType(self, system_type):
         """Update a system type"""
 
@@ -524,19 +372,19 @@ class SystemManager(base.BaseManager):
         system_type.save()
         return system_type
     
-    @base.exposed
+    @exposed
     def getSystemTypeSystems(self, system_type_id):
         system_type = self.getSystemType(system_type_id)
         Systems = models.Systems()
         Systems.system = system_type.systems.all()
         return Systems
     
-    @base.exposed
+    @exposed
     def getWindowsBuildServiceSystemType(self):
         "Return the zone for this rBuilder"
         return models.SystemType.objects.get(name=models.SystemType.INFRASTRUCTURE_WINDOWS_BUILD_NODE)
     
-    @base.exposed
+    @exposed
     def getWindowsBuildServiceNodes(self):
         nodes = []
         try:
@@ -548,7 +396,7 @@ class SystemManager(base.BaseManager):
         
         return nodes
     
-    @base.exposed
+    @exposed
     def addWindowsBuildService(self, name, description, network_address):
         log.info("Adding Windows Build Service with name '%s', description '%s', and network address '%s'" % (name, description, network_address))
         system = models.System(name=name, description=description)
@@ -566,12 +414,12 @@ class SystemManager(base.BaseManager):
         
         return system
 
-    @base.exposed
+    @exposed
     def getSystemState(self, system_state_id):
         systemState = models.SystemState.objects.get(pk=system_state_id)
         return systemState
 
-    @base.exposed
+    @exposed
     def getSystemStates(self):
         SystemStates = models.SystemStates()
         SystemStates.system_state = list(models.SystemState.objects.all())
@@ -600,7 +448,7 @@ class SystemManager(base.BaseManager):
 
         return None, None
 
-    @base.exposed
+    @exposed
     def log_system(self, system, log_msg):
         system_log = system.createLog()
         system_log_entry = models.SystemLogEntry(system_log=system_log,
@@ -609,13 +457,13 @@ class SystemManager(base.BaseManager):
         system_log.save()
         return system_log
 
-    @base.exposed
+    @exposed
     def addSystems(self, systemList):
         '''Add add one or more systems to inventory'''
         for system in systemList:
             self.addSystem(system)
 
-    @base.exposed
+    @exposed
     def addSystem(self, system, generateCertificates=False,
                   withManagementInterfaceDetection=True):
         '''Add a new system to inventory'''
@@ -849,7 +697,7 @@ class SystemManager(base.BaseManager):
         system.ssl_client_key = crt.pkey.as_pem(None)
         system.save()
 
-    @base.exposed
+    @exposed
     def updateSystem(self, system):
         # XXX This will have to change and be done in modellib, most likely.
         if self.checkAndApplyShutdown(system):
@@ -973,7 +821,7 @@ class SystemManager(base.BaseManager):
         return rbuildermodels.Targets.objects.get(
             targettype=targetType, targetname=targetName)
 
-    @base.exposed
+    @exposed
     def addLaunchedSystem(self, system, dnsName=None, targetName=None,
             targetType=None):
         target = self.lookupTarget(targetType=targetType,
@@ -1052,7 +900,7 @@ class SystemManager(base.BaseManager):
         row = cu.fetchone()
         return bool(row)
 
-    @base.exposed
+    @exposed
     def getSystemLog(self, system):
         systemLog = system.system_log.all()
         if systemLog:
@@ -1060,7 +908,7 @@ class SystemManager(base.BaseManager):
         else:
             models.SystemLog()
 
-    @base.exposed
+    @exposed
     def getSystemLogEntries(self, system):
         systemLog = self.getSystemLog(system)
         logEntries = systemLog.system_log_entries.order_by('-entry_date')
@@ -1083,7 +931,7 @@ class SystemManager(base.BaseManager):
     def marshalCredentials(cls, credentialsDict):
         return mintdata.marshalGenericData(credentialsDict)
 
-    @base.exposed
+    @exposed
     def getSystemCredentials(self, system_id):
         system = models.System.objects.get(pk=system_id)
         systemCreds = {}
@@ -1100,7 +948,7 @@ class SystemManager(base.BaseManager):
 
         return self._getCredentialsModel(system, systemCreds)
 
-    @base.exposed
+    @exposed
     def addSystemCredentials(self, system_id, credentials):
         system = models.System.objects.get(pk=system_id)
         if system.management_interface:
@@ -1120,12 +968,12 @@ class SystemManager(base.BaseManager):
         self.scheduleSystemRegistrationEvent(system)
         return self._getCredentialsModel(system, credentials)
     
-    @base.exposed
+    @exposed
     def getSystemConfigurationDescriptor(self, system_id):
         system = models.System.objects.get(pk=system_id)
         return self.mgr.getConfigurationDescriptor(system)
     
-    @base.exposed
+    @exposed
     def getSystemConfiguration(self, system_id):
         system = models.System.objects.get(pk=system_id)
         if system.configuration is None:
@@ -1134,7 +982,7 @@ class SystemManager(base.BaseManager):
             systemConfig = self.unmarshalConfiguration(system.configuration)
         return self._getConfigurationModel(system, systemConfig)
 
-    @base.exposed
+    @exposed
     def addSystemConfiguration(self, system_id, configuration):
         system = models.System.objects.get(pk=system_id)
         systemConfig = self.marshalConfiguration(configuration)
@@ -1160,23 +1008,23 @@ class SystemManager(base.BaseManager):
     def marshalConfiguration(cls, configDict):
         return mintdata.marshalGenericData(configDict)
 
-    @base.exposed
+    @exposed
     def getSystemEvent(self, event_id):
         event = models.SystemEvent.objects.get(pk=event_id)
         return event
 
-    @base.exposed
+    @exposed
     def deleteSystemEvent(self, event):
         event = models.SystemEvent.objects.get(pk=event)
         event.delete()
 
-    @base.exposed
+    @exposed
     def getSystemEvents(self):
         SystemEvents = models.SystemEvents()
         SystemEvents.system_event = list(models.SystemEvent.objects.all())
         return SystemEvents
 
-    @base.exposed
+    @exposed
     def getSystemSystemEvents(self, system_id):
         system = models.System.objects.get(pk=system_id)
         events = models.SystemEvent.objects.filter(system=system)
@@ -1184,12 +1032,12 @@ class SystemManager(base.BaseManager):
         system_events.system_event = list(events)
         return system_events
 
-    @base.exposed
+    @exposed
     def getSystemSystemEvent(self, system_id, system_event_id):
         event = models.SystemEvent.objects.get(pk=system_event_id)
         return event
 
-    @base.exposed
+    @exposed
     def addSystemSystemEvent(self, system_id, systemEvent):
         """Add a system event to a system"""
         
@@ -1241,7 +1089,7 @@ class SystemManager(base.BaseManager):
         
         return events
 
-    @base.exposed
+    @exposed
     def processSystemEvents(self):
         events = self.getSystemEventsForProcessing()
         if not events:
@@ -1294,7 +1142,7 @@ class SystemManager(base.BaseManager):
             log.debug("%s events do not trigger a new event creation" % event.event_type.name)
 
     @classmethod
-    @base.exposed
+    @exposed
     def getSystemManagementInterfaceName(cls, system):
         if system.management_interface_id is None:
             # Assume CIM
@@ -1372,7 +1220,7 @@ class SystemManager(base.BaseManager):
         # If no ip address was set, fall back to dns_name
         if network:
             destination = network.ip_address or network.dns_name
-            requiredNetwork = (network.required and destination) or None
+            requiredNetwork = (network.pinned and destination) or None
         else:
             destination = None
             requiredNetwork = None
@@ -1433,30 +1281,9 @@ class SystemManager(base.BaseManager):
             interfacesList=interfacesList)
         return params
 
-    @base.exposed
+    @exposed
     def extractNetworkToUse(self, system):
-        if hasattr(system.networks, 'all'):
-            networks = system.networks.all()
-        else:
-            networks = system.networks.network
-            for net in networks:
-                net.required = (net.required == 'true' or net.required == 'True')
-                net.active = (net.active == 'true' or net.active == 'True')
-
-        # first look for user required nets
-        nets = [ x for x in networks if x.required ]
-        if nets:
-            return nets[0]
-
-        # now look for a non-required active net
-        nets = [ x for x in networks if x.active ]
-        if nets:
-            return nets[0]
-
-        # If we only have one network, return that one and hope for the best
-        if len(networks) == 1:
-            return networks[0]
-        return None
+        return models.System.extractNetworkToUse(system)
 
     def needsNewSynchronization(self, system):
         """
@@ -1534,12 +1361,12 @@ class SystemManager(base.BaseManager):
     def jobState(cls, name):
         return models.JobState.objects.get(name=name)
 
-    @base.exposed
+    @exposed
     def scheduleSystemPollEvent(self, system):
         '''Schedule an event for the system to be polled'''
         return self._scheduleEvent(system, models.EventType.SYSTEM_POLL)
 
-    @base.exposed
+    @exposed
     def scheduleSystemPollNowEvent(self, system):
         '''Schedule an event for the system to be polled now'''
         # happens on demand, so enable now
@@ -1547,7 +1374,7 @@ class SystemManager(base.BaseManager):
             models.EventType.SYSTEM_POLL_IMMEDIATE,
             enableTime=self.now())
 
-    @base.exposed
+    @exposed
     def scheduleSystemRegistrationEvent(self, system):
         '''Schedule an event for the system to be registered'''
         # registration events happen on demand, so enable now
@@ -1555,20 +1382,20 @@ class SystemManager(base.BaseManager):
             models.EventType.SYSTEM_REGISTRATION,
             enableTime=self.now())
 
-    @base.exposed
+    @exposed
     def scheduleSystemApplyUpdateEvent(self, system, sources):
         '''Schedule an event for the system to be updated'''
         return self._scheduleEvent(system,
             models.EventType.SYSTEM_APPLY_UPDATE_IMMEDIATE,
             eventData=sources)
 
-    @base.exposed
+    @exposed
     def scheduleSystemShutdownEvent(self, system):
         '''Schedule an event to shutdown the system.'''
         return self._scheduleEvent(system,
             models.EventType.SYSTEM_SHUTDOWN_IMMEDIATE)
 
-    @base.exposed
+    @exposed
     def scheduleLaunchWaitForNetworkEvent(self, system):
         """
         Schedule an event that either waits for the system's IP address to
@@ -1579,7 +1406,7 @@ class SystemManager(base.BaseManager):
             models.EventType.LAUNCH_WAIT_FOR_NETWORK,
             enableTime=self.now())
 
-    @base.exposed
+    @exposed
     def scheduleSystemDetectMgmtInterfaceEvent(self, system):
         """
         Schedule an immediate event that detects the management interface
@@ -1589,7 +1416,7 @@ class SystemManager(base.BaseManager):
             models.EventType.SYSTEM_DETECT_MANAGEMENT_INTERFACE_IMMEDIATE,
             enableTime=self.now())
 
-    @base.exposed
+    @exposed
     def scheduleSystemConfigurationEvent(self, system, configuration):
         '''Schedule an event for the system to be configured'''
         # registration events happen on demand, so enable now
@@ -1610,7 +1437,7 @@ class SystemManager(base.BaseManager):
         return self.createSystemEvent(system, eventTypeObject, enableTime=enableTime,
             eventData=eventData)
 
-    @base.exposed
+    @exposed
     def createSystemEvent(self, system, eventType, enableTime=None,
                           eventData=None):
         event = None
@@ -1658,7 +1485,7 @@ class SystemManager(base.BaseManager):
                 
         return hasInfo
 
-    @base.exposed
+    @exposed
     def importTargetSystems(self, targetDrivers):
         if not targetDrivers:
             log.info("No targets found, nothing to import")
@@ -1922,13 +1749,25 @@ class SystemManager(base.BaseManager):
             (driver.cloudName, driver.cloudType, driver.userId,
                 time.time() - t0))
 
-    @base.exposed
+    @exposed
     def getSystemsLog(self):
         systemsLog = models.SystemsLog()
         systemLogEntries = \
             models.SystemLogEntry.objects.all().order_by('entry_date')
         systemsLog.system_log_entry = list(systemLogEntries)
         return systemsLog
+
+    @exposed
+    def getSystemTags(self, system_id):
+        system = models.System.objects.get(pk=system_id)
+        systemTags = querysetmodels.SystemTags()
+        systemTags.system_tag = system.system_tags.all()
+        return systemTags
+
+    @exposed
+    def getSystemTag(self, system_id, system_tag_id):
+        systemTag = querysetmodels.SystemTag.objects.get(pk=system_tag_id)
+        return systemTag
 
 class Configuration(object):
     _xobj = xobj.XObjMetadata(

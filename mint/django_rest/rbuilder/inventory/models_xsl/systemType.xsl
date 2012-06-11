@@ -11,35 +11,15 @@ Description:
 <xsl:copy-of select="$systemType_model_properties" />
 </xsl:variable>
 
-<xsl:variable name="systemType_model_properties"><![CDATA[
-SystemType Properties:
-  system_type_id - the database ID for the system type
-  name - the name of the system type
-  description - the description of the system type
-  created_date - the date the system type was added to inventory (UTC)
-  infrastructure - whether or not the system type is infrastructure
-  creation_descriptor - the descriptor of available fields to create systems of this type]]>
+<xsl:variable name="systemType_model_properties"><![CDATA[   created_date - the date the system type was added to inventory (UTC)
+   creation_descriptor - the descriptor of available fields to create systems of this type
+   description - the description of the system type
+   infrastructure - whether or not the system type is infrastructure
+   name - the name of the system type
+   system_type_id - the database ID for the system type]]>
 </xsl:variable>
 
-<xsl:variable name="systemType_methods"><![CDATA[
-Methods: 
-  GET:
-    Authentication: anonymous
-    Response Format:
-      <system_type id="http://hostname/api/inventory/system_types/1/">
-        ...
-      </system_type>
-
-  POST:
-    not supported
-    
-  PUT:
-    Authentication: admin
-    Read-only fields:
-        name
-      
-  DELETE:
-    not supported]]>
+<xsl:variable name="systemType_methods"><![CDATA[@@METHODS@@]]>
 </xsl:variable>
 
 </xsl:stylesheet>

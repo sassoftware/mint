@@ -1,3 +1,5 @@
+from mint.django_rest.rbuilder import metrics
+
 # Django settings for rbuilder project.
 
 DEBUG = False
@@ -69,6 +71,8 @@ MIDDLEWARE_CLASSES = (
     'mint.django_rest.middleware.ExceptionLoggerMiddleware',
     'mint.django_rest.middleware.AddCommentsMiddleware',
     'mint.django_rest.middleware.RedirectMiddleware',
+    'mint.django_rest.middleware.PerformanceMiddleware',
+    'mint.django_rest.middleware.SerializeXmlMiddleware',
     'django.middleware.transaction.TransactionMiddleware',
 )
 
@@ -77,9 +81,8 @@ USE_ETAGS=True
 ROOT_URLCONF = 'mint.django_rest.urls'
 
 TEMPLATE_DIRS = (
-    '/usr/lib64/python2.4/site-packages/mint/django_rest/templates/',
-    '/srv/code/products/rbuilder/trunk/mint/mint/django_rest/templates/',
-    './mint/django_rest/templates/',
+    '/usr/lib64/python2.6/site-packages/mint/django_rest/templates/',
+    'templates',
 )
 
 INSTALLED_APPS = (
@@ -88,9 +91,14 @@ INSTALLED_APPS = (
     'django.contrib.redirects',
     'django.contrib.sessions',
     'django.contrib.sites',
+    'debug_toolbar',
     'mint.django_rest.rbuilder',
     'mint.django_rest.rbuilder.reporting',
-    'mint.django_rest.rbuilder.inventory'
+    'mint.django_rest.rbuilder.inventory',
+    'mint.django_rest.rbuilder.metrics',
+    'mint.django_rest.rbuilder.querysets',
+    'mint.django_rest.rbuilder.packages',
+    'mint.django_rest.rbuilder.changelog',
 )
 
 AUTHENTICATION_BACKENDS = (
@@ -99,3 +107,10 @@ AUTHENTICATION_BACKENDS = (
 
 # Custom setting for if we should manage/create the tables in rbuilder.models
 MANAGE_RBUILDER_MODELS = False
+
+# Custom settings for pagination
+PER_PAGE = 50
+
+DEBUG_TOOLBAR_CONFIG = {
+    'SHOW_TOOLBAR_CALLBACK' : metrics.show_toolbar,
+}

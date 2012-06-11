@@ -12,6 +12,7 @@ from mint import mint_error
 from mint import userlevels
 from mint.db import projects
 from mint.db import repository as reposdb
+from mint.lib import mintutils
 from mint.lib import unixutils
 from mint.rest import errors
 from mint.rest.api import models
@@ -20,7 +21,11 @@ from mint.rest.db import manager
 from conary import changelog
 from conary import conarycfg
 from conary import conaryclient
+from conary import trove as cny_trove
+from conary import trovetup
+from conary.build import nextversion
 from conary.conaryclient import filetypes
+from conary.repository import changeset
 from conary.repository import errors as reposerrors
 from conary.repository import shimclient
 
@@ -34,6 +39,7 @@ class RepositoryManager(manager.Manager):
         self.auth = auth
         self.profiler = None
         self.reposManager = reposdb.RepositoryManager(cfg, db.db._db)
+        self.cache = mintutils.CacheWrapper(cfg.memCache)
 
     def close(self):
         self.reposManager.close()
@@ -356,6 +362,9 @@ class RepositoryManager(manager.Manager):
         # commit the change set to the repository
         client.getRepos().commitChangeSet(changeSet)
 
+        troveTup = sorted(changeSet.newTroves.keys())[0]
+        return trovetup.TroveTuple(troveTup)
+
     def _getFqdn(self, hostname, domainname):
         if domainname:
             fqdn = '%s.%s' % (hostname, domainname)
@@ -538,3 +547,74 @@ class RepositoryManager(manager.Manager):
                 repoMap[host] = helperfuncs.rewriteUrlProtocolPort(url, 
                                                             protocol, port)
         return repoMap
+
+    def _getKeyValueMetadata(self, troveTups):
+        out = []
+        client = self.getAdminClient()
+        for trv in client.repos.getTroves(troveTups):
+            if trv:
+                metaDict = trv.troveInfo.metadata.get()['keyValue']
+                if metaDict:
+                    out.append(dict(metaDict.items()))
+                else:
+                    out.append({})
+            else:
+                out.append(None)
+        return out
+
+    def getKeyValueMetadata(self, troveTups):
+        return self.cache.coalesce(
+                keyPrefix='kvmeta:',
+                innerFunc=self._getKeyValueMetadata,
+                items=troveTups,
+                )
+
+    def updateKeyValueMetadata(self, jobs, admin=False):
+        if not jobs:
+            return []
+        if admin:
+            client = self.getAdminClient(write=True)
+        else:
+            client = self.getUserClient()
+
+        troveTups = [x[0] for x in jobs]
+        allSpecs = [(n, '%s/%s' % (v.trailingLabel(),
+                v.trailingRevision().getVersion()), None)
+            for (n, v, f) in troveTups]
+        metaDicts = [x[1] for x in jobs]
+
+        allVersions = client.repos.findTroves(None, allSpecs, getLeaves=False)
+
+        troves = client.repos.getTroves(troveTups, withFiles=True)
+        changeSet = changeset.ChangeSet()
+        newTups = []
+        for trv, allSpec, metaDict in zip(troves, allSpecs, metaDicts):
+            newTrv = trv.copy()
+            # Build new key-value metadata
+            keyValues = cny_trove.KeyValueItemsStream()
+            for key, value in metaDict.iteritems():
+                keyValues[key] = value
+            meta = newTrv.troveInfo.metadata
+            # Make sure there's an existing MetadataItem to work on
+            meta.addItem(cny_trove.MetadataItem())
+            # Flatten old metadata and replace the keyvalue element
+            flattened = meta.flatten(skipSet=set(['sizeOverride']))
+            for item in flattened:
+                if not item.language():
+                    item.keyValue = keyValues
+            newTrv.troveInfo.metadata = cny_trove.Metadata()
+            newTrv.troveInfo.metadata.addItems(flattened)
+            # Pick new version
+            old = trv.getVersion()
+            oldTups = allVersions[allSpec]
+            version = nextversion.nextSourceVersion(old.branch(),
+                    old.trailingRevision(), [x[1] for x in oldTups])
+            newTrv.changeVersion(version)
+            # Prepare for commit
+            newTrv.computeDigests()
+            trvCs = newTrv.diff(None, absolute=True)[0]
+            changeSet.newTrove(trvCs)
+            newTups.append(trovetup.TroveTuple(newTrv.getNameVersionFlavor()))
+
+        client.repos.commitChangeSet(changeSet)
+        return newTups

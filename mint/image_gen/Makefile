@@ -1,10 +1,8 @@
 #
-# Copyright (c) 2010 rPath, Inc.
-#
-# All rights reserved.
+# Copyright (c) 2011 rPath, Inc.
 #
 
-SUBDIRS = wig
+SUBDIRS = upload wig
 
 python_files = $(wildcard *.py)
 

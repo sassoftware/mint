@@ -1,21 +1,12 @@
 #
-# Copyright (c) 2009 rPath, Inc.
+# Copyright (c) 2011 rPath, Inc.
 #
-# All Rights Reserved
-#
-import os
-import sys
-import time
 
+import errno
+import os
 from conary.lib import util
 from restlib import response
 
-from mint import builds
-from mint import buildtypes
-from mint import helperfuncs
-from mint import mint_error
-from mint.lib import data
-from mint.rest import errors
 from mint.rest.db import manager
 
 
@@ -64,3 +55,8 @@ class FileManager(manager.Manager):
         except OSError, err:
             if err.args[0] not in (errno.ENOENT, errno.ENOTEMPTY):
                 raise
+
+    def openImageFile(self, hostname, imageId, fileName, mode):
+        create = mode[0] in 'aw'
+        path = self._getImagePath(hostname, imageId, fileName, create)
+        return open(path, mode)

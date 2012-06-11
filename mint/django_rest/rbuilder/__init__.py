@@ -1,4 +1,9 @@
 #
+# Copyright (c) 2011 rPath, Inc.
+#
+# All rights reserved.
+#
+
 import os
 
 from xobj import xobj

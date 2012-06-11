@@ -1,0 +1,22 @@
+Network properties:
+    active - whether or not this is the active network device on the system
+    created_date - the date the network was created (UTC)
+    device_name - the network device name
+    dns_name - the network DNS name
+    ip_address - the network IP address
+    ipv6_address - the network IPv6 address
+    netmask - the network netmask
+    network_id - the database ID for the network
+    pinned - whether or not a user has pinned this network device be the one used to manage the system
+    port_type - the network port type
+    system - documentation missing
+
+Methods:
+    GET:
+        Authentication: user
+    POST:
+        not supported
+    PUT:
+        Authentication: admin
+    DELETE:
+        Authentication: admin

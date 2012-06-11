@@ -11,34 +11,13 @@ Description:
 <xsl:copy-of select="$event_type_model_properties" />
 </xsl:variable>
 
-<xsl:variable name="event_type_model_properties"><![CDATA[
-EventType Properties:
-  name - the event type name (read-only)
-  description - the event type description
-  priority - the event type priority where > priority wins
-  event_type_id - the database id of the event type
-  system_events - an entry point into a collection of all system events of this type]]>
+<xsl:variable name="event_type_model_properties"><![CDATA[   description - the event type description
+   event_type_id - the database id of the event type
+   name - the event type name (read-only)
+   priority - the event type priority where > priority wins]]>
 </xsl:variable>
 
-<xsl:variable name="event_type_methods"><![CDATA[
-Methods: 
-  GET:
-    Authentication: none
-    Response Format:
-       <event_type id="http://hostname/api/inventory/event_types/1/">
-         ...
-       </event_type>
-      
-  POST:
-    not supported
-    
-  PUT:
-    Authentication: admin
-    Read-only fields:
-        name
-    
-  DELETE:
-    not supported]]>
+<xsl:variable name="event_type_methods"><![CDATA[@@METHODS@@]]>
 </xsl:variable>
 
 </xsl:stylesheet>

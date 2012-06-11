@@ -452,7 +452,6 @@ class Database(DBInterface):
         self.productMgr.updateProductVersion(hostname,
                                              version, productVersion.description)
 
-
     def getProductVersionPlatform(self, hostname, version):
         self.auth.requireProductReadAccess(hostname)
         pd = self.productMgr.getProductVersionDefinition(hostname, version)
@@ -480,6 +479,32 @@ class Database(DBInterface):
             productVersion=version,
             enabled=platformEnabled,
             platformId = platformId)
+
+    def getProductVersionPlatformVersion(self, hostname, version):
+        self.auth.requireProductReadAccess(hostname)
+        pd = self.productMgr.getProductVersionDefinition(hostname, version)
+        platformName = pd.getPlatformName()
+        sourceTrove = pd.getPlatformSourceTrove()
+        if not sourceTrove:
+            return models.EmptyPlatformVersion()
+        n,v,f = cmdline.parseTroveSpec(sourceTrove)
+        v = versions.VersionFromString(v)
+        # convert trove name from unicode
+        platformLabel = str(v.trailingLabel())
+        localPlatform = self.platformMgr.getPlatformByLabel(platformLabel)
+        if localPlatform:
+            platformTroves = [pt for pt in pd.getPlatformSearchPaths() \
+                if pt.isPlatformTrove]
+            if not platformTroves:
+                return models.EmptyPlatformVersion()
+            platformTrove = platformTroves[0]
+            name = str(platformTrove.troveName)
+            revision = str(platformTrove.version)
+            return self.platformMgr.getPlatformVersion(
+                localPlatform.platformId, 
+                "%s=%s" % (name, revision))
+        else:
+            return models.EmptyPlatformVersion()
 
     def updateProductVersionStage(self, hostname, version, stageName, trove):
         return self.productMgr.updateProductVersionStage(hostname, version, stageName, trove)
@@ -735,6 +760,11 @@ class Database(DBInterface):
         return image
 
     @commitafter
+    def updateImage(self, hostname, image):
+        self.auth.requireProductDeveloper(hostname)
+        self.imageMgr.updateImage(hostname, image)
+
+    @commitafter
     def createUser(self, username, password, fullName, email, 
                    displayEmail, blurb, admin=False):
         self.auth.requireAdmin()
@@ -755,6 +785,14 @@ class Database(DBInterface):
     @commitafter
     def getPlatform(self, platformId):
         return self.platformMgr.getPlatform(platformId)
+
+    @commitafter
+    def getPlatformVersion(self, platformId, platformVersionId):
+        return self.platformMgr.getPlatformVersion(platformId, platformVersionId)
+
+    @commitafter
+    def getPlatformVersions(self, platformId):
+        return self.platformMgr.getPlatformVersions(platformId)
 
     @commitafter
     def createPlatform(self, platform, createPlatDef=True):

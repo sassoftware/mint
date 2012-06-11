@@ -11,36 +11,10 @@ Description:
 <xsl:copy-of select="$credentials_model_properties" />
 </xsl:variable>
 
-<xsl:variable name="credentials_model_properties"><![CDATA[
-Credentials Properties:
-  All properties of this object are determined by the properties specified in the credentials_descriptor property of this system's management interface.]]>
+<xsl:variable name="credentials_model_properties"><![CDATA[]]>
 </xsl:variable>
 
-<xsl:variable name="credentials_methods"><![CDATA[
-Methods: 
-  GET:
-    Authentication: admin
-    Response Format:
-      <credentials id="http://hostname/api/inventory/systems/1/credentials">
-        ...
-      </credentials>
-
-  POST:
-    Authentication: admin
-    Required fields:
-        The fields specified by the credentials_descriptor property of this system's management interface.
-    Supported:
-        Only when the credentials_readonly property of this system's management interface is false.
-    
-  PUT:
-    Authentication: admin
-    Required fields:
-        The fields specified by the credentials_descriptor property of this system's management interface.
-    Notes:
-        Supported only when the credentials_readonly property of this system's management interface is false.
-      
-  DELETE:
-    not supported]]>
+<xsl:variable name="credentials_methods"><![CDATA[@@METHODS@@]]>
 </xsl:variable>
 
 </xsl:stylesheet>

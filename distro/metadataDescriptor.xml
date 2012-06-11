@@ -5,6 +5,7 @@
     <field>
       <name>metadata.owner</name>
       <help lang="en_US">@Help_import_image_owner@</help>
+      <required>true</required>
       <readonly>true</readonly>
       <descriptions>
         <desc>Owner</desc>
@@ -15,6 +16,7 @@
     <field>
       <name>metadata.admin</name>
       <help lang="en_US">@Help_import_image_admin@</help>
+      <required>true</required>
       <readonly>true</readonly>
       <descriptions>
         <desc>Admin</desc>
@@ -51,7 +53,53 @@
       </enumeratedType>
     </field>
     <field>
-      <name>metadata.billingCode</name>
+      <name>metadata.workload</name>
+      <required>true</required>
+      <descriptions>
+        <desc>Workload</desc>
+      </descriptions>
+      <help lang="en_US">@Help_import_image_workload@</help>
+      <enumeratedType>
+        <describedValue>
+          <descriptions>
+            <desc>Application Server</desc>
+          </descriptions>
+          <key>appserver</key>
+        </describedValue>
+        <describedValue>
+          <descriptions>
+            <desc>Database Server</desc>
+          </descriptions>
+          <key>dbserver</key>
+        </describedValue>
+        <describedValue>
+          <descriptions>
+            <desc>File Store</desc>
+          </descriptions>
+          <key>filestore</key>
+        </describedValue>
+        <describedValue>
+          <descriptions>
+            <desc>Middleware/Messaging</desc>
+          </descriptions>
+          <key>middleware</key>
+        </describedValue>
+        <describedValue>
+          <descriptions>
+            <desc>Web Server</desc>
+          </descriptions>
+          <key>webserver</key>
+        </describedValue>
+        <describedValue>
+          <descriptions>
+            <desc>Other</desc>
+          </descriptions>
+          <key>other</key>
+        </describedValue>
+      </enumeratedType>
+    </field>
+    <field>
+      <name>metadata.billing_code</name>
       <help lang="en_US">@Help_import_image_billing_code@</help>
       <descriptions>
         <desc>Billing Code</desc>
@@ -60,7 +108,7 @@
       <default/>
     </field>
     <field>
-      <name>metadata.deptCode</name>
+      <name>metadata.department_code</name>
       <help lang="en_US">@Help_import_image_dept_code@</help>
       <descriptions>
         <desc>Department Code</desc>

@@ -41,7 +41,7 @@ def getHeaderValue(request, headerName):
     mangledHeaderName = 'HTTP_' + headerName.replace('-', '_').upper()
     return request.META.get(headerName, request.META.get(mangledHeaderName))
 
-def requires(model_names, save=True):
+def requires(model_names, save=True, load=True):
     """
     Decorator that parses the post data on a request into the class
     specified by modelClass.
@@ -62,10 +62,10 @@ def requires(model_names, save=True):
             # XXX This is not the ideal place to handle this
             _injectZone(request, built_model, model_name, modelCls)
             model = modelCls.objects.load_from_object(
-                built_model, request, save=save)
+                built_model, request, save=save, load=load)
             kw[model_name] = model
             return function(*args, **kw)
-
+        
         return inner
     return decorate
 
@@ -143,7 +143,8 @@ def return_xml(function):
         response = http.HttpResponse()
         response['Content-Type'] = 'text/xml'
         request = args[1]
-        response.write(ret_val.to_xml(request))
+        response.model = ret_val
         return response
-
+    inner.__doc__ = function.__doc__
     return inner
+

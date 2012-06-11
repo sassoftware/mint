@@ -220,6 +220,21 @@ class PlatformsTest(BaseTest):
 
         self.assertXMLEquals(xmlResp, statusTestPOSTRespXml)
 
+    def testGetSourceTypeStatusRepomd(self):
+        mock.mockFunctionOnce(contentsources.Repomd,
+                              'status',
+                              (True, True, 'Validated Successfully'))
+
+        uri = '/contentSources/repomd/statusTest'
+        xmlReq = '<contentSource><contentSourceId>0</contentSourceId><contentSourceStatus><id /><value /></contentSourceStatus><contentSourceType>repomd</contentSourceType><defaultSource>false</defaultSource><enabled>false</enabled><id /><name>Content source 1</name><orderIndex>0</orderIndex><password /><resourceErrors /><shortname>contentsource1</shortname><sourceUrl>http://example.com</sourceUrl><status>100</status><username /></contentSource>'
+
+        client = self.getRestClient(admin=True)
+        req, platform = client.call('POST', uri, body=xmlReq)
+        xmlResp = self._toXml(platform, client, req)
+
+        self.assertXMLEquals(xmlResp, statusTestPOSTRespXml)
+
+
     def testGetSourceDescriptor(self):
         uri = '/contentSources/RHN/descriptor'
         client = self.getRestClient(admin=True)
@@ -329,7 +344,7 @@ class PlatformsTest(BaseTest):
         client = self.getRestClient(admin=True)
         req, platform = client.call('PUT', uri, body=platformPUTXml)
         xml = self._toXml(platform, client, req)
-        self.assertXMLEquals(platformPUTXml, xml)
+        self.assertXMLEquals(platformGETXml, xml)
 
     def testGetPlatformStatus(self):
         self._getPlatforms()
@@ -363,7 +378,7 @@ class PlatformsTest(BaseTest):
         req, platforms = self._getPlatformModels()
         
         platformLoad = models.PlatformLoad()
-        platformLoad.uri = "http://no.such.host/1234"
+        platformLoad.loadUri = "http://no.such.host/1234"
         platformLoad.jobId = "abcd1234"
         platformLoad.platformId = platforms.platforms[0].platformId
 
