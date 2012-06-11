@@ -1,8 +1,9 @@
 #
-# Copyright (c) 2005-2007 rPath, Inc.
+# Copyright (c) 2005-2009 rPath, Inc.
 #
 # All Rights Reserved
 #
+import logging
 import simplejson
 import sys
 import xmlrpclib
@@ -13,13 +14,22 @@ from mint import config
 from mint import mint_error
 from mint import server
 from mint import maintenance
+from mint.lib import mintutils
 from mint.logerror import logWebErrorAndEmail
 from mint.web.webhandler import getHttpAuth
 
+from conary import dbstore
 from conary.lib import coveragehook
 from conary.repository import errors
 
-def rpcHandler(req, db, cfg, pathInfo = None):
+
+def rpcHandler(context):
+    return _rpcHandler(context.req, context.db, context.cfg)
+
+
+def _rpcHandler(req, db, cfg, pathInfo = None):
+    mintutils.setupLogging(consoleLevel=logging.INFO, consoleFormat='apache')
+
     maintenance.enforceMaintenanceMode(cfg)
     isJSONrpc = isXMLrpc = allowPrivate = False
 
@@ -81,11 +91,16 @@ def rpcHandler(req, db, cfg, pathInfo = None):
 def handler(req):
     coveragehook.install()
     cfg = config.getConfig(req.filename)
+    db = dbstore.connect(cfg.dbPath, cfg.dbDriver)
 
     try:
-        return rpcHandler(req, None, cfg)
-    except:
-        e_type, e_value, e_tb = sys.exc_info()
-        logWebErrorAndEmail(req, cfg, e_type, e_value, e_tb, 'XMLRPC handler')
-        del e_tb
-        return apache.HTTP_INTERNAL_SERVER_ERROR
+        try:
+            return _rpcHandler(req, db, cfg)
+        except:
+            e_type, e_value, e_tb = sys.exc_info()
+            logWebErrorAndEmail(req, cfg, e_type, e_value, e_tb, 'XMLRPC handler')
+            del e_tb
+            return apache.HTTP_INTERNAL_SERVER_ERROR
+    finally:
+        db.close()
+        logging.shutdown()

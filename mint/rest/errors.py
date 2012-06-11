@@ -37,6 +37,19 @@ class AuthHeaderError(mint_error.InvalidError):
 class InvalidSearchType(mint_error.MintError):
     pass
 
+class InvalidProjectForPlatform(mint_error.MintError):
+    """
+    A non-external project already exists that shares the fully qualified
+    domainname of the platform that is being enabled.
+    """
+
+class PlatformLoadFileNotFound(mint_error.MintError):
+    def __init__(self, uri):
+        self.uri = uri
+
+    def __str__(self):
+        return "Load file %s could not be downloaded." % self.uri
+
 class ProductNotFound(ItemNotFound):
     status = 404
 
@@ -82,11 +95,12 @@ class ExternalRepositoryAccessError(Exception):
         if self.url:
             msg = ("Error contacting remote repository. "
                    " Please ensure entitlement and repository "
-                   " URL are correct. (%s)" % str(e))
+                   " URL are correct. (%s)" % str(self.e))
         else:
             msg = ("Error contacting remote repository."
                    " Please ensure entitlement is correct."
-                   " (%s)" % str(e))
+                   " (%s)" % str(self.e))
+        return msg                   
 
 import inspect
 __all__ = []

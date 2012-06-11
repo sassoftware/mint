@@ -63,20 +63,19 @@ def setup():
 
     pathManager.addExecPath('MCP_PATH')
 
-    pathManager.addExecPath('JOB_SLAVE_PATH')
-
     pathManager.addExecPath('RAA_PATH')
     pathManager.addExecPath('RAA_TEST_PATH')
     
+    pathManager.addExecPath('REPODATA_PATH')
     pathManager.addExecPath('RESTLIB_PATH')
     pathManager.addExecPath('CREST_PATH')
     pathManager.addExecPath('XOBJ_PATH')
-    pathManager.addExecPath('BOTO_PATH')
     pathManager.addExecPath('XMLLIB_PATH')
     pathManager.addExecPath('PRODUCT_DEFINITION_PATH')
-    pathManager.addExecPath('STOMP_PATH')
     pathManager.addExecPath('STORAGE_PATH')
     pathManager.addExecPath('CATALOG_SERVICE_PATH')
+    pathManager.addExecPath('CAPSULE_INDEXER_PATH')
+    pathManager.addExecPath('CAPSULE_INDEXER_TEST_PATH')
 
     pathManager.addExecPath('PACKAGE_CREATOR_SERVICE_PATH')
     path = pathManager.addExecPath('PACKAGE_CREATOR_SERVICE_TEST_PATH')

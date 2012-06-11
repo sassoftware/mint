@@ -39,18 +39,7 @@ from conary.lib import util
 from conary.dbstore import sqlerrors
 from testutils import sqlharness
 
-from mcp_test import mcp_helper
-from mcp import queue
-from mcp_test.mcp_helper import MCPTestMixin
-
 from rpath_proddef import api1 as proddef
-
-# Mock out the queues
-queue.Queue = mcp_helper.DummyQueue
-queue.Topic = mcp_helper.DummyQueue
-queue.MultiplexedQueue = mcp_helper.DummyMultiplexedQueue
-queue.MultiplexedTopic = mcp_helper.DummyMultiplexedQueue
-
 
 
 def stockBuildFlavor(db, buildId, arch = "x86_64"):
@@ -110,16 +99,30 @@ class FixtureCache(object):
         cfg.ec2PublicKey = 'publicKey'
         cfg.ec2PrivateKey = 'secretKey'
 
+        cfg.availablePlatforms = ['localhost@rpath:plat-1',
+                                  'localhost@rpath:plat-2']
+
+        cfg.configurablePlatforms = ['localhost@rpath:plat-1',
+                                     'localhost@rpath:plat-2']
+
+        cfg.platformSources      = ['plat1source', 'plat2source0', 'plat2source1']
+        cfg.platformSourceTypes  = ['satellite', 'RHN', 'RHN']
+        cfg.platformSourceUrls   = ['http://plat1source.example.com',
+                                    'https://plat2source0.example.com',
+                                    'https://plat2source1.example.com']
+        cfg.platformSourceNames  = ['Platform 1 Source',
+                                    'Platform 2 Source 0',
+                                    'Platform 2 Source 1']
+        cfg.platformSourceLabels = ['localhost@rpath:plat-1',
+                                    'localhost@rpath:plat-2',
+                                    'localhost@rpath:plat-2']
+
         cfg.reposLog = False
         f = open(cfg.conaryRcFile, 'w')
         f.close()
         cfg.postCfg()
 
         util.mkdirChain(cfg.logPath)
-
-        util.mkdirChain(cfg.dataPath + "/config/")
-        f = open(cfg.dataPath + "/config/mcp-client.conf", "w")
-        f.close()
 
         return cfg
 
@@ -823,7 +826,7 @@ class PostgreSqlFixtureCache(SQLServerFixtureCache):
             util.rmtree(f[0].dataPath)
 
 
-class FixturedUnitTest(testhelp.TestCase, MCPTestMixin):
+class FixturedUnitTest(testhelp.TestCase):
     adminClient = None
     cfg = None
 
@@ -872,9 +875,7 @@ class FixturedUnitTest(testhelp.TestCase, MCPTestMixin):
                 password = 'anonymous'
             else:
                 password = '%spass' % username
-        s = shimclient.ShimMintClient(self.cfg, (username, password))
-        s.server._server.mcpClient = self.mcpClient
-        return s
+        return shimclient.ShimMintClient(self.cfg, (username, password))
 
     def getAnonymousClient(self):
         return self.getClient('anonymous')
@@ -961,8 +962,12 @@ class FixturedUnitTest(testhelp.TestCase, MCPTestMixin):
 
     def setUp(self):
         testhelp.TestCase.setUp(self)
-        MCPTestMixin.setUp(self)
         resetCache()
+
+        # Prevent the mcp from talking to anyone interesting.
+        server.MintServer._getMcpClient = mock.MockObject()
+        server.MintServer._getMcpClient(
+                ).new_job._mock.setDefaultReturn('0' * 32)
 
     def tearDown(self):
         mock.unmockAll()
@@ -970,7 +975,6 @@ class FixturedUnitTest(testhelp.TestCase, MCPTestMixin):
             server.dbConnection.close()
         server.dbConnection = None
         testhelp.TestCase.tearDown(self)
-        MCPTestMixin.tearDown(self)
         try:
             fixtureCache.delRepos()
             self.cfg and util.rmtree(self.cfg.dataPath)

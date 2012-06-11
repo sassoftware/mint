@@ -13,7 +13,7 @@ if mainPath not in sys.path: sys.path.append(mainPath)
 import testsuite
 testsuite.setup()
 
-import fixtures
+from mint_test import fixtures
 from mint_test import mint_rephelp
 
 from conary import versions as conaryver
@@ -96,7 +96,6 @@ class MockedAppCreatorTest(fixtures.FixturedUnitTest):
     @fixtures.fixture('Full')
     def testMakeApplianceTrove(self, db, data):
         self._setupMock()
-
         self.called = False
         @public
         def MockedMakeTrove(x, sesH):
@@ -271,9 +270,9 @@ class TestRecipe(PackageRecipe):
         l = self.mintClient.listApplianceTroves(self.projectId, sesH)
         self.assertEquals(set(l), set(['testpkgtwo', 'testpkgzero:runtime']))
 
-    def _makeApplianceTrove(self, rebuild, troveName, troveList):
+    def _makeApplianceTrove(self, rebuild, troveName, troveList, label):
         sesH, otherInfo = self.mintClient.startApplianceCreatorSession( \
-                self.projectId, self.versionId, rebuild)
+                self.projectId, self.versionId, rebuild, label)
         self.mintClient.addApplianceTrove(sesH, troveName)
         self.mintClient.makeApplianceTrove(sesH)
         project = self.mintClient.getProject(self.projectId)
@@ -281,7 +280,7 @@ class TestRecipe(PackageRecipe):
         cClient = conaryclient.ConaryClient(cfg)
         repos = cClient.getRepos()
         nvf = repos.findTrove(None, ("%s:source" % self.prodDef.getImageGroup(),
-            self.prodDef.getDefaultLabel(), None))
+            label, None))
         fileDict = cClient.getFilesFromTrove(*nvf[0])
         self.assertEquals(sorted(fileDict.keys()),
                 ['appliance-manifest.xml', 'group-prodtest.recipe'])
@@ -296,18 +295,13 @@ class TestRecipe(PackageRecipe):
         self.assertEquals([x for x in manifest.iterTroves(implicit = True)], [])
 
     def testMakeApplianceTrove(self):
-        raise testsuite.SkipTestException('Failed - see RBL-3636')
-        self._makeApplianceTrove(False, 'foo', ['foo'])
+        self._makeApplianceTrove(False, 'foo', ['foo'], 'prodtest.rpath.local2@prodtest:prodtest-1-qa')
 
     def testRebuildApplianceTrove(self):
-        raise testsuite.SkipTestException('Failed - see RBL-3636')
-        self._makeApplianceTrove(False, 'foo', ['foo'])
-        self._makeApplianceTrove(True, 'bar', ['foo', 'bar'])
+        self._makeApplianceTrove(True, 'bar', ['bar'], 'prodtest.rpath.local2@prodtest:prodtest-1-devel')
 
     def testRebuildApplianceTrove2(self):
-        raise testsuite.SkipTestException('Failed - see RBL-3636')
-        self._makeApplianceTrove(False, 'foo', ['foo'])
-        self._makeApplianceTrove(False, 'bar', ['bar'])
+        self._makeApplianceTrove(False, 'foo', ['foo'], 'prodtest.rpath.local2@prodtest:prodtest-1')
 
     def testGetAvailablePackages(self):
         self._setupMock()

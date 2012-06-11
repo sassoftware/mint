@@ -151,6 +151,32 @@ class DatabaseTable(object):
         if commit:
             self.db.commit()
 
+    @dbWriter
+    def new(self, cu, **kwargs):
+        """
+        Adds a row to the database.
+        @param kwargs: map of database column names to values.
+        @param commit: whether or not to automatically commit this
+          transaction after the statement has executed.
+        @return: primary key id of new item.
+        """
+        # XXX fix to handle sequences
+        values = kwargs.values()
+        fields = kwargs.keys()
+        if self.db.driver == 'mysql':
+            fields_ = ", ".join("`%s`" % x for x in fields)
+        else:
+            fields_ = ", ".join(fields)
+
+        stmt = "INSERT INTO %s (%s) VALUES (%s)" %\
+            (self.name, fields_, ",".join('?' * len(values)))
+
+        try:
+            ret = cu.execute(*[stmt] + values)
+        except sqlerrors.ColumnNotUnique:
+            raise DuplicateItem(self.name)
+
+        return ret
 
 class KeyedTable(DatabaseTable):
     """

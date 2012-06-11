@@ -49,96 +49,6 @@ class HelperFunctionsTest(mint_rephelp.MintRepositoryHelper, unittest.TestCase):
                                            ('ignored', 0L)), int):
             self.fail("myProjectCompare did not return an int")
 
-    def compareMakefile(self, directory, exclusionList = set()):
-        missing = False
-        makeFile = open(directory + '/Makefile')
-        data = [ x.strip() for x in makeFile.read().split('\n')]
-        makeFile.close()
-        newData = []
-        found = False
-        continuedLine = ''
-        for line in data:
-            if line.endswith('\\'):
-                continuedLine += line
-            else:
-                newData.append(continuedLine + line)
-                continuedLine = ''
-
-        fileList = set()
-        wildCards = set()
-        for line in newData:
-            if line.startswith('python_files') or \
-                    line.startswith('kid_files') or \
-                    line.startswith('static_files') or \
-                    line.startswith('extra_dist'):
-                files = [''.join(x.strip().split('\\')) for x in \
-                             ' '.join((line.split('=')[1] \
-                                       ).split('\t')).split(' ') \
-                             if x.strip() != '']
-                while '$(wildcard' in files:
-                    index = files.index('$(wildcard')
-                    wildCards.add(files[index + 1][:-1])
-                    del files[index:index+2]
-                fileList.update(files)
-
-        for wildCard in wildCards:
-            matches = util.braceGlob(os.path.join(directory, wildCard))
-            fileList.update(os.path.basename(x) for x in matches)
-
-        actualList = set(x for x in os.listdir(directory) \
-                           if ((x.endswith('.py') or x.endswith('.kid')) \
-                             and not x.startswith(".")))
-        missingList = (actualList - exclusionList) - fileList
-
-        if missingList:
-            print >> sys.stderr, "\n%s is missing: %s" % \
-                  (directory + '/Makefile', ' '.join(missingList)),
-            missing = True
-        return missing
-
-    # Unfriendly because testing against an installed system negates
-    # the usefulness of this test. If there are files not being installed
-    # correctly, the entire testsuite will explode. Also, this doesn't
-    # work against an installed system anyway because there are no
-    # makefiles on an installed system.
-    @testsuite.context("quick", "unfriendly")
-    def testMakefiles(self):
-        missing = False
-        skipDirs = ('.hg', 'mint_test/archive/arch',
-                    'mint_test/archive/use',
-                    'mint/web/content', 'mint/web/templates',
-                    'scripts', 'mint_test/templates',
-                    'raaplugins/rPath/rmakemanagement/help',
-                    'raaplugins/rPath/nextsteps',
-                    'mint_test/annotate', 'mint_test/coverage',
-                    'mint_test/.coverage', 'mint_test/archive/anaconda',
-                    'bin', 'mint_test', 'server_template',
-                    'doc',
-                    'pylint', 'commands', 
-                    'tom', 'product')
-        skipFiles = {'/distro' : ['backup.py', 'anaconda_custom.py',
-                                  'welcome_text.py', 'welcome_gui.py']}
-        mint_path = os.getenv('MINT_PATH')
-
-        # tweak skipdirs to be fully qualified path
-        skipDirs = [os.path.join(mint_path, x) for x in skipDirs]
-        if not mint_path:
-            print >> sys.stderr, "MINT_PATH is missing from your environment"
-            raise testsuite.SkipTestException()
-        for dirPath, dirNames, fileNames in \
-            [x for x in os.walk(mint_path) \
-             if True not in [x[0].startswith(y) for y in skipDirs]]:
-            if "Makefile" not in fileNames:
-                print >> sys.stderr, "\n%s is missing Makefile" % dirPath,
-                missing = True
-            else:
-                subdirPath = dirPath[len(mint_path):]
-                missing = max(missing, self.compareMakefile(dirPath, 
-                                                             exclusionList=set(skipFiles.get(subdirPath, []))))
-        if missing:
-            print >> sys.stderr, ''
-        self.failIf(missing, "There are issues with Makefiles")
-
     def testPlainKidTemplate(self):
         t = kid.Template(testTemplate)
         t.myString = "string"
@@ -747,7 +657,7 @@ Much like Powdermilk Biscuits[tm]."""
         self.failIf(prd.platform.buildTemplates)
 
         prd = proddef.ProductDefinition()
-        prd.addContainerTemplate(prd.imageType({}))
+        prd.addContainerTemplate(prd.imageType('installableIsoImage'))
         addDefaultPlatformToProductDefinition(prd)
         self.failIf(prd.platform.containerTemplates)
         self.failIf(prd.platform.architectures)

@@ -8,6 +8,7 @@ import md5
 import simplejson
 import re
 import socket
+import urllib
 
 from gettext import gettext as _
 import raa
@@ -143,6 +144,15 @@ class rBASetup(rAAWebPlugin):
                 errorList.append("Passwords must match")
             elif options['new_password'].find('#') != -1:
                 errorList.append("Passwords must not contain a #")
+                
+            # validate the entitlement key
+            if options.get('entitlementKey'):
+                res = self.validateNewEntitlement(options.get('entitlementKey'))
+                if res.has_key('errors'):
+                    errorString = "Entitlement is invalid"
+                    if len(res['errors']) > 0:
+                        errorString = res['errors'][0]
+                    errorList.append(errorString)
 
         if options.get('externalPasswordURL'):
             # XXX Removing the validation for this for now;
@@ -250,6 +260,12 @@ class rBASetup(rAAWebPlugin):
             hostname = normalizedOptions['hostName'].split('.')
             normalizedOptions['hostName'] = hostname[0]
             normalizedOptions['siteDomainName'] = '.'.join(hostname[1:])
+           
+        # try to save entitlement if we have one
+        if normalizedOptions.get('entitlementKey'):
+            result = self.setNewEntitlement(normalizedOptions.get('entitlementKey'))
+            if result['errors']:
+                return dict(errors=result['errors'])
 
         # Call backend to save generated file
         try:
@@ -295,6 +311,8 @@ class rBASetup(rAAWebPlugin):
             sched = schedule.ScheduleOnce(time.time() + 1)
             schedId = self.callBackendAsync(sched, 'firstTimeSetup', normalizedOptions)
             self.setPropertyValue('FTS_SCHEDID', schedId, RDT_INT)
+            # store the rBA Admin username, for use in other functions
+            self.setPropertyValue('RBA_ADMIN', normalizedOptions['new_username'], RDT_STRING)
             # raa.web.raiseHttpRedirect('/rbasetup/rBASetup/firstTimeSetup')
             return True
         else:
@@ -313,7 +331,9 @@ class rBASetup(rAAWebPlugin):
             (currentStatus['status'] == constants.TASK_SUCCESS and
              not self.getPropertyValue('FINALIZED', False)):
             sched = schedule.ScheduleOnce(time.time() + 1)
-            schedId = self.callBackendAsync(sched, 'firstTimeSetup', dict(retry=True))
+            schedId = self.callBackendAsync(sched, 'firstTimeSetup',
+                        dict(retry=True, 
+                             new_username=self.getPropertyValue('RBA_ADMIN')))
             self.deletePropertyValue('FTS_SCHEDID')
             self.setPropertyValue('FTS_SCHEDID', schedId, RDT_INT)
             return self._getFirstTimeSetupStatus()
@@ -385,10 +405,13 @@ class rBASetup(rAAWebPlugin):
         return dict(message='successfully set wizard done')
 
     @raa.web.expose(allow_xmlrpc=True, allow_json=True)
-    @raa.web.require(raa.authorization.LocalhostOnly())
+    def validateNewEntitlement(self, key):
+        return self.plugins['/configure/Entitlements'].validateEntitlement(key)
+
+    @raa.web.expose(allow_xmlrpc=True, allow_json=True)
+    @raa.web.require(raa.authorization.LocalhostOK())
     def setNewEntitlement(self, key):
-        self.plugins['/configure/Entitlements'].doSaveKey(key)
-        return True
+        return self.plugins['/configure/Entitlements'].doSaveKey(key)
 
     @raa.web.expose(allow_xmlrpc=True, allow_json=True)
     def finalize(self):
@@ -399,6 +422,8 @@ class rBASetup(rAAWebPlugin):
         # mark done in the wizard
         self.wizardDone()
         
-        # redirect to the rbuilder itself
+        # redirect to the rbuilder login screen
         fqdn = raa.web.getRequestHostname()
-        raa.web.raiseHttpRedirect("http://%s/" % (fqdn,))
+        query = { 'username': self.getPropertyValue('RBA_ADMIN', 'admin'),
+                  'msg': urllib.quote("Please sign in below to enable platforms and complete the setup process.") }
+        raa.web.raiseHttpRedirect("http://%s/ui/#/login?%s" % (fqdn, "&".join(["%s=%s" % (k, query[k]) for k in query.keys()])))

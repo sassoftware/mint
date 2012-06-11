@@ -4,6 +4,7 @@
 
 import optparse
 import os
+import sys
 
 from conary import dbstore
 from mint import config
@@ -25,6 +26,8 @@ class RBuilderDatabase(scriptlibrary.SingletonScript):
         op.add_option("--migrate", action = "store_true",
                 dest = "should_migrate", default = False,
                 help = "Migrate the schema to the latest version")
+        op.add_option('--create', action='store_true',
+                help="Create missing database tables (not recommended)")
         op.add_option("-c", "--rbuilder-config",
                 dest = "cfgPath", default = self.cfgPath,
                 help = "use a different configuration file")
@@ -38,8 +41,13 @@ class RBuilderDatabase(scriptlibrary.SingletonScript):
 
     def action(self):
         db = dbstore.connect(self.cfg.dbPath, self.cfg.dbDriver)
-        schema.loadSchema(db, self.cfg, self.options.should_migrate)
-        if self.options.should_migrate and db.driver == 'sqlite':
-            switchToPostgres(self.cfg)
+        if self.options.create:
+            print >> sys.stderr, "Force-creating database schema ..."
+            db.loadSchema()
+            schema.createSchema(db)
+        else:
+            schema.loadSchema(db, self.cfg, self.options.should_migrate)
+            if self.options.should_migrate and db.driver == 'sqlite':
+                switchToPostgres(self.cfg)
 
         return 0

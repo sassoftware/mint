@@ -7,6 +7,7 @@ import email
 import logging
 import os
 import stat
+import tempfile
 import time
 from urllib import quote, unquote, quote_plus, urlencode
 from mimetypes import guess_type
@@ -26,6 +27,7 @@ from mint import users
 from mint import userlevels
 from mint.client import timeDelta
 from mint.config import isRBO
+from mint.lib.unixutils import AtomicFile
 from mint.helperfuncs import getProjectText
 from mint.session import SqlSession
 
@@ -33,8 +35,9 @@ from mint.web.fields import boolFields, dictFields, intFields, listFields, strFi
 from mint.web.decorators import mailList, requiresAdmin, requiresAuth, \
      requiresHttps, redirectHttps, redirectHttp
 from mint.web.webhandler import (WebHandler, normPath, setCacheControl,
-    HttpNotFound, HttpOK, HttpMethodNotAllowed, HttpForbidden)
+    HttpNotFound, HttpOK, HttpMethodNotAllowed, HttpForbidden, HttpBadRequest)
 
+from conary.lib import digestlib
 from conary.lib import util
 from conary import versions
 from conary import conaryclient
@@ -561,7 +564,7 @@ class SiteHandler(WebHandler):
             helperfuncs.setCurrentProductVersion(self.session, projectId, versionId)
             self._setInfo("Successfully created %s %s '%s' version '%s'" % \
                               (isPrivate and "private" or "public", pText, title, version))
-            self._redirectHttp('project/%s' % (hostname,))
+            self._redirectHttp('project/%s' % (hostname,), temporary=True)
         else:
             availablePlatforms = self.client.getAvailablePlatforms()
             kwargs = {'title': title, 
@@ -965,7 +968,8 @@ class SiteHandler(WebHandler):
 
                 build = self.client.getBuild(buildId)
                 project = self.client.getProject(build.projectId) 
-                redirectUrl = "http://%s/images/%s/%d/%s" % (self.cfg.siteHost, project.hostname, build.id, os.path.basename(filename))
+                redirectUrl = "/images/%s/%d/%s" % (project.hostname, build.id,
+                        os.path.basename(filename))
 
         # record the hit
         urlId = urlIdMap.get(redirectUrl, urlIdMap.get(filename, None))
@@ -1166,11 +1170,35 @@ class SiteHandler(WebHandler):
         if outputToken != build.getDataValue('outputToken', validate = False):
             raise HttpForbidden
 
-        targetFn = os.path.join(self.cfg.imagesPath, project.hostname, str(buildId), fileName)
+        targetFn = os.path.join(self.cfg.imagesPath, project.hostname,
+                str(buildId), fileName)
         util.mkdirChain(os.path.dirname(targetFn))
+        fObj = AtomicFile(targetFn, 'wb', prefix='img-', suffix='.tmp')
+        ctx = digestlib.sha1()
 
-        targetF = open(targetFn, 'w+')
-        util.copyfileobj(self.req, targetF)
+        try:
+            copied = util.copyfileobj(self.req, fObj, digest=ctx)
+        except IOError, err:
+            log.warning("IOError during upload of %s: %s", targetFn, str(err))
+            raise HttpBadRequest
+
+        if 'content-length' in self.req.headers_in:
+            expected = long(self.req.headers_in['content-length'])
+            if copied != expected:
+                log.warning("Expected %d bytes but got %d bytes for "
+                        "uploaded file %s; discarding", expected, copied, targetFn)
+                return ''
+
+        # Validate SHA1 trailer (or header) if it is present.
+        if 'content-sha1' in self.req.headers_in:
+            expected = self.req.headers_in['content-sha1'].decode('base64')
+            actual = ctx.digest()
+            if expected != actual:
+                log.warning("SHA-1 mismatch on uploaded file %s; "
+                        "discarding.", targetFn)
+                return ''
+
+        fObj.commit(sync=False)
         return ''
 
 

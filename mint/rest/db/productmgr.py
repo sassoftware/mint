@@ -8,6 +8,7 @@ import os
 import itertools
 import time
 
+from conary.dbstore import sqlerrors
 from conary.lib import util
 from rpath_proddef import api1 as proddef
 
@@ -21,7 +22,6 @@ from mint.rest.api import models
 from mint.rest.db import manager
 from mint.rest.db import reposmgr
 from mint.templates import groupTemplate
-
 
 class ProductManager(manager.Manager):
     def __init__(self, cfg, db, auth, publisher=None):
@@ -71,6 +71,9 @@ class ProductManager(manager.Manager):
             role = row.pop('role')
             if role is not None:
                 row['role'] = userlevels.names[role]
+            row['name'] = cu.decode(row['name'])
+            if row['description'] is not None:
+                row['description'] = cu.decode(row['description'])
 
             results.append(models.Product(row))
         return results
@@ -135,31 +138,41 @@ class ProductManager(manager.Manager):
                       version, commitEmail, isPrivate):
         if namespace is None:
             namespace = self.cfg.namespace
+        else:
+            v = helperfuncs.validateNamespace(namespace)
+            if v != True:
+                raise mint_error.InvalidNamespace
         createTime = time.time()
         if self.auth.userId > 0:
             creatorId = self.auth.userId
         else:
             creatorId = None
-        projectId = self.db.db.projects.new(
-            name=name,
-            creatorId=creatorId,
-            description=description, 
-            hostname=hostname,
-            domainname=domainname, 
-            fqdn='%s.%s' % (hostname, domainname),
-            database=self.cfg.defaultDatabase,
-            namespace=namespace,
-            isAppliance=int(prodtype == 'Appliance'), 
-            projecturl=projecturl,
-            timeModified=createTime, 
-            timeCreated=createTime,
-            shortname=shortname, 
-            prodtype=prodtype, 
-            commitEmail=commitEmail, 
-            hidden=int(isPrivate),
-            version=version,
-            commit=False)
 
+        try:
+            projectId = self.db.db.projects.new(
+                name=name,
+                creatorId=creatorId,
+                description=description, 
+                hostname=hostname,
+                domainname=domainname, 
+                fqdn='%s.%s' % (hostname, domainname),
+                database=self.cfg.defaultDatabase,
+                namespace=namespace,
+                isAppliance=int(prodtype == 'Appliance'), 
+                projecturl=projecturl,
+                timeModified=createTime, 
+                timeCreated=createTime,
+                shortname=shortname, 
+                prodtype=prodtype, 
+                commitEmail=commitEmail, 
+                hidden=int(isPrivate),
+                version=version,
+                commit=False)
+        except sqlerrors.CursorError, e:
+            raise mint_error.InvalidError(e.msg)
+
+        authInfo = models.AuthInfo('userpass',
+                self.cfg.authUser, self.cfg.authPass)
         self.reposMgr.createRepository(projectId)
 
         # can only add members after the repository is set up
@@ -183,6 +196,9 @@ class ProductManager(manager.Manager):
             params['prodtype'] = prodtype
             params['isAppliance'] = int(prodtype == 'Appliance')
         if namespace is not None:
+            v = helperfuncs.validateNamespace(namespace)
+            if v != True:
+                raise mint_error.InvalidNamespace
             params['namespace'] = namespace
 
         if hidden:
@@ -195,9 +211,12 @@ class ProductManager(manager.Manager):
         keys = '=?, '.join(params) + '=?'
         values = params.values()
         values.append(hostname)
-        cu.execute('''UPDATE Projects SET %s
+        try:
+            cu.execute('''UPDATE Projects SET %s
                       WHERE hostname=?''' % keys,
                    *values)
+        except sqlerrors.CursorError, e:
+            raise mint_error.InvalidError(e.msg)
 
         if bool(oldproduct.hidden) == True and hidden == False:
             self.reposMgr.addUser('.'.join((oldproduct.hostname,
@@ -213,25 +232,51 @@ class ProductManager(manager.Manager):
         cu = self.db.cursor()
         createTime = time.time()
         creatorId = self.auth.userId > 0 and self.auth.userId or None
-        cu.execute('''INSERT INTO Projects (name, creatorId, description,
-                shortname, hostname, domainname, fqdn, projecturl, external,
-                timeModified, timeCreated, backupExternal, database)
-                VALUES (?, ?, '', ?, ?, ?, ?, '', 1, ?, ?, ?, ?)''',
-                title, creatorId, hostname, hostname, domainname,
-                '%s.%s' % (hostname, domainname),
-                createTime, createTime, int(backupExternal),
-                self.cfg.defaultDatabase)
-        productId = cu.lastrowid
+
+        try:
+            product = self.getProduct(hostname)
+            productId = product.productId
+
+            # Need to look in the labels table to see if there is a different
+            # repository url there.
+            labelIdMap, repoMap, userMap, entMap = \
+                self.db.db.labels.getLabelsForProject(productId) 
+            fqdn = self.reposMgr._getFqdn(hostname, domainname)
+            url = repoMap.get(fqdn, url)
+        except errors.ItemNotFound:
+            productId = None
+
+        database = None
+        if mirror:
+            database = self.cfg.defaultDatabase
+
+        if not productId:
+            # Need a new entry in projects table.
+            cu.execute('''INSERT INTO Projects (name, creatorId, description,
+                    shortname, hostname, domainname, fqdn, projecturl, external,
+                    timeModified, timeCreated, backupExternal, database)
+                    VALUES (?, ?, '', ?, ?, ?, ?, '', 1, ?, ?, ?, ?)''',
+                    title, creatorId, hostname, hostname, domainname,
+                    '%s.%s' % (hostname, domainname),
+                    createTime, createTime, int(backupExternal), database)
+            productId = cu.lastrowid
+
         if mirror:
             self.reposMgr.addIncomingMirror(productId, hostname, domainname, 
-                                            url, authInfo)
+                                            url, authInfo, True)
         else:
             self.reposMgr.addExternalRepository(productId, 
                                                 hostname, domainname, url,
-                                                authInfo)
+                                                authInfo, mirror)
         self.setMemberLevel(productId, self.auth.userId, userlevels.OWNER)
         self.publisher.notify('ExternalProductCreated', productId)
+
         return productId
+
+    def deleteExternalProduct(self, productId):
+        cu = self.db.cursor()
+        self.db.db.projects.delete(productId)
+        return
 
     def _getMemberLevel(self, projectId, userId):
         # internal fn because it takes projectId + userId 

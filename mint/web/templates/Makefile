@@ -6,7 +6,7 @@
 
 SUBDIRS = repos admin docs
 
-kid_files = *.kid
+kid_files = $(wildcard *.kid)
 
 python_files = __init__.py
 

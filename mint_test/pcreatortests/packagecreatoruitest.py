@@ -23,7 +23,7 @@ from conary.conaryclient import filetypes
 from conary import changelog
 from conary import versions
 
-import fixtures
+from mint_test import fixtures
 from mint_test import mint_rephelp
 
 from mint import packagecreator
@@ -120,7 +120,7 @@ class PkgCreatorTest(fixtures.FixturedUnitTest):
         # ensure we have a viable session
         self.assertEquals(os.listdir(os.path.join(wd, 'owner')), [self.uploadSes])
         self.assertEquals(wd.endswith(self.uploadSes), True)
-        refKeys = ['develStageLabel', 'productDefinition', 'searchPath',
+        refKeys = ['stageLabel', 'productDefinition', 'searchPath',
                 'factorySources', 'mincfg']
         assert(set(refKeys).issubset(set(os.listdir(os.path.join(wd, 'owner', self.uploadSes)))))
 
@@ -151,7 +151,7 @@ content-type=text/plain
         @pcreator.backend.public
         def startSession(s, *args, **kwargs):
             self.assertEquals(args[0], {'shortname': 'foo', 'version': 'FooV1', 'namespace': 'ns', 'hostname': 'foo.rpath.local2'})
-            self.assertEquals(len(args), 3, "The number of arguments to saveSession has changed")
+            self.assertEquals(len(args), 4, "The number of arguments to saveSession has changed")
             self.assertEquals(kwargs, {})
             return '88889'
 
@@ -364,7 +364,7 @@ content-type=text/plain
         def startSession(s, *args, **kwargs):
             self.assertEquals(args[0], {'shortname': 'foo', 'version': 'FooV1', 'namespace': 'ns', 'hostname': 'foo.rpath.local2'})
             self.assertEquals(args[2], 'foo:source=testproject.rpath.local2@ns1:testproject-vs1-devel/1.0-1')
-            self.assertEquals(len(args), 3, "The number of arguments to saveSession has changed")
+            self.assertEquals(len(args), 4, "The number of arguments to saveSession has changed")
             self.assertEquals(kwargs, {})
             return '88889'
         self.mock(pcreator.backend.BaseBackend, '_startPackagingSession', startSession)
@@ -390,7 +390,7 @@ content-type=text/plain
         def startSession(s, *args, **kwargs):
             self.assertEquals(args[0], {'shortname': 'foo', 'version': 'FooV1', 'namespace': 'ns', 'hostname': 'foo.rpath.local2'})
             self.assertEquals(args[2], 'foo:source=testproject.rpath.local2@ns1:testproject-vs1-devel/1.0-1')
-            self.assertEquals(len(args), 3, "The number of arguments to saveSession has changed")
+            self.assertEquals(len(args), 4, "The number of arguments to saveSession has changed")
             self.assertEquals(kwargs, {})
             return '88889'
         self.mock(pcreator.backend.BaseBackend, '_startPackagingSession', startSession)
@@ -521,38 +521,38 @@ class PkgCreatorReposTest(mint_rephelp.MintRepositoryHelper):
         label3 = labeltemplate % (ns2, vs2)
         cs = cclient.createSourceTrove('grnotify:source', label1, '0.4.4', {},
             changelog.ChangeLog(name='test', contact=''),
-            pkgCreatorData='{"develStageLabel": "%(label)s", "productDefinition": {"shortname": "%(shortname)s", "version": "%(version)s", "namespace": "%(namespace)s", "hostname": "%(hostname)s"}}' %
+            pkgCreatorData='{"stageLabel": "%(label)s", "productDefinition": {"shortname": "%(shortname)s", "version": "%(version)s", "namespace": "%(namespace)s", "hostname": "%(hostname)s"}}' %
                 dict(version=vs1, namespace=ns1, hostname=hostname,
                     shortname=project.getShortname(), label=label1))
         repos.commitChangeSet(cs)
         cs = cclient.createSourceTrove('zope:source', label1, '2.7.8', {},
             changelog.ChangeLog(name='test', contact=''),
-            pkgCreatorData='{"develStageLabel": "%(label)s", "productDefinition": {"shortname": "%(shortname)s", "version": "%(version)s", "namespace": "%(namespace)s", "hostname": "%(hostname)s"}}' %
+            pkgCreatorData='{"stageLabel": "%(label)s", "productDefinition": {"shortname": "%(shortname)s", "version": "%(version)s", "namespace": "%(namespace)s", "hostname": "%(hostname)s"}}' %
                 dict(version=vs1, namespace=ns1, hostname=hostname,
                     shortname=project.getShortname(), label=label1))
         repos.commitChangeSet(cs)
         cs = cclient.createSourceTrove('grnotify:source', label1, '0.4.5', {},
             changelog.ChangeLog(name='test', contact=''),
-            pkgCreatorData='{"develStageLabel": "%(label)s", "productDefinition": {"shortname": "%(shortname)s", "version": "%(version)s", "namespace": "%(namespace)s", "hostname": "%(hostname)s"}}' %
+            pkgCreatorData='{"stageLabel": "%(label)s", "productDefinition": {"shortname": "%(shortname)s", "version": "%(version)s", "namespace": "%(namespace)s", "hostname": "%(hostname)s"}}' %
                 dict(version=vs1, namespace=ns1, hostname=hostname,
                     shortname=project.getShortname(), label=label1))
         repos.commitChangeSet(cs)
         cs = cclient.createSourceTrove('grnotify:source', label2, '0.4.4', {},
             changelog.ChangeLog(name='test', contact=''),
-            pkgCreatorData='{"develStageLabel": "%(label)s", "productDefinition": {"shortname": "%(shortname)s", "version": "%(version)s", "namespace": "%(namespace)s", "hostname": "%(hostname)s"}}' %
+            pkgCreatorData='{"stageLabel": "%(label)s", "productDefinition": {"shortname": "%(shortname)s", "version": "%(version)s", "namespace": "%(namespace)s", "hostname": "%(hostname)s"}}' %
                 dict(version=vs2, namespace=ns1, hostname=hostname,
                     shortname=project.getShortname(), label=label2))
         repos.commitChangeSet(cs)
         cs = cclient.createSourceTrove('grnotify:source', label3, '0.4.4', {},
             changelog.ChangeLog(name='test', contact=''),
-            pkgCreatorData='{"develStageLabel": "%(label)s", "productDefinition": {"shortname": "%(shortname)s", "version": "%(version)s", "namespace": "%(namespace)s", "hostname": "%(hostname)s"}}' %
+            pkgCreatorData='{"stageLabel": "%(label)s", "productDefinition": {"shortname": "%(shortname)s", "version": "%(version)s", "namespace": "%(namespace)s", "hostname": "%(hostname)s"}}' %
                 dict(version=vs2, namespace=ns2, hostname=hostname,
                     shortname=project.getShortname(), label=label3))
         repos.commitChangeSet(cs)
         #This one should not be returned
         cs = cclient.createSourceTrove('zope:source', label1, '2.7.9', {},
             changelog.ChangeLog(name='test', contact=''),
-            pkgCreatorData='{"develStageLabel": "%(label)s", "productDefinition": {"shortname": "%(shortname)s", "version": "%(version)s", "namespace": "%(namespace)s", "hostname": "%(hostname)s"}}' %
+            pkgCreatorData='{"stageLabel": "%(label)s", "productDefinition": {"shortname": "%(shortname)s", "version": "%(version)s", "namespace": "%(namespace)s", "hostname": "%(hostname)s"}}' %
                 dict(version=vs2, namespace=ns2, hostname=hostname,
                     shortname=project.getShortname(), label=label3))
         repos.commitChangeSet(cs)
@@ -560,22 +560,22 @@ class PkgCreatorReposTest(mint_rephelp.MintRepositoryHelper):
         res = client.getPackageCreatorPackages(projectId)
         self.assertEquals(res, getPackageCreatorFactoriesData1)
 
-getPackageCreatorFactoriesData1 = {u'vs1': {u'ns1': {'grnotify:source': {u'develStageLabel': u'testproject.rpath.local2@ns1:testproject-vs1-devel',
+getPackageCreatorFactoriesData1 = {u'vs1': {u'ns1': {'grnotify:source': {u'stageLabel': u'testproject.rpath.local2@ns1:testproject-vs1-devel',
                                        u'productDefinition': {u'hostname': u'testproject.rpath.local2',
                                                               u'namespace': u'ns1',
                                                               u'shortname': u'testproject',
                                                               u'version': u'vs1'}},
-                   'zope:source': {u'develStageLabel': u'testproject.rpath.local2@ns1:testproject-vs1-devel',
+                   'zope:source': {u'stageLabel': u'testproject.rpath.local2@ns1:testproject-vs1-devel',
                                    u'productDefinition': {u'hostname': u'testproject.rpath.local2',
                                                           u'namespace': u'ns1',
                                                           u'shortname': u'testproject',
                                                           u'version': u'vs1'}}}},
- u'vs2': {u'ns1': {'grnotify:source': {u'develStageLabel': u'testproject.rpath.local2@ns1:testproject-vs2-devel',
+ u'vs2': {u'ns1': {'grnotify:source': {u'stageLabel': u'testproject.rpath.local2@ns1:testproject-vs2-devel',
                                        u'productDefinition': {u'hostname': u'testproject.rpath.local2',
                                                               u'namespace': u'ns1',
                                                               u'shortname': u'testproject',
                                                               u'version': u'vs2'}}},
-          u'ns2': {'grnotify:source': {u'develStageLabel': u'testproject.rpath.local2@ns2:testproject-vs2-devel',
+          u'ns2': {'grnotify:source': {u'stageLabel': u'testproject.rpath.local2@ns2:testproject-vs2-devel',
                                        u'productDefinition': {u'hostname': u'testproject.rpath.local2',
                                                               u'namespace': u'ns2',
                                                               u'shortname': u'testproject',

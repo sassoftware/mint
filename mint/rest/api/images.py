@@ -11,22 +11,18 @@ from mint.rest.middleware import auth
 from restlib.response import Response
 
 
-class ProductImageFilesController(base.BaseController):
-    modelName = 'fileName'
-
-    def index(self, hostname, imageId):
-        return self.db.listFilesForImage(hostname, imageId)
-
-    def destroy_all(self, request, hostname, imageId):
-        return self.db.deleteImageFilesForProduct(hostname, imageId)
-
 class ProductImagesController(base.BaseController):
 
     modelName = 'imageId'
 
-    urls = {'files' : ProductImageFilesController,
+    urls = {
+            'files' : {
+                'GET': 'getFiles',
+                'PUT': 'setFiles',
+                'DELETE': 'deleteFiles',
+                },
             'stop'  : {'POST' : 'stop'},
-            'status': {'GET': 'getStatus'},
+            'status': {'GET': 'getStatus', 'PUT': 'setStatus'},
             'buildLog': {'GET': 'getBuildLog', 'POST': 'postBuildLog'},
             }
 
@@ -44,29 +40,40 @@ class ProductImagesController(base.BaseController):
     def stop(self, request, hostname, imageId):
         return self.db.stopImageJob(hostname, imageId)
 
-    # job API
-    @staticmethod
-    def _getImageToken(request):
-        imageToken = request.headers.get('X-rBuilder-OutputToken')
-        if not imageToken:
-            raise PermissionDeniedError()
-        return imageToken
-
-    @auth.public
-    def getStatus(self, request, hostname, imageId):
-        return self.db.getImageStatus(hostname, imageId)
-
     @auth.public
     def getBuildLog(self, request, hostname, imageId):
         return self.db.getImageFile(hostname, imageId, 'build.log',
                 asResponse=True)
 
     @auth.public
+    def getFiles(self, request, hostname, imageId):
+        return self.db.listFilesForImage(hostname, imageId)
+
+    def deleteFiles(self, request, hostname, imageId):
+        return self.db.deleteImageFilesForProduct(hostname, imageId)
+
+    @auth.public
+    def getStatus(self, request, hostname, imageId):
+        return self.db.getImageStatus(hostname, imageId)
+
+    # job API
+    @auth.tokenRequired
+    @requires('status', models.ImageStatus)
+    def setStatus(self, request, hostname, imageId, status):
+        return self.db.setImageStatus(hostname, imageId, request.imageToken,
+                status)
+
+    @auth.tokenRequired
+    @requires('files', models.ImageFileList)
+    def setFiles(self, request, hostname, imageId, files):
+        return self.db.setFilesForImage(hostname, imageId, request.imageToken,
+                files)
+
+    @auth.tokenRequired
     def postBuildLog(self, request, hostname, imageId):
-        imageToken = self._getImageToken(request)
         data = request.read()
-        self.db.appendImageFile(hostname, imageId, 'build.log', imageToken,
-                data)
+        self.db.appendImageFile(hostname, imageId, 'build.log',
+                request.imageToken, data)
 
         # 204 No Content
         return Response(status=204)

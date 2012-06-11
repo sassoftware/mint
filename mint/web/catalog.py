@@ -87,13 +87,14 @@ class RbuilderCatalogRESTHandler(handler_apache.ApacheRESTHandler):
         self.handler.addCallback(SessionAuthenticationCallback(
             self.storageConfig, self.mintConfig, self.mintDb))
 
-def catalogHandler(req, db, cfg, pathInfo = None):
+
+def catalogHandler(context):
     coveragehook.install()
-    maintenance.enforceMaintenanceMode(cfg)
+    maintenance.enforceMaintenanceMode(context.cfg)
     # the leading portion of the URI in an rBuilder context. catalog-service
     # string substitutes, so leading and trailing slashes aren't needed.
-    topLevel = os.path.join(cfg.basePath, 'catalog')
-    storagePath = os.path.join(cfg.dataPath, 'catalog')
+    topLevel = os.path.join(context.cfg.basePath, 'catalog')
+    storagePath = os.path.join(context.cfg.dataPath, 'catalog')
     handler = RbuilderCatalogRESTHandler(topLevel, storagePath,
-            mintConfig=cfg, mintDb=db)
-    return handler.handle(req)
+            mintConfig=context.cfg, mintDb=context.db)
+    return handler.handle(context.req)

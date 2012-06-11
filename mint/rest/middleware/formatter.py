@@ -88,8 +88,11 @@ class FormatCallback(object):
         self.controller.db.setProfiler(request.profile)
         if hasattr(viewMethod, 'model'):
             modelName, model = viewMethod.model
+            # Save the body of the request
+            # May need it to create a different model later on
+            request.body = request.read()
             kw[modelName] = converter.fromText(request.responseType,
-                                               request.read(),
+                                               request.body,
                                                model, self.controller, request)
         
     def processResponse(self, request, res):

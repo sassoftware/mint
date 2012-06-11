@@ -91,7 +91,7 @@ ifndef MINIMAL
 	for docfile in $(doc_files); do \
 		htmlfile=`echo $$docfile | sed -e s,xml$$,html,` ; \
 		kidfile=`echo $$docfile | sed -e s,xml$$,kid,` ; \
-		$(TOPDIR)/scripts/devscripts/makedoc.sh -h -x $(TOPDIR)/doc/userguide/templates/section.xml -f $$docfile ; \
+		$(TOPDIR)/scripts/devscripts/makedoc.sh -h -x $(TOPDIR)/doc/userguide/templates/section.xml -f $$docfile || exit 1; \
 		mv $$htmlfile $$kidfile ; \
 		$(PYTHON) /usr/bin/kidc $$kidfile ; \
 	done

@@ -35,6 +35,7 @@ import mint.client
 from mint.rest.db import reposmgr
 from mint import config
 from mint import cooktypes
+from mint import jobstatus
 from mint import server
 from mint import shimclient
 from mint import buildtypes
@@ -53,18 +54,7 @@ from conary.deps import deps
 from conary.lib import util
 from conary.lib.digestlib import sha1
 
-from mcp_test import mcp_helper
-from mcp import queue
-from mcp_test.mcp_helper import MCPTestMixin
-
 from testrunner.testhelp import SkipTestException, findPorts
-from testutils import mock
-
-# Mock out the queues
-queue.Queue = mcp_helper.DummyQueue
-queue.Topic = mcp_helper.DummyQueue
-queue.MultiplexedQueue = mcp_helper.DummyMultiplexedQueue
-queue.MultiplexedTopic = mcp_helper.DummyMultiplexedQueue
 
 # NOTE: make sure that test.rpath.local and test.rpath.local2 is in your
 # system's /etc/hosts file (pointing to 127.0.0.1) before running this
@@ -491,8 +481,7 @@ class RestDBMixIn(object):
             self.mintDb.close()
         mock.unmockAll()
 
-    def openRestDatabase(self, createRepos=True, enableMCP=False,
-                         subscribers=None):
+    def openRestDatabase(self, createRepos=True, subscribers=None):
         if not self.mintDb:
             self._startDatabase()
         dbPort = getattr(self.mintDb, 'port', None)
@@ -514,11 +503,6 @@ class RestDBMixIn(object):
                         db.productMgr.setProductVersionDefinition
             db.productMgr.setProductVersionDefinition = mock.MockObject()
             db.reposMgr = mock.MockObject()
-        if not enableMCP:
-            db.imageMgr.mcpClient = mock.MockObject()
-            db.imageMgr.mcpClient.getJSVersion._mock.setDefaultReturn('1.0')
-            db.imageMgr.mcpClient.jobStatus._mock.setDefaultReturn(
-                                                            (100, 'Message'))
         return db
 
     def createUser(self, name, password=None, admin=False):
@@ -624,15 +608,19 @@ class RestDBMixIn(object):
             digest.update(str(imageId))
             digest = digest.hexdigest()
 
-            imageFiles = [('imagefile_%s.iso' % imageId, 
-                           'Image File %s' % imageId,
-                           1024 * imageId, digest)]
-        for item in imageFiles:
-            path = self.mintCfg.imagesPath + '/%s/%s/%s' % (hostname, imageId,
-                                                            item[0])
+            imageFiles = models.ImageFileList(files=[models.ImageFile(
+                title='Image File %s' % imageId,
+                size=1024 * imageId,
+                sha1=digest,
+                baseFileName='imagefile_%s.iso' % imageId,
+                )])
+
+        for item in imageFiles.files:
+            path = '%s/%s/%s/%s' % (self.mintCfg.imagesPath, hostname, imageId,
+                    item.baseFileName)
             util.mkdirChain(os.path.dirname(path))
             open(path, 'w').write('image data')
-        db.setImageFiles(hostname, imageId, imageFiles)
+        db.imageMgr.setFilesForImage(hostname, imageId, imageFiles)
 
 
 class MintDatabaseHelper(rephelp.RepositoryHelper, RestDBMixIn):
@@ -691,7 +679,7 @@ def restfixture(name):
         return wrapper
     return deco
 
-class MintRepositoryHelper(rephelp.RepositoryHelper, MCPTestMixin, RestDBMixIn):
+class MintRepositoryHelper(rephelp.RepositoryHelper, RestDBMixIn):
 
     # Repository tests tend to be slow, so tag them with this context
     contexts = ('slow',)
@@ -735,6 +723,7 @@ class MintRepositoryHelper(rephelp.RepositoryHelper, MCPTestMixin, RestDBMixIn):
                 self.securePort = server.securePort
             else:
                 self.securePort = 0
+        util.mkdirChain(self.mintCfg.logPath)
         self.db = self.openMintDatabase()
         try:
             cli, userId = self.quickMintAdmin('intuser', 'intpass')
@@ -764,7 +753,6 @@ class MintRepositoryHelper(rephelp.RepositoryHelper, MCPTestMixin, RestDBMixIn):
     def openMintClient(self, authToken=('mintauth', 'mintpass')):
         """Return a mint client authenticated via authToken, defaults to 'mintauth', 'mintpass'"""
         client = shimclient.ShimMintClient(self.mintCfg, authToken)
-        client.server._server.mcpClient = self.mcpClient
         return client
 
     def quickMintUser(self, username, password, email = "test@example.com"):
@@ -783,12 +771,10 @@ class MintRepositoryHelper(rephelp.RepositoryHelper, MCPTestMixin, RestDBMixIn):
             self.db.commit()
 
         client = self.openMintClient((username, password))
-        client.server._server.mcpClient = self.mcpClient
         return client, userId
 
     def quickMintAdmin(self, username, password, email = "test@example.com"):
         client, userId = self.quickMintUser(username, password, email = email)
-        client.server._server.mcpClient = self.mcpClient
 
         adminClient = self.openMintClient(('mintauth', 'mintpass'))
         try:
@@ -835,12 +821,11 @@ class MintRepositoryHelper(rephelp.RepositoryHelper, MCPTestMixin, RestDBMixIn):
         buildTable = builds.BuildsTable(db)
         buildFilesTable = jobs.BuildFilesTable(db)
         dataTable = builds.BuildDataTable(db)
-        buildId = buildTable.new(projectId=projectId, 
-                                 buildType=imageType, name=name,
-                                 description=description, createdBy=userId,
-                                 troveName=troveName,
-                                 troveVersion=troveVersion,
-                                 troveFlavor=troveFlavor)
+        buildId = buildTable.new(projectId=projectId, buildType=imageType,
+                name=name, description=description, createdBy=userId,
+                troveName=troveName, troveVersion=troveVersion,
+                troveFlavor=troveFlavor, status=jobstatus.FINISHED,
+                statusMessage="Job Finished")
         if imageFiles is None:
             digest = sha1()
             digest.update(str(buildId))
@@ -872,7 +857,6 @@ class MintRepositoryHelper(rephelp.RepositoryHelper, MCPTestMixin, RestDBMixIn):
         self.mintServers = _servers
 
         rephelp.RepositoryHelper.setUp(self)
-        MCPTestMixin.setUp(self)
         RestDBMixIn.setUp(self)
         if not os.path.exists(self.reposDir):
             util.mkdirChain(self.reposDir)
@@ -884,7 +868,6 @@ class MintRepositoryHelper(rephelp.RepositoryHelper, MCPTestMixin, RestDBMixIn):
         util.mkdirChain(os.path.join(self.reposDir + '-mint', "tmp"))
 
         self.mintServer = server.MintServer(self.mintCfg)
-        self.mintServer.mcpClient = self.mcpClient
 
         self.db = self.mintServer.db
 
@@ -897,12 +880,18 @@ class MintRepositoryHelper(rephelp.RepositoryHelper, MCPTestMixin, RestDBMixIn):
         self.db.close()
         RestDBMixIn.tearDown(self)
         rephelp.RepositoryHelper.tearDown(self)
-        MCPTestMixin.tearDown(self)
 
     def stockBuildFlavor(self, buildId, arch = "x86_64"):
         cu = self.db.cursor()
         flavor = deps.parseFlavor(stockFlavors['1#' + arch]).freeze()
         cu.execute("UPDATE Builds set troveFlavor=? WHERE buildId=?", flavor, buildId)
+        self.db.commit()
+
+    def setBuildFinished(self, buildId):
+        cu = self.db.cursor()
+        cu.execute("UPDATE Builds SET status = ?, statusMessage = ? "
+                "WHERE buildId = ?", jobstatus.FINISHED, "Job Finished",
+                buildId)
         self.db.commit()
 
     def hideOutput(self):
@@ -994,42 +983,26 @@ class MintRepositoryHelper(rephelp.RepositoryHelper, MCPTestMixin, RestDBMixIn):
             '%s://localhost:%d/repos/%s/' % (protocol, port, project.hostname),
             label['authType'], label['username'], label['password'], label['entitlement'])
 
-    def writeIsoGenCfg(self):
-        raise SkipTestExeption('this test references deleted code')
-        cfg = jobserver.IsoGenConfig()
-
-        cfg.serverUrl       = "http://mintauth:mintpass@localhost:%d/xmlrpc-private/" % self.port
-        cfg.supportedArch   = ['x86', 'x86_64']
-        cfg.cookTypes       = [cooktypes.GROUP_BUILDER]
-        cfg.buildTypes    = [buildtypes.STUB_IMAGE]
-        cfg.logPath         = os.path.join(self.reposDir, "jobserver", "logs")
-        cfg.imagesPath      = os.path.join(self.reposDir, "jobserver", "images")
-        cfg.finishedPath    = os.path.join(self.reposDir, "jobserver", "finished-images")
-        cfg.lockFile        = os.path.join(self.reposDir, "jobserver", "jobserver.pid")
-
-        cfg.jobTypes        = {'cookTypes' : cfg.cookTypes,
-                               'buildTypes' : cfg.buildTypes}
-
-        for x in ["logs", "images", "finished-images"]:
-            util.mkdirChain(os.path.join(self.reposDir, "jobserver", x))
-
-        f = open(self.tmpDir + "/iso_gen.conf", "w")
-        cfg.display(f)
-        f.close()
-
-        f = open(self.tmpDir + "/bootable_image.conf", "w")
-        f.close()
-
-        f = open(self.tmpDir + "/conaryrc", "w")
-        self.cfg.display(f)
-        f.close()
-
-        cfg.configPath = self.tmpDir
-        return cfg
-
     def verifyContentsInFile(self, fileName, contents):
         f = file(fileName)
         assert(contents in f.read())
+
+    def inboundMirror(self, debug = False):
+        url = "http://mintauth:mintpass@localhost:%d/xmlrpc-private/" % \
+              self.port
+
+        scriptPath = os.path.join(os.path.dirname(os.path.dirname(__file__)),
+            'scripts')
+        mirrorScript = os.path.join(scriptPath , 'mirror-inbound')
+        assert(os.access(mirrorScript, os.X_OK))
+        cfg = self.mintServers.getServer(0).serverRoot + '/rbuilder.conf'
+        cmd = "%s %s -c %s" % (mirrorScript, url, cfg)
+        if debug:
+            os.system(cmd + ' --show-mirror-cfg')
+        else:
+            #self.captureAllOutput( os.system, cmd)
+            os.system(cmd)
+
 
     def __del__(self):
         try:
@@ -1118,16 +1091,6 @@ class WebRepositoryHelper(BaseWebHelper):
         webunittest.HTTPResponse._TestCase__testMethodName = testName
         webunittest.HTTPResponse._testMethodName = testName
 
-        # by this point, apache's already forked and running but no calls
-        # needing the mcpClient have been made, so put the cfg values
-        # we need into the cfg file it'll look for so the server side code
-        # can work properly
-        mcpCfgPath = os.path.join(self.mintCfg.dataPath, 'mcp', 'client-config')
-        util.mkdirChain(os.path.dirname(mcpCfgPath))
-        cfgFile = open(mcpCfgPath, 'w')
-        for key in ('queueHost', 'queuePort', 'namespace'):
-            cfgFile.write('%s %s' % (key, self.mcpCfg.__getitem__(key)))
-
     def setUpProductDefinition(self):
         from rpath_proddef import api1 as proddef
         schemaDir = os.path.join(os.environ['PRODUCT_DEFINITION_PATH'], 'xsd')
@@ -1179,6 +1142,10 @@ class WebRepositoryHelper(BaseWebHelper):
                 url = urlparse.urljoin(url, newurl)
             except webunittest.HTTPError, error:
                 raise self.failureException, str(error)
+            except self.failureException, err:
+                if 'HTTP Response 500:' in str(err):
+                    self.showHttpdError()
+                raise
 
         return response
 
@@ -1189,6 +1156,34 @@ class WebRepositoryHelper(BaseWebHelper):
                      'password': password})
         self.failUnless('/logout' in page.body)
         return page
+
+    def showHttpdError(self):
+        server = self.mintServers.servers[0]
+        if not server:
+            return
+        logPath = os.path.join(server.reposDir, 'httpd/error_log')
+        if not os.path.isfile(logPath):
+            return
+        logFile = open(logPath)
+        for line in logFile:
+            if 'Traceback (most recent call last):' in line:
+                print 'Error from httpd/error_log:'
+
+                # unwind mod_python's awful traceback formatting
+                tb = re.compile(r'^\[.*?\] \[error\] \[client .*?\] '
+                        r'(.*?)(?:\\n(.*))?$')
+
+                one, two = tb.match(line).groups()
+                print one, two
+                for line in logFile:
+                    match = tb.match(line)
+                    if match:
+                        one, two = match.groups()
+                        print one
+                        if two:
+                            print two
+                    else:
+                        print line
 
 
 class FakeRequest(object):

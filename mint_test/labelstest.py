@@ -111,7 +111,7 @@ class LabelsTest(fixtures.FixturedUnitTest):
         labels = adminClient.getInboundMirrors()
         self.failUnlessEqual(labels,
                 [[1, projectId, targetLabel, 'http://www.example.com/conary/',
-                  'userpass', 'mirror', 'mirrorpass', '', 0]])
+                  'userpass', 'mirror', 'mirrorpass', '', '',  0]])
 
         # test delete
         adminClient.delInboundMirror(mirrorId)

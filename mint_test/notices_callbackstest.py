@@ -142,7 +142,7 @@ class NoticesTest(testsetup.testsuite.TestCase):
         tstamp = 1234567890
         # Add some dummy data to the file list
         cb.notify_built("Build Name", 2, tstamp, pName, pVer,
-            [ ('AMI-0', 'foo'), ('AMI-1', 'bar')])
+            [ 'AMI-0', 'AMI-1', ])
 
         path = os.path.join(self.workDir, "notices", "users", self.userId,
             "notices", "builder", str(counter.counter), "content")

@@ -15,7 +15,7 @@ generated_files = schema custom.cfg rbuilder.conf
 
 all: default-all $(generated_files)
 
-install: default-install
+install: default-install httpd-sysconfig
 	# rBuilder config
 	install -D -m0644 conaryrc.default $(DESTDIR)/srv/rbuilder/config/conaryrc
 	install -D -m0644 rbuilder.conf $(DESTDIR)/srv/rbuilder/config/rbuilder.conf
@@ -39,6 +39,7 @@ install: default-install
 	# system dist (data)
 	install -D -m0644 bootman.conf $(DESTDIR)/etc/bootloader.d/rbuilder.conf
 	install -D -m0644 firewall $(DESTDIR)/etc/firewall
+	install -D -m0644 firewall6 $(DESTDIR)/etc/firewall6
 	install -D -m0644 rbuilder.logrotate $(DESTDIR)/etc/logrotate.d/rbuilder
 	install -D -m0644 rbuilder.cron $(DESTDIR)/etc/cron.d/rbuilder.cron
 	install -D -m0644 httpd.conf $(DESTDIR)/etc/httpd/conf.d/rbuilder-common
@@ -49,6 +50,9 @@ install: default-install
 	install -D -m0755 rbuilder.tmpwatch $(DESTDIR)/etc/cron.daily/rbuilder.tmpwatch
 	install -D -m0755 chrootcache.tmpwatch $(DESTDIR)/etc/cron.daily/chrootcache.tmpwatch
 	install -D -m0755 rbuilder.init $(DESTDIR)/etc/init.d/rbuilder
+	# splashy theme
+	install -D -m0644 splashy.xml $(DESTDIR)/usr/share/splashy/themes/rbuilder/theme.xml
+	install -D -m0644 FreeSans.ttf $(DESTDIR)/usr/share/splashy/themes/rbuilder/FreeSans.ttf
 	# chkconfig overrides
 	mkdir -p $(DESTDIR)/etc/chkconfig.d
 	echo '# chkconfig: 345 23 15' > $(DESTDIR)/etc/chkconfig.d/httpd
@@ -59,6 +63,9 @@ install: default-install
 	install -D -m0644 welcome_gui.py $(DESTDIR)/usr/share/anaconda/
 	install -D -m0644 welcome_text.py $(DESTDIR)/usr/share/anaconda/
 
+httpd-sysconfig:
+	install -d -m0755 $(DESTDIR)/etc/sysconfig
+	echo "ulimit -n 65536" > $(DESTDIR)/etc/sysconfig/httpd
 
 clean: default-clean
 

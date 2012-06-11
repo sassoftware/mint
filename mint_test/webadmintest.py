@@ -96,7 +96,7 @@ class WebPageTest(mint_rephelp.WebRepositoryHelper):
         assert(client.getInboundMirrors() == [[1, 1,
             'rap.rpath.com@rpath:linux-1',
             'https://rap.rpath.com/conary/', 'userpass', 'mirror',
-            'mirrorpass', '', 0]])
+            'mirrorpass', '', '', 0]])
 
         # and make sure that the 'shell' repository was created
         assert(os.path.exists(os.path.join(self.reposDir + '-mint', 'repos', 'rap.rpath.com')))

@@ -1,0 +1,112 @@
+#!/usr/bin/python
+#
+# This script will use the repository log(s) to populate the mint db
+# with system update checks.
+# 
+# It can be run in a T0 manner to initially populate the DB or as part
+# of a cron job to scrape at some set interval.
+
+from conary.repository.netrepos import reposlog
+from mint.django_rest.rbuilder.reporting.models import SystemUpdate
+from mint.django_rest.rbuilder.reporting.models import RepositoryLogStatus
+
+import cPickle, mmap, optparse, os, socket, struct, sys, tarfile
+
+from datetime import datetime, date, time
+
+class IncrementalRepositoryCallLogger(reposlog.RepositoryCallLogger):
+    def __init__(self, logPath, serverNameList, offset, readOnly = False):
+        self.offset = int(offset)
+        reposlog.RepositoryCallLogger.__init__(self, logPath, serverNameList,
+            readOnly )
+
+    def __iter__(self):
+        fd = os.open(self.path, os.O_RDONLY)
+        size = os.fstat(fd).st_size
+        if size == 0:
+            raise StopIteration
+        map = mmap.mmap(fd, size, access = mmap.ACCESS_READ)
+        i = self.offset
+        while i < size:
+            length = struct.unpack("!I", map[i: i + 4])[0]
+            i += 4
+            yield self.EntryClass(cPickle.loads(map[i:i + length]))
+            i += length
+
+        self.offset = i
+        os.close(fd)
+
+class ServerUpdateCheck(object):
+
+    def __init__(self, logfile):
+        self.logfile = logfile
+        self.hostnameCache = {}
+    
+    def _writeLogtoDB(self, log):
+        iterator = iter(log)
+        for entry in iterator:
+            if entry.methodName == 'checkVersion' and entry.serverName:
+                hostname = self.hostnameCache.get(entry.remoteIp, None)
+                if hostname is None:
+                    try:
+                        hostname = socket.gethostbyaddr(entry.remoteIp)[0]
+                    except (socket.herror, socket.gaierror):
+                        hostname = entry.remoteIp
+                    self.hostnameCache[entry.remoteIp] = hostname
+                SystemUpdate.objects.create(serverName=hostname,
+                    repositoryName=entry.serverName[0],_updatetime=str(entry.timeStamp),
+                    updateUser=entry.user)
+
+    def incrReadLog(self, offset):
+        log = IncrementalRepositoryCallLogger(self.logfile, None, offset, readOnly = True)
+        self._writeLogtoDB(log)        
+        return log.offset
+
+    def readLog(self):
+        log = reposlog.RepositoryCallLogger(self.logfile, None, readOnly = True)
+        self._writeLogtoDB(log)
+
+if __name__ == '__main__':
+
+    parser = optparse.OptionParser(version = '%prog 0.1')
+    parser.add_option("--full_load","-f", dest = "full", default = True,
+                      action = "store_true", help = "Load the entire log file")
+    parser.add_option("--incremental","-i", dest = "incremental", default = False,
+                      action = "store_true", help = "Start from the last saved position in the log file")
+    (options, args) = parser.parse_args()
+    
+    if len(args) < 1:
+        print >> sys.stderr, "repository-log-scrape: a single file name was expected"
+        sys.exit(1)
+   
+    logname = args[0]
+
+    # Does the log file exist
+    try:
+        os.stat(logname)
+    except:
+        print "log file does not exist"
+        sys.exit(1)
+
+    if options.incremental:
+        offset = 0
+        status = None
+        filestat = os.stat(logname)
+        try:
+            status = RepositoryLogStatus.objects.get(pk=logname)
+            offset = status.logoffset
+            if status.inode != filestat.st_ino:
+                rolledlog = logname + ".1"
+                ServerUpdateCheck(rolledlog).incrReadLog(offset)
+                
+                # Save off info for the new log
+                offset = status.offset = 0
+                status.inode = filestat.st_ino
+                status.save()
+        except RepositoryLogStatus.DoesNotExist:
+            status = RepositoryLogStatus.objects.create(logname = logname,inode = filestat.st_ino, logoffset = offset)
+        offset = ServerUpdateCheck(logname).incrReadLog(offset)
+        status.logoffset = offset
+        status.save()
+    else:
+        ServerUpdateCheck(logname).readLog()

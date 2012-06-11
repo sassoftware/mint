@@ -1,3 +1,4 @@
 To access a login console, press control-alt-f2
 
-Download the QuickStart Guide from: http://docs.rpath.com/
+Download the rBuilder Installation and Walkthrough from:
+http://docs.rpath.com/

@@ -8,7 +8,6 @@ testsuite.setup()
 
 import sys
 import os
-import mock
 import StringIO
 
 from mint_rephelp import MINT_PROJECT_DOMAIN
@@ -20,6 +19,8 @@ from mint.scripts import backup
 from conary import dbstore
 from conary.conaryclient import ConaryClient
 from conary.lib import util
+
+from testutils import mock
 
 import fixtures
 
@@ -212,7 +213,7 @@ class BackupTest(fixtures.FixturedUnitTest):
     def testIsValid_GoodMetadata(self, db, data):
         metadataIO = StringIO.StringIO(goodMetadata)
         valid = backup.isValid(self.cfg, metadataIO)
-        self.failUnless(valid, "Metadata was valid; check mint.backup.knownGroupVersions")
+        self.failUnless(valid, "Metadata was invalid; check mint.scripts.backup.knownGroupVersions")
 
     @fixtures.fixture("Empty")
     def testIsValid_BadMetadata_OldSchema(self, db, data):

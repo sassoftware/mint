@@ -20,6 +20,7 @@ from rPath.rbasetup import lib
 
 from mint import config
 from mint import helperfuncs
+from mint import notices_callbacks
 from mint import rmake_setup
 from mint import shimclient
 from mint.lib.siteauth import SiteAuthorization
@@ -304,6 +305,7 @@ class rBASetup(rAASrvPlugin):
          -- create initial external projects
         """
         retry = options.get('retry', False)
+        new_username = options.get('new_username')
         self.message = ""
 
         newCfg = lib.readRBAConfig(config.RBUILDER_CONFIG)
@@ -312,7 +314,6 @@ class rBASetup(rAASrvPlugin):
 
         # don't re-add the admin user if it's just a retry
         if not retry:
-            new_username = options.get('new_username')
             new_password = options.get('new_password')
             new_email = options.get('new_email')
 
@@ -336,15 +337,16 @@ class rBASetup(rAASrvPlugin):
         self.message += result.get('message', '')
         self.reportMessage(execId, self.message)
 
-        # Generate an entitlement
-        step = lib.FTS_STEP_ENTITLE
-        self.message += "Generating an entitlement...  "
-        self.reportMessage(execId, self.message)
-        ret = self._generateEntitlement(newCfg)
-        if ret.has_key('errors'):
-            return { 'errors': ret['errors'], 'step': step, 'message': self.message }
-        self.message += ret.get('message', '\n')
-        self.reportMessage(execId, self.message)
+        if not options.get('entitlementKey'):
+            # Generate an entitlement
+            step = lib.FTS_STEP_ENTITLE
+            self.message += "Generating an entitlement...  "
+            self.reportMessage(execId, self.message)
+            ret = self._generateEntitlement(newCfg)
+            if ret.has_key('errors'):
+                return { 'errors': ret['errors'], 'step': step, 'message': self.message }
+            self.message += ret.get('message', '\n')
+            self.reportMessage(execId, self.message)
 
         # Setup the initial external projects
         step = lib.FTS_STEP_INITEXTERNAL
@@ -357,5 +359,19 @@ class rBASetup(rAASrvPlugin):
         # Done
         self.message += "Setup is complete.\n"
         self.reportMessage(execId, self.message)
+
+        cfg = lib.readRBAConfig(config.RBUILDER_CONFIG)
+        cb = notices_callbacks.RbaSetupNoticeCallback(cfg, new_username)
+        cb.notify()
+        # Since this plugin runs as root, we need to reset the permissions of
+        # the rbuilder notices dir to apache.
+        uid, gid = pwd.getpwnam('apache')[2:4]
+        self._chown('/srv/rbuilder/notices', uid, gid)
+
         return { 'step': lib.FTS_STEP_COMPLETE, 'message': self.message }
 
+    def _chown(self, root, uid, gid):
+        os.chown(root, uid, gid)
+        for dirpath, dirnames, filenames in os.walk(root):
+            for name in dirnames + filenames:
+                os.chown(os.path.join(dirpath, name), uid, gid)

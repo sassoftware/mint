@@ -3,6 +3,7 @@
 #
 # All Rights Reserved
 #
+import logging
 import os
 import sys
 import time
@@ -15,61 +16,68 @@ from mint import buildtypes
 from mint import jobstatus
 from mint import helperfuncs
 from mint import mint_error
+from mint import notices_callbacks
 from mint import urltypes
 from mint.lib import data
 from mint.rest import errors
 from mint.rest.db import manager
 from mint.rest.api import models
 
-from mcp import client as mcpclient
-from mcp import mcp_error
 from conary.lib import cfgtypes
+
+log = logging.getLogger(__name__)
+
 
 class ImageManager(manager.Manager):
     def __init__(self, cfg, db, auth, publisher=None):
         manager.Manager.__init__(self, cfg, db, auth, publisher)
-        self.mcpClient = None
-
-    def __del__(self):
-        if self.mcpClient:
-            self.mcpClient.disconnect()
-        self.mcpClient = None
 
     def _getImages(self, fqdn, extraJoin='', extraWhere='',
                    extraArgs=None, getOne=False):
         hostname = fqdn.split('.')[0]
+        cu = self.db.cursor()
+
         # TODO: pull amiId out of here and move into builddata dict ASAP
-        sql = '''SELECT Builds.buildId as imageId, hostname,
-               Builds.pubReleaseId as "release",
-               timePublished,
-               buildType as imageType, Builds.name, Builds.description, 
-               troveName, troveVersion, troveFlavor, troveLastChanged,
-               Builds.timeCreated, CreateUser.username as creator, 
-               Builds.timeUpdated, Builds.status, Builds.statusMessage,
-               ProductVersions.name as version, stageName as stage,
-               UpdateUser.username as updater, buildCount, 
-               BuildData.value as amiId
-            FROM Builds
-            JOIN Projects USING(projectId)
-            %(join)s
-            LEFT JOIN PublishedReleases
-            ON(Builds.pubReleaseId=PublishedReleases.pubReleaseId)
-            LEFT JOIN ProductVersions 
-                ON(Builds.productVersionId=ProductVersions.productVersionId)
-            LEFT JOIN Users as CreateUser ON (Builds.createdBy=CreateUser.userId)
-            LEFT JOIN Users as UpdateUser ON (Builds.updatedBy=UpdateUser.userId)
-            LEFT JOIN BuildData ON (BuildData.buildId=Builds.buildId 
-                                    AND BuildData.name='amiId')
-            WHERE hostname=? AND troveVersion IS NOT NULL %(where)s'''
-        sql = sql % dict(where=extraWhere, join=extraJoin)
+        sql = '''
+            SELECT
+                p.hostname,
+                pv.name AS version,
+                b.buildId AS imageId, b.pubReleaseId AS "release",
+                    b.buildType AS imageType, b.name, b.description,
+                    b.troveName, b.troveVersion, b.troveFlavor,
+                    b.troveLastChanged, b.timeCreated, b.timeUpdated,
+                    b.status AS statusCode, b.statusMessage, b.buildCount,
+                    b.stageName AS stage,
+                pr.timePublished,
+                cr_user.username AS creator, up_user.username AS updater,
+                ami_data.value AS amiId
+
+            FROM Builds b
+                JOIN Projects p USING ( projectId )
+                %(join)s
+                -- NB: USING() would be typical but sqlite seems upset?
+                LEFT JOIN PublishedReleases pr ON (
+                    b.pubReleaseId = pr.pubReleaseId )
+                LEFT JOIN ProductVersions pv ON (
+                    b.productVersionId = pv.productVersionId )
+                LEFT JOIN Users cr_user ON ( b.createdBy = cr_user.userId )
+                LEFT JOIN Users up_user ON ( b.updatedBy = up_user.userId )
+                LEFT JOIN BuildData ami_data ON (
+                    b.buildId = ami_data.buildId AND ami_data.name = 'amiId' )
+
+            WHERE hostname = ? AND troveVersion IS NOT NULL
+            %(where)s
+            '''
+        sql %= dict(where=extraWhere, join=extraJoin)
         args = (hostname,)
         if extraArgs:
             args += tuple(extraArgs)
-        cu = self.db.cursor()
-        rows = cu.execute(sql, *args)
+        cu.execute(sql, *args)
         if getOne:
             row = self.db._getOne(cu, errors.ImageNotFound, args)
             rows = [row]
+        else:
+            rows = cu
 
         images = []
         for row in rows:
@@ -95,129 +103,65 @@ class ImageManager(manager.Manager):
             status = models.ImageStatus()
             status.hostname = row['hostname']
             status.imageId = row['imageId']
-            status.set_status(code=row.pop('status'),
+            status.set_status(code=row.pop('statusCode'),
                     message=row.pop('statusMessage'))
 
             image = models.Image(row)
             image.imageStatus = status
             images.append(image)
 
-        # Now add files for the images.
-        filesById = {}
-        filesByImageId = {}
-        sql = '''SELECT fileId, Builds.buildId, title, size, sha1, urlType, url
-               FROM Builds
-               JOIN Projects USING(projectId)
-               JOIN BuildFiles ON(Builds.buildId = BuildFiles.buildId)
-            %(join)s
-            JOIN BuildFilesUrlsMap USING(fileId)
-            JOIN FilesUrls USING(urlId)
-            LEFT JOIN ProductVersions
-                ON(Builds.productVersionId=ProductVersions.productVersionId)
-            WHERE hostname=? AND troveVersion IS NOT NULL %(where)s'''
-        sql = sql % dict(where=extraWhere, join=extraJoin)
-        args = (hostname,)
-        if extraArgs:
-            args += tuple(extraArgs)
-        rows = self.db.cursor().execute(sql, *args)
-        for d in rows:
-            urlType = d.pop('urlType')
-            url = d.pop('url')
-            if d['fileId'] not in filesById:
-                d['imageId'] = d.pop('buildId')
-                file = models.ImageFile(d)
-                filesById[file] = file
-                file.urls = []
-                filesByImageId.setdefault(file.imageId, []).append(file)
-            else:
-                file = filesById[d['fileId']]
-            if url:
-                file.baseFileName = os.path.basename(url)
-            file.urls.append(models.FileUrl(fileId=file.fileId, urlType=urlType))
-
-        imagesById = dict((x.imageId, x) for x in images)
-        for image in images:
-            files = filesByImageId.get(image.imageId, [])
-            image.files = models.ImageFileList(files)
-
-        self._updateStatusForImageList(images)
+        imagesFiles = self._getFilesForImages(hostname,
+                (x.imageId for x in images))
+        for image, imageFiles in zip(images, imagesFiles):
+            image.files = imageFiles
 
         if getOne:
             return images[0]
         return models.ImageList(images)
 
+    def _getFilesForImages(self, hostname, imageIds):
+        imageIds = [int(x) for x in imageIds]
+        if not imageIds:
+            return []
 
-    def _updateStatusForImageList(self, imageList):
-        changed = []
-        for image in imageList:
-            if image.imageStatus.code in jobstatus.terminalStatuses:
-                continue
+        cu = self.db.cursor()
+        sql = '''
+            SELECT
+                f.fileId, f.buildId AS imageId, f.idx, f.title, f.size, f.sha1,
+                u.urlType, u.url
+            FROM BuildFiles f
+                JOIN BuildFilesUrlsMap USING ( fileId )
+                JOIN FilesUrls u USING ( urlId )
+            WHERE buildId IN ( %(images)s )
+            '''
+        sql %= dict(images=','.join('%d' % x for x in imageIds))
+        cu.execute(sql)
 
-            status = jobstatus.UNKNOWN
-            statusMessage = res = None
-            if image.hasBuild():
-                uuid = '%s.%s-build-%d-%d' % (self.cfg.hostName,
-                                  self.cfg.siteDomainName, image.imageId, 
-                                  image.buildCount)
-                try:
-                    mc = self._getMcpClient()
-                    res = mc.jobStatus(uuid)
-                except mcp_error.UnknownJob:
-                    status = jobstatus.NO_JOB
-                else:
-                    if res:
-                        status, statusMessage = res
-                    # Sometimes the MCP returns None for no obvious reason.
-                    # In those cases, keep the fallback value of UNKNOWN.
-
-                if status == jobstatus.NO_JOB:
-                    # The MCP no longer knows about this job and it never will,
-                    # so make a guess as to whether it passed or failed and
-                    # set its state to that.
-                    if image.files and image.files.files:
-                        # Images with files succeeded, unless one of those files
-                        # is a failed build log.
-                        for file in image.files.files:
-                            if file.title.startswith('Failed '):
-                                status = jobstatus.FAILED
-                                break
-                        else:
-                            status = jobstatus.FINISHED
-
-                    elif image.amiId:
-                        # AMIs don't have files but if the ID is posted then it
-                        # succeeded.
-                        status = jobstatus.FINISHED
-                    else:
-                        # No files and no AMI means the job failed.
-                        status = jobstatus.FAILED
-
+        filesByImageId = dict((imageId, {}) for imageId in imageIds)
+        for d in cu:
+            imageId, fileId = d['imageId'], d['fileId']
+            urlType, url = d.pop('urlType'), d.pop('url')
+            imageFiles = filesByImageId[imageId]
+            if fileId in imageFiles:
+                file = imageFiles[fileId]
             else:
-                status = jobstatus.FINISHED
+                file = imageFiles[fileId] = models.ImageFile(d)
+                file.urls = []
+            if url:
+                file.baseFileName = os.path.basename(url)
+            file.urls.append(models.FileUrl(fileId=fileId, urlType=urlType))
 
-            if status not in jobstatus.statusNames:
-                status = jobstatus.UNKNOWN
-            if not statusMessage:
-                statusMessage = jobstatus.statusNames[status]
-
-            if (status, statusMessage) != (image.imageStatus.code,
-                    image.imageStatus.message):
-                image.imageStatus.set_status(code=status,
-                        message=statusMessage)
-                changed.append(image)
-
-        if changed:
-            cu = self.db.cursor()
-            for image in changed:
-                cu.execute('UPDATE Builds SET status=?, statusMessage=?'
-                           ' WHERE buildId=?', image.imageStatus.code,
-                           image.imageStatus.message, image.imageId)
+        # Order image files in a list parallel to imageIds
+        imageFilesList = [ filesByImageId[x] for x in imageIds ]
+        return [models.ImageFileList(hostname=hostname, imageId=imageId,
+            files=sorted(imageFiles.values(), key=lambda x: x.idx))
+            for (imageId, imageFiles) in zip(imageIds, imageFilesList) ]
 
     def listImagesForProduct(self, fqdn):
         return self._getImages(fqdn)
 
     def getImageForProduct(self, fqdn, imageId):
-        return self._getImages(fqdn, '', 'AND Builds.buildId=?', [imageId],
+        return self._getImages(fqdn, '', 'AND b.buildId=?', [imageId],
                                 getOne=True)
 
     def deleteImageForProduct(self, fqdn, imageId):
@@ -249,18 +193,23 @@ class ImageManager(manager.Manager):
             """, imageId)
         cu.execute('''DELETE FROM BuildFiles WHERE buildId=?''', imageId)
         # Grab the build type
+        imageType = self._getImageType(imageId)
+        self.publisher.notify('ImageRemoved', imageId, imageName, imageType)
+
+    def _getImageType(self, imageId):
+        cu = self.db.cursor()
         cu.execute('''SELECT buildType FROM Builds
                       WHERE buildId = ?''', imageId)
         imageType = cu.fetchone()[0]
-        self.publisher.notify('ImageRemoved', imageId, imageName, imageType)
+        return imageType
 
     def listImagesForRelease(self, fqdn, releaseId):
-        return self._getImages(fqdn, '', ' AND Builds.pubReleaseId=?',
+        return self._getImages(fqdn, '', ' AND b.pubReleaseId=?',
                                [releaseId])
 
     def listImagesForProductVersion(self, fqdn, version):
         return self._getImages(fqdn, '',
-                               ' AND ProductVersions.name=?', [version])
+                               ' AND pv.name=?', [version])
 
     def listImagesForTrove(self, fqdn, name, version, flavor):
         images =  self._getImages(fqdn, '',
@@ -268,68 +217,16 @@ class ImageManager(manager.Manager):
                                     [name, flavor.freeze()])
         images.images = [ x for x in images.images
                           if x.troveVersion == version ]
-
-        self._updateStatusForImageList(images.images)
-
         return images
 
     def listImagesForProductVersionStage(self, fqdn, version, stageName):
         return self._getImages(fqdn, '',
-                              ' AND ProductVersions.name=? AND stageName=?',
+                              ' AND pv.name=? AND stageName=?',
                               [version, stageName])
 
-    def listFilesForImage(self, fqdn, imageId, includePath=False):
+    def listFilesForImage(self, fqdn, imageId):
         hostname = fqdn.split('.')[0]
-        cu = self.db.cursor()
-        cu.execute('''SELECT fileId, buildId,
-                      title, size, sha1
-                      FROM BuildFiles
-                      JOIN Builds USING(buildId)
-                      JOIN Projects USING(projectId)
-                      WHERE buildId=? and hostname=?
-                      ORDER BY idx''', imageId, hostname)
-        imageFiles = []
-        for d in cu:
-            d['imageId'] = d.pop('buildId')
-            file = models.ImageFile(d)
-            imageFiles.append(file)
-        for file in imageFiles:
-            cu.execute('''SELECT urlType, url
-                          FROM BuildFilesUrlsMap 
-                          JOIN FilesUrls USING(urlId)
-                          WHERE fileId=?''', file.fileId)
-            urls = []
-            for d in cu:
-                d['fileId'] = file.fileId
-                path = d.pop('url')
-                if includePath:
-                    d['path'] = path
-                urls.append(models.FileUrl(d))
-            file.urls = urls
-        return models.ImageFileList(imageFiles)
-
-    def _getMcpClient(self):
-        if not self.mcpClient:
-            mcpClientCfg = mcpclient.MCPClientConfig()
-
-            try:
-                mcpClientCfg.read(os.path.join(self.cfg.dataPath,
-                                               'mcp', 'client-config'))
-            except cfgtypes.CfgEnvironmentError:
-                # If there is no client-config, default to localhost
-                pass
-
-            self.mcpClient = mcpclient.MCPClient(mcpClientCfg)
-        return self.mcpClient
-
-    def _getJobServerVersion(self):
-        try:
-            mc = self._getMcpClient()
-            return str(mc.getJSVersion())
-        except mcp_error.NotEntitledError:
-            raise mint_error.NotEntitledError
-        except mcp_error.NetworkError:
-            raise mint_error.BuildSystemDown
+        return self._getFilesForImages(hostname, [imageId])[0]
 
     def createImage(self, fqdn, buildType, buildName, troveTuple, buildData):
         cu = self.db.db.cursor()
@@ -356,9 +253,6 @@ class ImageManager(manager.Manager):
                 buildDataTable.setDataValue(buildId, name, value, dataType, 
                                             commit=False)
 
-        jsversion = self._getJobServerVersion()
-        buildDataTable.setDataValue(buildId, 'jsversion',
-                               jsversion, data.RDT_STRING, commit=False)
         # clear out all "important flavors"
         for x in buildtypes.flavorFlags.keys():
             buildDataTable.removeDataValue(buildId, x, commit=False)
@@ -369,59 +263,189 @@ class ImageManager(manager.Manager):
                                         commit=False)
         return buildId
 
-    def setImageFiles(self, hostname, imageId, imageFiles):
+
+    def stopImageJob(self, imageId):
+        raise NotImplementedError
+
+    def getImageStatus(self, imageId):
         cu = self.db.cursor()
+        cu.execute("""SELECT hostname, buildId AS imageId,
+                    status AS code, statusMessage AS message
+                FROM Builds JOIN Projects USING ( projectId )
+                WHERE buildId = ?""", imageId)
+        row = self.db._getOne(cu, errors.ImageNotFound, imageId)
+        return models.ImageStatus(row)
+
+    def setImageStatus(self, imageId, status):
+        cu = self.db.cursor()
+        cu.execute("""UPDATE Builds SET status = ?, statusMessage = ?
+                WHERE buildId = ?""", status.code, status.message, imageId)
+        return self.getImageStatus(imageId)
+
+    def finalImageProcessing(self, imageId, status):
+        self._postFinished(imageId, status)
+        self._createNotices(imageId, status)
+
+    class UploadCallback(object):
+        def __init__(self, manager, imageId):
+            self.manager = manager
+            self.imageId = imageId
+
+        def callback(self, fileName, fileIdx, fileTotal,
+                currentFileBytes, totalFileBytes, sizeCurrent, sizeTotal):
+            # Nice percentages
+            if sizeTotal == 0:
+                sizeTotal = 1024
+            pct = sizeCurrent * 100.0 / sizeTotal
+            message = "Uploading bundle: %d%%" % (pct, )
+            self.manager._setStatus(self.imageId, message = message)
+            log.info("Uploading %s (%s/%s): %.1f%%, %s/%s",
+                fileName, fileIdx, fileTotal, pct, sizeCurrent, sizeTotal)
+
+    def _setStatus(self, imageId, code = jobstatus.RUNNING, message = ''):
+        status = models.ImageStatus()
+        status.set_status(code, message)
+        self.db.setVisibleImageStatus(imageId, status)
+
+    def _postFinished(self, imageId, status):
+        if status.code != jobstatus.FINISHED:
+            return
+        imageType = self._getImageType(imageId)
+        if imageType != buildtypes.AMI:
+            # for now we only have to do something special for AMIs
+            return
+        log.info("Finishing AMI image")
+        # Fetch the image path
+        cu = self._getImageFiles(imageId)
+        uploadCallback = self.UploadCallback(self, imageId)
+        for row in cu:
+            url = row[0]
+            if not os.path.exists(url):
+                continue
+            log.info("Uploading bundle")
+            bucketName, manifestName = self.db.awsMgr.amiPerms.uploadBundle(
+                url, callback = uploadCallback.callback)
+            self._setStatus(imageId, message = "Registering AMI")
+            log.info("Registering AMI for %s/%s", bucketName,
+                manifestName)
+            projectId = self._getProjectForImage(imageId)
+            getEC2AccountNumbersForProjectUsers = self.db.db.projectUsers.getEC2AccountNumbersForProjectUsers
+            writers, readers = getEC2AccountNumbersForProjectUsers(projectId)
+            amiId, manifestPath = self.db.awsMgr.amiPerms.registerAMI(
+                bucketName, manifestName, readers = readers, writers = writers)
+            log.info("Registered AMI %s for %s", amiId,
+                manifestPath)
+            self.db.db.buildData.setDataValue(imageId, 'amiId', amiId,
+                data.RDT_STRING)
+            self.db.db.buildData.setDataValue(imageId, 'amiManifestName,',
+                manifestPath, data.RDT_STRING)
+            self.db.commit()
+
+    def _getProjectForImage(self, imageId):
+        sql = "SELECT projectId FROM Builds WHERE buildId = ?"
+        cu = self.db.cursor()
+        cu.execute(sql, imageId)
+        row = cu.fetchone()
+        return row[0]
+
+    def _createNotices(self, imageId, status):
+        sql = """
+            SELECT Projects.hostname, ProductVersions.name, Users.username,
+                   Builds.name, Builds.buildType, BuildData.value AS amiId
+              FROM Builds
+              JOIN Projects USING ( projectId )
+         LEFT JOIN ProductVersions ON
+                (Builds.productVersionId = ProductVersions.productVersionId)
+         LEFT JOIN Users ON ( Builds.createdBy = Users.userId )
+         LEFT JOIN BuildData ON (Builds.buildId = BuildData.buildId AND
+                                 BuildData.name = 'amiId' )
+             WHERE Builds.buildId = ?
+        """
+        cu = self.db.cursor()
+        cu.execute(sql, imageId)
+        row = cu.fetchone()
+        projectName, projectVersion, imageCreator, imageName, imageType, amiId = row
+        imageType = buildtypes.typeNamesMarketing.get(imageType)
+
+        failed = (status.code != jobstatus.FINISHED)
+
+        downloadUrlTemplate = "https://%s%sdownloadImage?fileId=%%d" % (
+            self.cfg.siteHost, self.cfg.basePath, )
+        if amiId is not None:
+            notices = notices_callbacks.AMIImageNotices(self.cfg, imageCreator)
+            imageFiles = [ amiId ]
+        else:
+            notices = notices_callbacks.ImageNotices(self.cfg, imageCreator)
+            imageFiles = [ (x[0], downloadUrlTemplate % x[1])
+                for x in self._getImageFiles(imageId) ]
+
+        method = (failed and notices.notify_error) or notices.notify_built
+        method(imageName, imageType, time.time(), projectName, projectVersion,
+            imageFiles)
+
+    def _getImageFiles(self, imageId):
+        cu = self.db.cursor()
+        cu.execute("""
+            SELECT FilesUrls.url, BuildFilesUrlsMap.fileId
+              FROM BuildFiles
+              JOIN BuildFilesUrlsMap USING (fileId)
+              JOIN FilesUrls USING (urlId)
+             WHERE BuildFiles.buildId = ?
+               AND FilesUrls.urlType = ?
+        """, imageId, urltypes.LOCAL)
+        return cu
+
+    def _getImageInfoForNotices(self, imageId, status):
+        cu = self.db.cursor()
+        cu.execute("""
+            SELECT Projects.name, Projects.version, Users.username,
+                   Builds.buildType,
+                   BuildData.value AS amiId,
+              FROM Builds
+              JOIN Projects USING (projectId)
+              JOIN Users ON (Builds.createdBy = Users.userId)
+         LEFT JOIN BuildData ON (Builds.buildId = BuildData.buildId AND
+                                 BuildData.name = 'amiId' )
+             WHERE Builds.buildId = ?
+        """, imageId)
+        # XXX FIXME: add notices
+        return
+
+    def setFilesForImage(self, fqdn, imageId, files):
+        hostname = fqdn.split('.')[0]
+        cu = self.db.cursor()
+
+        # Delete existing files attached to the build.
+        # NB: currently we just orphan the URL objects, esp. since some may be
+        # on S3 and require special cleanup.
         if self.db.db.driver == 'sqlite':
             cu.execute("""DELETE FROM BuildFilesUrlsMap WHERE fileId IN
                 (SELECT fileId FROM BuildFiles WHERE buildId=?)""",
                     imageId)
         cu.execute("DELETE FROM BuildFiles WHERE buildId=?", imageId)
-        for idx, item in enumerate(imageFiles):
-            if len(item) == 2:
-                fileName, title = item
-                sha1 = ''
-                size = 0
-            elif len(item) == 4:
-                fileName, title, size, sha1 = item
 
-                # Newer jobslaves will send this as a string; convert
-                # to a long for the database's sake (RBL-2789)
-                size = long(size)
-
-                # sanitize filename based on configuration
-                fileName = os.path.join(self.cfg.imagesPath, 
-                                        hostname,
-                                str(imageId), os.path.basename(fileName))
-            else:
-                raise ValueError
-            cu.execute("""INSERT INTO BuildFiles ( buildId, idx, title,
-                    size, sha1) VALUES (?, ?, ?, ?, ?)""",
-                    imageId, idx, title, size, sha1)
+        for idx, file in enumerate(files.files):
+            # First insert the file ...
+            # NOTE: cast file size to long to work around broken python-pgsql
+            # behavior with integers too big for a postgres int but small
+            # enough to fit in a python int, esp. on 64 bit systems.
+            cu.execute("""
+                INSERT INTO BuildFiles ( buildId, idx, title, size, sha1 )
+                    VALUES ( ?, ?, ?, ?, ? )""",
+                imageId, idx, file.title, long(file.size), file.sha1)
             fileId = cu.lastrowid
-            cu.execute("""INSERT INTO FilesUrls ( urlType, url )
-                    VALUES (?, ?)""", urltypes.LOCAL, fileName)
+
+            # ... then the URL ...
+            fileName = os.path.basename(file.baseFileName)
+            filePath = os.path.join(self.cfg.imagesPath, hostname,
+                    str(imageId), fileName)
+            cu.execute("INSERT INTO FilesUrls ( urlType, url) VALUES ( ?, ? )",
+                    urltypes.LOCAL, filePath)
             urlId = cu.lastrowid
-            cu.execute("""INSERT INTO BuildFilesUrlsMap ( fileId, urlId )
-                    VALUES(?, ?)""", fileId, urlId)
 
-    def stopImageJob(self, imageId):
-        mcpClient = self._getMcpClient()
-        try:
-            mcpClient.stopJob(imageId)
-        except Exception, e:
-            raise errors.StopJobFailed, (imageId, e), sys.exc_info()[2]
+            # ... then the mapping between them.
+            cu.execute("""INSERT INTO BuildFilesUrlsMap (
+                    fileId, urlId) VALUES ( ?, ? )""",
+                    fileId, urlId)
 
-    def getImageStatus(self, hostname, imageId):
-        # XXX: Have to hack it to get the MCP status querying. Trash this once
-        # the MCP is gone.
-        image = self.getImageForProduct(hostname, imageId)
-        return image.imageStatus
-
-        cu = self.db.cursor()
-        cu.execute("""SELECT hostname, buildId AS imageId,
-                    status AS code, statusMessage AS message
-                FROM Builds JOIN Projects USING ( projectId )
-                WHERE hostname = ? AND buildId = ?""",
-                hostname, imageId)
-        row = self.db._getOne(cu, errors.ImageNotFound, imageId)
-        return models.ImageStatus(row)
+        return self.listFilesForImage(hostname, imageId)

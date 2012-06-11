@@ -163,7 +163,7 @@ class WebProjectTest(WebProjectBaseTest):
 
         self.webLogin('testuser', 'testpass')
         job = client.startImageJob(build.getId())
-        assert not job
+        self.failUnlessEqual(job, '0' * 32)
         page = self.assertContent('/project/testproject/builds',
                                   code=[200],
                                   content='Finished',

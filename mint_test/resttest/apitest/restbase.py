@@ -15,6 +15,7 @@ import subprocess
 import tempfile
 import time
 from conary.dbstore.sqllib import CaselessDict
+from conary import conaryclient
 
 from restlib.http import handler
 from restlib.http import request
@@ -25,6 +26,7 @@ from mint.rest.api import site
 from mint.rest.middleware import auth
 from mint.rest.middleware import formatter
 from mint.rest.modellib import converter
+from rpath_proddef import api1 as proddef
 
 from mint_test import mint_rephelp
 
@@ -38,15 +40,25 @@ class BaseRestTest(mint_rephelp.MintDatabaseHelper):
         ('VMware ESX 64-bit', 'vmware', 'x86_64', 'vmwareEsxImage'),
     ]
     buildTemplates = buildDefs
-    architectures = [ ]
-    containerTemplates = [ ]
-    flavorSets = [ ]
+    architectures = []
+    containerTemplates = []
+    flavorSets = []
     productVersion = '1.0'
     productName = 'Project 1'
     productShortName = 'testproject'
     productVersionDescription = 'Version description'
     productDomainName = mint_rephelp.MINT_PROJECT_DOMAIN
     productHostname = "%s.%s" % (productShortName, productDomainName)
+
+    def setUp(self):
+        try:
+            mint_rephelp.MintDatabaseHelper.setUp(self)
+            self.mockProddef()
+        except Exception, e:
+            self.tearDown()
+            raise e
+
+    ControllerFactory = None
 
     def setupProduct(self):
         self.setUpProductDefinition()
@@ -97,6 +109,7 @@ class BaseRestTest(mint_rephelp.MintDatabaseHelper):
                 containerTemplateRef = containerTemplateRef,
                 stages = stageRefs)
         client = db.productMgr.reposMgr.getConaryClientForProduct(shortName)
+        pd.setPlatformName('localhost@rpath:plat-1')
         pd.saveToRepository(client, 'Product Definition commit\n')
         return pd
 
@@ -145,6 +158,63 @@ class BaseRestTest(mint_rephelp.MintDatabaseHelper):
                 'v1', [imageId3])
         db.publishRelease(self.productShortName, releaseId2, True)
 
+    def mockProddef(self):
+        oldLoadFromRepository = proddef.PlatformDefinition.loadFromRepository
+        def newLoadFromRepository(slf, *args, **kw):
+            oldClient = args[0]
+            label = args[1]
+            return oldLoadFromRepository(slf, self.cclient, label)
+
+        self.mock(proddef.PlatformDefinition, 'loadFromRepository',
+            newLoadFromRepository)
+
+    def setupPlatforms(self):
+        repos = self.openRepository()
+        self.cclient = self.getConaryClient()
+        self.cclient.repos = repos
+        platformLabel1 = self.mintCfg.availablePlatforms[0]
+        pl1 = self.productDefinition.toPlatformDefinition()
+        cst = pl1.newContentSourceType('RHN', 'RHN', isSingleton = True)
+        cst2 = pl1.newContentSourceType('satellite', 'satellite')
+        ds = pl1.newDataSource('Channel 1', 'Channel 1')
+        pl1.setContentProvider('Crowbar', 'Crowbar', [cst, cst2], [ds])
+        pl1.setPlatformName('Crowbar Linux 1')
+        pl1.setPlatformUsageTerms('Terms of Use 1')
+        pl1.addArchitecture('x86', 'x86', 'is:x86 x86(~i486, ~i586, ~i686, ~cmov, ~mmx, ~sse, ~sse2)')
+        pl1.addArchitecture('x86_64', 'x86 (64-bit)', 'is:x86_64 x86(~i486, ~i586, ~i686, ~cmov, ~mmx, ~sse, ~sse2)')
+        pl1.addFlavorSet('xen', 'Xen DomU', '~xen, ~domU, ~!dom0, ~!vmware')
+        pl1.addFlavorSet('vmware','VMware','~vmware, ~!xen, !domU, ~!dom0')
+        pl1.addContainerTemplate(pl1.imageType('vmwareEsxImage', {'autoResolve':'false', 'natNetworking':'true', 'baseFileName':'', 'vmSnapshots':'false', 'swapSize':'512', 'vmMemory':'256', 'installLabelPath':'', 'freespace':'1024'}))
+        pl1.addContainerTemplate(pl1.imageType('xenOvaImage', {'autoResolve':'false', 'baseFileName':'', 'swapSize':'512', 'vmMemory':'256', 'installLabelPath':'', 'freespace':'1024'}))
+        pl1.saveToRepository(self.cclient, platformLabel1)
+
+        platformLabel2 = self.mintCfg.availablePlatforms[1]
+        pl2 = self.productDefinition.toPlatformDefinition()
+        cst = pl1.newContentSourceType('RHN', 'RHN')
+        ds = pl1.newDataSource('Channel 1', 'Channel 1')
+        pl1.setContentProvider('Crowbar', 'Crowbar', [cst], [ds])
+        pl2.setPlatformName('Crowbar Linux 2')
+        pl2.setPlatformUsageTerms('Terms of Use 2')
+        pl2.saveToRepository(self.cclient, platformLabel2)
+
+    def setupPlatform3(self):
+        repos = self.openRepository()
+        self.cclient = self.getConaryClient()
+        self.cclient.repos = repos
+        # platformLabel1 = self.mintCfg.availablePlatforms[0]
+        platformLabel1 = 'localhost@rpath:plat-3'
+        pl1 = self.productDefinition.toPlatformDefinition()
+        cst = pl1.newContentSourceType('RHN', 'RHN', isSingleton = True)
+        ds = pl1.newDataSource('Channel 1', 'Channel 1')
+        pl1.setContentProvider('Crowbar', 'Crowbar', [cst], [ds])
+        pl1.setPlatformName('Crowbar Linux 3')
+        pl1.setPlatformUsageTerms('Terms of Use 1')
+        pl1.addArchitecture('x86', 'x86', 'is:x86 x86(~i486, ~i586, ~i686, ~cmov, ~mmx, ~sse, ~sse2)')
+        pl1.addFlavorSet('xen', 'Xen DomU', '~xen, ~domU, ~!dom0, ~!vmware')
+        pl1.saveToRepository(self.cclient, platformLabel1)
+
+    def getConaryClient(self):
+        return conaryclient.ConaryClient(self.cfg)
 
     def getRestClient(self, **kw):
         if 'db' in kw:
@@ -167,7 +237,7 @@ class BaseRestTest(mint_rephelp.MintDatabaseHelper):
                 except UserAlreadyExists:
                     pass
 
-        return Controller(self.mintCfg, db, **kw)
+        return self.ControllerFactory(self.mintCfg, db, **kw)
 
     def escapeURLQuotes(self, foo):
         """
@@ -211,20 +281,23 @@ class BaseRestTest(mint_rephelp.MintDatabaseHelper):
 
 
 class Controller(object):
+    RequestFactory = None
+    HandlerFactory = None
+    FormatCallbackFactory = None
     def __init__(self, cfg, restDb, username, password):
         self.server = 'localhost'
         self.port = '8000'
         self.controller = site.RbuilderRestServer(cfg, restDb)
-        self.handler = MockHandler(self.controller)
+        self.handler = self.HandlerFactory(self.controller)
         self.handler.addCallback(auth.AuthenticationCallback(cfg, restDb,
             self.controller))
-        self.handler.addCallback(MockFormatCallback(self.controller))
+        self.handler.addCallback(self.FormatCallbackFactory(self.controller))
         self.restDb = restDb
         self.username = username
         self.password = password
 
     def call(self, method, uri, body=None, convert=False, headers=None):
-        request = MockRequest(method, uri, body=body)
+        request = self.RequestFactory(method, uri, body=body)
         request._convert = convert
 
         if self.username:
@@ -289,3 +362,10 @@ class MockFormatCallback(formatter.FormatCallback):
             return formatter.FormatCallback.processResponse(self, request, res)
         else:
             return res
+
+# Set defaults
+# We do this here because I did not want to move classes around
+BaseRestTest.ControllerFactory = Controller
+Controller.FormatCallbackFactory = MockFormatCallback
+Controller.HandlerFactory = MockHandler
+Controller.RequestFactory = MockRequest

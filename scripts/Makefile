@@ -6,14 +6,17 @@
 
 static_files =				\
 	amazon-s3-processor		\
+	apply-proxy-settings		\
 	auth-generate			\
 	check-repository		\
 	deleteproject			\
 	ec2-terminator			\
+	enable-platforms	\
 	fix-ec2-certificates		\
 	generate-certs.sh		\
 	group-script			\
 	init-extproducts	        \
+	job-cleanup			\
 	load-offline-mirror		\
 	mcp-stack			\
 	migrate-all-projects		\
@@ -22,13 +25,16 @@ static_files =				\
 	mirror-outbound			\
 	rbuilder-database		\
 	refresh-auth			\
+	rmake-reset			\
 	rmake-setup			\
 	rss-update			\
 	update-bulletin			\
 	update-package-index		\
 	update-package-index-external	\
 	update-top-projects		\
-	set-password
+	validate-proxy-settings		\
+	set-password                    \
+	repository-log-scrape
 
 generated_files =	\
 	rbuilder_database.py

@@ -4,11 +4,13 @@
 # All Rights Reserved
 #
 import decorator
+import logging
 
 from conary import versions
 from conary.conaryclient import cmdline
 from conary.dbstore import sqllib
 
+from mint import jobstatus
 from mint import mint_error
 from mint import projects
 from mint import userlevels
@@ -17,6 +19,7 @@ from mint.rest.api import models
 from mint.rest import errors
 from mint.rest.db import authmgr
 from mint.rest.db import awshandler
+from mint.rest.db import capsulemgr
 from mint.rest.db import emailnotifier
 from mint.rest.db import filemgr
 from mint.rest.db import imagemgr
@@ -30,6 +33,7 @@ from mint.rest.db import usermgr
 reservedHosts = ['admin', 'mail', 'mint', 'www', 'web', 'rpath', 'wiki', 'conary', 'lists']
 
 class DBInterface(object):
+    _logFormat = "%(asctime)s %(levelname)s - %(message)s"
     def __init__(self, db):
         self._holdCommits = False
         self.db = db
@@ -123,11 +127,13 @@ class Database(DBInterface):
                                                     auth, self.publisher)
         self.userMgr = usermgr.UserManager(cfg, self, auth, self.publisher)
         self.platformMgr = platformmgr.PlatformManager(cfg, self, auth)
+        self.capsuleMgr = capsulemgr.CapsuleManager(cfg, self, auth)
+        self.awsMgr = awshandler.AWSHandler(cfg, self, auth)
         if subscribers is None:
             subscribers = []
             subscribers.append(emailnotifier.EmailNotifier(cfg, self,
                                                            auth))
-            subscribers.append(awshandler.AWSHandler(cfg, self, auth))
+            subscribers.append(self.awsMgr)
         for subscriber in subscribers:
             self.publisher.subscribe(subscriber)
 
@@ -433,18 +439,27 @@ class Database(DBInterface):
         platformName = pd.getPlatformName()
         sourceTrove = pd.getPlatformSourceTrove()
         if not sourceTrove:
-            return models.Platform(platformTroveName='', platformVersion='',
-                                   label='', platformName='',
-                                   hostname=hostname, 
-                                   productVersion=version)
-        n,v,f = cmdline.parseTroveSpec(pd.getPlatformSourceTrove())
+            return models.ProductPlatform(platformTroveName='',
+                platformVersion='', label='', platformName=platformName,
+                hostname=hostname, productVersion=version)
+        n,v,f = cmdline.parseTroveSpec(sourceTrove)
         v = versions.VersionFromString(v)
-        return models.Platform(platformTroveName=str(n), # convert from unicode
-                               platformVersion=str(v.trailingRevision()), 
-                               label=str(v.trailingLabel()),
-                               platformName=platformName,
-                               hostname=hostname,
-                               productVersion=version)
+        # convert trove name from unicode
+        platformLabel = str(v.trailingLabel())
+        localPlatform = self.platformMgr.getPlatformByLabel(platformLabel)
+        platformId = None
+        platformEnabled = None
+        if localPlatform:
+            platformId = localPlatform.platformId
+            platformEnabled = bool(localPlatform.enabled)
+        return models.ProductPlatform(platformTroveName=str(n),
+            platformVersion=str(v.trailingRevision()),
+            label=platformLabel,
+            platformName=platformName,
+            hostname=hostname,
+            productVersion=version,
+            enabled=platformEnabled,
+            platformId = platformId)
 
     @readonly    
     def getProductVersionStage(self, hostname, version, stageName):
@@ -573,37 +588,61 @@ class Database(DBInterface):
         self.auth.requireProductOwner(hostname)
         self.releaseMgr.unpublishRelease(releaseId)
 
-
-    # TODO: switch to readonly after image status rework
-    @commitmaybe
+    @readonly
     def listImagesForTrove(self, hostname, name, version, flavor):
         self.auth.requireProductReadAccess(hostname)
         return self.imageMgr.listImagesForTrove(hostname, name, version,
                 flavor)
 
-    # TODO: switch to readonly after image status rework
-    @commitmaybe
+    @readonly
     def listImagesForRelease(self, hostname, releaseId):
         self.auth.requireProductReadAccess(hostname)
         return self.imageMgr.listImagesForRelease(hostname, releaseId)
 
-    # TODO: switch to readonly after image status rework
-    @commitmaybe
+    @readonly
     def listImagesForProduct(self, hostname):
         self.auth.requireProductReadAccess(hostname)
         return self.imageMgr.listImagesForProduct(hostname)
 
-    # TODO: switch to readonly after image status rework
-    @commitmaybe
+    @readonly
     def getImageForProduct(self, hostname, imageId):
         self.auth.requireProductReadAccess(hostname)
         return self.imageMgr.getImageForProduct(hostname, imageId)
 
-    # TODO: switch to readonly after image status rework
-    @commitmaybe
+    @readonly
     def getImageStatus(self, hostname, imageId):
         self.auth.requireProductReadAccess(hostname)
-        return self.imageMgr.getImageStatus(hostname, imageId)
+        return self.imageMgr.getImageStatus(imageId)
+
+    def setImageStatus(self, hostname, imageId, imageToken, status):
+        self.auth.requireImageToken(hostname, imageId, imageToken)
+        if status.isFinal:
+            try:
+                # This method is not running in a single transaction, since it
+                # may want to update the status
+                self._finalImageProcessing(imageId, status)
+            except:
+                self.rollback()
+                self._holdCommits = False
+                self.cancelImageBuild(imageId)
+                raise
+        return self.setVisibleImageStatus(imageId, status)
+
+    def _finalImageProcessing(self, imageId, status):
+        self.imageMgr.finalImageProcessing(imageId, status)
+
+    @commitafter
+    def setVisibleImageStatus(self, imageId, status):
+        return self.imageMgr.setImageStatus(imageId, status)
+
+    @commitafter
+    def cancelImageBuild(self, imageId):
+        """Only set the status if it's a non-terminal state"""
+        status = self.imageMgr.getImageStatus(imageId)
+        if status.isFinal:
+            return
+        status.set_status(jobstatus.FAILED, message = "Unknown error")
+        return self.imageMgr.setImageStatus(imageId, status)
 
     @readonly
     def getImageFile(self, hostname, imageId, fileName, asResponse=False):
@@ -629,8 +668,25 @@ class Database(DBInterface):
 
     @readonly
     def listFilesForImage(self, hostname, imageId):
-        self.auth.requireProductReadAccess(hostname)
+        self.auth.requireBuildsOnHost(hostname, [imageId])
         return self.imageMgr.listFilesForImage(hostname, imageId)
+
+    @commitafter
+    def setFilesForImage(self, hostname, imageId, imageToken, files):
+        self.auth.requireImageToken(hostname, imageId, imageToken)
+        return self.imageMgr.setFilesForImage(hostname, imageId, files)
+
+    def getPlatformContentErrors(self, contentSourceName, instanceName):
+        return self.capsuleMgr.getIndexerErrors(contentSourceName, instanceName)
+
+    def getPlatformContentError(self, contentSourceName, instanceName, errorId):
+        return self.capsuleMgr.getIndexerError(contentSourceName, instanceName,
+            errorId)
+
+    def updatePlatformContentError(self, contentSourceName, instanceName,
+            errorId, resourceError):
+        return self.capsuleMgr.updateIndexerError(contentSourceName,
+            instanceName, errorId, resourceError)
 
     @commitafter
     def createImage(self, hostname, image, buildData=None):
@@ -641,13 +697,7 @@ class Database(DBInterface):
                                             buildData)
         image.imageId = imageId
         return imageId
-    
-    @commitafter
-    def setImageFiles(self, hostname, imageId, imageFiles):
-        self.auth.requireAdmin()
-        self.imageMgr.setImageFiles(hostname, imageId, imageFiles)
 
-        
 
     @commitafter
     def createUser(self, username, password, fullName, email, 
@@ -663,9 +713,85 @@ class Database(DBInterface):
             return self.siteAuth.getIdentityModel()
         raise RuntimeError("Identity information is not loaded.")
 
+    @commitafter
+    def getPlatforms(self):
+        return self.platformMgr.getPlatforms()
+
+    @commitafter
+    def getPlatform(self, platformId):
+        return self.platformMgr.getPlatform(platformId)
+
     @readonly
-    def listPlatforms(self):
-        return self.platformMgr.listPlatforms()
+    def getPlatformImageTypeDefs(self, request, platformId):
+        return self.platformMgr.getPlatformImageTypeDefs(request, platformId)
+
+    @readonly
+    def getSourceTypes(self):
+        return self.platformMgr.getSourceTypes()
+
+    @readonly
+    def getSourceType(self, sourceType):
+        return self.platformMgr.getSourceType(sourceType)
+
+    @readonly
+    def getSourceTypeDescriptor(self, sourceType):
+        return self.platformMgr.getSourceTypeDescriptor(sourceType)
+
+    @commitafter
+    def getSources(self, sourceType):
+        return self.platformMgr.getSources(sourceType)
+
+    @commitafter
+    def getSourcesByPlatform(self, platformId):
+        return self.platformMgr.getSourcesByPlatform(platformId)
+
+    @commitafter
+    def getSource(self, shortName):
+        return self.platformMgr.getSource(shortName)
+
+    @readonly
+    def getSourceTypesByPlatform(self, platformId):
+        return self.platformMgr.getSourceTypesByPlatform(platformId)
+
+    @readonly
+    def getPlatformStatus(self, platformId):
+        return self.platformMgr.getPlatformStatus(platformId)
+
+    @readonly
+    def getPlatformStatusTest(self, platform):
+        return self.platformMgr.getPlatformStatusTest(platform)
+
+    @readonly
+    def getPlatformLoadStatus(self, platformId, jobId):
+        return self.platformMgr.getPlatformLoadStatus(platformId, jobId)
+
+    @commitafter
+    def getSourceStatusByName(self, sourceType, shortName):
+        return self.platformMgr.getSourceStatusByName(shortName)
+
+    @commitafter
+    def getSourceStatus(self, source):
+        return self.platformMgr.getSourceStatus(source)
+
+    @commitafter
+    def updateSource(self, shortName, sourceInstance):
+        return self.platformMgr.updateSource(sourceInstance)
+
+    @commitafter
+    def updatePlatform(self, platformId, platform):
+        return self.platformMgr.updatePlatform(platformId, platform)
+
+    @commitafter
+    def loadPlatform(self, platformId, platformLoad):
+        return self.platformMgr.loadPlatform(platformId, platformLoad)
+
+    @commitafter
+    def createSource(self, source):
+        return self.platformMgr.createSource(source)
+
+    @commitafter
+    def deleteSource(self, shortName):
+        return self.platformMgr.deleteSource(shortName)
 
     # doesn't actually commit anything to the database, instead
     # it pushes to the entitlement server.

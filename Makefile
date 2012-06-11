@@ -1,17 +1,18 @@
 #
-# Copyright (c) 2005-2007 rPath, Inc.
+# Copyright (c) 2005-2009 rPath, Inc.
 #
 
 # may be adjusted by recipe (via make commandline)
 export DESTDIR =	/
 export PRODUCT =	rbuilder
-export VERSION =	5.0
+export VERSION =	5.5.6
 export SHORTVER =	$(VERSION)
 export TOPDIR =		$(shell pwd)
 export DISTNAME =	$(PRODUCT)-$(SHORTVER)
 export DISTDIR =	$(TOPDIR)/$(DISTNAME)
 export PREFIX =		/usr
-export LIBDIR =		$(PREFIX)/lib
+export lib =		$(shell uname -m | sed -r '/x86_64|ppc64|s390x|sparc64/{s/.*/lib64/;q};s/.*/lib/')
+export LIBDIR =		$(PREFIX)/$(lib)
 export PYVER =		"`python -c 'import sys; print sys.version[0:3]'`"
 
 # from here on shouldn't need overriding

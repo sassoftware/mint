@@ -65,9 +65,8 @@ class ReposManagerTest(mint_rephelp.MintDatabaseHelper, auth_helper.AuthHelper):
         product = db.getProduct(u'bar')
         self.failUnless(isinstance(product.hostname, str))
         self.failUnlessEqual(product.hostname, "bar")
-        # Grr, we don't get back a Unicode string automatically.
         self.failUnlessEqual(product.description,
-            'Some desc with a non-ascii \xc5\xa3 character')
+            u'Some desc with a non-ascii \u0163 character')
 
     def testPublicCreateRepository(self):
         db = self.openMintDatabase()
@@ -151,7 +150,6 @@ class ReposManagerTest(mint_rephelp.MintDatabaseHelper, auth_helper.AuthHelper):
         cfg = reposMgr.getConaryConfig()
         self.assertEqual(cfg.repositoryMap['localhost.abc'],
                 'https://test.rpath.local2:0/repos/localhost/')
-        # FIXME - is this right??
         self.assertEqual(cfg.user.find('localhost.abc'),
                 ('mintauth', 'mintpass'))
 

@@ -8,9 +8,11 @@ import fcntl
 import logging
 import os
 import os.path
+import signal
 import sys
 import traceback
 from conary.lib.log import logger
+from mint import config
 from mint.lib import mintutils
 
 log = logging.getLogger(__name__)
@@ -26,14 +28,16 @@ class GenericScript(object):
     logFileName = None
     logPath = None
     newLogger = False
+    timeout = None
 
     def __init__(self):
         self.name = os.path.basename(sys.argv[0])
         self.resetLogging()
 
-    def resetLogging(self):
+    def resetLogging(self, quiet=False):
         if self.newLogger:
-            mintutils.setupLogging(self.logPath, consoleLevel=logging.INFO,
+            level = quiet and logging.ERROR or logging.INFO
+            mintutils.setupLogging(self.logPath, consoleLevel=level,
                     fileLevel=logging.DEBUG)
             # Set the conary logger to not eat messages
             logger.setLevel(logging.NOTSET)
@@ -66,12 +70,21 @@ class GenericScript(object):
             self.logPath = os.path.join(cfg.logPath, self.logFileName)
             self.resetLogging()
 
+    def loadConfig(self, cfgPath=config.RBUILDER_CONFIG):
+        self.setConfig(config.getConfig(cfgPath))
+
     def run(self):
         """ 
         Call this to run the script action. 
         """
         try:
             return self._run()
+        except KeyboardInterrupt:
+            print
+            print 'interrupted'
+            return 1
+        except SystemExit, err:
+            return err.code
         except:
             log.exception("Unhandled exception in script:")
             return 1
@@ -112,6 +125,10 @@ class GenericScript(object):
             return self._runAction()
 
     def _runAction(self):
+        if self.timeout:
+            signal.signal(signal.SIGALRM, self._onTimeout)
+            signal.alarm(self.timeout)
+
         exitcode = 1
         try:
             exitcode = self.action()
@@ -123,6 +140,9 @@ class GenericScript(object):
             log.exception("Unhandled exception in script action:")
         self.cleanup()
         return exitcode
+
+    def _onTimeout(self, signum, sigtb):
+        raise RuntimeError("script %s timed out" % (self.name,))
 
 
 # XXX: this should probably be /var/lock, but we need a properly setgid()

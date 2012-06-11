@@ -1,0 +1,4 @@
+#!/usr/bin/python
+import sys
+from mint.scripts.job_cleanup import JobCleanupScript
+sys.exit(JobCleanupScript().run())

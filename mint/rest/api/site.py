@@ -4,12 +4,16 @@
 # All Rights Reserved
 #
 
+import os
+
 from conary import constants as conaryConstants
+from rmake import constants as rmakeConstants
 from restlib.controller import RestController
 from rpath_proddef import api1 as proddef
 
 from mint import constants
 from mint import maintenance
+from mint.rest.api import capsules
 from mint.rest.api import models
 from mint.rest.api import product
 from mint.rest.api import notices
@@ -23,8 +27,11 @@ class RbuilderRestServer(RestController):
             'projects' : product.ProductController,
             'users'    : users.UserController,
             'platforms' : platforms.PlatformController,
+            'contentSources' : platforms.SourceTypeController,
             'registration' : registration.RegistrationController,
-            'notices'  : notices.NoticesController,}
+            'notices'  : notices.NoticesController,
+            'capsules'  : capsules.CapsulesController,
+            'reports/'  : 'getReportsList',}
 
     def __init__(self, cfg, db):
         self.cfg = cfg
@@ -37,8 +44,12 @@ class RbuilderRestServer(RestController):
         identity = self.db.getIdentity()
         maintMode = bool(maintenance.getMaintenanceMode(self.cfg))
         proddefSchemaVersion = proddef.BaseDefinition.version
+        username=((request.mintAuth and request.mintAuth.username) or 'anonymous')
         return models.RbuilderStatus(version=constants.mintVersion,
-                                     conaryVersion=conaryConstants.version,
+                                     conaryVersion=conaryConstants.changeset,
+                                     rmakeVersion=rmakeConstants.version,
+                                     userName=username,
+                                     hostName=os.uname()[1],
                                      isRBO=self.cfg.rBuilderOnline, 
                                      identity=identity,
                                      maintMode=maintMode,
@@ -51,3 +62,7 @@ class RbuilderRestServer(RestController):
         if result[-1] == '/':
             return result[:-1] + request.extension  + '/'
         return result + request.extension
+
+    # This is a handoff to the django URIs
+    def getReportsList(self, request):
+        return None

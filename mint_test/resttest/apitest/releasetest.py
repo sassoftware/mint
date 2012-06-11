@@ -63,6 +63,7 @@ class ReleasesTest(restbase.BaseRestTest):
                                    buildtypes.TARBALL,
                                    name = 'Image 3')
         self.setImageFiles(db, self.productShortName, imageId)
+        db.commit()
 
         client = self.getRestClient(admin=True, username='adminuser')
         uri = 'products/testproject/releases?limit=1'

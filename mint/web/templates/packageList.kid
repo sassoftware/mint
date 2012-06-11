@@ -48,7 +48,7 @@
                             <tbody>
                                 <tr py:for="troveName, data in sorted(pkgList.items())">
                                     <?python
-                                        label = data['develStageLabel']
+                                        label = data['stageLabel']
                                         prodVer = data['productDefinition']['version']
                                         namespace = data['productDefinition']['namespace']
                                     ?>

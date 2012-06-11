@@ -10,9 +10,23 @@ class InboundMirrorsTable(database.KeyedTable):
     key = 'inboundMirrorId'
 
     fields = ['inboundMirrorId', 'targetProjectId', 'sourceLabels',
-              'sourceUrls', 'sourceAuthType', 'sourceUsername',
+              'sourceUrl', 'sourceAuthType', 'sourceUsername',
               'sourcePassword', 'sourceEntitlement',
               'mirrorOrder', 'allLabels']
+
+    def getIdByHostname(self, hostname):
+        cu = self.db.cursor()
+        sql = """
+            SELECT inboundMirrorId, sourceLabels, allLabels
+            FROM inboundMirrors
+        """
+        cu.execute(sql)
+        rows = cu.fetchall()
+        ret = []
+        for row in rows:
+            host = row[1].split('@')[0]
+            ret.append(row)
+        return ret
 
 class OutboundMirrorsTable(database.KeyedTable):
     name = 'OutboundMirrors'
@@ -131,6 +145,17 @@ class RepNameMapTable(database.DatabaseTable):
         cu.execute("SELECT COUNT(*) FROM RepNameMap WHERE fromName = ?", fromName)
         count = cu.fetchone()[0]
         return bool(count)
+
+    def getCountByToName(self, toName):
+        cu = self.db.cursor()
+        cu.execute("SELECT COUNT(*) FROM RepNameMap WHERE toName = ?", toName)
+        count = cu.fetchone()[0]
+        return bool(count)
+
+    @database.dbWriter
+    def deleteByToName(self, cu, toName):
+        cu.execute("DELETE FROM RepNameMap WHERE toName = ?", toName)
+        return
 
 class UpdateServicesTable(database.KeyedTable):
     name = 'UpdateServices'

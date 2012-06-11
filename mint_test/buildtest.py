@@ -12,6 +12,7 @@ import sys
 import time
 import tempfile
 import simplejson
+from testutils import mock
 
 from mint_rephelp import MintRepositoryHelper
 from mint_rephelp import MINT_HOST, MINT_DOMAIN, MINT_PROJECT_DOMAIN
@@ -320,10 +321,10 @@ class BuildTest(fixtures.FixturedUnitTest):
         client = self.getClient("owner")
         buildId = data['buildId']
 
-        class MockMcpClient(object):
-            jobStatus = lambda *args, **kwargs: (jobstatus.RUNNING, "starting")
-        client.server._server._getMcpClient = \
-                lambda *args, **kwargs: MockMcpClient()
+        cu = db.cursor()
+        cu.execute("UPDATE Builds SET status = ?, statusMessage = ? "
+                "WHERE buildId = ?", jobstatus.RUNNING, "starting", buildId)
+        db.commit()
 
         self.assertEquals(client.server.getBuildStatus(buildId),
                 {'status': jobstatus.RUNNING, 'message': 'starting'})
@@ -739,7 +740,6 @@ class BuildTest(fixtures.FixturedUnitTest):
                 {'amiId': 'bogusAMIId',
                     'enumArg': '2',
                     'boolArg': False,
-                    'jsversion': 'None',
                     'amiManifestName,': 'bogusManifestName',
                     'stringArg': '', 'intArg': 0})
 
@@ -906,7 +906,7 @@ class BuildTest(fixtures.FixturedUnitTest):
         self.failUnlessEqual(set(str(x) for x in buildDict.keys()),
             set(str(x) for x in ['UUID', 'buildType', 'data', 'description', 'name', 'outputToken',
              'project', 'protocolVersion', 'proxy', 'troveFlavor', 'troveName', 'outputUrl',
-             'troveVersion', 'type', 'buildId', 'outputUrl']))
+             'troveVersion', 'type', 'buildId', 'outputUrl', 'proddefLabel']))
 
         self.failUnlessEqual(set(buildDict['project']), set(['hostname', 'name', 'label', 'conaryCfg']))
 
@@ -1081,9 +1081,9 @@ class ProductVersionBuildTest(fixtures.FixturedProductVersionTest):
         # This product definition is based on the "Full" fixture
         pd = helperfuncs.sanitizeProductDefinition('The Foo Project',
                 'The foo project is TEH AWESOME',
-                'foo', MINT_PROJECT_DOMAIN, 'foo', 'fooV1',
+                'foo', MINT_PROJECT_DOMAIN, 'foo', 'FooV1',
                 'Version one is not vaporware',
-                'yournamespace')
+                'ns')
 #        pd.setBaseFlavor("~MySQL-python.threadsafe, ~X, ~!alternatives, !bootstrap, ~builddocs, ~buildtests, !cross, ~desktop, ~!dietlibc, ~!dom0, ~!domU, ~emacs, ~gcj, ~gnome, ~grub.static, ~gtk, ~ipv6, ~kde, ~!kernel.debug, ~kernel.debugdata, ~!kernel.numa, ~kernel.smp, ~krb, ~ldap, ~nptl, ~!openssh.smartcard, ~!openssh.static_libcrypto, pam, ~pcre, ~perl, ~!pie, ~!postfix.mysql, ~python, ~qt, ~readline, ~!sasl, ~!selinux, ~sqlite.threadsafe, ssl, ~tcl, tcpwrappers, ~tk, ~uClibc, !vmware, ~!xen, ~!xfce, ~!xorg-x11.xprint")
         pd.setImageGroup('group-dist')
         # getInitialProductDefinition currently adds stages, but
@@ -1238,6 +1238,9 @@ class ProductVersionBuildTest(fixtures.FixturedProductVersionTest):
         build = client.getBuild(buildIds[0])
         self.assertEquals(build.getDataDict().get('showMediaCheck'), True)
 
+        data = simplejson.loads(client.server.serializeBuild(buildIds[0]))
+        self.assertEquals(data['proddefLabel'], 'foo.rpath.local2@ns:foo-FooV1')
+
     @fixtures.fixture('Full')
     def testBuildsFromProductDefinitionFilteredByBuildName(self, db, data):
         # Surprisingly, setUp runs before fixtureFull; we need to get rid of
@@ -1269,14 +1272,14 @@ class ProductVersionBuildTest(fixtures.FixturedProductVersionTest):
         buildIds = \
             client.newBuildsFromProductDefinition(versionId, 'Development',
                                                   False, reqBuildNames,
-                  '/foo.rpath.local2@yournamespace:foo-fooV1-devel/2-1-1')
+                  '/foo.rpath.local2@ns:foo-fooV1-devel/2-1-1')
         # Should have created 2 builds for Development stage
         self.assertEquals(1, len(buildIds))
 
         builds = [ client.getBuild(x) for x in buildIds ]
         buildNames = set(x.name for x in builds)
         self.failUnlessEqual(buildNames, set(reqBuildNames))
-        assert(builds[0].troveVersion == '/foo.rpath.local2@yournamespace:foo-fooV1-devel/0.000:2-1-1')
+        assert(builds[0].troveVersion == '/foo.rpath.local2@ns:foo-fooV1-devel/0.000:2-1-1')
 
     @fixtures.fixture('Full')
     @testsuite.tests('RBL-2924')
@@ -1364,25 +1367,25 @@ class ProductVersionBuildTest(fixtures.FixturedProductVersionTest):
              'buildFlavorName': 'Generic x86 (32-bit)',
              'buildTypeName'  : buildtypes.typeNamesMarketing[\
                                 buildtypes.INSTALLABLE_ISO],
-             'imageGroup'     : u'group-dist=foo.%s@yournamespace:foo-fooV1-devel' % MINT_PROJECT_DOMAIN
+             'imageGroup'     : u'group-dist=foo.%s@ns:foo-fooV1-devel' % MINT_PROJECT_DOMAIN
             }, 
             {'buildName'      : u'ISO 64', 
              'buildFlavorName': 'Generic x86 (64-bit)',
              'buildTypeName'  : buildtypes.typeNamesMarketing[\
                                 buildtypes.INSTALLABLE_ISO],
-             'imageGroup'     : u'group-dist=foo.%s@yournamespace:foo-fooV1-devel' % MINT_PROJECT_DOMAIN
+             'imageGroup'     : u'group-dist=foo.%s@ns:foo-fooV1-devel' % MINT_PROJECT_DOMAIN
              },
              {'buildName'     : u'VMWare 64', 
              'buildFlavorName': 'VMware x86 (64-bit)',
              'buildTypeName'  : buildtypes.typeNamesMarketing[\
                                 buildtypes.VMWARE_IMAGE],
-             'imageGroup'     : u'group-dist=foo.%s@yournamespace:foo-fooV1-devel' % MINT_PROJECT_DOMAIN
+             'imageGroup'     : u'group-dist=foo.%s@ns:foo-fooV1-devel' % MINT_PROJECT_DOMAIN
              },
              {'buildName'     : u'AMI 64', 
              'buildFlavorName': 'AMI x86 (64-bit)',
              'buildTypeName'  : buildtypes.typeNamesMarketing[\
                                 buildtypes.XEN_OVA],
-             'imageGroup'     : u'group-dist=foo.%s@yournamespace:foo-fooV1-devel' % MINT_PROJECT_DOMAIN
+             'imageGroup'     : u'group-dist=foo.%s@ns:foo-fooV1-devel' % MINT_PROJECT_DOMAIN
              }
         ]
         
@@ -1392,7 +1395,7 @@ class ProductVersionBuildTest(fixtures.FixturedProductVersionTest):
              'buildFlavorName': 'Superfunk x86 (64-bit)',
              'buildTypeName'  : buildtypes.typeNamesMarketing[\
                                 buildtypes.INSTALLABLE_ISO],
-             'imageGroup'     : u'group-other=foo.%s@yournamespace:foo-fooV1-booya' % MINT_PROJECT_DOMAIN
+             'imageGroup'     : u'group-other=foo.%s@ns:foo-fooV1-booya' % MINT_PROJECT_DOMAIN
             }
         ]
 

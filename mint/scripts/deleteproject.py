@@ -28,7 +28,10 @@ class DeleteProject(scriptlibrary.SingletonScript):
             sys.exit("This script must be run as root")
 
         # make sure they want to do it
-        self.confirm(args)
+        if '--force' in args:
+            args.remove('--force')
+        else:
+            self.confirm(args)
         
         mintConfig = config.getConfig(self.cfgPath)
         self.setConfig(mintConfig)

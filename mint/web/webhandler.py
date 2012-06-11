@@ -17,6 +17,8 @@ import time
 
 import gettext
 
+from conary.lib import util
+
 from mod_python import apache
 from mod_python import Cookie
 
@@ -96,12 +98,13 @@ class WebHandler(object):
         return returner
 
     def _redirectHttp(self, location='', temporary=False):
-        while location and location[0] == '/':
-            location = location[1:]
-        location = self.baseUrl + location
         self._redirect(location, temporary=temporary)
 
     def _redirect(self, location, temporary = False):
+        if '://' not in location:
+            while location and location[0] == '/':
+                location = location[1:]
+            location = self.baseUrl + location
         setCacheControl(self.req, strict=True)
         self.req.headers_out['Location'] = location
 
@@ -266,6 +269,7 @@ def getHttpAuth(req):
             raise apache.SERVER_RETURN, apache.HTTP_BAD_REQUEST
 
         authToken = authString.split(":")
+        authToken[1] = util.ProtectedString(authToken[1])
 
     entitlement = req.headers_in.get('X-Conary-Entitlement', None)
     if entitlement is not None:

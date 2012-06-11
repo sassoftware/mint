@@ -26,7 +26,7 @@ from conary.dbstore import sqlerrors, sqllib
 log = logging.getLogger(__name__)
 
 # database schema major version
-RBUILDER_DB_VERSION = sqllib.DBversion(48, 3)
+RBUILDER_DB_VERSION = sqllib.DBversion(48, 15)
 
 
 def _createTrigger(db, table, column = "changed"):
@@ -507,6 +507,11 @@ def _createRepNameMap(db):
     cu = db.cursor()
     changed = False
 
+    # NB: This table is dead. It is still referenced in a few places, but it
+    # was such an awful and tremendously confusing idea that it has been
+    # superceded by the "fqdn" column in Projects. Please delete references to
+    # it when it is safe to do so.
+
     if 'RepNameMap' not in db.tables:
         cu.execute("""
         CREATE TABLE RepNameMap (
@@ -724,6 +729,317 @@ def _createTargets(db):
 
     return changed
 
+def _createPlatforms(db):
+    cu = db.cursor()
+    changed = False
+
+    if 'Platforms' not in db.tables:
+        cu.execute("""
+            CREATE TABLE Platforms (
+                platformId  %(PRIMARYKEY)s,
+                label       varchar(255)    NOT NULL UNIQUE,
+                mode varchar(255) NOT NULL DEFAULT 'manual' check (mode in ('auto', 'manual')),
+                enabled     smallint NOT NULL DEFAULT 1,
+                projectId   smallint 
+                    REFERENCES Projects ON DELETE SET NULL
+            ) %(TABLEOPTS)s""" % db.keywords)
+        db.tables['Platforms'] = []
+        changed = True
+
+    if 'PlatformsContentSourceTypes' not in db.tables:
+        cu.execute("""
+            CREATE TABLE PlatformsContentSourceTypes (
+                platformId  integer NOT NULL
+                    REFERENCES platforms ON DELETE CASCADE,
+                contentSourceType  varchar(255) NOT NULL
+            ) %(TABLEOPTS)s""" % db.keywords)
+        db.tables['PlatformsContentSourceTypes'] = []
+        changed = True
+    changed |= db.createIndex('PlatformsContentSourceTypes',
+            'PlatformsContentSourceTypes_platformId_contentSourceType_uq',
+            'platformId,contentSourceType', unique = True)
+
+    if 'PlatformSources' not in db.tables:
+        cu.execute("""
+            CREATE TABLE PlatformSources (
+                platformSourceId  %(PRIMARYKEY)s,
+                name       varchar(255)    NOT NULL,
+                shortName  varchar(255)    NOT NULL UNIQUE,
+                defaultSource    smallint  NOT NULL DEFAULT 0,
+                contentSourceType  varchar(255) NOT NULL,
+                orderIndex  smallint NOT NULL
+            ) %(TABLEOPTS)s""" % db.keywords)
+        db.tables['PlatformSources'] = []
+        changed = True
+    changed |= db.createIndex('PlatformSources',
+            'PlatformSources_platformSourceId_defaultSource_uq',
+            'platformSourceId,defaultSource', unique = True)
+    changed |= db.createIndex('PlatformSources',
+            'PlatformSources_platformSourceId_orderIndex_uq',
+            'platformSourceId,orderIndex', unique = True)
+
+    if 'PlatformSourceData' not in db.tables:
+        cu.execute("""
+            CREATE TABLE PlatformSourceData (
+                platformSourceId    integer         NOT NULL
+                    REFERENCES PlatformSources ON DELETE CASCADE,
+                name                varchar(32)     NOT NULL,
+                value               text            NOT NULL,
+                dataType            smallint        NOT NULL,
+                PRIMARY KEY ( platformSourceId, name )
+            ) %(TABLEOPTS)s """ % db.keywords)
+        db.tables['PlatformSourceData'] = []
+        changed = True
+
+    if 'PlatformsPlatformSources' not in db.tables:
+        cu.execute("""
+            CREATE TABLE PlatformsPlatformSources (
+                platformId          integer         NOT NULL
+                    REFERENCES platforms ON DELETE CASCADE,
+                platformSourceId    integer         NOT NULL
+                    REFERENCES platformSources ON DELETE CASCADE
+            ) %(TABLEOPTS)s""" % db.keywords)
+        db.tables['PlatformsPlatformSources'] = []
+        changed = True
+
+    if 'PlatformLoadJobs' not in db.tables:
+        cu.execute("""
+            CREATE TABLE PlatformLoadJobs (
+                jobId %(PRIMARYKEY)s,
+                platformId          integer         NOT NULL
+                    REFERENCES platforms ON DELETE CASCADE,
+                message             varchar(255) NOT NULL,
+                done                smallint NOT NULL DEFAULT 0,
+                error               smallint NOT NULL DEFAULT 0
+            ) %(TABLEOPTS)s""" % db.keywords)
+        db.tables['PlatformLoadJobs'] = []
+        changed = True
+
+    return changed
+
+def _createCapsuleIndexerSchema(db):
+    # Even though sqlalchemy is perfectly capable of creating the schema, we
+    # will create it by hand instead. The main reason is that sqlite will get
+    # upset if schema changes underneath an open connection.
+    cu = db.cursor()
+    changed = False
+
+    tableName = 'ci_rhn_channels'
+    if tableName not in db.tables:
+        cu.execute("""
+            CREATE TABLE ci_rhn_channels (
+                channel_id %(PRIMARYKEY)s,
+                label VARCHAR(256) NOT NULL,
+                last_modified VARCHAR
+            ) %(TABLEOPTS)s""" % db.keywords)
+        db.tables[tableName] = []
+        changed = True
+    changed |= db.createIndex('ci_rhn_channels',
+        'ci_rhn_channels_label_idx_uq', 'label', unique = True)
+
+    tableName = 'ci_rhn_errata'
+    if tableName not in db.tables:
+        cu.execute("""
+            CREATE TABLE ci_rhn_errata (
+                errata_id %(PRIMARYKEY)s,
+                advisory VARCHAR NOT NULL,
+                advisory_type VARCHAR NOT NULL,
+                issue_date VARCHAR NOT NULL,
+                last_modified_date VARCHAR NOT NULL,
+                synopsis VARCHAR NOT NULL,
+                update_date VARCHAR NOT NULL
+            ) %(TABLEOPTS)s""" % db.keywords)
+        db.tables[tableName] = []
+        changed = True
+
+    tableName = 'ci_rhn_nevra'
+    if tableName not in db.tables:
+        cu.execute("""
+            CREATE TABLE ci_rhn_nevra (
+                nevra_id %(PRIMARYKEY)s,
+                name VARCHAR NOT NULL,
+                epoch INTEGER NOT NULL,
+                version VARCHAR NOT NULL,
+                release VARCHAR NOT NULL,
+                arch VARCHAR NOT NULL
+            ) %(TABLEOPTS)s""" % db.keywords)
+        db.tables[tableName] = []
+        changed = True
+    changed |= db.createIndex('ci_rhn_nevra',
+        'ci_rhn_nevra_n_e_v_r_a_idx_uq', 'name, epoch, version, release, arch',
+        unique = True)
+
+    tableName = 'ci_rhn_packages'
+    if tableName not in db.tables:
+        cu.execute("""
+            CREATE TABLE ci_rhn_packages (
+                package_id %(PRIMARYKEY)s,
+                nevra_id INTEGER NOT NULL
+                    REFERENCES ci_rhn_nevra ON DELETE CASCADE,
+                md5sum VARCHAR,
+                sha1sum VARCHAR,
+                last_modified VARCHAR NOT NULL,
+                path VARCHAR
+            ) %(TABLEOPTS)s""" % db.keywords)
+        db.tables[tableName] = []
+        changed = True
+    changed |= db.createIndex('ci_rhn_packages',
+        'ci_rhn_packages_nevra_id_last_modified_idx_uq',
+        'nevra_id, last_modified', unique = True)
+    changed |= db.createIndex('ci_rhn_packages',
+        'ci_rhn_packages_nevra_id_sha1sum_idx', 'nevra_id, sha1sum')
+
+    tableName = 'ci_rhn_package_failed'
+    if tableName not in db.tables:
+        cu.execute("""
+            CREATE TABLE ci_rhn_package_failed (
+                package_failed_id %(PRIMARYKEY)s,
+                package_id INTEGER NOT NULL
+                    REFERENCES ci_rhn_packages ON DELETE CASCADE,
+                failed_timestamp INTEGER NOT NULL,
+                failed_msg VARCHAR NOT NULL,
+                resolved VARCHAR
+            ) %(TABLEOPTS)s""" % db.keywords)
+        db.tables[tableName] = []
+        changed = True
+
+    tableName = 'ci_rhn_channel_package'
+    if tableName not in db.tables:
+        cu.execute("""
+            CREATE TABLE ci_rhn_channel_package (
+                channel_id  INTEGER NOT NULL
+                    REFERENCES ci_rhn_channels ON DELETE CASCADE,
+                package_id INTEGER NOT NULL
+                    REFERENCES ci_rhn_packages ON DELETE CASCADE
+            ) %(TABLEOPTS)s""" % db.keywords)
+        db.tables[tableName] = []
+        changed = True
+    changed |= db.createIndex('ci_rhn_channel_package',
+        'ci_rhn_channel_package_cid_pid_idx_uq', 'channel_id, package_id',
+        unique = True)
+    changed |= db.createIndex('ci_rhn_channel_package',
+        'ci_rhn_channel_package_pid_cid_idx', 'package_id, channel_id')
+
+    tableName = 'ci_rhn_errata_channel'
+    if tableName not in db.tables:
+        cu.execute("""
+            CREATE TABLE ci_rhn_errata_channel (
+                errata_id INTEGER NOT NULL
+                    REFERENCES ci_rhn_errata ON DELETE CASCADE,
+                channel_id  INTEGER NOT NULL
+                    REFERENCES ci_rhn_channels ON DELETE CASCADE
+            ) %(TABLEOPTS)s""" % db.keywords)
+        db.tables[tableName] = []
+        changed = True
+    changed |= db.createIndex('ci_rhn_errata_channel',
+        'ci_rhn_errata_channel_eid_cid_idx_uq', 'errata_id, channel_id',
+        unique = True)
+    changed |= db.createIndex('ci_rhn_errata_channel',
+        'ci_rhn_errata_channel_cid_eid_idx', 'channel_id, errata_id')
+
+    tableName = 'ci_rhn_errata_nevra_channel'
+    if tableName not in db.tables:
+        cu.execute("""
+            CREATE TABLE ci_rhn_errata_nevra_channel (
+                errata_id INTEGER NOT NULL
+                    REFERENCES ci_rhn_errata ON DELETE CASCADE,
+                nevra_id INTEGER NOT NULL
+                    REFERENCES ci_rhn_nevra ON DELETE CASCADE,
+                channel_id INTEGER NOT NULL
+                    REFERENCES ci_rhn_channels ON DELETE CASCADE,
+                PRIMARY KEY (errata_id, nevra_id, channel_id)
+            ) %(TABLEOPTS)s""" % db.keywords)
+        db.tables[tableName] = []
+        changed = True
+
+    return changed
+
+def _createCapsuleIndexerYumSchema(db):
+    cu = db.cursor()
+    changed = False
+
+    tableName = 'ci_yum_repositories'
+    if tableName not in db.tables:
+        cu.execute("""
+            CREATE TABLE ci_yum_repositories (
+                yum_repository_id %(PRIMARYKEY)s,
+                label VARCHAR(256) NOT NULL,
+                timestamp VARCHAR,
+                checksum VARCHAR,
+                checksum_type VARCHAR
+            ) %(TABLEOPTS)s""" % db.keywords)
+        db.tables[tableName] = []
+        changed = True
+    changed |= db.createIndex('ci_yum_repositories',
+        'ci_yum_repositories_label_idx_uq', 'label', unique = True)
+
+    tableName = 'ci_yum_packages'
+    if tableName not in db.tables:
+        cu.execute("""
+            CREATE TABLE ci_yum_packages (
+                package_id %(PRIMARYKEY)s,
+                nevra_id INTEGER NOT NULL
+                    REFERENCES ci_rhn_nevra ON DELETE CASCADE,
+                sha1sum VARCHAR,
+                checksum VARCHAR NOT NULL,
+                checksum_type VARCHAR NOT NULL,
+                path VARCHAR
+            ) %(TABLEOPTS)s""" % db.keywords)
+        db.tables[tableName] = []
+        changed = True
+    changed |= db.createIndex('ci_yum_packages',
+        'ci_yum_packages_nevra_id_checksum_idx_uq',
+        'nevra_id, checksum, checksum_type', unique = True)
+
+    tableName = 'ci_yum_repository_package'
+    if tableName not in db.tables:
+        cu.execute("""
+            CREATE TABLE ci_yum_repository_package (
+                yum_repository_id INTEGER NOT NULL
+                    REFERENCES ci_yum_repositories ON DELETE CASCADE,
+                package_id INTEGER NOT NULL
+                    REFERENCES ci_yum_packages ON DELETE CASCADE,
+                location VARCHAR NOT NULL,
+                PRIMARY KEY (yum_repository_id, package_id)
+            ) %(TABLEOPTS)s""" % db.keywords)
+        db.tables[tableName] = []
+        changed = True
+    return changed
+
+def _createRepositoryLogSchema(db):
+    # Repository Log scraping table and the status table for th scraper 
+    cu = db.cursor()
+    changed = False
+
+    if 'systemupdate' not in db.tables:
+        cu.execute("""
+            CREATE TABLE systemupdate
+            (
+                systemupdateid %(PRIMARYKEY)s, 
+                servername character varying(128) NOT NULL,
+                repositoryname character varying(128) NOT NULL,
+                updatetime numeric(14,3) NOT NULL,
+                updateuser character varying(128) NOT NULL
+            ) %(TABLEOPTS)s""" % db.keywords)
+        db.tables['systemupdate'] = []
+        changed = True
+    changed |= db.createIndex('systemupdate',
+        'systemupdate_repo_idx', 'repositoryname')
+
+    if 'repositorylogstatus' not in db.tables:
+        cu.execute("""
+            CREATE TABLE repositorylogstatus
+            (
+                logname varchar(128) PRIMARY KEY,
+                inode integer NOT NULL,
+                logoffset integer NOT NULL
+            ) %(TABLEOPTS)s""" % db.keywords)
+        db.tables['repositorylogstatus'] = []
+        changed = True
+
+    return changed
+
+
 # create the (permanent) server repository schema
 def createSchema(db, doCommit=True):
     if not hasattr(db, "tables"):
@@ -748,13 +1064,14 @@ def createSchema(db, doCommit=True):
     changed |= _createEC2Data(db)
     changed |= _createSessions(db)
     changed |= _createTargets(db)
+    changed |= _createPlatforms(db)
+    changed |= _createCapsuleIndexerSchema(db)
+    changed |= _createRepositoryLogSchema(db)
+    changed |= _createCapsuleIndexerYumSchema(db)
 
     if doCommit:
-        if changed:
-            db.commit()
-            db.loadSchema()
-        else:
-            db.rollback()
+        db.commit()
+        db.loadSchema()
 
     return changed
 
@@ -835,12 +1152,19 @@ def loadSchema(db, cfg=None, should_migrate=False):
         converting the rBuilder database to a supported version.""", version)
 
     # if we reach here, a schema migration is needed/requested
-    version = migrate.migrateSchema(db, cfg)
-    db.loadSchema()
+    db.transaction()
+    try:
+        version = migrate.migrateSchema(db, cfg)
+        db.loadSchema()
 
-    # run through the schema creation to create any missing objects
-    log.debug("Checking for and creating missing schema elements")
-    createSchema(db)
+        # run through the schema creation to create any missing objects
+        log.debug("Checking for and creating missing schema elements")
+        createSchema(db, doCommit=False)
+    except:
+        db.rollback()
+        raise
+    else:
+        db.commit()
     if version > 0 and version != RBUILDER_DB_VERSION:
         # schema creation/conversion failed. SHOULD NOT HAPPEN!
         raise sqlerrors.SchemaVersionError("""

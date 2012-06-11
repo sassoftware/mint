@@ -257,6 +257,15 @@ class SiteAuthorization(object):
         else:
             return None
 
+    def getApi(self):
+        """
+        Fetch the /api page from the service.  Primarily for testing
+        connectivity.
+        """
+        url = self.cfg.keyUrl.replace('/key/', '/api')
+        fObj = self._urlopen(url)
+        return fObj.read()
+
     # Writers
     def generate(self):
         """

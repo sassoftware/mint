@@ -156,7 +156,7 @@ class XobjConverter(Converter):
     def fromXobjObject(self, xobjObject, modelClass, context):
         entry = (modelClass, xobjObject, {}, None, None)
 
-        # toProcess is FIFO - deque is better.
+        # toProcess is FILO
         toProcess = [(entry, False)]
 
         while toProcess:
@@ -176,7 +176,9 @@ class XobjConverter(Converter):
                         # now a list :-/ )
                         # There is no need to finalize a list
                         lst = attrs[name] = []
-                        for lstValue in value:
+                        # toProcess is FILO, so we need to push the first item
+                        # in the list, last.
+                        for lstValue in reversed(value):
                             # doesn't work for non-Model lists.
                             # List sub-entries do not get their own name, it
                             # is part of the child model
@@ -205,7 +207,8 @@ class XobjConverter(Converter):
 
     def toText(self, modelInstance, context):
         xobjObject = self.getXobjObject(modelInstance, context)
-        return xobj.toxml(xobjObject, xobjObject.__class__.__name__)
+        nsmap = getattr(modelInstance, 'nsmap', {})
+        return xobj.toxml(xobjObject, xobjObject.__class__.__name__, nsmap=nsmap)
 
     def fromText(self, text, modelClass, context):
         className = self.xobjClass.__name__

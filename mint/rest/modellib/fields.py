@@ -5,6 +5,7 @@
 #
 from conary import versions
 from conary.deps import deps
+from conary.lib import util
 
 from mint.rest import modellib
 from mint.rest.modellib import Field
@@ -24,6 +25,9 @@ class CharField(Field):
         else:
             return unicode(value)
 
+class ProtectedField(CharField):
+    def _valueFromString(self, value):
+        return util.ProtectedString(unicode(value))
 
 class BooleanField(Field):
     def _valueFromString(self, value):
@@ -176,3 +180,4 @@ class ListField(Field):
     
     def isList(self):
         return True
+

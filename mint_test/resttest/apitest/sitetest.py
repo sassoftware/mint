@@ -16,6 +16,7 @@ from conary import constants as conaryConstants
 from conary.lib import util
 from mint import buildtypes
 from mint import constants
+from rmake import constants as rmakeConstants
 
 from rpath_proddef import api1 as proddef
 
@@ -34,6 +35,9 @@ class SiteTest(restbase.BaseRestTest):
 <rbuilderStatus id="http://%(server)s:%(port)s/api">
   <version>%(version)s</version>
   <conaryVersion>%(conaryversion)s</conaryVersion>
+  <rmakeVersion>%(rmakeversion)s</rmakeVersion>
+  <userName>anonymous</userName>
+  <hostName>%(hostname)s</hostName>
   <isRBO>false</isRBO>
   <identity>
     <rbuilderId></rbuilderId>
@@ -42,8 +46,9 @@ class SiteTest(restbase.BaseRestTest):
   </identity>
   <products href="http://%(server)s:%(port)s/api/products/"/>
   <users href="http://%(server)s:%(port)s/api/users/"/>
-  <platforms href="http://%(server)s:%(port)s/api/platforms"/>
+  <platforms href="http://%(server)s:%(port)s/api/platforms/"/>
   <registration href="http://%(server)s:%(port)s/api/registration"/>
+  <reports href="http://%(server)s:%(port)s/api/reports/"/>
   <maintMode>false</maintMode>
   <proddefSchemaVersion>%(proddefVer)s</proddefSchemaVersion>
 </rbuilderStatus>
@@ -51,7 +56,9 @@ class SiteTest(restbase.BaseRestTest):
         self.assertBlobEquals(response,
              exp % dict(port = client.port, server = client.server,
                          version=constants.mintVersion,
-                         conaryversion=conaryConstants.version,
+                         conaryversion=conaryConstants.changeset,
+                         rmakeversion=rmakeConstants.version,
+                         hostname=os.uname()[1],
                          proddefVer=proddef.BaseDefinition.version))
 
 if __name__ == "__main__":

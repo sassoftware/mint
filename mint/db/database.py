@@ -14,6 +14,7 @@ from mint.db import jobs
 from mint.db import news
 from mint.db import mirror
 from mint.db import pkgindex
+from mint.db import platforms
 from mint.db import projects
 from mint.db import pubreleases
 from mint.db import requests
@@ -62,12 +63,20 @@ class TableCache(object):
         self.targets = targets.TargetsTable(db)
         self.targetData = targets.TargetDataTable(db)
 
+        self.platforms = platforms.PlatformsTable(db, cfg)
+        self.platformSources = platforms.PlatformSourcesTable(db, cfg)
+        self.platformSourceData = platforms.PlatformSourceDataTable(db)
+        self.platformsPlatformSources = platforms.PlatformsPlatformSourcesTable(db)
+        self.platformsContentSourceTypes = platforms.PlatformsContentSourceTypesTable(db)
+        self.platformLoadJobs = platforms.PlatformLoadJobsTable(db)
+
         self.users.confirm_table.db = db
         self.newsCache.ageTable.db = db
         self.projects.reposDB.cfg = cfg
         # make sure we commit after creating all of this, as
         # instantiating some of these tables may perform inserts...
-        db.commit()
+        if db.inTransaction(True):
+            db.commit()
 
 
 class Database(object):
@@ -77,8 +86,9 @@ class Database(object):
         self._db = db
         self._autoDb = False
 
-        tables = self._openDb()
+        self._openDb()
 
+    def _copyTables(self, tables):
         self.labels = tables.labels
         self.projects = tables.projects
         self.buildFiles = tables.buildFiles
@@ -111,11 +121,15 @@ class Database(object):
         self.launchedAMIs = tables.launchedAMIs
         self.communityIds = tables.communityIds
         self.productVersions = tables.productVersions
+        self.platforms = tables.platforms
+        self.platformSources = tables.platformSources
+        self.platformSourceData = tables.platformSourceData
+        self.platformsPlatformSources = tables.platformsPlatformSources
+        self.platformsContentSourceTypes = tables.platformsContentSourceTypes
+        self.platformLoadJobs = tables.platformLoadJobs
 
         self.targets = tables.targets
         self.targetData = tables.targetData
-
-        self.normalizeMirrorOrder()
 
     @property
     def db(self):
@@ -136,12 +150,20 @@ class Database(object):
         except sqlerrors.SchemaVersionError:
             rethrow(mint_error.DatabaseVersionMismatch, False)
 
-        return TableCache(self._db, self._cfg)
+        tables = TableCache(self._db, self._cfg)
+        self._copyTables(tables)
+        self.normalizeMirrorOrder()
 
     def close(self):
         if self._autoDb:
             self._db.close()
             self._db = None
+
+    def reopen_fork(self, forked=False):
+        """Re-open the database connection after a fork()."""
+        self._db.close_fork()
+        self._db = None
+        self._openDb()
 
     def cursor(self):
         return self._db.cursor()

@@ -1,5 +1,5 @@
 #
-# Copyright (c) 2009 rPath, Inc.
+# Copyright (c) 2009-2010 rPath, Inc.
 #
 # All rights reserved.
 #
@@ -12,10 +12,12 @@ A unified interface to rBuilder project repositories.
 import errno
 import logging
 import os
+import time
 import weakref
 from conary import conarycfg
 from conary import conaryclient
 from conary import dbstore
+from conary.dbstore.sqlerrors import CursorError
 from conary.lib import util
 from conary.repository import errors as reposerrors
 from conary.repository import netclient
@@ -100,7 +102,10 @@ class RepositoryManager(object):
                         WHERE projectId = targetProjectId
                         ) AS localMirror,
                     commitEmail, %s, url, authType, username, password,
-                    entitlement
+                    entitlement, EXISTS (
+                        SELECT * FROM PlatformsContentSourceTypes
+                            JOIN Platforms AS plat USING (platformId)
+                        WHERE plat.projectId = projectId) AS hasContentSources
                 FROM Projects LEFT JOIN Labels USING ( projectId )
                 %s ORDER BY projectId ASC""" % (
                     (self.db.driver == 'mysql' and '`database`' or 'database'),
@@ -183,6 +188,8 @@ class RepositoryManager(object):
 
 
 class RepositoryHandle(object):
+    preloadSuffix = 'sql'
+
     def __init__(self, manager, projectInfo):
         self._manager = weakref.ref(manager)
         self._cfg = manager.cfg
@@ -222,7 +229,7 @@ class RepositoryHandle(object):
         return self._projectInfo['fqdn']
     @property
     def hasDatabase(self):
-        return bool((not self.isExternal) or self.isLocalMirror)
+        return self._projectInfo['database'] is not None
     @property
     def isExternal(self):
         return bool(self._projectInfo['external'])
@@ -241,6 +248,9 @@ class RepositoryHandle(object):
     @property
     def shortName(self):
         return self._projectInfo['shortname']
+    @property
+    def hasContentSources(self):
+        return bool(self._projectInfo['hasContentSources'])
 
 
     # Getters for repository objects
@@ -268,12 +278,11 @@ class RepositoryHandle(object):
         Return the "database tuple" for this project. Don't call this
         directly if you intend to open the database; use getReposDB().
         """
-        if not self.hasDatabase:
+        database = self._projectInfo['database']
+        if database is None:
             raise RuntimeError("Cannot open database for external project %r"
                     % (self.shortName,))
-
-        database = self._projectInfo['database']
-        if ' ' in database:
+        elif ' ' in database:
             # It's a connect string w/ driver and path
             driver, path = database.split(' ', 1)
         else:
@@ -406,10 +415,10 @@ class RepositoryHandle(object):
     @cached
     def getProxyServer(self):
         """
-        Return a (cached) C{SimpleRepositoryFilter} for this project's
+        Return a (cached) C{CachingRepositoryServer} for this project's
         repository.
         """
-        return proxy.SimpleRepositoryFilter(self.getNetServerConfig(),
+        return proxy.CachingRepositoryServer(self.getNetServerConfig(),
                 self.getURL(), self.getNetServer())
 
     @cached
@@ -499,16 +508,18 @@ class RepositoryHandle(object):
         Create a repository database for this project including associated
         infrastructure such as the content store and temporary storage.
         """
-        # Do the driver-specific bits first.
-        self._create()
-
-        # Set up some other infrastructure that is independent of the db.
+        # Set up some infrastructure that is independent of the db.
         nscfg = self.getNetServerConfig()
         util.mkdirChain(nscfg.tmpDir)
         for contDir in nscfg.contentsDir.split():
             util.mkdirChain(contDir)
 
-        # Initialize the repos schema.
+        # Check for a preload tarball.
+        if self.preload():
+            return
+
+        # Now do the driver-specfic bits and initialize the schema.
+        self._create()
         db = self.getReposDB()
         conary_schema.loadSchema(db)
 
@@ -566,6 +577,32 @@ class RepositoryHandle(object):
         e.g. contents.
         """
         raise NotImplementedError
+
+    def preload(self):
+        """ Load contents and database from a compressed tarball on disk. """
+
+        workDir = os.path.dirname(os.path.normpath(self.contentsDirs[0]))
+        preloadPath = os.path.join(workDir, 'preload.tar.xz')
+        if not os.path.isfile(preloadPath):
+            return False
+
+        # Preloads with multiple content store dirs are not supported yet.
+        assert len(self.contentsDirs) == 1
+
+        log.info("Preloading repository %s from archive at %s", self.fqdn,
+                preloadPath)
+
+        # Extract contents and dump file.
+        util.execute("xzdec '%s' | tar -C '%s' -x" % (preloadPath, workDir))
+
+        # Restore and delete the dump file.
+        dumpPath = os.path.join(workDir, 'database.' + self.preloadSuffix)
+        self.restore(dumpPath)
+        os.unlink(dumpPath)
+
+        log.info("Preload of %s is complete", self.fqdn)
+
+        return True
 
     # Repository management
     @withNetServer
@@ -640,9 +677,30 @@ class SQLiteRepositoryHandle(RepositoryHandle):
 
 
 class PostgreSQLRepositoryHandle(RepositoryHandle):
+    preloadSuffix = 'pgtar'
+
     @cached
     def _getName(self):
         return self.dbTuple[1].rsplit('/')[-1]
+
+    @cached
+    def _splitParams(self):
+        driver, path = self.dbTuple
+        host, user = 'localhost', 'postgres'
+        if driver == 'pgpool':
+            port = 6432
+        else:
+            port = 5432
+        if '/' in path:
+            host, database = path.rsplit('/', 1)
+            if '@' in host:
+                user, host = host.split('@', 1)
+            if ':' in host:
+                host, port = host.rsplit(':', 1)
+                port = int(port)
+        else:
+            database = path
+        return host, port, user, database
 
     def _getControlConnection(self):
         "Return a connection to the control database."
@@ -655,20 +713,38 @@ class PostgreSQLRepositoryHandle(RepositoryHandle):
         controlPath = base + 'postgres'
         return dbstore.connect(controlPath, driver)
 
+    def _getBouncerConnection(self):
+        """Return a connection to pgbouncer."""
+        driver, path = self.dbTuple
+
+        # Discard everything except the host/port
+        if '/' in path:
+            start = path.find('@')
+            end = path.find('/')
+            host = path[start + 1 : end]
+        else:
+            host = 'localhost:6432'
+
+        # Fill in the rest
+        # NB: don't use the pgpool driver or it will try to interrogate
+        # the admindb for schema information, which doesn't work.
+        bouncerPath = 'pgbouncer@%s/pgbouncer' % (host,)
+        return dbstore.connect(bouncerPath, 'postgresql')
+
     def _dbExists(self, controlDb):
         ccu = controlDb.cursor()
         ccu.execute("""SELECT COUNT(*) FROM pg_catalog.pg_database
                 WHERE datname = ?""", self._getName())
         return bool(ccu.fetchone()[0])
 
-    def _create(self):
+    def _create(self, empty=False):
         """
         PostgreSQL-specific repository creation.
 
         This is currently used by C{restore} as well so make sure it doesn't
         create anything that would interfere with the restore process.
         """
-        dbName = self._getName()
+        user, dbName = self._splitParams()[2:]
         controlDb = self._getControlConnection()
         ccu = controlDb.cursor()
 
@@ -678,7 +754,12 @@ class PostgreSQLRepositoryHandle(RepositoryHandle):
                     "creating project %r", dbName, self.shortName)
             raise RepositoryAlreadyExists(self.shortName)
 
-        ccu.execute("CREATE DATABASE %s ENCODING 'UTF8'" % (dbName,))
+        extra = ''
+        if empty:
+            # Clone template0 when restoring from a dump since the dump already
+            # has all the prefab stuff like plpgsql.
+            extra += ' TEMPLATE template0'
+        ccu.execute("CREATE DATABASE %s ENCODING 'UTF8'%s" % (dbName, extra))
 
     def drop(self):
         controlDb = self._getControlConnection()
@@ -687,21 +768,37 @@ class PostgreSQLRepositoryHandle(RepositoryHandle):
             return
 
         name = self._getName()
-        useBouncer = ':6432/' in self.dbTuple[1]
-        if useBouncer:
-            # pgbouncer normally holds idle connections for 45 seconds.
-            # PAUSEing causes it to close those connections, and prevents new
-            # ones from opening until the RESUME.
+        bcu = None
+        if ':6432/' in self.dbTuple[1]:
+            # pgbouncer normally holds idle connections for 45 seconds. Our
+            # version supports a custom KILL command that terminates all open
+            # client and server connections to that database and prevents new
+            # ones until the following RESUME. A little bit of trickery is
+            # needed to get around the fact that python-pgsql's primary API
+            # always uses prepared statements, which aren't supported by
+            # pgbouncer's admin interface.
+            bouncerDb = self._getBouncerConnection()
+            bcu = bouncerDb.cursor()
+            bcu._cursor._source.query("KILL " + name)
 
-            # Our psql bindings don't work with pgbouncer, so we have to do
-            # something incredibly lame...
-            util.execute("psql -U pgbouncer -p 6432 -c 'PAUSE %s'" % (name,))
+        try:
+            ccu = controlDb.cursor()
+            for n in range(5):
+                try:
+                    ccu.execute("DROP DATABASE %s" % (name,))
+                except CursorError, err:
+                    if 'is being accessed by other users' not in err.msg:
+                        raise
+                    time.sleep(1.0)
+                else:
+                    break
+            else:
+                log.error("Could not drop repository database %r because a "
+                        "connection is still open -- continuing.", name)
 
-        ccu = controlDb.cursor()
-        ccu.execute("DROP DATABASE %s" % (name,))
-
-        if useBouncer:
-            util.execute("psql -U pgbouncer -p 6432 -c 'RESUME %s'" % (name,))
+        finally:
+            if bcu:
+                bcu._cursor._source.query("RESUME " + name)
 
     def dump(self, path):
         controlDb = self._getControlConnection()
@@ -718,10 +815,22 @@ class PostgreSQLRepositoryHandle(RepositoryHandle):
 
         self.drop()
         if os.path.exists(path):
-            self._create()
-            # TODO: genericize
-            util.execute("psql -U postgres -p 5439 -f '%s' '%s' >/dev/null"
-                    % (path, dbName))
+            log.info("Restoring database dump for project %s", self.fqdn)
+            self._create(empty=True)
+
+            host, port, user, database = self._splitParams()
+            cxnArgs = "-h '%s' -p '%s' -U postgres" % (host, port)
+
+            if path.endswith('.pgtar'):
+                util.execute("pg_restore %s --single-transaction "
+                        "-d '%s' '%s'" % (cxnArgs, database, path))
+            else:
+                util.execute("psql %s -f '%s' '%s' >/dev/null"
+                        % (cxnArgs, path, dbName))
+
+            db = self.getReposDB(skipCache=True)
+            db.analyze()
+            db.close()
 
 
 class MultiShimServerCache(object):

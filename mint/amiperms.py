@@ -1,3 +1,5 @@
+import tarfile
+
 from mint import config
 from mint import ec2
 from mint import mint_error
@@ -81,18 +83,55 @@ class AMIPermissionsManager(object):
         # writers can view unpublished releases
         self._addAMIPermissionsForAccounts(writers, unpublished)
 
-    def _getEC2Client(self):
+    def getTargetData(self):
         targetId = self.db.targets.getTargetId('ec2', 'aws', None)
         if targetId is None:
             raise mint_error.EC2NotConfigured()
         amiData = self.db.targetData.getTargetData(targetId)
+        return amiData
+
+    def uploadBundle(self, filePath, callback = None):
+        targetData = self.getTargetData()
+        s3Bucket = targetData.get('ec2S3Bucket')
+        if s3Bucket is None:
+            raise mint_error.EC2NotConfigured()
+        client = self._getS3Client()
+        tarObject = tarfile.TarFile.open(filePath, "r:gz")
+        return client.uploadBundle(tarObject, s3Bucket, callback = callback)
+
+    def registerAMI(self, bucketName, manifestName, readers = None,
+            writers = None):
+        targetData = self.getTargetData()
+        launchUsers = targetData.get('ec2LaunchUsers', [])
+        launchGroups = targetData.get('ec2LaunchGroups', [])
+        readers = readers or []
+        writers = writers or []
+        if readers or writers:
+            # This is coming from server.py's serializeBuild
+            launchUsers = readers + writers
+            launchGroups = []
+        client = self._getEC2Client()
+        amiId, amiManifestName = client.registerAMI(bucketName, manifestName,
+            ec2LaunchUsers = launchUsers,
+            ec2LaunchGroups = launchGroups)
+
+        return amiId, amiManifestName
+
+    def _getEC2Client(self):
+        return self._getClient(ec2.EC2Wrapper)
+
+    def _getS3Client(self):
+        return self._getClient(ec2.S3Wrapper)
+
+    def _getClient(self, clientClass):
+        # make sure all the values are set
+        amiData = self.getTargetData()
         authToken = (amiData['ec2AccountId'],
                      amiData['ec2PublicKey'],
                      amiData['ec2PrivateKey'])
-        # make sure all the values are set
         if False in [ bool(x) for x in authToken ]:
             raise mint_error.EC2NotConfigured()
-        return ec2.EC2Wrapper(authToken, self.cfg.proxy.get('https'))
+        return clientClass(authToken, self.cfg.proxy.get('https'))
 
     def _hasAWSAccount(self, userId):
         return bool(self._getAWSAccountNumber(userId))

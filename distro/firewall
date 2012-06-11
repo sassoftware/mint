@@ -3,80 +3,34 @@
 :INPUT DROP [0:0]
 :FORWARD DROP [0:0]
 :OUTPUT ACCEPT [0:0]
-:FROM-OUTSIDE - [0:0]
-:FROM-SLAVE - [0:0]
-:FORWARD-SLAVE - [0:0]
-:FORWARD-PROXY - [0:0]
 
-
-## Universal input rules
+## INPUT rules
 # Allow loopback
 -A INPUT -i lo -j ACCEPT
+# Jobslave traffic shouldn't be using IPv4
+-A INPUT -i jm.+ -j DROP
 # Allow already-established connections
 -A INPUT -m state --state ESTABLISHED,RELATED -j ACCEPT
 # Allow ICMP
 -A INPUT -p icmp --icmp-type any -j ACCEPT
-# Route traffic from domUs to FROM-SLAVE chain 
--A INPUT -i vif+ -j FROM-SLAVE
-# Route all other traffic to FROM-OUTSIDE chain
--A INPUT -j FROM-OUTSIDE
+# Allow SSH, SNMP, nagios
+-A INPUT -m tcp -p tcp --dport 22 -j ACCEPT
+-A INPUT -m state --state NEW -m tcp -p tcp --dport 161 -j ACCEPT
+-A INPUT -m state --state NEW -m udp -p udp --dport 161 -j ACCEPT
+-A INPUT -m state --state NEW -m tcp -p tcp --dport 35000 -j ACCEPT
+-A INPUT -m state --state NEW -m udp -p udp --dport 35000 -j ACCEPT
+# HTTP/S for rBuilder
+-A INPUT -m state --state NEW -m tcp -p tcp --dport 80 -j ACCEPT
+-A INPUT -m state --state NEW -m tcp -p tcp --dport 443 -j ACCEPT
+# HTTP/S for rAPA
+-A INPUT -m state --state NEW -m tcp -p tcp --dport 8003 -j ACCEPT
+-A INPUT -m state --state NEW -m tcp -p tcp --dport 8004 -j ACCEPT
+# rMake XMLRPC and messagebus
+-A INPUT -m state --state NEW -m tcp -p tcp --dport 9999 -j ACCEPT
+-A INPUT -m state --state NEW -m tcp -p tcp --dport 50900 -j ACCEPT
 # Reject anything that hasn't been allowed yet
 -A INPUT -m tcp -p tcp -j REJECT --reject-with tcp-reset
 -A INPUT -j REJECT
 
-## Universal forward rules
-# Allow already-established connections
--A FORWARD -m state --state ESTABLISHED,RELATED -j ACCEPT
-# Allow DNS
--A FORWARD -m state --state NEW -m tcp -p tcp --dport 53 -j ACCEPT
--A FORWARD -m state --state NEW -m udp -p udp --dport 53 -j ACCEPT
-# Route all other traffic to FORWARD-SLAVE
--A FORWARD -i vif+ -o eth+ -j FORWARD-SLAVE
-# Reject anything that hasn't been allowed yet
--A FORWARD -j REJECT
 
-
-## rBuilder input rules (from outside)
-# Allow SSH, SNMP, nagios
--A FROM-OUTSIDE -m tcp -p tcp --dport 22 -j ACCEPT
--A FROM-OUTSIDE -m state --state NEW -m tcp -p tcp --dport 161 -j ACCEPT
--A FROM-OUTSIDE -m state --state NEW -m udp -p udp --dport 161 -j ACCEPT
--A FROM-OUTSIDE -m state --state NEW -m tcp -p tcp --dport 35000 -j ACCEPT
--A FROM-OUTSIDE -m state --state NEW -m udp -p udp --dport 35000 -j ACCEPT
-# HTTP/S for rBuilder
--A FROM-OUTSIDE -m state --state NEW -m tcp -p tcp --dport 80 -j ACCEPT
--A FROM-OUTSIDE -m state --state NEW -m tcp -p tcp --dport 443 -j ACCEPT
-# HTTP/S for rAPA
--A FROM-OUTSIDE -m state --state NEW -m tcp -p tcp --dport 8003 -j ACCEPT
--A FROM-OUTSIDE -m state --state NEW -m tcp -p tcp --dport 8004 -j ACCEPT
-# rMake XMLRPC and messagebus
--A FROM-OUTSIDE -m state --state NEW -m tcp -p tcp --dport 9999 -j ACCEPT
--A FROM-OUTSIDE -m state --state NEW -m tcp -p tcp --dport 50900 -j ACCEPT
-
-
-## Jobmaster input rules
-# Jobslave to jobmaster template server
--A FROM-SLAVE -m state --state NEW -m tcp -p tcp --dport 8000 -j ACCEPT
-# HTTP/S to rBuilder (proxy)
--A FROM-SLAVE -m state --state NEW -m tcp -p tcp --dport 80 -j ACCEPT
--A FROM-SLAVE -m state --state NEW -m tcp -p tcp --dport 443 -j ACCEPT
-# Stomp to MCP (messaging)
--A FROM-SLAVE -m state --state NEW -m tcp -p tcp --dport 61613 -j ACCEPT
-
-## Jobmaster forward rules
-# XXX Holes for S3 upload of EC2 images; this will be made better eventually
-#     by making rBuilder do this on the jobslave's behalf 
--A FORWARD-SLAVE -m state --state NEW -m tcp -p tcp --dport 80 -j ACCEPT
--A FORWARD-SLAVE -m state --state NEW -m tcp -p tcp --dport 443 -j ACCEPT
-# Jump to FORWARD-PROXY whch will be managed by a separate script
-# based on conary configuration.
--A FORWARD-SLAVE -j FORWARD-PROXY
-
-
-COMMIT
-
-
-## Jobmaster NAT rules
-*nat
--A POSTROUTING -o eth+ -j MASQUERADE
 COMMIT

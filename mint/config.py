@@ -224,6 +224,8 @@ class MintConfig(ConfigFile):
     visibleBuildTypes       = (CfgList(CfgBuildEnum))
     excludeBuildTypes       = (CfgList(CfgBuildEnum))
     includeBuildTypes       = (CfgList(CfgBuildEnum))
+    queueHost               = (CfgString, '127.0.0.1')
+    queuePort               = (CfgInt, 50900)
 
     # Entitlement and authorization (of the rBuilder)
     availablePlatforms      = (CfgList(CfgString), [])
@@ -231,6 +233,14 @@ class MintConfig(ConfigFile):
     # have an entitlement
     availablePlatformNames  = (CfgList(CfgString), [])
     availablePlatforms      = (CfgList(CfgString), [])
+    configurablePlatforms   = (CfgList(CfgString), [])
+    # Parallel lists of platform sources
+    platformSourceNames      = (CfgList(CfgString), [])
+    platformSourceUrls       = (CfgList(CfgString), [])
+    platformSourceLabels     = (CfgList(CfgString), [])
+    platformSources          = (CfgList(CfgString), [])
+    platformSourceTypes          = (CfgList(CfgString), [])
+
     acceptablePlatforms     = (CfgList(CfgString), [])
     siteAuthCfgPath         = (CfgPath, RBUILDER_DATA + 'data/authorization.cfg')
 
@@ -284,6 +294,11 @@ class MintConfig(ConfigFile):
     def read(self, path, exception = False):
         ConfigFile.read(self, path, exception)
 
+        self.postCfg()
+
+    def __setstate__(self, state):
+        # Needed to reset calculated fields after copy or unpickle
+        ConfigFile.__setstate__(self, state)
         self.postCfg()
 
     def postCfg(self):

@@ -5,7 +5,6 @@
 # All rights reserved
 #
 
-import mock
 import re
 import os
 import testsuite
@@ -22,6 +21,8 @@ from conary import deps
 from conary.conaryclient import ConaryClient
 from conary.build import signtrove
 from conary.lib import openpgpfile, openpgpkey
+
+from testutils import mock
 
 runTest = False
 debug = False
@@ -43,19 +44,6 @@ class MintMirrorTest(mint_rephelp.MintRepositoryHelper):
                               repos = repos)
             self.addCollection('test%d' % i, '1.0', [ "test%d:runtime" % i ],
                               repos = repos)
-
-    def inboundMirror(self):
-        url = "http://mintauth:mintpass@localhost:%d/xmlrpc-private/" % \
-              self.port
-
-        mirrorScript = os.path.join(scriptPath , 'mirror-inbound')
-        assert(os.access(mirrorScript, os.X_OK))
-        cfg = self.servers.getServer(0).serverRoot + '/rbuilder.conf'
-        cmd = "%s %s -c %s" % (mirrorScript, url, cfg)
-        if debug:
-            os.system(cmd + ' --show-mirror-cfg')
-        else:
-            self.captureAllOutput( os.system, cmd)
 
     def outboundMirror(self):
         import xmlrpclib

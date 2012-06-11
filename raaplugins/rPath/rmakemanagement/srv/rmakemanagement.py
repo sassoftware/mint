@@ -15,8 +15,8 @@ from rmake import plugins
 from rmake.build import buildcfg
 from rmake.cmdline import helper
 from rmake.errors import OpenError
+from rmake.node import nodecfg
 
-from rmake_node import nodecfg
 
 from rPath import rmakemanagement
 
@@ -153,6 +153,15 @@ class rMakeManagement(services.Services):
         self._writeConfigToFile(self.config['rmake.node_config_file'],
                                 conf, ' ')
         return True
+
+    def resetServer(self, schedId, execId):
+        """Reset the rMake server."""
+        stdout, stderr, rv = command.executeCommand([
+                rmakemanagement.COMMAND_RESET])
+        if rv:
+            return dict(errors=['Failed to reset rMake server:\n%s'
+                % (stdout + stderr)])
+        return dict(message='The rMake server has been reset')
 
     def _writeConfigToFile(self, filename, conf, delimiter):
         content = ""

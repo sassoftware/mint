@@ -16,6 +16,7 @@ from conary.lib import util
 
 import restbase
 from restlib import client as restClient
+from testutils import mock
 ResponseError = restClient.ResponseError
 
 class ProductVersionTest(restbase.BaseRestTest):
@@ -91,7 +92,7 @@ class ProductVersionTest(restbase.BaseRestTest):
     <stage href="http://%(server)s:%(port)s/api/products/testproject/versions/1.0/stages/Release"/>
     <container id="http://%(server)s:%(port)s/api/products/testproject/versions/1.0/containers/xenOvaImage">
       <name>xenOvaImage</name>
-      <displayName>Citrix XenServer (TM) Appliance</displayName>
+      <displayName>Citrix(R) XenServer(TM) Appliance</displayName>
       <options autoResolve="false" baseFileName="" freespace="1024" installLabelPath="" swapSize="512" vmMemory="256"/>
     </container>
     <architecture id="http://%(server)s:%(port)s/api/products/testproject/versions/1.0/architectures/x86">
@@ -112,7 +113,7 @@ class ProductVersionTest(restbase.BaseRestTest):
     <stage href="http://%(server)s:%(port)s/api/products/testproject/versions/1.0/stages/Release"/>
     <container id="http://%(server)s:%(port)s/api/products/testproject/versions/1.0/containers/xenOvaImage">
       <name>xenOvaImage</name>
-      <displayName>Citrix XenServer (TM) Appliance</displayName>
+      <displayName>Citrix(R) XenServer(TM) Appliance</displayName>
       <options autoResolve="false" baseFileName="" freespace="1024" installLabelPath="" swapSize="512" vmMemory="256"/>
     </container>
     <architecture id="http://%(server)s:%(port)s/api/products/testproject/versions/1.0/architectures/x86_64">
@@ -133,7 +134,7 @@ class ProductVersionTest(restbase.BaseRestTest):
     <stage href="http://%(server)s:%(port)s/api/products/testproject/versions/1.0/stages/Release"/>
     <container id="http://%(server)s:%(port)s/api/products/testproject/versions/1.0/containers/vmwareEsxImage">
       <name>vmwareEsxImage</name>
-      <displayName>VMware (R) ESX Server Virtual Appliance</displayName>
+      <displayName>VMware(R) ESX(R) Server Virtual Appliance</displayName>
       <options autoResolve="false" baseFileName="" freespace="1024" installLabelPath="" natNetworking="true" swapSize="512" vmMemory="256"/>
     </container>
     <architecture id="http://%(server)s:%(port)s/api/products/testproject/versions/1.0/architectures/x86">
@@ -154,7 +155,7 @@ class ProductVersionTest(restbase.BaseRestTest):
     <stage href="http://%(server)s:%(port)s/api/products/testproject/versions/1.0/stages/Release"/>
     <container id="http://%(server)s:%(port)s/api/products/testproject/versions/1.0/containers/vmwareEsxImage">
       <name>vmwareEsxImage</name>
-      <displayName>VMware (R) ESX Server Virtual Appliance</displayName>
+      <displayName>VMware(R) ESX(R) Server Virtual Appliance</displayName>
       <options autoResolve="false" baseFileName="" freespace="1024" installLabelPath="" natNetworking="true" swapSize="512" vmMemory="256"/>
     </container>
     <architecture id="http://%(server)s:%(port)s/api/products/testproject/versions/1.0/architectures/x86_64">
@@ -191,7 +192,7 @@ class ProductVersionTest(restbase.BaseRestTest):
     <stage href="http://%(server)s:%(port)s/api/products/testproject/versions/1.0/stages/Release"/>
     <container id="http://%(server)s:%(port)s/api/products/testproject/versions/1.0/containers/xenOvaImage">
       <name>xenOvaImage</name>
-      <displayName>Citrix XenServer (TM) Appliance</displayName>
+      <displayName>Citrix(R) XenServer(TM) Appliance</displayName>
       <options autoResolve="false" baseFileName="" freespace="1024" installLabelPath="" swapSize="512" vmMemory="256"/>
     </container>
     <architecture id="http://%(server)s:%(port)s/api/products/testproject/versions/1.0/architectures/x86">
@@ -212,7 +213,7 @@ class ProductVersionTest(restbase.BaseRestTest):
     <stage href="http://%(server)s:%(port)s/api/products/testproject/versions/1.0/stages/Release"/>
     <container id="http://%(server)s:%(port)s/api/products/testproject/versions/1.0/containers/xenOvaImage">
       <name>xenOvaImage</name>
-      <displayName>Citrix XenServer (TM) Appliance</displayName>
+      <displayName>Citrix(R) XenServer(TM) Appliance</displayName>
       <options autoResolve="false" baseFileName="" freespace="1024" installLabelPath="" swapSize="512" vmMemory="256"/>
     </container>
     <architecture id="http://%(server)s:%(port)s/api/products/testproject/versions/1.0/architectures/x86_64">
@@ -233,7 +234,7 @@ class ProductVersionTest(restbase.BaseRestTest):
     <stage href="http://%(server)s:%(port)s/api/products/testproject/versions/1.0/stages/Release"/>
     <container id="http://%(server)s:%(port)s/api/products/testproject/versions/1.0/containers/vmwareEsxImage">
       <name>vmwareEsxImage</name>
-      <displayName>VMware (R) ESX Server Virtual Appliance</displayName>
+      <displayName>VMware(R) ESX(R) Server Virtual Appliance</displayName>
       <options autoResolve="false" baseFileName="" freespace="1024" installLabelPath="" natNetworking="true" swapSize="512" vmMemory="256"/>
     </container>
     <architecture id="http://%(server)s:%(port)s/api/products/testproject/versions/1.0/architectures/x86">
@@ -254,7 +255,7 @@ class ProductVersionTest(restbase.BaseRestTest):
     <stage href="http://%(server)s:%(port)s/api/products/testproject/versions/1.0/stages/Release"/>
     <container id="http://%(server)s:%(port)s/api/products/testproject/versions/1.0/containers/vmwareEsxImage">
       <name>vmwareEsxImage</name>
-      <displayName>VMware (R) ESX Server Virtual Appliance</displayName>
+      <displayName>VMware(R) ESX(R) Server Virtual Appliance</displayName>
       <options autoResolve="false" baseFileName="" freespace="1024" installLabelPath="" natNetworking="true" swapSize="512" vmMemory="256"/>
     </container>
     <architecture id="http://%(server)s:%(port)s/api/products/testproject/versions/1.0/architectures/x86_64">
@@ -399,7 +400,7 @@ class ProductVersionTest(restbase.BaseRestTest):
     <displayName>MS Hyper-V</displayName>
     <container id="http://%(server)s:%(port)s/api/products/testproject/versions/1.0/containers/vhdImage">
       <name>vhdImage</name>
-      <displayName>VHD for Microsoft(R) Hyper-V</displayName>
+      <displayName>VHD for Microsoft(R) Hyper-V(R)</displayName>
       <options autoResolve="false" baseFileName="" freespace="1024" installLabelPath="" swapSize="512" vhdDiskType="dynamic"/>
     </container>
     <architecture id="http://%(server)s:%(port)s/api/products/testproject/versions/1.0/architectures/x86">
@@ -416,7 +417,7 @@ class ProductVersionTest(restbase.BaseRestTest):
     <displayName>MS Hyper-V</displayName>
     <container id="http://%(server)s:%(port)s/api/products/testproject/versions/1.0/containers/vhdImage">
       <name>vhdImage</name>
-      <displayName>VHD for Microsoft(R) Hyper-V</displayName>
+      <displayName>VHD for Microsoft(R) Hyper-V(R)</displayName>
       <options autoResolve="false" baseFileName="" freespace="1024" installLabelPath="" swapSize="512" vhdDiskType="dynamic"/>
     </container>
     <architecture id="http://%(server)s:%(port)s/api/products/testproject/versions/1.0/architectures/x86_64">
@@ -459,7 +460,7 @@ class ProductVersionTest(restbase.BaseRestTest):
     <displayName>Raw Hard Disk</displayName>
     <container id="http://%(server)s:%(port)s/api/products/testproject/versions/1.0/containers/rawHdImage">
       <name>rawHdImage</name>
-      <displayName>Parallels, QEMU (Raw Hard Disk)</displayName>
+      <displayName>Parallels(R), QEMU (Raw Hard Disk)</displayName>
       <options autoResolve="false" baseFileName="" freespace="1024" installLabelPath="" swapSize="512"/>
     </container>
     <architecture id="http://%(server)s:%(port)s/api/products/testproject/versions/1.0/architectures/x86">
@@ -472,7 +473,7 @@ class ProductVersionTest(restbase.BaseRestTest):
     <displayName>Raw Hard Disk</displayName>
     <container id="http://%(server)s:%(port)s/api/products/testproject/versions/1.0/containers/rawHdImage">
       <name>rawHdImage</name>
-      <displayName>Parallels, QEMU (Raw Hard Disk)</displayName>
+      <displayName>Parallels(R), QEMU (Raw Hard Disk)</displayName>
       <options autoResolve="false" baseFileName="" freespace="1024" installLabelPath="" swapSize="512"/>
     </container>
     <architecture id="http://%(server)s:%(port)s/api/products/testproject/versions/1.0/architectures/x86_64">
@@ -511,7 +512,7 @@ class ProductVersionTest(restbase.BaseRestTest):
     <displayName>VMware</displayName>
     <container id="http://%(server)s:%(port)s/api/products/testproject/versions/1.0/containers/vmwareImage">
       <name>vmwareImage</name>
-      <displayName>VMware (R) Virtual Appliance</displayName>
+      <displayName>VMware(R) Virtual Appliance</displayName>
       <options autoResolve="false" baseFileName="" diskAdapter="lsilogic" freespace="1024" installLabelPath="" natNetworking="true" swapSize="512" vmMemory="256" vmSnapshots="false"/>
     </container>
     <architecture id="http://%(server)s:%(port)s/api/products/testproject/versions/1.0/architectures/x86">
@@ -528,7 +529,7 @@ class ProductVersionTest(restbase.BaseRestTest):
     <displayName>VMware</displayName>
     <container id="http://%(server)s:%(port)s/api/products/testproject/versions/1.0/containers/vmwareEsxImage">
       <name>vmwareEsxImage</name>
-      <displayName>VMware (R) ESX Server Virtual Appliance</displayName>
+      <displayName>VMware(R) ESX(R) Server Virtual Appliance</displayName>
       <options autoResolve="false" baseFileName="" freespace="1024" installLabelPath="" natNetworking="true" swapSize="512" vmMemory="256"/>
     </container>
     <architecture id="http://%(server)s:%(port)s/api/products/testproject/versions/1.0/architectures/x86">
@@ -545,7 +546,7 @@ class ProductVersionTest(restbase.BaseRestTest):
     <displayName>VMware</displayName>
     <container id="http://%(server)s:%(port)s/api/products/testproject/versions/1.0/containers/vmwareImage">
       <name>vmwareImage</name>
-      <displayName>VMware (R) Virtual Appliance</displayName>
+      <displayName>VMware(R) Virtual Appliance</displayName>
       <options autoResolve="false" baseFileName="" diskAdapter="lsilogic" freespace="1024" installLabelPath="" natNetworking="true" swapSize="512" vmMemory="256" vmSnapshots="false"/>
     </container>
     <architecture id="http://%(server)s:%(port)s/api/products/testproject/versions/1.0/architectures/x86_64">
@@ -562,7 +563,7 @@ class ProductVersionTest(restbase.BaseRestTest):
     <displayName>VMware</displayName>
     <container id="http://%(server)s:%(port)s/api/products/testproject/versions/1.0/containers/vmwareEsxImage">
       <name>vmwareEsxImage</name>
-      <displayName>VMware (R) ESX Server Virtual Appliance</displayName>
+      <displayName>VMware(R) ESX(R) Server Virtual Appliance</displayName>
       <options autoResolve="false" baseFileName="" freespace="1024" installLabelPath="" natNetworking="true" swapSize="512" vmMemory="256"/>
     </container>
     <architecture id="http://%(server)s:%(port)s/api/products/testproject/versions/1.0/architectures/x86_64">
@@ -613,7 +614,7 @@ class ProductVersionTest(restbase.BaseRestTest):
     <displayName>Xen OVA</displayName>
     <container id="http://%(server)s:%(port)s/api/products/testproject/versions/1.0/containers/xenOvaImage">
       <name>xenOvaImage</name>
-      <displayName>Citrix XenServer (TM) Appliance</displayName>
+      <displayName>Citrix(R) XenServer(TM) Appliance</displayName>
       <options autoResolve="false" baseFileName="" freespace="1024" installLabelPath="" swapSize="512" vmMemory="256"/>
     </container>
     <architecture id="http://%(server)s:%(port)s/api/products/testproject/versions/1.0/architectures/x86">
@@ -630,7 +631,7 @@ class ProductVersionTest(restbase.BaseRestTest):
     <displayName>Xen OVA</displayName>
     <container id="http://%(server)s:%(port)s/api/products/testproject/versions/1.0/containers/xenOvaImage">
       <name>xenOvaImage</name>
-      <displayName>Citrix XenServer (TM) Appliance</displayName>
+      <displayName>Citrix(R) XenServer(TM) Appliance</displayName>
       <options autoResolve="false" baseFileName="" freespace="1024" installLabelPath="" swapSize="512" vmMemory="256"/>
     </container>
     <architecture id="http://%(server)s:%(port)s/api/products/testproject/versions/1.0/architectures/x86_64">
@@ -685,6 +686,64 @@ class ProductVersionTest(restbase.BaseRestTest):
         self.failUnlessEqual(response,
             exp % dict(server = client.server, port = client.port))
 
+    def testSetProductVersionPlatform(self):
+        self.setupPlatforms()
+        from mint.rest.db import platformmgr
+        mock.mock(platformmgr.Platforms, '_checkMirrorPermissions',
+                        True)
+        self.mock(restbase.proddef.PlatformDefinition, 'snapshotVersions',
+            lambda slf, conaryClient, platformVersion = None: None)
+        uriTemplate = 'products/%s/versions/%s/platform'
+        uri = uriTemplate % (self.productShortName, self.productVersion)
+        client = self.getRestClient(username='foouser', admin=True)
+
+        label = self.mintCfg.availablePlatforms[1]
+        data = """\
+<platform>
+  <label>%s</label>
+</platform>
+""" % label
+        req, response = client.call('PUT', uri, data, convert = True)
+        expected = """\
+<platform id="http://localhost:8000/api/products/testproject/versions/1.0/platform">
+  <platformId>2</platformId>
+  <platformTroveName>platform-definition</platformTroveName>
+  <label>localhost@rpath:plat-2</label>
+  <platformVersion>4.1-1</platformVersion>
+  <productVersion>1.0</productVersion>
+  <platformName>Crowbar Linux 2</platformName>
+  <enabled>false</enabled>
+  <contentSources href="http://localhost:8000/api/platforms/2/contentSources"/>
+  <platformStatus href="http://localhost:8000/api/platforms/2/status"/>
+  <contentSourceTypes href="http://localhost:8000/api/platforms/2/contentSourceTypes"/>
+  <load href="http://localhost:8000/api/platforms/2/load/"/>
+  <imageTypeDefinitions href="http://localhost:8000/api/platforms/2/imageTypeDefinitions"/>
+</platform>
+"""
+        self.assertXMLEquals(response, expected)
+
+        # Make sure a GET fetches the same thing
+        req, response = client.call('GET', uri, convert = True)
+        self.assertXMLEquals(response, expected)
+
+    def testGetProductVersionPlatform(self):
+        uriTemplate = 'products/%s/versions/%s/platform'
+        uri = uriTemplate % (self.productShortName, self.productVersion)
+        self.createUser('foouser')
+        client = self.getRestClient(username='foouser')
+        req, response = client.call('GET', uri, convert = True)
+        exp = """\
+<?xml version='1.0' encoding='UTF-8'?>
+<platform id="http://localhost:8000/api/products/testproject/versions/1.0/platform">
+  <platformTroveName />
+  <label/>
+  <platformVersion></platformVersion>
+  <productVersion>1.0</productVersion>
+  <platformName>localhost@rpath:plat-1</platformName>
+</platform>
+"""
+        self.assertXMLEquals(response, exp)
+
     def testSetImageDefinitions(self):
         uriTemplate = 'products/%s/versions/%s/imageDefinitions'
         uri = uriTemplate % (self.productShortName, self.productVersion)
@@ -695,39 +754,26 @@ class ProductVersionTest(restbase.BaseRestTest):
         exp = """\
 <?xml version='1.0' encoding='UTF-8'?>
 <imageDefinitions>
-  <imageDefinition id="http://localhost:8000/api/products/testproject/versions/1.0/imageDefinitions/2ebe0a8a2711b1fd9c45a4a54783d958">
-    <name>Old UI image that has an extra generic flavor in it</name>
-    <displayName>Old UI image that has an extra generic flavor in it</displayName>
-    <imageGroup>group-testproject-appliance</imageGroup>
-    <stage href="http://localhost:8000/api/products/testproject/versions/1.0/stages/Development"/>
-    <stage href="http://localhost:8000/api/products/testproject/versions/1.0/stages/QA"/>
-    <stage href="http://localhost:8000/api/products/testproject/versions/1.0/stages/Release"/>
-    <container id="http://localhost:8000/api/products/testproject/versions/1.0/containers/applianceIsoImage">
-      <name>applianceIsoImage</name>
-      <displayName>Appliance Installable ISO</displayName>
-      <options anacondaCustomTrove="" anacondaTemplatesTrove="conary.rpath.com@rpl:2" autoResolve="false" baseFileName="" betaNag="false" bugsUrl="" freespace="2048" installLabelPath="" mediaTemplateTrove="" showMediaCheck="false" swapSize="512"/>
-    </container>
-    <architecture id="http://localhost:8000/api/products/testproject/versions/1.0/architectures/x86">
-      <name>x86</name>
-      <displayName>x86 (32-bit)</displayName>
-    </architecture>
-  </imageDefinition>
-  <imageDefinition id="http://%(server)s:%(port)s/api/products/testproject/versions/1.0/imageDefinitions/24597af6ccdf86fbfdc1b011f61e8204">
-    <name>update iso 64-bit</name>
-    <displayName>update iso 64-bit</displayName>
+  <imageDefinition id="http://%(server)s:%(port)s/api/products/testproject/versions/1.0/imageDefinitions/71a60de01b7e8675254175584fdb9db2">
+    <name>Citrix XenServer 64-bit</name>
+    <displayName>Citrix XenServer 64-bit</displayName>
     <imageGroup>group-testproject-appliance</imageGroup>
     <stage href="http://%(server)s:%(port)s/api/products/testproject/versions/1.0/stages/Development"/>
     <stage href="http://%(server)s:%(port)s/api/products/testproject/versions/1.0/stages/QA"/>
     <stage href="http://%(server)s:%(port)s/api/products/testproject/versions/1.0/stages/Release"/>
-    <container id="http://%(server)s:%(port)s/api/products/testproject/versions/1.0/containers/updateIsoImage">
-      <name>updateIsoImage</name>
-      <displayName>Update CD/DVD</displayName>
-      <options anacondaCustomTrove="" anacondaTemplatesTrove="conary.rpath.com@rpl:2" autoResolve="false" baseFileName="" betaNag="false" bugsUrl="" freespace="2048" installLabelPath="" mediaTemplateTrove="" showMediaCheck="false" swapSize="512"/>
+    <container id="http://%(server)s:%(port)s/api/products/testproject/versions/1.0/containers/xenOvaImage">
+      <name>xenOvaImage</name>
+      <displayName>Citrix(R) XenServer(TM) Appliance</displayName>
+      <options autoResolve="false" baseFileName="" freespace="6789" installLabelPath="" natNetworking="false" swapSize="512" vmMemory="64"/>
     </container>
     <architecture id="http://%(server)s:%(port)s/api/products/testproject/versions/1.0/architectures/x86_64">
       <name>x86_64</name>
       <displayName>x86 (64-bit)</displayName>
     </architecture>
+    <flavorSet id="http://%(server)s:%(port)s/api/products/testproject/versions/1.0/flavorSets/xen">
+      <name>xen</name>
+      <displayName>Xen</displayName>
+    </flavorSet>
   </imageDefinition>
   <imageDefinition id="http://%(server)s:%(port)s/api/products/testproject/versions/1.0/imageDefinitions/201264007ec0d331b626ca074a841fa7">
     <name>virtual_irony 32-bit</name>
@@ -750,26 +796,39 @@ class ProductVersionTest(restbase.BaseRestTest):
       <displayName>Virtual Iron</displayName>
     </flavorSet>
   </imageDefinition>
-  <imageDefinition id="http://%(server)s:%(port)s/api/products/testproject/versions/1.0/imageDefinitions/71a60de01b7e8675254175584fdb9db2">
-    <name>Citrix XenServer 64-bit</name>
-    <displayName>Citrix XenServer 64-bit</displayName>
+  <imageDefinition id="http://%(server)s:%(port)s/api/products/testproject/versions/1.0/imageDefinitions/24597af6ccdf86fbfdc1b011f61e8204">
+    <name>update iso 64-bit</name>
+    <displayName>update iso 64-bit</displayName>
     <imageGroup>group-testproject-appliance</imageGroup>
     <stage href="http://%(server)s:%(port)s/api/products/testproject/versions/1.0/stages/Development"/>
     <stage href="http://%(server)s:%(port)s/api/products/testproject/versions/1.0/stages/QA"/>
     <stage href="http://%(server)s:%(port)s/api/products/testproject/versions/1.0/stages/Release"/>
-    <container id="http://%(server)s:%(port)s/api/products/testproject/versions/1.0/containers/xenOvaImage">
-      <name>xenOvaImage</name>
-      <displayName>Citrix XenServer (TM) Appliance</displayName>
-      <options autoResolve="false" baseFileName="" freespace="6789" installLabelPath="" natNetworking="false" swapSize="512" vmMemory="64"/>
+    <container id="http://%(server)s:%(port)s/api/products/testproject/versions/1.0/containers/updateIsoImage">
+      <name>updateIsoImage</name>
+      <displayName>Update CD/DVD</displayName>
+      <options anacondaCustomTrove="" anacondaTemplatesTrove="conary.rpath.com@rpl:2" autoResolve="false" baseFileName="" betaNag="false" bugsUrl="" freespace="2048" installLabelPath="" mediaTemplateTrove="" showMediaCheck="false" swapSize="512"/>
     </container>
     <architecture id="http://%(server)s:%(port)s/api/products/testproject/versions/1.0/architectures/x86_64">
       <name>x86_64</name>
       <displayName>x86 (64-bit)</displayName>
     </architecture>
-    <flavorSet id="http://%(server)s:%(port)s/api/products/testproject/versions/1.0/flavorSets/xen">
-      <name>xen</name>
-      <displayName>Xen</displayName>
-    </flavorSet>
+  </imageDefinition>
+  <imageDefinition id="http://localhost:8000/api/products/testproject/versions/1.0/imageDefinitions/2ebe0a8a2711b1fd9c45a4a54783d958">
+    <name>Old UI image that has an extra generic flavor in it</name>
+    <displayName>Old UI image that has an extra generic flavor in it</displayName>
+    <imageGroup>group-testproject-appliance</imageGroup>
+    <stage href="http://localhost:8000/api/products/testproject/versions/1.0/stages/Development"/>
+    <stage href="http://localhost:8000/api/products/testproject/versions/1.0/stages/QA"/>
+    <stage href="http://localhost:8000/api/products/testproject/versions/1.0/stages/Release"/>
+    <container id="http://localhost:8000/api/products/testproject/versions/1.0/containers/applianceIsoImage">
+      <name>applianceIsoImage</name>
+      <displayName>Appliance Installable ISO</displayName>
+      <options anacondaCustomTrove="" anacondaTemplatesTrove="conary.rpath.com@rpl:2" autoResolve="false" baseFileName="" betaNag="false" bugsUrl="" freespace="2048" installLabelPath="" mediaTemplateTrove="" showMediaCheck="false" swapSize="512"/>
+    </container>
+    <architecture id="http://localhost:8000/api/products/testproject/versions/1.0/architectures/x86">
+      <name>x86</name>
+      <displayName>x86 (32-bit)</displayName>
+    </architecture>
   </imageDefinition>
 </imageDefinitions>
 """

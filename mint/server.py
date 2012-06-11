@@ -58,9 +58,6 @@ from mint.reports import MintReport
 from mint.helperfuncs import toDatabaseTimestamp, fromDatabaseTimestamp, getUrlHost
 from mint import packagecreator
 
-from mcp import client as mcpClient
-from mcp import mcp_error
-
 from conary import changelog
 from conary import conarycfg
 from conary import conaryclient
@@ -75,17 +72,12 @@ from conary.repository.errors import TroveNotFound, RoleNotFound
 from conary.repository import netclient
 from conary.repository import shimclient
 from conary.repository.netrepos import netserver
+from conary.repository.netrepos.reposlog import RepositoryCallLogger as CallLogger
 from conary import errors as conary_errors
 
+from mcp import client as mcp_client
+from mcp import mcp_error
 from rpath_proddef import api1 as proddef
-
-try:
-    # Conary 2
-    from conary.repository.netrepos.reposlog \
-        import RepositoryCallLogger as CallLogger
-except ImportError:
-    # Conary 1
-    from conary.repository.netrepos.calllog import CallLogger
 
 
 import gettext
@@ -184,6 +176,9 @@ def checkParam(param, paramType):
                     if p_type in (int, long):
                         # allow ints and longs to be interchangeable
                         match = match or type(param) in (int, long)
+                    elif type(param) is util.ProtectedString:
+                        # allow protected passwords through
+                        return True
                     else:
                         match = match or (type(param) == p_type)
             return match
@@ -248,36 +243,6 @@ def typeCheck(*paramTypes):
         return wrapper
     return deco
 
-class PlatformNameCache(persistentcache.PersistentCache):
-
-    def __init__(self, cacheFile, conarycfg, server):
-        persistentcache.PersistentCache.__init__(self, cacheFile)
-        self._cclient = conaryclient.ConaryClient(conarycfg)
-        self._server = weakref.ref(server)
-
-    def _refresh(self, labelStr):
-        try:
-            hostname = versions.Label(labelStr).getHost()
-            # we require that the first section of the label be unique
-            # across all repositories we access.
-            hostname = hostname.split('.')[0]
-            try:
-                projectId = self._server().getProjectIdByHostname(hostname)
-                cfg = self._server()._getProjectConaryConfig(
-                                    projects.Project(self._server(), projectId))
-                client = conaryclient.ConaryClient(cfg)
-            except mint_error.ItemNotFound:
-                client = self._cclient
-            platDef = proddef.PlatformDefinition()
-            platDef.loadFromRepository(client, labelStr)
-            return platDef.getPlatformName()
-        except Exception, e:
-            # Swallowing this exception allows us to have a negative
-            # cache entries.  Of course this comes at the cost
-            # of swallowing exceptions...
-            print >> sys.stderr, "failed to lookup platform definition on label %s: %s" % (labelStr, str(e))
-            sys.stderr.flush()
-            return None
 
 class MintServer(object):
     def callWrapper(self, methodName, authToken, args):
@@ -383,9 +348,6 @@ class MintServer(object):
             prof.stopXml(methodName)
             if self.restDb:
                 self.restDb.productMgr.reposMgr.close()
-            if self.mcpClient:
-                self.mcpClient.disconnect()
-                self.mcpClient = None
 
     def __getattr__(self, key):
         if key[0] != '_':
@@ -574,6 +536,15 @@ class MintServer(object):
         version = projects.ProductVersions(self, versionId)
         project = projects.Project(self, version.projectId)
         return self._getProductDefinition(project, version)
+
+    def _getProductVersionLabel(self, project, versionId):
+        version = projects.ProductVersions(self, versionId)
+        pd = proddef.ProductDefinition()
+        pd.setProductShortname(project.shortname)
+        pd.setConaryRepositoryHostname(project.getFQDN())
+        pd.setConaryNamespace(version.namespace)
+        pd.setProductVersion(version.name)
+        return pd.getProductDefinitionLabel()
 
     def _fillInEmptyEC2Creds(self, authToken):
         """
@@ -1907,9 +1878,6 @@ If you would not like to be %s %s of this project, you may resign from this proj
     @private
     def addLabel(self, projectId, label, url, authType, username, password, entitlement):
         self._filterProjectAccess(projectId)
-        # this is overly agressive but should ensure that adding an
-        # entitlement enables access to the correct platform
-        self.platformNameCache.clear()
         return self.labels.addLabel(projectId, label, url, authType, username, password, entitlement)
 
     @typeCheck(int)
@@ -1929,9 +1897,6 @@ If you would not like to be %s %s of this project, you may resign from this proj
             password, entitlement)
         if self.cfg.createConaryRcFile:
             self._generateConaryRcFile()
-        # this is overly agressive but should ensure that adding an
-        # entitlement enables access to the correct platform
-        self.platformNameCache.clear()
         return True
 
     @typeCheck(int, int)
@@ -2045,7 +2010,6 @@ If you would not like to be %s %s of this project, you may resign from this proj
     @private
     def newBuild(self, projectId, productName):
         self._filterProjectAccess(projectId)
-        jsversion = self._getJSVersion()
         buildId = self.builds.new(projectId = projectId,
                       name = productName,
                       timeCreated = time.time(),
@@ -2053,8 +2017,6 @@ If you would not like to be %s %s of this project, you may resign from this proj
                       createdBy = self.auth.userId,
                       status = jobstatus.WAITING,
                       statusMessage = jobstatus.statusNames[jobstatus.WAITING])
-        self.buildData.setDataValue(buildId, 'jsversion',
-            jsversion, data.RDT_STRING)
 
         return buildId
 
@@ -2166,7 +2128,7 @@ If you would not like to be %s %s of this project, you may resign from this proj
                 buildSettings = containerTemplate.fields.copy()
 
             for key, val in buildImage.fields.iteritems():
-                if val:
+                if val is not None:
                     buildSettings[key] = val
             buildType = buildImage.containerFormat and \
                     str(buildImage.containerFormat) or ''
@@ -2226,9 +2188,10 @@ If you would not like to be %s %s of this project, you may resign from this proj
                             groupName, groupVersion, groupFlavor,
                             buildType, buildSettings, start=False):
         self._filterProjectAccess(projectId)
-        jsversion = self._getJSVersion()
 
-        groupVersion = helperfuncs.parseVersion(groupVersion).freeze()
+        version = helperfuncs.parseVersion(groupVersion)
+        
+        groupVersion = version.freeze()
         groupFlavor = helperfuncs.parseFlavor(groupFlavor).freeze()
 
         # Make sure we convert from Unicode to UTF-8
@@ -2240,13 +2203,19 @@ If you would not like to be %s %s of this project, you may resign from this proj
                       createdBy = self.auth.userId,
                       status = jobstatus.WAITING,
                       statusMessage=jobstatus.statusNames[jobstatus.WAITING])
-        self.buildData.setDataValue(buildId, 'jsversion', jsversion,
-            data.RDT_STRING)
 
         newBuild = builds.Build(self, buildId)
         newBuild.setTrove(groupName, groupVersion, groupFlavor)
         buildType = buildtypes.xmlTagNameImageTypeMap[buildType]
         newBuild.setBuildType(buildType)
+
+        label = version.trailingLabel().asString()
+        versionId, stage = self._getProductVersionForLabel(projectId, label)
+        if versionId and stage:
+            pd = self._getProductDefinitionForVersionObj(versionId)
+            platName = pd.getPlatformName()
+            if 'platformName' in newBuild.getDataTemplate():
+                newBuild.setDataValue('platformName', str(platName))
 
         template = newBuild.getDataTemplate()
 
@@ -2564,6 +2533,11 @@ If you would not like to be %s %s of this project, you may resign from this proj
                         'hostname' : project.hostname,
                         'label' : project.getLabel(),
                         'conaryCfg' : cfgData}
+        if buildDict['productVersionId']:
+            r['proddefLabel'] = self._getProductVersionLabel(project,
+                    buildDict['productVersionId'])
+        else:
+            r['proddefLabel'] = ''
 
         hostBase = '%s.%s' % (self.cfg.hostName, self.cfg.siteDomainName)
 
@@ -2875,7 +2849,7 @@ If you would not like to be %s %s of this project, you may resign from this proj
             baseLabel = pd.getProductDefinitionLabel()
             # assumption to speed this up.  
             # Stages are baselabel + '-' + extention (or just baseLabel)
-            if not str(label).startswith(str(baseLabel)):
+            if not str(label).lower().startswith(str(baseLabel).lower()):
                 continue
             try:
                 project = projects.Project(self, projectId)
@@ -3014,8 +2988,6 @@ If you would not like to be %s %s of this project, you may resign from this proj
         if self.builds.getPublished(buildId):
             raise mint_error.BuildPublished()
 
-        # image-less builds (i.e. group trove builds) don't actually get built,
-        # they just get stuffed into the DB
         buildDict = self.builds.get(buildId)
         buildType = buildDict['buildType']
 
@@ -3023,17 +2995,23 @@ If you would not like to be %s %s of this project, you may resign from this proj
         self._setBuildFilenames(buildId, [])
 
         if buildType == buildtypes.IMAGELESS:
-            return ""
+            # image-less builds (i.e. group trove builds) don't actually get
+            # built, they just get stuffed into the DB
+            self.db.builds.update(buildId, status=jobstatus.FINISHED,
+                    statusMessage="Job Finished")
+            return '0' * 32
         else:
-            data = self.serializeBuild(buildId)
+            jobData = self.serializeBuild(buildId)
             try:
-                mc = self._getMcpClient()
-                res = mc.submitJob(data)
-            except mcp_error.NotEntitledError:
-                raise mint_error.NotEntitledError()
-            except mcp_error.NetworkError:
-                raise mint_error.BuildSystemDown
-            return res or ""
+                client = self._getMcpClient()
+                uuid = client.new_job(client.LOCAL_RBUILDER, jobData)
+                self.buildData.setDataValue(buildId, 'uuid', uuid, data.RDT_STRING)
+                return uuid
+            except:
+                log.exception("Failed to start image job:")
+                self.db.builds.update(buildId, status=jobstatus.FAILED,
+                        statusMessage="Failed to start image job - check logs")
+                raise
 
     @typeCheck(int, str, list)
     def setBuildFilenamesSafe(self, buildId, outputToken, filenames):
@@ -3417,76 +3395,14 @@ If you would not like to be %s %s of this project, you may resign from this proj
             not trove.endswith(':source'))
         return troves
 
-    # XXX refactor to getJobStatus instead of two functions
     @typeCheck(int)
     @requiresAuth
     def getBuildStatus(self, buildId):
         self._filterBuildAccess(buildId)
 
         buildDict = self.builds.get(buildId)
-        buildType = buildDict['buildType'] 
-        count = buildDict['buildCount']
-        oldStatus = buildDict['status']
-        oldMessage = buildDict['statusMessage']
-
-        # NB: This function mostly mirrors
-        # ImageManager._updateStatusForImageList
-
-        if oldStatus in jobstatus.terminalStatuses:
-            return { 'status' : oldStatus, 'message' : oldMessage }
-
-        status = jobstatus.UNKNOWN
-        statusMessage = res = None
-        if buildType != buildtypes.IMAGELESS:
-            uuid = '%s.%s-build-%d-%d' % (self.cfg.hostName,
-                              self.cfg.siteDomainName, buildId, count)
-            try:
-                mc = self._getMcpClient()
-                res = mc.jobStatus(uuid)
-            except (mcp_error.UnknownJob, mcp_error.NetworkError):
-                status = jobstatus.NO_JOB
-            else:
-                if res:
-                    status, statusMessage = res
-                # Sometimes the MCP returns None for no obvious reason.
-                # In those cases, keep the fallback value of UNKNOWN.
-
-            if status == jobstatus.NO_JOB:
-                # The MCP no longer knows about this job and it never will,
-                # so make a guess as to whether it passed or failed and
-                # set its state to that.
-                filenames = [x['title'] for x in self.getBuildFilenames(buildId)]
-                if filenames:
-                    # Images with files succeeded, unless one of those files
-                    # is a failed build log.
-                    for filename in filenames:
-                        if filename.startswith('Failed '):
-                            status = jobstatus.FAILED
-                            break
-                    else:
-                        status = jobstatus.FINISHED
-
-                elif self.getBuildDataValue(buildId, 'amiId')[0]:
-                    # AMIs don't have files but if the ID is posted then it
-                    # succeeded.
-                    status = jobstatus.FINISHED
-                else:
-                    # No files and no AMI means the job failed.
-                    status = jobstatus.FAILED
-
-        else:
-            status = jobstatus.FINISHED
-
-        if status not in jobstatus.statusNames:
-            status = jobstatus.UNKNOWN
-        if not statusMessage:
-            statusMessage = jobstatus.statusNames[status]
-
-        if (status, statusMessage) != (oldStatus, oldMessage):
-            self.db.builds.update(buildId, status=status,
-                    statusMessage=statusMessage)
-
-        return { 'status' : status, 'message' : statusMessage }
+        return { 'status': buildDict['status'],
+                'message': buildDict['statusMessage'] }
 
     # session management
     @private
@@ -3569,10 +3485,12 @@ If you would not like to be %s %s of this project, you may resign from this proj
         mirrorOrder = cu.fetchone()[0]
 
         project = self.projects.get(targetProjectId)
+        createDB = False
         if not project['database']:
             # Project was not previously assigned a database.
             self.projects.update(targetProjectId,
                     database=self.cfg.defaultDatabase)
+            createDB = True
 
         x = self.inboundMirrors.new(targetProjectId=targetProjectId,
                 sourceLabels = ' '.join(sourceLabels),
@@ -3583,9 +3501,7 @@ If you would not like to be %s %s of this project, you may resign from this proj
                 mirrorOrder = mirrorOrder, allLabels = int(allLabels))
 
         fqdn = versions.Label(sourceLabels[0]).getHost()
-        if not os.path.exists(os.path.join(self.cfg.reposPath, fqdn)):
-            hostname = fqdn.split(".")[0]
-            domainname = ".".join(fqdn.split(".")[1:])
+        if createDB:
             self.restDb.productMgr.reposMgr.createRepository(targetProjectId,
                     createMaps=False)
 
@@ -3613,9 +3529,24 @@ If you would not like to be %s %s of this project, you may resign from this proj
     @requiresAdmin
     def getInboundMirrors(self):
         cu = self.db.cursor()
-        cu.execute("""SELECT inboundMirrorId, targetProjectId, sourceLabels, sourceUrl,
-            sourceAuthType, sourceUsername, sourcePassword, sourceEntitlement, allLabels
-            FROM InboundMirrors ORDER BY mirrorOrder""")
+        cu.execute("""
+            SELECT DISTINCT
+                inboundMirrorId,
+                targetProjectId,
+                sourceLabels,
+                sourceUrl,
+                sourceAuthType,
+                sourceUsername,
+                sourcePassword,
+                sourceEntitlement,
+                mirrorOrder,
+                allLabels
+            FROM InboundMirrors
+            LEFT OUTER JOIN Platforms AS Platforms
+                ON InboundMirrors.targetProjectId = Platforms.projectId
+            WHERE
+                COALESCE(Platforms.mode, 'auto')  = 'auto'
+            ORDER BY mirrorOrder""")
         return [[y is not None and y or '' for y in x[:-1]] + \
                 [x[-1]] for x in cu.fetchall()]
 
@@ -3930,30 +3861,12 @@ If you would not like to be %s %s of this project, you may resign from this proj
 
         return descendants
 
-    # *** MCP RELATED FUNCTIONS ***
-    # always use this method to get an MCP client so that it can be cached
     def _getMcpClient(self):
-        if not self.mcpClient:
-            mcpClientCfg = mcpClient.MCPClientConfig()
-
-            try:
-                mcpClientCfg.read(os.path.join(self.cfg.dataPath,
-                                               'mcp', 'client-config'))
-            except CfgEnvironmentError:
-                # If there is no client-config, default to localhost
-                pass
-
-            self.mcpClient = mcpClient.MCPClient(mcpClientCfg)
-        return self.mcpClient
-
-    def _getJSVersion(self):
         try:
-            mc = self._getMcpClient()
-            return str(mc.getJSVersion())
-        except mcp_error.NotEntitledError:
-            raise mint_error.NotEntitledError
-        except mcp_error.NetworkError:
-            raise mint_error.BuildSystemDown
+            return mcp_client.Client(self.cfg.queueHost, self.cfg.queuePort)
+        except mcp_error.BuildSystemUnreachableError:
+            util.rethrow(mint_error.BuildSystemDown)
+
 
     #
     # EC2 Support for rBO
@@ -4225,11 +4138,7 @@ If you would not like to be %s %s of this project, you may resign from this proj
 
         # TODO put back overrides
 
-        projectCfg = self._getProjectConaryConfig(project)
-        projectCfg['name'] = self.auth.username
-        projectCfg['contact'] = self.auth.fullName or ''
-        repos = self._getProjectRepo(project, pcfg=projectCfg)
-        cclient = conaryclient.ConaryClient(projectCfg, repos=repos)
+        cclient = self.reposMgr.getClient(self.auth.userId)
         if rebaseToPlatformLabel:
             pd.rebase(cclient, rebaseToPlatformLabel)
         pd.saveToRepository(cclient,
@@ -4325,9 +4234,9 @@ If you would not like to be %s %s of this project, you may resign from this proj
         mincfg = packagecreator.MinimalConaryConfiguration( cfg)
         return mincfg
 
-    @typeCheck(int, ((str,unicode),), int, ((str,unicode),), ((str,unicode),))
+    @typeCheck(int, ((str,unicode),), int, ((str,unicode),), ((str,unicode),), ((str,unicode),))
     @requiresAuth
-    def getPackageFactories(self, projectId, uploadDirectoryHandle, versionId, sessionHandle, upload_url):
+    def getPackageFactories(self, projectId, uploadDirectoryHandle, versionId, sessionHandle, upload_url, label):
         '''
             Given a file represented by L{uploadDirectoryHandle}, query the PC Service for
             possible factories to handle it.
@@ -4343,6 +4252,8 @@ If you would not like to be %s %s of this project, you may resign from this proj
             @type sessionHandle: string
             @param upload_url: Not used (yet)
             @type upload_url: string
+            @param label: stage label
+            @type label: str
 
             @return: L{sessionHandle} and A list of the candidate build factories and the data scanned
             from the uploaded file
@@ -4361,6 +4272,7 @@ If you would not like to be %s %s of this project, you may resign from this proj
         try:
             info = fileuploader.parseManifest()
         except IOError, e:
+            log.exception("Error parsing pcreator manifest:")
             raise mint_error.PackageCreatorError("unable to parse uploaded file's manifest: %s" % str(e))
         #TODO: Check for a URL
         #Now go ahead and start the Package Creator Service
@@ -4376,7 +4288,7 @@ If you would not like to be %s %s of this project, you may resign from this proj
             #Start the PC Session
             sesH = pc.startSession(dict(hostname=project.getFQDN(),
                 shortname=project.shortname, namespace=version['namespace'],
-                version=version['name']), mincfg)
+                version=version['name']), mincfg, label=label)
         else:
             sesH = sessionHandle
 
@@ -4398,7 +4310,7 @@ If you would not like to be %s %s of this project, you may resign from this proj
             @return: The available packages: outer dict uses the version string
             as the key, inner uses the namespace, third uses the trove name as
             keys.  Data is a dict containing the c{productDefinition} dict and
-            the C{develStageLabel}.
+            the C{stageLabel}.
         """
         # Get the conary repository client
         project = projects.Project(self, projectId)
@@ -4413,12 +4325,15 @@ If you would not like to be %s %s of this project, you may resign from this proj
             # First version
             # We expect data to look like {'productDefinition':
             # dict(hostname='repo.example.com', shortname='repo',
-            # namespace='rbo', version='2.0'), 'develStageLabel':
+            # namespace='rbo', version='2.0'), 'stageLabel':
             # 'repo.example.com@rbo:repo-2.0-devel'}
 
-            #Filter out labels that don't match the develStageLabel
+            # Do a backwards compatability check if it is an older trove
+            stageLabel = str((('stageLabel' in data and data['stageLabel']) or data['develStageLabel']))
+
+            #Filter out labels that don't match the stageLabel
             label = str(v.trailingLabel())
-            if label == str(data['develStageLabel']):
+            if label == stageLabel:
                 pDefDict = data['productDefinition']
                 manip = ret.setdefault(pDefDict['version'], dict())
                 manipns = manip.setdefault(pDefDict['namespace'], dict())
@@ -4642,7 +4557,7 @@ If you would not like to be %s %s of this project, you may resign from this proj
             return False
 
     @requiresAuth
-    def startApplianceCreatorSession(self, projectId, versionId, rebuild):
+    def startApplianceCreatorSession(self, projectId, versionId, rebuild, stageLabel = None):
         project = projects.Project(self, projectId)
         version = self.getProductVersion(versionId)
         pc = self.getApplianceCreatorClient()
@@ -4650,7 +4565,7 @@ If you would not like to be %s %s of this project, you may resign from this proj
         try:
             sesH, otherInfo = pc.startApplianceSession(dict(hostname=project.getFQDN(),
                 shortname=project.shortname, namespace=version['namespace'],
-                version=version['name']), mincfg, rebuild)
+                version=version['name']), mincfg, rebuild, stageLabel)
         except packagecreator.errors.NoFlavorsToCook, err:
             raise mint_error.NoImagesDefined( \
                     "Error starting the appliance creator service session: %s",
@@ -4982,8 +4897,22 @@ If you would not like to be %s %s of this project, you may resign from this proj
                 first = buildFilenames[0]
                 buildData['downloadUrl'] = first['downloadUrl']
                 buildData['sha1'] = first['sha1']
+            fileFields = [ 'idx', 'sha1', 'downloadUrl', 'size' ]
+            buildData['files'] = [ self._buildFileRepr(x)
+                    for x in buildFilenames or [] ]
 
         return res
+
+    @classmethod
+    def _buildFileRepr(cls, buildFile):
+        fileFields = [ 'idx', 'sha1', 'downloadUrl', 'size' ]
+        ret = dict((x, buildFile[x]) for x in fileFields)
+
+        fileUrls = buildFile['fileUrls']
+        fileNames = [ x[2] for x in fileUrls if x[1] == urltypes.LOCAL ]
+        if fileNames:
+            ret['filename'] = os.path.basename(fileNames[0])
+        return ret
 
     @typeCheck(int)
     @requiresAuth
@@ -5025,12 +4954,7 @@ If you would not like to be %s %s of this project, you may resign from this proj
         @rtype: C{list} of C{tuple}s. Each tuple is a pair; first element is
            the platform label, the second element is the platform name.
         """
-        availablePlatforms = []
-        for platformLabel in self.cfg.availablePlatforms:
-            platformName = self.platformNameCache.get(platformLabel)
-            if platformName:
-                availablePlatforms.append((platformLabel, platformName))
-        return availablePlatforms
+        return zip(self.cfg.availablePlatforms, self.cfg.availablePlatformNames)
 
     def isPlatformAcceptable(self, platformLabel):
         return (platformLabel in set(self.cfg.acceptablePlatforms + self.cfg.availablePlatforms))
@@ -5041,11 +4965,9 @@ If you would not like to be %s %s of this project, you may resign from this proj
     def __init__(self, cfg, allowPrivate=False, db=None, req=None):
         self.cfg = cfg
         self.req = req
-        self.mcpClient = None
         self.db = mint.db.database.Database(cfg, db=db)
         self.restDb = None
         self.reposMgr = repository.RepositoryManager(cfg, self.db._db)
-        self._platformNameCache = None
         self.amiPerms = amiperms.AMIPermissionsManager(self.cfg, self.db)
         self.siteAuth = siteauth.getSiteAuth(cfg.siteAuthCfgPath)
 
@@ -5076,15 +4998,6 @@ If you would not like to be %s %s of this project, you may resign from this proj
         #if self.db.tablesReloaded:
         #    self._generateConaryRcFile()
         self.newsCache.refresh()
-
-    def _getNameCache(self):
-        if self._platformNameCache is None:
-            self._platformNameCache = PlatformNameCache(
-                os.path.join(self.cfg.dataPath, 'data', 'platformName.cache'),
-                helperfuncs.getBasicConaryConfiguration(self.cfg), self)
-        return self._platformNameCache
-
-    platformNameCache = property(_getNameCache)
 
     @typeCheck(int)
     @requiresAdmin

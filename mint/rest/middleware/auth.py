@@ -5,6 +5,7 @@
 #
 
 import base64
+from conary.lib import util
 
 from mod_python import Cookie
 
@@ -20,6 +21,28 @@ from mint.rest import errors
 def public(deco):
     deco.public = True
     return deco
+
+# Decorator for methods/functions that require admin
+def admin(deco):
+    deco.admin = True
+    return deco
+
+# Decorator for internal methods/functions. Access should only be allowed from
+# localhost
+def internal(deco):
+    deco.internal = True
+    return deco
+
+
+def tokenRequired(func):
+    """
+    Mark an image-build-related API function as requiring an authentication
+    token in the HTTP headers. The token will be placed in
+    C{request.imageToken}.
+    """
+    func.tokenRequired = True
+    return func
+
 
 def noDisablement(method):
     """
@@ -43,6 +66,7 @@ class AuthenticationCallback(object):
         type, user_pass = request.headers['Authorization'].split(' ', 1)
         try:
             user_name, password = base64.decodestring(user_pass).split(':', 1)
+            password = util.ProtectedString(password)
             return (user_name, password)
         except:
             raise errors.AuthHeaderError
@@ -165,6 +189,28 @@ class AuthenticationCallback(object):
         response = self.checkDisablement(request, viewMethod)
         if response:
             return response
+
+        if (getattr(viewMethod, 'internal', False)
+                and request.remote[0] != '127.0.0.1'):
+            # Request to an internal API from an external IP address
+            return Response(status=404)
+
+        if getattr(viewMethod, 'tokenRequired', False):
+            imageToken = request.headers.get('X-rBuilder-OutputToken')
+            if not imageToken:
+                return Response(status=403)
+            request.imageToken = imageToken
+            return None
+
+        if getattr(viewMethod, 'admin', False):
+            if request.mintAuth is not None:
+                if request.mintAuth.admin:
+                    return None
+                else:
+                    return Response(status=401,
+                             headers={'WWW-Authenticate' : 'Basic realm="rBuilder"'})
+            else:
+                return Response(status=403)
 
         # require authentication
         if (not getattr(viewMethod, 'public', False)

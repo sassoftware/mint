@@ -56,18 +56,24 @@ class MigrateConfig(scriptlibrary.GenericScript):
             cfg.database[poolName] = pool = (cfg.reposDBDriver, cfg.reposDBPath)
             log.info("Set database alias %r to %r", poolName, pool)
 
-        # postgresql on 5439 -> pgpool on 6432
         for poolName, (driver, path) in cfg.database.items():
-            if driver != 'postgresql':
-                continue
-
-            if '@localhost.localdomain:5439/' in path:
-                newDriver = 'pgpool'
-                newPath = path.replace('@localhost.localdomain:5439/',
+            if (driver == 'postgresql' and
+                    '@localhost.localdomain:5439/' in path):
+                # Move postgresql on 5439 to pgpool on 6432
+                driver = 'pgpool'
+                path = path.replace('@localhost.localdomain:5439/',
                         '@localhost.localdomain:6432/')
-                cfg.database[poolName] = (newDriver, newPath)
+
+            if (driver == 'pgpool' and
+                    'rbuilder@localhost.localdomain:' in path):
+                path = path.replace('rbuilder@localhost.localdomain:',
+                        'postgres@localhost.localdomain:')
+
+            oldDriver, oldPath = cfg.database[poolName]
+            if (oldDriver, oldPath) != (driver, path):
+                cfg.database[poolName] = (driver, path)
                 log.info("Changing database alias %s::%s to %s::%s",
-                        driver, path, newDriver, newPath)
+                        oldDriver, oldPath, driver, path)
 
         path = config.RBUILDER_GENERATED_CONFIG
         cfg.writeGeneratedConfig(path)

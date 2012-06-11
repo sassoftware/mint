@@ -23,7 +23,7 @@ def readRBAConfig(configFileName):
         cfg.read(configFileName)
     except Exception, e:
         log.warn("Failed to read rBuilder configuration (reason: %s)." \
-                 "Using default values!" % str(ioe))
+                 "Using default values!" % str(e))
     return cfg
 
 def writeRBAGeneratedConfig(newCfg, generatedConfigFileName):

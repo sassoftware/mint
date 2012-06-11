@@ -153,6 +153,19 @@ Copyright (c) 2008-2009 rPath, Inc.
                 <div class="page-section-content">
                     <div id="advanced_options" style="${advancedOptionsStyle}">
 
+					<div py:if="not configured">
+						<h3>Entitlement Options</h3>
+	                    <p>
+	                        The following options are only required if you are an
+	                        existing customer with an entitlement already configured
+	                        for this product.
+	                    </p>
+	                     <div class="form-line-top">
+	                        <div class="rbasetup-label">Entitlement Key:</div>
+	                        <input type="text" name="entitlementKey" value="" />
+	                    </div>
+	                </div>
+	                
                     <h3>External Authentication</h3>
                     <p>
                         The following options are only required for situations

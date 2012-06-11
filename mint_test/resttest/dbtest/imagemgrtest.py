@@ -4,15 +4,13 @@ from testutils import mock
 
 from conary.lib import cfgtypes
 
-from mcp import client as mcpclient
-from mcp import mcp_error
-
 from mint import buildtypes
 from mint import jobstatus
 from mint import mint_error
 from mint.lib import data
 
 from mint.rest import errors
+from mint.rest.api import models
 from mint.rest.db import imagemgr
 
 from mint_test import mint_rephelp
@@ -56,6 +54,15 @@ class ImageManagerTest(mint_rephelp.MintDatabaseHelper):
         image2 = images['Image2']
         assert(image1.imageId == imageId)
         assert(image2.imageId == imageId2)
+
+        # Try the ordering both ways
+        imageIds = [ imageId, imageId2 ]
+        ret = db.imageMgr._getFilesForImages('hostName', imageIds)
+        self.failUnlessEqual([x.imageId for x in ret ], imageIds)
+
+        imageIds.reverse()
+        ret = db.imageMgr._getFilesForImages('hostName', imageIds)
+        self.failUnlessEqual([x.imageId for x in ret ], imageIds)
 
     def testListImagesForTrove(self):
         db = self.openMintDatabase(createRepos=False)
@@ -111,74 +118,31 @@ class ImageManagerTest(mint_rephelp.MintDatabaseHelper):
         self.createUser('admin', admin=True)
         self.createProduct('foo', owners=['admin'], db=db)
         imageId = self.createImage(db, 'foo', buildtypes.INSTALLABLE_ISO,
-                                   name='Image1')
-        self.setImageFiles(db, 'foo', imageId)
+                name='Image1',
+                buildData=[('outputToken', 'abcdef', data.RDT_STRING)])
+
+        # Initial creation -> unknown
         image = db.getImageForProduct('foo', imageId)
-        imageMgr = imagemgr.ImageManager(self.mintCfg, db, db.auth)
-        imageMgr.mcpClient = mock.MockObject()
-        imageMgr.mcpClient.jobStatus._mock.setDefaultReturn((jobstatus.RUNNING, 'foo'))
-        imageMgr._updateStatusForImageList([image])
-        self.assertEqual(image.imageStatus.code, jobstatus.RUNNING)
-        self.assertEqual(image.imageStatus.message, 'foo')
+        self.assertEqual(image.imageStatus.code, jobstatus.UNKNOWN)
+        self.assertEqual(image.imageStatus.message, '')
         self.assertEqual(image.imageStatus.isFinal, False)
 
-        # No job + image files -> finished
-        image.imageStatus.set_status(jobstatus.WAITING)
-        imageMgr.mcpClient.jobStatus._mock.raiseErrorOnAccess(
-                mcp_error.UnknownJob)
-        imageMgr._updateStatusForImageList([image])
-        self.failUnlessEqual(image.imageStatus.code, jobstatus.FINISHED)
-        self.failUnlessEqual(image.imageStatus.message, 'Finished')
-        self.failUnlessEqual(image.imageStatus.isFinal, True)
+        # Set by build machinery
+        status = models.ImageStatus(code=jobstatus.RUNNING, message='wait plz')
+        db.setImageStatus('foo', imageId, 'abcdef', status)
 
-        # No job + no image files -> failed
-        image.imageStatus.set_status(jobstatus.WAITING)
-        image.files.files = []
-        imageMgr.mcpClient.jobStatus._mock.raiseErrorOnAccess(
-                mcp_error.UnknownJob)
-        imageMgr._updateStatusForImageList([image])
-        self.failUnlessEqual(image.imageStatus.code, jobstatus.FAILED)
-        self.failUnlessEqual(image.imageStatus.message, 'Error')
-        self.failUnlessEqual(image.imageStatus.isFinal, True)
+        image = db.getImageForProduct('foo', imageId)
+        self.assertEqual(image.imageStatus.code, jobstatus.RUNNING)
+        self.assertEqual(image.imageStatus.message, 'wait plz')
+        self.assertEqual(image.imageStatus.isFinal, False)
 
-        # Imageless build -> finished
-        image.imageStatus.set_status(jobstatus.WAITING)
-        mock.mockMethod(image.hasBuild, False)
-        imageMgr._updateStatusForImageList([image])
-        self.failUnlessEqual(image.imageStatus.code, jobstatus.FINISHED)
-        self.failUnlessEqual(image.imageStatus.message, 'Finished')
-        self.failUnlessEqual(image.imageStatus.isFinal, True)
+        status = models.ImageStatus(code=jobstatus.FINISHED, message='Is good!')
+        db.setImageStatus('foo', imageId, 'abcdef', status)
 
-    def testGetMcpClient(self):
-        db = self.openMintDatabase(createRepos=False)
-        self.createUser('admin', admin=True)
-        imageMgr = imagemgr.ImageManager(self.mintCfg, db, db.auth)
-        mock.mock(mcpclient, 'MCPClientConfig')
-        mock.mock(mcpclient, 'MCPClient')
-        imageMgr._getMcpClient()
-        mcpclient.MCPClientConfig._mock.assertCalled()
-        mcpclient.MCPClientConfig().read._mock.assertCalled(
-                                self.mintCfg.dataPath + '/mcp/client-config')
-        mcpclient.MCPClient._mock.assertCalled(mcpclient.MCPClientConfig())
-        assert(imageMgr.mcpClient)
-        imageMgr.mcpClient = None
-        mcpclient.MCPClientConfig().read._mock.raiseErrorOnAccess(
-                                    cfgtypes.CfgEnvironmentError('foo', 'msg'))
-        imageMgr._getMcpClient()
-        assert(imageMgr.mcpClient)
-
-    def testGetJobServerVersion(self):
-        db = self.openMintDatabase(createRepos=False)
-        imageMgr = db.imageMgr
-        assert(db.imageMgr._getJobServerVersion() == '1.0')
-        imageMgr.mcpClient.getJSVersion._mock.raiseErrorOnAccess(
-                                            mcp_error.NotEntitledError)
-        self.assertRaises(mint_error.NotEntitledError,
-                          imageMgr._getJobServerVersion)
-        imageMgr.mcpClient.getJSVersion._mock.raiseErrorOnAccess(
-                                                mcp_error.NetworkError)
-        self.assertRaises(mint_error.BuildSystemDown,
-                          imageMgr._getJobServerVersion)
+        image = db.getImageForProduct('foo', imageId)
+        self.assertEqual(image.imageStatus.code, jobstatus.FINISHED)
+        self.assertEqual(image.imageStatus.message, 'Is good!')
+        self.assertEqual(image.imageStatus.isFinal, True)
 
     def testCreateImage(self):
         db = self.openMintDatabase(createRepos=False)
@@ -198,27 +162,39 @@ class ImageManagerTest(mint_rephelp.MintDatabaseHelper):
         db = self.openMintDatabase(createRepos=False)
         self.createUser('admin', admin=True)
         self.createProduct('foo', owners=['admin'], db=db)
-        imageId = self.createImage(db, 'foo', buildtypes.INSTALLABLE_ISO)
+        imageId = self.createImage(db, 'foo', buildtypes.INSTALLABLE_ISO,
+                buildData=[('outputToken', 'abcdef', data.RDT_STRING)])
 
-        db.setImageFiles('foo', imageId, [('filename1', 'title')])
-        files = db.getImageForProduct('foo', imageId).files.files
-        self.assertEqual(len(files), 1)
-        file, = files
-        self.assertEqual(file.title, 'title')
-        self.assertEqual(file.urls[0].fileId, 1)
-        self.assertEqual(file.urls[0].urlType, 0)
+        imageFiles = models.ImageFileList(files=[models.ImageFile(
+            baseFileName='filename2', title='title2', size=1024, sha1='sha')])
+        db.setFilesForImage('foo', imageId, 'abcdef', imageFiles)
 
-        db.setImageFiles('foo', imageId, [('filename2', 'title2', 1024, 'sha')])
-        files = db.getImageForProduct('foo', imageId).files.files
-        self.assertEqual(len(files), 1)
-        file, = files
+        file, = db.getImageForProduct('foo', imageId).files.files
         self.assertEqual(file.title, 'title2')
-        self.assertEqual(file.urls[0].fileId, 2)
+        self.assertEqual(file.urls[0].fileId, 1)
         self.assertEqual(file.urls[0].urlType, 0)
         self.assertEqual(file.size, 1024)
         self.assertEqual(file.sha1, 'sha')
-        self.assertRaises(ValueError,
-                db.setImageFiles, 'foo', imageId, 
-                                 [('filename2', 'title2', 1024)])
-        
+
+    def testSetImageFilesLarge(self):
+        """File size over 2 ** 31 shouldn't crash python-pgsql"""
+        db = self.openMintDatabase(createRepos=False)
+        self.createUser('admin', admin=True)
+        self.createProduct('foo', owners=['admin'], db=db)
+        imageId = self.createImage(db, 'foo', buildtypes.INSTALLABLE_ISO,
+                buildData=[('outputToken', 'abcdef', data.RDT_STRING)])
+
+        imageFiles = models.ImageFileList(files=[models.ImageFile(
+            baseFileName='filename2', title='title2', size=(2 ** 32),
+            sha1='sha')])
+        db.setFilesForImage('foo', imageId, 'abcdef', imageFiles)
+
+        file, = db.getImageForProduct('foo', imageId).files.files
+        self.assertEqual(file.title, 'title2')
+        self.assertEqual(file.urls[0].fileId, 1)
+        self.assertEqual(file.urls[0].urlType, 0)
+        self.assertEqual(file.size, 2 ** 32)
+        self.assertEqual(file.sha1, 'sha')
+
+
 testsetup.main()

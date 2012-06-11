@@ -49,6 +49,17 @@ class InstallClass(BaseInstallClass):
 
     in_advanced_mode = False
 
+    def setInstallData(self, anaconda):
+        BaseInstallClass.setInstallData(self, anaconda)
+        anaconda.id.partitions.autoClearPartType = CLEARPART_TYPE_ALL
+        anaconda.id.bootloader.setBootLoader(BL_EXTLINUX)
+
+        anaconda.id.rootPassword['password'] = ''
+        anaconda.id.rootPassword['isCrypted'] = True
+
+        anaconda.backend.addManifest('jspreload', optional=True)
+        anaconda.backend.addManifest('distpreload', optional=True)
+
     def setSteps(self, anaconda):
         BaseInstallClass.setSteps(self, anaconda);
         anaconda.dispatch.skipStep("authentication")
@@ -111,22 +122,7 @@ class InstallClass(BaseInstallClass):
 
         partitions.autoPartitionRequests = requests
 
-    def setInstallData(self, anaconda):
-        BaseInstallClass.setInstallData(self, anaconda)
-        anaconda.id.partitions.autoClearPartType = CLEARPART_TYPE_ALL
-        anaconda.id.bootloader.setBootLoader(BL_EXTLINUX)
-
     def postAction(self, anaconda, serial):
-        # assume that half of total mem is at least 2G
-        totalMem = iutil.memInstalled() / 1024 # in MB
-        dom0mem = max(int(totalMem / 2), 2048) # in MB
-
-        fObj = open(os.path.join(anaconda.rootPath, 'etc/bootloader.d/dom0-mem.conf'), 'w')
-        print >> fObj, 'add_xen_options dom0_mem=%dM' % dom0mem
-        fObj.close()
-
-        iutil.execWithRedirect('/sbin/bootman', [], root=anaconda.rootPath)
-
         # If in advanced mode the user had the opportunity to configure
         # networking already.
         if not self.in_advanced_mode:

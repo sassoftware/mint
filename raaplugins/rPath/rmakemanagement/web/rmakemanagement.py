@@ -141,7 +141,13 @@ class rMakeManagement(raawebplugin.rAAWebPlugin):
             service_table.saveJob(schedId, service, action)
 
         return dict(callback=callback)
-    
+
+    @web.expose(allow_xmlrpc=True, allow_json=True)
+    def resetServer(self):
+        """
+        Reset the rMake server.
+        """
+        return self.callBackend('resetServer')
 
     def _getServiceStatus(self, service_name):
         status = self.callBackend('getServiceStatus', service_name)

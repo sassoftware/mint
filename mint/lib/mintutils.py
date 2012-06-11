@@ -11,6 +11,8 @@ General utilities for use in the rBuilder codebase.
 import logging
 import inspect
 
+from conary.lib import util
+
 FORMATS = {
         'apache': ('[%(asctime)s] [%(levelname)s] (%(name)s) %(message)s',
             '%a %b %d %T %Y'),
@@ -25,6 +27,7 @@ def setupLogging(logPath=None, consoleLevel=logging.WARNING,
 
     logger = logging.getLogger(logger)
     logger.handlers = []
+    logger.propagate = False
     level = 100
 
     # Console handler
@@ -107,3 +110,11 @@ class ArgFiller(object):
                     % (sorted(kwargs)[0], self.name))
 
         return tuple(newArgs)
+
+def urlAddAuth(url, username, password):
+    urlArr = list(util.urlSplit(url))
+    if username is not None:
+        urlArr[1] = username
+    if password is not None:
+        urlArr[2] = password
+    return util.urlUnsplit(urlArr)

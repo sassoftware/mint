@@ -303,7 +303,10 @@ class WebPageTest(mint_rephelp.WebRepositoryHelper):
         page = page.postForm(1, self.fetchWithRedirect,
                 {'title': 'Test Project', 'shortname': 'test',
                     'domainname': MINT_PROJECT_DOMAIN,
-                    'prodtype': 'Component', 'version': '1.0'})
+                    'prodtype': 'Component',
+                    'version': '1.0',
+                    'platformLabel': '',
+                    })
 
         project = client.getProjectByHostname("test")
         self.failUnlessEqual(project.getName(), 'Test Project')
@@ -326,7 +329,9 @@ class WebPageTest(mint_rephelp.WebRepositoryHelper):
                  'isPrivate': False,
                  'prodtype': 'Appliance',
                  'namespace': self.mintCfg.namespace,
-                 'version': '1.0'})
+                 'version': '1.0',
+                 'platformLabel': '',
+                 })
 
         project = client.getProjectByHostname("test")
         self.failUnlessEqual(project.getApplianceValue(), 'yes')
@@ -340,7 +345,10 @@ class WebPageTest(mint_rephelp.WebRepositoryHelper):
         page = page.postForm(1, self.fetchWithRedirect,
                 {'title': 'Test Project 2', 'shortname': 'test2',
                  'domainname': MINT_PROJECT_DOMAIN,
-                 'prodtype': 'Component', 'version': '1.0'})
+                 'prodtype': 'Component',
+                 'version': '1.0',
+                 'platformLabel': '',
+                 })
 
         project = client.getProjectByHostname("test2")
         self.failUnlessEqual(project.getApplianceValue(), 'no')
@@ -354,7 +362,10 @@ class WebPageTest(mint_rephelp.WebRepositoryHelper):
         page = page.postForm(1, self.fetchWithRedirect,
                 {'title': 'Test Project 3', 'shortname': 'test3',
                  'domainname': MINT_PROJECT_DOMAIN,
-                 'prodtype': 'Component', 'version': '1.0'})
+                 'prodtype': 'Component',
+                 'version': '1.0',
+                 'platformLabel': '',
+                 })
 
         project = client.getProjectByHostname("test3")
         self.failUnlessEqual(project.getApplianceValue(), 'no')
@@ -385,7 +396,7 @@ class WebPageTest(mint_rephelp.WebRepositoryHelper):
                           {'name'   : 'Bar',
                            'commitEmail': 'email@example.com',
                            'namespace': 'spacemonkey'},
-                          ok_codes = [301])
+                          ok_codes = [302])
 
         project = client.getProject(projectId)
         self.failUnlessEqual(project.name, 'Bar')
@@ -426,7 +437,7 @@ class WebPageTest(mint_rephelp.WebRepositoryHelper):
                           {'name'   : 'Bar',
                            'isPrivate': 'off',
                            'namespace': 'spacemonkey'},
-                          ok_codes = [301])
+                          ok_codes = [302])
 
         project = client.getProject(projectId)
         self.failUnlessEqual(project.hidden, False)
@@ -524,6 +535,7 @@ class WebPageTest(mint_rephelp.WebRepositoryHelper):
         buildSize = 1024 * 1024 * 300
         buildSha1 = '0123456789ABCDEF01234567890ABCDEF0123456'
         build.setFiles([['foo.iso', 'Foo ISO Image', buildSize, buildSha1]])
+        self.setBuildFinished(build.buildId)
 
         self.webLogin('foouser', 'foopass')
 
@@ -563,6 +575,7 @@ class WebPageTest(mint_rephelp.WebRepositoryHelper):
                 'http://s3.amazonaws.com/ExtraCrispyChicken/foo.iso')
         build.addFileUrl(fileId, urltypes.AMAZONS3TORRENT,
                 'http://s3.amazonaws.com/ExtraCrispyChicken/foo.iso?torrent')
+        self.setBuildFinished(build.buildId)
 
         self.webLogin('foouser', 'foopass')
 
@@ -606,6 +619,7 @@ class WebPageTest(mint_rephelp.WebRepositoryHelper):
         build.setDataValue('anaconda-custom',
                 'anaconda-custom=/conary.rpath.com@rpl:devel/2.0-1-1[]',
                 data.RDT_TROVE, validate=False)
+        self.setBuildFinished(build.buildId)
 
         # make one of these frozen just to make sure we can handle
         # cases where a frozen version made it into the database
@@ -1543,39 +1557,11 @@ class WebPageTest(mint_rephelp.WebRepositoryHelper):
         project.editLabel(labelId, extLabel, self.cfg.repositoryMap[hostname],
                           authType, userpass[0], userpass[1], '')
 
-    def addPlatform(self, label, name='Platform for %(label)s'):
-        from rpath_proddef import api1 as proddef
-        from StringIO import StringIO
-        pd = proddef.PlatformDefinition()
-        pd.setPlatformName(name % dict(label=label))
-        stream = StringIO('w+')
-        pd.serialize(stream)
-        stream.seek(0)
-        self.addComponent('platform-definition:source=%s' % label, 
-                            [('platform-definition.xml', stream.read())])
-
     def testGetAvailablePlatforms(self):
         client = self.startMintServer(useProxy=True)
-        self.addPlatform('localhost@rpl:plat')
-        self.mintCfg.availablePlatforms.append('localhost@rpl:plat')
-
-        # before we add the external product, we don't have access to
-        # this product - there's no repomap.
         platforms = client.getAvailablePlatforms()
-        assert(not platforms)
-
-        # when we add localhost as an external repository, we
-        # can now access the platform
-        repos, hostname = self.addExternalRepository(client)
-        platforms = client.getAvailablePlatforms()
-        assert(platforms == [['localhost@rpl:plat', 
-                              'Platform for localhost@rpl:plat']])
-
-        # put the wrong password in, and now we can no longer access the
-        # repository.
-        self.editExternalRepository(client, hostname, userpass=('test', 'bar') )
-        platforms = client.getAvailablePlatforms()
-        assert(not platforms)
+        self.assertEquals(platforms, [['localhost@rpl:plat',
+                'My Spiffy Platform']])
 
     def testGetAllImagesByType(self):
         client, userId = self.quickMintUser('foouser', 'foopass')
@@ -1602,6 +1588,14 @@ class WebPageTest(mint_rephelp.WebRepositoryHelper):
                       userId=userId)
         images = client.getAllBuildsByType('VMWARE_ESX_IMAGE')
         assert(len(images) == 1)
+        self.failUnlessEqual(len(images[0]['files']), 1)
+
+        images = client.getAllBuildsByType('VMWARE_OVF_IMAGE')
+        assert(len(images) == 0)
+        self.addBuild(client, projectId, buildtypes.VMWARE_OVF_IMAGE,
+                      userId=userId)
+        images = client.getAllBuildsByType('VMWARE_OVF_IMAGE')
+        assert(len(images) == 1)
 
         images = client.getAllBuildsByType('AMI')
         assert(len(images) == 0)
@@ -1625,18 +1619,28 @@ class WebPageTest(mint_rephelp.WebRepositoryHelper):
         self.failUnlessEqual(len(images), 1)
         image = images[0]
         expected = {
-            'productDescription': '', 'buildId': 7, 'projectId': 1,
+            'productDescription': '', 'buildId': 8, 'projectId': 1,
             'isPublished': 0, 'buildDescription': 'Build Description',
             'productName': 'Test Project',
             'isPrivate': 0,
-            'sha1': '902ba3cda1883801594b6e1b452790cc53948fda',
+            'sha1': 'fe5dbbcea5ce7e2988b8c69bcfdfde8904aabc1f',
             'role': 'Product Owner', 'createdBy': 'foouser',
             'buildName': 'Build', 'baseFileName': 'testproject-0.1-',
-            'downloadUrl': 'http://SOMEHOST/downloadImage?fileId=7',
-            'buildPageUrl': 'http://SOMEHOST/project/testproject/build?id=7',
+            'downloadUrl': 'http://SOMEHOST/downloadImage?fileId=8',
+            'buildPageUrl': 'http://SOMEHOST/project/testproject/build?id=8',
+            'files' : [
+                {'downloadUrl': 'http://SOMEHOST/downloadImage?fileId=8',
+                 'sha1': 'fe5dbbcea5ce7e2988b8c69bcfdfde8904aabc1f',
+                 'idx': 0,
+                 'size': '8192',
+                 'filename' : 'imageFile 8',
+                 },
+            ],
         }
         image['downloadUrl'] = self._whiteOutHostPort(image['downloadUrl'])
         image['buildPageUrl'] = self._whiteOutHostPort(image['buildPageUrl'])
+        for f in image['files']:
+            f['downloadUrl'] = self._whiteOutHostPort(f['downloadUrl'])
         self.failUnlessEqual(images[0], expected)
 
     @classmethod

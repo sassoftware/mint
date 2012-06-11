@@ -18,3 +18,6 @@ pageList = {
 }
 
 
+COMMAND_RESET = '/usr/share/rbuilder/scripts/rmake-reset'
+
+

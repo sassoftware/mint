@@ -6,15 +6,15 @@
 #
 
 import sys
-import testsetup
+from mint_test import testsetup
 from mint_test import mint_rephelp
-import mock
-import webprojecttest
-from mint_rephelp import FQDN
+from mint_test import webprojecttest
+from mint_test.mint_rephelp import FQDN
 from pcreator import factorydata
 
 from conary.lib import util
 from testrunner import pathManager
+from testutils import mock
 
 from factory_test.factorydatatest import basicXmlDef
 
@@ -27,7 +27,8 @@ from types import MethodType
 
 from rpath_proddef import api1 as proddef
 
-import pcreatortests.packagecreatoruitest
+from mint_test.pcreatortests.packagecreatoruitest import getPackageCreatorFactoriesData1
+
 
 class TestPackageCreatorUIWeb(webprojecttest.WebProjectBaseTest):
     """ Unit tests for the web ui pieces of the Package Creator """
@@ -427,7 +428,7 @@ class TestPackageCreatorUIWeb(webprojecttest.WebProjectBaseTest):
         func = projectHandler.handle(context)
         try:
             page = func(auth = auth, **fields)
-        except mint.web.webhandler.HttpMoved:
+        except mint.web.webhandler.HttpMovedTemporarily:
             pass
         self.assertEquals(self.called, True)
 
@@ -451,7 +452,7 @@ class TestPackageCreatorUIWeb(webprojecttest.WebProjectBaseTest):
         func = projectHandler.handle(context)
         try:
             page = func(auth = auth, **fields)
-        except mint.web.webhandler.HttpMoved:
+        except mint.web.webhandler.HttpMovedTemporarily:
             pass
 
         self.assertEquals(projectHandler._getCurrentProductVersion(), 2)  #This should be set to the new version
@@ -508,7 +509,7 @@ class TestPackageCreatorUIWeb(webprojecttest.WebProjectBaseTest):
         fields = {}
         cmd = 'testproject/packageCreatorPackages'
         def getPackageList(s, projectId):
-            return {u'vs1': pcreatortests.packagecreatoruitest.getPackageCreatorFactoriesData1['vs1']}
+            return {u'vs1': getPackageCreatorFactoriesData1['vs1']}
         projectHandler, auth = self._setupProjectHandlerMockClientMethod('getPackageCreatorPackages', getPackageList, cmd)
         vId = projectHandler.client.addProductVersion(projectHandler.projectId, "ns1", "vs1", "Fluff description")
         projectHandler._setCurrentProductVersion(vId)
@@ -541,7 +542,7 @@ class TestPackageCreatorUIWeb(webprojecttest.WebProjectBaseTest):
         fields = {}
         cmd = 'testproject/packageCreatorPackages'
         def getPackageList(s, projectId):
-            return pcreatortests.packagecreatoruitest.getPackageCreatorFactoriesData1
+            return getPackageCreatorFactoriesData1
         projectHandler, auth = self._setupProjectHandlerMockClientMethod('getPackageCreatorPackages', getPackageList, cmd)
         vId = projectHandler.client.addProductVersion(projectHandler.projectId, "ns1", "vs1", "Fluff description")
         projectHandler._setCurrentProductVersion(vId)
@@ -577,7 +578,7 @@ class TestPackageCreatorUIWeb(webprojecttest.WebProjectBaseTest):
         func = siteHandler.handle(context)
         try:
             page = func(auth = auth, **fields)
-        except mint.web.webhandler.HttpMoved:
+        except mint.web.webhandler.HttpMovedTemporarily:
             pass
 
         self.assertEquals(self.called, True)

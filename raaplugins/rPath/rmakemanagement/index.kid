@@ -28,6 +28,13 @@ from rPath.rmakemanagement import pageList
         d = d.addCallback(reloadNoHistory);
     }
 
+    function doReset(service, msg)
+    {
+        var p = new Post('resetServer', [], []);
+        var d = p.doAction();
+        d = d.addCallback(reloadNoHistory);
+    }
+
     function toggleBuildLog(link, expand, collapse, buildId) {
         var el = $(buildId);
         if(null == el) {
@@ -159,7 +166,7 @@ from rPath.rmakemanagement import pageList
                                 <input py:if="status != rmakemanagement.status.STOPPED" type="image" title="restart" class="image" src="${restart}" onclick="javascript:doAct('${rmakemanagement.rMakeServiceName}', '${rmakemanagement.action.RESTART}', 'Restarting ${rmakemanagement.rMakeServiceName} ...');" onMouseOver="this.src = '${restart_h}'" onMouseOut="this.src = '${restart}'" />
                                 <img py:if="status == rmakemanagement.status.STOPPED" type="image" title="restart" src="${makeUrl('/static/images/icon_restart_d.gif')}"/></td>
                                 <td class="button-column service-action">
-                                <input type="image" title="reset" class="image" src="${restart}" onclick="javascript:doAct('${rmakemanagement.rMakeServiceName}', '${rmakemanagement.action.RESTART}', 'Resetting ${rmakemanagement.rMakeServiceName} ...');" onMouseOver="this.src = '${restart_h}'" onMouseOut="this.src = '${restart}'" /></td>
+                                <input type="image" title="reset" class="image" src="${restart}" onclick="javascript:doReset('${rmakemanagement.rMakeServiceName}', 'Resetting ${rmakemanagement.rMakeServiceName} ...');" onMouseOver="this.src = '${restart_h}'" onMouseOut="this.src = '${restart}'" /></td>
                             </tr>
                         </div>
                         <div py:if="server is None">
