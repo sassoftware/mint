@@ -3,6 +3,10 @@
 #
 # All Rights Reserved
 #
+
+from conary.lib import sha1helper
+
+from mint.lib import data as datatypes
 from mint.rest.api import requires
 from mint.rest.api import base
 from mint.rest.api import models
@@ -36,6 +40,14 @@ class ProductImagesController(base.BaseController):
 
     def destroy(self, request, hostname, imageId):
         self.db.deleteImageForProduct(hostname, imageId)
+
+    @requires('image', models.Image)
+    def create(self, request, hostname, image):
+        outputToken = sha1helper.sha1ToString(file('/dev/urandom').read(20))
+        buildData = [('outputToken', outputToken, datatypes.RDT_STRING)]
+        imageId = self.db.createImage(hostname, image, buildData=buildData)
+        self.db.uploadImageFiles(hostname, image, outputToken=outputToken)
+        return self.get(request, hostname, imageId)
 
     def stop(self, request, hostname, imageId):
         return self.db.stopImageJob(hostname, imageId)

@@ -34,11 +34,16 @@ class GenericScript(object):
         self.name = os.path.basename(sys.argv[0])
         self.resetLogging()
 
-    def resetLogging(self, quiet=False):
+    def resetLogging(self, quiet=False, verbose=False, fileLevel=logging.DEBUG):
         if self.newLogger:
-            level = quiet and logging.ERROR or logging.INFO
+            if verbose:
+                level = logging.DEBUG
+            elif quiet:
+                level = logging.ERROR
+            else:
+                level = logging.INFO
             mintutils.setupLogging(self.logPath, consoleLevel=level,
-                    fileLevel=logging.DEBUG)
+                    fileLevel=fileLevel)
             # Set the conary logger to not eat messages
             logger.setLevel(logging.NOTSET)
         else:
@@ -294,8 +299,8 @@ def setupScriptLogger(logfile = None, consoleLevel = logging.WARNING,
 
     # if a logfile was specified, create a handler for it, too
     if logfile:
-        logfileFormatter = logging.Formatter('%(asctime)s [%(process)d] '
-                '%(levelname)s %(name)s : %(message)s', '%Y-%b-%d %H:%M:%S')
+        logfileFormatter = mintutils.ISOFormatter('%(asctime)s [%(process)d] '
+                '%(levelname)s %(name)s : %(message)s')
         logfileHandler = logging.FileHandler(logfile)
         logfileHandler.setFormatter(logfileFormatter)
         logfileHandler.setLevel(logfileLevel)
@@ -304,7 +309,8 @@ def setupScriptLogger(logfile = None, consoleLevel = logging.WARNING,
         # also, let's log conary messages that would normally go to standard out
         # into our log files
         if globals().has_key("logger"):
-            conaryLogfileFormatter = logging.Formatter('%(asctime)s [%(process)d] CONARY: %(message)s', '%Y-%b-%d %H:%M:%S')
+            conaryLogfileFormatter = mintutils.ISOFormatter(
+                    '%(asctime)s [%(process)d] CONARY: %(message)s')
             conaryLogfileHandler = logging.FileHandler(logfile)
             conaryLogfileHandler.setFormatter(conaryLogfileFormatter)
             # always use debug level here no matter what

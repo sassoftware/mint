@@ -41,7 +41,7 @@ from conary.errors import TroveNotFound, ParseError
 
 from rpath_proddef import api1 as proddef
 
-import simplejson
+import json
 
 def getUserDict(members):
     users = { userlevels.USER: [],
@@ -118,7 +118,7 @@ class ProjectHandler(BaseProjectHandler, PackageCreatorMixin):
 
     @redirectHttp
     def projectPage(self, auth):
-        isAppliance = self.project.prodtype.lower() == 'appliance'
+        isAppliance = self.project.prodtype.lower() == 'appliance' or self.project.prodtype.lower() == 'platformfoundation'
         self._redirectOldLinks('#/%s?shortname=%s' % (
             isAppliance and 'appliances' or 'repositories',
             self.project.shortname))
@@ -421,7 +421,7 @@ class ProjectHandler(BaseProjectHandler, PackageCreatorMixin):
     @dictFields(yesArgs = {})
     def deleteBuilds(self, auth, buildIdsToDelete, confirmed, **yesArgs):
         if confirmed:
-            buildIds = simplejson.loads(yesArgs['buildIdsJSON'])
+            buildIds = json.loads(yesArgs['buildIdsJSON'])
             for buildId in buildIds:
                 build = self.client.getBuild(int(buildId))
                 build.deleteBuild()
@@ -447,7 +447,7 @@ class ProjectHandler(BaseProjectHandler, PackageCreatorMixin):
             return self._write("confirm",
                     message = message,
                     yesArgs = { 'func': 'deleteBuilds',
-                                'buildIdsJSON': simplejson.dumps(buildIdsToDelete),
+                                'buildIdsJSON': json.dumps(buildIdsToDelete),
                                 'confirmed': 1 },
                     noLink = "builds")
 

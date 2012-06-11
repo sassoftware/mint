@@ -1008,6 +1008,7 @@ class SiteHandler(WebHandler):
             return self._write("confirm", message = "Are you sure you want to close your account?",
                 yesArgs = {'func':'cancelAccount', 'confirmed':'1'}, noLink = self.cfg.basePath)
 
+    @redirectHttps
     def maintenance(self, auth, *args, **kwargs):
         mode = maintenance.getMaintenanceMode(self.cfg)
         if mode == maintenance.NORMAL_MODE:
@@ -1132,23 +1133,6 @@ class SiteHandler(WebHandler):
         return self._write("findRefs",
             trvName = trvName, trvVersion = trvVersion,
             references = references, descendants = descendants)
-
-    @intFields(id = -1)
-    def tryItNow(self, auth, id):
-        try:
-            bami = self.client.getBlessedAMI(id)
-        except mint_error.ItemNotFound:
-            raise HttpNotFound
-
-        if not bami.isAvailable:
-            raise HttpNotFound
-
-        return self._write("tryItNow",
-                blessedAMIId = bami.id,
-                ec2AMIId = bami.ec2AMIId,
-                buildId = bami.buildId,
-                shortDescription = bami.shortDescription,
-                helptext = bami.helptext)
 
     def uploadBuild(self, auth):
         method = self.req.method.upper()

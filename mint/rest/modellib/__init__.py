@@ -175,12 +175,12 @@ class Model(object):
                     % (className, sorted(kwargs)[0]))
 
     def __setattr__(self, attr, value):
-        fields = list(self._fields)
-        lowerFields = [f.lower() for f in fields]
+        fieldDict = dict((x.lower(), x) for x in self._fields)
+        # If the attribute could not be found in our defined fields, set the
+        # attribute normally
+        fieldName = fieldDict.get(attr.lower(), attr)
+        object.__setattr__(self, fieldName, value)
 
-        if attr.lower() in  lowerFields:
-            index = lowerFields.index(attr.lower())
-            fieldName = fields[index]
-            object.__setattr__(self, fieldName, value)
-        else:
-            object.__setattr__(self, attr, value)
+    def updateFields(self, **kwargs):
+        for key, value in kwargs.items():
+            setattr(self, key, value)

@@ -129,6 +129,7 @@ class Platform(Model):
     mode = fields.CharField()
     enabled = fields.BooleanField()
     configurable = fields.BooleanField()
+    abstract = fields.BooleanField()
     mirrorPermission = fields.BooleanField()
     repositoryUrl = _RepositoryUrlField()
     # contentSources = fields.ModelField(SourceRefs)
@@ -142,6 +143,7 @@ class Platform(Model):
     load = fields.UrlField('platforms.load', ['platformId'])
     imageTypeDefinitions = fields.UrlField('platforms.imageTypeDefinitions',
                                          ['platformId'])
+    isPlatform = fields.BooleanField()
 
     id = fields.AbsoluteUrlField(isAttribute=True)
 

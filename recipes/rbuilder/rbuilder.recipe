@@ -1,0 +1,240 @@
+#
+# Copyright (c) 2011 rPath, Inc.
+#
+
+rbuilder_dirs = {
+    'capsules':                     (0775, ('root', 'apache')),
+    'catalog':                      (0775, ('root', 'apache')),
+    'changesets':                   (0775, ('root', 'apache')),
+    'config':                       (0775, ('root', 'apache')),
+    'cscache':                      (0775, ('root', 'apache')),
+    'data':                         (0775, ('root', 'apache')),
+    'diffcache':                    (0775, ('root', 'apache')),
+    'entitlements':                 (0775, ('root', 'apache')),
+    'finished-images':              (0775, ('root', 'apache')),
+    'jobs':                         (0775, ('root', 'apache')),
+    'notices':                      (0775, ('root', 'apache')),
+    'proxy-contents':               (0775, ('root', 'apache')),
+    'repos':                        (0775, ('root', 'apache')),
+    'run':                          (0775, ('root', 'apache')),
+    'storage':                      (0775, ('root', 'apache')),
+    'templates':                    (0775, ('root', 'apache')),
+    'tmp':                          (0775, ('root', 'apache')),
+    '/var/log/rbuilder':            (0775, ('root', 'apache')),
+    '/var/lib/rbuilder':            (0775, ('root', 'apache')),
+    }
+
+class rBuilderProduct(CPackageRecipe):
+    name = 'rbuilder'
+    version = '5.0'
+
+    Flags.rbo = False
+
+    buildRequires = [
+        'bootman:runtime',
+        'boto:python',
+        'catalog-service:python',
+        'chkconfig:runtime',
+        'conary-repository:python', 
+        'conary-rest:python',
+        'decorator:python',
+        'django:python',
+        'django-db-postgres:python',
+        'django-rest-interface:python',
+        'dnspython:python',
+        'docbook-utils:runtime',
+        'elementtree:python',
+        'jobslave:python',
+        'kid:python',
+        'kid:runtime',
+        'libxml2:python',
+        'm2crypto:python',
+        'mcp:python',
+        'mod_python:runtime',
+        'pcreator:python',
+        'PIL:python',
+        'postgresql:runtime',
+        'psycopg2:python',
+        'pyOpenSSL:python',
+        'python-dateutil:python',
+        'python:devel',
+        'python-pgsql:python',
+        'python-twisted:python',
+        'rapa:python',
+        'restlib:python',
+        'rmake:python',
+        'rmake3:python',
+        'rpath-capsule-indexer:python',
+        'rpath-job:python',
+        'rpath-models:python',
+        'rpath-repeater:python',
+        'rpath-storage:python',
+        'rpath-product-definition:python',
+        'simplejson:python',
+        'splashy:runtime',
+        'util-linux:runtime',
+        'vobject:python',
+        'xmlto:runtime',
+        'xobj:python',
+      ]
+
+    def setup(r):
+        r.macros.sitepkg = '%(libdir)s/python%(pyver)s/site-packages'
+        r.unpack()
+        r.build()
+        r.install()
+        r.policy()
+        r.macros.pgver = '9.0'
+
+    def unpack(r):
+        r.addMercurialSnapshot()
+
+        # If our version includes a mercurial revision, don't include
+        # that in shortVersion
+        shortVersion, hgRevision = r.version.rsplit('.', 1)
+        if len(hgRevision) == 12:
+            r.macros.shortVersion = shortVersion
+        else:
+            r.macros.shortVersion = r.version
+
+        # items for media-template
+        r.macros.product = 'rPath rBuilder'
+        r.addSource('RELEASE-NOTES-en_US.html',
+            dest = '/usr/lib/media-template/disc1/', macros = True)
+        r.addSource('isolinux.cfg', dest='/usr/lib/media-template/disc1/isolinux/')
+        r.addSource('EULA.txt')
+
+    def build(r):
+        buildLabel = r.macros.get('buildlabel', 'products.rpath.com@rpath:rba-4')
+        r.Make( \
+            'VERSION=%s SHORTVER=%s ' % (r.version, r.macros.shortVersion) + \
+            'LIBDIR=%(libdir)s '
+            )
+
+    def install(r):
+        r.Make('install DESTDIR=%(destdir)s ' + \
+            'VERSION=%s SHORTVER=%s ' % (r.version, r.macros.shortVersion) + \
+            'LIBDIR=%(libdir)s POSTGRES_VERSION=%(pgver)s')
+
+        # Create apache-owned dirs
+        for path, (mode, (user, group)) in rbuilder_dirs.items():
+            path = os.path.join('/srv/rbuilder', path)
+            r.MakeDirs(path)
+            r.SetModes(path, mode)
+            r.Ownership(user, group, path)
+            r.ExcludeDirectories(exceptions=path)
+
+
+        # Symlink web toolkits into web-common
+        for tk in ('MochiKit', 'yui'):
+            target = '%(datadir)s/conary/web-common/apps/' + tk
+            r.Symlink('%(servicedir)s/www/html/' + tk, target)
+            r.DanglingSymlinks(exceptions=target)
+            r.Requires(tk + ':runtime', target)
+
+        # allow apache to write to a few "generated" files
+        r.Ownership('apache', 'root',
+            '%(servicedir)s/rbuilder/config/conaryrc.generated')
+        r.Ownership('apache', 'root',
+            '%(servicedir)s/rbuilder/config/rbuilder-(generated|custom).conf')
+        r.Ownership('apache', 'root',
+            r'/etc/rmake/(node|server).d/25_rbuilder-rapa.conf')
+
+
+        # known-good mount point for /mnt/mirror/
+        r.MakeDirs('/mnt/mirror')
+        r.ExcludeDirectories(exceptions = '/mnt/mirror')
+
+        # documentation and media-template bits
+        r.Install('EULA.txt', '/usr/lib/media-template/disc1/')
+        r.Install('EULA.txt', '%(thisdocdir)s/')
+
+        # remove the monkey from the product release
+        if not Flags.rbo:
+            r.Remove('%(datadir)s/rbuilder/scripts/amazon-s3-processor')
+
+            # rbas allow any package to be built using package creator
+            r.Create('/srv/rbuilder/config/pcreator.d/20_rba.conf', 
+                     contents='allowUnsafeBuilds True\n')
+
+        # compile all .py files into .pyc
+        r.CompilePython('/')
+
+    def policy(r):
+
+        # Data directories
+        r.Ownership('root', 'jabber', '/usr/share/rbuilder/jabberd')
+        r.ExcludeDirectories(exceptions='/srv/rbuilder/pki')
+
+        # These config files are managed at runtime or by the admin, not
+        # by conary.
+        r.InitialContents(r'%(servicedir)s/rbuilder/config/'
+            'conaryrc(\.generated)?')
+        r.InitialContents(r'%(servicedir)s/rbuilder/config/'
+            'rbuilder-(custom|generated).conf')
+        r.InitialContents(r'/etc/rmake/(node|server).d/25_rbuilder-rapa.conf')
+        r.InitialContents(r'/etc/bootloader.d/dom0-mem.conf')
+        r.InitialContents(r'/srv/rbuilder/config/postgresql-custom.conf')
+
+        # These files contain defaults or stubs and should always be
+        # replaced.
+        r.Transient(r'%(servicedir)s/rbuilder/config/(rbuilder|pcreator).conf')
+        r.Transient(r'/etc/sysconfig/pgsql/postgresql-rbuilder')
+        r.Transient(r'/usr/share/rbuilder/postgresql.conf')
+        r.Config(exceptions=r'/etc/sysconfig/pgsql/postgresql-rbuilder')
+
+        r.Transient(r'.*/\.keep[^/]*')
+        r.Config(exceptions=r'.*/\.keep[^/]*')
+
+        r.Transient(r'/etc/rmake/(noderc|(node|server).d/20_rbuilder.conf)')
+        r.Config(exceptions=r'/etc/rmake/(noderc|(node|server).d/20_rbuilder.conf)')
+
+        # Require mod_python httpd configuration.
+        r.Requires('mod_python:runtime',
+            '%(sysconfdir)s/httpd/conf.d/rbuilder.conf')
+
+        # rBuilder pieces need to work together with the same version
+        r.ComponentProvides('%(version)s')
+
+        # WORKAROUND: manually tag bootman files (RPL-3132)
+        r.TagSpec('bootman-config', '/etc/bootloader\.d/.*')
+
+        r.Requires('rbuilder:python(%(version)s)',
+                   '%(sitepkg)s/mint/web/webhandler.pyc')
+        r.Requires('rbuilder:python(%(version)s)',
+                   '%(localstatedir)s/mailman/bin/mmsettingspolicy.py.rbuilder')
+        r.Requires('rbuilder:python(%(version)s)',
+                   '%(datadir)s/rbuilder/scripts/migrate-config')
+
+        # Our rAPA plugins require rapa-plugin-rPath
+        r.Requires('rapa-plugin-rPath:python',
+            '%(libdir)s/raa/rPath/[^/]+/__init__.pyc')
+
+        # Script runtime dependencies
+        r.Requires('tmpwatch:runtime',
+            r'%(sysconfdir)s/cron.daily/rbuilder.tmpwatch')
+        r.Requires('logrotate:runtime',
+            r'%(sysconfdir)s/logrotate.d/')
+        r.Requires('/usr/bin/qemu-img', '.*/wig/bootable.py.*')
+
+        # disable reportlab for rbuilder 5.0
+        r.Requires(exceptDeps='python: reportlab.*')
+
+        # Make sure that amiconfig isn't required by our amiconfig plugin
+        r.Requires(exceptDeps='python: amiconfig.*')
+
+        # Anaconda customization
+        # This comes first so it is omitted from the -sources split.
+        r.PackageSpec('anaconda-custom', r'/usr/share/anaconda/')
+        r.PackageSpec('media-template', r'/usr/lib/media-template/')
+
+        # Bootsplash customization
+        r.ComponentSpec('splashy-theme:runtime', r'/usr/share/splashy/')
+
+        # Exceptions for python source stripping
+        r.PackageSpec('%(name)s', r'%(libdir)s/rmake.*')
+
+        # Strip out python files, leaving only compiled pyc/pyo files.
+        # Because our coverage can't work like this, put the sources
+        # into rbuilder-sources where rbuilder-test can consume it.
+        r.PackageSpec('%(name)s-sources', '.*\.py$')

@@ -4,7 +4,7 @@
 # All Rights Reserved
 #
 import logging
-import simplejson
+import json
 import sys
 import xmlrpclib
 
@@ -60,7 +60,7 @@ def _rpcHandler(req, db, cfg, pathInfo = None):
     if isXMLrpc:
         (args, method) = xmlrpclib.loads(req.read())
     if isJSONrpc:
-        (method, args) = simplejson.loads(req.read())
+        (method, args) = json.loads(req.read())
 
     # coax parameters into something MintServer likes
     params = [method, authToken, args]
@@ -77,7 +77,7 @@ def _rpcHandler(req, db, cfg, pathInfo = None):
         resp = xmlrpclib.dumps((result,), methodresponse=1)
         req.content_type = "text/xml"
     elif isJSONrpc:
-        resp = simplejson.dumps(result[1])
+        resp = json.dumps(result[1])
         req.content_type = "application/x-json"
 
     # write repsonse

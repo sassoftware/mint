@@ -12,70 +12,98 @@ Stores a dictionary of data on disk in a pickle.
 
 import os
 import time
-import errno
 import cPickle as pickle
-from conary.lib.util import mkdirChain
+from conary.lib.util import mkdirChain, fopenIfExists
 from mint.lib.unixutils import hashFile
 from mint.lib.unixutils import atomicOpen
 
 class PersistentCache(object):
+    # Time (in seconds) before a cached entry is considered stale, and
+    # re-generated
+    _expiration = 24 * 3600 # one day
+    # Time (in seconds) before the cache will try to refresh a negative
+    # cache entry.
+    _negativeExpire = 5 * 60 # 5 Minutes
+    _undefined = object()
+
     def __init__(self, cacheFile):
         self._cachefile = cacheFile
         self._data = dict()
         self._lastHash = None
+        self._dirtyKeys = set()
+        self._removedKeys = set()
+        self._dirty = False
 
-        # Time (in seconds) before a the cache will try to refresh a negative
-        # cache entry.
-        self._negativeExpire = 5 * 60 # 5 Minutes
-
-        self._load()
-
-    def _load(self):
+    def _load(self, create=True, truncate=False):
         """
         Load data from the cache file if the file has changed since the last
         time it was loaded.
         """
 
-        fObj = None
-        try:
-            fObj = file(self._cachefile, 'rb')
-        except IOError, ioe:
-            if ioe.args[0] == errno.ENOENT:
-                # No such file or directory
+        fObj = fopenIfExists(self._cachefile, 'rb')
+        if fObj is None:
+            if truncate:
+                self._data.clear()
+                self._dirty = True
+            if create:
                 self._persist()
-            else:
-                raise
         else:
-            # Hash the cache file 
-            if self._lastHash is None:
-                self._lastHash = hashFile(fObj)
+            self._loadFromFile(fObj)
 
-            # Only load data if the file has changed.
-            elif self._lastHash == hashFile(fObj):
-                return
-
-            self._data = pickle.load(fObj)
+    def _loadFromFile(self, fObj):
+        # Hash the cache file 
+        fileHash = hashFile(fObj)
+        if self._lastHash == fileHash:
+            self._dirty = bool(self._dirtyKeys) or bool(self._removedKeys)
+            return
+        self._lastHash = fileHash
+        # Save dirty data
+        dirty = [ (k, self._data[k]) for k in self._dirtyKeys ]
+        self._data = pickle.load(fObj)
+        # And add it back
+        self._data.update(dirty)
+        if not self._dirty:
+            self._dirty = bool(dirty)
+        for removed in self._removedKeys:
+            val = self._data.pop(removed, self._undefined)
+            if val is not self._undefined:
+                self._dirty = True
 
     def _persist(self):
         """
         Write data to the cache file.
         """
 
-        if not os.path.exists(os.path.dirname(self._cachefile)):
-            mkdirChain(os.path.dirname(self._cachefile))
+        mkdirChain(os.path.dirname(self._cachefile))
+        self._load(create=False)
+        self._dirtyKeys.clear()
+        self._removedKeys.clear()
+        if not self._dirty:
+            return
 
         fObj = atomicOpen(self._cachefile)
         pickle.dump(self._data, fObj)
         self._lastHash = fObj.commit()
+        self._dirty = False
 
-    def _update(self, key, value):
+    def _update(self, key, value, timestamp=None, commit=True):
         """
         Update both the local dictionary and the on disk cache.
         """
+        return self._updateMany([(key, value)], timestamp=timestamp,
+            commit=commit)[0]
 
-        self._data[key] = (value, time.time())
-        self._persist()
-        return value
+    def _updateMany(self, values, timestamp=None, commit=True):
+        if timestamp is None:
+            timestamp = time.time()
+        ret = []
+        for key, value in values:
+            self._data[key] = (value, timestamp)
+            ret.append(value)
+            self._dirtyKeys.add(key)
+        if commit:
+            self._persist()
+        return ret
 
     def _refresh(self, key):
         """
@@ -88,40 +116,51 @@ class PersistentCache(object):
         """
         Clear all cached data.
         """
-
-        self._data = dict()
+        self._load()
+        self._removedKeys.update(self._data)
+        self._data.clear()
         self._persist()
+
+    def clearKey(self, key, commit=True):
+        """
+        Clear one specific key.
+        """
+        # No need to load data here, self._persist will reload
+        self._removedKeys.add(key)
+        self._data.pop(key, None)
+        if commit:
+            self._persist()
 
     def get(self, key):
         """
         Get the value for a given key.
         """
 
+        self._load(truncate=True)
         if key in self._data:
             value = self._data[key]
 
             # Added for backwards compatability with already existing
             # cache files.
             if type(value) != tuple:
+                self._update(key, value)
                 return value
+            value, timestamp = value[:2]
+            now = time.time()
+            if value is not None:
+                if timestamp + self._expiration > now:
+                    # Return positive cached item.
+                    return value
+            else:
+                if timestamp + self._negativeExpire > now:
+                    # Negative cache is still fresh.
+                    return None
 
-            # Return possitive cached item.
-            elif value[0] is not None:
-                return value[0]
-
-            # Check to see if a negative cached item has expired, refresh
-            # if expired
-            elif (value[0] is None and
-                  time.time() > value[1] + self._negativeExpire):
-                return self.refresh(key)
-
-        else:
-            return self.refresh(key)
+        return self.refresh(key)
 
     def refresh(self, key):
         """
         Fetch data for a given key that is not in the cache.
         """
 
-        self._load()
         return self._update(key, self._refresh(key))

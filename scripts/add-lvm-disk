@@ -1,0 +1,22 @@
+#!/bin/bash
+# Partition the given disk and add it to volume group vg00.
+dev="$1"
+part="${dev}1"
+[ ! -b "$dev" ] && { echo "Usage: $0 <block device>"; exit 1; }
+vgscan >/dev/null
+vgname=`pvs --noheadings -o vg_name "$part" | grep -Po '\S+'`
+[ -n "$vgname" ] && { echo "$part seems to already be in volume group $vgname"; exit 1; }
+
+fdisk -l "$dev" || exit 1
+echo
+echo -n "OK to wipe device $dev [y/N] ? "
+read ret
+[ "$ret" == "y" ] || { echo "aborting"; exit 1; }
+
+echo -e "o\nn\np\n1\n\n\nt\n8e\np\nw" | fdisk -u "$dev" || exit 1
+
+pvcreate "$part" || exit 1
+vgextend vg00 "$part" || exit 1
+
+vgdisplay vg00
+echo "Done."

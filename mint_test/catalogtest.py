@@ -56,8 +56,7 @@ class WebPageTest(mint_rephelp.WebRepositoryHelper):
 
         tests = [
             (None, 401, "Unauthorized"),
-            ('NoSuchAuthMethodExists aa', 400,
-                "AuthHeaderError: Your authentication header could not be decoded"),
+            ('NoSuchAuthMethodExists aa', 401, "Unauthorized"),
             ('Basic', 401, "Unauthorized"),
             ('Basic a', 400,
                 "AuthHeaderError: Your authentication header could not be decoded"),

@@ -1,6 +1,5 @@
 <?xml version='1.0' encoding='UTF-8'?>
 <?python
-import simplejson
 from mint.helperfuncs import truncateForDisplay, formatProductVersion
 from mint.web.templatesupport import projectText
 

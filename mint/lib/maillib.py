@@ -8,6 +8,7 @@ except ImportError:
 
 import smtplib
 import socket
+import time
 from email import MIMEText
 
 from mint.mint_error import MailError
@@ -62,16 +63,29 @@ def sendMail(fromEmail, fromEmailName, toEmail, subject, body):
     msg['From'] = '"%s" <%s>' % (fromEmailName, fromEmail)
     msg['To'] = toEmail
 
-    s = smtplib.SMTP()
     try:
         rAPA = xmlrpclib.ServerProxy('http://localhost:8004/xmlrpc/')
         config = rAPA.configure.Notify.index()
-        s = smtplib.SMTP(host=config['mailRelay'])               
+        relay = config['mailRelay']
     except:
         # This simply means that we couldn't contact rAPA to get the relay,
         # and so we attempt to send mail directly
-        pass
+        relay = None
 
-    s.connect()
-    s.sendmail(fromEmail, [toEmail], msg.as_string())
-    s.close()
+    if not relay:
+        relay = '127.0.0.1'
+
+    for i in range(2):
+        try:
+            s = smtplib.SMTP(host=relay)
+            s.sendmail(fromEmail, [toEmail], msg.as_string())
+            s.close()
+        except smtplib.SMTPServerDisconnected:
+            time.sleep(.3 + i * .2)
+        else:
+            return
+    # If we got this far, we failed to send the email, so add something in the
+    # logs.
+    import logging
+    log = logging.getLogger(__name__)
+    log.error("Unable to send email to %s:\n%s", toEmail, body)

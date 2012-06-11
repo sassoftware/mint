@@ -33,7 +33,7 @@ from rpath_proddef import api1 as proddef
 
 ResponseError = restClient.ResponseError
 
-class PlatformsTest(restbase.BaseRestTest):
+class BaseTest(restbase.BaseRestTest):
     architectures = [
            # ('x86', 'x86', 'is:x86 x86(~i486, ~i586, ~i686, ~cmov, ~mmx, ~sse, ~sse2)'),
            # ('x86_64', 'x86 (64-bit)', 'is:x86_64 x86(~i486, ~i586, ~i686, ~cmov, ~mmx, ~sse, ~sse2)')
@@ -50,9 +50,8 @@ class PlatformsTest(restbase.BaseRestTest):
         restbase.BaseRestTest.setUp(self)
         self.setupProduct()
         self.setupPlatforms()
-        mock.mock(platformmgr.Platforms, '_checkMirrorPermissions',
-                        True)
 
+class PlatformsTest(BaseTest):
     def testGetPlatforms(self):
         return self._testGetPlatforms()
 
@@ -70,6 +69,7 @@ class PlatformsTest(restbase.BaseRestTest):
         return req, platforms
 
     def _getPlatforms(self):
+        self._disableAllPlatforms()
         req, platforms = self._getPlatformModels()
         return self._toXml(platforms, self.client, req)
 
@@ -77,11 +77,13 @@ class PlatformsTest(restbase.BaseRestTest):
         xml = self._getPlatforms()
         self.assertXMLEquals(platformsXml, xml)
 
-    def testGetPlatform(self):
-        # we already have a platform, so we must assume they've already been
-        # created in the db.  call getPlatforms to create them for this test.
-        self._getPlatforms()
+    def _disableAllPlatforms(self):
+        restdb = self.openRestDatabase()
+        restdb.db.cursor().execute("UPDATE Platforms SET enabled=0")
+        restdb.db.commit()
 
+    def testGetPlatform(self):
+        self._disableAllPlatforms()
         uri = '/platforms/1'
         client = self.getRestClient()
         req, platform = client.call('GET', uri)
@@ -89,9 +91,6 @@ class PlatformsTest(restbase.BaseRestTest):
         self.assertXMLEquals(platformXml, xml)
 
     def testGetImageTypeDefinitions(self):
-        # we already have a platform, so we must assume they've already been
-        # created in the db.  call getPlatforms to create them for this test.
-        self._getPlatforms()
         uri = '/platforms/1/imageTypeDefinitions'
         client = self.getRestClient()
         req, platform = client.call('GET', uri)
@@ -121,24 +120,38 @@ class PlatformsTest(restbase.BaseRestTest):
         xml = self._toXml(platform, client, req)
         self.assertXMLEquals(platformSourceStatusXml, xml)
 
+        platLabel = 'localhost@rpath:plat-1'
+
+        platformMgr = self.openRestDatabase().platformMgr
         mock.mock(proddef.PlatformDefinition, 'loadFromRepository')
         proddef.PlatformDefinition.loadFromRepository._mock.raiseErrorOnAccess(
             reposErrors.OpenError)
+        # Reset platform cache
+        platformMgr.platforms.platformCache._clearStatus(platLabel)
         req, platform = client.call('GET', uri)
         xml = self._toXml(platform, client, req)
         self.assertXMLEquals(platformSourceStatusXml2, xml)
+
         proddef.PlatformDefinition.loadFromRepository._mock.raiseErrorOnAccess(
             conaryErrors.ConaryError)
+        # Reset platform cache
+        platformMgr.platforms.platformCache._clearStatus(platLabel)
         req, platform = client.call('GET', uri)
         xml = self._toXml(platform, client, req)
         self.assertXMLEquals(platformSourceStatusXml3, xml)
+
         proddef.PlatformDefinition.loadFromRepository._mock.raiseErrorOnAccess(
             proddef.ProductDefinitionTroveNotFoundError)
+        # Reset platform cache
+        platformMgr.platforms.platformCache._clearStatus(platLabel)
         req, platform = client.call('GET', uri)
         xml = self._toXml(platform, client, req)
         self.assertXMLEquals(platformSourceStatusXml4, xml)
+
         proddef.PlatformDefinition.loadFromRepository._mock.raiseErrorOnAccess(
             Exception)
+        # Reset platform cache
+        platformMgr.platforms.platformCache._clearStatus(platLabel)
         req, platform = client.call('GET', uri)
         xml = self._toXml(platform, client, req)
         self.assertXMLEquals(platformSourceStatusXml5, xml)
@@ -338,6 +351,10 @@ class PlatformsTest(restbase.BaseRestTest):
         mock.mockFunctionOnce(reposmgr.RepositoryManager,
                               '_getFullRepositoryMap', 
                               {'localhost':'http://localhost/conary/'})
+
+        platLabel = 'localhost@rpath:plat-1'
+        platformMgr = self.openRestDatabase().platformMgr
+        platformMgr.platforms.platformCache._clearStatus(platLabel)
         req, platform = client.call('GET', uri)
         xml = self._toXml(platform, client, req)
         self.assertXMLEquals(platformStatus2Xml, xml)
@@ -371,6 +388,63 @@ class PlatformsTest(restbase.BaseRestTest):
 
         rpath_job.BackgroundRunner.backgroundRun = oldBackgroundRunner
         
+
+class NewPlatformTest(BaseTest):
+
+    def testCreatePlatform(self):
+        # Create a platform from a product
+        pdLabel = self.productDefinition.getProductDefinitionLabel()
+        uri = "/platforms"
+        xml = "<platform><label>%s</label><platformName>ignored</platformName></platform>" % pdLabel
+        client = self.getRestClient()
+        req, plat = client.call('POST', uri, body=xml)
+        self.failUnlessEqual(plat.label, pdLabel)
+        self.failUnlessEqual(plat.platformName, 'Project 1')
+        platformId = plat.platformId
+
+        # Post again, should not change anything
+        req, plat = client.call('POST', uri, body=xml)
+        self.failUnlessEqual(plat.platformId, platformId)
+
+    def testCreatePlatform_NoProduct(self):
+        # Create a platform when there is no product
+        self.setupPlatform3(repositoryOnly=True)
+        pdLabel = 'localhost@rpath:plat-3'
+
+        uri = "/platforms"
+        xml = "<platform><label>%s</label><platformName>ignored</platformName></platform>" % pdLabel
+        client = self.getRestClient()
+        req, plat = client.call('POST', uri, body=xml)
+        self.failUnlessEqual(plat.label, pdLabel)
+        self.failUnlessEqual(plat.platformName, 'Crowbar Linux 3')
+        platformId = plat.platformId
+
+        # Post again, should not change anything
+        req, plat = client.call('POST', uri, body=xml)
+        self.failUnlessEqual(plat.platformId, platformId)
+
+    def testCreatePlatform_NoPlatform(self):
+        # Create a platform when there is no product or platform
+        self.setupPlatform3(repositoryOnly=True)
+        pdLabel = 'localhost@rpath:plat-4'
+
+        uri = "/platforms"
+        xml = "<platform><label>%s</label><platformName>Platform 4</platformName><abstract>true</abstract><configurable>true</configurable></platform>" % pdLabel
+        client = self.getRestClient()
+        req, plat = client.call('POST', uri, body=xml)
+        self.failUnlessEqual(plat.label, pdLabel)
+        self.failUnlessEqual(plat.platformName, 'Platform 4')
+        self.failUnlessEqual(plat.abstract, True)
+        self.failUnlessEqual(plat.configurable, True)
+        platformId = plat.platformId
+
+        xml = xml.replace('<abstract>true</abstract>',
+            '<abstract>false</abstract>')
+
+        # Post again, make sure fields got updated
+        req, plat = client.call('POST', uri, body=xml)
+        self.failUnlessEqual(plat.platformId, platformId)
+        self.failUnlessEqual(plat.abstract, False)
 
 if __name__ == "__main__":
         testsetup.main()

@@ -90,6 +90,7 @@ Copyright (c) 2008-2009 rPath, Inc.
                         rBuilder administrator password, you must change the
                         Agent password later.
                     </p>
+                    
                     <div class="form-line-top">
                         <div class="rbasetup-label">Username:</div>
                         <input type="text" name="new_username" autocomplete="off" />
@@ -106,9 +107,19 @@ Copyright (c) 2008-2009 rPath, Inc.
                         <div class="rbasetup-label">Email address:</div>
                         <input type="text" name="new_email" autocomplete="off" />
                     </div>
+                    
                 </div>
                 <div class="page-section" py:if="not configured">Server Setup</div>
                 <div class="page-section-content" py:if="not configured">
+                    <p>
+                        <strong>Note:</strong> If you do not have an entitlement key, please go to 
+                        <a target="_blank" href="http://www.rpath.com/corp/request-information">http://www.rpath.com/corp/request-information</a>
+                        or contact <a href="mailto:sales@rpath.com">sales@rpath.com</a>.
+                    </p>
+                    <div class="form-line">
+                        <div class="rbasetup-label">Entitlement Key:</div>
+                        <input type="text" name="entitlementKey" value="" />
+                    </div>
                     <p>
                         <strong>Note:</strong> The hostname and domain name
                         displayed below are based on the URL you used to
@@ -152,19 +163,6 @@ Copyright (c) 2008-2009 rPath, Inc.
                 </div>
                 <div class="page-section-content">
                     <div id="advanced_options" style="${advancedOptionsStyle}">
-
-					<div py:if="not configured">
-						<h3>Entitlement Options</h3>
-	                    <p>
-	                        The following options are only required if you are an
-	                        existing customer with an entitlement already configured
-	                        for this product.
-	                    </p>
-	                     <div class="form-line-top">
-	                        <div class="rbasetup-label">Entitlement Key:</div>
-	                        <input type="text" name="entitlementKey" value="" />
-	                    </div>
-	                </div>
 	                
                     <h3>External Authentication</h3>
                     <p>

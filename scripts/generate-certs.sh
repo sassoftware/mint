@@ -24,18 +24,9 @@ then
             || exit 1
     fi
 
-    # Generate a self-sign certificate for httpd with the system hostname. This
-    # pre-empts the one in the httpd initscript.
-    if [ ! -f /etc/ssl/private/localhost.key ]
-    then
-        fqdn="`hostname -f`"
-        /usr/sbin/gencert-rmake -s -e 3653 \
-            -o /etc/ssl/certs/localhost.crt \
-            -O /etc/ssl/private/localhost.key \
-            --O='Auto-Generated' --OU='rBuilder Appliance' --CN="$fqdn" \
-            || exit 1
-        chmod 0644 /etc/ssl/certs/localhost.crt
-    fi
+    # Generate the plethora of managed certificates, including ones for httpd
+    # and jabberd.
+    /usr/share/rbuilder/scripts/pki-tool --initialize -q 2>&1 >>/var/log/rbuilder/scripts.log
 fi
 
 # Create the combined key/cert file for rPA if it doesn't already have one.

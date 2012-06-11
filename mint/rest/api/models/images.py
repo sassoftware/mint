@@ -11,13 +11,22 @@ from mint.rest.modellib import Model
 from mint.rest.modellib import fields
 
 class FileUrl(Model):
-    fileId = fields.IntegerField(display=False)
+    fileId = fields.IntegerField(isAttribute=True, display=False)
     urlType = fields.IntegerField(isAttribute=True)
-    url = fields.ImageDownloadField(isText=True)
+    # It is a bit weird that a field is set to be both isAttribute and isText
+    # But this is because xobj only sets the text value of a node if it
+    # contains no child elements (i.e. all fields are attributes).
+    # This won't cause problems on the way out, because we test for isText
+    # before we attempt to write the field as an attribute.
+    url = fields.ImageDownloadField(isAttribute=True, isText=True)
 
     def __repr__(self):
         return "images.FileUrl(fileId=%r, urlType=%r)" % (self.fileId, self.urlType)
 
+class TargetImage(Model):
+    targetType = fields.CharField()
+    targetName = fields.CharField()
+    targetImageId = fields.CharField()
 
 class ImageFile(Model):
     fileId   = fields.IntegerField()
@@ -28,9 +37,29 @@ class ImageFile(Model):
     sha1     = fields.CharField()
     fileName = fields.CharField()
     urls     = fields.ListField(FileUrl, displayName='url')
+    targetImages = fields.ListField(TargetImage)
 
     def __repr__(self):
         return "images.ImageId(fileId=%r, size=%r)" % (self.fileId, self.size)
+
+class ImageMetadata(Model):
+    owner = fields.CharField()
+    billingCode = fields.CharField()
+    deptCode = fields.CharField()
+    cost = fields.CharField()
+
+    def getValues(self):
+        vals = ((x, getattr(self, x)) for x in self._elements)
+        vals = [ (x, str(y)) for (x, y) in vals if y ]
+        return vals
+
+    def __repr__(self):
+        vals = self.getValues()
+        return "<images.%s: %s>" % (self.__class__.__name__,
+            ', '.join("%s:%s" % x for x in vals))
+
+    def __nonzero__(self):
+        return bool(self.getValues())
 
 class ImageFileList(Model):
     class Meta(object):
@@ -40,6 +69,7 @@ class ImageFileList(Model):
     hostname = fields.CharField(display=False)
     imageId = fields.IntegerField(display=False)
     files = fields.ListField(ImageFile, displayName='file')
+    metadata = fields.ModelField(ImageMetadata)
 
     def get_absolute_url(self):
         return ('products.images.files', self.hostname, str(self.imageId))
@@ -72,6 +102,7 @@ class Release(Model):
     timeMirrored = fields.DateTimeField(editable=False) # not modifiable
     timeUpdated = fields.DateTimeField(editable=False) # not modifiable
     shouldMirror = fields.BooleanField()
+    imageCount = fields.IntegerField()
 
     def get_absolute_url(self):
         return ('products.releases', self.hostname, str(self.releaseId))
@@ -118,7 +149,6 @@ class ImageStatus(Model):
             self.message = jobstatus.statusNames[self.code]
         self.isFinal = self.code in jobstatus.terminalStatuses
 
-
 class Image(Model):
     id = fields.AbsoluteUrlField(isAttribute=True)
     imageId = fields.IntegerField()
@@ -150,7 +180,8 @@ class Image(Model):
     imageStatus = fields.ModelField(ImageStatus)
     files = fields.ModelField(ImageFileList)
     baseFileName = fields.CharField()
-    
+    metadata = fields.ModelField(ImageMetadata)
+
     # TODO: we want to expose all buildData via a dict.  But that requires
     # a DictField which doesn't exist yet.
     amiId    = fields.CharField()

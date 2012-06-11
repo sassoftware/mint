@@ -20,7 +20,7 @@ from mint.lib import scriptlibrary
 log = logging.getLogger(__name__)
 
 
-class MigrateConfig(scriptlibrary.GenericScript):
+class Script(scriptlibrary.GenericScript):
     logFileName = 'scripts.log'
     newLogger = True
 

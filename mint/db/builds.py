@@ -29,7 +29,8 @@ class BuildsTable(database.KeyedTable):
               'troveName', 'troveVersion', 'troveFlavor', 'troveLastChanged',
               'timeCreated', 'createdBy', 'timeUpdated', 'updatedBy',
               'buildCount', 'productVersionId', 'stageName',
-              'status', 'statusMessage']
+              'status', 'statusMessage', 'job_uuid',
+              ]
 
     # Not the ideal place to put these, but I wanted to easily find them later
     # --misa
@@ -177,10 +178,12 @@ class BuildsTable(database.KeyedTable):
                              bd.value AS amiId'''
             extraJoin += ''' LEFT OUTER JOIN
                              (SELECT tuc.userId AS userId,
-                                     tuc.credentials AS creds
+                                     tc.credentials AS creds
                                 FROM Targets
                                 JOIN TargetUserCredentials AS tuc
                                      ON (Targets.targetId = tuc.targetId)
+                                JOIN TargetCredentials AS tc
+                                     ON (tuc.targetCredentialsId = tc.targetCredentialsId)
                                WHERE Targets.targetType = '%s'
                                  AND Targets.targetName = '%s') as subq
                               ON (b.createdBy = subq.userId)
@@ -220,6 +223,7 @@ class BuildsTable(database.KeyedTable):
                     p.name AS productName,
                     p.description AS productDescription,
                     b.name AS buildName,
+                    b.troveFlavor AS troveFlavor,
                     COALESCE(b.description,'') AS buildDescription,
                     COALESCE(pr.timePublished,0) != 0 AS isPublished,
                     p.hidden AS isPrivate,
@@ -246,7 +250,7 @@ class BuildsTable(database.KeyedTable):
         keys = ['projectId', 'hostname', 'buildId', 'productName',
                 'productDescription', 'buildName', 'buildDescription',
                 'isPublished', 'isPrivate', 'createdBy', 'role',
-                'awsCredentials', 'amiId',
+                'awsCredentials', 'amiId', 'troveFlavor',
                 ]
 
         cu.execute(query, requestingUserId, imageType)
@@ -266,6 +270,10 @@ class BuildsTable(database.KeyedTable):
                         value = value.get('accountId')
                     # Keep the old interface for getAllBuildsByType
                     key = 'awsAccountNumber'
+                elif key == 'troveFlavor':
+                    key = 'architecture'
+                    if value:
+                        value = helperfuncs.getArchFromFlavor(value)
                 if value is not None:
                     outRow[key] = value
             assert not row.fields

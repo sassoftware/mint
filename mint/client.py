@@ -813,9 +813,6 @@ class MintClient:
     def getTroveDescendants(self, troveName, troveLabel, troveFlavor):
         return dict(self.server.getTroveDescendants(troveName, troveLabel, troveFlavor))
 
-    # BEGIN GUIDED TOUR SUPPORT - since we call these via
-    # a javascript client, these methods are likely not needed
-    # outside of testing.
     def validateEC2Credentials(self, authToken):
         return self.server.validateEC2Credentials(authToken)
     
@@ -824,37 +821,6 @@ class MintClient:
     
     def getEC2KeyPairs(self, authToken, keyNames):
         return self.server.getEC2KeyPairs(authToken, keyNames)
-    
-    def createBlessedAMI(self, ec2AMIId, shortDescription):
-        return self.server.createBlessedAMI(ec2AMIId, shortDescription)
-
-    def getBlessedAMI(self, blessedAMIId):
-        return ec2.BlessedAMI(self.server, blessedAMIId)
-
-    def getAvailableBlessedAMIs(self):
-        return [self.getBlessedAMI(x) for x in \
-                self.server.getAvailableBlessedAMIs()]
-
-    def getLaunchedAMI(self, launchedAMIId):
-        return ec2.LaunchedAMI(self.server, launchedAMIId)
-
-    def getActiveLaunchedAMIs(self):
-        return [self.getLaunchedAMI(x) for x in \
-                self.server.getActiveLaunchedAMIs()]
-
-    def getLaunchedAMIInstanceStatus(self, authToken, launchedAMIId):
-        return self.server.getLaunchedAMIInstanceStatus(authToken,
-                                                        launchedAMIId)
-
-    def terminateExpiredAMIInstances(self, authToken):
-        return self.server.terminateExpiredAMIInstances(authToken)
-
-    def extendLaunchedAMITimeout(self, launchedAMIId):
-        return self.server.extendLaunchedAMITimeout(launchedAMIId)
-
-    def checkHTTPReturnCode(self, uri, expectedCodes=[200, 301, 302]):
-        return self.server.checkHTTPReturnCode(uri, expectedCodes)
-    # END GUIDED TOUR SUPPORT
 
     def getFullRepositoryMap(self):
         return self.server.getFullRepositoryMap()

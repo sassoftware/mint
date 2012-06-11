@@ -1,10 +1,15 @@
 #
-# Copyright (c) 2005-2009 rPath, Inc.
+# Copyright (c) 2010 rPath, Inc.
+#
+# All rights reserved.
 #
 
 import logging
 import os
 import sys
+
+import datetime
+from dateutil import tz
 
 from conary.conarycfg import loadEntitlement, EntitlementList
 from conary.dbstore import migration, sqlerrors
@@ -43,12 +48,15 @@ def add_columns(db, table, *columns):
     ...     'somethingelse STRING')
     '''
     cu = db.cursor()
+    changed = False
 
     for column in columns:
         try:
             cu.execute('ALTER TABLE %s ADD COLUMN %s' % (table, column))
+            changed = True
         except sqlerrors.DuplicateColumnName:
             pass
+    return changed
 
 
 def drop_tables(db, *tables):
@@ -120,6 +128,46 @@ def rebuild_table(db, table, fieldsOut, fieldsIn=None):
         cu.execute("DROP TABLE %s" % tmpTable)
 
     db.loadSchema()
+
+
+def createTable(db, definition):
+    return schema.createTable(db, None, definition)
+
+
+def columnExists(db, table, name):
+    cu = db.cursor()
+    cu.execute("""
+        SELECT COUNT(*)
+        FROM pg_attribute a
+        JOIN pg_class t ON t.oid = a.attrelid
+        JOIN pg_namespace n ON n.oid = t.relnamespace
+        WHERE t.relkind = 'r' AND n.nspname = 'public'
+        AND t.relname = ? AND a.attname = ?
+        """, table, name)
+    return bool(cu.fetchone()[0])
+
+
+def constraintExists(db, table, name):
+    cu = db.cursor()
+    cu.execute("""
+        SELECT COUNT(*)
+        FROM pg_constraint r
+        JOIN pg_class t ON t.oid = r.conrelid
+        JOIN pg_namespace n ON n.oid = t.relnamespace
+        WHERE t.relkind = 'r' AND n.nspname = 'public'
+        AND t.relname = ? AND r.conname = ?
+        """, table, name)
+    return bool(cu.fetchone()[0])
+
+
+def renameConstraint(db, table, oldName, newDefinition, conditional=False):
+    if constraintExists(db, table, oldName):
+        cu = db.cursor()
+        cu.execute('ALTER TABLE "%s" DROP CONSTRAINT "%s", %s' % (table,
+            oldName, newDefinition))
+    elif not conditional:
+        raise RuntimeError("Constraint %r on table %r does not exist" %
+                (oldName, table))
 
 
 #### SCHEMA MIGRATIONS BEGIN HERE ###########################################
@@ -501,12 +549,12 @@ class MigrateTo_45(SchemaMigration):
                 if amiData.get(key):
                     configured = True
             if configured:
-                import simplejson
+                import json
                 cu.execute("""INSERT INTO Targets (targetType, targetName)
                         VALUES('ec2', 'aws')""")
                 targetId = cu.lastid()
                 for name, value in amiData.iteritems():
-                    value = simplejson.dumps(value)
+                    value = json.dumps(value)
                     cu.execute("INSERT INTO TargetData VALUES(?, ?, ?)",
                             targetId, name, value)
 
@@ -684,7 +732,9 @@ class MigrateTo_48(SchemaMigration):
     # - Create missing roles for repositories. (RBL-5019)
     def migrate3(self):
         manager = repository.RepositoryManager(self.cfg, self.db, bypass=True)
-        for repos in manager.iterRepositories():
+        # contentSources=False is required here because the content sources
+        # table hasn't been created yet.
+        for repos in manager._iterRepositories('', (), contentSources=False):
             if not repos.hasDatabase:
                 continue
             log.info("Checking repository %s for standardized roles",
@@ -721,7 +771,68 @@ class MigrateTo_48(SchemaMigration):
     # - Platforms / PlatformSources / PlatformSourceData tables will be
     # created.
     def migrate4(self):
-        schema._createPlatforms(self.db)
+        db = self.db
+        cu = self.db.cursor()
+
+        cu.execute("""
+            CREATE TABLE Platforms (
+                platformId  %(PRIMARYKEY)s,
+                label       varchar(255)    NOT NULL UNIQUE,
+                mode varchar(255) NOT NULL DEFAULT 'manual' check (mode in ('auto', 'manual')),
+                enabled     smallint NOT NULL DEFAULT 1,
+                projectId   smallint
+                    REFERENCES Projects ON DELETE SET NULL
+            ) %(TABLEOPTS)s""" % db.keywords)
+        db.tables['Platforms'] = []
+
+        cu.execute("""
+            CREATE TABLE PlatformsContentSourceTypes (
+                platformId  integer NOT NULL
+                    REFERENCES platforms ON DELETE CASCADE,
+                contentSourceType  varchar(255) NOT NULL
+            ) %(TABLEOPTS)s""" % db.keywords)
+        db.tables['PlatformsContentSourceTypes'] = []
+        db.createIndex('PlatformsContentSourceTypes',
+                'PlatformsContentSourceTypes_platformId_contentSourceType_uq',
+                'platformId,contentSourceType', unique = True)
+
+        cu.execute("""
+            CREATE TABLE PlatformSources (
+                platformSourceId  %(PRIMARYKEY)s,
+                name       varchar(255)    NOT NULL,
+                shortName  varchar(255)    NOT NULL UNIQUE,
+                defaultSource    smallint  NOT NULL DEFAULT 0,
+                contentSourceType  varchar(255) NOT NULL,
+                orderIndex  smallint NOT NULL
+            ) %(TABLEOPTS)s""" % db.keywords)
+        db.tables['PlatformSources'] = []
+        db.createIndex('PlatformSources',
+                'PlatformSources_platformSourceId_defaultSource_uq',
+                'platformSourceId,defaultSource', unique = True)
+        db.createIndex('PlatformSources',
+                'PlatformSources_platformSourceId_orderIndex_uq',
+                'platformSourceId,orderIndex', unique = True)
+
+        cu.execute("""
+            CREATE TABLE PlatformSourceData (
+                platformSourceId    integer         NOT NULL
+                    REFERENCES PlatformSources ON DELETE CASCADE,
+                name                varchar(32)     NOT NULL,
+                value               text            NOT NULL,
+                dataType            smallint        NOT NULL,
+                PRIMARY KEY ( platformSourceId, name )
+            ) %(TABLEOPTS)s """ % db.keywords)
+        db.tables['PlatformSourceData'] = []
+
+        cu.execute("""
+            CREATE TABLE PlatformsPlatformSources (
+                platformId          integer         NOT NULL
+                    REFERENCES platforms ON DELETE CASCADE,
+                platformSourceId    integer         NOT NULL
+                    REFERENCES platformSources ON DELETE CASCADE
+            ) %(TABLEOPTS)s""" % db.keywords)
+        db.tables['PlatformsPlatformSources'] = []
+
         return True
 
     # 48.5
@@ -832,11 +943,12 @@ class MigrateTo_49(SchemaMigration):
         schema._createCapsuleIndexerSchema(self.db)
         drop_tables(self.db, 'ci_rhn_errata_package')
 
-        from mint import config
-        from mint.scripts import migrate_catalog_data
-        cfg = config.getConfig()
-        conv = migrate_catalog_data.TargetConversion(cfg, self.db)
-        conv.run()
+        if self.cfg:
+            from mint import config
+            from mint.scripts import migrate_catalog_data
+            cfg = config.getConfig()
+            conv = migrate_catalog_data.TargetConversion(cfg, self.db)
+            conv.run()
 
         # Drop uniq constraint on targetName
         cu = self.db.cursor()
@@ -847,6 +959,7 @@ class MigrateTo_49(SchemaMigration):
         return True
 
     def migrate2(self):
+        db = self.db
         cu = self.db.cursor()
         if 'inventory_managed_system' not in self.db.tables:
             cu.execute("""
@@ -990,7 +1103,98 @@ class MigrateTo_49(SchemaMigration):
             """)
             self.db.tables['inventory_cpu'] = []
 
-        schema._createJobsSchema(self.db)
+        createTable(db, """
+            CREATE TABLE job_types
+            (
+                job_type_id %(PRIMARYKEY)s,
+                name VARCHAR NOT NULL UNIQUE,
+                description VARCHAR NOT NULL
+            )""")
+        schema._addTableRows(db, 'job_types', 'name',
+            [ dict(name="instance-launch", description='Instance Launch'),
+              dict(name="platform-load", description='Platform Load'),
+              dict(name="software-version-refresh", description='Software Version Refresh'), ])
+
+        createTable(db, """
+            CREATE TABLE job_states
+            (
+                job_state_id %(PRIMARYKEY)s,
+                name VARCHAR NOT NULL UNIQUE
+            )""")
+        schema._addTableRows(db, 'job_states', 'name', [ dict(name='Queued'),
+            dict(name='Running'), dict(name='Completed'), dict(name='Failed') ])
+
+        createTable(db, """
+            CREATE TABLE rest_methods
+            (
+                rest_method_id %(PRIMARYKEY)s,
+                name VARCHAR NOT NULL UNIQUE
+            )""")
+        schema._addTableRows(db, 'rest_methods', 'name', [ dict(name='POST'),
+            dict(name='PUT'), dict(name='DELETE') ])
+
+        createTable(db, """
+            CREATE TABLE jobs
+            (
+                job_id      %(PRIMARYKEY)s,
+                job_type_id INTEGER NOT NULL
+                    REFERENCES job_types ON DELETE CASCADE,
+                job_state_id INTEGER NOT NULL
+                    REFERENCES job_states ON DELETE CASCADE,
+                created_by   INTEGER NOT NULL
+                    REFERENCES Users ON DELETE CASCADE,
+                created     NUMERIC(14,4) NOT NULL,
+                modified    NUMERIC(14,4) NOT NULL,
+                expiration  NUMERIC(14,4),
+                ttl         INTEGER,
+                pid         INTEGER,
+                message     VARCHAR,
+                error_response VARCHAR,
+                rest_uri    VARCHAR,
+                rest_method_id INTEGER
+                    REFERENCES rest_methods ON DELETE CASCADE,
+                rest_args   VARCHAR
+            )""")
+
+        createTable(db, """
+            CREATE TABLE job_history
+            (
+                job_history_id  %(PRIMARYKEY)s,
+                -- job_history_type needed
+                job_id          INTEGER NOT NULL
+                    REFERENCES jobs ON DELETE CASCADE,
+                timestamp   NUMERIC(14,3) NOT NULL,
+                content     VARCHAR NOT NULL
+            )""")
+
+        createTable(db, """
+            CREATE TABLE job_results
+            (
+                job_result_id   %(PRIMARYKEY)s,
+                job_id          INTEGER NOT NULL
+                    REFERENCES jobs ON DELETE CASCADE,
+                data    VARCHAR NOT NULL
+            )""")
+
+        createTable(db, """
+            CREATE TABLE job_target
+            (
+                job_id      INTEGER NOT NULL
+                    REFERENCES jobs ON DELETE CASCADE,
+                targetId    INTEGER NOT NULL
+                    REFERENCES Targets ON DELETE CASCADE
+            )""")
+
+        createTable(db, """
+            CREATE TABLE job_managed_system
+            (
+                job_id      INTEGER NOT NULL
+                    REFERENCES jobs ON DELETE CASCADE,
+                managed_system_id  INTEGER NOT NULL
+                    REFERENCES inventory_managed_system ON DELETE CASCADE
+            )""")
+
+        db.loadSchema()
         return True
 
     def migrate3(self):
@@ -1050,6 +1254,1056 @@ class MigrateTo_49(SchemaMigration):
             FOREIGN KEY (target_id) 
             REFERENCES targets(targetid) ON DELETE SET NULL
         """)
+        return True
+
+class MigrateTo_50(SchemaMigration):
+    Version = (50, 3)
+
+    def migrate(self):
+        cu = self.db.cursor()
+        db = self.db
+
+        changed = drop_tables(db,
+            "inventory_system_target",
+            "inventory_system_software_version",
+            "inventory_system_information",
+            "inventory_network_information",
+            "inventory_storage_volume",
+            "inventory_cpu",
+            "inventory_software_version_update",
+            "inventory_software_version",
+            "job_managed_system",
+            "inventory_managed_system",
+            "inventory_managementnode")
+        
+        if 'inventory_zone' not in db.tables:
+            cu.execute("""
+                CREATE TABLE "inventory_zone" (
+                    "zone_id" %(PRIMARYKEY)s,
+                    "name" varchar(8092) NOT NULL UNIQUE,
+                    "description" varchar(8092),
+                    "created_date" timestamp with time zone NOT NULL
+                ) %(TABLEOPTS)s""" % db.keywords)
+            db.tables['inventory_zone'] = []
+            changed = True
+
+        if 'inventory_system_state' not in db.tables:
+            cu.execute("""
+                CREATE TABLE "inventory_system_state" (
+                    "system_state_id" %(PRIMARYKEY)s,
+                    "name" varchar(8092) NOT NULL UNIQUE,
+                    "description" varchar(8092) NOT NULL,
+                    "created_date" timestamp with time zone NOT NULL
+                ) %(TABLEOPTS)s""" % db.keywords)
+            db.tables['inventory_system_state'] = []
+            changed = True
+            changed |= self._addSystemStates0()
+
+        if 'inventory_system' not in db.tables:
+            cu.execute("""
+                CREATE TABLE "inventory_system" (
+                    "system_id" %(PRIMARYKEY)s,
+                    "name" varchar(8092) NOT NULL,
+                    "description" varchar(8092),
+                    "created_date" timestamp with time zone NOT NULL,
+                    "hostname" varchar(8092),
+                    "launch_date" timestamp with time zone,
+                    "target_id" integer REFERENCES "targets" ("targetid"),
+                    "target_system_id" varchar(255),
+                    "target_system_name" varchar(255),
+                    "target_system_description" varchar(1024),
+                    "target_system_state" varchar(64),
+                    "os_type" varchar(64),
+                    "os_major_version" varchar(32),
+                    "os_minor_version" varchar(32),
+                    "registration_date" timestamp with time zone,
+                    "generated_uuid" varchar(64) UNIQUE,
+                    "local_uuid" varchar(64),
+                    "ssl_client_certificate" varchar(8092),
+                    "ssl_client_key" varchar(8092),
+                    "ssl_server_certificate" varchar(8092),
+                    "agent_port" integer,
+                    "state_change_date" timestamp with time zone,
+                    "launching_user_id" integer REFERENCES "users" ("userid"),
+                    "current_state_id" integer NOT NULL
+                        REFERENCES "inventory_system_state" ("system_state_id"),
+                    "management_node" bool,
+                    "managing_zone_id" integer NOT NULL
+                        REFERENCES "inventory_zone" ("zone_id")
+                ) %(TABLEOPTS)s""" % db.keywords)
+            db.tables['inventory_system'] = []
+            changed = True
+            changed |= db.createIndex("inventory_system",
+                "inventory_system_target_id_idx", "target_id")
+            
+        if 'inventory_zone_management_node' not in db.tables:
+            cu.execute("""
+                CREATE TABLE "inventory_zone_management_node" (
+                    "system_ptr_id" integer NOT NULL PRIMARY KEY 
+                        REFERENCES "inventory_system" ("system_id")
+                        ON DELETE CASCADE,
+                    "local" bool,
+                    "zone_id" integer NOT NULL REFERENCES "inventory_zone" ("zone_id"),
+                    "node_jid" varchar(64)
+                ) %(TABLEOPTS)s""" % db.keywords)
+            db.tables['inventory_zone_management_node'] = []
+            changed = True
+
+        if 'inventory_system_network' not in db.tables:
+            cu.execute("""
+                CREATE TABLE "inventory_system_network" (
+                    "network_id" %(PRIMARYKEY)s,
+                    "system_id" integer NOT NULL 
+                        REFERENCES "inventory_system" ("system_id")
+                        ON DELETE CASCADE,
+                    "created_date" timestamp with time zone NOT NULL,
+                    "ip_address" varchar(15),
+                    "ipv6_address" varchar(32),
+                    "device_name" varchar(255),
+                    "dns_name" varchar(255) NOT NULL,
+                    "netmask" varchar(20),
+                    "port_type" varchar(32),
+                    "active" bool,
+                    "required" bool,
+                    CONSTRAINT "inventory_system_network_system_id_dns_name_key"
+                        UNIQUE ("system_id", "dns_name"),
+                    UNIQUE ("system_id", "ip_address"),
+                    UNIQUE ("system_id", "ipv6_address")
+                ) %(TABLEOPTS)s""" % db.keywords)
+            db.tables['inventory_system_network'] = []
+            changed = True
+            changed |= db.createIndex("inventory_system_network",
+                "inventory_system_network_system_id_idx", "system_id")
+            changed |= db.createIndex("inventory_system_network",
+            "inventory_system_network_dns_name_idx", "dns_name")
+
+        # add local management zone
+        changed |= schema._addManagementZone(db, self.cfg)
+
+        if 'inventory_system_log' not in db.tables:
+            cu.execute("""
+                CREATE TABLE "inventory_system_log" (
+                    "system_log_id" %(PRIMARYKEY)s,
+                    "system_id" integer NOT NULL 
+                        REFERENCES "inventory_system" ("system_id")
+                        ON DELETE CASCADE
+                ) %(TABLEOPTS)s""" % db.keywords)
+            db.tables['inventory_system_log'] = []
+            changed = True
+            changed |= db.createIndex("inventory_system_log",
+                "inventory_system_log_system_id_idx", "system_id")
+
+        if 'inventory_system_log_entry' not in db.tables:
+            cu.execute("""
+                CREATE TABLE "inventory_system_log_entry" (
+                    "system_log_entry_id" %(PRIMARYKEY)s,
+                    "system_log_id" integer NOT NULL
+                        REFERENCES "inventory_system_log" ("system_log_id")
+                        ON DELETE CASCADE,
+                    "entry" VARCHAR(8092),
+                    "entry_date" timestamp with time zone NOT NULL
+                ) %(TABLEOPTS)s""" % db.keywords)
+            db.tables['inventory_system_log_entry'] = []
+            changed = True
+
+        if 'inventory_version' not in db.tables:
+            cu.execute("""
+                CREATE TABLE "inventory_version" (
+                    "version_id" %(PRIMARYKEY)s,
+                    "full" TEXT NOT NULL,
+                    "label" TEXT NOT NULL,
+                    "revision" TEXT NOT NULL,
+                    "ordering" TEXT NOT NULL,
+                    "flavor" TEXT NOT NULL,
+                    UNIQUE("full", "ordering", "flavor")
+                ) %(TABLEOPTS)s""" % db.keywords)
+            db.tables['inventory_version'] = []
+            changed = True
+
+        tableName = 'inventory_event_type'
+        if tableName not in db.tables:
+            cu.execute("""
+                CREATE TABLE "inventory_event_type" (
+                    "event_type_id" %(PRIMARYKEY)s,
+                    "name" varchar(8092) NOT NULL UNIQUE,
+                    "description" varchar(8092) NOT NULL,
+                    "priority" smallint NOT NULL
+                ) %(TABLEOPTS)s""" % db.keywords)
+            db.tables[tableName] = []
+            changed = True
+            changed |= schema._addTableRows(db, tableName, 'name',
+                [dict(name="system registration",
+                      description='on-demand system registration event', priority=110),
+                 dict(name="system poll",
+                      description='standard system polling event', priority=50),
+                 dict(name="immediate system poll",
+                      description='on-demand system polling event', priority=105),
+                 dict(name="system apply update",
+                      description='apply an update to a system',
+                      priority=50),
+                 dict(name="immediate system apply update",
+                      description='on-demand apply an update to a system', priority=105),
+                 dict(name="system shutdown",
+                      description='shutdown a system', priority=50),
+                 dict(name="immediate system shutdown", 
+                      description='on-demand shutdown a system', 
+                      priority=105),
+                ])
+
+        if 'inventory_system_event' not in db.tables:
+            cu.execute("""
+                CREATE TABLE "inventory_system_event" (
+                    "system_event_id" %(PRIMARYKEY)s,
+                    "system_id" integer NOT NULL
+                        REFERENCES "inventory_system" ("system_id")
+                        ON DELETE CASCADE,
+                    "event_type_id" integer NOT NULL
+                        REFERENCES "inventory_event_type",
+                    "time_created" timestamp with time zone NOT NULL,
+                    "time_enabled" timestamp with time zone NOT NULL,
+                    "priority" smallint NOT NULL
+                ) %(TABLEOPTS)s""" % db.keywords)
+            db.tables['inventory_system_event'] = []
+            changed |= db.createIndex("inventory_system_event",
+                "inventory_system_event_system_id", "system_id")
+            changed |= db.createIndex("inventory_system_event",
+                "inventory_system_event_event_type_id", "event_type_id")
+            changed |= db.createIndex("inventory_system_event",
+                "inventory_system_event_time_enabled", "time_enabled")
+            changed |= db.createIndex("inventory_system_event",
+                "inventory_system_event_priority", "priority")
+            changed = True
+
+        if 'inventory_job_state' not in db.tables:
+            cu.execute("""
+                CREATE TABLE inventory_job_state
+                (
+                    job_state_id %(PRIMARYKEY)s,
+                    name VARCHAR NOT NULL UNIQUE
+                ) %(TABLEOPTS)s""" % db.keywords)
+            db.tables['inventory_job_state'] = []
+            changed = True
+        changed |= schema._addTableRows(db, 'inventory_job_state', 'name',
+            [
+                dict(name='Queued'), dict(name='Running'),
+                dict(name='Completed'), dict(name='Failed'), ])
+
+        tableName = 'inventory_job'
+        if tableName not in db.tables:
+            cu.execute("""
+                CREATE TABLE inventory_job (
+                    job_id %(PRIMARYKEY)s,
+                    job_uuid varchar(64) NOT NULL UNIQUE,
+                    job_state_id integer NOT NULL
+                        REFERENCES inventory_job_state,
+                    event_type_id integer NOT NULL
+                        REFERENCES inventory_event_type,
+                    time_created timestamp with time zone NOT NULL,
+                    time_updated timestamp with time zone NOT NULL
+                ) %(TABLEOPTS)s""" % db.keywords)
+            db.tables[tableName] = []
+            changed = True
+
+        tableName = "inventory_system_job"
+        if 'inventory_system_job' not in db.tables:
+            cu.execute("""
+                CREATE TABLE inventory_system_job (
+                    system_job_id %(PRIMARYKEY)s,
+                    job_id integer NOT NULL UNIQUE
+                        REFERENCES inventory_job
+                        ON DELETE CASCADE,
+                    system_id integer NOT NULL
+                        REFERENCES inventory_system
+                        ON DELETE CASCADE,
+                    event_uuid varchar(64) NOT NULL UNIQUE
+                ) %(TABLEOPTS)s""" % db.keywords)
+            db.tables[tableName] = []
+            changed = True
+
+        if 'inventory_trove_available_updates' not in db.tables:
+            cu.execute("""
+                CREATE TABLE "inventory_trove_available_updates" (
+                    "id" %(PRIMARYKEY)s,
+                    "trove_id" INTEGER NOT NULL,
+                    "version_id" INTEGER NOT NULL
+                        REFERENCES "inventory_version" ("version_id")
+                        ON DELETE CASCADE,
+                    UNIQUE ("trove_id", "version_id")
+                )""" % db.keywords)
+            db.tables['inventory_trove_available_updates'] = []
+            changed = True
+
+        if 'inventory_trove' not in db.tables:
+            cu.execute("""
+                CREATE TABLE "inventory_trove" (
+                    "trove_id" %(PRIMARYKEY)s,
+                    "name" TEXT NOT NULL,
+                    "version_id" INTEGER NOT NULL
+                        REFERENCES "inventory_version" ("version_id")
+                        ON DELETE CASCADE,
+                    "flavor" text NOT NULL,
+                    "is_top_level" BOOL NOT NULL,
+                    "last_available_update_refresh" timestamp with time zone,
+                    UNIQUE ("name", "version_id", "flavor")
+                )""" % db.keywords)
+
+            db.tables['inventory_trove'] = []
+            changed = True
+
+        if 'inventory_system_installed_software' not in db.tables:
+            cu.execute("""
+                CREATE TABLE "inventory_system_installed_software" (
+                    "id" %(PRIMARYKEY)s,
+                    "system_id" INTEGER NOT NULL 
+                        REFERENCES "inventory_system" ("system_id")
+                        ON DELETE CASCADE,
+                    "trove_id" INTEGER NOT NULL
+                        REFERENCES "inventory_trove" ("trove_id"),
+                    UNIQUE ("system_id", "trove_id")
+                )"""  % db.keywords)
+
+        createTable(db, """
+                CREATE TABLE TargetCredentials (
+                    targetCredentialsId     %(PRIMARYKEY)s,
+                    credentials             text NOT NULL UNIQUE
+                )""")
+
+        createTable(db, """
+            CREATE TABLE "inventory_system_target_credentials" (
+                "id" %(PRIMARYKEY)s,
+                "system_id" INTEGER NOT NULL
+                    REFERENCES "inventory_system" ("system_id")
+                    ON DELETE CASCADE,
+                "credentials_id" INTEGER NOT NULL
+                    REFERENCES TargetCredentials (targetCredentialsId)
+                    ON DELETE CASCADE
+            )""")
+
+        createTable(db, """
+            CREATE TABLE pki_certificates (
+                fingerprint             text PRIMARY KEY,
+                purpose                 text NOT NULL,
+                is_ca                   boolean NOT NULL DEFAULT false,
+                x509_pem                text NOT NULL,
+                pkey_pem                text NOT NULL,
+                issuer_fingerprint      text
+                    REFERENCES pki_certificates ( fingerprint )
+                    ON DELETE SET NULL,
+                ca_serial_index         integer,
+                time_issued             timestamptz NOT NULL,
+                time_expired            timestamptz NOT NULL
+            )""")
+
+        self._migrateTargetUserCredentials(cu)
+        return True
+
+    def _addSystemStates0(self):
+        db = self.db
+        changed = False
+        changed |= schema._addTableRows(db, 'inventory_system_state', 'name',
+                [
+                    dict(name="unmanaged", description="Unmanaged", created_date=str(datetime.datetime.now(tz.tzutc()))),
+                    dict(name="unmanaged-credentials", description="Unmanaged: Invalid credentials", created_date=str(datetime.datetime.now(tz.tzutc()))),
+                    dict(name="registered", description="Initial synchronization pending", created_date=str(datetime.datetime.now(tz.tzutc()))),
+                    dict(name="responsive", description="Online", created_date=str(datetime.datetime.now(tz.tzutc()))),
+                    dict(name="non-responsive-unknown", description="Not responding: Unknown", created_date=str(datetime.datetime.now(tz.tzutc()))),
+                    dict(name="non-responsive-net", description="Not responding: Network unreachable", created_date=str(datetime.datetime.now(tz.tzutc()))),
+                    dict(name="non-responsive-host", description="Not responding: Host unreachable", created_date=str(datetime.datetime.now(tz.tzutc()))),
+                    dict(name="non-responsive-shutdown", description="Not responding: Shutdown", created_date=str(datetime.datetime.now(tz.tzutc()))),
+                    dict(name="non-responsive-suspended", description="Not responding: Suspended", created_date=str(datetime.datetime.now(tz.tzutc()))),
+                    dict(name="non-responsive-credentials", description="Not responding: Invalid credentials", created_date=str(datetime.datetime.now(tz.tzutc()))),
+                    dict(name="dead", description="Stale", created_date=str(datetime.datetime.now(tz.tzutc()))),
+                    dict(name="mothballed", description="Retired", created_date=str(datetime.datetime.now(tz.tzutc())))
+                ])
+        
+        return changed
+
+
+    def _migrateTargetUserCredentials(self, cu):
+        # Add a serial primary key, drop the old pk, add it as unique
+        cu.execute("""
+            ALTER TABLE TargetUserCredentials
+                DROP CONSTRAINT targetusercredentials_pkey""")
+        cu.execute("""
+            ALTER TABLE TargetUserCredentials
+                ADD COLUMN id SERIAL PRIMARY KEY""")
+        cu.execute("""
+            ALTER TABLE TargetUserCredentials
+                ADD UNIQUE(targetid, userid)""")
+        cu.execute("""
+            ALTER TABLE TargetUserCredentials
+                ADD COLUMN targetCredentialsId  INTEGER
+                    REFERENCES TargetCredentials
+                        ON DELETE CASCADE
+        """)
+        cu.execute("""
+            INSERT INTO TargetCredentials (credentials)
+                SELECT DISTINCT credentials FROM TargetUserCredentials
+        """)
+        cu.execute("""
+            UPDATE TargetUserCredentials AS a
+            SET targetCredentialsId = (
+                SELECT targetCredentialsId
+                  FROM TargetCredentials
+                 WHERE credentials = a.credentials)
+        """)
+        cu.execute("""
+            ALTER TABLE TargetUserCredentials
+                ALTER COLUMN targetCredentialsId SET NOT NULL
+        """)
+        cu.execute("""
+            ALTER TABLE TargetUserCredentials
+                DROP COLUMN credentials
+        """)
+
+        return True
+
+    def migrate1(self):
+        cu = self.db.cursor()
+        db = self.db
+
+        if 'job_system' not in db.tables:
+            cu.execute("""
+                CREATE TABLE job_system
+                (
+                    job_id      INTEGER NOT NULL
+                        REFERENCES jobs ON DELETE CASCADE,
+                    system_id    INTEGER NOT NULL
+                        REFERENCES inventory_system ON DELETE CASCADE
+                ) %(TABLEOPTS)s""" % db.keywords)
+            db.tables['job_system'] = []
+            changed = True
+
+        return changed or True
+    
+    def migrate2(self):
+        cu = self.db.cursor()
+
+        cu.execute("""
+            ALTER TABLE inventory_system
+                DROP COLUMN os_type,
+                DROP COLUMN os_major_version,
+                DROP COLUMN os_minor_version
+        """)
+        cu.execute("ALTER TABLE jobs ADD COLUMN job_uuid VARCHAR(64)")
+        cu.execute("UPDATE jobs SET job_uuid=job_id")
+        cu.execute("ALTER TABLE jobs ALTER COLUMN job_uuid SET NOT NULL")
+        cu.execute("ALTER TABLE jobs ADD UNIQUE(job_uuid)")
+        return True
+
+    def migrate3(self):
+        cu = self.db.cursor()
+
+        cu.execute("""
+            INSERT INTO "inventory_event_type" 
+                ("name", "description", "priority")
+            VALUES
+                ('system launch wait',
+                 'wait for a launched system''s network information',
+                 105)
+        """)
+        return True
+
+class MigrateTo_51(SchemaMigration):
+    Version = (51, 31)
+
+    def migrate(self):
+        cu = self.db.cursor()
+        db = self.db
+        changed = False
+        
+        if 'inventory_management_interface' not in db.tables:
+            cu.execute("""
+                CREATE TABLE "inventory_management_interface" (
+                    "management_interface_id" %(PRIMARYKEY)s,
+                    "name" varchar(8092) NOT NULL UNIQUE,
+                    "description" varchar(8092) NOT NULL,
+                    "created_date" timestamp with time zone NOT NULL,
+                    "port" integer NOT NULL,
+                    "credentials_descriptor" text NOT NULL
+                ) %(TABLEOPTS)s""" % db.keywords)
+            db.tables['inventory_management_interface'] = []
+            changed = True
+        
+        cu.execute("""
+            ALTER TABLE inventory_system
+                ADD COLUMN management_interface_id  INTEGER
+                    REFERENCES inventory_management_interface
+        """)
+        
+        return True
+    
+    def migrate1(self):
+        cu = self.db.cursor()
+        db = self.db
+        
+        cu.execute("ALTER TABLE inventory_management_interface ADD COLUMN credentials_readonly bool")
+        schema._addManagementInterfaces(db)
+        cu.execute("UPDATE inventory_management_interface SET credentials_readonly='true' WHERE name='cim'")
+        cu.execute("UPDATE inventory_management_interface SET credentials_readonly='false' WHERE name='wmi'")
+        
+        return True
+    
+    def migrate2(self):
+        cu = self.db.cursor()
+        
+        cu.execute("UPDATE inventory_management_interface SET port='5989' WHERE name='cim'")
+        
+        return True
+
+    def migrate3(self):
+        cu = self.db.cursor()
+        db = self.db
+
+        cu.execute("""
+            INSERT INTO "inventory_event_type" 
+                ("name", "description", "priority")
+            VALUES
+                ('system detect management interface',
+                 'detect a system''s management interface',
+                 50)
+        """)
+
+        cu.execute("""
+            INSERT INTO "inventory_event_type" 
+                ("name", "description", "priority")
+            VALUES
+                ('immediate system detect management interface',
+                 'on-demand detect a system''s management interface',
+                 105)
+        """)
+        
+        return True
+
+    def migrate4(self):
+        cu = self.db.cursor()
+        
+        cu.execute("ALTER TABLE inventory_system ADD COLUMN credentials text")
+        
+        return True
+
+    def _addSystemTypes5(self):
+        db = self.db
+        changed = False
+        
+        changed |= schema._addTableRows(db, 'inventory_system_type', 'name',
+                [dict(name='inventory',
+                      description='Inventory',
+                      created_date=str(datetime.datetime.now(tz.tzutc())),
+                      infrastructure=False,
+                )])
+        
+        changed |= schema._addTableRows(db, 'inventory_system_type', 'name',
+                [dict(name='infrastructure-management-node',
+                      description='rPath Update Service (Infrastructure)',
+                      created_date=str(datetime.datetime.now(tz.tzutc())),
+                      infrastructure=True,
+                )])
+        
+        changed |= schema._addTableRows(db, 'inventory_system_type', 'name',
+                [dict(name='infrastructure-windows-build-node',
+                      description='rPath Windows Build Service (Infrastructure)',
+                      created_date=str(datetime.datetime.now(tz.tzutc())),
+                      infrastructure=True,
+                )])
+        
+        return changed
+    
+    def migrate5(self):
+        cu = self.db.cursor()
+        changed = True
+        
+        if 'inventory_system_type' not in self.db.tables:
+            cu.execute("""
+                CREATE TABLE "inventory_system_type" (
+                    "system_type_id" %(PRIMARYKEY)s,
+                    "name" varchar(8092) NOT NULL UNIQUE,
+                    "description" varchar(8092) NOT NULL,
+                    "created_date" timestamp with time zone NOT NULL,
+                    "infrastructure" bool
+                ) %(TABLEOPTS)s""" % self.db.keywords)
+            self.db.tables['inventory_system_type'] = []
+            changed |= self._addSystemTypes5()
+            changed = True
+            
+        cu.execute("""
+            ALTER TABLE inventory_system
+                ADD COLUMN type_id  INTEGER
+                    REFERENCES inventory_system_type
+        """)
+            
+        # update type on the rUS
+        cu.execute("SELECT system_type_id from inventory_system_type where name='infrastructure-management-node'")
+        ids = cu.fetchall()
+        mgmtNodeId = ids[0][0]
+        cu.execute("UPDATE inventory_system SET type_id='%d' WHERE name='rPath Update Service'" % mgmtNodeId)
+        
+        # update type on the other systems
+        cu.execute("SELECT system_type_id from inventory_system_type where name='inventory'")
+        ids = cu.fetchall()
+        invTypeId = ids[0][0]
+        cu.execute("UPDATE inventory_system SET type_id='%d' WHERE name<>'rPath Update Service'" % invTypeId)
+        
+        return True
+    
+    def migrate6(self):
+        cu = self.db.cursor()
+
+        cu.execute("""ALTER TABLE inventory_system DROP COLUMN management_node""")
+        
+        return True
+    
+    def migrate7(self):
+        cu = self.db.cursor()
+
+        cu.execute("""update inventory_management_interface set credentials_descriptor=? where name='wmi'""" , schema.wmi_credentials_descriptor)
+        cu.execute("""update inventory_management_interface set credentials_descriptor=? where name='cim'""" , schema.cim_credentials_descriptor)
+        
+        return True
+    
+    def migrate8(self):
+        cu = self.db.cursor()
+
+        cu.execute("""update inventory_system_state set description='Initial synchronization pending' where name='registered'""")
+
+        return True
+
+    def migrate9(self):
+        schema._addTableRows(self.db, 'inventory_system_state', 'name',
+                [
+                    dict(name="non-responsive-credentials", description="Not responding: Invalid credentials", created_date=str(datetime.datetime.now(tz.tzutc()))),
+                ])
+        return True
+
+    def migrate10(self):
+        add_columns(self.db, 'inventory_job',
+            "status_code INTEGER NOT NULL DEFAULT 100",
+            "status_text VARCHAR NOT NULL DEFAULT 'Initializing'",
+            "status_detail VARCHAR",
+        )
+        return True
+    
+    def migrate11(self):
+        schema._addTableRows(self.db, 'inventory_system_state', 'name',
+                [
+                    dict(name="unmanaged-credentials", description="Unmanaged: Invalid credentials", created_date=str(datetime.datetime.now(tz.tzutc()))),
+                ])
+        return True
+    
+    def migrate12(self):
+        cu = self.db.cursor()
+
+        cu.execute("""update inventory_management_interface set credentials_descriptor=? where name='wmi'""" , schema.wmi_credentials_descriptor)
+        cu.execute("""update inventory_management_interface set credentials_descriptor=? where name='cim'""" , schema.cim_credentials_descriptor)
+        
+        return True
+
+    def migrate13(self):
+        cu = self.db.cursor()
+        db = self.db
+
+        if 'inventory_stage' not in db.tables:
+            cu.execute("""
+                CREATE TABLE "inventory_stage" (
+                    "stage_id" %(PRIMARYKEY)s,
+                    "name" varchar(256) NOT NULL,
+                    "label" text NOT NULL,
+                    "major_version_id" INTEGER REFERENCES
+                        ProductVersions (productVersionId)
+                )""" % db.keywords)
+            db.tables['inventory_stage'] = []
+            changed = True
+
+        cu.execute("""
+            ALTER TABLE "inventory_system"
+            ADD "stage_id" INTEGER REFERENCES "inventory_stage" ("stage_id")
+        """)
+
+        cu.execute("""
+            ALTER TABLE "inventory_system"
+            ADD "major_version_id" INTEGER REFERENCES ProductVersions (productVersionId)
+        """)
+
+        cu.execute("""
+            ALTER TABLE "inventory_system"
+            ADD "appliance_id" INTEGER REFERENCES Projects (projectId)
+        """)
+
+        return changed
+
+    def migrate14(self):
+        cu = self.db.cursor()
+        db = self.db
+
+        cu.execute("""
+            ALTER TABLE "inventory_system_type"
+            ALTER "infrastructure" SET NOT NULL
+        """)
+
+        return True
+
+    def migrate15(self):
+        cu = self.db.cursor()
+        db = self.db
+
+        cu.execute("""
+            ALTER TABLE "inventory_system"
+            RENAME "type_id" to "system_type_id"
+        """)
+
+        return True
+    
+    def migrate16(self):
+        cu = self.db.cursor()
+
+        cu.execute("alter table inventory_system_type ADD COLUMN creation_descriptor text")
+        cu.execute("""update inventory_system_type set creation_descriptor=? where name='inventory'""", 
+            schema.inventory_creation_descriptor)
+        cu.execute("""update inventory_system_type set creation_descriptor=? where name='infrastructure-management-node'""", 
+            schema.management_node_creation_descriptor)
+        cu.execute("""update inventory_system_type set creation_descriptor=? where name='infrastructure-windows-build-node'""", 
+            schema.windows_build_node_creation_descriptor)
+        
+        return True
+
+    def migrate17(self):
+        # Add platformName as nullable, fill it in with the label, then set to
+        # not null
+        add_columns(self.db, 'Platforms',
+            'platformName    varchar(1024)',
+            'configurable    boolean NOT NULL DEFAULT false',
+            'abstract        boolean NOT NULL DEFAULT false',
+            'time_refreshed  timestamp with time zone NOT NULL DEFAULT current_timestamp',
+        )
+
+        cu = self.db.cursor()
+        cu.execute("UPDATE Platforms SET platformName = label")
+        cu.execute("ALTER TABLE Platforms ALTER COLUMN platformName SET NOT NULL")
+        return True
+
+    def migrate18(self):
+        # Add isFromDisk, by default false - set to True only for platforms
+        # provided by the rbuilder
+        add_columns(self.db, 'Platforms',
+            'isFromDisk      boolean NOT NULL DEFAULT false',
+        )
+
+        if self.cfg is None:
+            # Skip data mangling in migration tests
+            return True
+
+        class Plat(object):
+            __slots__ = ['platformName', 'abstract', 'configurable',
+                'isFromDisk']
+            def __init__(self, **kwargs):
+                for slotName in self.__slots__:
+                    setattr(self, slotName, kwargs.get(slotName, None))
+                self.isFromDisk = False
+
+        cu = self.db.cursor()
+        sql = """UPDATE Platforms
+            SET platformName=?, abstract=?, configurable=?, isFromDisk=?
+            WHERE label=?
+        """
+        platformsString = """
+rhel.rpath.com@rpath:rhel-4-as,Red Hat Enterprise Linux 4,0,1
+rhel.rpath.com@rpath:rhel-5-server,Red Hat Enterprise Linux 5,0,1
+rhel.rpath.com@rpath:rhel-5-client-workstation,Red Hat Enterprise Linux Desktop Workstation 5,0,1
+sles.rpath.com@rpath:sles-10sp3,Encapsulated SLES 10 Delivered by rPath,0,1
+centos.rpath.com@rpath:centos-5e,Encapsulated CentOS 5 Delivered by rPath,0,1
+conary.rpath.com@rpl:2,rPath Linux 2,0,0
+windows.rpath.com@rpath:windows-common,Windows Foundation Platform,1,0
+"""
+        platforms = {}
+        for row in platformsString.split('\n'):
+            row = row.strip()
+            if not row:
+                continue
+            arr = [ x.strip() for x in row.split(',') ]
+            label, platformName, abstract, configurable = (arr[0], arr[1],
+                bool(int(arr[2])), bool(int(arr[3])))
+            platforms[label] = Plat(platformName=platformName,
+                abstract=abstract, configurable=configurable, isFromDisk=True)
+        for label, platformName in zip(self.cfg.availablePlatforms,
+                                               self.cfg.availablePlatformNames):
+            platforms[label] = Plat(platformName=platformName)
+        for label in self.cfg.configurablePlatforms:
+            plat = platforms.get(label, None)
+            if plat is None:
+                continue
+            plat.configurable = True
+        for label in self.cfg.abstractPlatforms:
+            plat = platforms.get(label, None)
+            if plat is None:
+                continue
+            plat.abstract = True
+        for label, plat in platforms.items():
+            cu.execute(sql, (plat.platformName, bool(plat.abstract),
+                bool(plat.configurable), plat.isFromDisk, label))
+        return True
+    
+    def migrate19(self):
+        cu = self.db.cursor()
+        
+        cu.execute("ALTER TABLE inventory_system ADD COLUMN configuration text")
+        return True
+
+    def migrate20(self):
+        cu = self.db.cursor()
+
+        cu.execute("""
+            UPDATE "inventory_event_type"
+            SET "description" = 'System registration'
+            WHERE "name" = 'system registration'
+        """)
+        cu.execute("""
+            UPDATE "inventory_event_type"
+            SET "description" = 'System sychnorization'
+            WHERE "name" = 'system poll'
+        """)
+        cu.execute("""
+            UPDATE "inventory_event_type"
+            SET "description" = 'On-demand system synchronization'
+            WHERE "name" = 'immediate system poll'
+        """)
+        cu.execute("""
+            UPDATE "inventory_event_type"
+            SET "description" = 'Scheduled system update'
+            WHERE "name" = 'system apply update'
+        """)
+        cu.execute("""
+            UPDATE "inventory_event_type"
+            SET "description" = 'System update'
+            WHERE "name" = 'immediate system apply update'
+        """)
+        cu.execute("""
+            UPDATE "inventory_event_type"
+            SET "description" = 'Scheduled system shutdown'
+            WHERE "name" = 'system shutdown'
+        """)
+        cu.execute("""
+            UPDATE "inventory_event_type"
+            SET "description" = 'System shutdown'
+            WHERE "name" = 'immediate system shutdown'
+        """)
+        cu.execute("""
+            UPDATE "inventory_event_type"
+            SET "description" = 'Launched system network data discovery'
+            WHERE "name" = 'system launch wait'
+        """)
+        cu.execute("""
+            UPDATE "inventory_event_type"
+            SET "description" = 'System management interface detection'
+            WHERE "name" = 'system detect management interface'
+        """)
+        cu.execute("""
+            UPDATE "inventory_event_type"
+            SET "description" = 'On-demand system management interface detection'
+            WHERE "name" = 'immediate system detect management interface'
+        """)
+
+        return True
+    
+    def migrate21(self):
+        cu = self.db.cursor()
+
+        cu.execute("""
+            INSERT INTO "inventory_event_type" 
+                ("name", "description", "priority")
+            VALUES
+                ('immediate system configuration',
+                 'Update system configuration',
+                 105)
+        """)
+        
+        return True
+
+    def migrate22(self):
+        cu = self.db.cursor()
+        cu.execute("ALTER TABLE Builds ADD job_uuid uuid")
+        return True
+
+    def migrate23(self):
+        drop_tables(self.db, 'LaunchedAMIs', 'BlessedAMIs')
+        return True
+    
+    def migrate24(self):
+        cu = self.db.cursor()
+
+        # descriptors were updated
+        cu.execute("""update inventory_system_type set creation_descriptor=? where name='inventory'""", 
+            schema.inventory_creation_descriptor)
+        cu.execute("""update inventory_system_type set creation_descriptor=? where name='infrastructure-management-node'""", 
+            schema.management_node_creation_descriptor)
+        cu.execute("""update inventory_system_type set creation_descriptor=? where name='infrastructure-windows-build-node'""", 
+            schema.windows_build_node_creation_descriptor)
+        
+        return True
+
+    def migrate25(self):
+        cu = self.db.cursor()
+        db = self.db
+
+        if 'django_site' not in db.tables:
+            cu.execute("""
+                CREATE TABLE "django_site" (
+                    "id" %(PRIMARYKEY)s,
+                    "domain" VARCHAR(100) NOT NULL UNIQUE,
+                    "name" VARCHAR(100) NOT NULL UNIQUE
+                )""" % db.keywords)
+            db.tables['django_site'] = []
+            changed = True
+            changed |= schema._addTableRows(db, 'django_site', 'name',
+                [
+                    dict(id=1, domain="rbuilder.inventory", name="rBuilder Inventory")])
+
+        if 'django_redirect' not in db.tables:
+            cu.execute("""
+                CREATE TABLE "django_redirect" (
+                    "id" %(PRIMARYKEY)s,
+                    "site_id" INTEGER NOT NULL UNIQUE
+                        REFERENCES "django_site" ("id"),
+                    "old_path" VARCHAR(200) NOT NULL UNIQUE,
+                    "new_path" VARCHAR(200) NOT NULL 
+                )""" % db.keywords)
+            db.tables['django_redirect'] = []
+            changed = True
+
+        return True
+
+    def migrate26(self):
+        cu = self.db.cursor()
+
+        cu.execute("""
+            ALTER TABLE inventory_system
+            DROP CONSTRAINT inventory_system_target_id_fkey
+        """)
+        cu.execute("""
+            ALTER TABLE inventory_system
+            ADD CONSTRAINT inventory_system_target_id_fkey
+            FOREIGN KEY (target_id) 
+            REFERENCES targets(targetid) ON DELETE SET NULL
+        """)
+
+        return True
+
+
+    def migrate27(self):
+        cu = self.db.cursor()
+
+        cu.execute("""
+            ALTER TABLE "inventory_system_network" 
+            ALTER "ipv6_address" TYPE TEXT
+        """)
+
+        return True
+
+    def migrate28(self):
+        cu = self.db.cursor()
+
+        cu.execute("""
+            ALTER TABLE "django_redirect" 
+            DROP CONSTRAINT "django_redirect_site_id_key"
+        """)
+
+        return True
+    
+    def migrate29(self):
+        cu = self.db.cursor()
+
+        # descriptors were updated
+        cu.execute("""update inventory_system_type set creation_descriptor=? where name='inventory'""", 
+            schema.inventory_creation_descriptor)
+        cu.execute("""update inventory_system_type set creation_descriptor=? where name='infrastructure-management-node'""", 
+            schema.management_node_creation_descriptor)
+        cu.execute("""update inventory_system_type set creation_descriptor=? where name='infrastructure-windows-build-node'""", 
+            schema.windows_build_node_creation_descriptor)
+        
+        return True
+
+    def migrate30(self):
+        cu = self.db.cursor()
+
+        cu.execute("""
+            ALTER TABLE "inventory_system_network"
+            DROP CONSTRAINT "inventory_system_network_system_id_dns_name_key"
+        """)
+
+        return True
+
+    def migrate31(self):
+        """Post-5.8.0 schema fixups"""
+        cu = self.db.cursor()
+        cu.execute("""
+            ALTER TABLE inventory_system_type
+            ALTER creation_descriptor SET NOT NULL
+            """)
+        cu.execute("""
+            UPDATE inventory_event_type
+            SET description = 'System synchronization'
+            WHERE name = 'system poll'
+            """)
+
+        if not columnExists(self.db, "inventory_system_event", "event_data"):
+            cu.execute("""
+                ALTER TABLE inventory_system_event
+                ADD event_data varchar
+                """)
+        if not constraintExists(self.db, "inventory_system_target_credentials",
+                "inventory_system_target_credentials_system_id_key"):
+            cu.execute("""
+                ALTER TABLE inventory_system_target_credentials
+                ADD CONSTRAINT inventory_system_target_credentials_system_id_key
+                UNIQUE ( system_id, credentials_id )
+                """)
+        renameConstraint(self.db, table="inventory_system",
+                oldName="inventory_system_type_id_fkey",
+                newDefinition="""
+                ADD CONSTRAINT inventory_system_system_type_id_fkey
+                    FOREIGN KEY ( system_type_id )
+                    REFERENCES inventory_system_type
+                """,
+                conditional=True)
+        return True
+
+class MigrateTo_52(SchemaMigration):
+    Version = (52, 3)
+
+    def migrate(self):
+        return True
+
+    def migrate1(self):
+        createTable(self.db, """
+                CREATE TABLE TargetImagesDeployed (
+                    id              %(PRIMARYKEY)s,
+                    targetId        integer             NOT NULL
+                        REFERENCES Targets ON DELETE CASCADE,
+                    fileId          integer             NOT NULL
+                        REFERENCES BuildFiles ON DELETE CASCADE,
+                    targetImageId   varchar(128)        NOT NULL
+                ) %(TABLEOPTS)s""")
+        return True
+
+    def migrate2(self):
+        cursor = self.db.cursor()
+        cursor.execute("""
+            ALTER TABLE inventory_system
+                DROP CONSTRAINT inventory_system_generated_uuid_key""")
+        return True
+        
+    def migrate3(self):
+        cursor = self.db.cursor()
+        cursor.execute("""
+            ALTER TABLE inventory_trove
+            ADD out_of_date BOOL
+        """)
+
+        # Invalidate trove update cache so that all updates will be recomputed
+        cursor.execute("""
+            UPDATE inventory_trove
+            SET last_available_update_refresh = NULL
+        """)
+
         return True
 
 #### SCHEMA MIGRATIONS END HERE #############################################

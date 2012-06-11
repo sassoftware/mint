@@ -1,0 +1,79 @@
+<c2s>
+  <id>c2s</id>
+  <pidfile>/var/lib/jabberd/pid/c2s.pid</pidfile>
+
+  <router>
+    <ip>127.0.0.1</ip>
+    <port>5347</port>
+    <user>jabberd</user>
+    <pass>f761434d1c9a6f91d1ab3cb240afff0c863c559e</pass>
+    <retry>
+      <init>-1</init>
+      <lost>-1</lost>
+      <sleep>2</sleep>
+    </retry>
+  </router>
+
+  <log type='syslog'>
+    <ident>jabberd/c2s</ident>
+    <facility>local3</facility>
+  </log>
+
+  <local>
+    <id realm='' require-starttls='true' register-enable='true'
+      pemfile='/srv/rbuilder/pki/jabberd.pem'
+      >rbuilder.rpath</id>
+    <ip>0.0.0.0</ip>
+    <port>5222</port>
+  </local>
+
+  <io>
+    <max_fds>1024</max_fds>
+
+    <limits>
+      <bytes>0</bytes>
+      <stanzas>0</stanzas>
+      <connects>0</connects>
+      <stanzasize>65535</stanzasize>
+    </limits>
+
+    <access>
+      <order>allow,deny</order>
+    </access>
+
+    <check>
+      <interval>15</interval>
+      <idle>0</idle>
+      <keepalive>15</keepalive>
+    </check>
+  </io>
+
+  <stats />
+
+  <authreg>
+    <path>/usr/lib64/jabberd</path>
+    <module>pgsql</module>
+
+    <mechanisms>
+      <traditional />
+      <sasl />
+    </mechanisms>
+    <ssl-mechanisms>
+      <traditional>
+        <plain/>
+      </traditional>
+      <sasl>
+        <plain/>
+      </sasl>
+    </ssl-mechanisms>
+
+    <pgsql>
+      <conninfo>dbname=jabberd user=jabberd port=5439</conninfo>
+    </pgsql>
+
+  </authreg>
+
+</c2s>
+<!--
+  vim: syntax=xml
+-->

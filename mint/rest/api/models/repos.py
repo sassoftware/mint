@@ -53,6 +53,7 @@ class Trove(Model):
     images           = fields.UrlField('products.repos.items.images',
                                       ['hostname', 'nvf'])
     files            = fields.ListField(TroveFile, displayName='file')
+    imageCount       = fields.IntegerField()
 
     def getNVF(self):
         return '%s=%s[%s]' % (self.name, self.version, self.flavor)

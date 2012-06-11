@@ -1,0 +1,164 @@
+<?xml version="1.0" encoding="utf-8"?>
+<django-objects version="1.0">
+  <object pk="1" model="inventory.stage">
+    <field to="rbuilder.versions" name="major_version" rel="ManyToOneRel">2</field>
+    <field type="CharField" name="name">Development</field>
+    <field type="TextField" name="label">clover.eng.rpath.com@rpath:clover-1-devel</field>
+  </object>
+
+  <object pk="3" model="inventory.system">
+    <field type="CharField" name="name">testsystemname</field>
+    <field type="CharField" name="description">testsystemdescription</field>
+    <field type="DateTimeField" name="created_date">2010-10-08 16:01:05</field>
+    <field type="CharField" name="hostname">
+      <None/>
+    </field>
+    <field type="DateTimeField" name="launch_date">
+      <None/>
+    </field>
+    <field to="rbuilder.targets" name="target" rel="ManyToOneRel">
+      <None/>
+    </field>
+    <field type="CharField" name="target_system_id">
+      <None/>
+    </field>
+    <field type="CharField" name="target_system_name">
+      <None/>
+    </field>
+    <field type="CharField" name="target_system_description">
+      <None/>
+    </field>
+    <field type="CharField" name="target_system_state">
+      <None/>
+    </field>
+    <field type="DateTimeField" name="registration_date">2010-10-08 16:01:05</field>
+    <field type="CharField" name="generated_uuid">testsystemgenerateduuid</field>
+    <field type="CharField" name="local_uuid">testsystemlocaluuid</field>
+    <field type="CharField" name="ssl_client_certificate">-----BEGIN CERTIFICATE-----
+MIIDCzCCAfOgAwIBAgIBADANBgkqhkiG9w0BAQUFADBAMRcwFQYDVQQKEw5yUGF0
+aCByQnVpbGRlcjElMCMGA1UECxMcaHR0cDovL2xvY2FsaG9zdC5sb2NhbGRvbWFp
+bjAeFw0xMDEwMDgxNjAxMTBaFw0yMDEwMDgxNjAxMTBaMEAxFzAVBgNVBAoTDnJQ
+YXRoIHJCdWlsZGVyMSUwIwYDVQQLExxodHRwOi8vbG9jYWxob3N0LmxvY2FsZG9t
+YWluMIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAw53apfUc95PgHUXE
+0L7s8G+msjOgUIAtblJ4uPsffsUKudqTnTbSsqH8DmCaQj6jkIjnT2BYEXdUtk8G
+JgkEqQykUyuriUvaFgh1uHwn/dmhCZl7DTw5Ic0plMiMmwR4vSxRLwGQeG9CylsI
+Dgq6PJRYIc9+INx2nEktukGnd0j/HEAqI2VzuU70xNzORAk2X7JXBzjpp4jSXdia
+REskJOGhm8q6krtv94r6azXYFCEoQUCEk3u+qtuUOKR7t0G/FfCcDGBYMolai4Ot
+sohjWPdYzvYXqZxkvUmzBI0EQrYZkmB456luIB+1k/DnVH16/Zp4chvfKTK6kZSl
+fnegFQIDAQABoxAwDjAMBgNVHRMBAf8EAjAAMA0GCSqGSIb3DQEBBQUAA4IBAQBG
+VsqXt1gJSmJAfDD0YKepXAUVgzEQRS5X4NrNWbn/BXwPoaar/intGRHfjlEfRk/w
+xeNp8Fp8U2z9cReGKHhHOizKFzbffNVmD5p2FmU86h3hqiDj1yg0RRJn2TDkCue9
+xliV85SwZFlBchPgO0VpxWm903TWuhz0Qk8+DUlPbpIiQOPCnJGiLEhOZpt6w/Hr
+e86LAsAjQtoGO5sKO+/N7hozhnkSzan1WZQ2h91+ZwswlQgIG+8fxvinXG2cJn0r
+PhkbpeDz+lOecHsrbjvShLsBHBzZDiQAAWeP1HUJIlffWroYn2CTQF9SdxvxFNwg
+qUUQIF8prloO+ySSSHyR
+-----END CERTIFICATE-----
+</field>
+    <field type="CharField" name="ssl_client_key">-----BEGIN RSA PRIVATE KEY-----
+MIIEowIBAAKCAQEAw53apfUc95PgHUXE0L7s8G+msjOgUIAtblJ4uPsffsUKudqT
+nTbSsqH8DmCaQj6jkIjnT2BYEXdUtk8GJgkEqQykUyuriUvaFgh1uHwn/dmhCZl7
+DTw5Ic0plMiMmwR4vSxRLwGQeG9CylsIDgq6PJRYIc9+INx2nEktukGnd0j/HEAq
+I2VzuU70xNzORAk2X7JXBzjpp4jSXdiaREskJOGhm8q6krtv94r6azXYFCEoQUCE
+k3u+qtuUOKR7t0G/FfCcDGBYMolai4OtsohjWPdYzvYXqZxkvUmzBI0EQrYZkmB4
+56luIB+1k/DnVH16/Zp4chvfKTK6kZSlfnegFQIDAQABAoIBAQCWyBJFYc5WN7HE
+Xob6sHBKVIWVTp3/7w0VwJQ1YbxBJvjBkW2+/QcjkiCLpILDFS1Wt3A0ivrXW7f8
+XqVKpCDnfUscoMi0J7eOzC6RaYIZ9apfj+J9rTIMj+vBN2TKCIRYrNRW+0m0y24c
+NFbdG/+5uk7EoP+DrOvwQ6fvrbO8CTsWrCLuKVC3X0zrlQLpK6VszeXsR9zOnqm6
+Fk0bybB0ioRA+LvM2D1SdyFt15vT3zvEn5osDG2SlUKKLpvRD0KkQ5rdLllJfTow
+glDphUqBgIUVtpOgbBK9MdZzFeBY9K0TzOpHPsTP/qe6DXD6rZkEuVmoqbajveWS
+Y/LJFSCBAoGBAOafQs437ZhYHx94LpDoKNtKBmq1dp043sigY6e+NGsTmb0wmBvB
+BWeW35f7c3IPMkBM10b+5hRSNCPfQxwpwdhEHULQOH3uzebhhT3nj8Td0Hym8SJy
+Wl3XzOvsURjrd9RB9NVhoy8tLbY4gi76/xU1/iYMmOqZKadNKIdFYi/ZAoGBANkk
+eJPBFKhGAOzRv6jx/TAg57AaojRRVcVC8J+lacqcWADm3WsUgM+V25bKhtrNUJz5
+R37qPGJzZay36uaJpyCNpLrqf6xpr8w36EDTg6gI4+R0vv8c8qvF0k1SwRTCjTxK
+jVatFLgNlXZxzjiFcrPuo+Qc9yvf0ZEwJNHWXYidAoGAF3NKT73QIxWS1Jhb49A3
+l1THokIhdYs63BuzBnOI0PqFP3+Zd/kAm6/zvHiNHKP+8BrgKQ/yRU62jo89O7fj
+RiJm90xE8kk+FqQH8GuDavlDIem3y1Dlb3VqGPNGq8oFvUeXpbrv5PQrGcRVOIG9
+PmLnHOdbBT/dxG1MGbUsbsECgYAjS99hvSf7dm2eETZDYxqR4TdoE9w7/uCfURNG
+ECBTM/jGJMDnMA0EMUrhhwhGtsscyRSLF846/qEPY1IGqWeGTh/x1j5sqz1NR+Uz
+7G3hOZi5wRRu6ai0rVJTCVmjY0CMBV5WMYpFpMef2j34SBDuGKOBaAfxlM8+94F0
+rpDDrQKBgHtLYIEPjr+hHhf1w2RzWNOXH8yJYoA2oez+6WVURAHuZjzWHnTTEMvA
+1WkqSrjA+G+Te++tPPZJZ9kzqy5q3Oj5X6tP16KDxkMR3jh3uQ/bKstlnoPSPvVD
+faC7SRCZ/AwFH/wytT+JK6HNKEjLdMjoiulZ9W/GTy/9VtQDtB06
+-----END RSA PRIVATE KEY-----
+</field>
+    <field type="CharField" name="ssl_server_certificate">testsystemsslservercertificate</field>
+    <field to="rbuilder.users" name="launching_user" rel="ManyToOneRel">
+      <None/>
+    </field>
+    <field to="inventory.systemstate" name="current_state" rel="ManyToOneRel">2</field>
+    <field to="inventory.zone" name="managing_zone" rel="ManyToOneRel">1</field>
+    <field type="IntegerField" name="agent_port">5989</field>
+    <field type="DateTimeField" name="state_change_date">2010-10-08 16:01:05</field>
+    <field to="inventory.managementinterface" name="management_interface" rel="ManyToOneRel">1</field>
+    <field type="TextField" name="credentials">
+      <None/>
+    </field>
+    <field to="inventory.systemtype" name="system_type" rel="ManyToOneRel">1</field>
+    <field to="inventory.trove" name="installed_software" rel="ManyToManyRel">
+      <object pk="1"/>
+    </field>
+    <field to="inventory.stage" name="stage" rel="ManyToOneRel">1</field>
+    <field to="rbuilder.versions" name="major_version" rel="ManyToOneRel">2</field>
+    <field to="rbuilder.products" name="appliance" rel="ManyToOneRel">2</field>
+  </object>
+
+  <object pk="1" model="inventory.version">
+    <field type="TextField" name="full">/clover.eng.rpath.com@rpath:clover-1-devel/1-3-1</field>
+    <field type="TextField" name="label">clover.eng.rpath.com@rpath:clover-1-devel</field>
+    <field type="TextField" name="revision">1-3-1</field>
+    <field type="TextField" name="ordering">1234567891.13</field>
+    <field type="TextField" name="flavor">~!dom0,~!domU,vmware,~!xen is: x86(i486,i586,i686,sse,sse2)</field>
+  </object>
+  <object pk="2" model="inventory.version">
+    <field type="TextField" name="full">/clover.eng.rpath.com@rpath:clover-1-devel/1-4-1</field>
+    <field type="TextField" name="label">clover.eng.rpath.com@rpath:clover-1-devel</field>
+    <field type="TextField" name="revision">1-4-1</field>
+    <field type="TextField" name="ordering">1234567892.14</field>
+    <field type="TextField" name="flavor">~!dom0,~!domU,vmware,~!xen is: x86(i486,i586,i686,sse,sse2)</field>
+  </object>
+
+  <object pk="1" model="inventory.trove">
+    <field type="TextField" name="name">group-clover-appliance</field>
+    <field to="inventory.version" name="version" rel="ManyToOneRel">1</field>
+    <field type="TextField" name="flavor">~!dom0,~!domU,vmware,~!xen is: x86(i486,i586,i686,sse,sse2)</field>
+    <field type="BooleanField" name="is_top_level">True</field>
+    <field type="DateTimeField" name="last_available_update_refresh">
+      <None/>
+    </field>
+    <field to="inventory.version" name="available_updates" rel="ManyToManyRel">
+      <object pk="1"/>
+      <object pk="2"/>
+    </field>
+  </object>
+
+  <object pk="2" model="rbuilder.products">
+    <field type="CharField" name="hostname">clover.eng.rpath.com</field>
+    <field type="CharField" name="name">clover</field>
+    <field type="CharField" name="namespace">rpath</field>
+    <field type="CharField" name="domainname">eng.rpath.com</field>
+    <field type="CharField" name="shortname">clover</field>
+    <field type="CharField" name="projecturl">http://</field>
+    <field type="CharField" name="repositoryHostName">clover.eng.rpath.com</field>
+    <field type="TextField" name="description">clover</field>
+    <field type="CharField" name="prodtype">1</field>
+    <field type="CharField" name="commitemail">a@a.com</field>
+    <field type="SmallIntegerField" name="backupexternal">0</field>
+    <field type="DecimalField" name="timecreated">0</field>
+    <field type="DecimalField" name="timemodified">0</field>
+    <field type="SmallIntegerField" name="hidden">0</field>
+    <field to="rbuilder.users" name="creatorid" rel="ManyToOneRel">1</field>
+  </object>
+
+  <object pk="2" model="rbuilder.versions">
+    <field to="rbuilder.products" name="productId" rel="ManyToOneRel">2</field>
+    <field type="CharField" name="namespace">rpath</field>
+    <field type="CharField" name="name">1</field>
+    <field type="TextField" name="description">1</field>
+    <field type="DecimalField" name="timecreated">0</field>
+  </object>
+
+    
+</django-objects>
+
+

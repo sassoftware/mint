@@ -1,20 +1,16 @@
 #!/usr/bin/python
-import StringIO
 import testsetup
 from testutils import mock
 
 from rpath_proddef import api1 as proddef
 
-from mint import mint_error
-
-from mint import userlevels
+from conary.lib.http import request as req_mod
 from mint.db import repository as reposdb
 from mint.rest import errors
 from mint.rest.api import models
 from mint.rest.db import platformmgr
 from mint.rest.db import reposmgr
 
-from mint_test import mint_rephelp
 from mint_test.resttest.apitest import restbase
 
 class PlatformManagerTest(restbase.BaseRestTest):
@@ -26,8 +22,6 @@ class PlatformManagerTest(restbase.BaseRestTest):
         self.db = self.openMintDatabase(createRepos=False)
         self.createUser('admin', admin=True)
         self.setDbUser(self.db, 'admin')
-        mock.mock(platformmgr.Platforms, '_checkMirrorPermissions',
-                        True)
 
     def _getPlatform(self):
         # Set up the platforms in the db before enabling it.
@@ -40,6 +34,7 @@ class PlatformManagerTest(restbase.BaseRestTest):
                             label='localhost@rpath:plat-1',
                             mode='manual',
                             platformId=platformId,
+                            configurable=True,
                             enabled=1)
         return p                            
 
@@ -179,7 +174,7 @@ class PlatformManagerTest(restbase.BaseRestTest):
 
         mock.mock(platformmgr.log, 'error')
         
-        self.db.platformMgr.platforms._create(p)
+        self.db.platformMgr.platforms._create(p, None)
         platformmgr.log.error._mock.assertCalled('Error creating platform '
             'localhost@rpath:plat-1, it must already exist: Duplicate '
             'item in platforms')
@@ -201,26 +196,30 @@ class PlatformManagerTest(restbase.BaseRestTest):
 
         self.db.platformMgr.getPlatforms()
 
-        self.assertEquals(3,
-            len(platformmgr.PlatformDefCache._getPlatDef._mock.calls))
+        self.assertEquals(
+            len(platformmgr.PlatformDefCache._getPlatDef._mock.calls),
+            2)
 
     def testProxySettingsPropagated(self):
-        proxies = dict(http = "http://blah.com:1234",
+        proxies = dict(http = "https://blah.com:12345",
                        https = "https://blah.com:12345")
         db = self.openRestDatabase()
         db.cfg.proxy.update(proxies)
         src = db.platformMgr.contentSourceTypes._getSourceTypeInstanceByName('RHN')
-        self.failUnlessEqual(src.proxies, proxies)
+        self.assertEqual(src.proxyMap.filterList[0][1],
+                [req_mod.URL('https://blah.com:12345')])
+        self.assertEqual(src.proxyMap.filterList[1][1],
+                [req_mod.URL('https://blah.com:12345')])
 
     def testPlatformsLinkedToSources(self):
         # list platforms and sources so they're created
         plats = self.db.getPlatforms()
-        sources = self.db.getSources('RHN')
-        sources = self.db.getSources('satellite')
+        # This adds the sources
+        self.db.getSources('RHN')
+        self.db.getSources('satellite')
 
         # add a new platform
         platformId = 3
-        self.mintCfg.availablePlatforms.append('localhost@rpath:plat-3')
         self.setupPlatform3()
 
         # get the new platform
@@ -230,9 +229,21 @@ class PlatformManagerTest(restbase.BaseRestTest):
         newPlatSources = self.db.getSourcesByPlatform(newPlatform.platformId)
         
         # verify the added platform was linked to sources
-        self.failUnlessEqual(len(newPlatSources.instance), 2)
         self.failUnlessEqual([x.contentSourceType \
             for x in newPlatSources.instance], ['RHN', 'RHN'])
+
+    def testPlatformsNoCfg(self):
+        # Make sure that simply adding the platform to the DB will
+        # successfully expose it
+        plats = self.db.getPlatforms()
+        self.failUnlessEqual(sorted(x.label for x in plats.platforms),
+            ['localhost@rpath:plat-1', 'localhost@rpath:plat-2'])
+
+        self.setupPlatform3()
+        plats = self.db.getPlatforms()
+        self.failUnlessEqual(sorted(x.label for x in plats.platforms),
+            ['localhost@rpath:plat-1', 'localhost@rpath:plat-2',
+            'localhost@rpath:plat-3'])
 
     def testGetDescriptor(self):
         rc = self.getRestClient()

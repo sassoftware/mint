@@ -26,7 +26,7 @@ class ProxiedTransport(transport.Transport):
     def request(self, *args, **kw):
         resp = transport.Transport.request(self, *args, **kw)
         # Return just the value.
-        return resp[0][1][0]
+        return resp[0][1]
 
 class ProxiedXMLOpener(transport.XMLOpener):
     def createConnection(self, *args, **kw):

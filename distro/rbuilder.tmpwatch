@@ -12,7 +12,7 @@ find /srv/rbuilder/repos -maxdepth 2 -name tmp -type d -exec /usr/sbin/tmpwatch 
 /usr/sbin/tmpwatch 720 /srv/rbuilder/diffcache
 
 # catch any stragglers in rbuilder's tmpdir
-/usr/sbin/tmpwatch 336 /srv/rbuilder/tmp
+/usr/sbin/tmpwatch 24 /srv/rbuilder/tmp
 
 # clean up proxy contents dir after a month of non-access
 /usr/sbin/tmpwatch 720 /srv/rbuilder/proxy-contents

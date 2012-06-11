@@ -1,24 +1,19 @@
 #
-# Copyright (c) 2005-2009 rPath, Inc.
-#
-# All Rights Reserved
+# Copyright (c) 2011 rPath, Inc.
 #
 
 import base64
 import errno
 import hmac
-import inspect
 import logging
 import os
 import re
-import simplejson
+import json
 import socket
 import stat
 import sys
 import time
 import tempfile
-import urllib
-import weakref
 import StringIO
 
 from mint import buildtypes
@@ -33,7 +28,6 @@ from mint import users
 from mint.lib import data
 from mint.lib import database
 from mint.lib import maillib
-from mint.lib import persistentcache
 from mint.lib import profile
 from mint.lib import siteauth
 from mint.lib.mintutils import ArgFiller
@@ -55,7 +49,8 @@ from mint import urltypes
 from mint.db import repository
 from mint.lib.unixutils import atomicOpen
 from mint.reports import MintReport
-from mint.helperfuncs import toDatabaseTimestamp, fromDatabaseTimestamp, getUrlHost
+from mint.helperfuncs import getUrlHost
+from mint.image_gen.wig import client as wig_client
 from mint import packagecreator
 
 from conary import changelog
@@ -65,18 +60,21 @@ from conary import versions
 from conary.conaryclient import filetypes
 from conary.conaryclient.cmdline import parseTroveSpec
 from conary.deps import deps
-from conary.lib.cfgtypes import CfgEnvironmentError
+from conary.lib import networking as cny_net
 from conary.lib import sha1helper
 from conary.lib import util
-from conary.repository.errors import TroveNotFound, RoleNotFound
+from conary.lib.http import http_error
+from conary.lib.http import request as cny_req
+from conary.repository.errors import TroveNotFound
 from conary.repository import netclient
 from conary.repository import shimclient
-from conary.repository.netrepos import netserver
 from conary.repository.netrepos.reposlog import RepositoryCallLogger as CallLogger
 from conary import errors as conary_errors
 
 from mcp import client as mcp_client
 from mcp import mcp_error
+from rmake.lib import procutil
+from rmake3 import client as rmk_client
 from rpath_proddef import api1 as proddef
 
 
@@ -656,41 +654,88 @@ class MintServer(object):
             httpProxies = self.cfg.proxy or {}
         return [ useInternalConaryProxy, httpProxies ]
 
+    def _getRmakeClient(self):
+        """Return an instance of a rMake 3 client."""
+        return rmk_client.RmakeClient('http://localhost:9998')
+
+    def _configureSputnik(self, sp, urlhostname):
+        """Try to configure remote sputnik.
+
+        It might fail if the upsrv is too old to have a sputnik (pre-5.7) in
+        which case we should succeed anyway with just the repository setup.
+        """
+        result = sp.configure.Network.index()
+        fqdn = result.get('host_hostName')
+        if not fqdn:
+            log.warning("Update service %s has no FQDN configured "
+                    "-- not creating certificate pair.", urlhostname)
+            return
+
+        log.info("Creating certificate pair for update service %s", fqdn)
+        x509_pem, pkey_pem = self.restDb.createCertificate(
+                purpose='upsrv %s' % (fqdn,),
+                desc='rPath Update Service',
+                issuer='hg_ca',
+                common=fqdn,
+                conditional=True,
+                )
+        confDict = {
+            'x509_pem': x509_pem,
+            'pkey_pem': pkey_pem,
+            }
+
+        rbuilder_ip = procutil.getNetName()
+        if rbuilder_ip != 'localhost':
+            confDict['xmpp_host'] = rbuilder_ip
+
+        ret = sp.rusconf.RusConf.pushConfiguration(confDict)
+        if 'errors' in ret:
+            # Too old to have a sputnik installation.
+            if ('method "pushConfiguration" is not supported'
+                    not in ret['errors'][-1]):
+                log.error("Error configuring update service %s: %s",
+                        urlhostname, ret['errors'][-1])
+                raise mint_error.UpdateServiceUnknownError(urlhostname)
+            log.warning("Update service %s does not support system inventory "
+                    "-- only repository services will be configured.",
+                    urlhostname)
+            return
+
+        # At this point, the rmake node should be connecting back to our XMPP
+        # server. Push the new JID to rmake's whitelist so it can authenticate.
+        jid = ret.get('jid')
+        try:
+            client = self._getRmakeClient()
+            client.registerWorker(jid)
+        except:
+            log.exception("Failed to register remote update service %s "
+                    "(JID %s) with local rMake dispatcher:", fqdn, jid)
+        else:
+            log.info("Registered update service %s w/ JID %s", fqdn, jid)
+
     def _configureUpdateService(self, hostname, adminUser, adminPassword):
         import xmlrpclib
         from mint.lib import proxiedtransport
         mirrorUser = ''
         try:
-            # Make sure that we deal with any HTTP proxies
-            proxy_host = self.cfg.proxy.get('https') or \
-                         self.cfg.proxy.get('http')
-
-            if proxy_host and proxy_host.startswith('https'):
-                proxy_proto_https = True
-            else:
-                proxy_proto_https = False 
-
-            # Set up a transport object to override the default if we're using
-            # a proxy.
-            if proxy_host:
-                conaryTransport = proxiedtransport.ProxiedTransport(
-                                    https=proxy_proto_https,
-                                    proxies=self.cfg.proxy)
-            else:
-                conaryTransport = None
-
             # Connect to the rUS via XML-RPC
             urlhostname = hostname
             if ':' not in urlhostname:
-                urlhostname += ':8003'
+                hostport = cny_net.HostPort(urlhostname, 8003)
                 protocol = 'https'
             else:
                 # Hack to allow testsuite, which passes 'hostname:port'
                 # and isn't using HTTPS
+                hostport = cny_net.HostPort(urlhostname)
                 protocol = 'http'
-            url = "%s://%s:%s@%s/rAA/xmlrpc/" % \
-                    (protocol, adminUser, adminPassword, urlhostname)
-            sp = xmlrpclib.ServerProxy(url, transport=conaryTransport)
+
+            url = cny_req.URL(scheme=protocol,
+                    userpass=(adminUser, util.ProtectedString(adminPassword)),
+                    hostport=hostport,
+                    path='/rAA/xmlrpc/')
+            transport = proxiedtransport.ProxiedTransport(
+                    proxyMap=self.cfg.getProxyMap())
+            sp = util.ServerProxy(url, transport=transport)
 
             mirrorUser = helperfuncs.generateMirrorUserName("%s.%s" % \
                     (self.cfg.hostName, self.cfg.siteDomainName), hostname)
@@ -705,20 +750,25 @@ class MintServer(object):
                 sp = xmlrpclib.ServerProxy(url, transport=m2xmlrpclib.SSL_Transport())
                 mirrorPassword = \
                     sp.mirrorusers.MirrorUsers.addRandomUser(mirrorUser)
-        except xmlrpclib.ProtocolError, e:
+
+            self._configureSputnik(sp, urlhostname)
+        except http_error.ResponseError, e:
             if e.errcode == 403:
                 raise mint_error.UpdateServiceAuthError(urlhostname)
             else:
                 raise mint_error.UpdateServiceConnectionFailed(urlhostname,
-                        "%d %s" % (e.errcode, e.errmsg))
+                        "%d %s" % (e.errcode, e.reason))
         except socket.error, e:
             raise mint_error.UpdateServiceConnectionFailed(urlhostname, 
                                                            str(e[1]))
-        else:
-            if not mirrorPassword:
-                raise mint_error.UpdateServiceUnknownError(urlhostname)
 
-        return (mirrorUser, mirrorPassword)
+        if mirrorPassword == '':
+            # rUS is in proxy mode
+            return 'proxy_mode', ''
+        elif isinstance(mirrorPassword, dict):
+            raise mint_error.UpdateServiceUnknownError(urlhostname)
+        else:
+            return (mirrorUser, mirrorPassword)
 
     def _createGroupTemplate(self, project, buildLabel, version,
                              groupName=None, groupApplianceLabel=None):
@@ -805,7 +855,7 @@ class MintServer(object):
         else:
             #If none was set use the default namespace set in config
             namespace = self.cfg.namespace
-        if not prodtype or (prodtype != 'Appliance' and prodtype != 'Component' and prodtype != 'Platform' and prodtype != 'Repository'):
+        if not prodtype or (prodtype != 'Appliance' and prodtype != 'Component' and prodtype != 'Platform' and prodtype != 'Repository' and prodtype != 'PlatformFoundation'):
             raise mint_error.InvalidProdType
 
         fqdn = ".".join((hostname, domainname))
@@ -2550,6 +2600,28 @@ If you would not like to be %s %s of this project, you may resign from this proj
         #Set up the http/https proxy
         r['proxy'] = dict(self.cfg.proxy)
 
+        # CA certificates for rpath-tools.
+        hg_ca, lg_ca = self.restDb.getCACertificates()
+        r['pki'] = {
+                'hg_ca': hg_ca or '',
+                'lg_ca': lg_ca or '',
+                }
+        if not hg_ca:
+            log.warning("High-grade CA certificate is missing. Images will "
+                    "not be registerable.")
+        if not lg_ca:
+            log.warning("Low-grade CA certificate is missing. Images will "
+                    "not be remote-registerable.")
+
+        # Send our IP to jobslave for rpath-tools configuration. This is mainly
+        # here for demoability, because images booted in a different management
+        # zone will fail to contact the rBuilder. Eventually SLP will work out
+        # of the box and this won't be necessary.
+        rbuilder_ip = procutil.getNetName()
+        if rbuilder_ip == 'localhost':
+            rbuilder_ip = self.cfg.siteHost
+        r['inventory_node'] = rbuilder_ip + ':8443'
+
         # Serialize AMI configuration data (if AMI build)
         if buildDict.get('buildType', buildtypes.STUB_IMAGE) == buildtypes.AMI:
 
@@ -2580,13 +2652,12 @@ If you would not like to be %s %s of this project, you may resign from this proj
 
             r['amiData'] = amiData
 
-        r['outputUrl'] = 'http://%s.%s%s' % \
-            (self.cfg.hostName, self.cfg.siteDomainName, self.cfg.basePath)
+        r['outputUrl'] = 'http://%s%s' % (rbuilder_ip, self.cfg.basePath)
         r['outputToken'] = sha1helper.sha1ToString(file('/dev/urandom').read(20))
         self.buildData.setDataValue(buildId, 'outputToken',
             r['outputToken'], data.RDT_STRING)
 
-        return simplejson.dumps(r)
+        return json.dumps(r)
 
     #
     # published releases 
@@ -3004,17 +3075,42 @@ If you would not like to be %s %s of this project, you may resign from this proj
                     statusMessage="Job Finished")
             return '0' * 32
         else:
-            jobData = self.serializeBuild(buildId)
             try:
+                jobData = self.serializeBuild(buildId)
+                if buildType in buildtypes.windowsBuildTypes:
+                    return self.startWindowsImageJob(buildId, jobData)
+
+                # Check the product definition to see if this is based on a
+                # Windows platform.
+                if buildDict['productVersionId'] is not None:
+                    pd = self._getProductDefinitionForVersionObj(
+                            buildDict['productVersionId'])
+                    platInfo = pd.getPlatformInformation()
+                    tags = []
+                    if (platInfo and hasattr(platInfo, 'platformClassifier')
+                        and hasattr(platInfo.platformClassifier, 'tags')):
+                        tags = platInfo.platformClassifier.tags.split()
+                    if 'windows' in tags:
+                        return self.startWindowsImageJob(buildId, jobData)
+
                 client = self._getMcpClient()
                 uuid = client.new_job(client.LOCAL_RBUILDER, jobData)
-                self.buildData.setDataValue(buildId, 'uuid', uuid, data.RDT_STRING)
+                self.buildData.setDataValue(buildId, 'uuid', uuid,
+                        data.RDT_STRING)
                 return uuid
             except:
                 log.exception("Failed to start image job:")
                 self.db.builds.update(buildId, status=jobstatus.FAILED,
                         statusMessage="Failed to start image job - check logs")
                 raise
+
+    def startWindowsImageJob(self, buildId, jobData):
+        """Direct Windows image builds to rMake 3."""
+        cli = wig_client.WigClient(self._getRmakeClient())
+        job_uuid, job = cli.createJob(jobData, subscribe=False)
+        log.info("Created Windows image job, UUID %s", job_uuid)
+        self.builds.update(buildId, job_uuid=str(job_uuid))
+        return str(job_uuid)
 
     @typeCheck(int, str, list)
     def setBuildFilenamesSafe(self, buildId, outputToken, filenames):
@@ -3905,119 +4001,6 @@ If you would not like to be %s %s of this project, you may resign from this proj
         ec2Wrapper = ec2.EC2Wrapper(authToken, self.cfg.proxy.get('https'))
         return ec2Wrapper.getAllKeyPairs(keyNames)
 
-## BEGIN Guided TOUR CODE
-
-    @typeCheck(str, str)
-    @requiresAdmin
-    @private
-    def createBlessedAMI(self, ec2AMIId, shortDescription):
-        amiData = self._getTargetData('ec2', 'aws', supressException = True)
-        return self.blessedAMIs.new(ec2AMIId = ec2AMIId,
-                shortDescription = shortDescription,
-                instanceTTL = amiData.get('ec2DefaultInstanceTTL', 600),
-                mayExtendTTLBy = amiData.get('ec2DefaultMayExtendTTLBy', 2700))
-
-    @typeCheck(int)
-    @private
-    def getBlessedAMI(self, blessedAMIsId):
-        return self.blessedAMIs.get(blessedAMIsId)
-
-    @typeCheck(int, dict)
-    @private
-    @requiresAdmin
-    def updateBlessedAMI(self, blessedAMIId, valDict):
-        if len(valDict):
-            return self.blessedAMIs.update(blessedAMIId, **valDict)
-
-    @private
-    def getAvailableBlessedAMIs(self):
-        return self.blessedAMIs.getAvailable()
-
-    @typeCheck(int)
-    @private
-    def getLaunchedAMI(self, launchedAMIId):
-        return self.launchedAMIs.get(launchedAMIId)
-
-    @typeCheck(int, dict)
-    @private
-    @requiresAdmin
-    def updateLaunchedAMI(self, launchedAMIId, valDict):
-        if len(valDict):
-            return self.launchedAMIs.update(launchedAMIId, **valDict)
-
-    @private
-    def getActiveLaunchedAMIs(self):
-        return self.launchedAMIs.getActive()
-
-    @typeCheck(((list, tuple),), int)
-    @private
-    def getLaunchedAMIInstanceStatus(self, authToken, launchedAMIId):
-        """
-        Get the status of a launched AMI instance
-        @param authToken: the EC2 authentication credentials.
-            If passed an empty tuple, it will use the default values
-            as set up in rBuilder's configuration.
-        @type  authToken: C{tuple}
-        @param launchedAMIId: the ID of a launched AMI
-        @type  launchedAMIId: C{int}
-        @return: the state and dns name of the launched AMI
-        @rtype: C{tuple}
-        @raises: C{EC2Exception}
-        """
-        authToken = self._fillInEmptyEC2Creds(authToken)
-        ec2Wrapper = ec2.EC2Wrapper(authToken, self.cfg.proxy.get('https'))
-        rs = self.launchedAMIs.get(launchedAMIId, fields=['ec2InstanceId'])
-        return ec2Wrapper.getInstanceStatus(rs['ec2InstanceId'])
-
-    @typeCheck(((list, tuple),))
-    @requiresAdmin
-    @private
-    def terminateExpiredAMIInstances(self, authToken):
-        """
-        Terminate all expired AMI isntances
-        @param authToken: the EC2 authentication credentials
-        @type  authToken: C{tuple}
-        @return: a list of the terminated instance IDs
-        @rtype: C{list}
-        @raises: C{EC2Exception}
-        """
-        authToken = self._fillInEmptyEC2Creds(authToken)
-        ec2Wrapper = ec2.EC2Wrapper(authToken, self.cfg.proxy.get('https'))
-        instancesToKill = self.launchedAMIs.getCandidatesForTermination()
-        instancesKilled = []
-        for launchedAMIId, ec2InstanceId in instancesToKill:
-            if ec2Wrapper.terminateInstance(ec2InstanceId):
-                self.launchedAMIs.update(launchedAMIId, isActive=0)
-                instancesKilled.append(launchedAMIId)
-        return instancesKilled
-
-    @typeCheck(int)
-    @private
-    def extendLaunchedAMITimeout(self, launchedAMIId):
-        lami = self.launchedAMIs.get(launchedAMIId)
-        bami = self.blessedAMIs.get(lami['blessedAMIId'])
-        newExpiresAfter = toDatabaseTimestamp(fromDatabaseTimestamp(lami['launchedAt']), offset=bami['instanceTTL'] + bami['mayExtendTTLBy'])
-        self.launchedAMIs.update(launchedAMIId,
-                expiresAfter = newExpiresAfter)
-        return True
-
-    @typeCheck(((unicode, str),), (list, int))
-    @private
-    def checkHTTPReturnCode(self, uri, expectedCodes):
-        if not expectedCodes:
-            expectedCodes = [200, 301, 302]
-        code = -1
-        opener = urllib.URLopener()
-        try:
-            f = opener.retrieve(uri)
-            return True
-        except IOError, ioe:
-            if ioe[0] == 'http error':
-                code = ioe[1]
-
-        return (code in expectedCodes)
-
-    # END GUIDED TOUR CODE
     @private
     def getProxies(self):
         return self._getProxies()
@@ -4263,7 +4246,7 @@ If you would not like to be %s %s of this project, you may resign from this proj
         ret = dict()
 
         for (n, v, f), sjdata in troves:
-            data = simplejson.loads(sjdata)
+            data = json.loads(sjdata)
             # First version
             # We expect data to look like {'productDefinition':
             # dict(hostname='repo.example.com', shortname='repo',
@@ -4280,6 +4263,10 @@ If you would not like to be %s %s of this project, you may resign from this proj
                 manip = ret.setdefault(pDefDict['version'], dict())
                 manipns = manip.setdefault(pDefDict['namespace'], dict())
                 manipns[n] = data
+                
+            if v.trailingRevision():
+                data['stageLabel'] += '/%s' % v.trailingRevision()
+                
         return ret
 
     @requiresAuth
@@ -5001,13 +4988,19 @@ If you would not like to be %s %s of this project, you may resign from this proj
 
     def getPackageCreatorClient(self):
         callback = notices_callbacks.PackageNoticesCallback(self.cfg, self.authToken[0])
+        return self._getPackageCreatorClient(callback)
         return packagecreator.getPackageCreatorClient(self.cfg, self.authToken,
             callback = callback)
 
     def getApplianceCreatorClient(self):
         callback = notices_callbacks.ApplianceNoticesCallback(self.cfg, self.authToken[0])
+        return self._getPackageCreatorClient(callback)
+
+    def _getPackageCreatorClient(self, callback):
+        from mint.django_rest.rbuilder.inventory import manager
+        mgr = manager.Manager()
         return packagecreator.getPackageCreatorClient(self.cfg, self.authToken,
-            callback = callback)
+            callback=callback, djangoManager=mgr)
 
     def getDownloadUrlTemplate(self, useRequest=True):
         if self.req and useRequest:

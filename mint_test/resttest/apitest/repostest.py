@@ -90,6 +90,7 @@ class ReposTest(restbase.BaseRestTest):
     <flavor></flavor>
     <timeStamp>%(timestamp)s</timeStamp>
     <images href="http://%(server)s:%(port)s/api/products/testproject/repos/items/group-foo%3D/testproject.rpath.local2%40yournamespace%3Atestproject-1.0-devel/1-1-1%5B%5D/images"/>
+    <imageCount>0</imageCount>
   </trove>
 </troves>
 """
@@ -168,7 +169,7 @@ class ReposTest(restbase.BaseRestTest):
     <imageId>1</imageId>
     <hostname>testproject</hostname>
     <imageType>installableIsoImage</imageType>
-    <imageTypeName>Installable CD/DVD</imageTypeName>
+    <imageTypeName>Legacy Installable CD/DVD</imageTypeName>
     <name>Image 1</name>
     <architecture></architecture>
     <troveName>group-foo</troveName>
@@ -199,6 +200,7 @@ class ReposTest(restbase.BaseRestTest):
       </file>
     </files>
     <baseFileName>testproject-1-</baseFileName>
+    <metadataDescriptor href="http://localhost:8000/api/products/testproject/images/1/metadataDescriptor"/>
   </image>
   <image id="http://%(server)s:%(port)s/api/products/testproject/images/2">
     <imageId>2</imageId>
@@ -235,6 +237,7 @@ class ReposTest(restbase.BaseRestTest):
       </file>
     </files>
     <baseFileName>testproject-1-</baseFileName>
+    <metadataDescriptor href="http://localhost:8000/api/products/testproject/images/2/metadataDescriptor"/>
   </image>
 </images>
 """

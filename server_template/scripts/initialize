@@ -20,6 +20,7 @@ from conary.conaryclient import filetypes
 
 from mint import config
 from mint.client import MintClient
+from mint import shimclient
 
 from rPath.rbasetup.srv import rbasetup
 
@@ -74,7 +75,9 @@ class WebHandler(webunittest.WebFetcher):
         setupPlugin.updateRBAConfig(1, 1, fields)
         cfg = config.MintConfig()
         cfg.read(baseDir + '/config/rbuilder.conf')
-        setupPlugin._addRBuilderAdminAccount(cfg, 'admin', 'tclmeSRS', 
+        shmclnt = shimclient.ShimMintClient(cfg, (cfg.authUser, cfg.authPass))
+        setupPlugin.shmclnt = shmclnt
+        setupPlugin._addRBuilderAdminAccount('admin', 'tclmeSRS', 
                             pwd.getpwuid(os.getuid())[0] + '@rpath.com')
         # NOTE: restart needed here.
 

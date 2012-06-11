@@ -4,23 +4,10 @@
 # All rights reserved
 #
 
-from conary import conarycfg
-from conary import conaryclient
-from conary import versions
-from conary.deps import arch, deps
-from conary.errors import ParseError
-from conary.repository.errors import RoleAlreadyExists, RoleNotFound
-from conary.repository.errors import InsufficientPermission
-
-from mint import config
-from mint import constants
-from mint import buildtypes
-from mint import mint_error
-
-
 import copy
 import htmlentitydefs
 import inspect
+import os
 import re
 import random
 import string
@@ -28,6 +15,18 @@ import time
 import traceback
 import urlparse
 import urllib
+
+from conary import conarycfg
+from conary import conaryclient
+from conary import versions
+from conary.deps import arch, deps
+from conary.repository.errors import InsufficientPermission
+
+from mint import config
+from mint import constants
+from mint import buildtypes
+from mint import mint_error
+
 
 def truncateForDisplay(s, maxWords=10, maxWordLen=15):
     """Truncates a string s for display. May limit the number of words in the
@@ -39,8 +38,6 @@ def truncateForDisplay(s, maxWords=10, maxWordLen=15):
 
     Raises ValueError if you give it insane values for maxWords and/or 
     maxWordLen."""
-
-    import re
 
     # Sanity check args
     if ((maxWords < 1) or (maxWordLen < 1)):
@@ -290,9 +287,6 @@ LOCAL_CONARY_PROXIES = { 'http': 'http://localhost',
                          'https': 'https://localhost' }
 def configureClientProxies(conaryCfg, useInternalConaryProxy,
         httpProxies={}, internalConaryProxies=LOCAL_CONARY_PROXIES):
-
-    from conary import conarycfg
-    from mint import config
 
     if not conaryCfg:
         conaryCfg = conarycfg.ConaryConfiguration()
@@ -547,9 +541,6 @@ def formatProductVersion(versions, currentVersion):
 def getBasicConaryConfiguration(mintCfg):
     """ Return a basic conary client configuration. """
 
-    import os
-    from conary import conarycfg
-    from mint import config
 
     ccfg = conarycfg.ConaryConfiguration()
     conarycfgFile = os.path.join(mintCfg.dataPath, 'config', 'conaryrc')

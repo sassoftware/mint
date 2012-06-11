@@ -1,0 +1,2 @@
+START_DAEMONS="router sm c2s"
+CONFIG_DIR="/usr/share/rbuilder/jabberd"

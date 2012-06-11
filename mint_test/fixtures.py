@@ -101,12 +101,6 @@ class FixtureCache(object):
         cfg.ec2PublicKey = 'publicKey'
         cfg.ec2PrivateKey = 'secretKey'
 
-        cfg.availablePlatforms = ['localhost@rpath:plat-1',
-                                  'localhost@rpath:plat-2']
-
-        cfg.configurablePlatforms = ['localhost@rpath:plat-1',
-                                     'localhost@rpath:plat-2']
-
         cfg.platformSources      = ['plat1source', 'plat2source0', 'plat2source1']
         cfg.platformSourceTypes  = ['satellite', 'RHN', 'RHN']
         cfg.platformSourceUrls   = ['http://plat1source.example.com',
@@ -569,16 +563,10 @@ class FixtureCache(object):
         hiddenProjPubPubReleaseId = pubRelease.id
         buildId6 = build.id
 
-        amiIds = []
-        for i in range(0,7):
-            amiIds.append(client.createBlessedAMI('ami-%08d' % i,
-                    "This is test AMI instance %d" % i))
-
         return cfg, { 'adminId': adminId,
                       'developerId': developerId,
                       'normalUserId': normalUserId,
                       'someOtherDeveloperId': someOtherDeveloperId,
-                      'amiIds': amiIds,
                       'projectId': projectId,
                       'otherProjectId': otherProjectId,
                       'hiddenProjectId': hiddenProjectId,
@@ -984,8 +972,9 @@ class FixturedUnitTest(testhelp.TestCase):
             pass
 
 class FixturedProductVersionTest(FixturedUnitTest):
+    oldProductDefinition = proddef.ProductDefinition
 
-    class _MockProductDefinition(proddef.ProductDefinition):
+    class _MockProductDefinition(oldProductDefinition):
         _testxmldata = []
         def saveToRepository(self, *args, **kwargs):
             sio = StringIO.StringIO()
@@ -1001,7 +990,6 @@ class FixturedProductVersionTest(FixturedUnitTest):
             self.parseStream(sio)
 
     def setUp(self):
-        self.oldProductDefinition = proddef.ProductDefinition
         proddef.ProductDefinition = self._MockProductDefinition
         FixturedUnitTest.setUp(self)
         del self._MockProductDefinition._testxmldata[:]

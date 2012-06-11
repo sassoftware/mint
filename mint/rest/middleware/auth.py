@@ -1,7 +1,5 @@
 #
-# Copyright (c) 2009 rPath, Inc.
-#
-# All Rights Reserved
+# Copyright (c) 2011 rPath, Inc.
 #
 
 import base64
@@ -14,7 +12,6 @@ from mint import maintenance
 from mint import shimclient
 from mint.rest.api import models
 from mint.rest.modellib import converter
-from mint.session import SqlSession
 from mint.rest import errors
 
 # Decorator for public (unauthenticated) methods/functions
@@ -66,7 +63,9 @@ class AuthenticationCallback(object):
         arr = request.headers['Authorization'].split(' ', 1)
         if len(arr) != 2:
             return None
-        type, user_pass = arr
+        authType, user_pass = arr
+        if authType != 'Basic':
+            return None
         try:
             user_name, password = base64.decodestring(user_pass).split(':', 1)
             password = util.ProtectedString(password)
@@ -98,6 +97,7 @@ class AuthenticationCallback(object):
         sessionClient = shimclient.ShimMintClient(cfg,
                 (cfg.authUser, cfg.authPass), db=self.db.db.db)
 
+        from mint.session import SqlSession
         session = SqlSession(req, sessionClient,
             sid = sid,
             secret = cfg.cookieSecretKey,

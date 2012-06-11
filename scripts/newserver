@@ -4,6 +4,7 @@ import os
 import pwd
 import socket
 import sys
+import time
 from conary.lib import util
 
 def require(package, label):
@@ -14,10 +15,10 @@ def require(package, label):
 
 def checksanity(buildFlex=False):
     require('yui', 'contrib.rpath.org@rpl:1')
-    require('stomp', 'contrib.rpath.org@rpl:2')
     if buildFlex:
         require('flex-sdk', 'private.rb.rpath.com@rpl:1')
         require('ant', 'foresight.rpath.org@fl:2')
+        require('python-pgsql', 'foresight.rpath.org@fl:2')
 
 def get_options(argv):
     import optparse
@@ -42,7 +43,11 @@ def get_options(argv):
                   action="store", default="sqlite",
                   dest = "mintDb",
                   help = "mint database type")
-    return op.parse_args()
+    options, args = op.parse_args()
+    if not args:
+        op.print_help()
+        sys.exit(1)
+    return options, args
 
 
 def main(argv):
@@ -80,6 +85,9 @@ def main(argv):
     if options.mintDb == 'sqlite':
         mintDbDriver = 'sqlite'
         mintDbPath = targetDir + '/rbuilder/data/mintdb'
+    elif options.mintDb == 'postgres':
+        mintDbDriver = 'postgresql'
+        mintDbPath = '%s@localhost.localdomain:5439/%%s'  % (pwd.getpwuid(os.getuid())[0])
     else:
         raise RuntimeError('Unknown mint db')
 
@@ -119,6 +127,7 @@ def main(argv):
                       ' -e "s,@MINTDBDRIVER@,%(mintDbDriver)s,g"'
                       ' -e "s,@REPOSDBPATH@,%(reposDbPath)s,g"'
                       ' -e "s,@REPOSDBDRIVER@,%(reposDbDriver)s,g"'
+                      ' -e "s,@TIMESTAMP@,%(timestamp)s,g"'
                       ' %(oldPath)s > %(newPath)s' \
                           % { 'serverPath' : targetDir,
                               'port'       : 8000,
@@ -135,6 +144,7 @@ def main(argv):
                               'mintDbPath'    : mintDbPath,
                               'reposDbDriver'  : reposDbDriver,
                               'reposDbPath'    : reposDbPath,
+                              'timestamp'   : str(time.time()),
                               })
             os.system(cmd)
             os.chmod(newPath, os.stat(oldPath).st_mode)
@@ -153,11 +163,13 @@ def loadModules(mintDir, destDir, hgDir, buildFlex=False):
     else:
         allModules = modules.modules
     loadmodules.loadModules(allModules, destDir, shouldClone=True,
-                            searchPath = [hgDir])
+                            searchPath = [hgDir,
+                                          os.path.realpath(os.path.join(hgDir,
+                                          '../../'))])
 
 def loadDatabase(targetDir):
     scriptsDir = os.path.dirname(__file__)
-    cmd = 'cd %s; cp rbuilder-database rbuilder_database.py; PYTHONPATH=%s/pythonpath python -c "import rbuilder_database;  rbuilder_database.RBuilderDatabase(aLockPath=\'%s/rbuilder/run\').run();" --migrate -c %s/config/rbuilder.conf' % (scriptsDir, targetDir, targetDir, targetDir)
+    cmd = 'cd %s; cp rbuilder-database rbuilder_database.py; PYTHONPATH=%s/pythonpath python -c "import rbuilder_database;  rbuilder_database.rbuilder_database.Script(aLockpath=\'%s/rbuilder/run\').run();" -c %s/config/rbuilder.conf' % (scriptsDir, targetDir, targetDir, targetDir)
     os.system(cmd)
 
 def linkCatalogClient(targetDir):

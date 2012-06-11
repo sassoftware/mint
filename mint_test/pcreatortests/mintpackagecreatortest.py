@@ -128,9 +128,6 @@ class TestPackageCreatorHelperMethods(testsetup.testsuite.TestCase):
         cfg.packageCreatorURL = None
         packagecreator.getPackageCreatorClient(cfg, ('foo', 'bar'))
         self.assertEquals(self.shimClient, True)
-        cfg.packageCreatorURL = 'localhost'
-        packagecreator.getPackageCreatorClient(cfg, ('foo', 'bar'))
-        self.assertEquals(self.networkedClient, True)
 
 #This may need to be reordered if the factory definition changes
 generatedXML = """<?xml version='1.0' encoding='UTF-8'?>

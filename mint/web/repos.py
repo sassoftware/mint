@@ -13,7 +13,7 @@ from mimetypes import guess_type
 
 from urllib import quote, unquote
 
-import simplejson
+import json
 
 
 from mint import userlevels
@@ -351,7 +351,7 @@ class ConaryHandler(WebHandler, productversion.ProductVersionView):
             labels[str(ver.trailingLabel())] = revs
 
         return self._write("trove_info", troveName = t, troves = troves,
-            verList=simplejson.dumps(labels), selectedLabel = simplejson.dumps(str(reqVer.trailingLabel())), parentType=parentType, lineage=simplejson.dumps(lineage))
+            verList=json.dumps(labels), selectedLabel = json.dumps(str(reqVer.trailingLabel())), parentType=parentType, lineage=json.dumps(lineage))
 
     @strFields(char = '')
     def browse(self, char, auth):

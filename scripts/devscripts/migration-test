@@ -1,0 +1,366 @@
+#!/usr/bin/python
+#
+# Copyright (c) 2010 rPath, Inc.
+#
+# This program is distributed under the terms of the Common Public License,
+# version 1.0. A copy of this license should have been distributed with this
+# source file in a file called LICENSE. If it is not present, the license
+# is always available at http://www.rpath.com/permanent/licenses/CPL-1.0.
+#
+# This program is distributed in the hope that it will be useful, but
+# without any warranty; without even the implied warranty of merchantability
+# or fitness for a particular purpose. See the Common Public License for
+# full details.
+#
+
+"""
+Starting from a particular mercurial revision, initialize the database schema
+and migrate forward. Then initialize a second database using the current
+(working copy) schema and compare the contents of the two databases.
+"""
+
+
+import logging
+import optparse
+import os
+import psycopg2
+import sys
+import tempfile
+from collections import namedtuple
+from conary import dbstore
+from conary.lib import util
+from mercurial import archival
+from mercurial import hg
+from mercurial import ui as hg_ui
+from psycopg2 import extensions
+
+sys.path.insert(0, '.')
+from mint.lib import mintutils
+from mint.scripts import postgres_major_migrate
+
+log = logging.getLogger('harness')
+
+
+def run(options, repo, start):
+    # Create mint db
+    db = psycopg2.connect(port=options.port, database='postgres')
+    db.set_isolation_level(extensions.ISOLATION_LEVEL_AUTOCOMMIT)
+    cu = db.cursor()
+    cu.execute("CREATE USER rbuilder")
+    cu.execute("CREATE DATABASE schema1 ENCODING 'utf-8' OWNER rbuilder")
+    cu.execute("CREATE DATABASE schema2 ENCODING 'utf-8' OWNER rbuilder")
+    db.close()
+
+    oldSchema = getOldSchema(options, repo, start)['tables']
+    newSchema = getNewSchema(options)['tables']
+
+    if False:
+        import pickle
+        pickle.dump(oldSchema, open('oldschema.pickle', 'w'))
+        pickle.dump(newSchema, open('newschema.pickle', 'w'))
+
+    for name, table1, table2 in compareSets(oldSchema, newSchema, 'table'):
+        print 'Modified table', name
+        compareSetsPrint(table1.columns, table2.columns, 'column', '  ')
+        compareSetsPrint(table1.constraints, table2.constraints, 'constraint',
+                '  ')
+        compareSetsPrint(table1.indexes, table2.indexes, 'index', '  ')
+        compareSetsPrint(table1.rows, table2.rows, 'row', '  ')
+        print
+
+
+def compareSets(one, two, kind, indent=''):
+    set1, set2 = set(one), set(two)
+    for name in set1 - set2:
+        print indent + 'Removed', kind, name
+        print indent + ' -', repr(one[name])
+    for name in set2 - set1:
+        print indent + 'Added', kind, name
+        print indent + ' +', repr(two[name])
+    for name in set1 & set2:
+        thing1, thing2 = one[name], two[name]
+        if thing1 != thing2:
+            yield name, thing1, thing2
+
+
+def compareSetsPrint(one, two, kind, indent=''):
+    for name, thing1, thing2 in compareSets(one, two, kind, indent):
+        print indent + 'Modified', kind, name
+        print indent + ' -', repr(thing1)
+        print indent + ' +', repr(thing2)
+
+
+def getOldSchema(options, repo, start):
+    db = dbstore.connect('rbuilder@localhost:%s/schema1' % options.port,
+            'postgresql')
+
+    # Check out 'start' revision
+    log.info("Checking out start revision %s, tags %s", start.hex(),
+            start.tags())
+    workDir = tempfile.mkdtemp(prefix='harness-checkout-')
+    try:
+        archival.archive(repo, workDir, start.node(), kind='files', prefix='')
+
+        # Purge mint code from the module cache and load the schema module from
+        # the start revision
+        for name in sys.modules.keys():
+            if name.split('.')[0] == 'mint':
+                del sys.modules[name]
+        sys.path.insert(0, workDir)
+        from mint.db import schema
+        assert schema.__file__.startswith(workDir)
+
+        log.info("Populating schema")
+        schema.loadSchema(db)
+        db.commit()
+
+        # Purge start revision code from the module cache
+        del schema
+        del sys.path[0]
+        for name in sys.modules.keys():
+            if name.split('.')[0] == 'mint':
+                del sys.modules[name]
+    finally:
+        util.rmtree(workDir)
+
+    # Migrate to the latest version
+    from mint.db import schema
+    schema.loadSchema(db, should_migrate=True)
+
+    return dumpDB(options, 'schema1')
+
+
+def getNewSchema(options):
+    db = dbstore.connect('rbuilder@localhost:%s/schema2' % options.port,
+            'postgresql')
+
+    from mint.db import schema
+    schema.loadSchema(db)
+
+    return dumpDB(options, 'schema2')
+
+
+def fold(items, numCols=1, numUniq=None):
+    """
+    Iterate over a sorted list of C{items}, grouping by the first C{numCols}
+    elements of each tuple and yielding each time a new selector is
+    encountered.
+
+    If C{numUniq} is given, that many columns are tested for equality but all
+    C{numCols} columns are returned as the "key". For example, C{fold(foo, 1,
+    3)} groups based on the first column's value, but returns the first 3
+    columns as a key.
+
+    This is similar to L{itertools.groupby()}, but maps more directly to
+    operations such as iterating over a SQL cursor.
+    """
+    if numUniq is None:
+        numUniq = numCols
+    assert numUniq <= numCols
+    last, values = (), []
+    for item in items:
+        key, value = item[:numCols], item[numCols:]
+        if key[:numUniq] != last[:numUniq]:
+            if last:
+                if numCols == 1:
+                    last = last[0]
+                yield last, values
+            last, values = key, []
+        values.append(value)
+    if last:
+        if numCols == 1:
+            last = last[0]
+        yield last, values
+
+
+class Table(namedtuple('Table', 'name columns constraints indexes rows')):
+
+    def __new__(cls, name, columns):
+        self = tuple.__new__(cls, (name, columns, {}, {}, {}))
+        self.colsByIndex = dict((x.index, x.name) for x in columns.values())
+        return self
+
+
+class Column(namedtuple('Column', 'name type notNull default')):
+
+    def __new__(cls, index, name, type, notNull, default):
+        self = tuple.__new__(cls, (name, type, notNull, default))
+        self = super(Column, cls).__new__(cls, name, type, notNull, default)
+        self.index = index
+        return self
+
+
+class Constraint(namedtuple('Constraint', 'name type keys fKeyOpts expr')):
+    pass
+
+
+class Index(namedtuple('Index', 'name isUnique keys expr')):
+    pass
+
+
+def dumpDB(options, dbname):
+    db = psycopg2.connect(port=options.port, database=dbname)
+    cu = db.cursor()
+    tables = {}
+    tableMap = {}
+    schema = dict(tables=tables)
+
+    # Tables and columns
+    cu.execute("""
+        SELECT t.oid, t.relname,
+                a.attnum, a.attname, a.attnotnull,
+                pg_catalog.format_type(a.atttypid, a.atttypmod),
+                ( SELECT pg_catalog.pg_get_expr(d.adbin, d.adrelid)
+                    FROM pg_attrdef d WHERE d.adrelid = a.attrelid AND
+                    d.adnum = a.attnum AND a.atthasdef )
+            FROM pg_class t
+            JOIN pg_namespace n ON n.oid = t.relnamespace
+            JOIN pg_attribute a ON a.attrelid = t.oid
+        WHERE t.relkind = 'r' AND a.attnum > 0 AND NOT a.attisdropped
+            AND nspname = ANY ( pg_catalog.current_schemas(false) )
+        ORDER BY t.oid
+        """)
+    for (oid, name), columns in fold(cu, 2):
+        colsByName = {}
+        for colNum, colName, colNotNull, colType, colDef in columns:
+            column = Column(colNum, colName, colType, colNotNull, colDef)
+            colsByName[colName] = column
+        tables[name] = tableMap[oid] = Table(name, colsByName)
+
+    if not tableMap:
+        return schema
+
+    # Constraints
+    oids = tuple(tableMap)
+    cu.execute("""
+        SELECT r.oid, r.conrelid, r.conname, r.contype, r.conkey,
+            r.confrelid, r.confupdtype, r.confdeltype, r.confkey,
+            pg_get_expr(r.conbin, r.conrelid, true)
+        FROM pg_constraint r
+        WHERE r.conrelid IN %s
+        """, (oids,))
+    for (oid, tableOID, name, conType, keys, fOID, fOnUpdate, fOnDelete,
+            fKeys, conExpr) in cu:
+        table = tableMap[tableOID]
+
+        keys = tuple(table.colsByIndex[x] for x in keys)
+        fKeyOpts = None
+
+        if conType == 'p':
+            conTypeName = 'primary key'
+        elif conType == 'u':
+            conTypeName = 'unique'
+        elif conType == 'f':
+            conTypeName = 'foreign key'
+            fTable = tableMap[fOID]
+            fKeyNames = tuple(fTable.colsByIndex[x] for x in fKeys)
+            fOnUpdate = FKEY_ACTION_MAP.get(fOnUpdate)
+            fOnDelete = FKEY_ACTION_MAP.get(fOnDelete)
+            fKeyOpts = (fTable.name, fKeyNames, fOnUpdate, fOnDelete)
+        elif conType == 'c':
+            conTypeName = 'check'
+        else:
+            raise RuntimeError("Unknown constraint type %r" % (conType,))
+
+        table.constraints[name] = Constraint(name, conTypeName, keys, fKeyOpts,
+                conExpr)
+
+    # Indexes
+    cu.execute("""
+        SELECT x.indexrelid, x.indrelid, i.relname,
+            x.indisunique, x.indisprimary, x.indkey,
+            pg_get_expr(x.indexprs, x.indrelid, true)
+        FROM pg_index x
+            JOIN pg_class i ON i.oid = x.indexrelid
+        WHERE x.indrelid IN %s
+        """, (oids,))
+    for oid, tableOID, name, isUnique, isPrimary, keys, expr in cu:
+        table = tableMap[tableOID]
+        # NB: indkey is an "int2vector", which psycopg2 represents as a
+        # string of space-separated numbers.
+        keys = tuple(int(x) for x in keys.split())
+        if keys == (0,):
+            # Expression index
+            assert expr is not None
+        else:
+            keys = tuple(table.colsByIndex[x] for x in keys)
+
+        constraint = table.constraints.get(name)
+        if constraint and constraint.type in ('primary key', 'unique'):
+            # Ignore indexes implied by a constraint.
+            assert keys == constraint.keys
+            continue
+
+        table.indexes[name] = Index(name, isUnique, keys, expr)
+
+
+    # Rows
+    for name, table in tables.items():
+        order = ''
+        for cons in table.constraints.values():
+            if cons.type == 'primary key':
+                order = 'ORDER BY ' + ','.join(cons.keys)
+        cu.execute("SELECT * FROM %s %s" % (name, order))
+        colNames = [x[0] for x in cu.description]
+        for n, row in enumerate(cu):
+            row = dict(zip(colNames, row))
+            for name in ('created_date',):
+                if name in row:
+                    del row[name]
+            table.rows[n] = row
+
+    return schema
+
+    cu = db.cursor()
+
+
+FKEY_ACTION_MAP = {
+        'a': 'NO ACTION',
+        'r': 'RESTRICT',
+        'c': 'CASCADE',
+        'n': 'SET NULL',
+        'd': 'SET DEFAULT',
+        }
+
+
+def main(args):
+    mintutils.setupLogging(consoleLevel=logging.INFO)
+    parser = optparse.OptionParser()
+    parser.add_option('--bin-dir', default='/usr/bin')
+    parser.add_option('--temp-dir', default='/tmp')
+    parser.add_option('--mint-checkout', default='.')
+    parser.add_option('--port', type='int', default=65000)
+    options, args = parser.parse_args(args)
+
+    if len(args) != 1:
+        sys.exit("Usage: %s [options] start-tag" % sys.argv[0])
+    checkout = os.path.realpath(options.mint_checkout)
+    start, = args
+
+    ui = hg_ui.ui()
+    repo = hg.repository(ui, checkout)
+    start = repo.changectx(start)
+
+    tempDir = tempfile.mkdtemp(dir=options.temp_dir,
+        prefix='harness-postgres-')
+    try:
+        server = postgres_major_migrate.Postmaster(dataDir=tempDir,
+                binDir=options.bin_dir, port=options.port,
+                logPath='/tmp/harness.log')
+        log.info("Initializing database")
+        server.initdb()
+        server.start()
+        server.waitForPostgres()
+        try:
+            run(options, repo, start)
+        finally:
+            log.info("Stopping database")
+            server.kill()
+            server.wait()
+    finally:
+        log.info("Cleaning up")
+        util.rmtree(tempDir)
+
+
+if __name__ == '__main__':
+    sys.exit(main(sys.argv[1:]))

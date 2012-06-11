@@ -1,4 +1,5 @@
 #!/usr/bin/python
+import os
 import testsetup
 from testutils import mock
 
@@ -15,6 +16,12 @@ from mint.rest.db import targetmgr
 from mint_test import mint_rephelp
 
 class TargetManagerTest(mint_rephelp.MintDatabaseHelper):
+    def setUp(self):
+        tmgr = targetmgr.TargetManager
+        mint_rephelp.MintDatabaseHelper.setUp(self)
+        if not os.path.exists(tmgr.TargetImportScriptPath):
+            tmgr.importTargetSystems = lambda *args, **kwargs: True
+
     def _newTarget(self, targetType=None, targetName=None, targetData=None):
         targetType = targetType or 'ec2'
         targetName = targetName or 'eww-west-1'
@@ -163,33 +170,63 @@ class TargetManagerTest(mint_rephelp.MintDatabaseHelper):
     def testGetTargetsForUser(self):
         db = self.openMintDatabase(createRepos=False)
         self.createUser('admin', admin=True)
-        userName = 'JeanValjean'
-        self.createUser(userName, admin = False)
+        userName1 = 'JeanValjean1'
+        userName2 = 'JeanValjean2'
+        userName3 = 'JeanValjean3'
+        for userName in [ userName1, userName2, userName3 ]:
+            self.createUser(userName, admin = False)
         self.createProduct('foo', owners=['admin'], db=db)
 
-        # XXX Replace nameXXX with name1 when RBL-5898 is fixed
         targets = [
             ('type1', 'name1', dict(data = '11')),
             ('type1', 'name2', dict(data = '12')),
-            ('type2', 'nameXXX', dict(data = '21')),
+            ('type2', 'name1', dict(data = '21')),
         ]
         userCreds = {
-            ('type1', 'name1') : dict(userdata = '11'),
-            ('type1', 'name2') : dict(userdata = '12'),
+            ('type1', 'name1') : [
+                (userName1, dict(userdata = '111')),
+                (userName2, dict(userdata = '112')),
+                (userName3, dict(userdata = '111')),
+            ],
+            ('type1', 'name2') : [
+                (userName1, dict(userdata = '121')),
+            ],
         }
 
         tmgr = db.targetMgr
         for targetType, targetName, targetData in targets:
             tmgr.addTarget(targetType, targetName, targetData)
-            if (targetType, targetName) in userCreds:
+            uclist = userCreds.get((targetType, targetName), [])
+            for userName, uCreds in uclist:
                 tmgr.setTargetCredentialsForUser(targetType, targetName,
-                    userName, userCreds[(targetType, targetName)])
+                    userName, uCreds)
 
-        self.failUnlessEqual(tmgr.getTargetsForUser('type2', userName),
-            [('nameXXX', dict(data = '21'), {})])
+        self.failUnlessEqual(tmgr.getTargetsForUser('type2', userName1),
+            [('name1', dict(data = '21'), {})])
 
-        self.failUnlessEqual(tmgr.getTargetsForUser('type1', userName),
-            [ ('name1', dict(data = '11'), userCreds[('type1', 'name1')]),
-              ('name2', dict(data = '12'), userCreds[('type1', 'name2')])])
+        self.failUnlessEqual(tmgr.getTargetsForUser('type1', userName1),
+            [ ('name1', dict(data = '11'), userCreds[('type1', 'name1')][0][1]),
+              ('name2', dict(data = '12'), userCreds[('type1', 'name2')][0][1])])
+
+        self.failUnlessEqual(tmgr.getTargetsForUsers('type1'), [
+            (2, userName1, 'name1', 1, dict(data = '11'),
+                userCreds[('type1', 'name1')][0][1]),
+            (2, userName1, 'name2', 3, dict(data = '12'),
+                userCreds[('type1', 'name2')][0][1]),
+            (3, userName2, 'name1', 2, dict(data = '11'),
+                userCreds[('type1', 'name1')][1][1]),
+            (4, userName3, 'name1', 1, dict(data = '11'),
+                userCreds[('type1', 'name1')][2][1]),
+        ])
+        self.failUnlessEqual(tmgr.getTargetsForUsers('type2'), [])
+
+        self.failUnlessEqual(tmgr.getUniqueTargetsForUsers('type1'), [
+            (2, userName1, 'name2', 3, dict(data = '12'),
+                userCreds[('type1', 'name2')][0][1]),
+            (3, userName2, 'name1', 2, dict(data = '11'),
+                userCreds[('type1', 'name1')][1][1]),
+            (4, userName3, 'name1', 1, dict(data = '11'),
+                userCreds[('type1', 'name1')][2][1]),
+        ])
 
 testsetup.main()

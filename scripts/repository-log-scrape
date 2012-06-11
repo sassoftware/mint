@@ -85,8 +85,8 @@ if __name__ == '__main__':
     try:
         os.stat(logname)
     except:
-        print "log file does not exist"
-        sys.exit(1)
+        # Nothing to do
+        sys.exit(0)
 
     if options.incremental:
         offset = 0

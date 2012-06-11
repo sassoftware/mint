@@ -25,7 +25,9 @@ class User(Model):
     active = fields.BooleanField()
     timeCreated = fields.DateTimeField()
     timeAccessed = fields.DateTimeField()
-    
+    groups = fields.UrlField('users.groups', 'username')
+    products = fields.UrlField('users.products', 'username')
+
     def get_absolute_url(self):
         return ('users', self.username)
 

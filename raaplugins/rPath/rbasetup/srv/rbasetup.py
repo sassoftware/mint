@@ -24,6 +24,7 @@ from mint import notices_callbacks
 from mint import rmake_setup
 from mint import shimclient
 from mint.lib.siteauth import SiteAuthorization
+from mint.scripts import createplatforms
 
 from mint.mint_error import (RmakeRepositoryExistsError, UserAlreadyExists,
         UserAlreadyAdmin)
@@ -53,12 +54,12 @@ class rBASetup(rAASrvPlugin):
                 log.info("Created initial rBuilder account %s (id=%d)",
                         adminUsername, userId)
             except UserAlreadyExists:
-                log.warning("rBuilder user %s already exists!")
+                log.warning("rBuilder user %s already exists!", adminUsername)
                 userId = self.shmclnt.getUserIdByName(adminUsername)
 
             try:
                 self.shmclnt.promoteUserToAdmin(userId)
-                log.info("Promoted initial rBuilder account to admin level",
+                log.info("Promoted initial rBuilder account %s to admin level",
                         adminUsername)
             except UserAlreadyAdmin:
                 log.warning("rBuilder user %s is already an admin!",
@@ -66,7 +67,7 @@ class rBASetup(rAASrvPlugin):
         except Exception, e:
             errmsg = "Failed to create rBuilder admin account %s : %s" % \
                      (adminUsername, str(e))
-            log.error(errmsg)
+            log.error("%s", errmsg)
             return { 'errors': [ errmsg ] }
 
         return {}
@@ -79,10 +80,10 @@ class rBASetup(rAASrvPlugin):
         try:
             retval = os.system("/sbin/service httpd graceful")
             if retval != 0:
-                log.error("Failed to gracefully restart Apache (error: %d)" % retval)
+                log.error("Failed to gracefully restart Apache (error: %d)" , retval)
                 return False
         except Exception, e:
-            log.error("Failed to gracefully restart Apache (reason: %s)" % str(e))
+            log.error("Failed to gracefully restart Apache (reason: %s)", str(e))
             return False
 
         log.info("Successful graceful restart of Apache")
@@ -104,17 +105,16 @@ class rBASetup(rAASrvPlugin):
         pid = os.fork()
         if not pid: # child
             rc = -3
+            os.close(rdfd)
+            os.close(rdfd2)
+            logWriter = os.fdopen(wrfd, 'w')
+            errorWriter = os.fdopen(wrfd2, 'w')
+            loggingHandler = logging.StreamHandler(logWriter)
             try:
-                errorWriter = None
                 try:
-                    os.close(rdfd)
-                    os.close(rdfd2)
-                    logWriter = os.fdopen(wrfd, 'w')
-                    errorWriter = os.fdopen(wrfd, 'w')
-
                     # Reset logging in the child
                     childLog = logging.getLogger('setupRMake')
-                    childLog.addHandler(logging.StreamHandler(logWriter))
+                    childLog.addHandler(loggingHandler)
                     childLog.setLevel(logging.DEBUG)
 
                     # Drop privs in the child to apache so as to not create
@@ -136,11 +136,13 @@ class rBASetup(rAASrvPlugin):
                     try:
                         pickle.dump(sys.exc_info()[:2], errorWriter)
                     except Exception, e:
-                        log.error('Pickle failed: %s' % str(e))
+                        childLog.error('Pickle failed: %s', str(e))
                         pass
                     childLog.error(traceback.format_exc())
                     rc = -2
             finally:
+                loggingHandler.close()
+                errorWriter.close()
                 os._exit(rc)
         else: # parent
             # close the child log
@@ -154,19 +156,19 @@ class rBASetup(rAASrvPlugin):
                 line = logReader.readline()
                 if not line:
                     break
-                log.info('rmake setup log: %s' % line)
+                log.info('rmake setup log: %s', line)
 
             # if child exits and returns 0, we need to restart rMake
-            log.info("Parent waiting on PID %d" % pid)
+            log.info("Parent waiting on PID %d", pid)
             childStatus = os.waitpid(pid,0)[1]
             childRC = os.WEXITSTATUS(childStatus)
-            os.close(rdfd)
+
             if not os.WIFEXITED(childStatus) or (childRC and childRC != 255):
-                log.info("Child exited with code %d" % childRC)
+                log.info("Child exited with code %d", childRC)
                 try:
                     exc = pickle.load(errorReader)
                 except Exception, e:
-                    log.error('Unpickle failed: %s' % str(e))
+                    log.error('Unpickle failed: %s', str(e))
                     return { 'errors': [ 'rmake setup exited with code %d' % childRC ] }
             restartNeeded = os.WIFEXITED(childStatus) and (childRC == 0)
 
@@ -176,15 +178,15 @@ class rBASetup(rAASrvPlugin):
                                             stdout = subprocess.PIPE,
                                             stderr = subprocess.PIPE)
             stdout, stderr = rmakeRestart.communicate()
-            log.info('output for "service rmake restart": \nstderr: %s\nstdout: %s' % \
-                    (stderr, stdout))
+            log.info('output for "service rmake restart": \nstderr: %s\nstdout: %s',
+                    stderr, stdout)
             if rmakeRestart.returncode == 0:
                 rmakeNodeRestart = subprocess.Popen(['/sbin/service', 'rmake-node', 'restart'],
                                             stdout = subprocess.PIPE,
                                             stderr = subprocess.PIPE)
                 stdout, stderr = rmakeNodeRestart.communicate() 
-                log.info('output for "service rmake-node restart": \nstderr: %s\nstdout: %s' % \
-                        (stderr, stdout))
+                log.info('output for "service rmake-node restart": \nstderr: %s\nstdout: %s',
+                        stderr, stdout)
             if rmakeRestart.returncode != 0 or rmakeNodeRestart.returncode != 0:
                 return { 'errors': [ "Failed to restart rMake services. You may need to reboot " \
                          "the appliance for changes to take effect.", ] }
@@ -200,7 +202,7 @@ class rBASetup(rAASrvPlugin):
             if auth.isConfigured():
                 msg = "Entitlement is already set; " + \
                         "keeping rBuilder ID %s .\n" % auth.rBuilderId
-                log.warning(msg)
+                log.warning("%s", msg)
                 return {'message': msg }
 
             newKey = auth.generate()
@@ -209,11 +211,24 @@ class rBASetup(rAASrvPlugin):
             self.server.setNewEntitlement(newKey)
 
             msg = "Key successfully generated; your rBuilder ID is %s .\n" % auth.rBuilderId
-            log.info(msg)
+            log.info("%s", msg)
             return {'message': msg}
         except Exception, e:
-            log.error("Failed to generate entitlement: %s" % str(e))
+            log.error("Failed to generate entitlement: %s", str(e))
             return { 'errors': [ str(e), ] }
+
+    def _createPlatforms(self):
+        log.info("Creating platforms...")
+        try:
+            script = createplatforms.Script()
+            script.run()
+            msg = "Platforms successfully created.\n"
+            log.info("%s", msg)
+            return dict(message=msg)
+        except Exception, e:
+            log.error("Failed to create platforms: %s", str(e))
+            return { 'errors': [ str(e), ] }
+
 
     def _setupExternalProjects(self):
         """
@@ -293,7 +308,7 @@ class rBASetup(rAASrvPlugin):
         try:
             return self._firstTimeSetup(schedId, execId, options, step=lib.FTS_STEP_INITIAL)
         except Exception, e:
-            log.error('an unhandled exception occurred: %s' % str(e))
+            log.error('an unhandled exception occurred: %s', str(e))
             return dict(errors=str(e))
 
     def _firstTimeSetup(self, schedId, execId, options, step=lib.FTS_STEP_INITIAL):
@@ -337,16 +352,13 @@ class rBASetup(rAASrvPlugin):
         self.message += result.get('message', '')
         self.reportMessage(execId, self.message)
 
-        if not options.get('entitlementKey'):
-            # Generate an entitlement
-            step = lib.FTS_STEP_ENTITLE
-            self.message += "Generating an entitlement...  "
-            self.reportMessage(execId, self.message)
-            ret = self._generateEntitlement(newCfg)
-            if ret.has_key('errors'):
-                return { 'errors': ret['errors'], 'step': step, 'message': self.message }
-            self.message += ret.get('message', '\n')
-            self.reportMessage(execId, self.message)
+        self.message += "Creating platforms... "
+        self.reportMessage(execId, self.message)
+        ret = self._createPlatforms()
+        if ret.has_key('errors'):
+            return { 'errors': ret['errors'], 'step': step, 'message': self.message }
+        self.message += ret.get('message', '\n')
+        self.reportMessage(execId, self.message)
 
         # Setup the initial external projects
         step = lib.FTS_STEP_INITEXTERNAL

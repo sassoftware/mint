@@ -35,7 +35,6 @@ install: default-install
 	# "dot-keep" files to preserve the empty config directories.
 	# This is marginally simpler than policy as long as the
 	# dirs are root-owned, and keeps everything in one place.
-	touch $(DESTDIR)/etc/rmake/node.d/.keep.rbuilder
 	touch $(DESTDIR)/srv/rbuilder/config/config.d/.keep.rbuilder
 	touch $(DESTDIR)/srv/rbuilder/config/pcreator.d/.keep.rbuilder
 

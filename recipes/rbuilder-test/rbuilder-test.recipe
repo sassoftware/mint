@@ -1,0 +1,109 @@
+#
+# Copyright (C) 2010 rPath, Inc.
+# All rights reserved
+#
+
+loadSuperClass('testpackage=testbits.rb.rpath.com@rpl:1')
+class rBuilderTest(TestPackageRecipe):
+    name = 'rbuilder-test'
+    version = '5.0'
+
+    # Location of testsuite.py used by the superclass
+    testDir = '.'
+
+    buildRequires = [
+        'rbuilder',
+        'rbuilder-sources', # stripped .py files
+
+        'chkconfig:runtime',
+        'conary-repository:python', 
+        'django:python',
+        'django-db-postgres:python',
+        'django-db-sqlite3:python',
+        'django-rest-interface:python',
+        'dnspython:python',
+        'decorator:python',
+        'elementtree:python',
+        'kid:runtime',
+        'kid:python',
+        'm2crypto:python',
+        'mcp:python',
+        'mcp-sources:python',
+        'mod_python:runtime',
+        'PIL:python',
+        'python:devel',
+        'rapa:python',
+        'rapa-plugin-rPath',
+        'renderPM:python',
+        'reportlab:python',
+        'simplejson:python',
+        'util-linux:runtime',
+        'webunit:python',
+        'net-tools:runtime',
+        'httpd:runtime',
+        'mod_ssl:runtime',
+        'rbuilder-hostsfile',
+        'restlib:python',
+        'sqlite:runtime',
+        'renderPM:fonts', 
+        'testutils:runtime',
+        'testutils:python',
+        'XenAPI:python',
+        'xobj:python',
+        'rpath-models:python',
+
+        # testsuites
+        'conary-factory-test:lib',
+        'conary-test:lib',
+        'rapa-test:lib',
+        'rpath-capsule-indexer-test:lib',
+      ]
+
+    pythonPath = [
+        '%(libdir)s/rpath-capsule-indexer-test',
+        '%(libdir)s/conary-test',
+        '%(libdir)s/raa-test',
+        '%(libdir)s/raa',
+      ]
+
+    codeDirs = {
+        'mint': '%(libdir)s/python2.4/site-packages/mint',
+        'mint-rapa': '%(libdir)s/raa/rPath',
+      }
+
+    # DB (default sqlite)
+    Flags.db_pgsql = False
+
+    def setup(r):
+        r.addMercurialSnapshot()
+
+        # Make sure the testsuite uses the installed rBuilder. Moving
+        # is faster than removing.
+        r.MakeDirs('../mint')
+        r.Move('mint/django_rest', 'django_rest')
+        r.Move('mint', '../mint/mint')
+        r.Move('raaplugins', '../mint/raaplugins')
+
+        r.test()
+        r.install()
+
+        r.PackageSpec('rbuilder-test-helper', 'mint_test/__init__.py', 'mint_test/mint_rephelp.py', 'mint_test/_apache.py', 'mint_test/server/')
+
+    def test(r):
+        environ = ''
+        config = {}
+
+        environ += 'RAA_PLUGINS_PATH=%(libdir)s/raa '
+        environ += 'PACKAGE_CREATOR_SERVICE_TEST_PATH=%(libdir)s/conary-factory-test '
+        environ += 'CONARY_TEST_PATH=%(libdir)s/conary-test '
+
+        config['repos_db'] = (
+            Flags.db_pgsql and 'postgresql'
+            or 'sqlite')
+        environ += 'CONARY_REPOS_DB=%s ' % config['repos_db']
+
+        r.run_tests(environ=environ, configuration=config,
+            args='--context \!unfriendly')
+
+    def install(r):
+        r.Install('mint_test', '%(libdir)s/mint-test')

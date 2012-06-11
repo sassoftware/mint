@@ -1,11 +1,13 @@
 PGPORT="5439"
-PGDATA="/srv/pgsql/8.2-rbuilder"
-PGOPTS="-c config_file=/etc/postgresql.conf.rbuilder"
+PGDATA="/srv/pgsql/@POSTGRES_VERSION@-rbuilder"
+PGOPTS="-c config_file=/usr/share/rbuilder/postgresql.conf"
 PGLOG="/var/log/pgsql"
 PGTZ="/usr/share/zoneinfo"
+PGAUTOINIT=no
+PGINITOPTS="--auth=trust --encoding=UTF8 --locale=C"
 
-# Set the maximum shared memory to 500MB before postmaster starts
-SHMMAX=524288000
+# Set the maximum shared memory to 10GB before postmaster starts
+SHMMAX=10000000000
 if [ `sysctl -n kernel.shmmax` -lt $SHMMAX ]
 then
     sysctl -q -w "kernel.shmmax=$SHMMAX"

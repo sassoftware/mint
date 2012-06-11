@@ -61,39 +61,19 @@ die() {
 # Shut down apache, if it's running
 shutdown_apache
 
-# Restart postgresql since it does not like the rPL 1 -> rPL 2
-# migration and probably does not like being run post-update either.
-#   -- 5.0.0 - 2009-01-08
-function waitForPg()
-{
-    echo "Waiting for postgres to start"
-    ready="false"
-    retries=4
-    while true
-    do
-        psql -U postgres -l >/dev/null 2>&1
-        rc=$?
-        if [ "$rc" -eq 0 ]
-        then
-            break
-        elif [[ "$rc" -eq 2 && "$retries" -ne 0 ]]
-        then
-            retries=$(( $retries - 1 ))
-            sleep 4
-        else
-            echo "Failed waiting for PostgreSQL to start"
-            exit 1
-        fi
-    done
-}
+# If not chrooted, stop cron, to prevent bad things from happening while we're
+# migrating (RBL-7973)
+[ -e /var/lock/subsys/crond ] && service crond stop
 
-service postgresql-rbuilder condstop
-# postgres attaches shared memory to its pidfile; if it shuts down uncleanly it
-# can subsequently refuse to start because of this. Unlinking the pidfile is a
-# simple workaround.
-rm -f $PGDATA/postmaster.pid
-service postgresql-rbuilder start
-waitForPg
+# Shut down postgres, and migrate to the latest major version if required.
+# Then start it and wait for it to return.
+if [ "x$is_chrooted" == "x1" ]
+then
+    # Initial install
+    updateargs="--init"
+fi
+"$scriptdir"/postgres-auto-update $updateargs \
+    || die "Migration failed, check /var/log/rbuilder/scripts.log"
 
 service pgbouncer restart
 
@@ -111,16 +91,22 @@ createdb -U postgres --encoding=UTF8 --owner=rbuilder mint &>/dev/null
 chown -f apache:apache /srv/rbuilder/data/db /srv/rbuilder/repos/* 2>/dev/null
 rm -f /srv/rbuilder/data/platformName.cache
 
+# jabberd database
+createuser -SDRU postgres jabberd &>/dev/null
+createdb -U postgres --encoding=UTF8 --owner=jabberd jabberd &>/dev/null && \
+    psql -U jabberd -d jabberd -Xqf /usr/share/rbuilder/jabberd/db-setup.pgsql
+
+# rMake database
+createuser -SDRU postgres rmake &>/dev/null
+createdb -U postgres --encoding=UTF8 --owner=rmake rmake &>/dev/null
+
+
 # Migrate the mint config
 "$scriptdir"/migrate-config --migrate || die "Failed to migrate the rBuilder configuration file"
 chown apache:apache /srv/rbuilder/config/rbuilder-generated.conf
 
 # Migrate all conary repositories
 "$scriptdir"/migrate-all-projects
-
-# Create the jobs directory 
-mkdir /srv/rbuilder/jobs &> /dev/null
-chown -f apache:apache /srv/rbuilder/jobs
 
 # raa-web user needs to be in apache group so that rbuilder-generated is readable by rapa
 usermod -a -G apache raa-web
@@ -144,10 +130,23 @@ if [ `uname -m` = "x86_64" ]; then
     rm -rf /usr/lib/raa/rPath/
 fi
 
-# Start apache, if not chrooted
+# Primary migration is done, exit maintenance mode now since some scripts need
+# to talk to local repositories.
+rm -f /srv/rbuilder/run/maintenance.lock
+
+# Generate rMake certificates IFF we're not chrooted; otherwise we
+# might end up sticking them pre-generated in the ISOs which would be
+# very bad.
+#   -- 5.0.0 - 2008-12-01
 if [ "x$is_chrooted" == "x" ]
 then
+    "$scriptdir"/generate-certs.sh \
+        || die "Failed to generate certificates"
+
+    # Start apache with new certificates.
     service httpd start
+else
+    echo Skipping certificate generation due to chrooting
 fi
 
 # If rmake repo didn't exist, this must be a new install, so only touch the
@@ -177,18 +176,6 @@ do
 done
 
 
-# Generate rMake certificates IFF we're not chrooted; otherwise we
-# might end up sticking them pre-generated in the ISOs which would be
-# very bad.
-#   -- 5.0.0 - 2008-12-01
-if [ "x$is_chrooted" == "x" ]
-then
-    "$scriptdir"/generate-certs.sh \
-        || die "Failed to generate certificates"
-else
-    echo Skipping certificate generation due to chrooting
-fi
-
 # Restart rMake after update + cert generation. This also straightens things out
 # for the first update after the messagebus was split.
 #   -- 5.0.0 - 2008-12-01
@@ -201,12 +188,22 @@ then
     [ -e /var/lock/subsys/rmake-node ] && service rmake-node stop
     service rmake stop
     service rmake-messagebus condstop
+    [ -e /var/lock/subsys/rmake3-node ] && service rmake3-node stop
+    [ -e /var/lock/subsys/rmake3 ] && service rmake3 stop
     # Start everything
+    service rmake3 start
+    service rmake3-node start
     service rmake-messagebus start
     service rmake start
     service rmake-node start
     service mcp-dispatcher start
     service jobmaster start
+
+    # Create initial platforms
+    /usr/share/rbuilder/scripts/create-platforms
+
+    # Start cron back (RBL-7973)
+    service crond start
 fi
 
 # Fix notifications with a bad GUID

@@ -18,8 +18,8 @@ def switchToPostgres(cfg):
         return
 
     sourceTuple = (cfg.dbDriver, cfg.dbPath)
-    destTuple = ('postgresql', 'rbuilder@localhost:5439/mint')
-    finalTuple = ('pgpool', 'rbuilder@localhost.localdomain:6432/mint')
+    destTuple = ('postgresql', 'postgres@localhost:5439/mint')
+    finalTuple = ('pgpool', 'postgres@localhost.localdomain:6432/mint')
 
     log.info("Migrating mint database from %s::%s to %s::%s",
             *(sourceTuple + destTuple))

@@ -104,7 +104,7 @@ class MigrateAllProjects(scriptlibrary.SingletonScript):
                     self.currentProjectName, handle.dbTuple)
 
             try:
-                reposDb = handle.getReposDB(skipCache=True)
+                reposDb = handle.getReposDB()
                 schema.loadSchema(reposDb, doMigrate=True)
             except:
                 errors += 1

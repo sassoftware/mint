@@ -1,6 +1,6 @@
 <?xml version='1.0' encoding='UTF-8'?>
 <?python
-import simplejson
+import json
 from mint.packagecreator import drawField, isChecked, isSelected, effectiveValue, expandme
 
 lang = None;
@@ -18,7 +18,7 @@ lang = None;
             function PkgCreatorFileUploadForm()
             {
                 this.base = FileUploadForm;
-                this.base(${simplejson.dumps(uploadDirectoryHandle)}, 'getPackageFactories', 'pollUploadStatus', 'cancelUploadProcess');
+                this.base(${json.dumps(uploadDirectoryHandle)}, 'getPackageFactories', 'pollUploadStatus', 'cancelUploadProcess');
             }
             PkgCreatorFileUploadForm.prototype = new FileUploadForm();
 
@@ -137,7 +137,7 @@ lang = None;
             <td class="expandableformgroupItems">
             <div py:if="not expandme(value)" py:strip="True">
                 <input type="text" id="${fieldId}" name="${field.name}" value="${value}"/>
-                <div id="${fieldId}_expander" class="resize expander" onclick="javascript:toggle_textarea(${simplejson.dumps(fieldId)})">
+                <div id="${fieldId}_expander" class="resize expander" onclick="javascript:toggle_textarea(${json.dumps(fieldId)})">
                     <img src="${cfg.staticPath}/apps/mint/images/spacer.gif" width="18" height="18" border="0" />
                 </div>
             </div>
@@ -309,7 +309,7 @@ lang = None;
         <script type="text/javascript">
             <![CDATA[
 var polldata = {
-    sessionHandle: ${simplejson.dumps(sessionHandle)}
+    sessionHandle: ${json.dumps(sessionHandle)}
 };
 
 var buildlength = '';

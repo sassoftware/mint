@@ -1,0 +1,3 @@
+version @POSTGRES_VERSION@
+binDir /opt/postgresql-@POSTGRES_VERSION@/bin
+dataDir /srv/pgsql/@POSTGRES_VERSION@-rbuilder

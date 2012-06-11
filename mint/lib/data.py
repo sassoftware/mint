@@ -80,21 +80,26 @@ class GenericDataTable(database.DatabaseTable):
             self.db.commit()
 
         return True
-
-def marshalTargetUserCredentials(creds):
-    # creds: dictionary
-    if not creds:
+    
+def marshalGenericData(genericDataDict):
+    if not genericDataDict:
         return ""
-    # Newline-separated credential fields
+    # Newline-separated fields
     data = '\n'.join("%s:%s" % (k, base64.b64encode(v))
-        for (k, v) in sorted(creds.iteritems()))
+        for (k, v) in sorted(genericDataDict.iteritems()))
     return data
 
-def unmarshalTargetUserCredentials(creds):
+def unmarshalGenericData(genericData):
     ret = {}
-    for nameval in creds.split('\n'):
+    for nameval in genericData.split('\n'):
         arr = nameval.split(':', 1)
         if len(arr) != 2:
             continue
         ret[arr[0]] = base64.b64decode(arr[1])
     return ret
+
+def marshalTargetUserCredentials(creds):
+    return marshalGenericData(creds)
+
+def unmarshalTargetUserCredentials(creds):
+    return unmarshalGenericData(creds)

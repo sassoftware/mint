@@ -7,6 +7,7 @@
 
 import testsuite
 testsuite.setup()
+from testutils import mock
 
 import os
 
@@ -26,6 +27,11 @@ class FakeUpdateServiceServerProxy:
     def addRandomUser(self, name):
         return 'thisisamirrorpassword'
 
+    Network = mock.MockObject()
+    Network.Network.index._mock.setDefaultReturn({'host_hostName':''})
+    configure = Network
+    rusconf = mock.MockObject()
+
 
 class FakerAPA(mint_rephelp.StubXMLRPCServerController):
 
@@ -40,6 +46,9 @@ class FakerAPA(mint_rephelp.StubXMLRPCServerController):
 
         def addRandomUser(self, name):
             return 'thisisamirrorpassword'
+
+        def index(self):
+            return {'has_hostName':''}
 
     def handlerFactory(self):
         return self.FakerAPAInterface()
@@ -529,6 +538,11 @@ class WebPageTest(mint_rephelp.WebRepositoryHelper):
         assert('An account with that username already exists.' in page.body)
 
     def testReports(self):
+        try:
+            import reportlab
+            del reportlab #pyflakes=ignore
+        except ImportError:
+            raise testsuite.SkipTestException("reportlab not installed")
         client, userId = self.quickMintAdmin('adminuser', 'adminpass')
         self.webLogin('adminuser', 'adminpass')
 
@@ -537,7 +551,7 @@ class WebPageTest(mint_rephelp.WebRepositoryHelper):
 
         # make sure we get a real pdf
         page = page.postForm(1, self.post, {'reportName': 'site_summary'})
-        assert(page.body.startswith('%PDF-1.3'))
+        assert(page.body.startswith('%PDF-1'))
 
     def testSelections(self):
         client, userId = self.quickMintAdmin('adminuser', 'adminpass')

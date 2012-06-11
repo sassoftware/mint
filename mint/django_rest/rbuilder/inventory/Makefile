@@ -12,7 +12,9 @@
 # full details.
 #
 
+SUBDIRS =	fixtures manager models_xsl
 python_files =	$(wildcard *.py)
+template_files = $(wildcard *.html *.xsl)
 
 dist_files = Makefile $(python_files)
 GENERATE_DS=generateDS.py
@@ -23,6 +25,8 @@ XSD_DIR=xsd
 all: $(generated_files) default-all
 
 install: pyfiles-install default-install
+	mkdir -p $(DESTDIR)$(PYDIR)/$(PYDEST)
+	install -m0644 $(template_files) $(DESTDIR)$(PYDIR)/$(PYDEST)/
 
 clean: default-clean
 

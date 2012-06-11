@@ -26,6 +26,7 @@ class SqlSession(BaseSession):
             c = Cookie.Cookie(COOKIE_NAME, self._sid)
 
         c.path = '/'
+        c.secure = True
         return c
     
     def do_cleanup(self):

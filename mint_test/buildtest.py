@@ -11,8 +11,7 @@ import re
 import sys
 import time
 import tempfile
-import simplejson
-from testutils import mock
+import json
 
 from mint_rephelp import MintRepositoryHelper
 from mint_rephelp import MINT_HOST, MINT_DOMAIN, MINT_PROJECT_DOMAIN
@@ -898,15 +897,18 @@ class BuildTest(fixtures.FixturedUnitTest):
 
         serialized = build.serialize()
 
-        buildDict = simplejson.loads(serialized)
+        buildDict = json.loads(serialized)
 
         self.failIf(buildDict['protocolVersion'] != 1,
                     "Serial Version 1 was not honored")
 
+        expectedKeys = ['UUID', 'buildType', 'data', 'description', 'name',
+            'outputToken', 'project', 'protocolVersion', 'proxy',
+            'troveFlavor', 'troveName', 'outputUrl', 'troveVersion', 'type',
+            'buildId', 'outputUrl', 'proddefLabel', 'pki', 'inventory_node']
+
         self.failUnlessEqual(set(str(x) for x in buildDict.keys()),
-            set(str(x) for x in ['UUID', 'buildType', 'data', 'description', 'name', 'outputToken',
-             'project', 'protocolVersion', 'proxy', 'troveFlavor', 'troveName', 'outputUrl',
-             'troveVersion', 'type', 'buildId', 'outputUrl', 'proddefLabel']))
+            set(str(x) for x in expectedKeys))
 
         self.failUnlessEqual(set(buildDict['project']), set(['hostname', 'name', 'label', 'conaryCfg']))
 
@@ -922,7 +924,7 @@ class BuildTest(fixtures.FixturedUnitTest):
         build = client.getBuild(data['pubReleaseFinalId'])
 
         serialized = build.serialize()
-        buildDict = simplejson.loads(serialized)
+        buildDict = json.loads(serialized)
         UUID = str(buildDict['UUID'])
 
         hname = '%s.%s' % (MINT_HOST, MINT_DOMAIN)
@@ -930,7 +932,7 @@ class BuildTest(fixtures.FixturedUnitTest):
 
         # repeat the serialize process to ensure the build count gets bumped
         serialized = build.serialize()
-        buildDict = simplejson.loads(serialized)
+        buildDict = json.loads(serialized)
         UUID = str(buildDict['UUID'])
 
         self.assertEquals(UUID, '%s-build-2-2' % (hname,))
@@ -958,7 +960,7 @@ class BuildTest(fixtures.FixturedUnitTest):
         f.close()
 
         serialized = build.serialize()
-        buildDict = simplejson.loads(serialized)
+        buildDict = json.loads(serialized)
 
         self.failUnless('amiData' in buildDict.keys())
 
@@ -979,7 +981,7 @@ class BuildTest(fixtures.FixturedUnitTest):
 
         serialized = build.serialize()
 
-        buildDict = simplejson.loads(serialized)
+        buildDict = json.loads(serialized)
         assert(buildDict['amiData']['ec2LaunchUsers'] == ['3234'])
 
     @fixtures.fixture('Full')
@@ -1005,13 +1007,13 @@ class BuildTest(fixtures.FixturedUnitTest):
         otherProject = nobody.getProject(otherProjectId)
         FQDN = otherProject.getFQDN()
 
-        buildDict = simplejson.loads(build.serialize())
+        buildDict = json.loads(build.serialize())
         self.failIf(FQDN in buildDict['project']['conaryCfg'],
             'Project "bar" should not be in conaryrc')
 
         # Now add developer to bar and make sure bar appears in their builds
         otherProject.addMemberById(data['developer'], userlevels.DEVELOPER)
-        buildDict = simplejson.loads(build.serialize())
+        buildDict = json.loads(build.serialize())
         self.failUnless(FQDN in buildDict['project']['conaryCfg'],
             'Project "bar" should be in conaryrc')
 
@@ -1160,6 +1162,14 @@ class ProductVersionBuildTest(fixtures.FixturedProductVersionTest):
                                    '/conary.rpath.com@rpl:devel/0.0:1.0-1-3'}),
                               stages=['Custom'],
                               imageGroup='group-dist')
+        # Kind of unfortunate we have no easy way to programatically set the
+        # platform information
+        pclas = pd.xmlFactory().platformClassifierTypeSub(
+            name="rpl", version="2", tags="linux")
+        pinfo = pd.xmlFactory().platformInformationTypeSub(
+            platformClassifier=pclas,
+            originLabel="conary.rpath.com@rpl:2")
+        pd._rootObj.set_platformInformation(pinfo)
 
         # mocked out call to save to memory
         pd.saveToRepository()
@@ -1238,7 +1248,7 @@ class ProductVersionBuildTest(fixtures.FixturedProductVersionTest):
         build = client.getBuild(buildIds[0])
         self.assertEquals(build.getDataDict().get('showMediaCheck'), True)
 
-        data = simplejson.loads(client.server.serializeBuild(buildIds[0]))
+        data = json.loads(client.server.serializeBuild(buildIds[0]))
         self.assertEquals(data['proddefLabel'], 'foo.rpath.local2@ns:foo-FooV1')
 
     @fixtures.fixture('Full')

@@ -56,42 +56,6 @@ excludeBuildTypes       LIVE_ISO
 # Activate Internal Conary Proxy for rBuilder
 useInternalConaryProxy  True
 
-# Available platforms (these are officially supported)
-availablePlatforms      rhel.rpath.com@rpath:rhel-4-as
-availablePlatforms      rhel.rpath.com@rpath:rhel-5-server
-availablePlatforms      rhel.rpath.com@rpath:rhel-5-client-workstation
-availablePlatforms      sles.rpath.com@rpath:sles-10sp3
-availablePlatforms      sles.rpath.com@rpath:sles-11sp1
-availablePlatforms      centos.rpath.com@rpath:centos-5e
-availablePlatforms      conary.rpath.com@rpl:2
-
-# Available platform names. Should match the order of availablePlatforms
-availablePlatformNames  Red Hat Enterprise Linux 4
-availablePlatformNames  Red Hat Enterprise Linux 5
-availablePlatformNames  Red Hat Enterprise Linux Desktop Workstation 5
-availablePlatformNames  SLES 10 SP3
-availablePlatformNames  SLES 11 SP1 
-availablePlatformNames  CentOS 5 
-availablePlatformNames  rPath Linux 2
-
-# Acceptable platforms (these are *allowed* but cannot be normally chosen)
-acceptablePlatforms     rap.rpath.com@rpath:linux-2-devel
-acceptablePlatforms     sle.rpath.com@rpath:sles-11-devel
-acceptablePlatforms     sle.rpath.com@rpath:sles-10-devel
-acceptablePlatforms     sle.rpath.com@rpath:sles-10
-acceptablePlatforms     centos.rpath.com@rpath:centos-5-devel
-acceptablePlatforms     centos.rpath.com@rpath:centos-5
-acceptablePlatforms     rap.rpath.com@rpath:linux-1-devel
-acceptablePlatforms     ubuntu.rpath.com@rpath:ubuntu-hardy
-acceptablePlatforms     scientific.rpath.com@rpath:sl-5
-
-configurablePlatforms   rhel.rpath.com@rpath:rhel-4-as
-configurablePlatforms   rhel.rpath.com@rpath:rhel-5-server
-configurablePlatforms   rhel.rpath.com@rpath:rhel-5-client-workstation
-configurablePlatforms   sles.rpath.com@rpath:sles-10sp3
-configurablePlatforms   sles.rpath.com@rpath:sles-11sp1
-configurablePlatforms	centos.rpath.com@rpath:centos-5e
-
 platformSources          redhatnetwork
 platformSourceUrls       https://rhn.redhat.com
 platformSourceNames      Red Hat Network
@@ -101,9 +65,6 @@ platformSources         novell-updater
 platformSourceUrls      https://nu.novell.com/repo/$RCE
 platformSourceNames     Novell Update Service
 platformSourceTypes     nu
-
-noticesRssFeed http://www.rpath.com/corp/index.php?option=com_bca-rss-syndicator&feed_id=3
-noticesRssFeed http://blogs.rpath.com/wpmu/rpath-technical-announcements/feed/
 
 # Include rAPA-generated proxy information
 includeConfigFile /etc/conary/config.d/httpProxy

@@ -34,6 +34,7 @@ class RbuilderStatus(Model):
     hostName                = fields.CharField()
     isRBO                   = fields.BooleanField()
     isExternalRba           = fields.BooleanField()
+    accountCreationRequiresAdmin = fields.BooleanField()
     identity                = fields.ModelField(Identity)
     rmcService              = RMCUrlField()
     products                = fields.UrlField('products', None)
@@ -41,9 +42,12 @@ class RbuilderStatus(Model):
     platforms               = fields.UrlField('platforms', None)
     registration            = fields.UrlField('registration', None)
     reports                 = fields.UrlField('reports/', None)
+    inventory               = fields.UrlField('inventory/', None)
     moduleHooks             = fields.UrlField('moduleHooks', None)
     maintMode               = fields.BooleanField()
     proddefSchemaVersion    = fields.CharField()
+    inventoryConfigurationEnabled   = fields.BooleanField()
+    imageImportEnabled      = fields.BooleanField()
 
     def get_absolute_url(self):
         return '',

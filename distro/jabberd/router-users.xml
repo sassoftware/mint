@@ -1,0 +1,11 @@
+<!-- This is the list of known router users, and their authentication
+     secrets. Access control is done via the settings in router.xml -->
+<users>
+  <user>
+    <name>jabberd</name>
+    <secret>f761434d1c9a6f91d1ab3cb240afff0c863c559e</secret>
+  </user>
+</users>
+<!--
+  vim: syntax=xml
+-->

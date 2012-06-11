@@ -58,7 +58,6 @@ class InstallClass(BaseInstallClass):
         anaconda.id.rootPassword['isCrypted'] = True
 
         anaconda.backend.addManifest('jspreload', optional=True)
-        anaconda.backend.addManifest('distpreload', optional=True)
 
     def setSteps(self, anaconda):
         BaseInstallClass.setSteps(self, anaconda);

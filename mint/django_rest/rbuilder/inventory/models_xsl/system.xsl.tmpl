@@ -1,0 +1,53 @@
+<xsl:stylesheet xmlns:xsl="http://www.w3.org/1999/XSL/Transform" version="1.0">
+
+<xsl:variable name="system_info">
+<xsl:copy-of select="$system_model" />
+<xsl:copy-of select="$system_methods" />
+</xsl:variable>
+
+<xsl:variable name="system_model"><![CDATA[
+Description:
+  A system in inventory]]>
+<xsl:copy-of select="$system_model_properties" />
+<xsl:copy-of select="$system_model_dedup" />
+</xsl:variable>
+
+<xsl:variable name="system_model_properties"><![CDATA[
+System Properties:]]>
+<xsl:copy-of select="$system_model_properties_no_description" />
+</xsl:variable>
+
+<xsl:variable name="system_model_properties_no_description"><![CDATA[@@FIELDS@@]]>
+</xsl:variable>
+
+<xsl:variable name="system_model_dedup"><![CDATA[
+Identification of Duplicate System Inventory Entries:
+  Because systems can enter inventory in a number of different ways, a single system may initially appear in the inventory multiple times.
+  The following information is used to identify these duplicate inventory entries:
+    1)  local_uuid and generated_uuid - Systems with identical local and generated UUIDs are guaranteed unique
+    2)  target and target_system_id - Virtual targets report a unique ID for each system and thus the combination
+           of target and target system ID is guaranteed unique.
+    3)  event_uuid - Event UUIDs are used to match system events with an incoming event response and can thus be used
+           to lookup a specific system.]]>
+</xsl:variable>
+
+<xsl:variable name="system_methods"><![CDATA[
+Methods: 
+  GET:
+    Authentication: user
+    Response Format:
+       <system id="http://hostname/api/inventory/systems/1/">
+         ...
+       </system>
+
+  POST:
+    not supported
+    
+  PUT:
+    Authentication: user
+    
+  DELETE:
+    Authentication: admin]]>
+</xsl:variable>
+
+</xsl:stylesheet>

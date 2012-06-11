@@ -1,7 +1,5 @@
 #
-# Copyright (c) 2005-2009 rPath, Inc.
-#
-# All rights reserved.
+# Copyright (c) 2011 rPath, Inc.
 #
 
 from mod_python import apache
@@ -9,7 +7,6 @@ from mod_python import apache
 import logging
 import os
 import time
-import traceback
 import urllib
 import base64
 
@@ -20,7 +17,6 @@ from mint import maintenance
 from mint.db import database as mdb
 from mint.db.projects import transTables
 from mint.rest.db import database as rdb
-from mint.rest.errors import ProductNotFound
 from mint.web import app
 from mint.web import cresthandler
 from mint.web.webhandler import normPath
@@ -29,7 +25,6 @@ from conary import errors as cerrors
 from conary.web import webauth
 from conary import dbstore, conarycfg
 from conary.dbstore import sqlerrors
-from conary.lib import util
 from conary.repository import shimclient, transport
 from conary.repository.netrepos import proxy
 from conary.repository.netrepos import netserver
@@ -41,7 +36,6 @@ log = logging.getLogger(__name__)
 
 # Global cached objects
 repositories = {}
-proxy_repository = None
 
 
 def post(port, isSecure, repos, cfg, db, req):
@@ -215,25 +209,6 @@ def _addCapsuleConfig(context, conaryReposCfg, repName):
     return restDb
 
 
-class RestRequestError(Exception):
-    def __init__(self, code, msg):
-        self.code = code
-        self.msg = msg
-        Exception.__init__(self, code, msg)
-
-
-class RestProxyOpener(transport.URLOpener):
-    def http_error_default(self, url, fp, errcode, errmsg, headers, data=None):
-        raise RestRequestError(errcode, errmsg)
-
-    # override all error handling
-    http_error_301 = http_error_default
-    http_error_302 = http_error_default
-    http_error_303 = http_error_default
-    http_error_307 = http_error_default
-    http_error_401 = http_error_default
-
-
 def proxyExternalRestRequest(context, fqdn, proxyServer):
     cfg, req = context.cfg, context.req
     # FIXME: this only works with entitlements, not user:password
@@ -263,20 +238,23 @@ def proxyExternalRestRequest(context, fqdn, proxyServer):
                                 base64.b64encode(entitlement[1])))
     entitlement = ' '.join(l)
 
-    opener = RestProxyOpener(proxies=proxyServer.cfg.proxy)
-    opener.addheader('X-Conary-Entitlement', entitlement)
-    opener.addheader('X-Conary-Servername', fqdn)
-    opener.addheader('User-agent', transport.Transport.user_agent)
+    opener = transport.URLOpener(proxyMap=context.cfg.getProxyMap())
+    headers = [
+            ('X-Conary-Entitlement', entitlement),
+            ('X-Conary-Servername', fqdn),
+            ('User-agent', transport.Transport.user_agent),
+            ]
 
     # make the request
     try:
-        f = opener.open(url)
-    except RestRequestError, e:
-        if e.code != apache.HTTP_FORBIDDEN:
+        f = opener.open(url, headers=headers)
+    except Exception, err:
+        if getattr(err, 'errcode', None) == 403:
+            return 403  # Forbidden
+        else:
             # translate all errors to a 502
-            log.error("Cannot proxy REST request to %s: %s", urlBase, e)
-            return apache.HTTP_BAD_GATEWAY
-        return e.code
+            log.error("Cannot proxy REST request to %s: %s", urlBase, err)
+            return 502  # Bad Gateway
 
     # form up the base URL to this repository on rBuilder
     if req.subprocess_env.get('HTTPS', '') == 'on':
@@ -323,6 +301,16 @@ class CapsuleFilterMixIn(object):
 
         def downloadCapsuleFile(self, capsuleKey, capsuleSha1sum, fileName,
                 fileSha1sum):
+            if capsuleSha1sum == fileSha1sum or fileName == '':
+                # Troves do contain the capsule too, it's legitimate to
+                # request it; however, we can fall back to downloadCapsule for
+                # it.
+                # The SHA-1 check doesn't normally work because the
+                # FileStreams.sha1 column is often null for capsule files, but
+                # the repository will also return fileName='' if the capsule
+                # fileId is the same as the contents fileId. Either of these
+                # mean that the capsule itself is being requested.
+                return self.downloadCapsule(capsuleKey, capsuleSha1sum)
             indexer = self._restDb.capsuleMgr.getIndexer()
             msgTmpl = ("Error downloading file from capsule. "
                 "Upstream error message: (fault code: %s) %s")
@@ -374,8 +362,9 @@ def conaryHandler(context):
         # don't require signatures for the internal user (this would break
         # group builder)
         requireSigs = False
-    if auth[1]:
-        auth[1] = util.ProtectedString(auth[1])
+    # From this point on we don't use the authentication information
+    # Get rid of it so it doesn't show up in tracebacks
+    del auth
 
     paths = normPath(req.uri).split("/")
     fqdn = hostName = None
@@ -466,7 +455,6 @@ def conaryHandler(context):
         # it's completely external
         # use the Internal Conary Proxy if it's configured and we're
         # passing a fully qualified url
-        global proxy_repository
         if (not cfg.useInternalConaryProxy
             or not urllib.splittype(req.unparsed_uri)[0]):
             # don't use the proxy we set up if the configuration says
@@ -483,28 +471,25 @@ def conaryHandler(context):
                     'loop (request %s, via %s)' % (req.hostname, via))
             raise apache.SERVER_RETURN, apache.HTTP_BAD_GATEWAY
 
-        if proxy_repository:
-            proxyServer = proxy_repository
+        proxycfg = netserver.ServerConfig()
+        proxycfg.proxyContentsDir = cfg.proxyContentsDir
+        proxycfg.changesetCacheDir = cfg.proxyChangesetCacheDir
+        proxycfg.tmpDir = cfg.proxyTmpDir
+        if actualRepName:
+            restDb = _addCapsuleConfig(context, proxycfg, actualRepName)
         else:
-            proxycfg = netserver.ServerConfig()
-            proxycfg.proxyContentsDir = cfg.proxyContentsDir
-            proxycfg.changesetCacheDir = cfg.proxyChangesetCacheDir
-            proxycfg.tmpDir = cfg.proxyTmpDir
-
-            # set a proxy (if it was configured)
-            proxycfg.proxy = cfg.proxy
-
-            if ':' in cfg.siteDomainName:
-                domain = cfg.siteDomainName
-            else:
-                domain = cfg.siteDomainName + ':%(port)d'
-            urlBase = "%%(protocol)s://%s.%s/" % \
-                    (cfg.hostName, domain)
-            # XXX For now we won't support injection into external projects
-            # that are not mirrored
             restDb = None
-            proxyServer = proxy_repository = ProxyRepositoryServer(
-                    restDb, proxycfg, urlBase)
+
+        # set a proxy (if it was configured)
+        proxycfg.proxy = cfg.proxy
+
+        if ':' in cfg.siteDomainName:
+            domain = cfg.siteDomainName
+        else:
+            domain = cfg.siteDomainName + ':%(port)d'
+        urlBase = "%%(protocol)s://%s.%s/" % \
+                (cfg.hostName, domain)
+        proxyServer = ProxyRepositoryServer(restDb, proxycfg, urlBase)
 
         # inject known authentication (userpass and entitlement)
         proxyServer.cfg.entitlement = conarycfg.EntitlementList()

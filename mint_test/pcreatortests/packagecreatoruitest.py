@@ -14,7 +14,7 @@ import testsuite
 testsuite.setup()
 
 import os, signal
-import simplejson
+import json
 import SimpleHTTPServer
 
 import StringIO
@@ -31,8 +31,8 @@ from mint import helperfuncs
 from mint.web import whizzyupload
 from mint_rephelp import MINT_HOST, MINT_DOMAIN
 from mint.server import deriveBaseFunc
+from mint.django_rest.rbuilder.inventory import manager
 import mint.mint_error
-from conary.conarycfg import ConaryConfiguration
 from conary import conaryclient
 from factory_test.factorydatatest import basicXmlDef
 import pcreator
@@ -109,7 +109,8 @@ class PkgCreatorTest(fixtures.FixturedUnitTest):
 
         wd = packagecreator.getUploadDir(self.cfg, self.uploadSes)
 
-        pc = packagecreator.getPackageCreatorClient(self.cfg, ('owner', "%dpass" % data['owner']))
+        pc = packagecreator.getPackageCreatorClient(self.cfg, ('owner', "%dpass" % data['owner']), 
+            djangoManager=manager.Manager())
         project = self.client.getProject(data['projectId'])
         cfg = project.getConaryConfig()
         cfg['name'] = 'owner'
@@ -454,14 +455,13 @@ content-type=text/plain
     def testMinCfgData(self, db, data):
         @pcreator.backend.public
         def startSession(*args):
-            cfgArgs = simplejson.loads(args[2])
+            cfgArgs = json.loads(args[2])
             proxyLines = [x for x in cfgArgs if x.startswith('conaryProxy')]
             self.failUnless(proxyLines, "Local conary proxy was not set")
             return 'asdfasdfasdfasdfsdf'
         self.mock(pcreator.backend.BaseBackend, '_startSession', startSession)
         client = self.getClient('owner')
         sesH = client.startPackageCreatorSession(1, '3', 'yournamespace', 'foo', 'bar.baz.com@yournamespace:baz-3-devel')
-
 
 class PkgCreatorReposTest(mint_rephelp.MintRepositoryHelper):
     def _createProductVersion(self, mintclient, project, version, namespace, description=''):
@@ -560,22 +560,22 @@ class PkgCreatorReposTest(mint_rephelp.MintRepositoryHelper):
         res = client.getPackageCreatorPackages(projectId)
         self.assertEquals(res, getPackageCreatorFactoriesData1)
 
-getPackageCreatorFactoriesData1 = {u'vs1': {u'ns1': {'grnotify:source': {u'stageLabel': u'testproject.rpath.local2@ns1:testproject-vs1-devel',
+getPackageCreatorFactoriesData1 = {u'vs1': {u'ns1': {'grnotify:source': {u'stageLabel': u'testproject.rpath.local2@ns1:testproject-vs1-devel/0.4.5-1',
                                        u'productDefinition': {u'hostname': u'testproject.rpath.local2',
                                                               u'namespace': u'ns1',
                                                               u'shortname': u'testproject',
                                                               u'version': u'vs1'}},
-                   'zope:source': {u'stageLabel': u'testproject.rpath.local2@ns1:testproject-vs1-devel',
+                   'zope:source': {u'stageLabel': u'testproject.rpath.local2@ns1:testproject-vs1-devel/2.7.8-1',
                                    u'productDefinition': {u'hostname': u'testproject.rpath.local2',
                                                           u'namespace': u'ns1',
                                                           u'shortname': u'testproject',
                                                           u'version': u'vs1'}}}},
- u'vs2': {u'ns1': {'grnotify:source': {u'stageLabel': u'testproject.rpath.local2@ns1:testproject-vs2-devel',
+ u'vs2': {u'ns1': {'grnotify:source': {u'stageLabel': u'testproject.rpath.local2@ns1:testproject-vs2-devel/0.4.4-1',
                                        u'productDefinition': {u'hostname': u'testproject.rpath.local2',
                                                               u'namespace': u'ns1',
                                                               u'shortname': u'testproject',
                                                               u'version': u'vs2'}}},
-          u'ns2': {'grnotify:source': {u'stageLabel': u'testproject.rpath.local2@ns2:testproject-vs2-devel',
+          u'ns2': {'grnotify:source': {u'stageLabel': u'testproject.rpath.local2@ns2:testproject-vs2-devel/0.4.4-1',
                                        u'productDefinition': {u'hostname': u'testproject.rpath.local2',
                                                               u'namespace': u'ns2',
                                                               u'shortname': u'testproject',
@@ -825,13 +825,12 @@ class ReposTests(mint_rephelp.MintRepositoryHelper):
             self.mintCfg.packageCreatorURL = url
             client, userId = self.quickMintUser('testuser', 'testpass')
             pClient = packagecreator.getPackageCreatorClient(self.mintCfg,
-                    ('testuser', 'testpass'))
+                    ('testuser', 'testpass'), djangoManager=manager.Manager())
             mincfg = packagecreator.MinimalConaryConfiguration(self.cfg)
             sesH = pClient.startSession(pDefDict, mincfg)
             tarFile = 'logrotate-3.7.1.tar.gz'
             filePath = os.path.join(pathManager.getPath('CONARY_ARCHIVE_PATH'), tarFile)
-            pClient.uploadData(sesH, tarFile, open(filePath),
-                    'application/x-rpm')
+            pClient.uploadData(sesH, tarFile, filePath, 'application/x-rpm')
             res = pClient.getCandidateBuildFactories(sesH)
             self.assertEquals([x[0] for x in res],
                     ['archive=/localhost@rpath:factories/1.0-1-1'])
@@ -851,7 +850,7 @@ class RecipeManipulationTest(fixtures.FixturedUnitTest):
         modePath = os.path.join(dataPath, 'mode')
         for mode in ('package-creator', 'appliance-creator'):
             f = open(modePath, 'w')
-            f.write(simplejson.dumps(mode))
+            f.write(json.dumps(mode))
             f.close()
             isDefault, recipe = client.getPackageCreatorRecipe(sesH)
             self.failUnless('asserts no copyright claim on this interface' \

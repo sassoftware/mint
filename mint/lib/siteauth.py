@@ -1,7 +1,5 @@
 #
-# Copyright (c) 2009 rPath, Inc.
-#
-# All rights reserved.
+# Copyright (c) 2011 rPath, Inc.
 #
 
 import logging
@@ -9,13 +7,12 @@ import os
 import urllib
 import urllib2
 import time
-import xmlrpclib
 from conary import conarycfg
 from conary import conaryclient
 from conary.lib.cfg import ConfigFile
 from conary.lib.cfgtypes import CfgString
+from conary.lib.http import opener as opener_mod
 from conary.lib.util import copyfileobj
-from conary.repository import transport
 from xobj import xobj
 
 from mint.lib.unixutils import atomicOpen, hashFile
@@ -134,20 +131,12 @@ class SiteAuthorization(object):
             self._conaryCfg = conarycfg.ConaryConfiguration(True)
         return self._conaryCfg
 
-    def _urlopen(self, request, data=None):
+    def _urlopen(self, url, data=None, headers=()):
         """
         urlopen C{request} using the system proxy settings.
         """
-        # Break down the request again ... :-(
-        opener = transport.URLOpener(proxies=self.conaryCfg.proxy)
-        if hasattr(request, 'get_header'):
-            if request.get_header('Content-type') == 'text/xml':
-                opener.contentType = 'text/xml'
-            url = request.get_full_url()
-            data = request.get_data()
-        else:
-            url = request
-        return opener.open(url, data)
+        opener = opener_mod.URLOpener(proxyMap=self.conaryCfg.getProxyMap())
+        return opener.open(url, data=data, headers=headers)
 
     # Readers
     def _getXMLPath(self):
@@ -284,14 +273,13 @@ class SiteAuthorization(object):
         doc.activate.version = version.asString()
 
         url = self.cfg.keyUrl
-        req = urllib2.Request(url, doc.toxml(), {'Content-type': 'text/xml'})
-
         log.info("Requesting entitlement for %s=%s from %s",
                 name, version, url)
 
         err = None
         try:
-            fObj = self._urlopen(req)
+            fObj = self._urlopen(url, data=doc.toxml(),
+                    headers={'Content-type': 'text/xml'})
         except Exception, e:
             log.exception("Failed to generate entitlement: %s" % str(e))
             raise Exception, "Failed to generate entitlement: %s" % str(e)
@@ -323,8 +311,7 @@ class SiteAuthorization(object):
                 log.debug("Entitlement refresh successful.")
                 return True
         else:
-            log.warning("Deferring authorization check: "
-                    "no system entitlement.")
+            log.info("Deferring authorization check: no system entitlement.")
         return False
 
     def save(self):
@@ -339,10 +326,8 @@ class SiteAuthorization(object):
         if not self.entitlementKey:
             raise MintError('Unable to register rBuilder - no key set')
         url = os.path.join(self.xml.entitlement.id, 'registration?_method=PUT')
-        req = urllib2.Request(url, registrationData,
-                {'Content-type': 'text/xml'})
-
-        fObj = self._urlopen(req)
+        fObj = self._urlopen(url, data=registrationData,
+                headers={'Content-type': 'text/xml'})
         self._copySaveXML(fObj)
         return True
 

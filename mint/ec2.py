@@ -1,5 +1,5 @@
 #
-# Copyright (c) 2005-2008 rPath, Inc.
+# Copyright (c) 2010 rPath, Inc.
 #
 # All Rights Reserved
 #
@@ -11,7 +11,7 @@ try:
     import boto
     import boto.s3
     import boto.s3.key
-    from boto.exception import EC2ResponseError, S3ResponseError
+    from boto.exception import EC2ResponseError, S3ResponseError, S3CreateError
     _boto_present = True
 except ImportError:
     _boto_present = False
@@ -19,35 +19,11 @@ except ImportError:
 import xml.dom.minidom
 from conary.lib import util
 
-from mint.db import ec2
-from mint.lib import database
 from mint.helperfuncs import urlSplit
 from mint import mint_error
 from rpath_xmllib import api1 as xmllib
 
 
-class LaunchedAMI(database.TableObject):
-
-    __slots__ = ec2.LaunchedAMIsTable.fields
-
-    def getItem(self, id):
-        return self.server.getLaunchedAMI(id)
-
-    def save(self):
-        return self.server.updateLaunchedAMI(self.launchedAMIId,
-                self.getDataAsDict())
-
-class BlessedAMI(database.TableObject):
-
-    __slots__ = ec2.BlessedAMIsTable.fields
-
-    def getItem(self, id):
-        return self.server.getBlessedAMI(id)
-
-    def save(self):
-        return self.server.updateBlessedAMI(self.blessedAMIId,
-                self.getDataAsDict())
-        
 class ErrorResponseObject(xmllib.BaseNode):
     """
     A object that maps to the EC2 XML response error from boto.
@@ -261,12 +237,28 @@ class S3Wrapper(object):
                 self.sizeCurrent + currentBytes, self.sizeTotal)
 
     def createBucket(self, bucketName):
-        bucket = self.s3conn.create_bucket(bucketName)
+        return self.createBucketBackend(self.s3conn, bucketName)
+
+    @classmethod
+    def createBucketBackend(cls, conn, bucketName, policy=None):
+        # boto 2.0 enforces that bucket names don't have upper case
+        bucketName = bucketName.lower()
+        try:
+            bucket = conn.create_bucket(bucketName, policy=policy)
+        except (S3CreateError, S3ResponseError):
+            bucket = conn.get_bucket(bucketName)
         return bucket
 
     # This is the magical za-team user that needs read access to the S3
     # files, in order for EC2 to be able to use them
     amazonEC2UserId = '6aa5a366c34c1cbe25dc49211496e913e0351eb0e8c37aa3477e40942ec6b97c'
+
+    @classmethod
+    def _fileObjFromTarFile(cls, tarObject, archiveMember):
+        fileObj = tarObject.extractfile(archiveMember)
+        nFileObj = util.BoundedStringIO()
+        util.copyfileobj(fileObj, nFileObj)
+        return nFileObj
 
     def uploadBundle(self, tarObject, bucketName, callback = None):
         bucket = self.createBucket(bucketName)
@@ -277,28 +269,36 @@ class S3Wrapper(object):
         totalSize = sum(fileSizes)
         manifests = [ os.path.basename(x.name) for x in members
             if x.name.endswith('.manifest.xml') ]
-        for i, archiveMember in enumerate(members):
-            fileObj = tarObject.extractfile(archiveMember)
-            nFileObj = util.BoundedStringIO()
-            util.copyfileobj(fileObj, nFileObj)
-
-            fileName = os.path.basename(archiveMember.name)
-            key = bucket.new_key(fileName)
-
-            if callback:
-                cb = self.UploadCallback(callback, archiveMember.name,
-                    i + 1, fileCount, sum(fileSizes[:i]), totalSize).callback
-            else:
-                cb = None
-            key.set_contents_from_file(nFileObj, cb=cb, policy='private')
-            # Grant permissions to za-team
-            key = bucket.get_key(fileName)
-            acl = key.get_acl()
-            acl.acl.add_user_grant('READ', self.amazonEC2UserId)
-            key.set_acl(acl)
+        bundleItemGen = (
+            (x.name, x.size, self._fileObjFromTarFile(tarObject, x))
+                for x in members )
+        self.uploadBundleBackend(bundleItemGen, fileCount, totalSize,
+            bucket, permittedUsers=[self.amazonEC2UserId], callback=callback)
         if manifests:
             return (bucketName, manifests[0])
         return (bucketName, None)
+
+    @classmethod
+    def uploadBundleBackend(cls, bundleItemGen, fileCount, totalSize,
+            bucket, permittedUsers=None, callback=None, policy="private"):
+        current = 0
+        for i, (biName, biSize, biFileObj) in enumerate(bundleItemGen):
+            keyName = os.path.basename(biName)
+            key = bucket.new_key(keyName)
+            if callback:
+                cb = cls.UploadCallback(callback, biName,
+                    i + 1, fileCount, current, totalSize).callback
+            else:
+                cb = None
+            current += biSize
+            key.set_contents_from_file(biFileObj, cb=cb, policy=policy)
+            if permittedUsers:
+            # Grant additional permissions
+                key = bucket.get_key(keyName)
+                acl = key.get_acl()
+                for user in permittedUsers:
+                    acl.acl.add_user_grant('READ', user)
+                key.set_acl(acl)
 
 class EC2Wrapper(object):
 
@@ -430,7 +430,7 @@ class EC2Wrapper(object):
         amiS3ManifestName = '%s/%s' % (bucketName,
             os.path.basename(manifestName))
         try:
-            amiId = str(self.ec2conn.register_image(amiS3ManifestName))
+            amiId = str(self.ec2conn.register_image(image_location=amiS3ManifestName))
             if ec2LaunchGroups:
                 self.ec2conn.modify_image_attribute(amiId,
                     attribute='launchPermission',

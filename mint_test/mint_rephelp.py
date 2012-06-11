@@ -3,6 +3,7 @@
 #
 # All Rights Reserved
 #
+import logging
 import os
 import shutil
 import pwd
@@ -520,6 +521,7 @@ class RestDBMixIn(object):
                         db.productMgr.setProductVersionDefinition
             db.productMgr.setProductVersionDefinition = mock.MockObject()
             db.reposMgr = mock.MockObject()
+        db.commit()
         return db
 
     def createUser(self, name, password=None, admin=False):
@@ -646,8 +648,16 @@ class MintDatabaseHelper(rephelp.RepositoryHelper, RestDBMixIn):
         RestDBMixIn.setUp(self)
 
     def tearDown(self):
+        self.tearDownLogging()
         RestDBMixIn.tearDown(self)
         rephelp.RepositoryHelper.tearDown(self)
+
+    @classmethod
+    def tearDownLogging(cls):
+        raiseExceptions = logging.raiseExceptions
+        logging.raiseExceptions = 0
+        logging.shutdown()
+        logging.raiseExceptions = raiseExceptions
 
     def loadRestFixture(self, name, fn=None):
         import fixtures
@@ -750,7 +760,12 @@ class MintRepositoryHelper(rephelp.RepositoryHelper, RestDBMixIn):
         if useProxy:
             self.cfg.configKey('conaryProxy',
                                'http http://localhost:%s' % server.port)
-        cli = mint.client.MintClient('http://%s:%s@localhost:%s/xmlrpc-private' % ('intuser', 'intpass', server.port))
+        try:
+            cli = mint.client.MintClient('http://%s:%s@localhost:%s/xmlrpc-private' % ('intuser', 'intpass', server.port))
+        except:
+            print "Failure connecting to localhost:%s" % (server.port, )
+            serverCache.stopServer(serverIdx)
+            raise
         auth = cli.checkAuth()
         assert(auth.authorized)
         return cli

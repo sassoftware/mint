@@ -232,7 +232,8 @@ class MockedResponse(object):
 
     def read(self, amt = None):
         return self.data.read(amt)
-
+    def getheader(self, name, default=None):
+        return default
     def close(self):
         pass
 

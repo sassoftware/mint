@@ -1,8 +1,6 @@
 #!/usr/bin/python
 #
-# Copyright (c) 2009 rPath, Inc.
-#
-# All rights reserved.
+# Copyright (c) 2011 rPath, Inc.
 #
 
 import logging
@@ -11,7 +9,9 @@ import os
 import sys
 import urllib
 import urllib2
+from conary import conarycfg
 from conary.lib import digestlib
+from conary.lib.http import opener
 from lxml import etree as ET
 from lxml.builder import E
 from mint import config
@@ -56,8 +56,10 @@ def main():
 
 def pull(store, url, baseUrl):
     log.info("Pulling notices from RSS feed %s", url)
+    cfg = conarycfg.ConaryConfiguration(True)
+    op = opener.URLOpener(proxyMap=cfg.getProxyMap())
     try:
-        xmlStream = urllib.urlopen(url)
+        xmlStream = op.open(url)
     except:
         log.exception("Error fetching notices RSS feed:")
         return 1

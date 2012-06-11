@@ -71,13 +71,13 @@ class Name(Field):
     password = False
 
 class ContentSourceType(object):
-    __slots__ = [ 'proxies', '_fieldValues', ]
+    __slots__ = [ 'proxyMap', '_fieldValues', ]
     fields = []
     model = None
     _ContentSourceTypeName = None
 
-    def __init__(self, proxies = None):
-        self.proxies = proxies or {}
+    def __init__(self, proxyMap = None):
+        self.proxyMap = proxyMap
         self._fieldValues = dict((x.name, x())
             for x in self.__class__.fields)
 
@@ -105,8 +105,8 @@ class ContentSourceType(object):
     def getContentSourceTypeName(self):
         return self.__class__._ContentSourceTypeName
 
-    def getProxies(self):
-        return self.proxies
+    def getProxyMap(self):
+        return self.proxyMap
 
     def status(self, *args, **kw):
         raise NotImplementedError
@@ -121,7 +121,7 @@ class _RhnSourceType(ContentSourceType):
     def getDataSource(self):
         srcChannels = rpath_capsule_indexer.sourcerhn.SourceChannels(self.cfg)
         return rpath_capsule_indexer.sourcerhn.Source_RHN(srcChannels,
-            self.username, self.password, proxies = self.proxies)
+            self.username, self.password, proxyMap = self.proxyMap)
 
     def status(self):
         msg = "Cannot connect to this resource. Verify you have provided correct information."
@@ -163,7 +163,7 @@ class Satellite(_RhnSourceType):
         serverName = util.urlSplit(self.sourceUrl)[3]
         srcChannels = rpath_capsule_indexer.sourcerhn.SourceChannels(self.cfg)
         return rpath_capsule_indexer.sourcerhn.Source(srcChannels, self.name,
-            self.username, self.password, serverName, proxies = self.proxies)
+            self.username, self.password, serverName, proxyMap = self.proxyMap)
 
 class Proxy(Satellite):
     _ContentSourceTypeName =  'Red Hat Proxy'
@@ -176,7 +176,8 @@ class _RepositoryMetadataSourceType(ContentSourceType):
         url = "%s/%s" % (self.sourceUrl, self.repomdLabel)
         authUrl = mintutils.urlAddAuth(url, self.username, self.password)
         try:
-            src = sourceyum.YumRepositorySource(self.repomdLabel, authUrl)
+            src = sourceyum.YumRepositorySource(self.repomdLabel, authUrl,
+                    proxyMap=self.proxyMap)
             if src.timestamp is None:
                 return (False, False,
                     "Error validating source at url %s" % url)

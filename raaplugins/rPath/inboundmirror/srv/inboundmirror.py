@@ -16,6 +16,9 @@ class InboundMirror(rAASrvPlugin):
         mc.read(config.RBUILDER_CONFIG)
         mintauth = mc.authUser
         mintpass = mc.authPass
-        MIRROR_INBOUND_CMD = 'sudo -u apache bash -c "/usr/share/rbuilder/scripts/mirror-inbound http://%s:%s@localhost/xmlrpc-private/"' % (mintauth, mintpass)
+        MIRROR_INBOUND_CMD = (
+                '/usr/share/rbuilder/scripts/mirror-inbound '
+                '"http://%s:%s@localhost/xmlrpc-private/"' % (mintauth,
+                    mintpass))
         os.system(MIRROR_INBOUND_CMD)
 

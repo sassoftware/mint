@@ -14,6 +14,7 @@ SUBDIRS = anaconda_legacy
 all: default-all
 
 install: default-install
+	install -D -m0644 anaconda_first.png $(DESTDIR)/usr/share/anaconda/pixmaps/progress_first.png
 	install -D -m0644 anaconda_splash.png $(DESTDIR)/usr/share/anaconda/pixmaps/splash.png
 	install -D -m0644 bootloader_splash.png $(DESTDIR)/boot/extlinux/rbuilder_background.png
 	install -D -m0644 splashy_background.png $(DESTDIR)/usr/share/splashy/themes/rbuilder/background.png

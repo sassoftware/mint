@@ -14,6 +14,8 @@ import logging
 import os
 import time
 import weakref
+from collections import namedtuple
+from conary import callbacks
 from conary import conarycfg
 from conary import conaryclient
 from conary import dbstore
@@ -92,8 +94,20 @@ class RepositoryManager(object):
         Generate a sequence of L{RepositoryHandle}s matching a given
         query.
         """
+        return self._iterRepositories(whereClause, args, contentSources=True)
+
+    def _iterRepositories(self, whereClause, args, contentSources):
         if whereClause:
             whereClause = 'WHERE ' + whereClause
+        if contentSources:
+            sourceClause = """
+                EXISTS (
+                    SELECT * FROM PlatformsContentSourceTypes
+                    JOIN Platforms AS plat USING (platformId)
+                    WHERE plat.projectId = projectId
+                )"""
+        else:
+            sourceClause = "false"
 
         cu = self.db.cursor()
         cu.execute("""
@@ -101,15 +115,10 @@ class RepositoryManager(object):
                     EXISTS ( SELECT * FROM InboundMirrors
                         WHERE projectId = targetProjectId
                         ) AS localMirror,
-                    commitEmail, %s, url, authType, username, password,
-                    entitlement, EXISTS (
-                        SELECT * FROM PlatformsContentSourceTypes
-                            JOIN Platforms AS plat USING (platformId)
-                        WHERE plat.projectId = projectId) AS hasContentSources
+                    commitEmail, database, url, authType, username, password,
+                    entitlement, %s AS hasContentSources
                 FROM Projects LEFT JOIN Labels USING ( projectId )
-                %s ORDER BY projectId ASC""" % (
-                    (self.db.driver == 'mysql' and '`database`' or 'database'),
-                    whereClause),
+                %s ORDER BY projectId ASC""" % (sourceClause, whereClause),
                 *args)
 
         for row in cu:
@@ -151,6 +160,11 @@ class RepositoryManager(object):
             reposDB = self.reposDBCache.popitem()[1]
             reposDB.close()
 
+    def close_fork(self):
+        while self.reposDBCache:
+            reposDB = self.reposDBCache.popitem()[1]
+            reposDB.close_fork()
+
     def getServerProxy(self, fqdn, url=None, user=None, entitlement=None):
         """
         Get a generic XMLRPC server proxy for C{fqdn}, optionally using
@@ -169,7 +183,7 @@ class RepositoryManager(object):
             entitlements.addEntitlement('*', entitlement)
 
         cache = netclient.ServerCache(repMap, userMap,
-                entitlements=entitlements, proxies=self.cfg.proxy)
+                entitlements=entitlements, proxyMap=self.cfg.getProxyMap())
         return cache[fqdn]
 
     def getRepos(self, userId=None):
@@ -188,7 +202,6 @@ class RepositoryManager(object):
 
 
 class RepositoryHandle(object):
-    preloadSuffix = 'sql'
 
     def __init__(self, manager, projectInfo):
         self._manager = weakref.ref(manager)
@@ -229,7 +242,7 @@ class RepositoryHandle(object):
         return self._projectInfo['fqdn']
     @property
     def hasDatabase(self):
-        return self._projectInfo['database'] is not None
+        return (not self.isExternal) or self.isLocalMirror
     @property
     def isExternal(self):
         return bool(self._projectInfo['external'])
@@ -306,13 +319,13 @@ class RepositoryHandle(object):
 
         return driver, path
 
-    def getReposDB(self, skipCache=False):
+    def getReposDB(self):
         """
         Open and return a connection to the repository database. May use
         a cached connection.
         """
         params = self._getReposDBParams()
-        if params in self._manager().reposDBCache and not skipCache:
+        if params in self._manager().reposDBCache:
             db = self._manager().reposDBCache[params]
             db.reopen()
             if db.inTransaction(True):
@@ -320,8 +333,6 @@ class RepositoryHandle(object):
         else:
             driver, path = params
             db = dbstore.connect(path, driver)
-            if not skipCache:
-                self._manager().reposDBCache[params] = db
         return db
 
     @cached
@@ -514,10 +525,6 @@ class RepositoryHandle(object):
         for contDir in nscfg.contentsDir.split():
             util.mkdirChain(contDir)
 
-        # Check for a preload tarball.
-        if self.preload():
-            return
-
         # Now do the driver-specfic bits and initialize the schema.
         self._create()
         db = self.getReposDB()
@@ -536,11 +543,63 @@ class RepositoryHandle(object):
         """
         raise NotImplementedError
 
-    def restore(self, path):
+    def restore(self, path, replaceExisting=False, callback=None):
         """
         Load the repository database from the backup at C{path}.
         """
         raise NotImplementedError
+
+    def restoreBundle(self, path, replaceExisting=False, callback=None):
+        """Load a repository bundle (uncompressed tar with contents and
+        database dump).
+        """
+        if not callback:
+            callback = DatabaseRestoreCallback()
+        if len(self.contentsDirs) != 1:
+            raise RuntimeError("Cannot restore bundle when multiple contents "
+                    "stores are in use.")
+        workDir = os.path.dirname(os.path.normpath(self.contentsDirs[0]))
+        callback.unpackStarted(self.fqdn)
+        util.mkdirChain(workDir)
+        util.execute("tar -C '%s' -xf '%s'" % (workDir, path))
+
+        mdPath = os.path.join(workDir, 'metadata')
+        dumpPath = None
+        try:
+            # Parse and verify metadata
+            metadata = {}
+            for line in open(mdPath):
+                key, value = line.rstrip().split(None, 1)
+                metadata[key] = value
+
+            if metadata['serverName'].lower() != self.fqdn.lower():
+                raise RuntimeError("Bundle is for repository %s but this is %s"
+                        % (metadata['serverName'], self.fqdn))
+
+            if self.driver == 'pgpool':
+                expectType = 'postgresql'
+            else:
+                expectType = self.driver
+            if metadata['type'] != expectType:
+                raise RuntimeError("Wrong database type in bundle -- expected %s "
+                        "but got %s" % (expectType, metadata['type']))
+
+            # Restore database dump
+            dumpPath = os.path.join(workDir, metadata['database'])
+            if not os.path.exists(dumpPath):
+                raise RuntimeError("Invalid repository bundle -- %s is missing." %
+                        (dumpPath,))
+            self.restore(dumpPath, replaceExisting=replaceExisting,
+                    callback=callback)
+
+        finally:
+            # Clean up
+            try:
+                util.removeIfExists(mdPath)
+                if dumpPath:
+                    util.removeIfExists(dumpPath)
+            except:
+                log.exception("Error cleaning up temporary restore files:")
 
     def destroy(self):
         """
@@ -577,32 +636,6 @@ class RepositoryHandle(object):
         e.g. contents.
         """
         raise NotImplementedError
-
-    def preload(self):
-        """ Load contents and database from a compressed tarball on disk. """
-
-        workDir = os.path.dirname(os.path.normpath(self.contentsDirs[0]))
-        preloadPath = os.path.join(workDir, 'preload.tar.xz')
-        if not os.path.isfile(preloadPath):
-            return False
-
-        # Preloads with multiple content store dirs are not supported yet.
-        assert len(self.contentsDirs) == 1
-
-        log.info("Preloading repository %s from archive at %s", self.fqdn,
-                preloadPath)
-
-        # Extract contents and dump file.
-        util.execute("xzdec '%s' | tar -C '%s' -x" % (preloadPath, workDir))
-
-        # Restore and delete the dump file.
-        dumpPath = os.path.join(workDir, 'database.' + self.preloadSuffix)
-        self.restore(dumpPath)
-        os.unlink(dumpPath)
-
-        log.info("Preload of %s is complete", self.fqdn)
-
-        return True
 
     # Repository management
     @withNetServer
@@ -654,6 +687,7 @@ class RepositoryHandle(object):
 
 
 class SQLiteRepositoryHandle(RepositoryHandle):
+
     @property
     def _dbPath(self):
         return self.dbTuple[1]
@@ -666,10 +700,22 @@ class SQLiteRepositoryHandle(RepositoryHandle):
         if os.path.exists(self._dbPath):
             util.execute("sqlite3 '%s' .dump > '%s'" % (self._dbPath, path))
 
-    def restore(self, path):
-        self.drop()
-        if os.path.exists(path):
-            util.execute("sqlite3 '%s' < '%s'" % (self._dbPath, path))
+    def restore(self, path, replaceExisting=False, callback=None):
+        if not os.path.exists(path):
+            return
+        if os.path.exists(self._dbPath) and not replaceExisting:
+            raise RuntimeError("Repository database %s already exists" %
+                    (self._dbPath,))
+        tempFile = util.AtomicFile(self._dbPath)
+        util.execute("sqlite3 '%s' < '%s'" % (tempFile.name, path))
+        # This is racy, but the risk is crashing the old process, not
+        # corrupting the new one.
+        if os.path.exists(self._dbPath) and not replaceExisting:
+            tempFile.close()
+            raise RuntimeError("Repository database %s already exists" %
+                    (self._dbPath,))
+        util.removeIfExists(self._dbPath + '.journal')
+        tempFile.commit()
 
     def drop(self):
         if os.path.exists(self._dbPath):
@@ -677,81 +723,52 @@ class SQLiteRepositoryHandle(RepositoryHandle):
 
 
 class PostgreSQLRepositoryHandle(RepositoryHandle):
-    preloadSuffix = 'pgtar'
 
     @cached
-    def _getName(self):
-        return self.dbTuple[1].rsplit('/')[-1]
-
-    @cached
-    def _splitParams(self):
+    def _getParams(self):
         driver, path = self.dbTuple
-        host, user = 'localhost', 'postgres'
         if driver == 'pgpool':
             port = 6432
         else:
             port = 5432
-        if '/' in path:
-            host, database = path.rsplit('/', 1)
-            if '@' in host:
-                user, host = host.split('@', 1)
-            if ':' in host:
-                host, port = host.rsplit(':', 1)
-                port = int(port)
-        else:
-            database = path
-        return host, port, user, database
+        return ConnectString.parseDBStore(path, port=port)
 
     def _getControlConnection(self):
         "Return a connection to the control database."
-        driver, path = self.dbTuple
-        if '/' in path:
-            base = path.rsplit('/', 1)[0] + '/'
-        else:
-            base = ''
-
-        controlPath = base + 'postgres'
-        return dbstore.connect(controlPath, driver)
+        params = self._getParams()._replace(database='postgres')
+        return dbstore.connect(params.asDBStore(), self.driver)
 
     def _getBouncerConnection(self):
         """Return a connection to pgbouncer."""
-        driver, path = self.dbTuple
-
-        # Discard everything except the host/port
-        if '/' in path:
-            start = path.find('@')
-            end = path.find('/')
-            host = path[start + 1 : end]
-        else:
-            host = 'localhost:6432'
-
-        # Fill in the rest
+        params = self._getParams()._replace(user='pgbouncer',
+                database='pgbouncer')
         # NB: don't use the pgpool driver or it will try to interrogate
         # the admindb for schema information, which doesn't work.
-        bouncerPath = 'pgbouncer@%s/pgbouncer' % (host,)
-        return dbstore.connect(bouncerPath, 'postgresql')
+        return dbstore.connect(params.asDBStore(), 'postgresql')
 
-    def _dbExists(self, controlDb):
+    def _dbExists(self, controlDb, name):
         ccu = controlDb.cursor()
         ccu.execute("""SELECT COUNT(*) FROM pg_catalog.pg_database
-                WHERE datname = ?""", self._getName())
+                WHERE datname = ?""", name)
         return bool(ccu.fetchone()[0])
 
-    def _create(self, empty=False):
+    def _create(self, empty=False, dbName=None):
         """
         PostgreSQL-specific repository creation.
 
         This is currently used by C{restore} as well so make sure it doesn't
         create anything that would interfere with the restore process.
         """
-        user, dbName = self._splitParams()[2:]
+        params = self._getParams()
+        if dbName:
+            params = params._replace(database=dbName)
         controlDb = self._getControlConnection()
         ccu = controlDb.cursor()
 
-        if self._dbExists(controlDb):
+        if self._dbExists(controlDb, params.database):
             # Database exists
             log.error("PostgreSQL database %r already exists while "
-                    "creating project %r", dbName, self.shortName)
+                    "creating project %r", params.database, self.shortName)
             raise RepositoryAlreadyExists(self.shortName)
 
         extra = ''
@@ -759,33 +776,39 @@ class PostgreSQLRepositoryHandle(RepositoryHandle):
             # Clone template0 when restoring from a dump since the dump already
             # has all the prefab stuff like plpgsql.
             extra += ' TEMPLATE template0'
-        ccu.execute("CREATE DATABASE %s ENCODING 'UTF8'%s" % (dbName, extra))
+        ccu.execute("CREATE DATABASE %s ENCODING 'UTF8'%s" % (params.database,
+            extra))
 
-    def drop(self):
+    def _doBounce(self, bouncerDb, command):
+        # A little bit of trickery is needed to get around the fact that
+        # python-pgsql's primary API always uses prepared statements, which
+        # aren't supported by pgbouncer's admin interface.
+        bcu = bouncerDb.cursor()
+        bcu._cursor._source.query(command)
+
+    def drop(self, dbName=None):
+        params = self._getParams()
+        if dbName:
+            params = params._replace(database=dbName)
         controlDb = self._getControlConnection()
 
-        if not self._dbExists(controlDb):
+        if not self._dbExists(controlDb, params.database):
             return
 
-        name = self._getName()
-        bcu = None
-        if ':6432/' in self.dbTuple[1]:
+        bouncerDb = None
+        if params.port == 6432:
             # pgbouncer normally holds idle connections for 45 seconds. Our
             # version supports a custom KILL command that terminates all open
             # client and server connections to that database and prevents new
-            # ones until the following RESUME. A little bit of trickery is
-            # needed to get around the fact that python-pgsql's primary API
-            # always uses prepared statements, which aren't supported by
-            # pgbouncer's admin interface.
+            # ones until the following RESUME.
             bouncerDb = self._getBouncerConnection()
-            bcu = bouncerDb.cursor()
-            bcu._cursor._source.query("KILL " + name)
+            self._doBounce(bouncerDb, "KILL " + params.database)
 
         try:
             ccu = controlDb.cursor()
             for n in range(5):
                 try:
-                    ccu.execute("DROP DATABASE %s" % (name,))
+                    ccu.execute("DROP DATABASE %s" % (params.database,))
                 except CursorError, err:
                     if 'is being accessed by other users' not in err.msg:
                         raise
@@ -794,43 +817,164 @@ class PostgreSQLRepositoryHandle(RepositoryHandle):
                     break
             else:
                 log.error("Could not drop repository database %r because a "
-                        "connection is still open -- continuing.", name)
+                        "connection is still open -- continuing.",
+                        params.database)
 
         finally:
-            if bcu:
-                bcu._cursor._source.query("RESUME " + name)
+            if bouncerDb:
+                self._doBounce(bouncerDb, "RESUME " + params.database)
 
     def dump(self, path):
+        params = self._getParams()
         controlDb = self._getControlConnection()
 
-        if self._dbExists(controlDb):
+        if self._dbExists(controlDb, params.database):
             # TODO: genericize
             util.execute("pg_dump -U postgres -p 5439 -f '%s' '%s'"
-                    % (path, self._getName()))
+                    % (path, params.database))
 
-    def restore(self, path):
-        dbName = self._getName()
+    def restore(self, path, replaceExisting=False, callback=None):
+        params = self._getParams()
         controlDb = self._getControlConnection()
+        if self._dbExists(controlDb, params.database) and not replaceExisting:
+            raise RuntimeError("Repository database %s already exists" %
+                    (params.database,))
+        if not callback:
+            callback = DatabaseRestoreCallback()
+
+        # Assign a temporary database name for the restore process.
+        tmpName = '_tmp_%s_%s' % (params.database, os.urandom(6).encode('hex'))
+        tmpParams = params._replace(database=tmpName)
+        if tmpParams.port == 6432:
+            # pg_restore 9.0 does not work with
+            # pgbouncer 1.3.1+rpath_8fc940fbca2a
+            tmpParams = tmpParams._replace(port=5439)
+
+        # Restore into a temporary database
+        self._create(empty=True, dbName=tmpName)
+        callback.restoreStarted(self.fqdn)
+
+        try:
+            self._restore(path, params, tmpParams, controlDb, replaceExisting,
+                    callback)
+        except:
+            failure = util.SavedException()
+            callback.restoreFailed(self.fqdn, failure)
+            try:
+                if self._dbExists(controlDb, tmpParams.database):
+                    self.drop(tmpParams.database)
+            except:
+                log.exception("Failed to drop temporary database %s:", tmpName)
+            failure.throw()
+
+    def _restore(self, path, params, tmpParams, controlDb, replaceExisting,
+            callback):
+        tmpName = tmpParams.database
+        cxnArgs = "-h '%s' -p '%s' -U postgres" % (tmpParams.host,
+                tmpParams.port)
+
+        if path.endswith('.pgtar') or path.endswith('.pgdump'):
+            # Dumps from postgres < 9.0 force-create plpgsql, which already
+            # exists in template0 in >= 9.0. But dumps from the latter
+            # still reference it, just as CREATE OR REPLACE. The most
+            # straightforward workaround is thus to drop it beforehand, and
+            # let pg_restore put it back.
+            util.execute("droplang %s plpgsql '%s'" % (cxnArgs, tmpName))
+
+            util.execute("pg_restore %s --single-transaction "
+                    "-d '%s' '%s'" % (cxnArgs, tmpName, path))
+        else:
+            # Flat file dumps aren't run with --single-transaction so
+            # duplicate plpgsql isn't fatal.
+            util.execute("psql %s -f '%s' '%s' >/dev/null"
+                    % (cxnArgs, path, tmpName))
+
+        # Analyze
+        db = dbstore.connect(tmpParams.asDBStore(), 'postgresql')
+        db.analyze()
+        db.close()
+
+        # Rename into place
         ccu = controlDb.cursor()
+        replacedName = None
+        if self._dbExists(controlDb, params.database):
+            if not replaceExisting:
+                raise RuntimeError("Repository database %s already exists" %
+                        (params.database,))
+            # Rename the old database instead of dropping because it will be
+            # much faster.
+            replacedName = '_removed_%s_%s' % (params.database,
+                    os.urandom(6).encode('hex'))
+            callback.restoreRenaming(self.fqdn)
+            bouncerDb = self._getBouncerConnection()
+            self._doBounce(bouncerDb, "KILL " + params.database)
+            ccu.execute('ALTER DATABASE "%s" RENAME TO "%s"' %
+                    (params.database, replacedName))
 
-        self.drop()
-        if os.path.exists(path):
-            log.info("Restoring database dump for project %s", self.fqdn)
-            self._create(empty=True)
+        ccu.execute('ALTER DATABASE "%s" RENAME TO "%s"' % (tmpName,
+            params.database))
+        callback.restoreCompleted(self.fqdn)
 
-            host, port, user, database = self._splitParams()
-            cxnArgs = "-h '%s' -p '%s' -U postgres" % (host, port)
+        callback.cleanupStarted(self.fqdn)
+        if replacedName:
+            self._doBounce(bouncerDb, "RESUME " + params.database)
+            try:
+                bouncerDb.close()
+                ccu.execute('DROP DATABASE "%s"' % (replacedName,))
+            except:
+                log.exception("Failed to drop old database %s; continuing:",
+                        replacedName)
+        callback.cleanupCompleted(self.fqdn)
 
-            if path.endswith('.pgtar'):
-                util.execute("pg_restore %s --single-transaction "
-                        "-d '%s' '%s'" % (cxnArgs, database, path))
-            else:
-                util.execute("psql %s -f '%s' '%s' >/dev/null"
-                        % (cxnArgs, path, dbName))
 
-            db = self.getReposDB(skipCache=True)
-            db.analyze()
-            db.close()
+class ConnectString(namedtuple('ConnectString', 'user host port database')):
+
+    @classmethod
+    def parseDBStore(cls, val, user='postgres', host='localhost', port=5432):
+        if '/' in val:
+            host, database = val.rsplit('/', 1)
+            if '@' in host:
+                user, host = host.split('@', 1)
+            if ':' in host:
+                host, port = host.rsplit(':', 1)
+                port = int(port)
+        else:
+            database = val
+        return cls(user, host, port, database)
+
+    def asDBStore(self):
+        return '%s@%s:%s/%s' % (self.user, self.host, self.port, self.database)
+
+
+class DatabaseRestoreCallback(callbacks.Callback):
+
+    def unpackStarted(self, fqdn):
+        self._info("Unpacking contents for project %s", fqdn)
+
+    def restoreStarted(self, fqdn):
+        self._info("Restoring database dump for project %s", fqdn)
+
+    def restoreFailed(self, fqdn, failure):
+        self._error("Error restoring project %s, attempting to clean up", fqdn)
+
+    def restoreRenaming(self, fqdn):
+        self._info("Replacing database for project %s; this will terminate "
+                "any active connections to that repository.", fqdn)
+
+    def restoreCompleted(self, fqdn):
+        self._info("Finished restoring database for project %s", fqdn)
+
+    def cleanupStarted(self, fqdn):
+        self._info("Cleaning up old database for project %s", fqdn)
+
+    def cleanupCompleted(self, fqdn):
+        self._info("Finished cleanup of project %s", fqdn)
+
+    def _info(self, message, *args):
+        log.info(message, *args)
+
+    def _error(self, message, *args):
+        log.error(message, *args)
 
 
 class MultiShimServerCache(object):
@@ -840,9 +984,12 @@ class MultiShimServerCache(object):
     rBuilder, and will use the credentials in the database for any external
     projects.
     """
-    def __init__(self, manager, userId=None):
+    def __init__(self, manager, userId=None, proxyMap=None):
         self.manager = weakref.ref(manager)
         self.userId = userId
+        # NetworkRepositoryClient needs this.
+        self.proxyMap = proxyMap
+
         self.cache = {}
 
     @staticmethod
@@ -879,7 +1026,8 @@ class MultiShimNetClient(shimclient.ShimNetClient):
     def __init__(self, manager, userId=None):
         repMap = conarycfg.RepoMap()
         userMap = conarycfg.UserInformation()
+        proxyMap = manager.cfg.getProxyMap()
         netclient.NetworkRepositoryClient.__init__(self, repMap, userMap,
-                proxy=manager.cfg.proxy)
+                proxyMap=proxyMap)
 
-        self.c = MultiShimServerCache(manager, userId)
+        self.c = MultiShimServerCache(manager, userId, proxyMap=proxyMap)
