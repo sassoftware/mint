@@ -5,6 +5,7 @@
 #
 
 import os
+import exceptions
 
 from conary import constants as conaryConstants
 from rmake import constants as rmakeConstants
@@ -65,7 +66,15 @@ class RbuilderRestServer(RestController):
                                      proddefSchemaVersion=proddefSchemaVersion)
 
     def url(self, request, *args, **kw):
-        result = RestController.url(self, request, *args, **kw)
+        result = None
+        try:
+            result = RestController.url(self, request, *args, **kw)
+        except exceptions.KeyError:
+            # workaround to be able to return URLs linking to Django
+            # which are hard coded string return values from the
+            # get_absolute_url function
+            return ''.join(args) 
+
         if not request.extension:
             return result
         if result[-1] == '/':

@@ -1,0 +1,69 @@
+<?xml version="1.0" encoding="utf-8"?>
+<django-objects version="1.0">
+  <object pk="2" model="projects.project">
+    <field type="CharField" name="hostname">yourmomiswatching</field>
+    <field type="CharField" name="name">porkisthemichaeljacksonofbeef</field>
+    <field type="CharField" name="namespace">meatheaven101</field>
+    <field type="CharField" name="domain_name">meatXample.com</field>
+    <field type="CharField" name="short_name">morbeef</field>
+    <field type="CharField" name="project_url">www.meatXample.com/beefcake</field>
+    <field type="CharField" name="repository_hostname">itsa beefa cake</field>
+    <field type="TextField" name="description">wheres the beef</field>
+    <field type="CharField" name="project_type">Appliance</field>
+    <field type="CharField" name="commit_email">beefcake@meatxample.com</field>
+    <field type="BooleanField" name="backup_external">0</field>
+    <field type="DecimalField" name="created_date">123</field>
+    <field type="DecimalField" name="modified_date">132</field>
+    <field type="BooleanField" name="hidden">0</field>
+    <field to="users.user" name="created_by" rel="ManyToOneRel"><None></None></field>
+    <field type="BooleanField" name="external">0</field>
+    <field type="BooleanField" name="disabled">0</field>
+    <field type="BooleanField" name="is_appliance">1</field>
+    <field type="CharField" name="version">meatapplianceV1</field>
+    <field type="CharField" name="database">sqlite neatmeatdb</field>
+  </object>
+  <object pk="3" model="projects.project">
+    <field type="CharField" name="hostname">hostname1</field>
+    <field type="CharField" name="name">name1</field>
+    <field type="CharField" name="namespace">namespace1</field>
+    <field type="CharField" name="domain_name">example.com</field>
+    <field type="CharField" name="short_name">example</field>
+    <field type="CharField" name="project_url">www.example.com/phoo</field>
+    <field type="CharField" name="repository_hostname">hello.world</field>
+    <field type="TextField" name="description">random sample data</field>
+    <field type="CharField" name="project_type">Appliance</field>
+    <field type="CharField" name="commit_email">myemail@rpath.com</field>
+    <field type="BooleanField" name="backup_external">0</field>
+    <field type="DecimalField" name="created_date">123</field>
+    <field type="DecimalField" name="modified_date">132</field>
+    <field type="BooleanField" name="hidden">0</field>
+    <field to="users.user" name="created_by" rel="ManyToOneRel"><None></None></field>
+    <field type="BooleanField" name="external">0</field>
+    <field type="BooleanField" name="disabled">0</field>
+    <field type="BooleanField" name="is_appliance">1</field>
+    <field type="CharField" name="version">applianceV2</field>
+    <field type="CharField" name="database">sqlite postgresdb</field>
+  </object>
+  <object pk="4" model="projects.project">
+    <field type="CharField" name="hostname">hostname2</field>
+    <field type="CharField" name="name">name2</field>
+    <field type="CharField" name="namespace">namespace2</field>
+    <field type="CharField" name="domain_name">example.com</field>
+    <field type="CharField" name="short_name">example2</field>
+    <field type="CharField" name="project_url">www.example.com/phoo</field>
+    <field type="CharField" name="repository_hostname">hello.world</field>
+    <field type="TextField" name="description">random sample data</field>
+    <field type="CharField" name="project_type">Appliance</field>
+    <field type="CharField" name="commit_email">myemail@rpath.com</field>
+    <field type="BooleanField" name="backup_external">0</field>
+    <field type="DecimalField" name="created_date">123</field>
+    <field type="DecimalField" name="modified_date">132</field>
+    <field type="BooleanField" name="hidden">0</field>
+    <field to="users.user" name="created_by" rel="ManyToOneRel"><None></None></field>
+    <field type="BooleanField" name="external">0</field>
+    <field type="BooleanField" name="disabled">0</field>
+    <field type="BooleanField" name="is_appliance">1</field>
+    <field type="CharField" name="version">applianceV3</field>
+    <field type="CharField" name="database">sqlite postgresdb</field>
+  </object>
+</django-objects>

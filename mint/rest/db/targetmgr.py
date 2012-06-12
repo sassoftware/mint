@@ -23,13 +23,25 @@ class TargetManager(manager.Manager):
         for row in cu:
             return row[0]
 
+    def getTargetTypeId(self, targetType):
+        cu = self.db.cursor()
+        cu.execute("SELECT target_type_id FROM target_types WHERE name=?",
+            targetType)
+        row = cu.fetchone()
+        if row:
+            return row[0]
+
     def getTargetId(self, targetType, targetName):
         cu = self.db.cursor()
         cu.execute("""
-            SELECT targetId FROM Targets
-            WHERE targetType = ? AND targetName = ?""", targetType, targetName)
-        for row in cu:
-            return row[0]
+            SELECT targetId
+              FROM Targets AS t
+              JOIN target_types AS tt USING (target_type_id)
+             WHERE tt.name = ?
+               AND t.name=?""", targetType, targetName)
+        res = cu.fetchone()
+        if res:
+            return res[0]
 
     def addTarget(self, targetType, targetName, targetData):
         targetId = self._addTarget(targetType, targetName)
@@ -37,55 +49,106 @@ class TargetManager(manager.Manager):
         self._addTargetQuerySet(targetId, targetName, targetType)
 
     def deleteTarget(self, targetType, targetName):
+        targetTypeId = self.getTargetTypeId(targetType)
+        if targetTypeId is None:
+            return
         cu = self.db.cursor()
-        cu.execute("DELETE FROM Targets WHERE targetType=? AND targetName=?",
-            targetType, targetName)
+        cu.execute("DELETE FROM Targets WHERE target_type_id=? AND name=?",
+            targetTypeId, targetName)
 
     def _addTarget(self, targetType, targetName):
         cu = self.db.cursor()
+        targetTypeId = self.getTargetTypeId(targetType)
+        if targetTypeId is None:
+            raise mint_error.TargetMissing(
+                    "Target type '%s' does not exist", targetType)
         targetId = self.getTargetId(targetType, targetName)
         if targetId:
             raise mint_error.TargetExists( \
                     "Target named '%s' of type '%s' already exists",
                     targetName, targetType)
-        cu.execute("INSERT INTO Targets (targetType, targetName) VALUES(?, ?)", targetType, targetName)
+        zoneId = self.getLocalZone()
+        cu.execute("INSERT INTO Targets (target_type_id, name, description, zone_id) VALUES(?, ?, ?, ?)",
+            targetTypeId, targetName, targetName, zoneId)
+        self.db.commit()
         return cu.lastid()
+
+    def getLocalZone(self):
+        cu = self.db.cursor()
+        cu.execute("SELECT zone_id FROM inventory_zone WHERE name = ?",
+            "Local rBuilder")
+        row = cu.fetchone()
+        if row:
+            return row[0]
+        raise mint_error.ServerError("Local zone not found")
 
     def _addTargetData(self, targetId, targetData):
         cu = self.db.cursor()
         # perhaps check the id to be certain it's unique
         for name, value in targetData.iteritems():
             value = json.dumps(value)
-            cu.execute("INSERT INTO TargetData VALUES(?, ?, ?)",
+            cu.execute("INSERT INTO TargetData (targetId, name, value) VALUES(?, ?, ?)",
                     targetId, name, value)
 
     def _addTargetQuerySet(self, targetId, targetName, targetType):
-        from mint.django_rest.rbuilder.manager import rbuildermanager
-        from mint.django_rest.rbuilder.querysets import models
-        log.info("Creating a new query set for target %s." % targetName)
-        filterEntry, created = models.FilterEntry.objects.get_or_create(
-            field='target.targetid', operator='EQUAL', value=targetId)
-        filterEntry.save()
+        # Ideally we would like to handle this from django, but once we
+        # add the target in restlib, the db is locked, so django can't
+        # do anything
+
         querySetName = "All %s systems (%s)" % (targetName, targetType)
-        querySet, created = models.QuerySet.objects.get_or_create(name=querySetName, 
-            description=querySetName, resource_type='system')
-        if not created:
+
+        cu = self.db.cursor()
+
+        cu.execute("SELECT query_set_id FROM querysets_queryset WHERE name=?",
+            querySetName)
+        rows = cu.fetchall()
+        if not rows:
+            log.info("Creating a new query set for target %s." % targetName)
+            cu.execute("""
+                INSERT INTO querysets_queryset
+                (name, description, resource_type, created_date, modified_date)
+                VALUES (?, ?, ?, current_timestamp, current_timestamp)""",
+                querySetName, querySetName, 'system')
+            querySetId = cu.lastrowid
+        else:
             log.info("Already a query set named %s, not creating a new one." %
                 querySetName)
-            return
-        querySet.filter_entries.add(filterEntry)
-        rbuilderManager = rbuildermanager.RbuilderManager(self.cfg, 
-            self.auth.username)
-        querySet.can_modify = False
-        return rbuilderManager.addQuerySet(querySet)
+            querySetId = rows[0][0]
+
+        feField = 'target.target_id'
+        feOperator = 'EQUAL'
+        feValue = str(targetId)
+        cu.execute("""SELECT filter_entry_id FROM querysets_filterentry
+            WHERE field=? AND operator=? AND value=?""",
+            feField, feOperator, feValue)
+        rows = cu.fetchall()
+        if not rows:
+            cu.execute("""
+                INSERT INTO querysets_filterentry (field, operator, value)
+                VALUES (?, ?, ?)""",
+                feField, feOperator, feValue)
+            filterEntryId = cu.lastrowid
+        else:
+            filterEntryId = rows[0][0]
+
+        cu.execute("""SELECT * FROM querysets_queryset_filter_entries
+            WHERE queryset_id = ? AND filterentry_id = ?""",
+            querySetId, filterEntryId)
+        if not cu.fetchall():
+            cu.execute("""
+                INSERT INTO querysets_queryset_filter_entries
+                    (queryset_id, filterentry_id)
+                VALUES (?, ?)""",
+                querySetId, filterEntryId)
 
     def getTargetData(self, targetType, targetName):
         cu = self.db.cursor()
         cu.execute("""
             SELECT td.name, td.value
-              FROM Targets
-              JOIN TargetData AS td USING (targetId)
-             WHERE targetType = ? AND targetName = ?
+              FROM Targets AS t
+              JOIN target_types USING (target_type_id)
+              JOIN TargetData AS td ON td.targetId = t.targetId
+             WHERE target_types.name = ? AND t.name = ?
         """, targetType, targetName)
         return dict((k, self._stripUnicode(json.loads(v)))
             for (k, v) in cu)
@@ -99,28 +162,30 @@ class TargetManager(manager.Manager):
     def getConfiguredTargetsByType(self, targetType):
         cu = self.db.cursor()
         cu.execute("""
-            SELECT Targets.targetName, TargetData.name, TargetData.value
-              FROM Targets
-              JOIN TargetData USING (targetId)
-             WHERE Targets.targetType = ?
+            SELECT t.name AS targetName, t.description AS targetDescription, td.name, td.value
+              FROM Targets AS t
+              JOIN target_types USING (target_type_id)
+              JOIN TargetData AS td ON td.targetId = t.targetId
+             WHERE target_types.name = ?
         """, targetType)
         ret = {}
-        for targetName, key, value in cu:
-            ret.setdefault(targetName, {})[key] = self._stripUnicode(
-                json.loads(value))
+        for targetName, targetDescription, key, value in cu:
+            targetConfig = ret.setdefault(targetName, {})
+            targetConfig['description'] = targetDescription
+            targetConfig[key] = self._stripUnicode(json.loads(value))
         return ret
 
     def getTargetsForUser(self, targetType, userName):
         cu = self.db.cursor()
         cu.execute("""
-            SELECT Targets.targetName,
-                   tc.credentials
-              FROM Targets
-              JOIN TargetUserCredentials AS tuc USING (targetId)
+            SELECT t.name AS targetName, tc.credentials
+              FROM Targets t
+              JOIN target_types USING (target_type_id)
+              JOIN TargetUserCredentials AS tuc ON tuc.targetId = t.targetId
               JOIN Users USING (userId)
               JOIN TargetCredentials AS tc ON
                   (tuc.targetCredentialsId=tc.targetCredentialsId)
-             WHERE Targets.targetType = ?
+             WHERE target_types.name = ?
                AND Users.username = ?
         """, targetType, userName)
         userCreds = {}
@@ -136,18 +201,19 @@ class TargetManager(manager.Manager):
         targetConfigs = self.getConfiguredTargetsByType(targetType)
         cu = self.db.cursor()
         cu.execute("""
-            SELECT Targets.targetName,
+            SELECT t.name AS targetName,
                    tc.credentials,
                    tc.targetCredentialsId,
                    Users.username,
                    Users.userId
-              FROM Targets
-              JOIN TargetUserCredentials AS tuc USING (targetId)
+              FROM Targets t
+              JOIN target_types USING (target_type_id)
+              JOIN TargetUserCredentials AS tuc ON tuc.targetId = t.targetId
               JOIN Users USING (userId)
               JOIN TargetCredentials AS tc ON
                   (tuc.targetCredentialsId=tc.targetCredentialsId)
-             WHERE Targets.targetType = ?
-             ORDER BY Users.userId, targetName
+             WHERE target_types.name = ?
+             ORDER BY Users.userId, t.name
         """, targetType)
         ret = []
         for targetName, creds, credsId, userName, userId in cu:
@@ -266,8 +332,9 @@ class TargetManager(manager.Manager):
               JOIN TargetCredentials AS creds USING (targetCredentialsId)
               JOIN Targets ON
                 (Targets.targetId=TargetUserCredentials.targetId)
-             WHERE Targets.targetType = ?
-               AND Targets.targetName = ?
+              JOIN target_types USING (target_type_id)
+             WHERE target_types.name = ?
+               AND Targets.name = ?
                AND Users.username = ?
         """, targetType, targetName, userName)
         return self._extractUserCredentialsFromCursor(cu)
@@ -279,8 +346,9 @@ class TargetManager(manager.Manager):
               FROM TargetCredentials AS creds
               JOIN TargetUserCredentials AS uc USING (targetCredentialsId)
               JOIN Targets USING (targetId)
-             WHERE Targets.targetType = ?
-               AND Targets.targetName = ?
+              JOIN target_types USING (target_type_id)
+             WHERE target_types.name = ?
+               AND Targets.name = ?
                AND uc.userId = ?
         """, targetType, targetName, userId)
         return self._extractUserCredentialsFromCursor(cu)

@@ -361,8 +361,6 @@ class WebPageTest(mint_rephelp.WebRepositoryHelper):
                               'externalPass': 'mirrorpass'})
 
         self.failUnlessEqual(client.getInboundMirrors(), [])
-        self.failUnlessEqual(client.translateProjectFQDN('rpath' + MINT_PROJECT_DOMAIN),
-            'rpath' + MINT_PROJECT_DOMAIN)
 
     def testExternalToMirroredProject(self):
         # mainly make sure that user-entered settings are preserved on the edit
@@ -552,19 +550,6 @@ class WebPageTest(mint_rephelp.WebRepositoryHelper):
         # make sure we get a real pdf
         page = page.postForm(1, self.post, {'reportName': 'site_summary'})
         assert(page.body.startswith('%PDF-1'))
-
-    def testSelections(self):
-        client, userId = self.quickMintAdmin('adminuser', 'adminpass')
-        self.webLogin('adminuser', 'adminpass')
-
-        data = dict(name='name', link='link', rank='1', op='set')
-        page = self.fetch('/admin/addSelection', postdata = data)
-        assert('Manage Front Page Selections' in page.body)
-
-        x = client.getFrontPageSelection()
-        page = self.fetch('/admin/deleteSelection',
-            postdata = {'itemId': str(x[0]['itemId'])})
-        assert('Manage Front Page Selections' in page.body)
 
     def testAddOutboundMirror(self):
         '''

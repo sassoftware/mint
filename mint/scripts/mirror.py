@@ -26,7 +26,7 @@ class MirrorScript(scriptlibrary.SingletonScript):
     args = None
 
     def handle_args(self):
-        usage = "%prog [options] rbuilder-xml-rpc-url"
+        usage = "%prog [options]"
         op = optparse.OptionParser(usage=usage)
         op.add_option("-c", "--rbuilder-config",
                 dest = "cfgPath", default = None,
@@ -50,9 +50,6 @@ class MirrorScript(scriptlibrary.SingletonScript):
                 help = "show how mirrorRepository would be called "
                        "(don't actually mirror)")
         (self.options, self.args) = op.parse_args()
-        if len(self.args) < 1:
-            op.error("missing URL to rBuilder XML-RPC interface")
-            return False
         # read the configuration
         cfg = config.MintConfig()
         if self.options.cfgPath:
@@ -60,6 +57,11 @@ class MirrorScript(scriptlibrary.SingletonScript):
         else:
             cfg.read(self.cfgPath)
         self.setConfig(cfg)
+        if self.args:
+            self.mintUrl = self.args[0]
+        else:
+            self.mintUrl = 'http://%s:%s@localhost/xmlrpc-private/' % (
+                    cfg.authUser, cfg.authPass)
         return True
 
     def _doMirror(self, mirrorCfg, sourceRepos, targetRepos, fullSync = False):

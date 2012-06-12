@@ -115,20 +115,18 @@ class ImagesTest(restbase.BaseRestTest):
 </image>""" % dict(productVersion=productVersion)
 
 
-        from rpath_repeater import client as repclient
-        from rpath_repeater import models
-        class MockRepeaterClient(repclient.RepeaterClient):
+        from mint.image_gen.upload import client as rclient
+        class MockRClient(rclient.UploadClient):
             calls = []
-            def download_images(slf, *args, **kwargs):
+            def __init__(self, *args, **kwargs):
+                pass
+            def downloadImages(slf, *args, **kwargs):
                 slf.calls.append((args, kwargs))
                 return 'uuid', 'job'
-            Image = models.Image
-            ImageFile = models.ImageFile
-            ImageMetadata = models.ImageMetadata
 
-        def mockGetRepeaterClient():
-            return MockRepeaterClient()
-        self.mock(db.imageMgr, "getRepeaterClient", mockGetRepeaterClient)
+        def mockGetUploaderClient():
+            return MockRClient()
+        self.mock(db.imageMgr, "getUploaderClient", mockGetUploaderClient)
 
         req, img = client.call('POST', 'products/%s/images' % hostname, imageXml)
         self.failUnlessEqual(img.stage, "Development")
@@ -136,18 +134,16 @@ class ImagesTest(restbase.BaseRestTest):
         self.failUnlessEqual(str(img.troveVersion), '/local@local:COOK/1-1-1')
         self.failUnlessEqual(str(img.troveFlavor), 'is: x86')
 
-        self.failUnlessEqual(len(MockRepeaterClient.calls), 1)
-        rcargs, rckwargs = MockRepeaterClient.calls[0]
+        self.failUnlessEqual(len(MockRClient.calls), 1)
+        rcargs, rckwargs = MockRClient.calls[0]
         self.failUnlessEqual(rckwargs, {})
 
-        image, statusReportUrl, putFilesUrl = rcargs
+        image, baseUrl = rcargs
         self.failUnlessEqual(image.architecture, 'x86')
-        self.failUnlessEqual(image.metadata.cost, 'sdfg')
+        self.failUnlessEqual(image.metadata['cost'], 'sdfg')
 
-        self.failUnlessEqual(statusReportUrl.path,
-            '/api/products/createdproject/images/4/status')
-        self.failUnlessEqual(putFilesUrl.path,
-            '/api/products/createdproject/images/4/files')
+        self.failUnlessEqual(baseUrl.path,
+            '/api/products/createdproject/images/5/')
 
     def testGetReleases(self):
         return self._testGetReleases()
@@ -190,7 +186,7 @@ class ImagesTest(restbase.BaseRestTest):
     <creator href="http://localhost:8000/api/users/adminuser">adminuser</creator>
     <timeCreated></timeCreated>
     <shouldMirror>false</shouldMirror>
-    <imageCount>2</imageCount>
+    <imageCount>3</imageCount>
   </release>
 </releases>
 """
@@ -198,7 +194,7 @@ class ImagesTest(restbase.BaseRestTest):
             txt = re.sub("<%s>.*</%s>" % (pat, pat),
              "<%s></%s>" % (pat, pat),
             txt)
-        self.failUnlessEqual(txt, 
+        self.assertXMLEquals(txt,
             exp % dict(server = 'localhost', port = '8000'))
 
         # These tests are very expensive, so cram the image test here as well
@@ -286,6 +282,43 @@ class ImagesTest(restbase.BaseRestTest):
     </files>
     <baseFileName>testproject-1-</baseFileName>
   </image>
+  <image id="http://localhost:8000/api/products/testproject/images/3">
+    <imageId>3</imageId>
+    <hostname>testproject</hostname>
+    <release href="http://localhost:8000/api/products/testproject/releases/1">Release Name</release>
+    <imageType>vmwareEsxImage</imageType>
+    <imageTypeName>VMware(R) ESX/VCD Virtual Appliance</imageTypeName>
+    <name>Image 3 vmware esx</name>
+    <architecture></architecture>
+    <troveName>group-foo</troveName>
+    <troveVersion>/testproject.rpath.local2@yournamespace:testproject-1.0-devel/1-1-1</troveVersion>
+    <trailingVersion>1-1-1</trailingVersion>
+    <troveFlavor></troveFlavor>
+    <released>true</released>
+    <published>false</published>
+    <version href="http://localhost:8000/api/products/testproject/versions/1.0">1.0</version>
+    <stage href="http://localhost:8000/api/products/testproject/versions/1.0/stages/Development">Development</stage>
+    <creator href="http://localhost:8000/api/users/adminuser">adminuser</creator>
+    <timeCreated></timeCreated>
+    <buildCount>0</buildCount>
+    <buildLog href="http://localhost:8000/api/products/testproject/images/3/buildLog"/>
+    <imageStatus id="http://localhost:8000/api/products/testproject/images/3/status">
+      <code>-1</code>
+      <message></message>
+      <isFinal>false</isFinal>
+    </imageStatus>
+    <files id="http://localhost:8000/api/products/testproject/images/3/files">
+      <file>
+        <fileId>3</fileId>
+        <title>Image File 3</title>
+        <size>3072</size>
+        <sha1>77de68daecd823babbb58edb1c8e14d7106e83bb</sha1>
+        <fileName>imagefile_3.iso</fileName>
+        <url urlType="0">http://localhost:8000/downloadImage?fileId=3&amp;urlType=0</url>
+      </file>
+    </files>
+    <baseFileName>testproject-1-</baseFileName>
+  </image>
 </images>
 """
 
@@ -363,6 +396,68 @@ class ImagesTest(restbase.BaseRestTest):
                 for x in resp.files ],
             exp)
 
+    def testSetFilesRecomputeTargetDeployableImages(self):
+        userName = 'JeanValjean'
+        self.createUser(userName, admin = False)
+
+        targetType = 'vmware'
+        targetName = 'mytarget'
+        targetData = dict(alias='my target alias')
+
+        db = self.openMintDatabase(createRepos=False)
+        tmgr = db.targetMgr
+        tmgr.addTarget(targetType, targetName, targetData)
+
+        credentials = dict(username = 'aaa', password='bbb')
+        # No need to run the target import script
+        tmgr.auth.isAdmin = False
+        tmgr.setTargetCredentialsForUser(targetType, targetName, userName,
+            credentials)
+        db.commit()
+
+        client = self.getRestClient(username='adminuser')
+        token = self._setOutputToken(3)
+
+        headers = {
+                'content-type': 'text/plain',
+                'x-rbuilder-outputtoken': token,
+                }
+        from rmake3.lib import uuid
+        sha1 = str(uuid.uuid4())
+        data = """\
+<files>
+  <file title="title1" size="10" sha1="%s" fileName="imagefile_1.ova" />
+</files>
+""" % sha1
+        resp = client.call('PUT', 'products/testproject/images/3/files',
+                data, headers=headers)[1]
+
+        exp = [ ('title1', 10, sha1, 'imagefile_1.ova') ]
+        self.failUnlessEqual(
+            [ (x.title, x.size, x.sha1, x.fileName)
+                for x in resp.files ],
+            exp)
+        # Set the image status, this is what triggers the recomputation
+        # of deployable images
+        data = """\
+<imageStatus code="%d" message="%s" />
+""" % (jobstatus.FINISHED, jobstatus.statusNames[jobstatus.FINISHED])
+        url = 'products/testproject/images/3/status'
+        resp = client.call('PUT', url, data, headers=headers)[1]
+        self.failUnlessEqual(resp.code, jobstatus.FINISHED)
+
+        # Make sure we have something in the db
+        cu = db.cursor()
+        cu.execute("""
+            SELECT t.name
+              FROM targets AS t
+              JOIN target_deployable_image AS tdi ON (t.targetid = tdi.target_id)
+              JOIN buildfiles AS bf ON (tdi.file_id = bf.fileid)
+             WHERE bf.buildid = ?
+               AND bf.sha1 = ?""", 3, sha1)
+        row = cu.fetchone()
+        self.failUnlessEqual(row[0], 'mytarget')
+
     def testSetFilesForImagePushToRepo(self):
         client = self.getRestClient(username='adminuser')
         token = self._setOutputToken(1)
@@ -398,7 +493,7 @@ class ImagesTest(restbase.BaseRestTest):
             fqdn)
         trvTup = repos.findTrove(label, ("image-testproject:source", None, None))[0]
         self.failUnlessEqual(str(trvTup[1]),
-            '/testproject.rpath.local2@yournamespace:testproject-1.0-devel/1.0-1')
+            '/testproject.rpath.local2@yournamespace:testproject-1.0-devel/1-1')
         trv = repos.getTrove(*trvTup)
         self.failUnlessEqual(dict(trv.troveInfo.metadata.flatten()[0].keyValue),
             dict(owner="JeanValjean"))
@@ -494,8 +589,8 @@ class ImagesTest(restbase.BaseRestTest):
             'Created On:&lt;/b&gt; @CREATED-ON@</desc', contents)
         contents = re.sub('<date>.*</date>',
             '<date>@DATE@</date>', contents)
-        self.failUnlessEqual(contents, """\
-<item><title>Image `Image 1' built (testproject version 1.0)</title><description>&lt;b&gt;Appliance Name:&lt;/b&gt; testproject&lt;br/&gt;&lt;b&gt;Appliance Major Version:&lt;/b&gt; 1.0&lt;br/&gt;&lt;b&gt;Image Type:&lt;/b&gt; VMware(R) Virtual Appliance&lt;br/&gt;&lt;b&gt;File Name:&lt;/b&gt; file1.txt&lt;br/&gt;&lt;b&gt;Download URL:&lt;/b&gt; &lt;a href="https://test.rpath.local/downloadImage?fileId=4"&gt;https://test.rpath.local/downloadImage?fileId=4&lt;/a&gt;&lt;br/&gt;&lt;b&gt;File Name:&lt;/b&gt; file2.txt&lt;br/&gt;&lt;b&gt;Download URL:&lt;/b&gt; &lt;a href="https://test.rpath.local/downloadImage?fileId=5"&gt;https://test.rpath.local/downloadImage?fileId=5&lt;/a&gt;&lt;br/&gt;&lt;b&gt;Created On:&lt;/b&gt; @CREATED-ON@</description><date>@DATE@</date><category>success</category><guid>/api/users/adminuser/notices/contexts/builder/1</guid></item>""")
+        self.assertXMLEquals(contents, """\
+<item><title>Image `Image 1' built (testproject version 1.0)</title><description>&lt;b&gt;Appliance Name:&lt;/b&gt; testproject&lt;br/&gt;&lt;b&gt;Appliance Major Version:&lt;/b&gt; 1.0&lt;br/&gt;&lt;b&gt;Image Type:&lt;/b&gt; VMware(R) Workstation/Fusion Virtual Appliance&lt;br/&gt;&lt;b&gt;File Name:&lt;/b&gt; file1.txt&lt;br/&gt;&lt;b&gt;Download URL:&lt;/b&gt; &lt;a href="https://test.rpath.local/downloadImage?fileId=5"&gt;https://test.rpath.local/downloadImage?fileId=5&lt;/a&gt;&lt;br/&gt;&lt;b&gt;File Name:&lt;/b&gt; file2.txt&lt;br/&gt;&lt;b&gt;Download URL:&lt;/b&gt; &lt;a href="https://test.rpath.local/downloadImage?fileId=6"&gt;https://test.rpath.local/downloadImage?fileId=6&lt;/a&gt;&lt;br/&gt;&lt;b&gt;Created On:&lt;/b&gt; @CREATED-ON@</description><date>@DATE@</date><category>success</category><guid>/api/users/adminuser/notices/contexts/builder/1</guid></item>""")
 
 
     def testSetImageStatusAMI(self):
@@ -647,6 +742,6 @@ class ImagesTest(restbase.BaseRestTest):
         contents = re.sub('<date>.*</date>',
             '<date>@DATE@</date>', contents)
         self.failUnlessEqual(contents, """\
-<item><title>Image `Image 1' failed to build (testproject version 1.0)</title><description>&lt;b&gt;Appliance Name:&lt;/b&gt; testproject&lt;br/&gt;&lt;b&gt;Appliance Major Version:&lt;/b&gt; 1.0&lt;br/&gt;&lt;b&gt;Image Type:&lt;/b&gt; VMware(R) Virtual Appliance&lt;br/&gt;&lt;b&gt;Created On:&lt;/b&gt; @CREATED-ON@</description><date>@DATE@</date><category>error</category><guid>/api/users/adminuser/notices/contexts/builder/1</guid></item>""")
+<item><title>Image `Image 1' failed to build (testproject version 1.0)</title><description>&lt;b&gt;Appliance Name:&lt;/b&gt; testproject&lt;br/&gt;&lt;b&gt;Appliance Major Version:&lt;/b&gt; 1.0&lt;br/&gt;&lt;b&gt;Image Type:&lt;/b&gt; VMware(R) Workstation/Fusion Virtual Appliance&lt;br/&gt;&lt;b&gt;Created On:&lt;/b&gt; @CREATED-ON@</description><date>@DATE@</date><category>error</category><guid>/api/users/adminuser/notices/contexts/builder/1</guid></item>""")
 
 testsetup.main()

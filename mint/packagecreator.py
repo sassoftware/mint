@@ -152,7 +152,7 @@ class _Method(object):
 class MinimalConaryConfiguration(pcreator.backend.MinimalConaryConfiguration):
     fields = ['name', 'contact', 'repositoryMap', 'buildLabel', 'user',
             'installLabelPath', 'searchPath', 'entitlement', 'conaryProxy']
-    def __init__(self, conarycfg):
+    def __init__(self, conarycfg, rmakeUser):
         hidePasswords = conarycfg.getDisplayOption('hidePasswords')
         try:
             conarycfg.setDisplayOptions(hidePasswords = False)
@@ -173,6 +173,7 @@ class MinimalConaryConfiguration(pcreator.backend.MinimalConaryConfiguration):
                 for line in lines:
                     newLines.append(util.ProtectedString(line))
                 self.lines.extend(((len(newLines) and newLines) or lines))
+            self.lines.append('rmakeUser %s %s' % rmakeUser)
         finally:
             conarycfg.setDisplayOptions(hidePasswords = hidePasswords)
 
@@ -192,7 +193,7 @@ def getPackageCreatorFactories(pc, sessionHandle):
         raise mint_error.PackageCreatorError("Error gathering Candidate Build Factories: %s",
             "The file uploaded is not a supported file type")
     [x[1].seek(0) for x in factories]
-    ret = [(x[0],x[1].read(),x[3]) for x in factories]
+    ret = [(x[0],x[1].read(),x[3], x[4]) for x in factories]
     return ret, data
 
 def getFactoryDataFromXML(xmldata):

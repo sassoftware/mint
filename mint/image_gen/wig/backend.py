@@ -17,6 +17,7 @@ class WigBackendClient(object):
     def __init__(self, url):
         self.api = robj.connect(url, logging=False, maxClients=1)
         self.image = None
+        self._persistNeeded = False
 
     def createJob(self):
         # Create image resource
@@ -25,6 +26,7 @@ class WigBackendClient(object):
 
     def startJob(self):
         # Initiate job
+        self._persist()
         self.image.imageJob = self.dataFromObject({
             'type': 'image',
             'createdBy': 'nobody',
@@ -87,18 +89,26 @@ class WigBackendClient(object):
             # Assume we need a VHD for the next layer up to convert into
             # something else.
             config.vhd = 'true'
-        config.persist()
+        self._persistNeeded = True
 
     def setOSVersion(self, osVersion):
         config = self.image.jobConfig
         config.osVersion = osVersion
-        config.persist()
+        self._persistNeeded = True
+
+    def setDiskSize(self, mebibytes):
+        self.image.jobConfig.vhdDiskSize = str(long(mebibytes))
 
     def cleanup(self):
         if self.image:
             self.image.imageJob.delete()
             self.image.delete()
             self.image = None
+
+    def _persist(self):
+        if self._persistNeeded:
+            self.image.jobConfig.persist()
+            self._persistNeeded = False
 
     def dataFromObject(self, data, tag, method='POST',
             contentType='application/xml'):
@@ -113,6 +123,7 @@ class WigBackendClient(object):
         self.addFileStream(fobj, filetype, name, size)
 
     def addFileStream(self, fobj, filetype, name, size):
+        self._persist()
         # Create file resource
         self.image.files.append({
             'path': name,

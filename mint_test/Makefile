@@ -27,7 +27,6 @@ python_files = \
                marketingtest.py	\
                mint_rephelp.py \
                mirrortest.py \
-               newstest.py \
                buildtest.py \
                projecttest.py \
 	       productversiontest.py \

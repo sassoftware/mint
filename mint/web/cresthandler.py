@@ -1,7 +1,8 @@
-from conary.repository.netrepos import proxy
+#
+# Copyright 2011 rPath, Inc.
+#
 
 import restlib.http.modpython
-from restlib import response
 
 import crest.root
 import crest.webhooks
@@ -11,15 +12,12 @@ from mint.db import database
 from mint.rest.middleware import auth
 
 
-def handleCrest(prefix, cfg, db, repos, req):
-    handler, callback = getCrestHandler(cfg, db)
-    if isinstance(repos, proxy.CachingRepositoryServer):
-        callback.repos = repos.repos
-    else:
-        callback.repos = repos
+def handleCrest(prefix, cfg, db, repos, req, authToken):
+    handler, callback = getCrestHandler(cfg, db, authToken)
+    callback.repos = repos.repos
     return handler.handle(req, prefix)
 
-def getCrestHandler(cfg, db):
+def getCrestHandler(cfg, db, authToken):
     assert(cfg)
     assert(db)
     crestController = crest.root.Controller(None, '/rest')
@@ -28,12 +26,20 @@ def getCrestHandler(cfg, db):
     crestHandler.addCallback(crestCallback)
     db = database.Database(cfg, db)
     db = restDatabase.Database(cfg, db)
-    crestHandler.addCallback(CrestAuthenticationCallback(cfg, db,
-        crestController))
+    auth = CrestAuthenticationCallback(cfg, db, crestController)
+    auth.authToken = authToken
+    crestHandler.addCallback(auth)
     return crestHandler, crestCallback
 
 
 class CrestAuthenticationCallback(auth.AuthenticationCallback):
+    authToken = None
+
+    def processRequest(self, request):
+        ret = auth.AuthenticationCallback.processRequest(self, request)
+        request.authToken = self.authToken
+        return ret
+
     def processMethod(self, request, viewMethod, args, kw):
         return self.checkDisablement(request, viewMethod)
 
@@ -46,7 +52,6 @@ class CrestRepositoryCallback(crest.webhooks.ReposCallback):
         if 'host' in kwargs:
             cu = self.db.cursor()
             fqdn = kwargs['host']
-            hostname = fqdn.split('.', 1)[0]
             cu.execute('''SELECT shortname FROM Projects
                           WHERE fqdn=?''', fqdn)
             try:

@@ -6,62 +6,77 @@
 
 import os
 import time
-
-from django.http import HttpResponse, HttpResponseNotFound
+from django.http import HttpResponse, HttpResponseNotFound, HttpResponseRedirect
 from django_restapi import resource
 
-from mint.db import database
-from mint import users
-from mint.django_rest.deco import requires, return_xml, access, ACCESS, \
-    HttpAuthenticationRequired, getHeaderValue
-from mint.django_rest.rbuilder import models as rbuildermodels
+from mint.django_rest.deco import requires, return_xml, access, \
+    HttpAuthenticationRequired, Flags
+from mint.django_rest.rbuilder.users import models as usersmodels
 from mint.django_rest.rbuilder import service
 from mint.django_rest.rbuilder.inventory import models
+from mint.django_rest.rbuilder.projects import models as projectsmodels
+from mint.django_rest.rbuilder.querysets import models as querymodels
+from mint.django_rest.rbuilder.rbac.rbacauth import rbac, manual_rbac
+from mint.django_rest.rbuilder.errors import PermissionDenied
+from mint.django_rest.rbuilder.rbac.manager.rbacmanager import \
+   READMEMBERS, MODMEMBERS
 
 class RestDbPassthrough(resource.Resource):
     pass
 
-class StageService(RestDbPassthrough):
-    def get(self, project, majorVersion, stage):
-        return None
+class StageProxyService(service.BaseAuthService):
+    
+    @staticmethod
+    def getStageAndSetGroup(request, stage_id):
+        stage = projectsmodels.Stage.objects.get(pk=stage_id)
+        hostname = stage.project.short_name # aka project's short_name
+        label = stage.label
+        href = 'http://' + request.get_host().strip('/') + '/api/products/%s/repos/search?type=group&label=%s'
+        stage.groups = projectsmodels.Group(href=href % (hostname, label))
+        return stage
+    
+    @staticmethod
+    def getStagesAndSetGroup(request, version=None):
+        Stages = projectsmodels.Stages()
+        
+        if version:
+            project_branch_stages = projectsmodels.Stage.objects.all().filter(name=version)
+        else:
+            project_branch_stages = projectsmodels.Stage.objects.all()
+        # project_branch_stages = projectsmodels.Stage.objects.all()
+        stages_collection = []
+        
+        for stage in project_branch_stages:
+            stages_collection.append(StageProxyService.getStageAndSetGroup(request, stage.stage_id))
+        Stages.project_branch_stage = stages_collection
+        return Stages
 
-class MajorVersionService(RestDbPassthrough):
-    def get(self, project, majorVersion):
-        return None
+
+class MajorVersionService(service.BaseAuthService):
+
+    def get(self, request, short_name, version):
+        """
+        XXX defunct for now
+        """
+        modifiers = ['platform', 'platform_version', 'definition', 'image_type_definitions',
+                     'image_definitions', 'images', 'source_group']
+        project = projectsmodels.Project.objects.get(short_name=short_name)
+        project_version = projectsmodels.ProjectVersion.objects.get(project=project)
+        for m in modifiers:
+            url = r'%(host)s/api/products/%(short_name)s/versions/%(version)s/%(modifier)s/'\
+                    % dict(host= 'http://' + request.get_host(), short_name=short_name, version=version, modifier=m)
+            setattr(project_version, m, url)
+        return project_version
+
 
 class ApplianceService(RestDbPassthrough):
     def get(self, project):
         return None
 
-class BaseInventoryService(service.BaseService):    
-    def _auth_filter(self, request, access, kwargs):
-        """Return C{True} if the request passes authentication checks."""
-        # Access flags are permissive -- if a function specifies more than one
-        # method, the authentication is successful if any of those methods
-        # succeed.
-
-        if access & ACCESS.LOCALHOST:
-            if self._check_localhost(request):
-                return True
-
-        if access & ACCESS.EVENT_UUID:
-            ret = self._check_event_uuid(request, kwargs)
-            if ret is not None:
-                # A bad event UUID should fail the auth check
-                return ret
-
-        if access & ACCESS.ADMIN:
-            return request._is_admin
-        if access & ACCESS.AUTHENTICATED:
-            return request._is_authenticated
-        if access & ACCESS.ANONYMOUS:
-            return True
-
-        return False
-
-    def _check_event_uuid(self, request, kwargs):
+class BaseInventoryService(service.BaseAuthService):    
+    def _check_uuid_auth(self, request, kwargs):
         headerName = 'X-rBuilder-Event-UUID'
-        eventUuid = getHeaderValue(request, headerName)
+        eventUuid = self.getHeaderValue(request, headerName)
         if not eventUuid:
             return None
         # Check if this system has such an event uuid
@@ -72,19 +87,6 @@ class BaseInventoryService(service.BaseService):
             return False
         self._setMintAuth()
         return True
-
-    def _setMintAuth(self):
-        db = database.Database(self.mgr.cfg)
-        authToken = (self.mgr.cfg.authUser, self.mgr.cfg.authPass)
-        mintAdminGroupId = db.userGroups.getMintAdminId()
-        cu = db.cursor()
-        cu.execute("SELECT MIN(userId) from userGroupMembers "
-           "WHERE userGroupId = ?", mintAdminGroupId)
-        ret = cu.fetchall()
-        userId = ret[0][0]
-        mintAuth = users.Authorization(username=self.mgr.cfg.authUser,
-            token=authToken, admin=True, userId=userId)
-        self.mgr._auth = mintAuth
 
 class InventoryService(BaseInventoryService):
     """
@@ -100,12 +102,13 @@ class InventoryService(BaseInventoryService):
         return inventory
 
 class InventoryLogService(BaseInventoryService):
-    
+   
+    @access.authenticated 
     @return_xml
     def rest_GET(self, request):
         return self.mgr.getSystemsLog()
     
-class InventorySystemStateService(BaseInventoryService):
+class InventorySystemStatesService(BaseInventoryService):
     """
     <system_states> 
         <system_state id="http://hostname/api/inventory/system_states/1/">
@@ -119,26 +122,41 @@ class InventorySystemStateService(BaseInventoryService):
    
     @access.anonymous
     @return_xml
-    def rest_GET(self, request, system_state_id=None):
-        return self.get(system_state_id)
+    def rest_GET(self, request):
+        return self.get()
     
-    def get(self, system_state_id=None):
-        if system_state_id:
-            return self.mgr.getSystemState(system_state_id)
-        else:
-            return self.mgr.getSystemStates()
-    
-class InventoryZoneService(BaseInventoryService):
-    
+    def get(self):
+        return self.mgr.getSystemStates()
+
+class InventorySystemStateService(BaseInventoryService):
+    """
+    <system_states> 
+        <system_state id="http://hostname/api/inventory/system_states/1/">
+        ...
+        </system_state>
+        <system_state id="http://hostname/api/inventory/system_states/2/">
+        ...
+        </system_state>
+    </system_states>
+    """
+
+    @access.anonymous
     @return_xml
-    def rest_GET(self, request, zone_id=None):
-        return self.get(zone_id)
+    def rest_GET(self, request, system_state_id):
+        return self.get(system_state_id)
+
+    def get(self, system_state_id):
+        return self.mgr.getSystemState(system_state_id)
+
+class InventoryZonesService(BaseInventoryService):
+    
+    @access.authenticated
+    @return_xml
+    def rest_GET(self, request):
+        return self.get()
     
     def get(self, zone_id=None):
-        if zone_id:
-            return self.mgr.getZone(zone_id)
-        else:
-            return self.mgr.getZones()
+        return self.mgr.getZones()
 
     @access.admin
     @requires('zone')
@@ -146,7 +164,17 @@ class InventoryZoneService(BaseInventoryService):
     def rest_POST(self, request, zone):
         zone = self.mgr.addZone(zone)
         return zone
-    
+
+class InventoryZoneService(BaseInventoryService):
+
+    @access.authenticated
+    @return_xml
+    def rest_GET(self, request, zone_id):
+        return self.get(zone_id)
+
+    def get(self, zone_id):
+        return self.mgr.getZone(zone_id)
+
     @access.admin
     @requires('zone')
     @return_xml
@@ -165,17 +193,15 @@ class InventoryZoneService(BaseInventoryService):
         response = HttpResponse(status=204)
         return response
     
-class InventoryManagementNodeService(BaseInventoryService):
+class InventoryManagementNodesService(BaseInventoryService):
     
+    @access.authenticated
     @return_xml
-    def rest_GET(self, request, management_node_id=None):
-        return self.get(management_node_id)
+    def rest_GET(self, request):
+        return self.get()
     
-    def get(self, management_node_id=None):
-        if management_node_id:
-            return self.mgr.getManagementNode(management_node_id)
-        else:
-            return self.mgr.getManagementNodes()
+    def get(self):
+        return self.mgr.getManagementNodes()
 
     @access.admin
     @requires('management_node')
@@ -191,19 +217,50 @@ class InventoryManagementNodeService(BaseInventoryService):
         self.mgr.synchronizeZones(management_nodes)
         return self.mgr.getManagementNodes()
 
-class InventoryManagementInterfaceService(BaseInventoryService):
+
+class InventoryManagementNodeService(BaseInventoryService):
+
+    @access.authenticated
+    @return_xml
+    def rest_GET(self, request, management_node_id):
+        return self.get(management_node_id)
+
+    def get(self, management_node_id):
+        return self.mgr.getManagementNode(management_node_id)
+    
+    # NOTE: unclear whether this belongs to InventoryManagementNodesService
+    # in addition to here
+    #
+    # @access.localhost
+    # @requires('management_nodes')
+    # @return_xml
+    # def rest_PUT(self, request, management_nodes):
+    #     self.mgr.synchronizeZones(management_nodes)
+    #     return self.mgr.getManagementNodes()
+
+class InventoryManagementInterfacesService(BaseInventoryService):
     
     @access.anonymous
     @return_xml
-    def rest_GET(self, request, management_interface_id=None):
-        return self.get(management_interface_id)
+    def rest_GET(self, request):
+        return self.get()
     
-    def get(self, management_interface_id=None):
-        if management_interface_id:
-            return self.mgr.getManagementInterface(management_interface_id)
-        else:
-            return self.mgr.getManagementInterfaces()
+    def get(self):
+        return self.mgr.getManagementInterfaces()
+
+class InventoryManagementInterfaceService(BaseInventoryService):
+
+    @access.anonymous
+    @return_xml
+    def rest_GET(self, request, management_interface_id):
+        return self.get(management_interface_id)
+
+    def get(self, management_interface_id):
+        return self.mgr.getManagementInterface(management_interface_id)
         
+    # FIXME: consider removing support
+    # this may be useful for tests but will likely break your
+    # rBuilder, so we shouldn't allow it, right?
     @access.admin
     @requires('management_interface')
     @return_xml
@@ -216,19 +273,27 @@ class InventoryManagementInterfaceService(BaseInventoryService):
         self.mgr.updateManagementInterface(management_interface)
         return self.get(management_interface_id)
     
+class InventorySystemTypesService(BaseInventoryService):
+
+    @access.anonymous
+    @return_xml
+    def rest_GET(self, request):
+        return self.get()
+    
+    def get(self):
+        return self.mgr.getSystemTypes()
+        
 class InventorySystemTypeService(BaseInventoryService):
 
     @access.anonymous
     @return_xml
-    def rest_GET(self, request, system_type_id=None):
+    def rest_GET(self, request, system_type_id):
         return self.get(system_type_id)
-    
-    def get(self, system_type_id=None):
-        if system_type_id:
-            return self.mgr.getSystemType(system_type_id)
-        else:
-            return self.mgr.getSystemTypes()
+
+    def get(self, system_type_id):
+        return self.mgr.getSystemType(system_type_id)
         
+    # FIXME: consider removing support
     @access.admin
     @requires('system_type')
     @return_xml
@@ -243,6 +308,7 @@ class InventorySystemTypeService(BaseInventoryService):
     
 class InventorySystemTypeSystemsService(BaseInventoryService):
     
+    @access.anonymous
     @return_xml
     def rest_GET(self, request, system_type_id, system_id=None):
         return self.get(system_type_id)
@@ -250,18 +316,17 @@ class InventorySystemTypeSystemsService(BaseInventoryService):
     def get(self, system_type_id):
         return self.mgr.getSystemTypeSystems(system_type_id)
     
-class InventoryZoneManagementNodeService(BaseInventoryService):
+class InventoryZoneManagementNodesService(BaseInventoryService):
     
+    @access.authenticated
     @return_xml
-    def rest_GET(self, request, zone_id, management_node_id=None):
-        return self.get(zone_id, management_node_id)
+    def rest_GET(self, request, zone_id):
+        return self.get(zone_id)
     
-    def get(self, zone_id, management_node_id=None):
-        if management_node_id:
-            return self.mgr.getManagementNodeForZone(zone_id, management_node_id)
-        else:
-            return self.mgr.getManagementNodesForZone(zone_id)
+    def get(self, zone_id):
+        return self.mgr.getManagementNodesForZone(zone_id)
         
+    # FIXME: consider removing support
     @access.admin
     @requires('management_node')
     @return_xml
@@ -270,17 +335,36 @@ class InventoryZoneManagementNodeService(BaseInventoryService):
             management_node)
         return managementNode
 
-class InventoryNetworkService(BaseInventoryService):
-    
+class InventoryZoneManagementNodeService(BaseInventoryService):
+
+    @access.authenticated
     @return_xml
-    def rest_GET(self, request, network_id=None):
-        return self.get(network_id)
+    def rest_GET(self, request, zone_id, management_node_id):
+        return self.get(zone_id, management_node_id)
+
+    def get(self, zone_id, management_node_id):
+        return self.mgr.getManagementNodeForZone(zone_id, management_node_id)
+
+
+class InventoryNetworksService(BaseInventoryService):
     
-    def get(self, network_id=None):
-        if network_id:
-            return self.mgr.getNetwork(network_id)
-        else:
-            return self.mgr.getNetworks()
+    @access.authenticated
+    @return_xml
+    def rest_GET(self, request):
+        return self.get()
+    
+    def get(self):
+        return self.mgr.getNetworks()
+        
+class InventoryNetworkService(BaseInventoryService):
+
+    @access.authenticated
+    @return_xml
+    def rest_GET(self, request, network_id):
+        return self.get(network_id)
+
+    def get(self, network_id):
+        return self.mgr.getNetwork(network_id)
         
     @access.admin
     @requires('network')
@@ -307,10 +391,18 @@ class InventorySystemsService(BaseInventoryService):
         ...
     </system>
     """
-
+    # has manual rbac, inlined
+    @rbac(manual_rbac)
     @return_xml
     def rest_GET(self, request):
-        return self.get()
+        user = request._authUser
+        systems = self.get()
+        tv = all(self.mgr.userHasRbacPermission(user, obj, READMEMBERS) for obj in systems.system)
+        if tv:
+            qs = querymodels.QuerySet.objects.get(name='All Systems')
+            url = '/api/v1/query_sets/%s/all%s' % (qs.pk, request.params)
+            return HttpResponseRedirect(url)
+        raise PermissionDenied()
 
     def get(self):
         return self.mgr.getSystems()
@@ -320,14 +412,20 @@ class InventorySystemsService(BaseInventoryService):
     @requires(['system', 'systems'])
     @return_xml
     def rest_POST(self, request, system=None, systems=None):
+        # FIXME -- determine if request._authUser is available if authentication is supplied
+        # but method is still anonymous <-- MPD
+        authUser = getattr(request, '_authUser', None)
         if system is not None:
-            system = self.mgr.addSystem(system, generateCertificates=True)
+            system = self.mgr.addSystem(system, generateCertificates=True, for_user=authUser)
             return system
-        systems = self.mgr.addSystems(systems.system)
+        systems = self.mgr.addSystems(systems.system, for_user=authUser)
         return self.mgr.getSystems()
 
 class InventoryInventorySystemsService(BaseInventoryService):
-    
+   
+    # if you want to get this data as a non-admin you must use the
+    # query set 
+    @access.admin
     @return_xml
     def rest_GET(self, request):
         return self.get()
@@ -351,23 +449,40 @@ class ImageImportMetadataDescriptorService(BaseInventoryService):
     @access.anonymous
     @return_xml
     def rest_GET(self, request):
-        response = HttpResponse(status=200, content=self.get())
-        response['Content-Type'] = 'text/xml'
-        return response
+        return self.get()
 
     def get(self):
-        return self.mgr.getImageImportMetadataDescriptor()
+        descriptor = self.mgr.getImageImportMetadataDescriptor()
+        return self.mgr.serializeDescriptor(descriptor)
 
+
+def rbac_can_write_system_id(view, request, system_id, *args, **kwargs):
+    '''is the system ID writeable by the user?'''
+    obj = view.mgr.getSystem(system_id)
+    user = request._authUser
+    return view.mgr.userHasRbacPermission(user, obj, MODMEMBERS)
+
+def rbac_can_read_system_id(view, request, system_id, *args, **kwargs):
+    '''is the system ID readable by the user?'''
+    obj = view.mgr.getSystem(system_id)
+    user = request._authUser
+    return view.mgr.userHasRbacPermission(user, obj, READMEMBERS)
+
+# NOTE: rbac_can_create_system does not exist because registration (temporarily)
+# must be anonymous for rpath_register.   
+   
 class InventorySystemsSystemService(BaseInventoryService):
-    
+
     @return_xml
+    @rbac(READMEMBERS)
     def rest_GET(self, request, system_id):
         return self.get(system_id)
 
     def get(self, system_id):
         return self.mgr.getSystem(system_id)
 
-    @access.event_uuid
+    # FIXME -- come back, tricky -- rbac if no auth_token ???
+    @access.auth_token
     @access.authenticated
     @requires('system')
     @return_xml
@@ -375,6 +490,8 @@ class InventorySystemsSystemService(BaseInventoryService):
         oldSystem = self.mgr.getSystem(system_id)
         if not oldSystem:
             return HttpResponseNotFound()
+        if oldSystem.pk != system.pk:
+            raise PermissionDenied()
         # This is a terrible place to put logic, but until we decide to pass
         # the request into the manager, we don't have a way around it
         mb = models.SystemState.MOTHBALLED
@@ -383,10 +500,11 @@ class InventorySystemsSystemService(BaseInventoryService):
             if not request._is_admin:
                 return HttpAuthenticationRequired
         # This really should be an update
-        self.mgr.updateSystem(system)
+        authUser = getattr(request, '_authUser', None)
+        self.mgr.updateSystem(system, for_user=authUser)
         return self.mgr.getSystem(system_id)
 
-    @access.admin
+    @rbac(rbac_can_write_system_id)
     def rest_DELETE(self, request, system_id):
         self.mgr.deleteSystem(system_id)
         response = HttpResponse(status=204)
@@ -394,6 +512,7 @@ class InventorySystemsSystemService(BaseInventoryService):
 
 class InventorySystemsSystemEventService(BaseInventoryService):
     
+    @rbac(rbac_can_read_system_id)
     @return_xml
     def rest_GET(self, request, system_id, system_event_id=None):
         return self.get(system_id)
@@ -404,6 +523,7 @@ class InventorySystemsSystemEventService(BaseInventoryService):
         else:
             return self.mgr.getSystemSystemEvents(system_id)
         
+    @rbac(rbac_can_write_system_id)
     @requires('system_event')
     @return_xml
     def rest_POST(self, request, system_id, system_event):
@@ -412,6 +532,7 @@ class InventorySystemsSystemEventService(BaseInventoryService):
 
 class InventorySystemsSystemLogService(BaseInventoryService):
 
+    @rbac(rbac_can_read_system_id)
     def rest_GET(self, request, system_id, format='xml'):
         managedSystem = self.mgr.getSystem(system_id)
         systemLog = self.mgr.getSystemLog(managedSystem)
@@ -438,25 +559,42 @@ class InventorySystemsSystemLogService(BaseInventoryService):
 
 class InventoryUsersService(BaseInventoryService):
 
-    # used by modeelib
+    # used by modellib
     def get(self, user):
-        user = rbuildermodels.Users.objects.get(username=user)
+        user = usersmodels.Users.objects.get(user_name=user)
         return user
 
 class InventorySystemEventsService(BaseInventoryService):
-    
+ 
+    # TODO -- this may reveal too much info, consider
+    # checking what event the system is related to
+    # for a single object and otherwise require
+    # admin for the full collection?
+    @access.authenticated   
     @return_xml
-    def rest_GET(self, request, system_event_id=None):
-        return self.get(system_event_id)
+    def rest_GET(self, request):
+        return self.get()
         
     def get(self, system_event_id=None):
-        if system_event_id:
-            return self.mgr.getSystemEvent(system_event_id)
-        else:
-            return self.mgr.getSystemEvents()
+        return self.mgr.getSystemEvents()
+
+class InventorySystemEventService(BaseInventoryService):
+
+    # TODO -- this may reveal too much info, consider
+    # checking what event the system is related to
+    # for a single object and otherwise require
+    # admin for the full collection?
+    @access.authenticated   
+    @return_xml
+    def rest_GET(self, request, system_event_id):
+        return self.get(system_event_id)
+
+    def get(self, system_event_id):
+        return self.mgr.getSystemEvent(system_event_id)
 
 class InventorySystemsInstalledSoftwareService(BaseInventoryService):
     
+    @rbac(rbac_can_read_system_id)
     @return_xml
     def rest_GET(self, request, system_id):
         system = self.mgr.getSystem(system_id)
@@ -464,6 +602,7 @@ class InventorySystemsInstalledSoftwareService(BaseInventoryService):
         installedSoftware.trove = system.installed_software.all()
         return installedSoftware
 
+    @rbac(rbac_can_write_system_id)
     @requires('installed_software')
     @return_xml
     def rest_PUT(self, request, system_id, installed_software):
@@ -475,12 +614,13 @@ class InventorySystemsInstalledSoftwareService(BaseInventoryService):
 
 class InventorySystemCredentialsServices(BaseInventoryService):
 
-    @access.admin
+    # TODO -- is this too permissive for reading credentials?
+    @rbac(rbac_can_read_system_id)
     @return_xml
     def rest_GET(self, request, system_id):
         return self.get(system_id)
 
-    @access.admin
+    @rbac(rbac_can_write_system_id)
     @return_xml
     @requires('credentials')
     def rest_PUT(self, request, system_id, credentials):
@@ -490,7 +630,7 @@ class InventorySystemCredentialsServices(BaseInventoryService):
                 credsDict[k] = v
         return self.mgr.addSystemCredentials(system_id, credsDict)
 
-    @access.admin
+    @rbac(rbac_can_write_system_id)
     @return_xml
     @requires('credentials')
     def rest_POST(self, request, system_id, credentials):
@@ -505,12 +645,12 @@ class InventorySystemCredentialsServices(BaseInventoryService):
     
 class InventorySystemConfigurationServices(BaseInventoryService):
 
-    @access.admin
+    @rbac(rbac_can_read_system_id)
     @return_xml
     def rest_GET(self, request, system_id):
         return self.get(system_id)
 
-    @access.admin
+    @rbac(rbac_can_write_system_id)
     @return_xml
     @requires('configuration')
     def rest_PUT(self, request, system_id, configuration):
@@ -520,7 +660,7 @@ class InventorySystemConfigurationServices(BaseInventoryService):
                 configDict[k] = v
         return self.mgr.addSystemConfiguration(system_id, configDict)
 
-    @access.admin
+    @rbac(rbac_can_write_system_id)
     @return_xml
     @requires('configuration')
     def rest_POST(self, request, system_id, configuration):
@@ -535,7 +675,7 @@ class InventorySystemConfigurationServices(BaseInventoryService):
     
 class InventorySystemConfigurationDescriptorServices(BaseInventoryService):
 
-    @access.admin
+    @rbac(rbac_can_read_system_id)
     def rest_GET(self, request, system_id):
         response = HttpResponse(status=200, content=self.get(system_id))
         response['Content-Type'] = 'text/xml'
@@ -557,15 +697,33 @@ class InventoryEventTypesService(BaseInventoryService):
     """
     @access.anonymous
     @return_xml
-    def rest_GET(self, request, event_type_id=None):
+    def rest_GET(self, request):
+        return self.get()
+        
+    def get(self):
+        return self.mgr.getEventTypes()
+
+class InventoryEventTypeService(BaseInventoryService):
+    """
+    <event_types>
+        <event_type id="http://hostname/api/inventory/event_types/1/">
+            ...
+        </event_type>
+        <event_type id="http://hostname/api/inventory/event_types/2/">
+            ...
+        </event_type>
+    </event_types>
+    """
+    @access.anonymous
+    @return_xml
+    def rest_GET(self, request, event_type_id):
         return self.get(event_type_id)
+
+    def get(self, event_type_id):
+        return self.mgr.getEventType(event_type_id)
         
-    def get(self, event_type_id=None):
-        if event_type_id:
-            return self.mgr.getEventType(event_type_id)
-        else:
-            return self.mgr.getEventTypes()
-        
+    # FIXME: consider dropping support for this as code
+    # changes are also required for this to be meaningful
     @access.admin
     @requires('event_type')
     @return_xml
@@ -579,53 +737,46 @@ class InventoryEventTypesService(BaseInventoryService):
 
 class InventorySystemJobsService(BaseInventoryService):
     
-    @access.anonymous
+    @rbac(rbac_can_read_system_id)
     @return_xml
-    def rest_GET(self, request, system_id, job_id=None):
+    def rest_GET(self, request, system_id):
+        '''list the jobs running on this system'''
         return self.get(system_id)
 
     def get(self, system_id):
         return self.mgr.getSystemJobs(system_id)
 
-class InventoryJobsService(BaseInventoryService):
-    
-    @access.anonymous
+    @rbac(rbac_can_write_system_id)
+    @requires('job', flags=Flags(save=False))
     @return_xml
-    def rest_GET(self, request, job_id=None):
-        return self.get(job_id)
+    def rest_POST(self, request, system_id, job):
+        '''request starting a job on this system'''
+        system = self.mgr.getSystem(system_id)
+        if job.job_type.name == job.job_type.SYSTEM_ASSIMILATE:
+            return self.mgr.scheduleJobAction(system, job)
+        return self.mgr.addJob(job, system_id=system_id)
 
-    def get(self, job_id):
-        if job_id:
-            return self.mgr.getJob(job_id)
-        else:
-            return self.mgr.getJobs()
+class InventorySystemJobDescriptorService(BaseInventoryService):
 
-class InventoryJobStatesService(BaseInventoryService):
-
-    @access.anonymous
+    @rbac(rbac_can_read_system_id)
     @return_xml
-    def rest_GET(self, request, job_state_id=None):
-        return self.get(job_state_id)
+    def rest_GET(self, request, system_id, descriptor_type):
+        '''
+        Get a smartform descriptor for starting a action on
+        InventorySystemJobsService.  An action is not *quite* a job.
+        It's a request to start a job.
+        '''
+        content = self.get(system_id, descriptor_type, request.GET.copy())
+        return content
 
-    def get(self, job_state_id):
-        if job_state_id:
-            return self.mgr.getJobState(job_state_id)
-        else:
-            return self.mgr.getJobStates()
-
-class InventoryJobStatesJobsService(BaseInventoryService):
-
-    @access.anonymous
-    @return_xml
-    def rest_GET(self, request, job_state_id):
-        return self.get(job_state_id)
-
-    def get(self, job_state_id):
-        return self.mgr.getJobsByJobState(job_state_id)
+    def get(self, system_id, descriptor_type, parameters):
+        descriptor = self.mgr.getSystemDescriptorForAction(system_id,
+            descriptor_type, parameters)
+        return self.mgr.serializeDescriptor(descriptor)
 
 class InventorySystemJobStatesService(BaseInventoryService):
 
-    @access.anonymous
+    @rbac(rbac_can_read_system_id)
     @return_xml
     def rest_GET(self, request, system_id, job_state_id):
         return self.get(system_id, job_state_id)
@@ -636,12 +787,21 @@ class InventorySystemJobStatesService(BaseInventoryService):
 
 class InventorySystemTagsService(BaseInventoryService):
 
+    @rbac(rbac_can_read_system_id)
     @return_xml
-    def rest_GET(self, request, system_id, system_tag_id=None):
+    def rest_GET(self, request, system_id):
+        return self.get(system_id)
+
+    def get(self, system_id):
+        return self.mgr.getSystemTags(system_id)
+
+class InventorySystemTagService(BaseInventoryService):
+
+    @rbac(rbac_can_read_system_id)
+    @return_xml
+    def rest_GET(self, request, system_id, system_tag_id):
         return self.get(system_id, system_tag_id)
 
     def get(self, system_id, system_tag_id):
-        if system_tag_id:
-            return self.mgr.getSystemTag(system_id, system_tag_id)
-        else:
-            return self.mgr.getSystemTags(system_id)
+        return self.mgr.getSystemTag(system_id, system_tag_id)
+

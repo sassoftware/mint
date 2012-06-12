@@ -131,11 +131,9 @@ class SqliteToPgsql(rAASrvPlugin):
     def _getRepNameMaps(self, cu):
         # get repname map used to help find the local Conary repository
         # for external locally-mirrored projects
-        repnamemap = {}
-        cu.execute("SELECT fromname, toname FROM RepNameMap")
-        for fromName, toName in cu.fetchall():
-            repnamemap[fromName] = toName
-        return repnamemap
+        # FIXME: wrong, but this plugin isn't supported in 6.0 anyway. Used to
+        # refer to RepNameMap but that is gone.
+        return {} 
 
     def _getLocalDbProjects(self, cu):
         # get all projects which are not external OR are external, but are locally mirrored

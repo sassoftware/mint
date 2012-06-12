@@ -109,16 +109,17 @@ class MintConfig(conarycfg.ConfigFile):
     dbDriver                = (CfgString, 'sqlite')
     dbPath                  = (CfgString, None)
     debugMode               = (CfgBool, False)
+    disableAuthorization    = (CfgBool, False)
     maintenanceLockPath     = (CfgPath, RBUILDER_DATA + '/run/maintenance.lock') 
     profiling               = (CfgBool, False)
     sendNotificationEmails  = (CfgBool, True)
     smallBugsEmail          = (CfgString, None)
     memCache                = (CfgString, 'localhost:11211')
     memCacheTimeout         = (CfgInt, 86400)
+    authSocket              = (CfgPath, None)
 
     # Handler configuration
     basePath                = (CfgString, '/', "URI root for this rBuilder")
-    cookieSecretKey         = (CfgString, None) # Not used in product
     hostName                = (CfgString, None,
         "Hostname to access the rBuilder site. For example, <b><tt>rbuilder</tt></b>. "
         "(The complete URL to access rBuilder is constructed from the "
@@ -136,9 +137,6 @@ class MintConfig(conarycfg.ConfigFile):
 
     # Web features
     diffCacheDir            = (CfgPath, RBUILDER_DATA + '/diffcache/')
-    EnableMailLists         = (CfgBool, False)
-    MailListBaseURL         = (CfgString, 'http://lists.rpath.org/mailman/')
-    MailListPass            = (CfgString, 'adminpass')
     licenseCryptoReports    = (CfgBool, True)
     removeTrovesVisible     = (CfgBool, False)
     hideFledgling           = (CfgBool, False)
@@ -201,8 +199,7 @@ class MintConfig(conarycfg.ConfigFile):
 
     # Upstream resources
     proxy                   = conarycfg.CfgProxy
-    VAMUser                 = (CfgString, '')
-    VAMPassword             = (CfgString, '')
+    proxyMap                = conarycfg.CfgProxyMap
 
     # Branding
     bulletinPath            = (CfgPath, '/srv/rbuilder/config/bulletin.txt')
@@ -219,7 +216,6 @@ class MintConfig(conarycfg.ConfigFile):
         "Your organization's intranet or public web site: (Used for the &quot;About&quot; links)")
     supportContactHTML      = (CfgString, 'Contact information in HTML.')
     supportContactTXT       = (CfgString, 'Contact information in text.')
-    newsRssFeed             = (CfgString, '')
     noticesRssFeed          = (CfgList(CfgString), [])
     announceLink            = (CfgString, '')
     googleAnalyticsTracker  = (CfgBool, False)
@@ -266,7 +262,7 @@ class MintConfig(conarycfg.ConfigFile):
                         "The number of days after which a non-responsive system is marked as dead")
     mothballedStateTimeout = (CfgInt, 30,
                         "The number of days after which a dead system is marked as mothballed")
-    launchWaitTime = (CfgInt, 300,
+    launchWaitTime = (CfgInt, 1200,
                         "The number of seconds to wait for a launched system's network information to become available")
 
     # inventory - configuration
@@ -294,6 +290,13 @@ class MintConfig(conarycfg.ConfigFile):
     projectAdmin            = (CfgBool, True)
     externalDomainName      = (CfgString, None)
     packageCreatorURL       = (CfgString, None)
+    cookieSecretKey         = (CfgString, None)
+    VAMUser                 = (CfgString, '')
+    VAMPassword             = (CfgString, '')
+    newsRssFeed             = (CfgString, '')
+    EnableMailLists         = None
+    MailListBaseURL         = None
+    MailListPass            = None
 
     # AMI configuration -- migrated in schema (45, 6)
     ec2PublicKey            = (CfgString, '', "The AWS account id")
@@ -328,10 +331,6 @@ class MintConfig(conarycfg.ConfigFile):
         self.postCfg()
 
     def postCfg(self):
-        #Make sure MailListBaseURL has a slash on the end of it
-        if self.MailListBaseURL[-1:] != '/':
-            self.setValue('MailListBaseURL', self.MailListBaseURL + '/')
-
         if not self.projectDomainName:
             self.projectDomainName = self.siteDomainName
 
@@ -364,9 +363,7 @@ class MintConfig(conarycfg.ConfigFile):
     def getProxyMap(self):
         # Similar to conarycfg.getProxyMap, but only supports the 'proxy'
         # option.
-        proxyDict = urllib.getproxies()
-        proxyDict.update(self.proxy)
-        return proxy_map.ProxyMap.fromDict(proxyDict)
+        return conarycfg.getProxyMap(self)
 
     def writeGeneratedConfig(self, path=RBUILDER_GENERATED_CONFIG, fObj=None):
         """

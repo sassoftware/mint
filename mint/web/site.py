@@ -1,46 +1,38 @@
 #
 # Copyright (c) 2005-2009 rPath, Inc.
 #
-# All rights reserved
-#
-import email
+
 import logging
 import os
 import stat
-import tempfile
-import time
-from urllib import quote, unquote, quote_plus, urlencode
+from urllib import unquote, quote_plus
 from mimetypes import guess_type
 
 from mint import buildtypes
-from mint import constants
 from mint import urltypes
 from mint.lib import data
 from mint import helperfuncs
 from mint import mint_error
 from mint import maintenance
-from mint import mailinglists
 from mint import projects
 from mint import searcher
 from mint import shimclient
 from mint import users
 from mint import userlevels
 from mint.client import timeDelta
-from mint.config import isRBO
 from mint.lib.unixutils import AtomicFile
 from mint.helperfuncs import getProjectText
 from mint.session import SqlSession
 
 from mint.web.fields import boolFields, dictFields, intFields, listFields, strFields
-from mint.web.decorators import mailList, requiresAdmin, requiresAuth, \
+from mint.web.decorators import requiresAdmin, requiresAuth, \
      requiresHttps, redirectHttps, redirectHttp
 from mint.web.webhandler import (WebHandler, normPath, setCacheControl,
-    HttpNotFound, HttpOK, HttpMethodNotAllowed, HttpForbidden, HttpBadRequest)
+    HttpNotFound, HttpMethodNotAllowed, HttpForbidden, HttpBadRequest)
 
 from conary.lib import digestlib
 from conary.lib import util
 from conary import versions
-from conary import conaryclient
 
 from rpath_proddef import api1 as proddef
 
@@ -71,10 +63,6 @@ class SiteHandler(WebHandler):
     @redirectHttp
     def _frontPage(self, auth, *args, **kwargs):
         self._redirectOldLinks()
-        
-        popularProjects = self.client.getPopularProjects()
-        topProjects = self.client.getTopProjects()
-        selectionData  = self.client.getFrontPageSelection()
         publishedReleases = self.client.getPublishedReleaseList()
 
         #insert marketing block
@@ -86,8 +74,6 @@ class SiteHandler(WebHandler):
             frontPageBlock = ""
 
         return self._write("frontPage", firstTime=self.session.get('firstTimer', False),
-            popularProjects=popularProjects, selectionData = selectionData,
-            topProjects = topProjects,
             publishedReleases = publishedReleases,
             frontPageBlock = frontPageBlock)
 
@@ -462,29 +448,6 @@ class SiteHandler(WebHandler):
                    'isPrivate': self.cfg.rBuilderOnline and 'off' or 'on',
                    'platformLabel': platformLabel})
 
-    @mailList
-    def _createProjectLists(self, mlists, auth, projectName, optlists = []):
-        #Get the formatted list of optional lists
-        lists = mailinglists.GetLists(projectName, optlists)
-        #Get the formatted list of default lists and add them to "lists"
-        lists.update(mailinglists.GetLists(projectName, mailinglists.defaultlists))
-        success = True
-        error = False
-        for name, values in lists.items():
-            # Create the lists
-            success = mlists.add_list(self.cfg.MailListPass, name, '', values['description'], auth.email, True, values['moderate'])
-            if not success: error = False
-        #add the commits sender address
-        try:
-            mlists.server.Mailman.setOptions(
-                    mailinglists.listnames[mailinglists.PROJECT_COMMITS]%projectName,
-                    self.cfg.MailListPass,
-                    {'accept_these_nonmembers': self.cfg.commitEmail }
-                )
-        except: 
-            mailinglists.MailingListException("Mailing List Error")
-        return not error
-
     @strFields(title = '', hostname = '', domainname = '', projecturl = '', 
                blurb = '', appliance = 'unknown', shortname = '', namespace = '',
                prodtype = 'Appliance', version = '', commitEmail='', isPrivate = '',
@@ -528,15 +491,6 @@ class SiteHandler(WebHandler):
                     domainname, projecturl, blurb, appliance, shortname, 
                     namespace, prodtype, version, commitEmail, isPrivate,
                     platformLabel)
-                
-                # now create the mailing lists
-                if self.cfg.EnableMailLists and not self._getErrors():
-                    if not self._createProjectLists(auth=auth,
-                                                    projectName=hostname,
-                                                    optlists=optlists):
-                        raise mailinglists.MailingListException("Could not create the mailing lists, check the mailing list page to set up your desired lists.")
-            except mailinglists.MailingListException:
-                raise
             except projects.DuplicateHostname, e:
                 self._addErrors(str(e))
             except projects.DuplicateName, e:
@@ -549,8 +503,9 @@ class SiteHandler(WebHandler):
             try:
                 versionId = self.client.addProductVersion(projectId, namespace, version);
                 pd = proddef.ProductDefinition()
+                fqdn = '.'.join((hostname, domainname))
                 pd = helperfuncs.sanitizeProductDefinition(title,
-                        blurb, hostname, domainname, shortname, version,
+                        blurb, fqdn, shortname, version,
                         '', namespace)
                 self.client.setProductDefinitionForVersion(versionId, pd, platformLabel)
 
@@ -1022,62 +977,6 @@ class SiteHandler(WebHandler):
         else:
             # Everyone else gets the maintenance notice
             return self._write("maintenance", reason="maintenance")
-
-    @strFields(feed = 'newProjects')
-    def rss(self, auth, feed):
-        pText = getProjectText()
-        if feed == "newProjects":
-            results = self.client.getNewProjects(10, showFledgling = False)
-
-            title = "%s - New %ss" % (self.cfg.productName,pText.title())
-            link = "http://%s%srss?feed=newProjects" % (self.cfg.siteHost, self.cfg.basePath)
-            desc = "New %ss created on %s" % (pText.lower(),self.cfg.productName) 
-
-            items = []
-            for p in results:
-                item = {}
-                project = self.client.getProject(p[0])
-
-                item['title'] = project.getName()
-                item['link'] = project.getUrl(self.baseUrl)
-                item['content'] = "<p>A new %s named <a href=\"%s\">%s</a> has been created.</p>" % \
-                    (pText.lower(),project.getUrl(self.baseUrl), project.getName())
-                desc = project.getDesc().strip()
-                if desc:
-                    item['content'] += "%s description:"%pText.title()
-                    item['content'] += "<blockquote>%s</blockquote>" % desc
-                item['date_822'] = email.Utils.formatdate(project.getTimeCreated())
-                item['creator'] = "http://%s%s" % (self.siteHost, self.cfg.basePath)
-                items.append(item)
-        elif feed == "newReleases":
-            results = self.client.getPublishedReleaseList()
-            title = "%s - Latest releases" % self.cfg.productName
-            link = "http://%s%srss?feed=newReleases" % (self.cfg.siteHost, self.cfg.basePath)
-            desc = "New releases published on %s" % self.cfg.productName
-
-            items = []
-            for p in results:
-                item = {}
-                projectName, hostname, release = p
-                item['title'] = "%s" % release.name
-                if release.version:
-                    item['title'] += " (version %s)" % (release.version)
-                item['link'] = '%sproject/%s/release?id=%d' % (self.baseUrl, hostname, release.getId())
-                item['content'] = "<p>A new release has been published by the <a href=\"%sproject/%s\">%s</a> %s.</p>\n" % (self.baseUrl, hostname, projectName, pText.lower())
-                item['content']  += "This release contains the following builds:"
-                item['content'] += "<ul>"
-                builds = [self.client.getBuild(x) for x in release.getBuilds()]
-                for build in builds:
-                    item['content'] += "<li><a href=\"http://%s%sproject/%s/build?id=%ld\">%s (%s %s)</a></li>" % (self.cfg.siteHost, self.cfg.basePath, hostname, build.id, build.getName(), build.getArch(), buildtypes.typeNamesShort[build.buildType])
-                item['content'] += "</ul>"
-
-                item['date_822'] = email.Utils.formatdate(release.timePublished)
-                item['creator'] = "http://%s%s" % (self.siteHost, self.cfg.basePath)
-                items.append(item)
-        else:
-            raise HttpNotFound
-
-        return self._writeRss(items = items, title = title, link = link, desc = desc)
 
     @intFields(userId = None)
     @strFields(operation = None)

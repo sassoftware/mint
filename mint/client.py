@@ -247,12 +247,6 @@ class MintClient:
         """
         return self.server.getUserIdByName(username)
 
-    def getUsersList(self):
-        """
-        Fetch users and IDs
-        """
-        return self.server.getUsersList()
-
     def getUserSearchResults(self, terms, limit = 10, offset = 0):
         """
         Collect the results from a users search as requested by the search
@@ -597,15 +591,6 @@ class MintClient:
         """
         return self.server.unpublishPublishedRelease(pubReleaseId)
 
-    def getCommunityId(self, projectId, communityType):
-        return self.server.getCommunityId(projectId, communityType)
-
-    def setCommunityId(self, projectId, communityType, communityId):
-        return self.server.setCommunityId(projectId, communityType, communityId)
-
-    def deleteCommunityId(self, projectId, communityType):
-        return self.server.deleteCommunityId(projectId, communityType)
-
     def getrAPAPassword(self, host, role):
         return self.server.getrAPAPassword(host, role)
 
@@ -626,20 +611,6 @@ class MintClient:
 
     def getFileInfo(self, fileId):
         return self.server.getFileInfo(fileId)
-
-    def getNews(self):
-        """
-        Return a list of news items from the RSS news cache.
-        @return: list of news item dictionaries
-        """
-        return self.server.getNews()
-
-    def getNewsLink(self):
-        """
-        Returns the web URL of the news RSS feed.
-        @return: web URL
-        """
-        return self.server.getNewsLink()
 
     def promoteUserToAdmin(self, userId):
         """
@@ -663,9 +634,6 @@ class MintClient:
          """
          return self.server.getJobServerStatus()
 
-    def translateProjectFQDN(self, fqdn):
-        return self.server.translateProjectFQDN(fqdn)
-
     # session management
     def loadSession(self, sid):
         return self.server.loadSession(sid) or None
@@ -688,9 +656,6 @@ class MintClient:
 
     def getReport(self, name):
         return self.server.getReport(name)
-
-    def getDownloadChart(self, projectId, days, format = 'png'):
-        return self.server.getDownloadChart(projectId, days, format)
 
     def addInboundMirror(self, targetProjectId, sourceLabels,
             sourceUrl, sourceAuthType='none', sourceUsername='',
@@ -785,27 +750,6 @@ class MintClient:
 
     def isLocalMirror(self, projectId):
         return self.server.isLocalMirror(projectId)
-
-    def addRemappedRepository(self, fromName, toName):
-        return self.server.addRemappedRepository(fromName, toName)
-
-    def delRemappedRepository(self, fromName):
-        return self.server.delRemappedRepository(fromName)
-
-    def addFrontPageSelection(self, name, link, rank):
-        return self.server.addFrontPageSelection(name, link, rank)
-
-    def deleteFrontPageSelection(self, itemId):
-        return self.server.deleteFrontPageSelection(itemId)
-
-    def getFrontPageSelection(self):
-        return self.server.getFrontPageSelection()
-
-    def getTopProjects(self):
-        return self.server.getTopProjects()
-
-    def getPopularProjects(self):
-        return self.server.getPopularProjects()
 
     def getTroveReferences(self, troveName, troveVersion, troveFlavors = []):
         return dict(self.server.getTroveReferences(troveName, troveVersion, troveFlavors))

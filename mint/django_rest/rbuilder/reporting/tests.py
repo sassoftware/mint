@@ -1,5 +1,5 @@
-from mint.django_rest.rbuilder.models import Images, Products, Users, Versions
-from mint.django_rest.rbuilder.reporting.models import Report, Reports
+from mint.django_rest.rbuilder.users.models import User
+from mint.django_rest.rbuilder.projects.models import Project
 
 from django.test.client import Client
 
@@ -61,24 +61,25 @@ class ReportTypeDescriptorTestCase(unittest.TestCase):
 class ImagesPerProductTestCase(unittest.TestCase):
     def setUp(self):
         self.client = Client()
-        self.user = Users.objects.create(username='user',fullname='User T. Foo',passwd='foo',
-            email='foo@bar.com', timecreated=str(time.time()), timeaccessed=str(time.time()),
+        now = time.time()
+        self.user = User.objects.create(user_name='user',full_name='User T. Foo',passwd='foo',
+            email='foo@bar.com', time_created=now, time_accessed=now,
             active=1)
-        self.product = Products.objects.create(hostname='foo',name='foo Applicance', 
+        self.product = Project.objects.create(hostname='foo',name='foo Applicance', 
             namespace='rpath',domainname='eng.rpath.com',repositoryHostName='foo.eng.rpath.com',
-            prodtype='Appliance',hidden=0,creatorid=self.user,timecreated=str(time.time()),
-            timemodified=str(time.time()), shortname='foo')
-        self.version = Versions.objects.create(productId=self.product,namespace='foo',name='bar',
-            timecreated=str(time.time()))
+            prodtype='Appliance',hidden=False,creatorid=self.user,timecreated=now,
+            timemodified=now, shortname='foo')
+        self.version = Project.Version.objects.create(productId=self.product,namespace='foo',name='bar',
+            timecreated=now)
             
         dt = datetime.date(2008,1,1)
         timeint = time.mktime(dt.timetuple())
         
         for i in range(0,50):
-            Images.objects.create(name='Image'+str(i),productId=self.product, createdby=self.user, buildtype=1,
-                timecreated=str(timeint), trovename='foo', troveversion='bar',troveflavor='baz',
-                trovelastchanged=str(time.time()), deleted=0, stagename='Development',productversionid=
-                self.version, buildcount=1, status=300)
+            Project.Image.objects.create(name='Image'+str(i),product_id=self.product, created_by=self.user, build_type=1,
+                time_created=str(timeint), trove_name='foo', trove_version='bar',trove_flavor='baz',
+                trove_last_changed=now, deleted=0, stage_name='Development',product_version_id=
+                self.version, build_count=1, status=300)
                 
             timeint += 60*60*72
             
@@ -90,29 +91,29 @@ class ImagesPerProductTestCase(unittest.TestCase):
             image.delete()
         
     def notestGetImagePerProductReport(self):
-        response = self.client.get('/api/reports/imagesReport/data/'+self.product.shortname)
+        response = self.client.get('/api/reports/imagesReport/data/'+self.product.short_name)
         self.assertEquals(response.status_code, 200)
         
-        response = self.client.post('/api/reports/imagesReport/data/'+self.product.shortname+'?_method=GET')
+        response = self.client.post('/api/reports/imagesReport/data/'+self.product.short_name+'?_method=GET')
         self.assertEquals(response.status_code, 200)    
     
     def notestGetEmptySet(self):
         """Test to make sure that an empty report is generated for the give query"""
-        response = self.client.post('/api/reports/imagesReport/data/'+self.product.shortname+'?_method=GET&timeunits=day&starttime=100&endtime=200')
+        response = self.client.post('/api/reports/imagesReport/data/'+self.product.short_name+'?_method=GET&timeunits=day&starttime=100&endtime=200')
         self.assertEquals(response.content, expectedResult)
     
     def notestBadRequestGet(self):
-        response = self.client.get('/api/reports/imagesReport/data/'+self.product.shortname+'?timeunits=bob')
+        response = self.client.get('/api/reports/imagesReport/data/'+self.product.short_name+'?timeunits=bob')
         self.assertEquals(response.status_code, 400)
         
-        response = self.client.get('/api/reports/imagesReport/data/'+self.product.shortname+'?starttime=bob')
+        response = self.client.get('/api/reports/imagesReport/data/'+self.product.short_name+'?starttime=bob')
         self.assertEquals(response.status_code, 400)
         
-        response = self.client.get('/api/reports/imagesReport/data/'+self.product.shortname+'?endtime=bob')
+        response = self.client.get('/api/reports/imagesReport/data/'+self.product.short_name+'?endtime=bob')
         self.assertEquals(response.status_code, 400)
             
     def notestNotFoundGet(self):
-        response = self.client.get('/api/reports/imagesReport/data/'+self.product.shortname+'1')
+        response = self.client.get('/api/reports/imagesReport/data/'+self.product.short_name+'1')
         self.assertEquals(response.status_code, 404)   
         
         

@@ -11,6 +11,24 @@ from xobj import xobj
 
 from mint.django_rest.rbuilder import modellib
 
+# because we don't want to include relations of the same
+# type multiple times, we do not offer up some items
+# in the filter descriptor.  This does NOT mean
+# they can't be added via REST.  Only removed
+# as it would be confusing since we don't include
+# the actual field name in the dropdown.
+EXCLUDE_FIELD_NAMES = [ 'modified_by', 'modified_date']
+
+# certain fields are eclipsed by the default search key
+# being named "name" when there is another "name".  This is a workaround
+# that ensures the QS engine does not try to interpolate them, allowing
+# a way to keep them from being eclipsed when prefixed by the string
+# "literal:".
+
+LITERAL_FIELDS = [
+    'Stage name'
+]
+
 class FieldDescriptor(object):
     _xobj = xobj.XObjMetadata(tag='field_descriptor',
         elements=[
@@ -78,6 +96,16 @@ def strOperatorChoices():
     operators = [modellib.operatorMap[o] for o in modellib.operatorMap
         if o not in ('LESS_THAN', 'LESS_THAN_OR_EQUAL', 'GREATER_THAN',
             'GREATER_THAN_OR_EQUAL', 'IS_NULL', None)]
+
+    def operator_sorter(one, two):
+        # put negative choices to the bottom of the list
+        if one.filterTerm.startswith("NOT") and not two.filterTerm.startswith("NOT"):
+            return 1
+        if two.filterTerm.startswith("NOT") and not one.filterTerm.startswith("NOT"):
+            return -1
+        return cmp(one.description, two.description)
+    operators.sort(cmp=operator_sorter)
+
     for operator in operators:
         operatorChoices.choices.append(OperatorChoice(operator.filterTerm, 
             operator.description))
@@ -93,13 +121,14 @@ def boolOperatorChoices():
     return operatorChoices
 
 def getFieldOperatorChoices(field):
-    if isinstance(field, models.IntegerField):
-        operatorChoices = allOperatorChoices()
-    if isinstance(field, models.BooleanField):
-        operatorChoices = boolOperatorChoices()
 
-    # Default to str
-    operatorChoices = strOperatorChoices()
+    operatorChoices = None
+    if isinstance(field, models.IntegerField) or isinstance(field, models.AutoField):
+        operatorChoices = allOperatorChoices()
+    elif isinstance(field, models.BooleanField):
+        operatorChoices = boolOperatorChoices()
+    else:
+        operatorChoices = strOperatorChoices()
 
     if field.null:
         operator = modellib.operatorMap['IS_NULL']
@@ -108,9 +137,17 @@ def getFieldOperatorChoices(field):
 
     return operatorChoices
 
-def getFieldDescriptors(field, prefix=None, processedModels=[]):
+def getFieldDescriptors(field, prefix=None, processedModels=[], depth=0):
     fds = []
     # Not using get_all_field_names in this function b/c of infinite recursion
+
+    if depth > 1:
+        # try not to suck down all of our models into crazy-land
+        # we may also want to require that any associations more than X away
+        # have a shortname to get in the list.  TODO: some concept of advanced
+        # option is on sed's eventual feature list.
+        return fds
+
     if isinstance(field, models.ForeignKey) or \
        isinstance(field, models.ManyToManyField):
         # Skip the model if it has already been processed, as long as it is
@@ -122,7 +159,7 @@ def getFieldDescriptors(field, prefix=None, processedModels=[]):
                 _prefix = '%s.%s' % (prefix, field.name)
             else:
                 _prefix = field.name
-            _fds = getFieldDescriptors(f, _prefix, processedModels)
+            _fds = getFieldDescriptors(f, _prefix, processedModels, depth+1)
             [fds.append(_fd) for _fd in _fds]
         processedModels.append(field.rel.to)
     elif isinstance(field, related.RelatedObject):
@@ -133,34 +170,102 @@ def getFieldDescriptors(field, prefix=None, processedModels=[]):
                 _prefix = '%s.%s' % (prefix, field.get_accessor_name())
             else:
                 _prefix = field.get_accessor_name()
-            _fds = getFieldDescriptors(f, _prefix, processedModels)
+            _fds = getFieldDescriptors(f, _prefix, processedModels, depth+1)
             [fds.append(_fd) for _fd in _fds]
         processedModels.append(field.model())
-    else:   
+    else:
         fd = FieldDescriptor()
         if prefix:
             key = '%s.%s' % (prefix, field.name)
         else:
             key = field.name
-        fd.field_label = getattr(field, 'docstring', field.name)
+        fd.field_label = getattr(field, 'shortname', None)
+        if fd.field_label in LITERAL_FIELDS:
+            key = "literal:%s" % key
         fd.field_key = key
-        fd.value_type = getFieldValueType(field)
-        fd.value_options = getFieldValueOptions(field)
-        fd.operator_choices = getFieldOperatorChoices(field)
-        fds.append(fd)
+        if fd.field_label is not None and not fd.field_key.startswith("_"):
+            fd.value_type = getFieldValueType(field)
+            fd.value_options = getFieldValueOptions(field)
+            fd.operator_choices = getFieldOperatorChoices(field)
+            fds.append(fd)
     return fds
 
+def _explicitlyAddSearchTerms(descriptorList, model, querySet):
+    """
+    Add some search terms that are perhaps too far away from the object
+    but still should be any user-interface oriented list.  A hack of sorts
+    in an otherwise self-generating descriptor system, but better than
+    setting the recursion depth too large.
+    """
+    if querySet.resource_type == 'system':
 
-def getFilterDescriptor(model):
+        # ipv4 address
+        desc = FieldDescriptor()
+        desc.field_label = "System network address (ipv4)"
+        desc.field_key = "networks.ip_address"
+        desc.value_type = 'str'
+        desc.value_options = ValueOptions()
+        desc.value_options.options = [] 
+        desc.operator_choices = allOperatorChoices()
+        descriptorList.append(desc) 
+        
+        # ipv6 address
+        desc = FieldDescriptor()
+        desc.field_label = "System network address (ipv6)"
+        desc.field_key = "networks.ipv6_address"
+        desc.value_type = 'str'
+        desc.value_options = ValueOptions()
+        desc.value_options.options = [] 
+        desc.operator_choices = allOperatorChoices()
+        descriptorList.append(desc) 
+
+def getFilterDescriptor(model, queryset):
     processedModels = []
     processedModels.append(model)
     fd = FilterDescriptor()
     fd.field_descriptors = FieldDescriptors()
     fd.field_descriptors.descriptors = []
     fieldNames = model._meta.get_all_field_names()
+    fieldNames.sort()
     for fieldName in fieldNames:
+        if fieldName in EXCLUDE_FIELD_NAMES:
+            continue 
         field = model._meta.get_field_by_name(fieldName)[0]
         _fds = getFieldDescriptors(field, None, processedModels)
         [fd.field_descriptors.descriptors.append(_fd) for _fd in _fds]
+
+    _explicitlyAddSearchTerms(fd.field_descriptors.descriptors, model, queryset)
+
+    # uniquify values as some systems resolve to themselves and so forth
+    list = fd.field_descriptors.descriptors
+    fds_by_name = {}
+    for x in list:
+        if x is None or x.field_label is None:
+            continue
+        if fds_by_name.has_key(x.field_label):
+            old = fds_by_name[x.field_label]
+            if len(x.field_key) < len(old.field_key):
+                fds_by_name[x.field_label] = x
+        else:
+            fds_by_name[x.field_label] = x
+    values = fds_by_name.values()
+    values.sort(key = lambda x: str.lower(x.field_label))
+    fd.field_descriptors.descriptors = values
+
+    def filter_sort(one, two):
+       '''
+       Sort alphabetically except that the most important item for each filter
+       type must rise to the top
+       '''
+       if one == two:
+           return 0
+       search_key = queryset.searchKey()
+       if one.field_label == search_key:
+           return -1
+       if two.field_label == search_key:
+           return 1
+       return cmp(one.field_label, two.field_label)
+
+    fd.field_descriptors.descriptors.sort(cmp=filter_sort)
     return fd
 

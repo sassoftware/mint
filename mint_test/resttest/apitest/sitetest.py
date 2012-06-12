@@ -38,15 +38,15 @@ class SiteTest(restbase.BaseRestTest):
   <version>%(version)s</version>
   <conaryVersion>%(conaryversion)s</conaryVersion>
   <rmakeVersion>%(rmakeversion)s</rmakeVersion>
-  <userName>anonymous</userName>
+  <userName>someuser</userName>
   <hostName>%(hostname)s</hostName>
   <isRBO>false</isRBO>
   <isExternalRba>false</isExternalRba>
   <accountCreationRequiresAdmin>false</accountCreationRequiresAdmin>
   <identity>
     <rbuilderId></rbuilderId>
-    <serviceLevel status="Unknown" daysRemaining="-1" expired="true" limited="true"/>
-    <registered>false</registered>
+    <serviceLevel status="Unknown" daysRemaining="-1" expired="false" limited="false"/>
+    <registered>true</registered>
   </identity>
   <products href="http://%(server)s:%(port)s/api/products/"/>
   <users href="http://%(server)s:%(port)s/api/users/"/>

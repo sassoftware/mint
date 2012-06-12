@@ -1,7 +1,5 @@
 #
-# Copyright (c) 2009 rPath, Inc.
-#
-# All Rights Reserved
+# Copyright (c) 2011 rPath, Inc.
 #
 import decorator
 import logging
@@ -15,6 +13,7 @@ from mint import jobstatus
 from mint import mint_error
 from mint import projects
 from mint import userlevels
+from mint.db import repository as reposdb
 from mint.lib import siteauth
 from mint.rest.api import models
 from mint.rest import errors
@@ -145,10 +144,13 @@ class Database(DBInterface):
         self.awsMgr = awshandler.AWSHandler(cfg, self, auth)
         self.pkiMgr = pkimgr.PKIManager(cfg, self, auth)
         self.systemMgr = systemmgr.SystemManager(cfg, self, auth)
+        self.reposShim = reposdb.RepositoryManager(cfg, db._db)
         if subscribers is None:
             subscribers = []
-            subscribers.append(emailnotifier.EmailNotifier(cfg, self,
-                                                           auth))
+            # Email notifications we have no longer make sense.  See
+            # http://mingle.eng.rpath.com/projects/rbuilder/cards/959 for more
+            # information.
+            # subscribers.append(emailnotifier.EmailNotifier(cfg, self, auth))
             subscribers.append(self.awsMgr)
         for subscriber in subscribers:
             self.publisher.subscribe(subscriber)
@@ -158,14 +160,26 @@ class Database(DBInterface):
         self.siteAuth = None
         if not dbOnly:
             self.siteAuth = siteauth.getSiteAuth(cfg.siteAuthCfgPath)
+        self._djMgr = None
+
+    @property
+    def djMgr(self):
+        if self._djMgr is None:
+            from mint.django_rest.rbuilder.manager import rbuildermanager
+            self._djMgr = rbuildermanager.RbuilderManager()
+        return self._djMgr
 
     def close(self):
-        #DBInterface.close(self)
-        self.productMgr.reposMgr.close()
+        DBInterface.close(self)
+        self.reposShim.close()
 
     def reopen_fork(self):
         DBInterface.reopen_fork(self)
-        self.productMgr.reposMgr.reopen_fork()
+        self.reposShim.close_fork()
+        self.reposShim = reposdb.RepositoryManager(self.cfg, self.db._db)
+
+    def reset(self):
+        self.reposShim.reset()
 
     def setAuth(self, auth, authToken):
         self.auth.setAuth(auth, authToken)
@@ -190,10 +204,8 @@ class Database(DBInterface):
     @readonly
     def getProductFQDNFromId(self, productId):
         cu = self.db.cursor()
-        cu.execute('SELECT hostname, domainname from Projects where projectId=?', productId)
-        hostname, domainname = self._getOne(cu, errors.ProductNotFound, 
-                                            productId)
-        return hostname + '.' + domainname
+        cu.execute('SELECT fqdn FROM Projects where projectId=?', productId)
+        return self._getOne(cu, errors.ProductNotFound, productId)[0]
 
     @readonly
     def getProduct(self, hostname):
@@ -217,7 +229,7 @@ class Database(DBInterface):
         for row in cu:
             pvl.addProductVersion(row)
             pv = pvl.versions[-1]
-            pd = self.productMgr.getProductVersionDefinitionByProductVersion(pv)
+            pd = self.productMgr.getProductVersionDefinitionByProductVersion(hostname, pv)
             # Use sourceGroup here since this is really the name of the source
             # trove that needs to be cooked.
             pv.sourceGroup = pd.getImageGroup()
@@ -328,21 +340,6 @@ class Database(DBInterface):
         for d in cu:
             userList.users.append(models.User(d))
         return userList
-
-    @readonly    
-    def listUserGroupsForUser(self, username):
-        self.auth.requireAdmin()
-        cu = self.db.cursor()
-        cu.execute('''SELECT userGroup 
-                      FROM Users
-                      JOIN UserGroupMembers  USING(userId)
-                      JOIN UserGroups  USING(userGroupId)
-                      WHERE Users.username=?''', username)
-        groupList = models.UserGroupMemberList()
-        for userGroup, in cu:
-            group = models.UserGroupMember(userGroup, username)
-        groupList.groups.append(group)
-        return groupList
 
     @commitafter
     def createProduct(self, product):
@@ -562,6 +559,10 @@ class Database(DBInterface):
     def getProductVersionDefinition(self, hostname, version):
         self.auth.requireProductReadAccess(hostname)
         return self.productMgr.getProductVersionDefinition(hostname, version)
+    
+    def getProductVersionDefinitionFromVersion(self, hostname, version):
+        self.auth.requireProductReadAccess(hostname)
+        return self.productMgr.getProductVersionDefinitionByProductVersion(hostname, version)
 
     @commitafter
     def setProductVersionDefinition(self, hostname, version, pd):
@@ -584,7 +585,7 @@ class Database(DBInterface):
         self.auth.requireBuildsOnHost(hostname, [imageId])
         return self.imageMgr.stopImageJob(imageId)
 
-    @readonly    
+    @readonly
     def listReleasesForProduct(self, hostname, limit=None):
         self.auth.requireProductReadAccess(hostname)
         return self.releaseMgr.listReleasesForProduct(hostname, limit=limit)

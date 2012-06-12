@@ -1,13 +1,10 @@
 #
-# Copyright (c) 2005-2009 rPath, Inc.
+# Copyright (c) 2011 rPath, Inc.
 #
-# All Rights Reserved
-#
+
 from mint import config
 from mint import helperfuncs
-from mint.db import pkgindex
 from mint.db import projects
-from mint.lib import database
 from mint.lib import scriptlibrary
 
 from conary import conaryclient
@@ -78,7 +75,7 @@ class UpdatePackageIndex(PackageIndexer):
                               LEFT JOIN Projects
                                   ON Commits.projectId=Projects.projectId
                               WHERE (troveName NOT LIKE '%:%' OR troveName LIKE '%:source')
-                              AND hidden=0 AND disabled=0
+                              AND NOT hidden AND NOT disabled
                               AND timestamp >=
                                   (SELECT mark FROM PackageIndexMark)""")
 
@@ -169,7 +166,7 @@ class UpdatePackageIndexExternal(PackageIndexer):
         # sets the mark to "1" to ensure no race conditions exist
         # sorrounding the setting of the mark.
         cu = self.db.transaction()
-        cu.execute("SELECT COUNT(*) FROM Projects WHERE external = 0")
+        cu.execute("SELECT COUNT(*) FROM Projects WHERE NOT external")
         internalProjects = cu.fetchone()[0]
         cu.execute("SELECT COUNT(*) FROM Commits")
         commits = cu.fetchone()[0]
@@ -187,16 +184,14 @@ class UpdatePackageIndexExternal(PackageIndexer):
         self.db.connect()
         self.db.loadSchema()
         cu = self.db.cursor()
-        pkgIdx = pkgindex.PackageIndexTable(self.db)
         labelsTable = projects.LabelsTable(self.db, self.cfg)
         self.db.commit()
 
         cu = self.db.cursor()
-        cu.execute("""SELECT projectId, %s, EXISTS(SELECT * FROM InboundMirrors
+        cu.execute("""SELECT projectId, fqdn, EXISTS(SELECT * FROM InboundMirrors
                            WHERE projectId=targetProjectId) AS localMirror
                          FROM Projects
-                         WHERE external=1 AND hidden=0 AND disabled=0""" % \
-                   database.concat(self.db, 'hostname', "'.'", 'domainname'))
+                         WHERE external AND NOT hidden AND NOT disabled""")
 
         labels = {}
         projectIds = {}
@@ -251,7 +246,6 @@ class UpdatePackageIndexExternal(PackageIndexer):
                 continue
 
             packageDict = {}
-            labelMap = {}
             for pkg in troves:
                 troveEntry = packageDict.setdefault(pkg, {})
                 verList = troves[pkg].keys()
@@ -278,31 +272,31 @@ class UpdatePackageIndexExternal(PackageIndexer):
 
         self.log.info("Completed fetching %d trove%s.", len(rows), ((len(rows) != 1) and 's' or ''))
         self.log.info("Updating database...")
-        updates = []
+
+        placeholders = ', '.join('?' for x in projectIds)
+        args = projectIds.values()
+        cu.execute("""
+            SELECT projectId, name, version, pkgId
+            FROM PackageIndex
+            WHERE projectId IN (%s)
+            """ % (placeholders,),
+            args)
+        troveLookup = dict((x[:3], x[3]) for x in cu)
         inserts = []
         for row in rows:
-            cu.execute("SELECT pkgId FROM PackageIndex WHERE projectId=? AND name=? AND version=?", *row[:3])
-            r = cu.fetchone()
-            if r:
-                pkgId = r[0]
-                updates.append((row[0], row[1], row[2], row[3], row[4], row[5], pkgId))
-            else:
+            projectId, name, version, serverName, branchName, isSource = row
+            pkgId = troveLookup.get((projectId, name, version), None)
+            if not pkgId:
                 inserts.append(row)
 
         st = time.time()
-        if inserts or updates:
+        if inserts:
             self.db.transaction()
             if inserts:
                 cu.executemany("""
                     INSERT INTO PackageIndex
                         (projectId, name, version, serverName, branchName, isSource)
                     VALUES (?, ?, ?, ?, ?, ?)""", inserts)
-            if updates:
-                cu.executemany("""
-                    UPDATE PackageIndex SET
-                        projectId=?, name=?, version=?,
-                        serverName=?, branchName=?, isSource=?
-                    WHERE pkgId=?""", updates)
             self.db.commit()
         if not hasErrors:
             self.updateMark()

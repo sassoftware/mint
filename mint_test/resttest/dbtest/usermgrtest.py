@@ -1,12 +1,31 @@
 #!/usr/bin/python
-import testsetup
-from testutils import mock
 
+import os
+import testsetup
+
+from mint import buildtypes
 from mint import mint_error
 from mint.rest import errors
 from mint_test import mint_rephelp
 
 class UserManagerTest(mint_rephelp.MintDatabaseHelper):
+    def setUp(self):
+        mint_rephelp.MintDatabaseHelper.setUp(self)
+        from mint.rest.db import targetmgr
+        tmgr = targetmgr.TargetManager
+        if not os.path.exists(tmgr.TargetImportScriptPath):
+            self.mock(tmgr, 'importTargetSystems',
+                lambda *args, **kwargs: True)
+        db = self.openMintDatabase(createRepos=False)
+        cu = db.cursor()
+        tbmap = [
+            ('tType', buildtypes.RAW_HD_IMAGE),
+        ]
+        for ttype, buildTypeId in tbmap:
+            cu.execute("INSERT INTO target_types (name, description, build_type_id) VALUES (?, ?, ?)",
+                ttype, ttype + " description", buildTypeId)
+        db.commit()
+
     def testCancelUserAccount(self):
         db = self.openMintDatabase(createRepos=False)
         self.createUser('admin', admin=True)
@@ -24,25 +43,17 @@ class UserManagerTest(mint_rephelp.MintDatabaseHelper):
         self.createProduct('foo3', developers=['developer'], db=db)
         self.assertRaises(mint_error.LastOwner, db.cancelUserAccount, 'owner')
 
-    def testGetAdminGroupId(self):
-        db = self.openMintDatabase(createRepos=False)
-        self.createUser('admin', admin=True)
-        groupId = db.userMgr._getAdminGroupId()
-        assert(groupId == db.userMgr._getAdminGroupId())
-
     def testMakeAdmin(self):
         db = self.openMintDatabase(createRepos=False)
         self.createUser('admin', admin=True)
         self.createUser('other')
         assert(not db.userMgr._isUserAdmin('other'))
         db.userMgr.makeAdmin('other')
-        groupId = db.userMgr._getAdminGroupId()
         assert(db.userMgr._isUserAdmin('other'))
 
     def testCreateUser(self):
         db = self.openMintDatabase(createRepos=False)
         self.createUser('admin', admin=True)
-        self.assertRaises(mint_error.UserAlreadyExists, self.createUser, 'mintadmin')
         self.assertRaises(mint_error.UserAlreadyExists, self.createUser, 'ADmIN')
         db.createUser('foo', 'bar', 'fullName', 'email', 
                       'displayEmail', 'blurb')
@@ -59,7 +70,6 @@ class UserManagerTest(mint_rephelp.MintDatabaseHelper):
         self.setDbUser(db, 'admin')
         adminId = db.getUser('admin').userId
         passwd, salt = db.userMgr._getPassword(adminId)
-        assert(len(salt) == 4)
         #TODO: ensure algorithm is right.
 
     def testGetUsername(self):

@@ -13,6 +13,8 @@ from mint import shimclient
 from mint.rest.api import models
 from mint.rest.modellib import converter
 from mint.rest import errors
+from conary.repository.netrepos.netauth import ValidPasswordToken
+
 
 # Decorator for public (unauthenticated) methods/functions
 def public(deco):
@@ -82,11 +84,7 @@ class AuthenticationCallback(object):
         req = request._req
         anonToken = ('anonymous', 'anonymous')
         try:
-            if cfg.cookieSecretKey:
-                cookies = Cookie.get_cookies(req, Cookie.SignedCookie,
-                                             secret = cfg.cookieSecretKey)
-            else:
-                cookies = Cookie.get_cookies(req, Cookie.Cookie)
+            cookies = Cookie.get_cookies(req, Cookie.Cookie)
         except:
             cookies = {}
         if 'pysid' not in cookies:
@@ -100,10 +98,13 @@ class AuthenticationCallback(object):
         from mint.session import SqlSession
         session = SqlSession(req, sessionClient,
             sid = sid,
-            secret = cfg.cookieSecretKey,
             timeout = 86400,
             lock = False)
-        return session.get('authToken', None)
+        authToken = session.get('authToken', None)
+        if authToken and authToken[1] == '':
+            # Pre-authenticated session
+            authToken = (authToken[0], ValidPasswordToken)
+        return authToken
 
     def _checkAuth(self, authToken):
         mintClient = shimclient.ShimMintClient(self.cfg, authToken,
@@ -210,6 +211,9 @@ class AuthenticationCallback(object):
                 if request.mintAuth.admin:
                     return None
                 else:
+                    # TODO: new way is to wrap these as XML faults and return 200 to Flash
+                    if 'HTTP_X_FLASH_VERSION' in request.headers:
+                        return Response('Unauthorized', status=403)
                     return Response(status=401,
                              headers={'WWW-Authenticate' : 'Basic realm="rBuilder"'})
             else:
@@ -219,6 +223,7 @@ class AuthenticationCallback(object):
         if (not getattr(viewMethod, 'public', False)
                 and request.mintAuth is None):
             if 'HTTP_X_FLASH_VERSION' in request.headers:
-                return Response(status=403)
+                # TODO: new way is to wrap these as XML faults and return 200 to Flash
+                return Response('Unauthorized', status=403)
             return Response(status=401,
                      headers={'WWW-Authenticate' : 'Basic realm="rBuilder"'})

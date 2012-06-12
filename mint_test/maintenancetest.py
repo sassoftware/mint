@@ -102,16 +102,6 @@ class MaintenanceTest(mint_rephelp.WebRepositoryHelper):
                           '/testproject.' + MINT_PROJECT_DOMAIN + \
                           '@rpl:devel/1.0-1-1')
 
-    def testRepos(self):
-        client, userId = self.quickMintAdmin('admin', 'admin')
-        self.newProject(client)
-        self.setMaintenanceMode(maintenance.LOCKED_MODE)
-        # this call would normally not be safe.
-        page = self.fetchWithRedirect('/repos/testproject/browse',
-                                      server = self.getProjectServerHostname())
-        self.failIf("is currently undergoing maintenance" not in page.body,
-                    "It appears we could browse the repo")
-
     def testUsers(self):
         # use a shim client and skip the lockfile.
         self.setMaintenanceMode(maintenance.LOCKED_MODE)

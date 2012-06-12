@@ -27,6 +27,8 @@ from mint.image_gen.wig import install_job
 
 log = logging.getLogger('wig')
 
+MEBI = 1048576
+
 # This list is used in order to automatically map status codes to a "step
 # number". For example, when sendStatus(WIG_JOB_SENDING) is invoked, the
 # progress element {2/5} would be sent. Some tasks may have variations on this
@@ -107,6 +109,7 @@ class ImageGenerator(object):
             ccfg.configLine(line)
         ccfg.configLine('conaryProxy http %sconary' % (data['outputUrl']))
         ccfg.configLine('conaryProxy https %sconary' % (data['outputUrl']))
+        ccfg.configLine('updateThreshold 1')
         ccfg.dbPath = ':memory:'
         self.conaryClient = conaryclient.ConaryClient(self.conaryCfg)
 
@@ -322,6 +325,13 @@ class WbsGenerator(ImageGenerator):
 
         servicingXml = self._getServicingXml(msis)
         uploadMap['servicing.xml'] = StringIO.StringIO(servicingXml)
+
+        diskSize = (self.wimData.size * 3
+                + sum(x.size for x in msis) * 3
+                + self.jobData.getBuildData('vmMemory') * MEBI * 2
+                + self.jobData.getBuildData('freespace') * MEBI
+                )
+        self.wigClient.setDiskSize(diskSize // MEBI)
 
         self.filesTransferred = 0
         self.fileCount = len(uploadMap)

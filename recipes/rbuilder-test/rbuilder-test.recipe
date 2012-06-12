@@ -29,6 +29,7 @@ class rBuilderTest(TestPackageRecipe):
         'm2crypto:python',
         'mcp:python',
         'mcp-sources:python',
+        'python-memcached:python',
         'mod_python:runtime',
         'PIL:python',
         'python:devel',
@@ -54,14 +55,13 @@ class rBuilderTest(TestPackageRecipe):
 
         # testsuites
         'conary-factory-test:lib',
-        'conary-test:lib',
+        'conary-test:python',
         'rapa-test:lib',
         'rpath-capsule-indexer-test:lib',
       ]
 
     pythonPath = [
         '%(libdir)s/rpath-capsule-indexer-test',
-        '%(libdir)s/conary-test',
         '%(libdir)s/raa-test',
         '%(libdir)s/raa',
       ]
@@ -95,15 +95,15 @@ class rBuilderTest(TestPackageRecipe):
 
         environ += 'RAA_PLUGINS_PATH=%(libdir)s/raa '
         environ += 'PACKAGE_CREATOR_SERVICE_TEST_PATH=%(libdir)s/conary-factory-test '
-        environ += 'CONARY_TEST_PATH=%(libdir)s/conary-test '
 
         config['repos_db'] = (
             Flags.db_pgsql and 'postgresql'
             or 'sqlite')
         environ += 'CONARY_REPOS_DB=%s ' % config['repos_db']
 
+        # For now, limit to django tests only -- misa
         r.run_tests(environ=environ, configuration=config,
-            args='--context \!unfriendly')
+            args='--context \!unfriendly django_rest mint_test.resttest')
 
     def install(r):
         r.Install('mint_test', '%(libdir)s/mint-test')

@@ -15,8 +15,7 @@ import time
 import xmlrpclib
 
 from mint_test import mint_rephelp
-from mint_rephelp import MINT_HOST, MINT_PROJECT_DOMAIN, MINT_DOMAIN
-import rephelp
+from mint_rephelp import MINT_PROJECT_DOMAIN
 
 from webunit import webunittest
 
@@ -114,43 +113,6 @@ class SiteTest(mint_rephelp.WebRepositoryHelper):
         self.assertNotContent('/cancelAccount?confirmed=1', 
                            content='Are you sure you want to close your account?',
                            code=[301])
-
-    def testGroupTroveSearch(self):
-        if not self.mintCfg.rBuilderOnline:
-            raise testsuite.SkipTestException("Test needs group builder, which has been disabled in non-rBO mode")
-        client, userId = self.quickMintUser('foouser','foopass')
-        page = self.webLogin('foouser', 'foopass')
-        hostname = 'foo'
-        projectId = client.newProject('Foo', hostname, MINT_PROJECT_DOMAIN,
-                        shortname=hostname, version="1.0", prodtype="Component")
-        gt = client.createGroupTrove(projectId, 'group-blah', '1', 'testing', True)
-        gt.addTrove('group-appliance-platform',
-            '/blah.blah.blah@rpl:1/1.1.1-1-1', '', '', False, False, False)
-        page = page.fetch('/project/foo/editGroup?id=%s' % gt.id)
-        page = page.fetch('/search?type=Packages')
-        self.failIf('only packages for rpl:1 branch' not in page.body, 
-                    "Package search failed to limit search to rpl:1 branch")
-    
-    def testPackageSearchFormat(self):
-        if not self.mintCfg.rBuilderOnline:
-            raise testsuite.SkipTestException("Test needs group builder, which has been disabled in non-rBO mode")
-        client, userId = self.quickMintUser('foouser','foopass')
-        page = self.webLogin('foouser', 'foopass')
-        hostname = 'foo'
-        projectId = client.newProject('Foo', hostname, MINT_PROJECT_DOMAIN,
-                        shortname=hostname, version="1.0", prodtype="Component")
-        cu = self.db.cursor()
-        for name in ('package1', 'package2', 'package3'):
-            cu.execute("SELECT COALESCE(MAX(pkgId) + 1, 1) FROM PackageIndex")
-            pkgId = cu.fetchone()[0]
-            r = cu.execute("INSERT INTO PackageIndex VALUES(?, ?, ?, '/test.project.test@test:test/1.1-1-1', ?, 'test:test', 0)", (pkgId, projectId, name, MINT_PROJECT_DOMAIN))
-        self.db.commit()
-        self.failIf('<tr> <td> <a href="/repos/foo/troveInfo?t=package2;v=%2Ftest.project.test%40test%3Atest%2F1.1-1-1" class="mainSearchItem">package2</a> </td> <td> <a href="/project/foo/">Foo</a> </td> </tr>' not in ' '.join(self.fetch('/search?type=Packages').body.split()))
-        gt = client.createGroupTrove(projectId, 'group-blah', '1', 'testing', True)
-        gt.addTrove('group-core', '/blah.blah.blah@test:test/1.1.1-1-1', '', '', False, False, False)
-        page = page.fetch('/project/foo/editGroup?id=%s' % gt.id)
-        page = page.fetch('/search?type=Packages')
-        self.failIf('Add to group-blah' not in page.body)
 
     def testBadCmd(self):
         client, userId = self.quickMintUser('foouser','foopass')

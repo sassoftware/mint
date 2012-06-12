@@ -4,7 +4,7 @@
 # All rights reserved.
 #
 
-SUBDIRS = db django_rest image_gen lib reports rest scripts templates web
+SUBDIRS = templates db django_rest image_gen lib reports rest rmake3_package_creator scripts web
 
 python_files = $(wildcard *.py)
 

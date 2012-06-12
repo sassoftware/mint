@@ -22,6 +22,9 @@ class PlatformManagerTest(restbase.BaseRestTest):
         self.db = self.openMintDatabase(createRepos=False)
         self.createUser('admin', admin=True)
         self.setDbUser(self.db, 'admin')
+        from mint import config
+        from mint.scripts import pkgindexer
+        self.mock(pkgindexer.PackageIndexer, 'cfgPath', config.RBUILDER_CONFIG)
 
     def _getPlatform(self):
         # Set up the platforms in the db before enabling it.
@@ -55,7 +58,25 @@ class PlatformManagerTest(restbase.BaseRestTest):
 
         return productId
 
+    def _mockReposMgr(self):
+        self.db.productMgr.reposMgr = mock.MockInstance(
+                                       reposmgr.RepositoryManager)
+        self.db.productMgr.reposMgr._mock.enableMethod('addIncomingMirror')
+        self.db.productMgr.reposMgr._mock.enableMethod('addUserByMd5')
+        self.db.productMgr.reposMgr._mock.enableMethod('_getFqdn')
+        self.db.productMgr.reposMgr._mock.enableMethod('_getNextMirrorOrder')
+        self.db.productMgr.reposMgr._mock.enableMethod('_isProductExternal')
+        self.db.productMgr.reposMgr._mock.enableByDefault()
+        self.db.productMgr.reposMgr._mock.disable('createRepository')
+        self.db.productMgr.reposMgr._mock.disable('_generateConaryrcFile')
+        self.db.productMgr.reposMgr._mock.disable('getAdminClient')
+        self.db.productMgr.reposMgr._mock.disable('_getRepositoryHandle')
+        self.db.productMgr.reposMgr._mock.disable('_getRepositoryServer')
+        self.db.productMgr.reposMgr._mock.disable('_getRoleForLevel')
+        self.db.productMgr.reposMgr.db = self.db
+
     def testEnablePlatformNoProject(self):
+        self._mockReposMgr()
         p = self._getPlatform()
         p2 = self.db.updatePlatform(p.platformId, p)
         plat = self.db.db.platforms.get(p.platformId)
@@ -66,19 +87,10 @@ class PlatformManagerTest(restbase.BaseRestTest):
         self.assertEquals(plat['projectId'], 2)
 
     def testEnablePlatformProjectNoMirror(self):
+        self._mockReposMgr()
         p = self._getPlatform()
         productId = self._getProductId()
         self.db.db.projects.update(productId, external=1)
-
-        self.db.productMgr.reposMgr = mock.MockInstance(
-                                       reposmgr.RepositoryManager)
-        self.db.productMgr.reposMgr._mock.enableMethod('addIncomingMirror')
-        self.db.productMgr.reposMgr._mock.enableMethod('_getFqdn')
-        self.db.productMgr.reposMgr._mock.enableMethod('_getNextMirrorOrder')
-        self.db.productMgr.reposMgr._mock.enableByDefault()
-        self.db.productMgr.reposMgr._mock.disable('createRepository')
-        self.db.productMgr.reposMgr._mock.disable('_generateConaryrcFile')
-        self.db.productMgr.reposMgr.db = self.db
 
         mock.mockFunctionOnce(self.db.db.projects, 'getProjectIdByFQDN',
             productId)
@@ -118,6 +130,17 @@ class PlatformManagerTest(restbase.BaseRestTest):
         self.assertTrue(plat['projectId'] is not None)
         # assert productId matches the product we created
         self.assertEquals(plat['projectId'], productId)
+
+    def testHidePlatform(self):
+        self._mockReposMgr()
+        p = self._getPlatform()
+        p.hidden = True
+
+        p2 = self.db.updatePlatform(p.platformId, p)
+        plat = self.db.db.platforms.get(p2.platformId)
+
+        self.failUnlessEqual(plat['hidden'], True)
+
 
     def testLoadPlatformProxy(self):
         # CNY-6002: make sure the whole config is passed to lookaside.FileFinder

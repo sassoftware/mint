@@ -63,7 +63,7 @@ class ErrorCallback(object):
                 'headers_in'        : request.headers,
                 'request_params'    : request.GET,
                 'post_params'       : request.POST,
-                'remote'            : '[%s]:%d' % request.remote,
+                'remote'            : '[%s]:%d' % request.remote[:2],
                 }
         try:
             logerror.logErrorAndEmail(self.controller.cfg, e_type, e_value,

@@ -5,6 +5,7 @@
 #
 
 
+SUBDIRS =	fixtures image_type_descriptors
 python_files = $(wildcard *.py)
 
 all: default-all

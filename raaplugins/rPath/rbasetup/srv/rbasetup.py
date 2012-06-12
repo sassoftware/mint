@@ -1,17 +1,16 @@
 #
-# Copyright (C) 2008-2009 rPath, Inc.
-# All rights reserved
+# Copyright (C) 2011 rPath, Inc.
 #
+
 import logging
 import os
-import pwd
-import subprocess
-import sys
-import tempfile
-import time
-import traceback
 import pickle
+import pwd
+import robj
+import subprocess
+import traceback
 from conary import conarycfg
+from xobj import xobj
 
 from raa.modules.raasrvplugin import rAASrvPlugin
 from raa.rpath_error import PermanentTaskFailureException
@@ -23,15 +22,14 @@ from mint import helperfuncs
 from mint import notices_callbacks
 from mint import rmake_setup
 from mint import shimclient
-from mint.lib.siteauth import SiteAuthorization
 from mint.scripts import createplatforms
+from mint.scripts import repository_sync
 
 from mint.mint_error import (RmakeRepositoryExistsError, UserAlreadyExists,
         UserAlreadyAdmin)
 
-from conary.lib.cfgtypes import CfgBool
-
 log = logging.getLogger('raa.server.rbasetup')
+
 
 class rBASetup(rAASrvPlugin):
     """
@@ -93,7 +91,6 @@ class rBASetup(rAASrvPlugin):
         """
         Sets up rMake for appliance creator, etc.
         """
-        errors = []
         restartNeeded = False
         apacheUID, apacheGID = pwd.getpwnam('apache')[2:4]
         # log pipe
@@ -134,7 +131,7 @@ class rBASetup(rAASrvPlugin):
                     childLog.error("Unexpected error occurred when attempting "
                             "to create the rMake repository: %s" % str(e))
                     try:
-                        pickle.dump(sys.exc_info()[:2], errorWriter)
+                        pickle.dump(e, errorWriter)
                     except Exception, e:
                         childLog.error('Pickle failed: %s', str(e))
                         pass
@@ -170,6 +167,8 @@ class rBASetup(rAASrvPlugin):
                 except Exception, e:
                     log.error('Unpickle failed: %s', str(e))
                     return { 'errors': [ 'rmake setup exited with code %d' % childRC ] }
+                else:
+                    raise exc
             restartNeeded = os.WIFEXITED(childStatus) and (childRC == 0)
 
         if restartNeeded:
@@ -193,30 +192,6 @@ class rBASetup(rAASrvPlugin):
 
         return { 'message': 'complete.\n' }
 
-    def _generateEntitlement(self, mintCfg):
-        log.info("Generating rBuilder site entitlement ...")
-
-        try:
-            conaryCfg = conarycfg.ConaryConfiguration(True)
-            auth = SiteAuthorization(mintCfg.siteAuthCfgPath, conaryCfg)
-            if auth.isConfigured():
-                msg = "Entitlement is already set; " + \
-                        "keeping rBuilder ID %s .\n" % auth.rBuilderId
-                log.warning("%s", msg)
-                return {'message': msg }
-
-            newKey = auth.generate()
-            if newKey is None:
-                return {'errors': [ 'Failed to generate entitlement', ] }
-            self.server.setNewEntitlement(newKey)
-
-            msg = "Key successfully generated; your rBuilder ID is %s .\n" % auth.rBuilderId
-            log.info("%s", msg)
-            return {'message': msg}
-        except Exception, e:
-            log.error("Failed to generate entitlement: %s", str(e))
-            return { 'errors': [ str(e), ] }
-
     def _createPlatforms(self):
         log.info("Creating platforms...")
         try:
@@ -229,29 +204,27 @@ class rBASetup(rAASrvPlugin):
             log.error("Failed to create platforms: %s", str(e))
             return { 'errors': [ str(e), ] }
 
-
-    def _setupExternalProjects(self):
-        """
-        Sets up a set of canned external projects.
-        All this does is call a script which does the heavy lifting.
-        """
-        log.info("Attempting to set up external projects for platforms")
-        try:
-            errors = helperfuncs.initializeExternalProjects(self.shmclnt)
-            if not errors:
-                log.info("Successfully set up initial external projects")
-                return {}
-            else:
-                log.error("Failed to set up initial external projects")
-                return { 'errors': errors }
-        except Exception, e:
-            log.error("Failed to set up initial external projects")
-            return { 'errors': "Failed to set up initial external projects" }            
-
-        # Initial RSS feed for notices. Not external projects, but it doesn't
-        # need its own section as it isn't important.
-        os.system("/usr/share/rbuilder/scripts/rss-update -q")
-
+    def _setupExternalProjects(self, cfg, username, password):
+        templateDir = '/usr/share/rbuilder/project-templates'
+        conaryCfg = conarycfg.ConaryConfiguration(True)
+        entitlements = conaryCfg.entitlement.find('products.rpath.com')
+        if entitlements:
+            entitlement = str(entitlements[0][1])
+        else:
+            entitlement = None
+        api = robj.open('https://%s:%s@localhost/api/v1' % (username,
+            password))
+        sync = repository_sync.SyncTool(cfg)
+        for name in os.listdir(templateDir):
+            log.info("Creating project from template %s", name)
+            try:
+                with open(os.path.join(templateDir, name)) as f:
+                    doc = xobj.parsef(f)
+                doc.project.entitlement = entitlement
+                api.projects.append(doc)
+                sync.syncReposByFQDN(str(doc.project.repository_hostname))
+            except:
+                log.exception("Failed to create project:")
         return {}
 
     def updateRBAConfig(self, schedId, execId, newValues):
@@ -304,7 +277,6 @@ class rBASetup(rAASrvPlugin):
             raise PermanentTaskFailureException('\n'.join(ret['errors']))
 
     def firstTimeSetup(self, schedId, execId, options, step=lib.FTS_STEP_INITIAL):
-        errors = ''
         try:
             return self._firstTimeSetup(schedId, execId, options, step=lib.FTS_STEP_INITIAL)
         except Exception, e:
@@ -352,6 +324,15 @@ class rBASetup(rAASrvPlugin):
         self.message += result.get('message', '')
         self.reportMessage(execId, self.message)
 
+        # Setup the initial external projects
+        if not retry:
+            step = lib.FTS_STEP_INITEXTERNAL
+            self.message += "Setting up external repositories...\n"
+            self.reportMessage(execId, self.message)
+            ret = self._setupExternalProjects(newCfg, new_username, new_password)
+            if ret.has_key('errors'):
+                return { 'errors': ret['errors'], 'step': step, 'message': self.message }
+
         self.message += "Creating platforms... "
         self.reportMessage(execId, self.message)
         ret = self._createPlatforms()
@@ -359,14 +340,6 @@ class rBASetup(rAASrvPlugin):
             return { 'errors': ret['errors'], 'step': step, 'message': self.message }
         self.message += ret.get('message', '\n')
         self.reportMessage(execId, self.message)
-
-        # Setup the initial external projects
-        step = lib.FTS_STEP_INITEXTERNAL
-        self.message += "Setting up external repositories...\n"
-        self.reportMessage(execId, self.message)
-        ret = self._setupExternalProjects()
-        if ret.has_key('errors'):
-            return { 'errors': ret['errors'], 'step': step, 'message': self.message }
 
         # Done
         self.message += "Setup is complete.\n"

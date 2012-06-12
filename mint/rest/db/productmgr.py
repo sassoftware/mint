@@ -9,8 +9,8 @@ import itertools
 import time
 import types
 
+from conary import trove
 from conary import versions
-from conary.conaryclient import callbacks
 from conary.conaryclient import cmdline
 from conary.deps import deps
 from conary.dbstore import sqlerrors
@@ -28,6 +28,7 @@ from mint.rest import errors
 from mint.rest.api import models
 from mint.rest.db import manager
 from mint.rest.db import reposmgr
+from mint.rest.db import platformmgr
 from mint.templates import groupTemplate
 
 class ProductVersionCallback(object):
@@ -60,8 +61,9 @@ class ProductJobStore(rpath_job.JobStore):
 
 class ProductManager(manager.Manager):
     def __init__(self, cfg, db, auth, publisher=None):
-	manager.Manager.__init__(self, cfg, db, auth, publisher)
+        manager.Manager.__init__(self, cfg, db, auth, publisher)
         self.reposMgr = reposmgr.RepositoryManager(cfg, db, auth)
+        self.platformMgr = platformmgr.PlatformManager(cfg, db, auth)
         self.jobStore = ProductJobStore(
             os.path.join(self.cfg.dataPath, 'jobs'))
 
@@ -89,7 +91,7 @@ class ProductManager(manager.Manager):
         if not self.auth.isAdmin:
             # Private projects are invisible to non-member non-admins.
             whereClauses.append(
-                    ('( p.hidden = 0 OR m.level IS NOT NULL )', ()))
+                    ('( NOT p.hidden OR m.level IS NOT NULL )', ()))
 
         if whereClauses:
             sql += ' WHERE ' + ' AND '.join(x[0] for x in whereClauses)
@@ -160,7 +162,7 @@ class ProductManager(manager.Manager):
 
     def getProductVersion(self, fqdn, versionName):
         productVersion = self._getMinimalProductVersion(fqdn, versionName)
-        pd = self.getProductVersionDefinitionByProductVersion(productVersion)
+        pd = self.getProductVersionDefinitionByProductVersion(productVersion.hostname, productVersion)
         # Use sourceGroup here since this is really the name of the source
         # trove that needs to be cooked.
         productVersion.sourceGroup = pd.getImageGroup()
@@ -208,14 +210,14 @@ class ProductManager(manager.Manager):
                 fqdn='%s.%s' % (hostname, domainname),
                 database=self.cfg.defaultDatabase,
                 namespace=namespace,
-                isAppliance=int(prodtype == 'Appliance' or prodtype == 'PlatformFoundation'), 
+                isAppliance=(prodtype == 'Appliance' or prodtype == 'PlatformFoundation'),
                 projecturl=projecturl,
                 timeModified=createTime, 
                 timeCreated=createTime,
                 shortname=shortname, 
                 prodtype=prodtype, 
                 commitEmail=commitEmail, 
-                hidden=int(isPrivate),
+                hidden=bool(isPrivate),
                 version=version,
                 commit=False)
         except sqlerrors.CursorError, e:
@@ -244,7 +246,7 @@ class ProductManager(manager.Manager):
                       timeModified=time.time())
         if prodtype is not None:
             params['prodtype'] = prodtype
-            params['isAppliance'] = int(prodtype == 'Appliance' or prodtype == 'PlatformFoundation')
+            params['isAppliance'] = (prodtype == 'Appliance' or prodtype == 'PlatformFoundation')
         if namespace is not None:
             v = helperfuncs.validateNamespace(namespace)
             if v != True:
@@ -254,9 +256,9 @@ class ProductManager(manager.Manager):
         if hidden:
             # only admin can hide
             if self.auth.isAdmin:
-                params['hidden'] = 1
+                params['hidden'] = True
         else:
-            params['hidden'] = 0
+            params['hidden'] = False
 
         keys = '=?, '.join(params) + '=?'
         values = params.values()
@@ -269,8 +271,7 @@ class ProductManager(manager.Manager):
             raise mint_error.InvalidError(e.msg)
 
         if bool(oldproduct.hidden) == True and hidden == False:
-            self.reposMgr.addUser('.'.join((oldproduct.hostname,
-                                            oldproduct.domainname)), 
+            self.reposMgr.addUser(oldproduct.repositoryHostname,
                                   'anonymous',
                                   password='anonymous',
                                   level=userlevels.USER)   
@@ -283,6 +284,7 @@ class ProductManager(manager.Manager):
         createTime = time.time()
         creatorId = self.auth.userId > 0 and self.auth.userId or None
 
+        fqdn = self.reposMgr._getFqdn(hostname, domainname)
         try:
             product = self.getProduct(hostname)
             productId = product.productId
@@ -291,7 +293,6 @@ class ProductManager(manager.Manager):
             # repository url there.
             labelIdMap, repoMap, userMap, entMap = \
                 self.db.db.labels.getLabelsForProject(productId) 
-            fqdn = self.reposMgr._getFqdn(hostname, domainname)
             url = repoMap.get(fqdn, url)
         except errors.ItemNotFound:
             productId = None
@@ -305,10 +306,10 @@ class ProductManager(manager.Manager):
             cu.execute('''INSERT INTO Projects (name, creatorId, description,
                     shortname, hostname, domainname, fqdn, projecturl, external,
                     timeModified, timeCreated, backupExternal, database)
-                    VALUES (?, ?, '', ?, ?, ?, ?, '', 1, ?, ?, ?, ?)''',
+                    VALUES (?, ?, '', ?, ?, ?, ?, '', ?, ?, ?, ?, ?)''',
                     title, creatorId, hostname, hostname, domainname,
-                    '%s.%s' % (hostname, domainname),
-                    createTime, createTime, int(backupExternal), database)
+                    fqdn, True,
+                    createTime, createTime, bool(backupExternal), database)
             productId = cu.lastrowid
 
         if mirror:
@@ -342,8 +343,8 @@ class ProductManager(manager.Manager):
 
     def _getProductFQDN(self, projectId):
         cu = self.db.cursor()
-        cu.execute('SELECT hostname, domainname from Projects where projectId=?', projectId)
-        return '.'.join(tuple(cu.next()))
+        cu.execute('SELECT fqdn FROM Projects where projectId=?', projectId)
+        return cu.next()[0]
 
     def setMemberLevel(self, projectId, userId, level, notify=True):
         fqdn = self._getProductFQDN(projectId)
@@ -412,7 +413,7 @@ class ProductManager(manager.Manager):
 
         # initial product definition
         prodDef = helperfuncs.sanitizeProductDefinition(product.name,
-                        description, product.hostname, product.domainname, 
+                        description, product.repositoryHostname,
                         product.shortname, version,
                         '', namespace)
         label = prodDef.getDefaultLabel()
@@ -430,6 +431,7 @@ class ProductManager(manager.Manager):
         try:
             versionId = self.db.db.productVersions.new(projectId=projectId,
                     namespace=namespace, name=version, description=description,
+                    label=prodDef.getProductDefinitionLabel(),
                     timeCreated=time.time())
         except mint_error.DuplicateItem:
             raise mint_error.DuplicateProductVersion
@@ -452,15 +454,14 @@ class ProductManager(manager.Manager):
 
     def getProductVersionForLabel(self, fqdn, label):
         cu = self.db.cursor()
-        cu.execute('''SELECT productVersionId, hostname, 
-                             domainname, shortname, 
+        cu.execute('''SELECT productVersionId, fqdn,
+                             shortname, 
                              ProductVersions.namespace,    
                              ProductVersions.name 
                       FROM Projects 
                       JOIN ProductVersions USING(projectId)
                       WHERE hostname=?''', fqdn.split('.')[0])
-        for versionId, hostname, domainname, shortname, namespace, name in cu:
-            fqdn = '%s.%s' % (hostname, domainname)
+        for versionId, fqdn, shortname, namespace, name in cu:
             pd = proddef.ProductDefinition()
             pd.setProductShortname(shortname)
             pd.setConaryRepositoryHostname(fqdn)
@@ -492,10 +493,10 @@ class ProductManager(manager.Manager):
 
     def getProductVersionDefinition(self, fqdn, version):
         productVersion = self._getMinimalProductVersion(fqdn, version)
-        return self.getProductVersionDefinitionByProductVersion(productVersion)
+        return self.getProductVersionDefinitionByProductVersion(fqdn, productVersion)
 
-    def getProductVersionDefinitionByProductVersion(self, productVersion):
-        product = self.getProduct(productVersion.hostname)
+    def getProductVersionDefinitionByProductVersion(self, hostname, productVersion):
+        product = self.getProduct(hostname)
         pd = proddef.ProductDefinition()
         pd.setProductShortname(product.shortname)
         pd.setConaryRepositoryHostname(product.getFQDN())
@@ -556,7 +557,7 @@ class ProductManager(manager.Manager):
         if not buildDef.container or not buildDef.container.id:
             raise errors.InvalidItem("Container missing")
         containerRef = os.path.basename(buildDef.container.id)
-        options = buildDef.container.options
+        options = buildDef.options
         bdentry = (containerRef, architectureRef, flavorSetRef)
         # Find a matching build template
         if prodDef.platform:
@@ -599,13 +600,13 @@ class ProductManager(manager.Manager):
         promoteJob.version = version
         promoteJob.stage = stageName
         promoteJob.group = str(trove.name)
-        
+
         client = self.reposMgr.getConaryClient()
         pd = self.getProductVersionDefinition(hostname, version)
 
-        rpath_job.BackgroundRunner(self._promoteGroup) (
-                client, pd, job, hostname, version, stageName, trove)        
- 
+        rpath_job.BackgroundRunner(self._promoteAndPublishPlatformDef) (
+                client, pd, job, hostname, version, stageName, trove)
+
         return promoteJob
 
     def getGroupPromoteJobStatus(self, hostname, version, stage, jobId):
@@ -768,31 +769,52 @@ class ProductManager(manager.Manager):
                                    allowMissing=allowMissing)
         return dict((specMap[x[0]], x[1]) for x in results.items())
 
-    def _promoteGroup(self, client, pd, job, hostname, version, stageName, trove): 
-       
-        callback = ProductVersionCallback(hostname, version, job) 
+    def _promoteAndPublishPlatformDef(self, client, pd, job, hostname, version, stageName, trv):
+        callback = ProductVersionCallback(hostname, version, job)
+
+        shouldPublish, targetLabels = self._promoteGroup(client, pd, job,
+                hostname, version, stageName, trv, callback)
+
+        # Republish platform definitions if this project is a platform and we
+        # are promoting to the release stage.
+        if shouldPublish and str(stageName) == 'Release':
+            self._updatePlatformDefinition(targetLabels, callback)
+
+        callback.done()
+
+    def _promoteGroup(self, client, pd, job, hostname, version, stageName, trv,
+        callback=None):
+
         nextStage = str(stageName)
-        nextLabel = pd.getLabelForStage(nextStage)
         activeStage = None
-        activeLabel = str(trove.label)
+        activeLabel = str(trv.label)
+
+        if callback is None:
+            callback = ProductVersionCallback(hostname, version, job)
 
         for stage in pd.getStages():
             if str(stage.name) == nextStage:
                 break
             activeStage = stage.name
-        
+
         callback._message('Getting all trove information for the promotion')
 
-	# Collect a list of groups to promote.
-        groupSpecs = [ '%s[%s]' % x for x in self.getVersionGroupFlavors(pd, trove.version) ]
+        # Collect a list of groups to promote.
+        groupSpecs = [ '%s[%s]' % x for x in self.getVersionGroupFlavors(pd,
+            trv.version) ]
         allTroves = self._findTrovesFlattened(client, groupSpecs, activeLabel)
 
         fromTo = pd.getPromoteMapsForStages(activeStage, nextStage)
 
-        promoteMap = dict((versions.Label(str(fromLabel)),
-                        versions.VersionFromString(str(toLabel)))
-                        for (fromLabel, toLabel) in fromTo.iteritems())
-        
+        targetLabels = set()
+        promoteMap = {}
+        for (fromLabel, toLabel) in fromTo.iteritems():
+            source = versions.Label(str(fromLabel))
+            target = versions.VersionFromString(str(toLabel))
+            promoteMap[source] = target
+
+            targetLabels.add(target.label().asString())
+
         callback._message('Creating clone changeset')
         success, cs = client.createSiblingCloneChangeSet(promoteMap,
                         allTroves,cloneSources=True)
@@ -800,8 +822,61 @@ class ProductManager(manager.Manager):
         if success:
             callback._message('Committing ChangeSet')
             client.getRepos().commitChangeSet(cs)
-            callback.done()
+            callback._message('Committed')
         else:
-            callback.error('Changeset was not cloned')
 
-        return
+            # Check to see if the trove that we are trying to promote is already
+            # on the target label.
+            targetSpecs = client.repos.findTroves(None,
+                [(n, promoteMap.get(v.trailingLabel()), f)
+                for n, v, f in allTroves ], getLeaves=False)
+
+            reqSpecs = sorted([ x for x in
+                itertools.chain(*targetSpecs.values()) ])
+
+            ti = client.repos.getTroveInfo(trove._TROVEINFO_TAG_CLONEDFROM,
+                reqSpecs)
+
+            sourceVersions = [ (n, t(), f) for (n, v, f), t in
+                itertools.izip(reqSpecs, ti) ]
+
+            error = False
+            for spec in allTroves:
+                if spec not in sourceVersions:
+                    error = True
+                    break
+
+            if error:
+                callback.error('Changeset was not cloned')
+                return False, None
+
+            else:
+                callback._message('This version has already been promoted')
+
+        return True, targetLabels
+
+    def _updatePlatformDefinition(self, labels, callback):
+        self.db.db.reopen()
+        cu = self.db.db.cursor()
+
+        found = False
+        for label in labels:
+            cu.execute("SELECT platformId FROM Platforms WHERE label = ?",
+                (label, ))
+            row = cu.fetchone()
+            if row:
+                found = True
+                break
+
+        if not found:
+            return
+
+        callback._message('Publishing platform definition')
+
+        # Update the platform definition
+        pl = self.platformMgr._lookupFromRepository(label, True)
+
+        if pl is not None:
+            callback._message('Published')
+        else:
+            callback.error('Error publising platform definition')

@@ -17,7 +17,7 @@ def _mungePassword(password):
     salt = os.urandom(4)
     m.update(salt)
     m.update(password)
-    return salt, m.hexdigest()
+    return salt.encode('hex'), m.hexdigest()
 
 
 class UserManager(manager.Manager):
@@ -40,19 +40,10 @@ class UserManager(manager.Manager):
             self.db.productMgr.deleteMember(productId, userId, notify=False)
 
         cu = self.db.cursor()
-        cu.execute("""SELECT userGroupId FROM UserGroupMembers
-                          WHERE userId=?""", userId)
-        for userGroupId in [x[0] for x in cu.fetchall()]:
-            cu.execute("""SELECT COUNT(*) FROM UserGroupMembers
-                              WHERE userGroupId=?""", userGroupId)
-            if cu.fetchone()[0] == 1:
-                cu.execute("DELETE FROM UserGroups WHERE userGroupId=?",
-                           userGroupId)
         cu.execute("UPDATE Projects SET creatorId=NULL WHERE creatorId=?",
                    userId)
         cu.execute("DELETE FROM ProjectUsers WHERE userId=?", userId)
         cu.execute("DELETE FROM Confirmations WHERE userId=?", userId)
-        cu.execute("DELETE FROM UserGroupMembers WHERE userId=?", userId)
         cu.execute("DELETE FROM Users WHERE userId=?", userId)
         cu.execute("DELETE FROM UserData where userId=?", userId)
         self.publisher.notify('UserCancelled', userId)
@@ -92,11 +83,7 @@ class UserManager(manager.Manager):
         if not self._isUserAdmin(username):
             return
         cu = self.db.cursor()
-        cu.execute("""SELECT username
-                          FROM UserGroups
-                          JOIN UserGroupMembers USING(userGroupId)
-                          JOIN Users USING(userId)
-                          WHERE userGroup='MintAdmin'""")
+        cu.execute("SELECT username FROM Users WHERE is_admin = ?", True)
         if [x[0] for x in cu.fetchall()] == [username]:
             # userId is admin, and there is only one admin => last admin
             raise mint_error.LastAdmin(
@@ -111,50 +98,27 @@ class UserManager(manager.Manager):
         userId, = self.db._getOne(cu, errors.UserNotFound, username)
         return userId
 
-    def _getAdminGroupId(self):
-        cu = self.db.cursor()
-        cu.execute('SELECT userGroupId'
-                   ' FROM UserGroups WHERE userGroup=?', 'MintAdmin')
-        groupIds = cu.fetchall()
-        if groupIds:
-            return groupIds[0][0]
-        cu.execute('INSERT INTO UserGroups (userGroup) VALUES (?)''',
-                   'MintAdmin')
-        return cu.lastrowid
-
     def _isUserAdmin(self, username):
         cu = self.db.cursor()
-        cu.execute('''SELECT userGroup FROM Users
-                    JOIN UserGroupMembers USING(userId)
-                    JOIN UserGroups USING(userGroupId)
-                    WHERE userGroup=? AND username=?''', 'MintAdmin', username)
-        return bool(cu.fetchall())
+        cu.execute("SELECT is_admin FROM Users WHERE username = ?", username)
+        r = cu.fetchone()
+        return r and bool(r[0])
 
     def makeAdmin(self, username):
         userId = self.getUserId(username)
         cu = self.db.cursor()
-        if not self._isUserAdmin(username):
-            groupId = self._getAdminGroupId()
-            cu.execute('INSERT INTO UserGroupMembers (userGroupId, userId)'
-                       ' VALUES (?, ?)', groupId, userId)
+        cu.execute("UPDATE Users SET is_admin = ? WHERE userId = ?", True,
+                userId)
 
     def createUser(self, username, password, fullName, email, 
                    displayEmail, blurb, admin=False):
         # fixme - not for creating non-active users.  To do that we
         # need to do confirmations, which are too entwined.
         cu = self.db.cursor()
-        cu.execute("""SELECT COUNT(*) FROM UserGroups
-                      WHERE UPPER(userGroup)=UPPER(?)""",
-                   username)
-        if cu.fetchone()[0]:
-            raise mint_error.UserAlreadyExists
         cu.execute("SELECT COUNT(*) FROM Users WHERE UPPER(username)=UPPER(?)",
                    username)
         if cu.fetchone()[0]:
             raise mint_error.UserAlreadyExists
-        # NOTE: I don't add users to their own usergroups.
-        # as far as I can tell the only use for usergroups is for
-        # MintAdmin.
         salt, pw = _mungePassword(password)
 
         userValues = dict(username = username,
@@ -180,7 +144,8 @@ class UserManager(manager.Manager):
     def _getPassword(self, userId):
         cu = self.db.cursor()
         cu.execute('SELECT passwd, salt from Users where userId=?', userId)
-        return cu.next()
+        passwd, salt = cu.next()
+        return passwd, salt
 
     def _getUsername(self, userId):
         cu = self.db.cursor()

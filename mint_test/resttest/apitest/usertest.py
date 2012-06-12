@@ -46,35 +46,9 @@ class SiteTest(restbase.BaseRestTest):
     <active>true</active>
     <timeCreated></timeCreated>
     <timeAccessed></timeAccessed>
-    <groups href="http://%(server)s:%(port)s/api/users/%(username)s/groups"/>
     <products href="http://%(server)s:%(port)s/api/users/%(username)s/products"/>
   </user>
 </users>
-"""
-        for pat in [ "timeCreated", "timeAccessed" ]:
-            response = re.sub("<%s>.*</%s>" % (pat, pat),
-                          "<%s></%s>" % (pat, pat),
-                          response)
-        self.assertBlobEquals(response,
-             exp % dict(port = client.port, server = client.server,
-                         username = username, displayname = '%s'))
-
-    def testGetUsersGroupsInfo(self):
-        self.setupReleases()
-        username = 'adminuser'
-        username = 'adminuser'
-        uri = 'users/%s/groups' % username
-        client = self.getRestClient(username=username)
-        req, response = client.call('GET', uri, convert=True)
-        exp = """\
-<?xml version='1.0' encoding='UTF-8'?>
-<userGroupMemberList>
-  <group>
-    <groupName>MintAdmin</groupName>
-    <userName>adminuser</userName>
-    <userUrl href="http://%(server)s:%(port)s/api/users/%(username)s"/>
-  </group>
-</userGroupMemberList>
 """
         for pat in [ "timeCreated", "timeAccessed" ]:
             response = re.sub("<%s>.*</%s>" % (pat, pat),

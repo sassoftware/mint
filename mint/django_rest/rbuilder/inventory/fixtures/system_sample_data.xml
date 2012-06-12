@@ -93,28 +93,28 @@
   </object>
 
   <object pk="2" model="rbuilder.products">
-    <field type="CharField" name="hostname">postgres.rpath.com</field>
+    <field type="CharField" name="host_name">postgres.rpath.com</field>
     <field type="CharField" name="name">postgres</field>
     <field type="CharField" name="namespace">rpath</field>
-    <field type="CharField" name="domainname">rpath.com</field>
-    <field type="CharField" name="shortname">postgres</field>
-    <field type="CharField" name="projecturl">http://</field>
-    <field type="CharField" name="repositoryHostName">postgres.rpath.com</field>
+    <field type="CharField" name="domain_name">rpath.com</field>
+    <field type="CharField" name="short_name">postgres</field>
+    <field type="CharField" name="project_url">http://</field>
+    <field type="CharField" name="repository_host_name">postgres.rpath.com</field>
     <field type="TextField" name="description">postgres</field>
-    <field type="CharField" name="prodtype">1</field>
-    <field type="CharField" name="commitemail">a@a.com</field>
+    <field type="CharField" name="prod_type">1</field>
+    <field type="CharField" name="commit_email">a@a.com</field>
     <field type="SmallIntegerField" name="backupexternal">0</field>
-    <field type="DecimalField" name="timecreated">0</field>
-    <field type="DecimalField" name="timemodified">0</field>
+    <field type="DecimalField" name="time_created">0</field>
+    <field type="DecimalField" name="time_modified">0</field>
     <field type="SmallIntegerField" name="hidden">0</field>
-    <field to="rbuilder.users" name="creatorid" rel="ManyToOneRel">1</field>
+    <field to="users.users" name="creator_id" rel="ManyToOneRel">1</field>
   </object>
   <object pk="2" model="rbuilder.versions">
-    <field to="rbuilder.products" name="productId" rel="ManyToOneRel">2</field>
+    <field to="rbuilder.products" name="product_id" rel="ManyToOneRel">2</field>
     <field type="CharField" name="namespace">rpath</field>
     <field type="CharField" name="name">1</field>
     <field type="TextField" name="description">1</field>
-    <field type="DecimalField" name="timecreated">0</field>
+    <field type="DecimalField" name="time_created">0</field>
   </object>
   <object pk="1" model="inventory.stage">
     <field to="rbuilder.versions" name="major_version" rel="ManyToOneRel">2</field>
@@ -123,28 +123,28 @@
   </object>
 
   <object pk="3" model="rbuilder.products">
-    <field type="CharField" name="hostname">httpd.rpath.com</field>
+    <field type="CharField" name="host_name">httpd.rpath.com</field>
     <field type="CharField" name="name">httpd</field>
     <field type="CharField" name="namespace">rpath</field>
-    <field type="CharField" name="domainname">eng.rpath.com</field>
-    <field type="CharField" name="shortname">httpd</field>
-    <field type="CharField" name="projecturl">http://</field>
-    <field type="CharField" name="repositoryHostName">httpd.rpath.com</field>
+    <field type="CharField" name="domain_name">eng.rpath.com</field>
+    <field type="CharField" name="short_name">httpd</field>
+    <field type="CharField" name="project_url">http://</field>
+    <field type="CharField" name="repository_host_name">httpd.rpath.com</field>
     <field type="TextField" name="description">httpd</field>
-    <field type="CharField" name="prodtype">1</field>
-    <field type="CharField" name="commitemail">a@a.com</field>
+    <field type="CharField" name="prod_type">1</field>
+    <field type="CharField" name="commit_email">a@a.com</field>
     <field type="SmallIntegerField" name="backupexternal">0</field>
-    <field type="DecimalField" name="timecreated">0</field>
-    <field type="DecimalField" name="timemodified">0</field>
+    <field type="DecimalField" name="time_created">0</field>
+    <field type="DecimalField" name="time_modified">0</field>
     <field type="SmallIntegerField" name="hidden">0</field>
-    <field to="rbuilder.users" name="creatorid" rel="ManyToOneRel">1</field>
+    <field to="users.users" name="creator_id" rel="ManyToOneRel">1</field>
   </object>
   <object pk="3" model="rbuilder.versions">
-    <field to="rbuilder.products" name="productId" rel="ManyToOneRel">3</field>
+    <field to="rbuilder.products" name="product_id" rel="ManyToOneRel">3</field>
     <field type="CharField" name="namespace">rpath</field>
     <field type="CharField" name="name">1</field>
     <field type="TextField" name="description">1</field>
-    <field type="DecimalField" name="timecreated">0</field>
+    <field type="DecimalField" name="time_created">0</field>
   </object>
   <object pk="2" model="inventory.stage">
     <field to="rbuilder.versions" name="major_version" rel="ManyToOneRel">3</field>
@@ -153,28 +153,28 @@
   </object>
 
   <object pk="4" model="rbuilder.products">
-    <field type="CharField" name="hostname">jboss.rpath.com</field>
+    <field type="CharField" name="host_name">jboss.rpath.com</field>
     <field type="CharField" name="name">jboss</field>
     <field type="CharField" name="namespace">rpath</field>
-    <field type="CharField" name="domainname">eng.rpath.com</field>
-    <field type="CharField" name="shortname">jboss</field>
-    <field type="CharField" name="projecturl">http://</field>
-    <field type="CharField" name="repositoryHostName">jboss.rpath.com</field>
+    <field type="CharField" name="domain_name">eng.rpath.com</field>
+    <field type="CharField" name="short_name">jboss</field>
+    <field type="CharField" name="project_url">http://</field>
+    <field type="CharField" name="repository_host_name">jboss.rpath.com</field>
     <field type="TextField" name="description">jboss</field>
-    <field type="CharField" name="prodtype">1</field>
-    <field type="CharField" name="commitemail">a@a.com</field>
+    <field type="CharField" name="prod_type">1</field>
+    <field type="CharField" name="commit_email">a@a.com</field>
     <field type="SmallIntegerField" name="backupexternal">0</field>
-    <field type="DecimalField" name="timecreated">0</field>
-    <field type="DecimalField" name="timemodified">0</field>
+    <field type="DecimalField" name="time_created">0</field>
+    <field type="DecimalField" name="time_modified">0</field>
     <field type="SmallIntegerField" name="hidden">0</field>
-    <field to="rbuilder.users" name="creatorid" rel="ManyToOneRel">1</field>
+    <field to="users.users" name="creator_id" rel="ManyToOneRel">1</field>
   </object>
   <object pk="4" model="rbuilder.versions">
-    <field to="rbuilder.products" name="productId" rel="ManyToOneRel">4</field>
+    <field to="rbuilder.products" name="product_id" rel="ManyToOneRel">4</field>
     <field type="CharField" name="namespace">rpath</field>
     <field type="CharField" name="name">1</field>
     <field type="TextField" name="description">1</field>
-    <field type="DecimalField" name="timecreated">0</field>
+    <field type="DecimalField" name="time_created">0</field>
   </object>
   <object pk="3" model="inventory.stage">
     <field to="rbuilder.versions" name="major_version" rel="ManyToOneRel">4</field>
@@ -182,17 +182,23 @@
     <field type="TextField" name="label">jboss.rpath.com@rpath:jboss-1-devel</field>
   </object>
 
-  <object pk="1" model="rbuilder.targets">
-    <field type="CharField" name="targettype">vmware</field>
-    <field type="CharField" name="targetname">vsphere1.eng.rpath.com</field>
+  <object pk="1" model="targets.target">
+    <field to="targets.target_type" name="target_type" rel="ManyToOneRel">5</field>
+    <field type="CharField" name="name">vsphere1.eng.rpath.com</field>
+    <field type="CharField" name="description">vsphere1.eng.rpath.com description</field>
+    <field to="zones.zone" name="zone" rel="ManyToOneRel">1</field>
   </object>
-  <object pk="2" model="rbuilder.targets">
-    <field type="CharField" name="targettype">vmware</field>
-    <field type="CharField" name="targetname">vsphere2.eng.rpath.com</field>
+  <object pk="2" model="targets.target">
+    <field to="targets.target_type" name="target_type" rel="ManyToOneRel">5</field>
+    <field type="CharField" name="name">vsphere2.eng.rpath.com</field>
+    <field type="CharField" name="description">vsphere2.eng.rpath.com description</field>
+    <field to="zones.zone" name="zone" rel="ManyToOneRel">1</field>
   </object>
-  <object pk="3" model="rbuilder.targets">
-    <field type="CharField" name="targettype">ec2</field>
-    <field type="CharField" name="targetname">aws</field>
+  <object pk="3" model="targets.target">
+    <field to="targets.target_type" name="target_type" rel="ManyToOneRel">1</field>
+    <field type="CharField" name="name">aws</field>
+    <field type="CharField" name="description">aws description</field>
+    <field to="zones.zone" name="zone" rel="ManyToOneRel">1</field>
   </object>
 
   <object pk="2" model="inventory.system">
@@ -221,7 +227,7 @@
     <field type="DateTimeField" name="registration_date">2010-10-08 16:01:05</field>
     <field type="CharField" name="generated_uuid">dbserver1generateduuid</field>
     <field type="CharField" name="local_uuid">dbserver1localuuid</field>
-    <field type="CharField" name="ssl_client_certificate">-----BEGIN CERTIFICATE-----
+    <field type="CharField" name="_ssl_client_certificate">-----BEGIN CERTIFICATE-----
 MIIDCzCCAfOgAwIBAgIBADANBgkqhkiG9w0BAQUFADBAMRcwFQYDVQQKEw5yUGF0
 aCByQnVpbGRlcjElMCMGA1UECxMcaHR0cDovL2xvY2FsaG9zdC5sb2NhbGRvbWFp
 bjAeFw0xMDEwMDgxNjAxMTBaFw0yMDEwMDgxNjAxMTBaMEAxFzAVBgNVBAoTDnJQ
@@ -241,7 +247,7 @@ PhkbpeDz+lOecHsrbjvShLsBHBzZDiQAAWeP1HUJIlffWroYn2CTQF9SdxvxFNwg
 qUUQIF8prloO+ySSSHyR
 -----END CERTIFICATE-----
 </field>
-    <field type="CharField" name="ssl_client_key">-----BEGIN RSA PRIVATE KEY-----
+    <field type="CharField" name="_ssl_client_key">-----BEGIN RSA PRIVATE KEY-----
 MIIEowIBAAKCAQEAw53apfUc95PgHUXE0L7s8G+msjOgUIAtblJ4uPsffsUKudqT
 nTbSsqH8DmCaQj6jkIjnT2BYEXdUtk8GJgkEqQykUyuriUvaFgh1uHwn/dmhCZl7
 DTw5Ic0plMiMmwR4vSxRLwGQeG9CylsIDgq6PJRYIc9+INx2nEktukGnd0j/HEAq
@@ -270,7 +276,7 @@ faC7SRCZ/AwFH/wytT+JK6HNKEjLdMjoiulZ9W/GTy/9VtQDtB06
 -----END RSA PRIVATE KEY-----
 </field>
     <field type="CharField" name="ssl_server_certificate">testsystemsslservercertificate</field>
-    <field to="rbuilder.users" name="launching_user" rel="ManyToOneRel">
+    <field to="users.users" name="launching_user" rel="ManyToOneRel">
       <None/>
     </field>
     <field to="inventory.systemstate" name="current_state" rel="ManyToOneRel">4</field>
@@ -327,7 +333,7 @@ faC7SRCZ/AwFH/wytT+JK6HNKEjLdMjoiulZ9W/GTy/9VtQDtB06
     <field type="DateTimeField" name="registration_date">2010-10-08 16:01:05</field>
     <field type="CharField" name="generated_uuid">dbserver2generateduuid</field>
     <field type="CharField" name="local_uuid">dbserver2localuuid</field>
-    <field type="CharField" name="ssl_client_certificate">-----BEGIN CERTIFICATE-----
+    <field type="CharField" name="_ssl_client_certificate">-----BEGIN CERTIFICATE-----
 MIIDCzCCAfOgAwIBAgIBADANBgkqhkiG9w0BAQUFADBAMRcwFQYDVQQKEw5yUGF0
 aCByQnVpbGRlcjElMCMGA1UECxMcaHR0cDovL2xvY2FsaG9zdC5sb2NhbGRvbWFp
 bjAeFw0xMDEwMDgxNjAxMTBaFw0yMDEwMDgxNjAxMTBaMEAxFzAVBgNVBAoTDnJQ
@@ -347,7 +353,7 @@ PhkbpeDz+lOecHsrbjvShLsBHBzZDiQAAWeP1HUJIlffWroYn2CTQF9SdxvxFNwg
 qUUQIF8prloO+ySSSHyR
 -----END CERTIFICATE-----
 </field>
-    <field type="CharField" name="ssl_client_key">-----BEGIN RSA PRIVATE KEY-----
+    <field type="CharField" name="_ssl_client_key">-----BEGIN RSA PRIVATE KEY-----
 MIIEowIBAAKCAQEAw53apfUc95PgHUXE0L7s8G+msjOgUIAtblJ4uPsffsUKudqT
 nTbSsqH8DmCaQj6jkIjnT2BYEXdUtk8GJgkEqQykUyuriUvaFgh1uHwn/dmhCZl7
 DTw5Ic0plMiMmwR4vSxRLwGQeG9CylsIDgq6PJRYIc9+INx2nEktukGnd0j/HEAq
@@ -376,7 +382,7 @@ faC7SRCZ/AwFH/wytT+JK6HNKEjLdMjoiulZ9W/GTy/9VtQDtB06
 -----END RSA PRIVATE KEY-----
 </field>
     <field type="CharField" name="ssl_server_certificate">testsystemsslservercertificate</field>
-    <field to="rbuilder.users" name="launching_user" rel="ManyToOneRel">
+    <field to="users.users" name="launching_user" rel="ManyToOneRel">
       <None/>
     </field>
     <field to="inventory.systemstate" name="current_state" rel="ManyToOneRel">4</field>
@@ -433,7 +439,7 @@ faC7SRCZ/AwFH/wytT+JK6HNKEjLdMjoiulZ9W/GTy/9VtQDtB06
     <field type="DateTimeField" name="registration_date">2010-10-08 16:01:05</field>
     <field type="CharField" name="generated_uuid">dbserver3generateduuid</field>
     <field type="CharField" name="local_uuid">dbserver3localuuid</field>
-    <field type="CharField" name="ssl_client_certificate">-----BEGIN CERTIFICATE-----
+    <field type="CharField" name="_ssl_client_certificate">-----BEGIN CERTIFICATE-----
 MIIDCzCCAfOgAwIBAgIBADANBgkqhkiG9w0BAQUFADBAMRcwFQYDVQQKEw5yUGF0
 aCByQnVpbGRlcjElMCMGA1UECxMcaHR0cDovL2xvY2FsaG9zdC5sb2NhbGRvbWFp
 bjAeFw0xMDEwMDgxNjAxMTBaFw0yMDEwMDgxNjAxMTBaMEAxFzAVBgNVBAoTDnJQ
@@ -453,7 +459,7 @@ PhkbpeDz+lOecHsrbjvShLsBHBzZDiQAAWeP1HUJIlffWroYn2CTQF9SdxvxFNwg
 qUUQIF8prloO+ySSSHyR
 -----END CERTIFICATE-----
 </field>
-    <field type="CharField" name="ssl_client_key">-----BEGIN RSA PRIVATE KEY-----
+    <field type="CharField" name="_ssl_client_key">-----BEGIN RSA PRIVATE KEY-----
 MIIEowIBAAKCAQEAw53apfUc95PgHUXE0L7s8G+msjOgUIAtblJ4uPsffsUKudqT
 nTbSsqH8DmCaQj6jkIjnT2BYEXdUtk8GJgkEqQykUyuriUvaFgh1uHwn/dmhCZl7
 DTw5Ic0plMiMmwR4vSxRLwGQeG9CylsIDgq6PJRYIc9+INx2nEktukGnd0j/HEAq
@@ -482,7 +488,7 @@ faC7SRCZ/AwFH/wytT+JK6HNKEjLdMjoiulZ9W/GTy/9VtQDtB06
 -----END RSA PRIVATE KEY-----
 </field>
     <field type="CharField" name="ssl_server_certificate">testsystemsslservercertificate</field>
-    <field to="rbuilder.users" name="launching_user" rel="ManyToOneRel">
+    <field to="users.users" name="launching_user" rel="ManyToOneRel">
       <None/>
     </field>
     <field to="inventory.systemstate" name="current_state" rel="ManyToOneRel">2</field>
@@ -540,7 +546,7 @@ faC7SRCZ/AwFH/wytT+JK6HNKEjLdMjoiulZ9W/GTy/9VtQDtB06
     <field type="DateTimeField" name="registration_date">2010-10-08 16:01:05</field>
     <field type="CharField" name="generated_uuid">webserver1generateduuid</field>
     <field type="CharField" name="local_uuid">webserver1localuuid</field>
-    <field type="CharField" name="ssl_client_certificate">-----BEGIN CERTIFICATE-----
+    <field type="CharField" name="_ssl_client_certificate">-----BEGIN CERTIFICATE-----
 MIIDCzCCAfOgAwIBAgIBADANBgkqhkiG9w0BAQUFADBAMRcwFQYDVQQKEw5yUGF0
 aCByQnVpbGRlcjElMCMGA1UECxMcaHR0cDovL2xvY2FsaG9zdC5sb2NhbGRvbWFp
 bjAeFw0xMDEwMDgxNjAxMTBaFw0yMDEwMDgxNjAxMTBaMEAxFzAVBgNVBAoTDnJQ
@@ -560,7 +566,7 @@ PhkbpeDz+lOecHsrbjvShLsBHBzZDiQAAWeP1HUJIlffWroYn2CTQF9SdxvxFNwg
 qUUQIF8prloO+ySSSHyR
 -----END CERTIFICATE-----
 </field>
-    <field type="CharField" name="ssl_client_key">-----BEGIN RSA PRIVATE KEY-----
+    <field type="CharField" name="_ssl_client_key">-----BEGIN RSA PRIVATE KEY-----
 MIIEowIBAAKCAQEAw53apfUc95PgHUXE0L7s8G+msjOgUIAtblJ4uPsffsUKudqT
 nTbSsqH8DmCaQj6jkIjnT2BYEXdUtk8GJgkEqQykUyuriUvaFgh1uHwn/dmhCZl7
 DTw5Ic0plMiMmwR4vSxRLwGQeG9CylsIDgq6PJRYIc9+INx2nEktukGnd0j/HEAq
@@ -589,7 +595,7 @@ faC7SRCZ/AwFH/wytT+JK6HNKEjLdMjoiulZ9W/GTy/9VtQDtB06
 -----END RSA PRIVATE KEY-----
 </field>
     <field type="CharField" name="ssl_server_certificate">testsystemsslservercertificate</field>
-    <field to="rbuilder.users" name="launching_user" rel="ManyToOneRel">
+    <field to="users.users" name="launching_user" rel="ManyToOneRel">
       <None/>
     </field>
     <field to="inventory.systemstate" name="current_state" rel="ManyToOneRel">4</field>
@@ -646,7 +652,7 @@ faC7SRCZ/AwFH/wytT+JK6HNKEjLdMjoiulZ9W/GTy/9VtQDtB06
     <field type="DateTimeField" name="registration_date">2010-10-08 16:01:05</field>
     <field type="CharField" name="generated_uuid">webserver2generateduuid</field>
     <field type="CharField" name="local_uuid">webserver2localuuid</field>
-    <field type="CharField" name="ssl_client_certificate">-----BEGIN CERTIFICATE-----
+    <field type="CharField" name="_ssl_client_certificate">-----BEGIN CERTIFICATE-----
 MIIDCzCCAfOgAwIBAgIBADANBgkqhkiG9w0BAQUFADBAMRcwFQYDVQQKEw5yUGF0
 aCByQnVpbGRlcjElMCMGA1UECxMcaHR0cDovL2xvY2FsaG9zdC5sb2NhbGRvbWFp
 bjAeFw0xMDEwMDgxNjAxMTBaFw0yMDEwMDgxNjAxMTBaMEAxFzAVBgNVBAoTDnJQ
@@ -666,7 +672,7 @@ PhkbpeDz+lOecHsrbjvShLsBHBzZDiQAAWeP1HUJIlffWroYn2CTQF9SdxvxFNwg
 qUUQIF8prloO+ySSSHyR
 -----END CERTIFICATE-----
 </field>
-    <field type="CharField" name="ssl_client_key">-----BEGIN RSA PRIVATE KEY-----
+    <field type="CharField" name="_ssl_client_key">-----BEGIN RSA PRIVATE KEY-----
 MIIEowIBAAKCAQEAw53apfUc95PgHUXE0L7s8G+msjOgUIAtblJ4uPsffsUKudqT
 nTbSsqH8DmCaQj6jkIjnT2BYEXdUtk8GJgkEqQykUyuriUvaFgh1uHwn/dmhCZl7
 DTw5Ic0plMiMmwR4vSxRLwGQeG9CylsIDgq6PJRYIc9+INx2nEktukGnd0j/HEAq
@@ -695,7 +701,7 @@ faC7SRCZ/AwFH/wytT+JK6HNKEjLdMjoiulZ9W/GTy/9VtQDtB06
 -----END RSA PRIVATE KEY-----
 </field>
     <field type="CharField" name="ssl_server_certificate">testsystemsslservercertificate</field>
-    <field to="rbuilder.users" name="launching_user" rel="ManyToOneRel">
+    <field to="users.users" name="launching_user" rel="ManyToOneRel">
       <None/>
     </field>
     <field to="inventory.systemstate" name="current_state" rel="ManyToOneRel">8</field>
@@ -753,7 +759,7 @@ faC7SRCZ/AwFH/wytT+JK6HNKEjLdMjoiulZ9W/GTy/9VtQDtB06
     <field type="DateTimeField" name="registration_date">2010-10-08 16:01:05</field>
     <field type="CharField" name="generated_uuid">appserver1generateduuid</field>
     <field type="CharField" name="local_uuid">appserver1localuuid</field>
-    <field type="CharField" name="ssl_client_certificate">-----BEGIN CERTIFICATE-----
+    <field type="CharField" name="_ssl_client_certificate">-----BEGIN CERTIFICATE-----
 MIIDCzCCAfOgAwIBAgIBADANBgkqhkiG9w0BAQUFADBAMRcwFQYDVQQKEw5yUGF0
 aCByQnVpbGRlcjElMCMGA1UECxMcaHR0cDovL2xvY2FsaG9zdC5sb2NhbGRvbWFp
 bjAeFw0xMDEwMDgxNjAxMTBaFw0yMDEwMDgxNjAxMTBaMEAxFzAVBgNVBAoTDnJQ
@@ -773,7 +779,7 @@ PhkbpeDz+lOecHsrbjvShLsBHBzZDiQAAWeP1HUJIlffWroYn2CTQF9SdxvxFNwg
 qUUQIF8prloO+ySSSHyR
 -----END CERTIFICATE-----
 </field>
-    <field type="CharField" name="ssl_client_key">-----BEGIN RSA PRIVATE KEY-----
+    <field type="CharField" name="_ssl_client_key">-----BEGIN RSA PRIVATE KEY-----
 MIIEowIBAAKCAQEAw53apfUc95PgHUXE0L7s8G+msjOgUIAtblJ4uPsffsUKudqT
 nTbSsqH8DmCaQj6jkIjnT2BYEXdUtk8GJgkEqQykUyuriUvaFgh1uHwn/dmhCZl7
 DTw5Ic0plMiMmwR4vSxRLwGQeG9CylsIDgq6PJRYIc9+INx2nEktukGnd0j/HEAq
@@ -802,7 +808,7 @@ faC7SRCZ/AwFH/wytT+JK6HNKEjLdMjoiulZ9W/GTy/9VtQDtB06
 -----END RSA PRIVATE KEY-----
 </field>
     <field type="CharField" name="ssl_server_certificate">testsystemsslservercertificate</field>
-    <field to="rbuilder.users" name="launching_user" rel="ManyToOneRel">
+    <field to="users.users" name="launching_user" rel="ManyToOneRel">
       <None/>
     </field>
     <field to="inventory.systemstate" name="current_state" rel="ManyToOneRel">12</field>
@@ -859,7 +865,7 @@ faC7SRCZ/AwFH/wytT+JK6HNKEjLdMjoiulZ9W/GTy/9VtQDtB06
     <field type="DateTimeField" name="registration_date">2010-10-08 16:01:05</field>
     <field type="CharField" name="generated_uuid">appserver2generateduuid</field>
     <field type="CharField" name="local_uuid">appserver2localuuid</field>
-    <field type="CharField" name="ssl_client_certificate">-----BEGIN CERTIFICATE-----
+    <field type="CharField" name="_ssl_client_certificate">-----BEGIN CERTIFICATE-----
 MIIDCzCCAfOgAwIBAgIBADANBgkqhkiG9w0BAQUFADBAMRcwFQYDVQQKEw5yUGF0
 aCByQnVpbGRlcjElMCMGA1UECxMcaHR0cDovL2xvY2FsaG9zdC5sb2NhbGRvbWFp
 bjAeFw0xMDEwMDgxNjAxMTBaFw0yMDEwMDgxNjAxMTBaMEAxFzAVBgNVBAoTDnJQ
@@ -879,7 +885,7 @@ PhkbpeDz+lOecHsrbjvShLsBHBzZDiQAAWeP1HUJIlffWroYn2CTQF9SdxvxFNwg
 qUUQIF8prloO+ySSSHyR
 -----END CERTIFICATE-----
 </field>
-    <field type="CharField" name="ssl_client_key">-----BEGIN RSA PRIVATE KEY-----
+    <field type="CharField" name="_ssl_client_key">-----BEGIN RSA PRIVATE KEY-----
 MIIEowIBAAKCAQEAw53apfUc95PgHUXE0L7s8G+msjOgUIAtblJ4uPsffsUKudqT
 nTbSsqH8DmCaQj6jkIjnT2BYEXdUtk8GJgkEqQykUyuriUvaFgh1uHwn/dmhCZl7
 DTw5Ic0plMiMmwR4vSxRLwGQeG9CylsIDgq6PJRYIc9+INx2nEktukGnd0j/HEAq
@@ -908,7 +914,7 @@ faC7SRCZ/AwFH/wytT+JK6HNKEjLdMjoiulZ9W/GTy/9VtQDtB06
 -----END RSA PRIVATE KEY-----
 </field>
     <field type="CharField" name="ssl_server_certificate">testsystemsslservercertificate</field>
-    <field to="rbuilder.users" name="launching_user" rel="ManyToOneRel">
+    <field to="users.users" name="launching_user" rel="ManyToOneRel">
       <None/>
     </field>
     <field to="inventory.systemstate" name="current_state" rel="ManyToOneRel">4</field>
@@ -965,7 +971,7 @@ faC7SRCZ/AwFH/wytT+JK6HNKEjLdMjoiulZ9W/GTy/9VtQDtB06
     <field type="DateTimeField" name="registration_date">2010-10-08 16:01:05</field>
     <field type="CharField" name="generated_uuid">appserver3generateduuid</field>
     <field type="CharField" name="local_uuid">appserver3localuuid</field>
-    <field type="CharField" name="ssl_client_certificate">-----BEGIN CERTIFICATE-----
+    <field type="CharField" name="_ssl_client_certificate">-----BEGIN CERTIFICATE-----
 MIIDCzCCAfOgAwIBAgIBADANBgkqhkiG9w0BAQUFADBAMRcwFQYDVQQKEw5yUGF0
 aCByQnVpbGRlcjElMCMGA1UECxMcaHR0cDovL2xvY2FsaG9zdC5sb2NhbGRvbWFp
 bjAeFw0xMDEwMDgxNjAxMTBaFw0yMDEwMDgxNjAxMTBaMEAxFzAVBgNVBAoTDnJQ
@@ -985,7 +991,7 @@ PhkbpeDz+lOecHsrbjvShLsBHBzZDiQAAWeP1HUJIlffWroYn2CTQF9SdxvxFNwg
 qUUQIF8prloO+ySSSHyR
 -----END CERTIFICATE-----
 </field>
-    <field type="CharField" name="ssl_client_key">-----BEGIN RSA PRIVATE KEY-----
+    <field type="CharField" name="_ssl_client_key">-----BEGIN RSA PRIVATE KEY-----
 MIIEowIBAAKCAQEAw53apfUc95PgHUXE0L7s8G+msjOgUIAtblJ4uPsffsUKudqT
 nTbSsqH8DmCaQj6jkIjnT2BYEXdUtk8GJgkEqQykUyuriUvaFgh1uHwn/dmhCZl7
 DTw5Ic0plMiMmwR4vSxRLwGQeG9CylsIDgq6PJRYIc9+INx2nEktukGnd0j/HEAq
@@ -1014,7 +1020,7 @@ faC7SRCZ/AwFH/wytT+JK6HNKEjLdMjoiulZ9W/GTy/9VtQDtB06
 -----END RSA PRIVATE KEY-----
 </field>
     <field type="CharField" name="ssl_server_certificate">testsystemsslservercertificate</field>
-    <field to="rbuilder.users" name="launching_user" rel="ManyToOneRel">
+    <field to="users.users" name="launching_user" rel="ManyToOneRel">
       <None/>
     </field>
     <field to="inventory.systemstate" name="current_state" rel="ManyToOneRel">4</field>

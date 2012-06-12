@@ -14,7 +14,7 @@ onload = "javascript:;"
 
 <html xmlns="http://www.w3.org/1999/xhtml"
       xmlns:py="http://purl.org/kid/ns#"
-      py:extends="'project.kid', 'library.kid'">
+      py:extends="'library.kid'">
     <head py:match="item.tag == '{http://www.w3.org/1999/xhtml}head'" >
         <meta name="KEYWORDS" content="rPath, rBuilder, rBuilder Online, rManager, rPath Linux, rPl, Conary, Software Appliance, Application image, Software as a Service, SaaS, Virtualization, virtualisation, open source, Linux," />
         <meta name="DESCRIPTION" content="rPath enables applications to be delivered as a software appliance which combines a software application and a streamlined version of system software that easily installs on industry standard hardware (typically a Linux server)." />
@@ -93,10 +93,6 @@ onload = "javascript:;"
                         </div>
                     </form>
                 </div>
-            </div>
-            <div py:if="latestRssNews and not maintenance.getMaintenanceMode(cfg)==maintenance.LOCKED_MODE" id="rssnews">
-                <p>Latest ${self.cfg.productName} News:
-                <a target="_blank" href="${latestRssNews['link']}">${latestRssNews['title']}</a><span class="newsAge" py:if="'age' in latestRssNews">&nbsp;(posted ${latestRssNews['age']})</span></p>
             </div>
             <div py:if="maintenance.getMaintenanceMode(cfg)==maintenance.LOCKED_MODE" id="maintmode">
                 <p>${cfg.productName} is currently in maintenance mode.

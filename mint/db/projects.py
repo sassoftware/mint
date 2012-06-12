@@ -15,7 +15,6 @@ from mint.lib import data as mintdata
 from mint.helperfuncs import truncateForDisplay, rewriteUrlProtocolPort, \
         hostPortParse, configureClientProxies, getProjectText
 from mint import helperfuncs
-from mint import mailinglists
 from mint import searcher
 from mint import userlevels
 from mint.mint_error import *
@@ -149,31 +148,74 @@ class ProjectsTable(database.KeyedTable):
                         ON Projects.projectId=ProjectUsers.projectId
                     WHERE ProjectUsers.userId=?"""
         if filter:
-            stmt += " AND hidden=0"
+            stmt += " AND NOT hidden"
         cu.execute(stmt, userId)
 
         return [tuple(x) for x in cu.fetchall()]
 
     def getProjectDataByMember(self, userId, filter = False):
         cu = self.db.cursor()
-        # audited for sql injection. check sat.
         # We used to filter these results with another condition that if the
         # project was hidden, you had to be a userlevels.WRITER.  That has
         # been changed to allow normal users to browse hidden projects of
         # which they are a member.
-        stmt = """SELECT Projects.*, ProjectUsers.level,
-                     EXISTS(SELECT 1 FROM MembershipRequests
-                            WHERE projectId=Projects.projectid) AS hasRequests
-                  FROM ProjectUsers
-                  JOIN Projects ON Projects.projectId=ProjectUsers.projectId
-                  WHERE ProjectUsers.userId=?"""
-        if filter:
-            stmt += " AND hidden=0"
-        cu.execute(stmt, userId)
+        stmt = """
+SELECT ep.*, grouped.level FROM (
+SELECT allperms.project_id, MIN(allperms.level) AS level
+FROM (
+    -- Permissions from a project set
+    SELECT qpt.project_id, CASE rpt.name
+            WHEN 'ReadMembers' THEN 2
+            WHEN 'ModMembers' THEN 0
+            ELSE NULL
+        END AS level
+    FROM rbac_user_role rur
+    JOIN rbac_permission rp
+        ON rp.role_id = rur.role_id
+    JOIN rbac_permission_type rpt
+        ON rpt.permission_type_id = rp.permission_type_id
+    JOIN querysets_projecttag qpt
+        ON qpt.query_set_id = rp.queryset_id
+    WHERE rur.user_id = :user_id
+    AND rpt.name in ('ReadMembers', 'ModMembers')
+
+    UNION ALL
+
+    -- Permissions from a project stage set
+    SELECT pbs.project_id, CASE rpt.name
+            WHEN 'ReadMembers' THEN 2
+            WHEN 'ModMembers' THEN 0
+            ELSE NULL
+        END AS level
+    FROM rbac_user_role rur
+    JOIN rbac_permission rp
+        ON rp.role_id = rur.role_id
+    JOIN rbac_permission_type rpt
+        ON rpt.permission_type_id = rp.permission_type_id
+    JOIN querysets_stagetag qst
+        ON qst.query_set_id = rp.queryset_id
+    JOIN project_branch_stage pbs
+        ON pbs.stage_id = qst.stage_id
+    WHERE rur.user_id = :user_id
+    AND rpt.name in ('ReadMembers', 'ModMembers')
+
+    UNION ALL
+
+    -- Oldschool project membership
+    SELECT projectid AS project_id, level
+    FROM ProjectUsers pu
+    WHERE userId = :user_id
+) allperms
+GROUP BY allperms.project_id
+) grouped
+JOIN Projects ep
+    ON ep.projectId = grouped.project_id
+"""
+        cu.execute(stmt, dict(user_id=userId))
         ret = []
         for x in cu.fetchall_dict():
             level = x.pop('level')
-            hasRequests = x.pop('hasRequests')
+            hasRequests = False
             if x['creatorId'] is None:
                 del x['creatorId']
             ret.append((x, level, hasRequests))
@@ -188,7 +230,7 @@ class ProjectsTable(database.KeyedTable):
             fledgeQuery = "AND EXISTS(SELECT troveName FROM Commits WHERE projectId=Projects.projectId LIMIT 1)"
 
         cu.execute("""SELECT projectId, hostname, name, description, timeModified
-                FROM Projects WHERE hidden=0 AND external=0 %s ORDER BY timeCreated DESC
+                FROM Projects WHERE NOT hidden AND NOT external %s ORDER BY timeCreated DESC
                 LIMIT ?""" % fledgeQuery, limit)
 
         ids = []
@@ -211,7 +253,7 @@ class ProjectsTable(database.KeyedTable):
         @param offset: Count at which to begin listing
         @param limit:  Number of items to return
         @param includeInactive:  Include hidden and fledgling projects
-        @param byPopularity: Sort by popularity metric.
+        @param byPopularity: Sort by popularity metric. (OBSOLETE)
         @return:       a dictionary of the requested items.
                        each entry will contain four bits of data:
                         The hostname for use with linking,
@@ -222,14 +264,13 @@ class ProjectsTable(database.KeyedTable):
         """
         columns = ['Projects.projectId', 'Projects.hostname',
                    'Projects.name', 'Projects.description',
-                   """COALESCE(LatestCommit.commitTime, Projects.timeCreated) AS timeModified""",
-                   """COALESCE(TopProjects.rank, (SELECT COUNT(projectId) FROM Projects)) AS rank""",
+                   """Projects.timeCreated AS timeModified""",
+                   """0 AS rank""",
                    """COALESCE(tmpLatestReleases.timePublished, 0) AS lastRelease"""
         ]
 
         searchcols = ['Projects.name', 'Projects.description', 'hostname']
         leftJoins = [ ('tmpLatestReleases', 'projectId'),
-                      ('LatestCommit', 'projectId'),
                       ('TopProjects', 'projectId') ]
 
         cu = self.db.cursor()
@@ -301,7 +342,7 @@ class ProjectsTable(database.KeyedTable):
             extras += ")"
 
         if not includeInactive:
-            extras += " AND Projects.hidden=0"
+            extras += " AND NOT Projects.hidden"
 
         terms = " ".join(terms)
 
@@ -322,10 +363,7 @@ class ProjectsTable(database.KeyedTable):
 
         whereClause = searcher.Searcher.where(terms, searchcols, extras, extraSubs)
 
-        if byPopularity:
-            orderByClause = 'rank ASC'
-        else:
-            orderByClause = searcher.Searcher.order(terms, searchcols, 'UPPER(Projects.name)')
+        orderByClause = searcher.Searcher.order(terms, searchcols, 'UPPER(Projects.name)')
 
         ids, count = database.KeyedTable.search(self, columns, 'Projects',
                 whereClause,
@@ -343,14 +381,14 @@ class ProjectsTable(database.KeyedTable):
     @database.dbWriter
     def hide(self, cu, projectId):
         # Anonymous user is added/removed in server
-        cu.execute("UPDATE Projects SET hidden=1, timeModified=? WHERE projectId=?", time.time(), projectId)
+        cu.execute("UPDATE Projects SET hidden=true, timeModified=? WHERE projectId=?", time.time(), projectId)
         cu.execute("DELETE FROM PackageIndex WHERE projectId=?", projectId)
 
     def unhide(self, projectId):
         # Anonymous user is added/removed in server
         cu = self.db.cursor()
 
-        cu.execute("UPDATE Projects SET hidden=0, timeModified=? WHERE projectId=?", time.time(), projectId)
+        cu.execute("UPDATE Projects SET hidden=false, timeModified=? WHERE projectId=?", time.time(), projectId)
         self.db.commit()
 
     def isHidden(self, projectId):
@@ -391,13 +429,13 @@ class LabelsTable(database.KeyedTable):
         cu = self.db.cursor()
 
         if projectId:
-            cu.execute("""SELECT l.labelId, l.label, l.url, l.authType, 
+            cu.execute("""SELECT l.labelId, l.label, p.fqdn, l.url, l.authType,
                                     l.username, l.password, l.entitlement,
                                     p.external
                             FROM Labels l, Projects p
                             WHERE p.projectId=? AND l.projectId=p.projectId""", projectId)
         else:
-            cu.execute("""SELECT l.labelId, l.label, l.url, l.authType, 
+            cu.execute("""SELECT l.labelId, l.label, p.fqdn, l.url, l.authType,
                                     l.username, l.password, l.entitlement,
                                     p.external
                             FROM Labels l, Projects p
@@ -407,13 +445,15 @@ class LabelsTable(database.KeyedTable):
         labelIdMap = {}
         userMap = []
         entMap = []
-        for labelId, label, url, authType, username, password, entitlement, \
-                external in cu.fetchall():
+        for (labelId, label, host, url, authType, username, password,
+                entitlement, external) in cu.fetchall():
             if overrideAuth:
                 authType = 'userpass'
                 username = newUser
                 password = newPass
 
+            if not label:
+                label = host + '@dummy:label'
             labelIdMap[label] = labelId
             host = label[:label.find('@')]
             if url:
@@ -437,6 +477,8 @@ class LabelsTable(database.KeyedTable):
                 userMap.append((host, (username, password)))
             elif authType == 'entitlement':
                 entMap.append((host, ('', entitlement)))
+            else:
+                userMap.append((host, (self.cfg.authUser, self.cfg.authPass)))
 
         return labelIdMap, repoMap, userMap, entMap
 
@@ -450,18 +492,33 @@ class LabelsTable(database.KeyedTable):
 
     def getLabel(self, labelId):
         cu = self.db.cursor()
-        cu.execute('''SELECT label, url, authType, username, password,
-            entitlement FROM Labels WHERE labelId=?''', labelId)
+        cu.execute("""SELECT label, url, authType, username, password,
+                entitlement, fqdn
+                FROM Labels
+                JOIN Projects USING (projectId)
+                WHERE labelId=?
+                """, labelId)
 
         p = cu.fetchone()
         if not p:
             raise LabelMissing
         else:
-            username = p[3] is not None and p[3] or ''
-            password = p[4] is not None and p[4] or ''
-            entitlement = p[5] is not None and p[5] or ''
-            return dict(label=p[0], url=p[1], authType=p[2],
-                username=username, password=password, entitlement=entitlement)
+            label, url, authType, username, password, entitlement, fqdn = p
+            if not label:
+                label = fqdn + '@dummy:label'
+            if not url:
+                url = 'https://%s/repos/%s/' % (self.cfg.siteHost, fqdn)
+            out = dict(
+                    label=label,
+                    url=url,
+                    authType=authType,
+                    username=username,
+                    password=password,
+                    entitlement=entitlement)
+            for key, value in out.items():
+                if value is None:
+                    out[key] = ''
+            return out
 
     @database.dbWriter
     def addLabel(self, cu, projectId, label, url=None, authType='none',
@@ -737,9 +794,10 @@ class ProjectUsersTable(database.DatabaseTable):
               JOIN TargetUserCredentials AS tuc USING (userId)
               JOIN TargetCredentials AS tc USING (targetCredentialsId)
               JOIN Targets ON (tuc.targetId=Targets.targetId)
+              JOIN target_types USING (target_type_id)
              WHERE pu.projectId = ?
-               AND Targets.targetType = ?
-               AND Targets.targetName = ?""", projectId, 'ec2', 'aws')
+               AND target_types.name = ?
+               AND Targets.name = ?""", projectId, 'ec2', 'aws')
         for isWriter, creds in cu.fetchall():
             val = mintdata.unmarshalTargetUserCredentials(creds).get('accountId')
             if val is None:

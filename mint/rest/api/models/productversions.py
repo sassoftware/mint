@@ -19,6 +19,7 @@ class ProductVersion(Model):
     description = fields.CharField()
     platformLabel = fields.CharField()
     timeCreated = fields.DateTimeField(editable=False)
+    label = fields.CharField()
     platform = fields.UrlField('products.versions.platform', 
                                 ('hostname', 'name'))
     platformVersion = fields.UrlField('products.versions.platformVersion', 

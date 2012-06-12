@@ -1,7 +1,5 @@
 #
-# Copyright (c) 2005-2008 rPath, Inc.
-#
-# All Rights Reserved
+# Copyright (c) 2011 rPath, Inc.
 #
 import os
 import random
@@ -12,14 +10,14 @@ from conary.lib.digestlib import md5
 from conary.lib import sha1helper
 
 from conary.repository.netrepos.netauth import nameCharacterSet
+from conary.repository.netrepos.netauth import ValidPasswordToken
 
-from mint import userlevels
 from mint import templates
-from mint.templates import registerNewUser
-from mint.templates import validateNewEmail
 from mint import searcher
 from mint import userlisting
-from mint.mint_error import *
+from mint.mint_error import (DuplicateItem, InvalidUsername,
+        IllegalUsername, UserAlreadyExists, AlreadyConfirmed, ItemNotFound)
+from mint.lib import auth_client
 from mint.lib import data
 from mint.lib import database
 from mint.lib import maillib
@@ -42,7 +40,7 @@ class UsersTable(database.KeyedTable):
 
     fields = ['userId', 'username', 'fullName', 'salt', 'passwd', 'email',
               'displayEmail', 'timeCreated', 'timeAccessed',
-              'active', 'blurb']
+              'active', 'blurb', 'is_admin']
 
     # Not the ideal place to put these, but I wanted to easily find them later
     # --misa
@@ -53,85 +51,89 @@ class UsersTable(database.KeyedTable):
         self.cfg = cfg
         database.DatabaseTable.__init__(self, db)
         self.confirm_table = ConfirmationsTable(db)
-        # not passing a db object since a mint db isn't correct
-        # and we're only using the _checkPassword function anyway
-        self._userAuth = repository.netrepos.netauth.UserAuthorization(
-            db = None, pwCheckUrl = self.cfg.externalPasswordURL,
-            cacheTimeout = self.cfg.authCacheTimeout)
+        self.authClient = auth_client.getClient(cfg.authSocket)
 
     def changePassword(self, username, password):
         salt, passwd = self._mungePassword(password)
         cu = self.db.cursor()
         cu.execute("UPDATE Users SET salt=?, passwd=? WHERE username=?",
-                   cu.binary(salt), passwd, username)
+                   salt, passwd, username)
         self.db.commit()
 
     def _checkPassword(self, user, salt, password, challenge):
-        return self._userAuth._checkPassword( \
-                user, salt, password, challenge)
+        if salt and password:
+            m = md5(salt.decode('hex') + challenge)
+            if m.hexdigest() == password:
+                return True
+        else:
+            if self.authClient.checkPassword(user, challenge):
+                return True
+        return False
 
     def _mungePassword(self, password):
+        if password is None or password == '':
+            return None, None
         m = md5()
         salt = os.urandom(4)
         m.update(salt)
         m.update(password)
-        return salt, m.hexdigest()
+        return salt.encode('hex'), m.hexdigest()
 
-    def _getUserGroups(self, authToken):
-        user, challenge = authToken
-
+    def _checkToken(self, userId, token):
+        # Don't send the token to the database, if it's actually a user
+        # password it might end up in the DB logs.
         cu = self.db.cursor()
-        cu.execute("SELECT salt, passwd FROM Users WHERE username=?", user)
-        r = cu.fetchone()
-        if r  and self._checkPassword(user, r[0], r[1], challenge):
-            cu.execute("""SELECT UserGroups.userGroup
-                          FROM UserGroups, Users, UserGroupMembers
-                          WHERE UserGroups.userGroupId =
-                                  UserGroupMembers.userGroupId AND
-                                UserGroupMembers.userId = Users.userId AND
-                                Users.username = ?""", user)
-            return [row[0] for row in cu.fetchall()]
-        else:
-            return []
+        cu.execute("""
+            SELECT token FROM auth_tokens
+            WHERE user_id = ?  AND expires_date >= now()
+            """, userId)
+        tokens = [x[0] for x in cu]
+        return token in tokens
 
-    def checkAuth(self, authToken):
-        auth = {'authorized': False, 'userId': -1}
+    def checkAuth(self, authToken, useToken=False):
+        noAuth = {'authorized': False, 'userId': -1}
         if authToken == ('anonymous', 'anonymous'):
-            return auth
+            return noAuth
 
         username, password = authToken
         cu = self.db.cursor()
         cu.execute("""SELECT userId, email, displayEmail, fullName, blurb,
-                        timeAccessed FROM Users
+                        timeAccessed, salt, passwd, is_admin FROM Users
                       WHERE username=? AND active=1""", username)
         r = cu.fetchone()
-
-        if r:
+        if not r:
+            # No matching uer
+            return noAuth
+        (userId, email, displayEmail, fullName, blurb, timeAccessed, salt,
+                digest, isAdmin) = r
+        if password is ValidPasswordToken:
+            # Pre-authenticated session
+            pass
+        elif useToken and self._checkToken(userId, password):
+            # Repository token
+            pass
+        else:
             try:
-                groups = self._getUserGroups(authToken)
+                if not self._checkPassword(username, salt, digest, password):
+                    # Password failed
+                    return noAuth
             except repository.errors.OpenError:
-                return auth
+                # External (HTTP) auth failed
+                return noAuth
 
-            if type(groups) != list:
-                raise AuthRepoError
-
-            if groups:
-                auth = {'authorized':   True,
-                        'userId':       int(r[0]),
-                        'username':     username,
-                        'email':        r[1],
-                        'displayEmail': r[2],
-                        'fullName':     r[3],
-                        'blurb':        r[4],
-                        'timeAccessed': r[5],
-                        'stagnant':     self.isUserStagnant(r[0]),
-                        'groups':       groups}
-                if 'MintAdmin' in groups:
-                    auth['admin'] = True
-                else:
-                    auth['admin'] = False
-
-        return auth
+        return {
+                'authorized':   True,
+                'userId':       int(userId),
+                'username':     username,
+                'email':        email,
+                'displayEmail': displayEmail,
+                'fullName':     fullName,
+                'blurb':        blurb,
+                'timeAccessed': timeAccessed,
+                'stagnant':     False,
+                'groups':       [],
+                'admin':        isAdmin,
+                }
 
     def validateNewEmail(self, userId, email):
         user = self.get(userId)
@@ -155,10 +157,7 @@ class UsersTable(database.KeyedTable):
         except DuplicateItem:
             self.confirm_table.update(userId, confirmation = confirm)
 
-    def registerNewUser(self, username, password, fullName, email,
-                        displayEmail, blurb, active):
-        if self.cfg.sendNotificationEmails and not active:
-            maillib.validateEmailDomain(email)
+    def validateUsername(self, username):
         if username.lower() == self.cfg.authUser.lower():
             raise IllegalUsername
         for letter in username:
@@ -166,28 +165,24 @@ class UsersTable(database.KeyedTable):
                 raise InvalidUsername
 
         cu = self.db.cursor()
-        cu.execute("""SELECT COUNT(*) FROM UserGroups
-                          WHERE UPPER(userGroup)=UPPER(?)""",
-                   username)
-        if cu.fetchone()[0]:
-            raise UserAlreadyExists
-
         cu.execute("SELECT COUNT(*) FROM Users WHERE UPPER(username)=UPPER(?)",
                    username)
         if cu.fetchone()[0]:
             raise UserAlreadyExists
 
+    def registerNewUser(self, username, password, fullName, email,
+                        displayEmail, blurb, active):
+        if self.cfg.sendNotificationEmails and not active:
+            maillib.validateEmailDomain(email)
+        self.validateUsername(username)
+
         salt, passwd = self._mungePassword(password)
 
         self.db.transaction()
         try:
-            cu.execute("INSERT INTO UserGroups (userGroup) VALUES(?)",
-                       username)
-            userGroupId = cu.lastid()
-
             userId = self.new(username = username,
                               fullName = fullName,
-                              salt = cu.binary(salt),
+                              salt = salt,
                               passwd = passwd,
                               email = email,
                               displayEmail = displayEmail,
@@ -195,18 +190,6 @@ class UsersTable(database.KeyedTable):
                               timeAccessed = 0,
                               blurb = blurb,
                               active = int(active))
-
-            cu.execute("INSERT INTO UserGroupMembers VALUES(?,?)", userGroupId,
-                       userId)
-            cu.execute("""SELECT userGroupId FROM UserGroups
-                              WHERE userGroup='public'""")
-            # FIXME, just skip the public group if it's not there.
-            try:
-                pubGroupId = cu.fetchone()[0]
-            except:
-                raise AssertionError("There's no public group!")
-            cu.execute("INSERT INTO UserGroupMembers VALUES(?,?)", pubGroupId,
-                       userId)
 
             if self.cfg.sendNotificationEmails and not active:
                 confirm = confirmString()
@@ -228,14 +211,6 @@ class UsersTable(database.KeyedTable):
         else:
             self.db.commit()
         return userId
-
-    def isUserStagnant(self, userId):
-        cu = self.db.cursor()
-        cu.execute("SELECT timeRequested FROM Confirmations WHERE userId=?", userId)
-        results = cu.fetchall()
-        if len(results) == 1:
-            return True
-        return False
 
     def confirm(self, confirm):
         cu = self.db.cursor()
@@ -291,33 +266,6 @@ class UsersTable(database.KeyedTable):
 
         return ids, count
 
-    def getUsersList(self):
-        """
-        Returns a list of all users suitable for framing in a listbox or
-        multi-select box.
-        """
-        cu = self.db.cursor()
-
-        userConcat = database.concat(self.db, 'username', "' - '", 'fullName')
-        SQL = """SELECT userId, %s, active
-                FROM Users
-                ORDER BY username""" % userConcat
-
-        cu.execute(SQL)
-
-        # results must be a built in type
-        results = [tuple(x) for x in cu.fetchall()]
-        for index, (userId, userName, active) in enumerate(results[:]):
-            cu.execute("""SELECT COUNT(*) FROM UserGroupMembers
-                              LEFT JOIN UserGroups
-                                  ON UserGroupMembers.userGroupId=
-                                          UserGroups.userGroupId
-                              WHERE UserGroup = 'MintAdmin'
-                              AND userId=?""", userId)
-            if cu.fetchone()[0]:
-                results[index] = userId, userName + " (admin)", active
-        return results
-
     def getUsersWithEmail(self):
         """
         Returns a list of all users suitable for sending e-mail
@@ -341,8 +289,9 @@ class UsersTable(database.KeyedTable):
               JOIN TargetUserCredentials AS tuc USING (userId)
               JOIN TargetCredentials AS tc USING (targetCredentialsId)
               JOIN Targets AS t ON (t.targetId=tuc.targetId)
-             WHERE t.targetType = ?
-               AND t.targetName = ?
+              JOIN target_types AS tt ON (t.target_type_id = t.target_type_id)
+             WHERE tt.name = ?
+               AND t.name = ?
             """
         cu.execute(SQL, self.EC2TargetType, self.EC2TargetName)
         results = cu.fetchall()
@@ -416,50 +365,6 @@ class UsersTable(database.KeyedTable):
               AND pu.userId = ?""", userId)
         return cu.fetchall_dict()
 
-class UserGroupsTable(database.KeyedTable):
-    name = "UserGroups"
-    key = "userGroupId"
-    fields = ['userGroupId', 'userGroup']
-
-    def __init__(self, db, cfg):
-        self.cfg = cfg
-        database.DatabaseTable.__init__(self, db)
-        cu = self.db.cursor()
-        cu.execute("""SELECT userGroupId FROM UserGroups
-                          WHERE userGroup='public'""")
-        if not cu.fetchall():
-            cu.execute("INSERT INTO UserGroups (userGroup) VALUES('public')")
-
-    def getMintAdminId(self):
-        """
-        Return the id of the MintAdmin user.
-
-        NOTE: This will create the MintAdmin UserGroup if it doesn't
-        already exist.
-        """
-        try:
-            mintAdminId = self.getIdByColumn('userGroup', 'MintAdmin')
-        except ItemNotFound:
-            mintAdminId = self.new(userGroup = 'MintAdmin')
-        except:
-            raise
-        return mintAdminId
-
-
-class UserGroupMembersTable(database.DatabaseTable):
-    name = "UserGroupMembers"
-    fields = ['userGroupId', 'userId']
-
-    def __init__(self, db, cfg):
-        self.cfg = cfg
-        database.DatabaseTable.__init__(self, db)
-
-    def getGroupsForUser(self, userId):
-        cu = self.db.cursor()
-        cu.execute("SELECT userGroupId FROM UserGroupMembers WHERE userId=?",
-                   userId)
-        return [x[0] for x in cu.fetchall()]
 
 class UserDataTable(data.GenericDataTable):
     name = "UserData"
-

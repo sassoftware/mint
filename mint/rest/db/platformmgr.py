@@ -344,12 +344,14 @@ class Platforms(object):
         abstract = kw.get('abstract', None)
         sourceTypes = kw.get('sourceTypes', [])
         mode = kw.get('mode', 'manual')
+        hidden = kw.get('hidden', None)
         platformUsageTerms = kw.get('platformUsageTerms')
         platform = models.Platform(platformId=platformId, label=label,
                 platformName=platformName, enabled=enabled,
                 platformUsageTerms=platformUsageTerms,
                 configurable=configurable, mode=mode,
-                repositoryHostname=fqdn, abstract=abstract)
+                repositoryHostname=fqdn, abstract=abstract,
+                hidden=hidden)
         platform._sourceTypes = sourceTypes
         platform._buildTypes = platformBuildTypes
         return platform
@@ -370,6 +372,8 @@ class Platforms(object):
 
         try:
             platformId = self.db.db.platforms.new(**params)
+            log.info("Created platform %s with id %s", platformLabel,
+                    platformId)
         except mint_error.DuplicateItem, e:
             platformId = self.db.db.platforms.getIdByColumn('label',
                 platformLabel)
@@ -491,7 +495,7 @@ class Platforms(object):
             outFile.close()
 
             callback._message('Download Complete. Loading preload...')
-            reposManager = self.db.productMgr.reposMgr.reposManager
+            reposManager = self.db.reposShim
             repoHandle = reposManager.getRepositoryFromFQDN(
                     platform.repositoryHostname)
             repoHandle.restoreBundle(outFilePath, replaceExisting=True,
@@ -598,6 +602,8 @@ class Platforms(object):
             # XXX Don't leave this hard-coded forever
             if hostname == 'centos.rpath.com':
                 return 'https://centos.rpath.com/nocapsules/'
+            elif hostname == 'centos6.rpath.com':
+                return 'https://centos6.rpath.com/nocapsules/'
             return 'https://%s/conary/' % (hostname)
 
     def _getAuthInfo(self):
@@ -673,7 +679,8 @@ class Platforms(object):
             self._setupPlatform(platform)
 
         self.db.db.platforms.update(platformId, enabled=int(platform.enabled),
-            mode=platform.mode, configurable=bool(platform.configurable))
+            mode=platform.mode, configurable=bool(platform.configurable),
+            hidden=bool(platform.hidden))
 
         # Clear the cache of status information
         self.platformCache.clearPlatformData(platform.label)
@@ -727,7 +734,7 @@ class Platforms(object):
             # any local repo map.
             sourceUrl = self._getUrl(platform)
             try:
-                serverProxy = self.db.productMgr.reposMgr.reposManager.getServerProxy(host,
+                serverProxy = self.db.reposShim.getServerProxy(host,
                     sourceUrl, None, [entitlement])
                 client.repos.c.cache[host] = serverProxy
                 platDef = proddef.PlatformDefinition()
@@ -914,6 +921,8 @@ class ContentSources(object):
                     defaultSource=int(source.defaultSource),
                     contentSourceType=typeName,
                     orderIndex=source.orderIndex)
+            log.info("Created platform source %s with type %s and id %s",
+                    source.name, typeName, sourceId)
         except mint_error.DuplicateItem, e:
             return self.db.db.platformSources.getIdFromShortName(source.shortName)
 
@@ -985,6 +994,8 @@ class ContentSources(object):
         return models.SourceInstances(dbSources)            
 
     def _linkPlatformToContentSource(self, platformId, sourceId):
+        log.info("Adding platform source %s to platform %s",
+                sourceId, platformId)
         self.db.db.platformsPlatformSources.new(platformId=platformId,
                     platformSourceId=sourceId)
 
@@ -997,6 +1008,7 @@ class ContentSources(object):
 
     def delete(self, shortName):
         sourceId = self.db.db.platformSources.getIdFromShortName(shortName)
+        log.info("Deleting platform source %s", sourceId)
         self.db.db.platformSources.delete(sourceId)
 
     def create(self, source):
@@ -1262,7 +1274,8 @@ class PlatformManager(manager.Manager):
                         id = ctemplRef,
                         name = ctemplRef,
                         displayName = displayName,
-                        options = imageParams, **extra)
+                        **extra)
+                    kw.update(options=imageParams)
 
             model = models.PlatformBuildTemplate(**kw)
             buildDefModels.append(model)
@@ -1402,7 +1415,7 @@ class PlatformDefCache(persistentcache.PersistentCache):
                     entitlement = reposMgr.db.siteAuth.entitlementKey
                 else:
                     entitlement = None
-                serverProxy = reposMgr.reposManager.getServerProxy(host,
+                serverProxy = reposMgr.db.reposShim.getServerProxy(host,
                     sourceUrl, None, [entitlement])
                 client.repos.c.cache[host] = serverProxy
                 platDef = self._getPlatDef(client, labelStr)

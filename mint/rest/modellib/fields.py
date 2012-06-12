@@ -3,12 +3,15 @@
 #
 # All Rights Reserved
 #
+
 from conary import versions
 from conary.deps import deps
 from conary.lib import util
 
 from mint.rest import modellib
 from mint.rest.modellib import Field
+
+import urlparse
 
 class IntegerField(Field):
     def _valueFromString(self, value):
@@ -129,8 +132,18 @@ class AbsoluteUrlField(CalculatedField):
     handleNone = True
     
     def _valueToString(self, value, parent, context):
-        return context.controller.url(context.request,
-                                      *parent.get_absolute_url())
+        url = parent.get_absolute_url()
+        if isinstance(url, basestring):
+            # return a path outside restlib
+            if not url.startswith("/"):
+                raise Exception("absolute URL expected")
+            tokens = urlparse.urlsplit(context.request.thisUrl)
+            (scheme, netloc, path, query, fragment) = tokens
+            return "%s://%s%s" % (scheme, netloc, url)
+        else:
+            # this is more or less the equivalent of reversing
+            # a Django view, except in restlib
+            return context.controller.url(context.request, *url)
 
 
 class ImageDownloadField(CalculatedField):

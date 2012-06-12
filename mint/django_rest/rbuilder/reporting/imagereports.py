@@ -1,5 +1,5 @@
-from mint.django_rest.rbuilder.models import Images, Products, Downloads
 from mint.django_rest.rbuilder import reporting
+from mint.django_rest.rbuilder.projects.models import Project #, Downloads
 from mint.django_rest.rbuilder.reporting.reports import TimeSegmentReport
 
 from django.db import connection, transaction
@@ -68,8 +68,8 @@ class ImagesPerProduct(Resource):
         #nonexistent product
         if not rows:
             try:
-                product = Products.objects.get(shortname=product)
-            except Products.DoesNotExist, data:
+                product = Project.objects.get(short_name=product)
+            except Project.DoesNotExist, data:
                 raise Http404(data)
         
         for row in rows:
@@ -172,8 +172,8 @@ class ApplianceDownloads(Resource):
         #nonexistent product
         if not rows:
             try:
-                product = Products.objects.get(shortname=product)
-            except Products.DoesNotExist, data:
+                product = Project.objects.get(short_name=product)
+            except Project.DoesNotExist, data:
                 raise Http404(data)
  
         for row in rows:

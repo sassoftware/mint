@@ -151,21 +151,23 @@ class ImageManager(manager.Manager):
         imageIds = [int(x) for x in imageIds]
         if not imageIds:
             return []
+        imageStr = ', '.join('%d' % x for x in imageIds)
 
         cu = self.db.cursor()
 
-        cu.execute("DELETE FROM tmpOneVal")
-        cu.executemany("INSERT INTO tmpOneVal (id) VALUES (?)",
-            [ (x, ) for x in imageIds ])
-
         # Grab target images
         cu.execute("""
-            SELECT DISTINCT t.targetType, t.targetName, tid.fileId, tid.targetImageId
+            SELECT DISTINCT
+                    tt.name AS targetType,
+                    t.name AS targetName,
+                    tid.fileId AS fileId,
+                    tid.targetImageId AS targetImageId
               FROM Targets AS t
-              JOIN TargetImagesDeployed AS tid USING (targetId)
+              JOIN target_types AS tt USING (target_type_id)
+              JOIN TargetImagesDeployed AS tid ON tid.targetId = t.targetId
               JOIN BuildFiles AS bf USING (fileId)
-              JOIN tmpOneVal AS tb ON (bf.buildId = tb.id)
-        """)
+              WHERE bf.buildId IN (%s)
+        """ % imageStr)
         targetImages = {}
         for row in cu:
             targetImages.setdefault(row['fileId'], []).append(
@@ -180,8 +182,8 @@ class ImageManager(manager.Manager):
             FROM BuildFiles f
                 JOIN BuildFilesUrlsMap USING ( fileId )
                 JOIN FilesUrls u USING ( urlId )
-                JOIN tmpOneVal AS tb ON (f.buildId = tb.id)
-            '''
+                WHERE f.buildId IN (%s)
+            ''' % imageStr
         cu.execute(sql)
 
         filesByImageId = dict((imageId, {}) for imageId in imageIds)
@@ -240,18 +242,26 @@ class ImageManager(manager.Manager):
         ret = {}
         for imageId in imageIds:
             troveName, troveVersion, troveFlavor, baseFileName = imageTroveMap[imageId]
-            baseFileName = self._sanitizeString(baseFileName)
-            if not baseFileName:
-                troveVersion = helperfuncs.parseVersion(troveVersion)
-                troveArch = helperfuncs.getArchFromFlavor(troveFlavor)
-                baseFileName = "%(name)s-%(version)s-%(arch)s" % dict(
-                    # XXX One would assume hostname == troveName, but that's
-                    # how server.py had the code written
-                    name = hostname,
-                    version = troveVersion.trailingRevision().version,
-                    arch = troveArch)
+            baseFileName = self._getBaseFileName(baseFileName, hostname,
+                troveName, troveVersion, troveFlavor)
             ret[imageId] = baseFileName
         return ret
+
+    @classmethod
+    def _getBaseFileName(self, baseFileName, hostname,
+            troveName, troveVersion, troveFlavor):
+        baseFileName = self._sanitizeString(baseFileName)
+        if baseFileName:
+            return baseFileName
+        troveVersion = helperfuncs.parseVersion(troveVersion)
+        troveArch = helperfuncs.getArchFromFlavor(troveFlavor)
+        baseFileName = "%(name)s-%(version)s-%(arch)s" % dict(
+            # XXX One would assume hostname == troveName, but that's
+            # how server.py had the code written
+            name = hostname,
+            version = troveVersion.trailingRevision().version,
+            arch = troveArch)
+        return baseFileName
 
     @classmethod
     def _sanitizeString(cls, string):
@@ -360,14 +370,15 @@ class ImageManager(manager.Manager):
         sql = '''INSERT INTO Builds (projectId, name, buildType, timeCreated, 
                                      buildCount, createdBy, troveName, 
                                      troveVersion, troveFlavor, stageName, 
-                                     productVersionId) 
-                            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)'''
+                                     productVersionId, output_trove) 
+                            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)'''
         assert buildType is not None
         cu.execute(sql, productId, buildName, buildType,    
                    time.time(), 0, self.auth.userId,
                    troveTuple[0], troveTuple[1].freeze(),
                    troveTuple[2].freeze(),
-                   stage, productVersionId)
+                   stage, productVersionId,
+                   image.outputTrove)
         buildId = cu.lastrowid
 
         buildDataTable = self.db.db.buildData
@@ -416,13 +427,14 @@ class ImageManager(manager.Manager):
         log.info(msg)
         self._getImageLogger(hostname, imageId).info(msg)
 
-    def getRepeaterClient(self):
-        return repeater_client.RepeaterClient()
+    def getUploaderClient(self):
+        rcli = repeater_client.RepeaterClient()
+        return iup_client.UploadClient(rcli.client)
 
     def uploadImageFiles(self, hostname, image, outputToken=None):
         if not image.files.files:
             return None
-        rcli = self.getRepeaterClient()
+        rcli = repeater_client.RepeaterClient
         relPath="/api/products/%s/images/%s/" % (hostname, image.imageId)
         imageURL = rcli.URL(
                 scheme='http',
@@ -456,7 +468,7 @@ class ImageManager(manager.Manager):
         imodel = rcli.Image(name=self._u(image.name), metadata=metaDict,
             architecture=self._u(image.architecture), files=fileList)
 
-        uploadClient = iup_client.UploadClient(rcli.client)
+        uploadClient = self.getUploaderClient()
         uuid, job = uploadClient.downloadImages(imodel, imageURL)
         cu = self.db.cursor()
         cu.execute("UPDATE builds SET job_uuid = ? WHERE buildId = ?",
@@ -514,6 +526,19 @@ class ImageManager(manager.Manager):
     def _postFinished(self, imageId, status):
         if status.code != jobstatus.FINISHED:
             return
+        self.db.db.auth_tokens.removeTokenByImage(imageId)
+        self.db.commit()
+
+        try:
+            self.db.djMgr.enterTransactionManagement()
+            self.db.djMgr.finishImageBuild(imageId)
+            self.db.djMgr.commit()
+        except:
+            self.db.djMgr.rollback()
+            raise
+        finally:
+            self.db.djMgr.leaveTransactionManagement()
+
         imageType = self._getImageType(imageId)
         if imageType != buildtypes.AMI:
             # for now we only have to do something special for AMIs
@@ -732,8 +757,14 @@ class ImageManager(manager.Manager):
             imageFileListMap.update(dict((x, y)
                 for (x, y) in zip(imageIds, imageFilesList)))
 
+        deferredImages = []
+        imageMap = {}
         for imageData in images:
-            imageFileList = imageFileListMap[imageData['buildId']]
+            if imageData['imageType'] == 'DEFERRED_IMAGE':
+                deferredImages.append(imageData)
+                continue
+            imageId = imageData['buildId']
+            imageFileList = imageFileListMap[imageId]
             imageFileData = [
                 dict(fileId = x.fileId, sha1 = x.sha1,
                      fileName = x.fileName,
@@ -744,8 +775,20 @@ class ImageManager(manager.Manager):
                             for y in x.targetImages ])
                 for x in imageFileList.files ]
             imageData['files'] = imageFileData
-            imageId = imageData['buildId']
             imageData['baseFileName'] = imagesBaseFileNameMap[imageId]
+            imageMap[imageId] = imageData
+        # Now munge deferred images
+        for img in deferredImages:
+            imageId = img['buildId']
+            baseImage = imageMap[img['baseBuildId']]
+            # Copy file data from the base image
+            imageFileData = []
+            for fileData in baseImage['files']:
+                fileData = fileData.copy()
+                fileData['uniqueImageId'] = imageId
+                imageFileData.append(fileData)
+            img['files'] = imageFileData
+            img['baseFileName'] = imagesBaseFileNameMap[imageId]
         return images
 
     def _getImageLogger(self, hostname, imageId):

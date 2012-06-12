@@ -1,386 +1,32 @@
 <?xml version="1.0" encoding="utf-8"?>
 <django-objects version="1.0">
     <!--  please keep all user passwords as "password" with same salt -->
-    <object pk="1" model="rbuilder.users">
-	    <field type="CharField" name="username">admin</field>
-	    <field type="CharField" name="fullname">Administrator</field>
-	    <field type="TextField" name="salt">\\256\\303\\325B)</field>
-	    <field type="CharField" name="passwd">f0ae519bbcac24795abf2c2aa5414ed0</field>
+    <object pk="1" model="users.user">
+	    <field type="CharField" name="user_name">admin</field>
+	    <field type="CharField" name="full_name">Administrator</field>
+	    <field type="TextField" name="salt">deadbeef</field>
+	    <field type="CharField" name="passwd">6ca2833e3cf29b63ac5ad911b8d8d3e3</field>
 	    <field type="CharField" name="email">admin@rpath.com</field>
-	    <field type="TextField" name="displayemail"/>
-	    <field type="DecimalField" name="timecreated">1283523987.852</field>
-	    <field type="DecimalField" name="timeaccessed">1283530322.491</field>
+	    <field type="TextField" name="display_email"/>
+	    <field type="DecimalField" name="created_date">1283523987.852</field>
+	    <field type="DecimalField" name="modified_date">1283530322.491</field>
 	    <field type="SmallIntegerField" name="active">1</field>
 	    <field type="TextField" name="blurb"/>
+      <field type="BooleanField" name="is_admin">True</field>
 	</object>
-	<object pk="2000" model="rbuilder.users">
-	    <field type="CharField" name="username">testuser</field>
-	    <field type="CharField" name="fullname"/>
-	    <field type="TextField" name="salt">\\256\\303\\325B)</field>
-	    <field type="CharField" name="passwd">f0ae519bbcac24795abf2c2aa5414ed0</field>
+	<object pk="2000" model="users.user">
+	    <field type="CharField" name="user_name">testuser</field>
+            <field type="CharField" name="full_name">Test User</field>
+	    <field type="TextField" name="salt">deadbeef</field>
+	    <field type="CharField" name="passwd">6ca2833e3cf29b63ac5ad911b8d8d3e3</field>
 	    <field type="CharField" name="email">testuser@rpath.com</field>
-	    <field type="TextField" name="displayemail"/>
-	    <field type="DecimalField" name="timecreated">1283529921.387</field>
-	    <field type="DecimalField" name="timeaccessed">1283530359.041</field>
+	    <field type="TextField" name="display_email"/>
+	    <field type="DecimalField" name="created_date">1283529921.387</field>
+	    <field type="DecimalField" name="modified_date">1283530359.041</field>
 	    <field type="SmallIntegerField" name="active">1</field>
 	    <field type="TextField" name="blurb">null</field>
+      <field type="BooleanField" name="is_admin">False</field>
 	</object>
-	<object pk="1" model="rbuilder.usergroups">
-      <field type="CharField" name="usergroup">admin</field>
-    </object>
-    <object pk="2" model="rbuilder.usergroups">
-      <field type="CharField" name="usergroup">MintAdmin</field>
-    </object>
-    <object pk="2000" model="rbuilder.usergroups">
-	    <field type="CharField" name="usergroup">testuser</field>
-	</object>
-	<object pk="1" model="rbuilder.usergroupmembers">
-	    <field to="rbuilder.usergroups" name="usergroupid" rel="ManyToOneRel">1</field>
-	    <field to="rbuilder.users" name="userid" rel="ManyToOneRel">1</field>
-	</object>
-	<object pk="2" model="rbuilder.usergroupmembers">
-        <field to="rbuilder.usergroups" name="usergroupid" rel="ManyToOneRel">2</field>
-        <field to="rbuilder.users" name="userid" rel="ManyToOneRel">1</field>
-    </object>
-	<object pk="2000" model="rbuilder.usergroupmembers">
-	    <field to="rbuilder.usergroups" name="usergroupid" rel="ManyToOneRel">2000</field>
-	    <field to="rbuilder.users" name="userid" rel="ManyToOneRel">2000</field>
-	</object>
-	<object pk="1" model="inventory.managementinterface">
-        <field type="CharField" name="name">cim</field>
-        <field type="CharField" name="description">Common Information Model (CIM)</field>
-        <field type="DateTimeField" name="created_date">2010-10-05 18:36:37</field>
-        <field type="IntegerField" name="port">5989</field>
-        <field type="NullBooleanField" name="credentials_readonly">True</field>
-        <field type="TextField" name="credentials_descriptor"><![CDATA[<descriptor xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns="http://www.rpath.com/permanent/descriptor-1.0.xsd" xsi:schemaLocation="http://www.rpath.com/permanent/descriptor-1.0.xsd descriptor-1.0.xsd">
-  <metadata></metadata>
-  <dataFields>
-    <field>
-      <name>ssl_client_certificate</name>
-      <descriptions>
-        <desc>Client Certificate</desc>
-      </descriptions>
-      <type>str</type>
-      <constraints>
-        <descriptions>
-          <desc>The certificate must start with '-----BEGIN CERTIFICATE-----', end with '-----END CERTIFICATE-----', and have a maximum length of 16384 characters.</desc>
-        </descriptions>
-        <regexp>^\s*-----BEGIN CERTIFICATE-----.*-----END CERTIFICATE-----\s*$</regexp>
-        <length>16384</length>
-      </constraints>
-      <required>true</required>
-      <allowFileContent>true</allowFileContent>
-    </field>
-    <field>
-      <name>ssl_client_key</name>
-      <descriptions>
-        <desc>Client Private Key</desc>
-      </descriptions>
-      <type>str</type>
-      <constraints>
-        <descriptions>
-          <desc>The key must start with '-----BEGIN PRIVATE KEY-----', end with '----END PRIVATE KEY-----', and have a maximum length of 16384 characters.</desc>
-        </descriptions>
-        <regexp>^\s*-----BEGIN (\S+ )?PRIVATE KEY-----.*-----END (\S+ )?PRIVATE KEY-----\s*$</regexp>
-        <length>16384</length>
-      </constraints>
-      <required>true</required>
-     <allowFileContent>true</allowFileContent>
-    </field>
-  </dataFields>
-</descriptor>]]></field>
-    </object>
-    <object pk="2" model="inventory.managementinterface">
-        <field type="CharField" name="name">wmi</field>
-        <field type="CharField" name="description">Windows Management Instrumentation (WMI)</field>
-        <field type="DateTimeField" name="created_date">2010-10-05 18:36:38</field>
-        <field type="IntegerField" name="port">135</field>
-        <field type="NullBooleanField" name="credentials_readonly">False</field>
-        <field type="TextField" name="credentials_descriptor"><![CDATA[<descriptor xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns="http://www.rpath.com/permanent/descriptor-1.0.xsd" xsi:schemaLocation="http://www.rpath.com/permanent/descriptor-1.0.xsd descriptor-1.0.xsd">
-  <metadata></metadata>
-  <dataFields>
-    <field><name>domain</name>
-      <descriptions>
-        <desc>Windows Domain</desc>
-      </descriptions>
-      <type>str</type>
-      <default></default>
-      <required>true</required>
-    </field>
-    <field>
-      <name>username</name>
-      <descriptions>
-        <desc>User</desc>
-      </descriptions>
-      <type>str</type>
-      <default></default>
-      <required>true</required>
-    </field>
-    <field>
-      <name>password</name>
-      <descriptions>
-        <desc>Password</desc>
-      </descriptions>
-      <password>true</password>
-      <type>str</type>
-      <default></default>
-      <required>true</required>
-    </field>
-  </dataFields>
-</descriptor>]]></field>
-    </object>
-    <object pk="1" model="inventory.systemtype">
-        <field type="CharField" name="name">inventory</field>
-        <field type="CharField" name="description">Inventory</field>
-        <field type="DateTimeField" name="created_date">2010-10-05 18:36:37</field>
-        <field type="NullBooleanField" name="infrastructure">False</field>
-        <field type="TextField" name="creation_descriptor"><![CDATA[<descriptor xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns="http://www.rpath.com/permanent/descriptor-1.0.xsd" xsi:schemaLocation="http://www.rpath.com/permanent/descriptor-1.0.xsd descriptor-1.0.xsd"> 
-  <metadata>
-  </metadata> 
-  <dataFields>
-    <field> 
-      <name>name</name> 
-      <help lang="en_US">@System_creation_name@</help>
-      <descriptions> 
-        <desc>Name</desc> 
-      </descriptions> 
-      <type>str</type> 
-      <default></default>
-      <required>true</required>
-      <prompt>
-        <desc>Enter a name for this system</desc>
-      </prompt>
-    </field>
-    <field> 
-      <name>description</name> 
-      <help lang="en_US">@System_creation_description@</help>
-      <descriptions> 
-        <desc>Description</desc> 
-      </descriptions> 
-      <type>str</type> 
-      <default></default>
-      <required>false</required>
-      <prompt>
-        <desc>Enter a description for this system</desc>
-      </prompt>
-    </field>
-    <field> 
-      <name>tempIpAddress</name> 
-      <help lang="en_US">@System_creation_ip@</help>
-      <descriptions> 
-        <desc>Network Address</desc> 
-      </descriptions> 
-      <prompt>
-        <desc>Enter a DNS name or IP address for this system</desc>
-      </prompt>
-      <type>str</type> 
-      <default></default> 
-      <required>true</required>
-    </field>
-    <field>
-      <name>requiredNetwork</name>
-      <help lang="en_US">@System_creation_required_net@</help>
-      <required>false</required>
-      <multiple>True</multiple>
-      <descriptions>
-        <desc>Manage Via this Address Only</desc>
-      </descriptions>
-      <enumeratedType>
-        <describedValue>
-          <descriptions>
-            <desc></desc>
-          </descriptions>
-          <key>true</key>
-        </describedValue>
-      </enumeratedType>
-      <default>false</default>
-    </field>
-  </dataFields> 
-</descriptor>]]></field>
-  </object>
-    <object pk="2" model="inventory.systemtype">
-        <field type="CharField" name="name">infrastructure-management-node</field>
-        <field type="CharField" name="description">rPath Update Service (Infrastructure)</field>
-        <field type="DateTimeField" name="created_date">2010-10-05 18:36:37</field>
-        <field type="NullBooleanField" name="infrastructure">True</field>
-        <field type="TextField" name="creation_descriptor"><![CDATA[<descriptor xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns="http://www.rpath.com/permanent/descriptor-1.0.xsd" xsi:schemaLocation="http://www.rpath.com/permanent/descriptor-1.0.xsd descriptor-1.0.xsd"> 
-  <metadata>
-  </metadata> 
-  <dataFields>
-    <field> 
-      <name>name</name> 
-      <help lang="en_US">@Management_node_creation_name@</help>
-      <descriptions> 
-        <desc>Name</desc> 
-      </descriptions> 
-      <type>str</type> 
-      <default></default>
-      <required>true</required>
-      <prompt>
-        <desc>Enter a name for this management service</desc>
-      </prompt>
-    </field>
-    <field> 
-      <name>description</name> 
-      <help lang="en_US">@Management_node_creation_description@</help>
-      <descriptions> 
-        <desc>Description</desc> 
-      </descriptions> 
-      <type>str</type> 
-      <default></default>
-      <required>false</required>
-      <prompt>
-        <desc>Enter a description for this management service</desc>
-      </prompt>
-    </field>
-    <field> 
-      <name>tempIpAddress</name> 
-      <help lang="en_US">@Management_node_creation_ip@</help>
-      <descriptions> 
-        <desc>Network Address</desc> 
-      </descriptions> 
-      <prompt>
-        <desc>Enter a DNS name or IP address for this management service</desc>
-      </prompt>
-      <type>str</type> 
-      <default></default> 
-      <required>true</required>
-    </field>
-    <field> 
-      <name>zoneName</name> 
-      <help lang="en_US">@Management_node_zone_creation_name@</help>
-      <descriptions> 
-        <desc>Zone Name</desc> 
-      </descriptions> 
-      <type>str</type> 
-      <default></default>
-      <required>true</required>
-      <prompt>
-        <desc>Enter a name for the zone</desc>
-      </prompt>
-    </field>
-    <field> 
-      <name>zoneDescription</name> 
-      <help lang="en_US">@Management_node_zone_creation_description@</help>
-      <descriptions> 
-        <desc>Zone Description</desc> 
-      </descriptions> 
-      <type>str</type> 
-      <default></default>
-      <required>false</required>
-      <prompt>
-        <desc>Enter a description for the zone</desc>
-      </prompt>
-    </field>
-  </dataFields> 
-</descriptor>]]></field>
-    </object>
-    <object pk="3" model="inventory.systemtype">
-        <field type="CharField" name="name">infrastructure-windows-build-node</field>
-        <field type="CharField" name="description">rPath Windows Build Service (Infrastructure)"</field>
-        <field type="DateTimeField" name="created_date">2010-10-05 18:36:37</field>
-        <field type="NullBooleanField" name="infrastructure">True</field>
-        <field type="TextField" name="creation_descriptor"><![CDATA[<descriptor xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns="http://www.rpath.com/permanent/descriptor-1.0.xsd" xsi:schemaLocation="http://www.rpath.com/permanent/descriptor-1.0.xsd descriptor-1.0.xsd"> 
-  <metadata>
-  </metadata> 
-  <dataFields>
-    <field> 
-      <name>name</name> 
-      <help lang="en_US">@Windows_build_node_creation_name@</help>
-      <descriptions> 
-        <desc>Name</desc> 
-      </descriptions> 
-      <type>str</type> 
-      <default></default>
-      <required>true</required>
-      <prompt>
-        <desc>Enter a name for this Windows build service</desc>
-      </prompt>
-    </field>
-    <field> 
-      <name>description</name> 
-      <help lang="en_US">@Windows_build_node_creation_description@</help>
-      <descriptions> 
-        <desc>Description</desc> 
-      </descriptions> 
-      <type>str</type> 
-      <default></default>
-      <required>false</required>
-      <prompt>
-        <desc>Enter a description for this Windows build service</desc>
-      </prompt>
-    </field>
-    <field> 
-      <name>tempIpAddress</name> 
-      <help lang="en_US">@Windows_build_node_creation_ip@</help>
-      <descriptions> 
-        <desc>Network Address</desc> 
-      </descriptions> 
-      <prompt>
-        <desc>Enter a DNS name or IP address for this Windows build service</desc>
-      </prompt>
-      <type>str</type> 
-      <default></default> 
-      <required>true</required>
-    </field>
-  </dataFields> 
-</descriptor>]]></field>
-    </object>
-    <object pk="1" model="inventory.eventtype">
-        <field type="CharField" name="name">system registration</field>
-        <field type="CharField" name="description">System registration</field>
-        <field type="SmallIntegerField" name="priority">70</field>
-    </object>
-    <object pk="2" model="inventory.eventtype">
-        <field type="CharField" name="name">immediate system poll</field>
-        <field type="CharField" name="description">On-demand system synchronization</field>
-        <field type="SmallIntegerField" name="priority">105</field>
-    </object>
-    <object pk="3" model="inventory.eventtype">
-        <field type="CharField" name="name">system poll</field>
-        <field type="CharField" name="description">System synchronization</field>
-        <field type="SmallIntegerField" name="priority">50</field>
-    </object>
-    <object pk="4" model="inventory.eventtype">
-        <field type="CharField" name="name">system apply update</field>
-        <field type="CharField" name="description">Scheduled system update</field>
-        <field type="SmallIntegerField" name="priority">50</field>
-    </object>
-    <object pk="5" model="inventory.eventtype">
-        <field type="CharField" name="name">immediate system apply update</field>
-        <field type="CharField" name="description">System update</field>
-        <field type="SmallIntegerField" name="priority">105</field>
-    </object>
-    <object pk="6" model="inventory.eventtype">
-        <field type="CharField" name="name">system shutdown</field>
-        <field type="CharField" name="description">Scheduled system shutdown</field>
-        <field type="SmallIntegerField" name="priority">50</field>
-    </object>
-    <object pk="7" model="inventory.eventtype">
-        <field type="CharField" name="name">immediate system shutdown</field>
-        <field type="CharField" name="description">System shutdown</field>
-        <field type="SmallIntegerField" name="priority">105</field>
-    </object>
-    <object pk="8" model="inventory.eventtype">
-        <field type="CharField" name="name">system launch wait</field>
-        <field type="CharField" name="description">Launched system network data discovery</field>
-        <field type="SmallIntegerField" name="priority">105</field>
-    </object>
-    <object pk="9" model="inventory.eventtype">
-        <field type="CharField" name="name">system detect management interface</field>
-        <field type="CharField" name="description">System management interface detection</field>
-        <field type="SmallIntegerField" name="priority">50</field>
-    </object>
-    <object pk="10" model="inventory.eventtype">
-        <field type="CharField" name="name">immediate system detect management interface</field>
-        <field type="CharField" name="description">On-demand system management interface detection</field>
-        <field type="SmallIntegerField" name="priority">105</field>
-    </object>
-    <object pk="11" model="inventory.eventtype">
-        <field type="CharField" name="name">immediate system configuration</field>
-        <field type="CharField" name="description">Update system configuration</field>
-        <field type="SmallIntegerField" name="priority">105</field>
-    </object>
   <object pk="2" model="inventory.system">
         <field type="CharField" name="name">rPath Update Service</field>
         <field type="CharField" name="description">Local rPath Update Service</field>
@@ -391,10 +37,10 @@
         <field type="DateTimeField" name="registration_date"><None></None></field>
         <field type="CharField" name="generated_uuid"><None></None></field>
         <field type="CharField" name="local_uuid"><None></None></field>
-        <field type="CharField" name="ssl_client_certificate"><None></None></field>
-        <field type="CharField" name="ssl_client_key"><None></None></field>
+        <field type="CharField" name="_ssl_client_certificate"><None></None></field>
+        <field type="CharField" name="_ssl_client_key"><None></None></field>
         <field type="CharField" name="ssl_server_certificate"><None></None></field>
-        <field to="rbuilder.users" name="launching_user" rel="ManyToOneRel"><None></None></field>
+        <field to="users.User" name="launching_user" rel="ManyToOneRel"><None></None></field>
         <field to="inventory.systemstate" name="current_state" rel="ManyToOneRel">1</field>
         <field to="inventory.zone" name="managing_zone" rel="ManyToOneRel">1</field>
         <field to="inventory.trove" name="installed_software" rel="ManyToManyRel"></field>
@@ -405,11 +51,6 @@
         <field to="inventory.zone" name="zone" rel="ManyToOneRel">1</field>
         <field type="CharField" name="node_jid">superduperjid@rbuilder.rpath</field>
         <field to="inventory.trove" name="installed_software" rel="ManyToManyRel"></field>
-    </object>
-  <object pk="1" model="inventory.zone">
-        <field type="CharField" name="name">Local rBuilder</field>
-        <field type="CharField" name="description">Local rBuilder management zone</field>
-        <field type="DateTimeField" name="created_date">2010-08-23 22:05:49</field>
     </object>
    <object pk="1" model="inventory.network">
         <field to="inventory.system" name="system" rel="ManyToOneRel">2</field>
@@ -422,78 +63,6 @@
         <field type="NullBooleanField" name="active"><None></None></field>
         <field type="NullBooleanField" name="pinned"><None></None></field>
         <field type="DateTimeField" name="created_date">2010-10-05 18:36:37</field>
-  </object>
-  <object pk="1" model="inventory.systemstate">
-    <field type="CharField" name="name">unmanaged</field>
-    <field type="CharField" name="description">Unmanaged</field>
-    <field type="DateTimeField" name="created_date">2010-10-05 18:36:37</field>
-  </object>
-  <object pk="2" model="inventory.systemstate">
-    <field type="CharField" name="name">registered</field>
-    <field type="CharField" name="description">Initial synchronization pending</field>
-    <field type="DateTimeField" name="created_date">2010-10-05 18:36:37</field>
-  </object>
-  <object pk="3" model="inventory.systemstate">
-    <field type="CharField" name="name">responsive</field>
-    <field type="CharField" name="description">Online</field>
-    <field type="DateTimeField" name="created_date">2010-10-05 18:36:37</field>
-  </object>
-  <object pk="4" model="inventory.systemstate">
-    <field type="CharField" name="name">non-responsive-unknown</field>
-    <field type="CharField" name="description">Not responding: Unknown</field>
-    <field type="DateTimeField" name="created_date">2010-10-05 18:36:37</field>
-  </object>
-  <object pk="5" model="inventory.systemstate">
-    <field type="CharField" name="name">non-responsive-net</field>
-    <field type="CharField" name="description">Not responding: Network unreachable</field>
-    <field type="DateTimeField" name="created_date">2010-10-05 18:36:37</field>
-  </object>
-  <object pk="6" model="inventory.systemstate">
-    <field type="CharField" name="name">non-responsive-host</field>
-    <field type="CharField" name="description">Not responding: Host unreachable</field>
-    <field type="DateTimeField" name="created_date">2010-10-05 18:36:37</field>
-  </object>
-  <object pk="7" model="inventory.systemstate">
-    <field type="CharField" name="name">non-responsive-shutdown</field>
-    <field type="CharField" name="description">Not responding: Shutdown</field>
-    <field type="DateTimeField" name="created_date">2010-10-05 18:36:37</field>
-  </object>
-  <object pk="8" model="inventory.systemstate">
-    <field type="CharField" name="name">non-responsive-suspended</field>
-    <field type="CharField" name="description">Not responding: Suspended</field>
-    <field type="DateTimeField" name="created_date">2010-10-05 18:36:37</field>
-  </object>
-  <object pk="9" model="inventory.systemstate">
-    <field type="CharField" name="name">dead</field>
-    <field type="CharField" name="description">Stale</field>
-    <field type="DateTimeField" name="created_date">2010-10-05 18:36:37</field>
-  </object>
-  <object pk="10" model="inventory.systemstate">
-    <field type="CharField" name="name">mothballed</field>
-    <field type="CharField" name="description">Retired</field>
-    <field type="DateTimeField" name="created_date">2010-10-05 18:36:37</field>
-  </object>
-  <object pk="11" model="inventory.systemstate">
-    <field type="CharField" name="name">unmanaged-credentials</field>
-    <field type="CharField" name="description">Unmanaged: Invalid credentials</field>
-    <field type="DateTimeField" name="created_date">2010-10-05 18:36:37</field>
-  </object>
-  <object pk="12" model="inventory.systemstate">
-    <field type="CharField" name="name">non-responsive-credentials</field>
-    <field type="CharField" name="description">Not responding: Invalid credentials</field>
-    <field type="DateTimeField" name="created_date">2010-10-05 18:36:37</field>
-  </object>
-  <object pk="1" model="inventory.jobstate">
-    <field type="CharField" name="name">Queued</field>
-  </object>
-  <object pk="2" model="inventory.jobstate">
-    <field type="CharField" name="name">Running</field>
-  </object>
-  <object pk="3" model="inventory.jobstate">
-    <field type="CharField" name="name">Completed</field>
-  </object>
-  <object pk="4" model="inventory.jobstate">
-    <field type="CharField" name="name">Failed</field>
   </object>
   <object pk="561f95e06c749a518526703d3c7013d1a1579f57" model="rbuilder.pkicertificates">
     <field type="TextField" name="purpose">hg_ca</field>
@@ -785,28 +354,48 @@ Aj/9jaPTk+mjBIgXSVEHkJCtxfGZWYFx/eNItfaAAfZVX68txm5Hyp2J6Equnr82
     <field type="DateTimeField" name="time_issued">2010-09-01 15:18:53</field>
     <field type="DateTimeField" name="time_expired">2010-09-01 15:18:53</field>
   </object>
-  <object pk="1" model="rbuilder.products">
-    <field type="CharField" name="hostname">chater-foo.eng.rpath.com</field>
+  <object pk="1" model="projects.project">
+    <field type="CharField" name="hostname">chater-foo</field>
     <field type="CharField" name="name">chater-foo</field>
     <field type="CharField" name="namespace">rpath</field>
-    <field type="CharField" name="domainname">eng.rpath.com</field>
-    <field type="CharField" name="shortname">chater-foo</field>
-    <field type="CharField" name="projecturl">http://</field>
-    <field type="CharField" name="repositoryHostName">chater-foo.eng.rpath.com</field>
+    <field type="CharField" name="domain_name">eng.rpath.com</field>
+    <field type="CharField" name="short_name">chater-foo</field>
+    <field type="CharField" name="project_url">http://</field>
+    <field type="CharField" name="repository_hostname">chater-foo.eng.rpath.com</field>
     <field type="TextField" name="description">chater-foo</field>
-    <field type="CharField" name="prodtype">1</field>
-    <field type="CharField" name="commitemail">a@a.com</field>
-    <field type="SmallIntegerField" name="backupexternal">0</field>
-    <field type="DecimalField" name="timecreated">0</field>
-    <field type="DecimalField" name="timemodified">0</field>
+    <field type="CharField" name="project_type">1</field>
+    <field type="CharField" name="commit_email">a@a.com</field>
+    <field type="SmallIntegerField" name="backup_external">0</field>
+    <field type="DecimalField" name="created_date">0</field>
+    <field type="DecimalField" name="modified_date">0</field>
     <field type="SmallIntegerField" name="hidden">0</field>
-    <field to="rbuilder.users" name="creatorid" rel="ManyToOneRel">1</field>
+    <field type="CharField" name="database">sqlite chater-foo</field>
+    <field to="users.User" name="created_by" rel="ManyToOneRel">1</field>
   </object>
-  <object pk="1" model="rbuilder.versions">
-    <field to="rbuilder.products" name="productId" rel="ManyToOneRel">1</field>
+  <object pk="1" model="projects.projectversion">
+    <field to="projects.project" name="project" rel="ManyToOneRel">1</field>
     <field type="CharField" name="namespace">rpath</field>
     <field type="CharField" name="name">1</field>
     <field type="TextField" name="description">1</field>
-    <field type="DecimalField" name="timecreated">0</field>
+    <field type="TextField" name="label">chater-foo.eng.rpath.com@rpath:chater-foo-1</field>
+    <field type="DecimalField" name="created_date">0</field>
+  </object>
+  <object pk="1" model="projects.stage">
+    <field to="projects.project" name="project" rel="ManyToOneRel">1</field>
+    <field to="projects.projectversion" name="project_branch" rel="ManyToOneRel">1</field>
+    <field type="CharField" name="name">Development</field>
+    <field type="TextField" name="label">chater-foo.eng.rpath.com@rpath:chater-foo-1-devel</field>
+  </object>
+  <object pk="2" model="projects.stage">
+    <field to="projects.project" name="project" rel="ManyToOneRel">1</field>
+    <field to="projects.projectversion" name="project_branch" rel="ManyToOneRel">1</field>
+    <field type="CharField" name="name">QA</field>
+    <field type="TextField" name="label">chater-foo.eng.rpath.com@rpath:chater-foo-1-qa</field>
+  </object>
+  <object pk="3" model="projects.stage">
+    <field to="projects.project" name="project" rel="ManyToOneRel">1</field>
+    <field to="projects.projectversion" name="project_branch" rel="ManyToOneRel">1</field>
+    <field type="CharField" name="name">Release</field>
+    <field type="TextField" name="label">chater-foo.eng.rpath.com@rpath:chater-foo-1</field>
   </object>
 </django-objects>

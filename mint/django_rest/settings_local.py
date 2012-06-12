@@ -9,13 +9,11 @@ ROOT_URLCONF = 'mint.django_rest.urls_local'
 
 # Override individual options
 DEBUG = True
-DATABASE_ENGINE = 'sqlite3'                  # 'postgresql_psycopg2', 'postgresql', 'mysql', 'sqlite3' or 'oracle'.
-
-try:
-    DATABASE_NAME = os.environ['MINT_LOCAL_DB']  # Or path to database file if using sqlite3.
-except:
-    DATABASE_NAME = os.path.realpath('../mint-local.db')
-TEST_DATABASE_NAME = '../test-mint-local.db'
+DATABASES['default'].update(
+    ENGINE = 'django.db.backends.sqlite3',
+    NAME = os.environ.get('MINT_LOCAL_DB', os.path.realpath('../mint-local.db')),
+    TEST_NAME =  os.path.realpath('../test-mint-local.db'),
+)
 
 AUTHENTICATION_BACKENDS = (
     'mint.django_rest.rbuilder.auth.rBuilderBackend',
@@ -27,5 +25,14 @@ MIDDLEWARE_CLASSES = MIDDLEWARE_CLASSES + (
     'mint.django_rest.middleware.ExceptionLoggerMiddleware',
 )
 
-# Custom setting for if we should manage/create the tables in rbuilder.models
-MANAGE_RBUILDER_MODELS = True
+# Commented out misa 2011-07-20 - adding this middleware breaks the test
+# suite, so make sure you know what you're doing
+#MIDDLEWARE_CLASSES = MIDDLEWARE_CLASSES + \
+#    ('mint.django_rest.middleware.LocalSetMintAdminMiddleware',)
+
+installedAppsList = list(INSTALLED_APPS)
+# Commented out misa 2011-08-02 - this breaks the testsuite under hudson
+# installedAppsList.append('mint.django_rest.sdk_builder')
+INSTALLED_APPS = tuple(installedAppsList)
+
+TEST_RUNNER = "mint.django_rest.test_utils.TestRunner"

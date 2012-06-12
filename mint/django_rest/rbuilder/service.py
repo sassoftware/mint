@@ -9,8 +9,9 @@ from django.http import HttpResponseNotAllowed, HttpResponseNotFound
 
 from django_restapi import resource
 
+from mint.db import database
 from mint import users
-from mint.django_rest.deco import getHeaderValue, access, ACCESS, HttpAuthenticationRequired
+from mint.django_rest.deco import getHeaderValue, access, ACCESS, HttpAuthenticationRequired, HttpAuthorizationRequired
 from mint.django_rest.rbuilder.manager import rbuildermanager
 
 MANAGER_CLASS = rbuildermanager.RbuilderManager
@@ -20,7 +21,6 @@ def undefined(function):
     return function
 
 class BaseService(resource.Resource):
-
     def __init__(self):
         self.mgr = MANAGER_CLASS(cfg=None)
         permitted_methods = ['GET', 'PUT', 'POST', 'DELETE']
@@ -32,12 +32,12 @@ class BaseService(resource.Resource):
         return resource.Resource.__call__(self, request, *args, **kw)
 
     def setManagerAuth(self, request):
-        username, password = request._auth
+        user_name, password = request._auth
         user = request._authUser
-        if username and password and user:
-            mintAuth = users.Authorization(username=username,
-                token=(username, password), admin=request._is_admin,
-                userId=user.userid)
+        if user_name and password and user:
+            mintAuth = users.Authorization(user_name=user_name,
+                token=(user_name, password), admin=request._is_admin,
+                userId=user.user_id)
             self.mgr.setAuth(mintAuth, user)
 
     def read(self, request, *args, **kwargs):
@@ -56,6 +56,10 @@ class BaseService(resource.Resource):
 
     def delete(self, request, *args, **kwargs):
         return self._auth(self.rest_DELETE, request, *args, **kwargs)
+
+    @classmethod
+    def getHeaderValue(cls, *args, **kwargs):
+        return getHeaderValue(*args, **kwargs)
 
     # Overwrite these functions when inheriting
     @undefined
@@ -97,8 +101,14 @@ class BaseService(resource.Resource):
         # we're allowing anonymous access
         if request._auth != (None, None) and not request._is_authenticated:
             return HttpAuthenticationRequired
-        if not self._auth_filter(request, access, kwargs):
-            return HttpAuthenticationRequired
+        (authOk, errorResponse) = self._auth_filter(request, access, kwargs)
+        if not authOk:
+            return errorResponse
+        # Set the manager into one of the model's base classes. It will be
+        # freed in SerializeXmlMiddleware, which is the last place that might
+        # need access to the attached database.
+        from mint.django_rest.rbuilder import modellib
+        modellib.XObjModel._rbmgr = self.mgr
         return method(request, *args, **kwargs)
 
     def _auth_filter(self, request, access, kwargs):
@@ -109,24 +119,77 @@ class BaseService(resource.Resource):
 
         if access & ACCESS.LOCALHOST:
             if self._check_localhost(request):
-                return True
+                return (True, None)
 
         if access & ACCESS.ADMIN:
-            return request._is_admin
+            if not request._is_authenticated:
+                return (False, HttpAuthenticationRequired)
+            return (request._is_admin, HttpAuthorizationRequired)
         if access & ACCESS.AUTHENTICATED:
-            return request._is_authenticated
+            return (request._is_authenticated, HttpAuthenticationRequired)
         if access & ACCESS.ANONYMOUS:
-            return True
+            return (True, None)
 
-        return False
+        # no decorator supplied for method 
+        # should be a 500 internal error perhaps?
+        return (False, HttpAuthorizationRequired)
 
     @classmethod
     def _check_localhost(cls, request):
         # Ignore requests that are forwarded through the repeater since
         # they are not trustworthy.
         headerName = 'X-rPath-Repeater'
-        headerValue = getHeaderValue(request, headerName)
+        headerValue = cls.getHeaderValue(request, headerName)
         return (headerValue is None and
             request.META['REMOTE_ADDR'] == '127.0.0.1')
 
+class BaseAuthService(BaseService):
+    def _auth_filter(self, request, access, kwargs):
+        """Return C{True} if the request passes authentication checks."""
+        # Access flags are permissive -- if a function specifies more than one
+        # method, the authentication is successful if any of those methods
+        # succeed.
+
+        if access & ACCESS.LOCALHOST:
+            if self._check_localhost(request):
+                return (True, None)
+
+        if access & ACCESS.AUTH_TOKEN:
+            ret = self._check_uuid_auth(request, kwargs)
+            if ret is not None:
+                # A bad event UUID should fail the auth check
+                return (ret, HttpAuthenticationRequired)
+
+        if access & ACCESS.ADMIN:
+            if not request._is_authenticated:
+                return (False, HttpAuthenticationRequired)
+            return (request._is_admin, HttpAuthorizationRequired)
+        if access & ACCESS.AUTHENTICATED:
+            return (request._is_authenticated, HttpAuthenticationRequired)
+
+        if access & ACCESS.ANONYMOUS:
+            return (True, None)
+
+        return (False, HttpAuthorizationRequired)
+
+    def _check_uuid_auth(self, request, kwargs):
+        return False
+
+    def _setMintAuth(self, user=None):
+        db = database.Database(self.mgr.cfg)
+        if user is None:
+            authToken = (self.mgr.cfg.authUser, self.mgr.cfg.authPass)
+            cu = db.cursor()
+            cu.execute("SELECT MIN(userId) FROM Users WHERE is_admin = ?", True)
+            ret = cu.fetchall()
+            userId = ret[0][0]
+            isAdmin = True
+        else:
+            authToken = (user.user_name, "FAKE PASSWORD")
+            userId = user.user_id
+            isAdmin = bool(user.is_admin)
+        userName = authToken[0]
+        mintAuth = users.Authorization(username=userName,
+            token=authToken, admin=isAdmin, userId=userId)
+        self.mgr.setAuth(mintAuth, user)
 

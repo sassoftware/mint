@@ -310,10 +310,6 @@ a.option:hover {
     overflow: visible;
 }
 
-.mailingListButtons ul li {
-    display: inline;
-}
-
 .fileupload {
     height: 30px;
     margin: 0px;

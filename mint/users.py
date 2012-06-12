@@ -146,3 +146,4 @@ def newPassword(length = 6):
     @rtype: str
     """
     return helperfuncs.genPassword(length)
+

@@ -96,9 +96,12 @@ createuser -SDRU postgres jabberd &>/dev/null
 createdb -U postgres --encoding=UTF8 --owner=jabberd jabberd &>/dev/null && \
     psql -U jabberd -d jabberd -Xqf /usr/share/rbuilder/jabberd/db-setup.pgsql
 
-# rMake database
+# rMake 3 database
 createuser -SDRU postgres rmake &>/dev/null
 createdb -U postgres --encoding=UTF8 --owner=rmake rmake &>/dev/null
+
+# rMake 2 database
+createdb -U postgres --encoding=UTF8 --owner=rmake rmake2 &>/dev/null
 
 
 # Migrate the mint config
@@ -117,11 +120,6 @@ RMAKE_EXISTED=$?
 
 # Make sure the site authorization is up to date.
 "$scriptdir"/refresh-auth
-
-# Set up external repositories for the platforms we support
-# this can't be run as apache as it needs root access to read the
-# entitlement dir
-"$scriptdir"/init-extproducts
 
 # make sure that the old rapa plugin .pyc files are not blocking us
 # from finding files in /usr/lib64/raa. rapa should restart at the end of 
@@ -200,10 +198,17 @@ then
     service jobmaster start
 
     # Create initial platforms
-    /usr/share/rbuilder/scripts/create-platforms
+    echo Updating platforms ...
+    $scriptdir/create-platforms
+
+    echo Updating branch/stage information ...
+    $scriptdir/repository-sync
 
     # Start cron back (RBL-7973)
     service crond start
+
+    # Restart the authentication service
+    service rbuilder-authn restart
 fi
 
 # Fix notifications with a bad GUID

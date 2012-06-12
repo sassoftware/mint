@@ -142,7 +142,7 @@ class InvalidShortname(InvalidError):
 class InvalidProdType(InvalidError):
     "The selected %(project)s type is invalid."
 class InvalidUsername(InvalidError):
-    "Username may contain only letters, digits, '-', '_', and '.'"
+    "Username may contain only letters, digits, '-', '_', '.', '\', and '@'"
 class JobserverVersionMismatch(ServerError): # LEGACY
     "Image job cannot be run."
 class LastAdmin(PermissionDenied):
@@ -153,7 +153,6 @@ class MailError(ServerError):
     "There was a problem sending email."
     status = 500
 
-class MailingListException(ServerError): pass
 class MaintenanceMode(ServerError): "Repositories are currently offline."
 class MessageException(ServerError): pass
 class MultipleImageTypes(InvalidError):

@@ -209,4 +209,3 @@ class LoadMirror:
         # set the internal label to our authUser and authPass
         project.editLabel(labelId, label, localUrl, "userpass", self.cfg.authUser, self.cfg.authPass, "")
         self.client.addInboundMirror(project.id, [label], "http://%s/conary/" % serverName, "none", "", "")
-        self.client.addRemappedRepository(".".join((project.hostname, self.cfg.projectDomainName)), serverName)

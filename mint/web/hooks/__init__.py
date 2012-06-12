@@ -1,50 +1,28 @@
 #
-# Copyright (c) 2005-2009 rPath, Inc.
-#
-# All Rights Reserved
+# Copyright (c) 2011 rPath, Inc.
 #
 
-import base64
 import logging
-import os
-import re
-import shutil
-import socket
 import sys
-import tempfile
-import time
-import traceback
-import urllib
 from mod_python import apache
 
 from mint import config
-from mint import users
 from mint.lib import mintutils
 from mint.lib import profile
 from mint import mint_error
 from mint import maintenance
-from mint.db.projects import transTables
+from mint.db.repository import RepositoryManager
 from mint.helperfuncs import extractBasePath
 from mint.logerror import logWebErrorAndEmail
 from mint.rest.server import restHandler
 from mint.web import app
 from mint.web.rpchooks import rpcHandler
-from mint.web import cresthandler
 from mint.web.catalog import catalogHandler
 from mint.web.hooks.conaryhooks import conaryHandler
 from mint.web.webhandler import normPath, setCacheControl, HttpError
 
-from conary.web import webauth
-from conary import dbstore, conarycfg
-from conary import versions
-from conary.dbstore import sqlerrors
+from conary import dbstore
 from conary.lib import coveragehook
-from conary.lib import util as conary_util
-from conary.repository import shimclient, transport
-from conary.repository.netrepos import proxy
-from conary.repository.netrepos import netserver
-
-from conary.server import apachemethods
 
 log = logging.getLogger(__name__)
 
@@ -58,6 +36,7 @@ class Context(object):
     cfg = None
     req = None
     pathInfo = None
+    manager = None
 
 
 def mintHandler(context):
@@ -120,19 +99,25 @@ def handler(req):
             req.headers_out['Location'] = cfg.basePath + "setup/"
             raise apache.SERVER_RETURN, apache.HTTP_MOVED_TEMPORARILY
 
-    context.db = dbstore.connect(cfg.dbPath, cfg.dbDriver)
+    context.db = db = dbstore.connect(cfg.dbPath, cfg.dbDriver)
+    context.manager = RepositoryManager(cfg, db)
 
     prof = profile.Profile(cfg)
     prof.startHttp(req.uri)
 
     ret = apache.HTTP_NOT_FOUND
     try:
+        # Proxied Conary requests can have all sorts of paths, so look for a
+        # header instead.
+        if 'x-conary-servername' in req.headers_in:
+            return _tryHandler(conaryHandler, context)
         for match, urlHandler in urls:
             if pathInfo.startswith(match):
                 ret = _tryHandler(urlHandler, context)
                 break
     finally:
         prof.stopHttp(req.uri)
+        context.manager.close()
         if context.db:
             context.db.close()
         coveragehook.save()
@@ -153,9 +138,9 @@ def _tryHandler(urlHandler, context):
         raise
 
     except mint_error.MaintenanceMode:
-        if (req.headers_in.get('User-agent', None) ==
-                transport.Transport.user_agent):
-            # this is a conary client, or an unknown python browser
+        agent = req.headers_in.get('User-agent', '')
+        if 'Conary' in agent or 'rPath' in agent:
+            # this is a conary client
             return apache.HTTP_SERVICE_UNAVAILABLE
         else:
             # this page offers a way to log in. vice standard error

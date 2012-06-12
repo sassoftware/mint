@@ -20,7 +20,7 @@ class Script(scriptlibrary.SingletonScript):
     logFileName = 'system_events.log'
     newLogger = True
     
-    def run(self):        
+    def action(self):
         if sys.argv[0].startswith('--xyzzy='):
             self.cfgPath = sys.argv.pop(0).split('=')[1]
             print "Test mode using configuration from %s" % self.cfgPath
@@ -41,7 +41,10 @@ class Script(scriptlibrary.SingletonScript):
 
         from mint.django_rest.rbuilder.manager import rbuildermanager
         mgr = rbuildermanager.RbuilderManager()
+        mgr.enterTransactionManagement()
         mgr.processSystemEvents()
+        mgr.commit()
+        return 0
 
     def usage(self):
         print >> sys.stderr, "Usage: %s [useLocalSettings]" % \

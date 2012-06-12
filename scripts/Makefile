@@ -17,16 +17,17 @@ static_files =				\
 	fix-ec2-certificates		\
 	generate-certs.sh		\
 	group-script			\
-	init-extproducts	        \
 	load-offline-mirror		\
 	mcp-stack			\
 	migrate-all-projects		\
 	mirror-inbound			\
 	mirror-outbound			\
 	refresh-auth			\
+	restore-preload-bundle		\
 	rmake-reset			\
 	rmake-setup			\
 	rss-update			\
+	set-authuserpass		\
 	update-bulletin			\
 	update-package-index		\
 	update-package-index-external	\
@@ -46,6 +47,7 @@ generic_scripts = \
 	postgres-major-migrate		\
 	process-system-events		\
 	rbuilder-database		\
+	repository-sync			\
 	system-resolver			\
 	target-systems-import		\
 

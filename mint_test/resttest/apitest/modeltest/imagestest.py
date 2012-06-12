@@ -79,7 +79,7 @@ class ReleaseModelTest(mint_rephelp.MintDatabaseHelper):
 
         tmpl = '<url urlType="0">irc://goo/downloadImage?fileId=%s&amp;urlType=0</url>'
         for fileId in [42, 43, 44]:
-            self.failUnlessIn(tmpl % fileId, newxml)
+            self.assertIn(tmpl % fileId, newxml)
 
 data = """<?xml version='1.0' encoding='UTF-8'?>
 <release id="http://%(server)s:%(port)s/api/products/testproject/releases/1">

@@ -72,8 +72,7 @@ class InboundMirrorTest(raatest.rAATest):
         os.system = lambda st: sio.write(st)
         self.callWithIdent(ibm.doTask, res['schedId'], 1)
         # The username/password is randomly generated
-        assert sio.getvalue().startswith('/usr/share/rbuilder/scripts/mirror-inbound "http://'), "Mismatch in %s" % sio.getvalue()
-        assert sio.getvalue().endswith('@localhost/xmlrpc-private/"'), "Mismatch in %s" % sio.getvalue()
+        self.assertEquals(sio.getvalue(), '/usr/share/rbuilder/scripts/mirror-inbound')
 
     def test_daily(self):
         """

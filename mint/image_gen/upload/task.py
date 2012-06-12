@@ -8,6 +8,7 @@ from restlib import client as rl_client
 from rmake3.worker import plug_worker
 from xml.etree import ElementTree as ET
 
+from mint.django_rest import timeutils
 from mint.image_gen import constants as iconst
 from mint.image_gen.util import FileWithProgress
 
@@ -59,7 +60,7 @@ class ImageUploadTask(plug_worker.TaskHandler):
     def _commitImage(self):
         self.sendStatus(iconst.IUP_JOB_PACKAGING,
                 "Committing image to repository")
-        url = self.params.imageURL.asString() + 'files'
+        url = self.urlJoin(self.params.imageURL.asString(), 'files')
         # This is awkward. Thanks, modellib.
         root = ET.Element('files')
         for imageFile in self.params.image.files:
@@ -72,6 +73,42 @@ class ImageUploadTask(plug_worker.TaskHandler):
         for key, value in self.params.image.metadata.items():
             ET.SubElement(mx, key).text = str(value)
 
-        client = rl_client.Client(url, self.params.imageURL.headers)
+        headers = self.params.imageURL.headers.copy()
+        headers['Content-Type'] = 'application/xml'
+        client = rl_client.Client(url, headers)
         client.connect()
         client.request('PUT', ET.tostring(root))
+        self.logMessage('Image built')
+
+    def logMessage(self, msg, *args):
+        """
+        jobslave/response.py has a smart log handler that runs in a different
+        thread. We don't need that, we should send state changes as logs
+        but we're not there. This is hopefully just a short-term fix
+        (but isn't that what we always say?) -- misa 2012-03-13
+        """
+        tstamp = timeutils.now()
+        if not args:
+            msgString = "%s %s\n" % (tstamp, msg)
+        else:
+            msgString = "%s %s\n" % (tstamp, msg % args)
+
+        url = self.urlJoin(self.params.imageURL.asString(), 'buildLog')
+
+        headers = self.params.imageURL.headers.copy()
+        headers['Content-Type'] = 'text/plain'
+        client = rl_client.Client(url, headers)
+        client.connect()
+        try:
+            client.request("POST", body=msgString)
+        except rl_client.ResponseError, e:
+            if e.status != 204:
+                raise
+
+    @classmethod
+    def urlJoin(cls, *args):
+        """
+        Join arguments by / after stripping leading and trailing /, to avoid
+        duplicating it
+        """
+        return '/'.join(x.strip('/') for x in args)

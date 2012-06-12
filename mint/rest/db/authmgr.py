@@ -1,7 +1,5 @@
 #
-# Copyright (c) 2009 rPath, Inc.
-#
-# All Rights Reserved
+# Copyright (c) 2011 rPath, Inc.
 #
 
 from mint import userlevels
@@ -30,46 +28,22 @@ class AuthenticationManager(manager.Manager):
         if self.userId < 0:
             raise errors.PermissionDeniedError
 
-    def requireProductReadAccess(self, hostname):
+    def _getLevelForUser(self, hostname):
         if self.isAdmin:
-            return
-        cu = self.db.cursor()
-        cu.execute('''SELECT hidden,level from Projects
-                      LEFT JOIN ProjectUsers ON (userId=? 
-                              AND ProjectUsers.projectId=Projects.projectId)
-                      WHERE hostname=?''', self.userId, hostname)
-        hidden, level = self.db._getOne(cu, errors.ProductNotFound, hostname)
-        if hidden and level is None:
-            raise errors.ProductNotFound(hostname)
+            return userlevels.OWNER
+        handle = self.db.reposShim.getRepositoryFromShortName(hostname)
+        return handle.getLevelForUser(self.userId)
+
+    def requireProductReadAccess(self, hostname):
+        # Raises ProductNotFound for hidden projects.
+        self._getLevelForUser(hostname)
 
     def requireProductDeveloper(self, hostname):
-        if self.isAdmin:
-            return
-        cu = self.db.cursor()
-        cu.execute('''SELECT hidden,level from Projects
-                      LEFT JOIN ProjectUsers ON (userId=? 
-                              AND ProjectUsers.projectId=Projects.projectId)
-                      WHERE hostname=?''', self.userId, 
-                      hostname)
-        hidden, level = self.db._getOne(cu, errors.ProductNotFound, hostname)
-        if hidden and level is None:
-            raise errors.ProductNotFound(hostname)
-        if level not in userlevels.WRITERS:
+        if self._getLevelForUser(hostname) not in userlevels.WRITERS:
             raise errors.PermissionDeniedError(hostname)
 
     def requireProductOwner(self, hostname):
-        if self.isAdmin:
-            return
-        cu = self.db.cursor()
-        cu.execute('''SELECT hidden,level from Projects
-                      LEFT JOIN ProjectUsers ON (userId=? 
-                              AND ProjectUsers.projectId=Projects.projectId)
-                      WHERE hostname=?''', self.userId, 
-                      hostname)
-        hidden, level = self.db._getOne(cu, errors.ProductNotFound, hostname)
-        if hidden and level is None:
-            raise errors.ProductNotFound(hostname)
-        if level != userlevels.OWNER:
+        if self._getLevelForUser(hostname) != userlevels.OWNER:
             raise errors.PermissionDeniedError(hostname)
 
     def requireUserReadAccess(self, username):

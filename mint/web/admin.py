@@ -1,7 +1,5 @@
 #
-# Copyright (c) 2010 rPath, Inc.
-#
-# All rights reserved.
+# Copyright (c) 2011 rPath, Inc.
 #
 
 import logging
@@ -13,17 +11,14 @@ from conary.repository import errors
 from mint import users
 from mint import maintenance
 from mint.helperfuncs import getProjectText, configureClientProxies
-from mint.scripts import mirror
+from mint.scripts import mirror as mirrormod
 from mint.web.webhandler import normPath, WebHandler, HttpNotFound, HttpForbidden
 from mint.web.fields import strFields, intFields, listFields, boolFields
 
 from conary import versions
 
-import kid.parser
-if hasattr(kid.parser, 'XML'):
-    from kid.parser import XML
-else:
-    from kid.pull import XML  # pyflakes=ignore
+from kid.parser import XML
+
 
 log = logging.getLogger(__name__)
 
@@ -137,7 +132,7 @@ class AdminHandler(WebHandler):
                 # skip a redundant label specification
                 if l != label:
                     try:
-                        testlabel = versions.Label(l)
+                        versions.Label(l)
                         additionalLabels.append(l)
                     except versions.ParseError:
                         self._addErrors("Invalid additional label %s" % l)
@@ -231,8 +226,8 @@ class AdminHandler(WebHandler):
             # set up the authentication
             project.editLabel(labelId, str(extLabel), url,
                 authType, externalUser, externalPass, externalEntKey)
+            inboundMirror = self.client.getInboundMirror(projectId)
 
-            mirror = self.client.getInboundMirror(projectId)
             # set up the mirror, if requested
             if useMirror == 'net':
                 localUrl = "http%s://%s%srepos/%s/" % (self.cfg.SSL and 's' or\
@@ -243,8 +238,8 @@ class AdminHandler(WebHandler):
                 project.editLabel(labelId, str(extLabel), localUrl,
                     'userpass', self.cfg.authUser, self.cfg.authPass, '')
 
-                if mirror and editing:
-                    mirrorId = mirror['inboundMirrorId']
+                if inboundMirror and editing:
+                    mirrorId = inboundMirror['inboundMirrorId']
                     self.client.editInboundMirror(mirrorId, [str(extLabel)] +
                         additionalLabels, url, authType, externalUser,
                         externalPass, externalEntKey, allLabels)
@@ -252,11 +247,9 @@ class AdminHandler(WebHandler):
                     self.client.addInboundMirror(projectId, [str(extLabel)] +
                         additionalLabels, url, authType, externalUser,
                         externalPass, externalEntKey, allLabels)
-                    self.client.addRemappedRepository(hostname + "." + self.cfg.siteDomainName, extLabel.getHost())
             # remove mirroring if requested
-            elif useMirror == 'none' and mirror and editing:
-                self.client.delInboundMirror(mirror['inboundMirrorId'])
-                self.client.delRemappedRepository(hostname + "." + self.cfg.siteDomainName)
+            elif useMirror == 'none' and inboundMirror and editing:
+                self.client.delInboundMirror(inboundMirror['inboundMirrorId'])
 
             verb = editing and "Edited" or "Added"
             self._setInfo("%s external %s %s" % (verb, getProjectText().lower(), name))
@@ -290,7 +283,6 @@ class AdminHandler(WebHandler):
 
         fqdn = versions.Label(label).getHost()
         initialKwargs['url'] = conaryCfg.repositoryMap[fqdn]
-        userMap = conaryCfg.user.find(fqdn)
 
         initialKwargs['authType'] = labelInfo['authType']
         initialKwargs['externalUser'] = labelInfo['username']
@@ -334,7 +326,7 @@ class AdminHandler(WebHandler):
         # projects).
         mirroredProjects = []
         for repos in self.client.server._server.reposMgr.iterRepositories(
-                'external = 1'):
+                'external'):
             project = self.client.getProject(repos.projectId)
             mirrored = self.client.getInboundMirror(project.id)
 
@@ -358,25 +350,6 @@ class AdminHandler(WebHandler):
         return self._write('admin/external',
             regColumns = regColumns, regRows = regRows,
             mirrorColumns = mirrorColumns, mirrorRows = mirrorRows)
-
-    def selections(self, *args, **kwargs):
-        return self._write('admin/selections',
-                           selectionData=self.client.getFrontPageSelection())
-
-    @strFields(name=None, link=None)
-    @intFields(rank=0)
-    def addSelection(self, name, link, rank, op, *args, **kwargs):
-        self.client.addFrontPageSelection(name, link, rank)
-        return self.selections()
-
-    @intFields(itemId=None)
-    def deleteSelection(self, itemId, *args, **kwargs):
-        self.client.deleteFrontPageSelection(itemId)
-        return self.selections()
-
-    def spotlight(self, *args, **kwargs):
-        return self._write('admin/spotlight',
-                           spotlightData=self.client.getSpotlightAll())
 
     def _makeMirrorOrderingLinks(self, name, count, order, index, id):
         """Helper function to make the up/down links for mirror ordering"""
@@ -418,7 +391,7 @@ class AdminHandler(WebHandler):
             mirrorData['ordinal'] = i
             matchStrings = self.client.getOutboundMirrorMatchTroves(outboundMirrorId)
             mirrorData['groups'] = self.client.getOutboundMirrorGroups(outboundMirrorId)
-            mirrorData['mirrorSources'] = not set(mirror.EXCLUDE_SOURCE_MATCH_TROVES).issubset(set(matchStrings)) and not (useReleases or mirrorData['groups'])
+            mirrorData['mirrorSources'] = not set(mirrormod.EXCLUDE_SOURCE_MATCH_TROVES).issubset(set(matchStrings)) and not (useReleases or mirrorData['groups'])
             rows.append(mirrorData)
 
         return self._write('admin/outbound', rows = rows)
@@ -433,7 +406,7 @@ class AdminHandler(WebHandler):
             obmg = self.client.getOutboundMirrorGroups(id)
             obmt = self.client.getOutboundMirrorTargets(id)
             kwargs.update({'projectId': obm['sourceProjectId'],
-                           'mirrorSources': not set(mirror.EXCLUDE_SOURCE_MATCH_TROVES).issubset(set(obm['matchStrings'].split())),
+                           'mirrorSources': not set(mirrormod.EXCLUDE_SOURCE_MATCH_TROVES).issubset(set(obm['matchStrings'].split())),
                            'useReleases': int(obm['useReleases']),
                            'allLabels': obm['allLabels'],
                            'selectedLabels': json.dumps(obm['targetLabels'].split()),
@@ -487,13 +460,12 @@ class AdminHandler(WebHandler):
                     matchTroveList.extend(['+%s' % (g,) for g in groups])
             else:
                 if not mirrorSources:
-                    matchTroveList.extend(mirror.EXCLUDE_SOURCE_MATCH_TROVES)
+                    matchTroveList.extend(mirrormod.EXCLUDE_SOURCE_MATCH_TROVES)
                 # make sure we include everything else if we are not in
                 # mirror by group mode
-                matchTroveList.extend(mirror.INCLUDE_ALL_MATCH_TROVES)
+                matchTroveList.extend(mirrormod.INCLUDE_ALL_MATCH_TROVES)
 
         if not self._getErrors():
-            project = self.client.getProject(projectId)
             recurse = (mirrorBy == 'group')
             outboundMirrorId = self.client.addOutboundMirror(projectId,
                     labelList, allLabels, recurse, useReleases, id=id)

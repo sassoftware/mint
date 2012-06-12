@@ -14,6 +14,8 @@ rbuilder_dirs = {
     'finished-images':              (0775, ('root', 'apache')),
     'jobs':                         (0775, ('root', 'apache')),
     'notices':                      (0775, ('root', 'apache')),
+    # Packages are downloaded by rmake, but could be removed from apache
+    'package-creator-downloads':    (0775, ('rmake', 'apache')),
     'proxy-contents':               (0775, ('root', 'apache')),
     'repos':                        (0775, ('root', 'apache')),
     'run':                          (0775, ('root', 'apache')),
@@ -59,6 +61,7 @@ class rBuilderProduct(CPackageRecipe):
         'pyOpenSSL:python',
         'python-dateutil:python',
         'python:devel',
+        'python-pam:python',
         'python-pgsql:python',
         'python-twisted:python',
         'rapa:python',
@@ -141,6 +144,9 @@ class rBuilderProduct(CPackageRecipe):
         r.Ownership('apache', 'root',
             r'/etc/rmake/(node|server).d/25_rbuilder-rapa.conf')
 
+        # create run directory for authentication service
+        r.MakeDirs('/var/lib/twisted-taps/rbuilder-authn')
+        r.ExcludeDirectories(exceptions='/var/lib/twisted-taps/rbuilder-authn')
 
         # known-good mount point for /mnt/mirror/
         r.MakeDirs('/mnt/mirror')
@@ -174,8 +180,9 @@ class rBuilderProduct(CPackageRecipe):
         r.InitialContents(r'%(servicedir)s/rbuilder/config/'
             'rbuilder-(custom|generated).conf')
         r.InitialContents(r'/etc/rmake/(node|server).d/25_rbuilder-rapa.conf')
-        r.InitialContents(r'/etc/bootloader.d/dom0-mem.conf')
         r.InitialContents(r'/srv/rbuilder/config/postgresql-custom.conf')
+        r.InitialContents(r'/root/.rmakerc')
+        r.Config(r'/srv/rbuilder/data/metadataDescriptor.xml')
 
         # These files contain defaults or stubs and should always be
         # replaced.
@@ -203,8 +210,6 @@ class rBuilderProduct(CPackageRecipe):
         r.Requires('rbuilder:python(%(version)s)',
                    '%(sitepkg)s/mint/web/webhandler.pyc')
         r.Requires('rbuilder:python(%(version)s)',
-                   '%(localstatedir)s/mailman/bin/mmsettingspolicy.py.rbuilder')
-        r.Requires('rbuilder:python(%(version)s)',
                    '%(datadir)s/rbuilder/scripts/migrate-config')
 
         # Our rAPA plugins require rapa-plugin-rPath
@@ -217,12 +222,16 @@ class rBuilderProduct(CPackageRecipe):
         r.Requires('logrotate:runtime',
             r'%(sysconfdir)s/logrotate.d/')
         r.Requires('/usr/bin/qemu-img', '.*/wig/bootable.py.*')
+        r.Requires('/usr/bin/twistd', '.*/twisted/plugins/.*')
 
         # disable reportlab for rbuilder 5.0
         r.Requires(exceptDeps='python: reportlab.*')
 
         # Make sure that amiconfig isn't required by our amiconfig plugin
         r.Requires(exceptDeps='python: amiconfig.*')
+
+        # Windows ISO builds requires mkisofs
+        r.Requires('cdrkit:runtime', '%(libdir)s/rmake3/.*')
 
         # Anaconda customization
         # This comes first so it is omitted from the -sources split.
@@ -232,10 +241,10 @@ class rBuilderProduct(CPackageRecipe):
         # Bootsplash customization
         r.ComponentSpec('splashy-theme:runtime', r'/usr/share/splashy/')
 
-        # Exceptions for python source stripping
-        r.PackageSpec('%(name)s', r'%(libdir)s/rmake.*')
-
         # Strip out python files, leaving only compiled pyc/pyo files.
         # Because our coverage can't work like this, put the sources
         # into rbuilder-sources where rbuilder-test can consume it.
-        r.PackageSpec('%(name)s-sources', '.*\.py$')
+        r.PackageSpec('%(name)s-sources',
+            r'%(sitepkg)s/mint/.*\.py',
+            r'%(libdir)s/raa/.*\.py',
+            )

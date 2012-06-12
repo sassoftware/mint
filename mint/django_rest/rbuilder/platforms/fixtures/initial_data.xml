@@ -1,0 +1,55 @@
+<?xml version="1.0" encoding="utf-8"?>
+<django-objects version="1.0">
+  <object pk="1" model="platforms.platform">
+    <field type="CharField" name="label">Platform</field>
+    <field type="CharField" name="platform_name">Platform</field>
+    <field type="CharField" name="mode">auto</field>
+    <field type="DateTimeUtcField" name="time_refreshed">2011-08-09T13:13:20.590430+00:00</field>
+    <field to="projects.project" name="project" rel="ManyToOneRel">1</field>
+  </object>
+  <object pk="2" model="platforms.platform">
+    <field type="CharField" name="label">Platform1</field>
+    <field type="CharField" name="platform_name">Platform1</field>
+    <field type="DateTimeUtcField" name="time_refreshed">2011-08-09T13:13:20.590430+00:00</field>
+    <field to="projects.project" name="project" rel="ManyToOneRel">2</field>
+  </object>
+  <object pk="3" model="platforms.platform">
+    <field type="CharField" name="label">Platform2</field>
+    <field type="CharField" name="platform_name">Platform2</field>
+    <field type="DateTimeUtcField" name="time_refreshed">2011-08-09T13:13:20.590430+00:00</field>
+    <field to="projects.project" name="project" rel="ManyToOneRel">3</field>
+  </object>
+  <object pk="4" model="platforms.platform">
+    <field type="CharField" name="label">PlatformHidden</field>
+    <field type="CharField" name="platform_name">Hidden Platform</field>
+    <field type="BooleanField" name="hidden">True</field>
+    <field type="DateTimeUtcField" name="time_refreshed">2011-08-09T13:13:20.590430+00:00</field>
+    <field to="projects.project" name="project" rel="ManyToOneRel">3</field>
+  </object>
+  <object pk="1" model="platforms.contentsourcetype">
+    <field to="platforms.platform" name="platform_id" rel="ManyToOneRel">1</field>
+    <field type="CharField" name="content_source_type">ContentSourceType</field>
+  </object>
+  <object pk="2" model="platforms.contentsourcetype">
+    <field to="platforms.platform" name="platform_id" rel="ManyToOneRel">1</field>
+    <field type="CharField" name="content_source_type">ContentSourceType1</field>
+  </object>
+  <object pk="3" model="platforms.contentsourcetype">
+    <field to="platforms.platform" name="platform_id" rel="ManyToOneRel">1</field>
+    <field type="CharField" name="content_source_type">ContentSourceType2</field>
+  </object>
+  <object pk="1" model="platforms.contentsource">
+      <field type="CharField" name="name">csname1</field>
+      <field type="IntegerField" name="default_source">0</field>
+      <field type="CharField" name="short_name">cs_shortname1</field>
+      <field type="CharField" name="content_source_type">RHN</field>
+      <field type="IntegerField" name="order_index">1</field>
+  </object>
+  <object pk="2" model="platforms.contentsource">
+      <field type="CharField" name="name">csname2</field>
+      <field type="IntegerField" name="default_source">1</field>
+      <field type="CharField" name="short_name">cs_shortname2</field>
+      <field type="CharField" name="content_source_type">SMT</field>
+      <field type="IntegerField" name="order_index">0</field>
+  </object>
+</django-objects>

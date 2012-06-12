@@ -64,9 +64,15 @@ class BuildDefinitionMixIn(object):
                     id = ctemplRef,
                     name = ctemplRef,
                     displayName = displayName,
-                    options = imageParams,
                     **extraParams)
+                kw.update(options=imageParams)
                 # XXX we need to add the rest of the fields here too
+
+            # url to image definition descriptor (will be served from Django)
+            kw['descriptor'] = models.Descriptor(
+                name = ctemplRef,
+            ) 
+
         if hasattr(buildDef, 'getBuildImageGroup'):
             grp = buildDef.getBuildImageGroup()
             if grp:
@@ -129,7 +135,11 @@ class ProductVersionStages(base.BaseController, BuildDefinitionMixIn):
     @requires('trove', models.Trove)
     def update(self, request, hostname, version, stageName, trove):
         return self.db.updateProductVersionStage(hostname, version, stageName, trove)
-    
+
+    @requires('trove', models.Trove)
+    def process(self, request, hostname, version, stageName, trove):
+        return self.db.updateProductVersionStage(hostname, version, stageName, trove)
+
     @auth.public
     def getImages(self, request, hostname, version, stageName):
         return self.db.listImagesForProductVersionStage(hostname, version, stageName)

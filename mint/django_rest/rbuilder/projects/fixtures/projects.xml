@@ -1,0 +1,162 @@
+<?xml version="1.0" encoding="utf-8"?>
+<django-objects version="1.0">
+  <object pk="2" model="projects.project">
+    <field type="CharField" name="hostname">postgres.rpath.com</field>
+    <field type="CharField" name="name">postgres</field>
+    <field type="CharField" name="namespace">rpath</field>
+    <field type="CharField" name="domain_name">rpath.com</field>
+    <field type="CharField" name="short_name">postgres</field>
+    <field type="CharField" name="project_url">http://</field>
+    <field type="CharField" name="repository_hostname">postgres.rpath.com</field>
+    <field type="TextField" name="description">postgres</field>
+    <field type="CharField" name="project_type">Appliance</field>
+    <field type="CharField" name="commit_email">admin@rpath.com</field>
+    <field type="SmallIntegerField" name="backup_external">0</field>
+    <field type="DecimalField" name="created_date">1297714268.362</field>
+    <field type="DecimalField" name="modified_date">1297714268.362</field>
+    <field type="SmallIntegerField" name="hidden">0</field>
+    <field to="users.user" name="created_by" rel="ManyToOneRel">1</field>
+  </object>
+  <object pk="2" model="projects.projectversion">
+    <field to="projects.project" name="project" rel="ManyToOneRel">2</field>
+    <field type="CharField" name="namespace">rpath</field>
+    <field type="CharField" name="name">1</field>
+    <field type="TextField" name="label">postgres.rpath.com@rpath:postgres-1</field>
+    <field type="TextField" name="description">1</field>
+    <field type="DecimalField" name="created_date">0</field>
+  </object>
+  <object pk="3" model="projects.projectversion">
+    <field to="projects.project" name="project" rel="ManyToOneRel">2</field>
+    <field type="CharField" name="namespace">rpath</field>
+    <field type="CharField" name="name">2</field>
+    <field type="TextField" name="label">postgres.rpath.com@rpath:postgres-2</field>
+    <field type="TextField" name="description">2</field>
+    <field type="DecimalField" name="created_date">0</field>
+  </object>
+  <object pk="1" model="projects.stage">
+    <field to="projects.project" name="project" rel="ManyToOneRel">2</field>
+    <field to="projects.projectversion" name="project_branch" rel="ManyToOneRel">2</field>
+    <field type="CharField" name="name">Development</field>
+    <field type="TextField" name="label">postgres.rpath.com@rpath:postgres-1-devel</field>
+    <field type="DateTimeField" name="created_date">2010-08-23 22:11:00</field>
+  </object>
+  <object pk="2" model="projects.stage">
+    <field to="projects.project" name="project" rel="ManyToOneRel">2</field>
+    <field to="projects.projectversion" name="project_branch" rel="ManyToOneRel">2</field>
+    <field type="CharField" name="name">QA</field>
+    <field type="TextField" name="label">postgres.rpath.com@rpath:postgres-1-qa</field>
+    <field type="DateTimeField" name="created_date">2010-08-23 22:11:00</field>
+  </object>
+  <object pk="3" model="projects.stage">
+    <field to="projects.project" name="project" rel="ManyToOneRel">2</field>
+    <field to="projects.projectversion" name="project_branch" rel="ManyToOneRel">2</field>
+    <field type="CharField" name="name">Release</field>
+    <field type="TextField" name="label">postgres.rpath.com@rpath:postgres-1</field>
+    <field type="DateTimeField" name="created_date">2010-08-23 22:11:00</field>
+  </object>
+  <object pk="4" model="projects.stage">
+    <field to="projects.project" name="project" rel="ManyToOneRel">2</field>
+    <field to="projects.projectversion" name="project_branch" rel="ManyToOneRel">3</field>
+    <field type="CharField" name="name">Development</field>
+    <field type="TextField" name="label">postgres.rpath.com@rpath:postgres-2-devel</field>
+    <field type="DateTimeField" name="created_date">2010-08-23 22:11:00</field>
+  </object>
+  <object pk="5" model="projects.stage">
+    <field to="projects.project" name="project" rel="ManyToOneRel">2</field>
+    <field to="projects.projectversion" name="project_branch" rel="ManyToOneRel">3</field>
+    <field type="CharField" name="name">QA</field>
+    <field type="TextField" name="label">postgres.rpath.com@rpath:postgres-2-qa</field>
+    <field type="DateTimeField" name="created_date">2010-08-23 22:11:00</field>
+  </object>
+  <object pk="6" model="projects.stage">
+    <field to="projects.project" name="project" rel="ManyToOneRel">2</field>
+    <field to="projects.projectversion" name="project_branch" rel="ManyToOneRel">3</field>
+    <field type="CharField" name="name">Release</field>
+    <field type="TextField" name="label">postgres.rpath.com@rpath:postgres-2</field>
+    <field type="DateTimeField" name="created_date">2010-08-23 22:11:00</field>
+  </object>
+
+  <object pk="3" model="projects.project">
+    <field type="CharField" name="hostname">postgres-private.rpath.com</field>
+    <field type="CharField" name="name">postgres-private</field>
+    <field type="CharField" name="namespace">rpath</field>
+    <field type="CharField" name="domain_name">rpath.com</field>
+    <field type="CharField" name="short_name">postgres-private</field>
+    <field type="CharField" name="project_url">http://</field>
+    <field type="CharField" name="repository_hostname">postgres-private.rpath.com</field>
+    <field type="TextField" name="description">postgres-private</field>
+    <field type="CharField" name="project_type">Appliance</field>
+    <field type="CharField" name="commit_email">admin@rpath.com</field>
+    <field type="SmallIntegerField" name="backup_external">0</field>
+    <field type="DecimalField" name="created_date">1297714268.362</field>
+    <field type="DecimalField" name="modified_date">1297714268.362</field>
+    <field type="SmallIntegerField" name="hidden">1</field>
+    <field to="users.user" name="created_by" rel="ManyToOneRel">1</field>
+  </object>
+  <object pk="4" model="projects.projectversion">
+    <field to="projects.project" name="project" rel="ManyToOneRel">3</field>
+    <field type="CharField" name="namespace">rpath</field>
+    <field type="CharField" name="name">1</field>
+    <field type="TextField" name="label">postgres-private.rpath.com@rpath:postgres-private-1</field>
+    <field type="TextField" name="description">1</field>
+    <field type="DecimalField" name="created_date">0</field>
+  </object>
+  <object pk="7" model="projects.stage">
+    <field to="projects.project" name="project" rel="ManyToOneRel">3</field>
+    <field to="projects.projectversion" name="project_branch" rel="ManyToOneRel">4</field>
+    <field type="CharField" name="name">Development</field>
+    <field type="TextField" name="label">postgres-private.rpath.com@rpath:postgres-1-devel</field>
+    <field type="DateTimeField" name="created_date">2010-08-23 22:11:00</field>
+  </object>
+  <object pk="8" model="projects.stage">
+    <field to="projects.project" name="project" rel="ManyToOneRel">3</field>
+    <field to="projects.projectversion" name="project_branch" rel="ManyToOneRel">4</field>
+    <field type="CharField" name="name">QA</field>
+    <field type="TextField" name="label">postgres-private.rpath.com@rpath:postgres-1-qa</field>
+    <field type="DateTimeField" name="created_date">2010-08-23 22:11:00</field>
+  </object>
+  <object pk="9" model="projects.stage">
+    <field to="projects.project" name="project" rel="ManyToOneRel">3</field>
+    <field to="projects.projectversion" name="project_branch" rel="ManyToOneRel">4</field>
+    <field type="CharField" name="name">Release</field>
+    <field type="TextField" name="label">postgres-private.rpath.com@rpath:postgres-1</field>
+    <field type="DateTimeField" name="created_date">2010-08-23 22:11:00</field>
+  </object>
+
+  <object pk="1" model="projects.member">
+    <field to="projects.project" name="project" rel="ManyToOneRel">2</field>
+    <field to="users.user" name="user" rel="ManyToOneRel">1</field>
+    <field type="SmallIntegerField" name="level">0</field>
+  </object>
+  <object pk="2" model="projects.member">
+    <field to="projects.project" name="project" rel="ManyToOneRel">2</field>
+    <field to="users.user" name="user" rel="ManyToOneRel">2</field>
+    <field type="SmallIntegerField" name="level">2</field>
+  </object>
+  <object pk="3" model="projects.member">
+    <field to="projects.project" name="project" rel="ManyToOneRel">3</field>
+    <field to="users.user" name="user" rel="ManyToOneRel">1</field>
+    <field type="SmallIntegerField" name="level">0</field>
+  </object>
+
+	<object pk="3" model="users.user">
+	    <field type="CharField" name="user_name">testuser2</field>
+	    <field type="CharField" name="full_name"/>
+	    <field type="TextField" name="salt">deadbeef</field>
+	    <field type="CharField" name="passwd">6ca2833e3cf29b63ac5ad911b8d8d3e3</field>
+	    <field type="CharField" name="email">testuser2@rpath.com</field>
+	    <field type="TextField" name="display_email"/>
+	    <field type="DecimalField" name="created_date">1283529921.387</field>
+	    <field type="DecimalField" name="modified_date">1283530359.041</field>
+	    <field type="SmallIntegerField" name="active">1</field>
+	    <field type="TextField" name="blurb">null</field>
+	</object>
+
+  <object pk="4" model="projects.member">
+    <field to="projects.project" name="project" rel="ManyToOneRel">3</field>
+    <field to="users.user" name="user" rel="ManyToOneRel">3</field>
+    <field type="SmallIntegerField" name="level">1</field>
+  </object>
+
+
+</django-objects>

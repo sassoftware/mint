@@ -120,5 +120,5 @@ class FormatCallback(object):
                                         self.controller, request)
             res = response.Response(text, content_type=request.contentType)
         res.headers['Cache-Control'] = 'private, must-revalidate, max-age=0'
-        request.rootController.db.close()
+        request.rootController.db.reset()
         return res

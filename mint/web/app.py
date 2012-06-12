@@ -14,7 +14,6 @@ from mod_python import Cookie
 from mod_python.util import FieldStorage
 
 from mint.session import SqlSession
-from mint.client import timeDelta
 from mint import server
 from mint import shimclient
 from mint import userlevels
@@ -23,8 +22,6 @@ from mint.helperfuncs import (formatHTTPDate, getProjectText,
 from mint.mint_error import MaintenanceMode, MintError
 from mint.web import fields
 from mint.web.admin import AdminHandler
-from mint.web.project import ProjectHandler
-from mint.web.appliance_creator import APCHandler
 from mint.web.repos import ConaryHandler
 from mint.web.site import SiteHandler
 from mint.web.webhandler import (WebHandler, normPath, setCacheControl,
@@ -79,8 +76,6 @@ class MintApp(WebHandler):
         self.basePath = normPath(self.cfg.basePath)
 
         self.siteHandler = SiteHandler()
-        self.apcHandler = APCHandler()
-        self.projectHandler = ProjectHandler()
         self.adminHandler = AdminHandler()
         self.errorHandler = ErrorHandler()
         self.conaryHandler = ConaryHandler(req, cfg, repServer)
@@ -93,10 +88,7 @@ class MintApp(WebHandler):
         anonToken = ('anonymous', 'anonymous')
 
         try:
-            if self.cfg.cookieSecretKey:
-                cookies = Cookie.get_cookies(self.req, Cookie.SignedCookie, secret = self.cfg.cookieSecretKey)
-            else:
-                cookies = Cookie.get_cookies(self.req, Cookie.Cookie)
+            cookies = Cookie.get_cookies(self.req, Cookie.Cookie)
         except:
             # Parsing the cookies failed, so just pretend there aren't
             # any and they'll get overwritten when our response goes
@@ -239,8 +231,6 @@ class MintApp(WebHandler):
 
         # mapping of url regexps to handlers
         urls = (
-            (r'^/apc/',         self.apcHandler),
-            (r'^/project/',     self.projectHandler),
             (r'^/admin/',  self.adminHandler),
             (r'^/administer/',  self.adminHandler),
             (r'^/repos/',       self.conaryHandler),
@@ -255,17 +245,6 @@ class MintApp(WebHandler):
         self.searchType = self.session.setdefault('searchType', getProjectText().title()+"s")
         self.searchTerms = ''
         self.errorMsgList = self._getErrors()
-
-        # get the news for the frontpage (only in non-maint mode)
-        self.latestRssNews = dict()
-        if not maintenance.getMaintenanceMode(self.cfg):
-            newNews = self.client.getNews()
-            if len(newNews) > 0:
-                self.latestRssNews = newNews[0]
-                if 'pubDate' in self.latestRssNews:
-                    self.latestRssNews['age'] = \
-                            timeDelta(self.latestRssNews['pubDate'],
-                                    capitalized=False)
 
         # a set of information to be passed into the next handler
         context = {
@@ -297,7 +276,6 @@ class MintApp(WebHandler):
             'errorMsgList':     self.errorMsgList,
             'output':           self.output,
             'remoteIp':         self.remoteIp,
-            'latestRssNews':    self.latestRssNews
         }
 
         if self.auth.stagnant and ''.join(pathInfo.split('/')) not in stagnantAllowedPages:

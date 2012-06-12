@@ -22,14 +22,40 @@ class TargetsTable(database.KeyedTable):
             raise mint_error.TargetExists( \
                     "Target named '%s' of type '%s' already exists",
                     targetName, targetType)
-        cu.execute("INSERT INTO Targets (targetType, targetName) VALUES(?, ?)", targetType, targetName)
+        targetTypeId = self.getTargetTypeId(targetType)
+        zoneId = self.getLocalZone()
+        cu.execute("INSERT INTO Targets (target_type_id, name, description, zone_id) VALUES(?, ?, ?, ?)",
+            targetTypeId, targetName, targetName, zoneId)
         self.db.commit()
         return cu.lastid()
 
+    def getLocalZone(self):
+        cu = self.db.cursor()
+        cu.execute("SELECT zone_id FROM inventory_zone WHERE name = ?",
+            "Local rBuilder")
+        row = cu.fetchone()
+        if row:
+            return row[0]
+        raise mint_error.ServerError("Local zone not found")
+
+    def getTargetTypeId(self, targetType):
+        cu = self.db.cursor()
+        cu.execute("SELECT target_type_id FROM target_types WHERE name=?",
+            targetType)
+        row = cu.fetchone()
+        if row:
+            return row[0]
+        raise mint_error.TargetMissing(
+                "Target type '%s' does not exist", targetType)
+
     def getTargetId(self, targetType, targetName, default = -1):
         cu = self.db.cursor()
-        cu.execute("""SELECT targetId FROM Targets WHERE targetType=?
-                AND targetName=?""", targetType, targetName)
+        cu.execute("""
+            SELECT targetId
+              FROM Targets AS t
+              JOIN target_types AS tt USING (target_type_id)
+             WHERE tt.name = ?
+               AND t.name=?""", targetType, targetName)
         res = cu.fetchone()
         if res:
             return res[0]
@@ -53,7 +79,7 @@ class TargetDataTable(database.DatabaseTable):
         # perhaps check the id to be certain it's unique
         for name, value in targetData.iteritems():
             value = json.dumps(value)
-            cu.execute("INSERT INTO TargetData VALUES(?, ?, ?)",
+            cu.execute("INSERT INTO TargetData (targetId, name, value) VALUES(?, ?, ?)",
                     targetId, name, value)
         self.db.commit()
 

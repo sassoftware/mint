@@ -296,21 +296,6 @@ class AccountTest(fixtures.FixturedUnitTest):
             client.server.removeUserAccount, userId2)
 
     @fixtures.fixture('Full')
-    def testUserList(self, db, data):
-        '''Try to get a user list'''
-
-        user = self.getClient('user')
-        admin = self.getAdminClient()
-
-        self.failUnlessEqual(admin.getUsers(0, 10, 0)[1], 5,
-            'Admin account could not see all users via getUsers')
-        self.failUnlessEqual(len(admin.getUsersList()), 5,
-            'Admin account could not see all users via getUsersList')
-        self.failUnlessRaises(PermissionDenied, user.getUsers, 0, 10, 0)
-        self.failUnlessEqual(user.server.searchUsers('user', 10, 0)[1], 5,
-            'User-level user search returned incorrect results.')
-
-    @fixtures.fixture('Full')
     def testChangePassword(self, db, data):
         '''Check repository access after changing a user's password'''
 
@@ -363,98 +348,6 @@ class AccountTest(fixtures.FixturedUnitTest):
         # admin changes user's password
         user = admin.getUser(userId)
         user.setPassword('testpass')
-
-    @fixtures.fixture('Empty')
-    def testHangingGroupMembership(self, db, data):
-        '''Check group membership cleanup after deleting a user'''
-
-        client, userId = self.getClient('test'), data['test']
-        cu = db.cursor()
-
-        # First make sure they were in a group to start with
-        cu.execute("SELECT * FROM UserGroupMembers WHERE userId=?", userId)
-        self.failIfEqual(len(cu.fetchall()), 0,
-            "User was not initially a member of a group")
-
-        # Now remove them and make sure they're not in a group anymore
-        client.removeUserAccount(userId)
-        cu.execute("SELECT * FROM UserGroupMembers WHERE userId=?", userId)
-        self.failUnlessEqual(len(cu.fetchall()), 0,
-                    "Leftover UserGroupMembers after account was canceled")
-
-    @fixtures.fixture('Empty')
-    def testHangingGroups(self, db, data):
-        '''Check group cleanup after deleting a user'''
-
-        client, userId = self.getClient('test'), data['test']
-        cu = db.cursor()
-
-        # First make sure the user's group existed in the first place
-        cu.execute("SELECT * FROM UserGroups WHERE userGroup=?", 'test')
-        self.failIfEqual(len(cu.fetchall()), 0,
-            "User's group did not initially exist")
-
-        # Now remove them and make sure the group no longer exists
-        client.removeUserAccount(userId)
-        cu.execute("SELECT * FROM UserGroups WHERE userGroup=?", 'test')
-        self.failUnlessEqual(len(cu.fetchall()), 0,
-                    "Leftover UserGroup after account was canceled")
-
-    @fixtures.fixture('Full')
-    def testPromoteDemoteAdmin(self, db, data):
-        '''Promote and demote a user to admin as various roles'''
-
-        adminClient, adminId = self.getClient('admin'), data['admin']
-        client, userId = self.getClient('user'), data['user']
-
-        # promote test user
-        adminClient.promoteUserToAdmin(userId)
-
-        mintAdminId = client.server._server.userGroups.getMintAdminId()
-        cu = db.cursor()
-        cu.execute("SELECT COUNT(*) FROM UserGroupMembers WHERE "
-            "userGroupId=? AND userId=?", mintAdminId, userId)
-        (count, ) = cu.fetchone()
-        self.failUnlessEqual(count, 1, "Admin user was not promoted")
-
-        # make sure we don't allow a user to be promoted twice
-        self.failUnlessRaises(UserAlreadyAdmin,
-                adminClient.promoteUserToAdmin,
-                userId)
-
-        # make sure a non-admin user cannot promote another user to admin
-        client2 = self.getClient('developer')
-        userId3 = data['owner']
-        self.failUnlessRaises(PermissionDenied,
-                client2.promoteUserToAdmin,
-                userId3)
-
-        # demote the user back to peon status
-        adminClient.demoteUserFromAdmin(userId)
-        cu.execute("SELECT COUNT(*) FROM UserGroupMembers WHERE "
-            "userGroupId=? AND userId=?", mintAdminId, userId)
-        (count, ) = cu.fetchone()
-        self.failUnlessEqual(count, 0, "Admin user was not demoted")
-
-        # ensure nothing bad happens if we click twice
-        adminClient.demoteUserFromAdmin(userId)
-
-        # ensure we can't demote the last admin
-        self.assertRaises(AdminSelfDemotion, adminClient.demoteUserFromAdmin,
-                          adminId)
-
-    @fixtures.fixture('Empty')
-    def testAutoGenerateMintAdminId(self, db, data):
-        '''Ensure a mint admin group is auto-generated'''
-
-        client, userId  = self.quickMintUser("testuser", "testpass")
-
-        # test auto adding the group here
-        mintAdminId = client.server._server.userGroups.getMintAdminId()
-
-        # this should return the same value twice
-        mintAdminId2 = client.server._server.userGroups.getMintAdminId()
-        self.failUnlessEqual(mintAdminId, mintAdminId2)
 
     @fixtures.fixture('Empty')
     def testLastAdmin(self, db, data):
@@ -525,7 +418,7 @@ class AccountTest(fixtures.FixturedUnitTest):
 
         # now make the project external
         cu = self.db.cursor()
-        cu.execute('UPDATE Projects set external = 1')
+        cu.execute('UPDATE Projects set external = true')
         self.db.commit()
 
         # now switch to admin context and add the watcher

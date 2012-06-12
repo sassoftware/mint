@@ -1,7 +1,5 @@
 #
-# Copyright (c) 2010 rPath, Inc.
-#
-# All Rights Reserved
+# Copyright (c) 2011 rPath, Inc.
 #
 
 try:
@@ -21,6 +19,7 @@ from django.http import HttpResponse
 from mint import logerror
 from mint import mint_error
 from mint.django_rest.rbuilder import models
+
 
 class MintDjangoRequest(modpython.ModPythonRequest):
 
@@ -73,11 +72,14 @@ def handler404(request, **kwargs):
 def handler500(request, **kwargs):
     return handleException(request)
 
-def handleException(request, exception=None):
+def handleException(request, exception=None, doEmail=True, doTraceback=True):
     ei = sys.exc_info()
-    tb = ''.join(traceback.format_tb(ei[2]))
+    if doTraceback:
+        tb = ''.join(traceback.format_tb(ei[2]))
+    else:
+        tb = None
     msg = str(ei[1])
-    logError(request, ei[0], ei[1], ei[2])
+    logError(request, ei[0], ei[1], ei[2], doEmail=doEmail)
 
     code = getattr(ei[1], 'status', 500)
     fault = models.Fault(code=code, message=msg, traceback=tb)
@@ -99,7 +101,8 @@ def logError(request, e_type, e_value, e_tb, doEmail=True):
     if request.raw_post_data:
         info.update(raw_post_data = request.raw_post_data)
     try:
-        logerror.logErrorAndEmail(request.cfg, e_type, e_value,
+        cfg = getattr(request, "cfg", None)
+        logerror.logErrorAndEmail(cfg, e_type, e_value,
                 e_tb, 'API call (django handler)', info, doEmail=doEmail)
     except mint_error.MailError, err:
         log.error("Error sending mail: %s", str(err))

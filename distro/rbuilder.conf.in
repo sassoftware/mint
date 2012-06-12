@@ -8,7 +8,7 @@
 # rbuilder-custom.conf (located in /srv/rbuilder/config).
 
 # This is rBuilder
-productName             rBuilder
+productName             rPath Cloud Engine
 
 # Use SQLite backend
 dbDriver                sqlite
@@ -29,9 +29,9 @@ supportContactHTML      <p>your local system administrator</p>
 # repository
 commitAction    @LIBDIR@/python2.4/site-packages/conary/commitaction --repmap='%(repMap)s' --build-label=%(buildLabel)s \
    --username=%(authUser)s --password=%(authPass)s \
-   --module='@LIBDIR@/python2.4/site-packages/mint/rbuilderaction.py --user=%%(user)s --hostname=%(fqdn)s'
+   --module='mint.rbuilderaction --user=%%(user)s --hostname=%(fqdn)s'
 commitActionEmail \
-    --module='@LIBDIR@/python2.4/site-packages/conary/changemail.py --user=%%(user)s --from=%(commitFromEmail)s --email=%(commitEmail)s'
+    --module='conary.changemail --user=%%(user)s --from=%(commitFromEmail)s --email=%(commitEmail)s'
 
 # Group template label
 groupApplianceLabel     rap.rpath.com@rpath:linux-1
@@ -46,6 +46,7 @@ rBuilderExternal        False
 authUser                mintauth
 authPass                mintpass
 debugMode               False
+authSocket              /tmp/mintauth.sock
 
 # Buildtypes that are not supported (remove and use at your own risk)
 excludeBuildTypes       STUB_IMAGE

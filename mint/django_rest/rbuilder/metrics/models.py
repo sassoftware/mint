@@ -14,9 +14,9 @@ class Metrics(modellib.XObjModel):
     server_versions = modellib.XObjModel()
     timer = modellib.XObjModel
 
-    def serialize(self, request=None, values=None):
-        self.server_versions = self.server_versions.serialize(request, values)
-        self.timer = self.timer.serialize(request, values)
+    def serialize(self, request=None):
+        self.server_versions = self.server_versions.serialize(request)
+        self.timer = self.timer.serialize(request)
         return self
 
 class ServerVersions(modellib.XObjModel):

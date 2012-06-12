@@ -15,14 +15,14 @@ export DISTDIR =	$(TOPDIR)/$(DISTNAME)
 export PREFIX =		/usr
 export lib =		$(shell uname -m | sed -r '/x86_64|ppc64|s390x|sparc64/{s/.*/lib64/;q};s/.*/lib/')
 export LIBDIR =		$(PREFIX)/$(lib)
-export PYVER =		"`python -c 'import sys; print sys.version[0:3]'`"
 export POSTGRES_VERSION = 9.0
 
 # from here on shouldn't need overriding
-export PYTHON = /usr/bin/python$(PYVER)
+export PYTHON = /usr/bin/python
+export PYVER = $(shell $(PYTHON) -c 'import sys; print sys.version[0:3]')
 export PYDIR = $(LIBDIR)/python$(PYVER)/site-packages
 
-SUBDIRS = mint scripts raaplugins rmake_plugins doc distro
+SUBDIRS = mint scripts raaplugins rmake_plugins doc distro twisted
 
 dist_files = Makefile Make.rules rbuilder.conf httpd.conf NEWS
 

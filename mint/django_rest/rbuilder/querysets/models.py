@@ -6,19 +6,32 @@
 #
 
 import sys
-
 from django.db import models
 
 from mint.django_rest.deco import D
 from mint.django_rest.rbuilder import modellib
-from mint.django_rest.rbuilder.inventory import models as inventorymodels
+from mint.django_rest.rbuilder.users import models as usersmodels
+from mint.django_rest.rbuilder.projects import models as projectsmodels
+from mint.django_rest.rbuilder.rbac import models as rbacmodels
 from mint.django_rest.rbuilder.querysets import errors
-
+from mint.django_rest.rbuilder.jobs import models as jobmodels
+from django.db.utils import IntegrityError
 from xobj import xobj
+
+APIReadOnly = modellib.APIReadOnly
+XObjHidden = modellib.XObjHidden
 
 OPERATOR_CHOICES = [(k, v) for k, v in modellib.filterTermMap.items()]
 
+class Universe(modellib.XObjIdModel):
+    '''Reference to the absolute all of a Given Type parent of any queryset'''
+    class Meta:
+        abstract = True
+    _xobj = xobj.XObjMetadata(tag = "universe")
+    view_name = "QuerySetUniverseResult"
+
 class AllMembers(modellib.XObjIdModel):
+    '''Query set results matched regardless of match type (below)'''
     class Meta:
         abstract = True
     _xobj = xobj.XObjMetadata(
@@ -26,6 +39,7 @@ class AllMembers(modellib.XObjIdModel):
     view_name = "QuerySetAllResult"
 
 class ChosenMembers(modellib.XObjIdModel):
+    '''Query set results based on resources explicitly added to the QS'''
     class Meta:
         abstract = True
     _xobj = xobj.XObjMetadata(
@@ -33,6 +47,7 @@ class ChosenMembers(modellib.XObjIdModel):
     view_name = "QuerySetChosenResult"
 
 class FilteredMembers(modellib.XObjIdModel):
+    '''Query set results based on given match criteria'''
     class Meta:
         abstract = True
     _xobj = xobj.XObjMetadata(
@@ -40,13 +55,33 @@ class FilteredMembers(modellib.XObjIdModel):
     view_name = "QuerySetFilteredResult"
 
 class ChildMembers(modellib.XObjIdModel):
+    '''Query set results that are selected because of a child query set'''
     class Meta:
         abstract = True
     _xobj = xobj.XObjMetadata(
                 tag = "child_members")
     view_name = "QuerySetChildResult"
 
+class GrantMatrix(modellib.XObjIdModel):
+    '''Permissions on queryset arranged in a UI-friendly way'''
+    class Meta:
+        abstract = True
+    _xobj = xobj.XObjMetadata(
+                tag = "grant_matrix")
+    view_name = "QuerySetGrantMatrix"
+
+class FavoriteQuerySets(modellib.Collection):
+    '''A list of all query sets in the rBuilder'''
+    class Meta:
+        abstract = True
+    _xobj = xobj.XObjMetadata(
+                tag = "favorite_query_sets")
+    list_fields = ["query_set"]
+    query_set = []
+    view_name = 'FavoriteQuerySets'
+
 class QuerySets(modellib.Collection):
+    '''A list of all query sets in the rBuilder'''
     class Meta:
         abstract = True
     _xobj = xobj.XObjMetadata(
@@ -55,10 +90,16 @@ class QuerySets(modellib.Collection):
     query_set = []
 
 class FilterDescriptor(modellib.XObjIdModel):
+
+    # this is a stub for serialization of a URL only, 
+    # see the other FilterDescriptor in descriptors.py 
+
     class Meta:
         abstract = True
     _xobj = xobj.XObjMetadata(
                 tag = "filter_descriptor")
+
+    id = models.AutoField(primary_key=True)
     view_name = "QuerySetFilterDescriptor"
 
 class CollectionId(modellib.XObjIdModel):
@@ -68,35 +109,84 @@ class CollectionId(modellib.XObjIdModel):
                 
 
 class QuerySet(modellib.XObjIdModel):
+    '''An individual queryset, ex: "All Systems"'''
+
+    objects = modellib.SaveableManyToManyManager()
     _xobj = xobj.XObjMetadata(
                 tag = "query_set")
-
-    refName = "id"
+    _xobj_explicit_accessors = set([])
+    _m2m_safe_to_create = [ 'filter_entries' ]
+    summary_view = [ 'name', 'description' ]
 
     query_set_id = D(models.AutoField(primary_key=True),
         "The database id for the query set")
     name = D(models.TextField(unique=True),
-        "Query set name")
+        "Query set name, must be unique", short="Queryset name")
     description = D(models.TextField(null=True),
-        "Query set description")
+        "Query set description, is null by default", short="Queryset description")
     created_date = D(modellib.DateTimeUtcField(auto_now_add=True),
         "Date the query set was created")
     modified_date = D(modellib.DateTimeUtcField(auto_now_add=True),
         "Date the query set was modified")
-    children = D(modellib.ManyToManyField("self", symmetrical=False,
-        refName="id"),
+    tagged_date = D(modellib.DateTimeUtcField(auto_now_add=False),
+        "Date the query set was last tagged")
+    children = D(models.ManyToManyField("self", symmetrical=False),
         "Query sets that are children of this query set")
     filter_entries = D(models.ManyToManyField("FilterEntry"),
         "Defined filter entries for this query set")
     resource_type = D(models.TextField(),
         "Name of the resource this query set operates on")
+    presentation_type = D(models.TextField(),
+        "A classification for client to use when displaying the objects.  For example, stages can be on projects, branches, platforms, etc.")
     can_modify = D(models.BooleanField(default=True),
-        "Whether this query set can be deleted through the API.")
+        "Whether this query set can be deleted through the API.  Boolean, defaults to False")
+    actions = D(modellib.SyntheticField(jobmodels.Actions), 'Available actions on this query set')
+    # public querysets are querysets like "All Systems" and do not require rbac ReadSet permissions
+    # to be visible, but will be empty unless ReadMember(ship) is conveyed on some of their contents.
+    is_public = APIReadOnly(models.BooleanField(default=False))
+    is_static = APIReadOnly(models.BooleanField(default=False))
+    created_by = APIReadOnly(modellib.ForeignKey('users.User', related_name='+', null=True, db_column='created_by'))
+    modified_by = APIReadOnly(modellib.ForeignKey('users.User', related_name='+', null=True, db_column='modified_by'))
+    personal_for = APIReadOnly(modellib.ForeignKey('users.User', related_name='+', db_column='personal_for', null=True))
 
     load_fields = [name]
 
-    def serialize(self, request=None, values=None):
-        xobjModel = modellib.XObjIdModel.serialize(self, request, values)
+    # the name of the most important key (default) in the filter descriptor
+    _queryset_search_key_map = {
+        'system'               : 'System name' ,
+        'user'                 : 'User name'   ,
+        'project'              : 'Project name',
+        'project_branch_stage' : 'Project name',
+        'grant'                : 'Grant name'  ,
+        'role'                 : 'Role name'   ,
+        'target'               : 'Target name' , 
+        'image'                : 'Image name'  ,
+    }
+
+    def searchKey(self):
+        '''The name of the most important item in the filter descriptor'''
+        return self._queryset_search_key_map[self.resource_type]
+
+    def computeSyntheticFields(self, sender, **kwargs):
+        ''' Compute non-database fields.'''
+        self._computeActions()
+
+    def _computeActions(self):
+        '''What actions are available on the system?'''
+
+        self.actions = jobmodels.Actions()
+        self.actions.action = []
+         
+        if self.tagged_date is not None:
+            # refreshes the queryset next time it is accessed
+            # regardless of resource tag (cache) age
+            invalidate = jobmodels.EventType.makeAction(
+                jobmodels.EventType.QUERYSET_INVALIDATE
+            )
+            self.actions.action.append(invalidate)
+
+    def serialize(self, request=None):
+        xobjModel = modellib.XObjIdModel.serialize(self, request)
 
         am = AllMembers()
         am._parents = [self]
@@ -110,15 +200,15 @@ class QuerySet(modellib.XObjIdModel):
         childM = ChildMembers()
         childM._parents = [self]
         xobjModel.child_members = childM.serialize(request)
+        universe = Universe()
+        universe._parents = [self]
+        xobjModel.universe = universe.serialize(request)
+        grant_matrix = GrantMatrix()
+        grant_matrix._parents = [self]
+        xobjModel.grant_matrix = grant_matrix.serialize(request)
 
-        fd = FilterDescriptor()
+        fd = FilterDescriptor(id=self.query_set_id)
         xobjModel.filter_descriptor = fd.serialize(request)
-
-        from mint.django_rest.rbuilder.querysets import manager
-        collectionId = CollectionId()
-        collectionId.view_name = \
-            modellib.type_map[manager.QuerySetManager.resourceCollectionMap[self.resource_type]].view_name
-        xobjModel.collection = collectionId.serialize(request)
 
         xobjModel.is_top_level = self.isTopLevel()
 
@@ -177,13 +267,33 @@ class QuerySet(modellib.XObjIdModel):
             # Recurse, validating each child
             childQuerySet._validateChildren(validatedChildren)
 
+    def parents(self):
+        '''querysets that directly include this queryset'''
+        results = QuerySet.objects.filter(
+            children = self
+        )
+        return results
+ 
+    def ancestors(self):
+        '''querysets that directly or indirectly include this queryset'''
+        return self._ancestors([], 0) 
+
+    def _ancestors(self, results, depth):
+        self._depth = depth
+        my_parents = self.parents()
+        results.extend(my_parents)
+        for parent in my_parents:
+            results.extend(parent._ancestors(results, depth-1))
+        return results
 
 class FilterEntry(modellib.XObjIdModel):
+
     class Meta:
         unique_together = ('field', 'operator', 'value')
 
     _xobj = xobj.XObjMetadata(
                 tag = "filter_entry")
+    _xobj_hidden_accessors = set(['links'])
 
     filter_entry_id = models.AutoField(primary_key=True)
     field = D(models.TextField(),
@@ -191,30 +301,45 @@ class FilterEntry(modellib.XObjIdModel):
     operator = D(models.TextField(choices=OPERATOR_CHOICES),
         "Operator for this filter")
     value = D(models.TextField(null=True),
-        "Value for this filter")
+        "Value for this filter, defaults to null")
 
     load_fields = [field, operator, value]
 
-class QueryTag(modellib.XObjIdModel):
-    _xobj = xobj.XObjMetadata(
-                tag = 'query_tag')
-    _xobj_hidden_accessors = set(['system_tags'])
+    def save(self, *args, **kwargs):
+        """
+        Validate that the query set does not have any circular relationships in
+        it's children before saving it.  E.g., a query set can not be a child
+        of one of it's children.
+        """
+        # If we don't have a query_set_id (pk), then we've never even been saved
+        # and Django prevents us from using the Many to Many manager on
+        # children.  Skip validating children in this case.
+        try:
+            return modellib.XObjIdModel.save(self, *args, **kwargs)
+        except IntegrityError:
+            # the shared filter entry schema is lame and doesn't store seperate
+            # entries for each queryset but attempts to share them
+            # if the ID already exists, be cool about it
+            pass
 
-    query_tag_id = models.AutoField(primary_key=True)
-    query_set = modellib.ForeignKey("QuerySet", related_name="query_tags", 
-        unique=True)
-    name = models.TextField()
+class FilterEntryLink(modellib.XObjIdModel):
+ 
+    class Meta:
+        db_table = 'querysets_queryset_filter_entries'
 
-    load_fields = [name]
-
-    def get_absolute_url(self, *args, **kwargs):
-        self._parents = [self.query_set, self]
-        return modellib.XObjIdModel.get_absolute_url(self, *args, **kwargs)
+    id = models.AutoField(primary_key=True)
+    queryset = models.ForeignKey(QuerySet, related_name='+')
+    filter_entry = models.ForeignKey(FilterEntry, 
+        db_column='filterentry_id', related_name='links')
 
 class InclusionMethod(modellib.XObjIdModel):
+    '''
+    Explains how the system came to be in the query set.  This is probably
+    not needed and could be removed for a performance boost.  [MPD]
+    '''
     _xobj = xobj.XObjMetadata(
                 tag = 'inclusion_method')
-    _xobj_hidden_accessors = set(["system_tags"])
+    _xobj_explicit_accessors = set([])
 
     METHOD_CHOICES = [
         ('chosen', 'Chosen'),
@@ -227,21 +352,25 @@ class InclusionMethod(modellib.XObjIdModel):
     load_fields = [name]
 
 class SystemTag(modellib.XObjIdModel):
+    '''
+    Indicates what systems were matched by a query set
+    '''
+
     class Meta:
-        unique_together = (("system", "query_tag", "inclusion_method"),)
+        unique_together = (("system", "query_set", "inclusion_method"),)
 
     _xobj = xobj.XObjMetadata(
                 tag = 'system_tag')
 
-    system_tag_id = models.AutoField(primary_key=True)
-    system = modellib.ForeignKey(inventorymodels.System,
-        related_name="system_tags")
-    query_tag = modellib.ForeignKey(QueryTag, related_name="system_tags",
-        text_field="name")
-    inclusion_method = modellib.SerializedForeignKey(InclusionMethod,
-        related_name="system_tags")
+    system_tag_id = D(models.AutoField(primary_key=True), 'The ID of the system tag')
+    system = XObjHidden(modellib.ForeignKey('inventory.System',
+        related_name="tags"))
+    query_set = XObjHidden(modellib.ForeignKey(QuerySet, related_name="system_tags",
+        text_field="name"))
+    inclusion_method = XObjHidden(modellib.ForeignKey(InclusionMethod,
+        related_name="+"))
 
-    load_fields = [system, query_tag, inclusion_method]
+    load_fields = [system, query_set, inclusion_method]
 
     def get_absolute_url(self, *args, **kwargs):
         self._parents = [self.system, self]
@@ -249,11 +378,162 @@ class SystemTag(modellib.XObjIdModel):
 
     def serialize(self, request=None, values=None):
         xobjModel = modellib.XObjIdModel.serialize(self, request)
-        querySetHref = self.query_tag.query_set.get_absolute_url(request)
-        xobjModel.query_set = modellib.XObjHrefModel(querySetHref, 'id')
+        querySetHref = self.query_set.get_absolute_url(request)
+        xobjModel.query_set = modellib.XObjHrefModel(querySetHref)
         return xobjModel
-         
 
+class ImageTag(modellib.XObjIdModel):
+    '''
+    Indicates what systems were matched by a query set
+    '''
+
+    class Meta:
+        unique_together = (("image", "query_set", "inclusion_method"),)
+
+    _xobj = xobj.XObjMetadata(
+                tag = 'image_tag')
+
+    image_tag_id = D(models.AutoField(primary_key=True), 'The ID of the image tag')
+    image = XObjHidden(modellib.ForeignKey('images.Image',
+        related_name="tags"))
+    query_set = XObjHidden(modellib.ForeignKey(QuerySet, related_name="image_tags",
+        text_field="name"))
+    inclusion_method = XObjHidden(modellib.ForeignKey(InclusionMethod,
+        related_name="+"))
+
+    load_fields = [image, query_set, inclusion_method] # TODO: determine if needed?
+
+class TargetTag(modellib.XObjIdModel):
+    '''
+    Indicates what targets were matched by a query set
+    '''
+
+    class Meta:
+        unique_together = (("target", "query_set", "inclusion_method"),)
+
+    _xobj = xobj.XObjMetadata(
+                tag = 'target_tag')
+
+    target_tag_id = D(models.AutoField(primary_key=True), 'The ID of the target tag')
+    target = XObjHidden(modellib.ForeignKey('targets.Target',
+        related_name="tags"))
+    query_set = XObjHidden(modellib.ForeignKey(QuerySet, related_name="target_tags",
+        text_field="name"))
+    inclusion_method = XObjHidden(modellib.ForeignKey(InclusionMethod,
+        related_name="+"))
+
+    load_fields = [target, query_set, inclusion_method]
+
+# TODO: reduce duplication here, add a common tag base class or factory?
+class RoleTag(modellib.XObjIdModel):
+    '''
+    Indicates what roles were matched by a query set
+    '''
+
+    class Meta:
+        unique_together = (("role", "query_set", "inclusion_method"),)
+
+    _xobj = xobj.XObjMetadata(
+                tag = 'role_tag')
+
+    role_tag_id = D(models.AutoField(primary_key=True), 'The ID of the role tag')
+    role = XObjHidden(modellib.ForeignKey(rbacmodels.RbacRole,
+        related_name="tags"))
+    query_set = XObjHidden(modellib.ForeignKey(QuerySet, related_name="role_tags",
+        text_field="name"))
+    inclusion_method = XObjHidden(modellib.ForeignKey(InclusionMethod,
+        related_name="+"))
+
+    load_fields = [role, query_set, inclusion_method]
+
+# TODO: reduce duplication here, add a common tag base class or factory?
+class PermissionTag(modellib.XObjIdModel):
+    '''
+    Indicates what roles were matched by a query set
+    '''
+
+    class Meta:
+        unique_together = (("permission", "query_set", "inclusion_method"),)
+
+    _xobj = xobj.XObjMetadata(
+                tag = 'grant_tag')
+
+    # NOTE: we call permissions "GRANTS" in the XML api, though these
+    # tags will largely be hidden here, and we can call fields by their
+    # internal names, knowing this data need not be surfaced.
+    permission_tag_id = D(models.AutoField(primary_key=True), 'The ID of a permission tag')
+    permission = XObjHidden(modellib.ForeignKey(rbacmodels.RbacPermission,
+        related_name="tags"))
+    query_set = XObjHidden(modellib.ForeignKey(QuerySet, related_name="permission_tags",
+        text_field="name"))
+    inclusion_method = XObjHidden(modellib.ForeignKey(InclusionMethod,
+        related_name="+"))
+
+    load_fields = [permission, query_set, inclusion_method]
+
+class UserTag(modellib.XObjIdModel):
+    '''Indicates what users were matched by a query set'''
+
+    class Meta:
+        unique_together = (('user', 'query_set', 'inclusion_method'),)
+
+    _xobj = xobj.XObjMetadata(tag='user_tag')
+    
+    user_tag_id = D(models.AutoField(primary_key=True), 'The ID of a user tag')
+    user = D(modellib.ForeignKey(usersmodels.User, related_name='tags'), 'User having tag')
+    query_set = XObjHidden(
+        modellib.ForeignKey(QuerySet, related_name='user_tags', text_field='name')
+    )
+    inclusion_method = XObjHidden(
+        modellib.ForeignKey(InclusionMethod, related_name='+')
+    )    
+
+    load_fields = [user, query_set, inclusion_method]
+    
+class ProjectTag(modellib.XObjIdModel):
+    '''Indicates what projects were matched by a query set'''
+
+    class Meta:
+        unique_together = (('project', 'query_set', 'inclusion_method'),)
+    
+    _xobj = xobj.XObjMetadata(tag='project_tag')
+    
+    project_tag_id = D(models.AutoField(primary_key=True), 'ID of the project tag')
+    project = D(modellib.ForeignKey(projectsmodels.Project, related_name='tags'),
+        'Project attached to the tag')
+    query_set = XObjHidden(
+        modellib.ForeignKey(QuerySet, related_name='project_tags', text_field='name')
+    )
+    inclusion_method = XObjHidden(
+       modellib.ForeignKey(InclusionMethod, related_name='+')
+    )    
+
+    load_fields = [project, query_set, inclusion_method]
+    
+class StageTag(modellib.XObjIdModel):
+    '''Indicates which stages were matched by a query set'''
+ 
+    class Meta:
+        unique_together = (('stage', 'query_set', 'inclusion_method'),)
+    
+    _xobj = xobj.XObjMetadata(tag='stage_tag')
+    
+    stage_tag_id = D(models.AutoField(primary_key=True), 'The id of a stage tag')
+    stage = D(modellib.ForeignKey(projectsmodels.Stage, related_name='tags'),
+        'Associated stage')
+    query_set = XObjHidden(
+        modellib.ForeignKey(QuerySet, related_name='stage_tags', text_field='name')
+    )
+    inclusion_method = XObjHidden(
+        modellib.ForeignKey(InclusionMethod, related_name='+')
+    )    
+
+    load_fields = [stage, query_set, inclusion_method]
+    # Queryset resource_type is 'project_branch_stage' but the field here is
+    # just called 'stage', so a special override is needed.
+    tagged_field = 'stage'
+
+# register xobj metadata
 for mod_obj in sys.modules[__name__].__dict__.values():
     if hasattr(mod_obj, '_xobj'):
         if mod_obj._xobj.tag:

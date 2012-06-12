@@ -90,7 +90,7 @@ class BaseRestTest(mint_rephelp.MintDatabaseHelper):
                                   description=description,
                                   namespace=self.mintCfg.namespace)
         pd = helperfuncs.sanitizeProductDefinition(
-            projectName, '', shortName, domainName,
+            projectName, '', '.'.join((shortName, domainName)),
             shortName, version, '', self.mintCfg.namespace)
         stageRefs = [ x.name for x in pd.getStages() ]
         for _name, displayName, _flavor in self.architectures:
@@ -136,6 +136,7 @@ class BaseRestTest(mint_rephelp.MintDatabaseHelper):
         images = [
             ('Image 1', buildtypes.INSTALLABLE_ISO),
             ('Image 2', buildtypes.TARBALL),
+            ('Image 3 vmware esx', buildtypes.VMWARE_ESX_IMAGE),
         ]
         groupName = groupTrv.getName()
         groupVer = groupTrv.getVersion().freeze()
@@ -214,6 +215,8 @@ class BaseRestTest(mint_rephelp.MintDatabaseHelper):
         pl1.setContentProvider('Crowbar', 'Crowbar', [cst], [ds])
         pl2.setPlatformName('Crowbar Linux 2')
         pl2.setPlatformUsageTerms('Terms of Use 2')
+        sp = pl2.getSearchPaths()[0]
+        sp.set_isPlatformTrove(True)
         pl2.saveToRepository(self.cclient, platformLabel2)
         self._addPlatform(platformLabel2, pl2)
 

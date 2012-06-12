@@ -7,7 +7,6 @@ from cStringIO import StringIO
 import os
 import sys
 
-from mint import helperfuncs
 from mint import mint_error
 from mint import userlevels
 from mint.db import projects
@@ -38,15 +37,7 @@ class RepositoryManager(manager.Manager):
         self.cfg = cfg
         self.auth = auth
         self.profiler = None
-        self.reposManager = reposdb.RepositoryManager(cfg, db.db._db)
         self.cache = mintutils.CacheWrapper(cfg.memCache)
-
-    def close(self):
-        self.reposManager.close()
-
-    def reopen_fork(self):
-        self.reposManager.close_fork()
-        self.reposManager = reposdb.RepositoryManager(self.cfg, self.db.db._db)
 
     def createRepositorySafe(self, productId, createMaps=True):
         try:
@@ -55,7 +46,7 @@ class RepositoryManager(manager.Manager):
             pass
 
     def createRepository(self, productId, createMaps=True):
-        repos = self.reposManager.getRepositoryFromProjectId(productId)
+        repos = self.db.reposShim.getRepositoryFromProjectId(productId)
 
         authInfo = models.AuthInfo('userpass',
                 self.cfg.authUser, self.cfg.authPass)
@@ -122,10 +113,10 @@ class RepositoryManager(manager.Manager):
         repos = self._getRepositoryServer(fqdn)
         role = self._getRoleForLevel(repos, level)
         try:
-            repos.auth.addUserByMD5(username, salt, password)
+            repos.auth.addUserByMD5(username, salt.decode('hex'), password)
         except reposerrors.UserAlreadyExists:
             repos.auth.deleteUserByName(username, deleteRole=False)
-            repos.auth.addUserByMD5(username, salt, password)
+            repos.auth.addUserByMD5(username, salt.decode('hex'), password)
         repos.auth.setUserRoles(username, [role])
 
     def addUser(self, fqdn, username, password, level):
@@ -173,7 +164,7 @@ class RepositoryManager(manager.Manager):
             userId = reposdb.ANY_WRITER
         else:
             userId = reposdb.ANY_READER
-        return self.reposManager.getClient(userId)
+        return self.db.reposShim.getClient(userId)
 
     def getUserClient(self):
         """
@@ -190,7 +181,7 @@ class RepositoryManager(manager.Manager):
             userId = reposdb.ANONYMOUS
         else:
             userId = self.auth.userId
-        client = self.reposManager.getClient(userId)
+        client = self.db.reposShim.getClient(userId)
         if self.auth.username:
             client.cfg.name = self.auth.username
             client.cfg.contact = self.auth.fullName or ''
@@ -249,11 +240,11 @@ class RepositoryManager(manager.Manager):
 
     def _getRepositoryHandle(self, fqdn):
         if '.' in fqdn:
-            return self.reposManager.getRepositoryFromFQDN(fqdn)
+            return self.db.reposShim.getRepositoryFromFQDN(fqdn)
         elif fqdn.isdigit():
-            return self.reposManager.getRepositoryFromProjectId(fqdn)
+            return self.db.reposShim.getRepositoryFromProjectId(fqdn)
         else:
-            return self.reposManager.getRepositoryFromShortName(fqdn)
+            return self.db.reposShim.getRepositoryFromShortName(fqdn)
 
     def _getBaseConfig(self):
         global _cachedCfg
@@ -264,8 +255,7 @@ class RepositoryManager(manager.Manager):
         if self.cfg.useInternalConaryProxy:
             cfg.conaryProxy = self.cfg.getInternalProxies()
         else:
-            if self.cfg.proxy:
-                cfg.proxy = self.cfg.proxy
+            cfg.proxyMap = self.cfg.getProxyMap()
             # we're not using the internal proxy, therefore we
             # need to add entitlements directly.
             userMap, entMap = self._getAuthMaps()
@@ -305,7 +295,7 @@ class RepositoryManager(manager.Manager):
         cu.execute('''SELECT label, authType, username, password,
                              entitlement
                       FROM Projects JOIN Labels USING(projectId)
-                      WHERE external=1 
+                      WHERE external
                         AND authType IN (?, ?)''', "userpass", "entitlement")
         repoMap = {}
         entMap = []
@@ -436,16 +426,12 @@ class RepositoryManager(manager.Manager):
 
         hostname = fqdn.split('.', 1)[0]
         localFqdn = hostname + "." + self.cfg.projectDomainName.split(':')[0]
-        if fqdn != localFqdn:
-            count = self.db.db.repNameMap.getCountByFromName(localFqdn)
-            if not count:
-                self.db.db.repNameMap.new(localFqdn, fqdn)
         self._generateConaryrcFile()
 
     def checkExternalRepositoryAccess(self, hostname, domainname, url, authInfo):
         fqdn = self._getFqdn(hostname, domainname)
         cfg = conarycfg.ConaryConfiguration(readConfigFiles=False)
-        cfg.proxy = self.cfg.proxy
+        cfg.proxyMap = self.cfg.getProxyMap()
         cfg.configLine('repositoryMap %s %s' % (fqdn, url))
         if authInfo.authType == 'entitlement':
             cfg.entitlement.addEntitlement(fqdn, authInfo.entitlement)
@@ -510,42 +496,10 @@ class RepositoryManager(manager.Manager):
         fObj_v1.commit()
 
     def _getFullRepositoryMap(self):
-        cu = self.db.cursor()
-        cu.execute("""
-            SELECT url, label, external, authType,
-                (projectId IN 
-                 (SELECT targetProjectId FROM InboundMirrors )) AS mirrored
-            FROM Projects
-            JOIN Labels USING(projectId)
-            WHERE hidden=0 AND disabled=0""")
         repoMap = {}
-        for url, label, external, authType, mirrored in cu:
-            host = label.split('@', 1)[0]
-            if not url:
-                repoMap[host] = "http://%s/conary/" % (host)
-            elif external:
-                if mirrored:
-                    repoMap[host] = url
-                elif host != helperfuncs.getUrlHost(url):
-                    repoMap[host] = url
-
-                elif authType == 'none':
-                    if not url.startswith('http://'):
-                        repoMap[host] = url
-                elif not url.startswith('https://'):
-                    repoMap[host] = url
-            else:
-                if self.cfg.SSL:
-                    protocol = "https"
-                    mapHost = self.cfg.secureHost
-                    defaultPort = 443
-                else:
-                    protocol = "http"
-                    mapHost = self.cfg.siteHost
-                    defaultPort = 80
-                _, port = helperfuncs.hostPortParse(mapHost, defaultPort)
-                repoMap[host] = helperfuncs.rewriteUrlProtocolPort(url, 
-                                                            protocol, port)
+        for handle in self.db.reposShim.iterRepositories(
+                'NOT hidden AND NOT disabled'):
+            repoMap[handle.fqdn] = handle.getURL()
         return repoMap
 
     def _getKeyValueMetadata(self, troveTups):
@@ -618,3 +572,29 @@ class RepositoryManager(manager.Manager):
 
         client.repos.commitChangeSet(changeSet)
         return newTups
+
+    def deleteTroves(self, troveTups, admin=False):
+        # NB: this doesn't recurse since it's initially used for deleting
+        # source troves
+        if not troveTups:
+            return []
+        if admin:
+            client = self.getAdminClient(write=True)
+        else:
+            client = self.getUserClient()
+        repos = client.repos
+        changeSet = changeset.ChangeSet()
+        added = False
+        for tup in troveTups:
+            # Resolve trovetup to trovetup with timestamp
+            try:
+                tup = sorted(repos.findTrove(None, tup))[0]
+            except reposerrors.TroveNotFound:
+                continue
+            antiTrove = cny_trove.Trove(*tup,
+                    type=cny_trove.TROVE_TYPE_REMOVED)
+            antiTrove.computeDigests()
+            changeSet.newTrove(antiTrove.diff(None, absolute=True)[0])
+            added = True
+        if added:
+            repos.commitChangeSet(changeSet)

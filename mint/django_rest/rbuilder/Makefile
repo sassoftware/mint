@@ -4,7 +4,7 @@
 # All rights reserved.
 #
 
-SUBDIRS = platforms reporting inventory metrics modellib manager querysets packages changelog
+SUBDIRS = docs discovery platforms reporting inventory metrics modellib manager querysets packages projects jobs packageindex notices targets users modulehooks rbac repos images
 
 python_files = $(wildcard *.py)
 

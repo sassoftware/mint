@@ -1,11 +1,12 @@
 #
-# Copyright (c) 2010, 2011 rPath, Inc.
-#
-# All Rights Reserved
+# Copyright (c) 2011 rPath, Inc.
 #
 
 import os
 import logging
+import traceback
+import time
+import textwrap
 
 from debug_toolbar import middleware
 
@@ -13,17 +14,20 @@ from django import http
 from django.contrib.auth import authenticate
 from django.contrib.redirects import middleware as redirectsmiddleware
 from django.http import HttpResponse, HttpResponseBadRequest
+from django.db.utils import IntegrityError
+from django.db import connection
+import django.core.exceptions as core_exc
 
-import django.core.exceptions as core_exc 
 from mint import config
 from mint.django_rest import handler
-from mint.django_rest.rbuilder import auth
-from mint.django_rest.rbuilder import models as rbuildermodels
+from mint.django_rest.rbuilder import auth, errors, models
+from mint.django_rest.rbuilder.users import models as usersmodels
 from mint.django_rest.rbuilder.metrics import models as metricsmodels
+from mint.django_rest.rbuilder.errors import PermissionDenied
+from mint.django_rest.rbuilder.inventory import errors as ierrors
 from mint.lib import mintutils
 
-#from lxml import etree
-
+log = logging.getLogger(__name__)
 
 try:
     # The mod_python version is more efficient, so try importing it first.
@@ -33,6 +37,10 @@ except ImportError:
 
 if parse_qsl is None:
     from cgi import parse_qsl
+        
+RBUILDER_DEBUG_SWITCHFILE = "/srv/rbuilder/MINT_LOGGING_ENABLE"
+RBUILDER_DEBUG_LOGPATH    = "/tmp/rbuilder_debug_logging/"
+RBUILDER_DEBUG_HISTORY    = "/tmp/rbuilder_debug_logging/history.log"
 
 class BaseMiddleware(object):
 
@@ -54,7 +62,116 @@ class BaseMiddleware(object):
     def _process_response(self, request, response):
         return response
 
-class ExceptionLoggerMiddleware(BaseMiddleware):
+    def isLocalServer(self, request):
+        return not hasattr(request, '_req')
+
+class SwitchableLogMiddleware(BaseMiddleware):
+    ''' base class for Request and Response LogMiddleware '''
+ 
+    def shouldLog(self):
+        ''' dictates whether the middlware should log or not '''
+        # create the switchfile and keep it newer than 1 hour to keep it logging
+        if not os.path.exists(RBUILDER_DEBUG_SWITCHFILE):
+            return False
+        if not os.path.exists(RBUILDER_DEBUG_LOGPATH):
+            return False
+        if not os.access(RBUILDER_DEBUG_LOGPATH, os.W_OK):
+            return False
+        mtime = os.path.getmtime(RBUILDER_DEBUG_SWITCHFILE)
+        delta = time.time() - mtime
+        return delta < (60*60)
+
+    def _getLogFilePath(self, localtime):
+        ''' keeps directories neat and organized '''
+
+        if not os.path.exists(RBUILDER_DEBUG_LOGPATH):
+            os.makedirs(RBUILDER_DEBUG_LOGPATH, mode=0600)
+
+        (year, month, mday, hour, min, sec, wday, yday, is_dst) = localtime
+        ymd = "%d-%02d-%02d" % (year, month, mday)
+        hour = "%02d" % hour
+ 
+        filePath = os.path.join(RBUILDER_DEBUG_LOGPATH, ymd, hour)
+        if not os.path.exists(filePath):
+            os.makedirs(filePath)
+
+        return (filePath, min, sec)
+
+    def getLogFile(self, isRequest, localtime, type="full"):
+        ''' returns log file and path for storing XML debug info'''
+ 
+        filename = None
+        (path, min, sec)  = self._getLogFilePath(localtime)
+        minsec = "%02dm-%02ds" % (min, sec)
+        counter = 0
+        while True:
+            if isRequest:
+                filename = os.path.join(path, "%s-%s.request_%s.log" % (minsec, counter, type))
+            else:
+                filename = os.path.join(path, "%s-%s.response_%s.log" % (minsec, counter, type))
+            counter += 1   
+            if not os.path.exists(filename):
+                return (open(filename, "a"), filename)
+
+    def logPrint(self, handle, vars_dicts):
+        wrap = textwrap.TextWrapper(width=80, subsequent_indent=' ', break_long_words=False, replace_whitespace=False)
+        for vars_dict in vars_dicts:
+            for k in sorted(vars_dict.keys()):
+                v = vars_dict[k]
+                if type(v) == list:
+                    # just in case...
+                    v = " ".join([ str(x) for x in v ])
+                else:
+                    v = str(v)
+                v = "\n     ".join(wrap.wrap(v))
+                handle.write("%s: %s\n" % (k, v))
+
+class RequestLogMiddleware(SwitchableLogMiddleware):
+    ''' 
+    When sentinel file is present, log request traffic...
+    '''
+
+    def _logRequest(self, request):
+
+        now = time.localtime()
+        nowstr =time.asctime(now)
+        urlsFile = RBUILDER_DEBUG_HISTORY
+        urlsFile = open(RBUILDER_DEBUG_HISTORY, "a")
+        (logFile, logFilePath) = self.getLogFile(True, now)
+        path = "%s %s%s" % (
+            request.META.get('REQUEST_METHOD'), 
+            request.META.get('PATH_INFO'), 
+            request.META.get('QUERY_STRING')
+        )
+        urlsFile.write("[%s]\n     %s\n     %s\n" % (nowstr, path, logFilePath))
+        urlsFile.close()
+        with logFile as f:
+            self.logPrint(f, [ request.META, dict(zzz_raw_post_data=request.raw_post_data) ])
+
+
+    def _process_request(self, request):
+        if self.shouldLog():
+            self._logRequest(request)
+        return None
+
+class ExceptionLoggerMiddleware(SwitchableLogMiddleware):
+
+    def _logFailure(self, code, exception_msg):
+
+         now = time.localtime()
+         urlsFile = RBUILDER_DEBUG_HISTORY
+         urlsFile = open(RBUILDER_DEBUG_HISTORY, "a")
+         (logFile, logFilePath) = self.getLogFile(False, now, type='error')
+         urlsFile.write("     (ERROR (%s))\n     %s\n" % (code, logFilePath))
+         urlsFile.close()
+         with logFile as f:
+             self.logPrint(f, [ dict(code=code, zzz_content=exception_msg) ])
+
+
+    def _process_request(self, request):
+        if self.shouldLog():
+            self._logRequest(request)
+        return None
 
     def process_request(self, request):
         mintutils.setupLogging(consoleLevel=logging.INFO,
@@ -63,13 +180,68 @@ class ExceptionLoggerMiddleware(BaseMiddleware):
 
     def process_exception(self, request, exception):
 
-        if isinstance(exception, core_exc.ObjectDoesNotExist):
-            fault = rbuildermodels.Fault(code=404, message=str(exception))
-            response = HttpResponse(status=404, content_type='text/xml')
+        # email will only be sent if this is True AND
+        # we don't return early from this function
+        doEmail=True
+
+        if isinstance(exception, PermissionDenied):
+            # TODO: factor out duplication 
+            code = 403
+            fault = models.Fault(code=code, message=str(exception))
+            response = HttpResponse(status=code, content_type='text/xml')
             response.content = fault.to_xml(request)
+            log.error(str(exception))
+            if self.shouldLog():
+                self._logFailure(code, str(exception))
             return response
 
-        return handler.handleException(request, exception)
+        if isinstance(exception, core_exc.ObjectDoesNotExist):
+            # django not found in a get/delete is usually a bad URL
+            # in a PUT/POST, it's usually trying to insert or 
+            # mangle something in a way that does not align with the DB
+            code=404
+            if request.method not in [ 'GET', 'DELETE' ]:
+                code = 400
+ 
+            # log full details, but don't present to user, in case
+            # XML submitted was rather confusing and we can't tell what
+            # was not found on the lookup, which could happen
+            # anywhere in the call chain
+            log.error(traceback.format_exc())
+
+            fault = models.Fault(code=code, message=str(exception))
+            response = HttpResponse(status=code, content_type='text/xml')
+            response.content = fault.to_xml(request)
+            log.error(str(exception))
+            if self.shouldLog():
+                self._logFailure(code, str(exception))
+            return response
+
+        if isinstance(exception, errors.RbuilderError):
+            tbStr = getattr(exception, 'traceback', None)
+            status = getattr(exception.__class__, 'status', 500)
+            fault = models.Fault(code=status, message=str(exception), traceback=tbStr)
+            response = HttpResponse(status=status, content_type='text/xml')
+            response.content = fault.to_xml(request)
+            log.error(str(exception))
+            if self.shouldLog():
+                self._logFailure(code, str(exception))
+            return response
+
+        if isinstance(exception, IntegrityError):
+            # IntegrityError is a bug but right now we're using it as a crutch
+            # (bad practice, should catch and map to reasonable errors)
+            # so do not log tracebacks when there's an uncaught conflict.
+            # user will still get an ISE w/ details
+            if self.shouldLog():
+                self._logFailure('IntegrityError', str(exception))
+            return handler.handleException(request, exception,
+                    doTraceback=False, doEmail=False)
+
+        if isinstance(exception, ierrors.IncompatibleEvent):
+            doEmail = False 
+
+        return handler.handleException(request, exception, doEmail=doEmail)
 
 class RequestSanitizationMiddleware(BaseMiddleware):
     def _process_request(self, request):
@@ -107,7 +279,8 @@ class SetMintAuthMiddleware(BaseMiddleware):
     def _process_request(self, request):
         request._auth = auth.getAuth(request)
         username, password = request._auth
-        request._authUser = authenticate(username = username, password = password)
+        request._authUser = authenticate(username=username, password=password,
+                mintConfig=request.cfg)
         return None
 
 class SetMintAdminMiddleware(BaseMiddleware):
@@ -117,14 +290,13 @@ class SetMintAdminMiddleware(BaseMiddleware):
     def _process_request(self, request):
         request._is_admin = auth.isAdmin(request._authUser)
         return None
-    
+
 class LocalSetMintAdminMiddleware(BaseMiddleware):
     def _process_request(self, request):
         request._is_admin = True
         request._is_authenticated = True
-        request._authUser = rbuildermodels.Users.objects.get(pk=1)
+        request._authUser = usersmodels.User.objects.get(pk=1)
         request._auth = ("admin", "admin")
-        return None
 
 class SetMintAuthenticatedMiddleware(BaseMiddleware):
     """
@@ -137,43 +309,43 @@ class SetMintAuthenticatedMiddleware(BaseMiddleware):
 class SetMintConfigMiddleware(BaseMiddleware):
 
     def _process_request(self, request):
-        if hasattr(request, '_req'):
+        if not self.isLocalServer(request):
             cfgPath = request._req.get_options().get("rbuilderConfig", config.RBUILDER_CONFIG)
         else:
             cfgPath = config.RBUILDER_CONFIG
-        cfg = config.getConfig(cfgPath)
 
+        cfg = config.getConfig(cfgPath)
         request.cfg = cfg
 
         return None
-
-class LocalSetMintConfigMiddleware(BaseMiddleware):
-
-    def _process_request(self, request):
-        cfg = config.MintConfig()
-        cfg.siteHost = 'localhost.localdomain'
-        request.cfg = cfg
-
 
 class AddCommentsMiddleware(BaseMiddleware):
     
     useXForm = True
 
     def _process_response(self, request, response):
+
+        # do not add comments to error messages
+        if response.status_code != 200:
+            return response
+
         if self.useXForm and response.content and  \
             response.status_code in (200, 201, 206, 207):
 
             # get view + documentation
-            view_name = request._view_func.__class__.__name__
-            path = os.path.join(os.path.dirname(__file__), 'rbuilder/inventory/docs/%s.txt' % view_name)
+            viewFunc = request._view_func
+            view_name = viewFunc.__class__.__name__
+            appName = self._getAppNameFromViewFunc(viewFunc)
+            path = os.path.join(os.path.dirname(__file__),
+                'rbuilder/docs/%s/%s.txt' % (appName, view_name))
             try:
                 f = open(path, 'r')
             except IOError:
                 return response
             try:
                 contents = response.content.split('\n')
-                docs = '<!--' + f.read().strip() + '-->'
-                response.content = contents[0] + docs + '\n'.join(contents[1:])
+                docs = '\n<!--\n' + f.read().strip() + '\n-->\n'
+                response.content = contents[0] + docs + '\n'.join(contents[1:])                
             finally:
                 f.close()
         return response
@@ -182,40 +354,26 @@ class AddCommentsMiddleware(BaseMiddleware):
         request._view_func = view_func
         return None
 
-#class AddCommentsMiddleware(BaseMiddleware):
-#    
-#    useXForm = True
-#    
-#    def __init__(self):
-#        try:
-#            f = os.path.join(os.path.dirname(__file__), 'templates/comments.xsl')
-#            self.styledoc = etree.parse(f)
-#        except:
-#            self.useXForm = False
-#
-#    def _process_response(self, request, response):
-#        if self.useXForm and response.content and  \
-#            response.status_code in (200, 201, 206, 207):
-#
-#            # get view + documentation
-#            view = request._view_func
-#            # Process view no longer exists, see generatecomments
-#            # script for HOWTO reconstruct it
-#            view_doc = processView(view)
-#            
-#            try:
-#                transform = etree.XSLT(self.styledoc)
-#                xmldoc = transform(etree.XML(response.content))
-#                response.content = str(xmldoc).replace('@@METHODS@@', view_doc)
-#            except:
-#                pass
-#
-#        return response 
-#
-#    def process_view(self, request, view_func, view_args, view_kwargs):
-#        request._view_func = view_func
-#        return None
+    def _getAppNameFromViewFunc(self, viewFunc):
+        module = viewFunc.__module__
+        return module.split('.')[-2]
 
+class FlashErrorCodeMiddleware(BaseMiddleware):
+    def _process_response(self, request, response):
+        isFlash = False
+        try:
+            isFlash = request._meta.get('HTTP_HTTP_X_FLASH_VERSION')
+        except:
+             # test code mocking things weirdly?
+             pass
+        if isFlash and (response.status_code >= 400):
+            response.status_code = 200
+        return response
+
+class CachingMiddleware(BaseMiddleware):
+    def _process_request(self, request):
+        from mint.django_rest.rbuilder import modellib
+        modellib.Cache.reset()
 
 class NoParamsRequest(object):
 
@@ -267,6 +425,10 @@ class LocalQueryParameterMiddleware(BaseMiddleware):
         request.GET = http.QueryDict(request.params)
 
 class PerformanceMiddleware(BaseMiddleware, middleware.DebugToolbarMiddleware):
+    ''' 
+    Adds timing info to the requests, should be off all the time, makes things slower 
+    by doing extra serialization even if that's not reflected in metrics!
+    '''
 
     def _process_request(self, request):
         metrics = request.GET.get('metrics', None)
@@ -295,23 +457,75 @@ class PerformanceMiddleware(BaseMiddleware, middleware.DebugToolbarMiddleware):
             xobj_model = response.model.serialize(request)
             xobj_model.metrics = metricsModel.serialize(request)
             response.content = ''
-            response.write(response.model.to_xml(request, xobj_model))
+            # was response.write()
+            response.content = response.model.to_xml(request, xobj_model)
 
             return response
         else:
             if hasattr(response, 'model'):
-                response.write(response.model.to_xml(request))
+                # was response.write()
+                response.content = response.model.to_xml(request)
             return response
 
 
-class SerializeXmlMiddleware(BaseMiddleware):
+class SerializeXmlMiddleware(SwitchableLogMiddleware):
+
+    def _logResponse(self, outdata, response):
+        now = time.localtime()
+        urlsFile = RBUILDER_DEBUG_HISTORY
+        urlsFile = open(RBUILDER_DEBUG_HISTORY, "a")
+        (logFile, logFilePath) = self.getLogFile(False, now)
+        urlsFile.write("     (%d)\n" % response.status_code)
+        urlsFile.write("     %s\n" % logFilePath)
+        urlsFile.close()
+        with logFile as f:
+            self.logPrint(f, [ dict(status=response.status_code, zzz_content=str(outdata)) ])
+
     def _process_response(self, request, response):
         if hasattr(response, 'model'):
             metrics = request.GET.get('metrics', None)
             if metrics:
                 return response
 
-            response.write(response.model.to_xml(request))
+            format = request.GET.get('format', 'xml')
+            outdata = ''
+            if format == 'json':
+                response['Content-Type'] = 'application/json'
+                outdata = response.model.to_json(request)
+            else:
+                response['Content-Type'] = 'text/xml'
+                outdata = response.model.to_xml(request)
+            response.write(outdata)
+            if self.shouldLog():
+                self._logResponse(outdata, response)
+
+        # Originally opened in BaseService. Unfortunately models in collections
+        # aren't finalized until this method, so the manager can't be closed in
+        # the same scope in which it was opened.
+        from mint.django_rest.rbuilder import modellib
+        if getattr(modellib.XObjModel, '_rbmgr', None):
+            modellib.XObjModel._rbmgr.restDb.close()
+            modellib.XObjModel._rbmgr = None
 
         return response
-        
+
+class AuthHeaderMiddleware(BaseMiddleware):
+    # details on mod_python+Django issue below, marked "won't fix" in Django bug tracker
+    # https://code.djangoproject.com/ticket/4354
+    # this needs to be loaded at the end of the middleware chain
+    def _process_response(self, request, response):
+        if response.status_code == 401:
+            response['WWW-Authenticate'] = "Basic realm=\"rBuilder\""
+        return response
+      
+# NOTE: must also set DEBUG=True in settings to use this. 
+class SqlLoggingMiddleware(BaseMiddleware):
+    '''log each database hit to a file, profiling use only'''
+    def process_response(self, request, response):
+        fd = open("/tmp/sql.log", "a")
+        for query in connection.queries:
+            fd.write("\033[1;31m[%s]\033[0m \033[1m%s\033[0m\n" % (query['time'],
+ " ".join(query['sql'].split())))
+        fd.close()
+        return response
+ 

@@ -12,7 +12,6 @@ testsuite.setup()
 
 import tempfile
 
-import rephelp
 from mint_test import mint_rephelp
 
 from mint import helperfuncs

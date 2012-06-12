@@ -19,8 +19,18 @@ class TargetManagerTest(mint_rephelp.MintDatabaseHelper):
     def setUp(self):
         tmgr = targetmgr.TargetManager
         mint_rephelp.MintDatabaseHelper.setUp(self)
-        if not os.path.exists(tmgr.TargetImportScriptPath):
-            tmgr.importTargetSystems = lambda *args, **kwargs: True
+        tmgr.importTargetSystems = lambda *args, **kwargs: True
+
+        db = self.openMintDatabase(createRepos=False)
+        cu = db.cursor()
+        tbmap = [
+            ('type1', buildtypes.RAW_HD_IMAGE),
+            ('type2', buildtypes.VMWARE_ESX_IMAGE),
+        ]
+        for ttype, buildTypeId in tbmap:
+            cu.execute("INSERT INTO target_types (name, description, build_type_id) VALUES (?, ?, ?)",
+                ttype, ttype + " description", buildTypeId)
+        db.commit()
 
     def _newTarget(self, targetType=None, targetName=None, targetData=None):
         targetType = targetType or 'ec2'
@@ -155,9 +165,9 @@ class TargetManagerTest(mint_rephelp.MintDatabaseHelper):
         self.createProduct('foo', owners=['admin'], db=db)
 
         targets = [
-            ('type1', 'name1', dict(data = '11')),
-            ('type1', 'name2', dict(data = '12')),
-            ('type2', 'nameXXX', dict(data = '21')),
+            ('type1', 'name1', dict(data = '11', description='name1')),
+            ('type1', 'name2', dict(data = '12', description='name2')),
+            ('type2', 'nameXXX', dict(data = '21', description='nameXXX',)),
         ]
         tmgr = db.targetMgr
         for targetType, targetName, targetData in targets:
@@ -202,30 +212,32 @@ class TargetManagerTest(mint_rephelp.MintDatabaseHelper):
                     userName, uCreds)
 
         self.failUnlessEqual(tmgr.getTargetsForUser('type2', userName1),
-            [('name1', dict(data = '21'), {})])
+            [('name1', dict(data = '21', description='name1',), {})])
 
         self.failUnlessEqual(tmgr.getTargetsForUser('type1', userName1),
-            [ ('name1', dict(data = '11'), userCreds[('type1', 'name1')][0][1]),
-              ('name2', dict(data = '12'), userCreds[('type1', 'name2')][0][1])])
+            [ ('name1', dict(data = '11', description="name1"),
+                userCreds[('type1', 'name1')][0][1]),
+              ('name2', dict(data = '12', description="name2",),
+                userCreds[('type1', 'name2')][0][1])])
 
         self.failUnlessEqual(tmgr.getTargetsForUsers('type1'), [
-            (2, userName1, 'name1', 1, dict(data = '11'),
+            (2, userName1, 'name1', 1, dict(data = '11', description="name1"),
                 userCreds[('type1', 'name1')][0][1]),
-            (2, userName1, 'name2', 3, dict(data = '12'),
+            (2, userName1, 'name2', 3, dict(data = '12', description="name2"),
                 userCreds[('type1', 'name2')][0][1]),
-            (3, userName2, 'name1', 2, dict(data = '11'),
+            (3, userName2, 'name1', 2, dict(data = '11', description="name1"),
                 userCreds[('type1', 'name1')][1][1]),
-            (4, userName3, 'name1', 1, dict(data = '11'),
+            (4, userName3, 'name1', 1, dict(data = '11', description="name1"),
                 userCreds[('type1', 'name1')][2][1]),
         ])
         self.failUnlessEqual(tmgr.getTargetsForUsers('type2'), [])
 
         self.failUnlessEqual(tmgr.getUniqueTargetsForUsers('type1'), [
-            (2, userName1, 'name2', 3, dict(data = '12'),
+            (2, userName1, 'name2', 3, dict(data = '12', description="name2"),
                 userCreds[('type1', 'name2')][0][1]),
-            (3, userName2, 'name1', 2, dict(data = '11'),
+            (3, userName2, 'name1', 2, dict(data = '11', description="name1"),
                 userCreds[('type1', 'name1')][1][1]),
-            (4, userName3, 'name1', 1, dict(data = '11'),
+            (4, userName3, 'name1', 1, dict(data = '11', description="name1"),
                 userCreds[('type1', 'name1')][2][1]),
         ])
 

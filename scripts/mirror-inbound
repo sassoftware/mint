@@ -26,10 +26,10 @@ class MirrorInbound(MirrorScript):
 
     def action(self):
         self.resetLogging()
-        client = MintClient(self.args[0])
+        client = MintClient(self.mintUrl)
         cfg = mirror.MirrorConfiguration()
 
-        proxy = self.cfg.proxy
+        proxyMap = self.cfg.getProxyMap()
 
         mirroredLabels = client.getInboundMirrors()
 
@@ -71,7 +71,7 @@ class MirrorInbound(MirrorScript):
                 sourceCCfg.repositoryMap.update(cfg.source.repositoryMap)
                 sourceCCfg.user = cfg.source.user
                 sourceCCfg.entitlement = cfg.source.entitlement
-                sourceCCfg.proxy = proxy
+                sourceCCfg.proxyMap = proxyMap
                 sourceRepos = conaryclient.ConaryClient(sourceCCfg).getRepos()
 
                 targetCCfg = conarycfg.ConaryConfiguration()

@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="utf-8"?>
+<django-objects version="1.0">
+  <object pk="1" model="users.user">
+    <field type="CharField" name="user_name">admin</field>
+    <field type="CharField" name="full_name">Administrator</field>
+    <field type="TextField" name="salt">deadbeef</field>
+    <field type="CharField" name="passwd">6ca2833e3cf29b63ac5ad911b8d8d3e3</field>
+    <field type="CharField" name="email">admin@rpath.com</field>
+    <field type="TextField" name="display_email"></field>
+    <field type="DecimalField" name="created_date">1283523987.852</field>
+    <field type="DecimalField" name="modified_date">1283530322.491</field>
+    <field type="SmallIntegerField" name="active">1</field>
+    <field type="TextField" name="blurb"></field>
+    <field type="BooleanField" name="is_admin">True</field>
+  </object>
+  <object pk="2000" model="users.user">
+    <field type="CharField" name="user_name">testuser</field>
+    <field type="CharField" name="full_name">Test User</field>
+    <field type="TextField" name="salt">deadbeef</field>
+    <field type="CharField" name="passwd">6ca2833e3cf29b63ac5ad911b8d8d3e3</field>
+    <field type="CharField" name="email">testuser@rpath.com</field>
+    <field type="TextField" name="display_email"></field>
+    <field type="DecimalField" name="created_date">1283529921.387</field>
+    <field type="DecimalField" name="modified_date">1283530359.041</field>
+    <field type="SmallIntegerField" name="active">1</field>
+    <field type="TextField" name="blurb">null</field>
+    <field type="BooleanField" name="is_admin">False</field>
+  </object>
+</django-objects>

@@ -1,0 +1,64 @@
+<?xml version="1.0" encoding="utf-8"?>
+<django-objects version="1.0">
+  <object pk="1" model="projects.project">
+    <field type="CharField" name="hostname">chater-foo</field>
+    <field type="CharField" name="name">chater-foo</field>
+    <field type="CharField" name="namespace">rpath</field>
+    <field type="CharField" name="domain_name">eng.rpath.com</field>
+    <field type="CharField" name="short_name">chater-foo</field>
+    <field type="CharField" name="project_url">http://</field>
+    <field type="CharField" name="repository_hostname">chater-foo.eng.rpath.com</field>
+    <field type="TextField" name="description">chater-foo</field>
+    <field type="CharField" name="project_type">1</field>
+    <field type="CharField" name="commit_email">a@a.com</field>
+    <field type="BooleanField" name="backup_external">False</field>
+    <field type="DecimalField" name="created_date">0</field>
+    <field type="DecimalField" name="modified_date">0</field>
+    <field type="BooleanField" name="hidden">False</field>
+    <field to="users.user" name="created_by" rel="ManyToOneRel">1</field>
+    <field type="BooleanField" name="external">False</field>
+    <field type="BooleanField" name="disabled">False</field>
+    <field type="BooleanField" name="is_appliance">True</field>
+    <field type="CharField" name="version"></field>
+    <field type="CharField" name="database">sqlite chater-foo</field>
+  </object>
+  <object pk="1" model="projects.projectversion">
+    <field to="projects.project" name="project" rel="ManyToOneRel">1</field>
+    <field type="TextField" name="label">chater-foo.eng.rpath.com@rpath:chater-foo-1</field>
+    <field type="TextField" name="cache_key"><None></None></field>
+    <field type="CharField" name="namespace">rpath</field>
+    <field type="CharField" name="name">1</field>
+    <field type="TextField" name="description">1</field>
+    <field type="DecimalField" name="created_date">0</field>
+  </object>
+  <object pk="1" model="projects.stage">
+    <field to="projects.project" name="project" rel="ManyToOneRel">1</field>
+    <field to="projects.projectversion" name="project_branch" rel="ManyToOneRel">1</field>
+    <field type="CharField" name="name">Stage</field>
+    <field type="TextField" name="label">label</field>
+    <field type="BooleanField" name="promotable">False</field>
+    <field type="DateTimeField" name="created_date">2011-08-03 17:47:04</field>
+  </object>
+  <object pk="1" model="images.image">
+    <field to="projects.project" name="project" rel="ManyToOneRel">1</field>
+    <field to="projects.stage" name="project_branch_stage" rel="ManyToOneRel">1</field>
+    <field to="projects.release" name="release" rel="ManyToOneRel"><None></None></field>
+    <field type="IntegerField" name="_image_type">2</field>
+    <field type="CharField" name="job_uuid"><None></None></field>
+    <field type="CharField" name="name">image from fixture</field>
+    <field type="TextField" name="description"><None></None></field>
+    <field type="CharField" name="trove_name"><None></None></field>
+    <field type="CharField" name="trove_version"><None></None></field>
+    <field type="CharField" name="trove_flavor"><None></None></field>
+    <field type="DecimalField" name="trove_last_changed"><None></None></field>
+    <field type="DecimalField" name="time_created">1</field>
+    <field to="users.user" name="created_by" rel="ManyToOneRel">1</field>
+    <field type="DecimalField" name="time_updated">1</field>
+    <field to="users.user" name="updated_by" rel="ManyToOneRel"><None></None></field>
+    <field type="IntegerField" name="image_count">0</field>
+    <field to="projects.projectversion" name="project_branch" rel="ManyToOneRel"><None></None></field>
+    <field type="CharField" name="stage_name"></field>
+    <field type="IntegerField" name="status">-1</field>
+    <field type="TextField" name="status_message"></field>
+  </object>
+</django-objects>

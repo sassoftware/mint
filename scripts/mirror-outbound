@@ -1,8 +1,6 @@
 #!/usr/bin/python
 #
-# Copyright (c) 2005-2009 rPath, Inc.
-#
-# All Rights Reserved
+# Copyright (c) 2011 rPath, Inc.
 #
 
 # This script is only used when the target mirror is in a DMZ and does not
@@ -30,12 +28,10 @@ class MirrorOutbound(MirrorScript):
 
     def action(self):
         self.resetLogging()
-        client = MintClient(self.args[0])
+        client = MintClient(self.mintUrl)
 
         outboundMirrors = client.getOutboundMirrors()
-
-        # get proxy configuration here
-        proxy = self.cfg.proxy
+        proxyMap = self.cfg.getProxyMap()
 
         for (outboundMirrorId, sourceProjectId, targetLabels, allLabels,
           recurse, matchStrings, _, fullSync, useReleases,
@@ -43,13 +39,10 @@ class MirrorOutbound(MirrorScript):
             cfg = mirror.MirrorFileConfiguration()
 
             sourceProject = client.getProject(int(sourceProjectId))
-            sourceLabelId = sourceProject.getLabelIdMap().values()[0]
             log.info("Mirroring %s", sourceProject.name)
 
             try:
-                labelInfo = client.getLabel(sourceLabelId)
-                labelStr = labelInfo['label']
-                cfg.host = reposHost = versions.Label(labelStr).getHost()
+                cfg.host = reposHost = sourceProject.fqdn
 
                 sourceProjCCfg = sourceProject.getConaryConfig()
                 sourceUrl = sourceProjCCfg.repositoryMap[reposHost]
@@ -81,7 +74,6 @@ class MirrorOutbound(MirrorScript):
                 sourceCCfg.repositoryMap.update(sourceCfg.repositoryMap)
                 sourceCCfg.user = sourceCfg.user
                 sourceCCfg.entitlement = sourceCfg.entitlement
-                sourceCCfg.proxy = proxy
                 sourceCCfg.conaryProxy = conaryProxy
 
                 # privRepos is a privileged netclient for managing the
@@ -197,6 +189,10 @@ class MirrorOutbound(MirrorScript):
                 targetReposes = []
                 for _, hostname, targetUser, targetPass, _ in obmt:
                     targetUrl = 'https://%s/conary/' % hostname
+                    if not targetPass:
+                        log.error("Skipping target %s because no password is configured.")
+                        log.error("HINT: Are you trying to mirror to a proxy-mode Update Service?")
+                        continue
 
                     if cfg.hasSection("target"):
                         targetOrdinal += 1
@@ -210,16 +206,17 @@ class MirrorOutbound(MirrorScript):
                     targetCCfg = conarycfg.ConaryConfiguration()
                     targetCCfg.repositoryMap.update(targetCfg.repositoryMap)
                     targetCCfg.user = targetCfg.user
-                    targetCCfg.proxy = proxy
+                    targetCCfg.proxyMap = proxyMap
                     t = conaryclient.ConaryClient(targetCCfg).getRepos()
                     targetReposes.append(t)
 
                 # Do the mirror
-                try:
-                    self._doMirror(cfg, sourceRepos, targetReposes, fullSync)
-                finally:
-                    if fullSync:
-                        client.setOutboundMirrorSync(outboundMirrorId, False)
+                if targetReposes:
+                    try:
+                        self._doMirror(cfg, sourceRepos, targetReposes, fullSync)
+                    finally:
+                        if fullSync:
+                            client.setOutboundMirrorSync(outboundMirrorId, False)
 
                 if useReleases:
                     # Delete temporary mirror user

@@ -1,28 +1,28 @@
 <?xml version="1.0"?>
 <django-objects version="1.0">
-  <object pk="4" model="querysets.filterentry">
+  <object pk="1004" model="querysets.filterentry">
     <field type="TextField" name="field">name</field>
     <field type="TextField" name="operator">LIKE</field>
     <field type="TextField" name="value">3</field>
   </object>
-  <object pk="5" model="querysets.queryset">
+  <object pk="1005" model="querysets.queryset">
     <field type="TextField" name="name">Systems named like 3</field>
     <field type="DateTimeField" name="created_date">2011-01-05 00:00:00</field>
     <field type="DateTimeField" name="modified_date">2011-01-05 00:00:00</field>
     <field type="TextField" name="resource_type">system</field>
     <field to="querysets.queryset" name="children" rel="ManyToManyRel"/>
     <field to="querysets.filterentry" name="filter_entries" rel="ManyToManyRel">
-      <object pk="4"/>
+      <object pk="1004"/>
     </field>
     <field type="BooleanField" name="can_modify">True</field>
   </object>
-  <object pk="5" model="querysets.querytag">
-    <field to="querysets.queryset" name="query_set" rel="ManyToOneRel">5</field>
+  <object pk="1005" model="querysets.querytag">
+    <field to="querysets.queryset" name="query_set" rel="ManyToOneRel">1005</field>
     <field type="TextField" name="name">query-tag-Systems_named_like_3-5</field>
   </object>
   <object pk="1" model="querysets.systemtag">
     <field to="inventory.system" name="system" rel="ManyToOneRel">4</field>
-    <field to="querysets.querytag" name="query_tag" rel="ManyToOneRel">5</field>
+    <field to="querysets.querytag" name="query_tag" rel="ManyToOneRel">1005</field>
     <field to="querysets.inclusionmethod" name="inclusion_method" rel="ManyToOneRel">1</field>
   </object>
 </django-objects>

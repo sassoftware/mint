@@ -1,17 +1,17 @@
 <?xml version="1.0"?>
 <django-objects version="1.0">
   <object pk="5" model="querysets.filterentry">
-    <field type="TextField" name="field">target.targetname</field>
+    <field type="TextField" name="field">target.name</field>
     <field type="TextField" name="operator">EQUAL</field>
     <field type="TextField" name="value">ec2</field>
   </object>
   <object pk="6" model="querysets.filterentry">
-    <field type="TextField" name="field">target.targetname</field>
+    <field type="TextField" name="field">target.name</field>
     <field type="TextField" name="operator">EQUAL</field>
     <field type="TextField" name="value">vsphere</field>
   </object>
   <object pk="7" model="querysets.filterentry">
-    <field type="TextField" name="field">target.targetname</field>
+    <field type="TextField" name="field">target.name</field>
     <field type="TextField" name="operator">EQUAL</field>
     <field type="TextField" name="value">esx</field>
   </object>
@@ -132,17 +132,23 @@
     <field type="TextField" name="name">query-tag-Tagged_Systems_1_and_2-10</field>
   </object>
 
-  <object pk="1" model="rbuilder.targets">
-    <field type="CharField" name="targettype">aws</field>
-    <field type="CharField" name="targetname">ec2</field>
+  <object pk="1" model="targets.target">
+    <field to="targets.target_type" name="target_type" rel="ManyToOneRel">1</field>
+    <field type="CharField" name="name">ec2</field>
+    <field type="CharField" name="description">ec2</field>
+    <field to="zones.zone" name="zone" rel="ManyToOneRel">1</field>
   </object>
-  <object pk="2" model="rbuilder.targets">
-    <field type="CharField" name="targettype">vmware</field>
-    <field type="CharField" name="targetname">vsphere</field>
+  <object pk="2" model="targets.target">
+    <field to="targets.target_type" name="target_type" rel="ManyToOneRel">5</field>
+    <field type="CharField" name="name">vsphere</field>
+    <field type="CharField" name="description">vsphere</field>
+    <field to="zones.zone" name="zone" rel="ManyToOneRel">1</field>
   </object>
-  <object pk="3" model="rbuilder.targets">
-    <field type="CharField" name="targettype">vmware</field>
-    <field type="CharField" name="targetname">esx</field>
+  <object pk="3" model="targets.target">
+    <field to="targets.target_type" name="target_type" rel="ManyToOneRel">5</field>
+    <field type="CharField" name="name">esx</field>
+    <field type="CharField" name="description">esx</field>
+    <field to="zones.zone" name="zone" rel="ManyToOneRel">1</field>
   </object>
 
     <object pk="210" model="inventory.system">
@@ -155,10 +161,10 @@
         <field type="DateTimeField" name="registration_date"><None></None></field>
         <field type="CharField" name="generated_uuid">system-210-generated-uuid</field>
         <field type="CharField" name="local_uuid">system-210-local-uuid</field>
-        <field type="CharField" name="ssl_client_certificate">system-210-ssl-client-certificate</field>
-        <field type="CharField" name="ssl_client_key">system-210-ssl-client-key</field>
+        <field type="CharField" name="_ssl_client_certificate">system-210-ssl-client-certificate</field>
+        <field type="CharField" name="_ssl_client_key">system-210-ssl-client-key</field>
         <field type="CharField" name="ssl_server_certificate">system-210-ssl-server-certificate</field>
-        <field to="rbuilder.users" name="launching_user" rel="ManyToOneRel"><None></None></field>
+        <field to="users.users" name="launching_user" rel="ManyToOneRel"><None></None></field>
         <field to="inventory.systemstate" name="current_state" rel="ManyToOneRel">1</field>
         <field to="inventory.zone" name="managing_zone" rel="ManyToOneRel">1</field>
         <field to="inventory.trove" name="installed_software" rel="ManyToManyRel"></field>
@@ -174,7 +180,7 @@
         <field type="CharField" name="netmask"><None></None></field>
         <field type="CharField" name="port_type"><None></None></field>
         <field type="NullBooleanField" name="active"><None></None></field>
-        <field type="NullBooleanField" name="required"><None></None></field>
+        <field type="NullBooleanField" name="pinned">False</field>
         <field type="DateTimeField" name="created_date">2010-10-05 18:36:37</field>
   </object>
   <object pk="211" model="inventory.system">
@@ -187,10 +193,10 @@
         <field type="DateTimeField" name="registration_date"><None></None></field>
         <field type="CharField" name="generated_uuid">system-211-generated-uuid</field>
         <field type="CharField" name="local_uuid">system-211-local-uuid</field>
-        <field type="CharField" name="ssl_client_certificate">system-211-ssl-client-certificate</field>
-        <field type="CharField" name="ssl_client_key">system-211-ssl-client-key</field>
+        <field type="CharField" name="_ssl_client_certificate">system-211-ssl-client-certificate</field>
+        <field type="CharField" name="_ssl_client_key">system-211-ssl-client-key</field>
         <field type="CharField" name="ssl_server_certificate">system-211-ssl-server-certificate</field>
-        <field to="rbuilder.users" name="launching_user" rel="ManyToOneRel"><None></None></field>
+        <field to="users.users" name="launching_user" rel="ManyToOneRel"><None></None></field>
         <field to="inventory.systemstate" name="current_state" rel="ManyToOneRel">1</field>
         <field to="inventory.zone" name="managing_zone" rel="ManyToOneRel">1</field>
         <field to="inventory.trove" name="installed_software" rel="ManyToManyRel"></field>
@@ -206,7 +212,7 @@
         <field type="CharField" name="netmask"><None></None></field>
         <field type="CharField" name="port_type"><None></None></field>
         <field type="NullBooleanField" name="active"><None></None></field>
-        <field type="NullBooleanField" name="required"><None></None></field>
+        <field type="NullBooleanField" name="pinned">False</field>
         <field type="DateTimeField" name="created_date">2010-10-05 18:36:37</field>
   </object>
   <object pk="212" model="inventory.system">
@@ -219,10 +225,10 @@
         <field type="DateTimeField" name="registration_date"><None></None></field>
         <field type="CharField" name="generated_uuid">system-212-generated-uuid</field>
         <field type="CharField" name="local_uuid">system-212-local-uuid</field>
-        <field type="CharField" name="ssl_client_certificate">system-212-ssl-client-certificate</field>
-        <field type="CharField" name="ssl_client_key">system-212-ssl-client-key</field>
+        <field type="CharField" name="_ssl_client_certificate">system-212-ssl-client-certificate</field>
+        <field type="CharField" name="_ssl_client_key">system-212-ssl-client-key</field>
         <field type="CharField" name="ssl_server_certificate">system-212-ssl-server-certificate</field>
-        <field to="rbuilder.users" name="launching_user" rel="ManyToOneRel"><None></None></field>
+        <field to="users.users" name="launching_user" rel="ManyToOneRel"><None></None></field>
         <field to="inventory.systemstate" name="current_state" rel="ManyToOneRel">1</field>
         <field to="inventory.zone" name="managing_zone" rel="ManyToOneRel">1</field>
         <field to="inventory.trove" name="installed_software" rel="ManyToManyRel"></field>
@@ -238,7 +244,7 @@
         <field type="CharField" name="netmask"><None></None></field>
         <field type="CharField" name="port_type"><None></None></field>
         <field type="NullBooleanField" name="active"><None></None></field>
-        <field type="NullBooleanField" name="required"><None></None></field>
+        <field type="NullBooleanField" name="pinned">False</field>
         <field type="DateTimeField" name="created_date">2010-10-05 18:36:37</field>
   </object>
   <object pk="213" model="inventory.system">
@@ -251,10 +257,10 @@
         <field type="DateTimeField" name="registration_date"><None></None></field>
         <field type="CharField" name="generated_uuid">system-213-generated-uuid</field>
         <field type="CharField" name="local_uuid">system-213-local-uuid</field>
-        <field type="CharField" name="ssl_client_certificate">system-213-ssl-client-certificate</field>
-        <field type="CharField" name="ssl_client_key">system-213-ssl-client-key</field>
+        <field type="CharField" name="_ssl_client_certificate">system-213-ssl-client-certificate</field>
+        <field type="CharField" name="_ssl_client_key">system-213-ssl-client-key</field>
         <field type="CharField" name="ssl_server_certificate">system-213-ssl-server-certificate</field>
-        <field to="rbuilder.users" name="launching_user" rel="ManyToOneRel"><None></None></field>
+        <field to="users.users" name="launching_user" rel="ManyToOneRel"><None></None></field>
         <field to="inventory.systemstate" name="current_state" rel="ManyToOneRel">1</field>
         <field to="inventory.zone" name="managing_zone" rel="ManyToOneRel">1</field>
         <field to="inventory.trove" name="installed_software" rel="ManyToManyRel"></field>
@@ -270,7 +276,7 @@
         <field type="CharField" name="netmask"><None></None></field>
         <field type="CharField" name="port_type"><None></None></field>
         <field type="NullBooleanField" name="active"><None></None></field>
-        <field type="NullBooleanField" name="required"><None></None></field>
+        <field type="NullBooleanField" name="pinned">False</field>
         <field type="DateTimeField" name="created_date">2010-10-05 18:36:37</field>
   </object>
   <object pk="214" model="inventory.system">
@@ -283,10 +289,10 @@
         <field type="DateTimeField" name="registration_date"><None></None></field>
         <field type="CharField" name="generated_uuid">system-214-generated-uuid</field>
         <field type="CharField" name="local_uuid">system-214-local-uuid</field>
-        <field type="CharField" name="ssl_client_certificate">system-214-ssl-client-certificate</field>
-        <field type="CharField" name="ssl_client_key">system-214-ssl-client-key</field>
+        <field type="CharField" name="_ssl_client_certificate">system-214-ssl-client-certificate</field>
+        <field type="CharField" name="_ssl_client_key">system-214-ssl-client-key</field>
         <field type="CharField" name="ssl_server_certificate">system-214-ssl-server-certificate</field>
-        <field to="rbuilder.users" name="launching_user" rel="ManyToOneRel"><None></None></field>
+        <field to="users.users" name="launching_user" rel="ManyToOneRel"><None></None></field>
         <field to="inventory.systemstate" name="current_state" rel="ManyToOneRel">1</field>
         <field to="inventory.zone" name="managing_zone" rel="ManyToOneRel">1</field>
         <field to="inventory.trove" name="installed_software" rel="ManyToManyRel"></field>
@@ -302,7 +308,7 @@
         <field type="CharField" name="netmask"><None></None></field>
         <field type="CharField" name="port_type"><None></None></field>
         <field type="NullBooleanField" name="active"><None></None></field>
-        <field type="NullBooleanField" name="required"><None></None></field>
+        <field type="NullBooleanField" name="pinned">False</field>
         <field type="DateTimeField" name="created_date">2010-10-05 18:36:37</field>
   </object>
   <object pk="215" model="inventory.system">
@@ -315,10 +321,10 @@
         <field type="DateTimeField" name="registration_date"><None></None></field>
         <field type="CharField" name="generated_uuid">system-215-generated-uuid</field>
         <field type="CharField" name="local_uuid">system-215-local-uuid</field>
-        <field type="CharField" name="ssl_client_certificate">system-215-ssl-client-certificate</field>
-        <field type="CharField" name="ssl_client_key">system-215-ssl-client-key</field>
+        <field type="CharField" name="_ssl_client_certificate">system-215-ssl-client-certificate</field>
+        <field type="CharField" name="_ssl_client_key">system-215-ssl-client-key</field>
         <field type="CharField" name="ssl_server_certificate">system-215-ssl-server-certificate</field>
-        <field to="rbuilder.users" name="launching_user" rel="ManyToOneRel"><None></None></field>
+        <field to="users.users" name="launching_user" rel="ManyToOneRel"><None></None></field>
         <field to="inventory.systemstate" name="current_state" rel="ManyToOneRel">1</field>
         <field to="inventory.zone" name="managing_zone" rel="ManyToOneRel">1</field>
         <field to="inventory.trove" name="installed_software" rel="ManyToManyRel"></field>
@@ -334,7 +340,7 @@
         <field type="CharField" name="netmask"><None></None></field>
         <field type="CharField" name="port_type"><None></None></field>
         <field type="NullBooleanField" name="active"><None></None></field>
-        <field type="NullBooleanField" name="required"><None></None></field>
+        <field type="NullBooleanField" name="pinned">False</field>
         <field type="DateTimeField" name="created_date">2010-10-05 18:36:37</field>
   </object>
   <object pk="216" model="inventory.system">
@@ -347,10 +353,10 @@
         <field type="DateTimeField" name="registration_date"><None></None></field>
         <field type="CharField" name="generated_uuid">system-216-generated-uuid</field>
         <field type="CharField" name="local_uuid">system-216-local-uuid</field>
-        <field type="CharField" name="ssl_client_certificate">system-216-ssl-client-certificate</field>
-        <field type="CharField" name="ssl_client_key">system-216-ssl-client-key</field>
+        <field type="CharField" name="_ssl_client_certificate">system-216-ssl-client-certificate</field>
+        <field type="CharField" name="_ssl_client_key">system-216-ssl-client-key</field>
         <field type="CharField" name="ssl_server_certificate">system-216-ssl-server-certificate</field>
-        <field to="rbuilder.users" name="launching_user" rel="ManyToOneRel"><None></None></field>
+        <field to="users.users" name="launching_user" rel="ManyToOneRel"><None></None></field>
         <field to="inventory.systemstate" name="current_state" rel="ManyToOneRel">1</field>
         <field to="inventory.zone" name="managing_zone" rel="ManyToOneRel">1</field>
         <field to="inventory.trove" name="installed_software" rel="ManyToManyRel"></field>
@@ -366,7 +372,7 @@
         <field type="CharField" name="netmask"><None></None></field>
         <field type="CharField" name="port_type"><None></None></field>
         <field type="NullBooleanField" name="active"><None></None></field>
-        <field type="NullBooleanField" name="required"><None></None></field>
+        <field type="NullBooleanField" name="pinned">False</field>
         <field type="DateTimeField" name="created_date">2010-10-05 18:36:37</field>
   </object>
   <object pk="217" model="inventory.system">
@@ -379,10 +385,10 @@
         <field type="DateTimeField" name="registration_date"><None></None></field>
         <field type="CharField" name="generated_uuid">system-217-generated-uuid</field>
         <field type="CharField" name="local_uuid">system-217-local-uuid</field>
-        <field type="CharField" name="ssl_client_certificate">system-217-ssl-client-certificate</field>
-        <field type="CharField" name="ssl_client_key">system-217-ssl-client-key</field>
+        <field type="CharField" name="_ssl_client_certificate">system-217-ssl-client-certificate</field>
+        <field type="CharField" name="_ssl_client_key">system-217-ssl-client-key</field>
         <field type="CharField" name="ssl_server_certificate">system-217-ssl-server-certificate</field>
-        <field to="rbuilder.users" name="launching_user" rel="ManyToOneRel"><None></None></field>
+        <field to="users.users" name="launching_user" rel="ManyToOneRel"><None></None></field>
         <field to="inventory.systemstate" name="current_state" rel="ManyToOneRel">1</field>
         <field to="inventory.zone" name="managing_zone" rel="ManyToOneRel">1</field>
         <field to="inventory.trove" name="installed_software" rel="ManyToManyRel"></field>
@@ -398,7 +404,7 @@
         <field type="CharField" name="netmask"><None></None></field>
         <field type="CharField" name="port_type"><None></None></field>
         <field type="NullBooleanField" name="active"><None></None></field>
-        <field type="NullBooleanField" name="required"><None></None></field>
+        <field type="NullBooleanField" name="pinned">False</field>
         <field type="DateTimeField" name="created_date">2010-10-05 18:36:37</field>
   </object>
 

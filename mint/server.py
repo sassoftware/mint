@@ -17,10 +17,6 @@ import tempfile
 import StringIO
 
 from mint import buildtypes
-try:
-    from mint import charts
-except ImportError:
-    charts = None
 import mint.db.database
 import mint.rest.db.reposmgr
 import mint.rest.db.database
@@ -52,6 +48,7 @@ from mint.reports import MintReport
 from mint.helperfuncs import getUrlHost
 from mint.image_gen.wig import client as wig_client
 from mint import packagecreator
+from mint.rest import errors as rest_errors
 
 from conary import changelog
 from conary import conarycfg
@@ -65,10 +62,11 @@ from conary.lib import sha1helper
 from conary.lib import util
 from conary.lib.http import http_error
 from conary.lib.http import request as cny_req
-from conary.repository.errors import TroveNotFound
+from conary.repository.errors import TroveNotFound, UserNotFound
 from conary.repository import netclient
 from conary.repository import shimclient
 from conary.repository.netrepos.reposlog import RepositoryCallLogger as CallLogger
+from conary.repository.netrepos.netauth import ValidPasswordToken
 from conary import errors as conary_errors
 
 from mcp import client as mcp_client
@@ -76,6 +74,7 @@ from mcp import mcp_error
 from rmake.lib import procutil
 from rmake3 import client as rmk_client
 from rpath_proddef import api1 as proddef
+from pcreator import errors as pcreator_errors
 
 
 import gettext
@@ -98,8 +97,8 @@ VERSION_STRINGS = ["RBUILDER_CLIENT:%d" % x for x in SERVER_VERSIONS]
 
 log = logging.getLogger(__name__)
 
-reservedHosts = ['admin', 'mail', 'mint', 'www', 'web', 'rpath', 'wiki', 'conary', 'lists']
-reservedExtHosts = ['admin', 'mail', 'mint', 'www', 'web', 'wiki', 'conary', 'lists']
+reservedHosts = ['admin', 'mail', 'mint', 'www', 'web', 'rpath', 'wiki', 'lists']
+reservedExtHosts = ['admin', 'mail', 'mint', 'www', 'web', 'wiki', 'lists']
 # XXX do we need to reserve localhost?
 # XXX reserve proxy hostname (see cfg.proxyHostname) if it's not
 #     localhost
@@ -267,32 +266,12 @@ class MintServer(object):
                 # the session id from the client is a hmac-signed string
                 # containing the actual session id.
                 if isinstance(authToken, basestring):
-                    # Until the session is proven valid, assume anonymous
-                    # access -- we don't want a broken session preventing
-                    # anonymous access or logins.
-                    sid, authToken = authToken, ('anonymous', 'anonymous')
-                    if len(sid) == 64:
-                        # signed cookie
-                        sig, val = sid[:32], sid[32:]
-
-                        mac = hmac.new(self.cfg.cookieSecretKey, 'pysid')
-                        mac.update(val)
-                        if mac.hexdigest() != sig:
-                            raise mint_error.PermissionDenied
-
-                        sid = val
-                    elif len(sid) == 32:
-                        # unsigned cookie
-                        pass
-                    else:
-                        # unknown
-                        sid = None
-
-                    if sid:
-                        d = self.sessions.load(sid)
-                        if d:
-                            if d.get('_data', []).get('authToken', None):
-                                authToken = d['_data']['authToken']
+                    authToken = self._getCookieAuth(authToken)
+                    if not authToken:
+                        # Until the session is proven valid, assume anonymous
+                        # access -- we don't want a broken session preventing
+                        # anonymous access or logins.
+                        authToken = ('anonymous', 'anonymous')
 
                 auth = self.users.checkAuth(authToken)
                 self.authToken = authToken
@@ -329,7 +308,7 @@ class MintServer(object):
                     self.callLog.log(self.remoteIp,
                         list(authToken) + [None, None], methodName, str_args)
 
-            except mint_error.MintError, e:
+            except (mint_error.MintError, pcreator_errors.PackageCreatorError), e:
                 e_type, e_value, e_tb = sys.exc_info()
                 self._handleError(e, authToken, methodName, args)
                 frozen = (e.__class__.__name__, e.freeze())
@@ -345,7 +324,21 @@ class MintServer(object):
         finally:
             prof.stopXml(methodName)
             if self.restDb:
-                self.restDb.productMgr.reposMgr.close()
+                self.restDb.reset()
+
+    def _getCookieAuth(self, pysid):
+        if len(pysid) != 32:
+            return None
+        d = self.sessions.load(pysid)
+        if not d:
+            return None
+        authToken = d.get('_data', []).get('authToken', None)
+        if not authToken:
+            return None
+        if authToken[1] == '':
+            # Pre-authenticated session
+            authToken = (authToken[0], ValidPasswordToken)
+        return authToken
 
     def __getattr__(self, key):
         if key[0] != '_':
@@ -362,19 +355,7 @@ class MintServer(object):
             self.callLog.log(self.remoteIp, list(authToken) + [None, None],
                 methodName, str_args, exception = e)
 
-    @typeCheck(str)
-    @requiresAdmin
-    @private
-    def translateProjectFQDN(self, fqdn):
-        return self._translateProjectFQDN(fqdn)
-
-    def _translateProjectFQDN(self, fqdn):
-        cu = self.db.cursor()
-        cu.execute('SELECT toName FROM RepNameMap WHERE fromName=?', fqdn)
-        res = cu.fetchone()
-        return res and res[0] or fqdn
-
-    def _addInternalConaryConfig(self, ccfg, repoMaps=True):
+    def _addInternalConaryConfig(self, ccfg, repoMaps=True, repoToken=None):
         """
         Adds user lines and repository maps for the current user.
         """
@@ -385,18 +366,19 @@ class MintServer(object):
             otherProject = projects.Project(self,
                     otherProjectData['projectId'],
                     initialData=otherProjectData)
+            passwd = repoToken or self.authToken[1]
             ccfg.user.addServerGlob(otherProject.getFQDN(),
-                self.authToken[0], self.authToken[1])
+                self.authToken[0], passwd)
 
         # Also add repositoryMap entries for external cached projects.
         if repoMaps:
-            for repos in self.reposMgr.iterRepositories('external = 1'):
+            for repos in self.reposMgr.iterRepositories('external'):
                 if repos.isLocalMirror:
                     # No repomap required for anything with a database.
                     continue
-                ccfg.repositoryMap.append((repos.fqdn, repos.repositoryMap))
+                ccfg.repositoryMap.append((repos.fqdn, repos.getURL()))
 
-    def _getProjectConaryConfig(self, project, internal=True):
+    def _getProjectConaryConfig(self, project, internal=True, repoToken=None):
         """
         Creates a conary configuration object, suitable for internal or external
         rBuilder use.
@@ -417,7 +399,8 @@ class MintServer(object):
         if os.path.exists(conarycfgFile):
             ccfg.read(conarycfgFile)
 
-        self._addInternalConaryConfig(ccfg, repoMaps=False)
+        self._addInternalConaryConfig(ccfg, repoMaps=False,
+                repoToken=repoToken)
 
         return ccfg
 
@@ -544,38 +527,18 @@ class MintServer(object):
         pd.setProductVersion(version.name)
         return pd.getProductDefinitionLabel()
 
-    def _fillInEmptyEC2Creds(self, authToken):
-        """
-        Convenience method that fills in the rBuilder's default
-        credentials for EC2 if the authToken is an empty tuple.
-        Otherwise it passes back what it was passed in.
-        """
-        assert(isinstance(authToken, (list, tuple)))
-        amiData = self._getTargetData('ec2', 'aws', supressException = True)
-        if len(authToken) == 0:
-            return (amiData.get('ec2AccountId', ""),
-                    amiData.get('ec2PublicKey', ""),
-                    amiData.get('ec2PrivateKey', ""))
-        return authToken
-
     # unfortunately this function can't be a proper decorator because we
     # can't always know which param is the projectId.
     # We'll just call it at the begining of every function that needs it.
     def _filterProjectAccess(self, projectId):
-        project = self.projects.get(projectId)
-
         # Allow admins to see all projects
         if list(self.authToken) == [self.cfg.authUser, self.cfg.authPass] or self.auth.admin:
             return
-        # Allow anyone to see public projects
-        if not project['hidden']:
-            return
-        # Project is hidden, so user must be a member to see it.
-        if (self.projectUsers.getUserlevelForProjectMember(projectId,
-            self.auth.userId) in userlevels.LEVELS):
-                return
-        # All the above checks must have failed, raise exception.
-        raise mint_error.ItemNotFound()
+        handle = self.reposMgr.getRepositoryFromProjectId(projectId)
+        try:
+            level = handle.getLevelForUser(self.auth.userId)
+        except rest_errors.ProductNotFound:
+            raise mint_error.ItemNotFound('project')
 
     def _filterBuildAccess(self, buildId):
         try:
@@ -637,13 +600,11 @@ class MintServer(object):
         return False
 
     def _isUserAdmin(self, userId):
-        mintAdminId = self.userGroups.getMintAdminId()
         try:
-            if mintAdminId in self.userGroupMembers.getGroupsForUser(userId):
-                return True
+            user = self.users.get(userId)
+            return user['is_admin']
         except mint_error.ItemNotFound:
-            pass
-        return False
+            return False
 
     def _getProxies(self):
         useInternalConaryProxy = self.cfg.useInternalConaryProxy
@@ -665,6 +626,11 @@ class MintServer(object):
         which case we should succeed anyway with just the repository setup.
         """
         result = sp.configure.Network.index()
+        if 'errors' in result:
+            log.error("Error configuring update service %s", urlhostname)
+            for error in result['errors']:
+                log.error("  %s", error.rstrip())
+            return
         fqdn = result.get('host_hostName')
         if not fqdn:
             log.warning("Update service %s has no FQDN configured "
@@ -922,7 +888,7 @@ class MintServer(object):
             projectId = self.projects.new(name=name, creatorId=creatorId,
                     description='', shortname=hostname, fqdn=fqdn,
                     hostname=hostname, domainname=domainname, projecturl='',
-                    external=1, timeModified=now, timeCreated=now,
+                    external=True, timeModified=now, timeCreated=now,
                     database=database, prodtype="Repository",
                     commit=False)
 
@@ -953,6 +919,9 @@ class MintServer(object):
         self._filterProjectAccess(id)
         project = self.projects.get(id)
 
+        if not hasattr(self, 'clientVer'):
+            return project
+
         if self.clientVer < 3:
             del project['isAppliance']
 
@@ -965,7 +934,6 @@ class MintServer(object):
     @typeCheck(str)
     @private
     def getProjectIdByFQDN(self, fqdn):
-        fqdn = self._translateProjectFQDN(fqdn)
         projectId = self.projects.getProjectIdByFQDN(fqdn)
         self._filterProjectAccess(projectId)
         return projectId
@@ -1290,8 +1258,11 @@ If you would not like to be %s %s of this project, you may resign from this proj
         project = projects.Project(self, projectId)
         self.amiPerms.hideProject(projectId)
 
-        self.restDb.productMgr.reposMgr.deleteUser(project.getFQDN(),
+        try:
+            self.restDb.productMgr.reposMgr.deleteUser(project.getFQDN(),
                                                    'anonymous')
+        except UserNotFound:
+            pass
         # Hide the project
         self.projects.hide(projectId)
 
@@ -1319,7 +1290,7 @@ If you would not like to be %s %s of this project, you may resign from this proj
     @private
     def setBackupExternal(self, projectId, backupExternal):
         return self.projects.update(projectId,
-                backupExternal=int(backupExternal))
+                backupExternal=bool(backupExternal))
 
     @typeCheck(int, bool)
     @requiresAuth
@@ -1400,13 +1371,12 @@ If you would not like to be %s %s of this project, you may resign from this proj
     def getProjectsByUser(self, userId):
         cu = self.db.cursor()
 
-        fqdnConcat = database.concat(self.db, "hostname", "'.'", "domainname")
         # audited for SQL injection.
-        cu.execute("""SELECT %s, name, level
+        cu.execute("""SELECT fqdn, name, level
                       FROM Projects, ProjectUsers
                       WHERE Projects.projectId=ProjectUsers.projectId AND
                             ProjectUsers.userId=?
-                      ORDER BY level, name""" % fqdnConcat, userId)
+                      ORDER BY level, name""", userId)
 
         rows = []
         for r in cu.fetchall():
@@ -1441,7 +1411,8 @@ If you would not like to be %s %s of this project, you may resign from this proj
     @private
     @typeCheck(str, str)
     def pwCheck(self, user, password):
-        return self.users.checkAuth((user, password))['authorized']
+        return self.users.checkAuth((user, password), useToken=True
+                )['authorized']
 
     @typeCheck(int)
     @requiresAuth
@@ -1546,12 +1517,7 @@ If you would not like to be %s %s of this project, you may resign from this proj
         if not self._isUserAdmin(userId):
             return
         cu = self.db.cursor()
-        cu.execute("""SELECT userId
-                          FROM UserGroups
-                          LEFT JOIN UserGroupMembers
-                          ON UserGroups.userGroupId =
-                                 UserGroupMembers.userGroupId
-                          WHERE userGroup='MintAdmin'""")
+        cu.execute("SELECT userId FROM UserGroups WHERE is_admin = true")
         if [x[0] for x in cu.fetchall()] == [userId]:
             # userId is admin, and there is only one admin => last admin
             raise mint_error.LastAdmin(
@@ -1580,19 +1546,10 @@ If you would not like to be %s %s of this project, you may resign from this proj
 
         cu = self.db.transaction()
         try:
-            cu.execute("""SELECT userGroupId FROM UserGroupMembers
-                              WHERE userId=?""", userId)
-            for userGroupId in [x[0] for x in cu.fetchall()]:
-                cu.execute("""SELECT COUNT(*) FROM UserGroupMembers
-                                  WHERE userGroupId=?""", userGroupId)
-                if cu.fetchone()[0] == 1:
-                    cu.execute("DELETE FROM UserGroups WHERE userGroupId=?",
-                               userGroupId)
             cu.execute("UPDATE Projects SET creatorId=NULL WHERE creatorId=?",
                        userId)
             cu.execute("DELETE FROM ProjectUsers WHERE userId=?", userId)
             cu.execute("DELETE FROM Confirmations WHERE userId=?", userId)
-            cu.execute("DELETE FROM UserGroupMembers WHERE userId=?", userId)
             cu.execute("DELETE FROM Users WHERE userId=?", userId)
             cu.execute("DELETE FROM UserData where userId=?", userId)
         except:
@@ -1708,15 +1665,18 @@ If you would not like to be %s %s of this project, you may resign from this proj
     @typeCheck(int, str)
     @private
     def setPassword(self, userId, newPassword):
-        if self.auth.admin or list(self.authToken) == [self.cfg.authUser, self.cfg.authPass] or self.auth.userId == userId:
+        if (self.auth.admin or
+            list(self.authToken) == [self.cfg.authUser, self.cfg.authPass] or
+            self.auth.userId == userId):
+
             username = self.users.get(userId)['username']
 
             for projectId, level in self.getProjectIdsByMember(userId):
                 project = projects.Project(self, projectId)
 
                 if not project.external:
-                    authRepo = self._getProjectRepo(project)
-                    authRepo.changePassword(versions.Label(project.getLabel()), username, newPassword)
+                    authRepo = self._getProjectRepo(project, useServer=True)
+                    authRepo.auth.changePassword(username, newPassword)
 
             self.users.changePassword(username, newPassword)
 
@@ -1796,15 +1756,6 @@ If you would not like to be %s %s of this project, you may resign from this proj
         """
         return self.projects.getNewProjects(limit, showFledgling)
 
-    @typeCheck()
-    @requiresAdmin
-    @private
-    def getUsersList(self):
-        """
-        Collect a list of users suitable for creating a select box
-        """
-        return self.users.getUsersList()
-
     @typeCheck(int, int, int)
     @requiresAdmin
     @private
@@ -1830,18 +1781,12 @@ If you would not like to be %s %s of this project, you may resign from this proj
         Given a userId, will attempt to promote that user to an
         administrator (i.e. make a member of the MintAdmin User Group).
 
-        NOTE: if the MintAdmin UserGroup doesn't exist, it will be created
-        as a side effect.
-
         @param userId: the userId to promote
         """
-        mintAdminId = self.userGroups.getMintAdminId()
         if self._isUserAdmin(userId):
             raise mint_error.UserAlreadyAdmin
-
         cu = self.db.cursor()
-        cu.execute('INSERT INTO UserGroupMembers VALUES(?, ?)',
-                mintAdminId, userId)
+        cu.execute("UPDATE Users SET is_admin = true WHERE userId = ?", userId)
         self.db.commit()
         return True
 
@@ -1857,53 +1802,10 @@ If you would not like to be %s %s of this project, you may resign from this proj
         # refuse to demote self. this ensures there will always be at least one
         if userId == self.auth.userId:
             raise mint_error.AdminSelfDemotion
-
-        mintAdminId = self.userGroups.getMintAdminId()
         cu = self.db.cursor()
-        cu.execute("SELECT userId FROM UserGroupMembers WHERE userGroupId=?",
-                   mintAdminId)
-
-        cu.execute("""DELETE FROM UserGroupMembers WHERE userId=?
-                          AND userGroupId=?""", userId, mintAdminId)
+        cu.execute("UPDATE Users SET is_admin = false WHERE userId = ?", userId)
         self.db.commit()
         return True
-
-    @typeCheck()
-    @private
-    def getNews(self):
-        return self.db.newsCache.getNews()
-
-    @typeCheck()
-    @private
-    def getNewsLink(self):
-        return self.db.newsCache.getNewsLink()
-
-    @typeCheck(str, str, int)
-    @private
-    @requiresAdmin
-    def addFrontPageSelection(self, name, link, rank):
-        return self.selections.addItem(name, link, rank)
-
-    @typeCheck(int)
-    @private
-    @requiresAdmin
-    def deleteFrontPageSelection(self, itemId):
-        return self.selections.deleteItem(itemId)
-
-    @typeCheck()
-    @private
-    def getFrontPageSelection(self):
-        return self.selections.getAll()
-
-    @typeCheck()
-    @private
-    def getPopularProjects(self):
-        return self.popularProjects.getList()
-
-    @typeCheck()
-    @private
-    def getTopProjects(self):
-        return self.topProjects.getList()
 
     #
     # LABEL STUFF
@@ -1962,28 +1864,10 @@ If you would not like to be %s %s of this project, you may resign from this proj
         return self.labels.removeLabel(projectId, labelId)
 
     def _getFullRepositoryMap(self):
-        cu = self.db.cursor()
-        cu.execute("""SELECT projectId FROM Projects
-                            WHERE hidden=0 AND disabled=0 AND
-                                (external=0 OR projectId IN (SELECT targetProjectId FROM InboundMirrors))""")
-        projs = cu.fetchall()
         repoMap = {}
-        for x in projs:
-            repoMap.update(self.labels.getLabelsForProject(x[0])[1])
-
-        # for external projects where rBuilder isn't using the default
-        # repositoryMap, put this in conaryrc.generated too:
-        cu.execute("""SELECT projectId FROM Projects WHERE external=1
-            AND NOT (projectId IN (SELECT targetProjectId FROM InboundMirrors))""")
-        projs = cu.fetchall()
-        for x in projs:
-            l = self.labels.getLabelsForProject(x[0])
-            label = versions.Label(l[0].keys()[0])
-            host = getUrlHost(l[1].values()[0])
-
-            if label.getHost() != host:
-                repoMap.update(l[1])
-
+        for handle in self.reposMgr.iterRepositories(
+                'NOT hidden AND NOT disabled'):
+            repoMap[handle.fqdn] = handle.getURL()
         return repoMap
 
     def _generateConaryRcFile(self):
@@ -2183,7 +2067,7 @@ If you would not like to be %s %s of this project, you may resign from this proj
                 buildSettings = containerTemplate.fields.copy()
 
             for key, val in buildImage.fields.iteritems():
-                if val is not None:
+                if val is not None and val != '':
                     buildSettings[key] = val
             buildType = buildImage.containerFormat and \
                     str(buildImage.containerFormat) or ''
@@ -2346,20 +2230,27 @@ If you would not like to be %s %s of this project, you may resign from this proj
         filterArch = helperfuncs.getArchFromFlavor(arch)
         flavorSetFlavor = deps.overrideFlavor(flavorSet, customFlavor)
         completeFlavor = deps.overrideFlavor(flavorSet, arch)
-        # If filterFlavor has an instruction set, the major
-        # architecture must match that of the group so
-        # an 'is: x86' filter does not match 'is: x86 x86_64' groups
-        # even though the flavor is technically satisfied.
-        maxVersion = max(x[1] for x in groupList)
-        groupList = [ x for x in groupList 
-                      if (helperfuncs.getArchFromFlavor(x[2]) == filterArch
-                          and x[1] == maxVersion
-                          and x[2].satisfies(completeFlavor)) ]
-        if not groupList:
+        # Hard filtering is done strictly by major architecture. This ensures
+        # two things:
+        #  * "is: x86" filter does NOT match "is: x86 x86_64" group
+        #  * "is: x86 x86_64" filter DOES match "is: x86_64" group
+        # After that, any remaining contests are broken using flavor scoring,
+        # but the vast majority of proddefs use one flavor per arch only and
+        # thus that case needs to be the most robust.
+        archMatches = [ x for x in groupList
+                if helperfuncs.getArchFromFlavor(x[2]) == filterArch ]
+        if not archMatches:
+            # Nothing even had the correct architecture, bail out.
             return []
-        scored = sorted((x[2].score(completeFlavor), x) for x in groupList)
+        maxVersion = max(x[1] for x in archMatches)
+        latest = [x for x in archMatches if x[1] == maxVersion]
+        if len(latest) < 2:
+            # A single group flavor matched the architecture so no need for
+            # flavor scoring.
+            return latest
+        scored = sorted((x[2].score(completeFlavor), x) for x in latest)
         maxScore = scored[-1][0]
-        return sorted([ x[1] for x in scored if x[0] == maxScore ], 
+        return sorted([ x[1] for x in scored if x[0] == maxScore ],
                       key=lambda x: x[2])[-1:]
 
     def _deleteBuild(self, buildId, force=False):
@@ -2493,11 +2384,6 @@ If you would not like to be %s %s of this project, you may resign from this proj
             # Determine search path; start with imageGroup's label
             searchPath.append(igV.branch().label())
 
-        # Handle anacond-templates using a fallback
-        if specialTroveName == 'anaconda-templates':
-            # Need to search our system-wide fallback for anaconda templates
-            searchPath.append(versions.Label(self.cfg.anacondaTemplatesFallback))
-
         # if no flavor specified, use the top level group's flavor
         if not specialTroveFlavor:
             specialTroveFlavor = helperfuncs.getMajorArchFlavor(
@@ -2570,8 +2456,9 @@ If you would not like to be %s %s of this project, you may resign from this proj
         self._addInternalConaryConfig(cc)
 
         cfgBuffer = StringIO.StringIO()
-        cc.displayKey('user', cfgBuffer)
         cc.displayKey('repositoryMap', cfgBuffer)
+        repoToken = os.urandom(16).encode('hex')
+        print >> cfgBuffer, 'user %s %s' % (self.auth.username, repoToken)
         cfgData = cfgBuffer.getvalue()
 
         r = {}
@@ -2587,7 +2474,9 @@ If you would not like to be %s %s of this project, you may resign from this proj
         r['project'] = {'name' : project.name,
                         'hostname' : project.hostname,
                         'label' : project.getLabel(),
-                        'conaryCfg' : cfgData}
+                        'conaryCfg' : cfgData,
+                        'repoToken': repoToken,
+                        }
         if buildDict['productVersionId']:
             r['proddefLabel'] = self._getProductVersionLabel(project,
                     buildDict['productVersionId'])
@@ -2659,7 +2548,7 @@ If you would not like to be %s %s of this project, you may resign from this proj
         self.buildData.setDataValue(buildId, 'outputToken',
             r['outputToken'], data.RDT_STRING)
 
-        return json.dumps(r)
+        return r
 
     #
     # published releases 
@@ -2857,23 +2746,6 @@ If you would not like to be %s %s of this project, you may resign from this proj
         return self.publishedReleases.getPublishedReleasesByProject(projectId,
                 publishedOnly)
 
-    @typeCheck(int, int)
-    @private
-    def getCommunityId(self, projectId, communityType):
-        return self.communityIds.getCommunityId(projectId, communityType)
-
-    @typeCheck(int, int, str)
-    @private
-    @requiresAuth
-    def setCommunityId(self, projectId, communityType, communityId):
-        return self.communityIds.setCommunityId(projectId, communityType,
-                                                communityId)
-    @typeCheck(int, int)
-    @private
-    @requiresAuth
-    def deleteCommunityId(self, projectId, communityType):
-        return self.communityIds.deleteCommunityId(projectId, communityType)
-
     @typeCheck(int)
     @private
     def getBuildTrove(self, buildId):
@@ -2908,25 +2780,31 @@ If you would not like to be %s %s of this project, you may resign from this proj
 
     def _getProductVersionForLabel(self, projectId, label):
         cu = self.db.cursor()
-        cu.execute('''SELECT productVersionId, hostname, 
-                             domainname, shortname, 
+        # First look in the database, we may have all the data already, without
+        # loading the proddef
+        cu.execute('''
+            SELECT project_branch_id, name
+              FROM project_branch_stage
+             WHERE project_id = ?
+               AND label = ?
+        ''', projectId, str(label))
+        for versionId, stageName in cu:
+            return versionId, stageName
+        # Fall back to the old code
+        cu.execute('''SELECT productVersionId, fqdn,
+                             shortname, 
                              ProductVersions.namespace, 
                              ProductVersions.name 
                       FROM Projects 
                       JOIN ProductVersions USING(projectId)
                       WHERE projectId=?''', projectId)
-        for versionId, hostname, domainname, shortname, namespace, name in cu:
-            fqdn = '%s.%s' % (hostname, domainname)
+        for versionId, fqdn, shortname, namespace, name in cu:
             pd = proddef.ProductDefinition()
             pd.setProductShortname(shortname)
             pd.setConaryRepositoryHostname(fqdn)
             pd.setConaryNamespace(namespace)
             pd.setProductVersion(name)
-            baseLabel = pd.getProductDefinitionLabel()
-            # assumption to speed this up.  
-            # Stages are baselabel + '-' + extention (or just baseLabel)
-            if not str(label).lower().startswith(str(baseLabel).lower()):
-                continue
+
             try:
                 project = projects.Project(self, projectId)
                 projectCfg = self._getProjectConaryConfig(project)
@@ -2939,7 +2817,6 @@ If you would not like to be %s %s of this project, you may resign from this proj
                 stageLabel = pd.getLabelForStage(stage.name)
                 if str(label) == stageLabel:
                     return versionId, str(stage.name)
-            return versionId, None
         return None, None
 
     @typeCheck(int, str)
@@ -3081,6 +2958,8 @@ If you would not like to be %s %s of this project, you may resign from this proj
                 jobData = self.serializeBuild(buildId)
                 if buildType in buildtypes.windowsBuildTypes:
                     return self.startWindowsImageJob(buildId, jobData)
+                elif buildType == buildtypes.DEFERRED_IMAGE:
+                    return self.startDeferredImageJob(buildId, jobData)
 
                 # Check the product definition to see if this is based on a
                 # Windows platform.
@@ -3095,24 +2974,67 @@ If you would not like to be %s %s of this project, you may resign from this proj
                     if 'windows' in tags:
                         return self.startWindowsImageJob(buildId, jobData)
 
-                client = self._getMcpClient()
-                uuid = client.new_job(client.LOCAL_RBUILDER, jobData)
-                self.buildData.setDataValue(buildId, 'uuid', uuid,
-                        data.RDT_STRING)
-                return uuid
+                return self.startMcpImageJob(buildId, jobData)
             except:
                 log.exception("Failed to start image job:")
                 self.db.builds.update(buildId, status=jobstatus.FAILED,
                         statusMessage="Failed to start image job - check logs")
                 raise
 
+    def _addRepoToken(self, buildId, jobData):
+        repoToken = jobData['project']['repoToken']
+        self.db.auth_tokens.addToken(repoToken, self.auth.userId, buildId)
+
+    def startMcpImageJob(self, buildId, jobData):
+        """Start a standard MCP image job."""
+        self._addRepoToken(buildId, jobData)
+        client = self._getMcpClient()
+        uuid = client.new_job(client.LOCAL_RBUILDER, json.dumps(jobData))
+        self.buildData.setDataValue(buildId, 'uuid', uuid, data.RDT_STRING)
+        return uuid
+
     def startWindowsImageJob(self, buildId, jobData):
         """Direct Windows image builds to rMake 3."""
+        self._addRepoToken(buildId, jobData)
+        jsonData = json.dumps(jobData)
         cli = wig_client.WigClient(self._getRmakeClient())
-        job_uuid, job = cli.createJob(jobData, subscribe=False)
+        job_uuid, job = cli.createJob(jsonData, subscribe=False)
         log.info("Created Windows image job, UUID %s", job_uuid)
         self.builds.update(buildId, job_uuid=str(job_uuid))
         return str(job_uuid)
+
+    def startDeferredImageJob(self, buildId, jobData):
+        """Create a deferred image record in the database."""
+        baseTrove = jobData['data'].get('baseImageTrove', '')
+        try:
+            baseId = self.db.builds.getIdByColumn('output_trove',
+                    baseTrove)
+        except database.ItemNotFound:
+            self.db.builds.update(buildId, status=jobstatus.FAILED,
+                    statusMessage="Base image %r not found" % (baseTrove,))
+            return -1
+        self.db.builds.update(buildId,
+                base_image=baseId,
+                status=jobstatus.FINISHED,
+                statusMessage="Deferred image has been recorded")
+        self.db.commit()
+
+        from mint.django_rest.rbuilder.manager import rbuildermanager
+        from mint.django_rest.rbuilder.images import models as image_models
+        mgr = rbuildermanager.RbuilderManager()
+        try:
+            mgr.enterTransactionManagement()
+            image = image_models.Image.objects.get(pk=buildId)
+            mgr.addToMyQuerySet(image, image.created_by)
+            mgr.retagQuerySetsByType('image')
+            mgr.commit()
+        except:
+            mgr.rollback()
+            raise
+        finally:
+            mgr.leaveTransactionManagement()
+
+        return 1
 
     @typeCheck(int, str, list)
     def setBuildFilenamesSafe(self, buildId, outputToken, filenames):
@@ -3470,15 +3392,12 @@ If you would not like to be %s %s of this project, you may resign from this proj
     @typeCheck(int)
     # @requiresAuth
     def getAllProjectLabels(self, projectId):
-        defaultLabel = projects.Project(self, projectId).getLabel()
-        serverName = versions.Label(defaultLabel).getHost()
         cu = self.db.cursor()
-        cu.execute("""SELECT DISTINCT(%s) FROM PackageIndex WHERE projectId=?
-                      AND serverName=?""" % database.concat(self.db,
-                            'serverName', "'@'",  'branchName'),
-                      projectId, serverName)
+        cu.execute("SELECT DISTINCT(%s) FROM PackageIndex WHERE projectId=?"
+                % database.concat(self.db, 'serverName', "'@'",  'branchName'),
+            projectId)
         labels = cu.fetchall()
-        return [x[0] for x in labels] or [defaultLabel]
+        return [x[0] for x in labels]
 
     @typeCheck(int)
     @requiresAuth
@@ -3487,8 +3406,7 @@ If you would not like to be %s %s of this project, you may resign from this proj
         project = projects.Project(self, projectId)
 
         nc = self._getProjectRepo(project, False)
-        label = versions.Label(project.getLabel())
-        troves = nc.troveNamesOnServer(label.getHost())
+        troves = nc.troveNamesOnServer(project.fqdn)
 
         troves = sorted(trove for trove in troves if
             (trove.startswith('group-') or
@@ -3565,14 +3483,6 @@ If you would not like to be %s %s of this project, you may resign from this proj
         if name not in reports.getAvailableReports():
             raise mint_error.PermissionDenied
         return base64.b64encode(self._getReportObject(name).getPdf())
-
-    
-    if charts:
-        @private
-        @typeCheck(int, int, str)
-        def getDownloadChart(self, projectId, days, format):
-            chart = charts.DownloadChart(self.db, projectId, span = days)
-            return chart.getImageData(format)
 
     # mirrored labels
     @private
@@ -3865,24 +3775,6 @@ If you would not like to be %s %s of this project, you may resign from this proj
             self.db.commit()
         return True
 
-    @private
-    @typeCheck(str, str)
-    @requiresAdmin
-    def addRemappedRepository(self, fromName, toName):
-        return self._addRemappedRepository(fromName, toName)
-
-    def _addRemappedRepository(self, fromName, toName):
-        return self.repNameMap.new(fromName = fromName, toName = toName)
-
-    @private
-    @typeCheck(str)
-    @requiresAdmin
-    def delRemappedRepository(self, fromName):
-        cu = self.db.cursor()
-        cu.execute("DELETE FROM RepNameMap WHERE fromName=?", fromName)
-        self.db.commit()
-        return True
-
     def _getAllRepositories(self):
         """
             Return a list of netclient objects for each repository
@@ -4147,7 +4039,10 @@ If you would not like to be %s %s of this project, you may resign from this proj
         # We should use internal=False here because the configuration we
         # generate here is used by the package creator service, not rBuilder.
         # However, pcreator is always localhost, so use that for proxying.
-        cfg = self._getProjectConaryConfig(project, internal=False)
+        repoToken = os.urandom(16).encode('hex')
+        self.db.auth_tokens.addToken(repoToken, self.auth.userId)
+        cfg = self._getProjectConaryConfig(project, internal=False,
+                repoToken=repoToken)
         cfg['name'] = self.auth.username
         cfg['contact'] = ''
         localhost = 'localhost'
@@ -4158,7 +4053,8 @@ If you would not like to be %s %s of this project, you may resign from this proj
         cfg.configLine('conaryProxy https http://%s/conary/' % localhost)
 
         #package creator service should get the searchpath from the product definition
-        mincfg = packagecreator.MinimalConaryConfiguration( cfg)
+        rmakeUser = (self.authToken[0], repoToken)
+        mincfg = packagecreator.MinimalConaryConfiguration(cfg, rmakeUser)
         return mincfg
 
     @typeCheck(int, ((str,unicode),), int, ((str,unicode),), ((str,unicode),), ((str,unicode),))
@@ -4207,9 +4103,9 @@ If you would not like to be %s %s of this project, you may resign from this proj
         #Register the file
         pc = self.getPackageCreatorClient()
         project = projects.Project(self, projectId)
-        mincfg = self._getMinCfg(project)
 
         if not sessionHandle:
+            mincfg = self._getMinCfg(project)
             #Get the version object
             version = self.getProductVersion(versionId)
             #Start the PC Session
@@ -4881,10 +4777,6 @@ If you would not like to be %s %s of this project, you may resign from this proj
         dummy = self.users.get(userId)
         return self.users.getAMIBuildsForUser(userId)
 
-        if not affectedAMIIds:
-            return False
-
-        ec2Wrap = ec2.EC2Wrapper(authToken, self.cfg.proxy.get('https'))
     def getAvailablePlatforms(self):
         """
         Returns a list of available platforms and their names (descriptions).
@@ -4936,7 +4828,6 @@ If you would not like to be %s %s of this project, you may resign from this proj
         # unnecessary when we're reloading the tables for every request.
         #if self.db.tablesReloaded:
         #    self._generateConaryRcFile()
-        self.newsCache.refresh()
 
     @typeCheck(int)
     @requiresAdmin
@@ -4963,7 +4854,6 @@ If you would not like to be %s %s of this project, you may resign from this proj
         cu = self.db.transaction()
         try:
             cu.execute("DELETE FROM Projects WHERE projectId = ?", projectId)
-            cu.execute("DELETE FROM RepNameMap WHERE toName = ?", handle.fqdn)
         except:
             self.db.rollback()
             raise
@@ -4991,8 +4881,6 @@ If you would not like to be %s %s of this project, you may resign from this proj
     def getPackageCreatorClient(self):
         callback = notices_callbacks.PackageNoticesCallback(self.cfg, self.authToken[0])
         return self._getPackageCreatorClient(callback)
-        return packagecreator.getPackageCreatorClient(self.cfg, self.authToken,
-            callback = callback)
 
     def getApplianceCreatorClient(self):
         callback = notices_callbacks.ApplianceNoticesCallback(self.cfg, self.authToken[0])
