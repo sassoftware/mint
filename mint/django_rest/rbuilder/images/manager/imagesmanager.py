@@ -4,25 +4,33 @@
 # All Rights Reserved
 #
 
+import sys
 import errno
 import logging
 import os
 from django.core import urlresolvers
+from mcp import client as mcp_client
+from mint import buildtypes
 from mint import jobstatus
+from mint import urltypes
 from mint.django_rest.rbuilder.jobs import models as jobsmodels
 from mint.django_rest.rbuilder.images import models
+from mint.django_rest.rbuilder.projects import models as projmodels
 from mint.django_rest.rbuilder.targets import models as tgtmodels
 from mint.django_rest.rbuilder.manager import basemanager
-from mint.django_rest.rbuilder.errors import PermissionDenied
+from mint.django_rest.rbuilder import errors
 from conary.lib import sha1helper
 from mint.lib import data as datatypes
 from conary import trovetup
 from conary import versions
 from conary.deps import deps
+from conary.lib import util
+from smartform import descriptor
 import time
 
 log = logging.getLogger(__name__)
 exposed = basemanager.exposed
+autocommit = basemanager.autocommit
 
 class ImagesManager(basemanager.BaseManager):
  
@@ -86,8 +94,7 @@ class ImagesManager(basemanager.BaseManager):
         image.save()
 
         for bdName, bdValue, bdType in buildData:
-            image.image_data.add(models.ImageData(name=bdName, value=bdValue,
-                data_type=bdType))
+            self._setImageDataValue(image.image_id, bdName, bdValue, dataType=bdType)
 
         self.mgr.addToMyQuerySet(image, for_user)
         self.mgr.retagQuerySetsByType('image', for_user)
@@ -95,7 +102,6 @@ class ImagesManager(basemanager.BaseManager):
 
     @exposed
     def createImageBuildFile(self, image, **kwargs):
-        from mint import urltypes
         url = kwargs.pop('url')
         urlType = kwargs.pop('urlType', urltypes.LOCAL)
         urlobj = models.FileUrl(url=url, url_type=urlType)
@@ -120,13 +126,124 @@ class ImagesManager(basemanager.BaseManager):
         return trovetup.TroveTuple(name, version, flavor)
 
     @exposed
+    def setImageBuildStatus(self, image):
+        self._postFinished(image)
+        self.setImageStatus(image.image_id, image.status, image.status_message)
+
+    @autocommit
+    def commitImageStatus(self, imageId, status=None, statusMessage=None):
+        if status is None:
+            status = jobstatus.RUNNING
+        self.setImageStatus(imageId, status, statusMessage)
+
+    def _postFinished(self, image):
+        if image.status != jobstatus.FINISHED:
+            return
+        # We're not done just yet
+        self.setImageStatus(image.image_id, code=jobstatus.RUNNING,
+            message="Finalizing image build")
+        # Remove auth tokens associated with this image
+        models.AuthTokens.objects.filter(image=image).delete()
+        self._handlePostImageBuildOperations(image)
+        # tag image, etc.
+        self.finishImageBuild(image.image_id)
+
+    class UploadCallback(object):
+        def __init__(self, manager, imageId):
+            self.manager = manager
+            self.imageId = imageId
+
+        def callback(self, fileName, fileIdx, fileTotal,
+                currentFileBytes, totalFileBytes, sizeCurrent, sizeTotal):
+            # Nice percentages
+            if sizeTotal == 0:
+                sizeTotal = 1024
+            pct = sizeCurrent * 100.0 / sizeTotal
+            message = "Uploading bundle: %d%%" % (pct, )
+            self.manager.commitImageStatus(self.imageId, statusMessage=message)
+            log.info("Uploading %s (%s/%s): %.1f%%, %s/%s",
+                fileName, fileIdx, fileTotal, pct, sizeCurrent, sizeTotal)
+
+
+    def _handlePostImageBuildOperations(self, image):
+        self._uploadAMI(image)
+
+    def _getImageFiles(self, imageId):
+        filePaths = []
+        for path, in models.FileUrl.objects.filter(
+                urls_map__file__image__image_id=imageId,
+                url_type=urltypes.LOCAL).values_list('url'):
+            if isinstance(path, unicode):
+                path = path.encode('utf8')
+            filePaths.append(path)
+        return filePaths
+
+    def _uploadAMI(self, image):
+        if image._image_type != buildtypes.AMI:
+            # for now we only have to do something special for AMIs
+            return
+        imageId = image.image_id
+        # Do all the read operations before we commit
+        # Get all builds for this image
+        filePaths = self._getImageFiles(imageId)
+        readers, writers = self.getEC2AccountNumbersForProjectUsers(
+            image.project.project_id)
+        # Move to autocommit mode. This will flush the existing
+        # transaction, and the decorated commitImageStatus will do its
+        # own commits. We need to restore transaction management when
+        # we're done.
+        self.mgr.prepareAutocommit()
+        uploadCallback = self.UploadCallback(self, imageId)
+        amiPerms = self.mgr.restDb.awsMgr.amiPerms
+        for filePath in filePaths:
+            if not os.path.exists(filePath):
+                continue
+            log.info("Uploading bundle")
+            bucketName, manifestName = amiPerms.uploadBundle(
+                filePath, callback=uploadCallback.callback)
+            message = "Registering AMI for %s/%s" % (bucketName, manifestName)
+            self.commitImageStatus(imageId, statusMessage=message)
+            log.info(message)
+            amiId, manifestPath = amiPerms.registerAMI(
+                bucketName, manifestName, readers=readers, writers=writers)
+            message = "Registered AMI %s for %s" % (amiId, manifestPath)
+            self.commitImageStatus(imageId, statusMessage=message)
+            log.info(message)
+            self._setImageDataValue(imageId, 'amiId', amiId)
+            self._setImageDataValue(imageId, 'amiManifestName', manifestPath)
+        self.mgr.commit()
+        # Restore transaction management
+        self.mgr.enterTransactionManagement()
+
+    def _setImageDataValue(self, imageId, name, value, dataType=datatypes.RDT_STRING):
+        models.ImageData.objects.create(image_id=imageId,
+            name=name, value=value, data_type=dataType)
+
+    def getEC2AccountNumbersForProjectUsers(self, projectId):
+        writers = set()
+        readers = set()
+        vals = projmodels.Member.objects.filter(
+            project__project_id = projectId,
+            user__target_user_credentials__target__target_type__name = 'ec2',
+            user__target_user_credentials__target__name = 'aws').values_list('level', 'user__target_user_credentials__target_credentials__credentials')
+        for level, creds in vals:
+            val = datatypes.unmarshalTargetUserCredentials(creds).get('accountId')
+            if val is None:
+                continue
+            if level <= 1:
+                writers.add(val)
+            else:
+                readers.add(val)
+        return sorted(writers), sorted(readers)
+
+    @exposed
     def deleteImageBuild(self, image_id):
         image = models.Image.objects.get(pk=image_id)
 
         # see if any images have this image as a baseimage, and if so, refuse to delete
         layered_images = models.Image.objects.filter(base_image = image)
         if len(layered_images) > 0:
-            raise PermissionDenied(msg="Image is in use as a layered base image and cannot be deleted")
+            raise errors.PermissionDenied(msg="Image is in use as a layered base image and cannot be deleted")
 
         log.info("Deleting image %s from project %s" % (image_id,
             image.project.short_name))
@@ -203,6 +320,13 @@ class ImagesManager(basemanager.BaseManager):
         return self.restDb.getImageFile(hostname, image_id, 'build.log')
 
     @exposed
+    def appendToBuildLog(self, imageId, buildLog):
+        hostname = self._getImageHostname(imageId)
+        filePath = self._getImageFilePath(hostname, imageId, 'build.log',
+            create=True)
+        file(filePath, "a").write(buildLog)
+
+    @exposed
     def getImageType(self, image_type_id):
         return models.ImageType.objects.get(image_type_id=image_type_id)
 
@@ -242,17 +366,162 @@ class ImagesManager(basemanager.BaseManager):
         self.mgr.recomputeTargetDeployableImages()
 
     @exposed
-    def finishImageBuild(self, image):
+    def finishImageBuild(self, image, imageStatus="Image built"):
         if isinstance(image, (int, basestring)):
             image = models.Image.objects.get(image_id=image)
 
-        if image.status != jobstatus.FINISHED:
-            # image won't show up in retag of dynamic sets if status is
-            # still running
-            # This is because we call this function from mint.rest
-            # before we set the status
-            image.status = jobstatus.FINISHED
-            image.save()
+        self.setImageStatus(image.image_id, code=jobstatus.FINISHED,
+            message=imageStatus)
 
         self.mgr.addToMyQuerySet(image, image.created_by)
         self.mgr.recomputeTargetDeployableImages()
+
+    def _getImageFilePath(self, hostname, imageId, fileName, create=False):
+        filePath = os.path.join(self.cfg.imagesPath, hostname, str(imageId),
+            os.path.basename(fileName))
+        if create:
+            util.mkdirChain(os.path.dirname(filePath))
+        return filePath
+
+    def _getImageHostname(self, imageId):
+        hostnames = projmodels.Project.objects.filter(
+            images__image_id=imageId).values_list('short_name')
+        if not hostnames:
+            raise Exception("No project associated with the image")
+        hostname = hostnames[0][0]
+        return hostname
+
+    @exposed
+    def updateImageBuildFiles(self, imageId, files):
+        fileList = files.file
+        # Purge files attached to this build
+        models.BuildFile.objects.filter(image__image_id=imageId).delete()
+        hostname = self._getImageHostname(imageId)
+        # Add files
+        for idx, fobj in enumerate(fileList):
+            fobj.image_id = imageId
+            fobj.idx = idx
+            fobj.save()
+
+            filePath = self._getImageFilePath(hostname, imageId, fobj.file_name)
+            url = models.FileUrl.objects.create(url_type=urltypes.LOCAL,
+                url=filePath)
+            models.BuildFilesUrlsMap.objects.create(file=fobj, url=url)
+
+        if files.metadata is not None:
+            self._addImageToRepository(imageId, files.metadata)
+
+        return self.getImageBuildFiles(imageId)
+
+    def _addImageToRepository(self, imageId, metadata):
+        metadataDict = self.mgr.restDb.imageMgr.getMetadataDict(metadata)
+        # Find the stage for this image, we need the label to commit to
+        buildLabels = projmodels.Stage.objects.filter(
+                images__image_id=imageId).values_list(
+                    'label', 'project__short_name', 'project__repository_hostname')
+        if not buildLabels:
+            raise Exception("Stage for image does not exist")
+        buildLabel, shortName, repositoryHostname = buildLabels[0]
+        factoryName = "rbuilder-image"
+        troveName = "image-%s" % shortName
+        troveVersion = imageId
+
+        filePaths = self._getImageFiles(imageId)
+
+        streamMap = dict((os.path.basename(x),
+            self.mgr.reposMgr.RegularFile(contents=file(x), config=False))
+                for x in filePaths)
+
+        try:
+            nvf = self.mgr.reposMgr.createSourceTrove(
+                repositoryHostname,
+                troveName,
+                buildLabel,
+                troveVersion, streamMap, changeLogMessage="Image imported",
+                factoryName=factoryName, admin=True,
+                metadata=metadataDict)
+        except Exception, e:
+            self.setImageStatus(imageId, code=jobstatus.FAILED,
+                message="Commit failed: %s" % (e, ))
+            log.error("Error: %s", e)
+            raise
+        else:
+            models.Image.objects.filter(image_id=imageId).update(
+                output_trove = nvf.asString())
+            msg = "Image committed as %s=%s/%s" % (nvf.name,
+                    nvf.version.trailingLabel(),
+                    nvf.version.trailingRevision())
+            log.info(msg)
+            #self._getImageLogger(hostname, imageId).info(msg)
+
+    def setImageStatus(self, imageId, code=jobstatus.RUNNING, message=''):
+        models.Image.objects.filter(image_id=imageId).update(status=code,
+            status_message=message)
+
+    @exposed
+    def getImageDescriptor(self, imageId, descriptorType):
+        supportedDescriptors = dict(cancel_build=self.getImageDescriptorCancelBuild)
+        method = supportedDescriptors.get(descriptorType)
+        if method is None:
+            raise errors.ResourceNotFound()
+        return method(imageId)
+
+    def getImageDescriptorCancelBuild(self, imageId):
+        descr = descriptor.ConfigurationDescriptor()
+        descr.setDisplayName('Cancel Image Build')
+        descr.addDescription('Cancel Image Build')
+        descr.setRootElement("descriptor_data")
+        return descr
+
+    @exposed
+    def cancelImageBuild(self, image, job):
+        try:
+            self._cancelImageBuild(image, job)
+        except:
+            exc = sys.exc_info()
+            stream = util.BoundedStringIO()
+            util.formatTrace(*exc, stream=stream, withLocals=False)
+            stream.seek(0)
+
+            job.job_state = self.mgr.getJobStateByName(jobsmodels.JobState.FAILED)
+            job.status_code = 500
+            job.status_text = "Failed"
+            job.status_detail = stream.read()
+        else:
+            job.job_state = self.mgr.getJobStateByName(jobsmodels.JobState.COMPLETED)
+            job.status_code = 200
+            job.status_text = "Done"
+        job.save()
+
+    def _cancelImageBuild(self, image, job=None):
+        mcpJobUUID = image.image_data.filter(name='uuid')
+        if not mcpJobUUID:
+            raise Exception("Image without a build task")
+        mcpJobUUID = mcpJobUUID[0].value
+        mcpClient = self._getMcpClient()
+        mcpClient.stop_job(mcpJobUUID)
+
+        if job and job.created_by:
+            msg = "User %s requested stopping of image build with job %s" % (
+                job.created_by.user_name, mcpJobUUID, )
+        else:
+            msg = "User requested stopping of image build with job %s" % (
+                mcpJobUUID, )
+
+        sio = util.BoundedStringIO()
+        lhandler = logging.StreamHandler(sio)
+        lhandler.setFormatter(util.log._getFormatter('file'))
+        oldLevel = log.level
+        try:
+            # Capture log
+            log.setLevel(logging.DEBUG)
+            log.addHandler(lhandler)
+            log.info(msg)
+            sio.seek(0)
+            self.appendToBuildLog(image.image_id, sio.read())
+        finally:
+            log.removeHandler(lhandler)
+            log.setLevel(oldLevel)
+
+    def _getMcpClient(self):
+        return mcp_client.Client(self.cfg.queueHost, self.cfg.queuePort)

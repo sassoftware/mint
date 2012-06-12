@@ -216,6 +216,22 @@ event_types_xml="""\
     <resource_type>System</resource_type>
     <system_events/>
   </event_type>
+  <event_type id="http://testserver/api/v1/inventory/event_types/24">
+    <description>Scan system</description>
+    <job_type_id>24</job_type_id>
+    <name>system scan</name>
+    <priority>105</priority>
+    <resource_type>System</resource_type>
+    <system_events/>
+  </event_type>
+  <event_type id="http://testserver/api/v1/inventory/event_types/25">
+    <description>Cancel an image build</description>
+    <job_type_id>25</job_type_id>
+    <name>image build cancellation</name>
+    <priority>105</priority>
+    <resource_type>Image</resource_type>
+    <system_events/>
+  </event_type>
 </event_types>"""
 
 event_type_put_xml="""\
@@ -382,6 +398,8 @@ system_type_systems_xml="""
 <?xml version="1.0"?>
 <systems count="1" end_index="0" filter_by="" full_collection="http://testserver/api/v1/inventory/systems" id="http://testserver/api/v1/inventory/systems;start_index=0;limit=10" limit="10" next_page="" num_pages="1" order_by="" per_page="10" previous_page="" start_index="0">
   <system id="http://testserver/api/v1/inventory/systems/3">
+    <is_configured>False</is_configured>
+    <surveys id="http://testserver/api/v1/inventory/systems/3/surveys"/>
     <source_image/>
     <agent_port>5989</agent_port>
     <project/>
@@ -498,6 +516,22 @@ network_put_xml = """\
   <pinned/>
 </network>"""
 
+network_put_xml_opt_ip_addr = """\
+<?xml version="1.0"?>
+<network id="http://testserver/api/v1/inventory/networks/1">
+  <active/>
+  <created_date>2010-09-15T21:41:40.142078+00:00</created_date>
+  <device_name>eth0</device_name>
+  <dns_name>new.com</dns_name>
+  <ip_address>%s</ip_address>
+  <ipv6_address/>
+  <netmask>255.255.255.0</netmask>
+  <network_id>2</network_id>
+  <port_type>lan</port_type>
+  <system id="http://testserver/api/v1/inventory/systems/3"/>
+  <pinned/>
+</network>"""
+
 system_states_xml = """\
 <?xml version="1.0" encoding="UTF-8"?>
 <system_states>
@@ -586,6 +620,8 @@ management_nodes_xml = """\
 <?xml version="1.0" encoding="UTF-8"?>
 <management_nodes>
   <management_node id="http://testserver/api/v1/inventory/management_nodes/3">
+    <is_configured>False</is_configured>
+    <surveys id="http://testserver/api/v1/inventory/management_nodes/3/surveys"/>
     <agent_port>5989</agent_port>
     <project/>
     <credentials id="http://testserver/api/v1/inventory/management_nodes/3/credentials"/>
@@ -661,6 +697,8 @@ management_nodes_xml = """\
 management_node_xml = """\
 <?xml version="1.0" encoding="UTF-8"?>
 <management_node id="http://testserver/api/v1/inventory/management_nodes/3">
+  <is_configured>False</is_configured>
+  <surveys id="http://testserver/api/v1/inventory/management_nodes/3/surveys"/>
   <agent_port>5989</agent_port> 
   <project/>
   <credentials id="http://testserver/api/v1/inventory/management_nodes/3/credentials"/>
@@ -772,6 +810,8 @@ management_node_post_xml = """\
 management_node_post_response_xml = """\
 <?xml version="1.0" encoding="UTF-8"?>
 <management_node id="http://testserver/api/v1/inventory/management_nodes/3">
+  <is_configured>False</is_configured>
+  <surveys id="http://testserver/api/v1/inventory/management_nodes/3/surveys"/>
   <agent_port>5989</agent_port> 
   <project/>
   <credentials id="http://testserver/api/v1/inventory/management_nodes/3/credentials"/>
@@ -845,6 +885,7 @@ management_node_post_response_xml = """\
 management_node_zone_post_xml = """\
 <?xml version="1.0" encoding="UTF-8"?>
 <management_node>
+  <is_configured>False</is_configured>
   <ssl_client_key>test management node client key</ssl_client_key>
   <out_of_date>false</out_of_date>
   <registration_date/>
@@ -883,6 +924,8 @@ management_node_zone_post_xml = """\
 management_node_zone_post_response_xml = """\
 <?xml version="1.0" encoding="UTF-8"?>
 <management_node id="http://testserver/api/v1/inventory/management_nodes/3">
+  <is_configured>False</is_configured>
+  <surveys id="http://testserver/api/v1/inventory/management_nodes/3/surveys"/>
   <agent_port>5989</agent_port>
   <project/>
   <credentials id="http://testserver/api/v1/inventory/management_nodes/3/credentials"/>
@@ -962,6 +1005,8 @@ systems_xml = """\
 <?xml version="1.0" encoding="UTF-8"?>
 <systems count="2" end_index="1" filter_by="" full_collection="http://testserver/api/v1/query_sets/5/all" id="http://testserver/api/v1/query_sets/5/all;start_index=0;limit=10" limit="10" next_page="" num_pages="1" order_by="" per_page="10" previous_page="" start_index="0">
   <system id="http://testserver/api/v1/inventory/systems/2">
+    <is_configured>False</is_configured>
+    <surveys id="http://testserver/api/v1/inventory/systems/2/surveys"/>
     <actions>
       <action>
         <description>Assimilate system</description>
@@ -970,6 +1015,14 @@ systems_xml = """\
         <job_type id="http://testserver/api/v1/inventory/event_types/12"/>
         <key>system_assimilation</key>
         <name>Assimilate system</name>
+      </action>
+      <action>
+        <description>Scan system</description>
+        <descriptor id="http://testserver/api/v1/inventory/systems/2/descriptors/survey_scan"/>
+        <enabled>False</enabled>
+        <job_type id="http://testserver/api/v1/inventory/event_types/24"/>
+        <key>system_scan</key>
+        <name>System scan</name>
       </action>
       <action>
         <description>Capture a system's image</description>
@@ -1045,6 +1098,8 @@ systems_xml = """\
     <source_image/>
   </system>
   <system id="http://testserver/api/v1/inventory/systems/3">
+    <is_configured>False</is_configured>
+    <surveys id="http://testserver/api/v1/inventory/systems/3/surveys"/>
     <actions>
       <action>
         <description>Assimilate system</description>
@@ -1053,6 +1108,14 @@ systems_xml = """\
         <job_type id="http://testserver/api/v1/inventory/event_types/12"/>
         <key>system_assimilation</key>
         <name>Assimilate system</name>
+      </action>
+      <action>
+        <description>Scan system</description>
+        <descriptor id="http://testserver/api/v1/inventory/systems/3/descriptors/survey_scan"/>
+        <enabled>True</enabled>
+        <job_type id="http://testserver/api/v1/inventory/event_types/24"/>
+        <key>system_scan</key>
+        <name>System scan</name>
       </action>
       <action>
         <description>Capture a system's image</description>
@@ -1134,6 +1197,7 @@ systems_put_xml = """\
 <?xml version="1.0" encoding="UTF-8"?>
 <systems>
   <system id="http://testserver/api/v1/inventory/systems/1">
+    <surveys id="http://testserver/api/v1/inventory/systems/1/surveys"/>
     <ssl_client_key>testsystemsslclientkey</ssl_client_key>
     <out_of_date>false</out_of_date>
     <registration_date/>
@@ -1177,6 +1241,7 @@ systems_put_xml = """\
     <source_image/>
   </system>
   <system id="http://testserver/api/v1/inventory/systems/2">
+    <surveys id="http://testserver/api/v1/inventory/systems/2/surveys"/>
     <ssl_client_key>testsystemsslclientkey</ssl_client_key>
     <out_of_date>false</out_of_date>
     <registration_date/>
@@ -1224,6 +1289,7 @@ systems_put_xml = """\
 systems_put_mothball_xml = """\
 <?xml version="1.0" encoding="UTF-8"?>
 <system id="http://testserver/api/v1/inventory/systems/3">
+  <surveys id="http://testserver/api/v1/inventory/systems/3/surveys"/>
   <ssl_client_key>testsystemsslclientkey</ssl_client_key>
   <out_of_date>false</out_of_date>
   <registration_date/>
@@ -1268,6 +1334,8 @@ systems_put_mothball_xml = """\
 system_xml = """\
 <?xml version="1.0" encoding="UTF-8"?>
 <system id="http://testserver/api/v1/inventory/systems/3">
+  <is_configured>False</is_configured>
+  <surveys id="http://testserver/api/v1/inventory/systems/3/surveys"/>
   <actions>
     <action>
       <description>Assimilate system</description>
@@ -1276,6 +1344,14 @@ system_xml = """\
       <job_type id="http://testserver/api/v1/inventory/event_types/12"/>
       <key>system_assimilation</key>
       <name>Assimilate system</name>
+    </action>
+    <action>
+      <description>Scan system</description>
+      <descriptor id="http://testserver/api/v1/inventory/systems/3/descriptors/survey_scan"/>
+      <enabled>True</enabled>
+      <job_type id="http://testserver/api/v1/inventory/event_types/24"/>
+      <key>system_scan</key>
+      <name>System scan</name>
     </action>
     <action>
       <description>Capture a system's image</description>
@@ -1509,6 +1585,8 @@ system_delete_mgmt_interface_put_xml = """\
 system_post_xml_response = """\
 <?xml version="1.0" encoding="UTF-8"?>
 <system id="http://testserver/api/v1/inventory/systems/3">
+  <is_configured>False</is_configured>
+  <surveys id="http://testserver/api/v1/inventory/systems/3/surveys"/>
   <agent_port>5989</agent_port>
   <project/>
   <credentials id="http://testserver/api/v1/inventory/systems/3/credentials"/>
@@ -1653,6 +1731,8 @@ system_post_xml_dup2 = system_post_xml_dup.replace(
 system_target_xml = """\
 <?xml version="1.0" encoding="UTF-8"?>
 <system id="http://testserver/api/v1/inventory/systems/3">
+  <is_configured>False</is_configured>
+  <surveys id="http://testserver/api/v1/inventory/systems/3/surveys"/>
   <actions>
     <action>
       <description>Assimilate system</description>
@@ -1661,6 +1741,14 @@ system_target_xml = """\
       <job_type id="http://testserver/api/v1/inventory/event_types/12"/>
       <key>system_assimilation</key>
       <name>Assimilate system</name>
+    </action>
+    <action>
+      <description>Scan system</description>
+      <descriptor id="http://testserver/api/v1/inventory/systems/3/descriptors/survey_scan"/>
+      <enabled>True</enabled>
+      <job_type id="http://testserver/api/v1/inventory/event_types/24"/>
+      <key>system_scan</key>
+      <name>System scan</name>
     </action>
     <action>
       <description>Capture a system's image</description>
@@ -2017,6 +2105,8 @@ installed_software_xml = """\
 system_version_xml = """\
 <?xml version="1.0" encoding="UTF-8"?>
 <system id="http://testserver/api/v1/inventory/systems/3">
+  <is_configured>False</is_configured>
+  <surveys id="http://testserver/api/v1/inventory/systems/3/surveys"/>
   <agent_port>5989</agent_port>
   <project/>
   <credentials id="http://testserver/api/v1/inventory/systems/3/credentials"/>
@@ -2170,6 +2260,8 @@ system_version_put_response_xml = """\
 <?xml version="1.0" encoding="UTF-8"?>
 <system id="http://testserver/api/v1/inventory/systems/2">
   %s
+  <is_configured>False</is_configured>
+  <surveys id="http://testserver/api/v1/inventory/systems/2/surveys"/>
   <system_events id="http://testserver/api/v1/inventory/systems/2/system_events"/>
   <registered>True</registered>
   <ssl_client_key>testsystemsslclientkey</ssl_client_key>
@@ -2223,6 +2315,8 @@ system_version_put_response_xml = """\
 system_available_updates_xml = """\
 <?xml version="1.0" encoding="UTF-8"?>
 <system id="http://testserver/api/v1/inventory/systems/3">
+  <is_configured>False</is_configured>
+  <surveys id="http://testserver/api/v1/inventory/systems/3/surveys"/>
   <agent_port>5989</agent_port>
   <project/>
   <credentials id="http://testserver/api/v1/inventory/systems/3/credentials"/>
@@ -2487,6 +2581,8 @@ Aj/9jaPTk+mjBIgXSVEHkJCtxfGZWYFx/eNItfaAAfZVX68txm5Hyp2J6Equnr82
 
 system_with_target = """\
 <system id="http://testserver/api/v1/inventory/systems/4">
+  <is_configured>False</is_configured>
+  <surveys id="http://testserver/api/v1/inventory/systems/4/surveys"/>
   <actions>
     <action>
       <description>Assimilate system</description>
@@ -2495,6 +2591,14 @@ system_with_target = """\
       <job_type id="http://testserver/api/v1/inventory/event_types/12"/>
       <key>system_assimilation</key>
       <name>Assimilate system</name>
+    </action>
+    <action>
+      <description>Scan system</description>
+      <descriptor id="http://testserver/api/v1/inventory/systems/4/descriptors/survey_scan"/>
+      <enabled>False</enabled>
+      <job_type id="http://testserver/api/v1/inventory/event_types/24"/>
+      <key>system_scan</key>
+      <name>System scan</name>
     </action>
     <action>
       <description>Capture a system's image</description>
@@ -2704,6 +2808,8 @@ configuration_descriptor_xml = """\
 system_installed_software_version_stage_xml = """\
 <?xml version="1.0"?>
 <system id="http://testserver/api/v1/inventory/systems/3">
+  <is_configured>False</is_configured>
+  <surveys id="http://testserver/api/v1/inventory/systems/3/surveys"/>
   <management_interface id="http://testserver/api/v1/inventory/management_interfaces/1">Common Information Model (CIM)</management_interface>
   <system_events id="http://testserver/api/v1/inventory/systems/3/system_events"/>
   <project id="http://testserver/api/v1/projects/chater-foo">
@@ -2950,6 +3056,8 @@ Methods:
 -->
 <systems count="201" next_page="http://testserver/api/v1/query_sets/5/all;start_index=10;limit=10" num_pages="21" previous_page="" full_collection="http://testserver/api/v1/query_sets/5/all" end_index="9" order_by="" per_page="10" filter_by="" id="http://testserver/api/v1/query_sets/5/all;start_index=0;limit=10" limit="10" start_index="0">
   <system id="http://testserver/api/v1/inventory/systems/2">
+    <is_configured>False</is_configured>
+    <surveys id="http://testserver/api/v1/inventory/systems/2/surveys"/>
     <network_address>
       <address>127.0.0.1</address>
     </network_address>
@@ -3016,6 +3124,8 @@ Methods:
     <source_image/>
   </system>
   <system id="http://testserver/api/v1/inventory/systems/3">
+    <is_configured>False</is_configured>
+    <surveys id="http://testserver/api/v1/inventory/systems/3/surveys"/>
     <network_address>
       <address>127.0.0.3</address>
     </network_address>
@@ -3082,6 +3192,8 @@ Methods:
     <source_image/>
   </system>
   <system id="http://testserver/api/v1/inventory/systems/4">
+    <is_configured>False</is_configured>
+    <surveys id="http://testserver/api/v1/inventory/systems/4/surveys"/>
     <network_address>
       <address>127.0.0.4</address>
     </network_address>
@@ -3148,6 +3260,8 @@ Methods:
     <source_image/>
   </system>
   <system id="http://testserver/api/v1/inventory/systems/5">
+    <is_configured>False</is_configured>
+    <surveys id="http://testserver/api/v1/inventory/systems/5/surveys"/>
     <network_address>
       <address>127.0.0.5</address>
     </network_address>
@@ -3214,6 +3328,8 @@ Methods:
     <source_image/>
   </system>
   <system id="http://testserver/api/v1/inventory/systems/6">
+    <is_configured>False</is_configured>
+    <surveys id="http://testserver/api/v1/inventory/systems/6/surveys"/>
     <network_address>
       <address>127.0.0.6</address>
     </network_address>
@@ -3280,6 +3396,8 @@ Methods:
     <source_image/>
   </system>
   <system id="http://testserver/api/v1/inventory/systems/7">
+    <is_configured>False</is_configured>
+    <surveys id="http://testserver/api/v1/inventory/systems/7/surveys"/>
     <network_address>
       <address>127.0.0.7</address>
     </network_address>
@@ -3346,6 +3464,8 @@ Methods:
     <source_image/>
   </system>
   <system id="http://testserver/api/v1/inventory/systems/8">
+    <is_configured>False</is_configured>
+    <surveys id="http://testserver/api/v1/inventory/systems/8/surveys"/>
     <network_address>
       <address>127.0.0.8</address>
     </network_address>
@@ -3412,6 +3532,8 @@ Methods:
     <source_image/>
   </system>
   <system id="http://testserver/api/v1/inventory/systems/9">
+    <is_configured>False</is_configured>
+    <surveys id="http://testserver/api/v1/inventory/systems/9/surveys"/>
     <network_address>
       <address>127.0.0.9</address>
     </network_address>
@@ -3478,6 +3600,8 @@ Methods:
     <source_image/>
   </system>
   <system id="http://testserver/api/v1/inventory/systems/10">
+    <is_configured>False</is_configured>
+    <surveys id="http://testserver/api/v1/inventory/systems/10/surveys"/>
     <network_address>
       <address>127.0.0.10</address>
     </network_address>
@@ -3544,6 +3668,8 @@ Methods:
     <source_image/>
   </system>
   <system id="http://testserver/api/v1/inventory/systems/11">
+    <is_configured>False</is_configured>
+    <surveys id="http://testserver/api/v1/inventory/systems/11/surveys"/>
     <network_address>
       <address>127.0.0.11</address>
     </network_address>
@@ -3622,6 +3748,7 @@ system_assimilator_xml = """\
 
 system_post_forge_object = """<?xml version="1.0" encoding="UTF-8"?>
 <system>
+  <is_configured>False</is_configured>
   <managing_zone id="http://testserver/api/v1/inventory/zones/1">Local rBuilder</managing_zone>
   <ssl_client_key>testsystemsslclientkey</ssl_client_key>
   <out_of_date>false</out_of_date>
@@ -3659,6 +3786,8 @@ system_post_forge_object = """<?xml version="1.0" encoding="UTF-8"?>
 
 retirement_xml = """
 <system id="http://testserver/api/v1/inventory/systems/3">
+  <is_configured>False</is_configured>
+  <surveys id="http://testserver/api/v1/inventory/systems/3/surveys"/>
   <networks/>
   <management_interface id="http://testserver/api/v1/inventory/management_interfaces/3">Secure Shell (SSH)</management_interface>
   <system_events id="http://testserver/api/v1/inventory/systems/3/system_events"/>
@@ -3730,3 +3859,190 @@ retirement_xml = """
 </system>
 """
 
+surveys_xml = """
+<surveys count="1" end_index="0" filter_by="" full_collection="http://testserver/api/v1/inventory/systems/3/surveys/" id="http://testserver/api/v1/inventory/systems/3/surveys/" limit="10" next_page="" num_pages="1" order_by="" per_page="10" previous_page="" start_index="0">
+  <survey id="http://testserver/api/v1/inventory/surveys/00000000-0000-4000-0000-000000000000">
+    <description/>
+    <name>x</name>
+    <removable>False</removable>
+    <uuid>00000000-0000-4000-0000-000000000000</uuid>
+  </survey>
+</surveys>
+"""
+
+survey_output_xml = """
+<survey id="http://testserver/api/v1/inventory/surveys/00000000-0000-4000-0000-000000000000">
+    <comment></comment>
+    <removable>False</removable>
+    <modified_date>2012-02-03T16:28:08.137616+00:00</modified_date>
+    <modified_by id="http://testserver/api/v1/users/2">
+      <user_name>JeanValjean1</user_name>
+      <full_name></full_name>
+    </modified_by>
+    <uuid>00000000-0000-4000-0000-000000000000</uuid>
+    <tags>
+      <tag id="http://testserver/api/v1/inventory/survey_tags/1">
+        <survey id="http://testserver/api/v1/inventory/surveys/00000000-0000-4000-0000-000000000000"/>
+        <name>needs_review</name>
+        <tag_id>1</tag_id>
+      </tag>
+    </tags>
+    <windows_patches/>
+    <windows_packages/>
+    <windows_services/>
+    <rpm_packages>
+      <rpm_package id="http://testserver/api/v1/inventory/survey_rpm_packages/1">
+        <survey id="http://testserver/api/v1/inventory/surveys/00000000-0000-4000-0000-000000000000"/>
+        <rpm_package_id>1</rpm_package_id>
+        <rpm_package_info id="http://testserver/api/v1/inventory/rpm_package_info/1">
+          <description>enterprise middleware abstraction layer</description>
+          <epoch>0</epoch>
+          <version>5</version>
+          <architecture>x86_64</architecture>
+          <signature>X</signature>
+          <release>6</release>
+          <name>asdf</name>
+        </rpm_package_info>
+        <install_date>2012-02-03T16:28:08.177050+00:00</install_date>
+      </rpm_package>
+    </rpm_packages>
+    <description></description>
+    <system id="http://testserver/api/v1/inventory/systems/3"/>
+    <created_by id="http://testserver/api/v1/users/2">
+      <user_name>JeanValjean1</user_name>
+      <full_name></full_name>
+    </created_by>
+    <created_date>2012-02-03T16:28:08.137524+00:00</created_date>
+    <services>
+      <service id="http://testserver/api/v1/inventory/survey_services/1">
+        <status>is maybe doing stuff</status>
+        <survey id="http://testserver/api/v1/inventory/surveys/00000000-0000-4000-0000-000000000000"/>
+        <running>false</running>
+        <service_info id="http://testserver/api/v1/inventory/service_info/1">
+          <name>httpd</name>
+          <autostart>1</autostart>
+          <runlevels>3,4,5</runlevels>
+        </service_info>
+        <service_id>1</service_id>
+      </service>
+    </services>
+    <conary_packages>
+      <conary_package id="http://testserver/api/v1/inventory/survey_conary_packages/1">
+        <conary_package_id>1</conary_package_id>
+        <survey id="http://testserver/api/v1/inventory/surveys/00000000-0000-4000-0000-000000000000"/>
+        <install_date>2012-02-03T16:28:08.169386+00:00</install_date>
+        <conary_package_info id="http://testserver/api/v1/inventory/conary_package_info/1">
+          <description>Type-R</description>
+          <name>jkl</name>
+          <version>7</version>
+          <architecture>ia64</architecture>
+          <signature>X</signature>
+          <rpm_package_info>
+            <name>asdf</name>
+            <epoch>0</epoch>
+            <version>5</version>
+            <architecture>x86_64</architecture>
+            <signature>X</signature>
+            <release>6</release>
+            <rpm_package_id>1</rpm_package_id>
+            <description>enterprise middleware abstraction layer</description>
+          </rpm_package_info>
+          <flavor>orange</flavor>
+          <revision>8</revision>
+        </conary_package_info>
+      </conary_package>
+    </conary_packages>
+    <name>x</name>
+    <config_values></config_values>
+</survey>
+"""
+
+# input without ids
+# FIXME -- created_by/modified_by should be nullable for system
+#          user?
+
+survey_input_xml = """
+<survey>
+    <comment></comment>
+    <uuid>1234</uuid>
+    <removable>False</removable>
+    <tags>
+      <tag>
+        <name>needs_review</name>
+      </tag>
+    </tags>
+    <rpm_packages>
+      <rpm_package id="1">
+        <rpm_package_info>
+          <description>enterprise middleware abstraction layer</description>
+          <epoch>0</epoch>
+          <version>5</version>
+          <architecture>x86_64</architecture>
+          <signature>X</signature>
+          <release>6</release>
+          <name>asdf</name>
+        </rpm_package_info>
+        <install_date>2012-02-03T16:28:08.177050+00:00</install_date>
+      </rpm_package>
+    </rpm_packages>
+    <description></description>
+    <system id="http://testserver/api/v1/inventory/systems/3"/>
+    <created_by id="http://testserver/api/v1/users/2"/>
+    <created_date>0</created_date>
+    <services>
+      <service id="2">
+        <status>is maybe doing stuff</status>
+        <running>false</running>
+        <service_info>
+          <name>httpd</name>
+          <autostart>1</autostart>
+          <runlevels>3,4,5</runlevels>
+        </service_info>
+      </service>
+    </services>
+    <conary_packages>
+      <conary_package id="3">
+        <install_date>2012-02-03T16:28:08.169386+00:00</install_date>
+        <conary_package_info>
+          <description>Type-R</description>
+          <name>jkl</name>
+          <version>7</version>
+          <architecture>ia64</architecture>
+          <signature>X</signature>
+          <rpm_package_info id="1">
+            <name>asdf</name>
+            <epoch>0</epoch>
+            <version>5</version>
+            <architecture>x86_64</architecture>
+            <signature>X</signature>
+            <release>6</release>
+            <description>enterprise middleware abstraction layer</description>
+          </rpm_package_info>
+          <flavor>orange</flavor>
+          <revision>8</revision>
+        </conary_package_info>
+      </conary_package>
+    </conary_packages>
+    <name>x</name>
+</survey>
+"""
+
+# FIXME: add tests trying to clobber fields it should not clobber
+# or if it can erase things
+
+survey_mod_xml="""
+<survey id='http://testserver/api/v1/inventory/surveys/1234'>
+    <comment>Here is a comment</comment>
+    <uuid>1234</uuid>
+    <name>Here is a name</name>
+    <removable>True</removable>
+    <tags>
+      <tag>
+        <name>onfire</name>
+      </tag>
+      <tag>
+        <name>stat</name>
+      </tag>
+    </tags>
+</survey>
+"""

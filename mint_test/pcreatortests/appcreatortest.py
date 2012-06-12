@@ -254,7 +254,9 @@ class TestRecipe(PackageRecipe):
         sesH, otherInfo = self.mintClient.startApplianceCreatorSession( \
                 self.projectId, self.versionId, False)
         project = self.mintClient.getProject(self.projectId)
-        repos = self.mintClient.server._server._getProjectRepo(project)
+        client = self.mintClient.server._server.reposMgr.getAdminClient(
+                write=True)
+        repos = client.getRepos()
         bar = self.addComponent('testpkgzero:runtime', '%s/1.0' % 
             self.prodDef.getDefaultLabel(), repos=repos)
         self.mintClient.addApplianceTrove(sesH, bar.getName())

@@ -459,7 +459,7 @@ class ImageManager(manager.Manager):
             # over the wire
             ifile = rcli.ImageFile(
                 title=self._u(fileItem.fileName),
-                fileName=self._u(fileItem.fileName),
+                file_name=self._u(fileItem.fileName),
                 url=url, destination=destination)
             fileList.append(ifile)
         if not fileList:
@@ -712,7 +712,7 @@ class ImageManager(manager.Manager):
         factoryName = "rbuilder-image"
         troveName = "image-%s" % hostname
         troveVersion = imageId
-        RegularFile = productMgr.reposMgr.RegularFile
+        RegularFile = self.db.reposShim.RegularFile
         streamMap = dict((os.path.basename(x),
             RegularFile(contents=file(x), config=False)) for x in filePaths)
         try:

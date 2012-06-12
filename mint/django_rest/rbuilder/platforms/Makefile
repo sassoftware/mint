@@ -5,7 +5,7 @@
 #
 
 
-SUBDIRS =	fixtures image_type_descriptors
+SUBDIRS =	fixtures image_type_descriptors views
 python_files = $(wildcard *.py)
 
 all: default-all

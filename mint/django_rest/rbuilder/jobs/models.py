@@ -10,6 +10,7 @@ from django.db import models
 from mint.django_rest.deco import D
 from mint.django_rest.rbuilder import modellib
 from mint.django_rest.rbuilder.users import models as usermodels
+from mint.django_rest.rbuilder.inventory import survey_models
 
 from xobj import xobj
 
@@ -19,6 +20,7 @@ APIReadOnly = modellib.APIReadOnly
 class JobSystemArtifact(modellib.XObjModel):
     class Meta:
         db_table = 'jobs_created_system'
+        unique_together = [ 'job', 'system' ]
     _xobj = xobj.XObjMetadata(tag = 'system_artifact')
     
     creation_id = XObjHidden(models.AutoField(primary_key=True))
@@ -28,11 +30,23 @@ class JobSystemArtifact(modellib.XObjModel):
 class JobImageArtifact(modellib.XObjModel):
     class Meta:
         db_table = 'jobs_created_image'
+        unique_together = [ 'job', 'image' ]
     _xobj = xobj.XObjMetadata(tag = 'image_artifact')
 
     creation_id = XObjHidden(models.AutoField(primary_key=True))
     job         = XObjHidden(modellib.ForeignKey('Job', db_column='job_id', related_name='created_images'))
     image       = modellib.ForeignKey('images.Image', db_column='image_id', related_name='+')
+
+class JobSurveyArtifact(modellib.XObjModel):
+    class Meta:
+        db_table = 'jobs_created_survey'
+        unique_together = [ 'job', 'survey' ]
+    _xobj = xobj.XObjMetadata(tag = 'survey_artifact')
+
+    id = XObjHidden(models.AutoField(primary_key=True))
+    job = XObjHidden(modellib.ForeignKey('Job', related_name='created_surveys'))
+    survey = modellib.ForeignKey(survey_models.Survey, related_name='created_surveys')
+
 
 class ActionResources(modellib.UnpaginatedCollection):
     class Meta:
@@ -162,6 +176,13 @@ class Job(modellib.XObjIdModel):
             return rmakeJobs[0]
         return None
 
+    def setDefaultValues(self):
+        runningState = modellib.Cache.get(JobState,
+            name=JobState.RUNNING)
+        self.job_state = runningState
+        self.status_code = 100
+        self.status_text = "Running"
+
     def setValuesFromRmake(self):
         runningState = modellib.Cache.get(JobState,
             name=JobState.RUNNING)
@@ -191,7 +212,6 @@ class Job(modellib.XObjIdModel):
                 self.job_state = failedState
         elif self.job_state_id is None:
             self.job_state = runningState
-        self.save()
 
     def get_absolute_url(self, request, parents=None, *args, **kwargs):
         if parents:
@@ -346,9 +366,15 @@ class EventType(modellib.XObjIdModel):
     SYSTEM_CAPTURE = 'system capture'
     SYSTEM_CAPTURE_DESCRIPTION = "Capture a system's image"
 
+    SYSTEM_SCAN = 'system scan'
+    SYSTEM_SCAN_DESCRIPTION = 'Scan system'
+
     # resource type = image ##########################################
     IMAGE_BUILDS = 'image builds'
     IMAGE_BUILDS_DESCRIPTION = 'Image builds'
+
+    IMAGE_CANCEL_BUILD = 'image build cancellation'
+    IMAGE_CANCEL_BUILD_DESCRIPTION = 'Cancel an image build'
      
     # resource type = queryset #######################################
     # these codes are not in the db because queryset jobs are (so far)

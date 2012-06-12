@@ -201,8 +201,8 @@ class RbacManager(basemanager.BaseManager):
         role.modified_by = by_user
         role.save()
         role = models.RbacRole.objects.get(name=role.name)
-        self.mgr.invalidateQuerySetByName('All Roles')
-        return role
+        self.mgr.invalidateQuerySetsByType('role')
+        return role    
 
     @exposed
     def updateRbacRole(self, old_id, role, by_user):
@@ -214,12 +214,11 @@ class RbacManager(basemanager.BaseManager):
         role.modified_date = timeutils.now()
         role.modified_by = by_user
         role.save()
-        self.mgr.invalidateQuerySetByName('All Roles')
+        self.mgr.invalidateQuerySetsByType('role')
         return role
 
     @exposed
     def deleteRbacRole(self, role):
-        self.mgr.invalidateQuerySetByName('All Roles')
         return self._deleteThing(models.RbacRole, self._role(role)) 
 
     #########################################################
@@ -310,7 +309,7 @@ class RbacManager(basemanager.BaseManager):
             queryset = permission.queryset,
             permission = permission.permission
         )
-        self.mgr.invalidateQuerySetByName('All Grants')
+        self.mgr.invalidateQuerySetsByType('grant')
         return result
 
     @exposed
@@ -323,12 +322,12 @@ class RbacManager(basemanager.BaseManager):
         permission.modified_date = timeutils.now()
         permission.modified_by   = by_user
         permission.save()
-        self.mgr.invalidateQuerySetByName('All Grants')
+        self.mgr.invalidateQuerySetsByType('grant')
         return permission
 
     @exposed
     def deleteRbacPermission(self, permission):
-        self.mgr.invalidateQuerySetByName('All Grants')
+        self.mgr.invalidateQuerySetsByType('grant')
         return self._deleteThing(models.RbacPermission, self._permission(permission))
 
     #########################################################
@@ -454,7 +453,7 @@ class RbacManager(basemanager.BaseManager):
             grants__role__rbacuserrole__user = user,
             grants__permission__name = CREATERESOURCE
         )
-        personal_sets = [ x for x in granting_sets if x.personal_for is not None ]
+        personal_sets = [ x for x in granting_sets if x.personal_for == user ]
         # if using "My Query Sets", always create the resource in THAT
         # queryset.  Currently the idea of chosing where to create a resource
         # is not really designed/supported.

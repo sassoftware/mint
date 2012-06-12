@@ -63,6 +63,13 @@ class JobsTestCase(BaseJobsTest):
         self.assertEquals(response.status_code, 200)
         self.assertXMLEquals(response.content, testsxml.jobs_xml)
 
+    def testGetJobsSortBySyntheticFields(self):
+        response = self._get('jobs/?order_by=job_description')
+        self.assertEquals(response.status_code, 200)
+        self.assertXMLEquals(response.content,
+            testsxml.jobs_xml.replace('order_by=""',
+                'order_by="job_description"'))
+
     def testGetJobStates(self):
         response = self._get('job_states/')
         self.assertEquals(response.status_code, 200)
@@ -199,4 +206,169 @@ class JobCreationTest(BaseJobsTest, RepeaterMixIn):
             [ 'xen-enterprise' ],
         )
 
+    def testCreateJobSystemScan(self):
+        jobType = self.mgr.sysMgr.eventType(models.EventType.SYSTEM_SCAN)
+        system = self._saveSystem()
+        system.save()
+        jobXml = """
+<job>
+  <job_type id="http://localhost/api/v1/inventory/event_types/%(jobTypeId)s"/>
+  <descriptor id="http://testserver/api/v1/inventory/systems/%(systemId)s/descriptors/survey_scan"/>
+  <descriptor_data/>
+</job>
+""" % dict(jobTypeId=jobType.job_type_id, systemId=system.system_id)
 
+        response = self._post('jobs', jobXml,
+            username='testuser', password='password')
+        self.assertEquals(response.status_code, 200)
+        obj = xobj.parse(response.content)
+        job = obj.job
+        self.failUnlessEqual(job.descriptor.id,
+            "http://testserver/api/v1/inventory/systems/%s/descriptors/survey_scan" % system.system_id)
+
+        repClient = self.mgr.repeaterMgr.repeaterClient
+        cimParams = repClient.CimParams
+        resLoc = repClient.ResultsLocation
+
+        callList = repClient.getCallList()
+
+        eventUuids = [ x.args[0].pop('eventUuid') for x in callList ]
+
+        dbjob = models.Job.objects.get(job_uuid=job.job_uuid)
+        # Make sure the job is related to the system
+        self.failUnlessEqual(
+            [ (x.system_id, x.event_uuid) for x in dbjob.systems.all() ],
+            [ (system.system_id, eventUuids[0]) ],
+        )
+
+
+
+        self.failUnlessEqual(callList,
+            [
+                ('survey_scan_cim',
+                    (
+                        cimParams(**{'targetType': None, 'instanceId': None, 'targetName': None, 'port': 5989, 'host': u'1.1.1.1', 'launchWaitTime': 1200, 'clientKey': u'testsystemsslclientkey', 'requiredNetwork': None, 'clientCert': u'testsystemsslclientcertificate'}),
+
+                    ),
+                    dict(
+                        zone=system.managing_zone.name,
+                    ),
+                ),
+            ])
+
+        # same deal with wmi
+
+        system.management_interface = self.mgr.wmiManagementInterface()
+        system.save()
+
+        response = self._post('jobs', jobXml,
+            username='testuser', password='password')
+        self.assertEquals(response.status_code, 200)
+        obj = xobj.parse(response.content)
+        job = obj.job
+        self.failUnlessEqual(job.descriptor.id,
+            "http://testserver/api/v1/inventory/systems/%s/descriptors/survey_scan" % system.system_id)
+
+        callList = repClient.getCallList()
+        eventUuids = [ x.args[0].pop('eventUuid') for x in callList[1:] ]
+
+        dbjob = models.Job.objects.get(job_uuid=job.job_uuid)
+
+        # Make sure the job is related to the system
+        self.failUnlessEqual(
+            [ (x.system_id, x.event_uuid) for x in dbjob.systems.all() ],
+            [ (system.system_id, eventUuids[0]) ]
+        )
+
+        repClient = self.mgr.repeaterMgr.repeaterClient
+        cimParams = repClient.CimParams
+        resLoc = repClient.ResultsLocation
+
+        # Ignore cim one
+        self.failUnlessEqual(len(callList), 2)
+
+        wmiParams = repClient.WmiParams
+
+        self.failUnlessEqual(callList[1:],
+            [
+                ('survey_scan_wmi',
+                    (
+                        wmiParams(**{'port': 5989, 'host': u'1.1.1.1', 'requiredNetwork': None,}),
+
+                    ),
+                    dict(
+                        zone=system.managing_zone.name,
+                    ),
+                ),
+            ])
+
+        # ssh interface should fail
+
+        system.management_interface = self.mgr.sshManagementInterface()
+        system.save()
+
+        response = self._post('jobs', jobXml,
+            username='testuser', password='password')
+        self.assertEquals(response.status_code, 400)
+        self.assertXMLEquals(response.content, """
+<fault><code>400</code><message>Unsupported management interface</message><traceback></traceback></fault>""")
+
+    def testJobSystemScanResults(self):
+        jobType = self.mgr.sysMgr.eventType(models.EventType.SYSTEM_SCAN)
+        system = self._saveSystem()
+        system.save()
+        jobXml = """
+<job>
+  <job_type id="http://localhost/api/v1/inventory/event_types/%(jobTypeId)s"/>
+  <descriptor id="http://testserver/api/v1/inventory/systems/%(systemId)s/descriptors/survey_scan"/>
+  <descriptor_data/>
+</job>
+""" % dict(jobTypeId=jobType.job_type_id, systemId=system.system_id)
+
+        response = self._post('jobs', jobXml,
+            username='testuser', password='password')
+        self.assertEquals(response.status_code, 200)
+        obj = xobj.parse(response.content)
+        job = obj.job
+        self.failUnlessEqual(job.descriptor.id,
+            "http://testserver/api/v1/inventory/systems/%s/descriptors/survey_scan" % system.system_id)
+
+        dbjob = models.Job.objects.get(job_uuid=job.job_uuid)
+
+        jobXml = """
+<job>
+  <job_state>Completed</job_state>
+  <status_code>200</status_code>
+  <status_text>Done</status_text>
+  <results>
+    <surveys>
+      <survey>
+        <uuid>aa-bb-cc-dd</uuid>
+        <rpm_packages/>
+        <conary_packages/>
+        <services/>
+      </survey>
+    </surveys>
+  </results>
+</job>
+"""
+
+        # Grab token
+        jobToken = dbjob.job_token
+        jobUrl = "jobs/%s" % dbjob.job_uuid
+        response = self._put(jobUrl, jobXml, jobToken=jobToken)
+        self.assertEquals(response.status_code, 200)
+        obj = xobj.parse(response.content)
+        job = obj.job
+        self.failUnlessEqual(job.job_uuid, dbjob.job_uuid)
+
+        # Make sure the job is related to the survey
+        self.failUnlessEqual(
+            [ x.survey.uuid for x in dbjob.created_surveys.all() ],
+            [ 'aa-bb-cc-dd' ]
+        )
+
+        # #2337 - make sure active flags are not set
+        dbsystem = system.__class__.objects.get(system_id=system.system_id)
+        self.assertEquals(bool(dbsystem.has_active_jobs), False)
+        self.assertEquals(bool(dbsystem.has_running_jobs), False)

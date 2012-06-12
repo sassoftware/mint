@@ -10,6 +10,8 @@ from mint import helperfuncs, userlevels
 from mint.django_rest.rbuilder import modellib
 from mint.django_rest.deco import D
 from mint.django_rest.rbuilder.users import models as usermodels
+# avoid circular reference:
+#from mint.django_rest.rbuilder.querysets import models as querymodels
 from xobj import xobj
 
 class Groups(modellib.XObjModel):
@@ -284,8 +286,15 @@ class ProjectVersion(modellib.XObjIdModel):
         "Branch platform label, defaults to null", short="Branch platform label")
     created_date = D(modellib.DecimalTimestampField(
         db_column="timecreated"), "Branch created date", short="Branch created date")
+    modified_date = D(modellib.DecimalTimestampField(
+        db_column="timemodified"), "Branch modified date", short="Branch modified date")
 
     platform_id = modellib.XObjHidden(models.IntegerField(null=True, db_column='platform_id'))
+    created_by = D(modellib.DeferredForeignKey(usermodels.User, db_column='created_by', null=True, 
+        related_name='+'), "Branch creator")
+    modified_by = D(modellib.DeferredForeignKey(usermodels.User, db_column='modified_by', null=True, 
+        related_name='+'), "Branch last modified by")
+
 
     images = modellib.SyntheticField()
     definition = modellib.SyntheticField(modellib.HrefField())
@@ -352,6 +361,7 @@ class ProjectVersion(modellib.XObjIdModel):
     def serialize(self, request=None):
 #        if request is not None:
 #            self._computeRepositoryAPI()
+
         oldUrlValues = (self.project.short_name, self.name)
         self.imageDefinitions = modellib.HrefField(
             href='/api/products/%s/versions/%s/imageDefinitions',
@@ -365,6 +375,7 @@ class ProjectVersion(modellib.XObjIdModel):
         xobjModel = modellib.XObjIdModel.serialize(self, request)
         # XXX FIXME: this should not be needed
         xobjModel.project_branch_stages.id = "%s/project_branch_stages" % (xobjModel.id, )
+
         return xobjModel
 
     @classmethod
@@ -411,11 +422,22 @@ class Stage(modellib.XObjIdModel):
     promotable = D(models.BooleanField(default=False),
         "Stage promotable? Boolean, defaults to False", short="Stage promotable?")
     created_date = D(modellib.DateTimeUtcField(auto_now_add=True), "Stage created date", short="Stage created date")
+    modified_date = D(modellib.DateTimeUtcField(auto_now_add=True), "Stage modified date", short="Stage modified date")
+    created_by = D(models.ForeignKey(usermodels.User, related_name="+", null=True, db_column="created_by"), "Stage creator", short="Stage creator")
+    modified_by = D(models.ForeignKey(usermodels.User, related_name="+", null=True, db_column="modified_by"), "Stage modifier", short="Stage modifier")
+    external = modellib.SyntheticField(models.BooleanField())
     groups = modellib.SyntheticField()
     repository_api = modellib.SyntheticField(modellib.HrefField())
 
     def get_url_key(self, *args, **kwargs):
         return [ self.project.short_name, self.project_branch.label, self.name ]
+
+    def computeSyntheticFields(self, sender, **kwargs):
+        ''' Compute non-database fields.'''
+        if self.project_id is None:
+            self.external = False
+        else:
+            self.external = self.project.external
 
     def _computeRepositoryAPI(self):
         self.repository_api = modellib.HrefField(

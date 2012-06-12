@@ -26,8 +26,11 @@ class WigTask(plug_worker.TaskHandler):
             genClass = isogen.IsoGenerator
         elif imageType == buildtypes.WINDOWS_WIM:
             genClass = genmod.WimGenerator
-        elif imageType in (buildtypes.VMWARE_IMAGE,
-                buildtypes.VMWARE_ESX_IMAGE):
+        elif imageType in (
+                buildtypes.VMWARE_IMAGE,
+                buildtypes.VMWARE_ESX_IMAGE,
+                buildtypes.VIRTUAL_PC_IMAGE,
+                ):
             genClass = genmod.ConvertedImageGenerator
         else:
             raise TypeError("Invalid Windows image type %s" % imageType)

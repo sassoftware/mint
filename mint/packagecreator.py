@@ -265,12 +265,12 @@ class ShimClient(pcreator.shimclient.ShimPackageCreatorClient):
         self.server._server._storeSessionValue(sessionHandle, 'currentFiles', currentFiles)
 
 def getPackageCreatorClient(mintCfg, authToken, callback=None,
-        djangoManager=None):
+        djangoManagerCallback=None):
     auth = {'user': authToken[0], 'passwd': authToken[1]}
     cfg = pcreator.config.PackageCreatorServiceConfiguration()
     cfg.storagePath = os.path.join(mintCfg.dataPath, 'tmp')
     cfg.tmpFileStorage = cfg.storagePath
-    cfg.djangoManager = djangoManager
+    cfg.djangoManagerCallback = djangoManagerCallback
     if mintCfg.packageCreatorConfiguration:
         cfg.read(mintCfg.packageCreatorConfiguration)
     return ShimClient(cfg, auth, callback = callback)

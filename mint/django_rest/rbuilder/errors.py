@@ -24,7 +24,7 @@ class RbuilderError(Exception):
         if kwargs_status:
             self.status = kwargs_status
         else:
-            self.status = INTERNAL_SERVER_ERROR
+            self.status = getattr(self.__class__, 'status', INTERNAL_SERVER_ERROR)
         self.kwargs = kwargs
         self.traceback = kwargs.pop('traceback', None)
 

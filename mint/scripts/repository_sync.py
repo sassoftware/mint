@@ -14,7 +14,7 @@ from rpath_proddef import api1 as proddef
 log = logging.getLogger(__name__)
 
 # Bump this to force all branches to be refreshed.
-SYNC_VERSION = 2
+SYNC_VERSION = 3
 
 
 class Script(GenericScript):
@@ -149,7 +149,7 @@ class SyncTool(object):
         sqlStages = dict(cu)
         pdStages = [x.name for x in pd.getStages()]
         for stage in set(pdStages) - set(sqlStages):
-            isPromotable = (stage != pdStages[-1])
+            isPromotable = (stage != pdStages[-1] and not handle.isExternal)
             cu.execute("""INSERT INTO project_branch_stage (name, label,
                     project_branch_id, project_id, promotable, created_date)
                 VALUES (?, ?, ?, ?, ?, now())""",
@@ -158,7 +158,7 @@ class SyncTool(object):
             log.info("Created stage information for stage %s on label %s",
                     stage, label)
         for stage in set(pdStages) & set(sqlStages):
-            isPromotable = (stage != pdStages[-1])
+            isPromotable = (stage != pdStages[-1] and not handle.isExternal)
             cu.execute("""UPDATE project_branch_stage SET name = ?, label = ?,
                     project_id = ?, promotable = ? WHERE stage_id = ?""",
                     (stage, pd.getLabelForStage(stage),

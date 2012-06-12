@@ -191,14 +191,20 @@ class PackageNoticesCallback(NoticesCallback):
 
     @classmethod
     def refreshCachedUpdates(cls, troveBinaries):
+        # Make sure django settings module is set before trying to import
+        # anything from django.
+        import mint.django_rest.rbuilder  # pyflakes=ignore
+
         from django import db
         db.close_connection()
-        from mint.django_rest.rbuilder.manager import rbuildermanager
-        mgr = rbuildermanager.RbuilderManager()
+
+        from mint.django_rest.rbuilder import service as rbuilder_service
+        srv = rbuilder_service.BaseAuthService()
+        srv._setMintAuth()
         for trvName, trvVersion in troveBinaries:
             trvLabel = trvVersion.trailingLabel().asString()
-            mgr.refreshCachedUpdates(trvName, trvLabel)
-            
+            srv.mgr.refreshCachedUpdates(trvName, trvLabel)
+
 
 class ApplianceNoticesCallback(PackageNoticesCallback):
     _labelTitle = "Build"
