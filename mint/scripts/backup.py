@@ -35,7 +35,7 @@ def backup(cfg, out, backupMirrors = False):
     dumpPath = os.path.join(backupPath, 'db.dump')
     if cfg.dbDriver == 'sqlite':
         util.execute("echo '.dump' | sqlite3 %s > %s" % (cfg.dbPath, dumpPath))
-    elif cfg.dbDriver in ('postgresql', 'pgpool'):
+    elif cfg.dbDriver in ('postgresql', 'pgpool', 'psycopg2'):
         dbName = cfg.dbPath.rsplit('/', 1)[-1]
         util.execute("pg_dump -U postgres -p 5439 '%s' > '%s'"
                 % (dbName, dumpPath))
@@ -76,7 +76,7 @@ def restore(cfg):
         if os.path.exists(cfg.dbPath):
             os.unlink(cfg.dbPath)
         util.execute("sqlite3 %s < %s" % (cfg.dbPath, dumpPath))
-    elif cfg.dbDriver in ('postgresql', 'pgpool'):
+    elif cfg.dbDriver in ('postgresql', 'pgpool', 'psycopg2'):
         dbName = cfg.dbPath.rsplit('/', 1)[-1]
 
         controlDb = dbstore.connect('postgres@localhost:5439/postgres',
@@ -135,7 +135,7 @@ def restore(cfg):
 
             cu.execute("SELECT * FROM InboundMirrors WHERE targetProjectId=?",
                     repoHandle.projectId)
-            localMirror = cu.fetchone_dict()
+            localMirror = cu.fetchone()
 
             # Copy permissions from InboundMirrors to Labels
             cu.execute("UPDATE Projects SET database = NULL "

@@ -384,7 +384,7 @@ class MintConfig(conarycfg.ConfigFile):
 
     def getDBParams(self):
         """Return a dictionary of psycopg params needed to connect to mintdb."""
-        if self.dbDriver not in ('postgresql', 'pgpool'):
+        if self.dbDriver not in ('postgresql', 'pgpool', 'psycopg2'):
             raise RuntimeError("Cannot convert %s database connection to "
                     "libpq format." % (self.dbDriver,))
 

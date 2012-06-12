@@ -33,19 +33,20 @@ class CapsuleManager(manager.Manager):
     def getIndexerConfig(self):
         capsuleDataDir = util.joinPaths(self.cfg.dataPath, 'capsules')
         cfg = rpath_capsule_indexer.IndexerConfig()
-        dbDriver = self.db.db.driver
-        # pgpool is the same as postgres
+        dbKind = self.db.db.db.kind
         dbConnectString = self.db.db.db.database
-        if dbDriver == 'pgpool':
-            dbDriver = "postgres"
-            # XXX this is temporary
+        if self.db.db.db.driver == 'pgpool':
+            # Can't share mint's connection when mint is using python-pgsql, so
+            # the one SA starts doesn't get cleaned up properly. This way at
+            # least it doesn't waste a pooler slot. There may also be problems
+            # with temporary tables.
             dbConnectString = 'postgres@localhost:5439/mint'
-        elif dbDriver == "sqlite":
+        elif dbKind == "sqlite":
             # sqlalchemy requires four slashes for a sqlite backend,
             # because it treats the filename as the database. See comments in
             # sqlalchemy/databases/sqlite.py
             dbConnectString = "/" + dbConnectString
-        cfg.configLine("store %s://%s" % (dbDriver, dbConnectString))
+        cfg.configLine("store %s://%s" % (dbKind, dbConnectString))
         cfg.configLine("indexDir %s/packages" % capsuleDataDir)
         cfg.configLine("systemsPath %s/systems" % capsuleDataDir)
         cfg.configLine("registeredSystemPrefix rbuilder %s" %
@@ -168,7 +169,13 @@ class CapsuleManager(manager.Manager):
         cfg = self.getIndexerConfig()
         Indexer.SourceChannels.LOGFILE_PATH = util.joinPaths(self.cfg.logPath,
             'capsule-indexer.log')
-        return Indexer(cfg)
+        dbs_conn = self.db.db.db
+        if dbs_conn.driver == 'psycopg2':
+            # Can reuse the connection if it's psycopg2
+            db = dbs_conn.dbh
+        else:
+            db = None
+        return Indexer(cfg, db=db)
 
     def getIndexerErrors(self, contentSourceName, instanceName):
         indexer = self.getIndexer()
