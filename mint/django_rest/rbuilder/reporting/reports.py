@@ -55,5 +55,3 @@ class TimeSegmentReport(object):
             zeroSeg = self.TimeSegment.Segment(0, timeindex)
             self.timeSegments.timeSegment.append(zeroSeg)
             timeindex = reporting._incrementTime(timeindex, self.timeUnits)
-    
-        

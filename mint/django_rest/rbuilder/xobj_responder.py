@@ -30,4 +30,3 @@ class xobjResponder(SerializeResponder):
         response = xobj.toxml(obj, obj.__class__.__name__)
         
         return response
-            
