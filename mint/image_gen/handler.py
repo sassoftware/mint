@@ -22,6 +22,7 @@ class BaseImageHandler(rmk_handler.JobHandler):
     imageBase = None
     imageToken = None
     log = None
+    slotType = 'image_gen'
 
     def _mirrorTaskStatus(self, task):
         """Copy task status to job status when task is updated."""
