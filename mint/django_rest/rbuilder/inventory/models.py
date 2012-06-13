@@ -874,8 +874,11 @@ class System(modellib.XObjIdModel):
 
         self.actions = actions = jobmodels.Actions()
         actions.action = []
-        assimEnabled = bool(self.management_interface_id and self.management_interface.name == 'ssh')
-        scanEnabled = bool(self.management_interface_id and self.management_interface.name == 'cim')
+        assimEnabled = bool(self.management_interface_id and
+            self.management_interface.name == 'ssh')
+        scanEnabled = bool(self.management_interface_id and
+            self.management_interface.name in ('cim', 'wmi'))
+
         actions.action.extend([
             jobmodels.EventType.makeAction(
                 jobmodels.EventType.SYSTEM_ASSIMILATE,
