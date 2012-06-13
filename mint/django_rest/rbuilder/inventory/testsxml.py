@@ -3931,6 +3931,7 @@ survey_output_xml = """
         <conary_package_id>1</conary_package_id>
         <survey id="http://testserver/api/v1/inventory/surveys/00000000-0000-4000-0000-000000000000"/>
         <install_date>2012-02-03T16:28:08.169386+00:00</install_date>
+        <is_top_level>False</is_top_level>
         <conary_package_info id="http://testserver/api/v1/inventory/conary_package_info/1">
           <description>Type-R</description>
           <name>jkl</name>
@@ -4003,6 +4004,7 @@ survey_input_xml = """
     <conary_packages>
       <conary_package id="3">
         <install_date>2012-02-03T16:28:08.169386+00:00</install_date>
+        <is_top_level>true</is_top_level>
         <conary_package_info>
           <description>Type-R</description>
           <name>jkl</name>

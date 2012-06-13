@@ -5007,7 +5007,7 @@ class MigrateTo_62(SchemaMigration):
  
 class MigrateTo_63(SchemaMigration):
     '''Goad'''
-    Version = (63, 0)
+    Version = (63, 1)
 
     def migrate(self):
         ''' add initial tables for config environments '''
@@ -5055,6 +5055,14 @@ class MigrateTo_63(SchemaMigration):
 
         # TODO: also want to save shredded key/value data for systems...
 
+        return True
+
+    def migrate1(self):
+        ''' track which conary packages are top level in surveys '''
+        self.db.cursor().execute("""
+            ALTER TABLE inventory_survey_conary_package ADD COLUMN is_top_level 
+            BOOLEAN NOT NULL DEFAULT FALSE
+        """)
         return True
 
 #### SCHEMA MIGRATIONS END HERE #############################################

@@ -296,6 +296,10 @@ class SurveyManager(basemanager.BaseManager):
             encap = getattr(xinfo, 'rpm_package_info', None)
 
             use_date = self._date(xmodel.install_date)
+            top_level = _u(getattr(xmodel, 'is_top_level', ''))
+            is_top_level = False
+            if top_level.lower() == 'true':
+                is_top_level = True
 
             if encap is not None:
                 info.rpm_package_info = rpm_info_by_id[encap.id]
@@ -310,7 +314,8 @@ class SurveyManager(basemanager.BaseManager):
             pkg = survey_models.SurveyConaryPackage(
                 conary_package_info = info,
                 survey              = survey,
-                install_date        = use_date
+                install_date        = use_date,
+                is_top_level        = is_top_level
             )
             pkg.save()
 

@@ -425,7 +425,8 @@ class SurveyConaryPackage(modellib.XObjIdModel):
     survey              = modellib.ForeignKey(Survey, related_name='conary_packages', null=False)
     conary_package_info = modellib.ForeignKey(ConaryPackageInfo, related_name='survey_conary_packages', db_column='conary_package_id', null=False)
     install_date        = modellib.DateTimeUtcField(auto_now_add=False, null=True)
-    
+    is_top_level        = models.BooleanField(null=False, default=False)   
+ 
     def get_url_key(self, *args, **kwargs):
         return [ self.conary_package_id ] 
 
