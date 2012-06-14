@@ -212,6 +212,12 @@ class SurveyTests(XMLTestCase):
             data = testsxml.survey_input_xml,
             username='admin', password='password')
         self.assertEqual(response.status_code, 200)
+        
+        # not included yet only because IDs don't line up?
+        # self.assertXMLEquals(response.content, testsxml.survey_output_xml2)
+
+        survey = survey_models.Survey.objects.get(uuid=1234)
+        #import epdb; epdb.st()
 
         response = self._get(url,
             username='admin', password='password')
@@ -238,6 +244,7 @@ class SurveyTests(XMLTestCase):
         self.assertEqual(response.status_code, 200)
         surv = survey_models.Survey.objects.get(uuid='1234')
         self.assertEqual(surv.removable, True) # Bug 2209
+
  
         # post a second survey to verify that updating the latest survey
         # info still works and see if the latest survey date matches
@@ -247,6 +254,9 @@ class SurveyTests(XMLTestCase):
         self.assertEqual(response.status_code, 200)
         sys = models.System.objects.get(pk=sys.pk)
         self.assertTrue(sys.latest_survey.created_date is not None)
+        
+        # not included yet only because IDs don't line up?
+        #self.assertXMLEquals(response.content, testsxml.survey_output_xml2)
 
         # delete the system, make sure nothing explodes
         response = self._delete("inventory/systems/%s" % sys.pk,
@@ -298,6 +308,8 @@ class SurveyTests(XMLTestCase):
             response = self._post(url,
                 data = x,
                 username='admin', password='password')
+            if response.status_code != 200:
+                print response.content
             self.assertEqual(response.status_code, 200)
 
         url = "inventory/surveys/%s/diffs/%s" % ('504', '505')

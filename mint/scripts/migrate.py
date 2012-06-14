@@ -5007,7 +5007,7 @@ class MigrateTo_62(SchemaMigration):
  
 class MigrateTo_63(SchemaMigration):
     '''Goad'''
-    Version = (63, 1)
+    Version = (63, 2)
 
     def migrate(self):
         ''' add initial tables for config environments '''
@@ -5064,6 +5064,24 @@ class MigrateTo_63(SchemaMigration):
             BOOLEAN NOT NULL DEFAULT FALSE
         """)
         return True
+
+    def migrate2(self):
+        ''' track all sorts of new survey details '''
+
+        cu = self.db.cursor()
+        cu.execute("ALTER TABLE inventory_survey ADD COLUMN desired_values_xml TEXT")
+        cu.execute("ALTER TABLE inventory_survey ADD COLUMN observed_values_xml TEXT")
+        cu.execute("ALTER TABLE inventory_survey ADD COLUMN validator_values_xml TEXT")
+        cu.execute("ALTER TABLE inventory_survey ADD COLUMN discovered_values_xml TEXT")
+
+        createTable2(self.db, 'inventory_survey_values', """
+            "survey_value_id" %(PRIMARYKEY)s,
+            "survey_id" INTEGER NOT NULL REFERENCES inventory_survey (survey_id),
+            "type" INTEGER NOT NULL,
+            "key" TEXT NOT NULL,
+            "subkey" TEXT,
+            "value" TEXT
+        """)
 
 #### SCHEMA MIGRATIONS END HERE #############################################
 

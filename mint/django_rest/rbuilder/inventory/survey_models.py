@@ -108,10 +108,40 @@ class Survey(modellib.XObjIdModel):
     modified_by   = modellib.ForeignKey(usermodels.User, null=True, db_column='modified_by', related_name='+', on_delete=models.SET_NULL) 
     system        = modellib.DeferredForeignKey('inventory.System', related_name='surveys', db_column='system_id')
     comment       = models.TextField()
-    config_values = models.TextField(db_column='values_xml')
+
+    # 'should be like this' values XML from system
+    config_values = modellib.XMLField(db_column='values_xml')
+    # values from config readers
+    observed_values   = modellib.XMLField(db_column='observed_values_xml')
+    # 'should be like this' values from server (usually will match system)
+    desired_values    = modellib.XMLField(db_column='desired_values_xml')
+    # values from config discovery probes
+    discovered_values = modellib.XMLField(db_column='discovered_values_xml')
+    # values from config validation reports
+    validator_values  = modellib.XMLField(db_column='validator_values_xml')
   
     def get_url_key(self, *args, **kwargs):
         return [ self.uuid ]
+
+#***********************************************************
+
+class SurveyValues(modellib.XObjIdModel):
+    ''' shredded values of various system properties so they are searchable '''
+
+    class Meta:
+        db_table = 'inventory_survey_values'
+
+    _xobj_explicit_accessors = set([])
+    _xobj = xobj.XObjMetadata(
+        tag = '_inventory_survey_values', attributes = {'id':str}
+    )
+
+    survey_value_id = models.AutoField(primary_key=True, db_column='survey_value_id')
+    survey_id       = modellib.ForeignKey(Survey, db_column='survey_id', null=False, related_name='survey_config')
+    type            = models.IntegerField(null=False)
+    key             = models.TextField(null=False)
+    subkey          = models.TextField(null=True)
+    value           = models.TextField()
 
 #***********************************************************
 
