@@ -199,6 +199,16 @@ class SurveyManager(basemanager.BaseManager):
         survey.save()
         return survey
 
+    def _toxml(self, what):
+        if what is None:
+            return ''
+        else:
+            try:
+                return xobj.toxml(what)
+            except TypeError:
+                # catch attempt to serialize an empty tag like <foo/>
+                return ''
+
     @exposed
     def addSurveyForSystemFromXobj(self, system_id, model):
         # shortcuts
@@ -207,22 +217,21 @@ class SurveyManager(basemanager.BaseManager):
 
         system = inventory_models.System.objects.get(pk=system_id)
 
-        xsurvey           = model.survey
-        xrpm_packages     = self._subel(xsurvey, 'rpm_packages', 'rpm_package')
-        xconary_packages  = self._subel(xsurvey, 'conary_packages', 'conary_package')
-        xwindows_packages = self._subel(xsurvey, 'windows_packages', 'windows_package')
-        xwindows_patches  = self._subel(xsurvey, 'windows_patches', 'windows_patch')
-        xservices         = self._subel(xsurvey, 'services', 'service')
-        xwindows_services = self._subel(xsurvey, 'windows_services', 'windows_service')
-        xtags             = self._subel(xsurvey, 'tags', 'tag')
-        xvalues           = getattr(xsurvey, 'values', None)
+        xsurvey            = model.survey
+        xrpm_packages      = self._subel(xsurvey, 'rpm_packages', 'rpm_package')
+        xconary_packages   = self._subel(xsurvey, 'conary_packages', 'conary_package')
+        xwindows_packages  = self._subel(xsurvey, 'windows_packages', 'windows_package')
+        xwindows_patches   = self._subel(xsurvey, 'windows_patches', 'windows_patch')
+        xservices          = self._subel(xsurvey, 'services', 'service')
+        xwindows_services  = self._subel(xsurvey, 'windows_services', 'windows_service')
+        xtags              = self._subel(xsurvey, 'tags', 'tag')
+        xvalues            = self._toxml(xsurvey.config_values)
 
-        # prevent against the backend sending <values><values> and
-        # recording it that way
-
-        subvalues         = getattr(xvalues, 'values', None)
-        if subvalues:
-            xvalues = subvalues
+        # FIXME: store all this in the DB in the survey_values table ALSO
+        xdesired_values    = self._toxml(xsurvey.desired_values)
+        xobserved_values   = self._toxml(xsurvey.observed_values)
+        xdiscovered_values = self._toxml(xsurvey.discovered_values)
+        xvalidator_values  = self._toxml(xsurvey.validator_values)
 
         created_date = getattr(xsurvey, 'created_date', 0)
         created_date = datetime.datetime.utcfromtimestamp(int(created_date))
@@ -230,9 +239,6 @@ class SurveyManager(basemanager.BaseManager):
         desc    = getattr(xsurvey, 'description', "")
         comment = getattr(xsurvey, 'comment',     "")
 
-        values = None
-        if xvalues is not None:
-            values = xobj.toxml(xsurvey.values)
 
         survey = survey_models.Survey(
             name          = system.name,
@@ -243,7 +249,11 @@ class SurveyManager(basemanager.BaseManager):
             system        = system,
             created_date  = created_date,
             modified_date = created_date,
-            config_values = values
+            config_values     = xvalues,
+            desired_values    = xdesired_values,
+            observed_values   = xobserved_values,
+            discovered_values = xdiscovered_values,
+            validator_values  = xvalidator_values
         )
         survey.save()
 

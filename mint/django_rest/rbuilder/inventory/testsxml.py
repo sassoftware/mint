@@ -3955,6 +3955,10 @@ survey_output_xml = """
     </conary_packages>
     <name>x</name>
     <config_values></config_values>
+    <desired_values></desired_values>
+    <observed_values></observed_values>
+    <discovered_values></discovered_values>
+    <validator_values></validator_values>
 </survey>
 """
 
@@ -3964,6 +3968,11 @@ survey_output_xml = """
 
 survey_input_xml = """
 <survey>
+    <config_values>X1</config_values>
+    <desired_values>X2</desired_values>
+    <observed_values><arbitrary><levels><of><nesting>foo</nesting></of></levels></arbitrary></observed_values>
+    <discovered_values>X4</discovered_values>
+    <validator_values>X5</validator_values>
     <comment></comment>
     <uuid>1234</uuid>
     <removable>False</removable>
@@ -4028,6 +4037,112 @@ survey_input_xml = """
     <name>x</name>
 </survey>
 """
+
+survey_output_xml2 = """
+<?xml version='1.0' encoding='UTF-8'?>
+<survey id="http://testserver/api/v1/inventory/surveys/1234">
+  <comment></comment>
+  <rpm_packages>
+    <rpm_package id="http://testserver/api/v1/inventory/survey_rpm_packages/2">
+      <survey id="http://testserver/api/v1/inventory/surveys/1234"/>
+      <rpm_package_id>2</rpm_package_id>
+      <rpm_package_info id="http://testserver/api/v1/inventory/rpm_package_info/1">
+        <description>enterprise middleware abstraction layer</description>
+        <epoch>0</epoch>
+        <version>5</version>
+        <architecture>x86_64</architecture>
+        <signature>X</signature>
+        <release>6</release>
+        <name>asdf</name>
+      </rpm_package_info>
+      <install_date>2012-02-03T16:28:08.177050+00:00</install_date>
+    </rpm_package>
+  </rpm_packages>
+  <config_values>
+    <config_values>X1</config_values>
+  </config_values>
+  <observed_values>
+    <observed_values>
+      <arbitrary>
+        <levels>
+          <of>
+            <nesting>foo</nesting>
+          </of>
+        </levels>
+      </arbitrary>
+    </observed_values>
+  </observed_values>
+  <conary_packages>
+    <conary_package id="http://testserver/api/v1/inventory/survey_conary_packages/2">
+      <conary_package_id>2</conary_package_id>
+      <survey id="http://testserver/api/v1/inventory/surveys/1234"/>
+      <install_date>2012-02-03T16:28:08.169386+00:00</install_date>
+      <conary_package_info id="http://testserver/api/v1/inventory/conary_package_info/1">
+        <description>Type-R</description>
+        <name>jkl</name>
+        <version>7</version>
+        <architecture>ia64</architecture>
+        <signature>X</signature>
+        <flavor>orange</flavor>
+        <revision>8</revision>
+        <rpm_package_info>
+          <name>asdf</name>
+          <epoch>0</epoch>
+          <version>5</version>
+          <architecture>x86_64</architecture>
+          <signature>X</signature>
+          <release>6</release>
+          <rpm_package_id>1</rpm_package_id>
+          <description>enterprise middleware abstraction layer</description>
+        </rpm_package_info>
+      </conary_package_info>
+      <is_top_level>true</is_top_level>
+    </conary_package>
+  </conary_packages>
+  <description></description>
+  <modified_date>2012-06-14T21:06:34.347143+00:00</modified_date>
+  <modified_by></modified_by>
+  <uuid>1234</uuid>
+  <tags>
+    <tag id="http://testserver/api/v1/inventory/survey_tags/4">
+      <survey id="http://testserver/api/v1/inventory/surveys/1234"/>
+      <name>needs_review</name>
+      <tag_id>4</tag_id>
+    </tag>
+  </tags>
+  <system id="http://testserver/api/v1/inventory/systems/3"/>
+  <created_by></created_by>
+  <discovered_values>
+    <discovered_values>X4</discovered_values>
+  </discovered_values>
+  <removable>true</removable>
+  <windows_packages/>
+  <windows_patches/>
+  <validator_values>
+    <validator_values>X5</validator_values>
+  </validator_values>
+  <services>
+    <service id="http://testserver/api/v1/inventory/survey_services/2">
+      <status>is maybe doing stuff</status>
+      <survey id="http://testserver/api/v1/inventory/surveys/1234"/>
+      <running>false</running>
+      <service_info id="http://testserver/api/v1/inventory/service_info/1">
+        <name>httpd</name>
+        <autostart>1</autostart>
+        <runlevels>3,4,5</runlevels>
+      </service_info>
+      <service_id>2</service_id>
+    </service>
+  </services>
+  <name>blinky</name>
+  <desired_values>
+    <desired_values>X2</desired_values>
+  </desired_values>
+  <created_date>2012-06-14T21:06:34.347008+00:00</created_date>
+  <windows_services/>
+</survey>
+"""
+
 
 # FIXME: add tests trying to clobber fields it should not clobber
 # or if it can erase things

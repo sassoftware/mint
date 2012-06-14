@@ -1,6 +1,11 @@
 # TODO: replace with capture from joebalt once availablewindows_survey_upload="""
 windows_upload_survey_xml="""
 <survey>
+  <config_values/>
+  <desired_values/>
+  <observed_values/>
+  <discovered_values/>
+  <validator_values/>
   <tags>
       <tag>
         <name>needs_review</name>
@@ -87,6 +92,11 @@ windows_upload_survey_xml="""
 
 windows_upload_survey_xml2 = """
 <survey>
+  <config_values/>
+  <desired_values/>
+  <observed_values/>
+  <discovered_values/>
+  <validator_values/>
   <uuid>987654321</uuid>
   <created_date>1330699918</created_date>
   <windows_patches>
@@ -195,7 +205,15 @@ windows_upload_survey_xml2 = """
 """
 
 very_long_survey="""
-<survey><rpm_packages><rpm_package id="62"><rpm_package_info><type>rpm</type><name>perl-Time-HiRes</name><epoch>4</epoch><version>1.9721</version><release>115.el6</release><architecture>x86_64</architecture><description>The Time::HiRes module implements a Perl interface to the usleep, nanosleep,
+<survey>
+
+<config_values></config_values>
+<observed_values></observed_values>
+<desired_values></desired_values>
+<validator_values></validator_values>
+<discovered_values></discovered_values>
+
+<rpm_packages><rpm_package id="62"><rpm_package_info><type>rpm</type><name>perl-Time-HiRes</name><epoch>4</epoch><version>1.9721</version><release>115.el6</release><architecture>x86_64</architecture><description>The Time::HiRes module implements a Perl interface to the usleep, nanosleep,
 ualarm, gettimeofday, and setitimer/getitimer system calls, in other words,
 high resolution time and timers. See the "EXAMPLES" section below and the test
 scripts for usage; see your system documentation for the description of the
@@ -2131,7 +2149,15 @@ lo eth0
 """
 
 one = """
-<survey><uuid>501</uuid><created_date>1328903844</created_date><rpm_packages><rpm_package id="193"><rpm_package_info><name>libdw1</name><epoch /><version>0.137</version><release>8.22.58</release><architecture>i586</architecture><description>This package provide a high-level library to access the DWARF debugging
+<survey>
+
+<config_values></config_values>
+<observed_values></observed_values>
+<desired_values></desired_values>
+<validator_values></validator_values>
+<discovered_values></discovered_values>
+
+<uuid>501</uuid><created_date>1328903844</created_date><rpm_packages><rpm_package id="193"><rpm_package_info><name>libdw1</name><epoch /><version>0.137</version><release>8.22.58</release><architecture>i586</architecture><description>This package provide a high-level library to access the DWARF debugging
 information.  This is a part of elfutils package.
 
 
@@ -7850,7 +7876,15 @@ Authors:
 """
 
 two = """
-<survey><uuid>502</uuid><created_date>1328904082</created_date><rpm_packages><rpm_package id="195"><rpm_package_info><name>libdw1</name><epoch /><version>0.137</version><release>8.22.58</release><architecture>i586</architecture><description>This package provide a high-level library to access the DWARF debugging
+<survey>
+
+<config_values></config_values>
+<observed_values></observed_values>
+<desired_values></desired_values>
+<validator_values></validator_values>
+<discovered_values></discovered_values>
+
+<uuid>502</uuid><created_date>1328904082</created_date><rpm_packages><rpm_package id="195"><rpm_package_info><name>libdw1</name><epoch /><version>0.137</version><release>8.22.58</release><architecture>i586</architecture><description>This package provide a high-level library to access the DWARF debugging
 information.  This is a part of elfutils package.
 
 
@@ -13728,7 +13762,15 @@ Authors:
 """
 
 three = """
-<survey><uuid>503</uuid><created_date>1328904196</created_date><rpm_packages><rpm_package id="195"><rpm_package_info><name>libdw1</name><epoch /><version>0.137</version><release>8.22.58</release><architecture>i586</architecture><description>This package provide a high-level library to access the DWARF debugging
+<survey>
+
+<config_values></config_values>
+<observed_values></observed_values>
+<desired_values></desired_values>
+<validator_values></validator_values>
+<discovered_values></discovered_values>
+
+<uuid>503</uuid><created_date>1328904196</created_date><rpm_packages><rpm_package id="195"><rpm_package_info><name>libdw1</name><epoch /><version>0.137</version><release>8.22.58</release><architecture>i586</architecture><description>This package provide a high-level library to access the DWARF debugging
 information.  This is a part of elfutils package.
 
 
@@ -19512,7 +19554,15 @@ Authors:
 """
 
 four = """
-<survey><uuid>504</uuid><created_date>1329160056</created_date><rpm_packages><rpm_package id="203"><rpm_package_info><name>libdw1</name><epoch /><version>0.137</version><release>8.22.58</release><architecture>i586</architecture><description>This package provide a high-level library to access the DWARF debugging
+<survey>
+
+<config_values></config_values>
+<observed_values></observed_values>
+<desired_values></desired_values>
+<validator_values></validator_values>
+<discovered_values></discovered_values>
+
+<uuid>504</uuid><created_date>1329160056</created_date><rpm_packages><rpm_package id="203"><rpm_package_info><name>libdw1</name><epoch /><version>0.137</version><release>8.22.58</release><architecture>i586</architecture><description>This package provide a high-level library to access the DWARF debugging
 information.  This is a part of elfutils package.
 
 
@@ -25496,7 +25546,15 @@ Authors:
 """
 
 five = """
-<survey><uuid>505</uuid><created_date>1329160009</created_date><rpm_packages><rpm_package id="203"><rpm_package_info><name>libdw1</name><epoch /><version>0.137</version><release>8.22.58</release><architecture>i586</architecture><description>This package provide a high-level library to access the DWARF debugging
+<survey>
+
+<config_values></config_values>
+<observed_values></observed_values>
+<desired_values></desired_values>
+<validator_values></validator_values>
+<discovered_values></discovered_values>
+
+<uuid>505</uuid><created_date>1329160009</created_date><rpm_packages><rpm_package id="203"><rpm_package_info><name>libdw1</name><epoch /><version>0.137</version><release>8.22.58</release><architecture>i586</architecture><description>This package provide a high-level library to access the DWARF debugging
 information.  This is a part of elfutils package.
 
 

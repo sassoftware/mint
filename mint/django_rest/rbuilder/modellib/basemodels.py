@@ -1284,7 +1284,14 @@ class XObjModel(models.Model):
                 elif isinstance(field, XMLField):
                     if val is None:
                         continue
-                    val = xobj.parse(val)
+                    try:
+                        val = xobj.parse(val)
+                    except:
+                        if val is None or val == '':
+                            val = ''
+                        else:
+                            print "DEBUG: BAD CONTENT: %s" % val
+                            raise
                 elif isinstance(field, HrefField):
                     if isinstance(val, HrefField):
                         # If a value was passed in, then ignore the
