@@ -5082,6 +5082,8 @@ class MigrateTo_63(SchemaMigration):
             "subkey" TEXT,
             "value" TEXT
         """)
+        return True
+
 
 #### SCHEMA MIGRATIONS END HERE #############################################
 
