@@ -3954,12 +3954,255 @@ survey_output_xml = """
       </conary_package>
     </conary_packages>
     <name>x</name>
-    <config_values></config_values>
-    <desired_values></desired_values>
-    <observed_values></observed_values>
-    <discovered_values></discovered_values>
-    <validator_values></validator_values>
+    <config_properties></config_properties>
+    <desired_properties></desired_properties>
+    <observed_properties></observed_properties>
+    <discovered_properties></discovered_properties>
+    <validation_report></validation_report>
 </survey>
+"""
+
+# NOTE: the examples in the XML items below are not domain-specific, but structural
+# so if "STIG checker" doesn't make sense in all examples, don't take it literally
+# see RCE-303
+
+config_properties = """
+<config_properties>
+  <apache_configuration>
+    <port>8080</port>
+    <processInfo>
+      <!-- This is a compound data type field -->
+      <user>nobody</user>
+      <group>nobody</group>
+    </processInfo>
+    <vhosts list="true">
+      <vhost>
+        <serverName>vhost1.example.com</serverName>
+        <documentRoot>/home/vhost1/public_html</documentRoot>
+      </vhost>
+      <vhost>
+        <serverName>vhost2.example.com</serverName>
+        <documentRoot>/home/vhost2/public_html</documentRoot>
+      </vhost>
+    </vhosts>
+    <aliases list="true">
+      <alias>
+        <handle>/images</handle>
+        <directory>/srv/www/images</directory>
+      </alias>
+      <alias>
+        <handle>/icons</handle>
+        <directory>/srv/www/icons</directory>
+      </alias>
+      <alias>
+        <handle>/robots.txt</handle>
+        <directory>/home/admin/hg/web-docs/robots.txt</directory>
+      </alias>
+    </aliases>
+  </apache_configuration>
+  <disa_stig_compliance_checker>
+    <dashboardServer>dashboard.eng.rpath.com</dashboardServer>
+    <credentials>
+      <username>host-123</username>
+      <password>my-password-123</password>
+    </credentials>
+  </disa_stig_compliance_checker>
+</config_properties>
+"""
+
+desired_properties = """
+<desired_properties>
+  <apache_configuration>
+    <port>8080</port>
+    <processInfo>
+      <!-- This is a compound data type field -->
+      <user>nobody</user>
+      <group>nobody</group>
+    </processInfo>
+    <vhosts list="true">
+      <vhost>
+        <serverName>vhost1.example.com</serverName>
+        <documentRoot>/home/vhost1/public_html</documentRoot>
+      </vhost>
+      <vhost>
+        <serverName>vhost2.example.com</serverName>
+        <documentRoot>/home/vhost2/public_html</documentRoot>
+      </vhost>
+    </vhosts>
+    <aliases list="true">
+      <alias>
+        <handle>/images</handle>
+        <directory>/srv/www/images</directory>
+      </alias>
+      <alias>
+        <handle>/icons</handle>
+        <directory>/srv/www/icons</directory>
+      </alias>
+      <alias>
+        <handle>/robots.txt</handle>
+        <directory>/home/admin/hg/web-docs/robots.txt</directory>
+      </alias>
+    </aliases>
+  </apache_configuration>
+  <disa_stig_compliance_checker>
+    <dashboardServer>dashboard.eng.rpath.com</dashboardServer>
+    <credentials>
+      <username>host-123</username>
+      <password>my-password-123</password>
+    </credentials>
+  </disa_stig_compliance_checker>
+</desired_properties>
+"""
+
+observed_properties = """
+<observed_properties>
+  <extensions>
+    <apache_configuration>
+      <port>8080</port>
+    </apache_configuration>
+  </extensions>
+  <errors>
+    <apache_configuration>
+      <!-- Overall the reader succeeded (hypothetically) -->
+      <success>true</success>
+      <error_list>
+        <error>
+          <!-- Global error -->
+          <code>500</code>
+          <message>General error: apache not running</message>
+          <detail>Lazy sysadmin didn't start apache</detail>
+        </error>
+        <error>
+          <!-- Error processing just one of the fields -->
+          <!-- Deep fields will be separated by / -->
+          <field>processInfo/user</field>
+          <code>1</code>
+          <message>Apache claims user blah, user blah does not exist</message>
+          <detail>Traceback: blah</detail>
+        </error>
+      </error_list>
+    </apache_configuration>
+    <disa_stig_compliance_checker>
+      <success>false</success>
+      <error_list>
+        <error>
+          <!-- Global error, the whole reader plugin failed -->
+          <code>100</code>
+          <message>Error: DISA compliance checker segfaulted</message>
+          <detail>Core dump here</detail>
+        </error>
+      </error_list>
+    </disa_stig_compliance_checker>
+  </errors>
+</observed_properties>
+"""
+
+discovered_properties = """
+<discovered_properties>
+  <extensions>
+    <apache_configuration>
+      <name>Apache Configuration Checker</name>
+      <probes>
+        <port>
+          <name>Apache Port Check</name>
+          <value content_type="text/html" encoding="base64">base64-encoded HTML here</value>
+        </port>
+        <port>
+          <name>Apache Port Check</name>
+          <value content_type="text/html" encoding="base64">base64-encoded HTML here</value>
+        </port>
+      </probes>
+    </apache_configuration>
+  </extensions>
+  <errors>
+    <apache_configuration>
+      <!-- Overall the reader succeeded (hypothetically) -->
+      <success>true</success>
+      <error_list>
+        <error>
+          <!-- Global error -->
+          <code>500</code>
+          <message>General error: apache not running</message>
+          <detail>Lazy sysadmin didn't start apache</detail>
+        </error>
+        <error>
+          <code>1</code>
+          <message>Apache claims user blah, user blah does not exist</message>
+          <detail>Traceback: blah</detail>
+        </error>
+      </error_list>
+    </apache_configuration>
+    <disa_stig_compliance_checker>
+      <success>false</success>
+      <error_list>
+        <error>
+          <!-- Global error, the whole reader plugin failed -->
+          <code>100</code>
+          <message>Error: DISA compliance checker segfaulted</message>
+          <detail>Core dump here</detail>
+        </error>
+      </error_list>
+    </disa_stig_compliance_checker>
+  </errors>
+</discovered_properties>
+"""
+
+validation_report = """
+<validation_report>>
+  <status>fail</status>
+  <extensions>
+    <apache_configuration>
+      <name>Apache Configuration Checker</name>
+      <status>fail</status>
+      <message>Same as in the probes below</message>
+      <details/>
+      <probes>
+        <port>
+          <name>Apache Port Check</name>
+          <status>fail</status>
+          <message>Apache not running on port</message>
+          <details content_type="text/html" encoding="base64">base64-encoded HTML here</details>
+        </port>
+        <port>
+          <name>Apache Port Check</name>
+          <status>fail</status>
+          <message>Apache not running on port</message>
+          <details content_type="text/html" encoding="base64">base64-encoded HTML here</details>
+        </port>
+      </probes>
+    </apache_configuration>
+  </extensions>
+  <errors>
+    <apache_configuration>
+      <!-- Overall the handler succeeded (hypothetically) -->
+      <success>true</success>
+      <error_list>
+        <error>
+          <!-- Global error -->
+          <code>500</code>
+          <message>General error: apache not running</message>
+          <detail>Lazy sysadmin didn't start apache</detail>
+        </error>
+        <error>
+          <code>1</code>
+          <message>Apache claims user blah, user blah does not exist</message>
+          <detail>Traceback: blah</detail>
+        </error>
+      </error_list>
+    </apache_configuration>
+    <disa_stig_compliance_checker>
+      <success>false</success>
+      <error_list>
+        <error>
+          <!-- Global error, the whole reader plugin failed -->
+          <code>100</code>
+          <message>Error: DISA compliance checker segfaulted</message>
+          <detail>Core dump here</detail>
+        </error>
+      </error_list>
+    </disa_stig_compliance_checker>
+  </errors>
+</validation_report>
 """
 
 # input without ids
@@ -3968,11 +4211,11 @@ survey_output_xml = """
 
 survey_input_xml = """
 <survey>
-    <config_values>X1</config_values>
-    <desired_values>X2</desired_values>
-    <observed_values><arbitrary><levels><of><nesting>foo</nesting></of></levels></arbitrary></observed_values>
-    <discovered_values>X4</discovered_values>
-    <validator_values>X5</validator_values>
+    %(config_properties)s
+    %(desired_properties)s
+    %(observed_properties)s
+    %(discovered_properties)s
+    %(validation_report)s
     <comment></comment>
     <uuid>1234</uuid>
     <removable>False</removable>
@@ -4036,7 +4279,13 @@ survey_input_xml = """
     </conary_packages>
     <name>x</name>
 </survey>
-"""
+""" % dict(
+    config_properties=config_properties, 
+    desired_properties=desired_properties, 
+    observed_properties=observed_properties, 
+    discovered_properties=discovered_properties, 
+    validation_report=validation_report
+)
 
 survey_output_xml2 = """
 <?xml version='1.0' encoding='UTF-8'?>
@@ -4058,20 +4307,9 @@ survey_output_xml2 = """
       <install_date>2012-02-03T16:28:08.177050+00:00</install_date>
     </rpm_package>
   </rpm_packages>
-  <config_values>
-    <config_values>X1</config_values>
-  </config_values>
-  <observed_values>
-    <observed_values>
-      <arbitrary>
-        <levels>
-          <of>
-            <nesting>foo</nesting>
-          </of>
-        </levels>
-      </arbitrary>
-    </observed_values>
-  </observed_values>
+  <config_properties/>
+  <desired_properties/>
+  <observed_properties/>
   <conary_packages>
     <conary_package id="http://testserver/api/v1/inventory/survey_conary_packages/2">
       <conary_package_id>2</conary_package_id>
@@ -4112,15 +4350,11 @@ survey_output_xml2 = """
   </tags>
   <system id="http://testserver/api/v1/inventory/systems/3"/>
   <created_by></created_by>
-  <discovered_values>
-    <discovered_values>X4</discovered_values>
-  </discovered_values>
+  <discovered_properties/>
   <removable>true</removable>
   <windows_packages/>
   <windows_patches/>
-  <validator_values>
-    <validator_values>X5</validator_values>
-  </validator_values>
+  <validation_report/>
   <services>
     <service id="http://testserver/api/v1/inventory/survey_services/2">
       <status>is maybe doing stuff</status>
@@ -4135,9 +4369,6 @@ survey_output_xml2 = """
     </service>
   </services>
   <name>blinky</name>
-  <desired_values>
-    <desired_values>X2</desired_values>
-  </desired_values>
   <created_date>2012-06-14T21:06:34.347008+00:00</created_date>
   <windows_services/>
 </survey>

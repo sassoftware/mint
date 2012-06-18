@@ -1,11 +1,10 @@
 # TODO: replace with capture from joebalt once availablewindows_survey_upload="""
 windows_upload_survey_xml="""
 <survey>
-  <config_values/>
-  <desired_values/>
-  <observed_values/>
-  <discovered_values/>
-  <validator_values/>
+  <desired_properties/>
+  <observed_properties/>
+  <discovered_properties/>
+  <validation_report/>
   <tags>
       <tag>
         <name>needs_review</name>
@@ -81,22 +80,22 @@ windows_upload_survey_xml="""
       <local_package>c:/path/to/stuff</local_package>
     </windows_package>
   </windows_packages>
-  <config_values>
+  <config_properties>
        <some_random_tag>
-           <key>config_values.xml is stored verbatim</key>
+           <key>config_properties.xml is stored verbatim</key>
            <value>this is not shredded anyway</value>
        </some_random_tag>
-  </config_values>
+  </config_properties>
 </survey>
 """
 
 windows_upload_survey_xml2 = """
 <survey>
-  <config_values/>
-  <desired_values/>
-  <observed_values/>
-  <discovered_values/>
-  <validator_values/>
+  <config_properties/>
+  <desired_properties/>
+  <observed_properties/>
+  <discovered_properties/>
+  <validation_report/>
   <uuid>987654321</uuid>
   <created_date>1330699918</created_date>
   <windows_patches>
@@ -207,11 +206,11 @@ windows_upload_survey_xml2 = """
 very_long_survey="""
 <survey>
 
-<config_values></config_values>
-<observed_values></observed_values>
-<desired_values></desired_values>
-<validator_values></validator_values>
-<discovered_values></discovered_values>
+<config_properties></config_properties>
+<observed_properties></observed_properties>
+<desired_properties></desired_properties>
+<validation_report></validation_report>
+<discovered_properties></discovered_properties>
 
 <rpm_packages><rpm_package id="62"><rpm_package_info><type>rpm</type><name>perl-Time-HiRes</name><epoch>4</epoch><version>1.9721</version><release>115.el6</release><architecture>x86_64</architecture><description>The Time::HiRes module implements a Perl interface to the usleep, nanosleep,
 ualarm, gettimeofday, and setitimer/getitimer system calls, in other words,
@@ -334,7 +333,7 @@ constructs based on associative arrays and extensible semantics. Lua
 is dynamically typed, interpreted from bytecodes, and has automatic
 memory management with garbage collection, making it ideal for
 configuration, scripting, and rapid prototyping.</description><signature>b07ea2b8d60aa8f95378b57a3d09b8e5bc95bdca</signature></rpm_package_info><install_date>1326485254</install_date><conary_package id="432" /><encapsulated>true</encapsulated></rpm_package><rpm_package id="223"><rpm_package_info><type>rpm</type><name>perl-ExtUtils-ParseXS</name><epoch>1</epoch><version>2.2003.0</version><release>115.el6</release><architecture>x86_64</architecture><description>ExtUtils::ParseXS will compile XS code into C code by embedding the
-constructs necessary to let C functions manipulate Perl config_values and
+constructs necessary to let C functions manipulate Perl config_properties and
 creates the glue necessary to let Perl access those functions.</description><signature>84d315f2eff8c28edc0e9bedbd9675e80173572c</signature></rpm_package_info><install_date>1326485271</install_date><conary_package id="222" /><encapsulated>true</encapsulated></rpm_package><rpm_package id="496"><rpm_package_info><type>rpm</type><name>ql2500-firmware</name><epoch>None</epoch><version>5.03.02</version><release>2.el6</release><architecture>noarch</architecture><description>Firmware for qlogic 2500 devices.</description><signature>ba6a5054c8ff62b05ff74278ae0c3d16d93c9df9</signature></rpm_package_info><install_date>1326485318</install_date><conary_package id="495" /><encapsulated>true</encapsulated></rpm_package><rpm_package id="150"><rpm_package_info><type>rpm</type><name>nss-util</name><epoch>None</epoch><version>3.12.8</version><release>1.el6_0</release><architecture>x86_64</architecture><description>Utilities for Network Security Services and the Softoken module</description><signature>0a7d5e6ef067692e26abe77c23950ed4abe9e071</signature></rpm_package_info><install_date>1326485253</install_date><conary_package id="149" /><encapsulated>true</encapsulated></rpm_package><rpm_package id="148"><rpm_package_info><type>rpm</type><name>dracut-kernel</name><epoch>None</epoch><version>004</version><release>33.2.el6_0</release><architecture>noarch</architecture><description>This package requires everything which is needed to build a initramfs with all
 kernel modules and firmware files needed by dracut modules.</description><signature>454b66ca0057efe2ce478970646d6aca18bcae58</signature></rpm_package_info><install_date>1326485279</install_date><conary_package id="147" /><encapsulated>true</encapsulated></rpm_package><rpm_package id="234"><rpm_package_info><type>rpm</type><name>glibc-devel</name><epoch>None</epoch><version>2.12</version><release>1.47.el6</release><architecture>x86_64</architecture><description>The glibc-devel package contains the object files necessary
 for developing programs which use the standard C libraries (which are
@@ -523,7 +522,7 @@ interface is the popular name for the interface that allows code
 written in one language to call code written in another language.  The
 `libffi' library really only provides the lowest, machine dependent
 layer of a fully featured foreign function interface.  A layer must
-exist above `libffi' that handles type conversions for config_values passed
+exist above `libffi' that handles type conversions for config_properties passed
 between the two languages.</description><signature>508ec63001a48130a7201492d7fb11d63362e990</signature></rpm_package_info><install_date>1326485267</install_date><conary_package id="260" /><encapsulated>true</encapsulated></rpm_package><rpm_package id="90"><rpm_package_info><type>rpm</type><name>libattr</name><epoch>None</epoch><version>2.4.44</version><release>4.el6</release><architecture>x86_64</architecture><description>This package contains the libattr.so dynamic library which contains
 the extended attribute system calls and library functions.</description><signature>15e499fc73678f3b92bc283f2daf9f71ed10213f</signature></rpm_package_info><install_date>1326485253</install_date><conary_package id="89" /><encapsulated>true</encapsulated></rpm_package><rpm_package id="135"><rpm_package_info><type>rpm</type><name>gcc-c++</name><epoch>None</epoch><version>4.4.6</version><release>3.el6</release><architecture>x86_64</architecture><description>This package adds C++ support to the GNU Compiler Collection.
 It includes support for most of the current C++ specification,
@@ -1482,7 +1481,7 @@ the POSIX API are also supplied in the library libpcreposix. Note that this
 just provides a POSIX calling interface to PCRE: the regular expressions
 themselves still follow Perl syntax and semantics. The header file
 for the POSIX-style functions is called pcreposix.h.</description><signature>5e0c458a60d7ec5e0f4441838fcc664bcc39eff9</signature></rpm_package_info></conary_package_info><install_date /></conary_package><conary_package id="222"><conary_package_info><name>perl-ExtUtils-ParseXS:rpm</name><version>/centos6.rpath.com@rpath:centos-6e/1323123992.113:5.10.1_115.el6-1-1</version><flavor>is: x86_64</flavor><description /><revision>5.10.1_115.el6-1-1</revision><architecture>x86_64</architecture><signature>1002ca43769a77073421bd7063f0b04e710b4bfd08233fc0f89932a7778545a2</signature><rpm_package_info id="223"><type>rpm</type><name>perl-ExtUtils-ParseXS</name><epoch>1</epoch><version>2.2003.0</version><release>115.el6</release><architecture>x86_64</architecture><description>ExtUtils::ParseXS will compile XS code into C code by embedding the
-constructs necessary to let C functions manipulate Perl config_values and
+constructs necessary to let C functions manipulate Perl config_properties and
 creates the glue necessary to let Perl access those functions.</description><signature>84d315f2eff8c28edc0e9bedbd9675e80173572c</signature></rpm_package_info></conary_package_info><install_date /></conary_package><conary_package id="224"><conary_package_info><name>iwl5000-firmware:rpm</name><version>/centos6.rpath.com@rpath:centos-6e/1323264489.097:8.24.2.12_3.el6-1-1</version><flavor>is: x86_64</flavor><description /><revision>8.24.2.12_3.el6-1-1</revision><architecture>x86_64</architecture><signature>e204c75b60e2d663885ba9568d31f92888f066e815e414443d5b57c95ec3fdcb</signature><rpm_package_info id="225"><type>rpm</type><name>iwl5000-firmware</name><epoch>None</epoch><version>8.24.2.12</version><release>3.el6</release><architecture>noarch</architecture><description>This package contains the firmware required by the iwl5000 driver for Linux.
 Usage of the firmware is subject to the terms and conditions contained
 inside the provided LICENSE file. Please read it carefully.</description><signature>3217785ab152fe34d2f9be404baa2e220266a601</signature></rpm_package_info></conary_package_info><install_date /></conary_package><conary_package id="226"><conary_package_info><name>conary-cim:supdoc</name><version>/centos6.rpath.com@rpath:centos-6-common/1326482915.054:2.0.5_929abb4e176d-1-1</version><flavor>is: x86_64</flavor><description /><revision>2.0.5_929abb4e176d-1-1</revision><architecture>x86_64</architecture><signature>6c9e82555afddc3bad473ea6ddc609fb1e840f26b20b099ac20121aafe3eebcd</signature></conary_package_info><install_date /></conary_package><conary_package id="227"><conary_package_info><name>cracklib-dicts:rpm</name><version>/centos6.rpath.com@rpath:centos-6e/1323406182.402:2.8.16_4.el6-1-1</version><flavor>is: x86_64</flavor><description /><revision>2.8.16_4.el6-1-1</revision><architecture>x86_64</architecture><signature>dbb93a0ce93353cea5bcf209bf9882525bccc8a51d10e8ac49f6fbe1c369ce21</signature><rpm_package_info id="228"><type>rpm</type><name>cracklib-dicts</name><epoch>None</epoch><version>2.8.16</version><release>4.el6</release><architecture>x86_64</architecture><description>The cracklib-dicts package includes the CrackLib dictionaries.
@@ -1562,7 +1561,7 @@ interface is the popular name for the interface that allows code
 written in one language to call code written in another language.  The
 `libffi' library really only provides the lowest, machine dependent
 layer of a fully featured foreign function interface.  A layer must
-exist above `libffi' that handles type conversions for config_values passed
+exist above `libffi' that handles type conversions for config_properties passed
 between the two languages.</description><signature>508ec63001a48130a7201492d7fb11d63362e990</signature></rpm_package_info></conary_package_info><install_date /></conary_package><conary_package id="262"><conary_package_info><name>group-smitty-c6e-openssl-sucks-appliance</name><version>/smitty-c6e-openssl-sucks.eng.rpath.com@rpath:smitty-c6e-openssl-sucks-1-devel/1326485061.958:1-1-1</version><flavor>~!xen is: x86 x86_64</flavor><description /><revision>1-1-1</revision><architecture>x86_64 x86</architecture><signature>9976d7226213e6459800781ad2157ea187fa461a04a2784593e3673a8d071486</signature></conary_package_info><install_date /></conary_package><conary_package id="263"><conary_package_info><name>pam:rpm</name><version>/centos6.rpath.com@rpath:centos-6e/1323253043.340:1.1.1_4.el6_0.1-1-1</version><flavor>is: x86_64</flavor><description /><revision>1.1.1_4.el6_0.1-1-1</revision><architecture>x86_64</architecture><signature>9781194943548fe7b9b718a1e77afee7e1332a17f991b1948fb77606c5904bd5</signature><rpm_package_info id="264"><type>rpm</type><name>pam</name><epoch>None</epoch><version>1.1.1</version><release>4.el6_0.1</release><architecture>x86_64</architecture><description>PAM (Pluggable Authentication Modules) is a system security tool that
 allows system administrators to set authentication policy without
 having to recompile programs that handle authentication.</description><signature>6cbb0f228b07148f23eb27ce93b3dc9bff01f474</signature></rpm_package_info></conary_package_info><install_date /></conary_package><conary_package id="265"><conary_package_info><name>xmlrpc-c:rpm</name><version>/centos6.rpath.com@rpath:centos-6e/1325880335.708:1.16.24_1200.1840.el6_1.4-1-1</version><flavor>is: x86_64</flavor><description /><revision>1.16.24_1200.1840.el6_1.4-1-1</revision><architecture>x86_64</architecture><signature>bbda4009c1ab695a1ec468c4a4c64a82253996ed6c9e3753b1d30d93cac364c7</signature><rpm_package_info id="266"><type>rpm</type><name>xmlrpc-c</name><epoch>None</epoch><version>1.16.24</version><release>1200.1840.el6_1.4</release><architecture>x86_64</architecture><description>XML-RPC is a quick-and-easy way to make procedure calls over the
@@ -2151,11 +2150,11 @@ lo eth0
 one = """
 <survey>
 
-<config_values></config_values>
-<observed_values></observed_values>
-<desired_values></desired_values>
-<validator_values></validator_values>
-<discovered_values></discovered_values>
+<config_properties></config_properties>
+<observed_properties></observed_properties>
+<desired_properties></desired_properties>
+<validation_report></validation_report>
+<discovered_properties></discovered_properties>
 
 <uuid>501</uuid><created_date>1328903844</created_date><rpm_packages><rpm_package id="193"><rpm_package_info><name>libdw1</name><epoch /><version>0.137</version><release>8.22.58</release><architecture>i586</architecture><description>This package provide a high-level library to access the DWARF debugging
 information.  This is a part of elfutils package.
@@ -4184,7 +4183,7 @@ Authors:
     Mathias Kettner &lt;kettner@suse.de&gt;
     Stefan Hundhammer &lt;sh@suse.de&gt;
 </description><signature>aea4d97a9972b5541837ed1ef179bb5c3a9dc2c0</signature></rpm_package_info><install_date>1326227872</install_date><conary_package id="561" /><encapsulated>true</encapsulated></rpm_package><rpm_package id="149"><rpm_package_info><name>perl-XML-Writer</name><epoch /><version>0.604</version><release>2.10</release><architecture>i586</architecture><description>XML::Writer is a helper module for Perl programs that write XML
-documents.  The module handles all escaping for attribute config_values and
+documents.  The module handles all escaping for attribute config_properties and
 character data and constructs different types of markup, such as tags,
 comments, and processing instructions.
 
@@ -5770,7 +5769,7 @@ Authors:
     Uwe Hollerbach &lt;uh@alumni.caltech.edu&gt;,
     Gisle Aas &lt;gisle@aas.no&gt;
 </description><signature>8e82fa308e2f8aab633fda5a0fb82aed1c4b021d</signature></rpm_package_info></conary_package_info><install_date /></conary_package><conary_package id="148"><conary_package_info><name>perl-XML-Writer:rpm</name><version>/sles.rpath.com@rpath:sles-11sp1/1288548900.304:0.604_2.10-1-1</version><flavor>is: x86(i486,i586,~!i686)</flavor><description /><revision>0.604_2.10-1-1</revision><architecture>x86(i486 i586 ~!i686)</architecture><signature>a747e6f05f5681fbbb3f99853a593e2c9301d146f81a2d34acd08b8a6e6918f6</signature><rpm_package_info id="149"><name>perl-XML-Writer</name><epoch /><version>0.604</version><release>2.10</release><architecture>i586</architecture><description>XML::Writer is a helper module for Perl programs that write XML
-documents.  The module handles all escaping for attribute config_values and
+documents.  The module handles all escaping for attribute config_properties and
 character data and constructs different types of markup, such as tags,
 comments, and processing instructions.
 
@@ -7878,11 +7877,11 @@ Authors:
 two = """
 <survey>
 
-<config_values></config_values>
-<observed_values></observed_values>
-<desired_values></desired_values>
-<validator_values></validator_values>
-<discovered_values></discovered_values>
+<config_properties></config_properties>
+<observed_properties></observed_properties>
+<desired_properties></desired_properties>
+<validation_report></validation_report>
+<discovered_properties></discovered_properties>
 
 <uuid>502</uuid><created_date>1328904082</created_date><rpm_packages><rpm_package id="195"><rpm_package_info><name>libdw1</name><epoch /><version>0.137</version><release>8.22.58</release><architecture>i586</architecture><description>This package provide a high-level library to access the DWARF debugging
 information.  This is a part of elfutils package.
@@ -9996,7 +9995,7 @@ Authors:
     Mathias Kettner &lt;kettner@suse.de&gt;
     Stefan Hundhammer &lt;sh@suse.de&gt;
 </description><signature>aea4d97a9972b5541837ed1ef179bb5c3a9dc2c0</signature></rpm_package_info><install_date>1326227872</install_date><conary_package id="571" /><encapsulated>true</encapsulated></rpm_package><rpm_package id="151"><rpm_package_info><name>perl-XML-Writer</name><epoch /><version>0.604</version><release>2.10</release><architecture>i586</architecture><description>XML::Writer is a helper module for Perl programs that write XML
-documents.  The module handles all escaping for attribute config_values and
+documents.  The module handles all escaping for attribute config_properties and
 character data and constructs different types of markup, such as tags,
 comments, and processing instructions.
 
@@ -11583,7 +11582,7 @@ Authors:
     Uwe Hollerbach &lt;uh@alumni.caltech.edu&gt;,
     Gisle Aas &lt;gisle@aas.no&gt;
 </description><signature>8e82fa308e2f8aab633fda5a0fb82aed1c4b021d</signature></rpm_package_info></conary_package_info><install_date /></conary_package><conary_package id="150"><conary_package_info><name>perl-XML-Writer:rpm</name><version>/sles.rpath.com@rpath:sles-11sp1/1288548900.304:0.604_2.10-1-1</version><flavor>is: x86(i486,i586,~!i686)</flavor><description /><revision>0.604_2.10-1-1</revision><architecture>x86(i486 i586 ~!i686)</architecture><signature>a747e6f05f5681fbbb3f99853a593e2c9301d146f81a2d34acd08b8a6e6918f6</signature><rpm_package_info id="151"><name>perl-XML-Writer</name><epoch /><version>0.604</version><release>2.10</release><architecture>i586</architecture><description>XML::Writer is a helper module for Perl programs that write XML
-documents.  The module handles all escaping for attribute config_values and
+documents.  The module handles all escaping for attribute config_properties and
 character data and constructs different types of markup, such as tags,
 comments, and processing instructions.
 
@@ -13764,11 +13763,11 @@ Authors:
 three = """
 <survey>
 
-<config_values></config_values>
-<observed_values></observed_values>
-<desired_values></desired_values>
-<validator_values></validator_values>
-<discovered_values></discovered_values>
+<config_properties></config_properties>
+<observed_properties></observed_properties>
+<desired_properties></desired_properties>
+<validation_report></validation_report>
+<discovered_properties></discovered_properties>
 
 <uuid>503</uuid><created_date>1328904196</created_date><rpm_packages><rpm_package id="195"><rpm_package_info><name>libdw1</name><epoch /><version>0.137</version><release>8.22.58</release><architecture>i586</architecture><description>This package provide a high-level library to access the DWARF debugging
 information.  This is a part of elfutils package.
@@ -15836,7 +15835,7 @@ Authors:
     Mathias Kettner &lt;kettner@suse.de&gt;
     Stefan Hundhammer &lt;sh@suse.de&gt;
 </description><signature>aea4d97a9972b5541837ed1ef179bb5c3a9dc2c0</signature></rpm_package_info><install_date>1326227872</install_date><conary_package id="567" /><encapsulated>true</encapsulated></rpm_package><rpm_package id="151"><rpm_package_info><name>perl-XML-Writer</name><epoch /><version>0.604</version><release>2.10</release><architecture>i586</architecture><description>XML::Writer is a helper module for Perl programs that write XML
-documents.  The module handles all escaping for attribute config_values and
+documents.  The module handles all escaping for attribute config_properties and
 character data and constructs different types of markup, such as tags,
 comments, and processing instructions.
 
@@ -17423,7 +17422,7 @@ Authors:
     Uwe Hollerbach &lt;uh@alumni.caltech.edu&gt;,
     Gisle Aas &lt;gisle@aas.no&gt;
 </description><signature>8e82fa308e2f8aab633fda5a0fb82aed1c4b021d</signature></rpm_package_info></conary_package_info><install_date /></conary_package><conary_package id="150"><conary_package_info><name>perl-XML-Writer:rpm</name><version>/sles.rpath.com@rpath:sles-11sp1/1288548900.304:0.604_2.10-1-1</version><flavor>is: x86(i486,i586,~!i686)</flavor><description /><revision>0.604_2.10-1-1</revision><architecture>x86(i486 i586 ~!i686)</architecture><signature>a747e6f05f5681fbbb3f99853a593e2c9301d146f81a2d34acd08b8a6e6918f6</signature><rpm_package_info id="151"><name>perl-XML-Writer</name><epoch /><version>0.604</version><release>2.10</release><architecture>i586</architecture><description>XML::Writer is a helper module for Perl programs that write XML
-documents.  The module handles all escaping for attribute config_values and
+documents.  The module handles all escaping for attribute config_properties and
 character data and constructs different types of markup, such as tags,
 comments, and processing instructions.
 
@@ -19556,11 +19555,11 @@ Authors:
 four = """
 <survey>
 
-<config_values></config_values>
-<observed_values></observed_values>
-<desired_values></desired_values>
-<validator_values></validator_values>
-<discovered_values></discovered_values>
+<config_properties></config_properties>
+<observed_properties></observed_properties>
+<desired_properties></desired_properties>
+<validation_report></validation_report>
+<discovered_properties></discovered_properties>
 
 <uuid>504</uuid><created_date>1329160056</created_date><rpm_packages><rpm_package id="203"><rpm_package_info><name>libdw1</name><epoch /><version>0.137</version><release>8.22.58</release><architecture>i586</architecture><description>This package provide a high-level library to access the DWARF debugging
 information.  This is a part of elfutils package.
@@ -21680,7 +21679,7 @@ Authors:
 --------
     James Clark\t&lt;jjc@clark.com&gt;
 </description><signature>363b067ac363dff9194037973630a6b887089ea9</signature></rpm_package_info><install_date>1329159883</install_date><conary_package id="253" /><encapsulated>true</encapsulated></rpm_package><rpm_package id="159"><rpm_package_info><name>perl-XML-Writer</name><epoch /><version>0.604</version><release>2.10</release><architecture>i586</architecture><description>XML::Writer is a helper module for Perl programs that write XML
-documents.  The module handles all escaping for attribute config_values and
+documents.  The module handles all escaping for attribute config_properties and
 character data and constructs different types of markup, such as tags,
 comments, and processing instructions.
 
@@ -23352,7 +23351,7 @@ Authors:
     Uwe Hollerbach &lt;uh@alumni.caltech.edu&gt;,
     Gisle Aas &lt;gisle@aas.no&gt;
 </description><signature>8e82fa308e2f8aab633fda5a0fb82aed1c4b021d</signature></rpm_package_info></conary_package_info><install_date /></conary_package><conary_package id="158"><conary_package_info><name>perl-XML-Writer:rpm</name><version>/sles.rpath.com@rpath:sles-11sp1/1288548900.304:0.604_2.10-1-1</version><flavor>is: x86(i486,i586,~!i686)</flavor><description /><revision>0.604_2.10-1-1</revision><architecture>x86(i486 i586 ~!i686)</architecture><signature>a747e6f05f5681fbbb3f99853a593e2c9301d146f81a2d34acd08b8a6e6918f6</signature><rpm_package_info id="159"><name>perl-XML-Writer</name><epoch /><version>0.604</version><release>2.10</release><architecture>i586</architecture><description>XML::Writer is a helper module for Perl programs that write XML
-documents.  The module handles all escaping for attribute config_values and
+documents.  The module handles all escaping for attribute config_properties and
 character data and constructs different types of markup, such as tags,
 comments, and processing instructions.
 
@@ -25548,11 +25547,11 @@ Authors:
 five = """
 <survey>
 
-<config_values></config_values>
-<observed_values></observed_values>
-<desired_values></desired_values>
-<validator_values></validator_values>
-<discovered_values></discovered_values>
+<config_properties></config_properties>
+<observed_properties></observed_properties>
+<desired_properties></desired_properties>
+<validation_report></validation_report>
+<discovered_properties></discovered_properties>
 
 <uuid>505</uuid><created_date>1329160009</created_date><rpm_packages><rpm_package id="203"><rpm_package_info><name>libdw1</name><epoch /><version>0.137</version><release>8.22.58</release><architecture>i586</architecture><description>This package provide a high-level library to access the DWARF debugging
 information.  This is a part of elfutils package.
@@ -27706,7 +27705,7 @@ Authors:
     Mathias Kettner &lt;kettner@suse.de&gt;
     Stefan Hundhammer &lt;sh@suse.de&gt;
 </description><signature>aea4d97a9972b5541837ed1ef179bb5c3a9dc2c0</signature></rpm_package_info><install_date>1326227872</install_date><conary_package id="581" /><encapsulated>true</encapsulated></rpm_package><rpm_package id="159"><rpm_package_info><name>perl-XML-Writer</name><epoch /><version>0.604</version><release>2.10</release><architecture>i586</architecture><description>XML::Writer is a helper module for Perl programs that write XML
-documents.  The module handles all escaping for attribute config_values and
+documents.  The module handles all escaping for attribute config_properties and
 character data and constructs different types of markup, such as tags,
 comments, and processing instructions.
 
@@ -29344,7 +29343,7 @@ Authors:
     Uwe Hollerbach &lt;uh@alumni.caltech.edu&gt;,
     Gisle Aas &lt;gisle@aas.no&gt;
 </description><signature>8e82fa308e2f8aab633fda5a0fb82aed1c4b021d</signature></rpm_package_info></conary_package_info><install_date /></conary_package><conary_package id="158"><conary_package_info><name>perl-XML-Writer:rpm</name><version>/sles.rpath.com@rpath:sles-11sp1/1288548900.304:0.604_2.10-1-1</version><flavor>is: x86(i486,i586,~!i686)</flavor><description /><revision>0.604_2.10-1-1</revision><architecture>x86(i486 i586 ~!i686)</architecture><signature>a747e6f05f5681fbbb3f99853a593e2c9301d146f81a2d34acd08b8a6e6918f6</signature><rpm_package_info id="159"><name>perl-XML-Writer</name><epoch /><version>0.604</version><release>2.10</release><architecture>i586</architecture><description>XML::Writer is a helper module for Perl programs that write XML
-documents.  The module handles all escaping for attribute config_values and
+documents.  The module handles all escaping for attribute config_properties and
 character data and constructs different types of markup, such as tags,
 comments, and processing instructions.
 

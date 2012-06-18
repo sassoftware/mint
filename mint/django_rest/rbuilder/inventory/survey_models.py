@@ -110,20 +110,27 @@ class Survey(modellib.XObjIdModel):
     comment       = models.TextField()
 
     # 'should be like this' values XML from system
-    config_values = modellib.XMLField(db_column='values_xml')
+    config_properties     = modellib.XMLField(db_column='values_xml')
     # values from config readers
-    observed_values   = modellib.XMLField(db_column='observed_values_xml')
+    observed_properties   = modellib.XMLField(db_column='observed_values_xml')
     # 'should be like this' values from server (usually will match system)
-    desired_values    = modellib.XMLField(db_column='desired_values_xml')
+    desired_properties    = modellib.XMLField(db_column='desired_values_xml')
     # values from config discovery probes
-    discovered_values = modellib.XMLField(db_column='discovered_values_xml')
+    discovered_properties = modellib.XMLField(db_column='discovered_values_xml')
     # values from config validation reports
-    validator_values  = modellib.XMLField(db_column='validator_values_xml')
+    validation_report  = modellib.XMLField(db_column='validator_values_xml')
   
     def get_url_key(self, *args, **kwargs):
         return [ self.uuid ]
 
 #***********************************************************
+
+# type codes for SurveyValues
+CONFIG_VALUES = 0
+DESIRED_VALUES = 1
+OBSERVED_VALUES = 2
+DISCOVERED_VALUES = 3
+VALIDATOR_VALUES = 4
 
 class SurveyValues(modellib.XObjIdModel):
     ''' shredded values of various system properties so they are searchable '''
