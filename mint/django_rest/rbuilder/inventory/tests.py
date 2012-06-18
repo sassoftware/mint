@@ -208,16 +208,17 @@ class SurveyTests(XMLTestCase):
         # data posted is not required for input (like hrefs)
         sys = self._makeSystem()
         url = "inventory/systems/%s/surveys" % sys.pk
+        # print testsxml.survey_input_xml
+
         response = self._post(url,
             data = testsxml.survey_input_xml,
             username='admin', password='password')
+	if response.status_code != 200:
+            print response.content
         self.assertEqual(response.status_code, 200)
-        
+ 
         # not included yet only because IDs don't line up?
         # self.assertXMLEquals(response.content, testsxml.survey_output_xml2)
-
-        survey = survey_models.Survey.objects.get(uuid=1234)
-        #import epdb; epdb.st()
 
         response = self._get(url,
             username='admin', password='password')
@@ -278,7 +279,6 @@ class SurveyTests(XMLTestCase):
             data = testsxml2.windows_upload_survey_xml,
             username='admin', password='password')
         self.assertEqual(response.status_code, 200)
-        #print response.content        
  
         self._hiturl('inventory/survey_windows_patches/1')
         self._hiturl('inventory/windows_patch_info/1')

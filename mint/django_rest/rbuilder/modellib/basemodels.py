@@ -28,6 +28,7 @@ from mint.django_rest import timeutils
 from mint.django_rest.rbuilder import errors
 from mint.lib import mintutils
 from mint.lib import data as mintdata
+import traceback
 
 class BaseFlags(util.Flags):
     __slots__ = []
@@ -351,6 +352,7 @@ class BaseManager(models.Manager):
                 subelement = getattr(val, subelementName, None)
                 if subelement is None:
                     continue
+                subelement = getattr(subelement, key, subelement)
                 val = xobj.toxml(subelement, tag=subelementTag,
                     prettyPrint=False, xml_declaration=False)
 
@@ -1286,11 +1288,15 @@ class XObjModel(models.Model):
                         continue
                     try:
                         val = xobj.parse(val)
+                        # avoid rendering as <values><values> etc
+                        # if the field name matches the XML field name
+                        subelt = getattr(val, key, None)
+                        if subelt is not None:
+                            val = subelt
                     except:
                         if val is None or val == '':
                             val = ''
                         else:
-                            print "DEBUG: BAD CONTENT: %s" % val
                             raise
                 elif isinstance(field, HrefField):
                     if isinstance(val, HrefField):

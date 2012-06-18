@@ -209,6 +209,39 @@ class SurveyManager(basemanager.BaseManager):
                 # catch attempt to serialize an empty tag like <foo/>
                 return ''
 
+    def _saveShreddedReport(self, xvalues, valueType):
+        ''' per RCE-303, config values and discovered/validation report data have different formats '''
+        # print "Skipping..."
+        pass
+
+    def _saveShreddedValues(self, xvalues, valueType):
+        ''' store config elements in the database so they are searchable, even if they are not surfaced this way '''
+        return 
+
+        if getattr(xvalues, 'configuration', None) is None:
+            return
+
+        # TODO: also store broken out success/fail info here
+        # TODO: DISCOVERED_VALUES type may require different logic
+        config = xvalues.configuration
+        eltNames = config._xobj.elements
+        
+        for eltName in eltNames:
+            elt = getattr(config, eltName)
+            subEltNames = elt._xobj.elements
+ 
+            if len(subEltNames) == 0:
+                #print "THIS IS A BASIC TYPE: %s, %s" % (eltName, elt.text)
+                pass
+            else:
+                for subEltName in subEltNames:
+                    subElt = getattr(elt, subEltName)
+                    if len(subElt._xobj.elements) == 0:
+                        # import epdb; epdb.st()
+                        pass # print "THIS IS A SIMPLE COMPLEX TYPE: %s/%s, %s" % (eltName, subEltName, "FIXME") # , subElt.text)
+                    else:
+                        pass # print "THIS IS A VERY COMPLEX TYPE: %s/%s, %s" % (eltName, subEltName, "<FIXME: XML DUMP>")
+
     @exposed
     def addSurveyForSystemFromXobj(self, system_id, model):
         # shortcuts
@@ -225,20 +258,28 @@ class SurveyManager(basemanager.BaseManager):
         xservices          = self._subel(xsurvey, 'services', 'service')
         xwindows_services  = self._subel(xsurvey, 'windows_services', 'windows_service')
         xtags              = self._subel(xsurvey, 'tags', 'tag')
-        xvalues            = self._toxml(xsurvey.config_values)
 
-        # FIXME: store all this in the DB in the survey_values table ALSO
-        xdesired_values    = self._toxml(xsurvey.desired_values)
-        xobserved_values   = self._toxml(xsurvey.observed_values)
-        xdiscovered_values = self._toxml(xsurvey.discovered_values)
-        xvalidator_values  = self._toxml(xsurvey.validator_values)
+        if getattr(xsurvey, 'values', None):
+            import epdb; epdb.st()
+            raise Exception("version 7.0 or later style surveys are required")
+
+        xconfig_properties     = self._toxml(xsurvey.config_properties)
+        xdesired_properties    = self._toxml(xsurvey.desired_properties)
+        xobserved_properties   = self._toxml(xsurvey.observed_properties)
+        xdiscovered_properties = self._toxml(xsurvey.discovered_properties)
+        xvalidation_report     = self._toxml(xsurvey.validation_report)
+
+        self._saveShreddedValues(xsurvey.config_properties, survey_models.CONFIG_VALUES)
+        self._saveShreddedValues(xsurvey.desired_properties, survey_models.DESIRED_VALUES)
+        self._saveShreddedValues(xsurvey.observed_properties, survey_models.OBSERVED_VALUES)
+        self._saveShreddedReport(xsurvey.discovered_properties, survey_models.DISCOVERED_VALUES)
+        self._saveShreddedReport(xsurvey.validation_report, survey_models.VALIDATOR_VALUES)        
 
         created_date = getattr(xsurvey, 'created_date', 0)
         created_date = datetime.datetime.utcfromtimestamp(int(created_date))
 
         desc    = getattr(xsurvey, 'description', "")
         comment = getattr(xsurvey, 'comment',     "")
-
 
         survey = survey_models.Survey(
             name          = system.name,
@@ -249,11 +290,12 @@ class SurveyManager(basemanager.BaseManager):
             system        = system,
             created_date  = created_date,
             modified_date = created_date,
-            config_values     = xvalues,
-            desired_values    = xdesired_values,
-            observed_values   = xobserved_values,
-            discovered_values = xdiscovered_values,
-            validator_values  = xvalidator_values
+            # avoid double rendering
+            config_properties     = xconfig_properties,
+            desired_properties    = xdesired_properties,
+            observed_properties   = xobserved_properties,
+            discovered_properties = xdiscovered_properties,
+            validation_report     = xvalidation_report,
         )
         survey.save()
 
