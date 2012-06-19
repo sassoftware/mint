@@ -213,7 +213,7 @@ class SurveyTests(XMLTestCase):
         response = self._post(url,
             data = testsxml.survey_input_xml,
             username='admin', password='password')
-	if response.status_code != 200:
+        if response.status_code != 200:
             print response.content
         self.assertEqual(response.status_code, 200)
  

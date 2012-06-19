@@ -261,7 +261,6 @@ class SurveyManager(basemanager.BaseManager):
         xtags              = self._subel(xsurvey, 'tags', 'tag')
 
         if getattr(xsurvey, 'values', None):
-            import epdb; epdb.st()
             raise Exception("version 7.0 or later style surveys are required")
 
         xconfig_properties     = self._toxml(xsurvey.config_properties)
