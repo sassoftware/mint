@@ -209,38 +209,39 @@ class SurveyManager(basemanager.BaseManager):
                 # catch attempt to serialize an empty tag like <foo/>
                 return ''
 
-    def _saveShreddedReport(self, xvalues, valueType):
-        ''' per RCE-303, config values and discovered/validation report data have different formats '''
-        # print "Skipping..."
-        pass
-
-    def _saveShreddedValues(self, xvalues, valueType):
-        ''' store config elements in the database so they are searchable, even if they are not surfaced this way '''
-        return 
-
-        if getattr(xvalues, 'configuration', None) is None:
-            return
-
-        # TODO: also store broken out success/fail info here
-        # TODO: DISCOVERED_VALUES type may require different logic
-        config = xvalues.configuration
-        eltNames = config._xobj.elements
-        
-        for eltName in eltNames:
-            elt = getattr(config, eltName)
-            subEltNames = elt._xobj.elements
- 
-            if len(subEltNames) == 0:
-                #print "THIS IS A BASIC TYPE: %s, %s" % (eltName, elt.text)
-                pass
+    def xwalk(self, xvalues, position='', results=None):
+        ''' find the leaf nodes in an xobj config model. '''
+        if type(xvalues) == list:
+            for i, elt in enumerate(xvalues):
+                position = "%s/%d" % (position, i)
+                self.xwalk(elt, position, results)
+        else:
+            eltNames = xvalues._xobj.elements
+            if len(eltNames) == 0:
+                results.append([position, xvalues])
             else:
-                for subEltName in subEltNames:
-                    subElt = getattr(elt, subEltName)
-                    if len(subElt._xobj.elements) == 0:
-                        # import epdb; epdb.st()
-                        pass # print "THIS IS A SIMPLE COMPLEX TYPE: %s/%s, %s" % (eltName, subEltName, "FIXME") # , subElt.text)
-                    else:
-                        pass # print "THIS IS A VERY COMPLEX TYPE: %s/%s, %s" % (eltName, subEltName, "<FIXME: XML DUMP>")
+                for eltName in eltNames:
+                    position = "%s/%s" % (position, eltName)
+                    self.xwalk(getattr(xvalues, eltName), position, results)            
+
+
+    def _saveShreddedValues(self, survey, xvalues, valueType):
+        ''' store config elements in the database so they are searchable, even if they are not surfaced this way '''
+
+        results = []
+        self.xwalk(xvalues, "", results)
+        for x in results:
+           (path, value) = x
+           if path == '':
+               continue
+           (obj, created) = survey_models.SurveyValues.objects.get_or_create(
+               survey = survey,
+               type   = valueType,
+               key    = path,
+               value  = value
+           )
+           if created:
+               obj.save()
 
     @exposed
     def addSurveyForSystemFromXobj(self, system_id, model):
@@ -269,11 +270,6 @@ class SurveyManager(basemanager.BaseManager):
         xdiscovered_properties = self._toxml(xsurvey.discovered_properties)
         xvalidation_report     = self._toxml(xsurvey.validation_report)
 
-        self._saveShreddedValues(xsurvey.config_properties, survey_models.CONFIG_VALUES)
-        self._saveShreddedValues(xsurvey.desired_properties, survey_models.DESIRED_VALUES)
-        self._saveShreddedValues(xsurvey.observed_properties, survey_models.OBSERVED_VALUES)
-        self._saveShreddedReport(xsurvey.discovered_properties, survey_models.DISCOVERED_VALUES)
-        self._saveShreddedReport(xsurvey.validation_report, survey_models.VALIDATOR_VALUES)        
 
         created_date = getattr(xsurvey, 'created_date', 0)
         created_date = datetime.datetime.utcfromtimestamp(int(created_date))
@@ -298,6 +294,12 @@ class SurveyManager(basemanager.BaseManager):
             validation_report     = xvalidation_report,
         )
         survey.save()
+        
+        self._saveShreddedValues(survey, xsurvey.config_properties, survey_models.CONFIG_VALUES)
+        self._saveShreddedValues(survey, xsurvey.desired_properties, survey_models.DESIRED_VALUES)
+        self._saveShreddedValues(survey, xsurvey.observed_properties, survey_models.OBSERVED_VALUES)
+        self._saveShreddedValues(survey, xsurvey.discovered_properties, survey_models.DISCOVERED_VALUES)
+        self._saveShreddedValues(survey, xsurvey.validation_report, survey_models.VALIDATOR_VALUES)        
 
         # update system.latest_survey if and only if it's
         # the latest

@@ -144,7 +144,7 @@ class SurveyValues(modellib.XObjIdModel):
     )
 
     survey_value_id = models.AutoField(primary_key=True, db_column='survey_value_id')
-    survey_id       = modellib.ForeignKey(Survey, db_column='survey_id', null=False, related_name='survey_config')
+    survey          = modellib.ForeignKey(Survey, db_column='survey_id', null=False, related_name='survey_config')
     type            = models.IntegerField(null=False)
     key             = models.TextField(null=False)
     subkey          = models.TextField(null=True)
