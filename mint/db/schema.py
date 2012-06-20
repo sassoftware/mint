@@ -1683,6 +1683,8 @@ def _createSurveyTables(db, cfg):
                 "compliance_summary_xml" TEXT,
                 "desired_values_descriptor_xml" TEXT,
                 "config_values_descriptor_xml" TEXT,
+                "updates_pending" BOOLEAN NOT NULL DEFAULT FALSE,
+                "has_errors" BOOLEAN NOT NULL DEFAULT FALSE,
                 "raw_xml" TEXT
     """)
 

@@ -123,6 +123,8 @@ class Survey(modellib.XObjIdModel):
     compliance_summary            = modellib.XMLField(db_column='compliance_summary_xml')
     config_properties_descriptor  = modellib.XMLField(db_column='config_values_descriptor_xml')
     desired_properties_descriptor = modellib.XMLField(db_column='desired_values_descriptor_xml')
+    updates_pending = XObjHidden(models.BooleanField(default=False))
+    has_errors = XObjHidden(models.BooleanField(default=False))
 
     def get_url_key(self, *args, **kwargs):
         return [ self.uuid ]

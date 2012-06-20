@@ -5090,6 +5090,8 @@ class MigrateTo_63(SchemaMigration):
         cu.execute("ALTER TABLE inventory_survey ADD COLUMN compliance_summary_xml TEXT")
         cu.execute("ALTER TABLE inventory_survey ADD COLUMN config_values_descriptor_xml TEXT")
         cu.execute("ALTER TABLE inventory_survey ADD COLUMN desired_values_descriptor_xml TEXT")
+        cu.execute("ALTER TABLE inventory_survey ADD COLUMN updates_pending BOOLEAN NOT NULL DEFAULT FALSE")
+        cu.execute("ALTER TABLE inventory_survey ADD COLUMN has_errors BOOLEAN NOT NULL DEFAULT FALSE")
         return True
 
 

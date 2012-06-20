@@ -276,6 +276,10 @@ class SurveyManager(basemanager.BaseManager):
         desc    = getattr(xsurvey, 'description', "")
         comment = getattr(xsurvey, 'comment',     "")
 
+        # TODO: populate config descriptors (2) -- 1 from client tools, 1 from server
+        # TODO: populate summary block
+        # TODO: populate hidden fields has_errors and updates_pending
+
         survey = survey_models.Survey(
             name          = system.name,
             uuid          = _u(xsurvey.uuid),
@@ -291,6 +295,8 @@ class SurveyManager(basemanager.BaseManager):
             observed_properties   = xobserved_properties,
             discovered_properties = xdiscovered_properties,
             validation_report     = xvalidation_report,
+            has_errors            = False, # FIXME,
+            updates_pending       = False # FIXME
         )
         survey.save()
         
