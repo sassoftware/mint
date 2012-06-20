@@ -228,7 +228,7 @@ class SurveyTests(XMLTestCase):
         response = self._get(url,
             username='admin', password='password')
         self.assertEqual(response.status_code, 200)
-        #self.assertXMLEquals(response.content, testsxml.survey_output_xml)      
+        # self.assertXMLEquals(response.content, testsxml.survey_output_xml)      
         # make sure inline urls work
         self._hiturl("inventory/survey_tags/1")
         self._hiturl("inventory/survey_rpm_packages/1")

@@ -280,6 +280,8 @@ class SurveyManager(basemanager.BaseManager):
         # TODO: populate summary block
         # TODO: populate hidden fields has_errors and updates_pending
 
+        desired_descriptor = self.mgr.getConfigurationDescriptor(system)
+
         survey = survey_models.Survey(
             name          = system.name,
             uuid          = _u(xsurvey.uuid),
@@ -296,7 +298,8 @@ class SurveyManager(basemanager.BaseManager):
             discovered_properties = xdiscovered_properties,
             validation_report     = xvalidation_report,
             has_errors            = False, # FIXME,
-            updates_pending       = False # FIXME
+            updates_pending       = False, # FIXME
+            desired_properties_descriptor = desired_descriptor
         )
         survey.save()
         
