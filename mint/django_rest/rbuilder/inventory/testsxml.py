@@ -3876,6 +3876,7 @@ survey_output_xml = """
     <desired_properties_descriptor/>
     <compliance_summary/>
     <comment></comment>
+    <preview/>
     <removable>False</removable>
     <modified_date>2012-02-03T16:28:08.137616+00:00</modified_date>
     <modified_by id="http://testserver/api/v1/users/2">
@@ -4219,6 +4220,8 @@ survey_input_xml = """
     %(observed_properties)s
     %(discovered_properties)s
     %(validation_report)s
+    <config_properties_descriptor><blarg/></config_properties_descriptor>
+    <preview><blarg></blarg></preview>
     <comment></comment>
     <uuid>1234</uuid>
     <removable>False</removable>

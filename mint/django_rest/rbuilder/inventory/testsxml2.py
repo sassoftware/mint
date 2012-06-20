@@ -5,6 +5,8 @@ windows_upload_survey_xml="""
   <observed_properties/>
   <discovered_properties/>
   <validation_report/>
+  <preview/>
+  <config_properties_descriptor/>
   <tags>
       <tag>
         <name>needs_review</name>
@@ -92,6 +94,8 @@ windows_upload_survey_xml="""
 windows_upload_survey_xml2 = """
 <survey>
   <config_properties/>
+  <config_properties_descriptor/>
+  <preview/>
   <desired_properties/>
   <observed_properties/>
   <discovered_properties/>

@@ -263,12 +263,13 @@ class SurveyManager(basemanager.BaseManager):
         if getattr(xsurvey, 'values', None):
             raise Exception("version 7.0 or later style surveys are required")
 
-        xconfig_properties     = self._toxml(xsurvey.config_properties)
-        xdesired_properties    = self._toxml(xsurvey.desired_properties)
-        xobserved_properties   = self._toxml(xsurvey.observed_properties)
-        xdiscovered_properties = self._toxml(xsurvey.discovered_properties)
-        xvalidation_report     = self._toxml(xsurvey.validation_report)
-
+        xconfig_properties     = self._toxml(getattr(xsurvey, 'config_properties', None))
+        xdesired_properties    = self._toxml(getattr(xsurvey, 'desired_properties', None))
+        xobserved_properties   = self._toxml(getattr(xsurvey, 'observed_properties', None))
+        xdiscovered_properties = self._toxml(getattr(xsurvey, 'discovered_properties', None))
+        xvalidation_report     = self._toxml(getattr(xsurvey, 'validation_report', None))
+        xpreview               = self._toxml(getattr(xsurvey, 'preview', None))
+        xconfig_descriptor     = self._toxml(getattr(xsurvey, 'config_properties_descriptor', None))
 
         created_date = getattr(xsurvey, 'created_date', 0)
         created_date = datetime.datetime.utcfromtimestamp(int(created_date))
@@ -276,7 +277,6 @@ class SurveyManager(basemanager.BaseManager):
         desc    = getattr(xsurvey, 'description', "")
         comment = getattr(xsurvey, 'comment',     "")
 
-        # TODO: populate config descriptors (2) -- 1 from client tools, 1 from server
         # TODO: populate summary block
         # TODO: populate hidden fields has_errors and updates_pending
 
@@ -297,8 +297,10 @@ class SurveyManager(basemanager.BaseManager):
             observed_properties   = xobserved_properties,
             discovered_properties = xdiscovered_properties,
             validation_report     = xvalidation_report,
+            preview               = xpreview,
             has_errors            = False, # FIXME,
             updates_pending       = False, # FIXME
+            config_properties_descriptor = xconfig_descriptor,
             desired_properties_descriptor = desired_descriptor
         )
         survey.save()
