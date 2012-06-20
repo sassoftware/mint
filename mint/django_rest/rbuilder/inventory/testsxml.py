@@ -3872,6 +3872,9 @@ surveys_xml = """
 
 survey_output_xml = """
 <survey id="http://testserver/api/v1/inventory/surveys/00000000-0000-4000-0000-000000000000">
+    <config_properties_descriptor/>
+    <desired_properties_descriptor/>
+    <compliance_summary/>
     <comment></comment>
     <removable>False</removable>
     <modified_date>2012-02-03T16:28:08.137616+00:00</modified_date>
@@ -4290,6 +4293,9 @@ survey_input_xml = """
 survey_output_xml2 = """
 <?xml version='1.0' encoding='UTF-8'?>
 <survey id="http://testserver/api/v1/inventory/surveys/1234">
+  <config_properties_descriptor/>
+  <desired_properties_descriptor/>
+  <compliance_summary/>
   <comment></comment>
   <rpm_packages>
     <rpm_package id="http://testserver/api/v1/inventory/survey_rpm_packages/2">

@@ -5007,7 +5007,7 @@ class MigrateTo_62(SchemaMigration):
  
 class MigrateTo_63(SchemaMigration):
     '''Goad'''
-    Version = (63, 2)
+    Version = (63, 3)
 
     def migrate(self):
         ''' add initial tables for config environments '''
@@ -5082,6 +5082,14 @@ class MigrateTo_63(SchemaMigration):
             "subkey" TEXT,
             "value" TEXT
         """)
+        return True
+
+    def migrate3(self):
+        ''' new survey additions '''
+        cu = self.db.cursor()
+        cu.execute("ALTER TABLE inventory_survey ADD COLUMN compliance_summary_xml TEXT")
+        cu.execute("ALTER TABLE inventory_survey ADD COLUMN config_values_descriptor_xml TEXT")
+        cu.execute("ALTER TABLE inventory_survey ADD COLUMN desired_values_descriptor_xml TEXT")
         return True
 
 

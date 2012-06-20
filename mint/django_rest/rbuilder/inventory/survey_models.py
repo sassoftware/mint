@@ -119,7 +119,11 @@ class Survey(modellib.XObjIdModel):
     discovered_properties = modellib.XMLField(db_column='discovered_values_xml')
     # values from config validation reports
     validation_report  = modellib.XMLField(db_column='validator_values_xml')
-  
+ 
+    compliance_summary            = modellib.XMLField(db_column='compliance_summary_xml')
+    config_properties_descriptor  = modellib.XMLField(db_column='config_values_descriptor_xml')
+    desired_properties_descriptor = modellib.XMLField(db_column='desired_values_descriptor_xml')
+
     def get_url_key(self, *args, **kwargs):
         return [ self.uuid ]
 
