@@ -3966,6 +3966,60 @@ survey_output_xml = """
 </survey>
 """
 
+survey_preview = """
+<preview>
+<observed>group-foo-appliance/1.2.3.3 possibly-other-junk/1.2.3.4</observed>
+<desired>group-foo-appliance/1.2.3.4</desired>
+<compliant>true</complaint>
+<conary_package_changes>
+<conary_package_change>
+<type>removed</type>
+<!-- ASK: since this won't be in the database, we can forego IDs -->
+<removed_conary_package>
+<name>blah</name>
+<version>blah</version>
+<signature>X</signature>
+<architecture>arch</architecture>
+<flavor>orange</flavor>
+</removed_conary_package>
+</conary_package_change>
+<conary_package_change>
+<type>added</type>
+<added_conary_package>
+<name>blah</name>
+<version>blah</version>
+<architecture>blah</architecture>
+<signature>X</signature>
+<flavor>orange</flavor>
+</added_conary_package>
+</conary_package_change>
+<conary_package_change>
+<type>changed</type>
+<from>
+<name>name</name>
+<version>1</version>
+<architecture>arch</architecture>
+<signature>X</signature>
+</from>
+<to>
+<name>name</name>
+<version>2</version>
+<architecture>arch</architecture>
+<signature>X</signature>
+</to>
+<conary_package_diff>
+<version>
+<from>1</from>
+<to>2</to>
+</version>
+</conary_package_diff>
+</conary_package_change>
+<!-- IMPORTANT: nothing in the preview but conary packages -->
+</conary_package_changes>
+</preview>
+"""
+
+
 # NOTE: the examples in the XML items below are not domain-specific, but structural
 # so if "STIG checker" doesn't make sense in all examples, don't take it literally
 # see RCE-303
@@ -4220,8 +4274,8 @@ survey_input_xml = """
     %(observed_properties)s
     %(discovered_properties)s
     %(validation_report)s
+    %(survey_preview)s
     <config_properties_descriptor><blarg/></config_properties_descriptor>
-    <preview><blarg></blarg></preview>
     <comment></comment>
     <uuid>1234</uuid>
     <removable>False</removable>
@@ -4290,7 +4344,8 @@ survey_input_xml = """
     desired_properties=desired_properties, 
     observed_properties=observed_properties, 
     discovered_properties=discovered_properties, 
-    validation_report=validation_report
+    validation_report=validation_report,
+    survey_preview=survey_preview
 )
 
 survey_output_xml2 = """
