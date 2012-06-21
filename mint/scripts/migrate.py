@@ -5053,8 +5053,6 @@ class MigrateTo_63(SchemaMigration):
             "value" TEXT
         """)
 
-        # TODO: also want to save shredded key/value data for systems...
-
         return True
 
     def migrate1(self):
@@ -5098,7 +5096,7 @@ class MigrateTo_63(SchemaMigration):
         cu = self.db.cursor()
         cu.execute("ALTER TABLE inventory_survey ADD COLUMN preview_xml TEXT")
         return True
-
+    
 #### SCHEMA MIGRATIONS END HERE #############################################
 
 def _getMigration(major):

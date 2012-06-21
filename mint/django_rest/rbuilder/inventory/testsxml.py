@@ -3970,7 +3970,7 @@ survey_preview = """
 <preview>
 <observed>group-foo-appliance/1.2.3.3 possibly-other-junk/1.2.3.4</observed>
 <desired>group-foo-appliance/1.2.3.4</desired>
-<compliant>true</complaint>
+<compliant>true</compliant>
 <conary_package_changes>
 <conary_package_change>
 <type>removed</type>
@@ -4206,7 +4206,7 @@ discovered_properties = """
 """
 
 validation_report = """
-<validation_report>>
+<validation_report>
   <status>fail</status>
   <extensions>
     <apache_configuration>

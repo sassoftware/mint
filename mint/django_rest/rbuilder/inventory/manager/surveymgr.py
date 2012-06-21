@@ -196,6 +196,7 @@ class SurveyManager(basemanager.BaseManager):
         survey.comment       = getattr(xmodel, 'comment', None)
         survey.removable     = self._bool(getattr(xmodel, 'removable', True))
         survey.modified_date = timeutils.now()
+
         survey.save()
         return survey
 
@@ -242,6 +243,93 @@ class SurveyManager(basemanager.BaseManager):
            )
            if created:
                obj.save()
+        
+    def _computeCompliance(self, survey, discovered_properties, validation_report, preview):
+        ''' create the compliance summary block for the survey '''
+
+        has_errors = False
+        updates_pending = False
+        config_execution_failed = False
+        config_execution_failures = 0
+
+        # process the validation report
+        if validation_report is not None:
+            status = getattr(validation_report, 'status', None)
+            if status and status.lower() == 'fail':
+                has_errors = True
+                config_execution_failures = True
+
+            errors = getattr(validation_report, 'errors', None)
+            if errors is not None:
+                elementNames = errors._xobj.elements
+                for x in elementNames:
+                    errorElement = getattr(errors, x)
+                    success = getattr(errorElement, 'success', None)
+                    subErrors = getattr(errorElement, 'error_list', None)
+                    if success and success.lower() == 'false':
+                        has_errors = True
+                        config_execution_failed = True
+                    if subErrors is not None:
+                        eCount = len(subErrors._xobj.elements)
+                        config_execution_failures += eCount
+
+        # process the preview (pending software updates)        
+        added = 0
+        removed = 0
+        changed = 0
+        if preview is not None:
+
+            observed = getattr(preview, 'observed', None)
+            desired = getattr(preview, 'desired', None)
+            if (observed is None) or (desired is None):
+                pass
+            else:
+                if observed != desired:
+                    updates_pending = True
+                    changes = preview.conary_package_changes.conary_package_change
+                    # xobj hack
+                    if type(changes) != list: 
+                        changes = [ changes ]
+                    for x in changes:
+                        typ = x.type
+                        if type == 'added':
+                           added = added+1
+                        elif type == 'removed':
+                           removed = removed+1
+                        elif type == 'changed':
+                           changed = changed+1
+
+        config_sync_message = "%s added, %s removed, %s changed" % (added, removed, changed)
+
+        # TODO: process and count deltas versus "readerators" with matching keys
+        # and include summary results
+
+        compliance_xml = """
+        <compliance_summary>
+        <config_execution>
+           <compliant>%(config_execution_compliant)s</compliant>
+           <failure_count>%(config_execution_failures)s</failure_count>
+        </config_execution>
+        <config_sync>
+           <compliant>%(config_sync_compliant)s</compliant>
+        </config_sync>
+        <software>
+           <compliant>%(config_sync_compliant)s</compliant>
+           <message>%(config_sync_message)s</message>
+        </software>
+        <overall>
+           <compliant>%(overall)s</compliant>
+        </overall>
+        </compliance_summary>
+        """ % dict(
+            overall = ((not has_errors) and (not updates_pending)),
+            config_execution_compliant = (not config_execution_failed),
+            config_execution_failures = config_execution_failures,
+            config_sync_compliant = (not updates_pending),
+            config_sync_message = config_sync_message
+        )
+        return (has_errors, updates_pending, compliance_xml)
+
 
     @exposed
     def addSurveyForSystemFromXobj(self, system_id, model):
@@ -277,9 +365,6 @@ class SurveyManager(basemanager.BaseManager):
         desc    = getattr(xsurvey, 'description', "")
         comment = getattr(xsurvey, 'comment',     "")
 
-        # TODO: populate summary block
-        # TODO: populate hidden fields has_errors and updates_pending
-
         desired_descriptor = self.mgr.getConfigurationDescriptor(system)
 
         survey = survey_models.Survey(
@@ -291,15 +376,12 @@ class SurveyManager(basemanager.BaseManager):
             system        = system,
             created_date  = created_date,
             modified_date = created_date,
-            # avoid double rendering
             config_properties     = xconfig_properties,
             desired_properties    = xdesired_properties,
             observed_properties   = xobserved_properties,
             discovered_properties = xdiscovered_properties,
             validation_report     = xvalidation_report,
             preview               = xpreview,
-            has_errors            = False, # FIXME,
-            updates_pending       = False, # FIXME
             config_properties_descriptor = xconfig_descriptor,
             desired_properties_descriptor = desired_descriptor
         )
@@ -482,6 +564,16 @@ class SurveyManager(basemanager.BaseManager):
                 name         = _u(xmodel.name),
             )
             tag.save()
+        
+        (has_errors, updates_pending, compliance_xml) = self._computeCompliance(survey, 
+            discovered_properties=getattr(xsurvey, 'discovered_properties', None),
+            validation_report=getattr(xsurvey, 'validation_report', None),
+            preview=getattr(xsurvey, 'preview', None)
+        )
+        survey.has_errors = has_errors
+        survey.updates_pending = updates_pending
+        survey.compliance_summary = compliance_xml
+        survey.save()       
 
         survey = survey_models.Survey.objects.get(pk=survey.pk)
         return survey
