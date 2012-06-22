@@ -3875,6 +3875,7 @@ survey_output_xml = """
     <config_properties_descriptor/>
     <desired_properties_descriptor/>
     <compliance_summary/>
+    <config_compliance/>
     <comment></comment>
     <preview/>
     <removable>False</removable>
@@ -4116,7 +4117,7 @@ observed_properties = """
 <observed_properties>
   <extensions>
     <apache_configuration>
-      <port>8080</port>
+      <port>8081</port>
     </apache_configuration>
   </extensions>
   <errors>
@@ -4349,95 +4350,374 @@ survey_input_xml = """
 )
 
 survey_output_xml2 = """
-<?xml version='1.0' encoding='UTF-8'?>
 <survey id="http://testserver/api/v1/inventory/surveys/1234">
-  <config_properties_descriptor/>
-  <desired_properties_descriptor/>
-  <compliance_summary/>
-  <comment></comment>
-  <rpm_packages>
-    <rpm_package id="http://testserver/api/v1/inventory/survey_rpm_packages/2">
-      <survey id="http://testserver/api/v1/inventory/surveys/1234"/>
-      <rpm_package_id>2</rpm_package_id>
-      <rpm_package_info id="http://testserver/api/v1/inventory/rpm_package_info/1">
-        <description>enterprise middleware abstraction layer</description>
-        <epoch>0</epoch>
-        <version>5</version>
-        <architecture>x86_64</architecture>
-        <signature>X</signature>
-        <release>6</release>
-        <name>asdf</name>
-      </rpm_package_info>
-      <install_date>2012-02-03T16:28:08.177050+00:00</install_date>
-    </rpm_package>
-  </rpm_packages>
-  <config_properties/>
-  <desired_properties/>
-  <observed_properties/>
+  <comment/>
+  <compliance_summary>
+    <config_execution>
+      <compliant>False</compliant>
+      <failure_count>3</failure_count>
+    </config_execution>
+    <config_sync>
+      <compliant>False</compliant>
+    </config_sync>
+    <overall>
+      <compliant>False</compliant>
+    </overall>
+    <software>
+      <compliant>False</compliant>
+      <message>0 added, 0 removed, 0 changed</message>
+    </software>
+  </compliance_summary>
   <conary_packages>
-    <conary_package id="http://testserver/api/v1/inventory/survey_conary_packages/2">
-      <conary_package_id>2</conary_package_id>
-      <survey id="http://testserver/api/v1/inventory/surveys/1234"/>
-      <install_date>2012-02-03T16:28:08.169386+00:00</install_date>
+    <conary_package id="http://testserver/api/v1/inventory/survey_conary_packages/1">
+      <conary_package_id>1</conary_package_id>
       <conary_package_info id="http://testserver/api/v1/inventory/conary_package_info/1">
-        <description>Type-R</description>
-        <name>jkl</name>
-        <version>7</version>
         <architecture>ia64</architecture>
-        <signature>X</signature>
+        <description>Type-R</description>
         <flavor>orange</flavor>
+        <name>jkl</name>
         <revision>8</revision>
         <rpm_package_info>
-          <name>asdf</name>
-          <epoch>0</epoch>
-          <version>5</version>
           <architecture>x86_64</architecture>
-          <signature>X</signature>
+          <description>enterprise middleware abstraction layer</description>
+          <epoch>0</epoch>
+          <name>asdf</name>
           <release>6</release>
           <rpm_package_id>1</rpm_package_id>
-          <description>enterprise middleware abstraction layer</description>
+          <signature>X</signature>
+          <version>5</version>
         </rpm_package_info>
+        <signature>X</signature>
+        <version>7</version>
       </conary_package_info>
-      <is_top_level>true</is_top_level>
+      <install_date>2012-02-03T16:28:08.169386+00:00</install_date>
+      <is_top_level>True</is_top_level>
+      <survey id="http://testserver/api/v1/inventory/surveys/1234"/>
     </conary_package>
   </conary_packages>
-  <description></description>
-  <modified_date>2012-06-14T21:06:34.347143+00:00</modified_date>
-  <modified_by></modified_by>
-  <uuid>1234</uuid>
-  <tags>
-    <tag id="http://testserver/api/v1/inventory/survey_tags/4">
+  <config_compliance>
+    <compliant>False</compliant>
+    <config_value>
+      <desired>8080</desired>
+      <key>port</key>
+      <keypath>/apache_configuration/port</keypath>
+      <read>8081</read>
+    </config_value>
+  </config_compliance>
+  <config_properties>
+    <apache_configuration>
+      <aliases list="True">
+        <alias>
+          <directory>/srv/www/images</directory>
+          <handle>/images</handle>
+        </alias>
+        <alias>
+          <directory>/srv/www/icons</directory>
+          <handle>/icons</handle>
+        </alias>
+        <alias>
+          <directory>/home/admin/hg/web-docs/robots.txt</directory>
+          <handle>/robots.txt</handle>
+        </alias>
+      </aliases>
+      <port>8080</port>
+      <processInfo>
+        <group>nobody</group>
+        <user>nobody</user>
+      </processInfo>
+      <vhosts list="True">
+        <vhost>
+          <documentRoot>/home/vhost1/public_html</documentRoot>
+          <serverName>vhost1.example.com</serverName>
+        </vhost>
+        <vhost>
+          <documentRoot>/home/vhost2/public_html</documentRoot>
+          <serverName>vhost2.example.com</serverName>
+        </vhost>
+      </vhosts>
+    </apache_configuration>
+    <disa_stig_compliance_checker>
+      <credentials>
+        <password>my-password-123</password>
+        <username>host-123</username>
+      </credentials>
+      <dashboardServer>dashboard.eng.rpath.com</dashboardServer>
+    </disa_stig_compliance_checker>
+  </config_properties>
+  <config_properties_descriptor>
+    <blarg/>
+  </config_properties_descriptor>
+  <description/>
+  <desired_properties>
+    <apache_configuration>
+      <aliases list="True">
+        <alias>
+          <directory>/srv/www/images</directory>
+          <handle>/images</handle>
+        </alias>
+        <alias>
+          <directory>/srv/www/icons</directory>
+          <handle>/icons</handle>
+        </alias>
+        <alias>
+          <directory>/home/admin/hg/web-docs/robots.txt</directory>
+          <handle>/robots.txt</handle>
+        </alias>
+      </aliases>
+      <port>8080</port>
+      <processInfo>
+        <group>nobody</group>
+        <user>nobody</user>
+      </processInfo>
+      <vhosts list="True">
+        <vhost>
+          <documentRoot>/home/vhost1/public_html</documentRoot>
+          <serverName>vhost1.example.com</serverName>
+        </vhost>
+        <vhost>
+          <documentRoot>/home/vhost2/public_html</documentRoot>
+          <serverName>vhost2.example.com</serverName>
+        </vhost>
+      </vhosts>
+    </apache_configuration>
+    <disa_stig_compliance_checker>
+      <credentials>
+        <password>my-password-123</password>
+        <username>host-123</username>
+      </credentials>
+      <dashboardServer>dashboard.eng.rpath.com</dashboardServer>
+    </disa_stig_compliance_checker>
+  </desired_properties>
+  <desired_properties_descriptor>
+    <configuration_descriptor xsi_schemaLocation="http://www.rpath.com/permanent/descriptor-1.0.xsd descriptor-1.0.xsd">
+      <dataFields/>
+      <metadata/>
+    </configuration_descriptor>
+  </desired_properties_descriptor>
+  <discovered_properties>
+    <errors>
+      <apache_configuration>
+        <error_list>
+          <error>
+            <code>500</code>
+            <detail>Lazy sysadmin didn't start apache</detail>
+            <message>General error: apache not running</message>
+          </error>
+          <error>
+            <code>1</code>
+            <detail>Traceback: blah</detail>
+            <message>Apache claims user blah, user blah does not exist</message>
+          </error>
+        </error_list>
+        <success>True</success>
+      </apache_configuration>
+      <disa_stig_compliance_checker>
+        <error_list>
+          <error>
+            <code>100</code>
+            <detail>Core dump here</detail>
+            <message>Error: DISA compliance checker segfaulted</message>
+          </error>
+        </error_list>
+        <success>False</success>
+      </disa_stig_compliance_checker>
+    </errors>
+    <extensions>
+      <apache_configuration>
+        <name>Apache Configuration Checker</name>
+        <probes>
+          <port>
+            <name>Apache Port Check</name>
+            <value content_type="text/html" encoding="base64">base64-encoded HTML here</value>
+          </port>
+          <port>
+            <name>Apache Port Check</name>
+            <value content_type="text/html" encoding="base64">base64-encoded HTML here</value>
+          </port>
+        </probes>
+      </apache_configuration>
+    </extensions>
+  </discovered_properties>
+  <name>blinky</name>
+  <observed_properties>
+    <errors>
+      <apache_configuration>
+        <error_list>
+          <error>
+            <code>500</code>
+            <detail>Lazy sysadmin didn't start apache</detail>
+            <message>General error: apache not running</message>
+          </error>
+          <error>
+            <code>1</code>
+            <detail>Traceback: blah</detail>
+            <field>processInfo/user</field>
+            <message>Apache claims user blah, user blah does not exist</message>
+          </error>
+        </error_list>
+        <success>True</success>
+      </apache_configuration>
+      <disa_stig_compliance_checker>
+        <error_list>
+          <error>
+            <code>100</code>
+            <detail>Core dump here</detail>
+            <message>Error: DISA compliance checker segfaulted</message>
+          </error>
+        </error_list>
+        <success>False</success>
+      </disa_stig_compliance_checker>
+    </errors>
+    <extensions>
+      <apache_configuration>
+        <port>8081</port>
+      </apache_configuration>
+    </extensions>
+  </observed_properties>
+  <preview>
+    <compliant>True</compliant>
+    <conary_package_changes>
+      <conary_package_change>
+        <removed_conary_package>
+          <architecture>arch</architecture>
+          <flavor>orange</flavor>
+          <name>blah</name>
+          <signature>X</signature>
+          <version>blah</version>
+        </removed_conary_package>
+        <type>removed</type>
+      </conary_package_change>
+      <conary_package_change>
+        <added_conary_package>
+          <architecture>blah</architecture>
+          <flavor>orange</flavor>
+          <name>blah</name>
+          <signature>X</signature>
+          <version>blah</version>
+        </added_conary_package>
+        <type>added</type>
+      </conary_package_change>
+      <conary_package_change>
+        <conary_package_diff>
+          <version>
+            <from>1</from>
+            <to>2</to>
+          </version>
+        </conary_package_diff>
+        <from>
+          <architecture>arch</architecture>
+          <name>name</name>
+          <signature>X</signature>
+          <version>1</version>
+        </from>
+        <to>
+          <architecture>arch</architecture>
+          <name>name</name>
+          <signature>X</signature>
+          <version>2</version>
+        </to>
+        <type>changed</type>
+      </conary_package_change>
+    </conary_package_changes>
+    <desired>group-foo-appliance/1.2.3.4</desired>
+    <observed>group-foo-appliance/1.2.3.3 possibly-other-junk/1.2.3.4</observed>
+  </preview>
+  <removable>True</removable>
+  <rpm_packages>
+    <rpm_package id="http://testserver/api/v1/inventory/survey_rpm_packages/1">
+      <install_date>2012-02-03T16:28:08.177050+00:00</install_date>
+      <rpm_package_id>1</rpm_package_id>
+      <rpm_package_info id="http://testserver/api/v1/inventory/rpm_package_info/1">
+        <architecture>x86_64</architecture>
+        <description>enterprise middleware abstraction layer</description>
+        <epoch>0</epoch>
+        <name>asdf</name>
+        <release>6</release>
+        <signature>X</signature>
+        <version>5</version>
+      </rpm_package_info>
       <survey id="http://testserver/api/v1/inventory/surveys/1234"/>
-      <name>needs_review</name>
-      <tag_id>4</tag_id>
-    </tag>
-  </tags>
-  <system id="http://testserver/api/v1/inventory/systems/3"/>
-  <created_by></created_by>
-  <discovered_properties/>
-  <removable>true</removable>
-  <windows_packages/>
-  <windows_patches/>
-  <validation_report/>
+    </rpm_package>
+  </rpm_packages>
   <services>
-    <service id="http://testserver/api/v1/inventory/survey_services/2">
-      <status>is maybe doing stuff</status>
-      <survey id="http://testserver/api/v1/inventory/surveys/1234"/>
-      <running>false</running>
+    <service id="http://testserver/api/v1/inventory/survey_services/1">
+     <running>False</running>
+      <service_id>1</service_id>
       <service_info id="http://testserver/api/v1/inventory/service_info/1">
-        <name>httpd</name>
         <autostart>1</autostart>
+        <name>httpd</name>
         <runlevels>3,4,5</runlevels>
       </service_info>
-      <service_id>2</service_id>
+      <status>is maybe doing stuff</status>
+      <survey id="http://testserver/api/v1/inventory/surveys/1234"/>
     </service>
   </services>
-  <name>blinky</name>
-  <created_date>2012-06-14T21:06:34.347008+00:00</created_date>
+  <system id="http://testserver/api/v1/inventory/systems/3"/>
+  <tags>
+    <tag id="http://testserver/api/v1/inventory/survey_tags/1">
+      <name>needs_review</name>
+      <survey id="http://testserver/api/v1/inventory/surveys/1234"/>
+      <tag_id>1</tag_id>
+    </tag>
+  </tags>
+  <uuid>1234</uuid>
+  <validation_report>
+    <errors>
+      <apache_configuration>
+        <error_list>
+          <error>
+            <code>500</code>
+            <detail>Lazy sysadmin didn't start apache</detail>
+            <message>General error: apache not running</message>
+          </error>
+          <error>
+            <code>1</code>
+            <detail>Traceback: blah</detail>
+            <message>Apache claims user blah, user blah does not exist</message>
+          </error>
+        </error_list>
+        <success>True</success>
+      </apache_configuration>
+      <disa_stig_compliance_checker>
+        <error_list>
+          <error>
+            <code>100</code>
+            <detail>Core dump here</detail>
+            <message>Error: DISA compliance checker segfaulted</message>
+          </error>
+        </error_list>
+        <success>False</success>
+      </disa_stig_compliance_checker>
+    </errors>
+    <extensions>
+      <apache_configuration>
+        <details/>
+        <message>Same as in the probes below</message>
+        <name>Apache Configuration Checker</name>
+        <probes>
+          <port>
+            <details content_type="text/html" encoding="base64">base64-encoded HTML here</details>
+            <message>Apache not running on port</message>
+            <name>Apache Port Check</name>
+            <status>fail</status>
+          </port>
+          <port>
+            <details content_type="text/html" encoding="base64">base64-encoded HTML here</details>
+            <message>Apache not running on port</message>
+            <name>Apache Port Check</name>
+            <status>fail</status>
+          </port>
+        </probes>
+        <status>fail</status>
+      </apache_configuration>
+    </extensions>
+    <status>fail</status>
+  </validation_report>
+  <windows_packages/>
+  <windows_patches/>
   <windows_services/>
 </survey>
 """
-
 
 # FIXME: add tests trying to clobber fields it should not clobber
 # or if it can erase things

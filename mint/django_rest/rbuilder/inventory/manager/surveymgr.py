@@ -214,16 +214,16 @@ class SurveyManager(basemanager.BaseManager):
         ''' find the leaf nodes in an xobj config model. '''
         if type(xvalues) == list:
             for i, elt in enumerate(xvalues):
-                position = "%s/%d" % (position, i)
-                self.xwalk(elt, position, results)
+                newPosition = "%s/%d" % (position, i)
+                self.xwalk(elt, newPosition, results)
         else:
             eltNames = xvalues._xobj.elements
             if len(eltNames) == 0:
                 results.append([position, xvalues])
             else:
                 for eltName in eltNames:
-                    position = "%s/%s" % (position, eltName)
-                    self.xwalk(getattr(xvalues, eltName), position, results)            
+                    newPosition = "%s/%s" % (position, eltName)
+                    self.xwalk(getattr(xvalues, eltName), newPosition, results)            
 
 
     def _saveShreddedValues(self, survey, xvalues, valueType):
@@ -330,6 +330,38 @@ class SurveyManager(basemanager.BaseManager):
         )
         return (has_errors, updates_pending, compliance_xml)
 
+    
+    def _computeConfigDelta(self, survey):
+        left = survey_models.SurveyValues.objects.filter(
+            survey = survey, type = survey_models.DESIRED_VALUES 
+        )
+        right = survey_models.SurveyValues.objects.filter(
+            survey = survey, type = survey_models.OBSERVED_VALUES
+        )
+        delta = "<config_compliance>"
+        compliant = True
+
+        for rightKey in right:
+            for leftKey in left:
+                # may have to be some magic to drop /extensions/, etc and do semi-fuzzy
+                # matches on bits
+                if leftKey.key.find("/errors/") != -1:
+                    continue
+
+                if leftKey.key == rightKey.key.replace("/extensions","") and leftKey.value != rightKey.value:
+                   compliant = False
+                   tokens = leftKey.key.split("/")
+                   keyShortName = tokens[-1]
+                   delta += "  <config_value>"
+                   delta += "     <keypath>%s</keypath>" % leftKey.key
+                   delta += "     <key>%s</key>" % keyShortName
+                   delta += "     <read>%s</read>" % rightKey.value
+                   delta += "     <desired>%s</desired>" % leftKey.value
+                   delta += "  </config_value>"
+
+        delta += "  <compliant>%s</compliant>" % compliant
+        delta += "</config_compliance>"
+        return delta
 
     @exposed
     def addSurveyForSystemFromXobj(self, system_id, model):
@@ -573,7 +605,8 @@ class SurveyManager(basemanager.BaseManager):
         survey.has_errors = has_errors
         survey.updates_pending = updates_pending
         survey.compliance_summary = compliance_xml
-        survey.save()       
+        survey.config_compliance = self._computeConfigDelta(survey)
+        survey.save()
 
         survey = survey_models.Survey.objects.get(pk=survey.pk)
         return survey

@@ -218,7 +218,7 @@ class SurveyTests(XMLTestCase):
         self.assertEqual(response.status_code, 200)
  
         # not included yet only because IDs don't line up?
-        # self.assertXMLEquals(response.content, testsxml.survey_output_xml2)
+        self.assertXMLEquals(response.content, testsxml.survey_output_xml2)
 
         response = self._get(url,
             username='admin', password='password')
