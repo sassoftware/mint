@@ -4397,12 +4397,14 @@ survey_output_xml2 = """
   </conary_packages>
   <config_compliance>
     <compliant>False</compliant>
-    <config_value>
-      <desired>8080</desired>
-      <key>port</key>
-      <keypath>/apache_configuration/port</keypath>
-      <read>8081</read>
-    </config_value>
+    <config_values>
+      <config_value>
+        <desired>8080</desired>
+        <key>port</key>
+        <keypath>/apache_configuration/port</keypath>
+        <read>8081</read>
+      </config_value>
+    </config_values>
   </config_compliance>
   <config_properties>
     <apache_configuration>

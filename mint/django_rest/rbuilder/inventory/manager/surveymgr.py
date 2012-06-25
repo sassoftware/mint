@@ -338,7 +338,7 @@ class SurveyManager(basemanager.BaseManager):
         right = survey_models.SurveyValues.objects.filter(
             survey = survey, type = survey_models.OBSERVED_VALUES
         )
-        delta = "<config_compliance>"
+        delta = "<config_compliance><config_values>"
         compliant = True
 
         for rightKey in right:
@@ -359,7 +359,7 @@ class SurveyManager(basemanager.BaseManager):
                    delta += "     <desired>%s</desired>" % leftKey.value
                    delta += "  </config_value>"
 
-        delta += "  <compliant>%s</compliant>" % compliant
+        delta += "</config_values><compliant>%s</compliant>" % compliant
         delta += "</config_compliance>"
         return delta
 
