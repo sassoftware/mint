@@ -664,7 +664,7 @@ class InventorySystemConfigurationServices(BaseInventoryService):
         for k, v in configuration.__dict__.items():
             if not k.startswith('_'):
                 configDict[k] = v
-        return self.mgr.addSystemConfiguration(system_id, configDict)
+        return self.mgr.saveSystemConfiguration(system_id, configDict)
 
     @rbac(rbac_can_write_system_id)
     @return_xml
@@ -674,7 +674,7 @@ class InventorySystemConfigurationServices(BaseInventoryService):
         for k, v in configuration.__dict__.items():
             if not k.startswith('_'):
                 configDict[k] = v
-        return self.mgr.addSystemConfiguration(system_id, configDict)
+        return self.mgr.saveSystemConfiguration(system_id, configDict)
 
     def get(self, system_id):
         return self.mgr.getSystemConfiguration(system_id)

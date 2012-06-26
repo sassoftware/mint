@@ -62,9 +62,10 @@ class JobManager(basemanager.BaseManager):
         job URL and in the descriptor URL, and they should match
         """
         job.created_by = self.user
-        factory = JobHandlerRegistry.getHandlerFactory(job.job_type.name)
+        typename = job.job_type.name
+        factory = JobHandlerRegistry.getHandlerFactory(typename)
         if factory is None:
-            raise errors.InvalidData()
+            raise errors.InvalidData(msg="no factory for job type: %s" % typename)
         jhandler = factory(self)
         jhandler.create(job, extraArgs)
         for system_job in job.systems.all():
@@ -224,7 +225,7 @@ class ResultsProcessingMixIn(object):
     def processResults(self, job):
         if job.oldModel is None:
             # We won't allow job creation to happen here
-            raise errors.InvalidData()
+            raise errors.InvalidData(msg="no model")
         # Flush job state to the DB, it is needed by processJobResults
         models.Job.objects.filter(job_id=job.job_id).update(
             job_state=job.job_state)
@@ -242,7 +243,7 @@ class ResultsProcessingMixIn(object):
     def validateJobResults(self, job):
         jobState = modellib.Cache.get(models.JobState, pk=job.job_state_id)
         if self.results is None and jobState.name == jobState.COMPLETED:
-            raise errors.InvalidData()
+            raise errors.InvalidData(msg = "missing results")
 
     def loadDescriptorData(self, job):
         descriptor = smartdescriptor.ConfigurationDescriptor(fromStream=job._descriptor)
@@ -327,7 +328,7 @@ class DescriptorJobHandler(BaseJobHandler, ResultsProcessingMixIn):
             descriptorDataObj = None
             descriptor        = self.getDescriptor(job.descriptor.id)
         else:
-            descriptorId = job.descriptor.id
+            descriptorId       = job.descriptor.id
             # Strip the server-side portion
             descriptorId       = urlparse.urlsplit(descriptorId).path
             descriptorDataXobj = job.descriptor_data
@@ -405,7 +406,7 @@ class DescriptorJobHandler(BaseJobHandler, ResultsProcessingMixIn):
         try:
             match = urlresolvers.resolve(resourceId)
         except urlresolvers.Resolver404:
-            raise errors.InvalidData()
+            raise errors.InvalidData(msg="unable to resolve resource id: %s" % resourceId)
 
         return match
 
@@ -446,7 +447,7 @@ class _TargetDescriptorJobHandler(DescriptorJobHandler):
     def _buildTargetCredentialsFromDb(self, cli, job):
         creds = self.mgr.mgr.getTargetCredentialsForCurrentUser(self.target)
         if creds is None:
-            raise errors.InvalidData()
+            raise errors.InvalidData(msg="missing credentials")
         return self._buildTargetCredentials(cli, job, creds)
 
     def _buildTargetCredentials(self, cli, job, creds):
@@ -855,7 +856,7 @@ class JobHandlerRegistry(HandlerRegistry):
 
             systemId = int(match.kwargs['system_id'])
             if str(systemId) != str(self.extraArgs.get('system_id')):
-                raise errors.InvalidData()
+                raise errors.InvalidData(msg = "system id does not match")
             self._setSystem(systemId)
             descr = self._getDescriptorMethod()(systemId)
             return descr
@@ -922,7 +923,7 @@ class JobHandlerRegistry(HandlerRegistry):
         def _processJobResults(self, job):
             imageId = getattr(self.results, 'id', None)
             if imageId is None:
-                raise errors.InvalidData()
+                raise errors.InvalidData(msg = "missing imageId")
             imageId = int(os.path.basename(imageId))
             image = self.mgr.mgr.getImageBuild(imageId)
             image.status = jobstatus.FINISHED
@@ -1003,7 +1004,7 @@ class JobHandlerRegistry(HandlerRegistry):
 
             imageId = int(match.kwargs['image_id'])
             if str(imageId) != str(self.extraArgs.get('imageId')):
-                raise errors.InvalidData()
+                raise errors.InvalidData(msg = "image id does not match")
             self._setImage(imageId)
             return self.mgr.mgr.imagesManager.getImageDescriptorCancelBuild(imageId)
 
@@ -1019,3 +1020,61 @@ class JobHandlerRegistry(HandlerRegistry):
 
         def postCreateJob(self, job):
             self.mgr.mgr.cancelImageBuild(self.image, job)
+
+    class SystemConfigure(DescriptorJobHandler):
+        # TODO: reduce boilerplate by making a system job handler base class
+        # and combine with other system jobs.  This should only be a few lines
+        # per job type if the job is reasonably basic
+
+        __slots__ = [ 'system', 'eventUuid' ]
+        jobType = models.EventType.SYSTEM_CONFIGURE
+        ResultsTag = 'configuration'
+    
+        def getDescriptor(self, descriptorId):
+
+            match = self.splitResourceId(descriptorId)
+            systemId = int(match.kwargs['system_id'])
+            if str(systemId) != str(self.extraArgs.get('system_id')):
+                raise errors.InvalidData()
+            system = inventorymodels.System.objects.get(system_id=systemId)
+            self.system = system
+
+            # FIXME:
+            return self.mgr.mgr.sysMgr.getDescriptorConfigure(systemId)
+
+        def getRelatedResource(self, descriptor):
+            print "DEBUG: sys=%s" % descriptor
+            return self.system
+    
+        def getRepeaterMethod(self, cli, job):
+            print "DEBUG: gRM=%s, %ss" % (cli, job)
+            self.descriptor, self.descriptorData = self.extractDescriptorData(job)
+            cimInterface = self.mgr.mgr.cimManagementInterface()
+            wmiInterface = self.mgr.mgr.wmiManagementInterface()
+            methodMap = {
+                cimInterface.management_interface_id : cli.configuration_cim,
+                wmiInterface.management_interface_id : cli.configuration_wmi,
+            }
+            method = methodMap.get(self.system.management_interface_id)
+            if method is None:
+                raise errors.InvalidData(msg="Unsupported management interface")
+            return method
+
+        def getRepeaterMethodArgs(self, cli, job):
+            self.eventUuid = uuid.uuid4()
+            nw = self.system.extractNetworkToUse(self.system)
+            if not nw:
+                raise errors.InvalidData(msg="No network available for system")
+            destination = nw.ip_address or nw.dns_name
+            params = self.mgr.mgr.sysMgr._computeDispatcherMethodParams(cli,
+                self.system, destination, eventUuid=str(self.eventUuid),
+                requiredNetwork=None)
+            return (params, ), dict(configuration=self.system.configuration, zone=self.system.managing_zone.name)
+
+        def getRelatedThroughModel(self, descriptor):
+            return inventorymodels.SystemJob
+
+        def postCreateJob(self, job):
+            # self.mgr.mgr.configureSystem(self.system, job)
+            pass
+

@@ -5007,7 +5007,7 @@ class MigrateTo_62(SchemaMigration):
  
 class MigrateTo_63(SchemaMigration):
     '''Goad'''
-    Version = (63, 5)
+    Version = (63, 6)
 
     def migrate(self):
         ''' add initial tables for config environments '''
@@ -5100,7 +5100,20 @@ class MigrateTo_63(SchemaMigration):
     def migrate5(self):
         cu = self.db.cursor()
         cu.execute("ALTER TABLE inventory_survey ADD COLUMN config_diff_xml TEXT")
-        return True  
+        return True
+
+    def migrate6(self):
+        cu = self.db.cursor()
+        cu.execute("""
+            INSERT INTO "jobs_job_type" 
+                ("name", "description", "priority", "resource_type")
+            VALUES
+                ('system apply configuration',
+                 'Apply system configuration',
+                 105, 'System')
+        """)
+        return True
+     
  
 #### SCHEMA MIGRATIONS END HERE #############################################
 

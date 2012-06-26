@@ -878,6 +878,12 @@ class System(modellib.XObjIdModel):
             self.management_interface.name == 'ssh')
         scanEnabled = bool(self.management_interface_id and
             self.management_interface.name in ('cim', 'wmi'))
+        configureEnabled = bool(self.configuration is not None)
+        capture_enabled = False
+        if self.target_id:
+            drvCls = targetmodels.Target.getDriverClassForTargetId(
+                self.target_id)
+            capture_enabled = hasattr(drvCls, "drvCaptureSystem")
 
         actions.action.extend([
             jobmodels.EventType.makeAction(
@@ -895,23 +901,23 @@ class System(modellib.XObjIdModel):
                 descriptorHref="descriptors/survey_scan",
                 enabled=scanEnabled,
             ),
+            jobmodels.EventType.makeAction(
+                jobmodels.EventType.SYSTEM_CAPTURE,
+                actionName="System capture",
+                descriptorModel=self,
+                descriptorHref="descriptors/capture",
+                enabled=capture_enabled
+            ),
+            jobmodels.EventType.makeAction(
+                jobmodels.EventType.SYSTEM_CONFIGURE,
+                actionName="Apply system configuration",
+                descriptorModel=self,
+                descriptorHref="descriptors/configure", # FIXME
+                enabled=configureEnabled
+            ),
         ])
 
-        if self.target_id:
-            drvCls = targetmodels.Target.getDriverClassForTargetId(
-                self.target_id)
-            enabled = hasattr(drvCls, "drvCaptureSystem")
-        else:
-            enabled = False
-        action = jobmodels.EventType.makeAction(
-            jobmodels.EventType.SYSTEM_CAPTURE,
-            actionName="System capture",
-            descriptorModel=self,
-            descriptorHref="descriptors/capture",
-            enabled=enabled)
-        actions.action.append(action)
-
-        return action
+        return actions
 
     def hasSourceImage(self):
         return bool(getattr(self, 'source_image', None))
