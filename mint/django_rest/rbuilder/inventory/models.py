@@ -909,6 +909,13 @@ class System(modellib.XObjIdModel):
                 enabled=capture_enabled
             ),
             jobmodels.EventType.makeAction(
+                jobmodels.EventType.SYSTEM_UPDATE,
+                actionName="Update Software",
+                descriptorModel=self,
+                descriptorHref="descriptors/update",
+                enabled=True,
+            ),
+            jobmodels.EventType.makeAction(
                 jobmodels.EventType.SYSTEM_CONFIGURE,
                 actionName="Apply system configuration",
                 descriptorModel=self,
@@ -1269,3 +1276,20 @@ for mod_obj in rbuildermodels.__dict__.values():
 for mod_obj in usersmodels.__dict__.values():
     if hasattr(mod_obj, '_meta'):
         modellib.type_map[mod_obj._meta.verbose_name] = mod_obj
+
+class Update(modellib.XObjIdModel):
+
+    class Meta:
+        db_table = 'inventory_update'
+
+    view_name = 'Update'
+
+    update_id = D(models.AutoField(primary_key=True),
+                  'the update ID for the system', short='Update ID')
+    system    = modellib.DeferredForeignKey('inventory.System', 
+                                            related_name='updates', db_column='system_id')
+    dry_run      = models.BooleanField(default=False)
+    specs        = models.TextField()
+    created_date = D(modellib.DateTimeUtcField(auto_now_add=True),
+        'the date the system was added to inventory (UTC)')
+

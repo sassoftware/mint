@@ -1021,6 +1021,56 @@ class JobHandlerRegistry(HandlerRegistry):
         def postCreateJob(self, job):
             self.mgr.mgr.cancelImageBuild(self.image, job)
 
+    class SystemUpdate(DescriptorJobHandler):
+        __slots__ = [ 'system', 'eventUuid', 'specs', 'dryRun']
+        jobType = models.EventType.SYSTEM_UPDATE
+        ResultsTag = 'update'
+
+        def getDescriptor(self, descriptorId):
+            match = self.splitResourceId(descriptorId)
+
+            systemId = int(match.kwargs['system_id'])
+            if str(systemId) != str(self.extraArgs.get('system_id')):
+                raise errors.InvalidData()
+            system = inventorymodels.System.objects.get(system_id=systemId)
+            self.system = system
+
+            return self.mgr.mgr.sysMgr.getDescriptorUpdate(systemId)
+
+        def getRelatedResource(self, descriptor):
+            return self.system
+
+        def getRepeaterMethod(self, cli, job):
+            self.descriptor, self.descriptorData = self.extractDescriptorData(job)
+            cimInterface = self.mgr.mgr.cimManagementInterface()
+            wmiInterface = self.mgr.mgr.wmiManagementInterface()
+            methodMap = {
+                cimInterface.management_interface_id : cli.survey_scan_cim,
+                wmiInterface.management_interface_id : cli.survey_scan_wmi,
+            }
+            method = methodMap.get(self.system.management_interface_id)
+            if method is None:
+                raise errors.InvalidData(msg="Unsupported management interface")
+            return method
+
+        def getRepeaterMethodArgs(self, cli, job):
+            self.eventUuid = uuid.uuid4()
+            nw = self.system.extractNetworkToUse(self.system)
+            if not nw:
+                raise errors.InvalidData(msg="No network available for system")
+            destination = nw.ip_address or nw.dns_name
+            params = self.mgr.mgr.sysMgr._computeDispatcherMethodParams(cli,
+                self.system, destination, eventUuid=str(self.eventUuid),
+                requiredNetwork=None)
+            return (params, ), dict(zone=self.system.managing_zone.name)
+
+        def getRelatedThroughModel(self, descriptor):
+            return inventorymodels.SystemJob
+
+        def postCreateJob(self, job):
+            self.mgr.mgr.updateSystem(self.system, job)
+
+
     class SystemConfigure(DescriptorJobHandler):
         # TODO: reduce boilerplate by making a system job handler base class
         # and combine with other system jobs.  This should only be a few lines
@@ -1038,16 +1088,12 @@ class JobHandlerRegistry(HandlerRegistry):
                 raise errors.InvalidData()
             system = inventorymodels.System.objects.get(system_id=systemId)
             self.system = system
-
-            # FIXME:
             return self.mgr.mgr.sysMgr.getDescriptorConfigure(systemId)
 
         def getRelatedResource(self, descriptor):
-            print "DEBUG: sys=%s" % descriptor
             return self.system
     
         def getRepeaterMethod(self, cli, job):
-            print "DEBUG: gRM=%s, %ss" % (cli, job)
             self.descriptor, self.descriptorData = self.extractDescriptorData(job)
             cimInterface = self.mgr.mgr.cimManagementInterface()
             wmiInterface = self.mgr.mgr.wmiManagementInterface()
