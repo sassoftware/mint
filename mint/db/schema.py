@@ -1665,6 +1665,14 @@ def _createInventorySchema(db, cfg):
 
     _createSurveyTables(db, cfg)
 
+    createTable(db, 'inventory_update', """
+              "update_id"    %(PRIMARYKEY)s,
+              "system_id"    INTEGER NOT NULL REFERENCES "inventory_system" (system_id) ON DELETE CASCADE,
+              "dry_run"      BOOLEAN DEFAULT TRUE,
+              "specs"        TEXT,
+              "created_date" TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT current_timestamp
+              """)
+
 def _createSurveyTables(db, cfg):
 
     createTable(db, 'inventory_survey', """
