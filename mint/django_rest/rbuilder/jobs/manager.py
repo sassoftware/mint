@@ -1092,7 +1092,10 @@ class JobHandlerRegistry(HandlerRegistry):
 
         def getRelatedResource(self, descriptor):
             return self.system
-    
+
+        def postprocessRelatedResource(self, job, model):
+            model.event_uuid = str(self.eventUuid)
+
         def getRepeaterMethod(self, cli, job):
             self.descriptor, self.descriptorData = self.extractDescriptorData(job)
             cimInterface = self.mgr.mgr.cimManagementInterface()
