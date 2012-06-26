@@ -1318,8 +1318,9 @@ class SystemManager(basemanager.BaseManager):
         system.save()
         return self._getConfigurationModel(system, configuration)
 
+    # FIXME: OBSOLETE with new config stuff, REMOVE
     def applySystemConfiguration(self):    
-        self.scheduleSystemConfigurationEvent(system)
+        self.scheduleSystemConfigurationEvent()
 
     def _getConfigurationModel(self, system, configDict):
         config = models.Configuration(system)
