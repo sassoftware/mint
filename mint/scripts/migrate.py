@@ -5007,7 +5007,7 @@ class MigrateTo_62(SchemaMigration):
  
 class MigrateTo_63(SchemaMigration):
     '''Goad'''
-    Version = (63, 5)
+    Version = (63, 6)
 
     def migrate(self):
         ''' add initial tables for config environments '''
@@ -5102,6 +5102,25 @@ class MigrateTo_63(SchemaMigration):
         cu.execute("ALTER TABLE inventory_survey ADD COLUMN config_diff_xml TEXT")
         return True  
  
+    def migrate6(self):
+        db = self.db
+        schema._addTableRows(db, 'jobs_job_type', 'name', [
+             dict(name="system update software",
+                  description="Update your system",
+                  priority=105,
+                  resource_type="System"),
+        ])
+
+        createTable2(self.db, 'inventory_update', """
+              "update_id"    %(PRIMARYKEY)s,
+              "system_id"    INTEGER NOT NULL REFERENCES "inventory_system" (system_id) ON DELETE CASCADE,
+              "dry_run"      BOOLEAN DEFAULT TRUE,
+              "specs"        TEXT,
+              "created_date" TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT current_timestamp
+              """)
+
+        return True
+
 #### SCHEMA MIGRATIONS END HERE #############################################
 
 def _getMigration(major):
