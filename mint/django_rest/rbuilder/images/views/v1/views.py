@@ -322,4 +322,4 @@ class ImageUploadService(service.BaseService):
                                     request.GET.get('chunk'),
                                     request.GET.get('chunks'),
                                     request.GET.get('md5chunk'))
-        return HttpResponse(status=204)
+        return HttpResponse(status=200)
