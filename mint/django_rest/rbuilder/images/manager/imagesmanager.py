@@ -8,6 +8,10 @@ import sys
 import errno
 import logging
 import os
+import os.path
+import hashlib
+import urllib
+import urlparse
 from django.core import urlresolvers
 from mcp import client as mcp_client
 from mint import buildtypes
@@ -525,3 +529,114 @@ class ImagesManager(basemanager.BaseManager):
 
     def _getMcpClient(self):
         return mcp_client.Client(self.cfg.queueHost, self.cfg.queuePort)
+
+    @exposed
+    def getImageUploadStatus(self, image_id, basename):
+        filename = self._getUploadFilename(image_id, basename) # FIXME pass an image instead of image_id
+        handler = MultiRequestUploadHandler()
+        status = handler.getStatus(filename)
+        return status
+
+    @exposed
+    def processImageUpload(self, image_id, uploaded_file, basename, chunk_id,
+                           num_chunks, checksum):
+        # FIXME don't process the upload if the image is "complete"
+        filename = self._getUploadFilename(image_id, basename) # FIXME pass an image instead of image_id
+        handler = MultiRequestUploadHandler()
+        upload = handler.handle(uploaded_file, filename, chunk_id, num_chunks, checksum)
+        # if upload.isComplete():
+            # do useful stuff
+            # pass
+
+    def _getUploadFilename(self, image_id, basename):
+        # FIXME put UPLOAD_DIR somewhere sane
+        # FIXME put project name in path
+        UPLOAD_DIR = '/srv/rbuilder/incoming-images'
+        # return os.path.join(UPLOAD_DIR, image.projectname, image.image_id)
+        return os.path.join(UPLOAD_DIR, os.path.basename(basename))
+
+
+class MultiRequestUploadHandler(object):
+    def handle(self, uploaded_file, filename, chunk_id, num_chunks, checksum):
+        if uploaded_file is None:
+            raise Exception("No file uploaded")
+
+        if chunk_id is None:
+            chunk_id = 0
+        chunk_id = int(chunk_id)
+
+        if num_chunks is None:
+            num_chunks = 1
+        num_chunks = int(num_chunks)
+
+        complete_file = filename
+        incomplete_file = filename + '.incomplete'
+        status_file = filename + '.status'
+
+        if checksum is not None:
+            md5_verify = hashlib.md5()
+            for buf in uploaded_file.chunks():
+                md5_verify.update(buf)
+
+            if md5_verify.hexdigest() != checksum:
+                raise Exception("Checksum error")
+
+        # If this is the first chunk, start from clean slate
+        if chunk_id == 0:
+            try:
+                os.remove(complete_file)
+            except:
+                pass
+            try:
+                os.remove(status_file)
+            except:
+                pass
+            # recursively create dest_dir
+            dir = os.path.dirname(filename)
+            if not os.path.isdir(dir):
+                os.path.makedirs(dir)
+
+        # Append uploaded bytes to .incomplete file
+        mode = 'wb' if chunk_id == 0 else 'ab'
+        with open(incomplete_file, mode) as f:
+            for buf in uploaded_file.chunks():
+                f.write(buf)
+        uploaded_file.close() # delete the tmp file
+
+        # If this is the last chunk, finish up
+        if chunk_id == num_chunks - 1:
+            os.rename(incomplete_file, complete_file)
+            try:
+                os.remove(status_file)
+            except:
+                pass # it's not a big deal if we can't delete the status file
+            current_file = complete_file
+
+        else:
+            status = {'status': 'uploading',
+                      'chunk': chunk_id,
+                      'chunks': num_chunks}
+
+            with open(status_file, 'w') as f:
+               f.write(urllib.urlencode(status))
+            current_file = incomplete_file
+
+        return MultiRequestUploadFile(current_file)
+
+    def getStatus(self, filename):
+        '''Returns a dict containing status info, used primarily by Plupload'''
+        status = {'status': 'unknown'}
+        if os.path.isfile(filename):
+            status = {'status': 'finished'}
+        elif os.path.isfile(filename + '.status'):
+            with open(filename + '.status', 'r') as f:
+                status = urlparse.parse_qs(f.read())
+        return status
+
+
+class MultiRequestUploadFile(object):
+    def __init__(self, filename):
+        self.filename = filename
+
+    def isComplete(self):
+        return not self.filename.endswith('.incomplete')
