@@ -13,7 +13,9 @@ from debug_toolbar import middleware
 from django import http
 from django.contrib.auth import authenticate
 from django.contrib.redirects import middleware as redirectsmiddleware
-from django.http import HttpResponse, HttpResponseBadRequest
+from django.http import HttpResponse, HttpResponseBadRequest, QueryDict
+from django.core.files.uploadhandler import StopFutureHandlers
+from django.utils.datastructures import MultiValueDict
 from django.db.utils import IntegrityError
 from django.db import connection
 import django.core.exceptions as core_exc
@@ -546,3 +548,73 @@ class SqlLoggingMiddleware(BaseMiddleware):
         fd.close()
         return response
  
+class ApplicationOctetStreamHandlerMiddleware(BaseMiddleware):
+    '''Process application/octet-stream uploads'''
+    def _process_request(self, request):
+        # @TODO support any large, non-multipart file upload w/o breaking
+        # @TODO support base64 encoding
+        # @TODO support content-disposition header and filename
+        content_type = request.META.get('CONTENT_TYPE')
+        try:
+            content_length = int(request.META.get('CONTENT_LENGTH', 0))
+        except (ValueError, TypeError):
+            content_length = 0
+
+        if not request.method in ('POST', 'PUT'):
+            return None
+
+        if not content_type == 'application/octet-stream':
+            return None
+
+        request._post = QueryDict('')
+        request._files = MultiValueDict()
+
+        # HTTP spec says that Content-Length >= 0 is valid
+        if content_length == 0:
+            return None
+
+        handlers = request.upload_handlers
+        unused_handlers = []
+
+        # For compatibility with low-level network APIs (with 32-bit integers),
+        # the chunk size should be < 2^31, but still divisible by 4.
+        possible_sizes = [x.chunk_size for x in handlers if x.chunk_size]
+        chunk_size = min([2**31-4] + possible_sizes)
+
+        # See if the handler will want to take care of the parsing.
+        # This allows overriding everything if somebody wants it.
+        for handler in handlers:
+            result = handler.handle_raw_input(request, request.META,
+                                              content_length, '', encoding=None)
+            if result is not None:
+                return result[0], result[1]
+
+        try:
+            for i, handler in enumerate(handlers):
+                handler.new_file('', '', content_type, content_length,
+                                 charset=None)
+        except StopFutureHandlers:
+            # put aside the remaining handlers
+            unused_handlers = handlers[i+1:]
+            handlers = handlers[:i+1]
+
+        counters = [0]*len(handlers)
+
+        while True:
+            chunk = request.read(chunk_size)
+            if not chunk:
+                break
+
+            for i, handler in enumerate(handlers):
+                handler.receive_data_chunk(chunk, counters[i])
+                counters[i] += len(chunk)
+
+        for i, handler in enumerate(handlers):
+            file_obj = handler.file_complete(counters[i])
+            if file_obj is not None:
+                request.FILES.appendlist('', file_obj)
+
+        for handler in handlers + unused_handlers:
+            handler.upload_complete()
+
+        return None

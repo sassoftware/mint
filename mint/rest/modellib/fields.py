@@ -157,6 +157,15 @@ class ImageDownloadField(CalculatedField):
                 parent.fileId, parent.urlType)
 
 
+class ImageUploadsHrefField(AbstractUrlField):
+    handleNone = True
+
+    def _getUrl(self, parent, context):
+        baseUrl = context.request.baseUrl
+        return "%s/v1/images/%d/upload_files" % (baseUrl,
+                parent.imageId)
+
+
 class EmailField(Field):
     pass
 
