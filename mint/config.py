@@ -125,6 +125,7 @@ class MintConfig(conarycfg.ConfigFile):
         "(The complete URL to access rBuilder is constructed from the "
         "host name and domain name.)")
     imagesPath              = (CfgString, None)
+    imagesUploadPath        = (CfgString, None)
     language                = (CfgString, 'en')
     localeDir               = (CfgPath, '/usr/share/locale/')
     projectDomainName       = (CfgString, None)
@@ -345,6 +346,7 @@ class MintConfig(conarycfg.ConfigFile):
         if not self.reposPath: self.reposPath = os.path.join(self.dataPath, 'repos')
         if not self.dbPath: self.dbPath = os.path.join(self.dataPath, 'data/db')
         if not self.imagesPath: self.imagesPath = os.path.join(self.dataPath, 'finished-images')
+        if not self.imagesUploadPath: self.imagesUploadPath = os.path.join(self.dataPath, 'incoming-images')
 
     def getInternalProxies(self):
         # use localhost for the proxy due to a bug in proxy handling

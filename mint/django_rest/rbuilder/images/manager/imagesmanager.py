@@ -539,7 +539,7 @@ class ImagesManager(basemanager.BaseManager):
     @exposed
     def processImageUpload(self, image_id, uploaded_file, basename, chunk_id,
                            num_chunks, checksum):
-        # FIXME don't process the upload if the image is "complete"
+        # FIXME don't process the upload if the image.status is "complete"
         filename = self._getUploadFilename(image_id, basename) # FIXME pass an image instead of image_id
         handler = MultiRequestUploadHandler()
         upload = handler.handle(uploaded_file, filename, chunk_id, num_chunks, checksum)
@@ -548,11 +548,9 @@ class ImagesManager(basemanager.BaseManager):
             # pass
 
     def _getUploadFilename(self, image_id, basename):
-        # FIXME put UPLOAD_DIR somewhere sane
-        # FIXME put project name in path
-        UPLOAD_DIR = '/srv/rbuilder/incoming-images'
-        # return os.path.join(UPLOAD_DIR, image.projectname, image.image_id)
-        return os.path.join(UPLOAD_DIR, os.path.basename(basename))
+        # FIXME put project.short_name in path as is done w/ finished-images
+        return os.path.join(self.cfg.imagesUploadPath,
+                            os.path.basename(basename))
 
 
 class MultiRequestUploadHandler(object):
@@ -590,7 +588,6 @@ class MultiRequestUploadHandler(object):
                 os.remove(status_file)
             except:
                 pass
-            # recursively create dest_dir
             dir = os.path.dirname(filename)
             if not os.path.isdir(dir):
                 os.path.makedirs(dir)
