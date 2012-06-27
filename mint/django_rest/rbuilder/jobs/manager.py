@@ -1067,4 +1067,5 @@ class JobHandlerRegistry(HandlerRegistry):
             return inventorymodels.SystemJob
 
         def postCreateJob(self, job):
-            self.mgr.mgr.updateSystem(self.system, job)
+            self.mgr.mgr.systemUpdateSystem(self.system, job)
+

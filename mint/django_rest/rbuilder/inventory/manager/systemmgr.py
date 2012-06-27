@@ -12,6 +12,7 @@ import time
 import traceback
 from conary import versions as cny_versions
 from conary.deps import deps as cny_deps
+from conary.lib import util
 from xobj import xobj
 
 from django.db import connection
@@ -56,6 +57,17 @@ survey_scan_descriptor = """<descriptor>
   <displayName>System Scan</displayName>
     <descriptions>
       <desc>System Scan</desc>
+    </descriptions>
+  </metadata>
+  <dataFields/>
+</descriptor>
+"""
+
+update_descriptor = """<descriptor>
+  <metadata>
+  <displayName>Update Software</displayName>
+    <descriptions>
+      <desc>Update your system</desc>
     </descriptions>
   </metadata>
   <dataFields/>
@@ -2066,8 +2078,9 @@ class SystemManager(basemanager.BaseManager):
         system = models.System.objects.get(pk=systemId)
         methodMap = dict(
             assimilation = self.getDescriptorAssimilation,
-            capture = self.getDescriptorCaptureSystem,
-            survey_scan = self.getDescriptorSurveyScan,
+            capture      = self.getDescriptorCaptureSystem,
+            update       = self.getDescriptorUpdate,
+            survey_scan  = self.getDescriptorSurveyScan,
         )
         method = methodMap.get(descriptorType)
         if method is None:
@@ -2078,6 +2091,12 @@ class SystemManager(basemanager.BaseManager):
         descr = descriptor.ConfigurationDescriptor(
             fromStream=system_assimilate_descriptor)
         return descr
+
+    def getDescriptorUpdate(self, systemId, *args, **kwargs):
+        descr = descriptor.ConfigurationDescriptor(
+            fromStream=update_descriptor)
+        return descr
+
 
     def getDescriptorSurveyScan(self, systemId, *args, **kwargs):
         descr = descriptor.ConfigurationDescriptor(
@@ -2161,6 +2180,31 @@ class SystemManager(basemanager.BaseManager):
         wrapper = models.modellib.etreeObjectWrapper(
             descriptor.getElementTree(validate=validate))
         return wrapper
+
+    @exposed
+    def systemUpdateSystem(self, system, job):
+        # TODO Rename. This is a terrible name but needs to be
+        #  distinguished from the old-school systemUpdate.
+        try:
+            self._updateSystem(system, job)
+        except:
+            exc = sys.exc_info()
+            stream = util.BoundedStringIO()
+            util.formatTrace(*exc, stream=stream, withLocals=False)
+            stream.seek(0)
+
+            job.job_state = self.mgr.getJobStateByName(jobmodels.JobState.FAILED)
+            job.status_code = 500
+            job.status_text = "Failed"
+            job.status_detail = stream.read()
+        else:
+            job.job_state = self.mgr.getJobStateByName(jobmodels.JobState.COMPLETED)
+            job.status_code = 200
+            job.status_text = "Done"
+        job.save()
+
+    def _systemUpdateSystem(self, system, job=None):
+        pass
 
 class Configuration(object):
     _xobj = xobj.XObjMetadata(
