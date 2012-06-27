@@ -28,7 +28,7 @@ from conary.dbstore import sqlerrors, sqllib
 log = logging.getLogger(__name__)
 
 # database schema major version
-RBUILDER_DB_VERSION = sqllib.DBversion(63, 5)
+RBUILDER_DB_VERSION = sqllib.DBversion(63, 7)
 
 def _createTrigger(db, table, column="changed"):
     retInsert = db.createTrigger(table, column, "INSERT")
@@ -1459,7 +1459,15 @@ def _createInventorySchema(db, cfg):
                   description="Cancel an image build",
                   priority=105,
                   resource_type="Image"),
-            ])
+             dict(name="system update software",
+                  description="Update your system",
+                  priority=105,
+                  resource_type="System"),
+             dict(name="system apply configuration",
+                  description="Apply system configuration",
+                  priority=105,
+                  resource_type="System"),
+             ])
 
     if 'inventory_system_event' not in db.tables:
         cu.execute("""
@@ -1660,6 +1668,14 @@ def _createInventorySchema(db, cfg):
         db.tables['django_redirect'] = []
 
     _createSurveyTables(db, cfg)
+
+    createTable(db, 'inventory_update', """
+              "update_id"    %(PRIMARYKEY)s,
+              "system_id"    INTEGER NOT NULL REFERENCES "inventory_system" (system_id) ON DELETE CASCADE,
+              "dry_run"      BOOLEAN DEFAULT TRUE,
+              "specs"        TEXT,
+              "created_date" TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT current_timestamp
+              """)
 
 def _createSurveyTables(db, cfg):
 

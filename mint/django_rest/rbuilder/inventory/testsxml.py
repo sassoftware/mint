@@ -1,5 +1,4 @@
-#!/usr/bin/python
-
+#!/usr/bin/python 
 inventory_xml = """\
 <?xml version="1.0" encoding="UTF-8"?>
 <inventory>
@@ -230,6 +229,14 @@ event_types_xml="""\
     <name>image build cancellation</name>
     <priority>105</priority>
     <resource_type>Image</resource_type>
+    <system_events/>
+  </event_type>
+  <event_type id="http://testserver/api/v1/inventory/event_types/26">
+    <description>Apply system configuration</description>
+    <job_type_id>26</job_type_id>
+    <name>system apply configuration</name>
+    <priority>105</priority>
+    <resource_type>System</resource_type>
     <system_events/>
   </event_type>
 </event_types>"""
@@ -1032,6 +1039,14 @@ systems_xml = """\
         <key>system_capture</key>
         <name>System capture</name>
       </action>
+      <action>
+        <description>Apply system configuration</description>
+        <descriptor id="http://testserver/api/v1/inventory/systems/2/descriptors/configure"/>
+        <enabled>False</enabled>
+        <job_type id="http://testserver/api/v1/inventory/event_types/26"/>
+        <key>system_apply_configuration</key>
+        <name>Apply system configuration</name>
+     </action>
     </actions>
     <agent_port/>
     <project/>
@@ -1125,6 +1140,14 @@ systems_xml = """\
         <key>system_capture</key>
         <name>System capture</name>
       </action>
+      <action>
+        <description>Apply system configuration</description>
+        <descriptor id="http://testserver/api/v1/inventory/systems/3/descriptors/configure"/>
+        <enabled>False</enabled>
+        <job_type id="http://testserver/api/v1/inventory/event_types/26"/>
+        <key>system_apply_configuration</key>
+        <name>Apply system configuration</name>
+     </action>
     </actions>
     <agent_port>5989</agent_port>
     <project/>
@@ -1361,6 +1384,14 @@ system_xml = """\
       <key>system_capture</key>
       <name>System capture</name>
     </action>
+    <action>
+        <description>Apply system configuration</description>
+        <descriptor id="http://testserver/api/v1/inventory/systems/3/descriptors/configure"/>
+        <enabled>False</enabled>
+        <job_type id="http://testserver/api/v1/inventory/event_types/26"/>
+        <key>system_apply_configuration</key>
+        <name>Apply system configuration</name>
+     </action>
   </actions>
   <agent_port>5989</agent_port>
   <project/>
@@ -1430,24 +1461,6 @@ system_xml = """\
 system_post_xml = """\
 <?xml version="1.0" encoding="UTF-8"?>
 <system>
-  <actions>
-    <action>
-      <description>Assimilate system</description>
-      <descriptor id="http://testserver/api/v1/inventory/systems/3/descriptors/assimilation"/>
-      <enabled>false</enabled>
-      <job_type id="http://testserver/api/v1/inventory/event_types/12"/>
-      <key>system_assimilation</key>
-      <name>Assimilate system</name>
-    </action>
-    <action>
-      <description>Capture a system's image</description>
-      <descriptor id="http://testserver/api/v1/inventory/systems/3/descriptors/capture"/>
-      <enabled>false</enabled>
-      <job_type id="http://testserver/api/v1/inventory/event_types/21"/>
-      <key>system_capture</key>
-      <name>System capture</name>
-    </action>
-  </actions>
   <managing_zone id="http://testserver/api/v1/inventory/zones/1">Local rBuilder</managing_zone>
   <ssl_client_key>testsystemsslclientkey</ssl_client_key>
   <out_of_date>false</out_of_date>
@@ -1757,6 +1770,14 @@ system_target_xml = """\
       <job_type id="http://testserver/api/v1/inventory/event_types/21"/>
       <key>system_capture</key>
       <name>System capture</name>
+   </action>
+   <action>
+      <description>Apply system configuration</description>
+      <descriptor id="http://testserver/api/v1/inventory/systems/3/descriptors/configure"/>
+      <enabled>False</enabled>
+      <job_type id="http://testserver/api/v1/inventory/event_types/26"/>
+      <key>system_apply_configuration</key>
+      <name>Apply system configuration</name>
    </action>
   </actions>
   <agent_port>5989</agent_port>
@@ -2608,6 +2629,14 @@ system_with_target = """\
       <key>system_capture</key>
       <name>System capture</name>
     </action>
+    <action>
+        <description>Apply system configuration</description>
+        <descriptor id="http://testserver/api/v1/inventory/systems/4/descriptors/configure"/>
+        <enabled>False</enabled>
+        <job_type id="http://testserver/api/v1/inventory/event_types/26"/>
+        <key>system_apply_configuration</key>
+        <name>Apply system configuration</name>
+     </action>
   </actions>
   <system_events id="http://testserver/api/v1/inventory/systems/4/system_events"/>
   <generated_uuid/>
@@ -3809,6 +3838,14 @@ retirement_xml = """
       <key>system_capture</key>
       <description>Capture a system's image</description>
     </action>
+    <action>
+        <description>Apply system configuration</description>
+        <descriptor id="http://testserver/api/v1/inventory/systems/3/descriptors/configure"/>
+        <enabled>False</enabled>
+        <job_type id="http://testserver/api/v1/inventory/event_types/26"/>
+        <key>system_apply_configuration</key>
+        <name>Apply system configuration</name>
+     </action>
   </actions>
   <has_running_jobs>false</has_running_jobs>
   <system_type id="http://testserver/api/v1/inventory/system_types/1">Inventory</system_type>
@@ -4740,3 +4777,13 @@ survey_mod_xml="""
     </tags>
 </survey>
 """
+
+system_configuration_xml = """
+<job>
+<descriptor id='http://testserver/api/v1/inventory/systems/%s/descriptors/configure'/>
+<descriptor_data />
+<job_type id='https://testserver/api/v1/inventory/event_types/26' href='https://testserver/api/v1/inventory/event_types/26' />
+</job>
+"""
+
+

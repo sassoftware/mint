@@ -366,6 +366,9 @@ class EventType(modellib.XObjIdModel):
     SYSTEM_CAPTURE = 'system capture'
     SYSTEM_CAPTURE_DESCRIPTION = "Capture a system's image"
 
+    SYSTEM_UPDATE = 'system update software'
+    SYSTEM_UPDATE_DESCRIPTION = 'Update your system'
+
     SYSTEM_SCAN = 'system scan'
     SYSTEM_SCAN_DESCRIPTION = 'Scan system'
 
@@ -396,6 +399,9 @@ class EventType(modellib.XObjIdModel):
     TARGET_CONFIGURE_CREDENTIALS_DESCRIPTION = 'Configure target credentials for the current user'
     TARGET_CONFIGURE = 'configure target'
     TARGET_CONFIGURE_DESCRIPTION = 'Configure target'
+    
+    SYSTEM_CONFIGURE             = 'system apply configuration'
+    SYSTEM_CONFIGURE_DESCRIPTION = 'Apply system configuration'
 
     job_type_id = D(models.AutoField(primary_key=True), "the database id of the  type")
     EVENT_TYPES = (
@@ -419,6 +425,7 @@ class EventType(modellib.XObjIdModel):
          SYSTEM_CONFIG_IMMEDIATE_DESCRIPTION),
         (SYSTEM_ASSIMILATE, SYSTEM_ASSIMILATE_DESCRIPTION),
         (SYSTEM_CAPTURE, SYSTEM_CAPTURE_DESCRIPTION),
+        (SYSTEM_UPDATE, SYSTEM_UPDATE_DESCRIPTION),
         (IMAGE_BUILDS, IMAGE_BUILDS_DESCRIPTION),
         (QUERYSET_INVALIDATE, QUERYSET_INVALIDATE_DESCRIPTION),
         (TARGET_REFRESH_IMAGES, TARGET_REFRESH_IMAGES_DESCRIPTION),
@@ -427,6 +434,7 @@ class EventType(modellib.XObjIdModel):
         (TARGET_LAUNCH_SYSTEM, TARGET_LAUNCH_SYSTEM_DESCRIPTION),
         (TARGET_CREATE, TARGET_CREATE_DESCRIPTION),
         (TARGET_CONFIGURE_CREDENTIALS, TARGET_CONFIGURE_CREDENTIALS_DESCRIPTION),
+        (SYSTEM_CONFIGURE, SYSTEM_CONFIGURE_DESCRIPTION)
     )
 
     name = D(APIReadOnly(models.CharField(max_length=8092, unique=True,
@@ -447,6 +455,7 @@ class EventType(modellib.XObjIdModel):
              self.SYSTEM_SHUTDOWN_IMMEDIATE,
              self.SYSTEM_CONFIG_IMMEDIATE,
              self.SYSTEM_ASSIMILATE,
+             self.SYSTEM_CONFIGURE
             ]:
             return True
         else:

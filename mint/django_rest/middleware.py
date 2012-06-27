@@ -615,6 +615,10 @@ class ApplicationOctetStreamHandlerMiddleware(BaseMiddleware):
                 request.FILES.appendlist('', file_obj)
 
         for handler in handlers + unused_handlers:
+<<<<<<< local
             handler.upload_complete()
+=======
+            retval = handler.upload_complete()
+>>>>>>> other
 
         return None
