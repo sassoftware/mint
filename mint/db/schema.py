@@ -28,7 +28,7 @@ from conary.dbstore import sqlerrors, sqllib
 log = logging.getLogger(__name__)
 
 # database schema major version
-RBUILDER_DB_VERSION = sqllib.DBversion(63, 7)
+RBUILDER_DB_VERSION = sqllib.DBversion(63, 8)
 
 def _createTrigger(db, table, column="changed"):
     retInsert = db.createTrigger(table, column, "INSERT")
@@ -1259,6 +1259,10 @@ def _createInventorySchema(db, cfg):
                 "has_active_jobs" BOOLEAN NOT NULL
                     DEFAULT FALSE,
                 "has_running_jobs" BOOLEAN NOT NULL
+                    DEFAULT FALSE,
+                "configuration_set" BOOLEAN NOT NULL
+                    DEFAULT FALSE,
+                "configuration_applied" BOOLEAN NOT NULL
                     DEFAULT FALSE
             ) %(TABLEOPTS)s""" % db.keywords)
         db.tables['inventory_system'] = []

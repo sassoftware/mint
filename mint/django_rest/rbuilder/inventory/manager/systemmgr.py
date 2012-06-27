@@ -1327,6 +1327,8 @@ class SystemManager(basemanager.BaseManager):
         system = models.System.objects.get(pk=system_id)
         systemConfig = self.marshalConfiguration(configuration)
         system.configuration = systemConfig
+        system.configuration_set = True
+        system.configuration_applied = False
         system.save()
         return self._getConfigurationModel(system, configuration)
 
