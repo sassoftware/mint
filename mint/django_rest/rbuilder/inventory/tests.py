@@ -401,7 +401,7 @@ class AssimilatorTestCase(XMLTestCase, test_utils.SmartformMixIn):
         actions = obj.system.actions.action
         if not isinstance(actions, list):
            actions = [actions]
-        self.assertTrue(len(actions) == 4)
+        self.assertTrue(len(actions) == 5)
 
     def testFetchActionsDescriptor(self): 
         descriptorTestData = [
