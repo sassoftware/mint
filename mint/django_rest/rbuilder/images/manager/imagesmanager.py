@@ -10,8 +10,7 @@ import logging
 import os
 import os.path
 import hashlib
-import urllib
-import urlparse
+import json
 from django.core import urlresolvers
 from mcp import client as mcp_client
 from mint import buildtypes
@@ -618,7 +617,7 @@ class MultiRequestUploadHandler(object):
                       'chunks': num_chunks}
 
             with open(status_file, 'w') as f:
-               f.write(urllib.urlencode(status))
+                json.dump(status, f)
             current_file = incomplete_file
 
         return MultiRequestUploadFile(current_file)
@@ -630,7 +629,7 @@ class MultiRequestUploadHandler(object):
             status = {'status': 'finished'}
         elif os.path.isfile(filename + '.status'):
             with open(filename + '.status', 'r') as f:
-                status = urlparse.parse_qs(f.read())
+                status = json.load(f)
         return status
 
 
