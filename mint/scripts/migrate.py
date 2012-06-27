@@ -5007,7 +5007,7 @@ class MigrateTo_62(SchemaMigration):
  
 class MigrateTo_63(SchemaMigration):
     '''Goad'''
-    Version = (63, 7)
+    Version = (63, 8)
 
     def migrate(self):
         ''' add initial tables for config environments '''
@@ -5130,6 +5130,18 @@ class MigrateTo_63(SchemaMigration):
                 ('system apply configuration',
                  'Apply system configuration',
                  105, 'System')
+        """)
+        return True
+
+    def migrate8(self):
+        cu = self.db.cursor()
+        cu.execute("""
+           ALTER TABLE inventory_system ADD COLUMN configuration_set 
+               BOOLEAN NOT NULL DEFAULT FALSE
+        """)
+        cu.execute("""
+           ALTER TABLE inventory_system ADD COLUMN configuration_applied
+               BOOLEAN NOT NULL DEFAULT FALSE
         """)
         return True
 

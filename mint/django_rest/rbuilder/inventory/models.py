@@ -564,10 +564,12 @@ class System(modellib.XObjIdModel):
     # these fields are derived from job & trove state
     # stored here so serialization speed is acceptable
     # call updateDerivedData() to recalculate
-    has_running_jobs = models.BooleanField(default=False, null=False)
-    has_active_jobs = models.BooleanField(default=False, null=False)
-    out_of_date  = models.BooleanField(default=False, null=False)
-    is_configured = modellib.SyntheticField(models.BooleanField(default=False, null=False))
+    has_running_jobs = D(models.BooleanField(default=False, null=False), 'whether the system has running jobs', short="System running jobs")
+    has_active_jobs = D(models.BooleanField(default=False, null=False), 'whether the system has active (queued/unqueud) jobs', short='System active jobs')
+    out_of_date  = D(models.BooleanField(default=False, null=False), 'whether the system has pending updates', short='System out of date')
+    
+    configuration_applied = D(models.BooleanField(default=False, null=False), 'whether any configuraiton has been applied for this system', short='System configuration applied')
+    configuration_set = D(models.BooleanField(default=False, null=False), 'whether any configuration has been saved (but not necc. applied) for this system', short='System configuration saved')
 
     # We need to distinguish between an <installed_software> node not being
     # present at all, and being present and empty
@@ -864,10 +866,6 @@ class System(modellib.XObjIdModel):
         ''' Compute non-database fields.'''
         self._computeActions()
         self.ssl_client_certificate = self._ssl_client_certificate
-
-        self.is_configured = False
-        if self.configuration is not None:
-            self.is_configured = True
 
     def _computeActions(self):
         '''What actions are available on the system?'''

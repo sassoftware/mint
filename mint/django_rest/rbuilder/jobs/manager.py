@@ -1133,6 +1133,9 @@ class JobHandlerRegistry(HandlerRegistry):
                 setattr(config, k, v)
             configXml = xobj.toxml(config, prettyPrint=False, xml_declaration=False)
 
+            self.system.configuration_applied = True
+            self.system.save()
+
             return (params, ), dict(configuration=configXml, zone=self.system.managing_zone.name)
 
         def getRelatedThroughModel(self, descriptor):
