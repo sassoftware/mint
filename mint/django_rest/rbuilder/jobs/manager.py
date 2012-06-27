@@ -26,6 +26,7 @@ from mint.django_rest.rbuilder.images import models as imagemodels
 from mint.django_rest.rbuilder.jobs import models
 from mint.django_rest.rbuilder.inventory import models as inventorymodels
 from mint.django_rest.rbuilder.targets import models as targetmodels
+from mint.lib import data as mintdata
 
 exposed = basemanager.exposed
 
@@ -1112,6 +1113,7 @@ class JobHandlerRegistry(HandlerRegistry):
             return method
 
         def getRepeaterMethodArgs(self, cli, job):
+
             self.eventUuid = uuid.uuid4()
             nw = self.system.extractNetworkToUse(self.system)
             if not nw:
@@ -1120,7 +1122,18 @@ class JobHandlerRegistry(HandlerRegistry):
             params = self.mgr.mgr.sysMgr._computeDispatcherMethodParams(cli,
                 self.system, destination, eventUuid=str(self.eventUuid),
                 requiredNetwork=None)
-            return (params, ), dict(configuration=self.system.configuration, zone=self.system.managing_zone.name)
+
+            # xml configuration is stored as mintdata, and we need it as
+            # nice XML because it will be sent literally, this is a copy
+            # of the old way it was done for backwards compat, we could just
+            # store the XML.
+            configDict = mintdata.unmarshalGenericData(self.system.configuration)
+            config = inventorymodels.Configuration(self.system)
+            for k, v in configDict.items():
+                setattr(config, k, v)
+            configXml = xobj.toxml(config, prettyPrint=False, xml_declaration=False)
+
+            return (params, ), dict(configuration=configXml, zone=self.system.managing_zone.name)
 
         def getRelatedThroughModel(self, descriptor):
             return inventorymodels.SystemJob
