@@ -74,6 +74,17 @@ update_descriptor = """<descriptor>
 </descriptor>
 """
 
+# TODO: copy/paste here could really use some templates
+configure_descriptor = """<descriptor>
+  <displayName>Apply System Configuration</displayName>
+  <metadata>
+    <descriptions>
+      <desc>Apply System Configuration</desc>
+    </descriptions>
+  </metadata>
+  <dataFields/>
+</descriptor>
+"""
 
 class SystemManager(basemanager.BaseManager):
     RegistrationEvents = set([
@@ -1312,14 +1323,17 @@ class SystemManager(basemanager.BaseManager):
         return self._getConfigurationModel(system, systemConfig)
 
     @exposed
-    def addSystemConfiguration(self, system_id, configuration):
+    def saveSystemConfiguration(self, system_id, configuration):
         system = models.System.objects.get(pk=system_id)
         systemConfig = self.marshalConfiguration(configuration)
         system.configuration = systemConfig
         system.save()
-        self.scheduleSystemConfigurationEvent(system, configuration)
         return self._getConfigurationModel(system, configuration)
-    
+
+    # FIXME: OBSOLETE with new config stuff, REMOVE
+    def applySystemConfiguration(self):    
+        self.scheduleSystemConfigurationEvent()
+
     def _getConfigurationModel(self, system, configDict):
         config = models.Configuration(system)
         for k, v in configDict.items():
@@ -1848,14 +1862,12 @@ class SystemManager(basemanager.BaseManager):
             enableTime=self.now())
 
     @exposed
-    def scheduleSystemConfigurationEvent(self, system, configuration):
+    def scheduleSystemConfigurationEvent(self, system):
         '''Schedule an event for the system to be configured'''
-        # registration events happen on demand, so enable now
-        configData = self.configDictToXml(configuration)
         return self._scheduleEvent(system,
             jobmodels.EventType.SYSTEM_CONFIG_IMMEDIATE,
             enableTime=self.now(),
-            eventData=configData)
+            eventData=system.configuration)
 
     @classmethod
     def configDictToXml(cls, configuration):
@@ -2079,6 +2091,7 @@ class SystemManager(basemanager.BaseManager):
         methodMap = dict(
             assimilation = self.getDescriptorAssimilation,
             capture      = self.getDescriptorCaptureSystem,
+            configure    = self.getDescriptorConfigure,
             update       = self.getDescriptorUpdate,
             survey_scan  = self.getDescriptorSurveyScan,
         )
@@ -2101,6 +2114,11 @@ class SystemManager(basemanager.BaseManager):
     def getDescriptorSurveyScan(self, systemId, *args, **kwargs):
         descr = descriptor.ConfigurationDescriptor(
             fromStream=survey_scan_descriptor)
+        return descr
+
+    def getDescriptorConfigure(self, systemId, *args, **kwargs):
+        descr = descriptor.ConfigurationDescriptor(
+            fromStream=configure_descriptor)
         return descr
 
     @exposed
@@ -2145,7 +2163,7 @@ class SystemManager(basemanager.BaseManager):
         system = models.System.objects.get(pk=systemId)
         DriverClass = targetmodels.Target.getDriverClassForTargetId(system.target_id)
         if not hasattr(DriverClass, "drvCaptureSystem"):
-            raise errors.InvalidData()
+            raise errors.InvalidData(msg="drvCaptureSystem not supported")
 
         descr = descriptor.ConfigurationDescriptor(
             fromStream=DriverClass.systemCaptureXmlData)

@@ -28,7 +28,7 @@ from conary.dbstore import sqlerrors, sqllib
 log = logging.getLogger(__name__)
 
 # database schema major version
-RBUILDER_DB_VERSION = sqllib.DBversion(63, 6)
+RBUILDER_DB_VERSION = sqllib.DBversion(63, 7)
 
 def _createTrigger(db, table, column="changed"):
     retInsert = db.createTrigger(table, column, "INSERT")
@@ -1461,6 +1461,10 @@ def _createInventorySchema(db, cfg):
                   resource_type="Image"),
              dict(name="system update software",
                   description="Update your system",
+                  priority=105,
+                  resource_type="System"),
+             dict(name="system apply configuration",
+                  description="Apply system configuration",
                   priority=105,
                   resource_type="System"),
              ])
