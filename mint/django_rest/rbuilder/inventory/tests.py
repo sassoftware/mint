@@ -402,9 +402,9 @@ class AssimilatorTestCase(XMLTestCase, test_utils.SmartformMixIn):
         if not isinstance(actions, list):
            actions = [actions]
         self.failUnlessEqual([ x.name for x in actions ],
-            ['Assimilate system', "System scan", "System capture"])
+            ['Assimilate system', "System scan", "Update Software", "System capture"])
         self.failUnlessEqual([ x.description for x in actions ],
-            ['Assimilate system', "Scan system", "Capture a system's image"])
+            ['Assimilate system', "Scan system", "Update your system", "Capture a system's image"])
 
     def testFetchActionsDescriptor(self): 
         descriptorTestData = [

@@ -1281,7 +1281,7 @@ class Update(modellib.XObjIdModel):
     update_id = D(models.AutoField(primary_key=True),
                   'the update ID for the system', short='Update ID')
     system    = modellib.DeferredForeignKey('inventory.System', 
-                                            related_name='updates', db_column='system_id')
+                                            related_name='updates+', db_column='system_id')
     dry_run      = models.BooleanField(default=False)
     specs        = models.TextField()
     created_date = D(modellib.DateTimeUtcField(auto_now_add=True),

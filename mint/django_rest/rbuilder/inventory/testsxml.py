@@ -232,6 +232,14 @@ event_types_xml="""\
     <resource_type>Image</resource_type>
     <system_events/>
   </event_type>
+  <event_type id="http://testserver/api/v1/inventory/event_types/26">
+    <description>Update your system</description>
+    <job_type_id>26</job_type_id>
+    <name>system update software</name>
+    <priority>105</priority>
+    <resource_type>System</resource_type>
+    <system_events/>
+  </event_type>
 </event_types>"""
 
 event_type_put_xml="""\
@@ -1025,6 +1033,14 @@ systems_xml = """\
         <name>System scan</name>
       </action>
       <action>
+        <description>Update your system</description>
+        <descriptor id="http://testserver/api/v1/inventory/systems/2/descriptors/update"/>
+        <enabled>True</enabled>
+        <job_type id="http://testserver/api/v1/inventory/event_types/26"/>
+        <key>system_update_software</key>
+        <name>Update Software</name>
+      </action>
+      <action>
         <description>Capture a system's image</description>
         <descriptor id="http://testserver/api/v1/inventory/systems/2/descriptors/capture"/>
         <enabled>false</enabled>
@@ -1116,6 +1132,14 @@ systems_xml = """\
         <job_type id="http://testserver/api/v1/inventory/event_types/24"/>
         <key>system_scan</key>
         <name>System scan</name>
+      </action>
+      <action>
+      <description>Update your system</description>
+      <descriptor id="http://testserver/api/v1/inventory/systems/3/descriptors/update"/>
+      <enabled>True</enabled>
+      <job_type id="http://testserver/api/v1/inventory/event_types/26"/>
+      <key>system_update_software</key>
+      <name>Update Software</name>
       </action>
       <action>
         <description>Capture a system's image</description>
@@ -1352,6 +1376,14 @@ system_xml = """\
       <job_type id="http://testserver/api/v1/inventory/event_types/24"/>
       <key>system_scan</key>
       <name>System scan</name>
+    </action>
+    <action>
+      <description>Update your system</description>
+      <descriptor id="http://testserver/api/v1/inventory/systems/3/descriptors/update"/>
+      <enabled>True</enabled>
+      <job_type id="http://testserver/api/v1/inventory/event_types/26"/>
+      <key>system_update_software</key>
+      <name>Update Software</name>
     </action>
     <action>
       <description>Capture a system's image</description>
@@ -1749,6 +1781,14 @@ system_target_xml = """\
       <job_type id="http://testserver/api/v1/inventory/event_types/24"/>
       <key>system_scan</key>
       <name>System scan</name>
+    </action>
+    <action>
+      <description>Update your system</description>
+      <descriptor id="http://testserver/api/v1/inventory/systems/3/descriptors/update"/>
+      <enabled>True</enabled>
+      <job_type id="http://testserver/api/v1/inventory/event_types/26"/>
+      <key>system_update_software</key>
+      <name>Update Software</name>
     </action>
     <action>
       <description>Capture a system's image</description>
@@ -2599,6 +2639,14 @@ system_with_target = """\
       <job_type id="http://testserver/api/v1/inventory/event_types/24"/>
       <key>system_scan</key>
       <name>System scan</name>
+    </action>
+    <action>
+      <description>Update your system</description>
+      <descriptor id="http://testserver/api/v1/inventory/systems/4/descriptors/update"/>
+      <enabled>True</enabled>
+      <job_type id="http://testserver/api/v1/inventory/event_types/26"/>
+      <key>system_update_software</key>
+      <name>Update Software</name>
     </action>
     <action>
       <description>Capture a system's image</description>
