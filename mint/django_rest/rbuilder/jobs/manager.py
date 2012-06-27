@@ -1068,8 +1068,10 @@ class JobHandlerRegistry(HandlerRegistry):
             return inventorymodels.SystemJob
 
         def postCreateJob(self, job):
-            self.mgr.mgr.updateSystem(self.system, job)
+            self.mgr.mgr.systemUpdateSystem(self.system, job)
 
+        def postprocessRelatedResource(self, job, model):
+            model.event_uuid = str(self.eventUuid)
 
     class SystemConfigure(DescriptorJobHandler):
         # TODO: reduce boilerplate by making a system job handler base class
@@ -1126,4 +1128,3 @@ class JobHandlerRegistry(HandlerRegistry):
         def postCreateJob(self, job):
             # self.mgr.mgr.configureSystem(self.system, job)
             pass
-

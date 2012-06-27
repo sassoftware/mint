@@ -232,8 +232,16 @@ event_types_xml="""\
     <system_events/>
   </event_type>
   <event_type id="http://testserver/api/v1/inventory/event_types/26">
-    <description>Apply system configuration</description>
+    <description>Update your system</description>
     <job_type_id>26</job_type_id>
+    <name>system update software</name>
+    <priority>105</priority>
+    <resource_type>System</resource_type>
+    <system_events/>
+  </event_type>
+  <event_type id="http://testserver/api/v1/inventory/event_types/27">
+    <description>Apply system configuration</description>
+    <job_type_id>27</job_type_id>
     <name>system apply configuration</name>
     <priority>105</priority>
     <resource_type>System</resource_type>
@@ -1040,10 +1048,18 @@ systems_xml = """\
         <name>System capture</name>
       </action>
       <action>
+        <description>Update your system</description>
+        <descriptor id="http://testserver/api/v1/inventory/systems/2/descriptors/update"/>
+        <enabled>True</enabled>
+        <job_type id="http://testserver/api/v1/inventory/event_types/26"/>
+        <key>system_update_software</key>
+        <name>Update Software</name>
+      </action>
+      <action>
         <description>Apply system configuration</description>
         <descriptor id="http://testserver/api/v1/inventory/systems/2/descriptors/configure"/>
         <enabled>False</enabled>
-        <job_type id="http://testserver/api/v1/inventory/event_types/26"/>
+        <job_type id="http://testserver/api/v1/inventory/event_types/27"/>
         <key>system_apply_configuration</key>
         <name>Apply system configuration</name>
      </action>
@@ -1141,10 +1157,18 @@ systems_xml = """\
         <name>System capture</name>
       </action>
       <action>
+        <description>Update your system</description>
+        <descriptor id="http://testserver/api/v1/inventory/systems/3/descriptors/update"/>
+        <enabled>True</enabled>
+        <job_type id="http://testserver/api/v1/inventory/event_types/26"/>
+        <key>system_update_software</key>
+        <name>Update Software</name>
+      </action>
+      <action>
         <description>Apply system configuration</description>
         <descriptor id="http://testserver/api/v1/inventory/systems/3/descriptors/configure"/>
         <enabled>False</enabled>
-        <job_type id="http://testserver/api/v1/inventory/event_types/26"/>
+        <job_type id="http://testserver/api/v1/inventory/event_types/27"/>
         <key>system_apply_configuration</key>
         <name>Apply system configuration</name>
      </action>
@@ -1385,10 +1409,18 @@ system_xml = """\
       <name>System capture</name>
     </action>
     <action>
+      <description>Update your system</description>
+      <descriptor id="http://testserver/api/v1/inventory/systems/3/descriptors/update"/>
+      <enabled>True</enabled>
+      <job_type id="http://testserver/api/v1/inventory/event_types/26"/>
+      <key>system_update_software</key>
+      <name>Update Software</name>
+    </action>
+    <action>
         <description>Apply system configuration</description>
         <descriptor id="http://testserver/api/v1/inventory/systems/3/descriptors/configure"/>
         <enabled>False</enabled>
-        <job_type id="http://testserver/api/v1/inventory/event_types/26"/>
+        <job_type id="http://testserver/api/v1/inventory/event_types/27"/>
         <key>system_apply_configuration</key>
         <name>Apply system configuration</name>
      </action>
@@ -1771,11 +1803,19 @@ system_target_xml = """\
       <key>system_capture</key>
       <name>System capture</name>
    </action>
+    <action>
+      <description>Update your system</description>
+      <descriptor id="http://testserver/api/v1/inventory/systems/3/descriptors/update"/>
+      <enabled>True</enabled>
+      <job_type id="http://testserver/api/v1/inventory/event_types/26"/>
+      <key>system_update_software</key>
+      <name>Update Software</name>
+    </action>
    <action>
       <description>Apply system configuration</description>
       <descriptor id="http://testserver/api/v1/inventory/systems/3/descriptors/configure"/>
       <enabled>False</enabled>
-      <job_type id="http://testserver/api/v1/inventory/event_types/26"/>
+      <job_type id="http://testserver/api/v1/inventory/event_types/27"/>
       <key>system_apply_configuration</key>
       <name>Apply system configuration</name>
    </action>
@@ -2630,10 +2670,18 @@ system_with_target = """\
       <name>System capture</name>
     </action>
     <action>
+      <description>Update your system</description>
+      <descriptor id="http://testserver/api/v1/inventory/systems/4/descriptors/update"/>
+      <enabled>True</enabled>
+      <job_type id="http://testserver/api/v1/inventory/event_types/26"/>
+      <key>system_update_software</key>
+      <name>Update Software</name>
+    </action>
+    <action>
         <description>Apply system configuration</description>
         <descriptor id="http://testserver/api/v1/inventory/systems/4/descriptors/configure"/>
         <enabled>False</enabled>
-        <job_type id="http://testserver/api/v1/inventory/event_types/26"/>
+        <job_type id="http://testserver/api/v1/inventory/event_types/27"/>
         <key>system_apply_configuration</key>
         <name>Apply system configuration</name>
      </action>
@@ -2809,30 +2857,10 @@ configuration_put_resp_xml = """\
 """
 
 configuration_descriptor_xml = """\
-<configuration_descriptor><descriptor>
-    <metadata>
-      <displayName>Apache HTTPd Configuration</displayName>
-      <descriptions>
-        <desc>This is the example descriptor for configuration of httpd</desc>
-      </descriptions>
-    </metadata>
-    <dataFields>
-      <field>
-        <name>org_apache_httpd_port</name>
-        <descriptions>
-          <desc>HTTP port number</desc>
-        </descriptions>
-        <prompt>
-          <desc>Apache will listen for HTTP connections on this port number</desc>
-        </prompt>
-        <type>str</type>
-        <constraints>
-          <length>5</length>
-        </constraints>
-        <required>true</required>
-      </field>
-    </dataFields>
-</descriptor></configuration_descriptor>"""
+<configuration_descriptor xmlns="http://www.rpath.com/permanent/descriptor-1.0.xsd" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.rpath.com/permanent/descriptor-1.0.xsd descriptor-1.0.xsd">
+  <dataFields/>
+  <metadata/>
+</configuration_descriptor>"""
 
 system_installed_software_version_stage_xml = """\
 <?xml version="1.0"?>
@@ -3842,7 +3870,7 @@ retirement_xml = """
         <description>Apply system configuration</description>
         <descriptor id="http://testserver/api/v1/inventory/systems/3/descriptors/configure"/>
         <enabled>False</enabled>
-        <job_type id="http://testserver/api/v1/inventory/event_types/26"/>
+        <job_type id="http://testserver/api/v1/inventory/event_types/27"/>
         <key>system_apply_configuration</key>
         <name>Apply system configuration</name>
      </action>
@@ -4782,7 +4810,7 @@ system_configuration_xml = """
 <job>
 <descriptor id='http://testserver/api/v1/inventory/systems/%s/descriptors/configure'/>
 <descriptor_data />
-<job_type id='https://testserver/api/v1/inventory/event_types/26' href='https://testserver/api/v1/inventory/event_types/26' />
+<job_type id='https://testserver/api/v1/inventory/event_types/27' href='https://testserver/api/v1/inventory/event_types/27' />
 </job>
 """
 
