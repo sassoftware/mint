@@ -1069,3 +1069,5 @@ class JobHandlerRegistry(HandlerRegistry):
         def postCreateJob(self, job):
             self.mgr.mgr.systemUpdateSystem(self.system, job)
 
+        def postprocessRelatedResource(self, job, model):
+            model.event_uuid = str(self.eventUuid)
