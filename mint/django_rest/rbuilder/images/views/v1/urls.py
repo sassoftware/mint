@@ -47,7 +47,7 @@ urlpatterns = patterns('',
         imagesviews.ImageDescriptorsService(),
         name='images.Descriptors'),
     URL(r'/(?P<image_id>\d+)/upload_files/?$',
-        imagesviews.ImageUploadService(),
+        imagesviews.ImageUploadFilesService(),
         name='ImageUpload',
         model='images.Image'),
 )

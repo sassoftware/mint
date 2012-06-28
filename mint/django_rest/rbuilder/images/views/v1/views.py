@@ -304,7 +304,7 @@ class ImageDescriptorsService(service.BaseService):
         return self.mgr.serializeDescriptor(
             self.mgr.getImageDescriptor(image_id, descriptor_type))
 
-class ImageUploadService(service.BaseService):
+class ImageUploadFilesService(service.BaseService):
     @access.anonymous
     def rest_GET(self, request, image_id):
         return self.get(image_id, request.GET.get('name'))
