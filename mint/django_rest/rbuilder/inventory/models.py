@@ -552,6 +552,8 @@ class System(modellib.XObjIdModel):
         "the date the system was last modified", short="System modified date")
     latest_survey = modellib.DeferredForeignKey('inventory.Survey',
         null=True, related_name='+', on_delete=models.SET_NULL)
+    survey = D(XObjHidden(modellib.SyntheticField()),
+        "survey specified at registration time")
 
     # Note the camel-case here. It is intentional, this is a field sent
     # only by catalog-service via rmake, to simplify creation of system

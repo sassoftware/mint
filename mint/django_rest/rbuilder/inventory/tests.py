@@ -361,6 +361,21 @@ class SurveyTests(XMLTestCase):
             username='admin', password='password')
         self.assertEqual(response.status_code, 204)
 
+    def testPostSystemWithSurvey(self):
+        """
+        Make sure a system can provide a survey at registration time
+        """
+        models.System.objects.all().delete()
+        system_xml = testsxml.system_post_xml.replace("</system>",
+            testsxml2.two + "\n</system>")
+        response = self._post('inventory/systems/', data=system_xml)
+        self.assertEquals(response.status_code, 200)
+        doc = xobj.parse(response.content)
+        systemId = doc.system.system_id
+        # Make sure we got a survey
+        system = models.System.objects.get(system_id=systemId)
+        self.assertEquals(system.surveys.count(), 1)
+
 class AssimilatorTestCase(XMLTestCase, test_utils.SmartformMixIn):
     ''' 
     This tests actions as well as the assimilator.  See if we can list the jobs on 
