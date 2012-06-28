@@ -2872,7 +2872,7 @@ configuration_put_resp_xml = """\
 """
 
 configuration_descriptor_xml = """\
-<configuration_descriptor xmlns="http://www.rpath.com/permanent/descriptor-1.0.xsd" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.rpath.com/permanent/descriptor-1.0.xsd descriptor-1.0.xsd">
+<configuration_descriptor xmlns="http://www.rpath.com/permanent/descriptor-1.0.xsd" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.rpath.com/permanent/descriptor-1.1.xsd descriptor-1.1.xsd" version="1.1">
   <dataFields/>
   <metadata/>
 </configuration_descriptor>"""
@@ -4613,7 +4613,7 @@ survey_output_xml2 = """
     </disa_stig_compliance_checker>
   </desired_properties>
   <desired_properties_descriptor>
-    <configuration_descriptor xsi_schemaLocation="http://www.rpath.com/permanent/descriptor-1.0.xsd descriptor-1.0.xsd">
+    <configuration_descriptor xsi_schemaLocation="http://www.rpath.com/permanent/descriptor-1.1.xsd descriptor-1.1.xsd" version="1.1">
       <dataFields/>
       <metadata/>
     </configuration_descriptor>
