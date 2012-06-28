@@ -549,6 +549,7 @@ class SurveyWindowsService(modellib.XObjIdModel):
     windows_service_id   = models.AutoField(primary_key=True, db_column='map_id')
     survey               = XObjHidden(modellib.ForeignKey(Survey, related_name='windows_services', null=False))
     windows_service_info = modellib.ForeignKey(WindowsServiceInfo, related_name='survey_windows_services', db_column='windows_service_id', null=False)
+    running              = models.BooleanField()
     status               = models.TextField(null=False)
  
     def get_url_key(self, *args, **kwargs):

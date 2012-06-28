@@ -295,7 +295,7 @@ class SurveyTests(XMLTestCase):
         url = "inventory/surveys/%s/diffs/%s" % ('123456789', '987654321')
         response = self._get(url, username='admin', password='password')
         self.assertEqual(response.status_code, 200)
-
+       
     def test_survey_diff_linux_heavy(self):
 
         sys = self._makeSystem()

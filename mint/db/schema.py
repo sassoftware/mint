@@ -28,7 +28,7 @@ from conary.dbstore import sqlerrors, sqllib
 log = logging.getLogger(__name__)
 
 # database schema major version
-RBUILDER_DB_VERSION = sqllib.DBversion(63, 8)
+RBUILDER_DB_VERSION = sqllib.DBversion(63, 9)
 
 def _createTrigger(db, table, column="changed"):
     retInsert = db.createTrigger(table, column, "INSERT")
@@ -1821,7 +1821,8 @@ def _createSurveyTables(db, cfg):
         "map_id" %(PRIMARYKEY)s,
         "survey_id" INTEGER NOT NULL REFERENCES "inventory_survey" (survey_id) ON DELETE CASCADE,
         "windows_service_id" INTEGER NOT NULL REFERENCES "inventory_windows_service" (windows_service_id) ON DELETE CASCADE,
-        "status" TEXT NOT NULL
+        "status" TEXT NOT NULL,
+        "running" BOOLEAN NOT NULL DEFAULT FALSE,
     """)
     db.createIndex('inventory_survey_windows_service', 'inventory_survey_windows_service_sid', 'survey_id')
 

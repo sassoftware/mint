@@ -587,6 +587,9 @@ class SurveyManager(basemanager.BaseManager):
                 windows_service_info = info,
                 survey               = survey,
                 status               = _u(xmodel.status),
+                # getattr can be removed once supplied by newer Windows survey code (7/4/11 or so)
+                # no windows survey code is otherwise released
+                running              = self._bool(getattr(xmodel, 'running', 'false')),
             )
             service.save()
 

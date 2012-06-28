@@ -5007,10 +5007,10 @@ class MigrateTo_62(SchemaMigration):
  
 class MigrateTo_63(SchemaMigration):
     '''Goad'''
-    Version = (63, 8)
+    Version = (63, 9)
 
     def migrate(self):
-        ''' add initial tables for config environments '''
+        ''' add initial tables for config environments'''
 
         createTable2(self.db, "config_environments", """
             "id" %(PRIMARYKEY)s,
@@ -5144,6 +5144,14 @@ class MigrateTo_63(SchemaMigration):
                BOOLEAN NOT NULL DEFAULT FALSE
         """)
         return True
+
+    def migrate9(self):
+        cu = self.db.cursor()
+        cu.execute("""
+           ALTER TABLE inventory_survey_windows_service ADD COLUMN running 
+               BOOLEAN NOT NULL DEFAULT FALSE
+        """)
+        return True 
 
 #### SCHEMA MIGRATIONS END HERE #############################################
 

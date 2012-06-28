@@ -46,6 +46,7 @@ windows_upload_survey_xml="""
   <conary_packages/>
   <windows_services>
     <windows_service id="1">
+      <running>true</running>
       <status>running</status>
       <windows_service_info>
         <display_name>minesweeper</display_name>
@@ -56,6 +57,7 @@ windows_upload_survey_xml="""
       </windows_service_info>
     </windows_service>
     <windows_service id="2">
+      <running>false</running>
       <status>stopped</status>
       <windows_service_info>
         <display_name>solitare</display_name>
@@ -154,6 +156,7 @@ windows_upload_survey_xml2 = """
   <conary_packages/>
  <windows_services>
     <windows_service id="1">
+      <running>true</running>
       <status>running</status>
       <windows_service_info>
         <display_name>skifree</display_name>
@@ -164,6 +167,7 @@ windows_upload_survey_xml2 = """
       </windows_service_info>
     </windows_service>
     <windows_service id="2">
+      <running>false</running>
       <status>stopped</status>
       <windows_service_info>
         <display_name>solitare</display_name>
