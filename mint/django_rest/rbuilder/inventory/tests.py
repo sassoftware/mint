@@ -217,9 +217,6 @@ class SurveyTests(XMLTestCase):
         # print response.content
         self.assertEqual(response.status_code, 200)
  
-        # not included yet only because IDs don't line up?
-        self.assertXMLEquals(response.content, testsxml.survey_output_xml2)
-
         response = self._get(url,
             username='admin', password='password')
         self.assertEqual(response.status_code, 200)
@@ -249,7 +246,7 @@ class SurveyTests(XMLTestCase):
  
         # post a second survey to verify that updating the latest survey
         # info still works and see if the latest survey date matches
-        response = self._post("inventory/systems/%s/surveys" % sys.pk,
+        response = self._put("inventory/surveys/1234",
             data = testsxml.survey_input_xml,
             username='admin', password='password')
         self.assertEqual(response.status_code, 200)
@@ -258,6 +255,20 @@ class SurveyTests(XMLTestCase):
         
         # not included yet only because IDs don't line up?
         #self.assertXMLEquals(response.content, testsxml.survey_output_xml2)
+        
+        # post an alternate survey, primarily for checking config and compliance diffs
+        # other parts of diffs will be checked in other tests, this one just has
+        # all the config parts populated so it makes sense here
+        response = self._post("inventory/systems/%s/surveys" % sys.pk,
+            data = testsxml.survey_input_xml_alt,
+            username='admin', password='password')
+        self.assertEqual(response.status_code, 200)
+        # TEMPORARY DEBUG ONLY
+
+        response = self._get("inventory/surveys/1234/diffs/99999",
+            username = 'admin', password='password')
+        # TODO: check that diffs are correct
+        self.assertEqual(response.status_code, 200)
 
         # delete the system, make sure nothing explodes
         response = self._delete("inventory/systems/%s" % sys.pk,
@@ -295,7 +306,7 @@ class SurveyTests(XMLTestCase):
         url = "inventory/surveys/%s/diffs/%s" % ('123456789', '987654321')
         response = self._get(url, username='admin', password='password')
         self.assertEqual(response.status_code, 200)
-       
+ 
     def test_survey_diff_linux_heavy(self):
 
         sys = self._makeSystem()
