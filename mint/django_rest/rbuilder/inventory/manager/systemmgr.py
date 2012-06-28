@@ -43,7 +43,7 @@ exposed = basemanager.exposed
 
 system_assimilate_descriptor = """<descriptor>
   <metadata>
-  <displayName>System Assimilation</displayName>
+    <displayName>System Assimilation</displayName>
     <descriptions>
       <desc>System Assimilation</desc>
     </descriptions>
@@ -54,7 +54,7 @@ system_assimilate_descriptor = """<descriptor>
 
 survey_scan_descriptor = """<descriptor>
   <metadata>
-  <displayName>System Scan</displayName>
+    <displayName>System Scan</displayName>
     <descriptions>
       <desc>System Scan</desc>
     </descriptions>
@@ -65,7 +65,7 @@ survey_scan_descriptor = """<descriptor>
 
 update_descriptor = """<descriptor>
   <metadata>
-  <displayName>Update Software</displayName>
+    <displayName>Update Software</displayName>
     <descriptions>
       <desc>Update your system</desc>
     </descriptions>
@@ -76,8 +76,8 @@ update_descriptor = """<descriptor>
 
 # TODO: copy/paste here could really use some templates
 configure_descriptor = """<descriptor>
-  <displayName>Apply System Configuration</displayName>
   <metadata>
+    <displayName>Apply System Configuration</displayName>
     <descriptions>
       <desc>Apply System Configuration</desc>
     </descriptions>

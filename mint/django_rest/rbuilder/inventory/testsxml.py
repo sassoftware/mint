@@ -4060,7 +4060,7 @@ survey_output_xml = """
 </survey>
 """
 
-survey_preview = """
+survey_preview_template = """
 <preview>
 <observed>group-foo-appliance/1.2.3.3 possibly-other-junk/1.2.3.4</observed>
 <desired>group-foo-appliance/1.2.3.4</desired>
@@ -4113,12 +4113,14 @@ survey_preview = """
 </preview>
 """
 
+survey_preview = survey_preview_template
+survey_preview_alt = survey_preview_template
 
 # NOTE: the examples in the XML items below are not domain-specific, but structural
 # so if "STIG checker" doesn't make sense in all examples, don't take it literally
 # see RCE-303
 
-config_properties = """
+config_properties_template = """
 <config_properties>
   <apache_configuration>
     <port>8080</port>
@@ -4162,7 +4164,11 @@ config_properties = """
 </config_properties>
 """
 
-desired_properties = """
+config_properties = config_properties_template
+config_properties_alt = config_properties_template
+
+
+desired_properties_template = """
 <desired_properties>
   <apache_configuration>
     <port>8080</port>
@@ -4206,7 +4212,10 @@ desired_properties = """
 </desired_properties>
 """
 
-observed_properties = """
+desired_properties = desired_properties_template
+desired_properties_alt = desired_properties_template
+
+observed_properties_template = """
 <observed_properties>
   <extensions>
     <apache_configuration>
@@ -4249,7 +4258,10 @@ observed_properties = """
 </observed_properties>
 """
 
-discovered_properties = """
+observed_properties = observed_properties_template
+observed_properties_alt = observed_properties_template
+
+discovered_properties_template = """
 <discovered_properties>
   <extensions>
     <apache_configuration>
@@ -4257,11 +4269,11 @@ discovered_properties = """
       <probes>
         <port>
           <name>Apache Port Check</name>
-          <value content_type="text/html" encoding="base64">base64-encoded HTML here</value>
+          <value content_type="text/html" encoding="base64">80</value>
         </port>
         <port>
-          <name>Apache Port Check</name>
-          <value content_type="text/html" encoding="base64">base64-encoded HTML here</value>
+          <name>Foo Port Check</name>
+          <value content_type="text/html" encoding="base64">5000</value>
         </port>
       </probes>
     </apache_configuration>
@@ -4299,7 +4311,10 @@ discovered_properties = """
 </discovered_properties>
 """
 
-validation_report = """
+discovered_properties = discovered_properties_template
+discovered_properties_alt = discovered_properties_template.replace("false","true").replace("5000","5001")
+
+validation_report_template = """
 <validation_report>
   <status>fail</status>
   <extensions>
@@ -4357,11 +4372,14 @@ validation_report = """
 </validation_report>
 """
 
+validation_report = validation_report_template
+validation_report_alt = validation_report_template.replace("false","true")
+
 # input without ids
 # FIXME -- created_by/modified_by should be nullable for system
 #          user?
 
-survey_input_xml = """
+survey_input_xml_template = """
 <survey>
     %(config_properties)s
     %(desired_properties)s
@@ -4433,14 +4451,25 @@ survey_input_xml = """
     </conary_packages>
     <name>x</name>
 </survey>
-""" % dict(
+"""
+
+survey_input_xml = (survey_input_xml_template % dict(
     config_properties=config_properties, 
     desired_properties=desired_properties, 
     observed_properties=observed_properties, 
     discovered_properties=discovered_properties, 
     validation_report=validation_report,
     survey_preview=survey_preview
-)
+))
+
+survey_input_xml_alt = (survey_input_xml_template % dict(
+    config_properties=config_properties_alt, 
+    desired_properties=desired_properties_alt, 
+    observed_properties=observed_properties_alt, 
+    discovered_properties=discovered_properties_alt, 
+    validation_report=validation_report_alt,
+    survey_preview=survey_preview_alt
+)).replace("1234", "99999")
 
 survey_output_xml2 = """
 <survey id="http://testserver/api/v1/inventory/surveys/1234">
@@ -4623,11 +4652,11 @@ survey_output_xml2 = """
         <probes>
           <port>
             <name>Apache Port Check</name>
-            <value content_type="text/html" encoding="base64">base64-encoded HTML here</value>
+            <value content_type="text/html" encoding="base64">80</value>
           </port>
           <port>
-            <name>Apache Port Check</name>
-            <value content_type="text/html" encoding="base64">base64-encoded HTML here</value>
+            <name>Foo Port Check</name>
+            <value content_type="text/html" encoding="base64">5000</value>
           </port>
         </probes>
       </apache_configuration>
@@ -4791,15 +4820,15 @@ survey_output_xml2 = """
         <name>Apache Configuration Checker</name>
         <probes>
           <port>
-            <details content_type="text/html" encoding="base64">base64-encoded HTML here</details>
+            <details content_type="text/html" encoding="base64">80</details>
             <message>Apache not running on port</message>
             <name>Apache Port Check</name>
             <status>fail</status>
           </port>
           <port>
-            <details content_type="text/html" encoding="base64">base64-encoded HTML here</details>
+            <details content_type="text/html" encoding="base64">5000</details>
             <message>Apache not running on port</message>
-            <name>Apache Port Check</name>
+            <name>Foo Port Check</name>
             <status>fail</status>
           </port>
         </probes>

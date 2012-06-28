@@ -47,7 +47,16 @@ class SurveyDiff(object):
         self.windowsPackageDiff = self._computeWindowsPackages()
         self.windowsPatchDiff   = self._computeWindowsPatches()
         self.windowsServiceDiff = self._computeWindowsServices()
-     
+
+        self.configDiff         = self._computeConfigDiff()
+        self.desiredDiff        = self._computeDesiredDiff()
+        self.observedDiff       = self._computeObservedDiff()
+        self.discoveredDiff     = self._computeDiscoveredDiff()
+        self.validatorDiff      = self._computeValidatorDiff()
+
+        # FIXME: TODO: _computeComplianceDiff() 
+
+ 
     def _name(self, obj):
         t = type(obj)
         if t == survey_models.WindowsPatchInfo:
@@ -225,6 +234,58 @@ class SurveyDiff(object):
 
     def _computeWindowsServices(self):
         return self._computeGeneric('windows_services', 'windows_service_info')
+
+    def _computeValueDiff(self, value_type):
+        ''' various config values are stored xpath-ish in the SurveyValues table '''
+
+        added = []
+        removed = []
+        changed = []      
+
+        left = survey_models.SurveyValues.objects.filter(
+            survey = self.left, type = value_type
+        ).order_by('key')
+
+        right = survey_models.SurveyValues.objects.filter(
+            survey = self.right, type = value_type
+        ).order_by('key')
+
+        lkeys = [ x.key for x in left ]
+        rkeys = [ x.key for x in right ] 
+
+        for x in right:
+           if x.key not in lkeys:
+               added.append(x)
+
+        for x in left:
+           if x.key not in rkeys:
+               removed.append(x)
+
+        for x in left:
+           for y in right:
+              if x.key == y.key:
+                  if x.value != y.value:
+                      changed.append(x)
+
+        result = (added, removed, changed)
+        return result
+ 
+    def _computeConfigDiff(self):
+        return self._computeValueDiff(survey_models.CONFIG_VALUES)
+
+    def _computeDesiredDiff(self):
+        return self._computeValueDiff(survey_models.DESIRED_VALUES)
+
+    def _computeObservedDiff(self):
+        return self._computeValueDiff(survey_models.OBSERVED_VALUES)
+
+    def _computeDiscoveredDiff(self):
+        return self._computeValueDiff(survey_models.DISCOVERED_VALUES)
+
+    def _computeValidatorDiff(self):
+        return self._computeValueDiff(survey_models.VALIDATOR_VALUES)
+    
+
 
 class SurveyDiffRender(object):
 
