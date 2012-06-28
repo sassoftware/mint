@@ -390,6 +390,16 @@ class SurveyManager(basemanager.BaseManager):
         xvalidation_report     = self._toxml(getattr(xsurvey, 'validation_report', None))
         xpreview               = self._toxml(getattr(xsurvey, 'preview', None))
         xconfig_descriptor     = self._toxml(getattr(xsurvey, 'config_properties_descriptor', None))
+        systemModel            = getattr(xsurvey, 'system_model', None)
+        if systemModel is None:
+            systemModelContents = None
+            systemModelModifiedDate = None
+            hasSystemModel = False
+        else:
+            systemModelContents = getattr(systemModel, 'contents', None)
+            systemModelModifiedDate = datetime.datetime.utcfromtimestamp(int(
+                getattr(systemModel, 'modified_date', 0)))
+            hasSystemModel = (systemModelContents is not None)
 
         created_date = getattr(xsurvey, 'created_date', 0)
         created_date = datetime.datetime.utcfromtimestamp(int(created_date))
@@ -415,7 +425,10 @@ class SurveyManager(basemanager.BaseManager):
             validation_report     = xvalidation_report,
             preview               = xpreview,
             config_properties_descriptor = xconfig_descriptor,
-            desired_properties_descriptor = desired_descriptor
+            desired_properties_descriptor = desired_descriptor,
+            system_model = systemModelContents,
+            system_model_modified_date = systemModelModifiedDate,
+            has_system_model = hasSystemModel,
         )
         survey.save()
         

@@ -5007,7 +5007,7 @@ class MigrateTo_62(SchemaMigration):
  
 class MigrateTo_63(SchemaMigration):
     '''Goad'''
-    Version = (63, 9)
+    Version = (63, 10)
 
     def migrate(self):
         ''' add initial tables for config environments'''
@@ -5152,6 +5152,17 @@ class MigrateTo_63(SchemaMigration):
                BOOLEAN NOT NULL DEFAULT FALSE
         """)
         return True 
+
+    def migrate10(self):
+        cu = self.db.cursor()
+        cu.execute("""
+           ALTER TABLE inventory_survey
+           ADD COLUMN system_model      TEXT,
+           ADD COLUMN system_model_modified_date    TIMESTAMP WITH TIME ZONE,
+           ADD COLUMN has_system_model  BOOLEAN NOT NULL DEFAULT FALSE
+        """)
+        return True 
+
 
 #### SCHEMA MIGRATIONS END HERE #############################################
 
