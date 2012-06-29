@@ -267,7 +267,6 @@ class SurveyTests(XMLTestCase):
 
         response = self._get("inventory/surveys/1234/diffs/99999",
             username = 'admin', password='password')
-        # TODO: check that diffs are correct
         self.assertEqual(response.status_code, 200)
 
         # delete the system, make sure nothing explodes
