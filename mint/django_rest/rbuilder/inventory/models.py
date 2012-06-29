@@ -878,7 +878,12 @@ class System(modellib.XObjIdModel):
             self.management_interface.name == 'ssh')
         scanEnabled = bool(self.management_interface_id and
             self.management_interface.name in ('cim', 'wmi'))
-        configureEnabled = bool(self.configuration is not None)
+        configureEnabled = False
+        # Disable config action if no config is saved, or if the system
+        # is based on a system model
+        if self.latest_survey is not None:
+            configureEnabled = bool(self.configuration is not None and
+                not self.latest_survey.has_system_model)
         capture_enabled = False
         if self.target_id:
             drvCls = targetmodels.Target.getDriverClassForTargetId(

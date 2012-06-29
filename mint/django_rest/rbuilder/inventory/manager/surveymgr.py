@@ -441,8 +441,7 @@ class SurveyManager(basemanager.BaseManager):
         # update system.latest_survey if and only if it's
         # the latest
         if system.latest_survey is None or survey.created_date > system.latest_survey.created_date:
-            system.latest_survey = survey
-            system.save()
+            system.__class__.objects.filter(system_id=system_id).update(latest_survey=survey)
 
         rpm_info_by_id     = {}
         rpms_by_info_id    = {}
