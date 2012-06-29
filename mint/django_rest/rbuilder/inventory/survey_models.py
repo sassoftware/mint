@@ -108,6 +108,9 @@ class Survey(modellib.XObjIdModel):
     modified_by   = modellib.ForeignKey(usermodels.User, null=True, db_column='modified_by', related_name='+', on_delete=models.SET_NULL) 
     system        = modellib.DeferredForeignKey('inventory.System', related_name='surveys', db_column='system_id')
     comment       = models.TextField()
+    system_model  = models.TextField()
+    system_model_modified_date = modellib.DateTimeUtcField()
+    has_system_model = models.BooleanField(default=False)
 
     # 'should be like this' values XML from system
     config_properties     = modellib.XMLField(db_column='values_xml')

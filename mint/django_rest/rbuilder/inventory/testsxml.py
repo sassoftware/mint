@@ -2872,7 +2872,7 @@ configuration_put_resp_xml = """\
 """
 
 configuration_descriptor_xml = """\
-<configuration_descriptor xmlns="http://www.rpath.com/permanent/descriptor-1.0.xsd" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.rpath.com/permanent/descriptor-1.0.xsd descriptor-1.0.xsd">
+<configuration_descriptor xmlns="http://www.rpath.com/permanent/descriptor-1.0.xsd" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.rpath.com/permanent/descriptor-1.1.xsd descriptor-1.1.xsd" version="1.1">
   <dataFields/>
   <metadata/>
 </configuration_descriptor>"""
@@ -3965,6 +3965,9 @@ surveys_xml = """
 
 survey_output_xml = """
 <survey id="http://testserver/api/v1/inventory/surveys/00000000-0000-4000-0000-000000000000">
+    <system_model/>
+    <system_model_modified_date/>
+    <has_system_model>false</has_system_model>
     <config_properties_descriptor/>
     <desired_properties_descriptor/>
     <compliance_summary/>
@@ -4379,8 +4382,28 @@ validation_report_alt = validation_report_template.replace("false","true")
 # FIXME -- created_by/modified_by should be nullable for system
 #          user?
 
+system_model = """
+  <system_model>
+    <contents>search group-haystack=haystack.rpath.com@rpath:haystack-1/1-1-1
+install group-haystack
+install needle
+</contents>
+    <modified_date>1234567890</modified_date>
+  </system_model>
+"""
+
+system_model_ret = """
+  <system_model>search group-haystack=haystack.rpath.com@rpath:haystack-1/1-1-1
+install group-haystack
+install needle
+</system_model>
+  <system_model_modified_date>2009-02-13T23:31:30+00:00</system_model_modified_date>
+  <has_system_model>true</has_system_model>
+"""
+
 survey_input_xml_template = """
 <survey>
+    %(system_model)s
     %(config_properties)s
     %(desired_properties)s
     %(observed_properties)s
@@ -4454,6 +4477,7 @@ survey_input_xml_template = """
 """
 
 survey_input_xml = (survey_input_xml_template % dict(
+    system_model=system_model,
     config_properties=config_properties, 
     desired_properties=desired_properties, 
     observed_properties=observed_properties, 
@@ -4463,6 +4487,7 @@ survey_input_xml = (survey_input_xml_template % dict(
 ))
 
 survey_input_xml_alt = (survey_input_xml_template % dict(
+    system_model="",
     config_properties=config_properties_alt, 
     desired_properties=desired_properties_alt, 
     observed_properties=observed_properties_alt, 
@@ -4613,7 +4638,7 @@ survey_output_xml2 = """
     </disa_stig_compliance_checker>
   </desired_properties>
   <desired_properties_descriptor>
-    <configuration_descriptor xsi_schemaLocation="http://www.rpath.com/permanent/descriptor-1.0.xsd descriptor-1.0.xsd">
+    <configuration_descriptor xsi_schemaLocation="http://www.rpath.com/permanent/descriptor-1.1.xsd descriptor-1.1.xsd" version="1.1">
       <dataFields/>
       <metadata/>
     </configuration_descriptor>
@@ -4777,6 +4802,7 @@ survey_output_xml2 = """
     </service>
   </services>
   <system id="http://testserver/api/v1/inventory/systems/3"/>
+  %(system_model)s
   <tags>
     <tag id="http://testserver/api/v1/inventory/survey_tags/1">
       <name>needs_review</name>
@@ -4841,7 +4867,7 @@ survey_output_xml2 = """
   <windows_patches/>
   <windows_services/>
 </survey>
-"""
+""" % dict(system_model=system_model_ret)
 
 # FIXME: add tests trying to clobber fields it should not clobber
 # or if it can erase things
