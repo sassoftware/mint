@@ -265,9 +265,13 @@ class SurveyDiff(object):
            for y in right:
               if x.key == y.key:
                   if x.value != y.value:
-                      changed.append(x)
+                      # store left and right, but delta is not meaningful
+                      delta = dict(
+                         value = (x.value, y.value)
+                      )
+                      changed.append((x,y,delta))
 
-        result = (added, removed, changed)
+        result = (added, changed, removed)
         return result
  
     def _computeConfigDiff(self):
@@ -336,7 +340,12 @@ class SurveyDiffRender(object):
     def _xmlNode(self, elemName, about=None, keys=[], parent=None):
         if type(keys) != list:
             keys = keys.split()
-        elem = Element(elemName, attrib=self._makeId(about))
+        id_dict = self._makeId(about)
+        if id_dict.get("id",None) is None:
+            # this is for the various properties elements, which are not REST resources
+            # TODO: fix in above function
+            id_dict={}
+        elem = Element(elemName, attrib=id_dict)
         elts = dict([ (x, getattr(about, x)) for x in keys])
         self._addElements(elem, **elts)
         if parent:
@@ -459,6 +468,15 @@ class SurveyDiffRender(object):
         subElt.append(required_elts)
         return elem
 
+    def _serializeSurveyValue(self, elemName, item):
+        '''
+        diff element serialization for config/observed/desired/discovered/validation values
+        '''
+        elem = self._xmlNode(elemName, about=item, 
+            keys='key value'
+        )
+        return elem
+
     def _serializeItem(self, elemName, item):
         ''' 
         wrappers around item serialization.  TODO: find ways to leap into xobj nicely
@@ -470,7 +488,8 @@ class SurveyDiffRender(object):
             survey_models.SurveyWindowsPackage: self._serializeWindowsPackage,
             survey_models.SurveyWindowsPatch: self._serializeWindowsPatch,
             survey_models.SurveyService: self._serializeService,
-            survey_models.SurveyWindowsService: self._serializeWindowsService
+            survey_models.SurveyWindowsService: self._serializeWindowsService,
+            survey_models.SurveyValues: self._serializeSurveyValue,
         }
         return serializers[type(item)](elemName, item)
 
@@ -537,7 +556,8 @@ class SurveyDiffRender(object):
                 (left, right, delta) = x
                 change.append(self._fromElement(parentTag, left))
                 change.append(self._toElement(parentTag, right))
-                change.append(self._diffElement(parentTag, delta))
+                if delta is not None:
+                    change.append(self._diffElement(parentTag, delta))
             parentElem.append(change)
 
     def _renderAdditions(self, parentTag, parentElem, items):
@@ -545,15 +565,18 @@ class SurveyDiffRender(object):
         render all of what's been added for an object type
         these all go directly under the foo_changes element     
         '''
-        self._renderACR(parentTag, parentElem, items, 'added')
+        if len(items) > 0:
+            self._renderACR(parentTag, parentElem, items, 'added')
 
     def _renderChanges(self, parentTag, parentElem, items):
         ''' render all of what's been changed (and how) for an object type '''
-        self._renderACR(parentTag, parentElem, items, 'changed')
+        if len(items) > 0:
+            self._renderACR(parentTag, parentElem, items, 'changed')
     
     def _renderRemovals(self, parentTag, parentElem, items):
         ''' render all of what's been removed for an object type '''
-        self._renderACR(parentTag, parentElem, items, 'removed')
+        if len(items) > 0:
+            self._renderACR(parentTag, parentElem, items, 'removed')
         
 
     def render(self):
@@ -569,7 +592,14 @@ class SurveyDiffRender(object):
             self._renderDiff('windows_package_changes', self.differ.windowsPackageDiff),
             self._renderDiff('windows_patch_changes', self.differ.windowsPatchDiff),
             self._renderDiff('windows_service_changes', self.differ.windowsServiceDiff),
+            self._renderDiff('config_properties_changes', self.differ.configDiff),
+            self._renderDiff('observed_properties_changes', self.differ.observedDiff),
+            self._renderDiff('desired_properties_changes', self.differ.desiredDiff),
+            self._renderDiff('discovered_properties_changes', self.differ.discoveredDiff),
+            self._renderDiff('validation_report_changes', self.differ.validatorDiff)
         ]
+        # FIXME: TODO: also need to include compliance_summary diff
+
         for elt in elts:
             root.append(elt)
 
