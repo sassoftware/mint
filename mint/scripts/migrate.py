@@ -5007,7 +5007,7 @@ class MigrateTo_62(SchemaMigration):
  
 class MigrateTo_63(SchemaMigration):
     '''Goad'''
-    Version = (63, 10)
+    Version = (63, 11)
 
     def migrate(self):
         ''' add initial tables for config environments'''
@@ -5163,6 +5163,10 @@ class MigrateTo_63(SchemaMigration):
         """)
         return True 
 
+    def migrate11(self):
+        self.db.dropIndex('inventory_survey', 'SurveyUuidIdx')
+        self.db.createIndex('inventory_survey', 'SurveyUuidIdx', 'uuid', unique=True)
+        return True 
 
 #### SCHEMA MIGRATIONS END HERE #############################################
 
