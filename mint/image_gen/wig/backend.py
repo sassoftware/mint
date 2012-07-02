@@ -1,10 +1,12 @@
 #
-# Copyright (c) 2011 rPath, Inc.
+# Copyright (c) rPath, Inc.
 #
 
+import logging
 import os
 import robj
 import time
+from conary.lib.http import opener
 from robj.lib import xutil
 from xobj import xobj
 
@@ -16,8 +18,11 @@ class WigBackendClient(object):
 
     def __init__(self, url):
         self.api = robj.connect(url, logging=False, maxClients=1)
+        robj_logger = logging.getLogger('robj')
+        robj_logger.setLevel(logging.WARNING)
         self.image = None
         self._persistNeeded = False
+        self.opener = opener.URLOpener()
 
     def createJob(self):
         # Create image resource
@@ -41,7 +46,7 @@ class WigBackendClient(object):
         errors = 0
         maxErrors = 10
         while True:
-            next = (job.status, job.message, int(job.progress))
+            next = (str(job.status), str(job.message), int(job.progress))
             if last != next:
                 last = next
                 yield next
@@ -71,7 +76,8 @@ class WigBackendClient(object):
             raise RuntimeError("No %r file in job result" % (kind,))
 
         size = int(resFile.size)
-        fobj = resFile.path
+        url = resFile._root.path.href
+        fobj = self.opener.open(url)
         return size, fobj
 
     def getLog(self):

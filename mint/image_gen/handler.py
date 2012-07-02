@@ -30,6 +30,10 @@ class BaseImageHandler(rmk_handler.JobHandler):
     def _mirrorTaskStatus(self, task):
         """Copy task status to job status when task is updated."""
         if task.status.final:
+            level = logging.ERROR if task.status.failed else logging.INFO
+            detail = '\n' + task.status.detail if task.status.detail else ''
+            self.log.log(level, "Job result: %s %s%s", task.status.code,
+                    task.status.text, detail)
             path = self.dispatcher.getLogPath(task.job_uuid, task.task_uuid)
             try:
                 fobj = open(path, 'rb')
