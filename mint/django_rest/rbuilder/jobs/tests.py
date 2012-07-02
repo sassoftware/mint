@@ -359,6 +359,7 @@ class JobCreationTest(BaseJobsTest, RepeaterMixIn):
         response = self._put(jobUrl, jobXml, jobToken=jobToken)
         self.assertEquals(response.status_code, 200)
         obj = xobj.parse(response.content)
+        # print response.content
         job = obj.job
         self.failUnlessEqual(job.job_uuid, dbjob.job_uuid)
 
