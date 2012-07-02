@@ -7,10 +7,11 @@
 import inspect
 import os
 import re
-import weakref
 import StringIO
+import sys
 import time
 import urlparse
+import weakref
 from django.core import urlresolvers
 from django.db import IntegrityError, transaction
 
@@ -18,7 +19,6 @@ from xobj import xobj
 from smartform import descriptor as smartdescriptor
 
 from mint import buildtypes, jobstatus, urltypes
-from mint.lib import uuid
 from mint.django_rest.rbuilder import errors
 from mint.django_rest.rbuilder import modellib
 from mint.django_rest.rbuilder.manager import basemanager
@@ -27,6 +27,8 @@ from mint.django_rest.rbuilder.jobs import models
 from mint.django_rest.rbuilder.inventory import models as inventorymodels
 from mint.django_rest.rbuilder.targets import models as targetmodels
 from mint.lib import data as mintdata
+from mint.lib import uuid
+from mint.logerror import logErrorAndEmail
 
 exposed = basemanager.exposed
 
@@ -264,6 +266,9 @@ class ResultsProcessingMixIn(object):
             transaction.savepoint_rollback(tsid)
             log.error("Error processing job %s %s",
                 job.job_uuid, e)
+            e_type, e_value, e_tb = sys.exc_info()
+            logErrorAndEmail(self.mgr.cfg, e_type, e_value, e_tb,
+                'jobs handler', dict(), doEmail=True)
             self.handleError(job, e)
             return None
         
