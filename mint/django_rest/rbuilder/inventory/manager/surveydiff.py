@@ -4,8 +4,8 @@
 # All Rights Reserved
 #
 
-from xml.etree.ElementTree import Element, tostring
-from xml.dom.minidom import parseString
+from xml.etree.ElementTree import Element, tostring, fromstring
+# from xml.dom.minidom import parseString
 from mint.django_rest.rbuilder.inventory import survey_models
 import datetime
 
@@ -54,9 +54,6 @@ class SurveyDiff(object):
         self.discoveredDiff     = self._computeDiscoveredDiff()
         self.validatorDiff      = self._computeValidatorDiff()
 
-        # FIXME: TODO: _computeComplianceDiff() 
-
- 
     def _name(self, obj):
         t = type(obj)
         if t == survey_models.WindowsPatchInfo:
@@ -288,9 +285,7 @@ class SurveyDiff(object):
 
     def _computeValidatorDiff(self):
         return self._computeValueDiff(survey_models.VALIDATOR_VALUES)
-    
-
-
+   
 class SurveyDiffRender(object):
 
     def __init__(self, left, right, request=None):
@@ -364,6 +359,16 @@ class SurveyDiffRender(object):
         elem.append(self._renderSurvey('left_survey', left))
         elem.append(self._renderSurvey('right_survey', right))
         elem.append(self._element('created_date', str(datetime.datetime.now())))
+        return elem
+
+    def _renderComplianceDiff(self):
+        elem = Element('compliance_summary_diff')
+        left = fromstring(self.left.compliance_summary)
+        left.tag = 'left'
+        right = fromstring(self.right.compliance_summary)
+        right.tag = 'right'
+        elem.append(left)
+        elem.append(right)
         return elem
 
     def _renderDiff(self, tag, changeList):
@@ -596,14 +601,12 @@ class SurveyDiffRender(object):
             self._renderDiff('observed_properties_changes', self.differ.observedDiff),
             self._renderDiff('desired_properties_changes', self.differ.desiredDiff),
             self._renderDiff('discovered_properties_changes', self.differ.discoveredDiff),
-            self._renderDiff('validation_report_changes', self.differ.validatorDiff)
+            self._renderDiff('validation_report_changes', self.differ.validatorDiff),
+            self._renderComplianceDiff()
         ]
-        # FIXME: TODO: also need to include compliance_summary diff
 
         for elt in elts:
             root.append(elt)
 
         return tostring(root)
-        # DEBUG/development only
-        #return parseString(tostring(root)).toprettyxml() 
 
