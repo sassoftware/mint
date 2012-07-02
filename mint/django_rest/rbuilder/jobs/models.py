@@ -306,14 +306,7 @@ class EventType(modellib.XObjIdModel):
     ON_DEMAND_BASE = 100
     
     # resource type == system #########################################
-    SYSTEM_POLL = "system poll"
-    SYSTEM_POLL_PRIORITY = 50
-    SYSTEM_POLL_DESC = "System synchronization"
-    
-    SYSTEM_POLL_IMMEDIATE = "immediate system poll"
-    SYSTEM_POLL_IMMEDIATE_PRIORITY = ON_DEMAND_BASE + 5
-    SYSTEM_POLL_IMMEDIATE_DESC = "On-demand system synchronization"
-    
+
     SYSTEM_REGISTRATION = "system registration"
     SYSTEM_REGISTRATION_PRIORITY = 70
     SYSTEM_REGISTRATION_DESC = "System registration"
@@ -406,8 +399,6 @@ class EventType(modellib.XObjIdModel):
     job_type_id = D(models.AutoField(primary_key=True), "the database id of the  type")
     EVENT_TYPES = (
         (SYSTEM_REGISTRATION, SYSTEM_REGISTRATION_DESC),
-        (SYSTEM_POLL_IMMEDIATE, SYSTEM_POLL_IMMEDIATE_DESC),
-        (SYSTEM_POLL, SYSTEM_POLL_DESC),
         (SYSTEM_APPLY_UPDATE, SYSTEM_APPLY_UPDATE_DESCRIPTION),
         (SYSTEM_APPLY_UPDATE_IMMEDIATE,
          SYSTEM_APPLY_UPDATE_IMMEDIATE_DESCRIPTION),
@@ -447,8 +438,6 @@ class EventType(modellib.XObjIdModel):
     def requiresManagementInterface(self):
         if self.name in \
             [self.SYSTEM_REGISTRATION,
-             self.SYSTEM_POLL_IMMEDIATE,
-             self.SYSTEM_POLL,
              self.SYSTEM_APPLY_UPDATE,
              self.SYSTEM_APPLY_UPDATE_IMMEDIATE,
              self.SYSTEM_SHUTDOWN,

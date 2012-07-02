@@ -1925,10 +1925,10 @@ system_event_xml = """\
 <?xml version="1.0" encoding="UTF-8"?>
 <system_event id="http://testserver/api/v1/inventory/system_events/1">
     <event_data/>
-    <event_type id="http://testserver/api/v1/inventory/event_types/2"/>
+    <event_type id="http://testserver/api/v1/inventory/event_types/26"/>
     <system id="http://testserver/api/v1/inventory/systems/3"/>
     <time_created>%s</time_created>
-    <priority>50</priority>
+    <priority>105</priority>
     <time_enabled>%s</time_enabled>
     <system_event_id>1</system_event_id>
 </system_event>

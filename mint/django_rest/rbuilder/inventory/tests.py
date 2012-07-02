@@ -1340,10 +1340,8 @@ class SystemsTestCase(XMLTestCase):
     def setUp(self):
         XMLTestCase.setUp(self)
         self.mock_scheduleSystemRegistrationEvent_called = False
-        self.mock_scheduleSystemPollEvent_called = False
         self.mockGetRmakeJob_called = False
         self.mock_scheduleSystemDetectMgmtInterfaceEvent_called = False
-        self.mgr.sysMgr.scheduleSystemPollEvent = self.mock_scheduleSystemPollEvent
         self.mgr.sysMgr.scheduleSystemRegistrationEvent = self.mock_scheduleSystemRegistrationEvent
         self.mgr.sysMgr.scheduleSystemDetectMgmtInterfaceEvent = \
             self.mock_scheduleSystemDetectMgmtInterfaceEvent
@@ -1354,9 +1352,6 @@ class SystemsTestCase(XMLTestCase):
 
     def mock_scheduleSystemRegistrationEvent(self, system):
         self.mock_scheduleSystemRegistrationEvent_called = True
-        
-    def mock_scheduleSystemPollEvent(self, system):
-        self.mock_scheduleSystemPollEvent_called = True
         
     def mockGetRmakeJob(self):
         self.mockGetRmakeJob_called = True
@@ -1570,9 +1565,6 @@ class SystemsTestCase(XMLTestCase):
         self.failUnlessEqual(self.mock_scheduleSystemRegistrationEvent_called,
             False)
         
-        # make sure we scheduled poll event
-        assert(self.mock_scheduleSystemPollEvent_called)
-        
     def testAddRegisteredManagementNodeSystem(self):
         zone = self._saveZone()
         system_type = models.SystemType.objects.get(
@@ -1591,9 +1583,6 @@ class SystemsTestCase(XMLTestCase):
         # make sure we did not schedule registration
         self.failUnlessEqual(self.mock_scheduleSystemRegistrationEvent_called,
             False)
-        
-        # make sure we did not scheduled poll event since this is a management node and they are managed now
-        self.failUnlessEqual(self.mock_scheduleSystemPollEvent_called, False)
         
     def testAddSystemNull(self):
         
@@ -2533,7 +2522,7 @@ class SystemsTestCase(XMLTestCase):
 
         # Create a job
         eventType = jobmodels.EventType.objects.get(
-            name = jobmodels.EventType.SYSTEM_POLL)
+            name = jobmodels.EventType.SYSTEM_UPDATE)
         job = jobmodels.Job(job_uuid=jobUuid, job_type=eventType,
             job_state=self.mgr.sysMgr.jobState(jobmodels.JobState.RUNNING))
         job.save()
@@ -2685,47 +2674,6 @@ class SystemsTestCase(XMLTestCase):
         xml = network.to_xml()
         self.failUnlessIn("<active>false</active>", xml)
         self.failUnlessIn("<pinned>true</pinned>", xml)
-
-    def testScheduleImmediatePollAfterRegistration(self):
-        localUuid = 'localuuid001'
-        generatedUuid = 'generateduuid001'
-        eventUuid = 'eventuuid001'
-        params = dict(localUuid=localUuid, generatedUuid=generatedUuid,
-            eventUuid=eventUuid, zoneId=self.localZone.zone_id)
-        xml = """\
-<system>
-  <local_uuid>%(localUuid)s</local_uuid>
-  <generated_uuid>%(generatedUuid)s</generated_uuid>
-  <event_uuid>%(eventUuid)s</event_uuid>
-  <managing_zone href="http://testserver/api/v1/inventory/zones/%(zoneId)s"/>
-</system>
-""" % params
-
-        # Create a system with just a name
-        system = self.newSystem(name = 'blippy')
-        system.save()
-        # Create a job
-        eventType = self.mgr.sysMgr.eventType(jobmodels.EventType.SYSTEM_REGISTRATION)
-        job = jobmodels.Job(job_uuid = 'rmakeuuid001', job_type=eventType,
-            job_state=self.mgr.sysMgr.jobState(jobmodels.JobState.RUNNING))
-        job.save()
-        systemJob = models.SystemJob(system=system, job=job,
-            event_uuid=eventUuid)
-        systemJob.save()
-
-        response = self._post('inventory/systems', data=xml)
-        self.failUnlessEqual(response.status_code, 200)
-
-        # Look up log entries
-        entries = self.mgr.getSystemLogEntries(system)
-        self.failUnlessEqual(
-            [ x.entry for x in entries ],
-            [
-                "Unable to create event 'On-demand system synchronization': no networking information", 
-                "Unable to create event 'System synchronization': no networking information"
-            ]
-        )
-
 
     def testAgentPort(self):
         # RBL-7150
@@ -3020,22 +2968,6 @@ class SystemStateTestCase(XMLTestCase):
         log = models.SystemLog.objects.filter(system=system).get()
         logEntries = log.system_log_entries.order_by('-entry_date')
 
-        # poll event
-        eventUuid2 = 'eventuuid002'
-        jobUuid2 = 'rmakeuuid002'
-        self._newSystemJob(system, eventUuid2, jobUuid2,
-            jobmodels.EventType.SYSTEM_POLL)
-
-        params = dict(eventUuid=eventUuid2, jobUuid=jobUuid2, jobState=jobState,
-            zoneId=self.localZone.zone_id)
-
-        xml = xmlTempl % params
-
-        response = self._put('inventory/systems/%s' % system.pk,
-            data=xml, headers = { 'X-rBuilder-Event-UUID' : eventUuid1 },
-            username="admin", password="password")
-        self.failUnlessEqual(response.status_code, 200)
-
         system2 = models.System.objects.get(pk=system.pk)
         self.failUnlessEqual(system2.current_state.name,
             models.SystemState.RESPONSIVE)
@@ -3077,10 +3009,6 @@ class SystemStateTestCase(XMLTestCase):
 
         job1 = self._newSystemJob(system, eventUuid1, jobUuid1,
             jobmodels.EventType.SYSTEM_REGISTRATION)
-        job2 = self._newSystemJob(system, eventUuid2, jobUuid2,
-            jobmodels.EventType.SYSTEM_POLL)
-        job3 = self._newSystemJob(system, eventUuid3, jobUuid3,
-            jobmodels.EventType.SYSTEM_POLL_IMMEDIATE)
         job4 = self._newSystemJob(system, eventUuid4, jobUuid4,
             jobmodels.EventType.SYSTEM_APPLY_UPDATE)
         job5 = self._newSystemJob(system, eventUuid5, jobUuid5,
@@ -3088,8 +3016,6 @@ class SystemStateTestCase(XMLTestCase):
 
         jobRegNoAuth = self._newSystemJob(system, eventUuid6, jobUuid6,
             jobmodels.EventType.SYSTEM_REGISTRATION, statusCode = 401)
-        jobPollNoAuth = self._newSystemJob(system, eventUuid7, jobUuid7,
-            jobmodels.EventType.SYSTEM_POLL, statusCode = 401)
 
         UNMANAGED = models.SystemState.UNMANAGED
         UNMANAGED_CREDENTIALS_REQUIRED = models.SystemState.UNMANAGED_CREDENTIALS_REQUIRED
@@ -3148,14 +3074,14 @@ class SystemStateTestCase(XMLTestCase):
                 NONRESPONSIVE, NONRESPONSIVE_CREDENTIALS, DEAD, MOTHBALLED]:
             transitionsFailed.append((oldState, None))
 
-        for job in [job2, job3, job4, job5]:
+        for job in [job4, job5]:
             for oldState, newState in transitionsCompleted:
                 tests.append((job, stateCompleted, oldState, newState))
             for oldState, newState in transitionsFailed:
                 tests.append((job, stateFailed, oldState, newState))
 
         # Failed auth tests`
-        for job in [ jobRegNoAuth, jobPollNoAuth ]:
+        for job in [ jobRegNoAuth ]:
             tests.append((job, stateFailed, UNMANAGED,
                 UNMANAGED_CREDENTIALS_REQUIRED))
             tests.append((job, stateFailed, UNMANAGED_CREDENTIALS_REQUIRED,
@@ -3181,47 +3107,6 @@ class SystemStateTestCase(XMLTestCase):
                  oldState, ret, newState))
             #self.failUnlessEqual(ret, newState, msg)
 
-        # Time-based tests
-        tests = [
-            (job2, stateFailed, UNMANAGED, None),
-            (job2, stateFailed, UNMANAGED_CREDENTIALS_REQUIRED, None),
-            (job2, stateFailed, REGISTERED, NONRESPONSIVE),
-            (job2, stateFailed, RESPONSIVE, NONRESPONSIVE),
-            (job2, stateFailed, NONRESPONSIVE_HOST, DEAD),
-            (job2, stateFailed, NONRESPONSIVE_NET, DEAD),
-            (job2, stateFailed, NONRESPONSIVE_SHUTDOWN, DEAD),
-            (job2, stateFailed, NONRESPONSIVE_SUSPENDED, DEAD),
-            (job2, stateFailed, NONRESPONSIVE_CREDENTIALS, DEAD),
-            (job2, stateFailed, NONRESPONSIVE, DEAD),
-            (job2, stateFailed, DEAD, MOTHBALLED),
-            (job2, stateFailed, MOTHBALLED, None),
-
-            (job3, stateFailed, UNMANAGED, None),
-            (job3, stateFailed, UNMANAGED_CREDENTIALS_REQUIRED, None),
-            (job3, stateFailed, REGISTERED, NONRESPONSIVE),
-            (job3, stateFailed, RESPONSIVE, NONRESPONSIVE),
-            (job3, stateFailed, NONRESPONSIVE_HOST, DEAD),
-            (job3, stateFailed, NONRESPONSIVE_NET, DEAD),
-            (job3, stateFailed, NONRESPONSIVE_SHUTDOWN, DEAD),
-            (job3, stateFailed, NONRESPONSIVE_SUSPENDED, DEAD),
-            (job3, stateFailed, NONRESPONSIVE_CREDENTIALS, DEAD),
-            (job3, stateFailed, NONRESPONSIVE, DEAD),
-            (job3, stateFailed, DEAD, MOTHBALLED),
-            (job3, stateFailed, MOTHBALLED, None),
-        ]
-
-        self.mgr.cfg.deadStateTimeout = 10
-        self.mgr.cfg.mothballedStateTimeout = 10
-        stateChange = self.mgr.sysMgr.now() - timeutils.timedelta(days=10)
-        for (job, jobState, oldState, newState) in tests:
-            system.current_state = self.mgr.sysMgr.systemState(oldState)
-            system.state_change_date = stateChange
-            job.job_state = jobState
-            ret = self.mgr.sysMgr.getNextSystemState(system, job)
-            msg = "Job %s (%s): %s -> %s (expected: %s)" % (
-                (job.job_type.name, jobState.name, oldState, ret, newState))
-            self.failUnlessEqual(ret, newState, msg)
-
 
 class SystemVersionsTestCase(XMLTestCase):
     fixtures = ['system_job']
@@ -3232,9 +3117,7 @@ class SystemVersionsTestCase(XMLTestCase):
         from django.conf import settings
         self.mintConfig.dbPath = settings.DATABASES['default']['NAME']
         self.mock_scheduleSystemRegistrationEvent_called = False
-        self.mock_scheduleSystemPollEvent_called = False
         self.mock_set_available_updates_called = False
-        self.mgr.sysMgr.scheduleSystemPollEvent = self.mock_scheduleSystemPollEvent
         self.mgr.sysMgr.scheduleSystemRegistrationEvent = self.mock_scheduleSystemRegistrationEvent
         rbuildermanager.SystemManager.scheduleSystemApplyUpdateEvent = self.mock_scheduleSystemApplyUpdateEvent
         self.sources = []
@@ -3260,9 +3143,6 @@ class SystemVersionsTestCase(XMLTestCase):
     def mock_scheduleSystemRegistrationEvent(self, system):
         self.mock_scheduleSystemRegistrationEvent_called = True
         
-    def mock_scheduleSystemPollEvent(self, system):
-        self.mock_scheduleSystemPollEvent_called = True
-
     def mock_scheduleSystemApplyUpdateEvent(self, system, sources):
         self.mock_scheduleSystemApplyUpdateEvent_called = True
         self.sources = sources
@@ -3458,28 +3338,6 @@ class SystemVersionsTestCase(XMLTestCase):
 
         eventUuid = 'eventuuid007'
         jobUuid = 'rmakejob007'
-        self._newSystemJob(system, eventUuid, jobUuid, jobmodels.EventType.SYSTEM_POLL)
-
-        self.failUnlessEqual(
-            [ (x.name, (x.version.full, x.version.ordering, x.version.flavor,
-                x.version.label, x.version.revision), x.flavor)
-                for x in system.installed_software.all() ],
-            [
-                ('group-clover-appliance',
-                    ('/clover.eng.rpath.com@rpath:clover-1-devel/1-2-1',
-                     '1234567890.12',
-                     '~!dom0,~!domU,vmware,~!xen is: x86(i486,i586,i686,sse,sse2)',
-                    'clover.eng.rpath.com@rpath:clover-1-devel',
-                    'change me gently'),
-                '~!dom0,~!domU,vmware,~!xen is: x86(i486,i586,i686,sse,sse2)'),
-                ('emacs',
-                    ('/contrib.rpath.org@rpl:devel//2/23.0.60cvs20080523-1-0.1',
-                     '1234567890.12',
-                     'desktop is: x86_64',
-                     'contrib.rpath.org@rpl:2',
-                     '23.0.60cvs20080523-1-0.1'),
-                    'desktop is: x86_64'),
-            ])
 
         data = testsxml.system_version_put_xml
 
@@ -3497,6 +3355,7 @@ class SystemVersionsTestCase(XMLTestCase):
             
         # Weak attempt to see if the response is XML
         exp = '<system id="http://testserver/api/v1/inventory/systems/%s">' % system.pk
+        print "DEBUG OUTPUT HERE=%s" % response.content
         self.failUnlessIn(exp, response.content)
 
         nsystem = models.System.objects.get(system_id=system.pk)
@@ -3586,9 +3445,9 @@ class EventTypeTestCase(XMLTestCase):
         Do not allow changing the event type name https://issues.rpath.com/browse/RBL-7171
         """
         jobmodels.EventType.objects.all().delete()
-        event_type = jobmodels.EventType(name=jobmodels.EventType.SYSTEM_POLL, description="bar", priority=110)
+        event_type = jobmodels.EventType(name=jobmodels.EventType.SYSTEM_UPDATE, description="bar", priority=110)
         event_type.save()
-        self.failUnlessEqual(event_type.name, jobmodels.EventType.SYSTEM_POLL)
+        self.failUnlessEqual(event_type.name, jobmodels.EventType.SYSTEM_UPDATE)
         xml = testsxml.event_type_put_name_change_xml % dict(event_type_id=event_type.pk)
         response = self._put('inventory/event_types/%d/' % event_type.pk,
             data=xml,
@@ -3596,7 +3455,7 @@ class EventTypeTestCase(XMLTestCase):
         self.assertEquals(response.status_code, 200)
         event_type = jobmodels.EventType.objects.get(pk=event_type.pk)
         # name should not have changed
-        self.failUnlessEqual(event_type.name, jobmodels.EventType.SYSTEM_POLL)
+        self.failUnlessEqual(event_type.name, jobmodels.EventType.SYSTEM_UPDATE)
 
 class SystemEventTestCase(XMLTestCase):
     
@@ -3630,10 +3489,7 @@ class SystemEventTestCase(XMLTestCase):
         self.mock_dispatchSystemEvent_called = True
     
     def testGetSystemEventsRest(self):
-        poll_event = self.mgr.sysMgr.eventType(jobmodels.EventType.SYSTEM_POLL)
         act_event = self.mgr.sysMgr.eventType(jobmodels.EventType.SYSTEM_REGISTRATION)
-        event1 = models.SystemEvent(system=self.system,event_type=poll_event, priority=poll_event.priority)
-        event1.save()
         event2 = models.SystemEvent(system=self.system,event_type=act_event, priority=act_event.priority)
         event2.save()
         response = self._get('inventory/system_events/',
@@ -3641,15 +3497,14 @@ class SystemEventTestCase(XMLTestCase):
         self.assertEquals(response.status_code, 200)
         self.assertXMLEquals(response.content, 
             testsxml.system_events_xml % \
-                (event1.time_created.isoformat(), event1.time_enabled.isoformat(),
-                 event2.time_created.isoformat(), event2.time_enabled.isoformat()))
+                 (event2.time_created.isoformat(), event2.time_enabled.isoformat()))
 
     def testGetSystemEventRestAuth(self):
         """
         Ensure requires auth but not admin
         """
-        poll_event = self.mgr.sysMgr.eventType(jobmodels.EventType.SYSTEM_POLL)
-        event = models.SystemEvent(system=self.system,event_type=poll_event, priority=poll_event.priority)
+        update_event = self.mgr.sysMgr.eventType(jobmodels.EventType.SYSTEM_UPDATE)
+        event = models.SystemEvent(system=self.system,event_type=update_event, priority=update_event.priority)
         event.save()
         response = self._get('inventory/system_events/%d/' % event.system_event_id)
         self.assertEquals(response.status_code, 401)
@@ -3659,8 +3514,8 @@ class SystemEventTestCase(XMLTestCase):
         self.assertEquals(response.status_code, 200)
 
     def testGetSystemEventRest(self):
-        poll_event = self.mgr.sysMgr.eventType(jobmodels.EventType.SYSTEM_POLL)
-        event = models.SystemEvent(system=self.system,event_type=poll_event, priority=poll_event.priority)
+        update_event = self.mgr.sysMgr.eventType(jobmodels.EventType.SYSTEM_UPDATE)
+        event = models.SystemEvent(system=self.system,event_type=update_event, priority=update_event.priority)
         event.save()
         response = self._get('inventory/system_events/%d/' % event.system_event_id,
            username="testuser", password="password")
@@ -3670,17 +3525,17 @@ class SystemEventTestCase(XMLTestCase):
     
     def testGetSystemEvent(self):
         # add an event
-        poll_event = self.mgr.sysMgr.eventType(jobmodels.EventType.SYSTEM_POLL)
-        event = models.SystemEvent(system=self.system,event_type=poll_event, priority=poll_event.priority)
+        update_event = self.mgr.sysMgr.eventType(jobmodels.EventType.SYSTEM_UPDATE)
+        event = models.SystemEvent(system=self.system,event_type=update_event, priority=update_event.priority)
         event.save()
         new_event = self.mgr.getSystemEvent(event.system_event_id)
         assert(new_event == event)
         
     def testGetSystemEvents(self):
         # add an event
-        poll_event = self.mgr.sysMgr.eventType(jobmodels.EventType.SYSTEM_POLL)
+        update_event = self.mgr.sysMgr.eventType(jobmodels.EventType.SYSTEM_UPDATE)
         act_event = self.mgr.sysMgr.eventType(jobmodels.EventType.SYSTEM_REGISTRATION)
-        event1 = models.SystemEvent(system=self.system,event_type=poll_event, priority=poll_event.priority)
+        event1 = models.SystemEvent(system=self.system,event_type=update_event, priority=update_event.priority)
         event1.save()
         event2 = models.SystemEvent(system=self.system,event_type=act_event, priority=act_event.priority)
         event2.save()
@@ -3689,8 +3544,8 @@ class SystemEventTestCase(XMLTestCase):
         
     def testDeleteSystemEvent(self):
         # add an event
-        poll_event = self.mgr.sysMgr.eventType(jobmodels.EventType.SYSTEM_POLL)
-        event = models.SystemEvent(system=self.system,event_type=poll_event, priority=poll_event.priority)
+        update_event = self.mgr.sysMgr.eventType(jobmodels.EventType.SYSTEM_UPDATE)
+        event = models.SystemEvent(system=self.system,event_type=update_event, priority=update_event.priority)
         event.save()
         self.mgr.deleteSystemEvent(event.system_event_id)
         events = models.SystemEvent.objects.all()
@@ -3702,59 +3557,30 @@ class SystemEventTestCase(XMLTestCase):
         network = models.Network(system=local_system)
         network.save()
         local_system.networks.add(network)
-        poll_event = self.mgr.sysMgr.eventType(jobmodels.EventType.SYSTEM_POLL)
-        event = self.mgr.createSystemEvent(local_system, poll_event)
+        update_event = self.mgr.sysMgr.eventType(jobmodels.EventType.SYSTEM_UPDATE)
+        event = self.mgr.createSystemEvent(local_system, update_event)
         assert(event is None)
         assert(self.mock_dispatchSystemEvent_called == False)
                 
         network2 = models.Network(system=local_system, ip_address="1.1.1.1")
         network2.save()
         local_system.networks.add(network2)
-        event = self.mgr.createSystemEvent(local_system, poll_event)
+        event = self.mgr.createSystemEvent(local_system, update_event)
         assert(event is not None)
         
     def testSaveSystemEvent(self):
         self._saveSystem()
-        poll_event = self.mgr.sysMgr.eventType(jobmodels.EventType.SYSTEM_POLL)
-        event = models.SystemEvent(system=self.system, event_type=poll_event)
+        update_event = self.mgr.sysMgr.eventType(jobmodels.EventType.SYSTEM_UPDATE)
+        event = models.SystemEvent(system=self.system, event_type=update_event)
         event.save()
         # make sure event priority was set even though we didn't pass it in
-        assert(event.priority == poll_event.priority)
+        assert(event.priority == update_event.priority)
         
-        event2 = models.SystemEvent(system=self.system, event_type=poll_event, priority=1)
+        event2 = models.SystemEvent(system=self.system, event_type=update_event, priority=1)
         event2.save()
         # make sure we honor priority if set
         assert(event2.priority == 1)
     
-    def testScheduleSystemPollEvent(self):
-        self.mgr.scheduleSystemPollEvent(self.system)
-        assert(self.mock_dispatchSystemEvent_called == False)
-        
-        # make sure we have our poll event
-        poll_event = self.mgr.sysMgr.eventType(jobmodels.EventType.SYSTEM_POLL)
-        event = models.SystemEvent.objects.filter(system=self.system,event_type=poll_event).get()
-        assert(event is not None)
-        
-        # make sure we have our log event
-        log = models.SystemLog.objects.filter(system=self.system).get()
-        sys_registered_entries = log.system_log_entries.all()
-        assert(len(sys_registered_entries) == 1)
-        
-    def testScheduleSystemPollNowEvent(self):
-        self.mgr.scheduleSystemPollNowEvent(self.system)
-        assert(self.mock_dispatchSystemEvent_called)
-        
-        pn_event = self.mgr.sysMgr.eventType(jobmodels.EventType.SYSTEM_POLL_IMMEDIATE)
-        event = models.SystemEvent.objects.filter(system=self.system,event_type=pn_event).get()
-        assert(event is not None)
-        # should have been enabled immediately
-        assert(event.time_enabled <= timeutils.now())
-        
-        # make sure we have our log event
-        log = models.SystemLog.objects.filter(system=self.system).get()
-        sys_registered_entries = log.system_log_entries.all()
-        assert(len(sys_registered_entries) == 1)
-        
     def testScheduleSystemRegistrationEvent(self):
         # registration events are no longer dispatched immediately (RBL-8851)
         self.mgr.scheduleSystemRegistrationEvent(self.system)
@@ -3800,28 +3626,6 @@ class SystemEventTestCase(XMLTestCase):
         self.mgr.addSystemSystemEvent(self.system.system_id, systemEvent)
         assert(self.mock_dispatchSystemEvent_called)
         
-    def testAddSystemPollNowEvent(self):
-        # poll now event should be dispatched now
-        poll_now_event = self.mgr.sysMgr.eventType(jobmodels.EventType.SYSTEM_POLL_IMMEDIATE)
-        systemEvent = models.SystemEvent(system=self.system, 
-            event_type=poll_now_event, priority=poll_now_event.priority,
-            time_enabled=timeutils.now())
-        systemEvent.save()
-        assert(systemEvent is not None)
-        self.mgr.addSystemSystemEvent(self.system.system_id, systemEvent)
-        assert(self.mock_dispatchSystemEvent_called)
-        
-    def testAddSystemPollEvent(self):
-        # poll event should not be dispatched now
-        poll_event = self.mgr.sysMgr.eventType(jobmodels.EventType.SYSTEM_POLL)
-        systemEvent = models.SystemEvent(system=self.system, 
-            event_type=poll_event, priority=poll_event.priority,
-            time_enabled=timeutils.now())
-        systemEvent.save()
-        assert(systemEvent is not None)
-        self.mgr.addSystemSystemEvent(self.system.system_id, systemEvent)
-        assert(self.mock_dispatchSystemEvent_called == False)
-        
     def testPostSystemEventAuth(self):
         """
         Ensure requires auth but not admin
@@ -3844,11 +3648,7 @@ class SystemEventTestCase(XMLTestCase):
             username="admin", password="password")
         self.assertEquals(response.status_code, 200)
         system_event = models.SystemEvent.objects.get(pk=1)
-        system_event_xml = testsxml.system_event_xml % \
-            (system_event.time_created.isoformat(),
-            system_event.time_enabled.isoformat())
-        self.assertXMLEquals(response.content, system_event_xml,
-            ignoreNodes=['time_created', 'time_enabled'])
+        # TODO: looser checking of XML returns
         
     def testIncompatibleEvents(self):
         def mock__dispatchSystemEvent(self, event):
@@ -3864,22 +3664,10 @@ class SystemEventTestCase(XMLTestCase):
 
         rbuildermanager.SystemManager._dispatchSystemEvent = mock__dispatchSystemEvent
 
-        url = 'inventory/systems/%d/system_events/' % self.system.system_id
-        response = self._post(url,
-            data=testsxml.system_event_immediate_poll_post_xml,
-            username="admin", password="password")
-        self.assertEquals(response.status_code, 200)
-
-        # Schedule another poll, should fail, can't poll twice at the same
-        # time
-        response = self._post(url,
-            data=testsxml.system_event_immediate_poll_post_xml,
-            username="admin", password="password")
-        self.assertEquals(response.status_code, 409)
-        self.assertTrue('<fault>' in response.content)
-
         # Clear system events
         [j.delete() for j in self.system.systemjob_set.all()]
+
+        url = 'inventory/systems/%d/system_events/' % self.system.system_id
 
         # Schedule an update, should succeed
         response = self._post(url,
@@ -3905,13 +3693,6 @@ class SystemEventTestCase(XMLTestCase):
         self.assertEquals(response.status_code, 200)
         self.assertTrue('<fault>' not in response.content)
 
-        # Schedule a poll, should succeed
-        response = self._post(url,
-            data=testsxml.system_event_immediate_poll_post_xml,
-            username="admin", password="password")
-        self.assertEquals(response.status_code, 200)
-        self.assertTrue('<fault>' not in response.content)
-
 class SystemEventProcessingTestCase(XMLTestCase):
     
     # do not load other fixtures for this test case as it is very data order dependent
@@ -3921,71 +3702,17 @@ class SystemEventProcessingTestCase(XMLTestCase):
         XMLTestCase.setUp(self)
 
         self.mintConfig = self.mgr.cfg
-        self.mock(self.mgr.sysMgr, 'scheduleSystemPollEvent',
-            self.mock_scheduleSystemPollEvent)
         self.mock(self.mgr.sysMgr, 'extractNetworkToUse',
             self.mock_extractNetworkToUse)
         self.resetFlags()
 
     def resetFlags(self):
-        self.mock_scheduleSystemPollEvent_called = False
         self.mock_extractNetworkToUse_called = False
-
-    def mock_scheduleSystemPollEvent(self, event):
-        self.mock_scheduleSystemPollEvent_called = True
 
     def mock_extractNetworkToUse(self, system):
         self.mock_extractNetworkToUse_called = True
         return None
 
-    def testGetSystemEventsForProcessing(self):
-
-        # set default processing size to 1
-        self.mintConfig.systemEventsNumToProcess = 1
-                
-        events = self.mgr.sysMgr.getSystemEventsForProcessing()
-        
-        # ensure we got our registration event back since it is the highest priority
-        self.failUnlessEqual(len(events), 1)
-        event = events[0]
-        self.failUnlessEqual(event.event_type.name,
-            jobmodels.EventType.SYSTEM_REGISTRATION)
-
-        # remove the registration event and ensure we get the on demand poll event next
-        event.delete()
-        events = self.mgr.sysMgr.getSystemEventsForProcessing()
-        self.failUnlessEqual(len(events), 1)
-        event = events[0]
-        self.failUnlessEqual(event.event_type.name,
-            jobmodels.EventType.SYSTEM_POLL)
-
-        # remove the poll now event and ensure we get the standard poll event next
-        event.delete()
-        events = self.mgr.sysMgr.getSystemEventsForProcessing()
-        self.failUnlessEqual(len(events), 1)
-        event = events[0]
-        self.failUnlessEqual(event.event_type.name,
-            jobmodels.EventType.SYSTEM_POLL_IMMEDIATE)
-
-        # add another poll event with a higher priority but a future time 
-        # and make sure we don't get it (because of the future registration time)
-        orgPollEvent = event
-        new_poll_event = models.SystemEvent(system=orgPollEvent.system, 
-            event_type=orgPollEvent.event_type, priority=orgPollEvent.priority + 1,
-            time_enabled=orgPollEvent.time_enabled + timeutils.timedelta(1))
-        new_poll_event.save()
-        events = self.mgr.sysMgr.getSystemEventsForProcessing()
-        self.failUnlessEqual(len(events), 1)
-        event = events[0]
-        self.failUnlessEqual(event.system_event_id,
-            new_poll_event.system_event_id)
-        
-    def testGetSystemEventsForProcessingPollCount(self):
-        self.mintConfig.systemEventsNumToProcess = 3
-        
-        events = self.mgr.sysMgr.getSystemEventsForProcessing()
-        self.failUnlessEqual(len(events), 3)
-        
     def testProcessSystemEvents(self):
         
         # set default processing size to 1
@@ -3998,34 +3725,13 @@ class SystemEventProcessingTestCase(XMLTestCase):
             jobmodels.EventType.SYSTEM_REGISTRATION)
         event.delete()
         
-        # make sure next one is poll now event
-        events = self.mgr.sysMgr.getSystemEventsForProcessing()
-        event = events[0]
-        self.failUnlessEqual(event.event_type.name,
-            jobmodels.EventType.SYSTEM_POLL)
-        self.mgr.sysMgr.processSystemEvents()
-        
-        # make sure the event was removed and that we have the next poll event 
-        # for this system now
-        try:
-            poll_now_event = self.mgr.sysMgr.eventType(jobmodels.EventType.SYSTEM_POLL_IMMEDIATE)
-            event = models.SystemEvent.objects.get(system_event_id=event.system_event_id,
-                event_type=poll_now_event)
-            assert(False) # should have failed
-        except models.SystemEvent.DoesNotExist:
-            pass
-        poll_event = self.mgr.sysMgr.eventType(jobmodels.EventType.SYSTEM_POLL_IMMEDIATE)
-        local_system = poll_event.system_events.all()[0]
-        event = models.SystemEvent.objects.get(system=local_system, event_type=poll_event)
-        self.failIf(event is None)
-        
     def testProcessSystemEventsNoTrigger(self):
         # make sure registration event doesn't trigger next poll event
         # start with no regular poll events
-        poll_event = self.mgr.sysMgr.eventType(jobmodels.EventType.SYSTEM_POLL)
-        models.SystemEvent.objects.filter(event_type=poll_event).delete()
+        update_event = self.mgr.sysMgr.eventType(jobmodels.EventType.SYSTEM_UPDATE)
+        models.SystemEvent.objects.filter(event_type=update_event).delete()
         try:
-            models.SystemEvent.objects.get(event_type=poll_event)
+            models.SystemEvent.objects.get(event_type=update_event)
             assert(False) # should have failed
         except models.SystemEvent.DoesNotExist:
             pass
@@ -4039,42 +3745,31 @@ class SystemEventProcessingTestCase(XMLTestCase):
         
         # should have no poll events still
         try:
-            models.SystemEvent.objects.get(event_type=poll_event)
+            models.SystemEvent.objects.get(event_type=update_event)
             assert(False) # should have failed
         except models.SystemEvent.DoesNotExist:
             pass
 
     def testDispatchSystemEvent(self):
         self.resetFlags()
-        self.failIf(self.mock_scheduleSystemPollEvent_called)
         self.failIf(self.mock_extractNetworkToUse_called)
 
-        poll_event = self.mgr.sysMgr.eventType(jobmodels.EventType.SYSTEM_POLL)
-        poll_now_event = self.mgr.sysMgr.eventType(jobmodels.EventType.SYSTEM_POLL_IMMEDIATE)
+        update_event = self.mgr.sysMgr.eventType(jobmodels.EventType.SYSTEM_UPDATE)
         act_event = self.mgr.sysMgr.eventType(jobmodels.EventType.SYSTEM_REGISTRATION)
 
         system = self.newSystem(name="hey")
         system.save()
         # sanity check dispatching poll event
-        event = models.SystemEvent(system=system,event_type=poll_event, priority=poll_event.priority)
+        event = models.SystemEvent(system=system,event_type=update_event, priority=update_event.priority)
         event.save()
         self.mgr.sysMgr.dispatchSystemEvent(event)
         transaction.commit()
 
         self.failUnlessEqual(event.system_event_id, None)
-        self.failUnless(self.mock_scheduleSystemPollEvent_called)
         # _extractNetworkToUse is only called if we have a repeater client
         self.failIf(self.mock_extractNetworkToUse_called)
 
-        # sanity check dispatching poll_now event
-        self.resetFlags()
-        event = models.SystemEvent(system=system, event_type=poll_now_event, priority=poll_now_event.priority)
-        event.save()
-        self.mgr.sysMgr.dispatchSystemEvent(event)
-        transaction.commit()
-
         self.failUnlessEqual(event.system_event_id, None)
-        self.failIf(self.mock_scheduleSystemPollEvent_called)
         # _extractNetworkToUse is only called if we have a repeater client
         self.failIf(self.mock_extractNetworkToUse_called)
 
@@ -4086,7 +3781,6 @@ class SystemEventProcessingTestCase(XMLTestCase):
         transaction.commit()
 
         self.failUnlessEqual(event.system_event_id, None)
-        self.failIf(self.mock_scheduleSystemPollEvent_called)
 
 class SystemEventProcessing2TestCase(XMLTestCase, test_utils.RepeaterMixIn):
     # do not load other fixtures for this test case as it is very data order dependent
@@ -4138,7 +3832,7 @@ class SystemEventProcessing2TestCase(XMLTestCase, test_utils.RepeaterMixIn):
 
 
     def testDispatchSystemEvent(self):
-        event = self._setupEvent(jobmodels.EventType.SYSTEM_POLL)
+        event = self._setupEvent(jobmodels.EventType.SYSTEM_UPDATE)
         self._dispatchEvent(event)
         transaction.commit()
 
@@ -4267,41 +3961,6 @@ class SystemEventProcessing2TestCase(XMLTestCase, test_utils.RepeaterMixIn):
         self.failUnlessEqual(
             [ x.event_uuid for x in models.SystemJob.objects.filter(system__system_id = system.system_id) ],
             [ 'really-unique-uuid-001' ])
-
-    def testDispatchPollWmi(self):
-        wmiInt = models.Cache.get(models.ManagementInterface,
-            name=models.ManagementInterface.WMI)
-        self.system2.management_interface = wmiInt
-        credDict = dict(username="JeanValjean", password="Javert",
-            domain="Paris")
-        self.system2.credentials = self.mgr.sysMgr.marshalCredentials(
-            credDict)
-        event = self._setupEvent(jobmodels.EventType.SYSTEM_POLL)
-        self._dispatchEvent(event)
-        transaction.commit()
-
-        repClient = self.mgr.repeaterMgr.repeaterClient
-        wmiParams = repClient.WmiParams
-        resLoc = repClient.ResultsLocation
-
-        wmiDict = credDict.copy()
-        wmiDict.update(eventUuid='really-unique-uuid-001', host='superduper.com',
-            requiredNetwork=None, port=12345)
-
-        self.failUnlessEqual(repClient.getCallList(),
-            [
-                ('poll_wmi',
-                    (
-                        wmiParams(**wmiDict),
-                    ),
-                    dict(zone='Local rBuilder',
-                        uuid='really-unique-uuid-002',
-                        resultsLocation=resLoc(
-                            path='/api/v1/inventory/systems/4',
-                            port=80),
-                    ),
-                ),
-            ])
 
     def testDispatchUpdateWmi(self):
         wmiInt = models.Cache.get(models.ManagementInterface,
@@ -4513,30 +4172,6 @@ class SystemEventProcessing2TestCase(XMLTestCase, test_utils.RepeaterMixIn):
         #            ),
         #        ),
         #    ])
-
-    def testAddSystemJobGetsCreated(self):
-        # Make sure the job that gets created is in the Queued state,
-        # and the model flags are properly set
-        system = self._saveSystem()
-        # Important to start a new transaction; the job should be queued
-        # until we commit
-        self.mgr.enterTransactionManagement()
-
-        newSystem = self.mgr.addSystem(system)
-        self.failUnlessEqual(newSystem.current_state.name,
-            models.SystemState.REGISTERED)
-        self.failUnlessEqual(
-            [ x.job_type.name for x in newSystem.jobs.all() ],
-            [ 'immediate system poll' ]
-        )
-        self.failUnlessEqual(
-            [ x.job_state.name for x in newSystem.jobs.all() ],
-            [ 'Queued', ]
-        )
-        system.updateDerivedData()
-        xobjModel = newSystem.serialize()
-        self.failUnlessEqual(str(xobjModel.has_active_jobs).lower(), 'true')
-        self.failUnlessEqual(str(xobjModel.has_running_jobs).lower(), 'false')
 
     def testPostSystemWmiManagementInterface(self):
 
