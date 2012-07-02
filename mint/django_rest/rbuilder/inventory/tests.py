@@ -2,7 +2,6 @@ import base64
 import cPickle
 import os
 import random
-from dateutil import tz
 from lxml import etree
 from xobj import xobj
 
