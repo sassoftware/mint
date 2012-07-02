@@ -3,6 +3,7 @@ import cPickle
 import os
 import random
 from dateutil import tz
+from lxml import etree
 from xobj import xobj
 
 from conary import versions
@@ -216,7 +217,37 @@ class SurveyTests(XMLTestCase):
         #if response.status_code != 200:
         # print response.content
         self.assertEqual(response.status_code, 200)
+        # Make sure the system has a system model
+        system = models.System.objects.get(system_id=sys.system_id)
+        self.assertEquals(system.latest_survey.has_system_model, True)
+        self.assertEquals(system.latest_survey.system_model, """\
+search group-haystack=haystack.rpath.com@rpath:haystack-1/1-1-1
+install group-haystack
+install needle
+""")
+        self.assertEquals(str(system.latest_survey.system_model_modified_date),
+            "2009-02-13 23:31:30+00:00")
  
+        # Config action should be disabled
+        url = "inventory/systems/%s" % system.system_id
+        response = self._get(url,
+            username='admin', password='password')
+        self.assertEqual(response.status_code, 200)
+        tree = etree.fromstring(response.content)
+        actionsStatus = tree.xpath('/system/actions/action[name="Apply system configuration"]/enabled')
+        self.assertEqual([x.text for x in actionsStatus], [ 'false' ])
+
+        # Hack last survey to pretend it doesn't have a system model
+        survey_models.Survey.objects.filter(survey_id=system.latest_survey.survey_id).update(has_system_model=False, system_model=None, system_model_modified_date=None)
+        system.__class__.objects.filter(system_id=system.system_id).update(configuration="<foo>value</foo>")
+
+        response = self._get(url,
+            username='admin', password='password')
+        self.assertEqual(response.status_code, 200)
+        tree = etree.fromstring(response.content)
+        actionsStatus = tree.xpath('/system/actions/action[name="Apply system configuration"]/enabled')
+        self.assertEqual([x.text for x in actionsStatus], [ 'true' ])
+
         response = self._get(url,
             username='admin', password='password')
         self.assertEqual(response.status_code, 200)
