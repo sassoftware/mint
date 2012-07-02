@@ -293,7 +293,6 @@ install needle
             data = testsxml.survey_input_xml_alt,
             username='admin', password='password')
         self.assertEqual(response.status_code, 200)
-        # TEMPORARY DEBUG ONLY
 
         response = self._get("inventory/surveys/1234/diffs/99999",
             username = 'admin', password='password')
@@ -3385,7 +3384,6 @@ class SystemVersionsTestCase(XMLTestCase):
             
         # Weak attempt to see if the response is XML
         exp = '<system id="http://testserver/api/v1/inventory/systems/%s">' % system.pk
-        print "DEBUG OUTPUT HERE=%s" % response.content
         self.failUnlessIn(exp, response.content)
 
         nsystem = models.System.objects.get(system_id=system.pk)
