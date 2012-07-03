@@ -266,10 +266,13 @@ class ResultsProcessingMixIn(object):
             transaction.savepoint_rollback(tsid)
             log.error("Error processing job %s %s",
                 job.job_uuid, e)
+            handled = self.handleError(job, e)
+            if handled:
+                return None
             e_type, e_value, e_tb = sys.exc_info()
             logErrorAndEmail(self.mgr.cfg, e_type, e_value, e_tb,
                 'jobs handler', dict(), doEmail=True)
-            self.handleError(job, e)
+            self.handleErrorDefault(job, e)
             return None
         
         # save the results from ramke to the DB
@@ -305,7 +308,7 @@ class ResultsProcessingMixIn(object):
         config = driverClass.getTargetConfigFromDescriptorData(descriptorData)
         return targetType, cloudName, config
 
-    def handleError(self, job, exc):
+    def handleErrorDefault(self, job, exc):
         job.status_text = "Unknown exception, please check logs"
         job.status_code = 500
 
@@ -765,12 +768,12 @@ class JobHandlerRegistry(HandlerRegistry):
             return target
 
         def handleError(self, job, exc):
-            if isinstance(exc, IntegrityError):
+            if isinstance(exc, (IntegrityError, errors.Conflict)):
                 job.job_state = self.mgr.getJobStateByName(models.JobState.FAILED)
                 job.status_text = "Duplicate Target"
                 job.status_code = 409
-            else:
-                DescriptorJobHandler.handleError(self, job, exc)
+                return True
+            return False
 
         def _createTarget(self, targetType, targetName, config):
             return self.mgr.mgr.createTarget(targetType, targetName, config)
@@ -810,12 +813,12 @@ class JobHandlerRegistry(HandlerRegistry):
                 targetName, config)
 
         def handleError(self, job, exc):
-            if isinstance(exc, IntegrityError):
+            if isinstance(exc, (IntegrityError, errors.Conflict)):
                 job.job_state = self.mgr.getJobStateByName(models.JobState.FAILED)
                 job.status_text = "Duplicate Target"
                 job.status_code = 409
-            else:
-                DescriptorJobHandler.handleError(self, job, exc)
+                return True
+            return False
 
     class TargetCredentialsConfigurator(_TargetDescriptorJobHandler):
         __slots__ = []
