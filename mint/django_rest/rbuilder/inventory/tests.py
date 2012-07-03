@@ -3038,8 +3038,6 @@ class SystemStateTestCase(XMLTestCase):
 
         job1 = self._newSystemJob(system, eventUuid1, jobUuid1,
             jobmodels.EventType.SYSTEM_REGISTRATION)
-        job4 = self._newSystemJob(system, eventUuid4, jobUuid4,
-            jobmodels.EventType.SYSTEM_APPLY_UPDATE)
 
         jobRegNoAuth = self._newSystemJob(system, eventUuid6, jobUuid6,
             jobmodels.EventType.SYSTEM_REGISTRATION, statusCode = 401)
@@ -3100,12 +3098,6 @@ class SystemStateTestCase(XMLTestCase):
                 NONRESPONSIVE_SHUTDOWN, NONRESPONSIVE_SUSPENDED,
                 NONRESPONSIVE, NONRESPONSIVE_CREDENTIALS, DEAD, MOTHBALLED]:
             transitionsFailed.append((oldState, None))
-
-        for job in [job4]:
-            for oldState, newState in transitionsCompleted:
-                tests.append((job, stateCompleted, oldState, newState))
-            for oldState, newState in transitionsFailed:
-                tests.append((job, stateFailed, oldState, newState))
 
         # Failed auth tests`
         for job in [ jobRegNoAuth ]:
@@ -3986,7 +3978,7 @@ class SystemEventProcessing2TestCase(XMLTestCase, test_utils.RepeaterMixIn):
         self.system2.credentials = self.mgr.sysMgr.marshalCredentials(
             credDict)
         toInstall = [ "group-foo=/a@b:c/1-2-3", "group-bar=/a@b:c//d@e:f/1-2.1-2.2" ]
-        event = self._setupEvent(jobmodels.EventType.SYSTEM_APPLY_UPDATE,
+        event = self._setupEvent(jobmodels.EventType.SYSTEM_UPDATE,
             eventData=toInstall)
 
         self._dispatchEvent(event)
@@ -4107,7 +4099,7 @@ class SystemEventProcessing2TestCase(XMLTestCase, test_utils.RepeaterMixIn):
             [])
 
     def testUpdateCim(self):
-        event = self._setupEvent(jobmodels.EventType.SYSTEM_APPLY_UPDATE)
+        event = self._setupEvent(jobmodels.EventType.SYSTEM_UPDATE)
         event.delete()
 
         url = "inventory/systems/%s/installed_software" % self.system2.pk

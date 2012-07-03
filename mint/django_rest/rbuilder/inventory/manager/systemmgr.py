@@ -124,14 +124,14 @@ class SystemManager(basemanager.BaseManager):
         # Can't shutdown and update at the same time
         # Can't shutdown and configure at the same time
 
-        jobmodels.EventType.SYSTEM_APPLY_UPDATE:\
+        jobmodels.EventType.SYSTEM_UPDATE:\
             [jobmodels.EventType.SYSTEM_SHUTDOWN,
              jobmodels.EventType.SYSTEM_SHUTDOWN_IMMEDIATE],
         jobmodels.EventType.SYSTEM_SHUTDOWN:\
-            [jobmodels.EventType.SYSTEM_APPLY_UPDATE,
+            [jobmodels.EventType.SYSTEM_UPDATE,
             jobmodels.EventType.SYSTEM_CONFIGURE],
         jobmodels.EventType.SYSTEM_SHUTDOWN_IMMEDIATE:\
-            [jobmodels.EventType.SYSTEM_APPLY_UPDATE,
+            [jobmodels.EventType.SYSTEM_UPDATE,
              jobmodels.EventType.SYSTEM_CONFIGURE],
         jobmodels.EventType.SYSTEM_CONFIGURE:\
             [jobmodels.EventType.SYSTEM_SHUTDOWN,
@@ -1748,10 +1748,10 @@ class SystemManager(basemanager.BaseManager):
     @exposed
     def scheduleSystemApplyUpdateEvent(self, system, sources):
         '''Schedule an event for the system to be updated'''
-        # this function only used by windows layered image pathway
-        # given update events are in new actions framework now
+        # FIXME: verify that this function creates something that is usable by new-style update
+        # code.   Is event data correct?
         return self._scheduleEvent(system,
-            jobmodels.EventType.SYSTEM_APPLY_UPDATE,
+            jobmodels.EventType.SYSTEM_UPDATE,
             eventData=sources)
 
     @exposed

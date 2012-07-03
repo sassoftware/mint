@@ -315,11 +315,6 @@ class EventType(modellib.XObjIdModel):
     SYSTEM_REGISTRATION_IMMEDIATE_PRIORITY = ON_DEMAND_BASE + 10
     SYSTEM_REGISTRATION_IMMEDIATE_DESC = "On-demand system registration"
 
-
-    SYSTEM_APPLY_UPDATE = 'system apply update'
-    SYSTEM_APPLY_UPDATE_PRIORITY = 50
-    SYSTEM_APPLY_UPDATE_DESCRIPTION = 'Scheduled system update'
-        
     SYSTEM_SHUTDOWN = 'system shutdown'
     SYSTEM_SHUTDOWN_PRIORITY = 50
     SYSTEM_SHUTDOWN_DESCRIPTION = 'Scheduled system shutdown'
@@ -394,7 +389,6 @@ class EventType(modellib.XObjIdModel):
     job_type_id = D(models.AutoField(primary_key=True), "the database id of the  type")
     EVENT_TYPES = (
         (SYSTEM_REGISTRATION, SYSTEM_REGISTRATION_DESC),
-        (SYSTEM_APPLY_UPDATE, SYSTEM_APPLY_UPDATE_DESCRIPTION),
         (SYSTEM_SHUTDOWN,
          SYSTEM_SHUTDOWN_DESCRIPTION),
         (SYSTEM_SHUTDOWN_IMMEDIATE,
@@ -429,9 +423,9 @@ class EventType(modellib.XObjIdModel):
     def requiresManagementInterface(self):
         if self.name in \
             [self.SYSTEM_REGISTRATION,
-             self.SYSTEM_APPLY_UPDATE,
              self.SYSTEM_SHUTDOWN,
              self.SYSTEM_SHUTDOWN_IMMEDIATE,
+             self.SYSTEM_UPDATE,
              self.SYSTEM_ASSIMILATE,
              self.SYSTEM_CONFIGURE
             ]:
