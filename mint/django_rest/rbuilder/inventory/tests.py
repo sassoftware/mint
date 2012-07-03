@@ -3312,27 +3312,6 @@ class SystemVersionsTestCase(XMLTestCase):
             ignoreNodes=['actions', 'created_date', 'modified_date', 
                 'created_by', 'modified_by', 'latest_survey', 'last_available_update_refresh'])
 
-    def testApplyUpdate(self):
-        system = self._saveSystem()
-        self._saveTrove()
-        system.installed_software.add(self.trove)
-        system.installed_software.add(self.trove2)
-        system.save()
-
-        # Apply update to 1-3-1
-        data = testsxml.system_apply_updates_xml
-        response = self._put('inventory/systems/%s/installed_software' 
-            % system.pk,
-            data=data, username="admin", password="password")
-        self.assertEquals(200, response.status_code)
-        self.assertEquals(2, len(self.sources))
-        newGroup = [g for g in self.sources \
-            if parseTroveSpec(g).name == 'group-clover-appliance'][0]
-        newGroup = parseTroveSpec(newGroup)
-        self.assertEquals('group-clover-appliance', newGroup.name)
-        version = versions.VersionFromString(newGroup.version)
-        self.assertEquals('1-3-1', version.trailingRevision().asString())
-
     def _mockProductDefinition(self):
         import StringIO
         from rpath_proddef import api1 as proddef
