@@ -59,7 +59,16 @@ survey_scan_descriptor = """<descriptor>
       <desc>System Scan</desc>
     </descriptions>
   </metadata>
-  <dataFields/>
+  <dataFields>
+    <field>
+      <name>top_level_group</name>
+      <descriptions>
+        <desc>Group</desc>
+      </descriptions>
+      <type>str</type>
+      <required>true</required>
+    </field>
+  </dataFields>
 </descriptor>
 """
 

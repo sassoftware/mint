@@ -978,8 +978,8 @@ class JobHandlerRegistry(HandlerRegistry):
             params = self.mgr.mgr.sysMgr._computeDispatcherMethodParams(cli,
                 self.system, destination, eventUuid=str(self.eventUuid),
                 requiredNetwork=None)
-            # XXX FIXME: pass real arguments here
-            desiredTopLevelItems = []
+            topLevelGroup = self.descriptorData.getField('top_level_group')
+            desiredTopLevelItems = [ topLevelGroup ]
             return (params, ), dict(zone=self.system.managing_zone.name,
                 desiredTopLevelItems=desiredTopLevelItems)
 

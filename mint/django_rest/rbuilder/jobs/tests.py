@@ -211,7 +211,9 @@ class JobCreationTest(BaseJobsTest, RepeaterMixIn):
 <job>
   <job_type id="http://localhost/api/v1/inventory/event_types/%(jobTypeId)s"/>
   <descriptor id="http://testserver/api/v1/inventory/systems/%(systemId)s/descriptors/survey_scan"/>
-  <descriptor_data/>
+  <descriptor_data>
+    <top_level_group>group-foo=/a@b:c/1-2-3</top_level_group>
+  </descriptor_data>
 </job>
 """ % dict(jobTypeId=jobType.job_type_id, systemId=system.system_id)
 
@@ -248,6 +250,7 @@ class JobCreationTest(BaseJobsTest, RepeaterMixIn):
 
                     ),
                     dict(
+                        desiredTopLevelItems = [u'group-foo=/a@b:c/1-2-3'],
                         zone=system.managing_zone.name,
                     ),
                 ),
@@ -294,6 +297,7 @@ class JobCreationTest(BaseJobsTest, RepeaterMixIn):
 
                     ),
                     dict(
+                        desiredTopLevelItems = [u'group-foo=/a@b:c/1-2-3'],
                         zone=system.managing_zone.name,
                     ),
                 ),
