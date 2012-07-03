@@ -978,7 +978,10 @@ class JobHandlerRegistry(HandlerRegistry):
             params = self.mgr.mgr.sysMgr._computeDispatcherMethodParams(cli,
                 self.system, destination, eventUuid=str(self.eventUuid),
                 requiredNetwork=None)
-            return (params, ), dict(zone=self.system.managing_zone.name)
+            # XXX FIXME: pass real arguments here
+            desiredTopLevelItems = []
+            return (params, ), dict(zone=self.system.managing_zone.name,
+                desiredTopLevelItems=desiredTopLevelItems)
 
         def postprocessRelatedResource(self, job, model):
             model.event_uuid = str(self.eventUuid)

@@ -32,9 +32,7 @@ class BaseJobsTest(XMLTestCase):
         self.job1 = self._newSystemJob(system, eventUuid1, jobUuid1,
             models.EventType.SYSTEM_REGISTRATION, createdBy=user)
         self.job2 = self._newSystemJob(system, eventUuid2, jobUuid2,
-            models.EventType.SYSTEM_POLL, createdBy=user)
-        self.job3 = self._newSystemJob(system, eventUuid3, jobUuid3,
-            models.EventType.SYSTEM_POLL_IMMEDIATE, createdBy=user)
+            models.EventType.SYSTEM_UPDATE, createdBy=user)
 
         self.system = system
 
@@ -164,13 +162,12 @@ class Jobs2TestCase(BaseJobsTest):
         jobs = obj.jobs.job
 
         self.failUnlessEqual([ str(x.job_state) for x in jobs ],
-            [models.JobState.RUNNING, models.JobState.COMPLETED,
-            models.JobState.FAILED ])
+            [models.JobState.RUNNING, models.JobState.COMPLETED])
 
         self.failUnlessEqual([ int(x.status_code) for x in jobs ],
-            [101, 299, 404])
+            [101, 299])
         self.failUnlessEqual([ x.status_text for x in jobs ],
-            ["text 101", "text 299", "text 404"])
+            ["text 101", "text 299"])
 
 class JobCreationTest(BaseJobsTest, RepeaterMixIn):
     def _mock(self):
