@@ -3040,8 +3040,6 @@ class SystemStateTestCase(XMLTestCase):
             jobmodels.EventType.SYSTEM_REGISTRATION)
         job4 = self._newSystemJob(system, eventUuid4, jobUuid4,
             jobmodels.EventType.SYSTEM_APPLY_UPDATE)
-        job5 = self._newSystemJob(system, eventUuid5, jobUuid5,
-            jobmodels.EventType.SYSTEM_APPLY_UPDATE_IMMEDIATE)
 
         jobRegNoAuth = self._newSystemJob(system, eventUuid6, jobUuid6,
             jobmodels.EventType.SYSTEM_REGISTRATION, statusCode = 401)
@@ -3103,7 +3101,7 @@ class SystemStateTestCase(XMLTestCase):
                 NONRESPONSIVE, NONRESPONSIVE_CREDENTIALS, DEAD, MOTHBALLED]:
             transitionsFailed.append((oldState, None))
 
-        for job in [job4, job5]:
+        for job in [job4]:
             for oldState, newState in transitionsCompleted:
                 tests.append((job, stateCompleted, oldState, newState))
             for oldState, newState in transitionsFailed:
@@ -3643,17 +3641,6 @@ class SystemEventTestCase(XMLTestCase):
         self.mgr.addSystemSystemEvent(self.system.system_id, systemEvent)
         self.failIf(self.mock_dispatchSystemEvent_called)
         
-    def testAddSystemConfigNowEvent(self):
-        # poll now event should be dispatched now
-        config_event = self.mgr.sysMgr.eventType(jobmodels.EventType.SYSTEM_CONFIG_IMMEDIATE)
-        systemEvent = models.SystemEvent(system=self.system, 
-            event_type=config_event, priority=config_event.priority,
-            time_enabled=timeutils.now())
-        systemEvent.save()
-        assert(systemEvent is not None)
-        self.mgr.addSystemSystemEvent(self.system.system_id, systemEvent)
-        assert(self.mock_dispatchSystemEvent_called)
-        
     def testPostSystemEventAuth(self):
         """
         Ensure requires auth but not admin
@@ -3999,7 +3986,7 @@ class SystemEventProcessing2TestCase(XMLTestCase, test_utils.RepeaterMixIn):
         self.system2.credentials = self.mgr.sysMgr.marshalCredentials(
             credDict)
         toInstall = [ "group-foo=/a@b:c/1-2-3", "group-bar=/a@b:c//d@e:f/1-2.1-2.2" ]
-        event = self._setupEvent(jobmodels.EventType.SYSTEM_APPLY_UPDATE_IMMEDIATE,
+        event = self._setupEvent(jobmodels.EventType.SYSTEM_APPLY_UPDATE,
             eventData=toInstall)
 
         self._dispatchEvent(event)
@@ -4120,7 +4107,7 @@ class SystemEventProcessing2TestCase(XMLTestCase, test_utils.RepeaterMixIn):
             [])
 
     def testUpdateCim(self):
-        event = self._setupEvent(jobmodels.EventType.SYSTEM_APPLY_UPDATE_IMMEDIATE)
+        event = self._setupEvent(jobmodels.EventType.SYSTEM_APPLY_UPDATE)
         event.delete()
 
         url = "inventory/systems/%s/installed_software" % self.system2.pk

@@ -127,18 +127,13 @@ class SystemManager(basemanager.BaseManager):
         jobmodels.EventType.SYSTEM_APPLY_UPDATE:\
             [jobmodels.EventType.SYSTEM_SHUTDOWN,
              jobmodels.EventType.SYSTEM_SHUTDOWN_IMMEDIATE],
-        jobmodels.EventType.SYSTEM_APPLY_UPDATE_IMMEDIATE:\
-            [jobmodels.EventType.SYSTEM_SHUTDOWN,
-             jobmodels.EventType.SYSTEM_SHUTDOWN_IMMEDIATE],
         jobmodels.EventType.SYSTEM_SHUTDOWN:\
             [jobmodels.EventType.SYSTEM_APPLY_UPDATE,
-             jobmodels.EventType.SYSTEM_APPLY_UPDATE_IMMEDIATE,
-             jobmodels.EventType.SYSTEM_CONFIG_IMMEDIATE],
+            jobmodels.EventType.SYSTEM_CONFIGURE],
         jobmodels.EventType.SYSTEM_SHUTDOWN_IMMEDIATE:\
             [jobmodels.EventType.SYSTEM_APPLY_UPDATE,
-             jobmodels.EventType.SYSTEM_APPLY_UPDATE_IMMEDIATE,
-             jobmodels.EventType.SYSTEM_CONFIG_IMMEDIATE],
-        jobmodels.EventType.SYSTEM_CONFIG_IMMEDIATE:\
+             jobmodels.EventType.SYSTEM_CONFIGURE],
+        jobmodels.EventType.SYSTEM_CONFIGURE:\
             [jobmodels.EventType.SYSTEM_SHUTDOWN,
              jobmodels.EventType.SYSTEM_SHUTDOWN_IMMEDIATE],
     }
@@ -1756,7 +1751,7 @@ class SystemManager(basemanager.BaseManager):
         # this function only used by windows layered image pathway
         # given update events are in new actions framework now
         return self._scheduleEvent(system,
-            jobmodels.EventType.SYSTEM_APPLY_UPDATE_IMMEDIATE,
+            jobmodels.EventType.SYSTEM_APPLY_UPDATE,
             eventData=sources)
 
     @exposed
