@@ -3838,43 +3838,6 @@ class SystemEventProcessing2TestCase(XMLTestCase, test_utils.RepeaterMixIn):
         self.mgr.sysMgr.dispatchSystemEvent(event)
 
 
-    def testDispatchSystemEvent(self):
-        event = self._setupEvent(jobmodels.EventType.SYSTEM_UPDATE)
-        self._dispatchEvent(event)
-        transaction.commit()
-
-        cimParams = self.mgr.repeaterMgr.repeaterClient.CimParams
-        resLoc = self.mgr.repeaterMgr.repeaterClient.ResultsLocation
-
-        self.failUnlessEqual(self.mgr.repeaterMgr.repeaterClient.getCallList(),
-            [
-                ('poll_cim',
-                    (
-                        cimParams(
-                            host='superduper.com',
-                            port=12345,
-                            eventUuid='really-unique-uuid-001',
-                            clientKey=testsxml.pkey_pem,
-                            clientCert=testsxml.x509_pem,
-                            requiredNetwork=None,
-                            targetName=None,
-                            targetType=None,
-                            instanceId=None,
-                            launchWaitTime=1200),
-                    ),
-                    dict(zone='Local rBuilder',
-                        uuid='really-unique-uuid-002',
-                        resultsLocation=resLoc(
-                            path='/api/v1/inventory/systems/%s' % self.system2.pk,
-                            port=80),
-                    ),
-                ),
-            ])
-        system = self.mgr.getSystem(self.system2.system_id)
-        jobs = system.jobs.all()
-        self.failUnlessEqual([ x.job_uuid for x in jobs ],
-            ['really-unique-uuid-002'])
-
     def testDispatchActivateSystemEvent(self):
         event = self._setupEvent(jobmodels.EventType.SYSTEM_REGISTRATION)
         self._dispatchEvent(event)
@@ -3968,48 +3931,6 @@ class SystemEventProcessing2TestCase(XMLTestCase, test_utils.RepeaterMixIn):
         self.failUnlessEqual(
             [ x.event_uuid for x in models.SystemJob.objects.filter(system__system_id = system.system_id) ],
             [ 'really-unique-uuid-001' ])
-
-    def testDispatchUpdateWmi(self):
-        wmiInt = models.Cache.get(models.ManagementInterface,
-            name=models.ManagementInterface.WMI)
-        self.system2.management_interface = wmiInt
-        credDict = dict(username="JeanValjean", password="Javert",
-            domain="Paris")
-        self.system2.credentials = self.mgr.sysMgr.marshalCredentials(
-            credDict)
-        toInstall = [ "group-foo=/a@b:c/1-2-3", "group-bar=/a@b:c//d@e:f/1-2.1-2.2" ]
-        event = self._setupEvent(jobmodels.EventType.SYSTEM_UPDATE,
-            eventData=toInstall)
-
-        self._dispatchEvent(event)
-        transaction.commit()
-
-        repClient = self.mgr.repeaterMgr.repeaterClient
-        wmiParams = repClient.WmiParams
-        resLoc = repClient.ResultsLocation
-
-        wmiDict = credDict.copy()
-        wmiDict.update(eventUuid='really-unique-uuid-001', host='superduper.com',
-            port=12345, requiredNetwork=None)
-
-        self.failUnlessEqual(repClient.getCallList(),
-            [
-                ('update_wmi',
-                    (
-                        wmiParams(**wmiDict),
-                    ),
-                    dict(
-                        resultsLocation=resLoc(
-                            path='/api/v1/inventory/systems/4',
-                            port=80),
-                        zone='Local rBuilder',
-                        sources=[
-                            'group-foo=/a@b:c/1-2-3',
-                            'group-bar=/a@b:c//d@e:f/1-2.1-2.2',
-                        ],
-                        uuid='really-unique-uuid-002'),
-                ),
-            ])
 
     def testInterfaceDetection(self):
         self._mockUuid()
