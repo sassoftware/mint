@@ -7,6 +7,7 @@
 BAD_REQUEST = 400
 NOT_FOUND = 404
 INTERNAL_SERVER_ERROR = 500
+CONFLICT = 409
 
 class RbuilderError(Exception):
     "An unknown error has occured."
@@ -67,6 +68,10 @@ class MirrorNotReachable(RbuilderError):
 class ResourceNotFound(RbuilderError):
     "The requested resource was not found."
     status = NOT_FOUND
+
+class Conflict(RbuilderError):
+    "The resource conflicts with an existing one"
+    status = CONFLICT
 
 class InvalidData(RbuilderError):
     "The data supplied with the resource was invalid"
