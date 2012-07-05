@@ -208,7 +208,6 @@ class SurveyTests(XMLTestCase):
         # data posted is not required for input (like hrefs)
         sys = self._makeSystem()
         url = "inventory/systems/%s/surveys" % sys.pk
-        # print testsxml.survey_input_xml
 
         response = self._post(url,
             data = testsxml.survey_input_xml,
@@ -3948,6 +3947,7 @@ class SystemEventProcessing2TestCase(XMLTestCase, test_utils.RepeaterMixIn):
 
         response = self._put(url, data=xml,
             username="admin", password="password")
+        print response.content
         self.failUnlessEqual(response.status_code, 200)
 
         # We can't mock something past django's handler, so there's no
