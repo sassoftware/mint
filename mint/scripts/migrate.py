@@ -5007,7 +5007,7 @@ class MigrateTo_62(SchemaMigration):
  
 class MigrateTo_63(SchemaMigration):
     '''Goad'''
-    Version = (63, 12)
+    Version = (63, 13)
 
     def migrate(self):
         ''' add initial tables for config environments'''
@@ -5175,6 +5175,18 @@ class MigrateTo_63(SchemaMigration):
             DELETE FROM jobs_job WHERE job_type_id = (SELECT job_type_id FROM jobs_job_type 
                 WHERE name = 'system poll')
         """)
+        return True
+
+    def migrate13(self):
+        createTable2(self.db, 'jobs_created_preview', """
+            id          %(PRIMARYKEY)s,
+            job_id      integer NOT NULL
+                        REFERENCES jobs_job(job_id)
+                        ON DELETE CASCADE,
+            preview     text, 
+        """)
+        self.db.createIndex('jobs_created_preview', 'jobs_created_preview_jid_sid_uq',
+            'job_id, survey_id', unique=True)
         return True
 
 #### SCHEMA MIGRATIONS END HERE #############################################
