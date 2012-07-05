@@ -1,5 +1,5 @@
 #
-# Copyright (c) 2011 rPath, Inc.
+# Copyright (c) rPath, Inc.
 #
 
 from mod_python import apache
@@ -79,17 +79,14 @@ def _getRestDb(context):
 
 def _addCapsuleConfig(context, conaryReposCfg, repName):
     restDb = _getRestDb(context)
-    # XXX we should speed these up by combining into a single call
-    contentInjectionServers = restDb.capsuleMgr.getContentInjectionServers()
-    if not contentInjectionServers or repName not in contentInjectionServers:
-        return
-    indexer = restDb.capsuleMgr.getIndexer()
-    if not indexer.hasSources():
+    indexer = restDb.capsuleMgr.getIndexer(repName)
+    if not indexer or not indexer.hasSources():
         return
     conaryReposCfg.excludeCapsuleContents = True
     # These settings are only used by the filter
-    conaryReposCfg.injectCapsuleContentServers = contentInjectionServers
+    conaryReposCfg.injectCapsuleContentServers = [repName]
     conaryReposCfg.capsuleServerUrl = "direct"
+    restDb.capsuleIndexer = indexer
     return restDb
 
 
@@ -172,7 +169,7 @@ class CapsuleFilterMixIn(object):
             self._restDb = restDb
 
         def downloadCapsule(self, capsuleKey, sha1sum):
-            indexer = self._restDb.capsuleMgr.getIndexer()
+            indexer = self._restDb.capsuleIndexer
             msgTmpl = ("Error downloading capsule. "
                 "Upstream error message: (fault code: %s) %s")
             try:
@@ -211,7 +208,7 @@ class CapsuleFilterMixIn(object):
                     fileSha1sums.append(fileSha1sum)
                     fileIndexes.append(n)
             if fileKeys:
-                indexer = self._restDb.capsuleMgr.getIndexer()
+                indexer = self._restDb.capsuleIndexer
                 msgTmpl = ("Error downloading file from capsule. "
                     "Upstream error message: (fault code: %s) %s")
                 try:
