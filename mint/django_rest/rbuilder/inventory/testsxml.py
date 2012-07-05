@@ -1952,10 +1952,10 @@ system_event_immediate_poll_post_xml = """\
 </system_event>
 """
 
-system_event_immediate_update_post_xml = """\
+system_event_update_post_xml = """\
 <?xml version="1.0" encoding="UTF-8"?>
 <system_event>
-    <event_type id="http://testserver/api/v1/inventory/event_types/5"/>
+    <event_type id="http://testserver/api/v1/inventory/event_types/26"/>
     <system id="http://testserver/api/v1/inventory/systems/2"/>
     <priority>50</priority>
 </system_event>
