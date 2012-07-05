@@ -1,10 +1,7 @@
 #
-# Copyright (c) 2009 rPath, Inc.
-#
-# All Rights Reserved
+# Copyright (c) rPath, Inc.
 #
 
-from conary import versions
 from conary.lib import util
 from mint.lib import mintutils
 from mint.rest.db import manager
@@ -30,7 +27,7 @@ class CapsuleManager(manager.Manager):
     SourcesRHN = set(['RHN', 'satellite', 'proxy'])
     SourcesYum = set(['nu', 'SMT', 'repomd'])
 
-    def getIndexerConfig(self):
+    def getIndexerConfig(self, fqdn=None):
         capsuleDataDir = util.joinPaths(self.cfg.dataPath, 'capsules')
         cfg = rpath_capsule_indexer.IndexerConfig()
         dbKind = self.db.db.db.kind
@@ -55,7 +52,15 @@ class CapsuleManager(manager.Manager):
         # Walk the content sources configured in mint
         # We will then walk the data sources defined in each platform, since
         # that is where the the data sources are defined.
-        contentSources = self.db.platformMgr.getSources().instance or []
+        if fqdn:
+            contentSources = self.db.platformMgr.getSourcesByRepository(fqdn)
+        else:
+            contentSources = self.db.platformMgr.getSources(fqdn)
+        contentSources = contentSources.instance or []
+        if fqdn and not contentSources:
+            # No injection for this repository
+            return None
+
         yumSourcesMap = {}
         for idx, contentSource in enumerate(contentSources):
             if not contentSource.enabled:
@@ -96,10 +101,9 @@ class CapsuleManager(manager.Manager):
         rhnChannels = OrderedDict()
         yumSourceConfig = {}
         # List configured platforms
-        for platform in self.db.platformMgr.platforms.list().platforms:
-            if not platform.enabled:
-                continue
-            platDef = self.db.platformMgr.platformCache.get(platform.label)
+        for platformLabel in (
+                self.db.platformMgr.getContentEnabledPlatformLabels(fqdn)):
+            platDef = self.db.platformMgr.platformCache.get(platformLabel)
             if platDef is None:
                 continue
             contentProvider = platDef.getContentProvider()
@@ -152,21 +156,10 @@ class CapsuleManager(manager.Manager):
                 return True
         return False
 
-    def getContentInjectionServers(self):
-        # Grab labels for enabled platforms that have capsule content
-        labels = self.db.platformMgr.getContentEnabledPlatformLabels()
-        ret = []
-        for label in labels:
-            try:
-                label = versions.Label(label).getHost()
-            except versions.ParseError:
-                # Oh well, try to use it as is
-                pass
-            ret.append(label)
-        return ret
-
-    def getIndexer(self):
-        cfg = self.getIndexerConfig()
+    def getIndexer(self, fqdn=None):
+        cfg = self.getIndexerConfig(fqdn)
+        if cfg is None:
+            return None
         Indexer.SourceChannels.LOGFILE_PATH = util.joinPaths(self.cfg.logPath,
             'capsule-indexer.log')
         dbs_conn = self.db.db.db
