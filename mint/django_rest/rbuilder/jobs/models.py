@@ -27,6 +27,16 @@ class JobSystemArtifact(modellib.XObjModel):
     job         = XObjHidden(modellib.ForeignKey('Job', db_column='job_id', related_name='created_systems'))
     system      = modellib.ForeignKey('inventory.System', db_column='system_id', related_name='+')
 
+class JobPreviewArtifact(modellib.XObjModel):
+    class Meta:
+        db_table = 'jobs_created_preview'
+        unique_together = [ 'job', 'preview' ]
+    _xobj = xobj.XObjMetadata(tag = 'preview_artifact')
+    
+    creation_id = XObjHidden(models.AutoField(primary_key=True))
+    job         = XObjHidden(modellib.ForeignKey('Job', db_column='job_id', related_name='created_previews'))
+    preview     = models.TextField()
+
 class JobImageArtifact(modellib.XObjModel):
     class Meta:
         db_table = 'jobs_created_image'

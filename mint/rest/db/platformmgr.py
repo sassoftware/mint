@@ -1363,7 +1363,7 @@ class PlatformManager(manager.Manager):
             WHERE pl.enabled != 0
             """
         if reposHost:
-            cu.execute(sql + "AND Projects.fqdn = ?", (reposHost,))
+            cu.execute(sql + "AND p.fqdn = ?", (reposHost,))
         else:
             cu.execute(sql)
         return [ x[0] for x in cu ]
