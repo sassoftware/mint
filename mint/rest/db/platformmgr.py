@@ -1356,11 +1356,11 @@ class PlatformManager(manager.Manager):
     def getContentEnabledPlatformLabels(self, reposHost=None):
         cu = self.db.cursor()
         sql = """
-            SELECT DISTINCT Platforms.label
-            FROM Platforms
-            JOIN Projects USING ( projectId )
-            JOIN PlatformsContentSourceTypes USING ( platformId )
-            WHERE Platforms.enabled != 0
+            SELECT DISTINCT pl.label
+            FROM Platforms pl
+            JOIN Projects p ON p.projectId = pl.projectId
+            JOIN PlatformsContentSourceTypes pcst ON pcst.platformId = pl.platformId
+            WHERE pl.enabled != 0
             """
         if reposHost:
             cu.execute(sql + "AND Projects.fqdn = ?", (reposHost,))
