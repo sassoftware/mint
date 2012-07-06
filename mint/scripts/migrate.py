@@ -5179,14 +5179,16 @@ class MigrateTo_63(SchemaMigration):
 
     def migrate13(self):
         createTable2(self.db, 'jobs_created_preview', """
-            id          %(PRIMARYKEY)s,
+            creation_id %(PRIMARYKEY)s,
             job_id      integer NOT NULL
                         REFERENCES jobs_job(job_id)
                         ON DELETE CASCADE,
             preview     text, 
+            system_id   INTEGER NOT NULL
+                        REFERENCES inventory_system ON DELETE SET NULL,
         """)
-        self.db.createIndex('jobs_created_preview', 'jobs_created_preview_jid_sid_uq',
-            'job_id, survey_id', unique=True)
+        self.db.createIndex('jobs_created_preview', 'jobs_created_preview_jid_sid',
+            'job_id, system_id')
         return True
 
 #### SCHEMA MIGRATIONS END HERE #############################################

@@ -1568,12 +1568,13 @@ def _createInventorySchema(db, cfg):
         (
             creation_id     %(PRIMARYKEY)s,
             job_id          INTEGER NOT NULL
-                REFERENCES jobs_job ON DELETE CASCADE,
-            preview         text 
+                            REFERENCES jobs_job ON DELETE CASCADE,
+            preview         text,
+            system_id       INTEGER NOT NULL
+                            REFERENCES inventory_system ON DELETE SET NULL
         ) %(TABLEOPTS)s""")
-
-    db.createIndex('jobs_created_preview', 'jobs_created_preview_jid_sid_uq',
-            'job_id, system_id', unique=True)
+    db.createIndex('jobs_created_preview', 'jobs_created_preview_jid_sid',
+            'job_id, system_id')
 
     createTable(db, 'jobs_created_image', """
         CREATE TABLE jobs_created_image
