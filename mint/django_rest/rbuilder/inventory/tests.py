@@ -386,14 +386,7 @@ install needle
         # check 404 support for survey not existing, second delete
         response = self._delete(url, username='admin', password='password')
         self.assertEqual(response.status_code, 404)
-        # verify that deleting a survey which is marked non-removable fails
-        smodel = survey_models.Survey.objects.get(uuid='504')
-        smodel.removable = False
-        smodel.save()
-        url = "inventory/surveys/%s" % '504'
-        response = self._delete(url, username='admin', password='password')
-        self.assertEqual(response.status_code, 403)
-        
+
         # delete the system, make sure nothing explodes
         response = self._delete("inventory/systems/%s" % sys.pk,
             username='admin', password='password')

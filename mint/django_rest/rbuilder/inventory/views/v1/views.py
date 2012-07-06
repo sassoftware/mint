@@ -845,8 +845,6 @@ class SurveyService(BaseInventoryService):
         (found, deleted) = self.mgr.deleteSurvey(uuid)
         if not found:
             return HttpResponseNotFound()
-        elif not deleted:
-            raise PermissionDenied(msg="Survey is not marked removable")
         else:
             return HttpResponse(status=204)    
 

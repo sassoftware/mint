@@ -25,35 +25,32 @@ class SurveyManager(basemanager.BaseManager):
         return survey_models.Survey.objects.get(uuid=uuid)
 
     @exposed
-    def deleteSurvey(self, uuid, force=False):
+    def deleteSurvey(self, uuid):
         ''' 
         Deletes a survey.  Returns a tuple of (found, deleted) as
-        the survey either might not exist or it might not be marked
-        removable.  See views.py usage.
+        the survey either might not exist.  Previously allowed locking
+        surveys down to be not removable, but that is now just a UI hint.
         '''
 
         surveys = survey_models.Survey.objects.filter(uuid=uuid)
         if len(surveys) == 0:
             return (False, False)
         survey = surveys[0]
-        if not survey.removable and not force:
-            return (True, False)
-        else:
-            matching_diffs = survey_models.SurveyDiff.objects.filter(
-                left_survey = survey
-            ).distinct() | survey_models.SurveyDiff.objects.filter(
-                right_survey = survey
-            ).distinct()
-            matching_diffs.delete()
-            sys = survey.system
-            survey.delete()
-            # point latest_survey to new latest
-            # if there are other surveys
-            surveys = survey_models.Survey.objects.filter(system=sys)
-            surveys.order_by('-created_date')
-            if len(surveys) > 0:
-                inventory_models.System.objects.filter(pk=sys.pk).update(latest_survey=surveys[0])
-            return (True, True)
+        matching_diffs = survey_models.SurveyDiff.objects.filter(
+            left_survey = survey
+        ).distinct() | survey_models.SurveyDiff.objects.filter(
+            right_survey = survey
+        ).distinct()
+        matching_diffs.delete()
+        sys = survey.system
+        survey.delete()
+        # point latest_survey to new latest
+        # if there are other surveys
+        surveys = survey_models.Survey.objects.filter(system=sys)
+        surveys.order_by('-created_date')
+        if len(surveys) > 0:
+            inventory_models.System.objects.filter(pk=sys.pk).update(latest_survey=surveys[0])
+        return (True, True)
 
     @exposed
     def getSurveysForSystem(self, system_id):

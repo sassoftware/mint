@@ -265,7 +265,7 @@ class SystemManager(basemanager.BaseManager):
             system=system
         )
         for survey in matching_surveys:
-            self.mgr.deleteSurvey(survey.uuid, force=True)
+            self.mgr.deleteSurvey(survey.uuid)
 
         system.delete()
 
