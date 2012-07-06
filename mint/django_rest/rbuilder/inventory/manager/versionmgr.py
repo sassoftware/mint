@@ -124,29 +124,28 @@ class VersionManager(basemanager.BaseManager):
         system.project_branch = majorVersion
         system.project = project
 
-    @exposed
-    def updateInstalledSoftware(self, system_id, new_versions):
-        system = models.System.objects.get(pk=system_id)
-        troveSpecs = ["%s=%s[%s]" % x.getNVF()
-            for x in new_versions ]
-        if troveSpecs:
-            msg = "Initiating software update to: %s" % (
-                ', '.join(troveSpecs), )
-        else:
-            msg = "Initiating software update, deleting everything"
-        self.mgr.log_system(system, msg)
-        oldInstalled, newInstalled, toAdd = \
-            self._diffVersions(system, new_versions)
-        sources = []
-        for nvf in newInstalled:
-            n, v, f = nvf
-            sources.append("%s=%s[%s]" % (n, str(v), self._flavor(f)))
-        self.mgr.scheduleSystemApplyUpdateEvent(system, sources)
+    #@exposed
+    #def updateInstalledSoftware(self, system_id, new_versions):
+    #    system = models.System.objects.get(pk=system_id)
+    #    troveSpecs = ["%s=%s[%s]" % x.getNVF()
+    #        for x in new_versions ]
+    #    if troveSpecs:
+    #        msg = "Initiating software update to: %s" % (
+    #            ', '.join(troveSpecs), )
+    #    else:
+    #        msg = "Initiating software update, deleting everything"
+    #    self.mgr.log_system(system, msg)
+    #    oldInstalled, newInstalled, toAdd = \
+    #        self._diffVersions(system, new_versions)
+    #    sources = []
+    #    for nvf in newInstalled:
+    #        n, v, f = nvf
+    #        sources.append("%s=%s[%s]" % (n, str(v), self._flavor(f)))
+    #    self.mgr.scheduleSystemApplyUpdateEvent(system, sources)
 
     def trove_from_nvf(self, nvf):
         n, v, f = conaryclient.cmdline.parseTroveSpec(nvf)
         f = self._flavor(f)
-
         thawed_v = versions.ThawVersion(v)
         version = models.Version()
         version.fromConaryVersion(thawed_v)

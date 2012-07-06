@@ -882,8 +882,14 @@ class System(modellib.XObjIdModel):
         # Disable config action if no config is saved, or if the system
         # is based on a system model
         if self.latest_survey is not None:
-            configureEnabled = bool(self.configuration is not None and
+            configureEnabled = bool((self.configuration is not None) and \
                 not self.latest_survey.has_system_model)
+        else:
+            # no survey taken, legacy system in inventory, don't disable
+            # the action because it would be confusing, next registration will
+            # survey it.
+            configureEnabled = bool(self.configuration is not None)
+
         capture_enabled = False
         if self.target_id:
             drvCls = targetmodels.Target.getDriverClassForTargetId(

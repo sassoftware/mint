@@ -27,6 +27,16 @@ class JobSystemArtifact(modellib.XObjModel):
     job         = XObjHidden(modellib.ForeignKey('Job', db_column='job_id', related_name='created_systems'))
     system      = modellib.ForeignKey('inventory.System', db_column='system_id', related_name='+')
 
+class JobPreviewArtifact(modellib.XObjModel):
+    class Meta:
+        db_table = 'jobs_created_preview'
+        unique_together = [ 'job', 'preview' ]
+    _xobj = xobj.XObjMetadata(tag = 'preview_artifact')
+    
+    creation_id = XObjHidden(models.AutoField(primary_key=True))
+    job         = XObjHidden(modellib.ForeignKey('Job', db_column='job_id', related_name='created_previews'))
+    preview     = models.TextField()
+
 class JobImageArtifact(modellib.XObjModel):
     class Meta:
         db_table = 'jobs_created_image'
@@ -306,14 +316,7 @@ class EventType(modellib.XObjIdModel):
     ON_DEMAND_BASE = 100
     
     # resource type == system #########################################
-    SYSTEM_POLL = "system poll"
-    SYSTEM_POLL_PRIORITY = 50
-    SYSTEM_POLL_DESC = "System synchronization"
-    
-    SYSTEM_POLL_IMMEDIATE = "immediate system poll"
-    SYSTEM_POLL_IMMEDIATE_PRIORITY = ON_DEMAND_BASE + 5
-    SYSTEM_POLL_IMMEDIATE_DESC = "On-demand system synchronization"
-    
+
     SYSTEM_REGISTRATION = "system registration"
     SYSTEM_REGISTRATION_PRIORITY = 70
     SYSTEM_REGISTRATION_DESC = "System registration"
@@ -321,16 +324,6 @@ class EventType(modellib.XObjIdModel):
     SYSTEM_REGISTRATION_IMMEDIATE = "immediate system registration"
     SYSTEM_REGISTRATION_IMMEDIATE_PRIORITY = ON_DEMAND_BASE + 10
     SYSTEM_REGISTRATION_IMMEDIATE_DESC = "On-demand system registration"
-
-
-    SYSTEM_APPLY_UPDATE = 'system apply update'
-    SYSTEM_APPLY_UPDATE_PRIORITY = 50
-    SYSTEM_APPLY_UPDATE_DESCRIPTION = 'Scheduled system update'
-        
-    SYSTEM_APPLY_UPDATE_IMMEDIATE = 'immediate system apply update'
-    SYSTEM_APPLY_UPDATE_IMMEDIATE_PRIORITY = ON_DEMAND_BASE + 5
-    SYSTEM_APPLY_UPDATE_IMMEDIATE_DESCRIPTION = \
-        'System update'
 
     SYSTEM_SHUTDOWN = 'system shutdown'
     SYSTEM_SHUTDOWN_PRIORITY = 50
@@ -406,11 +399,6 @@ class EventType(modellib.XObjIdModel):
     job_type_id = D(models.AutoField(primary_key=True), "the database id of the  type")
     EVENT_TYPES = (
         (SYSTEM_REGISTRATION, SYSTEM_REGISTRATION_DESC),
-        (SYSTEM_POLL_IMMEDIATE, SYSTEM_POLL_IMMEDIATE_DESC),
-        (SYSTEM_POLL, SYSTEM_POLL_DESC),
-        (SYSTEM_APPLY_UPDATE, SYSTEM_APPLY_UPDATE_DESCRIPTION),
-        (SYSTEM_APPLY_UPDATE_IMMEDIATE,
-         SYSTEM_APPLY_UPDATE_IMMEDIATE_DESCRIPTION),
         (SYSTEM_SHUTDOWN,
          SYSTEM_SHUTDOWN_DESCRIPTION),
         (SYSTEM_SHUTDOWN_IMMEDIATE,
@@ -421,8 +409,6 @@ class EventType(modellib.XObjIdModel):
          SYSTEM_DETECT_MANAGEMENT_INTERFACE_DESC),
         (SYSTEM_DETECT_MANAGEMENT_INTERFACE_IMMEDIATE,
          SYSTEM_DETECT_MANAGEMENT_INTERFACE_IMMEDIATE_DESC),
-        (SYSTEM_CONFIG_IMMEDIATE,
-         SYSTEM_CONFIG_IMMEDIATE_DESCRIPTION),
         (SYSTEM_ASSIMILATE, SYSTEM_ASSIMILATE_DESCRIPTION),
         (SYSTEM_CAPTURE, SYSTEM_CAPTURE_DESCRIPTION),
         (SYSTEM_UPDATE, SYSTEM_UPDATE_DESCRIPTION),
@@ -447,13 +433,9 @@ class EventType(modellib.XObjIdModel):
     def requiresManagementInterface(self):
         if self.name in \
             [self.SYSTEM_REGISTRATION,
-             self.SYSTEM_POLL_IMMEDIATE,
-             self.SYSTEM_POLL,
-             self.SYSTEM_APPLY_UPDATE,
-             self.SYSTEM_APPLY_UPDATE_IMMEDIATE,
              self.SYSTEM_SHUTDOWN,
              self.SYSTEM_SHUTDOWN_IMMEDIATE,
-             self.SYSTEM_CONFIG_IMMEDIATE,
+             self.SYSTEM_UPDATE,
              self.SYSTEM_ASSIMILATE,
              self.SYSTEM_CONFIGURE
             ]:

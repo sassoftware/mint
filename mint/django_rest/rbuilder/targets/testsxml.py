@@ -112,12 +112,12 @@ jobs_by_target_type_GET = \
     <time_updated>2011-09-21T17:32:00.921176+00:00</time_updated>
     <status_code>100</status_code>
     <job_state id="http://testserver/api/v1/job_states/2">Running</job_state>
-    <job_type id="http://testserver/api/v1/inventory/event_types/2">system poll</job_type>
+    <job_type id="http://testserver/api/v1/inventory/event_types/26">system update software</job_type>
     <time_created>2011-09-21T17:32:00.921114+00:00</time_created>
     <systems/>
     <status_text>Initializing</status_text>
     <job_uuid>rmakeuuid002</job_uuid>
-    <job_description>System synchronization</job_description>
+    <job_description>Update your system</job_description>
   </job>
   <job id="http://testserver/api/v1/jobs/rmakeuuid001">
     <created_resources/>
@@ -144,12 +144,12 @@ jobs_by_target_GET = \
     <time_updated>2011-09-21T17:31:12.245350+00:00</time_updated>
     <status_code>100</status_code>
     <job_state id="http://testserver/api/v1/job_states/2">Running</job_state>
-    <job_type id="http://testserver/api/v1/inventory/event_types/2">system poll</job_type>
+    <job_type id="http://testserver/api/v1/inventory/event_types/26">system update software</job_type>
     <time_created>2011-09-21T17:31:12.245290+00:00</time_created>
     <systems/>
     <status_text>Initializing</status_text>
     <job_uuid>rmakeuuid002</job_uuid>
-    <job_description>System synchronization</job_description>
+    <job_description>Update your system</job_description>
   </job>
   <job id="http://testserver/api/v1/jobs/rmakeuuid001">
     <created_resources/>
@@ -190,12 +190,12 @@ all_target_jobs_GET = \
     <time_updated>2011-09-22T14:47:51.275877+00:00</time_updated>
     <status_code>100</status_code>
     <job_state id="http://testserver/api/v1/job_states/2">Running</job_state>
-    <job_type id="http://testserver/api/v1/inventory/event_types/2">system poll</job_type>
+    <job_type id="http://testserver/api/v1/inventory/event_types/26">system update software</job_type>
     <time_created>2011-09-22T14:47:51.275815+00:00</time_created>
     <systems/>
     <status_text>Initializing</status_text>
     <job_uuid>rmakeuuid002</job_uuid>
-    <job_description>System synchronization</job_description>
+    <job_description>Update your system</job_description>
   </job>
   <job id="http://testserver/api/v1/jobs/rmakeuuid002">
     <created_resources/>
@@ -203,12 +203,12 @@ all_target_jobs_GET = \
     <time_updated>2011-09-22T14:47:51.275877+00:00</time_updated>
     <status_code>100</status_code>
     <job_state id="http://testserver/api/v1/job_states/2">Running</job_state>
-    <job_type id="http://testserver/api/v1/inventory/event_types/2">system poll</job_type>
+    <job_type id="http://testserver/api/v1/inventory/event_types/26">system update software</job_type>
     <time_created>2011-09-22T14:47:51.275815+00:00</time_created>
     <systems/>
     <status_text>Initializing</status_text>
     <job_uuid>rmakeuuid002</job_uuid>
-    <job_description>System synchronization</job_description>
+    <job_description>Update your system</job_description>
   </job>
   <job id="http://testserver/api/v1/jobs/rmakeuuid002">
     <created_resources/>
@@ -216,12 +216,12 @@ all_target_jobs_GET = \
     <time_updated>2011-09-22T14:47:51.275877+00:00</time_updated>
     <status_code>100</status_code>
     <job_state id="http://testserver/api/v1/job_states/2">Running</job_state>
-    <job_type id="http://testserver/api/v1/inventory/event_types/2">system poll</job_type>
+    <job_type id="http://testserver/api/v1/inventory/event_types/26">system update software</job_type>
     <time_created>2011-09-22T14:47:51.275815+00:00</time_created>
     <systems/>
     <status_text>Initializing</status_text>
     <job_uuid>rmakeuuid002</job_uuid>
-    <job_description>System synchronization</job_description>
+    <job_description>Update your system</job_description>
   </job>
   <job id="http://testserver/api/v1/jobs/rmakeuuid001">
     <created_resources/>
@@ -268,12 +268,12 @@ all_target_jobs_GET = \
     <time_updated>2011-09-22T14:47:51.275877+00:00</time_updated>
     <status_code>100</status_code>
     <job_state id="http://testserver/api/v1/job_states/2">Running</job_state>
-    <job_type id="http://testserver/api/v1/inventory/event_types/2">system poll</job_type>
+    <job_type id="http://testserver/api/v1/inventory/event_types/26">system update software</job_type>
     <time_created>2011-09-22T14:47:51.275815+00:00</time_created>
     <systems/>
     <status_text>Initializing</status_text>
     <job_uuid>rmakeuuid002</job_uuid>
-    <job_description>System synchronization</job_description>
+    <job_description>Update your system</job_description>
   </job>
   <job id="http://testserver/api/v1/jobs/rmakeuuid002">
     <created_resources/>
@@ -281,12 +281,12 @@ all_target_jobs_GET = \
     <time_updated>2011-09-22T14:47:51.275877+00:00</time_updated>
     <status_code>100</status_code>
     <job_state id="http://testserver/api/v1/job_states/2">Running</job_state>
-    <job_type id="http://testserver/api/v1/inventory/event_types/2">system poll</job_type>
+    <job_type id="http://testserver/api/v1/inventory/event_types/26">system update software</job_type>
     <time_created>2011-09-22T14:47:51.275815+00:00</time_created>
     <systems/>
     <status_text>Initializing</status_text>
     <job_uuid>rmakeuuid002</job_uuid>
-    <job_description>System synchronization</job_description>
+    <job_description>Update your system</job_description>
   </job>
   <job id="http://testserver/api/v1/jobs/rmakeuuid002">
     <created_resources/>
@@ -294,12 +294,12 @@ all_target_jobs_GET = \
     <time_updated>2011-09-22T14:47:51.275877+00:00</time_updated>
     <status_code>100</status_code>
     <job_state id="http://testserver/api/v1/job_states/2">Running</job_state>
-    <job_type id="http://testserver/api/v1/inventory/event_types/2">system poll</job_type>
+    <job_type id="http://testserver/api/v1/inventory/event_types/26">system update software</job_type>
     <time_created>2011-09-22T14:47:51.275815+00:00</time_created>
     <systems/>
     <status_text>Initializing</status_text>
     <job_uuid>rmakeuuid002</job_uuid>
-    <job_description>System synchronization</job_description>
+    <job_description>Update your system</job_description>
   </job>
 </jobs>
 """.strip()

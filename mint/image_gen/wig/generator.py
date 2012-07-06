@@ -72,7 +72,6 @@ class ImageGenerator(object):
             if extraProgress:
                 progress += ';' + extraProgress
             text += ' {%s}' % (progress,)
-        log.info("Status: %s %s", code, text)
         self.parent.sendStatus(code, text)
 
     def setConfiguration(self):

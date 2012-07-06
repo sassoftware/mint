@@ -1925,10 +1925,10 @@ system_event_xml = """\
 <?xml version="1.0" encoding="UTF-8"?>
 <system_event id="http://testserver/api/v1/inventory/system_events/1">
     <event_data/>
-    <event_type id="http://testserver/api/v1/inventory/event_types/2"/>
+    <event_type id="http://testserver/api/v1/inventory/event_types/26"/>
     <system id="http://testserver/api/v1/inventory/systems/3"/>
     <time_created>%s</time_created>
-    <priority>50</priority>
+    <priority>105</priority>
     <time_enabled>%s</time_enabled>
     <system_event_id>1</system_event_id>
 </system_event>
@@ -1937,8 +1937,8 @@ system_event_xml = """\
 system_event_post_xml = """\
 <?xml version="1.0" encoding="UTF-8"?>
 <system_event>
-    <event_type id="http://testserver/api/v1/inventory/event_types/2"/>
-    <system id="http://testserver/api/v1/inventory/systems/2"/>
+    <event_type id="http://testserver/api/v1/inventory/event_types/26"/>
+    <system id="http://testserver/api/v1/inventory/systems/26"/>
     <priority>50</priority>
 </system_event>
 """
@@ -1952,10 +1952,10 @@ system_event_immediate_poll_post_xml = """\
 </system_event>
 """
 
-system_event_immediate_update_post_xml = """\
+system_event_update_post_xml = """\
 <?xml version="1.0" encoding="UTF-8"?>
 <system_event>
-    <event_type id="http://testserver/api/v1/inventory/event_types/5"/>
+    <event_type id="http://testserver/api/v1/inventory/event_types/26"/>
     <system id="http://testserver/api/v1/inventory/systems/2"/>
     <priority>50</priority>
 </system_event>
@@ -1992,14 +1992,6 @@ system_log_xml = """\
       <entry>System registered via rpath-tools</entry>
       <system_log id="http://testserver/api/v1/inventory/systems/3/system_log"/>
       <system_log_entry_id>2</system_log_entry_id>
-    </system_log_entry>
-    <system_log_entry>
-      <system_log id="http://testserver/api/v1/inventory/systems/3/system_log"/>
-      <system_log_entry_id>3</system_log_entry_id>
-    </system_log_entry>
-    <system_log_entry>
-      <system_log id="http://testserver/api/v1/inventory/systems/3/system_log"/>
-      <system_log_entry_id>4</system_log_entry_id>
     </system_log_entry>
   </system_log_entries>
   <system_log_id>1</system_log_id>

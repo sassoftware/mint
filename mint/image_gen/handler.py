@@ -5,6 +5,7 @@
 import logging
 import tempfile
 from conary.lib import timeutil
+from conary.lib import util as cny_util
 from lxml import builder
 from lxml import etree
 from rmake3.core import handler as rmk_handler
@@ -24,23 +25,10 @@ class BaseImageHandler(rmk_handler.JobHandler):
 
     imageBase = None
     imageToken = None
-    log = None
     slotType = 'image_gen'
 
     def _mirrorTaskStatus(self, task):
         """Copy task status to job status when task is updated."""
-        if task.status.final:
-            level = logging.ERROR if task.status.failed else logging.INFO
-            detail = '\n' + task.status.detail if task.status.detail else ''
-            self.log.log(level, "Job result: %s %s%s", task.status.code,
-                    task.status.text, detail)
-            path = self.dispatcher.getLogPath(task.job_uuid, task.task_uuid)
-            try:
-                fobj = open(path, 'rb')
-            except IOError, err:
-                pass
-            else:
-                self._reformatLog(fobj)
         self.setStatus(task.status)
 
     def setStatus(self, codeOrStatus, text=None, detail=None):
@@ -55,6 +43,8 @@ class BaseImageHandler(rmk_handler.JobHandler):
         if self.log:
             self.log.info("Status: %s %s%s", status.code, status.text,
                     ('\n' + status.detail if status.detail else ''))
+        if status.final:
+            self._uploadLogs()
         # Always send status to mint before updating rMake's own database. This
         # prevents a race with job-cleanup, which will shoot any builds which
         # rMake thinks are done but mint thinks are still running.
@@ -105,13 +95,21 @@ class BaseImageHandler(rmk_handler.JobHandler):
         d.addCallbacks(cb_result, eb_unwrap_error)
         d.addErrback(logger.logFailure, "Error uploading job status:")
 
-    def _reformatLog(self, inFile):
+    def _uploadLogs(self):
+        logFiles = []
+        for path in self.dispatcher.getAllLogPaths(self.job.job_uuid):
+            try:
+                logFiles.append(cny_util.ExtendedFile(path, 'rb', False))
+            except IOError:
+                pass
+        if not logFiles:
+            return
         outFile = tempfile.NamedTemporaryFile()
         formatter = timeutil.ISOFormatter(
                 '[%(asctime)s] [%(levelname)s] (%(name)s) %(message)s')
         handler = logging.StreamHandler(outFile)
         handler.setFormatter(formatter)
-        parser = structlog.StructuredLogParser(inFile, asRecords=True)
+        parser = structlog.mergeLogs(logFiles, sort=True)
         for record in parser:
             handler.emit(record)
         handler.close()
