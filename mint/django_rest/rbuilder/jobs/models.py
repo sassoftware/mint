@@ -35,7 +35,8 @@ class JobPreviewArtifact(modellib.XObjModel):
     
     creation_id = XObjHidden(models.AutoField(primary_key=True))
     job         = XObjHidden(modellib.ForeignKey('Job', db_column='job_id', related_name='created_previews'))
-    preview     = models.TextField()
+    preview     = modellib.XMLField()
+    system      = modellib.ForeignKey('inventory.System', db_column='system_id', related_name='+')
 
 class JobImageArtifact(modellib.XObjModel):
     class Meta:

@@ -727,7 +727,6 @@ class System(modellib.XObjIdModel):
         latest = self.latest_survey
         if latest is None:
             return True
-        out_of_date = False
         compliance_summary = xobj.parse(latest.compliance_summary)
         sw_compliance = getattr(compliance_summary, 'software', None)
         if sw_compliance is None:

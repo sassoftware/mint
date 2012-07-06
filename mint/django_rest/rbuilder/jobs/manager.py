@@ -12,6 +12,7 @@ import sys
 import time
 import urlparse
 import weakref
+import exceptions
 from django.core import urlresolvers
 from django.db import IntegrityError, transaction
 
@@ -299,6 +300,8 @@ class ResultsProcessingMixIn(object):
                 pass
             elif tag == 'survey':
                 models.JobSurveyArtifact.objects.create(job=job, survey=resource)
+            elif tag == 'preview_artifact':
+                pass # Saved earlier in callchain because it's special.
             else:
                 raise Exception("internal error, don't know how to save resource: %s" % tag)
         return resources[0]
@@ -1043,7 +1046,7 @@ class JobHandlerRegistry(HandlerRegistry):
     class SystemUpdate(DescriptorJobHandler):
         __slots__ = [ 'system', 'eventUuid', 'specs', 'dryRun']
         jobType = models.EventType.SYSTEM_UPDATE
-        ResultsTag = 'update'
+        ResultsTag = 'preview'
 
         def getDescriptor(self, descriptorId):
             match = self.splitResourceId(descriptorId)
@@ -1091,11 +1094,15 @@ class JobHandlerRegistry(HandlerRegistry):
         def getRelatedThroughModel(self, descriptor):
             return inventorymodels.SystemJob
 
-        def postCreateJob(self, job):
-            self.mgr.mgr.systemUpdateSystem(self.system, job)
-
         def postprocessRelatedResource(self, job, model):
             model.event_uuid = str(self.eventUuid)
+
+        def _processJobResults(self, job):
+            xml = xobj.toxml(job.results.preview)
+            system = inventorymodels.System.objects.get(system_id=job.systems.all()[0].system_id)
+            preview = models.JobPreviewArtifact(job=job, preview=xml, system=system)
+            preview.save()
+            return preview
 
     class SystemConfigure(DescriptorJobHandler):
         # TODO: reduce boilerplate by making a system job handler base class
