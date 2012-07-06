@@ -1057,8 +1057,8 @@ class JobHandlerRegistry(HandlerRegistry):
             cimInterface = self.mgr.mgr.cimManagementInterface()
             wmiInterface = self.mgr.mgr.wmiManagementInterface()
             methodMap = {
-                cimInterface.management_interface_id : cli.survey_scan_cim,
-                wmiInterface.management_interface_id : cli.survey_scan_wmi,
+                cimInterface.management_interface_id : cli.update_cim,
+                wmiInterface.management_interface_id : cli.update_wmi,
             }
             method = methodMap.get(self.system.management_interface_id)
             if method is None:
@@ -1074,7 +1074,12 @@ class JobHandlerRegistry(HandlerRegistry):
             params = self.mgr.mgr.sysMgr._computeDispatcherMethodParams(cli,
                 self.system, destination, eventUuid=str(self.eventUuid),
                 requiredNetwork=None)
-            return (params, ), dict(zone=self.system.managing_zone.name)
+
+            test = job.descriptor_data.dry_run[0].upper() == 'T'
+            extra = dict(sources = [str(job.descriptor_data.trove_label)],
+                            test = test,
+                            zone = self.system.managing_zone.name)
+            return (params, ), extra
 
         def getRelatedThroughModel(self, descriptor):
             return inventorymodels.SystemJob
