@@ -568,6 +568,7 @@ class ApplicationOctetStreamHandlerMiddleware(BaseMiddleware):
 
         request._post = QueryDict('')
         request._files = MultiValueDict()
+        request._raw_post_data = None
 
         # HTTP spec says that Content-Length >= 0 is valid
         if content_length == 0:

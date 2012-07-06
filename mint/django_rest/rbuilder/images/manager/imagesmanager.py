@@ -8,14 +8,12 @@ import sys
 import errno
 import logging
 import os
-import os.path
-import hashlib
-import json
 from django.core import urlresolvers
 from mcp import client as mcp_client
 from mint import buildtypes
 from mint import jobstatus
 from mint import urltypes
+from mint.django_rest.helpers import MultiRequestUploadHandler
 from mint.django_rest.rbuilder.jobs import models as jobsmodels
 from mint.django_rest.rbuilder.images import models
 from mint.django_rest.rbuilder.projects import models as projmodels
@@ -37,6 +35,10 @@ autocommit = basemanager.autocommit
 
 class ImagesManager(basemanager.BaseManager):
  
+    @exposed
+    def getImageById(self, image_id):
+        return models.Image.objects.get(pk=image_id)
+
     @exposed
     def getImageBuild(self, image_id):
         return models.Image.objects.get(pk=image_id)
@@ -149,7 +151,7 @@ class ImagesManager(basemanager.BaseManager):
         models.AuthTokens.objects.filter(image=image).delete()
         self._handlePostImageBuildOperations(image)
         # tag image, etc.
-        self.finishImageBuild(image.image_id)
+        self.finishImageBuild(image)
 
     class UploadCallback(object):
         def __init__(self, manager, imageId):
@@ -531,7 +533,8 @@ class ImagesManager(basemanager.BaseManager):
 
     @exposed
     def getImageUploadStatus(self, image_id, basename):
-        filename = self._getUploadFilename(image_id, basename) # FIXME pass an image instead of image_id
+        image = self.getImageById(image_id)
+        filename = self._getUploadFilename(image, basename)
         handler = MultiRequestUploadHandler()
         status = handler.getStatus(filename)
         return status
@@ -539,100 +542,37 @@ class ImagesManager(basemanager.BaseManager):
     @exposed
     def processImageUpload(self, image_id, uploaded_file, basename, chunk_id,
                            num_chunks, checksum):
-        # FIXME don't process the upload if the image.status is "complete"
-        filename = self._getUploadFilename(image_id, basename) # FIXME pass an image instead of image_id
-        handler = MultiRequestUploadHandler()
-        upload = handler.handle(uploaded_file, filename, chunk_id, num_chunks, checksum)
-        # if upload.isComplete():
-            # do useful stuff
-            # pass
+        image = self.getImageById(image_id)
+        if image.status == jobstatus.WAITING:
+            filename = self._getUploadFilename(image, basename)
+            handler = MultiRequestUploadHandler()
+            upload = handler.handle(uploaded_file, filename, chunk_id, num_chunks, checksum)
+            if upload.isComplete():
+                self._finishImageUpload(image, upload)
+        return image
 
-    def _getUploadFilename(self, image_id, basename):
-        # FIXME put project.short_name in path as is done w/ finished-images
+    def _finishImageUpload(self, image, upload):
+        image.status = jobstatus.FINISHED
+        hostname = self._getImageHostname(image.image_id)
+        filePath = self._getImageFilePath(hostname, image.image_id,
+                                          upload.filename, create=True)
+        os.rename(upload.filename, filePath)
+        try:
+            imageid_dir = os.path.dirname(upload.filename)
+            os.rmdir(imageid_dir)
+            hostname_dir = os.path.dirname(imageid_dir)
+            os.rmdir(hostname_dir)
+        except:
+            pass
+
+        self.createImageBuildFile(image, url=filePath,
+                                  urlType=urltypes.LOCAL,
+                                  title=os.path.basename(filePath),
+                                  size=os.path.getsize(filePath))
+        self._postFinished(image)
+
+    def _getUploadFilename(self, image, basename):
         return os.path.join(self.cfg.imagesUploadPath,
+                            image.project.short_name,
+                            str(image.image_id),
                             os.path.basename(basename))
-
-
-class MultiRequestUploadHandler(object):
-    def handle(self, uploaded_file, filename, chunk_id, num_chunks, checksum):
-        if uploaded_file is None:
-            raise Exception("No file uploaded")
-
-        if chunk_id is None:
-            chunk_id = 0
-        chunk_id = int(chunk_id)
-
-        if num_chunks is None:
-            num_chunks = 1
-        num_chunks = int(num_chunks)
-
-        complete_file = filename
-        incomplete_file = filename + '.incomplete'
-        status_file = filename + '.status'
-
-        if checksum is not None:
-            md5_verify = hashlib.md5()
-            for buf in uploaded_file.chunks():
-                md5_verify.update(buf)
-
-            if md5_verify.hexdigest() != checksum:
-                raise Exception("Checksum error")
-
-        # If this is the first chunk, start from clean slate
-        if chunk_id == 0:
-            try:
-                os.remove(complete_file)
-            except:
-                pass
-            try:
-                os.remove(status_file)
-            except:
-                pass
-            dir = os.path.dirname(filename)
-            if not os.path.isdir(dir):
-                os.path.makedirs(dir)
-
-        # Append uploaded bytes to .incomplete file
-        mode = 'wb' if chunk_id == 0 else 'ab'
-        with open(incomplete_file, mode) as f:
-            for buf in uploaded_file.chunks():
-                f.write(buf)
-        uploaded_file.close() # delete the tmp file
-
-        # If this is the last chunk, finish up
-        if chunk_id == num_chunks - 1:
-            os.rename(incomplete_file, complete_file)
-            try:
-                os.remove(status_file)
-            except:
-                pass # it's not a big deal if we can't delete the status file
-            current_file = complete_file
-
-        else:
-            status = {'status': 'uploading',
-                      'chunk': chunk_id,
-                      'chunks': num_chunks}
-
-            with open(status_file, 'w') as f:
-                json.dump(status, f)
-            current_file = incomplete_file
-
-        return MultiRequestUploadFile(current_file)
-
-    def getStatus(self, filename):
-        '''Returns a dict containing status info, used primarily by Plupload'''
-        status = {'status': 'unknown'}
-        if os.path.isfile(filename):
-            status = {'status': 'finished'}
-        elif os.path.isfile(filename + '.status'):
-            with open(filename + '.status', 'r') as f:
-                status = json.load(f)
-        return status
-
-
-class MultiRequestUploadFile(object):
-    def __init__(self, filename):
-        self.filename = filename
-
-    def isComplete(self):
-        return not self.filename.endswith('.incomplete')
