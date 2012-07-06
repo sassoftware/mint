@@ -151,7 +151,7 @@ class ImagesManager(basemanager.BaseManager):
         models.AuthTokens.objects.filter(image=image).delete()
         self._handlePostImageBuildOperations(image)
         # tag image, etc.
-        self.finishImageBuild(image.image_id)
+        self.finishImageBuild(image)
 
     class UploadCallback(object):
         def __init__(self, manager, imageId):
@@ -542,17 +542,36 @@ class ImagesManager(basemanager.BaseManager):
     @exposed
     def processImageUpload(self, image_id, uploaded_file, basename, chunk_id,
                            num_chunks, checksum):
-        # FIXME don't process the upload if the image.status is "complete"
         image = self.getImageById(image_id)
-        filename = self._getUploadFilename(image, basename)
-        handler = MultiRequestUploadHandler()
-        upload = handler.handle(uploaded_file, filename, chunk_id, num_chunks, checksum)
-        # if upload.isComplete():
-            # do useful stuff
-            # pass
+        if image.status == jobstatus.WAITING:
+            filename = self._getUploadFilename(image, basename)
+            handler = MultiRequestUploadHandler()
+            upload = handler.handle(uploaded_file, filename, chunk_id, num_chunks, checksum)
+            if upload.isComplete():
+                self._finishImageUpload(image, upload)
+        return image
+
+    def _finishImageUpload(self, image, upload):
+        image.status = jobstatus.FINISHED
+        hostname = self._getImageHostname(image.image_id)
+        filePath = self._getImageFilePath(hostname, image.image_id,
+                                          upload.filename, create=True)
+        os.rename(upload.filename, filePath)
+        try:
+            imageid_dir = os.path.dirname(upload.filename)
+            os.rmdir(imageid_dir)
+            hostname_dir = os.path.dirname(imageid_dir)
+            os.rmdir(hostname_dir)
+        except:
+            pass
+
+        self.createImageBuildFile(image, url=filePath,
+                                  urlType=urltypes.LOCAL,
+                                  title=os.path.basename(filePath),
+                                  size=os.path.getsize(filePath))
+        self._postFinished(image)
 
     def _getUploadFilename(self, image, basename):
-        # FIXME put project.short_name in path as is done w/ finished-images
         return os.path.join(self.cfg.imagesUploadPath,
                             image.project.short_name,
                             str(image.image_id),
