@@ -40,42 +40,6 @@ class VersionManager(basemanager.BaseManager):
     def delete_installed_software(self, system):
         system.installed_software.all().delete()
 
-    def _diffVersions(self, system, new_versions):
-        oldInstalled = dict((x.getNVF(), x)
-            for x in system.installed_software.all())
-
-        # Do the delta
-        toAdd = []
-        newInstalled = []
-        for new_version in new_versions:
-            if isinstance(new_version, basestring):
-                trove = self.trove_from_nvf(new_version)
-            else:
-                trove = new_version
-            nvf = trove.getNVF()
-            isInst = oldInstalled.pop(nvf, None)
-            if isInst is None:
-                toAdd.append(self._trove(trove))
-            newInstalled.append(nvf)
-
-        return oldInstalled, newInstalled, toAdd
-
-    @exposed
-    def setInstalledSoftware(self, system, new_versions):
-        oldInstalled, newInstalled, toAdd = \
-            self._diffVersions(system, new_versions)
-        for trove in oldInstalled.itervalues():
-            system.installed_software.remove(trove)
-        for trove in toAdd:
-            system.installed_software.add(trove)
-            try:
-                self.setStage(system, trove)
-            except ProductVersionNotFound:
-                system.project = None
-        for trove in system.installed_software.all():
-            self.set_available_updates(trove, force=True)
-        system.save()
-
     @classmethod
     def _flavor(cls, flavor):
         if flavor is None:
@@ -123,25 +87,6 @@ class VersionManager(basemanager.BaseManager):
         system.project_branch_stage = stage
         system.project_branch = majorVersion
         system.project = project
-
-    #@exposed
-    #def updateInstalledSoftware(self, system_id, new_versions):
-    #    system = models.System.objects.get(pk=system_id)
-    #    troveSpecs = ["%s=%s[%s]" % x.getNVF()
-    #        for x in new_versions ]
-    #    if troveSpecs:
-    #        msg = "Initiating software update to: %s" % (
-    #            ', '.join(troveSpecs), )
-    #    else:
-    #        msg = "Initiating software update, deleting everything"
-    #    self.mgr.log_system(system, msg)
-    #    oldInstalled, newInstalled, toAdd = \
-    #        self._diffVersions(system, new_versions)
-    #    sources = []
-    #    for nvf in newInstalled:
-    #        n, v, f = nvf
-    #        sources.append("%s=%s[%s]" % (n, str(v), self._flavor(f)))
-    #    self.mgr.scheduleSystemApplyUpdateEvent(system, sources)
 
     def trove_from_nvf(self, nvf):
         n, v, f = conaryclient.cmdline.parseTroveSpec(nvf)

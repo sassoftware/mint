@@ -604,6 +604,7 @@ class InventorySystemsInstalledSoftwareService(BaseInventoryService):
     @return_xml
     def rest_GET(self, request, system_id):
         system = self.mgr.getSystem(system_id)
+        # FIXME: self.mgr.getInstalledSoftware(system_id) ?
         installedSoftware = models.InstalledSoftware()
         installedSoftware.trove = system.installed_software.all()
         return installedSoftware
