@@ -724,11 +724,18 @@ class System(modellib.XObjIdModel):
         self.save()
 
     def isOutOfDate(self):
+        latest = self.latest_survey
+        if latest is None:
+            return True
         out_of_date = False
-        for trove in self.installed_software.all():
-            if trove.out_of_date:
-                return True
-        return False
+        compliance_summary = xobj.parse(latest.compliance_summary)
+        sw_compliance = getattr(compliance_summary, 'software', None)
+        if sw_compliance is None:
+            return True
+        compliance_bit = getattr(sw_compliance, 'compliant', None)
+        if compliance_bit is None or compliance_bit == '':
+            return True
+        return (compliance_bit.lower() == 'false')
 
 
     def serialize(self, request=None):

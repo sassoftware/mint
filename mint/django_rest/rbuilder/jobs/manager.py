@@ -266,7 +266,10 @@ class ResultsProcessingMixIn(object):
             transaction.savepoint_rollback(tsid)
             log.error("Error processing job %s %s",
                 job.job_uuid, e)
-            handled = self.handleError(job, e)
+            try:
+                handled = self.handleError(job, e)
+            except exceptions.AttributeError:
+                handled = False
             if handled:
                 return None
             e_type, e_value, e_tb = sys.exc_info()
@@ -1001,6 +1004,10 @@ class JobHandlerRegistry(HandlerRegistry):
             survey = self.mgr.mgr.addSurveyForSystemFromXobj(
                 self.system.system_id, job.results.surveys)
             return survey
+
+        def handleError(self, job, exc):
+            job.status_text = "Unknown exception, please check logs"
+            job.status_code = 500
 
     class ImageBuildCancellation(DescriptorJobHandler):
         __slots__ = [ 'image', ]
