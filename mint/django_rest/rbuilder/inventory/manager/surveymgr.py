@@ -197,12 +197,16 @@ class SurveyManager(basemanager.BaseManager):
         survey.save()
         return survey
 
-    def _toxml(self, what):
+    def _toxml(self, what, tag_override=None):
+        ''' wrapper around xobj xml conversions '''
         if what is None:
             return ''
         else:
             try:
-                return xobj.toxml(what)
+                if tag_override is None:
+                    return xobj.toxml(what)
+                else:
+                    return xobj.toxml(what, tag_override)
             except TypeError:
                 # catch attempt to serialize an empty tag like <foo/>
                 return ''
@@ -428,7 +432,7 @@ class SurveyManager(basemanager.BaseManager):
             created_date  = created_date,
             modified_date = created_date,
             config_properties     = self._toxml(xconfig_properties),
-            desired_properties    = self._toxml(xdesired_properties),
+            desired_properties    = self._toxml(xdesired_properties, 'desired_properties'),
             observed_properties   = self._toxml(xobserved_properties),
             discovered_properties = self._toxml(xdiscovered_properties),
             validation_report     = self._toxml(xvalidation_report),
@@ -439,6 +443,7 @@ class SurveyManager(basemanager.BaseManager):
             system_model_modified_date = systemModelModifiedDate,
             has_system_model = hasSystemModel,
         )
+
         survey.save()
         
         self._saveShreddedValues(survey, xconfig_properties, survey_models.CONFIG_VALUES)
