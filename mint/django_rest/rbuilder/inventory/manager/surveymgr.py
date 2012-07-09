@@ -226,6 +226,8 @@ class SurveyManager(basemanager.BaseManager):
     def _saveShreddedValues(self, survey, xvalues, valueType):
         ''' store config elements in the database so they are searchable, even if they are not surfaced this way '''
 
+        if xvalues is None:
+            return
         results = []
         self.xwalk(xvalues, "", results)
         for x in results:
