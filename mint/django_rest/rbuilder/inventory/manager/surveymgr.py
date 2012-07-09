@@ -227,7 +227,7 @@ class SurveyManager(basemanager.BaseManager):
         ''' store config elements in the database so they are searchable, even if they are not surfaced this way '''
 
         if xvalues is None:
-            return
+            raise Exception("missing required survey element")
         results = []
         self.xwalk(xvalues, "", results)
         for x in results:
