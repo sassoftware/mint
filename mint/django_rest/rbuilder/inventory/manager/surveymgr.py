@@ -388,7 +388,8 @@ class SurveyManager(basemanager.BaseManager):
         # where the XML tag must be changed for the shredder
         xdesired_properties    = None
         if system.configuration is not None:
-            xdesired_properties = xobj.parse(system.configuration)
+            config = self.mgr.getSystemConfiguration(system_id)
+            xdesired_properties = xobj.parse(config.to_xml())
         if xdesired_properties is None or getattr(xdesired_properties, 'configuration', None) is None:
             xdesired_properties = xobj.parse('<configuration/>')
         xdesired_properties.configuration._xobj.tag = 'desired_properties'
