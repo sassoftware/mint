@@ -31,7 +31,7 @@ class JobPreviewArtifact(modellib.XObjModel):
     class Meta:
         db_table = 'jobs_created_preview'
         unique_together = [ 'job', 'preview' ]
-    _xobj = xobj.XObjMetadata(tag = 'preview_artifact')
+    _xobj = xobj.XObjMetadata(tag = 'preview')
     
     creation_id = XObjHidden(models.AutoField(primary_key=True))
     job         = XObjHidden(modellib.ForeignKey('Job', db_column='job_id', related_name='created_previews'))
@@ -197,7 +197,8 @@ class Job(modellib.XObjIdModel):
     def setValuesFromRmake(self):
         runningState = modellib.Cache.get(JobState,
             name=JobState.RUNNING)
-        if self.job_state_id != runningState.pk:
+        # XXX Hard-coding the job_type_id sucks. Where should this be referenced from?
+        if self.job_state_id != runningState.pk or self.job_type_id == 26:
             return
         # This job is still running, we need to poll rmake to get its
         # status
@@ -243,6 +244,7 @@ class Job(modellib.XObjIdModel):
         resources = []
         resources.extend([ x.image for x in self.created_images.all() ])
         resources.extend([ x.system for x in self.created_systems.all() ])
+        resources.extend([ x for x in self.created_previews.all() ])
         resources2 = []
         for r in resources:
             res = modellib.HrefFieldFromModel(r, tag=r._xobj.tag)

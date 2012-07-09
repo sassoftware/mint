@@ -300,7 +300,7 @@ class ResultsProcessingMixIn(object):
                 pass
             elif tag == 'survey':
                 models.JobSurveyArtifact.objects.create(job=job, survey=resource)
-            elif tag == 'preview_artifact':
+            elif tag == 'preview':
                 pass # Saved earlier in callchain because it's special.
             else:
                 raise Exception("internal error, don't know how to save resource: %s" % tag)
