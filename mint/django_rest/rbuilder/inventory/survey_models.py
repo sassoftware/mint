@@ -103,7 +103,7 @@ class Survey(modellib.XObjIdModel):
     description   = models.TextField()
     created_date  = modellib.DateTimeUtcField(auto_now_add=True)
     modified_date = modellib.DateTimeUtcField(auto_now_add=True)
-    removable     = models.BooleanField(default=False)
+    removable     = models.BooleanField(default=True)
     created_by    = modellib.ForeignKey(usermodels.User, null=True, db_column='created_by', related_name='+', on_delete=models.SET_NULL) 
     modified_by   = modellib.ForeignKey(usermodels.User, null=True, db_column='modified_by', related_name='+', on_delete=models.SET_NULL) 
     system        = modellib.DeferredForeignKey('inventory.System', related_name='surveys', db_column='system_id')
