@@ -383,7 +383,16 @@ class SurveyManager(basemanager.BaseManager):
             raise Exception("version 7.0 or later style surveys are required")
 
         xconfig_properties     = getattr(xsurvey, 'config_properties', None)
-        xdesired_properties    = getattr(xsurvey, 'desired_properties', None)
+
+        # desired_properties comes in from the server configuration, not the survey
+        # where the XML tag must be changed for the shredder
+        xdesired_properties    = None
+        if system.configuration is not None:
+            xdesired_properties = xobj.parse(system.configuration)
+        if xdesired_properties is None or getattr(xdesired_properties, 'configuration', None) is None:
+            xdesired_properties = xobj.parse('<configuration/>')
+        xdesired_properties.configuration._xobj.tag = 'desired_properties'
+
         xobserved_properties   = getattr(xsurvey, 'observed_properties', None)
         xdiscovered_properties = getattr(xsurvey, 'discovered_properties', None)
         xvalidation_report     = getattr(xsurvey, 'validation_report', None)

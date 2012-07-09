@@ -3949,7 +3949,7 @@ surveys_xml = """
   <survey id="http://testserver/api/v1/inventory/surveys/00000000-0000-4000-0000-000000000000">
     <description/>
     <name>x</name>
-    <removable>False</removable>
+    <removable>True</removable>
     <uuid>00000000-0000-4000-0000-000000000000</uuid>
   </survey>
 </surveys>
@@ -4397,7 +4397,6 @@ survey_input_xml_template = """
 <survey>
     %(system_model)s
     %(config_properties)s
-    %(desired_properties)s
     %(observed_properties)s
     %(discovered_properties)s
     %(validation_report)s
@@ -4471,7 +4470,6 @@ survey_input_xml_template = """
 survey_input_xml = (survey_input_xml_template % dict(
     system_model=system_model,
     config_properties=config_properties, 
-    desired_properties=desired_properties, 
     observed_properties=observed_properties, 
     discovered_properties=discovered_properties, 
     validation_report=validation_report,
@@ -4481,7 +4479,6 @@ survey_input_xml = (survey_input_xml_template % dict(
 survey_input_xml_alt = (survey_input_xml_template % dict(
     system_model="",
     config_properties=config_properties_alt, 
-    desired_properties=desired_properties_alt, 
     observed_properties=observed_properties_alt, 
     discovered_properties=discovered_properties_alt, 
     validation_report=validation_report_alt,
