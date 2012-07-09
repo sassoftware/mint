@@ -3966,7 +3966,7 @@ survey_output_xml = """
     <config_compliance/>
     <comment></comment>
     <preview/>
-    <removable>False</removable>
+    <removable>True</removable>
     <modified_date>2012-02-03T16:28:08.137616+00:00</modified_date>
     <modified_by id="http://testserver/api/v1/users/2">
       <user_name>JeanValjean1</user_name>
