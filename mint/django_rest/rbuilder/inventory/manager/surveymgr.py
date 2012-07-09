@@ -380,13 +380,13 @@ class SurveyManager(basemanager.BaseManager):
         if getattr(xsurvey, 'values', None):
             raise Exception("version 7.0 or later style surveys are required")
 
-        xconfig_properties     = self._toxml(getattr(xsurvey, 'config_properties', None))
-        xdesired_properties    = self._toxml(getattr(xsurvey, 'desired_properties', None))
-        xobserved_properties   = self._toxml(getattr(xsurvey, 'observed_properties', None))
-        xdiscovered_properties = self._toxml(getattr(xsurvey, 'discovered_properties', None))
-        xvalidation_report     = self._toxml(getattr(xsurvey, 'validation_report', None))
-        xpreview               = self._toxml(getattr(xsurvey, 'preview', None))
-        xconfig_descriptor     = self._toxml(getattr(xsurvey, 'config_properties_descriptor', None))
+        xconfig_properties     = getattr(xsurvey, 'config_properties', None)
+        xdesired_properties    = getattr(xsurvey, 'desired_properties', None)
+        xobserved_properties   = getattr(xsurvey, 'observed_properties', None)
+        xdiscovered_properties = getattr(xsurvey, 'discovered_properties', None)
+        xvalidation_report     = getattr(xsurvey, 'validation_report', None)
+        xpreview               = getattr(xsurvey, 'preview', None)
+        xconfig_descriptor     = getattr(xsurvey, 'config_properties_descriptor', None)
         systemModel            = getattr(xsurvey, 'system_model', None)
         if systemModel is None:
             systemModelContents = None
@@ -415,12 +415,12 @@ class SurveyManager(basemanager.BaseManager):
             system        = system,
             created_date  = created_date,
             modified_date = created_date,
-            config_properties     = xconfig_properties,
-            desired_properties    = xdesired_properties,
-            observed_properties   = xobserved_properties,
-            discovered_properties = xdiscovered_properties,
-            validation_report     = xvalidation_report,
-            preview               = xpreview,
+            config_properties     = self._toxml(xconfig_properties),
+            desired_properties    = self._toxml(xdesired_properties),
+            observed_properties   = self._toxml(xobserved_properties),
+            discovered_properties = self._toxml(xdiscovered_properties),
+            validation_report     = self._toxml(xvalidation_report),
+            preview               = self._toxml(xpreview),
             config_properties_descriptor = xconfig_descriptor,
             desired_properties_descriptor = desired_descriptor,
             system_model = systemModelContents,
@@ -429,11 +429,11 @@ class SurveyManager(basemanager.BaseManager):
         )
         survey.save()
         
-        self._saveShreddedValues(survey, xsurvey.config_properties, survey_models.CONFIG_VALUES)
-        self._saveShreddedValues(survey, xsurvey.desired_properties, survey_models.DESIRED_VALUES)
-        self._saveShreddedValues(survey, xsurvey.observed_properties, survey_models.OBSERVED_VALUES)
-        self._saveShreddedValues(survey, xsurvey.discovered_properties, survey_models.DISCOVERED_VALUES)
-        self._saveShreddedValues(survey, xsurvey.validation_report, survey_models.VALIDATOR_VALUES)        
+        self._saveShreddedValues(survey, xconfig_properties, survey_models.CONFIG_VALUES)
+        self._saveShreddedValues(survey, xdesired_properties, survey_models.DESIRED_VALUES)
+        self._saveShreddedValues(survey, xobserved_properties, survey_models.OBSERVED_VALUES)
+        self._saveShreddedValues(survey, xdiscovered_properties, survey_models.DISCOVERED_VALUES)
+        self._saveShreddedValues(survey, xvalidation_report, survey_models.VALIDATOR_VALUES)        
 
         # update system.latest_survey if and only if it's
         # the latest
@@ -610,9 +610,9 @@ class SurveyManager(basemanager.BaseManager):
             tag.save()
         
         (has_errors, updates_pending, compliance_xml) = self._computeCompliance(survey, 
-            discovered_properties=getattr(xsurvey, 'discovered_properties', None),
-            validation_report=getattr(xsurvey, 'validation_report', None),
-            preview=getattr(xsurvey, 'preview', None)
+            discovered_properties=xdiscovered_properties,
+            validation_report=xvalidation_report,
+            preview=xpreview,
         )
         survey.has_errors = has_errors
         survey.updates_pending = updates_pending
