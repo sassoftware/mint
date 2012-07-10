@@ -17,7 +17,6 @@ SYSTEM_TEMPLATE = """
         <field to="users.users" name="launching_user" rel="ManyToOneRel"><None></None></field>
         <field to="inventory.systemstate" name="current_state" rel="ManyToOneRel">1</field>
         <field to="inventory.zone" name="managing_zone" rel="ManyToOneRel">1</field>
-        <field to="inventory.trove" name="installed_software" rel="ManyToManyRel"></field>
         <field to="inventory.systemtype" name="system_type" rel="ManyToOneRel">1</field>
     </object>
 

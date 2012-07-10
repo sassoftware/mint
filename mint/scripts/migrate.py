@@ -1601,35 +1601,6 @@ class MigrateTo_50(SchemaMigration):
             db.tables['inventory_trove_available_updates'] = []
             changed = True
 
-        if 'inventory_trove' not in db.tables:
-            cu.execute("""
-                CREATE TABLE "inventory_trove" (
-                    "trove_id" %(PRIMARYKEY)s,
-                    "name" TEXT NOT NULL,
-                    "version_id" INTEGER NOT NULL
-                        REFERENCES "inventory_version" ("version_id")
-                        ON DELETE CASCADE,
-                    "flavor" text NOT NULL,
-                    "is_top_level" BOOL NOT NULL,
-                    "last_available_update_refresh" timestamp with time zone,
-                    UNIQUE ("name", "version_id", "flavor")
-                )""" % db.keywords)
-
-            db.tables['inventory_trove'] = []
-            changed = True
-
-        if 'inventory_system_installed_software' not in db.tables:
-            cu.execute("""
-                CREATE TABLE "inventory_system_installed_software" (
-                    "id" %(PRIMARYKEY)s,
-                    "system_id" INTEGER NOT NULL 
-                        REFERENCES "inventory_system" ("system_id")
-                        ON DELETE CASCADE,
-                    "trove_id" INTEGER NOT NULL
-                        REFERENCES "inventory_trove" ("trove_id"),
-                    UNIQUE ("system_id", "trove_id")
-                )"""  % db.keywords)
-
         createTable(db, """
                 CREATE TABLE TargetCredentials (
                     targetCredentialsId     %(PRIMARYKEY)s,
@@ -5007,7 +4978,7 @@ class MigrateTo_62(SchemaMigration):
  
 class MigrateTo_63(SchemaMigration):
     '''Goad'''
-    Version = (63, 13)
+    Version = (63, 14)
 
     def migrate(self):
         ''' add initial tables for config environments'''
@@ -5190,6 +5161,17 @@ class MigrateTo_63(SchemaMigration):
         self.db.createIndex('jobs_created_preview', 'jobs_created_preview_jid_sid',
             'job_id, system_id')
         return True
+
+    def migrate14(self):
+        ''' installed software is now just a record of the last update action '''
+        cu = self.db.cursor()
+        cu.execute("DROP TABLE inventory_system_installed_software")
+        cu.execute("ALTER TABLE inventory_system ADD COLUMN last_update_trove_spec TEXT")
+        cu.execute("""
+           UPDATE inventory_system_state SET description = 'Registered' WHERE name = 'registered'
+        """)
+        return True
+   
 
 #### SCHEMA MIGRATIONS END HERE #############################################
 

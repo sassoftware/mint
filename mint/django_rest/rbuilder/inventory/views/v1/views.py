@@ -598,17 +598,6 @@ class InventorySystemEventService(BaseInventoryService):
     def get(self, system_event_id):
         return self.mgr.getSystemEvent(system_event_id)
 
-class InventorySystemsInstalledSoftwareService(BaseInventoryService):
-    
-    @rbac(rbac_can_read_system_id)
-    @return_xml
-    def rest_GET(self, request, system_id):
-        system = self.mgr.getSystem(system_id)
-        # FIXME: self.mgr.getInstalledSoftware(system_id) ?
-        installedSoftware = models.InstalledSoftware()
-        installedSoftware.trove = system.installed_software.all()
-        return installedSoftware
-
 class InventorySystemCredentialsServices(BaseInventoryService):
 
     # TODO -- is this too permissive for reading credentials?

@@ -28,7 +28,7 @@ from conary.dbstore import sqlerrors, sqllib
 log = logging.getLogger(__name__)
 
 # database schema major version
-RBUILDER_DB_VERSION = sqllib.DBversion(63, 13)
+RBUILDER_DB_VERSION = sqllib.DBversion(63, 14)
 
 def _createTrigger(db, table, column="changed"):
     retInsert = db.createTrigger(table, column, "INSERT")
@@ -1263,7 +1263,8 @@ def _createInventorySchema(db, cfg):
                 "configuration_set" BOOLEAN NOT NULL
                     DEFAULT FALSE,
                 "configuration_applied" BOOLEAN NOT NULL
-                    DEFAULT FALSE
+                    DEFAULT FALSE,
+                "last_update_trove_spec" TEXT
             ) %(TABLEOPTS)s""" % db.keywords)
         db.tables['inventory_system'] = []
         db.createIndex("inventory_system",
@@ -1605,6 +1606,7 @@ def _createInventorySchema(db, cfg):
             ) %(TABLEOPTS)s""" % db.keywords)
         db.tables[tableName] = []
 
+    # does any old non-django code use this?
     if 'inventory_trove_available_updates' not in db.tables:
         cu.execute("""
             CREATE TABLE "inventory_trove_available_updates" (
@@ -1633,18 +1635,6 @@ def _createInventorySchema(db, cfg):
             )""" % db.keywords)
 
         db.tables['inventory_trove'] = []
-
-    if 'inventory_system_installed_software' not in db.tables:
-        cu.execute("""
-            CREATE TABLE "inventory_system_installed_software" (
-                "id" %(PRIMARYKEY)s,
-                "system_id" INTEGER NOT NULL
-                    REFERENCES "inventory_system" ("system_id")
-                    ON DELETE CASCADE,
-                "trove_id" INTEGER NOT NULL
-                    REFERENCES "inventory_trove" ("trove_id"),
-                UNIQUE ("system_id", "trove_id")
-            )""" % db.keywords)
 
     if 'inventory_system_target_credentials' not in db.tables:
         cu.execute("""
@@ -1907,7 +1897,7 @@ def _addSystemStates(db, cfg):
         dict(name="unmanaged-credentials",
             description="Unmanaged: Invalid credentials",
             created_date=str(datetime.datetime.now(tz.tzutc()))),
-        dict(name="registered", description="Initial synchronization pending",
+        dict(name="registered", description="Registered",
             created_date=str(datetime.datetime.now(tz.tzutc()))),
         dict(name="responsive", description="Online",
             created_date=str(datetime.datetime.now(tz.tzutc()))),

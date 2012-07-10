@@ -288,9 +288,6 @@ faC7SRCZ/AwFH/wytT+JK6HNKEjLdMjoiulZ9W/GTy/9VtQDtB06
       <None/>
     </field>
     <field to="inventory.systemtype" name="system_type" rel="ManyToOneRel">1</field>
-    <field to="inventory.trove" name="installed_software" rel="ManyToManyRel">
-      <object pk="1"/>
-    </field>
     <field to="inventory.stage" name="stage" rel="ManyToOneRel">1</field>
     <field to="rbuilder.versions" name="major_version" rel="ManyToOneRel">2</field>
     <field to="rbuilder.products" name="appliance" rel="ManyToOneRel">2</field>
@@ -394,9 +391,6 @@ faC7SRCZ/AwFH/wytT+JK6HNKEjLdMjoiulZ9W/GTy/9VtQDtB06
       <None/>
     </field>
     <field to="inventory.systemtype" name="system_type" rel="ManyToOneRel">1</field>
-    <field to="inventory.trove" name="installed_software" rel="ManyToManyRel">
-      <object pk="1"/>
-    </field>
     <field to="inventory.stage" name="stage" rel="ManyToOneRel">1</field>
     <field to="rbuilder.versions" name="major_version" rel="ManyToOneRel">2</field>
     <field to="rbuilder.products" name="appliance" rel="ManyToOneRel">2</field>
@@ -500,9 +494,6 @@ faC7SRCZ/AwFH/wytT+JK6HNKEjLdMjoiulZ9W/GTy/9VtQDtB06
       <None/>
     </field>
     <field to="inventory.systemtype" name="system_type" rel="ManyToOneRel">1</field>
-    <field to="inventory.trove" name="installed_software" rel="ManyToManyRel">
-      <object pk="1"/>
-    </field>
     <field to="inventory.stage" name="stage" rel="ManyToOneRel">1</field>
     <field to="rbuilder.versions" name="major_version" rel="ManyToOneRel">2</field>
     <field to="rbuilder.products" name="appliance" rel="ManyToOneRel">2</field>
@@ -607,9 +598,6 @@ faC7SRCZ/AwFH/wytT+JK6HNKEjLdMjoiulZ9W/GTy/9VtQDtB06
       <None/>
     </field>
     <field to="inventory.systemtype" name="system_type" rel="ManyToOneRel">1</field>
-    <field to="inventory.trove" name="installed_software" rel="ManyToManyRel">
-      <object pk="1"/>
-    </field>
     <field to="inventory.stage" name="stage" rel="ManyToOneRel">2</field>
     <field to="rbuilder.versions" name="major_version" rel="ManyToOneRel">3</field>
     <field to="rbuilder.products" name="appliance" rel="ManyToOneRel">3</field>
@@ -713,9 +701,6 @@ faC7SRCZ/AwFH/wytT+JK6HNKEjLdMjoiulZ9W/GTy/9VtQDtB06
       <None/>
     </field>
     <field to="inventory.systemtype" name="system_type" rel="ManyToOneRel">1</field>
-    <field to="inventory.trove" name="installed_software" rel="ManyToManyRel">
-      <object pk="1"/>
-    </field>
     <field to="inventory.stage" name="stage" rel="ManyToOneRel">2</field>
     <field to="rbuilder.versions" name="major_version" rel="ManyToOneRel">3</field>
     <field to="rbuilder.products" name="appliance" rel="ManyToOneRel">3</field>
@@ -820,9 +805,6 @@ faC7SRCZ/AwFH/wytT+JK6HNKEjLdMjoiulZ9W/GTy/9VtQDtB06
       <None/>
     </field>
     <field to="inventory.systemtype" name="system_type" rel="ManyToOneRel">1</field>
-    <field to="inventory.trove" name="installed_software" rel="ManyToManyRel">
-      <object pk="1"/>
-    </field>
     <field to="inventory.stage" name="stage" rel="ManyToOneRel">3</field>
     <field to="rbuilder.versions" name="major_version" rel="ManyToOneRel">4</field>
     <field to="rbuilder.products" name="appliance" rel="ManyToOneRel">4</field>
@@ -926,9 +908,6 @@ faC7SRCZ/AwFH/wytT+JK6HNKEjLdMjoiulZ9W/GTy/9VtQDtB06
       <None/>
     </field>
     <field to="inventory.systemtype" name="system_type" rel="ManyToOneRel">1</field>
-    <field to="inventory.trove" name="installed_software" rel="ManyToManyRel">
-      <object pk="1"/>
-    </field>
     <field to="inventory.stage" name="stage" rel="ManyToOneRel">3</field>
     <field to="rbuilder.versions" name="major_version" rel="ManyToOneRel">4</field>
     <field to="rbuilder.products" name="appliance" rel="ManyToOneRel">4</field>
@@ -1032,9 +1011,6 @@ faC7SRCZ/AwFH/wytT+JK6HNKEjLdMjoiulZ9W/GTy/9VtQDtB06
       <None/>
     </field>
     <field to="inventory.systemtype" name="system_type" rel="ManyToOneRel">1</field>
-    <field to="inventory.trove" name="installed_software" rel="ManyToManyRel">
-      <object pk="1"/>
-    </field>
     <field to="inventory.stage" name="stage" rel="ManyToOneRel">3</field>
     <field to="rbuilder.versions" name="major_version" rel="ManyToOneRel">4</field>
     <field to="rbuilder.products" name="appliance" rel="ManyToOneRel">4</field>
