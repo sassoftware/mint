@@ -5,6 +5,8 @@
 # All rights reserved.
 #
 
+from lxml import etree
+
 from mint.django_rest.test_utils import XMLTestCase, RepeaterMixIn
 
 from mint.django_rest.rbuilder.jobs import models
@@ -379,3 +381,80 @@ class JobCreationTest(BaseJobsTest, RepeaterMixIn):
         dbsystem = system.__class__.objects.get(system_id=system.system_id)
         self.assertEquals(bool(dbsystem.has_active_jobs), False)
         self.assertEquals(bool(dbsystem.has_running_jobs), False)
+
+    def testJobSystemSoftwareUpdate(self):
+        jobType = self.mgr.sysMgr.eventType(models.EventType.SYSTEM_UPDATE)
+        system = self._saveSystem()
+        system.save()
+        url = "inventory/systems/%(systemId)s/descriptors/update" % dict(
+            systemId=system.system_id)
+        response = self._get(url,
+            username='admin', password='password')
+        self.assertEquals(response.status_code, 200)
+
+        tree = etree.fromstring(response.content)
+        nsmap = dict(dsc='http://www.rpath.com/permanent/descriptor-1.1.xsd')
+        fieldNames = tree.xpath('/dsc:descriptor/dsc:dataFields/dsc:field/dsc:name/text()',
+            namespaces=nsmap)
+        self.assertEquals(fieldNames, ['trove_label', 'dry_run', ])
+
+        jobXml = """
+<job>
+  <job_type id="http://localhost/api/v1/inventory/event_types/%(jobTypeId)s"/>
+  <descriptor id="http://testserver/api/v1/inventory/systems/%(systemId)s/descriptors/update"/>
+  <descriptor_data>
+    <trove_label>group-foo=example.com@rpath:42/1-2-3</trove_label>
+    <dry_run>true</dry_run>
+  </descriptor_data>
+</job>
+""" % dict(jobTypeId=jobType.job_type_id, systemId=system.system_id)
+
+        url = "inventory/systems/%(systemId)s/jobs" % dict(
+            systemId=system.system_id)
+        response = self._post(url, jobXml,
+            username='admin', password='password')
+        self.assertEquals(response.status_code, 200)
+        obj = xobj.parse(response.content)
+        job = obj.job
+        self.failUnlessEqual(job.descriptor.id,
+            "http://testserver/api/v1/inventory/systems/%s/descriptors/update" % system.system_id)
+
+        dbjob = models.Job.objects.get(job_uuid=job.job_uuid)
+
+        jobXml = """
+<job>
+  <job_state>Completed</job_state>
+  <status_code>200</status_code>
+  <status_text>Done</status_text>
+  <results>
+    <preview>
+      <ignore-me-1/>
+      <ignore-me-2/>
+    </preview>
+  </results>
+</job>
+"""
+
+        # Grab token
+        jobToken = dbjob.job_token
+        jobUrl = "jobs/%s" % dbjob.job_uuid
+        response = self._put(jobUrl, jobXml, jobToken=jobToken)
+        self.assertEquals(response.status_code, 200)
+        obj = xobj.parse(response.content)
+        job = obj.job
+        self.failUnlessEqual(job.job_uuid, dbjob.job_uuid)
+
+        # Make sure the job is related to the survey
+        self.failUnlessEqual(
+            [ x.preview for x in dbjob.created_previews.all() ],
+            [ "<?xml version='1.0' encoding='UTF-8'?>\n<preview>\n  <ignore-me-1/>\n  <ignore-me-2/>\n</preview>\n" ]
+        )
+
+        # Fetch the job
+        response = self._get(jobUrl)
+        self.assertEquals(response.status_code, 200)
+
+        tree = etree.fromstring(response.content)
+        resources = tree.xpath('/job/created_resources')
+        self.assertXMLEquals(etree.tostring(resources[0]),
+            '<preview><ignore-me-1/><ignore-me-2/></preview>')

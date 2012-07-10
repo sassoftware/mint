@@ -1085,8 +1085,9 @@ class JobHandlerRegistry(HandlerRegistry):
                 self.system, destination, eventUuid=str(self.eventUuid),
                 requiredNetwork=None)
 
-            test = job.descriptor_data.dry_run[0].upper() == 'T'
-            extra = dict(sources = [str(job.descriptor_data.trove_label)],
+            topLevelGroup = str(self.descriptorData.getField('trove_label'))
+            test = self.descriptorData.getField('dry_run')
+            extra = dict(sources = [ topLevelGroup ],
                             test = test,
                             zone = self.system.managing_zone.name)
             return (params, ), extra

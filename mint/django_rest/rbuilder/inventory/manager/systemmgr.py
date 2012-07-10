@@ -79,7 +79,24 @@ update_descriptor = """<descriptor>
       <desc>Update your system</desc>
     </descriptions>
   </metadata>
-  <dataFields/>
+  <dataFields>
+    <field>
+      <name>trove_label</name>
+      <descriptions>
+        <desc>Group</desc>
+      </descriptions>
+      <type>str</type>
+      <required>true</required>
+    </field>
+    <field>
+      <name>dry_run</name>
+      <descriptions>
+        <desc>Run in test mode</desc>
+      </descriptions>
+      <type>bool</type>
+      <required>true</required>
+    </field>
+  </dataFields>
 </descriptor>
 """
 
