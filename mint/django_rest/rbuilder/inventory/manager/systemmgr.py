@@ -249,11 +249,6 @@ class SystemManager(basemanager.BaseManager):
     @exposed
     def getSystem(self, system_id):
         system = models.System.objects.select_related().get(pk=system_id)
-
-        # Recalculate available updates for each trove on the system, if
-        # needed.  This call honors the 24 hour cache.
-        for trove in system.installed_software.all():
-            self.mgr.versionMgr.set_available_updates(trove)
         return system
 
     @exposed
@@ -656,15 +651,6 @@ class SystemManager(basemanager.BaseManager):
             """, [ system.pk ])
             cu.execute("""
                 UPDATE inventory_system_network
-                   SET system_id = %s
-                 WHERE system_id = %s
-            """, [ system.pk, other.pk ])
-            cu.execute("""
-                DELETE FROM inventory_system_installed_software
-                 WHERE system_id = %s
-            """, [ system.pk ])
-            cu.execute("""
-                UPDATE inventory_system_installed_software
                    SET system_id = %s
                  WHERE system_id = %s
             """, [ system.pk, other.pk ])

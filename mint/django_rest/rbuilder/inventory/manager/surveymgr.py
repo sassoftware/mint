@@ -420,7 +420,8 @@ class SurveyManager(basemanager.BaseManager):
         desc    = getattr(xsurvey, 'description', "")
         comment = getattr(xsurvey, 'comment',     "")
 
-        desired_descriptor = self.mgr.getConfigurationDescriptor(system)
+        # FIXME: there is a catch-22 around this and we need to remove it:
+        desired_descriptor = '<desired_descriptor></desired_descriptor>'
 
         survey = survey_models.Survey(
             name          = system.name,

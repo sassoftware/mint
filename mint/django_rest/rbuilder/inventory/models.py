@@ -1,4 +1,4 @@
-#
+
 # Copyright (c) 2010 rPath, Inc.
 #
 # All Rights Reserved
@@ -229,7 +229,7 @@ class SystemState(modellib.XObjIdModel):
     UNMANAGED_CREDENTIALS_REQUIRED_DESC = "Unmanaged: Invalid credentials"
     
     REGISTERED = "registered"
-    REGISTERED_DESC = "Initial synchronization pending"
+    REGISTERED_DESC = "Registered"
     
     RESPONSIVE = "responsive"
     RESPONSIVE_DESC = "Online"
@@ -500,8 +500,6 @@ class System(modellib.XObjIdModel):
     current_state = D(modellib.SerializedForeignKey(
             SystemState, null=True, related_name='systems'),
         "the current state of the system", short="System state")
-    installed_software = D(models.ManyToManyField('Trove', null=True),
-        "a collection of top-level items installed on the system")
     managing_zone = D(modellib.ForeignKey(zmodels.Zone, null=False,
             related_name='systems', text_field="name"),
         "a link to the management zone in which this system resides")
@@ -573,6 +571,9 @@ class System(modellib.XObjIdModel):
     configuration_applied = D(models.BooleanField(default=False, null=False), 'whether any configuraiton has been applied for this system', short='System configuration applied')
     configuration_set = D(models.BooleanField(default=False, null=False), 'whether any configuration has been saved (but not necc. applied) for this system', short='System configuration saved')
 
+    last_update_trove_spec = XObjHidden(models.TextField())
+
+    # FIXME: OUT OF DATE -- installed software no longer used, can purge some of this?
     # We need to distinguish between an <installed_software> node not being
     # present at all, and being present and empty
     new_versions = None

@@ -43,14 +43,12 @@
         <field to="users.User" name="launching_user" rel="ManyToOneRel"><None></None></field>
         <field to="inventory.systemstate" name="current_state" rel="ManyToOneRel">1</field>
         <field to="inventory.zone" name="managing_zone" rel="ManyToOneRel">1</field>
-        <field to="inventory.trove" name="installed_software" rel="ManyToManyRel"></field>
         <field to="inventory.systemtype" name="system_type" rel="ManyToOneRel">2</field>
     </object>
   <object pk="2" model="inventory.managementnode">
         <field type="NullBooleanField" name="local"><None></None></field>
         <field to="inventory.zone" name="zone" rel="ManyToOneRel">1</field>
         <field type="CharField" name="node_jid">superduperjid@rbuilder.rpath</field>
-        <field to="inventory.trove" name="installed_software" rel="ManyToManyRel"></field>
     </object>
    <object pk="1" model="inventory.network">
         <field to="inventory.system" name="system" rel="ManyToOneRel">2</field>
