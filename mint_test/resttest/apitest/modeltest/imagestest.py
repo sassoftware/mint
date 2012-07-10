@@ -37,6 +37,7 @@ class ReleaseModelTest(mint_rephelp.MintDatabaseHelper):
       <url urlType="1"/>
     </file>
   </files>
+  <imageId>1</imageId>
 </image>
 """
         image = converter.fromText("xml", xml, models.Image, None, None)
