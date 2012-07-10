@@ -201,6 +201,7 @@ class ReposTest(restbase.BaseRestTest):
       </file>
     </files>
     <baseFileName>testproject-1-</baseFileName>
+    <upload_files href="http://localhost:8000/api/v1/images/1/upload_files"/>
   </image>
   <image id="http://%(server)s:%(port)s/api/products/testproject/images/2">
     <imageId>2</imageId>
@@ -237,6 +238,7 @@ class ReposTest(restbase.BaseRestTest):
       </file>
     </files>
     <baseFileName>testproject-1-</baseFileName>
+    <upload_files href="http://localhost:8000/api/v1/images/2/upload_files"/>
   </image>
 </images>
 """
