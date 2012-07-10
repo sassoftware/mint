@@ -345,6 +345,11 @@ class JobCreationTest(BaseJobsTest, RepeaterMixIn):
     <surveys>
       <survey>
         <uuid>aa-bb-cc-dd</uuid>
+        <config_properties/>
+        <desired_properties/>
+        <observed_properties/>
+        <discovered_properties/>
+        <validation_report/>
         <rpm_packages/>
         <conary_packages/>
         <services/>
