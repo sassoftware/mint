@@ -253,6 +253,10 @@ urlpatterns = patterns('',
         name='SurveyWindowsServiceInfo',
         model='inventory.SurveyWindowsServiceInfo'),
     
+    URL(r'/previews/(?P<id>\d+)/?',
+        inventoryviews.PreviewService(),
+        name='PreviewService',
+        model='inventory.JobPreviewArtifact'),
 )
 
 

@@ -1005,3 +1005,13 @@ class SurveyTagService(BaseInventoryService):
         return self.mgr.getSurveyTag(id)
 
 
+class PreviewService(BaseInventoryService):
+    ''' Fetch Preview objects '''
+
+    @return_xml
+    def rest_GET(self, request, id):
+        return self.get(id)
+
+    def get(self, id):
+        # XXX Mimic @rbac(rbac_can_read_survey_tag)
+        return self.mgr.getPreview(id)

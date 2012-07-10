@@ -32,6 +32,7 @@ class JobPreviewArtifact(modellib.XObjModel):
         db_table = 'jobs_created_preview'
         unique_together = [ 'job', 'preview' ]
     _xobj = xobj.XObjMetadata(tag = 'preview')
+    view_name = 'PreviewService'
     
     creation_id = XObjHidden(models.AutoField(primary_key=True))
     job         = XObjHidden(modellib.ForeignKey('Job', db_column='job_id', related_name='created_previews'))

@@ -2058,6 +2058,11 @@ class SystemManager(basemanager.BaseManager):
         return descr
 
     @exposed
+    def getPreview(self, preview_id):
+        preview = models.Cache.get(jobmodels.JobPreviewArtifact, pk=int(preview_id))
+        return preview
+
+    @exposed
     def scheduleJobAction(self, system, job):
         '''
         An action is a bare job submission that is a request to start
