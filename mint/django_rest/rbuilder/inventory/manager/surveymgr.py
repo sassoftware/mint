@@ -529,6 +529,7 @@ class SurveyManager(basemanager.BaseManager):
             info,created = survey_models.WindowsPackageInfo.objects.get_or_create(
                 publisher    = _u(xinfo.publisher),
                 product_code = _u(xinfo.product_code),
+                product_name = _u(xinfo.product_name),
                 package_code = _u(xinfo.package_code),
                 type         = _u(xinfo.type),
                 upgrade_code = _u(xinfo.upgrade_code),
