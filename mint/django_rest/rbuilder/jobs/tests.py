@@ -435,9 +435,9 @@ class JobCreationTest(BaseJobsTest, RepeaterMixIn):
 </job>
 """
 
-        # Grab token
+        # Grab token, pretend to be rMake putting CIM job results back to mint.
         jobToken = dbjob.job_token
-        jobUrl = "jobs/%s" % dbjob.job_uuid
+        jobUrl = "http://localhost/api/v1/jobs/%s" % dbjob.job_uuid
         response = self._put(jobUrl, jobXml, jobToken=jobToken)
         self.assertEquals(response.status_code, 200)
         obj = xobj.parse(response.content)
@@ -457,4 +457,4 @@ class JobCreationTest(BaseJobsTest, RepeaterMixIn):
         tree = etree.fromstring(response.content)
         resources = tree.xpath('/job/created_resources')
         self.assertXMLEquals(etree.tostring(resources[0]),
-            '<preview><ignore-me-1/><ignore-me-2/></preview>')
+            '<created_resources><preview id="http://testserver/api/v1/inventory/previews/1"/>\n</created_resources>')
