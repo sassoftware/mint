@@ -37,9 +37,6 @@ class VersionManager(basemanager.BaseManager):
     def get_software_versions(self, system):
         pass
 
-    def delete_installed_software(self, system):
-        system.installed_software.all().delete()
-
     @classmethod
     def _flavor(cls, flavor):
         if flavor is None:
@@ -125,13 +122,6 @@ class VersionManager(basemanager.BaseManager):
             trove=trove, trove_available_update=update_trove)
         available_update.save()
 
-    @exposed
-    def refreshCachedUpdates(self, name, label):
-        troves = models.Trove.objects.filter(name=name, 
-            version__label=label)
-        for trove in troves:
-            self.set_available_updates(trove, force=True)
-
     def get_conary_client(self):
         if self._cclient is None:
             self._cclient = self.restDb.productMgr.reposMgr.getUserClient()
@@ -141,7 +131,6 @@ class VersionManager(basemanager.BaseManager):
         one_day = timeutils.timedelta(1)
         return (trove.last_available_update_refresh + one_day) < timeutils.now()
 
-    @exposed
     def set_available_updates(self, trove, force=False):
 
         # Hack to make sure utc is set as the timezone on
@@ -252,17 +241,9 @@ class VersionManager(basemanager.BaseManager):
         Generate config descriptor for all top level items on a system.
         """
 
-        desc = descriptor.SystemConfigurationDescriptor()
-
-        fields = desc.getDataFields()
-        for trove in system.installed_software.all():
-            fields.extend(self._getTroveConfigDescriptor(trove))
-
-        out = StringIO()
-        desc.serialize(out, validate=False)
-        out.seek(0)
-
-        return out.read()
+        if system.latest_survey is None:
+            return '<configuration></configuration>'
+        return system.latest_survey.config_properties_descriptor
 
     def _getTroveConfigDescriptor(self, trove):
         client = self.get_conary_client()

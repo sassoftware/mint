@@ -134,10 +134,6 @@ urlpatterns = patterns('',
         inventoryviews.InventorySystemsSystemLogService(),
         name='SystemLogFormat',
         model='inventory.SystemLog'),
-    URL(r'/systems/(?P<system_id>\d+)/installed_software/?$',
-        inventoryviews.InventorySystemsInstalledSoftwareService(),
-        name='InstalledSoftware',
-        model='inventory.InstalledSoftware'),
     URL(r'/systems/(?P<system_id>\d+)/credentials/?$',
         inventoryviews.InventorySystemCredentialsServices(),
         name='SystemCredentials',
@@ -253,6 +249,10 @@ urlpatterns = patterns('',
         name='SurveyWindowsServiceInfo',
         model='inventory.SurveyWindowsServiceInfo'),
     
+    URL(r'/previews/(?P<id>\d+)/?',
+        inventoryviews.PreviewService(),
+        name='PreviewService',
+        model='inventory.JobPreviewArtifact'),
 )
 
 

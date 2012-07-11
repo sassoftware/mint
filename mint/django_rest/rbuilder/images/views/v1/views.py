@@ -315,11 +315,12 @@ class ImageUploadFilesService(service.BaseService):
                             mimetype='application/x-www-form-urlencoded')
 
     @access.anonymous
+    @return_xml
     def rest_POST(self, request, image_id):
-        self.mgr.processImageUpload(image_id,
+        return self.mgr.processImageUpload(image_id,
                                     next(iter(request.FILES.values())),
                                     request.GET.get('name'),
                                     request.GET.get('chunk'),
                                     request.GET.get('chunks'),
                                     request.GET.get('md5chunk'))
-        return HttpResponse(status=200)
+

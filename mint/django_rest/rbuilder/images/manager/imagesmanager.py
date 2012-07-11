@@ -546,30 +546,33 @@ class ImagesManager(basemanager.BaseManager):
         if image.status == jobstatus.WAITING:
             filename = self._getUploadFilename(image, basename)
             handler = MultiRequestUploadHandler()
-            upload = handler.handle(uploaded_file, filename, chunk_id, num_chunks, checksum)
+            upload = handler.handle(uploaded_file, filename, chunk_id,
+                                    num_chunks, checksum)
             if upload.isComplete():
-                self._finishImageUpload(image, upload)
+                image = self._finishImageUpload(image, upload.filename)
         return image
 
-    def _finishImageUpload(self, image, upload):
-        image.status = jobstatus.FINISHED
+    def _finishImageUpload(self, image, filename):
         hostname = self._getImageHostname(image.image_id)
-        filePath = self._getImageFilePath(hostname, image.image_id,
-                                          upload.filename, create=True)
-        os.rename(upload.filename, filePath)
+        new_filename = self._getImageFilePath(hostname, image.image_id,
+                                          filename, create=True)
+        os.rename(filename, new_filename)
         try:
-            imageid_dir = os.path.dirname(upload.filename)
+            imageid_dir = os.path.dirname(filename)
             os.rmdir(imageid_dir)
             hostname_dir = os.path.dirname(imageid_dir)
             os.rmdir(hostname_dir)
         except:
             pass
 
-        self.createImageBuildFile(image, url=filePath,
+        self.createImageBuildFile(image, url=new_filename,
                                   urlType=urltypes.LOCAL,
-                                  title=os.path.basename(filePath),
-                                  size=os.path.getsize(filePath))
+                                  title=os.path.basename(new_filename),
+                                  size=os.path.getsize(new_filename))
+
+        image.status = jobstatus.FINISHED
         self._postFinished(image)
+        return self.getImageById(image.image_id)
 
     def _getUploadFilename(self, image, basename):
         return os.path.join(self.cfg.imagesUploadPath,
