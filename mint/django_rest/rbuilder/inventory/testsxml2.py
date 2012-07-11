@@ -105,6 +105,7 @@ windows_upload_survey_xml2 = """
   <uuid>987654321</uuid>
   <created_date>1330699918</created_date>
   <windows_patches>
+
     <windows_patch id="1">
       <local_package>c:/path/to/stuff</local_package>
       <is_installed>true</is_installed>
@@ -128,12 +129,17 @@ windows_upload_survey_xml2 = """
       </windows_patch_info>
       <install_date>1330699918</install_date>
     </windows_patch>
+
     <windows_patch id="100">
       <local_package>c:/path/to/yet_more_stuff</local_package>
       <is_installed>true</is_installed>
+
       <windows_patch_info>
         <display_name>Bonus Levels</display_name>
         <windows_packages_info>
+          <!-- this next example is invalid, but is what the client sends on 7/11/12 -->
+          <!-- and is included only for demo-hacking purposes -->
+          <windows_package id="1"/>
           <windows_package_info>
             <publisher>konami</publisher>
             <type>msi</type>
@@ -179,8 +185,8 @@ windows_upload_survey_xml2 = """
     </windows_service>
   </windows_services>
   <windows_packages>
-      <windows_package id="1">
-      <windows_package_info>
+     <windows_package id="1">
+        <windows_package_info>
           <publisher>konami</publisher>
           <type>msi</type>
           <version>1.5</version>
@@ -188,7 +194,7 @@ windows_upload_survey_xml2 = """
           <product_code>up-up-down-down</product_code>
           <upgrade_code>B-A-B-A select-start</upgrade_code>
           <product_name>contra</product_name>
-      </windows_package_info>
+        </windows_package_info>
       <install_date>1330699922</install_date>
       <install_source>e:/path/to/other_stuff</install_source>
       <local_package>c:/path/to/other_stuff</local_package>
