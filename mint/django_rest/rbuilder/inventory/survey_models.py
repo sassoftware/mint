@@ -321,7 +321,7 @@ class WindowsPatchInfo(modellib.XObjIdModel):
     )
     summary_view = [ 
         'display_name', 'uninstallable', 'patch_code',
-        'product_code', 'transforms', 'windows_packages'
+        'product_code', 'product_name', 'transforms', 'windows_packages'
     ]    
     
     windows_patch_id = models.AutoField(primary_key=True)

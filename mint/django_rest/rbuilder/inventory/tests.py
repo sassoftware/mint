@@ -317,6 +317,7 @@ install needle
             data = testsxml2.windows_upload_survey_xml,
             username='admin', password='password')
         self.assertEqual(response.status_code, 200)
+        # print response.content
  
         self._hiturl('inventory/survey_windows_patches/1')
         self._hiturl('inventory/windows_patch_info/1')
