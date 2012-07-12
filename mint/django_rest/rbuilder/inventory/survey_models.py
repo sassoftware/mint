@@ -273,7 +273,7 @@ class WindowsPackageInfo(modellib.XObjIdModel):
     view_name = 'SurveyWindowsPackageInfo'
     _xobj = xobj.XObjMetadata(tag='windows_package_info')
     summary_view = [ 'publisher', 'product_code', 'package_code',
-                     'product_name' 'type', 'upgrade_code',
+                     'product_name', 'type', 'upgrade_code',
                      'version' ]
 
     windows_package_id = models.AutoField(primary_key=True)
@@ -321,7 +321,7 @@ class WindowsPatchInfo(modellib.XObjIdModel):
     )
     summary_view = [ 
         'display_name', 'uninstallable', 'patch_code',
-        'product_code', 'product_name', 'transforms', 'windows_packages'
+        'product_code', 'transforms', 'windows_packages'
     ]    
     
     windows_patch_id = models.AutoField(primary_key=True)
