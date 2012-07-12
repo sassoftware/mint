@@ -382,7 +382,6 @@ class ConfigEnvironmentsTestCase(QueryTestCase):
 
         response = self._get("query_sets/%s" % qs.pk,
             username="admin", password="password")
-        print response.content
         self.assertEquals(response.status_code, 200)
 
         
