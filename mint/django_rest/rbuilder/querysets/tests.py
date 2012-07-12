@@ -84,7 +84,7 @@ class QuerySetTestCase(QueryTestCase):
         self.assertEquals(response.status_code, 200)
         systems = xobj.parse(response.content)
         count = len(systems.systems.system)
-        self.failUnlessEqual(count, 201)
+        self.failUnlessEqual(count, 198)
 
         # we will have tagged it by visiting the last pass
         # now hit it again and run down the "tagged" path
@@ -95,7 +95,7 @@ class QuerySetTestCase(QueryTestCase):
         self.assertEquals(response.status_code, 200)
         systems = xobj.parse(response.content)
         count = len(systems.systems.system)
-        self.failUnlessEqual(count, 201)
+        self.failUnlessEqual(count, 198)
 
         # since we just fetched the queryset, the queryset entry itself
         # should now have an invalidation job on it which we can use
@@ -180,9 +180,9 @@ class QuerySetTestCase(QueryTestCase):
         self.assertTrue(fetched_qs.name.find("CHANGED NAME") != -1)
  
         child2 = self.xobjSystems("query_sets/%s/child/" % qs1.pk)
-        self.assertEquals(len(child2), 201)
+        self.assertEquals(len(child2), 198)
         all2 = self.xobjSystems("query_sets/%s/all/" % qs1.pk)
-        self.assertEquals(len(all2), 201)
+        self.assertEquals(len(all2), 198)
         chosen2 = self.xobjSystems("query_sets/%s/chosen/" % qs1.pk)
         self.assertEquals(len(chosen2), 0)
         filtered2 = self.xobjSystems("query_sets/%s/filtered/" % qs1.pk)
@@ -190,9 +190,9 @@ class QuerySetTestCase(QueryTestCase):
 
         # do it again to make sure child tags work
         child2 = self.xobjSystems("query_sets/%s/child/" % qs1.pk)
-        self.assertEquals(len(child2), 201)
+        self.assertEquals(len(child2), 198)
         all2 = self.xobjSystems("query_sets/%s/all/" % qs1.pk)
-        self.assertEquals(len(all2), 201)
+        self.assertEquals(len(all2), 198)
         chosen2 = self.xobjSystems("query_sets/%s/chosen/" % qs1.pk)
         self.assertEquals(len(chosen2), 0)
         filtered2 = self.xobjSystems("query_sets/%s/filtered/" % qs1.pk)
