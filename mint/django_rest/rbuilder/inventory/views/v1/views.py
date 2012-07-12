@@ -17,6 +17,7 @@ from django_restapi import resource
 from mint.django_rest.rbuilder.rbac.rbacauth import rbac, manual_rbac
 from mint.django_rest.rbuilder.querysets import models as querymodels
 from mint.django_rest.rbuilder.users import models as usersmodels
+#from mint.django_rest.rbuilder.jobs import models as jobmodels
 import os 
 import time
 
@@ -1003,4 +1004,9 @@ class PreviewService(BaseInventoryService):
 
     def get(self, id):
         # XXX Mimic @rbac(rbac_can_read_survey_tag)
-        return self.mgr.getPreview(id)
+        preview = self.mgr.getPreview(id)
+        # delete old previews
+        # jobmodels.JobPreviewArtifact.objects.filter(pk != preview.pk).delete()
+        return preview
+
+
