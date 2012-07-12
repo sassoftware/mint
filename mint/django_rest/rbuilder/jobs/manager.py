@@ -1098,20 +1098,21 @@ class JobHandlerRegistry(HandlerRegistry):
         def postprocessRelatedResource(self, job, model):
             model.event_uuid = str(self.eventUuid)
 
-        #def _updateInstalledSoftware(self, system, job):
-        #    desc = xobj.parse(job.descriptor_data)
-        #    dry_run = (desc.run_run.lower() == 'true')
-        #    if dry_run:
-        #        return
-        #   system.last_update_trove_spec = desc.trove_spec
-        #   system.save() 
+        def _updateInstalledSoftware(self, system, job):
+            descriptorData = self.loadDescriptorData(job)
+            test = descriptorData.getField('dry_run')
+            if test:
+                return
+            topLevelGroup = str(descriptorData.getField('trove_label'))
+            system.__class__.objects.filter(system_id=system.system_id).update(
+                last_update_trove_spec = topLevelGroup)
 
         def _processJobResults(self, job):
             xml = xobj.toxml(job.results.preview)
-            #self._updateInstalledSoftware(system, job)
-            system = inventorymodels.System.objects.get(system_id=job.systems.all()[0].system_id)
+            system = job.systems.all()[0].system
             preview = models.JobPreviewArtifact(job=job, preview=xml, system=system)
             preview.save()
+            self._updateInstalledSoftware(system, job)
             return preview
 
     class SystemConfigure(DescriptorJobHandler):

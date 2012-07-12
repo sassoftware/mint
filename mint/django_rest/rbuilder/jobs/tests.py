@@ -382,9 +382,17 @@ class JobCreationTest(BaseJobsTest, RepeaterMixIn):
         self.assertEquals(bool(dbsystem.has_active_jobs), False)
         self.assertEquals(bool(dbsystem.has_running_jobs), False)
 
-    def testJobSystemSoftwareUpdate(self):
+    def testJobSystemSoftwareUpdateWithPreview(self):
+        return self._testJobSystemSoftwareUpdate(dryRun=True)
+
+    def testJobSystemSoftwareUpdateWithUpdate(self):
+        return self._testJobSystemSoftwareUpdate(dryRun=False)
+
+    def _testJobSystemSoftwareUpdate(self, dryRun=False):
+        topLevelGroup = "group-foo=example.com@rpath:42/1-2-3"
         jobType = self.mgr.sysMgr.eventType(models.EventType.SYSTEM_UPDATE)
         system = self._saveSystem()
+        system.last_update_trove_spec = 'fake'
         system.save()
         url = "inventory/systems/%(systemId)s/descriptors/update" % dict(
             systemId=system.system_id)
@@ -403,11 +411,12 @@ class JobCreationTest(BaseJobsTest, RepeaterMixIn):
   <job_type id="http://localhost/api/v1/inventory/event_types/%(jobTypeId)s"/>
   <descriptor id="http://testserver/api/v1/inventory/systems/%(systemId)s/descriptors/update"/>
   <descriptor_data>
-    <trove_label>group-foo=example.com@rpath:42/1-2-3</trove_label>
-    <dry_run>true</dry_run>
+    <trove_label>%(topLevelGroup)s</trove_label>
+    <dry_run>%(dryRun)s</dry_run>
   </descriptor_data>
 </job>
-""" % dict(jobTypeId=jobType.job_type_id, systemId=system.system_id)
+""" % dict(jobTypeId=jobType.job_type_id, systemId=system.system_id,
+            topLevelGroup=topLevelGroup, dryRun=str(dryRun).lower())
 
         url = "inventory/systems/%(systemId)s/jobs" % dict(
             systemId=system.system_id)
@@ -465,3 +474,9 @@ class JobCreationTest(BaseJobsTest, RepeaterMixIn):
         self.assertEquals(response.status_code, 200)
         self.assertXMLEquals(response.content,
             '<preview><ignore-me-1/><ignore-me-2/></preview>')
+
+        system = system.__class__.objects.get(system_id=system.system_id)
+        if dryRun:
+            self.assertEquals(system.last_update_trove_spec, 'fake')
+        else:
+            self.assertEquals(system.last_update_trove_spec, topLevelGroup)
