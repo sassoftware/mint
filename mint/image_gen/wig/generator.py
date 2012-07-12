@@ -351,9 +351,6 @@ class WbsGenerator(ImageGenerator):
         self.sendStatus(iconst.WIG_JOB_RUNNING, "Processing image", "0%")
         self.wigClient.startJob()
         log.info("Job started: %s", self.wigClient.getJobUrl())
-        # KLUDGE: This can go away once rMake's build logs are actually piped
-        # somewhere.
-        self.sendLog("Job started, URL is: %s\n" % self.wigClient.getJobUrl())
 
         for status, message, progress in self.wigClient.watchJob():
             log.info("Job status: %03d %s: %s", progress, status,
@@ -367,15 +364,51 @@ class WbsGenerator(ImageGenerator):
                         "Processing image: " + message,
                         extraProgress=("%d%%" % (progress,)) )
 
-        # TODO: send logs upstream to rMake as well
         logs = self.wigClient.getLog()
-        self.sendLog(logs)
+        self.convertLogs(logs)
 
         if status != 'Completed':
             self.sendStatus(iconst.WIG_JOB_FAILED, "Image failed: %s" %
                     (message,))
             return False
         return True
+
+    @staticmethod
+    def convertLogs(data):
+        # Parse timestamps out of the log data
+        lines = iter(data.splitlines())
+        messages = []
+        for line in lines:
+            if line[0] != '[':
+                if messages:
+                    messages[-1][2] += '\n' + line.strip()
+                continue
+            b = line.find(']')
+            if b < 0:
+                continue
+            timestamp, message = line[1:b], line[b+5:]
+
+            assert timestamp[-1] == 'Z'
+            parseable = timestamp[:19] + ' UTC'
+            timetup = time.strptime(parseable, '%Y-%m-%dT%H:%M:%S %Z')
+            microseconds = int(timestamp[20:-1].ljust(6, '0'))
+
+            # Force mktime to parse using non-DST zone, then subtract zone
+            # offset to get UTC again.
+            tup_no_dst = timetup[:8] + (0,)
+            epoch = time.mktime(tup_no_dst) - time.timezone
+            epoch += microseconds / 1e6
+
+            messages.append([epoch, microseconds, message])
+
+        # Inject those records into the rmake logging infrastructure
+        logger = logging.getLogger('rwbs')
+        for epoch, microseconds, message in messages:
+            record = logger.makeRecord(name=logger.name, level=logging.INFO,
+                    fn='', lno=0, msg=message, args=(), exc_info=None)
+            record.created = epoch
+            record.msecs = microseconds / 1000.0
+            logger.handle(record)
 
 
 class WimGenerator(WbsGenerator):

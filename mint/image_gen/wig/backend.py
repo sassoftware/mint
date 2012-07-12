@@ -82,7 +82,11 @@ class WigBackendClient(object):
 
     def getLog(self):
         """Return contents of the job log."""
-        return self.image.imageJob.logs.read()
+        logData = self.image.imageJob.logs.read()
+        if logData.startswith('\xef\xbb\xbf'):
+            # Remote byte-order mark
+            logData = logData[3:]
+        return logData
 
     def setImageType(self, imageType):
         config = self.image.jobConfig
