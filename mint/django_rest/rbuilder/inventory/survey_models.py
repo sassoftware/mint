@@ -273,7 +273,7 @@ class WindowsPackageInfo(modellib.XObjIdModel):
     view_name = 'SurveyWindowsPackageInfo'
     _xobj = xobj.XObjMetadata(tag='windows_package_info')
     summary_view = [ 'publisher', 'product_code', 'package_code',
-                     'product_name' 'type', 'upgrade_code',
+                     'product_name', 'type', 'upgrade_code',
                      'version' ]
 
     windows_package_id = models.AutoField(primary_key=True)

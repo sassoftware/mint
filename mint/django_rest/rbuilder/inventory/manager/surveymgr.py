@@ -460,6 +460,7 @@ class SurveyManager(basemanager.BaseManager):
 
         rpm_info_by_id     = {}
         rpms_by_info_id    = {}
+        windows_packages_by_id = {}
 
         for xmodel in xrpm_packages:
             xinfo = xmodel.rpm_package_info
@@ -526,9 +527,11 @@ class SurveyManager(basemanager.BaseManager):
 
         for xmodel in xwindows_packages:
             xinfo = xmodel.windows_package_info
+            xid = xmodel.id
             info,created = survey_models.WindowsPackageInfo.objects.get_or_create(
                 publisher    = _u(xinfo.publisher),
                 product_code = _u(xinfo.product_code),
+                product_name = _u(xinfo.product_name),
                 package_code = _u(xinfo.package_code),
                 type         = _u(xinfo.type),
                 upgrade_code = _u(xinfo.upgrade_code),
@@ -541,6 +544,7 @@ class SurveyManager(basemanager.BaseManager):
                 local_package  = _u(xmodel.local_package),
                 install_date   = self._date(xmodel.install_date), 
             )
+            windows_packages_by_id[xid] = pkg
             pkg.save()
 
         for xmodel in xwindows_patches:
@@ -554,8 +558,21 @@ class SurveyManager(basemanager.BaseManager):
                 transforms     = _u(xinfo.transforms),
             )
             referenced_packages = self._subel(xinfo, 'windows_packages_info', 'windows_package_info')
+
+            # Windows client is sending back wrong XML elements but compensate by allowing this element
+            # in the wrong nesting topology to basically work.  Needed for demo.   TODO: get Windows client
+            # to send a package info object here, not a package, and remove this hack.
+            referenced_packages_hack = self._subel(xinfo, 'windows_packages_info', 'windows_package')
+
             packages_info = []
             if created:
+                for rp in referenced_packages_hack:
+                    pkg = windows_packages_by_id[rp.id]
+                    package_info = pkg.windows_package_info
+                    link, created_link = survey_models.SurveyWindowsPatchPackageLink.objects.get_or_create(
+                        windows_patch_info   = info,
+                        windows_package_info = package_info
+                    )
                 for rp in referenced_packages:
                     package_infos = survey_models.WindowsPackageInfo.objects.filter(
                         publisher    = _u(rp.publisher),
