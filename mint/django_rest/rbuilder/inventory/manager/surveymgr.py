@@ -398,12 +398,15 @@ class SurveyManager(basemanager.BaseManager):
             xdesired_properties = xobj.parse('<configuration/>')
         xdesired_properties.configuration._xobj.tag = 'desired_properties'
 
+        origin = getattr(xsurvey, 'origin', 'scanner')
+
         xobserved_properties   = getattr(xsurvey, 'observed_properties', None)
         xdiscovered_properties = getattr(xsurvey, 'discovered_properties', None)
         xvalidation_report     = getattr(xsurvey, 'validation_report', None)
         xpreview               = getattr(xsurvey, 'preview', None)
         xconfig_descriptor     = getattr(xsurvey, 'config_properties_descriptor', None)
         systemModel            = getattr(xsurvey, 'system_model', None)
+
         if systemModel is None:
             systemModelContents = None
             systemModelModifiedDate = None
@@ -423,21 +426,24 @@ class SurveyManager(basemanager.BaseManager):
         # FIXME: there is a catch-22 around this and we need to remove it:
         desired_descriptor = '<desired_descriptor></desired_descriptor>'
 
+        # default to removable for registration surveys, but not manual ones
+        removable = (origin != 'scanner')
+
         survey = survey_models.Survey(
-            name          = system.name,
-            uuid          = _u(xsurvey.uuid),
-            description   = desc,
-            comment       = comment,
-            removable     = True,
-            system        = system,
-            created_date  = created_date,
+            name = system.name,
+            uuid = _u(xsurvey.uuid),
+            description = desc,
+            comment = comment,
+            removable = removable,
+            system = system,
+            created_date = created_date,
             modified_date = created_date,
-            config_properties     = self._toxml(xconfig_properties),
-            desired_properties    = self._toxml(xdesired_properties, 'desired_properties'),
-            observed_properties   = self._toxml(xobserved_properties),
+            config_properties = self._toxml(xconfig_properties),
+            desired_properties = self._toxml(xdesired_properties, 'desired_properties'),
+            observed_properties = self._toxml(xobserved_properties),
             discovered_properties = self._toxml(xdiscovered_properties),
-            validation_report     = self._toxml(xvalidation_report),
-            preview               = self._toxml(xpreview),
+            validation_report = self._toxml(xvalidation_report),
+            preview = self._toxml(xpreview),
             config_properties_descriptor = xconfig_descriptor,
             desired_properties_descriptor = desired_descriptor,
             system_model = systemModelContents,
