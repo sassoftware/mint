@@ -464,4 +464,4 @@ class JobCreationTest(BaseJobsTest, RepeaterMixIn):
         response = self._get(url, username="testuser", password="password")
         self.assertEquals(response.status_code, 200)
         self.assertXMLEquals(response.content,
-            '<preview><ignore-me-1/><ignore-me-2/><system id="http://testserver/api/v1/inventory/systems/4"/></preview>')
+            '<preview><ignore-me-1/><ignore-me-2/></preview>')
