@@ -5,13 +5,8 @@
 #
 
 import logging
-from StringIO import StringIO
-
-from smartform import descriptor
-from smartform import descriptor_errors
 
 from conary import conaryclient, versions
-from conary import trove as conarytrove
 from conary.errors import RepositoryError
 
 from django.core.exceptions import ObjectDoesNotExist
@@ -20,7 +15,7 @@ from mint.django_rest import timeutils
 from mint.django_rest.rbuilder.inventory import models
 from mint.django_rest.rbuilder.manager import basemanager
 from mint.django_rest.rbuilder.projects.models import Project, ProjectVersion
-from mint.rest.errors import ProductNotFound, ProductVersionNotFound
+from mint.rest.errors import ProductNotFound
 
 log = logging.getLogger(__name__)
 exposed = basemanager.exposed
@@ -244,38 +239,3 @@ class VersionManager(basemanager.BaseManager):
         if system.latest_survey is None:
             return '<configuration></configuration>'
         return system.latest_survey.config_properties_descriptor
-
-    def _getTroveConfigDescriptor(self, trove):
-        client = self.get_conary_client()
-        repos = client.getRepos()
-        n, v, f = trove.getNVF()
-
-        trvList = repos.getTroves([(n, v, f)])
-
-        referencedByDefault = []
-        for trv in trvList:
-            referencedByDefault += [ nvf for nvf, byDefault, strongRef in
-                trv.iterTroveListInfo() if byDefault ]
-
-        # Get properties sorted by package name.
-        properties = repos.getTroveInfo(conarytrove._TROVEINFO_TAG_PROPERTIES,
-            sorted(referencedByDefault, cmp=lambda x, y: cmp(x[0], y[0])))
-
-        configFields = []
-        for propSet in properties:
-            if propSet is None:
-                continue
-            for property in propSet.iter():
-                xml = property.definition()
-                desc = descriptor.BaseDescriptor()
-
-                try:
-                    desc.parseStream(StringIO(xml))
-
-                # Ignore any descriptors that don't parse.
-                except descriptor_errors.Error:
-                    continue
-
-                configFields.extend(desc.getDataFields())
-
-        return configFields
