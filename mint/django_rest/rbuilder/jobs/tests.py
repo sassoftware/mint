@@ -260,6 +260,10 @@ class JobCreationTest(BaseJobsTest, RepeaterMixIn):
                 ),
             ])
 
+        # We should have a running job
+        system = invmodels.System.objects.get(system_id=system.system_id)
+        self.assertEquals(system.has_running_jobs, True)
+
         # same deal with wmi
 
         system.management_interface = self.mgr.wmiManagementInterface()
@@ -322,6 +326,11 @@ class JobCreationTest(BaseJobsTest, RepeaterMixIn):
         jobType = self.mgr.sysMgr.eventType(models.EventType.SYSTEM_SCAN)
         system = self._saveSystem()
         system.save()
+
+        # No jobs running
+        system = invmodels.System.objects.get(system_id=system.system_id)
+        self.assertEquals(system.has_running_jobs, False)
+
         jobXml = """
 <job>
   <job_type id="http://localhost/api/v1/inventory/event_types/%(jobTypeId)s"/>
@@ -337,6 +346,10 @@ class JobCreationTest(BaseJobsTest, RepeaterMixIn):
         job = obj.job
         self.failUnlessEqual(job.descriptor.id,
             "http://testserver/api/v1/inventory/systems/%s/descriptors/survey_scan" % system.system_id)
+
+        # We should have a running job
+        system = invmodels.System.objects.get(system_id=system.system_id)
+        self.assertEquals(system.has_running_jobs, True)
 
         dbjob = models.Job.objects.get(job_uuid=job.job_uuid)
 
@@ -383,6 +396,9 @@ class JobCreationTest(BaseJobsTest, RepeaterMixIn):
         dbsystem = system.__class__.objects.get(system_id=system.system_id)
         self.assertEquals(bool(dbsystem.has_active_jobs), False)
         self.assertEquals(bool(dbsystem.has_running_jobs), False)
+
+        # No running jobs
+        self.assertEquals(dbsystem.has_running_jobs, False)
 
     def testJobSystemSoftwareUpdateWithPreview(self):
         return self._testJobSystemSoftwareUpdate(dryRun=True)
