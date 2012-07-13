@@ -1112,8 +1112,41 @@ class JobHandlerRegistry(HandlerRegistry):
             mgr.filter(system=system,
                 trove_spec__in=existing.difference(topLevelItems)).delete()
 
+        def _renderChanges(self, change_xobj):
+            for change in change_xobj:
+                frum     = getattr(change, 'from', None)
+                name     = getattr(frum, 'name', None)
+                frum_ver = getattr(frum, 'version', None)
+                to     = getattr(change, 'to', None)
+                to_ver = getattr(to, 'version', None)
+                yield dict(name=str(name), from_ver=str(frum_ver), to_ver=str(to_ver))
+
+        def _processXml(self, job):
+            changes = job.results.preview
+            descriptorData = self.loadDescriptorData(job)
+            group_name, desired = str(descriptorData.getField('trove_label')).split("=")
+            dry_run = str(descriptorData.getField('dry_run'))[0].upper() == 'T'
+
+            # If there were changes to be made...
+            if hasattr(changes.conary_package_changes, 'conary_package_change'):
+                change_list = changes.conary_package_changes.conary_package_change # A node or a list of nodes.
+                if not isinstance(change_list, list):
+                    change_list = [change_list]
+                if dry_run:
+                    # And we were just previewing, then the 'from' version is still what's currently installed.
+                    [observed] = [x.get('from_ver') for x in self._renderChanges(change_list) if x.get('name') == group_name]
+                else:
+                    # Otherwise, we were updating, and the 'to' version is now what's currently installed.
+                    [observed] = [x.get('to_ver') for x in self._renderChanges(change_list) if x.get('name') == group_name]
+            else:
+                # But if there were no changes to be made, assume 'desired' was already installed.
+                observed = desired
+
+            changes.observed, changes.desired = observed, desired
+            return xobj.toxml(changes)
+
         def _processJobResults(self, job):
-            xml = xobj.toxml(job.results.preview)
+            xml = self._processXml(job)
             system = job.systems.all()[0].system
             preview = models.JobPreviewArtifact(job=job, preview=xml, system=system)
             preview.save()
