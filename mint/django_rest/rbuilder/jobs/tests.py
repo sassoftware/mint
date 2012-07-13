@@ -397,9 +397,6 @@ class JobCreationTest(BaseJobsTest, RepeaterMixIn):
         self.assertEquals(bool(dbsystem.has_active_jobs), False)
         self.assertEquals(bool(dbsystem.has_running_jobs), False)
 
-        # No running jobs
-        self.assertEquals(dbsystem.has_running_jobs, False)
-
     def testJobSystemSoftwareUpdateWithPreview(self):
         return self._testJobSystemSoftwareUpdate(dryRun=True)
 
