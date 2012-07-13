@@ -987,8 +987,8 @@ class JobHandlerRegistry(HandlerRegistry):
             params = self.mgr.mgr.sysMgr._computeDispatcherMethodParams(cli,
                 self.system, destination, eventUuid=str(self.eventUuid),
                 requiredNetwork=None)
-            topLevelGroup = self.descriptorData.getField('top_level_group')
-            desiredTopLevelItems = [ topLevelGroup ]
+            desiredTopLevelItems = [ x.trove_spec
+                for x in self.system.desired_top_level_items.all() ]
             return (params, ), dict(zone=self.system.managing_zone.name,
                 desiredTopLevelItems=desiredTopLevelItems)
 
@@ -1103,9 +1103,14 @@ class JobHandlerRegistry(HandlerRegistry):
             test = descriptorData.getField('dry_run')
             if test:
                 return
-            topLevelGroup = str(descriptorData.getField('trove_label'))
-            system.__class__.objects.filter(system_id=system.system_id).update(
-                last_update_trove_spec = topLevelGroup)
+            topLevelItems = set([ str(descriptorData.getField('trove_label')) ])
+            # Fetch existing top level groups
+            existing = set(x.trove_spec for x in system.desired_top_level_items.all())
+            mgr = inventorymodels.SystemDesiredTopLevelItem.objects
+            for toAdd in topLevelItems.difference(existing):
+                mgr.create(system=system, trove_spec=toAdd)
+            mgr.filter(system=system,
+                trove_spec__in=existing.difference(topLevelItems)).delete()
 
         def _processJobResults(self, job):
             xml = xobj.toxml(job.results.preview)

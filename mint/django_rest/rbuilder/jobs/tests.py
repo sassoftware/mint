@@ -11,6 +11,7 @@ from mint.django_rest.test_utils import XMLTestCase, RepeaterMixIn
 
 from mint.django_rest.rbuilder.jobs import models
 from mint.django_rest.rbuilder.jobs import testsxml
+from mint.django_rest.rbuilder.inventory import models as invmodels
 
 from xobj import xobj
 
@@ -206,16 +207,17 @@ class JobCreationTest(BaseJobsTest, RepeaterMixIn):
         )
 
     def testCreateJobSystemScan(self):
+        topLevelGroup = "group-foo=/a@b:c/1-2-3"
         jobType = self.mgr.sysMgr.eventType(models.EventType.SYSTEM_SCAN)
         system = self._saveSystem()
         system.save()
+        invmodels.SystemDesiredTopLevelItem.objects.create(
+            system=system, trove_spec=topLevelGroup)
         jobXml = """
 <job>
   <job_type id="http://localhost/api/v1/inventory/event_types/%(jobTypeId)s"/>
   <descriptor id="http://testserver/api/v1/inventory/systems/%(systemId)s/descriptors/survey_scan"/>
-  <descriptor_data>
-    <top_level_group>group-foo=/a@b:c/1-2-3</top_level_group>
-  </descriptor_data>
+  <descriptor_data/>
 </job>
 """ % dict(jobTypeId=jobType.job_type_id, systemId=system.system_id)
 
@@ -257,6 +259,10 @@ class JobCreationTest(BaseJobsTest, RepeaterMixIn):
                     ),
                 ),
             ])
+
+        # We should have a running job
+        system = invmodels.System.objects.get(system_id=system.system_id)
+        self.assertEquals(system.has_running_jobs, True)
 
         # same deal with wmi
 
@@ -320,6 +326,11 @@ class JobCreationTest(BaseJobsTest, RepeaterMixIn):
         jobType = self.mgr.sysMgr.eventType(models.EventType.SYSTEM_SCAN)
         system = self._saveSystem()
         system.save()
+
+        # No jobs running
+        system = invmodels.System.objects.get(system_id=system.system_id)
+        self.assertEquals(system.has_running_jobs, False)
+
         jobXml = """
 <job>
   <job_type id="http://localhost/api/v1/inventory/event_types/%(jobTypeId)s"/>
@@ -335,6 +346,10 @@ class JobCreationTest(BaseJobsTest, RepeaterMixIn):
         job = obj.job
         self.failUnlessEqual(job.descriptor.id,
             "http://testserver/api/v1/inventory/systems/%s/descriptors/survey_scan" % system.system_id)
+
+        # We should have a running job
+        system = invmodels.System.objects.get(system_id=system.system_id)
+        self.assertEquals(system.has_running_jobs, True)
 
         dbjob = models.Job.objects.get(job_uuid=job.job_uuid)
 
@@ -392,8 +407,9 @@ class JobCreationTest(BaseJobsTest, RepeaterMixIn):
         topLevelGroup = "group-foo=example.com@rpath:42/1-2-3"
         jobType = self.mgr.sysMgr.eventType(models.EventType.SYSTEM_UPDATE)
         system = self._saveSystem()
-        system.last_update_trove_spec = 'fake'
         system.save()
+        invmodels.SystemDesiredTopLevelItem.objects.create(
+            system=system, trove_spec='fake')
         url = "inventory/systems/%(systemId)s/descriptors/update" % dict(
             systemId=system.system_id)
         response = self._get(url,
@@ -476,7 +492,8 @@ class JobCreationTest(BaseJobsTest, RepeaterMixIn):
             '<preview><ignore-me-1/><ignore-me-2/></preview>')
 
         system = system.__class__.objects.get(system_id=system.system_id)
+        topLevelItems = sorted(x.trove_spec for x in system.desired_top_level_items.all())
         if dryRun:
-            self.assertEquals(system.last_update_trove_spec, 'fake')
+            self.assertEquals(topLevelItems, [ 'fake' ])
         else:
-            self.assertEquals(system.last_update_trove_spec, topLevelGroup)
+            self.assertEquals(topLevelItems, [ topLevelGroup ])

@@ -207,13 +207,13 @@ class SurveyTests(XMLTestCase):
         # like the model saved version above -- much of the
         # data posted is not required for input (like hrefs)
         sys = self._makeSystem()
+        # No top leve items initially
+        self.assertEquals(sys.desired_top_level_items.count(), 0)
         url = "inventory/systems/%s/surveys" % sys.pk
 
         response = self._post(url,
             data = testsxml.survey_input_xml,
             username='admin', password='password')
-        #if response.status_code != 200:
-        # print response.content
         self.assertEqual(response.status_code, 200)
         # Make sure the system has a system model
         system = models.System.objects.get(system_id=sys.system_id)
@@ -225,7 +225,12 @@ install needle
 """)
         self.assertEquals(str(system.latest_survey.system_model_modified_date),
             "2009-02-13 23:31:30+00:00")
- 
+
+        # We should have top level items
+        self.assertEquals(sorted(x.trove_spec
+            for x in sys.desired_top_level_items.all()),
+            ['jkl=7[orange]'])
+
         # Config action should be disabled
         url = "inventory/systems/%s" % system.system_id
         response = self._get(url,
@@ -289,9 +294,15 @@ install needle
         # other parts of diffs will be checked in other tests, this one just has
         # all the config parts populated so it makes sense here
         response = self._post("inventory/systems/%s/surveys" % sys.pk,
-            data = testsxml.survey_input_xml_alt,
+            data = testsxml.survey_input_xml_alt.replace('jkl', 'group-klm'),
             username='admin', password='password')
         self.assertEqual(response.status_code, 200)
+
+        # Top-level item should not have changed
+        topLevelItemMgr = models.SystemDesiredTopLevelItem.objects
+        self.assertEquals(sorted(x.trove_spec
+                for x in topLevelItemMgr.filter(system=sys)),
+            ['jkl=7[orange]'])
 
         response = self._get("inventory/surveys/1234/diffs/99999",
             username = 'admin', password='password')

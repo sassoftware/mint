@@ -4978,7 +4978,7 @@ class MigrateTo_62(SchemaMigration):
  
 class MigrateTo_63(SchemaMigration):
     '''Goad'''
-    Version = (63, 14)
+    Version = (63, 15)
 
     def migrate(self):
         ''' add initial tables for config environments'''
@@ -5171,7 +5171,22 @@ class MigrateTo_63(SchemaMigration):
            UPDATE inventory_system_state SET description = 'Registered' WHERE name = 'registered'
         """)
         return True
-   
+
+    def migrate15(self):
+        cu = self.db.cursor()
+        cu.execute("ALTER TABLE inventory_system DROP COLUMN last_update_trove_spec")
+        createTable2(self.db, 'inventory_system_desired_top_level_item', """
+                "id" %(PRIMARYKEY)s,
+                "system_id" integer NOT NULL
+                    REFERENCES "inventory_system" ("system_id")
+                    ON DELETE CASCADE,
+                "trove_spec" TEXT NOT NULL,
+                "created_date" TIMESTAMP WITH TIME ZONE NOT NULL,
+    """)
+        self.db.createIndex("inventory_system_desired_top_level_item",
+            "inventory_system_des_toplitem_sid_tspec", "system_id, trove_spec",
+            unique=True)
+        return True
 
 #### SCHEMA MIGRATIONS END HERE #############################################
 
