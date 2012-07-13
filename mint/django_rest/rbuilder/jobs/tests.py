@@ -514,7 +514,6 @@ class JobCreationTest(BaseJobsTest, RepeaterMixIn):
         topLevelItems = sorted(x.trove_spec for x in system.desired_top_level_items.all())
         if dryRun:
             self.assertEquals(topLevelItems, [ 'fake' ])
-        else:
 
             # Confirm <observed> is still on original version.
             frum = getattr(xobj.parse(payload).preview.conary_package_changes.conary_package_change, 'from')
@@ -522,6 +521,8 @@ class JobCreationTest(BaseJobsTest, RepeaterMixIn):
             self.assertEquals(
                 observed,
                 f_ver)
+
+        else:
             self.assertEquals(topLevelItems, [ topLevelGroup ])
 
             # Confirm <observed> is now on desired version.
