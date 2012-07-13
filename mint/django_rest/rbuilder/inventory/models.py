@@ -422,7 +422,8 @@ class System(modellib.XObjIdModel):
     # XXX this is hopefully a temporary solution to not serialize the FK
     # part of a many-to-many relationship
     _xobj_hidden_accessors = set(['systemjob_set', 'target_credentials',
-        'managementnode', 'jobsystem_set', 'tags', 'surveys'])
+        'managementnode', 'jobsystem_set', 'tags', 'surveys',
+        'desired_top_level_items'])
     _xobj_hidden_m2m = set()
     _xobj = xobj.XObjMetadata(
                 tag = 'system',
@@ -570,8 +571,6 @@ class System(modellib.XObjIdModel):
     
     configuration_applied = D(models.BooleanField(default=False, null=False), 'whether any configuraiton has been applied for this system', short='System configuration applied')
     configuration_set = D(models.BooleanField(default=False, null=False), 'whether any configuration has been saved (but not necc. applied) for this system', short='System configuration saved')
-
-    last_update_trove_spec = XObjHidden(models.TextField())
 
     # FIXME: OUT OF DATE -- installed software no longer used, can purge some of this?
     # We need to distinguish between an <installed_software> node not being
@@ -947,6 +946,16 @@ class System(modellib.XObjIdModel):
     def hasSourceImage(self):
         return bool(getattr(self, 'source_image', None))
 
+class SystemDesiredTopLevelItem(modellib.XObjModel):
+    class Meta:
+        db_table = 'inventory_system_desired_top_level_item'
+        unique_together = [ ('system', 'trove_spec') ]
+
+    system = modellib.ForeignKey(System, null=False,
+        related_name = 'desired_top_level_items')
+    trove_spec = D(models.TextField(null=False), "Trove")
+    created_date = D(modellib.DateTimeUtcField(null=False, auto_now_add=True),
+        "the date the entry was created", short="Entry created date")
 
 class ManagementNode(System):
     

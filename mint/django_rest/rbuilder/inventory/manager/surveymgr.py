@@ -494,6 +494,7 @@ class SurveyManager(basemanager.BaseManager):
             pkg.install_date = self._date(xmodel.install_date)
             pkg.save()
 
+        topLevelItems = set()
         for xmodel in xconary_packages:
             xinfo = xmodel.conary_package_info
             info, created = survey_models.ConaryPackageInfo.objects.get_or_create(
@@ -512,6 +513,8 @@ class SurveyManager(basemanager.BaseManager):
             is_top_level = False
             if top_level.lower() == 'true':
                 is_top_level = True
+                topLevelItems.add('%s=%s[%s]' %
+                    (info.name, info.version, info.flavor))
 
             if encap is not None:
                 info.rpm_package_info = rpm_info_by_id[encap.id]
@@ -530,6 +533,13 @@ class SurveyManager(basemanager.BaseManager):
                 is_top_level        = is_top_level
             )
             pkg.save()
+
+        # If no desired state is saved in the db, set it from the survey
+        if system.desired_top_level_items.count() == 0:
+            mgr = inventory_models.SystemDesiredTopLevelItem.objects
+            for troveSpec in topLevelItems:
+                mgr.create(system=system, trove_spec=troveSpec)
+
 
         for xmodel in xwindows_packages:
             xinfo = xmodel.windows_package_info

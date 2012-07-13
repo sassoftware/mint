@@ -28,7 +28,7 @@ from conary.dbstore import sqlerrors, sqllib
 log = logging.getLogger(__name__)
 
 # database schema major version
-RBUILDER_DB_VERSION = sqllib.DBversion(63, 14)
+RBUILDER_DB_VERSION = sqllib.DBversion(63, 15)
 
 def _createTrigger(db, table, column="changed"):
     retInsert = db.createTrigger(table, column, "INSERT")
@@ -1263,12 +1263,23 @@ def _createInventorySchema(db, cfg):
                 "configuration_set" BOOLEAN NOT NULL
                     DEFAULT FALSE,
                 "configuration_applied" BOOLEAN NOT NULL
-                    DEFAULT FALSE,
-                "last_update_trove_spec" TEXT
+                    DEFAULT FALSE
             ) %(TABLEOPTS)s""" % db.keywords)
         db.tables['inventory_system'] = []
         db.createIndex("inventory_system",
             "inventory_system_target_id_idx", "target_id")
+
+    createTable(db, 'inventory_system_desired_top_level_item', """
+                "id" %(PRIMARYKEY)s,
+                "system_id" integer NOT NULL
+                    REFERENCES "inventory_system" ("system_id")
+                    ON DELETE CASCADE,
+                "trove_spec" TEXT NOT NULL,
+                "created_date" TIMESTAMP WITH TIME ZONE NOT NULL,
+    """)
+    db.createIndex("inventory_system_desired_top_level_item",
+        "inventory_system_des_toplitem_sid_tspec", "system_id, trove_spec",
+        unique=True)
 
     if 'inventory_zone_management_node' not in db.tables:
         cu.execute("""
