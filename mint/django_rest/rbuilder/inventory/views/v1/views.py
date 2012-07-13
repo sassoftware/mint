@@ -1006,7 +1006,7 @@ class PreviewService(BaseInventoryService):
         # XXX Mimic @rbac(rbac_can_read_survey_tag)
         preview = self.mgr.getPreview(id)
         # delete old previews
-        # jobmodels.JobPreviewArtifact.objects.filter(pk != preview.pk).delete()
+        #jobmodels.JobPreviewArtifact.objects.filter(pk < preview.pk, system=preview.system).delete()
         return preview
 
 
