@@ -4978,7 +4978,7 @@ class MigrateTo_62(SchemaMigration):
  
 class MigrateTo_63(SchemaMigration):
     '''Goad'''
-    Version = (63, 15)
+    Version = (63, 16)
 
     def migrate(self):
         ''' add initial tables for config environments'''
@@ -5186,6 +5186,13 @@ class MigrateTo_63(SchemaMigration):
         self.db.createIndex("inventory_system_desired_top_level_item",
             "inventory_system_des_toplitem_sid_tspec", "system_id, trove_spec",
             unique=True)
+        return True
+
+    def migrate16(self):
+        cu = self.db.cursor()
+        cu.execute("""ALTER TABLE jobs_created_preview ADD COLUMN created_date 
+                TIMESTAMP WITH TIME ZONE
+                NOT NULL DEFAULT current_timestamp""")
         return True
 
 #### SCHEMA MIGRATIONS END HERE #############################################

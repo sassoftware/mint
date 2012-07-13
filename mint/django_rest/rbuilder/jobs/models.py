@@ -34,10 +34,12 @@ class JobPreviewArtifact(modellib.XObjModel):
     _xobj = xobj.XObjMetadata(tag = 'preview')
     view_name = 'PreviewService'
     
-    creation_id = XObjHidden(models.AutoField(primary_key=True))
-    job         = XObjHidden(modellib.ForeignKey('Job', db_column='job_id', related_name='created_previews'))
-    preview     = modellib.XMLField()
-    system      = modellib.ForeignKey('inventory.System', db_column='system_id', related_name='+')
+    creation_id  = XObjHidden(models.AutoField(primary_key=True))
+    job          = XObjHidden(modellib.ForeignKey('Job', db_column='job_id', related_name='created_previews'))
+    preview      = modellib.XMLField()
+    system       = modellib.ForeignKey('inventory.System', db_column='system_id', related_name='+')
+    created_date = D(modellib.DateTimeUtcField(auto_now_add=True),
+        'the date the preview was created (UTC)')
 
 class JobImageArtifact(modellib.XObjModel):
     class Meta:
