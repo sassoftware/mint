@@ -310,7 +310,12 @@ class VersionManager(basemanager.BaseManager):
             info = conary_package.conary_package_info
             name = info.name
             if name.startswith("group-") and name.find("-appliance") != -1:
-                res = self._getConfigDescriptor(info.name, info.version, info.flavor)
+                #try:
+                version = versions.VersionFromString(info.version)
+                #except versions.ParseError, e:
+                #    raise errors.InvalidVersion("Error parsing version %s: %s" %
+                #        (version, str(e)))
+                res = self._getConfigDescriptor(info.name, version, info.flavor)
                 return res
               
         # shouldn't ever get here unless you migrated to something weird, in which 
