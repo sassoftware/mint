@@ -131,6 +131,7 @@ class VersionManager(basemanager.BaseManager):
         one_day = timeutils.timedelta(1)
         return (trove.last_available_update_refresh + one_day) < timeutils.now()
 
+    # FIXME: is this still used?  -- MPD
     def set_available_updates(self, trove, force=False):
 
         # Hack to make sure utc is set as the timezone on
@@ -148,6 +149,7 @@ class VersionManager(basemanager.BaseManager):
                 trove.last_available_update_refresh = timeutils.now()
                 trove.save()
 
+    # NOTE: this system should no longer be used, but not positive -- MPD
     def refresh_available_updates(self, trove):
         self.cclient = self.get_conary_client()
         # trvName and trvVersion are str's, trvFlavor is a
@@ -235,6 +237,62 @@ class VersionManager(basemanager.BaseManager):
 
         return True
 
+
+    # FIMXE: this from old mint/rest/api
+    def _getTroveConfigDescriptor(self, name, version, flavor):
+
+        repos = self.get_conary_client.repos
+        trvList = repos.getTroves([(name, version, flavor)])
+
+        referencedByDefault = []
+        for trv in trvList:
+            referencedByDefault += [ nvf for nvf, byDefault, strongRef in
+                trv.iterTroveListInfo() if byDefault ]
+
+        # Get properties sorted by package name.
+        properties = repos.getTroveInfo(trove._TROVEINFO_TAG_PROPERTIES,
+            sorted(referencedByDefault, cmp=lambda x, y: cmp(x[0], y[0])))
+
+        configFields = []
+        for propSet in properties:
+            if propSet is None:
+                continue
+            for property in propSet.iter():
+                xml = property.definition()
+                desc = descriptor.BaseDescriptor()
+
+                try:
+                    desc.parseStream(StringIO(xml))
+
+                # Ignore any descriptors that don't parse.
+                except descriptor_errors.Error:
+                    continue
+
+                configFields.extend(desc.getDataFields())
+
+        return configFields
+
+    # this code originally from mint/rest/api
+    def _getConfigDescriptor(self, name, version, flavor):
+
+        # FIXME: import descriptor
+        desc = descriptor.ConfigurationDescriptor()
+        desc.setDisplayName('Configuration Descriptor')
+        desc.addDescription('Configuration Descriptor')
+
+        newFields = self._getTroveConfigDescriptor(name, version, flavor)
+        if not newFields:
+            return ''
+
+        fields = desc.getDataFields()
+        fields.extend(newFields)
+
+        out = StringIO()
+        desc.serialize(out, validate=False)
+        out.seek(0)
+
+        return out.read()
+   
     @exposed
     def getConfigurationDescriptor(self, system):
         """
@@ -243,14 +301,27 @@ class VersionManager(basemanager.BaseManager):
 
         if system.latest_survey is None:
             return '<configuration></configuration>'
-        return system.latest_survey.config_properties_descriptor
+    
+        # find the appliance group from the survey
+        # what if multiple top levels with config descriptors?
+        # UI doesn't support, so not worrying about it for now
+        packages = system.latest_survey.conary_packages
+        for conary_package in packages.all():
+            info = conary_package.conary_package_info
+            name = info.name
+            if name.startswith("group-") and name.find("-appliance") != -1:
+                res = self._getConfigDescriptor(info.name, info.version, info.flavor)
+                return res
+              
+        # shouldn't ever get here unless you migrated to something weird, in which 
+        # case (FIXME) just present the empty one and maybe log?
+        raise Exception("could not find group-X-appliance")                               
 
-    def _getTroveConfigDescriptor(self, trove):
-        client = self.get_conary_client()
-        repos = client.getRepos()
-        n, v, f = trove.getNVF()
+    def _getTroveConfigDescriptor(self, name, version, flavor):
+        # repos = self.getRepos()
+        repos = self.get_conary_client().repos
 
-        trvList = repos.getTroves([(n, v, f)])
+        trvList = repos.getTroves([(name, version, flavor)])
 
         referencedByDefault = []
         for trv in trvList:
@@ -258,7 +329,7 @@ class VersionManager(basemanager.BaseManager):
                 trv.iterTroveListInfo() if byDefault ]
 
         # Get properties sorted by package name.
-        properties = repos.getTroveInfo(conarytrove._TROVEINFO_TAG_PROPERTIES,
+        properties = repos.getTroveInfo(trove._TROVEINFO_TAG_PROPERTIES,
             sorted(referencedByDefault, cmp=lambda x, y: cmp(x[0], y[0])))
 
         configFields = []

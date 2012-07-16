@@ -2208,7 +2208,8 @@ class SystemsTestCase(XMLTestCase):
          
     
     def _getSystemConfigurationDescriptor(self, system_id):
-        return testsxml.configuration_descriptor_xml
+        system = models.System.objects.get(pk=system_id)
+        return self.mgr.getConfigurationDescriptor(system)
      
     def testSystemConfigurationDescriptor(self):
         ### Disabling this test until the code is in place and working.

@@ -4978,7 +4978,7 @@ class MigrateTo_62(SchemaMigration):
  
 class MigrateTo_63(SchemaMigration):
     '''Goad'''
-    Version = (63, 15)
+    Version = (63, 16)
 
     def migrate(self):
         ''' add initial tables for config environments'''
@@ -5173,6 +5173,7 @@ class MigrateTo_63(SchemaMigration):
         return True
 
     def migrate15(self):
+        ''' keep a list of desired top level items '''
         cu = self.db.cursor()
         cu.execute("ALTER TABLE inventory_system DROP COLUMN last_update_trove_spec")
         createTable2(self.db, 'inventory_system_desired_top_level_item', """
@@ -5182,11 +5183,20 @@ class MigrateTo_63(SchemaMigration):
                     ON DELETE CASCADE,
                 "trove_spec" TEXT NOT NULL,
                 "created_date" TIMESTAMP WITH TIME ZONE NOT NULL,
-    """)
+        """)
         self.db.createIndex("inventory_system_desired_top_level_item",
             "inventory_system_des_toplitem_sid_tspec", "system_id, trove_spec",
             unique=True)
         return True
+
+    def migrate16(self):
+        ''' store snapshots of system/project/branch with the survey '''
+        cu = self.db.cursor()
+        cu.execute("ALTER TABLE inventory_survey ADD COLUMN system_snapshot_xml TEXT")
+        cu.execute("ALTER TABLE inventory_survey ADD COLUMN project_snapshot_xml TEXT")
+        cu.execute("ALTER TABLE inventory_survey ADD COLUMN stage_snapshot_xml TEXT")
+        return True
+
 
 #### SCHEMA MIGRATIONS END HERE #############################################
 

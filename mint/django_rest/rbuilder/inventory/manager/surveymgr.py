@@ -198,7 +198,7 @@ class SurveyManager(basemanager.BaseManager):
         return survey
 
     def _toxml(self, what, tag_override=None):
-        ''' wrapper around xobj xml conversions '''
+        ''' wrapper around xobj xml conversions and various cleanup'''
         if what is None:
             return ''
         else:
@@ -429,6 +429,17 @@ class SurveyManager(basemanager.BaseManager):
         # default to removable for registration surveys, but not manual ones
         removable = (origin != 'scanner')
 
+        # WIP...
+
+        #system_snapshot_xml = system.to_xml()
+        #project_snapshot_xml = None
+        #stage_snapshot_xml = None
+        #
+        #if system.project:
+        #    project_snapshot_xml = system.project.to_xml()
+        #if system.project_branch_stage:
+        #    stage_snapshot_xml = system.project_branch_stage.to_xml()
+
         survey = survey_models.Survey(
             name = system.name,
             uuid = _u(xsurvey.uuid),
@@ -449,8 +460,13 @@ class SurveyManager(basemanager.BaseManager):
             system_model = systemModelContents,
             system_model_modified_date = systemModelModifiedDate,
             has_system_model = hasSystemModel,
+            # work in progress...
+            #system_snapshot = system_snapshot_xml,
+            #project_snapshot = project_snapshot_xml,
+            #stage_snapshot = stage_snapshot_xml,
         )
 
+        #epdb.st()
         survey.save()
         
         self._saveShreddedValues(survey, xconfig_properties, survey_models.CONFIG_VALUES)
