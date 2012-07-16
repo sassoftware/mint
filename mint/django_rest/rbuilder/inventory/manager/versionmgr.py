@@ -241,7 +241,7 @@ class VersionManager(basemanager.BaseManager):
     # FIMXE: this from old mint/rest/api
     def _getTroveConfigDescriptor(self, name, version, flavor):
 
-        repos = self.get_conary_client.repos
+        repos = self.get_conary_client().repos
         trvList = repos.getTroves([(name, version, flavor)])
 
         referencedByDefault = []
