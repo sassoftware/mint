@@ -446,19 +446,33 @@ class JobCreationTest(BaseJobsTest, RepeaterMixIn):
 
         dbjob = models.Job.objects.get(job_uuid=job.job_uuid)
 
+        payload = """
+<preview>
+  <conary_package_changes>
+    <conary_package_change>
+      <type>changed</type>
+      <from>
+        <name>group-foo</name>
+        <version>/example.com@rpath:42/1-2-3</version>
+      </from>
+      <to>
+        <name>group-foo</name>
+        <version>/example.com@rpath:42/4-5-6</version>
+      </to>
+    </conary_package_change>
+  </conary_package_changes>
+</preview>"""
+
         jobXml = """
 <job>
   <job_state>Completed</job_state>
   <status_code>200</status_code>
   <status_text>Done</status_text>
   <results>
-    <preview>
-      <ignore-me-1/>
-      <ignore-me-2/>
-    </preview>
+    %s
   </results>
 </job>
-"""
+""" % payload
 
         # Grab token, pretend to be rMake putting CIM job results back to mint.
         jobToken = dbjob.job_token
@@ -470,9 +484,10 @@ class JobCreationTest(BaseJobsTest, RepeaterMixIn):
         self.failUnlessEqual(job.job_uuid, dbjob.job_uuid)
 
         # Make sure the job is related to the survey
-        self.failUnlessEqual(
-            [ x.preview for x in dbjob.created_previews.all() ],
-            [ "<?xml version='1.0' encoding='UTF-8'?>\n<preview>\n  <ignore-me-1/>\n  <ignore-me-2/>\n</preview>\n" ]
+        self.assertXMLEquals(
+            dbjob.created_previews.all()[0].preview,
+            "<?xml version='1.0' encoding='UTF-8'?>%s" % payload,
+            ignoreNodes=['desired', 'observed']
         )
 
         # Fetch the job
@@ -488,12 +503,31 @@ class JobCreationTest(BaseJobsTest, RepeaterMixIn):
         url = "inventory/previews/1"
         response = self._get(url, username="testuser", password="password")
         self.assertEquals(response.status_code, 200)
-        self.assertXMLEquals(response.content,
-            '<preview><ignore-me-1/><ignore-me-2/></preview>')
+        self.assertXMLEquals(
+            response.content,
+            payload,
+            ignoreNodes=['desired', 'observed'])
 
         system = system.__class__.objects.get(system_id=system.system_id)
+        observed = xobj.parse(response.content).preview.observed
+
         topLevelItems = sorted(x.trove_spec for x in system.desired_top_level_items.all())
         if dryRun:
             self.assertEquals(topLevelItems, [ 'fake' ])
+
+            # Confirm <observed> is still on original version.
+            frum = getattr(xobj.parse(payload).preview.conary_package_changes.conary_package_change, 'from')
+            f_ver = getattr(frum, 'version')
+            self.assertEquals(
+                observed,
+                f_ver)
+
         else:
             self.assertEquals(topLevelItems, [ topLevelGroup ])
+
+            # Confirm <observed> is now on desired version.
+            to = getattr(xobj.parse(payload).preview.conary_package_changes.conary_package_change, 'to')
+            t_ver = getattr(to, 'version')
+            self.assertEquals(
+                observed,
+                t_ver)

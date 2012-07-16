@@ -28,7 +28,7 @@ from conary.dbstore import sqlerrors, sqllib
 log = logging.getLogger(__name__)
 
 # database schema major version
-RBUILDER_DB_VERSION = sqllib.DBversion(63, 16)
+RBUILDER_DB_VERSION = sqllib.DBversion(63, 17)
 
 def _createTrigger(db, table, column="changed"):
     retInsert = db.createTrigger(table, column, "INSERT")
@@ -1583,7 +1583,8 @@ def _createInventorySchema(db, cfg):
                             REFERENCES jobs_job ON DELETE CASCADE,
             preview         text,
             system_id       INTEGER NOT NULL
-                            REFERENCES inventory_system ON DELETE SET NULL
+                            REFERENCES inventory_system ON DELETE SET NULL,
+            created_date    TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT current_timestamp
         ) %(TABLEOPTS)s""")
     db.createIndex('jobs_created_preview', 'jobs_created_preview_jid_sid',
             'job_id, system_id')

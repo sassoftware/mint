@@ -4978,7 +4978,7 @@ class MigrateTo_62(SchemaMigration):
  
 class MigrateTo_63(SchemaMigration):
     '''Goad'''
-    Version = (63, 16)
+    Version = (63, 17)
 
     def migrate(self):
         ''' add initial tables for config environments'''
@@ -5190,13 +5190,19 @@ class MigrateTo_63(SchemaMigration):
         return True
 
     def migrate16(self):
+        cu = self.db.cursor()
+        cu.execute("""ALTER TABLE jobs_created_preview ADD COLUMN created_date 
+                TIMESTAMP WITH TIME ZONE
+                NOT NULL DEFAULT current_timestamp""")
+        return True
+
+    def migrate17(self):
         ''' store snapshots of system/project/branch with the survey '''
         cu = self.db.cursor()
         cu.execute("ALTER TABLE inventory_survey ADD COLUMN system_snapshot_xml TEXT")
         cu.execute("ALTER TABLE inventory_survey ADD COLUMN project_snapshot_xml TEXT")
         cu.execute("ALTER TABLE inventory_survey ADD COLUMN stage_snapshot_xml TEXT")
         return True
-
 
 #### SCHEMA MIGRATIONS END HERE #############################################
 
