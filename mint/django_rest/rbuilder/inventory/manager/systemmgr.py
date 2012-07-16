@@ -1280,7 +1280,6 @@ class SystemManager(basemanager.BaseManager):
     def getSystemConfigurationDescriptor(self, system_id):
         system = models.System.objects.get(pk=system_id)
         rc =  self.mgr.getConfigurationDescriptor(system)
-        import epdb; epdb.serve()
         return rc    
 
     @exposed

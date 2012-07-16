@@ -250,7 +250,7 @@ class VersionManager(basemanager.BaseManager):
                 trv.iterTroveListInfo() if byDefault ]
 
         # Get properties sorted by package name.
-        properties = repos.getTroveInfo(trove._TROVEINFO_TAG_PROPERTIES,
+        properties = repos.getTroveInfo(conarytrove._TROVEINFO_TAG_PROPERTIES,
             sorted(referencedByDefault, cmp=lambda x, y: cmp(x[0], y[0])))
 
         configFields = []
@@ -317,36 +317,3 @@ class VersionManager(basemanager.BaseManager):
         # case (FIXME) just present the empty one and maybe log?
         raise Exception("could not find group-X-appliance")                               
 
-    def _getTroveConfigDescriptor(self, name, version, flavor):
-        # repos = self.getRepos()
-        repos = self.get_conary_client().repos
-
-        trvList = repos.getTroves([(name, version, flavor)])
-
-        referencedByDefault = []
-        for trv in trvList:
-            referencedByDefault += [ nvf for nvf, byDefault, strongRef in
-                trv.iterTroveListInfo() if byDefault ]
-
-        # Get properties sorted by package name.
-        properties = repos.getTroveInfo(trove._TROVEINFO_TAG_PROPERTIES,
-            sorted(referencedByDefault, cmp=lambda x, y: cmp(x[0], y[0])))
-
-        configFields = []
-        for propSet in properties:
-            if propSet is None:
-                continue
-            for property in propSet.iter():
-                xml = property.definition()
-                desc = descriptor.BaseDescriptor()
-
-                try:
-                    desc.parseStream(StringIO(xml))
-
-                # Ignore any descriptors that don't parse.
-                except descriptor_errors.Error:
-                    continue
-
-                configFields.extend(desc.getDataFields())
-
-        return configFields
