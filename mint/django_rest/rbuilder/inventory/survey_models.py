@@ -128,11 +128,11 @@ class Survey(modellib.XObjIdModel):
     desired_properties_descriptor = modellib.XMLField(db_column='desired_values_descriptor_xml')
     preview                       = modellib.XMLField(db_column='preview_xml')
     config_compliance             = modellib.XMLField(db_column='config_diff_xml')    
-    # WIP...
-    #system_snapshot               = modellib.XMLField(db_column='system_snapshot_xml')
-    #project_snapshot              = modellib.XMLField(db_column='project_snapshot_xml')
-    #stage_snapshot                = modellib.XMLField(db_column='stage_snapshot_xml')
+    system_snapshot               = modellib.XMLField(db_column='system_snapshot_xml')
+    project_snapshot              = modellib.XMLField(db_column='project_snapshot_xml')
+    stage_snapshot                = modellib.XMLField(db_column='stage_snapshot_xml')
 
+    # obsolete now ???
     updates_pending = XObjHidden(models.BooleanField(default=False))
     has_errors = XObjHidden(models.BooleanField(default=False))
 
