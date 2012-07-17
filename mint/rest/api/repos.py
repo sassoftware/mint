@@ -4,7 +4,6 @@
 # All Rights Reserved
 #
 import mimetypes
-from StringIO import StringIO
 
 from conary import trove
 from conary import versions
@@ -53,7 +52,7 @@ class BaseReposController(base.BaseController):
 
 class RepositoryFilesController(BaseReposController):
     modelName = 'pathHash'
-    
+
     urls = {'contents' : 'contents' }
 
     def _getFileInfo(self, hostname, troveString, pathHash):
@@ -156,7 +155,7 @@ class RepositoryItemsController(BaseReposController):
         return self.db.listImagesForTrove(hostname, 
                 name, version, flavor)
 
-    
+
 class RepositoryController(BaseReposController):
     urls = {'search'   : dict(GET='search'),
             'items'    : RepositoryItemsController,
@@ -227,5 +226,3 @@ class RepositoryController(BaseReposController):
             trv.configuration_descriptor = descriptors.get(nvf)
 
         return models.TroveList(troveList)
-
-
