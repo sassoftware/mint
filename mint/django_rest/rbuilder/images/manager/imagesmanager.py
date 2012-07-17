@@ -7,6 +7,7 @@
 import sys
 import errno
 import logging
+import hashlib
 import os
 from django.core import urlresolvers
 from mcp import client as mcp_client
@@ -540,35 +541,46 @@ class ImagesManager(basemanager.BaseManager):
         return status
 
     @exposed
-    def processImageUpload(self, image_id, uploaded_file, basename, chunk_id,
-                           num_chunks, checksum):
+    def processImageUpload(self, image_id, token, uploaded_file, basename,
+                           chunk_id, num_chunks, checksum):
         image = self.getImageById(image_id)
         if image.status == jobstatus.WAITING:
-            filename = self._getUploadFilename(image, basename)
-            handler = MultiRequestUploadHandler()
-            upload = handler.handle(uploaded_file, filename, chunk_id,
-                                    num_chunks, checksum)
-            if upload.isComplete():
-                image = self._finishImageUpload(image, upload.filename)
+            outputToken = image.image_data.get(name='outputToken').value
+            if token == outputToken:
+                filename = self._getUploadFilename(image, basename)
+                handler = MultiRequestUploadHandler()
+                upload = handler.handle(uploaded_file, filename, chunk_id,
+                                        num_chunks, checksum)
+                if upload.isComplete():
+                    image = self._finishImageUpload(image, upload.filename)
         return image
 
-    def _finishImageUpload(self, image, filename):
+    def _finishImageUpload(self, image, src_filename):
         hostname = self._getImageHostname(image.image_id)
-        new_filename = self._getImageFilePath(hostname, image.image_id,
-                                          filename, create=True)
-        os.rename(filename, new_filename)
+        dst_filename = self._getImageFilePath(hostname, image.image_id,
+                                              src_filename, create=True)
+
+        src = open(src_filename, 'rb')
+        dst = open(dst_filename, 'wb')
+        digest = hashlib.sha1()
+        util.copyfileobj(src, dst, digest=digest)
+
         try:
-            imageid_dir = os.path.dirname(filename)
+            os.remove(src_filename)
+            imageid_dir = os.path.dirname(src_filename)
             os.rmdir(imageid_dir)
             hostname_dir = os.path.dirname(imageid_dir)
             os.rmdir(hostname_dir)
-        except:
+        except OSError:
             pass
 
-        self.createImageBuildFile(image, url=new_filename,
+        self.createImageBuildFile(image, url=dst_filename,
                                   urlType=urltypes.LOCAL,
-                                  title=os.path.basename(new_filename),
-                                  size=os.path.getsize(new_filename))
+                                  title=os.path.basename(dst_filename),
+                                  size=os.path.getsize(dst_filename),
+                                  sha1=digest.hexdigest())
+
+        self._addImageToRepository(image.image_id, None)
 
         image.status = jobstatus.FINISHED
         self._postFinished(image)

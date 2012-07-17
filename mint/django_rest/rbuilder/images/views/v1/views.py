@@ -316,11 +316,12 @@ class ImageUploadFilesService(service.BaseService):
 
     @access.anonymous
     @return_xml
-    def rest_POST(self, request, image_id):
+    def rest_POST(self, request, image_id, token):
         return self.mgr.processImageUpload(image_id,
-                                    next(iter(request.FILES.values())),
-                                    request.GET.get('name'),
-                                    request.GET.get('chunk'),
-                                    request.GET.get('chunks'),
-                                    request.GET.get('md5chunk'))
+                                           token,
+                                           next(iter(request.FILES.values())),
+                                           request.GET.get('name'),
+                                           request.GET.get('chunk'),
+                                           request.GET.get('chunks'),
+                                           request.GET.get('md5chunk'))
 
