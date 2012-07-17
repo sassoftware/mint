@@ -1114,10 +1114,10 @@ class JobHandlerRegistry(HandlerRegistry):
 
         def _renderChanges(self, change_xobj):
             for change in change_xobj:
-                frum     = getattr(change, 'from', None)
+                frum     = getattr(change, 'from_conary_package', None)
                 name     = getattr(frum, 'name', None)
                 frum_ver = getattr(frum, 'version', None)
-                to     = getattr(change, 'to', None)
+                to     = getattr(change, 'to_conary_package', None)
                 to_ver = getattr(to, 'version', None)
                 yield dict(name=str(name), from_ver=str(frum_ver), to_ver=str(to_ver))
 

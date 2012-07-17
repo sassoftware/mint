@@ -451,14 +451,14 @@ class JobCreationTest(BaseJobsTest, RepeaterMixIn):
   <conary_package_changes>
     <conary_package_change>
       <type>changed</type>
-      <from>
+      <from_conary_package>
         <name>group-foo</name>
         <version>/example.com@rpath:42/1-2-3</version>
-      </from>
-      <to>
+      </from_conary_package>
+      <to_conary_package>
         <name>group-foo</name>
         <version>/example.com@rpath:42/4-5-6</version>
-      </to>
+      </to_conary_package>
     </conary_package_change>
   </conary_package_changes>
 </preview>"""
@@ -516,7 +516,7 @@ class JobCreationTest(BaseJobsTest, RepeaterMixIn):
             self.assertEquals(topLevelItems, [ 'fake' ])
 
             # Confirm <observed> is still on original version.
-            frum = getattr(xobj.parse(payload).preview.conary_package_changes.conary_package_change, 'from')
+            frum = getattr(xobj.parse(payload).preview.conary_package_changes.conary_package_change, 'from_conary_package')
             f_ver = getattr(frum, 'version')
             self.assertEquals(
                 observed,
@@ -526,7 +526,7 @@ class JobCreationTest(BaseJobsTest, RepeaterMixIn):
             self.assertEquals(topLevelItems, [ topLevelGroup ])
 
             # Confirm <observed> is now on desired version.
-            to = getattr(xobj.parse(payload).preview.conary_package_changes.conary_package_change, 'to')
+            to = getattr(xobj.parse(payload).preview.conary_package_changes.conary_package_change, 'to_conary_package')
             t_ver = getattr(to, 'version')
             self.assertEquals(
                 observed,
