@@ -203,7 +203,9 @@ class PackageNoticesCallback(NoticesCallback):
         srv._setMintAuth()
         for trvName, trvVersion in troveBinaries:
             trvLabel = trvVersion.trailingLabel().asString()
-            srv.mgr.refreshCachedUpdates(trvName, trvLabel)
+            # FIXME -- put this back -- MPD -- but need to compare elsewhere with 
+            # how the updates flag is set.
+            # srv.mgr.refreshCachedUpdates(trvName, trvLabel)
 
 
 class ApplianceNoticesCallback(PackageNoticesCallback):
