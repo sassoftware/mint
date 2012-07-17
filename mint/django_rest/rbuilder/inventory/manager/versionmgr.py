@@ -10,6 +10,7 @@ from StringIO import StringIO
 from smartform import descriptor
 from smartform import descriptor_errors
 
+from conary.deps import deps
 from conary import conaryclient, versions
 from conary import trove as conarytrove
 from conary.errors import RepositoryError
@@ -237,10 +238,7 @@ class VersionManager(basemanager.BaseManager):
 
         return True
 
-
-    # FIMXE: this from old mint/rest/api
     def _getTroveConfigDescriptor(self, name, version, flavor):
-
         repos = self.get_conary_client().repos
         trvList = repos.getTroves([(name, version, flavor)])
 
@@ -272,10 +270,7 @@ class VersionManager(basemanager.BaseManager):
 
         return configFields
 
-    # this code originally from mint/rest/api
     def _getConfigDescriptor(self, name, version, flavor):
-
-        # FIXME: import descriptor
         desc = descriptor.ConfigurationDescriptor()
         desc.setDisplayName('Configuration Descriptor')
         desc.addDescription('Configuration Descriptor')
@@ -292,7 +287,7 @@ class VersionManager(basemanager.BaseManager):
         out.seek(0)
 
         return out.read()
-   
+
     @exposed
     def getConfigurationDescriptor(self, system):
         """
@@ -301,7 +296,7 @@ class VersionManager(basemanager.BaseManager):
 
         if system.latest_survey is None:
             return '<configuration></configuration>'
-    
+
         # find the appliance group from the survey
         # what if multiple top levels with config descriptors?
         # UI doesn't support, so not worrying about it for now
@@ -309,20 +304,11 @@ class VersionManager(basemanager.BaseManager):
         for conary_package in packages.all():
             info = conary_package.conary_package_info
             name = info.name
+            version = versions.ThawVersion(info.version)
+            flavor = deps.parseFlavor(info.flavor)
             if name.startswith("group-") and name.find("-appliance") != -1:
-                #try:
-                thawed_v = versions.ThawVersion(info.version)
-                version = models.Version()
-                version.fromConaryVersion(thawed_v)
-                version.flavor = info.flavor
+                return self._getConfigDescriptor(info.name, version, flavor)
 
-                #except versions.ParseError, e:
-                #    raise errors.InvalidVersion("Error parsing version %s: %s" %
-                #        (version, str(e)))
-                res = self._getConfigDescriptor(info.name, version, info.flavor)
-                return res
-              
-        # shouldn't ever get here unless you migrated to something weird, in which 
-        # case (FIXME) just present the empty one and maybe log?
-        raise Exception("could not find group-X-appliance")                               
-
+        # shouldn't ever get here unless you migrated to something weird, in
+        # which case (FIXME) just present the empty one and maybe log?
+        raise Exception("could not find group-X-appliance")
