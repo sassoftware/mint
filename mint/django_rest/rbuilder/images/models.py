@@ -199,12 +199,14 @@ class Image(modellib.XObjIdModel):
             self.image_type = ImageType.fromImageTypeId(self._image_type)
         self.jobs = modellib.HrefFieldFromModel(self, "ImageJobs")
 
-        outputToken = ImageData.objects.filter(image=self.image_id,
-                                               name="outputToken")[0].value
-        self.upload_files = modellib.HrefField(
-           href="/api/v1/images/%s/upload_files/%s" % (self.image_id,
-                                                       outputToken)
-        )
+        image_data = ImageData.objects.filter(image=self.image_id,
+                                              name="outputToken")
+        if image_data:
+            outputToken = image_data[0].value
+            self.upload_files = modellib.HrefField(
+                href="/api/v1/images/%s/upload_files/%s" % (self.image_id,
+                                                            outputToken)
+            )
 
         self._computeActions()
 
