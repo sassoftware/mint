@@ -21,7 +21,7 @@ from mint.django_rest import timeutils
 from mint.django_rest.rbuilder.inventory import models
 from mint.django_rest.rbuilder.manager import basemanager
 from mint.django_rest.rbuilder.projects.models import Project, ProjectVersion
-from mint.rest.errors import ProductNotFound, ProductVersionNotFound
+from mint.rest.errors import ProductNotFound
 
 log = logging.getLogger(__name__)
 exposed = basemanager.exposed
