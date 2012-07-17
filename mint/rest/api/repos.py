@@ -223,6 +223,11 @@ class RepositoryController(BaseReposController):
         # Attach config descriptors to any groups.
         descriptors = ConfigDescriptorCache(repos).getDescriptors(groups.keys())
         for nvf, trv in groups.iteritems():
-            trv.configuration_descriptor = descriptors.get(nvf)
+            desc = descriptors.get(nvf)
+            if not desc:
+                continue
+            desc.setDisplayName('Configuration Descriptor')
+            desc.addDescription('Configuration Descriptor')
+            trv.configuration_descriptor = desc.toxml(validate=False)
 
         return models.TroveList(troveList)
