@@ -54,7 +54,13 @@ class ProductImagesController(base.BaseController):
                                          message="Waiting for upload file")
             self.db.setVisibleImageStatus(imageId, image.imageStatus)
 
-        return self.get(request, hostname, imageId)
+        # This is a hack to get the outputToken to show up in the
+        # upload_files URL in the response. The reason for the hackiness is
+        # because the code is deprecated and it's probably not worth doing
+        # "the right way".
+        image = self.db.getImageForProduct(hostname, imageId)
+        image.outputToken = outputToken
+        return image
 
     @requires('image', models.Image)
     def update(self, request, hostname, imageId, image):

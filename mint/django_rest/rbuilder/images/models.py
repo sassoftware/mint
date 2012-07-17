@@ -198,8 +198,12 @@ class Image(modellib.XObjIdModel):
         if self._image_type is not None:
             self.image_type = ImageType.fromImageTypeId(self._image_type)
         self.jobs = modellib.HrefFieldFromModel(self, "ImageJobs")
+
+        outputToken = ImageData.objects.filter(image=self.image_id,
+                                               name="outputToken")[0].value
         self.upload_files = modellib.HrefField(
-           href="/api/v1/images/%s/upload_files" % self.image_id
+           href="/api/v1/images/%s/upload_files/%s" % (self.image_id,
+                                                       outputToken)
         )
 
         self._computeActions()
