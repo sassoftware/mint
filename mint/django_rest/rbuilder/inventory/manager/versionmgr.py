@@ -311,7 +311,11 @@ class VersionManager(basemanager.BaseManager):
             name = info.name
             if name.startswith("group-") and name.find("-appliance") != -1:
                 #try:
-                version = versions.VersionFromString(info.version)
+                thawed_v = versions.ThawVersion(info.version)
+                version = models.Version()
+                version.fromConaryVersion(thawed_v)
+                version.flavor = info.flavor
+
                 #except versions.ParseError, e:
                 #    raise errors.InvalidVersion("Error parsing version %s: %s" %
                 #        (version, str(e)))
