@@ -4,8 +4,8 @@
 # All Rights Reserved
 #
 
-from xml.etree.ElementTree import Element, tostring
-from xml.dom.minidom import parseString
+from xml.etree.ElementTree import Element, tostring, fromstring
+# from xml.dom.minidom import parseString
 from mint.django_rest.rbuilder.inventory import survey_models
 import datetime
 
@@ -47,7 +47,13 @@ class SurveyDiff(object):
         self.windowsPackageDiff = self._computeWindowsPackages()
         self.windowsPatchDiff   = self._computeWindowsPatches()
         self.windowsServiceDiff = self._computeWindowsServices()
-     
+
+        self.configDiff         = self._computeConfigDiff()
+        self.desiredDiff        = self._computeDesiredDiff()
+        self.observedDiff       = self._computeObservedDiff()
+        self.discoveredDiff     = self._computeDiscoveredDiff()
+        self.validatorDiff      = self._computeValidatorDiff()
+
     def _name(self, obj):
         t = type(obj)
         if t == survey_models.WindowsPatchInfo:
@@ -226,6 +232,60 @@ class SurveyDiff(object):
     def _computeWindowsServices(self):
         return self._computeGeneric('windows_services', 'windows_service_info')
 
+    def _computeValueDiff(self, value_type):
+        ''' various config values are stored xpath-ish in the SurveyValues table '''
+
+        added = []
+        removed = []
+        changed = []      
+
+        left = survey_models.SurveyValues.objects.filter(
+            survey = self.left, type = value_type
+        ).order_by('key')
+
+        right = survey_models.SurveyValues.objects.filter(
+            survey = self.right, type = value_type
+        ).order_by('key')
+
+        lkeys = [ x.key for x in left ]
+        rkeys = [ x.key for x in right ] 
+
+        for x in right:
+           if x.key not in lkeys:
+               added.append(x)
+
+        for x in left:
+           if x.key not in rkeys:
+               removed.append(x)
+
+        for x in left:
+           for y in right:
+              if x.key == y.key:
+                  if x.value != y.value:
+                      # store left and right, but delta is not meaningful
+                      delta = dict(
+                         value = (x.value, y.value)
+                      )
+                      changed.append((x,y,delta))
+
+        result = (added, changed, removed)
+        return result
+ 
+    def _computeConfigDiff(self):
+        return self._computeValueDiff(survey_models.CONFIG_VALUES)
+
+    def _computeDesiredDiff(self):
+        return self._computeValueDiff(survey_models.DESIRED_VALUES)
+
+    def _computeObservedDiff(self):
+        return self._computeValueDiff(survey_models.OBSERVED_VALUES)
+
+    def _computeDiscoveredDiff(self):
+        return self._computeValueDiff(survey_models.DISCOVERED_VALUES)
+
+    def _computeValidatorDiff(self):
+        return self._computeValueDiff(survey_models.VALIDATOR_VALUES)
+   
 class SurveyDiffRender(object):
 
     def __init__(self, left, right, request=None):
@@ -275,7 +335,12 @@ class SurveyDiffRender(object):
     def _xmlNode(self, elemName, about=None, keys=[], parent=None):
         if type(keys) != list:
             keys = keys.split()
-        elem = Element(elemName, attrib=self._makeId(about))
+        id_dict = self._makeId(about)
+        if id_dict.get("id",None) is None:
+            # this is for the various properties elements, which are not REST resources
+            # TODO: fix in above function
+            id_dict={}
+        elem = Element(elemName, attrib=id_dict)
         elts = dict([ (x, getattr(about, x)) for x in keys])
         self._addElements(elem, **elts)
         if parent:
@@ -294,6 +359,16 @@ class SurveyDiffRender(object):
         elem.append(self._renderSurvey('left_survey', left))
         elem.append(self._renderSurvey('right_survey', right))
         elem.append(self._element('created_date', str(datetime.datetime.now())))
+        return elem
+
+    def _renderComplianceDiff(self):
+        elem = Element('compliance_summary_diff')
+        left = fromstring(self.left.compliance_summary)
+        left.tag = 'left'
+        right = fromstring(self.right.compliance_summary)
+        right.tag = 'right'
+        elem.append(left)
+        elem.append(right)
         return elem
 
     def _renderDiff(self, tag, changeList):
@@ -398,6 +473,15 @@ class SurveyDiffRender(object):
         subElt.append(required_elts)
         return elem
 
+    def _serializeSurveyValue(self, elemName, item):
+        '''
+        diff element serialization for config/observed/desired/discovered/validation values
+        '''
+        elem = self._xmlNode(elemName, about=item, 
+            keys='key value'
+        )
+        return elem
+
     def _serializeItem(self, elemName, item):
         ''' 
         wrappers around item serialization.  TODO: find ways to leap into xobj nicely
@@ -409,7 +493,8 @@ class SurveyDiffRender(object):
             survey_models.SurveyWindowsPackage: self._serializeWindowsPackage,
             survey_models.SurveyWindowsPatch: self._serializeWindowsPatch,
             survey_models.SurveyService: self._serializeService,
-            survey_models.SurveyWindowsService: self._serializeWindowsService
+            survey_models.SurveyWindowsService: self._serializeWindowsService,
+            survey_models.SurveyValues: self._serializeSurveyValue,
         }
         return serializers[type(item)](elemName, item)
 
@@ -476,7 +561,8 @@ class SurveyDiffRender(object):
                 (left, right, delta) = x
                 change.append(self._fromElement(parentTag, left))
                 change.append(self._toElement(parentTag, right))
-                change.append(self._diffElement(parentTag, delta))
+                if delta is not None:
+                    change.append(self._diffElement(parentTag, delta))
             parentElem.append(change)
 
     def _renderAdditions(self, parentTag, parentElem, items):
@@ -484,15 +570,18 @@ class SurveyDiffRender(object):
         render all of what's been added for an object type
         these all go directly under the foo_changes element     
         '''
-        self._renderACR(parentTag, parentElem, items, 'added')
+        if len(items) > 0:
+            self._renderACR(parentTag, parentElem, items, 'added')
 
     def _renderChanges(self, parentTag, parentElem, items):
         ''' render all of what's been changed (and how) for an object type '''
-        self._renderACR(parentTag, parentElem, items, 'changed')
+        if len(items) > 0:
+            self._renderACR(parentTag, parentElem, items, 'changed')
     
     def _renderRemovals(self, parentTag, parentElem, items):
         ''' render all of what's been removed for an object type '''
-        self._renderACR(parentTag, parentElem, items, 'removed')
+        if len(items) > 0:
+            self._renderACR(parentTag, parentElem, items, 'removed')
         
 
     def render(self):
@@ -508,11 +597,16 @@ class SurveyDiffRender(object):
             self._renderDiff('windows_package_changes', self.differ.windowsPackageDiff),
             self._renderDiff('windows_patch_changes', self.differ.windowsPatchDiff),
             self._renderDiff('windows_service_changes', self.differ.windowsServiceDiff),
+            self._renderDiff('config_properties_changes', self.differ.configDiff),
+            self._renderDiff('observed_properties_changes', self.differ.observedDiff),
+            self._renderDiff('desired_properties_changes', self.differ.desiredDiff),
+            self._renderDiff('discovered_properties_changes', self.differ.discoveredDiff),
+            self._renderDiff('validation_report_changes', self.differ.validatorDiff),
+            self._renderComplianceDiff()
         ]
+
         for elt in elts:
             root.append(elt)
 
         return tostring(root)
-        # DEBUG/development only
-        #return parseString(tostring(root)).toprettyxml() 
 

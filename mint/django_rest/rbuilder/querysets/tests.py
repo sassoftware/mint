@@ -7,6 +7,7 @@
 
 from mint.django_rest.rbuilder.inventory.tests import XMLTestCase
 from mint.django_rest.rbuilder.inventory import models as inventorymodels
+from mint.django_rest.rbuilder.users import models as usermodels
 from mint.django_rest.rbuilder.querysets import models
 from mint.django_rest.rbuilder.querysets import testsxml
 #from mint.django_rest.rbuilder.manager import rbuildermanager
@@ -83,7 +84,7 @@ class QuerySetTestCase(QueryTestCase):
         self.assertEquals(response.status_code, 200)
         systems = xobj.parse(response.content)
         count = len(systems.systems.system)
-        self.failUnlessEqual(count, 201)
+        self.failUnlessEqual(count, 198)
 
         # we will have tagged it by visiting the last pass
         # now hit it again and run down the "tagged" path
@@ -94,7 +95,7 @@ class QuerySetTestCase(QueryTestCase):
         self.assertEquals(response.status_code, 200)
         systems = xobj.parse(response.content)
         count = len(systems.systems.system)
-        self.failUnlessEqual(count, 201)
+        self.failUnlessEqual(count, 198)
 
         # since we just fetched the queryset, the queryset entry itself
         # should now have an invalidation job on it which we can use
@@ -179,9 +180,9 @@ class QuerySetTestCase(QueryTestCase):
         self.assertTrue(fetched_qs.name.find("CHANGED NAME") != -1)
  
         child2 = self.xobjSystems("query_sets/%s/child/" % qs1.pk)
-        self.assertEquals(len(child2), 201)
+        self.assertEquals(len(child2), 198)
         all2 = self.xobjSystems("query_sets/%s/all/" % qs1.pk)
-        self.assertEquals(len(all2), 201)
+        self.assertEquals(len(all2), 198)
         chosen2 = self.xobjSystems("query_sets/%s/chosen/" % qs1.pk)
         self.assertEquals(len(chosen2), 0)
         filtered2 = self.xobjSystems("query_sets/%s/filtered/" % qs1.pk)
@@ -189,9 +190,9 @@ class QuerySetTestCase(QueryTestCase):
 
         # do it again to make sure child tags work
         child2 = self.xobjSystems("query_sets/%s/child/" % qs1.pk)
-        self.assertEquals(len(child2), 201)
+        self.assertEquals(len(child2), 198)
         all2 = self.xobjSystems("query_sets/%s/all/" % qs1.pk)
-        self.assertEquals(len(all2), 201)
+        self.assertEquals(len(all2), 198)
         chosen2 = self.xobjSystems("query_sets/%s/chosen/" % qs1.pk)
         self.assertEquals(len(chosen2), 0)
         filtered2 = self.xobjSystems("query_sets/%s/filtered/" % qs1.pk)
@@ -335,5 +336,58 @@ class QuerySetTestCase(QueryTestCase):
         response = self._get("query_sets/%s/filter_descriptor/" % qsid,
             username="admin", password="password")
         self.assertEquals(response.status_code, 200)
+
+class ConfigEnvironmentsTestCase(QueryTestCase):
+
+    fixtures = ['system_collection']
+
+    def setUp(self):
+        QueryTestCase.setUp(self)
+
+    def testConfigEnvironmentModels(self):
+        # show that we can list all query sets
+
+        qs = models.QuerySet.objects.get(pk=1)
+        user = usermodels.User.objects.get(pk=1)
+
+        ce = models.ConfigEnvironment(
+           name = 'testce',
+           created_by = user,
+           modified_by = user
+           # descriptor = "..."
+        )
+        ce.save()
+
+        qsce = models.QuerySetConfigEnvironment(
+           queryset = qs,
+           config_environment = ce,
+        )
+        qsce.save()
+
+        set1 = models.ConfigEnvironmentSetting(
+           config_environment = ce,
+           key='http_port',
+           value='80'
+        )
+        set2 = models.ConfigEnvironmentSetting(
+           config_environment = ce,
+           key='motd',
+           value='one does not simply telnet into mordor'
+        )
+        set1.save()
+        set2.save()
+         
+
+        # ConfigEnvironmentSetting(...)
+
+        response = self._get("query_sets/%s" % qs.pk,
+            username="admin", password="password")
+        self.assertEquals(response.status_code, 200)
+
+        
+        #querySets = xobj.parse(response.content)
+        #length = len(querySets.query_sets.query_set)
+        # ok to bump this if we add more QS in the db
+        #self.assertEqual(length, 10)
 
 

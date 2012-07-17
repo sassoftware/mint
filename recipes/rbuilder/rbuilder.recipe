@@ -12,6 +12,7 @@ rbuilder_dirs = {
     'diffcache':                    (0775, ('root', 'apache')),
     'entitlements':                 (0775, ('root', 'apache')),
     'finished-images':              (0775, ('root', 'apache')),
+    'incoming-images':              (0775, ('root', 'apache')),
     'jobs':                         (0775, ('root', 'apache')),
     'notices':                      (0775, ('root', 'apache')),
     # Packages are downloaded by rmake, but could be removed from apache

@@ -5,13 +5,8 @@
 #
 
 import logging
-from StringIO import StringIO
-
-from smartform import descriptor
-from smartform import descriptor_errors
 
 from conary import conaryclient, versions
-from conary import trove as conarytrove
 from conary.errors import RepositoryError
 
 from django.core.exceptions import ObjectDoesNotExist
@@ -20,7 +15,7 @@ from mint.django_rest import timeutils
 from mint.django_rest.rbuilder.inventory import models
 from mint.django_rest.rbuilder.manager import basemanager
 from mint.django_rest.rbuilder.projects.models import Project, ProjectVersion
-from mint.rest.errors import ProductNotFound, ProductVersionNotFound
+from mint.rest.errors import ProductNotFound
 
 log = logging.getLogger(__name__)
 exposed = basemanager.exposed
@@ -36,45 +31,6 @@ class VersionManager(basemanager.BaseManager):
 
     def get_software_versions(self, system):
         pass
-
-    def delete_installed_software(self, system):
-        system.installed_software.all().delete()
-
-    def _diffVersions(self, system, new_versions):
-        oldInstalled = dict((x.getNVF(), x)
-            for x in system.installed_software.all())
-
-        # Do the delta
-        toAdd = []
-        newInstalled = []
-        for new_version in new_versions:
-            if isinstance(new_version, basestring):
-                trove = self.trove_from_nvf(new_version)
-            else:
-                trove = new_version
-            nvf = trove.getNVF()
-            isInst = oldInstalled.pop(nvf, None)
-            if isInst is None:
-                toAdd.append(self._trove(trove))
-            newInstalled.append(nvf)
-
-        return oldInstalled, newInstalled, toAdd
-
-    @exposed
-    def setInstalledSoftware(self, system, new_versions):
-        oldInstalled, newInstalled, toAdd = \
-            self._diffVersions(system, new_versions)
-        for trove in oldInstalled.itervalues():
-            system.installed_software.remove(trove)
-        for trove in toAdd:
-            system.installed_software.add(trove)
-            try:
-                self.setStage(system, trove)
-            except ProductVersionNotFound:
-                system.project = None
-        for trove in system.installed_software.all():
-            self.set_available_updates(trove, force=True)
-        system.save()
 
     @classmethod
     def _flavor(cls, flavor):
@@ -124,29 +80,9 @@ class VersionManager(basemanager.BaseManager):
         system.project_branch = majorVersion
         system.project = project
 
-    @exposed
-    def updateInstalledSoftware(self, system_id, new_versions):
-        system = models.System.objects.get(pk=system_id)
-        troveSpecs = ["%s=%s[%s]" % x.getNVF()
-            for x in new_versions ]
-        if troveSpecs:
-            msg = "Initiating software update to: %s" % (
-                ', '.join(troveSpecs), )
-        else:
-            msg = "Initiating software update, deleting everything"
-        self.mgr.log_system(system, msg)
-        oldInstalled, newInstalled, toAdd = \
-            self._diffVersions(system, new_versions)
-        sources = []
-        for nvf in newInstalled:
-            n, v, f = nvf
-            sources.append("%s=%s[%s]" % (n, str(v), self._flavor(f)))
-        self.mgr.scheduleSystemApplyUpdateEvent(system, sources)
-
     def trove_from_nvf(self, nvf):
         n, v, f = conaryclient.cmdline.parseTroveSpec(nvf)
         f = self._flavor(f)
-
         thawed_v = versions.ThawVersion(v)
         version = models.Version()
         version.fromConaryVersion(thawed_v)
@@ -181,13 +117,6 @@ class VersionManager(basemanager.BaseManager):
             trove=trove, trove_available_update=update_trove)
         available_update.save()
 
-    @exposed
-    def refreshCachedUpdates(self, name, label):
-        troves = models.Trove.objects.filter(name=name, 
-            version__label=label)
-        for trove in troves:
-            self.set_available_updates(trove, force=True)
-
     def get_conary_client(self):
         if self._cclient is None:
             self._cclient = self.restDb.productMgr.reposMgr.getUserClient()
@@ -197,7 +126,6 @@ class VersionManager(basemanager.BaseManager):
         one_day = timeutils.timedelta(1)
         return (trove.last_available_update_refresh + one_day) < timeutils.now()
 
-    @exposed
     def set_available_updates(self, trove, force=False):
 
         # Hack to make sure utc is set as the timezone on
@@ -308,49 +236,6 @@ class VersionManager(basemanager.BaseManager):
         Generate config descriptor for all top level items on a system.
         """
 
-        desc = descriptor.SystemConfigurationDescriptor()
-
-        fields = desc.getDataFields()
-        for trove in system.installed_software.all():
-            fields.extend(self._getTroveConfigDescriptor(trove))
-
-        out = StringIO()
-        desc.serialize(out, validate=False)
-        out.seek(0)
-
-        return out.read()
-
-    def _getTroveConfigDescriptor(self, trove):
-        client = self.get_conary_client()
-        repos = client.getRepos()
-        n, v, f = trove.getNVF()
-
-        trvList = repos.getTroves([(n, v, f)])
-
-        referencedByDefault = []
-        for trv in trvList:
-            referencedByDefault += [ nvf for nvf, byDefault, strongRef in
-                trv.iterTroveListInfo() if byDefault ]
-
-        # Get properties sorted by package name.
-        properties = repos.getTroveInfo(conarytrove._TROVEINFO_TAG_PROPERTIES,
-            sorted(referencedByDefault, cmp=lambda x, y: cmp(x[0], y[0])))
-
-        configFields = []
-        for propSet in properties:
-            if propSet is None:
-                continue
-            for property in propSet.iter():
-                xml = property.definition()
-                desc = descriptor.BaseDescriptor()
-
-                try:
-                    desc.parseStream(StringIO(xml))
-
-                # Ignore any descriptors that don't parse.
-                except descriptor_errors.Error:
-                    continue
-
-                configFields.extend(desc.getDataFields())
-
-        return configFields
+        if system.latest_survey is None:
+            return '<configuration></configuration>'
+        return system.latest_survey.config_properties_descriptor

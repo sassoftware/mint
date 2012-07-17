@@ -1,10 +1,7 @@
 #
-# Copyright (c) 2009 rPath, Inc.
-#
-# All Rights Reserved
+# Copyright (c) rPath, Inc.
 #
 
-from conary import versions
 from conary.lib import util
 from mint.lib import mintutils
 from mint.rest.db import manager
@@ -30,22 +27,23 @@ class CapsuleManager(manager.Manager):
     SourcesRHN = set(['RHN', 'satellite', 'proxy'])
     SourcesYum = set(['nu', 'SMT', 'repomd'])
 
-    def getIndexerConfig(self):
+    def getIndexerConfig(self, fqdn=None):
         capsuleDataDir = util.joinPaths(self.cfg.dataPath, 'capsules')
         cfg = rpath_capsule_indexer.IndexerConfig()
-        dbDriver = self.db.db.driver
-        # pgpool is the same as postgres
+        dbKind = self.db.db.db.kind
         dbConnectString = self.db.db.db.database
-        if dbDriver == 'pgpool':
-            dbDriver = "postgres"
-            # XXX this is temporary
+        if self.db.db.db.driver == 'pgpool':
+            # Can't share mint's connection when mint is using python-pgsql, so
+            # the one SA starts doesn't get cleaned up properly. This way at
+            # least it doesn't waste a pooler slot. There may also be problems
+            # with temporary tables.
             dbConnectString = 'postgres@localhost:5439/mint'
-        elif dbDriver == "sqlite":
+        elif dbKind == "sqlite":
             # sqlalchemy requires four slashes for a sqlite backend,
             # because it treats the filename as the database. See comments in
             # sqlalchemy/databases/sqlite.py
             dbConnectString = "/" + dbConnectString
-        cfg.configLine("store %s://%s" % (dbDriver, dbConnectString))
+        cfg.configLine("store %s://%s" % (dbKind, dbConnectString))
         cfg.configLine("indexDir %s/packages" % capsuleDataDir)
         cfg.configLine("systemsPath %s/systems" % capsuleDataDir)
         cfg.configLine("registeredSystemPrefix rbuilder %s" %
@@ -54,7 +52,15 @@ class CapsuleManager(manager.Manager):
         # Walk the content sources configured in mint
         # We will then walk the data sources defined in each platform, since
         # that is where the the data sources are defined.
-        contentSources = self.db.platformMgr.getSources().instance or []
+        if fqdn:
+            contentSources = self.db.platformMgr.getSourcesByRepository(fqdn)
+        else:
+            contentSources = self.db.platformMgr.getSources(fqdn)
+        contentSources = contentSources.instance or []
+        if fqdn and not contentSources:
+            # No injection for this repository
+            return None
+
         yumSourcesMap = {}
         for idx, contentSource in enumerate(contentSources):
             if not contentSource.enabled:
@@ -95,10 +101,9 @@ class CapsuleManager(manager.Manager):
         rhnChannels = OrderedDict()
         yumSourceConfig = {}
         # List configured platforms
-        for platform in self.db.platformMgr.platforms.list().platforms:
-            if not platform.enabled:
-                continue
-            platDef = self.db.platformMgr.platformCache.get(platform.label)
+        for platformLabel in (
+                self.db.platformMgr.getContentEnabledPlatformLabels(fqdn)):
+            platDef = self.db.platformMgr.platformCache.get(platformLabel)
             if platDef is None:
                 continue
             contentProvider = platDef.getContentProvider()
@@ -151,24 +156,19 @@ class CapsuleManager(manager.Manager):
                 return True
         return False
 
-    def getContentInjectionServers(self):
-        # Grab labels for enabled platforms that have capsule content
-        labels = self.db.platformMgr.getContentEnabledPlatformLabels()
-        ret = []
-        for label in labels:
-            try:
-                label = versions.Label(label).getHost()
-            except versions.ParseError:
-                # Oh well, try to use it as is
-                pass
-            ret.append(label)
-        return ret
-
-    def getIndexer(self):
-        cfg = self.getIndexerConfig()
+    def getIndexer(self, fqdn=None):
+        cfg = self.getIndexerConfig(fqdn)
+        if cfg is None:
+            return None
         Indexer.SourceChannels.LOGFILE_PATH = util.joinPaths(self.cfg.logPath,
             'capsule-indexer.log')
-        return Indexer(cfg)
+        dbs_conn = self.db.db.db
+        if dbs_conn.driver == 'psycopg2':
+            # Can reuse the connection if it's psycopg2
+            db = dbs_conn.dbh
+        else:
+            db = None
+        return Indexer(cfg, db=db)
 
     def getIndexerErrors(self, contentSourceName, instanceName):
         indexer = self.getIndexer()

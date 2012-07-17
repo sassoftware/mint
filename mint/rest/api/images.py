@@ -6,6 +6,7 @@
 
 from conary.lib import sha1helper
 
+from mint import jobstatus
 from mint.lib import data as datatypes
 from mint.rest.api import requires
 from mint.rest.api import base
@@ -46,7 +47,13 @@ class ProductImagesController(base.BaseController):
         outputToken = sha1helper.sha1ToString(file('/dev/urandom').read(20))
         buildData = [('outputToken', outputToken, datatypes.RDT_STRING)]
         imageId = self.db.createImage(hostname, image, buildData=buildData)
-        self.db.uploadImageFiles(hostname, image, outputToken=outputToken)
+        if image.files.files:
+            self.db.uploadImageFiles(hostname, image, outputToken=outputToken)
+        else:
+            image.imageStatus.set_status(jobstatus.WAITING,
+                                         message="Waiting for upload file")
+            self.db.setVisibleImageStatus(imageId, image.imageStatus)
+
         return self.get(request, hostname, imageId)
 
     @requires('image', models.Image)

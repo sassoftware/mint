@@ -279,6 +279,7 @@ class ProductVersions(database.TableObject):
                   'namespace',
                   'name',
                   'description',
+                  'label',
                 )
 
     def getItem(self, id):

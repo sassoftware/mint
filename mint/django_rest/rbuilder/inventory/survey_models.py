@@ -103,15 +103,64 @@ class Survey(modellib.XObjIdModel):
     description   = models.TextField()
     created_date  = modellib.DateTimeUtcField(auto_now_add=True)
     modified_date = modellib.DateTimeUtcField(auto_now_add=True)
-    removable     = models.BooleanField(default=False)
+    removable     = models.BooleanField(default=True)
     created_by    = modellib.ForeignKey(usermodels.User, null=True, db_column='created_by', related_name='+', on_delete=models.SET_NULL) 
     modified_by   = modellib.ForeignKey(usermodels.User, null=True, db_column='modified_by', related_name='+', on_delete=models.SET_NULL) 
     system        = modellib.DeferredForeignKey('inventory.System', related_name='surveys', db_column='system_id')
     comment       = models.TextField()
-    config_values = models.TextField(db_column='values_xml')
-  
+    system_model  = models.TextField()
+    system_model_modified_date = modellib.DateTimeUtcField()
+    has_system_model = models.BooleanField(default=False)
+
+    # 'should be like this' values XML from system
+    config_properties     = modellib.XMLField(db_column='values_xml')
+    # values from config readers
+    observed_properties   = modellib.XMLField(db_column='observed_values_xml')
+    # 'should be like this' values from server (usually will match system)
+    desired_properties    = modellib.XMLField(db_column='desired_values_xml')
+    # values from config discovery probes
+    discovered_properties = modellib.XMLField(db_column='discovered_values_xml')
+    # values from config validation reports
+    validation_report  = modellib.XMLField(db_column='validator_values_xml')
+     
+    compliance_summary            = modellib.XMLField(db_column='compliance_summary_xml')
+    config_properties_descriptor  = modellib.XMLField(db_column='config_values_descriptor_xml')
+    desired_properties_descriptor = modellib.XMLField(db_column='desired_values_descriptor_xml')
+    preview                       = modellib.XMLField(db_column='preview_xml')
+    config_compliance             = modellib.XMLField(db_column='config_diff_xml')    
+
+    updates_pending = XObjHidden(models.BooleanField(default=False))
+    has_errors = XObjHidden(models.BooleanField(default=False))
+
     def get_url_key(self, *args, **kwargs):
         return [ self.uuid ]
+
+#***********************************************************
+
+# type codes for SurveyValues
+CONFIG_VALUES = 0
+DESIRED_VALUES = 1
+OBSERVED_VALUES = 2
+DISCOVERED_VALUES = 3
+VALIDATOR_VALUES = 4
+
+class SurveyValues(modellib.XObjIdModel):
+    ''' shredded values of various system properties so they are searchable '''
+
+    class Meta:
+        db_table = 'inventory_survey_values'
+
+    _xobj_explicit_accessors = set([])
+    _xobj = xobj.XObjMetadata(
+        tag = '_inventory_survey_values', attributes = {'id':str}
+    )
+
+    survey_value_id = models.AutoField(primary_key=True, db_column='survey_value_id')
+    survey          = modellib.ForeignKey(Survey, db_column='survey_id', null=False, related_name='survey_config')
+    type            = models.IntegerField(null=False)
+    key             = models.TextField(null=False)
+    subkey          = models.TextField(null=True)
+    value           = models.TextField()
 
 #***********************************************************
 
@@ -224,7 +273,7 @@ class WindowsPackageInfo(modellib.XObjIdModel):
     view_name = 'SurveyWindowsPackageInfo'
     _xobj = xobj.XObjMetadata(tag='windows_package_info')
     summary_view = [ 'publisher', 'product_code', 'package_code',
-                     'product_name' 'type', 'upgrade_code',
+                     'product_name', 'type', 'upgrade_code',
                      'version' ]
 
     windows_package_id = models.AutoField(primary_key=True)
@@ -425,7 +474,8 @@ class SurveyConaryPackage(modellib.XObjIdModel):
     survey              = modellib.ForeignKey(Survey, related_name='conary_packages', null=False)
     conary_package_info = modellib.ForeignKey(ConaryPackageInfo, related_name='survey_conary_packages', db_column='conary_package_id', null=False)
     install_date        = modellib.DateTimeUtcField(auto_now_add=False, null=True)
-    
+    is_top_level        = models.BooleanField(null=False, default=False)   
+ 
     def get_url_key(self, *args, **kwargs):
         return [ self.conary_package_id ] 
 
@@ -502,6 +552,7 @@ class SurveyWindowsService(modellib.XObjIdModel):
     windows_service_id   = models.AutoField(primary_key=True, db_column='map_id')
     survey               = XObjHidden(modellib.ForeignKey(Survey, related_name='windows_services', null=False))
     windows_service_info = modellib.ForeignKey(WindowsServiceInfo, related_name='survey_windows_services', db_column='windows_service_id', null=False)
+    running              = models.BooleanField()
     status               = models.TextField(null=False)
  
     def get_url_key(self, *args, **kwargs):

@@ -14,7 +14,7 @@ class InvalidNetworkInformation(InventoryError):
     status = 400
 
 class UnknownEventType(InventoryError):
-    "An unknown even type was specified: %(eventType)s"
+    "An unknown event type was specified: %(eventType)s"
     status = 400
 
 class JobsAlreadyRunning(InventoryError):

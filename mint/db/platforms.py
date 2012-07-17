@@ -1,15 +1,5 @@
 #
-# Copyright (c) 2011 rPath, Inc.
-#
-# This program is distributed under the terms of the Common Public License,
-# version 1.0. A copy of this license should have been distributed with this
-# source file in a file called LICENSE. If it is not present, the license
-# is always available at http://www.opensource.org/licenses/cpl.php.
-#
-# This program is distributed in the hope that it will be useful, but
-# without any warranty; without even the implied warranty of merchantability
-# or fitness for a particular purpose. See the Common Public License for
-# full details.
+# Copyright (c) rPath, Inc.
 #
 
 import logging
@@ -193,6 +183,21 @@ class PlatformSourcesTable(database.KeyedTable):
         """
         cu.execute(sql, platformId)
         return cu.fetchall()
+
+    @dbReader
+    def getByRepository(self, cu, reposHost):
+        cu.execute("""
+            SELECT DISTINCT ps.platformSourceId, ps.name, ps.shortName,
+                ps.defaultSource, ps.orderIndex, ps.contentSourceType
+            FROM platformSources ps
+            JOIN platformsPlatformSources pps USING ( platformSourceId )
+            JOIN Platforms pl USING ( platformId )
+            JOIN Projects p USING ( projectId )
+            WHERE p.fqdn = ?
+            ORDER BY ps.orderIndex
+        """, reposHost)
+        return cu.fetchall()
+
 
 class PlatformSourceDataTable(data.GenericDataTable):
     name = 'platformSourceData'

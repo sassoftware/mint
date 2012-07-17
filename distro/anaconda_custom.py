@@ -3,21 +3,21 @@
 # All rights reserved
 #
 
-import os
 import sys
 sys.path.insert(0, '/usr/lib/anaconda/installclasses')
 
 from pykickstart.constants import CLEARPART_TYPE_ALL
 from rhpl.translate import N_
 
-import bootloader
-import iutil
-import partRequests
 import parted
-from fsset import FileSystemType, fileSystemTypeGet, fileSystemTypeGetDefault, fileSystemTypeRegister
+import partRequests
+from fsset import FileSystemType
+from fsset import fileSystemTypeGet
+from fsset import fileSystemTypeGetDefault
+from fsset import fileSystemTypeRegister
+
 from constants import BL_EXTLINUX
 from rpathapp import InstallClass as BaseInstallClass
-
 
 class blankFileSystem(FileSystemType):
     def __init__(self):
@@ -107,11 +107,6 @@ class InstallClass(BaseInstallClass):
         requests.append(partRequests.LogicalVolumeRequestSpec(
             fstype=fileSystemTypeGet('blank'), size=4096, lvname='slave_dummy',
             grow=1, volgroup='vg00'))
-
-        # Create /var/log - 4GiB
-        requests.append(partRequests.LogicalVolumeRequestSpec(lvname='logs',
-            fstype=fileSystemTypeGetDefault(), mountpoint='/var/log', 
-            size=4096, format=1, volgroup='vg00'))
 
         # Create swap -- always 4GiB
         # (minswap, maxswap) = iutil.swapSuggestion()

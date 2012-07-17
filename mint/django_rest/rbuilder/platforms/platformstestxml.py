@@ -404,7 +404,7 @@ platformStatus2Xml = """\
 """
 
 deferred_image_descriptor_xml = """
-<descriptor xmlns="http://www.rpath.com/permanent/descriptor-1.0.xsd" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.rpath.com/permanent/descriptor-1.0.xsd descriptor-1.0.xsd">
+<descriptor xmlns="http://www.rpath.com/permanent/descriptor-1.1.xsd" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.rpath.com/permanent/descriptor-1.1.xsd descriptor-1.1.xsd" version="1.1">
   <dataFields>
     <field>
       <descriptions>
@@ -417,6 +417,7 @@ deferred_image_descriptor_xml = """
     </field>
     <field>
       <descriptions/>
+      <type>enumeratedType</type>
       <enumeratedType>
         <describedValue>
           <descriptions>
@@ -448,7 +449,7 @@ deferred_image_descriptor_xml = """
 """
 
 deferred_image_descriptor_no_base_images_xml = """
-<descriptor xmlns="http://www.rpath.com/permanent/descriptor-1.0.xsd" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.rpath.com/permanent/descriptor-1.0.xsd descriptor-1.0.xsd">
+<descriptor xmlns="http://www.rpath.com/permanent/descriptor-1.1.xsd" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.rpath.com/permanent/descriptor-1.1.xsd descriptor-1.1.xsd" version="1.1">
   <dataFields>
     <field>
       <descriptions>
@@ -461,6 +462,7 @@ deferred_image_descriptor_no_base_images_xml = """
     </field>
     <field>
       <descriptions/>
+      <type>enumeratedType</type>
       <enumeratedType>
         <describedValue>
           <descriptions>

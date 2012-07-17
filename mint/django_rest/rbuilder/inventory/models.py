@@ -1,4 +1,4 @@
-#
+
 # Copyright (c) 2010 rPath, Inc.
 #
 # All Rights Reserved
@@ -229,7 +229,7 @@ class SystemState(modellib.XObjIdModel):
     UNMANAGED_CREDENTIALS_REQUIRED_DESC = "Unmanaged: Invalid credentials"
     
     REGISTERED = "registered"
-    REGISTERED_DESC = "Initial synchronization pending"
+    REGISTERED_DESC = "Registered"
     
     RESPONSIVE = "responsive"
     RESPONSIVE_DESC = "Online"
@@ -500,8 +500,6 @@ class System(modellib.XObjIdModel):
     current_state = D(modellib.SerializedForeignKey(
             SystemState, null=True, related_name='systems'),
         "the current state of the system", short="System state")
-    installed_software = D(models.ManyToManyField('Trove', null=True),
-        "a collection of top-level items installed on the system")
     managing_zone = D(modellib.ForeignKey(zmodels.Zone, null=False,
             related_name='systems', text_field="name"),
         "a link to the management zone in which this system resides")
@@ -552,6 +550,8 @@ class System(modellib.XObjIdModel):
         "the date the system was last modified", short="System modified date")
     latest_survey = modellib.DeferredForeignKey('inventory.Survey',
         null=True, related_name='+', on_delete=models.SET_NULL)
+    survey = D(XObjHidden(modellib.SyntheticField()),
+        "survey specified at registration time")
 
     # Note the camel-case here. It is intentional, this is a field sent
     # only by catalog-service via rmake, to simplify creation of system
@@ -564,11 +564,16 @@ class System(modellib.XObjIdModel):
     # these fields are derived from job & trove state
     # stored here so serialization speed is acceptable
     # call updateDerivedData() to recalculate
-    has_running_jobs = models.BooleanField(default=False, null=False)
-    has_active_jobs = models.BooleanField(default=False, null=False)
-    out_of_date  = models.BooleanField(default=False, null=False)
-    is_configured = modellib.SyntheticField(models.BooleanField(default=False, null=False))
+    has_running_jobs = D(models.BooleanField(default=False, null=False), 'whether the system has running jobs', short="System running jobs")
+    has_active_jobs = D(models.BooleanField(default=False, null=False), 'whether the system has active (queued/unqueud) jobs', short='System active jobs')
+    out_of_date  = D(models.BooleanField(default=False, null=False), 'whether the system has pending updates', short='System out of date')
+    
+    configuration_applied = D(models.BooleanField(default=False, null=False), 'whether any configuraiton has been applied for this system', short='System configuration applied')
+    configuration_set = D(models.BooleanField(default=False, null=False), 'whether any configuration has been saved (but not necc. applied) for this system', short='System configuration saved')
 
+    last_update_trove_spec = XObjHidden(models.TextField())
+
+    # FIXME: OUT OF DATE -- installed software no longer used, can purge some of this?
     # We need to distinguish between an <installed_software> node not being
     # present at all, and being present and empty
     new_versions = None
@@ -720,11 +725,17 @@ class System(modellib.XObjIdModel):
         self.save()
 
     def isOutOfDate(self):
-        out_of_date = False
-        for trove in self.installed_software.all():
-            if trove.out_of_date:
-                return True
-        return False
+        latest = self.latest_survey
+        if latest is None:
+            return True
+        compliance_summary = xobj.parse(latest.compliance_summary)
+        sw_compliance = getattr(compliance_summary, 'software', None)
+        if sw_compliance is None:
+            return True
+        compliance_bit = getattr(sw_compliance, 'compliant', None)
+        if compliance_bit is None or compliance_bit == '':
+            return True
+        return (compliance_bit.lower() == 'false')
 
 
     def serialize(self, request=None):
@@ -865,17 +876,33 @@ class System(modellib.XObjIdModel):
         self._computeActions()
         self.ssl_client_certificate = self._ssl_client_certificate
 
-        self.is_configured = False
-        if self.configuration is not None:
-            self.is_configured = True
-
     def _computeActions(self):
         '''What actions are available on the system?'''
 
         self.actions = actions = jobmodels.Actions()
         actions.action = []
-        assimEnabled = bool(self.management_interface_id and self.management_interface.name == 'ssh')
-        scanEnabled = bool(self.management_interface_id and self.management_interface.name == 'cim')
+        assimEnabled = bool(self.management_interface_id and
+            self.management_interface.name == 'ssh')
+        scanEnabled = bool(self.management_interface_id and
+            self.management_interface.name in ('cim', 'wmi'))
+        configureEnabled = False
+        # Disable config action if no config is saved, or if the system
+        # is based on a system model
+        if self.latest_survey is not None:
+            configureEnabled = bool((self.configuration is not None) and \
+                not self.latest_survey.has_system_model)
+        else:
+            # no survey taken, legacy system in inventory, don't disable
+            # the action because it would be confusing, next registration will
+            # survey it.
+            configureEnabled = bool(self.configuration is not None)
+
+        capture_enabled = False
+        if self.target_id:
+            drvCls = targetmodels.Target.getDriverClassForTargetId(
+                self.target_id)
+            capture_enabled = hasattr(drvCls, "drvCaptureSystem")
+
         actions.action.extend([
             jobmodels.EventType.makeAction(
                 jobmodels.EventType.SYSTEM_ASSIMILATE,
@@ -892,23 +919,30 @@ class System(modellib.XObjIdModel):
                 descriptorHref="descriptors/survey_scan",
                 enabled=scanEnabled,
             ),
+            jobmodels.EventType.makeAction(
+                jobmodels.EventType.SYSTEM_CAPTURE,
+                actionName="System capture",
+                descriptorModel=self,
+                descriptorHref="descriptors/capture",
+                enabled=capture_enabled,
+            ),
+            jobmodels.EventType.makeAction(
+                jobmodels.EventType.SYSTEM_UPDATE,
+                actionName="Update Software",
+                descriptorModel=self,
+                descriptorHref="descriptors/update",
+                enabled=True,
+            ),
+            jobmodels.EventType.makeAction(
+                jobmodels.EventType.SYSTEM_CONFIGURE,
+                actionName="Apply system configuration",
+                descriptorModel=self,
+                descriptorHref="descriptors/configure", 
+                enabled=configureEnabled,
+            ),
         ])
 
-        if self.target_id:
-            drvCls = targetmodels.Target.getDriverClassForTargetId(
-                self.target_id)
-            enabled = hasattr(drvCls, "drvCaptureSystem")
-        else:
-            enabled = False
-        action = jobmodels.EventType.makeAction(
-            jobmodels.EventType.SYSTEM_CAPTURE,
-            actionName="System capture",
-            descriptorModel=self,
-            descriptorHref="descriptors/capture",
-            enabled=enabled)
-        actions.action.append(action)
-
-        return action
+        return actions
 
     def hasSourceImage(self):
         return bool(getattr(self, 'source_image', None))
@@ -1249,6 +1283,25 @@ class ErrorResponse(modellib.XObjModel):
     message = models.TextField()
     traceback = models.TextField()
     product_code = models.TextField()
+
+class Update(modellib.XObjIdModel):
+
+    class Meta:
+        db_table = 'inventory_update'
+
+    view_name = 'Update'
+
+    update_id = D(models.AutoField(primary_key=True),
+                  'the update ID for the system', short='Update ID')
+    system    = modellib.DeferredForeignKey('inventory.System',
+                                            related_name='updates+', db_column='system_id')
+    dry_run      = models.BooleanField(default=False)
+    specs        = models.TextField()
+    created_date = D(modellib.DateTimeUtcField(auto_now_add=True),
+        'the date the update was created (UTC)')
+
+# ------------------------
+# this stays at the bottom!
 
 for mod_obj in sys.modules[__name__].__dict__.values():
     if hasattr(mod_obj, '_xobj'):

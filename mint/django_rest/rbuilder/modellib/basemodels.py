@@ -351,6 +351,7 @@ class BaseManager(models.Manager):
                 subelement = getattr(val, subelementName, None)
                 if subelement is None:
                     continue
+                subelement = getattr(subelement, key, subelement)
                 val = xobj.toxml(subelement, tag=subelementTag,
                     prettyPrint=False, xml_declaration=False)
 
@@ -800,17 +801,13 @@ class SystemManager(BaseManager):
     
     def _clear_m2m_accessor(self, model, m2m_accessor):
         # XXX Need a better way to handle this
-        if m2m_accessor in [ 'installed_software', 'jobs' ]:
+        if m2m_accessor in [ 'jobs' ]:
             return
         BaseManager._clear_m2m_accessor(self, model, m2m_accessor)
 
     def _set_m2m_accessor(self, model, m2m_accessor, rel_mod, flags=None):
         # XXX Need a better way to handle this
-        if m2m_accessor == 'installed_software':
-            if model.new_versions is None:
-                model.new_versions = []
-            model.new_versions.append(rel_mod)
-        elif m2m_accessor == 'jobs':
+        if m2m_accessor == 'jobs':
             self._handleSystemJob(model, rel_mod)
         else:
             BaseManager._set_m2m_accessor(self, model, m2m_accessor, rel_mod, flags=flags)
@@ -1284,7 +1281,18 @@ class XObjModel(models.Model):
                 elif isinstance(field, XMLField):
                     if val is None:
                         continue
-                    val = xobj.parse(val)
+                    try:
+                        val = xobj.parse(val)
+                        # avoid rendering as <values><values> etc
+                        # if the field name matches the XML field name
+                        subelt = getattr(val, key, None)
+                        if subelt is not None:
+                            val = subelt
+                    except:
+                        if val is None or val == '':
+                            val = ''
+                        else:
+                            raise
                 elif isinstance(field, HrefField):
                     if isinstance(val, HrefField):
                         # If a value was passed in, then ignore the
