@@ -91,7 +91,6 @@ class ReposTest(restbase.BaseRestTest):
     <timeStamp>%(timestamp)s</timeStamp>
     <images href="http://%(server)s:%(port)s/api/products/testproject/repos/items/group-foo%3D/testproject.rpath.local2%40yournamespace%3Atestproject-1.0-devel/1-1-1%5B%5D/images"/>
     <imageCount>0</imageCount>
-    <configuration_descriptor></configuration_descriptor>
   </trove>
 </troves>
 """
@@ -99,7 +98,7 @@ class ReposTest(restbase.BaseRestTest):
         resp = response
         resp = re.sub("<timeStamp>.*</timeStamp>", "<timeStamp></timeStamp>",
             resp)
-        self.failUnlessEqual(resp,
+        self.assertXMLEquals(resp,
              exp % dict(port = client.port, server = client.server,
                         timestamp = ''))
 
@@ -201,7 +200,6 @@ class ReposTest(restbase.BaseRestTest):
       </file>
     </files>
     <baseFileName>testproject-1-</baseFileName>
-    <upload_files href="http://localhost:8000/api/v1/images/1/upload_files"/>
   </image>
   <image id="http://%(server)s:%(port)s/api/products/testproject/images/2">
     <imageId>2</imageId>
@@ -238,7 +236,6 @@ class ReposTest(restbase.BaseRestTest):
       </file>
     </files>
     <baseFileName>testproject-1-</baseFileName>
-    <upload_files href="http://localhost:8000/api/v1/images/2/upload_files"/>
   </image>
 </images>
 """
