@@ -552,13 +552,13 @@ class SurveyManager(basemanager.BaseManager):
         if system.desired_top_level_items.count() == 0:
             mgr = inventory_models.SystemDesiredTopLevelItem.objects
             for troveSpec in topLevelItems:
-                mgr.create(system=system, trove_spec=troveSpec)
-
+                obj = mgr.create(system=system, trove_spec=troveSpec)
+                obj.save()
 
         for xmodel in xwindows_packages:
             xinfo = xmodel.windows_package_info
             xid = xmodel.id
-            info,created = survey_models.WindowsPackageInfo.objects.get_or_create(
+            info, created = survey_models.WindowsPackageInfo.objects.get_or_create(
                 publisher    = _u(xinfo.publisher),
                 product_code = _u(xinfo.product_code),
                 product_name = _u(xinfo.product_name),
