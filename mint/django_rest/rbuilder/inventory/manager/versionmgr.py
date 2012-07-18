@@ -230,9 +230,24 @@ class VersionManager(basemanager.BaseManager):
                     if ver > repoVersion:
                         trove.out_of_date = True
 
+                    # updating systems that use this trove as found in 
+                    # desired_top_level_items, whose format is a troveSpec
+                    # the Trove table is just for the "cache" of conary results
+
+                    #matched_systems = []
+                    # 
+                    #matched_systems = models.System.objects.filter(
+                    #    # this is probably wrong
+                    #    desired_top_level_items__trove_spec = ("%s=" % trove.name)
+                    #)
+                    #for x in matched_systems:
+                    #    x.updateDerivedData()
+
         # Always add the current version as an available update, this is so
         # that remediation will work.
         trove.available_updates.add(trove.version)
+
+        
 
         return True
 

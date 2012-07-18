@@ -724,18 +724,18 @@ class System(modellib.XObjIdModel):
         self.save()
 
     def isOutOfDate(self):
-        latest = self.latest_survey
-        if latest is None:
-            return True
-        compliance_summary = xobj.parse(latest.compliance_summary)
-        sw_compliance = getattr(compliance_summary, 'software', None)
-        if sw_compliance is None:
-            return True
-        compliance_bit = getattr(sw_compliance, 'compliant', None)
-        if compliance_bit is None or compliance_bit == '':
-            return True
-        return (compliance_bit.lower() == 'false')
-
+        for x in self.desired_top_level_items.all():
+            troveSpec = x.trove_spec
+            (name, rest) = troveSpec.split('=')
+            (version, flavor) = rest.split("[")
+            flavor = flavor.replace("]","")
+            troves = Trove.objects.filter(name=name, version=version, flavor=flavor)
+            # FIXME: this is also incomplete, we must make sure the trove is a member of the stage
+            for x in troves:
+                # should just get one back, but anyway...
+                if x.out_of_date:
+                    return True
+        return False
 
     def serialize(self, request=None):
         
