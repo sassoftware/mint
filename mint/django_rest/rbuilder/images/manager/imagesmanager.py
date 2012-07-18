@@ -533,7 +533,7 @@ class ImagesManager(basemanager.BaseManager):
         return mcp_client.Client(self.cfg.queueHost, self.cfg.queuePort)
 
     @exposed
-    def getImageUploadStatus(self, image_id, basename):
+    def getImageUploadStatus(self, image_id, basename, token):
         image = self.getImageById(image_id)
         filename = self._getUploadFilename(image, basename)
         handler = MultiRequestUploadHandler()

@@ -367,18 +367,26 @@ class ImageManager(manager.Manager):
         else:
             productVersionId, stage = self.db.productMgr.getProductVersionForLabel(
                                                     fqdn, troveLabel)
+        cu.execute("""SELECT stage_id FROM project_branch_stage
+            WHERE project_branch_id = ? AND name = ?""",
+            productVersionId, stage)
+        row = cu.fetchone()
+        if row:
+            stageId = row[0]
+        else:
+            stageId = None
         sql = '''INSERT INTO Builds (projectId, name, buildType, timeCreated, 
                                      buildCount, createdBy, troveName, 
                                      troveVersion, troveFlavor, stageName, 
-                                     productVersionId, output_trove) 
-                            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)'''
+                                     productVersionId, output_trove, stageid)
+                            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)'''
         assert buildType is not None
         cu.execute(sql, productId, buildName, buildType,    
                    time.time(), 0, self.auth.userId,
                    troveTuple[0], troveTuple[1].freeze(),
                    troveTuple[2].freeze(),
                    stage, productVersionId,
-                   image.outputTrove)
+                   image.outputTrove, stageId)
         buildId = cu.lastrowid
 
         buildDataTable = self.db.db.buildData

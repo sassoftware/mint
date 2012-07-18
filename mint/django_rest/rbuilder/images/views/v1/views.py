@@ -306,11 +306,11 @@ class ImageDescriptorsService(service.BaseService):
 
 class ImageUploadFilesService(service.BaseService):
     @access.anonymous
-    def rest_GET(self, request, image_id):
-        return self.get(image_id, request.GET.get('name'))
+    def rest_GET(self, request, image_id, token):
+        return self.get(image_id, request.GET.get('name'), token)
 
-    def get(self, image_id, filename):
-        status = self.mgr.getImageUploadStatus(image_id, filename)
+    def get(self, image_id, filename, token):
+        status = self.mgr.getImageUploadStatus(image_id, filename, token)
         return HttpResponse(urllib.urlencode(status),
                             mimetype='application/x-www-form-urlencoded')
 
