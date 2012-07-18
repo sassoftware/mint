@@ -547,7 +547,7 @@ class SurveyManager(basemanager.BaseManager):
 
         # If no desired state is saved in the db, set it from the survey
         if system.desired_top_level_items.count() == 0:
-            mgr = inventory_models.SystemDesiredTopLevelItem.objects
+            # #mgr = inventory_models.SystemDesiredTopLevelItem.objects
             for troveSpec in topLevelItems:
                 # **DISABLED FOR DEMO**
                 #obj = mgr.create(system=system, trove_spec=troveSpec)
