@@ -158,14 +158,14 @@ class ImageDownloadField(CalculatedField):
 
 
 class ImageUploadsHrefField(AbstractUrlField):
-    handleNone = True
+    handleNone = False
 
     def _getUrl(self, parent, context):
         baseUrl = context.request.baseUrl
         if hasattr(parent, 'outputToken'):
             outputToken = parent.outputToken
         else:
-            outputToken = ''
+            return None
         return "%s/v1/images/%d/upload_files/%s" % (baseUrl,
                 parent.imageId, outputToken)
 
