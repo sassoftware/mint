@@ -423,8 +423,6 @@ class SurveyManager(basemanager.BaseManager):
         desc    = getattr(xsurvey, 'description', "")
         comment = getattr(xsurvey, 'comment',     "")
 
-        # FIXME: there is a catch-22 around this and we need to remove it:
-        desired_descriptor = '<desired_descriptor></desired_descriptor>'
 
         # default to removable for registration surveys, but not manual ones
         removable = (origin != 'scanner')
@@ -456,7 +454,6 @@ class SurveyManager(basemanager.BaseManager):
             validation_report = self._toxml(xvalidation_report),
             preview = self._toxml(xpreview),
             config_properties_descriptor = xconfig_descriptor,
-            desired_properties_descriptor = desired_descriptor,
             system_model = systemModelContents,
             system_model_modified_date = systemModelModifiedDate,
             has_system_model = hasSystemModel,
@@ -552,8 +549,13 @@ class SurveyManager(basemanager.BaseManager):
         if system.desired_top_level_items.count() == 0:
             mgr = inventory_models.SystemDesiredTopLevelItem.objects
             for troveSpec in topLevelItems:
-                obj = mgr.create(system=system, trove_spec=troveSpec)
-                obj.save()
+                # **DISABLED FOR DEMO**
+                #obj = mgr.create(system=system, trove_spec=troveSpec)
+                # we should not save these yet, why?  The format will cause problems 
+                # with the various callbacks.  We need to save this fully qualified
+                # just like the update code sets.
+                #obj.save()
+                pass
 
         for xmodel in xwindows_packages:
             xinfo = xmodel.windows_package_info
@@ -683,6 +685,16 @@ class SurveyManager(basemanager.BaseManager):
         survey.updates_pending = updates_pending
         survey.compliance_summary = compliance_xml
         survey.config_compliance = self._computeConfigDelta(survey)
+        survey.save()
+
+        # have to do this later as it depends on the current survey results
+        desired_descriptor='<configuration/>'
+        try:        
+            desired_descriptor = self.mgr.getConfigurationDescriptor(system)
+        except:
+            # ** BE NICE TO DEMO, conary stuff does not seem mocked in tests!!!!
+            pass
+        survey.desired_descriptor = desired_descriptor
         survey.save()
 
         survey = survey_models.Survey.objects.get(pk=survey.pk)

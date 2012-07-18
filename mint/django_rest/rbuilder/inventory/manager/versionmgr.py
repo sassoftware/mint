@@ -13,7 +13,7 @@ from smartform import descriptor_errors
 from conary.deps import deps
 from conary import conaryclient, versions
 from conary import trove as conarytrove
-from conary.errors import RepositoryError
+from conary.errors import RepositoryError, ParseError
 
 from django.core.exceptions import ObjectDoesNotExist
 
@@ -253,7 +253,10 @@ class VersionManager(basemanager.BaseManager):
 
     def _getTroveConfigDescriptor(self, name, version, flavor):
         repos = self.get_conary_client().repos
-        trvList = repos.getTroves([(name, version, flavor)])
+        try:
+            trvList = repos.getTroves([(name, version, flavor)])
+        except:
+            return None
 
         referencedByDefault = []
         for trv in trvList:
@@ -290,6 +293,8 @@ class VersionManager(basemanager.BaseManager):
 
         newFields = self._getTroveConfigDescriptor(name, version, flavor)
         if not newFields:
+            # this stuff isn't really well mocked out and may also happen
+            # in legit cases
             return ''
 
         fields = desc.getDataFields()
@@ -324,11 +329,15 @@ class VersionManager(basemanager.BaseManager):
         for conary_package in packages.all():
             info = conary_package.conary_package_info
             name = info.name
-            version = versions.ThawVersion(info.version)
+            try:
+                version = versions.ThawVersion(info.version)
+            except ParseError:
+                continue
             flavor = deps.parseFlavor(info.flavor)
             if name.startswith("group-") and name.find("-appliance") != -1:
                 return self._getConfigDescriptor(info.name, version, flavor)
 
         # shouldn't ever get here unless you migrated to something weird, in
         # which case (FIXME) just present the empty one and maybe log?
-        raise Exception("could not find group-X-appliance")
+        return '<configuration></configuration>'
+

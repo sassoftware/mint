@@ -203,7 +203,9 @@ class PackageNoticesCallback(NoticesCallback):
         srv._setMintAuth()
         for trvName, trvVersion in troveBinaries:
             trvLabel = trvVersion.trailingLabel().asString()
-            srv.mgr.refreshCachedUpdates(trvName, trvLabel)
+            # (AGAIN) DISABLED FOR DEMO *** conary parsing code seems fragile with some of the survey data when copying
+            # desired_top_level_items over, and possibly some others, need to investigate.
+            # srv.mgr.refreshCachedUpdates(trvName, trvLabel)
 
 
 class ApplianceNoticesCallback(PackageNoticesCallback):
