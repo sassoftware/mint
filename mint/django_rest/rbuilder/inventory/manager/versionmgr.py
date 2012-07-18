@@ -132,7 +132,6 @@ class VersionManager(basemanager.BaseManager):
         one_day = timeutils.timedelta(1)
         return (trove.last_available_update_refresh + one_day) < timeutils.now()
 
-    # FIXME: is this still used?  -- MPD
     def set_available_updates(self, trove, force=False):
 
         # Hack to make sure utc is set as the timezone on
@@ -150,7 +149,6 @@ class VersionManager(basemanager.BaseManager):
                 trove.last_available_update_refresh = timeutils.now()
                 trove.save()
 
-    # NOTE: this system should no longer be used, but not positive -- MPD
     def refresh_available_updates(self, trove):
         self.cclient = self.get_conary_client()
         # trvName and trvVersion are str's, trvFlavor is a
@@ -287,6 +285,13 @@ class VersionManager(basemanager.BaseManager):
         out.seek(0)
 
         return out.read()
+
+    @exposed
+    def refreshCachedUpdates(self, name, label):
+        troves = models.Trove.objects.filter(name=name,
+            version__label=label)
+        for trove in troves:
+            self.set_available_updates(trove, force=True)
 
     @exposed
     def getConfigurationDescriptor(self, system):
