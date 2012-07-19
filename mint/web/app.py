@@ -22,7 +22,6 @@ from mint.helperfuncs import (formatHTTPDate, getProjectText,
 from mint.mint_error import MaintenanceMode, MintError
 from mint.web import fields
 from mint.web.admin import AdminHandler
-from mint.web.repos import ConaryHandler
 from mint.web.site import SiteHandler
 from mint.web.webhandler import (WebHandler, normPath, setCacheControl,
     HttpNotFound)
@@ -80,7 +79,6 @@ class MintApp(WebHandler):
         self.siteHandler = SiteHandler()
         self.adminHandler = AdminHandler()
         self.errorHandler = ErrorHandler()
-        self.conaryHandler = ConaryHandler(req, cfg, repServer)
 
     def _handle(self, pathInfo):
         method = self.req.method.upper()
@@ -237,7 +235,6 @@ class MintApp(WebHandler):
         urls = (
             (r'^/admin/',  self.adminHandler),
             (r'^/administer/',  self.adminHandler),
-            (r'^/repos/',       self.conaryHandler),
             (r'^/unknownError', self.errorHandler),
             (r'^/',             self.siteHandler),
         )

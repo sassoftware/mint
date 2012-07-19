@@ -4,7 +4,7 @@
 # All Rights Reserved
 #
 
-SUBDIRS = repos admin
+SUBDIRS = admin
 
 kid_files = $(wildcard *.kid)
 
