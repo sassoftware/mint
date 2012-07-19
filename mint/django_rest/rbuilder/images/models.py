@@ -9,6 +9,7 @@
 # **THESE ARE CURRENTLY JUST STUBS TO UNBLOCK DEVELOPMENT**
 
 from mint import buildtypes
+from django.core.urlresolvers import reverse
 from django.db import models
 from mint import helperfuncs
 from mint.django_rest.deco import D
@@ -204,9 +205,7 @@ class Image(modellib.XObjIdModel):
         if image_data:
             outputToken = image_data[0].value
             self.upload_files = modellib.HrefField(
-                href="/api/v1/images/%s/upload_files/%s" % (self.image_id,
-                                                            outputToken)
-            )
+                href= reverse('ImageUpload', args=[self.image_id, outputToken]))
 
         self._computeActions()
 
