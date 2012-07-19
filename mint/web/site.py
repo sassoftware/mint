@@ -16,14 +16,20 @@ from mint.lib.unixutils import AtomicFile
 from mint.session import SqlSession
 
 from mint.web.fields import boolFields, intFields, strFields
-from mint.web.decorators import requiresAdmin, requiresAuth, \
-     requiresHttps, redirectHttps, redirectHttp
-from mint.web.webhandler import (WebHandler, normPath, setCacheControl,
-    HttpNotFound, HttpMethodNotAllowed, HttpForbidden, HttpBadRequest)
+from mint.web.decorators import requiresAdmin
+from mint.web.decorators import requiresHttps
+from mint.web.decorators import redirectHttps
+from mint.web.decorators import redirectHttp
+from mint.web.webhandler import WebHandler
+from mint.web.webhandler import normPath
+from mint.web.webhandler import setCacheControl
+from mint.web.webhandler import HttpNotFound
+from mint.web.webhandler import HttpMethodNotAllowed
+from mint.web.webhandler import HttpForbidden
+from mint.web.webhandler import HttpBadRequest
 
 from conary.lib import digestlib
 from conary.lib import util
-from conary import versions
 
 log = logging.getLogger(__name__)
 
@@ -106,7 +112,6 @@ class SiteHandler(WebHandler):
                 self.session['authToken'] = (authToken[0], '')
                 self.session['firstTimer'] = firstTimer
                 self.session['firstPage'] = unquote(to)
-                user = client.getUser(auth.userId)
                 client.updateAccessedTime(auth.userId)
                 self.session.save()
 
