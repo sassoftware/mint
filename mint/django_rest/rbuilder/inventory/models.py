@@ -724,18 +724,19 @@ class System(modellib.XObjIdModel):
         self.save()
 
     def isOutOfDate(self):
-        for x in self.desired_top_level_items.all():
-            troveSpec = x.trove_spec
-            (name, rest) = troveSpec.split('=')
-            (version, flavor) = rest.split("[")
-            flavor = flavor.replace("]","")
-            troves = Trove.objects.filter(name=name, version=version, flavor=flavor)
-            # FIXME: this is also incomplete, we must make sure the trove is a member of the stage
-            for x in troves:
-                # should just get one back, but anyway...
-                if x.out_of_date:
-                    return True
         return False
+        #for x in self.desired_top_level_items.all():
+        #    troveSpec = x.trove_spec
+        #    (name, rest) = troveSpec.split('=')
+        #    (version, flavor) = rest.split("[")
+        #    flavor = flavor.replace("]","")
+        #    troves = Trove.objects.filter(name=name, version=version, flavor=flavor)
+        #    # FIXME: this is also incomplete, we must make sure the trove is a member of the stage
+        #    for x in troves:
+        #        # should just get one back, but anyway...
+        #        if x.out_of_date:
+        #            return True
+        #return False
 
     def serialize(self, request=None):
         
