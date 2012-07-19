@@ -38,7 +38,7 @@ class SiteHandler(WebHandler):
         cmd = path.split('/')[1]
 
         if not cmd:
-            return self._frontPage
+            self._redirectOldLinks()
         try:
             method = self.__getattribute__(cmd)
         except AttributeError:
@@ -48,10 +48,6 @@ class SiteHandler(WebHandler):
             raise HttpNotFound
 
         return method
-
-    @redirectHttp
-    def _frontPage(self, auth, *args, **kwargs):
-        self._redirectOldLinks()
 
     @strFields(user = '', password = '')
     def pwCheck(self, auth, user, password):
