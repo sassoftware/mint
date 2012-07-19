@@ -47,60 +47,6 @@ class AdminHandler(WebHandler):
     def _frontPage(self, *args, **kwargs):
         return self._write('admin/frontPage', kwargs = kwargs)
 
-    def newUser(self, *args, **kwargs):
-        return self._write('admin/newUser', kwargs = kwargs)
-
-    @strFields(newUsername = '', email = '', password = '', password2 = '',
-               fullName = '', displayEmail = '', blurb = '')
-    def processNewUser(self, newUsername, fullName, email, password,
-                             password2, displayEmail, blurb, *args, **kwargs):
-        # newUsername was only used to prevent browsers from supplying a
-        # remembered value
-        username = newUsername
-        if not username:
-            self._addErrors("You must supply a username.")
-        if not email:
-            self._addErrors("You must supply a valid e-mail address.  This will be used to confirm your account.")
-        if not password or not password2:
-            self._addErrors("Password field left blank.")
-        if password != password2:
-            self._addErrors("Passwords do not match.")
-        if len(password) < 6:
-            self._addErrors("Password must be 6 characters or longer.")
-        if not self._getErrors():
-            try:
-                self.client.registerNewUser(username, password, fullName, email,
-                            displayEmail, blurb, active=True)
-            except users.UserAlreadyExists:
-                self._addErrors("An account with that username already exists.")
-            except users.GroupAlreadyExists:
-                self._addErrors("An account with that username already exists.")
-            except users.MailError,e:
-                self._addErrors(e.context);
-        if not self._getErrors():
-            self._setInfo("User account created")
-            self._redirectHttp("admin/")
-        else:
-            kwargs = {'username': username,
-                      'email': email,
-                      'fullName': fullName,
-                      'displayEmail': displayEmail,
-                      'blurb': blurb
-                     }
-            return self._write("admin/newUser", kwargs = kwargs)
-
-    def reports(self, *args, **kwargs):
-        reports = self.client.listAvailableReports()
-        return self._write('admin/report', kwargs=kwargs,
-            availableReports = reports.iteritems())
-
-    @strFields(reportName = None)
-    def viewReport(self, *args, **kwargs):
-        pdfData = self.client.getReportPdf(kwargs['reportName'])
-        self.req.content_type = "application/x-pdf"
-        self.req.headers_out.add('Content-Disposition', "attachment; filename=%s.pdf" % (kwargs['reportName']))
-        return pdfData
-
     def _validateExternalProject(self, name, hostname, label, url,
                         externalUser, externalPass,
                         externalEntKey,
@@ -311,7 +257,6 @@ class AdminHandler(WebHandler):
             editing = True, mirrored = mirrored, kwargs = kwargs,
             initialKwargs = initialKwargs, projectId = projectId)
 
-
     def external(self, auth):
         pText = getProjectText().title()
         regColumns = ['%s Name'%pText, 'Mirrored']
@@ -425,7 +370,6 @@ class AdminHandler(WebHandler):
                            'selectedTargets': [],
                            'allTargets': allTargets})
         return self._write('admin/editOutbound', isNew=isNew, id=id, projects = projects, kwargs = kwargs)
-
 
     @intFields(projectId = None, id = -1)
     @boolFields(mirrorSources=False, allLabels=False, useReleases=True)
@@ -586,4 +530,3 @@ class AdminHandler(WebHandler):
                     'removeJSON': json.dumps(remove)}
             return self._write('confirm', message=message, noLink=noLink,
                                yesArgs=yesArgs)
-

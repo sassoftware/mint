@@ -1,7 +1,7 @@
 <?xml version='1.0' encoding='UTF-8'?>
 <html xmlns="http://www.w3.org/1999/xhtml"
       xmlns:py="http://purl.org/kid/ns#"
-      py:extends="'../layoutUI.kid', 'admin.kid'">
+      py:extends="'../layout.kid', 'admin.kid'">
 <!--
     Copyright (c) 2005-2008 rPath, Inc.
     All Rights Reserved
