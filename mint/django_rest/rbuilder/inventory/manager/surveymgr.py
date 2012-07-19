@@ -516,8 +516,10 @@ class SurveyManager(basemanager.BaseManager):
                 revision     = _u(xinfo.revision),
                 architecture = _u(xinfo.architecture),
                 signature    = _u(xinfo.signature),
-                unfrozen     = _u(getattr(xinfo, 'unfrozen', ''))
             )
+            # unfrozen might not be set on old survey data, but update it if we have data now
+            # (hence not inside the get_or_create)
+            info.unfrozen    = _u(getattr(xinfo, 'unfrozen', ''))
             encap = getattr(xinfo, 'rpm_package_info', None)
 
             use_date = self._date(xmodel.install_date)
