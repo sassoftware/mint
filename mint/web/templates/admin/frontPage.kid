@@ -25,13 +25,10 @@
                     the menu to the left, you can:</p>
     
                     <ul>
-                        <li>Create ${cfg.productName} user accounts</li>
                         <li>Add ${projectText().lower()}s that reference remote repositories</li>
                         <li>Control the ${projectText().lower()}s that can be mirrored to remote repositories</li>
                         <li>Put ${cfg.productName} into or out of maintenance mode</li>
-                        <li py:if="cfg.rBuilderOnline">View ${cfg.productName} usage reports</li>
-                        <li py:if="cfg.rBuilderOnline">Manage the list of featured appliances</li>
-                        <li py:if="not cfg.rBuilderOnline">Use rPath Appliance Agent to perform system-level maintenance of ${cfg.productName}</li>
+                        <li>Use rPath Appliance Agent to perform system-level maintenance of ${cfg.productName}</li>
                     </ul>
     
                     <p>Note: Administrative operations for existing users and ${projectText().lower()}s 
