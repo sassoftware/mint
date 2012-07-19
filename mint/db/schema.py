@@ -28,7 +28,7 @@ from conary.dbstore import sqlerrors, sqllib
 log = logging.getLogger(__name__)
 
 # database schema major version
-RBUILDER_DB_VERSION = sqllib.DBversion(63, 17)
+RBUILDER_DB_VERSION = sqllib.DBversion(63, 18)
 
 def _createTrigger(db, table, column="changed"):
     retInsert = db.createTrigger(table, column, "INSERT")
@@ -1776,6 +1776,7 @@ def _createSurveyTables(db, cfg):
                 "revision" TEXT NOT NULL,
                 "architecture" TEXT NOT NULL,
                 "signature" TEXT NOT NULL,
+                "unfrozen" TEXT,
                 "rpm_package_id" INTEGER REFERENCES inventory_rpm_package (rpm_package_id) ON DELETE SET NULL 
     """)
     

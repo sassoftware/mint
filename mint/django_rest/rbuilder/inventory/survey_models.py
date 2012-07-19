@@ -261,6 +261,7 @@ class ConaryPackageInfo(modellib.XObjIdModel):
     revision          = models.TextField(null=False)
     architecture      = models.TextField(null=False)
     signature         = models.TextField(null=False)
+    unfrozen          = models.TextField(null=True)
     # needs to be deferrred so URL is included 
     rpm_package_info  = modellib.ForeignKey(RpmPackageInfo, db_column='rpm_package_id', related_name='+')
 

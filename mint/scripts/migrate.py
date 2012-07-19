@@ -4978,7 +4978,7 @@ class MigrateTo_62(SchemaMigration):
  
 class MigrateTo_63(SchemaMigration):
     '''Goad'''
-    Version = (63, 17)
+    Version = (63, 18)
 
     def migrate(self):
         ''' add initial tables for config environments'''
@@ -5202,6 +5202,11 @@ class MigrateTo_63(SchemaMigration):
         cu.execute("ALTER TABLE inventory_survey ADD COLUMN system_snapshot_xml TEXT")
         cu.execute("ALTER TABLE inventory_survey ADD COLUMN project_snapshot_xml TEXT")
         cu.execute("ALTER TABLE inventory_survey ADD COLUMN stage_snapshot_xml TEXT")
+        return True
+
+    def migrate18(self):
+        cu = self.db.cursor()
+        cu.execute("ALTER TABLE inventory_conary_package ADD COLUMN unfrozen TEXT")
         return True
 
 #### SCHEMA MIGRATIONS END HERE #############################################

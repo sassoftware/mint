@@ -234,14 +234,12 @@ class VersionManager(basemanager.BaseManager):
                     # desired_top_level_items, whose format is a troveSpec
                     # the Trove table is just for the "cache" of conary results
 
-                    #matched_systems = []
-                    # 
-                    #matched_systems = models.System.objects.filter(
-                    #    # this is probably wrong
-                    #    desired_top_level_items__trove_spec = ("%s=" % trove.name)
-                    #)
-                    #for x in matched_systems:
-                    #    x.updateDerivedData()
+                    trove_name_match = "%s=" % trove.name
+                    matched_systems = models.System.objects.filter(
+                        desired_top_level_items__trove_spec__contains = trove_name_match
+                    )
+                    for x in matched_systems:
+                        x.updateDerivedData()
 
         # Always add the current version as an available update, this is so
         # that remediation will work.

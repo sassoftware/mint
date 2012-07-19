@@ -515,14 +515,15 @@ class SurveyManager(basemanager.BaseManager):
                 description  = _u(xinfo.description),
                 revision     = _u(xinfo.revision),
                 architecture = _u(xinfo.architecture),
-                signature    = _u(xinfo.signature)
+                signature    = _u(xinfo.signature),
+                unfrozen     = _u(getattr(xinfo, 'unfrozen', ''))
             )
             encap = getattr(xinfo, 'rpm_package_info', None)
 
             use_date = self._date(xmodel.install_date)
             top_level = _u(getattr(xmodel, 'is_top_level', ''))
             is_top_level = False
-            if top_level.lower() == 'true':
+            if top_level.lower() == 'true' or (info.name.startswith('group-') and info.name.find("-appliance") != -1):
                 is_top_level = True
                 topLevelItems.add('%s=%s[%s]' %
                     (info.name, info.version, info.flavor))
@@ -546,16 +547,11 @@ class SurveyManager(basemanager.BaseManager):
             pkg.save()
 
         # If no desired state is saved in the db, set it from the survey
-        if system.desired_top_level_items.count() == 0:
-            # #mgr = inventory_models.SystemDesiredTopLevelItem.objects
+        count = system.desired_top_level_items.count()
+        if count == 0:
             for troveSpec in topLevelItems:
-                # **DISABLED FOR DEMO**
-                #obj = mgr.create(system=system, trove_spec=troveSpec)
-                # we should not save these yet, why?  The format will cause problems 
-                # with the various callbacks.  We need to save this fully qualified
-                # just like the update code sets.
-                #obj.save()
-                pass
+                obj = inventory_models.SystemDesiredTopLevelItem(system=system, trove_spec=troveSpec)
+                obj.save()
 
         for xmodel in xwindows_packages:
             xinfo = xmodel.windows_package_info

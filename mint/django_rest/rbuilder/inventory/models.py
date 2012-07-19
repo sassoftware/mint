@@ -724,18 +724,21 @@ class System(modellib.XObjIdModel):
         self.save()
 
     def isOutOfDate(self):
+
+        # this will eventually walk the survey instead
+        # and compare the unfrozen element to the Trove.version.full fields
+        # until then, disabled
         return False
         #for x in self.desired_top_level_items.all():
         #    troveSpec = x.trove_spec
         #    (name, rest) = troveSpec.split('=')
-        #    (version, flavor) = rest.split("[")
-        #    flavor = flavor.replace("]","")
-        #    troves = Trove.objects.filter(name=name, version=version, flavor=flavor)
+        #    troves = Trove.objects.filter(name=name, version__) # flavor=flavor) 
         #    # FIXME: this is also incomplete, we must make sure the trove is a member of the stage
-        #    for x in troves:
-        #        # should just get one back, but anyway...
-        #        if x.out_of_date:
-        #            return True
+        #    ood = [ t for t in troves if t.out_of_date ]
+        #    if len(troves) == 0:
+        #        raise Exception("no matching troves: %s, %s, %s" % (name, version, flavor))
+        #    if len(ood) > 1:
+        #        return True
         #return False
 
     def serialize(self, request=None):
