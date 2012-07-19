@@ -737,7 +737,7 @@ class System(modellib.XObjIdModel):
              if unfrozen is None or unfrozen == '':
                  # legacy survey, never stored this info, so we can't really tell if it's out of date
                  continue
-             troves = Trove.objects.filter(name=name, version__full=unfrozen)
+             troves = Trove.objects.filter(name=cp.conary_package_info.name, version__full=unfrozen)
              ood = [ t for t in troves if t.out_of_date ]
              if len(troves) == 0:
                  raise Exception("no matching troves: %s" % unfrozen)
