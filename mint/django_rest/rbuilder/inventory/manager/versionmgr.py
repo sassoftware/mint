@@ -125,7 +125,11 @@ class VersionManager(basemanager.BaseManager):
 
     def get_conary_client(self):
         if self._cclient is None:
-            self._cclient = self.restDb.productMgr.reposMgr.getUserClient()
+            try:
+                self._cclient = self.restDb.productMgr.reposMgr.getUserClient()
+            except:
+                # needs to be mocked in tests
+                return None
         return self._cclient
 
     def _checkCacheExpired(self, trove):
@@ -151,6 +155,9 @@ class VersionManager(basemanager.BaseManager):
 
     def refresh_available_updates(self, trove):
         self.cclient = self.get_conary_client()
+        if self.cclient is None:
+            return None
+
         # trvName and trvVersion are str's, trvFlavor is a
         # conary.deps.deps.Flavor.
         trvName = trove.name
@@ -250,7 +257,11 @@ class VersionManager(basemanager.BaseManager):
         return True
 
     def _getTroveConfigDescriptor(self, name, version, flavor):
-        repos = self.get_conary_client().repos
+        client = self.get_conary_client()
+        if client is None:
+            # indicates we are in test code, needs to be mocked out
+            return '' 
+        repos = client.repos
         try:
             trvList = repos.getTroves([(name, version, flavor)])
         except:

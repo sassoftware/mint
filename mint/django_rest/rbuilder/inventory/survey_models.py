@@ -559,6 +559,8 @@ class SurveyWindowsService(modellib.XObjIdModel):
     windows_service_info = modellib.ForeignKey(WindowsServiceInfo, related_name='survey_windows_services', db_column='windows_service_id', null=False)
     running              = models.BooleanField()
     status               = models.TextField(null=False)
+    start_account        = models.TextField()
+    start_mode           = models.TextField()
  
     def get_url_key(self, *args, **kwargs):
         return [ self.windows_service_id ]

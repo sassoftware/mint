@@ -581,7 +581,7 @@ class SurveyManager(basemanager.BaseManager):
                 survey = survey,
                 install_source = _u(xmodel.install_source),
                 local_package  = _u(xmodel.local_package),
-                install_date   = self._date(xmodel.install_date), 
+                install_date   = self._date(xmodel.install_date),
             )
             windows_packages_by_id[xid] = pkg
             pkg.save()
@@ -673,6 +673,8 @@ class SurveyManager(basemanager.BaseManager):
                 # getattr can be removed once supplied by newer Windows survey code (7/4/11 or so)
                 # no windows survey code is otherwise released
                 running              = self._bool(getattr(xmodel, 'running', 'false')),
+                start_account        = _u(getattr(xmodel, 'start_account', '')),
+                start_mode           = _u(getattr(xmodel, 'start_mode', ''))
             )
             service.save()
 
