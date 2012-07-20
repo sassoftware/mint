@@ -193,20 +193,10 @@ from mint.web.templatesupport import injectVersion, dictToJS, projectText
             <span id="topOfPage"><a href="#top">Top of Page</a></span>
             <div class="footerLinks">
                 <span id="mintFullVersionString" style="display: none">${cfg.productName} version ${constants.fullVersion} | </span>
-                <span id="mintVersionString">${cfg.productName} version ${constants.mintVersion} | </span>
-                <span py:if="cfg.rBuilderOnline"><a href="${cfg.corpSite}">About ${cfg.companyName}</a> | </span>
-                <span py:if="cfg.announceLink"><a href="${cfg.announceLink}">Site Announcements</a> | </span>
-                <span py:if="cfg.legaleseLink"><a href="${cfg.legaleseLink}">Legal</a> | </span>
-                <span py:if="cfg.rBuilderOnline"><a href="${cfg.corpSite}company-contact-rpath.html">Contact Us</a> | </span>
-                <span py:if="not cfg.rBuilderOnline"><a href="http://wiki.rpath.com/wiki/rBuilder?version=${constants.mintVersion}" target="_blank"> rBuilder ${constants.mintVersion} User Guide</a> | </span>
-                <span py:if="cfg.rBuilderOnline"><a href="http://wiki.rpath.com/wiki/rBuilder_Online" target="_blank">
-                    rBuilder Online User Guide</a> | </span>
-                <span py:if="auth.admin and not cfg.rBuilderOnline">
-                    <a href="http://wiki.rpath.com/wiki/rBuilder:Administration_Guide?version=${constants.mintVersion}" target="_blank">
-                    rBuilder ${constants.mintVersion} Administration Guide</a> | </span>
+                <span id="mintVersionString">${cfg.productName} version ${constants.mintVersion}</span>
             </div>
             <div id="bottomText">
-                <span id="copyright">Copyright &copy; 2005-2009 rPath. All Rights Reserved.</span>
+                <span id="copyright">Copyright &copy; rPath, Inc. All Rights Reserved.</span>
             </div>
          
         </div><br class="clear" />

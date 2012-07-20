@@ -23,7 +23,7 @@
             <li py:attrs="{'class': (lastchunk in ('updateServices', 'editUpdateService', 'processEditUpdateService')) and 'selectedItem' or None}"><a href="${cfg.basePath}admin/updateServices">Configure Update Services</a></li>
             <li py:attrs="{'class': (lastchunk in ('outbound', 'editOutbound', 'processEditOutbound')) and 'selectedItem' or None}"><a href="${cfg.basePath}admin/outbound">Configure Outbound Mirroring</a></li>
             <li py:attrs="{'class': (lastchunk == 'maintenance') and 'selectedItem' or None}"><a href="${cfg.basePath}admin/maintenance">Manage Maintenance Mode</a></li>
-            <li py:if="not cfg.rBuilderOnline" py:attrs="{'class': (lastchunk == 'rAA')}"><a href="https://${hostName}:8003/" target="_blank">More Administrative Options</a></li>
+            <li py:attrs="{'class': (lastchunk == 'rAA')}"><a href="https://${hostName}:8003/" target="_blank">More Administrative Options</a></li>
         </ul>
     </div>
 

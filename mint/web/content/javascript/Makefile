@@ -1,28 +1,13 @@
 javascript_files = $(wildcard *.js)
 
-generated_files =\
-	buildtypes.js \
-	jobstatus.js  \
-	buildtemplates.js
-
 static_files = $(javascript_files)
 
-all: $(generated_files) default-all
+all: default-all
 
 install: static-install default-install
 
 clean: default-clean
 	rm -f $(generated_files)
-
-buildtypes.js: ../../../buildtypes.py
-	python ../../../buildtypes.py --genjs > buildtypes.js
-
-jobstatus.js: ../../../jobstatus.py
-	python ../../../jobstatus.py --genjs > jobstatus.js
-
-buildtemplates.js: ../../../buildtemplates.py
-	PYTHONPATH=../../../../ python ../../../buildtemplates.py --genjs > buildtemplates.js
-
 
 include ../../../../Make.rules
 # vim: set sts=8 sw=8 noexpandtab :
