@@ -740,7 +740,7 @@ class System(modellib.XObjIdModel):
              troves = Trove.objects.filter(name=cp.conary_package_info.name, version__full=unfrozen)
              ood = [ t for t in troves if t.out_of_date ]
              if len(troves) == 0:
-                 raise Exception("no matching troves: %s" % unfrozen)
+                 continue
              if len(ood) > 0:
                  return True
         # no conary packages is super-unlikely :)
