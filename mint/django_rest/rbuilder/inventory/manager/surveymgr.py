@@ -397,7 +397,6 @@ class SurveyManager(basemanager.BaseManager):
             xdesired_properties = xobj.parse(config.to_xml())
         if xdesired_properties is None or getattr(xdesired_properties, 'configuration', None) is None:
             xdesired_properties = xobj.parse('<configuration/>')
-        xdesired_properties.configuration._xobj.tag = 'desired_properties'
 
         origin = getattr(xsurvey, 'origin', 'scanner')
 
