@@ -685,14 +685,12 @@ class SurveyManager(basemanager.BaseManager):
         survey.config_compliance = self._computeConfigDelta(survey)
         survey.save()
 
-        # have to do this later as it depends on the current survey results
-        desired_descriptor='<configuration/>'
-        try:        
-            desired_descriptor = self.mgr.getConfigurationDescriptor(system)
-        except:
-            # ** BE NICE TO DEMO, conary stuff does not seem mocked in tests!!!!
-            pass
-        survey.desired_descriptor = desired_descriptor
+        # required to avoid some first survey Catch-22 issues
+        system.latest_survey = survey
+        system.save()
+
+        desired_descriptor = self.mgr.getConfigurationDescriptor(system)
+        survey.desired_properties_descriptor = desired_descriptor
         survey.save()
 
         survey = survey_models.Survey.objects.get(pk=survey.pk)
