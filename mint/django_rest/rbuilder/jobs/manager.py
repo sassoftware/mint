@@ -27,6 +27,8 @@ from mint.django_rest.rbuilder.images import models as imagemodels
 from mint.django_rest.rbuilder.jobs import models
 from mint.django_rest.rbuilder.inventory import models as inventorymodels
 from mint.django_rest.rbuilder.targets import models as targetmodels
+from mint.django_rest.rbuilder.users import models as usermodels
+from mint.django_rest.rbuilder.rbac.manager.rbacmanager import MODMEMBERS
 from mint.lib import data as mintdata
 from mint.lib import uuid
 from mint.logerror import logErrorAndEmail
@@ -1047,6 +1049,14 @@ class JobHandlerRegistry(HandlerRegistry):
         __slots__ = [ 'system', 'eventUuid', 'specs', 'dryRun']
         jobType = models.EventType.SYSTEM_UPDATE
         ResultsTag = 'preview'
+
+        def createRmakeJob(self, job):
+            user = usermodels.User.objects.get(pk=job.created_by_id)
+            self.extractDescriptorData(job) # Get .system onto self.
+            allowed = self.mgr.mgr.rbacMgr.userHasRbacPermission(user, self.system, MODMEMBERS)
+            if not allowed:
+                raise errors.InvalidData(msg = "Operation not allowed.")
+            return super(JobHandlerRegistry.SystemUpdate, self).createRmakeJob(job)
 
         def getDescriptor(self, descriptorId):
             match = self.splitResourceId(descriptorId)
