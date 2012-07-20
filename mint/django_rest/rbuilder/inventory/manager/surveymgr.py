@@ -11,6 +11,7 @@ from mint.django_rest.rbuilder.inventory import models as inventory_models
 from mint.django_rest.rbuilder.manager import basemanager
 from mint.django_rest.rbuilder.inventory.manager.surveydiff import SurveyDiffRender
 from mint.django_rest import timeutils
+from conary import versions
 from xobj import xobj
 import datetime
 
@@ -508,6 +509,14 @@ class SurveyManager(basemanager.BaseManager):
         topLevelItems = set()
         for xmodel in xconary_packages:
             xinfo = xmodel.conary_package_info
+
+            unfrozen = ''
+            try:
+                conary_version = versions.ThawVersion(_u(xinfo.version))
+                unfrozen = conary_version.asString()
+            except:
+                pass
+
             info, created = survey_models.ConaryPackageInfo.objects.get_or_create(
                 name         = _u(xinfo.name),
                 version      = _u(xinfo.version),
@@ -519,7 +528,7 @@ class SurveyManager(basemanager.BaseManager):
             )
             # unfrozen might not be set on old survey data, but update it if we have data now
             # (hence not inside the get_or_create)
-            info.unfrozen    = _u(getattr(xinfo, 'unfrozen', ''))
+            info.unfrozen    = unfrozen
             encap = getattr(xinfo, 'rpm_package_info', None)
 
             use_date = self._date(xmodel.install_date)
