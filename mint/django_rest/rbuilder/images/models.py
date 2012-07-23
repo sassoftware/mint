@@ -207,7 +207,8 @@ class Image(modellib.XObjIdModel):
             if image_data:
                 outputToken = image_data[0].value
                 self.upload_files = modellib.HrefField(
-                    href= reverse('ImageUpload', args=[self.image_id, outputToken]))
+                    href=reverse('ImageUpload', args=[self.image_id,
+                                                      outputToken]))
 
         self._computeActions()
 
