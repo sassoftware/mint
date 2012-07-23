@@ -9,6 +9,7 @@
 # **THESE ARE CURRENTLY JUST STUBS TO UNBLOCK DEVELOPMENT**
 
 from mint import buildtypes
+from mint import jobstatus
 from django.core.urlresolvers import reverse
 from django.db import models
 from mint import helperfuncs
@@ -200,12 +201,14 @@ class Image(modellib.XObjIdModel):
             self.image_type = ImageType.fromImageTypeId(self._image_type)
         self.jobs = modellib.HrefFieldFromModel(self, "ImageJobs")
 
-        image_data = ImageData.objects.filter(image=self.image_id,
-                                              name="outputToken")
-        if image_data:
-            outputToken = image_data[0].value
-            self.upload_files = modellib.HrefField(
-                href= reverse('ImageUpload', args=[self.image_id, outputToken]))
+        if self.status == jobstatus.WAITING:
+            image_data = ImageData.objects.filter(image=self.image_id,
+                                                  name="outputToken")
+            if image_data:
+                outputToken = image_data[0].value
+                self.upload_files = modellib.HrefField(
+                    href=reverse('ImageUpload', args=[self.image_id,
+                                                      outputToken]))
 
         self._computeActions()
 

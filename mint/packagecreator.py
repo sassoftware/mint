@@ -192,6 +192,9 @@ def getPackageCreatorFactories(pc, sessionHandle):
     except errors.UnsupportedFileFormat, e:
         raise mint_error.PackageCreatorError("Error gathering Candidate Build Factories: %s",
             "The file uploaded is not a supported file type")
+    except errors.UnsupportedSPFMetadataFormat, e:
+        raise mint_error.PackageCreatorError('Error gathering candidate '
+            'factories: %s.', e)
     [x[1].seek(0) for x in factories]
     ret = [(x[0],x[1].read(),x[3], x[4]) for x in factories]
     return ret, data
