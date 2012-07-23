@@ -362,7 +362,13 @@ class SurveyDiffRender(object):
         return elem
 
     def _renderComplianceDiff(self):
+        from mint.django_rest.rbuilder import errors
         elem = Element('compliance_summary_diff')
+        msg = "Survey %s is from a previous version that no longer supports diffs, please take a new survey"
+        if self.left.compliance_summary is None:
+            raise errors.Conflict(msg=msg % self.left.uuid)
+        elif self.right.compliance_summary is None:
+            raise errors.Conflict(msg=msg % self.right.uuid)
         left = fromstring(self.left.compliance_summary)
         left.tag = 'left'
         right = fromstring(self.right.compliance_summary)
