@@ -560,6 +560,9 @@ class ImagesManager(basemanager.BaseManager):
         dst_filename = self._getImageFilePath(hostname, image.image_id,
                                               src_filename, create=True)
 
+        # This copy operation is slow. It is done to calculate the sha1 hash
+        # of the image file. A better approach would be to do the calculation
+        # inside a job.
         src = open(src_filename, 'rb')
         dst = open(dst_filename, 'wb')
         digest = hashlib.sha1()
