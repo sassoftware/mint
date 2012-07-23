@@ -276,7 +276,7 @@ class Image(modellib.XObjIdModel):
         return modellib.XObjIdModel.save(self)
 
     def _computeActions(self):
-        if self._image_type == buildtypes.DEFERRED_IMAGE:
+        if self._image_type == buildtypes.DEFERRED_IMAGE and self.base_image:
             self.actions = self._computeActionsForImage(self.base_image)
         else:
             self.actions = self._computeActionsForImage(self)
