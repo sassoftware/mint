@@ -733,10 +733,6 @@ class MintServer(object):
         if not url:
             url = 'http://%s/conary/' % (fqdn,)
 
-        dbSpec = None
-        if mirrored:
-            dbSpec = self.cfg.defaultDatabase
-
         creatorId = self.auth.userId > 0 and self.auth.userId or None
 
         self.db.transaction()
@@ -746,7 +742,7 @@ class MintServer(object):
                     description='', shortname=hostname, fqdn=fqdn,
                     hostname=hostname, domainname=domainname, projecturl='',
                     external=True, timeModified=now, timeCreated=now,
-                    database=dbSpec,
+                    database=None,
                     prodtype="Repository",
                     commit=False,
                     )
@@ -759,11 +755,6 @@ class MintServer(object):
 
             # create the labels entry
             self.labels.addLabel(projectId, label, url, 'none', commit=False)
-
-            # create the target repository if needed
-            if mirrored:
-                self.restDb.productMgr.reposMgr.createRepository(projectId,
-                        createMaps=False)
         except:
             self.db.rollback()
             raise
