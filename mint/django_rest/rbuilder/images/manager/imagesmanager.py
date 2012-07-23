@@ -582,6 +582,8 @@ class ImagesManager(basemanager.BaseManager):
 
         self._addImageToRepository(image.image_id, None)
 
+        image.image_data.get(name='outputToken').delete()
+
         image.status = jobstatus.FINISHED
         self._postFinished(image)
         return self.getImageById(image.image_id)
