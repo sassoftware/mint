@@ -203,6 +203,7 @@ class Image(modellib.XObjIdModel):
 
         if image.status == jobstatus.WAITING:
             image_data = ImageData.objects.filter(image=self.image_id,
+                                                  name="outputToken")
             if image_data:
                 outputToken = image_data[0].value
                 self.upload_files = modellib.HrefField(
