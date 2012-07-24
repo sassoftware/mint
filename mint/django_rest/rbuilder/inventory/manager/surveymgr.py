@@ -6,7 +6,6 @@
 
 import logging
 from mint.django_rest.rbuilder.inventory import survey_models
-from mint.django_rest.rbuilder.users import models as user_models
 from mint.django_rest.rbuilder.inventory import models as inventory_models
 from mint.django_rest.rbuilder.projects import models as project_models
 from mint.django_rest.rbuilder.manager import basemanager
