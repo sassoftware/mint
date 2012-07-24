@@ -8,6 +8,7 @@ import logging
 from mint.django_rest.rbuilder.inventory import survey_models
 from mint.django_rest.rbuilder.users import models as user_models
 from mint.django_rest.rbuilder.inventory import models as inventory_models
+from mint.django_rest.rbuilder.projects import models as project_models
 from mint.django_rest.rbuilder.manager import basemanager
 from mint.django_rest.rbuilder.inventory.manager.surveydiff import SurveyDiffRender
 from mint.django_rest import timeutils
@@ -537,7 +538,19 @@ class SurveyManager(basemanager.BaseManager):
                 is_top_level = True
                 topLevelItems.add('%s=%s[%s]' %
                     (info.name, info.version, info.flavor))
-
+                ver = versions.VersionFromString(unfrozen)
+                label = ver.trailingLabel()
+                labelstr = label.asString()
+                # TODO: if somehow the system is in a stage that got deleted
+                # be cool and just set it back to NULL
+                stage = project_models.Stage.objects.get(label=labelstr)
+                project = stage.project
+                branch = stage.project_branch
+                system.project = project
+                system.project_branch = branch
+                system.project_branch_stage = stage
+                system.save()
+ 
             if encap is not None:
                 info.rpm_package_info = rpm_info_by_id[encap.id]
                 info.save()
