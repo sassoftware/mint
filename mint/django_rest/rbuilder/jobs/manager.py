@@ -267,6 +267,7 @@ class ResultsProcessingMixIn(object):
             resources = self._processJobResults(job)
         except Exception, e:
             transaction.savepoint_rollback(tsid)
+            e_type, e_value, e_tb = sys.exc_info()
             log.error("Error processing job %s %s",
                 job.job_uuid, e)
             try:
@@ -275,7 +276,6 @@ class ResultsProcessingMixIn(object):
                 handled = False
             if handled:
                 return None
-            e_type, e_value, e_tb = sys.exc_info()
             logErrorAndEmail(self.mgr.cfg, e_type, e_value, e_tb,
                 'jobs handler', dict(), doEmail=True)
             self.handleErrorDefault(job, e)
