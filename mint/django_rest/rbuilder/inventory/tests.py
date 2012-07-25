@@ -2,11 +2,10 @@ import base64
 import cPickle
 import os
 import random
+from uuid import uuid4
 from lxml import etree
 from xobj import xobj
-
-from conary import versions
-from conary.conaryclient.cmdline import parseTroveSpec
+from datetime import datetime, timedelta
 
 from django.contrib.redirects import models as redirectmodels
 from django.db import connection, transaction
@@ -40,6 +39,18 @@ class SurveyTests(XMLTestCase):
 
     def setUp(self):
         XMLTestCase.setUp(self)
+
+    def _makeSurvey(self):
+        user1 = usersmodels.User.objects.get(user_name='JeanValjean1')
+        sys = self._makeSystem()
+
+        uuid = str(uuid4())
+        survey = survey_models.Survey(
+            name='x', uuid=uuid, system=sys,
+            created_by=user1, modified_by=user1
+        )
+        survey.save()
+        return survey
  
     def _makeSystem(self):
         zone = self._saveZone()
@@ -54,15 +65,7 @@ class SurveyTests(XMLTestCase):
         self.assertEqual(response.status_code, 200)
  
     def test_survey_serialization(self):
-        uuid = '00000000-0000-4000-0000-000000000000'
-        user1 = usersmodels.User.objects.get(user_name='JeanValjean1')
-        sys = self._makeSystem()
-
-        survey = survey_models.Survey(
-            name='x', uuid=uuid, system=sys,
-            created_by=user1, modified_by=user1
-        )
-        survey.save()
+        survey = self._makeSurvey()
         tag1 = survey_models.SurveyTag(
             survey = survey,
             name = 'needs_review'
@@ -102,28 +105,22 @@ class SurveyTests(XMLTestCase):
             status = 'is maybe doing stuff'
         )
         iss.save()
-        response = self._get("inventory/surveys/%s" % uuid, 
+        response = self._get("inventory/surveys/%s" % survey.uuid,
             username='admin', password='password') 
         self.assertEqual(response.status_code, 200)
         # this is an incomplete test as the survey didn't actually post
         # self.assertXMLEquals(response.content, testsxml.survey_output_xml, ignoreNodes=['created_date','install_date','modified_date'])
 
-        url = "inventory/systems/%s/surveys" % sys.pk
+        url = "inventory/systems/%s/surveys" % survey.system.pk
         response = self._get(url,
             username='admin', password='password')
         self.assertEqual(response.status_code, 200)
-        self.assertXMLEquals(response.content, testsxml.surveys_xml)
+        self.assertXMLEquals(response.content,
+                             testsxml.surveys_xml % {'uuid': survey.uuid})
 
     def test_survey_serialization_windows(self):
 
-        uuid = '00000000-0000-8000-0000-000000000000'
-        user1 = usersmodels.User.objects.get(user_name='JeanValjean1')
-        sys = self._makeSystem()
-        survey = survey_models.Survey(
-            name='x', uuid=uuid, system=sys,
-            created_by=user1, modified_by=user1
-        )
-        survey.save()
+        survey = self._makeSurvey()
         tag1 = survey_models.SurveyTag(
             survey = survey,
             name = 'needs_review'
@@ -200,7 +197,7 @@ class SurveyTests(XMLTestCase):
             status = 'stopped',
         )
         iss2.save()
-        response = self._get("inventory/surveys/%s" % uuid,
+        response = self._get("inventory/surveys/%s" % survey.uuid,
             username='admin', password='password')
         self.assertEqual(response.status_code, 200)
 
@@ -421,6 +418,40 @@ install needle
         # Make sure we got a survey
         system = models.System.objects.get(system_id=systemId)
         self.assertEquals(system.surveys.count(), 1)
+
+    def testDeleteRemovableSurveys(self):
+        # Surveys are removable by default
+        survey1 = self._makeSurvey()
+        self.assertTrue(survey1.removable)
+
+        # Do not purge unremovable surveys
+        survey2 = self._makeSurvey()
+        survey2.removable = False
+        survey2.save()
+        deleted = self.mgr.deleteRemovableSurveys()
+        self.assertEqual(0, len(deleted))
+
+        # Do not purge "young" surveys
+        survey3 = self._makeSurvey()
+        survey3.created_date = datetime.now() - timedelta(days=10)
+        survey3.save()
+        deleted = self.mgr.deleteRemovableSurveys(olderThanDays=30)
+        self.assertEquals(0, len(deleted))
+
+        # Only purge "old" surveys
+        survey4 = self._makeSurvey()
+        survey4.created_date = datetime.now() - timedelta(days=60)
+        survey4.save()
+        deleted = self.mgr.deleteRemovableSurveys(olderThanDays=30)
+        self.assertEquals(1, len(deleted))
+        self.assertEquals(survey4.uuid, deleted[0].uuid)
+
+        deleted = self.mgr.deleteRemovableSurveys(olderThanDays=0)
+        uuids = [survey.uuid for survey in deleted]
+        self.assertEquals(2, len(deleted))
+        self.assertIn(survey1.uuid, uuids)
+        self.assertIn(survey3.uuid, uuids)
+
 
 class AssimilatorTestCase(XMLTestCase, test_utils.SmartformMixIn):
     ''' 

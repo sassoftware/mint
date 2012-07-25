@@ -6,14 +6,14 @@
 
 import logging
 from mint.django_rest.rbuilder.inventory import survey_models
-from mint.django_rest.rbuilder.users import models as user_models
 from mint.django_rest.rbuilder.inventory import models as inventory_models
+from mint.django_rest.rbuilder.projects import models as project_models
 from mint.django_rest.rbuilder.manager import basemanager
 from mint.django_rest.rbuilder.inventory.manager.surveydiff import SurveyDiffRender
 from mint.django_rest import timeutils
 from conary import versions
 from xobj import xobj
-import datetime
+from datetime import datetime, timedelta
 
 log = logging.getLogger(__name__)
 exposed = basemanager.exposed
@@ -52,6 +52,20 @@ class SurveyManager(basemanager.BaseManager):
         if len(surveys) > 0:
             inventory_models.System.objects.filter(pk=sys.pk).update(latest_survey=surveys[0])
         return (True, True)
+
+    @exposed
+    def deleteRemovableSurveys(self, olderThanDays=None):
+        if olderThanDays is None:
+            olderThanDays = self.cfg.surveyMaxAge
+
+        date = datetime.now() - timedelta(days=olderThanDays)
+        surveys = survey_models.Survey.objects.filter(removable=True,
+                                                      created_date__lt=date)
+        for survey in surveys:
+            self.deleteSurvey(survey.uuid)
+
+        return surveys
+
 
     @exposed
     def getSurveysForSystem(self, system_id):
@@ -165,9 +179,9 @@ class SurveyManager(basemanager.BaseManager):
 
     def _date(self, x):
         if x == '':
-            return datetime.datetime.utcfromtimestamp(0)
+            return datetime.utcfromtimestamp(0)
         try:
-            idate = datetime.datetime.utcfromtimestamp(int(x))
+            idate = datetime.utcfromtimestamp(int(x))
         except ValueError:
             # happens when posting Englishey dates and is not the normal route
             idate = x
@@ -413,12 +427,12 @@ class SurveyManager(basemanager.BaseManager):
             hasSystemModel = False
         else:
             systemModelContents = getattr(systemModel, 'contents', None)
-            systemModelModifiedDate = datetime.datetime.utcfromtimestamp(int(
+            systemModelModifiedDate = datetime.utcfromtimestamp(int(
                 getattr(systemModel, 'modified_date', 0)))
             hasSystemModel = (systemModelContents is not None)
 
         created_date = getattr(xsurvey, 'created_date', 0)
-        created_date = datetime.datetime.utcfromtimestamp(int(created_date))
+        created_date = datetime.utcfromtimestamp(int(created_date))
 
         desc    = getattr(xsurvey, 'description', "")
         comment = getattr(xsurvey, 'comment',     "")
@@ -453,7 +467,7 @@ class SurveyManager(basemanager.BaseManager):
             discovered_properties = self._toxml(xdiscovered_properties),
             validation_report = self._toxml(xvalidation_report),
             preview = self._toxml(xpreview),
-            config_properties_descriptor = xconfig_descriptor,
+            config_properties_descriptor = self._toxml(xconfig_descriptor),
             system_model = systemModelContents,
             system_model_modified_date = systemModelModifiedDate,
             has_system_model = hasSystemModel,
@@ -537,7 +551,21 @@ class SurveyManager(basemanager.BaseManager):
                 is_top_level = True
                 topLevelItems.add('%s=%s[%s]' %
                     (info.name, info.version, info.flavor))
-
+                ver = versions.VersionFromString(unfrozen)
+                label = ver.trailingLabel()
+                labelstr = label.asString()
+                # TODO: if somehow the system is in a stage that got deleted
+                # be cool and just set it back to NULL
+                stages = project_models.Stage.objects.filter(label=labelstr)
+                if len(stages) > 0:
+                    stage = stages[0]
+                    project = stage.project
+                    branch = stage.project_branch
+                    system.project = project
+                    system.project_branch = branch
+                    system.project_branch_stage = stage
+                    system.save()
+ 
             if encap is not None:
                 info.rpm_package_info = rpm_info_by_id[encap.id]
                 info.save()

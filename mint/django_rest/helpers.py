@@ -37,11 +37,11 @@ class MultiRequestUploadHandler(object):
         if chunk_id == 0:
             try:
                 os.remove(complete_file)
-            except:
+            except OSError:
                 pass
             try:
                 os.remove(status_file)
-            except:
+            except OSError:
                 pass
 
             dir = os.path.dirname(filename)
@@ -49,18 +49,27 @@ class MultiRequestUploadHandler(object):
                 os.makedirs(dir)
 
         # Append uploaded bytes to .incomplete file
-        mode = 'wb' if chunk_id == 0 else 'ab'
-        with open(incomplete_file, mode) as f:
-            for buf in uploaded_file.chunks():
-                f.write(buf)
-        uploaded_file.close() # delete the tmp file
+        try:
+            mode = 'wb' if chunk_id == 0 else 'ab'
+            with open(incomplete_file, mode) as f:
+                for buf in uploaded_file.chunks():
+                    f.write(buf)
+            uploaded_file.close() # delete the tmp file
+        except IOError:
+            # It is likely that we received the final chunk on the previous
+            # request, moved the file to finished-images, but encountered an
+            # exception when processing the uploaded file. If the client resends
+            # the final chunk, we get an exception when attempting to append to
+            # the .incomplete file since it was already moved to
+            # finished-images.
+            raise
 
         # If this is the last chunk, finish up
         if chunk_id == num_chunks - 1:
             os.rename(incomplete_file, complete_file)
             try:
                 os.remove(status_file)
-            except:
+            except OSError:
                 pass # it's not a big deal if we can't delete the status file
             current_file = complete_file
 
