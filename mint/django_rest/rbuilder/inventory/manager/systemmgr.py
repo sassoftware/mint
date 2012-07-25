@@ -1050,10 +1050,6 @@ class SystemManager(basemanager.BaseManager):
         # Copy incoming certs (otherwise read-only)
         system._ssl_client_certificate = system.ssl_client_certificate
         system._ssl_client_key = system.ssl_client_key
-        if sourceImage is not None:
-            system.project_id = sourceImage.project_id
-            system.project_branch_id = sourceImage.project_branch_id
-            system.project_branch_stage_id = sourceImage.project_branch_stage_id
         if system.managing_zone_id is None:
             system.managing_zone = self.getLocalZone()
         oldModel, system = models.System.objects.load_or_create(system,
