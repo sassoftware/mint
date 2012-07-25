@@ -51,7 +51,7 @@ class ProductImagesController(base.BaseController):
             self.db.uploadImageFiles(hostname, image, outputToken=outputToken)
         else:
             image.imageStatus.set_status(jobstatus.WAITING,
-                                         message="Waiting for upload file")
+                                         message="This image does not have files associated with it")
             self.db.setVisibleImageStatus(imageId, image.imageStatus)
 
         # This is a hack to get the outputToken to show up in the
