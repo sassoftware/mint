@@ -265,6 +265,7 @@ class MintConfig(conarycfg.ConfigFile):
                         "The number of days after which a dead system is marked as mothballed")
     launchWaitTime = (CfgInt, 1200,
                         "The number of seconds to wait for a launched system's network information to become available")
+    surveyMaxAge = (CfgInt, 30, "The number of days after which a removable survey is deleted")
 
     # inventory - configuration
     inventoryConfigurationEnabled = (CfgBool, True, "Whether or not managed systems can be configured vai the API")
