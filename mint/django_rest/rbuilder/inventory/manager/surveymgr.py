@@ -10,7 +10,6 @@ from mint.django_rest.rbuilder.inventory import models as inventory_models
 from mint.django_rest.rbuilder.projects import models as project_models
 from mint.django_rest.rbuilder.manager import basemanager
 from mint.django_rest.rbuilder.inventory.manager.surveydiff import SurveyDiffRender
-from mint.django_rest.rbuilder.users import models as user_models
 from mint.django_rest import timeutils
 from conary import versions
 from xobj import xobj
