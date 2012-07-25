@@ -714,7 +714,7 @@ class SystemManager(basemanager.BaseManager):
         wmiIfaceId = self.wmiManagementInterface().management_interface_id
         if system.isNewRegistration:
             system.registration_date = self.now()
-            system.current_state = registeredState
+            system.current_state = onlineState
             system.save()
             if system.oldModel is None:
                 # We really see this system the first time with its proper
