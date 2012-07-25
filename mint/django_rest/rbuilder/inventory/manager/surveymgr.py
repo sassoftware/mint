@@ -467,7 +467,7 @@ class SurveyManager(basemanager.BaseManager):
             discovered_properties = self._toxml(xdiscovered_properties),
             validation_report = self._toxml(xvalidation_report),
             preview = self._toxml(xpreview),
-            config_properties_descriptor = xconfig_descriptor,
+            config_properties_descriptor = self._toxml(xconfig_descriptor),
             system_model = systemModelContents,
             system_model_modified_date = systemModelModifiedDate,
             has_system_model = hasSystemModel,
@@ -556,13 +556,15 @@ class SurveyManager(basemanager.BaseManager):
                 labelstr = label.asString()
                 # TODO: if somehow the system is in a stage that got deleted
                 # be cool and just set it back to NULL
-                stage = project_models.Stage.objects.get(label=labelstr)
-                project = stage.project
-                branch = stage.project_branch
-                system.project = project
-                system.project_branch = branch
-                system.project_branch_stage = stage
-                system.save()
+                stages = project_models.Stage.objects.filter(label=labelstr)
+                if len(stages) > 0:
+                    stage = stages[0]
+                    project = stage.project
+                    branch = stage.project_branch
+                    system.project = project
+                    system.project_branch = branch
+                    system.project_branch_stage = stage
+                    system.save()
  
             if encap is not None:
                 info.rpm_package_info = rpm_info_by_id[encap.id]
