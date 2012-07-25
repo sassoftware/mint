@@ -419,38 +419,41 @@ install needle
         system = models.System.objects.get(system_id=systemId)
         self.assertEquals(system.surveys.count(), 1)
 
-    def testDeleteRemovableSurveys(self):
-        # Surveys are removable by default
-        survey1 = self._makeSurvey()
-        self.assertTrue(survey1.removable)
+    def testSurveysRemovableByDefault(self):
+        survey = self._makeSurvey()
+        self.assertTrue(survey.removable)
 
-        # Do not purge unremovable surveys
-        survey2 = self._makeSurvey()
-        survey2.removable = False
-        survey2.save()
-        deleted = self.mgr.deleteRemovableSurveys()
+    def testDoNotPurgeUnremovableSurveys(self):
+        survey = self._makeSurvey()
+        survey.removable = False
+        survey.save()
+        deleted = self.mgr.deleteRemovableSurveys(olderThanDays=0)
         self.assertEqual(0, len(deleted))
 
-        # Do not purge "young" surveys
-        survey3 = self._makeSurvey()
-        survey3.created_date = datetime.now() - timedelta(days=10)
-        survey3.save()
+    def testDoNotPurgeYoungSurveys(self):
+        survey = self._makeSurvey()
+        survey.created_date = datetime.now() - timedelta(days=10)
+        survey.save()
         deleted = self.mgr.deleteRemovableSurveys(olderThanDays=30)
         self.assertEquals(0, len(deleted))
 
-        # Only purge "old" surveys
-        survey4 = self._makeSurvey()
-        survey4.created_date = datetime.now() - timedelta(days=60)
-        survey4.save()
-        deleted = self.mgr.deleteRemovableSurveys(olderThanDays=30)
-        self.assertEquals(1, len(deleted))
-        self.assertEquals(survey4.uuid, deleted[0].uuid)
+    def testPurgeAllOldSurveysExceptMostRecent(self):
+        num_surveys = 10
+        surveys = []
+        for i in range(num_surveys):
+            s = self._makeSurvey()
+            s.created_date = datetime.now() - timedelta(days=i)
+            s.save()
+            surveys.append(s)
 
-        deleted = self.mgr.deleteRemovableSurveys(olderThanDays=0)
+        # This deletes all but 2 surveys:
+        #   - surveys[0] was created 0 days ago, so is not old enough
+        #   - surveys[1] is old enough, but is the most recent
+        deleted = self.mgr.deleteRemovableSurveys(olderThanDays=1)
         uuids = [survey.uuid for survey in deleted]
-        self.assertEquals(2, len(deleted))
-        self.assertIn(survey1.uuid, uuids)
-        self.assertIn(survey3.uuid, uuids)
+        self.assertEquals(num_surveys - 2, len(deleted))
+        self.assertNotIn(surveys[0].uuid, uuids)
+        self.assertNotIn(surveys[1].uuid, uuids)
 
 
 class AssimilatorTestCase(XMLTestCase, test_utils.SmartformMixIn):
