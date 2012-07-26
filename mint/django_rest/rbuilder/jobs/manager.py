@@ -1123,12 +1123,35 @@ class JobHandlerRegistry(HandlerRegistry):
                 trove_spec__in=existing.difference(topLevelItems)).delete()
 
         def _renderChanges(self, change_xobj):
+            def _parse_from_conary_package(change):
+                name = getattr(change, 'name')
+                frum_ver = getattr(change, 'version', None)
+                to       = getattr(change, 'to_conary_package', None)
+                to_ver   = getattr(to, 'version', None)
+                return name, frum_ver, to_ver
+            def _parse_added_conary_package(change):
+                name = getattr(change, 'name')
+                frum_ver = None
+                to_ver   = getattr(change, 'version', None)
+                return name, frum_ver, to_ver
+            def _parse_removed_conary_package(change):
+                name = getattr(change, 'name')
+                frum_ver = getattr(change, 'version', None)
+                to_ver   = None
+                return name, frum_ver, to_ver
+
             for change in change_xobj:
-                frum     = getattr(change, 'from_conary_package', None)
-                name     = getattr(frum, 'name', None)
-                frum_ver = getattr(frum, 'version', None)
-                to     = getattr(change, 'to_conary_package', None)
-                to_ver = getattr(to, 'version', None)
+                frum    = getattr(change, 'from_conary_package',    None)
+                added   = getattr(change, 'added_conary_package',   None)
+                removed = getattr(change, 'removed_conary_package', None)
+
+                if frum is not None:
+                    name, frum_ver, to_ver = _parse_from_conary_package(frum)
+                elif added is not None:
+                    name, frum_ver, to_ver = _parse_added_conary_package(added)
+                elif removed is not None:
+                    name, frum_ver, to_ver = _parse_removed_conary_package(removed)
+
                 yield dict(name=str(name), from_ver=str(frum_ver), to_ver=str(to_ver))
 
         def _processXml(self, job):
