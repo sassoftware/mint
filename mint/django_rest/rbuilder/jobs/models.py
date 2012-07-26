@@ -200,8 +200,7 @@ class Job(modellib.XObjIdModel):
     def setValuesFromRmake(self):
         runningState = modellib.Cache.get(JobState,
             name=JobState.RUNNING)
-        # XXX Hard-coding the job_type_id sucks. Where should this be referenced from?
-        if self.job_state_id != runningState.pk or self.job_type_id == 26:
+        if self.job_state_id != runningState.pk:
             return
         # This job is still running, we need to poll rmake to get its
         # status
@@ -220,6 +219,11 @@ class Job(modellib.XObjIdModel):
         self.status_code = job.status.code
         self.status_text = job.status.text
         self.status_detail = job.status.detail
+        # XXX: OMGHACK
+        if self.job_type_id == 26:
+            self.job_state = runningState
+            return
+
         if job.status.final:
             if job.status.completed:
                 self.job_state = completedState
