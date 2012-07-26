@@ -57,30 +57,31 @@ class SurveyManager(basemanager.BaseManager):
     def deleteRemovableSurveys(self, olderThanDays=None):
         if olderThanDays is None:
             olderThanDays = self.cfg.surveyMaxAge
+        max_date = datetime.now() - timedelta(days=olderThanDays)
 
-        date = datetime.now() - timedelta(days=olderThanDays)
-        surveys = survey_models.Survey.objects.order_by('system',
-                                                        'created_date')
+        # We do 2 separate queries below because max_date is timezone offset
+        # naive whereas survey.created_date is timezone offset aware. Python
+        # doesn't handle this well: "TypeError: can't compare offset-naive and
+        # offset-aware datetimes". If the 2 query approach becomes untenable,
+        # the Python issue could be solved by using the pytz library.
 
-        # Group surveys by system
-        systems = {}
+        # Determine latest survey for each system
+        all_surveys = survey_models.Survey.objects.order_by('system', 'created_date')
+        system_latest = {}
+        for survey in all_surveys:
+            system_latest[survey.system.system_id] = survey.survey_id
+        del all_surveys
+
+        # Delete all old removable surveys unless they are the latest for
+        # a system
+        surveys = survey_models.Survey.objects.filter(
+            removable=True, created_date__lte=max_date
+        ).exclude(survey_id__in=system_latest.values())
+
         for survey in surveys:
-            system_id = survey.system.system_id
-            if system_id not in systems:
-                systems[system_id] = []
-            systems[system_id].append(survey)
+            self.deleteSurvey(survey.uuid)
 
-        # Discard the most recent survey on each system so it isn't deleted from
-        # the database, then delete remaining removable surveys
-        deleted = []
-        for system_surveys in systems.itervalues():
-            system_surveys.pop()
-            for survey in system_surveys:
-                if survey.removable:
-                    self.deleteSurvey(survey.uuid)
-                    deleted.append(survey)
-
-        return deleted
+        return surveys
 
 
     @exposed
