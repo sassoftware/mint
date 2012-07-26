@@ -422,8 +422,7 @@ class System(modellib.XObjIdModel):
     # XXX this is hopefully a temporary solution to not serialize the FK
     # part of a many-to-many relationship
     _xobj_hidden_accessors = set(['systemjob_set', 'target_credentials',
-        'managementnode', 'jobsystem_set', 'tags', 'surveys',
-        'desired_top_level_items'])
+        'managementnode', 'jobsystem_set', 'tags', 'surveys'])
     _xobj_hidden_m2m = set()
     _xobj = xobj.XObjMetadata(
                 tag = 'system',
