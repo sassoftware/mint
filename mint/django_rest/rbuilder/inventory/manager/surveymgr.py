@@ -181,7 +181,7 @@ class SurveyManager(basemanager.BaseManager):
         if x == '':
             return datetime.utcfromtimestamp(0)
         try:
-            idate = datetime.utcfromtimestamp(int(x))
+            idate = datetime.utcfromtimestamp(float(x))
         except ValueError:
             # happens when posting Englishey dates and is not the normal route
             idate = x
