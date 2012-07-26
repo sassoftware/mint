@@ -40,16 +40,21 @@ class SurveyTests(XMLTestCase):
     def setUp(self):
         XMLTestCase.setUp(self)
 
-    def _makeSurvey(self):
-        user1 = usersmodels.User.objects.get(user_name='JeanValjean1')
-        sys = self._makeSystem()
+    def _makeSurvey(self, system=None, created_date=None, removable=True):
+        if system is None:
+            system = self._makeSystem()
 
         uuid = str(uuid4())
+        user = usersmodels.User.objects.get(user_name='JeanValjean1')
         survey = survey_models.Survey(
-            name='x', uuid=uuid, system=sys,
-            created_by=user1, modified_by=user1
-        )
+            name='x', uuid=uuid, system=system, created_by=user,
+            modified_by=user, removable=removable)
         survey.save()
+
+        if created_date is not None:
+            survey.created_date = created_date
+            survey.save()
+
         return survey
  
     def _makeSystem(self):
@@ -419,41 +424,48 @@ install needle
         system = models.System.objects.get(system_id=systemId)
         self.assertEquals(system.surveys.count(), 1)
 
-    def testSurveysRemovableByDefault(self):
+    def testSurveysAreRemovableByDefault(self):
         survey = self._makeSurvey()
         self.assertTrue(survey.removable)
 
     def testDoNotPurgeUnremovableSurveys(self):
-        survey = self._makeSurvey()
-        survey.removable = False
-        survey.save()
+        survey = self._makeSurvey(removable=False)
         deleted = self.mgr.deleteRemovableSurveys(olderThanDays=0)
         self.assertEqual(0, len(deleted))
+        self.assertEqual(1, len(survey_models.Survey.objects.all()))
 
     def testDoNotPurgeYoungSurveys(self):
-        survey = self._makeSurvey()
-        survey.created_date = datetime.now() - timedelta(days=10)
-        survey.save()
-        deleted = self.mgr.deleteRemovableSurveys(olderThanDays=30)
-        self.assertEquals(0, len(deleted))
-
-    def testPurgeAllOldSurveysExceptMostRecent(self):
-        num_surveys = 10
-        surveys = []
-        for i in range(num_surveys):
-            s = self._makeSurvey()
-            s.created_date = datetime.now() - timedelta(days=i)
-            s.save()
-            surveys.append(s)
-
-        # This deletes all but 2 surveys:
-        #   - surveys[0] was created 0 days ago, so is not old enough
-        #   - surveys[1] is old enough, but is the most recent
+        survey = self._makeSurvey(created_date=datetime.now())
         deleted = self.mgr.deleteRemovableSurveys(olderThanDays=1)
-        uuids = [survey.uuid for survey in deleted]
-        self.assertEquals(num_surveys - 2, len(deleted))
-        self.assertNotIn(surveys[0].uuid, uuids)
-        self.assertNotIn(surveys[1].uuid, uuids)
+        self.assertEquals(0, len(deleted))
+        self.assertEqual(1, len(survey_models.Survey.objects.all()))
+
+    def testDoNotPurgeMostRecentSurvey(self):
+        survey = self._makeSurvey()
+        deleted = self.mgr.deleteRemovableSurveys(olderThanDays=0)
+        self.assertEqual(0, len(deleted))
+        self.assertEqual(1, len(survey_models.Survey.objects.all()))
+
+    def testPurgeAllOldRemovableSurveysPerSystemUnlessMostRecent(self):
+        present = datetime.now()
+        past = present - timedelta(days=60)
+
+        survey1 = self._makeSurvey(created_date=past) # do not delete (most recent)
+        survey2 = self._makeSurvey(created_date=past, removable=False) # do not delete (not removable)
+
+        sys3 = self._makeSystem()
+        survey3a = self._makeSurvey(system=sys3, created_date=present, removable=True) # do not deleted (most recent)
+        survey3b = self._makeSurvey(system=sys3, created_date=past, removable=True) #delete (removable, not most recent)
+
+        deleted = self.mgr.deleteRemovableSurveys(olderThanDays=0)
+        self.assertEqual(1, len(deleted))
+        self.assertEqual(survey3b.uuid, deleted[0].uuid)
+
+        remaining_uuids = [s.uuid for s in survey_models.Survey.objects.all()]
+        self.assertEqual(3, len(remaining_uuids))
+        self.assertIn(survey1.uuid, remaining_uuids)
+        self.assertIn(survey2.uuid, remaining_uuids)
+        self.assertIn(survey3a.uuid, remaining_uuids)
 
 
 class AssimilatorTestCase(XMLTestCase, test_utils.SmartformMixIn):
