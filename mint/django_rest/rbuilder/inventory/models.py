@@ -10,8 +10,7 @@ import re
 
 from conary import versions
 from conary.deps import deps
-from conary.conaryclient import cmdline
-from conary.trovetup import TroveTuple
+from conary.trovetup import TroveTuple, TroveSpec
 from conary.errors import ParseError
 
 from django.db import models
