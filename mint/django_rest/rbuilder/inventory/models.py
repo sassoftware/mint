@@ -10,6 +10,9 @@ import re
 
 from conary import versions
 from conary.deps import deps
+from conary.conaryclient import cmdline
+from conary.trovetup import TroveTuple
+from conary.errors import ParseError
 
 from django.db import models
 from django.db.backends import signals
@@ -959,11 +962,30 @@ class SystemDesiredTopLevelItem(modellib.XObjModel):
         db_table = 'inventory_system_desired_top_level_item'
         unique_together = [ ('system', 'trove_spec') ]
 
-    system = modellib.ForeignKey(System, null=False,
-        related_name = 'desired_top_level_items')
-    trove_spec = D(models.TextField(null=False), "Trove")
+    _xobj = xobj.XObjMetadata(
+        tag = 'desired_top_level_item'
+    )
+
+    system = XObjHidden(modellib.ForeignKey(System, null=False,
+        related_name = 'desired_top_level_items'))
+    trove_spec = D(models.TextField(null=False), "Desired trove spec", short="System Desired Trove Spec")
     created_date = D(modellib.DateTimeUtcField(null=False, auto_now_add=True),
-        "the date the entry was created", short="Entry created date")
+        "the date the entry was created")
+    revision = D(modellib.SyntheticField(), "Desired trove revision", short="System Desired Trove Revision")
+ 
+    # trailingRevision in computeSyntheticFields method
+    def computeSyntheticFields(self, sender, **kwargs):
+        ''' Compute non-database fields.'''
+
+        rev = None
+        try:
+            spec = TroveTuple(self.trove_spec)
+            rev = spec.version
+        except (ValueError, ParseError):
+            spec = TroveSpec(self.trove_spec)
+            ver = versions.VersionFromString(spec.version)
+            rev = ver.trailingRevision().asString() 
+        self.revision = rev.trailingRevision().asString() 
 
 class ManagementNode(System):
     
