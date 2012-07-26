@@ -705,13 +705,16 @@ class SystemManager(basemanager.BaseManager):
         pass
 
     def setSystemState(self, system, withManagementInterfaceDetection=True):
+
         if system.oldModel is None:
             self.log_system(system, models.SystemLogEntry.ADDED)
+
         registeredState = self.systemState(models.SystemState.REGISTERED)
         onlineState = self.systemState(models.SystemState.RESPONSIVE)
         credentialsMissing = self.systemState(models.SystemState.UNMANAGED_CREDENTIALS_REQUIRED)
         winBuildNodeType = self.getWindowsBuildServiceSystemType()
         wmiIfaceId = self.wmiManagementInterface().management_interface_id
+
         if system.isNewRegistration:
             system.registration_date = self.now()
             system.current_state = onlineState
