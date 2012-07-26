@@ -59,17 +59,28 @@ class SurveyManager(basemanager.BaseManager):
             olderThanDays = self.cfg.surveyMaxAge
 
         date = datetime.now() - timedelta(days=olderThanDays)
-        qs = survey_models.Survey.objects
-        qs = qs.filter(removable=True, created_date__lt=date)
-        qs = qs.order_by('created_date') # oldest first
+        surveys = survey_models.Survey.objects.order_by('system',
+                                                        'created_date')
 
-        surveys = list(qs)
-        if surveys:
-            surveys.pop() # don't delete the most recently created survey
-            for survey in surveys:
-                self.deleteSurvey(survey.uuid)
+        # Group surveys by system
+        systems = {}
+        for survey in surveys:
+            system_id = survey.system.system_id
+            if system_id not in systems:
+                systems[system_id] = []
+            systems[system_id].append(survey)
 
-        return surveys
+        # Discard the most recent survey on each system so it isn't deleted from
+        # the database, then delete remaining removable surveys
+        deleted = []
+        for system_surveys in systems.itervalues():
+            system_surveys.pop()
+            for survey in system_surveys:
+                if survey.removable:
+                    self.deleteSurvey(survey.uuid)
+                    deleted.append(survey)
+
+        return deleted
 
 
     @exposed
