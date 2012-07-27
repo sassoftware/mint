@@ -307,7 +307,7 @@ class ImageDescriptorsService(service.BaseService):
 class ImageUploadFilesService(service.BaseService):
     @access.anonymous
     def rest_GET(self, request, image_id, token):
-        return self.get(image_id, request.GET.get('name'), token)
+        return self.get(image_id, request.GET.get('name', ''), token)
 
     def get(self, image_id, filename, token):
         status = self.mgr.getImageUploadStatus(image_id, filename, token)
