@@ -403,9 +403,7 @@ class JobCreationTest(BaseJobsTest, RepeaterMixIn):
     def testJobSystemSoftwareUpdateWithUpdate(self):
         return self._testJobSystemSoftwareUpdate(dryRun=False)
 
-    def _testJobSystemSoftwareUpdate(self, dryRun=False):
-        topLevelGroup = "group-foo=example.com@rpath:42/1-2-3"
-        jobType = self.mgr.sysMgr.eventType(models.EventType.SYSTEM_UPDATE)
+    def _makeSystem(self):
         system = self._saveSystem()
         system.save()
         invmodels.SystemDesiredTopLevelItem.objects.create(
@@ -422,6 +420,11 @@ class JobCreationTest(BaseJobsTest, RepeaterMixIn):
             namespaces=nsmap)
         self.assertEquals(fieldNames, ['trove_label', 'dry_run', ])
 
+        return system
+
+
+    def _createUpdateXml(self, systemId, topLevelGroup, dryRun):
+        jobType = self.mgr.sysMgr.eventType(models.EventType.SYSTEM_UPDATE)
         jobXml = """
 <job>
   <job_type id="http://localhost/api/v1/inventory/event_types/%(jobTypeId)s"/>
@@ -431,38 +434,25 @@ class JobCreationTest(BaseJobsTest, RepeaterMixIn):
     <dry_run>%(dryRun)s</dry_run>
   </descriptor_data>
 </job>
-""" % dict(jobTypeId=jobType.job_type_id, systemId=system.system_id,
-            topLevelGroup=topLevelGroup, dryRun=str(dryRun).lower())
+""" % dict(jobTypeId=jobType.job_type_id, systemId=systemId,
+            topLevelGroup=topLevelGroup, dryRun=dryRun)
 
+        return jobXml
+
+    def _postJob(self, jobXml, systemId):
         url = "inventory/systems/%(systemId)s/jobs" % dict(
-            systemId=system.system_id)
+            systemId=systemId)
         response = self._post(url, jobXml,
             username='admin', password='password')
         self.assertEquals(response.status_code, 200)
         obj = xobj.parse(response.content)
         job = obj.job
         self.failUnlessEqual(job.descriptor.id,
-            "http://testserver/api/v1/inventory/systems/%s/descriptors/update" % system.system_id)
+            "http://testserver/api/v1/inventory/systems/%s/descriptors/update" % systemId)
 
-        dbjob = models.Job.objects.get(job_uuid=job.job_uuid)
+        return job
 
-        payload = """
-<preview>
-  <conary_package_changes>
-    <conary_package_change>
-      <type>changed</type>
-      <from_conary_package>
-        <name>group-foo</name>
-        <version>/example.com@rpath:42/1-2-3</version>
-      </from_conary_package>
-      <to_conary_package>
-        <name>group-foo</name>
-        <version>/example.com@rpath:42/4-5-6</version>
-      </to_conary_package>
-    </conary_package_change>
-  </conary_package_changes>
-</preview>"""
-
+    def _confirmRmakePost(self, payload, dbjob):
         jobXml = """
 <job>
   <job_state>Completed</job_state>
@@ -490,7 +480,9 @@ class JobCreationTest(BaseJobsTest, RepeaterMixIn):
             ignoreNodes=['desired', 'observed']
         )
 
+    def _fetchPreviewResponseContent(self, payload, dbjob):
         # Fetch the job
+        jobUrl = "jobs/%s" % dbjob.job_uuid
         response = self._get(jobUrl)
         self.assertEquals(response.status_code, 200)
 
@@ -508,8 +500,40 @@ class JobCreationTest(BaseJobsTest, RepeaterMixIn):
             payload,
             ignoreNodes=['desired', 'observed'])
 
+        return response.content
+
+    def _testJobSystemSoftwareUpdate(self, dryRun=False):
+        topLevelGroup = "group-foo=example.com@rpath:42/1-2-3"
+        system = self._makeSystem()
+
+        jobXml = self._createUpdateXml(system.system_id, topLevelGroup, str(dryRun).lower())
+        job = self._postJob(jobXml, system.system_id)
+
+        dbjob = models.Job.objects.get(job_uuid=job.job_uuid)
+
+        payload = """
+<preview>
+  <conary_package_changes>
+    <conary_package_change>
+      <type>changed</type>
+      <from_conary_package>
+        <name>group-foo</name>
+        <version>/example.com@rpath:42/1-2-3</version>
+      </from_conary_package>
+      <to_conary_package>
+        <name>group-foo</name>
+        <version>/example.com@rpath:42/4-5-6</version>
+      </to_conary_package>
+    </conary_package_change>
+  </conary_package_changes>
+</preview>"""
+
+        self._confirmRmakePost(payload, dbjob)
+
+        content = self._fetchPreviewResponseContent(payload, dbjob)
+
         system = system.__class__.objects.get(system_id=system.system_id)
-        observed = xobj.parse(response.content).preview.observed
+        observed = xobj.parse(content).preview.observed
 
         topLevelItems = sorted(x.trove_spec for x in system.desired_top_level_items.all())
         if dryRun:
