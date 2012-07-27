@@ -982,8 +982,7 @@ class SystemDesiredTopLevelItem(modellib.XObjModel):
             rev = spec.version
         except (ValueError, ParseError):
             spec = TroveSpec(self.trove_spec)
-            ver = versions.VersionFromString(spec.version)
-            rev = ver.trailingRevision().asString() 
+            rev = versions.VersionFromString(spec.version)
         self.revision = rev.trailingRevision().asString() 
 
 class ManagementNode(System):
