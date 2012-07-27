@@ -397,17 +397,11 @@ class JobCreationTest(BaseJobsTest, RepeaterMixIn):
         self.assertEquals(bool(dbsystem.has_active_jobs), False)
         self.assertEquals(bool(dbsystem.has_running_jobs), False)
 
-    def testJobSystemSoftwareUpdateWithPreview(self):
-        return self._testJobSystemSoftwareUpdate(dryRun=True)
-
-    def testJobSystemSoftwareUpdateWithUpdate(self):
-        return self._testJobSystemSoftwareUpdate(dryRun=False)
-
     def _makeSystem(self):
         system = self._saveSystem()
         system.save()
         invmodels.SystemDesiredTopLevelItem.objects.create(
-            system=system, trove_spec='fake')
+            system=system, trove_spec='group-fake=/fake.rpath.com@rpath:fake-0/0-0-0')
         url = "inventory/systems/%(systemId)s/descriptors/update" % dict(
             systemId=system.system_id)
         response = self._get(url,
@@ -502,8 +496,7 @@ class JobCreationTest(BaseJobsTest, RepeaterMixIn):
 
         return response.content
 
-    def _testJobSystemSoftwareUpdate(self, dryRun=False):
-        topLevelGroup = "group-foo=example.com@rpath:42/1-2-3"
+    def _testJobSystemSoftwareUpdate(self, topLevelGroup, payload, dryRun=False):
         system = self._makeSystem()
 
         jobXml = self._createUpdateXml(system.system_id, topLevelGroup, str(dryRun).lower())
@@ -511,47 +504,91 @@ class JobCreationTest(BaseJobsTest, RepeaterMixIn):
 
         dbjob = models.Job.objects.get(job_uuid=job.job_uuid)
 
+        self._confirmRmakePost(payload, dbjob)
+
+        content = self._fetchPreviewResponseContent(payload, dbjob)
+
+        system = system.__class__.objects.get(system_id=system.system_id)
+        return system, content
+
+    def testJobSystemSoftwareUpdateWithPreview(self):
+        topLevelGroup = "group-fake=/fake.rpath.com@rpath:fake-0/0-0-0"
         payload = """
 <preview>
   <conary_package_changes>
     <conary_package_change>
       <type>changed</type>
       <from_conary_package>
-        <name>group-foo</name>
-        <version>/example.com@rpath:42/1-2-3</version>
+        <name>group-fake</name>
+        <version>group-fake=/fake.rpath.com@rpath:fake-0/0-0-0</version>
       </from_conary_package>
       <to_conary_package>
-        <name>group-foo</name>
-        <version>/example.com@rpath:42/4-5-6</version>
+        <name>group-fake</name>
+        <version>group-fake=/fake.rpath.com@rpath:fake-1/1-1-1</version>
       </to_conary_package>
     </conary_package_change>
   </conary_package_changes>
 </preview>"""
+        system, content = self._testJobSystemSoftwareUpdate(topLevelGroup, payload, dryRun=True)
 
-        self._confirmRmakePost(payload, dbjob)
-
-        content = self._fetchPreviewResponseContent(payload, dbjob)
-
-        system = system.__class__.objects.get(system_id=system.system_id)
         observed = xobj.parse(content).preview.observed
-
         topLevelItems = sorted(x.trove_spec for x in system.desired_top_level_items.all())
-        if dryRun:
-            self.assertEquals(topLevelItems, [ 'fake' ])
 
-            # Confirm <observed> is still on original version.
-            frum = getattr(xobj.parse(payload).preview.conary_package_changes.conary_package_change, 'from_conary_package')
-            f_ver = getattr(frum, 'version')
-            self.assertEquals(
-                observed,
-                f_ver)
+        self.assertEquals(topLevelItems, [ 'group-fake=/fake.rpath.com@rpath:fake-0/0-0-0' ])
 
-        else:
-            self.assertEquals(topLevelItems, [ topLevelGroup ])
+        # Confirm <observed> is still on original version in accordance with dryRun=True.
+        frum = getattr(xobj.parse(payload).preview.conary_package_changes.conary_package_change, 'from_conary_package')
+        f_ver = getattr(frum, 'version')
+        self.assertEquals(observed, f_ver)
 
-            # Confirm <observed> is now on desired version.
-            to = getattr(xobj.parse(payload).preview.conary_package_changes.conary_package_change, 'to_conary_package')
-            t_ver = getattr(to, 'version')
-            self.assertEquals(
-                observed,
-                t_ver)
+    def testJobSystemSoftwareUpdateWithUpdate(self):
+        topLevelGroup = "group-fake=/fake.rpath.com@rpath:fake-0/0-0-0"
+        payload = """
+<preview>
+  <conary_package_changes>
+    <conary_package_change>
+      <type>changed</type>
+      <from_conary_package>
+        <name>group-fake</name>
+        <version>group-fake=/fake.rpath.com@rpath:fake-0/0-0-0</version>
+      </from_conary_package>
+      <to_conary_package>
+        <name>group-fake</name>
+        <version>group-fake=/fake.rpath.com@rpath:fake-1/1-1-1</version>
+      </to_conary_package>
+    </conary_package_change>
+  </conary_package_changes>
+</preview>"""
+        system, content = self._testJobSystemSoftwareUpdate(topLevelGroup, payload, dryRun=False)
+
+        observed = xobj.parse(content).preview.observed
+        topLevelItems = sorted(x.trove_spec for x in system.desired_top_level_items.all())
+
+        self.assertEquals(topLevelItems, [ topLevelGroup ])
+
+        # Confirm <observed> is now on desired version in accordance with dryRun=False.
+        to = getattr(xobj.parse(payload).preview.conary_package_changes.conary_package_change, 'to_conary_package')
+        t_ver = getattr(to, 'version')
+        self.assertEquals(observed, t_ver)
+
+#     def testJobSystemSoftwareUpdateWithAddedPackage(self):
+#         topLevelGroup = "group-foo=example.com@rpath:42/1-2-3"
+
+#         payload = """
+# <preview>
+#   <conary_package_changes>
+#     <conary_package_change>
+#       <type>changed</type>
+#       <from_conary_package>
+#         <name>group-foo</name>
+#         <version>/example.com@rpath:42/1-2-3</version>
+#       </from_conary_package>
+#       <to_conary_package>
+#         <name>group-foo</name>
+#         <version>/example.com@rpath:42/4-5-6</version>
+#       </to_conary_package>
+#     </conary_package_change>
+#   </conary_package_changes>
+# </preview>"""
+#         return self._testJobSystemSoftwareUpdate(topLevelGroup, payload, dryRun=False)
+
