@@ -1123,11 +1123,10 @@ class JobHandlerRegistry(HandlerRegistry):
                 trove_spec__in=existing.difference(topLevelItems)).delete()
 
         def _renderChanges(self, change_xobj):
-            def _parse_from_conary_package(change):
-                name = getattr(change, 'name')
-                frum_ver = getattr(change, 'version', None)
-                to       = getattr(change, 'to_conary_package', None)
-                to_ver   = getattr(to, 'version', None)
+            def _parse_from_conary_package(change_from, change_to):
+                name = getattr(change_from, 'name')
+                frum_ver = getattr(change_from, 'version', None)
+                to_ver   = getattr(change_to,   'version', None)
                 return name, frum_ver, to_ver
             def _parse_added_conary_package(change):
                 name = getattr(change, 'name')
@@ -1142,11 +1141,12 @@ class JobHandlerRegistry(HandlerRegistry):
 
             for change in change_xobj:
                 frum    = getattr(change, 'from_conary_package',    None)
+                to      = getattr(change, 'to_conary_package',      None)
                 added   = getattr(change, 'added_conary_package',   None)
                 removed = getattr(change, 'removed_conary_package', None)
 
-                if frum is not None:
-                    name, frum_ver, to_ver = _parse_from_conary_package(frum)
+                if frum is not None and to is not None:
+                    name, frum_ver, to_ver = _parse_from_conary_package(frum, to)
                 elif added is not None:
                     name, frum_ver, to_ver = _parse_added_conary_package(added)
                 elif removed is not None:
