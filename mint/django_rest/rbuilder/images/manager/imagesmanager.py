@@ -544,7 +544,7 @@ class ImagesManager(basemanager.BaseManager):
     def processImageUpload(self, image_id, token, uploaded_file, basename,
                            chunk_id, num_chunks, checksum):
         image = self.getImageById(image_id)
-        if image.status == jobstatus.WAITING:
+        if image.status == jobstatus.BLOCKED:
             outputToken = image.image_data.get(name='outputToken').value
             if token == outputToken:
                 filename = self._getUploadFilename(image, basename)

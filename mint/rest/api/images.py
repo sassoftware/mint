@@ -37,7 +37,16 @@ class ProductImagesController(base.BaseController):
 
     @auth.public
     def get(self, request, hostname, imageId):
-        return self.db.getImageForProduct(hostname, imageId)
+        image = self.db.getImageForProduct(hostname, imageId)
+
+        # This is a hack to get the outputToken to show up in the upload_files
+        # href in the response via ImageUploadsHrefField. The reason for the
+        # hackiness is because the code is deprecated and it's probably not
+        # worth doing "the right way".
+        if image.status == jobstatus.BLOCKED:
+            image.outputToken = outputToken
+
+        return image
 
     def destroy(self, request, hostname, imageId):
         self.db.deleteImageForProduct(hostname, imageId)
@@ -50,23 +59,17 @@ class ProductImagesController(base.BaseController):
         if image.files.files:
             self.db.uploadImageFiles(hostname, image, outputToken=outputToken)
         else:
-            image.imageStatus.set_status(jobstatus.WAITING,
-                                         message="This image does not have files associated with it")
+            image.imageStatus.set_status(jobstatus.BLOCKED,
+                 message="This image does not have files associated with it")
             self.db.setVisibleImageStatus(imageId, image.imageStatus)
 
-        # This is a hack to get the outputToken to show up in the
-        # upload_files URL in the response. The reason for the hackiness is
-        # because the code is deprecated and it's probably not worth doing
-        # "the right way".
-        image = self.db.getImageForProduct(hostname, imageId)
-        image.outputToken = outputToken
-        return image
+        return self.get(request, hostname, imageId)
 
     @requires('image', models.Image)
     def update(self, request, hostname, imageId, image):
         image.imageId = imageId
         self.db.updateImage(hostname, image)
-        return self.db.getImageForProduct(hostname, imageId)
+        return self.get(request, hostname, imageId)
 
     def stop(self, request, hostname, imageId):
         return self.db.stopImageJob(hostname, imageId)

@@ -8,8 +8,9 @@ import sys
 
 statuses = {
     'UNKNOWN'  : -1,
-    'WAITING'  : 0,
+    'WAITING'  : 0,   # Queued for processing
     'RUNNING'  : 100,
+    'BLOCKED'  : 101, # Wating on input, used for image uploads
     'BUILT'    : 200,
     'FINISHED' : 300,
     'FAILED'   : 301,
