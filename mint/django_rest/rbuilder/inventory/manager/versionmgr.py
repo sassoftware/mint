@@ -5,15 +5,12 @@
 #
 
 import logging
-from StringIO import StringIO
-
-from smartform import descriptor
-from smartform import descriptor_errors
 
 from conary.deps import deps
 from conary import conaryclient, versions
-from conary import trove as conarytrove
 from conary.errors import RepositoryError, ParseError
+
+from rpath_tools.client.utils.config_descriptor_cache import ConfigDescriptorCache
 
 from django.core.exceptions import ObjectDoesNotExist
 
@@ -30,7 +27,7 @@ class VersionManager(basemanager.BaseManager):
     """
     Class encapsulating all logic around versions, available updates, etc.
     """
-    
+
     def __init__(self, *args, **kwargs):
         basemanager.BaseManager.__init__(self, *args, **kwargs)
         self._cclient = None
@@ -252,68 +249,7 @@ class VersionManager(basemanager.BaseManager):
         # that remediation will work.
         trove.available_updates.add(trove.version)
 
-        
-
         return True
-
-    def _getTroveConfigDescriptor(self, name, version, flavor):
-        client = self.get_conary_client()
-        if client is None:
-            # indicates we are in test code, needs to be mocked out
-            return '' 
-        repos = client.repos
-        try:
-            trvList = repos.getTroves([(name, version, flavor)])
-        except:
-            return None
-
-        referencedByDefault = []
-        for trv in trvList:
-            referencedByDefault += [ nvf for nvf, byDefault, strongRef in
-                trv.iterTroveListInfo() if byDefault ]
-
-        # Get properties sorted by package name.
-        properties = repos.getTroveInfo(conarytrove._TROVEINFO_TAG_PROPERTIES,
-            sorted(referencedByDefault, cmp=lambda x, y: cmp(x[0], y[0])))
-
-        configFields = []
-        for propSet in properties:
-            if propSet is None:
-                continue
-            for property in propSet.iter():
-                xml = property.definition()
-                desc = descriptor.BaseDescriptor()
-
-                try:
-                    desc.parseStream(StringIO(xml))
-
-                # Ignore any descriptors that don't parse.
-                except descriptor_errors.Error:
-                    continue
-
-                configFields.extend(desc.getDataFields())
-
-        return configFields
-
-    def _getConfigDescriptor(self, name, version, flavor):
-        desc = descriptor.ConfigurationDescriptor()
-        desc.setDisplayName('Configuration Descriptor')
-        desc.addDescription('Configuration Descriptor')
-
-        newFields = self._getTroveConfigDescriptor(name, version, flavor)
-        if not newFields:
-            # this stuff isn't really well mocked out and may also happen
-            # in legit cases
-            return ''
-
-        fields = desc.getDataFields()
-        fields.extend(newFields)
-
-        out = StringIO()
-        desc.serialize(out, validate=False)
-        out.seek(0)
-
-        return out.read()
 
     @exposed
     def refreshCachedUpdates(self, name, label):
@@ -338,15 +274,29 @@ class VersionManager(basemanager.BaseManager):
         for conary_package in packages.all():
             info = conary_package.conary_package_info
             name = info.name
+
+            # Skip over anything that doesn't look like an appliance group.
+            if not (name.startswith('group-') and name.endswith('-appliance')):
+                continue
+
             try:
                 version = versions.ThawVersion(info.version)
             except ParseError:
                 continue
             flavor = deps.parseFlavor(info.flavor)
-            if name.startswith("group-") and name.find("-appliance") != -1:
-                return self._getConfigDescriptor(info.name, version, flavor)
 
-        # shouldn't ever get here unless you migrated to something weird, in
-        # which case (FIXME) just present the empty one and maybe log?
+            repos = self.get_conary_client().repos
+            desc = ConfigDescriptorCache(repos).getDescriptor(
+                (name, version, flavor))
+
+            if not desc:
+                break
+
+            desc.setDisplayName('Configuration Descriptor')
+            desc.addDescription('Configuration Descriptor')
+
+            return desc.toxml(validate=False)
+
+        log.warn('could not find configuration descriptor for %s' % system.name)
         return '<configuration></configuration>'
 
