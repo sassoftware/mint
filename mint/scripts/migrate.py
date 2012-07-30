@@ -4978,7 +4978,7 @@ class MigrateTo_62(SchemaMigration):
  
 class MigrateTo_63(SchemaMigration):
     '''Goad'''
-    Version = (63, 20)
+    Version = (63, 21)
 
     def migrate(self):
         ''' add initial tables for config environments'''
@@ -5218,7 +5218,7 @@ class MigrateTo_63(SchemaMigration):
     def migrate20(self):
         createTable2(self.db, 'inventory_windows_os_patch', """
             "windows_os_patch_id" %(PRIMARYKEY)s,
-            "hotfix_id" TEXT,
+            "hotfix_id" TEXT UNIQUE,
             "name" TEXT,
             "fix_comments" TEXT,
             "description" TEXT,
@@ -5233,6 +5233,19 @@ class MigrateTo_63(SchemaMigration):
             "install_date" TIMESTAMP WITH TIME ZONE NOT NULL,
             "installed_by" TEXT NOT NULL,
             "status" TEXT, 
+        """)
+        return True
+
+    def migrate21(self):
+        cu = self.db.cursor()
+        cu.execute("""
+            ALTER TABLE inventory_windows_os_patch ADD CONSTRAINT inventory_windows_os_patch_uq UNIQUE (hotfix_id)
+        """)
+        cu.execute("""
+            ALTER TABLE inventory_system RENAME COLUMN configuration TO configuration_legacy
+        """)
+        cu.execute("""
+            ALTER TABLE inventory_system ADD COLUMN configuration_xml TEXT
         """)
         return True
 

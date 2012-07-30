@@ -329,7 +329,7 @@ class SurveyManager(basemanager.BaseManager):
             else:
                 if observed != desired:
                     updates_pending = True
-                    changes = preview.conary_package_changes.getattr('conary_package_change', None)
+                    changes = getattr(preview.conary_package_changes, 'conary_package_change', None)
                     if changes is not None:
                         # xobj hack
                         if type(changes) != list: 

@@ -530,7 +530,7 @@ class System(modellib.XObjIdModel):
     project = D(APIReadOnly(modellib.DeferredForeignKey(Project, null=True,
         text_field='short_name', related_name="+")),
         "the project of the system")
-    configuration = APIReadOnly(XObjHidden(models.TextField(null=True)))
+    configuration = APIReadOnly(XObjHidden(models.TextField(null=True, db_column='configuration_xml')))
     configuration_descriptor = D(XObjHidden(modellib.SyntheticField()),
         "the descriptor of available fields to set system configuration "
         "parameters")

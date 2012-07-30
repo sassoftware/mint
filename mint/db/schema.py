@@ -28,7 +28,7 @@ from conary.dbstore import sqlerrors, sqllib
 log = logging.getLogger(__name__)
 
 # database schema major version
-RBUILDER_DB_VERSION = sqllib.DBversion(63, 20)
+RBUILDER_DB_VERSION = sqllib.DBversion(63, 21)
 
 def _createTrigger(db, table, column="changed"):
     retInsert = db.createTrigger(table, column, "INSERT")
@@ -1232,7 +1232,8 @@ def _createInventorySchema(db, cfg):
                 "system_type_id" integer
                     REFERENCES "inventory_system_type" ("system_type_id"),
                 "credentials" text,
-                "configuration" text,
+                "configuration_legacy" text,
+                "configuration_xml" text,
                 "stage_id" integer
                     REFERENCES "project_branch_stage" ("stage_id")
                     ON DELETE SET NULL,
@@ -1814,7 +1815,7 @@ def _createSurveyTables(db, cfg):
 
     createTable(db, 'inventory_windows_os_patch', """
         "windows_os_patch_id" %(PRIMARYKEY)s,
-        "hotfix_id" TEXT,
+        "hotfix_id" TEXT UNIQUE,
         "name" TEXT,
         "fix_comments" TEXT,
         "description" TEXT,
