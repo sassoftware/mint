@@ -564,7 +564,7 @@ class ImagesManager(basemanager.BaseManager):
         # of the image file. A better approach would be to do the calculation
         # inside a job.
         self.setImageStatus(image.image_id, code=jobstatus.RUNNING,
-            message="Calculating SHA-1 digest")
+                            message="Calculating SHA-1 digest")
         src = open(src_filename, 'rb')
         dst = open(dst_filename, 'wb')
         digest = hashlib.sha1()
@@ -586,7 +586,7 @@ class ImagesManager(basemanager.BaseManager):
                                   sha1=digest.hexdigest())
 
         self.setImageStatus(image.image_id, code=jobstatus.RUNNING,
-            message="Adding image to repository")
+                            message="Adding image to repository")
         self._addImageToRepository(image.image_id, None)
         image.image_data.get(name='outputToken').delete()
 
