@@ -43,8 +43,6 @@ class ErrorHandler(WebHandler):
 
 class MintApp(WebHandler):
     project = None
-    projectList = []
-    projectDict = {}
     userLevel = userlevels.NONMEMBER
     user = None
     session = {}
@@ -126,17 +124,9 @@ class MintApp(WebHandler):
                 '/validateSession/', '/continueLogin/', '/continueLogout/'):
             maintenance.enforceMaintenanceMode(self.cfg)
 
-        self.membershipReqsList = None
         if self.auth.authorized:
             try:
                 self.user = self.client.getUser(self.auth.userId)
-                self.projectList = self.client.getProjectsByMember(self.auth.userId)
-                self.projectDict = {}
-                for project, level, memberReqs in self.projectList:
-                    l = self.projectDict.setdefault(level, [])
-                    l.append((project, memberReqs))
-                self.membershipReqsList = [x[0] for x in self.projectList
-                        if x[2] > 0 and x[1] == userlevels.OWNER]
             except MaintenanceMode:
                 # A disabled rBuilder will forbid shim calls, even as admin.
                 pass
@@ -255,9 +245,6 @@ class MintApp(WebHandler):
             'cfg':              self.cfg,
             'db':               self.db,
             'fields':           self.fields,
-            'projectList':      self.projectList,
-            'projectDict':      self.projectDict,
-            'membershipReqsList': self.membershipReqsList,
             'req':              self.req,
             'session':          self.session,
             'siteHost':         self.cfg.siteHost,
