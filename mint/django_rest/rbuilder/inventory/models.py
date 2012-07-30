@@ -180,24 +180,6 @@ class Credentials(modellib.XObjIdModel):
         self.id = self.get_absolute_url(request, parents=[self._system])
         return xobj.toxml(self)
     
-class Configuration(modellib.XObjIdModel):
-    
-    class Meta:
-        abstract = True
-    _xobj = xobj.XObjMetadata(
-                tag = 'configuration',
-                attributes = {'id':str})
-    objects = modellib.ConfigurationManager()
-    view_name = 'SystemConfiguration'
-
-    def __init__(self, system, *args, **kwargs):
-        self._system = system
-        modellib.XObjIdModel.__init__(self, *args, **kwargs)
-
-    def to_xml(self, request=None, xobj_model=None):
-        self.id = self.get_absolute_url(request, parents=[self._system])
-        return xobj.toxml(self)
-    
 class ConfigurationDescriptor(modellib.XObjIdModel):
     class Meta:
         abstract = True

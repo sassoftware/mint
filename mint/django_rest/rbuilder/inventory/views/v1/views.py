@@ -639,29 +639,23 @@ class InventorySystemCredentialsServices(BaseInventoryService):
 class InventorySystemConfigurationServices(BaseInventoryService):
 
     @rbac(rbac_can_read_system_id)
-    @return_xml
     def rest_GET(self, request, system_id):
-        return self.get(system_id)
+        body = self.get(system_id)
+        return HttpResponse(status=200, content=body)
 
     @rbac(rbac_can_write_system_id)
-    @return_xml
-    @requires('configuration')
-    def rest_PUT(self, request, system_id, configuration):
-        configDict = {}
-        for k, v in configuration.__dict__.items():
-            if not k.startswith('_'):
-                configDict[k] = v
-        return self.mgr.saveSystemConfiguration(system_id, configDict)
-
+    def rest_PUT(self, request, system_id):
+        # FIXME: request.BODY?
+        configuration = request.raw_post_data
+        body = self.mgr.saveSystemConfiguration(system_id, configuration)
+        return HttpResponse(status=200, content=body)
+    
     @rbac(rbac_can_write_system_id)
-    @return_xml
-    @requires('configuration')
-    def rest_POST(self, request, system_id, configuration):
-        configDict = {}
-        for k, v in configuration.__dict__.items():
-            if not k.startswith('_'):
-                configDict[k] = v
-        return self.mgr.saveSystemConfiguration(system_id, configDict)
+    def rest_POST(self, request, system_id):
+        # FIXME: request.BODY?
+        configuration = request.raw_post_data
+        body = self.mgr.saveSystemConfiguration(system_id, configuration)
+        return HttpResponse(status=200, content=body)
 
     def get(self, system_id):
         return self.mgr.getSystemConfiguration(system_id)

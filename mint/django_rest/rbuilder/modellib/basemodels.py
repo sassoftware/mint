@@ -709,13 +709,6 @@ class CredentialsManager(BaseManager):
             setattr(model, k, v)
         return model
     
-class ConfigurationManager(BaseManager):
-    def load_from_object(self, obj, request, flags=None):
-        model = self.model(system=None)
-        for k, v in obj.__dict__.items():
-            setattr(model, k, v)
-        return model
-    
 class ConfigurationDescriptorManager(BaseManager):
     def load_from_object(self, obj, request, flags=None):
         model = self.model(system=None)

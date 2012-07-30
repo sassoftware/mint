@@ -1281,34 +1281,22 @@ class SystemManager(basemanager.BaseManager):
         rc =  self.mgr.getConfigurationDescriptor(system)
         return rc    
 
-    @exposed
     def getSystemConfiguration(self, system_id):
         system = models.System.objects.get(pk=system_id)
-        if system.configuration is None:
-            systemConfig = {}
-        else:
-            systemConfig = self.unmarshalConfiguration(system.configuration)
-        return self._getConfigurationModel(system, systemConfig)
+        return system.configuration
 
     @exposed
     def saveSystemConfiguration(self, system_id, configuration):
         system = models.System.objects.get(pk=system_id)
-        systemConfig = self.marshalConfiguration(configuration)
-        system.configuration = systemConfig
+        system.configuration = configuration
         system.configuration_set = True
         system.configuration_applied = False
         system.save()
-        return self._getConfigurationModel(system, configuration)
+        return system.configuration
 
     # FIXME: OBSOLETE with new config stuff, REMOVE
     def applySystemConfiguration(self):    
         self.scheduleSystemConfigurationEvent()
-
-    def _getConfigurationModel(self, system, configDict):
-        config = models.Configuration(system)
-        for k, v in configDict.items():
-            setattr(config, k, v)
-        return config
 
     @classmethod
     def unmarshalConfiguration(cls, configString):
