@@ -329,18 +329,19 @@ class SurveyManager(basemanager.BaseManager):
             else:
                 if observed != desired:
                     updates_pending = True
-                    changes = preview.conary_package_changes.conary_package_change
-                    # xobj hack
-                    if type(changes) != list: 
-                        changes = [ changes ]
-                    for x in changes:
-                        typ = x.type
-                        if type == 'added':
-                           added = added+1
-                        elif type == 'removed':
-                           removed = removed+1
-                        elif type == 'changed':
-                           changed = changed+1
+                    changes = preview.conary_package_changes.getattr('conary_package_change', None)
+                    if changes is not None:
+                        # xobj hack
+                        if type(changes) != list: 
+                            changes = [ changes ]
+                        for x in changes:
+                            typ = x.type
+                            if type == 'added':
+                                added = added+1
+                            elif type == 'removed':
+                                removed = removed+1
+                            elif type == 'changed':
+                                changed = changed+1
 
         config_sync_message = "%s added, %s removed, %s changed" % (added, removed, changed)
 
