@@ -112,6 +112,10 @@ class SurveyManager(basemanager.BaseManager):
         return survey_models.SurveyWindowsPatch.objects.get(pk=id)
 
     @exposed
+    def getSurveyWindowsOsPatch(self,id):
+        return survey_models.SurveyWindowsOsPatch.objects.get(pk=id)
+
+    @exposed
     def getSurveyService(self, id):
         return survey_models.SurveyService.objects.get(pk=id)
     
@@ -134,6 +138,10 @@ class SurveyManager(basemanager.BaseManager):
     @exposed
     def getSurveyWindowsPatchInfo(self, id):
         return survey_models.WindowsPatchInfo.objects.get(pk=id)
+
+    @exposed
+    def getSurveyWindowsOsPatchInfo(self, id):
+        return survey_models.WindowsOsPatchInfo.objects.get(pk=id)
 
     @exposed
     def getSurveyServiceInfo(self, id):
@@ -406,14 +414,15 @@ class SurveyManager(basemanager.BaseManager):
 
         system = inventory_models.System.objects.get(pk=system_id)
 
-        xsurvey            = model.survey
-        xrpm_packages      = self._subel(xsurvey, 'rpm_packages', 'rpm_package')
-        xconary_packages   = self._subel(xsurvey, 'conary_packages', 'conary_package')
-        xwindows_packages  = self._subel(xsurvey, 'windows_packages', 'windows_package')
-        xwindows_patches   = self._subel(xsurvey, 'windows_patches', 'windows_patch')
-        xservices          = self._subel(xsurvey, 'services', 'service')
-        xwindows_services  = self._subel(xsurvey, 'windows_services', 'windows_service')
-        xtags              = self._subel(xsurvey, 'tags', 'tag')
+        xsurvey              = model.survey
+        xrpm_packages        = self._subel(xsurvey, 'rpm_packages', 'rpm_package')
+        xconary_packages     = self._subel(xsurvey, 'conary_packages', 'conary_package')
+        xwindows_packages    = self._subel(xsurvey, 'windows_packages', 'windows_package')
+        xwindows_patches     = self._subel(xsurvey, 'windows_patches', 'windows_patch')
+        xwindows_os_patches  = self._subel(xsurvey, 'windows_os_patches', 'windows_os_patch')
+        xservices            = self._subel(xsurvey, 'services', 'service')
+        xwindows_services    = self._subel(xsurvey, 'windows_services', 'windows_service')
+        xtags                = self._subel(xsurvey, 'tags', 'tag')
 
         if getattr(xsurvey, 'values', None):
             raise Exception("version 7.0 or later style surveys are required")
@@ -628,6 +637,27 @@ class SurveyManager(basemanager.BaseManager):
                 install_date   = self._date(xmodel.install_date),
             )
             windows_packages_by_id[xid] = pkg
+            pkg.save()
+
+        for xmodel in xwindows_os_patches:
+            xinfo = xmodel.windows_os_patch_info
+            info, created = survey_models.WindowsOsPatchInfo.objects.get_or_create(
+                hotfix_id    = _u(xinfo.hotfix_id),
+                name         = _u(xinfo.name),
+                fix_comments = _u(xinfo.fix_comments),
+                description  = _u(xinfo.description),
+                cs_name      = _u(xinfo.cs_name),
+                caption      = _u(xinfo.caption)
+            )
+            if created:
+                info.save()
+            pkg = survey_models.SurveyWindowsOsPatch(
+                survey                = survey,
+                windows_os_patch_info = info,
+                status                = _u(xmodel.status),
+                install_date          = self._date(xmodel.install_date),
+                installed_by          = _u(xmodel.installed_by),
+            )
             pkg.save()
 
         for xmodel in xwindows_patches:

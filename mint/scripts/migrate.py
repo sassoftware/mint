@@ -4978,7 +4978,7 @@ class MigrateTo_62(SchemaMigration):
  
 class MigrateTo_63(SchemaMigration):
     '''Goad'''
-    Version = (63, 19)
+    Version = (63, 20)
 
     def migrate(self):
         ''' add initial tables for config environments'''
@@ -5213,6 +5213,27 @@ class MigrateTo_63(SchemaMigration):
         cu = self.db.cursor()
         cu.execute("ALTER TABLE inventory_survey_windows_service ADD COLUMN start_mode TEXT")
         cu.execute("ALTER TABLE inventory_survey_windows_service ADD COLUMN start_account TEXT")
+        return True
+
+    def migrate20(self):
+        createTable2(self.db, 'inventory_windows_os_patch', """
+            "windows_os_patch_id" %(PRIMARYKEY)s,
+            "hotfix_id" TEXT,
+            "name" TEXT,
+            "fix_comments" TEXT,
+            "description" TEXT,
+            "cs_name" TEXT,
+            "caption" TEXT,
+            "service_pack_in_effect" TEXT
+        """)
+        createTable2(self.db, 'inventory_survey_windows_os_patch', """
+            "map_id" %(PRIMARYKEY)s,
+            "survey_id" INTEGER NOT NULL REFERENCES "inventory_survey" (survey_id) ON DELETE CASCADE,
+            "windows_os_patch_id" INTEGER NOT NULL REFERENCES "inventory_windows_os_patch" (windows_os_patch_id) ON DELETE CASCADE,
+            "install_date" TIMESTAMP WITH TIME ZONE NOT NULL,
+            "installed_by" TEXT NOT NULL,
+            "status" TEXT, 
+        """)
         return True
 
 #### SCHEMA MIGRATIONS END HERE #############################################

@@ -17,6 +17,22 @@ windows_upload_survey_xml="""
   </tags>
   <uuid>123456789</uuid>
   <created_date>1330699918</created_date>
+  <windows_os_patches>
+    <windows_os_patch id="1">
+      <installed_by>w520-64SSD\joebalt</installed_by>
+      <install_date>1331528400</install_date>
+      <status></status>
+      <windows_os_patch_info>
+        <hotfix_id>KB982861</hotfix_id>
+        <name></name>
+        <fix_comments></fix_comments>
+        <description>Update</description>
+        <cs_name>W520-64SSD</cs_name>
+        <caption>http://go.microsoft.com/fwlink/?LinkId=133041</caption>
+        <service_pack_in_effect></service_pack_in_effect>
+      </windows_os_patch_info>
+    </windows_os_patch>
+  </windows_os_patches> 
   <windows_patches>
     <windows_patch id="1">
       <local_package>d:/path/to/stuff</local_package>

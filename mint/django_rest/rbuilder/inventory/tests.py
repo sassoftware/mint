@@ -147,7 +147,6 @@ class SurveyTests(XMLTestCase):
             patch_code    = 'up-c-down-c-left-c-right-c',
             product_code  = 'up-a-down-a-left-a-right-a',
             transforms    = 'bubblebee,starscream'
-
         )
 
         windows_patch.save()
@@ -333,9 +332,11 @@ install needle
             data = testsxml2.windows_upload_survey_xml,
             username='admin', password='password')
         self.assertEqual(response.status_code, 200)
+        print response.content
         # print response.content
  
         self._hiturl('inventory/survey_windows_patches/1')
+        self._hiturl('inventory/survey_os_windows_patches/1')
         self._hiturl('inventory/windows_patch_info/1')
         self._hiturl('inventory/windows_package_info/1')
         self._hiturl('inventory/survey_windows_packages/1')
@@ -346,6 +347,7 @@ install needle
             data = testsxml2.windows_upload_survey_xml2,
             username='admin', password='password')
         self.assertEqual(response.status_code, 200)
+        print response.content
 
         url = "inventory/surveys/%s/diffs/%s" % ('123456789', '987654321')
         response = self._get(url, username='admin', password='password')

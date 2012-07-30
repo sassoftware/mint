@@ -88,6 +88,7 @@ class Survey(modellib.XObjIdModel):
          'rpm_packages',
          'windows_packages',
          'windows_patches',
+         'windows_os_patches',
          'services',
          'windows_services',
          'tags',
@@ -525,6 +526,55 @@ class SurveyWindowsPatch(modellib.XObjIdModel):
     def get_url_key(self, *args, **kwargs):
         return [ self.windows_patch_id ] 
    
+#***********************************************************
+
+class WindowsOsPatchInfo(modellib.XObjIdModel):
+
+    class Meta:
+        db_table = 'inventory_windows_os_patch'
+
+    view_name = 'SurveyWindowsOsPatchInfo'
+    _xobj = xobj.XObjMetadata(tag='windows_os_patch_info',
+         attributes = { 'id' : str }
+    )
+    summary_view = [
+        'hotfix_id', 'name', 'fix_comments', 'description', 'cs_name', 'caption',
+        'service_pack_in_effect'
+    ]
+
+    windows_os_patch_id = models.AutoField(primary_key=True)
+
+    hotfix_id              = models.TextField()
+    name                   = models.TextField()
+    fix_comments           = models.TextField()
+    description            = models.TextField()
+    cs_name                = models.TextField()
+    caption                = models.TextField()
+    service_pack_in_effect = models.TextField()
+
+    def get_url_key(self, *args, **kwargs):
+        return [ self.windows_os_patch_id ]
+
+#***********************************************************
+
+class SurveyWindowsOsPatch(modellib.XObjIdModel):
+
+    class Meta:
+        db_table = 'inventory_survey_windows_os_patch'
+    _xobj                = xobj.XObjMetadata(tag='windows_os_patch')
+    view_name            = 'SurveyWindowsOsPatch'
+
+    windows_os_patch_id  = models.AutoField(primary_key=True, db_column='map_id')
+    survey          = modellib.ForeignKey(Survey, related_name='windows_os_patches', null=False)
+    windows_os_patch_info = modellib.ForeignKey(WindowsOsPatchInfo, db_column='windows_os_patch_id')
+    survey               = XObjHidden(modellib.ForeignKey(Survey, related_name='windows_os_patches'))
+
+    installed_by         = models.TextField(null=False)
+    install_date         = modellib.DateTimeUtcField(auto_now_add=False, null=True)
+    status               = models.TextField(null=False)
+
+    def get_url_key(self, *args, **kwargs):
+        return [ self.windows_os_patch_id ]
 
 #***********************************************************
 

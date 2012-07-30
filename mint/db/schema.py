@@ -28,7 +28,7 @@ from conary.dbstore import sqlerrors, sqllib
 log = logging.getLogger(__name__)
 
 # database schema major version
-RBUILDER_DB_VERSION = sqllib.DBversion(63, 19)
+RBUILDER_DB_VERSION = sqllib.DBversion(63, 20)
 
 def _createTrigger(db, table, column="changed"):
     retInsert = db.createTrigger(table, column, "INSERT")
@@ -1812,6 +1812,17 @@ def _createSurveyTables(db, cfg):
         "transforms" TEXT
     """)
 
+    createTable(db, 'inventory_windows_os_patch', """
+        "windows_os_patch_id" %(PRIMARYKEY)s,
+        "hotfix_id" TEXT,
+        "name" TEXT,
+        "fix_comments" TEXT,
+        "description" TEXT,
+        "cs_name" TEXT,
+        "caption" TEXT,
+        "service_pack_in_effect" TEXT
+    """)
+
     createTable(db, 'inventory_windows_patch_windows_package', """
         "map_id" %(PRIMARYKEY)s,
         "windows_package_id" INTEGER NOT NULL REFERENCES "inventory_windows_package" (windows_package_id) ON DELETE CASCADE,
@@ -1830,6 +1841,15 @@ def _createSurveyTables(db, cfg):
         "is_installed" BOOLEAN NOT NULL
     """)
 
+    createTable(db, 'inventory_survey_windows_os_patch', """
+        "map_id" %(PRIMARYKEY)s,
+        "survey_id" INTEGER NOT NULL REFERENCES "inventory_survey" (survey_id) ON DELETE CASCADE,
+        "windows_os_patch_id" INTEGER NOT NULL REFERENCES "inventory_windows_os_patch" (windows_os_patch_id) ON DELETE CASCADE,
+        "install_date" TIMESTAMP WITH TIME ZONE NOT NULL,
+        "installed_by" TEXT NOT NULL,
+        "status" TEXT, 
+    """)
+ 
     createTable(db, 'inventory_windows_service', """
         "windows_service_id" %(PRIMARYKEY)s,
         "name" TEXT NOT NULL,

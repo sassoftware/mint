@@ -72,8 +72,12 @@ def rbac_can_read_windows_package(view, request, id, *args, **kwargs):
     return rbac_can_read_system_id(view, request, conary.survey.system.pk)
 
 def rbac_can_read_windows_patch(view, request, id, *args, **kwargs):
-    conary = view.mgr.getSurveyWindowsPatch(id)
-    return rbac_can_read_system_id(view, request, conary.survey.system.pk)
+    wp = view.mgr.getSurveyWindowsPatch(id)
+    return rbac_can_read_system_id(view, request, wp.survey.system.pk)
+
+def rbac_can_read_windows_os_patch(view, request, id, *args, **kwargs):
+    wop = view.mgr.getSurveyWindowsOsPatch(id)
+    return rbac_can_read_system_id(view, request, wop.survey.system.pk)
 
 def rbac_can_read_service(view, request, id, *args, **kwargs):
     service = view.mgr.getSurveyService(id)
@@ -882,6 +886,16 @@ class SurveyWindowsPatchService(BaseInventoryService):
     def get(self, id):
         return self.mgr.getSurveyWindowsPatch(id)
 
+class SurveyWindowsOsPatchService(BaseInventoryService):
+
+    @rbac(rbac_can_read_windows_os_patch)
+    @return_xml
+    def rest_GET(self, request, id):
+        return self.get(id)
+
+    def get(self, id):
+        return self.mgr.getSurveyWindowsOsPatch(id)
+
 class SurveyServiceService(BaseInventoryService):
     ''' The instance of an service installed on a given system (per survey) '''
 
@@ -962,6 +976,16 @@ class SurveyWindowsPatchInfoService(BaseInventoryService):
 
     def get(self, id):
         return self.mgr.getSurveyWindowsPatchInfo(id)
+
+class SurveyWindowsOsPatchInfoService(BaseInventoryService):
+
+    @access.authenticated
+    @return_xml
+    def rest_GET(self, request, id):
+        return self.get(id)
+
+    def get(self, id):
+        return self.mgr.getSurveyWindowsOsPatchInfo(id)
 
 class SurveyServiceInfoService(BaseInventoryService):
     ''' The definition of a service state, shared between many systems '''

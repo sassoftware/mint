@@ -12,12 +12,13 @@ import datetime
 # for things changed, but not added/removed, what fields to show in the diff?  
 
 DIFF_FIELDS = {
-   'rpm_package_info'     : [ 'epoch', 'version', 'release', 'signature' ], 
-   'conary_package_info'  : [ 'version', 'architecture', 'signature' ],
-   'service_info'         : [ 'autostart', 'runlevels' ],
-   'windows_package_info' : [ 'publisher', 'product_code', 'package_code', 'product_name', 'type', 'upgrade_code', 'version' ],  
-   'windows_patch_info'   : [ 'display_name', 'uninstallable', 'patch_code', 'product_code', 'transforms' ],
-   'windows_service_info' : [ 'name', 'display_name', 'type', 'handle' ]
+   'rpm_package_info'      : [ 'epoch', 'version', 'release', 'signature' ], 
+   'conary_package_info'   : [ 'version', 'architecture', 'signature' ],
+   'service_info'          : [ 'autostart', 'runlevels' ],
+   'windows_package_info'  : [ 'publisher', 'product_code', 'package_code', 'product_name', 'type', 'upgrade_code', 'version' ],  
+   'windows_patch_info'    : [ 'display_name', 'uninstallable', 'patch_code', 'product_code', 'transforms' ],
+   'windows_os_patch_info' : [ 'hotfix_id', 'name', 'fix_comments', 'description', 'cs_name', 'caption' ],
+   'windows_service_info'  : [ 'name', 'display_name', 'type', 'handle' ]
 }
 
 # not really about the infos, but the state of the things themselves
@@ -46,6 +47,7 @@ class SurveyDiff(object):
         self.serviceDiff        = self._computeServices()
         self.windowsPackageDiff = self._computeWindowsPackages()
         self.windowsPatchDiff   = self._computeWindowsPatches()
+        self.windowsOsPatchDiff = self._computeWindowsOsPatches()
         self.windowsServiceDiff = self._computeWindowsServices()
 
         self.configDiff         = self._computeConfigDiff()
@@ -228,6 +230,9 @@ class SurveyDiff(object):
 
     def _computeWindowsPatches(self):
         return self._computeGeneric('windows_patches', 'windows_patch_info')
+
+    def _computeWindowsOsPatches(self):
+        return self._computeGeneric('windows_os_patches', 'windows_os_patch_info')
 
     def _computeWindowsServices(self):
         return self._computeGeneric('windows_services', 'windows_service_info')
@@ -602,6 +607,7 @@ class SurveyDiffRender(object):
             self._renderDiff('service_changes', self.differ.serviceDiff),
             self._renderDiff('windows_package_changes', self.differ.windowsPackageDiff),
             self._renderDiff('windows_patch_changes', self.differ.windowsPatchDiff),
+            self._renderDiff('windows_os_patch_changes', self.differ.windowsOsPatchDiff),
             self._renderDiff('windows_service_changes', self.differ.windowsServiceDiff),
             self._renderDiff('config_properties_changes', self.differ.configDiff),
             self._renderDiff('observed_properties_changes', self.differ.observedDiff),
