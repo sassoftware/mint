@@ -61,7 +61,7 @@ class ProductImagesController(base.BaseController):
         # href in the response via ImageUploadsHrefField. The reason for the
         # hackiness is because the code is deprecated and it's probably not
         # worth doing "the right way".
-        if image.status == jobstatus.BLOCKED:
+        if image.imageStatus == jobstatus.BLOCKED:
             image.outputToken = outputToken
 
         return image
