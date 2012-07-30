@@ -37,6 +37,24 @@ class ProductImagesController(base.BaseController):
 
     @auth.public
     def get(self, request, hostname, imageId):
+        return self.db.getImageForProduct(hostname, imageId)
+
+    def destroy(self, request, hostname, imageId):
+        self.db.deleteImageForProduct(hostname, imageId)
+
+    @requires('image', models.Image)
+    def create(self, request, hostname, image):
+        outputToken = sha1helper.sha1ToString(file('/dev/urandom').read(20))
+        buildData = [('outputToken', outputToken, datatypes.RDT_STRING)]
+        imageId = self.db.createImage(hostname, image, buildData=buildData)
+
+        if image.files.files:
+            self.db.uploadImageFiles(hostname, image, outputToken=outputToken)
+        else:
+            image.imageStatus.set_status(jobstatus.BLOCKED,
+                 message="This image does not have files associated with it")
+            self.db.setVisibleImageStatus(imageId, image.imageStatus)
+
         image = self.db.getImageForProduct(hostname, imageId)
 
         # This is a hack to get the outputToken to show up in the upload_files
@@ -48,28 +66,11 @@ class ProductImagesController(base.BaseController):
 
         return image
 
-    def destroy(self, request, hostname, imageId):
-        self.db.deleteImageForProduct(hostname, imageId)
-
-    @requires('image', models.Image)
-    def create(self, request, hostname, image):
-        outputToken = sha1helper.sha1ToString(file('/dev/urandom').read(20))
-        buildData = [('outputToken', outputToken, datatypes.RDT_STRING)]
-        imageId = self.db.createImage(hostname, image, buildData=buildData)
-        if image.files.files:
-            self.db.uploadImageFiles(hostname, image, outputToken=outputToken)
-        else:
-            image.imageStatus.set_status(jobstatus.BLOCKED,
-                 message="This image does not have files associated with it")
-            self.db.setVisibleImageStatus(imageId, image.imageStatus)
-
-        return self.get(request, hostname, imageId)
-
     @requires('image', models.Image)
     def update(self, request, hostname, imageId, image):
         image.imageId = imageId
         self.db.updateImage(hostname, image)
-        return self.get(request, hostname, imageId)
+        return self.db.getImageForProduct(hostname, imageId)
 
     def stop(self, request, hostname, imageId):
         return self.db.stopImageJob(hostname, imageId)
