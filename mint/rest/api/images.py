@@ -47,19 +47,23 @@ class ProductImagesController(base.BaseController):
         outputToken = sha1helper.sha1ToString(file('/dev/urandom').read(20))
         buildData = [('outputToken', outputToken, datatypes.RDT_STRING)]
         imageId = self.db.createImage(hostname, image, buildData=buildData)
+
         if image.files.files:
             self.db.uploadImageFiles(hostname, image, outputToken=outputToken)
         else:
-            image.imageStatus.set_status(jobstatus.WAITING,
-                                         message="This image does not have files associated with it")
+            image.imageStatus.set_status(jobstatus.BLOCKED,
+                 message="This image does not have files associated with it")
             self.db.setVisibleImageStatus(imageId, image.imageStatus)
 
-        # This is a hack to get the outputToken to show up in the
-        # upload_files URL in the response. The reason for the hackiness is
-        # because the code is deprecated and it's probably not worth doing
-        # "the right way".
         image = self.db.getImageForProduct(hostname, imageId)
-        image.outputToken = outputToken
+
+        # This is a hack to get the outputToken to show up in the upload_files
+        # href in the response via ImageUploadsHrefField. The reason for the
+        # hackiness is because the code is deprecated and it's probably not
+        # worth doing "the right way".
+        if image.status == jobstatus.BLOCKED:
+            image.outputToken = outputToken
+
         return image
 
     @requires('image', models.Image)

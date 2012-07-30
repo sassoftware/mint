@@ -544,7 +544,7 @@ class ImagesManager(basemanager.BaseManager):
     def processImageUpload(self, image_id, token, uploaded_file, basename,
                            chunk_id, num_chunks, checksum):
         image = self.getImageById(image_id)
-        if image.status == jobstatus.WAITING:
+        if image.status == jobstatus.BLOCKED:
             outputToken = image.image_data.get(name='outputToken').value
             if token == outputToken:
                 filename = self._getUploadFilename(image, basename)
@@ -595,7 +595,15 @@ class ImagesManager(basemanager.BaseManager):
         return self.getImageById(image.image_id)
 
     def _getUploadFilename(self, image, basename):
+        image_id = str(image.image_id)
+        project = image.project.short_name
+
+        if basename == '' or basename is None:
+            basename = '%s-%s-%s.ova' % (project,
+                                         image_id,
+                                         image.architecture)
+
         return os.path.join(self.cfg.imagesUploadPath,
-                            image.project.short_name,
-                            str(image.image_id),
+                            project,
+                            image_id,
                             os.path.basename(basename))

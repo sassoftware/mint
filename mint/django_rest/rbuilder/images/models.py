@@ -201,7 +201,7 @@ class Image(modellib.XObjIdModel):
             self.image_type = ImageType.fromImageTypeId(self._image_type)
         self.jobs = modellib.HrefFieldFromModel(self, "ImageJobs")
 
-        if self.status == jobstatus.WAITING:
+        if self.status == jobstatus.BLOCKED:
             image_data = ImageData.objects.filter(image=self.image_id,
                                                   name="outputToken")
             if image_data:
