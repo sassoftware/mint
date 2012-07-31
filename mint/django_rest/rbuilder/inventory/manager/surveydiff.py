@@ -109,7 +109,9 @@ class SurveyDiff(object):
             # this shouldn't really get hit in the way we are using it
             return False
         if infoName == 'rpm_package_info':
-            return (aInfo.architecture == bInfo.architecture)
+            # RPMs don't show up as changed, they are added and removed
+            # return (aInfo.architecture == bInfo.architecture)
+            return False
         elif infoName == 'conary_package_info':
             return (aInfo.architecture == bInfo.architecture and aInfo.flavor == bInfo.flavor)
         elif infoName == 'windows_package_info':
