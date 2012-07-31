@@ -1281,6 +1281,7 @@ class SystemManager(basemanager.BaseManager):
         rc =  self.mgr.getConfigurationDescriptor(system)
         return rc    
 
+    @exposed
     def getSystemConfiguration(self, system_id):
         system = models.System.objects.get(pk=system_id)
         return system.configuration

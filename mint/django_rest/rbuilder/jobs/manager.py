@@ -1235,16 +1235,7 @@ class JobHandlerRegistry(HandlerRegistry):
                 self.system, destination, eventUuid=str(self.eventUuid),
                 requiredNetwork=None)
 
-            # xml configuration is stored as mintdata, and we need it as
-            # nice XML because it will be sent literally, this is a copy
-            # of the old way it was done for backwards compat, we could just
-            # store the XML.
-            configDict = mintdata.unmarshalGenericData(self.system.configuration)
-            config = inventorymodels.Configuration(self.system)
-            for k, v in configDict.items():
-                setattr(config, k, v)
-            configXml = xobj.toxml(config, prettyPrint=False, xml_declaration=False)
-
+            configXml = self.system.configuration
             self.system.configuration_applied = True
             self.system.save()
 
