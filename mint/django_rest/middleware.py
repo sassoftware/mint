@@ -140,11 +140,13 @@ class RequestLogMiddleware(SwitchableLogMiddleware):
         urlsFile = RBUILDER_DEBUG_HISTORY
         urlsFile = open(RBUILDER_DEBUG_HISTORY, "a")
         (logFile, logFilePath) = self.getLogFile(True, now)
-        path = "%s %s%s" % (
+        path = "%s %s" % (
             request.META.get('REQUEST_METHOD'), 
             request.META.get('PATH_INFO'), 
-            request.META.get('QUERY_STRING')
         )
+        query = request.META.get('QUERY_STRING')
+        if query:
+            path += '?' + query
         urlsFile.write("[%s]\n     %s\n     %s\n" % (nowstr, path, logFilePath))
         urlsFile.close()
         with logFile as f:
