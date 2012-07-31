@@ -1284,6 +1284,8 @@ class SystemManager(basemanager.BaseManager):
     @exposed
     def getSystemConfiguration(self, system_id):
         system = models.System.objects.get(pk=system_id)
+        if system.configuration is None:
+            return '<configuration></configuration>'
         return system.configuration
 
     @exposed
