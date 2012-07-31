@@ -958,6 +958,10 @@ class SystemDesiredTopLevelItem(modellib.XObjModel):
     def computeSyntheticFields(self, sender, **kwargs):
         ''' Compute non-database fields.'''
 
+        if self.trove_spec is None:
+            # survey didn't populate this yet?
+            return
+
         rev = None
         try:
             spec = TroveTuple(self.trove_spec)
