@@ -17,7 +17,7 @@ DIFF_FIELDS = {
    'service_info'          : [ 'autostart', 'runlevels' ],
    'windows_package_info'  : [ 'publisher', 'product_code', 'package_code', 'product_name', 'type', 'upgrade_code', 'version' ],  
    'windows_patch_info'    : [ 'display_name', 'uninstallable', 'patch_code', 'product_code', 'transforms' ],
-   'windows_os_patch_info' : [ 'hotfix_id', 'name', 'fix_comments', 'description', 'cs_name', 'caption' ],
+   'windows_os_patch_info' : [ 'hotfix_id', 'name', 'fix_comments', 'description', 'caption' ],
    'windows_service_info'  : [ 'name', 'display_name', 'type', 'handle' ]
 }
 

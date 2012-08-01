@@ -4978,11 +4978,12 @@ class MigrateTo_62(SchemaMigration):
  
 class MigrateTo_63(SchemaMigration):
     '''Goad'''
-    Version = (63, 21)
+    Version = (63, 22)
 
     def migrate(self):
         ''' add initial tables for config environments'''
 
+        # note -- these are not used, let's whack them in harpoon?
         createTable2(self.db, "config_environments", """
             "id" %(PRIMARYKEY)s,
             "name" TEXT UNIQUE,
@@ -5246,6 +5247,16 @@ class MigrateTo_63(SchemaMigration):
         """)
         cu.execute("""
             ALTER TABLE inventory_system ADD COLUMN configuration_xml TEXT
+        """)
+        return True
+
+    def migrate22(self):
+        cu = self.db.cursor()
+        cu.execute("""
+            ALTER TABLE inventory_windows_os_patch DROP COLUMN cs_name
+        """)
+        cu.execute("""
+            ALTER TABLE inventory_survey_windows_os_patch ADD COLUMN cs_name TEXT
         """)
         return True
 

@@ -22,12 +22,12 @@ windows_upload_survey_xml="""
       <installed_by>w520-64SSD\joebalt</installed_by>
       <install_date>1331528400</install_date>
       <status></status>
+      <cs_name>W520-64SSD</cs_name>
       <windows_os_patch_info>
         <hotfix_id>KB982861</hotfix_id>
         <name></name>
         <fix_comments></fix_comments>
         <description>Update</description>
-        <cs_name>W520-64SSD</cs_name>
         <caption>http://go.microsoft.com/fwlink/?LinkId=133041</caption>
         <service_pack_in_effect></service_pack_in_effect>
       </windows_os_patch_info>

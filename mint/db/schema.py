@@ -28,7 +28,7 @@ from conary.dbstore import sqlerrors, sqllib
 log = logging.getLogger(__name__)
 
 # database schema major version
-RBUILDER_DB_VERSION = sqllib.DBversion(63, 21)
+RBUILDER_DB_VERSION = sqllib.DBversion(63, 22)
 
 def _createTrigger(db, table, column="changed"):
     retInsert = db.createTrigger(table, column, "INSERT")
@@ -1819,7 +1819,6 @@ def _createSurveyTables(db, cfg):
         "name" TEXT,
         "fix_comments" TEXT,
         "description" TEXT,
-        "cs_name" TEXT,
         "caption" TEXT,
         "service_pack_in_effect" TEXT
     """)
@@ -1849,6 +1848,7 @@ def _createSurveyTables(db, cfg):
         "install_date" TIMESTAMP WITH TIME ZONE NOT NULL,
         "installed_by" TEXT NOT NULL,
         "status" TEXT, 
+        "cs_name" TEXT
     """)
  
     createTable(db, 'inventory_windows_service', """

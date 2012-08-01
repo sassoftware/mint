@@ -538,7 +538,7 @@ class WindowsOsPatchInfo(modellib.XObjIdModel):
          attributes = { 'id' : str }
     )
     summary_view = [
-        'hotfix_id', 'name', 'fix_comments', 'description', 'cs_name', 'caption',
+        'hotfix_id', 'name', 'fix_comments', 'description', 'caption',
         'service_pack_in_effect'
     ]
 
@@ -548,7 +548,6 @@ class WindowsOsPatchInfo(modellib.XObjIdModel):
     name                   = models.TextField()
     fix_comments           = models.TextField()
     description            = models.TextField()
-    cs_name                = models.TextField()
     caption                = models.TextField()
     service_pack_in_effect = models.TextField()
 
@@ -572,6 +571,7 @@ class SurveyWindowsOsPatch(modellib.XObjIdModel):
     installed_by         = models.TextField(null=False)
     install_date         = modellib.DateTimeUtcField(auto_now_add=False, null=True)
     status               = models.TextField(null=False)
+    cs_name              = models.TextField()
 
     def get_url_key(self, *args, **kwargs):
         return [ self.windows_os_patch_id ]

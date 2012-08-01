@@ -336,7 +336,7 @@ install needle
         # print response.content
  
         self._hiturl('inventory/survey_windows_patches/1')
-        self._hiturl('inventory/survey_os_windows_patches/1')
+        self._hiturl('inventory/survey_windows_os_patches/1')
         self._hiturl('inventory/windows_patch_info/1')
         self._hiturl('inventory/windows_package_info/1')
         self._hiturl('inventory/survey_windows_packages/1')

@@ -647,7 +647,6 @@ class SurveyManager(basemanager.BaseManager):
                 name         = _u(xinfo.name),
                 fix_comments = _u(xinfo.fix_comments),
                 description  = _u(xinfo.description),
-                cs_name      = _u(xinfo.cs_name),
                 caption      = _u(xinfo.caption)
             )
             if created:
@@ -658,6 +657,7 @@ class SurveyManager(basemanager.BaseManager):
                 status                = _u(xmodel.status),
                 install_date          = self._date(xmodel.install_date),
                 installed_by          = _u(xmodel.installed_by),
+                cs_name               = _u(xmodel.cs_name),
             )
             pkg.save()
 
