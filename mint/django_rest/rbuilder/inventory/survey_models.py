@@ -47,8 +47,8 @@ class WindowsPackageInfoList(modellib.UnpaginatedCollection):
    class Meta:
        abstract = True
    _xobj_no_register = True
-   _xobj = xobj.XObjMetadata(tag = 'windows_packages_info')
-   list_fields = ['windows_package']
+   _xobj = xobj.XObjMetadata(tag = 'windows_package_infos')
+   list_fields = ['windows_package_info']
    windows_package = []
    view_name = None # ???
 
@@ -327,7 +327,7 @@ class WindowsPatchInfo(modellib.XObjIdModel):
     )
     summary_view = [ 
         'display_name', 'uninstallable', 'patch_code',
-        'product_code', 'transforms', 'windows_packages'
+        'product_code', 'transforms', 'windows_package_infos'
     ]    
     
     windows_patch_id = models.AutoField(primary_key=True)
@@ -336,10 +336,10 @@ class WindowsPatchInfo(modellib.XObjIdModel):
     patch_code       = models.TextField(null=False)
     product_code     = models.TextField(null=False)
     transforms       = models.TextField(null=False)
-    windows_packages = modellib.SyntheticField()
+    windows_package_infos = modellib.SyntheticField()
 
     def computeSyntheticFields(self, sender, **kwargs):
-        self.windows_packages = WindowsPackageInfoList()
+        self.windows_package_infos = WindowsPackageInfoList()
         links = SurveyWindowsPatchPackageLink.objects.filter(
             windows_patch_info = self
         )
@@ -351,7 +351,7 @@ class WindowsPatchInfo(modellib.XObjIdModel):
             type = wp.type, upgrade_code = wp.upgrade_code, version = wp.version,
             id = reverse('SurveyWindowsPackageInfo', args=[ wp.pk ])
         ) for wp in results ]
-        self.windows_packages.window_package = results
+        self.windows_package_infos.windows_package_info = results
  
     def get_url_key(self, *args, **kwargs):
         return [ self.windows_patch_id ] 

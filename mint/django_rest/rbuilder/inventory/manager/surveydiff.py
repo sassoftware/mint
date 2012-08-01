@@ -438,11 +438,21 @@ class SurveyDiffRender(object):
         )
         return elem
 
+    def _serializeWindowsOsPatch(self, elemName, item):
+        elem = self._xmlNode(elemName, about=item,
+            keys='status install_date installed_by cs_name'
+        )
+        self._xmlNode('windows_os_patch_info', 
+            about=item.windows_os_patch_info, parent=elem,
+            keys='hotfix_id name fix_comments description caption'
+        )
+        return elem
+
     def _serializeWindowsPatch(self, elemName, item):
         elem = self._xmlNode(elemName, about=item,
             keys = 'local_package install_date is_installed'
         )
-        self._xmlNode('windows_patch_info', 
+        info = self._xmlNode('windows_patch_info', 
             about=item.windows_patch_info, parent=elem,
             keys='display_name uninstallable patch_code product_code transforms'
         )
@@ -455,7 +465,7 @@ class SurveyDiffRender(object):
             self._xmlNode('windows_package_info', about=x, parent=package_elts,
                 keys='publisher product_code package_code type upgrade_code version'
             )
-        elem.append(package_elts)
+        info.append(package_elts)
         return elem
 
     def _serializeService(self, elemName, item):
@@ -505,6 +515,7 @@ class SurveyDiffRender(object):
             survey_models.SurveyConaryPackage: self._serializeConaryPackage,
             survey_models.SurveyWindowsPackage: self._serializeWindowsPackage,
             survey_models.SurveyWindowsPatch: self._serializeWindowsPatch,
+            survey_models.SurveyWindowsOsPatch: self._serializeWindowsOsPatch,
             survey_models.SurveyService: self._serializeService,
             survey_models.SurveyWindowsService: self._serializeWindowsService,
             survey_models.SurveyValues: self._serializeSurveyValue,
