@@ -195,9 +195,13 @@ def getPackageCreatorFactories(pc, sessionHandle):
     except errors.UnsupportedSPFMetadataFormat, e:
         raise mint_error.PackageCreatorError('Error gathering candidate '
             'factories: %s.', e)
-    [x[1].seek(0) for x in factories]
-    ret = [(x[0],x[1].read(),x[3], x[4]) for x in factories]
-    return ret, data
+    except errors.ConfigDescriptorSchemaValidationError, e:
+        raise mint_error.PackageCreatorError('Error gathering candidate build '
+            'factories: Failed to validate config descriptor %s', e)
+    except errors.ConfigDescriptorInvalidXMLError, e:
+        raise mint_error.PackageCreatorError('Error gathering candidate build '
+            'factories: Failed to parse config descriptor %s', e)
+    return factories, data
 
 def getFactoryDataFromXML(xmldata):
     """
