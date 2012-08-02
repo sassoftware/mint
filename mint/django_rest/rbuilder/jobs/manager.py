@@ -29,7 +29,6 @@ from mint.django_rest.rbuilder.inventory import models as inventorymodels
 from mint.django_rest.rbuilder.targets import models as targetmodels
 from mint.django_rest.rbuilder.users import models as usermodels
 from mint.django_rest.rbuilder.rbac.manager.rbacmanager import MODMEMBERS
-from mint.lib import data as mintdata
 from mint.lib import uuid
 from mint.logerror import logErrorAndEmail
 
