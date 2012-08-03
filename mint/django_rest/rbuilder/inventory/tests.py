@@ -332,7 +332,7 @@ install needle
             data = testsxml2.windows_upload_survey_xml,
             username='admin', password='password')
         self.assertEqual(response.status_code, 200)
-        print response.content
+        #print response.content
         # print response.content
  
         self._hiturl('inventory/survey_windows_patches/1')
@@ -347,9 +347,18 @@ install needle
             data = testsxml2.windows_upload_survey_xml2,
             username='admin', password='password')
         self.assertEqual(response.status_code, 200)
-        print response.content
-
+ 
         url = "inventory/surveys/%s/diffs/%s" % ('123456789', '987654321')
+        response = self._get(url, username='admin', password='password')
+        self.assertEqual(response.status_code, 200)
+        
+        url = "inventory/systems/%s/surveys" % sys.pk
+        response = self._post(url,
+            data = testsxml2.windows_upload_survey_xml3,
+            username='admin', password='password')
+        self.assertEqual(response.status_code, 200)
+        
+        url = "inventory/surveys/%s/diffs/%s" % ('123456789', '555')
         response = self._get(url, username='admin', password='password')
         self.assertEqual(response.status_code, 200)
  

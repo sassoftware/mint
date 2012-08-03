@@ -109,6 +109,9 @@ windows_upload_survey_xml="""
 </survey>
 """
 
+# replace the os patch hotfix and UUID
+windows_upload_survey_xml3 = windows_upload_survey_xml.replace("KB982861","KB111222").replace("123456789", "555")
+
 windows_upload_survey_xml2 = """
 <survey>
   <config_properties/>
