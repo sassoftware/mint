@@ -29,7 +29,6 @@ from mint.django_rest.rbuilder.inventory import models as inventorymodels
 from mint.django_rest.rbuilder.targets import models as targetmodels
 from mint.django_rest.rbuilder.users import models as usermodels
 from mint.django_rest.rbuilder.rbac.manager.rbacmanager import MODMEMBERS
-from mint.lib import data as mintdata
 from mint.lib import uuid
 from mint.logerror import logErrorAndEmail
 
@@ -46,7 +45,7 @@ class JobManager(basemanager.BaseManager):
 
     @exposed
     def getJob(self, job_uuid):
-        return self._fillIn(models.Job.objects.get(job_uuid=job_uuid))
+        return models.Job.objects.get(job_uuid=job_uuid)
 
     @exposed
     def updateJob(self, job_uuid, job):
@@ -135,13 +134,9 @@ class JobManager(basemanager.BaseManager):
     def _jobsFromIterator(cls, iterator):
         jobs = models.Jobs()
         for job in iterator:
-            jobs.job.append(cls._fillIn(job))
+            jobs.job.append(job)
         return jobs
 
-    @classmethod
-    def _fillIn(cls, job):
-        job.setValuesFromRmake()
-        return job
 
 class AbstractHandler(object):
     __slots__ = [ 'mgrRef', 'extraArgs', ]
@@ -191,13 +186,11 @@ class BaseJobHandler(AbstractHandler):
         self.extraArgs.update(extraArgs or {})
         uuid_, rmakeJob = self.createRmakeJob(job)
         job.job_uuid = str(uuid_)
+        job.setDefaultValues()
         if rmakeJob is not None:
-            job.setValuesFromRmakeJob(rmakeJob)
             jobToken = rmakeJob.data.getObject().data.get('authToken')
             if jobToken:
                 job.job_token = str(jobToken)
-        else:
-            job.setDefaultValues()
         job.save()
         # Blank out the descriptor data, we don't need it in the return
         # value

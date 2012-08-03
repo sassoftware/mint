@@ -122,7 +122,6 @@ class Jobs(modellib.Collection):
         return uri.split("?")[0]
 
 
-
 class Job(modellib.XObjIdModel):
     
     class Meta:
@@ -177,60 +176,12 @@ class Job(modellib.XObjIdModel):
 
     load_fields = [ job_uuid ]
 
-    def getRmakeJob(self):
-        # XXX we should be using the repeater client for this
-        import rmake3
-        RMAKE_ADDRESS = 'http://localhost:9998'
-        rmakeClient = rmake3.client.RmakeClient(RMAKE_ADDRESS)
-        try:
-            rmakeJobs = rmakeClient.getJobs([self.job_uuid])
-        except rmake3.errors.OpenError:
-            return None 
-        if rmakeJobs:
-            return rmakeJobs[0]
-        return None
-
     def setDefaultValues(self):
         runningState = modellib.Cache.get(JobState,
             name=JobState.RUNNING)
         self.job_state = runningState
         self.status_code = 100
         self.status_text = "Running"
-
-    def setValuesFromRmake(self):
-        runningState = modellib.Cache.get(JobState,
-            name=JobState.RUNNING)
-        if self.job_state_id != runningState.pk:
-            return
-        # This job is still running, we need to poll rmake to get its
-        # status
-        job = self.getRmakeJob()
-        if job:
-            self.setValuesFromRmakeJob(job)
-
-    def setValuesFromRmakeJob(self, job):
-        runningState = modellib.Cache.get(JobState,
-            name=JobState.RUNNING)
-        completedState = modellib.Cache.get(JobState,
-            name=JobState.COMPLETED)
-        failedState = modellib.Cache.get(JobState,
-            name=JobState.FAILED)
-        self.job_uuid = str(job.job_uuid)
-        self.status_code = job.status.code
-        self.status_text = job.status.text
-        self.status_detail = job.status.detail
-        # XXX: OMGHACK
-        if self.job_type_id == 26:
-            self.job_state = runningState
-            return
-
-        if job.status.final:
-            if job.status.completed:
-                self.job_state = completedState
-            else:
-                self.job_state = failedState
-        elif self.job_state_id is None:
-            self.job_state = runningState
 
     def get_absolute_url(self, request, parents=None, *args, **kwargs):
         if parents:
@@ -260,7 +211,6 @@ class Job(modellib.XObjIdModel):
 
     def serialize(self, request=None):
         xobj_model = modellib.XObjIdModel.serialize(self, request)
-        self.setValuesFromRmake()
         xobj_model.job_description = self.job_type.description
 
         return xobj_model
