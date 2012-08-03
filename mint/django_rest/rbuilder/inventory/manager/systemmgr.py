@@ -1642,6 +1642,8 @@ class SystemManager(basemanager.BaseManager):
             eventUuid = params.eventUuid
         else:
             eventUuid = kwargs.get('eventUuid')
+        if not kwargs.get('jobToken'):
+            kwargs['jobToken'] = str(uuid.uuid4())
         jobUuid = str(uuid.uuid4())
 
         logFunc = lambda x: log.info("System %s (%s), task %s (%s) %s" %
@@ -1653,6 +1655,7 @@ class SystemManager(basemanager.BaseManager):
         job.job_uuid = jobUuid
         job.job_type = event.event_type
         job.job_state = self.jobState(jobmodels.JobState.QUEUED)
+        job.job_token = str(kwargs['jobToken'])
         job.created_by = user
         job.save()
 
