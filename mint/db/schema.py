@@ -28,7 +28,7 @@ from conary.dbstore import sqlerrors, sqllib
 log = logging.getLogger(__name__)
 
 # database schema major version
-RBUILDER_DB_VERSION = sqllib.DBversion(63, 22)
+RBUILDER_DB_VERSION = sqllib.DBversion(63, 23)
 
 def _createTrigger(db, table, column="changed"):
     retInsert = db.createTrigger(table, column, "INSERT")
@@ -1247,7 +1247,7 @@ def _createInventorySchema(db, cfg):
                     DEFAULT FALSE, 
                 "source_image_id" INTEGER 
                     REFERENCES "builds" ("buildid")
-                    ON DELETE CASCADE,
+                    ON DELETE SET NULL,
                 "created_by" integer
                     REFERENCES "users" ("userid")
                     ON DELETE SET NULL,
@@ -1734,7 +1734,7 @@ def _createSurveyTables(db, cfg):
 
     createTable(db, 'inventory_survey_values', """
         "survey_value_id" %(PRIMARYKEY)s,
-        "survey_id" INTEGER NOT NULL REFERENCES inventory_survey (survey_id),
+        "survey_id" INTEGER NOT NULL REFERENCES inventory_survey (survey_id) ON DELETE CASCADE,
         "type" INTEGER NOT NULL,
         "key" TEXT NOT NULL,
         "subkey" TEXT,
@@ -1915,7 +1915,7 @@ def _createSurveyTables(db, cfg):
         "diff_id" %(PRIMARYKEY)s,
         "created_date" TIMESTAMP WITH TIME ZONE NOT NULL,
         "left_survey_id" INTEGER NOT NULL REFERENCES "inventory_survey" ("survey_id") ON DELETE CASCADE,
-        "right_survey_id" INTEGER NOT NULL REFERENCES "inventory_survey" ("survey_id") ON DELETE SET NULL,
+        "right_survey_id" INTEGER NOT NULL REFERENCES "inventory_survey" ("survey_id") ON DELETE CASCADE,
         "xml" TEXT
     """)
     db.createIndex('inventory_survey_diff', 'SurveyDiffLeftRightIdx', 

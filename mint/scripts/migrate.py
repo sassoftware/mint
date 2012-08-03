@@ -4978,7 +4978,7 @@ class MigrateTo_62(SchemaMigration):
  
 class MigrateTo_63(SchemaMigration):
     '''Goad'''
-    Version = (63, 22)
+    Version = (63, 23)
 
     def migrate(self):
         ''' add initial tables for config environments'''
@@ -5257,6 +5257,32 @@ class MigrateTo_63(SchemaMigration):
         """)
         cu.execute("""
             ALTER TABLE inventory_survey_windows_os_patch ADD COLUMN cs_name TEXT
+        """)
+        return True
+
+    def migrate23(self):
+        cu = self.db.cursor()
+        # deleting a source image should not delete a system record
+        cu.execute("ALTER TABLE inventory_system DROP CONSTRAINT inventory_system_source_image_id_fkey")
+        cu.execute("""
+            ALTER TABLE inventory_system ADD CONSTRAINT 
+            inventory_system_source_image_id_fkey 
+            FOREIGN KEY (source_image_id) REFERENCES builds(buildid) ON DELETE SET NULL
+        """)
+        # deleting a survey should delete the survey values
+        cu.execute("ALTER TABLE inventory_survey_values DROP CONSTRAINT inventory_survey_values_survey_id_fkey")
+        cu.execute("""
+            ALTER TABLE inventory_survey_values ADD CONSTRAINT 
+            inventory_survey_values_survey_id_fkey 
+            FOREIGN KEY (survey_id) REFERENCES inventory_survey(survey_id) ON DELETE CASCADE
+        """)
+        # deleting the right survey from a diff should also delete the diff
+        cu.execute("""
+            ALTER TABLE inventory_survey_diff DROP CONSTRAINT "inventory_survey_diff_right_survey_id_fkey" 
+        """)
+        cu.execute("""
+            ALTER TABLE inventory_survey_diff ADD CONSTRAINT "inventory_survey_diff_right_survey_id_fkey" 
+            FOREIGN KEY (right_survey_id) REFERENCES inventory_survey(survey_id) ON DELETE CASCADE
         """)
         return True
 
