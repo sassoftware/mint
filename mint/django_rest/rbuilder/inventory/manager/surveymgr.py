@@ -435,7 +435,7 @@ class SurveyManager(basemanager.BaseManager):
         xdesired_properties    = None
         if system.configuration is not None:
             config = self.mgr.getSystemConfiguration(system_id)
-            xdesired_properties = xobj.parse(config.to_xml())
+            xdesired_properties = xobj.parse(config)
         if xdesired_properties is None or getattr(xdesired_properties, 'configuration', None) is None:
             xdesired_properties = xobj.parse('<configuration/>')
 
