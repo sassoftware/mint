@@ -134,24 +134,42 @@ class RequestLogMiddleware(SwitchableLogMiddleware):
     '''
 
     def _logRequest(self, request):
-
         now = time.localtime()
-        nowstr =time.asctime(now)
-        urlsFile = RBUILDER_DEBUG_HISTORY
-        urlsFile = open(RBUILDER_DEBUG_HISTORY, "a")
+        nowstr = time.asctime(now)
+        method = request.META.get('REQUEST_METHOD')
+        path = request.META.get('SCRIPT_NAME', '')
+        path += request.META.get('PATH_INFO', '')
+        qs = request.META.get('QUERY_STRING')
+        if qs:
+            path += '?' + qs
+        vers = request.META.get('SERVER_PROTOCOL')
         (logFile, logFilePath) = self.getLogFile(True, now)
-        path = "%s %s" % (
-            request.META.get('REQUEST_METHOD'), 
-            request.META.get('PATH_INFO'), 
-        )
-        query = request.META.get('QUERY_STRING')
-        if query:
-            path += '?' + query
-        urlsFile.write("[%s]\n     %s\n     %s\n" % (nowstr, path, logFilePath))
-        urlsFile.close()
-        with logFile as f:
-            self.logPrint(f, [ request.META, dict(zzz_raw_post_data=request.raw_post_data) ])
-
+        with logFile:
+            with open(RBUILDER_DEBUG_HISTORY, "a") as history:
+                print >> history, "[%s]\n     %s %s\n     %s" % (nowstr,
+                        method, path, logFilePath)
+            print >> logFile, "%s %s %s" % (method, path, vers)
+            for key, value in sorted(request.META.items()):
+                if not key.startswith('HTTP_'):
+                    continue
+                key = key[5:].replace('_', '-').title()
+                print >> logFile, "%s: %s" % (key, value)
+            print >> logFile
+            if not request.raw_post_data:
+                return
+            if '/xml' not in request.META.get('HTTP_CONTENT_TYPE', ''):
+                logFile.write(request.raw_post_data)
+                return
+            from lxml import etree
+            try:
+                text = request.raw_post_data.decode('utf8', 'replace')
+                doc = etree.fromstring(text)
+                text = etree.tostring(doc, pretty_print=True, encoding='utf8')
+                print >> logFile, "<!-- reformatted -->"
+                print >> logFile, text
+            except:
+                print >> logFile, "<!-- reformatting failed -->"
+                logFile.write(request.raw_post_data)
 
     def _process_request(self, request):
         if self.shouldLog():
@@ -490,7 +508,11 @@ class SerializeXmlMiddleware(SwitchableLogMiddleware):
         urlsFile.write("     %s\n" % logFilePath)
         urlsFile.close()
         with logFile as f:
-            self.logPrint(f, [ dict(status=response.status_code, zzz_content=str(outdata)) ])
+            print >> f, "HTTP/1.1 %s" % (response.status_code,)
+            for key, value in sorted(response.items()):
+                print >> f, "%s: %s" % (key.title(), value)
+            print >> f
+            f.write(str(outdata))
 
     def _process_response(self, request, response):
         if hasattr(response, 'model'):
