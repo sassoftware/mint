@@ -321,7 +321,7 @@ class MigrateTo_40(SchemaMigration):
 
         for host, ent in entList:
             ent = ent[1]
-            cu.execute("""SELECT projectId, 
+            cu.execute("""SELECT projectId,
                     EXISTS(SELECT * FROM InboundMirrors WHERE
                         projectId=targetProjectId) AS localMirror
                 FROM Projects LEFT JOIN Labels USING(projectId)
@@ -534,7 +534,7 @@ class MigrateTo_45(SchemaMigration):
         add_columns(self.db, 'OutboundMirrors',
             "useReleases INTEGER NOT NULL DEFAULT 0")
         return True
-    
+
     # 45.3
     # - Set shortname to hostname if it isn't set to anything
     def migrate3(self):
@@ -642,9 +642,9 @@ class MigrateTo_46(SchemaMigration):
     # 46.0
     # - Add versionId and stage columns to Builds
     def migrate(self):
-        add_columns(self.db, 'Builds', 
+        add_columns(self.db, 'Builds',
                      'productVersionId INTEGER',
-                     'stageName VARCHAR(255) DEFAULT ""', 
+                     'stageName VARCHAR(255) DEFAULT ""',
                     )
         return True
 
@@ -777,7 +777,7 @@ class MigrateTo_48(SchemaMigration):
                 cu.execute("""ALTER TABLE Builds
                         ALTER COLUMN statusMessage TYPE text""")
 
-        return True                    
+        return True
 
     # 48.1
     # - Move component and non-typed projects to be "repositories"
@@ -904,12 +904,12 @@ class MigrateTo_48(SchemaMigration):
         return True
 
     # 48.5
-    # - Dashboard report type table 
+    # - Dashboard report type table
     def migrate5(self):
         return True
 
     # 48.6
-    # - Dashboard Repository Log scraping table 
+    # - Dashboard Repository Log scraping table
     def migrate6(self):
         schema._createRepositoryLogSchema(self.db)
         return True
@@ -930,8 +930,8 @@ class MigrateTo_48(SchemaMigration):
     # Preserved for previous migration no longer needed, we don't want to
     # decrease the version number.
     def migrate9(self):
-        return True            
-        
+        return True
+
     # 48.10
     # Preserved for previous migration no longer needed, we don't want to
     # decrease the version number.
@@ -1047,20 +1047,20 @@ class MigrateTo_49(SchemaMigration):
             cu.execute("""
                 CREATE TABLE "inventory_system_target" (
                     "id" %(PRIMARYKEY)s,
-                    "managed_system_id" integer 
-                        REFERENCES "inventory_managed_system" ("id") 
+                    "managed_system_id" integer
+                        REFERENCES "inventory_managed_system" ("id")
                         DEFERRABLE INITIALLY DEFERRED,
-                    "target_id" integer NOT NULL 
-                        REFERENCES "targets" ("targetid") 
+                    "target_id" integer NOT NULL
+                        REFERENCES "targets" ("targetid")
                         DEFERRABLE INITIALLY DEFERRED,
                     "target_system_id" varchar(256)
                 ) %(TABLEOPTS)s""" % self.db.keywords)
             cu.execute("""
-            CREATE INDEX "inventory_system_target_managed_system_id" 
+            CREATE INDEX "inventory_system_target_managed_system_id"
                 ON "inventory_system_target" ("managed_system_id");
             """)
             cu.execute("""
-            CREATE INDEX "inventory_system_target_target_id" 
+            CREATE INDEX "inventory_system_target_target_id"
                 ON "inventory_system_target" ("target_id");
             """)
             self.db.tables['inventory_system_target'] = []
@@ -1080,19 +1080,19 @@ class MigrateTo_49(SchemaMigration):
             cu.execute("""
                 CREATE TABLE "inventory_system_software_version" (
                     "id" %(PRIMARYKEY)s,
-                    "managed_system_id" integer NOT NULL 
-                        REFERENCES "inventory_managed_system" ("id") 
+                    "managed_system_id" integer NOT NULL
+                        REFERENCES "inventory_managed_system" ("id")
                         DEFERRABLE INITIALLY DEFERRED,
-                    "software_version_id" integer NOT NULL 
-                        REFERENCES "inventory_software_version" ("id") 
+                    "software_version_id" integer NOT NULL
+                        REFERENCES "inventory_software_version" ("id")
                         DEFERRABLE INITIALLY DEFERRED
                 ) %(TABLEOPTS)s""" % self.db.keywords)
             cu.execute("""
-            CREATE INDEX "inventory_system_software_version_managed_system_id" 
+            CREATE INDEX "inventory_system_software_version_managed_system_id"
                 ON "inventory_system_software_version" ("managed_system_id");
             """)
             cu.execute("""
-            CREATE INDEX "inventory_system_software_version_software_version_id" 
+            CREATE INDEX "inventory_system_software_version_software_version_id"
                 ON "inventory_system_software_version" ("software_version_id");
             """)
             self.db.tables['inventory_system_software_version'] = []
@@ -1101,8 +1101,8 @@ class MigrateTo_49(SchemaMigration):
             cu.execute("""
                 CREATE TABLE "inventory_system_information" (
                     "id" %(PRIMARYKEY)s,
-                    "managed_system_id" integer NOT NULL 
-                        REFERENCES "inventory_managed_system" ("id") 
+                    "managed_system_id" integer NOT NULL
+                        REFERENCES "inventory_managed_system" ("id")
                         DEFERRABLE INITIALLY DEFERRED,
                     "system_name" varchar(64),
                     "memory" integer,
@@ -1112,7 +1112,7 @@ class MigrateTo_49(SchemaMigration):
                     "system_type" varchar(32)
                 ) %(TABLEOPTS)s""" % self.db.keywords)
             cu.execute("""
-            CREATE INDEX "inventory_system_information_managed_system_id" 
+            CREATE INDEX "inventory_system_information_managed_system_id"
                 ON "inventory_system_information" ("managed_system_id");
             """)
             self.db.tables['inventory_system_information'] = []
@@ -1121,8 +1121,8 @@ class MigrateTo_49(SchemaMigration):
             cu.execute("""
                 CREATE TABLE "inventory_network_information" (
                     "id" %(PRIMARYKEY)s,
-                    "managed_system_id" integer NOT NULL 
-                        REFERENCES "inventory_managed_system" ("id") 
+                    "managed_system_id" integer NOT NULL
+                        REFERENCES "inventory_managed_system" ("id")
                         DEFERRABLE INITIALLY DEFERRED,
                     "interface_name" varchar(32),
                     "ip_address" varchar(15),
@@ -1130,7 +1130,7 @@ class MigrateTo_49(SchemaMigration):
                     "port_type" varchar(32)
                 ) %(TABLEOPTS)s""" % self.db.keywords)
             cu.execute("""
-            CREATE INDEX "inventory_network_information_managed_system_id" 
+            CREATE INDEX "inventory_network_information_managed_system_id"
                 ON "inventory_network_information" ("managed_system_id");
             """)
             self.db.tables['inventory_network_information'] = []
@@ -1139,15 +1139,15 @@ class MigrateTo_49(SchemaMigration):
             cu.execute("""
                 CREATE TABLE "inventory_storage_volume" (
                     "id" %(PRIMARYKEY)s,
-                    "managed_system_id" integer NOT NULL 
-                        REFERENCES "inventory_managed_system" ("id") 
+                    "managed_system_id" integer NOT NULL
+                        REFERENCES "inventory_managed_system" ("id")
                         DEFERRABLE INITIALLY DEFERRED,
                     "size" integer,
                     "storage_type" varchar(32),
                     "storage_name" varchar(32)
                 ) %(TABLEOPTS)s""" % self.db.keywords)
             cu.execute("""
-            CREATE INDEX "inventory_storage_volume_managed_system_id" 
+            CREATE INDEX "inventory_storage_volume_managed_system_id"
                 ON "inventory_storage_volume" ("managed_system_id");
             """)
             self.db.tables['inventory_storage_volume'] = []
@@ -1156,8 +1156,8 @@ class MigrateTo_49(SchemaMigration):
             cu.execute("""
                 CREATE TABLE "inventory_cpu" (
                     "id" %(PRIMARYKEY)s,
-                    "managed_system_id" integer NOT NULL 
-                        REFERENCES "inventory_managed_system" ("id") 
+                    "managed_system_id" integer NOT NULL
+                        REFERENCES "inventory_managed_system" ("id")
                         DEFERRABLE INITIALLY DEFERRED,
                     "cpu_type" varchar(64),
                     "cpu_count" integer,
@@ -1166,7 +1166,7 @@ class MigrateTo_49(SchemaMigration):
                     "enabled" boolean
                 ) %(TABLEOPTS)s""" % self.db.keywords)
             cu.execute("""
-            CREATE INDEX "inventory_cpu_managed_system_id" 
+            CREATE INDEX "inventory_cpu_managed_system_id"
                 ON "inventory_cpu" ("managed_system_id");
             """)
             self.db.tables['inventory_cpu'] = []
@@ -1271,15 +1271,15 @@ class MigrateTo_49(SchemaMigration):
             cu.execute("""
                 CREATE TABLE "inventory_software_version_update" (
                     "id" %(PRIMARYKEY)s,
-                    "software_version_id" integer NOT NULL 
+                    "software_version_id" integer NOT NULL
                         REFERENCES "inventory_software_version" ("id"),
-                    "available_update_id" integer NOT NULL 
+                    "available_update_id" integer NOT NULL
                         REFERENCES "inventory_software_version" ("id"),
                     "last_refreshed" timestamp with time zone NOT NULL,
                     UNIQUE ("software_version_id", "available_update_id")
             ) %(TABLEOPTS)s """ % self.db.keywords)
             cu.execute("""
-                CREATE INDEX "inventory_software_version_update_software_version_id" 
+                CREATE INDEX "inventory_software_version_update_software_version_id"
                     ON "inventory_software_version_update" ("software_version_id")
             """)
             self.db.tables['inventory_software_version_update'] = []
@@ -1288,16 +1288,16 @@ class MigrateTo_49(SchemaMigration):
     def migrate4(self):
         cu = self.db.cursor()
         cu.execute("""
-            ALTER TABLE inventory_system_software_version 
-            ADD CONSTRAINT inventory_system_software_version_sys_sv_uq 
+            ALTER TABLE inventory_system_software_version
+            ADD CONSTRAINT inventory_system_software_version_sys_sv_uq
                 UNIQUE (managed_system_id, software_version_id)
         """)
         return True
-        
+
     def migrate5(self):
         cu = self.db.cursor()
         cu.execute("""
-            ALTER TABLE inventory_software_version_update 
+            ALTER TABLE inventory_software_version_update
             ALTER COLUMN available_update_id DROP NOT NULL
         """)
         return True
@@ -1309,17 +1309,17 @@ class MigrateTo_49(SchemaMigration):
     def migrate7(self):
         cu = self.db.cursor()
         cu.execute("""
-            ALTER TABLE inventory_system_target 
+            ALTER TABLE inventory_system_target
             ALTER COLUMN target_id DROP NOT NULL
         """)
         cu.execute("""
-            ALTER TABLE inventory_system_target 
+            ALTER TABLE inventory_system_target
             DROP CONSTRAINT inventory_system_target_target_id_fkey
         """)
         cu.execute("""
-            ALTER TABLE inventory_system_target 
-            ADD CONSTRAINT inventory_system_target_target_id_fkey 
-            FOREIGN KEY (target_id) 
+            ALTER TABLE inventory_system_target
+            ADD CONSTRAINT inventory_system_target_target_id_fkey
+            FOREIGN KEY (target_id)
             REFERENCES targets(targetid) ON DELETE SET NULL
         """)
         return True
@@ -1343,7 +1343,7 @@ class MigrateTo_50(SchemaMigration):
             "job_managed_system",
             "inventory_managed_system",
             "inventory_managementnode")
-        
+
         if 'inventory_zone' not in db.tables:
             cu.execute("""
                 CREATE TABLE "inventory_zone" (
@@ -1403,11 +1403,11 @@ class MigrateTo_50(SchemaMigration):
             changed = True
             changed |= db.createIndex("inventory_system",
                 "inventory_system_target_id_idx", "target_id")
-            
+
         if 'inventory_zone_management_node' not in db.tables:
             cu.execute("""
                 CREATE TABLE "inventory_zone_management_node" (
-                    "system_ptr_id" integer NOT NULL PRIMARY KEY 
+                    "system_ptr_id" integer NOT NULL PRIMARY KEY
                         REFERENCES "inventory_system" ("system_id")
                         ON DELETE CASCADE,
                     "local" bool,
@@ -1421,7 +1421,7 @@ class MigrateTo_50(SchemaMigration):
             cu.execute("""
                 CREATE TABLE "inventory_system_network" (
                     "network_id" %(PRIMARYKEY)s,
-                    "system_id" integer NOT NULL 
+                    "system_id" integer NOT NULL
                         REFERENCES "inventory_system" ("system_id")
                         ON DELETE CASCADE,
                     "created_date" timestamp with time zone NOT NULL,
@@ -1452,7 +1452,7 @@ class MigrateTo_50(SchemaMigration):
             cu.execute("""
                 CREATE TABLE "inventory_system_log" (
                     "system_log_id" %(PRIMARYKEY)s,
-                    "system_id" integer NOT NULL 
+                    "system_id" integer NOT NULL
                         REFERENCES "inventory_system" ("system_id")
                         ON DELETE CASCADE
                 ) %(TABLEOPTS)s""" % db.keywords)
@@ -1513,8 +1513,8 @@ class MigrateTo_50(SchemaMigration):
                       description='on-demand apply an update to a system', priority=105),
                  dict(name="system shutdown",
                       description='shutdown a system', priority=50),
-                 dict(name="immediate system shutdown", 
-                      description='on-demand shutdown a system', 
+                 dict(name="immediate system shutdown",
+                      description='on-demand shutdown a system',
                       priority=105),
                 ])
 
@@ -1654,7 +1654,7 @@ class MigrateTo_50(SchemaMigration):
                     dict(name="dead", description="Stale", created_date=str(datetime.datetime.now(tz.tzutc()))),
                     dict(name="mothballed", description="Retired", created_date=str(datetime.datetime.now(tz.tzutc())))
                 ])
-        
+
         return changed
 
 
@@ -1714,7 +1714,7 @@ class MigrateTo_50(SchemaMigration):
             changed = True
 
         return changed or True
-    
+
     def migrate2(self):
         cu = self.db.cursor()
 
@@ -1734,7 +1734,7 @@ class MigrateTo_50(SchemaMigration):
         cu = self.db.cursor()
 
         cu.execute("""
-            INSERT INTO "inventory_event_type" 
+            INSERT INTO "inventory_event_type"
                 ("name", "description", "priority")
             VALUES
                 ('system launch wait',
@@ -1750,7 +1750,7 @@ class MigrateTo_51(SchemaMigration):
         cu = self.db.cursor()
         db = self.db
         changed = False
-        
+
         if 'inventory_management_interface' not in db.tables:
             cu.execute("""
                 CREATE TABLE "inventory_management_interface" (
@@ -1763,31 +1763,31 @@ class MigrateTo_51(SchemaMigration):
                 ) %(TABLEOPTS)s""" % db.keywords)
             db.tables['inventory_management_interface'] = []
             changed = True
-        
+
         cu.execute("""
             ALTER TABLE inventory_system
                 ADD COLUMN management_interface_id  INTEGER
                     REFERENCES inventory_management_interface
         """)
-        
+
         return True
-    
+
     def migrate1(self):
         cu = self.db.cursor()
         db = self.db
-        
+
         cu.execute("ALTER TABLE inventory_management_interface ADD COLUMN credentials_readonly bool")
         schema._addManagementInterfaces(db)
         cu.execute("UPDATE inventory_management_interface SET credentials_readonly='true' WHERE name='cim'")
         cu.execute("UPDATE inventory_management_interface SET credentials_readonly='false' WHERE name='wmi'")
-        
+
         return True
-    
+
     def migrate2(self):
         cu = self.db.cursor()
-        
+
         cu.execute("UPDATE inventory_management_interface SET port='5989' WHERE name='cim'")
-        
+
         return True
 
     def migrate3(self):
@@ -1795,7 +1795,7 @@ class MigrateTo_51(SchemaMigration):
         db = self.db
 
         cu.execute("""
-            INSERT INTO "inventory_event_type" 
+            INSERT INTO "inventory_event_type"
                 ("name", "description", "priority")
             VALUES
                 ('system detect management interface',
@@ -1804,54 +1804,54 @@ class MigrateTo_51(SchemaMigration):
         """)
 
         cu.execute("""
-            INSERT INTO "inventory_event_type" 
+            INSERT INTO "inventory_event_type"
                 ("name", "description", "priority")
             VALUES
                 ('immediate system detect management interface',
                  'on-demand detect a system''s management interface',
                  105)
         """)
-        
+
         return True
 
     def migrate4(self):
         cu = self.db.cursor()
-        
+
         cu.execute("ALTER TABLE inventory_system ADD COLUMN credentials text")
-        
+
         return True
 
     def _addSystemTypes5(self):
         db = self.db
         changed = False
-        
+
         changed |= schema._addTableRows(db, 'inventory_system_type', 'name',
                 [dict(name='inventory',
                       description='Inventory',
                       created_date=str(datetime.datetime.now(tz.tzutc())),
                       infrastructure=False,
                 )])
-        
+
         changed |= schema._addTableRows(db, 'inventory_system_type', 'name',
                 [dict(name='infrastructure-management-node',
                       description='rPath Update Service (Infrastructure)',
                       created_date=str(datetime.datetime.now(tz.tzutc())),
                       infrastructure=True,
                 )])
-        
+
         changed |= schema._addTableRows(db, 'inventory_system_type', 'name',
                 [dict(name='infrastructure-windows-build-node',
                       description='rPath Windows Build Service (Infrastructure)',
                       created_date=str(datetime.datetime.now(tz.tzutc())),
                       infrastructure=True,
                 )])
-        
+
         return changed
-    
+
     def migrate5(self):
         cu = self.db.cursor()
         changed = True
-        
+
         if 'inventory_system_type' not in self.db.tables:
             cu.execute("""
                 CREATE TABLE "inventory_system_type" (
@@ -1864,42 +1864,42 @@ class MigrateTo_51(SchemaMigration):
             self.db.tables['inventory_system_type'] = []
             changed |= self._addSystemTypes5()
             changed = True
-            
+
         cu.execute("""
             ALTER TABLE inventory_system
                 ADD COLUMN type_id  INTEGER
                     REFERENCES inventory_system_type
         """)
-            
+
         # update type on the rUS
         cu.execute("SELECT system_type_id from inventory_system_type where name='infrastructure-management-node'")
         ids = cu.fetchall()
         mgmtNodeId = ids[0][0]
         cu.execute("UPDATE inventory_system SET type_id='%d' WHERE name='rPath Update Service'" % mgmtNodeId)
-        
+
         # update type on the other systems
         cu.execute("SELECT system_type_id from inventory_system_type where name='inventory'")
         ids = cu.fetchall()
         invTypeId = ids[0][0]
         cu.execute("UPDATE inventory_system SET type_id='%d' WHERE name<>'rPath Update Service'" % invTypeId)
-        
+
         return True
-    
+
     def migrate6(self):
         cu = self.db.cursor()
 
         cu.execute("""ALTER TABLE inventory_system DROP COLUMN management_node""")
-        
+
         return True
-    
+
     def migrate7(self):
         cu = self.db.cursor()
 
         cu.execute("""update inventory_management_interface set credentials_descriptor=? where name='wmi'""" , schema.wmi_credentials_descriptor)
         cu.execute("""update inventory_management_interface set credentials_descriptor=? where name='cim'""" , schema.cim_credentials_descriptor)
-        
+
         return True
-    
+
     def migrate8(self):
         cu = self.db.cursor()
 
@@ -1921,20 +1921,20 @@ class MigrateTo_51(SchemaMigration):
             "status_detail VARCHAR",
         )
         return True
-    
+
     def migrate11(self):
         schema._addTableRows(self.db, 'inventory_system_state', 'name',
                 [
                     dict(name="unmanaged-credentials", description="Unmanaged: Invalid credentials", created_date=str(datetime.datetime.now(tz.tzutc()))),
                 ])
         return True
-    
+
     def migrate12(self):
         cu = self.db.cursor()
 
         cu.execute("""update inventory_management_interface set credentials_descriptor=? where name='wmi'""" , schema.wmi_credentials_descriptor)
         cu.execute("""update inventory_management_interface set credentials_descriptor=? where name='cim'""" , schema.cim_credentials_descriptor)
-        
+
         return True
 
     def migrate13(self):
@@ -1991,18 +1991,18 @@ class MigrateTo_51(SchemaMigration):
         """)
 
         return True
-    
+
     def migrate16(self):
         cu = self.db.cursor()
 
         cu.execute("alter table inventory_system_type ADD COLUMN creation_descriptor text")
-        cu.execute("""update inventory_system_type set creation_descriptor=? where name='inventory'""", 
+        cu.execute("""update inventory_system_type set creation_descriptor=? where name='inventory'""",
             schema.inventory_creation_descriptor)
-        cu.execute("""update inventory_system_type set creation_descriptor=? where name='infrastructure-management-node'""", 
+        cu.execute("""update inventory_system_type set creation_descriptor=? where name='infrastructure-management-node'""",
             schema.management_node_creation_descriptor)
-        cu.execute("""update inventory_system_type set creation_descriptor=? where name='infrastructure-windows-build-node'""", 
+        cu.execute("""update inventory_system_type set creation_descriptor=? where name='infrastructure-windows-build-node'""",
             schema.windows_build_node_creation_descriptor)
-        
+
         return True
 
     def migrate17(self):
@@ -2080,10 +2080,10 @@ windows.rpath.com@rpath:windows-common,Windows Foundation Platform,1,0
             cu.execute(sql, (plat.platformName, bool(plat.abstract),
                 bool(plat.configurable), plat.isFromDisk, label))
         return True
-    
+
     def migrate19(self):
         cu = self.db.cursor()
-        
+
         cu.execute("ALTER TABLE inventory_system ADD COLUMN configuration text")
         return True
 
@@ -2142,19 +2142,19 @@ windows.rpath.com@rpath:windows-common,Windows Foundation Platform,1,0
         """)
 
         return True
-    
+
     def migrate21(self):
         cu = self.db.cursor()
 
         cu.execute("""
-            INSERT INTO "inventory_event_type" 
+            INSERT INTO "inventory_event_type"
                 ("name", "description", "priority")
             VALUES
                 ('immediate system configuration',
                  'Update system configuration',
                  105)
         """)
-        
+
         return True
 
     def migrate22(self):
@@ -2165,18 +2165,18 @@ windows.rpath.com@rpath:windows-common,Windows Foundation Platform,1,0
     def migrate23(self):
         drop_tables(self.db, 'LaunchedAMIs', 'BlessedAMIs')
         return True
-    
+
     def migrate24(self):
         cu = self.db.cursor()
 
         # descriptors were updated
-        cu.execute("""update inventory_system_type set creation_descriptor=? where name='inventory'""", 
+        cu.execute("""update inventory_system_type set creation_descriptor=? where name='inventory'""",
             schema.inventory_creation_descriptor)
-        cu.execute("""update inventory_system_type set creation_descriptor=? where name='infrastructure-management-node'""", 
+        cu.execute("""update inventory_system_type set creation_descriptor=? where name='infrastructure-management-node'""",
             schema.management_node_creation_descriptor)
-        cu.execute("""update inventory_system_type set creation_descriptor=? where name='infrastructure-windows-build-node'""", 
+        cu.execute("""update inventory_system_type set creation_descriptor=? where name='infrastructure-windows-build-node'""",
             schema.windows_build_node_creation_descriptor)
-        
+
         return True
 
     def migrate25(self):
@@ -2203,7 +2203,7 @@ windows.rpath.com@rpath:windows-common,Windows Foundation Platform,1,0
                     "site_id" INTEGER NOT NULL UNIQUE
                         REFERENCES "django_site" ("id"),
                     "old_path" VARCHAR(200) NOT NULL UNIQUE,
-                    "new_path" VARCHAR(200) NOT NULL 
+                    "new_path" VARCHAR(200) NOT NULL
                 )""" % db.keywords)
             db.tables['django_redirect'] = []
             changed = True
@@ -2220,7 +2220,7 @@ windows.rpath.com@rpath:windows-common,Windows Foundation Platform,1,0
         cu.execute("""
             ALTER TABLE inventory_system
             ADD CONSTRAINT inventory_system_target_id_fkey
-            FOREIGN KEY (target_id) 
+            FOREIGN KEY (target_id)
             REFERENCES targets(targetid) ON DELETE SET NULL
         """)
 
@@ -2231,7 +2231,7 @@ windows.rpath.com@rpath:windows-common,Windows Foundation Platform,1,0
         cu = self.db.cursor()
 
         cu.execute("""
-            ALTER TABLE "inventory_system_network" 
+            ALTER TABLE "inventory_system_network"
             ALTER "ipv6_address" TYPE TEXT
         """)
 
@@ -2241,23 +2241,23 @@ windows.rpath.com@rpath:windows-common,Windows Foundation Platform,1,0
         cu = self.db.cursor()
 
         cu.execute("""
-            ALTER TABLE "django_redirect" 
+            ALTER TABLE "django_redirect"
             DROP CONSTRAINT "django_redirect_site_id_key"
         """)
 
         return True
-    
+
     def migrate29(self):
         cu = self.db.cursor()
 
         # descriptors were updated
-        cu.execute("""update inventory_system_type set creation_descriptor=? where name='inventory'""", 
+        cu.execute("""update inventory_system_type set creation_descriptor=? where name='inventory'""",
             schema.inventory_creation_descriptor)
-        cu.execute("""update inventory_system_type set creation_descriptor=? where name='infrastructure-management-node'""", 
+        cu.execute("""update inventory_system_type set creation_descriptor=? where name='infrastructure-management-node'""",
             schema.management_node_creation_descriptor)
-        cu.execute("""update inventory_system_type set creation_descriptor=? where name='infrastructure-windows-build-node'""", 
+        cu.execute("""update inventory_system_type set creation_descriptor=? where name='infrastructure-windows-build-node'""",
             schema.windows_build_node_creation_descriptor)
-        
+
         return True
 
     def migrate30(self):
@@ -2329,7 +2329,7 @@ class MigrateTo_52(SchemaMigration):
             ALTER TABLE inventory_system
                 DROP CONSTRAINT inventory_system_generated_uuid_key""")
         return True
-        
+
     def migrate3(self):
         cursor = self.db.cursor()
         cursor.execute("""
@@ -2373,13 +2373,13 @@ class MigrateTo_53(SchemaMigration):
                 created_date=str(datetime.datetime.now(tz.tzutc())),
                 modified_date=str(datetime.datetime.now(tz.tzutc()))),
             ])
-        allQSId = schema._getRowPk(db, "querysets_queryset", "query_set_id", 
+        allQSId = schema._getRowPk(db, "querysets_queryset", "query_set_id",
             name="All Systems")
-        activeQSId = schema._getRowPk(db, "querysets_queryset", "query_set_id", 
+        activeQSId = schema._getRowPk(db, "querysets_queryset", "query_set_id",
             name="Active Systems")
-        inactiveQSId = schema._getRowPk(db, "querysets_queryset", "query_set_id", 
+        inactiveQSId = schema._getRowPk(db, "querysets_queryset", "query_set_id",
             name="Inactive Systems")
-        physicalQSId = schema._getRowPk(db, "querysets_queryset", "query_set_id", 
+        physicalQSId = schema._getRowPk(db, "querysets_queryset", "query_set_id",
             name="Physical Systems")
 
         schema.createTable(db, 'querysets_filterentry', """
@@ -2393,14 +2393,14 @@ class MigrateTo_53(SchemaMigration):
         schema._addTableRows(db, "querysets_filterentry",
             'filter_entry_id',
             [dict(field="current_state.name", operator="EQUAL", value="responsive"),
-             dict(field="current_state.name", operator="IN", 
+             dict(field="current_state.name", operator="IN",
                 value="(unmanaged,unmanaged-credentials,registered,non-responsive-unknown,non-responsive-net,non-responsive-host,non-responsive-shutdown,non-responsive-suspended,non-responsive-credentials)"),
              dict(field="target", operator='IS_NULL', value="True")],
             ['field', 'operator', 'value'])
         activeFiltId = schema._getRowPk(db, "querysets_filterentry", 'filter_entry_id',
             field="current_state.name", operator="EQUAL", value="responsive")
         inactiveFiltId = schema._getRowPk(db, "querysets_filterentry", 'filter_entry_id',
-            field="current_state.name", operator="IN", 
+            field="current_state.name", operator="IN",
                         value="(unmanaged,unmanaged-credentials,registered,non-responsive-unknown,non-responsive-net,non-responsive-host,non-responsive-shutdown,non-responsive-suspended,non-responsive-credentials)")
         physicalFiltId = schema._getRowPk(db, "querysets_filterentry", 'filter_entry_id',
             field="target", operator='IS_NULL', value="True")
@@ -2540,13 +2540,13 @@ class MigrateTo_53(SchemaMigration):
     def migrate4(self):
         cu = self.db.cursor()
         cu.execute("""
-            ALTER TABLE inventory_stage 
+            ALTER TABLE inventory_stage
             DROP CONSTRAINT inventory_stage_major_version_id_fkey
         """)
         cu.execute("""
-            ALTER TABLE inventory_stage 
-            ADD CONSTRAINT inventory_stage_major_version_id_fkey 
-            FOREIGN KEY (major_version_id) 
+            ALTER TABLE inventory_stage
+            ADD CONSTRAINT inventory_stage_major_version_id_fkey
+            FOREIGN KEY (major_version_id)
             REFERENCES productversions(productversionid) ON DELETE SET NULL
         """)
 
@@ -2752,7 +2752,7 @@ class MigrateTo_56(SchemaMigration):
                 "description" TEXT,
                 "created_date" TIMESTAMP WITH TIME ZONE NOT NULL,
                 "modified_date" TIMESTAMP WITH TIME ZONE NOT NULL,
-                "created_by_id" INTEGER 
+                "created_by_id" INTEGER
                     REFERENCES "users" ("userid"),
                 "modified_by_id" INTEGER
                     REFERENCES "users" ("userid")
@@ -2761,7 +2761,7 @@ class MigrateTo_56(SchemaMigration):
         changed |= createTable(db, "packages_package_version", """
             CREATE TABLE "packages_package_version" (
                 "package_version_id" %(PRIMARYKEY)s,
-                "package_id" integer NOT NULL 
+                "package_id" integer NOT NULL
                     REFERENCES "packages_package" ("package_id"),
                 "name" text NOT NULL,
                 "description" text,
@@ -2769,9 +2769,9 @@ class MigrateTo_56(SchemaMigration):
                 "consumable" boolean NOT NULL,
                 "created_date" timestamp with time zone NOT NULL,
                 "modified_date" timestamp with time zone NOT NULL,
-                "created_by_id" integer 
+                "created_by_id" integer
                     REFERENCES "users" ("userid"),
-                "modified_by_id" integer 
+                "modified_by_id" integer
                     REFERENCES "users" ("userid"),
                 "committed" boolean NOT NULL
             )""")
@@ -2779,7 +2779,7 @@ class MigrateTo_56(SchemaMigration):
         changed |= createTable(db, "packages_package_version_action", """
             CREATE TABLE "packages_package_version_action" (
                 "package_version_action_id" %(PRIMARYKEY)s,
-                "package_version_id" integer NOT NULL 
+                "package_version_id" integer NOT NULL
                     REFERENCES "packages_package_version" ("package_version_id"),
                 "package_action_type_id" integer NOT NULL
                     REFERENCES "packages_package_action_type"
@@ -2794,7 +2794,7 @@ class MigrateTo_56(SchemaMigration):
         changed |= createTable(db, "packages_package_version_job", """
             CREATE TABLE "packages_package_version_job" (
                 "package_version_job_id" %(PRIMARYKEY)s,
-                "package_version_id" integer NOT NULL 
+                "package_version_id" integer NOT NULL
                     REFERENCES "packages_package_version" ("package_version_id"),
                 "package_action_type_id" integer NOT NULL
                     REFERENCES "packages_package_action_type"
@@ -2804,16 +2804,16 @@ class MigrateTo_56(SchemaMigration):
                 "job_data" text,
                 "created_date" timestamp with time zone NOT NULL,
                 "modified_date" timestamp with time zone NOT NULL,
-                "created_by_id" integer 
+                "created_by_id" integer
                     REFERENCES "users" ("userid"),
-                "modified_by_id" integer 
+                "modified_by_id" integer
                     REFERENCES "users" ("userid")
             )""")
 
         changed |= createTable(db, "packages_package_version_url", """
             CREATE TABLE "packages_package_version_url" (
                 "package_version_url_id" %(PRIMARYKEY)s,
-                "package_version_id" integer NOT NULL 
+                "package_version_id" integer NOT NULL
                     REFERENCES "packages_package_version" ("package_version_id"),
                 "url" text NOT NULL,
                 "file_path" text,
@@ -2821,32 +2821,32 @@ class MigrateTo_56(SchemaMigration):
                 "file_size" integer,
                 "created_date" timestamp with time zone NOT NULL,
                 "modified_date" timestamp with time zone NOT NULL,
-                "created_by_id" integer 
+                "created_by_id" integer
                     REFERENCES "users" ("userid"),
-                "modified_by_id" integer 
+                "modified_by_id" integer
                     REFERENCES "users" ("userid")
             )""")
 
         changed |= createTable(db, "packages_package_source", """
             CREATE TABLE "packages_package_source" (
                 "package_source_id" %(PRIMARYKEY)s,
-                "package_version_id" integer NOT NULL 
+                "package_version_id" integer NOT NULL
                     REFERENCES "packages_package_version" ("package_version_id"),
                 "created_date" timestamp with time zone NOT NULL,
                 "modified_date" timestamp with time zone NOT NULL,
-                "created_by_id" integer 
+                "created_by_id" integer
                     REFERENCES "users" ("userid"),
-                "modified_by_id" integer 
+                "modified_by_id" integer
                     REFERENCES "users" ("userid"),
                 "built" boolean NOT NULL,
-                "trove_id" integer 
+                "trove_id" integer
                     REFERENCES "inventory_trove" ("trove_id")
             )""")
 
         changed |= createTable(db, "packages_package_source_action", """
             CREATE TABLE "packages_package_source_action" (
                 "package_source_action_id" %(PRIMARYKEY)s,
-                "package_source_id" integer NOT NULL 
+                "package_source_id" integer NOT NULL
                     REFERENCES "packages_package_source" ("package_source_id"),
                 "package_action_type_id" integer NOT NULL,
                 "enabled" boolean NOT NULL,
@@ -2859,7 +2859,7 @@ class MigrateTo_56(SchemaMigration):
         changed |= createTable(db, "packages_package_source_job", """
             CREATE TABLE "packages_package_source_job" (
                 "package_source_job_id" %(PRIMARYKEY)s,
-                "package_source_id" integer NOT NULL 
+                "package_source_id" integer NOT NULL
                     REFERENCES "packages_package_source" ("package_source_id"),
                 "package_action_type_id" integer NOT NULL
                     REFERENCES "packages_package_action_type"
@@ -2869,16 +2869,16 @@ class MigrateTo_56(SchemaMigration):
                 "job_data" text,
                 "created_date" timestamp with time zone NOT NULL,
                 "modified_date" timestamp with time zone NOT NULL,
-                "created_by_id" integer 
+                "created_by_id" integer
                     REFERENCES "users" ("userid"),
-                "modified_by_id" integer 
+                "modified_by_id" integer
                     REFERENCES "users" ("userid")
             )""")
 
         changed |= createTable(db, "packages_package_build", """
             CREATE TABLE "packages_package_build" (
                 "package_build_id" %(PRIMARYKEY)s,
-                "package_source_id" integer NOT NULL 
+                "package_source_id" integer NOT NULL
                     REFERENCES "packages_package_source" ("package_source_id"),
                 "created_date" timestamp with time zone NOT NULL,
                 "modified_date" timestamp with time zone NOT NULL,
@@ -2893,7 +2893,7 @@ class MigrateTo_56(SchemaMigration):
                 "id" %(PRIMARYKEY)s,
                 "packagebuild_id" integer NOT NULL
                     REFERENCES "packages_package_build" ("package_build_id"),
-                "trove_id" integer NOT NULL 
+                "trove_id" integer NOT NULL
                     REFERENCES "inventory_trove" ("trove_id"),
                 UNIQUE ("packagebuild_id", "trove_id")
             )""")
@@ -2901,7 +2901,7 @@ class MigrateTo_56(SchemaMigration):
         changed |= createTable(db, "packages_package_build_action", """
             CREATE TABLE "packages_package_build_action" (
                 "package_build_action_id" %(PRIMARYKEY)s,
-                "package_build_id" integer NOT NULL 
+                "package_build_id" integer NOT NULL
                     REFERENCES "packages_package_build" ("package_build_id"),
                 "package_action_type_id" integer NOT NULL
                     REFERENCES "packages_package_action_type"
@@ -2916,7 +2916,7 @@ class MigrateTo_56(SchemaMigration):
         changed |= createTable(db, "packages_package_build_job", """
             CREATE TABLE "packages_package_build_job" (
                 "package_build_job_id" %(PRIMARYKEY)s,
-                "package_build_id" integer NOT NULL 
+                "package_build_id" integer NOT NULL
                     REFERENCES "packages_package_build" ("package_build_id"),
                 "package_action_type_id" integer NOT NULL,
                 "job_id" integer
@@ -2930,9 +2930,9 @@ class MigrateTo_56(SchemaMigration):
                     REFERENCES "users" ("userid")
             )""")
 
-        changed |= db.createIndex("packages_package", 
+        changed |= db.createIndex("packages_package",
             "packages_package_created_by_id", "created_by_id")
-        changed |= db.createIndex("packages_package", 
+        changed |= db.createIndex("packages_package",
             "packages_package_modified_by_id", "modified_by_id")
         changed |= db.createIndex("packages_package_version",
             "packages_package_version_package_id", "package_id")
@@ -3002,7 +3002,7 @@ class MigrateTo_56(SchemaMigration):
             "packages_package_build_job_modified_by_id", "modified_by_id")
 
         return True
-        
+
     def migrate2(self):
         cu = self.db.cursor()
         cu.execute("""
@@ -3057,18 +3057,18 @@ class MigrateTo_58(SchemaMigration):
               modified_date=str(datetime.datetime.now(tz.tzutc())),
               can_modify=False)
         ])
-        
+
         schema._addTableRows(self.db, "querysets_filterentry",
             'filter_entry_id',
             [
              dict(field='user_name', operator='IS_NULL', value="False"),
              ],
             ['field', 'operator', 'value'])
-        
+
         allUserFiltId = schema._getRowPk(self.db, "querysets_filterentry", 'filter_entry_id',
                 field="user_name", operator='IS_NULL', value="False")
 
-        allUserQSId = schema._getRowPk(self.db, "querysets_queryset", "query_set_id", 
+        allUserQSId = schema._getRowPk(self.db, "querysets_queryset", "query_set_id",
             name="All Users")
 
         schema._addTableRows(self.db, "querysets_querytag", "name",
@@ -3104,10 +3104,10 @@ class MigrateTo_58(SchemaMigration):
 
     def migrate3(self):
         return True
-        
+
     def migrate4(self):
         return True
-        
+
     def migrate5(self):
         return True
 
@@ -3128,13 +3128,13 @@ class MigrateTo_58(SchemaMigration):
         schema._createWindowsBuildSystemsQuerySet(self.db, version=(58,9))
         schema._createUpdateSystemsQuerySet(self.db, version=(58,9))
         return True
-    
+
     def migrate10(self):
         # no longer needed
         #schema._createAllProjectsQuerySetSchema(self.db)
         #schema._createExternalProjectsQuerySetSchema(self.db)
         return True
-    
+
     def migrate11(self):
         createTable(self.db, """
             CREATE TABLE "querysets_projecttag" (
@@ -3154,7 +3154,7 @@ class MigrateTo_58(SchemaMigration):
                 UNIQUE ("project_id", "query_tag_id", "inclusion_method_id")
             )""")
         return True
-    
+
     def migrate12(self):
         cu = self.db.cursor()
         cu.execute("""ALTER TABLE inventory_stage RENAME TO project_branch_stage""")
@@ -3164,7 +3164,7 @@ class MigrateTo_58(SchemaMigration):
         cu = self.db.cursor()
         cu.execute("""DELETE FROM querysets_queryset WHERE name='All Appliances'""")
         schema._createAllProjectBranchStages13(self.db, version=(58,13))
-        
+
         createTable(self.db, """
             CREATE TABLE "querysets_stagetag" (
                 "stage_tag_id" %(PRIMARYKEY)s,
@@ -3182,9 +3182,9 @@ class MigrateTo_58(SchemaMigration):
                     NOT NULL,
                 UNIQUE ("stage_id", "query_tag_id", "inclusion_method_id")
             )""")
-        
+
         return True
-    
+
     def migrate14(self):
         cu = self.db.cursor()
         cu.execute("""ALTER TABLE ProductVersions ALTER COLUMN projectId DROP NOT NULL""")
@@ -3275,7 +3275,7 @@ class MigrateTo_58(SchemaMigration):
     def migrate23(self):
         cu = self.db.cursor()
         cu.execute("""
-            INSERT INTO "inventory_event_type" 
+            INSERT INTO "inventory_event_type"
                 ("name", "description", "priority")
             VALUES
                 ('system assimilation',
@@ -3370,22 +3370,22 @@ class MigrateTo_58(SchemaMigration):
         cu = self.db.cursor()
         cu.execute("UPDATE jobs_job_type SET resource_type = 'System'")
         cu.execute("ALTER TABLE jobs_job_type ALTER resource_type SET NOT NULL")
-        return True       
+        return True
 
 
     def migrate31(self):
         cu = self.db.cursor()
         cu.execute("ALTER TABLE builds ALTER stageid DROP NOT NULL")
         return True
-        
+
     def migrate32(self):
         cu = self.db.cursor()
         cu.execute("""ALTER TABLE jobs_job_type RENAME COLUMN event_type_id TO job_type_id""")
         cu.execute("""ALTER TABLE jobs_job RENAME COLUMN event_type_id TO job_type_id""")
         cu.execute("""ALTER TABLE jobs_job ALTER job_type_id SET NOT NULL""")
         cu.execute("""ALTER TABLE inventory_system_event RENAME COLUMN event_type_id TO job_type_id""")
-        return True     
-    
+        return True
+
     def migrate33(self):
         # Add a serial primary key, drop the old pk, add it as unique for usergroupmembers table
         cu = self.db.cursor()
@@ -3404,7 +3404,7 @@ class MigrateTo_58(SchemaMigration):
         cu.execute("""ALTER TABLE users ALTER salt
                 TYPE text USING encode(salt, 'hex')""")
         return True
-        
+
     def migrate35(self):
         # Add a serial primary key, drop the old pk, add it as unique for targetdata table
         cu = self.db.cursor()
@@ -3415,8 +3415,8 @@ class MigrateTo_58(SchemaMigration):
             ALTER TABLE TargetData
                 ADD COLUMN targetdataId SERIAL PRIMARY KEY""")
         self.db.createIndex('TargetData', 'TargetDataIdx',
-            'targetId, name', unique = True)                 
-        return True        
+            'targetId, name', unique = True)
+        return True
 
     def migrate36(self):
         cu = self.db.cursor()
@@ -3427,8 +3427,8 @@ class MigrateTo_58(SchemaMigration):
         # Add a new management interface type (SSH)
         cu = self.db.cursor()
         cu.execute("""insert into inventory_management_interface (name, description, created_date, port, credentials_descriptor, credentials_readonly) values (?,?,now(),?,?,?)""" , 'ssh', 'Secure Shell (SSH)', 22, schema.ssh_credentials_descriptor, 'false')
-        return True 
-        
+        return True
+
     def migrate38(self):
         # Add Unique constraint to project and label in labels
         cu = self.db.cursor()
@@ -3498,11 +3498,11 @@ class MigrateTo_58(SchemaMigration):
             WHERE name = 'system assimilation'
         """)
         return True
-        
+
     def migrate42(self):
         cu = self.db.cursor()
         cu.execute("""
-            INSERT INTO "jobs_job_type" 
+            INSERT INTO "jobs_job_type"
                 ("name", "description", "priority","resource_type")
             VALUES
                 ('image builds',
@@ -3532,12 +3532,12 @@ class MigrateTo_58(SchemaMigration):
         CREATE TABLE rbac_user_role (
             rbac_user_role_id  %(PRIMARYKEY)s,
             role_id      TEXT NOT NULL
-               REFERENCES rbac_role (role_id) 
+               REFERENCES rbac_role (role_id)
                ON DELETE CASCADE
                ON UPDATE CASCADE,
             user_id      INTEGER NOT NULL
-               REFERENCES Users (userId) 
-               ON DELETE CASCADE, 
+               REFERENCES Users (userId)
+               ON DELETE CASCADE,
             UNIQUE ( "role_id", "user_id" )
         ) %(TABLEOPTS)s""" % self.db.keywords)
         self.db.tables['rbac_user_role'] = []
@@ -3546,20 +3546,20 @@ class MigrateTo_58(SchemaMigration):
         CREATE TABLE rbac_permission (
             permission_id   %(PRIMARYKEY)s,
             role_id         TEXT NOT NULL
-               REFERENCES rbac_role (role_id) 
+               REFERENCES rbac_role (role_id)
                ON DELETE CASCADE
                ON UPDATE CASCADE,
             context_id      TEXT NOT NULL
-               REFERENCES rbac_context (context_id) 
+               REFERENCES rbac_context (context_id)
                ON DELETE CASCADE
                ON UPDATE CASCADE,
-            action          TEXT NOT NULL, 
+            action          TEXT NOT NULL,
             UNIQUE ( "role_id", "context_id", "action" )
         ) %(TABLEOPTS)s""" % self.db.keywords)
         self.db.tables['rbac_permission'] = []
 
         cu.execute("""
-        ALTER TABLE inventory_system ADD COLUMN 
+        ALTER TABLE inventory_system ADD COLUMN
             "rbac_context_id" TEXT
              REFERENCES rbac_context (context_id)
              ON DELETE SET NULL
@@ -3569,57 +3569,57 @@ class MigrateTo_58(SchemaMigration):
         self.db.createIndex('rbac_permission', 'RbacPermissionSearchIdx',
             'role_id, context_id')
         self.db.createIndex('rbac_permission', 'RbacPermissionLookupIdx',
-            'role_id, context_id, action')  
+            'role_id, context_id, action')
         return True
 
     def migrate44(self):
         cu = self.db.cursor()
         cu.execute("""
-            ALTER TABLE project_branch_stage 
-            ADD CONSTRAINT project_branch_stage_nameid_uq 
+            ALTER TABLE project_branch_stage
+            ADD CONSTRAINT project_branch_stage_nameid_uq
                 UNIQUE (project_branch_id, name)
         """)
         return True
-        
+
     def migrate45(self):
         cu = self.db.cursor()
         cu.execute("""
             ALTER TABLE PlatformsContentSourceTypes
                 ADD COLUMN contentSourceTypeId SERIAL PRIMARY KEY""")
-        return True    
-        
+        return True
+
     def migrate46(self):
         cu = self.db.cursor()
         cu.execute("""
             ALTER TABLE PlatformsPlatformSources
                 ADD COLUMN platforms_platform_sources_id SERIAL PRIMARY KEY""")
-        return True            
+        return True
 
     def migrate47(self):
         '''permissions use querysets not a seperate rbac_context entity'''
         cu = self.db.cursor()
-        
+
         # remove old items (not shipped)
         cu.execute("DROP TABLE rbac_context CASCADE")
         cu.execute("DROP TABLE rbac_permission CASCADE")
         cu.execute("""
-        ALTER TABLE inventory_system DROP COLUMN 
+        ALTER TABLE inventory_system DROP COLUMN
             "rbac_context_id"
         """)
-        
+
         # add new version
         cu.execute("""
         CREATE TABLE rbac_permission (
             permission_id   %(PRIMARYKEY)s,
             role_id         TEXT NOT NULL
-               REFERENCES rbac_role (role_id) 
+               REFERENCES rbac_role (role_id)
                ON DELETE CASCADE
                ON UPDATE CASCADE,
             queryset_id      INTEGER NOT NULL
-               REFERENCES querysets_queryset (query_set_id) 
+               REFERENCES querysets_queryset (query_set_id)
                ON DELETE CASCADE
                ON UPDATE CASCADE,
-            action          TEXT NOT NULL, 
+            action          TEXT NOT NULL,
             UNIQUE ( "role_id", "queryset_id", "action" )
         ) %(TABLEOPTS)s""" % self.db.keywords)
         self.db.tables['rbac_permission'] = []
@@ -3628,7 +3628,7 @@ class MigrateTo_58(SchemaMigration):
         self.db.createIndex('rbac_permission', 'RbacPermissionLookupIdx',
             'role_id, queryset_id, action')
 
-        return True 
+        return True
 
     def migrate48(self):
         cu = self.db.cursor()
@@ -3647,10 +3647,10 @@ class MigrateTo_58(SchemaMigration):
         # these never shipped but following querysets were installed wrong
         # so the filters didn't work, delete querysets & reinstall
         cu = self.db.cursor()
-    
+
         cu.execute("DELETE FROM querysets_queryset WHERE name='All Project Stages'")
         cu.execute("DELETE FROM querysets_queryset WHERE name='All Projects'")
-    
+
         schema._createAllProjectBranchStages(self.db, version=(58,50))
         schema._createAllProjects(self.db, version=(58,50))
 
@@ -3663,7 +3663,7 @@ class MigrateTo_58(SchemaMigration):
         # find the existing All Systems query set
         # as previously defined, it will have children but no filter tags
         allQsId = schema._getRowPk(db, 'querysets_queryset', 'query_set_id',
-            name='All Systems')   
+            name='All Systems')
         # remove any child query sets assigned to 'All Systems'
         cu.execute('DELETE FROM querysets_queryset_children WHERE from_queryset_id=?', allQsId)
         # create a filter to match the presense of any system name
@@ -3671,7 +3671,7 @@ class MigrateTo_58(SchemaMigration):
             cu.execute("""INSERT INTO querysets_filterentry (field, operator, value)
                 VALUES('system.name', 'IS_NULL', false)""")
         except sqlerrors.ConstraintViolation:
-            # possible but unlikley the customer already made this one, so tolerate 
+            # possible but unlikley the customer already made this one, so tolerate
             # duplicate insertion failure
             pass
         filterId = schema._getRowPk(db, "querysets_filterentry", "filter_entry_id",
@@ -3685,18 +3685,18 @@ class MigrateTo_58(SchemaMigration):
         # tags tables need larger PKs
         db = self.db
         cu = db.cursor()
-        
-        cu.execute("""ALTER TABLE querysets_systemtag 
+
+        cu.execute("""ALTER TABLE querysets_systemtag
             ALTER COLUMN system_tag_id TYPE %(BIGINT)s
         """ % db.keywords)
-        cu.execute("""ALTER TABLE querysets_usertag 
-            ALTER COLUMN user_tag_id TYPE %(BIGINT)s 
+        cu.execute("""ALTER TABLE querysets_usertag
+            ALTER COLUMN user_tag_id TYPE %(BIGINT)s
         """ % db.keywords)
-        cu.execute("""ALTER TABLE querysets_projecttag  
-            ALTER COLUMN project_tag_id TYPE %(BIGINT)s  
+        cu.execute("""ALTER TABLE querysets_projecttag
+            ALTER COLUMN project_tag_id TYPE %(BIGINT)s
         """ % db.keywords)
-        cu.execute("""ALTER TABLE querysets_stagetag 
-             ALTER COLUMN stage_tag_id TYPE %(BIGINT)s 
+        cu.execute("""ALTER TABLE querysets_stagetag
+             ALTER COLUMN stage_tag_id TYPE %(BIGINT)s
         """ % db.keywords)
         return True
 
@@ -3704,7 +3704,7 @@ class MigrateTo_58(SchemaMigration):
         # remove intermediate querytag table
         db = self.db
         cu = db.cursor()
-        tables = [ 
+        tables = [
             [ 'querysets_systemtag',  'system_id',  'system',  'querysets_systemtag_uq' ],
             [ 'querysets_projecttag', 'project_id', 'project', 'querysets_projecttag_uq' ],
             [ 'querysets_stagetag',   'stage_id',   'stage',   'querysets_stagetag_uq' ],
@@ -3772,7 +3772,7 @@ class MigrateTo_58(SchemaMigration):
         filterId = schema._addQuerySetFilterEntry(db, "rbac_permission.permission_id", "IS_NULL", "false")
         schema._addQuerySet(db, "All Grants", "All grants", "grant", False, filterId, 'rbac',
                version=(58,56))
-        createTable(self.db, """ 
+        createTable(self.db, """
             CREATE TABLE "querysets_permissiontag" (
                 "permission_tag_id" TEXT PRIMARY KEY,
                 "permission_id" INTEGER
@@ -3810,7 +3810,7 @@ class MigrateTo_58(SchemaMigration):
     def migrate57(self):
         cu = self.db.cursor()
         cu.execute("""
-            INSERT INTO "jobs_job_type" 
+            INSERT INTO "jobs_job_type"
                 ("name", "description", "priority", "resource_type")
             VALUES
                 ('refresh queryset',
@@ -3821,7 +3821,7 @@ class MigrateTo_58(SchemaMigration):
         # fix previous migration -- needs different primary key type
         cu.execute("DROP TABLE querysets_permissiontag")
         cu.execute("DROP TABLE querysets_roletag")
-        createTable(self.db, """ 
+        createTable(self.db, """
             CREATE TABLE "querysets_permissiontag" (
                 "permission_tag_id" %(BIGPRIMARYKEY)s,
                 "permission_id" INTEGER
@@ -3860,11 +3860,11 @@ class MigrateTo_58(SchemaMigration):
         # we want integer IDs for rbac role
         cu = self.db.cursor()
         cu.execute("DROP TABLE rbac_permission CASCADE")
-        cu.execute("DROP TABLE rbac_user_role CASCADE") 
+        cu.execute("DROP TABLE rbac_user_role CASCADE")
         cu.execute("DROP TABLE rbac_role CASCADE")
         cu.execute("DROP TABLE querysets_roletag CASCADE")
         cu.execute("DROP TABLE querysets_permissiontag CASCADE")
- 
+
         createTable(self.db, """
             CREATE TABLE rbac_role (
                 role_id      %(PRIMARYKEY)s,
@@ -3876,12 +3876,12 @@ class MigrateTo_58(SchemaMigration):
         createTable(self.db, """
             CREATE TABLE rbac_user_role (
                 rbac_user_role_id  %(PRIMARYKEY)s,
-                role_id      INTEGER NOT NULL 
-                    REFERENCES rbac_role ( role_id ) 
+                role_id      INTEGER NOT NULL
+                    REFERENCES rbac_role ( role_id )
                     ON DELETE CASCADE
                     ON UPDATE CASCADE,
                 user_id      INTEGER NOT NULL
-                    REFERENCES Users ( userId ) 
+                    REFERENCES Users ( userId )
                     ON DELETE CASCADE,
                 created_date timestamp with time zone NOT NULL,
                 modified_date timestamp with time zone NOT NULL,
@@ -3892,11 +3892,11 @@ class MigrateTo_58(SchemaMigration):
             CREATE TABLE rbac_permission (
                 permission_id   %(PRIMARYKEY)s,
                 role_id         INTEGER NOT NULL
-                   REFERENCES rbac_role ( role_id ) 
+                   REFERENCES rbac_role ( role_id )
                    ON DELETE CASCADE
                    ON UPDATE CASCADE,
                 queryset_id      INTEGER NOT NULL
-                   REFERENCES querysets_queryset ( query_set_id ) 
+                   REFERENCES querysets_queryset ( query_set_id )
                    ON DELETE CASCADE
                    ON UPDATE CASCADE,
                 action          TEXT NOT NULL,
@@ -3914,7 +3914,7 @@ class MigrateTo_58(SchemaMigration):
                     NOT NULL,
                 "query_set_id" INTEGER
                     REFERENCES "querysets_queryset" ("query_set_id")
-                    ON DELETE CASCADE, 
+                    ON DELETE CASCADE,
                 "inclusion_method_id" INTEGER
                     REFERENCES "querysets_inclusionmethod" ("inclusion_method_id")
                     ON DELETE CASCADE
@@ -3950,17 +3950,17 @@ class MigrateTo_58(SchemaMigration):
     def migrate59(self):
         db = self.db
         cu = self.db.cursor()
-        columns = [ 'created_by', 'modified_by' ] 
+        columns = [ 'created_by', 'modified_by' ]
         tables = [ 'rbac_user_role', 'rbac_role' ]
         for table in tables:
             for column in columns:
                 cu.execute("""ALTER TABLE %s ADD COLUMN %s
-                     INTEGER 
-                     REFERENCES Users ( userId ) 
+                     INTEGER
+                     REFERENCES Users ( userId )
                      ON DELETE CASCADE
                 """ % (table, column))
-        cu.execute("ALTER TABLE rbac_role ADD COLUMN description TEXT")       
- 
+        cu.execute("ALTER TABLE rbac_role ADD COLUMN description TEXT")
+
         createTable(self.db, """
             CREATE TABLE "rbac_permission_type" (
                 "permission_type_id" %(PRIMARYKEY)s,
@@ -3968,7 +3968,7 @@ class MigrateTo_58(SchemaMigration):
                 "description" TEXT NOT NULL
             )""" % db.keywords)
 
-        schema._addTableRows(self.db, 'rbac_permission_type', 'name', [ 
+        schema._addTableRows(self.db, 'rbac_permission_type', 'name', [
             dict(name="ReadMembers", description='Read Member Resources'),
             dict(name="ModMembers",  description='Modify Member Resources'),
             dict(name="ReadSet",     description='Read Set'),
@@ -3980,19 +3980,19 @@ class MigrateTo_58(SchemaMigration):
             CREATE TABLE rbac_permission (
                 permission_id   %(PRIMARYKEY)s,
                 role_id         INTEGER NOT NULL
-                   REFERENCES rbac_role ( role_id ) 
+                   REFERENCES rbac_role ( role_id )
                    ON DELETE CASCADE
                    ON UPDATE CASCADE,
                 queryset_id      INTEGER NOT NULL
-                   REFERENCES querysets_queryset ( query_set_id ) 
+                   REFERENCES querysets_queryset ( query_set_id )
                    ON DELETE CASCADE
                    ON UPDATE CASCADE,
                 permission_type_id  INTEGER NOT NULL
                    REFERENCES rbac_permission_type ( permission_type_id )
                    ON DELETE CASCADE
                    ON UPDATE CASCADE,
-                created_by INTEGER 
-                     REFERENCES Users ( userId ) 
+                created_by INTEGER
+                     REFERENCES Users ( userId )
                      ON DELETE CASCADE,
                 modified_by INTEGER
                      REFERENCES Users ( userId )
@@ -4092,7 +4092,7 @@ class MigrateTo_58(SchemaMigration):
                 ALTER COLUMN description SET NOT NULL""")
         cu.execute("CREATE UNIQUE INDEX Targets_Type_Name_Uq ON Targets(target_type_id, name)")
         return True
-    
+
     def migrate61(self):
         db = self.db
         cu = db.cursor()
@@ -4249,7 +4249,7 @@ class MigrateTo_58(SchemaMigration):
                 created_date    TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT current_timestamp
             ) %(TABLEOPTS)s""")
         return True
-    
+
     def migrate68(self):
         db = self.db
         cu = db.cursor()
@@ -4290,13 +4290,13 @@ class MigrateTo_58(SchemaMigration):
         '''add source image to systems table'''
         cu = self.db.cursor()
         cu.execute("""
-            ALTER TABLE "inventory_system" 
-                 ADD COLUMN "source_image_id" INTEGER 
+            ALTER TABLE "inventory_system"
+                 ADD COLUMN "source_image_id" INTEGER
                      REFERENCES "builds" ("buildid")
                      ON DELETE CASCADE
         """)
         return True
-        
+
     def migrate71(self):
         """modify table for build data"""
         cu = self.db.cursor()
@@ -4360,7 +4360,7 @@ class MigrateTo_59(SchemaMigration):
         '''make some querysets always visible regardless of RBAC'''
         cu = self.db.cursor()
         cu.execute("""
-            ALTER TABLE querysets_queryset 
+            ALTER TABLE querysets_queryset
                 ADD COLUMN is_public BOOLEAN NOT NULL DEFAULT FALSE
         """)
 
@@ -4369,7 +4369,7 @@ class MigrateTo_59(SchemaMigration):
         """)
         cu.execute("""
             UPDATE querysets_queryset SET is_public = TRUE WHERE
-               name='All Systems' OR name='All Projects' 
+               name='All Systems' OR name='All Projects'
                OR name='All Project Stages' OR NAME='All Users'
                OR name='All Targets'
         """)
@@ -4378,7 +4378,7 @@ class MigrateTo_59(SchemaMigration):
     def migrate1(self):
         '''track additional audit params on users'''
         cu = self.db.cursor()
-        cu.execute(""" 
+        cu.execute("""
             ALTER TABLE Users ADD COLUMN
                 timeModified numeric(14,3)
         """)
@@ -4418,8 +4418,8 @@ class MigrateTo_59(SchemaMigration):
         cu = self.db.cursor()
         cu.execute("""
             ALTER TABLE querysets_queryset ADD COLUMN
-               is_static BOOLEAN NOT NULL DEFAULT FALSE    
-        """) 
+               is_static BOOLEAN NOT NULL DEFAULT FALSE
+        """)
         return True
 
 class MigrateTo_60(SchemaMigration):
@@ -4447,7 +4447,7 @@ class MigrateTo_60(SchemaMigration):
             ALTER TABLE rbac_role ADD COLUMN is_identity BOOLEAN NOT NULL DEFAULT FALSE
         """)
         schema._addTableRows(self.db, 'rbac_permission_type', 'name', [
-            dict(name="CreateResource", description='Create Resource'),    
+            dict(name="CreateResource", description='Create Resource'),
         ])
         return True
 
@@ -4456,7 +4456,7 @@ class MigrateTo_60(SchemaMigration):
         cu = self.db.cursor()
         cu.execute("""
             ALTER TABLE projects ADD COLUMN modified_by INTEGER REFERENCES Users (userid) ON DELETE SET NULL
-        """) 
+        """)
         return True
 
     def migrate2(self):
@@ -4465,7 +4465,7 @@ class MigrateTo_60(SchemaMigration):
                 set credentials_descriptor=? where name='wmi'""" ,
                 schema.wmi_credentials_descriptor)
         return True
-    
+
     def migrate3(self):
         '''do not delete users, mark them as deleted'''
         cu = self.db.cursor()
@@ -4695,7 +4695,7 @@ class MigrateTo_61(SchemaMigration):
         cu.execute("""ALTER TABLE inventory_system ADD COLUMN out_of_date BOOLEAN NOT NULL DEFAULT False""")
         cu.execute("""ALTER TABLE inventory_system ADD COLUMN has_active_jobs BOOLEAN NOT NULL DEFAULT False""")
         cu.execute("""ALTER TABLE inventory_system ADD COLUMN has_running_jobs BOOLEAN NOT NULL DEFAULT False""")
-        return True 
+        return True
 
     def migrate8(self):
         # make additional querysets show up in left navigation
@@ -4739,7 +4739,7 @@ class MigrateTo_62(SchemaMigration):
                 "epoch" INTEGER,
                 "version" TEXT NOT NULL,
                 "release" TEXT NOT NULL,
-                "architecture" TEXT NOT NULL, 
+                "architecture" TEXT NOT NULL,
                 "description" TEXT,
                 "signature" TEXT,
         """)
@@ -4747,13 +4747,13 @@ class MigrateTo_62(SchemaMigration):
         createTable2(self.db, 'inventory_conary_package', """
                 "conary_package_id" %(PRIMARYKEY)s,
                 "name" TEXT NOT NULL,
-                "version" TEXT NOT NULL, 
+                "version" TEXT NOT NULL,
                 "flavor" TEXT NOT NULL,
                 "description" TEXT NOT NULL,
                 "revision" TEXT NOT NULL,
                 "architecture" TEXT NOT NULL,
                 "signature" TEXT NOT NULL,
-                "rpm_package_id" INTEGER REFERENCES inventory_rpm_package (rpm_package_id) ON DELETE SET NULL 
+                "rpm_package_id" INTEGER REFERENCES inventory_rpm_package (rpm_package_id) ON DELETE SET NULL
         """)
 
         createTable2(self.db, 'inventory_service', """
@@ -4833,12 +4833,12 @@ class MigrateTo_62(SchemaMigration):
             ALTER TABLE inventory_system ADD COLUMN "latest_survey_id" INTEGER
             REFERENCES "inventory_survey" (survey_id) ON DELETE SET NULL
         """)
-        return True 
+        return True
 
     def migrate4(self):
         self.db.createIndex('inventory_survey', 'SurveyUuidIdx', 'uuid')
         self.db.createIndex('inventory_survey', 'SystemIdIdx', 'system_id')
-        self.db.createIndex('inventory_survey_diff', 'SurveyDiffLeftRightIdx', 
+        self.db.createIndex('inventory_survey_diff', 'SurveyDiffLeftRightIdx',
             'left_survey_id,right_survey_id', unique=True)
 
         return True
@@ -4882,7 +4882,7 @@ class MigrateTo_62(SchemaMigration):
         createTable2(db, 'inventory_windows_patch_windows_package', """
             "map_id" %(PRIMARYKEY)s,
             "windows_package_id" INTEGER NOT NULL REFERENCES "inventory_windows_package" (windows_package_id) ON DELETE CASCADE,
-            "windows_patch_id" INTEGER NOT NULL REFERENCES "inventory_windows_patch" (windows_patch_id) ON DELETE CASCADE 
+            "windows_patch_id" INTEGER NOT NULL REFERENCES "inventory_windows_patch" (windows_patch_id) ON DELETE CASCADE
         """)
 
         db.createIndex('inventory_windows_patch_windows_package',
@@ -4901,10 +4901,10 @@ class MigrateTo_62(SchemaMigration):
         createTable2(db, 'inventory_windows_service', """
             "windows_service_id" %(PRIMARYKEY)s,
             "name" TEXT NOT NULL,
-            "display_name" TEXT NOT NULL, 
+            "display_name" TEXT NOT NULL,
             "type" TEXT NOT NULL,
             "handle" TEXT NOT NULL,
-            "required_services" TEXT NOT NULL 
+            "required_services" TEXT NOT NULL
         """)
 
         createTable2(db, 'inventory_survey_windows_service', """
@@ -4913,11 +4913,11 @@ class MigrateTo_62(SchemaMigration):
             "windows_service_id" INTEGER NOT NULL REFERENCES "inventory_windows_service" (windows_service_id) ON DELETE CASCADE,
             "status" TEXT NOT NULL
         """)
-        
+
         db.createIndex('inventory_survey_windows_service', 'inventory_survey_windows_service_sid', 'survey_id')
 
         # end windows survey tables, begin additional indices for linux tables
- 
+
         db.createIndex('inventory_survey_rpm_package', 'inventory_survey_conary_rpm_package_sid',
             'survey_id')
         db.createIndex('inventory_survey_conary_package', 'inventory_survey_conary_package_sid',
@@ -4935,11 +4935,11 @@ class MigrateTo_62(SchemaMigration):
         cu.execute("""
             ALTER TABLE productversions ADD COLUMN "created_by" INTEGER
                 REFERENCES "users" (userid) ON DELETE SET NULL
-        """) 
+        """)
         cu.execute("""
             ALTER TABLE productversions ADD COLUMN "modified_by" INTEGER
                 REFERENCES "users" (userid) ON DELETE SET NULL
-        """) 
+        """)
         cu.execute("""
             ALTER TABLE productversions ADD COLUMN timeModified numeric(14,3)
         """)
@@ -4948,13 +4948,13 @@ class MigrateTo_62(SchemaMigration):
         cu.execute("""
             ALTER TABLE project_branch_stage ADD COLUMN created_by INTEGER
                 REFERENCES "users" (userid) ON DELETE SET NULL
-        """) 
+        """)
         cu.execute("""
             ALTER TABLE project_branch_stage ADD COLUMN modified_by INTEGER
                 REFERENCES "users" (userid) ON DELETE SET NULL
         """)
         cu.execute("""
-            ALTER TABLE project_branch_stage ADD COLUMN modified_date 
+            ALTER TABLE project_branch_stage ADD COLUMN modified_date
                 timestamp with time zone
                 DEFAULT current_timestamp
         """)
@@ -4970,15 +4970,15 @@ class MigrateTo_62(SchemaMigration):
                   resource_type="Image"),
         ])
         return True
-    
+
     def migrate8(self):
         db = self.db
         self.db.cursor().execute("ALTER TABLE inventory_survey ADD COLUMN values_xml TEXT")
         return True
- 
+
 class MigrateTo_63(SchemaMigration):
     '''Goad'''
-    Version = (63, 23)
+    Version = (63, 24)
 
     def migrate(self):
         ''' add initial tables for config environments'''
@@ -5030,7 +5030,7 @@ class MigrateTo_63(SchemaMigration):
     def migrate1(self):
         ''' track which conary packages are top level in surveys '''
         self.db.cursor().execute("""
-            ALTER TABLE inventory_survey_conary_package ADD COLUMN is_top_level 
+            ALTER TABLE inventory_survey_conary_package ADD COLUMN is_top_level
             BOOLEAN NOT NULL DEFAULT FALSE
         """)
         return True
@@ -5073,7 +5073,7 @@ class MigrateTo_63(SchemaMigration):
         cu = self.db.cursor()
         cu.execute("ALTER TABLE inventory_survey ADD COLUMN config_diff_xml TEXT")
         return True
- 
+
     def migrate6(self):
         db = self.db
         schema._addTableRows(db, 'jobs_job_type', 'name', [
@@ -5096,7 +5096,7 @@ class MigrateTo_63(SchemaMigration):
     def migrate7(self):
         cu = self.db.cursor()
         cu.execute("""
-            INSERT INTO "jobs_job_type" 
+            INSERT INTO "jobs_job_type"
                 ("name", "description", "priority", "resource_type")
             VALUES
                 ('system apply configuration',
@@ -5108,7 +5108,7 @@ class MigrateTo_63(SchemaMigration):
     def migrate8(self):
         cu = self.db.cursor()
         cu.execute("""
-           ALTER TABLE inventory_system ADD COLUMN configuration_set 
+           ALTER TABLE inventory_system ADD COLUMN configuration_set
                BOOLEAN NOT NULL DEFAULT FALSE
         """)
         cu.execute("""
@@ -5120,10 +5120,10 @@ class MigrateTo_63(SchemaMigration):
     def migrate9(self):
         cu = self.db.cursor()
         cu.execute("""
-           ALTER TABLE inventory_survey_windows_service ADD COLUMN running 
+           ALTER TABLE inventory_survey_windows_service ADD COLUMN running
                BOOLEAN NOT NULL DEFAULT FALSE
         """)
-        return True 
+        return True
 
     def migrate10(self):
         cu = self.db.cursor()
@@ -5133,18 +5133,18 @@ class MigrateTo_63(SchemaMigration):
            ADD COLUMN system_model_modified_date    TIMESTAMP WITH TIME ZONE,
            ADD COLUMN has_system_model  BOOLEAN NOT NULL DEFAULT FALSE
         """)
-        return True 
+        return True
 
     def migrate11(self):
         self.db.dropIndex('inventory_survey', 'SurveyUuidIdx')
         self.db.createIndex('inventory_survey', 'SurveyUuidIdx', 'uuid', unique=True)
-        return True 
+        return True
 
     def migrate12(self):
         ''' sync jobs no longer exist '''
         cu = self.db.cursor()
         cu.execute("""
-            DELETE FROM jobs_job WHERE job_type_id = (SELECT job_type_id FROM jobs_job_type 
+            DELETE FROM jobs_job WHERE job_type_id = (SELECT job_type_id FROM jobs_job_type
                 WHERE name = 'system poll')
         """)
         return True
@@ -5155,7 +5155,7 @@ class MigrateTo_63(SchemaMigration):
             job_id      integer NOT NULL
                         REFERENCES jobs_job(job_id)
                         ON DELETE CASCADE,
-            preview     text, 
+            preview     text,
             system_id   INTEGER NOT NULL
                         REFERENCES inventory_system ON DELETE SET NULL,
         """)
@@ -5192,7 +5192,7 @@ class MigrateTo_63(SchemaMigration):
 
     def migrate16(self):
         cu = self.db.cursor()
-        cu.execute("""ALTER TABLE jobs_created_preview ADD COLUMN created_date 
+        cu.execute("""ALTER TABLE jobs_created_preview ADD COLUMN created_date
                 TIMESTAMP WITH TIME ZONE
                 NOT NULL DEFAULT current_timestamp""")
         return True
@@ -5233,7 +5233,7 @@ class MigrateTo_63(SchemaMigration):
             "windows_os_patch_id" INTEGER NOT NULL REFERENCES "inventory_windows_os_patch" (windows_os_patch_id) ON DELETE CASCADE,
             "install_date" TIMESTAMP WITH TIME ZONE NOT NULL,
             "installed_by" TEXT NOT NULL,
-            "status" TEXT, 
+            "status" TEXT,
         """)
         return True
 
@@ -5265,25 +5265,41 @@ class MigrateTo_63(SchemaMigration):
         # deleting a source image should not delete a system record
         cu.execute("ALTER TABLE inventory_system DROP CONSTRAINT inventory_system_source_image_id_fkey")
         cu.execute("""
-            ALTER TABLE inventory_system ADD CONSTRAINT 
-            inventory_system_source_image_id_fkey 
+            ALTER TABLE inventory_system ADD CONSTRAINT
+            inventory_system_source_image_id_fkey
             FOREIGN KEY (source_image_id) REFERENCES builds(buildid) ON DELETE SET NULL
         """)
         # deleting a survey should delete the survey values
         cu.execute("ALTER TABLE inventory_survey_values DROP CONSTRAINT inventory_survey_values_survey_id_fkey")
         cu.execute("""
-            ALTER TABLE inventory_survey_values ADD CONSTRAINT 
-            inventory_survey_values_survey_id_fkey 
+            ALTER TABLE inventory_survey_values ADD CONSTRAINT
+            inventory_survey_values_survey_id_fkey
             FOREIGN KEY (survey_id) REFERENCES inventory_survey(survey_id) ON DELETE CASCADE
         """)
         # deleting the right survey from a diff should also delete the diff
         cu.execute("""
-            ALTER TABLE inventory_survey_diff DROP CONSTRAINT "inventory_survey_diff_right_survey_id_fkey" 
+            ALTER TABLE inventory_survey_diff DROP CONSTRAINT "inventory_survey_diff_right_survey_id_fkey"
         """)
         cu.execute("""
-            ALTER TABLE inventory_survey_diff ADD CONSTRAINT "inventory_survey_diff_right_survey_id_fkey" 
+            ALTER TABLE inventory_survey_diff ADD CONSTRAINT "inventory_survey_diff_right_survey_id_fkey"
             FOREIGN KEY (right_survey_id) REFERENCES inventory_survey(survey_id) ON DELETE CASCADE
         """)
+        return True
+
+    def migrate24(self):
+        ''' keep a list of observed top level items '''
+        cu = self.db.cursor()
+        createTable2(self.db, 'inventory_system_observed_top_level_item', """
+                "id" %(PRIMARYKEY)s,
+                "system_id" integer NOT NULL
+                    REFERENCES "inventory_system" ("system_id")
+                    ON DELETE CASCADE,
+                "trove_spec" TEXT NOT NULL,
+                "created_date" TIMESTAMP WITH TIME ZONE NOT NULL,
+        """)
+        self.db.createIndex("inventory_system_observed_top_level_item",
+            "inventory_system_obs_toplitem_sid_tspec", "system_id, trove_spec",
+            unique=True)
         return True
 
 #### SCHEMA MIGRATIONS END HERE #############################################

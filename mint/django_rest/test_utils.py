@@ -131,7 +131,7 @@ class XMLTestCase(TestCase, testcase.MockMixIn):
         cfg.dbPath = connection.settings_dict['TEST_NAME']
         cfg.projectDomainName = MINT_PROJECT_DOMAIN
         cfg.namespace = 'ns'
-        cfg.authUser = 'auth_user_abcdefg' 
+        cfg.authUser = 'auth_user_abcdefg'
         cfg.authPass = 'auth_pass_abcdefg'
         metadataDescriptorFile = os.path.join(self.workDir, "metadataDescriptor.xml")
         file(metadataDescriptorFile, "w").write("""\
@@ -201,13 +201,14 @@ class XMLTestCase(TestCase, testcase.MockMixIn):
         if ignoreNodes is None:
             ignoreNodes = ['time_created', 'time_updated', 'created_date',
                 'tagged_date', 'last_available_update_refresh', 'time_enabled',
-                'registration_date', 'modified_date', 'last_login_date', 
+                'registration_date', 'modified_date', 'last_login_date',
                 'created_by', 'modified_by', 'updated_by', 'published_by',
                 'full_name', 'user_name', 'is_public', 'is_static', 'time_mirrored',
-                'time_published', 'latest_survey', 'current_state', 'desired_top_level_items'
+                'time_published', 'latest_survey', 'current_state', 'desired_top_level_items',
+                'observed_top_level_items'
             ]
 
-        # contend with database False (sqlite only) vs synthetic false casing            
+        # contend with database False (sqlite only) vs synthetic false casing
         first = first.replace("true", "True")
         first = first.replace("false", "False")
         second = second.replace("true", "True")
@@ -501,7 +502,7 @@ class XMLTestCase(TestCase, testcase.MockMixIn):
         network.save()
 
         return system
-    
+
     def _newJob(self, jobUuid, jobType, jobToken=None, jobState=None,
             statusCode=100, statusText=None, statusDetail=None, createdBy=None):
         eventType = self.mgr.sysMgr.eventType(jobType)
@@ -549,15 +550,15 @@ class XML(object):
     class OrderedDict(dict):
         def items(self):
             return sorted(dict.items(self))
-            
+
     @classmethod
     def sortKey(cls, obj):
         return obj.tag
-        
+
     def __init__(self, orderedChildren=False, ignoreNodes=None):
         self.orderedChildren = orderedChildren
         self.ignoreNodes = set(ignoreNodes or ())
-        
+
     def normalize(self, node, parent=None):
         """
         This function will:

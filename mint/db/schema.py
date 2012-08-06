@@ -28,7 +28,7 @@ from conary.dbstore import sqlerrors, sqllib
 log = logging.getLogger(__name__)
 
 # database schema major version
-RBUILDER_DB_VERSION = sqllib.DBversion(63, 23)
+RBUILDER_DB_VERSION = sqllib.DBversion(63, 24)
 
 def _createTrigger(db, table, column="changed"):
     retInsert = db.createTrigger(table, column, "INSERT")
@@ -151,7 +151,7 @@ def _createRbac(db):
         dict(name="ModMembers", description='Modify Member Resources'),
         dict(name="ReadSet", description='Read Set'),
         dict(name="ModSetDef", description='Modify Set Definition'),
-        dict(name="CreateResource", description='Create Resource'), 
+        dict(name="CreateResource", description='Create Resource'),
     ])
 
     if 'rbac_role' not in db.tables:
@@ -271,7 +271,7 @@ def _createRbac(db):
             CONSTRAINT querysets_roletag_uq UNIQUE ("role_id", "query_set_id",
                 "inclusion_method_id")
         )""")
-    
+
     _createNonIdentityRoles(db)
 
     createTable(db, 'querysets_imagetag', """
@@ -1244,8 +1244,8 @@ def _createInventorySchema(db, cfg):
                     REFERENCES Projects (projectId)
                     ON DELETE SET NULL,
                 "should_migrate" BOOLEAN NOT NULL
-                    DEFAULT FALSE, 
-                "source_image_id" INTEGER 
+                    DEFAULT FALSE,
+                "source_image_id" INTEGER
                     REFERENCES "builds" ("buildid")
                     ON DELETE SET NULL,
                 "created_by" integer
@@ -1280,6 +1280,18 @@ def _createInventorySchema(db, cfg):
     """)
     db.createIndex("inventory_system_desired_top_level_item",
         "inventory_system_des_toplitem_sid_tspec", "system_id, trove_spec",
+        unique=True)
+
+    createTable(db, 'inventory_system_observed_top_level_item', """
+                "id" %(PRIMARYKEY)s,
+                "system_id" integer NOT NULL
+                    REFERENCES "inventory_system" ("system_id")
+                    ON DELETE CASCADE,
+                "trove_spec" TEXT NOT NULL,
+                "created_date" TIMESTAMP WITH TIME ZONE NOT NULL,
+    """)
+    db.createIndex("inventory_system_observed_top_level_item",
+        "inventory_system_obs_toplitem_sid_tspec", "system_id, trove_spec",
         unique=True)
 
     if 'inventory_zone_management_node' not in db.tables:
@@ -1763,7 +1775,7 @@ def _createSurveyTables(db, cfg):
                 "epoch" INTEGER,
                 "version" TEXT NOT NULL,
                 "release" TEXT NOT NULL,
-                "architecture" TEXT NOT NULL, 
+                "architecture" TEXT NOT NULL,
                 "description" TEXT,
                 "signature" TEXT,
     """)
@@ -1771,18 +1783,18 @@ def _createSurveyTables(db, cfg):
     createTable(db, 'inventory_conary_package', """
                 "conary_package_id" %(PRIMARYKEY)s,
                 "name" TEXT NOT NULL,
-                "version" TEXT NOT NULL, 
+                "version" TEXT NOT NULL,
                 "flavor" TEXT NOT NULL,
                 "description" TEXT NOT NULL,
                 "revision" TEXT NOT NULL,
                 "architecture" TEXT NOT NULL,
                 "signature" TEXT NOT NULL,
                 "unfrozen" TEXT,
-                "rpm_package_id" INTEGER REFERENCES inventory_rpm_package (rpm_package_id) ON DELETE SET NULL 
+                "rpm_package_id" INTEGER REFERENCES inventory_rpm_package (rpm_package_id) ON DELETE SET NULL
     """)
-    
+
     # --- begin windows survey info
-    
+
     createTable(db, 'inventory_windows_package', """
         "windows_package_id" %(PRIMARYKEY)s,
         "publisher" TEXT NOT NULL,
@@ -1826,7 +1838,7 @@ def _createSurveyTables(db, cfg):
     createTable(db, 'inventory_windows_patch_windows_package', """
         "map_id" %(PRIMARYKEY)s,
         "windows_package_id" INTEGER NOT NULL REFERENCES "inventory_windows_package" (windows_package_id) ON DELETE CASCADE,
-        "windows_patch_id" INTEGER NOT NULL REFERENCES "inventory_windows_patch" (windows_patch_id) ON DELETE CASCADE 
+        "windows_patch_id" INTEGER NOT NULL REFERENCES "inventory_windows_patch" (windows_patch_id) ON DELETE CASCADE
     """)
     db.createIndex('inventory_windows_patch_windows_package',
                    'inventory_windows_patch_windows_package_uq',
@@ -1847,19 +1859,19 @@ def _createSurveyTables(db, cfg):
         "windows_os_patch_id" INTEGER NOT NULL REFERENCES "inventory_windows_os_patch" (windows_os_patch_id) ON DELETE CASCADE,
         "install_date" TIMESTAMP WITH TIME ZONE NOT NULL,
         "installed_by" TEXT NOT NULL,
-        "status" TEXT, 
+        "status" TEXT,
         "cs_name" TEXT
     """)
- 
+
     createTable(db, 'inventory_windows_service', """
         "windows_service_id" %(PRIMARYKEY)s,
         "name" TEXT NOT NULL,
-        "display_name" TEXT NOT NULL, 
+        "display_name" TEXT NOT NULL,
         "required_services" TEXT NOT NULL,
         "type" TEXT NOT NULL,
         "handle" TEXT NOT NULL,
     """)
-    
+
     createTable(db, 'inventory_survey_windows_service', """
         "map_id" %(PRIMARYKEY)s,
         "survey_id" INTEGER NOT NULL REFERENCES "inventory_survey" (survey_id) ON DELETE CASCADE,
@@ -1918,7 +1930,7 @@ def _createSurveyTables(db, cfg):
         "right_survey_id" INTEGER NOT NULL REFERENCES "inventory_survey" ("survey_id") ON DELETE CASCADE,
         "xml" TEXT
     """)
-    db.createIndex('inventory_survey_diff', 'SurveyDiffLeftRightIdx', 
+    db.createIndex('inventory_survey_diff', 'SurveyDiffLeftRightIdx',
         'left_survey_id,right_survey_id', unique=True)
 
     createTable(db, 'jobs_created_survey', """
@@ -2102,47 +2114,47 @@ def _addManagementInterfaces(db):
             )])
 
 
-inventory_creation_descriptor = r"""<descriptor xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns="http://www.rpath.com/permanent/descriptor-1.0.xsd" xsi:schemaLocation="http://www.rpath.com/permanent/descriptor-1.0.xsd descriptor-1.0.xsd"> 
+inventory_creation_descriptor = r"""<descriptor xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns="http://www.rpath.com/permanent/descriptor-1.0.xsd" xsi:schemaLocation="http://www.rpath.com/permanent/descriptor-1.0.xsd descriptor-1.0.xsd">
   <metadata>
-  </metadata> 
+  </metadata>
   <dataFields>
-    <field> 
-      <name>name</name> 
+    <field>
+      <name>name</name>
       <help lang="en_US">@System_creation_name@</help>
-      <descriptions> 
-        <desc>System Name</desc> 
-      </descriptions> 
-      <type>str</type> 
+      <descriptions>
+        <desc>System Name</desc>
+      </descriptions>
+      <type>str</type>
       <default></default>
       <required>true</required>
       <prompt>
         <desc>Enter the system name</desc>
       </prompt>
     </field>
-    <field> 
-      <name>description</name> 
+    <field>
+      <name>description</name>
       <help lang="en_US">@System_creation_description@</help>
-      <descriptions> 
-        <desc>Description</desc> 
-      </descriptions> 
-      <type>str</type> 
+      <descriptions>
+        <desc>Description</desc>
+      </descriptions>
+      <type>str</type>
       <default></default>
       <required>false</required>
       <prompt>
         <desc>Enter the system description</desc>
       </prompt>
     </field>
-    <field> 
-      <name>tempIpAddress</name> 
+    <field>
+      <name>tempIpAddress</name>
       <help lang="en_US">@System_creation_ip@</help>
-      <descriptions> 
-        <desc>Network Address</desc> 
-      </descriptions> 
+      <descriptions>
+        <desc>Network Address</desc>
+      </descriptions>
       <prompt>
         <desc>Enter the system network address</desc>
       </prompt>
-      <type>str</type> 
-      <default></default> 
+      <type>str</type>
+      <default></default>
       <required>true</required>
     </field>
     <field>
@@ -2163,125 +2175,125 @@ inventory_creation_descriptor = r"""<descriptor xmlns:xsi="http://www.w3.org/200
       </enumeratedType>
       <default>false</default>
     </field>
-  </dataFields> 
+  </dataFields>
 </descriptor>"""
 
-management_node_creation_descriptor = r"""<descriptor xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns="http://www.rpath.com/permanent/descriptor-1.0.xsd" xsi:schemaLocation="http://www.rpath.com/permanent/descriptor-1.0.xsd descriptor-1.0.xsd"> 
+management_node_creation_descriptor = r"""<descriptor xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns="http://www.rpath.com/permanent/descriptor-1.0.xsd" xsi:schemaLocation="http://www.rpath.com/permanent/descriptor-1.0.xsd descriptor-1.0.xsd">
   <metadata>
-  </metadata> 
+  </metadata>
   <dataFields>
-    <field> 
-      <name>name</name> 
+    <field>
+      <name>name</name>
       <help lang="en_US">@Management_node_creation_name@</help>
-      <descriptions> 
-        <desc>System Name</desc> 
-      </descriptions> 
-      <type>str</type> 
+      <descriptions>
+        <desc>System Name</desc>
+      </descriptions>
+      <type>str</type>
       <default></default>
       <required>true</required>
       <prompt>
         <desc>Enter the system name</desc>
       </prompt>
     </field>
-    <field> 
-      <name>description</name> 
+    <field>
+      <name>description</name>
       <help lang="en_US">@Management_node_creation_description@</help>
-      <descriptions> 
-        <desc>Description</desc> 
-      </descriptions> 
-      <type>str</type> 
+      <descriptions>
+        <desc>Description</desc>
+      </descriptions>
+      <type>str</type>
       <default></default>
       <required>false</required>
       <prompt>
         <desc>Enter the system description</desc>
       </prompt>
     </field>
-    <field> 
-      <name>tempIpAddress</name> 
+    <field>
+      <name>tempIpAddress</name>
       <help lang="en_US">@Management_node_creation_ip@</help>
-      <descriptions> 
-        <desc>Network Address</desc> 
-      </descriptions> 
+      <descriptions>
+        <desc>Network Address</desc>
+      </descriptions>
       <prompt>
         <desc>Enter the system network address</desc>
       </prompt>
-      <type>str</type> 
-      <default></default> 
+      <type>str</type>
+      <default></default>
       <required>true</required>
     </field>
-    <field> 
-      <name>zoneName</name> 
+    <field>
+      <name>zoneName</name>
       <help lang="en_US">@Management_node_zone_creation_name@</help>
-      <descriptions> 
-        <desc>Zone Name</desc> 
-      </descriptions> 
-      <type>str</type> 
+      <descriptions>
+        <desc>Zone Name</desc>
+      </descriptions>
+      <type>str</type>
       <default></default>
       <required>true</required>
       <prompt>
         <desc>Enter the name of the zone</desc>
       </prompt>
     </field>
-    <field> 
-      <name>zoneDescription</name> 
+    <field>
+      <name>zoneDescription</name>
       <help lang="en_US">@Management_node_zone_creation_description@</help>
-      <descriptions> 
-        <desc>Zone Description</desc> 
-      </descriptions> 
-      <type>str</type> 
+      <descriptions>
+        <desc>Zone Description</desc>
+      </descriptions>
+      <type>str</type>
       <default></default>
       <required>false</required>
       <prompt>
         <desc>Enter a description of the zone</desc>
       </prompt>
     </field>
-  </dataFields> 
+  </dataFields>
 </descriptor>"""
 
-windows_build_node_creation_descriptor = r"""<descriptor xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns="http://www.rpath.com/permanent/descriptor-1.0.xsd" xsi:schemaLocation="http://www.rpath.com/permanent/descriptor-1.0.xsd descriptor-1.0.xsd"> 
+windows_build_node_creation_descriptor = r"""<descriptor xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns="http://www.rpath.com/permanent/descriptor-1.0.xsd" xsi:schemaLocation="http://www.rpath.com/permanent/descriptor-1.0.xsd descriptor-1.0.xsd">
   <metadata>
-  </metadata> 
+  </metadata>
   <dataFields>
-    <field> 
-      <name>name</name> 
+    <field>
+      <name>name</name>
       <help lang="en_US">@Windows_build_node_creation_name@</help>
-      <descriptions> 
-        <desc>System Name</desc> 
-      </descriptions> 
-      <type>str</type> 
+      <descriptions>
+        <desc>System Name</desc>
+      </descriptions>
+      <type>str</type>
       <default></default>
       <required>true</required>
       <prompt>
         <desc>Enter the system name.</desc>
       </prompt>
     </field>
-    <field> 
-      <name>description</name> 
+    <field>
+      <name>description</name>
       <help lang="en_US">@Windows_build_node_creation_description@</help>
-      <descriptions> 
-        <desc>Description</desc> 
-      </descriptions> 
-      <type>str</type> 
+      <descriptions>
+        <desc>Description</desc>
+      </descriptions>
+      <type>str</type>
       <default></default>
       <required>false</required>
       <prompt>
         <desc>Enter the system description</desc>
       </prompt>
     </field>
-    <field> 
-      <name>tempIpAddress</name> 
+    <field>
+      <name>tempIpAddress</name>
       <help lang="en_US">@Windows_build_node_creation_ip@</help>
-      <descriptions> 
-        <desc>Network Address</desc> 
-      </descriptions> 
+      <descriptions>
+        <desc>Network Address</desc>
+      </descriptions>
       <prompt>
         <desc>Enter the system network address</desc>
       </prompt>
-      <type>str</type> 
-      <default></default> 
+      <type>str</type>
+      <default></default>
       <required>true</required>
     </field>
-  </dataFields> 
+  </dataFields>
 </descriptor>"""
 
 
@@ -2526,8 +2538,8 @@ def _addQuerySet(db, name, description, resource_type, can_modify,
         options['is_public'] = public
     if not version or version >= (59, 4):
         options['is_static'] = static
- 
-    _addTableRows(db, "querysets_queryset", "name", [options])    
+
+    _addTableRows(db, "querysets_queryset", "name", [options])
 
     # add the query tag
     qsId = _getRowPk(db, "querysets_queryset", "query_set_id",
@@ -2735,7 +2747,7 @@ def _createQuerySetSchema(db):
                 NOT NULL,
             UNIQUE ("queryset_id", "filterentry_id")
         )""")
-            
+
     createTable(db, "config_environments", """
             "id" %(PRIMARYKEY)s,
             "name" TEXT UNIQUE,
@@ -2761,7 +2773,7 @@ def _createQuerySetSchema(db):
                 REFERENCES "config_environments" ("id")
                 ON DELETE CASCADE
                 NOT NULL
-    """)   
+    """)
 
     createTable(db, "config_environment_config_values", """
             "id" %(PRIMARYKEY)s,

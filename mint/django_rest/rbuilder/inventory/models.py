@@ -113,7 +113,7 @@ class SystemStates(modellib.XObjModel):
 
     def save(self):
         return [s.save() for s in self.system_state]
-    
+
 class ManagementNodes(modellib.XObjModel):
 
     class Meta:
@@ -127,7 +127,7 @@ class ManagementNodes(modellib.XObjModel):
 
     def save(self):
         return [s.save() for s in self.management_node]
-    
+
 class SystemsLog(modellib.XObjModel):
     class Meta:
         abstract = True
@@ -155,11 +155,11 @@ class Networks(modellib.XObjModel):
                 tag='networks',
                 elements=['network', 'systems'])
     list_fields = ['network']
-    
+
     systems = D(modellib.HrefField('../systems'), "an entry point into system inventory")
-    
+
 class Credentials(modellib.XObjIdModel):
-    
+
     class Meta:
         abstract = True
     _xobj = xobj.XObjMetadata(
@@ -179,7 +179,7 @@ class Credentials(modellib.XObjIdModel):
     def to_xml(self, request=None, xobj_model=None):
         self.id = self.get_absolute_url(request, parents=[self._system])
         return xobj.toxml(self)
-    
+
 class ConfigurationDescriptor(modellib.XObjIdModel):
     class Meta:
         abstract = True
@@ -198,47 +198,47 @@ class ConfigurationDescriptor(modellib.XObjIdModel):
         return xobj.toxml(self)
 
 class SystemState(modellib.XObjIdModel):
-    
+
     serialize_accessors = False
     class Meta:
         db_table = 'inventory_system_state'
-        
+
     _xobj = xobj.XObjMetadata(
                 attributes = {'id':str})
 
     UNMANAGED = "unmanaged"
     UNMANAGED_DESC = "Unmanaged"
-    
+
     UNMANAGED_CREDENTIALS_REQUIRED = "unmanaged-credentials"
     UNMANAGED_CREDENTIALS_REQUIRED_DESC = "Unmanaged: Invalid credentials"
-    
+
     REGISTERED = "registered"
     REGISTERED_DESC = "Registered"
-    
+
     RESPONSIVE = "responsive"
     RESPONSIVE_DESC = "Online"
-    
+
     NONRESPONSIVE = "non-responsive-unknown"
     NONRESPONSIVE_DESC = "Not responding: Unknown"
-    
+
     NONRESPONSIVE_NET = "non-responsive-net"
     NONRESPONSIVE_NET_DESC = "Not responding: Network unreachable"
-    
+
     NONRESPONSIVE_HOST = "non-responsive-host"
     NONRESPONSIVE_HOST_DESC = "Not responding: Host unreachable"
-    
+
     NONRESPONSIVE_SHUTDOWN = "non-responsive-shutdown"
     NONRESPONSIVE_SHUTDOWN_DESC = "Not responding: Hhutdown"
-    
+
     NONRESPONSIVE_SUSPENDED = "non-responsive-suspended"
     NONRESPONSIVE_SUSPENDED_DESC = "Not responding: Suspended"
-    
+
     NONRESPONSIVE_CREDENTIALS = "non-responsive-credentials"
     NONRESPONSIVE_CREDENTIALS_DESC = "Not responding: Invalid credentials"
-    
+
     DEAD = "dead"
     DEAD_DESC = "Stale"
-    
+
     MOTHBALLED = "mothballed"
     MOTHBALLED_DESC = "Retired"
 
@@ -266,23 +266,23 @@ class SystemState(modellib.XObjIdModel):
     load_fields = [ name ]
 
 class ManagementInterfaces(modellib.XObjModel):
-    
+
     class Meta:
         abstract = True
     _xobj = xobj.XObjMetadata(
                 tag='management_interfaces',
                 elements=['management_interface'])
     list_fields = ['management_interface']
-    
+
 class ManagementInterface(modellib.XObjIdModel):
-    
+
     class Meta:
         db_table = 'inventory_management_interface'
-        
+
     # Don't inline all the systems now.  Do not remove this code!
     # See https://issues.rpath.com/browse/RBL-7883 for more info
     _xobj_hidden_accessors = set(['systems',])
-        
+
     _xobj = xobj.XObjMetadata(
                 tag = 'management_interface',
                 attributes = {'id':str})
@@ -302,7 +302,7 @@ class ManagementInterface(modellib.XObjIdModel):
         (WMI, WMI_DESC),
         (SSH, SSH_DESC),
     )
-        
+
     management_interface_id = D(models.AutoField(primary_key=True), "the database ID for the management interface")
     name = D(APIReadOnly(models.CharField(max_length=8092, unique=True, choices=CHOICES)), "the name of the management interface")
     description = D(models.CharField(max_length=8092), "the description of the management interface")
@@ -310,7 +310,7 @@ class ManagementInterface(modellib.XObjIdModel):
     port = D(models.IntegerField(null=False), "the port used by the management interface")
     credentials_descriptor = D(modellib.XMLField(), "the descriptor of available fields to set credentials for the management interface")
     credentials_readonly = D(models.NullBooleanField(), "whether or not the management interface has readonly credentials")
-    
+
     load_fields = [name]
 
 class SystemTypes(modellib.XObjModel):
@@ -321,19 +321,19 @@ class SystemTypes(modellib.XObjModel):
                 tag='system_types',
                 elements=['system_type'])
     list_fields = ['system_type']
-    
+
 class SystemType(modellib.XObjIdModel):
-    
+
     class Meta:
         db_table = 'inventory_system_type'
     _xobj = xobj.XObjMetadata(
                 tag = 'system_type',
                 attributes = {'id':str})
-    
+
     # Don't inline all the systems now.  Do not remove this code!
     # See https://issues.rpath.com/browse/RBL-7372 for more info
     _xobj_hidden_accessors = set(['systems',])
-        
+
     INVENTORY = "inventory"
     INVENTORY_DESC = "Inventory"
     INFRASTRUCTURE_MANAGEMENT_NODE = "infrastructure-management-node"
@@ -346,7 +346,7 @@ class SystemType(modellib.XObjIdModel):
         (INFRASTRUCTURE_MANAGEMENT_NODE, INFRASTRUCTURE_MANAGEMENT_NODE_DESC),
         (INFRASTRUCTURE_WINDOWS_BUILD_NODE, INFRASTRUCTURE_WINDOWS_BUILD_NODE_DESC),
     )
-        
+
     system_type_id = D(models.AutoField(primary_key=True), "the database ID for the system type")
     name = D(APIReadOnly(models.CharField(max_length=8092, unique=True, choices=CHOICES)), "the name of the system type")
     description = D(models.CharField(max_length=8092), "the description of the system type")
@@ -397,7 +397,7 @@ class AssimilationCredential(modellib.XObjModel):
     ssh_key      = D(models.TextField(null=True), "SSH key")
 
 class System(modellib.XObjIdModel):
-    
+
     class Meta:
         db_table = 'inventory_system'
 
@@ -419,7 +419,7 @@ class System(modellib.XObjIdModel):
 
     """
     networks - a collection of network resources exposed by the system
-    system_events - a link to the collection of system events currently 
+    system_events - a link to the collection of system events currently
     active on this sytem
     """
     # need our own object manager for dup detection
@@ -439,7 +439,7 @@ class System(modellib.XObjIdModel):
     launch_date = D(modellib.DateTimeUtcField(null=True),
         "the date the system was deployed (only applies if system is on a "
         "virtual target)", short="System launch date")
-    target = D(modellib.ForeignKey(targetmodels.Target, null=True, 
+    target = D(modellib.ForeignKey(targetmodels.Target, null=True,
         text_field="name"),
         "the virtual target the system was deployed to (only applies if "
         "system is on a virtual target)")
@@ -477,7 +477,7 @@ class System(modellib.XObjIdModel):
         max_length=8092, null=True, db_column='ssl_client_key')))
     ssl_server_certificate = D(models.CharField(max_length=8092, null=True),
         "an x509 public certificate of the system's CIM broker")
-    launching_user = D(modellib.ForeignKey(usersmodels.User, null=True, 
+    launching_user = D(modellib.ForeignKey(usersmodels.User, null=True,
         text_field="user_name"),
         "the user that deployed the system (only applies if system is on a "
         "virtual target)")
@@ -496,14 +496,14 @@ class System(modellib.XObjIdModel):
         "a UUID used to link system events with their returned responses")
     boot_uuid = D(XObjHidden(modellib.SyntheticField()),
         "a UUID used for tracking systems registering at startup time")
-    management_interface = D(modellib.ForeignKey(ManagementInterface, 
+    management_interface = D(modellib.ForeignKey(ManagementInterface,
         null=True, related_name='systems', text_field="description"),
         "the management interface used to communicate with the system")
     credentials = APIReadOnly(XObjHidden(models.TextField(null=True)))
     system_type = D(modellib.ForeignKey(SystemType, null=False,
         related_name='systems', text_field='description'),
         "the type of the system")
-    project_branch_stage = D(APIReadOnly(modellib.DeferredForeignKey(Stage, null=True, 
+    project_branch_stage = D(APIReadOnly(modellib.DeferredForeignKey(Stage, null=True,
         db_column="stage_id", text_field='name', related_name="+")),
         "the project stage of the system")
     project_branch = D(APIReadOnly(modellib.DeferredForeignKey(ProjectVersion, null=True,
@@ -520,13 +520,13 @@ class System(modellib.XObjIdModel):
     actions = D(modellib.SyntheticField(jobmodels.Actions),
         "actions available on the system")
     source_image = D(APIReadOnly(models.ForeignKey('images.Image', null=True,
-         related_name='systems')), 
+         related_name='systems')),
          'rBuilder image used to deploy the system, if any')
-    created_by = D(modellib.ForeignKey(usersmodels.User, null=True, 
-        related_name='+', db_column='created_by'), 
+    created_by = D(modellib.ForeignKey(usersmodels.User, null=True,
+        related_name='+', db_column='created_by'),
         "User who created system",
         short="System created by")
-    modified_by = D(modellib.ForeignKey(usersmodels.User, null=True, 
+    modified_by = D(modellib.ForeignKey(usersmodels.User, null=True,
         related_name='+', db_column='modified_by'),
         "User who last modified system",
         short="System last modified by")
@@ -551,7 +551,7 @@ class System(modellib.XObjIdModel):
     has_running_jobs = D(models.BooleanField(default=False, null=False), 'whether the system has running jobs', short="System running jobs")
     has_active_jobs = D(models.BooleanField(default=False, null=False), 'whether the system has active (queued/unqueud) jobs', short='System active jobs')
     out_of_date  = D(models.BooleanField(default=False, null=False), 'whether the system has pending updates', short='System out of date')
-    
+
     configuration_applied = D(models.BooleanField(default=False, null=False), 'whether any configuraiton has been applied for this system', short='System configuration applied')
     configuration_set = D(models.BooleanField(default=False, null=False), 'whether any configuration has been saved (but not necc. applied) for this system', short='System configuration saved')
 
@@ -599,7 +599,7 @@ class System(modellib.XObjIdModel):
         #   from the xobj model
         # * curNetAddr is the state of the network in the db, which may
         #   have been altered since we loaded the object.
-       
+
         if self.network_address is not None:
             dnsName = self.network_address.address
             address = re.compile('^[a-zA-Z0-9:._-]+$')
@@ -623,9 +623,9 @@ class System(modellib.XObjIdModel):
             self.networks.filter(pinned=True).delete()
         else:
             self.networks.all().delete()
- 
 
-        nw = Network(system=self, dns_name=dnsName, 
+
+        nw = Network(system=self, dns_name=dnsName,
             pinned=self.network_address.pinned)
         nw.save()
 
@@ -667,7 +667,7 @@ class System(modellib.XObjIdModel):
         if self._RunningJobStateIds is None:
             self.__class__._RunningJobStateIds = set(
                 Cache.get(jobmodels.JobState, name=x).job_state_id
-                    for x in [ jobmodels.JobState.RUNNING, 
+                    for x in [ jobmodels.JobState.RUNNING,
                         jobmodels.JobState.QUEUED ])
         return self.__class__._RunningJobStateIds
 
@@ -730,30 +730,30 @@ class System(modellib.XObjIdModel):
         return False
 
     def serialize(self, request=None):
-        
-        # hide some data in collapsed collections 
+
+        # hide some data in collapsed collections
         summarize = getattr(self, '_summarize', False)
 
         xobj_model = modellib.XObjIdModel.serialize(self, request)
 
         if request:
-            class CredentialsHref(object): 
+            class CredentialsHref(object):
                 _xobj = xobj.XObjMetadata(
                             tag='credentials',
                             attributes={'id':str})
 
                 def __init__(self, href):
                     self.id = href
-                    
-            class ConfigurationHref(object): 
+
+            class ConfigurationHref(object):
                 _xobj = xobj.XObjMetadata(
                             tag='configuration',
                             attributes={'id':str})
 
                 def __init__(self, href):
                     self.id = href
-                    
-            class ConfigurationDescriptorHref(object): 
+
+            class ConfigurationDescriptorHref(object):
                 _xobj = xobj.XObjMetadata(
                             tag='configuration_descriptor',
                             attributes={'id':str})
@@ -769,17 +769,17 @@ class System(modellib.XObjIdModel):
                 def __init__(self, href):
                     self.id = href
 
-            
+
             if not summarize:
                 xobj_model.credentials = CredentialsHref(request.build_absolute_uri(
                     '%s/credentials' % self.get_absolute_url(request)))
-            
+
                 xobj_model.configuration = ConfigurationHref(request.build_absolute_uri(
                     '%s/configuration' % self.get_absolute_url(request)))
-            
+
                 xobj_model.configuration_descriptor = ConfigurationDescriptorHref(request.build_absolute_uri(
                     '%s/configuration_descriptor' % self.get_absolute_url(request)))
-                
+
                 xobj_model.surveys = SurveysHref(request.build_absolute_uri(
                     '%s/surveys' % self.get_absolute_url(request)))
 
@@ -815,7 +815,7 @@ class System(modellib.XObjIdModel):
                 self.view_name = None
 
         # old and busted slow way
-        # 
+        #
         if not summarize:
             xobj_model.jobs = JobsHref(request, self)
 
@@ -928,7 +928,7 @@ class System(modellib.XObjIdModel):
                 jobmodels.EventType.SYSTEM_CONFIGURE,
                 actionName="Apply system configuration",
                 descriptorModel=self,
-                descriptorHref="descriptors/configure", 
+                descriptorHref="descriptors/configure",
                 enabled=configureEnabled,
             ),
         ])
@@ -938,30 +938,36 @@ class System(modellib.XObjIdModel):
     def hasSourceImage(self):
         return bool(getattr(self, 'source_image', None))
 
-class SystemDesiredTopLevelItem(modellib.XObjModel):
+# ABSTRACT
+
+def topLevelItemsComputeSyntheticFields(self):
+    if self.trove_spec is None or self.trove_spec == '':
+        # survey didn't populate this yet?
+        return
+
+    rev = None
+    try:
+        spec = TroveTuple(self.trove_spec)
+        rev = spec.version
+    except (ValueError, ParseError):
+        spec = TroveSpec(self.trove_spec)
+        rev = versions.VersionFromString(spec.version)
+        self.revision = rev.trailingRevision().asString()
+
+class DesiredTopLevelItem(modellib.XObjModel):
     class Meta:
-        db_table = 'inventory_system_desired_top_level_item'
-        unique_together = [ ('system', 'trove_spec') ]
+        abstract = True
 
-    _xobj = xobj.XObjMetadata(
-        tag = 'desired_top_level_item'
-    )
-
-    system = XObjHidden(modellib.ForeignKey(System, null=False,
-        related_name = 'desired_top_level_items'))
     trove_spec = D(models.TextField(null=False), "Desired trove spec", short="System Desired Trove Spec")
-    created_date = D(modellib.DateTimeUtcField(null=False, auto_now_add=True),
-        "the date the entry was created")
+    created_date = D(modellib.DateTimeUtcField(null=False, auto_now_add=True), "the date the entry was created")
     revision = D(modellib.SyntheticField(), "Desired trove revision", short="System Desired Trove Revision")
- 
+
     # trailingRevision in computeSyntheticFields method
     def computeSyntheticFields(self, sender, **kwargs):
         ''' Compute non-database fields.'''
-
         if self.trove_spec is None or self.trove_spec == '':
             # survey didn't populate this yet?
             return
-
         rev = None
         try:
             spec = TroveTuple(self.trove_spec)
@@ -969,10 +975,26 @@ class SystemDesiredTopLevelItem(modellib.XObjModel):
         except (ValueError, ParseError):
             spec = TroveSpec(self.trove_spec)
             rev = versions.VersionFromString(spec.version)
-        self.revision = rev.trailingRevision().asString() 
+        self.revision = rev.trailingRevision().asString()
+
+class SystemDesiredTopLevelItem(DesiredTopLevelItem):
+    class Meta:
+        db_table = 'inventory_system_desired_top_level_item'
+        unique_together = [ ('system', 'trove_spec') ]
+
+    _xobj = xobj.XObjMetadata(tag = 'desired_top_level_item')
+    system = XObjHidden(modellib.ForeignKey(System, null=False, related_name = 'desired_top_level_items'))
+
+class SystemObservedTopLevelItem(DesiredTopLevelItem):
+    class Meta:
+        db_table = 'inventory_system_observed_top_level_item'
+        unique_together = [ ('system', 'trove_spec') ]
+
+    _xobj = xobj.XObjMetadata(tag = 'observed_top_level_item')
+    system = XObjHidden(modellib.ForeignKey(System, null=False, related_name = 'observed_top_level_items'))
 
 class ManagementNode(System):
-    
+
     class Meta:
         db_table = 'inventory_zone_management_node'
     _xobj = xobj.XObjMetadata(
@@ -986,10 +1008,10 @@ class ManagementNode(System):
 
     # ignore auto generated ptr from inheritance
     load_ignore_fields = ["system_ptr"]
-    
+
     # need our own object manager for dup detection
     objects = modellib.ManagementNodeManager()
-    
+
     def save(self, *args, **kw):
         self.system_type = SystemType.objects.get(
             name = SystemType.INFRASTRUCTURE_MANAGEMENT_NODE)
@@ -1032,7 +1054,7 @@ class SystemEvent(modellib.XObjIdModel):
     _xobj = xobj.XObjMetadata(
                 tag = 'system_event',
                 attributes = {'id':str})
-    
+
     system_event_id = models.AutoField(primary_key=True)
     system = modellib.DeferredForeignKey(System, db_index=True,
         related_name='system_events')
@@ -1066,7 +1088,7 @@ class Network(modellib.XObjIdModel):
     class Meta:
         db_table = 'inventory_system_network'
         unique_together = (('system', 'dns_name', 'ip_address', 'ipv6_address'),)
-        
+
     _xobj = xobj.XObjMetadata(
                 tag='network',
                 attributes = {'id':str})
@@ -1076,7 +1098,7 @@ class Network(modellib.XObjIdModel):
     ip_address = D(models.CharField(max_length=15, null=True), "the network IP address")
     # TODO: how long should this be?
     ipv6_address = D(models.CharField(max_length=32, null=True), "the network IPv6 address")
-    device_name = D(models.CharField(max_length=255), "the network device name") 
+    device_name = D(models.CharField(max_length=255), "the network device name")
     dns_name = D(models.CharField(max_length=255, db_index=True), "the network DNS name")
     netmask = D(models.CharField(max_length=20, null=True), "the network netmask")
     port_type = D(models.CharField(max_length=32, null=True), "the network port type")
@@ -1099,7 +1121,7 @@ class Network(modellib.XObjIdModel):
         return super(Network, self).save(*args, **kwargs)
 
 class SystemLog(modellib.XObjIdModel):
-    
+
     class Meta:
         db_table = 'inventory_system_log'
     system_log_id = D(models.AutoField(primary_key=True), "the database ID for the system log")
@@ -1119,7 +1141,7 @@ class SystemLogEntry(modellib.XObjModel):
     class Meta:
         db_table = 'inventory_system_log_entry'
         ordering = ['entry_date']
-        
+
     ADDED = "System added to inventory"
     REGISTERED = "System registered via rpath-tools"
     MANUALLY_REGISTERED = "System manually registered via rBuilder"
@@ -1146,7 +1168,7 @@ class Trove(modellib.XObjIdModel):
 
     _xobj = xobj.XObjMetadata(tag='trove')
     _xobj_hidden_accessors = set(['package_sources',])
-    
+
     objects = modellib.TroveManager()
 
     trove_id = models.AutoField(primary_key=True)
@@ -1283,7 +1305,7 @@ class SystemJob(modellib.XObjModel):
     _xobj = xobj.XObjMetadata(tag='__systemJob')
     system_job_id = models.AutoField(primary_key=True)
     system = modellib.ForeignKey(System)
-    job = modellib.DeferredForeignKey(jobmodels.Job, unique=True, 
+    job = modellib.DeferredForeignKey(jobmodels.Job, unique=True,
         related_name='systems')
     event_uuid = XObjHidden(models.CharField(max_length=64, unique=True))
 
