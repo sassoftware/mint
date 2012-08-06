@@ -118,6 +118,8 @@ class SurveyDiff(object):
             return (aInfo.product_code == bInfo.product_code)
         elif infoName == 'windows_patch_info':
             return (aInfo.product_code == bInfo.product_code)
+        elif infoName == 'windows_os_patch_info':
+            return (aInfo.hotfix_id == bInfo.hotfix_id) 
         elif infoName == 'service_info':
             return True
         elif infoName == 'windows_service_info':
