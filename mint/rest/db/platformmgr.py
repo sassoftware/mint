@@ -1305,11 +1305,13 @@ class PlatformManager(manager.Manager):
     def getSourceTypesByPlatform(self, platformId):
         platform = self.platforms.getById(platformId)
         types = []
-        for sourceType, isSingleton in platform._sourceTypes:
-            cst = contentsources.contentSourceTypes[sourceType]
-            types.append(ContentSourceTypes.contentSourceTypeModelFactory(
-                name=sourceType, singleton=isSingleton,
-                required=cst.isRequired))
+        sourceTypes = platform._sourceTypes
+        if sourceTypes is not None:
+            for sourceType, isSingleton in sourceTypes:
+                cst = contentsources.contentSourceTypes[sourceType]
+                types.append(ContentSourceTypes.contentSourceTypeModelFactory(
+                    name=sourceType, singleton=isSingleton,
+                    required=cst.isRequired))
 
         return models.SourceTypes(types)
 
