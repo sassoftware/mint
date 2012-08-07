@@ -6,9 +6,8 @@
 
 import logging
 
-from conary.deps import deps
 from conary import conaryclient, versions, trovetup
-from conary.errors import RepositoryError, ParseError
+from conary.errors import RepositoryError
 
 from rpath_tools.client.utils.config_descriptor_cache import ConfigDescriptorCache
 
