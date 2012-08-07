@@ -273,7 +273,7 @@ class ResultsProcessingMixIn(object):
                 'jobs handler', dict(), doEmail=True)
             self.handleErrorDefault(job, e)
             return None
-        
+
         # save the results from ramke to the DB
         job.results = modellib.HrefFieldFromModel(resources)
         if type(resources) != list:
@@ -694,7 +694,7 @@ class JobHandlerRegistry(HandlerRegistry):
             self.image = job.images.all()[0].image
 
             systems = job.results.systems.system
-            if type(systems) != list: 
+            if type(systems) != list:
                 systems = [ systems ]
 
             results = []
@@ -1093,6 +1093,8 @@ class JobHandlerRegistry(HandlerRegistry):
             extra = dict(sources = [ topLevelGroup ],
                             test = test,
                             zone = self.system.managing_zone.name)
+
+
             return (params, ), extra
 
         def getRelatedThroughModel(self, descriptor):
@@ -1101,7 +1103,7 @@ class JobHandlerRegistry(HandlerRegistry):
         def postprocessRelatedResource(self, job, model):
             model.event_uuid = str(self.eventUuid)
 
-        def _updateInstalledSoftware(self, system, job):
+        def _updateDesiredInstalledSoftware(self, system, job):
             descriptorData = self.loadDescriptorData(job)
             test = descriptorData.getField('dry_run')
             if test:
@@ -1110,6 +1112,20 @@ class JobHandlerRegistry(HandlerRegistry):
             # Fetch existing top level groups
             existing = set(x.trove_spec for x in system.desired_top_level_items.all())
             mgr = inventorymodels.SystemDesiredTopLevelItem.objects
+            for toAdd in topLevelItems.difference(existing):
+                mgr.create(system=system, trove_spec=toAdd)
+            mgr.filter(system=system,
+                trove_spec__in=existing.difference(topLevelItems)).delete()
+
+        def _updateObservedInstalledSoftware(self, system, job):
+            descriptorData = self.loadDescriptorData(job)
+            test = descriptorData.getField('dry_run')
+            if test:
+                return
+            topLevelItems = set([ str(descriptorData.getField('trove_label')) ])
+            # Fetch existing top level groups
+            existing = set(x.trove_spec for x in system.observed_top_level_items.all())
+            mgr = inventorymodels.SystemObservedTopLevelItem.objects
             for toAdd in topLevelItems.difference(existing):
                 mgr.create(system=system, trove_spec=toAdd)
             mgr.filter(system=system,
@@ -1176,7 +1192,10 @@ class JobHandlerRegistry(HandlerRegistry):
             system = job.systems.all()[0].system
             preview = models.JobPreviewArtifact(job=job, preview=xml, system=system)
             preview.save()
-            self._updateInstalledSoftware(system, job)
+            # both of these are only relevant to non-dry run and have meanings more overloaded than their names
+            # so no reason to set desired prior to attempting the command
+            self._updateDesiredInstalledSoftware(system, job)
+            self._updateObservedInstalledSoftware(system, job)
             return preview
 
     class SystemConfigure(DescriptorJobHandler):
@@ -1187,7 +1206,7 @@ class JobHandlerRegistry(HandlerRegistry):
         __slots__ = [ 'system', 'eventUuid' ]
         jobType = models.EventType.SYSTEM_CONFIGURE
         ResultsTag = 'configuration'
-    
+
         def getDescriptor(self, descriptorId):
 
             match = self.splitResourceId(descriptorId)

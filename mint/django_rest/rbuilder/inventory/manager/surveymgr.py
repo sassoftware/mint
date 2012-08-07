@@ -27,7 +27,7 @@ class SurveyManager(basemanager.BaseManager):
 
     @exposed
     def deleteSurvey(self, uuid):
-        ''' 
+        '''
         Deletes a survey.  Returns a tuple of (found, deleted) as
         the survey either might not exist.  Previously allowed locking
         surveys down to be not removable, but that is now just a UI hint.
@@ -118,7 +118,7 @@ class SurveyManager(basemanager.BaseManager):
     @exposed
     def getSurveyService(self, id):
         return survey_models.SurveyService.objects.get(pk=id)
-    
+
     @exposed
     def getSurveyWindowsService(self, id):
         return survey_models.SurveyWindowsService.objects.get(pk=id)
@@ -150,11 +150,11 @@ class SurveyManager(basemanager.BaseManager):
     @exposed
     def getSurveyWindowsServiceInfo(self, id):
         return survey_models.WindowsServiceInfo.objects.get(pk=id)
-    
+
     @exposed
     def getSurveyTag(self, id):
         return survey_models.SurveyTag.objects.get(pk=id)
-  
+
     # xobj hack
     @classmethod
     def _listify(cls, foo):
@@ -218,7 +218,7 @@ class SurveyManager(basemanager.BaseManager):
         xmodel = xmodel.survey
         survey = survey_models.Survey.objects.get(uuid=survey_uuid)
         xtags  = self._subel(xmodel, 'tags', 'tag')
-       
+
         survey_models.SurveyTag.objects.filter(survey=survey).delete()
 
         for xtag in xtags:
@@ -226,7 +226,7 @@ class SurveyManager(basemanager.BaseManager):
                 survey       = survey,
                 name         = xtag.name
             )
-            tag.save() 
+            tag.save()
 
         survey.name          = getattr(xmodel, 'name', None)
         survey.description   = getattr(xmodel, 'description', None)
@@ -264,7 +264,7 @@ class SurveyManager(basemanager.BaseManager):
             else:
                 for eltName in eltNames:
                     newPosition = "%s/%s" % (position, eltName)
-                    self.xwalk(getattr(xvalues, eltName), newPosition, results)            
+                    self.xwalk(getattr(xvalues, eltName), newPosition, results)
 
 
     def _saveShreddedValues(self, survey, xvalues, valueType):
@@ -286,7 +286,7 @@ class SurveyManager(basemanager.BaseManager):
            )
            if created:
                obj.save()
-        
+
     def _computeCompliance(self, survey, discovered_properties, validation_report, preview):
         ''' create the compliance summary block for the survey '''
 
@@ -316,7 +316,7 @@ class SurveyManager(basemanager.BaseManager):
                         eCount = len(subErrors._xobj.elements)
                         config_execution_failures += eCount
 
-        # process the preview (pending software updates)        
+        # process the preview (pending software updates)
         added = 0
         removed = 0
         changed = 0
@@ -332,7 +332,7 @@ class SurveyManager(basemanager.BaseManager):
                     changes = getattr(preview.conary_package_changes, 'conary_package_change', None)
                     if changes is not None:
                         # xobj hack
-                        if type(changes) != list: 
+                        if type(changes) != list:
                             changes = [ changes ]
                         for x in changes:
                             typ = x.type
@@ -374,10 +374,10 @@ class SurveyManager(basemanager.BaseManager):
         )
         return (has_errors, updates_pending, compliance_xml)
 
-    
+
     def _computeConfigDelta(self, survey):
         left = survey_models.SurveyValues.objects.filter(
-            survey = survey, type = survey_models.DESIRED_VALUES 
+            survey = survey, type = survey_models.DESIRED_VALUES
         )
         right = survey_models.SurveyValues.objects.filter(
             survey = survey, type = survey_models.OBSERVED_VALUES
@@ -473,7 +473,7 @@ class SurveyManager(basemanager.BaseManager):
         system_snapshot_xml = system.to_xml()
         project_snapshot_xml = None
         stage_snapshot_xml = None
-        
+
         if system.project:
             project_snapshot_xml = system.project.to_xml()
         if system.project_branch_stage:
@@ -504,12 +504,12 @@ class SurveyManager(basemanager.BaseManager):
         )
 
         survey.save()
- 
+
         self._saveShreddedValues(survey, xconfig_properties, survey_models.CONFIG_VALUES)
         self._saveShreddedValues(survey, xdesired_properties, survey_models.DESIRED_VALUES)
         self._saveShreddedValues(survey, xobserved_properties, survey_models.OBSERVED_VALUES)
         self._saveShreddedValues(survey, xdiscovered_properties, survey_models.DISCOVERED_VALUES)
-        self._saveShreddedValues(survey, xvalidation_report, survey_models.VALIDATOR_VALUES)        
+        self._saveShreddedValues(survey, xvalidation_report, survey_models.VALIDATOR_VALUES)
 
         # update system.latest_survey if and only if it's
         # the latest
@@ -592,7 +592,7 @@ class SurveyManager(basemanager.BaseManager):
                     system.project_branch = branch
                     system.project_branch_stage = stage
                     system.save()
- 
+
             if encap is not None:
                 info.rpm_package_info = rpm_info_by_id[encap.id]
                 info.save()
@@ -602,7 +602,7 @@ class SurveyManager(basemanager.BaseManager):
                     rpm_package = rpms_by_info_id.get(info.rpm_package_info.pk, None)
                     if rpm_package is not None:
                         use_date = rpm_package.install_date
- 
+
             pkg = survey_models.SurveyConaryPackage(
                 conary_package_info = info,
                 survey              = survey,
@@ -612,11 +612,20 @@ class SurveyManager(basemanager.BaseManager):
             pkg.save()
 
         # If no desired state is saved in the db, set it from the survey
+        # but always set observed top level items.
         count = system.desired_top_level_items.count()
         if count == 0:
-            for troveSpec in topLevelItems:
-                obj = inventory_models.SystemDesiredTopLevelItem(system=system, trove_spec=troveSpec)
-                obj.save()
+            existing = set(x.trove_spec for x in system.desired_top_level_items.all())
+            mgr = inventory_models.SystemDesiredTopLevelItem.objects
+            for toAdd in topLevelItems.difference(existing):
+                mgr.create(system=system, trove_spec=toAdd)
+            mgr.filter(system=system, trove_spec__in=existing.difference(topLevelItems)).delete()
+
+        existing = set(x.trove_spec for x in system.observed_top_level_items.all())
+        mgr = inventory_models.SystemObservedTopLevelItem.objects
+        for toAdd in topLevelItems.difference(existing):
+            mgr.create(system=system, trove_spec=toAdd)
+        mgr.filter(system=system, trove_spec__in=existing.difference(topLevelItems)).delete()
 
         for xmodel in xwindows_packages:
             xinfo = xmodel.windows_package_info
@@ -712,8 +721,8 @@ class SurveyManager(basemanager.BaseManager):
                 install_date       = self._date(xmodel.install_date),
                 is_installed       = self._bool(xmodel.is_installed)
             )
-            pkg.save() 
-                
+            pkg.save()
+
 
         for xmodel in xservices:
             xinfo = xmodel.service_info
@@ -721,7 +730,7 @@ class SurveyManager(basemanager.BaseManager):
                 name      = _u(xinfo.name),
                 autostart = _u(xinfo.autostart),
                 runlevels = _u(xinfo.runlevels),
-            ) 
+            )
             service = survey_models.SurveyService(
                 service_info = info,
                 survey       = survey,
@@ -739,7 +748,7 @@ class SurveyManager(basemanager.BaseManager):
                 handle       = _u(xinfo.handle),
                 # this will be rendered more properly later, but we're saving it
                 # flat to avoid a lot of ordering complexity
-                _required_services = _u(xinfo.required_services) 
+                _required_services = _u(xinfo.required_services)
             )
             service = survey_models.SurveyWindowsService(
                 windows_service_info = info,
@@ -759,8 +768,8 @@ class SurveyManager(basemanager.BaseManager):
                 name         = _u(xmodel.name),
             )
             tag.save()
-        
-        (has_errors, updates_pending, compliance_xml) = self._computeCompliance(survey, 
+
+        (has_errors, updates_pending, compliance_xml) = self._computeCompliance(survey,
             discovered_properties=xdiscovered_properties,
             validation_report=xvalidation_report,
             preview=xpreview,
@@ -784,9 +793,9 @@ class SurveyManager(basemanager.BaseManager):
 
     @exposed
     def diffSurvey(self, left, right, request):
-        ''' 
+        '''
         If the diff has already been calculated, return it, otherwise
-        save it and return it.  The diff will be pregenerated before 
+        save it and return it.  The diff will be pregenerated before
         returning the job result.
         '''
 
