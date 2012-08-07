@@ -35,27 +35,30 @@ class Coordinator(object):
 
     def _listSystems_get(self, blob, url):
         doc = xobj.parse(blob)
-        wbsUrl = None
+        system_type_id = None
         for systemType in doc.system_types.system_type:
             if systemType.name == 'infrastructure-windows-build-node':
-                wbsUrl = systemType.id
+                system_type_id = str(systemType.system_type_id)
                 break
         else:
             raise RuntimeError("Could not find "
                     "infrastructure-windows-build-node system type")
 
         # Now filter the set of infra systems to just WBS systems.
-        d = getPage(self.reactor, url + 'infrastructure_systems')
-        d.addCallback(self._listSystems_filter, wbsUrl)
+        d = getPage(self.reactor, url + 'infrastructure_systems;'
+            'filter_by=[system_type,EQUAL,%s];limit=100' % system_type_id)
+        d.addCallback(self._listSystems_filter)
         return d
 
-    def _listSystems_filter(self, blob, wbsUrl):
+    def _listSystems_filter(self, blob):
         doc = xobj.parse(blob)
         hostnames = set()
-        for system in doc.systems.system:
-            # Ignore non-WBS systems
-            if system.system_type.id != wbsUrl:
-                continue
+
+        systems = doc.systems.system
+        if not isinstance(systems, list):
+            systems = [systems, ]
+
+        for system in systems:
             # If there's only one network (usual case) xobj doesn't figure out
             # that it's a collection.
             if isinstance(system.networks.network, list):
