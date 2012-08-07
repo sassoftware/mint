@@ -7,7 +7,7 @@
 import logging
 
 from conary.deps import deps
-from conary import conaryclient, versions
+from conary import conaryclient, versions, trovetup
 from conary.errors import RepositoryError, ParseError
 
 from rpath_tools.client.utils.config_descriptor_cache import ConfigDescriptorCache
@@ -234,7 +234,7 @@ class VersionManager(basemanager.BaseManager):
                     if ver > repoVersion:
                         trove.out_of_date = True
 
-                    # updating systems that use this trove as found in 
+                    # updating systems that use this trove as found in
                     # desired_top_level_items, whose format is a troveSpec
                     # the Trove table is just for the "cache" of conary results
 
@@ -267,27 +267,14 @@ class VersionManager(basemanager.BaseManager):
         if system.latest_survey is None:
             return '<configuration></configuration>'
 
-        # find the appliance group from the survey
         # what if multiple top levels with config descriptors?
         # UI doesn't support, so not worrying about it for now
-        packages = system.latest_survey.conary_packages
-        for conary_package in packages.all():
-            info = conary_package.conary_package_info
-            name = info.name
+        items = system.observed_top_level_items.all()
+        for item in items:
 
-            # Skip over anything that doesn't look like an appliance group.
-            if not (name.startswith('group-') and name.endswith('-appliance')):
-                continue
-
-            try:
-                version = versions.ThawVersion(info.version)
-            except ParseError:
-                continue
-            flavor = deps.parseFlavor(info.flavor)
-
+            truple = trovetup.TroveTuple(item.trove_spec)
             repos = self.get_conary_client().repos
-            desc = ConfigDescriptorCache(repos).getDescriptor(
-                (name, version, flavor))
+            desc = ConfigDescriptorCache(repos).getDescriptor(truple)
 
             if not desc:
                 break
