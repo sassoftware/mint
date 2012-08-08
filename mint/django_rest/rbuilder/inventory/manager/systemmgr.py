@@ -2107,28 +2107,6 @@ class SystemManager(basemanager.BaseManager):
             descriptor.getElementTree(validate=validate))
         return wrapper
 
-    @exposed
-    def systemUpdateSystem(self, system, job):
-        # TODO Rename. This is a terrible name but needs to be
-        #  distinguished from the old-school systemUpdate.
-        try:
-            self._updateSystem(system, job)
-        except:
-            exc = sys.exc_info()
-            stream = util.BoundedStringIO()
-            util.formatTrace(*exc, stream=stream, withLocals=False)
-            stream.seek(0)
-
-            job.job_state = self.mgr.getJobStateByName(jobmodels.JobState.FAILED)
-            job.status_code = 500
-            job.status_text = "Failed"
-            job.status_detail = stream.read()
-        else:
-            job.job_state = self.mgr.getJobStateByName(jobmodels.JobState.COMPLETED)
-            job.status_code = 200
-            job.status_text = "Done"
-        job.save()
-
 class Configuration(object):
     _xobj = xobj.XObjMetadata(
         tag = 'configuration')
