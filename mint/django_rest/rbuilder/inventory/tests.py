@@ -4578,4 +4578,4 @@ class ModuleHooksTest(XMLTestCase):
             username="testuser", password="password")
         self.failUnlessEqual(response.status_code, 200)
         obj = xobj.parse(response.content)
-        self.failUnlessEqual(obj.module_hooks.count, "0")
+        self.failUnlessEqual(obj.module_hooks.count, "9")
