@@ -272,7 +272,11 @@ class VersionManager(basemanager.BaseManager):
         for item in items:
 
             truple = trovetup.TroveTuple(item.trove_spec)
-            repos = self.get_conary_client().repos
+            cclient = self.get_conary_client()
+            if not cclient:
+                break
+
+            repos = cclient.repos
             desc = ConfigDescriptorCache(repos).getDescriptor(truple)
 
             if not desc:
