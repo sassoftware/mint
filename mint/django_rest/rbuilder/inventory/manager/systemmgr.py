@@ -213,7 +213,7 @@ class SystemManager(basemanager.BaseManager):
             return
         zone.save()
         return zone
-    
+
     @exposed
     def updateZone(self, zone):
         """Update a zone"""
@@ -221,7 +221,7 @@ class SystemManager(basemanager.BaseManager):
             return
         zone.save()
         return zone
-    
+
     @exposed
     def deleteZone(self, zone):
         """Update a zone"""
@@ -234,13 +234,13 @@ class SystemManager(basemanager.BaseManager):
     def getNetwork(self, network_id):
         network = models.Network.objects.get(pk=network_id)
         return network
-    
+
     @exposed
     def getNetworks(self):
         Networks = models.Networks()
         Networks.network = list(models.Network.objects.all())
         return Networks
-    
+
     @exposed
     def updateNetwork(self, network):
         """Update a network"""
@@ -248,7 +248,7 @@ class SystemManager(basemanager.BaseManager):
             return
         network.save()
         return network
-    
+
     @exposed
     def deleteNetwork(self, network_id):
         network = models.Network.objects.get(pk=network_id)
@@ -262,7 +262,7 @@ class SystemManager(basemanager.BaseManager):
     @exposed
     def deleteSystem(self, system_id):
         system = models.System.objects.get(pk=system_id)
-        # API deletions used here to prevent cascade delete loop issues 
+        # API deletions used here to prevent cascade delete loop issues
         # that occur via diffs combined with latest_survey association
         matching_surveys = survey_models.Survey.objects.filter(
             system=system
@@ -329,7 +329,7 @@ class SystemManager(basemanager.BaseManager):
         ManagementInterfaces.management_interface = models.Cache.all(
             models.ManagementInterface)
         return ManagementInterfaces
-    
+
     @exposed
     def updateManagementInterface(self, management_interface):
         """Update a management interface"""
@@ -351,14 +351,14 @@ class SystemManager(basemanager.BaseManager):
         ManagementNodes = models.ManagementNodes()
         ManagementNodes.management_node = list(models.ManagementNode.objects.all())
         return ManagementNodes
-    
+
     @exposed
     def addManagementNode(self, managementNode):
         """Add a management node to the inventory"""
-        
+
         if not managementNode:
             return
-        
+
         managementNode.save()
 
         self.setSystemState(managementNode)
@@ -388,11 +388,11 @@ class SystemManager(basemanager.BaseManager):
         zone = self.getZone(zone_id)
         managementNode = models.ManagementNode.objects.get(zone=zone, pk=management_node_id)
         return managementNode
-    
+
     @exposed
     def addManagementNodeForZone(self, zone_id, managementNode):
         """Add a management node to the inventory"""
-        
+
         if not managementNode:
             return
 
@@ -421,7 +421,7 @@ class SystemManager(basemanager.BaseManager):
         SystemTypes = models.SystemTypes()
         SystemTypes.system_type = list(models.SystemType.objects.all())
         return SystemTypes
-    
+
     @exposed
     def updateSystemType(self, system_type):
         """Update a system type"""
@@ -431,14 +431,14 @@ class SystemManager(basemanager.BaseManager):
 
         system_type.save()
         return system_type
-    
+
     @exposed
     def getSystemTypeSystems(self, system_type_id):
         system_type = self.getSystemType(system_type_id)
         Systems = models.Systems()
         Systems.system = system_type.systems.all()
         return Systems
-    
+
     @exposed
     def getWindowsBuildServiceSystemType(self):
         "Return the zone for this rBuilder"
@@ -469,7 +469,7 @@ class SystemManager(basemanager.BaseManager):
             nodes = systems and systems.system or []
         except ObjectDoesNotExist:
             pass
-        
+
         return nodes
 
     @exposed
@@ -500,7 +500,7 @@ class SystemManager(basemanager.BaseManager):
         network.dns_name = network_address
         network.system = system
         network.save()
-        
+
         return system
 
     @exposed
@@ -735,7 +735,7 @@ class SystemManager(basemanager.BaseManager):
             # Already registered and no need to re-synchronize, if the
             # old state was online, and the new state is registered, we must
             # be coming in through rpath-tools, so preserve the online state.
-            elif (system.oldModel is not None and 
+            elif (system.oldModel is not None and
                     system.oldModel.current_state.system_state_id == \
                     onlineState.system_state_id and
                     system.current_state_id == \
@@ -763,7 +763,7 @@ class SystemManager(basemanager.BaseManager):
         # with lots of system activity
         self.mgr.invalidateQuerySetsByType('system')
 
-        
+
     def generateSystemCertificates(self, system):
         if system._ssl_client_certificate is not None and \
                 system._ssl_client_key is not None:
@@ -1244,7 +1244,7 @@ class SystemManager(basemanager.BaseManager):
                     systemCreds = {}
                 else:
                     systemCreds = self.unmarshalCredentials(system.credentials)
-            else: 
+            else:
                 systemCreds = dict(
                     ssl_client_certificate=system._ssl_client_certificate,
                     ssl_client_key=system._ssl_client_key)
@@ -1279,7 +1279,7 @@ class SystemManager(basemanager.BaseManager):
     def getSystemConfigurationDescriptor(self, system_id):
         system = models.System.objects.get(pk=system_id)
         rc =  self.mgr.getConfigurationDescriptor(system)
-        return rc    
+        return rc
 
     @exposed
     def getSystemConfiguration(self, system_id):
@@ -1296,10 +1296,6 @@ class SystemManager(basemanager.BaseManager):
         system.configuration_applied = False
         system.save()
         return system.configuration
-
-    # FIXME: OBSOLETE with new config stuff, REMOVE
-    def applySystemConfiguration(self):    
-        self.scheduleSystemConfigurationEvent()
 
     @classmethod
     def unmarshalConfiguration(cls, configString):
@@ -1344,10 +1340,10 @@ class SystemManager(basemanager.BaseManager):
     @exposed
     def addSystemSystemEvent(self, system_id, systemEvent):
         """Add a system event to a system"""
-        
+
         if not system_id or not systemEvent:
             return
-        
+
         system = models.System.objects.get(pk=system_id)
 
         # If this systemEvent requires that a management interface be set on
@@ -1356,7 +1352,7 @@ class SystemManager(basemanager.BaseManager):
         if systemEvent.event_type.requiresManagementInterface:
             if not system.management_interface:
                 if self.getSystemHasHostInfo(system):
-                    return self.scheduleSystemDetectMgmtInterfaceEvent(system) 
+                    return self.scheduleSystemDetectMgmtInterfaceEvent(system)
                 else:
                     log.info("Event cannot be created for system id %s '%s' "
                         "because there is no host information" % \
@@ -1368,21 +1364,21 @@ class SystemManager(basemanager.BaseManager):
 
         systemEvent.system = system
         systemEvent.save()
-        
+
         enable_time = None
         if systemEvent.dispatchImmediately():
             enable_time = self.now()
         else:
             enable_time = self.now() + timeutils.timedelta(minutes=self.cfg.systemEventsPollDelay)
-            
+
         self.logSystemEvent(systemEvent, enable_time)
-        
+
         if systemEvent.dispatchImmediately():
             self.dispatchSystemEvent(systemEvent)
-        
+
         return systemEvent
-    
-    def getSystemEventsForProcessing(self):        
+
+    def getSystemEventsForProcessing(self):
         events = None
         try:
             # get events in order based on whether or not they are enabled and what their priority is (descending)
@@ -1390,7 +1386,7 @@ class SystemManager(basemanager.BaseManager):
             events = models.SystemEvent.objects.filter(time_enabled__lte=current_time).order_by('-priority')[0:self.cfg.systemEventsNumToProcess].all()
         except models.SystemEvent.DoesNotExist:
             pass
-        
+
         return events
 
     @exposed
@@ -1408,7 +1404,7 @@ class SystemManager(basemanager.BaseManager):
                 pass
 
     def checkEventCompatibility(self, event):
-        runningJobs = event.system.jobs.filter(job_state__name=jobmodels.JobState.RUNNING) 
+        runningJobs = event.system.jobs.filter(job_state__name=jobmodels.JobState.RUNNING)
         runningEventTypes = [j.job_type.name for j in runningJobs]
 
         # Event types are incompatible with themselves
@@ -1436,7 +1432,7 @@ class SystemManager(basemanager.BaseManager):
                 raise
 
         log.info("Dispatching %s event (id %d, enabled %s) for system %s (id %d)" % \
-            (event.event_type.name, event.system_event_id, event.time_enabled, 
+            (event.event_type.name, event.system_event_id, event.time_enabled,
             event.system.name, event.system.system_id))
 
         try:
@@ -1623,7 +1619,7 @@ class SystemManager(basemanager.BaseManager):
                 return 99999   # SSH comes last
             else:
                 return x['port']
-            
+
         interfacesList.sort(key=lambda x: interfaceSorter(x))
         params = repClient.ManagementInterfaceParams(host=destination,
             interfacesList=interfacesList)
@@ -1809,7 +1805,7 @@ class SystemManager(basemanager.BaseManager):
                 event_data=pickledData)
             event.save()
             self.logSystemEvent(event, enableTime)
-                
+
             if event.dispatchImmediately():
                 self.dispatchSystemEvent(event)
         else:
@@ -1828,7 +1824,7 @@ class SystemManager(basemanager.BaseManager):
         msg = "Event type '%s' registered and will be enabled on %s" % (event.event_type.name, enable_time)
         self.log_system(event.system, msg)
         log.info(msg)
-        
+
     def getSystemHasHostInfo(self, system):
         hasInfo = False
         if system and system.networks:
@@ -1836,7 +1832,7 @@ class SystemManager(basemanager.BaseManager):
                 if network.ip_address or network.ipv6_address or network.dns_name:
                     hasInfo = True
                     break
-                
+
         return hasInfo
 
     def _iterTargetUserCredentials(self):
@@ -2064,7 +2060,7 @@ class SystemManager(basemanager.BaseManager):
             # function.
         else:
             raise Exception("action dispatch not yet supported on job type: %s" % job.job_type.name)
-        
+
         if event is None:
             # this can happen if the event preconditions are not met and the exception
             # gets caught somewhere up the chain (which we should fix)
