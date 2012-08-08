@@ -412,7 +412,6 @@ releases_by_project_get_xml = \
         <release id="http://testserver/api/v1/releases/1"/>
         <image_count>1</image_count>
         <job_uuid>1</job_uuid>
-        <upload_files id="http://testserver/api/v1/images/2/upload_files"/>
       </image>
     </images>
     <time_mirrored></time_mirrored>
@@ -488,7 +487,6 @@ releases_by_project_get_xml = \
         <release id="http://testserver/api/v1/releases/2"/>
         <image_count>1</image_count>
         <job_uuid>1</job_uuid>
-        <upload_files id="http://testserver/api/v1/images/3/upload_files"/>
       </image>
     </images>
     <time_mirrored></time_mirrored>
@@ -611,7 +609,6 @@ published_release_xml = \
       <release id="http://testserver/api/v1/releases/1"/>
       <image_count>1</image_count>
       <job_uuid>1</job_uuid>
-      <upload_files id="http://testserver/api/v1/images/2/upload_files"/>
     </image>
   </images>
   <time_mirrored>2011-11-10 18:37:03.871925+00:00</time_mirrored>
@@ -679,7 +676,6 @@ image_by_release_get_xml = \
     <image_count>1</image_count>
     <job_uuid>1</job_uuid>
     <jobs id="http://testserver/api/v1/images/2/jobs"/>
-    <upload_files id="http://testserver/api/v1/images/2/upload_files"/>
   </image>
 </images>
 """.strip()
@@ -769,7 +765,6 @@ image_by_release_post_result_xml = \
   <release id="http://testserver/api/v1/releases/1"/>
   <image_count>1</image_count>
   <job_uuid>1</job_uuid>
-  <upload_files id="http://testserver/api/v1/images/4/upload_files"/>
 </image>
 """.strip()
 
@@ -827,7 +822,6 @@ test_get_images_from_pbs_xml = \
     <release></release>
     <image_count>0</image_count>
     <job_uuid></job_uuid>
-    <upload_files id="http://testserver/api/v1/images/1/upload_files"/>
   </image>
   <image id="http://testserver/api/v1/images/2">
     <files/>
@@ -876,7 +870,6 @@ test_get_images_from_pbs_xml = \
     <release></release>
     <image_count>0</image_count>
     <job_uuid></job_uuid>
-    <upload_files id="http://testserver/api/v1/images/2/upload_files"/>
   </image>
 </images>
 """.strip()
