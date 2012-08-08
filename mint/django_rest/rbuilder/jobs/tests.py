@@ -168,9 +168,9 @@ class Jobs2TestCase(BaseJobsTest):
             [models.JobState.RUNNING, models.JobState.COMPLETED])
 
         self.failUnlessEqual([ int(x.status_code) for x in jobs ],
-            [101, 299])
+            [100, 299])
         self.failUnlessEqual([ x.status_text for x in jobs ],
-            ["text 101", "text 299"])
+            ["Initializing", "text 299"])
 
 class JobCreationTest(BaseJobsTest, RepeaterMixIn):
     def _mock(self):
