@@ -1205,7 +1205,7 @@ class JobHandlerRegistry(HandlerRegistry):
 
         __slots__ = [ 'system', 'eventUuid' ]
         jobType = models.EventType.SYSTEM_CONFIGURE
-        ResultsTag = 'configuration'
+        ResultsTag = 'system'
 
         def getDescriptor(self, descriptorId):
 
@@ -1259,3 +1259,9 @@ class JobHandlerRegistry(HandlerRegistry):
         def postCreateJob(self, job):
             # self.mgr.mgr.configureSystem(self.system, job)
             pass
+
+        def _processJobResults(self, job):
+            # Configuration jobs presently have no real result but return a
+            # system with just UUIDs in it. Just return the current system
+            # object.
+            return job.systems.all()[0].system
