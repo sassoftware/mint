@@ -122,7 +122,7 @@ class ProjectManager(basemanager.BaseManager):
         # legacy permissions system
         # Add current user as project owner
         if for_user:
-            member = models.Member(project=project, user=for_user, 
+            member = models.Member(project=project, user=for_user,
                 level=userlevels.OWNER)
             member.save()
 
@@ -224,7 +224,7 @@ class ProjectManager(basemanager.BaseManager):
             # If old level is the same, nothing to do
             if level == oldMember.level:
                 return user
-            
+
             # Can not demote the last owner
             allOwners = project.member.filter(level=userlevels.OWNER)
             if len(allOwners) == 1 and oldMember.level == userlevels.OWNER:
@@ -240,7 +240,7 @@ class ProjectManager(basemanager.BaseManager):
                     user.userid, project.project_id, oldMember.level, level)
         else:
             # Add membership
-            member = models.Project.member(project=project, user=user, 
+            member = models.Project.member(project=project, user=user,
                 level=level)
             member.save()
 
@@ -297,7 +297,10 @@ class ProjectManager(basemanager.BaseManager):
         # here so the project is not be created before this error occurs
         if projects.validLabel.match(projectVersion.label) == None:
             raise mint_error.InvalidLabel(projectVersion.label)
-        
+
+        if not projectVersion.name.isalnum():
+            raise mint_error.InvalidError(msg="branch name (%s) must be alpha-numeric" % projectVersion.name)
+
         projectVersion.created_by = forUser
         projectVersion.modified_by = forUser
 
@@ -333,7 +336,7 @@ class ProjectManager(basemanager.BaseManager):
         projectVersion.created_date = tnow
         projectVersion.modified_date = tnow
         projectVersion.save()
-        
+
         # get newly crated stages and assign ownership info
         # these are created as a side effect
         new_stages = models.Stage.objects.filter(
@@ -452,7 +455,7 @@ class ProjectManager(basemanager.BaseManager):
             project_branch__label=project_branch_label,
             name=stage_name)
         return stage
-        
+
     @exposed
     def getProjectAllBranchStages(self, project_short_name):
         stages = models.Stages()
@@ -514,7 +517,7 @@ class ProjectManager(basemanager.BaseManager):
     @exposed
     def getRelease(self, release_id):
         return models.Release.objects.get(pk=release_id)
-        
+
     @exposed
     def updateProjectBranchStage(self, project_short_name, project_branch_label, stage_name, stage):
         # if ever implemented be sure to update modified_by/modified_date
@@ -531,10 +534,10 @@ class ProjectManager(basemanager.BaseManager):
     def publishRelease(self, release, publishedBy):
         releaseId = release.release_id
         userId = publishedBy.user_id
-            
+
         if int(release.num_images) == 0:
             raise mint_error.PublishedReleaseEmpty
-  
+
         if self.isReleasePublished(releaseId):
             raise mint_error.PublishedReleasePublished
 
@@ -550,7 +553,7 @@ class ProjectManager(basemanager.BaseManager):
         release.time_published = None
         release.published_by = None
         release.should_mirror = 0
-        
+
     @exposed
     def createRelease(self, release, creatingUser, project=None):
         if project is not None:
@@ -559,7 +562,7 @@ class ProjectManager(basemanager.BaseManager):
         release.time_created = time.time()
         release.save()
         return release
-        
+
     @exposed
     def updateRelease(self, release, updatedBy):
         if release.published is u'True':
@@ -572,14 +575,14 @@ class ProjectManager(basemanager.BaseManager):
             release.time_mirrored = time.time()
         release.save()
         return release
-        
+
     @exposed
     def addImageToRelease(self, release_id, image):
         if image.release and release_id != image.release.release_id:
             raise mint_error.BuildPublished()
         release = projectsmodels.Release.objects.get(pk=release_id)
         image.release = release
-        
+
         # FIXME: is this still needed?
         # if (image.image_type not in ('amiImage', 'imageless')
         #         and not image.files.files):
