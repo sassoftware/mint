@@ -921,11 +921,11 @@ class SystemManager(basemanager.BaseManager):
                     return None
 
                 if system.management_interface_id == wmiIfaceId:
-                    if system.credentials and system.hasSourceImage():
-                        # Ready to migrate after a layered image deployment.
-                        trove, _ = self._getTrovesForLayeredImage(system)
-                        self.scheduleSystemApplyUpdateEvent(system, [trove])
-                    elif not system.credentials:
+                    # windows layered images not supported
+                    # could spawn an update job here if we wanted
+                    #if system.credentials and system.hasSourceImage():
+                    #    pass
+                    if not system.credentials:
                         # No credentials avaiable, prompt the user for them.
                         return models.SystemState.UNMANAGED_CREDENTIALS_REQUIRED
                 self.scheduleSystemRegistrationNowEvent(system)
@@ -1732,15 +1732,6 @@ class SystemManager(basemanager.BaseManager):
         return self._scheduleEvent(system,
             jobmodels.EventType.SYSTEM_REGISTRATION_IMMEDIATE,
             enableTime=self.now())
-
-    @exposed
-    def scheduleSystemApplyUpdateEvent(self, system, sources):
-        '''Schedule an event for the system to be updated'''
-        # FIXME: verify that this function creates something that is usable by new-style update
-        # code.   Is event data correct?
-        return self._scheduleEvent(system,
-            jobmodels.EventType.SYSTEM_UPDATE,
-            eventData=sources)
 
     @exposed
     def scheduleSystemShutdownEvent(self, system):
