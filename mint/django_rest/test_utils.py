@@ -160,6 +160,7 @@ class XMLTestCase(TestCase, testcase.MockMixIn):
 """)
         cfg.metadataDescriptorPath = metadataDescriptorFile
         cfg.imagesPath = os.path.join(self.workDir, 'finished-images')
+        cfg.moduleHooksDir = os.path.join(self.workDir, 'module-hooks')
         return cfg
 
     def setUp(self):

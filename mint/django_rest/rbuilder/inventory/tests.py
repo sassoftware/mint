@@ -4574,8 +4574,26 @@ class ModuleHooksTest(XMLTestCase):
     it seems to work, minus the testsuite being run.
     """
     def testGetModuleHooks(self):
+        moduleHooksDir = self.mintCfg.moduleHooksDir
+        os.makedirs(self.mintCfg.moduleHooksDir)
+        # Some extensions
+        for i in range(5):
+            file(os.path.join(moduleHooksDir, 'file-%d.swf' % i), "w")
+        # Some dummy files
+        for i in range(3):
+            file(os.path.join(moduleHooksDir, 'file-%d.blah' % i), "w")
+
         response = self._get("module_hooks",
             username="testuser", password="password")
         self.failUnlessEqual(response.status_code, 200)
         obj = xobj.parse(response.content)
-        self.failUnlessEqual(obj.module_hooks.count, "9")
+        self.failUnlessEqual(int(obj.module_hooks.count), 5)
+        self.failUnlessEqual(
+            sorted(x.url for x in obj.module_hooks.module_hook),
+                [
+                    'hooks/file-0.swf',
+                    'hooks/file-1.swf',
+                    'hooks/file-2.swf',
+                    'hooks/file-3.swf',
+                    'hooks/file-4.swf',
+                ])

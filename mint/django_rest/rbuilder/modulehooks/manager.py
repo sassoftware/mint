@@ -19,8 +19,8 @@ class ModuleHooksManager(basemanager.BaseManager):
         ModuleHooks = modulehooksModels.ModuleHooks()
         ModuleHooks.module_hook = []
         for path, dirs, files in os.walk(self.mgr.cfg.moduleHooksDir):
-            for file in [filename for filename in files]:
+            for filename in files:
                 if fnmatch.fnmatch(filename, self.mgr.cfg.moduleHooksExt):
-                    joined = os.path.join('hooks', file)
+                    joined = os.path.join('hooks', filename)
                     ModuleHooks.module_hook.append(modulehooksModels.ModuleHook(url=joined))
         return ModuleHooks
