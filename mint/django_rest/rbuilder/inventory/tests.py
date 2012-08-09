@@ -2258,14 +2258,14 @@ class SystemsTestCase(XMLTestCase):
             username="admin", password="password")
         self.assertEquals(response.status_code, 200)
         self.assertXMLEquals(response.content, 
-            testsxml.configuration_post_resp_xml)
+            testsxml.configuration_post_xml)
 
         response = self._get('inventory/systems/%s/configuration' % \
             system.pk,
             username="admin", password="password")
         self.assertEquals(response.status_code, 200)
         self.assertXMLEquals(response.content, 
-            testsxml.configuration_post_resp_xml)
+            testsxml.configuration_post_xml)
 
         response = self._put('inventory/systems/%s/configuration' % \
             system.pk,
@@ -2273,7 +2273,7 @@ class SystemsTestCase(XMLTestCase):
             username="admin", password="password")
         self.assertEquals(response.status_code, 200)
         self.assertXMLEquals(response.content, 
-            testsxml.configuration_put_resp_xml)
+            testsxml.configuration_put_xml)
     
         # now also test the configuration job
         # test failing because of no network interface... 
@@ -2915,14 +2915,25 @@ class SystemsTestCase(XMLTestCase):
         self.assertXMLEquals(creds.to_xml(),
             '<credentials id="/api/v1/inventory/systems/%s/credentials"/>' %
                 system.pk)
-        
+
+    def testGetConfiguration(self):
+        system = self.newSystem(name="blah")
+        system.configuration = configuration = "<configuration><a>a</a><b>b</b></configuration>"
+        system.save()
+        url = "inventory/systems/%s/configuration" % system.pk
+        response = self._get(url,
+            username="admin", password="password")
+        self.assertEquals(response.status_code, 200)
+        self.assertXMLEquals(response.content, configuration)
+
+        config = self.mgr.getSystemConfiguration(system.pk)
+        self.assertXMLEquals(config, configuration)
+
     def testGetConfigurationWhenMissing(self):
         system = self.newSystem(name="blah")
         system.save()
         config = self.mgr.getSystemConfiguration(system.pk)
-        self.assertXMLEquals(config.to_xml(),
-            '<configuration id="/api/v1/inventory/systems/%s/configuration"/>' %
-                system.pk)
+        self.assertXMLEquals(config, '<configuration/>')
 
     def testMarkSystemShutdown(self):
         p = dict(local_uuid="abc", generated_uuid="def")

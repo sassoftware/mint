@@ -1082,6 +1082,8 @@ systems_xml = """\
       <system_state_id>1</system_state_id>
     </current_state>
     <description>Local rPath Update Service</description>
+    <desired_top_level_items/>
+    <observed_top_level_items/>
     <generated_uuid/>
     <has_active_jobs>false</has_active_jobs>
     <has_running_jobs>false</has_running_jobs>
@@ -1191,6 +1193,8 @@ systems_xml = """\
       <system_state_id>3</system_state_id>
     </current_state>
     <description>testsystemdescription</description>
+    <desired_top_level_items/>
+    <observed_top_level_items/>
     <generated_uuid>testsystemgenerateduuid</generated_uuid>
     <has_active_jobs>false</has_active_jobs>
     <has_running_jobs>false</has_running_jobs>
@@ -1440,6 +1444,8 @@ system_xml = """\
     <queued_jobs id="http://testserver/api/v1/inventory/systems/3/job_states/1/jobs"/>
     <running_jobs id="http://testserver/api/v1/inventory/systems/3/job_states/2/jobs"/>
   </jobs>
+  <desired_top_level_items/>
+  <observed_top_level_items/>
   <out_of_date>false</out_of_date>
   <registration_date/>
   <generated_uuid>testsystemgenerateduuid</generated_uuid>
@@ -1828,6 +1834,8 @@ system_target_xml = """\
   <credentials id="http://testserver/api/v1/inventory/systems/3/credentials"/>
   <configuration id="http://testserver/api/v1/inventory/systems/3/configuration"/>
   <configuration_descriptor id="http://testserver/api/v1/inventory/systems/3/configuration_descriptor"/>
+  <desired_top_level_items/>
+  <observed_top_level_items/>
   <system_events id="http://testserver/api/v1/inventory/systems/3/system_events"/>
   <out_of_date>false</out_of_date>
   <registration_date/>
@@ -2411,23 +2419,9 @@ configuration_post_xml = """\
 </configuration>
 """
 
-configuration_post_resp_xml = """\
-<?xml version="1.0"?>
-<configuration id="http://testserver/api/v1/inventory/systems/3/configuration">
-  <http_port>89</http_port>
-</configuration>
-"""
-
 configuration_put_xml = """\
 <?xml version="1.0"?>
 <configuration>
-  <http_port>890</http_port>
-</configuration>
-"""
-
-configuration_put_resp_xml = """\
-<?xml version="1.0"?>
-<configuration id="http://testserver/api/v1/inventory/systems/3/configuration">
   <http_port>890</http_port>
 </configuration>
 """
