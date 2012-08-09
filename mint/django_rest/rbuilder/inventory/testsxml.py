@@ -428,6 +428,7 @@ system_type_systems_xml="""
       <system_state_id>3</system_state_id>
     </current_state>
     <description>testsystemdescription</description>
+    <desired_top_level_items/>
     <generated_uuid>testsystemgenerateduuid</generated_uuid>
     <has_active_jobs>false</has_active_jobs>
     <has_running_jobs>false</has_running_jobs>
@@ -462,6 +463,7 @@ system_type_systems_xml="""
         <pinned/>
       </network>
     </networks>
+    <observed_top_level_items/>
     <out_of_date>false</out_of_date>
     <registration_date/>
     <ssl_client_certificate>testsystemsslclientcertificate</ssl_client_certificate>
