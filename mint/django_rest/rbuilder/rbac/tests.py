@@ -23,7 +23,7 @@ class RbacTestCase(XMLTestCase):
         self._createQuerysets()
 
     def _createQuerysets(self):
-        ''' 
+        '''
         create some simple querysets to be used by all tests in common.
         more robust queryset testing exists in the queryset test cases
         '''
@@ -43,20 +43,20 @@ class RbacTestCase(XMLTestCase):
             name='lab')
         self.sys_queryset          = querymodels.QuerySet.objects.get(
             name='All Systems'
-        )       
+        )
         self.user_queryset         = querymodels.QuerySet.objects.get(
             name='All Users'
-        )       
+        )
         self.projects_queryset     = querymodels.QuerySet.objects.get(
             name='All Projects')
         self.images_queryset     = querymodels.QuerySet.objects.get(
             name='All Images')
         self.targets_queryset     = querymodels.QuerySet.objects.get(
             name='All Targets')
- 
+
         self.test_querysets = [
-            self.tradingfloor_queryset, 
-            self.datacenter_queryset, 
+            self.tradingfloor_queryset,
+            self.datacenter_queryset,
             self.lab_queryset,
         ]
 
@@ -81,10 +81,10 @@ class RbacTestCase(XMLTestCase):
         self.req('query_sets/%s/chosen/' % self.datacenter_queryset.pk,
              method='POST', expect=200, is_admin=True,
             data=self.datacenter_system.to_xml())
-        self.req('query_sets/%s/chosen/' % self.lab_queryset.pk, 
+        self.req('query_sets/%s/chosen/' % self.lab_queryset.pk,
             method='POST', expect=200, is_admin=True,
             data=self.lab_system.to_xml())
-        self.req('query_sets/%s/chosen/' % self.tradingfloor_queryset.pk, 
+        self.req('query_sets/%s/chosen/' % self.tradingfloor_queryset.pk,
             method='POST', expect=200, is_admin=True,
             data=self.tradingfloor_system.to_xml())
 
@@ -121,14 +121,14 @@ class RbacTestCase(XMLTestCase):
            'DELETE' : self._delete,
            'PUT'    : self._put
         }
-        
+
         if is_admin:
              response = method_map[method](url, username="admin", password="password", **kwargs)
         elif is_authenticated:
              response = method_map[method](url, username="testuser", password="password", **kwargs)
         else:
             response = method_map[method](url, **kwargs)
-        self.failUnlessEqual(response.status_code, expect, "Expected status code of %s for %s" % (expect, url))
+        self.failUnlessEqual(response.status_code, expect, "Expected status code of %s for %s:\n%s" % (expect, url, response.content))
         return response.content
 
 class RbacBasicTestCase(RbacTestCase):
@@ -199,7 +199,7 @@ class RbacBasicTestCase(RbacTestCase):
 
     def testModelsForUserRoleAssignment(self):
         # note -- we may also keep roles in AD, this is for the case
-        # where we sync them or manage them internally.  This will 
+        # where we sync them or manage them internally.  This will
         # probably need to be configurable
         user1 = usersmodels.User(
             user_name = "test",
@@ -220,7 +220,7 @@ class RbacBasicTestCase(RbacTestCase):
             modified_by=usersmodels.User.objects.get(user_name='admin'),
             created_date=timeutils.now(),
             modified_date=timeutils.now()
-        ) 
+        )
         mapping.save()
         mappings2  = models.RbacUserRole.objects.filter(
             user = user1,
@@ -242,7 +242,7 @@ class RbacRoleViews(RbacTestCase):
                 created_by=usersmodels.User.objects.get(user_name='admin'),
                 modified_by=usersmodels.User.objects.get(user_name='admin'),
             ).save()
-       
+
     def testCanListRoles(self):
 
         url = 'rbac/roles'
@@ -251,7 +251,7 @@ class RbacRoleViews(RbacTestCase):
 
         obj = xobj.parse(content)
         found_items = self._xobj_list_hack(obj.roles.role)
-        found_items = [ item.name for item in found_items ] 
+        found_items = [ item.name for item in found_items ]
         for expected in self.seed_data:
             self.assertTrue(expected in found_items, 'found item')
 
@@ -279,10 +279,10 @@ class RbacRoleViews(RbacTestCase):
         # now run the queryset to give it a tagged date
         self.req("query_sets/%s/all" % qs.pk, method='GET', is_admin=True)
         qs = querymodels.QuerySet.objects.get(name='All Roles')
-        self.assertTrue(qs.tagged_date is not None)    
-        # add the role and verify we returned a filled in role    
+        self.assertTrue(qs.tagged_date is not None)
+        # add the role and verify we returned a filled in role
         url = 'rbac/roles'
-        input = testsxml.role_post_xml_input   
+        input = testsxml.role_post_xml_input
         output = testsxml.role_post_xml_output
         content = self.req(url, method='POST', data=input, expect=403, is_authenticated=True)
         content = self.req(url, method='POST', data=input, expect=200, is_admin=True)
@@ -302,7 +302,7 @@ class RbacRoleViews(RbacTestCase):
             lambda: models.RbacRole.objects.get(name='intern'))
 
     def testCanUpdateRoles(self):
-        
+
         url = 'rbac/roles/2' # was 1, 2 == sysadmin?
         input = testsxml.role_put_xml_input   # reusing put data is fine here
         output = testsxml.role_put_xml_output
@@ -316,7 +316,7 @@ class RbacRoleViews(RbacTestCase):
         self.assertXMLEquals(content, output)
 
 class RbacPermissionViews(RbacTestCase):
-    
+
     def setUp(self):
         RbacTestCase.setUp(self)
 
@@ -348,7 +348,7 @@ class RbacPermissionViews(RbacTestCase):
             created_date  = timeutils.now(),
             modified_date = timeutils.now()
         ).save()
-       
+
         for permission in [ MODMEMBERS, CREATERESOURCE ] :
             models.RbacPermission(
                 queryset       = self.lab_queryset,
@@ -406,7 +406,7 @@ class RbacPermissionViews(RbacTestCase):
         self.assertXMLEquals(content, output)
 
     def testCanDeletePermissions(self):
-       
+
         all = models.RbacPermission.objects.all()
         url = 'rbac/grants/1'
         self.req(url, method='DELETE', expect=403, is_authenticated=True)
@@ -415,7 +415,7 @@ class RbacPermissionViews(RbacTestCase):
         self.assertEqual(len(all), 28, 'deleted an object')
 
     def testCanUpdatePermissions(self):
-        
+
         url = 'rbac/grants/1'
         input = testsxml.permission_put_xml_input
         output = testsxml.permission_put_xml_output
@@ -443,7 +443,7 @@ class RbacUserRoleViewTests(RbacTestCase):
                 created_by=usersmodels.User.objects.get(user_name='admin'),
                 modified_by=usersmodels.User.objects.get(user_name='admin')
             ).save()
-            
+
         self.sysadmin   = models.RbacRole.objects.get(name='sysadmin')
         self.developer  = models.RbacRole.objects.get(name='developer')
         self.intern     = models.RbacRole.objects.get(name='intern')
@@ -471,7 +471,7 @@ class RbacUserRoleViewTests(RbacTestCase):
             modified_by=self.admin_user
         ).save()
 
-      
+
     def testCanListUserRoles(self):
         user_id = self.admin_user.pk
         url = "users/%s/roles/" % user_id
@@ -483,10 +483,10 @@ class RbacUserRoleViewTests(RbacTestCase):
         self.assertXMLEquals(content, testsxml.user_role_list_xml)
 
     def testCanGetSingleUserRole(self):
-        # this is admittedly a rather useless function, which only 
-        # confirms/denies where a user is in a role.  More likely 
-        # we'd ask if they had permission to do something, and more 
-        # as an internals thing than a REST function.  Still, here, 
+        # this is admittedly a rather useless function, which only
+        # confirms/denies where a user is in a role.  More likely
+        # we'd ask if they had permission to do something, and more
+        # as an internals thing than a REST function.  Still, here,
         # for completeness.
 
         user_id = self.admin_user.pk
@@ -497,7 +497,7 @@ class RbacUserRoleViewTests(RbacTestCase):
         # now verify if the role isn't assigned to the user, we can't fetch it
         url = "users/%s/roles/intern" % user_id
         content = self.req(url, method='GET', expect=404, is_admin=True)
-          
+
     def testCanAddUserRoles(self):
         user_id = self.admin_user.pk
         url = "users/%s/roles/" % user_id
@@ -518,7 +518,7 @@ class RbacUserRoleViewTests(RbacTestCase):
         self.assertXMLEquals(content, testsxml.users_in_role_xml)
 
     # temporarily disabled until test can be adapted to new IDs
-    # 
+    #
     #def testCanDeleteUserRoles(self):
     #    user_id = self.admin_user.pk
     #    url = "users/%s/roles/1" % user_id # developer role
@@ -559,7 +559,7 @@ def setup_core(self):
     def mk_user(name, is_admin, role):
 
         xml = testsxml.user_post_xml % (
-            name, name, is_admin 
+            name, name, is_admin
         )
         # admins must register admins
         response = self._post('users/',
@@ -638,9 +638,9 @@ class RbacEngineTests(RbacEngine):
         # this tests the decorator in rbac_auth.py
         # disabling until error codes are appropriate
 
-        urls = [ 
+        urls = [
             "inventory/systems/%s" % self.datacenter_system.pk,
-        ] 
+        ]
 
         for url in urls:
             # sysadmin can get in
@@ -650,13 +650,13 @@ class RbacEngineTests(RbacEngine):
             )
             self.assertEquals(response.status_code, 200, "authorized get on %s" % url)
             self.assertTrue(response.content.find("<system") != -1)
-        
+
             # intern can't get in
             response = self._get(url,
                 username=self.intern_user.user_name,
                 password='password',
             )
-            
+
             self.assertEquals(response.status_code, 403, "unauthorized get on %s" % url)
             self.assertTrue(response.content.find("<system") == -1)
 
@@ -699,7 +699,7 @@ class RbacEngineTests(RbacEngine):
         self.assertEquals(len(results), len(actual_qs), 'admin gets full queryset results')
 
         # syadmin user can only see some query sets -- those which he has Read Set
-        # on and those marked 'public'   
+        # on and those marked 'public'
         response = self._get(url,
                username=self.sysadmin_user.user_name,
                password='password'
@@ -708,7 +708,7 @@ class RbacEngineTests(RbacEngine):
         xobj_querysets = xobj.parse(response.content)
         results = xobj_querysets.query_sets.query_set
         self.assertEquals(len(results), 12, 'sysadmin user gets fewer results')
- 
+
         # sysadmin user CAN see & use the all systems queryset
         # because he has permissions on it
         response = self._get("query_sets/%s" % self.sys_queryset.pk,
@@ -729,7 +729,7 @@ class RbacEngineTests(RbacEngine):
             password='password'
         )
         self.assertEquals(response.status_code, 200)
- 
+
         # intern user can't see or use the datacenter query set
         # because he hasn't been given permissions on it, but he can
         # see all systems -- it is public
@@ -743,20 +743,20 @@ class RbacEngineTests(RbacEngine):
             password='password'
         )
         self.assertEquals(response.status_code, 403)
-        
+
         # is allowed to get in because ANYBODY can access to try the set
-        # but because no permissions are to be matched there should be 
+        # but because no permissions are to be matched there should be
         # size zero results
 
         response = self._get("query_sets/%s/all" % self.sys_queryset.pk,
             username=self.intern_user.user_name,
             password='password'
         )
-         
+
         self.assertEquals(response.status_code, 200)
         self.assertXMLEquals(response.content, testsxml.empty_systems_set)
 
-        # TODO: add a more complex test showing size < full but > 0 
+        # TODO: add a more complex test showing size < full but > 0
         # results.
 
         # intern user can't read info about sysadmin user
@@ -786,11 +786,11 @@ class RbacEngineTests(RbacEngine):
         self.assertEquals(response.status_code, 200)
         doc = xobj.parse(response.content)
         self.failUnlessEqual(doc.users.user.user_name, self.intern_user.user_name)
-        
+
         # sysadmin user can't see the whole user list
         # but DOES have permission to ALL USERS queryset
         # and can see the intern because of the queryset
-        # mapping 
+        # mapping
         response = self._get("users/",
             username=self.sysadmin_user.user_name,
             password='password',
@@ -806,13 +806,13 @@ class RbacEngineTests(RbacEngine):
             username=self.admin_user.user_name,
             password='password'
         )
-        self.assertEquals(response.status_code, 200) 
+        self.assertEquals(response.status_code, 200)
         response = self._get("users/%s" % self.intern_user.pk,
             username=self.sysadmin_user.user_name,
             password='password',
         )
         self.assertEquals(response.status_code, 200)
-              
+
     def testReadListOfPermissionTypes(self):
         response = self._get("rbac/permissions/")
         self.assertEquals(response.status_code, 200)
@@ -822,7 +822,7 @@ class RbacEngineTests(RbacEngine):
         response = self._get("rbac/permissions/2")
         self.assertEquals(response.status_code, 200)
         self.assertXMLEquals(response.content, testsxml.permission_type_get_xml)
- 
+
     def testWriteImpliesRead(self):
         # if you can write to something, you can read
         # even if permission isn't in DB
@@ -885,7 +885,7 @@ class MetaRbac(RbacTestCase):
         # admin users can always get in
         response = self._get(url, username="admin", password="password")
         self.assertEqual(response.status_code, 200)
- 
+
     def testCanViewUserRoles(self):
         # ExampleDeveloper can also see his roles
         user_id = self.developer_user.pk

@@ -28,10 +28,10 @@ APIReadOnly = modellib.APIReadOnly
 class Images(modellib.Collection):
     class Meta:
         abstract = True
-        
+
     list_fields = ['image']
     _xobj = xobj.XObjMetadata(tag='images', attributes={'id':str})
-    
+
     actions = D(modellib.SyntheticField('jobs.Actions'),
         "actions available on the images")
 
@@ -51,13 +51,13 @@ class BuildLogHref(modellib.HrefFieldFromModel):
 class ImageTypes(modellib.Collection):
     class Meta:
         abstract = True
-        
+
     list_fields = ['image_type']
 
 class ImageType(modellib.XObjIdModel):
     class Meta:
         abstract = True
-        
+
     _xobj = xobj.XObjMetadata(tag='image_type', attributes={'id':str})
 
     objects = models_manager.ImageTypeManager()
@@ -113,14 +113,11 @@ class Image(modellib.XObjIdModel):
     project = D(modellib.DeferredForeignKey('projects.Project', db_column='projectid',
         related_name="images", view_name="ProjectImages"), 'Project attached to the image')
     # The images need to be linked to the project branch stages and the project
-    # Until then, hide project_branch_stage. 
+    # Until then, hide project_branch_stage.
     # SERIOUSLY, THIS VALUE IS NULL BECAUSE NOTHING SETS IT, DO NOT ATTEMPT TO USE!
     project_branch_stage = modellib.XObjHidden(
         modellib.DeferredForeignKey('projects.Stage', db_column='stageid',
         related_name="images", view_name="ProjectBranchStageImages", null=True))
-    release = D(modellib.ForeignKey('projects.Release', null=True,
-        db_column='pubreleaseid', related_name="images", view_name='ProjectReleaseImages'),
-        'Release attached to the image, by default is null')
     _image_type = modellib.XObjHidden(APIReadOnly(
         models.IntegerField(db_column="buildtype")))
     image_type = modellib.SyntheticField()
@@ -164,7 +161,6 @@ class Image(modellib.XObjIdModel):
     metadata = D(modellib.SyntheticField(), "Image metadata", short="Image metadata")
     architecture = D(modellib.SyntheticField(), "Image architecture", short="Image architecture")
     trailing_version = modellib.SyntheticField()
-    released = modellib.SyntheticField()
     num_image_files = D(modellib.SyntheticField(), "Image file count", short="Image file count")
     build_log = modellib.SyntheticField()
     actions = D(modellib.SyntheticField(jobmodels.Actions),
@@ -184,11 +180,6 @@ class Image(modellib.XObjIdModel):
             tv_obj = helperfuncs.parseVersion(self.trove_version)
             if tv_obj is not None:
                 self.trailing_version = str(tv_obj.trailingRevision())
-
-        if self.release is not None:
-            self.released = True
-        else:
-            self.released = False
 
         if self.files is not None:
             self.num_image_files = len(self.files.all())
@@ -361,7 +352,7 @@ class Image(modellib.XObjIdModel):
 class BuildFiles(modellib.Collection):
     class Meta:
         abstract = True
-        
+
     _xobj = xobj.XObjMetadata(tag='files')
     list_fields = ['file']
     metadata = modellib.SyntheticField()
@@ -429,7 +420,7 @@ class BuildFilesUrlsMap(modellib.XObjModel):
     class Meta:
         db_table = 'buildfilesurlsmap'
         unique_together = ('file', 'url')
-    
+
     build_files_urls_map_id = models.AutoField(primary_key=True, db_column='buildfilesurlsmapid')
     file = models.ForeignKey(BuildFile, null=False, db_column='fileid',
         related_name='urls_map')
@@ -468,4 +459,4 @@ for mod_obj in sys.modules[__name__].__dict__.values():
         if mod_obj._xobj.tag:
             modellib.type_map[mod_obj._xobj.tag] = mod_obj
     if hasattr(mod_obj, '_meta'):
-        modellib.type_map[mod_obj._meta.verbose_name] = mod_obj   
+        modellib.type_map[mod_obj._meta.verbose_name] = mod_obj

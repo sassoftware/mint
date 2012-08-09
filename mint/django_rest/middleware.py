@@ -39,7 +39,7 @@ except ImportError:
 
 if parse_qsl is None:
     from cgi import parse_qsl
-        
+
 RBUILDER_DEBUG_SWITCHFILE = "/srv/rbuilder/MINT_LOGGING_ENABLE"
 RBUILDER_DEBUG_LOGPATH    = "/tmp/rbuilder_debug_logging/"
 RBUILDER_DEBUG_HISTORY    = "/tmp/rbuilder_debug_logging/history.log"
@@ -69,7 +69,7 @@ class BaseMiddleware(object):
 
 class SwitchableLogMiddleware(BaseMiddleware):
     ''' base class for Request and Response LogMiddleware '''
- 
+
     def shouldLog(self):
         ''' dictates whether the middlware should log or not '''
         # create the switchfile and keep it newer than 1 hour to keep it logging
@@ -92,7 +92,7 @@ class SwitchableLogMiddleware(BaseMiddleware):
         (year, month, mday, hour, min, sec, wday, yday, is_dst) = localtime
         ymd = "%d-%02d-%02d" % (year, month, mday)
         hour = "%02d" % hour
- 
+
         filePath = os.path.join(RBUILDER_DEBUG_LOGPATH, ymd, hour)
         if not os.path.exists(filePath):
             os.makedirs(filePath)
@@ -101,7 +101,7 @@ class SwitchableLogMiddleware(BaseMiddleware):
 
     def getLogFile(self, isRequest, localtime, type="full"):
         ''' returns log file and path for storing XML debug info'''
- 
+
         filename = None
         (path, min, sec)  = self._getLogFilePath(localtime)
         minsec = "%02dm-%02ds" % (min, sec)
@@ -111,7 +111,7 @@ class SwitchableLogMiddleware(BaseMiddleware):
                 filename = os.path.join(path, "%s-%s.request_%s.log" % (minsec, counter, type))
             else:
                 filename = os.path.join(path, "%s-%s.response_%s.log" % (minsec, counter, type))
-            counter += 1   
+            counter += 1
             if not os.path.exists(filename):
                 return (open(filename, "a"), filename)
 
@@ -129,7 +129,7 @@ class SwitchableLogMiddleware(BaseMiddleware):
                 handle.write("%s: %s\n" % (k, v))
 
 class RequestLogMiddleware(SwitchableLogMiddleware):
-    ''' 
+    '''
     When sentinel file is present, log request traffic...
     '''
 
@@ -207,7 +207,7 @@ class ExceptionLoggerMiddleware(SwitchableLogMiddleware):
         doEmail=True
 
         if isinstance(exception, PermissionDenied):
-            # TODO: factor out duplication 
+            # TODO: factor out duplication
             code = 403
             fault = models.Fault(code=code, message=str(exception))
             response = HttpResponse(status=code, content_type='text/xml')
@@ -219,12 +219,12 @@ class ExceptionLoggerMiddleware(SwitchableLogMiddleware):
 
         if isinstance(exception, core_exc.ObjectDoesNotExist):
             # django not found in a get/delete is usually a bad URL
-            # in a PUT/POST, it's usually trying to insert or 
+            # in a PUT/POST, it's usually trying to insert or
             # mangle something in a way that does not align with the DB
             code=404
             if request.method not in [ 'GET', 'DELETE' ]:
                 code = 400
- 
+
             # log full details, but don't present to user, in case
             # XML submitted was rather confusing and we can't tell what
             # was not found on the lookup, which could happen
@@ -261,7 +261,7 @@ class ExceptionLoggerMiddleware(SwitchableLogMiddleware):
                     doTraceback=False, doEmail=False)
 
         if isinstance(exception, ierrors.IncompatibleEvent):
-            doEmail = False 
+            doEmail = False
 
         return handler.handleException(request, exception, doEmail=doEmail)
 
@@ -274,7 +274,7 @@ class RequestSanitizationMiddleware(BaseMiddleware):
         return None
 
 class SetMethodRequestMiddleware(BaseMiddleware):
-    
+
     def _process_request(self, request):
         # Was a '_method' directive in the query request
         if request.REQUEST.has_key('_method'):
@@ -293,7 +293,7 @@ class SetMethodRequestMiddleware(BaseMiddleware):
                 return response
 
         return None
-    
+
 class SetMintAuthMiddleware(BaseMiddleware):
     """
     Set the authentication information on the request
@@ -327,7 +327,7 @@ class SetMintAuthenticatedMiddleware(BaseMiddleware):
     def _process_request(self, request):
         request._is_authenticated = auth.isAuthenticated(request._authUser)
         return None
-       
+
 class SetMintConfigMiddleware(BaseMiddleware):
 
     def _process_request(self, request):
@@ -342,9 +342,9 @@ class SetMintConfigMiddleware(BaseMiddleware):
         return None
 
 class AddCommentsMiddleware(BaseMiddleware):
-    
+
     useXForm = True
-    
+
     def _process_response(self, request, response):
         try:
             return self._internal_process_response(request, response)
@@ -374,7 +374,7 @@ class AddCommentsMiddleware(BaseMiddleware):
             try:
                 contents = response.content.split('\n')
                 docs = '\n<!--\n' + f.read().strip() + '\n-->\n'
-                response.content = contents[0] + docs + '\n'.join(contents[1:])                
+                response.content = contents[0] + docs + '\n'.join(contents[1:])
             finally:
                 f.close()
         return response
@@ -454,8 +454,8 @@ class LocalQueryParameterMiddleware(BaseMiddleware):
         request.GET = http.QueryDict(request.params)
 
 class PerformanceMiddleware(BaseMiddleware, middleware.DebugToolbarMiddleware):
-    ''' 
-    Adds timing info to the requests, should be off all the time, makes things slower 
+    '''
+    Adds timing info to the requests, should be off all the time, makes things slower
     by doing extra serialization even if that's not reflected in metrics!
     '''
 
@@ -560,8 +560,8 @@ class AuthHeaderMiddleware(BaseMiddleware):
         if response.status_code == 401:
             response['WWW-Authenticate'] = "Basic realm=\"rBuilder\""
         return response
-      
-# NOTE: must also set DEBUG=True in settings to use this. 
+
+# NOTE: must also set DEBUG=True in settings to use this.
 class SqlLoggingMiddleware(BaseMiddleware):
     '''log each database hit to a file, profiling use only'''
     def process_response(self, request, response):
@@ -571,7 +571,7 @@ class SqlLoggingMiddleware(BaseMiddleware):
  " ".join(query['sql'].split())))
         fd.close()
         return response
- 
+
 class ApplicationOctetStreamHandlerMiddleware(BaseMiddleware):
     '''Process application/octet-stream uploads'''
     def _process_request(self, request):

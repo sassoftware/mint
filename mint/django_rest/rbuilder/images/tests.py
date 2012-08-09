@@ -62,14 +62,9 @@ class ImagesTestCase(RbacEngine):
             stage = projectsmodels.Stage(project=proj,
                 project_branch=branch, name="Release", label="foo%s@ns:trunk" % i)
             stage.save()
-            # release
-            release = projectsmodels.Release(project=proj,
-                name='release%s' % i, version='releaseVersion%s' % i, description='description%s' % i,
-                created_by=user1, updated_by=user2, published_by=user2)
-            release.save()
             # images
             image = models.Image(
-                project=proj, release=release, _image_type=10, job_uuid='1',
+                project=proj, _image_type=10, job_uuid='1',
                 name="image-%s" % i, trove_name='troveName%s' % i, trove_version='/cydonia.eng.rpath.com@rpath:cydonia-1-devel/1317221453.365:1-%d-1' % i,
                 trove_flavor='1#x86:i486:i586:i686|5#use:~!xen', created_by=user1, updated_by=user2, image_count=1,
                 output_trove=None, project_branch=branch, stage_name='stage%s' % i,
@@ -79,32 +74,32 @@ class ImagesTestCase(RbacEngine):
             buildFile = models.BuildFile(image=image, size=i, sha1='%s' % i,
                     title='foo')
             buildFile.save()
-            
+
             fileUrl = models.FileUrl(url_type=0, url='http://example.com/%s/' % i)
             fileUrl.save()
-            
+
             buildFilesUrlsMap = models.BuildFilesUrlsMap(file=buildFile, url=fileUrl)
             buildFilesUrlsMap.save()
-            
+
             buildFile = models.BuildFile(image=image, size=i+1,
                     sha1='%s' % (i + 1), title='foo')
             buildFile.save()
-        
+
             fileUrl = models.FileUrl(url_type=0, url='http://example.com/%s/' % (i + 1))
             fileUrl.save()
-        
+
             buildFilesUrlsMap = models.BuildFilesUrlsMap(file=buildFile, url=fileUrl)
             buildFilesUrlsMap.save()
-            
+
         self._setupRbac()
 
     # invalidate the querysets so tags can be applied
     def _retagQuerySets(self):
         self.mgr.retagQuerySetsByType('project')
         self.mgr.retagQuerySetsByType('image')
-            
+
     def _setupRbac(self):
- 
+
         # RbacEngine test base class has already done a decent amount of setup
         # now just add the grants for the things we are working with
 
@@ -131,19 +126,19 @@ class ImagesTestCase(RbacEngine):
         self._retagQuerySets()
 
     # def testCanListAndAccessImages(self):
-    # 
+    #
     #     # WARNING --
     #     # these are just stub tests until we can resolve what the unified
     #     # images table looks like.  We'll need real ones later that
     #     # inject items into the DB.
-    # 
+    #
     #     # once rbac for images is implemented this should redirect to a queryset
     #     # for now, it's just a stub
     #     url = 'images/'
     #     response = self._get(url, username='admin', password='password')
     #     self.assertEqual(response.status_code, 200)
     #     self.assertXMLEquals(response.content, testsxml.images_get_xml)
-    #  
+    #
     #     # also a stub
     #     url = "images/1"
     #     response = self._get(url, username='admin', password='password')
@@ -158,7 +153,7 @@ class ImagesTestCase(RbacEngine):
         # now as non-admin, should get filtered results, full contents
         response = self._get('images/', username='ExampleDeveloper', password='password')
         self.assertEquals(response.status_code, 200)
-        
+
         # now as user with no permissions, should get 0 results post redirect
         # pending redirection code change (FIXME)
         # response = self._get('images/', username='testuser', password='password')
@@ -172,27 +167,27 @@ class ImagesTestCase(RbacEngine):
         response = self._get(url, username='admin', password='password')
         self.assertEquals(response.status_code, 200)
         self.assertXMLEquals(response.content, testsxml.image_get_xml)
-        
+
         response = self._get(url, username='ExampleDeveloper', password='password')
         self.assertEquals(response.status_code, 200)
-        
+
         response = self._get(url, username='testuser', password='password')
         self.assertEquals(response.status_code, 403)
 
     def testGetImageBuildFiles(self):
         image = models.Image.objects.get(pk=1)
         url = "images/%s/build_files/" % image.pk
-        
+
         response = self._get(url, username='admin', password='password')
         self.assertEquals(response.status_code, 200)
         self.assertXMLEquals(response.content, testsxml.build_files_get_xml)
-        
+
         response = self._get(url, username='ExampleDeveloper', password='password')
         self.assertEquals(response.status_code, 200)
-        
+
         response = self._get(url, username='testuser', password='password')
         self.assertEquals(response.status_code, 403)
-        
+
     def testGetImageBuildFile(self):
         buildFile = models.BuildFile.objects.get(pk=1)
         url = "images/%s/build_files/%s/" % (buildFile.image_id, buildFile.pk)
@@ -206,7 +201,7 @@ class ImagesTestCase(RbacEngine):
 
         response = self._get(url, username='testuser', password='password')
         self.assertEquals(response.status_code, 403)
-        
+
     def _testCreateImage(self, username, expected_code):
         url = 'images/'
         response = self._post(url, username=username, password='password', data=testsxml.image_post_xml)
@@ -216,7 +211,7 @@ class ImagesTestCase(RbacEngine):
             self.assertEquals(image.image.name, 'image-20')
             self.assertEquals(image.image.trove_name, 'troveName20')
             self.assertEquals(image.image.image_id, u'4')
-       
+
     def testCreateImageAdmin(self):
         self._testCreateImage('admin', 200)
 
@@ -225,7 +220,7 @@ class ImagesTestCase(RbacEngine):
 
     def testCreateImageNoAuthz(self):
         self._testCreateImage('testuser', 403)
- 
+
     def _testUpdateImage(self, username, expected_code):
         response = self._post('images/',
             username=username, password='password', data=testsxml.image_post_xml)
@@ -245,7 +240,7 @@ class ImagesTestCase(RbacEngine):
 
     def testUpdateImageAdmin(self):
         self._testUpdateImage('admin', 200)
- 
+
     def testUpdateImageNonAdmin(self):
         self._testUpdateImage('ExampleDeveloper', 200)
 
@@ -299,14 +294,14 @@ class ImagesTestCase(RbacEngine):
     def _testDeleteImage(self, username, expected_code):
         response = self._delete('images/1', username=username, password='password')
         self.assertEquals(response.status_code, expected_code)
-    
+
     def testCannotDeleteLayeredSource(self):
         image1 = models.Image.objects.get(pk=1)
         image2 = models.Image.objects.get(pk=2)
         image2.base_image = image1
         image2.save()
         self._testDeleteImage('admin', 403)
- 
+
     def testDeleteImageAdmin(self):
         self._testDeleteImage('admin', 204)
 
@@ -432,78 +427,7 @@ class ImagesTestCase(RbacEngine):
 
     def testDeleteImageBuildFileNonAuthz(self):
         self._testDeleteImageBuildFile('testuser', 403)
-        
-    def testGetRelease(self):
-        url = 'releases/1'
-        response = self._get(url, username='admin', password='password')
-        self.assertEquals(response.status_code, 200)
-        self.assertXMLEquals(response.content, testsxml.release_get_xml)
 
-        response = self._get(url, username='ExampleDeveloper', password='password')
-        self.assertEquals(response.status_code, 200)
-        
-        response = self._get(url, username='testuser', password='password')
-        self.assertEquals(response.status_code, 403)
-        
-    def testGetReleases(self):
-
-        # there is no releases queryset so nothing to redirect to, only admins
-        # can read this
-        url = 'releases/'
-        response = self._get(url, username='admin', password='password')
-        self.assertEquals(response.status_code, 200)
-        self.assertXMLEquals(response.content, testsxml.releases_get_xml)
-        
-        # FIXME: non-admin accessing admin resources in API returns wrong
-        # error code, fix @access.admin!
-        response = self._get(url, username='ExampleDeveloper', password='password')
-        self.assertEquals(response.status_code, 403)
-
-    def _testCreateRelease(self, username, expected_code):
-
-        response = self._post('releases/',
-            username=username, password='password', data=testsxml.release_post_xml)
-        self.assertEquals(response.status_code, expected_code)
-        if expected_code != 200:
-            return
-        release = xobj.parse(response.content).release
-        self.assertEquals(release.name, u'release100')
-        self.assertEquals(release.description, u'description100')
-        self.assertEquals(release.project.id, u"http://testserver/api/v1/projects/foo0")
-        self.assertEquals(release.published_by.id, u"http://testserver/api/v1/users/2002")
-        
-    def testCreateReleaseAdmin(self):
-        self._testCreateRelease('admin', 200)
-
-    def testCreateReleaseNonAdmin(self):
-        self._testCreateRelease('ExampleDeveloper', 200)
-
-    def testCreateReleaseNoAuth(self):
-        self._testCreateRelease('testuser', 403)
-
-    def _testUpdateRelease(self, username, expected_code):
-        response = self._put('releases/1',
-            username=username, password='password', data=testsxml.release_put_xml)
-        self.assertEquals(response.status_code, expected_code)
-        if expected_code == 200:
-            release = xobj.parse(response.content).release
-            self.assertEquals(release.name, u'release100')
-            self.assertEquals(release.description, u'description100')
-            self.assertEquals(release.version, u'releaseVersion100')
-        
-    def testUpdateReleaseAdmin(self):
-        self._testUpdateRelease('admin', 200)
-
-    def testUpdateReleaseNonAdmin(self):
-        self._testUpdateRelease('ExampleDeveloper', 200)
-
-    def testUpdateReleaseNoAuthz(self):
-        self._testUpdateRelease('testuser', 403)
-
-    def testDeleteRelease(self):
-        response = self._delete('releases/1', username='admin', password='password')
-        self.assertEquals(response.status_code, 204)
-        
     def _testGetUrlFileByBuildFile(self, username, expected_code):
         response = self._get('images/1/build_files/1/file_url', username=username, password='password')
         self.assertEquals(response.status_code, expected_code)
@@ -524,7 +448,7 @@ class ImagesTestCase(RbacEngine):
 
     def testGetUrlFileByBuildFileNoAuthz(self):
         self._testGetUrlFileByBuildFile('testuser', 403)
-        
+
     def testGetBuildLog(self):
         url = 'images/3/build_log'
         response = self._get(url, username='admin', password='password')
@@ -539,7 +463,7 @@ class ImagesTestCase(RbacEngine):
         response = self._get('image_types/', username='testuser', password='password')
         self.assertEquals(response.status_code, 200)
         self.assertXMLEquals(response.content, testsxml.image_types_get_xml)
-        
+
     def testGetImageType(self):
         # is anonymous
         response = self._get('image_types/1', username='testuser', password='password')

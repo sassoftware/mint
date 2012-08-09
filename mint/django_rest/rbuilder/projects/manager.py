@@ -228,7 +228,7 @@ class ProjectManager(basemanager.BaseManager):
             # Can not demote the last owner
             allOwners = project.member.filter(level=userlevels.OWNER)
             if len(allOwners) == 1 and oldMember.level == userlevels.OWNER:
-                raise mint_error.LastOwner
+                raise errors.Conflict(msg='cannot demote the last owner')
 
             # Update the old level
             oldMember.level = level
@@ -258,7 +258,7 @@ class ProjectManager(basemanager.BaseManager):
         # Can not demote the last owner
         allOwners = project.member.filter(level=userlevels.OWNER)
         if len(allOwners) == 1 and user in allOwners:
-            raise mint_error.LastOwner
+            raise errors.Conflict(msg='cannot demote the last owner')
 
         member.delete()
 
@@ -296,10 +296,10 @@ class ProjectManager(basemanager.BaseManager):
         # validate the label, which will be added later.  This is done
         # here so the project is not be created before this error occurs
         if projects.validLabel.match(projectVersion.label) == None:
-            raise mint_error.InvalidLabel(projectVersion.label)
+            raise errors.Conflict(msg="invalid label=%s" % projectVersion.label)
 
-        if not projectVersion.name.isalnum():
-            raise mint_error.InvalidError(msg="branch name (%s) must be alpha-numeric" % projectVersion.name)
+        if not projectVersion.name.replace(".","").isalnum():
+            raise errors.Conflict(msg="branch name (%s) must be alpha-numeric" % projectVersion.name)
 
         projectVersion.created_by = forUser
         projectVersion.modified_by = forUser
@@ -382,7 +382,7 @@ class ProjectManager(basemanager.BaseManager):
         except Exception:
             # XXX could this exception handler be more specific? As written
             # any error in the proddef module will be masked.
-            raise mint_error.ProductDefinitionVersionNotFound
+            raise errors.Conflict(msg='product version definition not found')
         return pd
 
     @exposed
@@ -515,98 +515,7 @@ class ProjectManager(basemanager.BaseManager):
         return branches
 
     @exposed
-    def getRelease(self, release_id):
-        return models.Release.objects.get(pk=release_id)
-
-    @exposed
     def updateProjectBranchStage(self, project_short_name, project_branch_label, stage_name, stage):
         # if ever implemented be sure to update modified_by/modified_date
         raise exceptions.NotImplementedError()
 
-    @exposed
-    def isReleasePublished(self, release_id):
-        release = models.Release.objects.get(pk=release_id)
-        if not release.time_published:
-            return False
-        return True
-
-    @exposed
-    def publishRelease(self, release, publishedBy):
-        releaseId = release.release_id
-        userId = publishedBy.user_id
-
-        if int(release.num_images) == 0:
-            raise mint_error.PublishedReleaseEmpty
-
-        if self.isReleasePublished(releaseId):
-            raise mint_error.PublishedReleasePublished
-
-        release.time_published = time.time()
-        release.published_by = usermodels.User.objects.get(pk=userId)
-
-    @exposed
-    def unpublishRelease(self, release):
-        releaseId = release.release_id
-        if not self.isReleasePublished(releaseId):
-            raise mint_error.PublishedReleaseNotPublished
-
-        release.time_published = None
-        release.published_by = None
-        release.should_mirror = 0
-
-    @exposed
-    def createRelease(self, release, creatingUser, project=None):
-        if project is not None:
-            release.project = project
-        release.created_by = creatingUser
-        release.time_created = time.time()
-        release.save()
-        return release
-
-    @exposed
-    def updateRelease(self, release, updatedBy):
-        if release.published is u'True':
-            self.publishRelease(release, publishedBy=updatedBy)
-        elif release.published is u'False':
-            self.unpublishRelease(release.release_id)
-        release.time_updated = time.time()
-        release.updated_by = updatedBy
-        if int(release.should_mirror) != 0:
-            release.time_mirrored = time.time()
-        release.save()
-        return release
-
-    @exposed
-    def addImageToRelease(self, release_id, image):
-        if image.release and release_id != image.release.release_id:
-            raise mint_error.BuildPublished()
-        release = projectsmodels.Release.objects.get(pk=release_id)
-        image.release = release
-
-        # FIXME: is this still needed?
-        # if (image.image_type not in ('amiImage', 'imageless')
-        #         and not image.files.files):
-        #     raise mint_error.BuildEmpty()
-        # cu = connection.cursor()
-        # cu.execute('''UPDATE Builds SET pubReleaseId=?
-        #               WHERE buildId=?''', [release_id, image_id])
-        image.save()
-        return image
-
-    @exposed
-    def createTopLevelRelease(self, release):
-        release.save()
-        return release
-
-    @exposed
-    def getTopLevelReleases(self):
-        Releases = projectsmodels.Releases()
-        Releases.release = projectsmodels.Release.objects.all()
-        return Releases
-
-    def _getBuildCount(self, releaseId):
-        cu = connection.cursor()
-        buildCount, = cu.execute(
-                    'SELECT COUNT(*) from Builds WHERE pubReleaseId=?',
-                    [int(releaseId)]).next()
-        return buildCount

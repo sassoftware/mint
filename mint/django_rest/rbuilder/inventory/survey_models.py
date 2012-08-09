@@ -79,7 +79,7 @@ class WindowsRequiredServiceInfoList(modellib.UnpaginatedCollection):
 
 class Survey(modellib.XObjIdModel):
     ''' One survey of a given system '''
-    
+
     class Meta:
         db_table = 'inventory_survey'
     view_name = 'Survey'
@@ -105,8 +105,8 @@ class Survey(modellib.XObjIdModel):
     created_date  = modellib.DateTimeUtcField(auto_now_add=True)
     modified_date = modellib.DateTimeUtcField(auto_now_add=True)
     removable     = models.BooleanField(default=True)
-    created_by    = modellib.ForeignKey(usermodels.User, null=True, db_column='created_by', related_name='+', on_delete=models.SET_NULL) 
-    modified_by   = modellib.ForeignKey(usermodels.User, null=True, db_column='modified_by', related_name='+', on_delete=models.SET_NULL) 
+    created_by    = modellib.ForeignKey(usermodels.User, null=True, db_column='created_by', related_name='+', on_delete=models.SET_NULL)
+    modified_by   = modellib.ForeignKey(usermodels.User, null=True, db_column='modified_by', related_name='+', on_delete=models.SET_NULL)
     system        = modellib.DeferredForeignKey('inventory.System', related_name='surveys', db_column='system_id')
     comment       = models.TextField()
     system_model  = models.TextField()
@@ -123,12 +123,12 @@ class Survey(modellib.XObjIdModel):
     discovered_properties = modellib.XMLField(db_column='discovered_values_xml')
     # values from config validation reports
     validation_report  = modellib.XMLField(db_column='validator_values_xml')
-     
+
     compliance_summary            = modellib.XMLField(db_column='compliance_summary_xml')
     config_properties_descriptor  = modellib.XMLField(db_column='config_values_descriptor_xml')
     desired_properties_descriptor = modellib.XMLField(db_column='desired_values_descriptor_xml')
     preview                       = modellib.XMLField(db_column='preview_xml')
-    config_compliance             = modellib.XMLField(db_column='config_diff_xml')    
+    config_compliance             = modellib.XMLField(db_column='config_diff_xml')
     system_snapshot               = modellib.XMLField(db_column='system_snapshot_xml')
     project_snapshot              = modellib.XMLField(db_column='project_snapshot_xml')
     stage_snapshot                = modellib.XMLField(db_column='stage_snapshot_xml')
@@ -175,7 +175,7 @@ class SurveyDiff(modellib.XObjIdModel):
     class Meta:
         db_table = 'inventory_survey_diff'
     view_name = 'SurveyDiff'
-    
+
     # to use this model, look up the XML in the object, do not use xobj
 
     diff_id       = models.AutoField(primary_key=True)
@@ -219,8 +219,8 @@ class RpmPackageInfo(modellib.XObjIdModel):
      class Meta:
          db_table = 'inventory_rpm_package'
 
-     summary_view = [ 
-         "name", "epoch", "version", "release", 
+     summary_view = [
+         "name", "epoch", "version", "release",
          "architecture", "description", "signature"
      ]
 
@@ -263,7 +263,7 @@ class ConaryPackageInfo(modellib.XObjIdModel):
     architecture      = models.TextField(null=False)
     signature         = models.TextField(null=False)
     unfrozen          = models.TextField(null=True)
-    # needs to be deferrred so URL is included 
+    # needs to be deferrred so URL is included
     rpm_package_info  = modellib.ForeignKey(RpmPackageInfo, db_column='rpm_package_id', related_name='+')
 
     def get_url_key(self, *args, **kwargs):
@@ -290,7 +290,7 @@ class WindowsPackageInfo(modellib.XObjIdModel):
     type               = models.TextField(null=False)
     upgrade_code       = models.TextField(null=False)
     version            = models.TextField(null=False)
- 
+
     def get_url_key(self, *args, **kwargs):
         return [ self.windows_package_id ]
 
@@ -305,7 +305,7 @@ class FakeWindowsPackageInfo(modellib.XObjIdModel):
         attributes= { 'id' : str }
     )
     _xobj_no_register = True
- 
+
     publisher          = models.TextField(null=False)
     product_code       = models.TextField(null=False)
     package_code       = models.TextField(null=False)
@@ -325,11 +325,11 @@ class WindowsPatchInfo(modellib.XObjIdModel):
     _xobj = xobj.XObjMetadata(tag='windows_patch_info',
          attributes = { 'id' : str }
     )
-    summary_view = [ 
+    summary_view = [
         'display_name', 'uninstallable', 'patch_code',
         'product_code', 'transforms', 'windows_package_infos'
-    ]    
-    
+    ]
+
     windows_patch_id = models.AutoField(primary_key=True)
     display_name     = models.TextField(null=False)
     uninstallable    = models.BooleanField(null=False)
@@ -352,15 +352,15 @@ class WindowsPatchInfo(modellib.XObjIdModel):
             id = reverse('SurveyWindowsPackageInfo', args=[ wp.pk ])
         ) for wp in results ]
         self.windows_package_infos.windows_package_info = results
- 
+
     def get_url_key(self, *args, **kwargs):
-        return [ self.windows_patch_id ] 
+        return [ self.windows_patch_id ]
 
 #***********************************************************
 
 class ServiceInfo(modellib.XObjIdModel):
     ''' Representation of a possible Service installation, M2M '''
- 
+
     class Meta:
         db_table = 'inventory_service'
 
@@ -397,7 +397,7 @@ class WindowsServiceInfo(modellib.XObjIdModel):
     display_name       = models.TextField(null=False)
     type               = models.TextField(null=False)
     handle             = models.TextField(null=False)
-    _required_services = XObjHidden(models.TextField(null=False, db_column='required_services')) 
+    _required_services = XObjHidden(models.TextField(null=False, db_column='required_services'))
 
     required_services  = modellib.SyntheticField()
 
@@ -424,7 +424,7 @@ class FakeWindowsServiceInfo(modellib.XObjIdModel):
         attributes= { 'id' : str }
     )
     _xobj_no_register = True
-    
+
     id                 = models.TextField(null=False)
     name               = models.TextField(null=False)
     display_name       = models.TextField(null=False)
@@ -437,13 +437,13 @@ class SurveyTag(modellib.XObjIdModel):
     class Meta:
        db_table = 'inventory_survey_tags'
 
-    _xobj = xobj.XObjMetadata(tag='tag')                 
+    _xobj = xobj.XObjMetadata(tag='tag')
     view_name = 'SurveyTag'
 
     tag_id = models.AutoField(primary_key=True)
     survey = modellib.ForeignKey(Survey, related_name='tags')
     name   = models.TextField()
-    
+
     def get_url_key(self, *args, **kwargs):
         return [ self.tag_id ]
 
@@ -457,7 +457,7 @@ class SurveyRpmPackage(modellib.XObjIdModel):
 
     _xobj     = xobj.XObjMetadata(tag='rpm_package')
     view_name = 'SurveyRpmPackage'
-   
+
     rpm_package_id   = models.AutoField(primary_key=True, db_column='map_id')
     survey           = modellib.ForeignKey(Survey, related_name='rpm_packages', null=False)
     rpm_package_info = modellib.ForeignKey(RpmPackageInfo, related_name='survey_rpm_packages', db_column='rpm_package_id', null=False)
@@ -467,7 +467,7 @@ class SurveyRpmPackage(modellib.XObjIdModel):
         return [ self.rpm_package_id ]
 
 #***********************************************************
-    
+
 class SurveyConaryPackage(modellib.XObjIdModel):
     ''' A Conary package installed on a given system '''
 
@@ -480,10 +480,10 @@ class SurveyConaryPackage(modellib.XObjIdModel):
     survey              = modellib.ForeignKey(Survey, related_name='conary_packages', null=False)
     conary_package_info = modellib.ForeignKey(ConaryPackageInfo, related_name='survey_conary_packages', db_column='conary_package_id', null=False)
     install_date        = modellib.DateTimeUtcField(auto_now_add=False, null=True)
-    is_top_level        = models.BooleanField(null=False, default=False)   
- 
+    is_top_level        = models.BooleanField(null=False, default=False)
+
     def get_url_key(self, *args, **kwargs):
-        return [ self.conary_package_id ] 
+        return [ self.conary_package_id ]
 
 #***********************************************************
 
@@ -493,17 +493,17 @@ class SurveyWindowsPackage(modellib.XObjIdModel):
         db_table = 'inventory_survey_windows_package'
     _xobj                = xobj.XObjMetadata(tag='windows_package')
     view_name            = 'SurveyWindowsPackage'
-    
+
     windows_package_id   = models.AutoField(primary_key=True, db_column='map_id')
     survey               = XObjHidden(modellib.ForeignKey(Survey, related_name='windows_packages', null=False))
     windows_package_info = modellib.ForeignKey(WindowsPackageInfo, related_name='survey_windows_packages', db_column='windows_package_id', null=False)
-    
+
     install_source       = models.TextField(null=False)
     local_package        = models.TextField(null=False)
     install_date         = modellib.DateTimeUtcField(auto_now_add=False, null=True)
- 
+
     def get_url_key(self, *args, **kwargs):
-        return [ self.windows_package_id ] 
+        return [ self.windows_package_id ]
 
 #***********************************************************
 
@@ -516,7 +516,7 @@ class SurveyWindowsPatch(modellib.XObjIdModel):
 
     windows_patch_id     = models.AutoField(primary_key=True, db_column='map_id')
     survey               = XObjHidden(modellib.ForeignKey(Survey, related_name='windows_patches'))
-    windows_patch_info   = modellib.ForeignKey(WindowsPatchInfo, 
+    windows_patch_info   = modellib.ForeignKey(WindowsPatchInfo,
         related_name='+',
         db_column='windows_patch_id', null=False)
     local_package        = models.TextField(null=False)
@@ -524,8 +524,8 @@ class SurveyWindowsPatch(modellib.XObjIdModel):
     is_installed         = models.BooleanField(null=False)
 
     def get_url_key(self, *args, **kwargs):
-        return [ self.windows_patch_id ] 
-   
+        return [ self.windows_patch_id ]
+
 #***********************************************************
 
 class WindowsOsPatchInfo(modellib.XObjIdModel):
@@ -591,14 +591,14 @@ class SurveyService(modellib.XObjIdModel):
     service_info    = modellib.ForeignKey(ServiceInfo, related_name='survey_services', db_column='service_id', null=False)
     running         = models.BooleanField()
     status          = models.TextField()
-    
+
     def get_url_key(self, *args, **kwargs):
-        return [ self.service_id ] 
+        return [ self.service_id ]
 
 #***********************************************************
 
 class SurveyWindowsService(modellib.XObjIdModel):
-    
+
     class Meta:
         db_table = 'inventory_survey_windows_service'
     _xobj = xobj.XObjMetadata(tag='windows_service')
@@ -611,23 +611,23 @@ class SurveyWindowsService(modellib.XObjIdModel):
     status               = models.TextField(null=False)
     start_account        = models.TextField()
     start_mode           = models.TextField()
- 
+
     def get_url_key(self, *args, **kwargs):
         return [ self.windows_service_id ]
-        
+
 
 class SurveyWindowsPatchPackageLink(modellib.XObjIdModel):
-  
+
     class Meta:
         db_table = 'inventory_windows_patch_windows_package'
-    
+
     link_id              = models.AutoField(primary_key=True, db_column='map_id')
     windows_package_info = modellib.ForeignKey(WindowsPackageInfo, db_column='windows_package_id', related_name='+')
     windows_patch_info   = modellib.ForeignKey(WindowsPatchInfo, db_column='windows_patch_id', related_name='+')
-    
+
 
 #***********************************************************
-    
+
 for mod_obj in sys.modules[__name__].__dict__.values():
     if hasattr(mod_obj, '_xobj') and not getattr(mod_obj, '_xobj_no_register', False):
         if mod_obj._xobj.tag:

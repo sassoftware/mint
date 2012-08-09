@@ -17,16 +17,16 @@ from xobj import xobj
 class Groups(modellib.XObjModel):
     class Meta:
         abstract = True
-        
+
     _xobj = xobj.XObjMetadata(tag='groups')
-        
+
     list_fields = ['group']
 
 
 class Group(modellib.XObjIdModel):
     class Meta:
         abstract = True
-    
+
     # tag name is only groups for the sake of calculating project_branch_stage(s)
     # once Group(s) is moved over, change back to singular
     _xobj = xobj.XObjMetadata(tag='groups', attributes={'href':str, 'promote_href':str})
@@ -66,7 +66,7 @@ class Project(modellib.XObjIdModel):
         db_table = u"projects"
 
     _xobj = xobj.XObjMetadata(tag='project')
-    _xobj_hidden_accessors = set(['membership', 'package_set', 
+    _xobj_hidden_accessors = set(['membership', 'package_set',
         'platform_set', 'productplatform_set', 'tags', 'project_tags', 'abstractplatform_set', 'labels'])
     _queryset_resource_type = 'project'
     view_name = "Project"
@@ -75,25 +75,25 @@ class Project(modellib.XObjIdModel):
 
     project_id = models.AutoField(primary_key=True, db_column="projectid",
         blank=True)
-    hostname = D(models.CharField(unique=True, max_length=63), 
+    hostname = D(models.CharField(unique=True, max_length=63),
         "Project hostname, must be unique", short="Project hostname")
-    name = D(models.CharField(unique=True, max_length=128), 
+    name = D(models.CharField(unique=True, max_length=128),
         "Project name, must be unique", short="Project name")
-    namespace = D(models.CharField(max_length=16, null=True), 
+    namespace = D(models.CharField(max_length=16, null=True),
         "Project namespace, defaults to null", short="Project namespace")
-    domain_name = D(models.CharField(max_length=128, db_column="domainname"), 
+    domain_name = D(models.CharField(max_length=128, db_column="domainname"),
         "Project domain name", short="Project domain name")
-    short_name = D(models.CharField(unique=True, max_length=63, db_column="shortname"), 
+    short_name = D(models.CharField(unique=True, max_length=63, db_column="shortname"),
         "Project short name, must be unique", short="Project short name")
-    project_url = D(models.CharField(max_length=128, blank=True, db_column= "projecturl"), 
+    project_url = D(models.CharField(max_length=128, blank=True, db_column= "projecturl"),
         "Project URL, is blank by default", short="Project URL")
-    repository_hostname = D(models.CharField(max_length=255, db_column="fqdn"), 
+    repository_hostname = D(models.CharField(max_length=255, db_column="fqdn"),
         "Project repository hostname", short="Project repository hostname")
-    description = D(models.TextField(null=True, blank=True), 
+    description = D(models.TextField(null=True, blank=True),
         "Project description, null and blank by default", short="Project description")
-    project_type = D(models.CharField(max_length=128, db_column="prodtype", default="Appliance"), 
+    project_type = D(models.CharField(max_length=128, db_column="prodtype", default="Appliance"),
         "Project type, defaults to 'Appliance'", short="Project type")
-    commit_email = D(models.CharField(max_length=128, null=True, blank=True, db_column="commitemail"), 
+    commit_email = D(models.CharField(max_length=128, null=True, blank=True, db_column="commitemail"),
         "Project commit email, defaults to null and blank", short="Project commit email")
     backup_external = D(models.BooleanField(default=False, db_column="backupexternal"),
         "Boolean, defaults to False")
@@ -112,9 +112,9 @@ class Project(modellib.XObjIdModel):
     version = D(models.CharField(max_length=128, null=True, blank=True,
         default=''), "Project version, is blank and null by default", short="Project version")
     database = D(models.CharField(max_length=128, null=True), "Project database, is null by default", short="Project database")
-    members = D(modellib.DeferredManyToManyField(usermodels.User, 
+    members = D(modellib.DeferredManyToManyField(usermodels.User,
         through="Member"), 'User member')
-    modified_by = D(models.ForeignKey(usermodels.User, null=True, related_name='+', db_column="modified_by"), 
+    modified_by = D(models.ForeignKey(usermodels.User, null=True, related_name='+', db_column="modified_by"),
         "Project modified by, defaults to null", short="Project modified by")
 
     # synthetic properties hoisted from labels - these will eventually be merged
@@ -290,9 +290,9 @@ class ProjectVersion(modellib.XObjIdModel):
         db_column="timemodified"), "Branch modified date", short="Branch modified date")
 
     platform_id = modellib.XObjHidden(models.IntegerField(null=True, db_column='platform_id'))
-    created_by = D(modellib.DeferredForeignKey(usermodels.User, db_column='created_by', null=True, 
+    created_by = D(modellib.DeferredForeignKey(usermodels.User, db_column='created_by', null=True,
         related_name='+'), "Branch creator")
-    modified_by = D(modellib.DeferredForeignKey(usermodels.User, db_column='modified_by', null=True, 
+    modified_by = D(modellib.DeferredForeignKey(usermodels.User, db_column='modified_by', null=True,
         related_name='+'), "Branch last modified by")
 
 
@@ -462,86 +462,6 @@ class Stage(modellib.XObjIdModel):
                 promote_href=promote_href
                     % (short_name, self.project_branch.name, self.name))
         xobjModel = modellib.XObjIdModel.serialize(self, request)
-        return xobjModel
-
-
-class Releases(modellib.Collection):
-    class Meta:
-        abstract = True
-
-    list_fields = ['release']
-    _xobj = xobj.XObjMetadata(tag='releases')        
-
-
-class Release(modellib.XObjIdModel):
-    class Meta:
-        db_table = u'publishedreleases'
-
-    view_name = 'TopLevelRelease'
-    
-    _xobj = xobj.XObjMetadata(
-        tag='release')
-    _xobj_explict_accessors = set(["images"])
-
-    release_id = models.AutoField(primary_key=True,
-        db_column='pubreleaseid')
-    project = D(modellib.DeferredForeignKey('projects.Project', db_column='projectid', 
-        related_name='releases', view_name='ProjectReleases'),
-        'project to which the release belongs to')
-    name = D(models.CharField(max_length=255, blank=True, default=''),
-        'Release name')
-    version = D(models.CharField(max_length=32, blank=True, default=''),
-        'Release version')
-    description = D(models.TextField(), 'Description')
-    time_created = D(modellib.DecimalTimestampField(
-        db_column='timecreated', null=True), 'When the release was created')
-    created_by = D(modellib.ForeignKey('users.User', db_column='createdby',
-        related_name='created_releases', null=True),
-        'User who created the release')
-    time_updated = D(modellib.DecimalTimestampField(
-        null=True, db_column='timeupdated'),
-        'Time user updated the release')
-    # to be consistent with the rest of the models, this really should be modified_by
-    # but not changing before 11/14/11 release, feel free to fix later
-    updated_by = D(modellib.ForeignKey('users.User', db_column='updatedby',
-        related_name='updated_releases', null=True),
-        'User who updated the release')
-    time_published = modellib.DecimalTimestampField(
-        db_column='timepublished', null=True)
-    published_by = D(modellib.ForeignKey('users.User', 
-        db_column='publishedby', related_name='published_releases',
-        null=True), 'User who published the release')
-    should_mirror = D(models.SmallIntegerField(db_column='shouldmirror',
-        blank=True, default=0), 'Should the release be mirrored, default is 0')
-    time_mirrored = D(modellib.DecimalTimestampField(
-        null=True, db_column='timemirrored'),
-        'When the release was mirrored')
-    published = modellib.SyntheticField()
-    num_images = modellib.SyntheticField()
-    
-    def computeSyntheticFields(self, sender, **kwargs):
-        if self.published_by is not None:
-            self.published = True
-        else:
-            self.published = False
-        self.num_images = self.images.count()
-
-
-    def serialize(self, request=None):
-        """
-        necessary to make an id show up on the inlined images collection
-        """
-        xobjModel = modellib.XObjIdModel.serialize(self, request)
-        if request is not None:
-            xobjModel.images._xobj = xobj.XObjMetadata(attributes={'id':str})
-            # ugliness to minimize quirkiness
-            host = 'http://' + request.get_host().strip('/') + '/'
-            path = request.get_full_path().strip('/')
-            if path[-1].isdigit():
-                imagesId = host + path + '/images'
-            else:
-                imagesId = host + path + '/%s/images' % self.release_id
-            xobjModel.images.id = imagesId
         return xobjModel
 
 class InboundMirror(modellib.XObjModel):

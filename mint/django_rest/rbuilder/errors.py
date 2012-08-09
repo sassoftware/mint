@@ -12,7 +12,7 @@ CONFLICT = 409
 class RbuilderError(Exception):
     "An unknown error has occured."
 
-    status = INTERNAL_SERVER_ERROR 
+    status = INTERNAL_SERVER_ERROR
 
     def __init__(self, **kwargs):
         cls = self.__class__
