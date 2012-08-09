@@ -70,13 +70,24 @@ class BuildsTable(database.KeyedTable):
         self.db.commit()
         return 0
 
+    def _getStageId(self, cu, projectBranchId, stageName):
+        cu.execute("""SELECT stage_id FROM project_branch_stage
+            WHERE project_branch_id = ? AND name = ?""",
+            projectBranchId, stageName)
+        row = cu.fetchone()
+        if not row:
+            return None
+        return row[0]
+
     def setProductVersion(self, buildId, versionId, stageName):
         cu = self.db.cursor()
+        stageId = self._getStageId(cu, versionId, stageName)
         cu.execute("""UPDATE Builds SET productVersionId=?,
+                                          stageId=?,
                                           stageName=?,
                                           troveLastChanged=?
                       WHERE buildId=?""",
-                   versionId, stageName,
+                   versionId, stageId, stageName,
                    time.time(), buildId)
         self.db.commit()
 

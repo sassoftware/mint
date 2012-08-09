@@ -1031,3 +1031,25 @@ ec2LaunchGroups: []
         self.assertEquals(response.status_code, 200)
         doc = xobj.parse(response.content)
         self.assertEquals(doc.job.status_text, "Done")
+
+    def testImageSetProductVersion(self):
+        # RCE-626
+        from django.db import transaction
+        from mint.db import builds
+
+        img = self._setupImageOutputToken()
+        imageId = img.image_id
+        projectBranchId = img.project_branch_id
+        projectBranchStageId = img.project_branch_stage_id
+        self.assertTrue(projectBranchStageId is not None)
+        stageName = img.stage_name
+        models.Image.objects.filter(image_id=imageId).update(project_branch=None,
+            project_branch_stage=None)
+        transaction.commit()
+        olddb = self.mgr.restDb.db
+        b = builds.BuildsTable(olddb)
+        b.setProductVersion(imageId, projectBranchId, stageName)
+
+        img = models.Image.objects.get(image_id=imageId)
+        self.assertEqual(img.project_branch_id, projectBranchId)
+        self.assertEqual(img.project_branch_stage_id, projectBranchStageId)
