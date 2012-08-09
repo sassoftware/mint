@@ -38,11 +38,11 @@ class ProjectsTestCase(RbacEngine):
         mock.mock(manager.ProjectManager, "setProductVersionDefinition")
         self.mgr = rbuildermanager.RbuilderManager()
         self.mintConfig = self.mgr.cfg
-    
+
         # add sysadmin user with permission to "All Projects" and "All Project Branch Stages"
         # developer user does NOT have access to these .. skipping XML versions here as these
         # are well covered in rbac/tests.py
-                  
+
         role              = rbacmodels.RbacRole.objects.get(name='developer')
         self.all_projects = querymodels.QuerySet.objects.get(name='All Projects')
         self.all_pbs      = querymodels.QuerySet.objects.get(name='All Project Stages')
@@ -63,7 +63,7 @@ class ProjectsTestCase(RbacEngine):
                 ).save()
 
         self._retagQuerySets()
- 
+
         # invalidate the querysets so tags can be applied
     def _retagQuerySets(self):
         self.mgr.retagQuerySetsByType('project')
@@ -76,29 +76,29 @@ class ProjectsTestCase(RbacEngine):
         Authenticated user w/o permissions
         Authenticated user with permissions
         Admin user
-        
+
         TODO: Come back and update code to handle POST's and PUT's.  Since we want to do
         more XML testing, we need an intuitive way to handle returning the response's content
         """
-        usernames = { 
-            'NonAuthUser'      : 401, 
-            'testuser'         : 403, 
-            'ExampleDeveloper' : 200, 
+        usernames = {
+            'NonAuthUser'      : 401,
+            'testuser'         : 403,
+            'ExampleDeveloper' : 200,
             'admin'            : 200
         }
         passwd = 'password'
         methodType = methodType.lower()
-        
+
         if methodType == 'get':
             method = lambda username: self._get(url, username=username, password=passwd)
         else:
             raise Exception('Invalid HTTP Method')
-        
+
         statusCodeResults = {}
         for uname, status in usernames.items():
             response = method(uname)
             statusCodeResults[uname] = (status, response.status_code)
-            
+
         return statusCodeResults
 
     def _initProject(self, name='chater-foo', adorn=False):
@@ -120,18 +120,15 @@ class ProjectsTestCase(RbacEngine):
             stage.save()
         if adorn:
             for i in range(1, 3):
-                release = models.Release(project=proj,
-                    name='release%s' % i, version='releaseVersion%s' % i, description='description%s' % i)
-                release.save()
                 image = imagesmodels.Image(
-                    project=proj, release=release, _image_type=10, job_uuid='1',
+                    project=proj, _image_type=10, job_uuid='1',
                     name="image-%s" % i, trove_name='troveName%s' % i, trove_version='/cydonia.eng.rpath.com@rpath:cydonia-1-devel/1317221453.365:1-%d-1' % i,
                     trove_flavor='1#x86:i486:i586:i686|5#use:~!xen', image_count=1,
                     output_trove=None, project_branch=branch, stage_name='stage%s' % i,
                     description="image-%s" % i)
                 image.save()
         self._retagQuerySets()
-        
+
     def testGetProjects(self):
         # as admin or granted user, should succeed
         for username in [ 'admin', 'ExampleDeveloper' ]:
@@ -146,7 +143,7 @@ class ProjectsTestCase(RbacEngine):
             username="testuser", password="password")
         self.assertEquals(response.status_code, 200)
         self.assertXMLEquals(response.content, testsxml.empty_projects)
-        
+
         response = self._get('projects/')
         self.assertEquals(response.status_code, 401)
 
@@ -163,7 +160,7 @@ class ProjectsTestCase(RbacEngine):
         response = self._get('projects/chater-foo/',
             username='ExampleSysadmin', password='password')
         self.assertEquals(response.status_code, 403)
-        
+
         # anon obviously cannot
         response = self._get('projects/chater-foo')
         self.assertEquals(response.status_code, 401)
@@ -178,7 +175,7 @@ class ProjectsTestCase(RbacEngine):
         response = self._get('projects/chater-foo/project_branches/chater-foo.eng.rpath.com@rpath:chater-foo-trunk',
             username='ExampleDeveloper', password='password')
         self.assertEquals(response.status_code, 200)
-        
+
         response = self._get('projects/chater-foo/project_branches/chater-foo.eng.rpath.com@rpath:chater-foo-trunk/project_branch_stages', username='ExampleDeveloper', password='password')
         self.assertEquals(response.status_code, 200)
 
@@ -204,10 +201,10 @@ class ProjectsTestCase(RbacEngine):
         response = self._post('projects',
             data=testsxml.project_post_xml,
             username="admin", password="password")
-        self.assertEquals(response.status_code, 403) 
-          
-        
- 
+        self.assertEquals(response.status_code, 403)
+
+
+
     def testAddProjectNoHostname(self):
         response = self._post('projects',
             data=testsxml.project_post_no_hostname_xml,
@@ -217,7 +214,7 @@ class ProjectsTestCase(RbacEngine):
         projectId = project.project_id
         project = models.Project.objects.get(pk=projectId)
         self.assertEquals("test-project", project.hostname)
-        
+
     def testAddProjectNoRepoHostname(self):
         response = self._post('projects',
             data=testsxml.project_post_no_repo_hostname_xml,
@@ -228,7 +225,7 @@ class ProjectsTestCase(RbacEngine):
         project = models.Project.objects.get(pk=projectId)
         self.assertEquals("test-project.eng.rpath.com", project.repository_hostname)
         self.assertEquals(1, project.created_by.user_id)
-        
+
     def testAddProjectNoDomainName(self):
         response = self._post('projects',
             data=testsxml.project_post_no_domain_name_xml,
@@ -241,7 +238,7 @@ class ProjectsTestCase(RbacEngine):
         project = models.Project.objects.get(pk=projectId)
         self.failUnlessEqual(project.repository_hostname, 'test-project.rpath.local2')
         self.assertEquals(project.created_by.user_id, 1)
-        
+
     def testAddProjectNoNamespace(self):
         response = self._post('projects',
             data=testsxml.project_post_no_namespace_xml,
@@ -252,7 +249,7 @@ class ProjectsTestCase(RbacEngine):
         project = models.Project.objects.get(pk=projectId)
         self.assertEquals(project.namespace, 'ns')
         self.assertEquals(1, project.created_by.user_id)
-        
+
     def testAddProjectExternal(self):
         response = self._post('projects',
             data=testsxml.project_post_external_xml,
@@ -261,7 +258,7 @@ class ProjectsTestCase(RbacEngine):
         project = xobj.parse(response.content).project
         self.assertEquals("rPath Windows Build Service", project.name)
         self.assertEquals("https://rb.rpath.com/repos/rwbs/browse", project.upstream_url)
-        
+
     def testUpdateProject(self):
 
         for username in [ 'admin', 'ExampleDeveloper' ]:
@@ -274,13 +271,13 @@ class ProjectsTestCase(RbacEngine):
             project = models.Project.objects.get(pk=projectId)
             self.assertEquals("updated description",
                 project.description)
-            
+
         response = self._put('projects/chater-foo',
             data=testsxml.project_put_xml,
             username="testuser", password="password")
         self.assertEquals(response.status_code, 403)
 
-            
+
     def testUpdateProjectAuthenticatedWithGrant(self):
         response = self._put('projects/chater-foo',
             data=testsxml.project_put_xml,
@@ -339,17 +336,17 @@ class ProjectsTestCase(RbacEngine):
 
         # make sure creating the branch caused stages to auto vivify
         # and they have creator/modified info
-        stages = models.Stage.objects.filter(project__name='foo')        
+        stages = models.Stage.objects.filter(project__name='foo')
         self.assertEquals(len(stages), 3, 'stages auto created')
         for stage in stages:
             self.assertTrue(stage.created_by is not None)
             self.assertTrue(stage.modified_by is not None)
             self.assertTrue(stage.created_date is not None)
             self.assertTrue(stage.modified_date is not None)
-              
+
 
     def testAddProjectVersionToProjectTwo(self):
-        # add project as developer    
+        # add project as developer
         response = self._post('projects',
             data=testsxml.project_post_xml,
             username="ExampleDeveloper", password="password")
@@ -357,8 +354,8 @@ class ProjectsTestCase(RbacEngine):
         platform = platformsmodels.Platform(
             label='label-foo', platform_name='foo-platform-name')
         platform.save()
- 
-        # try POSTing with pb pointing to project with valid perms        
+
+        # try POSTing with pb pointing to project with valid perms
         response = self._post('projects/test-project/project_branches',
             data=testsxml.project_version_post_with_project_xml2,
             username="ExampleDeveloper", password="password")
@@ -366,7 +363,7 @@ class ProjectsTestCase(RbacEngine):
         branch = xobj.parse(response.content).project_branch
         self.assertEquals(branch.name, u'50')
         self.assertEquals(branch.project.id, u"http://testserver/api/v1/projects/test-project")
-        
+
         # try to add project as different user
         response = self._post('project_branches/',
             data=testsxml.project_version_post_with_project_no_auth_xml)
@@ -384,6 +381,8 @@ class ProjectsTestCase(RbacEngine):
         response = self._put('projects/postgres/project_branches/postgres.rpath.com@rpath:postgres-1',
             data=testsxml.project_version_put_xml,
             username="ExampleDeveloper", password="password")
+        if response.status_code != 200:
+            print repsonse.content
         self.assertEquals(response.status_code, 200)
         branch = xobj.parse(response.content).project_branch
         branch = models.ProjectVersion.objects.get(pk=branch.branch_id)
@@ -401,6 +400,8 @@ class ProjectsTestCase(RbacEngine):
         response = self._put('projects/postgres/project_branches/postgres.rpath.com@rpath:postgres-1',
             data=testsxml.project_version_put_xml,
             username="testuser", password="password")
+        if response.status_code != 403:
+            print response.content
         self.assertEquals(response.status_code, 403)
 
     def testDeleteProjectBranch(self):
@@ -411,7 +412,7 @@ class ProjectsTestCase(RbacEngine):
     def testDeleteProjectBranchAnonymous(self):
         response = self._delete('projects/postgres/project_branches/postgres.rpath.com@rpath:postgres-1')
         self.assertEquals(response.status_code, 401)
-        
+
     def testGetAggregateProjectBranchStages(self):
         self._initProject()
         response = self._get('project_branch_stages/',
@@ -437,7 +438,7 @@ class ProjectsTestCase(RbacEngine):
                 'foo@ns:trunk'
             ])
         self.maxDiff = oldMaxDiff
-       
+
         # developer can still fetch all stages collection since it's a queryset,
         # though it should return only what he can see.  FIXME: determine
         # if what we get is actually correct before adding XML test.
@@ -446,7 +447,7 @@ class ProjectsTestCase(RbacEngine):
         self.assertEquals(response.status_code, 200)
         # self.assertXMLEquals(response.content, testsxml.developer_stages)
 
-        
+
     def testGetProjectAllBranchStages(self):
         self._initProject()
         response = self._get('projects/chater-foo/project_branch_stages',
@@ -494,7 +495,7 @@ class ProjectsTestCase(RbacEngine):
             project_branch__branch_id=branch.branch_id, name='Development')
         url = "projects/%s/project_branches/%s/project_branch_stages/%s/images/"
         urlparams = (prj.short_name, branch.label, stage.name)
-        response = self._post(url % urlparams, 
+        response = self._post(url % urlparams,
             username='ExampleDeveloper', password='password', data=testsxml.project_branch_stage_images_post_xml)
         self.assertEquals(response.status_code, 200)
 
@@ -526,30 +527,30 @@ class ProjectsTestCase(RbacEngine):
             imagesmodels.Image.objects.filter(project_branch=branch)
             for i in range(2):
                 name = "image-%s-%s" % (branch.name, i)
-                image = imagesmodels.Image(name=name, 
+                image = imagesmodels.Image(name=name,
                     description=name,
-                    project_branch=branch, 
+                    project_branch=branch,
                     project=prj,
                     # this is a for a stage name that is not set
                     # which was a legacy thing.
                     _image_type=10,
                     trove_version='/foo@rpath:1/12345:%d-1' % i,
-                    trove_flavor='1#x86:i486:i586:i686|5#use:~!xen', 
+                    trove_flavor='1#x86:i486:i586:i686|5#use:~!xen',
                     image_count=1)
                 self.mgr.createImageBuild(image)
 
                 name += 'devel'
                 image = imagesmodels.Image(
-                    name=name, 
+                    name=name,
                     description=name,
                     project=prj,
                     # since this isn't what the real app stores (unfortunately)...
-                    project_branch_stage=stage, 
+                    project_branch_stage=stage,
                     # the tests must also set this...
                     stage_name=stage.name,
                     _image_type=10,
                     trove_version='/foo@rpath:1/12345:%d-1' % i,
-                    trove_flavor='1#x86:i486:i586:i686|5#use:~!xen', 
+                    trove_flavor='1#x86:i486:i586:i686|5#use:~!xen',
                     image_count=1)
                 self.mgr.createImageBuild(image)
 
@@ -558,7 +559,7 @@ class ProjectsTestCase(RbacEngine):
             branch2.label, stageDev2.name)
 
         actual  = [ x.name for x in imgs.image ]
-        desired = [ 
+        desired = [
            u'image from fixture',
            u'image-trunk-0',
            u'image-trunk-1',
@@ -642,103 +643,4 @@ class ProjectsTestCase(RbacEngine):
         images = images.image
         self.failUnlessEqual([ x.name for x in images ],
             [u'image from fixture', u'image-1', u'image-2'])
-
-    def testGetReleasesByProject(self):
-        self._initProject(adorn=True)
-        response = self._get('projects/chater-foo/releases', username='admin', password='password')
-        self.assertEquals(response.status_code, 200)
-        self.assertXMLEquals(response.content, testsxml.releases_by_project_get_xml)
-        response = self._get('projects/chater-foo/releases', username='ExampleDeveloper', password='password')
-        self.assertEquals(response.status_code, 200)
-        response = self._get('projects/chater-foo/releases', username='testuser', password='password')
-        self.assertEquals(response.status_code, 403)
-       
- 
-    def testAddRelease(self):
-        self.addProject('foo', user='ExampleDeveloper')
-        response = self._post('projects/foo/releases',
-            username='ExampleDeveloper', password='password', data=testsxml.release_by_project_post_xml)
-        self.assertEquals(response.status_code, 200)
-        release = xobj.parse(response.content).release
-        self.assertEquals(release.description, 'description2002')
-        self.assertEquals(release.project.id, 'http://testserver/api/v1/projects/foo')
-        self.assertEquals(release.id, "http://testserver/api/v1/releases/1")
-    
-    def testPublishRelease(self):
-        proj = self.addProject('foo', user='ExampleDeveloper')
-        release = models.Release(project=proj,
-            name='release42', version='releaseVersion42', description='description42')
-        user = usersmodels.User.objects.get(user_name='ExampleDeveloper')
-        release = self.mgr.createRelease(release, user, project=proj)
-        release.save()
-        image = imagesmodels.Image(
-            project=proj, release=release, _image_type=10, job_uuid='1',
-            name="image-42", trove_name='troveName42', trove_version='/cydonia.eng.rpath.com@rpath:cydonia-1-devel/1317221453.365:1-42-1',
-            trove_flavor='1#x86:i486:i586:i686|5#use:~!xen', image_count=1,
-            output_trove=None, description="image-42")
-        image.save()
-        response = self._put('projects/foo/releases/%s' % release.release_id,
-            username='admin', password='password', data=testsxml.release_by_project_do_publish_xml)
-        release = xobj.parse(response.content).release
-        self.assertEquals(response.status_code, 200)
-        self.assertEquals(release.published, u'True')
-        self.assertXMLEquals(response.content, testsxml.published_release_xml)
-        
-    def testUnpublishRelease(self):
-        proj = self.addProject('foo', user='ExampleDeveloper')
-        release = models.Release(project=proj,
-            name='release42', version='releaseVersion42', description='description42')
-        user = usersmodels.User.objects.get(user_name='ExampleDeveloper')
-        release = self.mgr.createRelease(release, user, project=proj)
-        release.save()
-        image = imagesmodels.Image(
-            project=proj, release=release, _image_type=10, job_uuid='1',
-            name="image-42", trove_name='troveName42', trove_version='/cydonia.eng.rpath.com@rpath:cydonia-1-devel/1317221453.365:1-42-1',
-            trove_flavor='1#x86:i486:i586:i686|5#use:~!xen', image_count=1,
-            output_trove=None, description="image-42")
-        image.save()
-        response = self._put('projects/foo/releases/%s' % release.release_id,
-            username='admin', password='password', data=testsxml.release_by_project_do_publish_xml)
-        self.assertEquals(response.status_code, 200)
-        response = self._put('projects/foo/releases/%s' % release.release_id,
-            username='admin', password='password', data=testsxml.release_by_project_unpublish_xml)
-        release = xobj.parse(response.content).release
-        self.assertEquals(release.published, u'False')
-    
-    
-    def testAddReleaseByInferringProject(self):
-        self.addProject('foo', user='admin')
-        response = self._post('projects/foo/releases',
-            username='ExampleDeveloper', password='password', data=testsxml.release_by_project_no_project_post_xml)
-        self.assertEquals(response.status_code, 200)
-        release = xobj.parse(response.content).release
-        self.assertEquals(release.name, 'release2002')
-        self.assertEquals(release.project.id, 'http://testserver/api/v1/projects/foo')
-        self.assertEquals(release.should_mirror, u'0')
-        self.assertEquals(release.version, 'releaseVersion2002')
-    
-    def testGetImagesByRelease(self):
-        self._initProject(adorn=True)
-        url = 'projects/chater-foo/releases/1/images/'
-        status_codes = self._testRbacHttpMethodPerms(url)
-        for expectedCode, responseCode in status_codes.values():
-            self.assertEquals(expectedCode, responseCode)          
-        response = self._get(url, username='ExampleDeveloper', password='password')
-        self.assertXMLEquals(response.content, testsxml.image_by_release_get_xml)
-        
-    def testAddImageByRelease(self):
-        self._initProject(adorn=True)
-        url = 'projects/chater-foo/releases/1/images/'
-        # try unauthenticated
-        response = self._post(url,data=testsxml.image_by_release_post_xml)
-        self.assertEquals(response.status_code, 401)
-        # try authenticated w/o perms
-        response = self._post(url,
-            username='testuser', password='password', data=testsxml.image_by_release_post_xml)
-        self.assertEquals(response.status_code, 403)
-        # try authenticated user with write perms
-        response = self._post(url,
-            username='ExampleDeveloper', password='password', data=testsxml.image_by_release_post_xml)
-        self.assertEquals(response.status_code, 200)
-        self.assertXMLEquals(response.content, testsxml.image_by_release_post_result_xml)
 

@@ -20,37 +20,6 @@ from mint import userlevels
 from mint.django_rest.rbuilder.modellib import Flags
 import time
 
-
-def _rbac_release_access_check(view, request, release_id, action, *args, **kwargs):
-    release = view.mgr.getRelease(release_id)
-    project = release.project 
-    user = request._authUser
-    return view.mgr.userHasRbacPermission(user, project, action)
-
-def can_read_release(view, request, release_id, *args, **kwargs):
-    return _rbac_release_access_check(
-        view, request, release_id, 
-        READMEMBERS, *args, **kwargs
-    )
-
-def can_write_release(view, request, release_id, *args, **kwargs):
-    return _rbac_release_access_check(
-        view, request, release_id, 
-        MODMEMBERS, *args, **kwargs
-    )
-
-def can_create_release(view, request, release, *args, **kwargs):
-    user = request._authUser
-    project = release.project
-    return view.mgr.userHasRbacPermission(user, project, MODMEMBERS)
-
-# unneeded
-# 
-#def can_create_release_through_project(view, request, project_short_name, *args, **kwargs):
-#    user = request._authUser
-#    project = projectmodels.Project.objects.get(short_name=project_short_name)
-#    return view.mgr.userHasRbacPermission(user, project, MODMEMBERS)
-
 class ProjectCallbacks(object):
     """
     RBAC callbacks for Project(s)
@@ -73,7 +42,7 @@ class ProjectCallbacks(object):
            return True
 
         # if no explicit Project permission, check all PBSes
-        # that have this project, ability to access any implies 
+        # that have this project, ability to access any implies
         # access on the project, this will be a bit sluggish
         # but prevents confusion in setting up an extra set of QS
         # permissions.  Unsafe for anything but reads
@@ -92,7 +61,7 @@ class ProjectCallbacks(object):
         project_short_name needs to be a kwarg until the views are more granularly refactored.
         """
         return ProjectCallbacks._checkPermissions(view, request, project_short_name, READMEMBERS)
-    
+
     @staticmethod
     def can_read_project_not_transitive(view, request, project_short_name=None, *args, **kwargs):
         return ProjectCallbacks._checkPermissions(view, request, project_short_name, READMEMBERS, transitive=False)
@@ -115,14 +84,14 @@ class BranchCallbacks(object):
 
     @staticmethod
     def _checkPermissions(view, request, branch_or_label, action):
-  
+
         # this is very special cased because:
         #    (A) legacy access control exists in the repo
         #    (B) there are attemps to make P and PBS do the right thing without
         #        having to set up very explicit perms
         #    (C) branches aren't queryseted, and RBAC wants querysets
-        # do _NOT_ use this as a model on how to rbac other resources -- MPD       
- 
+        # do _NOT_ use this as a model on how to rbac other resources -- MPD
+
         if request._is_admin:
             return True
 
@@ -155,9 +124,9 @@ class BranchCallbacks(object):
             )
         if len(membership) > 0:
             return True
-       
+
         # if no old-school membership, we can read the branch if we can
-        # read any of the stages (which might not exist yet) 
+        # read any of the stages (which might not exist yet)
         if action == READMEMBERS:
             stages_for_project = projectmodels.Stage.objects.filter(
                 project_branch = branch
@@ -171,13 +140,13 @@ class BranchCallbacks(object):
             return True
 
         return False
-        
+
     @staticmethod
     def can_read_branch(view, request, *args, **kwargs):
         branch_or_label = kwargs.get('project_branch_label', kwargs.get('project_branch',None))
         rc = BranchCallbacks._checkPermissions(view, request, branch_or_label, READMEMBERS)
         return rc
-    
+
     @staticmethod
     def can_write_branch(view, request, *args, **kwargs):
         # must use project_branch_label first or security is wrong on PUTs
@@ -191,9 +160,9 @@ class BranchCallbacks(object):
         return retval
 
 class StageCallbacks(object):
-    
+
     @staticmethod
-    def can_read_stage(view, request, project_short_name, project_branch_label, 
+    def can_read_stage(view, request, project_short_name, project_branch_label,
             stage_name=None, *args, **kwargs):
         user = request._authUser
         if stage_name:
@@ -213,7 +182,7 @@ class StageCallbacks(object):
             return False
 
     @staticmethod
-    def can_write_stage(view, request, project_short_name, project_branch_label, 
+    def can_write_stage(view, request, project_short_name, project_branch_label,
             stage_name, *args, **kwargs):
         obj = view.mgr.getProjectBranchStage(project_short_name, project_branch_label, stage_name)
         user = request._authUser
@@ -287,7 +256,7 @@ class ProjectAllBranchesService(service.BaseService):
     @return_xml
     def rest_GET(self, request, project_short_name):
         return self.get(project_short_name)
-        
+
     def get(self, project_short_name):
         return self.mgr.getAllProjectBranchesForProject(project_short_name)
 
@@ -296,7 +265,7 @@ class ProjectAllBranchesService(service.BaseService):
     @return_xml
     def rest_POST(self, request, project_short_name, project_branch):
         return self.mgr.addProjectBranch(project_short_name, project_branch, request._authUser)
-        
+
 
 class ProjectBranchService(service.BaseService):
 
@@ -304,7 +273,7 @@ class ProjectBranchService(service.BaseService):
     @return_xml
     def rest_GET(self, request, project_short_name=None, project_branch_label=None):
         return self.get(project_short_name, project_branch_label)
-        
+
     def get(self, project_short_name, project_branch_label):
         return self.mgr.getProjectBranch(project_short_name, project_branch_label)
 
@@ -340,7 +309,7 @@ class ProjectsService(service.BaseService):
         return HttpResponseRedirect(url)
 
     def get(self):
-        # possibly needed to appease modellib? 
+        # possibly needed to appease modellib?
         pass
 
     @rbac(ProjectCallbacks.can_create_project)
@@ -431,16 +400,16 @@ class ProjectImageService(service.BaseService):
         return self.mgr.updateImage(image)
 
 class ProjectBranchStageImagesService(service.BaseService):
-    
+
     def get(self, request, project_short_name, project_branch_label, stage_name):
         return self.mgr.getProjectBranchStageImages(project_short_name,
             project_branch_label, stage_name)
-    
+
     @rbac(StageCallbacks.can_read_stage)
     @return_xml
     def rest_GET(self, request, project_short_name, project_branch_label, stage_name):
         return self.get(request, project_short_name, project_branch_label, stage_name)
-     
+
     @rbac(StageCallbacks.can_write_stage)
     @requires("image")
     @return_xml
@@ -456,149 +425,4 @@ class ProjectMemberService(service.BaseService):
 
     def get(self, project_short_name):
         return self.mgr.getProjectMembers(project_short_name)
-
-
-class ProjectReleasesService(service.BaseService):
- 
-    @rbac(ProjectCallbacks.can_read_project)
-    @return_xml
-    def rest_GET(self, request, project_short_name):
-        return self.get(project_short_name)
-
-    def get(self, project_short_name):
-        Releases = projectmodels.Releases()
-        Releases.release = projectmodels.Release.objects.filter(
-                project__short_name=project_short_name)
-        return Releases
-
-    @rbac(ProjectCallbacks.can_write_project)
-    @requires('release', flags=Flags(save=False))
-    @return_xml
-    def rest_POST(self, request, project_short_name, release):
-        project = projectmodels.Project.objects.get(short_name=project_short_name)
-        user = request._authUser
-        return self.mgr.createRelease(release, user, project=project)
-        
-class ProjectReleaseService(service.BaseService):
-
-    @rbac(ProjectCallbacks.can_read_project)
-    @return_xml
-    def rest_GET(self, request, project_short_name, release_id):
-        return self.get(project_short_name, release_id)
-
-    def get(self, project_short_name, release_id):
-        return projectmodels.Release.objects.get(release_id=release_id)
-    
-    @rbac(ProjectCallbacks.can_write_project)
-    @return_xml
-    @requires('release')
-    def rest_PUT(self, request, project_short_name, release_id, release):
-
-        if str(release_id) != str(release.pk):
-            raise PermissionDenied(msg="release ID must match URL (%s,%s)" % (release_id, release.pk))
-
-        user = request._authUser
-        if release.published == u'True':
-            self.mgr.publishRelease(release, user)
-            release.published_by = user
-            release.time_published = time.time()
-        elif release.published == u'False':
-            self.mgr.unpublishRelease(release)
-            release.published_by = None
-            release.time_published = None
-            
-        if release.should_mirror != 0:
-            release.time_mirrored = time.time()
-        elif release.should_mirror == 0:
-            release.time_mirrored = None 
-        
-        release.updated_by = user
-        release.time_updated = time.time()
-        release.save()
-        
-        return release
-        
-class ProjectReleaseImagesService(service.BaseService):
-
-    @rbac(ProjectCallbacks.can_read_project)
-    @return_xml
-    def rest_GET(self, request, project_short_name, release_id):
-        return self.get(project_short_name, release_id)
-        
-    def get(self, project_short_name, release_id):
-        Images = imagemodels.Images()
-        Images.image = imagemodels.Image.objects.filter(release__release_id=release_id)
-        return Images
-    
-    @rbac(ProjectCallbacks.can_write_project)
-    @requires('image')
-    @return_xml
-    def rest_POST(self, request, project_short_name, release_id, image):
-        return self.mgr.addImageToRelease(release_id, image)
-        
-class ProjectReleaseImageService(service.BaseService):
-
-    @rbac(ProjectCallbacks.can_read_project)
-    @return_xml
-    def rest_GET(self, request, project_short_name, release_id, image_id):
-        return self.get(project_short_name, release_id, image_id)
-        
-    def get(self, project_short_name, release_id, image_id):
-        return self.mgr.getImageBuild(image_id)
-
-    @rbac(ProjectCallbacks.can_write_project)
-    def rest_DELETE(self, request, project_short_name, release_id, image_id):
-        imagemodels.Image.objects.get(pk=image_id).delete()
-        return HttpResponse(status=204)
-
-class TopLevelReleasesService(service.BaseService):
-
-    # the list of all releases should NOT be something the UI requests
-    # because there is no way to filter non-queryset paged collections.
-    # if we want to change this, we'd have to queryset releases
-    @access.admin
-    @return_xml
-    def rest_GET(self, request):
-        return self.get()
-
-    def get(self):
-        Releases = projectmodels.Releases()
-        Releases.release = projectmodels.Release.objects.all()
-        return Releases
-        
-    @rbac(manual_rbac)
-    @requires('release')
-    @return_xml
-    def rest_POST(self, request, release):
-        if can_create_release(self, request, release):
-            createdBy = request._authUser
-            return self.mgr.createRelease(release, createdBy)
-        raise PermissionDenied()
-
-class TopLevelReleaseService(service.BaseService):
-
-    @rbac(can_read_release)
-    @return_xml
-    def rest_GET(self, request, release_id):
-        return self.get(release_id)
-
-    def get(self, release_id):
-        release = projectmodels.Release.objects.get(pk=release_id)
-        return release
-
-    @rbac(can_write_release)
-    @requires('release')
-    @return_xml
-    def rest_PUT(self, request, release_id, release):
-        if str(release_id) != str(release.pk):
-            raise PermissionDenied(msg="release ID must match URL")
-        updatingUser = request._authUser
-        return self.mgr.updateRelease(release, updatingUser)
-
-    @rbac(can_write_release)
-    def rest_DELETE(self, request, release_id):
-        release = projectmodels.Release.objects.get(pk=release_id)
-        release.delete()
-        return HttpResponse(status=204)
-
 

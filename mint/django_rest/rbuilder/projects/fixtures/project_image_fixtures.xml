@@ -42,7 +42,6 @@
   <object pk="1" model="images.image">
     <field to="projects.project" name="project" rel="ManyToOneRel">1</field>
     <field to="projects.stage" name="project_branch_stage" rel="ManyToOneRel">1</field>
-    <field to="projects.release" name="release" rel="ManyToOneRel"><None></None></field>
     <field type="IntegerField" name="_image_type">2</field>
     <field type="CharField" name="job_uuid"><None></None></field>
     <field type="CharField" name="name">image from fixture</field>
