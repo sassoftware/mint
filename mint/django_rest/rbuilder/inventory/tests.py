@@ -1670,7 +1670,7 @@ class SystemsTestCase(XMLTestCase):
         new_system = self.mgr.addSystem(system)
         assert(new_system is not None)
         self.failUnlessEqual(new_system.current_state.name,
-            models.SystemState.REGISTERED)
+            models.SystemState.RESPONSIVE)
         
         # make sure we did not schedule registration
         self.failUnlessEqual(self.mock_scheduleSystemRegistrationEvent_called,
@@ -1689,7 +1689,7 @@ class SystemsTestCase(XMLTestCase):
         new_system = self.mgr.addSystem(system)
         assert(new_system is not None)
         self.failUnlessEqual(new_system.current_state.name,
-            models.SystemState.REGISTERED)
+            models.SystemState.RESPONSIVE)
         
         # make sure we did not schedule registration
         self.failUnlessEqual(self.mock_scheduleSystemRegistrationEvent_called,

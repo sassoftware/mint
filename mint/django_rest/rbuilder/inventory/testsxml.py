@@ -1685,6 +1685,8 @@ system_post_xml_response = """\
     <running_jobs id="http://testserver/api/v1/inventory/systems/3/job_states/2/jobs"/>
   </jobs>
   <description>testsystemdescription</description>
+  <desired_top_level_items/>
+  <observed_top_level_items/>
   <system_log id="http://testserver/api/v1/inventory/systems/3/system_log"/>
   <target_system_id/>
   <target_system_name/>
@@ -1696,10 +1698,10 @@ system_post_xml_response = """\
   <local_uuid>testsystemlocaluuid</local_uuid>
   <project_branch/>
   <management_interface id="http://testserver/api/v1/inventory/management_interfaces/1">Common Information Model (CIM)</management_interface>
-  <current_state id="http://testserver/api/v1/inventory/system_states/3">
-    <description>Registered</description>
-    <name>registered</name>
-    <system_state_id>3</system_state_id>
+  <current_state id="http://testserver/api/v1/inventory/system_states/4">
+    <description>Online</description>
+    <name>responsive</name>
+    <system_state_id>4</system_state_id>
   </current_state>
   <created_date>%s</created_date>
   <source_image/>
