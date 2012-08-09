@@ -3656,7 +3656,8 @@ class SystemEventProcessing2TestCase(XMLTestCase, test_utils.RepeaterMixIn):
                     ),
                     dict(
                         zone='Local rBuilder',
-                        uuid='really-unique-uuid-002',
+                        jobToken='really-unique-uuid-002',
+                        uuid='really-unique-uuid-003',
                         resultsLocation=resLoc(
                             path='/api/v1/inventory/systems/4',
                             port=80),
@@ -3666,7 +3667,7 @@ class SystemEventProcessing2TestCase(XMLTestCase, test_utils.RepeaterMixIn):
         system = self.mgr.getSystem(self.system2.system_id)
         jobs = system.jobs.all()
         self.failUnlessEqual([ x.job_uuid for x in jobs ],
-            ['really-unique-uuid-002'])
+            ['really-unique-uuid-003'])
         # XXX find a better way to extract the additional field from the
         # many-to-many table
         self.failUnlessEqual(
@@ -3708,7 +3709,8 @@ class SystemEventProcessing2TestCase(XMLTestCase, test_utils.RepeaterMixIn):
                     ),
                     dict(
                         zone='Local rBuilder',
-                        uuid='really-unique-uuid-002',
+                        jobToken='really-unique-uuid-002',
+                        uuid='really-unique-uuid-003',
                         resultsLocation=resLoc(
                             path='/api/v1/inventory/systems/4',
                             port=80),
@@ -3718,7 +3720,7 @@ class SystemEventProcessing2TestCase(XMLTestCase, test_utils.RepeaterMixIn):
         system = self.mgr.getSystem(self.system2.system_id)
         jobs = system.jobs.all()
         self.failUnlessEqual([ x.job_uuid for x in jobs ],
-            ['really-unique-uuid-002'])
+            ['really-unique-uuid-003'])
         # XXX find a better way to extract the additional field from the
         # many-to-many table
         self.failUnlessEqual(
@@ -3794,7 +3796,8 @@ class SystemEventProcessing2TestCase(XMLTestCase, test_utils.RepeaterMixIn):
                             launchWaitTime=1200),
                     ),
                     dict(zone='Local rBuilder',
-                        uuid='really-unique-uuid-002',
+                        jobToken='really-unique-uuid-002',
+                        uuid='really-unique-uuid-003',
                         resultsLocation=resLoc(
                             path='/api/v1/inventory/systems/%s' % systemCim.pk,
                             port=80),
