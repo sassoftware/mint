@@ -4978,7 +4978,7 @@ class MigrateTo_62(SchemaMigration):
 
 class MigrateTo_63(SchemaMigration):
     '''Goad'''
-    Version = (63, 24)
+    Version = (63, 25)
 
     def migrate(self):
         ''' add initial tables for config environments'''
@@ -5300,6 +5300,13 @@ class MigrateTo_63(SchemaMigration):
         self.db.createIndex("inventory_system_observed_top_level_item",
             "inventory_system_obs_toplitem_sid_tspec", "system_id, trove_spec",
             unique=True)
+        return True
+
+    def migrate25(self):
+        ''' new survey additions '''
+        cu = self.db.cursor()
+        cu.execute("ALTER TABLE inventory_survey ADD COLUMN overall_compliance BOOLEAN")
+        cu.execute("ALTER TABLE inventory_survey ADD COLUMN execution_error_count INTEGER")
         return True
 
 #### SCHEMA MIGRATIONS END HERE #############################################

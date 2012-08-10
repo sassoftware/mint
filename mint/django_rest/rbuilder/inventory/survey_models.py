@@ -113,6 +113,9 @@ class Survey(modellib.XObjIdModel):
     system_model_modified_date = modellib.DateTimeUtcField()
     has_system_model = models.BooleanField(default=False)
 
+    overall_compliance    = models.BooleanField(default=True)
+    execution_error_count = models.IntegerField()
+
     # 'should be like this' values XML from system
     config_properties     = modellib.XMLField(db_column='values_xml')
     # values from config readers
@@ -207,6 +210,9 @@ class ShortSurvey(modellib.XObjIdModel):
     description   = models.TextField()
     removable     = models.BooleanField(default=False)
     created_date  = modellib.DateTimeUtcField(auto_now_add=True)
+
+    overall_compliance    = models.BooleanField(default=True)
+    execution_error_count = models.IntegerField()
 
     def get_url_key(self, *args, **kwargs):
         return [ self.uuid ]

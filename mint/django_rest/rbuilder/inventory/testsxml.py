@@ -2571,6 +2571,8 @@ surveys_xml = """
     <name>x</name>
     <removable>True</removable>
     <uuid>%(uuid)s</uuid>
+    <execution_error_count/>
+    <overall_compliance>True</overall_compliance>
   </survey>
 </surveys>
 """

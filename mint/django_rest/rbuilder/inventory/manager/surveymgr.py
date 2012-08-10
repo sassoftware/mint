@@ -300,7 +300,7 @@ class SurveyManager(basemanager.BaseManager):
             status = getattr(validation_report, 'status', None)
             if status and status.lower() == 'fail':
                 has_errors = True
-                config_execution_failures = True
+                config_execution_failed = True
 
             errors = getattr(validation_report, 'errors', None)
             if errors is not None:
@@ -778,6 +778,14 @@ class SurveyManager(basemanager.BaseManager):
         survey.updates_pending = updates_pending
         survey.compliance_summary = compliance_xml
         survey.config_compliance = self._computeConfigDelta(survey)
+
+        def parse_compliance_xml(xml):
+            parsed_compliance_xml = xobj.parse(xml)
+            overall       = parsed_compliance_xml.compliance_summary.overall.compliant[0].lower == 't'
+            failure_count = int(parsed_compliance_xml.compliance_summary.config_execution.failure_count)
+            return overall, failure_count
+        survey.overall_compliance, survey.execution_error_count = parse_compliance_xml(compliance_xml)
+
         survey.save()
 
         # required to avoid some first survey Catch-22 issues
