@@ -258,6 +258,9 @@ class ProjectVersions(modellib.Collection):
     list_fields = ["project_branch"]
     version = []
 
+    def get_url_key(self, *args, **kwargs):
+        return self._url_key
+
 class ProjectVersion(modellib.XObjIdModel):
     # a.k.a. "branch"
     class Meta:
@@ -400,6 +403,9 @@ class Stages(modellib.Collection):
                 tag = "project_branch_stages")
     view_name = "ProjectBranchStages"
     list_fields = ["project_branch_stage"]
+
+    def get_url_key(self, *args, **kwargs):
+        return self._url_key
 
 class Stage(modellib.XObjIdModel):
     class Meta:

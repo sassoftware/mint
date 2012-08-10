@@ -462,6 +462,7 @@ class ProjectManager(basemanager.BaseManager):
         stages.project_branch_stage = models.Stage.objects.select_related(depth=2).filter(
                 project__short_name=project_short_name).order_by(
                     'project__project_id', 'project_branch__branch_id', 'stage_id')
+        stages._url_key = [ project_short_name ]
         return stages
 
     @exposed
@@ -471,8 +472,10 @@ class ProjectManager(basemanager.BaseManager):
                 project__short_name=project_short_name,
                 project_branch__label=project_branch_label).order_by(
                     'project__project_id', 'project_branch__branch_id', 'stage_id')
+        stages._url_key = [ project_short_name, project_branch_label ]
         return stages
 
+    # should not be used due to querysets
     @exposed
     def getAllProjectBranchStages(self):
         stages = models.Stages()
@@ -512,6 +515,7 @@ class ProjectManager(basemanager.BaseManager):
         branches = models.ProjectVersions()
         branches.project_branch = models.ProjectVersion.objects.filter(
             project__short_name=project_short_name)
+        branches._url_key = [ project_short_name ]
         return branches
 
     @exposed
