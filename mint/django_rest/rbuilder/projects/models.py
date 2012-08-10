@@ -258,9 +258,6 @@ class ProjectVersions(modellib.Collection):
     list_fields = ["project_branch"]
     version = []
 
-    def get_url_key(self, *args, **kwargs):
-        return self._url_key
-
 class ProjectVersion(modellib.XObjIdModel):
     # a.k.a. "branch"
     class Meta:

@@ -448,6 +448,7 @@ class ProjectManager(basemanager.BaseManager):
             'project__project_id', 'branch_id')
         return branches
 
+
     @exposed
     def getProjectBranchStage(self, project_short_name, project_branch_label, stage_name):
         stage = models.Stage.objects.get(
@@ -515,7 +516,6 @@ class ProjectManager(basemanager.BaseManager):
         branches = models.ProjectVersions()
         branches.project_branch = models.ProjectVersion.objects.filter(
             project__short_name=project_short_name)
-        branches._url_key = [ project_short_name ]
         return branches
 
     @exposed

@@ -302,6 +302,9 @@ class ProjectsTestCase(RbacEngine):
     def testGetAggregateProjectBranches(self):
         response = self._get('project_branches/',
             username='admin', password="password")
+        if response.status_code != 200:
+            print response.content
+
         self.assertEquals(response.status_code, 200)
         # FIXME: convert to XML test
         branches = xobj.parse(response.content).project_branches.project_branch
