@@ -627,7 +627,11 @@ class SurveyManager(basemanager.BaseManager):
             mgr.create(system=system, trove_spec=toAdd)
         mgr.filter(system=system, trove_spec__in=existing.difference(topLevelItems)).delete()
 
+        os_type = 'linux'
+
         for xmodel in xwindows_packages:
+            os_type = 'windows'
+
             xinfo = xmodel.windows_package_info
             xid = xmodel.id
             info, created = survey_models.WindowsPackageInfo.objects.get_or_create(
@@ -650,6 +654,8 @@ class SurveyManager(basemanager.BaseManager):
             pkg.save()
 
         for xmodel in xwindows_os_patches:
+            os_type = 'windows'
+
             xinfo = xmodel.windows_os_patch_info
             info, created = survey_models.WindowsOsPatchInfo.objects.get_or_create(
                 hotfix_id    = _u(xinfo.hotfix_id),
@@ -671,6 +677,8 @@ class SurveyManager(basemanager.BaseManager):
             pkg.save()
 
         for xmodel in xwindows_patches:
+            os_type = 'windows'
+
             # NOTE DEPENDENT SERVICES!!!
             xinfo = xmodel.windows_patch_info
             info,created = survey_models.WindowsPatchInfo.objects.get_or_create(
@@ -778,6 +786,7 @@ class SurveyManager(basemanager.BaseManager):
         survey.updates_pending = updates_pending
         survey.compliance_summary = compliance_xml
         survey.config_compliance = self._computeConfigDelta(survey)
+        survey.os_type = os_type
 
         def parse_compliance_xml(xml):
             parsed_compliance_xml = xobj.parse(xml)

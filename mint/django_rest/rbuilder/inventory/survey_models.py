@@ -102,6 +102,7 @@ class Survey(modellib.XObjIdModel):
     name          = models.TextField()
     uuid          = models.TextField(null=False)
     description   = models.TextField()
+    os_type       = models.TextField()
     created_date  = modellib.DateTimeUtcField(auto_now_add=True)
     modified_date = modellib.DateTimeUtcField(auto_now_add=True)
     removable     = models.BooleanField(default=True)

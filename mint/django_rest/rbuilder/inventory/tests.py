@@ -55,7 +55,7 @@ class SurveyTests(XMLTestCase):
             survey.save()
 
         return survey
- 
+
     def _makeSystem(self):
         zone = self._saveZone()
         sys = self.newSystem(name="blinky", description="ghost")
@@ -67,7 +67,7 @@ class SurveyTests(XMLTestCase):
         response = self._get(url,
             username='admin', password='password')
         self.assertEqual(response.status_code, 200)
- 
+
     def test_survey_serialization(self):
         survey = self._makeSurvey()
         tag1 = survey_models.SurveyTag(
@@ -110,7 +110,7 @@ class SurveyTests(XMLTestCase):
         )
         iss.save()
         response = self._get("inventory/surveys/%s" % survey.uuid,
-            username='admin', password='password') 
+            username='admin', password='password')
         self.assertEqual(response.status_code, 200)
         # this is an incomplete test as the survey didn't actually post
         # self.assertXMLEquals(response.content, testsxml.survey_output_xml, ignoreNodes=['created_date','install_date','modified_date'])
@@ -131,11 +131,11 @@ class SurveyTests(XMLTestCase):
         )
         tag1.save()
         windows_package = survey_models.WindowsPackageInfo(
-            publisher    = 'konami', 
+            publisher    = 'konami',
             product_code = 'up-up-down-down',
             package_code = 'left-right-right-left',
             product_name = 'contra',
-            type         = 'msi', 
+            type         = 'msi',
             upgrade_code = 'B-A-B-A select-start',
             version      = '1.0'
         )
@@ -167,7 +167,7 @@ class SurveyTests(XMLTestCase):
         )
         spackage.save()
         spatch = survey_models.SurveyWindowsPatch(
-            survey = survey, 
+            survey = survey,
             windows_patch_info = windows_patch_info,
             local_package='d:/path/to/stuff',
             is_installed=True,
@@ -175,7 +175,7 @@ class SurveyTests(XMLTestCase):
         )
         spatch.save()
         service = survey_models.WindowsServiceInfo(
-            name = 'minesweeper', 
+            name = 'minesweeper',
             display_name='minesweeper',
             type = 'AcmeService32',
             handle = 'AcmeServiceHandle',
@@ -183,7 +183,7 @@ class SurveyTests(XMLTestCase):
         )
         service.save()
         service2 = survey_models.WindowsServiceInfo(
-            name = 'solitaire', 
+            name = 'solitaire',
             display_name='solitare',
             type = 'AcmeService32',
             handle = 'AcmeServiceHandle',
@@ -204,7 +204,7 @@ class SurveyTests(XMLTestCase):
             username='admin', password='password')
         self.assertEqual(response.status_code, 200)
 
-    def notest_survey_post(self):
+    def test_survey_post(self):
 
         # make sure we can post a survey and it mostly looks
         # like the model saved version above -- much of the
@@ -217,6 +217,7 @@ class SurveyTests(XMLTestCase):
         response = self._post(url,
             data = testsxml.survey_input_xml % {'uuid': str(self.uuid4())},
             username='admin', password='password')
+        print response.content
         self.assertEqual(response.status_code, 200)
 
         # Make sure the system has a system model
@@ -263,7 +264,7 @@ install needle
         response = self._get(url,
             username='admin', password='password')
         self.assertEqual(response.status_code, 200)
-        # self.assertXMLEquals(response.content, testsxml.survey_output_xml)      
+        # self.assertXMLEquals(response.content, testsxml.survey_output_xml)
         # make sure inline urls work
         self._hiturl("inventory/survey_tags/1")
         self._hiturl("inventory/survey_rpm_packages/1")
@@ -272,7 +273,7 @@ install needle
         self._hiturl("inventory/rpm_package_info/1")
         self._hiturl("inventory/conary_package_info/1")
         self._hiturl("inventory/service_info/1")
-        
+
         url = "inventory/surveys/1234"
         response = self._put(url,
             data = testsxml.survey_mod_xml,
@@ -281,7 +282,7 @@ install needle
         surv = survey_models.Survey.objects.get(uuid='1234')
         self.assertEqual(surv.removable, True) # Bug 2209
 
- 
+
         # post a second survey to verify that updating the latest survey
         # info still works and see if the latest survey date matches
         response = self._put("inventory/surveys/1234",
@@ -290,10 +291,10 @@ install needle
         self.assertEqual(response.status_code, 200)
         sys = models.System.objects.get(pk=sys.pk)
         self.assertTrue(sys.latest_survey.created_date is not None)
-        
+
         # not included yet only because IDs don't line up?
         #self.assertXMLEquals(response.content, testsxml.survey_output_xml2)
-        
+
         # post an alternate survey, primarily for checking config and compliance diffs
         # other parts of diffs will be checked in other tests, this one just has
         # all the config parts populated so it makes sense here
@@ -332,9 +333,7 @@ install needle
             data = testsxml2.windows_upload_survey_xml,
             username='admin', password='password')
         self.assertEqual(response.status_code, 200)
-        #print response.content
-        # print response.content
- 
+
         self._hiturl('inventory/survey_windows_patches/1')
         self._hiturl('inventory/survey_windows_os_patches/1')
         self._hiturl('inventory/windows_patch_info/1')
@@ -342,33 +341,33 @@ install needle
         self._hiturl('inventory/survey_windows_packages/1')
         self._hiturl('inventory/survey_windows_services/2')
         self._hiturl('inventory/windows_service_info/1')
-        
+
         response = self._post(url,
             data = testsxml2.windows_upload_survey_xml2,
             username='admin', password='password')
         self.assertEqual(response.status_code, 200)
- 
+
         url = "inventory/surveys/%s/diffs/%s" % ('123456789', '987654321')
         response = self._get(url, username='admin', password='password')
         self.assertEqual(response.status_code, 200)
-        
+
         url = "inventory/systems/%s/surveys" % sys.pk
         response = self._post(url,
             data = testsxml2.windows_upload_survey_xml3,
             username='admin', password='password')
         self.assertEqual(response.status_code, 200)
-        
+
         url = "inventory/surveys/%s/diffs/%s" % ('123456789', '555')
         response = self._get(url, username='admin', password='password')
         self.assertEqual(response.status_code, 200)
- 
+
     def test_survey_diff_linux_heavy(self):
 
         sys = self._makeSystem()
         url = "inventory/systems/%s/surveys" % sys.pk
 
-        surveys = [ testsxml2.one, testsxml2.two, testsxml2.three, 
-            testsxml2.four, testsxml2.five ] 
+        surveys = [ testsxml2.one, testsxml2.two, testsxml2.three,
+            testsxml2.four, testsxml2.five ]
 
         for x in surveys:
             response = self._post(url,
@@ -385,7 +384,7 @@ install needle
         # hit it again to test cached diff logic
         response = self._get(url, username='admin', password='password')
         self.assertEqual(response.status_code, 200)
- 
+
         url = "inventory/surveys/%s/diffs/%s" % ('503', '501')
         response = self._get(url, username='admin', password='password')
         self.assertEqual(response.status_code, 200)
@@ -398,7 +397,7 @@ install needle
         if response.status_code != 204:
             print "response.content = %s" % response.content
         self.assertEqual(response.status_code, 204)
-        # verify system did not cascade 
+        # verify system did not cascade
         # and that since we deleted teh latest survey there is still a latest
         # survey
         surl = "inventory/systems/%s" % sys.pk
@@ -498,8 +497,8 @@ install needle
 
 
 class AssimilatorTestCase(XMLTestCase, test_utils.SmartformMixIn):
-    ''' 
-    This tests actions as well as the assimilator.  See if we can list the jobs on 
+    '''
+    This tests actions as well as the assimilator.  See if we can list the jobs on
     a system, get the descriptor for spawning that job, and whether we can actually
     start that job.  note: rpath-repeater is mocked, so that will return successful
     job XML even if parameters are insufficient.
@@ -539,7 +538,7 @@ class AssimilatorTestCase(XMLTestCase, test_utils.SmartformMixIn):
            actions = [actions]
         self.assertTrue(len(actions) == 5)
 
-    def testFetchActionsDescriptor(self): 
+    def testFetchActionsDescriptor(self):
         descriptorTestData = [
             ('assimilation', 'System Assimilation', 'System Assimilation'),
             ('survey_scan', 'System Scan', 'System Scan'),
@@ -572,7 +571,7 @@ class AssimilatorTestCase(XMLTestCase, test_utils.SmartformMixIn):
         self.assertEquals(response.status_code, 200)
         # now post a barebones job to the systems jobs collection
         url = "inventory/systems/%s/jobs/" % (self.system.pk)
-        response = self._post(url, testsxml.system_assimilator_xml, 
+        response = self._post(url, testsxml.system_assimilator_xml,
             username="admin", password="password")
         self.assertEquals(response.status_code, 200)
         obj = xobj.parse(response.content)
@@ -585,19 +584,19 @@ class InventoryTestCase(XMLTestCase):
         response = self._get('inventory/')
         self.assertEquals(response.status_code, 200)
         self.assertXMLEquals(response.content, testsxml.inventory_xml)
-        
+
         response = self._post('inventory/?_method=GET')
         self.assertEquals(response.status_code, 200)
         self.assertXMLEquals(response.content, testsxml.inventory_xml)
-       
+
     def testPostTypes(self):
         response = self._post('inventory/')
         self.assertEquals(response.status_code, 405)
-        
+
     def notestPutTypes(self):
         response = self._put('inventory/')
         self.assertEquals(response.status_code, 405)
-        
+
     def testDeleteTypes(self):
         response = self._delete('inventory/')
         self.assertEquals(response.status_code, 405)
@@ -619,8 +618,8 @@ class LogTestCase(XMLTestCase):
         """
         response = self._get('inventory/log/')
         self.assertEquals(response.status_code, 401)
-        
-        response = self._get('inventory/log/', username="testuser", 
+
+        response = self._get('inventory/log/', username="testuser",
             password="password")
         self.assertEquals(response.status_code, 200)
 
@@ -634,7 +633,7 @@ class LogTestCase(XMLTestCase):
         system = self.newSystem(name="mgoblue3",
             description="best appliance ever3")
         self.mgr.addSystem(system)
-        response = self._get('inventory/log/', username="testuser", 
+        response = self._get('inventory/log/', username="testuser",
             password="password")
         # unsure of what correct log XML should actually be
         #self.assertXMLEquals(response.content, testsxml.systems_log_xml,
@@ -662,7 +661,7 @@ class ZonesTestCase(XMLTestCase):
         self._saveZone()
         response = self._get('inventory/zones/2/')
         self.assertEquals(response.status_code, 401)
-        
+
         response = self._get('inventory/zones/2/',
             username="testuser", password="password")
         self.assertEquals(response.status_code, 200)
@@ -676,19 +675,19 @@ class ZonesTestCase(XMLTestCase):
         self.assertXMLEquals(response.content,
             testsxml.zone_xml % (zone.created_date.isoformat()),
             ignoreNodes = [ 'created_date', 'created_by', 'modified_by', 'modified_date', 'latest_survey' ])
-        
+
     def testAddZoneNodeNull(self):
-        
+
         try:
             self.mgr.addZone(None)
         except:
             assert(False) # should not throw exception
-        
+
     def testAddZone(self):
         zone = self._saveZone()
         new_zone = self.mgr.addZone(zone)
         assert(new_zone is not None)
-        
+
     def testPostZoneAuth(self):
         """
         Ensure we require admin to post zones
@@ -696,12 +695,12 @@ class ZonesTestCase(XMLTestCase):
         response = self._post('inventory/zones/',
             data= testsxml.zone_post_xml)
         self.assertEquals(response.status_code, 401)
-        
+
         response = self._post('inventory/zones/',
             data=testsxml.zone_post_xml,
             username="testuser", password="password")
         self.assertEquals(response.status_code, 403)
-        
+
     def testPostZone(self):
         zmodels.Zone.objects.all().delete()
         xml = testsxml.zone_post_xml
@@ -711,42 +710,42 @@ class ZonesTestCase(XMLTestCase):
         zone = zmodels.Zone.objects.get(pk=2)
         self.assertXMLEquals(response.content, testsxml.zone_post_response_xml % \
             (zone.created_date.isoformat()))
-        
+
         # test posting a second zone https://issues.rpath.com/browse/RBL-7229
         response = self._post('inventory/zones/',
             data=testsxml.zone_post_2_xml, username="admin", password="password")
         self.assertEquals(response.status_code, 200)
         zones = zmodels.Zone.objects.all()
         self.assertTrue(len(zones) == 2)
-        
+
     def testPutZoneAuth(self):
         """
         Ensure we require admin to put zones
         """
         zone = zmodels.Zone.objects.get(pk=1)
-        response = self._put('inventory/zones/1/', 
+        response = self._put('inventory/zones/1/',
             data=testsxml.zone_put_xml % zone.created_date)
         self.assertEquals(response.status_code, 401)
-        
-        response = self._put('inventory/zones/1/', 
+
+        response = self._put('inventory/zones/1/',
             data=testsxml.zone_put_xml % zone.created_date,
             username="testuser", password="password")
         self.assertEquals(response.status_code, 403)
-        
+
     def testPutZoneNotFound(self):
         """
         Ensure we return 404 if we update zone that doesn't exist
         """
         zone = zmodels.Zone.objects.get(pk=1)
         try:
-            response = self._put('inventory/zones/1zcvxzvzgvsdzfewrew4t4tga34/', 
+            response = self._put('inventory/zones/1zcvxzvzgvsdzfewrew4t4tga34/',
                 data=testsxml.zone_put_xml % zone.created_date,
                 username="testuser", password="password")
             self.assertEquals(response.status_code, 404)
         except TemplateDoesNotExist, e:
             # might not have template, so check for 404 in error
             self.assertTrue("404" in str(e))
-        
+
     def testPutZone(self):
         zmodels.Zone.objects.all().delete()
         zone = self._saveZone()
@@ -756,18 +755,18 @@ class ZonesTestCase(XMLTestCase):
         zone = zmodels.Zone.objects.get(pk=zone.zone_id)
         self.assertTrue(zone.name == "zoneputname")
         self.assertTrue(zone.description == "zoneputdesc")
-        
+
     def testDeleteZoneAuth(self):
         """
         Ensure we require admin to delete zones
         """
         response = self._delete('inventory/zones/1/')
         self.assertEquals(response.status_code, 401)
-        
+
         response = self._delete('inventory/zones/1/',
             username="testuser", password="password")
         self.assertEquals(response.status_code, 403)
-        
+
     def testDeleteZone(self):
         """
         Ensure we can delete zones
@@ -782,7 +781,7 @@ class ZonesTestCase(XMLTestCase):
             self.fail("Lookup should have failed due to deletion")
         except zmodels.Zone.DoesNotExist:
             pass # what we expect
-        
+
 class ManagementInterfacesTestCase(XMLTestCase):
     def testGetManagementInterfaces(self):
         models.ManagementInterface.objects.all().delete()
@@ -800,7 +799,7 @@ class ManagementInterfacesTestCase(XMLTestCase):
         """
         response = self._get('inventory/management_interfaces/')
         self.assertEquals(response.status_code, 200)
-        
+
         response = self._get('inventory/management_interfaces/',
             username="testuser", password="password")
         self.assertEquals(response.status_code, 200)
@@ -814,16 +813,16 @@ class ManagementInterfacesTestCase(XMLTestCase):
         self.assertEquals(response.status_code, 200)
         self.assertXMLEquals(response.content,
             testsxml.management_interface_xml, ignoreNodes = [ 'created_date', 'modified_by', 'created_by', 'modified_date', 'latest_survey' ])
-        
+
     def testPutManagementInterfaceAuth(self):
         """
         Ensure we require admin to put
         """
-        response = self._put('inventory/management_interfaces/1/', 
+        response = self._put('inventory/management_interfaces/1/',
             data=testsxml.management_interface_put_xml)
         self.assertEquals(response.status_code, 401)
-        
-        response = self._put('inventory/management_interfaces/1/', 
+
+        response = self._put('inventory/management_interfaces/1/',
             data=testsxml.management_interface_put_xml,
             username="testuser", password="password")
         self.assertEquals(response.status_code, 403)
@@ -833,14 +832,14 @@ class ManagementInterfacesTestCase(XMLTestCase):
         Ensure we return 404 if we update one that doesn't exist
         """
         try:
-            response = self._put('inventory/management_interfaces/1zcvxzvzgvsdzfewrew4t4tga34/', 
+            response = self._put('inventory/management_interfaces/1zcvxzvzgvsdzfewrew4t4tga34/',
                 data=testsxml.management_interface_put_xml,
                 username="admin", password="password")
             self.assertEquals(response.status_code, 404)
         except TemplateDoesNotExist, e:
             # might not have template, so check for 404 in error
             self.assertTrue("404" in str(e))
-        
+
     def testPutManagementInterface(self):
         models.ManagementInterface.objects.all().delete()
         mi = models.ManagementInterface(name="foo2", description="bar", port=8000, credentials_descriptor="<foo/>")
@@ -854,7 +853,7 @@ class ManagementInterfacesTestCase(XMLTestCase):
         self.assertTrue(mi.name != "thisnameshouldnotstick")
         self.failUnlessEqual(mi.port, 123)
         self.failUnlessEqual(mi.credentials_descriptor, "<foo/>")
-        
+
 class SystemTypesTestCase(XMLTestCase):
 
     def testGetSystemTypes(self):
@@ -891,7 +890,7 @@ class SystemTypesTestCase(XMLTestCase):
         self.assertEquals(response.status_code, 200)
         self.assertXMLEquals(response.content,
             testsxml.system_type_xml, ignoreNodes = [ 'created_date', 'created_by', 'modified_by', 'modified_date', 'latest_survey' ])
-        
+
     def testGetSystemTypeSystems(self):
         system = self._saveSystem()
         response = self._get('inventory/system_types/%d/systems/' % \
@@ -900,20 +899,20 @@ class SystemTypesTestCase(XMLTestCase):
         self.assertEquals(response.status_code, 200)
         self.assertXMLEquals(response.content, testsxml.system_type_systems_xml,
             ignoreNodes = [ 'created_date', 'actions',  'created_by', 'modified_by', 'modified_date', 'latest_survey'])
-        
+
     def testPutSystemTypeAuth(self):
         """
         Ensure we require admin to put
         """
-        response = self._put('inventory/system_types/1/', 
+        response = self._put('inventory/system_types/1/',
             data=testsxml.system_types_put_xml)
         self.assertEquals(response.status_code, 401)
-        
-        response = self._put('inventory/system_types/1/', 
+
+        response = self._put('inventory/system_types/1/',
             data=testsxml.system_types_put_xml,
             username="testuser", password="password")
         self.assertEquals(response.status_code, 403)
-        
+
     def XXXtestPutSystemTypes(self):
         """
         Skipping this test for now, there are problems with PUT support and
@@ -930,7 +929,7 @@ class SystemTypesTestCase(XMLTestCase):
         # name is read only, should not get changed
         self.assertTrue(si.name != "thisnameshouldnotstick")
         self.assertTrue(si.infrastructure == True)
-        
+
     def testAddWindowsBuildService(self):
         system = self.mgr.sysMgr.addWindowsBuildService("myname", "mydesc", "1.1.1.1")
         network = self.mgr.sysMgr.extractNetworkToUse(system)
@@ -938,11 +937,11 @@ class SystemTypesTestCase(XMLTestCase):
         assert(system.description == "mydesc")
         assert(system.system_type.name == models.SystemType.INFRASTRUCTURE_WINDOWS_BUILD_NODE)
         assert(network.dns_name == "1.1.1.1")
-        
+
     def testGetWindowsBuildServiceNodes(self):
         models.SystemType.objects.all().delete()
         models.SystemType.objects.all().delete()
-        st = models.SystemType(name=models.SystemType.INFRASTRUCTURE_WINDOWS_BUILD_NODE, 
+        st = models.SystemType(name=models.SystemType.INFRASTRUCTURE_WINDOWS_BUILD_NODE,
             description=models.SystemType.INFRASTRUCTURE_WINDOWS_BUILD_NODE_DESC, infrastructure=True,
             creation_descriptor="<foo></foo>")
         st.save()
@@ -962,12 +961,12 @@ class SystemTypesTestCase(XMLTestCase):
         network.port_type = 'lan'
         network.system = system
         network.save()
-        
-        st2 = models.SystemType(name=models.SystemType.INVENTORY, 
+
+        st2 = models.SystemType(name=models.SystemType.INVENTORY,
             description=models.SystemType.INVENTORY_DESC, infrastructure=True,
             creation_descriptor="<foo></foo>")
         st2.save()
-        
+
         system2 = models.System()
         system2.name = 'testsystemname2'
         system2.description = 'testsystemdescription2'
@@ -975,33 +974,33 @@ class SystemTypesTestCase(XMLTestCase):
         system2.management_interface = models.ManagementInterface.objects.get(pk=1)
         system2.st = st2
         system2.save()
-        
+
         buildNodes = self.mgr.sysMgr.getWindowsBuildServiceNodes()
         assert(len(buildNodes) == 1)
         assert(buildNodes[0].system_id == system.system_id)
-        
+
     def testGetWindowsBuildServiceNodesEmpty(self):
         models.SystemType.objects.all().delete()
         models.SystemType.objects.all().delete()
-        
+
         buildNodes = self.mgr.sysMgr.getWindowsBuildServiceNodes()
         assert(buildNodes is not None)
         assert(len(buildNodes) == 0)
-        
+
 class SystemStatesTestCase(XMLTestCase):
 
     def testGetSystemStates(self):
         response = self._get('inventory/system_states/')
         self.assertEquals(response.status_code, 200)
-        self.assertXMLEquals(response.content, testsxml.system_states_xml, 
+        self.assertXMLEquals(response.content, testsxml.system_states_xml,
             ignoreNodes = [ 'created_date' ])
 
     def testGetSystemState(self):
         response = self._get('inventory/system_states/1/')
         self.assertEquals(response.status_code, 200)
-        self.assertXMLEquals(response.content, testsxml.system_state_xml, 
+        self.assertXMLEquals(response.content, testsxml.system_state_xml,
             ignoreNodes = [ 'created_date' ])
-        
+
 class NetworkTestCase(XMLTestCase):
 
     def testGetNetworks(self):
@@ -1020,20 +1019,20 @@ class NetworkTestCase(XMLTestCase):
         self._saveSystem()
         response = self._get('inventory/networks/1/')
         self.assertEquals(response.status_code, 401)
-        
+
         response = self._get('inventory/networks/1/',
             username="testuser", password="password")
         self.assertEquals(response.status_code, 200)
-        
+
     def testPutNetworkAuth(self):
         """
         Ensure we require admin to put zones
         """
-        response = self._put('inventory/networks/1/', 
+        response = self._put('inventory/networks/1/',
             data= testsxml.network_put_xml)
         self.assertEquals(response.status_code, 401)
-        
-        response = self._put('inventory/networks/1/', 
+
+        response = self._put('inventory/networks/1/',
             data=testsxml.network_put_xml,
             username="testuser", password="password")
         self.assertEquals(response.status_code, 403)
@@ -1045,12 +1044,12 @@ class NetworkTestCase(XMLTestCase):
         models.System.objects.all().delete()
         self._saveSystem()
         old_count = models.Network.objects.count()
-        self._put('inventory/networks/1/', 
+        self._put('inventory/networks/1/',
                   data=testsxml.network_put_xml_opt_ip_addr % "169.254.4.4",
                   username="admin", password="password")
         self.assertEquals(old_count, models.Network.objects.count())
 
-        self._put('inventory/networks/1/', 
+        self._put('inventory/networks/1/',
                   data=testsxml.network_put_xml_opt_ip_addr % "4.4.4.4",
                   username="admin", password="password")
         self.assertEquals(old_count + 1, models.Network.objects.count())
@@ -1060,14 +1059,14 @@ class NetworkTestCase(XMLTestCase):
         Ensure we return 404 if we update network that doesn't exist
         """
         try:
-            response = self._put('inventory/networks/1zcvxzvzgvsdzfewrew4t4tga34/', 
+            response = self._put('inventory/networks/1zcvxzvzgvsdzfewrew4t4tga34/',
                 data=testsxml.network_put_xml,
                 username="testuser", password="password")
             self.assertEquals(response.status_code, 404)
         except TemplateDoesNotExist, e:
             # might not have template, so check for 404 in error
             self.assertTrue("404" in str(e))
-        
+
     def testPutNetwork(self):
         models.System.objects.all().delete()
         self._saveSystem()
@@ -1077,24 +1076,24 @@ class NetworkTestCase(XMLTestCase):
         network = models.Network.objects.get(pk=2)
         self.assertTrue(network.dns_name == "new.com")
         self.assertTrue(network.ip_address == "2.2.2.2")
-        
+
     def testDeleteNetworkAuth(self):
         """
         Ensure we require admin to put zones
         """
         response = self._delete('inventory/networks/1/')
         self.assertEquals(response.status_code, 401)
-        
-        response = self._delete('inventory/networks/1/', 
+
+        response = self._delete('inventory/networks/1/',
             username="testuser", password="password")
         self.assertEquals(response.status_code, 403)
-        
+
     def testDeleteNetwork(self):
         models.System.objects.all().delete()
         self._saveSystem()
         network = models.Network.objects.get(pk=2)
         self.assertTrue(network is not None)
-        response = self._delete('inventory/networks/2/', 
+        response = self._delete('inventory/networks/2/',
             username="admin", password="password")
         self.assertEquals(response.status_code, 204)
         try:
@@ -1127,7 +1126,7 @@ class ManagementNodesTestCase(XMLTestCase):
         _eq(management_node.current_state_id, None)
         management_node.save()
         _eq(management_node.current_state.name, models.SystemState.UNMANAGED)
-        
+
         # make sure we honor the state if set though
         management_node = models.ManagementNode(name="mgoblue", zone=zone,
             description="best node ever",
@@ -1135,14 +1134,14 @@ class ManagementNodesTestCase(XMLTestCase):
             managing_zone=zone)
         management_node.save()
         _eq(management_node.current_state.name, models.SystemState.DEAD)
-        
+
     # -----------------
     def testGetManagementNodes(self):
         management_node = self._saveManagementNode()
         response = self._get('inventory/management_nodes/',
             username="testuser", password="password")
         self.assertEquals(response.status_code, 200)
-        self.assertXMLEquals(response.content, 
+        self.assertXMLEquals(response.content,
             testsxml.management_nodes_xml % (management_node.networks.all()[0].created_date.isoformat(),
                                              management_node.current_state.created_date.isoformat(),
                                              management_node.created_date.isoformat()))
@@ -1234,7 +1233,7 @@ class ManagementNodesTestCase(XMLTestCase):
         node = self._saveManagementNode()
         response = self._get('inventory/management_nodes/%s/' % node.system_ptr_id)
         self.assertEquals(response.status_code, 401)
-        
+
         response = self._get('inventory/management_nodes/%s/' % node.system_ptr_id,
             username="testuser", password="password")
         self.assertEquals(response.status_code, 200)
@@ -1244,11 +1243,11 @@ class ManagementNodesTestCase(XMLTestCase):
         response = self._get('inventory/management_nodes/%s/' % management_node.system_ptr_id,
             username="testuser", password="password")
         self.assertEquals(response.status_code, 200)
-        self.assertXMLEquals(response.content, 
+        self.assertXMLEquals(response.content,
             testsxml.management_node_xml % (management_node.networks.all()[0].created_date.isoformat(),
-                                            management_node.current_state.created_date.isoformat(), 
+                                            management_node.current_state.created_date.isoformat(),
                                             management_node.created_date.isoformat()))
-        
+
     def testAddManagementNode(self):
         management_node = self._saveManagementNode()
         new_management_node = self.mgr.addManagementNode(management_node)
@@ -1256,27 +1255,27 @@ class ManagementNodesTestCase(XMLTestCase):
         assert(new_management_node.local)
         type = models.SystemType.objects.get(name = models.SystemType.INFRASTRUCTURE_MANAGEMENT_NODE)
         assert(new_management_node.type == type)
-        
+
     def testPostManagementNodeAuth(self):
         """
         Ensure requires admin
         """
         models.ManagementNode.objects.all().delete()
         self._saveZone()
-        response = self._post('inventory/management_nodes/', 
+        response = self._post('inventory/management_nodes/',
             data=testsxml.management_node_post_xml, content_type='text/xml')
         self.assertEquals(response.status_code, 401)
-        
-        response = self._post('inventory/management_nodes/', 
+
+        response = self._post('inventory/management_nodes/',
             data=testsxml.management_node_post_xml, content_type='text/xml',
             username="testuser", password="password")
         self.assertEquals(response.status_code, 403)
-        
-        response = self._post('inventory/management_nodes/', 
+
+        response = self._post('inventory/management_nodes/',
             data=testsxml.management_node_post_xml, content_type='text/xml',
             username="admin", password="password")
         self.assertEquals(response.status_code, 200)
-        
+
     def testPostManagementNode(self):
         models.ManagementNode.objects.all().delete()
         self._saveZone()
@@ -1290,16 +1289,16 @@ class ManagementNodesTestCase(XMLTestCase):
             '<registration_date>%s</registration_date>' % \
             (management_node.registration_date.isoformat()))
         self.assertXMLEquals(response.content, management_node_xml % \
-            (management_node.networks.all()[0].created_date.isoformat(), 
+            (management_node.networks.all()[0].created_date.isoformat(),
              management_node.current_state.created_date.isoformat(),
              management_node.created_date.isoformat()))
-        
+
     def testGetManagementNodesForZone(self):
         management_node = self._saveManagementNode()
         response = self._get('inventory/zones/%d/management_nodes/' % management_node.zone.zone_id,
             username="testuser", password="password")
         self.assertEquals(response.status_code, 200)
-        self.assertXMLEquals(response.content, 
+        self.assertXMLEquals(response.content,
             testsxml.management_nodes_xml % (management_node.networks.all()[0].created_date.isoformat(),
                                              management_node.current_state.created_date.isoformat(),
                                              management_node.created_date.isoformat()))
@@ -1312,7 +1311,7 @@ class ManagementNodesTestCase(XMLTestCase):
         response = self._get('inventory/zones/%d/management_nodes/%s/' % (
             management_node.zone.zone_id, management_node.system_ptr_id))
         self.assertEquals(response.status_code, 401)
-        
+
         response = self._get('inventory/zones/%d/management_nodes/%s/' % (
             management_node.zone.zone_id, management_node.system_ptr_id),
             username="testuser", password="password")
@@ -1324,20 +1323,20 @@ class ManagementNodesTestCase(XMLTestCase):
             management_node.zone.zone_id, management_node.system_ptr_id),
             username="testuser", password="password")
         self.assertEquals(response.status_code, 200)
-        self.assertXMLEquals(response.content, 
+        self.assertXMLEquals(response.content,
             testsxml.management_node_xml % (management_node.networks.all()[0].created_date.isoformat(),
-                                            management_node.current_state.created_date.isoformat(), 
+                                            management_node.current_state.created_date.isoformat(),
                                             management_node.created_date.isoformat()))
-        
+
     def testAddManagementNodeForZoneNull(self):
-        
+
         try:
             # create the system
             managementNode = None
             self.mgr.addManagementNodeForZone(None, managementNode)
         except:
             assert(False) # should not throw exception
-        
+
     def testAddManagementNodeForZone(self):
         management_node = self._saveManagementNode()
         new_management_node = self.mgr.addManagementNodeForZone(management_node.zone.zone_id, management_node)
@@ -1345,7 +1344,7 @@ class ManagementNodesTestCase(XMLTestCase):
         assert(new_management_node.local)
         assert(management_node.type == models.SystemType.objects.get(
             name = models.SystemType.INFRASTRUCTURE_MANAGEMENT_NODE))
-        
+
     def testAddManagementNodeSave(self):
         management_node = self._saveManagementNode()
         management_node.system_type = models.SystemType.objects.get(
@@ -1354,32 +1353,32 @@ class ManagementNodesTestCase(XMLTestCase):
         management_node.save()
         assert(management_node.system_type == models.SystemType.objects.get(
             name = models.SystemType.INFRASTRUCTURE_MANAGEMENT_NODE))
-        
+
     def testPostManagementNodeForZoneAuth(self):
         """
         Ensure requires admin
         """
         models.ManagementNode.objects.all().delete()
         zone = self._saveZone()
-        response = self._post('inventory/zones/%d/management_nodes/' % zone.zone_id, 
+        response = self._post('inventory/zones/%d/management_nodes/' % zone.zone_id,
             data=testsxml.management_node_zone_post_xml, content_type='text/xml')
         self.assertEquals(response.status_code, 401)
-        
-        response = self._post('inventory/zones/%d/management_nodes/' % zone.zone_id, 
+
+        response = self._post('inventory/zones/%d/management_nodes/' % zone.zone_id,
             data=testsxml.management_node_zone_post_xml, content_type='text/xml',
             username="testuser", password="password")
         self.assertEquals(response.status_code, 403)
-        
-        response = self._post('inventory/zones/%d/management_nodes/' % zone.zone_id, 
+
+        response = self._post('inventory/zones/%d/management_nodes/' % zone.zone_id,
             data=testsxml.management_node_zone_post_xml, content_type='text/xml',
             username="admin", password="password")
         self.assertEquals(response.status_code, 200)
-        
+
     def testPostManagementNodeForZone(self):
         models.ManagementNode.objects.all().delete()
         zone = self._saveZone()
         xml = testsxml.management_node_zone_post_xml
-        response = self._post('inventory/zones/%d/management_nodes/' % zone.zone_id, 
+        response = self._post('inventory/zones/%d/management_nodes/' % zone.zone_id,
             data=xml, username="admin", password="password")
         self.assertEquals(response.status_code, 200)
         management_node = models.ManagementNode.objects.get(pk=3)
@@ -1388,7 +1387,7 @@ class ManagementNodesTestCase(XMLTestCase):
             '<registration_date>%s</registration_date>' % \
             (management_node.registration_date.isoformat()))
         self.assertXMLEquals(response.content, management_node_xml % \
-            (management_node.networks.all()[0].created_date.isoformat(), 
+            (management_node.networks.all()[0].created_date.isoformat(),
              management_node.current_state.created_date.isoformat(),
              management_node.created_date.isoformat()))
 
@@ -1399,9 +1398,9 @@ class NetworksTestCase(XMLTestCase):
         self.system = self.newSystem(name="mgoblue",
             description="best appliance ever")
         self.system.save()
-        
+
     def testExtractNetworkToUse(self):
-        
+
         # try a net with no pinned/active nets, but only one net
         network = models.Network(dns_name="foo.com", active=False, pinned=False)
         network.system = self.system
@@ -1463,7 +1462,7 @@ class SystemsTestCase(XMLTestCase):
 
     def mock_scheduleSystemRegistrationEvent(self, system):
         self.mock_scheduleSystemRegistrationEvent_called = True
-        
+
     def mockGetRmakeJob(self):
         self.mockGetRmakeJob_called = True
 
@@ -1538,18 +1537,18 @@ class SystemsTestCase(XMLTestCase):
         """
         Ensure admin users can mothball systems https://issues.rpath.com/browse/RBL-7170
         """
-        
+
         # TODO:  This test will fail until https://issues.rpath.com/browse/RBL-7172
         # is fixed, please to do remove it!
-        
+
         models.System.objects.all().delete()
         system = self._saveSystem()
-        
+
         # fail if anon
         response = self._put('inventory/systems/%d/' % system.system_id,
             data=testsxml.systems_put_mothball_xml)
         self.failUnlessEqual(response.status_code, 401)
-        
+
         # fail if regular user
         response = self._put('inventory/systems/%d/' % system.system_id,
             data=testsxml.systems_put_mothball_xml,
@@ -1600,56 +1599,56 @@ class SystemsTestCase(XMLTestCase):
 
     def testSystemSave(self):
         # make sure state gets set to unmanaged
-        system = self.newSystem(name="mgoblue", 
+        system = self.newSystem(name="mgoblue",
             description="best appliance ever")
         _eq = self.failUnlessEqual
         _eq(system.current_state_id, None)
         system.save()
         _eq(system.current_state.name, models.SystemState.UNMANAGED)
-        
+
         # make sure we honor the state if set though
-        system = self.newSystem(name="mgoblue", 
+        system = self.newSystem(name="mgoblue",
             description="best appliance ever",
             current_state=self.mgr.sysMgr.systemState(models.SystemState.DEAD))
         system.save()
         _eq(system.current_state.name, models.SystemState.DEAD)
-        
+
         # test name fallback to hostname
-        system = self.newSystem(hostname="mgoblue", 
+        system = self.newSystem(hostname="mgoblue",
             description="best appliance ever")
         self.failUnlessEqual(system.name, '')
         system.save()
         self.failUnlessEqual(system.name, system.hostname)
-        
+
         # test name fallback to blank
         system = self.newSystem(description="best appliance ever")
         self.failUnlessEqual(system.name, '')
         system.save()
         self.failUnlessEqual(system.name, '')
-        
+
         # make sure we honor the name if set though
         system = self.newSystem(name="mgoblue")
         system.save()
         self.failUnlessEqual(system.name, "mgoblue")
-        
+
     def testSystemSaveAgentPort(self):
         # make sure state gets set to unmanaged
-        system = self.newSystem(name="mgoblue", 
+        system = self.newSystem(name="mgoblue",
             description="best appliance ever")
         self.assertTrue(system.agent_port is None)
         system.management_interface = models.ManagementInterface.objects.get(pk=1)
         system.save()
         self.assertTrue(system.agent_port == system.management_interface.port)
-        
+
         system.agent_port = 897
         system.save()
         self.assertTrue(system.agent_port == 897)
-        
-        system = self.newSystem(name="mgoblue2", 
+
+        system = self.newSystem(name="mgoblue2",
             description="best appliance ever")
         system.save()
         self.assertTrue(system.agent_port is None)
-        
+
     def testAddSystem(self):
         # create the system
         system = self.newSystem(name="mgoblue",
@@ -1671,11 +1670,11 @@ class SystemsTestCase(XMLTestCase):
         assert(new_system is not None)
         self.failUnlessEqual(new_system.current_state.name,
             models.SystemState.RESPONSIVE)
-        
+
         # make sure we did not schedule registration
         self.failUnlessEqual(self.mock_scheduleSystemRegistrationEvent_called,
             False)
-        
+
     def testAddRegisteredManagementNodeSystem(self):
         zone = self._saveZone()
         system_type = models.SystemType.objects.get(
@@ -1690,20 +1689,20 @@ class SystemsTestCase(XMLTestCase):
         assert(new_system is not None)
         self.failUnlessEqual(new_system.current_state.name,
             models.SystemState.RESPONSIVE)
-        
+
         # make sure we did not schedule registration
         self.failUnlessEqual(self.mock_scheduleSystemRegistrationEvent_called,
             False)
-        
+
     def testAddSystemNull(self):
-        
+
         try:
             # create the system
             system = None
             self.mgr.addSystem(system)
         except:
             assert(False) # should not throw exception
-            
+
     def testAddSystemNoNetwork(self):
         """
         Ensure a network is not pinned per https://issues.rpath.com/browse/RBL-7152
@@ -2010,12 +2009,12 @@ class SystemsTestCase(XMLTestCase):
         system = self._saveSystem()
         response = self._get('inventory/systems/', username="admin", password="password")
         self.assertEquals(response.status_code, 200)
-        self.assertXMLEquals(response.content, 
+        self.assertXMLEquals(response.content,
             testsxml.systems_xml % (system.networks.all()[0].created_date.isoformat(), system.created_date.isoformat()),
             ignoreNodes = [ 'latest_survey', 'created_date', 'modified_date', 'created_by', 'modified_by' ])
         response = self._get('inventory/systems', username='testuser', password='password')
         self.assertEquals(response.status_code, 403)
-        
+
     def testGetSystemAuth(self):
         """
         Ensure requires auth but not admin
@@ -2023,15 +2022,15 @@ class SystemsTestCase(XMLTestCase):
         system = self._saveSystem()
         response = self._get('inventory/systems/%d/' % system.system_id)
         self.assertEquals(response.status_code, 401)
-        
+
         response = self._get('inventory/systems/%d/' % system.system_id,
             username='testuser', password='password')
         self.assertEquals(response.status_code, 403)
-        
+
         response = self._get('inventory/systems/%d/' % system.system_id,
             username="admin", password="password")
         self.assertEquals(response.status_code, 200)
-        
+
     def testGetSystemDoesntExist(self):
         models.System.objects.all().delete()
         system = self._saveSystem()
@@ -2047,7 +2046,7 @@ class SystemsTestCase(XMLTestCase):
         response = self._get('inventory/systems/%d/' % system.system_id,
             username="admin", password="password")
         self.assertEquals(response.status_code, 200)
-        self.assertXMLEquals(response.content, 
+        self.assertXMLEquals(response.content,
             testsxml.system_xml % (system.networks.all()[0].created_date.isoformat(), system.created_date.isoformat()),
             ignoreNodes = [ 'latest_survey', 'created_date', 'modified_date', 'created_by', 'modified_by', 'time_created', 'time_updated' ])
 
@@ -2075,7 +2074,7 @@ class SystemsTestCase(XMLTestCase):
         self.assertXMLEquals(response.content, testsxml.system_target_xml % \
             (system.networks.all()[0].created_date.isoformat(), system.created_date.isoformat()),
             ignoreNodes = [ 'latest_survey', 'created_date', 'modified_date', 'created_by', 'modified_by', 'time_created', 'time_updated' ])
-        
+
     def testPostSystemAuth(self):
         """
         Ensure wide open for rpath-tools usage
@@ -2084,7 +2083,7 @@ class SystemsTestCase(XMLTestCase):
         response = self._post('inventory/systems/',
             data=system_xml, username="admin", password="password")
         self.assertEquals(response.status_code, 200)
-       
+
     def testPostSystemBadNetwork(self):
         """Ensure network address validation is done pre-save"""
         system_xml = testsxml.system_post_xml_bad_network
@@ -2092,7 +2091,7 @@ class SystemsTestCase(XMLTestCase):
             data=system_xml, username="admin", password="password")
         self.assertEquals(response.status_code, 400)
         self.assertTrue(response.content.find('<fault>') != -1)
- 
+
     def testPostSystem(self):
         models.System.objects.all().delete()
         system_xml = testsxml.system_post_xml
@@ -2107,7 +2106,7 @@ class SystemsTestCase(XMLTestCase):
             (system.networks.all()[0].created_date.isoformat(), system.created_date.isoformat()),
             ignoreNodes = [ 'created_date', 'ssl_client_certificate',
                             'time_created', 'time_updated',
-                            'registration_date', 'actions', 
+                            'registration_date', 'actions',
                             'created_by', 'modified_by',
                             'created_date', 'modified_date', 'latest_survey'])
 
@@ -2143,7 +2142,7 @@ class SystemsTestCase(XMLTestCase):
         self.assertEquals(response.status_code, 200)
         system = models.System.objects.get(pk=3)
         self.failUnlessEqual(system.name, "testsystemname")
-        
+
         # add it with same uuids but with different name to make sure
         # we get back same system with updated prop
         system_xml = testsxml.system_post_xml_dup2
@@ -2158,7 +2157,7 @@ class SystemsTestCase(XMLTestCase):
 
         # Test that a mgmt interface can be changed.
         response = self._put('inventory/systems/%s' % system.pk,
-            data=testsxml.system_mgmt_interface_put_xml, 
+            data=testsxml.system_mgmt_interface_put_xml,
             username="admin", password="password")
         self.assertEquals(response.status_code, 200)
         system = models.System.objects.get(pk=system.pk)
@@ -2169,7 +2168,7 @@ class SystemsTestCase(XMLTestCase):
         system.management_interface = None
         system.save()
         response = self._put('inventory/systems/%s' % system.pk,
-            data=testsxml.system_mgmt_interface_put_xml, 
+            data=testsxml.system_mgmt_interface_put_xml,
             username="admin", password="password")
         self.assertEquals(response.status_code, 200)
         system = models.System.objects.get(pk=system.pk)
@@ -2178,7 +2177,7 @@ class SystemsTestCase(XMLTestCase):
 
         # Test that mgmt interface can be deleted
         response = self._put('inventory/systems/%s' % system.pk,
-            data=testsxml.system_delete_mgmt_interface_put_xml, 
+            data=testsxml.system_delete_mgmt_interface_put_xml,
             username="admin", password="password")
         self.assertEquals(response.status_code, 200)
         system = models.System.objects.get(pk=system.pk)
@@ -2204,7 +2203,7 @@ class SystemsTestCase(XMLTestCase):
             data=testsxml.credentials_put_xml,
             username="admin", password="password")
         self.assertEquals(response.status_code, 200)
-        self.assertXMLEquals(response.content, 
+        self.assertXMLEquals(response.content,
             testsxml.credentials_put_resp_xml)
 
         system = models.System.objects.get(pk=system.pk)
@@ -2232,14 +2231,14 @@ class SystemsTestCase(XMLTestCase):
             data=testsxml.credentials_wmi_xml,
             username="admin", password="password")
         self.assertEquals(response.status_code, 200)
-        self.assertXMLEquals(response.content, 
+        self.assertXMLEquals(response.content,
             testsxml.credentials_wmi_resp_xml)
 
         response = self._get('inventory/systems/%s/credentials' % \
             system.pk,
             username="admin", password="password")
         self.assertEquals(response.status_code, 200)
-        self.assertXMLEquals(response.content, 
+        self.assertXMLEquals(response.content,
             testsxml.credentials_wmi_resp_xml)
 
         response = self._put('inventory/systems/%s/credentials' % \
@@ -2247,9 +2246,9 @@ class SystemsTestCase(XMLTestCase):
             data=testsxml.credentials_wmi_put_xml,
             username="admin", password="password")
         self.assertEquals(response.status_code, 200)
-        self.assertXMLEquals(response.content, 
+        self.assertXMLEquals(response.content,
             testsxml.credentials_wmi_put_resp_xml)
-        
+
     def testSystemConfiguration(self):
         system = self._saveSystem()
         response = self._post('inventory/systems/%s/configuration' % \
@@ -2257,14 +2256,14 @@ class SystemsTestCase(XMLTestCase):
             data=testsxml.configuration_post_xml,
             username="admin", password="password")
         self.assertEquals(response.status_code, 200)
-        self.assertXMLEquals(response.content, 
+        self.assertXMLEquals(response.content,
             testsxml.configuration_post_xml)
 
         response = self._get('inventory/systems/%s/configuration' % \
             system.pk,
             username="admin", password="password")
         self.assertEquals(response.status_code, 200)
-        self.assertXMLEquals(response.content, 
+        self.assertXMLEquals(response.content,
             testsxml.configuration_post_xml)
 
         response = self._put('inventory/systems/%s/configuration' % \
@@ -2272,29 +2271,29 @@ class SystemsTestCase(XMLTestCase):
             data=testsxml.configuration_put_xml,
             username="admin", password="password")
         self.assertEquals(response.status_code, 200)
-        self.assertXMLEquals(response.content, 
+        self.assertXMLEquals(response.content,
             testsxml.configuration_put_xml)
-    
+
         # now also test the configuration job
-        # test failing because of no network interface... 
+        # test failing because of no network interface...
         #response = self._post('inventory/systems/%s/jobs' % system.pk,
         #    data = testsxml.system_configuration_xml % system.pk,
         #    username='admin', password='password')
         #print response.content
         #self.assertEquals(response.status_code, 200)
-        #self.assertXMLEquals(response.content, '<wrong></wrong>') 
-         
-    
+        #self.assertXMLEquals(response.content, '<wrong></wrong>')
+
+
     def _getSystemConfigurationDescriptor(self, system_id):
         system = models.System.objects.get(pk=system_id)
         return self.mgr.getConfigurationDescriptor(system)
-     
+
     def testSystemConfigurationDescriptor(self):
         ### Disabling this test until the code is in place and working.
         system = self._saveSystem()
-        
+
         self.mgr.sysMgr.getSystemConfigurationDescriptor = self._getSystemConfigurationDescriptor(system.pk)
-    
+
         response = self._get('inventory/systems/%s/configuration_descriptor' % \
             system.pk,
             username="admin", password="password")
@@ -2308,22 +2307,22 @@ class SystemsTestCase(XMLTestCase):
         response = self._post('inventory/systems/',
             data=testsxml.system_post_xml, username="admin", password="password")
         self.assertEquals(response.status_code, 200)
-        
+
         response = self._get('inventory/systems/3/system_log/')
         self.assertEquals(response.status_code, 401)
-        
+
         response = self._get('inventory/systems/3/system_log/',
             username="admin", password="password")
         self.assertEquals(response.status_code, 200)
-        
+
         response = self._get('inventory/systems/3/system_log/',
             username="testuser", password="password")
         self.assertEquals(response.status_code, 403)
-        
+
 
     def testGetSystemLog(self):
         models.System.objects.all().delete()
-        response = self._post('inventory/systems/', 
+        response = self._post('inventory/systems/',
             data=testsxml.system_post_xml)
         self.assertEquals(response.status_code, 200)
         response = self._get('inventory/systems/3/system_log/',
@@ -2338,28 +2337,28 @@ class SystemsTestCase(XMLTestCase):
             else:
                 content.append(line)
         self.assertXMLEquals('\n'.join(content), testsxml.system_log_xml)
-        
+
     def testGetSystemHasHostInfo(self):
         system = self.newSystem(name="mgoblue")
         system.save()
         assert(self.mgr.sysMgr.getSystemHasHostInfo(system) == False)
-        
+
         network = models.Network(system=system)
         network.save()
         system.networks.add(network)
         assert(self.mgr.sysMgr.getSystemHasHostInfo(system) == False)
-        
+
         network2 = models.Network(ip_address="1.1.1.1", system=system)
         network2.save()
         system.networks.add(network2)
         assert(self.mgr.sysMgr.getSystemHasHostInfo(system))
-        
+
         network2.delete()
         network = models.Network(ipv6_address="1.1.1.1", system=system)
         network.save()
         system.networks.add(network)
         assert(self.mgr.sysMgr.getSystemHasHostInfo(system))
-        
+
         network.delete()
         network = models.Network(dns_name="foo.bar.com", system=system)
         network.save()
@@ -2992,9 +2991,9 @@ class SystemsTestCase(XMLTestCase):
         system = models.System.objects.get(system_id=systemId)
         actual = [ x.entry for x in models.SystemLogEntry.objects.filter(system_log__system__system_id = system.system_id) ]
         desired = [
-              u'System added to inventory', 
-              u'Incomplete registration: missing local_uuid. Possible cause: dmidecode malfunctioning', 
-        ] 
+              u'System added to inventory',
+              u'Incomplete registration: missing local_uuid. Possible cause: dmidecode malfunctioning',
+        ]
         self.failUnlessEqual(actual,desired)
 
 class SystemCertificateTestCase(XMLTestCase):
@@ -3041,7 +3040,7 @@ class SystemStateTestCase(XMLTestCase):
     def setUp(self):
         XMLTestCase.setUp(self)
         jobmodels.Job.getRmakeJob = self.mockGetRmakeJob
-    
+
     def mockGetRmakeJob(self):
         self.mockGetRmakeJob_called = True
 
@@ -3228,20 +3227,20 @@ class EventTypeTestCase(XMLTestCase):
         response = self._get('inventory/event_types/1/')
         self.assertEquals(response.status_code, 200)
         self.assertXMLEquals(response.content, testsxml.event_type_xml)
-        
+
     def testPutEventTypeAuth(self):
         """
         Ensure we require admin to put event types
         """
-        response = self._put('inventory/event_types/1/', 
+        response = self._put('inventory/event_types/1/',
             data= testsxml.event_type_put_xml, content_type='text/xml')
         self.assertEquals(response.status_code, 401)
-        
-        response = self._put('inventory/event_types/1/', 
+
+        response = self._put('inventory/event_types/1/',
             data=testsxml.event_type_put_xml, content_type='text/xml',
             username="testuser", password="password")
         self.assertEquals(response.status_code, 403)
-        
+
     def testPutEventType(self):
         jobmodels.EventType.objects.all().delete()
         event_type = jobmodels.EventType(name="foo", description="bar", priority=110)
@@ -3254,7 +3253,7 @@ class EventTypeTestCase(XMLTestCase):
         self.assertEquals(response.status_code, 200)
         event_type = jobmodels.EventType.objects.get(pk=event_type.pk)
         self.assertTrue(event_type.priority == 1)
-        
+
     def testPutEventTypeName(self):
         """
         Do not allow changing the event type name https://issues.rpath.com/browse/RBL-7171
@@ -3273,24 +3272,24 @@ class EventTypeTestCase(XMLTestCase):
         self.failUnlessEqual(event_type.name, jobmodels.EventType.SYSTEM_UPDATE)
 
 class SystemEventTestCase(XMLTestCase):
-    
+
     def setUp(self):
         XMLTestCase.setUp(self)
 
         # need a system
         network = models.Network(ip_address='1.1.1.1')
-        self.system = self.newSystem(name="mgoblue", 
+        self.system = self.newSystem(name="mgoblue",
             description="best appliance ever",
             management_interface=models.ManagementInterface.objects.get(name='cim'))
         self.system.save()
         network.system = self.system
         self.system.networks.add(network)
         self.system.save()
-        
+
         # start with no logs/system events
         models.SystemLog.objects.all().delete()
         models.SystemEvent.objects.all().delete()
-        
+
         self.mock_dispatchSystemEvent_called = False
         self.mgr.sysMgr.dispatchSystemEvent = self.mock_dispatchSystemEvent
 
@@ -3302,7 +3301,7 @@ class SystemEventTestCase(XMLTestCase):
 
     def mock_dispatchSystemEvent(self, event):
         self.mock_dispatchSystemEvent_called = True
-    
+
     # test needs update
     #
     #def testGetSystemEventsRest(self):
@@ -3312,7 +3311,7 @@ class SystemEventTestCase(XMLTestCase):
     #    response = self._get('inventory/system_events/',
     #       username="testuser", password="password")
     #    self.assertEquals(response.status_code, 200)
-    #    self.assertXMLEquals(response.content, 
+    #    self.assertXMLEquals(response.content,
     #        testsxml.system_events_xml % \
     #             (event2.time_created.isoformat(), event2.time_enabled.isoformat()))
 
@@ -3325,7 +3324,7 @@ class SystemEventTestCase(XMLTestCase):
         event.save()
         response = self._get('inventory/system_events/%d/' % event.system_event_id)
         self.assertEquals(response.status_code, 401)
-        
+
         response = self._get('inventory/system_events/%d/' % event.system_event_id,
            username="testuser", password="password")
         self.assertEquals(response.status_code, 200)
@@ -3337,9 +3336,9 @@ class SystemEventTestCase(XMLTestCase):
         response = self._get('inventory/system_events/%d/' % event.system_event_id,
            username="testuser", password="password")
         self.assertEquals(response.status_code, 200)
-        self.assertXMLEquals(response.content, 
+        self.assertXMLEquals(response.content,
             testsxml.system_event_xml % (event.time_created.isoformat(), event.time_enabled.isoformat()))
-    
+
     def testGetSystemEvent(self):
         # add an event
         update_event = self.mgr.sysMgr.eventType(jobmodels.EventType.SYSTEM_UPDATE)
@@ -3347,7 +3346,7 @@ class SystemEventTestCase(XMLTestCase):
         event.save()
         new_event = self.mgr.getSystemEvent(event.system_event_id)
         assert(new_event == event)
-        
+
     def testGetSystemEvents(self):
         # add an event
         update_event = self.mgr.sysMgr.eventType(jobmodels.EventType.SYSTEM_UPDATE)
@@ -3358,7 +3357,7 @@ class SystemEventTestCase(XMLTestCase):
         event2.save()
         SystemEvents = self.mgr.getSystemEvents()
         assert(len(SystemEvents.system_event) == 2)
-        
+
     def testDeleteSystemEvent(self):
         # add an event
         update_event = self.mgr.sysMgr.eventType(jobmodels.EventType.SYSTEM_UPDATE)
@@ -3367,7 +3366,7 @@ class SystemEventTestCase(XMLTestCase):
         self.mgr.deleteSystemEvent(event.system_event_id)
         events = models.SystemEvent.objects.all()
         assert(len(events) == 0)
-        
+
     def testCreateSystemEvent(self):
         local_system = self.newSystem(name="mgoblue_local", description="best appliance ever")
         local_system.save()
@@ -3378,13 +3377,13 @@ class SystemEventTestCase(XMLTestCase):
         event = self.mgr.createSystemEvent(local_system, update_event)
         assert(event is None)
         assert(self.mock_dispatchSystemEvent_called == False)
-                
+
         network2 = models.Network(system=local_system, ip_address="1.1.1.1")
         network2.save()
         local_system.networks.add(network2)
         event = self.mgr.createSystemEvent(local_system, update_event)
         assert(event is not None)
-        
+
     def testSaveSystemEvent(self):
         self._saveSystem()
         update_event = self.mgr.sysMgr.eventType(jobmodels.EventType.SYSTEM_UPDATE)
@@ -3392,12 +3391,12 @@ class SystemEventTestCase(XMLTestCase):
         event.save()
         # make sure event priority was set even though we didn't pass it in
         assert(event.priority == update_event.priority)
-        
+
         event2 = models.SystemEvent(system=self.system, event_type=update_event, priority=1)
         event2.save()
         # make sure we honor priority if set
         assert(event2.priority == 1)
-    
+
     def testScheduleSystemRegistrationEvent(self):
         # registration events are no longer dispatched immediately (RBL-8851)
         self.mgr.scheduleSystemRegistrationEvent(self.system)
@@ -3408,33 +3407,33 @@ class SystemEventTestCase(XMLTestCase):
         assert(event is not None)
         # should have been enabled immediately
         assert(event.time_enabled <= timeutils.now())
-        
+
         # make sure we have our log event
         log = models.SystemLog.objects.filter(system=self.system).get()
         sys_registered_entries = log.system_log_entries.all()
         assert(len(sys_registered_entries) == 1)
-        
+
     def testAddSystemEventNull(self):
-        
+
         try:
             self.mgr.addSystemSystemEvent(None, None)
         except:
             assert(False) # should not throw exception
-        
+
     def testAddSystemRegistrationEvent(self):
         # registration events are no longer dispatched immediately (RBL-8851)
         registration_event = self.mgr.sysMgr.eventType(jobmodels.EventType.SYSTEM_REGISTRATION)
-        systemEvent = models.SystemEvent(system=self.system, 
+        systemEvent = models.SystemEvent(system=self.system,
             event_type=registration_event, priority=registration_event.priority,
             time_enabled=timeutils.now())
         systemEvent.save()
         assert(systemEvent is not None)
         self.mgr.addSystemSystemEvent(self.system.system_id, systemEvent)
         self.failIf(self.mock_dispatchSystemEvent_called)
-     
+
 
     # temporarily disabled -- needs to send an old school job not a new one?
-   
+
     #def testPostSystemEventAuth(self):
     #    """
     #    Ensure requires auth but not admin
@@ -3443,12 +3442,12 @@ class SystemEventTestCase(XMLTestCase):
     #    system_event_post_xml = testsxml.system_event_post_xml
     #    response = self._post(url, data=system_event_post_xml)
     #    self.assertEquals(response.status_code, 401)
-    #    
+    #
     #    response = self._post(url,
     #        data=system_event_post_xml,
     #        username="admin", password="password")
     #    self.assertEquals(response.status_code, 200)
-        
+
     #def testPostSystemEvent(self):
     #    url = 'inventory/systems/%d/system_events/' % self.system.system_id
     #    system_event_post_xml = testsxml.system_event_post_xml
@@ -3458,7 +3457,7 @@ class SystemEventTestCase(XMLTestCase):
     #    self.assertEquals(response.status_code, 200)
     #    system_event = models.SystemEvent.objects.get(pk=1)
     #    # TODO: looser checking of XML returns
-        
+
     def testIncompatibleEvents(self):
         def mock__dispatchSystemEvent(self, event):
             system = event.system
@@ -3493,7 +3492,7 @@ class SystemEventTestCase(XMLTestCase):
         #print response.content
         self.assertEquals(response.status_code, 409)
         self.assertTrue('<fault>' in response.content)
-        
+
         # Clear system events
         [j.delete() for j in self.system.systemjob_set.all()]
 
@@ -3505,10 +3504,10 @@ class SystemEventTestCase(XMLTestCase):
         self.assertTrue('<fault>' not in response.content)
 
 class SystemEventProcessingTestCase(XMLTestCase):
-    
+
     # do not load other fixtures for this test case as it is very data order dependent
     fixtures = ['system_event_processing']
-    
+
     def setUp(self):
         XMLTestCase.setUp(self)
 
@@ -3525,17 +3524,17 @@ class SystemEventProcessingTestCase(XMLTestCase):
         return None
 
     def testProcessSystemEvents(self):
-        
+
         # set default processing size to 1
         self.mintConfig.systemEventsNumToProcess = 1
-        
+
         #remove the registration event so we handle the poll now event
         events = self.mgr.sysMgr.getSystemEventsForProcessing()
         event = events[0]
         self.failUnlessEqual(event.event_type.name,
             jobmodels.EventType.SYSTEM_REGISTRATION)
         event.delete()
-        
+
     def testProcessSystemEventsNoTrigger(self):
         # make sure registration event doesn't trigger next poll event
         # start with no regular poll events
@@ -3546,14 +3545,14 @@ class SystemEventProcessingTestCase(XMLTestCase):
             assert(False) # should have failed
         except models.SystemEvent.DoesNotExist:
             pass
-        
+
         # make sure next one is registration now event
         events = self.mgr.sysMgr.getSystemEventsForProcessing()
         event = events[0]
         self.failUnlessEqual(event.event_type.name,
             jobmodels.EventType.SYSTEM_REGISTRATION)
         self.mgr.sysMgr.processSystemEvents()
-        
+
         # should have no poll events still
         try:
             models.SystemEvent.objects.get(event_type=update_event)
@@ -3710,11 +3709,11 @@ class SystemEventProcessing2TestCase(XMLTestCase, test_utils.RepeaterMixIn):
                                     'interfaceHref':
                                       '/api/v1/inventory/management_interfaces/1',
                                 },
-                                { 
+                                {
                                     'port': 22,
                                     'interfaceHref':
                                       '/api/v1/inventory/management_interfaces/3',
-                                }   
+                                }
                                 ]
                         ),
                     ),
@@ -4473,7 +4472,7 @@ class Retirement(XMLTestCase):
         system.current_state = self.mgr.sysMgr.systemState(
             models.SystemState.RESPONSIVE)
         system.save()
-        
+
         response = self._get("inventory/systems/%s" % self.system.pk,
             username='admin', password='password')
         self.assertEquals(response.status_code, 200)
@@ -4485,7 +4484,7 @@ class Retirement(XMLTestCase):
         self.assertEquals(response.status_code, 200)
 
         params = dict(
-            localUuid=localUuid, 
+            localUuid=localUuid,
             generatedUuid=generatedUuid,
             zoneId=self.localZone.zone_id
         )
@@ -4498,7 +4497,7 @@ class Retirement(XMLTestCase):
         obj = xobj.parse(response.content)
         xObjModel = obj.system
         self.failUnlessEqual(obj.system.current_state.name, "mothballed")
-        
+
         response = self._get("inventory/systems/%s" % self.system.pk,
             username='admin', password='password')
         self.assertEquals(response.status_code, 200)
@@ -4509,7 +4508,7 @@ class Retirement(XMLTestCase):
 
 class AntiRecursiveSaving(XMLTestCase):
     '''
-       Generalized xobj test.  Make sure that when saving an object with child members, 
+       Generalized xobj test.  Make sure that when saving an object with child members,
     in this case a system & a management interface, and we go to EDIT
     that system, we can't CREATE a new, non-existant management interface OR
     rename an existing management interface.   This, if present, would
