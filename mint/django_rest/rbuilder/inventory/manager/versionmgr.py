@@ -263,9 +263,6 @@ class VersionManager(basemanager.BaseManager):
         Generate config descriptor for all top level items on a system.
         """
 
-        if system.latest_survey is None:
-            return '<configuration></configuration>'
-
         # what if multiple top levels with config descriptors?
         # UI doesn't support, so not worrying about it for now
         items = system.observed_top_level_items.all()
