@@ -4978,7 +4978,7 @@ class MigrateTo_62(SchemaMigration):
 
 class MigrateTo_63(SchemaMigration):
     '''Goad'''
-    Version = (63, 25)
+    Version = (63, 26)
 
     def migrate(self):
         ''' add initial tables for config environments'''
@@ -5307,6 +5307,12 @@ class MigrateTo_63(SchemaMigration):
         cu = self.db.cursor()
         cu.execute("ALTER TABLE inventory_survey ADD COLUMN overall_compliance BOOLEAN")
         cu.execute("ALTER TABLE inventory_survey ADD COLUMN execution_error_count INTEGER")
+        return True
+
+    def migrate26(self):
+        ''' store survey OS type '''
+        cu = self.db.cursor()
+        cu.execute("ALTER TABLE inventory_survey ADD COLUMN os_type TEXT")
         return True
 
 #### SCHEMA MIGRATIONS END HERE #############################################

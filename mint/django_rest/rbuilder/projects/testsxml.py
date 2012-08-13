@@ -190,7 +190,7 @@ project_image_post_xml = """\
 project_branch_stages_xml = \
 """
 <?xml version='1.0' encoding='UTF-8'?>
-<project_branch_stages count="4" next_page="" num_pages="1" previous_page="" full_collection="" end_index="3" limit="10" order_by="" per_page="10" filter_by="" start_index="0">
+<project_branch_stages count="4" end_index="3" filter_by="" full_collection="http://testserver/api/v1/projects/chater-foo/project_branches/chater-foo.eng.rpath.com@rpath:chater-foo-trunk/project_branch_stages" id="http://testserver/api/v1/projects/chater-foo/project_branches/chater-foo.eng.rpath.com@rpath:chater-foo-trunk/project_branch_stages;start_index=0;limit=10" limit="10" next_page="" num_pages="1" order_by="" per_page="10" previous_page="" start_index="0">
   <project_branch_stage id="http://testserver/api/v1/projects/chater-foo/project_branches/chater-foo.eng.rpath.com@rpath:chater-foo-trunk/project_branch_stages/Development">
     <stage_id>10</stage_id>
     <project_branch id="http://testserver/api/v1/projects/chater-foo/project_branches/chater-foo.eng.rpath.com@rpath:chater-foo-trunk">
