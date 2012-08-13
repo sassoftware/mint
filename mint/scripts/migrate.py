@@ -4978,7 +4978,7 @@ class MigrateTo_62(SchemaMigration):
 
 class MigrateTo_63(SchemaMigration):
     '''Goad'''
-    Version = (63, 26)
+    Version = (63, 27)
 
     def migrate(self):
         ''' add initial tables for config environments'''
@@ -5314,6 +5314,20 @@ class MigrateTo_63(SchemaMigration):
         cu = self.db.cursor()
         cu.execute("ALTER TABLE inventory_survey ADD COLUMN os_type TEXT")
         return True
+
+    def migrate27(self):
+        """Enforce timestamped tuples in system software"""
+        cu = self.db.cursor()
+        for name in ('observed', 'desired'):
+            name = 'inventory_system_%s_top_level_item' % name
+            constraint = r"trove_spec ~ E'.*=/.*/[^/[]+:[^/[]+\\[.*]$'"
+            cu.execute("DELETE FROM %s WHERE NOT (%s)" % (name, constraint))
+            if self.db.kind == 'sqlite':
+                continue
+            cu.execute("""ALTER TABLE %s ADD CONSTRAINT trove_spec_check
+                CHECK ( %s )""" % (name, constraint))
+        return True
+
 
 #### SCHEMA MIGRATIONS END HERE #############################################
 

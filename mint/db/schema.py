@@ -28,7 +28,7 @@ from conary.dbstore import sqlerrors, sqllib
 log = logging.getLogger(__name__)
 
 # database schema major version
-RBUILDER_DB_VERSION = sqllib.DBversion(63, 26)
+RBUILDER_DB_VERSION = sqllib.DBversion(63, 27)
 
 def _createTrigger(db, table, column="changed"):
     retInsert = db.createTrigger(table, column, "INSERT")
@@ -36,7 +36,7 @@ def _createTrigger(db, table, column="changed"):
     return retInsert or retUpdate
 
 
-def createTable(db, name, definition):
+def createTable(db, name, definition, pgExtra=''):
     """Helper for creating a table if it doesn't already exist.
 
     Pass C{None} as C{name} to force creation.
@@ -44,6 +44,8 @@ def createTable(db, name, definition):
     if name and name in db.tables:
         return False
     cu = db.cursor()
+    if db.kind != 'sqlite':
+        definition += pgExtra
     if not definition.lstrip()[:20].upper().startswith('CREATE TABLE'):
         # Avoid duplication for name; if the statement doesn't start
         # with CREATE TABLE, then assume it's just a straight list of
@@ -1277,6 +1279,9 @@ def _createInventorySchema(db, cfg):
                     ON DELETE CASCADE,
                 "trove_spec" TEXT NOT NULL,
                 "created_date" TIMESTAMP WITH TIME ZONE NOT NULL,
+                """,
+            pgExtra=r"""CONSTRAINT trove_spec_check CHECK (
+                    trove_spec ~ E'.*=/.*/[^/[]+:[^/[]+\\[.*]$' ),
     """)
     db.createIndex("inventory_system_desired_top_level_item",
         "inventory_system_des_toplitem_sid_tspec", "system_id, trove_spec",
@@ -1289,6 +1294,9 @@ def _createInventorySchema(db, cfg):
                     ON DELETE CASCADE,
                 "trove_spec" TEXT NOT NULL,
                 "created_date" TIMESTAMP WITH TIME ZONE NOT NULL,
+                """,
+            pgExtra=r"""CONSTRAINT trove_spec_check CHECK (
+                    trove_spec ~ E'.*=/.*/[^/[]+:[^/[]+\\[.*]$' ),
     """)
     db.createIndex("inventory_system_observed_top_level_item",
         "inventory_system_obs_toplitem_sid_tspec", "system_id, trove_spec",
