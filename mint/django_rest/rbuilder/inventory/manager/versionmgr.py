@@ -7,7 +7,7 @@
 import logging
 
 from conary import conaryclient, versions, trovetup
-from conary.errors import RepositoryError
+from conary.errors import RepositoryError, ParseError
 
 from rpath_tools.client.utils.config_descriptor_cache import ConfigDescriptorCache
 
@@ -268,7 +268,11 @@ class VersionManager(basemanager.BaseManager):
         items = system.observed_top_level_items.all()
         for item in items:
 
-            truple = trovetup.TroveTuple(item.trove_spec)
+            try:
+                truple = trovetup.TroveTuple(item.trove_spec)
+            except ParseError:
+                continue
+
             cclient = self.get_conary_client()
             if not cclient:
                 break
