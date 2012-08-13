@@ -12,7 +12,6 @@ from mint.django_rest.rbuilder.manager import basemanager
 from mint.django_rest.rbuilder.inventory.manager.surveydiff import SurveyDiffRender
 from mint.django_rest import timeutils
 from conary import versions
-from conary.errors import ParseError
 from xobj import xobj
 from datetime import datetime, timedelta
 
