@@ -12,6 +12,7 @@ from mint.django_rest.rbuilder.manager import basemanager
 from mint.django_rest.rbuilder.inventory.manager.surveydiff import SurveyDiffRender
 from mint.django_rest import timeutils
 from conary import versions
+from conary.errors import ParseError
 from xobj import xobj
 from datetime import datetime, timedelta
 
@@ -287,7 +288,7 @@ class SurveyManager(basemanager.BaseManager):
            if created:
                obj.save()
 
-    def _computeCompliance(self, survey, discovered_properties, validation_report, preview):
+    def _computeCompliance(self, survey, discovered_properties, validation_report, preview, config_diff_ct):
         ''' create the compliance summary block for the survey '''
 
         has_errors = False
@@ -352,7 +353,8 @@ class SurveyManager(basemanager.BaseManager):
             overall = ((not has_errors) and (not updates_pending)),
             config_execution_compliant = (not config_execution_failed),
             config_execution_failures = config_execution_failures,
-            config_sync_compliant = (not updates_pending),
+            software_sync_compliant = (not updates_pending),
+            config_sync_compliant = (config_diff_ct == 0),
             config_sync_message = config_sync_message
         )
 
@@ -362,9 +364,11 @@ class SurveyManager(basemanager.BaseManager):
            <compliant>%(config_execution_compliant)s</compliant>
            <failure_count>%(config_execution_failures)s</failure_count>
         </config_execution>
+
         <config_sync>
            <compliant>%(config_sync_compliant)s</compliant>
         </config_sync>
+
         <software>
            <compliant>%(config_sync_compliant)s</compliant>
            <message>%(config_sync_message)s</message>
@@ -374,6 +378,7 @@ class SurveyManager(basemanager.BaseManager):
         </overall>
         </compliance_summary>
         """ %  results
+
         return (has_errors, updates_pending, compliance_xml, 
                 results['overall'], config_execution_failures)
 
@@ -386,6 +391,7 @@ class SurveyManager(basemanager.BaseManager):
         )
         delta = "<config_compliance><config_values>"
         compliant = True
+        config_diff_ct = 0
 
         for rightKey in right:
             for leftKey in left:
@@ -395,19 +401,20 @@ class SurveyManager(basemanager.BaseManager):
                     continue
 
                 if leftKey.key == rightKey.key.replace("/extensions","") and leftKey.value != rightKey.value:
-                   compliant = False
-                   tokens = leftKey.key.split("/")
-                   keyShortName = tokens[-1]
-                   delta += "  <config_value>"
-                   delta += "     <keypath>%s</keypath>" % leftKey.key
-                   delta += "     <key>%s</key>" % keyShortName
-                   delta += "     <read>%s</read>" % rightKey.value
-                   delta += "     <desired>%s</desired>" % leftKey.value
-                   delta += "  </config_value>"
+                    config_diff_ct += 1
+                    compliant = False
+                    tokens = leftKey.key.split("/")
+                    keyShortName = tokens[-1]
+                    delta += "  <config_value>"
+                    delta += "     <keypath>%s</keypath>" % leftKey.key
+                    delta += "     <key>%s</key>" % keyShortName
+                    delta += "     <read>%s</read>" % rightKey.value
+                    delta += "     <desired>%s</desired>" % leftKey.value
+                    delta += "  </config_value>"
 
         delta += "</config_values><compliant>%s</compliant>" % compliant
         delta += "</config_compliance>"
-        return delta
+        return (delta, config_diff_ct)
 
     @exposed
     def addSurveyForSystemFromXobj(self, system_id, model):
@@ -580,20 +587,24 @@ class SurveyManager(basemanager.BaseManager):
                 is_top_level = True
                 topLevelItems.add('%s=%s[%s]' %
                     (info.name, info.version, info.flavor))
-                ver = versions.VersionFromString(unfrozen)
-                label = ver.trailingLabel()
-                labelstr = label.asString()
-                # TODO: if somehow the system is in a stage that got deleted
-                # be cool and just set it back to NULL
-                stages = project_models.Stage.objects.filter(label=labelstr)
-                if len(stages) > 0:
-                    stage = stages[0]
-                    project = stage.project
-                    branch = stage.project_branch
-                    system.project = project
-                    system.project_branch = branch
-                    system.project_branch_stage = stage
-                    system.save()
+                try:
+                    ver = versions.VersionFromString(unfrozen)
+                    label = ver.trailingLabel()
+                    labelstr = label.asString()
+                    # TODO: if somehow the system is in a stage that got deleted
+                    # be cool and just set it back to NULL
+                    stages = project_models.Stage.objects.filter(label=labelstr)
+                    if len(stages) > 0:
+                        stage = stages[0]
+                        project = stage.project
+                        branch = stage.project_branch
+                        system.project = project
+                        system.project_branch = branch
+                        system.project_branch_stage = stage
+                        system.save()
+                except IndexError:
+                    log.error("invalid version in survey: %s" % unfrozen)
+
 
             if encap is not None:
                 info.rpm_package_info = rpm_info_by_id[encap.id]
@@ -779,15 +790,18 @@ class SurveyManager(basemanager.BaseManager):
             )
             tag.save()
 
+        (survey.config_compliance, config_diff_ct) = self._computeConfigDelta(survey)
+
         (has_errors, updates_pending, compliance_xml, overall, execution_error_count) = self._computeCompliance(survey,
             discovered_properties=xdiscovered_properties,
             validation_report=xvalidation_report,
             preview=xpreview,
+            config_diff_ct=config_diff_ct,
         )
+
         survey.has_errors = has_errors
         survey.updates_pending = updates_pending
         survey.compliance_summary = compliance_xml
-        survey.config_compliance = self._computeConfigDelta(survey)
         survey.os_type = os_type
 
         survey.overall_compliance = overall

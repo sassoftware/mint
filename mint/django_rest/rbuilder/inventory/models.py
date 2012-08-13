@@ -28,6 +28,9 @@ from mint.django_rest.rbuilder.inventory import zones as zmodels
 from mint.django_rest.rbuilder.targets import models as targetmodels
 from ..targets import manager as tmgr
 from xobj import xobj
+import logging
+
+log = logging.getLogger(__name__)
 
 Cache = modellib.Cache
 XObjHidden = modellib.XObjHidden
@@ -974,8 +977,14 @@ class DesiredTopLevelItem(modellib.XObjModel):
             rev = spec.version
         except (ValueError, ParseError):
             spec = TroveSpec(self.trove_spec)
-            rev = versions.VersionFromString(spec.version)
-        self.revision = rev.trailingRevision().asString()
+            try:
+                rev = versions.VersionFromString(spec.version)
+            except ParseError:
+                # should only get here in the tests...
+                log.error("invalid version=%s" % self.trove_spec)
+
+        if rev is not None:
+            self.revision = rev.trailingRevision().asString()
 
 class SystemDesiredTopLevelItem(DesiredTopLevelItem):
     class Meta:
