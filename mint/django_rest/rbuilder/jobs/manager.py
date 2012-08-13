@@ -1,7 +1,5 @@
-
-# Copyright (c) 2011 rPath, Inc.
 #
-# All Rights Reserved
+# Copyright (c) rPath, Inc.
 #
 
 import inspect
@@ -16,6 +14,7 @@ import exceptions
 from django.core import urlresolvers
 from django.db import IntegrityError, transaction
 
+from conary import trovetup
 from xobj import xobj
 from smartform import descriptor as smartdescriptor
 
@@ -1103,12 +1102,12 @@ class JobHandlerRegistry(HandlerRegistry):
         def postprocessRelatedResource(self, job, model):
             model.event_uuid = str(self.eventUuid)
 
-        def _updateDesiredInstalledSoftware(self, system, job):
+        def _updateDesiredInstalledSoftware(self, system, job, topLevelItems):
             descriptorData = self.loadDescriptorData(job)
             test = descriptorData.getField('dry_run')
             if test:
                 return
-            topLevelItems = set([ str(descriptorData.getField('trove_label')) ])
+            topLevelItems = set(topLevelItems)
             # Fetch existing top level groups
             existing = set(x.trove_spec for x in system.desired_top_level_items.all())
             mgr = inventorymodels.SystemDesiredTopLevelItem.objects
@@ -1117,12 +1116,12 @@ class JobHandlerRegistry(HandlerRegistry):
             mgr.filter(system=system,
                 trove_spec__in=existing.difference(topLevelItems)).delete()
 
-        def _updateObservedInstalledSoftware(self, system, job):
+        def _updateObservedInstalledSoftware(self, system, job, topLevelItems):
             descriptorData = self.loadDescriptorData(job)
             test = descriptorData.getField('dry_run')
             if test:
                 return
-            topLevelItems = set([ str(descriptorData.getField('trove_label')) ])
+            topLevelItems = set(topLevelItems)
             # Fetch existing top level groups
             existing = set(x.trove_spec for x in system.observed_top_level_items.all())
             mgr = inventorymodels.SystemObservedTopLevelItem.objects
@@ -1163,14 +1162,26 @@ class JobHandlerRegistry(HandlerRegistry):
 
                 yield dict(name=str(name), from_ver=str(frum_ver), to_ver=str(to_ver))
 
+        @staticmethod
+        def _scrubTroveTup(val):
+            if isinstance(val, unicode):
+                val = val.encode('utf8')
+            val = trovetup.TroveTuple(val)
+            return val.asString(withTimestamp=True)
+
         def _processXml(self, job):
             changes = job.results.preview
             descriptorData = self.loadDescriptorData(job)
-            group_name, desired = str(descriptorData.getField('trove_label')).split("=")
+            group_name = str(descriptorData.getField('trove_label')
+                    ).split("=")[0]
             dry_run = str(descriptorData.getField('dry_run'))[0].upper() == 'T'
 
-            # If there were changes to be made...
-            if hasattr(changes.conary_package_changes, 'conary_package_change'):
+            if hasattr(changes, 'observed'):
+                # Preview expressly states what the old/new top-level items are
+                observed = self._scrubTroveTup(changes.observed)
+                desired = self._scrubTroveTup(changes.desired)
+            elif hasattr(changes.conary_package_changes, 'conary_package_change'):
+                # Infer old/new top-level items from the changes in the job
                 change_list = changes.conary_package_changes.conary_package_change # A node or a list of nodes.
                 if not isinstance(change_list, list):
                     change_list = [change_list]
@@ -1185,17 +1196,17 @@ class JobHandlerRegistry(HandlerRegistry):
                 observed = desired
 
             changes.observed, changes.desired = observed, desired
-            return xobj.toxml(changes)
+            return xobj.toxml(changes), observed, desired
 
         def _processJobResults(self, job):
-            xml = self._processXml(job)
+            xml, observed, desired = self._processXml(job)
             system = job.systems.all()[0].system
             preview = models.JobPreviewArtifact(job=job, preview=xml, system=system)
             preview.save()
             # both of these are only relevant to non-dry run and have meanings more overloaded than their names
             # so no reason to set desired prior to attempting the command
-            self._updateDesiredInstalledSoftware(system, job)
-            self._updateObservedInstalledSoftware(system, job)
+            self._updateDesiredInstalledSoftware(system, job, [desired])
+            self._updateObservedInstalledSoftware(system, job, [observed])
             return preview
 
     class SystemConfigure(DescriptorJobHandler):
