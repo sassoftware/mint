@@ -348,6 +348,14 @@ class SurveyManager(basemanager.BaseManager):
         # TODO: process and count deltas versus "readerators" with matching keys
         # and include summary results
 
+        results = dict(
+            overall = ((not has_errors) and (not updates_pending)),
+            config_execution_compliant = (not config_execution_failed),
+            config_execution_failures = config_execution_failures,
+            config_sync_compliant = (not updates_pending),
+            config_sync_message = config_sync_message
+        )
+
         compliance_xml = """
         <compliance_summary>
         <config_execution>
@@ -365,15 +373,9 @@ class SurveyManager(basemanager.BaseManager):
            <compliant>%(overall)s</compliant>
         </overall>
         </compliance_summary>
-        """ % dict(
-            overall = ((not has_errors) and (not updates_pending)),
-            config_execution_compliant = (not config_execution_failed),
-            config_execution_failures = config_execution_failures,
-            config_sync_compliant = (not updates_pending),
-            config_sync_message = config_sync_message
-        )
-        return (has_errors, updates_pending, compliance_xml)
-
+        """ %  results
+        return (has_errors, updates_pending, compliance_xml, 
+                results['overall'], config_execution_failures)
 
     def _computeConfigDelta(self, survey):
         left = survey_models.SurveyValues.objects.filter(
@@ -769,7 +771,7 @@ class SurveyManager(basemanager.BaseManager):
             )
             tag.save()
 
-        (has_errors, updates_pending, compliance_xml) = self._computeCompliance(survey,
+        (has_errors, updates_pending, compliance_xml, overall, execution_error_count) = self._computeCompliance(survey,
             discovered_properties=xdiscovered_properties,
             validation_report=xvalidation_report,
             preview=xpreview,
@@ -779,12 +781,8 @@ class SurveyManager(basemanager.BaseManager):
         survey.compliance_summary = compliance_xml
         survey.config_compliance = self._computeConfigDelta(survey)
 
-        def parse_compliance_xml(xml):
-            parsed_compliance_xml = xobj.parse(xml)
-            overall       = parsed_compliance_xml.compliance_summary.overall.compliant[0].lower == 't'
-            failure_count = int(parsed_compliance_xml.compliance_summary.config_execution.failure_count)
-            return overall, failure_count
-        survey.overall_compliance, survey.execution_error_count = parse_compliance_xml(compliance_xml)
+        survey.overall_compliance = overall
+        survey.execution_error_count = int(execution_error_count)
 
         survey.save()
 
