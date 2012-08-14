@@ -1130,38 +1130,6 @@ class JobHandlerRegistry(HandlerRegistry):
             mgr.filter(system=system,
                 trove_spec__in=existing.difference(topLevelItems)).delete()
 
-        def _renderChanges(self, change_xobj):
-            def _parse_from_conary_package(change_from, change_to):
-                name = getattr(change_from, 'name')
-                frum_ver = getattr(change_from, 'version', None)
-                to_ver   = getattr(change_to,   'version', None)
-                return name, frum_ver, to_ver
-            def _parse_added_conary_package(change):
-                name = getattr(change, 'name')
-                frum_ver = None
-                to_ver   = getattr(change, 'version', None)
-                return name, frum_ver, to_ver
-            def _parse_removed_conary_package(change):
-                name = getattr(change, 'name')
-                frum_ver = getattr(change, 'version', None)
-                to_ver   = None
-                return name, frum_ver, to_ver
-
-            for change in change_xobj:
-                frum    = getattr(change, 'from_conary_package',    None)
-                to      = getattr(change, 'to_conary_package',      None)
-                added   = getattr(change, 'added_conary_package',   None)
-                removed = getattr(change, 'removed_conary_package', None)
-
-                if frum is not None and to is not None:
-                    name, frum_ver, to_ver = _parse_from_conary_package(frum, to)
-                elif added is not None:
-                    name, frum_ver, to_ver = _parse_added_conary_package(added)
-                elif removed is not None:
-                    name, frum_ver, to_ver = _parse_removed_conary_package(removed)
-
-                yield dict(name=str(name), from_ver=str(frum_ver), to_ver=str(to_ver))
-
         @staticmethod
         def _scrubTroveTup(val):
             if isinstance(val, unicode):
@@ -1171,31 +1139,8 @@ class JobHandlerRegistry(HandlerRegistry):
 
         def _processXml(self, job):
             changes = job.results.preview
-            descriptorData = self.loadDescriptorData(job)
-            group_name = str(descriptorData.getField('trove_label')
-                    ).split("=")[0]
-            dry_run = str(descriptorData.getField('dry_run'))[0].upper() == 'T'
-
-            if hasattr(changes, 'observed'):
-                # Preview expressly states what the old/new top-level items are
-                observed = self._scrubTroveTup(changes.observed)
-                desired = self._scrubTroveTup(changes.desired)
-            elif hasattr(changes.conary_package_changes, 'conary_package_change'):
-                # Infer old/new top-level items from the changes in the job
-                change_list = changes.conary_package_changes.conary_package_change # A node or a list of nodes.
-                if not isinstance(change_list, list):
-                    change_list = [change_list]
-                if dry_run:
-                    # And we were just previewing, then the 'from' version is still what's currently installed.
-                    [observed] = [x.get('from_ver') for x in self._renderChanges(change_list) if x.get('name') == group_name]
-                else:
-                    # Otherwise, we were updating, and the 'to' version is now what's currently installed.
-                    [observed] = [x.get('to_ver') for x in self._renderChanges(change_list) if x.get('name') == group_name]
-            else:
-                # But if there were no changes to be made, assume 'desired' was already installed.
-                observed = desired
-
-            changes.observed, changes.desired = observed, desired
+            observed = changes.observed = self._scrubTroveTup(changes.observed)
+            desired = changes.desired = self._scrubTroveTup(changes.desired)
             return xobj.toxml(changes), observed, desired
 
         def _processJobResults(self, job):
