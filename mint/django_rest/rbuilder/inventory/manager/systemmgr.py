@@ -579,7 +579,8 @@ class SystemManager(basemanager.BaseManager):
             # field, and be able to pass the survey as part of the
             # surveys collection, but because of all the special parsing
             # in surveymgr, this is not possible at the moment -- misa
-            self.mgr.addSurveyForSystemFromXobj(system.system_id, system)
+            survey = self.mgr.addSurveyForSystemFromXobj(system.system_id, system)
+            system = survey.system
 
         # Verify potential duplicates here
         system = self.mergeSystems(system)
@@ -669,6 +670,7 @@ class SystemManager(basemanager.BaseManager):
             """, [ system.pk, other.pk ])
 
         self._mergeLogs(cu, system, other)
+        self._mergeSurveys(system, other)
 
         # Add a redirect from the deleted system to the saved system
         redirect = redirectmodels.Redirect(
@@ -700,6 +702,12 @@ class SystemManager(basemanager.BaseManager):
              WHERE system_log_id = %s
         """, [ systemLog.pk, otherSystemLog.pk ])
 
+    def _mergeSurveys(self, system, other):
+        # Point all surveys to the final system
+        survey_models.Survey.objects.filter(system=other).update(
+            system=system)
+        system.update(latest_survey=other.latest_survey)
+
     def postprocessEvent(self, system):
         # removable legacy artifact given new jobs infrastructure?  Does anything call this?
         pass
@@ -716,22 +724,19 @@ class SystemManager(basemanager.BaseManager):
         wmiIfaceId = self.wmiManagementInterface().management_interface_id
 
         if system.isNewRegistration:
-            system.registration_date = self.now()
-            system.current_state = onlineState
-            system.save()
+            system.update(registration_date=self.now(),
+                current_state=onlineState)
             if system.oldModel is None:
                 # We really see this system the first time with its proper
                 # uuids. We'll assume it's been registered with rpath-register
                 self.log_system(system, models.SystemLogEntry.REGISTERED)
             if (system.management_interface_id == wmiIfaceId and not system.credentials):
                 # No credentials, nothing to do here
-                system.current_state = credentialsMissing
-                system.save()
+                system.update(current_state=credentialsMissing)
         elif system.isRegistered:
             # See if a new poll is required
             if (system.current_state_id in self.NonresponsiveStates):
-                system.current_state = registeredState
-                system.save()
+                system.update(current_state=registeredState)
             # Already registered and no need to re-synchronize, if the
             # old state was online, and the new state is registered, we must
             # be coming in through rpath-tools, so preserve the online state.
@@ -740,21 +745,18 @@ class SystemManager(basemanager.BaseManager):
                     onlineState.system_state_id and
                     system.current_state_id == \
                     registeredState.system_state_id):
-                system.current_state = onlineState
-                system.save()
+                system.update(current_state=onlineState)
             elif system.current_state == registeredState:
                 # system is registered and scanned, should just go ahead and mark online
                 # definitely do not poll again as the initial registration polled.  Orchestrate if you
                 # want crazy amounts of extra polling.
-                system.current_state = onlineState
-                system.save()
+                system.update(current_state=onlineState)
                 return None
         elif system.isRegistrationIncomplete:
             self.log_system(system, "Incomplete registration: missing local_uuid. Possible cause: dmidecode malfunctioning")
         elif (system.management_interface_id == wmiIfaceId and not system.credentials):
                 # No credentials, nothing to do here
-                system.current_state = credentialsMissing
-                system.save()
+                system.update(current_state=credentialsMissing)
         elif withManagementInterfaceDetection:
             # Need to dectect the management interface on the system
             self.scheduleSystemDetectMgmtInterfaceEvent(system)
@@ -864,9 +866,7 @@ class SystemManager(basemanager.BaseManager):
             self.log_system(system, "System state change: %s -> %s" %
                 (system.current_state.description, nstate.description))
 
-            system.current_state = nstate
-            system.state_change_date = self.now()
-            system.save()
+            system.update(current_state=nstate, state_change_date=self.now())
 
     @staticmethod
     def _getTrovesForLayeredImage(system):

@@ -50,7 +50,7 @@ class SurveyManager(basemanager.BaseManager):
         surveys = survey_models.Survey.objects.filter(system=sys)
         surveys.order_by('-created_date')
         if len(surveys) > 0:
-            inventory_models.System.objects.filter(pk=sys.pk).update(latest_survey=surveys[0])
+            sys.update(latest_survey=surveys[0])
         return (True, True)
 
     @exposed
@@ -519,10 +519,9 @@ class SurveyManager(basemanager.BaseManager):
         self._saveShreddedValues(survey, xdiscovered_properties, survey_models.DISCOVERED_VALUES)
         self._saveShreddedValues(survey, xvalidation_report, survey_models.VALIDATOR_VALUES)
 
-        # update system.latest_survey if and only if it's
-        # the latest
+        # update system.latest_survey if and only if it's the latest
         if system.latest_survey is None or survey.created_date > system.latest_survey.created_date:
-            system.__class__.objects.filter(system_id=system_id).update(latest_survey=survey)
+            system.update(latest_survey=survey)
 
         rpm_info_by_id     = {}
         rpms_by_info_id    = {}
@@ -597,10 +596,9 @@ class SurveyManager(basemanager.BaseManager):
                         stage = stages[0]
                         project = stage.project
                         branch = stage.project_branch
-                        system.project = project
-                        system.project_branch = branch
-                        system.project_branch_stage = stage
-                        system.save()
+                        system.update(
+                            project=project, project_branch=branch,
+                            project_branch_stage=stage)
                 except IndexError:
                     log.error("invalid version in survey: %s" % unfrozen)
 
@@ -807,10 +805,6 @@ class SurveyManager(basemanager.BaseManager):
         survey.execution_error_count = int(execution_error_count)
 
         survey.save()
-
-        # required to avoid some first survey Catch-22 issues
-        system.latest_survey = survey
-        system.save()
 
         desired_descriptor = self.mgr.getConfigurationDescriptor(system)
         survey.desired_properties_descriptor = desired_descriptor

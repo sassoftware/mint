@@ -2397,7 +2397,8 @@ class SystemsTestCase(XMLTestCase):
             [ jobId, system2.pk ])
 
         params = dict(localUuid=localUuid, generatedUuid=generatedUuid,
-            bootUuid=bootUuid, targetSystemId=targetSystemId)
+            bootUuid=bootUuid, targetSystemId=targetSystemId,
+            survey=testsxml.survey_input_xml)
 
         xml = """\
 <system>
@@ -2405,6 +2406,7 @@ class SystemsTestCase(XMLTestCase):
   <generated_uuid>%(generatedUuid)s</generated_uuid>
   <boot_uuid>%(bootUuid)s</boot_uuid>
   <target_system_id>%(targetSystemId)s</target_system_id>
+  %(survey)s
 </system>
 """ % params
         obj = xobj.parse(xml)
@@ -2415,6 +2417,13 @@ class SystemsTestCase(XMLTestCase):
         self.failUnlessEqual(model.boot_uuid, bootUuid)
         self.failUnlessEqual(model.pk, system.pk)
         self.failUnlessEqual(model.target_system_id, targetSystemId)
+
+        # Fetch system, make sure we have a survey for it
+        system = self.mgr.addSystem(model)
+        self.failUnlessEqual(
+            [ x.uuid for x in system.surveys.all() ],
+            [ '1234', ])
+        self.failUnlessEqual(system.latest_survey.uuid, '1234')
 
     def testLoadFromObjectEventUuid(self):
         localUuid = 'localuuid001'
@@ -2442,13 +2451,15 @@ class SystemsTestCase(XMLTestCase):
         generatedUuid = 'generateduuid001'
         eventUuid = 'eventuuid001'
         params = dict(localUuid=localUuid, generatedUuid=generatedUuid,
-            eventUuid=eventUuid, zoneId=self.localZone.zone_id)
+            eventUuid=eventUuid, zoneId=self.localZone.zone_id,
+            survey=testsxml.survey_input_xml)
         xml = """\
 <system>
   <local_uuid>%(localUuid)s</local_uuid>
   <generated_uuid>%(generatedUuid)s</generated_uuid>
   <event_uuid>%(eventUuid)s</event_uuid>
   <managing_zone href="http://testserver/api/v1/inventory/zones/%(zoneId)s"/>
+  %(survey)s
 </system>
 """ % params
 
@@ -2472,6 +2483,13 @@ class SystemsTestCase(XMLTestCase):
         # Catch the case of synthetic fields not being converted to
         # unicode (xobj types confuse database drivers)
         self.failUnlessEqual(type(model.event_uuid), unicode)
+
+        # Fetch system, make sure we have a survey for it
+        system = self.mgr.addSystem(model)
+        self.failUnlessEqual(
+            [ x.uuid for x in system.surveys.all() ],
+            [ '1234', ])
+        self.failUnlessEqual(system.latest_survey.uuid, '1234')
 
     def testDedupByEventUuidWithRemoval1(self):
         system, systemRemoved = self._testDedupByEventUuidWithRemoval(targetSystemFirst=False)
