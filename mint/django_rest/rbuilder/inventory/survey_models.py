@@ -334,7 +334,7 @@ class WindowsPatchInfo(modellib.XObjIdModel):
     )
     summary_view = [
         'display_name', 'uninstallable', 'patch_code',
-        'product_code', 'transforms', 'windows_package_infos'
+        'product_code', 'product_name', 'transforms', 'windows_package_infos'
     ]
 
     windows_patch_id = models.AutoField(primary_key=True)
@@ -353,9 +353,13 @@ class WindowsPatchInfo(modellib.XObjIdModel):
         results = [ l.windows_package_info for l in links ]
         # forgive me
         results = [ FakeWindowsPackageInfo(
-            publisher = wp.publisher, product_code = wp.product_code,
-            package_code = wp.package_code, product_name = wp.product_name,
-            type = wp.type, upgrade_code = wp.upgrade_code, version = wp.version,
+            publisher = wp.publisher, 
+            product_code = wp.product_code,
+            package_code = wp.package_code, 
+            product_name = wp.product_name,
+            type = wp.type, 
+            upgrade_code = wp.upgrade_code, 
+            version = wp.version,
             id = reverse('SurveyWindowsPackageInfo', args=[ wp.pk ])
         ) for wp in results ]
         self.windows_package_infos.windows_package_info = results
