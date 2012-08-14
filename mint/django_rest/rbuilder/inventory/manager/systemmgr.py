@@ -105,8 +105,8 @@ configure_descriptor = """<descriptor>
 
 class SystemManager(basemanager.BaseManager):
     RegistrationEvents = set([
-        jobmodels.EventType.SYSTEM_REGISTRATION,
         jobmodels.EventType.SYSTEM_REGISTRATION_IMMEDIATE,
+        jobmodels.EventType.SYSTEM_REGISTRATION,
     ])
     ShutdownEvents = set([
         jobmodels.EventType.SYSTEM_SHUTDOWN,
@@ -891,7 +891,7 @@ class SystemManager(basemanager.BaseManager):
 
 
         if jobStateName == jobmodels.JobState.COMPLETED:
-            if eventTypeName == jobmodels.EventType.SYSTEM_REGISTRATION:
+            if eventTypeName in [ jobmodels.EventType.SYSTEM_REGISTRATION, jobmodels.EventType.SYSTEM_REGISTRATION_IMMEDIATE ]:
                 return models.SystemState.RESPONSIVE
             if eventTypeName in self.ManagementInterfaceEvents:
                 # Management interface detection finished, need to schedule a
@@ -928,7 +928,7 @@ class SystemManager(basemanager.BaseManager):
                     if not system.credentials:
                         # No credentials avaiable, prompt the user for them.
                         return models.SystemState.UNMANAGED_CREDENTIALS_REQUIRED
-                self.scheduleSystemRegistrationNowEvent(system)
+                self.scheduleSystemRegistrationEvent(system)
                 return None
             else:
                 # Add more processing here if needed
@@ -1264,7 +1264,7 @@ class SystemManager(basemanager.BaseManager):
         system.save()
         # Schedule a system registration event after adding/updating
         # credentials.
-        self.scheduleSystemRegistrationNowEvent(system)
+        self.scheduleSystemRegistrationEvent(system)
         return self._getCredentialsModel(system, credentials)
 
     def _addSystemCredentials(self, system, credentials):
@@ -1719,14 +1719,6 @@ class SystemManager(basemanager.BaseManager):
 
     @exposed
     def scheduleSystemRegistrationEvent(self, system):
-        '''Schedule an event for the system to be registered'''
-        # registration events happen on demand, so enable now
-        return self._scheduleEvent(system,
-            jobmodels.EventType.SYSTEM_REGISTRATION,
-            enableTime=self.now())
-
-    @exposed
-    def scheduleSystemRegistrationNowEvent(self, system):
         '''Schedule an event for the system to be registered'''
         # registration events happen on demand, so enable now
         return self._scheduleEvent(system,

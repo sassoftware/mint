@@ -56,7 +56,7 @@
     </object>
     <object pk="1" model="inventory.systemevent">
         <field to="inventory.system" name="system" rel="ManyToOneRel">1</field>
-        <field to="inventory.eventtype" name="event_type" rel="ManyToOneRel">1</field>
+        <field to="inventory.eventtype" name="event_type" rel="ManyToOneRel">23</field>
         <field type="DateTimeField" name="time_created">2010-08-05 22:20:46</field>
         <field type="DateTimeField" name="time_enabled">2010-08-06 02:09:36</field>
         <field type="SmallIntegerField" name="priority">100</field>
