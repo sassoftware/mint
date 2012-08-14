@@ -401,7 +401,7 @@ class JobCreationTest(BaseJobsTest, RepeaterMixIn):
         system = self._saveSystem()
         system.save()
         invmodels.SystemDesiredTopLevelItem.objects.create(
-            system=system, trove_spec='group-fake=/fake.rpath.com@rpath:fake-0/0-0-0')
+            system=system, trove_spec='group-fake=/fake.rpath.com@rpath:fake-0/1234.000:0-0-0[]')
         url = "inventory/systems/%(systemId)s/descriptors/update" % dict(
             systemId=system.system_id)
         response = self._get(url,
@@ -512,7 +512,8 @@ class JobCreationTest(BaseJobsTest, RepeaterMixIn):
         return system, content
 
     def testJobSystemSoftwareUpdateWithPreview(self):
-        topLevelGroup = "group-fake=/fake.rpath.com@rpath:fake-0/0-0-0"
+        old = "group-fake=/fake.rpath.com@rpath:fake-0/1234.000:0-0-0[]"
+        new = "group-fake=/fake.rpath.com@rpath:fake-1/1357.000:2-0-0[]"
         payload = """
 <preview>
   <conary_package_changes>
@@ -520,29 +521,31 @@ class JobCreationTest(BaseJobsTest, RepeaterMixIn):
       <type>changed</type>
       <from_conary_package>
         <name>group-fake</name>
-        <version>group-fake=/fake.rpath.com@rpath:fake-0/0-0-0</version>
+        <version>group-fake=/fake.rpath.com@rpath:fake-0/1234.000:0-0-0</version>
       </from_conary_package>
       <to_conary_package>
         <name>group-fake</name>
-        <version>group-fake=/fake.rpath.com@rpath:fake-1/1-1-1</version>
+        <version>group-fake=/fake.rpath.com@rpath:fake-1/1357.000:2-0-0</version>
       </to_conary_package>
     </conary_package_change>
   </conary_package_changes>
-</preview>"""
-        system, content = self._testJobSystemSoftwareUpdate(topLevelGroup, payload, dryRun=True)
+  <observed>%(old)s</observed>
+  <desired>%(new)s</desired>
+</preview>""" % locals()
+        system, content = self._testJobSystemSoftwareUpdate(new, payload, dryRun=True)
 
         observed = xobj.parse(content).preview.observed
         topLevelItems = sorted(x.trove_spec for x in system.desired_top_level_items.all())
-
-        self.assertEquals(topLevelItems, [ 'group-fake=/fake.rpath.com@rpath:fake-0/0-0-0' ])
+        self.assertEquals(topLevelItems, [ old ])
 
         # Confirm <observed> is still on original version in accordance with dryRun=True.
         frum = getattr(xobj.parse(payload).preview.conary_package_changes.conary_package_change, 'from_conary_package')
         f_ver = getattr(frum, 'version')
-        self.assertEquals(observed, f_ver)
+        self.assertEquals(observed, f_ver + '[]')
 
     def testJobSystemSoftwareUpdateWithUpdate(self):
-        topLevelGroup = "group-fake=/fake.rpath.com@rpath:fake-0/0-0-0"
+        old = "group-fake=/fake.rpath.com@rpath:fake-0/1234.000:0-0-0[]"
+        new = "group-fake=/fake.rpath.com@rpath:fake-1/1357.000:2-0-0[]"
         payload = """
 <preview>
   <conary_package_changes>
@@ -550,26 +553,28 @@ class JobCreationTest(BaseJobsTest, RepeaterMixIn):
       <type>changed</type>
       <from_conary_package>
         <name>group-fake</name>
-        <version>group-fake=/fake.rpath.com@rpath:fake-0/0-0-0</version>
+        <version>group-fake=/fake.rpath.com@rpath:fake-0/1234.000:0-0-0</version>
       </from_conary_package>
       <to_conary_package>
         <name>group-fake</name>
-        <version>group-fake=/fake.rpath.com@rpath:fake-1/1-1-1</version>
+        <version>group-fake=/fake.rpath.com@rpath:fake-1/1357.000:2-0-0</version>
       </to_conary_package>
     </conary_package_change>
   </conary_package_changes>
-</preview>"""
-        system, content = self._testJobSystemSoftwareUpdate(topLevelGroup, payload, dryRun=False)
+  <observed>%(new)s</observed>
+  <desired>%(new)s</desired>
+</preview>""" % locals()
+        system, content = self._testJobSystemSoftwareUpdate(new, payload, dryRun=False)
 
         observed = xobj.parse(content).preview.observed
         topLevelItems = sorted(x.trove_spec for x in system.desired_top_level_items.all())
 
-        self.assertEquals(topLevelItems, [ topLevelGroup ])
+        self.assertEquals(topLevelItems, [ new ])
 
         # Confirm <observed> is now on desired version in accordance with dryRun=False.
         to = getattr(xobj.parse(payload).preview.conary_package_changes.conary_package_change, 'to_conary_package')
         t_ver = getattr(to, 'version')
-        self.assertEquals(observed, t_ver)
+        self.assertEquals(observed, t_ver + '[]')
 
 #     def testJobSystemSoftwareUpdateWithAddedPackage(self):
 #         topLevelGroup = "group-foo=example.com@rpath:42/1-2-3"
