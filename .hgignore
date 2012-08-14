@@ -52,6 +52,7 @@
 ^scripts/repository-sync$
 ^scripts/system-resolver$
 ^scripts/target-systems-import$
+^scripts/purge-surveys$
 
 ^twisted/plugins/dropin.cache$
 
