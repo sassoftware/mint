@@ -1,6 +1,0 @@
-#!/usr/bin/python
-import sys
-from mint.scripts.purge_surveys import PurgeSurveysScript
-
-if __name__ == '__main__':
-    sys.exit(PurgeSurveysScript().run())

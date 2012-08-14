@@ -46,6 +46,7 @@ generic_scripts = \
 	postgres-auto-update		\
 	postgres-major-migrate		\
 	process-system-events		\
+	purge-surveys			\
 	rbuilder-database		\
 	repository-sync			\
 	system-resolver			\

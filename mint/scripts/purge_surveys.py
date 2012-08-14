@@ -12,7 +12,7 @@ from mint import config
 from mint.lib import scriptlibrary
 from mint.django_rest.rbuilder.manager import rbuildermanager
 
-class PurgeSurveysScript(scriptlibrary.SingletonScript):
+class Script(scriptlibrary.SingletonScript):
     cfgPath = config.RBUILDER_CONFIG
     logFileName = 'scripts.log'
     newLogger = True
@@ -35,6 +35,6 @@ class PurgeSurveysScript(scriptlibrary.SingletonScript):
         sys.exit(1)
 
 if __name__ == "__main__":
-    s = PurgeSurveysScript()
+    s = Script()
     s.run()
 
