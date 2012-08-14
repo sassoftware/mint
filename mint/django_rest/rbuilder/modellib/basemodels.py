@@ -1568,6 +1568,16 @@ class XObjModel(models.Model):
 
         return xobj_model
 
+    def update(self, **kwargs):
+        """
+        Directly update the fields specified in kwargs, updating the current
+        object too
+        """
+        self.__class__.objects.filter(pk=self.pk).update(**kwargs)
+        for k, v in kwargs.items():
+            setattr(self, k, v)
+        return self
+
 class XObjIdModel(XObjModel):
     """
     Model that sets an id attribute on itself corresponding to the href for
