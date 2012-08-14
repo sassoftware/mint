@@ -372,8 +372,6 @@ install needle
             response = self._post(url,
                 data = x,
                 username='admin', password='password')
-            if response.status_code != 200:
-                print response.content
             self.assertEqual(response.status_code, 200)
 
         url = "inventory/surveys/%s/diffs/%s" % ('504', '505')
@@ -393,8 +391,6 @@ install needle
         # verify we can delete the survey
         url = "inventory/surveys/%s" % '505'
         response = self._delete(url, username='admin', password='password')
-        if response.status_code != 204:
-            print "response.content = %s" % response.content
         self.assertEqual(response.status_code, 204)
         # verify system did not cascade
         # and that since we deleted teh latest survey there is still a latest

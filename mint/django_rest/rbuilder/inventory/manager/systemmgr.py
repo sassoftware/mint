@@ -874,13 +874,22 @@ class SystemManager(basemanager.BaseManager):
         # do not send down trove info for images we did not build,
         # images we built but never stored the source, or images
         # that are not layered/deferred
-        if not image or not image.base_image:
+        if image is None or image.base_image is None:
             return None, None
         version = cny_versions.ThawVersion(str(image.trove_version))
         flavor = cny_deps.ThawFlavor(str(image.trove_flavor))
         installTrove = '%s=%s[%s]' % (image.trove_name, version, flavor)
         projectLabel = str(version.trailingLabel())
         return installTrove, projectLabel
+
+    @classmethod
+    def _getTroveSpecForImage(cls, image):
+        if image is None:
+            return None, None, None, None
+        version = cny_versions.ThawVersion(str(image.trove_version))
+        flavor = cny_deps.ThawFlavor(str(image.trove_flavor))
+        troveSpec = '%s=%s[%s]' % (image.trove_name, version.freeze(), flavor)
+        return troveSpec, image.trove_name, version, flavor
 
     def getNextSystemState(self, system, job):
 
@@ -1057,6 +1066,7 @@ class SystemManager(basemanager.BaseManager):
             system.project_id = sourceImage.project_id
             system.project_branch_id = sourceImage.project_branch_id
             system.project_branch_stage_id = sourceImage.project_branch_stage_id
+
         if system.managing_zone_id is None:
             system.managing_zone = self.getLocalZone()
         oldModel, system = models.System.objects.load_or_create(system,
@@ -1105,6 +1115,12 @@ class SystemManager(basemanager.BaseManager):
         system.system_state = self.systemState(models.SystemState.UNMANAGED)
         self.addSystem(system, for_user=for_user,
             withManagementInterfaceDetection=False)
+        troveSpec, _, _, _ = self._getTroveSpecForImage(sourceImage)
+        if troveSpec:
+            models.SystemDesiredTopLevelItem.objects.create(
+                system=system, trove_spec=troveSpec)
+            models.SystemObservedTopLevelItem.objects.create(
+                system=system, trove_spec=troveSpec)
         # Add target system
         # get_or_create needs the defaults arg to do this properly (#1631)
         defaults=dict(
