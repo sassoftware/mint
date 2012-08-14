@@ -1,7 +1,5 @@
 #
-# Copyright (c) 2010 rPath, Inc.
-#
-# All rights reserved.
+# Copyright (c) rPath, Inc.
 #
 
 """
@@ -136,4 +134,43 @@ class Script(SingletonScript):
             cu.execute("DELETE FROM auth_tokens WHERE image_id IS NOT NULL")
         cu.execute("DELETE FROM auth_tokens WHERE expires_date < now()")
 
+        db.commit()
+
+        # Clean up other rmake3 jobs
+        cu.execute("""SELECT job_uuid FROM jobs_job
+            LEFT JOIN jobs_job_state USING (job_state_id)
+            WHERE now() - greatest(time_created, time_updated) > '10 minutes'
+            AND jobs_job_state.name NOT IN ('Completed', 'Failed')
+            """)
+        uuids = sorted(x[0] for x in cu)
+        cu.execute("""SELECT job_state_id FROM jobs_job_state
+                WHERE name = 'Failed'""")
+        failed = cu.fetchone()[0]
+        try:
+            jobs = rmake.getJobs(uuids)
+        except rmk_errors.OpenError, err:
+            # rMake is down, assume no jobs are running
+            log.warning("rMake is unreachable: %s", str(err))
+            jobs = [None for x in uuids]
+
+        for uuid, job in zip(uuids, jobs):
+            newCode = 504
+            newMessage = JOB_LOST
+            newDetail = None
+            if job:
+                if job.status.completed:
+                    # Still running
+                    continue
+                elif job.status.failed:
+                    # The rmake job failed so use the final status of that,
+                    # instead of a generic error
+                    newCode = job.status.code
+                    newMessage = job.status.text
+                    newDetail = job.status.detail
+            log.info("Setting job %s status to %s '%s' "
+                    "because job result was lost", uuid, newCode, newMessage)
+            cu.execute("""UPDATE jobs_job
+                SET job_state_id = ?, status_code = ?, status_text = ?,
+                status_detail = ?  WHERE job_uuid = ?""",
+                failed, newCode, newMessage, newDetail, uuid)
         db.commit()
