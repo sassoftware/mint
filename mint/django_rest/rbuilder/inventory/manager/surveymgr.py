@@ -348,13 +348,18 @@ class SurveyManager(basemanager.BaseManager):
         # TODO: process and count deltas versus "readerators" with matching keys
         # and include summary results
 
+        config_sync_compliant = (config_diff_ct == 0)
+        software_sync_compliant = (not updates_pending)
+        config_execution_compliant = (not config_execution_failed)
+        overall = config_sync_compliant and software_sync_compliant and config_execution_compliant
+           
         results = dict(
-            overall = ((not has_errors) and (not updates_pending)),
-            config_execution_compliant = (not config_execution_failed),
-            config_execution_failures = config_execution_failures,
-            software_sync_compliant = (not updates_pending),
-            config_sync_compliant = (config_diff_ct == 0),
-            config_sync_message = config_sync_message
+            overall = overall,
+            config_execution_failures  = config_execution_failures,
+            software_sync_compliant    = software_sync_compliant,
+            config_sync_compliant      = config_sync_compliant,
+            config_execution_compliant = config_execution_compliant,
+            config_sync_message        = config_sync_message
         )
 
         compliance_xml = """
@@ -366,11 +371,11 @@ class SurveyManager(basemanager.BaseManager):
 
         <config_sync>
            <compliant>%(config_sync_compliant)s</compliant>
+           <message>%(config_sync_message)s</message>
         </config_sync>
 
         <software>
-           <compliant>%(config_sync_compliant)s</compliant>
-           <message>%(config_sync_message)s</message>
+           <compliant>%(software_sync_compliant)s</compliant>
         </software>
         <overall>
            <compliant>%(overall)s</compliant>
