@@ -1108,13 +1108,7 @@ class JobHandlerRegistry(HandlerRegistry):
             if test:
                 return
             topLevelItems = set(topLevelItems)
-            # Fetch existing top level groups
-            existing = set(x.trove_spec for x in system.desired_top_level_items.all())
-            mgr = inventorymodels.SystemDesiredTopLevelItem.objects
-            for toAdd in topLevelItems.difference(existing):
-                mgr.create(system=system, trove_spec=toAdd)
-            mgr.filter(system=system,
-                trove_spec__in=existing.difference(topLevelItems)).delete()
+            self.mgr.mgr.sysMgr.setDesiredTopLevelItems(system, topLevelItems)
 
         def _updateObservedInstalledSoftware(self, system, job, topLevelItems):
             descriptorData = self.loadDescriptorData(job)
@@ -1122,13 +1116,7 @@ class JobHandlerRegistry(HandlerRegistry):
             if test:
                 return
             topLevelItems = set(topLevelItems)
-            # Fetch existing top level groups
-            existing = set(x.trove_spec for x in system.observed_top_level_items.all())
-            mgr = inventorymodels.SystemObservedTopLevelItem.objects
-            for toAdd in topLevelItems.difference(existing):
-                mgr.create(system=system, trove_spec=toAdd)
-            mgr.filter(system=system,
-                trove_spec__in=existing.difference(topLevelItems)).delete()
+            self.mgr.mgr.sysMgr.setObservedTopLevelItems(system, topLevelItems)
 
         @staticmethod
         def _scrubTroveTup(val):
