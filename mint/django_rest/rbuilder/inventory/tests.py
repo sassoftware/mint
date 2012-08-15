@@ -235,7 +235,7 @@ install needle
             for x in sys.desired_top_level_items.all()),
             ['jkl=7[orange]'])
 
-        # Config action should be disabled
+        # Config action should be disabled, Update action should be enabled
         url = "inventory/systems/%s" % system.system_id
         response = self._get(url,
             username='admin', password='password')
@@ -243,17 +243,22 @@ install needle
         tree = etree.fromstring(response.content)
         actionsStatus = tree.xpath('/system/actions/action[name="Apply system configuration"]/enabled')
         self.assertEqual([x.text for x in actionsStatus], [ 'false' ])
+        updateStatus = tree.xpath('/system/actions/action[name="Update Software"]/enabled')
+        self.assertEqual([x.text for x in updateStatus], [ 'true' ])
 
         # Hack last survey to pretend it doesn't have a system model
         survey_models.Survey.objects.filter(survey_id=system.latest_survey.survey_id).update(has_system_model=False, system_model=None, system_model_modified_date=None)
         system.__class__.objects.filter(system_id=system.system_id).update(configuration="<foo>value</foo>")
 
+        # Config action should now be enabled, Update action should be disaled
         response = self._get(url,
             username='admin', password='password')
         self.assertEqual(response.status_code, 200)
         tree = etree.fromstring(response.content)
         actionsStatus = tree.xpath('/system/actions/action[name="Apply system configuration"]/enabled')
         self.assertEqual([x.text for x in actionsStatus], [ 'true' ])
+        updateStatus = tree.xpath('/system/actions/action[name="Update Software"]/enabled')
+        self.assertEqual([x.text for x in updateStatus], [ 'false' ])
 
         response = self._get(url,
             username='admin', password='password')

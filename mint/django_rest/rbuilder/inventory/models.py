@@ -879,6 +879,9 @@ class System(modellib.XObjIdModel):
         scanEnabled = bool(self.management_interface_id and
             self.management_interface.name in ('cim', 'wmi'))
         configureEnabled = False
+        updateEnabled = bool(self.latest_survey is not None and
+            self.latest_survey.has_system_model)
+
         # Disable config action if no config is saved, or if the system
         # is based on a system model
         if self.latest_survey is not None:
@@ -924,7 +927,7 @@ class System(modellib.XObjIdModel):
                 actionName="Update Software",
                 descriptorModel=self,
                 descriptorHref="descriptors/update",
-                enabled=True,
+                enabled=updateEnabled,
             ),
             jobmodels.EventType.makeAction(
                 jobmodels.EventType.SYSTEM_CONFIGURE,
