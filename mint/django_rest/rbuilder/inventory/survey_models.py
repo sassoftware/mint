@@ -622,6 +622,7 @@ class SurveyWindowsService(modellib.XObjIdModel):
     status               = models.TextField(null=False)
     start_account        = models.TextField()
     start_mode           = models.TextField()
+    autostart            = models.BooleanField(default=False)
 
     def get_url_key(self, *args, **kwargs):
         return [ self.windows_service_id ]

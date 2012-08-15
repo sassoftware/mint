@@ -351,6 +351,7 @@ install needle
             username='admin', password='password')
         self.assertEqual(response.status_code, 200)
 
+
         url = "inventory/surveys/%s/diffs/%s" % ('123456789', '987654321')
         response = self._get(url, username='admin', password='password')
         self.assertEqual(response.status_code, 200)

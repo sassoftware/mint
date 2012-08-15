@@ -773,6 +773,7 @@ class SurveyManager(basemanager.BaseManager):
                 # flat to avoid a lot of ordering complexity
                 _required_services = _u(xinfo.required_services)
             )
+            autostart = (_u(getattr(xmodel, 'autostart', 'false')) != 'false')
             service = survey_models.SurveyWindowsService(
                 windows_service_info = info,
                 survey               = survey,
@@ -781,8 +782,10 @@ class SurveyManager(basemanager.BaseManager):
                 # no windows survey code is otherwise released
                 running              = self._bool(getattr(xmodel, 'running', 'false')),
                 start_account        = _u(getattr(xmodel, 'start_account', '')),
-                start_mode           = _u(getattr(xmodel, 'start_mode', ''))
+                start_mode           = _u(getattr(xmodel, 'start_mode', '')),
+                autostart            = autostart
             )
+
             service.save()
 
         for xmodel in xtags:
