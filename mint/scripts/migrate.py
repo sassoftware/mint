@@ -4978,7 +4978,7 @@ class MigrateTo_62(SchemaMigration):
 
 class MigrateTo_63(SchemaMigration):
     '''Goad'''
-    Version = (63, 27)
+    Version = (63, 28)
 
     def migrate(self):
         ''' add initial tables for config environments'''
@@ -5326,6 +5326,12 @@ class MigrateTo_63(SchemaMigration):
                 continue
             cu.execute("""ALTER TABLE %s ADD CONSTRAINT trove_spec_check
                 CHECK ( %s )""" % (name, constraint))
+        return True
+
+    def migrate28(self):
+        ''' store windows autostart '''
+        cu = self.db.cursor()
+        cu.execute("ALTER TABLE inventory_survey_windows_service ADD COLUMN autostart BOOLEAN DEFAULT FALSE")
         return True
 
 
