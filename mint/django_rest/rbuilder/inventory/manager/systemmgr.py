@@ -1117,10 +1117,9 @@ class SystemManager(basemanager.BaseManager):
             withManagementInterfaceDetection=False)
         troveSpec, _, _, _ = self._getTroveSpecForImage(sourceImage)
         if troveSpec:
-            models.SystemDesiredTopLevelItem.objects.create(
-                system=system, trove_spec=troveSpec)
-            models.SystemObservedTopLevelItem.objects.create(
-                system=system, trove_spec=troveSpec)
+            troveSpecs = set([troveSpec])
+            self.setDesiredTopLevelItems(system, troveSpecs)
+            self.setObservedTopLevelItems(system, troveSpecs)
         # Add target system
         # get_or_create needs the defaults arg to do this properly (#1631)
         defaults=dict(
@@ -1142,6 +1141,22 @@ class SystemManager(basemanager.BaseManager):
             target_system=tsys,
             target_credentials=credentials)
         return system
+
+    def setDesiredTopLevelItems(self, system, topLevelItems):
+        existing = set(x.trove_spec for x in system.desired_top_level_items.all())
+        mgr = models.SystemDesiredTopLevelItem.objects
+        for toAdd in topLevelItems.difference(existing):
+            mgr.create(system=system, trove_spec=toAdd)
+        mgr.filter(system=system,
+            trove_spec__in=existing.difference(topLevelItems)).delete()
+
+    def setObservedTopLevelItems(self, system, topLevelItems):
+        existing = set(x.trove_spec for x in system.observed_top_level_items.all())
+        mgr = models.SystemObservedTopLevelItem.objects
+        for toAdd in topLevelItems.difference(existing):
+            mgr.create(system=system, trove_spec=toAdd)
+        mgr.filter(system=system,
+            trove_spec__in=existing.difference(topLevelItems)).delete()
 
     def _addOldStyleJob(self, system):
         if system.boot_uuid is None:
