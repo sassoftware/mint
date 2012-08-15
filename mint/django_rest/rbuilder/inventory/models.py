@@ -879,7 +879,7 @@ class System(modellib.XObjIdModel):
         scanEnabled = bool(self.management_interface_id and
             self.management_interface.name in ('cim', 'wmi'))
         configureEnabled = False
-        updateEnabled = bool(self.latest_survey is None or
+        updateEnabled = bool(self.latest_survey is not None and
             not self.latest_survey.has_system_model)
 
         # Disable config action if no config is saved, or if the system
