@@ -1054,7 +1054,7 @@ systems_xml = """\
       <action>
         <description>Update your system</description>
         <descriptor id="http://testserver/api/v1/inventory/systems/2/descriptors/update"/>
-        <enabled>True</enabled>
+        <enabled>False</enabled>
         <job_type id="http://testserver/api/v1/inventory/event_types/26"/>
         <key>system_update_software</key>
         <name>Update Software</name>
@@ -1165,7 +1165,7 @@ systems_xml = """\
       <action>
         <description>Update your system</description>
         <descriptor id="http://testserver/api/v1/inventory/systems/3/descriptors/update"/>
-        <enabled>True</enabled>
+        <enabled>False</enabled>
         <job_type id="http://testserver/api/v1/inventory/event_types/26"/>
         <key>system_update_software</key>
         <name>Update Software</name>
@@ -1419,7 +1419,7 @@ system_xml = """\
     <action>
       <description>Update your system</description>
       <descriptor id="http://testserver/api/v1/inventory/systems/3/descriptors/update"/>
-      <enabled>True</enabled>
+      <enabled>False</enabled>
       <job_type id="http://testserver/api/v1/inventory/event_types/26"/>
       <key>system_update_software</key>
       <name>Update Software</name>
@@ -1817,7 +1817,7 @@ system_target_xml = """\
     <action>
       <description>Update your system</description>
       <descriptor id="http://testserver/api/v1/inventory/systems/3/descriptors/update"/>
-      <enabled>True</enabled>
+      <enabled>False</enabled>
       <job_type id="http://testserver/api/v1/inventory/event_types/26"/>
       <key>system_update_software</key>
       <name>Update Software</name>
@@ -2259,7 +2259,7 @@ system_with_target = """\
     <action>
       <description>Update your system</description>
       <descriptor id="http://testserver/api/v1/inventory/systems/4/descriptors/update"/>
-      <enabled>True</enabled>
+      <enabled>False</enabled>
       <job_type id="http://testserver/api/v1/inventory/event_types/26"/>
       <key>system_update_software</key>
       <name>Update Software</name>
