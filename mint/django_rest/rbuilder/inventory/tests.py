@@ -2277,7 +2277,7 @@ class SystemsTestCase(XMLTestCase):
             testsxml.configuration_put_xml)
 
         # Now test with some real config
-        descr = self._mockConfigDescriptorCache()
+        self._mockConfigDescriptorCache()
 
         self.mgr.sysMgr.setObservedTopLevelItems(system,
             set([ 'group-foo=/blah@rpl:1/12345.67:1-1-1' ]))
@@ -2335,7 +2335,7 @@ class SystemsTestCase(XMLTestCase):
         self.assertEquals(response.status_code, 200)
         self.assertXMLEquals(response.content, '<configuration/>')
 
-        descr = self._mockConfigDescriptorCache()
+        self._mockConfigDescriptorCache()
 
         self.mgr.sysMgr.setObservedTopLevelItems(system,
             set([ 'group-foo=/blah@rpl:1/12345.67:1-1-1' ]))
