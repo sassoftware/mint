@@ -258,11 +258,20 @@ class VersionManager(basemanager.BaseManager):
             self.set_available_updates(trove, force=True)
 
     @exposed
-    def getConfigurationDescriptor(self, system):
+    def getSystemConfigurationDescriptor(self, system):
         """
         Generate config descriptor for all top level items on a system.
         """
 
+        descr = self.getSystemConfigurationDescriptorObject(system)
+        if descr is None:
+            return '<configuration/>'
+        return descr.toxml()
+
+    @exposed
+    def getSystemConfigurationDescriptorObject(self, system):
+        if isinstance(system, (int, basestring)):
+            system = models.System.objects.get(system_id=system)
         # what if multiple top levels with config descriptors?
         # UI doesn't support, so not worrying about it for now
         items = system.observed_top_level_items.all()
@@ -285,9 +294,10 @@ class VersionManager(basemanager.BaseManager):
 
             desc.setDisplayName('Configuration Descriptor')
             desc.addDescription('Configuration Descriptor')
+            desc.setRootElement('configuration')
 
-            return desc.toxml(validate=False)
+            return desc
 
         log.warn('could not find configuration descriptor for %s' % system.name)
-        return '<configuration></configuration>'
+        return None
 

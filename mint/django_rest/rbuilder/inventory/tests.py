@@ -6,6 +6,8 @@ from lxml import etree
 from xobj import xobj
 from datetime import datetime, timedelta
 
+from smartform import descriptor
+
 from django.contrib.redirects import models as redirectmodels
 from django.db import connection, transaction
 from django.template import TemplateDoesNotExist
@@ -350,6 +352,7 @@ install needle
             data = testsxml2.windows_upload_survey_xml2,
             username='admin', password='password')
         self.assertEqual(response.status_code, 200)
+
 
         url = "inventory/surveys/%s/diffs/%s" % ('123456789', '987654321')
         response = self._get(url, username='admin', password='password')
@@ -2251,28 +2254,64 @@ class SystemsTestCase(XMLTestCase):
 
     def testSystemConfiguration(self):
         system = self._saveSystem()
-        response = self._post('inventory/systems/%s/configuration' % \
-            system.pk,
+        url = 'inventory/systems/%s/configuration' % system.pk
+
+        response = self._post(url,
             data=testsxml.configuration_post_xml,
             username="admin", password="password")
         self.assertEquals(response.status_code, 200)
         self.assertXMLEquals(response.content,
             testsxml.configuration_post_xml)
 
-        response = self._get('inventory/systems/%s/configuration' % \
-            system.pk,
+        response = self._get(url,
             username="admin", password="password")
         self.assertEquals(response.status_code, 200)
         self.assertXMLEquals(response.content,
             testsxml.configuration_post_xml)
 
-        response = self._put('inventory/systems/%s/configuration' % \
-            system.pk,
+        response = self._put(url,
             data=testsxml.configuration_put_xml,
             username="admin", password="password")
         self.assertEquals(response.status_code, 200)
         self.assertXMLEquals(response.content,
             testsxml.configuration_put_xml)
+
+        # Now test with some real config
+        self._mockConfigDescriptorCache()
+
+        self.mgr.sysMgr.setObservedTopLevelItems(system,
+            set([ 'group-foo=/blah@rpl:1/12345.67:1-1-1' ]))
+
+        response = self._put(url,
+            data=testsxml.configuration_put_xml,
+            username="admin", password="password")
+        self.assertEquals(response.status_code, 400)
+        self.assertXMLEquals(response.content,
+                '''<fault><code>400</code><message>["Missing field: 'vhosts'"]</message><traceback/></fault>''')
+
+        # Now some good data
+        configurationXml = """\
+<configuration>
+  <vhosts>
+    <vhost>
+      <serverName>aaa</serverName>
+      <documentRoot>aaa</documentRoot>
+    </vhost>
+  </vhosts>
+  <ignored-1/>
+  <ignored-2/>
+</configuration>
+"""
+
+        response = self._put(url,
+            data=configurationXml,
+            username="admin", password="password")
+        self.assertEquals(response.status_code, 200)
+
+        system = system.__class__.objects.get(system_id=system.system_id)
+        configurationXmlFixed = configurationXml.replace('<vhosts>',
+            '<vhosts list="true">')
+        self.assertXMLEquals(system.configuration, configurationXmlFixed)
 
         # now also test the configuration job
         # test failing because of no network interface...
@@ -2285,19 +2324,65 @@ class SystemsTestCase(XMLTestCase):
 
 
     def _getSystemConfigurationDescriptor(self, system_id):
-        system = models.System.objects.get(pk=system_id)
-        return self.mgr.getConfigurationDescriptor(system)
+        return self.mgr.getSystemConfigurationDescriptor(system_id)
 
     def testSystemConfigurationDescriptor(self):
-        ### Disabling this test until the code is in place and working.
         system = self._saveSystem()
-
-        self.mgr.sysMgr.getSystemConfigurationDescriptor = self._getSystemConfigurationDescriptor(system.pk)
 
         response = self._get('inventory/systems/%s/configuration_descriptor' % \
             system.pk,
             username="admin", password="password")
-        self.assertTrue(response.status_code == 200)
+        self.assertEquals(response.status_code, 200)
+        self.assertXMLEquals(response.content, '<configuration/>')
+
+        self._mockConfigDescriptorCache()
+
+        self.mgr.sysMgr.setObservedTopLevelItems(system,
+            set([ 'group-foo=/blah@rpl:1/12345.67:1-1-1' ]))
+
+        response = self._get('inventory/systems/%s/configuration_descriptor' % \
+            system.pk,
+            username="admin", password="password")
+        self.assertEquals(response.status_code, 200)
+
+        descr = descriptor.ConfigurationDescriptor(fromStream=response.content)
+        self.assertEquals(
+            [ x.name for x in descr.getDataFields() ],
+            [ 'vhosts' ])
+        # Check the fields we unconditionally change on the way out
+        self.assertEquals(descr.getDisplayName(), 'Configuration Descriptor')
+        self.assertEquals(descr.getRootElement(), 'configuration')
+
+    def _mockConfigDescriptorCache(self):
+        from rpath_tools.client.utils.config_descriptor_cache import ConfigDescriptorCache
+        descr = self._getConfigDescriptor()
+        mockGetDescriptor = lambda x, y: descr
+        self.mock(ConfigDescriptorCache, 'getDescriptor', mockGetDescriptor)
+        return descr
+
+    def _getConfigDescriptor(self):
+
+        vhost = descriptor.ConfigurationDescriptor()
+        vhost.setId("apache-configuration/vhost")
+        vhost.setRootElement('vhost')
+        vhost.setDisplayName('Virtual Host Configuration')
+        vhost.addDescription('Virtual Host Configuration')
+        vhost.addDataField('serverName', type="str", required=True,
+            descriptions="Virtual Host Name")
+        vhost.addDataField('documentRoot', type="str", required=True,
+            descriptions="Virtual Host Document Root") 
+
+        descr = descriptor.ConfigurationDescriptor()
+        descr.setId("Some-ID")
+        descr.setDisplayName('Ignored')
+        descr.addDescription('Ignored')
+        descr.setRootElement('ignored')
+
+        descr.addDataField('vhosts', type=descr.ListType(vhost),
+            required=True, descriptions="Virtual Hosts",
+            constraints=[dict(constraintName='uniqueKey', value="serverName"),
+                dict(constraintName="minLength", value=1)])
+        return descr
 
     def testGetSystemLogAuth(self):
         """

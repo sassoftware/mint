@@ -64,6 +64,7 @@ windows_upload_survey_xml="""
     <windows_service id="1">
       <running>true</running>
       <status>running</status>
+      <autostart>true</autostart>
       <windows_service_info>
         <display_name>minesweeper</display_name>
         <required_services>solitaire</required_services>
@@ -75,6 +76,7 @@ windows_upload_survey_xml="""
     <windows_service id="2">
       <running>false</running>
       <status>stopped</status>
+      <autostart>false</autostart>
       <windows_service_info>
         <display_name>solitare</display_name>
         <required_services/>
