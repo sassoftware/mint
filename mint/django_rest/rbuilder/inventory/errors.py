@@ -38,4 +38,6 @@ class SystemNotDeployed(InventoryError):
     "The system is not deployed on a target"
     status = 400
 
-
+class InvalidSystemConfiguration(InventoryError):
+    "The supplied configuration does not match the system's expectations"
+    status = 400

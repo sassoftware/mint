@@ -1311,12 +1311,6 @@ class SystemManager(basemanager.BaseManager):
                     system._ssl_client_key = credentials['ssl_client_key']
 
     @exposed
-    def getSystemConfigurationDescriptor(self, system_id):
-        system = models.System.objects.get(pk=system_id)
-        rc =  self.mgr.getConfigurationDescriptor(system)
-        return rc
-
-    @exposed
     def getSystemConfiguration(self, system_id):
         system = models.System.objects.get(pk=system_id)
         if system.configuration is None:
@@ -1325,8 +1319,20 @@ class SystemManager(basemanager.BaseManager):
 
     @exposed
     def saveSystemConfiguration(self, system_id, configuration):
-        system = models.System.objects.get(pk=system_id)
-        system.configuration = configuration
+        system = self.getSystem(system_id)
+        descr = self.mgr.getSystemConfigurationDescriptorObject(system)
+        if descr is None:
+            # Data not available, nothing to do here...
+            parsedConfig = configuration
+        else:
+            try:
+                descrData = descriptor.DescriptorData(descriptor=descr,
+                    fromStream=configuration)
+                parsedConfig = descrData.toxml(validate=True)
+            except descriptor.errors.ConstraintsValidationError, e:
+                raise errors.InvalidSystemConfiguration(msg=str(e))
+
+        system.configuration = parsedConfig
         system.configuration_set = True
         system.configuration_applied = False
         system.save()

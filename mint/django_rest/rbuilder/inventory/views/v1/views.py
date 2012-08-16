@@ -645,16 +645,12 @@ class InventorySystemConfigurationServices(BaseInventoryService):
 
     @rbac(rbac_can_write_system_id)
     def rest_PUT(self, request, system_id):
-        # FIXME: request.BODY?
-        configuration = request.raw_post_data
-        body = self.mgr.saveSystemConfiguration(system_id, configuration)
+        body = self.mgr.saveSystemConfiguration(system_id, request.raw_post_data)
         return HttpResponse(status=200, content=body)
     
     @rbac(rbac_can_write_system_id)
     def rest_POST(self, request, system_id):
-        # FIXME: request.BODY?
-        configuration = request.raw_post_data
-        body = self.mgr.saveSystemConfiguration(system_id, configuration)
+        body = self.mgr.saveSystemConfiguration(system_id, request.raw_post_data)
         return HttpResponse(status=200, content=body)
 
     def get(self, system_id):

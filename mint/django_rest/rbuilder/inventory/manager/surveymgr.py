@@ -814,7 +814,7 @@ class SurveyManager(basemanager.BaseManager):
 
         survey.save()
 
-        desired_descriptor = self.mgr.getConfigurationDescriptor(system)
+        desired_descriptor = self.mgr.getSystemConfigurationDescriptor(system)
         survey.desired_properties_descriptor = desired_descriptor
         survey.save()
 
