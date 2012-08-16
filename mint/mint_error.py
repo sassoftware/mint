@@ -169,6 +169,7 @@ class NotEntitledError(PermissionDenied):
 class ParameterError(InvalidError):
     "A required parameter had an incorrect data type."
 class PlatformDefinitionNotFound(MissingError): "The platform definition was not found."
+class PlatformAlreadyExists(ConflictError): "A platform with that label already exists."
 class PublicToPrivateConversionError(PermissionDenied):
     "Converting public products to private products is not supported."
 class ProductDefinitionVersionNotFound(MissingError):

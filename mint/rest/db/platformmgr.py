@@ -1193,7 +1193,7 @@ class PlatformManager(manager.Manager):
             dsset.update(ds.name for ds in contentProvider.dataSources)
         return dsset
 
-    def createPlatform(self, platform, createPlatDef=True):
+    def createPlatform(self, platform, createPlatDef=True, overwrite=False):
         platformLabel = platform.label
 
         # If the platform is already a platform, we want to make sure we
@@ -1209,6 +1209,8 @@ class PlatformManager(manager.Manager):
         cu = self.db.db.cursor()
         cu.execute("SELECT platformId FROM Platforms WHERE label = ?", (platformLabel, ))
         row = cu.fetchone()
+        if row and not overwrite:
+            raise mint_error.PlatformAlreadyExists
         if not row:
             platId = self.platforms._create(platform, pl)
         else:
