@@ -817,6 +817,9 @@ class SystemManager(basemanager.BaseManager):
             self.addSystem(system, generateCertificates=False,
                 withManagementInterfaceDetection=False,
                 withRetagging=False)
+        elif system.survey is not None:
+            survey = self.mgr.addSurveyForSystemFromXobj(system.system_id, system)
+            system = survey.system
         self.setSystemStateFromJob(system)
         if for_user:
             system.modified_by = for_user

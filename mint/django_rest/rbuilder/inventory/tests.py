@@ -2531,7 +2531,7 @@ class SystemsTestCase(XMLTestCase):
         self.failUnlessEqual(model.generated_uuid, generatedUuid)
         self.failUnlessEqual(model.event_uuid, eventUuid)
 
-    def testDedupByEventUuid(self):
+    def _setupDedupEventUuid(self):
         localUuid = 'localuuid001'
         generatedUuid = 'generateduuid001'
         eventUuid = 'eventuuid001'
@@ -2559,6 +2559,10 @@ class SystemsTestCase(XMLTestCase):
         systemJob = models.SystemJob(system=system, job=job,
             event_uuid=eventUuid)
         systemJob.save()
+        return system, xml
+
+    def testDedupByEventUuid(self):
+        system, xml = self._setupDedupEventUuid()
         obj = xobj.parse(xml)
         xobjmodel = obj.system
         model = models.System.objects.load_from_object(xobjmodel, request=None)
@@ -2571,10 +2575,10 @@ class SystemsTestCase(XMLTestCase):
 
         # Fetch system, make sure we have a survey for it
         system = self.mgr.addSystem(model)
-        self.failUnlessEqual(
+        self.assertEquals(
             [ x.uuid for x in system.surveys.all() ],
             [ '1234', ])
-        self.failUnlessEqual(system.latest_survey.uuid, '1234')
+        self.assertEquals(system.latest_survey.uuid, '1234')
 
     def testDedupByEventUuidWithRemoval1(self):
         system, systemRemoved = self._testDedupByEventUuidWithRemoval(targetSystemFirst=False)
@@ -2585,6 +2589,21 @@ class SystemsTestCase(XMLTestCase):
                 '(copied) Log message from target system',
                 'Log message from empty system'
             ])
+
+    def testDedupByEventUuidPUT(self):
+        system, xml = self._setupDedupEventUuid()
+        url = 'inventory/systems/%s' % system.system_id
+        headers = { 'X-rBuilder-Event-UUID' :
+            system.systemjob_set.all()[0].event_uuid }
+        response = self._put(url, data=xml, headers=headers)
+        self.assertEquals(response.status_code, 200)
+
+        # Make sure survey got saved
+        system = system.__class__.objects.get(system_id=system.system_id)
+        self.assertEquals(
+            [ x.uuid for x in system.surveys.all() ],
+            [ '1234', ])
+        self.assertEquals(system.latest_survey.uuid, '1234')
 
     def testDedupByEventUuidWithRemoval2(self):
         system, systemRemoved = self._testDedupByEventUuidWithRemoval(targetSystemFirst=True)
