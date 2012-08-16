@@ -34,7 +34,7 @@ XML = """<?xml version='1.0' encoding='UTF-8'?>
             </descriptions>
             <help lang="en_US" href="@Help_beta@"/>
             <type>bool</type>
-            <default/>
+            <default>false</default>
             <required>false</required>
         </field>
         <field>
@@ -44,7 +44,7 @@ XML = """<?xml version='1.0' encoding='UTF-8'?>
             </descriptions>
             <help lang="en_US" href="@Help_cd_verify@"/>
             <type>bool</type>
-            <default/>
+            <default>false</default>
             <required>false</required>
         </field>
         <field>
