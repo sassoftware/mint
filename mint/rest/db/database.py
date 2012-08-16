@@ -796,8 +796,8 @@ class Database(DBInterface):
         return self.platformMgr.getPlatformVersions(platformId)
 
     @commitafter
-    def createPlatform(self, platform, createPlatDef=True):
-        return self.platformMgr.createPlatform(platform, createPlatDef)
+    def createPlatform(self, platform, createPlatDef=True, overwrite=False):
+        return self.platformMgr.createPlatform(platform, createPlatDef, overwrite)
 
     @readonly
     def getPlatformImageTypeDefs(self, request, platformId):
