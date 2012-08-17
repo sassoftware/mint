@@ -170,6 +170,8 @@ class SyncTool(object):
                     sqlStages[stage])
             log.info("Deleted stage information for stage %s on label %s",
                     stage, label)
+        cu.execute("""UPDATE querysets_queryset SET tagged_date = NULL
+            WHERE resource_type = 'project_branch_stage'""")
 
     def getPlatformMap(self):
         if self._platformMap is None:
