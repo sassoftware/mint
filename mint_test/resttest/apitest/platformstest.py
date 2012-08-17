@@ -22,6 +22,7 @@ from mint.rest.db import platformmgr
 from mint.rest.db import reposmgr
 from mint.rest.db import contentsources
 from mint.rest.modellib import converter
+from mint.mint_error import PlatformAlreadyExists
 
 from testutils import mock
 
@@ -417,9 +418,9 @@ class NewPlatformTest(BaseTest):
         self.failUnlessEqual(plat.platformName, 'Project 1')
         platformId = plat.platformId
 
-        # Post again, should not change anything
-        req, plat = client.call('POST', uri, body=xml)
-        self.failUnlessEqual(plat.platformId, platformId)
+        # Post again, should produce ConflictError guarding against
+        # inadvertent overwrite of existing platform.
+        self.assertRaises(PlatformAlreadyExists, client.call, 'POST', uri, body=xml)
 
     def testCreatePlatform_NoProduct(self):
         # Create a platform when there is no product
@@ -432,11 +433,6 @@ class NewPlatformTest(BaseTest):
         req, plat = client.call('POST', uri, body=xml)
         self.failUnlessEqual(plat.label, pdLabel)
         self.failUnlessEqual(plat.platformName, 'Crowbar Linux 3')
-        platformId = plat.platformId
-
-        # Post again, should not change anything
-        req, plat = client.call('POST', uri, body=xml)
-        self.failUnlessEqual(plat.platformId, platformId)
 
     def testCreatePlatform_NoPlatform(self):
         # Create a platform when there is no product or platform
@@ -451,15 +447,6 @@ class NewPlatformTest(BaseTest):
         self.failUnlessEqual(plat.platformName, 'Platform 4')
         self.failUnlessEqual(plat.abstract, True)
         self.failUnlessEqual(plat.configurable, True)
-        platformId = plat.platformId
-
-        xml = xml.replace('<abstract>true</abstract>',
-            '<abstract>false</abstract>')
-
-        # Post again, make sure fields got updated
-        req, plat = client.call('POST', uri, body=xml)
-        self.failUnlessEqual(plat.platformId, platformId)
-        self.failUnlessEqual(plat.abstract, False)
 
 if __name__ == "__main__":
         testsetup.main()
