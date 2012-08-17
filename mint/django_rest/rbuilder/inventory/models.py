@@ -522,7 +522,7 @@ class System(modellib.XObjIdModel):
     actions = D(modellib.SyntheticField(jobmodels.Actions),
         "actions available on the system")
     source_image = D(APIReadOnly(models.ForeignKey('images.Image', null=True,
-         related_name='systems')),
+         related_name='systems', on_delete=models.SET_NULL)),
          'rBuilder image used to deploy the system, if any')
     created_by = D(modellib.ForeignKey(usersmodels.User, null=True,
         related_name='+', db_column='created_by'),
