@@ -417,10 +417,6 @@ class NewPlatformTest(BaseTest):
         self.failUnlessEqual(plat.platformName, 'Project 1')
         platformId = plat.platformId
 
-        # Post again, should not change anything
-        req, plat = client.call('POST', uri, body=xml)
-        self.failUnlessEqual(plat.platformId, platformId)
-
     def testCreatePlatform_NoProduct(self):
         # Create a platform when there is no product
         self.setupPlatform3(repositoryOnly=True)
@@ -433,10 +429,6 @@ class NewPlatformTest(BaseTest):
         self.failUnlessEqual(plat.label, pdLabel)
         self.failUnlessEqual(plat.platformName, 'Crowbar Linux 3')
         platformId = plat.platformId
-
-        # Post again, should not change anything
-        req, plat = client.call('POST', uri, body=xml)
-        self.failUnlessEqual(plat.platformId, platformId)
 
     def testCreatePlatform_NoPlatform(self):
         # Create a platform when there is no product or platform
@@ -451,15 +443,7 @@ class NewPlatformTest(BaseTest):
         self.failUnlessEqual(plat.platformName, 'Platform 4')
         self.failUnlessEqual(plat.abstract, True)
         self.failUnlessEqual(plat.configurable, True)
-        platformId = plat.platformId
 
-        xml = xml.replace('<abstract>true</abstract>',
-            '<abstract>false</abstract>')
-
-        # Post again, make sure fields got updated
-        req, plat = client.call('POST', uri, body=xml)
-        self.failUnlessEqual(plat.platformId, platformId)
-        self.failUnlessEqual(plat.abstract, False)
 
 if __name__ == "__main__":
         testsetup.main()
