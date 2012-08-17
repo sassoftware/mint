@@ -433,7 +433,6 @@ class NewPlatformTest(BaseTest):
         req, plat = client.call('POST', uri, body=xml)
         self.failUnlessEqual(plat.label, pdLabel)
         self.failUnlessEqual(plat.platformName, 'Crowbar Linux 3')
-        platformId = plat.platformId
 
     def testCreatePlatform_NoPlatform(self):
         # Create a platform when there is no product or platform
@@ -448,7 +447,6 @@ class NewPlatformTest(BaseTest):
         self.failUnlessEqual(plat.platformName, 'Platform 4')
         self.failUnlessEqual(plat.abstract, True)
         self.failUnlessEqual(plat.configurable, True)
-
 
 if __name__ == "__main__":
         testsetup.main()
