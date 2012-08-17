@@ -303,6 +303,19 @@ class TargetsTestCase(BaseTargetsTest, RepeaterMixIn):
                 (u'zone without description', u'zone without description'),
             ]
         )
+        helpTemplate = '/help/targets/drivers/openstack/configuration/%s.html'
+        self.failUnlessEqual(
+            [ x.help.href for x in obj.descriptor.dataFields.field[:-1] ],
+            [ helpTemplate % x for x in [
+                'novaServerName',
+                'novaPortNumber',
+                'glanceServerName',
+                'glancePortNumber',
+                'alias',
+                'description',
+        ]])
+        self.failUnlessEqual(
+            getattr(obj.descriptor.dataFields.field[-1], 'help', None), None)
 
     def testCreateTarget(self):
         zmodels.Zone.objects.create(name='other zone', description = "Other Zone")
@@ -459,6 +472,13 @@ class TargetsTestCase(BaseTargetsTest, RepeaterMixIn):
                 'username',
                 'password',
             ])
+        helpTemplate = '/help/targets/drivers/vmware/credentials/%s.html'
+        self.failUnlessEqual(
+            [ x.help.href for x in obj.descriptor.dataFields.field ],
+            [ helpTemplate % x for x in [
+                'username',
+                'password',
+        ]])
 
     def testGetTargetDescriptorRefreshImages(self):
         response = self._get('targets/1024/descriptors/refresh_images',

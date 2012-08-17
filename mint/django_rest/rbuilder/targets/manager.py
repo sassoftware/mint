@@ -330,9 +330,8 @@ class TargetsManager(basemanager.BaseManager, CatalogServiceHelper):
     @exposed
     def getDescriptorConfigureCredentials(self, target_id):
         target = self.getTargetById(target_id)
-        DriverClass = self.getDriverClass(target.target_type)
-        descr = descriptor.ConfigurationDescriptor(
-            fromStream=DriverClass.credentialsDescriptorXmlData)
+        drv = self.mgr.targetTypesManager.createDriverObject(target.target_type)
+        descr = drv.getCredentialsDescriptor()
         descr.setRootElement("descriptor_data")
         return descr
 
@@ -902,12 +901,21 @@ class TargetTypesManager(basemanager.BaseManager, CatalogServiceHelper):
         target = models.Target.objects.get(pk=target_id)
         return target.target_type
 
+    def createDriverObject(self, targetType):
+        if isinstance(targetType, (int, basestring)):
+            targetType = self.getTargetTypeById(targetType)
+        DriverClass = self.getDriverClass(targetType)
+        # Build some dummy objects
+        class Cfg(object):
+            cfg = None
+        cfg = Cfg()
+        drv = DriverClass(cfg, db=cfg)
+        return drv
+
     @exposed
     def getDescriptorCreateTargetByTargetType(self, target_type_id):
-        targetType = self.getTargetTypeById(target_type_id)
-        DriverClass = self.getDriverClass(targetType)
-        descr = descriptor.ConfigurationDescriptor(
-            fromStream=DriverClass.configurationDescriptorXmlData)
+        drv = self.createDriverObject(target_type_id)
+        descr = drv.getCloudConfigurationDescriptor()
         descr.setRootElement("descriptor_data")
         allZones = sorted(modellib.Cache.all(zones.Zone), key=lambda x: x.zone_id)
         # Use the name, if the description is not set
