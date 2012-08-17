@@ -2739,6 +2739,7 @@ survey_preview_alt = survey_preview_template
 
 config_properties_template = """
 <config_properties>
+  <values> <!-- bogus element to see if we rename it to 'configuration' -->
   <apache_configuration>
     <port>8080</port>
     <processInfo>
@@ -2778,6 +2779,7 @@ config_properties_template = """
       <password>my-password-123</password>
     </credentials>
   </disa_stig_compliance_checker>
+  </values>
 </config_properties>
 """
 

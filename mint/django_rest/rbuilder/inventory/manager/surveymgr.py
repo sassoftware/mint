@@ -444,6 +444,13 @@ class SurveyManager(basemanager.BaseManager):
 
         xconfig_properties     = getattr(xsurvey, 'config_properties', None)
 
+        # if it has <values> as a subelement, this is the client sending it weird, and attempt
+        # to rename it to configuration
+        values = getattr(xconfig_properties, 'values', None)
+        if values is not None:
+             values._xobj.tag = 'configuration'        
+
+
         # desired_properties comes in from the server configuration, not the survey
         # where the XML tag must be changed for the shredder
         xdesired_properties    = None
