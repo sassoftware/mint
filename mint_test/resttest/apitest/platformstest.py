@@ -22,6 +22,7 @@ from mint.rest.db import platformmgr
 from mint.rest.db import reposmgr
 from mint.rest.db import contentsources
 from mint.rest.modellib import converter
+from mint.mint_error import PlatformAlreadyExists
 
 from testutils import mock
 
@@ -416,6 +417,10 @@ class NewPlatformTest(BaseTest):
         self.failUnlessEqual(plat.label, pdLabel)
         self.failUnlessEqual(plat.platformName, 'Project 1')
         platformId = plat.platformId
+
+        # Post again, should produce ConflictError guarding against
+        # inadvertent overwrite of existing platform.
+        self.assertRaises(PlatformAlreadyExists, client.call, 'POST', uri, body=xml)
 
     def testCreatePlatform_NoProduct(self):
         # Create a platform when there is no product
