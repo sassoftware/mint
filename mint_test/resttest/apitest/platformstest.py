@@ -416,7 +416,6 @@ class NewPlatformTest(BaseTest):
         req, plat = client.call('POST', uri, body=xml)
         self.failUnlessEqual(plat.label, pdLabel)
         self.failUnlessEqual(plat.platformName, 'Project 1')
-        platformId = plat.platformId
 
         # Post again, should produce ConflictError guarding against
         # inadvertent overwrite of existing platform.
