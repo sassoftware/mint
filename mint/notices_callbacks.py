@@ -201,9 +201,21 @@ class PackageNoticesCallback(NoticesCallback):
         from mint.django_rest.rbuilder import service as rbuilder_service
         srv = rbuilder_service.BaseAuthService()
         srv._setMintAuth()
-        for trvName, trvVersion in troveBinaries:
-            trvLabel = trvVersion.trailingLabel().asString()
-            srv.mgr.refreshCachedUpdates(trvName, trvLabel)
+        try:
+            srv.mgr.enterTransactionManagement()
+ 
+            for trvName, trvVersion in troveBinaries:
+                trvLabel = trvVersion.trailingLabel().asString()
+                log.error("REFRESH CACHED UPDATES=%s,%s" % (trvName, trvLabel))
+                srv.mgr.refreshCachedUpdates(trvName, trvLabel)
+
+            srv.mgr.commit()
+        except:
+            srv.mgr.rollback()
+            raise
+        finally:
+            log.error("ok...")
+            srv.mgr.leaveTransactionManagement()
 
 class ApplianceNoticesCallback(PackageNoticesCallback):
     _labelTitle = "Build"
