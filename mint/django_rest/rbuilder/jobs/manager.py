@@ -1122,6 +1122,8 @@ class JobHandlerRegistry(HandlerRegistry):
         def _scrubTroveTup(val):
             if isinstance(val, unicode):
                 val = val.encode('utf8')
+            if val == '':
+                return ''
             val = trovetup.TroveTuple(val)
             return val.asString(withTimestamp=True)
 
