@@ -739,8 +739,9 @@ class ProductVersionsTable(database.KeyedTable):
 
     def getProductVersionListForProduct(self, projectId):
         cu = self.db.cursor()
+        fields = self.fields[:5]  # rbuild compatibility
         cu.execute("""SELECT %s FROM %s
-                      WHERE projectId = ?""" % (', '.join(self.fields),
+                      WHERE projectId = ?""" % (', '.join(fields),
                             self.name),
                       projectId)
         return [ list(x) for x in cu.fetchall() ]
