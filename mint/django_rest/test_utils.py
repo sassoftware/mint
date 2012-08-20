@@ -720,11 +720,12 @@ class RepeaterClient(CallProxy):
         job = RmakeJob(uuid, 200, "status text", "status detail", True)
         # XXX FIXME: rpath-repeater has a problem serializing stuff, the
         # inner object is not freezable
-        job.data.data = self._jobData
+        job.data = self._jobData
         return job
 
     def setJobData(self, jobData):
         self._jobData = types.FrozenObject.fromObject(jobData)
+
 
 class RmakeJob(object):
     Status = namedtuple("Status", "code text detail final failed")
