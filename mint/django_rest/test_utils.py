@@ -1,7 +1,5 @@
 #
-# Copyright (c) 2011 rPath, Inc.
-#
-# All Rights Reserved
+# Copyright (c) rPath, Inc.
 #
 
 import base64
@@ -23,6 +21,7 @@ from django.test.client import Client, FakePayload
 from django.test import TestCase
 from django.test.simple import DjangoTestSuiteRunner
 from django.utils.http import urlencode
+from rmake3.core import types
 
 from mint import config as mintconfig
 from mint import buildtypes
@@ -725,7 +724,7 @@ class RepeaterClient(CallProxy):
         return job
 
     def setJobData(self, jobData):
-        self._jobData = jobData
+        self._jobData = types.FrozenObject.fromObject(jobData)
 
 class RmakeJob(object):
     Status = namedtuple("Status", "code text detail final failed")

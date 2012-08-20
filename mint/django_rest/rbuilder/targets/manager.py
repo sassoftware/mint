@@ -385,7 +385,7 @@ class TargetsManager(basemanager.BaseManager, CatalogServiceHelper):
         if job.status.failed:
             raise errors.RbuilderError(msg=job.status.text,
                 traceback=job.status.detail)
-        descrXml = job.data.data
+        descrXml = job.data.getObject()
         descr = descriptor.ConfigurationDescriptor(fromStream=descrXml)
         descr.setRootElement("descriptor_data")
         # Fill in imageId
