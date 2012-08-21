@@ -5,7 +5,6 @@
 28      3   *   *   *       root    /usr/share/rbuilder/scripts/rss-update -q
 45      3   *   *   *       root    /usr/share/rbuilder/scripts/refresh-auth
 */5     *   *   *   *       root    /usr/share/rbuilder/scripts/job-cleanup -q
-0       *   *   *   *       root    DJANGO_SETTINGS_MODULE=mint.django_rest.settings /usr/share/rbuilder/scripts/repository-log-scrape -i /var/log/rbuilder/repository.log
 # Capsule indexer
 */10    *   *   *   *       root    curl -d "" --output /dev/null --stderr /dev/null http://127.0.0.1/api/capsules/rpm/content
 *       *   *   *   *       root    /usr/share/rbuilder/scripts/process-system-events -q >& /dev/null

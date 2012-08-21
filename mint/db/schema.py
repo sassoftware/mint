@@ -1114,7 +1114,7 @@ def _createCapsuleIndexerYumSchema(db):
 
 
 def _createRepositoryLogSchema(db):
-    # Repository Log scraping table and the status table for th scraper
+    # DEPRECATED -- delete when convenient
     cu = db.cursor()
 
     if 'systemupdate' not in db.tables:
