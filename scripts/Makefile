@@ -33,7 +33,6 @@ static_files =				\
 	update-package-index-external	\
 	validate-proxy-settings		\
 	set-password                    \
-	repository-log-scrape		\
 	$(generic_scripts)		\
 
 
