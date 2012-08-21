@@ -25,6 +25,8 @@ class MintDjangoRequest(modpython.ModPythonRequest):
 
     def __init__(self, req):
         modpython.ModPythonRequest.__init__(self, req)
+        # Used by the debugging middleware
+        self.debugFileName = None
 
         if req.args:
             args = req.args

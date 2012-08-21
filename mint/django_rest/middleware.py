@@ -9,6 +9,7 @@ import time
 import textwrap
 
 from debug_toolbar import middleware
+from conary.lib import util
 
 from django import http
 from django.contrib.auth import authenticate
@@ -73,60 +74,119 @@ class SwitchableLogMiddleware(BaseMiddleware):
     def shouldLog(self):
         ''' dictates whether the middlware should log or not '''
         # create the switchfile and keep it newer than 1 hour to keep it logging
-        if not os.path.exists(RBUILDER_DEBUG_SWITCHFILE):
+        try:
+            # We don't want exceptions on this codepath, so call
+            # os.path.exists before stat
+            if not os.path.exists(RBUILDER_DEBUG_SWITCHFILE):
+                return False
+            st = os.stat(RBUILDER_DEBUG_SWITCHFILE)
+        except OSError, e:
+            if e.errno != 2:
+                raise
             return False
-        if not os.path.exists(RBUILDER_DEBUG_LOGPATH):
-            return False
-        if not os.access(RBUILDER_DEBUG_LOGPATH, os.W_OK):
-            return False
-        mtime = os.path.getmtime(RBUILDER_DEBUG_SWITCHFILE)
+        mtime = st.st_mtime
         delta = time.time() - mtime
         return delta < (60*60)
 
-    def _getLogFilePath(self, localtime):
+    def _getLogFilenamePattern(self, tm):
         ''' keeps directories neat and organized '''
 
-        if not os.path.exists(RBUILDER_DEBUG_LOGPATH):
-            os.makedirs(RBUILDER_DEBUG_LOGPATH, mode=0600)
+        ymd = "%d-%02d-%02d" % (tm.tm_year, tm.tm_mon, tm.tm_mday)
+        hour = "%02d" % tm.tm_hour
 
-        (year, month, mday, hour, min, sec, wday, yday, is_dst) = localtime
-        ymd = "%d-%02d-%02d" % (year, month, mday)
-        hour = "%02d" % hour
+        dirName = os.path.join(RBUILDER_DEBUG_LOGPATH, ymd, hour)
+        util.mkdirChain(dirName)
 
-        filePath = os.path.join(RBUILDER_DEBUG_LOGPATH, ymd, hour)
-        if not os.path.exists(filePath):
-            os.makedirs(filePath)
+        minsec = "%02dm-%02ds" % (tm.tm_min, tm.tm_sec)
+        filenamePattern = os.path.join(dirName, '%s-%%s.log' % (minsec, ))
+        return filenamePattern
 
-        return (filePath, min, sec)
-
-    def getLogFile(self, isRequest, localtime, type="full"):
+    def getLogFile(self, request):
         ''' returns log file and path for storing XML debug info'''
+        if request.debugFileName is not None:
+            return file(request.debugFileName, "a"), request.debugFileName
 
+        now = time.localtime()
         filename = None
-        (path, min, sec)  = self._getLogFilePath(localtime)
-        minsec = "%02dm-%02ds" % (min, sec)
+        filenamePattern = self._getLogFilenamePattern(now)
         counter = 0
         while True:
-            if isRequest:
-                filename = os.path.join(path, "%s-%s.request_%s.log" % (minsec, counter, type))
-            else:
-                filename = os.path.join(path, "%s-%s.response_%s.log" % (minsec, counter, type))
-            counter += 1
-            if not os.path.exists(filename):
-                return (open(filename, "a"), filename)
+            try:
+                filename = filenamePattern % counter
+                fdesc = os.open(filename, os.O_CREAT | os.O_WRONLY | os.O_EXCL)
+                break
+            except OSError, e:
+                if e.errno != 17:
+                    raise
+                counter += 1
+                continue
+        # At this point the file is already created on the filesystem,
+        # there's no chance another process might stomp over it
+        # It would be nice if os.fdopen allowed one to carry the
+        # filename around
+        debugFile = os.fdopen(fdesc, "w")
+        request.debugFileName = filename
+
+        method = request.META.get('REQUEST_METHOD')
+        path = self._requestPath(request)
+
+        remoteAddr = request.META.get('REMOTE_ADDR')
+        remoteHost = request.META.get('REMOTE_HOST')
+        if remoteHost:
+            remoteAddr = "%s (%s)" % (remoteAddr, remoteHost)
+
+        tmpl = '''%(remoteAddr)s [%(date)s] "%(method)s %(path)s %(proto)s" %(filename)s\n'''
+        formattedDate = self.formatTime(now)
+        with open(RBUILDER_DEBUG_HISTORY, "a") as history:
+            history.write(tmpl % dict(remoteAddr=remoteAddr, method=method,
+                path=path, proto=request.META.get('SERVER_PROTOCOL'),
+                filename=filename, date=formattedDate))
+        # Print some general things
+        tmpl = "%s: %s\n"
+        debugFile.write(tmpl % ("Remote host", remoteAddr))
+        debugFile.write(tmpl % ("Server name", request.META.get('SERVER_NAME')))
+        debugFile.write(tmpl % ("Server port", request.META.get('SERVER_PORT')))
+        debugFile.write("\n")
+
+        return debugFile, request.debugFileName
+
+    _TimeFormat = "%Y-%m-%d %H:%M:%S %z"
+
+    @classmethod
+    def formatTime(cls, tm=None):
+        if tm is None:
+            tm = time.localtime()
+        return time.strftime(cls._TimeFormat, tm)
 
     def logPrint(self, handle, vars_dicts):
         wrap = textwrap.TextWrapper(width=80, subsequent_indent=' ', break_long_words=False, replace_whitespace=False)
         for vars_dict in vars_dicts:
-            for k in sorted(vars_dict.keys()):
-                v = vars_dict[k]
-                if type(v) == list:
+            for k, v in sorted(vars_dict.items()):
+                if isinstance(v, list):
                     # just in case...
-                    v = " ".join([ str(x) for x in v ])
+                    v = " ".join(str(x) for x in v)
                 else:
                     v = str(v)
                 v = "\n     ".join(wrap.wrap(v))
-                handle.write("%s: %s\n" % (k, v))
+                self.logLine(handle, k, v)
+
+    _LineFormat = "%s: %s\n"
+    @classmethod
+    def logLine(cls, handle, key, value):
+        handle.write(cls._LineFormat % (key, value))
+
+    @classmethod
+    def _requestPath(cls, request):
+        path = getattr(request, 'path', None)
+        if path is not None:
+            return path
+        path = request.META.get('SCRIPT_NAME', '')
+        path += request.META.get('PATH_INFO', '')
+        qs = request.META.get('QUERY_STRING')
+        path = util.urlUnsplit((None, None, None, None, None,
+            path, qs, None))
+        return path
+
 
 class RequestLogMiddleware(SwitchableLogMiddleware):
     '''
@@ -134,42 +194,34 @@ class RequestLogMiddleware(SwitchableLogMiddleware):
     '''
 
     def _logRequest(self, request):
-        now = time.localtime()
-        nowstr = time.asctime(now)
         method = request.META.get('REQUEST_METHOD')
-        path = request.META.get('SCRIPT_NAME', '')
-        path += request.META.get('PATH_INFO', '')
-        qs = request.META.get('QUERY_STRING')
-        if qs:
-            path += '?' + qs
+        path= self._requestPath(request)
         vers = request.META.get('SERVER_PROTOCOL')
-        (logFile, logFilePath) = self.getLogFile(True, now)
-        with logFile:
-            with open(RBUILDER_DEBUG_HISTORY, "a") as history:
-                print >> history, "[%s]\n     %s %s\n     %s" % (nowstr,
-                        method, path, logFilePath)
-            print >> logFile, "%s %s %s" % (method, path, vers)
-            for key, value in sorted(request.META.items()):
-                if not key.startswith('HTTP_'):
-                    continue
-                key = key[5:].replace('_', '-').title()
-                print >> logFile, "%s: %s" % (key, value)
-            print >> logFile
-            if not request.raw_post_data:
-                return
-            if '/xml' not in request.META.get('HTTP_CONTENT_TYPE', ''):
-                logFile.write(request.raw_post_data)
-                return
-            from lxml import etree
-            try:
-                text = request.raw_post_data.decode('utf8', 'replace')
-                doc = etree.fromstring(text)
-                text = etree.tostring(doc, pretty_print=True, encoding='utf8')
-                print >> logFile, "<!-- reformatted -->"
-                print >> logFile, text
-            except:
-                print >> logFile, "<!-- reformatting failed -->"
-                logFile.write(request.raw_post_data)
+        (logFile, logFilePath) = self.getLogFile(request)
+
+        logFile.write("Request: %s\n" % self.formatTime())
+        logFile.write("%s %s %s\n" % (method, path, vers))
+        for key, value in sorted(request.META.items()):
+            if not key.startswith('HTTP_'):
+                continue
+            key = key[5:].replace('_', '-').title()
+            self.logLine(logFile, key, value)
+        logFile.write("\n")
+        if not request.raw_post_data:
+            return
+        if '/xml' not in request.META.get('HTTP_CONTENT_TYPE', ''):
+            logFile.write(request.raw_post_data)
+            return
+        from lxml import etree
+        try:
+            text = request.raw_post_data.decode('utf8', 'replace')
+            doc = etree.fromstring(text)
+            text = etree.tostring(doc, pretty_print=True, encoding='utf8')
+            logFile.write("<!-- reformatted -->\n")
+            logFile.write(text)
+        except:
+            logFile.write("<!-- reformatting failed -->\n")
+            logFile.write(request.raw_post_data)
 
     def _process_request(self, request):
         if self.shouldLog():
@@ -178,17 +230,12 @@ class RequestLogMiddleware(SwitchableLogMiddleware):
 
 class ExceptionLoggerMiddleware(SwitchableLogMiddleware):
 
-    def _logFailure(self, code, exception_msg):
-
-         now = time.localtime()
-         urlsFile = RBUILDER_DEBUG_HISTORY
-         urlsFile = open(RBUILDER_DEBUG_HISTORY, "a")
-         (logFile, logFilePath) = self.getLogFile(False, now, type='error')
-         urlsFile.write("     (ERROR (%s))\n     %s\n" % (code, logFilePath))
-         urlsFile.close()
-         with logFile as f:
-             self.logPrint(f, [ dict(code=code, zzz_content=exception_msg) ])
-
+    def _logFailure(self, request, code, exception_msg):
+        if not self.shouldLog():
+            return
+        (logFile, logFilePath) = self.getLogFile(request)
+        self.logLine(logFile, "Failure", self.formatTime())
+        self.logPrint(logFile, [ dict(code=code, zzz_content=exception_msg) ])
 
     def _process_request(self, request):
         if self.shouldLog():
@@ -213,8 +260,7 @@ class ExceptionLoggerMiddleware(SwitchableLogMiddleware):
             response = HttpResponse(status=code, content_type='text/xml')
             response.content = fault.to_xml(request)
             log.error(str(exception))
-            if self.shouldLog():
-                self._logFailure(code, str(exception))
+            self._logFailure(request, code, str(exception))
             return response
 
         if isinstance(exception, core_exc.ObjectDoesNotExist):
@@ -235,8 +281,7 @@ class ExceptionLoggerMiddleware(SwitchableLogMiddleware):
             response = HttpResponse(status=code, content_type='text/xml')
             response.content = fault.to_xml(request)
             log.error(str(exception))
-            if self.shouldLog():
-                self._logFailure(code, str(exception))
+            self._logFailure(request, code, str(exception))
             return response
 
         if isinstance(exception, errors.RbuilderError):
@@ -246,8 +291,7 @@ class ExceptionLoggerMiddleware(SwitchableLogMiddleware):
             response = HttpResponse(status=status, content_type='text/xml')
             response.content = fault.to_xml(request)
             log.error(str(exception))
-            if self.shouldLog():
-                self._logFailure(status, str(exception))
+            self._logFailure(request, status, str(exception))
             return response
 
         if isinstance(exception, IntegrityError):
@@ -255,8 +299,7 @@ class ExceptionLoggerMiddleware(SwitchableLogMiddleware):
             # (bad practice, should catch and map to reasonable errors)
             # so do not log tracebacks when there's an uncaught conflict.
             # user will still get an ISE w/ details
-            if self.shouldLog():
-                self._logFailure('IntegrityError', str(exception))
+            self._logFailure(request, 'IntegrityError', str(exception))
             return handler.handleException(request, exception,
                     doTraceback=False, doEmail=False)
 
@@ -499,20 +542,14 @@ class PerformanceMiddleware(BaseMiddleware, middleware.DebugToolbarMiddleware):
 
 class SerializeXmlMiddleware(SwitchableLogMiddleware):
 
-    def _logResponse(self, outdata, response):
-        now = time.localtime()
-        urlsFile = RBUILDER_DEBUG_HISTORY
-        urlsFile = open(RBUILDER_DEBUG_HISTORY, "a")
-        (logFile, logFilePath) = self.getLogFile(False, now)
-        urlsFile.write("     (%d)\n" % response.status_code)
-        urlsFile.write("     %s\n" % logFilePath)
-        urlsFile.close()
-        with logFile as f:
-            print >> f, "HTTP/1.1 %s" % (response.status_code,)
-            for key, value in sorted(response.items()):
-                print >> f, "%s: %s" % (key.title(), value)
-            print >> f
-            f.write(str(outdata))
+    def _logResponse(self, request, outdata, response):
+        (logFile, logFilePath) = self.getLogFile(request)
+        self.logLine(logFile, "Response", self.formatTime())
+        logFile.write("HTTP/1.1 %s\n" % (response.status_code,))
+        for key, value in sorted(response.items()):
+            self.logLine(logFile, key.title(), value)
+        logFile.write('\n')
+        logFile.write(str(outdata))
 
     def _process_response(self, request, response):
         if hasattr(response, 'model'):
@@ -530,7 +567,7 @@ class SerializeXmlMiddleware(SwitchableLogMiddleware):
                 outdata = response.model.to_xml(request)
             response.write(outdata)
             if self.shouldLog():
-                self._logResponse(outdata, response)
+                self._logResponse(request, outdata, response)
 
         # Originally opened in BaseService. Unfortunately models in collections
         # aren't finalized until this method, so the manager can't be closed in
