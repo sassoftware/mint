@@ -13,6 +13,7 @@ import traceback
 from conary import versions as cny_versions
 from conary.deps import deps as cny_deps
 from conary.lib import util
+from conary import trovetup
 from xobj import xobj
 
 from django.db import connection
@@ -34,6 +35,7 @@ from mint.django_rest.rbuilder.manager import basemanager
 from mint.django_rest.rbuilder.querysets import models as querysetmodels
 from mint.django_rest.rbuilder.jobs import models as jobmodels
 from mint.django_rest.rbuilder.images import models as imagemodels
+from mint.django_rest.rbuilder.projects import models as projectmodels
 from mint.rest import errors as mint_rest_errors
 
 from smartform import descriptor
@@ -1145,6 +1147,7 @@ class SystemManager(basemanager.BaseManager):
             target_credentials=credentials)
         return system
 
+    @exposed
     def setDesiredTopLevelItems(self, system, topLevelItems):
         existing = set(x.trove_spec for x in system.desired_top_level_items.all())
         mgr = models.SystemDesiredTopLevelItem.objects
@@ -1153,6 +1156,7 @@ class SystemManager(basemanager.BaseManager):
         mgr.filter(system=system,
             trove_spec__in=existing.difference(topLevelItems)).delete()
 
+    @exposed
     def setObservedTopLevelItems(self, system, topLevelItems):
         existing = set(x.trove_spec for x in system.observed_top_level_items.all())
         mgr = models.SystemObservedTopLevelItem.objects
@@ -1160,6 +1164,23 @@ class SystemManager(basemanager.BaseManager):
             mgr.create(system=system, trove_spec=toAdd)
         mgr.filter(system=system,
             trove_spec__in=existing.difference(topLevelItems)).delete()
+
+        # update the project/branch/stage
+        sys = models.System.objects.get(pk=system.pk)
+        for top_level in sys.observed_top_level_items.all():
+            if not ("group-" in top_level.trove_spec and "-appliance" in top_level.trove_spec):
+                continue
+            (name, ver, flavor) = trovetup.TroveTuple(top_level.trove_spec)
+            label = ver.trailingLabel()
+            labelstr = label.asString()
+            stages = projectmodels.Stage.objects.filter(label=labelstr)
+            if len(stages) > 0:
+                stage = stages[0]
+                project = stage.project
+                branch = stage.project_branch
+                system.update(project=project, project_branch=branch, project_branch_stage=stage)
+            else:
+                pass
 
     def _addOldStyleJob(self, system):
         if system.boot_uuid is None:

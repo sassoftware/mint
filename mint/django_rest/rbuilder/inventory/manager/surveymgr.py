@@ -596,25 +596,7 @@ class SurveyManager(basemanager.BaseManager):
             is_top_level = False
             if top_level.lower() == 'true' or (info.name.startswith('group-') and info.name.find("-appliance") != -1):
                 is_top_level = True
-                topLevelItems.add('%s=%s[%s]' %
-                    (info.name, info.version, info.flavor))
-                try:
-                    ver = versions.VersionFromString(unfrozen)
-                    label = ver.trailingLabel()
-                    labelstr = label.asString()
-                    # TODO: if somehow the system is in a stage that got deleted
-                    # be cool and just set it back to NULL
-                    stages = project_models.Stage.objects.filter(label=labelstr)
-                    if len(stages) > 0:
-                        stage = stages[0]
-                        project = stage.project
-                        branch = stage.project_branch
-                        system.update(
-                            project=project, project_branch=branch,
-                            project_branch_stage=stage)
-                except IndexError:
-                    log.error("invalid version in survey: %s" % unfrozen)
-
+                topLevelItems.add('%s=%s[%s]' % (info.name, info.version, info.flavor))
 
             if encap is not None:
                 info.rpm_package_info = rpm_info_by_id[encap.id]
@@ -636,19 +618,14 @@ class SurveyManager(basemanager.BaseManager):
 
         # If no desired state is saved in the db, set it from the survey
         # but always set observed top level items.
+
         count = system.desired_top_level_items.count()
         if count == 0:
-            existing = set(x.trove_spec for x in system.desired_top_level_items.all())
-            mgr = inventory_models.SystemDesiredTopLevelItem.objects
-            for toAdd in topLevelItems.difference(existing):
-                mgr.create(system=system, trove_spec=toAdd)
-            mgr.filter(system=system, trove_spec__in=existing.difference(topLevelItems)).delete()
+            # server has no copy of desired top level items, so we must set this... otherwise don't
+            self.mgr.setDesiredTopLevelItems(system, topLevelItems)
+        self.mgr.setObservedTopLevelItems(system, topLevelItems)
 
-        existing = set(x.trove_spec for x in system.observed_top_level_items.all())
-        mgr = inventory_models.SystemObservedTopLevelItem.objects
-        for toAdd in topLevelItems.difference(existing):
-            mgr.create(system=system, trove_spec=toAdd)
-        mgr.filter(system=system, trove_spec__in=existing.difference(topLevelItems)).delete()
+        # assume linux unless we detect windows-isms
 
         os_type = 'linux'
 
