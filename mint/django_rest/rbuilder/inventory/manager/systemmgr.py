@@ -12,7 +12,6 @@ import time
 import traceback
 from conary import versions as cny_versions
 from conary.deps import deps as cny_deps
-from conary.lib import util
 from conary import trovetup
 from xobj import xobj
 
@@ -1166,8 +1165,8 @@ class SystemManager(basemanager.BaseManager):
             trove_spec__in=existing.difference(topLevelItems)).delete()
 
         # update the project/branch/stage
-        sys = models.System.objects.get(pk=system.pk)
-        for top_level in sys.observed_top_level_items.all():
+        system = models.System.objects.get(pk=system.pk)
+        for top_level in system.observed_top_level_items.all():
             if not ("group-" in top_level.trove_spec and "-appliance" in top_level.trove_spec):
                 continue
             (name, ver, flavor) = trovetup.TroveTuple(top_level.trove_spec)
