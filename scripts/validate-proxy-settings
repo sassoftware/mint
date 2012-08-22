@@ -12,7 +12,8 @@ try:
     ccfg = conarycfg.ConaryConfiguration(True)
     ccfg.read(proxyCfg)
     siteauth = SiteAuthorization(mintCfg.siteAuthCfgPath, conaryCfg=ccfg)
-    siteauth.getApi()
+    if not siteauth.isOffline():
+        siteauth.getApi()
 except Exception, e:
     print >> sys.stderr, e
     sys.exit(1)

@@ -1,16 +1,15 @@
 #
-# Copyright (c) 2011 rPath, Inc.
+# Copyright (c) rPath, Inc.
 #
 
 import logging
 import os
 import urllib
-import urllib2
 import time
 from conary import conarycfg
 from conary import conaryclient
 from conary.lib.cfg import ConfigFile
-from conary.lib.cfgtypes import CfgString
+from conary.lib.cfgtypes import CfgBool, CfgString
 from conary.lib.http import opener as opener_mod
 from conary.lib.util import copyfileobj
 from xobj import xobj
@@ -38,6 +37,8 @@ class AuthzConfig(ConfigFile):
     lastSuccess = (CfgString, None,
             "Date on which the entitlement service last "
             "provided a valid response.")
+    offline = (CfgBool, None,
+            "If true, this system cannot reach the internet")
 
 
 # xobj bits - authorization blob
@@ -255,6 +256,9 @@ class SiteAuthorization(object):
         fObj = self._urlopen(url)
         return fObj.read()
 
+    def isOffline(self):
+        return self.cfg.offline
+
     # Writers
     def generate(self):
         """
@@ -294,6 +298,8 @@ class SiteAuthorization(object):
         Returns C{True} if the refresh was successful, or C{False}
         if it failed for any reason.
         """
+        if self.isOffline():
+            return True
         key = self._getKeyFromSystem()
         if key:
             url = os.path.join(self.cfg.keyUrl, urllib.quote(key))

@@ -1,13 +1,11 @@
 #
-# Copyright (c) 2006-2009 rPath, Inc
-# All rights reserved
+# Copyright (c) rPath, Inc
 #
+
 import time
 import os
-import md5
 import re
 import socket
-import urllib
 
 from gettext import gettext as _
 import raa
@@ -15,17 +13,13 @@ import raa.web
 import logging
 log = logging.getLogger('raa.web')
 
-from raa import rpath_error
 from raa import constants
-from raa.db.data import RDT_BOOL, RDT_INT, RDT_JSON, RDT_STRING
+from raa.db.data import RDT_BOOL, RDT_INT, RDT_STRING
 from raa.db import schedule
-from raa.db import wizardrun
-from raa.modules import raawebplugin
 from raa.modules.raawebplugin import rAAWebPlugin
 from raa.lib import validate
 
 from mint import config
-from mint import helperfuncs
 
 from rPath.rbasetup import lib
 
