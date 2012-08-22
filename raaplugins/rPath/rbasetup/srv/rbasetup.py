@@ -1,5 +1,5 @@
 #
-# Copyright (C) 2011 rPath, Inc.
+# Copyright (C) rPath, Inc.
 #
 
 import logging
@@ -22,6 +22,7 @@ from mint import helperfuncs
 from mint import notices_callbacks
 from mint import rmake_setup
 from mint import shimclient
+from mint.lib import siteauth
 from mint.scripts import createplatforms
 from mint.scripts import repository_sync
 
@@ -324,22 +325,24 @@ class rBASetup(rAASrvPlugin):
         self.message += result.get('message', '')
         self.reportMessage(execId, self.message)
 
-        # Setup the initial external projects
-        if not retry:
-            step = lib.FTS_STEP_INITEXTERNAL
-            self.message += "Setting up external repositories...\n"
+        auth = siteauth.getSiteAuth(newCfg.siteAuthCfgPath)
+        if not auth.isOffline():
+            # Setup the initial external projects
+            if not retry:
+                step = lib.FTS_STEP_INITEXTERNAL
+                self.message += "Setting up external repositories...\n"
+                self.reportMessage(execId, self.message)
+                ret = self._setupExternalProjects(newCfg, new_username, new_password)
+                if ret.has_key('errors'):
+                    return { 'errors': ret['errors'], 'step': step, 'message': self.message }
+
+            self.message += "Creating platforms... "
             self.reportMessage(execId, self.message)
-            ret = self._setupExternalProjects(newCfg, new_username, new_password)
+            ret = self._createPlatforms()
             if ret.has_key('errors'):
                 return { 'errors': ret['errors'], 'step': step, 'message': self.message }
-
-        self.message += "Creating platforms... "
-        self.reportMessage(execId, self.message)
-        ret = self._createPlatforms()
-        if ret.has_key('errors'):
-            return { 'errors': ret['errors'], 'step': step, 'message': self.message }
-        self.message += ret.get('message', '\n')
-        self.reportMessage(execId, self.message)
+            self.message += ret.get('message', '\n')
+            self.reportMessage(execId, self.message)
 
         # Done
         self.message += "Setup is complete.\n"
