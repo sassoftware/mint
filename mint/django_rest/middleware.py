@@ -106,7 +106,7 @@ class SwitchableLogMiddleware(BaseMiddleware):
         if request.debugFileName is not None:
             return file(request.debugFileName, "a"), request.debugFileName
 
-        now = time.localtime()
+        now = time.localtime(request.startTime)
         filename = None
         filenamePattern = self._getLogFilenamePattern(now)
         counter = 0
@@ -142,10 +142,11 @@ class SwitchableLogMiddleware(BaseMiddleware):
                 path=path, proto=request.META.get('SERVER_PROTOCOL'),
                 filename=filename, date=formattedDate))
         # Print some general things
-        tmpl = "%s: %s\n"
-        debugFile.write(tmpl % ("Remote host", remoteAddr))
-        debugFile.write(tmpl % ("Server name", request.META.get('SERVER_NAME')))
-        debugFile.write(tmpl % ("Server port", request.META.get('SERVER_PORT')))
+        self.logLine(debugFile, "Remote host", remoteAddr)
+        self.logLine(debugFile, "Server name", request.META.get('SERVER_NAME'))
+        self.logLine(debugFile, "Server port", request.META.get('SERVER_PORT'))
+        self.logLine(debugFile, "Request time",
+            self.formatTime(request.startTime))
         debugFile.write("\n")
 
         return debugFile, request.debugFileName
@@ -156,7 +157,13 @@ class SwitchableLogMiddleware(BaseMiddleware):
     def formatTime(cls, tm=None):
         if tm is None:
             tm = time.localtime()
+        elif isinstance(tm, (int, float)):
+            tm = time.localtime(tm)
         return time.strftime(cls._TimeFormat, tm)
+
+    @classmethod
+    def formatSeconds(cls, seconds):
+        return "%.2f seconds" % seconds
 
     def logPrint(self, handle, vars_dicts):
         wrap = textwrap.TextWrapper(width=80, subsequent_indent=' ', break_long_words=False, replace_whitespace=False)
@@ -199,7 +206,6 @@ class RequestLogMiddleware(SwitchableLogMiddleware):
         vers = request.META.get('SERVER_PROTOCOL')
         (logFile, logFilePath) = self.getLogFile(request)
 
-        logFile.write("Request: %s\n" % self.formatTime())
         logFile.write("%s %s %s\n" % (method, path, vers))
         for key, value in sorted(request.META.items()):
             if not key.startswith('HTTP_'):
@@ -544,8 +550,10 @@ class SerializeXmlMiddleware(SwitchableLogMiddleware):
 
     def _logResponse(self, request, outdata, response):
         (logFile, logFilePath) = self.getLogFile(request)
-        self.logLine(logFile, "Response", self.formatTime())
-        logFile.write("HTTP/1.1 %s\n" % (response.status_code,))
+        now = time.time()
+        self.logLine(logFile, "Response time", self.formatTime(now))
+        self.logLine(logFile, "Duration", self.formatSeconds(now - request.startTime))
+        logFile.write("\nHTTP/1.1 %s\n" % (response.status_code,))
         for key, value in sorted(response.items()):
             self.logLine(logFile, key.title(), value)
         logFile.write('\n')

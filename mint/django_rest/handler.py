@@ -10,6 +10,7 @@ except ImportError:
 
 import logging
 import sys
+import time
 import traceback
 
 from django import http
@@ -27,6 +28,7 @@ class MintDjangoRequest(modpython.ModPythonRequest):
         modpython.ModPythonRequest.__init__(self, req)
         # Used by the debugging middleware
         self.debugFileName = None
+        self.startTime = time.time()
 
         if req.args:
             args = req.args

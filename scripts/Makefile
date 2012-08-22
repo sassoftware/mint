@@ -47,6 +47,7 @@ generic_scripts = \
 	process-system-events		\
 	purge-surveys			\
 	rbuilder-database		\
+	rbuilder-debug			\
 	repository-sync			\
 	system-resolver			\
 	target-systems-import		\
