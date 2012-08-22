@@ -287,21 +287,18 @@ class SurveyManager(basemanager.BaseManager):
            if created:
                obj.save()
 
-    def _computeCompliance(self, survey, discovered_properties, validation_report, preview, config_diff_ct):
-        ''' create the compliance summary block for the survey '''
-
+    def _computeValidationReportCompliance(self, validation_report):
+        # process the validation report
         has_errors = False
-        updates_pending = False
         config_execution_failed = False
         config_execution_failures = 0
 
-        # process the validation report
         if validation_report is not None:
             status = getattr(validation_report, 'status', None)
             if status and status.lower() == 'fail':
                 has_errors = True
                 config_execution_failed = True
-
+             
             errors = getattr(validation_report, 'errors', None)
             if errors is not None:
                 elementNames = errors._xobj.elements
@@ -315,13 +312,14 @@ class SurveyManager(basemanager.BaseManager):
                     if subErrors is not None:
                         eCount = len(subErrors._xobj.elements)
                         config_execution_failures += eCount
+        return (has_errors, config_execution_failed, config_execution_failures) 
 
-        # process the preview (pending software updates)
+    def _computePackageChangeCounts(self, preview):
         added = 0
         removed = 0
         changed = 0
+        updates_pending = False
         if preview is not None:
-
             observed = getattr(preview, 'observed', None)
             desired = getattr(preview, 'desired', None)
             if (observed is None) or (desired is None):
@@ -332,9 +330,9 @@ class SurveyManager(basemanager.BaseManager):
                 changes = getattr(preview.conary_package_changes, 'conary_package_change', None)
                 if changes is not None:
                     updates_pending = True
-                    # xobj hack
-                    if type(changes) != list:
-                        changes = [ changes ]
+                # xobj hack
+                if type(changes) != list:
+                    changes = [ changes ]
                     for x in changes:
                         typ = x.type
                         if type == 'added':
@@ -344,48 +342,58 @@ class SurveyManager(basemanager.BaseManager):
                         elif type == 'changed':
                             changed = changed+1
 
-        config_sync_message = "%s added, %s removed, %s changed" % (added, removed, changed)
+        return (added, removed, changed, updates_pending)
 
-        # TODO: process and count deltas versus "readerators" with matching keys
-        # and include summary results
+
+    def _computeCompliance(self, survey, discovered_properties, validation_report, preview, config_diff_ct):
+        ''' create the compliance summary block for the survey '''
+
+        (has_errors, config_execution_failed, config_execution_failures) = self._computeValidationReportCompliance(
+             validation_report
+        )
+        (added, removed, changed, updates_pending) = self._computePackageChangeCounts(preview)
+        config_sync_message = "%s added, %s removed, %s changed" % (added, removed, changed)
 
         config_sync_compliant = (config_diff_ct == 0)
         software_sync_compliant = (not updates_pending)
         config_execution_compliant = (not config_execution_failed)
         overall = config_sync_compliant and software_sync_compliant and config_execution_compliant
-           
-        results = dict(
-            overall = overall,
-            config_execution_failures  = config_execution_failures,
-            software_sync_compliant    = software_sync_compliant,
-            config_sync_compliant      = config_sync_compliant,
-            config_execution_compliant = config_execution_compliant,
-            config_sync_message        = config_sync_message
-        )
+        
+        compliance_xml = self._generateComplianceXml(overall, config_execution_failures, 
+            software_sync_compliant, config_sync_compliant, config_execution_compliant, 
+            config_sync_message)
+   
+        return (has_errors, updates_pending, compliance_xml, overall, config_execution_failures)
 
-        compliance_xml = """
+    def _generateComplianceXml(self, overall, config_execution_failures, software_sync_compliant, 
+        config_sync_compliant, config_execution_compliant, config_sync_message):
+
+        return """
         <compliance_summary>
         <config_execution>
-           <compliant>%(config_execution_compliant)s</compliant>
-           <failure_count>%(config_execution_failures)s</failure_count>
+            <compliant>%(config_execution_compliant)s</compliant>
+            <failure_count>%(config_execution_failures)s</failure_count>
         </config_execution>
-
         <config_sync>
-           <compliant>%(config_sync_compliant)s</compliant>
-           <message>%(config_sync_message)s</message>
+            <compliant>%(config_sync_compliant)s</compliant>
+            <message>%(config_sync_message)s</message>
         </config_sync>
-
         <software>
-           <compliant>%(software_sync_compliant)s</compliant>
+            <compliant>%(software_sync_compliant)s</compliant>
         </software>
         <overall>
-           <compliant>%(overall)s</compliant>
+            <compliant>%(overall)s</compliant>
         </overall>
         </compliance_summary>
-        """ %  results
+        """ %  dict(
+             overall = overall,
+             config_execution_failures  = config_execution_failures,
+             software_sync_compliant    = software_sync_compliant,
+             config_sync_compliant      = config_sync_compliant,
+             config_execution_compliant = config_execution_compliant,
+             config_sync_message        = config_sync_message
+        )
 
-        return (has_errors, updates_pending, compliance_xml, 
-                results['overall'], config_execution_failures)
 
     def _computeConfigDelta(self, survey):
         left = survey_models.SurveyValues.objects.filter(
