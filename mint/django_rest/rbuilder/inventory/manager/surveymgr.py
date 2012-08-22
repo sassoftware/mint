@@ -179,13 +179,13 @@ class SurveyManager(basemanager.BaseManager):
         return cls._listify(obj)
 
     @classmethod
-    def _xobjAsUnicode(cls, obj):
+    def _u(cls, obj):
         if obj is None:
             return None
         return unicode(obj)
 
     @classmethod
-    def _xobjAsInt(cls, obj):
+    def _i(cls, obj):
         if obj is None or str(obj) == '' or str(obj) == 'None':
             return None
         return int(obj)
@@ -222,10 +222,7 @@ class SurveyManager(basemanager.BaseManager):
         survey_models.SurveyTag.objects.filter(survey=survey).delete()
 
         for xtag in xtags:
-            tag = survey_models.SurveyTag(
-                survey       = survey,
-                name         = xtag.name
-            )
+            tag = survey_models.SurveyTag(survey = survey, name = xtag.name)
             tag.save()
 
         survey.name          = getattr(xmodel, 'name', None)
@@ -266,7 +263,6 @@ class SurveyManager(basemanager.BaseManager):
                     newPosition = "%s/%s" % (position, eltName)
                     self.xwalk(getattr(xvalues, eltName), newPosition, results)
 
-
     def _saveShreddedValues(self, survey, xvalues, valueType):
         ''' store config elements in the database so they are searchable, even if they are not surfaced this way '''
 
@@ -279,10 +275,7 @@ class SurveyManager(basemanager.BaseManager):
            if path == '':
                continue
            (obj, created) = survey_models.SurveyValues.objects.get_or_create(
-               survey = survey,
-               type   = valueType,
-               key    = path,
-               value  = value
+               survey = survey, type = valueType, key = path, value = value
            )
            if created:
                obj.save()
@@ -335,15 +328,13 @@ class SurveyManager(basemanager.BaseManager):
                     changes = [ changes ]
                     for x in changes:
                         typ = x.type
-                        if type == 'added':
+                        if typ == 'added':
                             added = added+1
-                        elif type == 'removed':
+                        elif typ == 'removed':
                             removed = removed+1
-                        elif type == 'changed':
+                        elif typ == 'changed':
                             changed = changed+1
-
         return (added, removed, changed, updates_pending)
-
 
     def _computeCompliance(self, survey, discovered_properties, validation_report, preview, config_diff_ct):
         ''' create the compliance summary block for the survey '''
@@ -386,22 +377,15 @@ class SurveyManager(basemanager.BaseManager):
         </overall>
         </compliance_summary>
         """ %  dict(
-             overall = overall,
-             config_execution_failures  = config_execution_failures,
-             software_sync_compliant    = software_sync_compliant,
-             config_sync_compliant      = config_sync_compliant,
-             config_execution_compliant = config_execution_compliant,
-             config_sync_message        = config_sync_message
+             overall = overall, config_execution_failures = config_execution_failures, software_sync_compliant = software_sync_compliant,
+             config_sync_compliant = config_sync_compliant, config_execution_compliant = config_execution_compliant,
+             config_sync_message = config_sync_message
         )
 
 
     def _computeConfigDelta(self, survey):
-        left = survey_models.SurveyValues.objects.filter(
-            survey = survey, type = survey_models.DESIRED_VALUES
-        )
-        right = survey_models.SurveyValues.objects.filter(
-            survey = survey, type = survey_models.OBSERVED_VALUES
-        )
+        left = survey_models.SurveyValues.objects.filter(survey = survey, type = survey_models.DESIRED_VALUES)
+        right = survey_models.SurveyValues.objects.filter(survey = survey, type = survey_models.OBSERVED_VALUES)
         delta = "<config_compliance><config_values>"
         compliant = True
         config_diff_ct = 0
@@ -412,7 +396,6 @@ class SurveyManager(basemanager.BaseManager):
                 # matches on bits
                 if leftKey.key.find("/errors/") != -1:
                     continue
-
                 if leftKey.key == rightKey.key.replace("/extensions","") and leftKey.value != rightKey.value:
                     config_diff_ct += 1
                     compliant = False
@@ -429,14 +412,223 @@ class SurveyManager(basemanager.BaseManager):
         delta += "</config_compliance>"
         return (delta, config_diff_ct)
 
+    def _store_rpm_packages(self, survey, xrpm_packages, rpms_by_info_id, rpm_info_by_id):
+
+        for xmodel in xrpm_packages:
+
+            xinfo = xmodel.rpm_package_info
+            # be tolerant of the way epoch comes back from node XML
+            epoch = self._i(getattr(xinfo, 'epoch', None))
+            info, created = survey_models.RpmPackageInfo.objects.get_or_create(
+               name         = self._u(xinfo.name),
+               version      = self._u(xinfo.version),
+               epoch        = epoch,
+               release      = self._u(xinfo.release),
+               architecture = self._u(xinfo.architecture),
+               description  = self._u(xinfo.description),
+               signature    = self._u(xinfo.signature),
+            )
+
+            rpm_info_by_id[xmodel.id] = info
+            pkg = survey_models.SurveyRpmPackage(survey=survey, rpm_package_info = info)
+            rpms_by_info_id[info.pk] = pkg
+            pkg.install_date = self._date(xmodel.install_date)
+            pkg.save()
+
+    def _store_conary_packages(self, survey, xconary_packages, topLevelItems, rpm_info_by_id, rpms_by_info_id):
+
+        for xmodel in xconary_packages:
+            xinfo = xmodel.conary_package_info
+
+            unfrozen = ''
+            try:
+                conary_version = versions.ThawVersion(self._u(xinfo.version))
+                unfrozen = conary_version.asString()
+            except:
+                pass
+
+            info, created = survey_models.ConaryPackageInfo.objects.get_or_create(
+                name         = self._u(xinfo.name), version = self._u(xinfo.version),
+                flavor       = self._u(xinfo.flavor), description = self._u(xinfo.description),
+                revision     = self._u(xinfo.revision), architecture = self._u(xinfo.architecture),
+                signature    = self._u(xinfo.signature),
+            )
+            # unfrozen might not be set on old survey data, but update it if we have data now
+            # (hence not inside the get_or_create)
+            info.unfrozen    = unfrozen
+            encap = getattr(xinfo, 'rpm_package_info', None)
+
+            use_date = self._date(xmodel.install_date)
+            top_level = self._u(getattr(xmodel, 'is_top_level', ''))
+            is_top_level = False
+            if top_level.lower() == 'true' or (info.name.startswith('group-') and info.name.find("-appliance") != -1):
+                is_top_level = True
+                topLevelItems.add('%s=%s[%s]' % (info.name, info.version, info.flavor))
+
+            if encap is not None:
+                info.rpm_package_info = rpm_info_by_id[encap.id]
+                info.save()
+                # conary may not support install_date yet so cheat
+                # and get it from the RPM if available
+                if xmodel.install_date in [ 0, '', None ]:
+                    rpm_package = rpms_by_info_id.get(info.rpm_package_info.pk, None)
+                    if rpm_package is not None:
+                        use_date = rpm_package.install_date
+
+            pkg = survey_models.SurveyConaryPackage(
+                conary_package_info = info, survey = survey, install_date = use_date, is_top_level = is_top_level
+            )
+            pkg.save()
+
+    def _save_windows_packages(self, survey, xwindows_packages, windows_packages_by_id, os_type):
+
+        for xmodel in xwindows_packages:
+            os_type = 'windows'
+
+            xinfo = xmodel.windows_package_info
+            xid = xmodel.id
+            info, created = survey_models.WindowsPackageInfo.objects.get_or_create(
+                publisher    = self._u(xinfo.publisher), product_code = self._u(xinfo.product_code), product_name = self._u(xinfo.product_name),
+                package_code = self._u(xinfo.package_code), type = self._u(xinfo.type), upgrade_code = self._u(xinfo.upgrade_code),
+                version      = self._u(xinfo.version)
+            )
+            pkg = survey_models.SurveyWindowsPackage(
+                windows_package_info = info, survey = survey, install_source = self._u(xmodel.install_source), local_package = self._u(xmodel.local_package),
+                install_date   = self._date(xmodel.install_date),
+            )
+            windows_packages_by_id[xid] = pkg
+            pkg.save()
+
+    def _save_windows_os_patches(self, survey, xwindows_os_patches, os_type):
+
+        for xmodel in xwindows_os_patches:
+            os_type = 'windows'
+
+            xinfo = xmodel.windows_os_patch_info
+            info, created = survey_models.WindowsOsPatchInfo.objects.get_or_create(
+                hotfix_id    = self._u(xinfo.hotfix_id), name = self._u(xinfo.name), fix_comments = self._u(xinfo.fix_comments),
+                description  = self._u(xinfo.description), caption = self._u(xinfo.caption)
+            )
+            if created:
+                info.save()
+            pkg = survey_models.SurveyWindowsOsPatch(
+                survey        = survey, windows_os_patch_info = info, status = self._u(xmodel.status),
+                install_date  = self._date(xmodel.install_date), installed_by = self._u(xmodel.installed_by),
+                cs_name       = self._u(xmodel.cs_name),
+            )
+            pkg.save()
+
+    def _save_windows_os_patches(self, survey, xwindows_os_patches, os_type):
+
+        for xmodel in xwindows_os_patches:
+            os_type = 'windows'
+
+            xinfo = xmodel.windows_os_patch_info
+            info, created = survey_models.WindowsOsPatchInfo.objects.get_or_create(
+                hotfix_id    = self._u(xinfo.hotfix_id),
+                name         = self._u(xinfo.name),
+                fix_comments = self._u(xinfo.fix_comments),
+                description  = self._u(xinfo.description),
+                caption      = self._u(xinfo.caption)
+            )
+            if created:
+                info.save()
+            pkg = survey_models.SurveyWindowsOsPatch(
+                survey                = survey,
+                windows_os_patch_info = info,
+                status                = self._u(xmodel.status),
+                install_date          = self._date(xmodel.install_date),
+                installed_by          = self._u(xmodel.installed_by),
+                cs_name               = self._u(xmodel.cs_name),
+            )
+            pkg.save()
+
+    def _save_windows_patches(self, survey, xwindows_patches, os_type, windows_packages_by_id):
+     
+        for xmodel in xwindows_patches:
+            os_type = 'windows'
+
+            # NOTE DEPENDENT SERVICES!!!
+            xinfo = xmodel.windows_patch_info
+            info,created = survey_models.WindowsPatchInfo.objects.get_or_create(
+                display_name   = self._u(xinfo.display_name),
+                uninstallable  = self._bool(xinfo.uninstallable),
+                patch_code     = self._u(xinfo.patch_code),
+                product_code   = self._u(xinfo.product_code),
+                transforms     = self._u(xinfo.transforms),
+            )
+            referenced_packages = self._subel(xinfo, 'windows_packages_info', 'windows_package_info')
+
+            # Windows client is sending back wrong XML elements but compensate by allowing this element
+            # in the wrong nesting topology to basically work.  Needed for demo.   TODO: get Windows client
+            # to send a package info object here, not a package, and remove this hack.
+            referenced_packages_hack = self._subel(xinfo, 'windows_packages_info', 'windows_package')
+
+            packages_info = []
+            if created:
+                for rp in referenced_packages_hack:
+                    pkg = windows_packages_by_id[rp.id]
+                    package_info = pkg.windows_package_info
+                    link, created_link = survey_models.SurveyWindowsPatchPackageLink.objects.get_or_create(
+                        windows_patch_info   = info,
+                        windows_package_info = package_info
+                    )
+                for rp in referenced_packages:
+                    package_infos = survey_models.WindowsPackageInfo.objects.filter(
+                        publisher    = self._u(rp.publisher), product_code = self._u(rp.product_code), package_code = self._u(rp.package_code),
+                        type         = self._u(rp.type), upgrade_code = self._u(rp.upgrade_code), version = self._u(rp.version)
+                    )
+                    if len(package_infos) > 0:
+                        link, created_link = survey_models.SurveyWindowsPatchPackageLink.objects.get_or_create(
+                            windows_patch_info = info, windows_package_info = package_infos[0]
+                        )
+                    else:
+                        # the XML's package reference was bad, but let's upload what we can
+                        # shouldn't really happen
+                        pass
+            pkg = survey_models.SurveyWindowsPatch(
+                survey = survey, windows_patch_info = info, local_package = self._u(xmodel.local_package),
+                install_date = self._date(xmodel.install_date), is_installed = self._bool(xmodel.is_installed)
+            )
+            pkg.save()
+
+    def _save_services(self, survey, xservices):
+
+        for xmodel in xservices:
+            xinfo = xmodel.service_info
+            info, created = survey_models.ServiceInfo.objects.get_or_create(
+                name      = self._u(xinfo.name), autostart = self._u(xinfo.autostart), runlevels = self._u(xinfo.runlevels),
+            )
+            service = survey_models.SurveyService(
+                service_info = info, survey = survey, running = self._bool(xmodel.running), status = self._u(xmodel.status),
+            )
+            service.save()
+
+    def _save_windows_services(self, survey, xwindows_services):
+
+        for xmodel in xwindows_services:
+            xinfo = xmodel.windows_service_info
+            info, created = survey_models.WindowsServiceInfo.objects.get_or_create(
+                name = self._u(xinfo.name), display_name = self._u(xinfo.display_name), type = self._u(xinfo.type), 
+                handle = self._u(xinfo.handle), _required_services = self._u(xinfo.required_services)
+            )
+            autostart = (self._u(getattr(xmodel, 'autostart', 'false')) != 'false')
+            service = survey_models.SurveyWindowsService(
+                windows_service_info = info, survey = survey, status = self._u(xmodel.status),
+                running = self._bool(getattr(xmodel, 'running', 'false')), start_account = self._u(getattr(xmodel, 'start_account', '')),
+                start_mode = self._u(getattr(xmodel, 'start_mode', '')), autostart = autostart
+            )
+            service.save()
+
+    def _save_tags(self, survey, xtags):
+        for xmodel in xtags:
+            tag = survey_models.SurveyTag(survey = survey, name = self._u(xmodel.name))
+            tag.save()
+
     @exposed
     def addSurveyForSystemFromXobj(self, system_id, model):
-        # shortcuts
-        _u = self._xobjAsUnicode
-        _int = self._xobjAsInt
 
         system = inventory_models.System.objects.get(pk=system_id)
-
         xsurvey              = model.survey
         xrpm_packages        = self._subel(xsurvey, 'rpm_packages', 'rpm_package')
         xconary_packages     = self._subel(xsurvey, 'conary_packages', 'conary_package')
@@ -458,7 +650,6 @@ class SurveyManager(basemanager.BaseManager):
         if values is not None:
              values._xobj.tag = 'configuration'        
 
-
         # desired_properties comes in from the server configuration, not the survey
         # where the XML tag must be changed for the shredder
         xdesired_properties    = None
@@ -468,8 +659,7 @@ class SurveyManager(basemanager.BaseManager):
         if xdesired_properties is None or getattr(xdesired_properties, 'configuration', None) is None:
             xdesired_properties = xobj.parse('<configuration/>')
 
-        origin = getattr(xsurvey, 'origin', 'scanner')
-
+        origin                 = getattr(xsurvey, 'origin', 'scanner')
         xobserved_properties   = getattr(xsurvey, 'observed_properties', None)
         xdiscovered_properties = getattr(xsurvey, 'discovered_properties', None)
         xvalidation_report     = getattr(xsurvey, 'validation_report', None)
@@ -483,8 +673,7 @@ class SurveyManager(basemanager.BaseManager):
             hasSystemModel = False
         else:
             systemModelContents = getattr(systemModel, 'contents', None)
-            systemModelModifiedDate = datetime.utcfromtimestamp(int(
-                getattr(systemModel, 'modified_date', 0)))
+            systemModelModifiedDate = datetime.utcfromtimestamp(int(getattr(systemModel, 'modified_date', 0)))
             hasSystemModel = (systemModelContents is not None)
 
         created_date = getattr(xsurvey, 'created_date', 0)
@@ -493,11 +682,8 @@ class SurveyManager(basemanager.BaseManager):
         desc    = getattr(xsurvey, 'description', "")
         comment = getattr(xsurvey, 'comment',     "")
 
-
         # default to removable for registration surveys, but not manual ones
         removable = (origin != 'scanner')
-
-        # WIP...
 
         system_snapshot_xml = system.to_xml()
         project_snapshot_xml = None
@@ -509,29 +695,15 @@ class SurveyManager(basemanager.BaseManager):
             stage_snapshot_xml = system.project_branch_stage.to_xml()
 
         survey = survey_models.Survey(
-            name = system.name,
-            uuid = _u(xsurvey.uuid),
-            description = desc,
-            comment = comment,
-            removable = removable,
-            system = system,
-            created_date = created_date,
-            modified_date = created_date,
-            config_properties = self._toxml(xconfig_properties),
-            desired_properties = self._toxml(xdesired_properties, 'desired_properties'),
-            observed_properties = self._toxml(xobserved_properties),
-            discovered_properties = self._toxml(xdiscovered_properties),
-            validation_report = self._toxml(xvalidation_report),
-            preview = self._toxml(xpreview),
-            config_properties_descriptor = self._toxml(xconfig_descriptor),
-            system_model = systemModelContents,
-            system_model_modified_date = systemModelModifiedDate,
-            has_system_model = hasSystemModel,
-            system_snapshot = system_snapshot_xml,
-            project_snapshot = project_snapshot_xml,
-            stage_snapshot = stage_snapshot_xml,
+            name = system.name, uuid = self._u(xsurvey.uuid), description = desc, comment = comment,
+            removable = removable, system = system, created_date = created_date, modified_date = created_date,
+            config_properties = self._toxml(xconfig_properties), desired_properties = self._toxml(xdesired_properties, 'desired_properties'),
+            observed_properties = self._toxml(xobserved_properties), discovered_properties = self._toxml(xdiscovered_properties),
+            validation_report = self._toxml(xvalidation_report), preview = self._toxml(xpreview),
+            config_properties_descriptor = self._toxml(xconfig_descriptor), system_model = systemModelContents,
+            system_model_modified_date = systemModelModifiedDate, has_system_model = hasSystemModel,
+            system_snapshot = system_snapshot_xml, project_snapshot = project_snapshot_xml, stage_snapshot = stage_snapshot_xml,
         )
-
         survey.save()
 
         self._saveShreddedValues(survey, xconfig_properties, survey_models.CONFIG_VALUES)
@@ -544,85 +716,15 @@ class SurveyManager(basemanager.BaseManager):
         if system.latest_survey is None or survey.created_date > system.latest_survey.created_date:
             system.update(latest_survey=survey)
 
-        rpm_info_by_id     = {}
-        rpms_by_info_id    = {}
+        os_type = 'linux' # innocent until proven guilty
+        rpm_info_by_id = {}
+        rpms_by_info_id = {}
         windows_packages_by_id = {}
 
-        for xmodel in xrpm_packages:
-            xinfo = xmodel.rpm_package_info
-
-            # be tolerant of the way epoch comes back from node XML
-            epoch = _int(getattr(xinfo, 'epoch', None))
-            info, created = survey_models.RpmPackageInfo.objects.get_or_create(
-               name         = _u(xinfo.name),
-               version      = _u(xinfo.version),
-               epoch        = epoch,
-               release      = _u(xinfo.release),
-               architecture = _u(xinfo.architecture),
-               description  = _u(xinfo.description),
-               signature    = _u(xinfo.signature),
-            )
-
-            rpm_info_by_id[xmodel.id] = info
-            pkg = survey_models.SurveyRpmPackage(
-               survey           = survey,
-               rpm_package_info = info,
-            )
-
-            rpms_by_info_id[info.pk] = pkg
-
-            pkg.install_date = self._date(xmodel.install_date)
-            pkg.save()
-
+        self._store_rpm_packages(survey, xrpm_packages, rpms_by_info_id, rpm_info_by_id)
         topLevelItems = set()
-        for xmodel in xconary_packages:
-            xinfo = xmodel.conary_package_info
-
-            unfrozen = ''
-            try:
-                conary_version = versions.ThawVersion(_u(xinfo.version))
-                unfrozen = conary_version.asString()
-            except:
-                pass
-
-            info, created = survey_models.ConaryPackageInfo.objects.get_or_create(
-                name         = _u(xinfo.name),
-                version      = _u(xinfo.version),
-                flavor       = _u(xinfo.flavor),
-                description  = _u(xinfo.description),
-                revision     = _u(xinfo.revision),
-                architecture = _u(xinfo.architecture),
-                signature    = _u(xinfo.signature),
-            )
-            # unfrozen might not be set on old survey data, but update it if we have data now
-            # (hence not inside the get_or_create)
-            info.unfrozen    = unfrozen
-            encap = getattr(xinfo, 'rpm_package_info', None)
-
-            use_date = self._date(xmodel.install_date)
-            top_level = _u(getattr(xmodel, 'is_top_level', ''))
-            is_top_level = False
-            if top_level.lower() == 'true' or (info.name.startswith('group-') and info.name.find("-appliance") != -1):
-                is_top_level = True
-                topLevelItems.add('%s=%s[%s]' % (info.name, info.version, info.flavor))
-
-            if encap is not None:
-                info.rpm_package_info = rpm_info_by_id[encap.id]
-                info.save()
-                # conary may not support install_date yet so cheat
-                # and get it from the RPM if available
-                if xmodel.install_date in [ 0, '', None ]:
-                    rpm_package = rpms_by_info_id.get(info.rpm_package_info.pk, None)
-                    if rpm_package is not None:
-                        use_date = rpm_package.install_date
-
-            pkg = survey_models.SurveyConaryPackage(
-                conary_package_info = info,
-                survey              = survey,
-                install_date        = use_date,
-                is_top_level        = is_top_level
-            )
-            pkg.save()
+        self._store_conary_packages(survey, xconary_packages, topLevelItems, rpm_info_by_id, rpms_by_info_id)
+        self._save_windows_packages(survey, xwindows_packages, windows_packages_by_id, os_type)
 
         # If no desired state is saved in the db, set it from the survey
         # but always set observed top level items.
@@ -635,176 +737,25 @@ class SurveyManager(basemanager.BaseManager):
 
         # assume linux unless we detect windows-isms
 
-        os_type = 'linux'
-
-        for xmodel in xwindows_packages:
-            os_type = 'windows'
-
-            xinfo = xmodel.windows_package_info
-            xid = xmodel.id
-            info, created = survey_models.WindowsPackageInfo.objects.get_or_create(
-                publisher    = _u(xinfo.publisher),
-                product_code = _u(xinfo.product_code),
-                product_name = _u(xinfo.product_name),
-                package_code = _u(xinfo.package_code),
-                type         = _u(xinfo.type),
-                upgrade_code = _u(xinfo.upgrade_code),
-                version      = _u(xinfo.version)
-            )
-            pkg = survey_models.SurveyWindowsPackage(
-                windows_package_info = info,
-                survey = survey,
-                install_source = _u(xmodel.install_source),
-                local_package  = _u(xmodel.local_package),
-                install_date   = self._date(xmodel.install_date),
-            )
-            windows_packages_by_id[xid] = pkg
-            pkg.save()
-
-        for xmodel in xwindows_os_patches:
-            os_type = 'windows'
-
-            xinfo = xmodel.windows_os_patch_info
-            info, created = survey_models.WindowsOsPatchInfo.objects.get_or_create(
-                hotfix_id    = _u(xinfo.hotfix_id),
-                name         = _u(xinfo.name),
-                fix_comments = _u(xinfo.fix_comments),
-                description  = _u(xinfo.description),
-                caption      = _u(xinfo.caption)
-            )
-            if created:
-                info.save()
-            pkg = survey_models.SurveyWindowsOsPatch(
-                survey                = survey,
-                windows_os_patch_info = info,
-                status                = _u(xmodel.status),
-                install_date          = self._date(xmodel.install_date),
-                installed_by          = _u(xmodel.installed_by),
-                cs_name               = _u(xmodel.cs_name),
-            )
-            pkg.save()
-
-        for xmodel in xwindows_patches:
-            os_type = 'windows'
-
-            # NOTE DEPENDENT SERVICES!!!
-            xinfo = xmodel.windows_patch_info
-            info,created = survey_models.WindowsPatchInfo.objects.get_or_create(
-                display_name   = _u(xinfo.display_name),
-                uninstallable  = self._bool(xinfo.uninstallable),
-                patch_code     = _u(xinfo.patch_code),
-                product_code   = _u(xinfo.product_code),
-                transforms     = _u(xinfo.transforms),
-            )
-            referenced_packages = self._subel(xinfo, 'windows_packages_info', 'windows_package_info')
-
-            # Windows client is sending back wrong XML elements but compensate by allowing this element
-            # in the wrong nesting topology to basically work.  Needed for demo.   TODO: get Windows client
-            # to send a package info object here, not a package, and remove this hack.
-            referenced_packages_hack = self._subel(xinfo, 'windows_packages_info', 'windows_package')
-
-            packages_info = []
-            if created:
-                for rp in referenced_packages_hack:
-                    pkg = windows_packages_by_id[rp.id]
-                    package_info = pkg.windows_package_info
-                    link, created_link = survey_models.SurveyWindowsPatchPackageLink.objects.get_or_create(
-                        windows_patch_info   = info,
-                        windows_package_info = package_info
-                    )
-                for rp in referenced_packages:
-                    package_infos = survey_models.WindowsPackageInfo.objects.filter(
-                        publisher    = _u(rp.publisher),
-                        product_code = _u(rp.product_code),
-                        package_code = _u(rp.package_code),
-                        type         = _u(rp.type),
-                        upgrade_code = _u(rp.upgrade_code),
-                        version      = _u(rp.version)
-                    )
-                    if len(package_infos) > 0:
-                        link, created_link = survey_models.SurveyWindowsPatchPackageLink.objects.get_or_create(
-                            windows_patch_info   = info,
-                            windows_package_info = package_infos[0]
-                        )
-                    else:
-                        # the XML's package reference was bad, but let's upload what we can
-                        # shouldn't really happen
-                        pass
-            pkg = survey_models.SurveyWindowsPatch(
-                survey             = survey,
-                windows_patch_info = info,
-                local_package      = _u(xmodel.local_package),
-                install_date       = self._date(xmodel.install_date),
-                is_installed       = self._bool(xmodel.is_installed)
-            )
-            pkg.save()
-
-
-        for xmodel in xservices:
-            xinfo = xmodel.service_info
-            info, created = survey_models.ServiceInfo.objects.get_or_create(
-                name      = _u(xinfo.name),
-                autostart = _u(xinfo.autostart),
-                runlevels = _u(xinfo.runlevels),
-            )
-            service = survey_models.SurveyService(
-                service_info = info,
-                survey       = survey,
-                running      = self._bool(xmodel.running),
-                status       = _u(xmodel.status),
-            )
-            service.save()
-
-        for xmodel in xwindows_services:
-            xinfo = xmodel.windows_service_info
-            info, created = survey_models.WindowsServiceInfo.objects.get_or_create(
-                name         = _u(xinfo.name),
-                display_name = _u(xinfo.display_name),
-                type         = _u(xinfo.type),
-                handle       = _u(xinfo.handle),
-                # this will be rendered more properly later, but we're saving it
-                # flat to avoid a lot of ordering complexity
-                _required_services = _u(xinfo.required_services)
-            )
-            autostart = (_u(getattr(xmodel, 'autostart', 'false')) != 'false')
-            service = survey_models.SurveyWindowsService(
-                windows_service_info = info,
-                survey               = survey,
-                status               = _u(xmodel.status),
-                # getattr can be removed once supplied by newer Windows survey code (7/4/11 or so)
-                # no windows survey code is otherwise released
-                running              = self._bool(getattr(xmodel, 'running', 'false')),
-                start_account        = _u(getattr(xmodel, 'start_account', '')),
-                start_mode           = _u(getattr(xmodel, 'start_mode', '')),
-                autostart            = autostart
-            )
-
-            service.save()
-
-        for xmodel in xtags:
-            tag = survey_models.SurveyTag(
-                survey       = survey,
-                name         = _u(xmodel.name),
-            )
-            tag.save()
+        self._save_windows_packages(survey, xwindows_packages, windows_packages_by_id, os_type)     
+        self._save_windows_os_patches(survey, xwindows_os_patches, os_type)
+        self._save_windows_patches(survey, xwindows_patches, os_type, windows_packages_by_id)
+        self._save_services(survey, xservices)
+        self._save_windows_services(survey, xwindows_services)
+        self._save_tags(survey, xtags)
 
         (survey.config_compliance, config_diff_ct) = self._computeConfigDelta(survey)
-
         (has_errors, updates_pending, compliance_xml, overall, execution_error_count) = self._computeCompliance(survey,
-            discovered_properties=xdiscovered_properties,
-            validation_report=xvalidation_report,
-            preview=xpreview,
-            config_diff_ct=config_diff_ct,
+            discovered_properties=xdiscovered_properties, validation_report=xvalidation_report,
+            preview=xpreview, config_diff_ct=config_diff_ct,
         )
 
         survey.has_errors = has_errors
         survey.updates_pending = updates_pending
         survey.compliance_summary = compliance_xml
         survey.os_type = os_type
-
         survey.overall_compliance = overall
         survey.execution_error_count = int(execution_error_count)
-
         survey.save()
 
         desired_descriptor = self.mgr.getSystemConfigurationDescriptor(system)
