@@ -2878,7 +2878,7 @@ observed_properties_template = """
 """
 
 observed_properties = observed_properties_template
-observed_properties_alt = observed_properties_template
+observed_properties_alt = observed_properties_template.replace("Lazy","Studious")
 
 discovered_properties_template = """
 <discovered_properties>
