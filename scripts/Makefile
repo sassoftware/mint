@@ -1,7 +1,5 @@
 #
-# Copyright (c) 2010 rPath, Inc.
-#
-# All Rights Reserved
+# Copyright (c) rPath, Inc.
 #
 
 static_files =				\
@@ -9,7 +7,6 @@ static_files =				\
 	add-windows-build-service       \
 	amazon-s3-processor		\
 	apply-proxy-settings		\
-	auth-generate			\
 	check-repository		\
 	create-platforms		\
 	deleteproject			\
