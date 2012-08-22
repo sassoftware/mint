@@ -480,10 +480,10 @@ class SurveyManager(basemanager.BaseManager):
             )
             pkg.save()
 
-    def _save_windows_packages(self, survey, xwindows_packages, windows_packages_by_id, os_type):
+    def _save_windows_packages(self, survey, xwindows_packages, windows_packages_by_id):
 
         for xmodel in xwindows_packages:
-            os_type = 'windows'
+            survey.os_type = 'windows'
 
             xinfo = xmodel.windows_package_info
             xid = xmodel.id
@@ -499,10 +499,10 @@ class SurveyManager(basemanager.BaseManager):
             windows_packages_by_id[xid] = pkg
             pkg.save()
 
-    def _save_windows_os_patches(self, survey, xwindows_os_patches, os_type):
+    def _save_windows_os_patches(self, survey, xwindows_os_patches):
 
         for xmodel in xwindows_os_patches:
-            os_type = 'windows'
+            survey.os_type = 'windows'
 
             xinfo = xmodel.windows_os_patch_info
             info, created = survey_models.WindowsOsPatchInfo.objects.get_or_create(
@@ -518,35 +518,10 @@ class SurveyManager(basemanager.BaseManager):
             )
             pkg.save()
 
-    def _save_windows_os_patches(self, survey, xwindows_os_patches, os_type):
-
-        for xmodel in xwindows_os_patches:
-            os_type = 'windows'
-
-            xinfo = xmodel.windows_os_patch_info
-            info, created = survey_models.WindowsOsPatchInfo.objects.get_or_create(
-                hotfix_id    = self._u(xinfo.hotfix_id),
-                name         = self._u(xinfo.name),
-                fix_comments = self._u(xinfo.fix_comments),
-                description  = self._u(xinfo.description),
-                caption      = self._u(xinfo.caption)
-            )
-            if created:
-                info.save()
-            pkg = survey_models.SurveyWindowsOsPatch(
-                survey                = survey,
-                windows_os_patch_info = info,
-                status                = self._u(xmodel.status),
-                install_date          = self._date(xmodel.install_date),
-                installed_by          = self._u(xmodel.installed_by),
-                cs_name               = self._u(xmodel.cs_name),
-            )
-            pkg.save()
-
-    def _save_windows_patches(self, survey, xwindows_patches, os_type, windows_packages_by_id):
+    def _save_windows_patches(self, survey, xwindows_patches, windows_packages_by_id):
      
         for xmodel in xwindows_patches:
-            os_type = 'windows'
+            survey.os_type = 'windows'
 
             # NOTE DEPENDENT SERVICES!!!
             xinfo = xmodel.windows_patch_info
@@ -564,7 +539,6 @@ class SurveyManager(basemanager.BaseManager):
             # to send a package info object here, not a package, and remove this hack.
             referenced_packages_hack = self._subel(xinfo, 'windows_packages_info', 'windows_package')
 
-            packages_info = []
             if created:
                 for rp in referenced_packages_hack:
                     pkg = windows_packages_by_id[rp.id]
@@ -716,7 +690,7 @@ class SurveyManager(basemanager.BaseManager):
         if system.latest_survey is None or survey.created_date > system.latest_survey.created_date:
             system.update(latest_survey=survey)
 
-        os_type = 'linux' # innocent until proven guilty
+        survey.os_type = 'linux'
         rpm_info_by_id = {}
         rpms_by_info_id = {}
         windows_packages_by_id = {}
@@ -724,7 +698,7 @@ class SurveyManager(basemanager.BaseManager):
         self._store_rpm_packages(survey, xrpm_packages, rpms_by_info_id, rpm_info_by_id)
         topLevelItems = set()
         self._store_conary_packages(survey, xconary_packages, topLevelItems, rpm_info_by_id, rpms_by_info_id)
-        self._save_windows_packages(survey, xwindows_packages, windows_packages_by_id, os_type)
+        self._save_windows_packages(survey, xwindows_packages, windows_packages_by_id)
 
         # If no desired state is saved in the db, set it from the survey
         # but always set observed top level items.
@@ -737,9 +711,9 @@ class SurveyManager(basemanager.BaseManager):
 
         # assume linux unless we detect windows-isms
 
-        self._save_windows_packages(survey, xwindows_packages, windows_packages_by_id, os_type)     
-        self._save_windows_os_patches(survey, xwindows_os_patches, os_type)
-        self._save_windows_patches(survey, xwindows_patches, os_type, windows_packages_by_id)
+        self._save_windows_packages(survey, xwindows_packages, windows_packages_by_id)
+        self._save_windows_os_patches(survey, xwindows_os_patches)
+        self._save_windows_patches(survey, xwindows_patches, windows_packages_by_id)
         self._save_services(survey, xservices)
         self._save_windows_services(survey, xwindows_services)
         self._save_tags(survey, xtags)
@@ -753,7 +727,6 @@ class SurveyManager(basemanager.BaseManager):
         survey.has_errors = has_errors
         survey.updates_pending = updates_pending
         survey.compliance_summary = compliance_xml
-        survey.os_type = os_type
         survey.overall_compliance = overall
         survey.execution_error_count = int(execution_error_count)
         survey.save()
