@@ -382,6 +382,7 @@ class ImagesTest(restbase.BaseRestTest):
 <files>
   <file title="title1" size="1231" sha1="1231" fileName="aaa1" />
   <file title="title2" size="1232" sha1="1232" fileName="aaa2" />
+  <file title="title3" size="1232" sha1="1232" fileName="file%20name%20escaped" />
 </files>
 """
         resp = client.call('PUT', 'products/testproject/images/1/files',
@@ -390,6 +391,7 @@ class ImagesTest(restbase.BaseRestTest):
         exp = [
             ('title1', 1231, '1231', 'aaa1'),
             ('title2', 1232, '1232', 'aaa2'),
+            ('title3', 1232, '1232', 'file name escaped'),
         ]
         self.failUnlessEqual(
             [ (x.title, x.size, x.sha1, x.fileName)

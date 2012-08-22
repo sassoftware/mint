@@ -5,6 +5,7 @@
 import logging
 import os
 import time
+import urllib
 from xobj import xobj
 
 from conary import trovetup
@@ -676,7 +677,7 @@ class ImageManager(manager.Manager):
             fileId = cu.lastrowid
 
             # ... then the URL ...
-            fileName = os.path.basename(file.fileName)
+            fileName = os.path.basename(urllib.unquote(file.fileName))
             filePath = os.path.join(self.cfg.imagesPath, hostname,
                     str(imageId), fileName)
             cu.execute("INSERT INTO FilesUrls ( urlType, url) VALUES ( ?, ? )",
