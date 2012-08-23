@@ -284,6 +284,9 @@ class ProjectVersion(modellib.XObjIdModel):
     description = D(models.TextField(), "Branch description", short="Branch description")
     platform_label = D(models.TextField(null=True),
         "Branch platform label, defaults to null", short="Branch platform label")
+    build_standard_group = D(models.BooleanField(default=False),
+        "Build standard group? Boolean, defaults to False",
+        short="Build standard group?")
     created_date = D(modellib.DecimalTimestampField(
         db_column="timecreated"), "Branch created date", short="Branch created date")
     modified_date = D(modellib.DecimalTimestampField(
