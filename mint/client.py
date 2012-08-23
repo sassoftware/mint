@@ -487,8 +487,8 @@ class MintClient:
         """See L{mint.server.startApplianceCreatorSession}"""
         return self.server.startApplianceCreatorSession(projectId, versionId, rebuild, stageLabel)
 
-    def makeApplianceTrove(self, sessionHandle):
-        return self.server.makeApplianceTrove(sessionHandle)
+    def makeApplianceTrove(self, sessionHandle, build_standard_group = False):
+        return self.server.makeApplianceTrove(sessionHandle, build_standard_group)
 
     def addApplianceTrove(self, sessionHandle, troveSpec):
         return self.server.addApplianceTrove(sessionHandle, troveSpec)
