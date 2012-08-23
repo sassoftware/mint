@@ -110,31 +110,37 @@ class SurveyDiff(object):
         for a given resource, we can move to having 1 item on the left side of a diff
         and multiple items on the right.  Only one is a change, the rest are additions
         and removals.   This is for resources that have more than one type with
-        same name.
+        same name -- to decide if this is a change event instead of an addition/removal.
         '''
 
         aInfo = getattr(a, infoName)
         bInfo = getattr(b, infoName)
+
         if self._name(aInfo) != self._name(bInfo):
             # this shouldn't really get hit in the way we are using it
             return False
+
         if infoName == 'rpm_package_info':
-            # RPMs don't show up as changed, they are added and removed
-            # return (aInfo.architecture == bInfo.architecture)
+            # RPMs don't show up as changed, they are always added or removed only
             return False
         elif infoName == 'conary_package_info':
+            # like conary packages can have the same name, arch, and flavor
             return (aInfo.architecture == bInfo.architecture and aInfo.flavor == bInfo.flavor)
         elif infoName == 'windows_package_info':
+            # windows uses product codes...
             return (aInfo.product_code == bInfo.product_code)
         elif infoName == 'windows_patch_info':
             return (aInfo.product_code == bInfo.product_code)
         elif infoName == 'windows_os_patch_info':
+            # except for patches, which use 'hotfix_id'
             return (aInfo.hotfix_id == bInfo.hotfix_id) 
         elif infoName == 'service_info':
+            # services are always changes if the name is the same ...
             return True
         elif infoName == 'windows_service_info':
             return True
         else:
+            # we added a new type of object to the diff and need to add another stanza here
             raise Exception("unknown info mode: %s" % infoName)
 
     def _in(self, infoName, itemList, infoPk):
@@ -161,7 +167,7 @@ class SurveyDiff(object):
 
     def _diff(self, infoName, before, after):
         ''' 
-        given the changes for one specific name of object, ex: rpms named 'foo' or services named 'foo'
+        given the changes for one specific name of object, ex: rpms named 'foo' or services named 'bar'
         identify what additions, changes, and removals there were.  This is somewhat tricky as multiple
         installations of something named foo are legal.    
         '''
@@ -201,13 +207,27 @@ class SurveyDiff(object):
         return a dict where each key is the name of a field and the each value
         is a tuple of the left value and right value
         '''
+
+        # fields of the _info objects to scan -- representing the definition of something
         fields = DIFF_FIELDS[mode]
+
+        # fields referencing the instance of something -- which are generally not diffed
+        # with a few exceptions (see top of file) 
         top_level_fields = DIFF_TOP_LEVEL_FIELDS.get(mode,[])
+
         differences = {}
+        
+        # 'mode' here is the name of the info field for the object
         leftInfo = getattr(leftItem, mode)
         rightInfo = getattr(rightItem, mode)
+
+        # if there are no top level fields to diff, and the info objects are the same, 
+        # there are no changes
         if leftInfo.pk == rightInfo.pk and len(top_level_fields) == 0:
             return None
+
+        # the info object is different, so record every field that is different
+        # in the list of info fields to diff
         if leftInfo.pk != rightInfo.pk:
             for f in fields:
                 lval = getattr(leftInfo, f)
@@ -215,10 +235,11 @@ class SurveyDiff(object):
                 if lval != rval:
                     differences[f] = (lval, rval)
 
+        # if there are any top level fields to diff... 
         # we are not actually diffing the info, but also a state change in the way the 
         # object exists presently.  This only happens with services because they can be 
         # running or not running even though they are installed the same.  Packages
-        # do not behave this way.
+        # do not behave this way.   
         for f in top_level_fields:
             lval = getattr(leftItem, f, None)
             rval = getattr(rightItem, f, None)
@@ -227,9 +248,9 @@ class SurveyDiff(object):
 
         if len(differences) == 0:
             return None
-
         return differences
 
+    # basic wrapper functions around diff calculation for various objects:
     def _computeRpmPackages(self):
         return self._computeGeneric('rpm_packages', 'rpm_package_info')
 
@@ -252,36 +273,35 @@ class SurveyDiff(object):
         return self._computeGeneric('windows_services', 'windows_service_info')
 
     def _computeValueDiff(self, value_type):
-        ''' various config values are stored xpath-ish in the SurveyValues table '''
+        ''' 
+        various config values are stored xpath-ish in the SurveyValues table.
+        this determines how they have changed in-between surveys.
+        '''
 
         added = []
         removed = []
         changed = []      
 
-        left = survey_models.SurveyValues.objects.filter(
-            survey = self.left, type = value_type
-        ).order_by('key')
-
-        right = survey_models.SurveyValues.objects.filter(
-            survey = self.right, type = value_type
-        ).order_by('key')
+        # get all values of the given type for both the left and right survey
+        left = survey_models.SurveyValues.objects.filter(survey=self.left, type=value_type).order_by('key')
+        right = survey_models.SurveyValues.objects.filter(survey=self.right, type=value_type).order_by('key')
 
         lkeys = [ x.key for x in left ]
         rkeys = [ x.key for x in right ] 
 
+        # whether the key is there or not decides added/removed
         for x in right:
            if x.key not in lkeys:
                added.append(x)
-
         for x in left:
            if x.key not in rkeys:
                removed.append(x)
 
+        # if the key is in both, it's changed
         for x in left:
            for y in right:
               if x.key == y.key:
                   if x.value != y.value:
-                      # store left and right, but delta is not meaningful
                       delta = dict(
                          value = (x.value, y.value)
                       )
@@ -289,7 +309,8 @@ class SurveyDiff(object):
 
         result = (added, changed, removed)
         return result
- 
+
+    # wrappers that just call configValueDiff for each of the config types 
     def _computeConfigDiff(self):
         return self._computeValueDiff(survey_models.CONFIG_VALUES)
 
