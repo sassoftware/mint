@@ -19,6 +19,7 @@ static_files =				\
 	migrate-all-projects		\
 	mirror-inbound			\
 	mirror-outbound			\
+	rbuilder-debug			\
 	refresh-auth			\
 	restore-preload-bundle		\
 	rmake-reset			\
@@ -44,7 +45,6 @@ generic_scripts = \
 	process-system-events		\
 	purge-surveys			\
 	rbuilder-database		\
-	rbuilder-debug			\
 	repository-sync			\
 	system-resolver			\
 	target-systems-import		\
