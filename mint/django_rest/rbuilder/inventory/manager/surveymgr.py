@@ -20,6 +20,7 @@ exposed = basemanager.exposed
 
 
 class SurveyManager(basemanager.BaseManager):
+    """ retrieves, saves (generates), and updates surveys.  For diff logic see surveydiff.py """
 
     @exposed
     def getSurvey(self, uuid):
@@ -45,8 +46,8 @@ class SurveyManager(basemanager.BaseManager):
         matching_diffs.delete()
         sys = survey.system
         survey.delete()
-        # point latest_survey to new latest
-        # if there are other surveys
+
+        # point latest_survey to new latest if there are other surveys
         surveys = survey_models.Survey.objects.filter(system=sys)
         surveys.order_by('-created_date')
         if len(surveys) > 0:
@@ -55,6 +56,11 @@ class SurveyManager(basemanager.BaseManager):
 
     @exposed
     def deleteRemovableSurveys(self, olderThanDays=None):
+        ''' 
+        there's a crontab that deletes surveys older than a set age that are marked
+        removable.  This is for that. 
+        '''
+
         if olderThanDays is None:
             olderThanDays = self.cfg.surveyMaxAge
         max_date = datetime.now() - timedelta(days=olderThanDays)
@@ -80,12 +86,12 @@ class SurveyManager(basemanager.BaseManager):
 
         for survey in surveys:
             self.deleteSurvey(survey.uuid)
-
         return surveys
-
 
     @exposed
     def getSurveysForSystem(self, system_id):
+       ''' return all surveys for a given system, ordered by creation date '''
+
        surveys = survey_models.Surveys()
        surveys.survey = survey_models.ShortSurvey.objects.filter(
            system__pk=system_id
@@ -226,8 +232,10 @@ class SurveyManager(basemanager.BaseManager):
         survey = survey_models.Survey.objects.get(uuid=survey_uuid)
         xtags  = self._subel(xmodel, 'tags', 'tag')
 
+        # delete any previous tags and save new ones
+        # TODO: delete only the ones that need to be removed, insert only those
+        # that need to be inserted.  
         survey_models.SurveyTag.objects.filter(survey=survey).delete()
-
         for xtag in xtags:
             tag = survey_models.SurveyTag(survey = survey, name = xtag.name)
             tag.save()
@@ -245,6 +253,7 @@ class SurveyManager(basemanager.BaseManager):
         ''' wrapper around xobj xml conversions and various cleanup'''
 
         if what is None:
+            # the XML of a None object is an empty string
             return ''
         else:
             try:
@@ -259,15 +268,21 @@ class SurveyManager(basemanager.BaseManager):
     def xwalk(self, xvalues, position='', results=None):
         ''' find the leaf nodes in an xobj config model. '''
 
+        # we start walking from xvalues, which is either a list-xobj or a regular node
+        # position keeps track of a pseudo-XPath like path
+        
         if type(xvalues) == list:
             for i, elt in enumerate(xvalues):
                 newPosition = "%s/%d" % (position, i)
+                # recurse down each item in the list
                 self.xwalk(elt, newPosition, results)
         else:
             eltNames = xvalues._xobj.elements
             if len(eltNames) == 0:
+                # it's a leaf node, record the xobj element found at this path
                 results.append([position, xvalues])
             else:
+                # recurse on children of the element
                 for eltName in eltNames:
                     newPosition = "%s/%s" % (position, eltName)
                     self.xwalk(getattr(xvalues, eltName), newPosition, results)
@@ -278,14 +293,18 @@ class SurveyManager(basemanager.BaseManager):
         if xvalues is None:
             raise Exception("missing required survey element")
         results = []
+        # find all leaf nodes of the xvalues tag
         self.xwalk(xvalues, "", results)
         for x in results:
            (path, value) = x
            if path == '':
+               # forget what this does -- if the root node is a leaf node, don't save it (?)
                continue
+           # save all leaf nodes
            (obj, created) = survey_models.SurveyValues.objects.get_or_create(
                survey = survey, type = valueType, key = path, value = value
            )
+           # if a key appears twice, don't save it twice.  Could happen with complex list types.  Maybe.
            if created:
                obj.save()
 
@@ -301,11 +320,19 @@ class SurveyManager(basemanager.BaseManager):
         config_execution_failures = 0
 
         if validation_report is not None:
+
+            # if there is a top level status tag and the status is 'fail', the client has decided to fail
+            # the validation report.
             status = getattr(validation_report, 'status', None)
             if status and status.lower() == 'fail':
                 has_errors = True
                 config_execution_failed = True
              
+            # errors represent things like tracebacks, not overt failures, but an individual error can mark
+            # the validation report as a fatal or non-fatal error.  This is respected if for some reason
+            # it didn't set the overall status, but the survey really SHOULD set the overall status.  We
+            # also have to count errors anyway.   Refer to RCE-11 and RCE-303 in JIRA for XML context.
+
             errors = getattr(validation_report, 'errors', None)
             if errors is not None:
                 elementNames = errors._xobj.elements
@@ -332,20 +359,31 @@ class SurveyManager(basemanager.BaseManager):
         removed = 0
         changed = 0
         updates_pending = False
+
+        # there is really no reason for a survey to NOT include a preview anymore, but we don't choke if
+        # it is not sent.
         if preview is not None:
+
+            # observed and desired are presently trove spec strings
             observed = getattr(preview, 'observed', None)
             desired = getattr(preview, 'desired', None)
             if (observed is None) or (desired is None):
                 pass
             else:
+                # the survey is going to be non-compliant if the observed version does not match the desired
+                # OR there are any packages in the list of conary package changes.  Note survey XML is also
+                # shared with the update action and follows the same format.
+
                 if observed != desired:
                     updates_pending = True
                 changes = getattr(preview.conary_package_changes, 'conary_package_change', None)
                 if changes is not None:
                     updates_pending = True
+
                 # xobj hack
                 if type(changes) != list:
                     changes = [ changes ]
+                    # count how many package changes we've had of each type
                     for x in changes:
                         typ = x.type
                         if typ == 'added':
@@ -361,6 +399,9 @@ class SurveyManager(basemanager.BaseManager):
         create the compliance summary block for the survey.  This is a rollup of various survey attributes
         and indicates whether the survey is overall in compliance or not.
         '''
+
+        # compliance is the summation of the validation report, package changes (preview XML) and whether
+        # or not we've had any config errors.  
 
         (has_errors, config_execution_failed, config_execution_failures) = self._computeValidationReportCompliance(
              validation_report
@@ -383,6 +424,7 @@ class SurveyManager(basemanager.BaseManager):
         config_sync_compliant, config_execution_compliant, config_sync_message):
         ''' helper function generating XML block from _computeCompliance '''
 
+        # to avoid xobj fun, here's an XML-template for the compliance block
         return """
         <compliance_summary>
         <config_execution>
@@ -413,6 +455,9 @@ class SurveyManager(basemanager.BaseManager):
         answering the configuration descriptor smartform questionaire on the server).
         '''
 
+        # we also have other types of configuration saved in this format, though spec says to only diff DESIRED vs OBSERVED here.
+        # the diff code uses this elsewhere to show, between two surveys, how DESIRED has changed over time.
+
         left = survey_models.SurveyValues.objects.filter(survey = survey, type = survey_models.DESIRED_VALUES)
         right = survey_models.SurveyValues.objects.filter(survey = survey, type = survey_models.OBSERVED_VALUES)
         delta = "<config_compliance><config_values>"
@@ -424,12 +469,18 @@ class SurveyManager(basemanager.BaseManager):
                 # may have to be some magic to drop /extensions/, etc and do semi-fuzzy
                 # matches on bits
                 if leftKey.key.find("/errors/") != -1:
+                    # don't include error information in the diff block
                     continue
                 if leftKey.key == rightKey.key.replace("/extensions","") and leftKey.value != rightKey.value:
+                    # the left hand side doesn't have any 'extensions' in the server XML and the right does, so try to
+                    # normalize to get a decent diff.  This may need work if the config XML from the configuration descriptor (Flex)
+                    # starts sending down XML differently to the nodes -- but if we do that, I imagine we've also broken
+                    # customer configurators.
                     config_diff_ct += 1
                     compliant = False
                     tokens = leftKey.key.split("/")
                     keyShortName = tokens[-1]
+                    # NOTE: the config compliance block format is not quite the same as the XML diffs in diffs.
                     delta += "  <config_value>"
                     delta += "     <keypath>%s</keypath>" % leftKey.key
                     delta += "     <key>%s</key>" % keyShortName
@@ -453,7 +504,7 @@ class SurveyManager(basemanager.BaseManager):
         for xmodel in xrpm_packages:
 
             xinfo = xmodel.rpm_package_info
-            # be tolerant of the way epoch comes back from node XML
+            # be tolerant of the way epoch comes back from client XML
             epoch = self._i(getattr(xinfo, 'epoch', None))
             info, created = survey_models.RpmPackageInfo.objects.get_or_create(
                name         = self._u(xinfo.name),
@@ -465,6 +516,10 @@ class SurveyManager(basemanager.BaseManager):
                signature    = self._u(xinfo.signature),
             )
 
+            # the ID's coming back from the client are obviously not database IDs and we are storing
+            # them here to later associate references in the client XML to associate rpm packages
+            # with the conary packages that encapsulate them.
+ 
             rpm_info_by_id[xmodel.id] = info
             pkg = survey_models.SurveyRpmPackage(survey=survey, rpm_package_info = info)
             rpms_by_info_id[info.pk] = pkg
@@ -479,6 +534,11 @@ class SurveyManager(basemanager.BaseManager):
 
         for xmodel in xconary_packages:
             xinfo = xmodel.conary_package_info
+
+            # XML from the client comes back frozen every time, but there are tables that have only
+            # the unfrozen versions, so we compute that here so we can do lookups into those tables.  This 
+            # was done for inventory_trove, which may or may not exist in Harpoon, but still useful to store
+            # for search purposes.
 
             unfrozen = ''
             try:
@@ -496,20 +556,24 @@ class SurveyManager(basemanager.BaseManager):
             # unfrozen might not be set on old survey data, but update it if we have data now
             # (hence not inside the get_or_create)
             info.unfrozen    = unfrozen
-            encap = getattr(xinfo, 'rpm_package_info', None)
 
+            encap = getattr(xinfo, 'rpm_package_info', None)
             use_date = self._date(xmodel.install_date)
             top_level = self._u(getattr(xmodel, 'is_top_level', ''))
+
+            # client should send back flags of what's top level or not, but in case it doesn't, group-foo-appliance
+            # is also used to mark something top level.  We'll probably have to revisit this when we have to do
+            # more with system model.
             is_top_level = False
             if top_level.lower() == 'true' or (info.name.startswith('group-') and info.name.find("-appliance") != -1):
                 is_top_level = True
                 topLevelItems.add('%s=%s[%s]' % (info.name, info.version, info.flavor))
 
+            # conary package encapsulated an RPM, so store those relations
             if encap is not None:
                 info.rpm_package_info = rpm_info_by_id[encap.id]
                 info.save()
-                # conary may not support install_date yet so cheat
-                # and get it from the RPM if available
+                # conary may not support install_date yet so cheat and get it from the RPM if available
                 if xmodel.install_date in [ 0, '', None ]:
                     rpm_package = rpms_by_info_id.get(info.rpm_package_info.pk, None)
                     if rpm_package is not None:
@@ -575,20 +639,21 @@ class SurveyManager(basemanager.BaseManager):
                 transforms     = self._u(xinfo.transforms),
             )
             referenced_packages = self._subel(xinfo, 'windows_packages_info', 'windows_package_info')
-
-            # Windows client is sending back wrong XML elements but compensate by allowing this element
-            # in the wrong nesting topology to basically work.  Needed for demo.   TODO: get Windows client
-            # to send a package info object here, not a package, and remove this hack.
+            
+            # at one point the windows client sent back the wrong XML tags, so also look in this location
             referenced_packages_hack = self._subel(xinfo, 'windows_packages_info', 'windows_package')
 
             if created:
+                # supporting the 'wrong' format... (possibly safe to remove now)
                 for rp in referenced_packages_hack:
                     pkg = windows_packages_by_id[rp.id]
                     package_info = pkg.windows_package_info
+                    # storing association of the windows patch to the package it patches
                     link, created_link = survey_models.SurveyWindowsPatchPackageLink.objects.get_or_create(
                         windows_patch_info   = info,
                         windows_package_info = package_info
                     )
+                # if we get the 'right' format...
                 for rp in referenced_packages:
                     package_infos = survey_models.WindowsPackageInfo.objects.filter(
                         publisher    = self._u(rp.publisher), product_code = self._u(rp.product_code), package_code = self._u(rp.package_code),
