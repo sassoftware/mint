@@ -114,6 +114,7 @@ class rBuilderProduct(CPackageRecipe):
         r.Make( \
             'VERSION=%s SHORTVER=%s ' % (r.version, r.macros.shortVersion) + \
             'LIBDIR=%(libdir)s '
+            'clean all'
             )
 
     def install(r):
