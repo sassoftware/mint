@@ -158,6 +158,7 @@ class SurveyManager(basemanager.BaseManager):
     # xobj hack
     @classmethod
     def _listify(cls, foo):
+        """ if foo is not a list, make foo a list of one """
         if isinstance(foo, list):
             return foo
         if foo is None:
@@ -180,12 +181,14 @@ class SurveyManager(basemanager.BaseManager):
 
     @classmethod
     def _u(cls, obj):
+        """ ensure obj is cast to unicode """
         if obj is None:
             return None
         return unicode(obj)
 
     @classmethod
     def _i(cls, obj):
+        """ ensure obj is cast to an integer """
         if obj is None or str(obj) == '' or str(obj) == 'None':
             return None
         return int(obj)
@@ -200,9 +203,11 @@ class SurveyManager(basemanager.BaseManager):
         return self.addSurveyForSystemFromXobj(system_id, xmodel)
 
     def _bool(self, x):
+        """ convert string x to a boolean value """
         return str(x).lower() == 'true'
 
     def _date(self, x):
+        """ convert an XML date to a datetime """
         if x == '':
             return datetime.utcfromtimestamp(0)
         try:
@@ -214,6 +219,8 @@ class SurveyManager(basemanager.BaseManager):
 
     @exposed
     def updateSurveyFromXml(self, survey_uuid, xml):
+        """ only portions of a survey are editable on POST """
+
         xmodel = xobj.parse(xml)
         xmodel = xmodel.survey
         survey = survey_models.Survey.objects.get(uuid=survey_uuid)
@@ -236,6 +243,7 @@ class SurveyManager(basemanager.BaseManager):
 
     def _toxml(self, what, tag_override=None):
         ''' wrapper around xobj xml conversions and various cleanup'''
+
         if what is None:
             return ''
         else:
@@ -250,6 +258,7 @@ class SurveyManager(basemanager.BaseManager):
 
     def xwalk(self, xvalues, position='', results=None):
         ''' find the leaf nodes in an xobj config model. '''
+
         if type(xvalues) == list:
             for i, elt in enumerate(xvalues):
                 newPosition = "%s/%d" % (position, i)
@@ -281,6 +290,11 @@ class SurveyManager(basemanager.BaseManager):
                obj.save()
 
     def _computeValidationReportCompliance(self, validation_report):
+        '''
+        given the <validation_report> element of a survey, walk through it and decide whether any errors are marked fatal
+        or the overall report is fatal.  Return this information + error counts
+        '''
+
         # process the validation report
         has_errors = False
         config_execution_failed = False
@@ -308,6 +322,12 @@ class SurveyManager(basemanager.BaseManager):
         return (has_errors, config_execution_failed, config_execution_failures) 
 
     def _computePackageChangeCounts(self, preview):
+        '''
+        determine if a <preview> has pending changes, and count up the number of additions, removals, and changes
+        a preview is the difference between the observed (client) group and the desired (server selected) group and
+        indicates package drift 
+        '''
+
         added = 0
         removed = 0
         changed = 0
@@ -337,7 +357,10 @@ class SurveyManager(basemanager.BaseManager):
         return (added, removed, changed, updates_pending)
 
     def _computeCompliance(self, survey, discovered_properties, validation_report, preview, config_diff_ct):
-        ''' create the compliance summary block for the survey '''
+        ''' 
+        create the compliance summary block for the survey.  This is a rollup of various survey attributes
+        and indicates whether the survey is overall in compliance or not.
+        '''
 
         (has_errors, config_execution_failed, config_execution_failures) = self._computeValidationReportCompliance(
              validation_report
@@ -358,6 +381,7 @@ class SurveyManager(basemanager.BaseManager):
 
     def _generateComplianceXml(self, overall, config_execution_failures, software_sync_compliant, 
         config_sync_compliant, config_execution_compliant, config_sync_message):
+        ''' helper function generating XML block from _computeCompliance '''
 
         return """
         <compliance_summary>
@@ -384,6 +408,11 @@ class SurveyManager(basemanager.BaseManager):
 
 
     def _computeConfigDelta(self, survey):
+        ''' 
+        the config_compliance section is a summary of how observed configuration values (client read.d) are different from desired values (set by
+        answering the configuration descriptor smartform questionaire on the server).
+        '''
+
         left = survey_models.SurveyValues.objects.filter(survey = survey, type = survey_models.DESIRED_VALUES)
         right = survey_models.SurveyValues.objects.filter(survey = survey, type = survey_models.OBSERVED_VALUES)
         delta = "<config_compliance><config_values>"
@@ -413,6 +442,13 @@ class SurveyManager(basemanager.BaseManager):
         return (delta, config_diff_ct)
 
     def _store_rpm_packages(self, survey, xrpm_packages, rpms_by_info_id, rpm_info_by_id):
+        ''' 
+        saves all rpm package references in the survey.  As with other types of saving below
+        The Info version of the object stores the definition of that object, the non-Info version
+        stores information about the instance, such as the install time on that particular system.
+        The Info version of the object can be the same across every system, the non-Info version
+        is the act of actually installing it.
+        '''
 
         for xmodel in xrpm_packages:
 
@@ -436,6 +472,10 @@ class SurveyManager(basemanager.BaseManager):
             pkg.save()
 
     def _store_conary_packages(self, survey, xconary_packages, topLevelItems, rpm_info_by_id, rpms_by_info_id):
+        '''
+        stores all conary packages, keeping track of references to encapsulated RPM packages.  Note that windows
+        packages do not have such references to their conary packages.
+        '''
 
         for xmodel in xconary_packages:
             xinfo = xmodel.conary_package_info
@@ -481,6 +521,7 @@ class SurveyManager(basemanager.BaseManager):
             pkg.save()
 
     def _save_windows_packages(self, survey, xwindows_packages, windows_packages_by_id):
+        ''' store all windows packages '''
 
         for xmodel in xwindows_packages:
             survey.os_type = 'windows'
@@ -500,6 +541,7 @@ class SurveyManager(basemanager.BaseManager):
             pkg.save()
 
     def _save_windows_os_patches(self, survey, xwindows_os_patches):
+        ''' save all windows OS patches. '''
 
         for xmodel in xwindows_os_patches:
             survey.os_type = 'windows'
@@ -519,11 +561,11 @@ class SurveyManager(basemanager.BaseManager):
             pkg.save()
 
     def _save_windows_patches(self, survey, xwindows_patches, windows_packages_by_id):
-     
+        ''' saves all windows patches with references to what windows_packages they patch '''     
+
         for xmodel in xwindows_patches:
             survey.os_type = 'windows'
 
-            # NOTE DEPENDENT SERVICES!!!
             xinfo = xmodel.windows_patch_info
             info,created = survey_models.WindowsPatchInfo.objects.get_or_create(
                 display_name   = self._u(xinfo.display_name),
@@ -567,6 +609,7 @@ class SurveyManager(basemanager.BaseManager):
             pkg.save()
 
     def _save_services(self, survey, xservices):
+        ''' saves all (Linux) services '''
 
         for xmodel in xservices:
             xinfo = xmodel.service_info
@@ -579,6 +622,7 @@ class SurveyManager(basemanager.BaseManager):
             service.save()
 
     def _save_windows_services(self, survey, xwindows_services):
+        ''' saves all windows services '''
 
         for xmodel in xwindows_services:
             xinfo = xmodel.windows_service_info
@@ -595,14 +639,24 @@ class SurveyManager(basemanager.BaseManager):
             service.save()
 
     def _save_tags(self, survey, xtags):
+        ''' saves any tags the user has applied.  These will probably only come on edits but are supported on initial POST as well. '''
+ 
         for xmodel in xtags:
             tag = survey_models.SurveyTag(survey = survey, name = self._u(xmodel.name))
             tag.save()
 
     @exposed
     def addSurveyForSystemFromXobj(self, system_id, model):
+        ''' 
+        given an XML (xobj) model for a survey as POSTed to inventory/systems/N/surveys from a Linux or Windows client, process
+        the survey, fix various associations, update various details (see inline comments), and save the survey.  The survey
+        cannot be saved directly like other resource objects because the version coming from the clients needs lots of
+        additional processing.
+        '''
 
         system = inventory_models.System.objects.get(pk=system_id)
+
+        # get shortcut references to the various XML tags in the survey.  The subel function is used to get data that are lists.
         xsurvey              = model.survey
         xrpm_packages        = self._subel(xsurvey, 'rpm_packages', 'rpm_package')
         xconary_packages     = self._subel(xsurvey, 'conary_packages', 'conary_package')
@@ -613,26 +667,30 @@ class SurveyManager(basemanager.BaseManager):
         xwindows_services    = self._subel(xsurvey, 'windows_services', 'windows_service')
         xtags                = self._subel(xsurvey, 'tags', 'tag')
 
+        # if we recieved a top level <values> this is a sign this is an pre-Goad survey, which we no longer support
         if getattr(xsurvey, 'values', None):
             raise Exception("version 7.0 or later style surveys are required")
 
+        # config-properites replaces <values> in Goad-and-later version surveys
         xconfig_properties     = getattr(xsurvey, 'config_properties', None)
 
-        # if it has <values> as a subelement, this is the client sending it weird, and attempt
+        # hack: if <config_properties> has a <values> as a subelement, this is the client sending it weird, and attempt
         # to rename it to configuration
         values = getattr(xconfig_properties, 'values', None)
         if values is not None:
              values._xobj.tag = 'configuration'        
 
-        # desired_properties comes in from the server configuration, not the survey
-        # where the XML tag must be changed for the shredder
+        # hack: desired_properties comes in from the server configuration, not the survey
+        # where the XML tag must be changed to follow the same tag hierarchy
         xdesired_properties    = None
         if system.configuration is not None:
             config = self.mgr.getSystemConfiguration(system_id)
             xdesired_properties = xobj.parse(config)
+        # if we recieved no configuration back, fill in an empty one
         if xdesired_properties is None or getattr(xdesired_properties, 'configuration', None) is None:
             xdesired_properties = xobj.parse('<configuration/>')
 
+        # get xobj handles to various other XML elements
         origin                 = getattr(xsurvey, 'origin', 'scanner')
         xobserved_properties   = getattr(xsurvey, 'observed_properties', None)
         xdiscovered_properties = getattr(xsurvey, 'discovered_properties', None)
@@ -641,6 +699,7 @@ class SurveyManager(basemanager.BaseManager):
         xconfig_descriptor     = getattr(xsurvey, 'config_properties_descriptor', None)
         systemModel            = getattr(xsurvey, 'system_model', None)
 
+        # determine if we have a system model or not, as we need to note that in the survey
         if systemModel is None:
             systemModelContents = None
             systemModelModifiedDate = None
@@ -650,24 +709,28 @@ class SurveyManager(basemanager.BaseManager):
             systemModelModifiedDate = datetime.utcfromtimestamp(int(getattr(systemModel, 'modified_date', 0)))
             hasSystemModel = (systemModelContents is not None)
 
+        # get the date, description, and time off the survey XML
         created_date = getattr(xsurvey, 'created_date', 0)
         created_date = datetime.utcfromtimestamp(int(created_date))
-
         desc    = getattr(xsurvey, 'description', "")
         comment = getattr(xsurvey, 'comment',     "")
 
-        # default to removable for registration surveys, but not manual ones
+        # we keep track of whether a survey comes from rpath-register or a CIM/WMI initiated scan.
+        # surveys coming from registration are marked such that they can be automatically purged, but not ones
+        # the user manually initiated.
         removable = (origin != 'scanner')
 
+        # the suryey contains a full capture of the system XML, project XML, and stage XML at the point the
+        # survey was taken
         system_snapshot_xml = system.to_xml()
         project_snapshot_xml = None
         stage_snapshot_xml = None
-
         if system.project:
             project_snapshot_xml = system.project.to_xml()
         if system.project_branch_stage:
             stage_snapshot_xml = system.project_branch_stage.to_xml()
 
+        # save what we know about the survey so far
         survey = survey_models.Survey(
             name = system.name, uuid = self._u(xsurvey.uuid), description = desc, comment = comment,
             removable = removable, system = system, created_date = created_date, modified_date = created_date,
@@ -680,50 +743,65 @@ class SurveyManager(basemanager.BaseManager):
         )
         survey.save()
 
+        # to enable queryset search (systems with these config attributes, etc) as well as config compliance diffing,
+        # we save each of the config elements in the database by XML path of each element and value.  It's pseudo-XPathey
+        # and allows us to say later, find me all the systems with Apache on port 80, etc.
+
         self._saveShreddedValues(survey, xconfig_properties, survey_models.CONFIG_VALUES)
         self._saveShreddedValues(survey, xdesired_properties, survey_models.DESIRED_VALUES)
         self._saveShreddedValues(survey, xobserved_properties, survey_models.OBSERVED_VALUES)
         self._saveShreddedValues(survey, xdiscovered_properties, survey_models.DISCOVERED_VALUES)
         self._saveShreddedValues(survey, xvalidation_report, survey_models.VALIDATOR_VALUES)
 
-        # update system.latest_survey if and only if it's the latest
+        # update system.latest_survey if and only if this survey is now the latest.
+        # though this should always be the latest, shouldn't it?  I guess you could post an old one later
+        # but the client tools currently don't enable this.
         if system.latest_survey is None or survey.created_date > system.latest_survey.created_date:
             system.update(latest_survey=survey)
 
+        # getting ready to save packages and need to keep track of various references.  We'll assume
+        # the system is Linux until we find out that it is not.
         survey.os_type = 'linux'
         rpm_info_by_id = {}
         rpms_by_info_id = {}
         windows_packages_by_id = {}
 
-        self._store_rpm_packages(survey, xrpm_packages, rpms_by_info_id, rpm_info_by_id)
+        # save packages, keeping track of which packages are top level in conary-land
         topLevelItems = set()
+        self._store_rpm_packages(survey, xrpm_packages, rpms_by_info_id, rpm_info_by_id)
         self._store_conary_packages(survey, xconary_packages, topLevelItems, rpm_info_by_id, rpms_by_info_id)
         self._save_windows_packages(survey, xwindows_packages, windows_packages_by_id)
 
-        # If no desired state is saved in the db, set it from the survey
-        # but always set observed top level items.
-
+        # if we do not have a record of what the server thinks should be installed on the box,
+        # this is an initial survey and we will set it from the current observed values to declare that the system
+        # is as intended.  We'll always update the observed top level items though.
         count = system.desired_top_level_items.count()
         if count == 0:
             # server has no copy of desired top level items, so we must set this... otherwise don't
             self.mgr.setDesiredTopLevelItems(system, topLevelItems)
         self.mgr.setObservedTopLevelItems(system, topLevelItems)
 
-        # assume linux unless we detect windows-isms
-
-        self._save_windows_packages(survey, xwindows_packages, windows_packages_by_id)
+        # save patch information (windows only)
         self._save_windows_os_patches(survey, xwindows_os_patches)
         self._save_windows_patches(survey, xwindows_patches, windows_packages_by_id)
+
+        # save service info
         self._save_services(survey, xservices)
         self._save_windows_services(survey, xwindows_services)
+
+        # user could have supplied some tags on upload (client tools don't do this yet)
         self._save_tags(survey, xtags)
 
+        # see if the configuration observed values are different from desired values (if any)
         (survey.config_compliance, config_diff_ct) = self._computeConfigDelta(survey)
+
+        # each survey has an overall compliance summary block.  Generate it.
         (has_errors, updates_pending, compliance_xml, overall, execution_error_count) = self._computeCompliance(survey,
             discovered_properties=xdiscovered_properties, validation_report=xvalidation_report,
             preview=xpreview, config_diff_ct=config_diff_ct,
         )
 
+        # update the survey object with what we've learned about complaince and save it again
         survey.has_errors = has_errors
         survey.updates_pending = updates_pending
         survey.compliance_summary = compliance_xml
@@ -731,10 +809,13 @@ class SurveyManager(basemanager.BaseManager):
         survey.execution_error_count = int(execution_error_count)
         survey.save()
 
+        # the survey contains a copy of the configuration descriptor at the point of survey time as it may change later and we need
+        # it to render the config properties form.
         desired_descriptor = self.mgr.getSystemConfigurationDescriptor(system)
         survey.desired_properties_descriptor = desired_descriptor
         survey.save()
 
+        # return the survey as we have saved it.
         survey = survey_models.Survey.objects.get(pk=survey.pk)
         return survey
 
