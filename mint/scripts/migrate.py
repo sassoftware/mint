@@ -1,7 +1,5 @@
 #
-# Copyright (c) 2011 rPath, Inc.
-#
-# All rights reserved.
+# Copyright (c) rPath, Inc.
 #
 
 import logging
@@ -4978,7 +4976,7 @@ class MigrateTo_62(SchemaMigration):
 
 class MigrateTo_63(SchemaMigration):
     '''Goad'''
-    Version = (63, 29)
+    Version = (63, 28)
 
     def migrate(self):
         ''' add initial tables for config environments'''
@@ -5334,7 +5332,12 @@ class MigrateTo_63(SchemaMigration):
         cu.execute("ALTER TABLE inventory_survey_windows_service ADD COLUMN autostart BOOLEAN DEFAULT FALSE")
         return True
 
-    def migrate29(self):
+
+class MigrateTo_64(SchemaMigration):
+    '''goad-p3'''
+    Version = (64, 0)
+
+    def migrate(self):
         ''' productversions.build_standard_group '''
         cu = self.db.cursor()
         cu.execute("ALTER TABLE productversions ADD COLUMN build_standard_group BOOLEAN NOT NULL DEFAULT FALSE")
