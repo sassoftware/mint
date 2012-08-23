@@ -648,24 +648,24 @@ def _createProductVersions(db):
         cu.execute("""
             CREATE TABLE ProductVersions (
                 productVersionId    %(PRIMARYKEY)s,
-                projectId       integer             NOT NULL
+                projectId            integer             NOT NULL
                     REFERENCES Projects ON DELETE CASCADE,
-                label               text            NOT NULL    UNIQUE,
-                cache_key           text,
-                source_group        text,
-                platform_id         integer
+                label                text            NOT NULL    UNIQUE,
+                cache_key            text,
+                source_group         text,
+                platform_id          integer
                     REFERENCES Platforms ON DELETE SET NULL,
-                platform_label      text,
-                namespace           varchar(16),
-                name                varchar(16)     NOT NULL,
-                description         text,
+                platform_label       text,
+                namespace            varchar(16),
+                name                 varchar(16)     NOT NULL,
+                description          text,
                 build_standard_group boolean NOT NULL DEFAULT false,
-                timeCreated         numeric(14,3),
-                created_by          integer
+                timeCreated          numeric(14,3),
+                created_by           integer
                     REFERENCES users (userid) ON DELETE SET NULL,
-                modified_by         integer
+                modified_by          integer
                     REFERENCES users (userid) ON DELETE SET NULL,
-                timeModified        numeric(14,3)
+                timeModified         numeric(14,3)
         ) %(TABLEOPTS)s """ % db.keywords)
         db.tables['ProductVersions'] = []
     db.createIndex('ProductVersions', 'ProductVersions_uq',
