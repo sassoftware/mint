@@ -4210,11 +4210,11 @@ If you would not like to be %s %s of this project, you may resign from this proj
         return sesH, otherInfo
 
     @requiresAuth
-    def makeApplianceTrove(self, sessionHandle, build_standard_group = False):
+    def makeApplianceTrove(self, sessionHandle, buildStandardGroup = False):
         pc = self.getApplianceCreatorClient()
         # If we ever allow jumping past the editApplianceGroup page, this will
         # have to filter out the :source troves added through package creator
-        return pc.makeApplianceTrove(sessionHandle, build_standard_group)
+        return pc.makeApplianceTrove(sessionHandle, buildStandardGroup)
 
     @requiresAuth
     def addApplianceTrove(self, sessionHandle, troveSpec):
