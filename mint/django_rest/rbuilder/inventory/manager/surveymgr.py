@@ -383,15 +383,15 @@ class SurveyManager(basemanager.BaseManager):
                 # xobj hack
                 if type(changes) != list:
                     changes = [ changes ]
-                    # count how many package changes we've had of each type
-                    for x in changes:
-                        typ = x.type
-                        if typ == 'added':
-                            added = added+1
-                        elif typ == 'removed':
-                            removed = removed+1
-                        elif typ == 'changed':
-                            changed = changed+1
+                # count how many package changes we've had of each type
+                for x in changes:
+                    typ = x.type
+                    if typ == 'added':
+                        added = added+1
+                    elif typ == 'removed':
+                        removed = removed+1
+                    elif typ == 'changed':
+                        changed = changed+1
         return (added, removed, changed, updates_pending)
 
     def _computeCompliance(self, survey, discovered_properties, validation_report, preview, config_diff_ct):

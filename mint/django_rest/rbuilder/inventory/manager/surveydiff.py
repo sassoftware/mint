@@ -1,15 +1,16 @@
 #
-# Copyright (c) 2010 rPath, Inc.
+# Copyright (c) 2012 rPath, Inc.
 #
 # All Rights Reserved
 #
 
 from xml.etree.ElementTree import Element, tostring, fromstring
-# from xml.dom.minidom import parseString
 from mint.django_rest.rbuilder.inventory import survey_models
 import datetime
 
 # for things changed, but not added/removed, what fields to show in the diff?  
+# this only applies to "_info" objects which represent the definition of something that can apply to multiple hosts
+# state information, like install_time is not included in a survey-to-survey diff.
 
 DIFF_FIELDS = {
    'rpm_package_info'      : [ 'epoch', 'version', 'release', 'signature' ], 
@@ -23,10 +24,12 @@ DIFF_FIELDS = {
 
 # not really about the infos, but the state of the things themselves
 # see usage below
+
 DIFF_TOP_LEVEL_FIELDS = {
    'windows_service_info' : [ 'running' ],
    'service_info' : [ 'running' ],
 }
+
 
 class SurveyDiff(object):
     ''' Compare two surveys and return a list or xobj model of their differences '''
@@ -42,6 +45,7 @@ class SurveyDiff(object):
         effects for usage by SurveyDiffRender class.
         '''
 
+        # basic objects
         self.rpmDiff            = self._computeRpmPackages()
         self.conaryDiff         = self._computeConaryPackages()
         self.serviceDiff        = self._computeServices()
@@ -50,6 +54,7 @@ class SurveyDiff(object):
         self.windowsOsPatchDiff = self._computeWindowsOsPatches()
         self.windowsServiceDiff = self._computeWindowsServices()
 
+        # configuration
         self.configDiff         = self._computeConfigDiff()
         self.desiredDiff        = self._computeDesiredDiff()
         self.observedDiff       = self._computeObservedDiff()
@@ -57,6 +62,8 @@ class SurveyDiff(object):
         self.validatorDiff      = self._computeValidatorDiff()
 
     def _name(self, obj):
+        ''' the name of the object to show in the diff is usually a name, except when it's not '''
+
         t = type(obj)
         if t == survey_models.WindowsPatchInfo:
             return obj.display_name
@@ -66,6 +73,7 @@ class SurveyDiff(object):
  
     def _uniqueNames(self, infoName, left, right):
         ''' return all the object names in left and right '''
+
         leftNames  = set([ self._name(getattr(x,infoName)) for x in left  ])
         rightNames = set([ self._name(getattr(x,infoName)) for x in right ])
         return leftNames | rightNames
@@ -85,8 +93,10 @@ class SurveyDiff(object):
             # process things one set of names at a time to prevent extra iteration
             leftMatches   = [ x for x in leftItems  if self._name(getattr(x, infoName)) == name ]
             rightMatches  = [ x for x in rightItems if self._name(getattr(x, infoName)) == name ]
+
             # for things with this same name, what's different?
             localAdded, localChanged, localRemoved = self._diff(infoName, leftMatches, rightMatches)
+
             # add to the big list for the overall diff of survey documents
             added.extend(localAdded)
             changed.extend(localChanged)
