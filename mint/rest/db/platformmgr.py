@@ -1381,6 +1381,24 @@ class PlatformDefCache(persistentcache.PersistentCache):
     def getReposMgr(self):
         return self.mgr().db.productMgr.reposMgr
 
+    def _isOffline(self, label):
+        restdb = self.mgr().db
+        if not restdb.siteAuth or not restdb.siteAuth.isOffline():
+            # Site is online so remote repos are reachable
+            return False
+        # Site is offline, check if there is a local mirror
+        host = label.split('@')[0]
+        try:
+            handle = self.mgr().db.reposShim.getRepositoryFromFQDN(host)
+        except errors.ProductNotFound:
+            # No project at all, so it's offline
+            return True
+        if not handle.hasDatabase:
+            # There is a project but it is remote
+            return True
+        # Local or mirrored project is accessible
+        return False
+
     def _getPlatDef(self, client, labelStr):
         try:
             platDef = proddef.PlatformDefinition()
@@ -1409,6 +1427,10 @@ class PlatformDefCache(persistentcache.PersistentCache):
             if labelStr == self._statusKey(labelStr[1]):
                 return self._refreshStatus(labelStr[1], platform=None)
             raise Exception("XXX")
+        if self._isOffline(labelStr):
+            # Don't refresh if we're offline and would need to talk to a remote
+            # repository.
+            return None
         reposMgr = self.getReposMgr()
         try:
             client = reposMgr.getAdminClient()
@@ -1427,6 +1449,9 @@ class PlatformDefCache(persistentcache.PersistentCache):
             try:
                 if reposMgr.db.siteAuth:
                     entitlement = reposMgr.db.siteAuth.entitlementKey
+                    if reposMgr.db.siteAuth.isOffline():
+                        # Remote will not be reachable
+                        return None
                 else:
                     entitlement = None
                 serverProxy = reposMgr.db.reposShim.getServerProxy(host,

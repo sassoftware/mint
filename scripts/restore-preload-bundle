@@ -24,7 +24,7 @@ class Script(scriptlibrary.GenericScript):
             pwnam = pwd.getpwnam('apache')
             os.setgid(pwnam.pw_gid)
             os.setuid(pwnam.pw_uid)
-            log.info("Dropped privilieges to uid %d", pwnam.pw_uid)
+            log.info("Dropped privileges to uid %d", pwnam.pw_uid)
 
         db = database.Database(self.cfg)
         mgr = repository.RepositoryManager(self.cfg, db)
