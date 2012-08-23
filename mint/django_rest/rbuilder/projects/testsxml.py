@@ -130,6 +130,7 @@ project_version_post_with_project_xml = """\
     <description>1</description>
     <namespace>rpath</namespace>
     <name>42</name>
+    <build_standard_group>true</build_standard_group>
     <platform id="http://testserver/api/v1/platforms/1"/>
   </project_branch>
 """
@@ -140,6 +141,7 @@ project_version_post_with_project_xml2 = """\
     <description>2</description>
     <namespace>rpath</namespace>
     <name>50</name>
+    <build_standard_group>false</build_standard_group>
     <platform id="http://testserver/api/v1/platforms/1"/>
   </project_branch>
 """
@@ -167,6 +169,7 @@ project_branch_xml = """\
   <label>chater-foo.eng.rpath.com@rpath:chater-foo-trunk</label>
   <name>trunk</name>
   <namespace>rpath</namespace>
+  <build_standard_group>true</build_standard_group>
   <project id="http://testserver/api/v1/projects/chater-foo">
     <domain_name>eng.rpath.com</domain_name>
     <name>chater-foo</name>
@@ -195,6 +198,7 @@ project_branch_stages_xml = \
     <stage_id>10</stage_id>
     <project_branch id="http://testserver/api/v1/projects/chater-foo/project_branches/chater-foo.eng.rpath.com@rpath:chater-foo-trunk">
       <name>trunk</name>
+      <build_standard_group>true</build_standard_group>
     </project_branch>
     <name>Development</name>
     <repository_api id="http://testserver/repos/chater-foo/api"/>

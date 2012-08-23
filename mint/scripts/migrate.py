@@ -4978,7 +4978,7 @@ class MigrateTo_62(SchemaMigration):
 
 class MigrateTo_63(SchemaMigration):
     '''Goad'''
-    Version = (63, 28)
+    Version = (63, 29)
 
     def migrate(self):
         ''' add initial tables for config environments'''
@@ -5332,6 +5332,12 @@ class MigrateTo_63(SchemaMigration):
         ''' store windows autostart '''
         cu = self.db.cursor()
         cu.execute("ALTER TABLE inventory_survey_windows_service ADD COLUMN autostart BOOLEAN DEFAULT FALSE")
+        return True
+
+    def migrate29(self):
+        ''' productversions.build_standard_group '''
+        cu = self.db.cursor()
+        cu.execute("ALTER TABLE productversions ADD COLUMN build_standard_group BOOLEAN NOT NULL DEFAULT FALSE")
         return True
 
 
