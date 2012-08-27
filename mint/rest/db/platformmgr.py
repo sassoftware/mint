@@ -1135,7 +1135,27 @@ class PlatformManager(manager.Manager):
     def getPlatformVersions(self, platformId):
         return self.platforms.getPlatformVersions(platformId)
 
+    def isOffline(self, label):
+        if not self.db.siteAuth or not self.db.siteAuth.isOffline():
+            # Site is online so remote repos are reachable
+            return False
+        # Site is offline, check if there is a local mirror
+        host = label.split('@')[0]
+        try:
+            handle = self.db.reposShim.getRepositoryFromFQDN(host)
+        except errors.ProductNotFound:
+            # No project at all, so it's offline
+            return True
+        if not handle.hasDatabase:
+            # There is a project but it is remote
+            return True
+        # Local or mirrored project is accessible
+        return False
+
     def _lookupFromRepository(self, platformLabel, createPlatDef):
+        if self.isOffline(platformLabel):
+            return None
+
         # If there is a product definition, this call will publish it as a
         # platform
         pd = proddef.ProductDefinition()
@@ -1383,24 +1403,6 @@ class PlatformDefCache(persistentcache.PersistentCache):
     def getReposMgr(self):
         return self.mgr().db.productMgr.reposMgr
 
-    def _isOffline(self, label):
-        restdb = self.mgr().db
-        if not restdb.siteAuth or not restdb.siteAuth.isOffline():
-            # Site is online so remote repos are reachable
-            return False
-        # Site is offline, check if there is a local mirror
-        host = label.split('@')[0]
-        try:
-            handle = self.mgr().db.reposShim.getRepositoryFromFQDN(host)
-        except errors.ProductNotFound:
-            # No project at all, so it's offline
-            return True
-        if not handle.hasDatabase:
-            # There is a project but it is remote
-            return True
-        # Local or mirrored project is accessible
-        return False
-
     def _getPlatDef(self, client, labelStr):
         try:
             platDef = proddef.PlatformDefinition()
@@ -1429,7 +1431,7 @@ class PlatformDefCache(persistentcache.PersistentCache):
             if labelStr == self._statusKey(labelStr[1]):
                 return self._refreshStatus(labelStr[1], platform=None)
             raise Exception("XXX")
-        if self._isOffline(labelStr):
+        if self.mgr().isOffline(labelStr):
             # Don't refresh if we're offline and would need to talk to a remote
             # repository.
             return None
