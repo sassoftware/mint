@@ -7,6 +7,10 @@
 from xml.etree.ElementTree import Element, tostring, fromstring
 from mint.django_rest.rbuilder.inventory import survey_models
 import datetime
+import difflib
+
+# lines of context for unified diff
+DIFF_CONTEXT = 10
 
 # for things changed, but not added/removed, what fields to show in the diff?  
 # this only applies to "_info" objects which represent the definition of something that can apply to multiple hosts
@@ -427,11 +431,46 @@ class SurveyDiffRender(object):
         </changes>
         '''
 
-        (added, changed, removed) = changeList
         elem = Element(tag)
-        self._renderAdditions(tag, elem, added)
-        self._renderChanges(tag, elem, changed)
-        self._renderRemovals(tag, elem, removed)
+        (added, changed, removed) = changeList
+            
+        lname = self.left.name
+        rname = self.right.name
+        ldate = str(self.left.created_date)
+        rdate = str(self.right.created_date)
+
+        if tag.startswith('discovered_properties'):
+
+            all_diffs = []
+            for item in added:
+                if not item[0].key.endswith('/value'):
+                    continue
+                left = [],
+                right = item[0].value.split('\n')
+                diff = '\n'.join(list(difflib.unified_diff(left, right, lname, rname, ldate, rdate, DIFF_CONTEXT)))
+                all_diffs.append( [ item[0].key, diff ] )
+            for item in removed:
+                if not item[0].key.endswith('/value'):
+                    continue
+                left = item[0].value.split('\n')
+                right = [],
+                diff = '\n'.join(list(difflib.unified_diff(left, right, lname, rname, ldate, rdate, DIFF_CONTEXT)))
+                all_diffs.append( [ item[0].key, diff ] )
+            for item in changed:
+                if not item[0].key.endswith('/value'):
+                    continue
+                left = item[0].value.split('\n')
+                right = item[1].value.split('\n')
+                diff = '\n'.join(list(difflib.unified_diff(left, right, lname, rname, ldate, rdate, DIFF_CONTEXT)))
+                all_diffs.append( [ item[0].key, diff ] )
+            self._renderSubDiffs(tag, elem, all_diffs)
+
+        else:
+
+            self._renderAdditions(tag, elem, added)
+            self._renderChanges(tag, elem, changed)
+            self._renderRemovals(tag, elem, removed)
+
         return elem
 
     def _changeElement(self, parentTag, mode):
@@ -603,6 +642,22 @@ class SurveyDiffRender(object):
             elem.append(subElem)
         return elem
 
+    def _subDiffElement(self, parentTag, key, diff_text):
+         '''
+         these are real diff format diffs inside the diff.  Confused yet?
+         They are only used for discovered_properties which return text like blocks.
+
+            <diff_text>
+                <key>path/to/key/thing</key>
+                <value>output from diff</value>
+            <diff_text>
+         '''
+         tagName = "%s_unified_diff" % parentTag.replace("_changes", "")
+         elem = Element(tagName)
+         elem.append(self._element('key', key))
+         elem.append(self._element('value', diff_text))
+         return elem
+
     def _renderACR(self, parentTag, parentElem, items, mode):
         ''' 
         abstraction around rendering out all the different possible changes
@@ -622,6 +677,17 @@ class SurveyDiffRender(object):
                     change.append(self._diffElement(parentTag, delta))
             parentElem.append(change)
 
+    def _renderSubDiffs(self, parentTag, parentElem, items):
+        '''
+        render textual diffs -- used for block fields like discovered_properties only
+        '''
+        for x in items:
+            change = self._changeElement(parentTag, 'unified_diff')
+            (key, diff_text) = x
+            change.append((self._subDiffElement(parentTag, key, diff_text)))
+            #self._DEBUG_FLAGGED = True
+            parentElem.append(change)
+
     def _renderAdditions(self, parentTag, parentElem, items):
         ''' 
         render all of what's been added for an object type
@@ -634,7 +700,7 @@ class SurveyDiffRender(object):
         ''' render all of what's been changed (and how) for an object type '''
         if len(items) > 0:
             self._renderACR(parentTag, parentElem, items, 'changed')
-    
+   
     def _renderRemovals(self, parentTag, parentElem, items):
         ''' render all of what's been removed for an object type '''
         if len(items) > 0:
@@ -666,5 +732,11 @@ class SurveyDiffRender(object):
         for elt in elts:
             root.append(elt)
 
-        return tostring(root)
+        result = tostring(root)
+
+        #if getattr(self, '_DEBUG_FLAGGED', False):
+        #    print result
+        return result
+
+
 
