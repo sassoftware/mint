@@ -237,6 +237,8 @@ class Platforms(object):
 
     def _getPlatformTroveName(self, platform):
         platformDef = self.platformCache.get(str(platform.label))
+        if not platformDef:
+            return None
         srcTroves = [s for s in platformDef.getSearchPaths() \
             if s.isPlatformTrove]
         if srcTroves:
