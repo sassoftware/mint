@@ -316,6 +316,7 @@ class SurveyManager(basemanager.BaseManager):
 
         # process the validation report
         has_errors = False
+        overall_validation = False
         config_execution_failed = False
         config_execution_failures = 0
 
@@ -327,7 +328,9 @@ class SurveyManager(basemanager.BaseManager):
             if status and status.lower() == 'fail':
                 has_errors = True
                 config_execution_failed = True
-             
+            else:
+                overall_validation = True        
+     
             # errors represent things like tracebacks, not overt failures, but an individual error can mark
             # the validation report as a fatal or non-fatal error.  This is respected if for some reason
             # it didn't set the overall status, but the survey really SHOULD set the overall status.  We
@@ -346,7 +349,7 @@ class SurveyManager(basemanager.BaseManager):
                     if subErrors is not None:
                         eCount = len(subErrors._xobj.elements)
                         config_execution_failures += eCount
-        return (has_errors, config_execution_failed, config_execution_failures) 
+        return (has_errors, config_execution_failed, config_execution_failures, overall_validation) 
 
     def _computePackageChangeCounts(self, preview):
         '''
@@ -402,9 +405,8 @@ class SurveyManager(basemanager.BaseManager):
         # compliance is the summation of the validation report, package changes (preview XML) and whether
         # or not we've had any config errors.  
 
-        (has_errors, config_execution_failed, config_execution_failures) = self._computeValidationReportCompliance(
-             validation_report
-        )
+        results = self._computeValidationReportCompliance(validation_report)
+        (has_errors, config_execution_failed, config_execution_failures, overall_validation) = results
         (added, removed, changed, updates_pending) = self._computePackageChangeCounts(preview)
         config_sync_message = "%s added, %s removed, %s changed" % (added, removed, changed)
 
@@ -417,7 +419,7 @@ class SurveyManager(basemanager.BaseManager):
             software_sync_compliant, config_sync_compliant, config_execution_compliant, 
             config_sync_message)
    
-        return (has_errors, updates_pending, compliance_xml, overall, config_execution_failures)
+        return (has_errors, updates_pending, compliance_xml, overall, config_execution_failures, overall_validation)
 
     def _generateComplianceXml(self, overall, config_execution_failures, software_sync_compliant, 
         config_sync_compliant, config_execution_compliant, config_sync_message):
@@ -860,16 +862,18 @@ class SurveyManager(basemanager.BaseManager):
         (survey.config_compliance, config_diff_ct) = self._computeConfigDelta(survey)
 
         # each survey has an overall compliance summary block.  Generate it.
-        (has_errors, updates_pending, compliance_xml, overall, execution_error_count) = self._computeCompliance(survey,
+        results = self._computeCompliance(survey,
             discovered_properties=xdiscovered_properties, validation_report=xvalidation_report,
             preview=xpreview, config_diff_ct=config_diff_ct,
         )
+        (has_errors, updates_pending, compliance_xml, overall, execution_error_count, overall_validation) = results
 
         # update the survey object with what we've learned about complaince and save it again
         survey.has_errors = has_errors
         survey.updates_pending = updates_pending
         survey.compliance_summary = compliance_xml
         survey.overall_compliance = overall
+        survey.overall_validation = overall_validation
         survey.execution_error_count = int(execution_error_count)
         survey.save()
 

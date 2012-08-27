@@ -115,6 +115,7 @@ class Survey(modellib.XObjIdModel):
     has_system_model = models.BooleanField(default=False)
 
     overall_compliance    = models.BooleanField(default=True)
+    overall_validation    = models.BooleanField(default=False)
     execution_error_count = models.IntegerField()
 
     # 'should be like this' values XML from system
@@ -214,6 +215,7 @@ class ShortSurvey(modellib.XObjIdModel):
 
     overall_compliance    = models.BooleanField(default=True)
     execution_error_count = models.IntegerField()
+    overall_validation    = models.BooleanField(default=False)
 
     def get_url_key(self, *args, **kwargs):
         return [ self.uuid ]
