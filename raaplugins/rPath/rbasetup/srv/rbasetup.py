@@ -336,13 +336,13 @@ class rBASetup(rAASrvPlugin):
                 if ret.has_key('errors'):
                     return { 'errors': ret['errors'], 'step': step, 'message': self.message }
 
-            self.message += "Creating platforms... "
-            self.reportMessage(execId, self.message)
-            ret = self._createPlatforms()
-            if ret.has_key('errors'):
-                return { 'errors': ret['errors'], 'step': step, 'message': self.message }
-            self.message += ret.get('message', '\n')
-            self.reportMessage(execId, self.message)
+        self.message += "Creating platforms... "
+        self.reportMessage(execId, self.message)
+        ret = self._createPlatforms()
+        if ret.has_key('errors'):
+            return { 'errors': ret['errors'], 'step': step, 'message': self.message }
+        self.message += ret.get('message', '\n')
+        self.reportMessage(execId, self.message)
 
         # Done
         self.message += "Setup is complete.\n"
