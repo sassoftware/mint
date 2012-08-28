@@ -2841,6 +2841,7 @@ observed_properties_template = """
 <observed_properties>
   <extensions>
     <apache_configuration>
+      <name>Apache configuration</name> 
       <port>8081</port>
     </apache_configuration>
   </extensions>
@@ -2960,6 +2961,8 @@ validation_report_template = """
         </port>
       </probes>
     </apache_configuration>
+    FILLER1
+    FILLER2
   </extensions>
   <errors>
     <apache_configuration>
@@ -2994,8 +2997,43 @@ validation_report_template = """
 </validation_report>
 """
 
-validation_report = validation_report_template
-validation_report_alt = validation_report_template.replace("false","true")
+stub1 = """
+<xyz_configuration>
+      <name>XYZ Configuration Checker</name>
+      <status>fail</status>
+      <message>Same as in the probes below</message>
+      <details/>
+      <probes>
+        <port>
+          <name>XYZ Port Check</name>
+          <status>fail</status>
+          <message>XYZ not running on port</message>
+          <details content_type="text/html" encoding="base64">base64-encoded HTML here</details>
+        </port>
+      </probes>
+</xyz_configuration>
+"""
+
+stub2 = """
+<abc_configuration>
+      <name>ABC Configuration Checker</name>
+      <status>fail</status>
+      <message>Same as in the probes below</message>
+      <details/>
+      <probes>
+        <port>
+          <name>ABC Port Check</name>
+          <status>fail</status>
+          <message>ABC not running on port</message>
+          <details content_type="text/html" encoding="base64">base64-encoded HTML here</details>
+        </port>
+      </probes>
+</abc_configuration>
+"""
+
+
+validation_report = validation_report_template.replace("FILLER1",stub1).replace("FILLER2","")
+validation_report_alt = validation_report_template.replace("false","true").replace("not running on port","jump on it").replace("FILLER1","").replace("FILLER2",stub2)
 
 # input without ids
 # FIXME -- created_by/modified_by should be nullable for system

@@ -293,12 +293,30 @@ class SurveyDiff(object):
         lkeys = [ x.key for x in left ]
         rkeys = [ x.key for x in right ] 
 
+        # attempt to get the name of the extension out of the database
+        # FIXME: smarter caching
+        all_keys = []
+        all_keys.extend(lkeys)
+        all_keys.extend(rkeys)
+
+        key_extension_map = {}
+        for x in all_keys:
+            tokens = x.split('/')
+            if (len(tokens) > 2) and tokens[1] == 'extensions':
+                name_key = "/extensions/%s/name" % tokens[2]
+                name_values = survey_models.SurveyValues.objects.filter(survey__in = [self.left, self.right ], key=name_key)
+                if len(name_values):
+                    value = name_values[0].value
+                    key_extension_map[x] = value
+
         # whether the key is there or not decides added/removed
         for x in right:
            if x.key not in lkeys:
+               x._extension_name = key_extension_map.get(x.key, None)
                added.append(x)
         for x in left:
            if x.key not in rkeys:
+               x._extension_name = key_extension_map.get(x.key, None)
                removed.append(x)
 
         # if the key is in both, it's changed
@@ -309,6 +327,9 @@ class SurveyDiff(object):
                       delta = dict(
                          value = (x.value, y.value)
                       )
+                      x._extension_name = key_extension_map.get(x.key, None)
+                      y._extension_name = key_extension_map.get(y.key, None)
+                      self._flagged = True
                       changed.append((x,y,delta))
 
         result = (added, changed, removed)
@@ -387,6 +408,7 @@ class SurveyDiffRender(object):
         elem = Element(elemName, attrib=id_dict)
         elts = dict([ (x, getattr(about, x)) for x in keys])
         self._addElements(elem, **elts)
+
         if parent:
             parent.append(elem)
         return elem
@@ -575,6 +597,7 @@ class SurveyDiffRender(object):
         elem = self._xmlNode(elemName, about=item, 
             keys='key value'
         )
+        extension = getattr(item, '_extension_name', None)
         return elem
 
     def _serializeItem(self, elemName, item):
@@ -667,12 +690,21 @@ class SurveyDiffRender(object):
             change = self._changeElement(parentTag, mode)
             if mode == 'added':
                 change.append(self._addedElement(parentTag, x))
+                extension = getattr(x, '_extension_name', None)
+                if extension is not None:
+                    change.append(self._element('extension', extension)),
             elif mode == 'removed':
                 change.append(self._removedElement(parentTag, x))
+                extension = getattr(x, '_extension_name', None)
+                if extension is not None:
+                    change.append(self._element('extension', extension)),
             elif mode == 'changed':
                 (left, right, delta) = x
                 change.append(self._fromElement(parentTag, left))
                 change.append(self._toElement(parentTag, right))
+                extension = getattr(left, '_extension_name', None)
+                if extension is not None:
+                    change.append(self._element('extension', extension)),
                 if delta is not None:
                     change.append(self._diffElement(parentTag, delta))
             parentElem.append(change)
@@ -734,8 +766,6 @@ class SurveyDiffRender(object):
 
         result = tostring(root)
 
-        #if getattr(self, '_DEBUG_FLAGGED', False):
-        #    print result
         return result
 
 
