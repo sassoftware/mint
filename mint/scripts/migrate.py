@@ -5335,12 +5335,18 @@ class MigrateTo_63(SchemaMigration):
 
 class MigrateTo_64(SchemaMigration):
     '''goad-p3'''
-    Version = (64, 0)
+    Version = (64, 1)
 
     def migrate(self):
         ''' productversions.build_standard_group '''
         cu = self.db.cursor()
         cu.execute("ALTER TABLE productversions ADD COLUMN build_standard_group BOOLEAN NOT NULL DEFAULT FALSE")
+        return True
+
+    def migrate1(self):
+        '''add overall_validation to survey for summary view '''
+        cu = self.db.cursor()
+        cu.execute("ALTER TABLE inventory_survey ADD COLUMN overall_validation BOOLEAN NOT NULL DEFAULT FALSE")
         return True
 
 
