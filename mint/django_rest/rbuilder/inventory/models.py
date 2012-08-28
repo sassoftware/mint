@@ -879,7 +879,10 @@ class System(modellib.XObjIdModel):
         scanEnabled = bool(self.management_interface_id and
             self.management_interface.name in ('cim', 'wmi'))
         configureEnabled = False
-        updateEnabled = bool(self.latest_survey is not None and
+
+        # Note that you must be able to update systems that don't have a survey
+        # in the case of adding a windows system with no software installed.
+        updateEnabled = bool(self.latest_survey is None or
             not self.latest_survey.has_system_model)
 
         # Disable config action if no config is saved, or if the system
