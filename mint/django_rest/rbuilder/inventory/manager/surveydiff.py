@@ -352,7 +352,7 @@ class SurveyDiffRender(object):
     def _renderSurvey(self, tag, survey):
         ''' serializes the left_survey or right_survey elements '''
         node = self._xmlNode(tag, about=survey,
-             keys='name description removable created_date comment'
+             keys='name description removable created_date comment overall_validation updates_pending has_errors overall_compliance'
         )
         xtags = Element('tags')
         for tag in survey.tags.all():
