@@ -659,9 +659,8 @@ class Platforms(object):
                     self._updateExternalPackageIndex()
                 else:
                     self._updateInternalPackageIndex()
-                
 
-        if not projectId:            
+        if not projectId:
             # Still no project, we need to create a new one.
             try:
                 projectId = self.db.productMgr.createExternalProduct(
@@ -672,7 +671,10 @@ class Platforms(object):
 
             self.db.db.platforms.update(platformId, projectId=projectId)
 
-            self._updateExternalPackageIndex()
+            # Update package index if the project is in proxy mode. In mirror
+            # mode there's no content yet.
+            if not mirror:
+                self._updateExternalPackageIndex()
 
         return projectId
 

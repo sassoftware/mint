@@ -50,6 +50,7 @@
 ^scripts/process-system-events$
 ^scripts/rbuilder-database$
 ^scripts/repository-sync$
+^scripts/restore-preload-bundle$
 ^scripts/system-resolver$
 ^scripts/target-systems-import$
 ^scripts/purge-surveys$
