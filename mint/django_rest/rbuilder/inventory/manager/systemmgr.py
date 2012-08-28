@@ -575,7 +575,7 @@ class SystemManager(basemanager.BaseManager):
         # add the system
         system.save()
 
-        if system.survey is not None:
+        if system.survey is not None and system.survey._xobj.elements:
             # XXX we theoretically shouldn't have to have the synthetic
             # field, and be able to pass the survey as part of the
             # surveys collection, but because of all the special parsing
