@@ -8,6 +8,7 @@ from mint.db import database
 from mint.lib import scriptlibrary
 from mint.rest.db import database as restdb
 from mint.rest.errors import ProductNotFound
+from mint.scripts import createplatforms
 
 log = logging.getLogger(__name__)
 
@@ -89,6 +90,11 @@ class Script(scriptlibrary.GenericScript):
 
         restDb.productMgr.reposMgr.populateUsers(handle)
         restDb.platformMgr.platformCache.clear()
+
+        # Load platform sources from the platdef which is now available.
+        cplatscript = createplatforms.Script()
+        cplatscript.restdb = restDb
+        cplatscript.createPlatforms(fqdn)
 
         restDb.close()
 

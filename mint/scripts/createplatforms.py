@@ -48,11 +48,13 @@ class Script(scriptlibrary.SingletonScript):
         self.createPlatforms()
         return 0
 
-    def createPlatforms(self):
+    def createPlatforms(self, fqdn=None):
         onDiskPlatforms = set()
         for platformFile in self.listPlatforms():
             platformModel = self.loadPlatform(platformFile)
-            self.restdb.createPlatform(platformModel, createPlatDef=False, overwrite=True)
+            if not fqdn or fqdn == platformModel.repositoryHostname:
+                self.restdb.createPlatform(platformModel, createPlatDef=False,
+                        overwrite=True)
             onDiskPlatforms.add(platformModel.label)
         # Fetch all on-disk platforms from the db
         cu = self.restdb.db.cursor()
@@ -74,6 +76,7 @@ class Script(scriptlibrary.SingletonScript):
         contents = file(fpath).read()
         model = converter.fromText('xml', contents, Platform, None, None)
         model.isFromDisk = True
+        model.repositoryHostname = model.label.split('@')[0]
         return model
 
     def usage(self):

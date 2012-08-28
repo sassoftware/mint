@@ -32,7 +32,6 @@ class GenericScript(object):
 
     def __init__(self):
         self.name = os.path.basename(sys.argv[0])
-        self.resetLogging()
 
     def resetLogging(self, quiet=False, verbose=False, fileLevel=logging.DEBUG):
         if self.newLogger:
@@ -83,6 +82,7 @@ class GenericScript(object):
         Call this to run the script action. 
         """
         try:
+            self.resetLogging()
             return self._run()
         except KeyboardInterrupt:
             print
