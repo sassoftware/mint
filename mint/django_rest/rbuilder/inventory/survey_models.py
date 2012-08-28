@@ -138,9 +138,8 @@ class Survey(modellib.XObjIdModel):
     project_snapshot              = modellib.XMLField(db_column='project_snapshot_xml')
     stage_snapshot                = modellib.XMLField(db_column='stage_snapshot_xml')
 
-    # obsolete now ???
-    updates_pending = XObjHidden(models.BooleanField(default=False))
-    has_errors = XObjHidden(models.BooleanField(default=False))
+    updates_pending = models.BooleanField(default=False)
+    has_errors = models.BooleanField(default=False)
 
     def get_url_key(self, *args, **kwargs):
         return [ self.uuid ]
@@ -216,6 +215,8 @@ class ShortSurvey(modellib.XObjIdModel):
     overall_compliance    = models.BooleanField(default=True)
     execution_error_count = models.IntegerField()
     overall_validation    = models.BooleanField(default=False)
+    updates_pending       = models.BooleanField(default=False)
+    has_errors            = models.BooleanField(default=False)
 
     def get_url_key(self, *args, **kwargs):
         return [ self.uuid ]

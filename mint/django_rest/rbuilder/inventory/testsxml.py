@@ -2574,6 +2574,8 @@ surveys_xml = """
     <execution_error_count/>
     <overall_compliance>True</overall_compliance>
     <overall_validation>False</overall_validation>
+    <updates_pending>False</updates_pending>
+    <has_errors>False</has_errors>
   </survey>
 </surveys>
 """
