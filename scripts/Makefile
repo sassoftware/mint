@@ -21,7 +21,6 @@ static_files =				\
 	mirror-outbound			\
 	rbuilder-debug			\
 	refresh-auth			\
-	restore-preload-bundle		\
 	rmake-reset			\
 	rmake-setup			\
 	rss-update			\
@@ -46,6 +45,7 @@ generic_scripts = \
 	purge-surveys			\
 	rbuilder-database		\
 	repository-sync			\
+	restore-preload-bundle		\
 	system-resolver			\
 	target-systems-import		\
 
