@@ -266,7 +266,7 @@ class VersionManager(basemanager.BaseManager):
         descr = self.getSystemConfigurationDescriptorObject(system)
         if descr is None:
             return '<configuration/>'
-        return descr.toxml()
+        return descr.toxml(validate=False)
 
     @exposed
     def getSystemConfigurationDescriptorObject(self, system):
