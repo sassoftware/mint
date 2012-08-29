@@ -481,21 +481,21 @@ class SurveyDiffRender(object):
                 left = [],
                 right = item[0].value.split('\n')
                 diff = '\n'.join(list(difflib.unified_diff(left, right, lname, rname, ldate, rdate, DIFF_CONTEXT)))
-                all_diffs.append( [ item[0].key, diff ] )
+                all_diffs.append( [ item[0], diff ] )
             for item in removed:
                 if not item[0].key.endswith('/value'):
                     continue
                 left = item[0].value.split('\n')
                 right = [],
                 diff = '\n'.join(list(difflib.unified_diff(left, right, lname, rname, ldate, rdate, DIFF_CONTEXT)))
-                all_diffs.append( [ item[0].key, diff ] )
+                all_diffs.append( [ item[0], diff ] )
             for item in changed:
                 if not item[0].key.endswith('/value'):
                     continue
                 left = item[0].value.split('\n')
                 right = item[1].value.split('\n')
                 diff = '\n'.join(list(difflib.unified_diff(left, right, lname, rname, ldate, rdate, DIFF_CONTEXT)))
-                all_diffs.append( [ item[0].key, diff ] )
+                all_diffs.append( [ item[0], diff ] )
             self._renderSubDiffs(tag, elem, all_diffs)
 
         else:
@@ -726,7 +726,11 @@ class SurveyDiffRender(object):
         '''
         for x in items:
             change = self._changeElement(parentTag, 'unified_diff')
-            (key, diff_text) = x
+            (item, diff_text) = x
+            key = item.key
+            extension = getattr(item, '_extension_name')
+            if extension is not None:
+                change.append(self._element('extension', extension))
             change.append((self._subDiffElement(parentTag, key, diff_text)))
             #self._DEBUG_FLAGGED = True
             parentElem.append(change)
