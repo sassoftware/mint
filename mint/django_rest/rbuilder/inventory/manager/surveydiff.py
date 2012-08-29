@@ -699,6 +699,10 @@ class SurveyDiffRender(object):
         '''
         for x in items:
             change = self._changeElement(parentTag, mode)
+            if getattr(x, 'key', None) and mode in [ 'added', 'removed' ]:
+                if x.key in [ '/configuration', '/errors' ]:
+                    # skip empty config nodes
+                    continue
             if mode == 'added':
                 change.append(self._addedElement(parentTag, x))
                 extension = getattr(x, '_extension_name', None)
@@ -711,6 +715,10 @@ class SurveyDiffRender(object):
                     change.append(self._element('extension', extension)),
             elif mode == 'changed':
                 (left, right, delta) = x
+                if getattr(left, 'key', None) in [ '/configuration', '/errors' ]:
+                    continue
+                if getattr(right, 'key', None) in [ '/configuration', '/errors' ]:
+                    continue
                 change.append(self._fromElement(parentTag, left))
                 change.append(self._toElement(parentTag, right))
                 extension = getattr(left, '_extension_name', None)
