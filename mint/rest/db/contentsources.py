@@ -76,6 +76,7 @@ class ContentSourceType(object):
     model = None
     _ContentSourceTypeName = None
     isRequired = False
+    enabledInOfflineMode = True
 
     def __init__(self, proxyMap = None):
         self.proxyMap = proxyMap
@@ -158,6 +159,8 @@ class Rhn(_RhnSourceType):
     sourceUrl = 'https://rhn.redhat.com'
     _ContentSourceTypeName = 'Red Hat Network'
     isRequired = True
+    enabledInOfflineMode = False
+
 
 class Satellite(_RhnSourceType):
     fields = [Name, Username, Password, SourceUrl]
@@ -219,6 +222,7 @@ class Nu(Smt):
     model = models.NuSource
     sourceUrl = 'https://nu.novell.com/repo/$RCE'
     _ContentSourceTypeName = 'Novell Update Service'
+    enabledInOfflineMode = False
 
 class Repomd(_RepositoryMetadataSourceType):
     fields = [Name, UsernameOptional, PasswordOptional, SourceUrl]

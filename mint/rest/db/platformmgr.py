@@ -97,11 +97,14 @@ class ContentSourceTypes(object):
         allTypesMap = dict()
         allTypes = []
         pIter = self.mgr().platforms.iterPlatforms(withRepositoryLookups=True)
+        isOffline = self.db.siteAuth.isOffline()
         for platform in pIter:
             sourceTypes = platform._sourceTypes
             for t, isSingleton in sourceTypes or []:
                 if t not in allTypes:
                     cst = contentsources.contentSourceTypes[t]
+                    if isOffline and not cst.enabledInOfflineMode:
+                        continue
                     allTypes.append(t)
                     allTypesMap[t] = (isSingleton, cst.isRequired)
 
@@ -358,7 +361,7 @@ class Platforms(object):
         platform._buildTypes = platformBuildTypes
         return platform
 
-    def _create(self, platformModel, platformDef):
+    def _create(self, platformModel, platformDef, projectId=None):
         platformLabel = str(platformModel.label)
         params = dict(
             platformName=platformModel.platformName,
@@ -366,6 +369,7 @@ class Platforms(object):
             configurable=bool(platformModel.configurable),
             label=platformLabel,
             enabled=int(platformModel.enabled or 0),
+            projectId=projectId,
         )
 
         # isFromDisk is a field that's not exposed in the API, so treat it
@@ -1332,9 +1336,12 @@ class PlatformManager(manager.Manager):
         platform = self.platforms.getById(platformId)
         types = []
         sourceTypes = platform._sourceTypes
+        isOffline = self.db.siteAuth.isOffline()
         if sourceTypes is not None:
             for sourceType, isSingleton in sourceTypes:
                 cst = contentsources.contentSourceTypes[sourceType]
+                if isOffline and not cst.enabledInOfflineMode:
+                    continue
                 types.append(ContentSourceTypes.contentSourceTypeModelFactory(
                     name=sourceType, singleton=isSingleton,
                     required=cst.isRequired))
