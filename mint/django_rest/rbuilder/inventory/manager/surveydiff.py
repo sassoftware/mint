@@ -43,6 +43,11 @@ class SurveyDiff(object):
         self.left = left
         self.right = right
 
+        # used to control some potential redundant lookups when trying to find
+        # names of configurator extensions for particular configurator XML paths
+        # (very much a minor corner case)
+        self.name_key_map = {} 
+
     def compare(self):
         ''' 
         Compute survey differences, but don't return XML.  Sets side
@@ -304,10 +309,16 @@ class SurveyDiff(object):
             tokens = x.split('/')
             if (len(tokens) > 2) and tokens[1] == 'extensions':
                 name_key = "/extensions/%s/name" % tokens[2]
-                name_values = survey_models.SurveyValues.objects.filter(survey__in = [self.left, self.right ], key=name_key)
-                if len(name_values):
-                    value = name_values[0].value
-                    key_extension_map[x] = value
+                if not (name_key in self.name_key_map):
+                    name_values = survey_models.SurveyValues.objects.filter(survey__in = [self.left, self.right ], key=name_key)
+                    if len(name_values):
+                        value = name_values[0].value
+                        key_extension_map[x] = value
+                        self.name_key_map[name_key] = value
+                    else:
+                        self.name_key_map[name_key] = None
+                else:
+                    key_extension_map[x] = self.name_key_map[name_key]
 
         # whether the key is there or not decides added/removed
         for x in right:
