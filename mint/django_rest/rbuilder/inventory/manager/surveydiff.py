@@ -585,18 +585,18 @@ class SurveyDiffRender(object):
 
     def _serializeWindowsService(self, elemName, item):
         elem = self._xmlNode(elemName, about=item,
-            keys='status'
+            keys='status start_account start_mode running'
         )
         subElt = self._xmlNode('windows_service_info', 
             about=item.windows_service_info, parent=elem,
-            keys='name type handle'
+            keys='name type handle display_name'
         )
         services = item.windows_service_info._required_services.split(",")
         required_objs = survey_models.WindowsServiceInfo.objects.filter(name__in=services)
         required_elts = Element('required_services')
         for x in required_objs:
             self._xmlNode('windows_service_info', about=x, parent=required_elts,
-                keys='name display_name type handle'
+                keys='name display_name type handle '
             )
         subElt.append(required_elts)
         return elem
