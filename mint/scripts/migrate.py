@@ -236,6 +236,54 @@ def dropForeignKey(db, table, columns):
     return name
 
 
+def _getMigration(major):
+    try:
+        ret = sys.modules[__name__].__dict__['MigrateTo_' + str(major)]
+    except KeyError:
+        return None
+    return ret
+
+
+# return the last major.minor version for a given major
+def majorMinor(major):
+    migr = _getMigration(major)
+    if migr is None:
+        return (major, 0)
+    return migr.Version
+
+
+def tryMigrate(db, func):
+    # Do all migration steps in one transaction so a failure in createSchema
+    # will abort the whole thing. Otherwise we wouldn't rerun the createSchema
+    # because the schema version has already been updated.
+    return func(skipCommit=True)
+
+
+# entry point that migrates the schema
+def migrateSchema(db, cfg=None):
+    version = db.getVersion()
+    assert(version >= 37) # minimum version we support
+    if version.major > schema.RBUILDER_DB_VERSION.major:
+        return version # noop, should not have been called.
+    # first, we need to make sure that for the current major we're up
+    # to the latest minor
+    migrateFunc = _getMigration(version.major)
+    if migrateFunc is None:
+        raise sqlerrors.SchemaVersionError(
+            "Could not find migration code that deals with repository "
+            "schema %s" % version, version)
+    # migrate all the way to the latest minor for the current major
+    tryMigrate(db, migrateFunc(db, cfg))
+    version = db.getVersion()
+    # migrate to the latest major
+    while version.major < schema.RBUILDER_DB_VERSION.major:
+        migrateFunc = _getMigration(int(version.major)+1)
+        newVersion = tryMigrate(db, migrateFunc(db, cfg))
+        assert(newVersion.major == version.major+1)
+        version = newVersion
+    return version
+
+
 #### SCHEMA MIGRATIONS BEGIN HERE ###########################################
 
 # SCHEMA VERSION 37.0 - DUMMY MIGRATION
@@ -5354,52 +5402,3 @@ class MigrateTo_64(SchemaMigration):
         cu = self.db.cursor()
         cu.execute("ALTER TABLE inventory_survey ADD COLUMN config_diff_count INTEGER")
         return True
-
-
-#### SCHEMA MIGRATIONS END HERE #############################################
-
-def _getMigration(major):
-    try:
-        ret = sys.modules[__name__].__dict__['MigrateTo_' + str(major)]
-    except KeyError:
-        return None
-    return ret
-
-# return the last major.minor version for a given major
-def majorMinor(major):
-    migr = _getMigration(major)
-    if migr is None:
-        return (major, 0)
-    return migr.Version
-
-
-def tryMigrate(db, func):
-    # Do all migration steps in one transaction so a failure in createSchema
-    # will abort the whole thing. Otherwise we wouldn't rerun the createSchema
-    # because the schema version has already been updated.
-    return func(skipCommit=True)
-
-
-# entry point that migrates the schema
-def migrateSchema(db, cfg=None):
-    version = db.getVersion()
-    assert(version >= 37) # minimum version we support
-    if version.major > schema.RBUILDER_DB_VERSION.major:
-        return version # noop, should not have been called.
-    # first, we need to make sure that for the current major we're up
-    # to the latest minor
-    migrateFunc = _getMigration(version.major)
-    if migrateFunc is None:
-        raise sqlerrors.SchemaVersionError(
-            "Could not find migration code that deals with repository "
-            "schema %s" % version, version)
-    # migrate all the way to the latest minor for the current major
-    tryMigrate(db, migrateFunc(db, cfg))
-    version = db.getVersion()
-    # migrate to the latest major
-    while version.major < schema.RBUILDER_DB_VERSION.major:
-        migrateFunc = _getMigration(int(version.major)+1)
-        newVersion = tryMigrate(db, migrateFunc(db, cfg))
-        assert(newVersion.major == version.major+1)
-        version = newVersion
-    return version
