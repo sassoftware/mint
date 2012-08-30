@@ -442,7 +442,7 @@ class System(modellib.XObjIdModel):
         "the date the system was deployed (only applies if system is on a "
         "virtual target)", short="System launch date")
     target = D(modellib.ForeignKey(targetmodels.Target, null=True,
-        text_field="name"),
+        text_field="name", on_delete=models.SET_NULL),
         "the virtual target the system was deployed to (only applies if "
         "system is on a virtual target)")
     target_system_id = D(models.CharField(max_length=255,
@@ -480,7 +480,7 @@ class System(modellib.XObjIdModel):
     ssl_server_certificate = D(models.CharField(max_length=8092, null=True),
         "an x509 public certificate of the system's CIM broker")
     launching_user = D(modellib.ForeignKey(usersmodels.User, null=True,
-        text_field="user_name"),
+        text_field="user_name", on_delete=models.SET_NULL),
         "the user that deployed the system (only applies if system is on a "
         "virtual target)")
     current_state = D(modellib.SerializedForeignKey(
@@ -506,13 +506,15 @@ class System(modellib.XObjIdModel):
         related_name='systems', text_field='description'),
         "the type of the system")
     project_branch_stage = D(APIReadOnly(modellib.DeferredForeignKey(Stage, null=True,
-        db_column="stage_id", text_field='name', related_name="+")),
+        db_column="stage_id", text_field='name', related_name="+",
+        on_delete=models.SET_NULL)),
         "the project stage of the system")
     project_branch = D(APIReadOnly(modellib.DeferredForeignKey(ProjectVersion, null=True,
-        db_column="major_version_id", text_field='name', related_name="systems")),
+        db_column="major_version_id", text_field='name', related_name="systems",
+        on_delete=models.SET_NULL)),
         "the project major version of the system")
     project = D(APIReadOnly(modellib.DeferredForeignKey(Project, null=True,
-        text_field='short_name', related_name="+")),
+        text_field='short_name', related_name="+", on_delete=models.SET_NULL)),
         "the project of the system")
     configuration = APIReadOnly(XObjHidden(models.TextField(null=True, db_column='configuration_xml')))
     configuration_descriptor = D(XObjHidden(modellib.SyntheticField()),
@@ -525,11 +527,11 @@ class System(modellib.XObjIdModel):
          related_name='systems', on_delete=models.SET_NULL)),
          'rBuilder image used to deploy the system, if any')
     created_by = D(modellib.ForeignKey(usersmodels.User, null=True,
-        related_name='+', db_column='created_by'),
+        related_name='+', db_column='created_by', on_delete=models.SET_NULL),
         "User who created system",
         short="System created by")
     modified_by = D(modellib.ForeignKey(usersmodels.User, null=True,
-        related_name='+', db_column='modified_by'),
+        related_name='+', db_column='modified_by', on_delete=models.SET_NULL),
         "User who last modified system",
         short="System last modified by")
     modified_date = D(modellib.DateTimeUtcField(null=True),
