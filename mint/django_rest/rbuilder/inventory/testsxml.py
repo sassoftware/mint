@@ -3033,7 +3033,7 @@ stub2 = """
 
 
 validation_report = validation_report_template.replace("FILLER1",stub1).replace("FILLER2","")
-validation_report_alt = validation_report_template.replace("false","true").replace("not running on port","jump on it").replace("FILLER1","").replace("FILLER2",stub2)
+validation_report_alt = validation_report_template.replace("false","true").replace("not running on port","jump on it").replace("FILLER1","").replace("FILLER2",stub2).replace("user blah does not exist","user quota exceeded")
 
 # input without ids
 # FIXME -- created_by/modified_by should be nullable for system
