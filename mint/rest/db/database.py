@@ -189,6 +189,9 @@ class Database(DBInterface):
         #profile.attachRepos(self.productMgr.reposMgr)
         pass
 
+    def isOffline(self):
+        return self.siteAuth and self.siteAuth.isOffline()
+
     @readonly
     def getUsername(self, userId):
         cu = self.db.cursor()

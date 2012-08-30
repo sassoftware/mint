@@ -97,7 +97,7 @@ class ContentSourceTypes(object):
         allTypesMap = dict()
         allTypes = []
         pIter = self.mgr().platforms.iterPlatforms(withRepositoryLookups=True)
-        isOffline = self.db.siteAuth.isOffline()
+        isOffline = self.db.isOffline()
         for platform in pIter:
             sourceTypes = platform._sourceTypes
             for t, isSingleton in sourceTypes or []:
@@ -643,6 +643,9 @@ class Platforms(object):
         url = self._getUrl(platform)
         domainname = self._getDomainname(platform)
         mirror = platform.configurable
+        if self.db.isOffline():
+            # Proxying is prohibited in offline mode so always create a mirror
+            mirror = True
 
         authInfo = self._getAuthInfo()
 
@@ -1142,7 +1145,7 @@ class PlatformManager(manager.Manager):
         return self.platforms.getPlatformVersions(platformId)
 
     def isOffline(self, label):
-        if not self.db.siteAuth or not self.db.siteAuth.isOffline():
+        if not self.db.isOffline():
             # Site is online so remote repos are reachable
             return False
         # Site is offline, check if there is a local mirror
@@ -1336,7 +1339,7 @@ class PlatformManager(manager.Manager):
         platform = self.platforms.getById(platformId)
         types = []
         sourceTypes = platform._sourceTypes
-        isOffline = self.db.siteAuth.isOffline()
+        isOffline = self.db.isOffline()
         if sourceTypes is not None:
             for sourceType, isSingleton in sourceTypes:
                 cst = contentsources.contentSourceTypes[sourceType]
@@ -1462,7 +1465,7 @@ class PlatformDefCache(persistentcache.PersistentCache):
             try:
                 if reposMgr.db.siteAuth:
                     entitlement = reposMgr.db.siteAuth.entitlementKey
-                    if reposMgr.db.siteAuth.isOffline():
+                    if reposMgr.db.isOffline():
                         # Remote will not be reachable
                         return None
                 else:
