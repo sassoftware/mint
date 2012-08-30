@@ -8,6 +8,14 @@ import traceback
 import time
 import textwrap
 
+import re
+import glob
+import cProfile
+import pstats
+import tempfile
+import datetime
+from cStringIO import StringIO
+
 from debug_toolbar import middleware
 from conary.lib import util
 
@@ -688,3 +696,87 @@ class ApplicationOctetStreamHandlerMiddleware(BaseMiddleware):
             handler.upload_complete()
 
         return None
+
+class ProfilingMiddleware(object):
+    """
+    Profile view calls. If the request has a session ID, accumulate
+    stats across requests. Without session ID, profiling will be on
+    per-request basis. Profiling data is served in markup comment
+    inside each request, and also dumped in /tmp with filenames
+    containing session ID or timestamp.
+
+    Imperfections:
+    1) Either dumpfiles are modified out-of-order or the constituent
+    dumpfile list in each request uses a non-stable sort. Neither may
+    be important except in relation to...
+    2) Occasionally at pstats.Stats construction-time a dumpfile
+    errors out on unmarshalling.
+    3) HTTP responses commonly do not arrive at the client in the same
+    order as the corresponding request moves through this middleware.
+    """
+    TEMPDIR  = "/tmp/"
+    TEMPLATE = "profiling_%s_"
+    COMMENT_SYNTAX = ((re.compile(r'^text/xml|application/x-www-form-urlencoded$', re.I), '<!--', '-->'),
+                      (re.compile(r'^application/j(avascript|son)$', re.I), '/*',   '*/' ))
+
+
+    def find_matching_filenames(self, match_string, latest=100):
+        dir = self.TEMPDIR
+        # "/tmp/" + "profiling_[SESSION-ID]_" + "*"
+        matcher = dir + match_string + "*"
+        files = filter(os.path.isfile, glob.glob(matcher))
+        files = [os.path.join(dir, f) for f in files]
+        files.sort(key=lambda x: -os.path.getmtime(x))
+        return files[:latest]
+
+    def process_view(self, request, callback, args, kwargs):
+        prefix = self.TEMPLATE % request.COOKIES.get('pysid', datetime.datetime.now().strftime('%s%f'))
+        _, filename = tempfile.mkstemp(dir=self.TEMPDIR, prefix=prefix)
+
+        prof = cProfile.Profile()
+        args = [request] + list(args)
+        response = prof.runcall(callback, *args, **kwargs) # runcall = undocumented.
+
+        prof.dump_stats(filename)
+        all_files = self.find_matching_filenames(prefix) # Current file plus any older.
+        p = pstats.Stats(*all_files, stream=StringIO())
+
+        # If we have got a 3xx status code, further
+        # action needs to be taken by the user agent
+        # in order to fulfill the request. So don't
+        # attach any stats to the content, because of
+        # the content is supposed to be empty and is
+        # ignored by the user agent.
+        if response.status_code // 100 == 3:
+            return response
+
+        # Detect the appropriate syntax based on the
+        # Content-Type header.
+        for regex, begin_comment, end_comment in self.COMMENT_SYNTAX:
+            if regex.match(response['Content-Type'].split(';')[0].strip()):
+                break
+        else:
+            # If the given Content-Type is not
+            # supported, don't attach any stats to
+            # the content and return the unchanged
+            # response.
+            return response
+
+        p.sort_stats('cumulative')
+        p.print_stats()  # You wouldn't think this'd be necessary, but you'd be wrong.
+
+        # Construct an HTML/XML or Javascript comment, with
+        # the formatted stats, written to the StringIO object
+        # and attach it to the content of the response.
+        comment = '\n%s\n\n%s\n\n%s\n' % (begin_comment, p.stream.getvalue(), end_comment)
+        response.content += comment
+
+        # If the Content-Length header is given, add the
+        # number of bytes we have added to it. If the
+        # Content-Length header is omitted or incorrect,
+        # it remains so in order to not change the
+        # behaviour of the web server or user agent.
+        if response.has_header('Content-Length'):
+            response['Content-Length'] = int(response['Content-Length']) + len(comment)
+
+        return response
