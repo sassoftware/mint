@@ -117,6 +117,7 @@ class Survey(modellib.XObjIdModel):
     overall_compliance    = models.BooleanField(default=True)
     overall_validation    = models.BooleanField(default=False)
     execution_error_count = models.IntegerField()
+    config_diff_count     = models.IntegerField()
 
     # 'should be like this' values XML from system
     config_properties     = modellib.XMLField(db_column='values_xml')

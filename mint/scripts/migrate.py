@@ -5335,7 +5335,7 @@ class MigrateTo_63(SchemaMigration):
 
 class MigrateTo_64(SchemaMigration):
     '''goad-p3'''
-    Version = (64, 1)
+    Version = (64, 2)
 
     def migrate(self):
         ''' productversions.build_standard_group '''
@@ -5347,6 +5347,12 @@ class MigrateTo_64(SchemaMigration):
         '''add overall_validation to survey for summary view '''
         cu = self.db.cursor()
         cu.execute("ALTER TABLE inventory_survey ADD COLUMN overall_validation BOOLEAN NOT NULL DEFAULT FALSE")
+        return True
+
+    def migrate2(self):
+        '''add overall_validation to survey for summary view '''
+        cu = self.db.cursor()
+        cu.execute("ALTER TABLE inventory_survey ADD COLUMN config_diff_count INTEGER")
         return True
 
 

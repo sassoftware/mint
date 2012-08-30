@@ -872,6 +872,7 @@ class SurveyManager(basemanager.BaseManager):
         survey.has_errors = has_errors
         survey.updates_pending = updates_pending
         survey.compliance_summary = compliance_xml
+        survey.config_diff_count = config_diff_ct
         survey.overall_compliance = overall
         survey.overall_validation = overall_validation
         survey.execution_error_count = int(execution_error_count)
