@@ -724,8 +724,8 @@ class ProfilingMiddleware(object):
         dir = self.TEMPDIR
         # "/tmp/" + "profiling_[SESSION-ID]_" + "*"
         matcher = dir + match_string + "*"
-        files = filter(os.path.isfile, glob.glob(matcher))
-        files = [os.path.join(dir, f) for f in files]
+        files = [f for f in glob.glob(matcher) if os.path.isfile(f) and 
+                 os.path.getsize(f) > 0]
         files.sort(key=lambda x: -os.path.getmtime(x))
         return files[:latest]
 
