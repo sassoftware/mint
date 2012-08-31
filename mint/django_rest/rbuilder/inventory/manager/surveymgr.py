@@ -91,13 +91,21 @@ class SurveyManager(basemanager.BaseManager):
 
     @exposed
     def getSurveysForSystem(self, system_id):
-       ''' return all surveys for a given system, ordered by creation date '''
+        ''' return all surveys for a given system, ordered by creation date '''
 
-       surveys = survey_models.Surveys()
-       surveys.survey = survey_models.ShortSurvey.objects.filter(
+        surveys = survey_models.Surveys()
+        surveys.survey = survey_models.ShortSurvey.objects.filter(
            system__pk=system_id
-       ).order_by('-created_date')
-       return surveys
+        ).order_by('-created_date')
+        return surveys
+
+    @exposed
+    def getAllSurveys(self):
+        # all the surveys, multiples per system -- doesn't really make sense
+        # without a filter term
+        surveys = survey_models.Surveys()
+        surveys.survey = survey_models.ShortSurvey.objects.all().order_by('-created_date')
+        return surveys
 
     @exposed 
     def getLatestSurveys(self):
