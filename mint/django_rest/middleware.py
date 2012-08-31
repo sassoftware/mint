@@ -704,15 +704,6 @@ class ProfilingMiddleware(object):
     per-request basis. Profiling data is served in markup comment
     inside each request, and also dumped in /tmp with filenames
     containing session ID or timestamp.
-
-    Imperfections:
-    1) Either dumpfiles are modified out-of-order or the constituent
-    dumpfile list in each request uses a non-stable sort. Neither may
-    be important except in relation to...
-    2) Occasionally at pstats.Stats construction-time a dumpfile
-    errors out on unmarshalling.
-    3) HTTP responses commonly do not arrive at the client in the same
-    order as the corresponding request moves through this middleware.
     """
     TEMPDIR  = "/tmp/"
     TEMPLATE = "profiling_%s_"
