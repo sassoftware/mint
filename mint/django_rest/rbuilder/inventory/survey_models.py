@@ -206,7 +206,7 @@ class ShortSurvey(modellib.XObjIdModel):
 
     survey_id     = D(modellib.XObjHidden(models.AutoField(primary_key=True)),
         "the database ID for the survey", short="Survey ID")
-    system        = XObjHidden(modellib.DeferredForeignKey('inventory.System', related_name='+', db_column='system_id'))
+    system        = modellib.DeferredForeignKey('inventory.System', related_name='+', db_column='system_id')
     uuid          = models.TextField()
     name          = models.TextField()
     description   = models.TextField()
