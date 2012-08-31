@@ -762,7 +762,7 @@ class ProfilingMiddleware(object):
             # response.
             return response
 
-        p.sort_stats('cumulative')
+        p.sort_stats('time')
         p.print_stats()  # You wouldn't think this'd be necessary, but you'd be wrong.
 
         # Construct an HTML/XML or Javascript comment, with
