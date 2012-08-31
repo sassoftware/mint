@@ -217,7 +217,7 @@ class PlatformManagerTest(restbase.BaseRestTest):
             self.cclient.repos.c.cache['localhost'],
             'localhost', 'localhost@rpath:plat-1', None, [None])
         mgr = self.db.platformMgr.platformCache.getReposMgr()
-        mgr.db.siteAuth.isOffline._mock.setDefaultReturn(False)
+        mgr.db.isOffline._mock.setDefaultReturn(False)
 
         self.db.platformMgr.getPlatforms()
 
