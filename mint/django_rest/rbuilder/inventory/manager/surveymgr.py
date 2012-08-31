@@ -14,6 +14,7 @@ from mint.django_rest import timeutils
 from conary import versions
 from xobj import xobj
 from datetime import datetime, timedelta
+from django.db.models import F
 
 log = logging.getLogger(__name__)
 exposed = basemanager.exposed
@@ -95,6 +96,15 @@ class SurveyManager(basemanager.BaseManager):
        surveys = survey_models.Surveys()
        surveys.survey = survey_models.ShortSurvey.objects.filter(
            system__pk=system_id
+       ).order_by('-created_date')
+       return surveys
+
+    @exposed 
+    def getLatestSurveys(self):
+       # all the latest surveys
+       surveys = survey_models.Surveys()
+       surveys.survey = survey_models.ShortSurvey.objects.filter(
+           pk=F('system__latest_survey__pk')
        ).order_by('-created_date')
        return surveys
 
