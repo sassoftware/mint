@@ -120,6 +120,65 @@ class OrOperator(Operator):
 def operatorFactory(operator):
     return operatorMap[operator]
 
+# === BEGIN NEW STYLE FILTERING ===
+
+def _filterTerm(node):
+    # TODO: handle NOT by teaching classes to provide the proper operands
+    (field, value) = node.operands
+    django_operator = "%s__%s" % (field, node.operator)
+    return dict(django_operator=value)
+
+def _isAllLeaves(operands):
+    for x in operands:
+       if isinstance(x, AndOperator) or isinstance(x, OrOperator):
+          return False
+    return True
+
+def _filterTreeAnd(model, operands):
+    and_result = None
+    for (i,x) in enumerate(tree.operands):
+        if (i==0):
+            and_result = filterTree(x)
+        else:
+            and_result = and_result & filterTree(x)
+    return and_result
+
+def _filterTreeOr(model, operands):
+    or_result = None
+    for (i,x) in enumerate(operands):
+        if (i==0):
+            or_result = filterTree(model, x)
+        else:
+            or_result = or_result | filterTree(model, x)
+    return or_result
+
+def _filterTreeAndFlat(model, terms):
+    filters = {}
+    for x in terms:
+        filters.update(_filterTerm(x))
+    return model.filter(**filters)
+
+def _filterOperator(model, node):
+    filters = _filterTerm(node)
+    return model.filter(**filters)
+
+def filterTree(model, tree):
+    ''' new style advanced filtering '''
+
+    model = getattr(model, 'objects', model)
+    if isinstance(tree, AndOperator):
+        if not _isAllLeaves(tree.operands):
+            return _filterTreeAnd(model, tree.operands)
+        else:
+            return _filterTreeAndFlat(model, tree.operands)
+    elif isinstance(tree, OrOperator):
+        return _filterTreeOr(model, tree.operands)
+    else:
+        return _filterOperator(model, tree)
+
+# === END NEW STYLE FILTERING ===
+
+
 def filterDjangoQuerySet(djangoQuerySet, field, operator, value, 
         collection=None, queryset=None):
     
@@ -343,8 +402,7 @@ class Collection(XObjIdModel):
                         continue
                 filtString = filt.strip(',').strip('[').strip(']')
                 field, oper, value = filtString.split(',', 2)
-                modelList = filterDjangoQuerySet(modelList,
-                    field, oper, value, collection=self)
+                modelList = filterDjangoQuerySet(modelList, field, oper, value, collection=self)
 
         return modelList
 
