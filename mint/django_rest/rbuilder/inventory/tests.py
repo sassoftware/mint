@@ -4462,10 +4462,10 @@ class CollectionTest(XMLTestCase):
                )
         )
         #self.assertEquals(q.asString(), 'AND(CONTAINS(latest_surveys.rpm_packages,AND(EQUAL(rpm_package_info.name,a),EQUAL(rpm_package_info.version,2))),CONTAINS(latest_surveys.observed_properties,AND(EQUAL(key,port),EQUAL(value,8080))))')
-        qStr = q.asString()
+        #qStr = q.asString()
 
         djQs =  collections.filterTree(models.System, q)
-        print djQs.query
+        #print djQs.query
 
 
     def testFilterBy(self):

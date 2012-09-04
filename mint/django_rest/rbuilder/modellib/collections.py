@@ -125,8 +125,10 @@ def operatorFactory(operator):
 def _filterTerm(node):
     # TODO: handle NOT by teaching classes to provide the proper operands
     (field, value) = node.operands
-    django_operator = "%s__%s" % (field, node.operator)
-    return dict(django_operator=value)
+    django_operator = "%s__%s" % (field.replace(".","__"), node.operator) 
+    filt = {}
+    filt[django_operator] = value
+    return filt
 
 def _isAllLeaves(operands):
     for x in operands:
@@ -136,7 +138,7 @@ def _isAllLeaves(operands):
 
 def _filterTreeAnd(model, operands):
     and_result = None
-    for (i,x) in enumerate(tree.operands):
+    for (i,x) in enumerate(operands):
         if (i==0):
             and_result = filterTree(x)
         else:
