@@ -4446,6 +4446,24 @@ class CollectionTest(XMLTestCase):
             'http://testserver/api/v1/query_sets/5/all;start_index=10;limit=10;order_by=-name')
         self.assertEquals(systems.order_by, '-name')
 
+    def testQueryTree(self):
+        from mint.django_rest.rbuilder.modellib import collections
+        q = collections.AndOperator(
+            collections.ContainsOperator('latest_surveys.rpm_packages',
+                collections.AndOperator(
+                    collections.EqualOperator('rpm_package_info.name', 'a'),
+                    collections.EqualOperator('rpm_package_info.version', '2'),
+                ),
+            ),
+            collections.ContainsOperator('latest_surveys.observed_properties',
+                collections.AndOperator(
+                    collections.EqualOperator('key', 'port'),
+                    collections.EqualOperator('value', '8080'),
+                )
+            ),
+        )
+        self.assertEquals(q.asString(), 'AND(CONTAINS(latest_surveys.rpm_packages,AND(EQUAL(rpm_package_info.name,a),EQUAL(rpm_package_info.version,2))),CONTAINS(latest_surveys.observed_properties,AND(EQUAL(key,port),EQUAL(value,8080))))')
+
     def testFilterBy(self):
         systems = self.xobjResponse(
             '/api/v1/inventory/systems;filter_by=[name,LIKE,3]')

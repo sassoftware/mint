@@ -38,6 +38,14 @@ class Operator(object):
     operator = None
     description = None
 
+    def __init__(self, *operands):
+        self.operands = operands
+
+    def asString(self):
+        return "%s(%s)" % (self.filterTerm,
+            ','.join((hasattr(x, 'asString') and x.asString() or x)
+                for x in self.operands))
+
 class BooleanOperator(Operator):
     pass
 
@@ -93,6 +101,21 @@ class NotLikeOperator(LikeOperator):
     filterTerm = 'NOT_LIKE'
     operator = 'icontains'
     description = 'Not like'
+
+class ContainsOperator(Operator):
+    filterTerm = 'CONTAINS'
+    operator = None
+    description = "Contains"
+
+class AndOperator(Operator):
+    filterTerm = 'AND'
+    operator = None
+    description = "And"
+
+class OrOperator(Operator):
+    filterTerm = 'OR'
+    operator = None
+    description = "Or"
 
 def operatorFactory(operator):
     return operatorMap[operator]
