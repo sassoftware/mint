@@ -264,10 +264,11 @@ def _filterTreeAnd(model, operands):
     and_result = None
     for (i,x) in enumerate(operands):
         if (i==0):
-            and_result = filterTree(x)
+            and_result = filterTree(model, x)
         else:
-            and_result = and_result & filterTree(x)
+            and_result = and_result & filterTree(model, x)
     return and_result
+
 def _filterTreeOr(model, operands):
     or_result = None
     for (i,x) in enumerate(operands):

@@ -4448,22 +4448,23 @@ class CollectionTest(XMLTestCase):
 
     def testQueryTree(self):
         from mint.django_rest.rbuilder.modellib import collections
-        q = collections.OrOperator(
+        q = collections.AndOperator(
                # port=8080 for a given type of configurator
                collections.AndOperator(
                    collections.EqualOperator('latest_survey.survey_config.type', '0'),
                    collections.EqualOperator('latest_survey.survey_config.value', '8080'),
                    collections.LikeOperator('latest_survey.survey_config.key', '/port'),
                ),
-               # name has substring either a or e 
+               # name has substring either a or not e (super arbitrary) 
                collections.OrOperator(
                    collections.LikeOperator('latest_survey.rpm_packages.rpm_package_info.name', 'a'),
-                   collections.LikeOperator('latest_survey.rpm_packages.rpm_package_info.name', 'e'),
+                   collections.NotLikeOperator('latest_survey.rpm_packages.rpm_package_info.name', 'e'),
                )
         )
-        test1 = r'OR(AND(EQUAL(latest_survey.survey_config.type,0),EQUAL(latest_survey.survey_config.value,8080),LIKE(latest_survey.survey_config.key,/port)),OR(LIKE(latest_survey.rpm_packages.rpm_package_info.name,a),LIKE(latest_survey.rpm_packages.rpm_package_info.name,e)))'
+        test1 = r'AND(AND(EQUAL(latest_survey.survey_config.type,0),EQUAL(latest_survey.survey_config.value,8080),LIKE(latest_survey.survey_config.key,/port)),OR(LIKE(latest_survey.rpm_packages.rpm_package_info.name,a),NOT_LIKE(latest_survey.rpm_packages.rpm_package_info.name,e)))'
         self.assertEquals(q.asString(), test1)
 
+        # test the queryset/SQL builder engine
         djQs =  collections.filterTree(models.System, q)
         #print djQs.query
 
