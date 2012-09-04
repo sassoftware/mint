@@ -198,7 +198,6 @@ project_branch_stages_xml = \
     <stage_id>10</stage_id>
     <project_branch id="http://testserver/api/v1/projects/chater-foo/project_branches/chater-foo.eng.rpath.com@rpath:chater-foo-trunk">
       <name>trunk</name>
-      <build_standard_group>true</build_standard_group>
     </project_branch>
     <name>Development</name>
     <repository_api id="http://testserver/repos/chater-foo/api"/>
