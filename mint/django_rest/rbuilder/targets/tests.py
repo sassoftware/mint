@@ -472,6 +472,8 @@ class TargetsTestCase(BaseTargetsTest, RepeaterMixIn):
                 'username',
                 'password',
             ])
+        # RCE-807: no need to have help for username and password
+        return
         helpTemplate = '/help/targets/drivers/vmware/credentials/%s.html'
         self.failUnlessEqual(
             [ x.help.href for x in obj.descriptor.dataFields.field ],
