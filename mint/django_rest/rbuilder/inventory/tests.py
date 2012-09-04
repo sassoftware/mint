@@ -4448,23 +4448,24 @@ class CollectionTest(XMLTestCase):
 
     def testQueryTree(self):
         from mint.django_rest.rbuilder.modellib import collections
-        q = collections.AndOperator(
-            collections.ContainsOperator('latest_surveys.rpm_packages',
-                collections.AndOperator(
-                    collections.EqualOperator('rpm_package_info.name', 'a'),
-                    collections.EqualOperator('rpm_package_info.version', '2'),
-                ),
-            ),
-            collections.ContainsOperator('latest_surveys.observed_properties',
-                collections.AndOperator(
-                    collections.EqualOperator('key', 'port'),
-                    collections.EqualOperator('value', '8080'),
-                    collections.EqualOperator('description', r'this is a complex value (with commas, paranthesis) and \"quoted words\" as well as an escaped backslash like \\')
-                )
-            ),
+        q = collections.OrOperator(
+               # port=8080 for a given type of configurator
+               collections.AndOperator(
+                   collections.EqualOperator('latest_survey.survey_config.type', '0'),
+                   collections.EqualOperator('latest_survey.survey_config.value', '8080'),
+                   collections.LikeOperator('latest_survey.survey_config.key', '/port'),
+               ),
+               # name has substring either a or e 
+               collections.OrOperator(
+                   collections.LikeOperator('latest_survey.rpm_packages.rpm_package_info.name', 'a'),
+                   collections.LikeOperator('latest_survey.rpm_packages.rpm_package_info.name', 'e'),
+               )
         )
-        test1 =  r'AND(CONTAINS(latest_surveys.rpm_packages,AND(EQUAL(rpm_package_info.name,a),EQUAL(rpm_package_info.version,2))),CONTAINS(latest_surveys.observed_properties,AND(EQUAL(key,port),EQUAL(value,8080),EQUAL(description,"this is a complex value (with commas, paranthesis) and \"quoted words\" as well as an escaped backslash like \\"))))'
+        test1 = r'OR(AND(EQUAL(latest_survey.survey_config.type,0),EQUAL(latest_survey.survey_config.value,8080),LIKE(latest_survey.survey_config.key,/port)),OR(LIKE(latest_survey.rpm_packages.rpm_package_info.name,a),LIKE(latest_survey.rpm_packages.rpm_package_info.name,e)))'
         self.assertEquals(q.asString(), test1)
+
+        djQs =  collections.filterTree(models.System, q)
+        #print djQs.query
 
         lexer = collections.Lexer()
         tree = lexer.scan(test1)
