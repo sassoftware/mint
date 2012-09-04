@@ -4459,10 +4459,53 @@ class CollectionTest(XMLTestCase):
                 collections.AndOperator(
                     collections.EqualOperator('key', 'port'),
                     collections.EqualOperator('value', '8080'),
+                    collections.EqualOperator('description', r'this is a complex value (with commas, paranthesis) and \"quoted words\" as well as an escaped backslash like \\')
                 )
             ),
         )
-        self.assertEquals(q.asString(), 'AND(CONTAINS(latest_surveys.rpm_packages,AND(EQUAL(rpm_package_info.name,a),EQUAL(rpm_package_info.version,2))),CONTAINS(latest_surveys.observed_properties,AND(EQUAL(key,port),EQUAL(value,8080))))')
+        test1 =  r'AND(CONTAINS(latest_surveys.rpm_packages,AND(EQUAL(rpm_package_info.name,a),EQUAL(rpm_package_info.version,2))),CONTAINS(latest_surveys.observed_properties,AND(EQUAL(key,port),EQUAL(value,8080),EQUAL(description,"this is a complex value (with commas, paranthesis) and \"quoted words\" as well as an escaped backslash like \\"))))'
+        self.assertEquals(q.asString(), test1)
+
+        lexer = collections.Lexer()
+        tree = lexer.scan(test1)
+        self.assertEquals(tree.asString(), test1)
+
+        self.assertEquals(tree, q)
+
+        # Simpler tests
+        tests = [
+            (collections.EqualOperator('key', 'port'), 'EQUAL(key,port)'),
+            (collections.EqualOperator('key', r'a \"quoted\" value'),
+                r'EQUAL(key,"a \"quoted\" value")'),
+            (collections.EqualOperator('key', r'Extra ( and ), escaped backslash \\ stray \n\r and \"'),
+                r'EQUAL(key,"Extra ( and ), escaped backslash \\ stray \n\r and \"")'),
+        ]
+        for q, strrepr in tests:
+            tree = lexer.scan(strrepr)
+            self.assertEquals(tree, q)
+            self.assertEquals(q.asString(), strrepr)
+            self.assertEquals(tree.asString(), strrepr)
+
+        # One-way tests - extra quotes that get stripped out etc
+        tests = [
+            (collections.EqualOperator('key', 'port'), 'EQUAL(key,"port")'),
+        ]
+        for q, strrepr in tests:
+            tree = lexer.scan(strrepr)
+            self.assertEquals(tree, q)
+
+        # Errors
+        tests = [
+            ('EQUAL(key,"port)', 'Closing quote not found'),
+            ('abc', 'Unable to parse abc'),
+            ('FOO(key,"port)', 'Unknown operator FOO'),
+            ('EQUAL(key,port)junk', "Garbage found at the end of the expression: 'junk'"),
+            ('EQUAL(key,port', 'Unable to parse EQUAL(key,port'),
+        ]
+        InvalidData = collections.errors.InvalidData
+        for strrepr, err in tests:
+            e = self.assertRaises(InvalidData, lexer.scan, strrepr)
+            self.assertEquals(e.msg, err)
 
     def testFilterBy(self):
         systems = self.xobjResponse(

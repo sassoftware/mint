@@ -230,6 +230,24 @@ class XMLTestCase(TestCase, testcase.MockMixIn):
                 diff += "\nNode diff: %s" % (nd, )
             self.fail(diff)
 
+    def assertRaises(self, excClass, callableObj=None, *args, **kwargs):
+        # Override so that the exception is returned. But also try to pass
+        # through the context manager feature added in Python 2.7
+        if callableObj is None:
+            return super(XMLTestCase, self)(excClass, callableObj,
+                    *args, **kwargs)
+        try:
+            callableObj(*args, **kwargs)
+        except excClass, err:
+            return err
+        else:
+            try:
+                exc_name = excClass.__name__
+            except AttributeError:
+                exc_name = str(excClass)
+            raise self.failureException("%s not raised" % exc_name)
+    failUnlessRaises = assertRaises
+
     def getProject(self, shortName):
         return projmodels.Project.objects.get(short_name=shortName)
 

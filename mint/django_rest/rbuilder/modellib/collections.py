@@ -5,6 +5,7 @@
 # All rights reserved.
 #
 
+import re
 import sys
 
 from django.db import models
@@ -39,12 +40,36 @@ class Operator(object):
     description = None
 
     def __init__(self, *operands):
-        self.operands = operands
+        self.operands = list(operands)
+
+    def addOperand(self, operand):
+        self.operands.append(operand)
 
     def asString(self):
         return "%s(%s)" % (self.filterTerm,
-            ','.join((hasattr(x, 'asString') and x.asString() or x)
+            ','.join((hasattr(x, 'asString') and x.asString() or self._quote(x))
                 for x in self.operands))
+
+    @classmethod
+    def _quote(cls, s):
+        if '"' in s:
+            return '"%s"' % s
+        return s
+
+    def __eq__(self, other):
+        if not isinstance(other, self.__class__):
+            return False
+        if not isinstance(self, other.__class__):
+            return False
+        if len(self.operands) != len(other.operands):
+            return False
+        for ssub, osub in zip(self.operands, other.operands):
+            if ssub != osub:
+                return False
+        return True
+
+    def __ne__(self, other):
+        return not (self == other)
 
 class BooleanOperator(Operator):
     pass
@@ -119,6 +144,108 @@ class OrOperator(Operator):
 
 def operatorFactory(operator):
     return operatorMap[operator]
+
+class Lexer(object):
+    """
+    Class used for parsing a query tree.
+    The general syntax is, in BNF-like syntax:
+
+    optree ::== OPERATOR(operand[,operand*])
+    OPERATOR ::== (word)
+    operand ::== string | quotedstring | optree
+    string ::== (pretty obvious)
+    quotedstring :== " | string | "
+
+    Strings MUST be quoted if they contain a quote (which must be escaped with
+    a backslash), paranthesis or commas. Simple words do not have to be quoted,
+    as they do not break the parser. Backslashes have to be doubled up within
+    quotes.
+
+    Example of operands that evaluate to strings::
+        simple word
+        "quoted words"
+        "an embedded \"quote\" and an escaped \\ (backslash)"
+    """
+    _doubleBackslash = r'\\\\'
+    _convertedDoubleBackslash = u'\u0560'
+    _escaped = re.compile(_doubleBackslash)
+    _unescaped = re.compile(_convertedDoubleBackslash)
+    # .*? means non-greedy expansion, to avoid skipping over separators
+    _startSep = re.compile(r'^(?P<head>.*?)(?P<sep>(\(|\)|,|(?<!\\)"))(?P<tail>.*)$')
+    _endQuote = re.compile(r'^(?P<head>.*?)(?P<sep>(?<!\\)")(?P<tail>.*)$')
+
+    def __init__(self):
+        pass
+
+    def scan(self, s):
+        return self._split(s)
+
+    @classmethod
+    def _split(cls, code):
+        # The stack contains only tree nodes. Literal nodes are added as
+        # operands directly to the last tree node in the stack.
+        stack = []
+        # First pass: we replace all double-backslashes with a
+        # non-ascii unicode char, to simplify the regular expressions
+        # _unescape will then revert this operation
+        escCode = cls._escaped.sub(cls._convertedDoubleBackslash, code)
+        # There are only 2 states to worry about.
+        # We look for a separator that is either ( , ) or " (unescaped,
+        # hence the negative look-ahead in the regex)
+        # If an (unescaped) quote is found, we need to find its matching
+        # (unescaped) quote, which is the sep == '"' case.
+
+        while escCode:
+            m = cls._startSep.match(escCode)
+            if m is None:
+                raise errors.InvalidData(msg="Unable to parse %s" % code)
+            g = m.groupdict()
+            head, sep, tail = g['head'], g['sep'], g['tail']
+            escCode = tail
+            if sep == '(':
+                # New operator found.
+                op = cls._unescape(head)
+                opFactory = operatorMap.get(op, None)
+                if opFactory is None:
+                    raise errors.InvalidData(msg="Unknown operator %s" % op)
+                tree = opFactory()
+                if stack:
+                    # Add the tree node to the parent (using the stack)
+                    cls._addOperand(stack, tree)
+                # ... and we push it onto the stack
+                stack.append(tree)
+                continue
+            if sep == '"':
+                # Ignore everything but a close quote
+                m = cls._endQuote.match(escCode)
+                if m:
+                    g = m.groupdict()
+                    head, sep, tail = g['head'], g['sep'], g['tail']
+                    escCode = tail
+                    cls._addOperand(stack, cls._unescape(head))
+                    continue
+                raise errors.InvalidData(msg="Closing quote not found")
+            if head:
+                cls._addOperand(stack, cls._unescape(head))
+            if sep == ',':
+                continue
+            assert sep == ')'
+            top = stack.pop()
+            if not stack:
+                if escCode != '':
+                    raise errors.InvalidData(msg="Garbage found at the end of the expression: '%s'" % escCode)
+                return top
+
+    @classmethod
+    def _addOperand(cls, stack, child):
+        top = stack[-1]
+        assert isinstance(top, Operator)
+        top.addOperand(child)
+
+    @classmethod
+    def _unescape(cls, s):
+        return cls._unescaped.sub(cls._doubleBackslash, s).encode('ascii')
+
 
 def filterDjangoQuerySet(djangoQuerySet, field, operator, value, 
         collection=None, queryset=None):
