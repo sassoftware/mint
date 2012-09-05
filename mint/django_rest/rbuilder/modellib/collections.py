@@ -7,6 +7,7 @@
 
 import re
 import sys
+import urllib
 
 from django.db import models
 from django.db.models import Q
@@ -165,6 +166,9 @@ class Lexer(object):
         simple word
         "quoted words"
         "an embedded \"quote\" and an escaped \\ (backslash)"
+
+    Note that semicolons will have to be URL-escaped before the query is passed
+    in the URL.
     """
     _doubleBackslash = r'\\\\'
     _convertedDoubleBackslash = u'\u0560'
@@ -173,9 +177,6 @@ class Lexer(object):
     # .*? means non-greedy expansion, to avoid skipping over separators
     _startSep = re.compile(r'^(?P<head>.*?)(?P<sep>(\(|\)|,|(?<!\\)"))(?P<tail>.*)$')
     _endQuote = re.compile(r'^(?P<head>.*?)(?P<sep>(?<!\\)")(?P<tail>.*)$')
-
-    def __init__(self):
-        pass
 
     def scan(self, s):
         return self._split(s)
@@ -288,19 +289,20 @@ def _filterOperator(model, node):
     filters = _filterTerm(node)
     return model.filter(**filters)
 
-def filterTree(model, tree):
+def filterTree(djangoQuerySet, tree):
     ''' new style advanced filtering '''
 
-    model = getattr(model, 'objects', model)
+    model = getattr(djangoQuerySet, 'model', None)
+    if model is None:
+        raise Exception("filtering is not supported on non-database collections")
+
     if isinstance(tree, AndOperator):
         if not _isAllLeaves(tree.operands):
-            return _filterTreeAnd(model, tree.operands)
-        else:
-            return _filterTreeAndFlat(model, tree.operands)
+            return _filterTreeAnd(djangoQuerySet, tree.operands)
+        return _filterTreeAndFlat(djangoQuerySet, tree.operands)
     elif isinstance(tree, OrOperator):
-        return _filterTreeOr(model, tree.operands)
-    else:
-        return _filterOperator(model, tree)
+        return _filterTreeOr(djangoQuerySet, tree.operands)
+    return _filterOperator(djangoQuerySet, tree)
 
 
 def filterDjangoQuerySet(djangoQuerySet, field, operator, value, 
@@ -472,7 +474,7 @@ class Collection(XObjIdModel):
             if self.order_by:
                 url += ';order_by=%s' % self.order_by
             if self.filter_by:
-                url += ';filter_by=%s' % self.filter_by
+                url += ';filter_by=%s' % urllib.quote(self.filter_by)
         return url
 
     def _sortByField(key):
@@ -519,7 +521,7 @@ class Collection(XObjIdModel):
 
     def filterBy(self, request, modelList):
         filterBy = request.GET.get('filter_by')
-        if filterBy:
+        if filterBy and filterBy.startswith('['):
             self.filter_by = filterBy
             for filt in filterBy.split(']'):
                 if not (filt.startswith('[') or filt.startswith(',[')):
@@ -527,6 +529,11 @@ class Collection(XObjIdModel):
                 filtString = filt.strip(',').strip('[').strip(']')
                 field, oper, value = filtString.split(',', 2)
                 modelList = filterDjangoQuerySet(modelList, field, oper, value, collection=self)
+        elif filterBy:
+            lexer = Lexer()
+            qt = lexer.scan(filterBy)
+            self.filter_by = qt.asString()
+            modelList = filterTree(modelList, qt)
 
         return modelList
 

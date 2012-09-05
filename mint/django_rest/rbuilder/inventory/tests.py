@@ -4465,7 +4465,7 @@ class CollectionTest(XMLTestCase):
         self.assertEquals(q.asString(), test1)
 
         # test the queryset/SQL builder engine
-        djQs =  collections.filterTree(models.System, q)
+        djQs = collections.filterTree(models.System.objects.all(), q)
         #print djQs.query
 
         lexer = collections.Lexer()
@@ -4540,6 +4540,12 @@ class CollectionTest(XMLTestCase):
             'http://testserver/api/v1/query_sets/5/all;start_index=10;limit=10;filter_by=[name,NOT_LIKE,3],[description,NOT_LIKE,Update]')
         self.assertEquals(systems.filter_by,
             '[name,NOT_LIKE,3],[description,NOT_LIKE,Update]')
+
+    def testFilterBy2(self):
+        systems = self.xobjResponse(
+            '/api/v1/inventory/systems;filter_by=LIKE(name,3)')
+        self.assertEquals([x.name.strip('System name ') for x in systems.system],
+            [u'3', u'13', u'23', u'30', u'31', u'32', u'33', u'34', u'35', u'36'])
 
     def testOrderAndFilterBy(self):
         systems = self.xobjResponse(
