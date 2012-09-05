@@ -829,7 +829,8 @@ class SystemManager(BaseManager):
         """
         for key, val in accessors.items():
             if key == 'networks':
-                model.networks.all().delete()
+                model.updateNetworks(val)
+                continue
             if key == "tags":
                 model.tags.all().delete()
             for v in val:
