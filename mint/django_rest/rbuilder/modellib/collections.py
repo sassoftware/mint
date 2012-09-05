@@ -247,7 +247,10 @@ class Lexer(object):
     def _unescape(cls, s):
         return cls._unescaped.sub(cls._doubleBackslash, s).encode('ascii')
 
+# === BEGIN ADVANCED SEARCH ===
+
 def _filterTerm(node):
+    ''' given a filter instance (node) produce a hash that Django understands '''
     # TODO: handle NOT by teaching classes to provide the proper operands
     (field, value) = node.operands
     django_operator = "%s__%s" % (field.replace(".","__"), node.operator) 
@@ -256,12 +259,14 @@ def _filterTerm(node):
     return filt
 
 def _isAllLeaves(operands):
+    ''' are none of the operands complex?  No (ANDs or ORs)? '''
     for x in operands:
        if isinstance(x, AndOperator) or isinstance(x, OrOperator):
           return False
     return True
 
 def _filterTreeAnd(model, operands):
+    ''' Compute the results of a tree with AND as the root node '''
     and_result = None
     for (i,x) in enumerate(operands):
         if (i==0):
@@ -271,23 +276,66 @@ def _filterTreeAnd(model, operands):
     return and_result
 
 def _filterTreeOr(model, operands):
-    or_result = None
-    for (i,x) in enumerate(operands):
-        if (i==0):
-            or_result = filterTree(model, x)
+    ''' Compute the results of a tree with OR as the root node '''
+    def first(value, this):
+        value = filterTree(model, this)
+        return value
+    def later(value, this):
+        value = value | filterTree(model, this)
+        return value
+    return _reduceFirst(operands, first, later)
+
+def _filterHasAnyNegatives(terms):
+    ''' 
+    Django negations must be treated specially in and clauses to preserve the behavior where
+    two clauses in the same AND are implied to be related to the same object.  This detects that. 
+    '''
+    for x in terms:
+        if x.filterTerm.startswith('NOT_'):
+            return True
+    return False
+
+def _reduceFirst(terms, first, later):
+    ''' like python's reduce, but with special handling for the first item '''
+    res = None
+    if type(terms) != list:
+        terms = [ terms ] 
+    for (i, x) in enumerate(terms):
+        if i == 0:
+            res = first(res, x)
         else:
-            or_result = or_result | filterTree(model, x)
-    return or_result
+            res = later(res, x)
+    return res
 
 def _filterTreeAndFlat(model, terms):
+    ''' 
+    Leaf-node and terms are handled differently than top-level and terms.  To ensure
+    ands are logical when talking about the same resource, if no resources contain AND operations
+    generate only one filter-clause.  This can't be done if negations are included without turning
+    all negations into positives, which is currently not done.
+    '''
+
     filters = {}
-    for x in terms:
-        filters.update(_filterTerm(x))
-    return model.filter(**filters)
+    if not _filterHasAnyNegatives(terms):
+        for x in terms:
+            filters.update(_filterTerm(x))
+        return model.filter(**filters)
+    else:
+        def first(value, this):
+            value = _filterOperator(model, this)
+            return value
+        def later(value, this):
+            value = value & _filterOperator(model, this)
+            return value
+        return _reduceFirst(terms, first, later)
 
 def _filterOperator(model, node):
+    ''' given a filter term, generate a filter clause suitable for Django usage ''' 
     filters = _filterTerm(node)
-    return model.filter(**filters)
+    if not node.filterTerm.startswith("NOT_"):
+        return model.filter(**filters)
+    else:
+        return model.filter(~Q(**filters))
 
 def filterTree(djangoQuerySet, tree):
     ''' new style advanced filtering '''
@@ -304,6 +352,7 @@ def filterTree(djangoQuerySet, tree):
         return _filterTreeOr(djangoQuerySet, tree.operands)
     return _filterOperator(djangoQuerySet, tree)
 
+# === END ADVANCED SEARCH ===
 
 def filterDjangoQuerySet(djangoQuerySet, field, operator, value, 
         collection=None, queryset=None):
