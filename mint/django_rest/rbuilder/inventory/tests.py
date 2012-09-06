@@ -118,11 +118,9 @@ class SurveyTests(XMLTestCase):
         # self.assertXMLEquals(response.content, testsxml.survey_output_xml, ignoreNodes=['created_date','install_date','modified_date'])
 
         url = "inventory/systems/%s/surveys" % survey.system.pk
-        response = self._get(url,
-            username='admin', password='password')
+        response = self._get(url, username='admin', password='password')
         self.assertEqual(response.status_code, 200)
-        self.assertXMLEquals(response.content,
-                             testsxml.surveys_xml % {'uuid': survey.uuid})
+        self.assertXMLEquals(response.content, testsxml.surveys_xml % {'uuid': survey.uuid})
 
     def test_survey_serialization_windows(self):
 
@@ -352,6 +350,14 @@ install needle
             data = testsxml2.windows_upload_survey_xml2,
             username='admin', password='password')
         self.assertEqual(response.status_code, 200)
+        
+        # BOOKMARK
+        # test complex query against surveys
+        search = '/api/v1/inventory/systems;filter_by=EQUAL(latest_survey.windows_packages.windows_package_info.publisher,konami)'
+        response = self._get(search, username='admin', password='password')
+        print response.content
+        self.assertEqual(response.status_code, 200)
+       
 
 
         url = "inventory/surveys/%s/diffs/%s" % ('123456789', '987654321')
@@ -4461,17 +4467,34 @@ class CollectionTest(XMLTestCase):
                    collections.NotLikeOperator('latest_survey.rpm_packages.rpm_package_info.name', 'e'),
                )
         )
-        test1 = r'AND(AND(EQUAL(latest_survey.survey_config.type,0),EQUAL(latest_survey.survey_config.value,8080),LIKE(latest_survey.survey_config.key,/port)),OR(LIKE(latest_survey.rpm_packages.rpm_package_info.name,a),NOT_LIKE(latest_survey.rpm_packages.rpm_package_info.name,e)))'
+
+        # shorter form!
+        q2 = collections.AndOperator(
+               collections.ContainsOperator('latest_survey.survey_config', collections.AndOperator(
+                   collections.EqualOperator('type', '0'),
+                   collections.EqualOperator('value', '8080'),
+                   collections.LikeOperator('key', '/port'),
+               )),
+               collections.ContainsOperator('latest_survey.rpm_packages.rpm_package_info', collections.OrOperator(
+                   collections.LikeOperator('name', 'a'),
+                   collections.NotLikeOperator('name', 'e'),
+               ))
+        )
+
+        test1 = 'AND(AND(EQUAL(latest_survey.survey_config.type,0),EQUAL(latest_survey.survey_config.value,8080),LIKE(latest_survey.survey_config.key,/port)),OR(LIKE(latest_survey.rpm_packages.rpm_package_info.name,a),NOT_LIKE(latest_survey.rpm_packages.rpm_package_info.name,e)))'
+        test2 = 'AND(CONTAINS(latest_survey.survey_config,AND(EQUAL(type,0),EQUAL(value,8080),LIKE(key,/port))),CONTAINS(latest_survey.rpm_packages.rpm_package_info,OR(LIKE(name,a),NOT_LIKE(name,e))))'
         self.assertEquals(q.asString(), test1)
+        self.assertEquals(q2.asString(), test2)
 
         # test the queryset/SQL builder engine
-        djQs = collections.filterTree(models.System.objects.all(), q)
-        #print djQs.query
+        djQs = collections.filterTree(models.System.objects.all(), q).query
+        djQs2 = collections.filterTree(models.System.objects.all(), q2).query
+        self.assertEquals(str(djQs),str(djQs2))
 
+        # Lexer...
         lexer = collections.Lexer()
         tree = lexer.scan(test1)
         self.assertEquals(tree.asString(), test1)
-
         self.assertEquals(tree, q)
 
         # Simpler tests

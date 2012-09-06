@@ -249,11 +249,12 @@ class Lexer(object):
 
 # === BEGIN ADVANCED SEARCH ===
 
-def _filterTerm(node):
+def _filterTerm(node, scope):
     ''' given a filter instance (node) produce a hash that Django understands '''
     # TODO: handle NOT by teaching classes to provide the proper operands
     (field, value) = node.operands
-    django_operator = "%s__%s" % (field.replace(".","__"), node.operator) 
+    django_operator = "%s%s__%s" % (scope, field, node.operator) 
+    django_operator = django_operator.replace(".","__")
     filt = {}
     filt[django_operator] = value
     return filt
@@ -261,27 +262,27 @@ def _filterTerm(node):
 def _isAllLeaves(operands):
     ''' are none of the operands complex?  No (ANDs or ORs)? '''
     for x in operands:
-       if isinstance(x, AndOperator) or isinstance(x, OrOperator):
+       if isinstance(x, AndOperator) or isinstance(x, OrOperator) or isinstance(x, ContainsOperator):
           return False
     return True
 
-def _filterTreeAnd(model, operands):
+def _filterTreeAnd(model, operands, scope):
     ''' Compute the results of a tree with AND as the root node '''
     and_result = None
     for (i,x) in enumerate(operands):
         if (i==0):
-            and_result = filterTree(model, x)
+            and_result = filterTree(model, x, scope)
         else:
-            and_result = and_result & filterTree(model, x)
+            and_result = and_result & filterTree(model, x, scope)
     return and_result
 
-def _filterTreeOr(model, operands):
+def _filterTreeOr(model, operands, scope):
     ''' Compute the results of a tree with OR as the root node '''
     def first(value, this):
-        value = filterTree(model, this)
+        value = filterTree(model, this, scope)
         return value
     def later(value, this):
-        value = value | filterTree(model, this)
+        value = value | filterTree(model, this, scope)
         return value
     return _reduceFirst(operands, first, later)
 
@@ -307,7 +308,7 @@ def _reduceFirst(terms, first, later):
             res = later(res, x)
     return res
 
-def _filterTreeAndFlat(model, terms):
+def _filterTreeAndFlat(model, terms, scope):
     ''' 
     Leaf-node and terms are handled differently than top-level and terms.  To ensure
     ands are logical when talking about the same resource, if no resources contain AND operations
@@ -318,39 +319,46 @@ def _filterTreeAndFlat(model, terms):
     filters = {}
     if not _filterHasAnyNegatives(terms):
         for x in terms:
-            filters.update(_filterTerm(x))
+            filters.update(_filterTerm(x,scope))
         return model.filter(**filters)
     else:
         def first(value, this):
-            value = _filterOperator(model, this)
+            value = _filterOperator(model, this, scope)
             return value
         def later(value, this):
-            value = value & _filterOperator(model, this)
+            value = value & _filterOperator(model, this, scope)
             return value
         return _reduceFirst(terms, first, later)
 
-def _filterOperator(model, node):
+def _filterOperator(model, node, scope):
     ''' given a filter term, generate a filter clause suitable for Django usage ''' 
-    filters = _filterTerm(node)
+    filters = _filterTerm(node, scope)
     if not node.filterTerm.startswith("NOT_"):
         return model.filter(**filters)
     else:
         return model.filter(~Q(**filters))
 
-def filterTree(djangoQuerySet, tree):
+def filterTree(djangoQuerySet, tree, scope=''):
     ''' new style advanced filtering '''
-
+    
+    if not isinstance(tree, Operator):
+        raise Exception("expecting an operator")
     model = getattr(djangoQuerySet, 'model', None)
     if model is None:
         raise Exception("filtering is not supported on non-database collections")
 
-    if isinstance(tree, AndOperator):
+    if isinstance(tree, ContainsOperator):
+        if len(tree.operands) != 2 or not isinstance(tree.operands[0], basestring):
+            raise Exception("invalid usage of Contains() operator") 
+        scope = scope + tree.operands[0] + "__"
+        return filterTree(djangoQuerySet, tree.operands[1], scope)    
+    elif isinstance(tree, AndOperator):
         if not _isAllLeaves(tree.operands):
-            return _filterTreeAnd(djangoQuerySet, tree.operands)
-        return _filterTreeAndFlat(djangoQuerySet, tree.operands)
+            return _filterTreeAnd(djangoQuerySet, tree.operands, scope)
+        return _filterTreeAndFlat(djangoQuerySet, tree.operands, scope)
     elif isinstance(tree, OrOperator):
-        return _filterTreeOr(djangoQuerySet, tree.operands)
-    return _filterOperator(djangoQuerySet, tree)
+        return _filterTreeOr(djangoQuerySet, tree.operands, scope)
+    return _filterOperator(djangoQuerySet, tree, scope)
 
 # === END ADVANCED SEARCH ===
 
