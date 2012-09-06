@@ -318,6 +318,10 @@ class WbsGenerator(ImageGenerator):
             # Uniquify MSI filenames to avoid collisions between same-named
             # files from different packages. msiData.fileName is changed here
             # so that servicing.xml references the correct file.
+
+            # Skip packages and groups.
+            if not msiData.fileName:
+                continue
             if msiData.isRtis():
                 msiData.fileName = 'rPathTools.msi'
             else:

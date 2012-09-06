@@ -45,6 +45,7 @@ class InstallJob(object):
                 checkPathConflicts=False)
         jobList = [ x for x in itertools.chain(*job.jobs) ]
         orderedTups = [ (x[0], x[2][0], x[2][1]) for x in jobList ]
+        names = set(x[0] for x in orderedTups)
 
         # Fetch a changeset with files but no contents so that individual files
         # can be selected.
@@ -60,6 +61,13 @@ class InstallJob(object):
                 fileData = self._getFileData(changeSet, trvCs, fileTup)
                 if fileData is not None:
                     fileMap.setdefault(type(fileData), []).append(fileData)
+            else:
+                troveTup = trvCs.getNewNameVersionFlavor()
+                if ('%s:msi' % troveTup[0] in names or
+                    troveTup[0].startswith('group-')):
+
+                    fileMap.setdefault(MSIData, []).append(
+                        PackageData(troveTup))
 
         for dataType, fileList in fileMap.iteritems():
             if dataType is MSIData:
@@ -211,6 +219,35 @@ class MSIData(RegularFileData):
                 E.previousManifestEntry(''),
                 E.critical(str(self.isCritical()).lower()),
                 )
+
+    def isCritical(self):
+        return self.troveTuple[0] in CRITICAL_PACKAGES
+
+    def isRtis(self):
+        return self.troveTuple[0] in RTIS_PACKAGES
+
+
+class PackageData(RegularFileData):
+    def __init__(self, troveTuple):
+        RegularFileData.__init__(self, None, None, 0)
+        self.troveTuple = troveTuple
+        self.sha1 = None
+        self.fileName = None
+
+    def getPackageXML(self, seqNum):
+        E = builder.ElementMaker()
+        manifest = '%s=%s[%s]' % (self.troveTuple[0],
+                self.troveTuple[1].freeze(), self.troveTuple[2])
+
+        return E.package(
+            E.type('package'),
+            E.sequence(str(seqNum)),
+            E.logFile('install.log'),
+            E.operation('install'),
+            E.manifestEntry(manifest),
+            E.previousManifestEntry(''),
+            E.critical(str(self.isCritical()).lower()),
+        )
 
     def isCritical(self):
         return self.troveTuple[0] in CRITICAL_PACKAGES
