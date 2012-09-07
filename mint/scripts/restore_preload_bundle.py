@@ -9,6 +9,7 @@ from mint.lib import scriptlibrary
 from mint.rest.db import database as restdb
 from mint.rest.errors import ProductNotFound
 from mint.scripts import createplatforms
+from mint.scripts import repository_sync
 
 log = logging.getLogger(__name__)
 
@@ -35,17 +36,14 @@ class Script(scriptlibrary.GenericScript):
         if tarm.name not in ('metadata', './metadata'):
             sys.exit("Invalid preload tarball: "
                     "first member must be named 'metadata'")
+        metadata = {}
         for line in tar.extractfile(tarm):
             key, value = line.rstrip().split(None, 1)
-            if key == 'serverName':
-                fqdn2 = value
-                break
-        else:
-            sys.exit("Invalid preload tarball: "
-                    "missing metadata field 'serverName'")
+            metadata[key] = value
         tar.close()
 
         # If the user provided a FQDN, make sure it matches
+        fqdn2 = metadata['serverName']
         if fqdn and fqdn != fqdn2:
             sys.exit("Preload FQDN %s does not match requested FQDN %s" %
                     (fqdn2, fqdn))
@@ -61,42 +59,84 @@ class Script(scriptlibrary.GenericScript):
 
         # Get a repository handle to restore to
         db = database.Database(self.cfg)
-        restDb = restdb.Database(self.cfg, db)
+        self.restDb = restdb.Database(self.cfg, db)
         try:
-            handle = restDb.reposShim.getRepositoryFromFQDN(fqdn)
+            handle = self.restDb.reposShim.getRepositoryFromFQDN(fqdn)
         except ProductNotFound:
             # Look for a platform with that FQDN and enable it
-            platforms = {}
-            for platform in restDb.platformMgr.platforms.iterPlatforms(
-                    withRepositoryLookups=False):
-                if platform.repositoryHostname != fqdn:
-                    continue
-                platforms[platform.label] = platform
-            if not platforms:
+            handle = self._enablePlatform(fqdn)
+            if not handle:
+                handle = self._createProject(metadata)
+            if not handle:
                 sys.exit("No project or platform with FQDN %s was found" %
                         (fqdn,))
-            # Prefer higher-sorting platforms
-            platform = sorted(platforms.items())[-1][1]
-            platform.enabled = True
-            platform.mode = 'manual'
-            # This will create an empty repository DB for the platform
-            log.info("Enabling platform %s (%s)", platform.platformName,
-                    platform.platformId)
-            restDb.platformMgr.updatePlatform(platform.platformId, platform)
-            handle = restDb.reposShim.getRepositoryFromFQDN(fqdn)
+        if not handle.hasDatabase:
+            sys.exit("Target project does not have a database! The target "
+                    "must be local project or mirror-mode external project")
+        self.restDb.commit()
 
         # Do the restore, create helper roles, and nuke caches
         handle.restoreBundle(dump, replaceExisting=True)
 
-        restDb.productMgr.reposMgr.populateUsers(handle)
-        restDb.platformMgr.platformCache.clear()
+        self.restDb.productMgr.reposMgr.populateUsers(handle)
+        self.restDb.platformMgr.platformCache.clear()
 
         # Load platform sources from the platdef which is now available.
         cplatscript = createplatforms.Script()
-        cplatscript.restdb = restDb
+        cplatscript.restdb = self.restDb
         cplatscript.createPlatforms(fqdn)
 
-        restDb.close()
+        # Create branches and stages
+        sync = repository_sync.SyncTool(self.cfg, db)
+        sync.syncReposByFQDN(fqdn)
+
+        self.restDb.close()
+
+    def _enablePlatform(self, fqdn):
+        platforms = {}
+        for platform in self.restDb.platformMgr.platforms.iterPlatforms(
+                withRepositoryLookups=False):
+            if platform.repositoryHostname != fqdn:
+                continue
+            platforms[platform.label] = platform
+        if not platforms:
+            return None
+        # Prefer higher-sorting platforms
+        platform = sorted(platforms.items())[-1][1]
+        platform.enabled = True
+        platform.mode = 'manual'
+        # This will create an empty repository DB for the platform
+        log.info("Enabling platform %s (%s)", platform.platformName,
+                platform.platformId)
+        self.restDb.platformMgr.updatePlatform(platform.platformId, platform)
+        return self.restDb.reposShim.getRepositoryFromFQDN(fqdn)
+
+    def _createProject(self, metadata):
+        fqdn = metadata['serverName']
+        host, domain = fqdn.split('.', 1)
+        shortName = metadata.get('shortName')
+        longName = metadata.get('longName', shortName)
+        if not shortName:
+            return None
+        # Projects with attached platforms in 'manual' mode will not be
+        # mirrored. Projects with no platforms don't have any such mechanism to
+        # suppress mirroring, so create them as a local project instead.
+        log.info("Creating project %s (%s)", longName, shortName)
+        projectId = self.restDb.productMgr.createProduct(
+                name=longName,
+                description=longName,
+                hostname=host,
+                domainname=domain,
+                namespace=None,
+                projecturl='',
+                shortname=shortName,
+                prodtype='Appliance',
+                version=None,
+                commitEmail=None,
+                isPrivate=False,
+                )
+        return self.restDb.reposShim.getRepositoryFromProjectId(projectId)
 
 
-sys.exit(Script().run())
+if __name__ == '__main__':
+    sys.exit(Script().run())
