@@ -476,19 +476,19 @@ class SurveyDiffRender(object):
 
             all_diffs = []
             for item in added:
-                if not item[0].key.endswith('/value'):
+                if not item.key.endswith('/value'):
                     continue
-                left = [],
-                right = item[0].value.split('\n')
+                left = [ '' ]
+                right = item.value.split('\n')
                 diff = '\n'.join(list(difflib.unified_diff(left, right, lname, rname, ldate, rdate, DIFF_CONTEXT)))
-                all_diffs.append( [ item[0], diff ] )
+                all_diffs.append( [ item, diff ] )
             for item in removed:
-                if not item[0].key.endswith('/value'):
+                if not item.key.endswith('/value'):
                     continue
-                left = item[0].value.split('\n')
-                right = [],
+                left = item.value.split('\n')
+                right = [ '' ]
                 diff = '\n'.join(list(difflib.unified_diff(left, right, lname, rname, ldate, rdate, DIFF_CONTEXT)))
-                all_diffs.append( [ item[0], diff ] )
+                all_diffs.append( [ item, diff ] )
             for item in changed:
                 if not item[0].key.endswith('/value'):
                     continue

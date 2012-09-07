@@ -308,7 +308,7 @@ install needle
             data = testsxml.survey_input_xml_alt.replace('jkl', 'group-klm'),
             username='admin', password='password')
         self.assertEqual(response.status_code, 200)
-       
+ 
         # Top-level item should not have changed
         topLevelItemMgr = models.SystemDesiredTopLevelItem.objects
         self.assertEquals(sorted(x.trove_spec
