@@ -2576,6 +2576,7 @@ surveys_xml = """
     <overall_validation>False</overall_validation>
     <updates_pending>False</updates_pending>
     <has_errors>False</has_errors>
+    <system id="http://testserver/api/v1/inventory/systems/3"/>
   </survey>
 </surveys>
 """

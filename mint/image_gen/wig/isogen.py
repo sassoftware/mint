@@ -93,6 +93,10 @@ class IsoGenerator(genmod.ImageGenerator):
     def _downloadPackages(self, msis, updateDir):
         rtisPath = None
         for msiData in msis:
+            # Skip packages and groups.
+            if not msiData.fileName:
+                continue
+
             name = os.path.basename(msiData.fileTup.path)
 
             # Store MSI directly to the output directory.

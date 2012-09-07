@@ -198,14 +198,15 @@ class ReposManager(basemanager.BaseManager, reposdbmgr.RepomanMixin):
         
 
     def getRepositoryFromFQDN(self, fqdn):
+        projects = self.iterRepositories(repository_hostname=fqdn)
         try:
-            project = projectmodels.Project.objects.get(repository_hostname=fqdn)
-        except ObjectDoesNotExist:
-            raise resterrors.ProductNotFound
-        return self.getRepositoryForProject(project)
+            return projects.next()
+        except StopIteration:
+            raise resterrors.ProductNotFound(fqdn)
 
     def iterRepositories(self, **conditions):
-        for project in projectmodels.Project.objects.filter(**conditions):
+        for project in projectmodels.Project.objects.filter(**conditions
+                ).order_by('project_id'):
             yield self.getRepositoryForProject(project)
 
     @exposed
