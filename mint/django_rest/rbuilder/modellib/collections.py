@@ -5,7 +5,9 @@
 # All rights reserved.
 #
 
+import re
 import sys
+import urllib
 
 from django.db import models
 from django.db.models import Q
@@ -37,6 +39,38 @@ class Operator(object):
     filterTerm = None
     operator = None
     description = None
+
+    def __init__(self, *operands):
+        self.operands = list(operands)
+
+    def addOperand(self, operand):
+        self.operands.append(operand)
+
+    def asString(self):
+        return "%s(%s)" % (self.filterTerm,
+            ','.join((hasattr(x, 'asString') and x.asString() or self._quote(x))
+                for x in self.operands))
+
+    @classmethod
+    def _quote(cls, s):
+        if '"' in s:
+            return '"%s"' % s
+        return s
+
+    def __eq__(self, other):
+        if not isinstance(other, self.__class__):
+            return False
+        if not isinstance(self, other.__class__):
+            return False
+        if len(self.operands) != len(other.operands):
+            return False
+        for ssub, osub in zip(self.operands, other.operands):
+            if ssub != osub:
+                return False
+        return True
+
+    def __ne__(self, other):
+        return not (self == other)
 
 class BooleanOperator(Operator):
     pass
@@ -94,8 +128,239 @@ class NotLikeOperator(LikeOperator):
     operator = 'icontains'
     description = 'Not like'
 
+class ContainsOperator(Operator):
+    filterTerm = 'CONTAINS'
+    operator = None
+    description = "Contains"
+
+class AndOperator(Operator):
+    filterTerm = 'AND'
+    operator = None
+    description = "And"
+
+class OrOperator(Operator):
+    filterTerm = 'OR'
+    operator = None
+    description = "Or"
+
 def operatorFactory(operator):
     return operatorMap[operator]
+
+class Lexer(object):
+    """
+    Class used for parsing a query tree.
+    The general syntax is, in BNF-like syntax:
+
+    optree ::== OPERATOR(operand[,operand*])
+    OPERATOR ::== (word)
+    operand ::== string | quotedstring | optree
+    string ::== (pretty obvious)
+    quotedstring :== " | string | "
+
+    Strings MUST be quoted if they contain a quote (which must be escaped with
+    a backslash), paranthesis or commas. Simple words do not have to be quoted,
+    as they do not break the parser. Backslashes have to be doubled up within
+    quotes.
+
+    Example of operands that evaluate to strings::
+        simple word
+        "quoted words"
+        "an embedded \"quote\" and an escaped \\ (backslash)"
+
+    Note that semicolons will have to be URL-escaped before the query is passed
+    in the URL.
+    """
+    _doubleBackslash = r'\\\\'
+    _convertedDoubleBackslash = u'\u0560'
+    _escaped = re.compile(_doubleBackslash)
+    _unescaped = re.compile(_convertedDoubleBackslash)
+    # .*? means non-greedy expansion, to avoid skipping over separators
+    _startSep = re.compile(r'^(?P<head>.*?)(?P<sep>(\(|\)|,|(?<!\\)"))(?P<tail>.*)$')
+    _endQuote = re.compile(r'^(?P<head>.*?)(?P<sep>(?<!\\)")(?P<tail>.*)$')
+
+    def scan(self, s):
+        return self._split(s)
+
+    @classmethod
+    def _split(cls, code):
+        # The stack contains only tree nodes. Literal nodes are added as
+        # operands directly to the last tree node in the stack.
+        stack = []
+        # First pass: we replace all double-backslashes with a
+        # non-ascii unicode char, to simplify the regular expressions
+        # _unescape will then revert this operation
+        escCode = cls._escaped.sub(cls._convertedDoubleBackslash, code)
+        # There are only 2 states to worry about.
+        # We look for a separator that is either ( , ) or " (unescaped,
+        # hence the negative look-ahead in the regex)
+        # If an (unescaped) quote is found, we need to find its matching
+        # (unescaped) quote, which is the sep == '"' case.
+
+        while escCode:
+            m = cls._startSep.match(escCode)
+            if m is None:
+                raise errors.InvalidData(msg="Unable to parse %s" % code)
+            g = m.groupdict()
+            head, sep, tail = g['head'], g['sep'], g['tail']
+            escCode = tail
+            if sep == '(':
+                # New operator found.
+                op = cls._unescape(head)
+                opFactory = operatorMap.get(op, None)
+                if opFactory is None:
+                    raise errors.InvalidData(msg="Unknown operator %s" % op)
+                tree = opFactory()
+                if stack:
+                    # Add the tree node to the parent (using the stack)
+                    cls._addOperand(stack, tree)
+                # ... and we push it onto the stack
+                stack.append(tree)
+                continue
+            if sep == '"':
+                # Ignore everything but a close quote
+                m = cls._endQuote.match(escCode)
+                if m:
+                    g = m.groupdict()
+                    head, sep, tail = g['head'], g['sep'], g['tail']
+                    escCode = tail
+                    cls._addOperand(stack, cls._unescape(head))
+                    continue
+                raise errors.InvalidData(msg="Closing quote not found")
+            if head:
+                cls._addOperand(stack, cls._unescape(head))
+            if sep == ',':
+                continue
+            assert sep == ')'
+            top = stack.pop()
+            if not stack:
+                if escCode != '':
+                    raise errors.InvalidData(msg="Garbage found at the end of the expression: '%s'" % escCode)
+                return top
+
+    @classmethod
+    def _addOperand(cls, stack, child):
+        top = stack[-1]
+        assert isinstance(top, Operator)
+        top.addOperand(child)
+
+    @classmethod
+    def _unescape(cls, s):
+        return cls._unescaped.sub(cls._doubleBackslash, s).encode('ascii')
+
+# === BEGIN ADVANCED SEARCH ===
+
+def _filterTerm(node, scope):
+    ''' given a filter instance (node) produce a hash that Django understands '''
+    # TODO: handle NOT by teaching classes to provide the proper operands
+    (field, value) = node.operands
+    django_operator = "%s%s__%s" % (scope, field, node.operator) 
+    django_operator = django_operator.replace(".","__")
+    filt = {}
+    filt[django_operator] = value
+    return filt
+
+def _isAllLeaves(operands):
+    ''' are none of the operands complex?  No (ANDs or ORs)? '''
+    for x in operands:
+       if isinstance(x, AndOperator) or isinstance(x, OrOperator) or isinstance(x, ContainsOperator):
+          return False
+    return True
+
+def _filterTreeAnd(model, operands, scope):
+    ''' Compute the results of a tree with AND as the root node '''
+    and_result = None
+    for (i,x) in enumerate(operands):
+        if (i==0):
+            and_result = filterTree(model, x, scope)
+        else:
+            and_result = and_result & filterTree(model, x, scope)
+    return and_result
+
+def _filterTreeOr(model, operands, scope):
+    ''' Compute the results of a tree with OR as the root node '''
+    def first(value, this):
+        value = filterTree(model, this, scope)
+        return value
+    def later(value, this):
+        value = value | filterTree(model, this, scope)
+        return value
+    return _reduceFirst(operands, first, later)
+
+def _filterHasAnyNegatives(terms):
+    ''' 
+    Django negations must be treated specially in and clauses to preserve the behavior where
+    two clauses in the same AND are implied to be related to the same object.  This detects that. 
+    '''
+    for x in terms:
+        if x.filterTerm.startswith('NOT_'):
+            return True
+    return False
+
+def _reduceFirst(terms, first, later):
+    ''' like python's reduce, but with special handling for the first item '''
+    res = None
+    if type(terms) != list:
+        terms = [ terms ] 
+    for (i, x) in enumerate(terms):
+        if i == 0:
+            res = first(res, x)
+        else:
+            res = later(res, x)
+    return res
+
+def _filterTreeAndFlat(model, terms, scope):
+    ''' 
+    Leaf-node and terms are handled differently than top-level and terms.  To ensure
+    ands are logical when talking about the same resource, if no resources contain AND operations
+    generate only one filter-clause.  This can't be done if negations are included without turning
+    all negations into positives, which is currently not done.
+    '''
+
+    filters = {}
+    if not _filterHasAnyNegatives(terms):
+        for x in terms:
+            filters.update(_filterTerm(x,scope))
+        return model.filter(**filters)
+    else:
+        def first(value, this):
+            value = _filterOperator(model, this, scope)
+            return value
+        def later(value, this):
+            value = value & _filterOperator(model, this, scope)
+            return value
+        return _reduceFirst(terms, first, later)
+
+def _filterOperator(model, node, scope):
+    ''' given a filter term, generate a filter clause suitable for Django usage ''' 
+    filters = _filterTerm(node, scope)
+    if not node.filterTerm.startswith("NOT_"):
+        return model.filter(**filters)
+    else:
+        return model.filter(~Q(**filters))
+
+def filterTree(djangoQuerySet, tree, scope=''):
+    ''' new style advanced filtering '''
+    
+    if not isinstance(tree, Operator):
+        raise Exception("expecting an operator")
+    model = getattr(djangoQuerySet, 'model', None)
+    if model is None:
+        raise Exception("filtering is not supported on non-database collections")
+
+    if isinstance(tree, ContainsOperator):
+        if len(tree.operands) != 2 or not isinstance(tree.operands[0], basestring):
+            raise Exception("invalid usage of Contains() operator") 
+        scope = scope + tree.operands[0] + "__"
+        return filterTree(djangoQuerySet, tree.operands[1], scope)    
+    elif isinstance(tree, AndOperator):
+        if not _isAllLeaves(tree.operands):
+            return _filterTreeAnd(djangoQuerySet, tree.operands, scope)
+        return _filterTreeAndFlat(djangoQuerySet, tree.operands, scope)
+    elif isinstance(tree, OrOperator):
+        return _filterTreeOr(djangoQuerySet, tree.operands, scope)
+    return _filterOperator(djangoQuerySet, tree, scope)
+
+# === END ADVANCED SEARCH ===
 
 def filterDjangoQuerySet(djangoQuerySet, field, operator, value, 
         collection=None, queryset=None):
@@ -266,7 +531,7 @@ class Collection(XObjIdModel):
             if self.order_by:
                 url += ';order_by=%s' % self.order_by
             if self.filter_by:
-                url += ';filter_by=%s' % self.filter_by
+                url += ';filter_by=%s' % urllib.quote(self.filter_by)
         return url
 
     def _sortByField(key):
@@ -313,15 +578,19 @@ class Collection(XObjIdModel):
 
     def filterBy(self, request, modelList):
         filterBy = request.GET.get('filter_by')
-        if filterBy:
+        if filterBy and filterBy.startswith('['):
             self.filter_by = filterBy
             for filt in filterBy.split(']'):
                 if not (filt.startswith('[') or filt.startswith(',[')):
                         continue
                 filtString = filt.strip(',').strip('[').strip(']')
                 field, oper, value = filtString.split(',', 2)
-                modelList = filterDjangoQuerySet(modelList,
-                    field, oper, value, collection=self)
+                modelList = filterDjangoQuerySet(modelList, field, oper, value, collection=self)
+        elif filterBy:
+            lexer = Lexer()
+            qt = lexer.scan(filterBy)
+            self.filter_by = qt.asString()
+            modelList = filterTree(modelList, qt)
 
         return modelList
 

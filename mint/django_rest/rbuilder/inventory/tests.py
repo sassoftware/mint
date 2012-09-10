@@ -118,11 +118,9 @@ class SurveyTests(XMLTestCase):
         # self.assertXMLEquals(response.content, testsxml.survey_output_xml, ignoreNodes=['created_date','install_date','modified_date'])
 
         url = "inventory/systems/%s/surveys" % survey.system.pk
-        response = self._get(url,
-            username='admin', password='password')
+        response = self._get(url, username='admin', password='password')
         self.assertEqual(response.status_code, 200)
-        self.assertXMLEquals(response.content,
-                             testsxml.surveys_xml % {'uuid': survey.uuid})
+        self.assertXMLEquals(response.content, testsxml.surveys_xml % {'uuid': survey.uuid})
 
     def test_survey_serialization_windows(self):
 
@@ -352,6 +350,14 @@ install needle
             data = testsxml2.windows_upload_survey_xml2,
             username='admin', password='password')
         self.assertEqual(response.status_code, 200)
+        
+        # BOOKMARK
+        # test complex query against surveys
+        search = '/api/v1/inventory/systems;filter_by=EQUAL(latest_survey.windows_packages.windows_package_info.publisher,konami)'
+        response = self._get(search, username='admin', password='password')
+        print response.content
+        self.assertEqual(response.status_code, 200)
+       
 
 
         url = "inventory/surveys/%s/diffs/%s" % ('123456789', '987654321')
@@ -4508,6 +4514,86 @@ class CollectionTest(XMLTestCase):
             'http://testserver/api/v1/query_sets/5/all;start_index=10;limit=10;order_by=-name')
         self.assertEquals(systems.order_by, '-name')
 
+    def testQueryTree(self):
+        from mint.django_rest.rbuilder.modellib import collections
+        q = collections.AndOperator(
+               # port=8080 for a given type of configurator
+               collections.AndOperator(
+                   collections.EqualOperator('latest_survey.survey_config.type', '0'),
+                   collections.EqualOperator('latest_survey.survey_config.value', '8080'),
+                   collections.LikeOperator('latest_survey.survey_config.key', '/port'),
+               ),
+               # name has substring either a or not e (super arbitrary) 
+               collections.OrOperator(
+                   collections.LikeOperator('latest_survey.rpm_packages.rpm_package_info.name', 'a'),
+                   collections.NotLikeOperator('latest_survey.rpm_packages.rpm_package_info.name', 'e'),
+               )
+        )
+
+        # shorter form!
+        q2 = collections.AndOperator(
+               collections.ContainsOperator('latest_survey.survey_config', collections.AndOperator(
+                   collections.EqualOperator('type', '0'),
+                   collections.EqualOperator('value', '8080'),
+                   collections.LikeOperator('key', '/port'),
+               )),
+               collections.ContainsOperator('latest_survey.rpm_packages.rpm_package_info', collections.OrOperator(
+                   collections.LikeOperator('name', 'a'),
+                   collections.NotLikeOperator('name', 'e'),
+               ))
+        )
+
+        test1 = 'AND(AND(EQUAL(latest_survey.survey_config.type,0),EQUAL(latest_survey.survey_config.value,8080),LIKE(latest_survey.survey_config.key,/port)),OR(LIKE(latest_survey.rpm_packages.rpm_package_info.name,a),NOT_LIKE(latest_survey.rpm_packages.rpm_package_info.name,e)))'
+        test2 = 'AND(CONTAINS(latest_survey.survey_config,AND(EQUAL(type,0),EQUAL(value,8080),LIKE(key,/port))),CONTAINS(latest_survey.rpm_packages.rpm_package_info,OR(LIKE(name,a),NOT_LIKE(name,e))))'
+        self.assertEquals(q.asString(), test1)
+        self.assertEquals(q2.asString(), test2)
+
+        # test the queryset/SQL builder engine
+        djQs = collections.filterTree(models.System.objects.all(), q).query
+        djQs2 = collections.filterTree(models.System.objects.all(), q2).query
+        self.assertEquals(str(djQs),str(djQs2))
+
+        # Lexer...
+        lexer = collections.Lexer()
+        tree = lexer.scan(test1)
+        self.assertEquals(tree.asString(), test1)
+        self.assertEquals(tree, q)
+
+        # Simpler tests
+        tests = [
+            (collections.EqualOperator('key', 'port'), 'EQUAL(key,port)'),
+            (collections.EqualOperator('key', r'a \"quoted\" value'),
+                r'EQUAL(key,"a \"quoted\" value")'),
+            (collections.EqualOperator('key', r'Extra ( and ), escaped backslash \\ stray \n\r and \"'),
+                r'EQUAL(key,"Extra ( and ), escaped backslash \\ stray \n\r and \"")'),
+        ]
+        for q, strrepr in tests:
+            tree = lexer.scan(strrepr)
+            self.assertEquals(tree, q)
+            self.assertEquals(q.asString(), strrepr)
+            self.assertEquals(tree.asString(), strrepr)
+
+        # One-way tests - extra quotes that get stripped out etc
+        tests = [
+            (collections.EqualOperator('key', 'port'), 'EQUAL(key,"port")'),
+        ]
+        for q, strrepr in tests:
+            tree = lexer.scan(strrepr)
+            self.assertEquals(tree, q)
+
+        # Errors
+        tests = [
+            ('EQUAL(key,"port)', 'Closing quote not found'),
+            ('abc', 'Unable to parse abc'),
+            ('FOO(key,"port)', 'Unknown operator FOO'),
+            ('EQUAL(key,port)junk', "Garbage found at the end of the expression: 'junk'"),
+            ('EQUAL(key,port', 'Unable to parse EQUAL(key,port'),
+        ]
+        InvalidData = collections.errors.InvalidData
+        for strrepr, err in tests:
+            e = self.assertRaises(InvalidData, lexer.scan, strrepr)
+            self.assertEquals(e.msg, err)
+
     def testFilterBy(self):
         systems = self.xobjResponse(
             '/api/v1/inventory/systems;filter_by=[name,LIKE,3]')
@@ -4539,6 +4625,12 @@ class CollectionTest(XMLTestCase):
             'http://testserver/api/v1/query_sets/5/all;start_index=10;limit=10;filter_by=[name,NOT_LIKE,3],[description,NOT_LIKE,Update]')
         self.assertEquals(systems.filter_by,
             '[name,NOT_LIKE,3],[description,NOT_LIKE,Update]')
+
+    def testFilterBy2(self):
+        systems = self.xobjResponse(
+            '/api/v1/inventory/systems;filter_by=LIKE(name,3)')
+        self.assertEquals([x.name.strip('System name ') for x in systems.system],
+            [u'3', u'13', u'23', u'30', u'31', u'32', u'33', u'34', u'35', u'36'])
 
     def testOrderAndFilterBy(self):
         systems = self.xobjResponse(
