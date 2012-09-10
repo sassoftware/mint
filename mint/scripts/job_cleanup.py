@@ -158,7 +158,7 @@ class Script(SingletonScript):
             newMessage = JOB_LOST
             newDetail = None
             if job:
-                if job.status.completed:
+                if not job.status.final:
                     # Still running
                     continue
                 elif job.status.failed:
