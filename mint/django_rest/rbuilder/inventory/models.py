@@ -612,7 +612,14 @@ class System(modellib.XObjIdModel):
             futureNetworks[key] = nw
         # Walk DB networks
         pinnedFound = False
-        for nw in self.networks.all():
+        # RCE-985: order networks by IP address, with nulls being last
+        # This makes sure we don't attempt to update the ip address and
+        # trip over the uniq constraint
+        # Unfortunately django doesn't know how to tell pgsql
+        # 'order by ip_address nulls last', the workaround is to
+        # fabricate a column that is sorted by first.
+        q = self.networks.extra(select=dict(null1="ip_address is null"))
+        for nw in q.order_by('null1', 'ip_address'):
             key = (nw.ip_address or nw.dns_name)
             if nw.pinned:
                 if not pinnedFound:
