@@ -596,6 +596,49 @@ class System(modellib.XObjIdModel):
             return ret[0]
         return None
 
+    def updateNetworks(self, networks):
+        # This function is called when loading a system object from xobj
+        # and merging it with an existing system. This only happens on a
+        # POST
+        valid = re.compile('^[a-zA-Z0-9:._-]+$')
+        futureNetworks = {}
+        for nw in networks:
+            key = (nw.ip_address or nw.dns_name)
+            if not key:
+                continue
+            if not valid.match(key):
+                raise errors.InvalidData(msg="invalid hostname/DNS name %s" %
+                    key)
+            futureNetworks[key] = nw
+        # Walk DB networks
+        pinnedFound = False
+        for nw in self.networks.all():
+            key = (nw.ip_address or nw.dns_name)
+            if nw.pinned:
+                if not pinnedFound:
+                    # This is the first pinned network in the db
+                    pinnedFound = True
+                    futureNetworks.pop(key, None)
+                    continue
+                # Second pinned network. Remove it
+                nw.delete()
+                # We may add it back as unpinned
+            fnw = futureNetworks.pop(key, None)
+            if fnw is None:
+                # This network should disappear
+                if nw.network_id is not None:
+                    nw.delete()
+                continue
+            nw.ip_address = fnw.ip_address
+            nw.dns_name = fnw.dns_name
+            nw.device_name = fnw.device_name
+            nw.save()
+        # Everything else has to be added
+        for nw in futureNetworks.values():
+            nw.system = self
+            nw.save()
+        self.network_address = self.__class__.extractNetworkAddress(self)
+
     def createNetworks(self):
         # * oldNetAddr is the state of the system in the db, before any
         #   fields from the xobj model were copied

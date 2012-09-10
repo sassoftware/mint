@@ -306,7 +306,7 @@ install needle
             data = testsxml.survey_input_xml_alt.replace('jkl', 'group-klm'),
             username='admin', password='password')
         self.assertEqual(response.status_code, 200)
-       
+ 
         # Top-level item should not have changed
         topLevelItemMgr = models.SystemDesiredTopLevelItem.objects
         self.assertEquals(sorted(x.trove_spec
@@ -1947,6 +1947,30 @@ class SystemsTestCase(XMLTestCase):
             [ ('blah1', '1.2.3.4', False, True, ),
               ('blah2', '10.2.2.2', True, False, ) ])
 
+    def testPostNewSystemNetworkPinned(self):
+        xmlTempl = """\
+<system>
+  <name>%(name)s</name>
+  <network_address>
+    <address>%(ipAddr)s</address>
+    <pinned>true</pinned>
+  </network_address>
+  <managing_zone href="http://testserver/api/v1/inventory/zones/%(zoneId)s"/>
+</system>"""
+        params = dict(name='test1', zoneId=self.localZone.zone_id,
+            ipAddr='1.1.1.1')
+        response = self._post('inventory/systems/',
+            data=xmlTempl % params, username='admin', password='password')
+        self.assertEquals(response.status_code, 200)
+        doc = xobj.parse(response.content)
+        systemId = doc.system.system_id
+        system = models.System.objects.get(system_id=systemId)
+        self.assertEquals(
+            [ (x.dns_name, x.ip_address, x.active, x.pinned)
+                for x in system.networks.order_by('dns_name') ],
+            [ (params['ipAddr'], None, None, True), ])
+
+
     def testPostSystemNetworkPreservePinned(self):
         """
         Pinned network_address
@@ -2003,11 +2027,11 @@ class SystemsTestCase(XMLTestCase):
         system = models.System.objects.get(pk=system.pk)
         self.failUnlessEqual(
             [ (x.dns_name, x.ip_address, x.active, x.pinned)
-                for x in system.networks.all() ],
+                for x in system.networks.order_by('dns_name') ],
             [
-                ('blah2.example.com', '10.2.2.2', True, False, ),
                 ('10.1.1.1', '10.1.1.1', False, None, ),
-                ('blah1', None, None, True, ),
+                ('blah1', None, False, True, ),
+                ('blah2.example.com', '10.2.2.2', True, False, ),
             ])
         xml = system.to_xml()
         x = xobj.parse(xml)
@@ -2023,6 +2047,44 @@ class SystemsTestCase(XMLTestCase):
             ignoreNodes = [ 'latest_survey', 'created_date', 'modified_date', 'created_by', 'modified_by' ])
         response = self._get('inventory/systems', username='testuser', password='password')
         self.assertEquals(response.status_code, 403)
+
+    def testPostSystemNetworkAddressChange(self):
+        """
+        Pinned network_address
+        """
+        localUuid = 'localuuid001'
+        generatedUuid = 'generateduuid001'
+        params = dict(localUuid=localUuid, generatedUuid=generatedUuid)
+        xmlTempl = """\
+<system>
+  <local_uuid>%(localUuid)s</local_uuid>
+  <generated_uuid>%(generatedUuid)s</generated_uuid>
+  <networks>
+    <network>
+      <active>false</active>
+      <device_name>eth0</device_name>
+      <dns_name>10.1.1.1</dns_name>
+      <ip_address>10.1.1.1</ip_address>
+      <netmask>255.255.255.0</netmask>
+    </network>
+  </networks>
+</system>
+"""
+        models.System.objects.all().delete()
+        system = self.newSystem(name="aaa", description="bbb",
+            local_uuid=localUuid, generated_uuid=generatedUuid)
+        system.save()
+        network = models.Network(system=system, ip_address='1.2.3.4',
+            dns_name='blah1', active=True, pinned=False)
+        network.save()
+
+        system_xml = xmlTempl % params
+        response = self._post('inventory/systems/', data=system_xml)
+        self.assertEquals(response.status_code, 200)
+
+        system = models.System.objects.get(system_id=system.system_id)
+        self.assertEquals([ x.ip_address for x in system.networks.all() ],
+            ['10.1.1.1'])
 
     def testGetSystemAuth(self):
         """

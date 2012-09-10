@@ -2576,6 +2576,7 @@ surveys_xml = """
     <overall_validation>False</overall_validation>
     <updates_pending>False</updates_pending>
     <has_errors>False</has_errors>
+    <system id="http://testserver/api/v1/inventory/systems/3"/>
   </survey>
 </surveys>
 """
@@ -2884,10 +2885,8 @@ observed_properties_template = """
 observed_properties = observed_properties_template
 observed_properties_alt = observed_properties_template.replace("Lazy","Studious")
 
-discovered_properties_template = """
-<discovered_properties>
-  <extensions>
-    <apache_configuration>
+estub0 = """
+  <apache_configuration>
       <name>Apache Configuration Checker</name>
       <probes>
         <port>
@@ -2900,6 +2899,17 @@ discovered_properties_template = """
         </port>
       </probes>
     </apache_configuration>
+"""
+
+estub1 = estub0.replace("apache","nginx").replace("Apache","nginx")
+estub2 = estub0.replace("apache","tomcat").replace("Apache","Tomcat")
+
+discovered_properties_template = """
+<discovered_properties>
+  <extensions>
+    EXTENSION_STUB0
+    EXTENSION_STUB1
+    EXTENSION_STUB2
   </extensions>
   <errors>
     <apache_configuration>
@@ -2932,10 +2942,10 @@ discovered_properties_template = """
     </disa_stig_compliance_checker>
   </errors>
 </discovered_properties>
-"""
+""".replace('EXTENSION_STUB0', estub0)
 
-discovered_properties = discovered_properties_template
-discovered_properties_alt = discovered_properties_template.replace("false","true").replace("5000","5001")
+discovered_properties = discovered_properties_template.replace('EXTENSION_STUB1','').replace('EXTENSTION_STUB2',estub2)
+discovered_properties_alt = discovered_properties_template.replace("false","true").replace("5000","5001").replace('EXTENSION_STUB1',estub1).replace('EXTENSION_STUB2','')
 
 validation_report_template = """
 <validation_report>
