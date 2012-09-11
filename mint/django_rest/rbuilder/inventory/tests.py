@@ -2048,6 +2048,55 @@ class SystemsTestCase(XMLTestCase):
         response = self._get('inventory/systems', username='testuser', password='password')
         self.assertEquals(response.status_code, 403)
 
+    def testPostSystemNetworkDuplicateAddress(self):
+        """
+        RCE-985
+
+        2 entries in network:
+        IP_ADDRESS  DNS_NAME
+        -----------+--------
+        (null)      10.1.1.1
+        10.1.1.1    ...
+        we should update the second and delete the first, not the other way
+        around.
+        """
+        localUuid = 'localuuid001'
+        generatedUuid = 'generateduuid001'
+        params = dict(localUuid=localUuid, generatedUuid=generatedUuid)
+        xmlTempl = """\
+<system>
+  <local_uuid>%(localUuid)s</local_uuid>
+  <generated_uuid>%(generatedUuid)s</generated_uuid>
+  <networks>
+    <network>
+      <active>true</active>
+      <device_name>eth0</device_name>
+      <dns_name>dhcp1.example.com</dns_name>
+      <ip_address>10.1.1.1</ip_address>
+      <netmask>255.255.255.0</netmask>
+    </network>
+  </networks>
+</system>
+"""
+        models.System.objects.all().delete()
+        system = self.newSystem(name="aaa", description="bbb",
+            local_uuid=localUuid, generated_uuid=generatedUuid)
+        system.save()
+        models.Network.objects.create(system=system,
+            dns_name='10.1.1.1', active=True, pinned=False)
+        nw = models.Network.objects.create(system=system,
+            ip_address='10.1.1.1', dns_name='dhcp1.example.com',
+            active=True, pinned=False)
+
+        system_xml = xmlTempl % params
+        response = self._post('inventory/systems/', data=system_xml)
+        self.assertEquals(response.status_code, 200)
+
+        system = models.System.objects.get(system_id=system.system_id)
+        self.assertEquals([
+            (x.network_id, x.ip_address) for x in system.networks.all() ],
+            [(nw.network_id, '10.1.1.1')])
+
     def testPostSystemNetworkAddressChange(self):
         """
         Pinned network_address
