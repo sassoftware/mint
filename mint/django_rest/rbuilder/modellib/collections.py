@@ -21,6 +21,9 @@ from mint.jobstatus import FINISHED
 from xobj import xobj
 import math
 
+#import logging
+#log = logging.getLogger(__name__)
+
 filterTermMap = {
     'EQUAL' : 'iexact',
     'NOT_EQUAL' : 'iexact', 
@@ -259,11 +262,25 @@ def _filterTerm(node, scope):
     filt[django_operator] = value
     return filt
 
-def _isAllLeaves(operands):
+def _isAllLeaves(operands, and_no_repeated_terms=False):
     ''' are none of the operands complex?  No (ANDs or ORs)? '''
     for x in operands:
        if isinstance(x, AndOperator) or isinstance(x, OrOperator) or isinstance(x, ContainsOperator):
           return False
+
+    if and_no_repeated_terms:
+        # if the same term is used more than once, we can't merge the queryset together
+        counts = {}
+        for x in operands:
+            (field, value) = x.operands
+            if field not in counts:
+                 counts[field] = 1 
+            else:
+                 counts[field] = counts[field] + 1
+        counts = [ c for c in counts.values() if c > 1 ]
+        if len(counts):
+            return False
+
     return True
 
 def _filterTreeAnd(model, operands, scope):
@@ -339,6 +356,10 @@ def _filterOperator(model, node, scope):
         return model.filter(~Q(**filters))
 
 def filterTree(djangoQuerySet, tree, scope=''):
+    result = _filterTree(djangoQuerySet, tree, scope)
+    return result
+
+def _filterTree(djangoQuerySet, tree, scope=''):
     ''' new style advanced filtering '''
     
     if not isinstance(tree, Operator):
@@ -353,7 +374,7 @@ def filterTree(djangoQuerySet, tree, scope=''):
         scope = scope + tree.operands[0] + "__"
         return filterTree(djangoQuerySet, tree.operands[1], scope)    
     elif isinstance(tree, AndOperator):
-        if not _isAllLeaves(tree.operands):
+        if not _isAllLeaves(tree.operands, and_no_repeated_terms=True):
             return _filterTreeAnd(djangoQuerySet, tree.operands, scope)
         return _filterTreeAndFlat(djangoQuerySet, tree.operands, scope)
     elif isinstance(tree, OrOperator):
