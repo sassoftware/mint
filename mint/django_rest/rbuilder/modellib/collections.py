@@ -42,6 +42,9 @@ class Operator(object):
     filterTerm = None
     operator = None
     description = None
+    # This may look weird, but we need two backslashes when trying to
+    # match a single one, for escaping reasons
+    _singleBackslashRe = re.compile(r'\\')
 
     def __init__(self, *operands):
         self.operands = list(operands)
@@ -56,8 +59,12 @@ class Operator(object):
 
     @classmethod
     def _quote(cls, s):
-        if '"' in s:
-            return '"%s"' % s
+        s = cls._singleBackslashRe.sub(r'\\\\', s)
+        slen = len(s)
+        s = s.replace('"', r'\"')
+        if len(s) != slen:
+            # We've replaced something
+            s = '"%s"' % s
         return s
 
     def __eq__(self, other):
@@ -231,7 +238,7 @@ class Lexer(object):
                     g = m.groupdict()
                     head, sep, tail = g['head'], g['sep'], g['tail']
                     escCode = tail.lstrip()
-                    cls._addOperand(stack, cls._unescape(head))
+                    cls._addOperand(stack, cls._unescapeString(head))
                     continue
                 raise errors.InvalidData(msg="Closing quote not found")
             if head:
@@ -253,7 +260,12 @@ class Lexer(object):
 
     @classmethod
     def _unescape(cls, s):
-        return cls._unescaped.sub(cls._doubleBackslash, s).encode('ascii')
+        return cls._unescaped.sub(r'\\', s).encode('ascii')
+
+    @classmethod
+    def _unescapeString(cls, s):
+        s = s.replace(r'\"', '"')
+        return cls._unescape(s)
 
 # === BEGIN ADVANCED SEARCH ===
 

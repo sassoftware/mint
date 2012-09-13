@@ -4611,10 +4611,13 @@ class CollectionTest(XMLTestCase):
         # Simpler tests
         tests = [
             (collections.EqualOperator('key', 'port'), 'EQUAL(key,port)'),
-            (collections.EqualOperator('key', r'a \"quoted\" value'),
+            (collections.EqualOperator('key', r'a "quoted" value'),
                 r'EQUAL(key,"a \"quoted\" value")'),
-            (collections.EqualOperator('key', r'Extra ( and ), escaped backslash \\ stray \n\r and \"'),
-                r'EQUAL(key,"Extra ( and ), escaped backslash \\ stray \n\r and \"")'),
+            (collections.EqualOperator('key', r'Extra ( and ), backslash \ stray \n\r and "'),
+                r'EQUAL(key,"Extra ( and ), backslash \\ stray \\n\\r and \"")'),
+            # No need to add quotes around a word with \ in it
+            (collections.EqualOperator('key', r'with \ within'),
+                r'EQUAL(key,with \\ within)'),
         ]
         for q, strrepr in tests:
             tree = lexer.scan(strrepr)
@@ -4624,6 +4627,8 @@ class CollectionTest(XMLTestCase):
 
         # One-way tests - extra quotes that get stripped out etc
         tests = [
+            (collections.EqualOperator('key', r'with \ within'),
+                r'EQUAL(key,"with \\ within")'),
             (collections.EqualOperator('key', 'port'), 'EQUAL(key,"port")'),
             (collections.EqualOperator('key', ' value with spaces '),
                 ' EQUAL ( key ,  " value with spaces "  )'),
