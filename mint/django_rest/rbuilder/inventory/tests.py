@@ -4625,6 +4625,8 @@ class CollectionTest(XMLTestCase):
         # One-way tests - extra quotes that get stripped out etc
         tests = [
             (collections.EqualOperator('key', 'port'), 'EQUAL(key,"port")'),
+            (collections.EqualOperator('key', ' value with spaces '),
+                ' EQUAL ( key ,  " value with spaces "  )'),
         ]
         for q, strrepr in tests:
             tree = lexer.scan(strrepr)
