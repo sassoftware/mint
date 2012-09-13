@@ -269,6 +269,10 @@ class VersionManager(basemanager.BaseManager):
         return descr.toxml()
 
     @exposed
+    def troveTupleFactory(self, *args, **kwargs):
+        return trovetup.TroveTuple(*args, **kwargs)
+
+    @exposed
     def getSystemConfigurationDescriptorObject(self, system):
         if isinstance(system, (int, basestring)):
             system = models.System.objects.get(system_id=system)
@@ -286,18 +290,28 @@ class VersionManager(basemanager.BaseManager):
             if not cclient:
                 break
 
-            repos = cclient.repos
-            desc = ConfigDescriptorCache(repos).getDescriptor(truple)
-
-            if not desc:
-                break
-
-            desc.setDisplayName('Configuration Descriptor')
-            desc.addDescription('Configuration Descriptor')
-            desc.setRootElement('configuration')
-
-            return desc
+            desc = self.getConfigurationDescriptorFromTrove(truple,
+                conaryClient=cclient)
+            if desc is not None:
+                return desc
 
         log.warn('could not find configuration descriptor for %s' % system.name)
         return None
 
+    @exposed
+    def getConfigurationDescriptorFromTrove(self, trvTup, conaryClient=None):
+        if conaryClient is None:
+            conaryClient = self.get_conary_client()
+            if conaryClient is None:
+                return None
+
+        repos = conaryClient.getRepos()
+        desc = ConfigDescriptorCache(repos).getDescriptor(trvTup)
+        if desc is None:
+            return None
+
+        desc.setDisplayName('Configuration Descriptor')
+        desc.addDescription('Configuration Descriptor')
+        desc.setRootElement('configuration')
+
+        return desc

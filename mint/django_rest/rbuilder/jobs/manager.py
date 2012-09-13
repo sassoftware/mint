@@ -669,13 +669,32 @@ class JobHandlerRegistry(HandlerRegistry):
             return tmpl % dict(targetId=self.target.target_id)
 
     class TargetLaunchSystem(TargetDeployImage):
-        __slots__ = []
+        __slots__ = ['configDescriptorData']
         jobType = models.EventType.TARGET_LAUNCH_SYSTEM
         ResultsTag = 'systems'
 
         def getRepeaterMethod(self, cli, job):
             JobHandlerRegistry.TargetDeployImage.getRepeaterMethod(self, cli, job)
+            self.parseConfigDescriptorData(job)
             return cli.targets.launchSystem
+
+        def parseConfigDescriptorData(self, job):
+            # Validate config descriptor data, if necessary
+            self.configDescriptorData = None
+            if self.withConfigurationData(job.descriptor_data):
+                descr = self.mgr.mgr.getConfigDescriptorForImage(self.image)
+                if descr is not None:
+                    try:
+                        ddata = smartdescriptor.DescriptorData(
+                            fromStream=job._descriptor_data, descriptor=descr)
+                    except smartdescriptor.errors.ConstraintsValidationError, e:
+                        raise errors.InvalidData(msg="Data validation error: %s" % e.args[0])
+                    self.configDescriptorData = ddata
+
+        def withConfigurationData(self, descriptorDataXobj):
+            withConfigurationData = unicode(getattr(descriptorDataXobj,
+                'withConfiguration', 'false'))
+            return (withConfigurationData.lower() == 'true')
 
         def getRepeaterMethodArgs(self, cli, job):
             args, kwargs = JobHandlerRegistry.TargetDeployImage.getRepeaterMethodArgs(self, cli, job)
@@ -696,6 +715,13 @@ class JobHandlerRegistry(HandlerRegistry):
             if type(systems) != list:
                 systems = [ systems ]
 
+
+            configurationData = None
+            descriptorData = xobj.parse(job._descriptor_data).descriptor_data
+            if self.withConfigurationData(descriptorData):
+                # This has validated, so it Should Not Fail (TM)
+                configurationData = xobj.toxml(descriptorData.system_configuration)
+
             results = []
             for targetSystem in systems:
                 # System XML does not contain a target id, hence duplicate lookup
@@ -708,6 +734,9 @@ class JobHandlerRegistry(HandlerRegistry):
                 # The system may not have network info yet, so don't try
                 # to do anything clever here (Mingle #1785)
                 results.append(realSystem)
+
+                if configurationData is not None:
+                    realSystem.update(configuration=configurationData)
 
             return results
 

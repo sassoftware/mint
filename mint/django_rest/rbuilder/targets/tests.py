@@ -8,6 +8,7 @@
 import json
 import collections
 import re
+from lxml import etree
 
 from mint import buildtypes
 from mint.lib import data as mintdata
@@ -1674,11 +1675,15 @@ ZcY7o9aU
         imgmgr = self.mgr.imagesManager
         for i in range(5):
             for target, imageType, fileExtensions in targetData:
+                trvVer = '/example.com@rpath:foo-%d-1-devel/123.4:1-%d-1' % (
+                    i, i)
                 image = imgmgr.createImage(
                     _image_type=imageType,
                     name = "image %02d" % i,
                     description = "image %02d description" % i,
                     project_branch_stage=stage,
+                    trove_name='group-foo-%d-appliance' % i,
+                    trove_version=trvVer,
                 )
 
                 j = i + 2
@@ -2052,7 +2057,8 @@ ZcY7o9aU
         self._testLaunchSystem(targets, deferredImg, img)
 
 
-    def _testLaunchSystem(self, targets, img, baseImg=None):
+    def _testLaunchSystem(self, targets, img, baseImg=None, configData=None,
+            expectedStatusCode=200):
         self.mgr.targetsManager.recomputeTargetDeployableImages()
 
         # Post a job
@@ -2060,12 +2066,9 @@ ZcY7o9aU
 <job>
   <job_type id="http://localhost/api/v1/inventory/event_types/%(jobTypeId)s"/>
   <descriptor id="http://testserver/api/v1/targets/%(targetId)s/descriptors/launch/file/%(buildFileId)s"/>
-  <descriptor_data>
-    <imageId>%(buildFileId)s</imageId>
-  </descriptor_data>
+  %(descriptorData)s
 </job>
 """
-
         if baseImg is None:
             baseImg = img
 
@@ -2074,15 +2077,26 @@ ZcY7o9aU
         targetId = targets[0].target_id
         jobTypeId = self.mgr.sysMgr.eventType(jmodels.EventType.TARGET_LAUNCH_SYSTEM).job_type_id
 
+        if configData:
+            edata = '<withConfiguration>true</withConfiguration><system_configuration>%s</system_configuration>'
+            edata = edata % ''.join("<%s>%s</%s>" % (k, v, k)
+                for k, v in configData.items())
+        else:
+            edata = ''
+        descriptorData = "<descriptor_data><imageId>%s</imageId>%s</descriptor_data>" % (buildFileId, edata)
+
         jobXml = jobXmlTmpl % dict(
                 jobTypeId=jobTypeId,
                 targetId=targetId,
-                buildFileId = buildFileId,)
+                buildFileId = buildFileId,
+                descriptorData=descriptorData)
         self._retagQuerySets()
         jobUrl = "images/%s/jobs" % imageId
         response = self._post(jobUrl, jobXml,
             username='ExampleDeveloper', password='password')
-        self.failUnlessEqual(response.status_code, 200)
+        self.failUnlessEqual(response.status_code, expectedStatusCode)
+        if expectedStatusCode != 200:
+            return response
         obj = xobj.parse(response.content)
 
         job = obj.job
@@ -2106,6 +2120,8 @@ ZcY7o9aU
                 'targets.configure', 'targets.launchSystem',
             ])
         realCall = calls[-1]
+        descriptorData = etree.tostring(etree.fromstring(descriptorData),
+            pretty_print=True, xml_declaration=True, encoding="UTF-8")
         self.failUnlessEqual(self._mungeDict(realCall.args[0]),
           {
             'imageFileInfo': {
@@ -2115,7 +2131,7 @@ ZcY7o9aU
                 'size' : 102,
                 'baseFileName' : 'chater-foo-1-',
             },
-            'descriptorData': "<?xml version='1.0' encoding='UTF-8'?>\n<descriptor_data>\n  <imageId>%s</imageId>\n</descriptor_data>\n" % buildFileId,
+            'descriptorData': descriptorData,
             'imageDownloadUrl': 'https://bubba.com/downloadImage?fileId=%s' % buildFileId,
             'imageFileUpdateUrl': 'http://localhost/api/v1/images/%s/build_files/%s' % (baseImg.image_id, buildFileId),
             'targetImageXmlTemplate': '<file>\n  <target_images>\n    <target_image>\n      <target id="/api/v1/targets/1"/>\n      %(image)s\n    </target_image>\n  </target_images>\n</file>',
@@ -2173,5 +2189,93 @@ ZcY7o9aU
         response = self._get(jobUrl, username='admin', password='password')
 
         self.assertXMLEquals(response.content, testsxml.job_created_system)
+        return dbjob
 
- 
+    def testGetDescriptorLaunch(self):
+        targets = self._setupImages()
+        self.mgr.targetsManager.recomputeTargetDeployableImages()
+
+        self.mgr.repeaterMgr.repeaterClient.setJobData("""\
+<descriptor>
+  <metadata>
+    <displayName>FooDescriptor</displayName>
+    <rootElement>blah</rootElement>
+    <descriptions><desc>Description</desc></descriptions>
+  </metadata>
+  <dataFields>
+    <field>
+      <name>imageId</name>
+      <descriptions>
+        <desc>Image ID</desc>
+      </descriptions>
+      <type>str</type>
+      <required>true</required>
+      <hidden>true</hidden>
+    </field>
+  </dataFields>
+</descriptor>""")
+
+        from smartform import descriptor
+        def mockGetDescriptor(slf, trvTup):
+            return descriptor.SystemConfigurationDescriptor(fromStream="""\
+<descriptor>
+  <metadata>
+    <displayName>FooDescriptor</displayName>
+    <rootElement>blah</rootElement>
+    <descriptions><desc>Description</desc></descriptions>
+  </metadata>
+  <dataFields>
+    <field>
+      <name>blargh</name>
+      <descriptions>
+        <desc>Blargh</desc>
+      </descriptions>
+      <type>str</type>
+      <required>true</required>
+    </field>
+  </dataFields>
+</descriptor>
+""")
+        from rpath_tools.client.utils.config_descriptor_cache import ConfigDescriptorCache
+        self.mock(ConfigDescriptorCache, 'getDescriptor', mockGetDescriptor)
+
+        # Grab an image
+        tgt = [ x for x in targets if x.target_type.name == 'vmware' ][0]
+        imgName = "image 02"
+        img = imgmodels.Image.objects.get(name=imgName, _image_type=buildtypes.VMWARE_ESX_IMAGE)
+        buildFileId = img.files.all()[0].file_id
+        response = self._get('targets/%d/descriptors/launch/file/%d' %
+            (tgt.target_id, buildFileId),
+            username='ExampleDeveloper', password='password')
+        self.assertEquals(response.status_code, 200)
+
+        doc = etree.fromstring(response.content)
+        nsmap = dict(dsc='http://www.rpath.com/permanent/descriptor-1.1.xsd')
+        fields = doc.xpath('/dsc:descriptor/dsc:dataFields/dsc:field/dsc:name/text()',
+            namespaces=nsmap)
+        self.assertEquals(fields,
+            ['imageId', 'withConfiguration', 'system_configuration'])
+
+        sfields = doc.xpath('/dsc:descriptor/dsc:dataFields/dsc:field'
+            '[dsc:name="system_configuration"]/'
+            'dsc:descriptor/dsc:dataFields/dsc:field/dsc:name/text()',
+            namespaces=nsmap)
+        self.assertEquals(sfields, ['blargh'])
+
+        # Now test that we saved the config in the DB
+        self.mgr.repeaterMgr.repeaterClient.reset()
+        job = self._testLaunchSystem(targets, img,
+            configData=dict(blargh='abc123'))
+        system = jmodels.JobSystemArtifact.objects.filter(job=job)[0].system
+        self.assertXMLEquals(system.configuration,
+            "<system_configuration><blargh>abc123</blargh></system_configuration>")
+
+        # Test errors
+        response = self._testLaunchSystem(targets, img,
+            configData=dict(johnny='is not here'), expectedStatusCode=400)
+        self.assertXMLEquals(response.content, """\
+<fault>
+  <code>400</code>
+  <message>Data validation error: [u"Missing field: 'blargh'"]</message>
+  <traceback></traceback>
+</fault>""")
