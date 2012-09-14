@@ -569,7 +569,7 @@ class Collection(XObjIdModel):
             if self.order_by:
                 url += ';order_by=%s' % self.order_by
             if self.filter_by:
-                url += ';filter_by=%s' % urllib.quote(self.filter_by)
+                url += ';filter_by=%s' % urllib.quote(self.filter_by, safe="[],")
         return url
 
     def _sortByField(key):
