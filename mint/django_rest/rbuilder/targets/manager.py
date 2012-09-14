@@ -374,7 +374,8 @@ class TargetsManager(basemanager.BaseManager, CatalogServiceHelper):
         trvFlavor = img.trove_flavor
         if not trvName or not trvVersion:
             return None
-        trvTup = self.mgr.troveTupleFactory(trvName, trvVersion, trvFlavor)
+        trvTup = self.mgr.troveTupleFactory(trvName, trvVersion, trvFlavor,
+            withFrozenFlavor=True)
         cdesc = self.mgr.versionMgr.getConfigurationDescriptorFromTrove(trvTup)
         if cdesc is None:
             return None

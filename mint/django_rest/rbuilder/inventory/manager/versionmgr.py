@@ -270,7 +270,9 @@ class VersionManager(basemanager.BaseManager):
 
     @exposed
     def troveTupleFactory(self, *args, **kwargs):
-        return trovetup.TroveTuple(*args, **kwargs)
+        # Eek. One class doesn't parse the flavor, the other doesn't
+        # parse the version
+        return trovetup.TroveTuple(trovetup.TroveSpec(*args, **kwargs))
 
     @exposed
     def getSystemConfigurationDescriptorObject(self, system):
