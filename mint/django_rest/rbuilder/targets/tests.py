@@ -561,7 +561,7 @@ class JobCreationTest(BaseTargetsTest, RepeaterMixIn):
             ['targets.configure', 'targets.checkCreate'])
         realCall = calls[-1]
         self.failUnlessEqual(realCall.args, ())
-        self.failUnlessEqual(realCall.kwargs, {})
+        self.failUnlessEqual(realCall.kwargs, dict(uuid=job.job_uuid))
         self.mgr.repeaterMgr.repeaterClient.reset()
 
         jobXml = """
@@ -660,7 +660,7 @@ class JobCreationTest(BaseTargetsTest, RepeaterMixIn):
             ['targets.configure', 'targets.checkCreate'])
         realCall = calls[-1]
         self.failUnlessEqual(realCall.args, ())
-        self.failUnlessEqual(realCall.kwargs, {})
+        self.failUnlessEqual(realCall.kwargs, dict(uuid=job.job_uuid))
         self.mgr.repeaterMgr.repeaterClient.reset()
 
         jobXml = """
@@ -800,7 +800,7 @@ class JobCreationTest(BaseTargetsTest, RepeaterMixIn):
             ['targets.configure', 'targets.checkCredentials'])
         realCall = calls[-1]
         self.failUnlessEqual(realCall.args, ())
-        self.failUnlessEqual(realCall.kwargs, {})
+        self.failUnlessEqual(realCall.kwargs, dict(uuid=job.job_uuid))
         self.mgr.repeaterMgr.repeaterClient.reset()
 
         jobXml = """
@@ -916,7 +916,7 @@ ZcY7o9aU
             ['targets.configure', 'targets.checkCreate'])
         realCall = calls[-1]
         self.failUnlessEqual(realCall.args, ())
-        self.failUnlessEqual(realCall.kwargs, {})
+        self.failUnlessEqual(realCall.kwargs, dict(uuid=job.job_uuid))
         self.mgr.repeaterMgr.repeaterClient.reset()
 
         # Grab token
@@ -1060,7 +1060,7 @@ ZcY7o9aU
             ['targets.configure', 'targets.listImages'])
         realCall = calls[-1]
         self.failUnlessEqual(realCall.args, ())
-        self.failUnlessEqual(realCall.kwargs, {})
+        self.failUnlessEqual(realCall.kwargs, dict(uuid=job.job_uuid))
         self.mgr.repeaterMgr.repeaterClient.reset()
 
         jobXml = """
@@ -1236,7 +1236,7 @@ ZcY7o9aU
             ['targets.configure', 'targets.listInstances'])
         realCall = calls[-1]
         self.failUnlessEqual(realCall.args, ())
-        self.failUnlessEqual(realCall.kwargs, {})
+        self.failUnlessEqual(realCall.kwargs, dict(uuid=job.job_uuid))
         self.mgr.repeaterMgr.repeaterClient.reset()
 
         jobXml = """
@@ -1602,7 +1602,7 @@ ZcY7o9aU
         self.failUnlessEqual(realCall.args[0], system.target_system_id)
         mungedParams = self._mungeDict(realCall.args[1])
         self.failUnlessEqual(mungedParams, params)
-        self.failUnlessEqual(realCall.kwargs, {})
+        self.failUnlessEqual(realCall.kwargs, dict(uuid=job.job_uuid))
         self.mgr.repeaterMgr.repeaterClient.reset()
 
         jobXml = """
@@ -2026,7 +2026,7 @@ ZcY7o9aU
             'targetImageIdList': ['target-internal-id-02'],
           })
         self.failUnlessEqual(realCall.args[1:], ())
-        self.failUnlessEqual(realCall.kwargs, {})
+        self.failUnlessEqual(realCall.kwargs, dict(uuid=job.job_uuid))
 
         jobXml = """
 <job>
@@ -2043,7 +2043,8 @@ ZcY7o9aU
         jobUrl = "jobs/%s" % dbjob.job_uuid
         response = self._put(jobUrl, jobXml, jobToken=jobToken)
         self.failUnlessEqual(response.status_code, 200)
-        self.assertXMLEquals(response.content, testsxml.job_xml_with_artifacts)
+        self.assertXMLEquals(response.content,
+            testsxml.job_xml_with_artifacts % dict(jobUuid=job.job_uuid))
 
     def testLaunchSystem(self):
         targets = self._setupImages()
@@ -2137,18 +2138,15 @@ ZcY7o9aU
             'imageDownloadUrl': 'https://bubba.com/downloadImage?fileId=%s' % buildFileId,
             'imageFileUpdateUrl': 'http://localhost/api/v1/images/%s/build_files/%s' % (baseImg.image_id, buildFileId),
             'targetImageXmlTemplate': '<file>\n  <target_images>\n    <target_image>\n      <target id="/api/v1/targets/1"/>\n      %(image)s\n    </target_image>\n  </target_images>\n</file>',
-            'systemsCreateUrl': 'http://localhost/api/v1/images/%s/systems' %
-                img.image_id,
+            'systemsCreateUrl': 'http://localhost/api/v1/jobs/%s/systems' %
+                job.job_uuid,
             'targetImageIdList': ['target-internal-id-02'],
           })
         self.failUnlessEqual(realCall.args[1:], ())
-        self.failUnlessEqual(realCall.kwargs, {})
+        self.failUnlessEqual(realCall.kwargs, dict(uuid=job.job_uuid))
 
-        jobXml = """<job>
-  <job_state>Completed</job_state>
-  <status_code>200</status_code>
-  <status_text>Some status here</status_text>
-  <results encoding="identity">
+
+        systemsXml = """\
   <systems>
     <system>
       <targetType>xen-enterprise</targetType>
@@ -2163,34 +2161,32 @@ ZcY7o9aU
       <targetName>Target Name xen-enterprise</targetName>
       <name>misa-foobar-4</name>
     </system>
-  </systems>
-</results>
-</job>
-"""
+  </systems>"""
 
-        # since we need to associate the system to the job, quickly save a real target
-        # and system so this can succeed
-        jmodels.JobSystemArtifact.objects.all().delete()
-        invmodels.System.objects.all().delete()
-        targetType = models.TargetType.objects.get(name='xen-enterprise')
-        target = models.Target.objects.filter(target_type=targetType)[0]
-        system = self._saveSystem()
-        system.target = target
-        system.target_system_id = "0c24c2d8-2fde-11d0-67ab-599b1d93616c"
-        system.save()
-        self.mgr.retagQuerySetsByType('system') # not really needed
+        # POST the system, that should create the artifacts
+        url = 'jobs/%s/systems' % (job.job_uuid, )
+        response = self._post(url, data=systemsXml, jobToken=jobToken)
+        self.assertEquals(response.status_code, 200)
+
+        artifacts = jmodels.JobSystemArtifact.objects.all()
+        self.failUnlessEqual(len(artifacts), 1)
+
+        jobXml = """<job>
+  <job_state>Completed</job_state>
+  <status_code>200</status_code>
+  <status_text>Some status here</status_text>
+  <results encoding="identity">%(systems)s</results>
+</job>
+""" % dict(systems=systemsXml)
 
         jobUrl = "jobs/%s" % dbjob.job_uuid
         response = self._put(jobUrl, jobXml, jobToken=jobToken)
         self.failUnlessEqual(response.status_code, 200)
 
-        artifacts = jmodels.JobSystemArtifact.objects.all()
-        self.failUnlessEqual(len(artifacts), 1)
-        
-        jobUrl = "jobs/%s" % dbjob.job_uuid
         response = self._get(jobUrl, username='admin', password='password')
 
-        self.assertXMLEquals(response.content, testsxml.job_created_system)
+        self.assertXMLEquals(response.content,
+            testsxml.job_created_system % dict(jobUuid=job.job_uuid))
         return dbjob
 
     def testGetDescriptorLaunch(self):

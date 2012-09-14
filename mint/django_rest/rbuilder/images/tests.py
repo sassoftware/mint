@@ -569,8 +569,7 @@ class ImagesTestCase(RbacEngine):
 """
         xml = xmlTemplate % dict(targetId=tgt.target_id,
             targetImageId=targetImageId)
-        url = 'images/%s/systems' % (img.image_id, )
-        xml = xml
+        url = 'jobs/%s/systems' % (job.job_uuid, )
         response = self._post(url, data=xml, jobToken=jobToken)
         self.assertEquals(response.status_code, 200)
         doc = xobj.parse(response.content)
@@ -602,6 +601,11 @@ class ImagesTestCase(RbacEngine):
                 'ssl-client-certificate-%s' % (i+1))
             self.failUnlessEqual(system._ssl_client_key,
                 'ssl-client-key-%s' % (i+1))
+
+        # Make sure the systems were associated with the job
+        self.assertEquals(sorted(x.system.target_system_id
+            for x in job.created_systems.all()),
+            ['long-id-1', 'long-id-2'])
 
     def _setupImageOutputToken(self):
         img = models.Image.objects.get(name='image-0')

@@ -1022,11 +1022,13 @@ class SystemManager(basemanager.BaseManager):
         # XXX more stuff to happen here
 
     @exposed
-    def addLaunchedSystems(self, systems, imageId=None, forUser=None):
-        if imageId is not None:
-            img = imagemodels.Image.objects.get(image_id=imageId)
-        else:
-            img = None
+    def addLaunchedSystems(self, systems, job=None, forUser=None):
+        img = None
+        if job:
+            # Try to extract the image for this job
+            images = job.images.all()
+            if images:
+                img = images[0].image
         # Copy the incoming systems; we'll replace them with real ones
         slist = systems.system
         rlist = systems.system = []
@@ -1034,7 +1036,7 @@ class SystemManager(basemanager.BaseManager):
             djSystem = self.mgr.addLaunchedSystem(system,
                 dnsName=system.dnsName,
                 targetName=system.targetName, targetType=system.targetType,
-                sourceImage=img, for_user=forUser)
+                sourceImage=img, job=job, for_user=forUser)
             rlist.append(djSystem)
             if system.dnsName:
                 self.postSystemLaunch(djSystem)
@@ -1054,7 +1056,7 @@ class SystemManager(basemanager.BaseManager):
 
     @exposed
     def addLaunchedSystem(self, system, dnsName=None, targetName=None,
-            targetType=None, for_user=None, sourceImage=None):
+            targetType=None, for_user=None, sourceImage=None, job=None):
         if isinstance(targetType, basestring):
             targetTypeName = targetType
         else:
@@ -1144,6 +1146,9 @@ class SystemManager(basemanager.BaseManager):
         targetmodels.TargetSystemCredentials.objects.get_or_create(
             target_system=tsys,
             target_credentials=credentials)
+        if job is not None:
+            # Link system to job
+            jobmodels.JobSystemArtifact.objects.create(system=system, job=job)
         return system
 
     @exposed

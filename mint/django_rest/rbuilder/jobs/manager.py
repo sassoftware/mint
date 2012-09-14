@@ -198,9 +198,13 @@ class BaseJobHandler(AbstractHandler):
         self.postCreateJob(job)
 
     def createRmakeJob(self, job):
+        # Tentatively supply a jobUuid, to make sure we have a stable
+        # URL back to the job
+        job.job_uuid = str(uuid.uuid4())
         cli = self.mgr.mgr.repeaterMgr.repeaterClient
         method = self.getRepeaterMethod(cli, job)
         methodArgs, methodKwargs = self.getRepeaterMethodArgs(cli, job)
+        methodKwargs.update(uuid=job.job_uuid)
         return method(*methodArgs, **methodKwargs)
 
     def getRepeaterMethodArgs(self, cli, job):
@@ -282,21 +286,11 @@ class ResultsProcessingMixIn(object):
 
             # XXX this is ugly. We should have a more extensible way to
             # handle this
-            if tag == 'system':
-                models.JobSystemArtifact(job=job, system=resource).save()
-                # store the change in the system job count
-                resource.updateDerivedData()
-            elif tag == 'image':
+            if tag == 'image':
                 models.JobImageArtifact(job=job, image=resource).save()
-            elif tag == 'target':
-                # not used in production yet, but mentioned in tests, so we don't
-                # have to save it.
-                pass
             elif tag == 'survey':
                 models.JobSurveyArtifact.objects.create(job=job, survey=resource)
-            elif tag == 'preview':
-                pass # Saved earlier in callchain because it's special.
-            else:
+            elif tag not in set(['target', 'system', 'preview']):
                 raise Exception("internal error, don't know how to save resource: %s" % tag)
         return resources[0]
 
@@ -701,9 +695,8 @@ class JobHandlerRegistry(HandlerRegistry):
             params = args[0]
             # Use the original image id, which should be the non-base
             # image
-            imageId = self.extraArgs['imageId'].encode('ascii')
             params.update(systemsCreateUrl =
-                "http://localhost/api/v1/images/%s/systems" % (imageId, ))
+                "http://localhost/api/v1/jobs/%s/systems" % (job.job_uuid, ))
             return args, kwargs
 
         def _processJobResults(self, job):
@@ -1042,7 +1035,7 @@ class JobHandlerRegistry(HandlerRegistry):
 
         def createRmakeJob(self, job):
             self.extractDescriptorData(job)
-            return str(uuid.uuid4()), None
+            return job.job_uuid, None
 
         def getDescriptor(self, descriptorId):
             match = self.splitResourceId(descriptorId)

@@ -764,8 +764,8 @@ class RmakeJob(object):
         self.status = self.Status(statusCode, statusText, statusDetail, final,
             failed)
 
-def makeRepeaterData(serial):
-    uuid = "uuid%03d" % serial
+def makeRepeaterData(n, args, kwargs, callList):
+    uuid = kwargs.get('uuid', "uuid%03d" % len(callList))
     return uuid, RmakeJob(uuid, 200, "status text", "status detail", False)
 
 class SmartformMixIn(object):
@@ -787,7 +787,7 @@ class RepeaterMixIn(SmartformMixIn):
     class RepeaterMgr(object):
         repeaterClient = RepeaterClient()
         repeaterClient.setCallReturn(
-                lambda n, args, kwargs, callList: makeRepeaterData(len(callList)))
+                lambda n, args, kwargs, callList: makeRepeaterData(n, args, kwargs, callList))
 
     def setUpRepeaterClient(self):
         self.setUpSchemaDir()
