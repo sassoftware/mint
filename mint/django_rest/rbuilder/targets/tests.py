@@ -1673,6 +1673,7 @@ ZcY7o9aU
 
         targetImageIdTempl = "target-internal-id-%02d"
         imgmgr = self.mgr.imagesManager
+        trvFlavor = '1#x86:i486:i586:i686|5#use:~!xen'
         for i in range(5):
             for target, imageType, fileExtensions in targetData:
                 trvVer = '/example.com@rpath:foo-%d-1-devel/123.4:1-%d-1' % (
@@ -1684,6 +1685,7 @@ ZcY7o9aU
                     project_branch_stage=stage,
                     trove_name='group-foo-%d-appliance' % i,
                     trove_version=trvVer,
+                    trove_flavor=trvFlavor,
                 )
 
                 j = i + 2
@@ -2015,7 +2017,7 @@ ZcY7o9aU
                 'name' : u'filename-09-02.ova',
                 'sha1' : u'0000000000000000000000000000000000000002',
                 'size' : 102,
-                'baseFileName' : 'chater-foo-1-',
+                'baseFileName' : 'chater-foo-1-x86',
             },
             'descriptorData': "<?xml version='1.0' encoding='UTF-8'?>\n<descriptor_data>\n  <imageId>%s</imageId>\n</descriptor_data>\n" % buildFileId,
             'imageDownloadUrl': 'https://bubba.com/downloadImage?fileId=%s' % buildFileId,
@@ -2129,7 +2131,7 @@ ZcY7o9aU
                 'name' : u'filename-09-02.ova',
                 'sha1' : u'0000000000000000000000000000000000000002',
                 'size' : 102,
-                'baseFileName' : 'chater-foo-1-',
+                'baseFileName' : 'chater-foo-1-x86',
             },
             'descriptorData': descriptorData,
             'imageDownloadUrl': 'https://bubba.com/downloadImage?fileId=%s' % buildFileId,
