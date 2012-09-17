@@ -256,6 +256,7 @@ class JobCreationTest(BaseJobsTest, RepeaterMixIn):
                     dict(
                         desiredTopLevelItems = [u'group-foo=/a@b:c/1-2-3'],
                         zone=system.managing_zone.name,
+                        uuid=job.job_uuid,
                     ),
                 ),
             ])
@@ -307,6 +308,7 @@ class JobCreationTest(BaseJobsTest, RepeaterMixIn):
                     dict(
                         desiredTopLevelItems = [u'group-foo=/a@b:c/1-2-3'],
                         zone=system.managing_zone.name,
+                        uuid=job.job_uuid,
                     ),
                 ),
             ])
