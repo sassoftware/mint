@@ -569,8 +569,9 @@ class SystemManager(basemanager.BaseManager):
         except ObjectDoesNotExist:
             pass # will default later on
 
-        system.created_by = for_user
-        system.modified_by = for_user
+        if for_user is not None:
+            system.created_by = for_user
+            system.modified_by = for_user
 
         # add the system
         system.save()
@@ -734,6 +735,8 @@ class SystemManager(basemanager.BaseManager):
             if (system.management_interface_id == wmiIfaceId and not system.credentials):
                 # No credentials, nothing to do here
                 system.update(current_state=credentialsMissing)
+            else:
+                self._scheduleApplySystemConfiguration(system)
         elif system.isRegistered:
             # See if a new poll is required
             if (system.current_state_id in self.NonresponsiveStates):
@@ -1093,9 +1096,10 @@ class SystemManager(basemanager.BaseManager):
         # Add an old style job, to persist the boot uuid
         self._addOldStyleJob(system)
         system.launching_user = self.user
-        if for_user:
-            system.created_by  = for_user
-            system.modified_by = for_user
+        if for_user is None:
+            for_user = self.user
+        system.created_by  = for_user
+        system.modified_by = for_user
         system.launch_date = self.now()
         # Copy some of the data from the target
         if not system.name:
@@ -1932,6 +1936,24 @@ class SystemManager(basemanager.BaseManager):
            target.target_id)
         job.descriptor_data = xobj.parse('<descriptor_data/>').descriptor_data
         self.mgr.addJob(job)
+        return job
+
+    def _scheduleApplySystemConfiguration(self, system):
+        if not system.configuration:
+            return None
+        network = self.extractNetworkToUse(system)
+        if not network:
+            self.log_system(system, "Not applying system configuration - network information unavailable")
+            return None
+        jobType = self.getEventTypeByName(jobmodels.EventType.SYSTEM_CONFIGURE)
+        job = jobmodels.Job(job_type=jobType)
+        job.descriptor = self.getDescriptorConfigure(system.system_id)
+        job.descriptor.id = ("/api/v1/inventory/systems/%s/descriptors/configure" %
+            system.system_id)
+        job.descriptor_data = xobj.parse("<descriptor_data/>").descriptor_data
+        self.mgr.addJob(job, forUser=system.created_by,
+            system_id=system.system_id)
+        self.log_system(system, "Applying system configuration")
         return job
 
     @exposed

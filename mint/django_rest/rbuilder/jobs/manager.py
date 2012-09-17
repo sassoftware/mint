@@ -65,7 +65,7 @@ class JobManager(basemanager.BaseManager):
         the identity of the related resource may be present both in the
         job URL and in the descriptor URL, and they should match
         """
-        job.created_by = self.user
+        job.created_by = job.modified_by = extraArgs.get('forUser', self.user)
         typename = job.job_type.name
         factory = JobHandlerRegistry.getHandlerFactory(typename)
         if factory is None:

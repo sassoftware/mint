@@ -4457,6 +4457,64 @@ class TargetSystemImportTest(XMLTestCase, test_utils.RepeaterMixIn):
             params['target_system_description'])
         self.failUnlessEqual(system.description, params['description'])
 
+    def testAddLaunchedSystem2(self):
+        systemConfiguration = "<system_configuration><a>1</a><b>2</b></system_configuration>"
+        user2 = usersmodels.User.objects.get(user_name='JeanValjean2')
+        self.mgr.user = user2
+        params = dict(
+            target_system_id = "target-system-id-001",
+            target_system_name = "target-system-name 001",
+            target_system_description = "target-system-description 001",
+            target_system_state = "Frisbulating",
+            created_by = user2,
+            management_interface = models.Cache.get(models.ManagementInterface,
+                name=models.ManagementInterface.CIM),
+        )
+        system = self.newSystem(**params)
+
+        system.boot_uuid = bootUuid = str(self.uuid4())
+        system.ssl_client_certificate = "ssl client certificate 001"
+        system.ssl_client_key = "ssl client key 001"
+
+        system = self.mgr.addLaunchedSystem(system,
+            targetName=self.tgt2.name,
+            targetType=self.tgt2.target_type,
+            configurationData=systemConfiguration,
+            )
+        for k, v in params.items():
+            self.failUnlessEqual(getattr(system, k), v)
+
+        savedsystem = models.System.objects.get(pk=system.pk)
+        self.assertXMLEquals(savedsystem.configuration, systemConfiguration)
+
+        # System registers and passes a boot uuid
+        params = dict(localUuid=str(self.uuid4()),
+            generatedUuid=str(self.uuid4()),
+            ipAddress='10.10.10.10',
+            bootUuid=bootUuid)
+
+        xml = """\
+<system>
+  <local_uuid>%(localUuid)s</local_uuid>
+  <generated_uuid>%(generatedUuid)s</generated_uuid>
+  <boot_uuid>%(bootUuid)s</boot_uuid>
+  <hostname>bluetorch.example.com</hostname>
+  <networks>
+    <network>
+      <ip_address>%(ipAddress)s</ip_address>
+      <dns_name>%(ipAddress)s</dns_name>
+    </network>
+  </networks>
+</system>
+""" % params
+        url = "inventory/systems"
+        response = self._post(url, data=xml)
+        self.assertEquals(response.status_code, 200)
+
+        # We should have a job
+        self.assertEquals([ j.job_type.name for j in savedsystem.jobs.all() ],
+            ['system apply configuration'])
+
     def testCaptureSystem(self):
         user2 = usersmodels.User.objects.get(user_name='JeanValjean2')
         self.mgr.user = user2
