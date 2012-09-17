@@ -355,7 +355,6 @@ install needle
         # test complex query against surveys
         search = '/api/v1/inventory/systems;filter_by=EQUAL(latest_survey.windows_packages.windows_package_info.publisher,konami)'
         response = self._get(search, username='admin', password='password')
-        print response.content
         self.assertEqual(response.status_code, 200)
        
 
@@ -2435,7 +2434,6 @@ class SystemsTestCase(XMLTestCase):
         #response = self._post('inventory/systems/%s/jobs' % system.pk,
         #    data = testsxml.system_configuration_xml % system.pk,
         #    username='admin', password='password')
-        #print response.content
         #self.assertEquals(response.status_code, 200)
         #self.assertXMLEquals(response.content, '<wrong></wrong>')
 
