@@ -4295,7 +4295,7 @@ class TargetSystemImportTest(XMLTestCase, test_utils.RepeaterMixIn):
             ['targets.configure', 'targets.listInstances'] * 4)
         realCall = calls[-1]
         self.failUnlessEqual(realCall.args, ())
-        self.failUnlessEqual(realCall.kwargs, {})
+        self.failUnlessEqual(realCall.kwargs, dict(uuid=jobs[-1].job_uuid))
         self.mgr.repeaterMgr.repeaterClient.reset()
 
 
