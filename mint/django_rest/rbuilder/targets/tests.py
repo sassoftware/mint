@@ -2081,10 +2081,12 @@ ZcY7o9aU
         jobTypeId = self.mgr.sysMgr.eventType(jmodels.EventType.TARGET_LAUNCH_SYSTEM).job_type_id
 
         if configData:
-            edata = '<withConfiguration>true</withConfiguration><system_configuration>%s</system_configuration>'
-            edata = edata % ''.join("<%s>%s</%s>" % (k, v, k)
-                for k, v in configData.items())
+            configDataXml = ('<system_configuration>%s</system_configuration>' %
+                ''.join("<%s>%s</%s>" % (k, v, k)
+                    for k, v in configData.items()))
+            edata = '<withConfiguration>true</withConfiguration>' + configDataXml
         else:
+            configDataXml = None
             edata = ''
         descriptorData = "<descriptor_data><imageId>%s</imageId>%s</descriptor_data>" % (buildFileId, edata)
 
@@ -2170,6 +2172,12 @@ ZcY7o9aU
 
         artifacts = jmodels.JobSystemArtifact.objects.all()
         self.failUnlessEqual(len(artifacts), 1)
+        if configDataXml is None:
+            self.assertEquals([j.system.configuration for j in artifacts],
+                [configDataXml] * len(artifacts))
+        else:
+            for j in artifacts:
+                self.assertXMLEquals(j.system.configuration, configDataXml)
 
         jobXml = """<job>
   <job_state>Completed</job_state>

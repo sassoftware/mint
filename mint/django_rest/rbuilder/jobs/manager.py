@@ -675,7 +675,7 @@ class JobHandlerRegistry(HandlerRegistry):
         def parseConfigDescriptorData(self, job):
             # Validate config descriptor data, if necessary
             self.configDescriptorData = None
-            if self.withConfigurationData(job.descriptor_data):
+            if self.mgr.mgr.descriptorHasConfigurationData(job.descriptor_data):
                 descr = self.mgr.mgr.getConfigDescriptorForImage(self.image)
                 if descr is not None:
                     try:
@@ -684,11 +684,6 @@ class JobHandlerRegistry(HandlerRegistry):
                     except smartdescriptor.errors.ConstraintsValidationError, e:
                         raise errors.InvalidData(msg="Data validation error: %s" % e.args[0])
                     self.configDescriptorData = ddata
-
-        def withConfigurationData(self, descriptorDataXobj):
-            withConfigurationData = unicode(getattr(descriptorDataXobj,
-                'withConfiguration', 'false'))
-            return (withConfigurationData.lower() == 'true')
 
         def getRepeaterMethodArgs(self, cli, job):
             args, kwargs = JobHandlerRegistry.TargetDeployImage.getRepeaterMethodArgs(self, cli, job)
@@ -709,12 +704,6 @@ class JobHandlerRegistry(HandlerRegistry):
                 systems = [ systems ]
 
 
-            configurationData = None
-            descriptorData = xobj.parse(job._descriptor_data).descriptor_data
-            if self.withConfigurationData(descriptorData):
-                # This has validated, so it Should Not Fail (TM)
-                configurationData = xobj.toxml(descriptorData.system_configuration)
-
             results = []
             for targetSystem in systems:
                 # System XML does not contain a target id, hence duplicate lookup
@@ -727,9 +716,6 @@ class JobHandlerRegistry(HandlerRegistry):
                 # The system may not have network info yet, so don't try
                 # to do anything clever here (Mingle #1785)
                 results.append(realSystem)
-
-                if configurationData is not None:
-                    realSystem.update(configuration=configurationData)
 
             return results
 
@@ -1216,9 +1202,6 @@ class JobHandlerRegistry(HandlerRegistry):
                 requiredNetwork=None)
 
             configXml = self.system.configuration
-            self.system.configuration_applied = True
-            self.system.save()
-
             return (params, ), dict(configuration=configXml, zone=self.system.managing_zone.name)
 
         def getRelatedThroughModel(self, descriptor):
@@ -1232,4 +1215,6 @@ class JobHandlerRegistry(HandlerRegistry):
             # Configuration jobs presently have no real result but return a
             # system with just UUIDs in it. Just return the current system
             # object.
-            return job.systems.all()[0].system
+            system = job.systems.all()[0].system
+            system.update(configuration_applied=True)
+            return system

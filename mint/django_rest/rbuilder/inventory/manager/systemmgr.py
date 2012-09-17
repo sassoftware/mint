@@ -1024,11 +1024,13 @@ class SystemManager(basemanager.BaseManager):
     @exposed
     def addLaunchedSystems(self, systems, job=None, forUser=None):
         img = None
+        configurationData = None
         if job:
             # Try to extract the image for this job
             images = job.images.all()
             if images:
                 img = images[0].image
+                configurationData = self._getConfigurationDataFromJob(job)
         # Copy the incoming systems; we'll replace them with real ones
         slist = systems.system
         rlist = systems.system = []
@@ -1036,7 +1038,8 @@ class SystemManager(basemanager.BaseManager):
             djSystem = self.mgr.addLaunchedSystem(system,
                 dnsName=system.dnsName,
                 targetName=system.targetName, targetType=system.targetType,
-                sourceImage=img, job=job, for_user=forUser)
+                sourceImage=img, job=job, configurationData=configurationData,
+                for_user=forUser)
             rlist.append(djSystem)
             if system.dnsName:
                 self.postSystemLaunch(djSystem)
@@ -1056,13 +1059,15 @@ class SystemManager(basemanager.BaseManager):
 
     @exposed
     def addLaunchedSystem(self, system, dnsName=None, targetName=None,
-            targetType=None, for_user=None, sourceImage=None, job=None):
+            targetType=None, for_user=None, sourceImage=None, job=None,
+            configurationData=None):
         if isinstance(targetType, basestring):
             targetTypeName = targetType
         else:
             targetTypeName = targetType.name
         target = self.lookupTarget(targetTypeName=targetTypeName,
             targetName=targetName)
+        system.configuration = configurationData
         system.target = target
         system.source_image = sourceImage
         # Copy incoming certs (otherwise read-only)
@@ -1149,7 +1154,25 @@ class SystemManager(basemanager.BaseManager):
         if job is not None:
             # Link system to job
             jobmodels.JobSystemArtifact.objects.create(system=system, job=job)
+
         return system
+
+    def _getConfigurationDataFromJob(self, job):
+        if job._descriptor_data is None:
+            return None
+        descriptorData = xobj.parse(job._descriptor_data).descriptor_data
+        if not self.descriptorHasConfigurationData(descriptorData):
+            return None
+
+        # This has validated, so it Should Not Fail (TM)
+        configurationData = xobj.toxml(descriptorData.system_configuration)
+        return configurationData
+
+    @exposed
+    def descriptorHasConfigurationData(self, descriptorDataXobj):
+        withConfigurationData = unicode(getattr(descriptorDataXobj,
+            'withConfiguration', 'false'))
+        return (withConfigurationData.lower() == 'true')
 
     @exposed
     def setDesiredTopLevelItems(self, system, topLevelItems):
