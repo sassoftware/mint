@@ -5402,3 +5402,12 @@ class MigrateTo_64(SchemaMigration):
         cu = self.db.cursor()
         cu.execute("ALTER TABLE inventory_survey ADD COLUMN config_diff_count INTEGER")
         return True
+
+class MigrateTo_65(SchemaMigration):
+    '''goad-p4'''
+    Version = (65, 0)
+
+    def migrate(self):
+        cu = self.db.cursor()
+        cu.execute("UPDATE builds SET troveversion='/local@local:COOK/0.100:1-1-1' WHERE troveversion='/local@local:COOK/1-1-1'")
+        return True
