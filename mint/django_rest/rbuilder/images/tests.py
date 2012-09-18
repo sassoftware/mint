@@ -607,6 +607,11 @@ class ImagesTestCase(RbacEngine):
             for x in job.created_systems.all()),
             ['long-id-1', 'long-id-2'])
 
+        # post again, should not fail (trying to add the same system
+        # as a created artifact multiple times)
+        response = self._post(url, data=xml, jobToken=jobToken)
+        self.assertEquals(response.status_code, 200)
+
     def _setupImageOutputToken(self):
         img = models.Image.objects.get(name='image-0')
         img.project_branch_stage = projectsmodels.Stage.objects.filter(

@@ -1156,8 +1156,10 @@ class SystemManager(basemanager.BaseManager):
             target_system=tsys,
             target_credentials=credentials)
         if job is not None:
-            # Link system to job
-            jobmodels.JobSystemArtifact.objects.create(system=system, job=job)
+            # Link system to job. This call may be repeated, so
+            # gracefully handle existing records
+            jobmodels.JobSystemArtifact.objects.get_or_create(
+                system=system, job=job)
 
         return system
 
