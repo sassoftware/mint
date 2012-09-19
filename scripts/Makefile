@@ -5,7 +5,6 @@
 static_files =				\
 	add-lvm-disk			\
 	add-windows-build-service       \
-	amazon-s3-processor		\
 	apply-proxy-settings		\
 	check-repository		\
 	create-platforms		\
