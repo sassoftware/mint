@@ -1071,6 +1071,7 @@ class SystemManager(basemanager.BaseManager):
         target = self.lookupTarget(targetTypeName=targetTypeName,
             targetName=targetName)
         system.configuration = configurationData
+        system.configuration_set = bool(configurationData is not None)
         system.target = target
         system.source_image = sourceImage
         # Copy incoming certs (otherwise read-only)

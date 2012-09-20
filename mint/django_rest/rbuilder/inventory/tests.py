@@ -4484,6 +4484,7 @@ class TargetSystemImportTest(XMLTestCase, test_utils.RepeaterMixIn):
 
         savedsystem = models.System.objects.get(pk=system.pk)
         self.assertXMLEquals(savedsystem.configuration, systemConfiguration)
+        self.assertEquals(bool(savedsystem.configuration_set), True)
 
         # System registers and passes a boot uuid
         params = dict(localUuid=str(self.uuid4()),
