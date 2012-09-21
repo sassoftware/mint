@@ -5,9 +5,8 @@
 # All rights reserved.
 #
 
-from mint.django_rest.deco import access, return_xml, requires
+from mint.django_rest.deco import return_xml, requires
 from mint.django_rest.rbuilder import service
-from mint.django_rest.rbuilder.xmlresources import models as xmlresources
 
 class XmlResourcesService(service.BaseService):
 
