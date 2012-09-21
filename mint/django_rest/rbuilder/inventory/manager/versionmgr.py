@@ -309,7 +309,7 @@ class VersionManager(basemanager.BaseManager):
 
         repos = conaryClient.getRepos()
         desc = ConfigDescriptorCache(repos).getDescriptor(trvTup)
-        if desc is None:
+        if desc is None or desc == '':
             return None
 
         desc.setDisplayName('Configuration Descriptor')
