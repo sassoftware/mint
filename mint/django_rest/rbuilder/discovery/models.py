@@ -107,4 +107,5 @@ class ApiVersion(modellib.XObjIdModel):
     targets = modellib.HrefField("targets")
     config_info = ConfigInfo()
     version_info = VersionInfo()
+    xml_resources = modellib.HrefField("xml_resources")
 

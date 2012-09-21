@@ -89,4 +89,5 @@ class VersionsTestCase(XMLTestCase):
     <rbuilder_version>mint-version-42</rbuilder_version>
     <rmake_version>rmake-version-42</rmake_version>
   </version_info>
+  <xml_resources id="http://testserver/api/v1/xml_resources"/>
 </api_version>""")
