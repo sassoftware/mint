@@ -27,13 +27,24 @@ class XmlResourcesTestCase(RbacEngine):
             data=testsxml.schema_and_data_xml,
             username="admin", password="password")
         self.assertEquals(response.status_code, 200)
+        
+    def testValidateXmlResourceInvalidXml1(self):
+        response = self._post('xml_resources',
+            data=testsxml.schema_and_data_invalidxml1_xml,
+            username="admin", password="password")
         xml_resource_data = xobj.parse(response.content).xml_resource
-        xml_resource = models.XmlResource()
-        xml_resource.schema = xml_resource_data.schema
-        xml_resource.xml_data = xml_resource_data.xml_data
-        xml_resource.error = xml_resource_data.error
-        #self.assertEquals("test-project", project.name)
-        #self.assertEquals(1, project.created_by.user_id)
-        #self.assertEquals(1, project.modified_by.user_id)
-        #self.assertTrue(project.created_date is not None)
-        #self.assertTrue(project.modified_date is not None)
+        self.assertEquals(xml_resource_data.error.code, u'70')
+        
+    def testValidateXmlResourceInvalidSchema1(self):
+        response = self._post('xml_resources',
+            data=testsxml.schema_and_data_invalidschema1_xml,
+            username="admin", password="password")
+        xml_resource_data = xobj.parse(response.content).xml_resource
+        self.assertEquals(xml_resource_data.error.code, u'70')
+        
+    def testValidateXmlResourceInvalidSchema2(self):
+        response = self._post('xml_resources',
+            data=testsxml.schema_and_data_invalidschema2_xml,
+            username="admin", password="password")
+        xml_resource_data = xobj.parse(response.content).xml_resource
+        self.assertEquals(xml_resource_data.error.code, u'70')
