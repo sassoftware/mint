@@ -12,7 +12,7 @@
 # full details.
 #
 
-SUBDIRS =	fixtures views
+SUBDIRS =	views
 python_files =	$(wildcard *.py)
 
 dist_files = Makefile $(python_files)
