@@ -2,10 +2,7 @@
 # Copyright (c) 2011 rPath, Inc.
 #
 
-import re
 import sys
-from django.db import models
-from mint import helperfuncs
 from mint.django_rest.rbuilder import modellib
 from xobj import xobj
 

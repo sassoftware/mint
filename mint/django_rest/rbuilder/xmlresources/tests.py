@@ -5,11 +5,8 @@
 # All rights reserved.
 #
 
-from mint.django_rest import timeutils
-from mint.django_rest.rbuilder.xmlresources import manager
 from mint.django_rest.rbuilder.xmlresources import models
 from mint.django_rest.rbuilder.xmlresources import testsxml
-from mint.django_rest.rbuilder.manager import basemanager
 from mint.django_rest.rbuilder.manager import rbuildermanager
 from mint.django_rest.rbuilder.rbac.tests import RbacEngine
 
