@@ -23,12 +23,20 @@ class XmlResourceManager(basemanager.BaseManager):
 
     @exposed
     def validateXmlResource(self, xml_resource):
-        # validate stuff
-        xml_resource.error = models.XmlResourceError()
-        success, error_code, error_msg, error_details = self._validateXmlResource(xml_resource)
-        xml_resource.error.code = error_code
-        xml_resource.error.message = error_msg
-        xml_resource.error.details = error_details
+        # validate stuff  
+        
+        success = False
+        status_code = None
+        status_msg = None
+        status_details = None
+        try:
+            success, status_code, status_msg, status_details = self._validateXmlResource(xml_resource)
+        except Exception, e:
+            code = hasattr(e, "errno") and e.errno or 500
+            success, status_code, status_msg, status_details = self._processValidationException(code, e, traceback.format_exc())
+
+        # add the status node
+        xml_resource.status = self._buildStatusNode(success, status_code, status_msg, status_details)
 
         return xml_resource
     
@@ -45,12 +53,14 @@ class XmlResourceManager(basemanager.BaseManager):
                     return True, 0, None, None
         except (etree.DocumentInvalid, etree.XMLSyntaxError), e:
             return self._processValidationException(70, e, traceback.format_exc())
-        except Exception, e:
-            code = hasattr(e, "errno") and e.errno or 500
-            return self._processValidationException(code, e, traceback.format_exc())
         
     def _processValidationException(self, code, exception, tb):
-        msg = "%s\n"  % str(exception.error_log)
+        
+        msg = None;
+        if hasattr(exception, "error_log"):
+            msg = "%s\n"  % str(exception.error_log)
+        else:
+            msg = "Unknown error while validating XML"
         
         if "References from this schema to components in no namespace are not allowed, since not indicated by an import statement" in msg:
             # details will contain the original info, make this a better message
@@ -58,3 +68,12 @@ class XmlResourceManager(basemanager.BaseManager):
             msg = "Invalid XML: Make sure the XML is properly wrapped as CDATA"
         
         return False, code, msg, tb
+    
+    def _buildStatusNode(self, success, code, message, details):
+        status_node = models.XmlResourceStatus()
+        status_node.success = success
+        status_node.code = code
+        status_node.message = message
+        status_node.details = details
+        
+        return status_node
