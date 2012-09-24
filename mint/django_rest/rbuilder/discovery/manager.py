@@ -14,6 +14,7 @@ from mint.lib import siteauth
 
 from mint.django_rest.rbuilder.manager import basemanager
 from mint.django_rest.rbuilder.discovery import models
+from mint.django_rest.rbuilder import modellib
 exposed = basemanager.exposed
 
 class DiscoveryManager(basemanager.BaseManager):
@@ -44,6 +45,12 @@ class DiscoveryManager(basemanager.BaseManager):
         ci.inventory_configuration_enabled = self._bool(self.cfg.inventoryConfigurationEnabled)
         ci.image_import_enabled = self._bool(self.cfg.imageImportEnabled)
         ci.rbuilder_id = self._getRbuilderId()
+        
+        apiVersion.xml_resources = xi = models.XmlResources()
+        xi.id = "%s/xml_resources" % v1.id
+        xi.schemas = models.XmlSchemas()
+        xi.schemas.rpath_configurator_2_0 = modellib.HrefField("xml_resources/schemas/rpath-configurator-2.0.xsd")
+        
         return apiVersion
 
     def _getRbuilderId(self):
