@@ -21,11 +21,19 @@ class XmlResourcesTestCase(RbacEngine):
 
         # invalidate the querysets so tags can be applied
   
-    def testValidateXmlResource(self):
+    def testValidateXmlResourceValidXml1(self):
 
         response = self._post('xml_resources',
-            data=testsxml.schema_and_data_xml,
+            data=testsxml.schema_and_data_validxml1_xml,
             username="admin", password="password")
+        self.assertEquals(response.status_code, 200)
+        
+    def testValidateXmlResourceValidXml2(self):
+
+        response = self._post('xml_resources',
+            data=testsxml.schema_and_data_validxml2_xml,
+            username="admin", password="password")
+        xml_resource_data = xobj.parse(response.content).xml_resource
         self.assertEquals(response.status_code, 200)
         
     def testValidateXmlResourceInvalidXml1(self):
@@ -34,6 +42,14 @@ class XmlResourcesTestCase(RbacEngine):
             username="admin", password="password")
         xml_resource_data = xobj.parse(response.content).xml_resource
         self.assertEquals(xml_resource_data.error.code, u'70')
+        
+    def testValidateXmlResourceInvalidXml2(self):
+        response = self._post('xml_resources',
+            data=testsxml.schema_and_data_invalidxml2_xml,
+            username="admin", password="password")
+        xml_resource_data = xobj.parse(response.content).xml_resource
+        self.assertEquals(xml_resource_data.error.code, u'500')
+        self.assertEquals(xml_resource_data.error.message, u'Invalid XML: Make sure the XML is properly wrapped as CDATA')
         
     def testValidateXmlResourceInvalidSchema1(self):
         response = self._post('xml_resources',

@@ -43,7 +43,18 @@ class XmlResourceManager(basemanager.BaseManager):
                     xmldata = etree.fromstring(str(xml_resource.xml_data))
                     xmlschema.assertValid(xmldata)
                     return True, 0, None, None
-        except (etree.DocumentInvalid, etree.XMLSyntaxError), ex:
-            msg = "%s\n"  % str(ex.error_log)
-            tb = traceback.format_exc()
-            return False, 70, msg, tb
+        except (etree.DocumentInvalid, etree.XMLSyntaxError), e:
+            return self._processValidationException(70, e, traceback.format_exc())
+        except Exception, e:
+            code = hasattr(e, "errno") and e.errno or 500
+            return self._processValidationException(code, e, traceback.format_exc())
+        
+    def _processValidationException(self, code, exception, tb):
+        msg = "%s\n"  % str(exception.error_log)
+        
+        if "References from this schema to components in no namespace are not allowed, since not indicated by an import statement" in msg:
+            # details will contain the original info, make this a better message
+            tb = "%s : %s" % (msg, tb)
+            msg = "Invalid XML: Make sure the XML is properly wrapped as CDATA"
+        
+        return False, code, msg, tb
