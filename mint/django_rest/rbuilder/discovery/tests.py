@@ -80,6 +80,9 @@ class VersionsTestCase(XMLTestCase):
   <query_sets id="http://testserver/api/v1/query_sets"/>
   <rbac id="http://testserver/api/v1/rbac"/>
   <roles id="http://testserver/api/v1/rbac/roles"/>
+  <schemas>
+    <rpath_configurator_2_0 id="http://testserver/api/v1/schemas/rpath-configurator-2.0.xsd"/>
+  </schemas>
   <users id="http://testserver/api/v1/users"/>
   <session id="http://testserver/api/v1/session"/>
   <targets id="http://testserver/api/v1/targets"/>
@@ -89,9 +92,4 @@ class VersionsTestCase(XMLTestCase):
     <rbuilder_version>mint-version-42</rbuilder_version>
     <rmake_version>rmake-version-42</rmake_version>
   </version_info>
-  <xml_resources id="http://testserver/api/v1/xml_resources">
-    <schemas>
-      <rpath_configurator_2_0 id="http://testserver/api/v1/xml_resources/schemas/rpath-configurator-2.0.xsd"/>
-    </schemas>
-  </xml_resources>
 </api_version>""")

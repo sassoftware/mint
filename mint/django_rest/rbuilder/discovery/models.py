@@ -83,14 +83,7 @@ class XmlSchemas(modellib.XObjIdModel):
         abstract = True
     
     rpath_configurator_2_0 = modellib.HrefField("xml_resources/schemas")
-    
-class XmlResources(modellib.XObjIdModel):
-    class Meta:
-        abstract = True
-
-    id = modellib.SyntheticField()
-    schemas = XmlSchemas()
-    
+        
 class ApiVersion(modellib.XObjIdModel):
     class Meta:
         abstract = True
@@ -120,5 +113,5 @@ class ApiVersion(modellib.XObjIdModel):
     targets = modellib.HrefField("targets")
     config_info = ConfigInfo()
     version_info = VersionInfo()
-    xml_resources = XmlResources()
+    schemas = XmlSchemas()
 
