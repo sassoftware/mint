@@ -33,7 +33,6 @@ class XmlResourcesTestCase(RbacEngine):
         response = self._post('xml_resources',
             data=testsxml.schema_and_data_validxml2_xml,
             username="admin", password="password")
-        xml_resource_data = xobj.parse(response.content).xml_resource
         self.assertEquals(response.status_code, 200)
         
     def testValidateXmlResourceInvalidXml1(self):
