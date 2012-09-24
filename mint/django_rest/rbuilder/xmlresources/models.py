@@ -15,7 +15,7 @@ class XmlResource(modellib.XObjIdModel):
     view_name = "XmlResource"
     
     schema = modellib.SyntheticField()
-    xml_data = modellib.SyntheticField()
+    xml = modellib.SyntheticField()
     status = modellib.SyntheticField()
 
     def __unicode__(self):

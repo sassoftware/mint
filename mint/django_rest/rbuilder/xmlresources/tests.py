@@ -52,16 +52,8 @@ class XmlResourcesTestCase(RbacEngine):
             data=testsxml.schema_and_data_invalidxml2_xml,
             username="admin", password="password")
         xml_resource_data = xobj.parse(response.content).xml_resource
-        self.assertEquals(xml_resource_data.status.code, u'500')
-        self.assertEquals(xml_resource_data.status.message, u'Invalid XML: Make sure the XML is properly wrapped as CDATA')
-        self.assertEquals(xml_resource_data.status.success, u'False')
-        
-    def testValidateXmlResourceInvalidXml3(self):
-        response = self._post('xml_resources',
-            data=testsxml.schema_and_data_invalidxml3_xml,
-            username="admin", password="password")
-        xml_resource_data = xobj.parse(response.content).xml_resource
-        self.assertEquals(xml_resource_data.status.code, u'500')
+        self.assertEquals(xml_resource_data.status.code, u'22')
+        self.assertEquals(xml_resource_data.status.message, u'Invalid (empty) xml_resource node')
         self.assertEquals(xml_resource_data.status.success, u'False')
         
     def testValidateXmlResourceInvalidSchema1(self):
