@@ -46,7 +46,8 @@ class XmlResourcesTestCase(RbacEngine):
             username="admin", password="password")
         self.assertEquals(response.status_code, 200)
         xml_resource_data = xobj.parse(response.content).xml_resource
-        self.assertEquals(xml_resource_data.status.success, u'True')
+        self.assertEquals(xml_resource_data.status.code, '0')
+        self.assertEquals(xml_resource_data.status.success, 'True')
         
     def testValidateXmlResourceInvalidXml1(self):
         response = self._post('xml_resources',
@@ -80,3 +81,19 @@ class XmlResourcesTestCase(RbacEngine):
         xml_resource_data = xobj.parse(response.content).xml_resource
         self.assertEquals(xml_resource_data.status.code, u'70')
         self.assertEquals(xml_resource_data.status.success, u'False')
+
+    def testValidateXmlResourceCallHangs(self):
+        # The presence of targetNamespace without a default namespace or a
+        # qualified reference to the type with a namespace prefix
+        # breaks schema validation for lxml
+        # (see http://www.xfront.com/DefaultNamespace.pdf)
+        response = self._post('xml_resources',
+            data=testsxml.schema_and_data_hanging_xml,
+            username="admin", password="password")
+        self.assertEquals(response.status_code, 200)
+        xml_resource_data = xobj.parse(response.content).xml_resource
+        self.assertEquals(xml_resource_data.status.code, '70')
+        self.assertEquals(xml_resource_data.status.success, 'False')
+        self.assertIn(
+            'References from this schema to components in no namespace are not allowed, since not indicated by an import statement.',
+            xml_resource_data.status.message)

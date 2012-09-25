@@ -33,7 +33,7 @@ class XmlResourceManager(basemanager.BaseManager):
             success, status_code, status_msg, status_details = self._validateXmlResource(xml_resource)
         except Exception, e:
             code = hasattr(e, "errno") and e.errno or 500
-            success, status_code, status_msg, status_details = self._processValidationResult(True, code, e, traceback.format_exc())
+            success, status_code, status_msg, status_details = self._processValidationResult(False, code, e, traceback.format_exc())
 
         # add the status node
         xml_resource.status = self._buildStatusNode(success, status_code, status_msg, status_details)
@@ -64,7 +64,7 @@ class XmlResourceManager(basemanager.BaseManager):
                 # validate the xml against the schema
                 schemaXml.assertValid(xmlDoc)
                 return self._processValidationResult(True, 0, None, None)
-        except (etree.DocumentInvalid, etree.XMLSyntaxError), e:
+        except etree.Error, e:
             return self._processValidationResult(False, 70, e, traceback.format_exc())
         
     def _processValidationResult(self, success, code, exception, tb, message=None):
@@ -74,9 +74,8 @@ class XmlResourceManager(basemanager.BaseManager):
             msg = message
         else:
             msg = hasattr(exception, "error_log") and "%s\n"  % str(exception.error_log) or "Unknown error while validating XML"
-        
         return success, code, msg, tb
-    
+
     def _buildStatusNode(self, success, code, message, details):
         status_node = models.XmlResourceStatus()
         status_node.success = success
