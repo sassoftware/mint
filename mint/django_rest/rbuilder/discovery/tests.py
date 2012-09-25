@@ -81,7 +81,7 @@ class VersionsTestCase(XMLTestCase):
   <rbac id="http://testserver/api/v1/rbac"/>
   <roles id="http://testserver/api/v1/rbac/roles"/>
   <schemas>
-    <rpath_configurator_2_0 id="http://testserver/api/v1/schemas/rpath-configurator-2.0.xsd"/>
+    <rpath_configurator_2_0 id="/rpath-configurator-2.0.xsd" name="rpath-configurator-2.0.xsd"/>
   </schemas>
   <users id="http://testserver/api/v1/users"/>
   <session id="http://testserver/api/v1/session"/>

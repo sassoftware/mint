@@ -47,7 +47,9 @@ class DiscoveryManager(basemanager.BaseManager):
         ci.rbuilder_id = self._getRbuilderId()
         
         apiVersion.schemas = models.XmlSchemas()
-        apiVersion.schemas.rpath_configurator_2_0 = modellib.HrefField("schemas/rpath-configurator-2.0.xsd")
+        apiVersion.schemas.rpath_configurator_2_0 = models.XmlSchema()
+        apiVersion.schemas.rpath_configurator_2_0.id = "/rpath-configurator-2.0.xsd"
+        apiVersion.schemas.rpath_configurator_2_0.name = "rpath-configurator-2.0.xsd"
         
         return apiVersion
 
