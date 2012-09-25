@@ -87,10 +87,6 @@ class XmlSchema(modellib.XObjIdModel):
     
     id = modellib.SyntheticField()
     name = modellib.SyntheticField()
-    
-    def __init__(self, id=None, name=None):
-        self.id = id
-        self.name = name
 
     def get_absolute_url(self, request):
         return self.id
@@ -100,6 +96,18 @@ class XmlSchemas(modellib.XObjIdModel):
         abstract = True
     
     rpath_configurator_2_0 = XmlSchema()
+    
+class XmlResources(modellib.XObjIdModel):
+    class Meta:
+        abstract = True
+        
+    _xobj = xobj.XObjMetadata(attributes=dict(id=str))
+    
+    id = modellib.SyntheticField()
+    schemas = XmlSchemas()
+    
+    def get_absolute_url(self, request):
+        return self.id
         
 class ApiVersion(modellib.XObjIdModel):
     class Meta:
@@ -130,5 +138,5 @@ class ApiVersion(modellib.XObjIdModel):
     targets = modellib.HrefField("targets")
     config_info = ConfigInfo()
     version_info = VersionInfo()
-    schemas = XmlSchemas()
+    xml_resources = XmlResources()
 

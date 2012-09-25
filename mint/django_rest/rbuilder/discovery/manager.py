@@ -46,10 +46,13 @@ class DiscoveryManager(basemanager.BaseManager):
         ci.image_import_enabled = self._bool(self.cfg.imageImportEnabled)
         ci.rbuilder_id = self._getRbuilderId()
         
-        apiVersion.schemas = models.XmlSchemas()
-        apiVersion.schemas.rpath_configurator_2_0 = models.XmlSchema()
-        apiVersion.schemas.rpath_configurator_2_0.id = "/rpath-configurator-2.0.xsd"
-        apiVersion.schemas.rpath_configurator_2_0.name = "rpath-configurator-2.0.xsd"
+        apiVersion.xml_resources = xr = models.XmlResources()
+        
+        xr.id = apiVersion.get_absolute_url() + "/xml_resources"
+        xr.schemas = models.XmlSchemas()
+        xr.schemas.rpath_configurator_2_0 = models.XmlSchema()
+        xr.schemas.rpath_configurator_2_0.id = "/rpath-configurator-2.0.xsd"
+        xr.schemas.rpath_configurator_2_0.name = "rpath-configurator-2.0.xsd"
         
         return apiVersion
 
