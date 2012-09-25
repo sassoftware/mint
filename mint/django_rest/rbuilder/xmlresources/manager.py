@@ -27,16 +27,16 @@ class XmlResourceManager(basemanager.BaseManager):
         
         success = False
         status_code = None
-        status_msg = None
+        status_errors = []
         status_details = None
         try:
-            success, status_code, status_msg, status_details = self._validateXmlResource(xml_resource)
+            success, status_code, status_errors, status_details = self._validateXmlResource(xml_resource)
         except Exception, e:
             code = hasattr(e, "errno") and e.errno or 500
-            success, status_code, status_msg, status_details = self._processValidationResult(False, code, e, traceback.format_exc())
+            success, status_code, status_errors, status_details = self._processValidationResult(False, code, e, traceback.format_exc())
 
         # add the status node
-        xml_resource.status = self._buildStatusNode(success, status_code, status_msg, status_details)
+        xml_resource.status = self._buildStatusNode(success, status_code, status_errors, status_details)
 
         return xml_resource
     
@@ -69,23 +69,36 @@ class XmlResourceManager(basemanager.BaseManager):
         
     def _processValidationResult(self, success, code, exception, tb, message=None):
         
-        msg = None
+        errors = []
         
         if not success:
             if message:
-                msg = message
+                errors.append(models.XmlResourceStatusError(message))
             else:
-                msg = hasattr(exception, "error_log") and "%s\n"  % str(exception.error_log) or "Unknown error while validating XML"
-        else:
-            msg = "The XML is valid"
+                errors = self._processEtreeException(exception)
             
-        return success, code, msg, tb
+        return success, code, errors, tb
+    
+    def _processEtreeException(self, exception):
+        errors = []
+        if hasattr(exception, "error_log"):
+            for e in exception.error_log:
+                err = models.XmlResourceStatusError(e.message, e.column, e.domain, 
+                    e.domain_name, e.filename, e.level, e.level_name, e.line, 
+                    e.type, e.type_name)
+                errors.append(err)
+        else:
+            err = models.XmlResourceStatusError("Unknown error while validating XML")
+            errors.append(err)
+            
+        return errors
 
-    def _buildStatusNode(self, success, code, message, details):
+    def _buildStatusNode(self, success, code, errors, details):
         status_node = models.XmlResourceStatus()
         status_node.success = success
         status_node.code = code
-        status_node.message = message
+        for e in errors:
+            status_node.errors.error.append(e)
         status_node.details = details
         
         return status_node

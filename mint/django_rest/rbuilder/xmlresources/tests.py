@@ -29,7 +29,7 @@ class XmlResourcesTestCase(RbacEngine):
         self.assertEquals(response.status_code, 200)
         xml_resource_data = xobj.parse(response.content).xml_resource
         self.assertEquals(xml_resource_data.status.success, u'True')
-        self.assertEquals(xml_resource_data.status.message, u'The XML is valid')
+        self.assertEquals(len(xml_resource_data.status.errors), 0)
         
     def testValidateXmlResourceValidXml2(self):
 
@@ -39,7 +39,7 @@ class XmlResourcesTestCase(RbacEngine):
         self.assertEquals(response.status_code, 200)
         xml_resource_data = xobj.parse(response.content).xml_resource
         self.assertEquals(xml_resource_data.status.success, u'True')
-        self.assertEquals(xml_resource_data.status.message, u'The XML is valid')
+        self.assertEquals(len(xml_resource_data.status.errors), 0)
         
     def testValidateXmlResourceValidXml3(self):
 
@@ -50,7 +50,7 @@ class XmlResourcesTestCase(RbacEngine):
         xml_resource_data = xobj.parse(response.content).xml_resource
         self.assertEquals(xml_resource_data.status.code, '0')
         self.assertEquals(xml_resource_data.status.success, 'True')
-        self.assertEquals(xml_resource_data.status.message, u'The XML is valid')
+        self.assertEquals(len(xml_resource_data.status.errors), 0)
         
     def testValidateXmlResourceInvalidXml1(self):
         response = self._post('xml_resources',
@@ -66,7 +66,7 @@ class XmlResourcesTestCase(RbacEngine):
             username="admin", password="password")
         xml_resource_data = xobj.parse(response.content).xml_resource
         self.assertEquals(xml_resource_data.status.code, u'22')
-        self.assertEquals(xml_resource_data.status.message, u'Invalid (empty) xml_resource node')
+        self.assertEquals(xml_resource_data.status.errors.error.message, u'Invalid (empty) xml_resource node')
         self.assertEquals(xml_resource_data.status.success, u'False')
         
     def testValidateXmlResourceInvalidSchema1(self):
@@ -97,6 +97,10 @@ class XmlResourcesTestCase(RbacEngine):
         xml_resource_data = xobj.parse(response.content).xml_resource
         self.assertEquals(xml_resource_data.status.code, '70')
         self.assertEquals(xml_resource_data.status.success, 'False')
-        self.assertIn(
-            'References from this schema to components in no namespace are not allowed, since not indicated by an import statement.',
-            xml_resource_data.status.message)
+        found=False
+        for e in xml_resource_data.status.errors.error:
+            if 'References from this schema to components in no namespace are not allowed, since not indicated by an import statement.' in e.message:
+                found=True
+                break;
+        self.assertEquals(found, True)
+        
