@@ -70,10 +70,15 @@ class XmlResourceManager(basemanager.BaseManager):
     def _processValidationResult(self, success, code, exception, tb, message=None):
         
         msg = None
-        if message:
-            msg = message
+        
+        if not success:
+            if message:
+                msg = message
+            else:
+                msg = hasattr(exception, "error_log") and "%s\n"  % str(exception.error_log) or "Unknown error while validating XML"
         else:
-            msg = hasattr(exception, "error_log") and "%s\n"  % str(exception.error_log) or "Unknown error while validating XML"
+            msg = "The XML is valid"
+            
         return success, code, msg, tb
 
     def _buildStatusNode(self, success, code, message, details):

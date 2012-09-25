@@ -29,6 +29,7 @@ class XmlResourcesTestCase(RbacEngine):
         self.assertEquals(response.status_code, 200)
         xml_resource_data = xobj.parse(response.content).xml_resource
         self.assertEquals(xml_resource_data.status.success, u'True')
+        self.assertEquals(xml_resource_data.status.message, u'The XML is valid')
         
     def testValidateXmlResourceValidXml2(self):
 
@@ -38,6 +39,7 @@ class XmlResourcesTestCase(RbacEngine):
         self.assertEquals(response.status_code, 200)
         xml_resource_data = xobj.parse(response.content).xml_resource
         self.assertEquals(xml_resource_data.status.success, u'True')
+        self.assertEquals(xml_resource_data.status.message, u'The XML is valid')
         
     def testValidateXmlResourceValidXml3(self):
 
@@ -48,6 +50,7 @@ class XmlResourcesTestCase(RbacEngine):
         xml_resource_data = xobj.parse(response.content).xml_resource
         self.assertEquals(xml_resource_data.status.code, '0')
         self.assertEquals(xml_resource_data.status.success, 'True')
+        self.assertEquals(xml_resource_data.status.message, u'The XML is valid')
         
     def testValidateXmlResourceInvalidXml1(self):
         response = self._post('xml_resources',
