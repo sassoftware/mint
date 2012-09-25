@@ -15,8 +15,8 @@ class XmlResource(modellib.XObjIdModel):
     view_name = "XmlResource"
     
     schema = modellib.SyntheticField()
-    xml_data = modellib.SyntheticField()
-    error = modellib.SyntheticField()
+    xml = modellib.SyntheticField()
+    status = modellib.SyntheticField()
 
     def __unicode__(self):
         return self.hostname
@@ -32,12 +32,13 @@ class XmlResource(modellib.XObjIdModel):
     def save(self, *args, **kwargs):
         pass
     
-class XmlResourceError(modellib.XObjIdModel):
+class XmlResourceStatus(modellib.XObjIdModel):
     
     class Meta:
         abstract = True
 
-    _xobj = xobj.XObjMetadata(tag='error')
+    _xobj = xobj.XObjMetadata(tag='status')
+    success = modellib.SyntheticField()
     code = modellib.SyntheticField()
     message = modellib.SyntheticField()
     details = modellib.SyntheticField()

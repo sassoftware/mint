@@ -24,37 +24,63 @@ class XmlResourceManager(basemanager.BaseManager):
     @exposed
     def validateXmlResource(self, xml_resource):
         # validate stuff
-        xml_resource.error = models.XmlResourceError()
-        success, error_code, error_msg, error_details = self._validateXmlResource(xml_resource)
-        xml_resource.error.code = error_code
-        xml_resource.error.message = error_msg
-        xml_resource.error.details = error_details
+        
+        success = False
+        status_code = None
+        status_msg = None
+        status_details = None
+        try:
+            success, status_code, status_msg, status_details = self._validateXmlResource(xml_resource)
+        except Exception, e:
+            code = hasattr(e, "errno") and e.errno or 500
+            success, status_code, status_msg, status_details = self._processValidationResult(False, code, e, traceback.format_exc())
+
+        # add the status node
+        xml_resource.status = self._buildStatusNode(success, status_code, status_msg, status_details)
 
         return xml_resource
     
     def _validateXmlResource(self, xml_resource):
+
+        hasSchema = xml_resource.schema != None
+        hasXml = xml_resource.xml != None
+        
+        if not hasSchema and not hasXml:
+            return self._processValidationResult(False, 22, None, None, "Invalid (empty) xml_resource node")
         
         try:
-            if xml_resource.schema:
-                #TODO: validate the schema
-                schemaxml = etree.fromstring(str(xml_resource.schema))
-                xmlschema = etree.XMLSchema(schemaxml)
-                if xml_resource.xml_data:
-                    xmldata = etree.fromstring(str(xml_resource.xml_data))
-                    xmlschema.assertValid(xmldata)
-                    return True, 0, None, None
-        except (etree.DocumentInvalid, etree.XMLSyntaxError), e:
-            return self._processValidationException(70, e, traceback.format_exc())
-        except Exception, e:
-            code = hasattr(e, "errno") and e.errno or 500
-            return self._processValidationException(code, e, traceback.format_exc())
+            schemaXml = None
+            
+            if hasSchema:
+                # parse schema
+                schemaElement = etree.fromstring(xml_resource.schema.encode("utf-8"))
+                schemaXml = etree.XMLSchema(schemaElement)
+                
+            if hasXml:
+                # parse xml
+                xmlDoc = etree.fromstring(xml_resource.xml.encode("utf-8"))
+                
+            if hasSchema and hasXml:
+                # validate the xml against the schema
+                schemaXml.assertValid(xmlDoc)
+                return self._processValidationResult(True, 0, None, None)
+        except etree.Error, e:
+            return self._processValidationResult(False, 70, e, traceback.format_exc())
         
-    def _processValidationException(self, code, exception, tb):
-        msg = "%s\n"  % str(exception.error_log)
+    def _processValidationResult(self, success, code, exception, tb, message=None):
         
-        if "References from this schema to components in no namespace are not allowed, since not indicated by an import statement" in msg:
-            # details will contain the original info, make this a better message
-            tb = "%s : %s" % (msg, tb)
-            msg = "Invalid XML: Make sure the XML is properly wrapped as CDATA"
+        msg = None
+        if message:
+            msg = message
+        else:
+            msg = hasattr(exception, "error_log") and "%s\n"  % str(exception.error_log) or "Unknown error while validating XML"
+        return success, code, msg, tb
+
+    def _buildStatusNode(self, success, code, message, details):
+        status_node = models.XmlResourceStatus()
+        status_node.success = success
+        status_node.code = code
+        status_node.message = message
+        status_node.details = details
         
-        return False, code, msg, tb
+        return status_node

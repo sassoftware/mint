@@ -77,7 +77,38 @@ class ConfigInfo(modellib.XObjIdModel):
     is_external_rba = modellib.SyntheticField()
     maintenance_mode = modellib.SyntheticField()
     rbuilder_id = modellib.SyntheticField()
+    
+class XmlSchema(modellib.XObjIdModel):
+    class Meta:
+        abstract = True
+        
+    _xobj = xobj.XObjMetadata(
+        attributes=dict(id=str, name=str))
+    
+    id = modellib.SyntheticField()
+    name = modellib.SyntheticField()
 
+    def get_absolute_url(self, request):
+        return self.id
+        
+class XmlSchemas(modellib.XObjIdModel):
+    class Meta:
+        abstract = True
+    
+    rpath_configurator_2_0 = XmlSchema()
+    
+class XmlResources(modellib.XObjIdModel):
+    class Meta:
+        abstract = True
+        
+    _xobj = xobj.XObjMetadata(attributes=dict(id=str))
+    
+    id = modellib.SyntheticField()
+    schemas = XmlSchemas()
+    
+    def get_absolute_url(self, request):
+        return self.id
+        
 class ApiVersion(modellib.XObjIdModel):
     class Meta:
         abstract = True
@@ -107,5 +138,5 @@ class ApiVersion(modellib.XObjIdModel):
     targets = modellib.HrefField("targets")
     config_info = ConfigInfo()
     version_info = VersionInfo()
-    xml_resources = modellib.HrefField("xml_resources")
+    xml_resources = XmlResources()
 
