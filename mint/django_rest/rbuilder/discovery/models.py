@@ -95,6 +95,7 @@ class XmlSchemas(modellib.XObjIdModel):
     class Meta:
         abstract = True
     
+    rpath_descriptor_1_1 = XmlSchema()
     rpath_configurator_2_0 = XmlSchema()
     
 class XmlResources(modellib.XObjIdModel):

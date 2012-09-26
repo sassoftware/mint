@@ -91,7 +91,8 @@ class VersionsTestCase(XMLTestCase):
   </version_info>
   <xml_resources id="/api/v1/xml_resources">
     <schemas>
-      <rpath_configurator_2_0 id="/rpath-configurator-2.0.xsd" name="rpath-configurator-2.0.xsd"/>
+      <rpath_configurator_2_0 id="/schemas/rpath-configurator-2.0.xsd" name="rpath-configurator-2.0.xsd"/>
+      <rpath_descriptor_1_1 id="/schemas/descriptor-1.1.xsd" name="descriptor-1.1.xsd"/>
     </schemas>
   </xml_resources>
 </api_version>""")
