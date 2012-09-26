@@ -2176,8 +2176,12 @@ ZcY7o9aU
             self.assertEquals([j.system.configuration for j in artifacts],
                 [configDataXml] * len(artifacts))
         else:
+            # Munge config since the launch descriptor calls it
+            # system_configuration
+            tgt = configDataXml.replace('system_configuration>',
+                'configuration>')
             for j in artifacts:
-                self.assertXMLEquals(j.system.configuration, configDataXml)
+                self.assertXMLEquals(j.system.configuration, tgt)
 
         jobXml = """<job>
   <job_state>Completed</job_state>
@@ -2274,7 +2278,7 @@ ZcY7o9aU
             configData=dict(blargh='abc123'))
         system = jmodels.JobSystemArtifact.objects.filter(job=job)[0].system
         self.assertXMLEquals(system.configuration,
-            "<system_configuration><blargh>abc123</blargh></system_configuration>")
+            "<configuration><blargh>abc123</blargh></configuration>")
 
         # Test errors
         response = self._testLaunchSystem(targets, img,

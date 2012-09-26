@@ -1172,7 +1172,10 @@ class SystemManager(basemanager.BaseManager):
             return None
 
         # This has validated, so it Should Not Fail (TM)
-        configurationData = xobj.toxml(descriptorData.system_configuration)
+        data = descriptorData.system_configuration
+        # RCE-1138
+        data._xobj.tag = 'configuration'
+        configurationData = xobj.toxml(data)
         return configurationData
 
     @exposed
