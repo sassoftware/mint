@@ -355,7 +355,6 @@ install needle
         # test complex query against surveys
         search = '/api/v1/inventory/systems;filter_by=EQUAL(latest_survey.windows_packages.windows_package_info.publisher,konami)'
         response = self._get(search, username='admin', password='password')
-        print response.content
         self.assertEqual(response.status_code, 200)
        
 
