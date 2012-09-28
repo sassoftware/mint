@@ -1,8 +1,8 @@
 <project>
   <hostname>rwbs</hostname>
   <short_name>rwbs</short_name>
-  <name>rPath Windows Build Service</name>
-  <description>rPath Windows Build Service appliance</description>
+  <name>rPath Infrastructure</name>
+  <description>Project containing various parts of rPath provided infrastructure.</description>
   <domain_name>rpath.com</domain_name>
   <repository_hostname>infra.rpath.com</repository_hostname>
   <project_type>Appliance</project_type>

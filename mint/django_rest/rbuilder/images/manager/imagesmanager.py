@@ -83,8 +83,7 @@ class ImagesManager(basemanager.BaseManager):
                 image.project_branch_stage_id = pbs.stage_id
 
         if image.trove_version is None:
-            image.trove_version = str(versions.VersionFromString(
-                '/local@local:COOK/1-1-1', timeStamps = [ 0.1 ]))
+            image.trove_version = '/%s/0.1:1-1-1' % versions.CookLabel()
 
         if not image.trove_flavor and image.architecture:
             image.trove_flavor = "is: %s" % image.architecture

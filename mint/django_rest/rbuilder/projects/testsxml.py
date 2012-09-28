@@ -432,7 +432,7 @@ test_get_images_from_pbs_xml = \
     <trove_last_changed></trove_last_changed>
     <time_updated>2011-11-30T14:48:20.430000+00:00</time_updated>
     <name>image-1</name>
-    <trove_version>/local@local:COOK/1-1-1</trove_version>
+    <trove_version>/local@local:COOK/0.1:1-1-1</trove_version>
     <project id="http://testserver/api/v1/projects/chater-foo">
       <domain_name>eng.rpath.com</domain_name>
       <short_name>chater-foo</short_name>

@@ -19,4 +19,8 @@ urlpatterns = patterns('',
         jobviews.JobService(),
         name='Job',
         model='jobs.Job'),
+    URL(r'/(?P<job_uuid>[-a-zA-Z0-9]+)/systems/?$',
+        jobviews.JobSystemsService(),
+        name='JobSystemsService',
+        model='inventory.Systems'),
 )

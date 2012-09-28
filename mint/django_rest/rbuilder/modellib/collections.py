@@ -42,6 +42,9 @@ class Operator(object):
     filterTerm = None
     operator = None
     description = None
+    # This may look weird, but we need two backslashes when trying to
+    # match a single one, for escaping reasons
+    _singleBackslashRe = re.compile(r'\\')
 
     def __init__(self, *operands):
         self.operands = list(operands)
@@ -56,8 +59,12 @@ class Operator(object):
 
     @classmethod
     def _quote(cls, s):
-        if '"' in s:
-            return '"%s"' % s
+        s = cls._singleBackslashRe.sub(r'\\\\', s)
+        slen = len(s)
+        s = s.replace('"', r'\"')
+        if len(s) != slen:
+            # We've replaced something
+            s = '"%s"' % s
         return s
 
     def __eq__(self, other):
@@ -192,7 +199,7 @@ class Lexer(object):
         # First pass: we replace all double-backslashes with a
         # non-ascii unicode char, to simplify the regular expressions
         # _unescape will then revert this operation
-        escCode = cls._escaped.sub(cls._convertedDoubleBackslash, code)
+        escCode = cls._escaped.sub(cls._convertedDoubleBackslash, code).strip()
         # There are only 2 states to worry about.
         # We look for a separator that is either ( , ) or " (unescaped,
         # hence the negative look-ahead in the regex)
@@ -205,10 +212,15 @@ class Lexer(object):
                 raise errors.InvalidData(msg="Unable to parse %s" % code)
             g = m.groupdict()
             head, sep, tail = g['head'], g['sep'], g['tail']
-            escCode = tail
+            # Get rid of leading whitespaces, unless the string is
+            # quoted
+            if sep != '"':
+                escCode = tail.lstrip()
+            else:
+                escCode = tail
             if sep == '(':
                 # New operator found.
-                op = cls._unescape(head)
+                op = cls._unescape(head.strip())
                 opFactory = operatorMap.get(op, None)
                 if opFactory is None:
                     raise errors.InvalidData(msg="Unknown operator %s" % op)
@@ -225,12 +237,12 @@ class Lexer(object):
                 if m:
                     g = m.groupdict()
                     head, sep, tail = g['head'], g['sep'], g['tail']
-                    escCode = tail
-                    cls._addOperand(stack, cls._unescape(head))
+                    escCode = tail.lstrip()
+                    cls._addOperand(stack, cls._unescapeString(head))
                     continue
                 raise errors.InvalidData(msg="Closing quote not found")
             if head:
-                cls._addOperand(stack, cls._unescape(head))
+                cls._addOperand(stack, cls._unescape(head.strip()))
             if sep == ',':
                 continue
             assert sep == ')'
@@ -248,7 +260,12 @@ class Lexer(object):
 
     @classmethod
     def _unescape(cls, s):
-        return cls._unescaped.sub(cls._doubleBackslash, s).encode('ascii')
+        return cls._unescaped.sub(r'\\', s).encode('ascii')
+
+    @classmethod
+    def _unescapeString(cls, s):
+        s = s.replace(r'\"', '"')
+        return cls._unescape(s)
 
 # === BEGIN ADVANCED SEARCH ===
 
@@ -552,7 +569,7 @@ class Collection(XObjIdModel):
             if self.order_by:
                 url += ';order_by=%s' % self.order_by
             if self.filter_by:
-                url += ';filter_by=%s' % urllib.quote(self.filter_by)
+                url += ';filter_by=%s' % urllib.quote(self.filter_by, safe="[],")
         return url
 
     def _sortByField(key):

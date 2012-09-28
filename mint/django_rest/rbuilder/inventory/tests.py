@@ -2434,7 +2434,6 @@ class SystemsTestCase(XMLTestCase):
         #response = self._post('inventory/systems/%s/jobs' % system.pk,
         #    data = testsxml.system_configuration_xml % system.pk,
         #    username='admin', password='password')
-        #print response.content
         #self.assertEquals(response.status_code, 200)
         #self.assertXMLEquals(response.content, '<wrong></wrong>')
 
@@ -4294,7 +4293,7 @@ class TargetSystemImportTest(XMLTestCase, test_utils.RepeaterMixIn):
             ['targets.configure', 'targets.listInstances'] * 4)
         realCall = calls[-1]
         self.failUnlessEqual(realCall.args, ())
-        self.failUnlessEqual(realCall.kwargs, {})
+        self.failUnlessEqual(realCall.kwargs, dict(uuid=jobs[-1].job_uuid))
         self.mgr.repeaterMgr.repeaterClient.reset()
 
 
@@ -4456,6 +4455,65 @@ class TargetSystemImportTest(XMLTestCase, test_utils.RepeaterMixIn):
             params['target_system_description'])
         self.failUnlessEqual(system.description, params['description'])
 
+    def testAddLaunchedSystem2(self):
+        systemConfiguration = "<system_configuration><a>1</a><b>2</b></system_configuration>"
+        user2 = usersmodels.User.objects.get(user_name='JeanValjean2')
+        self.mgr.user = user2
+        params = dict(
+            target_system_id = "target-system-id-001",
+            target_system_name = "target-system-name 001",
+            target_system_description = "target-system-description 001",
+            target_system_state = "Frisbulating",
+            created_by = user2,
+            management_interface = models.Cache.get(models.ManagementInterface,
+                name=models.ManagementInterface.CIM),
+        )
+        system = self.newSystem(**params)
+
+        system.boot_uuid = bootUuid = str(self.uuid4())
+        system.ssl_client_certificate = "ssl client certificate 001"
+        system.ssl_client_key = "ssl client key 001"
+
+        system = self.mgr.addLaunchedSystem(system,
+            targetName=self.tgt2.name,
+            targetType=self.tgt2.target_type,
+            configurationData=systemConfiguration,
+            )
+        for k, v in params.items():
+            self.failUnlessEqual(getattr(system, k), v)
+
+        savedsystem = models.System.objects.get(pk=system.pk)
+        self.assertXMLEquals(savedsystem.configuration, systemConfiguration)
+        self.assertEquals(bool(savedsystem.configuration_set), True)
+
+        # System registers and passes a boot uuid
+        params = dict(localUuid=str(self.uuid4()),
+            generatedUuid=str(self.uuid4()),
+            ipAddress='10.10.10.10',
+            bootUuid=bootUuid)
+
+        xml = """\
+<system>
+  <local_uuid>%(localUuid)s</local_uuid>
+  <generated_uuid>%(generatedUuid)s</generated_uuid>
+  <boot_uuid>%(bootUuid)s</boot_uuid>
+  <hostname>bluetorch.example.com</hostname>
+  <networks>
+    <network>
+      <ip_address>%(ipAddress)s</ip_address>
+      <dns_name>%(ipAddress)s</dns_name>
+    </network>
+  </networks>
+</system>
+""" % params
+        url = "inventory/systems"
+        response = self._post(url, data=xml)
+        self.assertEquals(response.status_code, 200)
+
+        # We should have a job
+        self.assertEquals([ j.job_type.name for j in savedsystem.jobs.all() ],
+            ['system apply configuration'])
+
     def testCaptureSystem(self):
         user2 = usersmodels.User.objects.get(user_name='JeanValjean2')
         self.mgr.user = user2
@@ -4610,10 +4668,13 @@ class CollectionTest(XMLTestCase):
         # Simpler tests
         tests = [
             (collections.EqualOperator('key', 'port'), 'EQUAL(key,port)'),
-            (collections.EqualOperator('key', r'a \"quoted\" value'),
+            (collections.EqualOperator('key', r'a "quoted" value'),
                 r'EQUAL(key,"a \"quoted\" value")'),
-            (collections.EqualOperator('key', r'Extra ( and ), escaped backslash \\ stray \n\r and \"'),
-                r'EQUAL(key,"Extra ( and ), escaped backslash \\ stray \n\r and \"")'),
+            (collections.EqualOperator('key', r'Extra ( and ), backslash \ stray \n\r and "'),
+                r'EQUAL(key,"Extra ( and ), backslash \\ stray \\n\\r and \"")'),
+            # No need to add quotes around a word with \ in it
+            (collections.EqualOperator('key', r'with \ within'),
+                r'EQUAL(key,with \\ within)'),
         ]
         for q, strrepr in tests:
             tree = lexer.scan(strrepr)
@@ -4623,7 +4684,11 @@ class CollectionTest(XMLTestCase):
 
         # One-way tests - extra quotes that get stripped out etc
         tests = [
+            (collections.EqualOperator('key', r'with \ within'),
+                r'EQUAL(key,"with \\ within")'),
             (collections.EqualOperator('key', 'port'), 'EQUAL(key,"port")'),
+            (collections.EqualOperator('key', ' value with spaces '),
+                ' EQUAL ( key ,  " value with spaces "  )'),
         ]
         for q, strrepr in tests:
             tree = lexer.scan(strrepr)
