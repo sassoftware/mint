@@ -4745,6 +4745,18 @@ class CollectionTest(XMLTestCase):
         self.assertEquals([x.name.strip('System name ') for x in systems.system],
             [u'3', u'13', u'23', u'30', u'31', u'32', u'33', u'34', u'35', u'36'])
 
+    def testFilterByIn(self):
+        systems = self.xobjResponse(
+            '/api/v1/inventory/systems;filter_by=IN(system_id,1, 3 , 5)')
+        self.assertEquals([x.system_id for x in systems.system],
+            ['3', '5'])
+
+    def testFilterByIsNull(self):
+        systems = self.xobjResponse(
+            '/api/v1/inventory/systems;filter_by=IS_NULL(local_uuid,true)')
+        self.assertEquals([x.system_id for x in systems.system],
+            ['2', '50'])
+
     def testOrderAndFilterBy(self):
         systems = self.xobjResponse(
             '/api/v1/inventory/systems;filter_by=[name,LIKE,3];order_by=-name')
