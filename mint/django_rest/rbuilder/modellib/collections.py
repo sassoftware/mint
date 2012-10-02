@@ -42,6 +42,9 @@ class Operator(object):
     filterTerm = None
     operator = None
     description = None
+    arity = 2
+    # Variable length arguments
+    ARITY_VAR = object()
     # This may look weird, but we need two backslashes when trying to
     # match a single one, for escaping reasons
     _singleBackslashRe = re.compile(r'\\')
@@ -89,6 +92,7 @@ class InOperator(Operator):
     filterTerm = 'IN'
     operator = 'in'
     description = 'In list'
+    arity = Operator.ARITY_VAR
 
 class NotInOperator(InOperator):
     filterTerm = 'NOT_IN'
@@ -142,16 +146,19 @@ class ContainsOperator(Operator):
     filterTerm = 'CONTAINS'
     operator = None
     description = "Contains"
+    arity = Operator.ARITY_VAR
 
 class AndOperator(Operator):
     filterTerm = 'AND'
     operator = None
     description = "And"
+    arity = Operator.ARITY_VAR
 
 class OrOperator(Operator):
     filterTerm = 'OR'
     operator = None
     description = "Or"
+    arity = Operator.ARITY_VAR
 
 def operatorFactory(operator):
     return operatorMap[operator]
@@ -272,7 +279,12 @@ class Lexer(object):
 def _filterTerm(node, scope):
     ''' given a filter instance (node) produce a hash that Django understands '''
     # TODO: handle NOT by teaching classes to provide the proper operands
-    (field, value) = node.operands
+    if node.arity == 2:
+        (field, value) = node.operands
+    elif node.arity == node.ARITY_VAR:
+        (field, value) = node.operands[0], node.operands[1:]
+    else:
+        raise Exception("Unsupported arity %s" % node.arity)
     django_operator = "%s%s__%s" % (scope, field, node.operator) 
     django_operator = django_operator.replace(".","__")
     filt = {}
