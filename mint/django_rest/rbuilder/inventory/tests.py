@@ -236,7 +236,7 @@ install needle
             ['jkl=7[orange]'])
 
         # Config and Update actions should be disabled
-        url = "inventory/systems/%s" % system.system_id
+        system_url = url = "inventory/systems/%s" % system.system_id
         response = self._get(url,
             username='admin', password='password')
         self.assertEqual(response.status_code, 200)
@@ -285,7 +285,6 @@ install needle
         self.assertEqual(response.status_code, 200)
         surv = survey_models.Survey.objects.get(uuid='1234')
         self.assertEqual(surv.removable, True) # Bug 2209
-
 
         # post a second survey to verify that updating the latest survey
         # info still works and see if the latest survey date matches

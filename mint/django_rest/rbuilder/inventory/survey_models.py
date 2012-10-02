@@ -96,6 +96,7 @@ class Survey(modellib.XObjIdModel):
     _xobj = xobj.XObjMetadata(
         tag = 'survey', attributes = {'id':str}
     )
+    summary_view = [ "name", "overall_compliance", "overall_validation", "execution_error_count", "config_diff_count", "created_date" ]
 
     survey_id     = D(modellib.XObjHidden(models.AutoField(primary_key=True)),
         "the database ID for the survey", short="Survey ID")
