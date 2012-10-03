@@ -441,7 +441,7 @@ class SurveyManager(basemanager.BaseManager):
             software_sync_compliant, config_sync_compliant, config_execution_compliant, 
             config_sync_message)
    
-        return (has_errors, updates_pending, compliance_xml, overall, config_execution_failures, overall_validation)
+        return (has_errors, updates_pending, compliance_xml, overall, config_execution_failures, overall_validation, software_sync_compliant)
 
     def _generateComplianceXml(self, overall, config_execution_failures, software_sync_compliant, 
         config_sync_compliant, config_execution_compliant, config_sync_message):
@@ -888,7 +888,7 @@ class SurveyManager(basemanager.BaseManager):
             discovered_properties=xdiscovered_properties, validation_report=xvalidation_report,
             preview=xpreview, config_diff_ct=config_diff_ct, observed_properties=xobserved_properties
         )
-        (has_errors, updates_pending, compliance_xml, overall, execution_error_count, overall_validation) = results
+        (has_errors, updates_pending, compliance_xml, overall, execution_error_count, overall_validation, software_sync_compliance) = results
 
         # update the survey object with what we've learned about complaince and save it again
         survey.has_errors = has_errors
@@ -898,6 +898,7 @@ class SurveyManager(basemanager.BaseManager):
         survey.overall_compliance = overall
         survey.overall_validation = overall_validation
         survey.execution_error_count = int(execution_error_count)
+        survey.software_sync_compliance = software_sync_compliance
         survey.save()
 
         # the survey contains a copy of the configuration descriptor at the point of survey time as it may change later and we need

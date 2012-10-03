@@ -115,10 +115,11 @@ class Survey(modellib.XObjIdModel):
     system_model_modified_date = modellib.DateTimeUtcField()
     has_system_model = models.BooleanField(default=False)
 
-    overall_compliance    = models.BooleanField(default=True)
-    overall_validation    = models.BooleanField(default=False)
-    execution_error_count = models.IntegerField()
-    config_diff_count     = models.IntegerField()
+    overall_compliance       = models.BooleanField(default=True)
+    overall_validation       = models.BooleanField(default=False)
+    execution_error_count    = models.IntegerField()
+    config_diff_count        = models.IntegerField()
+    software_sync_compliance = models.BooleanField(default=True)
 
     # 'should be like this' values XML from system
     config_properties     = modellib.XMLField(db_column='values_xml')
