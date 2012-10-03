@@ -1215,6 +1215,24 @@ class JobHandlerRegistry(HandlerRegistry):
             # Configuration jobs presently have no real result but return a
             # system with just UUIDs in it. Just return the current system
             # object.
+            try:
+                scriptOutput = self.results.scriptOutput
+                returnCode = int(scriptOutput.returnCode)
+                stdout = scriptOutput.stdout
+                stderr = scriptOutput.stderr
+            except AttributeError:
+                returnCode, stdout, stderr = 0, None, None
+            if stdout is not None:
+                stdout = unicode(stdout)
+            if stderr is not None:
+                stderr = unicode(stderr)
             system = job.systems.all()[0].system
-            system.update(configuration_applied=True)
+            job.status_detail = stdout
+            if returnCode == 0:
+                system.update(configuration_applied=True)
+            else:
+                jobState = self.mgr.getJobStateByName(models.JobState.FAILED)
+                job.job_state = jobState
+                job.status_code = 400
+                job.status_text = stderr
             return system
