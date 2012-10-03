@@ -28,7 +28,7 @@ from conary.dbstore import sqlerrors, sqllib
 log = logging.getLogger(__name__)
 
 # database schema major version
-RBUILDER_DB_VERSION = sqllib.DBversion(65, 1)
+RBUILDER_DB_VERSION = sqllib.DBversion(65, 2)
 
 def _createTrigger(db, table, column="changed"):
     retInsert = db.createTrigger(table, column, "INSERT")
@@ -411,9 +411,9 @@ def _createBuilds(db):
             job_uuid             uuid,
             name                 varchar(255),
             description          text,
-            troveName            varchar(128),
-            troveVersion         varchar(255),
-            troveFlavor          varchar(4096),
+            troveName            text,
+            troveVersion         text,
+            troveFlavor          text,
             troveLastChanged     numeric(14,3),
             timeCreated          numeric(14,3),
             createdBy            integer
@@ -424,7 +424,7 @@ def _createBuilds(db):
             buildCount           integer        NOT NULL    DEFAULT 0,
             productVersionId     integer
                 REFERENCES ProductVersions ON DELETE SET NULL,
-            stageName            varchar(255)               DEFAULT '',
+            stageName            text                       DEFAULT '',
             status               integer                    DEFAULT -1,
             statusMessage        text                       DEFAULT '',
             output_trove         text,
@@ -518,8 +518,8 @@ def _createCommits(db):
             projectId           integer         NOT NULL
                 REFERENCES Projects ON DELETE CASCADE,
             timestamp           numeric(14,3),
-            troveName           varchar(255),
-            version             varchar(255),
+            troveName           text,
+            version             text,
             userId              integer
                 REFERENCES Users ON DELETE SET NULL
         ) %(TABLEOPTS)s """ % db.keywords)
@@ -536,10 +536,10 @@ def _createPackageIndex(db):
             pkgId               %(PRIMARYKEY)s,
             projectId           integer         NOT NULL
                 REFERENCES Projects ON DELETE CASCADE,
-            name                varchar(255)    NOT NULL,
-            version             varchar(255)    NOT NULL,
-            serverName          varchar(254)    NOT NULL,
-            branchName          varchar(254)    NOT NULL,
+            name                text            NOT NULL,
+            version             text            NOT NULL,
+            serverName          text            NOT NULL,
+            branchName          text            NOT NULL,
             isSource            integer         NOT NULL    DEFAULT '0'
         ) %(TABLEOPTS)s """ % db.keywords)
         db.tables['PackageIndex'] = []
@@ -656,8 +656,8 @@ def _createProductVersions(db):
                 platform_id          integer
                     REFERENCES Platforms ON DELETE SET NULL,
                 platform_label       text,
-                namespace            varchar(16),
-                name                 varchar(16)     NOT NULL,
+                namespace            text,
+                name                 text           NOT NULL,
                 description          text,
                 build_standard_group boolean NOT NULL DEFAULT false,
                 timeCreated          numeric(14,3),
@@ -868,7 +868,7 @@ def _createPlatforms(db):
         cu.execute("""
             CREATE TABLE Platforms (
                 platformId  %(PRIMARYKEY)s,
-                label       varchar(255)    NOT NULL UNIQUE,
+                label       text        NOT NULL UNIQUE,
                 mode varchar(255) NOT NULL DEFAULT 'manual'
                     CHECK (mode in ('auto', 'manual')),
                 enabled     smallint NOT NULL DEFAULT 1,
@@ -1112,35 +1112,6 @@ def _createCapsuleIndexerYumSchema(db):
                 PRIMARY KEY (yum_repository_id, package_id)
             ) %(TABLEOPTS)s""" % db.keywords)
         db.tables[tableName] = []
-
-
-def _createRepositoryLogSchema(db):
-    # DEPRECATED -- delete when convenient
-    cu = db.cursor()
-
-    if 'systemupdate' not in db.tables:
-        cu.execute("""
-            CREATE TABLE systemupdate
-            (
-                systemupdateid %(PRIMARYKEY)s,
-                servername character varying(128) NOT NULL,
-                repositoryname character varying(128) NOT NULL,
-                updatetime numeric(14,3) NOT NULL,
-                updateuser character varying(128) NOT NULL
-            ) %(TABLEOPTS)s""" % db.keywords)
-        db.tables['systemupdate'] = []
-    db.createIndex('systemupdate',
-        'systemupdate_repo_idx', 'repositoryname')
-
-    if 'repositorylogstatus' not in db.tables:
-        cu.execute("""
-            CREATE TABLE repositorylogstatus
-            (
-                logname varchar(128) PRIMARY KEY,
-                inode integer NOT NULL,
-                logoffset integer NOT NULL
-            ) %(TABLEOPTS)s""" % db.keywords)
-        db.tables['repositorylogstatus'] = []
 
 
 def _createZoneSchema(db):
@@ -3392,7 +3363,6 @@ def createSchema(db, doCommit=True, cfg=None):
     _createZoneSchema(db)
     _createTargets(db)
     _createCapsuleIndexerSchema(db)
-    _createRepositoryLogSchema(db)
     _createInventorySchema(db, cfg)
     _createJobsSchema(db)
     _createCapsuleIndexerYumSchema(db)

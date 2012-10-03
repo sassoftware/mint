@@ -534,16 +534,48 @@ class JobCreationTest(BaseJobsTest, RepeaterMixIn):
         # System needs to apply configuration
         self.assertEquals(bool(dbsystem.configuration_applied), False)
 
+        stdout = """
+<configurators>
+  <write_status>
+    <errors>
+      <config_error-b9812828-0d6a-11e2-a354-005056b40871>
+        <name>config_error-b9812828-0d6a-11e2-a354-005056b40871</name>
+        <error_list>
+          <error>
+            <code>0</code>
+            <detail>Stdout = \nStderr = \nReturnCode = 0\n</detail>
+            <message>httpd-config.sh</message>
+          </error>
+        </error_list>
+      </config_error-b9812828-0d6a-11e2-a354-005056b40871>
+    </errors>
+    <status>fail</status>
+  </write_status>
+</configurators>
+"""
+
         jobXml = """
 <job>
   <job_state>Completed</job_state>
   <status_code>200</status_code>
   <status_text>Done</status_text>
   <results>
-    <system/>
+    <system>
+      <scriptOutput>
+        <returnCode>0</returnCode>
+        <stdout><![CDATA[%s]]></stdout>
+        <stderr>[2012-10-03 10:57:55.023-0400] [INFO] (client) Running command: configurator
+[2012-10-03 10:57:55.027-0400] [WARNING] (client) Can't import dmidecode, falling back to dmidecode command.
+[2012-10-03 10:57:55.035-0400] [WARNING] (client) Can't use dmidecode command, falling back to mac address
+[2012-10-03 10:57:55.037-0400] [INFO] (client) Attempting to run configurators on 303a3530-3a35-363a-6234-3a30383a3731
+[2012-10-03 10:58:00.460-0400] [INFO] (client) Configurators succeeded
+[2012-10-03 10:58:00.464-0400] [INFO] (client) Command finished: configurator
+</stderr>
+      </scriptOutput>
+    </system>
   </results>
 </job>
-"""
+""" % stdout
 
         # Grab token
         jobToken = dbjob.job_token
@@ -563,6 +595,42 @@ class JobCreationTest(BaseJobsTest, RepeaterMixIn):
         # System should have the config applied
         self.assertEquals(bool(dbsystem.configuration_applied), True)
 
+        # Verify status_text and status_detail
+        self.assertEquals(job.status_text, 'Done')
+        dbjob = models.Job.objects.get(job_uuid=dbjob.job_uuid)
+        self.assertXMLEquals(dbjob.status_detail, stdout)
+
+        # Now pretend we have an error
+        jobXml = """
+<job>
+  <job_state>Completed</job_state>
+  <status_code>200</status_code>
+  <status_text>Done</status_text>
+  <results>
+    <system>
+      <scriptOutput>
+        <returnCode>1</returnCode>
+        <stdout><![CDATA[%s]]></stdout>
+        <stderr>SPLOSION
+Some more errors here
+</stderr>
+      </scriptOutput>
+    </system>
+  </results>
+</job>
+""" % stdout
+
+        # Grab token
+        response = self._put(jobUrl, jobXml, jobToken=jobToken)
+        self.assertEquals(response.status_code, 200)
+        obj = xobj.parse(response.content)
+        # print response.content
+        job = obj.job
+        self.failUnlessEqual(job.job_uuid, dbjob.job_uuid)
+
+        self.assertEquals(job.status_text, 'SPLOSION\nSome more errors here\n')
+        dbjob = models.Job.objects.get(job_uuid=dbjob.job_uuid)
+        self.assertXMLEquals(dbjob.status_detail, stdout)
 
     def _makeSystem(self):
         system = self._saveSystem()
