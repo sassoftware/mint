@@ -549,7 +549,7 @@ class JobCreationTest(BaseJobsTest, RepeaterMixIn):
         </error_list>
       </config_error-b9812828-0d6a-11e2-a354-005056b40871>
     </errors>
-    <status>fail</status>
+    <status>success</status>
   </write_status>
 </configurators>
 """

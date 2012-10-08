@@ -13,6 +13,7 @@ import weakref
 import exceptions
 from django.core import urlresolvers
 from django.db import IntegrityError, transaction
+from lxml import etree
 
 from conary import trovetup
 from xobj import xobj
@@ -1223,7 +1224,13 @@ class JobHandlerRegistry(HandlerRegistry):
             except AttributeError:
                 returnCode, stdout, stderr = 0, None, None
             if stdout is not None:
-                stdout = unicode(stdout)
+                try:
+                    doc = etree.fromstring(str(stdout))
+                    status = doc.xpath('write_status/status/text()')
+                    if status and status[0].lower() == 'fail':
+                        returnCode = 400
+                except etree.Error:
+                    stdout = unicode(stdout)
             if stderr is not None:
                 stderr = unicode(stderr)
             system = job.systems.all()[0].system
