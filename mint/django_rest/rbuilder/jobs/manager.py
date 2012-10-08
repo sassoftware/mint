@@ -682,7 +682,7 @@ class JobHandlerRegistry(HandlerRegistry):
                     try:
                         ddata = smartdescriptor.DescriptorData(
                             fromStream=job._descriptor_data, descriptor=descr)
-                    except smartdescriptor.errors.ConstraintsValidationError, e:
+                    except smartdescriptor.errors.Error, e:
                         raise errors.InvalidData(msg="Data validation error: %s" % e.args[0])
                     self.configDescriptorData = ddata
 
