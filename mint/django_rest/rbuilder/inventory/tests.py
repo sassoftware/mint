@@ -4750,6 +4750,13 @@ class CollectionTest(XMLTestCase):
         self.assertEquals([x.system_id for x in systems.system],
             ['3', '5'])
 
+    def testFilterByAndIn(self):
+        # RCE-1158
+        systems = self.xobjResponse(
+            '/api/v1/inventory/systems;filter_by=AND(IS_NULL(local_uuid,false),IN(system_id,1, 3 , 5))')
+        self.assertEquals([x.system_id for x in systems.system],
+            ['3', '5'])
+
     def testFilterByIsNull(self):
         systems = self.xobjResponse(
             '/api/v1/inventory/systems;filter_by=IS_NULL(local_uuid,true)')

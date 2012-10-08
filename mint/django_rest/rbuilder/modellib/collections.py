@@ -85,8 +85,14 @@ class Operator(object):
     def __ne__(self, other):
         return not (self == other)
 
+    def castValue(self, value):
+        return value
+
 class BooleanOperator(Operator):
-    pass
+    def castValue(self, value):
+        if value.lower() == 'false':
+            return False
+        return True
 
 class InOperator(Operator):
     filterTerm = 'IN'
@@ -288,7 +294,7 @@ def _filterTerm(node, scope):
     django_operator = "%s%s__%s" % (scope, field, node.operator) 
     django_operator = django_operator.replace(".","__")
     filt = {}
-    filt[django_operator] = value
+    filt[django_operator] = node.castValue(value)
     return filt
 
 def _isAllLeaves(operands, and_no_repeated_terms=False):
@@ -301,9 +307,9 @@ def _isAllLeaves(operands, and_no_repeated_terms=False):
         # if the same term is used more than once, we can't merge the queryset together
         counts = {}
         for x in operands:
-            (field, value) = x.operands
+            field = x.operands[0]
             if field not in counts:
-                 counts[field] = 1 
+                 counts[field] = 1
             else:
                  counts[field] = counts[field] + 1
         counts = [ c for c in counts.values() if c > 1 ]
