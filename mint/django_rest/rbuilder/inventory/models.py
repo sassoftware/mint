@@ -552,12 +552,12 @@ class System(modellib.XObjIdModel):
     # these fields are derived from job & trove state
     # stored here so serialization speed is acceptable
     # call updateDerivedData() to recalculate
-    has_running_jobs = D(models.BooleanField(default=False, null=False), 'whether the system has running jobs', short="System running jobs")
-    has_active_jobs = D(models.BooleanField(default=False, null=False), 'whether the system has active (queued/unqueud) jobs', short='System active jobs')
-    out_of_date  = D(models.BooleanField(default=False, null=False), 'whether the system has pending updates', short='System out of date')
+    has_running_jobs = D(APIReadOnly(models.BooleanField(default=False, null=False)), 'whether the system has running jobs', short="System running jobs")
+    has_active_jobs = D(APIReadOnly(models.BooleanField(default=False, null=False)), 'whether the system has active (queued/unqueud) jobs', short='System active jobs')
+    out_of_date  = D(APIReadOnly(models.BooleanField(default=False, null=False)), 'whether the system has pending updates', short='System out of date')
 
-    configuration_applied = D(models.BooleanField(default=False, null=False), 'whether any configuraiton has been applied for this system', short='System configuration applied')
-    configuration_set = D(models.BooleanField(default=False, null=False), 'whether any configuration has been saved (but not necc. applied) for this system', short='System configuration saved')
+    configuration_applied = D(APIReadOnly(models.BooleanField(default=False, null=False)), 'whether any configuraiton has been applied for this system', short='System configuration applied')
+    configuration_set = D(APIReadOnly(models.BooleanField(default=False, null=False)), 'whether any configuration has been saved (but not necc. applied) for this system', short='System configuration saved')
 
     # FIXME: OUT OF DATE -- installed software no longer used, can purge some of this?
     # We need to distinguish between an <installed_software> node not being
