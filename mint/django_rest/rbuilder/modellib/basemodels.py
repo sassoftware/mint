@@ -187,7 +187,10 @@ class BaseManager(models.Manager):
         # We need to remove the read-only fields, added from the xobj model
         for field in model_inst._meta.fields:
             if getattr(field, 'APIReadOnly', None):
-                setattr(model_inst, field.name, None)
+                defaultValue = None
+                if not field.null and isinstance(field, djangofields.BooleanField):
+                    defaultValue = field.default
+                setattr(model_inst, field.name, defaultValue)
         return oldModel, loadedModel
 
     def _copyFields(self, dest, src, xobjModel=object(), withReadOnly=False):
