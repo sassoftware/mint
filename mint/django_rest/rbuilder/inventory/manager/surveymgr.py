@@ -418,7 +418,7 @@ class SurveyManager(basemanager.BaseManager):
                             changed = changed+1
         return (added, removed, changed, updates_pending)
 
-    def _computeCompliance(self, survey, discovered_properties, validation_report, preview, config_diff_ct, observed_properties):
+    def _computeCompliance(self, survey, system_model, discovered_properties, validation_report, preview, config_diff_ct, observed_properties):
         ''' 
         create the compliance summary block for the survey.  This is a rollup of various survey attributes
         and indicates whether the survey is overall in compliance or not.
@@ -427,9 +427,16 @@ class SurveyManager(basemanager.BaseManager):
         # compliance is the summation of the validation report, package changes (preview XML) and whether
         # or not we've had any config errors.  
 
+             
         results = self._computeSummarizedCompliance(validation_report, discovered_properties, observed_properties)
         (has_errors, config_execution_failed, config_execution_failures, overall_validation) = results
-        (added, removed, changed, updates_pending) = self._computePackageChangeCounts(preview)
+
+        (added, removed, changed, updates_pending) = (0, 0, 0, False)
+        if system_model is not None:
+            # TODO: system model based systems don't really work with SW compliance so just deal with the ones
+            # that are still using standard management.  At some point, this will have to do system model
+            # math, should this compliance tracking remain a feature.
+            (added, removed, changed, updates_pending) = self._computePackageChangeCounts(preview)
         config_sync_message = "%s added, %s removed, %s changed" % (added, removed, changed)
 
         config_sync_compliant = (config_diff_ct == 0)
@@ -884,7 +891,7 @@ class SurveyManager(basemanager.BaseManager):
         (survey.config_compliance, config_diff_ct) = self._computeConfigDelta(survey)
 
         # each survey has an overall compliance summary block.  Generate it.
-        results = self._computeCompliance(survey,
+        results = self._computeCompliance(survey, system_model=systemModelContents,
             discovered_properties=xdiscovered_properties, validation_report=xvalidation_report,
             preview=xpreview, config_diff_ct=config_diff_ct, observed_properties=xobserved_properties
         )
