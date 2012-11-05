@@ -207,9 +207,7 @@ class TargetsManager(basemanager.BaseManager, CatalogServiceHelper):
             target_type=targetType,
             defaults = defaults)
         if not created:
-            # Update the defaults
-            models.Target.objects.filter(target_id=target.target_id).update(
-                **defaults)
+            raise errors.Conflict(msg="Target already exists")
         self.mgr.retagQuerySetsByType('target', forUser)
         self.mgr.recomputeTargetDeployableImages()
         return target
