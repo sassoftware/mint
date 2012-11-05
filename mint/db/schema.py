@@ -1967,8 +1967,8 @@ def _addSystemStates(db, cfg):
 def _addManagementZone(db, cfg):
 
     # add the zone
-    zoneName = "Local Zone"
-    zoneDescription = 'Local Management Zone'
+    zoneName = "Local rBuilder"
+    zoneDescription = 'Local rBuilder management zone'
     _addTableRows(db, 'inventory_zone', 'name',
             [dict(name=zoneName,
                   description=zoneDescription,
