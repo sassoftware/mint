@@ -4,7 +4,12 @@
 # All Rights Reserved
 #
 
+import logging
+import random
+import time
+
 from django.core.exceptions import ObjectDoesNotExist
+from django.db import DatabaseError, transaction
 from django.http import HttpResponseNotAllowed, HttpResponseNotFound
 
 from django_restapi import resource
@@ -15,12 +20,17 @@ from mint.django_rest.deco import getHeaderValue, access, ACCESS, HttpAuthentica
 from mint.django_rest.rbuilder.manager import rbuildermanager
 
 MANAGER_CLASS = rbuildermanager.RbuilderManager
+log = logging.getLogger(__name__)
 
 def undefined(function):
     function.undefined = True
     return function
 
 class BaseService(resource.Resource):
+
+    MAX_RETRIES = 10
+    RETRY_WAIT_TIME = 1
+
     def __init__(self):
         self.mgr = MANAGER_CLASS(cfg=None)
         permitted_methods = ['GET', 'PUT', 'POST', 'DELETE']
@@ -29,7 +39,25 @@ class BaseService(resource.Resource):
     def __call__(self, request, *args, **kw):
         self.mgr = MANAGER_CLASS(cfg=getattr(request, 'cfg', None))
         self.setManagerAuth(request)
-        return resource.Resource.__call__(self, request, *args, **kw)
+
+        retries = 0
+        while True:
+            try:
+                return resource.Resource.__call__(self, request, *args, **kw)
+            except DatabaseError as e:
+                if 'deadlock' in e.args[0]:
+                    retries += 1
+                    random.seed(time.time())
+                    wait = random.randint(1, retries)
+                    log.warning(
+                        'Deadlock detected, retry %s in %ss', retries, wait
+                        )
+                    time.sleep(wait)
+                    if self.MAX_RETRIES <= retries:
+                        raise
+                    transaction.rollback()
+                    transaction.set_clean()
+                    continue
 
     def setManagerAuth(self, request):
         user_name, password = request._auth
