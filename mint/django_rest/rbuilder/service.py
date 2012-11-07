@@ -58,6 +58,7 @@ class BaseService(resource.Resource):
                     transaction.rollback()
                     transaction.set_clean()
                     continue
+                raise
 
     def setManagerAuth(self, request):
         user_name, password = request._auth
