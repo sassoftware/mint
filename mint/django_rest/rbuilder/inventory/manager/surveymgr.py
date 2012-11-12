@@ -432,7 +432,7 @@ class SurveyManager(basemanager.BaseManager):
         (has_errors, config_execution_failed, config_execution_failures, overall_validation) = results
 
         (added, removed, changed, updates_pending) = (0, 0, 0, False)
-        if system_model is not None:
+        if system_model is None:
             # TODO: system model based systems don't really work with SW compliance so just deal with the ones
             # that are still using standard management.  At some point, this will have to do system model
             # math, should this compliance tracking remain a feature.
