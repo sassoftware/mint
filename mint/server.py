@@ -2013,6 +2013,8 @@ If you would not like to be %s %s of this project, you may resign from this proj
             platName = pd.getPlatformName()
             if 'platformName' in newBuild.getDataTemplate():
                 newBuild.setDataValue('platformName', str(platName))
+            # RCE-814
+            self.builds.setProductVersion(buildId, versionId, stage)
 
         template = newBuild.getDataTemplate()
 

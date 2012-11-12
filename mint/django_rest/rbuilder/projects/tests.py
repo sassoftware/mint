@@ -201,7 +201,7 @@ class ProjectsTestCase(RbacEngine):
         response = self._post('projects',
             data=testsxml.project_post_xml,
             username="admin", password="password")
-        self.assertEquals(response.status_code, 403)
+        self.assertEquals(response.status_code, 409)
 
 
 

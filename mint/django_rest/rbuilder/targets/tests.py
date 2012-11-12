@@ -367,15 +367,12 @@ class TargetsTestCase(BaseTargetsTest, RepeaterMixIn):
             [ x.build_file.file_id for x in tdi ],
             [ bf.file_id, ])
 
-        # Re-creating the target should not fail, but the description
-        # should be updated
+        # RCE-572 re-creating the target should fail with 409
         data = testsxml.target_POST.replace('Target Description',
             'New description')
         response = self._post('targets/', username='admin', password='password',
             data=data)
-        self.assertEquals(response.status_code, 200)
-        dbobj = models.Target.objects.get(target_id=target.target_id)
-        self.assertEqual(dbobj.description, "New description")
+        self.assertEquals(response.status_code, 409)
 
     def testUpdateTarget(self):
         response = self._put('targets/1', username='admin', password='password',
