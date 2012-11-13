@@ -111,7 +111,10 @@ class SyncTool(object):
         label = str(version.trailingLabel())
         pd = proddef.ProductDefinition()
         pd.setBaseLabel(label)
-        pd.loadFromRepository(self.client)
+        try:
+            pd.loadFromRepository(self.client)
+        except proddef.ProductDefinitionFileNotFoundError:
+            return
         if pd.getProductDefinitionLabel() != label:
             # baselabel does not match
             log.info("Product definition on label %s has base label %s; not "
@@ -192,3 +195,7 @@ class SyncTool(object):
             cu.execute("SELECT label, platformId FROM Platforms")
             self._platformMap = dict(cu)
         return self._platformMap
+
+
+if __name__ == '__main__':
+    sys.exit(Script().run())
