@@ -27,7 +27,6 @@ static_files =				\
 	update-bulletin			\
 	update-package-index		\
 	update-package-index-external	\
-	validate-proxy-settings		\
 	set-password                    \
 	$(generic_scripts)		\
 
