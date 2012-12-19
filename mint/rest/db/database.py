@@ -32,7 +32,7 @@ from mint.rest.db import systemmgr
 from mint.rest.db import targetmgr
 from mint.rest.db import usermgr
 
-reservedHosts = ['admin', 'mail', 'mint', 'www', 'web', 'rpath', 'wiki', 'conary', 'lists']
+reservedHosts = ['admin', 'mail', 'mint', 'www', 'web', 'rpath', 'wiki', 'lists']
 
 class DBInterface(object):
     _logFormat = "%(asctime)s %(levelname)s - %(message)s"

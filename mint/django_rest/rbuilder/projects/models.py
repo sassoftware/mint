@@ -131,7 +131,7 @@ class Project(modellib.XObjIdModel):
 
     _ApplianceTypes = set([ "Appliance", "PlatformFoundation", ])
 
-    RESERVED_HOSTS = ['admin', 'mail', 'mint', 'www', 'web', 'rpath', 'wiki', 'conary', 'lists']
+    RESERVED_HOSTS = ['admin', 'mail', 'mint', 'www', 'web', 'rpath', 'wiki', 'lists']
 
     def __unicode__(self):
         return self.hostname
