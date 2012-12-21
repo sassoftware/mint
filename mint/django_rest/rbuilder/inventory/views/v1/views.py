@@ -788,6 +788,26 @@ class InventorySystemTagService(BaseInventoryService):
     def get(self, system_id, system_tag_id):
         return self.mgr.getSystemTag(system_id, system_tag_id)
 
+class AllSurveysService(BaseInventoryService):
+
+   @access.admin
+   @return_xml
+   def rest_GET(self, request):
+       return self.get()
+
+   def get(self):
+       return self.mgr.getAllSurveys()
+
+class LatestSurveysService(BaseInventoryService):
+
+   @access.admin
+   @return_xml
+   def rest_GET(self, request):
+       return self.get()
+
+   def get(self):
+       return self.mgr.getLatestSurveys()
+
 class SurveysService(BaseInventoryService):
     ''' Collection of all surveys on a given system '''
 

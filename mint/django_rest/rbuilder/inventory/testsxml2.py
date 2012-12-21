@@ -108,6 +108,39 @@ windows_upload_survey_xml="""
            <value>this is not shredded anyway</value>
        </some_random_tag>
   </config_properties>
+
+  <!-- junk data from a non-windows survey but useful for testing diffs -->
+  <validation_report>
+  <extensions>
+    <apache_configuration>
+      <name>Apache configuration</name>
+      <port>8081</port>
+    </apache_configuration>
+  </extensions>
+  <errors>
+    <apache_configuration>
+      <!-- Overall the reader succeeded (hypothetically) -->
+      <success>true</success>
+      <error_list>
+        <error>
+          <!-- Global error -->
+          <code>500</code>
+          <message>General error: apache not running</message>
+          <detail>Lazy sysadmin didn't start apache</detail>
+        </error>
+        <error>
+          <!-- Error processing just one of the fields -->
+          <!-- Deep fields will be separated by / -->
+          <field>processInfo/user</field>
+          <code>1</code>
+          <message>Apache claims user blah, user blah does not exist</message>
+          <detail>Traceback: blah</detail>
+        </error>
+      </error_list>
+    </apache_configuration>
+  </errors>
+  </validation_report>
+
 </survey>
 """
 

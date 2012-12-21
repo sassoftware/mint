@@ -1,15 +1,20 @@
 #
-# Copyright (c) 2010 rPath, Inc.
+# Copyright (c) 2012 rPath, Inc.
 #
 # All Rights Reserved
 #
 
 from xml.etree.ElementTree import Element, tostring, fromstring
-# from xml.dom.minidom import parseString
 from mint.django_rest.rbuilder.inventory import survey_models
 import datetime
+import difflib
+
+# lines of context for unified diff
+DIFF_CONTEXT = 10
 
 # for things changed, but not added/removed, what fields to show in the diff?  
+# this only applies to "_info" objects which represent the definition of something that can apply to multiple hosts
+# state information, like install_time is not included in a survey-to-survey diff.
 
 DIFF_FIELDS = {
    'rpm_package_info'      : [ 'epoch', 'version', 'release', 'signature' ], 
@@ -23,10 +28,12 @@ DIFF_FIELDS = {
 
 # not really about the infos, but the state of the things themselves
 # see usage below
+
 DIFF_TOP_LEVEL_FIELDS = {
    'windows_service_info' : [ 'running' ],
    'service_info' : [ 'running' ],
 }
+
 
 class SurveyDiff(object):
     ''' Compare two surveys and return a list or xobj model of their differences '''
@@ -36,12 +43,18 @@ class SurveyDiff(object):
         self.left = left
         self.right = right
 
+        # used to control some potential redundant lookups when trying to find
+        # names of configurator extensions for particular configurator XML paths
+        # (very much a minor corner case)
+        self.name_key_map = {} 
+
     def compare(self):
         ''' 
         Compute survey differences, but don't return XML.  Sets side
         effects for usage by SurveyDiffRender class.
         '''
 
+        # basic objects
         self.rpmDiff            = self._computeRpmPackages()
         self.conaryDiff         = self._computeConaryPackages()
         self.serviceDiff        = self._computeServices()
@@ -50,6 +63,7 @@ class SurveyDiff(object):
         self.windowsOsPatchDiff = self._computeWindowsOsPatches()
         self.windowsServiceDiff = self._computeWindowsServices()
 
+        # configuration
         self.configDiff         = self._computeConfigDiff()
         self.desiredDiff        = self._computeDesiredDiff()
         self.observedDiff       = self._computeObservedDiff()
@@ -57,6 +71,8 @@ class SurveyDiff(object):
         self.validatorDiff      = self._computeValidatorDiff()
 
     def _name(self, obj):
+        ''' the name of the object to show in the diff is usually a name, except when it's not '''
+
         t = type(obj)
         if t == survey_models.WindowsPatchInfo:
             return obj.display_name
@@ -66,6 +82,7 @@ class SurveyDiff(object):
  
     def _uniqueNames(self, infoName, left, right):
         ''' return all the object names in left and right '''
+
         leftNames  = set([ self._name(getattr(x,infoName)) for x in left  ])
         rightNames = set([ self._name(getattr(x,infoName)) for x in right ])
         return leftNames | rightNames
@@ -85,8 +102,10 @@ class SurveyDiff(object):
             # process things one set of names at a time to prevent extra iteration
             leftMatches   = [ x for x in leftItems  if self._name(getattr(x, infoName)) == name ]
             rightMatches  = [ x for x in rightItems if self._name(getattr(x, infoName)) == name ]
+
             # for things with this same name, what's different?
             localAdded, localChanged, localRemoved = self._diff(infoName, leftMatches, rightMatches)
+
             # add to the big list for the overall diff of survey documents
             added.extend(localAdded)
             changed.extend(localChanged)
@@ -100,31 +119,37 @@ class SurveyDiff(object):
         for a given resource, we can move to having 1 item on the left side of a diff
         and multiple items on the right.  Only one is a change, the rest are additions
         and removals.   This is for resources that have more than one type with
-        same name.
+        same name -- to decide if this is a change event instead of an addition/removal.
         '''
 
         aInfo = getattr(a, infoName)
         bInfo = getattr(b, infoName)
+
         if self._name(aInfo) != self._name(bInfo):
             # this shouldn't really get hit in the way we are using it
             return False
+
         if infoName == 'rpm_package_info':
-            # RPMs don't show up as changed, they are added and removed
-            # return (aInfo.architecture == bInfo.architecture)
+            # RPMs don't show up as changed, they are always added or removed only
             return False
         elif infoName == 'conary_package_info':
+            # like conary packages can have the same name, arch, and flavor
             return (aInfo.architecture == bInfo.architecture and aInfo.flavor == bInfo.flavor)
         elif infoName == 'windows_package_info':
+            # windows uses product codes...
             return (aInfo.product_code == bInfo.product_code)
         elif infoName == 'windows_patch_info':
             return (aInfo.product_code == bInfo.product_code)
         elif infoName == 'windows_os_patch_info':
+            # except for patches, which use 'hotfix_id'
             return (aInfo.hotfix_id == bInfo.hotfix_id) 
         elif infoName == 'service_info':
+            # services are always changes if the name is the same ...
             return True
         elif infoName == 'windows_service_info':
             return True
         else:
+            # we added a new type of object to the diff and need to add another stanza here
             raise Exception("unknown info mode: %s" % infoName)
 
     def _in(self, infoName, itemList, infoPk):
@@ -151,7 +176,7 @@ class SurveyDiff(object):
 
     def _diff(self, infoName, before, after):
         ''' 
-        given the changes for one specific name of object, ex: rpms named 'foo' or services named 'foo'
+        given the changes for one specific name of object, ex: rpms named 'foo' or services named 'bar'
         identify what additions, changes, and removals there were.  This is somewhat tricky as multiple
         installations of something named foo are legal.    
         '''
@@ -191,13 +216,27 @@ class SurveyDiff(object):
         return a dict where each key is the name of a field and the each value
         is a tuple of the left value and right value
         '''
+
+        # fields of the _info objects to scan -- representing the definition of something
         fields = DIFF_FIELDS[mode]
+
+        # fields referencing the instance of something -- which are generally not diffed
+        # with a few exceptions (see top of file) 
         top_level_fields = DIFF_TOP_LEVEL_FIELDS.get(mode,[])
+
         differences = {}
+        
+        # 'mode' here is the name of the info field for the object
         leftInfo = getattr(leftItem, mode)
         rightInfo = getattr(rightItem, mode)
+
+        # if there are no top level fields to diff, and the info objects are the same, 
+        # there are no changes
         if leftInfo.pk == rightInfo.pk and len(top_level_fields) == 0:
             return None
+
+        # the info object is different, so record every field that is different
+        # in the list of info fields to diff
         if leftInfo.pk != rightInfo.pk:
             for f in fields:
                 lval = getattr(leftInfo, f)
@@ -205,10 +244,11 @@ class SurveyDiff(object):
                 if lval != rval:
                     differences[f] = (lval, rval)
 
+        # if there are any top level fields to diff... 
         # we are not actually diffing the info, but also a state change in the way the 
         # object exists presently.  This only happens with services because they can be 
         # running or not running even though they are installed the same.  Packages
-        # do not behave this way.
+        # do not behave this way.   
         for f in top_level_fields:
             lval = getattr(leftItem, f, None)
             rval = getattr(rightItem, f, None)
@@ -217,9 +257,9 @@ class SurveyDiff(object):
 
         if len(differences) == 0:
             return None
-
         return differences
 
+    # basic wrapper functions around diff calculation for various objects:
     def _computeRpmPackages(self):
         return self._computeGeneric('rpm_packages', 'rpm_package_info')
 
@@ -242,44 +282,71 @@ class SurveyDiff(object):
         return self._computeGeneric('windows_services', 'windows_service_info')
 
     def _computeValueDiff(self, value_type):
-        ''' various config values are stored xpath-ish in the SurveyValues table '''
+        ''' 
+        various config values are stored xpath-ish in the SurveyValues table.
+        this determines how they have changed in-between surveys.
+        '''
 
         added = []
         removed = []
         changed = []      
 
-        left = survey_models.SurveyValues.objects.filter(
-            survey = self.left, type = value_type
-        ).order_by('key')
-
-        right = survey_models.SurveyValues.objects.filter(
-            survey = self.right, type = value_type
-        ).order_by('key')
+        # get all values of the given type for both the left and right survey
+        left = survey_models.SurveyValues.objects.filter(survey=self.left, type=value_type).order_by('key')
+        right = survey_models.SurveyValues.objects.filter(survey=self.right, type=value_type).order_by('key')
 
         lkeys = [ x.key for x in left ]
         rkeys = [ x.key for x in right ] 
 
+        # attempt to get the name of the extension out of the database
+        # FIXME: smarter caching
+        all_keys = []
+        all_keys.extend(lkeys)
+        all_keys.extend(rkeys)
+
+        key_extension_map = {}
+        for x in all_keys:
+            tokens = x.split('/')
+            if (len(tokens) > 2) and tokens[1] == 'extensions':
+                name_key = "/extensions/%s/name" % tokens[2]
+                if not (name_key in self.name_key_map):
+                    name_values = survey_models.SurveyValues.objects.filter(survey__in = [self.left, self.right ], key=name_key)
+                    if len(name_values):
+                        value = name_values[0].value
+                        key_extension_map[x] = value
+                        self.name_key_map[name_key] = value
+                    else:
+                        self.name_key_map[name_key] = None
+                else:
+                    key_extension_map[x] = self.name_key_map[name_key]
+
+        # whether the key is there or not decides added/removed
         for x in right:
            if x.key not in lkeys:
+               x._extension_name = key_extension_map.get(x.key, None)
                added.append(x)
-
         for x in left:
            if x.key not in rkeys:
+               x._extension_name = key_extension_map.get(x.key, None)
                removed.append(x)
 
+        # if the key is in both, it's changed
         for x in left:
            for y in right:
               if x.key == y.key:
                   if x.value != y.value:
-                      # store left and right, but delta is not meaningful
                       delta = dict(
                          value = (x.value, y.value)
                       )
+                      x._extension_name = key_extension_map.get(x.key, None)
+                      y._extension_name = key_extension_map.get(y.key, None)
+                      self._flagged = True
                       changed.append((x,y,delta))
 
         result = (added, changed, removed)
         return result
- 
+
+    # wrappers that just call configValueDiff for each of the config types 
     def _computeConfigDiff(self):
         return self._computeValueDiff(survey_models.CONFIG_VALUES)
 
@@ -317,7 +384,7 @@ class SurveyDiffRender(object):
     def _renderSurvey(self, tag, survey):
         ''' serializes the left_survey or right_survey elements '''
         node = self._xmlNode(tag, about=survey,
-             keys='name description removable created_date comment'
+             keys='name description removable created_date comment overall_validation updates_pending has_errors overall_compliance'
         )
         xtags = Element('tags')
         for tag in survey.tags.all():
@@ -352,6 +419,7 @@ class SurveyDiffRender(object):
         elem = Element(elemName, attrib=id_dict)
         elts = dict([ (x, getattr(about, x)) for x in keys])
         self._addElements(elem, **elts)
+
         if parent:
             parent.append(elem)
         return elem
@@ -396,11 +464,46 @@ class SurveyDiffRender(object):
         </changes>
         '''
 
-        (added, changed, removed) = changeList
         elem = Element(tag)
-        self._renderAdditions(tag, elem, added)
-        self._renderChanges(tag, elem, changed)
-        self._renderRemovals(tag, elem, removed)
+        (added, changed, removed) = changeList
+            
+        lname = self.left.name
+        rname = self.right.name
+        ldate = str(self.left.created_date)
+        rdate = str(self.right.created_date)
+
+        if tag.startswith('discovered_properties'):
+
+            all_diffs = []
+            for item in added:
+                if not item.key.endswith('/value'):
+                    continue
+                left = [ '' ]
+                right = item.value.split('\n')
+                diff = '\n'.join(list(difflib.unified_diff(left, right, lname, rname, ldate, rdate, DIFF_CONTEXT)))
+                all_diffs.append( [ item, diff ] )
+            for item in removed:
+                if not item.key.endswith('/value'):
+                    continue
+                left = item.value.split('\n')
+                right = [ '' ]
+                diff = '\n'.join(list(difflib.unified_diff(left, right, lname, rname, ldate, rdate, DIFF_CONTEXT)))
+                all_diffs.append( [ item, diff ] )
+            for item in changed:
+                if not item[0].key.endswith('/value'):
+                    continue
+                left = item[0].value.split('\n')
+                right = item[1].value.split('\n')
+                diff = '\n'.join(list(difflib.unified_diff(left, right, lname, rname, ldate, rdate, DIFF_CONTEXT)))
+                all_diffs.append( [ item[0], diff ] )
+            self._renderSubDiffs(tag, elem, all_diffs)
+
+        else:
+
+            self._renderAdditions(tag, elem, added)
+            self._renderChanges(tag, elem, changed)
+            self._renderRemovals(tag, elem, removed)
+
         return elem
 
     def _changeElement(self, parentTag, mode):
@@ -482,18 +585,18 @@ class SurveyDiffRender(object):
 
     def _serializeWindowsService(self, elemName, item):
         elem = self._xmlNode(elemName, about=item,
-            keys='status'
+            keys='status start_account start_mode running'
         )
         subElt = self._xmlNode('windows_service_info', 
             about=item.windows_service_info, parent=elem,
-            keys='name type handle'
+            keys='name type handle display_name'
         )
         services = item.windows_service_info._required_services.split(",")
         required_objs = survey_models.WindowsServiceInfo.objects.filter(name__in=services)
         required_elts = Element('required_services')
         for x in required_objs:
             self._xmlNode('windows_service_info', about=x, parent=required_elts,
-                keys='name display_name type handle'
+                keys='name display_name type handle '
             )
         subElt.append(required_elts)
         return elem
@@ -505,6 +608,7 @@ class SurveyDiffRender(object):
         elem = self._xmlNode(elemName, about=item, 
             keys='key value'
         )
+        extension = getattr(item, '_extension_name', None)
         return elem
 
     def _serializeItem(self, elemName, item):
@@ -572,6 +676,22 @@ class SurveyDiffRender(object):
             elem.append(subElem)
         return elem
 
+    def _subDiffElement(self, parentTag, key, diff_text):
+         '''
+         these are real diff format diffs inside the diff.  Confused yet?
+         They are only used for discovered_properties which return text like blocks.
+
+            <diff_text>
+                <key>path/to/key/thing</key>
+                <value>output from diff</value>
+            <diff_text>
+         '''
+         tagName = "%s_unified_diff" % parentTag.replace("_changes", "")
+         elem = Element(tagName)
+         elem.append(self._element('key', key))
+         elem.append(self._element('value', diff_text))
+         return elem
+
     def _renderACR(self, parentTag, parentElem, items, mode):
         ''' 
         abstraction around rendering out all the different possible changes
@@ -579,16 +699,48 @@ class SurveyDiffRender(object):
         '''
         for x in items:
             change = self._changeElement(parentTag, mode)
+            if getattr(x, 'key', None) and mode in [ 'added', 'removed' ]:
+                if x.key in [ '/configuration', '/errors' ]:
+                    # skip empty config nodes
+                    continue
             if mode == 'added':
                 change.append(self._addedElement(parentTag, x))
+                extension = getattr(x, '_extension_name', None)
+                if extension is not None:
+                    change.append(self._element('extension', extension)),
             elif mode == 'removed':
                 change.append(self._removedElement(parentTag, x))
+                extension = getattr(x, '_extension_name', None)
+                if extension is not None:
+                    change.append(self._element('extension', extension)),
             elif mode == 'changed':
                 (left, right, delta) = x
+                if getattr(left, 'key', None) in [ '/configuration', '/errors' ]:
+                    continue
+                if getattr(right, 'key', None) in [ '/configuration', '/errors' ]:
+                    continue
                 change.append(self._fromElement(parentTag, left))
                 change.append(self._toElement(parentTag, right))
+                extension = getattr(left, '_extension_name', None)
+                if extension is not None:
+                    change.append(self._element('extension', extension)),
                 if delta is not None:
                     change.append(self._diffElement(parentTag, delta))
+            parentElem.append(change)
+
+    def _renderSubDiffs(self, parentTag, parentElem, items):
+        '''
+        render textual diffs -- used for block fields like discovered_properties only
+        '''
+        for x in items:
+            change = self._changeElement(parentTag, 'unified_diff')
+            (item, diff_text) = x
+            key = item.key
+            extension = getattr(item, '_extension_name')
+            if extension is not None:
+                change.append(self._element('extension', extension))
+            change.append((self._subDiffElement(parentTag, key, diff_text)))
+            #self._DEBUG_FLAGGED = True
             parentElem.append(change)
 
     def _renderAdditions(self, parentTag, parentElem, items):
@@ -603,7 +755,7 @@ class SurveyDiffRender(object):
         ''' render all of what's been changed (and how) for an object type '''
         if len(items) > 0:
             self._renderACR(parentTag, parentElem, items, 'changed')
-    
+   
     def _renderRemovals(self, parentTag, parentElem, items):
         ''' render all of what's been removed for an object type '''
         if len(items) > 0:
@@ -635,5 +787,9 @@ class SurveyDiffRender(object):
         for elt in elts:
             root.append(elt)
 
-        return tostring(root)
+        result = tostring(root)
+
+        return result
+
+
 

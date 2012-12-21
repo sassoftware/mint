@@ -1054,7 +1054,7 @@ systems_xml = """\
       <action>
         <description>Update your system</description>
         <descriptor id="http://testserver/api/v1/inventory/systems/2/descriptors/update"/>
-        <enabled>False</enabled>
+        <enabled>True</enabled>
         <job_type id="http://testserver/api/v1/inventory/event_types/26"/>
         <key>system_update_software</key>
         <name>Update Software</name>
@@ -1165,7 +1165,7 @@ systems_xml = """\
       <action>
         <description>Update your system</description>
         <descriptor id="http://testserver/api/v1/inventory/systems/3/descriptors/update"/>
-        <enabled>False</enabled>
+        <enabled>True</enabled>
         <job_type id="http://testserver/api/v1/inventory/event_types/26"/>
         <key>system_update_software</key>
         <name>Update Software</name>
@@ -1419,7 +1419,7 @@ system_xml = """\
     <action>
       <description>Update your system</description>
       <descriptor id="http://testserver/api/v1/inventory/systems/3/descriptors/update"/>
-      <enabled>False</enabled>
+      <enabled>True</enabled>
       <job_type id="http://testserver/api/v1/inventory/event_types/26"/>
       <key>system_update_software</key>
       <name>Update Software</name>
@@ -1817,7 +1817,7 @@ system_target_xml = """\
     <action>
       <description>Update your system</description>
       <descriptor id="http://testserver/api/v1/inventory/systems/3/descriptors/update"/>
-      <enabled>False</enabled>
+      <enabled>True</enabled>
       <job_type id="http://testserver/api/v1/inventory/event_types/26"/>
       <key>system_update_software</key>
       <name>Update Software</name>
@@ -2259,7 +2259,7 @@ system_with_target = """\
     <action>
       <description>Update your system</description>
       <descriptor id="http://testserver/api/v1/inventory/systems/4/descriptors/update"/>
-      <enabled>False</enabled>
+      <enabled>True</enabled>
       <job_type id="http://testserver/api/v1/inventory/event_types/26"/>
       <key>system_update_software</key>
       <name>Update Software</name>
@@ -2573,6 +2573,10 @@ surveys_xml = """
     <uuid>%(uuid)s</uuid>
     <execution_error_count/>
     <overall_compliance>True</overall_compliance>
+    <overall_validation>False</overall_validation>
+    <updates_pending>False</updates_pending>
+    <has_errors>False</has_errors>
+    <system id="http://testserver/api/v1/inventory/systems/3"/>
   </survey>
 </surveys>
 """
@@ -2838,6 +2842,7 @@ observed_properties_template = """
 <observed_properties>
   <extensions>
     <apache_configuration>
+      <name>Apache configuration</name> 
       <port>8081</port>
     </apache_configuration>
   </extensions>
@@ -2878,12 +2883,10 @@ observed_properties_template = """
 """
 
 observed_properties = observed_properties_template
-observed_properties_alt = observed_properties_template
+observed_properties_alt = observed_properties_template.replace("Lazy","Studious")
 
-discovered_properties_template = """
-<discovered_properties>
-  <extensions>
-    <apache_configuration>
+estub0 = """
+  <apache_configuration>
       <name>Apache Configuration Checker</name>
       <probes>
         <port>
@@ -2896,6 +2899,17 @@ discovered_properties_template = """
         </port>
       </probes>
     </apache_configuration>
+"""
+
+estub1 = estub0.replace("apache","nginx").replace("Apache","nginx")
+estub2 = estub0.replace("apache","tomcat").replace("Apache","Tomcat")
+
+discovered_properties_template = """
+<discovered_properties>
+  <extensions>
+    EXTENSION_STUB0
+    EXTENSION_STUB1
+    EXTENSION_STUB2
   </extensions>
   <errors>
     <apache_configuration>
@@ -2928,10 +2942,10 @@ discovered_properties_template = """
     </disa_stig_compliance_checker>
   </errors>
 </discovered_properties>
-"""
+""".replace('EXTENSION_STUB0', estub0)
 
-discovered_properties = discovered_properties_template
-discovered_properties_alt = discovered_properties_template.replace("false","true").replace("5000","5001")
+discovered_properties = discovered_properties_template.replace('EXTENSION_STUB1','').replace('EXTENSTION_STUB2',estub2)
+discovered_properties_alt = discovered_properties_template.replace("false","true").replace("5000","5001").replace('EXTENSION_STUB1',estub1).replace('EXTENSION_STUB2','')
 
 validation_report_template = """
 <validation_report>
@@ -2957,6 +2971,8 @@ validation_report_template = """
         </port>
       </probes>
     </apache_configuration>
+    FILLER1
+    FILLER2
   </extensions>
   <errors>
     <apache_configuration>
@@ -2991,8 +3007,43 @@ validation_report_template = """
 </validation_report>
 """
 
-validation_report = validation_report_template
-validation_report_alt = validation_report_template.replace("false","true")
+stub1 = """
+<xyz_configuration>
+      <name>XYZ Configuration Checker</name>
+      <status>fail</status>
+      <message>Same as in the probes below</message>
+      <details/>
+      <probes>
+        <port>
+          <name>XYZ Port Check</name>
+          <status>fail</status>
+          <message>XYZ not running on port</message>
+          <details content_type="text/html" encoding="base64">base64-encoded HTML here</details>
+        </port>
+      </probes>
+</xyz_configuration>
+"""
+
+stub2 = """
+<abc_configuration>
+      <name>ABC Configuration Checker</name>
+      <status>fail</status>
+      <message>Same as in the probes below</message>
+      <details/>
+      <probes>
+        <port>
+          <name>ABC Port Check</name>
+          <status>fail</status>
+          <message>ABC not running on port</message>
+          <details content_type="text/html" encoding="base64">base64-encoded HTML here</details>
+        </port>
+      </probes>
+</abc_configuration>
+"""
+
+
+validation_report = validation_report_template.replace("FILLER1",stub1).replace("FILLER2","")
+validation_report_alt = validation_report_template.replace("false","true").replace("not running on port","jump on it").replace("FILLER1","").replace("FILLER2",stub2).replace("user blah does not exist","user quota exceeded")
 
 # input without ids
 # FIXME -- created_by/modified_by should be nullable for system

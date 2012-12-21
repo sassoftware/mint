@@ -82,7 +82,6 @@ INSTALLED_APPS = (
     'django.contrib.sessions',
     'django.contrib.sites',
     'mint.django_rest.rbuilder',
-    'mint.django_rest.rbuilder.reporting',
     'mint.django_rest.rbuilder.inventory'
 )
 

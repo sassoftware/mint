@@ -115,7 +115,9 @@ class Survey(modellib.XObjIdModel):
     has_system_model = models.BooleanField(default=False)
 
     overall_compliance    = models.BooleanField(default=True)
+    overall_validation    = models.BooleanField(default=False)
     execution_error_count = models.IntegerField()
+    config_diff_count     = models.IntegerField()
 
     # 'should be like this' values XML from system
     config_properties     = modellib.XMLField(db_column='values_xml')
@@ -137,9 +139,8 @@ class Survey(modellib.XObjIdModel):
     project_snapshot              = modellib.XMLField(db_column='project_snapshot_xml')
     stage_snapshot                = modellib.XMLField(db_column='stage_snapshot_xml')
 
-    # obsolete now ???
-    updates_pending = XObjHidden(models.BooleanField(default=False))
-    has_errors = XObjHidden(models.BooleanField(default=False))
+    updates_pending = models.BooleanField(default=False)
+    has_errors = models.BooleanField(default=False)
 
     def get_url_key(self, *args, **kwargs):
         return [ self.uuid ]
@@ -205,7 +206,7 @@ class ShortSurvey(modellib.XObjIdModel):
 
     survey_id     = D(modellib.XObjHidden(models.AutoField(primary_key=True)),
         "the database ID for the survey", short="Survey ID")
-    system        = XObjHidden(modellib.DeferredForeignKey('inventory.System', related_name='+', db_column='system_id'))
+    system        = modellib.DeferredForeignKey('inventory.System', related_name='+', db_column='system_id')
     uuid          = models.TextField()
     name          = models.TextField()
     description   = models.TextField()
@@ -214,6 +215,9 @@ class ShortSurvey(modellib.XObjIdModel):
 
     overall_compliance    = models.BooleanField(default=True)
     execution_error_count = models.IntegerField()
+    overall_validation    = models.BooleanField(default=False)
+    updates_pending       = models.BooleanField(default=False)
+    has_errors            = models.BooleanField(default=False)
 
     def get_url_key(self, *args, **kwargs):
         return [ self.uuid ]

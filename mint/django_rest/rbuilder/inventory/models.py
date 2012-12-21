@@ -442,7 +442,7 @@ class System(modellib.XObjIdModel):
         "the date the system was deployed (only applies if system is on a "
         "virtual target)", short="System launch date")
     target = D(modellib.ForeignKey(targetmodels.Target, null=True,
-        text_field="name"),
+        text_field="name", on_delete=models.SET_NULL),
         "the virtual target the system was deployed to (only applies if "
         "system is on a virtual target)")
     target_system_id = D(models.CharField(max_length=255,
@@ -480,7 +480,7 @@ class System(modellib.XObjIdModel):
     ssl_server_certificate = D(models.CharField(max_length=8092, null=True),
         "an x509 public certificate of the system's CIM broker")
     launching_user = D(modellib.ForeignKey(usersmodels.User, null=True,
-        text_field="user_name"),
+        text_field="user_name", on_delete=models.SET_NULL),
         "the user that deployed the system (only applies if system is on a "
         "virtual target)")
     current_state = D(modellib.SerializedForeignKey(
@@ -506,13 +506,15 @@ class System(modellib.XObjIdModel):
         related_name='systems', text_field='description'),
         "the type of the system")
     project_branch_stage = D(APIReadOnly(modellib.DeferredForeignKey(Stage, null=True,
-        db_column="stage_id", text_field='name', related_name="+")),
+        db_column="stage_id", text_field='name', related_name="+",
+        on_delete=models.SET_NULL)),
         "the project stage of the system")
     project_branch = D(APIReadOnly(modellib.DeferredForeignKey(ProjectVersion, null=True,
-        db_column="major_version_id", text_field='name', related_name="systems")),
+        db_column="major_version_id", text_field='name', related_name="systems",
+        on_delete=models.SET_NULL)),
         "the project major version of the system")
     project = D(APIReadOnly(modellib.DeferredForeignKey(Project, null=True,
-        text_field='short_name', related_name="+")),
+        text_field='short_name', related_name="+", on_delete=models.SET_NULL)),
         "the project of the system")
     configuration = APIReadOnly(XObjHidden(models.TextField(null=True, db_column='configuration_xml')))
     configuration_descriptor = D(XObjHidden(modellib.SyntheticField()),
@@ -525,11 +527,11 @@ class System(modellib.XObjIdModel):
          related_name='systems', on_delete=models.SET_NULL)),
          'rBuilder image used to deploy the system, if any')
     created_by = D(modellib.ForeignKey(usersmodels.User, null=True,
-        related_name='+', db_column='created_by'),
+        related_name='+', db_column='created_by', on_delete=models.SET_NULL),
         "User who created system",
         short="System created by")
     modified_by = D(modellib.ForeignKey(usersmodels.User, null=True,
-        related_name='+', db_column='modified_by'),
+        related_name='+', db_column='modified_by', on_delete=models.SET_NULL),
         "User who last modified system",
         short="System last modified by")
     modified_date = D(modellib.DateTimeUtcField(null=True),
@@ -593,6 +595,56 @@ class System(modellib.XObjIdModel):
         if ret:
             return ret[0]
         return None
+
+    def updateNetworks(self, networks):
+        # This function is called when loading a system object from xobj
+        # and merging it with an existing system. This only happens on a
+        # POST
+        valid = re.compile('^[a-zA-Z0-9:._-]+$')
+        futureNetworks = {}
+        for nw in networks:
+            key = (nw.ip_address or nw.dns_name)
+            if not key:
+                continue
+            if not valid.match(key):
+                raise errors.InvalidData(msg="invalid hostname/DNS name %s" %
+                    key)
+            futureNetworks[key] = nw
+        # Walk DB networks
+        pinnedFound = False
+        # RCE-985: order networks by IP address, with nulls being last
+        # This makes sure we don't attempt to update the ip address and
+        # trip over the uniq constraint
+        # Unfortunately django doesn't know how to tell pgsql
+        # 'order by ip_address nulls last', the workaround is to
+        # fabricate a column that is sorted by first.
+        q = self.networks.extra(select=dict(null1="ip_address is null"))
+        for nw in q.order_by('null1', 'ip_address'):
+            key = (nw.ip_address or nw.dns_name)
+            if nw.pinned:
+                if not pinnedFound:
+                    # This is the first pinned network in the db
+                    pinnedFound = True
+                    futureNetworks.pop(key, None)
+                    continue
+                # Second pinned network. Remove it
+                nw.delete()
+                # We may add it back as unpinned
+            fnw = futureNetworks.pop(key, None)
+            if fnw is None:
+                # This network should disappear
+                if nw.network_id is not None:
+                    nw.delete()
+                continue
+            nw.ip_address = fnw.ip_address
+            nw.dns_name = fnw.dns_name
+            nw.device_name = fnw.device_name
+            nw.save()
+        # Everything else has to be added
+        for nw in futureNetworks.values():
+            nw.system = self
+            nw.save()
+        self.network_address = self.__class__.extractNetworkAddress(self)
 
     def createNetworks(self):
         # * oldNetAddr is the state of the system in the db, before any
@@ -879,7 +931,10 @@ class System(modellib.XObjIdModel):
         scanEnabled = bool(self.management_interface_id and
             self.management_interface.name in ('cim', 'wmi'))
         configureEnabled = False
-        updateEnabled = bool(self.latest_survey is not None and
+
+        # Note that you must be able to update systems that don't have a survey
+        # in the case of adding a windows system with no software installed.
+        updateEnabled = bool(self.latest_survey is None or
             not self.latest_survey.has_system_model)
 
         # Disable config action if no config is saved, or if the system

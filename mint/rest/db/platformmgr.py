@@ -97,11 +97,14 @@ class ContentSourceTypes(object):
         allTypesMap = dict()
         allTypes = []
         pIter = self.mgr().platforms.iterPlatforms(withRepositoryLookups=True)
+        isOffline = self.db.isOffline()
         for platform in pIter:
             sourceTypes = platform._sourceTypes
             for t, isSingleton in sourceTypes or []:
                 if t not in allTypes:
                     cst = contentsources.contentSourceTypes[t]
+                    if isOffline and not cst.enabledInOfflineMode:
+                        continue
                     allTypes.append(t)
                     allTypesMap[t] = (isSingleton, cst.isRequired)
 
@@ -237,6 +240,8 @@ class Platforms(object):
 
     def _getPlatformTroveName(self, platform):
         platformDef = self.platformCache.get(str(platform.label))
+        if not platformDef:
+            return None
         srcTroves = [s for s in platformDef.getSearchPaths() \
             if s.isPlatformTrove]
         if srcTroves:
@@ -356,7 +361,7 @@ class Platforms(object):
         platform._buildTypes = platformBuildTypes
         return platform
 
-    def _create(self, platformModel, platformDef):
+    def _create(self, platformModel, platformDef, projectId=None):
         platformLabel = str(platformModel.label)
         params = dict(
             platformName=platformModel.platformName,
@@ -364,6 +369,7 @@ class Platforms(object):
             configurable=bool(platformModel.configurable),
             label=platformLabel,
             enabled=int(platformModel.enabled or 0),
+            projectId=projectId,
         )
 
         # isFromDisk is a field that's not exposed in the API, so treat it
@@ -637,6 +643,9 @@ class Platforms(object):
         url = self._getUrl(platform)
         domainname = self._getDomainname(platform)
         mirror = platform.configurable
+        if self.db.isOffline():
+            # Proxying is prohibited in offline mode so always create a mirror
+            mirror = True
 
         authInfo = self._getAuthInfo()
 
@@ -657,9 +666,8 @@ class Platforms(object):
                     self._updateExternalPackageIndex()
                 else:
                     self._updateInternalPackageIndex()
-                
 
-        if not projectId:            
+        if not projectId:
             # Still no project, we need to create a new one.
             try:
                 projectId = self.db.productMgr.createExternalProduct(
@@ -670,7 +678,10 @@ class Platforms(object):
 
             self.db.db.platforms.update(platformId, projectId=projectId)
 
-            self._updateExternalPackageIndex()
+            # Update package index if the project is in proxy mode. In mirror
+            # mode there's no content yet.
+            if not mirror:
+                self._updateExternalPackageIndex()
 
         return projectId
 
@@ -1133,7 +1144,27 @@ class PlatformManager(manager.Manager):
     def getPlatformVersions(self, platformId):
         return self.platforms.getPlatformVersions(platformId)
 
+    def isOffline(self, label):
+        if not self.db.isOffline():
+            # Site is online so remote repos are reachable
+            return False
+        # Site is offline, check if there is a local mirror
+        host = label.split('@')[0]
+        try:
+            handle = self.db.reposShim.getRepositoryFromFQDN(host)
+        except errors.ProductNotFound:
+            # No project at all, so it's offline
+            return True
+        if not handle.hasDatabase:
+            # There is a project but it is remote
+            return True
+        # Local or mirrored project is accessible
+        return False
+
     def _lookupFromRepository(self, platformLabel, createPlatDef):
+        if self.isOffline(platformLabel):
+            return None
+
         # If there is a product definition, this call will publish it as a
         # platform
         pd = proddef.ProductDefinition()
@@ -1308,9 +1339,12 @@ class PlatformManager(manager.Manager):
         platform = self.platforms.getById(platformId)
         types = []
         sourceTypes = platform._sourceTypes
+        isOffline = self.db.isOffline()
         if sourceTypes is not None:
             for sourceType, isSingleton in sourceTypes:
                 cst = contentsources.contentSourceTypes[sourceType]
+                if isOffline and not cst.enabledInOfflineMode:
+                    continue
                 types.append(ContentSourceTypes.contentSourceTypeModelFactory(
                     name=sourceType, singleton=isSingleton,
                     required=cst.isRequired))
@@ -1409,6 +1443,10 @@ class PlatformDefCache(persistentcache.PersistentCache):
             if labelStr == self._statusKey(labelStr[1]):
                 return self._refreshStatus(labelStr[1], platform=None)
             raise Exception("XXX")
+        if self.mgr().isOffline(labelStr):
+            # Don't refresh if we're offline and would need to talk to a remote
+            # repository.
+            return None
         reposMgr = self.getReposMgr()
         try:
             client = reposMgr.getAdminClient()
@@ -1427,6 +1465,9 @@ class PlatformDefCache(persistentcache.PersistentCache):
             try:
                 if reposMgr.db.siteAuth:
                     entitlement = reposMgr.db.siteAuth.entitlementKey
+                    if reposMgr.db.isOffline():
+                        # Remote will not be reachable
+                        return None
                 else:
                     entitlement = None
                 serverProxy = reposMgr.db.reposShim.getServerProxy(host,

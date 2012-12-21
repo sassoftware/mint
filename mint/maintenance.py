@@ -8,7 +8,6 @@ import errno
 import os
 
 from mint import mint_error
-from mint.lib import siteauth
 
 # the length of the maintenanceLockPath file is used as the maintenance mode
 # as defined below. no file equates to a length of zero.
@@ -22,12 +21,7 @@ EXPIRED_MODE = 2
 
 # client side
 def getMaintenanceMode(cfg):
-    # Check site authorization first
-    siteAuth = siteauth.getSiteAuth(cfg.siteAuthCfgPath)
-    if not siteAuth.isValid():
-        return EXPIRED_MODE
-
-    # Then check the maintmode file. A missing file is the same as
+    # check the maintmode file. A missing file is the same as
     # normal mode.
     try:
         st_result = os.stat(cfg.maintenanceLockPath)

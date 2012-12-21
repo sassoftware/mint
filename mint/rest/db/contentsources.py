@@ -76,6 +76,7 @@ class ContentSourceType(object):
     model = None
     _ContentSourceTypeName = None
     isRequired = False
+    enabledInOfflineMode = True
 
     def __init__(self, proxyMap = None):
         self.proxyMap = proxyMap
@@ -119,8 +120,10 @@ class ContentSourceType(object):
 class _RhnSourceType(ContentSourceType):
     xmlrpcUrl = 'XMLRPC'
     cfg = rpath_capsule_indexer.IndexerConfig()
+    cfg.channels.append('rhel-i386-server-6')
+    cfg.channels.append('rhel-i386-server-5')
     cfg.channels.append('rhel-i386-as-4')
-    # Just use the rhel 4 channel label here, both rhel 4 and rhel 5 pull
+    # Just use the rhel 5 channel label here, both rhel 4 and rhel 5 pull
     # from the same entitlement pool.
 
     def getDataSource(self):
@@ -140,17 +143,21 @@ class _RhnSourceType(ContentSourceType):
             log.error("Error validating content source %s" \
                         % (self.name, ))
             return (False, False, msg)
-        
-        try:
-            remaining = ds.getAvailableEntitlements(self.cfg.channels[0])
-        except rpath_capsule_indexer.errors.RPCError, e:
-            log.error("Error getting available entitlements: %s" % e)
-            return(False, False, msg)
 
-        if remaining <= 0:
+        remaining = None
+        for ch in self.cfg.channels:
+            try:
+                remaining = ds.getAvailableEntitlements(ch)
+            except rpath_capsule_indexer.errors.RPCError, e:
+                log.error("Error getting available entitlements: %s" % e)
+            else:
+                if remaining > 0:
+                    return (True, True, 'Validated Successfully.')
+                log.error("Insufficient Channel Entitlements for %s" % ch)
+
+        if remaining is not None:
             return (False, False, "Insufficient Channel Entitlements.")
-
-        return (True, True, 'Validated Successfully.')
+        return (False, False, msg)
 
 class Rhn(_RhnSourceType):
     fields = [Name, Username, Password]
@@ -158,6 +165,8 @@ class Rhn(_RhnSourceType):
     sourceUrl = 'https://rhn.redhat.com'
     _ContentSourceTypeName = 'Red Hat Network'
     isRequired = True
+    enabledInOfflineMode = False
+
 
 class Satellite(_RhnSourceType):
     fields = [Name, Username, Password, SourceUrl]
@@ -219,6 +228,7 @@ class Nu(Smt):
     model = models.NuSource
     sourceUrl = 'https://nu.novell.com/repo/$RCE'
     _ContentSourceTypeName = 'Novell Update Service'
+    enabledInOfflineMode = False
 
 class Repomd(_RepositoryMetadataSourceType):
     fields = [Name, UsernameOptional, PasswordOptional, SourceUrl]

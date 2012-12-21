@@ -315,7 +315,8 @@ class ProductManager(manager.Manager):
             self.reposMgr.addExternalRepository(productId, 
                                                 hostname, domainname, url,
                                                 authInfo, mirror)
-        self.setMemberLevel(productId, self.auth.userId, userlevels.OWNER)
+        if self.auth.userId is not None:
+            self.setMemberLevel(productId, self.auth.userId, userlevels.OWNER)
         self.publisher.notify('ExternalProductCreated', productId)
 
         return productId

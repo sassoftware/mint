@@ -1,7 +1,5 @@
 #
-# Copyright (c) 2010 rPath, Inc.
-#
-# All Rights Reserved
+# Copyright (c) rPath, Inc.
 #
 
 static_files =				\
@@ -9,7 +7,6 @@ static_files =				\
 	add-windows-build-service       \
 	amazon-s3-processor		\
 	apply-proxy-settings		\
-	auth-generate			\
 	check-repository		\
 	create-platforms		\
 	deleteproject			\
@@ -22,8 +19,8 @@ static_files =				\
 	migrate-all-projects		\
 	mirror-inbound			\
 	mirror-outbound			\
+	rbuilder-debug			\
 	refresh-auth			\
-	restore-preload-bundle		\
 	rmake-reset			\
 	rmake-setup			\
 	rss-update			\
@@ -33,7 +30,6 @@ static_files =				\
 	update-package-index-external	\
 	validate-proxy-settings		\
 	set-password                    \
-	repository-log-scrape		\
 	$(generic_scripts)		\
 
 
@@ -49,6 +45,7 @@ generic_scripts = \
 	purge-surveys			\
 	rbuilder-database		\
 	repository-sync			\
+	restore-preload-bundle		\
 	system-resolver			\
 	target-systems-import		\
 

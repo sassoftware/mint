@@ -72,6 +72,8 @@ class ContentSourceTypeTest(mint_rephelp.MintDatabaseHelper):
                 dataMap = {
                     'auth.login' : ":sessionHandle:",
                     'channel.software.availableEntitlements' : {
+                        (':sessionHandle:', 'rhel-i386-server-6') : -100,
+                        (':sessionHandle:', 'rhel-i386-server-5') : 0,
                         (':sessionHandle:', 'rhel-i386-as-4') : 10,
                     },
                 }

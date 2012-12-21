@@ -1,0 +1,13 @@
+#!/bin/bash
+
+if [ $# -ne 1 -o  \( "$1" != enable -a "$1" != disable \) ]; then
+    echo "Usage: $0 <enable|disable>"
+    exit 1
+fi
+
+if [ "$1" == enable ]; then
+    install -d -m 0700 -o apache -g apache /tmp/rbuilder_debug_logging
+    touch /srv/rbuilder/MINT_LOGGING_ENABLE
+else
+    rm -f /srv/rbuilder/MINT_LOGGING_ENABLE
+fi

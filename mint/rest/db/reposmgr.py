@@ -1,5 +1,5 @@
 #
-# Copyright (c) 2011 rPath, Inc.
+# Copyright (c) rPath, Inc.
 #
 
 import copy
@@ -19,8 +19,6 @@ from mint.rest.db import manager
 from conary import conarycfg
 from conary import conaryclient
 from conary import trove as cny_trove
-from conary import trovetup
-from conary.build import nextversion
 from conary.repository import changeset
 from conary.repository import errors as reposerrors
 from conary.repository import shimclient
@@ -355,16 +353,17 @@ class RepositoryManager(manager.Manager):
             cfg.configLine('user %s %s %s' % (fqdn, authInfo.username,
                                               authInfo.password))
 
-        nc = conaryclient.ConaryClient(cfg).getRepos()
-        try:
-            # use 2**64 to ensure we won't make the server do much
-            nc.getNewTroveList(fqdn, '4611686018427387904')
-        except reposerrors.InsufficientPermission, e:
-            e_tb = sys.exc_info()[2]
-            raise errors.ExternalRepositoryMirrorError(url, e), None, e_tb
-        except reposerrors.OpenError, e:
-            e_tb = sys.exc_info()[2]
-            raise errors.ExternalRepositoryAccessError(url, e), None, e_tb
+        if not self.db.siteAuth.isOffline():
+            nc = conaryclient.ConaryClient(cfg).getRepos()
+            try:
+                # use 2**64 to ensure we won't make the server do much
+                nc.getNewTroveList(fqdn, '4611686018427387904')
+            except reposerrors.InsufficientPermission, e:
+                e_tb = sys.exc_info()[2]
+                raise errors.ExternalRepositoryMirrorError(url, e), None, e_tb
+            except reposerrors.OpenError, e:
+                e_tb = sys.exc_info()[2]
+                raise errors.ExternalRepositoryAccessError(url, e), None, e_tb
 
     def _getRepositoryUrl(self, fqdn):
         hostname = fqdn.split('.', 1)[0]

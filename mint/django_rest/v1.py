@@ -1,7 +1,5 @@
 #
-# Copyright (c) 2010 rPath, Inc.
-#
-# All Rights Reserved
+# Copyright (c) rPath, Inc.
 #
 
 from django.conf.urls.defaults import patterns, include
@@ -20,10 +18,6 @@ URL = urls.URLRegistry.URL
 # can support v2, can update URL function to know & append context
 
 urlpatterns = patterns('',
-
-    # FIXME: something wrong with these URLs if enabled
-    #(r'^/reports',
-    # include('mint.django_rest.rbuilder.reporting.views.v1.urls')),
 
     (r'^/images',
      include('mint.django_rest.rbuilder.images.views.v1.urls')),

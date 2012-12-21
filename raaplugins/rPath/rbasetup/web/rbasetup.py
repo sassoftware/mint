@@ -1,13 +1,11 @@
 #
-# Copyright (c) 2006-2009 rPath, Inc
-# All rights reserved
+# Copyright (c) rPath, Inc
 #
+
 import time
 import os
-import md5
 import re
 import socket
-import urllib
 
 from gettext import gettext as _
 import raa
@@ -15,17 +13,14 @@ import raa.web
 import logging
 log = logging.getLogger('raa.web')
 
-from raa import rpath_error
 from raa import constants
-from raa.db.data import RDT_BOOL, RDT_INT, RDT_JSON, RDT_STRING
+from raa.db.data import RDT_BOOL, RDT_INT, RDT_STRING
 from raa.db import schedule
-from raa.db import wizardrun
-from raa.modules import raawebplugin
 from raa.modules.raawebplugin import rAAWebPlugin
 from raa.lib import validate
 
 from mint import config
-from mint import helperfuncs
+from mint.lib import siteauth
 
 from rPath.rbasetup import lib
 
@@ -143,18 +138,21 @@ class rBASetup(rAAWebPlugin):
                 errorList.append("Passwords must match")
             elif options['new_password'].find('#') != -1:
                 errorList.append("Passwords must not contain a #")
-                
-            # entitlement key required
-            if 'entitlementKey' not in options:
-                errorList.append("You must enter a valid entitlement")
-                
-            # validate the entitlement key
-            res = self.validateNewEntitlement(options.get('entitlementKey'))
-            if res.has_key('errors'):
-                errorString = "Entitlement is invalid"
-                if len(res['errors']) > 0:
-                    errorString = res['errors'][0]
-                errorList.append(errorString)
+
+            cfg = lib.readRBAConfig(config.RBUILDER_CONFIG)
+            auth = siteauth.getSiteAuth(cfg.siteAuthCfgPath)
+            if not auth.isOffline():
+                # entitlement key required
+                if 'entitlementKey' not in options:
+                    errorList.append("You must enter a valid entitlement")
+
+                # validate the entitlement key
+                res = self.validateNewEntitlement(options.get('entitlementKey'))
+                if res.has_key('errors'):
+                    errorString = "Entitlement is invalid"
+                    if len(res['errors']) > 0:
+                        errorString = res['errors'][0]
+                    errorList.append(errorString)
 
         if options.get('externalPasswordURL'):
             # XXX Removing the validation for this for now;

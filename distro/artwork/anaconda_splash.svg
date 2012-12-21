@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="UTF-8" standalone="no"?>
 <!-- Created with Inkscape (http://www.inkscape.org/) -->
+
 <svg
    xmlns:i="http://ns.adobe.com/AdobeIllustrator/10.0/"
    xmlns:dc="http://purl.org/dc/elements/1.1/"
@@ -14,7 +15,7 @@
    height="420"
    id="svg2384"
    sodipodi:version="0.32"
-   inkscape:version="0.46"
+   inkscape:version="0.48.2 r9819"
    version="1.0"
    sodipodi:docname="anaconda_splash.svg"
    inkscape:output_extension="org.inkscape.output.svg.inkscape">
@@ -51,7 +52,7 @@
      inkscape:pageopacity="0.0"
      inkscape:pageshadow="2"
      inkscape:zoom="1.7416055"
-     inkscape:cx="199.78974"
+     inkscape:cx="200.93811"
      inkscape:cy="209.99999"
      inkscape:document-units="px"
      inkscape:current-layer="layer5"
@@ -60,8 +61,9 @@
      inkscape:guide-bbox="true"
      inkscape:window-width="1400"
      inkscape:window-height="980"
-     inkscape:window-x="1280"
-     inkscape:window-y="25">
+     inkscape:window-x="1600"
+     inkscape:window-y="25"
+     inkscape:window-maximized="0">
     <sodipodi:guide
        orientation="1,0"
        position="0,293.06176"
@@ -360,14 +362,14 @@
     </switch>
     <text
        xml:space="preserve"
-       style="font-size:10px;font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;text-align:start;line-height:100%;writing-mode:lr-tb;text-anchor:start;fill:#000000;fill-opacity:1;stroke:none;stroke-width:1px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1;font-family:Trebuchet MS;-inkscape-font-specification:Trebuchet MS"
-       x="124.32617"
+       style="font-size:10px;font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;text-align:start;line-height:100%;writing-mode:lr-tb;text-anchor:start;fill:#000000;fill-opacity:1;stroke:none;font-family:Trebuchet MS;-inkscape-font-specification:Trebuchet MS"
+       x="142.32617"
        y="407.03552"
        id="text4026"
        sodipodi:linespacing="100%"><tspan
          sodipodi:role="line"
          id="tspan4028"
-         x="124.32617"
-         y="407.03552">Copyright © 2007-2010 rPath, Inc.</tspan></text>
+         x="142.32617"
+         y="407.03552">Copyright © rPath, Inc.</tspan></text>
   </g>
 </svg>

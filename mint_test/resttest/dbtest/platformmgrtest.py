@@ -216,6 +216,8 @@ class PlatformManagerTest(restbase.BaseRestTest):
         reposdb.RepositoryManager.getServerProxy._mock.setReturn(
             self.cclient.repos.c.cache['localhost'],
             'localhost', 'localhost@rpath:plat-1', None, [None])
+        mgr = self.db.platformMgr.platformCache.getReposMgr()
+        mgr.db.isOffline._mock.setDefaultReturn(False)
 
         self.db.platformMgr.getPlatforms()
 
