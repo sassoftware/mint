@@ -326,7 +326,7 @@ class SurveyManager(basemanager.BaseManager):
            if created:
                obj.save()
 
-    def _computeValidationReportCompliance(self, validation_report):
+    def _computeSummarizedCompliance(self, validation_report, discovered_properties, observed_properties):
         '''
         given the <validation_report> element of a survey, walk through it and decide whether any errors are marked fatal
         or the overall report is fatal.  Return this information + error counts
@@ -338,11 +338,14 @@ class SurveyManager(basemanager.BaseManager):
         config_execution_failed = False
         config_execution_failures = 0
 
-        if validation_report is not None:
+        all_reports = [ validation_report, discovered_properties, observed_properties ] 
+        reports = [ r for r in all_reports if r is not None ]
+
+        for report in reports:
 
             # if there is a top level status tag and the status is 'fail', the client has decided to fail
             # the validation report.
-            status = getattr(validation_report, 'status', None)
+            status = getattr(report, 'status', None)
             if status and status.lower() == 'fail':
                 has_errors = True
                 config_execution_failed = True
@@ -354,7 +357,7 @@ class SurveyManager(basemanager.BaseManager):
             # it didn't set the overall status, but the survey really SHOULD set the overall status.  We
             # also have to count errors anyway.   Refer to RCE-11 and RCE-303 in JIRA for XML context.
 
-            errors = getattr(validation_report, 'errors', None)
+            errors = getattr(report, 'errors', None)
             if errors is not None:
                 elementNames = errors._xobj.elements
                 for x in elementNames:
@@ -367,6 +370,7 @@ class SurveyManager(basemanager.BaseManager):
                     if subErrors is not None:
                         eCount = len(subErrors._xobj.elements)
                         config_execution_failures += eCount
+
         return (has_errors, config_execution_failed, config_execution_failures, overall_validation) 
 
     def _computePackageChangeCounts(self, preview):
@@ -414,7 +418,7 @@ class SurveyManager(basemanager.BaseManager):
                             changed = changed+1
         return (added, removed, changed, updates_pending)
 
-    def _computeCompliance(self, survey, discovered_properties, validation_report, preview, config_diff_ct):
+    def _computeCompliance(self, survey, system_model, discovered_properties, validation_report, preview, config_diff_ct, observed_properties):
         ''' 
         create the compliance summary block for the survey.  This is a rollup of various survey attributes
         and indicates whether the survey is overall in compliance or not.
@@ -423,9 +427,16 @@ class SurveyManager(basemanager.BaseManager):
         # compliance is the summation of the validation report, package changes (preview XML) and whether
         # or not we've had any config errors.  
 
-        results = self._computeValidationReportCompliance(validation_report)
+             
+        results = self._computeSummarizedCompliance(validation_report, discovered_properties, observed_properties)
         (has_errors, config_execution_failed, config_execution_failures, overall_validation) = results
-        (added, removed, changed, updates_pending) = self._computePackageChangeCounts(preview)
+
+        (added, removed, changed, updates_pending) = (0, 0, 0, False)
+        if system_model is None:
+            # TODO: system model based systems don't really work with SW compliance so just deal with the ones
+            # that are still using standard management.  At some point, this will have to do system model
+            # math, should this compliance tracking remain a feature.
+            (added, removed, changed, updates_pending) = self._computePackageChangeCounts(preview)
         config_sync_message = "%s added, %s removed, %s changed" % (added, removed, changed)
 
         config_sync_compliant = (config_diff_ct == 0)
@@ -437,7 +448,7 @@ class SurveyManager(basemanager.BaseManager):
             software_sync_compliant, config_sync_compliant, config_execution_compliant, 
             config_sync_message)
    
-        return (has_errors, updates_pending, compliance_xml, overall, config_execution_failures, overall_validation)
+        return (has_errors, updates_pending, compliance_xml, overall, config_execution_failures, overall_validation, software_sync_compliant)
 
     def _generateComplianceXml(self, overall, config_execution_failures, software_sync_compliant, 
         config_sync_compliant, config_execution_compliant, config_sync_message):
@@ -880,11 +891,11 @@ class SurveyManager(basemanager.BaseManager):
         (survey.config_compliance, config_diff_ct) = self._computeConfigDelta(survey)
 
         # each survey has an overall compliance summary block.  Generate it.
-        results = self._computeCompliance(survey,
+        results = self._computeCompliance(survey, system_model=systemModelContents,
             discovered_properties=xdiscovered_properties, validation_report=xvalidation_report,
-            preview=xpreview, config_diff_ct=config_diff_ct,
+            preview=xpreview, config_diff_ct=config_diff_ct, observed_properties=xobserved_properties
         )
-        (has_errors, updates_pending, compliance_xml, overall, execution_error_count, overall_validation) = results
+        (has_errors, updates_pending, compliance_xml, overall, execution_error_count, overall_validation, software_sync_compliance) = results
 
         # update the survey object with what we've learned about complaince and save it again
         survey.has_errors = has_errors
@@ -894,6 +905,7 @@ class SurveyManager(basemanager.BaseManager):
         survey.overall_compliance = overall
         survey.overall_validation = overall_validation
         survey.execution_error_count = int(execution_error_count)
+        survey.software_sync_compliance = software_sync_compliance
         survey.save()
 
         # the survey contains a copy of the configuration descriptor at the point of survey time as it may change later and we need

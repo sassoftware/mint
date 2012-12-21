@@ -957,7 +957,7 @@ class MigrateTo_48(SchemaMigration):
     # 48.6
     # - Dashboard Repository Log scraping table
     def migrate6(self):
-        schema._createRepositoryLogSchema(self.db)
+        # OBSOLETE
         return True
 
     # 48.7
@@ -5402,3 +5402,43 @@ class MigrateTo_64(SchemaMigration):
         cu = self.db.cursor()
         cu.execute("ALTER TABLE inventory_survey ADD COLUMN config_diff_count INTEGER")
         return True
+
+class MigrateTo_65(SchemaMigration):
+    '''goad-p4'''
+    Version = (65, 2)
+
+    def migrate(self):
+        cu = self.db.cursor()
+        cu.execute("UPDATE builds SET troveversion='/local@local:COOK/0.100:1-1-1' WHERE troveversion='/local@local:COOK/1-1-1'")
+        return True
+
+    def migrate1(self):
+        drop_tables(self.db, 'systemupdate', 'repositorylogstatus')
+        cu = self.db.cursor()
+        cu.execute("""ALTER TABLE Builds
+            ALTER troveName TYPE text,
+            ALTER troveVersion TYPE text,
+            ALTER troveFlavor TYPE text,
+            ALTER stageName TYPE text,
+            ALTER stageName SET DEFAULT ''
+            """)
+        cu.execute("""ALTER TABLE Commits
+            ALTER troveName TYPE text,
+            ALTER version TYPE text""")
+        cu.execute("""ALTER TABLE PackageIndex
+            ALTER name TYPE text,
+            ALTER version TYPE text,
+            ALTER serverName TYPE text,
+            ALTER branchName TYPE text""")
+        cu.execute("""ALTER TABLE ProductVersions
+            ALTER namespace TYPE text,
+            ALTER name TYPE text""")
+        cu.execute("""ALTER TABLE Platforms
+            ALTER label TYPE text""")
+        return True
+        
+    def migrate2(self):
+        cu = self.db.cursor()
+        cu.execute("ALTER TABLE inventory_survey ADD COLUMN software_sync_compliance BOOLEAN")
+        return True
+

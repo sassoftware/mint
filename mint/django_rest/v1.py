@@ -81,6 +81,9 @@ urlpatterns = patterns('',
 
     (r'^/target_type_jobs',
      include('mint.django_rest.rbuilder.targets.views.v1.urls_target_type_jobs')),
+                       
+    (r'^/xml_resources',
+     include('mint.django_rest.rbuilder.xmlresources.views.v1.urls')),
 
     # Generic descriptors for creating resources
     # FIXME -- migrate to new structure

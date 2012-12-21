@@ -207,9 +207,7 @@ class TargetsManager(basemanager.BaseManager, CatalogServiceHelper):
             target_type=targetType,
             defaults = defaults)
         if not created:
-            # Update the defaults
-            models.Target.objects.filter(target_id=target.target_id).update(
-                **defaults)
+            raise errors.Conflict(msg="Target already exists")
         self.mgr.retagQuerySetsByType('target', forUser)
         self.mgr.recomputeTargetDeployableImages()
         return target
@@ -357,8 +355,47 @@ class TargetsManager(basemanager.BaseManager, CatalogServiceHelper):
 
     @exposed
     def getDescriptorLaunchSystem(self, targetId, buildFileId):
-        return self._getDescriptorFromCatalogService(targetId, buildFileId,
+        descr = self._getDescriptorFromCatalogService(targetId, buildFileId,
             'systemLaunchDescriptor')
+        # Look up images associated with this build file
+        imgs = imagemodels.Image.objects.filter(files__file_id=buildFileId)
+        if imgs:
+            img = imgs[0]
+            cdesc = self.getConfigDescriptorForImage(img)
+            self.concatenateDescriptors(descr, cdesc)
+        return descr
+
+    @exposed
+    def getConfigDescriptorForImage(self, img):
+        trvName = img.trove_name
+        trvVersion = img.trove_version
+        trvFlavor = img.trove_flavor
+        if not trvName or not trvVersion:
+            return None
+        trvTup = self.mgr.troveTupleFactory(trvName, trvVersion, trvFlavor,
+            withFrozenFlavor=True)
+        cdesc = self.mgr.versionMgr.getConfigurationDescriptorFromTrove(trvTup)
+        if cdesc is None:
+            return None
+        descr = cdesc.__class__()
+        descr.setRootElement('descriptor_data')
+        descr.addDataField('withConfiguration', type='bool',
+            descriptions="Configuration",
+            required=True, default=False)
+        descr.addDataField('system_configuration',
+            type=descr.CompoundType(cdesc),
+            required=True, descriptions="System Configuration",
+            conditional=descr.Conditional('withConfiguration', 'true'))
+        return descr
+
+    @exposed
+    def concatenateDescriptors(self, descr, *others):
+        for other in others:
+            if other is None:
+                continue
+            for field in other.getDataFields():
+                descr.addDataFieldRaw(field)
+        return descr
 
     @exposed
     def getDescriptorDeployImage(self, targetId, buildFileId):

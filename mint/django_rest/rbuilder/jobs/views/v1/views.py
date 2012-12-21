@@ -88,3 +88,11 @@ class JobStatesJobsService(service.BaseService):
 
     def get(self, job_state_id):
         return self.mgr.getJobsByJobState(job_state_id)
+
+class JobSystemsService(JobsBaseService):
+    @access.auth_token
+    @requires("systems", flags=Flags(save=False))
+    @return_xml
+    def rest_POST(self, request, job_uuid, systems):
+        job = self.mgr.getJob(job_uuid=job_uuid)
+        return self.mgr.addLaunchedSystems(systems, job=job, forUser=self.mgr.user)

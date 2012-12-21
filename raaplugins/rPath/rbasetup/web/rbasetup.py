@@ -139,21 +139,6 @@ class rBASetup(rAAWebPlugin):
             elif options['new_password'].find('#') != -1:
                 errorList.append("Passwords must not contain a #")
 
-            cfg = lib.readRBAConfig(config.RBUILDER_CONFIG)
-            auth = siteauth.getSiteAuth(cfg.siteAuthCfgPath)
-            if not auth.isOffline():
-                # entitlement key required
-                if 'entitlementKey' not in options:
-                    errorList.append("You must enter a valid entitlement")
-
-                # validate the entitlement key
-                res = self.validateNewEntitlement(options.get('entitlementKey'))
-                if res.has_key('errors'):
-                    errorString = "Entitlement is invalid"
-                    if len(res['errors']) > 0:
-                        errorString = res['errors'][0]
-                    errorList.append(errorString)
-
         if options.get('externalPasswordURL'):
             # XXX Removing the validation for this for now;
             #     it was more necessary when you could lock yourself

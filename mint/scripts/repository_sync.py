@@ -111,7 +111,16 @@ class SyncTool(object):
         label = str(version.trailingLabel())
         pd = proddef.ProductDefinition()
         pd.setBaseLabel(label)
-        pd.loadFromRepository(self.client)
+        try:
+            pd.loadFromRepository(self.client)
+        except proddef.ProductDefinitionFileNotFoundError:
+            return
+        if pd.getProductDefinitionLabel() != label:
+            # baselabel does not match
+            log.info("Product definition on label %s has base label %s; not "
+                    "synchronizing into database", label,
+                    pd.getProductDefinitionLabel())
+            return
 
         platformLabel = pd.getPlatformSourceLabel()
         platformId = self.getPlatformMap().get(platformLabel)
@@ -148,6 +157,13 @@ class SyncTool(object):
                 WHERE project_branch_id = ?""", branchId)
         sqlStages = dict(cu)
         pdStages = [x.name for x in pd.getStages()]
+        for stage in pdStages:
+            stageHost = pd.getLabelForStage(stage).split('@')[0]
+            if stageHost != handle.fqdn:
+                log.info("Stage '%s' of product definition on label %s is on "
+                        "a different repository %s; this stage will not be "
+                        "added to the database", stage, label, stageHost)
+                pdStages.remove(stage)
         for stage in set(pdStages) - set(sqlStages):
             isPromotable = (stage != pdStages[-1] and not handle.isExternal)
             cu.execute("""INSERT INTO project_branch_stage (name, label,
@@ -179,3 +195,7 @@ class SyncTool(object):
             cu.execute("SELECT label, platformId FROM Platforms")
             self._platformMap = dict(cu)
         return self._platformMap
+
+
+if __name__ == '__main__':
+    sys.exit(Script().run())

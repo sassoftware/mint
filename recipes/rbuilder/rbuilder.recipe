@@ -31,8 +31,6 @@ class rBuilderProduct(CPackageRecipe):
     name = 'rbuilder'
     version = '5.0'
 
-    Flags.rbo = False
-
     buildRequires = [
         'bootman:runtime',
         'boto:python',
@@ -157,14 +155,6 @@ class rBuilderProduct(CPackageRecipe):
         # documentation and media-template bits
         r.Install('EULA.txt', '/usr/lib/media-template/disc1/')
         r.Install('EULA.txt', '%(thisdocdir)s/')
-
-        # remove the monkey from the product release
-        if not Flags.rbo:
-            r.Remove('%(datadir)s/rbuilder/scripts/amazon-s3-processor')
-
-            # rbas allow any package to be built using package creator
-            r.Create('/srv/rbuilder/config/pcreator.d/20_rba.conf', 
-                     contents='allowUnsafeBuilds True\n')
 
         # compile all .py files into .pyc
         r.CompilePython('/')

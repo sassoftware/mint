@@ -5,7 +5,6 @@
 static_files =				\
 	add-lvm-disk			\
 	add-windows-build-service       \
-	amazon-s3-processor		\
 	apply-proxy-settings		\
 	check-repository		\
 	create-platforms		\
@@ -28,7 +27,6 @@ static_files =				\
 	update-bulletin			\
 	update-package-index		\
 	update-package-index-external	\
-	validate-proxy-settings		\
 	set-password                    \
 	$(generic_scripts)		\
 

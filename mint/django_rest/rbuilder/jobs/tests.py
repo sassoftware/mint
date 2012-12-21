@@ -256,6 +256,7 @@ class JobCreationTest(BaseJobsTest, RepeaterMixIn):
                     dict(
                         desiredTopLevelItems = [u'group-foo=/a@b:c/1-2-3'],
                         zone=system.managing_zone.name,
+                        uuid=job.job_uuid,
                     ),
                 ),
             ])
@@ -307,6 +308,7 @@ class JobCreationTest(BaseJobsTest, RepeaterMixIn):
                     dict(
                         desiredTopLevelItems = [u'group-foo=/a@b:c/1-2-3'],
                         zone=system.managing_zone.name,
+                        uuid=job.job_uuid,
                     ),
                 ),
             ])
@@ -396,6 +398,239 @@ class JobCreationTest(BaseJobsTest, RepeaterMixIn):
         dbsystem = system.__class__.objects.get(system_id=system.system_id)
         self.assertEquals(bool(dbsystem.has_active_jobs), False)
         self.assertEquals(bool(dbsystem.has_running_jobs), False)
+
+    def testCreateJobSystemConfigApply(self):
+        jobType = self.mgr.sysMgr.eventType(models.EventType.SYSTEM_CONFIGURE)
+        system = self._saveSystem()
+        system.configuration = "<configuration><blah>1</blah></configuration>"
+        system.save()
+
+        jobXml = """
+<job>
+  <job_type id="http://localhost/api/v1/inventory/event_types/%(jobTypeId)s"/>
+  <descriptor id="http://testserver/api/v1/inventory/systems/%(systemId)s/descriptors/configure"/>
+  <descriptor_data/>
+</job>
+""" % dict(jobTypeId=jobType.job_type_id, systemId=system.system_id)
+
+        url = 'inventory/systems/%s/jobs' % system.system_id
+        response = self._post(url, jobXml,
+            username='admin', password='password')
+        self.assertEquals(response.status_code, 200)
+        obj = xobj.parse(response.content)
+        job = obj.job
+        self.failUnlessEqual(job.descriptor.id,
+            "http://testserver/api/v1/inventory/systems/%s/descriptors/configure" % system.system_id)
+
+        repClient = self.mgr.repeaterMgr.repeaterClient
+        cimParams = repClient.CimParams
+        resLoc = repClient.ResultsLocation
+
+        callList = repClient.getCallList()
+
+        eventUuids = [ x.args[0].pop('eventUuid') for x in callList ]
+
+        dbjob = models.Job.objects.get(job_uuid=job.job_uuid)
+        # Make sure the job is related to the system
+        self.failUnlessEqual(
+            [ (x.system_id, x.event_uuid) for x in dbjob.systems.all() ],
+            [ (system.system_id, eventUuids[0]) ],
+        )
+
+
+
+        self.failUnlessEqual(callList,
+            [
+                ('configuration_cim',
+                    (
+                        cimParams(**{'targetType': None, 'instanceId': None, 'targetName': None, 'port': 5989, 'host': u'1.1.1.1', 'launchWaitTime': 1200, 'clientKey': u'testsystemsslclientkey', 'requiredNetwork': None, 'clientCert': u'testsystemsslclientcertificate'}),
+
+                    ),
+                    dict(
+                        configuration = system.configuration,
+                        zone=system.managing_zone.name,
+                        uuid=job.job_uuid,
+                    ),
+                ),
+            ])
+
+        # We should have a running job
+        system = invmodels.System.objects.get(system_id=system.system_id)
+        self.assertEquals(system.has_running_jobs, True)
+
+        # Get rid of the cim job, leave only the wmi one
+        dbjob.delete()
+        system.updateDerivedData()
+
+        system = invmodels.System.objects.get(system_id=system.system_id)
+        self.assertEquals(system.has_running_jobs, False)
+
+        # same deal with wmi
+
+        system.management_interface = self.mgr.wmiManagementInterface()
+        system.save()
+
+        response = self._post(url, jobXml,
+            username='admin', password='password')
+        self.assertEquals(response.status_code, 200)
+        obj = xobj.parse(response.content)
+        job = obj.job
+        self.failUnlessEqual(job.descriptor.id,
+            "http://testserver/api/v1/inventory/systems/%s/descriptors/configure" % system.system_id)
+
+        callList = repClient.getCallList()
+        eventUuids = [ x.args[0].pop('eventUuid') for x in callList[1:] ]
+
+        dbjob = models.Job.objects.get(job_uuid=job.job_uuid)
+
+        # Make sure the job is related to the system
+        self.failUnlessEqual(
+            [ (x.system_id, x.event_uuid) for x in dbjob.systems.all() ],
+            [ (system.system_id, eventUuids[0]) ]
+        )
+
+        repClient = self.mgr.repeaterMgr.repeaterClient
+        wmiParams = repClient.WmiParams
+        resLoc = repClient.ResultsLocation
+
+        # Ignore cim one
+        self.failUnlessEqual(len(callList), 2)
+
+        self.failUnlessEqual(callList[1:],
+            [
+                ('configuration_wmi',
+                    (
+                        wmiParams(**{'port': 5989, 'host': u'1.1.1.1', 'requiredNetwork': None,}),
+
+                    ),
+                    dict(
+                        configuration = system.configuration,
+                        zone=system.managing_zone.name,
+                        uuid=job.job_uuid,
+                    ),
+                ),
+            ])
+
+        # We should have a running job
+        system = invmodels.System.objects.get(system_id=system.system_id)
+        self.assertEquals(system.has_running_jobs, True)
+
+        # ssh interface should fail
+
+        system.management_interface = self.mgr.sshManagementInterface()
+        system.save()
+
+        response = self._post(url, jobXml,
+            username='admin', password='password')
+        self.assertEquals(response.status_code, 400)
+        self.assertXMLEquals(response.content, """
+<fault><code>400</code><message>Unsupported management interface</message><traceback></traceback></fault>""")
+
+        dbjob = models.Job.objects.get(job_uuid=job.job_uuid)
+
+        dbsystem = system.__class__.objects.get(system_id=system.system_id)
+        self.assertEquals(bool(dbsystem.has_active_jobs), True)
+        self.assertEquals(bool(dbsystem.has_running_jobs), True)
+        # System needs to apply configuration
+        self.assertEquals(bool(dbsystem.configuration_applied), False)
+
+        stdout = """
+<configurators>
+  <write_status>
+    <errors>
+      <config_error-b9812828-0d6a-11e2-a354-005056b40871>
+        <name>config_error-b9812828-0d6a-11e2-a354-005056b40871</name>
+        <error_list>
+          <error>
+            <code>0</code>
+            <detail>Stdout = \nStderr = \nReturnCode = 0\n</detail>
+            <message>httpd-config.sh</message>
+          </error>
+        </error_list>
+      </config_error-b9812828-0d6a-11e2-a354-005056b40871>
+    </errors>
+    <status>success</status>
+  </write_status>
+</configurators>
+"""
+
+        jobXml = """
+<job>
+  <job_state>Completed</job_state>
+  <status_code>200</status_code>
+  <status_text>Done</status_text>
+  <results>
+    <system>
+      <scriptOutput>
+        <returnCode>0</returnCode>
+        <stdout><![CDATA[%s]]></stdout>
+        <stderr>[2012-10-03 10:57:55.023-0400] [INFO] (client) Running command: configurator
+[2012-10-03 10:57:55.027-0400] [WARNING] (client) Can't import dmidecode, falling back to dmidecode command.
+[2012-10-03 10:57:55.035-0400] [WARNING] (client) Can't use dmidecode command, falling back to mac address
+[2012-10-03 10:57:55.037-0400] [INFO] (client) Attempting to run configurators on 303a3530-3a35-363a-6234-3a30383a3731
+[2012-10-03 10:58:00.460-0400] [INFO] (client) Configurators succeeded
+[2012-10-03 10:58:00.464-0400] [INFO] (client) Command finished: configurator
+</stderr>
+      </scriptOutput>
+    </system>
+  </results>
+</job>
+""" % stdout
+
+        # Grab token
+        jobToken = dbjob.job_token
+        jobUrl = "jobs/%s" % dbjob.job_uuid
+        response = self._put(jobUrl, jobXml, jobToken=jobToken)
+        self.assertEquals(response.status_code, 200)
+        obj = xobj.parse(response.content)
+        # print response.content
+        job = obj.job
+        self.failUnlessEqual(job.job_uuid, dbjob.job_uuid)
+
+        # #2337 - make sure active flags are not set
+        dbsystem = system.__class__.objects.get(system_id=system.system_id)
+        self.assertEquals(bool(dbsystem.has_active_jobs), False)
+        self.assertEquals(bool(dbsystem.has_running_jobs), False)
+
+        # System should have the config applied
+        self.assertEquals(bool(dbsystem.configuration_applied), True)
+
+        # Verify status_text and status_detail
+        self.assertEquals(job.status_text, 'Done')
+        dbjob = models.Job.objects.get(job_uuid=dbjob.job_uuid)
+        self.assertXMLEquals(dbjob.status_detail, stdout)
+
+        # Now pretend we have an error
+        jobXml = """
+<job>
+  <job_state>Completed</job_state>
+  <status_code>200</status_code>
+  <status_text>Done</status_text>
+  <results>
+    <system>
+      <scriptOutput>
+        <returnCode>1</returnCode>
+        <stdout><![CDATA[%s]]></stdout>
+        <stderr>SPLOSION
+Some more errors here
+</stderr>
+      </scriptOutput>
+    </system>
+  </results>
+</job>
+""" % stdout
+
+        # Grab token
+        response = self._put(jobUrl, jobXml, jobToken=jobToken)
+        self.assertEquals(response.status_code, 200)
+        obj = xobj.parse(response.content)
+        # print response.content
+        job = obj.job
+        self.failUnlessEqual(job.job_uuid, dbjob.job_uuid)
+
+        self.assertEquals(job.status_text, 'SPLOSION\nSome more errors here\n')
+        dbjob = models.Job.objects.get(job_uuid=dbjob.job_uuid)
+        self.assertXMLEquals(dbjob.status_detail, stdout)
 
     def _makeSystem(self):
         system = self._saveSystem()

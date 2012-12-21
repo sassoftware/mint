@@ -41,6 +41,7 @@ from mint.django_rest.rbuilder.targets.manager import TargetsManager,\
                                                       TargetTypeJobsManager,\
                                                       TargetJobsManager
 from mint.django_rest.rbuilder.images.manager.imagesmanager import ImagesManager
+from mint.django_rest.rbuilder.xmlresources.manager import XmlResourceManager
 
 class RbuilderManager(basemanager.BaseRbuilderManager):
 
@@ -77,6 +78,7 @@ class RbuilderManager(basemanager.BaseRbuilderManager):
         'targetTypeJobsManager' : TargetTypeJobsManager,
         'targetJobsManager' : TargetJobsManager,
         'imagesManager' : ImagesManager,
+        'mmlResourceManager' : XmlResourceManager,
     }
 
     def __init__(self, cfg=None, userName=None):

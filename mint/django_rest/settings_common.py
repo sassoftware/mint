@@ -112,6 +112,7 @@ INSTALLED_APPS = (
     'mint.django_rest.rbuilder.rbac',
     'mint.django_rest.rbuilder.targets',
     'mint.django_rest.rbuilder.images',
+    'mint.django_rest.rbuilder.xmlresources',
 )
 
 AUTHENTICATION_BACKENDS = (
