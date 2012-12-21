@@ -38,6 +38,7 @@ class ImageConverter(object):
     """
     Converts a bootable VHD image to another format.
     """
+    alwaysOvf10 = False
 
     def __init__(self, jobData, vhdObj, vhdSize, tempDir, callback=None):
         self.jobData = jobData
@@ -91,9 +92,9 @@ class ImageConverter(object):
     def getBuildData(self, key):
         return self.jobData.getBuildData(key)
 
-    def fetch(self):
+    def fetch(self, name='input.vhd'):
         """Copy input VHD to a file in the workdir and return its path."""
-        vhdPath = os.path.join(self.scratchDir, 'input.vhd')
+        vhdPath = os.path.join(self.scratchDir, name)
         tempFobj = open(vhdPath, 'wb')
 
         def callback(transferred):
@@ -129,6 +130,18 @@ class ImageConverter(object):
         if self.scratchDir:
             cny_util.rmtree(self.scratchDir)
             self.scratchDir = None
+
+
+class VHDConverter(ImageConverter):
+    imageName = "VHD Image"
+
+    def convert(self):
+        vhdPath = self.fetch(self.basefilename + '.vhd')
+        self.outputFileList.append((vhdPath, self.imageName))
+        return self.outputFileList
+
+    def getImageTitle(self):
+        return self.imageName
 
 
 class _BaseVMwareConverter(ImageConverter):
@@ -182,6 +195,8 @@ def getConverter(jobData, vhdObj, vhdSize, tempDir, callback=None):
         cls = VMwareConverter
     elif imageType == buildtypes.VMWARE_ESX_IMAGE:
         cls = VMwareESXConverter
+    elif imageType == buildtypes.VIRTUAL_PC_IMAGE:
+        cls = VHDConverter
     else:
         raise RuntimeError("Unsupported image type %r" % (imageType,))
 

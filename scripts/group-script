@@ -111,6 +111,9 @@ chown apache:apache /srv/rbuilder/config/rbuilder-generated.conf
 # Migrate all conary repositories
 "$scriptdir"/migrate-all-projects
 
+# Old pcreator sessions are no longer useful (or desirable)
+rm -rf /srv/rbuilder/tmp/users
+
 # raa-web user needs to be in apache group so that rbuilder-generated is readable by rapa
 usermod -a -G apache raa-web
 

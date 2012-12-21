@@ -263,7 +263,7 @@ def getHttpAuth(req):
         authToken[1] = util.ProtectedString(authToken[1])
 
     entitlement = req.headers_in.get('X-Conary-Entitlement', None)
-    if entitlement is not None:
+    if entitlement:
         try:
             entitlement = entitlement.split()
             entitlement[1] = base64.decodestring(entitlement[1])

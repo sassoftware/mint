@@ -188,17 +188,20 @@ class QuerySetManager(basemanager.BaseManager):
         return querySet
 
     @exposed
-    def invalidateQuerySetByName(self, name):
-        ''' 
-        to be called after adding an object such that a regular request
-        to the queryset that does NOT want to bother with queryset invalidation
-        jobs can get reasonably results... only use for querysets of small size
-        as we have a tag/cache timeout and that should be fine for larger querysets
+    def invalidateQuerySetsByType(self, resource_type): 
         '''
-        models.QuerySet.objects.filter(name=name).update(tagged_date=None)
+        Requires that a queryset be retagged the next time it is requested
+        only if the queryset is non-static.  This is basically for operations
+        on querysets that could cause a state change, which means edit operations
+        as opposed to additions.
+        '''
+        matched = models.QuerySet.objects.filter(
+            resource_type=resource_type,
+            is_static=False
+        ).update(tagged_date=None)
 
     @exposed
-    def retagQuerySetsByType(self, type, for_user=None):
+    def retagQuerySetsByType(self, type, for_user=None, defer=False):
         '''
         Invalidates all querysets of a given type and then recomputes their data.
         This is needed on addition of some resource types when security context of all
@@ -207,11 +210,13 @@ class QuerySetManager(basemanager.BaseManager):
         will work regardless of RBAC queryset granting access and whether the queryset
         was requested or not -- otherwise application of security rules is latent until
         the next time the queryset members are accessed.  This avoids that.
+
+        If defer is True, retag will happen on next queryset access.
         '''
-        all_sets = None
-        if for_user is None:
-            all_sets = models.QuerySet.objects.filter(resource_type=type)
-        else:
+        all_sets = models.QuerySet.objects.filter(resource_type=type)
+        if len(all_sets) == 0:
+            raise Exception("error -- no querysets matched -- invalid type name? %s" % type)
+        if for_user is not None:
             # avoid retagging everyone's My Stages when adding a new stage ... not neccessary
             # to pass for_user where we know all of the My Querysets are static.
             all_sets = models.QuerySet.objects.filter(
@@ -221,8 +226,10 @@ class QuerySetManager(basemanager.BaseManager):
                 resource_type        = type,
                 personal_for__isnull = True,
             ).distinct()
-
         all_sets.filter(is_static=False).update(tagged_date=None)
+
+        if defer:
+            return
 
         for qs in all_sets.filter(is_static=False):
 

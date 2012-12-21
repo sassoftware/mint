@@ -309,8 +309,6 @@ class VersionManager(basemanager.BaseManager):
         """
 
         desc = descriptor.SystemConfigurationDescriptor()
-        desc.setDisplayName('Configuration Descriptor')
-        desc.addDescription('Configuration Descriptor')
 
         fields = desc.getDataFields()
         for trove in system.installed_software.all():

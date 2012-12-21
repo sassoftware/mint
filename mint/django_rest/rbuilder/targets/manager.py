@@ -377,7 +377,7 @@ class TargetsManager(basemanager.BaseManager, CatalogServiceHelper):
             targetUserCredentials)
         method = getattr(repClient.targets, rmakeMethodName)
         uuid, job = method()
-        job = self.mgr.waitForRmakeJob(uuid, interval=.1)
+        job = self.mgr.waitForRmakeJob(uuid, timeout=60, interval=.1)
         if not job.status.final:
             raise Exception("Final state not reached")
         if job.status.failed:
@@ -687,7 +687,8 @@ class TargetsManager(basemanager.BaseManager, CatalogServiceHelper):
             raise exc[0], exc[1], exc[2]
         else:
             cu.execute("DROP TABLE tmp_target_image")
-        self.mgr.retagQuerySetsByType('image')
+        #self.mgr.retagQuerySetsByType('image')
+        self.mgr.invalidateQuerySetsByType('image') # less abusive and deadlock prone
 
     def _recomputeTargetDeployableImages(self):
         cu = connection.cursor()
@@ -956,4 +957,3 @@ class TargetJobsManager(basemanager.BaseManager):
         Jobs = jobsmodels.Jobs()
         Jobs.job = allTargetJobs
         return Jobs
-            

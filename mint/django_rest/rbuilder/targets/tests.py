@@ -139,7 +139,7 @@ class BaseTargetsTest(RbacEngine):
     # invalidate the querysets so tags can be applied
     def _retagQuerySets(self):
         self.mgr.retagQuerySetsByType('project')
-        self.mgr.retagQuerySetsByType('images')
+        self.mgr.retagQuerySetsByType('image')
 
     def _setupRbac(self):
 
@@ -1567,7 +1567,7 @@ ZcY7o9aU
             'metadata_owner': u'Owner',
             'image_id': 'https://bubba.com/api/v1/images/1',
             'imageUploadUrl': 'https://bubba.com/uploadBuild/1',
-            'imageFilesCommitUrl': u'https://bubba.com/api/products/chater-foo/images/1/files',
+            'imageFilesCommitUrl': u'https://bubba.com/api/v1/images/1/build_files',
         }
         from ..images import models as imgmodels
         imgdata = imgmodels.ImageData.objects.filter(name='outputToken')[0]
@@ -1769,6 +1769,7 @@ ZcY7o9aU
                 ])
 
         url = "images/%s" % img.image_id
+        self._retagQuerySets()
         resp = self._get(url, username="ExampleDeveloper", password="password")
         self.failUnlessEqual(resp.status_code, 200)
         doc = xobj.parse(resp.content)
@@ -1780,9 +1781,10 @@ ZcY7o9aU
              "Launch system on 'Target Name vmware' (vmware)",
              "Launch system on 'Target Name vcloud' (vcloud)",
              "Launch system on '%s' (vmware)" % targetX.name,
+             "Cancel image build",
             ])
         self.failUnlessEqual([ x.enabled for x in actions ],
-            ['false', 'false', 'false', 'true', 'false', 'false'])
+            ['true', 'false', 'false', 'true', 'false', 'false', 'false'])
 
         file1 = img.files.all()[0]
         self.failUnlessEqual([ x.descriptor.id for x in actions ],
@@ -1799,8 +1801,10 @@ ZcY7o9aU
                 (target3.target_id, file1.file_id),
             'http://testserver/api/v1/targets/%s/descriptors/launch/file/%s' %
                 (targetX.target_id, file1.file_id),
+            'http://testserver/api/v1/images/%s/descriptors/cancel_build' %
+                (img.image_id, ),
             ])
-        self.failUnlessEqual([ x.resources.target.id for x in actions ],
+        self.failUnlessEqual([ x.resources.target.id for x in actions[:-1] ],
             [
             'http://testserver/api/v1/targets/%s' %
                 (target1.target_id, ),
@@ -1869,6 +1873,7 @@ ZcY7o9aU
              "Launch system on 'Target Name vmware' (vmware)",
              "Launch system on 'Target Name vcloud' (vcloud)",
              "Launch system on '%s' (vmware)" % targetX.name,
+             "Cancel image build",
             ])
         # We should be referring to the base image's files
         file1 = baseImg.files.all()[0]
@@ -1886,6 +1891,8 @@ ZcY7o9aU
                 (target3.target_id, file1.file_id),
             'http://testserver/api/v1/targets/%s/descriptors/launch/file/%s' %
                 (targetX.target_id, file1.file_id),
+            'http://testserver/api/v1/images/%s/descriptors/cancel_build' %
+                (img.image_id, ),
             ])
         self.failUnlessEqual(doc.image.jobs.id,
             'http://testserver/api/v1/images/%s/jobs' % img.image_id)
@@ -1947,6 +1954,7 @@ ZcY7o9aU
                 targetId=targetId,
                 buildFileId = buildFileId,)
         jobUrl = "images/%s/jobs" % imageId
+        self._retagQuerySets()
         response = self._post(jobUrl, jobXml,
             username='ExampleDeveloper', password='password')
         self.failUnlessEqual(response.status_code, 200)
@@ -2048,6 +2056,7 @@ ZcY7o9aU
                 jobTypeId=jobTypeId,
                 targetId=targetId,
                 buildFileId = buildFileId,)
+        self._retagQuerySets()
         jobUrl = "images/%s/jobs" % imageId
         response = self._post(jobUrl, jobXml,
             username='ExampleDeveloper', password='password')

@@ -225,7 +225,7 @@ class ExceptionLoggerMiddleware(SwitchableLogMiddleware):
             response.content = fault.to_xml(request)
             log.error(str(exception))
             if self.shouldLog():
-                self._logFailure(code, str(exception))
+                self._logFailure(status, str(exception))
             return response
 
         if isinstance(exception, IntegrityError):
@@ -322,8 +322,15 @@ class SetMintConfigMiddleware(BaseMiddleware):
 class AddCommentsMiddleware(BaseMiddleware):
     
     useXForm = True
-
+    
     def _process_response(self, request, response):
+        try:
+            return self._internal_process_response(request, response)
+        except:
+            return response
+
+
+    def _internal_process_response(self, request, response):
 
         # do not add comments to error messages
         if response.status_code != 200:
@@ -508,6 +515,16 @@ class SerializeXmlMiddleware(SwitchableLogMiddleware):
             modellib.XObjModel._rbmgr = None
 
         return response
+
+    def process_response(self, request, response):
+        try:
+            return self._process_response(request, response)
+        except Exception, e:
+            # Don't spam if the exception has a status code lower than 500
+            isISE = (getattr(e, 'status', 500) >= 500)
+            return handler.handleException(request, e,
+                doEmail=isISE, doTraceback=isISE)
+
 
 class AuthHeaderMiddleware(BaseMiddleware):
     # details on mod_python+Django issue below, marked "won't fix" in Django bug tracker

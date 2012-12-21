@@ -27,6 +27,7 @@ from mint.django_rest.rbuilder import models as rbuildermodels
 from mint.django_rest.rbuilder.inventory import errors
 from mint.django_rest.rbuilder.inventory import models
 from mint.django_rest.rbuilder.inventory import zones as zmodels
+from mint.django_rest.rbuilder.inventory import survey_models
 from mint.django_rest.rbuilder.targets import models as targetmodels
 from mint.django_rest.rbuilder.manager import basemanager
 from mint.django_rest.rbuilder.querysets import models as querysetmodels
@@ -49,6 +50,18 @@ system_assimilate_descriptor = """<descriptor>
   <dataFields/>
 </descriptor>
 """
+
+survey_scan_descriptor = """<descriptor>
+  <metadata>
+  <displayName>System Scan</displayName>
+    <descriptions>
+      <desc>System Scan</desc>
+    </descriptions>
+  </metadata>
+  <dataFields/>
+</descriptor>
+"""
+
 
 class SystemManager(basemanager.BaseManager):
     RegistrationEvents = set([
@@ -227,6 +240,14 @@ class SystemManager(basemanager.BaseManager):
     @exposed
     def deleteSystem(self, system_id):
         system = models.System.objects.get(pk=system_id)
+        # API deletions used here to prevent cascade delete loop issues 
+        # that occur via diffs combined with latest_survey association
+        matching_surveys = survey_models.Survey.objects.filter(
+            system=system
+        )
+        for survey in matching_surveys:
+            self.mgr.deleteSurvey(survey.uuid, force=True)
+
         system.delete()
 
     @exposed
@@ -719,7 +740,12 @@ class SystemManager(basemanager.BaseManager):
                 system.current_state = onlineState
                 system.save()
             elif system.current_state == registeredState:
-                self.scheduleSystemPollNowEvent(system)
+                # system is registered and scanned, should just go ahead and mark online
+                # definitely do not poll again as the initial registration polled.  Orchestrate if you
+                # want crazy amounts of extra polling.
+                system.current_state = onlineState
+                system.save()
+                return None
         elif system.isRegistrationIncomplete:
             self.log_system(system, "Incomplete registration: missing local_uuid. Possible cause: dmidecode malfunctioning")
         elif (system.management_interface_id == wmiIfaceId and not system.credentials):
@@ -729,7 +755,12 @@ class SystemManager(basemanager.BaseManager):
         elif withManagementInterfaceDetection:
             # Need to dectect the management interface on the system
             self.scheduleSystemDetectMgmtInterfaceEvent(system)
+        # so that a transition between Inactive and Active systems will make the system
+        # move between querysets.  Note, not retagging, would be grossly inefficient
+        # with lots of system activity
+        self.mgr.invalidateQuerySetsByType('system')
 
+        
     def generateSystemCertificates(self, system):
         if system._ssl_client_certificate is not None and \
                 system._ssl_client_key is not None:
@@ -854,6 +885,7 @@ class SystemManager(basemanager.BaseManager):
         jobStateName = job.job_state.name
         eventTypeName = job.job_type.name
         system.updateDerivedData()
+
 
         if jobStateName == jobmodels.JobState.COMPLETED:
             if eventTypeName == jobmodels.EventType.SYSTEM_REGISTRATION:
@@ -1071,9 +1103,9 @@ class SystemManager(basemanager.BaseManager):
             stc.save()
 
         if dnsName:
-            network = models.Network(dns_name=dnsName,
-                            active=True)
-            system.networks.add(network)
+            network = system._matchNetwork(dnsName)
+            if network is None:
+                models.Network.objects.create(system=system, dns_name=dnsName, active=True)
         self.log_system(system, "System launched in target %s (%s)" %
             (target.name, target.target_type.name))
         system.system_state = self.systemState(models.SystemState.UNMANAGED)
@@ -1629,6 +1661,8 @@ class SystemManager(basemanager.BaseManager):
         fields have changed that would cause a new synchronization to be
         needed.
         """
+        # MPD: this code still syncs 2 times too many, but now one less than before
+        # 4 syncs will break you, 3 is ok.  You only wish I was kidding.
         oldModel = getattr(system, 'oldModel', None)
         if not oldModel:
             return False
@@ -1649,6 +1683,7 @@ class SystemManager(basemanager.BaseManager):
 
         if oldServerCert != system.ssl_server_certificate:
             return True
+        return False
 
     def _runSystemEvent(self, event, method, params, resultsLocation=None,
             **kwargs):
@@ -2026,21 +2061,27 @@ class SystemManager(basemanager.BaseManager):
         return systemTag
 
     @exposed
-    def getSystemDescriptorForAction(self, systemId, descriptorType, params):
+    def getSystemDescriptorForAction(self, systemId, descriptorType, parameters=None):
         # This will validate the system
         system = models.System.objects.get(pk=systemId)
         methodMap = dict(
             assimilation = self.getDescriptorAssimilation,
             capture = self.getDescriptorCaptureSystem,
+            survey_scan = self.getDescriptorSurveyScan,
         )
         method = methodMap.get(descriptorType)
         if method is None:
             raise errors.errors.ResourceNotFound()
-        return method(systemId, params)
+        return method(systemId)
 
     def getDescriptorAssimilation(self, systemId, *args, **kwargs):
         descr = descriptor.ConfigurationDescriptor(
             fromStream=system_assimilate_descriptor)
+        return descr
+
+    def getDescriptorSurveyScan(self, systemId, *args, **kwargs):
+        descr = descriptor.ConfigurationDescriptor(
+            fromStream=survey_scan_descriptor)
         return descr
 
     @exposed

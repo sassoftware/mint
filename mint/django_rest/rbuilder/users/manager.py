@@ -77,8 +77,9 @@ class UsersManager(basemanager.BaseManager):
         dbuser.can_create  = user.can_create
         dbuser.created_by  = by_user
         dbuser.modified_by = by_user
-        dbuser.is_admin    = user.is_admin
-        dbuser.deleted     = False
+        dbuser.modified_date = dbuser.created_date
+        dbuser.is_admin = user.is_admin
+        dbuser.deleted = False
         dbuser.save()
             
         self.mgr.getOrCreateIdentityRole(user, by_user)

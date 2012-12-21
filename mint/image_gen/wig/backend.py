@@ -101,8 +101,9 @@ class WigBackendClient(object):
 
     def cleanup(self):
         if self.image:
-            self.image.imageJob.delete()
-            self.image.delete()
+            # The rWBS has support for cleaning up behind itself (#1849)
+            # self.image.imageJob.delete()
+            # self.image.delete()
             self.image = None
 
     def _persist(self):
