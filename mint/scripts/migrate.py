@@ -1601,35 +1601,6 @@ class MigrateTo_50(SchemaMigration):
             db.tables['inventory_trove_available_updates'] = []
             changed = True
 
-        if 'inventory_trove' not in db.tables:
-            cu.execute("""
-                CREATE TABLE "inventory_trove" (
-                    "trove_id" %(PRIMARYKEY)s,
-                    "name" TEXT NOT NULL,
-                    "version_id" INTEGER NOT NULL
-                        REFERENCES "inventory_version" ("version_id")
-                        ON DELETE CASCADE,
-                    "flavor" text NOT NULL,
-                    "is_top_level" BOOL NOT NULL,
-                    "last_available_update_refresh" timestamp with time zone,
-                    UNIQUE ("name", "version_id", "flavor")
-                )""" % db.keywords)
-
-            db.tables['inventory_trove'] = []
-            changed = True
-
-        if 'inventory_system_installed_software' not in db.tables:
-            cu.execute("""
-                CREATE TABLE "inventory_system_installed_software" (
-                    "id" %(PRIMARYKEY)s,
-                    "system_id" INTEGER NOT NULL 
-                        REFERENCES "inventory_system" ("system_id")
-                        ON DELETE CASCADE,
-                    "trove_id" INTEGER NOT NULL
-                        REFERENCES "inventory_trove" ("trove_id"),
-                    UNIQUE ("system_id", "trove_id")
-                )"""  % db.keywords)
-
         createTable(db, """
                 CREATE TABLE TargetCredentials (
                     targetCredentialsId     %(PRIMARYKEY)s,
@@ -5005,6 +4976,203 @@ class MigrateTo_62(SchemaMigration):
         self.db.cursor().execute("ALTER TABLE inventory_survey ADD COLUMN values_xml TEXT")
         return True
  
+class MigrateTo_63(SchemaMigration):
+    '''Goad'''
+    Version = (63, 14)
+
+    def migrate(self):
+        ''' add initial tables for config environments'''
+
+        createTable2(self.db, "config_environments", """
+            "id" %(PRIMARYKEY)s,
+            "name" TEXT UNIQUE,
+            "description" TEXT,
+            created_by INTEGER
+                REFERENCES Users ON DELETE SET NULL,
+            modified_by INTEGER
+                REFERENCES Users ON DELETE SET NULL,
+            created_date TIMESTAMP WITH TIME ZONE NOT NULL
+                DEFAULT current_timestamp,
+            modified_date TIMESTAMP WITH TIME ZONE NOT NULL
+                DEFAULT current_timestamp,
+            config_descriptor TEXT,
+        """)
+
+        createTable2(self.db, "querysets_queryset_config_environments", """
+            "id" %(PRIMARYKEY)s,
+            "queryset_id" INTEGER
+                REFERENCES "querysets_queryset" ("query_set_id")
+                ON DELETE CASCADE
+                NOT NULL,
+            "config_environment_id" INTEGER
+                REFERENCES "config_environments" ("id")
+                ON DELETE CASCADE
+                NOT NULL
+        """)
+
+        createTable2(self.db, "config_environment_config_values", """
+            "id" %(PRIMARYKEY)s,
+            "config_environment_id" INTEGER REFERENCES "config_environments" ("id") ON DELETE CASCADE,
+            "key" TEXT,
+            "value" TEXT
+        """)
+
+        createTable2(self.db, "system_config_values", """
+            "id" %(PRIMARYKEY)s,
+            "system_id" INTEGER REFERENCES "inventory_system" ("system_id") ON DELETE CASCADE,
+            "key" TEXT,
+            "value" TEXT
+        """)
+
+        return True
+
+    def migrate1(self):
+        ''' track which conary packages are top level in surveys '''
+        self.db.cursor().execute("""
+            ALTER TABLE inventory_survey_conary_package ADD COLUMN is_top_level 
+            BOOLEAN NOT NULL DEFAULT FALSE
+        """)
+        return True
+
+    def migrate2(self):
+        ''' track all sorts of new survey details '''
+
+        cu = self.db.cursor()
+        cu.execute("ALTER TABLE inventory_survey ADD COLUMN desired_values_xml TEXT")
+        cu.execute("ALTER TABLE inventory_survey ADD COLUMN observed_values_xml TEXT")
+        cu.execute("ALTER TABLE inventory_survey ADD COLUMN validator_values_xml TEXT")
+        cu.execute("ALTER TABLE inventory_survey ADD COLUMN discovered_values_xml TEXT")
+
+        createTable2(self.db, 'inventory_survey_values', """
+            "survey_value_id" %(PRIMARYKEY)s,
+            "survey_id" INTEGER NOT NULL REFERENCES inventory_survey (survey_id),
+            "type" INTEGER NOT NULL,
+            "key" TEXT NOT NULL,
+            "subkey" TEXT,
+            "value" TEXT
+        """)
+        return True
+
+    def migrate3(self):
+        ''' new survey additions '''
+        cu = self.db.cursor()
+        cu.execute("ALTER TABLE inventory_survey ADD COLUMN compliance_summary_xml TEXT")
+        cu.execute("ALTER TABLE inventory_survey ADD COLUMN config_values_descriptor_xml TEXT")
+        cu.execute("ALTER TABLE inventory_survey ADD COLUMN desired_values_descriptor_xml TEXT")
+        cu.execute("ALTER TABLE inventory_survey ADD COLUMN updates_pending BOOLEAN NOT NULL DEFAULT FALSE")
+        cu.execute("ALTER TABLE inventory_survey ADD COLUMN has_errors BOOLEAN NOT NULL DEFAULT FALSE")
+        return True
+
+    def migrate4(self):
+        cu = self.db.cursor()
+        cu.execute("ALTER TABLE inventory_survey ADD COLUMN preview_xml TEXT")
+        return True
+
+    def migrate5(self):
+        cu = self.db.cursor()
+        cu.execute("ALTER TABLE inventory_survey ADD COLUMN config_diff_xml TEXT")
+        return True
+ 
+    def migrate6(self):
+        db = self.db
+        schema._addTableRows(db, 'jobs_job_type', 'name', [
+             dict(name="system update software",
+                  description="Update your system",
+                  priority=105,
+                  resource_type="System"),
+        ])
+
+        createTable2(self.db, 'inventory_update', """
+              "update_id"    %(PRIMARYKEY)s,
+              "system_id"    INTEGER NOT NULL REFERENCES "inventory_system" (system_id) ON DELETE CASCADE,
+              "dry_run"      BOOLEAN DEFAULT TRUE,
+              "specs"        TEXT,
+              "created_date" TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT current_timestamp
+              """)
+
+        return True
+
+    def migrate7(self):
+        cu = self.db.cursor()
+        cu.execute("""
+            INSERT INTO "jobs_job_type" 
+                ("name", "description", "priority", "resource_type")
+            VALUES
+                ('system apply configuration',
+                 'Apply system configuration',
+                 105, 'System')
+        """)
+        return True
+
+    def migrate8(self):
+        cu = self.db.cursor()
+        cu.execute("""
+           ALTER TABLE inventory_system ADD COLUMN configuration_set 
+               BOOLEAN NOT NULL DEFAULT FALSE
+        """)
+        cu.execute("""
+           ALTER TABLE inventory_system ADD COLUMN configuration_applied
+               BOOLEAN NOT NULL DEFAULT FALSE
+        """)
+        return True
+
+    def migrate9(self):
+        cu = self.db.cursor()
+        cu.execute("""
+           ALTER TABLE inventory_survey_windows_service ADD COLUMN running 
+               BOOLEAN NOT NULL DEFAULT FALSE
+        """)
+        return True 
+
+    def migrate10(self):
+        cu = self.db.cursor()
+        cu.execute("""
+           ALTER TABLE inventory_survey
+           ADD COLUMN system_model      TEXT,
+           ADD COLUMN system_model_modified_date    TIMESTAMP WITH TIME ZONE,
+           ADD COLUMN has_system_model  BOOLEAN NOT NULL DEFAULT FALSE
+        """)
+        return True 
+
+    def migrate11(self):
+        self.db.dropIndex('inventory_survey', 'SurveyUuidIdx')
+        self.db.createIndex('inventory_survey', 'SurveyUuidIdx', 'uuid', unique=True)
+        return True 
+
+    def migrate12(self):
+        ''' sync jobs no longer exist '''
+        cu = self.db.cursor()
+        cu.execute("""
+            DELETE FROM jobs_job WHERE job_type_id = (SELECT job_type_id FROM jobs_job_type 
+                WHERE name = 'system poll')
+        """)
+        return True
+
+    def migrate13(self):
+        createTable2(self.db, 'jobs_created_preview', """
+            creation_id %(PRIMARYKEY)s,
+            job_id      integer NOT NULL
+                        REFERENCES jobs_job(job_id)
+                        ON DELETE CASCADE,
+            preview     text, 
+            system_id   INTEGER NOT NULL
+                        REFERENCES inventory_system ON DELETE SET NULL,
+        """)
+        self.db.createIndex('jobs_created_preview', 'jobs_created_preview_jid_sid',
+            'job_id, system_id')
+        return True
+
+    def migrate14(self):
+        ''' installed software is now just a record of the last update action '''
+        cu = self.db.cursor()
+        cu.execute("DROP TABLE inventory_system_installed_software")
+        cu.execute("ALTER TABLE inventory_system ADD COLUMN last_update_trove_spec TEXT")
+        cu.execute("""
+           UPDATE inventory_system_state SET description = 'Registered' WHERE name = 'registered'
+        """)
+        return True
+   
+
 #### SCHEMA MIGRATIONS END HERE #############################################
 
 def _getMigration(major):
@@ -5047,7 +5215,7 @@ def migrateSchema(db, cfg=None):
     version = db.getVersion()
     # migrate to the latest major
     while version.major < schema.RBUILDER_DB_VERSION.major:
-        migrateFunc = _getMigration(version.major+1)
+        migrateFunc = _getMigration(int(version.major)+1)
         newVersion = tryMigrate(db, migrateFunc(db, cfg))
         assert(newVersion.major == version.major+1)
         version = newVersion

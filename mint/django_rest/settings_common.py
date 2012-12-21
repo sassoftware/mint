@@ -64,6 +64,7 @@ MIDDLEWARE_CLASSES = (
     'django.middleware.common.CommonMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
+    'mint.django_rest.middleware.ApplicationOctetStreamHandlerMiddleware',
     'mint.django_rest.middleware.RequestLogMiddleware',
     'mint.django_rest.middleware.RequestSanitizationMiddleware',
     'mint.django_rest.middleware.CachingMiddleware',

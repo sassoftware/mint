@@ -169,6 +169,8 @@ class Image(modellib.XObjIdModel):
         "actions available on the system")
     jobs = D(modellib.SyntheticField(modellib.HrefField()),
         "jobs for this system")
+    upload_files = D(modellib.SyntheticField(modellib.HrefField()),
+        "Upload image files by POSTing them to this URL")
 
     def computeSyntheticFields(self, sender, **kwargs):
         self._computeMetadata()
@@ -196,6 +198,10 @@ class Image(modellib.XObjIdModel):
         if self._image_type is not None:
             self.image_type = ImageType.fromImageTypeId(self._image_type)
         self.jobs = modellib.HrefFieldFromModel(self, "ImageJobs")
+        self.upload_files = modellib.HrefField(
+           href="/api/v1/images/%s/upload_files" % self.image_id
+        )
+
         self._computeActions()
 
     def _getBuildLog(self):

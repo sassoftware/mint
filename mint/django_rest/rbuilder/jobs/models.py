@@ -27,6 +27,18 @@ class JobSystemArtifact(modellib.XObjModel):
     job         = XObjHidden(modellib.ForeignKey('Job', db_column='job_id', related_name='created_systems'))
     system      = modellib.ForeignKey('inventory.System', db_column='system_id', related_name='+')
 
+class JobPreviewArtifact(modellib.XObjModel):
+    class Meta:
+        db_table = 'jobs_created_preview'
+        unique_together = [ 'job', 'preview' ]
+    _xobj = xobj.XObjMetadata(tag = 'preview')
+    view_name = 'PreviewService'
+    
+    creation_id = XObjHidden(models.AutoField(primary_key=True))
+    job         = XObjHidden(modellib.ForeignKey('Job', db_column='job_id', related_name='created_previews'))
+    preview     = modellib.XMLField()
+    system      = modellib.ForeignKey('inventory.System', db_column='system_id', related_name='+')
+
 class JobImageArtifact(modellib.XObjModel):
     class Meta:
         db_table = 'jobs_created_image'
@@ -186,7 +198,8 @@ class Job(modellib.XObjIdModel):
     def setValuesFromRmake(self):
         runningState = modellib.Cache.get(JobState,
             name=JobState.RUNNING)
-        if self.job_state_id != runningState.pk:
+        # XXX Hard-coding the job_type_id sucks. Where should this be referenced from?
+        if self.job_state_id != runningState.pk or self.job_type_id == 26:
             return
         # This job is still running, we need to poll rmake to get its
         # status
@@ -232,6 +245,7 @@ class Job(modellib.XObjIdModel):
         resources = []
         resources.extend([ x.image for x in self.created_images.all() ])
         resources.extend([ x.system for x in self.created_systems.all() ])
+        resources.extend([ x for x in self.created_previews.all() ])
         resources2 = []
         for r in resources:
             res = modellib.HrefFieldFromModel(r, tag=r._xobj.tag)
@@ -306,14 +320,7 @@ class EventType(modellib.XObjIdModel):
     ON_DEMAND_BASE = 100
     
     # resource type == system #########################################
-    SYSTEM_POLL = "system poll"
-    SYSTEM_POLL_PRIORITY = 50
-    SYSTEM_POLL_DESC = "System synchronization"
-    
-    SYSTEM_POLL_IMMEDIATE = "immediate system poll"
-    SYSTEM_POLL_IMMEDIATE_PRIORITY = ON_DEMAND_BASE + 5
-    SYSTEM_POLL_IMMEDIATE_DESC = "On-demand system synchronization"
-    
+
     SYSTEM_REGISTRATION = "system registration"
     SYSTEM_REGISTRATION_PRIORITY = 70
     SYSTEM_REGISTRATION_DESC = "System registration"
@@ -321,16 +328,6 @@ class EventType(modellib.XObjIdModel):
     SYSTEM_REGISTRATION_IMMEDIATE = "immediate system registration"
     SYSTEM_REGISTRATION_IMMEDIATE_PRIORITY = ON_DEMAND_BASE + 10
     SYSTEM_REGISTRATION_IMMEDIATE_DESC = "On-demand system registration"
-
-
-    SYSTEM_APPLY_UPDATE = 'system apply update'
-    SYSTEM_APPLY_UPDATE_PRIORITY = 50
-    SYSTEM_APPLY_UPDATE_DESCRIPTION = 'Scheduled system update'
-        
-    SYSTEM_APPLY_UPDATE_IMMEDIATE = 'immediate system apply update'
-    SYSTEM_APPLY_UPDATE_IMMEDIATE_PRIORITY = ON_DEMAND_BASE + 5
-    SYSTEM_APPLY_UPDATE_IMMEDIATE_DESCRIPTION = \
-        'System update'
 
     SYSTEM_SHUTDOWN = 'system shutdown'
     SYSTEM_SHUTDOWN_PRIORITY = 50
@@ -366,6 +363,9 @@ class EventType(modellib.XObjIdModel):
     SYSTEM_CAPTURE = 'system capture'
     SYSTEM_CAPTURE_DESCRIPTION = "Capture a system's image"
 
+    SYSTEM_UPDATE = 'system update software'
+    SYSTEM_UPDATE_DESCRIPTION = 'Update your system'
+
     SYSTEM_SCAN = 'system scan'
     SYSTEM_SCAN_DESCRIPTION = 'Scan system'
 
@@ -396,15 +396,13 @@ class EventType(modellib.XObjIdModel):
     TARGET_CONFIGURE_CREDENTIALS_DESCRIPTION = 'Configure target credentials for the current user'
     TARGET_CONFIGURE = 'configure target'
     TARGET_CONFIGURE_DESCRIPTION = 'Configure target'
+    
+    SYSTEM_CONFIGURE             = 'system apply configuration'
+    SYSTEM_CONFIGURE_DESCRIPTION = 'Apply system configuration'
 
     job_type_id = D(models.AutoField(primary_key=True), "the database id of the  type")
     EVENT_TYPES = (
         (SYSTEM_REGISTRATION, SYSTEM_REGISTRATION_DESC),
-        (SYSTEM_POLL_IMMEDIATE, SYSTEM_POLL_IMMEDIATE_DESC),
-        (SYSTEM_POLL, SYSTEM_POLL_DESC),
-        (SYSTEM_APPLY_UPDATE, SYSTEM_APPLY_UPDATE_DESCRIPTION),
-        (SYSTEM_APPLY_UPDATE_IMMEDIATE,
-         SYSTEM_APPLY_UPDATE_IMMEDIATE_DESCRIPTION),
         (SYSTEM_SHUTDOWN,
          SYSTEM_SHUTDOWN_DESCRIPTION),
         (SYSTEM_SHUTDOWN_IMMEDIATE,
@@ -415,10 +413,9 @@ class EventType(modellib.XObjIdModel):
          SYSTEM_DETECT_MANAGEMENT_INTERFACE_DESC),
         (SYSTEM_DETECT_MANAGEMENT_INTERFACE_IMMEDIATE,
          SYSTEM_DETECT_MANAGEMENT_INTERFACE_IMMEDIATE_DESC),
-        (SYSTEM_CONFIG_IMMEDIATE,
-         SYSTEM_CONFIG_IMMEDIATE_DESCRIPTION),
         (SYSTEM_ASSIMILATE, SYSTEM_ASSIMILATE_DESCRIPTION),
         (SYSTEM_CAPTURE, SYSTEM_CAPTURE_DESCRIPTION),
+        (SYSTEM_UPDATE, SYSTEM_UPDATE_DESCRIPTION),
         (IMAGE_BUILDS, IMAGE_BUILDS_DESCRIPTION),
         (QUERYSET_INVALIDATE, QUERYSET_INVALIDATE_DESCRIPTION),
         (TARGET_REFRESH_IMAGES, TARGET_REFRESH_IMAGES_DESCRIPTION),
@@ -427,6 +424,7 @@ class EventType(modellib.XObjIdModel):
         (TARGET_LAUNCH_SYSTEM, TARGET_LAUNCH_SYSTEM_DESCRIPTION),
         (TARGET_CREATE, TARGET_CREATE_DESCRIPTION),
         (TARGET_CONFIGURE_CREDENTIALS, TARGET_CONFIGURE_CREDENTIALS_DESCRIPTION),
+        (SYSTEM_CONFIGURE, SYSTEM_CONFIGURE_DESCRIPTION)
     )
 
     name = D(APIReadOnly(models.CharField(max_length=8092, unique=True,
@@ -439,14 +437,11 @@ class EventType(modellib.XObjIdModel):
     def requiresManagementInterface(self):
         if self.name in \
             [self.SYSTEM_REGISTRATION,
-             self.SYSTEM_POLL_IMMEDIATE,
-             self.SYSTEM_POLL,
-             self.SYSTEM_APPLY_UPDATE,
-             self.SYSTEM_APPLY_UPDATE_IMMEDIATE,
              self.SYSTEM_SHUTDOWN,
              self.SYSTEM_SHUTDOWN_IMMEDIATE,
-             self.SYSTEM_CONFIG_IMMEDIATE,
+             self.SYSTEM_UPDATE,
              self.SYSTEM_ASSIMILATE,
+             self.SYSTEM_CONFIGURE
             ]:
             return True
         else:

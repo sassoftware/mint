@@ -78,15 +78,6 @@ class OutboundMirrorsTable(database.KeyedTable):
         return [list(x[:3]) + [bool(x[3]), bool(x[4]), x[5].split(), \
                 x[6], bool(x[7]), bool(x[8])] \
                 for x in cu.fetchall()]
-        
-    def getOutboundMirrorByProject(self, projectId):
-        cu = self.db.cursor()
-        cu.execute("SELECT * FROM OutboundMirrors WHERE sourceProjectId=?", projectId)
-        x = cu.fetchone_dict()
-        if x:
-            return x
-        else:
-            return {}
 
     def isProjectMirroredByRelease(self, projectId):
         cu = self.db.cursor()

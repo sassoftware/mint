@@ -117,4 +117,4 @@ class PublishedReleasesTable(database.KeyedTable):
             WHERE bd.name = 'amiId'
               AND pr.pubReleaseId = ?
             """, pubReleaseId)
-        return cu.fetchall_dict()
+        return cu.fetchall()

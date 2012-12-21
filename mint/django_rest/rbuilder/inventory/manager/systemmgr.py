@@ -12,6 +12,7 @@ import time
 import traceback
 from conary import versions as cny_versions
 from conary.deps import deps as cny_deps
+from conary.lib import util
 from xobj import xobj
 
 from django.db import connection
@@ -42,7 +43,7 @@ exposed = basemanager.exposed
 
 system_assimilate_descriptor = """<descriptor>
   <metadata>
-  <displayName>System Assimilation</displayName>
+    <displayName>System Assimilation</displayName>
     <descriptions>
       <desc>System Assimilation</desc>
     </descriptions>
@@ -53,28 +54,68 @@ system_assimilate_descriptor = """<descriptor>
 
 survey_scan_descriptor = """<descriptor>
   <metadata>
-  <displayName>System Scan</displayName>
+    <displayName>System Scan</displayName>
     <descriptions>
       <desc>System Scan</desc>
+    </descriptions>
+  </metadata>
+  <dataFields>
+    <field>
+      <name>top_level_group</name>
+      <descriptions>
+        <desc>Group</desc>
+      </descriptions>
+      <type>str</type>
+      <required>true</required>
+    </field>
+  </dataFields>
+</descriptor>
+"""
+
+update_descriptor = """<descriptor>
+  <metadata>
+    <displayName>Update Software</displayName>
+    <descriptions>
+      <desc>Update your system</desc>
+    </descriptions>
+  </metadata>
+  <dataFields>
+    <field>
+      <name>trove_label</name>
+      <descriptions>
+        <desc>Group</desc>
+      </descriptions>
+      <type>str</type>
+      <required>true</required>
+    </field>
+    <field>
+      <name>dry_run</name>
+      <descriptions>
+        <desc>Run in test mode</desc>
+      </descriptions>
+      <type>bool</type>
+      <required>true</required>
+    </field>
+  </dataFields>
+</descriptor>
+"""
+
+# TODO: copy/paste here could really use some templates
+configure_descriptor = """<descriptor>
+  <metadata>
+    <displayName>Apply System Configuration</displayName>
+    <descriptions>
+      <desc>Apply System Configuration</desc>
     </descriptions>
   </metadata>
   <dataFields/>
 </descriptor>
 """
 
-
 class SystemManager(basemanager.BaseManager):
     RegistrationEvents = set([
         jobmodels.EventType.SYSTEM_REGISTRATION,
         jobmodels.EventType.SYSTEM_REGISTRATION_IMMEDIATE,
-    ])
-    PollEvents = set([
-        jobmodels.EventType.SYSTEM_POLL,
-        jobmodels.EventType.SYSTEM_POLL_IMMEDIATE,
-    ])
-    SystemUpdateEvents = set([
-        jobmodels.EventType.SYSTEM_APPLY_UPDATE,
-        jobmodels.EventType.SYSTEM_APPLY_UPDATE_IMMEDIATE,
     ])
     ShutdownEvents = set([
         jobmodels.EventType.SYSTEM_SHUTDOWN,
@@ -100,21 +141,16 @@ class SystemManager(basemanager.BaseManager):
         # Can't shutdown and update at the same time
         # Can't shutdown and configure at the same time
 
-        jobmodels.EventType.SYSTEM_APPLY_UPDATE:\
-            [jobmodels.EventType.SYSTEM_SHUTDOWN,
-             jobmodels.EventType.SYSTEM_SHUTDOWN_IMMEDIATE],
-        jobmodels.EventType.SYSTEM_APPLY_UPDATE_IMMEDIATE:\
+        jobmodels.EventType.SYSTEM_UPDATE:\
             [jobmodels.EventType.SYSTEM_SHUTDOWN,
              jobmodels.EventType.SYSTEM_SHUTDOWN_IMMEDIATE],
         jobmodels.EventType.SYSTEM_SHUTDOWN:\
-            [jobmodels.EventType.SYSTEM_APPLY_UPDATE,
-             jobmodels.EventType.SYSTEM_APPLY_UPDATE_IMMEDIATE,
-             jobmodels.EventType.SYSTEM_CONFIG_IMMEDIATE],
+            [jobmodels.EventType.SYSTEM_UPDATE,
+            jobmodels.EventType.SYSTEM_CONFIGURE],
         jobmodels.EventType.SYSTEM_SHUTDOWN_IMMEDIATE:\
-            [jobmodels.EventType.SYSTEM_APPLY_UPDATE,
-             jobmodels.EventType.SYSTEM_APPLY_UPDATE_IMMEDIATE,
-             jobmodels.EventType.SYSTEM_CONFIG_IMMEDIATE],
-        jobmodels.EventType.SYSTEM_CONFIG_IMMEDIATE:\
+            [jobmodels.EventType.SYSTEM_UPDATE,
+             jobmodels.EventType.SYSTEM_CONFIGURE],
+        jobmodels.EventType.SYSTEM_CONFIGURE:\
             [jobmodels.EventType.SYSTEM_SHUTDOWN,
              jobmodels.EventType.SYSTEM_SHUTDOWN_IMMEDIATE],
     }
@@ -230,11 +266,6 @@ class SystemManager(basemanager.BaseManager):
     @exposed
     def getSystem(self, system_id):
         system = models.System.objects.select_related().get(pk=system_id)
-
-        # Recalculate available updates for each trove on the system, if
-        # needed.  This call honors the 24 hour cache.
-        for trove in system.installed_software.all():
-            self.mgr.versionMgr.set_available_updates(trove)
         return system
 
     @exposed
@@ -246,7 +277,7 @@ class SystemManager(basemanager.BaseManager):
             system=system
         )
         for survey in matching_surveys:
-            self.mgr.deleteSurvey(survey.uuid, force=True)
+            self.mgr.deleteSurvey(survey.uuid)
 
         system.delete()
 
@@ -552,6 +583,13 @@ class SystemManager(basemanager.BaseManager):
         # add the system
         system.save()
 
+        if system.survey is not None:
+            # XXX we theoretically shouldn't have to have the synthetic
+            # field, and be able to pass the survey as part of the
+            # surveys collection, but because of all the special parsing
+            # in surveymgr, this is not possible at the moment -- misa
+            self.mgr.addSurveyForSystemFromXobj(system.system_id, system)
+
         # Verify potential duplicates here
         system = self.mergeSystems(system)
 
@@ -634,15 +672,6 @@ class SystemManager(basemanager.BaseManager):
                  WHERE system_id = %s
             """, [ system.pk, other.pk ])
             cu.execute("""
-                DELETE FROM inventory_system_installed_software
-                 WHERE system_id = %s
-            """, [ system.pk ])
-            cu.execute("""
-                UPDATE inventory_system_installed_software
-                   SET system_id = %s
-                 WHERE system_id = %s
-            """, [ system.pk, other.pk ])
-            cu.execute("""
                 UPDATE inventory_system_job
                    SET system_id = %s
                  WHERE system_id = %s
@@ -681,20 +710,8 @@ class SystemManager(basemanager.BaseManager):
         """, [ systemLog.pk, otherSystemLog.pk ])
 
     def postprocessEvent(self, system):
-        # This code is kept here just as an example of how one can react to
-        # events
-        """
-        # Look up the job associated with this event
-        sjobs = models.SystemJob.objects.filter(system__system_id=system.pk,
-            event_uuid=system.event_uuid)
-        if not sjobs:
-            return
-        job = sjobs[0].job
-        if job.job_type.name != job.job_type.SYSTEM_REGISTRATION:
-            return
-        # We came back from a registration. Schedule an immediate system poll.
-        self.scheduleSystemPollNowEvent(system)
-        """
+        # removable legacy artifact given new jobs infrastructure?  Does anything call this?
+        pass
 
     def setSystemState(self, system, withManagementInterfaceDetection=True):
         if system.oldModel is None:
@@ -716,18 +733,10 @@ class SystemManager(basemanager.BaseManager):
                 # No credentials, nothing to do here
                 system.current_state = credentialsMissing
                 system.save()
-            elif (not system.system_type.infrastructure or
-                    system.system_type_id == winBuildNodeType.system_type_id):
-                # Schedule a poll event in the future
-                self.scheduleSystemPollEvent(system)
-                # And schedule one immediately
-                self.scheduleSystemPollNowEvent(system)
         elif system.isRegistered:
             # See if a new poll is required
-            if (system.current_state_id in self.NonresponsiveStates or
-                    self.needsNewSynchronization(system)):
+            if (system.current_state_id in self.NonresponsiveStates):
                 system.current_state = registeredState
-                self.scheduleSystemPollNowEvent(system)
                 system.save()
             # Already registered and no need to re-synchronize, if the
             # old state was online, and the new state is registered, we must
@@ -890,9 +899,6 @@ class SystemManager(basemanager.BaseManager):
         if jobStateName == jobmodels.JobState.COMPLETED:
             if eventTypeName == jobmodels.EventType.SYSTEM_REGISTRATION:
                 return models.SystemState.RESPONSIVE
-            if eventTypeName in self.PollEvents or \
-                    eventTypeName in self.SystemUpdateEvents:
-                return models.SystemState.RESPONSIVE
             if eventTypeName in self.ManagementInterfaceEvents:
                 # Management interface detection finished, need to schedule a
                 # registration event now.
@@ -957,13 +963,7 @@ class SystemManager(basemanager.BaseManager):
                 if timedelta.days >= self.cfg.deadStateTimeout:
                     return models.SystemState.DEAD
                 return None
-            if eventTypeName not in self.PollEvents and \
-                    eventTypeName not in self.SystemUpdateEvents:
-                # Non-polling event, nothing to do
-                return None
-            if currentStateName in [models.SystemState.REGISTERED,
-                    models.SystemState.RESPONSIVE]:
-                return models.SystemState.NONRESPONSIVE
+            return None
         # Some other job state, do nothing
         return None
 
@@ -1300,14 +1300,19 @@ class SystemManager(basemanager.BaseManager):
         return self._getConfigurationModel(system, systemConfig)
 
     @exposed
-    def addSystemConfiguration(self, system_id, configuration):
+    def saveSystemConfiguration(self, system_id, configuration):
         system = models.System.objects.get(pk=system_id)
         systemConfig = self.marshalConfiguration(configuration)
         system.configuration = systemConfig
+        system.configuration_set = True
+        system.configuration_applied = False
         system.save()
-        self.scheduleSystemConfigurationEvent(system, configuration)
         return self._getConfigurationModel(system, configuration)
-    
+
+    # FIXME: OBSOLETE with new config stuff, REMOVE
+    def applySystemConfiguration(self):    
+        self.scheduleSystemConfigurationEvent()
+
     def _getConfigurationModel(self, system, configDict):
         config = models.Configuration(system)
         for k, v in configDict.items():
@@ -1594,15 +1599,6 @@ class SystemManager(basemanager.BaseManager):
             method = getattr(repClient, "register_" + mgmtInterfaceName)
             job = self._runSystemEvent(event, method, params, resultsLocation,
                 user=self.user, zone=zone)
-        elif eventType in self.PollEvents:
-            method = getattr(repClient, "poll_" + mgmtInterfaceName)
-            job = self._runSystemEvent(event, method, params, resultsLocation,
-                user=self.user, zone=zone)
-        elif eventType in self.SystemUpdateEvents:
-            data = cPickle.loads(event.event_data)
-            method = getattr(repClient, "update_" + mgmtInterfaceName)
-            job = self._runSystemEvent(event, method, params, resultsLocation,
-                user=self.user, zone=zone, sources=data)
         elif eventType in self.SystemConfigurationEvents:
             data = event.event_data
             method = getattr(repClient, "configuration_" + mgmtInterfaceName)
@@ -1654,36 +1650,6 @@ class SystemManager(basemanager.BaseManager):
     @exposed
     def extractNetworkToUse(self, system):
         return models.System.extractNetworkToUse(system)
-
-    def needsNewSynchronization(self, system):
-        """
-        Relies on the presence of oldModel.  Look to see if any pertinent
-        fields have changed that would cause a new synchronization to be
-        needed.
-        """
-        # MPD: this code still syncs 2 times too many, but now one less than before
-        # 4 syncs will break you, 3 is ok.  You only wish I was kidding.
-        oldModel = getattr(system, 'oldModel', None)
-        if not oldModel:
-            return False
-
-        oldNetwork = self.extractNetworkToUse(oldModel)
-        if not oldNetwork:
-            return False
-        newNetwork = self.extractNetworkToUse(system)
-        
-        oldIp = oldNetwork.ip_address or oldNetwork.dns_name
-        newIp = newNetwork.ip_address or newNetwork.dns_name
-        if oldIp != newIp:
-            return True
-
-        oldServerCert = getattr(oldModel, 'ssl_server_certificate', None)
-        if not oldServerCert:
-            return False
-
-        if oldServerCert != system.ssl_server_certificate:
-            return True
-        return False
 
     def _runSystemEvent(self, event, method, params, resultsLocation=None,
             **kwargs):
@@ -1758,12 +1724,6 @@ class SystemManager(basemanager.BaseManager):
             (eventType.name, event.system_event_id, system.name))
         event.delete()
 
-        # create the next event if needed
-        if eventType.name == jobmodels.EventType.SYSTEM_POLL:
-            self.scheduleSystemPollEvent(system)
-        else:
-            log.debug("%s events do not trigger a new event creation" % eventType.name)
-
     @classmethod
     def eventType(cls, name):
         return models.Cache.get(jobmodels.EventType, name=name)
@@ -1771,19 +1731,6 @@ class SystemManager(basemanager.BaseManager):
     @classmethod
     def jobState(cls, name):
         return jobmodels.JobState.objects.get(name=name)
-
-    @exposed
-    def scheduleSystemPollEvent(self, system):
-        '''Schedule an event for the system to be polled'''
-        return self._scheduleEvent(system, jobmodels.EventType.SYSTEM_POLL)
-
-    @exposed
-    def scheduleSystemPollNowEvent(self, system):
-        '''Schedule an event for the system to be polled now'''
-        # happens on demand, so enable now
-        return self._scheduleEvent(system,
-            jobmodels.EventType.SYSTEM_POLL_IMMEDIATE,
-            enableTime=self.now())
 
     @exposed
     def scheduleSystemRegistrationEvent(self, system):
@@ -1804,8 +1751,10 @@ class SystemManager(basemanager.BaseManager):
     @exposed
     def scheduleSystemApplyUpdateEvent(self, system, sources):
         '''Schedule an event for the system to be updated'''
+        # FIXME: verify that this function creates something that is usable by new-style update
+        # code.   Is event data correct?
         return self._scheduleEvent(system,
-            jobmodels.EventType.SYSTEM_APPLY_UPDATE_IMMEDIATE,
+            jobmodels.EventType.SYSTEM_UPDATE,
             eventData=sources)
 
     @exposed
@@ -1836,14 +1785,12 @@ class SystemManager(basemanager.BaseManager):
             enableTime=self.now())
 
     @exposed
-    def scheduleSystemConfigurationEvent(self, system, configuration):
+    def scheduleSystemConfigurationEvent(self, system):
         '''Schedule an event for the system to be configured'''
-        # registration events happen on demand, so enable now
-        configData = self.configDictToXml(configuration)
         return self._scheduleEvent(system,
             jobmodels.EventType.SYSTEM_CONFIG_IMMEDIATE,
             enableTime=self.now(),
-            eventData=configData)
+            eventData=system.configuration)
 
     @classmethod
     def configDictToXml(cls, configuration):
@@ -2062,12 +2009,14 @@ class SystemManager(basemanager.BaseManager):
 
     @exposed
     def getSystemDescriptorForAction(self, systemId, descriptorType, parameters=None):
-        # This will validate the system
+        # FIXME: move this closer to the inventory action code
         system = models.System.objects.get(pk=systemId)
         methodMap = dict(
             assimilation = self.getDescriptorAssimilation,
-            capture = self.getDescriptorCaptureSystem,
-            survey_scan = self.getDescriptorSurveyScan,
+            capture      = self.getDescriptorCaptureSystem,
+            configure    = self.getDescriptorConfigure,
+            update       = self.getDescriptorUpdate,
+            survey_scan  = self.getDescriptorSurveyScan,
         )
         method = methodMap.get(descriptorType)
         if method is None:
@@ -2079,10 +2028,25 @@ class SystemManager(basemanager.BaseManager):
             fromStream=system_assimilate_descriptor)
         return descr
 
+    def getDescriptorUpdate(self, systemId, *args, **kwargs):
+        descr = descriptor.ConfigurationDescriptor(
+            fromStream=update_descriptor)
+        return descr
+
     def getDescriptorSurveyScan(self, systemId, *args, **kwargs):
         descr = descriptor.ConfigurationDescriptor(
             fromStream=survey_scan_descriptor)
         return descr
+
+    def getDescriptorConfigure(self, systemId, *args, **kwargs):
+        descr = descriptor.ConfigurationDescriptor(
+            fromStream=configure_descriptor)
+        return descr
+
+    @exposed
+    def getPreview(self, preview_id):
+        preview = models.Cache.get(jobmodels.JobPreviewArtifact, pk=int(preview_id))
+        return preview
 
     @exposed
     def scheduleJobAction(self, system, job):
@@ -2126,7 +2090,7 @@ class SystemManager(basemanager.BaseManager):
         system = models.System.objects.get(pk=systemId)
         DriverClass = targetmodels.Target.getDriverClassForTargetId(system.target_id)
         if not hasattr(DriverClass, "drvCaptureSystem"):
-            raise errors.InvalidData()
+            raise errors.InvalidData(msg="drvCaptureSystem not supported")
 
         descr = descriptor.ConfigurationDescriptor(
             fromStream=DriverClass.systemCaptureXmlData)
@@ -2161,6 +2125,28 @@ class SystemManager(basemanager.BaseManager):
         wrapper = models.modellib.etreeObjectWrapper(
             descriptor.getElementTree(validate=validate))
         return wrapper
+
+    @exposed
+    def systemUpdateSystem(self, system, job):
+        # TODO Rename. This is a terrible name but needs to be
+        #  distinguished from the old-school systemUpdate.
+        try:
+            self._updateSystem(system, job)
+        except:
+            exc = sys.exc_info()
+            stream = util.BoundedStringIO()
+            util.formatTrace(*exc, stream=stream, withLocals=False)
+            stream.seek(0)
+
+            job.job_state = self.mgr.getJobStateByName(jobmodels.JobState.FAILED)
+            job.status_code = 500
+            job.status_text = "Failed"
+            job.status_detail = stream.read()
+        else:
+            job.job_state = self.mgr.getJobStateByName(jobmodels.JobState.COMPLETED)
+            job.status_code = 200
+            job.status_text = "Done"
+        job.save()
 
 class Configuration(object):
     _xobj = xobj.XObjMetadata(

@@ -82,9 +82,9 @@ class BaseTargetsTest(RbacEngine):
         jobs.append(self._newSystemJob(system, eventUuid1, jobUuid1,
             jmodels.EventType.SYSTEM_REGISTRATION, createdBy=user))
         jobs.append(self._newSystemJob(system, eventUuid2, jobUuid2,
-            jmodels.EventType.SYSTEM_POLL, createdBy=user))
+            jmodels.EventType.SYSTEM_UPDATE, createdBy=user))
         jobs.append(self._newSystemJob(system, eventUuid3, jobUuid3,
-            jmodels.EventType.SYSTEM_POLL_IMMEDIATE, createdBy=user))
+            jmodels.EventType.SYSTEM_SCAN, createdBy=user))
 
         self.system = system
         self.jobs = jobs

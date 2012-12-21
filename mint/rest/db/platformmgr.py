@@ -1,5 +1,5 @@
 #
-# Copyright (c) 2011 rPath, Inc.
+# Copyright (c) rPath, Inc.
 #
 
 import base64
@@ -961,15 +961,17 @@ class ContentSources(object):
 
         return changed
 
-    def _listFromDb(self):
+    def _wrapFromDb(self, dbSources):
         sources = []
-        dbSources = self.db.db.platformSources.getAll()
         for dbSource in dbSources:
             source = self._contentSourceModelFactory(**dict(dbSource))
             sources.append(source)
+        return sources
 
-        return sources            
-        
+    def _listFromDb(self):
+        dbSources = self.db.db.platformSources.getAll()
+        return self._wrapFromDb(dbSources)
+
     def _listFromCfg(self):
         sources = []
         for i, cfgShortName in enumerate(self.cfg.platformSources):
@@ -1075,14 +1077,14 @@ class ContentSources(object):
         return models.SourceInstances(sources)                   
 
     def listByPlatformId(self, platformId):
-        sources = self.list()
         dbSources = self.db.db.platformSources.getByPlatformId(platformId)
-        sources = []
-        for dbSource in dbSources:
-            source = self.getByShortName(dbSource['shortName'])
-            sources.append(source)
+        sources = self._wrapFromDb(dbSources)
+        return models.ContentSourceInstances(sources)
 
-        return models.ContentSourceInstances(sources)            
+    def listByRepository(self, reposHost):
+        dbSources = self.db.db.platformSources.getByRepository(reposHost)
+        sources = self._wrapFromDb(dbSources)
+        return models.ContentSourceInstances(sources)
 
     def getStatus(self, source):        
         pmgr = self.mgr()
@@ -1329,6 +1331,9 @@ class PlatformManager(manager.Manager):
     def getSourcesByPlatform(self, platformId):
         return self.platforms.getSources(platformId)
 
+    def getSourcesByRepository(self, reposHost):
+        return self.contentSources.listByRepository(reposHost)
+
     def getSourceStatusByName(self, shortName):
         source = self.getSource(shortName=shortName)
         return self.getSourceStatus(source)
@@ -1348,16 +1353,21 @@ class PlatformManager(manager.Manager):
     def deleteSource(self, shortName):
         return self.contentSources.delete(shortName)
 
-    def getContentEnabledPlatformLabels(self):
-        sql = """
-            SELECT DISTINCT Platforms.label
-                       FROM Platforms
-                       JOIN PlatformsContentSourceTypes USING (platformId)
-                      WHERE Platforms.enabled != 0
-        """
+    def getContentEnabledPlatformLabels(self, reposHost=None):
         cu = self.db.cursor()
-        cu.execute(sql)
+        sql = """
+            SELECT DISTINCT pl.label
+            FROM Platforms pl
+            JOIN Projects p ON p.projectId = pl.projectId
+            JOIN PlatformsContentSourceTypes pcst ON pcst.platformId = pl.platformId
+            WHERE pl.enabled != 0
+            """
+        if reposHost:
+            cu.execute(sql + "AND p.fqdn = ?", (reposHost,))
+        else:
+            cu.execute(sql)
         return [ x[0] for x in cu ]
+
 
 class PlatformDefCache(persistentcache.PersistentCache):
     def __init__(self, cacheFile, mgr):

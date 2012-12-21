@@ -5,6 +5,8 @@
 # All rights reserved.
 #
 
+from lxml import etree
+
 from mint.django_rest.test_utils import XMLTestCase, RepeaterMixIn
 
 from mint.django_rest.rbuilder.jobs import models
@@ -32,9 +34,7 @@ class BaseJobsTest(XMLTestCase):
         self.job1 = self._newSystemJob(system, eventUuid1, jobUuid1,
             models.EventType.SYSTEM_REGISTRATION, createdBy=user)
         self.job2 = self._newSystemJob(system, eventUuid2, jobUuid2,
-            models.EventType.SYSTEM_POLL, createdBy=user)
-        self.job3 = self._newSystemJob(system, eventUuid3, jobUuid3,
-            models.EventType.SYSTEM_POLL_IMMEDIATE, createdBy=user)
+            models.EventType.SYSTEM_UPDATE, createdBy=user)
 
         self.system = system
 
@@ -164,13 +164,12 @@ class Jobs2TestCase(BaseJobsTest):
         jobs = obj.jobs.job
 
         self.failUnlessEqual([ str(x.job_state) for x in jobs ],
-            [models.JobState.RUNNING, models.JobState.COMPLETED,
-            models.JobState.FAILED ])
+            [models.JobState.RUNNING, models.JobState.COMPLETED])
 
         self.failUnlessEqual([ int(x.status_code) for x in jobs ],
-            [101, 299, 404])
+            [101, 299])
         self.failUnlessEqual([ x.status_text for x in jobs ],
-            ["text 101", "text 299", "text 404"])
+            ["text 101", "text 299"])
 
 class JobCreationTest(BaseJobsTest, RepeaterMixIn):
     def _mock(self):
@@ -214,7 +213,9 @@ class JobCreationTest(BaseJobsTest, RepeaterMixIn):
 <job>
   <job_type id="http://localhost/api/v1/inventory/event_types/%(jobTypeId)s"/>
   <descriptor id="http://testserver/api/v1/inventory/systems/%(systemId)s/descriptors/survey_scan"/>
-  <descriptor_data/>
+  <descriptor_data>
+    <top_level_group>group-foo=/a@b:c/1-2-3</top_level_group>
+  </descriptor_data>
 </job>
 """ % dict(jobTypeId=jobType.job_type_id, systemId=system.system_id)
 
@@ -251,6 +252,7 @@ class JobCreationTest(BaseJobsTest, RepeaterMixIn):
 
                     ),
                     dict(
+                        desiredTopLevelItems = [u'group-foo=/a@b:c/1-2-3'],
                         zone=system.managing_zone.name,
                     ),
                 ),
@@ -297,6 +299,7 @@ class JobCreationTest(BaseJobsTest, RepeaterMixIn):
 
                     ),
                     dict(
+                        desiredTopLevelItems = [u'group-foo=/a@b:c/1-2-3'],
                         zone=system.managing_zone.name,
                     ),
                 ),
@@ -344,6 +347,11 @@ class JobCreationTest(BaseJobsTest, RepeaterMixIn):
     <surveys>
       <survey>
         <uuid>aa-bb-cc-dd</uuid>
+        <config_properties/>
+        <desired_properties/>
+        <observed_properties/>
+        <discovered_properties/>
+        <validation_report/>
         <rpm_packages/>
         <conary_packages/>
         <services/>
@@ -359,6 +367,7 @@ class JobCreationTest(BaseJobsTest, RepeaterMixIn):
         response = self._put(jobUrl, jobXml, jobToken=jobToken)
         self.assertEquals(response.status_code, 200)
         obj = xobj.parse(response.content)
+        # print response.content
         job = obj.job
         self.failUnlessEqual(job.job_uuid, dbjob.job_uuid)
 
@@ -372,3 +381,80 @@ class JobCreationTest(BaseJobsTest, RepeaterMixIn):
         dbsystem = system.__class__.objects.get(system_id=system.system_id)
         self.assertEquals(bool(dbsystem.has_active_jobs), False)
         self.assertEquals(bool(dbsystem.has_running_jobs), False)
+
+    def testJobSystemSoftwareUpdate(self):
+        jobType = self.mgr.sysMgr.eventType(models.EventType.SYSTEM_UPDATE)
+        system = self._saveSystem()
+        system.save()
+        url = "inventory/systems/%(systemId)s/descriptors/update" % dict(
+            systemId=system.system_id)
+        response = self._get(url,
+            username='admin', password='password')
+        self.assertEquals(response.status_code, 200)
+
+        tree = etree.fromstring(response.content)
+        nsmap = dict(dsc='http://www.rpath.com/permanent/descriptor-1.1.xsd')
+        fieldNames = tree.xpath('/dsc:descriptor/dsc:dataFields/dsc:field/dsc:name/text()',
+            namespaces=nsmap)
+        self.assertEquals(fieldNames, ['trove_label', 'dry_run', ])
+
+        jobXml = """
+<job>
+  <job_type id="http://localhost/api/v1/inventory/event_types/%(jobTypeId)s"/>
+  <descriptor id="http://testserver/api/v1/inventory/systems/%(systemId)s/descriptors/update"/>
+  <descriptor_data>
+    <trove_label>group-foo=example.com@rpath:42/1-2-3</trove_label>
+    <dry_run>true</dry_run>
+  </descriptor_data>
+</job>
+""" % dict(jobTypeId=jobType.job_type_id, systemId=system.system_id)
+
+        url = "inventory/systems/%(systemId)s/jobs" % dict(
+            systemId=system.system_id)
+        response = self._post(url, jobXml,
+            username='admin', password='password')
+        self.assertEquals(response.status_code, 200)
+        obj = xobj.parse(response.content)
+        job = obj.job
+        self.failUnlessEqual(job.descriptor.id,
+            "http://testserver/api/v1/inventory/systems/%s/descriptors/update" % system.system_id)
+
+        dbjob = models.Job.objects.get(job_uuid=job.job_uuid)
+
+        jobXml = """
+<job>
+  <job_state>Completed</job_state>
+  <status_code>200</status_code>
+  <status_text>Done</status_text>
+  <results>
+    <preview>
+      <ignore-me-1/>
+      <ignore-me-2/>
+    </preview>
+  </results>
+</job>
+"""
+
+        # Grab token, pretend to be rMake putting CIM job results back to mint.
+        jobToken = dbjob.job_token
+        jobUrl = "http://localhost/api/v1/jobs/%s" % dbjob.job_uuid
+        response = self._put(jobUrl, jobXml, jobToken=jobToken)
+        self.assertEquals(response.status_code, 200)
+        obj = xobj.parse(response.content)
+        job = obj.job
+        self.failUnlessEqual(job.job_uuid, dbjob.job_uuid)
+
+        # Make sure the job is related to the survey
+        self.failUnlessEqual(
+            [ x.preview for x in dbjob.created_previews.all() ],
+            [ "<?xml version='1.0' encoding='UTF-8'?>\n<preview>\n  <ignore-me-1/>\n  <ignore-me-2/>\n</preview>\n" ]
+        )
+
+        # Fetch the job
+        response = self._get(jobUrl)
+        self.assertEquals(response.status_code, 200)
+
+        tree = etree.fromstring(response.content)
+        resources = tree.xpath('/job/created_resources')
+        self.assertXMLEquals(etree.tostring(resources[0]),
+            '<created_resources><preview id="http://testserver/api/v1/inventory/previews/1"/>\n</created_resources>')

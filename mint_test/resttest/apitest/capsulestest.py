@@ -120,20 +120,31 @@ class IndexerSetupMixIn(base.IndexerTestMixIn):
     def _addPlatformSources(self, db):
         # XXX nasty hacks to produce some data in the hopefully proper format
         psql = """
-            INSERT INTO Platforms (platformName, label, mode)
-            VALUES (?, ?, ?)
+            INSERT INTO Platforms (platformName, label, mode, projectId, enabled)
+            VALUES (?, ?, ?, 1, ?)
         """
         cstsql = """
             INSERT INTO platformsContentSourceTypes
             (platformId, contentSourceType)
             VALUES (?, ?)
         """
+        projsql = """
+            INSERT INTO Projects (name, hostname, shortname, fqdn)
+            VALUES (?, ?, ?, ?)
+            """
+        projMap = {}
         mode = 'manual'
         cu = db.cursor()
         for platformLabel in self.mintCfg.availablePlatforms:
             # XXX this isn't quite right, we set the platform name to be the
             # same as the label. It may need to change
-            cu.execute(psql, platformLabel, platformLabel, mode)
+            fqdn = platformLabel.split('@')[0]
+            projectId = projMap.get(fqdn)
+            if projectId is None:
+                hostname = fqdn.split('.')[0]
+                cu.execute(projsql, hostname, hostname, hostname, fqdn)
+                projectId = projMap[fqdn] = cu.lastid()
+            cu.execute(psql, platformLabel, platformLabel, mode, projectId)
             platformId = cu.lastid()
 
             for contentSourceType in self.LabelToContentSourcesMap[platformLabel]:

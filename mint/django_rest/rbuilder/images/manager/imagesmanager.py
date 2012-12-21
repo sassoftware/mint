@@ -13,6 +13,7 @@ from mcp import client as mcp_client
 from mint import buildtypes
 from mint import jobstatus
 from mint import urltypes
+from mint.django_rest.helpers import MultiRequestUploadHandler
 from mint.django_rest.rbuilder.jobs import models as jobsmodels
 from mint.django_rest.rbuilder.images import models
 from mint.django_rest.rbuilder.projects import models as projmodels
@@ -34,6 +35,10 @@ autocommit = basemanager.autocommit
 
 class ImagesManager(basemanager.BaseManager):
  
+    @exposed
+    def getImageById(self, image_id):
+        return models.Image.objects.get(pk=image_id)
+
     @exposed
     def getImageBuild(self, image_id):
         return models.Image.objects.get(pk=image_id)
@@ -146,7 +151,7 @@ class ImagesManager(basemanager.BaseManager):
         models.AuthTokens.objects.filter(image=image).delete()
         self._handlePostImageBuildOperations(image)
         # tag image, etc.
-        self.finishImageBuild(image.image_id)
+        self.finishImageBuild(image)
 
     class UploadCallback(object):
         def __init__(self, manager, imageId):
@@ -525,3 +530,52 @@ class ImagesManager(basemanager.BaseManager):
 
     def _getMcpClient(self):
         return mcp_client.Client(self.cfg.queueHost, self.cfg.queuePort)
+
+    @exposed
+    def getImageUploadStatus(self, image_id, basename):
+        image = self.getImageById(image_id)
+        filename = self._getUploadFilename(image, basename)
+        handler = MultiRequestUploadHandler()
+        status = handler.getStatus(filename)
+        return status
+
+    @exposed
+    def processImageUpload(self, image_id, uploaded_file, basename, chunk_id,
+                           num_chunks, checksum):
+        image = self.getImageById(image_id)
+        if image.status == jobstatus.WAITING:
+            filename = self._getUploadFilename(image, basename)
+            handler = MultiRequestUploadHandler()
+            upload = handler.handle(uploaded_file, filename, chunk_id,
+                                    num_chunks, checksum)
+            if upload.isComplete():
+                image = self._finishImageUpload(image, upload.filename)
+        return image
+
+    def _finishImageUpload(self, image, filename):
+        hostname = self._getImageHostname(image.image_id)
+        new_filename = self._getImageFilePath(hostname, image.image_id,
+                                          filename, create=True)
+        os.rename(filename, new_filename)
+        try:
+            imageid_dir = os.path.dirname(filename)
+            os.rmdir(imageid_dir)
+            hostname_dir = os.path.dirname(imageid_dir)
+            os.rmdir(hostname_dir)
+        except:
+            pass
+
+        self.createImageBuildFile(image, url=new_filename,
+                                  urlType=urltypes.LOCAL,
+                                  title=os.path.basename(new_filename),
+                                  size=os.path.getsize(new_filename))
+
+        image.status = jobstatus.FINISHED
+        self._postFinished(image)
+        return self.getImageById(image.image_id)
+
+    def _getUploadFilename(self, image, basename):
+        return os.path.join(self.cfg.imagesUploadPath,
+                            image.project.short_name,
+                            str(image.image_id),
+                            os.path.basename(basename))

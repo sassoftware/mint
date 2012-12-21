@@ -1,5 +1,5 @@
 #
-# Copyright (c) 2011 rPath, Inc.
+# Copyright (c) rPath, Inc.
 #
 
 from mod_python import apache
@@ -79,17 +79,14 @@ def _getRestDb(context):
 
 def _addCapsuleConfig(context, conaryReposCfg, repName):
     restDb = _getRestDb(context)
-    # XXX we should speed these up by combining into a single call
-    contentInjectionServers = restDb.capsuleMgr.getContentInjectionServers()
-    if not contentInjectionServers or repName not in contentInjectionServers:
-        return
-    indexer = restDb.capsuleMgr.getIndexer()
-    if not indexer.hasSources():
+    indexer = restDb.capsuleMgr.getIndexer(repName)
+    if not indexer or not indexer.hasSources():
         return
     conaryReposCfg.excludeCapsuleContents = True
     # These settings are only used by the filter
-    conaryReposCfg.injectCapsuleContentServers = contentInjectionServers
+    conaryReposCfg.injectCapsuleContentServers = [repName]
     conaryReposCfg.capsuleServerUrl = "direct"
+    restDb.capsuleIndexer = indexer
     return restDb
 
 
@@ -172,7 +169,7 @@ class CapsuleFilterMixIn(object):
             self._restDb = restDb
 
         def downloadCapsule(self, capsuleKey, sha1sum):
-            indexer = self._restDb.capsuleMgr.getIndexer()
+            indexer = self._restDb.capsuleIndexer
             msgTmpl = ("Error downloading capsule. "
                 "Upstream error message: (fault code: %s) %s")
             try:
@@ -185,33 +182,45 @@ class CapsuleFilterMixIn(object):
             fobj = file(indexer.getFullFilePath(pkg))
             return self.fromFile(fobj)
 
-        def downloadCapsuleFile(self, capsuleKey, capsuleSha1sum, fileName,
+        def downloadCapsuleFile(self, capsuleKey, capsuleSha1sum, fileKey,
                 fileSha1sum):
-            if capsuleSha1sum == fileSha1sum or fileName == '':
-                # Troves do contain the capsule too, it's legitimate to
-                # request it; however, we can fall back to downloadCapsule for
-                # it.
-                # The SHA-1 check doesn't normally work because the
-                # FileStreams.sha1 column is often null for capsule files, but
-                # the repository will also return fileName='' if the capsule
-                # fileId is the same as the contents fileId. Either of these
-                # mean that the capsule itself is being requested.
-                return self.downloadCapsule(capsuleKey, capsuleSha1sum)
-            indexer = self._restDb.capsuleMgr.getIndexer()
-            msgTmpl = ("Error downloading file from capsule. "
-                "Upstream error message: (fault code: %s) %s")
-            try:
-                fobj = indexer.getFileFromPackage(capsuleKey, capsuleSha1sum,
-                    fileName, fileSha1sum)
-            except rpath_capsule_indexer.errors.RPCError, e:
-                raise cerrors.RepositoryError(msgTmpl %
-                    (e.faultCode, e.faultString))
-            return self.fromFile(fobj)
+            return self.downloadCapsuleFiles(capsuleKey, capsuleSha1sum,
+                    [(fileKey, fileSha1sum)])[0]
 
         def downloadCapsuleFiles(self, capsuleKey, capsuleSha1sum, fileList):
-            return [ self.downloadCapsuleFile(capsuleKey, capsuleSha1sum,
-                fileName, fileSha1sum)
-                    for (fileName, fileSha1sum) in fileList ]
+            out = [None] * len(fileList)
+            fileKeys = []
+            fileSha1sums = []
+            fileIndexes = []
+            for n, (fileName, fileSha1sum) in enumerate(fileList):
+                if capsuleSha1sum == fileSha1sum or fileName == '':
+                    # Troves do contain the capsule too, it's legitimate to
+                    # request it; however, we can fall back to downloadCapsule
+                    # for it.
+                    # The SHA-1 check doesn't normally work because the
+                    # FileStreams.sha1 column is often null for capsule files,
+                    # but the repository will also return fileName='' if the
+                    # capsule fileId is the same as the contents fileId. Either
+                    # of these mean that the capsule itself is being requested.
+                    out[n] = self.downloadCapsule(capsuleKey, capsuleSha1sum)
+                else:
+                    fileKeys.append(fileName)
+                    fileSha1sums.append(fileSha1sum)
+                    fileIndexes.append(n)
+            if fileKeys:
+                indexer = self._restDb.capsuleIndexer
+                msgTmpl = ("Error downloading file from capsule. "
+                    "Upstream error message: (fault code: %s) %s")
+                try:
+                    fileObjs = indexer.getFilesFromPackage(capsuleKey,
+                            capsuleSha1sum, fileKeys, fileSha1sums)
+                except rpath_capsule_indexer.errors.RPCError, e:
+                    raise cerrors.RepositoryError(msgTmpl %
+                        (e.faultCode, e.faultString))
+                for n, fileObj in zip(fileIndexes, fileObjs):
+                    out[n] = self.fromFile(fileObj)
+            assert None not in out
+            return out
 
         fromFile = proxy.ChangesetFilter.CapsuleDownloader.fromFile
 

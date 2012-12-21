@@ -598,26 +598,6 @@ class InventorySystemEventService(BaseInventoryService):
     def get(self, system_event_id):
         return self.mgr.getSystemEvent(system_event_id)
 
-class InventorySystemsInstalledSoftwareService(BaseInventoryService):
-    
-    @rbac(rbac_can_read_system_id)
-    @return_xml
-    def rest_GET(self, request, system_id):
-        system = self.mgr.getSystem(system_id)
-        installedSoftware = models.InstalledSoftware()
-        installedSoftware.trove = system.installed_software.all()
-        return installedSoftware
-
-    @rbac(rbac_can_write_system_id)
-    @requires('installed_software')
-    @return_xml
-    def rest_PUT(self, request, system_id, installed_software):
-        """Initiate a software update on the system, in order to install the
-        specified software"""
-        self.mgr.updateInstalledSoftware(system_id, installed_software.trove)
-        installedSoftware = models.InstalledSoftware()
-        return installedSoftware
-
 class InventorySystemCredentialsServices(BaseInventoryService):
 
     # TODO -- is this too permissive for reading credentials?
@@ -664,7 +644,7 @@ class InventorySystemConfigurationServices(BaseInventoryService):
         for k, v in configuration.__dict__.items():
             if not k.startswith('_'):
                 configDict[k] = v
-        return self.mgr.addSystemConfiguration(system_id, configDict)
+        return self.mgr.saveSystemConfiguration(system_id, configDict)
 
     @rbac(rbac_can_write_system_id)
     @return_xml
@@ -674,7 +654,7 @@ class InventorySystemConfigurationServices(BaseInventoryService):
         for k, v in configuration.__dict__.items():
             if not k.startswith('_'):
                 configDict[k] = v
-        return self.mgr.addSystemConfiguration(system_id, configDict)
+        return self.mgr.saveSystemConfiguration(system_id, configDict)
 
     def get(self, system_id):
         return self.mgr.getSystemConfiguration(system_id)
@@ -854,8 +834,6 @@ class SurveyService(BaseInventoryService):
         (found, deleted) = self.mgr.deleteSurvey(uuid)
         if not found:
             return HttpResponseNotFound()
-        elif not deleted:
-            raise PermissionDenied(msg="Survey is not marked removable")
         else:
             return HttpResponse(status=204)    
 
@@ -1016,3 +994,13 @@ class SurveyTagService(BaseInventoryService):
         return self.mgr.getSurveyTag(id)
 
 
+class PreviewService(BaseInventoryService):
+    ''' Fetch Preview objects '''
+
+    def rest_GET(self, request, id):
+        ret = self.get(id)
+        return HttpResponse(ret.preview, status=200, content_type='text/xml')
+
+    def get(self, id):
+        # XXX Mimic @rbac(rbac_can_read_survey_tag)
+        return self.mgr.getPreview(id)

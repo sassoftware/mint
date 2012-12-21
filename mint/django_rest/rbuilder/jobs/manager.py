@@ -7,10 +7,12 @@
 import inspect
 import os
 import re
-import weakref
 import StringIO
+import sys
 import time
 import urlparse
+import weakref
+import exceptions
 from django.core import urlresolvers
 from django.db import IntegrityError, transaction
 
@@ -18,7 +20,6 @@ from xobj import xobj
 from smartform import descriptor as smartdescriptor
 
 from mint import buildtypes, jobstatus, urltypes
-from mint.lib import uuid
 from mint.django_rest.rbuilder import errors
 from mint.django_rest.rbuilder import modellib
 from mint.django_rest.rbuilder.manager import basemanager
@@ -26,6 +27,9 @@ from mint.django_rest.rbuilder.images import models as imagemodels
 from mint.django_rest.rbuilder.jobs import models
 from mint.django_rest.rbuilder.inventory import models as inventorymodels
 from mint.django_rest.rbuilder.targets import models as targetmodels
+from mint.lib import data as mintdata
+from mint.lib import uuid
+from mint.logerror import logErrorAndEmail
 
 exposed = basemanager.exposed
 
@@ -62,9 +66,10 @@ class JobManager(basemanager.BaseManager):
         job URL and in the descriptor URL, and they should match
         """
         job.created_by = self.user
-        factory = JobHandlerRegistry.getHandlerFactory(job.job_type.name)
+        typename = job.job_type.name
+        factory = JobHandlerRegistry.getHandlerFactory(typename)
         if factory is None:
-            raise errors.InvalidData()
+            raise errors.InvalidData(msg="no factory for job type: %s" % typename)
         jhandler = factory(self)
         jhandler.create(job, extraArgs)
         for system_job in job.systems.all():
@@ -224,7 +229,7 @@ class ResultsProcessingMixIn(object):
     def processResults(self, job):
         if job.oldModel is None:
             # We won't allow job creation to happen here
-            raise errors.InvalidData()
+            raise errors.InvalidData(msg="no model")
         # Flush job state to the DB, it is needed by processJobResults
         models.Job.objects.filter(job_id=job.job_id).update(
             job_state=job.job_state)
@@ -242,7 +247,7 @@ class ResultsProcessingMixIn(object):
     def validateJobResults(self, job):
         jobState = modellib.Cache.get(models.JobState, pk=job.job_state_id)
         if self.results is None and jobState.name == jobState.COMPLETED:
-            raise errors.InvalidData()
+            raise errors.InvalidData(msg = "missing results")
 
     def loadDescriptorData(self, job):
         descriptor = smartdescriptor.ConfigurationDescriptor(fromStream=job._descriptor)
@@ -262,7 +267,16 @@ class ResultsProcessingMixIn(object):
             transaction.savepoint_rollback(tsid)
             log.error("Error processing job %s %s",
                 job.job_uuid, e)
-            self.handleError(job, e)
+            try:
+                handled = self.handleError(job, e)
+            except exceptions.AttributeError:
+                handled = False
+            if handled:
+                return None
+            e_type, e_value, e_tb = sys.exc_info()
+            logErrorAndEmail(self.mgr.cfg, e_type, e_value, e_tb,
+                'jobs handler', dict(), doEmail=True)
+            self.handleErrorDefault(job, e)
             return None
         
         # save the results from ramke to the DB
@@ -286,6 +300,8 @@ class ResultsProcessingMixIn(object):
                 pass
             elif tag == 'survey':
                 models.JobSurveyArtifact.objects.create(job=job, survey=resource)
+            elif tag == 'preview':
+                pass # Saved earlier in callchain because it's special.
             else:
                 raise Exception("internal error, don't know how to save resource: %s" % tag)
         return resources[0]
@@ -298,7 +314,7 @@ class ResultsProcessingMixIn(object):
         config = driverClass.getTargetConfigFromDescriptorData(descriptorData)
         return targetType, cloudName, config
 
-    def handleError(self, job, exc):
+    def handleErrorDefault(self, job, exc):
         job.status_text = "Unknown exception, please check logs"
         job.status_code = 500
 
@@ -327,7 +343,7 @@ class DescriptorJobHandler(BaseJobHandler, ResultsProcessingMixIn):
             descriptorDataObj = None
             descriptor        = self.getDescriptor(job.descriptor.id)
         else:
-            descriptorId = job.descriptor.id
+            descriptorId       = job.descriptor.id
             # Strip the server-side portion
             descriptorId       = urlparse.urlsplit(descriptorId).path
             descriptorDataXobj = job.descriptor_data
@@ -405,7 +421,7 @@ class DescriptorJobHandler(BaseJobHandler, ResultsProcessingMixIn):
         try:
             match = urlresolvers.resolve(resourceId)
         except urlresolvers.Resolver404:
-            raise errors.InvalidData()
+            raise errors.InvalidData(msg="unable to resolve resource id: %s" % resourceId)
 
         return match
 
@@ -446,7 +462,7 @@ class _TargetDescriptorJobHandler(DescriptorJobHandler):
     def _buildTargetCredentialsFromDb(self, cli, job):
         creds = self.mgr.mgr.getTargetCredentialsForCurrentUser(self.target)
         if creds is None:
-            raise errors.InvalidData()
+            raise errors.InvalidData(msg="missing credentials")
         return self._buildTargetCredentials(cli, job, creds)
 
     def _buildTargetCredentials(self, cli, job, creds):
@@ -758,12 +774,12 @@ class JobHandlerRegistry(HandlerRegistry):
             return target
 
         def handleError(self, job, exc):
-            if isinstance(exc, IntegrityError):
+            if isinstance(exc, (IntegrityError, errors.Conflict)):
                 job.job_state = self.mgr.getJobStateByName(models.JobState.FAILED)
                 job.status_text = "Duplicate Target"
                 job.status_code = 409
-            else:
-                DescriptorJobHandler.handleError(self, job, exc)
+                return True
+            return False
 
         def _createTarget(self, targetType, targetName, config):
             return self.mgr.mgr.createTarget(targetType, targetName, config)
@@ -803,12 +819,12 @@ class JobHandlerRegistry(HandlerRegistry):
                 targetName, config)
 
         def handleError(self, job, exc):
-            if isinstance(exc, IntegrityError):
+            if isinstance(exc, (IntegrityError, errors.Conflict)):
                 job.job_state = self.mgr.getJobStateByName(models.JobState.FAILED)
                 job.status_text = "Duplicate Target"
                 job.status_code = 409
-            else:
-                DescriptorJobHandler.handleError(self, job, exc)
+                return True
+            return False
 
     class TargetCredentialsConfigurator(_TargetDescriptorJobHandler):
         __slots__ = []
@@ -855,7 +871,7 @@ class JobHandlerRegistry(HandlerRegistry):
 
             systemId = int(match.kwargs['system_id'])
             if str(systemId) != str(self.extraArgs.get('system_id')):
-                raise errors.InvalidData()
+                raise errors.InvalidData(msg = "system id does not match")
             self._setSystem(systemId)
             descr = self._getDescriptorMethod()(systemId)
             return descr
@@ -922,7 +938,7 @@ class JobHandlerRegistry(HandlerRegistry):
         def _processJobResults(self, job):
             imageId = getattr(self.results, 'id', None)
             if imageId is None:
-                raise errors.InvalidData()
+                raise errors.InvalidData(msg = "missing imageId")
             imageId = int(os.path.basename(imageId))
             image = self.mgr.mgr.getImageBuild(imageId)
             image.status = jobstatus.FINISHED
@@ -971,7 +987,10 @@ class JobHandlerRegistry(HandlerRegistry):
             params = self.mgr.mgr.sysMgr._computeDispatcherMethodParams(cli,
                 self.system, destination, eventUuid=str(self.eventUuid),
                 requiredNetwork=None)
-            return (params, ), dict(zone=self.system.managing_zone.name)
+            topLevelGroup = self.descriptorData.getField('top_level_group')
+            desiredTopLevelItems = [ topLevelGroup ]
+            return (params, ), dict(zone=self.system.managing_zone.name,
+                desiredTopLevelItems=desiredTopLevelItems)
 
         def postprocessRelatedResource(self, job, model):
             model.event_uuid = str(self.eventUuid)
@@ -989,6 +1008,10 @@ class JobHandlerRegistry(HandlerRegistry):
                 self.system.system_id, job.results.surveys)
             return survey
 
+        def handleError(self, job, exc):
+            job.status_text = "Unknown exception, please check logs"
+            job.status_code = 500
+
     class ImageBuildCancellation(DescriptorJobHandler):
         __slots__ = [ 'image', ]
         jobType = models.EventType.IMAGE_CANCEL_BUILD
@@ -1003,7 +1026,7 @@ class JobHandlerRegistry(HandlerRegistry):
 
             imageId = int(match.kwargs['image_id'])
             if str(imageId) != str(self.extraArgs.get('imageId')):
-                raise errors.InvalidData()
+                raise errors.InvalidData(msg = "image id does not match")
             self._setImage(imageId)
             return self.mgr.mgr.imagesManager.getImageDescriptorCancelBuild(imageId)
 
@@ -1019,3 +1042,145 @@ class JobHandlerRegistry(HandlerRegistry):
 
         def postCreateJob(self, job):
             self.mgr.mgr.cancelImageBuild(self.image, job)
+
+    class SystemUpdate(DescriptorJobHandler):
+        __slots__ = [ 'system', 'eventUuid', 'specs', 'dryRun']
+        jobType = models.EventType.SYSTEM_UPDATE
+        ResultsTag = 'preview'
+
+        def getDescriptor(self, descriptorId):
+            match = self.splitResourceId(descriptorId)
+
+            systemId = int(match.kwargs['system_id'])
+            if str(systemId) != str(self.extraArgs.get('system_id')):
+                raise errors.InvalidData()
+            system = inventorymodels.System.objects.get(system_id=systemId)
+            self.system = system
+
+            return self.mgr.mgr.sysMgr.getDescriptorUpdate(systemId)
+
+        def getRelatedResource(self, descriptor):
+            return self.system
+
+        def getRepeaterMethod(self, cli, job):
+            self.descriptor, self.descriptorData = self.extractDescriptorData(job)
+            cimInterface = self.mgr.mgr.cimManagementInterface()
+            wmiInterface = self.mgr.mgr.wmiManagementInterface()
+            methodMap = {
+                cimInterface.management_interface_id : cli.update_cim,
+                wmiInterface.management_interface_id : cli.update_wmi,
+            }
+            method = methodMap.get(self.system.management_interface_id)
+            if method is None:
+                raise errors.InvalidData(msg="Unsupported management interface")
+            return method
+
+        def getRepeaterMethodArgs(self, cli, job):
+            self.eventUuid = uuid.uuid4()
+            nw = self.system.extractNetworkToUse(self.system)
+            if not nw:
+                raise errors.InvalidData(msg="No network available for system")
+            destination = nw.ip_address or nw.dns_name
+            params = self.mgr.mgr.sysMgr._computeDispatcherMethodParams(cli,
+                self.system, destination, eventUuid=str(self.eventUuid),
+                requiredNetwork=None)
+
+            topLevelGroup = str(self.descriptorData.getField('trove_label'))
+            test = self.descriptorData.getField('dry_run')
+            extra = dict(sources = [ topLevelGroup ],
+                            test = test,
+                            zone = self.system.managing_zone.name)
+            return (params, ), extra
+
+        def getRelatedThroughModel(self, descriptor):
+            return inventorymodels.SystemJob
+
+        def postprocessRelatedResource(self, job, model):
+            model.event_uuid = str(self.eventUuid)
+
+        #def _updateInstalledSoftware(self, system, job):
+        #    desc = xobj.parse(job.descriptor_data)
+        #    dry_run = (desc.run_run.lower() == 'true')
+        #    if dry_run:
+        #        return
+        #   system.last_update_trove_spec = desc.trove_spec
+        #   system.save() 
+
+        def _processJobResults(self, job):
+            xml = xobj.toxml(job.results.preview)
+            #self._updateInstalledSoftware(system, job)
+            system = inventorymodels.System.objects.get(system_id=job.systems.all()[0].system_id)
+            preview = models.JobPreviewArtifact(job=job, preview=xml, system=system)
+            preview.save()
+            return preview
+
+    class SystemConfigure(DescriptorJobHandler):
+        # TODO: reduce boilerplate by making a system job handler base class
+        # and combine with other system jobs.  This should only be a few lines
+        # per job type if the job is reasonably basic
+
+        __slots__ = [ 'system', 'eventUuid' ]
+        jobType = models.EventType.SYSTEM_CONFIGURE
+        ResultsTag = 'configuration'
+    
+        def getDescriptor(self, descriptorId):
+
+            match = self.splitResourceId(descriptorId)
+            systemId = int(match.kwargs['system_id'])
+            if str(systemId) != str(self.extraArgs.get('system_id')):
+                raise errors.InvalidData()
+            system = inventorymodels.System.objects.get(system_id=systemId)
+            self.system = system
+            return self.mgr.mgr.sysMgr.getDescriptorConfigure(systemId)
+
+        def getRelatedResource(self, descriptor):
+            return self.system
+
+        def postprocessRelatedResource(self, job, model):
+            model.event_uuid = str(self.eventUuid)
+
+        def getRepeaterMethod(self, cli, job):
+            self.descriptor, self.descriptorData = self.extractDescriptorData(job)
+            cimInterface = self.mgr.mgr.cimManagementInterface()
+            wmiInterface = self.mgr.mgr.wmiManagementInterface()
+            methodMap = {
+                cimInterface.management_interface_id : cli.configuration_cim,
+                wmiInterface.management_interface_id : cli.configuration_wmi,
+            }
+            method = methodMap.get(self.system.management_interface_id)
+            if method is None:
+                raise errors.InvalidData(msg="Unsupported management interface")
+            return method
+
+        def getRepeaterMethodArgs(self, cli, job):
+
+            self.eventUuid = uuid.uuid4()
+            nw = self.system.extractNetworkToUse(self.system)
+            if not nw:
+                raise errors.InvalidData(msg="No network available for system")
+            destination = nw.ip_address or nw.dns_name
+            params = self.mgr.mgr.sysMgr._computeDispatcherMethodParams(cli,
+                self.system, destination, eventUuid=str(self.eventUuid),
+                requiredNetwork=None)
+
+            # xml configuration is stored as mintdata, and we need it as
+            # nice XML because it will be sent literally, this is a copy
+            # of the old way it was done for backwards compat, we could just
+            # store the XML.
+            configDict = mintdata.unmarshalGenericData(self.system.configuration)
+            config = inventorymodels.Configuration(self.system)
+            for k, v in configDict.items():
+                setattr(config, k, v)
+            configXml = xobj.toxml(config, prettyPrint=False, xml_declaration=False)
+
+            self.system.configuration_applied = True
+            self.system.save()
+
+            return (params, ), dict(configuration=configXml, zone=self.system.managing_zone.name)
+
+        def getRelatedThroughModel(self, descriptor):
+            return inventorymodels.SystemJob
+
+        def postCreateJob(self, job):
+            # self.mgr.mgr.configureSystem(self.system, job)
+            pass

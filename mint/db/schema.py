@@ -22,14 +22,13 @@ L{migrate<mint.migrate>} module.
 
 import logging
 import datetime
-import os
 from dateutil import tz
 from conary.dbstore import sqlerrors, sqllib
 
 log = logging.getLogger(__name__)
 
 # database schema major version
-RBUILDER_DB_VERSION = sqllib.DBversion(62, 8)
+RBUILDER_DB_VERSION = sqllib.DBversion(63, 14)
 
 def _createTrigger(db, table, column="changed"):
     retInsert = db.createTrigger(table, column, "INSERT")
@@ -1260,7 +1259,12 @@ def _createInventorySchema(db, cfg):
                 "has_active_jobs" BOOLEAN NOT NULL
                     DEFAULT FALSE,
                 "has_running_jobs" BOOLEAN NOT NULL
-                    DEFAULT FALSE
+                    DEFAULT FALSE,
+                "configuration_set" BOOLEAN NOT NULL
+                    DEFAULT FALSE,
+                "configuration_applied" BOOLEAN NOT NULL
+                    DEFAULT FALSE,
+                "last_update_trove_spec" TEXT
             ) %(TABLEOPTS)s""" % db.keywords)
         db.tables['inventory_system'] = []
         db.createIndex("inventory_system",
@@ -1460,7 +1464,15 @@ def _createInventorySchema(db, cfg):
                   description="Cancel an image build",
                   priority=105,
                   resource_type="Image"),
-            ])
+             dict(name="system update software",
+                  description="Update your system",
+                  priority=105,
+                  resource_type="System"),
+             dict(name="system apply configuration",
+                  description="Apply system configuration",
+                  priority=105,
+                  resource_type="System"),
+             ])
 
     if 'inventory_system_event' not in db.tables:
         cu.execute("""
@@ -1552,6 +1564,19 @@ def _createInventorySchema(db, cfg):
     db.createIndex('jobs_created_system', 'jobs_created_system_jid_sid_uq',
             'job_id, system_id', unique=True)
 
+    createTable(db, 'jobs_created_preview', """
+        CREATE TABLE jobs_created_preview
+        (
+            creation_id     %(PRIMARYKEY)s,
+            job_id          INTEGER NOT NULL
+                            REFERENCES jobs_job ON DELETE CASCADE,
+            preview         text,
+            system_id       INTEGER NOT NULL
+                            REFERENCES inventory_system ON DELETE SET NULL
+        ) %(TABLEOPTS)s""")
+    db.createIndex('jobs_created_preview', 'jobs_created_preview_jid_sid',
+            'job_id, system_id')
+
     createTable(db, 'jobs_created_image', """
         CREATE TABLE jobs_created_image
         (
@@ -1581,6 +1606,7 @@ def _createInventorySchema(db, cfg):
             ) %(TABLEOPTS)s""" % db.keywords)
         db.tables[tableName] = []
 
+    # does any old non-django code use this?
     if 'inventory_trove_available_updates' not in db.tables:
         cu.execute("""
             CREATE TABLE "inventory_trove_available_updates" (
@@ -1609,18 +1635,6 @@ def _createInventorySchema(db, cfg):
             )""" % db.keywords)
 
         db.tables['inventory_trove'] = []
-
-    if 'inventory_system_installed_software' not in db.tables:
-        cu.execute("""
-            CREATE TABLE "inventory_system_installed_software" (
-                "id" %(PRIMARYKEY)s,
-                "system_id" INTEGER NOT NULL
-                    REFERENCES "inventory_system" ("system_id")
-                    ON DELETE CASCADE,
-                "trove_id" INTEGER NOT NULL
-                    REFERENCES "inventory_trove" ("trove_id"),
-                UNIQUE ("system_id", "trove_id")
-            )""" % db.keywords)
 
     if 'inventory_system_target_credentials' not in db.tables:
         cu.execute("""
@@ -1662,6 +1676,14 @@ def _createInventorySchema(db, cfg):
 
     _createSurveyTables(db, cfg)
 
+    createTable(db, 'inventory_update', """
+              "update_id"    %(PRIMARYKEY)s,
+              "system_id"    INTEGER NOT NULL REFERENCES "inventory_system" (system_id) ON DELETE CASCADE,
+              "dry_run"      BOOLEAN DEFAULT TRUE,
+              "specs"        TEXT,
+              "created_date" TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT current_timestamp
+              """)
+
 def _createSurveyTables(db, cfg):
 
     createTable(db, 'inventory_survey', """
@@ -1677,12 +1699,34 @@ def _createSurveyTables(db, cfg):
                 "modified_by" INTEGER REFERENCES "users" (userid) ON DELETE SET NULL,
                 "removable" BOOLEAN NOT NULL DEFAULT TRUE,
                 "values_xml" TEXT,
+                "desired_values_xml" TEXT,
+                "observed_values_xml" TEXT,
+                "validator_values_xml" TEXT,
+                "discovered_values_xml" TEXT,
+                "compliance_summary_xml" TEXT,
+                "desired_values_descriptor_xml" TEXT,
+                "config_values_descriptor_xml" TEXT,
+                "system_model" TEXT,
+                "system_model_modified_date" TIMESTAMP WITH TIME ZONE,
+                "has_system_model" BOOLEAN NOT NULL DEFAULT FALSE,
+                "updates_pending" BOOLEAN NOT NULL DEFAULT FALSE,
+                "has_errors" BOOLEAN NOT NULL DEFAULT FALSE,
+                "preview_xml" TEXT,
+                "config_diff_xml" TEXT,
                 "raw_xml" TEXT
-
     """)
-    db.createIndex('inventory_survey', 'SurveyUuidIdx', 'uuid')
-    db.createIndex('inventory_survey', 'SystemIdIdx', 'system_id')
 
+    createTable(db, 'inventory_survey_values', """
+        "survey_value_id" %(PRIMARYKEY)s,
+        "survey_id" INTEGER NOT NULL REFERENCES inventory_survey (survey_id),
+        "type" INTEGER NOT NULL,
+        "key" TEXT NOT NULL,
+        "subkey" TEXT,
+        "value" TEXT
+    """)
+
+    db.createIndex('inventory_survey', 'SurveyUuidIdx', 'uuid', unique=True)
+    db.createIndex('inventory_survey', 'SystemIdIdx', 'system_id')
 
     cu = db.cursor()
     cu.execute("""
@@ -1783,7 +1827,8 @@ def _createSurveyTables(db, cfg):
         "map_id" %(PRIMARYKEY)s,
         "survey_id" INTEGER NOT NULL REFERENCES "inventory_survey" (survey_id) ON DELETE CASCADE,
         "windows_service_id" INTEGER NOT NULL REFERENCES "inventory_windows_service" (windows_service_id) ON DELETE CASCADE,
-        "status" TEXT NOT NULL
+        "status" TEXT NOT NULL,
+        "running" BOOLEAN NOT NULL DEFAULT FALSE,
     """)
     db.createIndex('inventory_survey_windows_service', 'inventory_survey_windows_service_sid', 'survey_id')
 
@@ -1810,7 +1855,8 @@ def _createSurveyTables(db, cfg):
         "map_id" %(PRIMARYKEY)s,
         "survey_id" INTEGER NOT NULL REFERENCES "inventory_survey" (survey_id) ON DELETE CASCADE,
         "conary_package_id" INTEGER NOT NULL REFERENCES "inventory_conary_package" (conary_package_id) ON DELETE CASCADE,
-        "install_date" TIMESTAMP WITH TIME ZONE NOT NULL
+        "install_date" TIMESTAMP WITH TIME ZONE NOT NULL,
+        "is_top_level" BOOLEAN NOT NULL DEFAULT FALSE
     """)
 
     db.createIndex('inventory_survey_conary_package', 'inventory_survey_conary_package_sid', 'survey_id')
@@ -1851,7 +1897,7 @@ def _addSystemStates(db, cfg):
         dict(name="unmanaged-credentials",
             description="Unmanaged: Invalid credentials",
             created_date=str(datetime.datetime.now(tz.tzutc()))),
-        dict(name="registered", description="Initial synchronization pending",
+        dict(name="registered", description="Registered",
             created_date=str(datetime.datetime.now(tz.tzutc()))),
         dict(name="responsive", description="Online",
             created_date=str(datetime.datetime.now(tz.tzutc()))),
@@ -2650,6 +2696,47 @@ def _createQuerySetSchema(db):
                 NOT NULL,
             UNIQUE ("queryset_id", "filterentry_id")
         )""")
+            
+    createTable(db, "config_environments", """
+            "id" %(PRIMARYKEY)s,
+            "name" TEXT UNIQUE,
+            "description" TEXT,
+            created_by INTEGER
+                REFERENCES Users ON DELETE SET NULL,
+            modified_by INTEGER
+                REFERENCES Users ON DELETE SET NULL,
+            created_date TIMESTAMP WITH TIME ZONE NOT NULL
+                DEFAULT current_timestamp,
+            modified_date TIMESTAMP WITH TIME ZONE NOT NULL
+                DEFAULT current_timestamp,
+            config_descriptor TEXT,
+    """)
+
+    createTable(db, "querysets_queryset_config_environments", """
+        "id" %(PRIMARYKEY)s,
+        "queryset_id" INTEGER
+                REFERENCES "querysets_queryset" ("query_set_id")
+                ON DELETE CASCADE
+                NOT NULL,
+        "config_environment_id" INTEGER
+                REFERENCES "config_environments" ("id")
+                ON DELETE CASCADE
+                NOT NULL
+    """)   
+
+    createTable(db, "config_environment_config_values", """
+            "id" %(PRIMARYKEY)s,
+            "config_environment_id" INTEGER REFERENCES "config_environments" ("id") ON DELETE CASCADE,
+            "key" TEXT,
+            "value" TEXT
+    """)
+
+    createTable(db, "system_config_values", """
+            "id" %(PRIMARYKEY)s,
+            "system_id" INTEGER REFERENCES "inventory_system" ("system_id") ON DELETE CASCADE,
+            "key" TEXT,
+            "value" TEXT
+    """)
 
     # unique value was 'name', not queryset_id
     qs_rows=[

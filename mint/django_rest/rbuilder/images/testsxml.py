@@ -262,6 +262,7 @@ image_get_xml = """
   <image_count>1</image_count>
   <job_uuid>1</job_uuid>
   <jobs id="http://testserver/api/v1/images/1/jobs"/>
+  <upload_files id="http://testserver/api/v1/images/1/upload_files"/>
 </image>
 """
 
@@ -548,6 +549,7 @@ release_get_xml = \
       <release id="http://testserver/api/v1/releases/1"/>
       <image_count>1</image_count>
       <job_uuid>1</job_uuid>
+      <upload_files id="http://testserver/api/v1/images/1/upload_files"/>
     </image>
   </images>
   <time_mirrored></time_mirrored>
@@ -684,6 +686,7 @@ releases_get_xml = \
         <release id="http://testserver/api/v1/releases/1"/>
         <image_count>1</image_count>
         <job_uuid>1</job_uuid>
+        <upload_files id="http://testserver/api/v1/images/1/upload_files"/>
       </image>
     </images>
     <time_mirrored></time_mirrored>
@@ -793,6 +796,7 @@ releases_get_xml = \
         <release id="http://testserver/api/v1/releases/2"/>
         <image_count>1</image_count>
         <job_uuid>1</job_uuid>
+        <upload_files id="http://testserver/api/v1/images/2/upload_files"/>
       </image>
     </images>
     <time_mirrored></time_mirrored>
@@ -902,6 +906,7 @@ releases_get_xml = \
         <release id="http://testserver/api/v1/releases/3"/>
         <image_count>1</image_count>
         <job_uuid>1</job_uuid>
+        <upload_files id="http://testserver/api/v1/images/3/upload_files"/>
       </image>
     </images>
     <time_mirrored></time_mirrored>

@@ -7,6 +7,7 @@
 # Services related to images -- expect heavy changes
 # as target service evolves
 
+import urllib
 from django.http import HttpResponse, HttpResponseRedirect 
 from mint.django_rest.deco import requires, return_xml, access, Flags
 from mint.django_rest.rbuilder import service
@@ -302,3 +303,24 @@ class ImageDescriptorsService(service.BaseService):
     def get(self, image_id, descriptor_type):
         return self.mgr.serializeDescriptor(
             self.mgr.getImageDescriptor(image_id, descriptor_type))
+
+class ImageUploadFilesService(service.BaseService):
+    @access.anonymous
+    def rest_GET(self, request, image_id):
+        return self.get(image_id, request.GET.get('name'))
+
+    def get(self, image_id, filename):
+        status = self.mgr.getImageUploadStatus(image_id, filename)
+        return HttpResponse(urllib.urlencode(status),
+                            mimetype='application/x-www-form-urlencoded')
+
+    @access.anonymous
+    @return_xml
+    def rest_POST(self, request, image_id):
+        return self.mgr.processImageUpload(image_id,
+                                    next(iter(request.FILES.values())),
+                                    request.GET.get('name'),
+                                    request.GET.get('chunk'),
+                                    request.GET.get('chunks'),
+                                    request.GET.get('md5chunk'))
+

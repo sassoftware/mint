@@ -222,9 +222,12 @@ class TargetsManager(basemanager.BaseManager, CatalogServiceHelper):
         description = targetData.get('description', targetName)
         zoneName = targetData.pop('zone')
         zone = modellib.Cache.get(zones.Zone, name=zoneName)
-        target = models.Target(name=targetName, description=description,
-            target_type=targetType, zone=zone,
-            state=models.Target.States.OPERATIONAL)
+        target, created = models.Target.objects.get_or_create(name=targetName,
+            target_type=targetType, defaults=dict(zone=zone,
+            description=description,
+            state=models.Target.States.OPERATIONAL))
+        if not created:
+            raise errors.Conflict()
         target.save()
         self._setTargetData(target, targetData)
         self._addTargetQuerySet(target)

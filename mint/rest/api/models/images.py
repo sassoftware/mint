@@ -163,6 +163,7 @@ class Image(Model):
     imageStatus = fields.ModelField(ImageStatus)
     files = fields.ModelField(ImageFileList)
     baseFileName = fields.CharField()
+    upload_files = fields.ImageUploadsHrefField()
     metadata = fields.XObjField()
     outputTrove = fields.CharField()
 
