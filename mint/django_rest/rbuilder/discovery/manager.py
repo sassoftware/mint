@@ -10,7 +10,6 @@ from conary import constants as conaryConstants
 from rmake import constants as rmakeConstants
 from rpath_proddef import api1 as proddef
 from mint import constants, maintenance
-from mint.lib import siteauth
 
 from mint.django_rest.rbuilder.manager import basemanager
 from mint.django_rest.rbuilder.discovery import models
@@ -62,7 +61,7 @@ class DiscoveryManager(basemanager.BaseManager):
         return apiVersion
 
     def _getRbuilderId(self):
-        return siteauth.getSiteAuth(self.cfg.siteAuthCfgPath).rBuilderId
+        return ''
 
     @classmethod
     def _bool(cls, val):
