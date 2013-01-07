@@ -7,7 +7,6 @@ product.companyCopyYears="2006-2012"
 services.Services.hidden = True
 apphome.visible = True
 apphome.text = "rPath Cloud Engine"
-configure.entitlements.postscript = "/usr/share/rbuilder/scripts/refresh-auth"
 
 # Wizard plugins to run in this order. 
 # -- Terms of service should always be first!

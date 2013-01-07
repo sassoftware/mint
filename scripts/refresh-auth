@@ -1,6 +1,0 @@
-#!/usr/bin/python
-from mint.scripts import refresh_auth
-import sys
-
-if __name__ == '__main__':
-    sys.exit(refresh_auth.RefreshAuthScript().run())
