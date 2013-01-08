@@ -16,7 +16,7 @@ from conary import versions
 import conary.errors
 import conary.server.schema
 from conary.conaryclient import cmdline
-from mint.lib import mintutils, siteauth
+from mint.lib import mintutils
 
 log = logging.getLogger(__name__)
 
@@ -172,9 +172,6 @@ def restore(cfg):
 
     # Everything beyond this point runs as root again
     restorePrivs()
-
-    auth = siteauth.SiteAuthorization(cfg.siteAuthCfgPath)
-    auth.update()
 
     log.info("Restore complete.")
 

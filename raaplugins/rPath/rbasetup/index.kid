@@ -112,15 +112,6 @@ Copyright (c) 2008-2009 rPath, Inc.
                 <div class="page-section" py:if="not configured">Server Setup</div>
                 <div class="page-section-content" py:if="not configured">
                     <p>
-                        <strong>Note:</strong> If you do not have an entitlement key, please go to 
-                        <a target="_blank" href="http://www.rpath.com/corp/request-information">http://www.rpath.com/corp/request-information</a>
-                        or contact <a href="mailto:sales@rpath.com">sales@rpath.com</a>.
-                    </p>
-                    <div class="form-line">
-                        <div class="rbasetup-label">Entitlement Key:</div>
-                        <input type="text" name="entitlementKey" value="" />
-                    </div>
-                    <p>
                         <strong>Note:</strong> The hostname and domain name
                         displayed below are based on the URL you used to
                         access your rBuilder Appliance.  You can change

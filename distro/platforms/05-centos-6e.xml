@@ -2,5 +2,5 @@
   <label>centos6.rpath.com@rpath:centos-6e</label>
   <platformName>CentOS 6</platformName>
   <abstract>false</abstract>
-  <configurable>true</configurable>
+  <configurable>false</configurable>
 </platform>

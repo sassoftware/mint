@@ -51,7 +51,6 @@ class SiteTest(restbase.BaseRestTest):
   <products href="http://%(server)s:%(port)s/api/products/"/>
   <users href="http://%(server)s:%(port)s/api/users/"/>
   <platforms href="http://%(server)s:%(port)s/api/platforms/"/>
-  <registration href="http://%(server)s:%(port)s/api/registration"/>
   <reports href="http://%(server)s:%(port)s/api/reports/"/>
   <inventory href="http://%(server)s:%(port)s/api/inventory/"/>
   <query_sets href="http://localhost:8000/api/query_sets/"/>

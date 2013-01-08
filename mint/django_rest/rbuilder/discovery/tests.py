@@ -36,19 +36,12 @@ class VersionsTestCase(XMLTestCase):
 
     def _mockConfigInfo(self):
         from mint import constants
-        from mint.lib import siteauth
         from conary import constants as conaryConstants
         from rmake import constants as rmakeConstants
         self.mock(constants, 'mintVersion', 'mint-version-42')
         self.mock(conaryConstants, 'changeset', 'conary-version-42')
         self.mock(rmakeConstants, 'changeset', 'rmake-version-42')
         self.mock(os, 'uname', lambda: ('Lunix', 'superduper.example.com', '1.1'))
-        oldGetSiteAuth = siteauth.getSiteAuth
-        def mockGetSiteAuth(*args, **kwargs):
-            obj = oldGetSiteAuth(*args, **kwargs)
-            obj.rBuilderId = 'super-id'
-            return obj
-        self.mock(siteauth, 'getSiteAuth', mockGetSiteAuth)
 
     def testVersion(self):
         self._mockConfigInfo()
@@ -63,7 +56,7 @@ class VersionsTestCase(XMLTestCase):
     <inventory_configuration_enabled>true</inventory_configuration_enabled>
     <is_external_rba>false</is_external_rba>
     <maintenance_mode>false</maintenance_mode>
-    <rbuilder_id>super-id</rbuilder_id>
+    <rbuilder_id />
   </config_info>
   <grants id="http://testserver/api/v1/rbac/grants"/>
   <inventory id="http://testserver/api/v1/inventory"/>

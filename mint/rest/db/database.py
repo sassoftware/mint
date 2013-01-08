@@ -874,26 +874,6 @@ class Database(DBInterface):
     def deleteSource(self, shortName):
         return self.platformMgr.deleteSource(shortName)
 
-    # doesn't actually commit anything to the database, instead
-    # it pushes to the entitlement server.
-    @readonly
-    def setRegistration(self, registrationData):
-        assert self.siteAuth
-        if self.siteAuth.isValid():
-            # only require admin if we've got a valid setup.
-            # If our setup is already invalid then allow anyone to
-            # set the registration, as most of the interface (including 
-            # logging in) is disabled.
-            self.auth.requireAdmin()
-        self.siteAuth.register(registrationData)
-
-    @readonly
-    def getRegistrationForm(self):
-        assert self.siteAuth
-        if self.siteAuth.isValid():
-            self.auth.requireAdmin()
-        return self.siteAuth.getForm()
-
     @readonly
     def getCACertificates(self):
         return self.pkiMgr.getCACertificates()

@@ -20,7 +20,6 @@ from mint.rest.api import modulehooks
 from mint.rest.api import product
 from mint.rest.api import notices
 from mint.rest.api import platforms
-from mint.rest.api import registration
 from mint.rest.api import users
 from mint.rest.middleware import auth
 
@@ -30,7 +29,6 @@ class RbuilderRestServer(RestController):
             'users'    : users.UserController,
             'platforms' : platforms.PlatformController,
             'contentSources' : platforms.SourceTypeController,
-            'registration' : registration.RegistrationController,
             'notices'  : notices.NoticesController,
             'capsules'  : capsules.CapsulesController,
             'reports/'  : 'djangoHandoff',
