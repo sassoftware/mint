@@ -230,6 +230,10 @@ class rBuilderProduct(CPackageRecipe):
         r.PackageSpec('anaconda-custom', r'/usr/share/anaconda/')
         r.PackageSpec('media-template', r'/usr/lib/media-template/')
 
+        # Attempt to isolate things that don't work when mint is just a library
+        r.ComponentSpec('appliance', '/usr/share/raa/')
+        r.ComponentSpec('runtime', '/usr/share/rbuilder/scripts/')
+
         # Bootsplash customization
         r.ComponentSpec('splashy-theme:runtime', r'/usr/share/splashy/')
 
