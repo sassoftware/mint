@@ -11,6 +11,7 @@ from mint.django_rest.rbuilder.projects import models as project_models
 from mint.django_rest.rbuilder.manager import basemanager
 from mint.django_rest.rbuilder.inventory.manager.surveydiff import SurveyDiffRender
 from mint.django_rest import timeutils
+from mint.lib import uuid
 from conary import versions
 from xobj import xobj
 from datetime import datetime, timedelta
@@ -309,7 +310,7 @@ class SurveyManager(basemanager.BaseManager):
         ''' store config elements in the database so they are searchable, even if they are not surfaced this way '''
 
         if xvalues is None:
-            raise Exception("missing required survey element")
+            return
         results = []
         # find all leaf nodes of the xvalues tag
         self.xwalk(xvalues, "", results)
@@ -765,6 +766,8 @@ class SurveyManager(basemanager.BaseManager):
         # if we recieved a top level <values> this is a sign this is an pre-Goad survey, which we no longer support
         if getattr(xsurvey, 'values', None):
             raise Exception("version 7.0 or later style surveys are required")
+        if not getattr(xsurvey, 'uuid', None):
+            xsurvey.uuid = str(uuid.uuid4())
 
         # config-properites replaces <values> in Goad-and-later version surveys
         xconfig_properties     = getattr(xsurvey, 'config_properties', None)
