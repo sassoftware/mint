@@ -267,8 +267,8 @@ class Platforms(object):
         if not label.startswith('/'):
             label = '/%s' % label
         conaryLabel = versions.VersionFromString(label).label()
-        repos = self.db.productMgr.reposMgr.getRepositoryClientForProduct(host)
-        repoTroves = repos.findTroves(conaryLabel, 
+        cli = self.db.productMgr.reposMgr.getUserClient()
+        repoTroves = cli.repos.findTroves(conaryLabel,
             [(platformTroveName, None, None)], getLeaves=False)
 
         try:
