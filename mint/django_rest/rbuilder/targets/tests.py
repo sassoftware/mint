@@ -446,6 +446,7 @@ class TargetsTestCase(BaseTargetsTest, RepeaterMixIn):
                 'name',
                 'alias',
                 'description',
+                'region',
                 'accountId',
                 'publicAccessKeyId',
                 'secretAccessKey',
@@ -838,6 +839,7 @@ class JobCreationTest(BaseTargetsTest, RepeaterMixIn):
             ('alias', 'ec2'),
             ('description', 'Amazon Elastic Compute Cloud'),
             ('accountId', '12345'),
+            ('region', 'us-east-1'),
             ('publicAccessKeyId', 'public-access-key-id'),
             ('secretAccessKey', 'secret-access-key'),
             ('certificateData', """-----BEGIN CERTIFICATE-----
@@ -1658,7 +1660,7 @@ ZcY7o9aU
         ]
 
         if withEc2:
-            targetData.append((targetEc2, buildtypes.AMI, [ '.tar.gz', ]))
+            targetData.append((targetEc2, buildtypes.TARBALL, [ '.tar.gz', ]))
 
         # We need to set a user, image creation needs it
         user = self.getUser('ExampleDeveloper')
@@ -1686,12 +1688,8 @@ ZcY7o9aU
                 )
 
                 j = i + 2
-                if imageType == buildtypes.AMI:
-                    targetInternalImageId = 'rmi-%08x' % j
-                    buildData = [ ('amiId', targetInternalImageId, 0) ]
-                else:
-                    targetInternalImageId = targetImageIdTempl % j
-                    buildData = []
+                targetInternalImageId = targetImageIdTempl % j
+                buildData = []
 
                 imgmgr.createImageBuild(image, buildData=buildData)
                 for fileExtension in fileExtensions:
@@ -1704,9 +1702,7 @@ ZcY7o9aU
                         title="Image File Title %02d" % i,
                         size=100+i,
                         sha1="%040d" % i)
-                    if i % 2 == 0 and imageType != buildtypes.AMI:
-                        # the amiId is not recorded with the build
-                        # file, but with the whole image
+                    if i % 2 == 0:
                         imgbuild = imgmgr.recordTargetInternalId(
                             buildFile=bf, target=target,
                             targetInternalId=targetImageIdTempl % i)
@@ -1930,15 +1926,26 @@ ZcY7o9aU
         targetEC2 = targets[-1]
         self.failUnlessEqual(targetEC2.target_type.name, 'ec2')
 
-        for i, imgName in enumerate([ "image 00", "image 01", "image 02", "image 03", "image 04" ]):
-            img = imgmodels.Image.objects.get(name=imgName, _image_type=buildtypes.AMI)
+        for imgName in [ "image 00", "image 01", "image 03", ]:
+            img = imgmodels.Image.objects.get(name=imgName, _image_type=buildtypes.TARBALL)
+            self.failUnlessEqual(
+                [
+                    [ tdi.target_image
+                        for tdi in imgfile.target_deployable_images.all() ]
+                    for imgfile in img.files.order_by('file_id') ],
+                [[None]]
+            )
+
+        for imgName in [ "image 02", "image 04" ]:
+            img = imgmodels.Image.objects.get(name=imgName, _image_type=buildtypes.TARBALL)
             self.failUnlessEqual(
                 [
                     [ tdi.target_image.target_internal_id
                         for tdi in imgfile.target_deployable_images.all() ]
                     for imgfile in img.files.order_by('file_id') ],
-                [["rmi-%08x" % (i+2)]]
+                [["target-internal-id-%s" % imgName[-2:]]]
             )
+
 
     def testDeployImage(self):
         targets = self._setupImages()

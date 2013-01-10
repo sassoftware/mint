@@ -304,7 +304,7 @@ def dumpDB(options, dbname):
         colNames = [x[0] for x in cu.description]
         for n, row in enumerate(cu):
             row = dict(zip(colNames, row))
-            for name in ('created_date',):
+            for name in ('created_date', 'modified_date', ):
                 if name in row:
                     del row[name]
             table.rows[n] = row

@@ -28,7 +28,7 @@ from conary.dbstore import sqlerrors, sqllib
 log = logging.getLogger(__name__)
 
 # database schema major version
-RBUILDER_DB_VERSION = sqllib.DBversion(65, 2)
+RBUILDER_DB_VERSION = sqllib.DBversion(66, 0)
 
 def _createTrigger(db, table, column="changed"):
     retInsert = db.createTrigger(table, column, "INSERT")
@@ -720,7 +720,7 @@ def _createTargets(db):
             [
                 dict(name="ec2",
                     description="Amazon Elastic Compute Cloud",
-                    build_type_id=buildtypes.AMI),
+                    build_type_id=buildtypes.TARBALL),
                 dict(name="eucalyptus",
                     description="Eucalyptus",
                     build_type_id=buildtypes.RAW_FS_IMAGE),
