@@ -611,10 +611,10 @@ class Platforms(object):
         # Use the entitlement from /srv/rbuilder/data/authorization.xml
         if self.db.siteAuth:
             entitlement = self.db.siteAuth.entitlementKey
-            return models.AuthInfo(authType='entitlement',
-                    entitlement=entitlement)
-        else:
-            return models.AuthInfo(authType='none')
+            if entitlement:
+                return models.AuthInfo(authType='entitlement',
+                        entitlement=entitlement)
+        return models.AuthInfo(authType='none')
 
     def _updateInternalPackageIndex(self):
         """
