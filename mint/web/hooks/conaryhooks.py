@@ -315,8 +315,11 @@ def conaryHandler(context):
         del netServer, restDb
     else:
         # Remote repository
+        overrideUrl = None
+        if handle:
+            overrideUrl = handle.getURL()
         serverCfg, proxyServer, shimRepo = _getProxyServer(context, fqdn,
-                withCapsuleFilter=(handle is not None))
+                withCapsuleFilter=(handle is not None), overrideUrl=overrideUrl)
         items = req.uri.split('/')
         proxyRestRequest = (len(items) >= 4
                             and items[1] == 'repos'
@@ -360,7 +363,7 @@ def _getAuth(context):
     return authToken
 
 
-def _getProxyServer(context, fqdn, withCapsuleFilter):
+def _getProxyServer(context, fqdn, withCapsuleFilter, overrideUrl):
     """Create a ProxyRepositoryServer for remote proxied calls."""
     cfg, req = context.cfg, context.req
 
@@ -369,6 +372,8 @@ def _getProxyServer(context, fqdn, withCapsuleFilter):
     serverCfg.changesetCacheDir = cfg.proxyChangesetCacheDir
     serverCfg.tmpDir = cfg.proxyTmpDir
     serverCfg.proxyMap = cfg.getProxyMap()
+    if overrideUrl:
+        serverCfg.repositoryMap.append((fqdn, overrideUrl))
 
     restDb = None
     if withCapsuleFilter:
