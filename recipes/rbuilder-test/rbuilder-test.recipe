@@ -54,7 +54,6 @@ class rBuilderTest(TestPackageRecipe):
         'rpath-models:python',
 
         # testsuites
-        'conary-factory-test:lib',
         'conary-test:python',
         'rapa-test:lib',
         'rpath-capsule-indexer-test:lib',
