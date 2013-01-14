@@ -1951,12 +1951,18 @@ ZcY7o9aU
         targets = self._setupImages()
         imgName = "image 02"
         img = imgmodels.Image.objects.get(name=imgName, _image_type=buildtypes.VMWARE_ESX_IMAGE)
+        imgmodels.ImageData.objects.create(image=img,
+                name='filesystemSize', value='3141',
+                data_type=mintdata.RDT_INT)
         self._testDeployImage(targets, img)
 
     def testDeployDeferredImage(self):
         targets = self._setupImages()
         imgName = "image 02"
         img = imgmodels.Image.objects.get(name=imgName, _image_type=buildtypes.VMWARE_ESX_IMAGE)
+        imgmodels.ImageData.objects.create(image=img,
+                name='filesystemSize', value='3141',
+                data_type=mintdata.RDT_INT)
         deferredImg = imgmodels.Image.objects.get(base_image=img)
         self._testDeployImage(targets, deferredImg, img)
 
@@ -2028,6 +2034,7 @@ ZcY7o9aU
             'imageFileUpdateUrl': 'http://localhost/api/v1/images/%s/build_files/%s' % (baseImg.image_id, buildFileId),
             'targetImageXmlTemplate': '<file>\n  <target_images>\n    <target_image>\n      <target id="/api/v1/targets/1"/>\n      %(image)s\n    </target_image>\n  </target_images>\n</file>',
             'targetImageIdList': ['target-internal-id-02'],
+            'imageData' : { 'filesystemSize' : 3141 },
           })
         self.failUnlessEqual(realCall.args[1:], ())
         self.failUnlessEqual(realCall.kwargs, dict(uuid=job.job_uuid))
@@ -2147,6 +2154,7 @@ ZcY7o9aU
             'systemsCreateUrl': 'http://localhost/api/v1/jobs/%s/systems' %
                 job.job_uuid,
             'targetImageIdList': ['target-internal-id-02'],
+            'imageData' : {},
           })
         self.failUnlessEqual(realCall.args[1:], ())
         self.failUnlessEqual(realCall.kwargs, dict(uuid=job.job_uuid))

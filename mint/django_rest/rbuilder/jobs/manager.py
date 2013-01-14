@@ -29,7 +29,7 @@ from mint.django_rest.rbuilder.inventory import models as inventorymodels
 from mint.django_rest.rbuilder.targets import models as targetmodels
 from mint.django_rest.rbuilder.users import models as usermodels
 from mint.django_rest.rbuilder.rbac.manager.rbacmanager import MODMEMBERS
-from mint.lib import uuid
+from mint.lib import uuid, data as mintdata
 from mint.logerror import logErrorAndEmail
 
 exposed = basemanager.exposed
@@ -560,6 +560,8 @@ class JobHandlerRegistry(HandlerRegistry):
         jobType = models.EventType.TARGET_DEPLOY_IMAGE
         ResultsTag = 'image'
 
+        ImageDataFilteredFields = set(['outputToken', 'baseFileName', ])
+
         def getDescriptor(self, descriptorId):
             match = self.splitResourceId(descriptorId)
 
@@ -636,8 +638,18 @@ class JobHandlerRegistry(HandlerRegistry):
                 imageFileUpdateUrl='http://localhost/api/v1/images/%s/build_files/%s' % (
                         self.image.image_id, self.image_file.file_id),
                 targetImageIdList=targetImageIdList,
+                imageData = self._getImageData(self.image),
             )
             return (params, ), {}
+
+        @classmethod
+        def _getImageData(cls, image):
+            ret = {}
+            for data in image.image_data.all():
+                if data.name in cls.ImageDataFilteredFields:
+                    continue
+                ret[data.name] = mintdata.Data.thaw(data.value, data.data_type)
+            return ret
 
         def getRelatedThroughModel(self, descriptor):
             return imagemodels.JobImage
