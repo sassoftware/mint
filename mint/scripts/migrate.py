@@ -5444,10 +5444,16 @@ class MigrateTo_65(SchemaMigration):
 
 class MigrateTo_66(SchemaMigration):
     '''amethyst'''
-    Version = (66, 0)
+    Version = (66, 1)
 
     def migrate(self):
         cu = self.db.cursor()
-        cu.execute("update target_types set build_type_id = 5 where name = 'ec2'")
+        cu.execute("update target_types set build_type_id = ? where name = ?",
+            buildtypes.TARBALL, 'ec2')
         return True
 
+    def migrate1(self):
+        cu = self.db.cursor()
+        cu.execute("update target_types set build_type_id = ? where name = ?",
+            buildtypes.AMI, 'ec2')
+        return True
