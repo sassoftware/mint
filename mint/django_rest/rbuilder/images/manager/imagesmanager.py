@@ -184,8 +184,16 @@ class ImagesManager(basemanager.BaseManager):
         return filePaths
 
     def _setImageDataValue(self, imageId, name, value, dataType=datatypes.RDT_STRING):
-        models.ImageData.objects.create(image_id=imageId,
-            name=name, value=value, data_type=dataType)
+        # Handles the case where the image data entry already exists
+        defaults = dict(value=value, data_type=dataType)
+        iD, created = models.ImageData.objects.get_or_create(image_id=imageId,
+            name=name, defaults=defaults)
+        if not created:
+            iD.update(**defaults)
+
+    def _deleteImageData(self, imageId, name):
+        models.ImageData.objects.filter(image__image_id=imageId,
+                name=name).delete()
 
     def getEC2AccountNumbersForProjectUsers(self, projectId):
         writers = set()
@@ -375,6 +383,17 @@ class ImagesManager(basemanager.BaseManager):
             url = models.FileUrl.objects.create(url_type=urltypes.LOCAL,
                 url=filePath)
             models.BuildFilesUrlsMap.objects.create(file=fobj, url=url)
+
+        installedSizeAttrName =  'attributes.installed_size'
+        if files.attributes is not None:
+            installedSize = getattr(files.attributes, 'installed_size', None)
+        else:
+            installedSize = None
+        if installedSize is None:
+            self._deleteImageData(imageId, installedSizeAttrName)
+        else:
+            self._setImageDataValue(imageId, installedSizeAttrName,
+                    installedSize, dataType=datatypes.RDT_INT)
 
         if files.metadata is not None:
             self._addImageToRepository(imageId, files.metadata)

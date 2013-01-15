@@ -663,7 +663,7 @@ class ImagesTestCase(RbacEngine):
         self.mock(self.mgr.restDb.productMgr.reposMgr.__class__,
                 'getKeyValueMetadata', mockGetKeyValueMetadata)
 
-        xmlFilesTmpl = """<files>%s</files>"""
+        xmlFilesTmpl = """<files>%s<attributes><installed_size>56245126</installed_size></attributes></files>"""
         xmlFileTmpl = """
   <file>
     <title>%(title)s</title>
@@ -690,6 +690,12 @@ class ImagesTestCase(RbacEngine):
         self.failUnlessEqual(
             [(x.title, x.sha1) for x in obj.files.file],
             [(x['title'], x['sha1']) for x in fileContentList])
+
+        # Make sure installed_size got in the db
+        self.assertEquals(
+            [ (x.value, x.data_type) for x in
+                img.image_data.filter(name='attributes.installed_size') ],
+            [ ('56245126', 2), ])
 
         self.failUnlessEqual(createSourceTroveCallArgs, [])
 

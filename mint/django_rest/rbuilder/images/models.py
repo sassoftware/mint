@@ -356,6 +356,7 @@ class BuildFiles(modellib.Collection):
     _xobj = xobj.XObjMetadata(tag='files')
     list_fields = ['file']
     metadata = modellib.SyntheticField()
+    attributes = modellib.SyntheticField()
 
 class BuildFile(modellib.XObjIdModel):
     class Meta:
