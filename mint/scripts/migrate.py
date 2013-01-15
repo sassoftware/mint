@@ -5444,7 +5444,7 @@ class MigrateTo_65(SchemaMigration):
 
 class MigrateTo_66(SchemaMigration):
     '''amethyst'''
-    Version = (66, 1)
+    Version = (66, 2)
 
     def migrate(self):
         cu = self.db.cursor()
@@ -5456,4 +5456,10 @@ class MigrateTo_66(SchemaMigration):
         cu = self.db.cursor()
         cu.execute("update target_types set build_type_id = ? where name = ?",
             buildtypes.AMI, 'ec2')
+        return True
+
+    def migrate2(self):
+        self.db.dropIndex('ProductVersions', 'ProductVersions_uq')
+        self.db.createIndex('ProductVersions', 'ProductVersions_uq',
+            'projectId,label', unique=True)
         return True

@@ -28,7 +28,7 @@ from conary.dbstore import sqlerrors, sqllib
 log = logging.getLogger(__name__)
 
 # database schema major version
-RBUILDER_DB_VERSION = sqllib.DBversion(66, 1)
+RBUILDER_DB_VERSION = sqllib.DBversion(66, 2)
 
 def _createTrigger(db, table, column="changed"):
     retInsert = db.createTrigger(table, column, "INSERT")
@@ -669,7 +669,7 @@ def _createProductVersions(db):
         ) %(TABLEOPTS)s """ % db.keywords)
         db.tables['ProductVersions'] = []
     db.createIndex('ProductVersions', 'ProductVersions_uq',
-            'projectId,namespace,name', unique=True)
+            'projectId,label', unique=True)
 
     if 'project_branch_stage' not in db.tables:
         cu.execute("""
