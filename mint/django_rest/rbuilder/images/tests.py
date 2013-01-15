@@ -824,15 +824,6 @@ class ImagesTestCase(RbacEngine):
         self.mock(ec2.S3Wrapper, 'createBucket',
             lambda *args, **kwargs: self.MockBucket())
 
-        statusFile = os.path.join(self.workDir, "registerAMI.status")
-        def mockedRegisterAMI(slf, bucketName, manifestName, *args, **kwargs):
-            f = file(statusFile, "a")
-            f.write("ec2LaunchUsers: %s\n" % kwargs.get('ec2LaunchUsers'))
-            f.write("ec2LaunchGroups: %s\n" % kwargs.get('ec2LaunchGroups'))
-            f.close()
-            return ('ami-01234', '%s/%s' % (bucketName, manifestName))
-        self.mock(ec2.EC2Wrapper, 'registerAMI', mockedRegisterAMI)
-
         img = self._setupImageOutputToken()
         archiveContents = file(self.createFakeAmiBuild()).read()
         fileContentList = self._setupFileContentsList(img, contentMap=[
@@ -929,23 +920,16 @@ class ImagesTestCase(RbacEngine):
             list(models.AuthTokens.objects.filter(token=authToken.token)),
             [])
 
-        self.assertEqual(file(statusFile).read(), """\
-ec2LaunchUsers: []
-ec2LaunchGroups: []
-""")
         self.assertEqual(
             sorted((x.name, x.value)
                 for x in models.ImageData.objects.filter(
                     image__image_id=img.image_id)),
             [
-                ('amiId', 'ami-01234'),
-                ('amiManifestName', 'bukkit/image.img.manifest.xml'),
                 ('outputToken', outputToken),
             ]
         )
 
-        # This is kind of a bug, we should add the newly deployed AMI in
-        # the list if deployed images immediately
+        # AMIs are no longer published at build time
         self.assertEqual(list(
             tgtmodels.TargetImagesDeployed.objects.filter(build_file__image__image_id=img.image_id).values_list('target__name')),
             [ ])
