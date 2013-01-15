@@ -742,7 +742,7 @@ class TargetsManager(basemanager.BaseManager, CatalogServiceHelper):
         """
         cu.execute(query)
 
-        # Add undeployed images (but not for AMI)
+        # Add undeployed images
         query = """
             INSERT INTO tmp_target_image (target_id, target_image_id, file_id)
                 SELECT t.targetId, NULL, imgf.fileId
@@ -750,14 +750,8 @@ class TargetsManager(basemanager.BaseManager, CatalogServiceHelper):
                   JOIN target_types AS tt USING (target_type_id)
                   JOIN Builds AS img ON (tt.build_type_id = img.buildType)
                   JOIN BuildFiles AS imgf ON (img.buildId = imgf.buildId)
-                 WHERE NOT EXISTS (
-                       SELECT 1
-                         FROM tmp_target_image
-                        WHERE target_id = t.targetId
-                          AND file_id = imgf.fileId)
-                   AND img.buildType != %s
         """
-        cu.execute(query, [ buildtypes.AMI ])
+        cu.execute(query)
 
         # Build target to target type mapping
         query = """
