@@ -1660,7 +1660,7 @@ ZcY7o9aU
         ]
 
         if withEc2:
-            targetData.append((targetEc2, buildtypes.TARBALL, [ '.tar.gz', ]))
+            targetData.append((targetEc2, buildtypes.AMI, [ '.tar.gz', ]))
 
         # We need to set a user, image creation needs it
         user = self.getUser('ExampleDeveloper')
@@ -1927,7 +1927,7 @@ ZcY7o9aU
         self.failUnlessEqual(targetEC2.target_type.name, 'ec2')
 
         for imgName in [ "image 00", "image 01", "image 03", ]:
-            img = imgmodels.Image.objects.get(name=imgName, _image_type=buildtypes.TARBALL)
+            img = imgmodels.Image.objects.get(name=imgName, _image_type=buildtypes.AMI)
             self.failUnlessEqual(
                 [
                     [ tdi.target_image
@@ -1936,14 +1936,20 @@ ZcY7o9aU
                 [[None]]
             )
 
+        missing = object()
+        def _getTargetInternalId(tgtimg):
+            if tgtimg is None:
+                return missing
+            return tgtimg.target_internal_id
+
         for imgName in [ "image 02", "image 04" ]:
-            img = imgmodels.Image.objects.get(name=imgName, _image_type=buildtypes.TARBALL)
+            img = imgmodels.Image.objects.get(name=imgName, _image_type=buildtypes.AMI)
             self.failUnlessEqual(
                 [
-                    [ tdi.target_image.target_internal_id
+                    [ _getTargetInternalId(tdi.target_image)
                         for tdi in imgfile.target_deployable_images.all() ]
                     for imgfile in img.files.order_by('file_id') ],
-                [["target-internal-id-%s" % imgName[-2:]]]
+                [["target-internal-id-%s" % imgName[-2:], missing]]
             )
 
 
