@@ -934,10 +934,10 @@ class ImagesTestCase(RbacEngine):
             tgtmodels.TargetImagesDeployed.objects.filter(build_file__image__image_id=img.image_id).values_list('target__name')),
             [ ])
 
-        # We can't deploy the image again
+        # We can deploy the image again
         self.assertEqual(list(
             tgtmodels.TargetDeployableImage.objects.filter(build_file__image__image_id=img.image_id).values_list('target__name')),
-            [ ])
+            [ ('aws', ), ])
 
         # Did we tag this image?
         # XXX write test
