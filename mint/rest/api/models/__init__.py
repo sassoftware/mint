@@ -40,7 +40,6 @@ class RbuilderStatus(Model):
     products                = fields.UrlField('products', None)
     users                   = fields.UrlField('users', None)
     platforms               = fields.UrlField('platforms', None)
-    registration            = fields.UrlField('registration', None)
     reports                 = fields.UrlField('reports/', None)
     inventory               = fields.UrlField('inventory/', None)
     query_sets              = fields.UrlField('query_sets/', None)
