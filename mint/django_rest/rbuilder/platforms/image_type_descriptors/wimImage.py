@@ -12,7 +12,7 @@ XML = """<?xml version='1.0' encoding='UTF-8'?>
             <descriptions>
                 <desc>Image name</desc>
             </descriptions>
-            <help lang="en_US" href="@Help_image_name@"/>
+            <help href="@Help_image_name@"/>
             <type>str</type>
             <default/>
             <required>true</required>
@@ -22,7 +22,7 @@ XML = """<?xml version='1.0' encoding='UTF-8'?>
             <descriptions>
                 <desc>Image filename</desc>
             </descriptions>
-            <help lang="en_US" href="@Help_image_filename@"/>
+            <help href="@Help_image_filename@"/>
             <type>str</type>
             <default/>
             <required>false</required>
