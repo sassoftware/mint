@@ -1946,10 +1946,10 @@ ZcY7o9aU
             img = imgmodels.Image.objects.get(name=imgName, _image_type=buildtypes.AMI)
             self.failUnlessEqual(
                 [
-                    [ _getTargetInternalId(tdi.target_image)
-                        for tdi in imgfile.target_deployable_images.order_by('target_deployable_image_id') ]
+                    sorted(_getTargetInternalId(tdi.target_image)
+                        for tdi in imgfile.target_deployable_images.all())
                     for imgfile in img.files.order_by('file_id') ],
-                [["target-internal-id-%s" % imgName[-2:], missing]]
+                [[missing, "target-internal-id-%s" % imgName[-2:], ]]
             )
 
 
