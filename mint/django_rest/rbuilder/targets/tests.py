@@ -2307,3 +2307,38 @@ ZcY7o9aU
   <message>Data validation error: [u"Missing field: 'blargh'"]</message>
   <traceback></traceback>
 </fault>""")
+
+
+    def testGetDescriptorDeploy(self):
+        targets = self._setupImages()
+        self.mgr.targetsManager.recomputeTargetDeployableImages()
+
+        self.mgr.repeaterMgr.repeaterClient.setJobData("""\
+<descriptor>
+  <metadata>
+    <displayName>FooDescriptor</displayName>
+    <rootElement>blah</rootElement>
+    <descriptions><desc>Description</desc></descriptions>
+  </metadata>
+  <dataFields>
+    <field>
+      <name>imageId</name>
+      <descriptions>
+        <desc>Image ID</desc>
+      </descriptions>
+      <type>str</type>
+      <required>true</required>
+      <hidden>true</hidden>
+    </field>
+  </dataFields>
+</descriptor>""")
+
+        # Grab an image
+        tgt = [ x for x in targets if x.target_type.name == 'vmware' ][0]
+        imgName = "image 02"
+        img = imgmodels.Image.objects.get(name=imgName, _image_type=buildtypes.VMWARE_ESX_IMAGE)
+        buildFileId = img.files.all()[0].file_id
+        response = self._get('targets/%d/descriptors/deploy/file/%d' %
+            (tgt.target_id, buildFileId),
+            username='ExampleDeveloper', password='password')
+        self.assertEquals(response.status_code, 200)

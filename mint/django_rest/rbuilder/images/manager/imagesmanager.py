@@ -35,7 +35,8 @@ exposed = basemanager.exposed
 autocommit = basemanager.autocommit
 
 class ImagesManager(basemanager.BaseManager):
- 
+    ImageDataFilteredFields = set(['outputToken', 'baseFileName', ])
+
     @exposed
     def getImageById(self, image_id):
         return models.Image.objects.get(pk=image_id)
@@ -452,6 +453,14 @@ class ImagesManager(basemanager.BaseManager):
         if method is None:
             raise errors.ResourceNotFound()
         return method(imageId)
+
+    def getImageData(self, image):
+        ret = {}
+        for data in image.image_data.all():
+            if data.name in self.ImageDataFilteredFields:
+                continue
+            ret[data.name] = datatypes.Data.thaw(data.value, data.data_type)
+        return ret
 
     def getImageDescriptorCancelBuild(self, imageId):
         descr = descriptor.ConfigurationDescriptor()

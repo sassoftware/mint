@@ -355,14 +355,17 @@ class TargetsManager(basemanager.BaseManager, CatalogServiceHelper):
 
     @exposed
     def getDescriptorLaunchSystem(self, targetId, buildFileId):
-        descr = self._getDescriptorFromCatalogService(targetId, buildFileId,
-            'systemLaunchDescriptor')
+        import epdb; epdb.st()
         # Look up images associated with this build file
         imgs = imagemodels.Image.objects.filter(files__file_id=buildFileId)
-        if imgs:
-            img = imgs[0]
-            cdesc = self.getConfigDescriptorForImage(img)
-            self.concatenateDescriptors(descr, cdesc)
+        if not imgs:
+            raise errors.ResourceNotFound()
+        img = imgs[0]
+        imageData = self.mgr.imagesManager.getImageData(img)
+        descr = self._getDescriptorFromCatalogService(targetId, buildFileId,
+            'systemLaunchDescriptor', extraArgs=dict(imageData=imageData))
+        cdesc = self.getConfigDescriptorForImage(img)
+        self.concatenateDescriptors(descr, cdesc)
         return descr
 
     @exposed
@@ -399,11 +402,15 @@ class TargetsManager(basemanager.BaseManager, CatalogServiceHelper):
 
     @exposed
     def getDescriptorDeployImage(self, targetId, buildFileId):
+        imgs = imagemodels.Image.objects.filter(files__file_id=buildFileId)
+        if not imgs:
+            raise errors.ResourceNotFound()
+        imageData = self.mgr.imagesManager.getImageData(imgs[0])
         return self._getDescriptorFromCatalogService(targetId, buildFileId,
-            'imageDeploymentDescriptor')
+            'imageDeploymentDescriptor', imageData=imageData)
 
     def _getDescriptorFromCatalogService(self, targetId, buildFileId,
-                rmakeMethodName):
+                rmakeMethodName, **kwargs):
         repClient = self.mgr.repeaterMgr.repeaterClient
         if repClient is None:
             log.info("Failed loading repeater client, expected in local mode only")
@@ -415,7 +422,7 @@ class TargetsManager(basemanager.BaseManager, CatalogServiceHelper):
         repClient.targets.configure(zone.name, targetConfiguration,
             targetUserCredentials)
         method = getattr(repClient.targets, rmakeMethodName)
-        uuid, job = method()
+        uuid, job = method(**kwargs)
         job = self.mgr.waitForRmakeJob(uuid, timeout=60, interval=.1)
         if not job.status.final:
             raise Exception("Final state not reached")
