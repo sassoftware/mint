@@ -355,7 +355,6 @@ class TargetsManager(basemanager.BaseManager, CatalogServiceHelper):
 
     @exposed
     def getDescriptorLaunchSystem(self, targetId, buildFileId):
-        import epdb; epdb.st()
         # Look up images associated with this build file
         imgs = imagemodels.Image.objects.filter(files__file_id=buildFileId)
         if not imgs:
