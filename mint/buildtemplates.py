@@ -206,6 +206,10 @@ class amiHugeDiskMountpoint(StringOption):
     default = ''
     prompt  = 'Mountpoint for scratch space (/dev/sda2) on AMI'
 
+class ebsBacked(BooleanOption):
+    default = False
+    prompt = 'Backed by EBS'
+
 class platformName(StringOption):
     default = ''
     prompt = 'platform-name'
@@ -296,8 +300,8 @@ class VirtualIronVHDTemplate(Template):
     id = buildtypes.VIRTUAL_IRON
 
 class AMITemplate(Template):
-    __slots__ = ['autoResolve', 'freespace', 'baseFileName',
-                 'amiHugeDiskMountpoint', 'installLabelPath', 'buildOVF10']
+    __slots__ = ['freespace', 'baseFileName', 'ebsBacked',
+                 'amiHugeDiskMountpoint', 'buildOVF10']
     id = buildtypes.AMI
 
 class ApplianceISOTemplate(Template):
