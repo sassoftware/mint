@@ -2029,6 +2029,7 @@ ZcY7o9aU
         self.failUnlessEqual(self._mungeDict(realCall.args[0]),
           {
             'imageFileInfo': {
+                'architecture' : 'x86',
                 'fileId' : buildFileId,
                 'name' : u'filename-09-02.ova',
                 'sha1' : u'0000000000000000000000000000000000000002',
@@ -2147,6 +2148,7 @@ ZcY7o9aU
         self.failUnlessEqual(self._mungeDict(realCall.args[0]),
           {
             'imageFileInfo': {
+                'architecture' : 'x86',
                 'fileId' : buildFileId,
                 'name' : u'filename-09-02.ova',
                 'sha1' : u'0000000000000000000000000000000000000002',
