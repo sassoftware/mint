@@ -57,11 +57,10 @@ class rBuilderTest(TestPackageRecipe):
         'conary-factory-test:lib',
         'conary-test:python',
         'rapa-test:lib',
-        'rpath-capsule-indexer-test:lib',
+        'rpath-capsule-indexer-test:python',
       ]
 
     pythonPath = [
-        '%(libdir)s/rpath-capsule-indexer-test',
         '%(libdir)s/raa-test',
         '%(libdir)s/raa',
       ]
