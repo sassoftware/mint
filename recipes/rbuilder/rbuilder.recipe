@@ -236,11 +236,3 @@ class rBuilderProduct(CPackageRecipe):
 
         # Bootsplash customization
         r.ComponentSpec('splashy-theme:runtime', r'/usr/share/splashy/')
-
-        # Strip out python files, leaving only compiled pyc/pyo files.
-        # Because our coverage can't work like this, put the sources
-        # into rbuilder-sources where rbuilder-test can consume it.
-        r.PackageSpec('%(name)s-sources',
-            r'%(sitepkg)s/mint/.*\.py',
-            r'%(libdir)s/raa/.*\.py',
-            )
