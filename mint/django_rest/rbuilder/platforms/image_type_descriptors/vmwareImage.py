@@ -85,7 +85,6 @@ XML = """<?xml version='1.0' encoding='UTF-8'?>
             <help href="@Help_image_use_nat@"/>
             <type>bool</type>
             <default>true</default>
-            <hidden>true</hidden>
         </field>
         <field>
             <name>options.allowSnapshots</name>
