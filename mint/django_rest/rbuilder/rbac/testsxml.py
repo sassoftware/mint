@@ -24,15 +24,15 @@ user_post_xml = """
 """
 
 user_get_xml_with_roles = """
-<user id="http://testserver/api/v1/users/2003">
+<user id="http://testserver/api/v1/users/2004">
   <blurb>something here</blurb>
   <display_email>True</display_email>
   <email>email@example.com</email>
   <full_name>ExampleIntern</full_name>
   <is_admin>false</is_admin>
-  <roles id="http://testserver/api/v1/users/2003/roles"/>
+  <roles id="http://testserver/api/v1/users/2004/roles"/>
   <external_auth>false</external_auth>
-  <user_id>2003</user_id>
+  <user_id>2004</user_id>
   <user_name>ExampleIntern</user_name>
   <can_create>true</can_create>
 </user>
