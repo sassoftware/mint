@@ -2,5 +2,5 @@
   <label>rhel.rpath.com@rpath:rhel-5-server</label>
   <platformName>Red Hat Enterprise Linux 5</platformName>
   <abstract>false</abstract>
-  <configurable>true</configurable>
+  <configurable>false</configurable>
 </platform>
