@@ -1,6 +1,0 @@
-<platform>
-  <label>sles.rpath.com@rpath:sles-10sp3</label>
-  <platformName>SuSE Linux Enterprise Server 10 SP3</platformName>
-  <abstract>false</abstract>
-  <configurable>true</configurable>
-</platform>
