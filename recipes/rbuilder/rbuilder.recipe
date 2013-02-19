@@ -222,7 +222,7 @@ class rBuilderProduct(CPackageRecipe):
         r.Requires(exceptDeps='python: amiconfig.*')
 
         # Windows ISO builds requires mkisofs
-        r.Requires('cdrkit:rpm', '%(libdir)s/rmake3/.*')
+        r.Requires('/usr/bin/mkisofs', '%(libdir)s/rmake3/.*')
 
         # Anaconda customization
         # This comes first so it is omitted from the -sources split.
