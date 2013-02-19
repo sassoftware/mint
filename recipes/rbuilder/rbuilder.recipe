@@ -32,35 +32,19 @@ class rBuilderProduct(CPackageRecipe):
     version = '5.0'
 
     buildRequires = [
-        'bootman:runtime',
         'boto:python',
         'catalog-service:python',
-        'chkconfig:runtime',
         'conary-repository:python', 
         'conary-rest:python',
         'decorator:python',
+        'dnspython:python',
         'django:python',
         'django-db-postgres:python',
         'django-rest-interface:python',
         'django-debug-toolbar:python',
-        'dnspython:python',
-        'docbook-utils:runtime',
-        'elementtree:python',
         'jobslave:python',
-        'kid:python',
-        'kid:runtime',
-        'libxml2:python',
-        'm2crypto:python',
         'mcp:python',
-        'mod_python:runtime',
         'pcreator:python',
-        'PIL:python',
-        'postgresql:runtime',
-        'psycopg2:python',
-        'pyOpenSSL:python',
-        'python-dateutil:python',
-        'python:devel',
-        'python-pam:python',
         'python-pgsql:python',
         'python-twisted:python',
         'rapa:python',
@@ -73,12 +57,22 @@ class rBuilderProduct(CPackageRecipe):
         'rpath-repeater:python',
         'rpath-storage:python',
         'rpath-product-definition:python',
-        'simplejson:python',
-        'splashy:runtime',
-        'util-linux:runtime',
         'vobject:python',
-        'xmlto:runtime',
         'xobj:python',
+        'mod_python:runtime',
+        'python-pam:python',
+
+        'docbook-utils',
+        'python-kid',
+        'libxml2-python',
+        'm2crypto',
+        'python-imaging',
+        'python-psycopg2',
+        'python-dateutil',
+        'python-devel',
+        'util-linux-ng',
+        'pyOpenSSL',
+        'xmlto',
       ]
 
     def setup(r):
@@ -87,7 +81,7 @@ class rBuilderProduct(CPackageRecipe):
         r.build()
         r.install()
         r.policy()
-        r.macros.pgver = '9.0'
+        r.macros.pgver = '9.2'
 
     def unpack(r):
         r.addMercurialSnapshot()
@@ -148,10 +142,6 @@ class rBuilderProduct(CPackageRecipe):
         r.MakeDirs('/var/lib/twisted-taps/rbuilder-authn')
         r.ExcludeDirectories(exceptions='/var/lib/twisted-taps/rbuilder-authn')
 
-        # known-good mount point for /mnt/mirror/
-        r.MakeDirs('/mnt/mirror')
-        r.ExcludeDirectories(exceptions = '/mnt/mirror')
-
         # documentation and media-template bits
         r.Install('EULA.txt', '/usr/lib/media-template/disc1/')
         r.Install('EULA.txt', '%(thisdocdir)s/')
@@ -196,9 +186,6 @@ class rBuilderProduct(CPackageRecipe):
         # rBuilder pieces need to work together with the same version
         r.ComponentProvides('%(version)s')
 
-        # WORKAROUND: manually tag bootman files (RPL-3132)
-        r.TagSpec('bootman-config', '/etc/bootloader\.d/.*')
-
         r.Requires('rbuilder:python(%(version)s)',
                    '%(sitepkg)s/mint/web/webhandler.pyc')
         r.Requires('rbuilder:python(%(version)s)',
@@ -209,9 +196,9 @@ class rBuilderProduct(CPackageRecipe):
             '%(libdir)s/raa/rPath/[^/]+/__init__.pyc')
 
         # Script runtime dependencies
-        r.Requires('tmpwatch:runtime',
+        r.Requires('/usr/sbin/tmpwatch',
             r'%(sysconfdir)s/cron.daily/rbuilder.tmpwatch')
-        r.Requires('logrotate:runtime',
+        r.Requires('/usr/sbin/logrotate',
             r'%(sysconfdir)s/logrotate.d/')
         r.Requires('/usr/bin/qemu-img', '.*/wig/bootable.py.*')
         r.Requires('/usr/bin/twistd', '.*/twisted/plugins/.*')
@@ -233,6 +220,3 @@ class rBuilderProduct(CPackageRecipe):
         # Attempt to isolate things that don't work when mint is just a library
         r.ComponentSpec('appliance', '/usr/share/raa/')
         r.ComponentSpec('runtime', '/usr/share/rbuilder/scripts/')
-
-        # Bootsplash customization
-        r.ComponentSpec('splashy-theme:runtime', r'/usr/share/splashy/')

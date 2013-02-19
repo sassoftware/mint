@@ -44,7 +44,6 @@ install: default-install httpd-sysconfig
 	install -D -m0644 rmake3/dispatcher.conf $(DESTDIR)/etc/rmake3/server.d/20_rbuilder.conf
 	install -D -m0644 rmake3/worker.conf $(DESTDIR)/etc/rmake3/node.d/20_rbuilder.conf
 	# system dist (data)
-	install -D -m0644 bootman.conf $(DESTDIR)/etc/bootloader.d/rbuilder.conf
 	install -D -m0644 firewall $(DESTDIR)/etc/firewall
 	install -D -m0644 firewall6 $(DESTDIR)/etc/firewall6
 	install -D -m0644 rbuilder.logrotate $(DESTDIR)/etc/logrotate.d/rbuilder
@@ -58,9 +57,6 @@ install: default-install httpd-sysconfig
 	install -D -m0755 chrootcache.tmpwatch $(DESTDIR)/etc/cron.daily/chrootcache.tmpwatch
 	install -D -m0755 rbuilder.init $(DESTDIR)/etc/init.d/rbuilder
 	install -D -m0755 rbuilder-authn.init $(DESTDIR)/etc/init.d/rbuilder-authn
-	# splashy theme
-	install -D -m0644 splashy.xml $(DESTDIR)/usr/share/splashy/themes/rbuilder/theme.xml
-	install -D -m0644 FreeSans.ttf $(DESTDIR)/usr/share/splashy/themes/rbuilder/FreeSans.ttf
 	# chkconfig overrides
 	mkdir -p $(DESTDIR)/etc/chkconfig.d
 	echo '# chkconfig: 345 15 74' > $(DESTDIR)/etc/chkconfig.d/ntpd
