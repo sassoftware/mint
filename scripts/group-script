@@ -121,9 +121,6 @@ usermod -a -G apache raa-web
 sudo -u apache "$scriptdir"/rmake-setup
 RMAKE_EXISTED=$?
 
-# Make sure the site authorization is up to date.
-"$scriptdir"/refresh-auth
-
 # make sure that the old rapa plugin .pyc files are not blocking us
 # from finding files in /usr/lib64/raa. rapa should restart at the end of 
 # the update. (Due to unowned .pyc files pre rapa 3.1.0)

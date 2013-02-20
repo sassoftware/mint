@@ -3,13 +3,13 @@
 #
 
 import hashlib
-from jobslave.response import FilePutter
 from restlib import client as rl_client
 from rmake3.worker import plug_worker
 from xml.etree import ElementTree as ET
 
 from mint.django_rest import timeutils
 from mint.image_gen import constants as iconst
+from mint.image_gen.response import FilePutter
 from mint.image_gen.util import FileWithProgress
 
 

@@ -35,7 +35,8 @@ exposed = basemanager.exposed
 autocommit = basemanager.autocommit
 
 class ImagesManager(basemanager.BaseManager):
- 
+    ImageDataFilteredFields = set(['outputToken', 'baseFileName', ])
+
     @exposed
     def getImageById(self, image_id):
         return models.Image.objects.get(pk=image_id)
@@ -171,7 +172,7 @@ class ImagesManager(basemanager.BaseManager):
 
 
     def _handlePostImageBuildOperations(self, image):
-        self._uploadAMI(image)
+        pass
 
     def _getImageFiles(self, imageId):
         filePaths = []
@@ -183,46 +184,17 @@ class ImagesManager(basemanager.BaseManager):
             filePaths.append(path)
         return filePaths
 
-    def _uploadAMI(self, image):
-        if image._image_type != buildtypes.AMI:
-            # for now we only have to do something special for AMIs
-            return
-        imageId = image.image_id
-        # Do all the read operations before we commit
-        # Get all builds for this image
-        filePaths = self._getImageFiles(imageId)
-        readers, writers = self.getEC2AccountNumbersForProjectUsers(
-            image.project.project_id)
-        # Move to autocommit mode. This will flush the existing
-        # transaction, and the decorated commitImageStatus will do its
-        # own commits. We need to restore transaction management when
-        # we're done.
-        self.mgr.prepareAutocommit()
-        uploadCallback = self.UploadCallback(self, imageId)
-        amiPerms = self.mgr.restDb.awsMgr.amiPerms
-        for filePath in filePaths:
-            if not os.path.exists(filePath):
-                continue
-            log.info("Uploading bundle")
-            bucketName, manifestName = amiPerms.uploadBundle(
-                filePath, callback=uploadCallback.callback)
-            message = "Registering AMI for %s/%s" % (bucketName, manifestName)
-            self.commitImageStatus(imageId, statusMessage=message)
-            log.info(message)
-            amiId, manifestPath = amiPerms.registerAMI(
-                bucketName, manifestName, readers=readers, writers=writers)
-            message = "Registered AMI %s for %s" % (amiId, manifestPath)
-            self.commitImageStatus(imageId, statusMessage=message)
-            log.info(message)
-            self._setImageDataValue(imageId, 'amiId', amiId)
-            self._setImageDataValue(imageId, 'amiManifestName', manifestPath)
-        self.mgr.commit()
-        # Restore transaction management
-        self.mgr.enterTransactionManagement()
-
     def _setImageDataValue(self, imageId, name, value, dataType=datatypes.RDT_STRING):
-        models.ImageData.objects.create(image_id=imageId,
-            name=name, value=value, data_type=dataType)
+        # Handles the case where the image data entry already exists
+        defaults = dict(value=value, data_type=dataType)
+        iD, created = models.ImageData.objects.get_or_create(image_id=imageId,
+            name=name, defaults=defaults)
+        if not created:
+            iD.update(**defaults)
+
+    def _deleteImageData(self, imageId, name):
+        models.ImageData.objects.filter(image__image_id=imageId,
+                name=name).delete()
 
     def getEC2AccountNumbersForProjectUsers(self, projectId):
         writers = set()
@@ -413,6 +385,17 @@ class ImagesManager(basemanager.BaseManager):
                 url=filePath)
             models.BuildFilesUrlsMap.objects.create(file=fobj, url=url)
 
+        installedSizeAttrName =  'attributes.installed_size'
+        if files.attributes is not None:
+            installedSize = getattr(files.attributes, 'installed_size', None)
+        else:
+            installedSize = None
+        if installedSize is None:
+            self._deleteImageData(imageId, installedSizeAttrName)
+        else:
+            self._setImageDataValue(imageId, installedSizeAttrName,
+                    installedSize, dataType=datatypes.RDT_INT)
+
         if files.metadata is not None:
             self._addImageToRepository(imageId, files.metadata)
 
@@ -470,6 +453,14 @@ class ImagesManager(basemanager.BaseManager):
         if method is None:
             raise errors.ResourceNotFound()
         return method(imageId)
+
+    def getImageData(self, image):
+        ret = {}
+        for data in image.image_data.all():
+            if data.name in self.ImageDataFilteredFields:
+                continue
+            ret[data.name] = datatypes.Data.thaw(data.value, data.data_type)
+        return ret
 
     def getImageDescriptorCancelBuild(self, imageId):
         descr = descriptor.ConfigurationDescriptor()

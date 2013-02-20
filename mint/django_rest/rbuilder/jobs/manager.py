@@ -618,6 +618,7 @@ class JobHandlerRegistry(HandlerRegistry):
             urls = self.image_file.urls_map.filter(
                 url__url_type=urltypes.LOCAL).values('url__url')
             imageFileInfo = dict(
+                architecture=self.image.architecture,
                 size=self.image_file.size,
                 sha1=self.image_file.sha1,
                 fileId=self.image_file.file_id,
@@ -636,6 +637,7 @@ class JobHandlerRegistry(HandlerRegistry):
                 imageFileUpdateUrl='http://localhost/api/v1/images/%s/build_files/%s' % (
                         self.image.image_id, self.image_file.file_id),
                 targetImageIdList=targetImageIdList,
+                imageData = self.mgr.mgr.imagesManager.getImageData(self.image),
             )
             return (params, ), {}
 

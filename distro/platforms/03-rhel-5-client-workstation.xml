@@ -1,6 +1,0 @@
-<platform>
-  <label>rhel.rpath.com@rpath:rhel-5-client-workstation</label>
-  <platformName>Red Hat Enterprise Linux Desktop Workstation 5</platformName>
-  <abstract>false</abstract>
-  <configurable>true</configurable>
-</platform>

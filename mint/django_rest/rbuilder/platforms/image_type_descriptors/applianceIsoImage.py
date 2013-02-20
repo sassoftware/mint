@@ -12,7 +12,7 @@ XML = """<?xml version='1.0' encoding='UTF-8'?>
             <descriptions>
                 <desc>Image name</desc>
             </descriptions>
-            <help lang="en_US" href="@Help_image_name@"/>
+            <help href="@Help_image_name@"/>
             <type>str</type>
             <default/>
             <required>true</required>
@@ -22,7 +22,7 @@ XML = """<?xml version='1.0' encoding='UTF-8'?>
             <descriptions>
                 <desc>Bug Report URL</desc>
             </descriptions>
-            <help lang="en_US" href="@Help_bug_report_url@"/>
+            <help href="@Help_bug_report_url@"/>
             <type>str</type>
             <default/>
             <required>false</required>
@@ -32,7 +32,7 @@ XML = """<?xml version='1.0' encoding='UTF-8'?>
             <descriptions>
                 <desc>Beta?</desc>
             </descriptions>
-            <help lang="en_US" href="@Help_beta@"/>
+            <help href="@Help_beta@"/>
             <type>bool</type>
             <default>false</default>
             <required>false</required>
@@ -42,7 +42,7 @@ XML = """<?xml version='1.0' encoding='UTF-8'?>
             <descriptions>
                 <desc>CD verify?</desc>
             </descriptions>
-            <help lang="en_US" href="@Help_cd_verify@"/>
+            <help href="@Help_cd_verify@"/>
             <type>bool</type>
             <default>false</default>
             <required>false</required>
@@ -52,7 +52,7 @@ XML = """<?xml version='1.0' encoding='UTF-8'?>
             <descriptions>
                 <desc>anaconda-templates</desc>
             </descriptions>
-            <help lang="en_US" href="@Help_anaconda_templates@"/>
+            <help href="@Help_anaconda_templates@"/>
             <type>str</type>
             <default/>
             <required>false</required>
@@ -62,7 +62,7 @@ XML = """<?xml version='1.0' encoding='UTF-8'?>
             <descriptions>
                 <desc>anaconda-custom</desc>
             </descriptions>
-            <help lang="en_US" href="@Help_anaconda_custom@"/>
+            <help href="@Help_anaconda_custom@"/>
             <type>str</type>
             <default/>
             <required>false</required>
@@ -72,7 +72,7 @@ XML = """<?xml version='1.0' encoding='UTF-8'?>
             <descriptions>
                 <desc>media-template</desc>
             </descriptions>
-            <help lang="en_US" href="@Help_media_template@"/>
+            <help href="@Help_media_template@"/>
             <type>str</type>
             <default/>
             <required>false</required>
@@ -82,7 +82,7 @@ XML = """<?xml version='1.0' encoding='UTF-8'?>
             <descriptions>
                 <desc>Image filename</desc>
             </descriptions>
-            <help lang="en_US" href="@Help_image_filename@"/>
+            <help href="@Help_image_filename@"/>
             <type>str</type>
             <default/>
             <required>false</required>
@@ -92,7 +92,7 @@ XML = """<?xml version='1.0' encoding='UTF-8'?>
             <descriptions>
                 <desc>Conary installLabelPath</desc>
             </descriptions>
-            <help lang="en_US" href="@Help_conary_installlabelpath@"/>
+            <help href="@Help_conary_installlabelpath@"/>
             <type>str</type>
             <default/>
             <required>false</required>
@@ -102,7 +102,7 @@ XML = """<?xml version='1.0' encoding='UTF-8'?>
             <descriptions>
                 <desc>Autoinstall Dependencies</desc>
             </descriptions>
-            <help lang="en_US" href="@Help_resolve_dependencies@"/>
+            <help href="@Help_resolve_dependencies@"/>
             <type>bool</type>
             <default>false</default>
             <required>false</required>
@@ -112,7 +112,7 @@ XML = """<?xml version='1.0' encoding='UTF-8'?>
             <descriptions>
                 <desc>Generate in OVF 1.0?</desc>
             </descriptions>
-            <help lang="en_US" href="@Help_build_ovf_1_0@"/>
+            <help href="@Help_build_ovf_1_0@"/>
             <type>bool</type>
             <default>false</default>
             <required>false</required>

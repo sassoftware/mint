@@ -20,7 +20,6 @@ from raa.modules.raawebplugin import rAAWebPlugin
 from raa.lib import validate
 
 from mint import config
-from mint.lib import siteauth
 
 from rPath.rbasetup import lib
 
@@ -245,12 +244,6 @@ class rBASetup(rAAWebPlugin):
             hostname = normalizedOptions['hostName'].split('.')
             normalizedOptions['hostName'] = hostname[0]
             normalizedOptions['siteDomainName'] = '.'.join(hostname[1:])
-           
-        # try to save entitlement if we have one
-        if normalizedOptions.get('entitlementKey'):
-            result = self.setNewEntitlement(normalizedOptions.get('entitlementKey'))
-            if result['errors']:
-                return dict(errors=result['errors'])
 
         # Call backend to save generated file
         try:
@@ -388,15 +381,6 @@ class rBASetup(rAAWebPlugin):
         except Exception, e:
             log.error('error setting wizard done')
         return dict(message='successfully set wizard done')
-
-    @raa.web.expose(allow_xmlrpc=True, allow_json=True)
-    def validateNewEntitlement(self, key):
-        return self.plugins['/configure/Entitlements'].validateEntitlement(key)
-
-    @raa.web.expose(allow_xmlrpc=True, allow_json=True)
-    @raa.web.require(raa.authorization.LocalhostOK())
-    def setNewEntitlement(self, key):
-        return self.plugins['/configure/Entitlements'].doSaveKey(key)
 
     @raa.web.expose(allow_xmlrpc=True, allow_json=True)
     def finalize(self):

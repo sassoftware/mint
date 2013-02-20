@@ -12,7 +12,7 @@ XML = """<?xml version='1.0' encoding='UTF-8'?>
             <descriptions>
                 <desc>Image name</desc>
             </descriptions>
-            <help lang="en_US" href="@Help_image_name@"/>
+            <help href="@Help_image_name@"/>
             <type>str</type>
             <default/>
             <required>true</required>
@@ -22,7 +22,7 @@ XML = """<?xml version='1.0' encoding='UTF-8'?>
             <descriptions>
                 <desc>Image filename</desc>
             </descriptions>
-            <help lang="en_US" href="@Help_image_filename@"/>
+            <help href="@Help_image_filename@"/>
             <type>str</type>
             <default/>
             <required>false</required>
@@ -32,7 +32,7 @@ XML = """<?xml version='1.0' encoding='UTF-8'?>
             <descriptions>
                 <desc>Conary installLabelPath</desc>
             </descriptions>
-            <help lang="en_US" href="@Help_conary_installlabelpath@"/>
+            <help href="@Help_conary_installlabelpath@"/>
             <type>str</type>
             <default/>
             <required>false</required>
@@ -42,7 +42,7 @@ XML = """<?xml version='1.0' encoding='UTF-8'?>
             <descriptions>
                 <desc>Free space</desc>
             </descriptions>
-            <help lang="en_US" href="@Help_image_freespace@"/>
+            <help href="@Help_image_freespace@"/>
             <type>int</type>
             <default>256</default>
             <required>false</required>
@@ -52,7 +52,7 @@ XML = """<?xml version='1.0' encoding='UTF-8'?>
             <descriptions>
                 <desc>Swap space</desc>
             </descriptions>
-            <help lang="en_US" href="@Help_image_swapspace@"/>
+            <help href="@Help_image_swapspace@"/>
             <type>int</type>
             <default>512</default>
             <required>false</required>
@@ -62,7 +62,7 @@ XML = """<?xml version='1.0' encoding='UTF-8'?>
             <descriptions>
                 <desc>RAM</desc>
             </descriptions>
-            <help lang="en_US" href="@Help_image_ram@"/>
+            <help href="@Help_image_ram@"/>
             <type>int</type>
             <default>512</default>
             <required>false</required>
@@ -72,7 +72,7 @@ XML = """<?xml version='1.0' encoding='UTF-8'?>
             <descriptions>
                 <desc>Autoinstall Dependencies</desc>
             </descriptions>
-            <help lang="en_US" href="@Help_resolve_dependencies@"/>
+            <help href="@Help_resolve_dependencies@"/>
             <type>bool</type>
             <default>false</default>
             <required>false</required>
@@ -82,17 +82,16 @@ XML = """<?xml version='1.0' encoding='UTF-8'?>
             <descriptions>
                 <desc>Use NAT?</desc>
             </descriptions>
-            <help lang="en_US" href="@Help_image_use_nat@"/>
+            <help href="@Help_image_use_nat@"/>
             <type>bool</type>
             <default>true</default>
-            <hidden>true</hidden>
         </field>
         <field>
             <name>options.allowSnapshots</name>
             <descriptions>
                 <desc>Allow snapshots?</desc>
             </descriptions>
-            <help lang="en_US" href="@Help_allow_snapshots@"/>
+            <help href="@Help_allow_snapshots@"/>
             <type>bool</type>
             <default>true</default>
             <hidden>true</hidden>
@@ -102,7 +101,7 @@ XML = """<?xml version='1.0' encoding='UTF-8'?>
             <descriptions>
                 <desc>Disk driver</desc>
             </descriptions>
-            <help lang="en_US" href="@Help_image_disk_driver@"/>
+            <help href="@Help_image_disk_driver@"/>
             <enumeratedType>
                 <describedValue>
                     <descriptions>
@@ -125,7 +124,7 @@ XML = """<?xml version='1.0' encoding='UTF-8'?>
             <descriptions>
                 <desc>Generate in OVF 1.0?</desc>
             </descriptions>
-            <help lang="en_US" href="@Help_build_ovf_1_0@"/>
+            <help href="@Help_build_ovf_1_0@"/>
             <type>bool</type>
             <default>false</default>
         </field>

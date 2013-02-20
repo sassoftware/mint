@@ -1,10 +1,10 @@
 <project>
-  <hostname>rwbs</hostname>
-  <short_name>rwbs</short_name>
-  <name>rPath Windows Build Service</name>
+  <hostname>pdt</hostname>
+  <short_name>pdt</short_name>
+  <name>rPath Infrastructure</name>
   <description>Project containing various parts of rPath provided infrastructure.</description>
-  <domain_name>rpath.com</domain_name>
-  <repository_hostname>infra.rpath.com</repository_hostname>
+  <domain_name>cny.sas.com</domain_name>
+  <repository_hostname>pdt.cny.sas.com</repository_hostname>
   <project_type>Appliance</project_type>
   <backup_external>false</backup_external>
   <hidden>false</hidden>

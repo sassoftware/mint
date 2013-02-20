@@ -13,6 +13,28 @@ from mint.lib import database
  RDT_ENUM,
  RDT_TROVE)= range(5)
 
+class Data(object):
+
+    @classmethod
+    def thaw(cls, data, dataType):
+        if data is None:
+            return None
+        if dataType == RDT_BOOL:
+            return bool(int(data))
+        if dataType == RDT_INT:
+            return int(data)
+        return data
+
+    @classmethod
+    def freeze(cls, data, dataType):
+        if data is None:
+            return None
+        if dataType == RDT_BOOL:
+            return str(int(data))
+        if dataType == RDT_INT:
+            return str(data)
+        return data
+
 class GenericDataTable(database.DatabaseTable):
     name = None
 
@@ -26,10 +48,7 @@ class GenericDataTable(database.DatabaseTable):
 
     def setDataValue(self, id, name, value, dataType, commit=True):
         # do any data conversions necessary to safely store value as a string
-        if dataType == RDT_BOOL:
-            value=str(int(value))
-        elif dataType == RDT_INT:
-            value=str(value)
+        value = Data.freeze(value, dataType)
 
         cu = self.db.cursor()
 
@@ -53,10 +72,7 @@ class GenericDataTable(database.DatabaseTable):
         if len(res) != 1:
             return False, 0
         value, dataType = res[0]
-        if dataType == RDT_BOOL:
-            value=bool(int(value))
-        elif dataType == RDT_INT:
-            value=int(value)
+        value = Data.thaw(value, dataType)
         return True, value
 
     def getDataDict(self, id):
@@ -65,10 +81,7 @@ class GenericDataTable(database.DatabaseTable):
         cu.execute("SELECT name, value, dataType FROM %s WHERE %sId=?" % (self.name, self.front), id)
         dataDict = {}
         for name, value, dataType in cu.fetchall():
-            if dataType == RDT_BOOL:
-                value=bool(int(value))
-            elif dataType == RDT_INT:
-                value=int(value)
+            value = Data.thaw(value, dataType)
             dataDict[name] = value
         return dataDict
 

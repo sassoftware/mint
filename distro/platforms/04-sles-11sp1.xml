@@ -1,6 +1,0 @@
-<platform>
-  <label>sles.rpath.com@rpath:sles-11sp1</label>
-  <platformName>SuSE Linux Enterprise Server 11 SP1</platformName>
-  <abstract>false</abstract>
-  <configurable>true</configurable>
-</platform>

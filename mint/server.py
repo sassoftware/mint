@@ -2359,37 +2359,6 @@ If you would not like to be %s %s of this project, you may resign from this proj
         if rbuilder_ip == 'localhost':
             rbuilder_ip = self.cfg.siteHost
         r['inventory_node'] = rbuilder_ip + ':8443'
-
-        # Serialize AMI configuration data (if AMI build)
-        if buildDict.get('buildType', buildtypes.STUB_IMAGE) == buildtypes.AMI:
-
-            amiData = {}
-
-            try:
-                storedAmiData = self._getTargetData('ec2', 'aws')
-            except mint_error.TargetMissing:
-                raise mint_error.EC2NotConfigured
-            for k in ('ec2PublicKey', 'ec2PrivateKey', 'ec2AccountId',
-                       'ec2S3Bucket', 'ec2LaunchUsers', 'ec2LaunchGroups',
-                       'ec2Certificate', 'ec2CertificateKey'):
-                amiData[k] = storedAmiData.get(k)
-                if not amiData[k] and k not in ('ec2LaunchUsers', 'ec2LaunchGroups'):
-                    raise mint_error.EC2NotConfigured
-            if project.hidden:
-                # overwrite ec2LaunchUsers if any of the users have
-                # ec2 accounts, otherwise default to whatever the default
-                # is...
-                # FIXME should we be erroring out instead?
-                writers, readers = self.projectUsers.getEC2AccountNumbersForProjectUsers(project.id)
-                if writers + readers:
-                    amiData['ec2LaunchUsers'] = writers + readers
-                    amiData['ec2LaunchGroups'] = []
-
-            if self.siteAuth.ec2ProductCodes:
-                amiData['ec2ProductCode'] = self.siteAuth.ec2ProductCodes
-
-            r['amiData'] = amiData
-
         r['outputUrl'] = 'http://%s%s' % (rbuilder_ip, self.cfg.basePath)
         r['outputToken'] = sha1helper.sha1ToString(file('/dev/urandom').read(20))
         self.buildData.setDataValue(buildId, 'outputToken',
@@ -2721,14 +2690,6 @@ If you would not like to be %s %s of this project, you may resign from this proj
     @private
     def getAvailableBuildTypes(self):
         buildTypes = set(buildtypes.TYPES)
-
-        # XXX we have one special case for now, but this won't scale
-        # if AMI is not configured, remove it from the list
-        amiData = self._getTargetData('ec2', 'aws', supressException = True)
-        if not (amiData.get('ec2AccountId') and \
-                amiData.get('ec2PublicKey') and \
-                amiData.get('ec2PrivateKey')):
-            buildTypes.remove(buildtypes.AMI)
 
         if self.cfg.excludeBuildTypes:
             buildTypes -= set(self.cfg.excludeBuildTypes)

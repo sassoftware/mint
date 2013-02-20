@@ -35,6 +35,35 @@ logging.disable(logging.CRITICAL)
 from mint.django_rest import test_utils
 XMLTestCase = test_utils.XMLTestCase
 
+class AuthTests(XMLTestCase):
+    def testAuthRCE1341(self):
+        password = "password with 'weird :chars"
+        response = self._get('inventory/log/', username="test-rce1341",
+            password=password)
+        self.assertEquals(response.status_code, 200)
+
+        # Now pretend it's an external user
+        from mint.django_rest.rbuilder.users import models as usermodels
+        u = usermodels.User.objects.get(user_name='test-rce1341')
+        u.update(passwd=None)
+
+        # Capture the requested password
+        class MockAuthClient(object):
+            def __init__(slf):
+                slf.args = []
+            def checkPassword(slf, username, password):
+                slf.args.append((username, password))
+                return True
+        authClient = MockAuthClient()
+        from mint.lib import auth_client
+        self.mock(auth_client, 'getClient', lambda *args: authClient)
+
+        response = self._get('inventory/log/', username="test-rce1341",
+            password=password)
+        self.assertEquals(response.status_code, 200)
+
+        self.assertEquals(authClient.args, [('test-rce1341', password)])
+
 class SurveyTests(XMLTestCase):
     fixtures = ['users']
 

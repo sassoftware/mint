@@ -123,7 +123,7 @@ def proxyExternalRestRequest(context, fqdn, handle, authToken):
     opener = transport.URLOpener(proxyMap=context.cfg.getProxyMap())
     headers = [
             ('X-Conary-Servername', fqdn),
-            ('User-agent', transport.Transport.user_agent),
+            ('User-Agent', transport.Transport.user_agent),
             ]
     if entitlement:
         headers.append(('X-Conary-Entitlement', entitlement))
@@ -146,20 +146,33 @@ def proxyExternalRestRequest(context, fqdn, handle, authToken):
         protocol = 'http'
     myUrlBase = '%s://%s/repos/%s/' % (protocol, req.hostname, fqdn)
 
-    # translate the response
-    l = []
-    for line in f:
-        # rewrite hrefs to point at ourself
-        l.append(line.replace(urlBase, myUrlBase))
-    buf = ''.join(l)
-    req.headers_out['Content-length'] = str(len(buf))
-
     # copy response headers from upstream
-    skippedHeaders = ('content-length', 'server', 'connection', 'date')
+    skippedHeaders = ('content-length', 'server', 'connection', 'date',
+            'transfer-encoding')
     for header in f.headers.keys():
-        if header not in skippedHeaders:
-            req.headers_out[header] = f.headers.get(header)
-    req.write(buf)
+        if header.lower() not in skippedHeaders:
+            req.headers_out[header.title()] = f.headers.get(header)
+
+    # translate the response
+    contentType = f.headers.get('content-type', '').split(';')[0]
+    if contentType in ('text/xml', 'application/xml'):
+        l = []
+        for line in f:
+            # rewrite hrefs to point at ourself
+            l.append(line.replace(urlBase, myUrlBase))
+        buf = ''.join(l)
+        req.headers_out['Content-Length'] = str(len(buf))
+        req.write(buf)
+    else:
+        if f.headers.get('Content-Length'):
+            req.headers_out['Content-Length'] = f.headers['Content-Length']
+        req.headers_out['Transfer-Encoding'] = 'chunked'
+        while True:
+            d = f.read(16384)
+            if not d:
+                break
+            req.write('%x\r\n%s\r\n' % (len(d), d))
+        req.write('0\r\n\r\n')
     f.close()
     return apache.OK
 
@@ -315,8 +328,11 @@ def conaryHandler(context):
         del netServer, restDb
     else:
         # Remote repository
+        overrideUrl = None
+        if handle:
+            overrideUrl = handle.getURL()
         serverCfg, proxyServer, shimRepo = _getProxyServer(context, fqdn,
-                withCapsuleFilter=(handle is not None))
+                withCapsuleFilter=(handle is not None), overrideUrl=overrideUrl)
         items = req.uri.split('/')
         proxyRestRequest = (len(items) >= 4
                             and items[1] == 'repos'
@@ -360,7 +376,7 @@ def _getAuth(context):
     return authToken
 
 
-def _getProxyServer(context, fqdn, withCapsuleFilter):
+def _getProxyServer(context, fqdn, withCapsuleFilter, overrideUrl):
     """Create a ProxyRepositoryServer for remote proxied calls."""
     cfg, req = context.cfg, context.req
 
@@ -369,6 +385,8 @@ def _getProxyServer(context, fqdn, withCapsuleFilter):
     serverCfg.changesetCacheDir = cfg.proxyChangesetCacheDir
     serverCfg.tmpDir = cfg.proxyTmpDir
     serverCfg.proxyMap = cfg.getProxyMap()
+    if overrideUrl:
+        serverCfg.repositoryMap.append((fqdn, overrideUrl))
 
     restDb = None
     if withCapsuleFilter:

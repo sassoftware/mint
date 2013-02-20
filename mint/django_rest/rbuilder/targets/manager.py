@@ -355,14 +355,16 @@ class TargetsManager(basemanager.BaseManager, CatalogServiceHelper):
 
     @exposed
     def getDescriptorLaunchSystem(self, targetId, buildFileId):
-        descr = self._getDescriptorFromCatalogService(targetId, buildFileId,
-            'systemLaunchDescriptor')
         # Look up images associated with this build file
         imgs = imagemodels.Image.objects.filter(files__file_id=buildFileId)
-        if imgs:
-            img = imgs[0]
-            cdesc = self.getConfigDescriptorForImage(img)
-            self.concatenateDescriptors(descr, cdesc)
+        if not imgs:
+            raise errors.ResourceNotFound()
+        img = imgs[0]
+        imageData = self.mgr.imagesManager.getImageData(img)
+        descr = self._getDescriptorFromCatalogService(targetId, buildFileId,
+            'systemLaunchDescriptor', extraArgs=dict(imageData=imageData))
+        cdesc = self.getConfigDescriptorForImage(img)
+        self.concatenateDescriptors(descr, cdesc)
         return descr
 
     @exposed
@@ -399,11 +401,15 @@ class TargetsManager(basemanager.BaseManager, CatalogServiceHelper):
 
     @exposed
     def getDescriptorDeployImage(self, targetId, buildFileId):
+        imgs = imagemodels.Image.objects.filter(files__file_id=buildFileId)
+        if not imgs:
+            raise errors.ResourceNotFound()
+        imageData = self.mgr.imagesManager.getImageData(imgs[0])
         return self._getDescriptorFromCatalogService(targetId, buildFileId,
-            'imageDeploymentDescriptor')
+            'imageDeploymentDescriptor', imageData=imageData)
 
     def _getDescriptorFromCatalogService(self, targetId, buildFileId,
-                rmakeMethodName):
+                rmakeMethodName, **kwargs):
         repClient = self.mgr.repeaterMgr.repeaterClient
         if repClient is None:
             log.info("Failed loading repeater client, expected in local mode only")
@@ -415,7 +421,7 @@ class TargetsManager(basemanager.BaseManager, CatalogServiceHelper):
         repClient.targets.configure(zone.name, targetConfiguration,
             targetUserCredentials)
         method = getattr(repClient.targets, rmakeMethodName)
-        uuid, job = method()
+        uuid, job = method(**kwargs)
         job = self.mgr.waitForRmakeJob(uuid, timeout=60, interval=.1)
         if not job.status.final:
             raise Exception("Final state not reached")
@@ -742,24 +748,7 @@ class TargetsManager(basemanager.BaseManager, CatalogServiceHelper):
         """
         cu.execute(query)
 
-        # ec2 images are special
-        query = """
-            INSERT INTO tmp_target_image (target_id, target_image_id, file_id)
-            SELECT t.targetid, ti.target_image_id, imgfile.fileid
-              FROM Builds AS img
-              JOIN BuildData AS imgdata ON (img.buildid = imgdata.buildid)
-              JOIN BuildFiles AS imgfile ON (img.buildid = imgfile.buildid)
-        CROSS JOIN Targets AS t
-              JOIN target_types AS tt ON (t.target_type_id = tt.target_type_id)
-              JOIN target_image AS ti ON (ti.target_id = t.targetid
-                   AND ti.target_internal_id = imgdata.value)
-             WHERE imgdata.name = 'amiId'
-               AND img.buildtype = %s
-               AND tt.name = 'ec2'
-        """
-        cu.execute(query, [ buildtypes.AMI ])
-
-        # Add undeployed images (but not for AMI)
+        # Add undeployed images
         query = """
             INSERT INTO tmp_target_image (target_id, target_image_id, file_id)
                 SELECT t.targetId, NULL, imgf.fileId
@@ -767,14 +756,8 @@ class TargetsManager(basemanager.BaseManager, CatalogServiceHelper):
                   JOIN target_types AS tt USING (target_type_id)
                   JOIN Builds AS img ON (tt.build_type_id = img.buildType)
                   JOIN BuildFiles AS imgf ON (img.buildId = imgf.buildId)
-                 WHERE NOT EXISTS (
-                       SELECT 1
-                         FROM tmp_target_image
-                        WHERE target_id = t.targetId
-                          AND file_id = imgf.fileId)
-                   AND img.buildType != %s
         """
-        cu.execute(query, [ buildtypes.AMI ])
+        cu.execute(query)
 
         # Build target to target type mapping
         query = """

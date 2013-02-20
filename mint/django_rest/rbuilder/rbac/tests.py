@@ -798,8 +798,8 @@ class RbacEngineTests(RbacEngine):
         self.assertEquals(response.status_code, 200)
         doc = xobj.parse(response.content)
         self.failUnlessEqual([ x.user_name for x in doc.users.user ],
-            [ 'admin', 'testuser', 'ExampleSysadmin', 'ExampleDeveloper',
-              'ExampleIntern', ]
+            [ 'admin', 'testuser', 'test-rce1341', 'ExampleSysadmin',
+              'ExampleDeveloper', 'ExampleIntern', ]
         )
 
         response = self._get("query_sets/%s/all" % self.user_queryset.pk,

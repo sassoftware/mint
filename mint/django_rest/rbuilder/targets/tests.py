@@ -446,6 +446,7 @@ class TargetsTestCase(BaseTargetsTest, RepeaterMixIn):
                 'name',
                 'alias',
                 'description',
+                'region',
                 'accountId',
                 'publicAccessKeyId',
                 'secretAccessKey',
@@ -838,6 +839,7 @@ class JobCreationTest(BaseTargetsTest, RepeaterMixIn):
             ('alias', 'ec2'),
             ('description', 'Amazon Elastic Compute Cloud'),
             ('accountId', '12345'),
+            ('region', 'us-east-1'),
             ('publicAccessKeyId', 'public-access-key-id'),
             ('secretAccessKey', 'secret-access-key'),
             ('certificateData', """-----BEGIN CERTIFICATE-----
@@ -1686,12 +1688,8 @@ ZcY7o9aU
                 )
 
                 j = i + 2
-                if imageType == buildtypes.AMI:
-                    targetInternalImageId = 'rmi-%08x' % j
-                    buildData = [ ('amiId', targetInternalImageId, 0) ]
-                else:
-                    targetInternalImageId = targetImageIdTempl % j
-                    buildData = []
+                targetInternalImageId = targetImageIdTempl % j
+                buildData = []
 
                 imgmgr.createImageBuild(image, buildData=buildData)
                 for fileExtension in fileExtensions:
@@ -1704,9 +1702,7 @@ ZcY7o9aU
                         title="Image File Title %02d" % i,
                         size=100+i,
                         sha1="%040d" % i)
-                    if i % 2 == 0 and imageType != buildtypes.AMI:
-                        # the amiId is not recorded with the build
-                        # file, but with the whole image
+                    if i % 2 == 0:
                         imgbuild = imgmgr.recordTargetInternalId(
                             buildFile=bf, target=target,
                             targetInternalId=targetImageIdTempl % i)
@@ -1930,26 +1926,49 @@ ZcY7o9aU
         targetEC2 = targets[-1]
         self.failUnlessEqual(targetEC2.target_type.name, 'ec2')
 
-        for i, imgName in enumerate([ "image 00", "image 01", "image 02", "image 03", "image 04" ]):
+        for imgName in [ "image 00", "image 01", "image 03", ]:
             img = imgmodels.Image.objects.get(name=imgName, _image_type=buildtypes.AMI)
             self.failUnlessEqual(
                 [
-                    [ tdi.target_image.target_internal_id
+                    [ tdi.target_image
                         for tdi in imgfile.target_deployable_images.all() ]
                     for imgfile in img.files.order_by('file_id') ],
-                [["rmi-%08x" % (i+2)]]
+                [[None]]
             )
+
+        missing = object()
+        def _getTargetInternalId(tgtimg):
+            if tgtimg is None:
+                return missing
+            return tgtimg.target_internal_id
+
+        for imgName in [ "image 02", "image 04" ]:
+            img = imgmodels.Image.objects.get(name=imgName, _image_type=buildtypes.AMI)
+            self.failUnlessEqual(
+                [
+                    sorted(_getTargetInternalId(tdi.target_image)
+                        for tdi in imgfile.target_deployable_images.all())
+                    for imgfile in img.files.order_by('file_id') ],
+                [[missing, "target-internal-id-%s" % imgName[-2:], ]]
+            )
+
 
     def testDeployImage(self):
         targets = self._setupImages()
         imgName = "image 02"
         img = imgmodels.Image.objects.get(name=imgName, _image_type=buildtypes.VMWARE_ESX_IMAGE)
+        imgmodels.ImageData.objects.create(image=img,
+                name='filesystemSize', value='3141',
+                data_type=mintdata.RDT_INT)
         self._testDeployImage(targets, img)
 
     def testDeployDeferredImage(self):
         targets = self._setupImages()
         imgName = "image 02"
         img = imgmodels.Image.objects.get(name=imgName, _image_type=buildtypes.VMWARE_ESX_IMAGE)
+        imgmodels.ImageData.objects.create(image=img,
+                name='filesystemSize', value='3141',
+                data_type=mintdata.RDT_INT)
         deferredImg = imgmodels.Image.objects.get(base_image=img)
         self._testDeployImage(targets, deferredImg, img)
 
@@ -2010,6 +2029,7 @@ ZcY7o9aU
         self.failUnlessEqual(self._mungeDict(realCall.args[0]),
           {
             'imageFileInfo': {
+                'architecture' : 'x86',
                 'fileId' : buildFileId,
                 'name' : u'filename-09-02.ova',
                 'sha1' : u'0000000000000000000000000000000000000002',
@@ -2021,6 +2041,7 @@ ZcY7o9aU
             'imageFileUpdateUrl': 'http://localhost/api/v1/images/%s/build_files/%s' % (baseImg.image_id, buildFileId),
             'targetImageXmlTemplate': '<file>\n  <target_images>\n    <target_image>\n      <target id="/api/v1/targets/1"/>\n      %(image)s\n    </target_image>\n  </target_images>\n</file>',
             'targetImageIdList': ['target-internal-id-02'],
+            'imageData' : { 'filesystemSize' : 3141 },
           })
         self.failUnlessEqual(realCall.args[1:], ())
         self.failUnlessEqual(realCall.kwargs, dict(uuid=job.job_uuid))
@@ -2127,6 +2148,7 @@ ZcY7o9aU
         self.failUnlessEqual(self._mungeDict(realCall.args[0]),
           {
             'imageFileInfo': {
+                'architecture' : 'x86',
                 'fileId' : buildFileId,
                 'name' : u'filename-09-02.ova',
                 'sha1' : u'0000000000000000000000000000000000000002',
@@ -2140,6 +2162,7 @@ ZcY7o9aU
             'systemsCreateUrl': 'http://localhost/api/v1/jobs/%s/systems' %
                 job.job_uuid,
             'targetImageIdList': ['target-internal-id-02'],
+            'imageData' : {},
           })
         self.failUnlessEqual(realCall.args[1:], ())
         self.failUnlessEqual(realCall.kwargs, dict(uuid=job.job_uuid))
@@ -2286,3 +2309,38 @@ ZcY7o9aU
   <message>Data validation error: [u"Missing field: 'blargh'"]</message>
   <traceback></traceback>
 </fault>""")
+
+
+    def testGetDescriptorDeploy(self):
+        targets = self._setupImages()
+        self.mgr.targetsManager.recomputeTargetDeployableImages()
+
+        self.mgr.repeaterMgr.repeaterClient.setJobData("""\
+<descriptor>
+  <metadata>
+    <displayName>FooDescriptor</displayName>
+    <rootElement>blah</rootElement>
+    <descriptions><desc>Description</desc></descriptions>
+  </metadata>
+  <dataFields>
+    <field>
+      <name>imageId</name>
+      <descriptions>
+        <desc>Image ID</desc>
+      </descriptions>
+      <type>str</type>
+      <required>true</required>
+      <hidden>true</hidden>
+    </field>
+  </dataFields>
+</descriptor>""")
+
+        # Grab an image
+        tgt = [ x for x in targets if x.target_type.name == 'vmware' ][0]
+        imgName = "image 02"
+        img = imgmodels.Image.objects.get(name=imgName, _image_type=buildtypes.VMWARE_ESX_IMAGE)
+        buildFileId = img.files.all()[0].file_id
+        response = self._get('targets/%d/descriptors/deploy/file/%d' %
+            (tgt.target_id, buildFileId),
+            username='ExampleDeveloper', password='password')
+        self.assertEquals(response.status_code, 200)
