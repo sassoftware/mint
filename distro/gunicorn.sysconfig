@@ -1,0 +1,1 @@
+GUNICORN_ARGS="mint.web.wsgi_hook -c /etc/gunicorn.conf -u apache -g apache"

@@ -71,6 +71,7 @@ class rBuilderProduct(CPackageRecipe):
         'python-pgsql:python',
         'python-psycopg2',
         'python-twisted:python',
+        'python-webob:python',
         'rapa:python',
         'restlib:python',
         'rmake3:python',
