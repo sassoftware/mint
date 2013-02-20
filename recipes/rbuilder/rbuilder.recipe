@@ -54,6 +54,7 @@ class rBuilderProduct(CPackageRecipe):
         'django-db-postgres:python',
         'django-rest-interface:python',
         'django-debug-toolbar:python',
+        'epdb:python',
         'jobslave:python',
         'mcp:python',
         'pcreator:python',
