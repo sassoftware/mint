@@ -16,8 +16,8 @@ install: default-install
 	install -D -m0644 postgresql-rbuilder.sysconfig ${DESTDIR}/etc/sysconfig/pgsql/postgresql-rbuilder
 	sed -i "s/@POSTGRES_VERSION@/$(POSTGRES_VERSION)/g" ${DESTDIR}/etc/sysconfig/pgsql/postgresql-rbuilder
 	sed -e "s/@POSTGRES_VERSION@/$(POSTGRES_VERSION)/g" meta > $(DESTDIR)/usr/share/rbuilder/postgres-meta
-	mkdir -p ${DESTDIR}/etc/init.d
-	ln -sf /opt/postgresql-$(POSTGRES_VERSION)/etc/init.d/postgresql ${DESTDIR}/etc/init.d/postgresql-rbuilder
+	mkdir -p ${DESTDIR}/etc/rc.d/init.d
+	ln -sf /opt/postgresql-$(POSTGRES_VERSION)/etc/init.d/postgresql ${DESTDIR}/etc/rc.d/init.d/postgresql-rbuilder
 
 
 clean: default-clean

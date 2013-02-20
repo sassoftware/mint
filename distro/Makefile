@@ -51,8 +51,8 @@ install: default-install
 	# system dist (executable)
 	install -D -m0755 rbuilder.tmpwatch $(DESTDIR)/etc/cron.daily/rbuilder.tmpwatch
 	install -D -m0755 chrootcache.tmpwatch $(DESTDIR)/etc/cron.daily/chrootcache.tmpwatch
-	install -D -m0755 rbuilder.init $(DESTDIR)/etc/init.d/rbuilder
-	install -D -m0755 rbuilder-authn.init $(DESTDIR)/etc/init.d/rbuilder-authn
+	install -D -m0755 rbuilder.init $(DESTDIR)/etc/rc.d/init.d/rbuilder
+	install -D -m0755 rbuilder-authn.init $(DESTDIR)/etc/rc.d/init.d/rbuilder-authn
 	# chkconfig overrides
 	mkdir -p $(DESTDIR)/etc/chkconfig.d
 	echo '# chkconfig: 345 15 74' > $(DESTDIR)/etc/chkconfig.d/ntpd
