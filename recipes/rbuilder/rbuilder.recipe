@@ -75,6 +75,7 @@ class rBuilderProduct(CPackageRecipe):
         'restlib:python',
         'rmake3:python',
         'rmake:python',
+        'robj:python',
         'rpath-capsule-indexer:python',
         'rpath-job:python',
         'rpath-models:python',
