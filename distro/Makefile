@@ -37,6 +37,7 @@ install: default-install
 	# gunicorn
 	install -D -m0644 gunicorn.conf $(DESTDIR)/etc/gunicorn.conf
 	install -D -m0644 gunicorn.sysconfig $(DESTDIR)/etc/sysconfig/gunicorn
+	mkdir -p $(DESTDIR)/var/log
 	ln -sfn gunicorn $(DESTDIR)/var/log/httpd
 	# rMake node configuration
 	install -D -m0644 rmake2/noderc.main $(DESTDIR)/etc/rmake/node.d/20_rbuilder.conf
