@@ -204,7 +204,7 @@ class rBuilderProduct(CPackageRecipe):
                    '%(datadir)s/rbuilder/scripts/migrate-config')
 
         # Our rAPA plugins require rapa-plugin-rPath
-        r.Requires('rapa-plugin-rPath:python',
+        r.Requires('rapa-plugin-rPath:lib',
             '%(libdir)s/raa/rPath/[^/]+/__init__.pyc')
 
         # Script runtime dependencies
