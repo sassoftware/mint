@@ -13,7 +13,7 @@ generated_files = custom.cfg rbuilder.conf
 
 all: default-all $(generated_files)
 
-install: default-install httpd-sysconfig
+install: default-install
 	# data directories
 	mkdir -p $(DESTDIR)/srv/rbuilder/pki
 	# rBuilder config
@@ -48,10 +48,6 @@ install: default-install httpd-sysconfig
 	install -D -m0644 firewall6 $(DESTDIR)/etc/firewall6
 	install -D -m0644 rbuilder.logrotate $(DESTDIR)/etc/logrotate.d/rbuilder
 	install -D -m0644 rbuilder.cron $(DESTDIR)/etc/cron.d/rbuilder.cron
-	install -D -m0644 httpd.conf $(DESTDIR)/etc/httpd/conf.d/rbuilder-common
-	install -D -m0644 httpd-stub.conf $(DESTDIR)/etc/httpd/conf.d/01_rbuilder.conf
-	mkdir -p $(DESTDIR)/etc/httpd/conf.d/rbuilder
-	touch $(DESTDIR)/etc/httpd/conf.d/rbuilder/.keep.rbuilder
 	# system dist (executable)
 	install -D -m0755 rbuilder.tmpwatch $(DESTDIR)/etc/cron.daily/rbuilder.tmpwatch
 	install -D -m0755 chrootcache.tmpwatch $(DESTDIR)/etc/cron.daily/chrootcache.tmpwatch
@@ -67,7 +63,6 @@ install: default-install httpd-sysconfig
 	echo '# chkconfig: 345 30 35' > $(DESTDIR)/etc/chkconfig.d/mcp-dispatcher
 	echo '# chkconfig: 345 50 50' > $(DESTDIR)/etc/chkconfig.d/snmpd
 	echo '# chkconfig: 345 50 25' > $(DESTDIR)/etc/chkconfig.d/jabberd
-	echo '# chkconfig: 345 50 15' > $(DESTDIR)/etc/chkconfig.d/httpd
 	# anaconda
 	install -D -m0644 anaconda_custom.py $(DESTDIR)/usr/share/anaconda/installclasses/rbuilder.py
 	install -D -m0644 welcome_gui.py $(DESTDIR)/usr/share/anaconda/
@@ -80,10 +75,6 @@ install: default-install httpd-sysconfig
 	# amiconfig
 	mkdir -p $(DESTDIR)/$(PYDIR)/amiconfig/plugins/
 	install -D -m0644 rbuilderstorage.py $(DESTDIR)/$(PYDIR)/amiconfig/plugins/
-
-httpd-sysconfig:
-	install -d -m0755 $(DESTDIR)/etc/sysconfig
-	echo "ulimit -n 65536" > $(DESTDIR)/etc/sysconfig/httpd
 
 clean: default-clean
 

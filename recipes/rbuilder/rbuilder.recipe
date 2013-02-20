@@ -191,10 +191,6 @@ class rBuilderProduct(CPackageRecipe):
         r.Transient(r'/etc/rmake/(noderc|(node|server).d/20_rbuilder.conf)')
         r.Config(exceptions=r'/etc/rmake/(noderc|(node|server).d/20_rbuilder.conf)')
 
-        # Require mod_python httpd configuration.
-        r.Requires('mod_python:runtime',
-            '%(sysconfdir)s/httpd/conf.d/rbuilder.conf')
-
         # rBuilder pieces need to work together with the same version
         r.ComponentProvides('%(version)s')
 
