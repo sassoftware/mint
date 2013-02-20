@@ -53,16 +53,6 @@ install: default-install
 	install -D -m0755 chrootcache.tmpwatch $(DESTDIR)/etc/cron.daily/chrootcache.tmpwatch
 	install -D -m0755 rbuilder.init $(DESTDIR)/etc/rc.d/init.d/rbuilder
 	install -D -m0755 rbuilder-authn.init $(DESTDIR)/etc/rc.d/init.d/rbuilder-authn
-	# chkconfig overrides
-	mkdir -p $(DESTDIR)/etc/chkconfig.d
-	echo '# chkconfig: 345 15 74' > $(DESTDIR)/etc/chkconfig.d/ntpd
-	echo '# chkconfig: 345 21 70' > $(DESTDIR)/etc/chkconfig.d/postgresql-rbuilder
-	echo '# chkconfig: 345 22 68' > $(DESTDIR)/etc/chkconfig.d/pgbouncer
-	echo '# chkconfig: 345 25 65' > $(DESTDIR)/etc/chkconfig.d/rbuilder
-	echo '# chkconfig: 345 25 40' > $(DESTDIR)/etc/chkconfig.d/rmake-messagebus
-	echo '# chkconfig: 345 30 35' > $(DESTDIR)/etc/chkconfig.d/mcp-dispatcher
-	echo '# chkconfig: 345 50 50' > $(DESTDIR)/etc/chkconfig.d/snmpd
-	echo '# chkconfig: 345 50 25' > $(DESTDIR)/etc/chkconfig.d/jabberd
 	# anaconda
 	install -D -m0644 anaconda_custom.py $(DESTDIR)/usr/share/anaconda/installclasses/rbuilder.py
 	install -D -m0644 welcome_gui.py $(DESTDIR)/usr/share/anaconda/

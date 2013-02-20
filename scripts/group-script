@@ -71,6 +71,9 @@ if [ "x$is_chrooted" == "x1" ]
 then
     # Initial install
     updateargs="--init"
+
+    chkconfig memcached on
+    chkconfig pgbouncer on
 fi
 "$scriptdir"/postgres-auto-update $updateargs \
     || die "Migration failed, check /var/log/rbuilder/scripts.log"

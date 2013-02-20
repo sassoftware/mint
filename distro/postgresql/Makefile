@@ -9,9 +9,8 @@ all: default-all $(generated_files)
 
 install: default-install
 	install -D -m0644 custom.conf ${DESTDIR}/srv/rbuilder/config/postgresql-custom.conf
-	install -D -m0644 pgbouncer.conf ${DESTDIR}/etc/pgbouncer.ini
+	install -D -m0644 pgbouncer.conf ${DESTDIR}/etc/pgbouncer/pgbouncer.ini
 	install -D -m0644 postgresql.cron ${DESTDIR}/etc/cron.d/postgresql
-	install -D -m0644 postgresql.chkconfig ${DESTDIR}/etc/chkconfig.d/postgresql
 	install -D -m0644 postgresql.conf ${DESTDIR}/usr/share/rbuilder/postgresql.conf
 	install -D -m0644 postgresql-rbuilder.sysconfig ${DESTDIR}/etc/sysconfig/pgsql/postgresql-rbuilder
 	sed -i "s/@POSTGRES_VERSION@/$(POSTGRES_VERSION)/g" ${DESTDIR}/etc/sysconfig/pgsql/postgresql-rbuilder
