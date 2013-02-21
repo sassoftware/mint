@@ -9,9 +9,9 @@ import sys
 
 from conary.lib import util
 
-from mod_python import apache
-from mod_python import Cookie
-from mod_python.util import FieldStorage
+#from mod_python import apache
+#from mod_python import Cookie
+#from mod_python.util import FieldStorage
 
 from mint.session import SqlSession
 from mint import server

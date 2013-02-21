@@ -8,7 +8,7 @@ import json
 import sys
 import xmlrpclib
 
-from mod_python import apache
+#from mod_python import apache
 
 from mint import config
 from mint import mint_error

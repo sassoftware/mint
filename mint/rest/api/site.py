@@ -31,10 +31,6 @@ class RbuilderRestServer(RestController):
             'contentSources' : platforms.SourceTypeController,
             'notices'  : notices.NoticesController,
             'capsules'  : capsules.CapsulesController,
-            'reports/'  : 'djangoHandoff',
-            'inventory/' : 'djangoHandoff',
-            'query_sets/' : 'djangoHandoff',
-            'packages/' : 'djangoHandoff',
             'moduleHooks' : modulehooks.ModuleController,}
 
     def __init__(self, cfg, db):
@@ -78,7 +74,3 @@ class RbuilderRestServer(RestController):
         if result[-1] == '/':
             return result[:-1] + request.extension  + '/'
         return result + request.extension
-
-    # This is a handoff to the django URIs
-    def djangoHandoff(self, request):
-        return None

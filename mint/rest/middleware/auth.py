@@ -5,7 +5,7 @@
 import base64
 from conary.lib import util
 
-from mod_python import Cookie
+#from mod_python import Cookie
 
 from restlib.response import Response
 from mint import maintenance

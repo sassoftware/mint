@@ -4,7 +4,7 @@
 
 import logging
 import sys
-from mod_python import apache
+#from mod_python import apache
 
 from mint import config
 from mint.lib import mintutils

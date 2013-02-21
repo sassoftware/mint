@@ -16,8 +16,8 @@ import gettext
 
 from conary.lib import util
 
-from mod_python import apache
-from mod_python import Cookie
+#from mod_python import apache
+#from mod_python import Cookie
 
 from mint import helperfuncs
 from mint import shimclient

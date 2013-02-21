@@ -15,10 +15,108 @@
 #
 
 
+import logging
+import sys
 import webob
+from conary import dbstore
+
+from mint import config
+from mint import mint_error
+from mint.db.repository import RepositoryManager
+from mint.lib import mintutils
+from mint.logerror import logWebErrorAndEmail
+from mint.rest.api import site as rest_site
+from mint.rest.server import restHandler
+from mint.web import app
+from mint.web.rpchooks import rpcHandler
+from mint.web.catalog import catalogHandler
+from mint.web.hooks.conaryhooks import conaryHandler
+from mint.web.webhandler import normPath, setCacheControl, HttpError
+from conary.lib import coveragehook
+log = logging.getLogger(__name__)
 
 
-def application(environ, start_response):
-    req = webob.Request(environ)
-    response = webob.Response("Hello World!\r\n", content_type='text/plain')
-    return response(environ, start_response)
+class application(object):
+    requestFactory = webob.Request
+    responseFactory = webob.Response
+
+    environ = None
+    cfg = None
+    req = None
+    db = None
+    rm = None
+    iterable = None
+
+    def __init__(self, environ, start_response):
+        coveragehook.install()
+        mintutils.setupLogging(consoleLevel=logging.INFO, consoleFormat='apache')
+        self.environ = environ
+        try:
+            self.req = self.requestFactory(environ)
+        except:
+            log.exception("Error parsing request:")
+            response = self.responseFactory(
+                    "<h1>400 Bad Request</h1>\n"
+                    "<p>The server was unable to parse the request\n",
+                    status='400 Bad Request',
+                    content_type='text/html')
+            self.iterable = response(environ, start_response)
+            return
+        if not self.cfg:
+            # Cache config in the class
+            type(self).cfg = config.getConfig()
+
+        try:
+            response = self.handleRequest()
+        except:
+            exc_info = sys.exc_info()
+            logWebErrorAndEmail(self.req, self.cfg, *exc_info)
+            response = self.responseFactory(
+                    "<h1>500 Internal Server Error</h1>\n"
+                    "<p>Something has gone terribly wrong. Check the logs for details.\n",
+                    status='500 Internal Server Error',
+                    content_type='text/html')
+        finally:
+            if self.rm:
+                self.rm.close()
+            if self.db:
+                self.db.close()
+            coveragehook.save()
+            logging.shutdown()
+        if callable(response):
+            self.iterable = response(environ, start_response)
+        else:
+            self.iterable = response
+
+    def __iter__(self):
+        return iter(self.iterable)
+
+    def handleRequest(self):
+        self.db = dbstore.connect(self.cfg.dbPath, self.cfg.dbDriver)
+        self.rm = RepositoryManager(self.cfg, self.db)
+
+        # Proxied Conary requests can have all sorts of paths, so look for a
+        # header instead.
+        if 'x-conary-servername' in self.req.headers:
+            return self.handleConary()
+
+        elem = self.req.path_info_peek()
+        if elem in ('changeset', 'conary', 'repos'):
+            return self.handleConary()
+        elif elem in ('xmlrpc', 'xmlrpc-private', 'jsonrpc'):
+            return self.handleRpc()
+        elif elem == 'api':
+            return self.handleApi()
+        elif elem == 'catalog':
+            return self.handleCatalog()
+        else:
+            return self.handleWeb()
+
+    def handleApi(self):
+        self.req.path_info_pop()
+        if self.req.path_info_peek() in rest_site.RbuilderRestServer.urls:
+            # "restlib" API
+            return restHandler(self)
+        else:
+            # django API
+            pass

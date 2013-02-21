@@ -3,13 +3,13 @@
 #
 # All Rights Reserved
 #
-from mod_python import apache
-from mod_python import Cookie
-from mod_python.Session import BaseSession
+#from mod_python import apache
+#from mod_python import Cookie
+#from mod_python.Session import BaseSession
 
 COOKIE_NAME = 'pysid'
 
-class SqlSession(BaseSession):
+class SqlSession(object):#BaseSession):
     """An implementation of mod_python's Session support for an sqlite backend."""
     def __init__(self, req, client, sid = 0,
                  secret = None, timeout = 0, lock = 1):

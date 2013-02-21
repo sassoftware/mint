@@ -2,7 +2,7 @@
 # Copyright (c) rPath, Inc.
 #
 
-from mod_python import apache
+#from mod_python import apache
 
 import logging
 import os
@@ -25,7 +25,7 @@ from conary.repository.netrepos import netauth
 from conary.repository.netrepos import netserver
 from conary.web import webauth
 
-from conary.server import apachemethods
+#from conary.server import apachemethods
 
 log = logging.getLogger(__name__)
 
