@@ -19,20 +19,20 @@ import logging
 import sys
 import webob
 from conary import dbstore
+from conary.lib import coveragehook
+from webob import exc as web_exc
 
 from mint import config
-from mint import mint_error
 from mint.db.repository import RepositoryManager
 from mint.lib import mintutils
 from mint.logerror import logWebErrorAndEmail
 from mint.rest.api import site as rest_site
 from mint.rest.server import restHandler
 from mint.web import app
-from mint.web.rpchooks import rpcHandler
+from mint.web import rpchooks
 from mint.web.catalog import catalogHandler
 from mint.web.hooks.conaryhooks import conaryHandler
 from mint.web.webhandler import normPath, setCacheControl, HttpError
-from conary.lib import coveragehook
 log = logging.getLogger(__name__)
 
 
@@ -55,11 +55,7 @@ class application(object):
             self.req = self.requestFactory(environ)
         except:
             log.exception("Error parsing request:")
-            response = self.responseFactory(
-                    "<h1>400 Bad Request</h1>\n"
-                    "<p>The server was unable to parse the request\n",
-                    status='400 Bad Request',
-                    content_type='text/html')
+            response = web_exc.HTTPBadRequest()
             self.iterable = response(environ, start_response)
             return
         if not self.cfg:
@@ -68,14 +64,14 @@ class application(object):
 
         try:
             response = self.handleRequest()
+        except web_exc.HTTPException, exc:
+            response = exc
         except:
             exc_info = sys.exc_info()
             logWebErrorAndEmail(self.req, self.cfg, *exc_info)
-            response = self.responseFactory(
-                    "<h1>500 Internal Server Error</h1>\n"
-                    "<p>Something has gone terribly wrong. Check the logs for details.\n",
-                    status='500 Internal Server Error',
-                    content_type='text/html')
+            response = web_exc.HTTPInternalServerError(explanation=
+                    "Something has gone terribly wrong. "
+                    "Check the webserver logs for details.")
         finally:
             if self.rm:
                 self.rm.close()
@@ -104,7 +100,7 @@ class application(object):
         if elem in ('changeset', 'conary', 'repos'):
             return self.handleConary()
         elif elem in ('xmlrpc', 'xmlrpc-private', 'jsonrpc'):
-            return self.handleRpc()
+            return rpchooks.rpcHandler(self)
         elif elem == 'api':
             return self.handleApi()
         elif elem == 'catalog':

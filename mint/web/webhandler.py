@@ -1,18 +1,27 @@
 #
-# Copyright (c) 2005-2009 rPath, Inc.
+# Copyright (c) SAS Institute Inc.
 #
-# All rights reserved
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
 #
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+#
+
+
 import base64
+import gettext
 import kid
-import kid.parser
-from kid.parser import START, TEXT, END
-
-
 import os
 import time
-
-import gettext
+from kid.parser import START, TEXT, END
+from webob import exc as web_exc
 
 from conary.lib import util
 
@@ -235,40 +244,39 @@ def normPath(path):
 def getHttpAuth(req):
     # special header to pass a session id through
     # instead of a real http authorization token
-    if 'X-Session-Id' in req.headers_in:
-        return req.headers_in['X-Session-Id']
+    if 'X-Session-Id' in req.headers:
+        return req.headers['X-Session-Id']
 
     # pysid cookies are just as good as the session id - flex uses the browser
     # for authentication info and cookies are sent for free. (RBL-4276)
-    cookies = Cookie.get_cookies(req, Cookie.Cookie)
-    if 'pysid' in cookies:
-        return cookies['pysid'].value
+    if 'pysid' in req.cookies:
+        return req.cookies['pysid']
 
-    if not 'Authorization' in req.headers_in:
+    if not 'Authorization' in req.headers:
         authToken = ['anonymous', 'anonymous']
     else:
-        info = req.headers_in['Authorization'].split()
+        info = req.headers['Authorization'].split()
         if len(info) != 2 or info[0] != "Basic":
-            raise apache.SERVER_RETURN, apache.HTTP_BAD_REQUEST
+            raise web_exc.HTTPBadRequest()
 
         try:
             authString = base64.decodestring(info[1])
         except:
-            raise apache.SERVER_RETURN, apache.HTTP_BAD_REQUEST
+            raise web_exc.HTTPBadRequest()
 
         if authString.count(":") != 1:
-            raise apache.SERVER_RETURN, apache.HTTP_BAD_REQUEST
+            raise web_exc.HTTPBadRequest()
 
         authToken = authString.split(":")
         authToken[1] = util.ProtectedString(authToken[1])
 
-    entitlement = req.headers_in.get('X-Conary-Entitlement', None)
+    entitlement = req.headers.get('X-Conary-Entitlement', None)
     if entitlement:
         try:
             entitlement = entitlement.split()
             entitlement[1] = base64.decodestring(entitlement[1])
         except:
-            raise apache.SERVER_RETURN, apache.HTTP_BAD_REQUEST
+            raise web_exc.HTTPBadRequest()
     else:
         entitlement = [ None, None ]
 

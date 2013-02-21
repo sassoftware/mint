@@ -1966,7 +1966,7 @@ If you would not like to be %s %s of this project, you may resign from this proj
             project = self.getProject(projectId)
             hostname = project.get('hostname')
         if self.req:
-            target = self.req.hostname
+            target = self.req.host_port
         else:
             target = self.cfg.siteHost
         return "http://%s%sproject/%s/build?id=%d" % (target,
@@ -4575,8 +4575,7 @@ If you would not like to be %s %s of this project, you may resign from this proj
         self.callLog = callLog
 
         if self.req:
-            self.remoteIp = self.req.headers_in.get("X-Forwarded-For",
-                    self.req.connection.remote_ip)
+            self.remoteIp = self.req.client_addr
         else:
             self.remoteIp = "0.0.0.0"
 
@@ -4661,7 +4660,7 @@ If you would not like to be %s %s of this project, you may resign from this proj
 
     def getDownloadUrlTemplate(self, useRequest=True):
         if self.req and useRequest:
-            hostname = self.req.hostname
+            hostname = self.req.host_port
         else:
             hostname = self.cfg.siteHost
         return "http://%s%sdownloadImage?fileId=%%d" % (hostname, self.cfg.basePath)
