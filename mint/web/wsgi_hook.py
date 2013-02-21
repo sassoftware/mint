@@ -30,9 +30,9 @@ from mint.rest.api import site as rest_site
 from mint.rest.server import restHandler
 from mint.web import app
 from mint.web import rpchooks
-from mint.web.catalog import catalogHandler
-from mint.web.hooks.conaryhooks import conaryHandler
-from mint.web.webhandler import normPath, setCacheControl, HttpError
+#from mint.web.catalog import catalogHandler
+#from mint.web.hooks.conaryhooks import conaryHandler
+#from mint.web.webhandler import normPath, setCacheControl, HttpError
 log = logging.getLogger(__name__)
 
 
@@ -116,3 +116,7 @@ class application(object):
         else:
             # django API
             pass
+
+    def handleWeb(self):
+        webfe = app.MintApp(self.req, self.cfg, db=self.db)
+        return webfe._handle()
