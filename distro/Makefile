@@ -37,6 +37,10 @@ install: default-install
 	# gunicorn
 	install -D -m0644 gunicorn.conf $(DESTDIR)/etc/gunicorn.conf
 	install -D -m0644 gunicorn.sysconfig $(DESTDIR)/etc/sysconfig/gunicorn
+	# nginx
+	install -D -m0644 nginx.conf $(DESTDIR)/etc/nginx/nginx.conf
+	install -D -m0644 nginx-rbuilder.conf $(DESTDIR)/etc/nginx/conf.d/01_rbuilder.conf
+	install -D -m0644 nginx.mime.types $(DESTDIR)/etc/nginx/mime.types
 	# rMake node configuration
 	install -D -m0644 rmake2/noderc.main $(DESTDIR)/etc/rmake/node.d/20_rbuilder.conf
 	install -D -m0644 rmake2/serverrc.main $(DESTDIR)/etc/rmake/server.d/20_rbuilder.conf
