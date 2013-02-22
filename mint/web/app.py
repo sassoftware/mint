@@ -18,7 +18,6 @@ import kid
 import sys
 import time
 import webob
-from conary.repository.netrepos.netauth import ValidPasswordToken
 from webob import exc as web_exc
 
 from mint import shimclient
@@ -26,7 +25,6 @@ from mint import userlevels
 from mint.helperfuncs import getProjectText, weak_signature_call
 from mint.mint_error import MaintenanceMode, MintError
 from mint.web import fields
-from mint.web import webhandler
 from mint.web.admin import AdminHandler
 from mint.web.site import SiteHandler
 from mint.web.webhandler import WebHandler, normPath
@@ -49,7 +47,8 @@ class MintApp(WebHandler):
     user = None
     responseFactory = webob.Response
 
-    def __init__(self, req, cfg, repServer = None, db=None, session=None):
+    def __init__(self, req, cfg, repServer = None, db=None, session=None,
+            authToken=None):
         self.req = req
         self.cfg = cfg
         self.db = db
@@ -71,6 +70,7 @@ class MintApp(WebHandler):
         if session is None:
             session = {}
         self.session = session
+        self.authToken = authToken
 
         self.siteHandler = SiteHandler()
         self.adminHandler = AdminHandler()
@@ -82,12 +82,8 @@ class MintApp(WebHandler):
         if method not in allowed:
             return web_exc.HTTPMethodNotAllowed(allow=allowed)
 
-        authToken = webhandler.getHttpAuth(self.req)
-        if isinstance(authToken, basestring):
-            authToken = self._getCookieAuth(authToken)
-            if not authToken:
-                authToken = ('anonymous', 'anonymous')
-        self.authToken = authToken
+        if not self.authToken:
+            self.authToken = ('anonymous', 'anonymous')
 
         # open up a new client with the retrieved authToken
         self.client = shimclient.ShimMintClient(self.cfg, self.authToken,
@@ -200,19 +196,3 @@ class MintApp(WebHandler):
             urlHandler = self.siteHandler
         context['cmd'] = self.req.path_info
         return urlHandler.handle(context)
-
-    def _getCookieAuth(self, pysid):
-        if len(pysid) != 32:
-            return None
-        if pysid != self.session.id:
-            self.session.id = pysid
-            self.session.load()
-        authToken = self.session.get('authToken', None)
-        if not authToken:
-            return None
-        if authToken[1] == '':
-            # Pre-authenticated session
-            authToken = (authToken[0], ValidPasswordToken)
-            return authToken
-        # Discard old password-containing sessions to force a fresh login
-        return None

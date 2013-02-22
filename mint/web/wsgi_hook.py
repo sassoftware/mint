@@ -21,6 +21,7 @@ import webob
 from beaker import session
 from conary import dbstore
 from conary.lib import coveragehook
+from conary.repository.netrepos import netauth
 from webob import exc as web_exc
 
 from mint import config
@@ -31,9 +32,9 @@ from mint.rest.api import site as rest_site
 from mint.rest.server import restHandler
 from mint.web import app
 from mint.web import rpchooks
+from mint.web import webhandler
 #from mint.web.catalog import catalogHandler
 #from mint.web.hooks.conaryhooks import conaryHandler
-#from mint.web.webhandler import normPath, setCacheControl, HttpError
 log = logging.getLogger(__name__)
 
 
@@ -41,6 +42,7 @@ class application(object):
     requestFactory = webob.Request
     responseFactory = webob.Response
 
+    authToken = None
     environ = None
     cfg = None
     req = None
@@ -98,6 +100,7 @@ class application(object):
     def handleRequest(self):
         self.db = dbstore.connect(self.cfg.dbPath, self.cfg.dbDriver)
         self.rm = RepositoryManager(self.cfg, self.db)
+        self.authToken = self._getAuth()
 
         # Proxied Conary requests can have all sorts of paths, so look for a
         # header instead.
@@ -126,9 +129,28 @@ class application(object):
             pass
 
     def handleWeb(self):
-        webfe = app.MintApp(self.req, self.cfg, db=self.db,
-                session=self.session)
+        webfe = app.MintApp(self.req, self.cfg,
+                db=self.db,
+                session=self.session,
+                authToken=self.authToken,
+                )
         return webfe._handle()
+
+    def _getAuth(self):
+        authToken = webhandler.getHttpAuth(self.req)
+        if not isinstance(authToken, basestring):
+            return authToken
+        if authToken != self.session.id:
+            self.session.id = authToken
+            self.session.load()
+        authToken = self.session.get('authToken', None)
+        if not authToken:
+            return None
+        if authToken[1] == '':
+            # Pre-authenticated session
+            return (authToken[0], netauth.ValidPasswordToken)
+        # Discard old password-containing sessions to force a fresh login
+        return None
 
     def _persistSession(self, response):
         session = self.session

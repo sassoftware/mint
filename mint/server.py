@@ -60,7 +60,6 @@ from conary.lib.http import request as cny_req
 from conary.repository.errors import TroveNotFound, UserNotFound
 from conary.repository import netclient
 from conary.repository.netrepos.reposlog import RepositoryCallLogger as CallLogger
-from conary.repository.netrepos.netauth import ValidPasswordToken
 from conary import errors as conary_errors
 
 from mcp import client as mcp_client
@@ -253,19 +252,11 @@ class MintServer(object):
 
         try:
             try:
-                # check authorization
-
-                # grab authToken from a session id if passed a session id
-                # the session id from the client is a hmac-signed string
-                # containing the actual session id.
-                if isinstance(authToken, basestring):
-                    authToken = self._getCookieAuth(authToken)
-                    if not authToken:
-                        # Until the session is proven valid, assume anonymous
-                        # access -- we don't want a broken session preventing
-                        # anonymous access or logins.
-                        authToken = ('anonymous', 'anonymous')
-
+                if not authToken:
+                    # Until the session is proven valid, assume anonymous
+                    # access -- we don't want a broken session preventing
+                    # anonymous access or logins.
+                    authToken = ('anonymous', 'anonymous')
                 auth = self.users.checkAuth(authToken)
                 authToken = (authToken[0], '')
                 self.authToken = authToken
@@ -319,22 +310,6 @@ class MintServer(object):
             prof.stopXml(methodName)
             if self.restDb:
                 self.restDb.reset()
-
-    def _getCookieAuth(self, pysid):
-        if len(pysid) != 32:
-            return None
-        d = self.sessions.load(pysid)
-        if not d:
-            return None
-        authToken = d.get('_data', []).get('authToken', None)
-        if not authToken:
-            return None
-        if authToken[1] == '':
-            # Pre-authenticated session
-            authToken = (authToken[0], ValidPasswordToken)
-            return authToken
-        # Discard old password-containing sessions to force a fresh login
-        return None
 
     def __getattr__(self, key):
         if key[0] != '_':
@@ -3199,26 +3174,6 @@ If you would not like to be %s %s of this project, you may resign from this proj
         buildDict = self.builds.get(buildId)
         return { 'status': buildDict['status'],
                 'message': buildDict['statusMessage'] }
-
-    # session management
-    @private
-    def loadSession(self, sid):
-        return self.sessions.load(sid)
-
-    @private
-    def saveSession(self, sid, data):
-        self.sessions.save(sid, data)
-        return True
-
-    @private
-    def deleteSession(self, sid):
-        self.sessions.delete(sid)
-        return True
-
-    @private
-    def cleanupSessions(self):
-        self.sessions.cleanup()
-        return True
 
     ### Site reports ###
     @private

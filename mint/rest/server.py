@@ -29,8 +29,8 @@ def restHandler(context):
     restDb = restDatabase.Database(context.cfg, mintDb)
     controller = site.RbuilderRestServer(context.cfg, restDb)
     handler = wsgi.WSGIHandler(controller)
-    handler.addCallback(auth.AuthenticationCallback( context.cfg, restDb,
-        controller))
+    handler.addCallback(auth.AuthenticationCallback(context.cfg, restDb,
+        controller, context.authToken))
     handler.addCallback(formatter.FormatCallback(controller))
     handler.addCallback(error.ErrorCallback(controller))
     return handler.handle(context.req, pathPrefix=context.req.script_name)
