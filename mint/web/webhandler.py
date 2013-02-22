@@ -17,9 +17,9 @@
 
 import base64
 import gettext
+import logging
 import kid
 import os
-import time
 from kid.parser import START, TEXT, END
 from webob import exc as web_exc
 
@@ -33,20 +33,9 @@ from mint import shimclient
 from mint.lib import maillib
 from mint.lib import profile
 from mint import users
-from mint.session import SqlSession
 
-class HttpError(Exception):
-    code = -1
-    def __str__(self):
-        return "HTTP error %d" % self.code
-class HttpOK(HttpError):                code = 200
-class HttpPartialContent(HttpError):    code = 206
-class HttpMoved(HttpError):             code = 301
-class HttpMovedTemporarily(HttpError):  code = 302
-class HttpBadRequest(HttpError):        code = 400
-class HttpForbidden(HttpError):         code = 403
-class HttpNotFound(HttpError):          code = 404
-class HttpMethodNotAllowed(HttpError):  code = 405
+log = logging.getLogger(__name__)
+
 
 class WebHandler(object):
     """Mixin class for various helpful web methods."""
@@ -111,33 +100,23 @@ class WebHandler(object):
             while location and location[0] == '/':
                 location = location[1:]
             location = self.baseUrl + location
-        setCacheControl(self.req, strict=True)
-        self.req.headers_out['Location'] = location
-
         if temporary:
-            raise HttpMovedTemporarily
+            raise web_exc.HTTPFound(location=location)
         else:
-            raise HttpMoved
+            raise web_exc.HTTPMovedPermanently(location=location)
 
     def _redirectOldLinks(self, location=''):
         """
         Mechanism to redirect old UI links to the new UI when not prefixed by
         /web/
         """
-        redirectIndex = self.req.get_options().get('redirectIndex', False)
-        if redirectIndex:
-            self._redirectHttp('ui/' + location)
+        self._redirectHttp('ui/' + location)
 
     def _clearAuth(self):
         self.auth = users.Authorization()
         self.authToken = ('anonymous', 'anonymous')
-        #Add additional data to clear here
-        if 'firstTimer' in self.session.keys():
-            del self.session['firstTimer']
-
         self.session['authToken'] = self.authToken
-        if self.session and isinstance(self.session, SqlSession):
-            self.session.invalidate()
+        self.session.invalidate()
 
     def _resetPasswordById(self, userId):
         newpw = users.newPassword()
@@ -164,39 +143,7 @@ class WebHandler(object):
                        user.getEmail(),
                        "%s password reset"%self.cfg.productName, message)
         else:
-            self.req.log_error("The password for %s has been reset to %s" % (user.username, newpw))
-
-    def _protocol(self):
-        protocol = 'https'
-        if self.req.subprocess_env.get('HTTPS', 'off') != 'on':
-            protocol = 'http'
-        return protocol
-
-    def _session_start(self, rememberMe = False):
-        sid = self.fields.get('sid', None)
-
-        sessionClient = shimclient.ShimMintClient(self.cfg,
-                (self.cfg.authUser, self.cfg.authPass), self.db)
-
-        self.session = SqlSession(self.req, sessionClient,
-            sid = sid,
-            timeout = 86400,
-            lock = False)
-
-        if self.session.is_new():
-            self.session['rememberMe'] = rememberMe
-        else:
-            rememberMe = self.session['rememberMe']
-
-        c = self.session.make_cookie()
-
-        if rememberMe:
-            c.expires = 1209600 + time.time()
-            # ensure timeout is 2 weeks for remembered sessions
-            if self.session.timeout() != 1209600:
-                self.session.set_timeout(1209600)
-
-        self.req.err_headers_out.add('Set-Cookie', str(c))
+            log.info("The password for %s has been reset to %s" % (user.username, newpw))
 
     # Methods used to stash away info/error messages into the session.
     # These variables are retrieved and deleted automatically by
@@ -208,8 +155,7 @@ class WebHandler(object):
     def _setInfo(self, message):
         self.session['infoMsg'] = message
         self.infoMsg = message
-        if (isinstance(self.session, SqlSession)):
-            self.session.save()
+        self.session.save()
 
     def _getErrors(self):
         return self.session.setdefault('errorMsgList', [])
@@ -218,15 +164,13 @@ class WebHandler(object):
         errorMsgList = self._getErrors()
         errorMsgList.append(message)
         self.session['errorMsgList'] = errorMsgList
-        if (isinstance(self.session, SqlSession)):
-            self.session.save()
+        self.session.save()
 
     def _clearAllMessages(self):
         for key in ('infoMsg', 'errorMsgList'):
             if self.session.has_key(key):
                 del self.session[key]
-        if (isinstance(self.session, SqlSession)):
-            self.session.save()
+        self.session.save()
 
 def normPath(path):
     """Normalize a web path by prepending a / if missing, and appending
@@ -322,39 +266,3 @@ def make_i18n_filter(localeDir, locale = 'en'):
             yield (ev, item)
 
     return i18n_filter
-
-
-def setCacheControl(req, strict=False):
-    """
-    Set the Cache-Control header for dynamically generated content.
-
-    These flags are used:
-     * private - Responses are specific to each user agent, so only
-       private caches (like the one built into the user agent, as
-       opposed to a shared proxy cache) may store. We can probably
-       omit this if the user is not logged in as it may save
-       some traffic.
-     * max-age=0 - Content is stale immediately after it is
-       received.
-     * must-revalidate - Always ask the server for another copy
-       once content is stale, which due to the above directive
-       means every time.
-
-    Effectively, these three will allow the cache to store
-    responses, but never use them to respond to a request without
-    first asking the server to fufill the request and then
-    comparing the fresh content from the server to the previous
-    cached value. This way, client conditions like
-    If-Modified-Since can still work since the cache can check
-    them against the now revalidated cached data.
-
-    If C{strict} is C{True}, "no-cache" will be used in place of
-    the "max-age" and "must-revalidate" fields. This should be used
-    for contentless responses such as redirects, or temporary
-    issues like bad logins.
-    """
-    if strict:
-        cacheFlags = 'private, no-cache'
-    else:
-        cacheFlags = 'private, must-revalidate, max-age=0'
-    req.err_headers_out['Cache-control'] = cacheFlags

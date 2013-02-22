@@ -32,6 +32,7 @@ rbuilder_dirs = {
     'proxy-contents':               (0775, ('root', 'apache')),
     'repos':                        (0775, ('root', 'apache')),
     'run':                          (0775, ('root', 'apache')),
+    'sessions':                     (0770, ('root', 'apache')),
     'storage':                      (0775, ('root', 'apache')),
     'templates':                    (0775, ('root', 'apache')),
     'tmp':                          (0775, ('root', 'apache')),

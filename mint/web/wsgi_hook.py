@@ -18,6 +18,7 @@
 import logging
 import sys
 import webob
+from beaker import session
 from conary import dbstore
 from conary.lib import coveragehook
 from webob import exc as web_exc
@@ -45,6 +46,7 @@ class application(object):
     req = None
     db = None
     rm = None
+    session = None
     iterable = None
 
     def __init__(self, environ, start_response):
@@ -61,6 +63,14 @@ class application(object):
         if not self.cfg:
             # Cache config in the class
             type(self).cfg = config.getConfig()
+        self.session = session.SessionObject(environ,
+                invalidate_corrupt=True,
+                type='file',
+                data_dir=self.cfg.getSessionDir(),
+                key='pysid',
+                secure=True,
+                httponly=True,
+                )
 
         try:
             response = self.handleRequest()
@@ -79,10 +89,8 @@ class application(object):
                 self.db.close()
             coveragehook.save()
             logging.shutdown()
-        if callable(response):
-            self.iterable = response(environ, start_response)
-        else:
-            self.iterable = response
+        self._persistSession(response)
+        self.iterable = response(environ, start_response)
 
     def __iter__(self):
         return iter(self.iterable)
@@ -118,5 +126,18 @@ class application(object):
             pass
 
     def handleWeb(self):
-        webfe = app.MintApp(self.req, self.cfg, db=self.db)
+        webfe = app.MintApp(self.req, self.cfg, db=self.db,
+                session=self.session)
         return webfe._handle()
+
+    def _persistSession(self, response):
+        session = self.session
+        if not session.accessed():
+            return
+        session.persist()
+        headers = session.__dict__['_headers']
+        if not headers['set_cookie']:
+            return
+        cookie = headers['cookie_out']
+        if cookie:
+            response.headers.add('Set-Cookie', cookie)

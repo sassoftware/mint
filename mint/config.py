@@ -420,3 +420,6 @@ class MintConfig(conarycfg.ConfigFile):
         if password:
             out['password'] = password
         return out
+
+    def getSessionDir(self):
+        return os.path.join(self.dataPath, 'sessions')
