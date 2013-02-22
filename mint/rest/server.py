@@ -30,7 +30,7 @@ def restHandler(context):
     controller = site.RbuilderRestServer(context.cfg, restDb)
     handler = wsgi.WSGIHandler(controller)
     handler.addCallback(auth.AuthenticationCallback(context.cfg, restDb,
-        controller, context.authToken))
+        controller))
     handler.addCallback(formatter.FormatCallback(controller))
     handler.addCallback(error.ErrorCallback(controller))
     return handler.handle(context.req, pathPrefix=context.req.script_name)

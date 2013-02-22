@@ -33,9 +33,9 @@ from mint.logerror import logWebErrorAndEmail
 from mint.rest.api import site as rest_site
 from mint.rest.server import restHandler
 from mint.web import app
+from mint.web import catalog
 from mint.web import rpchooks
 from mint.web import webhandler
-#from mint.web.catalog import catalogHandler
 #from mint.web.hooks.conaryhooks import conaryHandler
 log = logging.getLogger(__name__)
 
@@ -123,7 +123,8 @@ class application(object):
         elif elem == 'api':
             return self.handleApi()
         elif elem == 'catalog':
-            return self.handleCatalog()
+            self.req.path_info_pop()
+            return catalog.catalogHandler(self)
         else:
             return self.handleWeb()
 

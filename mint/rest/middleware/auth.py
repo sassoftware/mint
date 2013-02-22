@@ -59,11 +59,10 @@ def noDisablement(method):
 
 class AuthenticationCallback(object):
 
-    def __init__(self, cfg, db, controller, authToken):
+    def __init__(self, cfg, db, controller):
         self.cfg = cfg
         self.db = db
         self.controller = controller
-        self.authToken = authToken
 
     def _checkAuth(self, authToken):
         mintClient = shimclient.ShimMintClient(self.cfg, authToken,
@@ -76,9 +75,10 @@ class AuthenticationCallback(object):
     def processRequest(self, request):
         mintClient = None
         mintAuth = None
-        if self.authToken:
-            mintClient, mintAuth = self._checkAuth(self.authToken)
-            request.auth = self.authToken
+        authToken = request._req.environ['mint.authToken']
+        if authToken:
+            mintClient, mintAuth = self._checkAuth(authToken)
+            request.auth = authToken
         if not mintAuth:
             # No authentication was successful.
             request.auth = request.mintClient = request.mintAuth = None
