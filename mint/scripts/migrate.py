@@ -5463,3 +5463,12 @@ class MigrateTo_66(SchemaMigration):
         self.db.createIndex('ProductVersions', 'ProductVersions_uq',
             'projectId,label', unique=True)
         return True
+
+
+class MigrateTo_67(SchemaMigration):
+    '''beryl'''
+    Version = (67, 0)
+
+    def migrate(self):
+        drop_tables(self.db, 'Sessions')
+        return True

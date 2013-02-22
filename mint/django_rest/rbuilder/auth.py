@@ -1,65 +1,33 @@
 #
-# Copyright (c) 2011 rPath, Inc.
+# Copyright (c) SAS Institute Inc.
 #
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+#
+
+
 from conary.repository.netrepos.netauth import ValidPasswordToken
-from mint.django_rest.rbuilder.models import Sessions
 from mint.django_rest.rbuilder.users.models import User
 from mint.django_rest.rbuilder.manager import rbuildermanager
 from django.db import transaction
 from django.db.utils import IntegrityError
 from mint.lib import auth_client
 from hashlib import md5
-import base64
-import cPickle
 import time
 
-def getCookieAuth(request):
-    # the pysid cookie contains the session reference that we can use to
-    # look up the proper credentials
-    # we need the underlying request object since restlib doesn't
-    # have support for cookies yet.
-    try:
-        cookies = request.COOKIES
-    except:
-        cookies = {}
-    if 'pysid' not in cookies:
-        return (None, None)
 
-    sid = cookies['pysid']
-
-    try:
-        session = Sessions.objects.get(sid=sid)
-        d = cPickle.loads(str(session.data))
-        username, password = d['_data']['authToken']
-        if password == '':
-            password = ValidPasswordToken
-            return (username, password)
-        # Discard old password-containing sessions to force a fresh login
-    except:
-        pass
-        
-    return (None, None)
-        
 def getAuth(request):
-    auth_header = {}
-    if 'Authorization' in request.META:
-        auth_header = {'Authorization': request.META['Authorization']}
-    elif 'HTTP_AUTHORIZATION' in request.META:
-        auth_header =  {'Authorization': request.META['HTTP_AUTHORIZATION']}
+    return request.META['mint.authToken'] or (None, None)
 
-    if 'Authorization' in auth_header:
-        authType, user_pass = auth_header['Authorization'].split(' ', 1)
-        if authType == 'Basic':
-            try:
-                user_name, password = base64.decodestring(user_pass
-                        ).split(':', 1)
-                return (user_name, password)
-            except:
-                pass
-    else:
-        return getCookieAuth(request)
-        
-    return (None, None)
 
 def isAdmin(user):
     if not isinstance(user, User):

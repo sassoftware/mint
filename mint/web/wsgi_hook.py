@@ -16,12 +16,14 @@
 
 
 import logging
+import os
 import sys
 import webob
 from beaker import session
 from conary import dbstore
 from conary.lib import coveragehook
 from conary.repository.netrepos import netauth
+from django.core.handlers import wsgi as djwsgi
 from webob import exc as web_exc
 
 from mint import config
@@ -43,13 +45,14 @@ class application(object):
     responseFactory = webob.Response
 
     authToken = None
-    environ = None
     cfg = None
-    req = None
     db = None
+    environ = None
+    iterable = None
+    req = None
     rm = None
     session = None
-    iterable = None
+    start_response = None
 
     def __init__(self, environ, start_response):
         coveragehook.install()
@@ -74,6 +77,7 @@ class application(object):
                 httponly=True,
                 )
 
+        self.start_response = start_response
         try:
             response = self.handleRequest()
         except web_exc.HTTPException, exc:
@@ -91,8 +95,11 @@ class application(object):
                 self.db.close()
             coveragehook.save()
             logging.shutdown()
-        self._persistSession(response)
-        self.iterable = response(environ, start_response)
+        if callable(response):
+            self._persistSession(response)
+            self.iterable = response(environ, start_response)
+        else:
+            self.iterable = response
 
     def __iter__(self):
         return iter(self.iterable)
@@ -101,6 +108,7 @@ class application(object):
         self.db = dbstore.connect(self.cfg.dbPath, self.cfg.dbDriver)
         self.rm = RepositoryManager(self.cfg, self.db)
         self.authToken = self._getAuth()
+        self.req.environ['mint.authToken'] = self.authToken
 
         # Proxied Conary requests can have all sorts of paths, so look for a
         # header instead.
@@ -120,13 +128,16 @@ class application(object):
             return self.handleWeb()
 
     def handleApi(self):
+        script_name, path_info = self.req.script_name, self.req.path_info
         self.req.path_info_pop()
         if self.req.path_info_peek() in rest_site.RbuilderRestServer.urls:
             # "restlib" API
             return restHandler(self)
-        else:
-            # django API
-            pass
+        # django API
+        os.environ.setdefault('DJANGO_SETTINGS_MODULE',
+                'mint.django_rest.settings')
+        self.req.script_name, self.req.path_info = script_name, path_info
+        return djwsgi.WSGIHandler()(self.req.environ, self.start_response)
 
     def handleWeb(self):
         webfe = app.MintApp(self.req, self.cfg,
@@ -139,7 +150,7 @@ class application(object):
     def _getAuth(self):
         authToken = webhandler.getHttpAuth(self.req)
         if not isinstance(authToken, basestring):
-            return authToken
+            return authToken[:2]
         if authToken != self.session.id:
             self.session.id = authToken
             self.session.load()
