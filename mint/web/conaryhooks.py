@@ -2,17 +2,14 @@
 # Copyright (c) rPath, Inc.
 #
 
-#from mod_python import apache
-
 import logging
 import os
 import base64
-
 import rpath_capsule_indexer
+from webob import exc as web_exc
 
 from mint import maintenance
 from mint.db import database as mdb
-from mint.db.sessiondb import SessionsTable
 from mint.rest.db import database as rdb
 from mint.rest.errors import ProductNotFound
 from mint.web import cresthandler
@@ -21,11 +18,8 @@ from mint.web.webhandler import normPath, getHttpAuth
 from conary import errors as cerrors
 from conary.repository import transport
 from conary.repository.netrepos import proxy
-from conary.repository.netrepos import netauth
 from conary.repository.netrepos import netserver
-from conary.web import webauth
-
-#from conary.server import apachemethods
+from conary.server import wsgi_hooks
 
 log = logging.getLogger(__name__)
 
@@ -40,7 +34,7 @@ def post(port, isSecure, repos, cfg, db, req, authToken):
             skippedPart = '/'.join(items[:4])
             return cresthandler.handleCrest(skippedPart,
                     cfg, db, repos, req, authToken=authToken)
-    if req.headers_in['Content-Type'] == "text/xml":
+    if req.headers['Content-Type'] == "text/xml":
         if not repos:
             return apache.HTTP_NOT_FOUND
         return apachemethods.post(port, isSecure, repos, req,
@@ -69,25 +63,6 @@ def get(port, isSecure, repos, cfg, db, req, authToken, manager):
             return cresthandler.handleCrest(skippedPart,
                     cfg, db, repos, req, authToken=authToken)
     return apache.HTTP_NOT_FOUND
-
-
-def _getRestDb(context):
-    mintDb = mdb.Database(context.cfg, context.db)
-    restDb = rdb.Database(context.cfg, mintDb, dbOnly=True)
-    return restDb
-
-
-def _addCapsuleConfig(context, conaryReposCfg, repName):
-    restDb = _getRestDb(context)
-    indexer = restDb.capsuleMgr.getIndexer(repName)
-    if not indexer or not indexer.hasSources():
-        return
-    conaryReposCfg.excludeCapsuleContents = True
-    # These settings are only used by the filter
-    conaryReposCfg.injectCapsuleContentServers = [repName]
-    conaryReposCfg.capsuleServerUrl = "direct"
-    restDb.capsuleIndexer = indexer
-    return restDb
 
 
 def proxyExternalRestRequest(context, fqdn, handle, authToken):
@@ -249,175 +224,206 @@ class ProxyRepositoryServer(proxy.ProxyRepositoryServer, CapsuleFilterMixIn):
     pass
 
 
-def conaryHandler(context):
-    req, cfg, manager = context.req, context.cfg, context.manager
-    maintenance.enforceMaintenanceMode(cfg)
+class MintConaryHandler(wsgi_hooks.ConaryHandler):
 
-    paths = normPath(req.uri).split("/")
-    fqdn = hostName = None
-    if "repos" in paths:
-        hostPart = paths[paths.index('repos') + 1]
-        if '.' in hostPart:
-            fqdn = hostPart
-            if fqdn.endswith('.'):
-                fqdn = fqdn[:-1]
+    def __init__(self, context):
+        wsgi_hooks.ConaryHandler.__init__(self, None)
+        self.context = context
+
+    def _loadCfg(self):
+        req, cfg, manager = self.context.req, self.context.cfg, self.context.rm
+        maintenance.enforceMaintenanceMode(cfg)
+
+        paths = normPath(req.path).split("/")
+        fqdn = hostName = None
+        if req.path_info_peek() == 'repos':
+            req.path_info_pop()
+            hostPart = req.path_info_pop()
+            if not hostPart:
+                raise web_exc.HTTPNotFound()
+            if '.' in hostPart:
+                fqdn = hostPart
+                if fqdn.endswith('.'):
+                    fqdn = fqdn[:-1]
+            else:
+                hostName = hostPart
+        elif 'x-conary-servername' in req.headers:
+            fqdn = req.headers['x-conary-servername']
         else:
-            hostName = hostPart
-    elif 'x-conary-servername' in req.headers_in:
-        fqdn = req.headers_in['x-conary-servername']
-    else:
-        fqdn = req.hostname
+            fqdn = req.host.split(':')[0]
 
-    method = req.method.upper()
-    port = req.connection.local_addr[1]
-    secure = (req.subprocess_env.get('HTTPS', 'off') == 'on')
+        method = req.method.upper()
+        port = req.client_addr
+        self.isSecure = req.scheme == 'https'
 
-    # resolve the conary repository names
-    try:
-        if fqdn:
-            handle = manager.getRepositoryFromFQDN(fqdn)
-        else:
-            handle = manager.getRepositoryFromShortName(hostName)
-    except ProductNotFound:
-        handle = None
-
-    # By now we must know the FQDN, either from the request itself or from
-    # the project looked up in the database.
-    if handle:
-        fqdn = handle.fqdn
-    elif not fqdn:
-        log.warning("Unknown project %s in request for %s", hostName,
-                req.uri)
-        return apache.HTTP_NOT_FOUND
-
-    # Determine the user's authorization with respect to the rBuilder
-    # project, if there is one.
-    authToken = _getAuth(context)
-    if handle:
-        # Convert mint user/pass into abstract repository roles, if the
-        # user is successfully authenticated to mint.
+        # resolve the conary repository names
         try:
-            authToken = handle.convertAuthToken(authToken, useRepoDb=True)
+            if fqdn:
+                handle = manager.getRepositoryFromFQDN(fqdn)
+            else:
+                handle = manager.getRepositoryFromShortName(hostName)
         except ProductNotFound:
-            # User doesn't have read permission, so they can't see the
-            # repository at all. However there are some unauthenticated calls,
-            # like GETing and PUTting changesets, so just downgrade the auth
-            # token and leave it at that.
-            authToken.user = authToken.password = 'anonymous'
+            handle = None
 
-    # TODO: Push restdb setup and capsule filtering down to repository.py,
-    # otherwise shims won't have access to it.
-    if handle and handle.hasDatabase:
-        # Local database
-        serverCfg = handle.getNetServerConfig()
-        restDb = _addCapsuleConfig(context, serverCfg, fqdn)
-        netServer = handle.getServer(netserver.NetworkRepositoryServer,
-                serverCfg)
-        if restDb:
-            proxyClass = CachingRepositoryServer
-            serverCfg.proxyContentsDir = cfg.proxyContentsDir
+        # By now we must know the FQDN, either from the request itself or from
+        # the project looked up in the database.
+        if handle:
+            fqdn = handle.fqdn
+        elif not fqdn:
+            log.warning("Unknown project %s in request for %s",
+                    hostName, req.url)
+            raise web_exc.HTTPNotFound()
+
+        # Determine the user's authorization with respect to the rBuilder
+        # project, if there is one.
+        authToken = self._getAuth()
+        if handle:
+            # Convert mint user/pass into abstract repository roles, if the
+            # user is successfully authenticated to mint.
+            try:
+                authToken = handle.convertAuthToken(authToken, useRepoDb=True)
+            except ProductNotFound:
+                # User doesn't have read permission, so they can't see the
+                # repository at all. However there are some unauthenticated calls,
+                # like GETing and PUTting changesets, so just downgrade the auth
+                # token and leave it at that.
+                authToken.user = authToken.password = 'anonymous'
+
+        # TODO: Push restdb setup and capsule filtering down to repository.py,
+        # otherwise shims won't have access to it.
+        if handle and handle.hasDatabase:
+            # Local database
+            serverCfg = handle.getNetServerConfig()
+            restDb = self._addCapsuleConfig(serverCfg, fqdn)
+            netServer = handle.getServer(netserver.NetworkRepositoryServer,
+                    serverCfg)
+            if restDb:
+                proxyClass = CachingRepositoryServer
+                serverCfg.proxyContentsDir = cfg.proxyContentsDir
+            else:
+                proxyClass = proxy.SimpleRepositoryFilter
+            proxyServer = proxyClass(serverCfg, handle.getURL(), netServer)
+            if restDb:
+                proxyServer.setRestDb(restDb)
+            contentsStore = netServer.repos.contentsStore
+            # TODO: This shim server doesn't do capsule filtering, which may
+            # affect the conary REST API.
+            shimRepo = handle.getShimServer()
         else:
-            proxyClass = proxy.SimpleRepositoryFilter
-        proxyServer = proxyClass(serverCfg, handle.getURL(), netServer)
+            # Remote repository
+            netServer = contentsStore = None
+            overrideUrl = handle.getURL() if handle else None
+            serverCfg, proxyServer, shimRepo = self._getProxyServer(fqdn,
+                    withCapsuleFilter=(handle is not None),
+                    overrideUrl=overrideUrl,
+                    )
+
+        self.auth = authToken
+        self.repositoryServer = netServer
+        self.shimServer = shimRepo
+        self.proxyServer = proxyServer
+        self.contentsStore = contentsStore
+
+    def _loadAuth(self):
+        pass
+
+        #if proxyRestRequest:
+        #    # use proxyServer config for http proxy and auth data
+        #    return proxyExternalRestRequest(context, fqdn, handle, authToken)
+        #if method == "POST":
+        #    return post(port, secure, (proxyServer, shimRepo), cfg, context.db,
+        #            req, authToken)
+        #elif method == "GET":
+        #    return get(port, secure, (proxyServer, shimRepo), cfg, context.db,
+        #            req, authToken, manager)
+        #elif method == "PUT":
+        #    if proxyServer:
+        #        return apachemethods.putFile(port, secure, proxyServer, req)
+        #    else:
+        #        return apache.HTTP_NOT_FOUND
+        #else:
+        #    return apache.HTTP_METHOD_NOT_ALLOWED
+
+
+    def _getAuth(self):
+        authToken = getHttpAuth(self.request)
+        if authToken is None:
+            authToken = ('anonymous', 'anonymous')
+        authToken = netserver.AuthToken(*authToken)
+        authToken.remote_ip = self.request.client_addr
+        return authToken
+
+    def _getProxyServer(self, fqdn, withCapsuleFilter, overrideUrl):
+        """Create a ProxyRepositoryServer for remote proxied calls."""
+        cfg, req = self.context.cfg, self.request
+
+        serverCfg = netserver.ServerConfig()
+        serverCfg.proxyContentsDir = cfg.proxyContentsDir
+        serverCfg.changesetCacheDir = cfg.proxyChangesetCacheDir
+        serverCfg.tmpDir = cfg.proxyTmpDir
+        serverCfg.proxyMap = cfg.getProxyMap()
+        if overrideUrl:
+            serverCfg.repositoryMap.append((fqdn, overrideUrl))
+
+        restDb = None
+        if withCapsuleFilter:
+            restDb = self._addCapsuleConfig(serverCfg, fqdn)
+        if restDb:
+            serverClass = ProxyRepositoryServer
+        else:
+            serverClass = proxy.ProxyRepositoryServer
+
+        # Conary >= 1.1.26 proxies will add a Via header for all
+        # requests forwarded for the Conary Proxy. If it contains our
+        # IP address and port, then we've already handled this request.
+        via = req.headers.get("Via", "")
+        myHostPort = "%s:%s" % (req.server_name, req.server_port)
+        if myHostPort in via:
+            log.error('Internal Conary Proxy was attempting an infinite '
+                    'loop (request %s, via %s)' % (req.host, via))
+            raise web_exc.HTTPBadGateway()
+
+        if ':' in cfg.siteDomainName:
+            domain = cfg.siteDomainName
+        else:
+            domain = cfg.siteDomainName + ':%(port)d'
+        urlBase = "%%(protocol)s://%s.%s/" % \
+                (cfg.hostName, domain)
+        # Entitlement and password injection used to live here, now
+        # convertAuthToken handles it.
+
+        proxyServer = serverClass(serverCfg, urlBase)
         if restDb:
             proxyServer.setRestDb(restDb)
-        # TODO: This shim server doesn't do capsule filtering, which may
-        # affect the conary REST API.
-        shimRepo = handle.getShimServer()
-        proxyRestRequest = False
-        del netServer, restDb
-    else:
-        # Remote repository
-        overrideUrl = None
-        if handle:
-            overrideUrl = handle.getURL()
-        serverCfg, proxyServer, shimRepo = _getProxyServer(context, fqdn,
-                withCapsuleFilter=(handle is not None), overrideUrl=overrideUrl)
-        items = req.uri.split('/')
-        proxyRestRequest = (len(items) >= 4
-                            and items[1] == 'repos'
-                            and items[3] == 'api')
+        shimRepo = None
+        return serverCfg, proxyServer, shimRepo
 
-    if proxyRestRequest:
-        # use proxyServer config for http proxy and auth data
-        return proxyExternalRestRequest(context, fqdn, handle, authToken)
-    if method == "POST":
-        return post(port, secure, (proxyServer, shimRepo), cfg, context.db,
-                req, authToken)
-    elif method == "GET":
-        return get(port, secure, (proxyServer, shimRepo), cfg, context.db,
-                req, authToken, manager)
-    elif method == "PUT":
-        if proxyServer:
-            return apachemethods.putFile(port, secure, proxyServer, req)
-        else:
-            return apache.HTTP_NOT_FOUND
-    else:
-        return apache.HTTP_METHOD_NOT_ALLOWED
+    def _getRestDb(self):
+        mintDb = mdb.Database(self.context.cfg, self.context.db)
+        restDb = rdb.Database(self.context.cfg, mintDb, dbOnly=True)
+        return restDb
+
+    def _addCapsuleConfig(self, conaryReposCfg, repName):
+        restDb = self._getRestDb()
+        indexer = restDb.capsuleMgr.getIndexer(repName)
+        if not indexer or not indexer.hasSources():
+            return
+        conaryReposCfg.excludeCapsuleContents = True
+        # These settings are only used by the filter
+        conaryReposCfg.injectCapsuleContentServers = [repName]
+        conaryReposCfg.capsuleServerUrl = "direct"
+        restDb.capsuleIndexer = indexer
+        return restDb
+
+    def getApi(self):
+        """Handle proxied REST requests"""
+        if self.repositoryServer:
+            # Regular, local repository
+            return super(MintConaryHandler, self).getApi()
+        exc = web_exc.HTTPBadGateway()
+        exc.status = '503 Bad Gateway TODO'
+        return exc
 
 
-def _getAuth(context):
-    authToken = netserver.AuthToken(*webauth.getAuth(context.req))
-    pysid = getHttpAuth(context.req)
-    if isinstance(pysid, list):
-        # No pysid found.
-        return authToken
-
-    sessions = SessionsTable(context.db)
-    d = sessions.load(pysid)
-    if not d:
-        # Session is invalid.
-        return authToken
-    mintToken = d.get('_data', {}).get('authToken', None)
-    if not mintToken:
-        return authToken
-    authToken.user = mintToken[0]
-    authToken.password = netauth.ValidPasswordToken
-    return authToken
-
-
-def _getProxyServer(context, fqdn, withCapsuleFilter, overrideUrl):
-    """Create a ProxyRepositoryServer for remote proxied calls."""
-    cfg, req = context.cfg, context.req
-
-    serverCfg = netserver.ServerConfig()
-    serverCfg.proxyContentsDir = cfg.proxyContentsDir
-    serverCfg.changesetCacheDir = cfg.proxyChangesetCacheDir
-    serverCfg.tmpDir = cfg.proxyTmpDir
-    serverCfg.proxyMap = cfg.getProxyMap()
-    if overrideUrl:
-        serverCfg.repositoryMap.append((fqdn, overrideUrl))
-
-    restDb = None
-    if withCapsuleFilter:
-        restDb = _addCapsuleConfig(context, serverCfg, fqdn)
-    if restDb:
-        serverClass = ProxyRepositoryServer
-    else:
-        serverClass = proxy.ProxyRepositoryServer
-
-    # Conary >= 1.1.26 proxies will add a Via header for all
-    # requests forwarded for the Conary Proxy. If it contains our
-    # IP address and port, then we've already handled this request.
-    via = req.headers_in.get("Via", "")
-    myHostPort = "%s:%d" % (req.connection.local_ip,
-            req.connection.local_addr[1])
-    if myHostPort in via:
-        apache.log_error('Internal Conary Proxy was attempting an infinite '
-                'loop (request %s, via %s)' % (req.hostname, via))
-        raise apache.SERVER_RETURN, apache.HTTP_BAD_GATEWAY
-
-    if ':' in cfg.siteDomainName:
-        domain = cfg.siteDomainName
-    else:
-        domain = cfg.siteDomainName + ':%(port)d'
-    urlBase = "%%(protocol)s://%s.%s/" % \
-            (cfg.hostName, domain)
-    # Entitlement and password injection used to live here, now
-    # convertAuthToken handles it.
-
-    proxyServer = serverClass(serverCfg, urlBase)
-    if restDb:
-        proxyServer.setRestDb(restDb)
-    shimRepo = None
-    return serverCfg, proxyServer, shimRepo
+def conaryHandler(context):
+    return MintConaryHandler(context).handleRequest(context.req)

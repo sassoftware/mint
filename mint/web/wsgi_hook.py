@@ -34,9 +34,9 @@ from mint.rest.api import site as rest_site
 from mint.rest.server import restHandler
 from mint.web import app
 from mint.web import catalog
+from mint.web import conaryhooks
 from mint.web import rpchooks
 from mint.web import webhandler
-#from mint.web.hooks.conaryhooks import conaryHandler
 log = logging.getLogger(__name__)
 
 
@@ -113,11 +113,11 @@ class application(object):
         # Proxied Conary requests can have all sorts of paths, so look for a
         # header instead.
         if 'x-conary-servername' in self.req.headers:
-            return self.handleConary()
+            return conaryhooks.conaryHandler(self)
 
         elem = self.req.path_info_peek()
         if elem in ('changeset', 'conary', 'repos'):
-            return self.handleConary()
+            return conaryhooks.conaryHandler(self)
         elif elem in ('xmlrpc', 'xmlrpc-private', 'jsonrpc'):
             return rpchooks.rpcHandler(self)
         elif elem == 'api':

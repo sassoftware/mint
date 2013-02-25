@@ -269,7 +269,7 @@ class SiteHandler(WebHandler):
         # the hash we gave the slave in the first place.
         # this prevents slaves from overwriting arbitrary files
         # in the finished images directory.
-        outputToken = self.req.headers_in.get('X-rBuilder-OutputToken')
+        outputToken = self.req.headers.get('X-rBuilder-OutputToken')
         if outputToken != build.getDataValue('outputToken', validate = False):
             raise web_exc.HTTPForbidden()
 
@@ -285,8 +285,8 @@ class SiteHandler(WebHandler):
             log.warning("IOError during upload of %s: %s", targetFn, str(err))
             raise web_exc.HTTPBadRequest()
 
-        if 'content-length' in self.req.headers_in:
-            expected = long(self.req.headers_in['content-length'])
+        if 'content-length' in self.req.headers:
+            expected = long(self.req.headers['content-length'])
             if copied != expected:
                 log.warning("Expected %d bytes but got %d bytes for "
                         "uploaded file %s; discarding", expected, copied,
@@ -294,8 +294,8 @@ class SiteHandler(WebHandler):
                 return ''
 
         # Validate SHA1 trailer (or header) if it is present.
-        if 'content-sha1' in self.req.headers_in:
-            expected = self.req.headers_in['content-sha1'].decode('base64')
+        if 'content-sha1' in self.req.headers:
+            expected = self.req.headers['content-sha1'].decode('base64')
             actual = ctx.digest()
             if expected != actual:
                 log.warning("SHA-1 mismatch on uploaded file %s; "
