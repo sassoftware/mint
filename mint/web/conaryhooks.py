@@ -143,7 +143,7 @@ class MintConaryHandler(wsgi_hooks.ConaryHandler):
 
         # Determine the user's authorization with respect to the rBuilder
         # project, if there is one.
-        authToken = self._getAuth()
+        authToken = self.context.req.environ['mint.authToken']
         if handle:
             # Convert mint user/pass into abstract repository roles, if the
             # user is successfully authenticated to mint.
@@ -196,14 +196,6 @@ class MintConaryHandler(wsgi_hooks.ConaryHandler):
 
     def _loadAuth(self):
         pass
-
-    def _getAuth(self):
-        authToken = getHttpAuth(self.request)
-        if authToken is None:
-            authToken = ('anonymous', 'anonymous')
-        authToken = netserver.AuthToken(*authToken)
-        authToken.remote_ip = self.request.client_addr
-        return authToken
 
     def _getProxyServer(self, fqdn, withCapsuleFilter, overrideUrl):
         """Create a ProxyRepositoryServer for remote proxied calls."""

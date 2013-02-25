@@ -23,6 +23,7 @@ from beaker import session
 from conary import dbstore
 from conary.lib import coveragehook
 from conary.repository.netrepos import netauth
+from conary.repository.netrepos import netserver
 from django.core.handlers import wsgi as djwsgi
 from webob import exc as web_exc
 
@@ -108,7 +109,16 @@ class application(object):
         self.db = dbstore.connect(self.cfg.dbPath, self.cfg.dbDriver)
         self.rm = RepositoryManager(self.cfg, self.db)
         self.authToken = self._getAuth()
+        self.authToken = netserver.AuthToken(*self.authToken)
+        self.authToken.remote_ip = self.req.client_addr
         self.req.environ['mint.authToken'] = self.authToken
+
+        if '_method' in self.req.GET:
+            method = self.req.GET['_method'].upper()
+            allowed = ['GET', 'PUT', 'POST', 'DELETE', 'HEAD']
+            if method not in allowed:
+                return web_exc.HTTPMethodNotAllowed(allow=allowed)
+            self.req.method = method
 
         # Proxied Conary requests can have all sorts of paths, so look for a
         # header instead.
@@ -157,12 +167,12 @@ class application(object):
             self.session.load()
         authToken = self.session.get('authToken', None)
         if not authToken:
-            return None
+            return ()
         if authToken[1] == '':
             # Pre-authenticated session
             return (authToken[0], netauth.ValidPasswordToken)
         # Discard old password-containing sessions to force a fresh login
-        return None
+        return ()
 
     def _persistSession(self, response):
         session = self.session

@@ -75,7 +75,7 @@ class AuthenticationCallback(object):
     def processRequest(self, request):
         mintClient = None
         mintAuth = None
-        authToken = request._req.environ['mint.authToken']
+        authToken = request._req.environ['mint.authToken'][:2]
         if authToken:
             mintClient, mintAuth = self._checkAuth(authToken)
             request.auth = authToken
@@ -136,8 +136,10 @@ class AuthenticationCallback(object):
         if response:
             return response
 
-        if (getattr(viewMethod, 'internal', False)
-                and request.remote[0] != '127.0.0.1'):
+        remote = request.remote
+        if isinstance(remote, (list, tuple)):
+            remote = remote[0]
+        if getattr(viewMethod, 'internal', False) and remote != '127.0.0.1':
             # Request to an internal API from an external IP address
             return Response(status=404)
 
