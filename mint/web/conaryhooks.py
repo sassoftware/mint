@@ -3,7 +3,6 @@
 #
 
 import logging
-import os
 import base64
 import rpath_capsule_indexer
 from webob import exc as web_exc
@@ -12,8 +11,7 @@ from mint import maintenance
 from mint.db import database as mdb
 from mint.rest.db import database as rdb
 from mint.rest.errors import ProductNotFound
-from mint.web import cresthandler
-from mint.web.webhandler import normPath, getHttpAuth
+from mint.web.webhandler import getHttpAuth
 
 from conary import errors as cerrors
 from conary.repository import transport
@@ -23,133 +21,6 @@ from conary.server import wsgi_hooks
 
 log = logging.getLogger(__name__)
 
-
-def post(port, isSecure, repos, cfg, db, req, authToken):
-    repos, shimRepo = repos
-
-    if repos:
-        items = req.uri.split('/')
-        if len(items) >= 4 and items[1] == 'repos' and items[3] == 'api':
-            # uri at this point should be repos/<hostname>/
-            skippedPart = '/'.join(items[:4])
-            return cresthandler.handleCrest(skippedPart,
-                    cfg, db, repos, req, authToken=authToken)
-    if req.headers['Content-Type'] == "text/xml":
-        if not repos:
-            return apache.HTTP_NOT_FOUND
-        return apachemethods.post(port, isSecure, repos, req,
-                authToken=authToken)
-    return apache.HTTP_NOT_FOUND
-
-
-CONARY_GET_COMMANDS = ["changeset", "getOpenPGPKey"]
-
-def get(port, isSecure, repos, cfg, db, req, authToken, manager):
-    repos, shimRepo = repos
-
-    uri = req.uri
-    if uri.endswith('/'):
-        uri = uri[:-1]
-
-    cmd = os.path.basename(uri)
-    if cmd in CONARY_GET_COMMANDS:
-        return apachemethods.get(port, isSecure, repos, req,
-                authToken=authToken)
-    elif repos:
-        items = req.uri.split('/')
-        if len(items) >= 4 and items[1] == 'repos' and items[3] == 'api':
-            # uri at this point should be repos/<hostname>/
-            skippedPart = '/'.join(items[:4])
-            return cresthandler.handleCrest(skippedPart,
-                    cfg, db, repos, req, authToken=authToken)
-    return apache.HTTP_NOT_FOUND
-
-
-def proxyExternalRestRequest(context, fqdn, handle, authToken):
-    cfg, req = context.cfg, context.req
-    # FIXME: this only works with entitlements, not user:password
-
-    # /repos/rap/api/foo -> api/foo
-    path = '/'.join(req.unparsed_uri.split('/')[3:])
-    # get the upstream repo url and label
-    if handle:
-        urlBase = handle.getURL()
-    else:
-        # no external project?  maybe it's a non-entitled platform
-        found = False
-        for label in cfg.availablePlatforms:
-            if label.split('@')[0].lower() == fqdn.lower():
-                urlBase = 'http://%s/conary/' % fqdn
-                found = True
-                break
-        if not found:
-            raise apache.SERVER_RETURN, apache.HTTP_NOT_FOUND
-    url = ''.join((urlBase, path))
-    # build the entitlement to send in the header
-    l = []
-    for entitlement in authToken.entitlements:
-        if entitlement[0] is None:
-            l.append("* %s" % (base64.b64encode(entitlement[1])))
-        else:
-            l.append("%s %s" % (entitlement[0],
-                                base64.b64encode(entitlement[1])))
-    entitlement = ' '.join(l)
-
-    opener = transport.URLOpener(proxyMap=context.cfg.getProxyMap())
-    headers = [
-            ('X-Conary-Servername', fqdn),
-            ('User-Agent', transport.Transport.user_agent),
-            ]
-    if entitlement:
-        headers.append(('X-Conary-Entitlement', entitlement))
-
-    # make the request
-    try:
-        f = opener.open(url, headers=headers)
-    except Exception, err:
-        if getattr(err, 'errcode', None) == 403:
-            return 403  # Forbidden
-        else:
-            # translate all errors to a 502
-            log.error("Cannot proxy REST request to %s: %s", urlBase, err)
-            return 502  # Bad Gateway
-
-    # form up the base URL to this repository on rBuilder
-    if req.subprocess_env.get('HTTPS', '') == 'on':
-        protocol = 'https'
-    else:
-        protocol = 'http'
-    myUrlBase = '%s://%s/repos/%s/' % (protocol, req.hostname, fqdn)
-
-    # copy response headers from upstream
-    skippedHeaders = ('content-length', 'server', 'connection', 'date',
-            'transfer-encoding')
-    for header in f.headers.keys():
-        if header.lower() not in skippedHeaders:
-            req.headers_out[header.title()] = f.headers.get(header)
-
-    # translate the response
-    contentType = f.headers.get('content-type', '').split(';')[0]
-    if contentType in ('text/xml', 'application/xml'):
-        l = []
-        for line in f:
-            # rewrite hrefs to point at ourself
-            l.append(line.replace(urlBase, myUrlBase))
-        buf = ''.join(l)
-        req.headers_out['Content-Length'] = str(len(buf))
-        req.write(buf)
-    else:
-        if f.headers.get('Content-Length'):
-            req.headers_out['Content-Length'] = f.headers['Content-Length']
-        req.headers_out['Transfer-Encoding'] = 'chunked'
-        while True:
-            d = f.read(16384)
-            if not d:
-                break
-            req.write('%x\r\n%s\r\n' % (len(d), d))
-        req.write('0\r\n\r\n')
-    f.close()
-    return apache.OK
 
 class CapsuleFilterMixIn(object):
     class _CapsuleDownloader(object):
@@ -234,7 +105,6 @@ class MintConaryHandler(wsgi_hooks.ConaryHandler):
         req, cfg, manager = self.context.req, self.context.cfg, self.context.rm
         maintenance.enforceMaintenanceMode(cfg)
 
-        paths = normPath(req.path).split("/")
         fqdn = hostName = None
         if req.path_info_peek() == 'repos':
             req.path_info_pop()
@@ -251,9 +121,6 @@ class MintConaryHandler(wsgi_hooks.ConaryHandler):
             fqdn = req.headers['x-conary-servername']
         else:
             fqdn = req.host.split(':')[0]
-
-        method = req.method.upper()
-        port = req.client_addr
         self.isSecure = req.scheme == 'https'
 
         # resolve the conary repository names
@@ -318,6 +185,9 @@ class MintConaryHandler(wsgi_hooks.ConaryHandler):
                     overrideUrl=overrideUrl,
                     )
 
+        self.fqdn = fqdn
+        self.handle = handle
+
         self.auth = authToken
         self.repositoryServer = netServer
         self.shimServer = shimRepo
@@ -326,24 +196,6 @@ class MintConaryHandler(wsgi_hooks.ConaryHandler):
 
     def _loadAuth(self):
         pass
-
-        #if proxyRestRequest:
-        #    # use proxyServer config for http proxy and auth data
-        #    return proxyExternalRestRequest(context, fqdn, handle, authToken)
-        #if method == "POST":
-        #    return post(port, secure, (proxyServer, shimRepo), cfg, context.db,
-        #            req, authToken)
-        #elif method == "GET":
-        #    return get(port, secure, (proxyServer, shimRepo), cfg, context.db,
-        #            req, authToken, manager)
-        #elif method == "PUT":
-        #    if proxyServer:
-        #        return apachemethods.putFile(port, secure, proxyServer, req)
-        #    else:
-        #        return apache.HTTP_NOT_FOUND
-        #else:
-        #    return apache.HTTP_METHOD_NOT_ALLOWED
-
 
     def _getAuth(self):
         authToken = getHttpAuth(self.request)
@@ -420,9 +272,81 @@ class MintConaryHandler(wsgi_hooks.ConaryHandler):
         if self.repositoryServer:
             # Regular, local repository
             return super(MintConaryHandler, self).getApi()
-        exc = web_exc.HTTPBadGateway()
-        exc.status = '503 Bad Gateway TODO'
-        return exc
+        # FIXME: this only works with entitlements, not user:password
+
+        # get the upstream repo url and label
+        if self.handle:
+            urlBase = self.handle.getURL()
+            if not urlBase.endswith('/'):
+                urlBase += '/'
+            urlBase += 'api'
+        else:
+            # no external project?  maybe it's a non-entitled platform
+            found = False
+            for label in self.context.cfg.availablePlatforms:
+                if label.split('@')[0].lower() == self.fqdn.lower():
+                    urlBase = '%s://%s/conary/api' % (self.request.scheme,
+                            self.fqdn)
+                    found = True
+                    break
+            if not found:
+                raise web_exc.HTTPNotFound("Could not proxy request to "
+                        "unknown repository '%s'" % self.fqdn)
+        url = urlBase + self.request.path_info
+        if self.request.query_string:
+            url += '?' + self.request.query_string
+        # build the entitlement to send in the header
+        l = []
+        for entitlement in self.auth.entitlements:
+            if entitlement[0] is None:
+                l.append("* %s" % (base64.b64encode(entitlement[1])))
+            else:
+                l.append("%s %s" % (entitlement[0],
+                                    base64.b64encode(entitlement[1])))
+        entitlement = ' '.join(l)
+
+        opener = transport.URLOpener(proxyMap=self.context.cfg.getProxyMap())
+        headers = [
+                ('X-Conary-Servername', self.fqdn),
+                ('User-Agent', transport.Transport.user_agent),
+                ]
+        if entitlement:
+            headers.append(('X-Conary-Entitlement', entitlement))
+
+        # make the request
+        try:
+            f = opener.open(url, headers=headers)
+        except Exception, err:
+            if getattr(err, 'errcode', None) == 403:
+                raise web_exc.HTTPForbidden()
+            else:
+                # translate all errors to a 502
+                log.error("Cannot proxy REST request to %s: %s", urlBase, err)
+                return web_exc.HTTPBadGateway("Error proxying REST request")
+
+        # copy response headers from upstream
+        skippedHeaders = ('content-length', 'server', 'connection', 'date',
+                'transfer-encoding')
+        response = self.responseFactory()
+        for header in f.headers.keys():
+            if header.lower() not in skippedHeaders:
+                response.headers[header.title()] = f.headers.get(header)
+
+        # translate the response
+        contentType = f.headers.get('content-type', '').split(';')[0]
+        if contentType in ('text/xml', 'application/xml'):
+            myUrlBase = self.request.application_url
+            l = []
+            for line in f:
+                # rewrite hrefs to point at ourself
+                l.append(line.replace(urlBase, myUrlBase))
+            response.body = ''.join(l)
+            f.close()
+        else:
+            if f.headers.get('Content-Length'):
+                response.headers['Content-Length'] = f.headers['Content-Length']
+            response.body_file = f
+        return response
 
 
 def conaryHandler(context):
