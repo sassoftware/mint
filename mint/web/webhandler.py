@@ -15,18 +15,13 @@
 #
 
 
-import base64
 import gettext
 import logging
 import kid
 import os
+from conary.web import webauth
 from kid.parser import START, TEXT, END
 from webob import exc as web_exc
-
-from conary.lib import util
-
-#from mod_python import apache
-#from mod_python import Cookie
 
 from mint import helperfuncs
 from mint import shimclient
@@ -196,35 +191,7 @@ def getHttpAuth(req):
     if 'pysid' in req.cookies:
         return req.cookies['pysid']
 
-    if not 'Authorization' in req.headers:
-        authToken = ['anonymous', 'anonymous']
-    else:
-        info = req.headers['Authorization'].split()
-        if len(info) != 2 or info[0] != "Basic":
-            raise web_exc.HTTPBadRequest()
-
-        try:
-            authString = base64.decodestring(info[1])
-        except:
-            raise web_exc.HTTPBadRequest()
-
-        if authString.count(":") != 1:
-            raise web_exc.HTTPBadRequest()
-
-        authToken = authString.split(":")
-        authToken[1] = util.ProtectedString(authToken[1])
-
-    entitlement = req.headers.get('X-Conary-Entitlement', None)
-    if entitlement:
-        try:
-            entitlement = entitlement.split()
-            entitlement[1] = base64.decodestring(entitlement[1])
-        except:
-            raise web_exc.HTTPBadRequest()
-    else:
-        entitlement = [ None, None ]
-
-    return authToken + entitlement
+    return webauth.getAuth(req)
 
 
 catalogs = {}
