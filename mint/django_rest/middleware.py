@@ -479,36 +479,27 @@ class RedirectMiddleware(BaseMiddleware, redirectsmiddleware.RedirectFallbackMid
         return redirectsmiddleware.RedirectFallbackMiddleware.process_response(self, nPRequest, response)
 
 
-class LocalQueryParameterMiddleware(BaseMiddleware):
+class QueryParameterMiddleware(BaseMiddleware):
 
     def _process_request(self, request):
-        if '?' in request.path:
-            url, questionParams = request.path.split('?', 1)
-            questionParams = parse_qsl(questionParams)
-        else:
-            questionParams = []
-            url = request.path
-
-        if ';' in url:
-            request.path, semiColonParams = url.split(';', 1)
-            request.path_info = request.path
+        script_name = request.META.get('SCRIPT_NAME') or ''
+        path = request.META['PATH_INFO']
+        if ';' in path:
+            path, semiColonParams = path.split(';', 1)
             semiColonParams = parse_qsl(semiColonParams)
         else:
             semiColonParams = []
-
-        qs = request.environ.get('QUERY_STRING', [])
-        if qs:
-            qs = parse_qsl(qs)
-        else:
-            qs = []
-
-        params = questionParams + semiColonParams + qs
+        questionParams = parse_qsl(request.META.get('QUERY_STRING') or '')
+        params = questionParams + semiColonParams
+        request.path = script_name + path
+        request.path_info = path
         request.params = ['%s=%s' % (k, v) for k, v in params]
         request.params = ';' + ';'.join(request.params)
         method = request.GET.get('_method', None)
         if method:
             request.params += ';_method=%s' % method
         request.GET = http.QueryDict(request.params)
+
 
 class PerformanceMiddleware(BaseMiddleware, middleware.DebugToolbarMiddleware):
     '''

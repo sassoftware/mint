@@ -21,7 +21,6 @@ AUTHENTICATION_BACKENDS = (
 )
 
 MIDDLEWARE_CLASSES = MIDDLEWARE_CLASSES + (
-    'mint.django_rest.middleware.LocalQueryParameterMiddleware',
     'mint.django_rest.middleware.ExceptionLoggerMiddleware',
 )
 
