@@ -63,6 +63,7 @@ class rBuilderProduct(CPackageRecipe):
         'mod_python:runtime',
         'pcreator:python',
         'pyOpenSSL',
+        'python-beaker',
         'python-dateutil',
         'python-devel',
         'python-epdb:python',
