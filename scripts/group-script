@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/bin/bash
 #
 # Copyright (c) 2008 rPath, Inc.
 # All rights reserved.
@@ -25,45 +25,18 @@ then
     is_chrooted=1
 fi
 
-check_apache() {
-    pidof httpd > /dev/null 2>&1
-}
-
-shutdown_apache() {
-    if check_apache; then
-        service httpd stop
-        for i in $(seq 30); do
-            if check_apache; then
-                sleep 1
-            else
-                break
-            fi
-        done
-        if check_apache; then
-            echo "WARNING: httpd still running, killing httpd"
-            killall httpd > /dev/null 2>&1
-            if check_apache; then
-                echo "WARNING: httpd *still* running, sending httpd signal 9"
-                killall -9 httpd > /dev/null 2>&1
-                if check_apache; then
-                    echo "WARNING: failed to shutdown the Apache (httpd) service"
-                fi
-            fi
-        fi
-    fi
-}
-
 die() {
     echo "ERROR:" "$@"
     exit 1
 }
 
-# Shut down apache, if it's running
-shutdown_apache
-
 # If not chrooted, stop cron, to prevent bad things from happening while we're
 # migrating (RBL-7973)
 [ -e /var/lock/subsys/crond ] && service crond stop
+
+# Pause nginx and shutdown gunicorn
+[ -f /var/run/nginx.pid ] && kill -WINCH $(cat /var/run/nginx.pid)
+[ -f /var/lock/subsys/gunicorn ] && /sbin/service gunicorn stop
 
 # Shut down postgres, and migrate to the latest major version if required.
 # Then start it and wait for it to return.
@@ -74,6 +47,8 @@ then
 
     chkconfig memcached on
     chkconfig pgbouncer on
+    chkconfig postgresql-rbuilder on
+    chkconfig jabberd on
 fi
 "$scriptdir"/postgres-auto-update $updateargs \
     || die "Migration failed, check /var/log/rbuilder/scripts.log"
@@ -124,13 +99,6 @@ usermod -a -G apache raa-web
 sudo -u apache "$scriptdir"/rmake-setup
 RMAKE_EXISTED=$?
 
-# make sure that the old rapa plugin .pyc files are not blocking us
-# from finding files in /usr/lib64/raa. rapa should restart at the end of 
-# the update. (Due to unowned .pyc files pre rapa 3.1.0)
-if [ `uname -m` = "x86_64" ]; then
-    rm -rf /usr/lib/raa/rPath/
-fi
-
 # Primary migration is done, exit maintenance mode now since some scripts need
 # to talk to local repositories.
 rm -f /srv/rbuilder/run/maintenance.lock
@@ -144,8 +112,14 @@ then
     "$scriptdir"/generate-certs.sh \
         || die "Failed to generate certificates"
 
-    # Start apache with new certificates.
-    service httpd start
+    # Start nginx with new certificates.
+    /sbin/service gunicorn start
+    if [ -f /var/lock/subsys/nginx ]
+    then
+        /sbin/service nginx reload || /sbin/service nginx restart
+    else
+        /sbin/service nginx start
+    fi
 else
     echo Skipping certificate generation due to chrooting
 fi
@@ -164,18 +138,6 @@ then
 fi
 
 ### Extra Steps
-
-# Re-add postgresql initscripts so that it picks up a new chkconfig.d entry
-#   -- pre-4.1.0 - 2008-05-16
-for initscript in postgresql postgresql-rbuilder
-do
-    if [ -f /etc/init.d/$initscript ]
-    then
-        /sbin/chkconfig --del $initscript
-        /sbin/chkconfig --add $initscript
-    fi
-done
-
 
 # Restart rMake after update + cert generation. This also straightens things out
 # for the first update after the messagebus was split.
@@ -213,12 +175,6 @@ then
     # Restart the authentication service
     service rbuilder-authn restart
 fi
-
-# Fix notifications with a bad GUID
-#   -- 5.1.1 - 2009-04-24
-sed -i -e 's,contexts/default/default,contexts/default,' \
-    /srv/rbuilder/notices/global/default/*/content &>/dev/null
-
 
 # Shut down postgres if chrooted
 if [ "x$is_chrooted" == "x1" ]
