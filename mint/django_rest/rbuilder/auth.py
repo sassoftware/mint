@@ -26,7 +26,10 @@ import time
 
 
 def getAuth(request):
-    return request.META['mint.authToken'][:2] or (None, None)
+    token = request.META['mint.authToken'][:2]
+    if token[0] == 'anonymous':
+        token = (None, None)
+    return token
 
 
 def isAdmin(user):
