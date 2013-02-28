@@ -11,7 +11,6 @@ from mint import maintenance
 from mint.db import database as mdb
 from mint.rest.db import database as rdb
 from mint.rest.errors import ProductNotFound
-from mint.web.webhandler import getHttpAuth
 
 from conary import errors as cerrors
 from conary.repository import transport
@@ -189,6 +188,7 @@ class MintConaryHandler(wsgi_hooks.ConaryHandler):
         self.handle = handle
 
         self.auth = authToken
+        self.cfg = serverCfg
         self.repositoryServer = netServer
         self.shimServer = shimRepo
         self.proxyServer = proxyServer

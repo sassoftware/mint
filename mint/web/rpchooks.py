@@ -21,7 +21,6 @@ from webob import exc as web_exc
 
 from mint import mint_error
 from mint import server
-from mint.web.webhandler import getHttpAuth
 
 
 def rpcHandler(context):
@@ -31,10 +30,6 @@ def rpcHandler(context):
         raise web_exc.HTTPMethodNotAllowed(allow='POST')
     if req.content_type != 'text/xml':
         raise web_exc.HTTPBadRequest()
-    authToken = getHttpAuth(req)
-
-    if type(authToken) is list:
-        authToken = authToken[0:2] # throw away entitlement
     # instantiate a MintServer
     srvr = server.MintServer(context.cfg, allowPrivate=True, req=req,
             db=context.db)
@@ -48,7 +43,7 @@ def rpcHandler(context):
     (args, method) = util.xmlrpcLoad(stream)
 
     # coax parameters into something MintServer likes
-    params = [method, authToken, args]
+    params = [method, context.authToken, args]
 
     # go for it; return 403 if permission is denied
     try:
