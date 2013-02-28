@@ -45,6 +45,7 @@ then
     # Initial install
     updateargs="--init"
 
+    chkconfig gunicorn on
     chkconfig memcached on
     chkconfig pgbouncer on
     chkconfig postgresql-rbuilder on
@@ -53,7 +54,8 @@ fi
 "$scriptdir"/postgres-auto-update $updateargs \
     || die "Migration failed, check /var/log/rbuilder/scripts.log"
 
-service pgbouncer restart
+service pgbouncer condstop
+service pgbouncer start
 
 # Create rbuilder user for initial setup OR give it createdb permissions to fix
 # up an earlier mistake. -- 5.5.0 2009-11-16
