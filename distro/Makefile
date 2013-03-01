@@ -51,8 +51,8 @@ install: default-install
 	install -D -m0644 rmake3/dispatcher.conf $(DESTDIR)/etc/rmake3/server.d/20_rbuilder.conf
 	install -D -m0644 rmake3/worker.conf $(DESTDIR)/etc/rmake3/node.d/20_rbuilder.conf
 	# system dist (data)
-	install -D -m0644 firewall $(DESTDIR)/etc/firewall
-	install -D -m0644 firewall6 $(DESTDIR)/etc/firewall6
+	install -D -m0644 firewall $(DESTDIR)/etc/sysconfig/iptables
+	install -D -m0644 firewall6 $(DESTDIR)/etc/sysconfig/ip6tables
 	install -D -m0644 rbuilder.logrotate $(DESTDIR)/etc/logrotate.d/rbuilder
 	install -D -m0644 rbuilder.cron $(DESTDIR)/etc/cron.d/rbuilder.cron
 	# system dist (executable)
