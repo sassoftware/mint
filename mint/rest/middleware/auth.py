@@ -139,7 +139,8 @@ class AuthenticationCallback(object):
         remote = request.remote
         if isinstance(remote, (list, tuple)):
             remote = remote[0]
-        if getattr(viewMethod, 'internal', False) and remote != '127.0.0.1':
+        if getattr(viewMethod, 'internal', False) and remote not in (
+                '127.0.0.1', '::1', '::ffff:127.0.0.1'):
             # Request to an internal API from an external IP address
             return Response(status=404)
 
