@@ -261,7 +261,7 @@ class SiteHandler(WebHandler):
         client = shimclient.ShimMintClient(self.cfg,
                 (self.cfg.authUser, self.cfg.authPass), self.db)
 
-        buildId, fileName = self.req.uri.split("/")[-2:]
+        buildId, fileName = self.req.path_info.split("/")[-2:]
         build = client.getBuild(int(buildId))
         project = client.getProject(build.projectId)
 
@@ -269,9 +269,10 @@ class SiteHandler(WebHandler):
         # the hash we gave the slave in the first place.
         # this prevents slaves from overwriting arbitrary files
         # in the finished images directory.
-        outputToken = self.req.headers.get('X-rBuilder-OutputToken')
-        if outputToken != build.getDataValue('outputToken', validate = False):
-            raise web_exc.HTTPForbidden()
+        if not auth.admin:
+            outputToken = self.req.headers.get('X-rBuilder-OutputToken')
+            if outputToken != build.getDataValue('outputToken', validate = False):
+                raise web_exc.HTTPForbidden()
 
         targetFn = os.path.join(self.cfg.imagesPath, project.hostname,
                 str(buildId), fileName)
@@ -280,7 +281,7 @@ class SiteHandler(WebHandler):
         ctx = digestlib.sha1()
 
         try:
-            copied = util.copyfileobj(self.req, fObj, digest=ctx)
+            copied = util.copyfileobj(self.req.body_file, fObj, digest=ctx)
         except IOError, err:
             log.warning("IOError during upload of %s: %s", targetFn, str(err))
             raise web_exc.HTTPBadRequest()

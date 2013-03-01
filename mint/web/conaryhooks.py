@@ -221,8 +221,7 @@ class MintConaryHandler(wsgi_hooks.ConaryHandler):
         # requests forwarded for the Conary Proxy. If it contains our
         # IP address and port, then we've already handled this request.
         via = req.headers.get("Via", "")
-        myHostPort = "%s:%s" % (req.server_name, req.server_port)
-        if myHostPort in via:
+        if req.host in via:
             log.error('Internal Conary Proxy was attempting an infinite '
                     'loop (request %s, via %s)' % (req.host, via))
             raise web_exc.HTTPBadGateway()
