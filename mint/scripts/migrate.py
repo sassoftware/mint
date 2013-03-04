@@ -5467,8 +5467,13 @@ class MigrateTo_66(SchemaMigration):
 
 class MigrateTo_67(SchemaMigration):
     '''beryl'''
-    Version = (67, 0)
+    Version = (67, 1)
 
     def migrate(self):
         drop_tables(self.db, 'Sessions')
+        return True
+
+    def migrate1(self):
+        cu = self.db.cursor()
+        cu.execute("ALTER TABLE Platforms ADD upstream_url text")
         return True

@@ -28,7 +28,7 @@ from conary.dbstore import sqlerrors, sqllib
 log = logging.getLogger(__name__)
 
 # database schema major version
-RBUILDER_DB_VERSION = sqllib.DBversion(67, 0)
+RBUILDER_DB_VERSION = sqllib.DBversion(67, 1)
 
 def _createTrigger(db, table, column="changed"):
     retInsert = db.createTrigger(table, column, "INSERT")
@@ -866,6 +866,7 @@ def _createPlatforms(db):
                 abstract        boolean NOT NULL DEFAULT false,
                 isFromDisk      boolean NOT NULL DEFAULT false,
                 hidden          boolean NOT NULL DEFAULT false,
+                upstream_url    text,
                 time_refreshed  timestamp with time zone NOT NULL
                                 DEFAULT current_timestamp
             ) %(TABLEOPTS)s""" % db.keywords)

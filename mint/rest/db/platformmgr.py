@@ -350,13 +350,14 @@ class Platforms(object):
         sourceTypes = kw.get('sourceTypes', [])
         mode = kw.get('mode', 'manual')
         hidden = kw.get('hidden', None)
+        upstream_url = kw.get('upstream_url', None)
         platformUsageTerms = kw.get('platformUsageTerms')
         platform = models.Platform(platformId=platformId, label=label,
                 platformName=platformName, enabled=enabled,
                 platformUsageTerms=platformUsageTerms,
                 configurable=configurable, mode=mode,
                 repositoryHostname=fqdn, abstract=abstract,
-                hidden=hidden)
+                hidden=hidden, upstream_url=upstream_url)
         platform._sourceTypes = sourceTypes
         platform._buildTypes = platformBuildTypes
         return platform
@@ -400,9 +401,10 @@ class Platforms(object):
             SET platformName = ?,
                 abstract = ?,
                 configurable = ?,
+                upstream_url = ?,
                 time_refreshed = current_timestamp
             WHERE platformId = ?"""
-        cu.execute(sql, platformName, abstract, configurable, platformId)
+        cu.execute(sql, platformName, abstract, configurable, platformModel.upstream_url, platformId)
         self._updateDatabasePlatformSources(platformModel, platformDef)
         return platformId
 
@@ -604,6 +606,8 @@ class Platforms(object):
         if local:
             return 'https://%s/repos/%s/' % \
                 (self.cfg.secureHost, hostname)
+        elif platform.upstream_url:
+            return platform.upstream_url
         else:
             return 'https://%s/conary/' % (hostname)
 
@@ -686,7 +690,7 @@ class Platforms(object):
 
         self.db.db.platforms.update(platformId, enabled=int(platform.enabled),
             mode=platform.mode, configurable=bool(platform.configurable),
-            hidden=bool(platform.hidden))
+            hidden=bool(platform.hidden), upstream_url=platform.upstream_url)
 
         # Clear the cache of status information
         self.platformCache.clearPlatformData(platform.label)
