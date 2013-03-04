@@ -1481,7 +1481,7 @@ class XObjModel(models.Model):
             # TODO: do we still need to handle this exception here? not
             # sure what was throwing it.
             except exceptions.ObjectDoesNotExist:
-                Raise
+                raise
 
     def _m2m_buildEtreeModel(self, request, m2mAccessorName):
         dmodel = type_map.get(m2mAccessorName)
